@@ -28,25 +28,18 @@
 
 WiFiClient::WiFiClient():sockfd(-1),_connected(false),next(NULL)
 {
-    //ets_printf("WiFiClient(%d)\n", sockfd);
 }
 
 WiFiClient::WiFiClient(int fd):sockfd(fd),_connected(true),next(NULL)
 {
-    ets_printf("WiFiClient(%d)\n", sockfd);
 }
 
 WiFiClient::~WiFiClient()
 {
-    if(sockfd >= 0) {
-        ets_printf("~WiFiClient(%d)\n", sockfd);
-    }
-    //stop();
 }
 
 WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
-    ets_printf("WiFiClient(%d) = (%d)\n", sockfd, other.sockfd);
     stop();
     sockfd = other.sockfd;
     _connected = other._connected;
