@@ -20,7 +20,7 @@
  parsing functions based on TextFinder library by Michael Margolis
  */
 
-#include "Wiring.h"
+#include "Arduino.h"
 #include "Stream.h"
 #include "esp32-hal.h"
 

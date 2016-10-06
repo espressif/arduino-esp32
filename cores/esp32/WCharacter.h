@@ -21,7 +21,6 @@
 #define Character_h
 
 #include <ctype.h>
-#include "WTypes.h"
 #define isascii(__c) ((unsigned)(__c)<=0177)
 #define toascii(__c)  ((__c)&0177)
 
