@@ -1,0 +1,68 @@
+#######################################
+# Syntax Coloring Map For WiFi
+#######################################
+
+#######################################
+# Library (KEYWORD3)
+#######################################
+
+WiFi	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+WiFi	KEYWORD1
+WiFiClient	KEYWORD1
+WiFiServer	KEYWORD1
+WiFiUDP	KEYWORD1
+WiFiClientSecure	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+status	KEYWORD2
+mode	KEYWORD2
+connect	KEYWORD2
+write	KEYWORD2
+available	KEYWORD2
+config	KEYWORD2
+setDNS	KEYWORD2
+read	KEYWORD2
+flush	KEYWORD2
+stop	KEYWORD2
+connected	KEYWORD2
+begin	KEYWORD2
+beginMulticast	KEYWORD2
+disconnect	KEYWORD2
+macAddress	KEYWORD2
+localIP	KEYWORD2
+subnetMask	KEYWORD2
+gatewayIP	KEYWORD2
+SSID	KEYWORD2
+psk	KEYWORD2
+BSSID		KEYWORD2
+RSSI	KEYWORD2
+encryptionType	KEYWORD2
+beginPacket	KEYWORD2
+beginPacketMulticast	KEYWORD2
+endPacket	KEYWORD2
+parsePacket	KEYWORD2
+destinationIP	KEYWORD2
+remoteIP	KEYWORD2
+remotePort	KEYWORD2
+softAP	KEYWORD2
+softAPIP	KEYWORD2
+softAPmacAddress	KEYWORD2
+softAPConfig	KEYWORD2
+printDiag	KEYWORD2
+hostByName	KEYWORD2
+scanNetworks	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+WIFI_AP	LITERAL1
+WIFI_STA	LITERAL1
+WIFI_AP_STA	LITERAL1

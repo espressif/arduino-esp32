@@ -1,0 +1,97 @@
+
+name=ESP32 Arduino
+version=0.0.1
+
+runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
+runtime.tools.esptool.path={runtime.platform.path}/tools/esptool.py
+
+compiler.warning_flags=-w
+compiler.warning_flags.none=-w
+compiler.warning_flags.default=
+compiler.warning_flags.more=-Wall
+compiler.warning_flags.all=-Wall -Wextra
+
+compiler.path={runtime.tools.xtensa-esp32-elf-gcc.path}/bin/
+compiler.sdk.path={runtime.platform.path}/tools/sdk
+compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DHAVE_CONFIG_H "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/lwip"
+
+compiler.c.cmd=xtensa-esp32-elf-gcc
+compiler.c.flags=-c {compiler.warning_flags} -Os -g3 -Wpointer-arith -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -ffunction-sections -fdata-sections -mlongcalls -nostdlib -MMD -std=gnu99 -fstrict-volatile-bitfields
+
+compiler.cpp.cmd=xtensa-esp32-elf-g++
+compiler.cpp.flags=-c {compiler.warning_flags} -Os -g3 -Wpointer-arith -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -fno-rtti -ffunction-sections -fdata-sections -mlongcalls -nostdlib -MMD -std=gnu++11 -fno-exceptions -fstrict-volatile-bitfields
+
+compiler.S.cmd=xtensa-esp32-elf-gcc
+compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
+
+compiler.c.elf.cmd=xtensa-esp32-elf-gcc
+compiler.c.elf.flags="-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -nostdlib -T esp32_out.ld -T esp32.common.ld -T esp32.rom.ld -T esp32.peripherals.ld -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority
+compiler.c.elf.libs=-lgcc -lc -lm -lhal -lcore -lnet80211 -lphy -lrtc -lpp -lwpa -lsmartconfig -lbtdm_app -lbt -ldriver -lesp32 -lcrypto -lexpat -lfreertos -ljson -llog -llwip -lmbedtls -lnghttp -lnvs_flash -lspi_flash -ltcpip_adapter
+
+compiler.as.cmd=xtensa-esp32-elf-as
+
+compiler.ar.cmd=xtensa-esp32-elf-ar
+compiler.ar.flags=cru
+
+compiler.elf2hex.cmd=esptool.py
+compiler.elf2hex.flags=
+
+compiler.size.cmd=xtensa-esp32-elf-size
+
+compiler.python.cmd=python
+compiler.python.cmd.windows=python.exe
+
+# This can be overriden in boards.txt
+build.extra_flags=-DESP32
+
+# These can be overridden in platform.local.txt
+compiler.c.extra_flags=
+compiler.c.elf.extra_flags=
+compiler.S.extra_flags=
+compiler.cpp.extra_flags=
+compiler.ar.extra_flags=
+compiler.objcopy.eep.extra_flags=
+compiler.elf2hex.extra_flags=
+
+## Compile c files
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {compiler.c.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+
+## Compile c++ files
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpreprocessor.flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {compiler.cpp.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+
+## Compile S files
+recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {compiler.c.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+
+## Create archives
+recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{build.path}/arduino.ar" "{object_file}"
+
+## Combine gc-sections, archives, and objects
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{build.path}/arduino.ar" {compiler.c.elf.libs} -Wl,--end-group -o "{build.path}/{build.project_name}.elf"
+
+## Create eeprom
+recipe.objcopy.eep.pattern=
+
+## Create hex
+recipe.objcopy.hex.pattern="{compiler.python.cmd}" "{runtime.platform.path}/tools/esptool.py" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+
+## Save hex
+recipe.output.tmp_file={build.project_name}.bin
+recipe.output.save_file={build.project_name}.{build.variant}.bin
+
+## Compute size
+recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
+recipe.size.regex=^(?:\.iram0\.text|\.dram0\.text|\.flash\.text|\.dram0\.data|\.flash\.rodata|)\s+([0-9]+).*
+recipe.size.regex.data=^(?:\.dram0\.data|\.flash\.rodata|\.dram0\.bss)\s+([0-9]+).*
+
+# ------------------------------
+
+tools.esptool.cmd=python
+tools.esptool.cmd.windows=python.exe
+tools.esptool.path={runtime.platform.path}/tools/esptool.py
+tools.esptool.network_cmd=python
+tools.esptool.network_cmd.windows=python.exe
+
+tools.esptool.upload.protocol=esp32
+tools.esptool.upload.params.verbose=
+tools.esptool.upload.params.quiet=
+tools.esptool.upload.pattern="{cmd}" "{path}" --chip esp32 --port "{serial.port}" --baud {upload.speed} write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x4000 "{runtime.platform.path}/tools/sdk/bin/partitions_singleapp.bin" 0x10000 "{build.path}/{build.project_name}.bin"

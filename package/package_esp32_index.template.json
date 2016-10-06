@@ -1,0 +1,76 @@
+{
+  "packages": [
+    {
+      "name": "esp32",
+      "maintainer": "Espressif Systems",
+      "websiteURL": "https://github.com/espressif/esp32-arduino",
+      "email": "hristo@espressif.com",
+      "help": {
+        "online": "http://esp32.com"
+      },
+      "platforms": [
+        {
+          "name": "esp32",
+          "architecture": "esp32",
+          "version": "",
+          "category": "ESP32",
+          "url": "",
+          "archiveFileName": "",
+          "checksum": "",
+          "size": "",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-59"
+            }
+          ]
+        }
+      ],
+      "tools": [
+        {
+          "name": "xtensa-esp32-elf-gcc",
+          "version": "1.22.0-59",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-59.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-59.zip",
+              "checksum": "SHA-256:10476b9c11a7a90f40883413ddfb409f505b20692e316c4e597c4c175b4be09c",
+              "size": "153527527"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-59.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-59.tar.gz",
+              "checksum": "SHA-256:0cf150193997bd1355e0f49d3d49711730035257bc1aee1eaaad619e56b9e4e6",
+              "size": "35385382"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-59.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-59.tar.gz",
+              "checksum": "SHA-256:46f057fbd8b320889a26167daf325038912096d09940b2a95489db92431473b7",
+              "size": "30262903"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
+              "checksum": "SHA-256:b24817819f0078fb05895a640e806e0aca9aa96b47b80d2390ac8e2d9ddc955a",
+              "size": "32734156"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
