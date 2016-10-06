@@ -286,29 +286,21 @@ void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *ca
  * */
 #include "nvs_flash.h"
 
-void bootWiFi()
+void initWiFi()
 {
-    esp_err_t err;
-    wifi_init_config_t cfg;
-    wifi_mode_t mode = WIFI_MODE_NULL;
-    bool auto_connect = false;
-
-    err = nvs_flash_init();
-    if (err != ESP_OK) {
-        log_e("nvs_flash_init fail %d", err);
-        return;
-    }
-
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    nvs_flash_init();
     system_init();
     tcpip_adapter_init();
     esp_event_loop_init(WiFiGenericClass::_eventCallback, NULL);
+    esp_wifi_init(&cfg);
+}
 
-    cfg.event_handler = &esp_event_send;
-    err = esp_wifi_init(&cfg);
-    if (err != ESP_OK) {
-        log_e("esp_wifi_init fail %d\n", err);
-        return;
-    }
+void startWiFi()
+{
+    esp_err_t err;
+    wifi_mode_t mode = WIFI_MODE_NULL;
+    bool auto_connect = false;
 
     err = esp_wifi_start();
     if (err != ESP_OK) {
