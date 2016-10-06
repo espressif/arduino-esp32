@@ -30,6 +30,6 @@ extern "C" void app_main()
 {
     init();
     initVariant();
-    xTaskCreatePinnedToCore(loopTask, "loopTask", 4096, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(loopTask, "loopTask", 4096, NULL, 1, NULL, 1);
 }
 
