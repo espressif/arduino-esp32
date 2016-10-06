@@ -170,9 +170,11 @@ void uartWrite(uart_t* uart, uint8_t c)
 
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
 {
-    while(len && uart->dev->status.rxfifo_cnt < 0x7F) {
-        uart->dev->fifo.rw_byte = *data++;
-        len--;
+    while(len) {
+        while(len && uart->dev->status.txfifo_cnt < 0x7F) {
+            uart->dev->fifo.rw_byte = *data++;
+            len--;
+        }
     }
 }
 
@@ -189,8 +191,8 @@ void uartFlush(uart_t* uart)
     }
 
     if(uart->txEnabled) {
-        tmp |= UART_TXFIFO_RST;
         while(uart->dev->status.txfifo_cnt);
+        tmp |= UART_TXFIFO_RST;
     }
 
     uart->dev->conf0.val |= (tmp);
