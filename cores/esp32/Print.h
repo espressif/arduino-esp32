@@ -72,7 +72,7 @@ public:
     }
 
     size_t printf(const char * format, ...)  __attribute__ ((format (printf, 2, 3)));
-    size_t print(const __FlashStringHelper *);
+    //size_t print(const __FlashStringHelper *);
     size_t print(const String &);
     size_t print(const char[]);
     size_t print(char);
@@ -84,7 +84,7 @@ public:
     size_t print(double, int = 2);
     size_t print(const Printable&);
 
-    size_t println(const __FlashStringHelper *);
+    //size_t println(const __FlashStringHelper *);
     size_t println(const String &s);
     size_t println(const char[]);
     size_t println(char);
