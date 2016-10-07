@@ -22,7 +22,8 @@
 typedef char __FlashStringHelper;
 #define PROGMEM
 #define PSTR(s) (s)
-#define F(string_literal) (reinterpret_cast<const __FlashStringHelper *>(PSTR(string_literal)))
+#define FPSTR(pstr_pointer) ((const char *)(pstr_pointer))
+#define F(string_literal) (string_literal)
 
 #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
 #define pgm_read_word(addr) (*(const unsigned short *)(addr))

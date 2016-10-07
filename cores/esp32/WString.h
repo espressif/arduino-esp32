@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-//#include <pgmspace.h>
+#include <pgmspace.h>
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -34,9 +34,7 @@ class StringSumHelper;
 
 // an abstract class used as a means to proide a unique pointer type
 // but really has no body
-class __FlashStringHelper;
-#define FPSTR(pstr_pointer) (reinterpret_cast<const __FlashStringHelper *>(pstr_pointer))
-#define F(string_literal) (FPSTR(PSTR(string_literal)))
+//class __FlashStringHelper;
 
 // The string class
 class String
