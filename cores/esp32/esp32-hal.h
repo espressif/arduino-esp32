@@ -30,6 +30,7 @@ extern "C" {
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+#include <math.h>
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
 #define NOP() asm volatile ("nop")
