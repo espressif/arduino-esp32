@@ -14,12 +14,12 @@ void WiFiEvent(WiFiEvent_t event)
     Serial.printf("[WiFi-event] event: %d\n", event);
 
     switch(event) {
-    case WIFI_EVENT_STAMODE_GOT_IP:
+    case SYSTEM_EVENT_STA_GOT_IP:
         Serial.println("WiFi connected");
         Serial.println("IP address: ");
         Serial.println(WiFi.localIP());
         break;
-    case WIFI_EVENT_STAMODE_DISCONNECTED:
+    case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println("WiFi lost connection");
         break;
     }
