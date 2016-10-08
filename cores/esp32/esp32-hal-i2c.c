@@ -63,10 +63,10 @@ enum {
 /*
  * index     - command index (0 to 15)
  * op_code   - is the command
+ * byte_num  - This register is to store the amounts of data that is read and written. byte_num in RSTART, STOP, END is null.
  * ack_val   - Each data byte is terminated by an ACK bit used to set the bit level.
  * ack_exp   - This bit is to set an expected ACK value for the transmitter.
  * ack_check - This bit is to decide whether the transmitter checks ACK bit. 1 means yes and 0 means no.
- * byte_num  - This register is to store the amounts of data that is read and written. byte_num in RSTART, STOP, END is null.
  * */
 void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
@@ -80,6 +80,7 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
 
 int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
 {
+    int i;
     uint8_t index = 0;
     uint8_t dataLen = len + (addr_10bit?2:1);
     address = (address << 1);
@@ -87,8 +88,11 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
     while(dataLen) {
         uint8_t willSend = (dataLen > 32)?32:dataLen;
         uint8_t dataSend = willSend;
-        i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);//START
-        i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
+
+        //CMD START
+        i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
+
+        //CMD WRITE(ADDRESS + DATA)
         if(!index) {
             i2c->dev->fifo_data.data = address & 0xFF;
             dataSend--;
@@ -97,27 +101,56 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
                 dataSend--;
             }
         }
-        int i = 0;
+        i = 0;
         while(i<dataSend) {
             i++;
             i2c->dev->fifo_data.data = data[index++];
         }
+        i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
         dataLen -= willSend;
+
+        //CMD STOP or CMD END if there is more data
         if(dataLen) {
             i2cSetCmd(i2c, 2, I2C_CMD_END, 0, false, false, false);
         } else if(sendStop) {
-            i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, true);
+            i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
         }
+
+        //Clear Interrupts
+        i2c->dev->int_clr.val = 0xFFFFFFFF;
+
+        //START Transmission
         i2c->dev->ctr.trans_start = 1;
-        while(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || (!i2c->dev->int_raw.ack_err && !i2c->dev->command[2].done));
-        if(!i2c->dev->command[2].done) {
-            log_e("Ack Error");
-            return -1;
+
+        //WAIT Transmission
+        while(1) {
+            if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[2].done)) {
+                continue;
+            } else if(i2c->dev->int_raw.ack_err || i2c->dev->int_raw.time_out || i2c->dev->int_raw.arbitration_lost) {
+                break;
+            } else if(i2c->dev->command[2].done) {
+                break;
+            }
         }
-        if(i2c->dev->status_reg.arb_lost || i2c->dev->status_reg.time_out) {
-            log_e("Bus Fail");
-            return -1;
+
+        //Bus failed (maybe check for this while waiting?
+        if(i2c->dev->int_raw.arbitration_lost) {
+            //log_e("Bus Fail! Addr: %x", address >> 1);
+            return 4;
         }
+
+        //Bus timeout
+        if(i2c->dev->int_raw.time_out) {
+            //log_e("Bus Timeout! Addr: %x", address >> 1);
+            return 3;
+        }
+
+        //Transmission did not finish and ACK_ERR is set
+        if(i2c->dev->int_raw.ack_err) {
+            //log_e("Ack Error! Addr: %x", address >> 1);
+            return 1;
+        }
+
     }
     return 0;
 }
@@ -130,12 +163,16 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
     uint8_t cmdIdx;
     uint8_t willRead;
 
-    i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);//START
-    i2cSetCmd(i2c, 1, I2C_CMD_WRITE, addrLen, false, false, true);
+    //CMD START
+    i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
+
+    //CMD WRITE ADDRESS
     i2c->dev->fifo_data.data = address & 0xFF;
     if(addr_10bit) {
         i2c->dev->fifo_data.data = (address >> 8) & 0xFF;
     }
+    i2cSetCmd(i2c, 1, I2C_CMD_WRITE, addrLen, false, false, true);
+
     while(len) {
         cmdIdx = (index)?0:2;
         willRead = (len > 32)?32:(len-1);
@@ -150,14 +187,38 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
             }
         }
 
+        //Clear Interrupts
+        i2c->dev->int_clr.val = 0xFFFFFFFF;
+
+        //START Transmission
         i2c->dev->ctr.trans_start = 1;
-        while(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || (!i2c->dev->int_raw.ack_err && !i2c->dev->command[cmdIdx-1].done));
-        if(!i2c->dev->command[cmdIdx-1].done) {
-            log_e("Ack Error");
-            return -1;
+
+        //WAIT Transmission
+        while(1) {
+            if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[cmdIdx-1].done)) {
+                continue;
+            } else if(i2c->dev->int_raw.ack_err || i2c->dev->int_raw.time_out || i2c->dev->int_raw.arbitration_lost) {
+                break;
+            } else if(i2c->dev->command[cmdIdx-1].done) {
+                break;
+            }
         }
-        if(i2c->dev->status_reg.arb_lost || i2c->dev->status_reg.time_out) {
-            log_e("Bus Fail");
+
+        //Bus failed (maybe check for this while waiting?
+        if(i2c->dev->int_raw.arbitration_lost) {
+            //log_e("Bus Fail! Addr: %x", address >> 1);
+            return -4;
+        }
+
+        //Bus timeout
+        if(i2c->dev->int_raw.time_out) {
+            //log_e("Bus Timeout! Addr: %x", address >> 1);
+            return -3;
+        }
+
+        //Transmission did not finish and ACK_ERR is set
+        if(i2c->dev->int_raw.ack_err) {
+            //log_e("Ack Error! Addr: %x", address >> 1);
             return -1;
         }
         int i = 0;
@@ -192,8 +253,8 @@ void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     i2c->dev->scl_stop_hold.time   = 50;
     i2c->dev->scl_stop_setup.time = 50;
 
-    i2c->dev->sda_hold.time     = 40;
-    i2c->dev->sda_sample.time = 40;
+    i2c->dev->sda_hold.time     = 25;
+    i2c->dev->sda_sample.time = 25;
 }
 
 uint32_t i2cGetFrequency(i2c_t * i2c)
@@ -205,7 +266,6 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
  * mode          - 0 = Slave, 1 = Master
  * slave_addr    - I2C Address
  * addr_10bit_en - enable slave 10bit address mode.
- * clk_speed     - SCL Frequency
  * */
 
 i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
@@ -226,16 +286,16 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
 
-    i2c->dev->ctr.rx_lsb_first = 0 ;
-    i2c->dev->ctr.tx_lsb_first = 0 ;
+    i2c->dev->ctr.val = 0;
     i2c->dev->ctr.ms_mode = (slave_addr == 0);
     i2c->dev->ctr.sda_force_out = 1 ;
     i2c->dev->ctr.scl_force_out = 1 ;
-    i2c->dev->ctr.sample_scl_level = 0 ;
+    i2c->dev->ctr.clk_en = 1;
 
     i2c->dev->timeout.tout = 2000;
     i2c->dev->fifo_conf.nonfifo_en = 0;
 
+    i2c->dev->slave_addr.val = 0;
     if (slave_addr) {
         i2c->dev->slave_addr.addr = slave_addr;
         i2c->dev->slave_addr.en_10bit = addr_10bit_en;
