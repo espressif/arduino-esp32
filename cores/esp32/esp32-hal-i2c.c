@@ -89,6 +89,8 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
         uint8_t willSend = (dataLen > 32)?32:dataLen;
         uint8_t dataSend = willSend;
 
+        i2cResetFiFo(i2c);
+
         //CMD START
         i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
 
@@ -124,31 +126,29 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
 
         //WAIT Transmission
         while(1) {
+            //Bus failed (maybe check for this while waiting?
+            if(i2c->dev->int_raw.arbitration_lost) {
+                //log_e("Bus Fail! Addr: %x", address >> 1);
+                return 4;
+            }
+
+            //Bus timeout
+            if(i2c->dev->int_raw.time_out) {
+                //log_e("Bus Timeout! Addr: %x", address >> 1);
+                return 3;
+            }
+
+            //Transmission did not finish and ACK_ERR is set
+            if(i2c->dev->int_raw.ack_err) {
+                //log_e("Ack Error! Addr: %x", address >> 1);
+                return 1;
+            }
+
             if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[2].done)) {
                 continue;
-            } else if(i2c->dev->int_raw.ack_err || i2c->dev->int_raw.time_out || i2c->dev->int_raw.arbitration_lost) {
-                break;
             } else if(i2c->dev->command[2].done) {
                 break;
             }
-        }
-
-        //Bus failed (maybe check for this while waiting?
-        if(i2c->dev->int_raw.arbitration_lost) {
-            //log_e("Bus Fail! Addr: %x", address >> 1);
-            return 4;
-        }
-
-        //Bus timeout
-        if(i2c->dev->int_raw.time_out) {
-            //log_e("Bus Timeout! Addr: %x", address >> 1);
-            return 3;
-        }
-
-        //Transmission did not finish and ACK_ERR is set
-        if(i2c->dev->int_raw.ack_err) {
-            //log_e("Ack Error! Addr: %x", address >> 1);
-            return 1;
         }
 
     }
@@ -163,6 +163,8 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
     uint8_t cmdIdx;
     uint8_t willRead;
 
+    i2cResetFiFo(i2c);
+
     //CMD START
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
 
@@ -176,6 +178,10 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
     while(len) {
         cmdIdx = (index)?0:2;
         willRead = (len > 32)?32:(len-1);
+        if(cmdIdx){
+            i2cResetFiFo(i2c);
+        }
+
         i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, willRead, false, false, false);
         if((len - willRead) > 1) {
             i2cSetCmd(i2c, cmdIdx++, I2C_CMD_END, 0, false, false, false);
@@ -195,32 +201,30 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
 
         //WAIT Transmission
         while(1) {
+            //Bus failed (maybe check for this while waiting?
+            if(i2c->dev->int_raw.arbitration_lost) {
+                //log_e("Bus Fail! Addr: %x", address >> 1);
+                return -4;
+            }
+
+            //Bus timeout
+            if(i2c->dev->int_raw.time_out) {
+                //log_e("Bus Timeout! Addr: %x", address >> 1);
+                return -3;
+            }
+
+            //Transmission did not finish and ACK_ERR is set
+            if(i2c->dev->int_raw.ack_err) {
+                //log_e("Ack Error! Addr: %x", address >> 1);
+                return -1;
+            }
             if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[cmdIdx-1].done)) {
                 continue;
-            } else if(i2c->dev->int_raw.ack_err || i2c->dev->int_raw.time_out || i2c->dev->int_raw.arbitration_lost) {
-                break;
             } else if(i2c->dev->command[cmdIdx-1].done) {
                 break;
             }
         }
 
-        //Bus failed (maybe check for this while waiting?
-        if(i2c->dev->int_raw.arbitration_lost) {
-            //log_e("Bus Fail! Addr: %x", address >> 1);
-            return -4;
-        }
-
-        //Bus timeout
-        if(i2c->dev->int_raw.time_out) {
-            //log_e("Bus Timeout! Addr: %x", address >> 1);
-            return -3;
-        }
-
-        //Transmission did not finish and ACK_ERR is set
-        if(i2c->dev->int_raw.ack_err) {
-            //log_e("Ack Error! Addr: %x", address >> 1);
-            return -1;
-        }
         int i = 0;
         while(i<willRead) {
             i++;
