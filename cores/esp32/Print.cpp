@@ -60,7 +60,9 @@ size_t Print::printf(const char *format, ...)
     len = vsnprintf(temp, len+1, format, arg);
     write((uint8_t*)temp, len);
     va_end(arg);
-    delete[] temp;
+    if(len > 64){
+        delete[] temp;
+    }
     return len;
 }
 /*
