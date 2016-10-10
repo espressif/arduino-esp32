@@ -26,7 +26,7 @@
 
 void i2cAttachSCL(i2c_t * i2c, int8_t scl)
 {
-    pinMode(scl, OUTPUT_OPEN_DRAIN);
+    pinMode(scl, OUTPUT);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
 }
