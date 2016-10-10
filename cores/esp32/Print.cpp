@@ -46,13 +46,16 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 
 size_t Print::printf(const char *format, ...)
 {
-    char * temp;
+    char loc_buf[64];
+    char * temp = loc_buf;
     va_list arg;
     va_start(arg, format);
     size_t len = vsnprintf(NULL, 0, format, arg);
-    temp = new char[len+1];
-    if(temp == NULL) {
-        return 0;
+    if(len > 64){
+        temp = new char[len+1];
+        if(temp == NULL) {
+            return 0;
+        }
     }
     len = vsnprintf(temp, len+1, format, arg);
     write((uint8_t*)temp, len);
