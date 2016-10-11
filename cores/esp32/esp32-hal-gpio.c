@@ -187,16 +187,23 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
 extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
 {
     static bool interrupt_initialized = false;
+    static int core_id = 0;
+    
     if(!interrupt_initialized) {
         interrupt_initialized = true;
+        core_id = xPortGetCoreID();
         ESP_INTR_DISABLE(ETS_GPIO_INUM);
-        intr_matrix_set(xPortGetCoreID(), ETS_GPIO_INTR_SOURCE, ETS_GPIO_INUM);
+        intr_matrix_set(core_id, ETS_GPIO_INTR_SOURCE, ETS_GPIO_INUM);
         xt_set_interrupt_handler(ETS_GPIO_INUM, &__onPinInterrupt, NULL);
         ESP_INTR_ENABLE(ETS_GPIO_INUM);
     }
     __pinInterruptHandlers[pin] = userFunc;
     ESP_INTR_DISABLE(ETS_GPIO_INUM);
-    GPIO.pin[pin].int_ena = 1;
+    if(core_id) { //APP_CPU
+        GPIO.pin[pin].int_ena = 1;
+    } else { //PRO_CPU
+        GPIO.pin[pin].int_ena = 4;
+    }
     GPIO.pin[pin].int_type = intr_type;
     ESP_INTR_ENABLE(ETS_GPIO_INUM);
 }
