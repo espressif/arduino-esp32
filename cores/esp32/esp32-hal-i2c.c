@@ -13,13 +13,17 @@
 // limitations under the License.
 
 #include "esp32-hal-i2c.h"
+#include "esp32-hal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "rom/ets_sys.h"
 #include "soc/i2c_reg.h"
+#include "soc/i2c_struct.h"
 #include "soc/dport_reg.h"
 
+//#define I2C_DEV(i)   (volatile i2c_dev_t *)((i)?DR_REG_I2C1_EXT_BASE:DR_REG_I2C_EXT_BASE)
+//#define I2C_DEV(i)   ((i2c_dev_t *)(REG_I2C_BASE(i)))
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
 #define I2C_SDA_IDX(p) ((p==0)?I2CEXT0_SDA_OUT_IDX:((p==1)?I2CEXT1_SDA_OUT_IDX:0))
 
@@ -46,52 +50,56 @@ static i2c_t _i2c_bus_array[2] = {
     {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE), NULL, 1}
 };
 
-void i2cAttachSCL(i2c_t * i2c, int8_t scl)
+i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
 {
     if(i2c == NULL){
-        return;
+        return I2C_ERROR_DEV;
     }
     I2C_MUTEX_LOCK();
     pinMode(scl, OUTPUT);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
     I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
 }
 
-void i2cDetachSCL(i2c_t * i2c, int8_t scl)
+i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
 {
     if(i2c == NULL){
-        return;
+        return I2C_ERROR_DEV;
     }
     I2C_MUTEX_LOCK();
     pinMatrixOutDetach(scl, false, false);
     pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
     pinMode(scl, INPUT);
     I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
 }
 
-void i2cAttachSDA(i2c_t * i2c, int8_t sda)
+i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
 {
     if(i2c == NULL){
-        return;
+        return I2C_ERROR_DEV;
     }
     I2C_MUTEX_LOCK();
     pinMode(sda, OUTPUT_OPEN_DRAIN);
     pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
     pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
     I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
 }
 
-void i2cDetachSDA(i2c_t * i2c, int8_t sda)
+i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
 {
     if(i2c == NULL){
-        return;
+        return I2C_ERROR_DEV;
     }
     I2C_MUTEX_LOCK();
     pinMatrixOutDetach(sda, false, false);
     pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
     pinMode(sda, INPUT);
     I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
 }
 
 /*
@@ -120,7 +128,7 @@ void i2cResetFiFo(i2c_t * i2c)
     i2c->dev->fifo_conf.rx_fifo_rst = 0;
 }
 
-int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
 {
     int i;
     uint8_t index = 0;
@@ -128,7 +136,7 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
     address = (address << 1);
 
     if(i2c == NULL){
-        return 4;
+        return I2C_ERROR_DEV;
     }
 
     I2C_MUTEX_LOCK();
@@ -178,21 +186,21 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return 4;
+                return I2C_ERROR_BUS;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
                 //log_e("Bus Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return 3;
+                return I2C_ERROR_TIMEOUT;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
                 //log_e("Ack Error! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return 1;
+                return I2C_ERROR_ACK;
             }
 
             if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[2].done)) {
@@ -204,10 +212,10 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
 
     }
     I2C_MUTEX_UNLOCK();
-    return 0;
+    return I2C_ERROR_OK;
 }
 
-int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
 {
     address = (address << 1) | 1;
     uint8_t addrLen = (addr_10bit?2:1);
@@ -216,7 +224,7 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
     uint8_t willRead;
 
     if(i2c == NULL){
-        return 4;
+        return I2C_ERROR_DEV;
     }
 
     I2C_MUTEX_LOCK();
@@ -263,21 +271,21 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return -4;
+                return I2C_ERROR_BUS;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
                 //log_e("Bus Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return -3;
+                return I2C_ERROR_TIMEOUT;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
                 //log_e("Ack Error! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
-                return -1;
+                return I2C_ERROR_ACK;
             }
             if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[cmdIdx-1].done)) {
                 continue;
@@ -294,15 +302,15 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
         len -= willRead;
     }
     I2C_MUTEX_UNLOCK();
-    return 0;
+    return I2C_ERROR_OK;
 }
 
-void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
+i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 {
     uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
 
     if(i2c == NULL){
-        return;
+        return I2C_ERROR_DEV;
     }
 
     I2C_MUTEX_LOCK();
@@ -318,6 +326,7 @@ void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     i2c->dev->sda_hold.time     = 25;
     i2c->dev->sda_sample.time = 25;
     I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
 }
 
 uint32_t i2cGetFrequency(i2c_t * i2c)
