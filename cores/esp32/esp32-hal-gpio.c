@@ -190,13 +190,14 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
     if(!interrupt_initialized) {
         interrupt_initialized = true;
         ESP_INTR_DISABLE(ETS_GPIO_INUM);
-        intr_matrix_set(PRO_CPU_NUM, ETS_GPIO_INTR_SOURCE, ETS_GPIO_INUM);
+        intr_matrix_set(xPortGetCoreID(), ETS_GPIO_INTR_SOURCE, ETS_GPIO_INUM);
         xt_set_interrupt_handler(ETS_GPIO_INUM, &__onPinInterrupt, NULL);
         ESP_INTR_ENABLE(ETS_GPIO_INUM);
     }
     __pinInterruptHandlers[pin] = userFunc;
     ESP_INTR_DISABLE(ETS_GPIO_INUM);
-    GPIO.pin[pin].val = (GPIO.pin[pin].val & ~((GPIO_PIN0_INT_ENA << GPIO_PIN0_INT_ENA_S) | (GPIO_PIN0_INT_TYPE << GPIO_PIN0_INT_TYPE_S))) | (((uint32_t)0x4 << GPIO_PIN0_INT_ENA_S) | ((uint32_t)intr_type << GPIO_PIN0_INT_TYPE_S));
+    GPIO.pin[pin].int_ena = 1;
+    GPIO.pin[pin].int_type = intr_type;
     ESP_INTR_ENABLE(ETS_GPIO_INUM);
 }
 
@@ -204,7 +205,8 @@ extern void __detachInterrupt(uint8_t pin)
 {
     __pinInterruptHandlers[pin] = NULL;
     ESP_INTR_DISABLE(ETS_GPIO_INUM);
-    GPIO.pin[pin].val = (GPIO.pin[pin].val & ~((GPIO_PIN0_INT_ENA << GPIO_PIN0_INT_ENA_S) | (GPIO_PIN0_INT_TYPE << GPIO_PIN0_INT_TYPE_S)));
+    GPIO.pin[pin].int_ena = 0;
+    GPIO.pin[pin].int_type = 0;
     ESP_INTR_ENABLE(ETS_GPIO_INUM);
 }
 
