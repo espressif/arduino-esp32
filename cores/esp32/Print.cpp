@@ -49,9 +49,12 @@ size_t Print::printf(const char *format, ...)
     char loc_buf[64];
     char * temp = loc_buf;
     va_list arg;
+    va_list copy;
     va_start(arg, format);
+    va_copy(copy, arg);
     size_t len = vsnprintf(NULL, 0, format, arg);
-    if(len > 64){
+    va_end(copy);
+    if(len >= sizeof(loc_buf)){
         temp = new char[len+1];
         if(temp == NULL) {
             return 0;
