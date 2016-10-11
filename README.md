@@ -36,3 +36,4 @@ python get.py
 - Restart Arduino
 
 ![Pin Functions](doc/esp32_pinmap.png)
+![Pin Functions](doc/PinHeaders.jpg)
