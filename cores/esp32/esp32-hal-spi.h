@@ -19,8 +19,8 @@
 extern "C" {
 #endif
 
-#include "esp32-hal.h"
-#include "soc/spi_struct.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define SPI_HAS_TRANSACTION
 
@@ -51,10 +51,8 @@ extern "C" {
 #define SPI_LSBFIRST 0
 #define SPI_MSBFIRST 1
 
-typedef struct {
-    spi_dev_t * dev;
-    uint8_t num;
-} spi_t;
+struct spi_struct_t;
+typedef struct spi_struct_t spi_t;
 
 spi_t * spiStartBus(uint8_t spi_num, uint32_t freq, uint8_t dataMode, uint8_t bitOrder);
 void spiStopBus(spi_t * spi);
