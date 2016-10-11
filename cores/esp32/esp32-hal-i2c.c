@@ -15,42 +15,20 @@
 #include "esp32-hal-i2c.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "rom/ets_sys.h"
 #include "soc/i2c_reg.h"
 #include "soc/dport_reg.h"
 
-#define I2C_DEV(i)   (volatile i2c_dev_t *)((i)?DR_REG_I2C1_EXT_BASE:DR_REG_I2C_EXT_BASE)
-//#define I2C_DEV(i)   ((i2c_dev_t *)(REG_I2C_BASE(i)))
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
 #define I2C_SDA_IDX(p) ((p==0)?I2CEXT0_SDA_OUT_IDX:((p==1)?I2CEXT1_SDA_OUT_IDX:0))
 
-void i2cAttachSCL(i2c_t * i2c, int8_t scl)
-{
-    pinMode(scl, OUTPUT);
-    pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
-    pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
-}
 
-void i2cDetachSCL(i2c_t * i2c, int8_t scl)
-{
-    pinMatrixOutDetach(scl, false, false);
-    pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
-    pinMode(scl, INPUT);
-}
-
-void i2cAttachSDA(i2c_t * i2c, int8_t sda)
-{
-    pinMode(sda, OUTPUT_OPEN_DRAIN);
-    pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
-    pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
-}
-
-void i2cDetachSDA(i2c_t * i2c, int8_t sda)
-{
-    pinMatrixOutDetach(sda, false, false);
-    pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
-    pinMode(sda, INPUT);
-}
+struct i2c_struct_t {
+    i2c_dev_t * dev;
+    xSemaphoreHandle lock;
+    uint8_t num;
+};
 
 enum {
     I2C_CMD_RSTART,
@@ -59,6 +37,62 @@ enum {
     I2C_CMD_STOP,
     I2C_CMD_END
 };
+
+#define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTake(i2c->lock, portMAX_DELAY) != pdPASS)
+#define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
+
+static i2c_t _i2c_bus_array[2] = {
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE), NULL, 0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE), NULL, 1}
+};
+
+void i2cAttachSCL(i2c_t * i2c, int8_t scl)
+{
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    pinMode(scl, OUTPUT);
+    pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
+    pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
+    I2C_MUTEX_UNLOCK();
+}
+
+void i2cDetachSCL(i2c_t * i2c, int8_t scl)
+{
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    pinMatrixOutDetach(scl, false, false);
+    pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
+    pinMode(scl, INPUT);
+    I2C_MUTEX_UNLOCK();
+}
+
+void i2cAttachSDA(i2c_t * i2c, int8_t sda)
+{
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    pinMode(sda, OUTPUT_OPEN_DRAIN);
+    pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
+    pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
+    I2C_MUTEX_UNLOCK();
+}
+
+void i2cDetachSDA(i2c_t * i2c, int8_t sda)
+{
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    pinMatrixOutDetach(sda, false, false);
+    pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
+    pinMode(sda, INPUT);
+    I2C_MUTEX_UNLOCK();
+}
 
 /*
  * index     - command index (0 to 15)
@@ -78,12 +112,26 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
     i2c->dev->command[index].op_code = op_code;
 }
 
+void i2cResetFiFo(i2c_t * i2c)
+{
+    i2c->dev->fifo_conf.tx_fifo_rst = 1;
+    i2c->dev->fifo_conf.tx_fifo_rst = 0;
+    i2c->dev->fifo_conf.rx_fifo_rst = 1;
+    i2c->dev->fifo_conf.rx_fifo_rst = 0;
+}
+
 int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
 {
     int i;
     uint8_t index = 0;
     uint8_t dataLen = len + (addr_10bit?2:1);
     address = (address << 1);
+
+    if(i2c == NULL){
+        return 4;
+    }
+
+    I2C_MUTEX_LOCK();
 
     while(dataLen) {
         uint8_t willSend = (dataLen > 32)?32:dataLen;
@@ -129,18 +177,21 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return 4;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
                 //log_e("Bus Timeout! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return 3;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
                 //log_e("Ack Error! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return 1;
             }
 
@@ -152,6 +203,7 @@ int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uin
         }
 
     }
+    I2C_MUTEX_UNLOCK();
     return 0;
 }
 
@@ -162,6 +214,12 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
     uint8_t index = 0;
     uint8_t cmdIdx;
     uint8_t willRead;
+
+    if(i2c == NULL){
+        return 4;
+    }
+
+    I2C_MUTEX_LOCK();
 
     i2cResetFiFo(i2c);
 
@@ -204,18 +262,21 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return -4;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
                 //log_e("Bus Timeout! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return -3;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
                 //log_e("Ack Error! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
                 return -1;
             }
             if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[cmdIdx-1].done)) {
@@ -232,22 +293,19 @@ int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint
         }
         len -= willRead;
     }
+    I2C_MUTEX_UNLOCK();
     return 0;
-}
-
-void i2cResetFiFo(i2c_t * i2c)
-{
-    //TX FIFO
-    i2c->dev->fifo_conf.tx_fifo_rst = 1;
-    i2c->dev->fifo_conf.tx_fifo_rst = 0;
-    //RX FIFO
-    i2c->dev->fifo_conf.rx_fifo_rst = 1;
-    i2c->dev->fifo_conf.rx_fifo_rst = 0;
 }
 
 void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 {
     uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
+
+    if(i2c == NULL){
+        return;
+    }
+
+    I2C_MUTEX_LOCK();
     i2c->dev->scl_low_period.scl_low_period = period;
     i2c->dev->scl_high_period.period = period;
 
@@ -259,10 +317,15 @@ void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 
     i2c->dev->sda_hold.time     = 25;
     i2c->dev->sda_sample.time = 25;
+    I2C_MUTEX_UNLOCK();
 }
 
 uint32_t i2cGetFrequency(i2c_t * i2c)
 {
+    if(i2c == NULL){
+        return 0;
+    }
+
     return APB_CLK_FREQ/(i2c->dev->scl_low_period.scl_low_period+i2c->dev->scl_high_period.period);
 }
 
@@ -274,18 +337,23 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
 
 i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
 {
-    i2c_t* i2c = (i2c_t*) malloc(sizeof(i2c_t));
-    if(i2c == 0) {
+    if(i2c_num > 1){
         return NULL;
     }
 
-    i2c->num = i2c_num;
-    i2c->dev = I2C_DEV(i2c_num);
+    i2c_t * i2c = &_i2c_bus_array[i2c_num];
 
-    if(i2c->num == 0) {
+    if(i2c->lock == NULL){
+        i2c->lock = xSemaphoreCreateMutex();
+        if(i2c->lock == NULL) {
+            return NULL;
+        }
+    }
+
+    if(i2c_num == 0) {
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN);
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);
-    } else if(i2c->num == 1) {
+    } else {
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }

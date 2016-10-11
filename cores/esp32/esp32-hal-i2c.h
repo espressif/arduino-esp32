@@ -22,17 +22,13 @@ extern "C" {
 #include "esp32-hal.h"
 #include "soc/i2c_struct.h"
 
-typedef struct {
-    i2c_dev_t * dev;
-    uint8_t num;
-} i2c_t;
+struct i2c_struct_t;
+typedef struct i2c_struct_t i2c_t;
 
 i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en);
 
 void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
-
-void i2cResetFiFo(i2c_t * i2c);
 
 void i2cAttachSCL(i2c_t * i2c, int8_t scl);
 void i2cDetachSCL(i2c_t * i2c, int8_t scl);
