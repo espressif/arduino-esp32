@@ -90,7 +90,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 
         pinMode(uart->rxPin, INPUT);
         pinMatrixInAttach(uart->rxPin, UART_RXD_IDX(uart->num), uart->inverted);
-        intr_matrix_set(PRO_CPU_NUM, UART_INTR_SOURCE(uart->num), UART_INUM(uart->num));
+        intr_matrix_set(APP_CPU_NUM, UART_INTR_SOURCE(uart->num), UART_INUM(uart->num));
         xt_set_interrupt_handler(UART_INUM(uart->num), _uart_isr, uart);
         ESP_INTR_ENABLE(UART_INUM(uart->num));
         conf1 = (112 << UART_RXFIFO_FULL_THRHD_S) | (0x02 << UART_RX_TOUT_THRHD_S) | UART_RX_TOUT_EN;
