@@ -69,10 +69,8 @@ void spiAttachSCK(spi_t * spi, int8_t sck)
             sck = 6;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMode(sck, OUTPUT);
     pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiAttachMISO(spi_t * spi, int8_t miso)
@@ -109,10 +107,8 @@ void spiAttachMOSI(spi_t * spi, int8_t mosi)
             mosi = 8;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMode(mosi, OUTPUT);
     pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiDetachSCK(spi_t * spi, int8_t sck)
@@ -129,10 +125,8 @@ void spiDetachSCK(spi_t * spi, int8_t sck)
             sck = 6;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMatrixOutDetach(sck, false, false);
     pinMode(sck, INPUT);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiDetachMISO(spi_t * spi, int8_t miso)
@@ -149,10 +143,8 @@ void spiDetachMISO(spi_t * spi, int8_t miso)
             miso = 7;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
     pinMode(miso, INPUT);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiDetachMOSI(spi_t * spi, int8_t mosi)
@@ -169,10 +161,8 @@ void spiDetachMOSI(spi_t * spi, int8_t mosi)
             mosi = 8;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMatrixOutDetach(mosi, false, false);
     pinMode(mosi, INPUT);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
@@ -193,11 +183,9 @@ void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
             ss = 11;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMode(ss, OUTPUT);
     pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
     spiEnableSSPins(spi, (1 << cs_num));
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiDetachSS(spi_t * spi, int8_t ss)
@@ -214,10 +202,8 @@ void spiDetachSS(spi_t * spi, int8_t ss)
             ss = 11;
         }
     }
-    SPI_MUTEX_LOCK();
     pinMatrixOutDetach(ss, false, false);
     pinMode(ss, INPUT);
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiEnableSSPins(spi_t * spi, uint8_t cs_mask)
@@ -287,9 +273,7 @@ uint32_t spiGetClockDiv(spi_t * spi)
     if(!spi) {
         return 0;
     }
-    SPI_MUTEX_LOCK();
     return spi->dev->clock.val;
-    SPI_MUTEX_UNLOCK();
 }
 
 void spiSetClockDiv(spi_t * spi, uint32_t clockDiv)
