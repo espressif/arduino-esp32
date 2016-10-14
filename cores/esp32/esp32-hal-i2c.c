@@ -55,11 +55,9 @@ i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
-    I2C_MUTEX_LOCK();
     pinMode(scl, OUTPUT);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
-    I2C_MUTEX_UNLOCK();
     return I2C_ERROR_OK;
 }
 
@@ -68,11 +66,9 @@ i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
-    I2C_MUTEX_LOCK();
     pinMatrixOutDetach(scl, false, false);
     pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
     pinMode(scl, INPUT);
-    I2C_MUTEX_UNLOCK();
     return I2C_ERROR_OK;
 }
 
@@ -81,11 +77,9 @@ i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
-    I2C_MUTEX_LOCK();
     pinMode(sda, OUTPUT_OPEN_DRAIN);
     pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
     pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
-    I2C_MUTEX_UNLOCK();
     return I2C_ERROR_OK;
 }
 
@@ -94,11 +88,9 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
-    I2C_MUTEX_LOCK();
     pinMatrixOutDetach(sda, false, false);
     pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
     pinMode(sda, INPUT);
-    I2C_MUTEX_UNLOCK();
     return I2C_ERROR_OK;
 }
 
@@ -366,7 +358,8 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
-
+    
+    I2C_MUTEX_LOCK();
     i2c->dev->ctr.val = 0;
     i2c->dev->ctr.ms_mode = (slave_addr == 0);
     i2c->dev->ctr.sda_force_out = 1 ;
@@ -381,6 +374,7 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
         i2c->dev->slave_addr.addr = slave_addr;
         i2c->dev->slave_addr.en_10bit = addr_10bit_en;
     }
+    I2C_MUTEX_UNLOCK();
 
     return i2c;
 }
