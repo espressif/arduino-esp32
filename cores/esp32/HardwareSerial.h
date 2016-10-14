@@ -65,8 +65,6 @@ public:
     operator bool() const;
 
     void setDebugOutput(bool);
-    bool isTxEnabled(void);
-    bool isRxEnabled(void);
 
 protected:
     int _uart_nr;
