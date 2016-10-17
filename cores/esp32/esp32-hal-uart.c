@@ -48,9 +48,6 @@ struct uart_struct_t {
 #define UART_MUTEX_LOCK()    do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
 #define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
 
-#define UART_MUTEX_LOCK_NUM(i)      if(_uart_bus_array[i].lock != NULL) do {} while (xSemaphoreTake(_uart_bus_array[i].lock, portMAX_DELAY) != pdPASS)
-#define UART_MUTEX_UNLOCK_NUM(i)    if(_uart_bus_array[i].lock != NULL) xSemaphoreGive(_uart_bus_array[i].lock)
-
 static uart_t _uart_bus_array[3] = {
     {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL},
     {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL},
@@ -313,26 +310,20 @@ uint32_t uartGetBaudRate(uart_t* uart)
 
 static void IRAM_ATTR uart0_write_char(char c)
 {
-    UART_MUTEX_LOCK_NUM(0);
     while(((ESP_REG(0x01C+DR_REG_UART_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
     ESP_REG(DR_REG_UART_BASE) = c;
-    UART_MUTEX_UNLOCK_NUM(0);
 }
 
 static void IRAM_ATTR uart1_write_char(char c)
 {
-    UART_MUTEX_LOCK_NUM(1);
     while(((ESP_REG(0x01C+DR_REG_UART1_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
     ESP_REG(DR_REG_UART1_BASE) = c;
-    UART_MUTEX_UNLOCK_NUM(1);
 }
 
 static void IRAM_ATTR uart2_write_char(char c)
 {
-    UART_MUTEX_LOCK_NUM(2);
     while(((ESP_REG(0x01C+DR_REG_UART2_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
     ESP_REG(DR_REG_UART2_BASE) = c;
-    UART_MUTEX_UNLOCK_NUM(2);
 }
 
 void uartSetDebug(uart_t* uart)
