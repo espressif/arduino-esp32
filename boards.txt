@@ -6,7 +6,7 @@ esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
 esp32.upload.maximum_size=1044464
-esp32.upload.maximum_data_size=114688
+esp32.upload.maximum_data_size=294912
 esp32.upload.wait_for_upload_port=true
 
 esp32.serial.disableDTR=true
