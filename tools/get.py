@@ -70,9 +70,12 @@ def get_tool(tool):
     local_path = dist_dir + archive_name
     url = tool['url']
     #real_hash = tool['checksum'].split(':')[1]
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     if not os.path.isfile(local_path):
         print('Downloading ' + archive_name);
-        urlretrieve(url, local_path, report_progress)
+        urlretrieve(url, local_path, report_progress,context=ctx)
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:
