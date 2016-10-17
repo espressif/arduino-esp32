@@ -66,16 +66,21 @@ def unpack(filename, destination):
         shutil.move(dirname, rename_to)
 
 def get_tool(tool):
+    sys_name = platform.system()
     archive_name = tool['archiveFileName']
     local_path = dist_dir + archive_name
     url = tool['url']
     #real_hash = tool['checksum'].split(':')[1]
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    if 'CYGWIN_NT' in sys_name:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
     if not os.path.isfile(local_path):
         print('Downloading ' + archive_name);
-        urlretrieve(url, local_path, report_progress,context=ctx)
+        if 'CYGWIN_NT' in sys_name:
+            urlretrieve(url, local_path, report_progress,context=ctx)
+        else:
+            urlretrieve(url, local_path, report_progress)
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:
