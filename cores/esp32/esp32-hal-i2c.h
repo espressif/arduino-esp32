@@ -19,28 +19,32 @@
 extern "C" {
 #endif
 
-#include "esp32-hal.h"
-#include "soc/i2c_struct.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-typedef struct {
-    i2c_dev_t * dev;
-    uint8_t num;
-} i2c_t;
+typedef enum {
+    I2C_ERROR_OK,
+    I2C_ERROR_DEV,
+    I2C_ERROR_ACK,
+    I2C_ERROR_TIMEOUT,
+    I2C_ERROR_BUS
+} i2c_err_t;
+
+struct i2c_struct_t;
+typedef struct i2c_struct_t i2c_t;
 
 i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en);
 
-void i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
+i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
 
-void i2cResetFiFo(i2c_t * i2c);
+i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl);
+i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl);
+i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda);
+i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda);
 
-void i2cAttachSCL(i2c_t * i2c, int8_t scl);
-void i2cDetachSCL(i2c_t * i2c, int8_t scl);
-void i2cAttachSDA(i2c_t * i2c, int8_t sda);
-void i2cDetachSDA(i2c_t * i2c, int8_t sda);
-
-int i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
-int i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
 
 
 #ifdef __cplusplus
