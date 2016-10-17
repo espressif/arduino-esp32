@@ -40,14 +40,18 @@ static int s_uart_debug_nr = 0;
 
 struct uart_struct_t {
     uart_dev_t * dev;
+    xSemaphoreHandle lock;
     uint8_t num;
     xQueueHandle queue;
 };
 
+#define UART_MUTEX_LOCK()    do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
+#define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
+
 static uart_t _uart_bus_array[3] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), 1, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL}
+    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL},
+    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL},
+    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL}
 };
 
 static void IRAM_ATTR _uart_isr(void *arg)
@@ -88,6 +92,7 @@ void uartDisableGlobalInterrupt()
 
 void uartEnableInterrupt(uart_t* uart)
 {
+    UART_MUTEX_LOCK();
     uart->dev->conf1.rxfifo_full_thrhd = 112;
     uart->dev->conf1.rx_tout_thrhd = 2;
     uart->dev->conf1.rx_tout_en = 1;
@@ -97,13 +102,16 @@ void uartEnableInterrupt(uart_t* uart)
     uart->dev->int_clr.val = 0xffffffff;
 
     intr_matrix_set(xPortGetCoreID(), UART_INTR_SOURCE(uart->num), ETS_UART_INUM);
+    UART_MUTEX_UNLOCK();
 }
 
 void uartDisableInterrupt(uart_t* uart)
 {
+    UART_MUTEX_LOCK();
     uart->dev->conf1.val = 0;
     uart->dev->int_ena.val = 0;
     uart->dev->int_clr.val = 0xffffffff;
+    UART_MUTEX_UNLOCK();
 }
 
 void uartDetachRx(uart_t* uart)
@@ -154,7 +162,14 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     }
 
     uart_t* uart = &_uart_bus_array[uart_nr];
-    
+
+    if(uart->lock == NULL) {
+        uart->lock = xSemaphoreCreateMutex();
+        if(uart->lock == NULL) {
+            return NULL;
+        }
+    }
+
     if(queueLen && uart->queue == NULL) {
         uart->queue = xQueueCreate(queueLen, sizeof(uint8_t)); //initialize the queue
         if(uart->queue == NULL) {
@@ -164,7 +179,9 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 
     uartFlush(uart);
     uartSetBaudRate(uart, baudrate);
+    UART_MUTEX_LOCK();
     uart->dev->conf0.val = config;
+    UART_MUTEX_UNLOCK();
 
     if(rxPin != -1) {
         uartAttachRx(uart, rxPin, inverted);
@@ -183,6 +200,7 @@ void uartEnd(uart_t* uart)
         return;
     }
 
+    UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
         vQueueDelete(uart->queue);
     }
@@ -191,6 +209,7 @@ void uartEnd(uart_t* uart)
     uartDetachTx(uart);
 
     uart->dev->conf0.val = 0;
+    UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartAvailable(uart_t* uart)
@@ -230,8 +249,10 @@ void uartWrite(uart_t* uart, uint8_t c)
     if(uart == NULL) {
         return;
     }
+    UART_MUTEX_LOCK();
     while(uart->dev->status.rxfifo_cnt == 0x7F);
     uart->dev->fifo.rw_byte = c;
+    UART_MUTEX_UNLOCK();
 }
 
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
@@ -239,12 +260,14 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     if(uart == NULL) {
         return;
     }
+    UART_MUTEX_LOCK();
     while(len) {
         while(len && uart->dev->status.rxfifo_cnt < 0x7F) {
             uart->dev->fifo.rw_byte = *data++;
             len--;
         }
     }
+    UART_MUTEX_UNLOCK();
 }
 
 void uartFlush(uart_t* uart)
@@ -253,6 +276,7 @@ void uartFlush(uart_t* uart)
         return;
     }
 
+    UART_MUTEX_LOCK();
     while(uart->dev->status.txfifo_cnt);
 
     uart->dev->conf0.txfifo_rst = 1;
@@ -260,6 +284,7 @@ void uartFlush(uart_t* uart)
 
     uart->dev->conf0.rxfifo_rst = 1;
     uart->dev->conf0.rxfifo_rst = 0;
+    UART_MUTEX_UNLOCK();
 }
 
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
@@ -267,9 +292,11 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
     if(uart == NULL) {
         return;
     }
+    UART_MUTEX_LOCK();
     uint32_t clk_div = ((UART_CLK_FREQ<<4)/baud_rate);
     uart->dev->clk_div.div_int = clk_div>>4 ;
     uart->dev->clk_div.div_frag = clk_div & 0xf;
+    UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t* uart)
