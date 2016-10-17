@@ -46,7 +46,7 @@ esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
 esp320.upload.maximum_size=1044464
-esp320.upload.maximum_data_size=114688
+esp320.upload.maximum_data_size=294912
 esp320.upload.wait_for_upload_port=true
 
 esp320.serial.disableDTR=true
