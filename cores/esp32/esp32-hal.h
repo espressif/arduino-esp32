@@ -41,6 +41,8 @@ extern "C" {
 #include "esp32-hal-gpio.h"
 #include "esp32-hal-spi.h"
 #include "esp32-hal-i2c.h"
+#include "esp32-hal-ledc.h"
+#include "esp32-hal-sd.h"
 #include "esp_system.h"
 
 uint32_t micros();
