@@ -542,6 +542,12 @@ class ESPLoader(object):
         self.check_command("set SPI params", ESP32ROM.ESP_SPI_SET_PARAMS,
                            struct.pack('<IIIIII', fl_id, total_size, block_size, sector_size, page_size, status_mask))
 
+    def reset(self):
+        # RTS = either CH_PD or nRESET 
+        # (active low, chip to reset)
+        self._port.setRTS(True)
+        time.sleep(0.05)
+        self._port.setRTS(False)  
 
 class ESP8266ROM(ESPLoader):
     """ Access class for ESP8266 ROM bootloader
@@ -1332,6 +1338,9 @@ def write_flash(esp, args):
         print 'Verifying just-written flash...'
         verify_flash(esp, args, header_block)
 
+    if args.board == 'NANO32':
+        print 'Board NANO32 resetted.'
+        esp.reset()
 
 def image_info(args):
     image = LoadFirmwareImage(args.chip, args.filename)
@@ -1478,6 +1487,9 @@ def version(args):
 
 def main():
     parser = argparse.ArgumentParser(description='esptool.py v%s - ESP8266 ROM Bootloader Utility' % __version__, prog='esptool')
+
+    parser.add_argument('--board', 
+                        help='Target board type')
 
     parser.add_argument('--chip', '-c',
                         help='Target chip type',
