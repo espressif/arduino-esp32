@@ -39,6 +39,7 @@ extern "C" {
 #include "esp32-hal.h"
 #include "soc/gpio_reg.h"
 
+#include "stdlib_noniso.h"
 #include "binary.h"
 
 #define PI 3.1415926535897932384626433832795
