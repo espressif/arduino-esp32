@@ -172,7 +172,7 @@ bool WiFiScanClass::getNetworkInfo(uint8_t i, String &ssid, uint8_t &encType, in
 {
     wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
     if(!it) {
-        return 0;
+        return false;
     }
     ssid = (const char*) it->ssid;
     encType = it->authmode;
@@ -192,7 +192,7 @@ String WiFiScanClass::SSID(uint8_t i)
 {
     wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
     if(!it) {
-        return 0;
+        return String();
     }
     return String(reinterpret_cast<const char*>(it->ssid));
 }
@@ -251,7 +251,7 @@ String WiFiScanClass::BSSIDstr(uint8_t i)
     char mac[18] = { 0 };
     wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
     if(!it) {
-        return String("");
+        return String();
     }
     sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", it->bssid[0], it->bssid[1], it->bssid[2], it->bssid[3], it->bssid[4], it->bssid[5]);
     return String(mac);
