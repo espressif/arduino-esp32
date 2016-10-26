@@ -121,16 +121,6 @@ typedef unsigned int word;
 
 #ifdef __cplusplus
 }
-#endif
-
-#ifndef _GLIBCXX_VECTOR
-// arduino is not compatible with std::vector
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
-#endif
-
-#define _min(a,b) ((a)<(b)?(a):(b))
-#define _max(a,b) ((a)>(b)?(a):(b))
 
 #include "WCharacter.h"
 #include "WString.h"
@@ -143,6 +133,17 @@ typedef unsigned int word;
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
+
+#endif /* __cplusplus */
+
+#ifndef _GLIBCXX_VECTOR
+// arduino is not compatible with std::vector
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+#endif
+
+#define _min(a,b) ((a)<(b)?(a):(b))
+#define _max(a,b) ((a)>(b)?(a):(b))
 
 #include "pins_arduino.h"
 
