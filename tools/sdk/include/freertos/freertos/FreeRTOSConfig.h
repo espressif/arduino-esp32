@@ -152,9 +152,9 @@
  *----------------------------------------------------------*/
 
 #define configUSE_PREEMPTION			1
-#define configUSE_IDLE_HOOK				0
+#define configUSE_IDLE_HOOK				( CONFIG_TASK_WDT_CHECK_IDLE_TASK )
 
-#define configUSE_TICK_HOOK				0
+#define configUSE_TICK_HOOK				( CONFIG_INT_WDT )
 
 #define configTICK_RATE_HZ				( CONFIG_FREERTOS_HZ )
 
@@ -231,6 +231,7 @@
 #define INCLUDE_vTaskDelayUntil				1
 #define INCLUDE_vTaskDelay					1
 #define INCLUDE_uxTaskGetStackHighWaterMark	1
+#define INCLUDE_pcTaskGetTaskName			1
 
 #if CONFIG_ENABLE_MEMORY_DEBUG
 #define configENABLE_MEMORY_DEBUG 1
@@ -250,6 +251,8 @@
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY	XCHAL_EXCM_LEVEL
 
 #define configUSE_NEWLIB_REENTRANT		1
+
+#define configSUPPORT_DYNAMIC_ALLOCATION    1
 
 /* Test FreeRTOS timers (with timer task) and more. */
 /* Some files don't compile if this flag is disabled */

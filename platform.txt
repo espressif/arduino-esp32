@@ -13,7 +13,7 @@ compiler.warning_flags.all=-Wall -Wextra
 
 compiler.path={runtime.tools.xtensa-esp32-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk
-compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DHAVE_CONFIG_H "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/lwip"
+compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DHAVE_CONFIG_H "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/lwip"
 
 compiler.c.cmd=xtensa-esp32-elf-gcc
 compiler.c.flags=-c {compiler.warning_flags} -Os -g3 -Wpointer-arith -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -ffunction-sections -fdata-sections -mlongcalls -nostdlib -MMD -std=gnu99 -fstrict-volatile-bitfields
@@ -26,7 +26,7 @@ compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
 
 compiler.c.elf.cmd=xtensa-esp32-elf-gcc
 compiler.c.elf.flags="-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -nostdlib -T esp32_out.ld -T esp32.common.ld -T esp32.rom.ld -T esp32.peripherals.ld -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority
-compiler.c.elf.libs=-lgcc -lc -lm -lhal -lcore -lnet80211 -lphy -lrtc -lpp -lwpa -lsmartconfig -lbtdm_app -lbt -ldriver -lesp32 -lcrypto -lexpat -lfreertos -ljson -llog -llwip -lmbedtls -lnghttp -lnvs_flash -lspi_flash -ltcpip_adapter
+compiler.c.elf.libs=-lgcc -lc -lm -lhal -lcore -lnet80211 -lphy -lrtc -lpp -lwpa -lsmartconfig -lbtdm_app -lbt -ldriver -lesp32 -lcrypto -lexpat -lfreertos -ljson -llog -llwip -lmbedtls -lnghttp -lnvs_flash -lspi_flash -ltcpip_adapter -lnewlib -lvfs
 
 compiler.as.cmd=xtensa-esp32-elf-as
 
