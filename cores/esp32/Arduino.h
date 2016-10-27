@@ -145,6 +145,12 @@ typedef unsigned int word;
 #define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
 
+// WMath prototypes
+long random(long);
+long random(long, long);
+void randomSeed(unsigned long);
+long map(long, long, long, long, long);
+
 #include "pins_arduino.h"
 
 #endif /* _ESP32_CORE_ARDUINO_H_ */
