@@ -9,7 +9,7 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-#define LED_BUILTIN 5
+#define LED_BUILTIN             5
 
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
