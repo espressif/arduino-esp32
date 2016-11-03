@@ -189,9 +189,9 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
  */
 uint8_t WiFiAPClass::softAPgetStationNum()
 {
-    uint16_t number;
-    if(esp_wifi_get_ap_num(&number) == ESP_OK) {
-        return number;
+    wifi_sta_list_t clients;
+    if(esp_wifi_ap_get_sta_list(&clients) == ESP_OK) {
+        return clients.num;
     }
     return 0;
 }

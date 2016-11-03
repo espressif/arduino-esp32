@@ -99,11 +99,11 @@ void WiFiScanClass::_scanDone()
 {
     WiFiScanClass::_scanComplete = true;
     WiFiScanClass::_scanStarted = false;
-    esp_wifi_get_ap_num(&(WiFiScanClass::_scanCount));
+    esp_wifi_scan_get_ap_num(&(WiFiScanClass::_scanCount));
     if(WiFiScanClass::_scanCount) {
-        WiFiScanClass::_scanResult = new wifi_ap_list_t[WiFiScanClass::_scanCount];
+        WiFiScanClass::_scanResult = new wifi_ap_record_t[WiFiScanClass::_scanCount];
         if(WiFiScanClass::_scanResult) {
-            esp_wifi_get_ap_list(&(WiFiScanClass::_scanCount), (wifi_ap_list_t*)_scanResult);
+            esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t*)_scanResult);
         } else {
             //no memory
             WiFiScanClass::_scanCount = 0;
@@ -121,7 +121,7 @@ void * WiFiScanClass::_getScanInfoByIndex(int i)
     if(!WiFiScanClass::_scanResult || (size_t) i > WiFiScanClass::_scanCount) {
         return 0;
     }
-    return reinterpret_cast<wifi_ap_list_t*>(WiFiScanClass::_scanResult) + i;
+    return reinterpret_cast<wifi_ap_record_t*>(WiFiScanClass::_scanResult) + i;
 }
 
 /**
@@ -150,7 +150,7 @@ int8_t WiFiScanClass::scanComplete()
 void WiFiScanClass::scanDelete()
 {
     if(WiFiScanClass::_scanResult) {
-        delete[] reinterpret_cast<wifi_ap_list_t*>(WiFiScanClass::_scanResult);
+        delete[] reinterpret_cast<wifi_ap_record_t*>(WiFiScanClass::_scanResult);
         WiFiScanClass::_scanResult = 0;
         WiFiScanClass::_scanCount = 0;
     }
@@ -170,7 +170,7 @@ void WiFiScanClass::scanDelete()
  */
 bool WiFiScanClass::getNetworkInfo(uint8_t i, String &ssid, uint8_t &encType, int32_t &rssi, uint8_t* &bssid, int32_t &channel)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return false;
     }
@@ -190,7 +190,7 @@ bool WiFiScanClass::getNetworkInfo(uint8_t i, String &ssid, uint8_t &encType, in
  */
 String WiFiScanClass::SSID(uint8_t i)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return String();
     }
@@ -205,7 +205,7 @@ String WiFiScanClass::SSID(uint8_t i)
  */
 wifi_auth_mode_t WiFiScanClass::encryptionType(uint8_t i)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return WIFI_AUTH_OPEN;
     }
@@ -219,7 +219,7 @@ wifi_auth_mode_t WiFiScanClass::encryptionType(uint8_t i)
  */
 int32_t WiFiScanClass::RSSI(uint8_t i)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return 0;
     }
@@ -234,7 +234,7 @@ int32_t WiFiScanClass::RSSI(uint8_t i)
  */
 uint8_t * WiFiScanClass::BSSID(uint8_t i)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return 0;
     }
@@ -249,7 +249,7 @@ uint8_t * WiFiScanClass::BSSID(uint8_t i)
 String WiFiScanClass::BSSIDstr(uint8_t i)
 {
     char mac[18] = { 0 };
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return String();
     }
@@ -259,7 +259,7 @@ String WiFiScanClass::BSSIDstr(uint8_t i)
 
 int32_t WiFiScanClass::channel(uint8_t i)
 {
-    wifi_ap_list_t* it = reinterpret_cast<wifi_ap_list_t*>(_getScanInfoByIndex(i));
+    wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
     if(!it) {
         return 0;
     }

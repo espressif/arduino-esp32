@@ -250,7 +250,7 @@ void uartWrite(uart_t* uart, uint8_t c)
         return;
     }
     UART_MUTEX_LOCK();
-    while(uart->dev->status.rxfifo_cnt == 0x7F);
+    while(uart->dev->status.txfifo_cnt == 0x7F);
     uart->dev->fifo.rw_byte = c;
     UART_MUTEX_UNLOCK();
 }
@@ -262,7 +262,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     }
     UART_MUTEX_LOCK();
     while(len) {
-        while(len && uart->dev->status.rxfifo_cnt < 0x7F) {
+        while(len && uart->dev->status.txfifo_cnt < 0x7F) {
             uart->dev->fifo.rw_byte = *data++;
             len--;
         }
