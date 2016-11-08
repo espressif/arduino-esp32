@@ -271,13 +271,14 @@ class ESPLoader(object):
             # issue reset-to-bootloader:
             # RTS = either CH_PD or nRESET (both active low = chip in reset)
             # DTR = GPIO0 (active low = boot to flasher)
-            self._port.setDTR(False)
-            self._port.setRTS(True)
+
+            self._port.setDTR(False)    # GPIO0 -> 1
+            self._port.setRTS(True)   # RST -> 0
+            self._port.setDTR(True)   # GPIO0 -> 0
             time.sleep(0.05)
-            self._port.setDTR(True)
-            self._port.setRTS(False)
-            time.sleep(0.05)
-            self._port.setDTR(False)
+            self._port.setRTS(False)   # RST -> 1
+            time.sleep(0.1) 
+
 
             self._port.timeout = 0.1
             last_exception = None
