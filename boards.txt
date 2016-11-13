@@ -215,7 +215,7 @@ quantum.serial.disableRTS=true
 quantum.build.mcu=esp32
 quantum.build.core=esp32
 quantum.build.variant=quantum
-quantum.build.board=Quantum
+quantum.build.board=QUANTUM
 
 quantum.build.f_cpu=160000000L
 quantum.build.flash_mode=qio
