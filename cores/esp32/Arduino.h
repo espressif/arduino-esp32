@@ -134,7 +134,13 @@ typedef unsigned int word;
 #include "HardwareSerial.h"
 #include "Esp.h"
 
+// WMath prototypes
+long random(long);
 #endif /* __cplusplus */
+
+long random(long, long);
+void randomSeed(unsigned long);
+long map(long, long, long, long, long);
 
 #ifndef _GLIBCXX_VECTOR
 // arduino is not compatible with std::vector
@@ -144,12 +150,6 @@ typedef unsigned int word;
 
 #define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
-
-// WMath prototypes
-long random(long);
-long random(long, long);
-void randomSeed(unsigned long);
-long map(long, long, long, long, long);
 
 #include "pins_arduino.h"
 
