@@ -47,7 +47,7 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     if(sdaPin < 0) {
         if(num == 0) {
-            sdaPin = I2C0_DEFAULT_SDA_PIN;
+            sdaPin = SDA;
         } else {
             return;
         }
@@ -55,7 +55,7 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 
     if(sclPin < 0) {
         if(num == 0) {
-            sclPin = I2C0_DEFAULT_SCL_PIN;
+            sclPin = SCL;
         } else {
             return;
         }

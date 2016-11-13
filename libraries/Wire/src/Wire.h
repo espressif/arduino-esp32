@@ -29,8 +29,6 @@
 #include "freertos/queue.h"
 
 #define I2C_BUFFER_LENGTH 128
-#define I2C0_DEFAULT_SDA_PIN 21
-#define I2C0_DEFAULT_SCL_PIN 22
 
 class TwoWire
 {
