@@ -65,35 +65,38 @@ extern "C"
 #define ARDUHAL_LOG_RESET_COLOR
 #endif
 
+const char * pathToFileName(const char * path);
+int log_printf(const char *fmt, ...);
+
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
-#define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[" #letter "][%s():%d] " format ARDUHAL_LOG_RESET_COLOR "\r\n", __FUNCTION__, __LINE__
+#define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
 #if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-#define log_v(format, ...) ets_printf(ARDUHAL_SHORT_LOG_FORMAT(V, format), ##__VA_ARGS__)
+#define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
 #else
 #define log_v(format, ...)
 #endif
 
 #if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-#define log_d(format, ...) ets_printf(ARDUHAL_SHORT_LOG_FORMAT(D, format), ##__VA_ARGS__)
+#define log_d(format, ...) log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
 #else
 #define log_d(format, ...)
 #endif
 
 #if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-#define log_i(format, ...) ets_printf(ARDUHAL_SHORT_LOG_FORMAT(I, format), ##__VA_ARGS__)
+#define log_i(format, ...) log_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
 #else
 #define log_i(format, ...)
 #endif
 
 #if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
-#define log_w(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
+#define log_w(format, ...) log_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
 #else
 #define log_w(format, ...)
 #endif
 
 #if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-#define log_e(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
+#define log_e(format, ...) log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #else
 #define log_e(format, ...)
 #endif
