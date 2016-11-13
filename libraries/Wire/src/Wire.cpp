@@ -29,6 +29,7 @@ extern "C" {
 
 #include "esp32-hal-i2c.h"
 #include "Wire.h"
+#include "Arduino.h"
 
 TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)

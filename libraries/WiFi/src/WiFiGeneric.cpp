@@ -290,7 +290,6 @@ void initWiFi()
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     nvs_flash_init();
-    system_init();
     tcpip_adapter_init();
     esp_event_loop_init(WiFiGenericClass::_eventCallback, NULL);
     esp_wifi_init(&cfg);
