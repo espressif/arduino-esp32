@@ -119,6 +119,9 @@ typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
 
+uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
+
 #ifdef __cplusplus
 }
 
