@@ -32,20 +32,17 @@ extern "C" {
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
+
 #include <esp_err.h>
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
-#include <lwip/ip_addr.h>
-
+#include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
 #include "lwip/dns.h"
 
 #include "esp32-hal-log.h"
 }
-
-//#include "WiFiClient.h"
-//#include "WiFiUdp.h"
 
 #undef min
 #undef max
@@ -107,7 +104,7 @@ void WiFiGenericClass::removeEvent(WiFiEventCb cbEvent, system_event_id_t event)
  */
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
-    log_d("wifi evt: %d", event->event_id);
+    log_d("%d", event->event_id);
 
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
@@ -122,7 +119,6 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
         } else {
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
-        log_d("wifi reason: %d", reason);
     } else if(event->event_id == SYSTEM_EVENT_STA_START) {
         WiFiSTAClass::_setStatus(WL_DISCONNECTED);
     } else if(event->event_id == SYSTEM_EVENT_STA_STOP) {
@@ -303,13 +299,13 @@ void startWiFi()
 
     err = esp_wifi_start();
     if (err != ESP_OK) {
-        log_e("esp_wifi_start fail %d\n", err);
+        log_e("esp_wifi_start: %d", err);
         return;
     }
 
     err = esp_wifi_get_mode(&mode);
     if (err != ESP_OK) {
-        log_e("esp_wifi_get_mode fail %d\n", err);
+        log_e("esp_wifi_get_mode: %d", err);
         return;
     }
 
@@ -317,7 +313,7 @@ void startWiFi()
     if ((mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) && auto_connect) {
         err = esp_wifi_connect();
         if (err != ESP_OK) {
-            log_e("esp_wifi_connect fail %d\n", err);
+            log_e("esp_wifi_connect: %d", err);
         }
     }
 }

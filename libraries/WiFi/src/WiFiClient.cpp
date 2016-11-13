@@ -59,7 +59,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        log_e("error: %d", errno);
+        log_e("socket: %d", errno);
         return 0;
     }
     uint32_t ip_addr = ip;
@@ -70,7 +70,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
     serveraddr.sin_port = htons(port);
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     if (res < 0) {
-        log_e("error: %d", errno);
+        log_e("lwip_connect_r: %d", errno);
         close(sockfd);
         sockfd = -1;
         return 0;
@@ -94,7 +94,7 @@ int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
     int res = setsockopt(sockfd, SOL_SOCKET, option, value, len);
     if(res < 0) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
     }
     return res;
 }
@@ -114,7 +114,7 @@ int WiFiClient::setOption(int option, int *value)
 {
     int res = setsockopt(sockfd, IPPROTO_TCP, option, (char *)value, sizeof(int));
     if(res < 0) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
     }
     return res;
 }
@@ -124,7 +124,7 @@ int WiFiClient::getOption(int option, int *value)
     size_t size = sizeof(int);
     int res = getsockopt(sockfd, IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
     }
     return res;
 }
@@ -164,7 +164,7 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     }
     int res = send(sockfd, (void*)buf, size, MSG_DONTWAIT);
     if(res < 0) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
         _connected = false;
         sockfd = -1;
         res = 0;
@@ -179,7 +179,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     }
     int res = recv(sockfd, buf, size, MSG_DONTWAIT);
     if(res < 0 && errno != EWOULDBLOCK) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
         _connected = false;
         sockfd = -1;
     }
@@ -194,7 +194,7 @@ int WiFiClient::available()
     int count;
     int res = ioctl(sockfd, FIONREAD, &count);
     if(res < 0) {
-        log_e("error: %d", errno);
+        log_e("%d", errno);
         _connected = false;
         sockfd = -1;
         return 0;
