@@ -71,6 +71,10 @@ public:
     int peek(void);
     void flush(void);
 
+    inline size_t write(const char * s)
+    {
+        return write((uint8_t*) s, strlen(s));
+    }
     inline size_t write(unsigned long n)
     {
         return write((uint8_t)n);
@@ -92,4 +96,3 @@ public:
 extern TwoWire Wire;
 
 #endif
-
