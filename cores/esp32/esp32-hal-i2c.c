@@ -112,6 +112,13 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
     i2c->dev->command[index].op_code = op_code;
 }
 
+void i2cResetCmd(i2c_t * i2c){
+    int i;
+    for(i=0;i<16;i++){
+        i2c->dev->command[i].val = 0;
+    }
+}
+
 void i2cResetFiFo(i2c_t * i2c)
 {
     i2c->dev->fifo_conf.tx_fifo_rst = 1;
@@ -138,6 +145,7 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
         uint8_t dataSend = willSend;
 
         i2cResetFiFo(i2c);
+        i2cResetCmd(i2c);
 
         //CMD START
         i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
@@ -222,6 +230,7 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
     I2C_MUTEX_LOCK();
 
     i2cResetFiFo(i2c);
+    i2cResetCmd(i2c);
 
     //CMD START
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
