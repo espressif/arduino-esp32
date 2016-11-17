@@ -27,10 +27,11 @@
 #include <esp32-hal.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "Stream.h"
 
 #define I2C_BUFFER_LENGTH 128
 
-class TwoWire
+class TwoWire: public Stream
 {
 protected:
     uint8_t num;
