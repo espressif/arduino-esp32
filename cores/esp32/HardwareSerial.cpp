@@ -15,6 +15,14 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         rxPin = 3;
         txPin = 1;
     }
+    if(_uart_nr == 1 && rxPin < 0 && txPin < 0) {
+        rxPin = 9;
+        txPin = 10;
+    }
+    if(_uart_nr == 2 && rxPin < 0 && txPin < 0) {
+        rxPin = 16;
+        txPin = 17;
+    }
     _uart = uartBegin(_uart_nr, baud, config, rxPin, txPin, 256, false);
 }
 

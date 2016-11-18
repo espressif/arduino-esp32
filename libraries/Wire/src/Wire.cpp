@@ -29,6 +29,7 @@ extern "C" {
 
 #include "esp32-hal-i2c.h"
 #include "Wire.h"
+#include "Arduino.h"
 
 TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)
@@ -47,7 +48,7 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     if(sdaPin < 0) {
         if(num == 0) {
-            sdaPin = I2C0_DEFAULT_SDA_PIN;
+            sdaPin = SDA;
         } else {
             return;
         }
@@ -55,7 +56,7 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 
     if(sclPin < 0) {
         if(num == 0) {
-            sclPin = I2C0_DEFAULT_SCL_PIN;
+            sclPin = SCL;
         } else {
             return;
         }

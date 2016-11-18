@@ -642,9 +642,9 @@ void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t byt
     uint8_t * bytesBuf = (uint8_t *) wordsBuf;
 
     if(data) {
-        for(i=0; i<bytes; i++) {
-            bytesBuf[i] = data[i];//copy data to buffer
-        }
+        memcpy(bytesBuf, data, bytes);//copy data to buffer
+    } else {
+        memset(bytesBuf, 0xFF, bytes);
     }
 
     while(spi->dev->cmd.usr);
@@ -662,9 +662,7 @@ void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t byt
         for(i=0; i<words; i++) {
             wordsBuf[i] = spi->dev->data_buf[i];//copy spi fifo to buffer
         }
-        for(i=0; i<bytes; i++) {
-            out[i] = bytesBuf[i];//copy buffer to output
-        }
+        memcpy(out, bytesBuf, bytes);//copy buffer to output
     }
 }
 

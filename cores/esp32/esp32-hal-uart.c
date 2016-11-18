@@ -358,5 +358,38 @@ int uartGetDebug()
     return s_uart_debug_nr;
 }
 
-
+int log_printf(const char *format, ...)
+{
+    if(s_uart_debug_nr < 0){
+        return 0;
+    }
+    char loc_buf[64];
+    char * temp = loc_buf;
+    int len;
+    va_list arg;
+    va_list copy;
+    va_start(arg, format);
+    va_copy(copy, arg);
+    len = vsnprintf(NULL, 0, format, arg);
+    va_end(copy);
+    if(len >= sizeof(loc_buf)){
+        temp = (char*)malloc(len+1);
+        if(temp == NULL) {
+            return 0;
+        }
+    }
+    vsnprintf(temp, len+1, format, arg);
+    if(_uart_bus_array[s_uart_debug_nr].lock){
+        while (xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY) != pdPASS);
+        ets_printf("%s", temp);
+        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
+    } else {
+        ets_printf("%s", temp);
+    }
+    va_end(arg);
+    if(len > 64){
+        free(temp);
+    }
+    return len;
+}
 

@@ -28,9 +28,15 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
+
+//forward declaration from freertos/portmacro.h
+void vPortYield( void );
+#define yield() vPortYield()
+#define optimistic_yield(u)
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
 #define NOP() asm volatile ("nop")
