@@ -1,20 +1,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp32-hal.h"
 
-void initVariant() __attribute__((weak));
-void initVariant() {}
+#if CONFIG_AUTOSTART_ARDUINO
 
-void init() __attribute__((weak));
-void init() {}
+extern "C" void initArduino();
+extern void loop();
+extern void setup();
 
 void startWiFi() __attribute__((weak));
 void startWiFi() {}
-
-void initWiFi() __attribute__((weak));
-void initWiFi() {}
-
-extern void loop();
-extern void setup();
 
 void loopTask(void *pvParameters)
 {
@@ -31,9 +26,8 @@ void loopTask(void *pvParameters)
 
 extern "C" void app_main()
 {
-    init();
-    initVariant();
-    initWiFi();
+    initArduino();
     xTaskCreatePinnedToCore(loopTask, "loopTask", 4096, NULL, 1, NULL, 1);
 }
 
+#endif

@@ -33,6 +33,14 @@ extern "C" {
 #include <string.h>
 #include <math.h>
 
+#ifndef CONFIG_DISABLE_HAL_LOCKS
+#define CONFIG_DISABLE_HAL_LOCKS 0
+#endif
+
+#ifndef CONFIG_AUTOSTART_ARDUINO
+#define CONFIG_AUTOSTART_ARDUINO 1
+#endif
+
 //forward declaration from freertos/portmacro.h
 void vPortYield( void );
 #define yield() vPortYield()
@@ -55,6 +63,10 @@ uint32_t micros();
 uint32_t millis();
 void delay(uint32_t);
 void delayMicroseconds(uint32_t us);
+
+#if !CONFIG_AUTOSTART_ARDUINO
+void initArduino();
+#endif
 
 #ifdef __cplusplus
 }
