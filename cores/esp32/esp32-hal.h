@@ -32,6 +32,7 @@ extern "C" {
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
+#include "sdkconfig.h"
 
 #ifndef CONFIG_DISABLE_HAL_LOCKS
 #define CONFIG_DISABLE_HAL_LOCKS 0
