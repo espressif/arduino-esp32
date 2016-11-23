@@ -22,11 +22,14 @@
 #include "soc/ledc_reg.h"
 #include "soc/ledc_struct.h"
 
-xSemaphoreHandle _ledc_sys_lock;
-
-
+#if CONFIG_DISABLE_HAL_LOCKS
+#define LEDC_MUTEX_LOCK()
+#define LEDC_MUTEX_UNLOCK()
+#else
 #define LEDC_MUTEX_LOCK()    do {} while (xSemaphoreTake(_ledc_sys_lock, portMAX_DELAY) != pdPASS)
 #define LEDC_MUTEX_UNLOCK()  xSemaphoreGive(_ledc_sys_lock)
+xSemaphoreHandle _ledc_sys_lock;
+#endif
 
 /*
  * LEDC Chan to Group/Channel/Timer Mapping
@@ -59,7 +62,9 @@ void ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, bool apb_cl
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
         ledc_dev->conf.apb_clk_sel = 1;//LS use apb clock
+#if !CONFIG_DISABLE_HAL_LOCKS
         _ledc_sys_lock = xSemaphoreCreateMutex();
+#endif
     }
     LEDC_MUTEX_LOCK();
     ledc_dev->timer_group[group].timer[timer].conf.div_num = div_num;//18 bit (10.8) This register is used to configure parameter for divider in timer the least significant eight bits represent the decimal part.

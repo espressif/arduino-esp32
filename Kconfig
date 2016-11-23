@@ -1,0 +1,107 @@
+menu "Arduino Configuration"
+
+choice MONITOR_BAUD
+    prompt "Monitor baud rate"
+    default MONITOR_BAUD_115200B
+    help
+        Baud rate to use while monitoring the ESP chip.
+
+config MONITOR_BAUD_9600B
+    bool "9600 bps"
+config MONITOR_BAUD_57600B
+    bool "57600 bps"
+config MONITOR_BAUD_115200B
+    bool "115200 bps"
+config MONITOR_BAUD_230400B
+    bool "230400 bps"
+config MONITOR_BAUD_921600B
+    bool "921600 bps"
+config MONITOR_BAUD_2MB
+    bool "2 Mbps"
+config MONITOR_BAUD_OTHER
+    bool "Custom baud rate"
+
+endchoice
+
+config MONITOR_BAUD_OTHER_VAL
+    int "Custom baud rate value" if MONITOR_BAUD_OTHER
+    default 115200
+
+config MONITOR_BAUD
+    int
+    default 9600 if MONITOR_BAUD_9600B
+    default 57600 if MONITOR_BAUD_57600B
+    default 115200 if MONITOR_BAUD_115200B
+    default 230400 if MONITOR_BAUD_230400B
+    default 921600 if MONITOR_BAUD_921600B
+    default 2000000 if MONITOR_BAUD_2MB
+    default MONITOR_BAUD_OTHER_VAL if MONITOR_BAUD_OTHER
+
+config AUTOSTART_ARDUINO
+    bool "Autostart Arduino setup and loop on boot"
+    default "n"
+    help
+        Enabling this option will implement app_main and start Arduino.
+        All you need to implement in your main.cpp is setup() and loop()
+        and include Arduino.h
+        If disabled, you can call initArduino() to run any preparations
+        required by the framework
+
+config DISABLE_HAL_LOCKS
+    bool "Disable mutex locks for HAL"
+    default "n"
+    help
+        Enabling this option will run all hardware abstraction without locks.
+        While communication with external hardware will be faster, you need to
+        make sure that there is no option to use the same bus from another thread
+        or interrupt at the same time. Option is best used with Arduino enabled
+        and code implemented only in setup/loop and Arduino callbacks
+
+menu "Debug Log Configuration"
+choice ARDUHAL_LOG_DEFAULT_LEVEL
+    bool "Default log level"
+    default ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    help
+        Specify how much output to see in logs by default.
+
+config ARDUHAL_LOG_DEFAULT_LEVEL_NONE
+    bool "No output"
+config ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    bool "Error"
+config ARDUHAL_LOG_DEFAULT_LEVEL_WARN
+    bool "Warning"
+config ARDUHAL_LOG_DEFAULT_LEVEL_INFO
+    bool "Info"
+config ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG
+    bool "Debug"
+config ARDUHAL_LOG_DEFAULT_LEVEL_VERBOSE
+    bool "Verbose"
+endchoice
+
+config ARDUHAL_LOG_DEFAULT_LEVEL
+    int
+    default 0 if ARDUHAL_LOG_DEFAULT_LEVEL_NONE
+    default 1 if ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    default 2 if ARDUHAL_LOG_DEFAULT_LEVEL_WARN
+    default 3 if ARDUHAL_LOG_DEFAULT_LEVEL_INFO
+    default 4 if ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG
+    default 5 if ARDUHAL_LOG_DEFAULT_LEVEL_VERBOSE
+
+config ARDUHAL_LOG_COLORS
+    bool "Use ANSI terminal colors in log output"
+    default "n"
+    help
+        Enable ANSI terminal color codes in bootloader output.
+        In order to view these, your terminal program must support ANSI color codes.
+
+endmenu
+
+config AUTOCONNECT_WIFI
+    bool "Autoconnect WiFi on boot"
+    default "n"
+    depends on AUTOSTART_ARDUINO
+    help
+        If enabled, WiFi will connect to the last used SSID (if station was enabled),
+        else connection will be started only after calling WiFi.begin(ssid, password)
+
+endmenu

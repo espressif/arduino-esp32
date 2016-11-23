@@ -47,6 +47,21 @@ void delayMicroseconds(uint32_t us)
     }
 }
 
+void initVariant() __attribute__((weak));
+void initVariant() {}
+
+void init() __attribute__((weak));
+void init() {}
+
+void initWiFi() __attribute__((weak));
+void initWiFi() {}
+
+void initArduino(){
+    init();
+    initVariant();
+    initWiFi();
+}
+
 //used by hal log
 const char * IRAM_ATTR pathToFileName(const char * path){
     size_t i = 0;

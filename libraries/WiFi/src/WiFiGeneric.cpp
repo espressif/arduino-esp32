@@ -282,7 +282,7 @@ void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *ca
  * */
 #include "nvs_flash.h"
 
-void initWiFi()
+extern "C" void initWiFi()
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     nvs_flash_init();
@@ -294,14 +294,15 @@ void initWiFi()
 void startWiFi()
 {
     esp_err_t err;
-    wifi_mode_t mode = WIFI_MODE_NULL;
-    bool auto_connect = false;
 
     err = esp_wifi_start();
     if (err != ESP_OK) {
         log_e("esp_wifi_start: %d", err);
         return;
     }
+#if CONFIG_AUTOCONNECT_WIFI
+    wifi_mode_t mode = WIFI_MODE_NULL;
+    bool auto_connect = false;
 
     err = esp_wifi_get_mode(&mode);
     if (err != ESP_OK) {
@@ -316,5 +317,6 @@ void startWiFi()
             log_e("esp_wifi_connect: %d", err);
         }
     }
+#endif
 }
 

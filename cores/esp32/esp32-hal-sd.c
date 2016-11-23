@@ -21,11 +21,15 @@
 #include "soc/gpio_sd_reg.h"
 #include "soc/gpio_sd_struct.h"
 
-xSemaphoreHandle _sd_sys_lock;
 
+#if CONFIG_DISABLE_HAL_LOCKS
+#define SD_MUTEX_LOCK()
+#define SD_MUTEX_UNLOCK()
+#else
 #define SD_MUTEX_LOCK()    do {} while (xSemaphoreTake(_sd_sys_lock, portMAX_DELAY) != pdPASS)
 #define SD_MUTEX_UNLOCK()  xSemaphoreGive(_sd_sys_lock)
-
+xSemaphoreHandle _sd_sys_lock;
+#endif
 
 uint32_t sdSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
 {
@@ -35,7 +39,9 @@ uint32_t sdSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
     static bool tHasStarted = false;
     if(!tHasStarted) {
         tHasStarted = true;
+#if !CONFIG_DISABLE_HAL_LOCKS
         _sd_sys_lock = xSemaphoreCreateMutex();
+#endif
     }
     gpio_sd_dev_t * gpio_sd_dev = (volatile gpio_sd_dev_t *)(DR_REG_GPIO_SD_BASE);
     uint32_t prescale = (10000000/(freq*32)) - 1;

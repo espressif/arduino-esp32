@@ -41,10 +41,23 @@
 
 struct spi_struct_t {
     spi_dev_t * dev;
+#if !CONFIG_DISABLE_HAL_LOCKS
     xSemaphoreHandle lock;
+#endif
     uint8_t num;
 };
 
+#if CONFIG_DISABLE_HAL_LOCKS
+#define SPI_MUTEX_LOCK()
+#define SPI_MUTEX_UNLOCK()
+
+static spi_t _spi_bus_array[4] = {
+    {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 1},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 2},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 3}
+};
+#else
 #define SPI_MUTEX_LOCK()    do {} while (xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS)
 #define SPI_MUTEX_UNLOCK()  xSemaphoreGive(spi->lock)
 
@@ -54,6 +67,7 @@ static spi_t _spi_bus_array[4] = {
     {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 2},
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 3}
 };
+#endif
 
 void spiAttachSCK(spi_t * spi, int8_t sck)
 {
@@ -383,12 +397,14 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
 
     spi_t * spi = &_spi_bus_array[spi_num];
 
+#if !CONFIG_DISABLE_HAL_LOCKS
     if(spi->lock == NULL){
         spi->lock = xSemaphoreCreateMutex();
         if(spi->lock == NULL) {
             return NULL;
         }
     }
+#endif
 
     if(spi_num == HSPI) {
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI_CLK_EN_1);
