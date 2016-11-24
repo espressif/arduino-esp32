@@ -11,14 +11,13 @@ BLEPeripheral::BLEPeripheral(String localName)
   setLocalName(localName);
   uint8_t peerAddr[BD_ADDR_LEN] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85};
   setPeerAddress(BLE_GAP_ADDR_TYPE_PUBLIC, peerAddr);
-  setAdvertisingInterval(160);
-  setAdvertisingChannelMap(GAP_ADVCHAN_ALL);  // 37, 38, 39 channels 
+  setAdvertisingInterval(80);
+  setAdvertisingChannelMap(BLE_GAP_ADVCHAN_ALL);  // 37, 38, 39 channels 
 }
 
 BLEPeripheral::BLEPeripheral(void):BLEPeripheral("MY_BLUETOOTH")
 {
 }
-
 
 BLEPeripheral::~BLEPeripheral(void)
 {
@@ -243,7 +242,7 @@ uint16_t BLEPeripheral::make_cmd_ble_set_adv_param (uint8_t *buf)
 void BLEPeripheral::hci_cmd_send_ble_adv_start(void)
 {
   uint8_t hci_cmd_buf[128];
-  uint16_t sz = make_cmd_ble_set_adv_enable (hci_cmd_buf, 1);
+  uint16_t sz = make_cmd_ble_set_adv_enable (hci_cmd_buf, HCI_BLE_ADV_ENABLE);
   API_vhci_host_send_packet(hci_cmd_buf, sz);
 }
 
@@ -256,37 +255,6 @@ uint16_t BLEPeripheral::make_cmd_ble_set_adv_enable(uint8_t *buf, uint8_t adv_en
   return HCI_H4_CMD_PREAMBLE_SIZE + HCIC_PARAM_SIZE_WRITE_ADV_ENABLE;
 }
 
-
-
-/* 
- * @brief: BT controller callback function, used to notify the upper layer that
- *         controller is ready to receive command
- */
-void controller_rcv_pkt_ready(void)
-{
-  printf("controller rcv pkt ready\n");
-}
-
-/* 
- * @brief: BT controller callback function, to transfer data packet to upper
- *         controller is ready to receive command
- */
-int host_rcv_pkt(uint8_t *data, uint16_t len)
-{
-  printf("host rcv pkt: ");
-  for (uint16_t i=0; i<len; i++)
-    printf("%02x", data[i]);
-  printf("\n");
-  return 0;
-}
-
-vhci_host_callback_t vhci_host_cb = {
-  controller_rcv_pkt_ready,
-  host_rcv_pkt
-};
-
-
-
 bool BLEPeripheral::begin(void)
 {
   bt_controller_init();
@@ -294,7 +262,7 @@ bool BLEPeripheral::begin(void)
 
   int cmd_cnt = 0;
   bool send_avail = false;
-  API_vhci_host_register_callback(&vhci_host_cb);
+  //API_vhci_host_register_callback(&vhci_host_cb);
  
   while(cmd_cnt < 4) {
     ::delay(1000);
@@ -311,4 +279,7 @@ bool BLEPeripheral::begin(void)
 
   return true;
 }
+
+
+
 
