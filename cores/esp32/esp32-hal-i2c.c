@@ -67,7 +67,7 @@ i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
-    pinMode(scl, OUTPUT);
+    pinMode(scl, OUTPUT_OPEN_DRAIN);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
     return I2C_ERROR_OK;
