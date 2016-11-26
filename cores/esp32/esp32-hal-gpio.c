@@ -22,6 +22,7 @@
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_struct.h"
+#include "driver/gpio.h"
 
 #define ETS_GPIO_INUM       4
 
@@ -85,13 +86,6 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         } else {
             GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
-
-        if(mode & PULLUP) {
-            pinFunction |= FUN_PU;
-        } else if(mode & PULLDOWN) {
-            pinFunction |= FUN_PD;
-        }
-
     } else if(mode & OUTPUT) {
         if(pin < 32) {
             GPIO.enable_w1ts = ((uint32_t)1 << pin);
@@ -111,11 +105,25 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         pinFunction |= ((uint32_t)(mode >> 5) << MCU_SEL_S);
     }
 
+    ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioToFn[pin]) = pinFunction;
+
+    if((mode & INPUT) && (mode & (PULLUP|PULLDOWN))) {
+        if(mode & PULLUP) {
+            gpio_pullup_en(pin);
+            gpio_pulldown_dis(pin);
+        } else {
+            gpio_pulldown_en(pin);
+            gpio_pullup_dis(pin);
+        }
+    } else {
+        gpio_pullup_dis(pin);
+        gpio_pulldown_dis(pin);
+    }
+
     if(mode & OPEN_DRAIN) {
         pinControl = (1 << GPIO_PIN0_PAD_DRIVER_S);
     }
 
-    ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioToFn[pin]) = pinFunction;
     GPIO.pin[pin].val = pinControl;
 }
 
