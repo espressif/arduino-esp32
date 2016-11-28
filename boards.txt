@@ -17,7 +17,7 @@ esp32.build.core=esp32
 esp32.build.variant=esp32
 esp32.build.board=ESP32_DEV
 
-esp32.build.f_cpu=160000000L
+esp32.build.f_cpu=240000000L
 esp32.build.flash_mode=dio
 esp32.build.flash_size=4MB
 
@@ -57,7 +57,7 @@ esp320.build.core=esp32
 esp320.build.variant=esp320
 esp320.build.board=ESP320
 
-esp320.build.f_cpu=160000000L
+esp320.build.f_cpu=240000000L
 esp320.build.flash_mode=qio
 esp320.build.flash_size=4MB
 
@@ -97,7 +97,7 @@ nano32.build.core=esp32
 nano32.build.variant=nano32
 nano32.build.board=NANO32
 
-nano32.build.f_cpu=160000000L
+nano32.build.f_cpu=240000000L
 nano32.build.flash_mode=dio
 nano32.build.flash_size=4MB
 
@@ -137,7 +137,7 @@ lolin32.build.core=esp32
 lolin32.build.variant=lolin32
 lolin32.build.board=LoLin32
 
-lolin32.build.f_cpu=160000000L
+lolin32.build.f_cpu=240000000L
 lolin32.build.flash_mode=dio
 lolin32.build.flash_size=4MB
 
@@ -177,7 +177,7 @@ espea32.build.core=esp32
 espea32.build.variant=espea32
 espea32.build.board=ESPea32
 
-espea32.build.f_cpu=160000000L
+espea32.build.f_cpu=240000000L
 espea32.build.flash_mode=dio
 espea32.build.flash_size=4MB
 
@@ -217,7 +217,7 @@ quantum.build.core=esp32
 quantum.build.variant=quantum
 quantum.build.board=QUANTUM
 
-quantum.build.f_cpu=160000000L
+quantum.build.f_cpu=240000000L
 quantum.build.flash_mode=qio
 quantum.build.flash_size=16MB
 
@@ -257,7 +257,7 @@ node32s.build.core=esp32
 node32s.build.variant=node32s
 node32s.build.board=Node32s
 
-node32s.build.f_cpu=160000000L
+node32s.build.f_cpu=240000000L
 node32s.build.flash_mode=dio
 node32s.build.flash_size=4MB
 
