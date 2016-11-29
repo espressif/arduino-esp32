@@ -36,6 +36,7 @@ WiFiClient::WiFiClient(int fd):sockfd(fd),_connected(true),next(NULL)
 
 WiFiClient::~WiFiClient()
 {
+    stop();
 }
 
 WiFiClient & WiFiClient::operator=(const WiFiClient &other)
