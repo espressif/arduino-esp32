@@ -166,8 +166,7 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     int res = send(sockfd, (void*)buf, size, MSG_DONTWAIT);
     if(res < 0) {
         log_e("%d", errno);
-        _connected = false;
-        sockfd = -1;
+        stop();
         res = 0;
     }
     return res;
@@ -181,8 +180,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     int res = recv(sockfd, buf, size, MSG_DONTWAIT);
     if(res < 0 && errno != EWOULDBLOCK) {
         log_e("%d", errno);
-        _connected = false;
-        sockfd = -1;
+        stop();
     }
     return res;
 }
@@ -196,8 +194,7 @@ int WiFiClient::available()
     int res = ioctl(sockfd, FIONREAD, &count);
     if(res < 0) {
         log_e("%d", errno);
-        _connected = false;
-        sockfd = -1;
+        stop();
         return 0;
     }
     return count;
