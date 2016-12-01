@@ -65,6 +65,10 @@ uint32_t millis();
 void delay(uint32_t);
 void delayMicroseconds(uint32_t us);
 
+#if !CONFIG_ESP32_PHY_AUTO_INIT
+void arduino_phy_init();
+#endif
+
 #if !CONFIG_AUTOSTART_ARDUINO
 void initArduino();
 #endif
