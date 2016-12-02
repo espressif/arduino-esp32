@@ -34,6 +34,10 @@ extern "C" {
 #include <math.h>
 #include "sdkconfig.h"
 
+#ifndef F_CPU
+#define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
+#endif
+
 #ifndef CONFIG_DISABLE_HAL_LOCKS
 #define CONFIG_DISABLE_HAL_LOCKS 0
 #endif

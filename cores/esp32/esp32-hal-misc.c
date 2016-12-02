@@ -68,7 +68,6 @@ uint32_t IRAM_ATTR micros()
     uint32_t ccount;
     __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
     return ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
-    //return system_get_time();
 }
 
 uint32_t IRAM_ATTR millis()
@@ -81,12 +80,17 @@ void delay(uint32_t ms)
     vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
-void delayMicroseconds(uint32_t us)
+void IRAM_ATTR delayMicroseconds(uint32_t us)
 {
-    if(us) {
-        unsigned long endat = micros();
-        endat += us;
-        while(micros() < endat) {
+    uint32_t m = micros();
+    if(us){
+        uint32_t e = (m + us) % ((0xFFFFFFFF / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ) + 1);
+        if(m > e){ //overflow
+            while(micros() > e){
+                NOP();
+            }
+        }
+        while(micros() < e){
             NOP();
         }
     }
