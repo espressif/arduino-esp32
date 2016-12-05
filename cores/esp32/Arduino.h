@@ -117,7 +117,6 @@ extern "C" {
 
 typedef bool boolean;
 typedef uint8_t byte;
-typedef unsigned int word;
 
 uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
@@ -153,6 +152,11 @@ long map(long, long, long, long, long);
 
 #define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
+
+uint16_t makeWord(uint16_t w);
+uint16_t makeWord(byte h, byte l);
+
+#define word(...) makeWord(__VA_ARGS__)
 
 #include "pins_arduino.h"
 
