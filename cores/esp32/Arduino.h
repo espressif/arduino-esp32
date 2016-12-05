@@ -136,6 +136,11 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "HardwareSerial.h"
 #include "Esp.h"
 
+uint16_t makeWord(uint16_t w);
+uint16_t makeWord(byte h, byte l);
+
+#define word(...) makeWord(__VA_ARGS__)
+
 // WMath prototypes
 long random(long);
 #endif /* __cplusplus */
@@ -152,12 +157,6 @@ long map(long, long, long, long, long);
 
 #define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
-
-uint16_t makeWord(uint16_t w);
-uint16_t makeWord(byte h, byte l);
-
-#define word(...) makeWord(__VA_ARGS__)
-
 #include "pins_arduino.h"
 
 #endif /* _ESP32_CORE_ARDUINO_H_ */
