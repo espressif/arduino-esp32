@@ -19,20 +19,41 @@ WiFiClient, WiFiServer and WiFiUdp are not quite ready yet because there are sti
 You can try WiFiClient but you need to disconnect the client yourself to be sure that connection is closed.
 
 ### Installation
-- Install Arduino IDE
-- Go to Arduino IDE installation directory
-- Clone this repository into hardware/espressif/esp32 directory (or clone it elsewhere and create a symlink)
-```bash
-cd hardware
-mkdir espressif
-cd espressif
-git clone https://github.com/espressif/arduino-esp32.git esp32
-```
-- Download binary tools (you need Python 2.7)
-```bash
-cd esp32/tools
-python get.py
-```
-- Restart Arduino
+
+####[Instructions for Windows](doc/windows.md)
+
+#### Instructions for Mac
+- Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
+- Open Terminal and execute the following command (copy->paste and hit enter):
+
+  ```bash
+  curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py && \
+  sudo python get-pip.py && \
+  sudo pip install pyserial && \
+  mkdir -p ~/Documents/Arduino/hardware/espressif && \
+  cd ~/Documents/Arduino/hardware/espressif && \
+  git clone https://github.com/espressif/arduino-esp32.git esp32 && \
+  cd esp32/tools/ && \
+  python get.py
+  ```
+- Restart Arduino IDE
+
+#### Instructions for Debian/Ubuntu Linux
+- Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
+- Open Terminal and execute the following command (copy->paste and hit enter):
+
+  ```bash
+  sudo usermod -a -G dialout $USER && \
+  sudo apt-get install git && \
+  wget https://bootstrap.pypa.io/get-pip.py && \
+  sudo python get-pip.py && \
+  sudo pip install pyserial && \
+  mkdir -p ~/Arduino/hardware/espressif && \
+  cd ~/Arduino/hardware/espressif && \
+  git clone https://github.com/espressif/arduino-esp32.git esp32 && \
+  cd esp32/tools/ && \
+  python get.py
+  ```
+- Restart Arduino IDE
 
 ![Pin Functions](doc/esp32_pinmap.png)
