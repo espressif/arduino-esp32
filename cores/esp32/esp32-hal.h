@@ -38,14 +38,6 @@ extern "C" {
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
 #endif
 
-#ifndef CONFIG_DISABLE_HAL_LOCKS
-#define CONFIG_DISABLE_HAL_LOCKS 0
-#endif
-
-#ifndef CONFIG_AUTOSTART_ARDUINO
-#define CONFIG_AUTOSTART_ARDUINO 1
-#endif
-
 //forward declaration from freertos/portmacro.h
 void vPortYield( void );
 #define yield() vPortYield()
