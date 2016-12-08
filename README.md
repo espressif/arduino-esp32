@@ -6,10 +6,13 @@ Not everything is working yet, you can not get it through package manager, but y
 
 The framework can also be downloaded as component in an IDF project and be used like that.
 
-Things that "should" work:
+Things that work:
+
 - pinMode
 - digitalRead/digitalWrite
 - attachInterrupt/detachInterrupt
+- analogRead/touchRead/touchAttachInterrupt
+- ledcWrite/sdWrite/dacWrite
 - Serial (global Serial is attached to pins 1 and 3 by default, there are another 2 serials that you can attach to any pin)
 - SPI (global SPI is attached to VSPI pins by default and HSPI can be attached to any pins)
 - Wire (global Wire is attached to pins 21 and 22 by default and there is another I2C bus that you can attach to any pins)
@@ -55,5 +58,58 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
   python get.py
   ```
 - Restart Arduino IDE
+
+#### Instructions for using as esp-idf component
+- Download and install [esp-idf](https://github.com/espressif/esp-idf)
+- Create blank idf project (from one of the examples)
+- in the project folder, create a folder called components and clone this repository inside
+    
+    ```bash
+    mkdir -p components && \
+    cd components && \
+    git clone https://github.com/espressif/arduino-esp32.git arduino && \
+    cd.. && \
+    make menuconfig
+  ```
+- ```make menuconfig``` has some Arduino options
+    - "Autostart Arduino setup and loop on boot"
+        - If you enable this options, your main.cpp should be formated like any other sketch
+          
+          ```arduino
+          //file: main.cpp
+          #include "Arduino.h"
+          
+          void setup(){
+            Serial.begin(115200);
+          }
+          
+          void loop(){
+            Serial.println("loop");
+            delay(1000);
+          }
+          ```
+        - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
+        
+          Keep in mind that setup() and loop() will not be called in this case
+          
+          ```arduino
+          //file: main.cpp
+          #include "Arduino.h"
+          extern "C" void initArduino();
+          
+          extern "C" void app_main()
+          {
+              initArduino();
+              pinMode(4, OUPUT);
+              digitalWrite(4, HIGH);
+              //do your own thing
+          }
+          ```
+    - "Disable mutex locks for HAL"
+        - If enabled, there will be no protection on the drivers from concurently accessing them from another thread/interrupt/core
+    - "Autoconnect WiFi on boot"
+        - If enabled, WiFi will start with the last known configuration
+        - Else it will wait for WiFi.begin
+- ```make flash monitor``` will build, upload and open serial monitor to your board
 
 ![Pin Functions](doc/esp32_pinmap.png)
