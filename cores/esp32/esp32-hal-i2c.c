@@ -172,9 +172,13 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
             }
         }
         i = 0;
+        uint32_t fifotail = 0;
         while(i<dataSend) {
+            fifotail = i2c->dev->fifo_st.tx_fifo_end_addr;
             i++;
             i2c->dev->fifo_data.data = data[index++];
+            // Wait for FIFO to update
+            while(i2c->dev->fifo_st.tx_fifo_end_addr == fifotail) {};
         }
         i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
         dataLen -= willSend;
@@ -389,7 +393,7 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
     i2c->dev->ctr.scl_force_out = 1 ;
     i2c->dev->ctr.clk_en = 1;
 
-    i2c->dev->timeout.tout = 2000;
+    i2c->dev->timeout.tout = 400000;//clocks max=1048575
     i2c->dev->fifo_conf.nonfifo_en = 0;
 
     i2c->dev->slave_addr.val = 0;
