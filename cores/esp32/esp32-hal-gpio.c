@@ -24,7 +24,7 @@
 #include "soc/gpio_struct.h"
 #include "soc/rtc_io_reg.h"
 
-#define ETS_GPIO_INUM       4
+#define ETS_GPIO_INUM       12
 
 const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
     {0x44, 11, 11, 1},

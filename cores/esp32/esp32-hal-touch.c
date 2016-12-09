@@ -22,7 +22,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 
-#define RTC_TOUCH_INUM 5
+#define RTC_TOUCH_INUM 13
 
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
