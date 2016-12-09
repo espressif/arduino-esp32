@@ -172,13 +172,9 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
             }
         }
         i = 0;
-        uint32_t fifotail = 0;
         while(i<dataSend) {
-            fifotail = i2c->dev->fifo_st.tx_fifo_end_addr;
             i++;
             i2c->dev->fifo_data.data = data[index++];
-            // Wait for FIFO to update
-            while(i2c->dev->fifo_st.tx_fifo_end_addr == fifotail) {};
         }
         i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
         dataLen -= willSend;
