@@ -1,7 +1,13 @@
-Arduino core for ESP32 WiFi chip
-===========================================
+# Arduino core for ESP32 WiFi chip
 
-### Development Status
+- [Development Status](#development-status)
+- Installing options:
+  + [Using Arduino IDE](#using-arduino-ide)
+  + [Using PlatformIO](#using-platformio)
+  + [Using as ESP-IDF component](#using-as-esp-idf-component)
+- [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)  
+
+## Development Status
 Not everything is working yet, you can not get it through package manager, but you can give it a go and help us find bugs in the things that are implemented :)
 
 The framework can also be downloaded as component in an IDF project and be used like that.
@@ -21,11 +27,11 @@ Things that work:
 WiFiClient, WiFiServer and WiFiUdp are not quite ready yet because there are still some small hiccups in LwIP to be overcome.
 You can try WiFiClient but you need to disconnect the client yourself to be sure that connection is closed.
 
-### Installation
+## Using Arduino IDE
 
-####[Instructions for Windows](doc/windows.md)
+###[Instructions for Windows](doc/windows.md)
 
-#### Instructions for Mac
+### Instructions for Mac
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
@@ -41,7 +47,7 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
   ```
 - Restart Arduino IDE
 
-#### Instructions for Debian/Ubuntu Linux
+### Instructions for Debian/Ubuntu Linux
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
@@ -59,7 +65,21 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
   ```
 - Restart Arduino IDE
 
-#### Instructions for using as esp-idf component
+## Using PlatformIO
+
+[PlatformIO](http://platformio.org) is an open source ecosystem for IoT
+development with cross platform build system, library manager and full support
+for Espressif ESP32 development. It works on the popular host OS: Mac OS X, Windows,
+Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
+
+- [What is PlatformIO?](http://docs.platformio.org/page/what-is-platformio.html)
+- [PlatformIO IDE](http://platformio.org/platformio-ide)
+- Quick Start with [PlatformIO IDE](http://docs.platformio.org/page/ide/atom.html#quick-start) or [PlatformIO Core](http://docs.platformio.org/page/core.html)
+- [Integration with Cloud and Standalone IDEs](http://docs.platformio.org/page/ide.html) -
+  Cloud9, Codeanywehre, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM and Visual Studio
+- [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
+
+## Using as ESP-IDF component
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
 - in the project folder, create a folder called components and clone this repository inside
@@ -111,5 +131,7 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
         - If enabled, WiFi will start with the last known configuration
         - Else it will wait for WiFi.begin
 - ```make flash monitor``` will build, upload and open serial monitor to your board
+
+## ESP32Dev Board PINMAP
 
 ![Pin Functions](doc/esp32_pinmap.png)
