@@ -65,6 +65,7 @@ typedef struct {
 } esp32_gpioMux_t;
 
 extern const esp32_gpioMux_t esp32_gpioMux[40];
+extern const int8_t esp32_adc2gpio[20];
 
 #define digitalPinIsValid(pin)          ((pin) < 40 && esp32_gpioMux[(pin)].reg)
 #define digitalPinCanOutput(pin)        ((pin) < 34 && esp32_gpioMux[(pin)].reg)

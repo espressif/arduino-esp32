@@ -26,6 +26,8 @@
 
 #define ETS_GPIO_INUM       12
 
+const int8_t esp32_adc2gpio[20] = {36, -1, -1, 39, 32, 33, 34, 35, -1, -1, 4, 0, 2, 15, 13, 12, 14, 27, 25, 26};
+
 const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
     {0x44, 11, 11, 1},
     {0x88, -1, -1, -1},
