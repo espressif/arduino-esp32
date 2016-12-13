@@ -85,44 +85,44 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
 - in the project folder, create a folder called components and clone this repository inside
-    
+
     ```bash
     mkdir -p components && \
     cd components && \
     git clone https://github.com/espressif/arduino-esp32.git arduino && \
-    cd.. && \
+    cd .. && \
     make menuconfig
   ```
 - ```make menuconfig``` has some Arduino options
     - "Autostart Arduino setup and loop on boot"
         - If you enable this options, your main.cpp should be formated like any other sketch
-          
+
           ```arduino
           //file: main.cpp
           #include "Arduino.h"
-          
+
           void setup(){
             Serial.begin(115200);
           }
-          
+
           void loop(){
             Serial.println("loop");
             delay(1000);
           }
           ```
         - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
-        
+
           Keep in mind that setup() and loop() will not be called in this case
-          
+
           ```arduino
           //file: main.cpp
           #include "Arduino.h"
           extern "C" void initArduino();
-          
+
           extern "C" void app_main()
           {
               initArduino();
-              pinMode(4, OUPUT);
+              pinMode(4, OUTPUT);
               digitalWrite(4, HIGH);
               //do your own thing
           }
