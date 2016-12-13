@@ -1,6 +1,6 @@
 # Arduino core for ESP32 WiFi chip
 
-[![Join the chat at https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+## Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - [Development Status](#development-status)
 - Installing options:
@@ -117,7 +117,6 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
           ```arduino
           //file: main.cpp
           #include "Arduino.h"
-          extern "C" void initArduino();
 
           extern "C" void app_main()
           {
