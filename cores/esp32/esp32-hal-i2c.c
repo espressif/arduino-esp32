@@ -267,9 +267,17 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
             i2cResetFiFo(i2c);
         }
 
-        i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, willRead, false, false, false);
-        if((len - willRead) > 1) {
-            i2cSetCmd(i2c, cmdIdx++, I2C_CMD_END, 0, false, false, false);
+        if(willRead){
+            i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, willRead, false, false, false);
+            if((len - willRead) > 1) {
+                i2cSetCmd(i2c, cmdIdx++, I2C_CMD_END, 0, false, false, false);
+            } else {
+                willRead++;
+                i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, 1, true, false, false);
+                if(sendStop) {
+                    i2cSetCmd(i2c, cmdIdx++, I2C_CMD_STOP, 0, false, false, false);
+                }
+            }
         } else {
             willRead++;
             i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, 1, true, false, false);
