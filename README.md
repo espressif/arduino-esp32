@@ -112,7 +112,8 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
           ```
         - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
 
-          Keep in mind that setup() and loop() will not be called in this case
+          Keep in mind that setup() and loop() will not be called in this case.
+          If you are writing your code on esp-idf examples, make sure there is just app_main() function in your main.cpp and example files. 
 
           ```arduino
           //file: main.cpp
