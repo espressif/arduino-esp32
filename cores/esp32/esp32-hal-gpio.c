@@ -103,7 +103,10 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         //unlock rtc
         ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)2 << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
         return;
-    } else if(rtc_reg) {
+    }
+
+    //RTC pins PULL settings
+    if(rtc_reg) {
         //lock rtc
         ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
         if(mode & PULLUP) {
@@ -125,12 +128,6 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         } else {
             GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
-
-        if(mode & PULLUP) {
-            pinFunction |= FUN_PU;
-        } else if(mode & PULLDOWN) {
-            pinFunction |= FUN_PD;
-        }
     } else if(mode & OUTPUT) {
         if(pin > 33){
             //unlock gpio
@@ -140,6 +137,12 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         } else {
             GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
         }
+    }
+
+    if(mode & PULLUP) {
+        pinFunction |= FUN_PU;
+    } else if(mode & PULLDOWN) {
+        pinFunction |= FUN_PD;
     }
 
     pinFunction |= ((uint32_t)2 << FUN_DRV_S);//what are the drivers?
