@@ -158,6 +158,8 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
 
         i2cResetFiFo(i2c);
         i2cResetCmd(i2c);
+        //Clear Interrupts
+        i2c->dev->int_clr.val = 0xFFFFFFFF;
 
         //CMD START
         i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
@@ -174,26 +176,32 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
         i = 0;
         while(i<dataSend) {
             i++;
-            i2c->dev->fifo_data.data = data[index++];
+            i2c->dev->fifo_data.val = data[index++];
+            while(i2c->dev->status_reg.tx_fifo_cnt < i);
         }
         i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
         dataLen -= willSend;
 
         //CMD STOP or CMD END if there is more data
-        if(dataLen) {
+        if(dataLen || !sendStop) {
             i2cSetCmd(i2c, 2, I2C_CMD_END, 0, false, false, false);
         } else if(sendStop) {
             i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
         }
 
-        //Clear Interrupts
-        i2c->dev->int_clr.val = 0xFFFFFFFF;
-
         //START Transmission
         i2c->dev->ctr.trans_start = 1;
 
         //WAIT Transmission
+        uint32_t startAt = millis();
         while(1) {
+            //have been looping for too long
+            if((millis() - startAt)>50){
+                //log_e("Timeout! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
+                return I2C_ERROR_BUS;
+            }
+
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
@@ -210,14 +218,12 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
-                //log_e("Ack Error! Addr: %x", address >> 1);
+                //log_w("Ack Error! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
             }
 
-            if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[2].done)) {
-                continue;
-            } else if(i2c->dev->command[2].done) {
+            if((sendStop && i2c->dev->command[2].done) || !i2c->dev->status_reg.bus_busy){
                 break;
             }
         }
@@ -248,9 +254,9 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
 
     //CMD WRITE ADDRESS
-    i2c->dev->fifo_data.data = address & 0xFF;
+    i2c->dev->fifo_data.val = address & 0xFF;
     if(addr_10bit) {
-        i2c->dev->fifo_data.data = (address >> 8) & 0xFF;
+        i2c->dev->fifo_data.val = (address >> 8) & 0xFF;
     }
     i2cSetCmd(i2c, 1, I2C_CMD_WRITE, addrLen, false, false, true);
 
@@ -279,7 +285,15 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
         i2c->dev->ctr.trans_start = 1;
 
         //WAIT Transmission
+        uint32_t startAt = millis();
         while(1) {
+            //have been looping for too long
+            if((millis() - startAt)>50){
+                //log_e("Timeout! Addr: %x", address >> 1);
+                I2C_MUTEX_UNLOCK();
+                return I2C_ERROR_BUS;
+            }
+
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
                 //log_e("Bus Fail! Addr: %x", address >> 1);
@@ -296,13 +310,12 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
-                //log_e("Ack Error! Addr: %x", address >> 1);
+                //log_w("Ack Error! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
             }
-            if(i2c->dev->ctr.trans_start || i2c->dev->status_reg.bus_busy || !(i2c->dev->int_raw.trans_complete) || !(i2c->dev->command[cmdIdx-1].done)) {
-                continue;
-            } else if(i2c->dev->command[cmdIdx-1].done) {
+
+            if(i2c->dev->command[cmdIdx-1].done) {
                 break;
             }
         }
@@ -310,7 +323,7 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
         int i = 0;
         while(i<willRead) {
             i++;
-            data[index++] = i2c->dev->fifo_data.data;
+            data[index++] = i2c->dev->fifo_data.val & 0xFF;
         }
         len -= willRead;
     }
@@ -320,24 +333,34 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
 
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 {
-    uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
-
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
 
+    uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
+    uint32_t halfPeriod = period/2;
+    uint32_t quarterPeriod = period/4;
+
     I2C_MUTEX_LOCK();
+    //the clock num during SCL is low level
     i2c->dev->scl_low_period.scl_low_period = period;
+    //the clock num during SCL is high level
     i2c->dev->scl_high_period.period = period;
 
-    i2c->dev->scl_start_hold.time = 50;
-    i2c->dev->scl_rstart_setup.time = 50;
+    //the clock num between the negedge of SDA and negedge of SCL for start mark
+    i2c->dev->scl_start_hold.time = halfPeriod;
+    //the clock num between the posedge of SCL and the negedge of SDA for restart mark
+    i2c->dev->scl_rstart_setup.time = halfPeriod;
 
-    i2c->dev->scl_stop_hold.time   = 50;
-    i2c->dev->scl_stop_setup.time = 50;
+    //the clock num after the STOP bit's posedge
+    i2c->dev->scl_stop_hold.time = halfPeriod;
+    //the clock num between the posedge of SCL and the posedge of SDA
+    i2c->dev->scl_stop_setup.time = halfPeriod;
 
-    i2c->dev->sda_hold.time     = 25;
-    i2c->dev->sda_sample.time = 25;
+    //the clock num I2C used to hold the data after the negedge of SCL.
+    i2c->dev->sda_hold.time = quarterPeriod;
+    //the clock num I2C used to sample data on SDA after the posedge of SCL
+    i2c->dev->sda_sample.time = quarterPeriod;
     I2C_MUTEX_UNLOCK();
     return I2C_ERROR_OK;
 }
@@ -389,7 +412,9 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
     i2c->dev->ctr.scl_force_out = 1 ;
     i2c->dev->ctr.clk_en = 1;
 
+    //the max clock number of receiving  a data
     i2c->dev->timeout.tout = 400000;//clocks max=1048575
+    //disable apb nonfifo access
     i2c->dev->fifo_conf.nonfifo_en = 0;
 
     i2c->dev->slave_addr.val = 0;
@@ -402,4 +427,19 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
     return i2c;
 }
 
-
+void i2cInitFix(i2c_t * i2c){
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    i2cResetFiFo(i2c);
+    i2cResetCmd(i2c);
+    i2c->dev->int_clr.val = 0xFFFFFFFF;
+    i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
+    i2c->dev->fifo_data.data = 0;
+    i2cSetCmd(i2c, 1, I2C_CMD_WRITE, 1, false, false, false);
+    i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
+    i2c->dev->ctr.trans_start = 1;
+    while(!i2c->dev->command[2].done);
+    I2C_MUTEX_UNLOCK();
+}

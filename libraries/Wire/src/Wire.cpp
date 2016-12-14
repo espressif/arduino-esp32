@@ -86,6 +86,8 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     i2cAttachSCL(i2c, scl);
 
     flush();
+
+    i2cInitFix(i2c);
 }
 
 void TwoWire::setClock(uint32_t frequency)
