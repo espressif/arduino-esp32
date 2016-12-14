@@ -26,13 +26,22 @@ extern "C" {
 
 #include "esp32-hal.h"
 
+typedef enum {
+    ADC_0db,
+    ADC_2_5db,
+    ADC_6db,
+    ADC_11db
+} adc_attenuation_t;
+
 /*
  * Get ADC value for pin
  * */
 uint16_t analogRead(uint8_t pin);
 
 /*
- * Sets the sample bits (9 - 12)
+ * Sets the sample bits
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
  * */
 void analogSetWidth(uint8_t bits);
 
@@ -60,6 +69,18 @@ void analogSetSamples(uint8_t samples);
  * Range is 1 - 255
  * */
 void analogSetClockDiv(uint8_t clockDiv);
+
+/*
+ * Set the attenuation for all channels
+ * Default is 11db
+ * */
+void analogSetAttenuation(adc_attenuation_t attenuation);
+
+/*
+ * Set the attenuation for particular pin
+ * Default is 11db
+ * */
+void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
 /*
  * Get value for HALL sensor (without LNA)

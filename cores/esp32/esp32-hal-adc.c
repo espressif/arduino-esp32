@@ -22,7 +22,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 
-static uint8_t __analogAttenuation = 0;//0db
+static uint8_t __analogAttenuation = 3;//11db
 static uint8_t __analogWidth = 3;//12 bits
 static uint8_t __analogCycles = 8;
 static uint8_t __analogSamples = 0;//1 sample
@@ -66,15 +66,16 @@ void __analogSetClockDiv(uint8_t clockDiv){
     SET_PERI_REG_BITS(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_CLK_DIV, __analogClockDiv, SENS_SAR2_CLK_DIV_S);
 }
 
-void __analogSetAttenuation(uint8_t attenuation){
+void __analogSetAttenuation(adc_attenuation_t attenuation)
+{
     __analogAttenuation = attenuation & 3;
     uint32_t att_data = 0;
-    int i = 8;
+    int i = 10;
     while(i--){
         att_data |= __analogAttenuation << (i * 2);
     }
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DATA_SAR, att_data, SENS_MEAS1_DATA_SAR_S);
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DATA_SAR, att_data, SENS_MEAS2_DATA_SAR_S);
+    WRITE_PERI_REG(SENS_SAR_ATTEN1_REG, att_data & 0xFFFF);//ADC1 has 8 channels
+    WRITE_PERI_REG(SENS_SAR_ATTEN2_REG, att_data);
 }
 
 void IRAM_ATTR __analogInit(){
@@ -82,6 +83,7 @@ void IRAM_ATTR __analogInit(){
     if(initialized){
         return;
     }
+
     __analogSetAttenuation(__analogAttenuation);
     __analogSetCycles(__analogCycles);
     __analogSetSamples(__analogSamples + 1);//in samples
@@ -106,6 +108,20 @@ void IRAM_ATTR __analogInit(){
     while (GET_PERI_REG_BITS2(SENS_SAR_SLAVE_ADDR1_REG, 0x7, SENS_MEAS_STATUS_S) != 0); //wait det_fsm==
 
     initialized = true;
+}
+
+void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
+{
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    if(channel < 0 || attenuation > 3){
+        return ;
+    }
+    __analogInit();
+    if(channel > 7){
+        SET_PERI_REG_BITS(SENS_SAR_ATTEN2_REG, 3, attenuation, ((channel - 10) * 2));
+    } else {
+        SET_PERI_REG_BITS(SENS_SAR_ATTEN1_REG, 3, attenuation, (channel * 2));
+    }
 }
 
 uint16_t IRAM_ATTR __analogRead(uint8_t pin)
@@ -150,6 +166,7 @@ uint16_t IRAM_ATTR __analogRead(uint8_t pin)
     while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0) {}; //read done
     return GET_PERI_REG_BITS2(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DATA_SAR, SENS_MEAS1_DATA_SAR_S);
 }
+
 int __hallRead()    //hall sensor without LNA
 {
     int Sens_Vp0;
@@ -179,5 +196,6 @@ extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSe
 extern void analogSetCycles(uint8_t cycles) __attribute__ ((weak, alias("__analogSetCycles")));
 extern void analogSetSamples(uint8_t samples) __attribute__ ((weak, alias("__analogSetSamples")));
 extern void analogSetClockDiv(uint8_t clockDiv) __attribute__ ((weak, alias("__analogSetClockDiv")));
-//extern void analogSetAttenuation(uint8_t attenuation) __attribute__ ((weak, alias("__analogSetAttenuation")));
+extern void analogSetAttenuation(adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetAttenuation")));
+extern void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetPinAttenuation")));
 extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
