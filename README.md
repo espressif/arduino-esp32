@@ -108,8 +108,9 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
           void loop(){
             Serial.println("loop");
             delay(1000);
-          ```
           }
+          ```
+          
         - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
 
           Keep in mind that setup() and loop() will not be called in this case.
