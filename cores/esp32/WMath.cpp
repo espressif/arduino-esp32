@@ -25,6 +25,7 @@
 
 extern "C" {
 #include <stdlib.h>
+#include "esp_system.h"
 }
 
 void randomSeed(unsigned long seed)
@@ -39,7 +40,7 @@ long random(long howbig)
     if(howbig == 0) {
         return 0;
     }
-    return rand() % howbig;
+    return esp_random() % howbig;
 }
 
 long random(long howsmall, long howbig)

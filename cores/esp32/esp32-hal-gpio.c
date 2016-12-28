@@ -22,64 +22,106 @@
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_struct.h"
-#include "driver/gpio.h"
+#include "soc/rtc_io_reg.h"
 
-#define ETS_GPIO_INUM       4
+#define ETS_GPIO_INUM       12
 
-const uint8_t esp32_gpioToFn[40] = {
-    0x44,//0
-    0x88,//1
-    0x40,//2
-    0x84,//3
-    0x48,//4
-    0x6c,//5
-    0x60,//6
-    0x64,//7
-    0x68,//8
-    0x54,//9
-    0x58,//10
-    0x5c,//11
-    0x34,//12
-    0x38,//13
-    0x30,//14
-    0x3c,//15
-    0x4c,//16
-    0x50,//17
-    0x70,//18
-    0x74,//19
-    0x78,//20
-    0x7c,//21
-    0x80,//22
-    0x8c,//23
-    0xFF,//N/A
-    0x24,//25
-    0x28,//26
-    0x2c,//27
-    0xFF,//N/A
-    0xFF,//N/A
-    0xFF,//N/A
-    0xFF,//N/A
-    0x1c,//32
-    0x20,//33
-    0x14,//34
-    0x18,//35
-    0x04,//36
-    0x08,//37
-    0x0c,//38
-    0x10 //39
+const int8_t esp32_adc2gpio[20] = {36, -1, -1, 39, 32, 33, 34, 35, -1, -1, 4, 0, 2, 15, 13, 12, 14, 27, 25, 26};
+
+const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
+    {0x44, 11, 11, 1},
+    {0x88, -1, -1, -1},
+    {0x40, 12, 12, 2},
+    {0x84, -1, -1, -1},
+    {0x48, 10, 10, 0},
+    {0x6c, -1, -1, -1},
+    {0x60, -1, -1, -1},
+    {0x64, -1, -1, -1},
+    {0x68, -1, -1, -1},
+    {0x54, -1, -1, -1},
+    {0x58, -1, -1, -1},
+    {0x5c, -1, -1, -1},
+    {0x34, 15, 15, 5},
+    {0x38, 14, 14, 4},
+    {0x30, 16, 16, 6},
+    {0x3c, 13, 13, 3},
+    {0x4c, -1, -1, -1},
+    {0x50, -1, -1, -1},
+    {0x70, -1, -1, -1},
+    {0x74, -1, -1, -1},
+    {0x78, -1, -1, -1},
+    {0x7c, -1, -1, -1},
+    {0x80, -1, -1, -1},
+    {0x8c, -1, -1, -1},
+    {0, -1, -1, -1},
+    {0x24, 6, 18, -1}, //DAC1
+    {0x28, 7, 19, -1}, //DAC2
+    {0x2c, 17, 17, 7},
+    {0, -1, -1, -1},
+    {0, -1, -1, -1},
+    {0, -1, -1, -1},
+    {0, -1, -1, -1},
+    {0x1c, 9, 4, 9},
+    {0x20, 8, 5, 8},
+    {0x14, 4, 6, -1},
+    {0x18, 5, 7, -1},
+    {0x04, 0, 0, -1},
+    {0x08, 1, -1, -1},
+    {0x0c, 2, -1, -1},
+    {0x10, 3, 3, -1}
 };
 
 typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
+#include "driver/rtc_io.h"
+
 extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
-    uint32_t pinFunction = 0, pinControl = 0;
 
-    if(pin > 39 || esp32_gpioToFn[pin] == 0xFF) {
+    if(!digitalPinIsValid(pin)) {
         return;
     }
 
+    uint32_t rtc_reg = rtc_gpio_desc[pin].reg;
+    if(mode == ANALOG) {
+        if(!rtc_reg) {
+            return;//not rtc pin
+        }
+        //lock rtc
+        uint32_t reg_val = ESP_REG(rtc_reg);
+        if(reg_val & rtc_gpio_desc[pin].mux){
+            return;//already in adc mode
+        }
+        reg_val &= ~(
+                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_gpio_desc[pin].func)
+                |rtc_gpio_desc[pin].ie
+                |rtc_gpio_desc[pin].pullup
+                |rtc_gpio_desc[pin].pulldown);
+        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_gpio_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
+        ESP_REG(rtc_reg) = reg_val | rtc_gpio_desc[pin].mux;
+        //unlock rtc
+        ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)2 << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
+        return;
+    }
+
+    //RTC pins PULL settings
+    if(rtc_reg) {
+        //lock rtc
+        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
+        if(mode & PULLUP) {
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pullup) & ~(rtc_gpio_desc[pin].pulldown);
+        } else if(mode & PULLDOWN) {
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pulldown) & ~(rtc_gpio_desc[pin].pullup);
+        } else {
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
+        }
+        //unlock rtc
+    }
+
+    uint32_t pinFunction = 0, pinControl = 0;
+
+    //lock gpio
     if(mode & INPUT) {
         if(pin < 32) {
             GPIO.enable_w1tc = ((uint32_t)1 << pin);
@@ -87,11 +129,20 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
             GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
     } else if(mode & OUTPUT) {
-        if(pin < 32) {
+        if(pin > 33){
+            //unlock gpio
+            return;//pins above 33 can be only inputs
+        } else if(pin < 32) {
             GPIO.enable_w1ts = ((uint32_t)1 << pin);
         } else {
             GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
         }
+    }
+
+    if(mode & PULLUP) {
+        pinFunction |= FUN_PU;
+    } else if(mode & PULLDOWN) {
+        pinFunction |= FUN_PD;
     }
 
     pinFunction |= ((uint32_t)2 << FUN_DRV_S);//what are the drivers?
@@ -105,43 +156,28 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         pinFunction |= ((uint32_t)(mode >> 5) << MCU_SEL_S);
     }
 
-    ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioToFn[pin]) = pinFunction;
-
-    if((mode & INPUT) && (mode & (PULLUP|PULLDOWN))) {
-        if(mode & PULLUP) {
-            gpio_pullup_en(pin);
-            gpio_pulldown_dis(pin);
-        } else {
-            gpio_pulldown_en(pin);
-            gpio_pullup_dis(pin);
-        }
-    } else {
-        gpio_pullup_dis(pin);
-        gpio_pulldown_dis(pin);
-    }
+    ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = pinFunction;
 
     if(mode & OPEN_DRAIN) {
         pinControl = (1 << GPIO_PIN0_PAD_DRIVER_S);
     }
 
     GPIO.pin[pin].val = pinControl;
+    //unlock gpio
 }
 
 extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
-    if(pin > 39) {
-        return;
-    }
     if(val) {
         if(pin < 32) {
             GPIO.out_w1ts = ((uint32_t)1 << pin);
-        } else {
+        } else if(pin < 34) {
             GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
         }
     } else {
         if(pin < 32) {
             GPIO.out_w1tc = ((uint32_t)1 << pin);
-        } else {
+        } else if(pin < 34) {
             GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
     }
@@ -149,14 +185,12 @@ extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 
 extern int IRAM_ATTR __digitalRead(uint8_t pin)
 {
-    if(pin > 39) {
-        return 0;
-    }
     if(pin < 32) {
         return (GPIO.in >> pin) & 0x1;
-    } else {
+    } else if(pin < 40) {
         return (GPIO.in1.val >> (pin - 32)) & 0x1;
     }
+    return 0;
 }
 
 
@@ -206,6 +240,7 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
         ESP_INTR_ENABLE(ETS_GPIO_INUM);
     }
     __pinInterruptHandlers[pin] = userFunc;
+    //lock gpio
     ESP_INTR_DISABLE(ETS_GPIO_INUM);
     if(core_id) { //APP_CPU
         GPIO.pin[pin].int_ena = 1;
@@ -214,15 +249,18 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
     }
     GPIO.pin[pin].int_type = intr_type;
     ESP_INTR_ENABLE(ETS_GPIO_INUM);
+    //unlock gpio
 }
 
 extern void __detachInterrupt(uint8_t pin)
 {
-    __pinInterruptHandlers[pin] = NULL;
+    //lock gpio
     ESP_INTR_DISABLE(ETS_GPIO_INUM);
+    __pinInterruptHandlers[pin] = NULL;
     GPIO.pin[pin].int_ena = 0;
     GPIO.pin[pin].int_type = 0;
     ESP_INTR_ENABLE(ETS_GPIO_INUM);
+    //unlock gpio
 }
 
 

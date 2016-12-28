@@ -52,6 +52,9 @@ extern "C" {
 static bool _esp_wifi_initalized = false;
 extern void initWiFi()
 {
+#if !CONFIG_ESP32_PHY_AUTO_INIT
+    arduino_phy_init();
+#endif
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     tcpip_adapter_init();
     esp_event_loop_init(&WiFiGenericClass::_eventCallback, NULL);

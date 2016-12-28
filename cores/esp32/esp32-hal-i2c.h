@@ -35,6 +35,10 @@ typedef struct i2c_struct_t i2c_t;
 
 i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en);
 
+//call this after you setup the bus and pins to send empty packet
+//required because when pins are attached, they emit pulses that lock the bus
+void i2cInitFix(i2c_t * i2c);
+
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
 

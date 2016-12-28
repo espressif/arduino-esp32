@@ -89,17 +89,17 @@ uint32_t EspClass::getCycleCount()
 
 void EspClass::restart(void)
 {
-    system_restart();
+    esp_restart();
 }
 
 uint32_t EspClass::getFreeHeap(void)
 {
-    return system_get_free_heap_size();
+    return esp_get_free_heap_size();
 }
 
 const char * EspClass::getSdkVersion(void)
 {
-    return system_get_sdk_version();
+    return "";//deprecated in IDF
 }
 
 uint32_t EspClass::getFlashChipSize(void)

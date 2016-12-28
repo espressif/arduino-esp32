@@ -34,12 +34,8 @@ extern "C" {
 #include <math.h>
 #include "sdkconfig.h"
 
-#ifndef CONFIG_DISABLE_HAL_LOCKS
-#define CONFIG_DISABLE_HAL_LOCKS 0
-#endif
-
-#ifndef CONFIG_AUTOSTART_ARDUINO
-#define CONFIG_AUTOSTART_ARDUINO 1
+#ifndef F_CPU
+#define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
 #endif
 
 //forward declaration from freertos/portmacro.h
@@ -54,16 +50,24 @@ void vPortYield( void );
 #include "esp32-hal-matrix.h"
 #include "esp32-hal-uart.h"
 #include "esp32-hal-gpio.h"
+#include "esp32-hal-touch.h"
+#include "esp32-hal-dac.h"
+#include "esp32-hal-adc.h"
 #include "esp32-hal-spi.h"
 #include "esp32-hal-i2c.h"
 #include "esp32-hal-ledc.h"
 #include "esp32-hal-sd.h"
+#include "esp32-hal-timer.h"
 #include "esp_system.h"
 
 uint32_t micros();
 uint32_t millis();
 void delay(uint32_t);
 void delayMicroseconds(uint32_t us);
+
+#if !CONFIG_ESP32_PHY_AUTO_INIT
+void arduino_phy_init();
+#endif
 
 #if !CONFIG_AUTOSTART_ARDUINO
 void initArduino();
