@@ -304,7 +304,21 @@ bool WiFiGenericClass::enableAP(bool enable)
 // ------------------------------------------------ Generic Network function ---------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
-void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg);
+static bool _dns_busy = false;
+
+/**
+ * DNS callback
+ * @param name
+ * @param ipaddr
+ * @param callback_arg
+ */
+static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
+{
+    if(ipaddr) {
+        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
+    }
+    _dns_busy = false;
+}
 
 /**
  * Resolve the given hostname to an IP address.
@@ -313,36 +327,24 @@ void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *ca
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-static bool _dns_busy = false;
-
 int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 {
     ip_addr_t addr;
     aResult = static_cast<uint32_t>(0);
+
+    _dns_busy = true;
     err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
-    _dns_busy = err == ERR_INPROGRESS;
-    while(_dns_busy);
-    if(err == ERR_INPROGRESS && aResult) {
-        //found by search
-    } else if(err == ERR_OK && addr.u_addr.ip4.addr) {
+    if(err == ERR_OK && addr.u_addr.ip4.addr) {
         aResult = addr.u_addr.ip4.addr;
+        _dns_busy = false;
+    } else if(err == ERR_INPROGRESS) {
+        while(_dns_busy){
+            delay(1);
+        }
     } else {
+        _dns_busy = false;
         return 0;
     }
     return 1;
-}
-
-/**
- * DNS callback
- * @param name
- * @param ipaddr
- * @param callback_arg
- */
-void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
-{
-    if(ipaddr) {
-        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
-    }
-    _dns_busy = false;
 }
 

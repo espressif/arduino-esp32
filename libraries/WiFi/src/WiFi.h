@@ -34,6 +34,8 @@
 #include "WiFiGeneric.h"
 
 #include "WiFiClient.h"
+#include "WiFiServer.h"
+#include "WiFiUdp.h"
 
 class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass
 {
@@ -55,6 +57,8 @@ public:
 public:
     void printDiag(Print& dest);
     friend class WiFiClient;
+    friend class WiFiServer;
+    friend class WiFiUDP;
 };
 
 extern WiFiClass WiFi;
