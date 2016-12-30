@@ -10,24 +10,10 @@
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)  
 
 ## Development Status
-Not everything is working yet, you can not get it through package manager, but you can give it a go and help us find bugs in the things that are implemented :)
-
-The framework can also be downloaded as component in an IDF project and be used like that.
-
-Things that work:
-
-- pinMode
-- digitalRead/digitalWrite
-- attachInterrupt/detachInterrupt
-- analogRead/touchRead/touchAttachInterrupt
-- ledcWrite/sdWrite/dacWrite
-- Serial (global Serial is attached to pins 1 and 3 by default, there are another 2 serials that you can attach to any pin)
-- SPI (global SPI is attached to VSPI pins by default and HSPI can be attached to any pins)
-- Wire (global Wire is attached to pins 21 and 22 by default and there is another I2C bus that you can attach to any pins)
-- WiFi (about 99% the same as ESP8266)
-
-WiFiClient, WiFiServer and WiFiUdp are not quite ready yet because there are still some small hiccups in LwIP to be overcome.
-You can try WiFiClient but you need to disconnect the client yourself to be sure that connection is closed.
+Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
+- 16 channels [LEDC](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-ledc.h) which is PWM
+- 8 channels [SigmaDelta](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-sd.h) which uses SigmaDelta modulation
+- 2 channels [DAC](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-dac.h) which gives real analog output
 
 ## Using Arduino IDE
 
