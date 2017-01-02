@@ -205,13 +205,13 @@ int WiFiUDP::parsePacket(){
 
 int WiFiUDP::available(){
   if(!rx_buffer) return 0;
-  return rx_buffer->size();
+  return rx_buffer->available();
 }
 
 int WiFiUDP::read(){
   if(!rx_buffer) return -1;
   int out = rx_buffer->read();
-  if(!rx_buffer->size()){
+  if(!rx_buffer->available()){
     cbuf *b = rx_buffer;
     rx_buffer = 0;
     delete b;
@@ -226,7 +226,7 @@ int WiFiUDP::read(unsigned char* buffer, size_t len){
 int WiFiUDP::read(char* buffer, size_t len){
   if(!rx_buffer) return 0;
   int out = rx_buffer->read(buffer, len);
-  if(!rx_buffer->size()){
+  if(!rx_buffer->available()){
     cbuf *b = rx_buffer;
     rx_buffer = 0;
     delete b;
