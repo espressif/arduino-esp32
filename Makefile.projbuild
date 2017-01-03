@@ -1,3 +1,1 @@
-#build with "make flash monitor" to upload and open serial monitor
-monitor:
-	$(Q) miniterm.py --rts 0 --dtr 0 --raw $(ESPPORT) $(CONFIG_MONITOR_BAUD)
+
