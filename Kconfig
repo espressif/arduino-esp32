@@ -1,42 +1,5 @@
 menu "Arduino Configuration"
 
-choice MONITOR_BAUD
-    prompt "Monitor baud rate"
-    default MONITOR_BAUD_115200B
-    help
-        Baud rate to use while monitoring the ESP chip.
-
-config MONITOR_BAUD_9600B
-    bool "9600 bps"
-config MONITOR_BAUD_57600B
-    bool "57600 bps"
-config MONITOR_BAUD_115200B
-    bool "115200 bps"
-config MONITOR_BAUD_230400B
-    bool "230400 bps"
-config MONITOR_BAUD_921600B
-    bool "921600 bps"
-config MONITOR_BAUD_2MB
-    bool "2 Mbps"
-config MONITOR_BAUD_OTHER
-    bool "Custom baud rate"
-
-endchoice
-
-config MONITOR_BAUD_OTHER_VAL
-    int "Custom baud rate value" if MONITOR_BAUD_OTHER
-    default 115200
-
-config MONITOR_BAUD
-    int
-    default 9600 if MONITOR_BAUD_9600B
-    default 57600 if MONITOR_BAUD_57600B
-    default 115200 if MONITOR_BAUD_115200B
-    default 230400 if MONITOR_BAUD_230400B
-    default 921600 if MONITOR_BAUD_921600B
-    default 2000000 if MONITOR_BAUD_2MB
-    default MONITOR_BAUD_OTHER_VAL if MONITOR_BAUD_OTHER
-
 config AUTOSTART_ARDUINO
     bool "Autostart Arduino setup and loop on boot"
     default "n"
