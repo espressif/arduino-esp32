@@ -26,6 +26,7 @@
 
 #include "Print.h"
 #include "IPAddress.h"
+#include "IPv6Address.h"
 
 #include "WiFiType.h"
 #include "WiFiSTA.h"

@@ -453,3 +453,48 @@ int32_t WiFiSTAClass::RSSI(void)
 {
     return 0;//wifi_station_get_rssi();
 }
+
+/**
+ * Get the station interface Host name.
+ * @return char array hostname
+ */
+const char * WiFiSTAClass::getHostname()
+{
+    const char * hostname;
+    if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_STA, &hostname)){
+        return NULL;
+    }
+    return hostname;
+}
+
+/**
+ * Set the station interface Host name.
+ * @param  hostname  pointer to const string
+ * @return true on   success
+ */
+bool WiFiSTAClass::setHostname(const char * hostname)
+{
+    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname) == 0;
+}
+
+/**
+ * Enable IPv6 on the station interface.
+ * @return true on success
+ */
+bool WiFiSTAClass::enableIpV6()
+{
+    return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA) == 0;
+}
+
+/**
+ * Get the station interface IPv6 address.
+ * @return IPv6Address
+ */
+IPv6Address WiFiSTAClass::localIPv6()
+{
+    static ip6_addr_t addr;
+    if(tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_STA, &addr)){
+        return IPv6Address();
+    }
+    return IPv6Address(addr.addr);
+}

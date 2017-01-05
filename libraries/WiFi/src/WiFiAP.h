@@ -45,6 +45,12 @@ public:
 
     IPAddress softAPIP();
 
+    bool softAPenableIpV6();
+    IPv6Address softAPIPv6();
+
+    const char * softAPgetHostname();
+    bool softAPsetHostname(const char * hostname);
+
     uint8_t* softAPmacAddress(uint8_t* mac);
     String softAPmacAddress(void);
 

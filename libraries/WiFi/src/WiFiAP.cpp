@@ -232,3 +232,48 @@ String WiFiAPClass::softAPmacAddress(void)
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
 }
+
+/**
+ * Get the softAP interface Host name.
+ * @return char array hostname
+ */
+const char * WiFiAPClass::softAPgetHostname()
+{
+    const char * hostname;
+    if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_AP, &hostname)) {
+        return NULL;
+    }
+    return hostname;
+}
+
+/**
+ * Set the softAP    interface Host name.
+ * @param  hostname  pointer to const string
+ * @return true on   success
+ */
+bool WiFiAPClass::softAPsetHostname(const char * hostname)
+{
+    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, hostname) == 0;
+}
+
+/**
+ * Enable IPv6 on the softAP interface.
+ * @return true on success
+ */
+bool WiFiAPClass::softAPenableIpV6()
+{
+    return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_AP) == 0;
+}
+
+/**
+ * Get the softAP interface IPv6 address.
+ * @return IPv6Address softAP IPv6
+ */
+IPv6Address WiFiAPClass::softAPIPv6()
+{
+    static ip6_addr_t addr;
+    if(tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_AP, &addr)) {
+        return IPv6Address();
+    }
+    return IPv6Address(addr.addr);
+}

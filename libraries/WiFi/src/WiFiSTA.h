@@ -63,6 +63,12 @@ public:
     IPAddress subnetMask();
     IPAddress gatewayIP();
     IPAddress dnsIP(uint8_t dns_no = 0);
+    
+    bool enableIpV6();
+    IPv6Address localIPv6();
+
+    const char * getHostname();
+    bool setHostname(const char * hostname);
 
     // STA WiFi info
     wl_status_t status();
