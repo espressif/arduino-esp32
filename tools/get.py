@@ -80,7 +80,15 @@ def get_tool(tool):
         if 'CYGWIN_NT' in sys_name:
             urlretrieve(url, local_path, report_progress,context=ctx)
         else:
-            urlretrieve(url, local_path, report_progress)
+            try:
+                urlretrieve(url, local_path, report_progress)
+            except Exception,e:
+                print()
+                print("!!! TLS Failed !!! Download the following file manually and put it in the 'dist' folder:")
+                print(url)
+                print("... then run this script again.")
+                print()
+                raise Exception('Aborting')
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:
