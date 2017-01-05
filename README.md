@@ -3,8 +3,12 @@
 ## Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - [Development Status](#development-status)
-- Installing options:
-  + [Using Arduino IDE](#using-arduino-ide)
+- [Installation Instructions](#installation-instructions):
+  + [Using Arduino IDE](#using-through-arduino-ide)
+    + [Windows](https://github.com/espressif/arduino-esp32/blob/master/doc/windows.md)
+    + [Mac OS](#instructions-for-mac)
+    + [Debian/Ubuntu](#instructions-for-debianubuntu-linux)
+    + [Decoding Exceptions](#decoding-exceptions)
   + [Using PlatformIO](#using-platformio)
   + [Using as ESP-IDF component](#using-as-esp-idf-component)
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)  
@@ -15,11 +19,13 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
 - 8 channels [SigmaDelta](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-sd.h) which uses SigmaDelta modulation
 - 2 channels [DAC](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-dac.h) which gives real analog output
 
-## Using Arduino IDE
+## Installation Instructions
+
+### Using through Arduino IDE
 
 ###[Instructions for Windows](doc/windows.md)
 
-### Instructions for Mac
+#### Instructions for Mac
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
@@ -35,7 +41,7 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
   ```
 - Restart Arduino IDE
 
-### Instructions for Debian/Ubuntu Linux
+#### Instructions for Debian/Ubuntu Linux
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
@@ -53,7 +59,11 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
   ```
 - Restart Arduino IDE
 
-## Using PlatformIO
+#### Decoding exceptions
+
+You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder) to get meaningful call trace.
+
+### Using PlatformIO
 
 [PlatformIO](http://platformio.org) is an open source ecosystem for IoT
 development with cross platform build system, library manager and full support
@@ -67,7 +77,7 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
   Cloud9, Codeanywehre, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM and Visual Studio
 - [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
 
-## Using as ESP-IDF component
+### Using as ESP-IDF component
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
 - in the project folder, create a folder called components and clone this repository inside
