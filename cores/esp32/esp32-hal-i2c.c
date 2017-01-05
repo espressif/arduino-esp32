@@ -347,7 +347,7 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 
     I2C_MUTEX_LOCK();
     //the clock num during SCL is low level
-    i2c->dev->scl_low_period.scl_low_period = period;
+    i2c->dev->scl_low_period.period = period;
     //the clock num during SCL is high level
     i2c->dev->scl_high_period.period = period;
 
@@ -375,7 +375,7 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
         return 0;
     }
 
-    return APB_CLK_FREQ/(i2c->dev->scl_low_period.scl_low_period+i2c->dev->scl_high_period.period);
+    return APB_CLK_FREQ/(i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
 }
 
 /*
