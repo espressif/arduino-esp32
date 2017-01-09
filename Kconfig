@@ -1,5 +1,10 @@
 menu "Arduino Configuration"
 
+config ENABLE_ARDUINO_DEPENDS
+    bool
+    select LWIP_SO_RCVBUF
+    default "y"
+
 config AUTOSTART_ARDUINO
     bool "Autostart Arduino setup and loop on boot"
     default "n"
