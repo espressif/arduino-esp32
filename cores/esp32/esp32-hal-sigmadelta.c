@@ -31,53 +31,53 @@
 xSemaphoreHandle _sd_sys_lock;
 #endif
 
-uint32_t sdSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
+uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
 {
     if(channel > 7) {
         return 0;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     static bool tHasStarted = false;
     if(!tHasStarted) {
         tHasStarted = true;
-#if !CONFIG_DISABLE_HAL_LOCKS
         _sd_sys_lock = xSemaphoreCreateMutex();
-#endif
     }
-    gpio_sd_dev_t * gpio_sd_dev = (volatile gpio_sd_dev_t *)(DR_REG_GPIO_SD_BASE);
+#endif
     uint32_t prescale = (10000000/(freq*32)) - 1;
     if(prescale > 0xFF) {
         prescale = 0xFF;
     }
     SD_MUTEX_LOCK();
-    gpio_sd_dev->channel[channel].prescale = prescale;
-    gpio_sd_dev->cg.clk_en = 0;
-    gpio_sd_dev->cg.clk_en = 1;
+    SIGMADELTA.channel[channel].prescale = prescale;
+    SIGMADELTA.cg.clk_en = 0;
+    SIGMADELTA.cg.clk_en = 1;
     SD_MUTEX_UNLOCK();
     return 10000000/((prescale + 1) * 32);
 }
 
-void sdWrite(uint8_t channel, uint8_t duty) //chan 0-7 duty 8 bit
+void sigmaDeltaWrite(uint8_t channel, uint8_t duty) //chan 0-7 duty 8 bit
 {
     if(channel > 7) {
         return;
     }
     duty += 128;
-    gpio_sd_dev_t * gpio_sd_dev = (volatile gpio_sd_dev_t *)(DR_REG_GPIO_SD_BASE);
     SD_MUTEX_LOCK();
-    gpio_sd_dev->channel[channel].duty = duty;
+    SIGMADELTA.channel[channel].duty = duty;
     SD_MUTEX_UNLOCK();
 }
 
-uint8_t sdRead(uint8_t channel) //chan 0-7
+uint8_t sigmaDeltaRead(uint8_t channel) //chan 0-7
 {
     if(channel > 7) {
         return 0;
     }
-    gpio_sd_dev_t * gpio_sd_dev = (volatile gpio_sd_dev_t *)(DR_REG_GPIO_SD_BASE);
-    return gpio_sd_dev->channel[channel].duty - 128;
+    SD_MUTEX_LOCK();
+    uint8_t duty = SIGMADELTA.channel[channel].duty - 128;
+    SD_MUTEX_UNLOCK();
+    return duty;
 }
 
-void sdAttachPin(uint8_t pin, uint8_t channel) //channel 0-7
+void sigmaDeltaAttachPin(uint8_t pin, uint8_t channel) //channel 0-7
 {
     if(channel > 7) {
         return;
@@ -86,7 +86,7 @@ void sdAttachPin(uint8_t pin, uint8_t channel) //channel 0-7
     pinMatrixOutAttach(pin, GPIO_SD0_OUT_IDX + channel, false, false);
 }
 
-void sdDetachPin(uint8_t pin)
+void sigmaDeltaDetachPin(uint8_t pin)
 {
     pinMatrixOutDetach(pin, false, false);
 }
