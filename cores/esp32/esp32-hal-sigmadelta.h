@@ -23,11 +23,11 @@ extern "C" {
 #include <stdbool.h>
 
 //channel 0-7 freq 1220-312500 duty 0-255
-uint32_t    sdSetup(uint8_t channel, uint32_t freq);
-void        sdWrite(uint8_t channel, uint8_t duty);
-uint8_t     sdRead(uint8_t channel);
-void        sdAttachPin(uint8_t pin, uint8_t channel);
-void        sdDetachPin(uint8_t pin);
+uint32_t    sigmaDeltaSetup(uint8_t channel, uint32_t freq);
+void        sigmaDeltaWrite(uint8_t channel, uint8_t duty);
+uint8_t     sigmaDeltaRead(uint8_t channel);
+void        sigmaDeltaAttachPin(uint8_t pin, uint8_t channel);
+void        sigmaDeltaDetachPin(uint8_t pin);
 
 
 #ifdef __cplusplus
