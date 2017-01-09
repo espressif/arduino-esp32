@@ -22,12 +22,20 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+typedef enum {
+    NOTE_C, NOTE_Cs, NOTE_D, NOTE_Eb, NOTE_E, NOTE_F, NOTE_Fs, NOTE_G, NOTE_Gs, NOTE_A, NOTE_Bb, NOTE_B, NOTE_MAX
+} note_t;
+
 //channel 0-15 resolution 1-16bits freq limits depend on resolution
-uint32_t    ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
+double      ledcSetup(uint8_t channel, double freq, uint8_t resolution_bits);
 void        ledcWrite(uint8_t channel, uint32_t duty);
+double      ledcWriteTone(uint8_t channel, double freq);
+double      ledcWriteNote(uint8_t channel, note_t note, uint8_t octave);
 uint32_t    ledcRead(uint8_t channel);
+double      ledcReadFreq(uint8_t channel);
 void        ledcAttachPin(uint8_t pin, uint8_t channel);
 void        ledcDetachPin(uint8_t pin);
+
 
 #ifdef __cplusplus
 }
