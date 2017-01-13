@@ -15,6 +15,7 @@ import sys
 import tarfile
 import zipfile
 import re
+import requests
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
 else:
@@ -83,12 +84,10 @@ def get_tool(tool):
             try:
                 urlretrieve(url, local_path, report_progress)
             except Exception,e:
-                print()
-                print("!!! TLS Failed !!! Download the following file manually and put it in the 'dist' folder:")
-                print(url)
-                print("... then run this script again.")
-                print()
-                raise Exception('Aborting')
+                r = requests.get(url)
+                f = open(local_path, 'wb')
+                f.write(r.content)
+                f.close()
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:
