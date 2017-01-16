@@ -84,7 +84,7 @@ def get_tool(tool):
             try:
                 urlretrieve(url, local_path, report_progress)
             except Exception,e:
-                r = requests.get(url)
+                r = requests.get(url)
                 f = open(local_path, 'wb')
                 f.write(r.content)
                 f.close()
