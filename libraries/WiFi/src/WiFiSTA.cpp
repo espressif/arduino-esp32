@@ -498,3 +498,62 @@ IPv6Address WiFiSTAClass::localIPv6()
     }
     return IPv6Address(addr.addr);
 }
+
+
+bool WiFiSTAClass::_smartConfigStarted = false;
+bool WiFiSTAClass::_smartConfigDone = false;
+
+
+bool WiFiSTAClass::beginSmartConfig() {
+    if (_smartConfigStarted) {
+        return false;
+    }
+
+    if (!WiFi.mode(WIFI_STA)) {
+        return false;
+    }
+
+
+    esp_err_t err;
+    err = esp_smartconfig_start(reinterpret_cast<sc_callback_t>(&WiFiSTAClass::_smartConfigCallback), 1);
+    if (err == ESP_OK) {
+        _smartConfigStarted = true;
+        _smartConfigDone = false;
+        return true;
+    }
+    return false;
+}
+
+bool WiFiSTAClass::stopSmartConfig() {
+    if (!_smartConfigStarted) {
+        return true;
+    }
+
+    if (esp_smartconfig_stop() == ESP_OK) {
+        _smartConfigStarted = false;
+        return true;
+    }
+
+    return false;
+}
+
+bool WiFiSTAClass::smartConfigDone() {
+    if (!_smartConfigStarted) {
+        return false;
+    }
+
+    return _smartConfigDone;
+}
+
+void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
+    smartconfig_status_t status = (smartconfig_status_t) st;
+    if (status == SC_STATUS_LINK) {
+        wifi_sta_config_t *sta_conf = reinterpret_cast<wifi_sta_config_t *>(result);
+
+        esp_wifi_set_config(WIFI_IF_AP, (wifi_config_t *)sta_conf);
+        esp_wifi_disconnect();
+        esp_wifi_connect();
+    } else if (status == SC_STATUS_LINK_OVER) {
+        WiFi.stopSmartConfig();
+    }
+}

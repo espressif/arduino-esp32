@@ -85,6 +85,16 @@ protected:
     static wl_status_t _status;
     static bool _useStaticIp;
 
+public: 
+    bool beginSmartConfig();
+    bool stopSmartConfig();
+    bool smartConfigDone();
+
+protected:
+    static bool _smartConfigStarted;
+    static bool _smartConfigDone;
+    static void _smartConfigCallback(uint32_t status, void* result);
+
 };
 
 
