@@ -40,6 +40,7 @@ extern "C" {
 #include <lwip/ip_addr.h>
 #include "lwip/err.h"
 #include "lwip/dns.h"
+#include <esp_smartconfig.h>
 }
 
 extern "C" void esp_schedule();
