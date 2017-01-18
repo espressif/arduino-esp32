@@ -11,7 +11,7 @@
 
     ```bash
     python -m pip install --upgrade pip && \
-    pip install pyserial && 
+    pip install pyserial && \
     pip install requests
     ```
     ![Git Bash As Admin](gitbash-admin-start.png)
