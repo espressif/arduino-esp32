@@ -158,8 +158,9 @@ int WiFiUDP::endPacket(){
   int sent = sendto(udp_server, tx_buffer, tx_buffer_len, 0, (struct sockaddr*) &recipient, sizeof(recipient));
   if(sent < 0){
     log_e("could not send data: %d", errno);
+    return 0;
   }
-  return sent;
+  return 1;
 }
 
 size_t WiFiUDP::write(uint8_t data){
