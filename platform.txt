@@ -1,9 +1,10 @@
-
 name=ESP32 Arduino
 version=0.0.1
 
 runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-runtime.tools.esptool.path={runtime.platform.path}/tools/esptool.py
+
+tools.esptool.cmd=python "{runtime.platform.path}/tools/esptool.py"
+tools.esptool.cmd.windows=python.exe "{runtime.platform.path}/tools/esptool.py"
 
 compiler.warning_flags=-w
 compiler.warning_flags.none=-w
@@ -33,13 +34,7 @@ compiler.as.cmd=xtensa-esp32-elf-as
 compiler.ar.cmd=xtensa-esp32-elf-ar
 compiler.ar.flags=cru
 
-compiler.elf2hex.cmd=esptool.py
-compiler.elf2hex.flags=
-
 compiler.size.cmd=xtensa-esp32-elf-size
-
-compiler.python.cmd=python
-compiler.python.cmd.windows=python.exe
 
 # This can be overriden in boards.txt
 build.extra_flags=-DESP32
@@ -72,7 +67,7 @@ recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.f
 recipe.objcopy.eep.pattern=
 
 ## Create hex
-recipe.objcopy.hex.pattern="{compiler.python.cmd}" "{runtime.platform.path}/tools/esptool.py" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+recipe.objcopy.hex.pattern={tools.esptool.cmd} --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
 
 ## Save hex
 recipe.output.tmp_file={build.project_name}.bin
@@ -85,13 +80,7 @@ recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss)\s+([0-9]+).*
 
 # ------------------------------
 
-tools.esptool.cmd=python
-tools.esptool.cmd.windows=python.exe
-tools.esptool.path={runtime.platform.path}/tools/esptool.py
-tools.esptool.network_cmd=python
-tools.esptool.network_cmd.windows=python.exe
-
 tools.esptool.upload.protocol=esp32
 tools.esptool.upload.params.verbose=
 tools.esptool.upload.params.quiet=
-tools.esptool.upload.pattern="{cmd}" "{path}" --chip esp32 --port "{serial.port}" --baud {upload.speed} write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} --flash_size {build.flash_size} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x8000 "{runtime.platform.path}/tools/sdk/bin/partitions_singleapp.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+tools.esptool.upload.pattern={cmd} --chip esp32 --port "{serial.port}" --baud {upload.speed} write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} --flash_size {build.flash_size} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x8000 "{runtime.platform.path}/tools/sdk/bin/partitions_singleapp.bin" 0x10000 "{build.path}/{build.project_name}.bin"

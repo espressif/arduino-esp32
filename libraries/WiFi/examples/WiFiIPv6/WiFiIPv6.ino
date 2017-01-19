@@ -1,8 +1,8 @@
 #include "WiFi.h"
 
-#define STA_SSID "nbis-test"
-#define STA_PASS "1234567890"
-#define AP_SSID  "esp32"
+#define STA_SSID "**********"
+#define STA_PASS "**********"
+#define AP_SSID  "esp32-v6"
 
 static volatile bool wifi_connected = false;
 
