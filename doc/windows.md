@@ -19,7 +19,8 @@
     - Open ```C:/Users/[YOUR_USER_NAME]/Documents/Arduino/hardware/espressif/esp32/tools``` and double-click ```get.exe```
     
         ![Step 4](win-gui-4.png)
-    - When ```get.exe``` finishes, you should the following files you the directory
+        
+    - When ```get.exe``` finishes, you should see the following files in the directory
     
         ![Step 5](win-gui-5.png)
         
@@ -35,11 +36,11 @@
 
 1. Start ```Git GUI``` and you should see the repository under ```Open Recent Repository```. Click on it!
 
-    ![Update Step 1](win-gui-update-1png)
+    ![Update Step 1](win-gui-update-1.png)
     
 2. From menu ```Remote``` select ```Fetch from``` > ```origin```
 
-    ![Update Step 2](win-gui-update-2png)
+    ![Update Step 2](win-gui-update-2.png)
     
 3. Wait for git to pull any changes and close ```Git GUI```
 4. Open ```C:/Users/[YOUR_USER_NAME]/Documents/Arduino/hardware/espressif/esp32/tools``` and double-click ```get.exe```
