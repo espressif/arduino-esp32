@@ -26,7 +26,6 @@ extern uint32_t xthal_get_ccount();
         if (xthal_get_ccount() - start_cycle_count > timeout_cycles) { \
             return 0; \
         } \
-        optimistic_yield(5000); \
     }
 
 // max timeout is 27 seconds at 160MHz clock and 54 seconds at 80MHz clock
