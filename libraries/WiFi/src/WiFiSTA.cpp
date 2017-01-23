@@ -43,9 +43,6 @@ extern "C" {
 #include <esp_smartconfig.h>
 }
 
-extern "C" void esp_schedule();
-extern "C" void esp_yield();
-
 // -----------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------- Private functions ------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
@@ -404,9 +401,11 @@ wl_status_t WiFiSTAClass::status()
  */
 String WiFiSTAClass::SSID() const
 {
-    wifi_config_t conf;
-    esp_wifi_get_config(WIFI_IF_STA, &conf);
-    return String(reinterpret_cast<char*>(conf.sta.ssid));
+    wifi_ap_record_t info;
+    if(!esp_wifi_sta_get_ap_info(&info)) {
+        return String(reinterpret_cast<char*>(info.ssid));
+    }
+    return String();
 }
 
 /**
@@ -427,10 +426,12 @@ String WiFiSTAClass::psk() const
 uint8_t* WiFiSTAClass::BSSID(void)
 {
     static uint8_t bssid[6];
-    wifi_config_t conf;
-    esp_wifi_get_config(WIFI_IF_STA, &conf);
-    memcpy(bssid, conf.sta.bssid, 6);
-    return reinterpret_cast<uint8_t*>(bssid);
+    wifi_ap_record_t info;
+    if(!esp_wifi_sta_get_ap_info(&info)) {
+        memcpy(bssid, info.bssid, 6);
+        return reinterpret_cast<uint8_t*>(bssid);
+    }
+    return NULL;
 }
 
 /**
@@ -439,10 +440,12 @@ uint8_t* WiFiSTAClass::BSSID(void)
  */
 String WiFiSTAClass::BSSIDstr(void)
 {
+    uint8_t* bssid = BSSID();
+    if(!bssid){
+        return String();
+    }
     char mac[18] = { 0 };
-    wifi_config_t conf;
-    esp_wifi_get_config(WIFI_IF_STA, &conf);
-    sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", conf.sta.bssid[0], conf.sta.bssid[1], conf.sta.bssid[2], conf.sta.bssid[3], conf.sta.bssid[4], conf.sta.bssid[5]);
+    sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
     return String(mac);
 }
 
@@ -450,9 +453,13 @@ String WiFiSTAClass::BSSIDstr(void)
  * Return the current network RSSI.
  * @return  RSSI value
  */
-int32_t WiFiSTAClass::RSSI(void)
+int8_t WiFiSTAClass::RSSI(void)
 {
-    return 0;//wifi_station_get_rssi();
+    wifi_ap_record_t info;
+    if(!esp_wifi_sta_get_ap_info(&info)) {
+        return info.rssi;
+    }
+    return 0;
 }
 
 /**

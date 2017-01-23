@@ -78,7 +78,7 @@ public:
     uint8_t * BSSID();
     String BSSIDstr();
 
-    int32_t RSSI();
+    int8_t RSSI();
 
     static void _setStatus(wl_status_t status);
 protected:
