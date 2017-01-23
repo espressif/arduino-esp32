@@ -135,18 +135,18 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         esp_wifi_set_config(WIFI_IF_STA, &conf);
     }
 
-
-
     if(channel > 0 && channel <= 13) {
         esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
     }
 
-    if(!_useStaticIp) {
-        tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
-    }
-
     if(connect) {
         esp_wifi_connect();
+    }
+
+    if(!_useStaticIp) {
+        tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
+    } else {
+        tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
     }
 
     return status();
@@ -173,7 +173,10 @@ wl_status_t WiFiSTAClass::begin()
 
     if(!_useStaticIp) {
         tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
+    } else {
+        tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
     }
+
     return status();
 }
 
@@ -204,7 +207,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     info.netmask.addr = static_cast<uint32_t>(subnet);
 
     tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
-    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info)) {
+    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info) == ESP_OK) {
         _useStaticIp = true;
     } else {
         return false;
