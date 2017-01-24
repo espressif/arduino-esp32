@@ -29,7 +29,7 @@
 
 #include "Print.h"
 extern "C" {
-//#include "esp_common.h"
+    #include "time.h"
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -153,6 +153,18 @@ size_t Print::print(const Printable& x)
     return x.printTo(*this);
 }
 
+size_t Print::print(struct tm * timeinfo, const char * format)
+{
+    const char * f = format;
+    if(!f){
+        f = "%c";
+    }
+    char buf[64];
+    size_t written = strftime(buf, 64, f, timeinfo);
+    print(buf);
+    return written;
+}
+
 size_t Print::println(void)
 {
     return print("\r\n");
@@ -224,6 +236,13 @@ size_t Print::println(double num, int digits)
 size_t Print::println(const Printable& x)
 {
     size_t n = print(x);
+    n += println();
+    return n;
+}
+
+size_t Print::println(struct tm * timeinfo, const char * format)
+{
+    size_t n = print(timeinfo, format);
     n += println();
     return n;
 }
