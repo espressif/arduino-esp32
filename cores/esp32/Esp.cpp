@@ -99,7 +99,7 @@ uint32_t EspClass::getFreeHeap(void)
 
 const char * EspClass::getSdkVersion(void)
 {
-    return "";//deprecated in IDF
+    return esp_get_idf_version();
 }
 
 uint32_t EspClass::getFlashChipSize(void)
