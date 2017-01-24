@@ -21,7 +21,7 @@
 #include "cbuf.h"
 
 cbuf::cbuf(size_t size) :
-    next(NULL), _size(size), _buf(new char[size]), _bufend(_buf + size), _begin(_buf), _end(_begin)
+    next(NULL), _size(size+1), _buf(new char[size+1]), _bufend(_buf + size + 1), _begin(_buf), _end(_begin)
 {
 }
 
@@ -39,7 +39,7 @@ size_t cbuf::resize(size_t newSize)
 {
 
     size_t bytes_available = available();
-
+    newSize += 1;
     // not lose any data
     // if data can be lost use remove or flush before resize
     if((newSize < bytes_available) || (newSize == _size)) {
