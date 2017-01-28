@@ -46,7 +46,7 @@ def compile(tmp_dir, sketch, tools_dir, hardware_dir, ide_path, f, args):
     # Debug=Serial,DebugLevel=Core____
     cmd += '-fqbn=espressif:esp32:{board_name}:' \
             'FlashFreq={flash_freq},' \
-            'UploadSpeed=921600'
+            'UploadSpeed=921600'.format(**vars(args))
     cmd += ' '
     cmd += '-ide-version=10607 '
     cmd += '-warnings={warnings} '.format(**vars(args))
