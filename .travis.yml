@@ -1,0 +1,54 @@
+sudo: false
+language: bash
+os:
+  - linux
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
+script:
+  - set -e
+  - export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"
+  - echo -e "travis_fold:start:host_tests"
+  - pushd $TRAVIS_BUILD_DIR/tests/host
+  - make
+  - make clean-objects
+  - echo -e "travis_fold:end:host_tests"
+  - echo -e "travis_fold:start:sketch_test_env_prepare"
+  - popd
+  - wget -O arduino.tar.xz https://www.arduino.cc/download.php?f=/arduino-nightly-linux64.tar.xz
+  - tar xf arduino.tar.xz
+  - mv arduino-nightly $HOME/arduino_ide
+  - cd $HOME/arduino_ide/hardware
+  - mkdir espressif
+  - cd espressif
+  - ln -s $TRAVIS_BUILD_DIR esp32
+  - cd esp32/tools
+  - python get.py
+  - export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
+  - which arduino
+  - cd $TRAVIS_BUILD_DIR
+  - source tools/common.sh
+  - install_libraries
+  - echo -e "travis_fold:end:sketch_test_env_prepare"
+  - echo -e "travis_fold:start:sketch_test"
+  - build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
+  - echo -e "travis_fold:end:sketch_test"
+  - echo -e "travis_fold:start:size_report"
+  - cat size.log
+  - echo -e "travis_fold:end:size_report"
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/cb057279c430d91a47a8
+    on_success: change  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: false     # default: false
