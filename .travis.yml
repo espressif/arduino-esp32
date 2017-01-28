@@ -1,5 +1,9 @@
 sudo: false
-language: bash
+
+language: python
+python:
+  - "2.7"
+
 os:
   - linux
 
@@ -26,6 +30,11 @@ script:
   - echo -e "travis_fold:start:size_report"
   - cat size.log
   - echo -e "travis_fold:end:size_report"
+
+  # test library examples with PlatformIO
+  - pip install -U https://github.com/platformio/platformio/archive/develop.zip
+  - platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage
+  - "python -c \"import glob,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), glob.glob('libraries/*/examples/*/'))\""
 
 notifications:
   email:

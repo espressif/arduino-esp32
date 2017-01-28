@@ -22,6 +22,8 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 
+# Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
+
 from os.path import isdir, join
 
 from SCons.Script import DefaultEnvironment
