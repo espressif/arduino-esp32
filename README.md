@@ -74,6 +74,11 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
 - [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
 - [Using "Stage" (Git) version of Arduino Core](http://docs.platformio.org/page/platforms/espressif32.html#using-arduino-framework-with-staging-version)
 
+### Building with make
+
+[makeEspArduino](https://github.com/plerup/makeEspArduino) is a generic makefile for any ESP8266/ESP32 Arduino project.
+Using make instead of the Arduino IDE makes it easier to do automated and production builds.
+
 ### Using as ESP-IDF component
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
