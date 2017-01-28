@@ -13,7 +13,7 @@
     + [Decoding Exceptions](#decoding-exceptions)
   + [Using PlatformIO](#using-platformio)
   + [Using as ESP-IDF component](#using-as-esp-idf-component)
-- [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)  
+- [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
 ## Development Status
 Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
@@ -72,6 +72,7 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
 - [Integration with Cloud and Standalone IDEs](http://docs.platformio.org/page/ide.html) -
   Cloud9, Codeanywehre, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM and Visual Studio
 - [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
+- [Using "Stage" (Git) version of Arduino Core](http://docs.platformio.org/page/platforms/espressif32.html#using-arduino-framework-with-staging-version)
 
 ### Using as ESP-IDF component
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
@@ -102,7 +103,7 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
             delay(1000);
           }
           ```
-          
+
         - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
 
           Keep in mind that setup() and loop() will not be called in this case.
