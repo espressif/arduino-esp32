@@ -5,7 +5,7 @@ function print_size_info()
     elf_file=$1
 
     if [ -z "$elf_file" ]; then
-        printf "sketch                       data     rodata   bss      text     irom0.text   dram     flash\n"
+        #printf "sketch                       data     rodata   bss      text     irom0.text   dram     flash\n"
         return 0
     fi
 
@@ -29,8 +29,8 @@ function print_size_info()
     #printf "%-28s %-8d %-8d %-8d %-8d %-8d     %-8d %-8d\n" $sketch_name ${segments[data]} ${segments[rodata]} ${segments[bss]} ${segments[text]} $total_ram $total_flash
     return 0
 }
-recipe.size.regex=^(?:\.iram0\.text|\.dram0\.text|\.flash\.text|\.dram0\.data|\.flash\.rodata|)\s+([0-9]+).*
-recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss)\s+([0-9]+).*
+#recipe.size.regex=^(?:\.iram0\.text|\.dram0\.text|\.flash\.text|\.dram0\.data|\.flash\.rodata|)\s+([0-9]+).*
+#recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss)\s+([0-9]+).*
 
 function build_sketches()
 {
