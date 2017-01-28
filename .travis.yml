@@ -3,23 +3,8 @@ language: bash
 os:
   - linux
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
-
 script:
   - set -e
-  - export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"
-  - echo -e "travis_fold:start:host_tests"
-  - pushd $TRAVIS_BUILD_DIR/tests/host
-  - make
-  - make clean-objects
-  - echo -e "travis_fold:end:host_tests"
-  - echo -e "travis_fold:start:sketch_test_env_prepare"
-  - popd
   - wget -O arduino.tar.xz https://www.arduino.cc/download.php?f=/arduino-nightly-linux64.tar.xz
   - tar xf arduino.tar.xz
   - mv arduino-nightly $HOME/arduino_ide
@@ -33,7 +18,6 @@ script:
   - which arduino
   - cd $TRAVIS_BUILD_DIR
   - source tools/common.sh
-  - install_libraries
   - echo -e "travis_fold:end:sketch_test_env_prepare"
   - echo -e "travis_fold:start:sketch_test"
   - build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
