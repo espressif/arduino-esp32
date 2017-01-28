@@ -1,7 +1,5 @@
 # Arduino core for ESP32 WiFi chip
 
-[![Linux and macOS build status](https://travis-ci.org/esp8266/arduino-esp32.svg)](https://travis-ci.org/esp8266/arduino-esp32) [![Windows build status](https://ci.appveyor.com/api/projects/status/%INSERT_ID_HERE%/branch/develop?svg=true)](https://ci.appveyor.com/project/esp8266/arduino-esp32)
-
 ## Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - [Development Status](#development-status)
