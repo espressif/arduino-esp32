@@ -20,17 +20,17 @@ function print_size_info()
         addr=${tokens[2]}
         if [ "$addr" -eq "$addr" -a "$addr" -ne "0" ] 2>/dev/null; then
             segments[$seg]=$size
+            echo "segment[$seg]=$size"
         fi
-
-
     done < <(xtensa-esp32-elf-size --format=sysv $elf_file)
 
-    total_ram=$((${segments[data]} + ${segments[rodata]} + ${segments[bss]}))
-    total_flash=$((${segments[data]} + ${segments[rodata]} + ${segments[text]} + ${segments[irom0text]}))
-
-    printf "%-28s %-8d %-8d %-8d %-8d %-8d     %-8d %-8d\n" $sketch_name ${segments[data]} ${segments[rodata]} ${segments[bss]} ${segments[text]} ${segments[irom0text]} $total_ram $total_flash
+    #total_ram=$((${segments[data]} + ${segments[bss]}))
+    #total_flash=$((${segments[data]} + ${segments[rodata]} + ${segments[text]}))
+    #printf "%-28s %-8d %-8d %-8d %-8d %-8d     %-8d %-8d\n" $sketch_name ${segments[data]} ${segments[rodata]} ${segments[bss]} ${segments[text]} $total_ram $total_flash
     return 0
 }
+recipe.size.regex=^(?:\.iram0\.text|\.dram0\.text|\.flash\.text|\.dram0\.data|\.flash\.rodata|)\s+([0-9]+).*
+recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss)\s+([0-9]+).*
 
 function build_sketches()
 {
