@@ -138,7 +138,7 @@ WiFiSSLClient::operator bool() {
 }
 
 int WiFiSSLClient::connect(IPAddress ip, uint16_t port) {
-    connect(host, port, _CA_cert, _cert, _private_key);
+    connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
 int WiFiSSLClient::connect(const char *host, uint16_t port) {
