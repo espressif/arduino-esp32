@@ -144,7 +144,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 			DEBUG_PRINT( "Loading CA cert\n");
 			mbedtls_x509_crt_init(&ssl_client->ca_cert);
 			mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-			ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (uint8_t*)rootCABuff, strlen(rootCABuff) + 1);
+			ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (const unsigned char *)rootCABuff, sizeof(rootCABuff));
 			mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
 			//mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
 			if(ret < 0)
@@ -164,7 +164,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
 			DEBUG_PRINT( "Loading CRT cert\n");
 			
-			ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
+			ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, sizeof(rootCABuff));
 
 			if (ret < 0) {
 				printf( "CRT cert: mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
@@ -174,7 +174,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
 
 			DEBUG_PRINT( "Loading private key\n");
-			ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0); 
+			ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, sizeof(rootCABuff), NULL, 0); 
 			
 			if (ret < 0) {
 				printf( "PRIVATE KEY: mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
@@ -289,7 +289,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
 void stop_ssl_socket(sslclient_context* ssl_client) {
 	DEBUG_PRINT( "\nCleaning SSL connection.\n");
-	mbedtls_net_free(&ssl_client->fd);
+	//mbedtls_net_free(&ssl_client->fd);
 	ssl_client->fd = -1;
 	mbedtls_ssl_free(&ssl_client->ssl_ctx);
 	mbedtls_ssl_config_free(&ssl_client->ssl_conf);
