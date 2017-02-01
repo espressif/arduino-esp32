@@ -454,17 +454,17 @@ void spiWrite(spi_t * spi, uint32_t *data, uint8_t len)
         len = 16;
     }
     SPI_MUTEX_LOCK();
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = (len * 32) - 1;
-    spi->dev->miso_dlen.usr_miso_dbitlen = (len * 32) - 1;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
     for(i=0; i<len; i++) {
         spi->dev->data_buf[i] = data[i];
     }
     spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
 }
 
-void spiRead(spi_t * spi, uint32_t *data, uint8_t len)
+void spiTransfer(spi_t * spi, uint32_t *data, uint8_t len)
 {
     if(!spi) {
         return;
@@ -474,6 +474,12 @@ void spiRead(spi_t * spi, uint32_t *data, uint8_t len)
         len = 16;
     }
     SPI_MUTEX_LOCK();
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = (len * 32) - 1;
+    spi->dev->miso_dlen.usr_miso_dbitlen = (len * 32) - 1;
+    for(i=0; i<len; i++) {
+        spi->dev->data_buf[i] = data[i];
+    }
+    spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     for(i=0; i<len; i++) {
         data[i] = spi->dev->data_buf[i];
@@ -487,21 +493,24 @@ void spiWriteByte(spi_t * spi, uint8_t data)
         return;
     }
     SPI_MUTEX_LOCK();
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
-    spi->dev->miso_dlen.usr_miso_dbitlen = 7;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
     spi->dev->data_buf[0] = data;
     spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
 }
 
-uint8_t spiReadByte(spi_t * spi)
+uint8_t spiTransferByte(spi_t * spi, uint8_t data)
 {
     if(!spi) {
         return 0;
     }
-    uint8_t data;
     SPI_MUTEX_LOCK();
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 7;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     data = spi->dev->data_buf[0] & 0xFF;
     SPI_MUTEX_UNLOCK();
@@ -551,21 +560,24 @@ void spiWriteWord(spi_t * spi, uint16_t data)
         return;
     }
     SPI_MUTEX_LOCK();
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
-    spi->dev->miso_dlen.usr_miso_dbitlen = 15;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
     spi->dev->data_buf[0] = __spiTranslate16(data, !spi->dev->ctrl.wr_bit_order);
     spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
 }
 
-uint16_t spiReadWord(spi_t * spi)
+uint16_t spiTransferWord(spi_t * spi, uint16_t data)
 {
     if(!spi) {
         return 0;
     }
-    uint16_t data;
     SPI_MUTEX_LOCK();
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 15;
+    spi->dev->data_buf[0] = __spiTranslate16(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     data = __spiTranslate16(spi->dev->data_buf[0] & 0xFFFF, !spi->dev->ctrl.rd_bit_order);
     SPI_MUTEX_UNLOCK();
@@ -578,21 +590,24 @@ void spiWriteLong(spi_t * spi, uint32_t data)
         return;
     }
     SPI_MUTEX_LOCK();
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
-    spi->dev->miso_dlen.usr_miso_dbitlen = 31;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
     spi->dev->data_buf[0] = __spiTranslate32(data, !spi->dev->ctrl.wr_bit_order);
     spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
 }
 
-uint32_t spiReadLong(spi_t * spi)
+uint32_t spiTransferLong(spi_t * spi, uint32_t data)
 {
     if(!spi) {
         return 0;
     }
-    uint32_t data;
     SPI_MUTEX_LOCK();
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 31;
+    spi->dev->data_buf[0] = __spiTranslate32(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     data = __spiTranslate32(spi->dev->data_buf[0], !spi->dev->ctrl.rd_bit_order);
     SPI_MUTEX_UNLOCK();
@@ -612,7 +627,6 @@ void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
     uint32_t mask = (((uint64_t)1 << bits) - 1) & 0xFFFFFFFF;
 
     SPI_MUTEX_LOCK();
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = (bits - 1);
     spi->dev->miso_dlen.usr_miso_dbitlen = (bits - 1);
     if(bytes == 1) {
@@ -626,8 +640,9 @@ void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
     }
     spi->dev->cmd.usr = 1;
 
+    while(spi->dev->cmd.usr);
+
     if(out) {
-        while(spi->dev->cmd.usr);
         if(bytes == 1) {
             *out = spi->dev->data_buf[0] & mask;
         } else if(bytes == 2) {
@@ -663,7 +678,6 @@ void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t byt
         memset(bytesBuf, 0xFF, bytes);
     }
 
-    while(spi->dev->cmd.usr);
     spi->dev->mosi_dlen.usr_mosi_dbitlen = ((bytes * 8) - 1);
     spi->dev->miso_dlen.usr_miso_dbitlen = ((bytes * 8) - 1);
 
@@ -673,8 +687,9 @@ void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t byt
 
     spi->dev->cmd.usr = 1;
 
+    while(spi->dev->cmd.usr);
+
     if(out) {
-        while(spi->dev->cmd.usr);
         for(i=0; i<words; i++) {
             wordsBuf[i] = spi->dev->data_buf[i];//copy spi fifo to buffer
         }

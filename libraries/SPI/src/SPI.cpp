@@ -128,8 +128,7 @@ void SPIClass::write(uint8_t data)
 
 uint8_t SPIClass::transfer(uint8_t data)
 {
-    spiWriteByte(_spi, data);
-    return spiReadByte(_spi);
+    return spiTransferByte(_spi, data);
 }
 
 void SPIClass::write16(uint16_t data)
@@ -139,8 +138,7 @@ void SPIClass::write16(uint16_t data)
 
 uint16_t SPIClass::transfer16(uint16_t data)
 {
-    spiWriteWord(_spi, data);
-    return spiReadWord(_spi);
+    return spiTransferWord(_spi, data);
 }
 
 void SPIClass::write32(uint32_t data)
@@ -150,8 +148,7 @@ void SPIClass::write32(uint32_t data)
 
 uint32_t SPIClass::transfer32(uint32_t data)
 {
-    spiWriteLong(_spi, data);
-    return spiReadLong(_spi);
+    return spiTransferLong(_spi, data);
 }
 
 void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)

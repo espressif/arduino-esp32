@@ -98,10 +98,10 @@ void spiWriteByte(spi_t * spi, uint8_t data);
 void spiWriteWord(spi_t * spi, uint16_t data);
 void spiWriteLong(spi_t * spi, uint32_t data);
 
-void spiRead(spi_t * spi, uint32_t *out, uint8_t len);
-uint8_t spiReadByte(spi_t * spi);
-uint16_t spiReadWord(spi_t * spi);
-uint32_t spiReadLong(spi_t * spi);
+void spiTransfer(spi_t * spi, uint32_t *out, uint8_t len);
+uint8_t spiTransferByte(spi_t * spi, uint8_t data);
+uint16_t spiTransferWord(spi_t * spi, uint16_t data);
+uint32_t spiTransferLong(spi_t * spi, uint32_t data);
 
 void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
 void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size);
