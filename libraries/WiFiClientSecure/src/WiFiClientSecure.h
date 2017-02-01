@@ -4,7 +4,7 @@
 
 #ifndef WiFiClientSecure_h
 #define WiFiClientSecure_h
-#include "Wifi.h"
+//#include "Wifi.h"
 #include "IPAddress.h"
 
 #include "ssl_client.h"
