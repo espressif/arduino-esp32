@@ -6,11 +6,13 @@
 #include <WiFiUdp.h>
 
 // WiFi network name and password:
-const char * networkName = "network_name";
-const char * networkPswd = "password";
+const char * networkName = "your-ssid";
+const char * networkPswd = "your-password";
 
 //IP address to send UDP data to:
-const char * udpAddress = "192.168.1.255";
+// either use the ip address of the server or 
+// a network broadcast address
+const char * udpAddress = "192.168.0.255";
 const int udpPort = 3333;
 
 //Are we currently connected?
@@ -30,17 +32,13 @@ void setup(){
 void loop(){
   //only send data when connected
   if(connected){
-
-    //send one random byte
-    byte randomData = (byte) random(255);
-
     //Send a packet
     udp.beginPacket(udpAddress,udpPort);
-    udp.write(randomData);
+    udp.printf("Seconds since boot: %u", millis()/1000);
     udp.endPacket();
   }
-  //Wait for 1.5 seconds
-  delay(1500);
+  //Wait for 1 second
+  delay(1000);
 }
 
 void connectToWiFi(const char * ssid, const char * pwd){
@@ -66,7 +64,7 @@ void WiFiEvent(WiFiEvent_t event){
           Serial.println(WiFi.localIP());  
           //initializes the UDP state
           //This initializes the transfer buffer
-          port.begin(WiFi.localIP(),udpPort);
+          udp.begin(WiFi.localIP(),udpPort);
           connected = true;
           break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
