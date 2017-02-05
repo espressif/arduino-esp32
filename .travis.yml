@@ -36,7 +36,7 @@ script:
   - platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage
   - sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' ~/.platformio/platforms/espressif32_stage/platform.json
   - ln -s $TRAVIS_BUILD_DIR ~/.platformio/packages/framework-arduinoespressif32
-  - "python -c \"import glob,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), glob.glob('libraries/*/examples/*/'))\""
+  - "python -c \"import glob,os,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), set([os.path.dirname(p) for p in glob.glob('libraries/*/examples/*/*.ino') + glob.glob('libraries/*/examples/*/*/*.ino')]))\""
 
 notifications:
   email:
