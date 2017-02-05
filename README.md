@@ -136,3 +136,8 @@ Using make instead of the Arduino IDE makes it easier to do automated and produc
 ## ESP32Dev Board PINMAP
 
 ![Pin Functions](doc/esp32_pinmap.png)
+
+## Hint
+
+To programm ESP32 via serial you must keep GPIO0 LOW during the hole programming process
+
