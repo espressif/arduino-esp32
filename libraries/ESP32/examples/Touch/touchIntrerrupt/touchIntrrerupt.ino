@@ -18,7 +18,7 @@ void gotTouch1(){
 void setup() {
   Serial.begin(115200);
   delay(1000); // give me time to bring up serial monitor
-  printf("\n ESP32 Touch Interrupt Test\n");
+  Serial.println("ESP32 Touch Interrupt Test");
   touchAttachInterrupt(T2, gotTouch, threshold);
   touchAttachInterrupt(T3, gotTouch1, threshold);
 }
