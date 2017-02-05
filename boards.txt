@@ -1,5 +1,6 @@
 menu.UploadSpeed=Upload Speed
 menu.FlashFreq=Flash Frequency
+menu.DebugLevel=Core Debug Level
 
 ##############################################################
 
@@ -41,6 +42,19 @@ esp32.menu.UploadSpeed.460800.macosx=460800
 esp32.menu.UploadSpeed.460800.upload.speed=460800
 esp32.menu.UploadSpeed.512000.windows=512000
 esp32.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32.menu.DebugLevel.none=None
+esp32.menu.DebugLevel.none.build.code_debug=0
+esp32.menu.DebugLevel.error=Error
+esp32.menu.DebugLevel.error.build.code_debug=1
+esp32.menu.DebugLevel.warn=Warn
+esp32.menu.DebugLevel.warn.build.code_debug=2
+esp32.menu.DebugLevel.info=Info
+esp32.menu.DebugLevel.info.build.code_debug=3
+esp32.menu.DebugLevel.debug=Debug
+esp32.menu.DebugLevel.debug.build.code_debug=4
+esp32.menu.DebugLevel.verbose=Verbose
+esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 

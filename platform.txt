@@ -40,7 +40,8 @@ compiler.ar.flags=cru
 compiler.size.cmd=xtensa-esp32-elf-size
 
 # This can be overriden in boards.txt
-build.extra_flags=-DESP32
+build.code_debug=0
+build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug}
 
 # These can be overridden in platform.local.txt
 compiler.c.extra_flags=
