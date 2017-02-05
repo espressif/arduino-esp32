@@ -166,14 +166,20 @@ void WiFiGenericClass::removeEvent(WiFiEventCb cbEvent, system_event_id_t event)
  * callback for WiFi events
  * @param arg
  */
+#if CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_PROBEREQRECVED", "AP_STA_GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
+const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT" };
+#define reason2str(r) ((r>174)?system_event_reasons[r-174]:system_event_reasons[r-1])
+#endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
-    log_d("%d", event->event_id);
+    log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
 
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
     } else if(event->event_id == SYSTEM_EVENT_STA_DISCONNECTED) {
         uint8_t reason = event->event_info.disconnected.reason;
+        log_w("Reason: %u - %s", reason, reason2str(reason));
         if(reason == WIFI_REASON_NO_AP_FOUND) {
             WiFiSTAClass::_setStatus(WL_NO_SSID_AVAIL);
         } else if(reason == WIFI_REASON_AUTH_FAIL || reason == WIFI_REASON_ASSOC_FAIL) {
