@@ -31,7 +31,7 @@ function print_size_info()
 
 function build_sketches()
 {
-    set +e
+    #set +e
     local arduino=$1
     local srcpath=$2
     local build_arg=$3
@@ -56,7 +56,7 @@ function build_sketches()
         fi
         echo -e "\n ------------ Building $sketch ------------ \n";
         # $arduino --verify $sketch;
-        echo "$build_cmd $sketch"
+        #echo "$build_cmd $sketch"
         time ($build_cmd $sketch >build.log)
         local result=$?
         if [ $result -ne 0 ]; then
@@ -68,5 +68,5 @@ function build_sketches()
         rm build.log
         print_size_info $build_dir/*.elf >>size.log
     done
-    set -e
+    #set -e
 }
