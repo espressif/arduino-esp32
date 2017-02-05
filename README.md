@@ -139,5 +139,5 @@ Using make instead of the Arduino IDE makes it easier to do automated and produc
 
 ## Hint
 
-Sometimes to program ESP32 via serial you must keep GPIO0 LOW during the hole programming process
+Sometimes to program ESP32 via serial you must keep GPIO0 LOW during the programming process
 
