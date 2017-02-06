@@ -10,7 +10,7 @@
 #define digitalPinHasPWM(p)         (p < 34)
 
 static const uint8_t LED_BUILTIN = 5;
-static const uint8_t BUILTIN_LED = 5;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
