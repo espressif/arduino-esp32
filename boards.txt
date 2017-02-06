@@ -1,7 +1,9 @@
 menu.UploadSpeed=Upload Speed
 menu.FlashFreq=Flash Frequency
+menu.DebugLevel=Core Debug Level
 
 ##############################################################
+
 esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
@@ -41,7 +43,62 @@ esp32.menu.UploadSpeed.460800.upload.speed=460800
 esp32.menu.UploadSpeed.512000.windows=512000
 esp32.menu.UploadSpeed.512000.upload.speed=512000
 
+esp32.menu.DebugLevel.none=None
+esp32.menu.DebugLevel.none.build.code_debug=0
+esp32.menu.DebugLevel.error=Error
+esp32.menu.DebugLevel.error.build.code_debug=1
+esp32.menu.DebugLevel.warn=Warn
+esp32.menu.DebugLevel.warn.build.code_debug=2
+esp32.menu.DebugLevel.info=Info
+esp32.menu.DebugLevel.info.build.code_debug=3
+esp32.menu.DebugLevel.debug=Debug
+esp32.menu.DebugLevel.debug.build.code_debug=4
+esp32.menu.DebugLevel.verbose=Verbose
+esp32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
+esp32thing.name=SparkFun ESP32 Thing
+
+esp32thing.upload.tool=esptool
+esp32thing.upload.maximum_size=1044464
+esp32thing.upload.maximum_data_size=294912
+esp32thing.upload.wait_for_upload_port=true
+
+esp32thing.serial.disableDTR=true
+esp32thing.serial.disableRTS=true
+
+esp32thing.build.mcu=esp32
+esp32thing.build.core=esp32
+esp32thing.build.variant=esp32thing
+esp32thing.build.board=ESP32_THING
+
+esp32thing.build.f_cpu=240000000L
+esp32thing.build.flash_mode=dio
+esp32thing.build.flash_size=4MB
+
+esp32thing.menu.FlashFreq.80=80MHz
+esp32thing.menu.FlashFreq.80.build.flash_freq=80m
+esp32thing.menu.FlashFreq.40=40MHz
+esp32thing.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32thing.menu.UploadSpeed.921600=921600
+esp32thing.menu.UploadSpeed.921600.upload.speed=921600
+esp32thing.menu.UploadSpeed.115200=115200
+esp32thing.menu.UploadSpeed.115200.upload.speed=115200
+esp32thing.menu.UploadSpeed.256000.windows=256000
+esp32thing.menu.UploadSpeed.256000.upload.speed=256000
+esp32thing.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32thing.menu.UploadSpeed.230400=230400
+esp32thing.menu.UploadSpeed.230400.upload.speed=230400
+esp32thing.menu.UploadSpeed.460800.linux=460800
+esp32thing.menu.UploadSpeed.460800.macosx=460800
+esp32thing.menu.UploadSpeed.460800.upload.speed=460800
+esp32thing.menu.UploadSpeed.512000.windows=512000
+esp32thing.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
@@ -82,6 +139,7 @@ esp320.menu.UploadSpeed.512000.windows=512000
 esp320.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
+
 nano32.name=Nano32
 
 nano32.upload.tool=esptool
@@ -122,6 +180,7 @@ nano32.menu.UploadSpeed.512000.windows=512000
 nano32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
+
 lolin32.name=WEMOS LoLin32
 
 lolin32.upload.tool=esptool
@@ -162,6 +221,7 @@ lolin32.menu.UploadSpeed.512000.windows=512000
 lolin32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
+
 espea32.name=ESPea32
 
 espea32.upload.tool=esptool
@@ -202,6 +262,7 @@ espea32.menu.UploadSpeed.512000.windows=512000
 espea32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
+
 quantum.name=Noduino Quantum
 
 quantum.upload.tool=esptool
@@ -242,6 +303,7 @@ quantum.menu.UploadSpeed.512000.windows=512000
 quantum.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
+
 node32s.name=Node32s
 
 node32s.upload.tool=esptool
@@ -280,7 +342,9 @@ node32s.menu.UploadSpeed.460800.macosx=460800
 node32s.menu.UploadSpeed.460800.upload.speed=460800
 node32s.menu.UploadSpeed.512000.windows=512000
 node32s.menu.UploadSpeed.512000.upload.speed=512000
+
 ##############################################################
+
 hornbill32dev.name=Hornbill ESP32 Dev
 
 hornbill32dev.upload.tool=esptool
@@ -318,7 +382,9 @@ hornbill32dev.menu.UploadSpeed.460800.macosx=460800
 hornbill32dev.menu.UploadSpeed.460800.upload.speed=460800
 hornbill32dev.menu.UploadSpeed.512000.windows=512000
 hornbill32dev.menu.UploadSpeed.512000.upload.speed=512000
+
 ##############################################################
+
 hornbill32minima.name=Hornbill ESP32 Minima
 
 hornbill32minima.upload.tool=esptool

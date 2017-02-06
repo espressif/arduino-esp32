@@ -50,6 +50,7 @@ env.Prepend(
 
     CPPPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
@@ -58,6 +59,8 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls_port"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
@@ -68,27 +71,21 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "ld"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
     LIBS=[
-        "app_update", "bootloader_support", "bt", "btdm_app", "c",
-        "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32",
-        "ethernet", "expat", "fatfs", "freertos", "hal", "json", "log",
-        "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib",
-        "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "sdmmc",
-        "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa",
-        "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module", "gcc", "stdc++"
+        "gcc", "stdc++", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "sdmmc", "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
     ]
 )
 
