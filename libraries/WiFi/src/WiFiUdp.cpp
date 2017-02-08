@@ -130,7 +130,29 @@ int WiFiUDP::beginMulticastPacket(){
 int WiFiUDP::beginPacket(){
   if(!remote_port)
     return 0;
+
+  // allocate tx_buffer if is necessary
+  if(!tx_buffer){
+    tx_buffer = new char[1460];
+    if(!tx_buffer){
+      log_e("could not create tx buffer: %d", errno);
+      return 0;
+    }
+  }
+
   tx_buffer_len = 0;
+
+  // check whereas socket is already open
+  if (udp_server != -1)
+    return 1;
+
+  if ((udp_server=socket(AF_INET, SOCK_DGRAM, 0)) == -1){
+    log_e("could not create socket: %d", errno);
+    return 0;
+  }
+
+  fcntl(udp_server, F_SETFL, O_NONBLOCK);
+
   return 1;
 }
 
