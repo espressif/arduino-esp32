@@ -1,0 +1,41 @@
+#######################################
+# Syntax Coloring Map NVS
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+NVSClass	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+end	KEYWORD2
+writeChar	KEYWORD2
+writeUChar	KEYWORD2
+writeShort	KEYWORD2
+writeUShort	KEYWORD2
+writeInt	KEYWORD2
+writeUInt	KEYWORD2
+writeLong	KEYWORD2
+writeULong	KEYWORD2
+writeString	KEYWORD2
+writeBytes	KEYWORD2
+readChar	KEYWORD2
+readUChar	KEYWORD2
+readShort	KEYWORD2
+readUShort	KEYWORD2
+readInt	KEYWORD2
+readUInt	KEYWORD2
+readLong	KEYWORD2
+readULong	KEYWORD2
+readString	KEYWORD2
+readBytes	KEYWORD2
+erase	KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
