@@ -1,0 +1,92 @@
+/*
+  WiFiClientSecure.h - Base class that provides Client SSL to ESP32
+  Copyright (c) 2011 Adrian McEwen.  All right reserved.
+  Additions Copyright (C) 2017 Evandro Luis Copercini.
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+
+#ifndef WiFiClientSecure_h
+#define WiFiClientSecure_h
+#include "Arduino.h"
+#include "IPAddress.h"
+#include <WiFi.h>
+#include "ssl_client.h"
+
+class WiFiClientSecure : public Client
+{
+protected:
+    bool _connected;
+    sslclient_context *sslclient;
+
+    unsigned char *_CA_cert;
+    unsigned char *_cert;
+    unsigned char *_private_key;
+
+public:
+    WiFiClientSecure *next;
+    WiFiClientSecure();
+    WiFiClientSecure(int socket);
+    ~WiFiClientSecure();
+    int connect(IPAddress ip, uint16_t port);
+    int connect(const char *host, uint16_t port);
+    int connect(IPAddress ip, uint16_t port, unsigned char *rootCABuff, unsigned char *cli_cert, unsigned char *cli_key);
+    int connect(const char *host, uint16_t port, unsigned char *rootCABuff, unsigned char *cli_cert, unsigned char *cli_key);
+    size_t write(uint8_t data);
+    size_t write(const uint8_t *buf, size_t size);
+    int available();
+    int read();
+    int read(uint8_t *buf, size_t size);
+    int peek()
+    {
+        return 0;
+    }
+    void flush() {}
+    void stop();
+    uint8_t connected();
+
+    void setCACert(unsigned char *rootCA);
+    void setCertificate(unsigned char *client_ca);
+    void setPrivateKey (unsigned char *private_key);
+
+    operator bool()
+    {
+        return connected();
+    }
+    WiFiClientSecure &operator=(const WiFiClientSecure &other);
+    bool operator==(const bool value)
+    {
+        return bool() == value;
+    }
+    bool operator!=(const bool value)
+    {
+        return bool() != value;
+    }
+    bool operator==(const WiFiClientSecure &);
+    bool operator!=(const WiFiClientSecure &rhs)
+    {
+        return !this->operator==(rhs);
+    };
+
+    int socket()
+    {
+        return sslclient->socket = -1;
+    }
+
+    //friend class WiFiServer;
+    using Print::write;
+};
+
+#endif /* _WIFICLIENT_H_ */
