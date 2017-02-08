@@ -29,8 +29,6 @@ typedef unsigned short prog_uint16_t;
 typedef long prog_int32_t;
 typedef unsigned long prog_uint32_t;
 
-typedef char __FlashStringHelper;
-
 #define SIZE_IRRELEVANT 0x7fffffff
 
 #define PROGMEM
@@ -38,7 +36,6 @@ typedef char __FlashStringHelper;
 #define PGM_VOID_P    const void *
 #define FPSTR(p)      ((const char *)(p))
 #define PSTR(s)       (s)
-#define F(s)          (s)
 #define _SFR_BYTE(n)  (n)
 
 #define pgm_read_byte(addr)   (*(const unsigned char *)(addr))
