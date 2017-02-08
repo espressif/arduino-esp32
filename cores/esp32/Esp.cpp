@@ -20,6 +20,7 @@
 #include "Arduino.h"
 #include "Esp.h"
 #include "rom/spi_flash.h"
+#include "esp_deep_sleep.h"
 #include <memory>
 
 //#define DEBUG_SERIAL Serial
@@ -79,6 +80,11 @@ unsigned long long operator"" _GB(unsigned long long x)
 
 
 EspClass ESP;
+
+void EspClass::deepSleep(uint32_t time_us)
+{
+    esp_deep_sleep(time_us);
+}
 
 uint32_t EspClass::getCycleCount()
 {

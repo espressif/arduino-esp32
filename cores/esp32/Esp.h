@@ -60,6 +60,7 @@ public:
 
     const char * getSdkVersion();
 
+    void deepSleep(uint32_t time_us);
 
     uint8_t getCpuFreqMHz();
 
