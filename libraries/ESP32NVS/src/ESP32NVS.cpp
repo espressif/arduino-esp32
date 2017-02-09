@@ -14,6 +14,7 @@
 #include "ESP32NVS.h"
 
 #include "nvs.h"
+#include "nvs_flash.h"
 
 const char * nvs_errors[] = { "OTHER", "NOT_INITIALIZED", "NOT_FOUND", "TYPE_MISMATCH", "READ_ONLY", "NOT_ENOUGH_SPACE", "INVALID_NAME", "INVALID_HANDLE", "REMOVE_FAILED", "KEY_TOO_LONG", "PAGE_FULL", "INVALID_STATE", "INVALID_LENGHT"};
 #define nvs_error(e) (((e)>ESP_ERR_NVS_BASE)?nvs_errors[(e)&~(ESP_ERR_NVS_BASE)]:nvs_errors[0])
@@ -32,6 +33,9 @@ bool NVSClass::begin(const char * name, bool readOnly){
     if(_started){
         return false;
     }
+
+    nvs_flash_init();
+
     _readOnly = readOnly;
     esp_err_t err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
     if(err){
@@ -256,8 +260,8 @@ size_t NVSClass::writeBytes(const char* key, const void* value, size_t len){
  * Read
  * */
 
-int8_t NVSClass::readChar(const char* key){
-    int8_t value = 0;
+int8_t NVSClass::readChar(const char* key, const int8_t defaultValue){
+    int8_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -268,8 +272,8 @@ int8_t NVSClass::readChar(const char* key){
     return value;
 }
 
-uint8_t NVSClass::readUChar(const char* key){
-    uint8_t value = 0;
+uint8_t NVSClass::readUChar(const char* key, const uint8_t defaultValue){
+    uint8_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -280,8 +284,8 @@ uint8_t NVSClass::readUChar(const char* key){
     return value;
 }
 
-int16_t NVSClass::readShort(const char* key){
-    int16_t value = 0;
+int16_t NVSClass::readShort(const char* key, const int16_t defaultValue){
+    int16_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -292,8 +296,8 @@ int16_t NVSClass::readShort(const char* key){
     return value;
 }
 
-uint16_t NVSClass::readUShort(const char* key){
-    uint16_t value = 0;
+uint16_t NVSClass::readUShort(const char* key, const uint16_t defaultValue){
+    uint16_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -304,8 +308,8 @@ uint16_t NVSClass::readUShort(const char* key){
     return value;
 }
 
-int32_t NVSClass::readInt(const char* key){
-    int32_t value = 0;
+int32_t NVSClass::readInt(const char* key, const int32_t defaultValue){
+    int32_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -316,8 +320,8 @@ int32_t NVSClass::readInt(const char* key){
     return value;
 }
 
-uint32_t NVSClass::readUInt(const char* key){
-    uint32_t value = 0;
+uint32_t NVSClass::readUInt(const char* key, const uint32_t defaultValue){
+    uint32_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -328,8 +332,8 @@ uint32_t NVSClass::readUInt(const char* key){
     return value;
 }
 
-int64_t NVSClass::readLong(const char* key){
-    int64_t value = 0;
+int64_t NVSClass::readLong(const char* key, const int64_t defaultValue){
+    int64_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -340,8 +344,8 @@ int64_t NVSClass::readLong(const char* key){
     return value;
 }
 
-uint64_t NVSClass::readULong(const char* key){
-    uint64_t value = 0;
+uint64_t NVSClass::readULong(const char* key, const uint64_t defaultValue){
+    uint64_t value = defaultValue;
     if(!_started || !key){
         return value;
     }
@@ -352,23 +356,23 @@ uint64_t NVSClass::readULong(const char* key){
     return value;
 }
 
-String NVSClass::readString(const char* key){
+String NVSClass::readString(const char* key, const char* defaultValue){
     char * value = NULL;
     size_t len = 0;
     if(!_started || !key){
-        return String();
+        return String(defaultValue);
     }
     esp_err_t err = nvs_get_str(_handle, key, value, &len);
     if(err){
         log_e("nvs_get_str len fail: %s %s", key, nvs_error(err));
-        return String();
+        return String(defaultValue);
     }
     char buf[len];
     value = buf;
     err = nvs_get_str(_handle, key, value, &len);
     if(err){
         log_e("nvs_get_str fail: %s %s", key, nvs_error(err));
-        return String();
+        return String(defaultValue);
     }
     return String(buf);
 }
