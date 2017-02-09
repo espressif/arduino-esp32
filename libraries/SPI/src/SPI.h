@@ -58,9 +58,7 @@ public:
 
     void write(uint8_t data);
     void write16(uint16_t data);
-    void write16(uint16_t data, bool msb);
     void write32(uint32_t data);
-    void write32(uint32_t data, bool msb);
     void writeBytes(uint8_t * data, uint32_t size);
     void writePattern(uint8_t * data, uint8_t size, uint32_t repeat);
 private:
