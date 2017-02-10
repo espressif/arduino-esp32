@@ -80,12 +80,19 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
+
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
+
     LIBS=[
         "gcc", "stdc++", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "sdmmc", "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
+    ],
+
+    UPLOADERFLAGS=[
+        "--before", "default_reset",
+        "--after", "hard_reset"
     ]
 )
 
@@ -103,10 +110,14 @@ env.Append(
 
     UPLOADERFLAGS=[
         "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader.bin"),
-        "0x8000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "default.bin"),
+        "0x8000", '"%s"' % join("$BUILD_DIR", "partitions.bin"),
         "0xe000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
+)
+
+env.Replace(
+    UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
 )
 
 #
@@ -135,3 +146,15 @@ libs.append(envsafe.BuildLibrary(
 ))
 
 env.Prepend(LIBS=libs)
+
+#
+# Generate partition table
+#
+
+partition_table = env.Command(
+    join("$BUILD_DIR", "partitions.bin"),
+    join(FRAMEWORK_DIR, "tools", "partitions", "default.csv"),
+    '"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
+        FRAMEWORK_DIR, "tools", "gen_esp32part.py")
+)
+env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
