@@ -28,30 +28,32 @@ class NVSClass {
         bool begin(const char * name, bool readOnly=false);
         void end();
 
-        bool erase();
-        bool erase(const char * key);
+        bool clear();
+        bool remove(const char * key);
 
-        size_t writeChar(const char* key, int8_t value);
-        size_t writeUChar(const char* key, uint8_t value);
-        size_t writeShort(const char* key, int16_t value);
-        size_t writeUShort(const char* key, uint16_t value);
-        size_t writeInt(const char* key, int32_t value);
-        size_t writeUInt(const char* key, uint32_t value);
-        size_t writeLong(const char* key, int64_t value);
-        size_t writeULong(const char* key, uint64_t value);
-        size_t writeString(const char* key, const char* value);
-        size_t writeBytes(const char* key, const void* value, size_t len);
+        size_t setChar(const char* key, int8_t value);
+        size_t setUChar(const char* key, uint8_t value);
+        size_t setShort(const char* key, int16_t value);
+        size_t setUShort(const char* key, uint16_t value);
+        size_t setInt(const char* key, int32_t value);
+        size_t setUInt(const char* key, uint32_t value);
+        size_t setLong(const char* key, int64_t value);
+        size_t setULong(const char* key, uint64_t value);
+        size_t setString(const char* key, const char* value);
+        size_t setString(const char* key, String value);
+        size_t setBytes(const char* key, const void* value, size_t len);
 
-        int8_t readChar(const char* key);
-        uint8_t readUChar(const char* key);
-        int16_t readShort(const char* key);
-        uint16_t readUShort(const char* key);
-        int32_t readInt(const char* key);
-        uint32_t readUInt(const char* key);
-        int64_t readLong(const char* key);
-        uint64_t readULong(const char* key);
-        String readString(const char* key);
-        size_t readBytes(const char* key, void * buf, size_t maxLen);
+        int8_t getChar(const char* key, int8_t defaultValue = 0);
+        uint8_t getUChar(const char* key, uint8_t defaultValue = 0);
+        int16_t getShort(const char* key, int16_t defaultValue = 0);
+        uint16_t getUShort(const char* key, uint16_t defaultValue = 0);
+        int32_t getInt(const char* key, int32_t defaultValue = 0);
+        uint32_t getUInt(const char* key, uint32_t defaultValue = 0);
+        int64_t getLong(const char* key, int64_t defaultValue = 0);
+        uint64_t getULong(const char* key, uint64_t defaultValue = 0);
+        size_t getString(const char* key, char* value, size_t maxLen);
+        String getString(const char* key, String defaultValue = String());
+        size_t getBytes(const char* key, void * buf, size_t maxLen);
 };
 
 #endif
