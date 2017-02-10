@@ -51,10 +51,10 @@ void NVSClass::end(){
 }
 
 /*
- * Erase
+ * Clear the storage
  * */
 
-bool NVSClass::erase(){
+bool NVSClass::clear(){
     if(!_started || _readOnly){
         return false;
     }
@@ -66,7 +66,11 @@ bool NVSClass::erase(){
     return true;
 }
 
-bool NVSClass::erase(const char * key){
+/*
+ * Remove the key
+ * */
+
+bool NVSClass::remove(const char * key){
     if(!_started || !key || _readOnly){
         return false;
     }
@@ -82,7 +86,7 @@ bool NVSClass::erase(const char * key){
  * Write
  * */
 
-size_t NVSClass::writeChar(const char* key, int8_t value){
+size_t NVSClass::setChar(const char* key, int8_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -99,7 +103,7 @@ size_t NVSClass::writeChar(const char* key, int8_t value){
     return 1;
 }
 
-size_t NVSClass::writeUChar(const char* key, uint8_t value){
+size_t NVSClass::setUChar(const char* key, uint8_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -116,7 +120,7 @@ size_t NVSClass::writeUChar(const char* key, uint8_t value){
     return 1;
 }
 
-size_t NVSClass::writeShort(const char* key, int16_t value){
+size_t NVSClass::setShort(const char* key, int16_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -133,7 +137,7 @@ size_t NVSClass::writeShort(const char* key, int16_t value){
     return 2;
 }
 
-size_t NVSClass::writeUShort(const char* key, uint16_t value){
+size_t NVSClass::setUShort(const char* key, uint16_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -150,7 +154,7 @@ size_t NVSClass::writeUShort(const char* key, uint16_t value){
     return 2;
 }
 
-size_t NVSClass::writeInt(const char* key, int32_t value){
+size_t NVSClass::setInt(const char* key, int32_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -167,7 +171,7 @@ size_t NVSClass::writeInt(const char* key, int32_t value){
     return 4;
 }
 
-size_t NVSClass::writeUInt(const char* key, uint32_t value){
+size_t NVSClass::setUInt(const char* key, uint32_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -184,7 +188,7 @@ size_t NVSClass::writeUInt(const char* key, uint32_t value){
     return 4;
 }
 
-size_t NVSClass::writeLong(const char* key, int64_t value){
+size_t NVSClass::setLong(const char* key, int64_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -201,7 +205,7 @@ size_t NVSClass::writeLong(const char* key, int64_t value){
     return 8;
 }
 
-size_t NVSClass::writeULong(const char* key, uint64_t value){
+size_t NVSClass::setULong(const char* key, uint64_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -218,7 +222,7 @@ size_t NVSClass::writeULong(const char* key, uint64_t value){
     return 8;
 }
 
-size_t NVSClass::writeString(const char* key, const char* value){
+size_t NVSClass::setString(const char* key, const char* value){
     if(!_started || !key || !value || _readOnly){
         return 0;
     }
@@ -235,11 +239,11 @@ size_t NVSClass::writeString(const char* key, const char* value){
     return strlen(value);
 }
 
-size_t NVSClass::writeString(const char* key, const String value){
-    return writeString(key, value.c_str());
+size_t NVSClass::setString(const char* key, const String value){
+    return setString(key, value.c_str());
 }
 
-size_t NVSClass::writeBytes(const char* key, const void* value, size_t len){
+size_t NVSClass::setBytes(const char* key, const void* value, size_t len){
     if(!_started || !key || !value || !len || _readOnly){
         return 0;
     }
@@ -260,7 +264,7 @@ size_t NVSClass::writeBytes(const char* key, const void* value, size_t len){
  * Read
  * */
 
-int8_t NVSClass::readChar(const char* key, const int8_t defaultValue){
+int8_t NVSClass::getChar(const char* key, const int8_t defaultValue){
     int8_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -272,7 +276,7 @@ int8_t NVSClass::readChar(const char* key, const int8_t defaultValue){
     return value;
 }
 
-uint8_t NVSClass::readUChar(const char* key, const uint8_t defaultValue){
+uint8_t NVSClass::getUChar(const char* key, const uint8_t defaultValue){
     uint8_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -284,7 +288,7 @@ uint8_t NVSClass::readUChar(const char* key, const uint8_t defaultValue){
     return value;
 }
 
-int16_t NVSClass::readShort(const char* key, const int16_t defaultValue){
+int16_t NVSClass::getShort(const char* key, const int16_t defaultValue){
     int16_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -296,7 +300,7 @@ int16_t NVSClass::readShort(const char* key, const int16_t defaultValue){
     return value;
 }
 
-uint16_t NVSClass::readUShort(const char* key, const uint16_t defaultValue){
+uint16_t NVSClass::getUShort(const char* key, const uint16_t defaultValue){
     uint16_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -308,7 +312,7 @@ uint16_t NVSClass::readUShort(const char* key, const uint16_t defaultValue){
     return value;
 }
 
-int32_t NVSClass::readInt(const char* key, const int32_t defaultValue){
+int32_t NVSClass::getInt(const char* key, const int32_t defaultValue){
     int32_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -320,7 +324,7 @@ int32_t NVSClass::readInt(const char* key, const int32_t defaultValue){
     return value;
 }
 
-uint32_t NVSClass::readUInt(const char* key, const uint32_t defaultValue){
+uint32_t NVSClass::getUInt(const char* key, const uint32_t defaultValue){
     uint32_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -332,7 +336,7 @@ uint32_t NVSClass::readUInt(const char* key, const uint32_t defaultValue){
     return value;
 }
 
-int64_t NVSClass::readLong(const char* key, const int64_t defaultValue){
+int64_t NVSClass::getLong(const char* key, const int64_t defaultValue){
     int64_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -344,7 +348,7 @@ int64_t NVSClass::readLong(const char* key, const int64_t defaultValue){
     return value;
 }
 
-uint64_t NVSClass::readULong(const char* key, const uint64_t defaultValue){
+uint64_t NVSClass::getULong(const char* key, const uint64_t defaultValue){
     uint64_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -356,7 +360,7 @@ uint64_t NVSClass::readULong(const char* key, const uint64_t defaultValue){
     return value;
 }
 
-size_t NVSClass::readString(const char* key, char* value, const size_t maxLen){
+size_t NVSClass::getString(const char* key, char* value, const size_t maxLen){
     size_t len = 0;
     if(!_started || !key || !value || !maxLen){
         return 0;
@@ -378,7 +382,7 @@ size_t NVSClass::readString(const char* key, char* value, const size_t maxLen){
     return len;
 }
 
-String NVSClass::readString(const char* key, const String defaultValue){
+String NVSClass::getString(const char* key, const String defaultValue){
     char * value = NULL;
     size_t len = 0;
     if(!_started || !key){
@@ -399,7 +403,7 @@ String NVSClass::readString(const char* key, const String defaultValue){
     return String(buf);
 }
 
-size_t NVSClass::readBytes(const char* key, void * buf, size_t maxLen){
+size_t NVSClass::getBytes(const char* key, void * buf, size_t maxLen){
     size_t len = 0;
     if(!_started || !key || !buf || !maxLen){
         return 0;

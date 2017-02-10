@@ -1,7 +1,7 @@
 /*
  ESP32 start counter example with Non-volatile storage
 
- A simple example which use Non-volatile storage on ESP32 to store how many 
+ A simple example which use Non-volatile storage on ESP32 to store how many
  times ESP32 module was started.
 
  created for arduino-esp32 09 Feb 2017
@@ -17,36 +17,36 @@ void setup() {
   Serial.println();
 
   // Open NVS key storage with my-app namespace. Each application module (library, etc.)
-  // have to use namespace name to prevent key name colision. We will open storage in 
+  // have to use namespace name to prevent key name colisions. We will open storage in
   // RW-mode (second parameter has to be false).
   // Note: Namespace name is limited to 15 chars
   keyStorage.begin("my-app", false);
 
-  // Erase my-app namespace key storage
-  //keyStorage.erase();
+  // Clear an opened key storage
+  //keyStorage.clear();
 
-  // Or erase counter key in my-app namespace key storage
-  //keyStorage.erase("counter");
+  // Or remove the counter key from key storage
+  //keyStorage.remove("counter");
 
   // Get a counter value, if key is not exist return default value 0
-  // Note: Key name is limited to 15 chars
-  unsigned int counter = keyStorage.readUInt("counter", 0);
+  // Note: Key name is limited to 15 chars too
+  unsigned int counter = keyStorage.getUInt("counter", 0);
 
   // Increase counter
   counter++;
 
-  // Print counter to Serial
+  // Print counter to a Serial
   Serial.printf("Current counter value: %u\n", counter);
 
-  // Store counter to key storage
-  keyStorage.writeUInt("counter", counter);
+  // Store counter to the key storage
+  keyStorage.setUInt("counter", counter);
 
-  // Close key storage
+  // Close the key storage
   keyStorage.end();
 
   Serial.println("Restarting in 10 seconds...");
-  
-  // Wait 10 sec
+
+  // Wait 10 seconds
   delay(10000);
 
   // Restart ESP
