@@ -154,7 +154,7 @@ env.Prepend(LIBS=libs)
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
     join(FRAMEWORK_DIR, "tools", "partitions", "default.csv"),
-    '"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
-        FRAMEWORK_DIR, "tools", "gen_esp32part.py")
-)
+    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' %
+                      join(FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
+                      "Generating partitions $TARGET"))
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
