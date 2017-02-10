@@ -87,4 +87,4 @@ recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss)\s+([0-9]+).*
 tools.esptool.upload.protocol=esp32
 tools.esptool.upload.params.verbose=
 tools.esptool.upload.params.quiet=
-tools.esptool.upload.pattern={cmd} --chip esp32 --port "{serial.port}" --baud {upload.speed}  --before default_reset --after hard_reset write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} --flash_size {build.flash_size} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+tools.esptool.upload.pattern={cmd} --chip esp32 --port "{serial.port}" --baud {upload.speed}  --before default_reset --after hard_reset write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} --flash_size {build.flash_size} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"

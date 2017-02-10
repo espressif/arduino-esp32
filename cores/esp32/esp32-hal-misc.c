@@ -28,7 +28,6 @@ void arduino_phy_init()
     if(initialized){
         return;
     }
-    nvs_flash_init();
     esp_phy_calibration_mode_t calibration_mode = PHY_RF_CAL_PARTIAL;
     if (rtc_get_reset_reason(0) == DEEPSLEEP_RESET) {
         calibration_mode = PHY_RF_CAL_NONE;
@@ -106,6 +105,7 @@ void initWiFi() __attribute__((weak));
 void initWiFi() {}
 
 void initArduino(){
+    nvs_flash_init();
     init();
     initVariant();
     initWiFi();

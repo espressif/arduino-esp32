@@ -253,7 +253,7 @@ const char * WiFiAPClass::softAPgetHostname()
  */
 bool WiFiAPClass::softAPsetHostname(const char * hostname)
 {
-    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, hostname) == 0;
+    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, hostname) == ESP_OK;
 }
 
 /**
@@ -262,7 +262,7 @@ bool WiFiAPClass::softAPsetHostname(const char * hostname)
  */
 bool WiFiAPClass::softAPenableIpV6()
 {
-    return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_AP) == 0;
+    return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_AP) == ESP_OK;
 }
 
 /**
