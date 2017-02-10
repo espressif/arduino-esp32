@@ -84,7 +84,6 @@ void ssl_init(sslclient_context *ssl_client)
     mbedtls_ssl_config_init(&ssl_client->ssl_conf);
 
     mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
-    mbedtls_entropy_init(&ssl_client->entropy_ctx);
 }
 
 
@@ -127,6 +126,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
 
         DEBUG_PRINT( "Seeding the random number generator\n");
+        mbedtls_entropy_init(&ssl_client->entropy_ctx);
 
         if ((ret = mbedtls_ctr_drbg_seed(&ssl_client->drbg_ctx, mbedtls_entropy_func,
                                          &ssl_client->entropy_ctx, (const unsigned char *) pers, strlen(pers))) != 0) {
