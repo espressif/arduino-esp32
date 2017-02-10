@@ -40,17 +40,19 @@ class NVSClass {
         size_t writeLong(const char* key, int64_t value);
         size_t writeULong(const char* key, uint64_t value);
         size_t writeString(const char* key, const char* value);
+        size_t writeString(const char* key, String value);
         size_t writeBytes(const char* key, const void* value, size_t len);
 
-        int8_t readChar(const char* key, const int8_t defaultValue = 0);
-        uint8_t readUChar(const char* key, const uint8_t defaultValue = 0);
-        int16_t readShort(const char* key, const int16_t defaultValue = 0);
-        uint16_t readUShort(const char* key, const uint16_t defaultValue = 0);
-        int32_t readInt(const char* key, const int32_t defaultValue = 0);
-        uint32_t readUInt(const char* key, const uint32_t defaultValue = 0);
-        int64_t readLong(const char* key, const int64_t defaultValue = 0);
-        uint64_t readULong(const char* key, const uint64_t defaultValue = 0);
-        String readString(const char* key, const char* defaultValue = NULL);
+        int8_t readChar(const char* key, int8_t defaultValue = 0);
+        uint8_t readUChar(const char* key, uint8_t defaultValue = 0);
+        int16_t readShort(const char* key, int16_t defaultValue = 0);
+        uint16_t readUShort(const char* key, uint16_t defaultValue = 0);
+        int32_t readInt(const char* key, int32_t defaultValue = 0);
+        uint32_t readUInt(const char* key, uint32_t defaultValue = 0);
+        int64_t readLong(const char* key, int64_t defaultValue = 0);
+        uint64_t readULong(const char* key, uint64_t defaultValue = 0);
+        size_t readString(const char* key, char* value, size_t maxLen);
+        String readString(const char* key, String defaultValue = String());
         size_t readBytes(const char* key, void * buf, size_t maxLen);
 };
 

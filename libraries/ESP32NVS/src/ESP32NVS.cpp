@@ -14,7 +14,6 @@
 #include "ESP32NVS.h"
 
 #include "nvs.h"
-#include "nvs_flash.h"
 
 const char * nvs_errors[] = { "OTHER", "NOT_INITIALIZED", "NOT_FOUND", "TYPE_MISMATCH", "READ_ONLY", "NOT_ENOUGH_SPACE", "INVALID_NAME", "INVALID_HANDLE", "REMOVE_FAILED", "KEY_TOO_LONG", "PAGE_FULL", "INVALID_STATE", "INVALID_LENGHT"};
 #define nvs_error(e) (((e)>ESP_ERR_NVS_BASE)?nvs_errors[(e)&~(ESP_ERR_NVS_BASE)]:nvs_errors[0])
@@ -33,9 +32,6 @@ bool NVSClass::begin(const char * name, bool readOnly){
     if(_started){
         return false;
     }
-
-    nvs_flash_init();
-
     _readOnly = readOnly;
     esp_err_t err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
     if(err){
@@ -239,6 +235,10 @@ size_t NVSClass::writeString(const char* key, const char* value){
     return strlen(value);
 }
 
+size_t NVSClass::writeString(const char* key, const String value){
+    return writeString(key, value.c_str());
+}
+
 size_t NVSClass::writeBytes(const char* key, const void* value, size_t len){
     if(!_started || !key || !value || !len || _readOnly){
         return 0;
@@ -356,7 +356,29 @@ uint64_t NVSClass::readULong(const char* key, const uint64_t defaultValue){
     return value;
 }
 
-String NVSClass::readString(const char* key, const char* defaultValue){
+size_t NVSClass::readString(const char* key, char* value, const size_t maxLen){
+    size_t len = 0;
+    if(!_started || !key || !value || !maxLen){
+        return 0;
+    }
+    esp_err_t err = nvs_get_str(_handle, key, NULL, &len);
+    if(err){
+        log_e("nvs_get_str len fail: %s %s", key, nvs_error(err));
+        return 0;
+    }
+    if(len > maxLen){
+        log_e("not enough space in value: %u < %u", maxLen, len);
+        return 0;
+    }
+    err = nvs_get_str(_handle, key, value, &len);
+    if(err){
+        log_e("nvs_get_str fail: %s %s", key, nvs_error(err));
+        return 0;
+    }
+    return len;
+}
+
+String NVSClass::readString(const char* key, const String defaultValue){
     char * value = NULL;
     size_t len = 0;
     if(!_started || !key){
