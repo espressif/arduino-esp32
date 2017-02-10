@@ -102,10 +102,9 @@ env.Append(
     ],
 
     UPLOADERFLAGS=[
-        "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools",
-                                "sdk", "bin", "bootloader.bin"),
-        "0x8000", '"%s"' % join(FRAMEWORK_DIR, "tools",
-                                "sdk", "bin", "partitions_singleapp.bin"),
+        "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader.bin"),
+        "0x8000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "default.bin"),
+        "0xe000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
 )
