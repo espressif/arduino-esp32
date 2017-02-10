@@ -154,8 +154,8 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
     tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
-    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info)) {
-        return tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
+    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info) == ESP_OK) {
+        return tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP) == ESP_OK;
     }
     return false;
 }
