@@ -59,7 +59,7 @@ extern void initWiFi()
     tcpip_adapter_init();
     esp_event_loop_init(&WiFiGenericClass::_eventCallback, NULL);
     esp_wifi_init(&cfg);
-    esp_wifi_set_storage(WIFI_STORAGE_RAM);
+    esp_wifi_set_storage(WIFI_STORAGE_FLASH);
     _esp_wifi_initalized = true;
 }
 
