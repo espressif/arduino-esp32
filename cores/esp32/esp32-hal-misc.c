@@ -62,6 +62,11 @@ void arduino_phy_init()
 }
 #endif
 
+void yield()
+{
+    vPortYield();
+}
+
 uint32_t IRAM_ATTR micros()
 {
     uint32_t ccount;

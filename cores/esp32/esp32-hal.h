@@ -39,8 +39,8 @@ extern "C" {
 #endif
 
 //forward declaration from freertos/portmacro.h
-void vPortYield( void );
-#define yield() vPortYield()
+void vPortYield(void);
+void yield(void);
 #define optimistic_yield(u)
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
