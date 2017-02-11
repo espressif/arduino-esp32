@@ -40,7 +40,7 @@ void setup() {
   Serial.printf("Current counter value: %u\n", counter);
 
   // Store counter to the Preferences
-  preferences.put("counter", counter);
+  preferences.putUInt("counter", counter);
 
   // Close the Preferences
   preferences.end();

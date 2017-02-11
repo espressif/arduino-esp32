@@ -86,7 +86,7 @@ bool Preferences::remove(const char * key){
  * Put a key value
  * */
 
-size_t Preferences::put(const char* key, int8_t value){
+size_t Preferences::putChar(const char* key, int8_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -103,7 +103,7 @@ size_t Preferences::put(const char* key, int8_t value){
     return 1;
 }
 
-size_t Preferences::put(const char* key, uint8_t value){
+size_t Preferences::putUChar(const char* key, uint8_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -120,7 +120,7 @@ size_t Preferences::put(const char* key, uint8_t value){
     return 1;
 }
 
-size_t Preferences::put(const char* key, int16_t value){
+size_t Preferences::putShort(const char* key, int16_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -137,7 +137,7 @@ size_t Preferences::put(const char* key, int16_t value){
     return 2;
 }
 
-size_t Preferences::put(const char* key, uint16_t value){
+size_t Preferences::putUShort(const char* key, uint16_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -154,7 +154,7 @@ size_t Preferences::put(const char* key, uint16_t value){
     return 2;
 }
 
-size_t Preferences::put(const char* key, int32_t value){
+size_t Preferences::putInt(const char* key, int32_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -171,7 +171,7 @@ size_t Preferences::put(const char* key, int32_t value){
     return 4;
 }
 
-size_t Preferences::put(const char* key, uint32_t value){
+size_t Preferences::putUInt(const char* key, uint32_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -188,7 +188,15 @@ size_t Preferences::put(const char* key, uint32_t value){
     return 4;
 }
 
-size_t Preferences::put(const char* key, int64_t value){
+size_t Preferences::putLong(const char* key, int32_t value){
+    return putInt(key, value);
+}
+
+size_t Preferences::putULong(const char* key, uint32_t value){
+    return putUInt(key, value);
+}
+
+size_t Preferences::putLong64(const char* key, int64_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -205,7 +213,7 @@ size_t Preferences::put(const char* key, int64_t value){
     return 8;
 }
 
-size_t Preferences::put(const char* key, uint64_t value){
+size_t Preferences::putULong64(const char* key, uint64_t value){
     if(!_started || !key || _readOnly){
         return 0;
     }
@@ -222,19 +230,19 @@ size_t Preferences::put(const char* key, uint64_t value){
     return 8;
 }
 
-size_t Preferences::put(const char* key, const float_t value){
-    return put(key, (void*)&value, sizeof(float_t));
+size_t Preferences::putFloat(const char* key, const float_t value){
+    return putBytes(key, (void*)&value, sizeof(float_t));
 }
 
-size_t Preferences::put(const char* key, const double_t value){
-    return put(key, (void*)&value, sizeof(double_t));
+size_t Preferences::putDouble(const char* key, const double_t value){
+    return putBytes(key, (void*)&value, sizeof(double_t));
 }
 
-size_t Preferences::put(const char* key, const bool value){
-    return put(key, (uint8_t) (value ? 1 : 0));
+size_t Preferences::putBool(const char* key, const bool value){
+    return putUChar(key, (uint8_t) (value ? 1 : 0));
 }
 
-size_t Preferences::put(const char* key, const char* value){
+size_t Preferences::putString(const char* key, const char* value){
     if(!_started || !key || !value || _readOnly){
         return 0;
     }
@@ -251,11 +259,11 @@ size_t Preferences::put(const char* key, const char* value){
     return strlen(value);
 }
 
-size_t Preferences::put(const char* key, const String value){
-    return put(key, value.c_str());
+size_t Preferences::putString(const char* key, const String value){
+    return putString(key, value.c_str());
 }
 
-size_t Preferences::put(const char* key, const void* value, size_t len){
+size_t Preferences::putBytes(const char* key, const void* value, size_t len){
     if(!_started || !key || !value || !len || _readOnly){
         return 0;
     }
@@ -348,7 +356,15 @@ uint32_t Preferences::getUInt(const char* key, const uint32_t defaultValue){
     return value;
 }
 
-int64_t Preferences::getLong(const char* key, const int64_t defaultValue){
+int32_t Preferences::getLong(const char* key, const int32_t defaultValue){
+    return getInt(key, defaultValue);
+}
+
+uint32_t Preferences::getULong(const char* key, const uint32_t defaultValue){
+    return getUInt(key, defaultValue);
+}
+
+int64_t Preferences::getLong64(const char* key, const int64_t defaultValue){
     int64_t value = defaultValue;
     if(!_started || !key){
         return value;
@@ -360,7 +376,7 @@ int64_t Preferences::getLong(const char* key, const int64_t defaultValue){
     return value;
 }
 
-uint64_t Preferences::getULong(const char* key, const uint64_t defaultValue){
+uint64_t Preferences::getULong64(const char* key, const uint64_t defaultValue){
     uint64_t value = defaultValue;
     if(!_started || !key){
         return value;
