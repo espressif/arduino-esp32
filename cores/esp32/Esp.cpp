@@ -21,6 +21,7 @@
 #include "Esp.h"
 #include "rom/spi_flash.h"
 #include "esp_deep_sleep.h"
+#include "esp_spi_flash.h"
 #include <memory>
 
 //#define DEBUG_SERIAL Serial
@@ -113,7 +114,7 @@ uint32_t EspClass::getFlashChipSize(void)
     uint32_t data;
     uint8_t * bytes = (uint8_t *) &data;
     // read first 4 byte (magic byte + flash config)
-    if(SPIRead(0x0000, &data, 4) == SPI_FLASH_RESULT_OK) {
+    if(flashRead(0x0000, &data, 4) == ESP_OK) {
         return magicFlashChipSize((bytes[3] & 0xf0) >> 4);
     }
     return 0;
@@ -124,7 +125,7 @@ uint32_t EspClass::getFlashChipSpeed(void)
     uint32_t data;
     uint8_t * bytes = (uint8_t *) &data;
     // read first 4 byte (magic byte + flash config)
-    if(SPIRead(0x0000, &data, 4) == SPI_FLASH_RESULT_OK) {
+    if(flashRead(0x0000, &data, 4) == ESP_OK) {
         return magicFlashChipSpeed(bytes[3] & 0x0F);
     }
     return 0;
@@ -136,7 +137,7 @@ FlashMode_t EspClass::getFlashChipMode(void)
     uint32_t data;
     uint8_t * bytes = (uint8_t *) &data;
     // read first 4 byte (magic byte + flash config)
-    if(SPIRead(0x0000, &data, 4) == SPI_FLASH_RESULT_OK) {
+    if(flashRead(0x0000, &data, 4) == ESP_OK) {
         mode = magicFlashChipMode(bytes[2]);
     }
     return mode;
@@ -191,39 +192,17 @@ FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
     return mode;
 }
 
-bool EspClass::eraseConfig(void)
-{
-    bool ret = true;
-    size_t cfgAddr = (getFlashChipSize() - 0x4000);
-    size_t cfgSize = (8*1024);
-
-    while(cfgSize) {
-
-        if(SPIEraseSector((cfgAddr / 4096)) != SPI_FLASH_RESULT_OK) {
-            ret = false;
-        }
-
-        cfgSize -= 4096;
-        cfgAddr += 4096;
-    }
-
-    return ret;
-}
-
 bool EspClass::flashEraseSector(uint32_t sector)
 {
-    int rc = SPIEraseSector(sector);
-    return rc == 0;
+    return spi_flash_erase_sector(sector) == ESP_OK;
 }
 
 bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size)
 {
-    int rc = SPIWrite(offset, (uint32_t*) data, size);
-    return rc == 0;
+    return spi_flash_write(offset, (uint32_t*) data, size) == ESP_OK;
 }
 
 bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 {
-    int rc = SPIRead(offset, (uint32_t*) data, size);
-    return rc == 0;
+    return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
 }

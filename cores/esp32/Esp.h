@@ -55,14 +55,11 @@ public:
     ~EspClass() {}
     void restart();
     uint32_t getFreeHeap();
-
-    uint32_t getChipId();
-
+    uint8_t getCpuFreqMHz(){ return F_CPU; }
+    uint32_t getCycleCount();
     const char * getSdkVersion();
 
     void deepSleep(uint32_t time_us);
-
-    uint8_t getCpuFreqMHz();
 
     uint32_t getFlashChipSize();
     uint32_t getFlashChipSpeed();
@@ -76,9 +73,6 @@ public:
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
     bool flashRead(uint32_t offset, uint32_t *data, size_t size);
 
-    bool eraseConfig();
-
-    uint32_t getCycleCount();
 };
 
 extern EspClass ESP;
