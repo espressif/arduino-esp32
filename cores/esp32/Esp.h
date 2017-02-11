@@ -55,7 +55,7 @@ public:
     ~EspClass() {}
     void restart();
     uint32_t getFreeHeap();
-    uint8_t getCpuFreqMHz(){ return F_CPU; }
+    uint8_t getCpuFreqMHz(){ return CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ; }
     uint32_t getCycleCount();
     const char * getSdkVersion();
 
