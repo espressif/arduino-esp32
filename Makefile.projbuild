@@ -1,1 +1,15 @@
+BOOT_APP_BIN_OFFSET := 0xe000
+BOOT_APP_BIN_ROOT := $(call dequote,$(COMPONENT_PATH))
+BOOT_APP_BIN_PATH := $(call dequote,$(abspath $(BOOT_APP_BIN_ROOT)/$(subst $(quote),,tools/partitions/boot_app0.bin)))
+
+ifndef CONFIG_PARTITION_TABLE_CUSTOM
+PARTITION_TABLE_CSV_PATH = $(call dequote,$(abspath $(BOOT_APP_BIN_ROOT)/$(subst $(quote),,tools/partitions/default.csv)))
+endif
+
+BOOT_APP_BIN_FLASH_CMD = $(ESPTOOLPY_SERIAL) write_flash $(BOOT_APP_BIN_OFFSET) $(BOOT_APP_BIN_PATH)
+ESPTOOL_ALL_FLASH_ARGS += $(BOOT_APP_BIN_OFFSET) $(BOOT_APP_BIN_PATH)
+
+boot-app0:
+	@echo "Rebooting to APP0"
+	$(BOOT_APP_BIN_FLASH_CMD)
 
