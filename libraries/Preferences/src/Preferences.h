@@ -11,19 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _ESP32NVS_H_
-#define _ESP32NVS_H_
+#ifndef _PREFERENCES_H_
+#define _PREFERENCES_H_
 
 #include "Arduino.h"
 
-class NVSClass {
+class Preferences {
     protected:
         uint32_t _handle;
         bool _started;
         bool _readOnly;
     public:
-        NVSClass();
-        ~NVSClass();
+        Preferences();
+        ~Preferences();
 
         bool begin(const char * name, bool readOnly=false);
         void end();
@@ -31,17 +31,20 @@ class NVSClass {
         bool clear();
         bool remove(const char * key);
 
-        size_t setChar(const char* key, int8_t value);
-        size_t setUChar(const char* key, uint8_t value);
-        size_t setShort(const char* key, int16_t value);
-        size_t setUShort(const char* key, uint16_t value);
-        size_t setInt(const char* key, int32_t value);
-        size_t setUInt(const char* key, uint32_t value);
-        size_t setLong(const char* key, int64_t value);
-        size_t setULong(const char* key, uint64_t value);
-        size_t setString(const char* key, const char* value);
-        size_t setString(const char* key, String value);
-        size_t setBytes(const char* key, const void* value, size_t len);
+        size_t put(const char* key, int8_t value);
+        size_t put(const char* key, uint8_t value);
+        size_t put(const char* key, int16_t value);
+        size_t put(const char* key, uint16_t value);
+        size_t put(const char* key, int32_t value);
+        size_t put(const char* key, uint32_t value);
+        size_t put(const char* key, int64_t value);
+        size_t put(const char* key, uint64_t value);
+        size_t put(const char* key, float_t value);
+        size_t put(const char* key, double_t value);
+        size_t put(const char* key, bool value);
+        size_t put(const char* key, const char* value);
+        size_t put(const char* key, String value);
+        size_t put(const char* key, const void* value, size_t len);
 
         int8_t getChar(const char* key, int8_t defaultValue = 0);
         uint8_t getUChar(const char* key, uint8_t defaultValue = 0);
@@ -51,6 +54,9 @@ class NVSClass {
         uint32_t getUInt(const char* key, uint32_t defaultValue = 0);
         int64_t getLong(const char* key, int64_t defaultValue = 0);
         uint64_t getULong(const char* key, uint64_t defaultValue = 0);
+        float_t getFloat(const char* key, float_t defaultValue = NAN);
+        double_t getDouble(const char* key, double_t defaultValue = NAN);
+        bool getBool(const char* key, bool defaultValue = false);
         size_t getString(const char* key, char* value, size_t maxLen);
         String getString(const char* key, String defaultValue = String());
         size_t getBytes(const char* key, void * buf, size_t maxLen);
