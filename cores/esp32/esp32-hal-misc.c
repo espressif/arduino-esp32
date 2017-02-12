@@ -17,9 +17,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
+#include "nvs_flash.h"
 
 #if !CONFIG_ESP32_PHY_AUTO_INIT
-#include "nvs_flash.h"
 #include "esp_phy_init.h"
 #include "rom/rtc.h"
 void arduino_phy_init()
