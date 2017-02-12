@@ -1,8 +1,8 @@
 /*
- LEDC Fade
+ LEDC Software Fade
 
- This example shows how to fade an built-in LED
- using the LEDC functions. 
+ This example shows how to software fade built-in LED 
+ using the ledcWrite function.
  
  Code adapted from original Arduino Fade example:
  https://www.arduino.cc/en/Tutorial/Fade
@@ -25,10 +25,11 @@
 int brightness = 0;    // how bright the LED is
 int fadeAmount = 5;    // how many points to fade the LED by
 
-// Arduino like analogWrite, value has to be 0 - 255
-void ledcAnalogWrite(uint8_t channel, uint8_t value) {
-  // we calculate duty
-  uint32_t duty = (LEDC_BASE_FREQ / 255) * brightness;
+// Arduino like analogWrite
+// value has to be between 0 and valueMax
+void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
+  // calculate duty
+  uint32_t duty = (LEDC_BASE_FREQ / valueMax) * min(value, valueMax);
 
   // write duty to LEDC
   ledcWrite(channel, duty);  
