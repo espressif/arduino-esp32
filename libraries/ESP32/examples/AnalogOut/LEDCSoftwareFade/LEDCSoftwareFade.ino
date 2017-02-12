@@ -1,9 +1,9 @@
 /*
  LEDC Software Fade
 
- This example shows how to software fade built-in LED 
+ This example shows how to software fade LED
  using the ledcWrite function.
- 
+
  Code adapted from original Arduino Fade example:
  https://www.arduino.cc/en/Tutorial/Fade
 
@@ -19,8 +19,8 @@
 // use 5000 Hz as a LEDC base frequency
 #define LEDC_BASE_FREQ     5000
 
-// fade led pin
-#define LED_PIN            LED_BUILTIN
+// fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
+#define LED_PIN            5
 
 int brightness = 0;    // how bright the LED is
 int fadeAmount = 5;    // how many points to fade the LED by
@@ -32,7 +32,7 @@ void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax = 255) {
   uint32_t duty = (LEDC_BASE_FREQ / valueMax) * min(value, valueMax);
 
   // write duty to LEDC
-  ledcWrite(channel, duty);  
+  ledcWrite(channel, duty);
 }
 
 void setup() {
