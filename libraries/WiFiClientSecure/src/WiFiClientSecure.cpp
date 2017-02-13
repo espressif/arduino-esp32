@@ -83,12 +83,12 @@ void WiFiClientSecure::stop()
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
 {
-    connect(ip, port, _CA_cert, _cert, _private_key);
+	return connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port)
 {
-    connect(host, port, _CA_cert, _cert, _private_key);
+	return connect(host, port, _CA_cert, _cert, _private_key);
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port, unsigned char *_CA_cert, unsigned char *_cert, unsigned char *_private_key)
