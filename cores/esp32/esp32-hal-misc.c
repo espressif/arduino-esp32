@@ -109,11 +109,15 @@ void init() {}
 void initWiFi() __attribute__((weak));
 void initWiFi() {}
 
+void initBT() __attribute__((weak));
+void initBT() {}
+
 void initArduino(){
     nvs_flash_init();
     init();
     initVariant();
     initWiFi();
+    initBT();
 }
 
 //used by hal log
