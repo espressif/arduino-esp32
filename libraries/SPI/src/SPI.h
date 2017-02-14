@@ -36,6 +36,19 @@ public:
 
 class SPIClass
 {
+private:
+    int8_t _spi_num;
+    spi_t * _spi;
+    bool _use_hw_ss;
+    int8_t _sck;
+    int8_t _miso;
+    int8_t _mosi;
+    int8_t _ss;
+    uint32_t _div;
+    uint32_t _freq;
+    bool _inTransaction;
+    void writePattern_(uint8_t * data, uint8_t size, uint8_t repeat);
+
 public:
     SPIClass(uint8_t spi_bus=HSPI);
     void begin(int8_t sck=-1, int8_t miso=-1, int8_t mosi=-1, int8_t ss=-1);
@@ -61,17 +74,8 @@ public:
     void write32(uint32_t data);
     void writeBytes(uint8_t * data, uint32_t size);
     void writePattern(uint8_t * data, uint8_t size, uint32_t repeat);
-private:
-    int8_t _spi_num;
-    spi_t * _spi;
-    bool _use_hw_ss;
-    int8_t _sck;
-    int8_t _miso;
-    int8_t _mosi;
-    int8_t _ss;
-    uint32_t _div;
-    uint32_t _freq;
-    void writePattern_(uint8_t * data, uint8_t size, uint8_t repeat);
+
+    spi_t * bus(){ return _spi; }
 };
 
 extern SPIClass SPI;

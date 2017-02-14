@@ -31,6 +31,7 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_ss(-1)
     ,_div(0)
     ,_freq(1000000)
+    , _inTransaction(false)
 {}
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -84,16 +85,6 @@ void SPIClass::setHwCs(bool use)
     _use_hw_ss = use;
 }
 
-void SPIClass::beginTransaction(SPISettings settings)
-{
-    spiWaitReady(_spi);
-    setFrequency(settings._clock);
-    setBitOrder(settings._bitOrder);
-    setDataMode(settings._dataMode);
-}
-
-void SPIClass::endTransaction() {}
-
 void SPIClass::setFrequency(uint32_t freq)
 {
     //check if last freq changed
@@ -121,38 +112,79 @@ void SPIClass::setBitOrder(uint8_t bitOrder)
     spiSetBitOrder(_spi, bitOrder);
 }
 
+void SPIClass::beginTransaction(SPISettings settings)
+{
+    //check if last freq changed
+    uint32_t cdiv = spiGetClockDiv(_spi);
+    if(_freq != settings._clock || _div != cdiv) {
+        _freq = settings._clock;
+        _div = spiFrequencyToClockDiv(_freq);
+    }
+    spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
+    _inTransaction = true;
+}
+
+void SPIClass::endTransaction()
+{
+    if(_inTransaction){
+        spiEndTransaction(_spi);
+        _inTransaction = false;
+    }
+}
+
 void SPIClass::write(uint8_t data)
 {
+    if(_inTransaction){
+        return spiWriteByteNL(_spi, data);
+    }
     spiWriteByte(_spi, data);
 }
 
 uint8_t SPIClass::transfer(uint8_t data)
 {
+    if(_inTransaction){
+        return spiTransferByteNL(_spi, data);
+    }
     return spiTransferByte(_spi, data);
 }
 
 void SPIClass::write16(uint16_t data)
 {
+    if(_inTransaction){
+        return spiWriteShortNL(_spi, data);
+    }
     spiWriteWord(_spi, data);
 }
 
 uint16_t SPIClass::transfer16(uint16_t data)
 {
+    if(_inTransaction){
+        return spiTransferShortNL(_spi, data);
+    }
     return spiTransferWord(_spi, data);
 }
 
 void SPIClass::write32(uint32_t data)
 {
+    if(_inTransaction){
+        return spiWriteLongNL(_spi, data);
+    }
     spiWriteLong(_spi, data);
 }
 
 uint32_t SPIClass::transfer32(uint32_t data)
 {
+    if(_inTransaction){
+        return spiTransferLongNL(_spi, data);
+    }
     return spiTransferLong(_spi, data);
 }
 
 void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)
 {
+    if(_inTransaction){
+        return spiTransferBitsNL(_spi, data, out, bits);
+    }
     spiTransferBits(_spi, data, out, bits);
 }
 
@@ -165,7 +197,12 @@ void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)
  */
 void SPIClass::writeBytes(uint8_t * data, uint32_t size)
 {
-    spiTransferBytes(_spi, data, 0, size);
+    if(_inTransaction){
+        return spiWriteNL(_spi, data, size);
+    }
+    spiSimpleTransaction(_spi);
+    spiWriteNL(_spi, data, size);
+    spiEndTransaction(_spi);
 }
 
 /**
@@ -175,6 +212,9 @@ void SPIClass::writeBytes(uint8_t * data, uint32_t size)
  */
 void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
 {
+    if(_inTransaction){
+        return spiTransferBytesNL(_spi, data, out, size);
+    }
     spiTransferBytes(_spi, data, out, size);
 }
 

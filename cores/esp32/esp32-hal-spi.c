@@ -517,41 +517,24 @@ uint8_t spiTransferByte(spi_t * spi, uint8_t data)
     return data;
 }
 
-uint32_t __spiTranslate16(uint16_t data, bool msb)
+uint32_t __spiTranslate24(uint32_t data)
 {
-    if(msb) {
-        return (data >> 8) | (data << 8);
-    } else {
-        return data;
-    }
+    union {
+        uint32_t l;
+        uint8_t b[4];
+    } out;
+    out.l = data;
+    return out.b[2] | (out.b[1] << 8) | (out.b[0] << 16);
 }
 
-uint32_t __spiTranslate24(uint32_t data, bool msb)
+uint32_t __spiTranslate32(uint32_t data)
 {
-    if(msb) {
-        union {
-            uint32_t l;
-            uint8_t b[4];
-        } out;
-        out.l = data;
-        return out.b[2] | (out.b[1] << 8) | (out.b[0] << 16);
-    } else {
-        return data;
-    }
-}
-
-uint32_t __spiTranslate32(uint32_t data, bool msb)
-{
-    if(msb) {
-        union {
-            uint32_t l;
-            uint8_t b[4];
-        } out;
-        out.l = data;
-        return out.b[3] | (out.b[2] << 8) | (out.b[1] << 16) | (out.b[0] << 24);
-    } else {
-        return data;
-    }
+    union {
+        uint32_t l;
+        uint8_t b[4];
+    } out;
+    out.l = data;
+    return out.b[3] | (out.b[2] << 8) | (out.b[1] << 16) | (out.b[0] << 24);
 }
 
 void spiWriteWord(spi_t * spi, uint16_t data)
@@ -559,10 +542,13 @@ void spiWriteWord(spi_t * spi, uint16_t data)
     if(!spi) {
         return;
     }
+    if(!spi->dev->ctrl.wr_bit_order){
+        data = (data >> 8) | (data << 8);
+    }
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
-    spi->dev->data_buf[0] = __spiTranslate16(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->data_buf[0] = data;
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
@@ -573,14 +559,20 @@ uint16_t spiTransferWord(spi_t * spi, uint16_t data)
     if(!spi) {
         return 0;
     }
+    if(!spi->dev->ctrl.wr_bit_order){
+        data = (data >> 8) | (data << 8);
+    }
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
     spi->dev->miso_dlen.usr_miso_dbitlen = 15;
-    spi->dev->data_buf[0] = __spiTranslate16(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->data_buf[0] = data;
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = __spiTranslate16(spi->dev->data_buf[0] & 0xFFFF, !spi->dev->ctrl.rd_bit_order);
+    data = spi->dev->data_buf[0];
     SPI_MUTEX_UNLOCK();
+    if(!spi->dev->ctrl.rd_bit_order){
+        data = (data >> 8) | (data << 8);
+    }
     return data;
 }
 
@@ -589,10 +581,13 @@ void spiWriteLong(spi_t * spi, uint32_t data)
     if(!spi) {
         return;
     }
+    if(!spi->dev->ctrl.wr_bit_order){
+        data = __spiTranslate32(data);
+    }
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
-    spi->dev->data_buf[0] = __spiTranslate32(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->data_buf[0] = data;
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     SPI_MUTEX_UNLOCK();
@@ -603,57 +598,21 @@ uint32_t spiTransferLong(spi_t * spi, uint32_t data)
     if(!spi) {
         return 0;
     }
+    if(!spi->dev->ctrl.wr_bit_order){
+        data = __spiTranslate32(data);
+    }
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
     spi->dev->miso_dlen.usr_miso_dbitlen = 31;
-    spi->dev->data_buf[0] = __spiTranslate32(data, !spi->dev->ctrl.wr_bit_order);
+    spi->dev->data_buf[0] = data;
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = __spiTranslate32(spi->dev->data_buf[0], !spi->dev->ctrl.rd_bit_order);
+    data = spi->dev->data_buf[0];
     SPI_MUTEX_UNLOCK();
+    if(!spi->dev->ctrl.rd_bit_order){
+        data = __spiTranslate32(data);
+    }
     return data;
-}
-
-void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
-{
-    if(!spi) {
-        return;
-    }
-
-    if(bits > 32) {
-        bits = 32;
-    }
-    uint32_t bytes = (bits + 7) / 8;//64 max
-    uint32_t mask = (((uint64_t)1 << bits) - 1) & 0xFFFFFFFF;
-
-    SPI_MUTEX_LOCK();
-    spi->dev->mosi_dlen.usr_mosi_dbitlen = (bits - 1);
-    spi->dev->miso_dlen.usr_miso_dbitlen = (bits - 1);
-    if(bytes == 1) {
-        spi->dev->data_buf[0] = data & mask;
-    } else if(bytes == 2) {
-        spi->dev->data_buf[0] = __spiTranslate16(data & mask, !spi->dev->ctrl.wr_bit_order);
-    } else if(bytes == 3) {
-        spi->dev->data_buf[0] = __spiTranslate24(data & mask, !spi->dev->ctrl.wr_bit_order);
-    } else {
-        spi->dev->data_buf[0] = __spiTranslate32(data & mask, !spi->dev->ctrl.wr_bit_order);
-    }
-    spi->dev->cmd.usr = 1;
-
-    while(spi->dev->cmd.usr);
-
-    if(out) {
-        if(bytes == 1) {
-            *out = spi->dev->data_buf[0] & mask;
-        } else if(bytes == 2) {
-            *out = __spiTranslate16(spi->dev->data_buf[0] & mask, !spi->dev->ctrl.wr_bit_order);
-        } else if(bytes == 3) {
-            *out = __spiTranslate24(spi->dev->data_buf[0] & mask, !spi->dev->ctrl.wr_bit_order);
-        } else {
-            *out = __spiTranslate32(spi->dev->data_buf[0] & mask, !spi->dev->ctrl.wr_bit_order);
-        }
-    }
-    SPI_MUTEX_UNLOCK();
 }
 
 void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t bytes)
@@ -721,6 +680,320 @@ void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size)
     SPI_MUTEX_UNLOCK();
 }
 
+/*
+ * Manual Lock Management
+ * */
+
+#define MSB_32_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[3] | (d[2] << 8) | (d[1] << 16) | (d[0] << 24); }
+#define MSB_24_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[2] | (d[1] << 8) | (d[0] << 16); }
+#define MSB_16_SET(var, val) { (var) = (((val) & 0xFF00) >> 8) | (((val) & 0xFF) << 8); }
+
+void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
+{
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_LOCK();
+    spi->dev->clock.val = clockDiv;
+    switch (dataMode) {
+        case SPI_MODE1:
+            spi->dev->pin.ck_idle_edge = 0;
+            spi->dev->user.ck_out_edge = 1;
+            break;
+        case SPI_MODE2:
+            spi->dev->pin.ck_idle_edge = 1;
+            spi->dev->user.ck_out_edge = 0;
+            break;
+        case SPI_MODE3:
+            spi->dev->pin.ck_idle_edge = 1;
+            spi->dev->user.ck_out_edge = 1;
+            break;
+        case SPI_MODE0:
+        default:
+            spi->dev->pin.ck_idle_edge = 0;
+            spi->dev->user.ck_out_edge = 0;
+            break;
+    }
+    if (SPI_MSBFIRST == bitOrder) {
+        spi->dev->ctrl.wr_bit_order = 0;
+        spi->dev->ctrl.rd_bit_order = 0;
+    } else if (SPI_LSBFIRST == bitOrder) {
+        spi->dev->ctrl.wr_bit_order = 1;
+        spi->dev->ctrl.rd_bit_order = 1;
+    }
+}
+
+void spiSimpleTransaction(spi_t * spi)
+{
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_LOCK();
+}
+
+void spiEndTransaction(spi_t * spi)
+{
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_UNLOCK();
+}
+
+void spiWriteByteNL(spi_t * spi, uint8_t data)
+{
+    if(!spi) {
+        return;
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+}
+
+uint8_t spiTransferByteNL(spi_t * spi, uint8_t data)
+{
+    if(!spi) {
+        return 0;
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 7;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+    data = spi->dev->data_buf[0] & 0xFF;
+    return data;
+}
+
+void spiWriteShortNL(spi_t * spi, uint16_t data)
+{
+    if(!spi) {
+        return;
+    }
+    if(!spi->dev->ctrl.wr_bit_order){
+        MSB_16_SET(data, data);
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+}
+
+uint16_t spiTransferShortNL(spi_t * spi, uint16_t data)
+{
+    if(!spi) {
+        return 0;
+    }
+    if(!spi->dev->ctrl.wr_bit_order){
+        MSB_16_SET(data, data);
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 15;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+    data = spi->dev->data_buf[0] & 0xFFFF;
+    if(!spi->dev->ctrl.rd_bit_order){
+        MSB_16_SET(data, data);
+    }
+    return data;
+}
+
+void spiWriteLongNL(spi_t * spi, uint32_t data)
+{
+    if(!spi) {
+        return;
+    }
+    if(!spi->dev->ctrl.wr_bit_order){
+        MSB_32_SET(data, data);
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 0;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+}
+
+uint32_t spiTransferLongNL(spi_t * spi, uint32_t data)
+{
+    if(!spi) {
+        return 0;
+    }
+    if(!spi->dev->ctrl.wr_bit_order){
+        MSB_32_SET(data, data);
+    }
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
+    spi->dev->miso_dlen.usr_miso_dbitlen = 31;
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+    data = spi->dev->data_buf[0];
+    if(!spi->dev->ctrl.rd_bit_order){
+        MSB_32_SET(data, data);
+    }
+    return data;
+}
+
+void spiWriteNL(spi_t * spi, const void * data_in, size_t len){
+    size_t longs = len >> 2;
+    if(len & 3){
+        longs++;
+    }
+    uint32_t * data = (uint32_t*)data_in;
+    size_t c_len = 0, c_longs = 0;
+
+    while(len){
+        c_len = (len>64)?64:len;
+        c_longs = (longs > 16)?16:longs;
+
+        spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
+        spi->dev->miso_dlen.usr_miso_dbitlen = 0;
+        for (int i=0; i<c_longs; i++) {
+            spi->dev->data_buf[i] = data[i];
+        }
+        spi->dev->cmd.usr = 1;
+        while(spi->dev->cmd.usr);
+
+        data += c_longs;
+        longs -= c_longs;
+        len -= c_len;
+    }
+}
+
+void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, size_t len){
+    if(!spi) {
+        return;
+    }
+    size_t longs = len >> 2;
+    if(len & 3){
+        longs++;
+    }
+    uint32_t * data = (uint32_t*)data_in;
+    uint32_t * result = (uint32_t*)data_out;
+    size_t c_len = 0, c_longs = 0;
+
+    while(len){
+        c_len = (len>64)?64:len;
+        c_longs = (longs > 16)?16:longs;
+
+        spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
+        spi->dev->miso_dlen.usr_miso_dbitlen = (c_len*8)-1;
+        if(data){
+            for (int i=0; i<c_longs; i++) {
+                spi->dev->data_buf[i] = data[i];
+            }
+        } else {
+            for (int i=0; i<c_longs; i++) {
+                spi->dev->data_buf[i] = 0xFFFFFFFF;
+            }
+        }
+        spi->dev->cmd.usr = 1;
+        while(spi->dev->cmd.usr);
+        if(result){
+            for (int i=0; i<c_longs; i++) {
+                result[i] = spi->dev->data_buf[i];
+            }
+        }
+        if(data){
+            data += c_longs;
+        }
+        if(result){
+            result += c_longs;
+        }
+        longs -= c_longs;
+        len -= c_len;
+    }
+}
+
+void spiTransferBitsNL(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
+{
+    if(!spi) {
+        return;
+    }
+
+    if(bits > 32) {
+        bits = 32;
+    }
+    uint32_t bytes = (bits + 7) / 8;//64 max
+    uint32_t mask = (((uint64_t)1 << bits) - 1) & 0xFFFFFFFF;
+    data = data & mask;
+    if(!spi->dev->ctrl.wr_bit_order){
+        if(bytes == 2) {
+            MSB_16_SET(data, data);
+        } else if(bytes == 3) {
+            MSB_24_SET(data, data);
+        } else {
+            MSB_32_SET(data, data);
+        }
+    }
+
+    spi->dev->mosi_dlen.usr_mosi_dbitlen = (bits - 1);
+    spi->dev->miso_dlen.usr_miso_dbitlen = (bits - 1);
+    spi->dev->data_buf[0] = data;
+    spi->dev->cmd.usr = 1;
+    while(spi->dev->cmd.usr);
+    data = spi->dev->data_buf[0];
+    if(out) {
+        *out = data;
+        if(!spi->dev->ctrl.rd_bit_order){
+            if(bytes == 2) {
+                MSB_16_SET(*out, data);
+            } else if(bytes == 3) {
+                MSB_24_SET(*out, data);
+            } else {
+                MSB_32_SET(*out, data);
+            }
+        }
+    }
+}
+
+void spiWritePixelsNL(spi_t * spi, const void * data_in, size_t len){
+    size_t longs = len >> 2;
+    if(len & 3){
+        longs++;
+    }
+    bool msb = !spi->dev->ctrl.wr_bit_order;
+    uint32_t * data = (uint32_t*)data_in;
+    size_t c_len = 0, c_longs = 0, l_bytes = 0;
+
+    while(len){
+        c_len = (len>64)?64:len;
+        c_longs = (longs > 16)?16:longs;
+        l_bytes = (c_len & 3);
+
+        spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
+        spi->dev->miso_dlen.usr_miso_dbitlen = 0;
+        for (int i=0; i<c_longs; i++) {
+            if(msb){
+                if(l_bytes && i == (c_longs - 1)){
+                    if(l_bytes == 2){
+                        MSB_16_SET(spi->dev->data_buf[i], data[i]);
+                    } else {
+                        spi->dev->data_buf[i] = data[i] & 0xFF;
+                    }
+                } else {
+                    MSB_32_SET(spi->dev->data_buf[i], data[i]);
+                }
+            } else {
+                spi->dev->data_buf[i] = data[i];
+            }
+        }
+        spi->dev->cmd.usr = 1;
+        while(spi->dev->cmd.usr);
+
+        data += c_longs;
+        longs -= c_longs;
+        len -= c_len;
+    }
+}
+
+
+
+/*
+ * Clock Calculators
+ *
+ * */
 
 typedef union {
     uint32_t regValue;
@@ -794,6 +1067,4 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
     }
     return bestReg.regValue;
 }
-
-
 
