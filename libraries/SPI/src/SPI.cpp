@@ -189,9 +189,6 @@ void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)
 }
 
 /**
- * Note:
- *  data need to be aligned to 32Bit
- *  or you get an Fatal exception (9)
  * @param data uint8_t *
  * @param size uint32_t
  */
@@ -202,6 +199,20 @@ void SPIClass::writeBytes(uint8_t * data, uint32_t size)
     }
     spiSimpleTransaction(_spi);
     spiWriteNL(_spi, data, size);
+    spiEndTransaction(_spi);
+}
+
+/**
+ * @param data void *
+ * @param size uint32_t
+ */
+void SPIClass::writePixels(const void * data, uint32_t size)
+{
+    if(_inTransaction){
+        return spiWritePixelsNL(_spi, data, size);
+    }
+    spiSimpleTransaction(_spi);
+    spiWritePixelsNL(_spi, data, size);
     spiEndTransaction(_spi);
 }
 
@@ -219,9 +230,6 @@ void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
 }
 
 /**
- * Note:
- *  data need to be aligned to 32Bit
- *  or you get an Fatal exception (9)
  * @param data uint8_t *
  * @param size uint8_t  max for size is 64Byte
  * @param repeat uint32_t
