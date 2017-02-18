@@ -117,7 +117,7 @@ uint32_t EspClass::getFreeHeap(void)
     return esp_get_free_heap_size();
 }
 
-uint8_t EspClass::getCpuRevision(void)
+uint8_t EspClass::getChipRevision(void)
 {
     return (REG_READ(EFUSE_BLK0_RDATA3_REG) >> EFUSE_RD_CHIP_VER_RESERVE_S) && EFUSE_RD_CHIP_VER_RESERVE_V;
 }
