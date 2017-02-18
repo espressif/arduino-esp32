@@ -202,12 +202,13 @@ bool EspClass::flashEraseSector(uint32_t sector)
     return spi_flash_erase_sector(sector) == ESP_OK;
 }
 
+// Warning: These functions do not work with encrypted flash
 bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_write_encrypted(offset, (uint32_t*) data, size) == ESP_OK;
+    return spi_flash_write(offset, (uint32_t*) data, size) == ESP_OK;
 }
 
 bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_read_encrypted(offset, (uint32_t*) data, size) == ESP_OK;
+    return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
 }
