@@ -30,7 +30,7 @@ compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
 
 compiler.c.elf.cmd=xtensa-esp32-elf-gcc
 compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.common.ld -T esp32.rom.ld -T esp32.peripherals.ld -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority
-compiler.c.elf.libs=-lgcc -lstdc++ -lapp_update -lbootloader_support -lbt -lbtdm_app -lc -lc_nano -lcoap -lcoexist -lcore -lcxx -ldriver -lesp32 -lethernet -lexpat -lfatfs -lfreertos -lhal -ljson -llog -llwip -lm -lmbedtls -lmdns -lmicro-ecc -lnet80211 -lnewlib -lnghttp -lnvs_flash -lopenssl -lphy -lpp -lrtc -lsdmmc -lsmartconfig -lspi_flash -ltcpip_adapter -lulp -lvfs -lwpa -lwpa2 -lwpa_supplicant -lwps -lxtensa-debug-module 
+compiler.c.elf.libs=-lgcc -lstdc++ -lapp_update -lbootloader_support -lbt -lbtdm_app -lc -lc_nano -lcoap -lcoexist -lcore -lcxx -ldriver -lesp32 -lethernet -lexpat -lfatfs -lfreertos -lhal -ljson -llog -llwip -lm -lmbedtls -lmdns -lmicro-ecc -lnet80211 -lnewlib -lnghttp -lnvs_flash -lopenssl -lphy -lpp -lrtc -lrtc_clk -lsdmmc -lsmartconfig -lspi_flash -ltcpip_adapter -lulp -lvfs -lwpa -lwpa2 -lwpa_supplicant -lwps -lxtensa-debug-module 
 
 compiler.as.cmd=xtensa-esp32-elf-as
 

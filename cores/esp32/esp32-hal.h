@@ -58,6 +58,7 @@ void yield(void);
 #include "esp32-hal-ledc.h"
 #include "esp32-hal-sigmadelta.h"
 #include "esp32-hal-timer.h"
+#include "esp32-hal-bt.h"
 #include "esp_system.h"
 
 uint32_t micros();

@@ -1,4 +1,4 @@
-ARDUINO_LIB_DIRS := libraries/WiFi/src libraries/SPI/src libraries/Wire/src libraries/Preferences/src
+ARDUINO_LIB_DIRS := libraries/WiFi/src libraries/SPI/src libraries/Wire/src libraries/Preferences/src libraries/SimpleBLE/src libraries/WiFiClientSecure/src
 
 COMPONENT_ADD_INCLUDEDIRS := cores/esp32 variants/esp32 $(ARDUINO_LIB_DIRS)
 COMPONENT_PRIV_INCLUDEDIRS := cores/esp32/libb64
