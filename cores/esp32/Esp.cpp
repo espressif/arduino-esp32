@@ -23,9 +23,22 @@
 #include "esp_deep_sleep.h"
 #include "esp_spi_flash.h"
 #include <memory>
+#include <soc/soc.h>
+#include <soc/efuse_reg.h>
 
-//#define DEBUG_SERIAL Serial
+/* Main header of binary image */
+typedef struct {
+    uint8_t magic;
+    uint8_t segment_count;
+    uint8_t spi_mode;      /* flash read mode (esp_image_spi_mode_t as uint8_t) */
+    uint8_t spi_speed: 4;  /* flash frequency (esp_image_spi_freq_t as uint8_t) */
+    uint8_t spi_size: 4;   /* flash chip size (esp_image_flash_size_t as uint8_t) */
+    uint32_t entry_addr;
+    uint8_t encrypt_flag;    /* encrypt flag */
+    uint8_t extra_header[15]; /* ESP32 additional header, unused by second bootloader */
+} esp_image_header_t;
 
+#define ESP_IMAGE_HEADER_MAGIC 0xE9
 
 /**
  * User-defined Literals
@@ -104,6 +117,11 @@ uint32_t EspClass::getFreeHeap(void)
     return esp_get_free_heap_size();
 }
 
+uint8_t EspClass::getChipRevision(void)
+{
+    return (REG_READ(EFUSE_BLK0_RDATA3_REG) >> EFUSE_RD_CHIP_VER_RESERVE_S) && EFUSE_RD_CHIP_VER_RESERVE_V;
+}
+
 const char * EspClass::getSdkVersion(void)
 {
     return esp_get_idf_version();
@@ -111,57 +129,44 @@ const char * EspClass::getSdkVersion(void)
 
 uint32_t EspClass::getFlashChipSize(void)
 {
-    uint32_t data;
-    uint8_t * bytes = (uint8_t *) &data;
-    // read first 4 byte (magic byte + flash config)
-    if(flashRead(0x0000, &data, 4) == ESP_OK) {
-        return magicFlashChipSize((bytes[3] & 0xf0) >> 4);
+    esp_image_header_t fhdr;
+    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+        return 0;
     }
-    return 0;
+    return magicFlashChipSize(fhdr.spi_size);
 }
 
 uint32_t EspClass::getFlashChipSpeed(void)
 {
-    uint32_t data;
-    uint8_t * bytes = (uint8_t *) &data;
-    // read first 4 byte (magic byte + flash config)
-    if(flashRead(0x0000, &data, 4) == ESP_OK) {
-        return magicFlashChipSpeed(bytes[3] & 0x0F);
+    esp_image_header_t fhdr;
+    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+        return 0;
     }
-    return 0;
+    return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
 FlashMode_t EspClass::getFlashChipMode(void)
 {
-    FlashMode_t mode = FM_UNKNOWN;
-    uint32_t data;
-    uint8_t * bytes = (uint8_t *) &data;
-    // read first 4 byte (magic byte + flash config)
-    if(flashRead(0x0000, &data, 4) == ESP_OK) {
-        mode = magicFlashChipMode(bytes[2]);
+    esp_image_header_t fhdr;
+    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+        return FM_UNKNOWN;
     }
-    return mode;
+    return magicFlashChipMode(fhdr.spi_mode);
 }
 
 uint32_t EspClass::magicFlashChipSize(uint8_t byte)
 {
     switch(byte & 0x0F) {
-    case 0x0: // 4 Mbit (512KB)
-        return (512_kB);
-    case 0x1: // 2 MBit (256KB)
-        return (256_kB);
-    case 0x2: // 8 MBit (1MB)
+    case 0x0: // 8 MBit (1MB)
         return (1_MB);
-    case 0x3: // 16 MBit (2MB)
+    case 0x1: // 16 MBit (2MB)
         return (2_MB);
-    case 0x4: // 32 MBit (4MB)
+    case 0x2: // 32 MBit (4MB)
         return (4_MB);
-    case 0x5: // 64 MBit (8MB)
+    case 0x3: // 64 MBit (8MB)
         return (8_MB);
-    case 0x6: // 128 MBit (16MB)
+    case 0x4: // 128 MBit (16MB)
         return (16_MB);
-    case 0x7: // 256 MBit (32MB)
-        return (32_MB);
     default: // fail?
         return 0;
     }
@@ -186,7 +191,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte)
 FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
 {
     FlashMode_t mode = (FlashMode_t) byte;
-    if(mode > FM_DOUT) {
+    if(mode > FM_SLOW_READ) {
         mode = FM_UNKNOWN;
     }
     return mode;
@@ -197,6 +202,7 @@ bool EspClass::flashEraseSector(uint32_t sector)
     return spi_flash_erase_sector(sector) == ESP_OK;
 }
 
+// Warning: These functions do not work with encrypted flash
 bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size)
 {
     return spi_flash_write(offset, (uint32_t*) data, size) == ESP_OK;

@@ -45,6 +45,8 @@ typedef enum {
     FM_QOUT = 0x01,
     FM_DIO = 0x02,
     FM_DOUT = 0x03,
+    FM_FAST_READ = 0x04,
+    FM_SLOW_READ = 0x05,
     FM_UNKNOWN = 0xff
 } FlashMode_t;
 
@@ -55,6 +57,7 @@ public:
     ~EspClass() {}
     void restart();
     uint32_t getFreeHeap();
+    uint8_t getChipRevision();
     uint8_t getCpuFreqMHz(){ return CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ; }
     uint32_t getCycleCount();
     const char * getSdkVersion();
