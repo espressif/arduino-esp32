@@ -20,20 +20,48 @@
 #ifndef _WIFICLIENT_H_
 #define _WIFICLIENT_H_
 
-
 #include "Arduino.h"
 #include "Client.h"
+
+class WiFiClientSocketHandle {
+private:
+    int sockfd;
+    int refCount;
+
+public:
+    WiFiClientSocketHandle(int fd):sockfd(fd), refCount(1)
+    {
+    }
+    ;
+    ~WiFiClientSocketHandle();
+
+    int ref()
+    {
+        return ++refCount;
+    }
+
+    int unref()
+    {
+        return --refCount;
+    }
+
+    int fd()
+    {
+        return sockfd;
+    }
+};
 
 class WiFiClient : public Client
 {
 protected:
-    int sockfd;
+    WiFiClientSocketHandle *clientSocketHandle;
     bool _connected;
 
 public:
     WiFiClient *next;
     WiFiClient();
     WiFiClient(int fd);
+    WiFiClient(const WiFiClient &other);
     ~WiFiClient();
     int connect(IPAddress ip, uint16_t port);
     int connect(const char *host, uint16_t port);
@@ -69,12 +97,15 @@ public:
         return !this->operator==(rhs);
     };
 
-    int fd()
+    int fd() const
     {
-        return sockfd;
+        if (clientSocketHandle == NULL) {
+            return -1;
+        } else {
+            return clientSocketHandle->fd();
+        }
     }
-    IPAddress remoteIP();
-    uint16_t remotePort();
+
     int setSocketOption(int option, char* value, size_t len);
     int setOption(int option, int *value);
     int getOption(int option, int *value);
@@ -82,8 +113,10 @@ public:
     int setNoDelay(bool nodelay);
     bool getNoDelay();
 
-    IPAddress remoteIP(int fd);
-    uint16_t remotePort(int fd);
+    IPAddress remoteIP() const;
+    IPAddress remoteIP(int fd) const;
+    uint16_t remotePort() const;
+    uint16_t remotePort(int fd) const;
 
     //friend class WiFiServer;
     using Print::write;
