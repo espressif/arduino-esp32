@@ -20,30 +20,21 @@
 #ifndef _WIFICLIENT_H_
 #define _WIFICLIENT_H_
 
+
 #include "Arduino.h"
 #include "Client.h"
+#include <memory>
 
 class WiFiClientSocketHandle {
 private:
     int sockfd;
-    int refCount;
 
 public:
-    WiFiClientSocketHandle(int fd):sockfd(fd), refCount(1)
+    WiFiClientSocketHandle(int fd):sockfd(fd)
     {
     }
-    ;
+
     ~WiFiClientSocketHandle();
-
-    int ref()
-    {
-        return ++refCount;
-    }
-
-    int unref()
-    {
-        return --refCount;
-    }
 
     int fd()
     {
@@ -54,14 +45,13 @@ public:
 class WiFiClient : public Client
 {
 protected:
-    WiFiClientSocketHandle *clientSocketHandle;
+    std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
     bool _connected;
 
 public:
     WiFiClient *next;
     WiFiClient();
     WiFiClient(int fd);
-    WiFiClient(const WiFiClient &other);
     ~WiFiClient();
     int connect(IPAddress ip, uint16_t port);
     int connect(const char *host, uint16_t port);

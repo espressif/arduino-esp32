@@ -26,7 +26,6 @@
 #undef write
 #undef read
 
-#define WIFI_CLIENT_SELECT_TIMEOUT_US (100000)
 
 WiFiClientSocketHandle::~WiFiClientSocketHandle()
 {
@@ -35,12 +34,11 @@ WiFiClientSocketHandle::~WiFiClientSocketHandle()
 
 WiFiClient::WiFiClient():_connected(false),next(NULL)
 {
-    clientSocketHandle = NULL;
 }
 
 WiFiClient::WiFiClient(int fd):_connected(true),next(NULL)
 {
-    clientSocketHandle = new WiFiClientSocketHandle(fd);
+    clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
 }
 
 WiFiClient::~WiFiClient()
@@ -52,28 +50,12 @@ WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
     stop();
     clientSocketHandle = other.clientSocketHandle;
-    if (clientSocketHandle != NULL) {
-        clientSocketHandle->ref();
-    }
     _connected = other._connected;
     return *this;
 }
 
-WiFiClient::WiFiClient(const WiFiClient &other)
-{
-    clientSocketHandle = other.clientSocketHandle;
-    if (clientSocketHandle != NULL) {
-        clientSocketHandle->ref();
-    }
-    _connected = other._connected;
-    next = other.next;
-}
-
 void WiFiClient::stop()
 {
-    if (clientSocketHandle && clientSocketHandle->unref() == 0) {
-        delete clientSocketHandle;
-    }
     clientSocketHandle = NULL;
     _connected = false;
 }
@@ -86,12 +68,6 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
         return 0;
     }
 
-    //If there is an exisiting socket, unreference it
-    if (clientSocketHandle && clientSocketHandle->unref() == 0) {
-        delete clientSocketHandle;
-    }
-    clientSocketHandle = new WiFiClientSocketHandle(sockfd);
-
     uint32_t ip_addr = ip;
     struct sockaddr_in serveraddr;
     bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -101,10 +77,10 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     if (res < 0) {
         log_e("lwip_connect_r: %d", errno);
-        delete clientSocketHandle;
-        clientSocketHandle = NULL;
+        close(sockfd);
         return 0;
     }
+    clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
     _connected = true;
     return 1;
 }
@@ -122,9 +98,6 @@ int WiFiClient::connect(const char *host, uint16_t port)
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    if (clientSocketHandle == NULL) {
-        return -1;
-    }
     int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
     if(res < 0) {
         log_e("%d", errno);
@@ -145,12 +118,8 @@ int WiFiClient::setTimeout(uint32_t seconds)
 
 int WiFiClient::setOption(int option, int *value)
 {
-    if (clientSocketHandle == NULL) {
-        return -1;
-    }
-    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value,
-            sizeof(int));
-    if (res < 0) {
+    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
+    if(res < 0) {
         log_e("%d", errno);
     }
     return res;
@@ -158,9 +127,6 @@ int WiFiClient::setOption(int option, int *value)
 
 int WiFiClient::getOption(int option, int *value)
 {
-    if (clientSocketHandle == NULL) {
-        return -1;
-    }
     size_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
@@ -199,52 +165,21 @@ int WiFiClient::read()
 
 size_t WiFiClient::write(const uint8_t *buf, size_t size)
 {
-    int res =0;
-    bool retry = true;
-
-    if (!_connected || clientSocketHandle == NULL) {
+    if(!_connected) {
         return 0;
     }
-
-    int sockfd = fd();
-
-    while (retry) {
-        //use select to make sure the socket is ready for writing
-        fd_set set;
-        struct timeval tv;
-        FD_ZERO(&set); /* empties the set */
-        FD_SET(sockfd, &set); /* adds FD to the set */
-        tv.tv_sec = 0;
-        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
-
-        if (select(sockfd + 1, NULL, &set, NULL, &tv) < 0) {
-            return 0;
-        }
-
-        if (FD_ISSET(sockfd, &set)) {
-            res = send(sockfd, (void*) buf, size, MSG_DONTWAIT);
-            if (res < 0) {
-                log_e("%d", errno);
-                Serial.print("Write Error: ");
-                Serial.println(errno);
-                if (errno != EAGAIN) {
-                    //if resource was busy, can try again, otherwise give up
-                    stop();
-                    res = 0;
-                    retry = false;
-                }
-            } else {
-                //completed successfully
-                retry = false;
-            }
-        }
+    int res = send(fd(), (void*)buf, size, MSG_DONTWAIT);
+    if(res < 0) {
+        log_e("%d", errno);
+        stop();
+        res = 0;
     }
     return res;
 }
 
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
-    if (!available() || clientSocketHandle == NULL) {
+    if(!available()) {
         return -1;
     }
     int res = recv(fd(), buf, size, MSG_DONTWAIT);
@@ -257,7 +192,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
 
 int WiFiClient::available()
 {
-    if (!_connected || clientSocketHandle == NULL) {
+    if(!_connected) {
         return 0;
     }
     int count;
