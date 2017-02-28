@@ -22,6 +22,9 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
+#define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US (100000)
+
 #undef connect
 #undef write
 #undef read
@@ -160,14 +163,43 @@ int WiFiClient::read()
 
 size_t WiFiClient::write(const uint8_t *buf, size_t size)
 {
-    if(!_connected) {
+    int res =0;
+    int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
+    int socketFileDescriptor = fd();
+
+    if(!_connected || (socketFileDescriptor < 0)) {
         return 0;
     }
-    int res = send(sockfd, (void*)buf, size, MSG_DONTWAIT);
-    if(res < 0) {
-        log_e("%d", errno);
-        stop();
-        res = 0;
+
+    while(retry) {
+        //use select to make sure the socket is ready for writing
+        fd_set set;
+        struct timeval tv;
+        FD_ZERO(&set);        // empties the set
+        FD_SET(socketFileDescriptor, &set); // adds FD to the set
+        tv.tv_sec = 0;
+        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
+        retry--;
+
+        if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
+            return 0;
+        }
+
+        if(FD_ISSET(socketFileDescriptor, &set)) {
+            res = send(socketFileDescriptor, (void*) buf, size, MSG_DONTWAIT);
+            if(res < 0) {
+                log_e("%d", errno);
+                if(errno != EAGAIN) {
+                    //if resource was busy, can try again, otherwise give up
+                    stop();
+                    res = 0;
+                    retry = 0;
+                }
+            } else {
+                //completed successfully
+                retry = 0;
+            }
+        }
     }
     return res;
 }
