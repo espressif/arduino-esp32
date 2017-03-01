@@ -39,6 +39,7 @@ WiFiClientSecure::WiFiClientSecure()
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
+    next = NULL;
 }
 
 
@@ -57,6 +58,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
+    next = NULL;
 }
 
 WiFiClientSecure::~WiFiClientSecure()

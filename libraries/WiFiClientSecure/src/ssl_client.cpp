@@ -18,7 +18,7 @@
 
 const char *pers = "esp32-tls";
 
-#define DEBUG true //Set false to supress debug messages
+#define DEBUG //Comment to supress debug messages
 
 #ifdef DEBUG
 #define DEBUG_PRINT(...) printf( __VA_ARGS__ )
@@ -26,7 +26,7 @@ const char *pers = "esp32-tls";
 #define DEBUG_PRINT(x)
 #endif
 
-#ifdef MBEDTLS_DEBUG_C
+#ifdef CONFIG_MBEDTLS_DEBUG
 
 #define MBEDTLS_DEBUG_LEVEL 4
 
@@ -201,7 +201,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         }
 
         mbedtls_ssl_conf_rng(&ssl_client->ssl_conf, mbedtls_ctr_drbg_random, &ssl_client->drbg_ctx);
-#ifdef MBEDTLS_DEBUG_C
+#ifdef CONFIG_MBEDTLS_DEBUG
         mbedtls_debug_set_threshold(MBEDTLS_DEBUG_LEVEL);
         mbedtls_ssl_conf_dbg(&ssl_client->ssl_conf, mbedtls_debug, NULL);
 #endif
