@@ -29,12 +29,33 @@
 #undef write
 #undef read
 
-WiFiClient::WiFiClient():sockfd(-1),_connected(false),next(NULL)
+class WiFiClientSocketHandle {
+private:
+    int sockfd;
+
+public:
+    WiFiClientSocketHandle(int fd):sockfd(fd)
+    {
+    }
+
+    ~WiFiClientSocketHandle()
+    {
+        close(sockfd);
+    }
+
+    int fd()
+    {
+        return sockfd;
+    }
+};
+
+WiFiClient::WiFiClient():_connected(false),next(NULL)
 {
 }
 
-WiFiClient::WiFiClient(int fd):sockfd(fd),_connected(true),next(NULL)
+WiFiClient::WiFiClient(int fd):_connected(true),next(NULL)
 {
+    clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
 }
 
 WiFiClient::~WiFiClient()
@@ -45,27 +66,25 @@ WiFiClient::~WiFiClient()
 WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
     stop();
-    sockfd = other.sockfd;
+    clientSocketHandle = other.clientSocketHandle;
     _connected = other._connected;
     return *this;
 }
 
 void WiFiClient::stop()
 {
-    if(_connected && sockfd >= 0) {
-        close(sockfd);
-        sockfd = -1;
-        _connected = false;
-    }
+    clientSocketHandle = NULL;
+    _connected = false;
 }
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         log_e("socket: %d", errno);
         return 0;
     }
+
     uint32_t ip_addr = ip;
     struct sockaddr_in serveraddr;
     bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -76,9 +95,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
     if (res < 0) {
         log_e("lwip_connect_r: %d", errno);
         close(sockfd);
-        sockfd = -1;
         return 0;
     }
+    clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
     _connected = true;
     return 1;
 }
@@ -96,7 +115,7 @@ int WiFiClient::connect(const char *host, uint16_t port)
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    int res = setsockopt(sockfd, SOL_SOCKET, option, value, len);
+    int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -116,7 +135,7 @@ int WiFiClient::setTimeout(uint32_t seconds)
 
 int WiFiClient::setOption(int option, int *value)
 {
-    int res = setsockopt(sockfd, IPPROTO_TCP, option, (char *)value, sizeof(int));
+    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -126,7 +145,7 @@ int WiFiClient::setOption(int option, int *value)
 int WiFiClient::getOption(int option, int *value)
 {
     size_t size = sizeof(int);
-    int res = getsockopt(sockfd, IPPROTO_TCP, option, (char *)value, &size);
+    int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -209,7 +228,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     if(!available()) {
         return -1;
     }
-    int res = recv(sockfd, buf, size, MSG_DONTWAIT);
+    int res = recv(fd(), buf, size, MSG_DONTWAIT);
     if(res < 0 && errno != EWOULDBLOCK) {
         log_e("%d", errno);
         stop();
@@ -223,7 +242,7 @@ int WiFiClient::available()
         return 0;
     }
     int count;
-    int res = ioctl(sockfd, FIONREAD, &count);
+    int res = ioctl(fd(), FIONREAD, &count);
     if(res < 0) {
         log_e("%d", errno);
         stop();
@@ -239,7 +258,7 @@ uint8_t WiFiClient::connected()
     return _connected;
 }
 
-IPAddress WiFiClient::remoteIP(int fd)
+IPAddress WiFiClient::remoteIP(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -248,7 +267,7 @@ IPAddress WiFiClient::remoteIP(int fd)
     return IPAddress((uint32_t)(s->sin_addr.s_addr));
 }
 
-uint16_t WiFiClient::remotePort(int fd)
+uint16_t WiFiClient::remotePort(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -257,17 +276,27 @@ uint16_t WiFiClient::remotePort(int fd)
     return ntohs(s->sin_port);
 }
 
-IPAddress WiFiClient::remoteIP()
+IPAddress WiFiClient::remoteIP() const
 {
-    return remoteIP(sockfd);
+    return remoteIP(fd());
 }
 
-uint16_t WiFiClient::remotePort()
+uint16_t WiFiClient::remotePort() const
 {
-    return remotePort(sockfd);
+    return remotePort(fd());
 }
 
 bool WiFiClient::operator==(const WiFiClient& rhs)
 {
-    return sockfd == rhs.sockfd && remotePort(sockfd) == remotePort(rhs.sockfd) && remoteIP(sockfd) == remoteIP(rhs.sockfd);
+    return clientSocketHandle == rhs.clientSocketHandle && remotePort() == rhs.remotePort() && remoteIP() == rhs.remoteIP();
 }
+
+int WiFiClient::fd() const
+{
+    if (clientSocketHandle == NULL) {
+        return -1;
+    } else {
+        return clientSocketHandle->fd();
+    }
+}
+
