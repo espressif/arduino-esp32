@@ -25,22 +25,7 @@
 #include "Client.h"
 #include <memory>
 
-class WiFiClientSocketHandle {
-private:
-    int sockfd;
-
-public:
-    WiFiClientSocketHandle(int fd):sockfd(fd)
-    {
-    }
-
-    ~WiFiClientSocketHandle();
-
-    int fd()
-    {
-        return sockfd;
-    }
-};
+class WiFiClientSocketHandle;
 
 class WiFiClient : public Client
 {
@@ -87,14 +72,7 @@ public:
         return !this->operator==(rhs);
     };
 
-    int fd() const
-    {
-        if (clientSocketHandle == NULL) {
-            return -1;
-        } else {
-            return clientSocketHandle->fd();
-        }
-    }
+    int fd() const;
 
     int setSocketOption(int option, char* value, size_t len);
     int setOption(int option, int *value);

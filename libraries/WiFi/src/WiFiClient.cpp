@@ -29,11 +29,25 @@
 #undef write
 #undef read
 
+class WiFiClientSocketHandle {
+private:
+    int sockfd;
 
-WiFiClientSocketHandle::~WiFiClientSocketHandle()
-{
-    close(sockfd);
-}
+public:
+    WiFiClientSocketHandle(int fd):sockfd(fd)
+    {
+    }
+
+    ~WiFiClientSocketHandle()
+    {
+        close(sockfd);
+    }
+
+    int fd()
+    {
+        return sockfd;
+    }
+};
 
 WiFiClient::WiFiClient():_connected(false),next(NULL)
 {
@@ -276,3 +290,13 @@ bool WiFiClient::operator==(const WiFiClient& rhs)
 {
     return clientSocketHandle == rhs.clientSocketHandle && remotePort() == rhs.remotePort() && remoteIP() == rhs.remoteIP();
 }
+
+int WiFiClient::fd() const
+{
+    if (clientSocketHandle == NULL) {
+        return -1;
+    } else {
+        return clientSocketHandle->fd();
+    }
+}
+
