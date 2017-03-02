@@ -266,12 +266,9 @@ void WiFiClient::flush() {
     while(a){
         toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
         if(recv(fd(), buf, toRead, MSG_DONTWAIT) < 0) {
-            if(errno != EWOULDBLOCK){
-                log_e("%d", errno);
-                stop();
-                break;
-            }
-            delay(1);//give some time
+            log_e("%d", errno);
+            stop();
+            break;
         }
         a = available();
     }
