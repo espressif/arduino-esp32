@@ -49,7 +49,7 @@ public:
     {
         return 0;
     }
-    void flush() {}
+    void flush();
     void stop();
     uint8_t connected();
 

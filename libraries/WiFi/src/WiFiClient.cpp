@@ -24,6 +24,7 @@
 
 #define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
 #define WIFI_CLIENT_SELECT_TIMEOUT_US (100000)
+#define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
 
 #undef connect
 #undef write
@@ -249,6 +250,32 @@ int WiFiClient::available()
         return 0;
     }
     return count;
+}
+
+// Though flushing means to send all pending data,
+// seems that in Arduino it also means to clear RX
+void WiFiClient::flush() {
+    size_t a = available(), toRead = 0;
+    if(!a){
+        return;//nothing to flush
+    }
+    uint8_t * buf = (uint8_t *)malloc(WIFI_CLIENT_FLUSH_BUFFER_SIZE);
+    if(!buf){
+        return;//memory error
+    }
+    while(a){
+        toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
+        if(recv(fd(), buf, toRead, MSG_DONTWAIT) < 0) {
+            if(errno != EWOULDBLOCK){
+                log_e("%d", errno);
+                stop();
+                break;
+            }
+            delay(1);//give some time
+        }
+        a = available();
+    }
+    free(buf);
 }
 
 uint8_t WiFiClient::connected()
