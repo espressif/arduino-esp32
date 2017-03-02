@@ -437,7 +437,7 @@ esp32.serial.disableRTS=true
 
 esp32.build.mcu=esp32
 esp32.build.core=esp32
-esp32.build.variant=esp32
+esp32.build.variant=firebeetle32
 esp32.build.board=ESP32_DEV
 
 esp32.build.f_cpu=240000000L
