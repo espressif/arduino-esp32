@@ -105,7 +105,7 @@
 #define _BV(b) (1UL << (b))
 
 #define digitalPinToPort(pin)       (((pin)>31)?1:0)
-#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-31):(pin)))
+#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-32):(pin)))
 #define digitalPinToTimer(pin)      (0)
 #define analogInPinToBit(P)         (P)
 #define portOutputRegister(port)    ((volatile uint32_t*)((port)?GPIO_OUT1_REG:GPIO_OUT_REG))
