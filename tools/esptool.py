@@ -30,7 +30,7 @@ import base64
 import zlib
 import shlex
 
-__version__ = "2.0-beta1"
+__version__ = "2.0-beta2"
 
 MAX_UINT32 = 0xffffffff
 MAX_UINT24 = 0xffffff
@@ -281,6 +281,62 @@ class ESPLoader(object):
         for i in range(7):
             self.command()
 
+    def _connect_attempt(self, mode='default_reset', esp32r0_delay=False):
+        """ A single connection attempt, with esp32r0 workaround options """
+        # esp32r0_delay is a workaround for bugs with the most common auto reset
+        # circuit and Windows, if the EN pin on the dev board does not have
+        # enough capacitance.
+        #
+        # Newer dev boards shouldn't have this problem (higher value capacitor
+        # on the EN pin), and ESP32 revision 1 can't use this workaround as it
+        # relies on a silicon bug.
+        #
+        # Details: https://github.com/espressif/esptool/issues/136
+        last_error = None
+
+        # issue reset-to-bootloader:
+        # RTS = either CH_PD/EN or nRESET (both active low = chip in reset
+        # DTR = GPIO0 (active low = boot to flasher)
+        #
+        # DTR & RTS are active low signals,
+        # ie True = pin @ 0V, False = pin @ VCC.
+        if mode != 'no_reset':
+            self._port.setDTR(False)  # IO0=HIGH
+            self._port.setRTS(True)   # EN=LOW, chip in reset
+            time.sleep(0.1)
+            if esp32r0_delay:
+                # Some chips are more likely to trigger the esp32r0
+                # watchdog reset silicon bug if they're held with EN=LOW
+                # for a longer period
+                time.sleep(1.2)
+            self._port.setDTR(True)   # IO0=LOW
+            self._port.setRTS(False)  # EN=HIGH, chip out of reset
+            if esp32r0_delay:
+                # Sleep longer after reset.
+                # This workaround only works on revision 0 ESP32 chips,
+                # it exploits a silicon bug spurious watchdog reset.
+                time.sleep(0.4)  # allow watchdog reset to occur
+            time.sleep(0.05)
+            self._port.setDTR(False)  # IO0=HIGH, done
+
+        self._port.timeout = 0.1
+        for _ in range(5):
+            try:
+                self.flush_input()
+                self._port.flushOutput()
+                self.sync()
+                self._port.timeout = 5
+                return None
+            except FatalError as e:
+                if esp32r0_delay:
+                    print('_', end='')
+                else:
+                    print('.', end='')
+                sys.stdout.flush()
+                time.sleep(0.05)
+                last_error = e
+        return last_error
+
     def connect(self, mode='default_reset'):
         """ Try connecting repeatedly until successful, or giving up """
         print('Connecting...', end='')
@@ -289,44 +345,12 @@ class ESPLoader(object):
 
         try:
             for _ in range(10):
-                # issue reset-to-bootloader:
-                # RTS = either CH_PD/EN or nRESET (both active low = chip in reset
-                # DTR = GPIO0 (active low = boot to flasher)
-                #
-                # DTR & RTS are active low signals,
-                # ie True = pin @ 0V, False = pin @ VCC.
-                if mode != 'no_reset':
-                    self._port.setDTR(False)  # IO0=HIGH
-                    self._port.setRTS(True)   # EN=LOW, chip in reset
-                    time.sleep(0.05)
-                    self._port.setDTR(True)   # IO0=LOW
-                    self._port.setRTS(False)  # EN=HIGH, chip out of reset
-                    if mode == 'esp32r0':
-                        # this is a workaround for a bug with the most
-                        # common auto reset circuit and Windows, if the EN
-                        # pin on the dev board does not have enough
-                        # capacitance. This workaround only works on
-                        # revision 0 ESP32 chips, it exploits a silicon
-                        # bug spurious watchdog reset.
-                        #
-                        # Details: https://github.com/espressif/esptool/issues/136
-                        time.sleep(0.4)  # allow watchdog reset to occur
-                    time.sleep(0.05)
-                    self._port.setDTR(False)  # IO0=HIGH, done
-
-                self._port.timeout = 0.1
-                for _ in range(4):
-                    try:
-                        self.flush_input()
-                        self._port.flushOutput()
-                        self.sync()
-                        self._port.timeout = 5
-                        return
-                    except FatalError as e:
-                        print('.', end='')
-                        sys.stdout.flush()
-                        time.sleep(0.05)
-                        last_error = e
+                last_error = self._connect_attempt(mode=mode, esp32r0_delay=False)
+                if last_error is None:
+                    return
+                last_error = self._connect_attempt(mode=mode, esp32r0_delay=True)
+                if last_error is None:
+                    return
         finally:
             print('')  # end 'Connecting...' line
         raise FatalError('Failed to connect to %s: %s' % (self.CHIP_NAME, last_error))
@@ -653,8 +677,7 @@ class ESPLoader(object):
         if data_bits == 0:
             self.write_reg(SPI_W0_REG, 0)  # clear data register before we read it
         else:
-            if len(data) % 4 != 0:  # pad to 32-bit multiple
-                data += b'\0' * (4 - (len(data) % 4))
+            data = pad_to(data, 4, b'\00')  # pad to 32-bit multiple
             words = struct.unpack("I" * (len(data) // 4), data)
             next_reg = SPI_W0_REG
             for word in words:
@@ -901,11 +924,11 @@ class ESP32ROM(ESPLoader):
 
     def read_mac(self):
         """ Read MAC from EFUSE region """
-        words = [self.read_efuse(1), self.read_efuse(2)]
+        words = [self.read_efuse(2), self.read_efuse(1)]
         bitstring = struct.pack(">II", *words)
-        bitstring = bitstring[:6]  # trim 2 byte CRC
+        bitstring = bitstring[2:8]  # trim the 2 byte CRC
         try:
-            return tuple(ord(b) for b in bitstring)  # trim 2 byte CRC
+            return tuple(ord(b) for b in bitstring)
         except TypeError:  # Python 3, bitstring elements are already bytes
             return tuple(bitstring)
 
@@ -964,10 +987,7 @@ class ImageSegment(object):
     def __init__(self, addr, data, file_offs=None):
         self.addr = addr
         # pad all ImageSegments to at least 4 bytes length
-        pad_mod = len(data) % 4
-        if pad_mod != 0:
-            data += b"\x00" * (4 - pad_mod)
-        self.data = data
+        self.data = pad_to(data, 4, b'\x00')
         self.file_offs = file_offs
         self.include_in_checksum = True
 
@@ -1210,15 +1230,13 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         self.flash_mode = 0
         self.flash_size_freq = 0
         self.version = 1
-        self.encrypt_flag = False
 
         if load_file is not None:
             segments = self.load_common_header(load_file, ESPLoader.ESP_IMAGE_MAGIC)
             additional_header = list(struct.unpack("B" * 16, load_file.read(16)))
-            self.encrypt_flag = (additional_header[0] == 0x01)
 
-            # check remaining 14 bytes are unused
-            if additional_header[2:] != [0] * 14:
+            # check these bytes are unused
+            if additional_header != [0] * 16:
                 print("WARNING: ESP32 image header contains unknown flags. Possibly this image is from a newer version of esptool.py")
 
             for _ in range(segments):
@@ -1241,9 +1259,9 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         with open(filename, 'wb') as f:
             self.write_common_header(f, self.segments)
 
-            f.write(b'\x01' if self.encrypt_flag else b'\x00')
-            # remaining 15 bytes of header are unused
-            f.write(b'\x00' * 15)
+            # first 4 bytes of header are read by ROM bootloader for SPI
+            # config, but currently unused
+            f.write(b'\x00' * 16)
 
             checksum = ESPLoader.ESP_CHECKSUM_MAGIC
             last_addr = None
@@ -1464,6 +1482,14 @@ def unhexify(hs):
     return s
 
 
+def pad_to(data, alignment, pad_character=b'\xFF'):
+    """ Pad to the next alignment boundary """
+    pad_mod = len(data) % alignment
+    if pad_mod != 0:
+        data += pad_character * (alignment - pad_mod)
+    return data
+
+
 class FatalError(RuntimeError):
     """
     Wrapper class for runtime errors that aren't caused by internal bugs, but by
@@ -1590,7 +1616,7 @@ def write_flash(esp, args):
     for address, argfile in args.addr_filename:
         if args.no_stub:
             print('Erasing flash...')
-        image = argfile.read()
+        image = pad_to(argfile.read(), 4)
         image = _update_image_flash_params(esp, address, flash_params, image)
         calcmd5 = hashlib.md5(image).hexdigest()
         uncsize = len(image)
@@ -1689,10 +1715,6 @@ def elf2image(args):
         print("Creating image for ESP8266...")
         args.chip == 'esp8266'
 
-    if args.chip != 'esp32':
-        if args.set_encrypt_flag:
-            raise FatalError("--encrypt-flag only applies to ESP32 images")
-
     if args.chip == 'esp32':
         image = ESP32FirmwareImage()
     elif args.version == '1':  # ESP8266
@@ -1704,7 +1726,6 @@ def elf2image(args):
     image.flash_mode = {'qio':0, 'qout':1, 'dio':2, 'dout': 3}[args.flash_mode]
     image.flash_size_freq = image.ROM_LOADER.FLASH_SIZES[args.flash_size]
     image.flash_size_freq += {'40m':0, '26m':1, '20m':2, '80m': 0xf}[args.flash_freq]
-    image.encrypt_flag = args.set_encrypt_flag
 
     if args.output is None:
         args.output = image.default_output_name(args.input)
@@ -1776,7 +1797,7 @@ def _verify_flash(esp, args):
     flash_params = _get_flash_params(esp, args)
 
     for address, argfile in args.addr_filename:
-        image = argfile.read()
+        image = pad_to(argfile.read(), 4)
         argfile.seek(0)  # rewind in case we need it again
 
         image = _update_image_flash_params(esp, address, flash_params, image)
@@ -1853,7 +1874,7 @@ def main():
     parser.add_argument(
         '--before',
         help='What to do before connecting to the chip',
-        choices=['default_reset', 'no_reset', 'esp32r0'],
+        choices=['default_reset', 'no_reset'],
         default=os.environ.get('ESPTOOL_BEFORE', 'default_reset'))
 
     parser.add_argument(
@@ -1946,7 +1967,6 @@ def main():
     parser_elf2image.add_argument('input', help='Input ELF file')
     parser_elf2image.add_argument('--output', '-o', help='Output filename prefix (for version 1 image), or filename (for version 2 single image)', type=str)
     parser_elf2image.add_argument('--version', '-e', help='Output image version', choices=['1','2'], default='1')
-    parser_elf2image.add_argument('--set-encrypt-flag', help='Flag image to be encrypted by bootloader after flashing.', action="store_true")
 
     add_spi_flash_subparsers(parser_elf2image)
 
@@ -2152,6 +2172,19 @@ class AddrFilenamePairAction(argparse.Action):
             except IndexError:
                 raise argparse.ArgumentError(self,'Must be pairs of an address and the binary filename to write there')
             pairs.append((address, argfile))
+
+        # Sort the addresses and check for overlapping
+        end = 0
+        for address, argfile in sorted(pairs):
+            argfile.seek(0,2)  # seek to end
+            size = argfile.tell()
+            argfile.seek(0)
+            sector_start = address & ~(ESPLoader.FLASH_SECTOR_SIZE - 1)
+            sector_end = ((address + size + ESPLoader.FLASH_SECTOR_SIZE - 1) & ~(ESPLoader.FLASH_SECTOR_SIZE - 1)) - 1
+            if sector_start < end:
+                message = 'Detected overlap at address: 0x%x for file: %s' % (address, argfile.name)
+                raise argparse.ArgumentError(self, message)
+            end = sector_end
         setattr(namespace, self.dest, pairs)
 
 
