@@ -31,9 +31,9 @@ protected:
     bool _connected;
     sslclient_context *sslclient;
 
-    unsigned char *_CA_cert;
-    unsigned char *_cert;
-    unsigned char *_private_key;
+    const char *_CA_cert;
+    const char *_cert;
+    const char *_private_key;
 
 public:
     WiFiClientSecure *next;
@@ -42,8 +42,8 @@ public:
     ~WiFiClientSecure();
     int connect(IPAddress ip, uint16_t port);
     int connect(const char *host, uint16_t port);
-    int connect(IPAddress ip, uint16_t port, unsigned char *rootCABuff, unsigned char *cli_cert, unsigned char *cli_key);
-    int connect(const char *host, uint16_t port, unsigned char *rootCABuff, unsigned char *cli_cert, unsigned char *cli_key);
+    int connect(IPAddress ip, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
+    int connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
     int available();
@@ -57,9 +57,9 @@ public:
     void stop();
     uint8_t connected();
 
-    void setCACert(unsigned char *rootCA);
-    void setCertificate(unsigned char *client_ca);
-    void setPrivateKey (unsigned char *private_key);
+    void setCACert(const char *rootCA);
+    void setCertificate(const char *client_ca);
+    void setPrivateKey (const char *private_key);
 
     operator bool()
     {
