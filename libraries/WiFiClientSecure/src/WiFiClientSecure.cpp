@@ -39,7 +39,7 @@ WiFiClientSecure::WiFiClientSecure()
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
-    next = NULL;
+	next = NULL;			
 }
 
 
@@ -58,7 +58,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
-    next = NULL;
+    next = NULL;				
 }
 
 WiFiClientSecure::~WiFiClientSecure()
@@ -76,34 +76,37 @@ WiFiClientSecure &WiFiClientSecure::operator=(const WiFiClientSecure &other)
 
 void WiFiClientSecure::stop()
 {
-    if (_connected && sslclient->socket >= 0) {
-        stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
+    if (sslclient->socket >= 0) {
+        close(sslclient->socket);
         sslclient->socket = -1;
         _connected = false;
     }
+    stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
 {
-	return connect(ip, port, _CA_cert, _cert, _private_key);
+    return connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port)
 {
-	return connect(host, port, _CA_cert, _cert, _private_key);
+    return connect(host, port, _CA_cert, _cert, _private_key);
 }
 
-int WiFiClientSecure::connect(IPAddress ip, uint16_t port, unsigned char *_CA_cert, unsigned char *_cert, unsigned char *_private_key)
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
     int ret = start_ssl_client(sslclient, ip, port, _CA_cert, _cert, _private_key);
     if (ret < 0) {
         log_e("lwip_connect_r: %d", errno);
+        stop();
+        return 0;
     }
     _connected = true;
     return 1;
 }
 
-int WiFiClientSecure::connect(const char *host, uint16_t port, unsigned char *_CA_cert, unsigned char *_cert, unsigned char *_private_key)
+int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
     struct hostent *server;
     server = gethostbyname(host);
@@ -137,7 +140,7 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     }
     int res = send_ssl_data(sslclient, buf, size);
     if (res < 0) {
-        log_e("%d", errno);
+						   
         stop();
         res = 0;
     }
@@ -150,8 +153,8 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
         return -1;
     }
     int res = get_ssl_receive(sslclient, buf, size);
-    if (res < 0 && errno != EWOULDBLOCK) {
-        printf("%d", errno);
+    if (res < 0) {
+							
         stop();
     }
     return res;
@@ -163,7 +166,9 @@ int WiFiClientSecure::available()
         return 0;
     }
     int res = data_to_read(sslclient);
-
+    if (res < 0 ) {
+        stop();
+    }	
     return res;
 }
 
@@ -175,17 +180,17 @@ uint8_t WiFiClientSecure::connected()
     return _connected;
 }
 
-void WiFiClientSecure::setCACert(unsigned char *rootCA)
+void WiFiClientSecure::setCACert (const char *rootCA)
 {
     _CA_cert = rootCA;
 }
 
-void WiFiClientSecure::setCertificate (unsigned char *client_ca)
+void WiFiClientSecure::setCertificate (const char *client_ca)
 {
     _cert = client_ca;
 }
 
-void WiFiClientSecure::setPrivateKey (unsigned char *private_key)
+void WiFiClientSecure::setPrivateKey (const char *private_key)
 {
     _private_key = private_key;
 }
