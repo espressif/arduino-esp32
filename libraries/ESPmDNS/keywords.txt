@@ -6,8 +6,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-ESP8266mDNS	KEYWORD1
-MDNSResponder	KEYWORD1
+ESPmDNS	KEYWORD1
 MDNS	KEYWORD1
 
 #######################################
@@ -15,9 +14,10 @@ MDNS	KEYWORD1
 #######################################
 
 begin	KEYWORD2
-update	KEYWORD2
+end KEYWORD2
 addService	KEYWORD2
 enableArduino	KEYWORD2
+disableArduino   KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
