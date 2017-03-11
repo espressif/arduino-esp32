@@ -81,11 +81,6 @@ bool VFSImpl::exists(const char* path)
     return false;
 }
 
-static inline int real_rename(const char* f, const char* t)
-{
-    return rename(f,t);
-}
-
 bool VFSImpl::rename(const char* pathFrom, const char* pathTo)
 {
     if(!_mountpoint) {
@@ -114,7 +109,7 @@ bool VFSImpl::rename(const char* pathFrom, const char* pathTo)
     }
     sprintf(temp1,"%s%s", _mountpoint, pathFrom);
     sprintf(temp2,"%s%s", _mountpoint, pathTo);
-    auto rc = real_rename(temp1, temp2);
+    auto rc = ::rename(temp1, temp2);
     free(temp1);
     free(temp2);
     return rc == 0;
@@ -153,11 +148,6 @@ bool VFSImpl::remove(const char* path)
     return rc == 0;
 }
 
-static inline int real_mkdir(const char* f)
-{
-    return mkdir(f, ACCESSPERMS);
-}
-
 bool VFSImpl::mkdir(const char *path)
 {
     if(!_mountpoint) {
@@ -182,7 +172,7 @@ bool VFSImpl::mkdir(const char *path)
         return false;
     }
     sprintf(temp,"%s%s", _mountpoint, path);
-    auto rc = real_mkdir(temp);
+    auto rc = ::mkdir(temp, ACCESSPERMS);
     free(temp);
     return rc == 0;
 }
