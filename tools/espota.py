@@ -98,7 +98,14 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
     inv_trys += 1
     sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     remote_address = (remoteAddr, int(remotePort))
-    sent = sock2.sendto(message.encode(), remote_address)
+    try:
+      sent = sock2.sendto(message.encode(), remote_address)
+    except:
+      sys.stderr.write('failed\n')
+      sys.stderr.flush()
+      sock2.close()
+      logging.error('Host %s Not Found', remoteAddr)
+      return 1
     sock2.settimeout(1)
     try:
       data = sock2.recv(37).decode()
