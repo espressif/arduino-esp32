@@ -51,6 +51,7 @@ env.Prepend(
     CPPPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bootloader_support"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),

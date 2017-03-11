@@ -16,51 +16,6 @@
 #include "FS.h"
 #include "SD_MMC.h"
 
-void setup(){
-    Serial.begin(115200);
-    if(!SD_MMC.begin()){
-        Serial.println("Card Mount Failed");
-        return;
-    }
-    uint8_t cardType = SD_MMC.cardType();
-
-    if(cardType == CARD_NONE){
-        Serial.println("No SD_MMC card attached");
-        return;
-    }
-
-    Serial.print("SD_MMC Card Type: ");
-    if(cardType == CARD_MMC){
-        Serial.println("MMC");
-    } else if(cardType == CARD_SD){
-        Serial.println("SDSC");
-    } else if(cardType == CARD_SDHC){
-        Serial.println("SDHC");
-    } else {
-        Serial.println("UNKNOWN");
-    }
-
-    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-    Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
-
-    listDir(SD_MMC, "/", 0);
-    createDir(SD_MMC, "/mydir");
-    listDir(SD_MMC, "/", 0);
-    removeDir(SD_MMC, "/mydir");
-    listDir(SD_MMC, "/", 2);
-    writeFile(SD_MMC, "/hello.txt", "Hello ");
-    appendFile(SD_MMC, "/hello.txt", "World!\n");
-    readFile(SD_MMC, "/hello.txt");
-    deleteFile(SD_MMC, "/foo.txt");
-    renameFile(SD_MMC, "/hello.txt", "/foo.txt");
-    readFile(SD_MMC, "/foo.txt");
-    testFileIO(SD_MMC, "/test.txt");
-}
-
-void loop(){
-    
-}
-
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\n", dirname);
 
@@ -213,4 +168,49 @@ void testFileIO(fs::FS &fs, const char * path){
     end = millis() - start;
     Serial.printf("%u bytes written for %u ms\n", 2048 * 512, end);
     file.close();
+}
+
+void setup(){
+    Serial.begin(115200);
+    if(!SD_MMC.begin()){
+        Serial.println("Card Mount Failed");
+        return;
+    }
+    uint8_t cardType = SD_MMC.cardType();
+
+    if(cardType == CARD_NONE){
+        Serial.println("No SD_MMC card attached");
+        return;
+    }
+
+    Serial.print("SD_MMC Card Type: ");
+    if(cardType == CARD_MMC){
+        Serial.println("MMC");
+    } else if(cardType == CARD_SD){
+        Serial.println("SDSC");
+    } else if(cardType == CARD_SDHC){
+        Serial.println("SDHC");
+    } else {
+        Serial.println("UNKNOWN");
+    }
+
+    uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+    Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+
+    listDir(SD_MMC, "/", 0);
+    createDir(SD_MMC, "/mydir");
+    listDir(SD_MMC, "/", 0);
+    removeDir(SD_MMC, "/mydir");
+    listDir(SD_MMC, "/", 2);
+    writeFile(SD_MMC, "/hello.txt", "Hello ");
+    appendFile(SD_MMC, "/hello.txt", "World!\n");
+    readFile(SD_MMC, "/hello.txt");
+    deleteFile(SD_MMC, "/foo.txt");
+    renameFile(SD_MMC, "/hello.txt", "/foo.txt");
+    readFile(SD_MMC, "/foo.txt");
+    testFileIO(SD_MMC, "/test.txt");
+}
+
+void loop(){
+
 }

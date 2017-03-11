@@ -6,6 +6,9 @@ runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp
 tools.esptool.cmd="{runtime.platform.path}/tools/esptool"
 tools.esptool.cmd.windows="{runtime.platform.path}/tools/esptool.exe"
 
+tools.esptool.network_cmd=python "{runtime.platform.path}/tools/espota.py"
+tools.esptool.network_cmd.windows="{runtime.platform.path}/tools/espota.exe"
+
 tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
@@ -17,7 +20,7 @@ compiler.warning_flags.all=-Wall -Werror=all -Wextra
 
 compiler.path={runtime.tools.xtensa-esp32-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk
-compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DHAVE_CONFIG_H "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/bluedroid" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/ethernet" "-I{compiler.sdk.path}/include/fatfs" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/mdns" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/mbedtls_port" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/ulp" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/sdmmc" "-I{compiler.sdk.path}/include/openssl" "-I{compiler.sdk.path}/include/app_update" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/xtensa-debug-module" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/coap" "-I{compiler.sdk.path}/include/wpa_supplicant" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/lwip"
+compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DHAVE_CONFIG_H "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/bluedroid" "-I{compiler.sdk.path}/include/bootloader_support" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/ethernet" "-I{compiler.sdk.path}/include/fatfs" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/mdns" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/mbedtls_port" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/ulp" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/sdmmc" "-I{compiler.sdk.path}/include/openssl" "-I{compiler.sdk.path}/include/app_update" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/xtensa-debug-module" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/coap" "-I{compiler.sdk.path}/include/wpa_supplicant" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/lwip"
 
 compiler.c.cmd=xtensa-esp32-elf-gcc
 compiler.c.flags=-std=gnu99 -Os -g3 -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wpointer-arith {compiler.warning_flags} -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-old-style-declaration -MMD -c
@@ -88,3 +91,4 @@ tools.esptool.upload.protocol=esp32
 tools.esptool.upload.params.verbose=
 tools.esptool.upload.params.quiet=
 tools.esptool.upload.pattern={cmd} --chip esp32 --port "{serial.port}" --baud {upload.speed}  --before default_reset --after hard_reset write_flash -z --flash_freq {build.flash_freq} --flash_mode {build.flash_mode} --flash_size {build.flash_size} 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+tools.esptool.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{network.port}" "--auth={network.password}" -f "{build.path}/{build.project_name}.bin"
