@@ -26,9 +26,20 @@ void yield()
 
 uint32_t IRAM_ATTR micros()
 {
+    static uint32_t ccount_overflows = 0;
+    static uint32_t previous_ccount = 0;
     uint32_t ccount;
-    __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
-    return ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    ccount = xthal_get_ccount();
+    
+    if(previous_ccount>ccount)
+    {
+      previous_ccount = ccount;
+      ccount_overflows++;
+    }
+    
+    previous_ccount = ccount;
+    return (4294967296 / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ)*ccount_overflows
+              +(ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
 }
 
 uint32_t IRAM_ATTR millis()
