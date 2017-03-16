@@ -26,6 +26,8 @@ void yield()
 
 uint32_t IRAM_ATTR micros()
 {
+    //The ESP32's micro's function overflows too quickly becuase the 32bit 
+    //cycle counter is used.
     static uint32_t ccount_overflows = 0;
     static uint32_t previous_ccount = 0;
     uint32_t ccount;
