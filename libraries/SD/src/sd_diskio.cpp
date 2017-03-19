@@ -142,10 +142,16 @@ char sdCommand(uint8_t pdrv, char cmd, unsigned int arg, unsigned int* resp)
         }
 
         if (token == 0xFF) {
-            log_e("no token received");
-            break;
+            log_w("no token received");
+            sdDeselectCard(pdrv);
+            delay(100);
+            sdSelectCard(pdrv);
+            continue;
         } else if (token & 0x08) {
             log_w("crc error");
+            sdDeselectCard(pdrv);
+            delay(100);
+            sdSelectCard(pdrv);
             continue;
         } else if (token > 1) {
             log_w("token error [%u] 0x%x", cmd, token);
@@ -443,6 +449,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
     card->spi->beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
 
     if (sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
+        log_w("GO_IDLE_STATE failed");
         goto unknown_card;
     }
 
@@ -451,15 +458,18 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         //old card maybe
         card->supports_crc = false;
     } else if (token != 1) {
+        log_w("CRC_ON_OFF failed: %u", token);
         goto unknown_card;
     }
 
     if (sdTransaction(pdrv, SEND_IF_COND, 0x1AA, &resp) == 1) {
         if ((resp & 0xFFF) != 0x1AA) {
+            log_w("SEND_IF_COND failed: %03X", resp & 0xFFF);
             goto unknown_card;
         }
 
         if (sdTransaction(pdrv, READ_OCR, 0, &resp) != 1 || !(resp & (1 << 20))) {
+            log_w("READ_OCR failed: %X", resp);
             goto unknown_card;
         }
 
@@ -469,6 +479,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         } while (token == 1 && (millis() - start) < 1000);
 
         if (token) {
+            log_w("APP_OP_COND failed: %u", token);
             goto unknown_card;
         }
 
@@ -479,10 +490,12 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
                 card->type = CARD_SD;
             }
         } else {
+            log_w("READ_OCR failed: %X", resp);
             goto unknown_card;
         }
     } else {
         if (sdTransaction(pdrv, READ_OCR, 0, &resp) != 1 || !(resp & (1 << 20))) {
+            log_w("READ_OCR failed: %X", resp);
             goto unknown_card;
         }
 
@@ -502,6 +515,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
             if (token == 0x00) {
                 card->type = CARD_MMC;
             } else {
+                log_w("SEND_OP_COND failed: %u", token);
                 goto unknown_card;
             }
         }
@@ -509,12 +523,14 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
 
     if (card->type != CARD_MMC) {
         if (sdTransaction(pdrv, APP_CLR_CARD_DETECT, 0, NULL)) {
+            log_w("APP_CLR_CARD_DETECT failed");
             goto unknown_card;
         }
     }
 
     if (card->type != CARD_SDHC) {
         if (sdTransaction(pdrv, SET_BLOCKLEN, 512, NULL) != 0x00) {
+            log_w("SET_BLOCKLEN failed");
             goto unknown_card;
         }
     }
