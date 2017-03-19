@@ -1,6 +1,8 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
+#include <stdint.h>
+
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
