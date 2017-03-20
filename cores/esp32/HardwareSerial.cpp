@@ -89,5 +89,5 @@ size_t HardwareSerial::write(const uint8_t *buffer, size_t size)
 
 HardwareSerial::operator bool() const
 {
-    return _uart != 0;
+    return true;
 }
