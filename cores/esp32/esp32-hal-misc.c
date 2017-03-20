@@ -18,17 +18,28 @@
 #include "freertos/task.h"
 #include "esp_attr.h"
 #include "nvs_flash.h"
+#include <sys/time.h>
 
 void yield()
 {
     vPortYield();
 }
 
+portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
+
 uint32_t IRAM_ATTR micros()
 {
+    static uint32_t lccount = 0;
+    static uint32_t overflow = 0;
     uint32_t ccount;
+    portENTER_CRITICAL_ISR(&microsMux);
     __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
-    return ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    if(ccount < lccount){
+        overflow += UINT32_MAX / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    }
+    lccount = ccount;
+    portEXIT_CRITICAL_ISR(&microsMux);
+    return overflow + (ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
 }
 
 uint32_t IRAM_ATTR millis()
@@ -45,7 +56,7 @@ void IRAM_ATTR delayMicroseconds(uint32_t us)
 {
     uint32_t m = micros();
     if(us){
-        uint32_t e = (m + us) % ((0xFFFFFFFF / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ) + 1);
+        uint32_t e = (m + us);
         if(m > e){ //overflow
             while(micros() > e){
                 NOP();
@@ -63,14 +74,16 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
-void initArduino(){
+void initArduino()
+{
     nvs_flash_init();
     init();
     initVariant();
 }
 
 //used by hal log
-const char * IRAM_ATTR pathToFileName(const char * path){
+const char * IRAM_ATTR pathToFileName(const char * path)
+{
     size_t i = 0;
     size_t pos = 0;
     char * p = (char *)path;

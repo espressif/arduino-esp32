@@ -14,6 +14,7 @@ void loopTask(void *pvParameters)
 {
     setup();
     for(;;) {
+        micros(); //update overflow
         loop();
     }
 }
