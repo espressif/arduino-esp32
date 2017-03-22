@@ -687,6 +687,7 @@ void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size)
 #define MSB_32_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[3] | (d[2] << 8) | (d[1] << 16) | (d[0] << 24); }
 #define MSB_24_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[2] | (d[1] << 8) | (d[0] << 16); }
 #define MSB_16_SET(var, val) { (var) = (((val) & 0xFF00) >> 8) | (((val) & 0xFF) << 8); }
+#define MSB_PIX_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[1] | (d[0] << 8) | (d[3] << 16) | (d[2] << 24); }
 
 void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
 {
@@ -973,7 +974,7 @@ void spiWritePixelsNL(spi_t * spi, const void * data_in, size_t len){
                         spi->dev->data_buf[i] = data[i] & 0xFF;
                     }
                 } else {
-                    MSB_32_SET(spi->dev->data_buf[i], data[i]);
+                    MSB_PIX_SET(spi->dev->data_buf[i], data[i]);
                 }
             } else {
                 spi->dev->data_buf[i] = data[i];
