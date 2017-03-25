@@ -27,6 +27,8 @@
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
 #define I2C_SDA_IDX(p) ((p==0)?I2CEXT0_SDA_OUT_IDX:((p==1)?I2CEXT1_SDA_OUT_IDX:0))
 
+#define DR_REG_I2C_EXT_BASE_FIXED               0x60013000
+#define DR_REG_I2C1_EXT_BASE_FIXED              0x60027000
 
 struct i2c_struct_t {
     i2c_dev_t * dev;
@@ -49,16 +51,16 @@ enum {
 #define I2C_MUTEX_UNLOCK()
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE), 0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE), 1}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), 0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1}
 };
 #else
 #define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTake(i2c->lock, portMAX_DELAY) != pdPASS)
 #define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE), NULL, 0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE), NULL, 1}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1}
 };
 #endif
 
