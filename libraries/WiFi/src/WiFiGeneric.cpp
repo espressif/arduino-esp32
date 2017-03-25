@@ -184,6 +184,8 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             WiFiSTAClass::_setStatus(WL_CONNECT_FAILED);
         } else if(reason == WIFI_REASON_BEACON_TIMEOUT || reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
             WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
+        } else if(reason == WIFI_REASON_AUTH_EXPIRE) {
+            WiFi.begin();
         } else {
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
