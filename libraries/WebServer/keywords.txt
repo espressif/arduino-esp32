@@ -1,0 +1,36 @@
+#######################################
+# Syntax Coloring Map For Ultrasound
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESP8266WebServer	KEYWORD1
+HTTPMethod	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+handleClient	KEYWORD2
+on	KEYWORD2
+addHandler	KEYWORD2
+uri	KEYWORD2
+method	KEYWORD2
+client	KEYWORD2
+send	KEYWORD2
+arg	KEYWORD2
+argName	KEYWORD2
+args	KEYWORD2
+hasArg	KEYWORD2
+onNotFound	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+HTTP_GET	LITERAL1
+HTTP_POST	LITERAL1
+HTTP_ANY	LITERAL1
