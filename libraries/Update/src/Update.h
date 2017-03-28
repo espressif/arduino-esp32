@@ -1,5 +1,5 @@
-#ifndef ESP8266UPDATER_H
-#define ESP8266UPDATER_H
+#ifndef UPDATER_H
+#define UPDATER_H
 
 #include <Arduino.h>
 #include <MD5Builder.h>
