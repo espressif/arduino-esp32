@@ -32,7 +32,7 @@ void setup() {
         delay(1000);
     }
 
-    wifiMulti.addAP("MasterHax_2.4G", "wittyercheese551");
+    wifiMulti.addAP("SSID", "PASSWORD");
 
 }
 
