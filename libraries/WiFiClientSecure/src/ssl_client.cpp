@@ -12,9 +12,7 @@
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
-
 #include "ssl_client.h"
-
 
 const char *pers = "esp32-tls";
 
@@ -36,9 +34,7 @@ to ESP_LOGx debug output.
 MBEDTLS_DEBUG_LEVEL 4 means all mbedTLS debug output gets sent here,
 and then filtered to the ESP logging mechanism.
 */
-static void mbedtls_debug(void *ctx, int level,
-                          const char *file, int line,
-                          const char *str)
+static void mbedtls_debug(void *ctx, int level, const char *file, int line, const char *str)
 {
     const char *MBTAG = "mbedtls";
     char *file_sep;
@@ -68,7 +64,6 @@ static void mbedtls_debug(void *ctx, int level,
         break;
     }
 }
-
 #endif
 
 
@@ -76,25 +71,18 @@ static int handle_error(int err)
 {
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
-
     mbedtls_strerror(err, error_buf, 100);
     printf("\n%s\n", error_buf);
 #endif
-    printf("\nMbedTLS message code: %d\n", err);
+    printf("MbedTLS message code: %d\n", err);
     return err;
 }
 
 
-
 void ssl_init(sslclient_context *ssl_client)
 {
-    /*
-    * Initialize the RNG and the session data
-    */
-
     mbedtls_ssl_init(&ssl_client->ssl_ctx);
     mbedtls_ssl_config_init(&ssl_client->ssl_conf);
-
     mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
 }
 
@@ -107,9 +95,8 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     int enable = 1;
     DEBUG_PRINT("Free heap before TLS %u\n", xPortGetFreeHeapSize());
 
-
+    DEBUG_PRINT("Starting socket\n");
     ssl_client->socket = -1;
-								
     ssl_client->socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (ssl_client->socket < 0) {
         printf("\r\nERROR opening socket\r\n");
@@ -121,7 +108,6 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = ipAddress;
     serv_addr.sin_port = htons(port);
-
     if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
         timeout = 30000;
         lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
@@ -131,25 +117,26 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     } else {
         printf("\r\nConnect to Server failed!\r\n");
         return -1;
-				  
     }
-
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
-
 
     DEBUG_PRINT( "Seeding the random number generator\n");
     mbedtls_entropy_init(&ssl_client->entropy_ctx);
 
     ret = mbedtls_ctr_drbg_seed(&ssl_client->drbg_ctx, mbedtls_entropy_func,
                                 &ssl_client->entropy_ctx, (const unsigned char *) pers, strlen(pers));
-																 
-				  
-		 
-
     if (ret < 0) {
         return handle_error(ret);
     }
 
+    DEBUG_PRINT( "Setting up the SSL/TLS structure...\n");
+
+    if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
+                                           MBEDTLS_SSL_IS_CLIENT,
+                                           MBEDTLS_SSL_TRANSPORT_STREAM,
+                                           MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
+        return handle_error(ret);
+    }
 
     /* MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
         MBEDTLS_SSL_VERIFY_NONE if not.
@@ -163,14 +150,10 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         //mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
         if (ret < 0) {
             return handle_error(ret);
-					  
-			 
-				
-																					  
         }
     } else {
-												  
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
+        DEBUG_PRINT( "WARNING: Use certificates for a more secure communication!\n");
     }
 
     if (cli_cert != NULL && cli_key != NULL) {
@@ -180,18 +163,12 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         DEBUG_PRINT( "Loading CRT cert\n");
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
-																					 
-					  
-			 
-
         if (ret < 0) {
             return handle_error(ret);
         }
 
         DEBUG_PRINT( "Loading private key\n");
         ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
-					  
-			 
 
         if (ret != 0) {
             return handle_error(ret);
@@ -209,19 +186,9 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0)
         {
             return handle_error(ret);
-				  
+
         }
-        */
-
-    DEBUG_PRINT( "Setting up the SSL/TLS structure...\n");
-
-    if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
-                                           MBEDTLS_SSL_IS_CLIENT,
-                                           MBEDTLS_SSL_TRANSPORT_STREAM,
-                                           MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
-        return handle_error(ret);
-				  
-    }
+    */
 
     mbedtls_ssl_conf_rng(&ssl_client->ssl_conf, mbedtls_ctr_drbg_random, &ssl_client->drbg_ctx);
 #ifdef CONFIG_MBEDTLS_DEBUG
@@ -231,7 +198,6 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
     if ((ret = mbedtls_ssl_setup(&ssl_client->ssl_ctx, &ssl_client->ssl_conf)) != 0) {
         return handle_error(ret);
-				  
     }
 
     mbedtls_ssl_set_bio(&ssl_client->ssl_ctx, &ssl_client->socket, mbedtls_net_send, mbedtls_net_recv, NULL );
@@ -239,12 +205,8 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     DEBUG_PRINT( "Performing the SSL/TLS handshake...\n");
 
     while ((ret = mbedtls_ssl_handshake(&ssl_client->ssl_ctx)) != 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) {
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) {  //workaround for bug: https://github.com/espressif/esp-idf/issues/434
             return handle_error(ret);
-					  
-			 
-					  
-						 
         }
         delay(10);
         vPortYield();
@@ -257,10 +219,8 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
             DEBUG_PRINT("Record expansion is %d\n", ret);
         } else {
             DEBUG_PRINT("Record expansion is unknown (compression)\n");
-			 
         }
     }
-
 
     DEBUG_PRINT( "Verifying peer X.509 certificate...\n");
 
@@ -274,8 +234,6 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     } else {
         DEBUG_PRINT( "Certificate verified.\n");
     }
-
-				
 
     DEBUG_PRINT("Free heap after TLS %u\n", xPortGetFreeHeapSize());
 
@@ -313,13 +271,12 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
 
 int data_to_read(sslclient_context *ssl_client)
 {
-
     int ret, res;
     ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, NULL, 0);
     //printf("RET: %i\n",ret);   //for low level debug
     res = mbedtls_ssl_get_bytes_avail(&ssl_client->ssl_ctx);
     //printf("RES: %i\n",res);
-    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0 && ret != -76) { //RC:76 sockets is not connected
+    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0 && ret != -76) {
         return handle_error(ret);
     }
 
@@ -334,9 +291,8 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
     int ret = -1;
 
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) { //RC:76 sockets is not connected
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) {
             return handle_error(ret);
-				  
         }
     }
 
