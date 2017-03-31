@@ -33,7 +33,12 @@
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "1.22.0-59"
+              "version": "1.22.0-61-gab8375a-5.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool",
+              "version": "fe69994"
             }
           ]
         }
@@ -41,28 +46,28 @@
       "tools": [
         {
           "name": "xtensa-esp32-elf-gcc",
-          "version": "1.22.0-59",
+          "version": "1.22.0-61-gab8375a-5.2.0",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-59.zip",
-              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-59.zip",
-              "checksum": "SHA-256:10476b9c11a7a90f40883413ddfb409f505b20692e316c4e597c4c175b4be09c",
-              "size": "153527527"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0-2.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0-2.zip",
+              "checksum": "SHA-256:c00dbdab8e8acc273d4aa319a74f7bb1d9496c843159823201d685359174168f",
+              "size": "76346909"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-59.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-59.tar.gz",
-              "checksum": "SHA-256:0cf150193997bd1355e0f49d3d49711730035257bc1aee1eaaad619e56b9e4e6",
-              "size": "35385382"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "checksum": "SHA-256:89a9a6084ec032ddcd4bdae37b428e533ed5fd0c0ab6b66ddf703e4b3f83d6e4",
+              "size": "40481812"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-59.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-59.tar.gz",
-              "checksum": "SHA-256:46f057fbd8b320889a26167daf325038912096d09940b2a95489db92431473b7",
-              "size": "30262903"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
+              "checksum": "SHA-256:b74333fd7f622f035fee7c4e0ca57c3e2ccb2515de5d901f33e87e79cdf0d4f9",
+              "size": "37674568"
             },
             {
               "host": "i686-pc-linux-gnu",
@@ -70,6 +75,40 @@
               "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
               "checksum": "SHA-256:b24817819f0078fb05895a640e806e0aca9aa96b47b80d2390ac8e2d9ddc955a",
               "size": "32734156"
+            }
+          ]
+        },
+        {
+          "name": "esptool",
+          "version": "fe69994",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://dl.espressif.com/dl/esptool-fe69994-windows.zip",
+              "archiveFileName": "esptool-fe69994-windows.zip",
+              "checksum": "SHA-256:b2702efc045f5f61f821c72495301a0f2016e87e33f49fa16e262d0522d2b021",
+              "size": "3389457"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://dl.espressif.com/dl/esptool-fe69994-macos.tar.gz",
+              "archiveFileName": "esptool-fe69994-macos.tar.gz",
+              "checksum": "SHA-256:49ab32fbdf4f855925638d4b76ffd292255a47c4445b1069737f7151f66a03aa",
+              "size": "3886730"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/esptool-fe69994-linux64.tar.gz",
+              "archiveFileName": "esptool-fe69994-linux64.tar.gz",
+              "checksum": "SHA-256:6ff54604bb3e1af39a7dd4f0e54b02b0f48bcd8a0b9259bc202385fdea573e05",
+              "size": "3937680"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/esptool-fe69994-linux32.tar.gz",
+              "archiveFileName": "esptool-fe69994-linux32.tar.gz",
+              "checksum": "SHA-256:4912aa39b3b78fbe4f959c496e52968b207e66e92cf186ad583812526a455f48",
+              "size": "3766885"
             }
           ]
         }

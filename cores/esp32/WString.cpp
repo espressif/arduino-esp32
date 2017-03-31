@@ -44,12 +44,7 @@ String::String(const String &value)
     init();
     *this = value;
 }
-/*
-String::String(const __FlashStringHelper *pstr) {
-    init();
-    *this = pstr; // see operator =
-}
-*/
+
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 String::String(String &&rval)
 {
@@ -200,17 +195,12 @@ String & String::copy(const char *cstr, unsigned int length)
     strcpy(buffer, cstr);
     return *this;
 }
-/*
-String & String::copy(const __FlashStringHelper *pstr, unsigned int length) {
-    if (!reserve(length)) {
-        invalidate();
-        return *this;
-    }
-    len = length;
-    strcpy_P(buffer, (PGM_P)pstr);
-    return *this;
+
+String & String::copy(const __FlashStringHelper *pstr, unsigned int length)
+{
+    return copy(reinterpret_cast<const char *>(pstr), length);
 }
-*/
+
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 void String::move(String &rhs)
 {
@@ -276,7 +266,7 @@ String & String::operator =(const char *cstr)
 
     return *this;
 }
-/*
+
 String & String::operator = (const __FlashStringHelper *pstr)
 {
     if (pstr) copy(pstr, strlen_P((PGM_P)pstr));
@@ -284,7 +274,7 @@ String & String::operator = (const __FlashStringHelper *pstr)
 
     return *this;
 }
-*/
+
 // /*********************************************/
 // /*  concat                                   */
 // /*********************************************/
@@ -375,18 +365,12 @@ unsigned char String::concat(double num)
     char* string = dtostrf(num, 4, 2, buf);
     return concat(string, strlen(string));
 }
-/*
-unsigned char String::concat(const __FlashStringHelper * str) {
-    if (!str) return 0;
-    int length = strlen_P((PGM_P)str);
-    if (length == 0) return 1;
-    unsigned int newlen = len + length;
-    if (!reserve(newlen)) return 0;
-    strcpy_P(buffer + len, (PGM_P)str);
-    len = newlen;
-    return 1;
+
+unsigned char String::concat(const __FlashStringHelper * str)
+{
+    return concat(reinterpret_cast<const char *>(str));
 }
-*/
+
 /*********************************************/
 /*  Concatenate                              */
 /*********************************************/
@@ -480,14 +464,14 @@ StringSumHelper & operator +(const StringSumHelper &lhs, double num)
     }
     return a;
 }
-/*
+
 StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHelper *rhs)
 {
     StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
     if (!a.concat(rhs))	a.invalidate();
     return a;
 }
-*/
+
 // /*********************************************/
 // /*  Comparison                               */
 // /*********************************************/

@@ -63,6 +63,12 @@ public:
     IPAddress subnetMask();
     IPAddress gatewayIP();
     IPAddress dnsIP(uint8_t dns_no = 0);
+    
+    bool enableIpV6();
+    IPv6Address localIPv6();
+
+    const char * getHostname();
+    bool setHostname(const char * hostname);
 
     // STA WiFi info
     wl_status_t status();
@@ -72,12 +78,22 @@ public:
     uint8_t * BSSID();
     String BSSIDstr();
 
-    int32_t RSSI();
+    int8_t RSSI();
 
     static void _setStatus(wl_status_t status);
 protected:
     static wl_status_t _status;
     static bool _useStaticIp;
+
+public: 
+    bool beginSmartConfig();
+    bool stopSmartConfig();
+    bool smartConfigDone();
+
+protected:
+    static bool _smartConfigStarted;
+    static bool _smartConfigDone;
+    static void _smartConfigCallback(uint32_t status, void* result);
 
 };
 

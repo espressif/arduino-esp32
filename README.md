@@ -1,46 +1,37 @@
 # Arduino core for ESP32 WiFi chip
 
+[![Build Status](https://travis-ci.org/espressif/arduino-esp32.svg?branch=master)](https://travis-ci.org/espressif/arduino-esp32)
+
 ## Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 - [Development Status](#development-status)
-- Installing options:
-  + [Using Arduino IDE](#using-arduino-ide)
+- [Installation Instructions](#installation-instructions):
+  + [Using Arduino IDE](#using-through-arduino-ide)
+    + [Windows](https://github.com/espressif/arduino-esp32/blob/master/doc/windows.md)
+    + [Mac OS](#instructions-for-mac)
+    + [Debian/Ubuntu](#instructions-for-debianubuntu-linux)
+    + [Decoding Exceptions](#decoding-exceptions)
   + [Using PlatformIO](#using-platformio)
   + [Using as ESP-IDF component](#using-as-esp-idf-component)
-- [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)  
+- [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
 ## Development Status
-Not everything is working yet, you can not get it through package manager, but you can give it a go and help us find bugs in the things that are implemented :)
+Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
+- 16 channels [LEDC](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-ledc.h) which is PWM
+- 8 channels [SigmaDelta](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-sigmadelta.h) which uses SigmaDelta modulation
+- 2 channels [DAC](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-dac.h) which gives real analog output
 
-The framework can also be downloaded as component in an IDF project and be used like that.
+## Installation Instructions
 
-Things that work:
-
-- pinMode
-- digitalRead/digitalWrite
-- attachInterrupt/detachInterrupt
-- analogRead/touchRead/touchAttachInterrupt
-- ledcWrite/sdWrite/dacWrite
-- Serial (global Serial is attached to pins 1 and 3 by default, there are another 2 serials that you can attach to any pin)
-- SPI (global SPI is attached to VSPI pins by default and HSPI can be attached to any pins)
-- Wire (global Wire is attached to pins 21 and 22 by default and there is another I2C bus that you can attach to any pins)
-- WiFi (about 99% the same as ESP8266)
-
-WiFiClient, WiFiServer and WiFiUdp are not quite ready yet because there are still some small hiccups in LwIP to be overcome.
-You can try WiFiClient but you need to disconnect the client yourself to be sure that connection is closed.
-
-## Using Arduino IDE
+### Using through Arduino IDE
 
 ###[Instructions for Windows](doc/windows.md)
 
-### Instructions for Mac
+#### Instructions for Mac
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
   ```bash
-  curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py && \
-  sudo python get-pip.py && \
-  sudo pip install pyserial && \
   mkdir -p ~/Documents/Arduino/hardware/espressif && \
   cd ~/Documents/Arduino/hardware/espressif && \
   git clone https://github.com/espressif/arduino-esp32.git esp32 && \
@@ -49,16 +40,13 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
   ```
 - Restart Arduino IDE
 
-### Instructions for Debian/Ubuntu Linux
+#### Instructions for Debian/Ubuntu Linux
 - Install latest Arduino IDE from [arduino.cc](https://www.arduino.cc/en/Main/Software)
 - Open Terminal and execute the following command (copy->paste and hit enter):
 
   ```bash
   sudo usermod -a -G dialout $USER && \
   sudo apt-get install git && \
-  wget https://bootstrap.pypa.io/get-pip.py && \
-  sudo python get-pip.py && \
-  sudo pip install pyserial && \
   mkdir -p ~/Arduino/hardware/espressif && \
   cd ~/Arduino/hardware/espressif && \
   git clone https://github.com/espressif/arduino-esp32.git esp32 && \
@@ -67,7 +55,11 @@ You can try WiFiClient but you need to disconnect the client yourself to be sure
   ```
 - Restart Arduino IDE
 
-## Using PlatformIO
+#### Decoding exceptions
+
+You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder) to get meaningful call trace.
+
+### Using PlatformIO
 
 [PlatformIO](http://platformio.org) is an open source ecosystem for IoT
 development with cross platform build system, library manager and full support
@@ -80,8 +72,14 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
 - [Integration with Cloud and Standalone IDEs](http://docs.platformio.org/page/ide.html) -
   Cloud9, Codeanywehre, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM and Visual Studio
 - [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
+- [Using "Stage" (Git) version of Arduino Core](http://docs.platformio.org/page/platforms/espressif32.html#using-arduino-framework-with-staging-version)
 
-## Using as ESP-IDF component
+### Building with make
+
+[makeEspArduino](https://github.com/plerup/makeEspArduino) is a generic makefile for any ESP8266/ESP32 Arduino project.
+Using make instead of the Arduino IDE makes it easier to do automated and production builds.
+
+### Using as ESP-IDF component
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
 - in the project folder, create a folder called components and clone this repository inside
@@ -110,9 +108,11 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
             delay(1000);
           }
           ```
+
         - Else you need to implement ```app_main()``` and call ```initArduino();``` in it.
 
-          Keep in mind that setup() and loop() will not be called in this case
+          Keep in mind that setup() and loop() will not be called in this case.
+          If you plan to base your code on examples provided in [esp-idf](https://github.com/espressif/esp-idf/tree/master/examples), please make sure move the app_main() function in main.cpp from the files in the example.
 
           ```arduino
           //file: main.cpp
@@ -136,3 +136,8 @@ Linux 32/64, Linux ARM (like Raspberry Pi, BeagleBone, CubieBoard).
 ## ESP32Dev Board PINMAP
 
 ![Pin Functions](doc/esp32_pinmap.png)
+
+## Hint
+
+Sometimes to program ESP32 via serial you must keep GPIO0 LOW during the programming process
+

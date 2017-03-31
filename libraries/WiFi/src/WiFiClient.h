@@ -23,11 +23,14 @@
 
 #include "Arduino.h"
 #include "Client.h"
+#include <memory>
+
+class WiFiClientSocketHandle;
 
 class WiFiClient : public Client
 {
 protected:
-    int sockfd;
+    std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
     bool _connected;
 
 public:
@@ -46,7 +49,7 @@ public:
     {
         return 0;
     }
-    void flush() {}
+    void flush();
     void stop();
     uint8_t connected();
 
@@ -69,12 +72,8 @@ public:
         return !this->operator==(rhs);
     };
 
-    int fd()
-    {
-        return sockfd;
-    }
-    IPAddress remoteIP();
-    uint16_t remotePort();
+    int fd() const;
+
     int setSocketOption(int option, char* value, size_t len);
     int setOption(int option, int *value);
     int getOption(int option, int *value);
@@ -82,8 +81,10 @@ public:
     int setNoDelay(bool nodelay);
     bool getNoDelay();
 
-    IPAddress remoteIP(int fd);
-    uint16_t remotePort(int fd);
+    IPAddress remoteIP() const;
+    IPAddress remoteIP(int fd) const;
+    uint16_t remotePort() const;
+    uint16_t remotePort(int fd) const;
 
     //friend class WiFiServer;
     using Print::write;

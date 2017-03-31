@@ -22,16 +22,41 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
+#define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US (1000000)
+#define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
+
 #undef connect
 #undef write
 #undef read
 
-WiFiClient::WiFiClient():sockfd(-1),_connected(false),next(NULL)
+class WiFiClientSocketHandle {
+private:
+    int sockfd;
+
+public:
+    WiFiClientSocketHandle(int fd):sockfd(fd)
+    {
+    }
+
+    ~WiFiClientSocketHandle()
+    {
+        close(sockfd);
+    }
+
+    int fd()
+    {
+        return sockfd;
+    }
+};
+
+WiFiClient::WiFiClient():_connected(false),next(NULL)
 {
 }
 
-WiFiClient::WiFiClient(int fd):sockfd(fd),_connected(true),next(NULL)
+WiFiClient::WiFiClient(int fd):_connected(true),next(NULL)
 {
+    clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
 }
 
 WiFiClient::~WiFiClient()
@@ -42,27 +67,25 @@ WiFiClient::~WiFiClient()
 WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
     stop();
-    sockfd = other.sockfd;
+    clientSocketHandle = other.clientSocketHandle;
     _connected = other._connected;
     return *this;
 }
 
 void WiFiClient::stop()
 {
-    if(_connected && sockfd >= 0) {
-        close(sockfd);
-        sockfd = -1;
-        _connected = false;
-    }
+    clientSocketHandle = NULL;
+    _connected = false;
 }
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         log_e("socket: %d", errno);
         return 0;
     }
+
     uint32_t ip_addr = ip;
     struct sockaddr_in serveraddr;
     bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -73,9 +96,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
     if (res < 0) {
         log_e("lwip_connect_r: %d", errno);
         close(sockfd);
-        sockfd = -1;
         return 0;
     }
+    clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
     _connected = true;
     return 1;
 }
@@ -93,7 +116,7 @@ int WiFiClient::connect(const char *host, uint16_t port)
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    int res = setsockopt(sockfd, SOL_SOCKET, option, value, len);
+    int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -113,7 +136,7 @@ int WiFiClient::setTimeout(uint32_t seconds)
 
 int WiFiClient::setOption(int option, int *value)
 {
-    int res = setsockopt(sockfd, IPPROTO_TCP, option, (char *)value, sizeof(int));
+    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -123,7 +146,7 @@ int WiFiClient::setOption(int option, int *value)
 int WiFiClient::getOption(int option, int *value)
 {
     size_t size = sizeof(int);
-    int res = getsockopt(sockfd, IPPROTO_TCP, option, (char *)value, &size);
+    int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("%d", errno);
     }
@@ -160,14 +183,43 @@ int WiFiClient::read()
 
 size_t WiFiClient::write(const uint8_t *buf, size_t size)
 {
-    if(!_connected) {
+    int res =0;
+    int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
+    int socketFileDescriptor = fd();
+
+    if(!_connected || (socketFileDescriptor < 0)) {
         return 0;
     }
-    int res = send(sockfd, (void*)buf, size, MSG_DONTWAIT);
-    if(res < 0) {
-        log_e("%d", errno);
-        stop();
-        res = 0;
+
+    while(retry) {
+        //use select to make sure the socket is ready for writing
+        fd_set set;
+        struct timeval tv;
+        FD_ZERO(&set);        // empties the set
+        FD_SET(socketFileDescriptor, &set); // adds FD to the set
+        tv.tv_sec = 0;
+        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
+        retry--;
+
+        if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
+            return 0;
+        }
+
+        if(FD_ISSET(socketFileDescriptor, &set)) {
+            res = send(socketFileDescriptor, (void*) buf, size, MSG_DONTWAIT);
+            if(res < 0) {
+                log_e("%d", errno);
+                if(errno != EAGAIN) {
+                    //if resource was busy, can try again, otherwise give up
+                    stop();
+                    res = 0;
+                    retry = 0;
+                }
+            } else {
+                //completed successfully
+                retry = 0;
+            }
+        }
     }
     return res;
 }
@@ -177,7 +229,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     if(!available()) {
         return -1;
     }
-    int res = recv(sockfd, buf, size, MSG_DONTWAIT);
+    int res = recv(fd(), buf, size, MSG_DONTWAIT);
     if(res < 0 && errno != EWOULDBLOCK) {
         log_e("%d", errno);
         stop();
@@ -191,13 +243,38 @@ int WiFiClient::available()
         return 0;
     }
     int count;
-    int res = ioctl(sockfd, FIONREAD, &count);
+    int res = ioctl(fd(), FIONREAD, &count);
     if(res < 0) {
         log_e("%d", errno);
         stop();
         return 0;
     }
     return count;
+}
+
+// Though flushing means to send all pending data,
+// seems that in Arduino it also means to clear RX
+void WiFiClient::flush() {
+    int res;
+    size_t a = available(), toRead = 0;
+    if(!a){
+        return;//nothing to flush
+    }
+    uint8_t * buf = (uint8_t *)malloc(WIFI_CLIENT_FLUSH_BUFFER_SIZE);
+    if(!buf){
+        return;//memory error
+    }
+    while(a){
+        toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
+        res = recv(fd(), buf, toRead, MSG_DONTWAIT);
+        if(res < 0) {
+            log_e("%d", errno);
+            stop();
+            break;
+        }
+        a -= res;
+    }
+    free(buf);
 }
 
 uint8_t WiFiClient::connected()
@@ -207,7 +284,7 @@ uint8_t WiFiClient::connected()
     return _connected;
 }
 
-IPAddress WiFiClient::remoteIP(int fd)
+IPAddress WiFiClient::remoteIP(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -216,7 +293,7 @@ IPAddress WiFiClient::remoteIP(int fd)
     return IPAddress((uint32_t)(s->sin_addr.s_addr));
 }
 
-uint16_t WiFiClient::remotePort(int fd)
+uint16_t WiFiClient::remotePort(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -225,17 +302,27 @@ uint16_t WiFiClient::remotePort(int fd)
     return ntohs(s->sin_port);
 }
 
-IPAddress WiFiClient::remoteIP()
+IPAddress WiFiClient::remoteIP() const
 {
-    return remoteIP(sockfd);
+    return remoteIP(fd());
 }
 
-uint16_t WiFiClient::remotePort()
+uint16_t WiFiClient::remotePort() const
 {
-    return remotePort(sockfd);
+    return remotePort(fd());
 }
 
 bool WiFiClient::operator==(const WiFiClient& rhs)
 {
-    return sockfd == rhs.sockfd && remotePort(sockfd) == remotePort(rhs.sockfd) && remoteIP(sockfd) == remoteIP(rhs.sockfd);
+    return clientSocketHandle == rhs.clientSocketHandle && remotePort() == rhs.remotePort() && remoteIP() == rhs.remoteIP();
 }
+
+int WiFiClient::fd() const
+{
+    if (clientSocketHandle == NULL) {
+        return -1;
+    } else {
+        return clientSocketHandle->fd();
+    }
+}
+

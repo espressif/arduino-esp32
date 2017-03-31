@@ -45,8 +45,8 @@ MEMORY
 
      Start of RTC slow memory is reserved for ULP co-processor code + data, if enabled.
   */
-  rtc_slow_seg(RW) : org = 0x50000000 + 0,
-                                     len = 0x1000 - 0
+  rtc_slow_seg(RW) : org = 0x50000000 + 512,
+                                     len = 0x1000 - 512
 }
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000 - 0x0;

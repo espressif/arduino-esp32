@@ -135,7 +135,7 @@
 #define HSPICS2_IN_IDX			62
 #define HSPICS2_OUT_IDX			62
 #define VSPICLK_IN_IDX			63
-#define VSPICLK_OUT_MUX_IDX			63
+#define VSPICLK_OUT_IDX			63
 #define VSPIQ_IN_IDX			64
 #define VSPIQ_OUT_IDX			64
 #define VSPID_IN_IDX			65
@@ -418,5 +418,5 @@
 #define SIG_IN_FUNC226_IDX			226
 #define SIG_IN_FUNC227_IDX			227
 #define SIG_IN_FUNC228_IDX			228
-
+#define SIG_GPIO_OUT_IDX            256
 #endif /* _SOC_GPIO_SIG_MAP_H_ */

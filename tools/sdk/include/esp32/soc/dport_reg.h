@@ -1035,14 +1035,36 @@
 #define DPORT_WIFI_CLK_EN_V  0xFFFFFFFF
 #define DPORT_WIFI_CLK_EN_S  0
 
-#define DPORT_WIFI_RST_EN_REG          (DR_REG_DPORT_BASE + 0x0D0)
-/* DPORT_WIFI_RST : R/W ;bitpos:[31:0] ;default: 32'h0 ; */
+/* Mask for all Wifi clock bits - 0, 1, 2, 3, 6, 7, 8, 9, 10, 15 */
+#define DPORT_WIFI_CLK_WIFI_EN  0x000007cf
+#define DPORT_WIFI_CLK_WIFI_EN_M  ((DPORT_WIFI_CLK_WIFI_EN_V)<<(DPORT_WIFI_CLK_WIFI_EN_S))
+#define DPORT_WIFI_CLK_WIFI_EN_V  0x1FF
+#define DPORT_WIFI_CLK_WIFI_EN_S  0
+/* Mask for all Bluetooth clock bits - 11, 16, 17 */
+#define DPORT_WIFI_CLK_BT_EN  0x61
+#define DPORT_WIFI_CLK_BT_EN_M  ((DPORT_WIFI_CLK_BT_EN_V)<<(DPORT_WIFI_CLK_BT_EN_S))
+#define DPORT_WIFI_CLK_BT_EN_V  0x61
+#define DPORT_WIFI_CLK_BT_EN_S  11
+/* Remaining single bit clock masks */
+#define DPORT_WIFI_CLK_SDIOSLAVE_EN  BIT(4)
+#define DPORT_WIFI_CLK_SDIO_HOST_EN  BIT(13)
+#define DPORT_WIFI_CLK_EMAC_EN  BIT(14)
+#define DPORT_WIFI_CLK_RNG_EN  BIT(15)
+
+#define DPORT_CORE_RST_EN_REG          (DR_REG_DPORT_BASE + 0x0D0)
+/* DPORT_CORE_RST : R/W ;bitpos:[31:0] ;default: 32'h0 ; */
 /*description: */
+#define DPORT_RW_BTLP_RST (BIT(10))
+#define DPORT_RW_BTMAC_RST (BIT(9))
+#define DPORT_MACPWR_RST (BIT(8))
+#define DPORT_EMAC_RST (BIT(7))
+#define DPORT_SDIO_HOST_RST (BIT(6))
+#define DPORT_SDIO_RST (BIT(5))
+#define DPORT_BTMAC_RST (BIT(4))
+#define DPORT_BT_RST (BIT(3))
 #define DPORT_MAC_RST (BIT(2))
-#define DPORT_WIFI_RST  0xFFFFFFFF
-#define DPORT_WIFI_RST_M  ((DPORT_WIFI_RST_V)<<(DPORT_WIFI_RST_S))
-#define DPORT_WIFI_RST_V  0xFFFFFFFF
-#define DPORT_WIFI_RST_S  0
+#define DPORT_FE_RST (BIT(1))
+#define DPORT_BB_RST (BIT(0))  
 
 #define DPORT_BT_LPCK_DIV_INT_REG          (DR_REG_DPORT_BASE + 0x0D4)
 /* DPORT_BTEXTWAKEUP_REQ : R/W ;bitpos:[12] ;default: 1'b0 ; */

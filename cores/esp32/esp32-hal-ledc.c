@@ -50,36 +50,39 @@ xSemaphoreHandle _ledc_sys_lock;
 ** ledc: 14 => Group: 1, Channel: 6, Timer: 3
 ** ledc: 15 => Group: 1, Channel: 7, Timer: 3
 */
+#define LEDC_CHAN(g,c) LEDC.channel_group[(g)].channel[(c)]
+#define LEDC_TIMER(g,t) LEDC.timer_group[(g)].timer[(t)]
 
 //uint32_t frequency = (80MHz or 1MHz)/((div_num / 256.0)*(1 << bit_num));
-void ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, bool apb_clk)
+static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, bool apb_clk)
 {
-    ledc_dev_t * ledc_dev = (volatile ledc_dev_t *)(DR_REG_LEDC_BASE);
     uint8_t group=(chan/8), timer=((chan/2)%4);
     static bool tHasStarted = false;
     if(!tHasStarted) {
         tHasStarted = true;
         SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
         CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
-        ledc_dev->conf.apb_clk_sel = 1;//LS use apb clock
+        LEDC.conf.apb_clk_sel = 1;//LS use apb clock
 #if !CONFIG_DISABLE_HAL_LOCKS
         _ledc_sys_lock = xSemaphoreCreateMutex();
 #endif
     }
     LEDC_MUTEX_LOCK();
-    ledc_dev->timer_group[group].timer[timer].conf.div_num = div_num;//18 bit (10.8) This register is used to configure parameter for divider in timer the least significant eight bits represent the decimal part.
-    ledc_dev->timer_group[group].timer[timer].conf.bit_num = bit_num;//5 bit This register controls the range of the counter in timer. the counter range is [0 2**bit_num] the max bit width for counter is 20.
-    ledc_dev->timer_group[group].timer[timer].conf.tick_sel = apb_clk;//apb clock
+    LEDC_TIMER(group, timer).conf.div_num = div_num;//18 bit (10.8) This register is used to configure parameter for divider in timer the least significant eight bits represent the decimal part.
+    LEDC_TIMER(group, timer).conf.bit_num = bit_num;//5 bit This register controls the range of the counter in timer. the counter range is [0 2**bit_num] the max bit width for counter is 20.
+    LEDC_TIMER(group, timer).conf.tick_sel = apb_clk;//apb clock
     if(group) {
-        ledc_dev->timer_group[group].timer[timer].conf.low_speed_update = 1;//This bit is only useful for low speed timer channels, reserved for high speed timers
+        LEDC_TIMER(group, timer).conf.low_speed_update = 1;//This bit is only useful for low speed timer channels, reserved for high speed timers
     }
-    ledc_dev->timer_group[group].timer[timer].conf.pause = 0;
-    ledc_dev->timer_group[group].timer[timer].conf.rst = 1;//This bit is used to reset timer the counter will be 0 after reset.
-    ledc_dev->timer_group[group].timer[timer].conf.rst = 0;
+    LEDC_TIMER(group, timer).conf.pause = 0;
+    LEDC_TIMER(group, timer).conf.rst = 1;//This bit is used to reset timer the counter will be 0 after reset.
+    LEDC_TIMER(group, timer).conf.rst = 0;
     LEDC_MUTEX_UNLOCK();
 }
 
-uint32_t ledcSetupTimerFreq(uint8_t chan, uint32_t freq, uint8_t bit_num)
+//max div_num 0x3FFFF (262143)
+//max bit_num 0x1F (31)
+static double _ledcSetupTimerFreq(uint8_t chan, double freq, uint8_t bit_num)
 {
     uint64_t clk_freq = APB_CLK_FREQ;
     clk_freq <<= 8;//div_num is 8 bit decimal
@@ -95,40 +98,60 @@ uint32_t ledcSetupTimerFreq(uint8_t chan, uint32_t freq, uint8_t bit_num)
     } else if(div_num < 256) {
         div_num = 256;//highest clock possible
     }
-    ledcSetupTimer(chan, div_num, bit_num, apb_clk);
-    return (clk_freq >> bit_num) / div_num;
+    _ledcSetupTimer(chan, div_num, bit_num, apb_clk);
+    //log_i("Fin: %f, Fclk: %uMhz, bits: %u, DIV: %u, Fout: %f",
+    //        freq, apb_clk?80:1, bit_num, div_num, (clk_freq >> bit_num) / (double)div_num);
+    return (clk_freq >> bit_num) / (double)div_num;
 }
 
-void ledcSetupChannel(uint8_t chan, uint8_t idle_level)
+static double _ledcTimerRead(uint8_t chan)
+{
+    uint32_t div_num;
+    uint8_t bit_num;
+    bool apb_clk;
+    uint8_t group=(chan/8), timer=((chan/2)%4);
+    LEDC_MUTEX_LOCK();
+    div_num = LEDC_TIMER(group, timer).conf.div_num;//18 bit (10.8) This register is used to configure parameter for divider in timer the least significant eight bits represent the decimal part.
+    bit_num = LEDC_TIMER(group, timer).conf.bit_num;//5 bit This register controls the range of the counter in timer. the counter range is [0 2**bit_num] the max bit width for counter is 20.
+    apb_clk = LEDC_TIMER(group, timer).conf.tick_sel;//apb clock
+    LEDC_MUTEX_UNLOCK();
+    uint64_t clk_freq = 1000000;
+    if(apb_clk) {
+        clk_freq *= 80;
+    }
+    clk_freq <<= 8;//div_num is 8 bit decimal
+    return (clk_freq >> bit_num) / (double)div_num;
+}
+
+static void _ledcSetupChannel(uint8_t chan, uint8_t idle_level)
 {
     uint8_t group=(chan/8), channel=(chan%8), timer=((chan/2)%4);
-    ledc_dev_t * ledc_dev = (volatile ledc_dev_t *)(DR_REG_LEDC_BASE);
     LEDC_MUTEX_LOCK();
-    ledc_dev->channel_group[group].channel[channel].conf0.timer_sel = timer;//2 bit Selects the timer to attach 0-3
-    ledc_dev->channel_group[group].channel[channel].conf0.idle_lv = idle_level;//1 bit This bit is used to control the output value when channel is off.
-    ledc_dev->channel_group[group].channel[channel].hpoint.hpoint = 0;//20 bit The output value changes to high when timer selected by channel has reached hpoint
-    ledc_dev->channel_group[group].channel[channel].conf1.duty_inc = 1;//1 bit This register is used to increase the duty of output signal or decrease the duty of output signal for high speed channel
-    ledc_dev->channel_group[group].channel[channel].conf1.duty_num = 1;//10 bit This register is used to control the number of increased or decreased times for channel
-    ledc_dev->channel_group[group].channel[channel].conf1.duty_cycle = 1;//10 bit This register is used to increase or decrease the duty every duty_cycle cycles for channel
-    ledc_dev->channel_group[group].channel[channel].conf1.duty_scale = 0;//10 bit This register controls the increase or decrease step scale for channel.
-    ledc_dev->channel_group[group].channel[channel].duty.duty = 0;
-    ledc_dev->channel_group[group].channel[channel].conf0.sig_out_en = 0;//This is the output enable control bit for channel
-    ledc_dev->channel_group[group].channel[channel].conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
+    LEDC_CHAN(group, channel).conf0.timer_sel = timer;//2 bit Selects the timer to attach 0-3
+    LEDC_CHAN(group, channel).conf0.idle_lv = idle_level;//1 bit This bit is used to control the output value when channel is off.
+    LEDC_CHAN(group, channel).hpoint.hpoint = 0;//20 bit The output value changes to high when timer selected by channel has reached hpoint
+    LEDC_CHAN(group, channel).conf1.duty_inc = 1;//1 bit This register is used to increase the duty of output signal or decrease the duty of output signal for high speed channel
+    LEDC_CHAN(group, channel).conf1.duty_num = 1;//10 bit This register is used to control the number of increased or decreased times for channel
+    LEDC_CHAN(group, channel).conf1.duty_cycle = 1;//10 bit This register is used to increase or decrease the duty every duty_cycle cycles for channel
+    LEDC_CHAN(group, channel).conf1.duty_scale = 0;//10 bit This register controls the increase or decrease step scale for channel.
+    LEDC_CHAN(group, channel).duty.duty = 0;
+    LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
+    LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
     if(group) {
-        ledc_dev->channel_group[group].channel[channel].conf0.val &= ~BIT(4);
+        LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
     } else {
-        ledc_dev->channel_group[group].channel[channel].conf0.clk_en = 0;
+        LEDC_CHAN(group, channel).conf0.clk_en = 0;
     }
     LEDC_MUTEX_UNLOCK();
 }
 
-uint32_t ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num)
+double ledcSetup(uint8_t chan, double freq, uint8_t bit_num)
 {
     if(chan > 15) {
         return 0;
     }
-    uint32_t res_freq = ledcSetupTimerFreq(chan, freq, bit_num);
-    ledcSetupChannel(chan, LOW);
+    double res_freq = _ledcSetupTimerFreq(chan, freq, bit_num);
+    _ledcSetupChannel(chan, LOW);
     return res_freq;
 }
 
@@ -138,24 +161,23 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         return;
     }
     uint8_t group=(chan/8), channel=(chan%8);
-    ledc_dev_t * ledc_dev = (volatile ledc_dev_t *)(DR_REG_LEDC_BASE);
     LEDC_MUTEX_LOCK();
-    ledc_dev->channel_group[group].channel[channel].duty.duty = duty << 4;//25 bit (21.4)
+    LEDC_CHAN(group, channel).duty.duty = duty << 4;//25 bit (21.4)
     if(duty) {
-        ledc_dev->channel_group[group].channel[channel].conf0.sig_out_en = 1;//This is the output enable control bit for channel
-        ledc_dev->channel_group[group].channel[channel].conf1.duty_start = 1;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
+        LEDC_CHAN(group, channel).conf0.sig_out_en = 1;//This is the output enable control bit for channel
+        LEDC_CHAN(group, channel).conf1.duty_start = 1;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            ledc_dev->channel_group[group].channel[channel].conf0.val |= BIT(4);
+            LEDC_CHAN(group, channel).conf0.val |= BIT(4);
         } else {
-            ledc_dev->channel_group[group].channel[channel].conf0.clk_en = 1;
+            LEDC_CHAN(group, channel).conf0.clk_en = 1;
         }
     } else {
-        ledc_dev->channel_group[group].channel[channel].conf0.sig_out_en = 0;//This is the output enable control bit for channel
-        ledc_dev->channel_group[group].channel[channel].conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
+        LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
+        LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            ledc_dev->channel_group[group].channel[channel].conf0.val &= ~BIT(4);
+            LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
         } else {
-            ledc_dev->channel_group[group].channel[channel].conf0.clk_en = 0;
+            LEDC_CHAN(group, channel).conf0.clk_en = 0;
         }
     }
     LEDC_MUTEX_UNLOCK();
@@ -166,8 +188,42 @@ uint32_t ledcRead(uint8_t chan)
     if(chan > 15) {
         return 0;
     }
-    ledc_dev_t * ledc_dev = (volatile ledc_dev_t *)(DR_REG_LEDC_BASE);
-    return ledc_dev->channel_group[chan/8].channel[chan%8].duty.duty >> 4;
+    return LEDC.channel_group[chan/8].channel[chan%8].duty.duty >> 4;
+}
+
+double ledcReadFreq(uint8_t chan)
+{
+    if(!ledcRead(chan)){
+        return 0;
+    }
+    return _ledcTimerRead(chan);
+}
+
+double ledcWriteTone(uint8_t chan, double freq)
+{
+    if(chan > 15) {
+        return 0;
+    }
+    if(!freq) {
+        ledcWrite(chan, 0);
+        return 0;
+    }
+    double res_freq = _ledcSetupTimerFreq(chan, freq, 10);
+    ledcWrite(chan, 0x1FF);
+    return res_freq;
+}
+
+double ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
+    const uint16_t noteFrequencyBase[12] = {
+    //   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
+        4186,    4435,    4699,    4978,    5274,    5588,    5920,    6272,    6645,    7040,    7459,    7902
+    };
+
+    if(octave > 8 || note >= NOTE_MAX){
+        return 0;
+    }
+    double noteFreq =  (double)noteFrequencyBase[note] / (double)(1 << (8-octave));
+    return ledcWriteTone(chan, noteFreq);
 }
 
 void ledcAttachPin(uint8_t pin, uint8_t chan)

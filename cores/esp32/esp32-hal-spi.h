@@ -85,12 +85,15 @@ void spiSSClear(spi_t * spi);
 void spiWaitReady(spi_t * spi);
 
 uint32_t spiGetClockDiv(spi_t * spi);
-void spiSetClockDiv(spi_t * spi, uint32_t clockDiv);
-
 uint8_t spiGetDataMode(spi_t * spi);
-void spiSetDataMode(spi_t * spi, uint8_t dataMode);
-
 uint8_t spiGetBitOrder(spi_t * spi);
+
+
+/*
+ * Non transaction based lock methods (each locks and unlocks when called)
+ * */
+void spiSetClockDiv(spi_t * spi, uint32_t clockDiv);
+void spiSetDataMode(spi_t * spi, uint8_t dataMode);
 void spiSetBitOrder(spi_t * spi, uint8_t bitOrder);
 
 void spiWrite(spi_t * spi, uint32_t *data, uint8_t len);
@@ -98,14 +101,36 @@ void spiWriteByte(spi_t * spi, uint8_t data);
 void spiWriteWord(spi_t * spi, uint16_t data);
 void spiWriteLong(spi_t * spi, uint32_t data);
 
-void spiRead(spi_t * spi, uint32_t *out, uint8_t len);
-uint8_t spiReadByte(spi_t * spi);
-uint16_t spiReadWord(spi_t * spi);
-uint32_t spiReadLong(spi_t * spi);
-
-void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
+void spiTransfer(spi_t * spi, uint32_t *out, uint8_t len);
+uint8_t spiTransferByte(spi_t * spi, uint8_t data);
+uint16_t spiTransferWord(spi_t * spi, uint16_t data);
+uint32_t spiTransferLong(spi_t * spi, uint32_t data);
 void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size);
+void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
 
+/*
+ * New (EXPERIMENTAL) Transaction lock based API (lock once until endTransaction)
+ * */
+void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder);
+void spiSimpleTransaction(spi_t * spi);
+void spiEndTransaction(spi_t * spi);
+
+void spiWriteNL(spi_t * spi, const void * data, uint32_t len);
+void spiWriteByteNL(spi_t * spi, uint8_t data);
+void spiWriteShortNL(spi_t * spi, uint16_t data);
+void spiWriteLongNL(spi_t * spi, uint32_t data);
+void spiWritePixelsNL(spi_t * spi, const void * data, uint32_t len);
+
+#define spiTransferNL(spi, data, len) spiTransferBytesNL(spi, data, data, len)
+uint8_t spiTransferByteNL(spi_t * spi, uint8_t data);
+uint16_t spiTransferShortNL(spi_t * spi, uint16_t data);
+uint32_t spiTransferLongNL(spi_t * spi, uint32_t data);
+void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, uint32_t len);
+void spiTransferBitsNL(spi_t * spi, uint32_t data_in, uint32_t * data_out, uint8_t bits);
+
+/*
+ * Helper functions to translate frequency to clock divider and back
+ * */
 uint32_t spiFrequencyToClockDiv(uint32_t freq);
 uint32_t spiClockDivToFrequency(uint32_t freq);
 

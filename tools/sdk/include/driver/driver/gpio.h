@@ -23,6 +23,7 @@
 #include "soc/gpio_sig_map.h"
 #include "rom/gpio.h"
 #include "esp_attr.h"
+#include "esp_intr_alloc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -155,6 +156,7 @@ typedef enum {
     GPIO_NUM_37 = 37,   /*!< GPIO37, input mode only */
     GPIO_NUM_38 = 38,   /*!< GPIO38, input mode only */
     GPIO_NUM_39 = 39,   /*!< GPIO39, input mode only */
+    GPIO_NUM_MAX = 40,
 } gpio_num_t;
 
 typedef enum {
@@ -203,7 +205,9 @@ typedef enum {
     GPIO_FLOATING,                  /*!< Pad floating           */
 } gpio_pull_mode_t;
 
-typedef void (*gpio_event_callback)(gpio_num_t gpio_intr_num);
+
+typedef void (*gpio_isr_t)(void*);
+typedef intr_handle_t gpio_isr_handle_t;
 
 /**
  * @brief GPIO common configuration
@@ -265,7 +269,7 @@ esp_err_t gpio_intr_disable(gpio_num_t gpio_num);
  *
  * @return
  *     - ESP_OK Success
- *     - GPIO_IS_VALID_GPIO GPIO number error
+ *     - ESP_ERR_INVALID_ARG GPIO number error
  *
  */
 esp_err_t gpio_set_level(gpio_num_t gpio_num, uint32_t level);
@@ -298,9 +302,9 @@ int gpio_get_level(gpio_num_t gpio_num);
 esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 
 /**
- * @brief  GPIO set pull
+ * @brief  Configure GPIO pull-up/pull-down resistors
  *
- * User this Function,configure GPIO pull mode,such as pull-up,pull-down
+ * Only pins that support both input & output have integrated pull-up and pull-down resistors. Input-only GPIOs 34-39 do not.
  *
  * @param  gpio_num GPIO number. If you want to set pull up or down mode for e.g. GPIO16, gpio_num should be GPIO_NUM_16 (16);
  * @param  pull GPIO pull up/down mode.
@@ -313,7 +317,7 @@ esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
 
 /**
-  * @brief enable GPIO wake-up function.
+  * @brief Enable GPIO wake-up function.
   *
   * @param gpio_num GPIO number.
   *
@@ -337,27 +341,29 @@ esp_err_t gpio_wakeup_enable(gpio_num_t gpio_num, gpio_int_type_t intr_type);
 esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num);
 
 /**
- * @brief   register GPIO interrupt handler, the handler is an ISR.
+ * @brief   Register GPIO interrupt handler, the handler is an ISR.
  *          The handler will be attached to the same CPU core that this function is running on.
- *          @note
- *          Users should know that which CPU is running and then pick a INUM that is not used by system.
- *          We can find the information of INUM and interrupt level in soc.h.
  *
- * @param  gpio_intr_num  GPIO interrupt number,check the info in soc.h, and please see the core-isa.h for more details
+ * This ISR function is called whenever any GPIO interrupt occurs. See
+ * the alternative gpio_install_isr_service() and
+ * gpio_isr_handler_add() API in order to have the driver support
+ * per-GPIO ISRs.
+ *
  * @param  fn  Interrupt handler function.
- *
- *         @note
- *         Note that the handler function MUST be defined with attribution of "IRAM_ATTR".
- *
+ * @param  intr_alloc_flags Flags used to allocate the interrupt. One or multiple (ORred)
+ *            ESP_INTR_FLAG_* values. See esp_intr_alloc.h for more info.
  * @param  arg  Parameter for handler function
+ * @param  handle Pointer to return handle. If non-NULL, a handle for the interrupt will be returned here.
+ *
+ * \verbatim embed:rst:leading-asterisk
+ * To disable or remove the ISR, pass the returned handle to the :doc:`interrupt allocation functions </api/system/intr_alloc>`.
+ * \endverbatim
  *
  * @return
  *     - ESP_OK Success ;
  *     - ESP_ERR_INVALID_ARG GPIO error
  */
-esp_err_t gpio_isr_register(uint32_t gpio_intr_num, void (*fn)(void*), void * arg);
-
-
+esp_err_t gpio_isr_register(void (*fn)(void*), void * arg, int intr_alloc_flags, gpio_isr_handle_t *handle);
 
 /**
   * @brief Enable pull-up on GPIO.
@@ -403,98 +409,64 @@ esp_err_t gpio_pulldown_en(gpio_num_t gpio_num);
   */
 esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num);
 
+/**
+  * @brief Install the driver's GPIO ISR handler service, which allows per-pin GPIO interrupt handlers.
+  *
+  * This function is incompatible with gpio_isr_register() - if that function is used, a single global ISR is registered for all GPIO interrupts. If this function is used, the ISR service provides a global GPIO ISR and individual pin handlers are registered via the gpio_isr_register() function.
+  *
+  * @param intr_alloc_flags Flags used to allocate the interrupt. One or multiple (ORred)
+  *            ESP_INTR_FLAG_* values. See esp_intr_alloc.h for more info.
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_FAIL Operation fail
+  *     - ESP_ERR_NO_MEM No memory to install this service
+  */
+esp_err_t gpio_install_isr_service(int intr_alloc_flags);
 
 /**
- * ***************        ATTENTION       ********************/
-/**
- *@attention
- *     Each GPIO has its own separate configuration register, so we do not use
- *     a lock to serialize access to them. This works under the assumption that
- *     no situation will occur where two tasks try to configure the same GPIO
- *     pin simultaneously. It is up to the application developer to guarantee this.
- */
+  * @brief Uninstall the driver's GPIO ISR service, freeing related resources.
+  */
+void gpio_uninstall_isr_service();
 
 /**
- *----------EXAMPLE TO CONIFGURE GPIO AS OUTPUT ------------ *
- * @code{c}
- *     gpio_config_t io_conf;
- *     io_conf.intr_type = GPIO_INTR_DISABLE;             //disable interrupt
- *     io_conf.mode = GPIO_MODE_OUTPUT;                       //set as output mode
- *     io_conf.pin_bit_mask = GPIO_SEL_18 | GPIO_SEL_19;      //bit mask of the pins that you want to set,e.g.GPIO18/19
- *     io_conf.pull_down_en = 0;                              //disable pull-down mode
- *     io_conf.pull_up_en = 0;                                //disable pull-up mode
- *     gpio_config(&io_conf);                                 //configure GPIO with the given settings
- * @endcode
- **/
+  * @brief Add ISR handler for the corresponding GPIO pin.
+  *
+  * Call this function after using gpio_install_isr_service() to
+  * install the driver's GPIO ISR handler service.
+  *
+  * The pin ISR handlers no longer need to be declared with IRAM_ATTR,
+  * unless you pass the ESP_INTR_FLAG_IRAM flag when allocating the
+  * ISR in gpio_install_isr_service().
+  *
+  * This ISR handler will be called from an ISR. So there is a stack
+  * size limit (configurable as "ISR stack size" in menuconfig). This
+  * limit is smaller compared to a global GPIO interrupt handler due
+  * to the additional level of indirection.
+  *
+  * @param gpio_num GPIO number
+  * @param isr_handler ISR handler function for the corresponding GPIO number.
+  * @param args parameter for ISR handler.
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_STATE Wrong state, the ISR service has not been initialized.
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_isr_handler_add(gpio_num_t gpio_num, gpio_isr_t isr_handler, void* args);
 
 /**
- *----------EXAMPLE TO CONIFGURE GPIO AS OUTPUT ------------ *
- * @code{c}
- *     io_conf.intr_type = GPIO_INTR_POSEDGE;             //set posedge interrupt
- *     io_conf.mode = GPIO_MODE_INPUT;                        //set as input
- *     io_conf.pin_bit_mask = GPIO_SEL_4 | GPIO_SEL_5;        //bit mask of the pins that you want to set, e.g.,GPIO4/5
- *     io_conf.pull_down_en = 0;                              //disable pull-down mode
- *     io_conf.pull_up_en = 1;                                //enable pull-up mode
- *     gpio_config(&io_conf);                                 //configure GPIO with the given settings
- * @endcode
- */
-/**
- *----------EXAMPLE TO SET ISR HANDLER ----------------------
- * @code{c}
- * //the first parameter is INUM, you can pick one form interrupt level 1/2 which is not used by the system.
- * gpio_isr_register(18,gpio_intr_test,NULL);    //hook the isr handler for GPIO interrupt
- * @endcode
- * @note
- *     1. user should arrange the INUMs that used, better not to use a same INUM for different interrupt.
- *     2. do not pick the INUM that already occupied by the system.
- *     3. refer to soc.h to check which INUMs that can be used.
- */
-/**
- *-------------EXAMPLE OF HANDLER FUNCTION-------------------*
- * @code{c}
- * #include "esp_attr.h"
- * void IRAM_ATTR gpio_intr_test(void* arg)
- * {
- *     //GPIO intr process
- *     ets_printf("in gpio_intr\n");
- *     uint32_t gpio_num = 0;
- *     uint32_t gpio_intr_status = READ_PERI_REG(GPIO_STATUS_REG);   //read status to get interrupt status for GPIO0-31
- *     uint32_t gpio_intr_status_h = READ_PERI_REG(GPIO_STATUS1_REG);//read status1 to get interrupt status for GPIO32-39
- *     SET_PERI_REG_MASK(GPIO_STATUS_W1TC_REG, gpio_intr_status);    //Clear intr for gpio0-gpio31
- *     SET_PERI_REG_MASK(GPIO_STATUS1_W1TC_REG, gpio_intr_status_h); //Clear intr for gpio32-39
- *     do {
- *         if(gpio_num < 32) {
- *             if(gpio_intr_status & BIT(gpio_num)) { //gpio0-gpio31
- *                 ets_printf("Intr GPIO%d ,val: %d\n",gpio_num,gpio_get_level(gpio_num));
- *                 //This is an isr handler, you should post an event to process it in RTOS queue.
- *             }
- *         } else {
- *             if(gpio_intr_status_h & BIT(gpio_num - 32)) {
- *                 ets_printf("Intr GPIO%d, val : %d\n",gpio_num,gpio_get_level(gpio_num));
- *                 //This is an isr handler, you should post an event to process it in RTOS queue.
- *             }
- *         }
- *     } while(++gpio_num < GPIO_PIN_COUNT);
- * }
- * @endcode
- */
+  * @brief Remove ISR handler for the corresponding GPIO pin.
+  *
+  * @param gpio_num GPIO number
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_STATE Wrong state, the ISR service has not been initialized.
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_isr_handler_remove(gpio_num_t gpio_num);
 
-/**
- *----EXAMPLE OF I2C CONFIG AND PICK SIGNAL FOR IO MATRIX---*
- * @code{c}
- * gpio_config_t io_conf;
- * io_conf.intr_type = GPIO_INTR_DISABLE;                 //disable interrupt
- * io_conf.mode = GPIO_MODE_INPUT_OUTPUT_OD;              //set as output mode
- * io_conf.pin_bit_mask = GPIO_SEL_21 | GPIO_SEL_22;      //bit mask of the pins that you want to set,e.g.GPIO21/22
- * io_conf.pull_down_en = 0;                              //disable pull-down mode
- * io_conf.pull_up_en = 1;                                //enable pull-up mode
- * gpio_config(&io_conf);                                 //configure GPIO with the given settings
- * gpio_matrix_out(21, EXT_I2C_SCL_O_IDX, 0,  0);         //set output signal for io_matrix
- * gpio_matrix_out(22, EXT_I2C_SDA_O_IDX, 0,  0);         //set output signal for io_matrix
- * gpio_matrix_in( 22, EXT_I2C_SDA_I_IDX, 0);             //set input signal for io_matrix
- * @endcode
- *
- */
 
 #ifdef __cplusplus
 }

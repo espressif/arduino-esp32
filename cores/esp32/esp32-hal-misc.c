@@ -17,57 +17,29 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
-
-#if !CONFIG_ESP32_PHY_AUTO_INIT
 #include "nvs_flash.h"
-#include "esp_phy_init.h"
-#include "rom/rtc.h"
-void arduino_phy_init()
+#include <sys/time.h>
+
+void yield()
 {
-    static bool initialized = false;
-    if(initialized){
-        return;
-    }
-    nvs_flash_init();
-    esp_phy_calibration_mode_t calibration_mode = PHY_RF_CAL_PARTIAL;
-    if (rtc_get_reset_reason(0) == DEEPSLEEP_RESET) {
-        calibration_mode = PHY_RF_CAL_NONE;
-    }
-    const esp_phy_init_data_t* init_data = esp_phy_get_init_data();
-    if (init_data == NULL) {
-        printf("failed to obtain PHY init data\n");
-        abort();
-    }
-    esp_phy_calibration_data_t* cal_data =
-            (esp_phy_calibration_data_t*) calloc(sizeof(esp_phy_calibration_data_t), 1);
-    if (cal_data == NULL) {
-        printf("failed to allocate memory for RF calibration data\n");
-        abort();
-    }
-    esp_err_t err = esp_phy_load_cal_data_from_nvs(cal_data);
-    if (err != ESP_OK) {
-        printf("failed to load RF calibration data, falling back to full calibration\n");
-        calibration_mode = PHY_RF_CAL_FULL;
-    }
-
-    esp_phy_init(init_data, calibration_mode, cal_data);
-
-    if (calibration_mode != PHY_RF_CAL_NONE) {
-        err = esp_phy_store_cal_data_to_nvs(cal_data);
-    } else {
-        err = ESP_OK;
-    }
-    esp_phy_release_init_data(init_data);
-    free(cal_data); // PHY maintains a copy of calibration data, so we can free this
-    initialized = true;
+    vPortYield();
 }
-#endif
+
+portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
 
 uint32_t IRAM_ATTR micros()
 {
+    static uint32_t lccount = 0;
+    static uint32_t overflow = 0;
     uint32_t ccount;
+    portENTER_CRITICAL_ISR(&microsMux);
     __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
-    return ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    if(ccount < lccount){
+        overflow += UINT32_MAX / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    }
+    lccount = ccount;
+    portEXIT_CRITICAL_ISR(&microsMux);
+    return overflow + (ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
 }
 
 uint32_t IRAM_ATTR millis()
@@ -84,7 +56,7 @@ void IRAM_ATTR delayMicroseconds(uint32_t us)
 {
     uint32_t m = micros();
     if(us){
-        uint32_t e = (m + us) % ((0xFFFFFFFF / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ) + 1);
+        uint32_t e = (m + us);
         if(m > e){ //overflow
             while(micros() > e){
                 NOP();
@@ -102,17 +74,16 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
-void initWiFi() __attribute__((weak));
-void initWiFi() {}
-
-void initArduino(){
+void initArduino()
+{
+    nvs_flash_init();
     init();
     initVariant();
-    initWiFi();
 }
 
 //used by hal log
-const char * IRAM_ATTR pathToFileName(const char * path){
+const char * IRAM_ATTR pathToFileName(const char * path)
+{
     size_t i = 0;
     size_t pos = 0;
     char * p = (char *)path;

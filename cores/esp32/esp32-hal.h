@@ -39,8 +39,8 @@ extern "C" {
 #endif
 
 //forward declaration from freertos/portmacro.h
-void vPortYield( void );
-#define yield() vPortYield()
+void vPortYield(void);
+void yield(void);
 #define optimistic_yield(u)
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
@@ -56,8 +56,9 @@ void vPortYield( void );
 #include "esp32-hal-spi.h"
 #include "esp32-hal-i2c.h"
 #include "esp32-hal-ledc.h"
-#include "esp32-hal-sd.h"
+#include "esp32-hal-sigmadelta.h"
 #include "esp32-hal-timer.h"
+#include "esp32-hal-bt.h"
 #include "esp_system.h"
 
 uint32_t micros();

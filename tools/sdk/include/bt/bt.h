@@ -23,41 +23,90 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Bluetooth mode for controller enable/disable
+ */
+typedef enum {
+    ESP_BT_MODE_ILDE       = 0x00,   /*!< Bluetooth is not run */
+    ESP_BT_MODE_BLE        = 0x01,   /*!< Run BLE mode */
+    ESP_BT_MODE_CLASSIC_BT = 0x02,   /*!< Run Classic BT mode */
+    ESP_BT_MODE_BTDM       = 0x03,   /*!< Run dual mode */
+} esp_bt_mode_t;
 
 /**
- * @brief  Initialize BT controller
+ * @brief Bluetooth controller enable/disable/initialised/de-initialised status
+ */
+typedef enum {
+    ESP_BT_CONTROLLER_STATUS_IDLE = 0,
+    ESP_BT_CONTROLLER_STATUS_INITED,
+    ESP_BT_CONTROLLER_STATUS_ENABLED,
+    ESP_BT_CONTROLLER_STATUS_NUM,
+} esp_bt_controller_status_t;
+
+/**
+ * @brief  Initialize BT controller to allocate task and other resource.
  *
  * This function should be called only once, before any other BT functions are called.
  */
-void bt_controller_init(void);
+void esp_bt_controller_init(void);
 
-/** @brief vhci_host_callback
+/**
+ * @brief  De-initialize BT controller to free resource and delete task.
+ *
+ * This function should be called only once, after any other BT functions are called.
+ * This function is not whole completed, esp_bt_controller_init cannot called after this function.
+ */
+void esp_bt_controller_deinit(void);
+
+/**
+ * @brief Enable BT controller
+ * @param mode : the mode(BLE/BT/BTDM) to enable.
+ *               Now only support BTDM.
+ * @return       ESP_OK - success, other - failed
+ */
+esp_err_t esp_bt_controller_enable(esp_bt_mode_t mode);
+
+/**
+ * @brief  Disable BT controller
+ * @param mode : the mode(BLE/BT/BTDM) to disable.
+ *               Now only support BTDM.
+ * @return       ESP_OK - success, other - failed
+ */
+esp_err_t esp_bt_controller_disable(esp_bt_mode_t mode);
+
+/**
+ * @brief  Get BT controller is initialised/de-initialised/enabled/disabled
+ * @return status value
+ */
+esp_bt_controller_status_t esp_bt_controller_get_status(void);
+
+/** @brief esp_vhci_host_callback
  *  used for vhci call host function to notify what host need to do
  */
-typedef struct vhci_host_callback {
+typedef struct esp_vhci_host_callback {
     void (*notify_host_send_available)(void);               /*!< callback used to notify that the host can send packet to controller */
     int (*notify_host_recv)(uint8_t *data, uint16_t len);   /*!< callback used to notify that the controller has a packet to send to the host*/
-} vhci_host_callback_t;
+} esp_vhci_host_callback_t;
 
-/** @brief API_vhci_host_check_send_available
+/** @brief esp_vhci_host_check_send_available
  *  used for check actively if the host can send packet to controller or not.
  *  @return true for ready to send, false means cannot send packet
  */
-bool API_vhci_host_check_send_available(void);
+bool esp_vhci_host_check_send_available(void);
 
-/** @brief API_vhci_host_send_packet
+/** @brief esp_vhci_host_send_packet
  * host send packet to controller
  * @param data the packet point
  *,@param len the packet length
  */
-void API_vhci_host_send_packet(uint8_t *data, uint16_t len);
+void esp_vhci_host_send_packet(uint8_t *data, uint16_t len);
 
-/** @brief API_vhci_host_register_callback
+/** @brief esp_vhci_host_register_callback
  * register the vhci referece callback, the call back
  * struct defined by vhci_host_callback structure.
- * @param callback vhci_host_callback type variable
+ * @param callback esp_vhci_host_callback type variable
  */
-void API_vhci_host_register_callback(const vhci_host_callback_t *callback);
+void esp_vhci_host_register_callback(const esp_vhci_host_callback_t *callback);
 
 #ifdef __cplusplus
 }

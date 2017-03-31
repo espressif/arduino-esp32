@@ -1,6 +1,8 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
+#include <stdint.h>
+
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
@@ -9,8 +11,10 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-#define LED_BUILTIN 2
-#define KEY_BUILTIN 0
+static const uint8_t LED_BUILTIN = 2;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
+static const uint8_t KEY_BUILTIN = 0;
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -18,7 +22,7 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 2;
+static const uint8_t SS    = 5;
 static const uint8_t MOSI  = 23;
 static const uint8_t MISO  = 19;
 static const uint8_t SCK   = 18;

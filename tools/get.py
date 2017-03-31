@@ -21,7 +21,11 @@ else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
 
-dist_dir = 'dist/'
+if 'Windows' in platform.system():
+    import requests
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
     hash = hashlib.sha256()
@@ -45,7 +49,8 @@ def report_progress(count, blockSize, totalSize):
 
 def unpack(filename, destination):
     dirname = ''
-    print('Extracting {0}'.format(filename))
+    print('Extracting {0}'.format(os.path.basename(filename)))
+    sys.stdout.flush()
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
         tfile.extractall(destination)
@@ -71,20 +76,26 @@ def get_tool(tool):
     local_path = dist_dir + archive_name
     url = tool['url']
     #real_hash = tool['checksum'].split(':')[1]
-    if 'CYGWIN_NT' in sys_name:
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
     if not os.path.isfile(local_path):
         print('Downloading ' + archive_name);
+        sys.stdout.flush()
         if 'CYGWIN_NT' in sys_name:
-            urlretrieve(url, local_path, report_progress,context=ctx)
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            urlretrieve(url, local_path, report_progress, context=ctx)
+        elif 'Windows' in sys_name:
+            r = requests.get(url)
+            f = open(local_path, 'wb')
+            f.write(r.content)
+            f.close()
         else:
             urlretrieve(url, local_path, report_progress)
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))
+        sys.stdout.flush()
     #local_hash = sha256sum(local_path)
     #if local_hash != real_hash:
     #    print('Hash mismatch for {0}, delete the file and try again'.format(local_path))
@@ -110,15 +121,19 @@ def identify_platform():
     if sys.maxsize > 2**32:
         bits = 64
     sys_name = platform.system()
-    if 'Linux' in sys_name and platform.platform().find('arm') > 0:
+    sys_platform = platform.platform()
+    print('System: %s, Info: %s' % (sys_name, sys_platform))
+    if 'Linux' in sys_name and sys_platform.find('arm') > 0:
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
-    print('Platform: {0}'.format(identify_platform()))
-    tools_to_download = load_tools_list('../package/package_esp32_index.template.json', identify_platform())
+    identified_platform = identify_platform()
+    print('Platform: {0}'.format(identified_platform))
+    tools_to_download = load_tools_list(current_dir + '/../package/package_esp32_index.template.json', identified_platform)
     mkdir_p(dist_dir)
     for tool in tools_to_download:
         get_tool(tool)
+    print('Done')
