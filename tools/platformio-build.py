@@ -51,6 +51,7 @@ env.Prepend(
     CPPPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bootloader_support"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
@@ -58,19 +59,19 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "jsmn"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls_port"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nvs_flash"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spi_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "sdmmc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
@@ -88,7 +89,7 @@ env.Prepend(
     ],
 
     LIBS=[
-        "gcc", "stdc++", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "rtc_clk", "sdmmc", "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
+        "gcc", "stdc++", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "jsmn", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "rtc_clk", "rtc_pm", "sdmmc", "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
     ],
 
     UPLOADERFLAGS=[
