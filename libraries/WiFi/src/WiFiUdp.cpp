@@ -99,6 +99,7 @@ uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
 void WiFiUDP::stop(){
   if(tx_buffer){
     delete[] tx_buffer;
+    tx_buffer = NULL;
   }
   tx_buffer_len = 0;
   if(rx_buffer){
