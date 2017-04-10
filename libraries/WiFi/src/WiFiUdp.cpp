@@ -123,8 +123,8 @@ void WiFiUDP::stop(){
 int WiFiUDP::beginMulticastPacket(){
   if(!server_port || multicast_ip == IPAddress(INADDR_ANY))
     return 0;
-  remote_ip = server_port;
-  remote_port = multicast_ip;
+  remote_ip = multicast_ip;
+  remote_port = server_port;
   return beginPacket();
 }
 
