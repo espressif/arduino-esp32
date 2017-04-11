@@ -54,7 +54,7 @@ void* WiFiScanClass::_scanResult = 0;
  * @param show_hidden   show hidden networks
  * @return Number of discovered networks
  */
-int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden)
+int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan)
 {
     if(WiFiScanClass::_scanStarted) {
         return WIFI_SCAN_RUNNING;
@@ -71,6 +71,14 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden)
     config.bssid = 0;
     config.channel = 0;
     config.show_hidden = show_hidden;
+    if(passive){
+        config.scan_type = WIFI_SCAN_TYPE_PASSIVE;
+        config.scan_time.passive = max_ms_per_chan;
+    } else {
+        config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
+        config.scan_time.active.min = 100;
+        config.scan_time.active.max = max_ms_per_chan;
+    }
     if(esp_wifi_scan_start(&config, WiFiScanClass::_scanAsync) == ESP_OK) {
         WiFiScanClass::_scanComplete = false;
         WiFiScanClass::_scanStarted = true;
