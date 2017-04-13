@@ -1537,7 +1537,6 @@ PROVIDE ( esp_rom_spiflash_read_user_cmd = 0x400621b0 );
 PROVIDE ( esp_rom_spiflash_write_encrypted_disable = 0x40062e60 );
 PROVIDE ( esp_rom_spiflash_write_encrypted_enable = 0x40062df4 );
 PROVIDE ( esp_rom_spiflash_prepare_encrypted_data = 0x40062e1c );
-PROVIDE ( esp_rom_spiflash_master_config_readmode = 0x40062944 );
 PROVIDE ( g_rom_spiflash_chip = 0x3ffae270 );
 
 /* 
