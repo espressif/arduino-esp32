@@ -88,8 +88,7 @@ SECTIONS
     *libesp32.a:heap_alloc_caps.o(.literal .text .literal.* .text.*)
     *libphy.a:(.literal .text .literal.* .text.*)
     *librtc.a:(.literal .text .literal.* .text.*)
-    *librtc_clk.a:(.literal .text .literal.* .text.*)
-    *librtc_pm.a:(.literal .text .literal.* .text.*)
+    *libsoc.a:(.literal .text .literal.* .text.*)
     *libpp.a:pp.o(.literal .text .literal.* .text.*)
     *libpp.a:lmac.o(.literal .text .literal.* .text.*)
     *libpp.a:wdev.o(.literal .text .literal.* .text.*)
@@ -97,6 +96,7 @@ SECTIONS
     *libnet80211.a:ieee80211_misc.o(.literal .text .literal.* .text.*)
     *libhal.a:(.literal .text .literal.* .text.*)
     *libcoexist.a:(.literal .text .literal.* .text.*)
+    *libspi_flash.a:spi_flash_rom_patch.o(.literal .text .literal.* .text.*)
     _iram_text_end = ABSOLUTE(.);
   } > iram0_0_seg
 

@@ -23,11 +23,13 @@ bool btStarted(){
 }
 
 bool btStart(){
+    esp_bt_controller_config_t cfg;
+    memset(&cfg, 0, sizeof(esp_bt_controller_config_t));
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){
-        esp_bt_controller_init();
+        esp_bt_controller_init(&cfg);
         while(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){}
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED){
