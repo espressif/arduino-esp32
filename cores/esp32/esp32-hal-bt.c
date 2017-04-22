@@ -23,8 +23,7 @@ bool btStarted(){
 }
 
 bool btStart(){
-    esp_bt_controller_config_t cfg;
-    memset(&cfg, 0, sizeof(esp_bt_controller_config_t));
+    esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }
