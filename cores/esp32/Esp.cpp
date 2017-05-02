@@ -214,9 +214,9 @@ bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 }
 
 
-uint64_t EspClass::getChipId(void)
+uint64_t EspClass::getEfuseMac(void)
 {
-    uint64_t _chipid;
-    esp_efuse_read_mac((uint8_t*) (&_chipid));
-    return _chipid;
+    uint64_t _chipmacid;
+    esp_efuse_read_mac((uint8_t*) (&_chipmacid));
+    return _chipmacid;
 }

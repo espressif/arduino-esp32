@@ -76,7 +76,7 @@ public:
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
     bool flashRead(uint32_t offset, uint32_t *data, size_t size);
 
-    uint64_t getChipId();
+    uint64_t getEfuseMac();
 
 };
 
