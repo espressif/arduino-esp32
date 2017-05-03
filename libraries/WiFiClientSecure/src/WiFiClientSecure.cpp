@@ -64,6 +64,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
 WiFiClientSecure::~WiFiClientSecure()
 {
     stop();
+	delete sslclient;				  
 }
 
 WiFiClientSecure &WiFiClientSecure::operator=(const WiFiClientSecure &other)
