@@ -14,7 +14,6 @@
 
 typedef struct sslclient_context {
     int socket;
-    mbedtls_net_context net_ctx;
     mbedtls_ssl_context ssl_ctx;
     mbedtls_ssl_config ssl_conf;
 
