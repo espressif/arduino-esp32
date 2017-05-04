@@ -1,5 +1,5 @@
 /**
- * ESP8266HTTPClient.h
+ * HTTPClient.h
  *
  * Created on: 02.11.2015
  *
@@ -129,8 +129,6 @@ public:
     bool begin(String url, const char* CAcert);
     bool begin(String host, uint16_t port, String uri = "/");
     bool begin(String host, uint16_t port, String uri, const char* CAcert);
-    // deprecated, use the overload above instead
-    bool begin(String host, uint16_t port, String uri, bool https, const char* CAcert)  __attribute__ ((deprecated));
 
     void end(void);
 

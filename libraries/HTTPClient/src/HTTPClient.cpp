@@ -191,15 +191,6 @@ bool HTTPClient::begin(String host, uint16_t port, String uri)
     return true;
 }
 
-bool HTTPClient::begin(String host, uint16_t port, String uri, bool https, const char* CAcert)
-{
-    if (https) {
-        return begin(host, port, uri, CAcert);
-    } else {
-        return begin(host, port, uri);
-    }
-}
-
 bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcert)
 {
     clear();
