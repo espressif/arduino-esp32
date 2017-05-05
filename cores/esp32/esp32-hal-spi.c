@@ -332,11 +332,11 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
         break;
     case SPI_MODE2:
         spi->dev->pin.ck_idle_edge = 1;
-        spi->dev->user.ck_out_edge = 0;
+        spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE3:
         spi->dev->pin.ck_idle_edge = 1;
-        spi->dev->user.ck_out_edge = 1;
+        spi->dev->user.ck_out_edge = 0;
         break;
     case SPI_MODE0:
     default:
