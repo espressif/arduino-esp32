@@ -64,5 +64,20 @@ bool btStop(){
     return false;
 }
 
+#else
+bool btStarted()
+{
+    return false;
+}
+
+bool btStart()
+{
+    return false;
+}
+
+bool btStop()
+{
+    return false;
+}
 #endif
 
