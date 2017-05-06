@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#if CONFIG_BT_ENABLED
 
 #include "esp32-hal-bt.h"
 
@@ -62,5 +63,5 @@ bool btStop(){
     return false;
 }
 
-
+#endif
 

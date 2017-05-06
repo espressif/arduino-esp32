@@ -17,6 +17,8 @@
 
 #include "esp32-hal.h"
 
+#if CONFIG_BT_ENABLED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +29,8 @@ bool btStop();
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif /* _ESP32_ESP32_HAL_BT_H_ */
