@@ -1,9 +1,9 @@
-// Copyright 2010-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2010-2017 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -65,8 +65,9 @@
 #define BIT(nr)                 (1UL << (nr))
 #else
 #define BIT(nr)                 (1 << (nr))
-#endif //__ASSEMBLER__
+#endif
 
+#ifndef __ASSEMBLER__
 //write value to register
 #define REG_WRITE(_r, _v)    (*(volatile uint32_t *)(_r)) = (_v)
 
@@ -88,8 +89,8 @@
 //get field from register, uses field _S & _V to determine mask
 #define REG_GET_FIELD(_r, _f) ((REG_READ(_r) >> (_f##_S)) & (_f##_V))
 
-//set field to register, used when _f is not left shifted by _f##_S
-#define REG_SET_FIELD(_r, _f, _v) (REG_WRITE((_r),((REG_READ(_r) & ~((_f) << (_f##_S)))|(((_v) & (_f))<<(_f##_S)))))
+//set field of a register from variable, uses field _S & _V to determine mask
+#define REG_SET_FIELD(_r, _f, _v) (REG_WRITE((_r),((REG_READ(_r) & ~((_f##_V) << (_f##_S)))|(((_v) & (_f##_V))<<(_f##_S)))))
 
 //get field value from a variable, used when _f is not left shifted by _f##_S
 #define VALUE_GET_FIELD(_r, _f) (((_r) >> (_f##_S)) & (_f))
@@ -134,6 +135,8 @@
 #define GET_PERI_REG_BITS2(reg, mask,shift)      ((READ_PERI_REG(reg)>>(shift))&(mask))
 //}}
 
+#endif /* !__ASSEMBLER__ */
+
 //Periheral Clock {{
 #define  APB_CLK_FREQ_ROM                            ( 26*1000000 )
 #define  CPU_CLK_FREQ_ROM                            APB_CLK_FREQ_ROM
@@ -145,6 +148,16 @@
 #define  SPI_CLK_DIV                                 4
 #define  TICKS_PER_US_ROM                            26              // CPU is 80MHz
 //}}
+
+/* Overall memory map */
+#define SOC_IROM_LOW    0x400D0000
+#define SOC_IROM_HIGH   0x40400000
+#define SOC_DROM_LOW    0x3F400000
+#define SOC_DROM_HIGH   0x3F800000
+#define SOC_RTC_IRAM_LOW  0x400C0000
+#define SOC_RTC_IRAM_HIGH 0x400C2000
+#define SOC_RTC_DATA_LOW  0x50000000
+#define SOC_RTC_DATA_HIGH 0x50002000
 
 #define DR_REG_DPORT_BASE                       0x3ff00000
 #define DR_REG_RSA_BASE                         0x3ff02000
@@ -273,14 +286,14 @@
 /*************************************************************************************************************
  *      Intr num                Level           Type                    PRO CPU usage           APP CPU uasge
  *      0                       1               extern level            WMAC                    Reserved
- *      1                       1               extern level            BT/BLE Host VHCI        Reserved
+ *      1                       1               extern level            BT/BLE Host HCI DMA     BT/BLE Host HCI DMA
  *      2                       1               extern level
  *      3                       1               extern level
  *      4                       1               extern level            WBB
- *      5                       1               extern level            BT/BLE Controller
+ *      5                       1               extern level            BT/BLE Controller       BT/BLE Controller
  *      6                       1               timer                   FreeRTOS Tick(L1)       FreeRTOS Tick(L1)
- *      7                       1               software                Reserved                Reserved
- *      8                       1               extern level            BT/BLE BB(RX/TX)
+ *      7                       1               software                BT/BLE VHCI             BT/BLE VHCI
+ *      8                       1               extern level            BT/BLE BB(RX/TX)        BT/BLE BB(RX/TX)
  *      9                       1               extern level
  *      10                      1               extern edge             Internal Timer
  *      11                      3               profiling
@@ -297,7 +310,7 @@
  *      22                      3               extern edge             FRC1 timer
  *      23                      3               extern level
  *      24                      4               extern level            TG1_WDT
- *      25                      4               extern level            Reserved                Reserved
+ *      25                      4               extern level            CACHEERR
  *      26                      5               extern level            Reserved                Reserved
  *      27                      3               extern level            Reserved                Reserved
  *      28                      4               extern edge             
@@ -314,6 +327,7 @@
 #define ETS_TG0_T1_INUM                         10 /**< use edge interrupt*/
 #define ETS_FRC1_INUM                           22
 #define ETS_T1_WDT_INUM                         24
+#define ETS_CACHEERR_INUM                       25
 
 //CPU0 Interrupt number used in ROM, should be cancelled in SDK
 #define ETS_SLC_INUM                            1

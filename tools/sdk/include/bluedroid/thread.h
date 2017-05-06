@@ -40,7 +40,6 @@ enum {
     SIG_PRF_WORK = 0xfd,
     SIG_BTU_START_UP = 0xfe,
     SIG_BTU_WORK = 0xff,
-    SIG_BTIF_WORK = 0xff
 };
 
 #define HCI_HOST_TASK_STACK_SIZE        (2048 + BT_TASK_EXTRA_STACK_SIZE)
@@ -53,7 +52,7 @@ enum {
 #define HCI_H4_TASK_NAME                "hciH4T"
 #define HCI_H4_QUEUE_NUM                60
 
-#define BTU_TASK_STACK_SIZE             (3584 + BT_TASK_EXTRA_STACK_SIZE)
+#define BTU_TASK_STACK_SIZE             (4096 + BT_TASK_EXTRA_STACK_SIZE)
 #define BTU_TASK_PRIO                   (configMAX_PRIORITIES - 5)
 #define BTU_TASK_NAME                   "btuT"
 #define BTU_QUEUE_NUM                   50
