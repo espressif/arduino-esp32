@@ -181,7 +181,7 @@ nano32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
-lolin32.name=WEMOS LoLin32
+lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool
 lolin32.upload.maximum_size=1044464
@@ -194,7 +194,7 @@ lolin32.serial.disableRTS=true
 lolin32.build.mcu=esp32
 lolin32.build.core=esp32
 lolin32.build.variant=lolin32
-lolin32.build.board=LoLin32
+lolin32.build.board=LOLIN32
 
 lolin32.build.f_cpu=240000000L
 lolin32.build.flash_mode=dio
