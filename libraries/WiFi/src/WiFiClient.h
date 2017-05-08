@@ -23,6 +23,8 @@
 
 #include "Arduino.h"
 #include "Client.h"
+#undef min
+#undef max
 #include <memory>
 
 class WiFiClientSocketHandle;
@@ -47,7 +49,7 @@ public:
     int read(uint8_t *buf, size_t size);
     int peek()
     {
-        return 0;
+        return -1;
     }
     void flush();
     void stop();

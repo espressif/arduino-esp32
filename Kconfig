@@ -3,7 +3,6 @@ menu "Arduino Configuration"
 config ENABLE_ARDUINO_DEPENDS
     bool
     select LWIP_SO_RCVBUF
-    select BT_ENABLED
     select ETHERNET
     select WIFI_ENABLED
     select ESP32_PHY_CALIBRATION_AND_DATA_STORAGE

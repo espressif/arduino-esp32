@@ -14,6 +14,8 @@
 
 #include "esp32-hal-bt.h"
 
+#if CONFIG_BT_ENABLED
+
 #include "bt.h"
 #include "esp_bt_defs.h"
 #include "esp_bt_main.h"
@@ -23,8 +25,7 @@ bool btStarted(){
 }
 
 bool btStart(){
-    esp_bt_controller_config_t cfg;
-    memset(&cfg, 0, sizeof(esp_bt_controller_config_t));
+    esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }
@@ -63,5 +64,20 @@ bool btStop(){
     return false;
 }
 
+#else
+bool btStarted()
+{
+    return false;
+}
 
+bool btStart()
+{
+    return false;
+}
+
+bool btStop()
+{
+    return false;
+}
+#endif
 

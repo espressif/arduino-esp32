@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include "rom/queue.h"
 #include "esp_err.h"
-#include "esp_wifi_types.h"
 #include "esp_interface.h"
 
 #ifdef __cplusplus
@@ -124,7 +123,7 @@ typedef struct {
 
 typedef struct {
     uint8_t bssid[6];                     /**< MAC address of AP */
-    uint8_t ssid[32];                     /**< SSID of AP */
+    uint8_t ssid[33];                     /**< SSID of AP */
     uint8_t primary;                      /**< channel of AP */
     wifi_second_chan_t second;            /**< second channel of AP */
     int8_t  rssi;                         /**< signal strength of AP */
@@ -164,6 +163,7 @@ typedef struct {
     uint8_t password[64];  /**< password of target AP*/
     bool bssid_set;        /**< whether set MAC address of target AP or not. Generally, station_config.bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.*/
     uint8_t bssid[6];     /**< MAC address of target AP*/
+    uint8_t channel;       /**< channel of target AP. Set to 1~13 to scan starting from the specified channel before connecting to AP. If the channel of AP is unknown, set it to 0.*/
 } wifi_sta_config_t;
 
 typedef union {
