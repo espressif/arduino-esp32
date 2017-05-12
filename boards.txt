@@ -99,6 +99,47 @@ esp32thing.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+widora-air.name=Widora AIR
+
+widora-air.upload.tool=esptool
+widora-air.upload.maximum_size=1044464
+widora-air.upload.maximum_data_size=294912
+widora-air.upload.wait_for_upload_port=true
+
+widora-air.serial.disableDTR=true
+widora-air.serial.disableRTS=true
+
+widora-air.build.mcu=esp32
+widora-air.build.core=esp32
+widora-air.build.variant=widora-air
+widora-air.build.board=WIDORA_AIR
+
+widora-air.build.f_cpu=240000000L
+widora-air.build.flash_mode=dio
+widora-air.build.flash_size=16MB
+
+widora-air.menu.FlashFreq.80=80MHz
+widora-air.menu.FlashFreq.80.build.flash_freq=80m
+widora-air.menu.FlashFreq.40=40MHz
+widora-air.menu.FlashFreq.40.build.flash_freq=40m
+
+widora-air.menu.UploadSpeed.921600=921600
+widora-air.menu.UploadSpeed.921600.upload.speed=921600
+widora-air.menu.UploadSpeed.115200=115200
+widora-air.menu.UploadSpeed.115200.upload.speed=115200
+widora-air.menu.UploadSpeed.256000.windows=256000
+widora-air.menu.UploadSpeed.256000.upload.speed=256000
+widora-air.menu.UploadSpeed.230400.windows.upload.speed=256000
+widora-air.menu.UploadSpeed.230400=230400
+widora-air.menu.UploadSpeed.230400.upload.speed=230400
+widora-air.menu.UploadSpeed.460800.linux=460800
+widora-air.menu.UploadSpeed.460800.macosx=460800
+widora-air.menu.UploadSpeed.460800.upload.speed=460800
+widora-air.menu.UploadSpeed.512000.windows=512000
+widora-air.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
