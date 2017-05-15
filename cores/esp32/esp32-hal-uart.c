@@ -377,7 +377,7 @@ int log_printf(const char *format, ...)
     if(s_uart_debug_nr < 0){
         return 0;
     }
-    char loc_buf[64];
+    static char loc_buf[64];
     char * temp = loc_buf;
     int len;
     va_list arg;
