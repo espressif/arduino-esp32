@@ -60,8 +60,8 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     static bool tHasStarted = false;
     if(!tHasStarted) {
         tHasStarted = true;
-        SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
-        CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
         LEDC.conf.apb_clk_sel = 1;//LS use apb clock
 #if !CONFIG_DISABLE_HAL_LOCKS
         _ledc_sys_lock = xSemaphoreCreateMutex();
