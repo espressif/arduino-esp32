@@ -15,6 +15,7 @@
 #include <lwip/netdb.h>
 #include "ssl_client.h"
 
+
 const char *pers = "esp32-tls";
 
 static int handle_error(int err)
@@ -153,11 +154,9 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     log_i("Performing the SSL/TLS handshake...");
 
     while ((ret = mbedtls_ssl_handshake(&ssl_client->ssl_ctx)) != 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) {  //workaround for bug: https://github.com/espressif/esp-idf/issues/434
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             return handle_error(ret);
         }
-        delay(10);
-        vPortYield();
     }
 
 
@@ -224,7 +223,7 @@ int data_to_read(sslclient_context *ssl_client)
     //log_e("RET: %i",ret);   //for low level debug
     res = mbedtls_ssl_get_bytes_avail(&ssl_client->ssl_ctx);
     //log_e("RES: %i",res);
-    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0 && ret != -76) {
+    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
         return handle_error(ret);
     }
 
@@ -238,7 +237,7 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
     int ret = -1;
 
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != -76) {
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             return handle_error(ret);
         }
     }

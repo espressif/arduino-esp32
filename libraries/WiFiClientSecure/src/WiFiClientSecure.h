@@ -25,7 +25,7 @@
 #include <WiFi.h>
 #include "ssl_client.h"
 
-class WiFiClientSecure : public Client
+class WiFiClientSecure : public WiFiClient
 {
 protected:
     bool _connected;
