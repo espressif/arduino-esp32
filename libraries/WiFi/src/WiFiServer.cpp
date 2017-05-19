@@ -45,8 +45,11 @@ WiFiClient WiFiServer::available(){
   int client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
   if(client_sock >= 0){
     int val = 1;
-    if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK)
-      return WiFiClient(client_sock);
+    if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK) {
+      val = _noDelay;
+      if(setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, sizeof(int)) == ESP_OK)
+        return WiFiClient(client_sock);
+    }
   }
   return WiFiClient();
 }
@@ -67,6 +70,14 @@ void WiFiServer::begin(){
     return;
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   _listening = true;
+}
+
+void WiFiServer::setNoDelay(bool nodelay) {
+    _noDelay = nodelay;
+}
+
+bool WiFiServer::getNoDelay() {
+    return _noDelay;
 }
 
 void WiFiServer::end(){

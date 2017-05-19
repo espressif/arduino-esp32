@@ -29,6 +29,7 @@ class WiFiServer : public Server {
     uint16_t _port;
     uint8_t _max_clients;
     bool _listening;
+    bool _noDelay = false;
 
   public:
     void listenOnLocalhost(){}
@@ -38,6 +39,8 @@ class WiFiServer : public Server {
     WiFiClient available();
     WiFiClient accept(){return available();}
     void begin();
+    void setNoDelay(bool nodelay);
+    bool getNoDelay();
     size_t write(const uint8_t *data, size_t len);
     size_t write(uint8_t data){
       return write(&data, 1);
