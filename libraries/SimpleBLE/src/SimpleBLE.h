@@ -52,10 +52,7 @@ class SimpleBLE {
         void end(void);
 
     private:
-        struct ble_gap_adv_params_s * _ble_adv_param;
         String local_name;
-        void _ble_send_adv_param(void);
-        void _ble_send_adv_data(void);
     private:
 
 };
