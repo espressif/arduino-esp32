@@ -84,6 +84,7 @@ static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
 // ---------------------------------------------------- STA function -----------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
 wl_status_t WiFiSTAClass::_status = WL_NO_SHIELD;
 /**
@@ -300,6 +301,17 @@ bool WiFiSTAClass::getAutoConnect()
     bool autoConnect;
     esp_wifi_get_auto_connect(&autoConnect);
     return autoConnect;
+}
+
+bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
+{
+    _autoReconnect = autoReconnect;
+    return true;
+}
+
+bool WiFiSTAClass::getAutoReconnect()
+{
+    return _autoReconnect;
 }
 
 /**
