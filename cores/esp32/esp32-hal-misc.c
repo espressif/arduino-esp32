@@ -30,11 +30,11 @@ void yield()
 
 portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
 
-uint32_t IRAM_ATTR micros()
+unsigned long IRAM_ATTR micros()
 {
-    static uint32_t lccount = 0;
-    static uint32_t overflow = 0;
-    uint32_t ccount;
+    static unsigned long lccount = 0;
+    static unsigned long overflow = 0;
+    unsigned long ccount;
     portENTER_CRITICAL_ISR(&microsMux);
     __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
     if(ccount < lccount){
@@ -45,7 +45,7 @@ uint32_t IRAM_ATTR micros()
     return overflow + (ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
 }
 
-uint32_t IRAM_ATTR millis()
+unsigned long IRAM_ATTR millis()
 {
     return xTaskGetTickCount() * portTICK_PERIOD_MS;
 }

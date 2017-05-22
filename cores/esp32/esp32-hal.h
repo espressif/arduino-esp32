@@ -61,8 +61,8 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp_system.h"
 
-uint32_t micros();
-uint32_t millis();
+unsigned long micros();
+unsigned long millis();
 void delay(uint32_t);
 void delayMicroseconds(uint32_t us);
 
