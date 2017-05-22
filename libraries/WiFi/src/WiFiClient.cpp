@@ -237,6 +237,20 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     return res;
 }
 
+int WiFiClient::peek()
+{
+    if(!available()) {
+        return -1;
+    }
+    uint8_t data = 0;
+    int res = recv(fd(), &data, 1, MSG_PEEK);
+    if(res < 0 && errno != EWOULDBLOCK) {
+        log_e("%d", errno);
+        stop();
+    }
+    return data;
+}
+
 int WiFiClient::available()
 {
     if(!_connected) {

@@ -47,10 +47,7 @@ public:
     int available();
     int read();
     int read(uint8_t *buf, size_t size);
-    int peek()
-    {
-        return -1;
-    }
+    int peek();
     void flush();
     void stop();
     uint8_t connected();
