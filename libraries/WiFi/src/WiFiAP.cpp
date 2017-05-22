@@ -122,16 +122,11 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     wifi_config_t conf_current;
     esp_wifi_get_config(WIFI_IF_AP, &conf_current);
-    if(softap_config_equal(conf, conf_current)) {
-        //DEBUGV("softap config unchanged");
-        return true;
+    if(!softap_config_equal(conf, conf_current) && esp_wifi_set_config(WIFI_IF_AP, &conf) != ESP_OK) {
+        return false;
     }
 
-    bool ret;
-
-    ret = esp_wifi_set_config(WIFI_IF_AP, &conf) == ESP_OK;
-
-    return ret;
+    return true;
 }
 
 
@@ -149,12 +144,25 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
         return false;
     }
 
+    esp_wifi_start();
+
     tcpip_adapter_ip_info_t info;
     info.ip.addr = static_cast<uint32_t>(local_ip);
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
     tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
     if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info) == ESP_OK) {
+        dhcps_lease_t lease;
+        lease.enable = true;
+        lease.start_ip.addr = static_cast<uint32_t>(local_ip) + (1 << 24);
+        lease.end_ip.addr = static_cast<uint32_t>(local_ip) + (11 << 24);
+
+        tcpip_adapter_dhcps_option(
+            (tcpip_adapter_option_mode_t)TCPIP_ADAPTER_OP_SET,
+            (tcpip_adapter_option_id_t)REQUESTED_IP_ADDRESS,
+            (void*)&lease, sizeof(dhcps_lease_t)
+        );
+
         return tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP) == ESP_OK;
     }
     return false;

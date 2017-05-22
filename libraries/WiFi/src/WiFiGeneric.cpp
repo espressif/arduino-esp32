@@ -51,11 +51,19 @@ extern "C" {
 #undef max
 #include <vector>
 
+void tcpipInit(){
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        tcpip_adapter_init();
+        esp_event_loop_init(&WiFiGenericClass::_eventCallback, NULL);
+    }
+}
+
 static bool wifiLowLevelInit(){
     static bool lowLevelInitDone = false;
     if(!lowLevelInitDone){
-        tcpip_adapter_init();
-        esp_event_loop_init(&WiFiGenericClass::_eventCallback, NULL);
+        tcpipInit();
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
@@ -172,7 +180,6 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
     log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
-
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
     } else if(event->event_id == SYSTEM_EVENT_STA_DISCONNECTED) {

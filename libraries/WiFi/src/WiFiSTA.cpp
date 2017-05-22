@@ -201,6 +201,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     if(!WiFi.enableSTA(true)) {
         return false;
     }
+    esp_wifi_start();
 
     tcpip_adapter_ip_info_t info;
     info.ip.addr = static_cast<uint32_t>(local_ip);
