@@ -279,8 +279,28 @@ void WiFiClient::flush() {
 
 uint8_t WiFiClient::connected()
 {
-    uint8_t dummy = 0;
-    read(&dummy, 0);
+    if (_connected) {
+        uint8_t dummy;
+        int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
+        if (res <= 0) {
+            switch (errno) {
+                case ENOTCONN:
+                case EPIPE:
+                case ECONNRESET:
+                case ECONNREFUSED:
+                case ECONNABORTED:
+                    _connected = false;
+                    break;
+                default:
+                    _connected = true;
+                    break;
+            }
+        }
+        else {
+            // Should never happen since requested 0 bytes
+            _connected = true;
+        }
+    }
     return _connected;
 }
 
