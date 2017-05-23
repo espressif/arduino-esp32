@@ -40,9 +40,16 @@ void WiFiServer::stopAll(){}
 WiFiClient WiFiServer::available(){
   if(!_listening)
     return WiFiClient();
+  int client_sock;
+  if (_accepted_sockfd >= 0) {
+    client_sock = _accepted_sockfd;
+    _accepted_sockfd = -1;
+  }
+  else {
   struct sockaddr_in _client;
   int cs = sizeof(struct sockaddr_in);
-  int client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+  }
   if(client_sock >= 0){
     int val = 1;
     if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK) {
@@ -70,6 +77,8 @@ void WiFiServer::begin(){
     return;
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   _listening = true;
+  _noDelay = false;
+  _accepted_sockfd = -1;
 }
 
 void WiFiServer::setNoDelay(bool nodelay) {
@@ -78,6 +87,19 @@ void WiFiServer::setNoDelay(bool nodelay) {
 
 bool WiFiServer::getNoDelay() {
     return _noDelay;
+}
+
+bool WiFiServer::hasClient() {
+    if (_accepted_sockfd >= 0) {
+      return true;
+    }
+    struct sockaddr_in _client;
+    int cs = sizeof(struct sockaddr_in);
+    _accepted_sockfd = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    if (_accepted_sockfd >= 0) {
+      return true;
+    }
+    return false;
 }
 
 void WiFiServer::end(){
