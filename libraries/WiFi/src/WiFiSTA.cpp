@@ -141,6 +141,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
     }
 
+    esp_wifi_start();
     if(connect) {
         esp_wifi_connect();
     }
