@@ -138,7 +138,7 @@ Using make instead of the Arduino IDE makes it easier to do automated and produc
 
 ## ESP32Dev Board PINMAP
 
-![Pin Functions](doc/esp32_pinmap.png)
+![Pin Functions](doc/esp32_pinmap1.png)
 
 ## Hint
 
