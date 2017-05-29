@@ -259,6 +259,7 @@ bool WiFiSTAClass::disconnect(bool wifioff)
     *conf.sta.ssid = 0;
     *conf.sta.password = 0;
 
+    WiFi.getMode();
     esp_wifi_set_config(WIFI_IF_STA, &conf);
     ret = esp_wifi_set_config(WIFI_IF_STA, &conf) == ESP_OK;
 
