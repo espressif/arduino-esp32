@@ -7,7 +7,7 @@ menu.DebugLevel=Core Debug Level
 esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
-esp32.upload.maximum_size=1044464
+esp32.upload.maximum_size=1310720
 esp32.upload.maximum_data_size=294912
 esp32.upload.wait_for_upload_port=true
 
@@ -61,7 +61,7 @@ esp32.menu.DebugLevel.verbose.build.code_debug=5
 esp32thing.name=SparkFun ESP32 Thing
 
 esp32thing.upload.tool=esptool
-esp32thing.upload.maximum_size=1044464
+esp32thing.upload.maximum_size=1310720
 esp32thing.upload.maximum_data_size=294912
 esp32thing.upload.wait_for_upload_port=true
 
@@ -102,7 +102,7 @@ esp32thing.menu.UploadSpeed.512000.upload.speed=512000
 widora-air.name=Widora AIR
 
 widora-air.upload.tool=esptool
-widora-air.upload.maximum_size=1044464
+widora-air.upload.maximum_size=1310720
 widora-air.upload.maximum_data_size=294912
 widora-air.upload.wait_for_upload_port=true
 
@@ -143,7 +143,7 @@ widora-air.menu.UploadSpeed.512000.upload.speed=512000
 esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
-esp320.upload.maximum_size=1044464
+esp320.upload.maximum_size=1310720
 esp320.upload.maximum_data_size=294912
 esp320.upload.wait_for_upload_port=true
 
@@ -184,7 +184,7 @@ esp320.menu.UploadSpeed.512000.upload.speed=512000
 nano32.name=Nano32
 
 nano32.upload.tool=esptool
-nano32.upload.maximum_size=1044464
+nano32.upload.maximum_size=1310720
 nano32.upload.maximum_data_size=294912
 nano32.upload.wait_for_upload_port=true
 
@@ -225,7 +225,7 @@ nano32.menu.UploadSpeed.512000.upload.speed=512000
 lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool
-lolin32.upload.maximum_size=1044464
+lolin32.upload.maximum_size=1310720
 lolin32.upload.maximum_data_size=294912
 lolin32.upload.wait_for_upload_port=true
 
@@ -266,7 +266,7 @@ lolin32.menu.UploadSpeed.512000.upload.speed=512000
 espea32.name=ESPea32
 
 espea32.upload.tool=esptool
-espea32.upload.maximum_size=1044464
+espea32.upload.maximum_size=1310720
 espea32.upload.maximum_data_size=294912
 espea32.upload.wait_for_upload_port=true
 
@@ -307,7 +307,7 @@ espea32.menu.UploadSpeed.512000.upload.speed=512000
 quantum.name=Noduino Quantum
 
 quantum.upload.tool=esptool
-quantum.upload.maximum_size=1044464
+quantum.upload.maximum_size=1310720
 quantum.upload.maximum_data_size=294912
 quantum.upload.wait_for_upload_port=true
 
@@ -348,7 +348,7 @@ quantum.menu.UploadSpeed.512000.upload.speed=512000
 node32s.name=Node32s
 
 node32s.upload.tool=esptool
-node32s.upload.maximum_size=1044464
+node32s.upload.maximum_size=1310720
 node32s.upload.maximum_data_size=294912
 node32s.upload.wait_for_upload_port=true
 
@@ -389,7 +389,7 @@ node32s.menu.UploadSpeed.512000.upload.speed=512000
 hornbill32dev.name=Hornbill ESP32 Dev
 
 hornbill32dev.upload.tool=esptool
-hornbill32dev.upload.maximum_size=1044464
+hornbill32dev.upload.maximum_size=1310720
 hornbill32dev.upload.maximum_data_size=294912
 hornbill32dev.upload.wait_for_upload_port=true
 
@@ -429,7 +429,7 @@ hornbill32dev.menu.UploadSpeed.512000.upload.speed=512000
 hornbill32minima.name=Hornbill ESP32 Minima
 
 hornbill32minima.upload.tool=esptool
-hornbill32minima.upload.maximum_size=1044464
+hornbill32minima.upload.maximum_size=1310720
 hornbill32minima.upload.maximum_data_size=294912
 hornbill32minima.upload.wait_for_upload_port=true
 
@@ -469,7 +469,7 @@ hornbill32minima.menu.UploadSpeed.512000.upload.speed=512000
 firebeetle32.name=FireBeetle-ESP32
 
 firebeetle32.upload.tool=esptool
-firebeetle32.upload.maximum_size=1044464
+firebeetle32.upload.maximum_size=1310720
 firebeetle32.upload.maximum_data_size=294912
 firebeetle32.upload.wait_for_upload_port=true
 
@@ -510,7 +510,7 @@ firebeetle32.menu.UploadSpeed.512000.upload.speed=512000
 intorobot-fig.name=IntoRobot Fig
 
 intorobot-fig.upload.tool=esptool
-intorobot-fig.upload.maximum_size=1044464
+intorobot-fig.upload.maximum_size=1310720
 intorobot-fig.upload.maximum_data_size=294912
 intorobot-fig.upload.wait_for_upload_port=true
 
@@ -551,7 +551,7 @@ intorobot-fig.menu.UploadSpeed.512000.upload.speed=512000
 onehorse32dev.name=Onehorse ESP32 Dev Module
 
 onehorse32dev.upload.tool=esptool
-onehorse32dev.upload.maximum_size=1044464
+onehorse32dev.upload.maximum_size=1310720
 onehorse32dev.upload.maximum_data_size=294912
 onehorse32dev.upload.wait_for_upload_port=true
 
@@ -592,7 +592,7 @@ onehorse32dev.menu.UploadSpeed.512000.upload.speed=512000
 featheresp32.name=Adafruit ESP32 Feather
 
 featheresp32.upload.tool=esptool
-featheresp32.upload.maximum_size=1044464
+featheresp32.upload.maximum_size=1310720
 featheresp32.upload.maximum_data_size=294912
 featheresp32.upload.wait_for_upload_port=true
 
@@ -633,7 +633,7 @@ featheresp32.menu.UploadSpeed.512000.upload.speed=512000
 nodemcu-32s.name=NodeMCU-32S
 
 nodemcu-32s.upload.tool=esptool
-nodemcu-32s.upload.maximum_size=1044464
+nodemcu-32s.upload.maximum_size=1310720
 nodemcu-32s.upload.maximum_data_size=294912
 nodemcu-32s.upload.wait_for_upload_port=true
 
