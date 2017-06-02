@@ -209,7 +209,7 @@ bool UpdateClass::_verifyHeader(uint8_t data) {
 
 bool UpdateClass::_verifyEnd() {
     if(_command == U_FLASH) {
-        if(!_partitionIsBootable(_partition)) {
+        if(!_enablePartition || !_partitionIsBootable(_partition)) {
             _abort(UPDATE_ERROR_READ);
             return false;
         }
