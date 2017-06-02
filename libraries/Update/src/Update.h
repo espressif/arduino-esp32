@@ -137,6 +137,15 @@ class UpdateClass {
       return written;
     }
 
+    /*
+      check if there is a firmware on the other OTA partition that you can bootinto
+    */
+    bool canRollBack();
+    /*
+      set the other OTA partition as bootable (reboot to enable)
+    */
+    bool rollBack();
+
   private:
     void _reset();
     void _abort(uint8_t err);
