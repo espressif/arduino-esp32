@@ -56,8 +56,9 @@ static uart_t _uart_bus_array[3] = {
     {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL}
 };
 #else
-#define UART_MUTEX_LOCK()    do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
-#define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
+static BaseType_t _pxHigherPriorityTaskWoken_ = pdFALSE;
+#define UART_MUTEX_LOCK()    do {} while (xSemaphoreTakeFromISR(uart->lock, &_pxHigherPriorityTaskWoken_) != pdPASS)
+#define UART_MUTEX_UNLOCK()  xSemaphoreGiveFromISR(uart->lock, &_pxHigherPriorityTaskWoken_)
 
 static uart_t _uart_bus_array[3] = {
     {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL},
@@ -377,9 +378,10 @@ int log_printf(const char *format, ...)
     if(s_uart_debug_nr < 0){
         return 0;
     }
-    static char loc_buf[64];
+    char loc_buf[64];
     char * temp = loc_buf;
-    int len;
+    int len, i;
+    void (* put_char)(char) = NULL;
     va_list arg;
     va_list copy;
     va_start(arg, format);
@@ -392,17 +394,37 @@ int log_printf(const char *format, ...)
             return 0;
         }
     }
+
+    switch(s_uart_debug_nr) {
+    case 0:
+        put_char = &uart0_write_char;
+        break;
+    case 1:
+        put_char = &uart1_write_char;
+        break;
+    case 2:
+        put_char = &uart2_write_char;
+        break;
+    default:
+        return 0;
+    }
     vsnprintf(temp, len+1, format, arg);
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_uart_bus_array[s_uart_debug_nr].lock){
-        while (xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY) != pdPASS);
-        ets_printf("%s", temp);
-        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
+        while (xSemaphoreTakeFromISR(_uart_bus_array[s_uart_debug_nr].lock, &_pxHigherPriorityTaskWoken_) != pdPASS);
+        for(i=0;i<len;i++){
+            put_char(temp[i]);
+        }
+        xSemaphoreGiveFromISR(_uart_bus_array[s_uart_debug_nr].lock, &_pxHigherPriorityTaskWoken_);
     } else {
-        ets_printf("%s", temp);
+        for(i=0;i<len;i++){
+            put_char(temp[i]);
+        }
     }
 #else
-    ets_printf("%s", temp);
+    for(i=0;i<len;i++){
+        put_char(temp[i]);
+    }
 #endif
     va_end(arg);
     if(len > 64){
