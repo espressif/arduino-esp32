@@ -346,6 +346,34 @@ uint16_t WiFiClient::remotePort() const
     return remotePort(fd());
 }
 
+IPAddress WiFiClient::localIP(int fd) const
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof addr;
+    getsockname(fd, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+}
+
+uint16_t WiFiClient::localPort(int fd) const
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof addr;
+    getsockname(fd, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return ntohs(s->sin_port);
+}
+
+IPAddress WiFiClient::localIP() const
+{
+    return localIP(fd());
+}
+
+uint16_t WiFiClient::localPort() const
+{
+    return localPort(fd());
+}
+
 bool WiFiClient::operator==(const WiFiClient& rhs)
 {
     return clientSocketHandle == rhs.clientSocketHandle && remotePort() == rhs.remotePort() && remoteIP() == rhs.remoteIP();
