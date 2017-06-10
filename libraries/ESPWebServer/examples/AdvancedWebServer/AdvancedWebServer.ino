@@ -32,6 +32,10 @@
 #include <ESPWebServer.h>
 #include <ESPmDNS.h>
 
+#ifndef LED_BUILTIN
+  #define LED_BUILTIN 2
+#endif
+
 const char *ssid = "YourSSIDHere";
 const char *password = "YourPSKHere";
 
