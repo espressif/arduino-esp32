@@ -44,6 +44,7 @@ public:
     int connect(const char *host, uint16_t port);
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
+    size_t write_P(PGM_P buf, size_t size);
     int available();
     int read();
     int read(uint8_t *buf, size_t size);
