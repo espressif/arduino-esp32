@@ -69,7 +69,7 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     if(lhs.ap.ssid_hidden != rhs.ap.ssid_hidden) {
         return false;
     }
-    if(lhs.max_connection != rhs.max_connection) {
+    if(lhs.ap.max_connection != rhs.ap.max_connection) {
         return false;
     }
     return true;
