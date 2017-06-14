@@ -50,6 +50,8 @@ class WiFiServer : public Server {
     using Print::write;
 
     void end();
+    void close();
+    void stop();
     operator bool(){return _listening;}
     int setTimeout(uint32_t seconds);
     void stopAll();

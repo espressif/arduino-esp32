@@ -224,6 +224,11 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     return res;
 }
 
+size_t WiFiClient::write_P(PGM_P buf, size_t size)
+{
+    return write(buf, size);
+}
+
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
     if(!available()) {
