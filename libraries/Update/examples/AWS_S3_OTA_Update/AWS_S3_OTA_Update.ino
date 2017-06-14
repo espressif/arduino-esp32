@@ -9,16 +9,12 @@
    Step 2 : Upload it to your Amazon S3 account, in a bucket of your choice
    Step 3 : Once uploaded, inside S3, select the bin file >> More (button on top of the file list) >> Make Public
    Step 4 : You S3 URL => http://bucket-name.s3.ap-south-1.amazonaws.com/sketch-name.ino.bin
-   Step 5 : Build the above URL from and fire it either in your browser or curl it `curl -I -v http://bucket-name.ap-south-1.amazonaws.com/sketch-name.ino.bin` to validate the same
+   Step 5 : Build the above URL and fire it either in your browser or curl it `curl -I -v http://bucket-name.ap-south-1.amazonaws.com/sketch-name.ino.bin` to validate the same
    Step 6:  Plug in your SSID, Password, S3 Host and Bin file below
 
    Build & upload
-   Step 1 : Preferences > Show verbose output during `compilation`
-   Step 2 : ctrp + r (Verify sketch or build sketch)
-   Step 3 : In the verbose log, you will find a path t0 `sketch-name.iono.bin` on your machine. Example from Apple OSX: 
-   "/Users/arvindravulavaru/Documents/Arduino/hardware/espressif/esp32/tools/esptool" --chip esp32 elf2image --flash_mode "dio" --flash_freq "80m" --flash_size "4MB" -o "/var/folders/9c/_rypm_vn1ml3mljk1lqkvrsc0000gn/T/arduino_build_137334/StartCounter.ino.bin"
-   Step 4 : Navigate to that path and find the bin file.
-   Step 5 : Upload to S3 and continue the above process
+   Step 1 : Menu > Sketch > Export Compiled Library. The bin file will be saved in the sketch folder (Menu > Sketch > Show Sketch folder)
+   Step 2 : Upload bin to S3 and continue the above process
 
    // Check the bottom of this sketch for sample serial monitor log, during and after successful OTA Update
 */
@@ -43,35 +39,12 @@ String host = "bucket-name.s3.ap-south-1.amazonaws.com"; // Host => bucket-name.
 int port = 80; // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
 String bin = "/sketch-name.ino.bin"; // bin file name with a slash in front.
 
-
-void setup() {
-  //Begin Serial
-  Serial.begin(115200);
-  delay(10);
-
-  Serial.println("Connecting to " + String(SSID));
-
-  // Connect to provided SSID and PSWD
-  WiFi.begin(SSID, PSWD);
-
-  // Wait for connection to establish
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("."); // Keep the serial monitor lit!
-    delay(500);
-  }
-
-  // Connection Succeed
-  Serial.println("");
-  Serial.println("Connected to " + String(SSID));
-
-  // Execute OTA Update
-  execOTA();
+// Utility to extract header value from headers
+String getHeaderValue(String header, String headerName) {
+  return header.substring(strlen(headerName.c_str()));
 }
 
-void loop() {
-  // chill
-}
-
+// OTA Logic 
 void execOTA() {
   Serial.println("Connecting to: " + String(host));
   // Connect to S3
@@ -108,7 +81,7 @@ void execOTA() {
         Content-Type: application/octet-stream
         Content-Length: 357280
         Server: AmazonS3
-
+                                   
         {{BIN FILE CONTENTS}}
 
     */
@@ -209,9 +182,32 @@ void execOTA() {
   }
 }
 
-// Utility to extract header value from headers
-String getHeaderValue(String header, String headerName) {
-  return header.substring(strlen(headerName.c_str()));
+void setup() {
+  //Begin Serial
+  Serial.begin(115200);
+  delay(10);
+
+  Serial.println("Connecting to " + String(SSID));
+
+  // Connect to provided SSID and PSWD
+  WiFi.begin(SSID, PSWD);
+
+  // Wait for connection to establish
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print("."); // Keep the serial monitor lit!
+    delay(500);
+  }
+
+  // Connection Succeed
+  Serial.println("");
+  Serial.println("Connected to " + String(SSID));
+
+  // Execute OTA Update
+  execOTA();
+}
+
+void loop() {
+  // chill
 }
 
 /*
