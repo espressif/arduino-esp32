@@ -1,6 +1,6 @@
 //Simple sketch to access the internal hall effect detector on the esp32.
 //values can be quite low. 
-//Brian Degger 
+//Brian Degger / @sctv  
 
 int val = 0;
 void setup() {
