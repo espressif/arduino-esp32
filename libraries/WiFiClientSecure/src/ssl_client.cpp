@@ -8,7 +8,6 @@
 
 #include "Arduino.h"
 #include <esp32-hal-log.h>
-#include <lwip/sockets.h>
 #include <lwip/err.h>
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
