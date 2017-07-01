@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Sketch shows how SimpleBLE to advertise the name of the device and change it on button press
-// Usefull if you want to advertise some short message
-// Button is attached between GPIO 0 and GND and modes are switched with each press
+// Sketch shows how to use SimpleBLE to advertise the name of the device and change it on the press of a button
+// Useful if you want to advertise some sort of message
+// Button is attached between GPIO 0 and GND, and the name changes with each button press
 
 #include "SimpleBLE.h"
 SimpleBLE ble;
