@@ -671,7 +671,7 @@ nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
-esp32.name=MH ET LIVE ESP32DevKIT
+MH-ET-LIVE-ESP32DevKIT.name=MH ET LIVE ESP32DevKIT
 
 esp32.upload.tool=esptool
 esp32.upload.maximum_size=1044464
@@ -684,7 +684,7 @@ esp32.serial.disableRTS=true
 esp32.build.mcu=esp32
 esp32.build.core=esp32
 esp32.build.variant=esp32
-esp32.build.board=MH ET LIVE ESP32DevKIT
+esp32.build.board=MH-ET-LIVE-ESP32DevKIT
 
 esp32.build.f_cpu=240000000L
 esp32.build.flash_mode=dio
