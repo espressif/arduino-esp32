@@ -673,55 +673,55 @@ nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
 
 MH-ET-LIVE-ESP32DevKIT.name=MH ET LIVE ESP32DevKIT
 
-esp32.upload.tool=esptool
-esp32.upload.maximum_size=1044464
-esp32.upload.maximum_data_size=294912
-esp32.upload.wait_for_upload_port=true
+MH-ET-LIVE-ESP32DevKIT.upload.tool=esptool
+MH-ET-LIVE-ESP32DevKIT.upload.maximum_size=1044464
+MH-ET-LIVE-ESP32DevKIT.upload.maximum_data_size=294912
+MH-ET-LIVE-ESP32DevKIT.upload.wait_for_upload_port=true
 
-esp32.serial.disableDTR=true
-esp32.serial.disableRTS=true
+MH-ET-LIVE-ESP32DevKIT.serial.disableDTR=true
+MH-ET-LIVE-ESP32DevKIT.serial.disableRTS=true
 
-esp32.build.mcu=esp32
-esp32.build.core=esp32
-esp32.build.variant=esp32
-esp32.build.board=MH-ET-LIVE-ESP32DevKIT
+MH-ET-LIVE-ESP32DevKIT.build.mcu=esp32
+MH-ET-LIVE-ESP32DevKIT.build.core=esp32
+MH-ET-LIVE-ESP32DevKIT.build.variant=esp32
+MH-ET-LIVE-ESP32DevKIT.build.board=MH-ET-LIVE-ESP32DevKIT
 
-esp32.build.f_cpu=240000000L
-esp32.build.flash_mode=dio
-esp32.build.flash_size=4MB
+MH-ET-LIVE-ESP32DevKIT.build.f_cpu=240000000L
+MH-ET-LIVE-ESP32DevKIT.build.flash_mode=dio
+MH-ET-LIVE-ESP32DevKIT.build.flash_size=4MB
 
-esp32.menu.FlashFreq.80=80MHz
-esp32.menu.FlashFreq.80.build.flash_freq=80m
-esp32.menu.FlashFreq.40=40MHz
-esp32.menu.FlashFreq.40.build.flash_freq=40m
+MH-ET-LIVE-ESP32DevKIT.menu.FlashFreq.80=80MHz
+MH-ET-LIVE-ESP32DevKIT.menu.FlashFreq.80.build.flash_freq=80m
+MH-ET-LIVE-ESP32DevKIT.menu.FlashFreq.40=40MHz
+MH-ET-LIVE-ESP32DevKIT.menu.FlashFreq.40.build.flash_freq=40m
 
-esp32.menu.UploadSpeed.921600=921600
-esp32.menu.UploadSpeed.921600.upload.speed=921600
-esp32.menu.UploadSpeed.115200=115200
-esp32.menu.UploadSpeed.115200.upload.speed=115200
-esp32.menu.UploadSpeed.256000.windows=256000
-esp32.menu.UploadSpeed.256000.upload.speed=256000
-esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
-esp32.menu.UploadSpeed.230400=230400
-esp32.menu.UploadSpeed.230400.upload.speed=230400
-esp32.menu.UploadSpeed.460800.linux=460800
-esp32.menu.UploadSpeed.460800.macosx=460800
-esp32.menu.UploadSpeed.460800.upload.speed=460800
-esp32.menu.UploadSpeed.512000.windows=512000
-esp32.menu.UploadSpeed.512000.upload.speed=512000
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.921600=921600
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.921600.upload.speed=921600
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.115200=115200
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.115200.upload.speed=115200
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.256000.windows=256000
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.256000.upload.speed=256000
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.230400.windows.upload.speed=256000
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.230400=230400
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.230400.upload.speed=230400
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.460800.linux=460800
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.460800.macosx=460800
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.460800.upload.speed=460800
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.512000.windows=512000
+MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.512000.upload.speed=512000
 
-esp32.menu.DebugLevel.none=None
-esp32.menu.DebugLevel.none.build.code_debug=0
-esp32.menu.DebugLevel.error=Error
-esp32.menu.DebugLevel.error.build.code_debug=1
-esp32.menu.DebugLevel.warn=Warn
-esp32.menu.DebugLevel.warn.build.code_debug=2
-esp32.menu.DebugLevel.info=Info
-esp32.menu.DebugLevel.info.build.code_debug=3
-esp32.menu.DebugLevel.debug=Debug
-esp32.menu.DebugLevel.debug.build.code_debug=4
-esp32.menu.DebugLevel.verbose=Verbose
-esp32.menu.DebugLevel.verbose.build.code_debug=5
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.none=None
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.none.build.code_debug=0
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.error=Error
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.error.build.code_debug=1
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.warn=Warn
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.warn.build.code_debug=2
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.info=Info
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.info.build.code_debug=3
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.debug=Debug
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.debug.build.code_debug=4
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.verbose=Verbose
+MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
