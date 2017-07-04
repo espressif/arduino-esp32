@@ -69,6 +69,9 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     if(lhs.ap.ssid_hidden != rhs.ap.ssid_hidden) {
         return false;
     }
+    if(lhs.ap.max_connection != rhs.ap.max_connection) {
+        return false;
+    }
     return true;
 }
 
@@ -79,12 +82,13 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
 
 /**
  * Set up an access point
- * @param ssid          Pointer to the SSID (max 63 char).
- * @param passphrase    (for WPA2 min 8 char, for open use NULL)
- * @param channel       WiFi channel number, 1 - 13.
- * @param ssid_hidden   Network cloaking (0 = broadcast SSID, 1 = hide SSID)
- */
-bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden)
+ * @param ssid              Pointer to the SSID (max 63 char).
+ * @param passphrase        (for WPA2 min 8 char, for open use NULL)
+ * @param channel           WiFi channel number, 1 - 13.
+ * @param ssid_hidden       Network cloaking (0 = broadcast SSID, 1 = hide SSID)
+ * @param max_connection    Max simultaneous connected clients, 1 - 4.
+*/
+bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection)
 {
 
     if(!WiFi.enableAP(true)) {
@@ -109,7 +113,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     conf.ap.channel = channel;
     conf.ap.ssid_len = strlen(ssid);
     conf.ap.ssid_hidden = ssid_hidden;
-    conf.ap.max_connection = 4;
+    conf.ap.max_connection = max_connection;
     conf.ap.beacon_interval = 100;
 
     if(!passphrase || strlen(passphrase) == 0) {

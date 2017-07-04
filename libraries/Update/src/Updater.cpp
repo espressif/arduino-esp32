@@ -35,6 +35,34 @@ static const char * _err2str(uint8_t _error){
     return ("UNKNOWN");
 }
 
+static bool _partitionIsBootable(const esp_partition_t* partition){
+    uint8_t buf[4];
+    if(!partition){
+        return false;
+    }
+    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
+        return false;
+    }
+
+    if(buf[0] != ESP_IMAGE_HEADER_MAGIC) {
+        return false;
+    }
+    return true;
+}
+
+static bool _enablePartition(const esp_partition_t* partition){
+    uint8_t buf[4];
+    if(!partition){
+        return false;
+    }
+    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
+        return false;
+    }
+    buf[0] = ESP_IMAGE_HEADER_MAGIC;
+
+    return ESP.flashWrite(partition->address, (uint32_t*)buf, 4);
+}
+
 UpdateClass::UpdateClass()
 : _error(0)
 , _buffer(0)
@@ -54,6 +82,22 @@ void UpdateClass::_reset() {
     _progress = 0;
     _size = 0;
     _command = U_FLASH;
+}
+
+bool UpdateClass::canRollBack(){
+    if(_buffer){ //Update is running
+        return false;
+    }
+    const esp_partition_t* partition = esp_ota_get_next_update_partition(NULL);
+    return _partitionIsBootable(partition);
+}
+
+bool UpdateClass::rollBack(){
+    if(_buffer){ //Update is running
+        return false;
+    }
+    const esp_partition_t* partition = esp_ota_get_next_update_partition(NULL);
+    return _partitionIsBootable(partition) && !esp_ota_set_boot_partition(partition);
 }
 
 bool UpdateClass::begin(size_t size, int command) {
@@ -121,6 +165,17 @@ void UpdateClass::abort(){
 }
 
 bool UpdateClass::_writeBuffer(){
+    //first bytes of new firmware
+    if(!_progress && _command == U_FLASH){
+        //check magic
+        if(_buffer[0] != ESP_IMAGE_HEADER_MAGIC){
+            _abort(UPDATE_ERROR_MAGIC_BYTE);
+            return false;
+        }
+        //remove magic byte from the firmware now and write it upon success
+        //this ensures that partially written firmware will not be bootable
+        _buffer[0] = 0xFF;
+    }
     if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
         _abort(UPDATE_ERROR_ERASE);
         return false;
@@ -128,6 +183,10 @@ bool UpdateClass::_writeBuffer(){
     if (!ESP.flashWrite(_partition->address + _progress, (uint32_t*)_buffer, _bufferLen)) {
         _abort(UPDATE_ERROR_WRITE);
         return false;
+    }
+    //restore magic or md5 will fail
+    if(!_progress && _command == U_FLASH){
+        _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
     }
     _md5.add(_buffer, _bufferLen);
     _progress += _bufferLen;
@@ -150,14 +209,8 @@ bool UpdateClass::_verifyHeader(uint8_t data) {
 
 bool UpdateClass::_verifyEnd() {
     if(_command == U_FLASH) {
-        uint8_t buf[4];
-        if(!ESP.flashRead(_partition->address, (uint32_t*)buf, 4)) {
+        if(!_enablePartition(_partition) || !_partitionIsBootable(_partition)) {
             _abort(UPDATE_ERROR_READ);
-            return false;
-        }
-
-        if(buf[0] != ESP_IMAGE_HEADER_MAGIC) {
-            _abort(UPDATE_ERROR_MAGIC_BYTE);
             return false;
         }
 
@@ -168,6 +221,7 @@ bool UpdateClass::_verifyEnd() {
         _reset();
         return true;
     } else if(_command == U_SPIFFS) {
+        _reset();
         return true;
     }
     return false;

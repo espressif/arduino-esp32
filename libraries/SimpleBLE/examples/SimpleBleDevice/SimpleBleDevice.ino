@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Sketch shows how SimpleBLE to advertise the name of the device and change it on button press
-// Usefull if you want to advertise some short message
-// Button is attached between GPIO 0 and GND and modes are switched with each press
+// Sketch shows how to use SimpleBLE to advertise the name of the device and change it on the press of a button
+// Useful if you want to advertise some sort of message
+// Button is attached between GPIO 0 and GND, and the device name changes each time the button is pressed
 
 #include "SimpleBLE.h"
 SimpleBLE ble;
 
 void onButton(){
-    String out = "BLE32 at: ";
+    String out = "BLE32 name: ";
     out += String(millis() / 1000);
     Serial.println(out);
     ble.begin(out);
@@ -33,7 +33,7 @@ void setup() {
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
     ble.begin("ESP32 SimpleBLE");
-    Serial.println("Press the button to change the device name");
+    Serial.println("Press the button to change the device's name");
 }
 
 void loop() {

@@ -11,6 +11,7 @@
     - Select source and destination
         - Source Location: ```https://github.com/espressif/arduino-esp32.git```
         - Target Directory: ```C:/Users/[YOUR_USER_NAME]/Documents/Arduino/hardware/espressif/esp32```
+        - Change this to your Sketchbook Location if you have a different directory listed underneath the "Sketchbook location" in Arduino preferences.
         - Click ```Clone``` to start cloning the repository
         
             ![Step 2](win-gui-2.png)

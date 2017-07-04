@@ -21,6 +21,7 @@
 #include <lwip/netdb.h>
 
 #undef write
+#undef close
 
 int WiFiServer::setTimeout(uint32_t seconds){
   struct timeval tv;
@@ -103,8 +104,16 @@ bool WiFiServer::hasClient() {
 }
 
 void WiFiServer::end(){
-  close(sockfd);
+  lwip_close_r(sockfd);
   sockfd = -1;
   _listening = false;
+}
+
+void WiFiServer::close(){
+  end();
+}
+
+void WiFiServer::stop(){
+  end();
 }
 
