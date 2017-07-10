@@ -186,6 +186,8 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     int res =0;
     int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
     int socketFileDescriptor = fd();
+    size_t totalBytesSent = 0;
+    size_t bytesRemaining = size;
 
     if(!_connected || (socketFileDescriptor < 0)) {
         return 0;
@@ -206,8 +208,18 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
         }
 
         if(FD_ISSET(socketFileDescriptor, &set)) {
-            res = send(socketFileDescriptor, (void*) buf, size, MSG_DONTWAIT);
-            if(res < 0) {
+            res = send(socketFileDescriptor, (void*) buf, bytesRemaining, MSG_DONTWAIT);
+            if(res > 0) {
+                totalBytesSent += res;
+                if (totalBytesSent >= size) {
+                    //completed successfully
+                    retry = 0;
+                } else {
+                    buf += res;
+                    bytesRemaining -= res;
+                }
+            }
+            else if(res < 0) {
                 log_e("%d", errno);
                 if(errno != EAGAIN) {
                     //if resource was busy, can try again, otherwise give up
@@ -215,13 +227,13 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
                     res = 0;
                     retry = 0;
                 }
-            } else {
-                //completed successfully
-                retry = 0;
+            }
+            else {
+                // Try again
             }
         }
     }
-    return res;
+    return totalBytesSent;
 }
 
 size_t WiFiClient::write_P(PGM_P buf, size_t size)
