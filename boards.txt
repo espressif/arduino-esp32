@@ -710,20 +710,48 @@ MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.460800.upload.speed=460800
 MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.512000.windows=512000
 MH-ET-LIVE-ESP32DevKIT.menu.UploadSpeed.512000.upload.speed=512000
 
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.none=None
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.none.build.code_debug=0
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.error=Error
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.error.build.code_debug=1
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.warn=Warn
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.warn.build.code_debug=2
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.info=Info
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.info.build.code_debug=3
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.debug=Debug
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.debug.build.code_debug=4
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.verbose=Verbose
-MH-ET-LIVE-ESP32DevKIT.menu.DebugLevel.verbose.build.code_debug=5
-
 ##############################################################
+
+MH-ET-LIVE-ESP32MiniKit.name=MH ET LIVE ESP32MiniKit
+
+MH-ET-LIVE-ESP32MiniKit.upload.tool=esptool
+MH-ET-LIVE-ESP32MiniKit.upload.maximum_size=1044464
+MH-ET-LIVE-ESP32MiniKit.upload.maximum_data_size=294912
+MH-ET-LIVE-ESP32MiniKit.upload.wait_for_upload_port=true
+
+MH-ET-LIVE-ESP32MiniKit.serial.disableDTR=true
+MH-ET-LIVE-ESP32MiniKit.serial.disableRTS=true
+
+MH-ET-LIVE-ESP32MiniKit.build.mcu=esp32
+MH-ET-LIVE-ESP32MiniKit.build.core=esp32
+MH-ET-LIVE-ESP32MiniKit.build.variant=esp32
+MH-ET-LIVE-ESP32MiniKit.build.board=MH-ET-LIVE-ESP32MiniKit
+
+MH-ET-LIVE-ESP32MiniKit.build.f_cpu=240000000L
+MH-ET-LIVE-ESP32MiniKit.build.flash_mode=dio
+MH-ET-LIVE-ESP32MiniKit.build.flash_size=4MB
+
+MH-ET-LIVE-ESP32MiniKit.menu.FlashFreq.80=80MHz
+MH-ET-LIVE-ESP32MiniKit.menu.FlashFreq.80.build.flash_freq=80m
+MH-ET-LIVE-ESP32MiniKit.menu.FlashFreq.40=40MHz
+MH-ET-LIVE-ESP32MiniKit.menu.FlashFreq.40.build.flash_freq=40m
+
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.921600=921600
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.921600.upload.speed=921600
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.115200=115200
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.115200.upload.speed=115200
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.256000.windows=256000
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.256000.upload.speed=256000
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.230400.windows.upload.speed=256000
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.230400=230400
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.230400.upload.speed=230400
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.460800.linux=460800
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.460800.macosx=460800
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.460800.upload.speed=460800
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.512000.windows=512000
+MH-ET-LIVE-ESP32MiniKit.menu.UploadSpeed.512000.upload.speed=512000
+
+#################################################################
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
 
