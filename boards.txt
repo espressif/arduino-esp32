@@ -683,7 +683,7 @@ MH-ET-LIVE-ESP32DevKIT.serial.disableRTS=true
 
 MH-ET-LIVE-ESP32DevKIT.build.mcu=esp32
 MH-ET-LIVE-ESP32DevKIT.build.core=esp32
-MH-ET-LIVE-ESP32DevKIT.build.variant=esp32
+MH-ET-LIVE-ESP32DevKIT.build.variant=mhetesp32devkit
 MH-ET-LIVE-ESP32DevKIT.build.board=MH-ET-LIVE-ESP32DevKIT
 
 MH-ET-LIVE-ESP32DevKIT.build.f_cpu=240000000L
@@ -724,7 +724,7 @@ MH-ET-LIVE-ESP32MiniKit.serial.disableRTS=true
 
 MH-ET-LIVE-ESP32MiniKit.build.mcu=esp32
 MH-ET-LIVE-ESP32MiniKit.build.core=esp32
-MH-ET-LIVE-ESP32MiniKit.build.variant=esp32
+MH-ET-LIVE-ESP32MiniKit.build.variant=mhetesp32minikit
 MH-ET-LIVE-ESP32MiniKit.build.board=MH-ET-LIVE-ESP32MiniKit
 
 MH-ET-LIVE-ESP32MiniKit.build.f_cpu=240000000L
