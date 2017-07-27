@@ -135,7 +135,8 @@ bool EEPROMClass::commit() {
 	  {
 		  ESP_LOGE(TAG, "error in Write");
 	  }
-	  else {
+	  else
+	  {
 		  _dirty = false;
 		  ret = true;
 	  }
