@@ -28,8 +28,6 @@
 
 static const char* TAG = "eeprom";
 
-//extern "C" uint32_t _SPIFFS_end;
-
 EEPROMClass::EEPROMClass(uint32_t sector)
 : _sector(sector)
 , _data(0)
@@ -47,12 +45,16 @@ EEPROMClass::EEPROMClass(void)
 }
 
 bool EEPROMClass::begin(size_t size) {
-  if (size <= 0)
+  if (size <= 0) {
     return false;
-  if (size > SPI_FLASH_SEC_SIZE)
-  size = SPI_FLASH_SEC_SIZE;
+  }
+  if (size > SPI_FLASH_SEC_SIZE) {
+    size = SPI_FLASH_SEC_SIZE;
+  }
   _mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA,ESP_PARTITION_SUBTYPE_ANY, EEPROM_FLASH_PARTITION_NAME);
-  if (_mypart == NULL) { return false; }
+  if (_mypart == NULL) {
+    return false;
+  }
   size = (size + 3) & (~3);
 
   if (_data) {
@@ -64,29 +66,34 @@ bool EEPROMClass::begin(size_t size) {
 
   noInterrupts();
   bool ret = false;
- if( esp_partition_read (_mypart,0, (void *) _data,_size)==ESP_OK)ret=true;
+  if (esp_partition_read (_mypart,0, (void *) _data,_size)==ESP_OK {
+    ret=true;
+  }
   interrupts();
+
   return ret;
 }
 
 void EEPROMClass::end() {
-  if (!_size)
+  if (!_size) {
     return;
+  }
 
   commit();
-  if(_data) {
+  if (_data) {
     delete[] _data;
   }
   _data = 0;
   _size = 0;
 }
 
-
 uint8_t EEPROMClass::read(int address) {
-  if (address < 0 || (size_t)address >= _size)
+  if (address < 0 || (size_t)address >= _size) {
     return 0;
-  if(!_data)
+  }
+  if (!_data) {
     return 0;
+  }
 
   return _data[address];
 }
@@ -110,9 +117,9 @@ bool EEPROMClass::commit() {
   bool ret = false;
   if (!_size)
     return false;
-  if(!_dirty)
+  if (!_dirty)
     return true;
-  if(!_data)
+  if (!_data)
     return false;
 
   noInterrupts();
