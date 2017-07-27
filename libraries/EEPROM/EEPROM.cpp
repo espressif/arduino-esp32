@@ -66,7 +66,7 @@ bool EEPROMClass::begin(size_t size) {
 
   noInterrupts();
   bool ret = false;
-  if (esp_partition_read (_mypart,0, (void *) _data,_size)==ESP_OK {
+  if (esp_partition_read (_mypart,0, (void *) _data,_size)==ESP_OK) {
     ret=true;
   }
   interrupts();
