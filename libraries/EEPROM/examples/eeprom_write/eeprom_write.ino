@@ -14,15 +14,19 @@ int addr = 0;
 #define N512 64
 void setup()
 {
-
 	Serial.begin(115200);
 	Serial.println("start...");
-	if (!EEPROM.begin(N512)) {Serial.println("failed to initialise EEPROM"); delay(1000000);
-}
+	if (!EEPROM.begin(N512))
+	{
+		Serial.println("failed to initialise EEPROM"); delay(1000000);
+	}
 	Serial.println(" bytes read from Flash . Values are:");
-	for (int i = 0; i < N512; i++) { Serial.print(byte(EEPROM.read(i))); Serial.print(" "); }
-	Serial.println(); 
-  Serial.println("writing random n. in memory");
+	for (int i = 0; i < N512; i++)
+	{
+		Serial.print(byte(EEPROM.read(i))); Serial.print(" ");
+	}
+	Serial.println();
+	Serial.println("writing random n. in memory");
 }
 
 void loop()
@@ -44,14 +48,16 @@ void loop()
   if (addr == N512)
   {
 	  Serial.println();
-    addr = 0;
-    EEPROM.commit();
-	Serial.print(N512);
-	Serial.println(" bytes written on Flash . Values are:");
-	for (int i = 0; i < N512; i++) { Serial.print(byte(EEPROM.read(i))); Serial.print(" "); }
-	Serial.println(); Serial.println("----------------------------------");
+	  addr = 0;
+	  EEPROM.commit();
+	  Serial.print(N512);
+	  Serial.println(" bytes written on Flash . Values are:");
+	  for (int i = 0; i < N512; i++)
+	  {
+		  Serial.print(byte(EEPROM.read(i))); Serial.print(" ");
+	  }
+	  Serial.println(); Serial.println("----------------------------------");
   }
   
   delay(100);
-  
 }
