@@ -62,15 +62,12 @@ bool EEPROMClass::begin(size_t size) {
   }
 
   _data = new uint8_t[size];
-  _size = size;
-
-  noInterrupts();
+  _size = size;	
   bool ret = false;
   if (esp_partition_read (_mypart,0, (void *) _data,_size)==ESP_OK) {
     ret=true;
   }
-  interrupts();
-
+  
   return ret;
 }
 
@@ -124,21 +121,21 @@ bool EEPROMClass::commit() {
 
   noInterrupts();
 
-  if (esp_partition_erase_range(_mypart, 0, 4096) != ESP_OK)
-  {
-	  ESP_LOGE(TAG, "partition erase err.");
+  if (esp_partition_erase_range(_mypart, 0, SPI_FLASH_SEC_SIZE) != ESP_OK)
+  {	  
+     ESP_LOGE(TAG, "partition erase err.");
   }
   else
   {
-	  if (esp_partition_write(_mypart, 0, (void *)_data, _size) == ESP_ERR_INVALID_SIZE)
-	  {
-		  ESP_LOGE(TAG, "error in Write");
-	  }
-	  else
-	  {
-		  _dirty = false;
-		  ret = true;
-	  }
+     if (esp_partition_write(_mypart, 0, (void *)_data, _size) == ESP_ERR_INVALID_SIZE)
+     {
+	ESP_LOGE(TAG, "error in Write");
+     }
+     else
+     {
+	_dirty = false;
+	ret = true;
+     }
   }
   interrupts();
 
