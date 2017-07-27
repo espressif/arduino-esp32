@@ -123,8 +123,7 @@ bool EEPROMClass::commit() {
     return false;
 
   noInterrupts();
- // if(spi_flash_erase_sector(_sector) == SPI_FLASH_RESULT_OK) {
- //   if(spi_flash_write(_sector * SPI_FLASH_SEC_SIZE, reinterpret_cast<uint32_t*>(_data), _size) == SPI_FLASH_RESULT_OK) {
+
   if (esp_partition_erase_range(_mypart, 0, 4096) != ESP_OK)
   {
 	  ESP_LOGE(TAG, "partition erase err.");
