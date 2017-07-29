@@ -8,7 +8,6 @@
 
 #include "Arduino.h"
 #include <esp32-hal-log.h>
-#include <lwip/sockets.h>
 #include <lwip/err.h>
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
@@ -181,6 +180,18 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     } else {
         log_i("Certificate verified.");
     }
+    
+    if (rootCABuff != NULL) {
+        mbedtls_x509_crt_free(&ssl_client->ca_cert);
+    }
+
+    if (cli_cert != NULL) {
+        mbedtls_x509_crt_free(&ssl_client->client_cert);
+    }
+
+    if (cli_key != NULL) {
+        mbedtls_pk_free(&ssl_client->client_key);
+    }    
 
     log_i("Free heap after TLS %u", xPortGetFreeHeapSize());
 
@@ -201,18 +212,6 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
-
-    if (rootCABuff != NULL) {
-        mbedtls_x509_crt_free(&ssl_client->ca_cert);
-    }
-
-    if (cli_cert != NULL) {
-        mbedtls_x509_crt_free(&ssl_client->client_cert);
-    }
-
-    if (cli_key != NULL) {
-        mbedtls_pk_free(&ssl_client->client_key);
-    }
 }
 
 

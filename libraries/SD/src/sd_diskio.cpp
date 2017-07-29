@@ -84,22 +84,14 @@ void sdDeselectCard(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     digitalWrite(card->ssPin, HIGH);
-    card->spi->write(0xFF);
 }
 
 bool sdSelectCard(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     digitalWrite(card->ssPin, LOW);
-    card->spi->write(0xFF);
-
-    if (sdWait(pdrv, 500)) {
-        return true;
-    } else {
-        log_e("timeout");
-        sdDeselectCard(pdrv);
-        return false;
-    }
+    sdWait(pdrv, 300);
+    return true;
 }
 
 char sdCommand(uint8_t pdrv, char cmd, unsigned int arg, unsigned int* resp)
@@ -447,6 +439,11 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
     }
 
     card->spi->beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
+
+    digitalWrite(card->ssPin, HIGH);
+    for (uint8_t i = 0; i < 20; i++) {
+        card->spi->transfer(0XFF);
+    }
 
     if (sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
         log_w("GO_IDLE_STATE failed");

@@ -224,51 +224,9 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     return res;
 }
 
-
 size_t WiFiClient::write_P(PGM_P buf, size_t size)
 {
-    int res =0;
-    int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
-    int socketFileDescriptor = fd();
-
-    if(!_connected || (socketFileDescriptor < 0)) {
-        return 0;
-    }
-
-    while(retry) {
-        //use select to make sure the socket is ready for writing
-        fd_set set;
-        struct timeval tv;
-        FD_ZERO(&set);        // empties the set
-        FD_SET(socketFileDescriptor, &set); // adds FD to the set
-        tv.tv_sec = 0;
-        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
-        retry--;
-
-        if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
-            return 0;
-        }
-
-        if(FD_ISSET(socketFileDescriptor, &set)) {
-            uint8_t* puf = new uint8_t[size];
-            memcpy_P(puf, buf, size);
-            res = send(socketFileDescriptor, (void*) puf, size, MSG_DONTWAIT);
-            delete[] puf;
-            if(res < 0) {
-                log_e("%d", errno);
-                if(errno != EAGAIN) {
-                    //if resource was busy, can try again, otherwise give up
-                    stop();
-                    res = 0;
-                    retry = 0;
-                }
-            } else {
-                //completed successfully
-                retry = 0;
-            }
-        }
-    }
-    return res;
+    return write(buf, size);
 }
 
 int WiFiClient::read(uint8_t *buf, size_t size)
@@ -391,6 +349,34 @@ IPAddress WiFiClient::remoteIP() const
 uint16_t WiFiClient::remotePort() const
 {
     return remotePort(fd());
+}
+
+IPAddress WiFiClient::localIP(int fd) const
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof addr;
+    getsockname(fd, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+}
+
+uint16_t WiFiClient::localPort(int fd) const
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof addr;
+    getsockname(fd, (struct sockaddr*)&addr, &len);
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return ntohs(s->sin_port);
+}
+
+IPAddress WiFiClient::localIP() const
+{
+    return localIP(fd());
+}
+
+uint16_t WiFiClient::localPort() const
+{
+    return localPort(fd());
 }
 
 bool WiFiClient::operator==(const WiFiClient& rhs)

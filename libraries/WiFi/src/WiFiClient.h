@@ -85,6 +85,10 @@ public:
     IPAddress remoteIP(int fd) const;
     uint16_t remotePort() const;
     uint16_t remotePort(int fd) const;
+    IPAddress localIP() const;
+    IPAddress localIP(int fd) const;
+    uint16_t localPort() const;
+    uint16_t localPort(int fd) const;
 
     //friend class WiFiServer;
     using Print::write;

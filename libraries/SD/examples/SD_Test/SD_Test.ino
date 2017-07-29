@@ -78,6 +78,7 @@ void readFile(fs::FS &fs, const char * path){
     while(file.available()){
         Serial.write(file.read());
     }
+    file.close();
 }
 
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -93,6 +94,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
     } else {
         Serial.println("Write failed");
     }
+    file.close();
 }
 
 void appendFile(fs::FS &fs, const char * path, const char * message){
@@ -108,6 +110,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     } else {
         Serial.println("Append failed");
     }
+    file.close();
 }
 
 void renameFile(fs::FS &fs, const char * path1, const char * path2){
