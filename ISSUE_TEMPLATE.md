@@ -9,7 +9,7 @@ https://github.com/me-no-dev/EspExceptionDecoder
 ### Hardware:
 Board:							?ESP32 Dev Module?
 Core Installation/update date:			?11/jul/2017?
-IDE name:							?Arduino IDE? ?Platform.io?
+IDE name:							?Arduino IDE? ?Platform.io? ?IDF component?
 Flash Frequency:					?40Mhz?
 Upload Speed:						?115200?
 
