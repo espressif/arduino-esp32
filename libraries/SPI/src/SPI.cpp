@@ -242,11 +242,12 @@ void SPIClass::writePattern(uint8_t * data, uint8_t size, uint32_t repeat)
 
     uint32_t byte = (size * repeat);
     uint8_t r = (64 / size);
+    const uint8_t max_bytes_FIFO = r * size;    // Max number of whole patterns (in bytes) that can fit into the hardware FIFO
 
     while(byte) {
-        if(byte > 64) {
+        if(byte > max_bytes_FIFO) {
             writePattern_(data, size, r);
-            byte -= 64;
+            byte -= max_bytes_FIFO;
         } else {
             writePattern_(data, size, (byte / size));
             byte = 0;
