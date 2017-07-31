@@ -255,6 +255,13 @@ bool WiFiSTAClass::reconnect()
 bool WiFiSTAClass::disconnect(bool wifioff)
 {
     bool ret;
+    wifi_config_t conf;
+    *conf.sta.ssid = 0;
+    *conf.sta.password = 0;
+
+    WiFi.getMode();
+    esp_wifi_start();
+    esp_wifi_set_config(WIFI_IF_STA, &conf);
     ret = esp_wifi_disconnect() == ESP_OK;
 
     if(wifioff) {
