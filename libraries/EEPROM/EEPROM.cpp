@@ -1,6 +1,6 @@
 /*
   EEPROM.cpp -ported by Paolo Becchi to Esp32  
-  
+  Op
   from esp8266 EEPROM emulation
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
@@ -119,7 +119,6 @@ bool EEPROMClass::commit() {
   if (!_data)
     return false;
 
-  noInterrupts();
 
   if (esp_partition_erase_range(_mypart, 0, SPI_FLASH_SEC_SIZE) != ESP_OK)
   {	  
@@ -137,7 +136,6 @@ bool EEPROMClass::commit() {
 	ret = true;
      }
   }
-  interrupts();
 
   return ret;
 }
