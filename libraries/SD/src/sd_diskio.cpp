@@ -417,10 +417,32 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 }
 
 
+namespace
+{
 
+struct AcquireSPI
+{
+    ardu_sdcard_t *card;
+    explicit AcquireSPI(ardu_sdcard_t* card)
+        : card(card)
+    {
+        card->spi->beginTransaction(SPISettings(card->frequency, MSBFIRST, SPI_MODE0));
+    }
+    AcquireSPI(ardu_sdcard_t* card, int frequency)
+        : card(card)
+    {
+        card->spi->beginTransaction(SPISettings(frequency, MSBFIRST, SPI_MODE0));
+    }
+    ~AcquireSPI()
+    {
+        card->spi->endTransaction();
+    }
+private:
+    AcquireSPI(AcquireSPI const&);
+    AcquireSPI& operator=(AcquireSPI const&);
+};
 
-
-
+}
 
 
 /*
@@ -438,7 +460,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         return card->status;
     }
 
-    card->spi->beginTransaction(SPISettings(400000, MSBFIRST, SPI_MODE0));
+    AcquireSPI card_locked(card, 400000);
 
     digitalWrite(card->ssPin, HIGH);
     for (uint8_t i = 0; i < 20; i++) {
@@ -538,13 +560,10 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         card->frequency = 25000000;
     }
 
-    card->spi->endTransaction();
-
     card->status &= ~STA_NOINIT;
     return card->status;
 
 unknown_card:
-    card->spi->endTransaction();
     card->type = CARD_UNKNOWN;
     return card->status;
 }
@@ -562,15 +581,13 @@ DRESULT ff_sd_read(uint8_t pdrv, uint8_t* buffer, DWORD sector, UINT count)
     }
     DRESULT res = RES_OK;
 
-    card->spi->beginTransaction(SPISettings(card->frequency, MSBFIRST, SPI_MODE0));
+    AcquireSPI lock(card);
 
     if (count > 1) {
         res = sdReadSectors(pdrv, (char*)buffer, sector, count) ? RES_OK : RES_ERROR;
     } else {
         res = sdReadSector(pdrv, (char*)buffer, sector) ? RES_OK : RES_ERROR;
     }
-
-    card->spi->endTransaction();
     return res;
 }
 
@@ -586,14 +603,12 @@ DRESULT ff_sd_write(uint8_t pdrv, const uint8_t* buffer, DWORD sector, UINT coun
     }
     DRESULT res = RES_OK;
 
-    card->spi->beginTransaction(SPISettings(card->frequency, MSBFIRST, SPI_MODE0));
+    AcquireSPI lock(card);
 
     if (count > 1) {
         res = sdWriteSectors(pdrv, (const char*)buffer, sector, count) ? RES_OK : RES_ERROR;
     }
     res = sdWriteSector(pdrv, (const char*)buffer, sector) ? RES_OK : RES_ERROR;
-
-    card->spi->endTransaction();
     return res;
 }
 
@@ -601,9 +616,12 @@ DRESULT ff_sd_ioctl(uint8_t pdrv, uint8_t cmd, void* buff)
 {
     switch(cmd) {
     case CTRL_SYNC:
-        if (sdSelectCard(pdrv)) {
-            sdDeselectCard(pdrv);
-            return RES_OK;
+        {
+            AcquireSPI lock(s_cards[pdrv]);
+            if (sdSelectCard(pdrv)) {
+                sdDeselectCard(pdrv);
+                return RES_OK;
+            }
         }
         return RES_ERROR;
     case GET_SECTOR_COUNT:
@@ -722,6 +740,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path)
         esp_vfs_fat_unregister_path(path);
         return false;
     }
+    AcquireSPI lock(card);
     card->sectors = sdGetSectorsCount(pdrv);
     return true;
 }
