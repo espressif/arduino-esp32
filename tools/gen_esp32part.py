@@ -12,6 +12,15 @@ import re
 import struct
 import sys
 
+PY2 = sys.version_info[0] == 2
+
+if PY2:
+    to_bytes = lambda string, encoding: string
+    to_str = lambda string, encoding: string
+else:
+    to_bytes = bytes
+    to_str = str
+
 MAX_PARTITION_LENGTH = 0xC00   # 3K for partition data (96 entries) leaves 1K in a 4K sector for signature
 
 __version__ = '1.0'
@@ -94,16 +103,16 @@ class PartitionTable(list):
             data = b[o:o+32]
             if len(data) != 32:
                 raise InputError("Partition table length must be a multiple of 32 bytes")
-            if data == '\xFF'*32:
+            if data == b'\xFF'*32:
                 return result  # got end marker
             result.append(PartitionDefinition.from_binary(data))
         raise InputError("Partition table is missing an end-of-table marker")
 
     def to_binary(self):
-        result = "".join(e.to_binary() for e in self)
+        result = b"".join(e.to_binary() for e in self)
         if len(result )>= MAX_PARTITION_LENGTH:
             raise InputError("Binary partition table length (%d) longer than max" % len(result))
-        result += "\xFF" * (MAX_PARTITION_LENGTH - len(result))  # pad the sector, for signing
+        result += b"\xFF" * (MAX_PARTITION_LENGTH - len(result))  # pad the sector, for signing
         return result
 
     def to_csv(self, simple_formatting=False):
@@ -137,7 +146,7 @@ class PartitionDefinition(object):
             },
     }
 
-    MAGIC_BYTES = "\xAA\x50"
+    MAGIC_BYTES = to_bytes("\xAA\x50", 'latin-1')
 
     ALIGNMENT = {
         APP_TYPE : 0x1000,
@@ -209,6 +218,12 @@ class PartitionDefinition(object):
     def __cmp__(self, other):
         return self.offset - other.offset
 
+    def __lt__(self, other):
+        return self.offset < other.offset
+
+    def __gt__(self, other):
+        return self.offset > other.offset
+
     def parse_type(self, strval):
         if strval == "":
             raise InputError("Field 'type' can't be left empty.")
@@ -246,8 +261,8 @@ class PartitionDefinition(object):
         res = cls()
         (magic, res.type, res.subtype, res.offset,
          res.size, res.name, flags) = struct.unpack(cls.STRUCT_FORMAT, b)
-        if "\x00" in res.name: # strip null byte padding from name string
-            res.name = res.name[:res.name.index("\x00")]
+        if b"\x00" in res.name: # strip null byte padding from name string
+            res.name = res.name[:res.name.index(b"\x00")]
         if magic != cls.MAGIC_BYTES:
             raise InputError("Invalid magic bytes (%r) for partition definition" % magic)
         for flag,bit in cls.FLAGS.items():
@@ -267,7 +282,7 @@ class PartitionDefinition(object):
                            self.MAGIC_BYTES,
                            self.type, self.subtype,
                            self.offset, self.size,
-                           self.name,
+                           to_bytes(self.name, 'utf-8'),
                            flags)
 
     def to_csv(self, simple_formatting=False):
@@ -288,7 +303,7 @@ class PartitionDefinition(object):
             """ colon-delimited list of flags """
             return ":".join(self.get_flags_list())
 
-        return ",".join([ self.name,
+        return ",".join([ to_str(self.name, 'utf-8'),
                           lookup_keyword(self.type, self.TYPES),
                           lookup_keyword(self.subtype, self.SUBTYPES.get(self.type, {})),
                           addr_format(self.offset, False),
@@ -323,7 +338,7 @@ def main():
     parser.add_argument('--verify', '-v', help='Verify partition table fields', default=True, action='store_false')
     parser.add_argument('--quiet', '-q', help="Don't print status messages to stderr", action='store_true')
 
-    parser.add_argument('input', help='Path to CSV or binary file to parse. Will use stdin if omitted.', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('input', help='Path to CSV or binary file to parse. Will use stdin if omitted.', type=argparse.FileType('rb'), default=sys.stdin)
     parser.add_argument('output', help='Path to output converted binary or CSV file. Will use stdout if omitted, unless the --display argument is also passed (in which case only the summary is printed.)',
                         nargs='?',
                         default='-')
@@ -338,7 +353,7 @@ def main():
         table = PartitionTable.from_binary(input)
     else:
         status("Parsing CSV input...")
-        table = PartitionTable.from_csv(input)
+        table = PartitionTable.from_csv(to_str(input, 'utf-8'))
 
     if args.verify:
         status("Verifying table...")
@@ -348,7 +363,7 @@ def main():
         output = table.to_csv()
     else:
         output = table.to_binary()
-    with sys.stdout if args.output == '-' else open(args.output, 'w') as f:
+    with sys.stdout if args.output == '-' else open(args.output, 'wb') as f:
         f.write(output)
 
 if __name__ == '__main__':
