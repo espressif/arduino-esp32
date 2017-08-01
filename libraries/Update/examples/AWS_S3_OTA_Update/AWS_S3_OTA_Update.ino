@@ -31,8 +31,8 @@ bool isValidContentType = false;
 
 // Your SSID and PSWD that the chip needs
 // to connect to
-char* SSID = "YOUR-SSID";
-char* PSWD = "YOUR-SSID-PSWD";
+const char* SSID = "YOUR-SSID";
+const char* PSWD = "YOUR-SSID-PSWD";
 
 // S3 Bucket Config
 String host = "bucket-name.s3.ap-south-1.amazonaws.com"; // Host => bucket-name.s3.region.amazonaws.com
@@ -65,7 +65,14 @@ void execOTA() {
     //                 "Cache-Control: no-cache\r\n" +
     //                 "Connection: close\r\n\r\n");
 
-    delay(100);
+    unsigned long timeout = millis();
+    while (client.available() == 0) {
+      if (millis() - timeout > 5000) {
+        Serial.println("Client Timeout !");
+        client.stop();
+        return;
+      }
+    }
     // Once the response is available,
     // check stuff
 
