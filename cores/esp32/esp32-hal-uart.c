@@ -223,6 +223,8 @@ void uartEnd(uart_t* uart)
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
+        uint8_t c;
+        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
     }
 

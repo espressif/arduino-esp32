@@ -11,6 +11,9 @@ HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin)
 {
+    if(_uart) {
+        end();
+    }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
         rxPin = 3;
         txPin = 1;
