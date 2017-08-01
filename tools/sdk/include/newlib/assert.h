@@ -1,50 +1,28 @@
-/*
-	assert.h
+// Copyright 2017 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+/* This header file wraps newlib's own unmodified assert.h and adds
+   support for silent assertion failure.
 */
+#pragma once
+#include <sdkconfig.h>
+#include <stdlib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include_next <assert.h>
 
-#include "_ansi.h"
-
+#if defined(CONFIG_OPTIMIZATION_ASSERTIONS_SILENT) && !defined(NDEBUG)
 #undef assert
-
-#ifdef NDEBUG           /* required by ANSI standard */
-# define assert(__e) ((void) sizeof(__e))
-#else
-# define assert(__e) ((__e) ? (void)0 : __assert_func (__FILE__, __LINE__, \
-						       __ASSERT_FUNC, #__e))
-
-# ifndef __ASSERT_FUNC
-  /* Use g++'s demangled names in C++.  */
-#  if defined __cplusplus && defined __GNUC__
-#   define __ASSERT_FUNC __PRETTY_FUNCTION__
-
-  /* C99 requires the use of __func__.  */
-#  elif __STDC_VERSION__ >= 199901L
-#   define __ASSERT_FUNC __func__
-
-  /* Older versions of gcc don't have __func__ but can use __FUNCTION__.  */
-#  elif __GNUC__ >= 2
-#   define __ASSERT_FUNC __FUNCTION__
-
-  /* failed to detect __func__ support.  */
-#  else
-#   define __ASSERT_FUNC ((char *) 0)
-#  endif
-# endif /* !__ASSERT_FUNC */
-#endif /* !NDEBUG */
-
-void _EXFUN(__assert, (const char *, int, const char *)
-	    _ATTRIBUTE ((__noreturn__)));
-void _EXFUN(__assert_func, (const char *, int, const char *, const char *)
-	    _ATTRIBUTE ((__noreturn__)));
-
-#if __STDC_VERSION__ >= 201112L && !defined __cplusplus
-# define static_assert _Static_assert
-#endif
-
-#ifdef __cplusplus
-}
+#define assert(__e) ((__e) ? (void)0 : abort())
 #endif

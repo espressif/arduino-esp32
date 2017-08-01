@@ -38,7 +38,7 @@
             {
               "packager": "esp32",
               "name": "esptool",
-              "version": "96698a3"
+              "version": "a420774"
             }
           ]
         }
@@ -80,21 +80,21 @@
         },
         {
           "name": "esptool",
-          "version": "96698a3",
+          "version": "a420774",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-96698a3-windows.zip",
-              "archiveFileName": "esptool-96698a3-windows.zip",
-              "checksum": "SHA-256:12f026c84869f0bd2f6a863191ec84d27b91f21d17e2e2e9e11c79be50f2d0fc",
-              "size": "3390935"
+              "url": "https://dl.espressif.com/dl/esptool-a420774-windows.zip",
+              "archiveFileName": "esptool-a420774-windows.zip",
+              "checksum": "SHA-256:7778545baa30a85a37a956e47e42a236fa67227f21b160b2164ef83a5e20a41f",
+              "size": "3394137"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-96698a3-macos.tar.gz",
-              "archiveFileName": "esptool-96698a3-macos.tar.gz",
-              "checksum": "SHA-256:e3154dbf32c3ba5e5ebd45e913178b167cf761e5ce0152b2bb069a2453f6839b",
-              "size": "3805789"
+              "url": "https://dl.espressif.com/dl/esptool-a420774-macos.tar.gz",
+              "archiveFileName": "esptool-a420774-macos.tar.gz",
+              "checksum": "SHA-256:1a6237b695fe299357bfd78a9727564464a00e020bc7c7a4cf6fad02250eb2a2",
+              "size": "3808980"
             }
           ]
         }

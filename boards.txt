@@ -1,5 +1,6 @@
 menu.UploadSpeed=Upload Speed
 menu.FlashFreq=Flash Frequency
+menu.FlashMode=Flash Mode
 menu.DebugLevel=Core Debug Level
 
 ##############################################################
@@ -20,8 +21,19 @@ esp32.build.variant=esp32
 esp32.build.board=ESP32_DEV
 
 esp32.build.f_cpu=240000000L
-esp32.build.flash_mode=dio
 esp32.build.flash_size=4MB
+esp32.build.boot=bootloader
+
+esp32.menu.FlashMode.qio=QIO
+esp32.menu.FlashMode.qio.build.flash_mode=dio
+esp32.menu.FlashMode.qio.build.boot=bootloader_qio
+esp32.menu.FlashMode.dio=DIO
+esp32.menu.FlashMode.dio.build.flash_mode=dio
+esp32.menu.FlashMode.qout=QOUT
+esp32.menu.FlashMode.qout.build.flash_mode=dout
+esp32.menu.FlashMode.qout.build.boot=bootloader_qio
+esp32.menu.FlashMode.dout=DOUT
+esp32.menu.FlashMode.dout.build.flash_mode=dout
 
 esp32.menu.FlashFreq.80=80MHz
 esp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -76,6 +88,7 @@ esp32thing.build.board=ESP32_THING
 esp32thing.build.f_cpu=240000000L
 esp32thing.build.flash_mode=dio
 esp32thing.build.flash_size=4MB
+esp32thing.build.boot=bootloader
 
 esp32thing.menu.FlashFreq.80=80MHz
 esp32thing.menu.FlashFreq.80.build.flash_freq=80m
@@ -117,6 +130,7 @@ widora-air.build.board=WIDORA_AIR
 widora-air.build.f_cpu=240000000L
 widora-air.build.flash_mode=dio
 widora-air.build.flash_size=16MB
+widora-air.build.boot=bootloader
 
 widora-air.menu.FlashFreq.80=80MHz
 widora-air.menu.FlashFreq.80.build.flash_freq=80m
@@ -158,6 +172,7 @@ esp320.build.board=ESP320
 esp320.build.f_cpu=240000000L
 esp320.build.flash_mode=qio
 esp320.build.flash_size=4MB
+esp320.build.boot=bootloader
 
 esp320.menu.FlashFreq.80=80MHz
 esp320.menu.FlashFreq.80.build.flash_freq=80m
@@ -199,6 +214,7 @@ nano32.build.board=NANO32
 nano32.build.f_cpu=240000000L
 nano32.build.flash_mode=dio
 nano32.build.flash_size=4MB
+nano32.build.boot=bootloader
 
 nano32.menu.FlashFreq.80=80MHz
 nano32.menu.FlashFreq.80.build.flash_freq=80m
@@ -240,6 +256,7 @@ lolin32.build.board=LOLIN32
 lolin32.build.f_cpu=240000000L
 lolin32.build.flash_mode=dio
 lolin32.build.flash_size=4MB
+lolin32.build.boot=bootloader
 
 lolin32.menu.FlashFreq.80=80MHz
 lolin32.menu.FlashFreq.80.build.flash_freq=80m
@@ -281,6 +298,7 @@ espea32.build.board=ESPea32
 espea32.build.f_cpu=240000000L
 espea32.build.flash_mode=dio
 espea32.build.flash_size=4MB
+espea32.build.boot=bootloader
 
 espea32.menu.FlashFreq.80=80MHz
 espea32.menu.FlashFreq.80.build.flash_freq=80m
@@ -322,6 +340,7 @@ quantum.build.board=QUANTUM
 quantum.build.f_cpu=240000000L
 quantum.build.flash_mode=qio
 quantum.build.flash_size=16MB
+quantum.build.boot=bootloader
 
 quantum.menu.FlashFreq.80=80MHz
 quantum.menu.FlashFreq.80.build.flash_freq=80m
@@ -363,6 +382,7 @@ node32s.build.board=Node32s
 node32s.build.f_cpu=240000000L
 node32s.build.flash_mode=dio
 node32s.build.flash_size=4MB
+node32s.build.boot=bootloader
 
 node32s.menu.FlashFreq.80=80MHz
 node32s.menu.FlashFreq.80.build.flash_freq=80m
@@ -400,9 +420,11 @@ hornbill32dev.build.mcu=esp32
 hornbill32dev.build.core=esp32
 hornbill32dev.build.variant=hornbill32dev
 hornbill32dev.build.board=HORNBILL_ESP32_DEV
+
 hornbill32dev.build.f_cpu=240000000L
 hornbill32dev.build.flash_mode=dio
 hornbill32dev.build.flash_size=4MB
+hornbill32dev.build.boot=bootloader
 
 hornbill32dev.menu.FlashFreq.80=80MHz
 hornbill32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -443,6 +465,7 @@ hornbill32minima.build.board=HORNBILL_ESP32_MINIMA
 hornbill32minima.build.f_cpu=240000000L
 hornbill32minima.build.flash_mode=dio
 hornbill32minima.build.flash_size=4MB
+hornbill32minima.build.boot=bootloader
 
 hornbill32minima.menu.FlashFreq.80=80MHz
 hornbill32minima.menu.FlashFreq.80.build.flash_freq=80m
@@ -484,6 +507,7 @@ firebeetle32.build.board=ESP32_DEV
 firebeetle32.build.f_cpu=240000000L
 firebeetle32.build.flash_mode=dio
 firebeetle32.build.flash_size=4MB
+firebeetle32.build.boot=bootloader
 
 firebeetle32.menu.FlashFreq.80=80MHz
 firebeetle32.menu.FlashFreq.80.build.flash_freq=80m
@@ -525,6 +549,7 @@ intorobot-fig.build.board=INTOROBOT_ESP32_DEV
 intorobot-fig.build.f_cpu=240000000L
 intorobot-fig.build.flash_mode=dio
 intorobot-fig.build.flash_size=4MB
+intorobot-fig.build.boot=bootloader
 
 intorobot-fig.menu.FlashFreq.80=80MHz
 intorobot-fig.menu.FlashFreq.80.build.flash_freq=80m
@@ -566,6 +591,7 @@ onehorse32dev.build.board=ONEHORSE_ESP32_DEV
 onehorse32dev.build.f_cpu=240000000L
 onehorse32dev.build.flash_mode=dout
 onehorse32dev.build.flash_size=4MB
+onehorse32dev.build.boot=bootloader
 
 onehorse32dev.menu.FlashFreq.80=80MHz
 onehorse32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -607,6 +633,7 @@ featheresp32.build.board=FEATHER_ESP32
 featheresp32.build.f_cpu=240000000L
 featheresp32.build.flash_mode=dio
 featheresp32.build.flash_size=4MB
+featheresp32.build.boot=bootloader
 
 featheresp32.menu.FlashFreq.80=80MHz
 featheresp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -628,6 +655,19 @@ featheresp32.menu.UploadSpeed.460800.upload.speed=460800
 featheresp32.menu.UploadSpeed.512000.windows=512000
 featheresp32.menu.UploadSpeed.512000.upload.speed=512000
 
+featheresp32.menu.DebugLevel.none=None
+featheresp32.menu.DebugLevel.none.build.code_debug=0
+featheresp32.menu.DebugLevel.error=Error
+featheresp32.menu.DebugLevel.error.build.code_debug=1
+featheresp32.menu.DebugLevel.warn=Warn
+featheresp32.menu.DebugLevel.warn.build.code_debug=2
+featheresp32.menu.DebugLevel.info=Info
+featheresp32.menu.DebugLevel.info.build.code_debug=3
+featheresp32.menu.DebugLevel.debug=Debug
+featheresp32.menu.DebugLevel.debug.build.code_debug=4
+featheresp32.menu.DebugLevel.verbose=Verbose
+featheresp32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 nodemcu-32s.name=NodeMCU-32S
@@ -648,6 +688,7 @@ nodemcu-32s.build.board=NodeMCU-32S
 nodemcu-32s.build.f_cpu=240000000L
 nodemcu-32s.build.flash_mode=dio
 nodemcu-32s.build.flash_size=4MB
+nodemcu-32s.build.boot=bootloader
 
 nodemcu-32s.menu.FlashFreq.80=80MHz
 nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
@@ -689,6 +730,7 @@ esp32vn-iot-uno.build.board=esp32vn-iot-uno
 esp32vn-iot-uno.build.f_cpu=240000000L
 esp32vn-iot-uno.build.flash_mode=dio
 esp32vn-iot-uno.build.flash_size=4MB
+esp32vn-iot-uno.build.boot=bootloader
 
 esp32vn-iot-uno.menu.FlashFreq.80=80MHz
 esp32vn-iot-uno.menu.FlashFreq.80.build.flash_freq=80m
@@ -730,6 +772,7 @@ esp32doit-devkit-v1.build.board=ESP32_DEV
 esp32doit-devkit-v1.build.f_cpu=240000000L
 esp32doit-devkit-v1.build.flash_mode=dio
 esp32doit-devkit-v1.build.flash_size=4MB
+esp32doit-devkit-v1.build.boot=bootloader
 
 esp32doit-devkit-v1.menu.FlashFreq.80=80MHz
 esp32doit-devkit-v1.menu.FlashFreq.80.build.flash_freq=80m
@@ -782,6 +825,7 @@ esp32-evb.build.board=ESP32-EVB
 esp32-evb.build.f_cpu=240000000L
 esp32-evb.build.flash_mode=dio
 esp32-evb.build.flash_size=4MB
+esp32-evb.build.boot=bootloader
 
 esp32-evb.menu.FlashFreq.80=80MHz
 esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
@@ -812,6 +856,7 @@ esp32-gateway.build.board=ESP32-GATEWAY
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio
 esp32-gateway.build.flash_size=4MB
+esp32-gateway.build.boot=bootloader
 
 esp32-gateway.menu.FlashFreq.80=80MHz
 esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
@@ -842,6 +887,7 @@ espino32.build.board=ESPino32
 espino32.build.f_cpu=240000000L
 espino32.build.flash_mode=dio
 espino32.build.flash_size=4MB
+espino32.build.boot=bootloader
 
 espino32.menu.FlashFreq.80=80MHz
 espino32.menu.FlashFreq.80.build.flash_freq=80m

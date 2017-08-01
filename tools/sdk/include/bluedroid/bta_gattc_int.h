@@ -29,7 +29,6 @@
 #include "bta_gatt_api.h"
 #include "bta_gattc_ci.h"
 #include "bta_gattc_co.h"
-
 #include "gki.h"
 
 /*****************************************************************************
@@ -82,7 +81,11 @@ typedef UINT16 tBTA_GATTC_INT_EVT;
 
 /* max known devices GATTC can support */
 #ifndef     BTA_GATTC_KNOWN_SR_MAX
-#define     BTA_GATTC_KNOWN_SR_MAX    3 // 10
+#if (GATT_MAX_PHY_CHANNEL > 3)
+    #define     BTA_GATTC_KNOWN_SR_MAX    GATT_MAX_PHY_CHANNEL
+#else
+    #define     BTA_GATTC_KNOWN_SR_MAX    3 // The origin value is 10
+#endif
 #endif
 
 #define BTA_GATTC_CONN_MAX      GATT_MAX_PHY_CHANNEL
@@ -380,6 +383,9 @@ typedef struct {
 typedef struct {
     BOOLEAN             in_use;
     BD_ADDR             remote_bda;
+    TIMER_LIST_ENT      service_change_ccc_timer;           /* wait for discovering remote device's service change ccc handle */
+    BOOLEAN             ccc_timer_used;                     /* service_change_ccc_timer started */
+    BOOLEAN             service_change_ccc_written;         /* has written remote device's service change ccc */
 } tBTA_GATTC_CONN;
 
 enum {
@@ -403,6 +409,16 @@ typedef struct {
 #endif  ///SDP_INCLUDED == TRUE
     UINT16              sdp_conn_id;
 } tBTA_GATTC_CB;
+
+typedef enum {
+    SERVICE_CHANGE_CCC_WRITTEN_SUCCESS = 0,
+    SERVICE_CHANGE_CACHE_NOT_FOUND,
+    SERVICE_CHANGE_SERVICE_NOT_FOUND,
+    SERVICE_CHANGE_CHAR_NOT_FOUND,
+    SERVICE_CHANGE_CCC_NOT_FOUND,
+    SERVICE_CHANGE_WRITE_CCC_FAILED
+}tBTA_GATTC_FIND_SERVICE_CB;
+
 
 /*****************************************************************************
 **  Global data
@@ -441,7 +457,8 @@ extern void bta_gattc_cancel_open_ok(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p
 extern void bta_gattc_cancel_open_error(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
 
 extern void bta_gattc_conn(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
-
+extern void bta_gattc_conncback(tBTA_GATTC_RCB *p_rcb, tBTA_GATTC_DATA *p_data);
+extern void bta_gattc_disconncback(tBTA_GATTC_RCB *p_rcb, tBTA_GATTC_DATA *p_data);
 extern void bta_gattc_close(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
 extern void bta_gattc_close_fail(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
 extern void bta_gattc_disc_close(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
@@ -468,6 +485,10 @@ extern void bta_gattc_init_bk_conn(tBTA_GATTC_API_OPEN *p_data, tBTA_GATTC_RCB *
 extern void bta_gattc_cancel_bk_conn(tBTA_GATTC_API_CANCEL_OPEN *p_data);
 extern void bta_gattc_send_open_cback( tBTA_GATTC_RCB *p_clreg, tBTA_GATT_STATUS status,
                                        BD_ADDR remote_bda, UINT16 conn_id, tBTA_TRANSPORT transport,  UINT16 mtu);
+extern void bta_gattc_send_connect_cback( tBTA_GATTC_RCB *p_clreg, tBTA_GATT_STATUS status,
+                                BD_ADDR remote_bda, UINT16 conn_id);
+extern void bta_gattc_send_disconnect_cback( tBTA_GATTC_RCB *p_clreg, tBTA_GATT_STATUS status,
+                                BD_ADDR remote_bda, UINT16 conn_id);
 extern void bta_gattc_process_api_refresh(tBTA_GATTC_CB *p_cb, tBTA_GATTC_DATA *p_msg);
 extern void bta_gattc_cfg_mtu(tBTA_GATTC_CLCB *p_clcb, tBTA_GATTC_DATA *p_data);
 #if BLE_INCLUDED == TRUE
