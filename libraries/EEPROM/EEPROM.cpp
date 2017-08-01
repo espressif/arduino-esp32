@@ -122,13 +122,13 @@ bool EEPROMClass::commit() {
 
   if (esp_partition_erase_range(_mypart, 0, SPI_FLASH_SEC_SIZE) != ESP_OK)
   {	  
-     ESP_LOGE(TAG, "partition erase err.");
+     log_e( "partition erase err.");
   }
   else
   {
      if (esp_partition_write(_mypart, 0, (void *)_data, _size) == ESP_ERR_INVALID_SIZE)
      {
-	ESP_LOGE(TAG, "error in Write");
+	log_e( "error in Write");
      }
      else
      {
