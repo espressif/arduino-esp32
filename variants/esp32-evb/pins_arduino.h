@@ -25,4 +25,6 @@ static const uint8_t MOSI  = 2;
 static const uint8_t MISO  = 15;
 static const uint8_t SCK   = 14;
 
+#define BOARD_HAS_1BIT_SDMMC
+
 #endif /* Pins_Arduino_h */
