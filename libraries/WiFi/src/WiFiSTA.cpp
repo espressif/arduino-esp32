@@ -217,6 +217,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
         return false;
     }
     ip_addr_t d;
+    d.type = IPADDR_TYPE_V4;
 
     if(dns1 != (uint32_t)0x00000000) {
         // Set DNS1-Server
