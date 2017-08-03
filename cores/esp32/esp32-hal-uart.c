@@ -227,12 +227,13 @@ void uartEnd(uart_t* uart)
         while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
     }
+
+    uart->dev->conf0.val = 0;
+
     UART_MUTEX_UNLOCK();
 
     uartDetachRx(uart);
     uartDetachTx(uart);
-
-    uart->dev->conf0.val = 0;
 }
 
 uint32_t uartAvailable(uart_t* uart)
