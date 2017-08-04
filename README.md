@@ -8,13 +8,13 @@
 - [Development Status](#development-status)
 - [Installation Instructions](#installation-instructions):
   + Using Arduino IDE
-    + [Windows](https://github.com/espressif/arduino-esp32/blob/master/doc/arduino-ide/windows.md)
-    + [Mac OS](https://github.com/espressif/arduino-esp32/blob/master/doc/arduino-ide/mac.md)
-    + [Debian/Ubuntu](https://github.com/espressif/arduino-esp32/blob/master/doc/arduino-ide/debian_ubuntu.md)
-    + [Fedora](https://github.com/espressif/arduino-esp32/blob/master/doc/arduino-ide/fedora.md)
-  + [Using PlatformIO](doc/platformio.md)
-  + [Building with make](doc/make.md)
-  + [Using as ESP-IDF component](doc/esp-idf_component.md)
+    + [Windows](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/windows.md)
+    + [Mac OS](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/mac.md)
+    + [Debian/Ubuntu](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/debian_ubuntu.md)
+    + [Fedora](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/fedora.md)
+  + [Using PlatformIO](docs/platformio.md)
+  + [Building with make](docs/make.md)
+  + [Using as ESP-IDF component](docs/esp-idf_component.md)
 - [Decoding Exceptions](#decoding-exceptions)
 - [Issue/Bug report template](#Issue/Bug report template)
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
@@ -28,13 +28,13 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
 ## Installation Instructions
 
 - Using Arduino IDE
-  + [Instructions for Windows](doc/arduino-ide/windows.md)
-  + [Instructions for Mac](doc/arduino-ide/mac.md)
-  + [Instructions for Debian/Ubuntu Linux](doc/arduino-ide/debian_ubuntu.md)
-  + [Instructions for Fedora](doc/arduino-ide/fedora.md)
-- [Using PlatformIO](doc/platformio.md)
-- [Building with make](doc/make.md)
-- [Using as ESP-IDF component](doc/esp-idf_component.md)
+  + [Instructions for Windows](docs/arduino-ide/windows.md)
+  + [Instructions for Mac](docs/arduino-ide/mac.md)
+  + [Instructions for Debian/Ubuntu Linux](docs/arduino-ide/debian_ubuntu.md)
+  + [Instructions for Fedora](docs/arduino-ide/fedora.md)
+- [Using PlatformIO](docs/platformio.md)
+- [Building with make](docs/make.md)
+- [Using as ESP-IDF component](docs/esp-idf_component.md)
 
 #### Decoding exceptions
 
@@ -43,12 +43,12 @@ You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecod
 #### Issue/Bug report template
 Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labelled as [for reference](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue%20label%3A%22for%20reference%22%20).
 
-Finally, if you're sure no one else had the issue, follow the [ISSUE_TEMPLATE](https://github.com/espressif/arduino-esp32/blob/master/ISSUE_TEMPLATE.md) while reporting any issue.
+Finally, if you're sure no one else had the issue, follow the [ISSUE_TEMPLATE](https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md) while reporting any issue.
 
 
 ## ESP32Dev Board PINMAP
 
-![Pin Functions](doc/esp32_pinmap.png)
+![Pin Functions](docs/esp32_pinmap.png)
 
 ## Hint
 
