@@ -16,7 +16,7 @@
   + [Building with make](docs/make.md)
   + [Using as ESP-IDF component](docs/esp-idf_component.md)
 - [Decoding Exceptions](#decoding-exceptions)
-- [Issue/Bug report template](#Issue/Bug report template)
+- [Issue/Bug report template](#issuebug-report-template)
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
 ## Development Status
