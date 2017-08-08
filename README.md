@@ -6,15 +6,7 @@
 
 ## Contents
 - [Development Status](#development-status)
-- [Installation Instructions](#installation-instructions):
-  + Using Arduino IDE
-    + [Windows](docs/arduino-ide/windows.md)
-    + [Mac OS](docs/arduino-ide/mac.md)
-    + [Debian/Ubuntu](docs/arduino-ide/debian_ubuntu.md)
-    + [Fedora](docs/arduino-ide/fedora.md)
-  + [Using PlatformIO](docs/platformio.md)
-  + [Building with make](docs/make.md)
-  + [Using as ESP-IDF component](docs/esp-idf_component.md)
+- [Installation Instructions](#installation-instructions)
 - [Decoding Exceptions](#decoding-exceptions)
 - [Issue/Bug report template](#issuebug-report-template)
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
