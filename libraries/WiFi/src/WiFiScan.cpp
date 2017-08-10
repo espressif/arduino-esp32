@@ -79,7 +79,7 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, u
         config.scan_time.active.min = 100;
         config.scan_time.active.max = max_ms_per_chan;
     }
-    if(esp_wifi_scan_start(&config, WiFiScanClass::_scanAsync) == ESP_OK) {
+    if(esp_wifi_scan_start(&config, false) == ESP_OK) {
         WiFiScanClass::_scanComplete = false;
         WiFiScanClass::_scanStarted = true;
 
