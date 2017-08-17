@@ -172,14 +172,14 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
       sys.stderr.flush()
     offset = 0
     while True:
-      chunk = f.read(1460)
+      chunk = f.read(1024)
       if not chunk: break
       offset += len(chunk)
       update_progress(offset/float(content_size))
       connection.settimeout(10)
       try:
         connection.sendall(chunk)
-        res = connection.recv(5)
+        res = connection.recv(10)
       except:
         sys.stderr.write('\n')
         logging.error('Error Uploading')
