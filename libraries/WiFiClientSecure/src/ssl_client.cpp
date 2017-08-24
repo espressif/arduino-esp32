@@ -36,8 +36,7 @@ void ssl_init(sslclient_context *ssl_client)
     mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
 }
 
-
-int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t port, const uint8_t *rootCABuff, uint16_t rootCA_len, const uint8_t *cli_cert, uint16_t cli_cert_len, const uint8_t *cli_key, uint16_t cli_key_len)
 {
     char buf[512];
     int ret, flags, len, timeout;
@@ -97,7 +96,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         log_i("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-        ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (const unsigned char *)rootCABuff, strlen(rootCABuff) + 1);
+        ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (const unsigned char *)rootCABuff, rootCA_len);
         mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
         //mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
         if (ret < 0) {
@@ -114,13 +113,13 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
 
         log_i("Loading CRT cert");
 
-        ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
+        ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, cli_cert_len);
         if (ret < 0) {
             return handle_error(ret);
         }
 
         log_i("Loading private key");
-        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
+        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, cli_key_len, NULL, 0);
 
         if (ret != 0) {
             return handle_error(ret);
@@ -175,7 +174,7 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         bzero(buf, sizeof(buf));
         mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
         log_e("verification info: %s", buf);
-        stop_ssl_socket(ssl_client, rootCABuff, cli_cert, cli_key);  //It's not safe continue.
+        stop_ssl_socket(ssl_client);  //It's not safe continue.
         return handle_error(ret);
     } else {
         log_i("Certificate verified.");
@@ -198,8 +197,15 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
     return ssl_client->socket;
 }
 
+int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+{
+    return start_ssl_client(ssl_client, ipAddress, port,
+        (const uint8_t*)rootCABuff, (!rootCABuff)?0:strlen(rootCABuff)+1,
+        (const uint8_t*)cli_cert, (!cli_cert)?0:strlen(cli_cert)+1,
+        (const uint8_t*)cli_key, (!cli_key)?0:strlen(cli_key)+1);
+}
 
-void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+void stop_ssl_socket(sslclient_context *ssl_client)
 {
     log_i("Cleaning SSL connection.");
 
