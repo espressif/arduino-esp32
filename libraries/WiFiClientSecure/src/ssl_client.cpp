@@ -37,7 +37,7 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
     char buf[512];
     int ret, flags, len, timeout;
@@ -53,10 +53,17 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         return ssl_client->socket;
     }
 
+	struct hostent *server;
+    server = gethostbyname(host);
+    if (server == NULL) {
+        return 0;
+    }
+    IPAddress srv((const uint8_t *)(server->h_addr));
+	
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = ipAddress;
+    serv_addr.sin_addr.s_addr = srv;
     serv_addr.sin_port = htons(port);
 
     if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
@@ -90,9 +97,9 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         return handle_error(ret);
     }
 
-    /* MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
-        MBEDTLS_SSL_VERIFY_NONE if not.
-        */
+    // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
+    // MBEDTLS_SSL_VERIFY_NONE if not.
+
     if (rootCABuff != NULL) {
         log_i("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
@@ -129,18 +136,12 @@ int start_ssl_client(sslclient_context *ssl_client, uint32_t ipAddress, uint32_t
         mbedtls_ssl_conf_own_cert(&ssl_client->ssl_conf, &ssl_client->client_cert, &ssl_client->client_key);
     }
 
-    /*
-        // TODO: implement match CN verification
+    log_i("Setting hostname for TLS session...");
 
-        log_i("Setting hostname for TLS session...");
-
-                // Hostname set here should match CN in server certificate
-        if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0)
-        {
-            return handle_error(ret);
-
-        }
-    */
+    // Hostname set here should match CN in server certificate
+    if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0){
+        return handle_error(ret);
+	}
 
     mbedtls_ssl_conf_rng(&ssl_client->ssl_conf, mbedtls_ctr_drbg_random, &ssl_client->drbg_ctx);
 
@@ -221,7 +222,7 @@ int data_to_read(sslclient_context *ssl_client)
     ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, NULL, 0);
     //log_e("RET: %i",ret);   //for low level debug
     res = mbedtls_ssl_get_bytes_avail(&ssl_client->ssl_ctx);
-    //log_e("RES: %i",res);
+    //log_e("RES: %i",res);    //for low level debug
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
         return handle_error(ret);
     }

@@ -97,7 +97,12 @@ int WiFiClientSecure::connect(const char *host, uint16_t port)
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
-    int ret = start_ssl_client(sslclient, ip, port, _CA_cert, _cert, _private_key);
+    return connect(ip.toString().c_str(), port, _CA_cert, _cert, _private_key);
+}
+
+int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
+{
+    int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key);
     if (ret < 0) {
         log_e("lwip_connect_r: %d", errno);
         stop();
@@ -106,18 +111,6 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert,
     _connected = true;
     return 1;
 }
-
-int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
-{
-    struct hostent *server;
-    server = gethostbyname(host);
-    if (server == NULL) {
-        return 0;
-    }
-    IPAddress srv((const uint8_t *)(server->h_addr));
-    return connect(srv, port, _CA_cert, _cert, _private_key);
-}
-
 
 size_t WiFiClientSecure::write(uint8_t data)
 {
