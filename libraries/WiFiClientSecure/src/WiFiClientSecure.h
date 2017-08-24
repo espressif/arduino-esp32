@@ -31,9 +31,12 @@ protected:
     bool _connected;
     sslclient_context *sslclient;
 
-    const char *_CA_cert;
-    const char *_cert;
-    const char *_private_key;
+    const uint8_t *_CA_cert;
+    const uint8_t *_cert;
+    const uint8_t *_private_key;
+    size_t _CA_cert_len;
+    size_t _cert_len;
+    size_t _private_key_len;
 
 public:
     WiFiClientSecure *next;
@@ -44,6 +47,8 @@ public:
     int connect(const char *host, uint16_t port);
     int connect(IPAddress ip, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     int connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
+    int connect(IPAddress ip, uint16_t port, const uint8_t *rootCABuff, size_t rootCA_len, const uint8_t *cli_cert=0, size_t cli_cert_len=0, const uint8_t *cli_key=0, size_t cli_key_len=0);
+    int connect(const char *host, uint16_t port, const uint8_t *rootCABuff, size_t rootCA_len, const uint8_t *cli_cert=0, size_t cli_cert_len=0, const uint8_t *cli_key=0, size_t cli_key_len=0);
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
     int available();
@@ -58,6 +63,7 @@ public:
     uint8_t connected();
 
     void setCACert(const char *rootCA);
+    void setCACert(const uint8_t *rootCA, size_t size);
     void setCertificate(const char *client_ca);
     void setPrivateKey (const char *private_key);
 

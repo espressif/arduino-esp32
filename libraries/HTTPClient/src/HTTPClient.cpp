@@ -54,8 +54,8 @@ public:
 class TLSTraits : public TransportTraits
 {
 public:
-    TLSTraits(const char* CAcert) :
-        _cacert(CAcert)
+    TLSTraits(const uint8_t* CAcert, size_t size) :
+        _cacert(CAcert), _size(size)
     {
     }
 
@@ -67,12 +67,13 @@ public:
     bool verify(WiFiClient& client, const char* host) override
     {
          WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
-		 wcs.setCACert(_cacert);
+		 wcs.setCACert(_cacert, _size);
          return true;
     }
 
 protected:
-    const char* _cacert;
+    const uint8_t* _cacert;
+    size_t _size;
 };
 
 /**
@@ -102,8 +103,12 @@ void HTTPClient::clear()
     _headers = "";
 }
 
-
 bool HTTPClient::begin(String url, const char* CAcert)
+{
+    return begin(url, (const uint8_t*)CAcert, strlen(CAcert)+1);
+}
+
+bool HTTPClient::begin(String url, const uint8_t* CAcert, size_t size)
 {
     _transportTraits.reset(nullptr);
     _port = 443;
@@ -111,7 +116,7 @@ bool HTTPClient::begin(String url, const char* CAcert)
         return false;
     }
     _secure = true;
-    _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
+    _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert, size));
     return true;
 }
 
@@ -191,15 +196,20 @@ bool HTTPClient::begin(String host, uint16_t port, String uri)
 
 bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcert)
 {
+    return begin(host, port, uri, (const uint8_t*) CAcert, strlen(CAcert));
+}
+
+bool HTTPClient::begin(String host, uint16_t port, String uri, const uint8_t* CAcert, size_t size)
+{
     clear();
     _host = host;
     _port = port;
     _uri = uri;
 
-    if (strlen(CAcert) == 0) {
+    if (size == 0) {
         return false;
     }
-    _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
+    _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert, size));
     return true;
 }
 

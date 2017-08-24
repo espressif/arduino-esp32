@@ -127,8 +127,10 @@ public:
 
     bool begin(String url);
     bool begin(String url, const char* CAcert);
+    bool begin(String url, const uint8_t* CAcert, size_t size);
     bool begin(String host, uint16_t port, String uri = "/");
     bool begin(String host, uint16_t port, String uri, const char* CAcert);
+    bool begin(String host, uint16_t port, String uri, const uint8_t* CAcert, size_t size);
 
     void end(void);
 
@@ -139,6 +141,11 @@ public:
     void setAuthorization(const char * user, const char * password);
     void setAuthorization(const char * auth);
     void setTimeout(uint16_t timeout);
+
+    // // Set the root certificate authority to authorize SSL connections with. Must initialize SNTP first.
+    // bool setRootCA(uint8_t * cert, size_t size);
+    // // Set the root certificate authority to authorize SSL connections with. Must initialize SNTP first.
+    // bool setRootCA_P(PGM_VOID_P * cert, size_t size);
 
     void useHTTP10(bool usehttp10 = true);
 

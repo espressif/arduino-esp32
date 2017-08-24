@@ -241,7 +241,7 @@ size_t WiFiClient::write_P(PGM_P buf, size_t size)
     return write(buf, size);
 }
 
-
+/*
 size_t WiFiClient::write_P(PGM_P buf, size_t size)
 {
     int res =0;
@@ -287,7 +287,7 @@ size_t WiFiClient::write_P(PGM_P buf, size_t size)
     }
     return res;
 }
-
+*/
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
     if(!available()) {

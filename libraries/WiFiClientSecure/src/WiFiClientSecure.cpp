@@ -21,7 +21,7 @@
 #include "WiFiClientSecure.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
-#include <errno.h>
+//#include <errno.h>
 
 #undef connect
 #undef write
@@ -39,7 +39,11 @@ WiFiClientSecure::WiFiClientSecure()
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
-	next = NULL;			
+	next = NULL;
+
+    _CA_cert_len = 0;
+    _cert_len = 0;
+    _private_key_len = 0;
 }
 
 
@@ -59,6 +63,10 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     _cert = NULL;
     _private_key = NULL;
     next = NULL;				
+
+    _CA_cert_len = 0;
+    _cert_len = 0;
+    _private_key_len = 0;
 }
 
 WiFiClientSecure::~WiFiClientSecure()
@@ -82,27 +90,43 @@ void WiFiClientSecure::stop()
         sslclient->socket = -1;
         _connected = false;
     }
-    stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
+    stop_ssl_socket(sslclient);
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
 {
-    return connect(ip, port, _CA_cert, _cert, _private_key);
+    return connect(ip, port, (uint8_t*)_CA_cert, _CA_cert_len, (uint8_t*)_cert, _cert_len, (uint8_t*)_private_key, _private_key_len);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port)
 {
-    return connect(host, port, _CA_cert, _cert, _private_key);
+    return connect(host, port, (uint8_t*)_CA_cert, _CA_cert_len, (uint8_t*)_cert, _cert_len, (uint8_t*)_private_key, _private_key_len);
 }
 
-int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
-    return connect(ip.toString().c_str(), port, _CA_cert, _cert, _private_key);
+    return connect(ip, port,
+        (const uint8_t*)rootCABuff, (!rootCABuff)?0:strlen(rootCABuff)+1,
+        (const uint8_t*)cli_cert, (!cli_cert)?0:strlen(cli_cert)+1,
+        (const uint8_t*)cli_key, (!cli_key)?0:strlen(cli_key)+1);
 }
 
-int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const uint8_t *rootCABuff, size_t rootCA_len, const uint8_t *cli_cert, size_t cli_cert_len, const uint8_t *cli_key, size_t cli_key_len)
 {
-    int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key);
+    return connect(ip.toString().c_str(), port, rootCABuff, rootCA_len, cli_cert, cli_cert_len, cli_key, cli_key_len);
+}
+
+int WiFiClientSecure::connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+{
+    return connect(host, port,
+        (const uint8_t*)rootCABuff, (!rootCABuff)?0:strlen(rootCABuff)+1,
+        (const uint8_t*)cli_cert, (!cli_cert)?0:strlen(cli_cert)+1,
+        (const uint8_t*)cli_key, (!cli_key)?0:strlen(cli_key)+1);
+}
+
+int WiFiClientSecure::connect(const char *host, uint16_t port, const uint8_t *rootCABuff, size_t rootCA_len, const uint8_t *cli_cert, size_t cli_cert_len, const uint8_t *cli_key, size_t cli_key_len)
+{
+    int ret = start_ssl_client(sslclient, host, port, rootCABuff, rootCA_len, cli_cert, cli_cert_len, cli_key, cli_key_len);
     if (ret < 0) {
         log_e("lwip_connect_r: %d", errno);
         stop();
@@ -176,16 +200,24 @@ uint8_t WiFiClientSecure::connected()
 
 void WiFiClientSecure::setCACert (const char *rootCA)
 {
+    setCACert((const uint8_t*)rootCA, strlen(rootCA)+1);
+}
+
+void WiFiClientSecure::setCACert (const uint8_t *rootCA, size_t size)
+{
     _CA_cert = rootCA;
+    _CA_cert_len = size;
 }
 
 void WiFiClientSecure::setCertificate (const char *client_ca)
 {
-    _cert = client_ca;
+    _cert = (const uint8_t*) client_ca;
+    _cert_len = strlen(client_ca)+1;
 }
 
 void WiFiClientSecure::setPrivateKey (const char *private_key)
 {
-    _private_key = private_key;
+    _private_key = (const uint8_t*) private_key;
+    _private_key_len = strlen(private_key)+1;
 }
 
