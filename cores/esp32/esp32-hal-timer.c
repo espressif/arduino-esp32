@@ -79,9 +79,6 @@ void IRAM_ATTR __timerISR(void * arg){
     while(i--){
         hw_timer_reg_t * dev = hw_timer[i].dev;
         if((status & (1 << i)) && dev->config.autoreload){
-            dev->load_high = 0;
-            dev->load_low = 0;
-            dev->reload = 1;
             dev->config.alarm_en = 1;
         }
     }
