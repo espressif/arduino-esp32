@@ -109,7 +109,8 @@ env.Append(
         "-Wl,-EL",
         "-T", "esp32.common.ld",
         "-T", "esp32.rom.ld",
-        "-T", "esp32.peripherals.ld"
+        "-T", "esp32.peripherals.ld",
+        "-u", "ld_include_panic_highint_hdl"
     ],
 
     UPLOADERFLAGS=[
