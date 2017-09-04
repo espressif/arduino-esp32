@@ -15,35 +15,11 @@
 #include "esp32-hal.h"
 #include "apps/sntp/sntp.h"
 
-static void setTimeZone(long offset, int daylight)
-{
-    char cst[16] = {0};
-    char cdt[16] = "CDT";
-    char tz[32] = {0};
-
-    if(offset % 3600){
-        sprintf(cst, "CST%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));
-    } else {
-        sprintf(cst, "CST%ld", offset / 3600);
-    }
-    if(daylight != 3600){
-        long tz_dst = offset - daylight;
-        if(tz_dst % 3600){
-            sprintf(cdt, "CDT%ld:%02u:%02u", tz_dst / 3600, abs((tz_dst % 3600) / 60), abs(tz_dst % 60));
-        } else {
-            sprintf(cdt, "CDT%ld", tz_dst / 3600);
-        }
-    }
-    sprintf(tz, "%s%s", cst, cdt);
-    setenv("TZ", tz, 1);
-    tzset();
-}
-
 /*
  * configTime
  * Source: https://github.com/esp8266/Arduino/blob/master/cores/esp8266/time.c
  * */
-void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
+void configTime(const char *tz, const char* server1, const char* server2, const char* server3)
 {
 
     if(sntp_enabled()){
@@ -54,7 +30,8 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
     sntp_setservername(1, (char*)server2);
     sntp_setservername(2, (char*)server3);
     sntp_init();
-    setTimeZone(gmtOffset_sec, daylightOffset_sec);
+    setenv("TZ", tz, 1);
+    tzset();
 }
 
 bool getLocalTime(struct tm * info, uint32_t ms)
