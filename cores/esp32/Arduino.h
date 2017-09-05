@@ -168,6 +168,8 @@ unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 10
 extern "C" bool getLocalTime(struct tm * info, uint32_t ms = 5000);
 extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
+extern "C" void configTzTime(const char* tz,
+        const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
 
 // WMath prototypes
 long random(long);

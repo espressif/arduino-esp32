@@ -45,7 +45,6 @@ static void setTimeZone(long offset, int daylight)
  * */
 void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
 {
-
     if(sntp_enabled()){
         sntp_stop();
     }
@@ -55,6 +54,24 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
     sntp_setservername(2, (char*)server3);
     sntp_init();
     setTimeZone(gmtOffset_sec, daylightOffset_sec);
+}
+
+/*
+ * configTzTime
+ * sntp setup using TZ environment variable
+ * */
+void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3)
+{
+    if(sntp_enabled()){
+        sntp_stop();
+    }
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, (char*)server1);
+    sntp_setservername(1, (char*)server2);
+    sntp_setservername(2, (char*)server3);
+    sntp_init();
+    setenv("TZ", tz, 1);
+    tzset();
 }
 
 bool getLocalTime(struct tm * info, uint32_t ms)
