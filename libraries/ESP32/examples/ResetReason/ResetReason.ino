@@ -77,7 +77,7 @@ void setup() {
 
   // Set ESP32 to go to deep sleep to see a variation
   // in the reset reason. Device will sleep for 5 seconds.
-  esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+  esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
   Serial.println("Going to sleep");
   esp_deep_sleep(5 * uS_TO_S_FACTOR);
 }
