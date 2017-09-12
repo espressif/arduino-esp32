@@ -20,9 +20,9 @@ Method to print the reason by which ESP32
 has been awaken from sleep
 */
 void print_wakeup_reason(){
-  esp_deep_sleep_wakeup_cause_t wakeup_reason;
+  esp_sleep_wakeup_cause_t wakeup_reason;
 
-  wakeup_reason = esp_deep_sleep_get_wakeup_cause();
+  wakeup_reason = esp_sleep_get_wakeup_cause();
 
   switch(wakeup_reason)
   {
@@ -42,7 +42,7 @@ has been awaken from sleep
 void print_wakeup_touchpad(){
   touch_pad_t pin;
 
-  touchPin = esp_deep_sleep_get_touchpad_wakeup_status();
+  touchPin = esp_sleep_get_touchpad_wakeup_status();
 
   switch(touchPin)
   {
@@ -80,7 +80,7 @@ void setup(){
   touchAttachInterrupt(T3, callback, Threshold);
 
   //Configure Touchpad as wakeup source
-  esp_deep_sleep_enable_touchpad_wakeup();
+  esp_sleep_enable_touchpad_wakeup();
 
   //Go to sleep now
   Serial.println("Going to sleep now");
