@@ -32,7 +32,7 @@ import shlex
 import copy
 import io
 
-__version__ = "2.1-beta1"
+__version__ = "2.1"
 
 MAX_UINT32 = 0xffffffff
 MAX_UINT24 = 0xffffff
@@ -1315,7 +1315,7 @@ class ESP32FirmwareImage(BaseFirmwareImage):
 
             if self.append_digest:
                 end = load_file.tell()
-                self.stored_digest = load_file.read(16)
+                self.stored_digest = load_file.read(32)
                 load_file.seek(start)
                 calc_digest = hashlib.sha256()
                 calc_digest.update(load_file.read(end - start))
@@ -1864,6 +1864,15 @@ def image_info(args):
     calc_checksum = image.calculate_checksum()
     print('Checksum: %02x (%s)' % (image.checksum,
                                    'valid' if image.checksum == calc_checksum else 'invalid - calculated %02x' % calc_checksum))
+    try:
+        digest_msg = 'Not appended'
+        if image.append_digest:
+            is_valid = image.stored_digest == image.calc_digest
+            digest_msg = "%s (%s)" % (hexify(image.calc_digest).lower(),
+                                      "valid" if is_valid else "invalid")
+            print('Validation Hash: %s' % digest_msg)
+    except AttributeError:
+        pass  # ESP8266 image has no append_digest field
 
 
 def make_image(args):

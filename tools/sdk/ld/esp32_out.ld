@@ -20,6 +20,7 @@
  * Espressif IoT Development Framework Configuration
  *
  */
+/* If BT is not built at all */
 MEMORY
 {
   /* All these values assume the flash cache is on, and have the blocks this uses subtracted from the length

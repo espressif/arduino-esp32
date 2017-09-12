@@ -57,6 +57,7 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_adc_cal"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
@@ -72,11 +73,13 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spi_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "sdmmc"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "spiffs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
@@ -91,7 +94,7 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
     LIBS=[
-        "gcc", "stdc++", "app_trace", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "heap", "jsmn", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "sdmmc", "smartconfig", "soc", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wear_levelling", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
+        "gcc", "stdc++", "app_trace", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "console", "core", "cxx", "driver", "esp32", "esp_adc_cal", "ethernet", "expat", "fatfs", "freertos", "hal", "heap", "jsmn", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "pthread", "rtc", "sdmmc", "smartconfig", "soc", "spi_flash", "spiffs", "tcpip_adapter", "ulp", "vfs", "wear_levelling", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
     ],
 
     UPLOADERFLAGS=[
@@ -110,6 +113,7 @@ env.Append(
         "-T", "esp32.common.ld",
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
+        "-T", "esp32.rom.spiram_incompatible_fns.ld",
         "-u", "ld_include_panic_highint_hdl"
     ],
 
