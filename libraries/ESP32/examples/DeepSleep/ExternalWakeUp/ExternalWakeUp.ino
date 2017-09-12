@@ -30,9 +30,9 @@ Method to print the reason by which ESP32
 has been awaken from sleep
 */
 void print_wakeup_reason(){
-  esp_deep_sleep_wakeup_cause_t wakeup_reason;
+  esp_sleep_wakeup_cause_t wakeup_reason;
 
-  wakeup_reason = esp_deep_sleep_get_wakeup_cause();
+  wakeup_reason = esp_sleep_get_wakeup_cause();
 
   switch(wakeup_reason)
   {
@@ -66,7 +66,7 @@ void setup(){
   Note that using internal pullups/pulldowns also requires
   RTC peripherals to be turned on.
   */
-  esp_deep_sleep_enable_ext0_wakeup(GPIO_NUM_33,1); //1 = High, 0 = Low
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_33,1); //1 = High, 0 = Low
 
   //If you were to use ext1, you would use it like
   //esp_deep_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ANY_HIGH);
