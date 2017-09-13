@@ -63,14 +63,9 @@ void updateFromFS(fs::FS &fs) {
       }
 
       updateBin.close();
-
-      //remove any previous leftovers
-      if (fs.exists("/update_old.bin")) {
-         fs.remove("/update_old.bin");
-      }
-      
-      //rename the file to prevent an infinite loop of updates
-      fs.rename("/update.bin", "/update_old.bin");
+    
+      // whe finished remove the binary from sd card to indicate end of the process
+      fs.remove("/update.bin");      
    }
    else {
       Serial.println("Could not load update.bin from sd root");
