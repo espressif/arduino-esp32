@@ -6,9 +6,9 @@
 
  Steps:
    1. Flash this image to the ESP32 an run it
-   2. Copy update.bin to a SD-Card, you can:
-      - Use the file supplied in the examples folder
-      - Compile an own app and rename the app binary to update.bin
+   2. Copy update.bin to a SD-Card, you can basically
+      compile this or any other example
+      then copy and rename the app binary to the sd card root
    3. Connect SD-Card as shown in SD_MMC example, 
       this can also be adapted for SPI
    3. After successfull update and reboot, ESP32 shall start the new app
