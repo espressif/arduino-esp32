@@ -680,6 +680,16 @@ void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size)
     SPI_MUTEX_UNLOCK();
 }
 
+void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
+{
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_LOCK();
+    spiTransferBitsNL(spi, data, out, bits);
+    SPI_MUTEX_UNLOCK();
+}
+
 /*
  * Manual Lock Management
  * */
