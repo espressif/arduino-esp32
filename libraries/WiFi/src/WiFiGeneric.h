@@ -28,11 +28,7 @@
 #include <esp_event_loop.h>
 
 typedef void (*WiFiEventCb)(system_event_id_t event);
-
-typedef struct {
-    WiFiEventCb cb;
-    system_event_id_t event;
-} WiFiEventCbList_t;
+typedef void (*WiFiEventFullCb)(system_event_id_t event, system_event_info_t info);
 
 class WiFiGenericClass
 {
@@ -41,7 +37,9 @@ public:
     WiFiGenericClass();
 
     void onEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    void onEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    void removeEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
 
     int32_t channel(void);
 

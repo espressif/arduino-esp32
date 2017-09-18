@@ -120,6 +120,12 @@ static bool espWiFiStop(){
 // ------------------------------------------------- Generic WiFi function -----------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+typedef struct {
+    WiFiEventCb cb;
+    WiFiEventFullCb fcb;
+    system_event_id_t event;
+} WiFiEventCbList_t;
+
 // arduino dont like std::vectors move static here
 static std::vector<WiFiEventCbList_t> cbEventList;
 
@@ -143,6 +149,19 @@ void WiFiGenericClass::onEvent(WiFiEventCb cbEvent, system_event_id_t event)
     }
     WiFiEventCbList_t newEventHandler;
     newEventHandler.cb = cbEvent;
+    newEventHandler.fcb = NULL;
+    newEventHandler.event = event;
+    cbEventList.push_back(newEventHandler);
+}
+
+void WiFiGenericClass::onEvent(WiFiEventFullCb cbEvent, system_event_id_t event)
+{
+    if(!cbEvent) {
+        return;
+    }
+    WiFiEventCbList_t newEventHandler;
+    newEventHandler.cb = NULL;
+    newEventHandler.fcb = cbEvent;
     newEventHandler.event = event;
     cbEventList.push_back(newEventHandler);
 }
@@ -161,6 +180,20 @@ void WiFiGenericClass::removeEvent(WiFiEventCb cbEvent, system_event_id_t event)
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         WiFiEventCbList_t entry = cbEventList[i];
         if(entry.cb == cbEvent && entry.event == event) {
+            cbEventList.erase(cbEventList.begin() + i);
+        }
+    }
+}
+
+void WiFiGenericClass::removeEvent(WiFiEventFullCb cbEvent, system_event_id_t event)
+{
+    if(!cbEvent) {
+        return;
+    }
+
+    for(uint32_t i = 0; i < cbEventList.size(); i++) {
+        WiFiEventCbList_t entry = cbEventList[i];
+        if(entry.fcb == cbEvent && entry.event == event) {
             cbEventList.erase(cbEventList.begin() + i);
         }
     }
@@ -208,9 +241,13 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.cb) {
+        if(entry.cb || entry.fcb) {
             if(entry.event == (system_event_id_t) event->event_id || entry.event == SYSTEM_EVENT_MAX) {
-                entry.cb((system_event_id_t) event->event_id);
+                if(entry.cb){
+                    entry.cb((system_event_id_t) event->event_id);
+                } else {
+                    entry.fcb((system_event_id_t) event->event_id, (system_event_info_t) event->event_info);
+                }
             }
         }
     }
