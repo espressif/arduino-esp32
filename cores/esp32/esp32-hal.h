@@ -61,6 +61,9 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp_system.h"
 
+//returns chip temperature in Celsius
+float temperatureRead();
+
 unsigned long micros();
 unsigned long millis();
 void delay(uint32_t);

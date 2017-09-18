@@ -23,6 +23,15 @@
 #include "esp_log.h"
 #include <sys/time.h>
 
+//Undocumented!!! Get chip temperature in Farenheit
+//Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
+uint8_t temprature_sens_read();
+
+float temperatureRead()
+{
+    return (temprature_sens_read() - 32) / 1.8;
+}
+
 void yield()
 {
     vPortYield();
