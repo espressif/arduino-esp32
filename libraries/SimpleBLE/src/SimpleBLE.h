@@ -15,6 +15,7 @@
 #ifndef _SIMPLE_BLE_H_
 #define _SIMPLE_BLE_H_
 
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <cstdint>
 #include <cstdio>
@@ -56,5 +57,7 @@ class SimpleBLE {
     private:
 
 };
+
+#endif
 
 #endif

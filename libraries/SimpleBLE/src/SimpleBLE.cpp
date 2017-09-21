@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+
 #include "SimpleBLE.h"
 #include "esp32-hal-log.h"
 
@@ -125,3 +127,5 @@ void SimpleBLE::end()
 {
     _stop_gap();
 }
+
+#endif

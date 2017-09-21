@@ -16,6 +16,10 @@
 // Useful if you want to advertise some sort of message
 // Button is attached between GPIO 0 and GND, and the device name changes each time the button is pressed
 
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
 #include "SimpleBLE.h"
 SimpleBLE ble;
 

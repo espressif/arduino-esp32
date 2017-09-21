@@ -14,7 +14,8 @@
 
 #include "esp32-hal-bt.h"
 
-#if CONFIG_BT_ENABLED
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+
 
 #include "bt.h"
 #include "esp_bt_defs.h"
