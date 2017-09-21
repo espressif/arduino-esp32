@@ -66,6 +66,7 @@ public:
     {
         return write((uint8_t) n);
     }
+    uint32_t baudRate();
     operator bool() const;
 
     void setDebugOutput(bool);
