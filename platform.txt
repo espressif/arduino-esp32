@@ -34,7 +34,7 @@ compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
 
 compiler.c.elf.cmd=xtensa-esp32-elf-gcc
 compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.common.ld -T esp32.rom.ld -T esp32.peripherals.ld -T esp32.rom.spiram_incompatible_fns.ld -u ld_include_panic_highint_hdl -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority
-compiler.c.elf.libs=-lgcc -lstdc++ -lapp_trace -lapp_update -lbootloader_support -lbt -lbtdm_app -lc -lc_nano -lcoap -lcoexist -lconsole -lcore -lcxx -ldriver -lesp32 -lesp_adc_cal -lethernet -lexpat -lfatfs -lfreertos -lhal -lheap -ljsmn -ljson -llog -llwip -lm -lmbedtls -lmdns -lmicro-ecc -lnet80211 -lnewlib -lnghttp -lnvs_flash -lopenssl -lphy -lpp -lpthread -lrtc -lsdmmc -lsmartconfig -lsoc -lspi_flash -lspiffs  -ltcpip_adapter -lulp -lvfs -lwear_levelling -lwpa -lwpa2 -lwpa_supplicant -lwps -lxtensa-debug-module
+compiler.c.elf.libs=-lgcc -lstdc++ -lapp_trace -lapp_update -lbootloader_support -lbt -lbtdm_app -lc -lc_nano -lcoap -lcoexist -lconsole -lcore -lcxx -ldriver -lesp32 -lesp_adc_cal -lespnow -lethernet -lexpat -lfatfs -lfreertos -lhal -lheap -ljsmn -ljson -llog -llwip -lm -lmbedtls -lmdns -lmicro-ecc -lnet80211 -lnewlib -lnghttp -lnvs_flash -lopenssl -lphy -lpp -lpthread -lrtc -lsdmmc -lsmartconfig -lsoc -lspi_flash -lspiffs -ltcpip_adapter -lulp -lvfs -lwear_levelling -lwpa -lwpa2 -lwpa_supplicant -lwps -lxtensa-debug-module
 
 compiler.as.cmd=xtensa-esp32-elf-as
 
