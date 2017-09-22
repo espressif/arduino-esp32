@@ -68,7 +68,6 @@ typedef uint8_t   esp_ble_auth_req_t;         /*!< combination of the above bit 
 #define ESP_IO_CAP_KBDISP                   4   /*!< Keyboard display */    /* relate to BTM_IO_CAP_KBDISP in btm_api.h */
 typedef uint8_t esp_ble_io_cap_t;               /*!< combination of the io capability */
 
-
 /// GAP BLE callback event type
 typedef enum {
     ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT        = 0,       /*!< When advertising data set complete, the event comes */
@@ -97,6 +96,7 @@ typedef enum {
     ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT,               /*!< When remove the bond device complete, the event comes */
     ESP_GAP_BLE_CLEAR_BOND_DEV_COMPLETE_EVT,                /*!< When clear the bond device clear complete, the event comes */
     ESP_GAP_BLE_GET_BOND_DEV_COMPLETE_EVT,                  /*!< When get the bond device list complete, the event comes */
+    ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT,                     /*!< When read the rssi complete, the event comes */
     ESP_GAP_BLE_EVT_MAX,
 } esp_gap_ble_cb_event_t;
 
@@ -569,7 +569,7 @@ typedef union {
      */
     struct ble_local_privacy_cmpl_evt_param {
         esp_bt_status_t status;                     /*!< Indicate the set local privacy operation success status */
-    } local_privacy_cmpl;                          /*!< Event parameter of ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT */
+    } local_privacy_cmpl;                           /*!< Event parameter of ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT */
     /**
      * @brief ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT
      */
@@ -591,6 +591,15 @@ typedef union {
         uint8_t dev_num;                            /*!< Indicate the get number device in the bond list */
         esp_ble_bond_dev_t *bond_dev;               /*!< the pointer to the bond device Structure */
     }get_bond_dev_cmpl;                             /*!< Event parameter of ESP_GAP_BLE_GET_BOND_DEV_COMPLETE_EVT */
+    /**
+     * @brief ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT
+     */
+    struct ble_read_rssi_cmpl_evt_param {
+        esp_bt_status_t status;                     /*!< Indicate the read adv tx power operation success status */
+        int8_t rssi;                                /*!< The ble remote device rssi value, the range is from -127 to 20, the unit is dbm,
+                                                         if the RSSI cannot be read, the RSSI metric shall be set to 127. */
+        esp_bd_addr_t remote_addr;                  /*!< The remote device address */
+    } read_rssi_cmpl;                               /*!< Event parameter of ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT */
 } esp_ble_gap_cb_param_t;
 
 /**
@@ -742,6 +751,48 @@ esp_err_t esp_ble_gap_set_rand_addr(esp_bd_addr_t rand_addr);
  */
 esp_err_t esp_ble_gap_config_local_privacy (bool privacy_enable);
 
+/**
+* @brief            Add or remove device from white list
+*
+* @param[in]        add_remove: the value is true if added the ble device to the white list, and false remove to the white list.
+* @param[in]        remote_bda: the remote device address add/remove from the white list.
+* @return
+*                     - ESP_OK : success
+*                     - other  : failed
+*
+*/
+esp_err_t esp_ble_gap_update_whitelist(bool add_remove, esp_bd_addr_t remote_bda);
+
+/**
+* @brief            Get the whitelist size in the controller
+*
+* @param[out]       length: the white list length.
+* @return
+*                     - ESP_OK : success
+*                     - other  : failed
+*
+*/
+esp_err_t esp_ble_gap_get_whitelist_size(uint16_t *length);
+
+/**
+* @brief            This function is called to set the preferred connection
+*                   parameters when default connection parameter is not desired before connecting.
+*                   This API can only be used in the master role.
+*
+* @param[in]        bd_addr: BD address of the peripheral
+* @param[in]        min_conn_int: minimum preferred connection interval
+* @param[in]        max_conn_int: maximum preferred connection interval
+* @param[in]        slave_latency: preferred slave latency
+* @param[in]        supervision_tout: preferred supervision timeout
+*
+* @return
+*                   - ESP_OK : success
+*                   - other  : failed
+*
+*/
+esp_err_t esp_ble_gap_set_prefer_conn_params(esp_bd_addr_t bd_addr,
+                                                                 uint16_t min_conn_int, uint16_t max_conn_int,
+                                                                 uint16_t slave_latency, uint16_t supervision_tout);
 
 /**
  * @brief           Set device name to the local device
@@ -796,7 +847,20 @@ esp_err_t esp_ble_gap_config_adv_data_raw(uint8_t *raw_data, uint32_t raw_data_l
  */
 esp_err_t esp_ble_gap_config_scan_rsp_data_raw(uint8_t *raw_data, uint32_t raw_data_len);
 
+/**
+ * @brief           This function is called to read the RSSI of remote device.
+ *                  The address of link policy results are returned in the gap callback function with
+ *                  ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT event.
+ *
+ * @param[in]       remote_addr : The remote connection device address.
+ *
+ * @return
+ *                  - ESP_OK : success
+ *                  - other  : failed
+ */
+esp_err_t esp_ble_gap_read_rssi(esp_bd_addr_t remote_addr);
 
+#if (SMP_INCLUDED == TRUE)
 /**
 * @brief             Set a GAP security parameter value. Overrides the default value.
 *
@@ -879,24 +943,32 @@ esp_err_t esp_ble_confirm_reply(esp_bd_addr_t bd_addr, bool accept);
 esp_err_t esp_ble_remove_bond_device(esp_bd_addr_t bd_addr);
 
 /**
-* @brief           Removes all of the device from the security database list of
-*                  peer device. It manages unpairing event while connected.
+* @brief           Get the device number from the security database list of peer device.
+*                  It will return the device bonded number immediately.
 *
-* @return            - ESP_OK : success
-*                       - other  : failed
+* @return          - >= 0 : bonded devices number.
+*                  - < 0  : failed
 *
 */
-esp_err_t esp_ble_clear_bond_device_list(void);
+int esp_ble_get_bond_device_num(void);
+
 
 /**
 * @brief           Get the device from the security database list of peer device.
-*                  It will return the device bonded information from the ESP_GAP_BLE_GET_BOND_DEV_COMPLETE_EVT event.
+*                  It will return the device bonded information immediately.
+* @param[inout]    dev_num: Indicate the dev_list array(buffer) size as input.
+*                           If dev_num is large enough, it means the actual number as output.
+*                           Suggest that dev_num value equal to esp_ble_get_bond_device_num().
 *
-* @return            - ESP_OK : success
-*                       - other  : failed
+* @param[out]      dev_list: an array(buffer) of `esp_ble_bond_dev_t` type. Use for storing the bonded devices address.
+*                            The dev_list should be allocated by who call this API. 
+* @return          - ESP_OK : success
+*                  - other  : failed
 *
 */
-esp_err_t esp_ble_get_bond_device_list(void);
+esp_err_t esp_ble_get_bond_device_list(int *dev_num, esp_ble_bond_dev_t *dev_list);
+
+#endif /* #if (SMP_INCLUDED == TRUE) */
 
 /**
 * @brief           This function is to disconnect the physical connection of the peer device

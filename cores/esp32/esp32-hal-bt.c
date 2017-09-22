@@ -52,7 +52,7 @@ bool btStop(){
         return true;
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
-        if (esp_bt_controller_disable(ESP_BT_MODE_BTDM)) {
+        if (esp_bt_controller_disable()) {
             log_e("BT Disable failed");
             return false;
         }
