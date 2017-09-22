@@ -199,6 +199,7 @@ void WiFiSTAClass::_setStatus(wl_status_t status)
  */
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
+    esp_err_t err = ESP_OK;
 
     if(!WiFi.enableSTA(true)) {
         return false;
@@ -206,16 +207,40 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     esp_wifi_start();
 
     tcpip_adapter_ip_info_t info;
-    info.ip.addr = static_cast<uint32_t>(local_ip);
-    info.gw.addr = static_cast<uint32_t>(gateway);
-    info.netmask.addr = static_cast<uint32_t>(subnet);
 
-    tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
-    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info) == ESP_OK) {
-        _useStaticIp = true;
+    if(local_ip != (uint32_t)0x00000000){
+        info.ip.addr = static_cast<uint32_t>(local_ip);
+        info.gw.addr = static_cast<uint32_t>(gateway);
+        info.netmask.addr = static_cast<uint32_t>(subnet);
     } else {
+        info.ip.addr = 0;
+        info.gw.addr = 0;
+        info.netmask.addr = 0;
+    }
+
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
+    if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+        log_e("DHCP could not be stopped! Error: %d", err);
         return false;
     }
+
+    err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info);
+    if(err != ERR_OK){
+        log_e("STA IP could not be configured! Error: %d", err);
+        return false;
+    }
+
+    if(info.ip.addr){
+        _useStaticIp = true;
+    } else {
+        err = tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
+        if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STARTED){
+            log_w("DHCP could not be started! Error: %d", err);
+            return false;
+        }
+        _useStaticIp = false;
+    }
+
     ip_addr_t d;
     d.type = IPADDR_TYPE_V4;
 
