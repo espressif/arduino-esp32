@@ -89,7 +89,11 @@ size_t HardwareSerial::write(const uint8_t *buffer, size_t size)
     uartWriteBuf(_uart, buffer, size);
     return size;
 }
+uint32_t  HardwareSerial::baudRate()
 
+{
+	return uartGetBaudRate(_uart);
+}
 HardwareSerial::operator bool() const
 {
     return true;
