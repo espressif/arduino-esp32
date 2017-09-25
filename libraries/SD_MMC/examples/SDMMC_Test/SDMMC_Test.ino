@@ -201,7 +201,15 @@ void setup(){
     createDir(SD_MMC, "/mydir");
     listDir(SD_MMC, "/", 0);
     removeDir(SD_MMC, "/mydir");
+    writeFile(SD_MMC, "/long file name.txt", "Yes it support long name ");
     listDir(SD_MMC, "/", 2);
+    FILINFO fno;
+    FRESULT r = f_stat ("/long file name.txt", &fno);
+    if (r!=FR_OK){
+		Serial.printf("Error %d\n", r);
+	} else {
+		Serial.printf("Long name : /long file name.txt\nShort name : %s\n",fno.altname);
+	}
     writeFile(SD_MMC, "/hello.txt", "Hello ");
     appendFile(SD_MMC, "/hello.txt", "World!\n");
     readFile(SD_MMC, "/hello.txt");
@@ -209,6 +217,8 @@ void setup(){
     renameFile(SD_MMC, "/hello.txt", "/foo.txt");
     readFile(SD_MMC, "/foo.txt");
     testFileIO(SD_MMC, "/test.txt");
+    Serial.printf("Disk 0: Total Size: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
+    Serial.printf("Disk 0: Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
 
 void loop(){

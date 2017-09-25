@@ -209,6 +209,7 @@ void setup(){
     FILINFO fno;
     FRESULT r = f_stat ("/long file name.txt", &fno);
     if (r!=FR_OK){
+		Serial.printf("Error %d\n", r);
 	} else {
 		Serial.printf("Long name : /long file name.txt\nShort name : %s\n",fno.altname);
 	}

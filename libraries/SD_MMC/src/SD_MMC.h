@@ -17,6 +17,7 @@
 #include "FS.h"
 #include "driver/sdmmc_types.h"
 #include "sd_defines.h"
+#include "ff.h"
 
 namespace fs
 {
@@ -32,6 +33,8 @@ public:
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
+    uint64_t totalBytes(const char * logical_drive="0:", FRESULT * error=NULL);
+    uint64_t usedBytes(const char * logical_drive="0:", FRESULT * error=NULL);
 };
 
 }
