@@ -3,7 +3,7 @@
    Date: 26th September 2017
    Author: Arvind Ravulavaru <https://github.com/arvindr21>
    Purpose: ESPNow Communication between a Master ESP32 and a Slave ESP32
-   Description: This sketch consists of the code for the Master module.
+   Description: This sketch consists of the code for the Slave module.
    Resources: (A bit outdated)
    a. https://espressif.com/sites/default/files/documentation/esp-now_user_guide_en.pdf
    b. http://www.esploradores.com/practica-6-conexion-esp-now/
