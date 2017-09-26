@@ -55,7 +55,9 @@ void InitESPNow() {
 // Scan for slaves in AP mode
 void ScanForSlave() {
   int8_t scanResults = WiFi.scanNetworks();
+  // reset on each scan
   bool slaveFound = 0;
+  memset(&slave, 0, sizeof(slave));
   Serial.println("");
   if (scanResults == 0) {
     Serial.println("No WiFi devices in AP Mode found");
@@ -128,14 +130,6 @@ bool manageSlave() {
       // Slave already paired.
       Serial.println("Already Paired");
       return true;
-    } else if (exists == ESP_ERR_ESPNOW_NOT_INIT) {
-      // How did we get so far!!
-      Serial.println("ESPNOW Not InitESP_ERR_ESPNOW_NOT_INIT");
-      return false;
-    } else if (exists == ESP_ERR_ESPNOW_ARG) {
-      // Invalid Argument
-      Serial.println("Invalid Argument");
-      return false;
     } else {
       // Slave not paired, attempt pair
       esp_err_t addStatus = esp_now_add_peer(peer);
@@ -190,8 +184,6 @@ void deletePeer() {
     Serial.println("Not sure what happened");
   }
 }
-
-
 
 uint8_t data = 0;
 // send data
