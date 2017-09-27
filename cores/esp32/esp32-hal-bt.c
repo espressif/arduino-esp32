@@ -14,7 +14,8 @@
 
 #include "esp32-hal-bt.h"
 
-#if CONFIG_BT_ENABLED
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+
 
 #include "bt.h"
 #include "esp_bt_defs.h"
@@ -51,7 +52,7 @@ bool btStop(){
         return true;
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
-        if (esp_bt_controller_disable(ESP_BT_MODE_BTDM)) {
+        if (esp_bt_controller_disable()) {
             log_e("BT Disable failed");
             return false;
         }
