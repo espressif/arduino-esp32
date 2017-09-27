@@ -2,7 +2,7 @@
    ESPNOW - Basic communication - Master
    Date: 26th September 2017
    Author: Arvind Ravulavaru <https://github.com/arvindr21>
-   Purpose: ESPNow Communication between a Master ESP32 and a Slave ESP32
+   Purpose: ESPNow Communication between a Master ESP32 and multiple ESP32 Slaves
    Description: This sketch consists of the code for the Master module.
    Resources: (A bit outdated)
    a. https://espressif.com/sites/default/files/documentation/esp-now_user_guide_en.pdf
@@ -15,7 +15,7 @@
    Step 2 : Start scanning for Slave ESP32 (we have added a prefix of `slave` to the SSID of slave for an easy setup)
    Step 3 : Once found, add Slave as peer
    Step 4 : Register for send callback
-   Step 5 : Start Transmitting data from Master to Slave
+   Step 5 : Start Transmitting data from Master to Slave(s)
 
    Flow: Slave
    Step 1 : ESPNow Init on Slave
@@ -27,16 +27,35 @@
    Note: Master and Slave have been defined to easily understand the setup.
          Based on the ESPNOW API, there is no concept of Master and Slave.
          Any devices can act as master or salve.
+
+
+  // Sample Serial log with 1 master & 2 slaves
+      Found 12 devices 
+      1: Slave:24:0A:C4:81:CF:A4 [24:0A:C4:81:CF:A5] (-44)
+      3: Slave:30:AE:A4:02:6D:CC [30:AE:A4:02:6D:CD] (-55)
+      2 Slave(s) found, processing..
+      Processing: 24:A:C4:81:CF:A5 Status: Already Paired
+      Processing: 30:AE:A4:2:6D:CD Status: Already Paired
+      Sending: 9
+      Send Status: Success
+      Last Packet Sent to: 24:0a:c4:81:cf:a5
+      Last Packet Send Status: Delivery Success
+      Send Status: Success
+      Last Packet Sent to: 30:ae:a4:02:6d:cd
+      Last Packet Send Status: Delivery Success
+
 */
 
 #include <esp_now.h>
 #include <WiFi.h>
 
 // Global copy of slave
-esp_now_peer_info_t slave;
+#define NUMSLAVES 20
+esp_now_peer_info_t slaves[NUMSLAVES] = {};
+int SlaveCnt = 0;
+
 #define CHANNEL 3
 #define PRINTSCANRESULTS 0
-#define DELETEBEFOREPAIR 0
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -55,10 +74,9 @@ void InitESPNow() {
 // Scan for slaves in AP mode
 void ScanForSlave() {
   int8_t scanResults = WiFi.scanNetworks();
-  // reset on each scan
-  bool slaveFound = 0;
-  memset(&slave, 0, sizeof(slave));
-
+  //reset slaves
+  memset(slaves, 0, sizeof(slaves));
+  SlaveCnt = 0;
   Serial.println("");
   if (scanResults == 0) {
     Serial.println("No WiFi devices in AP Mode found");
@@ -71,43 +89,32 @@ void ScanForSlave() {
       String BSSIDstr = WiFi.BSSIDstr(i);
 
       if (PRINTSCANRESULTS) {
-        Serial.print(i + 1);
-        Serial.print(": ");
-        Serial.print(SSID);
-        Serial.print(" (");
-        Serial.print(RSSI);
-        Serial.print(")");
-        Serial.println("");
+        Serial.print(i + 1); Serial.print(": "); Serial.print(SSID); Serial.print(" ["); Serial.print(BSSIDstr); Serial.print("]"); Serial.print(" ("); Serial.print(RSSI); Serial.print(")"); Serial.println("");
       }
       delay(10);
       // Check if the current device starts with `Slave`
       if (SSID.indexOf("Slave") == 0) {
         // SSID of interest
-        Serial.println("Found a Slave.");
         Serial.print(i + 1); Serial.print(": "); Serial.print(SSID); Serial.print(" ["); Serial.print(BSSIDstr); Serial.print("]"); Serial.print(" ("); Serial.print(RSSI); Serial.print(")"); Serial.println("");
         // Get BSSID => Mac Address of the Slave
         int mac[6];
+
         if ( 6 == sscanf(BSSIDstr.c_str(), "%x:%x:%x:%x:%x:%x%c",  &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5] ) ) {
           for (int ii = 0; ii < 6; ++ii ) {
-            slave.peer_addr[ii] = (uint8_t) mac[ii];
+            slaves[SlaveCnt].peer_addr[ii] = (uint8_t) mac[ii];
           }
         }
-
-        slave.channel = CHANNEL; // pick a channel
-        slave.encrypt = 0; // no encryption
-
-        slaveFound = 1;
-        // we are planning to have only one slave in this example;
-        // Hence, break after we find one, to be a bit efficient
-        break;
+        slaves[SlaveCnt].channel = CHANNEL; // pick a channel
+        slaves[SlaveCnt].encrypt = 0; // no encryption
+        SlaveCnt++;
       }
     }
   }
 
-  if (slaveFound) {
-    Serial.println("Slave Found, processing..");
+  if (SlaveCnt > 0) {
+    Serial.print(SlaveCnt); Serial.println(" Slave(s) found, processing..");
   } else {
-    Serial.println("Slave Not Found, trying again.");
+    Serial.println("No Slave Found, trying again.");
   }
 
   // clean up ram
@@ -116,99 +123,81 @@ void ScanForSlave() {
 
 // Check if the slave is already paired with the master.
 // If not, pair the slave with master
-bool manageSlave() {
-  if (slave.channel == CHANNEL) {
-    if (DELETEBEFOREPAIR) {
-      deletePeer();
-    }
-
-    Serial.print("Slave Status: ");
-    const esp_now_peer_info_t *peer = &slave;
-    const uint8_t *peer_addr = slave.peer_addr;
-    // check if the peer exists
-    bool exists = esp_now_is_peer_exist(peer_addr);
-    if ( exists) {
-      // Slave already paired.
-      Serial.println("Already Paired");
-      return true;
-    } else {
-      // Slave not paired, attempt pair
-      esp_err_t addStatus = esp_now_add_peer(peer);
-      if (addStatus == ESP_OK) {
-        // Pair success
-        Serial.println("Pair success");
-        return true;
-      } else if (addStatus == ESP_ERR_ESPNOW_NOT_INIT) {
-        // How did we get so far!!
-        Serial.println("ESPNOW Not Init");
-        return false;
-      } else if (addStatus == ESP_ERR_ESPNOW_ARG) {
-        Serial.println("Invalid Argument");
-        return false;
-      } else if (addStatus == ESP_ERR_ESPNOW_FULL) {
-        Serial.println("Peer list full");
-        return false;
-      } else if (addStatus == ESP_ERR_ESPNOW_NO_MEM) {
-        Serial.println("Out of memory");
-        return false;
-      } else if (addStatus == ESP_ERR_ESPNOW_EXIST) {
-        Serial.println("Peer Exists");
-        return true;
+void manageSlave() {
+  if (SlaveCnt > 0) {
+    for (int i = 0; i < SlaveCnt; i++) {
+      const esp_now_peer_info_t *peer = &slaves[i];
+      const uint8_t *peer_addr = slaves[i].peer_addr;
+      Serial.print("Processing: ");
+      for (int ii = 0; ii < 6; ++ii ) {
+        Serial.print((uint8_t) slaves[i].peer_addr[ii], HEX);
+        if (ii != 5) Serial.print(":");
+      }
+      Serial.print(" Status: ");
+      // check if the peer exists
+      bool exists = esp_now_is_peer_exist(peer_addr);
+      if (exists) {
+        // Slave already paired.
+        Serial.println("Already Paired");
       } else {
-        Serial.println("Not sure what happened");
-        return false;
+        // Slave not paired, attempt pair
+        esp_err_t addStatus = esp_now_add_peer(peer);
+        if (addStatus == ESP_OK) {
+          // Pair success
+          Serial.println("Pair success");
+        } else if (addStatus == ESP_ERR_ESPNOW_NOT_INIT) {
+          // How did we get so far!!
+          Serial.println("ESPNOW Not Init");
+        } else if (addStatus == ESP_ERR_ESPNOW_ARG) {
+          Serial.println("Add Peer - Invalid Argument");
+        } else if (addStatus == ESP_ERR_ESPNOW_FULL) {
+          Serial.println("Peer list full");
+        } else if (addStatus == ESP_ERR_ESPNOW_NO_MEM) {
+          Serial.println("Out of memory");
+        } else if (addStatus == ESP_ERR_ESPNOW_EXIST) {
+          Serial.println("Peer Exists");
+        } else {
+          Serial.println("Not sure what happened");
+        }
+        delay(100);
       }
     }
   } else {
     // No slave found to process
     Serial.println("No Slave found to process");
-    return false;
   }
 }
 
-void deletePeer() {
-  const esp_now_peer_info_t *peer = &slave;
-  const uint8_t *peer_addr = slave.peer_addr;
-  esp_err_t delStatus = esp_now_del_peer(peer_addr);
-  Serial.print("Slave Delete Status: ");
-  if (delStatus == ESP_OK) {
-    // Delete success
-    Serial.println("Success");
-  } else if (delStatus == ESP_ERR_ESPNOW_NOT_INIT) {
-    // How did we get so far!!
-    Serial.println("ESPNOW Not Init");
-  } else if (delStatus == ESP_ERR_ESPNOW_ARG) {
-    Serial.println("Invalid Argument");
-  } else if (delStatus == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println("Peer not found.");
-  } else {
-    Serial.println("Not sure what happened");
-  }
-}
 
 uint8_t data = 0;
 // send data
 void sendData() {
   data++;
-  const uint8_t *peer_addr = slave.peer_addr;
-  Serial.print("Sending: "); Serial.println(data);
-  esp_err_t result = esp_now_send(peer_addr, &data, sizeof(data));
-  Serial.print("Send Status: ");
-  if (result == ESP_OK) {
-    Serial.println("Success");
-  } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-    // How did we get so far!!
-    Serial.println("ESPNOW not Init.");
-  } else if (result == ESP_ERR_ESPNOW_ARG) {
-    Serial.println("Invalid Argument");
-  } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-    Serial.println("Internal Error");
-  } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-  } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println("Peer not found.");
-  } else {
-    Serial.println("Not sure what happened");
+  for (int i = 0; i < SlaveCnt; i++) {
+    const uint8_t *peer_addr = slaves[i].peer_addr;
+    if (i == 0) { // print only for first slave
+      Serial.print("Sending: ");
+      Serial.println(data);
+    }
+    esp_err_t result = esp_now_send(peer_addr, &data, sizeof(data));
+    Serial.print("Send Status: ");
+    if (result == ESP_OK) {
+      Serial.println("Success");
+    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+      // How did we get so far!!
+      Serial.println("ESPNOW not Init.");
+    } else if (result == ESP_ERR_ESPNOW_ARG) {
+      Serial.println("Invalid Argument");
+    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+      Serial.println("Internal Error");
+    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+      Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+      Serial.println("Peer not found.");
+    } else {
+      Serial.println("Not sure what happened");
+    }
+    delay(100);
   }
 }
 
@@ -225,7 +214,7 @@ void setup() {
   Serial.begin(115200);
   //Set device in STA mode to begin with
   WiFi.mode(WIFI_STA);
-  Serial.println("ESPNow/Basic/Master Example");
+  Serial.println("ESPNow/Multi-Slave/Master Example");
   // This is the mac address of the Master in Station Mode
   Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
   // Init ESPNow with a fallback logic
@@ -240,23 +229,17 @@ void loop() {
   ScanForSlave();
   // If Slave is found, it would be populate in `slave` variable
   // We will check if `slave` is defined and then we proceed further
-  if (slave.channel == CHANNEL) { // check if slave channel is defined
+  if (SlaveCnt > 0) { // check if slave channel is defined
     // `slave` is defined
     // Add slave as peer if it has not been added already
-    bool isPaired = manageSlave();
-    if (isPaired) {
-      // pair success or already paired
-      // Send data to device
-      sendData();
-    } else {
-      // slave pair failed
-      Serial.println("Slave pair failed!");
-    }
-  }
-  else {
+    manageSlave();
+    // pair success or already paired
+    // Send data to device
+    sendData();
+  } else {
     // No slave found to process
   }
 
   // wait for 3seconds to run the logic again
-  delay(3000);
+  delay(1000);
 }
