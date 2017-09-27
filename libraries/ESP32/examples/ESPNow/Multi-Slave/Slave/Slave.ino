@@ -15,7 +15,7 @@
    Step 2 : Start scanning for Slave ESP32 (we have added a prefix of `slave` to the SSID of slave for an easy setup)
    Step 3 : Once found, add Slave as peer
    Step 4 : Register for send callback
-   Step 5 : Start Transmitting data from Master to found Slaves
+   Step 5 : Start Transmitting data from Master to Slave(s)
 
    Flow: Slave
    Step 1 : ESPNow Init on Slave

@@ -2,7 +2,7 @@
    ESPNOW - Basic communication - Master
    Date: 26th September 2017
    Author: Arvind Ravulavaru <https://github.com/arvindr21>
-   Purpose: ESPNow Communication between a Master ESP32 and a Slave ESP32
+   Purpose: ESPNow Communication between a Master ESP32 and multiple ESP32 Slaves
    Description: This sketch consists of the code for the Master module.
    Resources: (A bit outdated)
    a. https://espressif.com/sites/default/files/documentation/esp-now_user_guide_en.pdf
@@ -15,7 +15,7 @@
    Step 2 : Start scanning for Slave ESP32 (we have added a prefix of `slave` to the SSID of slave for an easy setup)
    Step 3 : Once found, add Slave as peer
    Step 4 : Register for send callback
-   Step 5 : Start Transmitting data from Master to Slave
+   Step 5 : Start Transmitting data from Master to Slave(s)
 
    Flow: Slave
    Step 1 : ESPNow Init on Slave
