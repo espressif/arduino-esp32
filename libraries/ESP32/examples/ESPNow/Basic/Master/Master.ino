@@ -58,6 +58,7 @@ void ScanForSlave() {
   // reset on each scan
   bool slaveFound = 0;
   memset(&slave, 0, sizeof(slave));
+
   Serial.println("");
   if (scanResults == 0) {
     Serial.println("No WiFi devices in AP Mode found");
