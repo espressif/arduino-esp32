@@ -98,5 +98,36 @@ uint64_t SDMMCFS::cardSize()
     return (uint64_t)_card->csd.capacity * _card->csd.sector_size;
 }
 
+uint64_t SDMMCFS::totalBytes(const char * logical_drive, FRESULT * error)
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	FRESULT result_id = f_getfree(logical_drive,&fre_clust,&fsinfo);
+	if (error !=NULL)*error = result_id; 
+    if (result_id!= FR_OK) return 0;
+    uint64_t size = (fsinfo->csize)*(fsinfo->n_fatent - 2)
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
+}
+
+uint64_t SDMMCFS::usedBytes(const char * logical_drive, FRESULT * error)
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	FRESULT result_id = f_getfree(logical_drive,&fre_clust,&fsinfo);
+	if (error !=NULL)*error = result_id; 
+    if (result_id!= FR_OK) return 0;
+	uint64_t size = (fsinfo->csize)*((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
+}
 
 SDMMCFS SD_MMC = SDMMCFS(FSImplPtr(new VFSImpl()));

@@ -204,7 +204,15 @@ void setup(){
     createDir(SD, "/mydir");
     listDir(SD, "/", 0);
     removeDir(SD, "/mydir");
+    writeFile(SD, "/long file name.txt", "Yes it support long name ");
     listDir(SD, "/", 2);
+    FILINFO fno;
+    FRESULT r = f_stat ("/long file name.txt", &fno);
+    if (r!=FR_OK){
+		Serial.printf("Error %d\n", r);
+	} else {
+		Serial.printf("Long name : /long file name.txt\nShort name : %s\n",fno.altname);
+	}
     writeFile(SD, "/hello.txt", "Hello ");
     appendFile(SD, "/hello.txt", "World!\n");
     readFile(SD, "/hello.txt");
@@ -212,6 +220,8 @@ void setup(){
     renameFile(SD, "/hello.txt", "/foo.txt");
     readFile(SD, "/foo.txt");
     testFileIO(SD, "/test.txt");
+    Serial.printf("Disk 0: Total Size: %lluMB\n", SD.totalBytes() / (1024 * 1024));
+    Serial.printf("Disk 0: Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
 }
 
 void loop(){
