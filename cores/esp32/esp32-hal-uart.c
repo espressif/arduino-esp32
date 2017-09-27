@@ -27,7 +27,9 @@
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/dport_reg.h"
-#include "esp_intr_alloc.h"
+
+#define ETS_UART_INUM  5
+#define ETS_UART2_INUM  ETS_UART_INUM
 
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
 #define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:(         (u==2)?U2RXD_IN_IDX:0)))
@@ -43,7 +45,6 @@ struct uart_struct_t {
 #endif
     uint8_t num;
     xQueueHandle queue;
-    intr_handle_t intr_handle;
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -60,9 +61,9 @@ static uart_t _uart_bus_array[3] = {
 #define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[3] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL, NULL}
+    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL},
+    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL},
+    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL}
 };
 #endif
 
@@ -74,9 +75,6 @@ static void IRAM_ATTR _uart_isr(void *arg)
 
     for(i=0;i<3;i++){
         uart = &_uart_bus_array[i];
-        if(uart->intr_handle == NULL){
-            continue;
-        }
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
@@ -87,9 +85,22 @@ static void IRAM_ATTR _uart_isr(void *arg)
             }
         }
     }
+
     if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR();
     }
+}
+
+void uartEnableGlobalInterrupt()
+{
+    xt_set_interrupt_handler(ETS_UART_INUM, _uart_isr, NULL);
+    ESP_INTR_ENABLE(ETS_UART_INUM);
+}
+
+void uartDisableGlobalInterrupt()
+{
+    ESP_INTR_DISABLE(ETS_UART_INUM);
+    xt_set_interrupt_handler(ETS_UART_INUM, NULL, NULL);
 }
 
 void uartEnableInterrupt(uart_t* uart)
@@ -103,7 +114,7 @@ void uartEnableInterrupt(uart_t* uart)
     uart->dev->int_ena.rxfifo_tout = 1;
     uart->dev->int_clr.val = 0xffffffff;
 
-    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
+    intr_matrix_set(xPortGetCoreID(), UART_INTR_SOURCE(uart->num), ETS_UART_INUM);
     UART_MUTEX_UNLOCK();
 }
 
@@ -113,9 +124,6 @@ void uartDisableInterrupt(uart_t* uart)
     uart->dev->conf1.val = 0;
     uart->dev->int_ena.val = 0;
     uart->dev->int_clr.val = 0xffffffff;
-
-    esp_intr_free(uart->intr_handle);
-
     UART_MUTEX_UNLOCK();
 }
 
@@ -144,6 +152,7 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
     uartEnableInterrupt(uart);
+    uartEnableGlobalInterrupt();
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
