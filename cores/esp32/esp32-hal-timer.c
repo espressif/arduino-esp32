@@ -213,14 +213,12 @@ void timerEnd(hw_timer_t *timer){
     timerAttachInterrupt(timer, NULL, false);
 }
 
-#define HWTIMER_INUM 10
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     static bool initialized = false;
-    //static intr_handle_t intr_handle = NULL;
-    //if(intr_handle){
-    //    esp_intr_disable(intr_handle);
-    //}
-    ESP_INTR_DISABLE(HWTIMER_INUM);
+    static intr_handle_t intr_handle = NULL;
+    if(intr_handle){
+        esp_intr_disable(intr_handle);
+    }
     if(fn == NULL){
         timer->dev->config.level_int_en = 0;
         timer->dev->config.edge_int_en = 0;
@@ -251,22 +249,19 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         }
         if(!initialized){
             initialized = true;
-            xt_set_interrupt_handler(HWTIMER_INUM, &__timerISR, NULL);
-            //esp_intr_alloc(intr_source, (int)ESP_INTR_FLAG_IRAM, __timerISR, NULL, &intr_handle);
-        }// else {
-        //    intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
-        //}
-        intr_matrix_set(xPortGetCoreID(), intr_source, HWTIMER_INUM);
+            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_EDGE), __timerISR, NULL, &intr_handle);
+        } else {
+            intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
+        }
         if(timer->group){
             TIMERG1.int_ena.val |= BIT(timer->timer);
         } else {
             TIMERG0.int_ena.val |= BIT(timer->timer);
         }
     }
-    //if(intr_handle){
-    //    esp_intr_enable(intr_handle);
-    //}
-    ESP_INTR_ENABLE(HWTIMER_INUM);
+    if(intr_handle){
+        esp_intr_enable(intr_handle);
+    }
 }
 
 void timerDetachInterrupt(hw_timer_t *timer){
