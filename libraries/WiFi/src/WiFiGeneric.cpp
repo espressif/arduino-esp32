@@ -51,12 +51,55 @@ extern "C" {
 #undef max
 #include <vector>
 
+
+static xQueueHandle _network_event_queue;
+static TaskHandle_t _network_event_task_handle = NULL;
+
+static void _network_event_task(void * arg){
+    system_event_t *event = NULL;
+    for (;;) {
+        if(xQueueReceive(_network_event_queue, &event, 0) == pdTRUE){
+            WiFiGenericClass::_eventCallback(NULL, event);
+        } else {
+            vTaskDelay(1);
+        }
+    }
+    vTaskDelete(NULL);
+    _network_event_task_handle = NULL;
+}
+
+static esp_err_t _network_event_cb(void *arg, system_event_t *event){
+    if (xQueueSend(_network_event_queue, &event, portMAX_DELAY) != pdPASS) {
+        log_w("Network Event Queue Send Failed!");
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
+static void _start_network_event_task(){
+    if(!_network_event_queue){
+        _network_event_queue = xQueueCreate(32, sizeof(system_event_t *));
+        if(!_network_event_queue){
+            log_e("Network Event Queue Create Failed!");
+            return;
+        }
+    }
+    if(!_network_event_task_handle){
+        xTaskCreatePinnedToCore(_network_event_task, "network_event", 4096, NULL, 2, &_network_event_task_handle, 1);
+        if(!_network_event_task_handle){
+            log_e("Network Event Task Start Failed!");
+            return;
+        }
+    }
+    esp_event_loop_init(&_network_event_cb, NULL);
+}
+
 void tcpipInit(){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
+        _start_network_event_task();
         tcpip_adapter_init();
-        esp_event_loop_init(&WiFiGenericClass::_eventCallback, NULL);
     }
 }
 
