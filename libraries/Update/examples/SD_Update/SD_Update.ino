@@ -52,6 +52,12 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
 void updateFromFS(fs::FS &fs) {
    File updateBin = fs.open("/update.bin");
    if (updateBin) {
+      if(updateBin.isDirectory()){
+         Serial.println("Error, update.bin is not a file");
+         updateBin.close();
+         return;
+      }
+
       size_t updateSize = updateBin.size();
 
       if (updateSize > 0) {
