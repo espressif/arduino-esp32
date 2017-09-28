@@ -107,14 +107,10 @@ bool HTTPClient::begin(String url, const char* CAcert)
 {
     _transportTraits.reset(nullptr);
     _port = 443;
-    if (strlen(CAcert) == 0) {
-        return false;
-    }
     if (!beginInternal(url, "https")) {
         return false;
     }
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
-    //log_d("[HTTP-Client][begin] CAcert: %s", CAcert.c_str());
     return true;
 }
 
