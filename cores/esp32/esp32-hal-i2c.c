@@ -445,7 +445,8 @@ void i2cInitFix(i2c_t * i2c){
     i2c->dev->fifo_data.data = 0;
     i2cSetCmd(i2c, 1, I2C_CMD_WRITE, 1, false, false, false);
     i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
-    i2c->dev->ctr.trans_start = 1;
-    while(!i2c->dev->command[2].done);
+    do {
+        i2c->dev->ctr.trans_start = 1;
+    } while(!i2c->dev->command[2].done);
     I2C_MUTEX_UNLOCK();
 }
