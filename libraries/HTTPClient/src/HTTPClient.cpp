@@ -120,6 +120,10 @@ bool HTTPClient::begin(String url, const char* CAcert)
  */
 bool HTTPClient::begin(String url)
 {
+
+    if (beginInternal(url, "https")) {
+        return begin(url, (const char*)NULL);
+    }
     _transportTraits.reset(nullptr);
     _port = 80;
     if (!beginInternal(url, "http")) {
@@ -143,6 +147,11 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
     }
 
     _protocol = url.substring(0, index);
+    if (_protocol != expectedProtocol) {
+        log_d("[HTTP-Client][begin] unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
+        return false;
+    }
+
     url.remove(0, (index + 3)); // remove http:// or https://
 
     index = url.indexOf('/');
@@ -168,10 +177,6 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
         _host = host;
     }
     _uri = url;
-    if (_protocol != expectedProtocol) {
-        log_d("[HTTP-Client][begin] unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
-        return false;
-    }
     log_d("[HTTP-Client][begin] host: %s port: %d url: %s", _host.c_str(), _port, _uri.c_str());
     return true;
 }
