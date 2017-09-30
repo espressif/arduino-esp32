@@ -18,6 +18,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "rom/ets_sys.h"
+#include "driver/periph_ctrl.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
 #include "soc/dport_reg.h"
@@ -154,6 +155,13 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
 
     I2C_MUTEX_LOCK();
 
+    if (i2c->dev->status_reg.bus_busy == 1)
+    {
+        log_e( "Busy Timeout! Addr: %x", address >> 1 );
+        I2C_MUTEX_UNLOCK();
+        return I2C_ERROR_BUSY;
+    }
+
     while(dataLen) {
         uint8_t willSend = (dataLen > 32)?32:dataLen;
         uint8_t dataSend = willSend;
@@ -199,29 +207,29 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
         while(1) {
             //have been looping for too long
             if((millis() - startAt)>50){
-                //log_e("Timeout! Addr: %x", address >> 1);
+                log_e("Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
-                //log_e("Bus Fail! Addr: %x", address >> 1);
+                log_e("Bus Fail! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
-                //log_e("Bus Timeout! Addr: %x", address >> 1);
+                log_e("Bus Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_TIMEOUT;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
-                //log_w("Ack Error! Addr: %x", address >> 1);
-                while(i2c->dev->status_reg.bus_busy);
+                log_w("Ack Error! Addr: %x", address >> 1);
+                while((i2c->dev->status_reg.bus_busy) && ((millis() - startAt)>50));
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
             }
@@ -249,6 +257,13 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
     }
 
     I2C_MUTEX_LOCK();
+
+    if (i2c->dev->status_reg.bus_busy == 1)
+    {
+        log_w( "Busy Timeout! Addr: %x", address >> 1 );
+        I2C_MUTEX_UNLOCK();
+        return I2C_ERROR_BUSY;
+    }
 
     i2cResetFiFo(i2c);
     i2cResetCmd(i2c);
@@ -295,28 +310,28 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
         while(1) {
             //have been looping for too long
             if((millis() - startAt)>50){
-                //log_e("Timeout! Addr: %x", address >> 1);
+                log_e("Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
-                //log_e("Bus Fail! Addr: %x", address >> 1);
+                log_e("Bus Fail! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
-                //log_e("Bus Timeout! Addr: %x", address >> 1);
+                log_e("Bus Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_TIMEOUT;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
-                //log_w("Ack Error! Addr: %x", address >> 1);
+                log_w("Ack Error! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
             }
@@ -445,7 +460,25 @@ void i2cInitFix(i2c_t * i2c){
     i2c->dev->fifo_data.data = 0;
     i2cSetCmd(i2c, 1, I2C_CMD_WRITE, 1, false, false, false);
     i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
+    if (i2c->dev->status_reg.bus_busy) // If this condition is true, the while loop will timeout as done will not be set
+    {
+        log_e("Busy at initialization!");
+    }
     i2c->dev->ctr.trans_start = 1;
-    while(!i2c->dev->command[2].done);
+    uint16_t count = 50000;
+    while ((!i2c->dev->command[2].done) && (--count > 0));
     I2C_MUTEX_UNLOCK();
 }
+
+void i2cReset(i2c_t* i2c){
+    if(i2c == NULL){
+        return;
+    }
+    I2C_MUTEX_LOCK();
+    periph_module_t moduleId = (i2c == &_i2c_bus_array[0])?PERIPH_I2C0_MODULE:PERIPH_I2C1_MODULE;
+    periph_module_disable( moduleId );
+    delay( 20 ); // Seems long but delay was chosen to ensure system teardown and setup without core generation
+    periph_module_enable( moduleId );
+    I2C_MUTEX_UNLOCK();
+}
+

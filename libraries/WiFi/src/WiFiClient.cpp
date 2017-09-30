@@ -118,7 +118,7 @@ int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
     int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
     if(res < 0) {
-        log_e("%d", errno);
+        log_e("%X : %d", option, errno);
     }
     return res;
 }

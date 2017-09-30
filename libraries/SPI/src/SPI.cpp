@@ -127,8 +127,8 @@ void SPIClass::beginTransaction(SPISettings settings)
 void SPIClass::endTransaction()
 {
     if(_inTransaction){
-        spiEndTransaction(_spi);
         _inTransaction = false;
+        spiEndTransaction(_spi);
     }
 }
 

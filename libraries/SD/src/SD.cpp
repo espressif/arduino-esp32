@@ -14,6 +14,7 @@
 
 #include "vfs_api.h"
 #include "sd_diskio.h"
+#include "ff.h"
 #include "FS.h"
 #include "SD.h"
 
@@ -71,6 +72,34 @@ uint64_t SDFS::cardSize()
     size_t sectors = sdcard_num_sectors(_pdrv);
     size_t sectorSize = sdcard_sector_size(_pdrv);
     return (uint64_t)sectors * sectorSize;
+}
+
+uint64_t SDFS::totalBytes()
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
+    uint64_t size = (fsinfo->csize)*(fsinfo->n_fatent - 2)
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
+}
+
+uint64_t SDFS::usedBytes()
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
+	uint64_t size = (fsinfo->csize)*((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
 }
 
 SDFS SD = SDFS(FSImplPtr(new VFSImpl()));

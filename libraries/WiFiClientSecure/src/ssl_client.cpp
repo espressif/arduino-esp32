@@ -19,6 +19,9 @@ const char *pers = "esp32-tls";
 
 static int handle_error(int err)
 {
+    if(err == -30848){
+        return err;
+    }
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
     mbedtls_strerror(err, error_buf, 100);
@@ -42,9 +45,9 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     char buf[512];
     int ret, flags, len, timeout;
     int enable = 1;
-    log_i("Free heap before TLS %u", xPortGetFreeHeapSize());
+    log_v("Free heap before TLS %u", xPortGetFreeHeapSize());
 
-    log_i("Starting socket");
+    log_v("Starting socket");
     ssl_client->socket = -1;
 
     ssl_client->socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -79,7 +82,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
 
-    log_i("Seeding the random number generator");
+    log_v("Seeding the random number generator");
     mbedtls_entropy_init(&ssl_client->entropy_ctx);
 
     ret = mbedtls_ctr_drbg_seed(&ssl_client->drbg_ctx, mbedtls_entropy_func,
@@ -88,7 +91,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return handle_error(ret);
     }
 
-    log_i("Setting up the SSL/TLS structure...");
+    log_v("Setting up the SSL/TLS structure...");
 
     if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
                                            MBEDTLS_SSL_IS_CLIENT,
@@ -101,7 +104,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     // MBEDTLS_SSL_VERIFY_NONE if not.
 
     if (rootCABuff != NULL) {
-        log_i("Loading CA cert");
+        log_v("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
         ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (const unsigned char *)rootCABuff, strlen(rootCABuff) + 1);
@@ -119,14 +122,14 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_x509_crt_init(&ssl_client->client_cert);
         mbedtls_pk_init(&ssl_client->client_key);
 
-        log_i("Loading CRT cert");
+        log_v("Loading CRT cert");
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
         if (ret < 0) {
             return handle_error(ret);
         }
 
-        log_i("Loading private key");
+        log_v("Loading private key");
         ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
 
         if (ret != 0) {
@@ -136,7 +139,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_ssl_conf_own_cert(&ssl_client->ssl_conf, &ssl_client->client_cert, &ssl_client->client_key);
     }
 
-    log_i("Setting hostname for TLS session...");
+    log_v("Setting hostname for TLS session...");
 
     // Hostname set here should match CN in server certificate
     if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0){
@@ -151,7 +154,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     mbedtls_ssl_set_bio(&ssl_client->ssl_ctx, &ssl_client->socket, mbedtls_net_send, mbedtls_net_recv, NULL );
 
-    log_i("Performing the SSL/TLS handshake...");
+    log_v("Performing the SSL/TLS handshake...");
 
     while ((ret = mbedtls_ssl_handshake(&ssl_client->ssl_ctx)) != 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
@@ -161,25 +164,24 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
 
     if (cli_cert != NULL && cli_key != NULL) {
-        log_i("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
+        log_d("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
         if ((ret = mbedtls_ssl_get_record_expansion(&ssl_client->ssl_ctx)) >= 0) {
-            log_i("Record expansion is %d", ret);
+            log_d("Record expansion is %d", ret);
         } else {
-            log_i("Record expansion is unknown (compression)");
+            log_w("Record expansion is unknown (compression)");
         }
     }
 
-    log_i("Verifying peer X.509 certificate...");
+    log_v("Verifying peer X.509 certificate...");
 
     if ((flags = mbedtls_ssl_get_verify_result(&ssl_client->ssl_ctx)) != 0) {
-        log_e("Failed to verify peer certificate!");
         bzero(buf, sizeof(buf));
         mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
-        log_e("verification info: %s", buf);
+        log_e("Failed to verify peer certificate! verification info: %s", buf);
         stop_ssl_socket(ssl_client, rootCABuff, cli_cert, cli_key);  //It's not safe continue.
         return handle_error(ret);
     } else {
-        log_i("Certificate verified.");
+        log_v("Certificate verified.");
     }
     
     if (rootCABuff != NULL) {
@@ -194,7 +196,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_pk_free(&ssl_client->client_key);
     }    
 
-    log_i("Free heap after TLS %u", xPortGetFreeHeapSize());
+    log_v("Free heap after TLS %u", xPortGetFreeHeapSize());
 
     return ssl_client->socket;
 }
@@ -202,7 +204,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
 void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
-    log_i("Cleaning SSL connection.");
+    log_v("Cleaning SSL connection.");
 
     if (ssl_client->socket >= 0) {
         close(ssl_client->socket);
@@ -233,7 +235,7 @@ int data_to_read(sslclient_context *ssl_client)
 
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t len)
 {
-    //log_i("Writing HTTP request...");  //for low level debug
+    log_v("Writing HTTP request...");  //for low level debug
     int ret = -1;
 
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
@@ -243,18 +245,18 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
     }
 
     len = ret;
-    //log_i("%d bytes written", len);  //for low level debug
+    log_v("%d bytes written", len);  //for low level debug
     return ret;
 }
 
 
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length)
 {
-    //log_i( "Reading HTTP response...");   //for low level debug
+    //log_d( "Reading HTTP response...");   //for low level debug
     int ret = -1;
 
     ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, data, length);
 
-    //log_i( "%d bytes readed", ret);   //for low level debug
+    log_v( "%d bytes read", ret);   //for low level debug
     return ret;
 }

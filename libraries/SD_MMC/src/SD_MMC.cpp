@@ -23,6 +23,7 @@ extern "C" {
 #include "driver/sdmmc_defs.h"
 #include "sdmmc_cmd.h"
 }
+#include "ff.h"
 #include "SD_MMC.h"
 
 using namespace fs;
@@ -98,5 +99,32 @@ uint64_t SDMMCFS::cardSize()
     return (uint64_t)_card->csd.capacity * _card->csd.sector_size;
 }
 
+uint64_t SDMMCFS::totalBytes()
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
+    uint64_t size = (fsinfo->csize)*(fsinfo->n_fatent - 2)
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
+}
+
+uint64_t SDMMCFS::usedBytes()
+{
+	FATFS* fsinfo;
+	DWORD fre_clust;
+	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
+	uint64_t size = (fsinfo->csize)*((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
+#if _MAX_SS != 512
+        *(fsinfo->ssize);
+#else
+        *512;
+#endif
+	return size;
+}
 
 SDMMCFS SD_MMC = SDMMCFS(FSImplPtr(new VFSImpl()));

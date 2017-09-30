@@ -211,4 +211,11 @@ void TwoWire::flush(void)
     txLength = 0;
 }
 
+void TwoWire::reset(void)
+{
+    i2cReset( i2c );
+    i2c = NULL;
+    begin( sda, scl );
+}
+
 TwoWire Wire = TwoWire(0);

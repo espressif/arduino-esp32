@@ -32,6 +32,8 @@ public:
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
+    uint64_t totalBytes();
+    uint64_t usedBytes();
 };
 
 }
