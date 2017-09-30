@@ -24,6 +24,7 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
   + [Instructions for Mac](docs/arduino-ide/mac.md)
   + [Instructions for Debian/Ubuntu Linux](docs/arduino-ide/debian_ubuntu.md)
   + [Instructions for Fedora](docs/arduino-ide/fedora.md)
+  + [Instructions for openSUSE](docs/arduino-ide/opensuse.md)
 - [Using PlatformIO](docs/platformio.md)
 - [Building with make](docs/make.md)
 - [Using as ESP-IDF component](docs/esp-idf_component.md)
