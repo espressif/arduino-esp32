@@ -18,20 +18,20 @@
 static void setTimeZone(long offset, int daylight)
 {
     char cst[16] = {0};
-    char cdt[16] = "CDT";
+    char cdt[16] = "DST";
     char tz[32] = {0};
 
     if(offset % 3600){
-        sprintf(cst, "CST%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));
+        sprintf(cst, "UTC%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));
     } else {
-        sprintf(cst, "CST%ld", offset / 3600);
+        sprintf(cst, "UTC%ld", offset / 3600);
     }
     if(daylight != 3600){
         long tz_dst = offset - daylight;
         if(tz_dst % 3600){
-            sprintf(cdt, "CDT%ld:%02u:%02u", tz_dst / 3600, abs((tz_dst % 3600) / 60), abs(tz_dst % 60));
+            sprintf(cdt, "DST%ld:%02u:%02u", tz_dst / 3600, abs((tz_dst % 3600) / 60), abs(tz_dst % 60));
         } else {
-            sprintf(cdt, "CDT%ld", tz_dst / 3600);
+            sprintf(cdt, "DST%ld", tz_dst / 3600);
         }
     }
     sprintf(tz, "%s%s", cst, cdt);
@@ -53,7 +53,7 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
     sntp_setservername(1, (char*)server2);
     sntp_setservername(2, (char*)server3);
     sntp_init();
-    setTimeZone(gmtOffset_sec, daylightOffset_sec);
+    setTimeZone(-gmtOffset_sec, daylightOffset_sec);
 }
 
 /*
