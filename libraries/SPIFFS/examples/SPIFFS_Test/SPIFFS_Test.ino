@@ -36,7 +36,7 @@ void readFile(fs::FS &fs, const char * path){
     Serial.printf("Reading file: %s\n", path);
 
     File file = fs.open(path);
-    if(!file){
+    if(!file || file.isDirectory()){
         Serial.println("Failed to open file for reading");
         return;
     }
@@ -101,7 +101,7 @@ void testFileIO(fs::FS &fs, const char * path){
     size_t len = 0;
     uint32_t start = millis();
     uint32_t end = start;
-    if(file){
+    if(file && !file.isDirectory()){
         len = file.size();
         size_t flen = len;
         start = millis();
