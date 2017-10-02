@@ -14,6 +14,10 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if(_uart) {
         end();
     }
+    if(0 > _uart_nr || _uart_nr > 2) {
+        log_e("Serial number is invalid, please use 0, 1 or 2");
+        end();
+    }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
         rxPin = 3;
         txPin = 1;
