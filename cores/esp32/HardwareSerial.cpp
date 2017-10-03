@@ -11,11 +11,11 @@ HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin)
 {
-    if(_uart) {
-        end();
-    }
     if(0 > _uart_nr || _uart_nr > 2) {
         log_e("Serial number is invalid, please use 0, 1 or 2");
+        return;
+    }
+    if(_uart) {
         end();
     }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
