@@ -119,7 +119,7 @@ uint32_t EspClass::getFreeHeap(void)
 
 uint8_t EspClass::getChipRevision(void)
 {
-    return (REG_READ(EFUSE_BLK0_RDATA3_REG) >> EFUSE_RD_CHIP_VER_RESERVE_S) && EFUSE_RD_CHIP_VER_RESERVE_V;
+    return (REG_READ(EFUSE_BLK0_RDATA3_REG) >> EFUSE_RD_CHIP_VER_RESERVE_S) & EFUSE_RD_CHIP_VER_RESERVE_V;
 }
 
 const char * EspClass::getSdkVersion(void)
