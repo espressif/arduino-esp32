@@ -628,10 +628,10 @@ DRESULT ff_sd_ioctl(uint8_t pdrv, uint8_t cmd, void* buff)
         *((unsigned long*) buff) = s_cards[pdrv]->sectors;
         return RES_OK;
     case GET_SECTOR_SIZE:
-        *((unsigned long*) buff) = 512;
+        *((WORD*) buff) = 512;
         return RES_OK;
     case GET_BLOCK_SIZE:
-        *((unsigned long*)buff) = 1;
+        *((uint32_t*)buff) = 1;
         return RES_OK;
     }
     return RES_PARERR;
