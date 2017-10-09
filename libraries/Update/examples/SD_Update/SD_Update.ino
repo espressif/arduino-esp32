@@ -88,22 +88,22 @@ void setup() {
 
    //first init and check SD card
    if (!SD_MMC.begin()) {
-      Serial.println("Card Mount Failed");
-      goto end;
+      rebootEspWithReason("Card Mount Failed");
    }
 
    cardType = SD_MMC.cardType();
 
    if (cardType == CARD_NONE) {
-      Serial.println("No SD_MMC card attached");
-      goto end;
-   }
+      rebootEspWithReason("No SD_MMC card attached");
+   }else{
+      updateFromFS(SD_MMC);
+  }
+}
 
-   updateFromFS(SD_MMC);
-
-end: 
-   delay(1000);
-   ESP.restart();
+void rebootEspWithReason(String reason){
+    Serial.println(reason);
+    delay(1000);
+    ESP.restart();
 }
 
 //will not be reached
