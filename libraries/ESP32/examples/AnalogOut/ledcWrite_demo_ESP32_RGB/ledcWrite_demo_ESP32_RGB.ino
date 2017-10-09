@@ -1,5 +1,5 @@
 /*
-  ledcWrite_demo_ESP32_RGB.ino
+  ledcWrite_RGB.ino
   Runs through the full 255 color spectrum for an rgb led 
   Demonstrate ledcWrite functionality for driving leds with PWM on ESP32
  
@@ -19,7 +19,7 @@ const boolean invert = true; // set true if common anode, false if common cathod
 
 uint8_t color = 0;          // a value from 0 to 255 representing the hue
 uint32_t R, G, B;           // the Red Green and Blue color components
-uint8_t brightness = 255;  // 255 is maximum brightness, but can be changed
+uint8_t brightness = 255;  // 255 is maximum brightness, but can be changed.  Might need 256 for common anode to fully turn off.
 
 // the setup routine runs once when you press reset:
 void setup() 
@@ -43,7 +43,8 @@ void setup()
 void loop() 
 {
   Serial.println("Send all LEDs a 255 and wait 2 seconds.");
-  // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode
+  // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
+  // If it doesn't fully turn off and is common anode try using 256.
   ledcWrite(1, 255);
   ledcWrite(2, 255);
   ledcWrite(3, 255);
