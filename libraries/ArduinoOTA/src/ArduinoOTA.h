@@ -32,7 +32,7 @@ class ArduinoOTAClass
     //Sets the service port. Default 3232
     void setPort(uint16_t port);
 
-    //Sets the device hostname. Default esp8266-xxxxxx
+    //Sets the device hostname. Default esp32-xxxxxx
     void setHostname(const char *hostname);
     String getHostname();
 
