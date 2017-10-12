@@ -9,7 +9,7 @@ HardwareSerial Serial(0);
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
-void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin)
+void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert)
 {
     if(0 > _uart_nr || _uart_nr > 2) {
         log_e("Serial number is invalid, please use 0, 1 or 2");
@@ -30,7 +30,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         rxPin = 16;
         txPin = 17;
     }
-    _uart = uartBegin(_uart_nr, baud, config, rxPin, txPin, 256, false);
+    _uart = uartBegin(_uart_nr, baud, config, rxPin, txPin, 256, invert);
 }
 
 void HardwareSerial::end()
