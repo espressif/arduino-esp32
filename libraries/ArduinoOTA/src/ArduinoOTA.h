@@ -29,7 +29,7 @@ class ArduinoOTAClass
     ArduinoOTAClass();
     ~ArduinoOTAClass();
 
-    //Sets the service port. Default 8266
+    //Sets the service port. Default 3232
     void setPort(uint16_t port);
 
     //Sets the device hostname. Default esp8266-xxxxxx
