@@ -62,9 +62,9 @@ To use as a component of ESP-IDF
 
 If you are writing code that does not require Arduino to compile and you want your `ESP_LOGx` macros to work in Arduino IDE, you can enable the compatibility by adding the following lines after your includes:
 
-    ```cpp
-    #ifdef ARDUINO_ARCH_ESP32
-    #include "esp32-hal-log.h"
-    #endif
-    ```
+```cpp
+#ifdef ARDUINO_ARCH_ESP32
+#include "esp32-hal-log.h"
+#endif
+```
 
