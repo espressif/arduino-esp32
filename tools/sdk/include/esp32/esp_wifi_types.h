@@ -40,11 +40,15 @@ typedef esp_interface_t wifi_interface_t;
 #define WIFI_IF_AP  ESP_IF_WIFI_AP
 
 typedef enum {
-    WIFI_COUNTRY_CN = 0, /**< country China, channel range [1, 14] */
-    WIFI_COUNTRY_JP,     /**< country Japan, channel range [1, 14] */
-    WIFI_COUNTRY_US,     /**< country USA, channel range [1, 11] */
-    WIFI_COUNTRY_EU,     /**< country Europe, channel range [1, 13] */
-    WIFI_COUNTRY_MAX
+    WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
+    WIFI_COUNTRY_POLICY_MANUAL, /**< Country policy is manual, always use the configured country info */
+} wifi_country_policy_t;
+
+typedef struct {
+    char                  cc[3];   /**< country code string */
+    uint8_t               schan;   /**< start channel */
+    uint8_t               nchan;   /**< total channel number */
+    wifi_country_policy_t policy;  /**< country policy */
 } wifi_country_t;
 
 typedef enum {
@@ -121,6 +125,16 @@ typedef struct {
     wifi_scan_time_t scan_time;  /**< scan time per channel */
 } wifi_scan_config_t;
 
+typedef enum {
+    WIFI_CIPHER_TYPE_NONE = 0,   /**< the cipher type is none */
+    WIFI_CIPHER_TYPE_WEP40,      /**< the cipher type is WEP40 */
+    WIFI_CIPHER_TYPE_WEP104,     /**< the cipher type is WEP104 */
+    WIFI_CIPHER_TYPE_TKIP,       /**< the cipher type is TKIP */
+    WIFI_CIPHER_TYPE_CCMP,       /**< the cipher type is CCMP */
+    WIFI_CIPHER_TYPE_TKIP_CCMP,  /**< the cipher type is TKIP and CCMP */
+    WIFI_CIPHER_TYPE_UNKNOWN,    /**< the cipher type is unknown */
+} wifi_cipher_type_t;
+
 typedef struct {
     uint8_t bssid[6];                     /**< MAC address of AP */
     uint8_t ssid[33];                     /**< SSID of AP */
@@ -128,8 +142,14 @@ typedef struct {
     wifi_second_chan_t second;            /**< second channel of AP */
     int8_t  rssi;                         /**< signal strength of AP */
     wifi_auth_mode_t authmode;            /**< authmode of AP */
-    uint32_t low_rate_enable:1;           /**< bit: 0 flag to identify if low rate is enabled or not */
-    uint32_t reserved:31;                 /**< bit: 1..31 reserved */
+    wifi_cipher_type_t pairwise_cipher;   /**< pairwise cipher of AP */
+    wifi_cipher_type_t group_cipher;      /**< group cipher of AP */
+    uint32_t phy_11b:1;                   /**< bit: 0 flag to identify if 11b mode is enabled or not */
+    uint32_t phy_11g:1;                   /**< bit: 1 flag to identify if 11g mode is enabled or not */
+    uint32_t phy_11n:1;                   /**< bit: 2 flag to identify if 11n mode is enabled or not */
+    uint32_t phy_lr:1;                    /**< bit: 3 flag to identify if low rate is enabled or not */
+    uint32_t wps:1;                       /**< bit: 4 flag to identify if WPS is supported or not */
+    uint32_t reserved:27;                 /**< bit: 5..31 reserved */
 } wifi_ap_record_t;
 
 typedef enum {
