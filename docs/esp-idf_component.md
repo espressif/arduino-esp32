@@ -9,7 +9,9 @@ To use as a component of ESP-IDF
     mkdir -p components && \
     cd components && \
     git clone https://github.com/espressif/arduino-esp32.git arduino && \
-    cd .. && \
+    cd arduino && \
+    git submodule update --init --recursive && \
+    cd ../.. && \
     make menuconfig
   ```
 - ```make menuconfig``` has some Arduino options

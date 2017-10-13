@@ -19,7 +19,9 @@ script:
   - mkdir espressif
   - cd espressif
   - ln -s $TRAVIS_BUILD_DIR esp32
-  - cd esp32/tools
+  - cd esp32
+  - git submodule update --init --recursive
+  - cd tools
   - python get.py
   - export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
   - which arduino
