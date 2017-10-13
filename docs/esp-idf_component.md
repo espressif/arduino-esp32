@@ -1,6 +1,8 @@
 To use as a component of ESP-IDF
 =================================================
 
+## Installation
+
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
 - in the project folder, create a folder called components and clone this repository inside
@@ -55,3 +57,14 @@ To use as a component of ESP-IDF
         - If enabled, WiFi will start with the last known configuration
         - Else it will wait for WiFi.begin
 - ```make flash monitor``` will build, upload and open serial monitor to your board
+
+## Logging To Serial
+
+If you are writing code that does not require Arduino to compile and you want your `ESP_LOGx` macros to work in Arduino IDE, you can enable the compatibility by adding the following lines after your includes:
+
+    ```cpp
+    #ifdef ARDUINO_ARCH_ESP32
+    #include "esp32-hal-log.h"
+    #endif
+    ```
+

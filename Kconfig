@@ -66,6 +66,16 @@ config ARDUHAL_LOG_COLORS
         Enable ANSI terminal color codes in bootloader output.
         In order to view these, your terminal program must support ANSI color codes.
 
+config ARDUHAL_ESP_LOG
+    bool "Forward ESP_LOGx to Arduino log output"
+    default "n"
+    help
+        This option will redefine the ESP_LOGx macros to Arduino's log_x macros.
+        To enable for your application, add the follwing after your includes:
+        #ifdef ARDUINO_ARCH_ESP32
+        #include "esp32-hal-log.h"
+        #endif
+
 endmenu
 
 config AUTOCONNECT_WIFI
