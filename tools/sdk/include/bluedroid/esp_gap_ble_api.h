@@ -97,6 +97,7 @@ typedef enum {
     ESP_GAP_BLE_CLEAR_BOND_DEV_COMPLETE_EVT,                /*!< When clear the bond device clear complete, the event comes */
     ESP_GAP_BLE_GET_BOND_DEV_COMPLETE_EVT,                  /*!< When get the bond device list complete, the event comes */
     ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT,                     /*!< When read the rssi complete, the event comes */
+    ESP_GAP_BLE_ADD_WHITELIST_COMPLETE_EVT,                 /*!< When add or remove whitelist complete, the event comes */
     ESP_GAP_BLE_EVT_MAX,
 } esp_gap_ble_cb_event_t;
 
@@ -462,6 +463,10 @@ typedef enum {
     ESP_BLE_EVT_SCAN_RSP         = 0x04,        /*!< Scan Response (SCAN_RSP) */
 } esp_ble_evt_type_t;
 
+typedef enum{
+    ESP_BLE_WHITELIST_REMOVE     = 0X00,    /*!< remove mac from whitelist */
+    ESP_BLE_WHITELIST_ADD        = 0X01,    /*!< add address to whitelist */
+}esp_ble_wl_opration;
 /**
  * @brief Gap callback parameters union
  */
@@ -600,6 +605,13 @@ typedef union {
                                                          if the RSSI cannot be read, the RSSI metric shall be set to 127. */
         esp_bd_addr_t remote_addr;                  /*!< The remote device address */
     } read_rssi_cmpl;                               /*!< Event parameter of ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT */
+    /**
+     * @brief ESP_GAP_BLE_ADD_WHITELIST_COMPLETE_EVT
+     */
+    struct ble_add_whitelist_cmpl_evt_param {
+        esp_bt_status_t status;                     /*!< Indicate the add or remove whitelist operation success status */
+        esp_ble_wl_opration wl_opration;            /*!< The value is ESP_BLE_WHITELIST_ADD if add address to whitelist operation success, ESP_BLE_WHITELIST_REMOVE if remove address from the whitelist operation success */
+    } add_whitelist_cmpl;                           /*!< Event parameter of ESP_GAP_BLE_ADD_WHITELIST_COMPLETE_EVT */
 } esp_ble_gap_cb_param_t;
 
 /**
@@ -972,6 +984,12 @@ esp_err_t esp_ble_get_bond_device_list(int *dev_num, esp_ble_bond_dev_t *dev_lis
 
 /**
 * @brief           This function is to disconnect the physical connection of the peer device
+*                  gattc maybe have multiple virtual GATT server connections when multiple app_id registed.
+*                  esp_ble_gattc_close (esp_gatt_if_t gattc_if, uint16_t conn_id) only close one virtual GATT server connection.
+*                  if there exist other virtual GATT server connections, it does not disconnect the physical connection.
+*                  esp_ble_gap_disconnect(esp_bd_addr_t remote_device) disconnect the physical connection directly.
+*
+*
 *
 * @param[in]       remote_device : BD address of the peer device
 *
