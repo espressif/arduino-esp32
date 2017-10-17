@@ -197,12 +197,12 @@ void setup(){
     uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
 
-    listDir(SD, "/", 0);
-    removeDir(SD, "/mydir");
-    createDir(SD, "/mydir");
-    deleteFile(SD, "/hello.txt");
-    writeFile(SD, "/hello.txt", "Hello ");
-    appendFile(SD, "/hello.txt", "World!\n");
+    listDir(SD_MMC, "/", 0);
+    removeDir(SD_MMC, "/mydir");
+    createDir(SD_MMC, "/mydir");
+    deleteFile(SD_MMC, "/hello.txt");
+    writeFile(SD_MMC, "/hello.txt", "Hello ");
+    appendFile(SD_MMC, "/hello.txt", "World!\n");
 	listDir(SD, "/", 0);
 }
 
