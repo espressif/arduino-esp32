@@ -203,7 +203,7 @@ void setup(){
     deleteFile(SD_MMC, "/hello.txt");
     writeFile(SD_MMC, "/hello.txt", "Hello ");
     appendFile(SD_MMC, "/hello.txt", "World!\n");
-	listDir(SD, "/", 0);
+	listDir(SD_MMC, "/", 0);
 }
 
 void loop(){
