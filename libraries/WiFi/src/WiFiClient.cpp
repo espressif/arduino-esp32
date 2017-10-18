@@ -274,7 +274,7 @@ int WiFiClient::available()
         return 0;
     }
     int count;
-    int res = ioctl(fd(), FIONREAD, &count);
+    int res = lwip_ioctl_r(fd(), FIONREAD, &count);
     if(res < 0) {
         log_e("%d", errno);
         stop();
