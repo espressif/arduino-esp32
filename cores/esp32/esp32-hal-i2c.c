@@ -229,7 +229,7 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
                 log_w("Ack Error! Addr: %x", address >> 1);
-                while((i2c->dev->status_reg.bus_busy) && ((millis() - startAt)>50));
+                while((i2c->dev->status_reg.bus_busy) && ((millis() - startAt)<50));
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
             }
