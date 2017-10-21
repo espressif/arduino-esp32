@@ -85,7 +85,7 @@ static void _start_network_event_task(){
         }
     }
     if(!_network_event_task_handle){
-        xTaskCreatePinnedToCore(_network_event_task, "network_event", 4096, NULL, 2, &_network_event_task_handle, 1);
+        xTaskCreatePinnedToCore(_network_event_task, "network_event", 4096, NULL, 2, &_network_event_task_handle, ARDUINO_RUNNING_CORE);
         if(!_network_event_task_handle){
             log_e("Network Event Task Start Failed!");
             return;
