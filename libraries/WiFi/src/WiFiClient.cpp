@@ -241,6 +241,53 @@ size_t WiFiClient::write_P(PGM_P buf, size_t size)
     return write(buf, size);
 }
 
+/*
+size_t WiFiClient::write_P(PGM_P buf, size_t size)
+{
+    int res =0;
+    int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
+    int socketFileDescriptor = fd();
+
+    if(!_connected || (socketFileDescriptor < 0)) {
+        return 0;
+    }
+
+    while(retry) {
+        //use select to make sure the socket is ready for writing
+        fd_set set;
+        struct timeval tv;
+        FD_ZERO(&set);        // empties the set
+        FD_SET(socketFileDescriptor, &set); // adds FD to the set
+        tv.tv_sec = 0;
+        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
+        retry--;
+
+        if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
+            return 0;
+        }
+
+        if(FD_ISSET(socketFileDescriptor, &set)) {
+            uint8_t* puf = new uint8_t[size];
+            memcpy_P(puf, buf, size);
+            res = send(socketFileDescriptor, (void*) puf, size, MSG_DONTWAIT);
+            delete[] puf;
+            if(res < 0) {
+                log_e("%d", errno);
+                if(errno != EAGAIN) {
+                    //if resource was busy, can try again, otherwise give up
+                    stop();
+                    res = 0;
+                    retry = 0;
+                }
+            } else {
+                //completed successfully
+                retry = 0;
+            }
+        }
+    }
+    return res;
+}
+*/
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
     if(!available()) {
