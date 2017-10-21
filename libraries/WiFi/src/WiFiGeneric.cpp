@@ -51,6 +51,13 @@ extern "C" {
 #undef max
 #include <vector>
 
+#include "sdkconfig.h"
+
+#if CONFIG_FREERTOS_UNICORE
+#define ARDUINO_RUNNING_CORE 0
+#else
+#define ARDUINO_RUNNING_CORE 1
+#endif
 
 static xQueueHandle _network_event_queue;
 static TaskHandle_t _network_event_task_handle = NULL;
