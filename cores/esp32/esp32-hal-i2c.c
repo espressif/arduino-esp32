@@ -176,10 +176,13 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
 
         //CMD WRITE(ADDRESS + DATA)
         if(!index) {
-            i2c->dev->fifo_data.data = address & 0xFF;
-            dataSend--;
-            if(addr_10bit) {
-                i2c->dev->fifo_data.data = (address >> 8) & 0xFF;
+            if(addr_10bit){// address is leftshifted with Read/Write bit set
+                i2c->dev->fifo_data.data = (((address >> 8) & 0x6) | 0xF0); // send a9:a8 plus 1111 0xxW mask
+                i2c->dev->fifo_data.data = ((address >> 1) & 0xFF); // send a7:a0, remove W bit (7bit address style)
+                dataSend -= 2;
+            }
+            else { // 7bit address
+                i2c->dev->fifo_data.data = address & 0xFF;
                 dataSend--;
             }
         }
@@ -272,10 +275,14 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
 
     //CMD WRITE ADDRESS
-    i2c->dev->fifo_data.val = address & 0xFF;
-    if(addr_10bit) {
-        i2c->dev->fifo_data.val = (address >> 8) & 0xFF;
+    if(addr_10bit){// address is leftshifted with Read/Write bit set
+       i2c->dev->fifo_data.data = (((address >> 8) & 0x6) | 0xF1); // send a9:a8 plus 1111 0xxR mask
+       i2c->dev->fifo_data.data = ((address >> 1) & 0xFF); // send a7:a0, remove R bit (7bit address style)
     }
+    else { // 7bit address
+       i2c->dev->fifo_data.data = address & 0xFF;
+    }
+
     i2cSetCmd(i2c, 1, I2C_CMD_WRITE, addrLen, false, false, true);
 
     while(len) {
