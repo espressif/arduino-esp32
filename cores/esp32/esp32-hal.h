@@ -45,6 +45,7 @@ void yield(void);
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
 #define NOP() asm volatile ("nop")
+#define ICACHE_RAM_ATTR IRAM_ATTR
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-matrix.h"
