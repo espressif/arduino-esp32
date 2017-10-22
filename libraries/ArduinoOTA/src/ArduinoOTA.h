@@ -5,6 +5,9 @@
 #include <functional>
 #include "Update.h"
 
+#define INT_BUFFER_SIZE 16
+
+
 typedef enum {
   OTA_IDLE,
   OTA_WAITAUTH,
@@ -62,6 +65,9 @@ class ArduinoOTAClass
 
     //Starts the ArduinoOTA service
     void begin();
+
+    //Ends the ArduinoOTA service
+    void end();
 
     //Call this in loop() to run the service
     void handle();
