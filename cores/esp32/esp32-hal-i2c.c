@@ -340,7 +340,8 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
             // Save bytes from the buffer as they arrive instead of doing them at the end of the loop since there is no
             // pause from an END operation in this approach.
             if((!isEndNear) && (nextCmdCount < 2)) {
-                if (willRead = ((len>32)?32:len)) {
+                willRead = ((len>32)?32:len);
+                if (willRead > 0) {
                     if (willRead > 1) {
                         i2cSetCmd(i2c, cmdIdx, I2C_CMD_READ, (amountRead[ inc( &cmdIdx ) ] = willRead -1), false, false, false);
                         nextCmdCount++;
