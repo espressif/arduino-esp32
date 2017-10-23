@@ -43,7 +43,7 @@ void ssl_init(sslclient_context *ssl_client)
 int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
     char buf[512];
-    int ret, flags, len, timeout;
+    int ret, flags, timeout;
     int enable = 1;
     log_v("Free heap before TLS %u", xPortGetFreeHeapSize());
 
@@ -59,7 +59,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 	struct hostent *server;
     server = gethostbyname(host);
     if (server == NULL) {
-        return 0;
+        log_e("gethostbyname failed");
+        return -1;
     }
     IPAddress srv((const uint8_t *)(server->h_addr));
 	
@@ -245,7 +246,7 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
     }
 
     len = ret;
-    log_v("%d bytes written", len);  //for low level debug
+    //log_v("%d bytes written", len);  //for low level debug
     return ret;
 }
 
@@ -257,6 +258,6 @@ int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length)
 
     ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, data, length);
 
-    log_v( "%d bytes read", ret);   //for low level debug
+    //log_v( "%d bytes read", ret);   //for low level debug
     return ret;
 }
