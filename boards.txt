@@ -122,6 +122,44 @@ esp32thing.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+nina_w10.name=u-blox NINA-W10 series (ESP32)
+
+nina_w10.upload.tool=esptool
+nina_w10.upload.maximum_size=1310720
+nina_w10.upload.maximum_data_size=294912
+nina_w10.upload.wait_for_upload_port=true
+
+nina_w10.serial.disableDTR=true
+nina_w10.serial.disableRTS=true
+
+nina_w10.build.mcu=esp32
+nina_w10.build.core=esp32
+nina_w10.build.variant=nina_w10
+nina_w10.build.board=UBLOX_NINA_W10
+nina_w10.build.f_cpu=240000000L
+nina_w10.build.boot=bootloader
+nina_w10.build.partitions=default
+nina_w10.build.flash_mode=dio
+nina_w10.build.flash_size=2MB
+nina_w10.build.flash_freq=40m
+
+nina_w10.menu.UploadSpeed.921600=921600
+nina_w10.menu.UploadSpeed.921600.upload.speed=921600
+nina_w10.menu.UploadSpeed.115200=115200
+nina_w10.menu.UploadSpeed.115200.upload.speed=115200
+nina_w10.menu.UploadSpeed.256000.windows=256000
+nina_w10.menu.UploadSpeed.256000.upload.speed=256000
+nina_w10.menu.UploadSpeed.230400.windows.upload.speed=256000
+nina_w10.menu.UploadSpeed.230400=230400
+nina_w10.menu.UploadSpeed.230400.upload.speed=230400
+nina_w10.menu.UploadSpeed.460800.linux=460800
+nina_w10.menu.UploadSpeed.460800.macosx=460800
+nina_w10.menu.UploadSpeed.460800.upload.speed=460800
+nina_w10.menu.UploadSpeed.512000.windows=512000
+nina_w10.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 widora-air.name=Widora AIR
 
 widora-air.upload.tool=esptool
