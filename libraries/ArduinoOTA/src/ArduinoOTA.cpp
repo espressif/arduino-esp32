@@ -350,7 +350,9 @@ void ArduinoOTAClass::_runUpdate() {
 void ArduinoOTAClass::end() {
     _initialized = false;
     _udp_ota.stop();
-    MDNS.end();
+    if(_mdnsEnabled){
+        MDNS.end();
+    }
     _state = OTA_IDLE;
 #ifdef OTA_DEBUG
     OTA_DEBUG.println("OTA server stopped.");
