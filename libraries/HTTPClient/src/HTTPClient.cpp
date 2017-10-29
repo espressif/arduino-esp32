@@ -218,9 +218,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
         return false;
     }
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert, cli_cert, cli_key));
-    // //Serial.printf("[HTTP-Client][begin] host: %s port: %d url: %s httpsFingerprint: %s", host.c_str(), port, uri.c_str(),
-    // httpsFingerprint.c_str());
-     return true;
+    return true;
 }
 
 /**
