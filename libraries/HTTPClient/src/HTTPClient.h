@@ -129,6 +129,7 @@ public:
     bool begin(String url, const char* CAcert);
     bool begin(String host, uint16_t port, String uri = "/");
     bool begin(String host, uint16_t port, String uri, const char* CAcert);
+    bool begin(String host, uint16_t port, String uri, const char* CAcert, const char* cli_cert, const char* cli_key);
 
     void end(void);
 
