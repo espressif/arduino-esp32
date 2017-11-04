@@ -33,35 +33,35 @@ class ArduinoOTAClass
     ~ArduinoOTAClass();
 
     //Sets the service port. Default 3232
-    void setPort(uint16_t port);
+    ArduinoOTAClass& setPort(uint16_t port);
 
     //Sets the device hostname. Default esp32-xxxxxx
-    void setHostname(const char *hostname);
+    ArduinoOTAClass& setHostname(const char *hostname);
     String getHostname();
 
     //Sets the password that will be required for OTA. Default NULL
-    void setPassword(const char *password);
+    ArduinoOTAClass& setPassword(const char *password);
 
     //Sets the password as above but in the form MD5(password). Default NULL
-    void setPasswordHash(const char *password);
+    ArduinoOTAClass& setPasswordHash(const char *password);
 
     //Sets if the device should be rebooted after successful update. Default true
-    void setRebootOnSuccess(bool reboot);
+    ArduinoOTAClass& setRebootOnSuccess(bool reboot);
 
     //Sets if the device should advertise itself to Arduino IDE. Default true
-    void setMdnsEnabled(bool enabled);
+    ArduinoOTAClass& setMdnsEnabled(bool enabled);
 
     //This callback will be called when OTA connection has begun
-    void onStart(THandlerFunction fn);
+    ArduinoOTAClass& onStart(THandlerFunction fn);
 
     //This callback will be called when OTA has finished
-    void onEnd(THandlerFunction fn);
+    ArduinoOTAClass& onEnd(THandlerFunction fn);
 
     //This callback will be called when OTA encountered Error
-    void onError(THandlerFunction_Error fn);
+    ArduinoOTAClass& onError(THandlerFunction_Error fn);
 
     //This callback will be called when OTA is receiving data
-    void onProgress(THandlerFunction_Progress fn);
+    ArduinoOTAClass& onProgress(THandlerFunction_Progress fn);
 
     //Starts the ArduinoOTA service
     void begin();
