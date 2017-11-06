@@ -830,7 +830,7 @@ nodemcu-32s.serial.disableRTS=true
 nodemcu-32s.build.mcu=esp32
 nodemcu-32s.build.core=esp32
 nodemcu-32s.build.variant=nodemcu-32s
-nodemcu-32s.build.board=NodeMCU-32S
+nodemcu-32s.build.board=NodeMCU_32S
 
 nodemcu-32s.build.f_cpu=240000000L
 nodemcu-32s.build.flash_mode=dio
