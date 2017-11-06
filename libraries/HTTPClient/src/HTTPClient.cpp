@@ -994,7 +994,7 @@ int HTTPClient::handleHeaderResponse()
             if((millis() - lastDataTime) > _tcpTimeout) {
                 return HTTPC_ERROR_READ_TIMEOUT;
             }
-            delay(0);
+            delay(10);
         }
     }
 
