@@ -36,6 +36,7 @@ bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * 
     }
 
     if(!sdcard_mount(_pdrv, mountpoint)){
+        sdcard_unmount(_pdrv);
         sdcard_uninit(_pdrv);
         _pdrv = 0xFF;
         return false;
