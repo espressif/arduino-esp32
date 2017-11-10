@@ -625,6 +625,7 @@ void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
     } else if (status == SC_STATUS_LINK) {
         wifi_sta_config_t *sta_conf = reinterpret_cast<wifi_sta_config_t *>(result);
         log_d("SSID: %s", (char *)(sta_conf->ssid));
+        sta_conf->bssid_set = 0;
         esp_wifi_set_config(WIFI_IF_STA, (wifi_config_t *)sta_conf);
         esp_wifi_connect();
         _smartConfigDone = true;
