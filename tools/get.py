@@ -15,6 +15,8 @@ import sys
 import tarfile
 import zipfile
 import re
+import ssl
+
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
 else:
