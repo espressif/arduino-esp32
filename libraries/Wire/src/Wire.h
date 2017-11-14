@@ -30,6 +30,8 @@
 #include "Stream.h"
 
 #define I2C_BUFFER_LENGTH 128
+typedef void(*user_onRequest)(void);
+typedef void(*user_onReceive)(uint8_t*, int);
 
 class TwoWire: public Stream
 {
@@ -42,6 +44,7 @@ protected:
     uint8_t rxBuffer[I2C_BUFFER_LENGTH];
     uint16_t rxIndex;
     uint16_t rxLength;
+    uint16_t queuedRxLength;
 
     uint8_t txBuffer[I2C_BUFFER_LENGTH];
     uint16_t txIndex;
@@ -49,6 +52,11 @@ protected:
     uint8_t txAddress;
 
     uint8_t transmitting;
+		static user_onRequest uReq[2];
+		static user_onReceive uRcv[2];
+    void onRequestService(void);
+    void onReceiveService(uint8_t*, int);
+		i2c_err_t last_error; // from esp32-hal-i2c.h
 
 public:
     TwoWire(uint8_t bus_num);
@@ -58,12 +66,22 @@ public:
     void beginTransmission(int);
     uint8_t endTransmission(void);
     uint8_t endTransmission(uint8_t);
+    uint8_t newEndTransmission(void);
     size_t requestFrom(uint8_t address, size_t size, bool sendStop);
-
+		
+		size_t 	newRequestFrom(uint8_t address, size_t size, bool sendStop);
+		size_t 	newRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
+		size_t	transact(size_t readLen);
+		i2c_err_t	lastError();
+		
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
     uint8_t requestFrom(int, int);
     uint8_t requestFrom(int, int, int);
+		
+    void onReceive( void (*)(int) );
+    void onRequest( void (*)(void) );
+
 
     size_t write(uint8_t);
     size_t write(const uint8_t *, size_t);

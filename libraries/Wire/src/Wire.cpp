@@ -19,6 +19,7 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
+  Modified Nov 2017 by Chuck Todd (ctodd@cableone.net) - ESP32 support
 */
 
 extern "C" {
@@ -30,6 +31,31 @@ extern "C" {
 #include "esp32-hal-i2c.h"
 #include "Wire.h"
 #include "Arduino.h"
+/* Declarations to support Slave Mode */
+#include "esp_attr.h"
+#include "soc/i2c_reg.h"
+#include "soc/i2c_struct.h"
+
+user_onRequest TwoWire::uReq[2];
+user_onReceive TwoWire::uRcv[2];
+
+#define DR_REG_I2C_EXT_BASE_FIXED               0x60013000
+#define DR_REG_I2C1_EXT_BASE_FIXED              0x60027000
+
+/*
+	
+void IRAM_ATTR slave_isr_handler(void* arg){
+    // ...
+uint32_t num = (uint32_t)arg;
+i2c_dev_t * dev;
+if(num==0) dev=(volatile i2c_dev_t*)DR_REG_I2C_EXT_BASE_FIXED;
+else dev=(volatile i2c_dev_t*)DR_REG_I2C1_EXT_BASE_FIXED;
+
+uint32_t stat = dev->int_status.val;		
+		
+}
+*/
+
 
 TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)
@@ -42,7 +68,10 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,txLength(0)
     ,txAddress(0)
     ,transmitting(0)
-{}
+		{}	
+
+void TwoWire::onRequestService(void){}
+void TwoWire::onReceiveService(uint8_t*buf, int count){}
 
 void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
@@ -68,6 +97,8 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
             return;
         }
     }
+		uReq[num] =NULL;
+		uRcv[num] =NULL;
 
     i2cSetFrequency(i2c, frequency);
 
@@ -100,10 +131,124 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
     if(size > I2C_BUFFER_LENGTH) {
         size = I2C_BUFFER_LENGTH;
     }
-    size_t read = (i2cRead(i2c, address, false, rxBuffer, size, sendStop) == 0)?size:0;
+    last_error = i2cRead(i2c, address, false, rxBuffer, size, sendStop);
+		size_t read = (last_error == 0)?size:0;
     rxIndex = 0;
     rxLength = read;
     return read;
+}
+
+size_t TwoWire::newRequestFrom(uint8_t address, size_t size, bool sendStop){
+
+    uint16_t cnt = queuedRxLength; // currently queued reads 
+    if(cnt<I2C_BUFFER_LENGTH){
+      if((size+cnt)>I2C_BUFFER_LENGTH)
+        size = (I2C_BUFFER_LENGTH-cnt);
+      }
+    else { // no room to receive more!
+      log_e("no room %d",cnt);
+      cnt = 0;
+      rxIndex = 0;
+      rxLength = 0;
+      last_error = I2C_ERROR_MEMORY;
+      return cnt;
+      }
+    last_error =i2cAddQueueRead(i2c,address,&rxBuffer[cnt],size,sendStop);
+    if(last_error==I2C_ERROR_OK){ // successfully queued the read
+      queuedRxLength += size;
+      if(sendStop){ //now actually process the queued commands
+        last_error=i2cProcQueue(i2c);
+        if(last_error!=I2C_ERROR_OK){
+          log_e("err=%d",last_error);
+          }
+        rxIndex = 0;
+        rxLength = i2cQueueReadCount(i2c);
+        queuedRxLength = 0;
+        cnt = rxLength;
+        i2cFreeQueue(i2c);
+        }
+      else { // stop not received, so wait for I2C stop,
+        last_error=I2C_ERROR_CONTINUE;
+        cnt = 0;
+        }
+      }
+    else {// only possible error is I2C_ERROR_MEMORY
+      cnt = 0;
+      }
+    return cnt;
+}
+
+size_t TwoWire::newRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop){
+    rxIndex = 0;
+    rxLength = 0;
+	 if(size==0){
+		 return 0;
+		}
+		last_error =pollI2cRead(i2c, address, false, buf, size, sendStop);
+    if(last_error!=0){
+			log_e("err=%d",last_error);
+			}
+		size_t read = (last_error==0)?size:0; 	
+    return read;
+}
+
+size_t TwoWire::transact(size_t readLen){ // Assumes Wire.beginTransaction(),Wire.write()
+// this command replaces Wire.endTransmission(false) and Wire.requestFrom(readLen,true);
+    last_error =i2cAddQueueWrite(i2c,txAddress,txBuffer,txLength,false);  //queue tx element
+    size_t cnt = 0;
+    if(last_error != I2C_ERROR_OK){
+      log_e("writeQueue err=%d",last_error);
+      rxIndex = 0;
+      rxLength = 0;
+      queuedRxLength = 0;
+      txLength = 0;
+      i2cFreeQueue(i2c);
+      return cnt;
+      }
+      
+    if(readLen>I2C_BUFFER_LENGTH) readLen = I2C_BUFFER_LENGTH;
+    
+    last_error =i2cAddQueueRead(i2c,txAddress,rxBuffer,readLen,true); //queue rx element
+    if(last_error==I2C_ERROR_OK){ // successfully queued the read
+      last_error=i2cProcQueue(i2c);
+      if(last_error!=I2C_ERROR_OK){
+        log_e("procqueue err=%d",last_error);
+        }
+      rxIndex = 0;
+      rxLength = i2cQueueReadCount(i2c);
+      cnt = rxLength;
+      i2cFreeQueue(i2c);
+      }
+    else {// only possible error is I2C_ERROR_MEMORY
+      log_e("readqueue err=%d",last_error);
+      cnt = 0;
+      rxIndex=0;
+      rxLength=0;
+      i2cFreeQueue(i2c); // cleanup
+      }
+    return cnt;
+}
+
+uint8_t TwoWire::newEndTransmission(void){ // Assumes Wire.beginTransaction(),Wire.write()
+// this command replaces Wire.endTransmission(true)
+  size_t cnt = 0;
+last_error =i2cAddQueueWrite(i2c,txAddress,txBuffer,txLength,true);  //queue tx element
+
+if(last_error == I2C_ERROR_OK){
+  last_error=i2cProcQueue(i2c);
+  if(last_error!=I2C_ERROR_OK){
+    log_e("procqueue err=%d",last_error);
+    }
+  i2cFreeQueue(i2c);
+  }
+
+txLength = 0;
+
+return last_error;
+}
+
+i2c_err_t TwoWire::lastError(){
+	return last_error;
 }
 
 uint8_t TwoWire::endTransmission(uint8_t sendStop)
