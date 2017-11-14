@@ -25,6 +25,8 @@
 #define HWTIMER_LOCK()      portENTER_CRITICAL(timer->lock)
 #define HWTIMER_UNLOCK()    portEXIT_CRITICAL(timer->lock)
 
+portMUX_TYPE arduino_mux = portMUX_INITIALIZER_UNLOCKED;
+
 typedef struct {
     union {
         struct {

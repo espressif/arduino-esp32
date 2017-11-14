@@ -80,8 +80,8 @@
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
 
-#define sei()
-#define cli()
+#define sei()   portEXIT_CRITICAL(&arduino_mux);
+#define cli()   portENTER_CRITICAL(&arduino_mux);
 #define interrupts() sei()
 #define noInterrupts() cli()
 
