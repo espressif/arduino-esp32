@@ -18,15 +18,53 @@
 extern "C" {
 #endif
 
-typedef volatile struct {
-    union {
+typedef union {
+        struct {
+            uint32_t byte_num:      8;              /*Byte_num represent the number of data need to be send or data need to be received.*/
+            uint32_t ack_en:        1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
+            uint32_t ack_exp:       1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
+            uint32_t ack_val:       1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
+            uint32_t op_code:       3;              /*op_code is the command  0：RSTART   1：WRITE  2：READ  3：STOP . 4:END.*/
+            uint32_t reserved14:   17;
+            uint32_t done:  1;                      /*When command0 is done in I2C Master mode  this bit changes to high level.*/
+        };
+        uint32_t val;
+    } I2C_COMMAND_t;
+
+typedef union {
+        struct {
+            uint32_t rx_fifo_full_thrhd: 5;
+            uint32_t tx_fifo_empty_thrhd:5;         //Config tx_fifo empty threhd value when using apb fifo access * /
+            uint32_t nonfifo_en:         1;         //Set this bit to enble apb nonfifo access. * /
+            uint32_t fifo_addr_cfg_en:   1;         //When this bit is set to 1 then the byte after address represent the offset address of I2C Slave's ram. * /
+            uint32_t rx_fifo_rst:        1;         //Set this bit to reset rx fifo when using apb fifo access. * /
+						// chuck while this bit is 1, the RX fifo is held in REST, Toggle it * /
+            uint32_t tx_fifo_rst:        1;         //Set this bit to reset tx fifo when using apb fifo access. * /
+						// chuck while this bit is 1, the TX fifo is held in REST, Toggle it * /
+            uint32_t nonfifo_rx_thres:   6;         //when I2C receives more than nonfifo_rx_thres data  it will produce rx_send_full_int_raw interrupt and update the current offset address of the receiving data.* /
+            uint32_t nonfifo_tx_thres:   6;         //when I2C sends more than nonfifo_tx_thres data  it will produce tx_send_empty_int_raw interrupt and update the current offset address of the sending data. * /
+            uint32_t reserved26:         6;
+        };
+        uint32_t val;
+    } I2C_FIFO_CONF_t; 
+	
+typedef union {
+        struct {
+            uint8_t data;                           /*The register represent the byte  data read from rx_fifo when use apb fifo access*/
+            uint8_t reserved[3];
+        };
+        uint32_t val;
+    } I2C_FIFO_DATA_t;
+
+typedef union {
         struct {
             uint32_t period:14;             /*This register is used to configure the  low level width of SCL clock.*/
             uint32_t reserved14:    18;
         };
         uint32_t val;
-    } scl_low_period;
-    union {
+    } I2C_SCL_LOW_PERIOD_t;
+	
+typedef union {
         struct {
             uint32_t sda_force_out:    1;           /*1：normally output sda data   0: exchange the function of sda_o and sda_oe (sda_o is the original internal output sda signal sda_oe is the enable bit for the internal output sda signal)*/
             uint32_t scl_force_out:    1;           /*1：normally output scl clock  0: exchange the function of scl_o and scl_oe (scl_o is the original internal output scl signal  scl_oe is the enable bit for the internal output scl signal)*/
@@ -40,15 +78,18 @@ typedef volatile struct {
             uint32_t reserved9:       23;
         };
         uint32_t val;
-    } ctr;
-    union {
+    } I2C_CTR_t;
+    
+typedef union {
         struct {
             uint32_t ack_rec:             1;        /*This register stores the value of ACK bit.*/
             uint32_t slave_rw:            1;        /*when in slave mode  1：master read slave  0: master write slave.*/
+						/*chuck SLAVE Mode: this bit is UPDATED to match the LAST Master->Slave direction on the bus. IT IS NOT limited to transactions referencing THIS SLAVE*/
             uint32_t time_out:            1;        /*when I2C takes more than time_out_reg clocks to receive a data then this register changes to high level.*/
             uint32_t arb_lost:            1;        /*when I2C lost control of SDA line  this register changes to high level.*/
             uint32_t bus_busy:            1;        /*1:I2C bus is busy transferring data. 0:I2C bus is in idle state.*/
             uint32_t slave_addressed:     1;        /*when configured as i2c slave  and the address send by master is equal to slave's address  then this bit will be high level.*/
+						/*chuck Slave Mode receive: non persistant, set when last byte received Matched Slave Id.  As soon as first byte of data received, this bit is cleared. No Interrupt generated*/
             uint32_t byte_trans:          1;        /*This register changes to high level when one byte is transferred.*/
             uint32_t reserved7:           1;
             uint32_t rx_fifo_cnt:         6;        /*This register represent the amount of data need to send.*/
@@ -60,8 +101,38 @@ typedef volatile struct {
             uint32_t reserved31:          1;
         };
         uint32_t val;
-    } status_reg;
-    union {
+    } I2C_STATUS_REG_t;
+
+typedef union {
+        struct {
+            uint32_t rx_fifo_full:     1;           /*The raw interrupt status bit for rx_fifo full when use apb fifo access.*/
+            uint32_t tx_fifo_empty:    1;           /*The raw interrupt status bit for tx_fifo empty when use apb fifo access.*/
+					/*chuck will only clear if tx_fifo has more than fifo_conf.tx_fifo_empty_thrhd bytes in it.*/
+            uint32_t rx_fifo_ovf:      1;           /*The raw interrupt status bit for receiving data overflow when use apb fifo access.*/
+            uint32_t end_detect:       1;           /*The raw interrupt status bit for end_detect_int interrupt. when I2C deals with  the END command  it will produce end_detect_int interrupt.*/
+            uint32_t slave_tran_comp:  1;           /*The raw interrupt status bit for slave_tran_comp_int interrupt. when I2C Slave detects the STOP bit  it will produce slave_tran_comp_int interrupt.*/
+						/*chuck Slave Mode: actually triggered after receipt of Slave Address. */
+            uint32_t arbitration_lost: 1;           /*The raw interrupt status bit for arbitration_lost_int interrupt.when I2C lost the usage right of I2C BUS it will produce arbitration_lost_int interrupt.*/
+            uint32_t master_tran_comp: 1;           /*The raw interrupt status bit for master_tra_comp_int interrupt. when I2C Master sends or receives a byte it will produce master_tran_comp_int interrupt.*/
+            uint32_t trans_complete:   1;           /*The raw interrupt status bit for trans_complete_int interrupt. when I2C Master finished STOP command  it will produce trans_complete_int interrupt.*/
+						/*chuck Slave Mode: triggerd when STOP is seen on the Bus. ANY STOP including those generated by OTHER MASTERS TALKING with OTHER SLAVES */
+            uint32_t time_out:         1;           /*The raw interrupt status bit for time_out_int interrupt. when I2C takes a lot of time to receive a data  it will produce  time_out_int interrupt.*/
+            uint32_t trans_start:      1;           /*The raw interrupt status bit for trans_start_int interrupt. when I2C sends the START bit it will produce trans_start_int interrupt.*/
+            /*chuck Only issued after ctr.trans_start=1 and a START has been sent.  It does not fire on a ReSTART */
+            uint32_t ack_err:          1;           /*The raw interrupt status bit for ack_err_int interrupt. when I2C receives a wrong ACK bit  it will produce ack_err_int interrupt..*/
+						/*chuck SLAVE MODE: triggered WHENEVER a NAK is seen on the BUS.  If another master does an presense detect, this interrupt will be triggered on every failed acknowledgement*/
+            uint32_t rx_rec_full:      1;           /*The raw interrupt status bit for rx_rec_full_int interrupt. when I2C receives more data  than nonfifo_rx_thres  it will produce rx_rec_full_int interrupt.*/
+            uint32_t tx_send_empty:    1;           /*The raw interrupt status bit for tx_send_empty_int interrupt.when I2C sends more data than nonfifo_tx_thres  it will produce tx_send_empty_int interrupt..*/
+            uint32_t reserved13:      19;
+        };
+        uint32_t val;
+    } I2C_INTERRUPT_t;
+    
+typedef volatile struct {
+    I2C_SCL_LOW_PERIOD_t scl_low_period;
+    I2C_CTR_t ctr;
+		I2C_STATUS_REG_t status_reg;
+		union {
         struct {
             uint32_t tout:      20;                 /*This register is used to configure the max clock number of receiving a data, unit: APB clock cycle.*/
             uint32_t reserved20:12;
@@ -70,8 +141,12 @@ typedef volatile struct {
     } timeout;
     union {
         struct {
-            uint32_t addr:       15;                /*when configured as i2c slave  this register is used to configure slave's address.*/
-            uint32_t reserved15: 16;
+            uint32_t addr:       16;  	            /*when configured as i2c slave  this register is used to configure slave's address.*/
+						/*Stickchuck when using 10bit address: to comply with industry standard format, the bit order of address must be adjusted.
+								slave_addr.addr=((slaveId&0xff)<<7)|(((slaveId>>8)&0x3)|0x78);
+							The ( | 0x78) mask is used to avoid collision with 7bit device. 7bit device address are limited to 0x00..0x77*/
+
+            uint32_t reserved15: 15;
             uint32_t en_10bit:    1;                /*This register is used to enable slave 10bit address mode.*/
         };
         uint32_t val;
@@ -86,103 +161,12 @@ typedef volatile struct {
         };
         uint32_t val;
     } fifo_st;
-    union {
-        struct {
-            uint32_t rx_fifo_full_thrhd: 5;
-            uint32_t tx_fifo_empty_thrhd:5;         /*Config tx_fifo empty threhd value when using apb fifo access*/
-            uint32_t nonfifo_en:         1;         /*Set this bit to enble apb nonfifo access.*/
-            uint32_t fifo_addr_cfg_en:   1;         /*When this bit is set to 1 then the byte after address represent the offset address of I2C Slave's ram.*/
-            uint32_t rx_fifo_rst:        1;         /*Set this bit to reset rx fifo when using apb fifo access.*/
-            uint32_t tx_fifo_rst:        1;         /*Set this bit to reset tx fifo when using apb fifo access.*/
-            uint32_t nonfifo_rx_thres:   6;         /*when I2C receives more than nonfifo_rx_thres data  it will produce rx_send_full_int_raw interrupt and update the current offset address of the receiving data.*/
-            uint32_t nonfifo_tx_thres:   6;         /*when I2C sends more than nonfifo_tx_thres data  it will produce tx_send_empty_int_raw interrupt and update the current offset address of the sending data.*/
-            uint32_t reserved26:         6;
-        };
-        uint32_t val;
-    } fifo_conf;
-    union {
-        struct {
-            uint8_t data;                           /*The register represent the byte  data read from rx_fifo when use apb fifo access*/
-            uint8_t reserved[3];
-        };
-        uint32_t val;
-    } fifo_data;
-    union {
-        struct {
-            uint32_t rx_fifo_full:     1;           /*The raw interrupt status bit for rx_fifo full when use apb fifo access.*/
-            uint32_t tx_fifo_empty:    1;           /*The raw interrupt status bit for tx_fifo empty when use apb fifo access.*/
-            uint32_t rx_fifo_ovf:      1;           /*The raw interrupt status bit for receiving data overflow when use apb fifo access.*/
-            uint32_t end_detect:       1;           /*The raw interrupt status bit for end_detect_int interrupt. when I2C deals with  the END command  it will produce end_detect_int interrupt.*/
-            uint32_t slave_tran_comp:  1;           /*The raw interrupt status bit for slave_tran_comp_int interrupt. when I2C Slave detects the STOP bit  it will produce slave_tran_comp_int interrupt.*/
-            uint32_t arbitration_lost: 1;           /*The raw interrupt status bit for arbitration_lost_int interrupt.when I2C lost the usage right of I2C BUS it will produce arbitration_lost_int interrupt.*/
-            uint32_t master_tran_comp: 1;           /*The raw interrupt status bit for master_tra_comp_int interrupt. when I2C Master sends or receives a byte it will produce master_tran_comp_int interrupt.*/
-            uint32_t trans_complete:   1;           /*The raw interrupt status bit for trans_complete_int interrupt. when I2C Master finished STOP command  it will produce trans_complete_int interrupt.*/
-            uint32_t time_out:         1;           /*The raw interrupt status bit for time_out_int interrupt. when I2C takes a lot of time to receive a data  it will produce  time_out_int interrupt.*/
-            uint32_t trans_start:      1;           /*The raw interrupt status bit for trans_start_int interrupt. when I2C sends the START bit it will produce trans_start_int interrupt.*/
-            uint32_t ack_err:          1;           /*The raw interrupt status bit for ack_err_int interrupt. when I2C receives a wrong ACK bit  it will produce ack_err_int interrupt..*/
-            uint32_t rx_rec_full:      1;           /*The raw interrupt status bit for rx_rec_full_int interrupt. when I2C receives more data  than nonfifo_rx_thres  it will produce rx_rec_full_int interrupt.*/
-            uint32_t tx_send_empty:    1;           /*The raw interrupt status bit for tx_send_empty_int interrupt.when I2C sends more data than nonfifo_tx_thres  it will produce tx_send_empty_int interrupt..*/
-            uint32_t reserved13:      19;
-        };
-        uint32_t val;
-    } int_raw;
-    union {
-        struct {
-            uint32_t rx_fifo_full:     1;           /*Set this bit to clear the rx_fifo_full_int interrupt.*/
-            uint32_t tx_fifo_empty:    1;           /*Set this bit to clear the tx_fifo_empty_int interrupt.*/
-            uint32_t rx_fifo_ovf:      1;           /*Set this bit to clear the rx_fifo_ovf_int interrupt.*/
-            uint32_t end_detect:       1;           /*Set this bit to clear the end_detect_int interrupt.*/
-            uint32_t slave_tran_comp:  1;           /*Set this bit to clear the slave_tran_comp_int interrupt.*/
-            uint32_t arbitration_lost: 1;           /*Set this bit to clear the arbitration_lost_int interrupt.*/
-            uint32_t master_tran_comp: 1;           /*Set this bit to clear the master_tran_comp interrupt.*/
-            uint32_t trans_complete:   1;           /*Set this bit to clear the trans_complete_int interrupt.*/
-            uint32_t time_out:         1;           /*Set this bit to clear the time_out_int interrupt.*/
-            uint32_t trans_start:      1;           /*Set this bit to clear the trans_start_int interrupt.*/
-            uint32_t ack_err:          1;           /*Set this bit to clear the ack_err_int interrupt.*/
-            uint32_t rx_rec_full:      1;           /*Set this bit to clear the rx_rec_full_int interrupt.*/
-            uint32_t tx_send_empty:    1;           /*Set this bit to clear the tx_send_empty_int interrupt.*/
-            uint32_t reserved13:      19;
-        };
-        uint32_t val;
-    } int_clr;
-    union {
-        struct {
-            uint32_t rx_fifo_full:     1;           /*The enable bit for rx_fifo_full_int interrupt.*/
-            uint32_t tx_fifo_empty:    1;           /*The enable bit for tx_fifo_empty_int interrupt.*/
-            uint32_t rx_fifo_ovf:      1;           /*The enable bit for rx_fifo_ovf_int interrupt.*/
-            uint32_t end_detect:       1;           /*The enable bit for end_detect_int interrupt.*/
-            uint32_t slave_tran_comp:  1;           /*The enable bit for slave_tran_comp_int interrupt.*/
-            uint32_t arbitration_lost: 1;           /*The enable bit for arbitration_lost_int interrupt.*/
-            uint32_t master_tran_comp: 1;           /*The enable bit for master_tran_comp_int interrupt.*/
-            uint32_t trans_complete:   1;           /*The enable bit for trans_complete_int interrupt.*/
-            uint32_t time_out:         1;           /*The enable bit for time_out_int interrupt.*/
-            uint32_t trans_start:      1;           /*The enable bit for trans_start_int interrupt.*/
-            uint32_t ack_err:          1;           /*The enable bit for ack_err_int interrupt.*/
-            uint32_t rx_rec_full:      1;           /*The enable bit for rx_rec_full_int interrupt.*/
-            uint32_t tx_send_empty:    1;           /*The enable bit for tx_send_empty_int interrupt.*/
-            uint32_t reserved13:      19;
-        };
-        uint32_t val;
-    } int_ena;
-    union {
-        struct {
-            uint32_t rx_fifo_full:     1;            /*The masked interrupt status for rx_fifo_full_int interrupt.*/
-            uint32_t tx_fifo_empty:    1;            /*The masked interrupt status for tx_fifo_empty_int interrupt.*/
-            uint32_t rx_fifo_ovf:      1;            /*The masked interrupt status for rx_fifo_ovf_int interrupt.*/
-            uint32_t end_detect:       1;            /*The masked interrupt status for end_detect_int interrupt.*/
-            uint32_t slave_tran_comp:  1;            /*The masked interrupt status for slave_tran_comp_int interrupt.*/
-            uint32_t arbitration_lost: 1;            /*The masked interrupt status for arbitration_lost_int interrupt.*/
-            uint32_t master_tran_comp: 1;            /*The masked interrupt status for master_tran_comp_int interrupt.*/
-            uint32_t trans_complete:   1;            /*The masked interrupt status for trans_complete_int interrupt.*/
-            uint32_t time_out:         1;            /*The masked interrupt status for time_out_int interrupt.*/
-            uint32_t trans_start:      1;            /*The masked interrupt status for trans_start_int interrupt.*/
-            uint32_t ack_err:          1;            /*The masked interrupt status for ack_err_int interrupt.*/
-            uint32_t rx_rec_full:      1;            /*The masked interrupt status for rx_rec_full_int interrupt.*/
-            uint32_t tx_send_empty:    1;            /*The masked interrupt status for tx_send_empty_int interrupt.*/
-            uint32_t reserved13:      19;
-        };
-        uint32_t val;
-    } int_status;
+		I2C_FIFO_CONF_t fifo_conf;
+		I2C_FIFO_DATA_t fifo_data;
+		I2C_INTERRUPT_t int_raw;
+		I2C_INTERRUPT_t int_clr;
+		I2C_INTERRUPT_t int_ena;
+		I2C_INTERRUPT_t int_status;
     union {
         struct {
             uint32_t time:        10;                /*This register is used to configure the clock num I2C used to hold the data after the negedge of SCL.*/
@@ -249,18 +233,19 @@ typedef volatile struct {
         };
         uint32_t val;
     } sda_filter_cfg;
-    union {
+/*    union {
         struct {
-            uint32_t byte_num:      8;              /*Byte_num represent the number of data need to be send or data need to be received.*/
-            uint32_t ack_en:        1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
-            uint32_t ack_exp:       1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
-            uint32_t ack_val:       1;              /*ack_check_en  ack_exp and ack value are used to control  the ack bit.*/
-            uint32_t op_code:       3;              /*op_code is the command  0：RSTART   1：WRITE  2：READ  3：STOP . 4:END.*/
+            uint32_t byte_num:      8;              //Byte_num represent the number of data need to be send or data need to be received.
+            uint32_t ack_en:        1;              //ack_check_en  ack_exp and ack value are used to control  the ack bit.
+            uint32_t ack_exp:       1;              //ack_check_en  ack_exp and ack value are used to control  the ack bit.
+            uint32_t ack_val:       1;              //ack_check_en  ack_exp and ack value are used to control  the ack bit.
+            uint32_t op_code:       3;              //op_code is the command  0：RSTART   1：WRITE  2：READ  3：STOP . 4:END.
             uint32_t reserved14:   17;
-            uint32_t done:  1;                      /*When command0 is done in I2C Master mode  this bit changes to high level.*/
+            uint32_t done:  1;                      //When command0 is done in I2C Master mode  this bit changes to high level.
         };
         uint32_t val;
-    } command[16];
+			} */
+		I2C_COMMAND_t command[16];
     uint32_t reserved_98;
     uint32_t reserved_9c;
     uint32_t reserved_a0;
@@ -289,6 +274,7 @@ typedef volatile struct {
     uint32_t reserved_fc;
     uint32_t ram_data[32];                          /*This the start address for ram when use apb nonfifo access.*/
 } i2c_dev_t;
+
 extern i2c_dev_t I2C0;
 extern i2c_dev_t I2C1;
 
