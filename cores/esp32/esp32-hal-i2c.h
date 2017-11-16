@@ -22,16 +22,21 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <esp_attr.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+
 
 typedef enum {
-    I2C_ERROR_OK,
+    I2C_ERROR_OK=0,
     I2C_ERROR_DEV,
     I2C_ERROR_ACK,
     I2C_ERROR_TIMEOUT,
     I2C_ERROR_BUS,
     I2C_ERROR_BUSY,
     I2C_ERROR_MEMORY,
-    I2C_ERROR_CONTINUE
+    I2C_ERROR_CONTINUE,
+    I2C_ERROR_MISSING_WRITE,
+    I2C_ERROR_NO_BEGIN
 } i2c_err_t;
 
 typedef enum {
@@ -53,17 +58,22 @@ typedef enum {
 //  I2C_NONE=0,	
 	I2C_OK=1,
   I2C_ERROR,
-	I2C_ADDR_ACK,
-	I2C_DATA_ACK,
+	I2C_ADDR_NAK,
+	I2C_DATA_NAK,
 	I2C_ARBITRATION,
 	I2C_TIMEOUT
 }I2C_ERROR_t;
 
 // i2c_event bits
-#define EVENT_IN_IRQ 	  (BIT(2))
+#define EVENT_ERROR_NAK (BIT(0))
+#define EVENT_ERROR     (BIT(1))
 #define EVENT_RUNNING   (BIT(3))
 #define EVENT_DONE      (BIT(4))
 #define EVENT_IN_END    (BIT(5))
+#define EVENT_ERROR_PREV  (BIT(6))
+#define EVENT_ERROR_TIMEOUT   (BIT(7))
+#define EVENT_ERROR_ARBITRATION (BIT(8))
+#define EVENT_ERROR_DATA_NAK  (BIT(9))
 	
 typedef union{
   struct {
@@ -88,6 +98,7 @@ typedef struct {
   uint16_t cmdBytesNeeded; // number of data bytes needing (READ/WRITE)Command[]
   uint16_t queueLength;
   I2C_DATA_CTRL_t ctrl;
+  EventGroupHandle_t queueEvent;
   }I2C_DATA_QUEUE_t;  
 
 struct i2c_struct_t;
@@ -112,11 +123,14 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data
 //Stickbreakers attempt to read big blocks
 i2c_err_t pollI2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint16_t len, bool sendStop);
 i2c_err_t i2cProcQueue(i2c_t *i2c);
-i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop);
-i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop);
+i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
+i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cFreeQueue(i2c_t *i2c);
+i2c_err_t i2cReleaseISR(i2c_t *i2c);
 uint16_t i2cQueueReadPendingCount(i2c_t *i2c);
 uint16_t i2cQueueReadCount(i2c_t *i2c);
+i2c_err_t i2cGetReadQueue(i2c_t *i2c, uint8_t** buffPtr, uint16_t* lenPtr,uint8_t *savePtr);
+void i2cDumpInts();
 
 
 static void IRAM_ATTR i2c_isr_handler_default(void* arg); //ISR
