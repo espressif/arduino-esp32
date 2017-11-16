@@ -128,7 +128,7 @@ void loop(void);
 long random(long, long);
 void randomSeed(unsigned long);
 long Arduino_map(long, long, long, long, long);
-#define map Arduino_map
+#define map(a,b,c,d,e)  Arduino_map(a,b,c,d,e)
 
 #ifdef __cplusplus
 extern "C" {
