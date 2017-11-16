@@ -4,9 +4,9 @@
 The existing main fork of arduino-esp32 implement i2c communications using a polled monitoring of the I2C Hardware StateMachine.  The implementation of the I2C ReSTART operations leaves the I2C Hardware StateMachine(SM) in an unstable configuration.  The I2C protocol arbitrates exclusive ownership of the bus to a single Master Device from a `START` signal to the next `STOP`.  A restart operation is just a start signal inserted into this `START` -> `STOP` flow.  Schematically like this:
  `START` (Read or Write) -> `ReSTART` (Read or Write) -> `STOP`.
  
- By I2C protocol as [UM10204 I2C-Bus Specification and User Manual](https://Fwww.nxp.com/docs/en/user-guide/UM10204.pdf), A valid I2C transaction must be a `START` at least one Data Byte `STOP`.  The Arduino environment is base on the AVR processor series, These Atmel CPU's implementation of the the I2C protocol allows unlimited pauses between protocol elements.  The Espressif implement enforces a Strict TimeOut between elements.  This has resulted in perceived I2C bus stability issues ([834](https://github.com/espressif/arduino-esp32/issues/834),[811](https://github.com/espressif/arduino-esp32/issues/811),[741](https://github.com/espressif/arduino-esp32/issues/741),[682](https://github.com/espressif/arduino-esp32/issues/682),[659](https://github.com/espressif/arduino-esp32/issues/659) and many more.  @lonerzzz create a partial solution [#751](https://github.com/espressif/arduino-esp32/pull/751).
+ By I2C protocol as [UM10204 I2C-Bus Specification and User Manual](https://Fwww.nxp.com/docs/en/user-guide/UM10204.pdf), A valid I2C transaction must be a `START` at least one Data Byte `STOP`.  The Arduino environment is base on the AVR processor series, These Atmel CPU's implementation of the the I2C protocol allows unlimited pauses between protocol elements.  The Espressif implement enforces a Strict TimeOut between elements.  This has resulted in perceived I2C bus stability issues ([834](https://github.com/espressif/arduino-esp32/issues/834),[811](https://github.com/espressif/arduino-esp32/issues/811),[741](https://github.com/espressif/arduino-esp32/issues/741),[682](https://github.com/espressif/arduino-esp32/issues/682),[659](https://github.com/espressif/arduino-esp32/issues/659) and many more.  @lonerzzz created a partial solution [#751](https://github.com/espressif/arduino-esp32/pull/751).
  I spend a couple of weeks investigating these problems, and discovered this Hard TimeOut was the basis of all of these problems.  Once this Hard TimeOut limit is triggered the SM cannot recover without a complete reinitialization.  
-The existing Arduino code base is reliant on the AVR's ability to infinetly pausing a i2c transaction.  The standard coding practice of:
+The existing Arduino code base is reliant on the AVR's ability to infintely pause a i2c transaction.  The standard coding practice of:
 ```c++
 // set internal address pointer in I2C EEPROM from which to read
 Wire.beginTransmission(ID);
@@ -75,12 +75,12 @@ I have create a few new methods for Wire:
     size_t oldRequestFrom(uint8_t address, size_t size, bool sendStop); //released implementation
 //@stickBreaker for big blocks and ISR model
     uint8_t writeTransaction(uint8_t address, uint8_t* buff, size_t size, bool sendStop);// big block handling
-		size_t 	requestFrom(uint8_t address, size_t size, bool sendStop);
-		size_t 	requestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
-		size_t 	polledRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);//a BigBlock test case Not USING ISR
-		size_t	transact(size_t readLen); // replacement for endTransmission(false),requestFrom(ID,readLen,true);
-    size_t  transact(uint8_t* readBuff, size_t readLen);// bigger Block read
-		i2c_err_t	lastError(); // Expose complete error
+    size_t requestFrom(uint8_t address, size_t size, bool sendStop);
+    size_t requestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
+    size_t polledRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);//a BigBlock test case Not USING ISR
+    size_t transact(size_t readLen); // replacement for endTransmission(false),requestFrom(ID,readLen,true);
+    size_t transact(uint8_t* readBuff, size_t readLen);// bigger Block read
+    i2c_err_t lastError(); // Expose complete error
     void dumpInts(); // diagnostic dump for the last 64 different i2c Interrupts
     size_t getClock(); // current i2c Clock rate
 ``` 
