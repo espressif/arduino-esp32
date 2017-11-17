@@ -63,7 +63,8 @@ void yield(void);
 
 #include <freertos/portmacro.h>
 
-extern portMUX_TYPE interrupt_mux;
+void sei();
+void cli();
 
 //returns chip temperature in Celsius
 float temperatureRead();

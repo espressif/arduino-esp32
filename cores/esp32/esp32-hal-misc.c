@@ -23,7 +23,23 @@
 #include "esp_log.h"
 #include <sys/time.h>
 
-portMUX_TYPE interrupt_mux = portMUX_INITIALIZER_UNLOCKED;
+static portMUX_TYPE interrupt_mux = portMUX_INITIALIZER_UNLOCKED;
+static uint8_t interrupts_disabled = 0;
+void sei()
+{
+    if (interrupts_disabled) {
+        portEXIT_CRITICAL(&interrupt_mux);
+        interrupts_disabled = 0;
+    }
+}
+
+void cli()
+{
+    if (!interrupts_disabled) {
+        portENTER_CRITICAL(&interrupt_mux);
+        interrupts_disabled = 1;
+    }
+}
 
 //Undocumented!!! Get chip temperature in Farenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
