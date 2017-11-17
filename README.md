@@ -39,7 +39,6 @@ typedef enum {
     I2C_ERROR_BUSY,
     I2C_ERROR_MEMORY,
     I2C_ERROR_CONTINUE,
-    I2C_ERROR_MISSING_WRITE,
     I2C_ERROR_NO_BEGIN
 } i2c_err_t;
 
