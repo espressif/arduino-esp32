@@ -331,7 +331,7 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop){ // Assumes Wire.beginTransac
 // this command replaces Wire.endTransmission(true)
 
 if(transmitting==1){
-  last_error =i2cAddQueueWrite(i2c,txAddress,&txBuffer[txQueued],txLength,sendStop,NULL);  //queue tx element
+  last_error =i2cAddQueueWrite(i2c,txAddress,&txBuffer[txQueued],txLength-teQueued,sendStop,NULL);  //queue tx element
 
   if(last_error == I2C_ERROR_OK){
     if(sendStop){
