@@ -143,6 +143,7 @@ else {//not found
 }
 
 i2c_err_t i2cFreeQueue(i2c_t * i2c){
+i2c_err_t rc=I2C_ERROR_OK;
 if(i2c->dq!=NULL){
 // what about EventHandle?
   free(i2c->dq);
@@ -150,6 +151,7 @@ if(i2c->dq!=NULL){
   }
 i2c->queueCount=0;
 i2c->queuePos=0;
+return rc;
 }
 
 i2c_err_t i2cAddQueueWrite(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event){
