@@ -61,6 +61,10 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp_system.h"
 
+#include <freertos/portmacro.h>
+
+extern portMUX_TYPE interrupt_mux;
+
 //returns chip temperature in Celsius
 float temperatureRead();
 

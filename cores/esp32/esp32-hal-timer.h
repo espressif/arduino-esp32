@@ -27,8 +27,6 @@ extern "C" {
 #include "esp32-hal.h"
 #include "freertos/FreeRTOS.h"
 
-extern portMUX_TYPE arduino_mux;
-
 struct hw_timer_s;
 typedef struct hw_timer_s hw_timer_t;
 
