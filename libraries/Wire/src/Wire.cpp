@@ -158,7 +158,6 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
       rxIndex = 0;
       rxLength = 0;
       rxQueued = 0;
-      txQueued = 0;
       last_error = I2C_ERROR_MEMORY;
       i2cFreeQueue(i2c);
       return cnt;
@@ -172,6 +171,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
         rxIndex = 0;
         rxLength = i2cQueueReadCount(i2c);
         rxQueued = 0;
+	txQueued = 0;
         cnt = rxLength;
         i2cFreeQueue(i2c);
         }
