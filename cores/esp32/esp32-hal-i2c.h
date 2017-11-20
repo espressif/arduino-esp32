@@ -35,7 +35,6 @@ typedef enum {
     I2C_ERROR_BUSY,
     I2C_ERROR_MEMORY,
     I2C_ERROR_CONTINUE,
-    I2C_ERROR_MISSING_WRITE,
     I2C_ERROR_NO_BEGIN
 } i2c_err_t;
 
@@ -67,14 +66,14 @@ typedef enum {
 // i2c_event bits
 #define EVENT_ERROR_NAK (BIT(0))
 #define EVENT_ERROR     (BIT(1))
-#define EVENT_RUNNING   (BIT(3))
+//#define EVENT_RUNNING   (BIT(3))
 #define EVENT_DONE      (BIT(4))
 #define EVENT_IN_END    (BIT(5))
 #define EVENT_ERROR_PREV  (BIT(6))
 #define EVENT_ERROR_TIMEOUT   (BIT(7))
 #define EVENT_ERROR_ARBITRATION (BIT(8))
 #define EVENT_ERROR_DATA_NAK  (BIT(9))
-	
+#define EVENT_MASK 0x3F	
 typedef union{
   struct {
     uint32_t  addr: 16; // I2C address, if 10bit must have 0x7800 mask applied, else 8bit

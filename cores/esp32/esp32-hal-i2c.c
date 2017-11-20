@@ -48,6 +48,7 @@ struct i2c_struct_t {
     uint16_t queueCount;
     uint16_t queuePos;
     uint16_t byteCnt;
+    uint32_t exitCode;
 		
 };
 
@@ -95,7 +96,7 @@ static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, u
   dqx.queueEvent = event;
   
 if(event){// an eventGroup exist, so, initialize it
-  xEventGroupClearBits(event, 0x3F); // all of them
+  xEventGroupClearBits(event, EVENT_MASK); // all of them
   }
  
 if(i2c->dq!=NULL){ // expand
@@ -1209,6 +1210,10 @@ static void IRAM_ATTR emptyRxFifo(i2c_t * i2c){
   I2C_DATA_QUEUE_t *tdq =&i2c->dq[i2c->queuePos];
 
 moveCnt = i2c->dev->status_reg.rx_fifo_cnt;//no need to check the reg until this many are read
+if(moveCnt > (tdq->length - tdq->position)){ //makesure they go in this dq
+  // part of these reads go into the next dq
+  moveCnt = (tdq->length - tdq->position);
+  }  
 
 if(tdq->ctrl.mode==1) { // read
   while(moveCnt > 0){
@@ -1216,13 +1221,14 @@ if(tdq->ctrl.mode==1) { // read
       d = i2c->dev->fifo_data.val;
       moveCnt--;
       cnt++;
-      if(tdq->position < tdq->length) tdq->data[tdq->position++] = (d&0xFF);
-      else { // discard? what Happened to get more than requested?
-        log_e("discard 0x%x",d);
-        }
+      tdq->data[tdq->position++] = (d&0xFF);
       }
     // see if any more chars showed up while empting Fifo.
     moveCnt = i2c->dev->status_reg.rx_fifo_cnt;
+    if(moveCnt > (tdq->length - tdq->position)){ //makesure they go in this dq
+  // part of these reads go into the next dq
+      moveCnt = (tdq->length - tdq->position);
+      }  
     }
   cnt += (intBuff[intPos][1])&&0xffFF;
   intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF0000)|cnt;
@@ -1235,6 +1241,7 @@ else {
 }
  
 static void i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal){
+
 switch(eventCode){
   case EVENT_DONE:
     i2c->error = I2C_OK;
@@ -1256,24 +1263,25 @@ switch(eventCode){
   }
 uint32_t exitCode = EVENT_DONE | eventCode |(Fatal?EVENT_ERROR:0);
 
+if(i2c->dq[i2c->queuePos].ctrl.mode == 1) emptyRxFifo(i2c); // grab last few characters
+
 i2c->dev->int_ena.val = 0; // shutdown interrupts
 i2c->dev->int_clr.val = 0x1FFFF;
 i2c->stage = I2C_DONE;
+i2c->exitCode = exitCode; //true eventcode
 
-portBASE_TYPE HPTaskAwoken = pdFALSE; 
-
-if(i2c->dq[i2c->queuePos].queueEvent){ // this data element has an event, use it.
-  HPTaskAwoken = pdFALSE;
-  xEventGroupClearBitsFromISR(i2c->dq[i2c->queuePos].queueEvent, EVENT_RUNNING);
-  xEventGroupSetBitsFromISR(i2c->dq[i2c->queuePos].queueEvent, exitCode,&HPTaskAwoken);
-  if(HPTaskAwoken == pdTRUE) portYIELD_FROM_ISR();
-  }
-xEventGroupClearBitsFromISR(i2c->i2c_event, EVENT_RUNNING);
+portBASE_TYPE HPTaskAwoken = pdFALSE,xResult; 
+// try to notify Dispatch we are done, 
+// else the 50ms timeout will recover the APP, just alittle slower
 HPTaskAwoken = pdFALSE;
-xEventGroupSetBitsFromISR(i2c->i2c_event, exitCode, &HPTaskAwoken);
-if (HPTaskAwoken == pdTRUE) {//higher pri task has awoken, jump to it
-  portYIELD_FROM_ISR();
+xResult = xEventGroupSetBitsFromISR(i2c->i2c_event, exitCode, &HPTaskAwoken);
+if(xResult == pdPASS){
+  if(HPTaskAwoken==pdTRUE) {
+    portYIELD_FROM_ISR();
+//      log_e("Yield to Higher");
+    }
   }
+
 }  
  
 static void IRAM_ATTR i2c_isr_handler_default(void* arg){
@@ -1283,17 +1291,7 @@ uint32_t activeInt = p_i2c->dev->int_status.val&0x1FFF;
 //log_e("int=%x",activeInt);
 //dumpI2c(p_i2c);
  
-portBASE_TYPE HPTaskAwoken = pdFALSE; 
-/* don't need this Event_in_irq
-// be polite if someone more important wakes up.
-//log_e("setbits(%p)=%p",p_i2c->i2c_event);
- 
-xEventGroupSetBitsFromISR(p_i2c->i2c_event, EVENT_IN_IRQ, &HPTaskAwoken);
-if (HPTaskAwoken == pdTRUE) {//higher pri task has awoken, jump to it
-  portYIELD_FROM_ISR();
-  }
-//log_e("stage");
-*/
+portBASE_TYPE HPTaskAwoken = pdFALSE,xResult; 
 
 if(p_i2c->stage==I2C_DONE){ //get Out
   log_e("eject int=%p, ena=%p",activeInt,p_i2c->dev->int_ena.val);
@@ -1301,7 +1299,6 @@ if(p_i2c->stage==I2C_DONE){ //get Out
   p_i2c->dev->int_clr.val = activeInt; //0x1FFF;
   dumpI2c(p_i2c);
   i2cDumpInts();
-//  xEventGroupClearBitsFromISR(p_i2c->i2c_event, EVENT_IN_IRQ);
   return;
   }
 while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important, don't change
@@ -1321,19 +1318,8 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
  //   p_i2c->byteCnt=0;
     if(p_i2c->stage==I2C_STARTUP){
       p_i2c->stage=I2C_RUNNING;
-      xEventGroupClearBitsFromISR(p_i2c->i2c_event, EVENT_DONE); //why?
-      if(p_i2c->dq[p_i2c->queuePos].queueEvent){ // this data element has an event, use it.
-        HPTaskAwoken = pdFALSE;
-        xEventGroupSetBitsFromISR(p_i2c->dq[p_i2c->queuePos].queueEvent, EVENT_RUNNING,
-        &HPTaskAwoken);
-        if(HPTaskAwoken == pdTRUE) portYIELD_FROM_ISR();
-        }
-      HPTaskAwoken = pdFALSE;
-      xEventGroupSetBitsFromISR(p_i2c->i2c_event, EVENT_RUNNING, &HPTaskAwoken);
-      if (HPTaskAwoken == pdTRUE) {//higher pri task has awoken, jump to it
-        portYIELD_FROM_ISR();
-        }
       }
+
     activeInt &=~I2C_TRANS_START_INT_ST_M;
     p_i2c->dev->int_ena.trans_start = 1; // already enabled? why Again?
     p_i2c->dev->int_clr.trans_start = 1; // so that will trigger after next 'END'
@@ -1367,22 +1353,7 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
         p_i2c->dev->int_ena.rx_fifo_full=1;
         }
 
-      if(p_i2c->dq[p_i2c->queuePos].queueEvent){ // this data element has an event, use it.
-        HPTaskAwoken = pdFALSE;
-        xEventGroupClearBitsFromISR(p_i2c->dq[p_i2c->queuePos].queueEvent, EVENT_RUNNING);
-        xEventGroupSetBitsFromISR(p_i2c->dq[p_i2c->queuePos].queueEvent, EVENT_DONE,
-        &HPTaskAwoken);
-        if(HPTaskAwoken == pdTRUE) portYIELD_FROM_ISR();
-        }
-        
       p_i2c->queuePos++; //inc to next dq
-
-      if(p_i2c->dq[p_i2c->queuePos].queueEvent){ // this data element has an event, use it.
-        HPTaskAwoken = pdFALSE;
-        xEventGroupSetBitsFromISR(p_i2c->dq[p_i2c->queuePos].queueEvent, EVENT_RUNNING,
-        &HPTaskAwoken);
-        if(HPTaskAwoken == pdTRUE) portYIELD_FROM_ISR();
-        }
 
       if(p_i2c->queuePos < p_i2c->queueCount) // load next dq address field + data
         p_i2c->dev->int_ena.tx_fifo_empty=1;
@@ -1408,7 +1379,6 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     } 
 	
   if (activeInt & I2C_TRANS_COMPLETE_INT_ST_M) { 
-    if(p_i2c->dq[p_i2c->queuePos].ctrl.mode == 1) emptyRxFifo(p_i2c); // grab last few characters
     i2cIsrExit(p_i2c,EVENT_DONE,false);
     return; // no more work to do
 /*    
@@ -1430,11 +1400,6 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     }
   
   if (activeInt & I2C_END_DETECT_INT_ST_M) {
-    HPTaskAwoken = pdFALSE;
-    xEventGroupSetBitsFromISR(p_i2c->i2c_event, EVENT_IN_END, &HPTaskAwoken);
-    if (HPTaskAwoken == pdTRUE) {//higher pri task has awoken, jump to it
-      portYIELD_FROM_ISR();
-      }
     p_i2c->dev->int_ena.end_detect = 0;
     p_i2c->dev->int_clr.end_detect = 1;
 		p_i2c->dev->ctr.trans_start=0;
@@ -1442,27 +1407,22 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     p_i2c->dev->ctr.trans_start=1; // go for it
     activeInt&=~I2C_END_DETECT_INT_ST_M;
     // What about Tx, RX fifo fill?
-    xEventGroupClearBitsFromISR(p_i2c->i2c_event, EVENT_IN_END);
     }
   
   if (activeInt & I2C_RXFIFO_OVF_INT_ST_M) { //should never happen, I always use Fifo
     p_i2c->dev->int_clr.rx_fifo_ovf = 1;
+    p_i2c->dev->int_ena.rx_fifo_ovf = 0; // disable it
     } 
 	
   if(activeInt){ // clear unhandled if possible?  What about Disabling interrupt?
     p_i2c->dev->int_clr.val = activeInt;
     log_e("unknown int=%x",activeInt);
+    // disable unhandled IRQ,
+    p_i2c->dev->int_ena.val = p_i2c->dev->int_ena.val & (~activeInt);
     }
 
   activeInt = p_i2c->dev->int_status.val; // start all over if another interrupt happened
- /* if((activeInt&oldInt)==oldInt){
-    log_e("dup int old=%p, new=%p dup=%p",oldInt,activeInt,(oldInt&activeInt));
-    }
-*/
   }
-
-//xEventGroupClearBitsFromISR(p_i2c->i2c_event, EVENT_IN_IRQ);
-// and we're out!  
 }
  
 void i2cDumpInts(){
@@ -1506,10 +1466,12 @@ if(!i2c->i2c_event){
   }
 if(i2c->i2c_event) {
   uint32_t ret=xEventGroupClearBits(i2c->i2c_event, 0xFF);
+  
 //  log_e("after clearBits(%p)=%p",i2c->i2c_event,ret);
   }
 else {// failed to create EventGroup
   log_e("eventCreate failed=%p",i2c->i2c_event);
+  I2C_MUTEX_UNLOCK();
   return I2C_ERROR_MEMORY;
   }
 
@@ -1561,6 +1523,7 @@ i2c->queuePos=0;
 fillCmdQueue(i2c,0,false); // start adding command[], END irq will keep it full
 //Data Fifo will be filled after trans_start is issued
 
+i2c->exitCode=0;
 i2c->stage = I2C_STARTUP; // everything configured, now start the I2C StateMachine, and
 // As soon as interrupts are enabled, the ISR will start handling them.
 // it should receive a TXFIFO_EMPTY immediately, even before it
@@ -1584,6 +1547,7 @@ if(!i2c->intr_handle){ // create ISR I2C_0 only,
   uint32_t ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, 0, &i2c_isr_handler_default, i2c, &i2c->intr_handle);
   if(ret!=ESP_OK){
     log_e("install interrupt handler Failed=%d",ret);
+    I2C_MUTEX_UNLOCK();
     return I2C_ERROR_MEMORY;
     }
   }
@@ -1592,6 +1556,8 @@ if(!i2c->intr_handle){ // create ISR I2C_0 only,
 
 // how many ticks should it take to transfer totalBytes thru the I2C hardware,
 // add 50ms just for kicks
+ 
+
  
 portTickType ticksTimeOut = ((totalBytes /(i2cGetFrequency(i2c)/(10*1000)))+50)/portTICK_PERIOD_MS;
 portTickType tBefore=xTaskGetTickCount();  
@@ -1607,6 +1573,14 @@ uint32_t eBits = xEventGroupWaitBits(i2c->i2c_event,EVENT_DONE,pdFALSE,pdTRUE,ti
 portTickType tAfter=xTaskGetTickCount();
 
 uint32_t b;
+// if xEventGroupSetBitsFromISR() failed, the ISR could have succeeded but never been
+// able to mark the success
+
+if(i2c->exitCode!=eBits){ // try to recover from O/S failure
+//  log_e("EventGroup Failed:%p!=%p",eBits,i2c->exitCode);
+  eBits=i2c->exitCode;
+  }
+
 if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK
   dumpI2c(i2c);
   i2cDumpInts();
@@ -1647,15 +1621,28 @@ else { // GROSS timeout, shutdown ISR , report Timeout
   i2cDumpInts();
   }
 
+// offloading all EventGroups to dispatch, EventGroups in ISR is not always successful
+// 11/20/2017
 // if error, need to trigger all succeeding dataQueue events with the EVENT_ERROR_PREV
-if(eBits&EVENT_ERROR){// every dq past the error point needs it's EventGroup Released
-  b=i2c->queuePos + 1;
-  while(b < i2c->queueCount){
+
+b = 0;
+while(b < i2c->queueCount){
+  if(b < i2c->queuePos){ // before any error
+    if(i2c->dq[b].queueEvent){ // this data queue element has an EventGroup
+      xEventGroupSetBits(i2c->dq[b].queueEvent,EVENT_DONE);
+      }
+    }
+  else if(b == i2c->queuePos){ // last processed queue
+    if(i2c->dq[b].queueEvent){ // this data queue element has an EventGroup
+      xEventGroupSetBits(i2c->dq[b].queueEvent,eBits);
+      }
+    }
+  else{ // never processed queues
     if(i2c->dq[b].queueEvent){ // this data queue element has an EventGroup
       xEventGroupSetBits(i2c->dq[b].queueEvent,eBits|EVENT_ERROR_PREV);
       }
-    b++;
     }
+  b++;
   }
 
 I2C_MUTEX_UNLOCK();
