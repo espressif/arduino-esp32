@@ -58,6 +58,7 @@ protected:
     void onRequestService(void);
     void onReceiveService(uint8_t*, int);
 		i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
+    i2c_err_t processQueue(uint16_t *readCount);
 
 public:
     TwoWire(uint8_t bus_num);

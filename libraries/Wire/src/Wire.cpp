@@ -142,74 +142,64 @@ size_t TwoWire::oldRequestFrom(uint8_t address, size_t size, bool sendStop)
     rxLength = read;
     return read;
 }
+/*@StickBreaker common handler for processing the queued commands
+*/
+i2c_err_t TwoWire::processQueue(uint16_t * readCount){
+   last_error=i2cProcQueue(i2c);
+   rxIndex = 0;
+   rxLength = 0;
+   txQueued = 0; // the SendStop=true will restart all Queueing 
+   rxQueued = 0;
+   *readCount = i2cQueueReadCount(i2c); // do I want to exclude all Local buffers from this?
+// currently 17/NOV/2017 this count is of all bytes read from I2C, for this queue of commands.
+  
+
+  //what about mix local buffers and Wire Buffers?
+  //Handled it by verifying location, only contiguous sections of
+  //rxBuffer are available for Wire.read().  Any local buffer requestfrom(id,*char..) is 
+  // completed already, only the ones using Wire's buffers need to be considered
+  
+   uint8_t *savePtr;
+   uint16_t len;
+   uint8_t idx=0;
+   while(I2C_ERROR_OK==i2cGetReadQueue(i2c,&savePtr,&len,&idx)){
+     if(savePtr==(rxBuffer+rxLength)){
+       rxLength = rxLength + len;
+       }
+     }
+   i2cFreeQueue(i2c);
+   return last_error;
+}
+ 
+
 
 /* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
 */
 size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop){
+//use internal Wire rxBuffer, multiple requestFrom()'s may be pending, try to share rxBuffer
 
-    uint16_t cnt = rxQueued; // currently queued reads 
-    if(cnt<I2C_BUFFER_LENGTH){
+    uint16_t cnt = rxQueued; // currently queued reads, next available position in rxBuffer 
+    if(cnt<(I2C_BUFFER_LENGTH-1)){ // any room left in rxBuffer 
       if((size+cnt)>I2C_BUFFER_LENGTH)
         size = (I2C_BUFFER_LENGTH-cnt);
       }
     else { // no room to receive more!
-      log_e("no room %d",cnt);
+      log_e("rxBuff overflow %d",cnt+size);
       cnt = 0;
-      rxIndex = 0;
-      rxLength = 0;
-      rxQueued = 0;
       last_error = I2C_ERROR_MEMORY;
-      i2cFreeQueue(i2c);
+      flush();
       return cnt;
       }
-      
-    last_error =i2cAddQueueRead(i2c,address,&rxBuffer[cnt],size,sendStop,NULL);
-    if(last_error==I2C_ERROR_OK){ // successfully queued the read
-      rxQueued += size;
-      if(sendStop){ //now actually process the queued commands
-        last_error=i2cProcQueue(i2c);
-        rxIndex = 0;
-        rxLength = i2cQueueReadCount(i2c);
-        rxQueued = 0;
-	txQueued = 0;
-        cnt = rxLength;
-        i2cFreeQueue(i2c);
-        }
-      else { // stop not received, so wait for I2C stop,
-        last_error=I2C_ERROR_CONTINUE;
-        cnt = 0;
-        }
-      }
-    else {// only possible error is I2C_ERROR_MEMORY
-      cnt = 0;
-      }
-    return cnt;
-}
+    
+    return requestFrom(address, &rxBuffer[cnt],size,sendStop);
+ }
 
 size_t TwoWire::requestFrom(uint8_t address, uint8_t * readBuff, size_t size, bool sendStop){
-    size_t cnt=0;
+    uint16_t cnt=0;
     last_error =i2cAddQueueRead(i2c,address,readBuff,size,sendStop,NULL);
     if(last_error==I2C_ERROR_OK){ // successfully queued the read
       if(sendStop){ //now actually process the queued commands
-        last_error=i2cProcQueue(i2c);
-        rxIndex = 0;
-        rxLength = 0;
-        txQueued = 0; // the SendStop=true will restart are Queueing 
-        rxQueued = 0;
-        cnt = i2cQueueReadCount(i2c); 
-
-  //what about mix local buffers and Wire Buffers?
-  //Handled it by verifying location, only contiguous sections of
-  //rxBuffer are counted.
-        uint8_t *savePtr;
-        uint16_t len;
-        uint8_t idx=0;
-        while(I2C_ERROR_OK==i2cGetReadQueue(i2c,&savePtr,&len,&idx)){
-          if(savePtr==(rxBuffer+rxLength)){
-            rxLength = rxLength + len;
-            }
-          }
-        i2cFreeQueue(i2c);
+        last_error = processQueue(&cnt);
         }
       else { // stop not received, so wait for I2C stop,
         last_error=I2C_ERROR_CONTINUE;
@@ -229,24 +219,8 @@ last_error=i2cAddQueueWrite(i2c,address,buff,size,sendStop,NULL);
 
 if(last_error==I2C_ERROR_OK){ //queued
   if(sendStop){ //now actually process the queued commands, including READs
-    last_error=i2cProcQueue(i2c);
-    rxIndex = 0;
-    rxLength = 0;
-    txQueued = 0; // the SendStop=true will restart all Queueing 
-    rxQueued = 0;
-    
-  //what about mix local buffers and Wire Buffers?
-  //Handled it by verifying location, only contiguous sections of
-  //rxBuffer are counted.
-    uint8_t *savePtr;
-    uint16_t len;
-    uint8_t idx=0;
-    while(I2C_ERROR_OK==i2cGetReadQueue(i2c,&savePtr,&len,&idx)){
-      if(savePtr==(rxBuffer+rxLength)){
-        rxLength = rxLength + len;
-        }
-      }
-    i2cFreeQueue(i2c);
+    uint16_t dummy;
+    last_error=processQueue(&dummy);
     }
   else { // stop not received, so wait for I2C stop,
     last_error=I2C_ERROR_CONTINUE;
@@ -302,7 +276,7 @@ if(last_error==I2C_ERROR_CONTINUE){ // must have queued the Write
   return cnt;
   }
 else {
-  last_error = I2C_ERROR_MISSING_WRITE;
+  last_error = I2C_ERROR_NO_BEGIN;
   return 0;
   }
 }
@@ -320,7 +294,7 @@ if(last_error==I2C_ERROR_CONTINUE){ // must have queued the write
   return cnt;
   }
 else {
-  last_error = I2C_ERROR_MISSING_WRITE;
+  last_error = I2C_ERROR_NO_BEGIN;
   return 0;
   }
 }
@@ -335,9 +309,8 @@ if(transmitting==1){
 
   if(last_error == I2C_ERROR_OK){
     if(sendStop){
-      last_error=i2cProcQueue(i2c);
-      txQueued = 0;
-      i2cFreeQueue(i2c);
+      uint16_t dummy;
+      last_error = processQueue(&dummy);
       }
     else { // queued because it had sendStop==false
       // txlength is howmany bytes in txbufferhave been use
@@ -348,8 +321,7 @@ if(transmitting==1){
   }
 else {
   last_error= I2C_ERROR_NO_BEGIN;
-  txQueued = 0;
-  i2cFreeQueue(i2c); // cleanup
+  flush();
   }
 txIndex = 0;
 txLength =0;
@@ -398,6 +370,9 @@ void TwoWire::beginTransmission(uint8_t address)
     txAddress = address;
     txIndex = txQueued; // allow multiple beginTransmission(),write(),endTransmission(false) until endTransmission(true)
     txLength = txQueued;
+    if(txLength!=0)
+      log_e("multiple beginTransmissions starting at %d",txQueued);
+    
 }
 
 void TwoWire::beginTransmission(int address)
