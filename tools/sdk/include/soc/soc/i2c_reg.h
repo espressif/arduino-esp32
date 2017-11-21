@@ -18,7 +18,7 @@
 #include "soc.h"
 
 #define REG_I2C_BASE(i)    (DR_REG_I2C_EXT_BASE + (i) * 0x14000 )
-#define REG_I2C_BASEO(i,o)		(DR_REG_I2C_EXT_BASE +(i) *0x14000+(o)*4)
+
 #define I2C_SCL_LOW_PERIOD_REG(i)          (REG_I2C_BASE(i) + 0x0000)
 /* I2C_SCL_LOW_PERIOD : R/W ;bitpos:[13:0] ;default: 14'b0 ; */
 /*description: This register is used to configure the  low level width of SCL clock.*/

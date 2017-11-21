@@ -1001,9 +1001,9 @@ while(!needMoreCmds&&(qp < i2c->queueCount)){ // check if more possible cmds
 //log_e("needMoreCmds=%d",needMoreCmds);
 done=(!needMoreCmds)||(cmdIdx>14);
 
-while(!done){ // fill the command[] until either 0..14 or out of cmds
+while(!done){ // fill the command[] until either 0..14 filled or out of cmds and last cmd is STOP
 //CMD START
-  I2C_DATA_QUEUE_t *tdq=&i2c->dq[qp]; // simpler
+  I2C_DATA_QUEUE_t *tdq=&i2c->dq[qp]; // simpler coding 
 
   if(!tdq->ctrl.startCmdSent){// has this dq element's START command been added?
     i2cSetCmd(i2c, cmdIdx++, I2C_CMD_RSTART, 0, false, false, false);
@@ -1023,9 +1023,12 @@ while(!done){ // fill the command[] until either 0..14 or out of cmds
 
 /* Can I have another Sir?
  ALL CMD queues must be terminated with either END or STOP.
- if END is used, when refilling the cmd[] next time, no entries from END to [15] can be used.
- AND the END continue. The END command does not complete until the the 
- ctr->trans_start=1 has executed.
+ 
+ If END is used, when refilling the cmd[] next time, no entries from END to [15] can be used.
+ AND the cmd[] must be filled starting at [0] with commands. Either fill all 15 [0]..[14] and leave the
+ END in [15] or include a STOP in one of the positions [0]..[14].  Any entries after a STOP are IGNORED byte the StateMachine. 
+ The END operation does not complete until ctr->trans_start=1 has been issued.
+ 
  So, only refill from [0]..[14], leave [15] for a continuation if necessary.
  As a corrilary, once END exists in [15], you do not need to overwrite it for the
  next continuation. It is never modified. But, I update it every time because it might
@@ -1093,7 +1096,7 @@ while(!done){ // fill the command[] until either 0..14 or out of cmds
     }
       
   }// while(!done)
-if(INTS){
+if(INTS){ // don't want to prematurely enable fifo ints until ISR is ready to handle it.
   if(ena_rx) i2c->dev->int_ena.rx_fifo_full = 1;
   if(ena_tx) i2c->dev->int_ena.tx_fifo_empty = 1;
   }
@@ -1146,7 +1149,7 @@ uint8_t cnt;
 while((a < i2c->queueCount)&&!(full || readEncountered)){
   I2C_DATA_QUEUE_t *tdq = &i2c->dq[a];
   cnt=0; 
-// add to address to fifo
+// add to address to fifo ctrl.addr already has R/W bit positioned correctly 
   if(tdq->ctrl.addrSent < tdq->ctrl.addrReq){ // need to send address bytes
     if(tdq->ctrl.addrReq==2){ //10bit
       if(tdq->ctrl.addrSent==0){ //10bit highbyte needs sent
@@ -1178,6 +1181,8 @@ while((a < i2c->queueCount)&&!(full || readEncountered)){
     }
   full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
 // add write data to fifo
+//21NOV2017 might want to look into using local capacity counter instead of reading status_reg
+//  a double while loop, like emptyRxFifo()
   if(tdq->ctrl.mode==0){ // write
     if(tdq->ctrl.addrSent == tdq->ctrl.addrReq){ //address has been sent, is Write Mode!
       while((!full)&&(tdq->position < tdq->length)){
@@ -1190,9 +1195,11 @@ while((a < i2c->queueCount)&&!(full || readEncountered)){
   else readEncountered = true;
   
   if(full) readEncountered =false; //tx possibly needs more
-  
+
+// update debug buffer tx counts  
   cnt += intBuff[intPos][1]>>16;
   intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF)|(cnt<<16);
+
   if(!(full||readEncountered)) a++; // check next buffer for tx
   }
 
@@ -1230,6 +1237,7 @@ if(tdq->ctrl.mode==1) { // read
       moveCnt = (tdq->length - tdq->position);
       }  
     }
+// update Debug rxCount
   cnt += (intBuff[intPos][1])&&0xffFF;
   intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF0000)|cnt;
   }
