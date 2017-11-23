@@ -94,7 +94,7 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
     LIBS=[
-        "gcc", "app_trace", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "console", "core", "cxx", "driver", "esp32", "esp_adc_cal", "espnow", "ethernet", "expat", "fatfs", "freertos", "hal", "heap", "jsmn", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "pthread", "rtc", "sdmmc", "smartconfig", "soc", "spi_flash", "spiffs", "tcpip_adapter", "ulp", "vfs", "wear_levelling", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module", "stdc++"
+        "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "idf_test", "wear_levelling", "hal", "newlib", "driver", "bootloader_support", "pp", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
     ],
 
     UPLOADERFLAGS=[
