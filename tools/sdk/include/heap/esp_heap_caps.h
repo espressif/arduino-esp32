@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include "multi_heap.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Flags to indicate the capabilities of the various memory systems
  */
@@ -40,7 +44,7 @@
  *
  * Equivalent semantics to libc malloc(), for capability-aware memory.
  *
- * In IDF, ``malloc(p)`` is equivalent to ``heaps_caps_malloc(p, MALLOC_CAP_8BIT)``.
+ * In IDF, ``malloc(p)`` is equivalent to ``heap_caps_malloc(p, MALLOC_CAP_8BIT)``.
  *
  * @param size Size, in bytes, of the amount of memory to allocate
  * @param caps        Bitwise OR of MALLOC_CAP_* flags indicating the type
@@ -63,7 +67,7 @@ void *heap_caps_malloc(size_t size, uint32_t caps);
 void heap_caps_free( void *ptr);
 
 /**
- * @brief Reallocate memory previously allocated via heaps_caps_malloc() or heaps_caps_realloc().
+ * @brief Reallocate memory previously allocated via heap_caps_malloc() or heaps_caps_realloc().
  *
  * Equivalent semantics to libc realloc(), for capability-aware memory.
  *
@@ -306,3 +310,6 @@ void heap_caps_dump(uint32_t caps);
  */
 void heap_caps_dump_all();
 
+#ifdef __cplusplus
+}
+#endif
