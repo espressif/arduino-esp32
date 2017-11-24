@@ -12,14 +12,23 @@
 
 begin	KEYWORD2
 setClock	KEYWORD2
-setClockStretchLimit	KEYWORD2
 beginTransmission	KEYWORD2
 endTransmission	KEYWORD2
 requestFrom	KEYWORD2
-send	KEYWORD2
-receive	KEYWORD2
 onReceive	KEYWORD2
 onRequest	KEYWORD2
+requestFrom	KEYWORD2
+writeTransaction	KEYWORD2
+transact	KEYWORD2
+lastError	KEYWORD2
+getErrorText	KEYWORD2
+write	KEYWORD2
+read	KEYWORD2
+available	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+reset	KEYWORD2
+
 
 #######################################
 # Instances (KEYWORD2)

@@ -145,11 +145,13 @@ typedef struct {
 struct i2c_struct_t;
 typedef struct i2c_struct_t i2c_t;
 
-i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en);
+i2c_t * i2cInit(uint8_t i2c_num);
 
 //call this after you setup the bus and pins to send empty packet
 //required because when pins are attached, they emit pulses that lock the bus
 void i2cInitFix(i2c_t * i2c);
+
+void i2cReset(i2c_t* i2c);
 
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
@@ -159,25 +161,14 @@ i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl);
 i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda);
 i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda);
 
-i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
-i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
-//Stickbreakers attempt to read big blocks
-i2c_err_t pollI2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint16_t len, bool sendStop);
-i2c_err_t i2cProcQueue(i2c_t *i2c);
+//Stickbreakers ISR Support
+i2c_err_t i2cProcQueue(i2c_t *i2c, uint32_t *readCount);
 i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cFreeQueue(i2c_t *i2c);
 i2c_err_t i2cReleaseISR(i2c_t *i2c);
-uint16_t i2cQueueReadPendingCount(i2c_t *i2c);
-uint16_t i2cQueueReadCount(i2c_t *i2c);
-i2c_err_t i2cGetReadQueue(i2c_t *i2c, uint8_t** buffPtr, uint16_t* lenPtr,uint8_t *savePtr);
+//stickbreaker debug support
 void i2cDumpInts();
-
-
-static void IRAM_ATTR i2c_isr_handler_default(void* arg); //ISR
-
-
-void i2cReset(i2c_t* i2c);
 
 #ifdef __cplusplus
 }

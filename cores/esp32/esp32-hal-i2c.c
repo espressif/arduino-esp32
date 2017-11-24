@@ -49,7 +49,6 @@ struct i2c_struct_t {
     uint16_t queuePos;
     uint16_t byteCnt;
     uint32_t exitCode;
-		
 };
 
 enum {
@@ -91,7 +90,7 @@ static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, u
   dqx.ctrl.addr = i2cDeviceAddr;
   dqx.ctrl.mode = mode;
   dqx.ctrl.stop= sendStop;
-  dqx.ctrl.addrReq = ((i2cDeviceAddr&0x7800)==0x7800)?2:1; // 10bit or 7bit address
+  dqx.ctrl.addrReq = ((i2cDeviceAddr&0xFC00)==0x7800)?2:1; // 10bit or 7bit address
   dqx.queueLength = dataLen + dqx.ctrl.addrReq;
   dqx.queueEvent = event;
   
@@ -123,27 +122,10 @@ else { // first Time
   }
 return I2C_ERROR_OK;
 }
-/* walk thru dq elements returning the buffer* and length, savePtr=NULL to start
-*/
-i2c_err_t i2cGetReadQueue(i2c_t *i2c, uint8_t** buffPtr, uint16_t* lenPtr,uint8_t *savePtr){
-  uint8_t a = *savePtr;
-while((a<i2c->queueCount)&&(i2c->dq[a].ctrl.mode!=1)) a++;
-if(a < i2c->queueCount){// found one
-  *buffPtr = i2c->dq[a].data;
-  *lenPtr = i2c->dq[a].length;
-  a++;
-  *savePtr = a;
-  return I2C_ERROR_OK;
-  }
-else {//not found
-  *buffPtr = NULL;
-  *lenPtr = 0;
-  *savePtr = a;
-  return I2C_ERROR_MEMORY;
-  }
-}
 
 i2c_err_t i2cFreeQueue(i2c_t * i2c){
+  // need to grab a MUTEX for exclusive Queue,
+  // what out if ISR is running?
 i2c_err_t rc=I2C_ERROR_OK;
 if(i2c->dq!=NULL){
 // what about EventHandle?
@@ -152,41 +134,33 @@ if(i2c->dq!=NULL){
   }
 i2c->queueCount=0;
 i2c->queuePos=0;
+// release Mutex
 return rc;
 }
 
 i2c_err_t i2cAddQueueWrite(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event){
+  // need to grab a MUTEX for exclusive Queue,
+  // what out if ISR is running?
   
   return i2cAddQueue(i2c,0,i2cDeviceAddr,dataPtr,dataLen,sendStop,event); 
 }
 
 i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event){
-  
-  return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,event); 
-}
+// need to grab a MUTEX for exclusive Queue,
+// what out if ISR is running?
 
-uint16_t i2cQueueReadPendingCount(i2c_t * i2c){
-uint16_t cnt=0;
-uint16_t a=i2c->queuePos;
-while(a<i2c->queueCount){
-  if(i2c->dq[a].ctrl.mode==1){
-    cnt += i2c->dq[a].length - i2c->dq[a].position;
-    }
-  a++;
-  }
-return cnt;
-}
   
-uint16_t i2cQueueReadCount(i2c_t * i2c){
-uint16_t cnt=0;
-uint16_t a=0;
-while( a < i2c->queueCount){
-  if(i2c->dq[a].ctrl.mode==1){
-    cnt += i2c->dq[a].position; //if postion is > 0 then some reads have happened
+  //10bit read is kind of weird, first you do a 0byte Write with 10bit
+  //  address, then a ReSTART then a 7bit Read using the the upper 7bit +
+  // readBit.
+  if((i2cDeviceAddr &0xFC00)==0x7800){ // ten bit read
+    i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,event);
+    if(err==I2C_ERROR_OK){
+      return i2cAddQueue(i2c,1,(i2cDeviceAddr>>8),dataPtr,dataLen,sendStop,event);
+      }
+    else return err;
     }
-  a++;
-  }
-return cnt;
+  return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,event); 
 }
 // Stickbreaker 
 
@@ -252,20 +226,6 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
 		cmd.byte_num = byte_num;
 		cmd.op_code = op_code;
     i2c->dev->command[index].val = cmd.val;
-/*
-    i2c->dev->command[index].ack_en = ack_check;
-    i2c->dev->command[index].ack_exp = ack_exp;
-    i2c->dev->command[index].ack_val = ack_val;
-    i2c->dev->command[index].byte_num = byte_num;
-    i2c->dev->command[index].op_code = op_code;
-*/
-}
-
-void i2cResetCmd(i2c_t * i2c){
-    int i;
-    for(i=0;i<16;i++){
-        i2c->dev->command[i].val = 0;
-    }
 }
 
 void i2cResetFiFo(i2c_t * i2c)
@@ -278,563 +238,6 @@ void i2cResetFiFo(i2c_t * i2c)
 	f.tx_fifo_rst = 0;
 	f.rx_fifo_rst = 0;
 	i2c->dev->fifo_conf.val = f.val;
-/*	
-    i2c->dev->fifo_conf.tx_fifo_rst = 1;
-    i2c->dev->fifo_conf.tx_fifo_rst = 0;
-    i2c->dev->fifo_conf.rx_fifo_rst = 1;
-    i2c->dev->fifo_conf.rx_fifo_rst = 0;
-*/
-}
-
-i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
-{
-    int i;
-    uint8_t index = 0;
-    uint8_t dataLen = len + (addr_10bit?2:1);
-    address = (address << 1);
-
-    if(i2c == NULL){
-        return I2C_ERROR_DEV;
-    }
-
-    I2C_MUTEX_LOCK();
-
-    if (i2c->dev->status_reg.bus_busy == 1)
-    {
-        log_e( "Busy Timeout! Addr: %x", address >> 1 );
-        I2C_MUTEX_UNLOCK();
-        return I2C_ERROR_BUSY;
-    }
-
-    while(dataLen) {
-        uint8_t willSend = (dataLen > 32)?32:dataLen;
-        uint8_t dataSend = willSend;
-
-        i2cResetFiFo(i2c);
-        i2cResetCmd(i2c);
-        //Clear Interrupts
-        i2c->dev->int_clr.val = 0xFFFFFFFF;
-
-        //CMD START
-        i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
-
-        //CMD WRITE(ADDRESS + DATA)
-        if(!index) {
-            i2c->dev->fifo_data.data = address & 0xFF;
-            dataSend--;
-            if(addr_10bit) {
-                i2c->dev->fifo_data.data = (address >> 8) & 0xFF;
-                dataSend--;
-            }
-        }
-        i = 0;
-        while(i<dataSend) {
-            i++;
-            i2c->dev->fifo_data.val = data[index++];
-            while(i2c->dev->status_reg.tx_fifo_cnt < i);
-        }
-        i2cSetCmd(i2c, 1, I2C_CMD_WRITE, willSend, false, false, true);
-        dataLen -= willSend;
-
-        //CMD STOP or CMD END if there is more data
-        if(dataLen || !sendStop) {
-            i2cSetCmd(i2c, 2, I2C_CMD_END, 0, false, false, false);
-        } else if(sendStop) {
-            i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
-        }
-
-        //START Transmission
-        i2c->dev->ctr.trans_start = 1;
-
-        //WAIT Transmission
-        uint32_t startAt = millis();
-        while(1) {
-            //have been looping for too long
-            if((millis() - startAt)>50){
-                log_e("Timeout! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_BUS;
-            }
-
-            //Bus failed (maybe check for this while waiting?
-            if(i2c->dev->int_raw.arbitration_lost) {
-                log_e("Bus Fail! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_BUS;
-            }
-
-            //Bus timeout
-            if(i2c->dev->int_raw.time_out) {
-                log_e("Bus Timeout! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_TIMEOUT;
-            }
-
-            //Transmission did not finish and ACK_ERR is set
-            if(i2c->dev->int_raw.ack_err) {
-                log_w("Ack Error! Addr: %x", address >> 1);
-								i2c->dev->int_clr.ack_err = 1; // clear it
-                while((i2c->dev->status_reg.bus_busy) && ((millis() - startAt)<50));
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_ACK;
-            }
-
-            if((sendStop && i2c->dev->command[2].done) || !i2c->dev->status_reg.bus_busy){
-                break;
-            }
-        }
-
-    }
-    I2C_MUTEX_UNLOCK();
-    return I2C_ERROR_OK;
-}
-
-i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop)
-{
-    address = (address << 1) | 1;
-    uint8_t addrLen = (addr_10bit?2:1);
-    uint8_t index = 0;
-    uint8_t cmdIdx;
-    uint8_t willRead;
-
-    if(i2c == NULL){
-        return I2C_ERROR_DEV;
-    }
-
-    I2C_MUTEX_LOCK();
-
-    if (i2c->dev->status_reg.bus_busy == 1)
-    {
-        log_w( "Busy Timeout! Addr: %x", address >> 1 );
-        I2C_MUTEX_UNLOCK();
-        return I2C_ERROR_BUSY;
-    }
-
-    i2cResetFiFo(i2c);
-    i2cResetCmd(i2c);
-
-    //CMD START
-    i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
-
-    //CMD WRITE ADDRESS
-    i2c->dev->fifo_data.val = address & 0xFF;
-    if(addr_10bit) {
-        i2c->dev->fifo_data.val = (address >> 8) & 0xFF;
-    }
-    i2cSetCmd(i2c, 1, I2C_CMD_WRITE, addrLen, false, false, true);
-
-    while(len) {
-        cmdIdx = (index)?0:2;
-        willRead = (len > 32)?32:(len-1);
-        if(cmdIdx){
-            i2cResetFiFo(i2c);
-        }
-
-        if(willRead){
-            i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, willRead, false, false, false);
-        }
-
-        if((len - willRead) > 1) {
-            i2cSetCmd(i2c, cmdIdx++, I2C_CMD_END, 0, false, false, false);
-        } else {
-            willRead++;
-            i2cSetCmd(i2c, cmdIdx++, I2C_CMD_READ, 1, true, false, false);
-            if(sendStop) {
-                i2cSetCmd(i2c, cmdIdx++, I2C_CMD_STOP, 0, false, false, false);
-            }
-        }
-
-        //Clear Interrupts
-        i2c->dev->int_clr.val = 0xFFFFFFFF;
-
-        //START Transmission
-        i2c->dev->ctr.trans_start = 1;
-
-        //WAIT Transmission
-        uint32_t startAt = millis();
-        while(1) {
-            //have been looping for too long
-            if((millis() - startAt)>50){
-                log_e("Timeout! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_BUS;
-            }
-
-            //Bus failed (maybe check for this while waiting?
-            if(i2c->dev->int_raw.arbitration_lost) {
-                log_e("Bus Fail! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_BUS;
-            }
-
-            //Bus timeout
-            if(i2c->dev->int_raw.time_out) {
-                log_e("Bus Timeout! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_TIMEOUT;
-            }
-
-            //Transmission did not finish and ACK_ERR is set
-            if(i2c->dev->int_raw.ack_err) {
-                log_w("Ack Error! Addr: %x", address >> 1);
-                I2C_MUTEX_UNLOCK();
-                return I2C_ERROR_ACK;
-            }
-
-            if(i2c->dev->command[cmdIdx-1].done) {
-                break;
-            }
-        }
-
-        int i = 0;
-        while(i<willRead) {
-            i++;
-            data[index++] = i2c->dev->fifo_data.val & 0xFF;
-        }
-        len -= willRead;
-    }
-    I2C_MUTEX_UNLOCK();
-    return I2C_ERROR_OK;
-}
-
-/* Stickbreaker Debug code 
-*/
-void dumpCmdQueue(i2c_t *i2c){
-uint8_t i=0;
-while(i<16){
-	I2C_COMMAND_t c;
-	c.val=i2c->dev->command[i].val;
-	
-	log_e("[%2d] %c op[%d] val[%d] exp[%d] en[%d] bytes[%d]",i,(c.done?'Y':'N'),
-	c.op_code,
-	c.ack_val,
-	c.ack_exp,
-	c.ack_en,
-	c.byte_num);
-	i++;
-	}
-}
-
-/* Stickbreaker debug support
-*/
-uint32_t emptyCnt=0;
-uint32_t maxRead=0;
-
-/* Stickbreaker poll mode suppot
-*/
-void	emptyFifo(i2c_t* i2c,char* data, uint16_t len,uint16_t* index){
-uint32_t d;
-uint32_t max=0;
-while(i2c->dev->status_reg.rx_fifo_cnt>0){
-	d = i2c->dev->fifo_data.val;
-	data[*index] = (d&0xff);
-	if(((*index)+1)<len) (*index)++;
-	max++;
-	}
-if(max>maxRead) maxRead=max;
-d = I2C_RXFIFO_FULL_INT_ST;
-i2c->dev->int_clr.val =d; // processed!
-//log_e("emptied %d",*index);
-emptyCnt++;
-}
-
-/* Stickbreaker poll mode suppot
-*/
-void	fillFifo(i2c_t* i2c,uint8_t* data, uint16_t len,uint16_t* index){
-uint32_t d;
-while((i2c->dev->status_reg.tx_fifo_cnt<0x1F)&&(*index<len)){
-	d = data[*index];
-	i2c->dev->fifo_data.val = d;
-	*index++;
-	}
-d = I2C_TXFIFO_EMPTY_INT_ST;
-i2c->dev->int_clr.val =d; // processed!
-//log_e("Filled %d",*index);
-}
-
-/* Stickbreaker poll mode suppot
-*/
-typedef enum{
-	Stage_waitForBusIdle,
-	Stage_init,
-	Stage_StartMachine,
-	Stage_process,
-	Stage_done,
-	Stage_abort
-	}STAGES;
-
-/* Stickbreaker poll mode suppot
-*/
-void fillReadQueue(i2c_t *i2c, uint16_t *neededRead, uint8_t cmdIdx){
-/* Can I have another Sir?
- ALL CMD queues must be terminated with either END or STOP.
- if END is used, when refilling it next time, no entries from END to [15] can be used.
- AND END must exit. The END command does not complete until the the 
- ctr->trans_start=1 has executed.
- So, only refill from [0]..[14], leave [15] for a continuation if necessary.
- As a corrilary, once END exists in [15], you do not need to overwrite it for the
- next continuation. It is never modified. But, I update it every time because!
- 
-*/
-uint8_t blkSize=0; // max is 255
-//log_e("needed=%2d index=%d",*neededRead,cmdIdx);
-while((*neededRead>1)&&((cmdIdx)<15))	{ // more bytes needed and room in cmd queue, leave room for END 
-		// lets start with 3 bytes at a time, but may 255 is possible
-	blkSize = (*neededRead>35)?35:(*neededRead-1); // each read CMD can only read 32?
-	*neededRead -= blkSize; // 
-	i2cSetCmd(i2c, (cmdIdx)++, I2C_CMD_READ, blkSize,false,false,false); // read cmd, this can't be the last read.
-	}
-if((*neededRead==1)&&(cmdIdx==14)){ // stretch because Stop cannot be after or at END spot.
-	I2C_COMMAND_t cmdx;
-  cmdx.val =i2c->dev->command[cmdIdx-1].val;
-  if(cmdx.byte_num>1){
-		cmdx.byte_num--;
-		i2c->dev->command[cmdIdx-1].val = cmdx.val;
-		}
-	else { // go back two
-		cmdx.val =i2c->dev->command[cmdIdx-2].val;
-		cmdx.byte_num--;
-		i2c->dev->command[cmdIdx-2].val = cmdx.val;
-		}
-	cmdx.byte_num=1;
-	i2c->dev->command[cmdIdx++].val = cmdx.val;
-	// now cmdIdx is 15 and a contuation will be added
-	}
-	
-if(cmdIdx==15){ //need continuation 
-// cmd buffer is almost full, Add END as a continuation feature
-//					log_e("END at %d, left=%d",cmdIdx,neededRead);
-	i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_END, 0,false,false,false);
-	i2c->dev->int_ena.end_detect=1; //maybe?
-	i2c->dev->int_clr.end_detect=1; //maybe?
-	}
-
-if((*neededRead==1)&&((cmdIdx)<15)){// last Read cmd needs a NAK
-	//			log_e("last Read");
-	i2cSetCmd(i2c, (cmdIdx)++, I2C_CMD_READ, 1,true,false,false);
-				// send NAK to mark end of read
-	*neededRead=0;
-	}					
-if((*neededRead==0)&&((cmdIdx)<16)){// add Stop command
-			  // What about SEND_STOP? If no Stop is sent, the Bus Buzy will Error on
-				// next call? Need bus ownership?
-//				log_e("STOP at %d",cmdIdx);
-	i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_STOP,0,false,false,false);
-	}
-//			log_e("loaded %d cmds",cmdIdx);
-//			dumpCmdQueue(i2c);
-
-
-}
-	
-/* Stickbreaker poll mode suppot
-*/
-i2c_err_t pollI2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint16_t len, bool sendStop)
-{
-address = (address << 1) | 1;
-uint8_t addrLen = (addr_10bit?2:1);
-uint16_t index = 0; // pos in data for next byte
-uint8_t cmdIdx=0; // next available entry in cmd buffer8
-uint16_t neededRead = len; // bytes left
-uint32_t intbuf[32];
-uint16_t intIndex=0;
-for(intIndex=0;intIndex<32;intIndex++){
-	intbuf[intIndex]=intIndex;
-	}
-intIndex = 0;
-
-if(i2c == NULL){
-	return I2C_ERROR_DEV;
-  }
-
-I2C_MUTEX_LOCK();
-
-emptyCnt = 0;
-STAGES stage=Stage_init; // init
-bool finished = false;
-bool abort = false;
-bool started = false;
-uint8_t blkSize = 0;
-uint32_t startAt = millis(),lastInt=0,activeInt=0;
-i2c_err_t reason = I2C_ERROR_OK;
-//uint8_t priorMode=i2c->dev->ctr.ms_mode;
-while(!finished){
-	if((millis()-startAt)>5000){ // timeout
-	  if(reason == I2C_ERROR_OK) reason = I2C_ERROR_TIMEOUT;
-		// else leave reason alone
-	   log_e("Stage[%d] millis(%ld) Timeout(%ld)! Addr: %x",stage,millis(),startAt, address >> 1);
-		stage= Stage_abort;
- 	}
-	switch(stage){
-		case Stage_waitForBusIdle : // bus busy on entry
-		  // if last call had SEND_STOP=FALSE, this will always Error Out?
-			if (!i2c->dev->status_reg.bus_busy){
-				stage = Stage_StartMachine;
-				reason = I2C_ERROR_OK;
-				}
-			else reason = I2C_ERROR_BUSY;
-			break;
-
-		case Stage_init: // set up address
-			i2c->dev->ctr.trans_start=0; // Pause Machine
-			i2c->dev->timeout.tout = 0xFFFFF; // max 1M
-			I2C_FIFO_CONF_t f;
-			f.val = i2c->dev->fifo_conf.val;
-			f.rx_fifo_rst = 1; // fifo in reset
-			f.tx_fifo_rst = 1; // fifo in reset
-			f.nonfifo_en = 0; // use fifo mode
-			f.rx_fifo_full_thrhd = 6; // six bytes before INT is issued
-			f.fifo_addr_cfg_en = 0; // no directed access
-			i2c->dev->fifo_conf.val = f.val; // post them all
-			
-			f.rx_fifo_rst = 0; // release fifo
-			f.tx_fifo_rst = 0;
-			i2c->dev->fifo_conf.val = f.val; // post them all
-			
-			i2c->dev->int_ena.val = 
-				I2C_ACK_ERR_INT_ENA | // (BIT(10))
-				I2C_TRANS_START_INT_ENA | // (BIT(9))
-				I2C_TIME_OUT_INT_ENA  | //(BIT(8))
-				I2C_TRANS_COMPLETE_INT_ENA | // (BIT(7))
-				I2C_MASTER_TRAN_COMP_INT_ENA | // (BIT(6))
-				I2C_ARBITRATION_LOST_INT_ENA | // (BIT(5))
-				I2C_SLAVE_TRAN_COMP_INT_ENA  | // (BIT(4))
-				I2C_END_DETECT_INT_ENA  | // (BIT(3))
-				I2C_RXFIFO_OVF_INT_ENA  | //(BIT(2))
-				I2C_RXFIFO_FULL_INT_ENA;  // (BIT(0))
-			
-			
-			i2c->dev->int_clr.val = 0xFFFFFFFF; // kill them All!
-			i2c->dev->ctr.ms_mode = 1; // master!
-		  //i2cResetFiFo(i2c);
-			//i2cResetCmd(i2c);
-
-			//CMD START
-			i2cSetCmd(i2c, cmdIdx++, I2C_CMD_RSTART, 0, false, false, false);
-
-    //CMD WRITE ADDRESS
-			if(addr_10bit){
-				i2c->dev->fifo_data.data = ((address>>7)&0xff)|0x1; // high 2 bits plus read
-				i2c->dev->fifo_data.data = (address>>1)&0xff; // low 8 bits of address
-				}
-			else i2c->dev->fifo_data.data = address & 0xFF; // low 7bits plus read
-
-			i2cSetCmd(i2c, cmdIdx++, I2C_CMD_WRITE, addrLen, false, false, true); //load address in cmdlist, validate (low) ack
-		//	log_e("init(%d)",millis());
-			fillReadQueue(i2c,&neededRead,cmdIdx);
-			stage = Stage_StartMachine;
-			break;
-		case Stage_StartMachine:
-		  if((!started)&& (i2c->dev->status_reg.bus_busy)){ 
-			// should not hang on END? because we own the bus!
-			  log_e("bus_busy");
-				stage = Stage_waitForBusIdle;
-				}
-			else {
-				started = true; 
-//				i2c->dev->int_clr.val = 0xFFFFFFFF; // kill them All!
-//				log_e("started");
-				i2c->dev->ctr.trans_start=1; // go for it
-				stage = Stage_process;
-				}
-			break;
-		case Stage_process: // Ok, Get to Work
-			activeInt = i2c->dev->int_status.val; // ok lets play!
-			if(activeInt==0) break; // nothing to do!
-			if(lastInt!=activeInt){
-				intIndex++;
-				intIndex %= 32;
-				intbuf[intIndex] = activeInt;
-//				log_e("int=%08X",activeInt);
-				lastInt = activeInt;
-				}
-			else { // same int as last time, probably rx_fifo_full!
-				uint32_t x=(intbuf[intIndex]>>20); //12 bits should be enough!
-				x++;
-				x = x<<20;
-				intbuf[intIndex] = x | (intbuf[intIndex]&0x00ffffff);
-				}
-				
-			if(activeInt&I2C_RXFIFO_FULL_INT_ST){// rx has reached thrhd
-//				log_e("process");
-				emptyFifo(i2c,data,len,&index);
-				startAt=millis(); // reset timeout
-				}
-				
-			if(activeInt&I2C_END_DETECT_INT_ST){
-				i2c->dev->ctr.trans_start=0;
-				cmdIdx=0;
-				fillReadQueue(i2c,&neededRead,cmdIdx);
-				i2c->dev->int_ena.end_detect = 1;
-				i2c->dev->int_clr.end_detect = 1;
-				
-				stage = Stage_StartMachine;
-//				log_e("end");
-				}
-				
-			if(activeInt&I2C_ARBITRATION_LOST_INT_ST){// abort transaction
-				// reset State Machine, Release Bus
-				stage = Stage_abort;
-				reason = I2C_ERROR_BUS;
-        log_e("Arbitration Lost Addr: %x", address >> 1);
-				}
-			else if(activeInt&I2C_TRANS_COMPLETE_INT_ST){// stop
-				stage = Stage_done;
-				reason = I2C_ERROR_OK;
-//				log_e("trans_Complete");
-				}
-			else if(activeInt&I2C_TIME_OUT_INT_ST){// 
-			  stage = Stage_abort;
-				reason = I2C_ERROR_TIMEOUT;
-
-        log_e("bit Timeout! int(%lx) stat(%lx) Addr: %x",activeInt,
-					i2c->dev->status_reg.val,address >> 1);
-				}
-			else if(activeInt&I2C_ACK_ERR_INT_ST){
-				stage = Stage_abort;
-				reason = I2C_ERROR_ACK;
-        log_e("Ack Error Addr: %x", address >> 1);
-				}
-			i2c->dev->int_clr.val = activeInt;
-		  break;
-		case Stage_done: // quiting Time! More Beer!
-//		  log_e("done");
-			emptyFifo(i2c,data,len,&index);
-		  finished = true;
-			i2c->dev->int_clr.val = 0xFFFFFFFF; // kill them All!
-			break;
-		case Stage_abort : // on the Job accident, Call 911
-			emptyFifo(i2c,data,len,&index);
-			i2c->dev->int_clr.val = 0xFFFFFFFF; // kill them All!
-			finished = true;
-			abort = true;
-		  log_e("abort len=%d",index);
-			break;
-		default :
-			stage = Stage_abort; // should not happen
-			reason = I2C_ERROR_DEV;
-      log_e("Unknown Stage! Addr: %x", address >> 1);
-		}
-	}
-
-//i2c->dev->ctr.trans_start=0; // Pause Machine
-i2c->dev->int_ena.val = 0; // disable all interrups
-//i2c->dev->ctr.ms_mode=priorMode; // maybe also a slave?
-if(reason!=I2C_ERROR_OK) {
-	log_e("exit =%d, cnt=%d got %d maxRead%d",reason,emptyCnt,index,maxRead);
-	uint16_t a=intIndex;
-	a = (a +1)%32;
-	while(a!=intIndex){
-		if(intbuf[a] != a)log_e("[%02d]=0x%08lx",a,intbuf[a]);
-		a++;
-		a %=32;
-		}
-	if(intbuf[a] != a)log_e("[%02d]=0x%08lx",a,intbuf[a]);
-	dumpCmdQueue(i2c);
-	}
-I2C_MUTEX_UNLOCK();
-
-return reason;
 }
 
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
@@ -885,8 +288,8 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
  * slave_addr    - I2C Address
  * addr_10bit_en - enable slave 10bit address mode.
  * */
-
-i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
+// 24Nov17 only supports Master Mode 
+i2c_t * i2cInit(uint8_t i2c_num)
 {
     if(i2c_num > 1){
         return NULL;
@@ -913,7 +316,7 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
     
     I2C_MUTEX_LOCK();
     i2c->dev->ctr.val = 0;
-    i2c->dev->ctr.ms_mode = (slave_addr == 0);
+    i2c->dev->ctr.ms_mode = 1;
     i2c->dev->ctr.sda_force_out = 1 ;
     i2c->dev->ctr.scl_force_out = 1 ;
     i2c->dev->ctr.clk_en = 1;
@@ -924,10 +327,6 @@ i2c_t * i2cInit(uint8_t i2c_num, uint16_t slave_addr, bool addr_10bit_en)
     i2c->dev->fifo_conf.nonfifo_en = 0;
 
     i2c->dev->slave_addr.val = 0;
-    if (slave_addr) {
-        i2c->dev->slave_addr.addr = slave_addr;
-        i2c->dev->slave_addr.en_10bit = addr_10bit_en;
-    }
     I2C_MUTEX_UNLOCK();
 
     return i2c;
@@ -939,7 +338,6 @@ void i2cInitFix(i2c_t * i2c){
     }
     I2C_MUTEX_LOCK();
     i2cResetFiFo(i2c);
-    i2cResetCmd(i2c);
     i2c->dev->int_clr.val = 0xFFFFFFFF;
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
     i2c->dev->fifo_data.data = 0;
@@ -977,15 +375,16 @@ return esp_intr_free(handle);
 /* Stickbreaker ISR mode debug support
 */
 #define INTBUFFMAX 64
-static uint32_t intBuff[INTBUFFMAX][2];
+static uint32_t intBuff[INTBUFFMAX][3];
 static uint32_t intPos=0;
 
 /* Stickbreaker ISR mode support
 */
-static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, uint8_t cmdIdx, bool INTS){
+static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS){
 /* this function is call on initial i2cProcQueue()
   or when a I2C_END_DETECT_INT occures
 */
+  uint16_t cmdIdx = 0;
   uint16_t qp = i2c->queuePos;
   bool done;
   bool needMoreCmds = false;
@@ -1005,7 +404,8 @@ while(!done){ // fill the command[] until either 0..14 filled or out of cmds and
 //CMD START
   I2C_DATA_QUEUE_t *tdq=&i2c->dq[qp]; // simpler coding 
 
-  if(!tdq->ctrl.startCmdSent){// has this dq element's START command been added?
+  if((!tdq->ctrl.startCmdSent) && (cmdIdx < 14)){// has this dq element's START command been added?
+  // <14 testing if ReSTART END is causeing the Timeout
     i2cSetCmd(i2c, cmdIdx++, I2C_CMD_RSTART, 0, false, false, false);
     tdq->ctrl.startCmdSent=1;
     done = (cmdIdx>14);
@@ -1033,6 +433,11 @@ while(!done){ // fill the command[] until either 0..14 filled or out of cmds and
  As a corrilary, once END exists in [15], you do not need to overwrite it for the
  next continuation. It is never modified. But, I update it every time because it might
  actually be the first time!
+ 
+ 23NOV17  START cannot proceed END.  if START is in[14], END cannot be in [15].
+   so, AND if END is moved to [14], [14] and [15] can nolonger be use for anything other than END.
+   If a START is found in [14] then a prior READ or WRITE must be expanded so that there is no START element in [14].
+    
  
 */
   if((!done)&&(tdq->ctrl.addrCmdSent)){ //room in command[] for at least One data (read/Write) cmd
@@ -1076,12 +481,56 @@ while(!done){ // fill the command[] until either 0..14 filled or out of cmds and
       }
     }
 
+  if((cmdIdx==14)&&(!tdq->ctrl.startCmdSent)){ 
+  // START would have preceded END, causes SM TIMEOUT
+  // need to stretch out a prior WRITE or READ to two Command[] elements
+    done = false; // reuse it
+    uint16_t i = 13; // start working back until a READ/WRITE has >1 numBytes
+    cmdIdx =15; 
+ //   log_e("before Stretch");
+ //   dumpCmdQueue(i2c);
+    while(!done){
+      i2c->dev->command[i+1].val = i2c->dev->command[i].val; // push it down
+      if (((i2c->dev->command[i].op_code == 1)||(i2c->dev->command[i].op_code==2))){
+ /* just try a num_bytes =0;       
+       &&(i2c->dev->command[i].byte_num>1)){ // found the one to expand
+        i2c->dev->command[i+1].byte_num =1;
+// the -= in the following statment caused unintential consequences.
+//  The op_code field value changed from 2 to 4, so the manual cludge was needed
+//      i2c->dev->command[i].byte_num -= 1;
+/
+        uint32_t temp = i2c->dev->command[i].val;
+        temp =  (temp&0xFFFFFF00) | ((temp & 0xFF)-1);
+        i2c->dev->command[i].val = temp;
+*/
+        i2c->dev->command[i].byte_num = 0;
+        done = true;
+
+        }
+      else {
+        if(i > 0) {
+          i--;
+          }
+        else { // unable to stretch, fatal 
+          log_e("invalid CMD[] layout Stretch Failed");
+          dumpCmdQueue(i2c);
+          done = true;
+          }
+        }
+      }
+ //   log_e("after Stretch");
+ //   dumpCmdQueue(i2c);
+
+    }
+    
+    
   if(cmdIdx==15){ //need continuation, even if STOP is in 14, it will not matter
   // cmd buffer is almost full, Add END as a continuation feature
   //					log_e("END at %d, left=%d",cmdIdx,neededRead);
     i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_END, 0,false,false,false);
     i2c->dev->int_ena.end_detect=1; //maybe?
     i2c->dev->int_clr.end_detect=1; //maybe?
+    done = true;
     }
   
   if(!done){
@@ -1101,7 +550,6 @@ if(INTS){ // don't want to prematurely enable fifo ints until ISR is ready to ha
   if(ena_tx) i2c->dev->int_ena.tx_fifo_empty = 1;
   }
 }  
-
 
 /* Stickbreaker ISR mode debug support
 */
@@ -1128,6 +576,22 @@ while(a<i2c->queueCount){
   }
 }
 
+/* Stickbreaker ISR mode debug support
+*/
+void IRAM_ATTR dumpCmdQueue(i2c_t *i2c){
+uint8_t i=0;
+while(i<16){
+	I2C_COMMAND_t c;
+	c.val=i2c->dev->command[i].val;
+	log_e("[%2d] %c op[%d] val[%d] exp[%d] en[%d] bytes[%d]",i,(c.done?'Y':'N'),
+	c.op_code,
+	c.ack_val,
+	c.ack_exp,
+	c.ack_en,
+	c.byte_num);
+	i++;
+	}
+}
 
 /* Stickbreaker ISR mode support
 */
@@ -1141,6 +605,9 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c){
   queued (write addr, write 10) of the Third command?  I need to test!
   */
 /*11/15/2017 will assume that I cannot queue tx after a READ until READ completes
+11/23/2017 Seems to be a TX fifo problem, the SM sends 0x40 for last rxbyte, I
+enable txEmpty, filltx fires, but the SM has already sent a bogus byte out the BUS.
+I am going so see if I can overlap Tx/Rx/Tx in the fifo
 */
 bool readEncountered = false;  
 uint16_t a=i2c->queuePos; // currently executing dq,
@@ -1192,7 +659,8 @@ while((a < i2c->queueCount)&&!(full || readEncountered)){
         }
       }
     }
-  else readEncountered = true;
+//11/23/2017 overlap tx/rx/tx
+//  else readEncountered = true;
   
   if(full) readEncountered =false; //tx possibly needs more
 
@@ -1248,7 +716,7 @@ else {
 //log_e("emptied %d",*index);
 }
  
-static void i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal){
+static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal){
 
 switch(eventCode){
   case EVENT_DONE:
@@ -1319,6 +787,8 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     intBuff[intPos][0]=(1<<16)|activeInt;
     intBuff[intPos][1] = 0;
     }
+
+  intBuff[intPos][2] = xTaskGetTickCountFromISR(); // when IRQ fired
 
   uint32_t oldInt =activeInt;
 
@@ -1411,17 +881,11 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     p_i2c->dev->int_ena.end_detect = 0;
     p_i2c->dev->int_clr.end_detect = 1;
 		p_i2c->dev->ctr.trans_start=0;
-    fillCmdQueue(p_i2c,0,true);
+    fillCmdQueue(p_i2c,true); // enable interrupts
     p_i2c->dev->ctr.trans_start=1; // go for it
     activeInt&=~I2C_END_DETECT_INT_ST_M;
-    // What about Tx, RX fifo fill?
     }
-  
-  if (activeInt & I2C_RXFIFO_OVF_INT_ST_M) { //should never happen, I always use Fifo
-    p_i2c->dev->int_clr.rx_fifo_ovf = 1;
-    p_i2c->dev->int_ena.rx_fifo_ovf = 0; // disable it
-    } 
-	
+ 
   if(activeInt){ // clear unhandled if possible?  What about Disabling interrupt?
     p_i2c->dev->int_clr.val = activeInt;
     log_e("unknown int=%x",activeInt);
@@ -1438,11 +902,11 @@ uint32_t b;
 log_e("row  count   INTR    TX     RX");
 for(uint32_t a=1;a<=INTBUFFMAX;a++){
   b=(a+intPos)%INTBUFFMAX;
-  if(intBuff[b][0]!=0) log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x",b,((intBuff[b][0]>>16)&0xFFFF),(intBuff[b][0]&0xFFFF),((intBuff[b][1]>>16)&0xFFFF),(intBuff[b][1]&0xFFFF));
+  if(intBuff[b][0]!=0) log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0]>>16)&0xFFFF),(intBuff[b][0]&0xFFFF),((intBuff[b][1]>>16)&0xFFFF),(intBuff[b][1]&0xFFFF),intBuff[b][2]);
   }
 }
  
-i2c_err_t i2cProcQueue(i2c_t * i2c){
+i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount){
 /* do the hard stuff here
   install ISR if necessary
   setup EventGroup
@@ -1450,7 +914,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c){
   do I load command[] or just pass that off to the ISR
 */
 //log_e("procQueue i2c=%p",&i2c);
-
+*readCount = 0; //total reads accomplished in all queue elements
 if(i2c == NULL){
 	return I2C_ERROR_DEV;
   }
@@ -1528,7 +992,8 @@ while(i2c->queuePos < i2c->queueCount){
   }
 i2c->queuePos=0;
 
-fillCmdQueue(i2c,0,false); // start adding command[], END irq will keep it full
+fillCmdQueue(i2c,false); // don't enable Tx/RX irq's
+// start adding command[], END irq will keep it full
 //Data Fifo will be filled after trans_start is issued
 
 i2c->exitCode=0;
@@ -1564,8 +1029,6 @@ if(!i2c->intr_handle){ // create ISR I2C_0 only,
 
 // how many ticks should it take to transfer totalBytes thru the I2C hardware,
 // add 50ms just for kicks
- 
-
  
 portTickType ticksTimeOut = ((totalBytes /(i2cGetFrequency(i2c)/(10*1000)))+50)/portTICK_PERIOD_MS;
 portTickType tBefore=xTaskGetTickCount();  
@@ -1634,7 +1097,11 @@ else { // GROSS timeout, shutdown ISR , report Timeout
 // if error, need to trigger all succeeding dataQueue events with the EVENT_ERROR_PREV
 
 b = 0;
+
 while(b < i2c->queueCount){
+  if(i2c->dq[b].ctrl.mode==1){
+    *readCount += i2c->dq[b].position; // number of data bytes received
+    }
   if(b < i2c->queuePos){ // before any error
     if(i2c->dq[b].queueEvent){ // this data queue element has an EventGroup
       xEventGroupSetBits(i2c->dq[b].queueEvent,EVENT_DONE);
@@ -1665,3 +1132,13 @@ if(i2c->intr_handle){
   }
 return I2C_ERROR_OK;
 }
+
+/* todo
+  24Nov17
+  Need to think about not usings I2C_MASTER_TRAN_COMP_INT_ST to adjust queuePos.  This
+    INT triggers every byte.  The only reason to know which byte is being transfered is 
+    to decide where to store a READ or if an error occured.  It may be possible to use
+    the status_reg.tx_fifo_cnt and a .txQueued to do this in the fillRxFifo().  The
+    same mechanism could work if an error occured in i2cErrorExit().
+*/
+    

@@ -19,6 +19,7 @@
   Modified 2012 by Todd Krein (todd@krein.org) to implement repeated starts
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
+  Modified November 2017 by Chuck Todd <stickbreaker on GitHub> to use ISR and increase stability.
 */
 
 #ifndef TwoWire_h
@@ -53,12 +54,14 @@ protected:
     uint16_t txQueued; //@stickbreaker
 
     uint8_t transmitting;
+/* slave Mode, not yet Stickbreaker
 		static user_onRequest uReq[2];
 		static user_onReceive uRcv[2];
     void onRequestService(void);
     void onReceiveService(uint8_t*, int);
+*/
 		i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
-    i2c_err_t processQueue(uint16_t *readCount);
+    i2c_err_t processQueue(uint32_t *readCount);
 
 public:
     TwoWire(uint8_t bus_num);
@@ -68,16 +71,14 @@ public:
     void beginTransmission(int);
     uint8_t endTransmission(void);
     uint8_t endTransmission(uint8_t);
-    uint8_t oldEndTransmission(uint8_t);
-    size_t oldRequestFrom(uint8_t address, size_t size, bool sendStop);
+		size_t 	requestFrom(uint8_t address, size_t size, bool sendStop);
 //@stickBreaker for big blocks and ISR model
     uint8_t writeTransaction(uint8_t address, uint8_t* buff, size_t size, bool sendStop);
-		size_t 	requestFrom(uint8_t address, size_t size, bool sendStop);
 		size_t 	requestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
-		size_t 	polledRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
 		size_t	transact(size_t readLen);
     size_t  transact(uint8_t* readBuff, size_t readLen);
-		i2c_err_t	lastError();
+		uint8_t	lastError();
+    char * getErrorText(uint8_t err);
     void dumpInts();
     size_t getClock();
 //		
