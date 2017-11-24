@@ -54,9 +54,9 @@ uint8_t err =Wire.endTransmission(false); // don't send a STOP, just Pause I2C o
 if(err==7){ // Prior Operation has been queued, it is NOT guaranteed that it will
 // successfully occur!
   err=Wire.requestFrom(addr,len);
-  if(err!=len){ // complete/partial read failure
-    Serial.print("Bad Stuff!! Read Failed lastError=");
-    Serial.print(Wire.lastError(),DEC);
+  if(Wire.lastError()!=0){ // complete/partial read failure
+    Serial.printf("Bad Stuff!!\nRead of (%d) bytes read %d bytes\nFailed lastError=%d,"
+      " text=%s\n",len,err,Wire.lastError(),Wire.getErrorText(Wire.lastError()));
     }
   // some of the read may have executed
   while(Wire.avaiable()){
@@ -70,13 +70,8 @@ Additionally I have expanded the ability of `Wire()` to handle larger Reads and 
 
 I have create a few new methods for Wire:
 ```c++
-    uint8_t oldEndTransmission(uint8_t); //released implementation
-    size_t oldRequestFrom(uint8_t address, size_t size, bool sendStop); //released implementation
-//@stickBreaker for big blocks and ISR model
     uint8_t writeTransaction(uint8_t address, uint8_t* buff, size_t size, bool sendStop);// big block handling
-    size_t requestFrom(uint8_t address, size_t size, bool sendStop);
     size_t requestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
-    size_t polledRequestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);//a BigBlock test case Not USING ISR
     size_t transact(size_t readLen); // replacement for endTransmission(false),requestFrom(ID,readLen,true);
     size_t transact(uint8_t* readBuff, size_t readLen);// bigger Block read
     i2c_err_t lastError(); // Expose complete error
@@ -91,10 +86,9 @@ Wire.beginTransmission(ID);
 Wire.write(highByte(addr));
 Wire.write(lowByte(addr));
 
-uint8_t err=Wire.transact(len);
-if(err!=len){ // complete/partial read failure
-  Serial.print("Bad Stuff!! Read Failed lastError=");
-  Serial.print(Wire.lastError(),DEC);
+uint8_t err=Wire.transact(len); // transact() does both Wire.endTransmission(false); and Wire.requestFrom(ID,len,true);
+if(Wire.lastError != 0){ // complete/partial read failure
+  Serial.printf("Bad Stuff!! Read Failed lastError=%d\n",Wire.lastError());
   }
   // some of the read may have executed
 while(Wire.avaiable()){
@@ -108,7 +102,6 @@ This **APLHA** release should be compiled with ESP32 Dev Module as its target, a
 Set the "core debug level" to 'error'
 
 There is MINIMAL to NO ERROR detection, BUS, BUSY.  because I have not encounter any of them!
-
 
 
 Chuck.
