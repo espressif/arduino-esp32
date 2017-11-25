@@ -48,7 +48,7 @@ env.Prepend(
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
-        # "-fstack-protector",
+        "-fstack-protector"
     ],
 
     CPPPATH=[
