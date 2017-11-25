@@ -162,7 +162,7 @@ i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda);
 i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda);
 
 //Stickbreakers ISR Support
-i2c_err_t i2cProcQueue(i2c_t *i2c, uint32_t *readCount);
+i2c_err_t i2cProcQueue(i2c_t *i2c, uint32_t *readCount, uint16_t timeOutMillis);
 i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cFreeQueue(i2c_t *i2c);

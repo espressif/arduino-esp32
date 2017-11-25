@@ -62,6 +62,7 @@ protected:
 */
 		i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
     i2c_err_t processQueue(uint32_t *readCount);
+    uint16_t _timeOutMillis;
 
 public:
     TwoWire(uint8_t bus_num);
@@ -81,6 +82,8 @@ public:
     char * getErrorText(uint8_t err);
     void dumpInts();
     size_t getClock();
+    void setTimeOut(uint16_t timeOutMillis);
+    uint16_t getTimeOut();
 //		
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);

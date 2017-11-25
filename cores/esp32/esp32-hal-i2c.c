@@ -906,7 +906,7 @@ for(uint32_t a=1;a<=INTBUFFMAX;a++){
   }
 }
  
-i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount){
+i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis){
 /* do the hard stuff here
   install ISR if necessary
   setup EventGroup
@@ -1028,9 +1028,9 @@ if(!i2c->intr_handle){ // create ISR I2C_0 only,
 //hang until it completes.
 
 // how many ticks should it take to transfer totalBytes thru the I2C hardware,
-// add 50ms just for kicks
+// add user supplied timeOutMillis to Calc Value
  
-portTickType ticksTimeOut = ((totalBytes /(i2cGetFrequency(i2c)/(10*1000)))+50)/portTICK_PERIOD_MS;
+portTickType ticksTimeOut = ((totalBytes /(i2cGetFrequency(i2c)/(10*1000)))+timeOutMillis)/portTICK_PERIOD_MS;
 portTickType tBefore=xTaskGetTickCount();  
 
 //log_e("before startup @tick=%d will wait=%d",xTaskGetTickCount(),ticksTimeOut);
@@ -1052,7 +1052,7 @@ if(i2c->exitCode!=eBits){ // try to recover from O/S failure
   eBits=i2c->exitCode;
   }
 
-if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK
+if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR_DATA_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK, DATA_NAK
   dumpI2c(i2c);
   i2cDumpInts();
   }
@@ -1087,7 +1087,7 @@ else { // GROSS timeout, shutdown ISR , report Timeout
   i2c->dev->int_clr.val = 0x1FFF;
   reason = I2C_ERROR_TIMEOUT;
   eBits = eBits | EVENT_ERROR_TIMEOUT|EVENT_ERROR|EVENT_DONE;
-  log_e(" Gross Timeout Dead st=%d, ed=%d, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
+  log_e(" Gross Timeout Dead st=0x%x, ed=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
   dumpI2c(i2c);
   i2cDumpInts();
   }
@@ -1130,7 +1130,11 @@ if(i2c->intr_handle){
 //  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
-return I2C_ERROR_OK;
+if(i2c->i2c_event){
+  vEventGroupDelete(i2c->i2c_event);
+  i2c->i2c_event = NULL;
+  }
+return i2cFreeQueue(i2c);
 }
 
 /* todo

@@ -69,6 +69,7 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,transmitting(0)
     ,txQueued(0)
     ,rxQueued(0)
+    ,_timeOutMillis(50)
 		{}	
 /* slave Mode, no yet Stickbreaker
 void TwoWire::onRequestService(void){}
@@ -124,6 +125,14 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     i2cInitFix(i2c);
 }
 
+void TwoWire::setTimeOut(uint16_t timeOutMillis){
+  _timeOutMillis = timeOutMillis;
+}
+  
+uint16_t TwoWire::getTimeOut(){
+  return _timeOutMillis;
+}
+
 void TwoWire::setClock(uint32_t frequency)
 {
     i2cSetFrequency(i2c, frequency);
@@ -146,7 +155,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
 /*@StickBreaker common handler for processing the queued commands
 */
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
-   last_error=i2cProcQueue(i2c,readCount);
+   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
    rxIndex = 0;
    rxLength = rxQueued;
    rxQueued = 0;
@@ -484,6 +493,7 @@ void TwoWire::flush(void)
 
 void TwoWire::reset(void)
 {
+    i2cReleaseISR(i2c); // remove ISR from Interrupt chain,Delete EventGroup,Free Heap memory
     i2cReset( i2c );
     i2c = NULL;
     begin( sda, scl );
