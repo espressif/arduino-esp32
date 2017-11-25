@@ -103,7 +103,19 @@ env.Prepend(
     ]
 )
 
+
+def _get_board_flash_mode(env):
+    mode = env.subst("$BOARD_FLASH_MODE")
+    if mode == "qio":
+        return "dio"
+    elif mode == "qout":
+        return "dout"
+    return mode
+
+
 env.Append(
+    __get_board_flash_mode=_get_board_flash_mode,
+    
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -118,12 +130,15 @@ env.Append(
     ],
 
     UPLOADERFLAGS=[
-        "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_dio_40m.bin"),
+        "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
         "0x8000", '"%s"' % join("$BUILD_DIR", "partitions.bin"),
         "0xe000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
 )
+
+if "$BOARD_FLASH_MODE" in env['UPLOADERFLAGS']:
+    env['UPLOADERFLAGS'][env['UPLOADERFLAGS'].index("$BOARD_FLASH_MODE")] = "${__get_board_flash_mode(__env__)}"
 
 env.Replace(
     UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
