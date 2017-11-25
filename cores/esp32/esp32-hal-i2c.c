@@ -1131,10 +1131,17 @@ if(i2c->intr_handle){
   i2c->intr_handle=NULL;
   }
 if(i2c->i2c_event){
+<<<<<<< HEAD
   vEventGroupDelete(i2c->i2c_event);
   i2c->i2c_event = NULL;
   }
 return i2cFreeQueue(i2c);
+=======
+  xEventGroupDelete(i2c->i2c_event);
+  i2c->i2c_event = NULL;
+  }
+return i2cFreeQueue(i2c); //release dynamic memory
+>>>>>>> origin/master
 }
 
 /* todo
