@@ -36,16 +36,19 @@ assert isdir(FRAMEWORK_DIR)
 
 env.Prepend(
     CPPDEFINES=[
-        ("ARDUINO", 10610),
-        "ARDUINO_ARCH_ESP32"
+        ("ARDUINO", 10805),
+        "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
     CFLAGS=["-Wno-old-style-declaration"],
 
     CCFLAGS=[
         "-Wno-error=deprecated-declarations",
+        "-Wno-error=unused-function",
         "-Wno-unused-parameter",
-        "-Wno-sign-compare"
+        "-Wno-sign-compare",
+        # "-fstack-protector",
     ],
 
     CPPPATH=[
@@ -115,7 +118,7 @@ def _get_board_flash_mode(env):
 
 env.Append(
     __get_board_flash_mode=_get_board_flash_mode,
-    
+
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
