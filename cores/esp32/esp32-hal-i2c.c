@@ -1130,7 +1130,11 @@ if(i2c->intr_handle){
 //  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
-return I2C_ERROR_OK;
+if(i2c->i2c_event){
+  xEventGroupDelete(i2c->i2c_event);
+  i2c->i2c_event = NULL;
+  }
+return i2cFreeQueue(i2c); //release dynamic memory
 }
 
 /* todo
