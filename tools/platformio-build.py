@@ -103,7 +103,19 @@ env.Prepend(
     ]
 )
 
+
+def _get_board_flash_mode(env):
+    mode = env.subst("$BOARD_FLASH_MODE")
+    if mode == "qio":
+        return "dio"
+    elif mode == "qout":
+        return "dout"
+    return mode
+
+
 env.Append(
+    __get_board_flash_mode=_get_board_flash_mode,
+    
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -124,6 +136,9 @@ env.Append(
         "0x10000"
     ]
 )
+
+if "$BOARD_FLASH_MODE" in env['UPLOADERFLAGS']:
+    env['UPLOADERFLAGS'][env['UPLOADERFLAGS'].index("$BOARD_FLASH_MODE")] = "${__get_board_flash_mode(__env__)}"
 
 env.Replace(
     UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
