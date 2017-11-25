@@ -484,6 +484,8 @@ void TwoWire::flush(void)
 
 void TwoWire::reset(void)
 {
+    i2cFreeQueue(i2c); // release malloc memory
+    i2cReleaseISR(i2c); // remove ISR from Interrupt chain
     i2cReset( i2c );
     i2c = NULL;
     begin( sda, scl );
