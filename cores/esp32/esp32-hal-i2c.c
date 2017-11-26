@@ -365,13 +365,6 @@ void i2cReset(i2c_t* i2c){
     I2C_MUTEX_UNLOCK();
 }
 
-//** 11/2017 Stickbreaker attempt at ISR for I2C hardware
-// liberally stolen from ESP_IDF /drivers/i2c.c
-esp_err_t i2c_isr_free(intr_handle_t handle){
-
-return esp_intr_free(handle);
-}
-
 /* Stickbreaker ISR mode debug support
 */
 #define INTBUFFMAX 64
@@ -1126,8 +1119,8 @@ return reason;
 
 i2c_err_t i2cReleaseISR(i2c_t * i2c){
 if(i2c->intr_handle){
-  esp_err_t error =i2c_isr_free(i2c->intr_handle);
-//  log_e("released ISR=%d",error);
+  esp_err_t error =esp_intr_free(i2c->intr_handle);
+  //  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
 if(i2c->i2c_event){
