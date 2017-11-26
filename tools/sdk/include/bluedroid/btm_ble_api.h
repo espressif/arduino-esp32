@@ -27,7 +27,6 @@
 
 #include "bt_defs.h"
 #include "btm_api.h"
-#include "gki.h"
 #include "bt_common_types.h"
 
 #define CHANNEL_MAP_LEN    5
@@ -164,12 +163,12 @@ typedef UINT8   tBTM_BLE_SFP;
 
 /* default connection interval min */
 #ifndef BTM_BLE_CONN_INT_MIN_DEF
-#define BTM_BLE_CONN_INT_MIN_DEF     24      /* recommended min: 30ms  = 24 * 1.25 */
+#define BTM_BLE_CONN_INT_MIN_DEF     10      /* recommended min: 12.5 ms  = 10 * 1.25 */
 #endif
 
 /* default connection interval max */
 #ifndef BTM_BLE_CONN_INT_MAX_DEF
-#define BTM_BLE_CONN_INT_MAX_DEF     40      /* recommended max: 50 ms = 56 * 1.25 */
+#define BTM_BLE_CONN_INT_MAX_DEF     12      /* recommended max: 15 ms = 12 * 1.25 */
 #endif
 
 /* default slave latency */
@@ -179,7 +178,7 @@ typedef UINT8   tBTM_BLE_SFP;
 
 /* default supervision timeout */
 #ifndef BTM_BLE_CONN_TIMEOUT_DEF
-#define BTM_BLE_CONN_TIMEOUT_DEF    2000
+#define BTM_BLE_CONN_TIMEOUT_DEF    600
 #endif
 
 /* minimum acceptable connection interval */
@@ -310,30 +309,42 @@ typedef void (tBTM_RAND_ENC_CB) (tBTM_RAND_ENC *p1);
 
 typedef  UINT32  tBTM_BLE_AD_MASK;
 
-#define BTM_BLE_AD_TYPE_FLAG            HCI_EIR_FLAGS_TYPE                  /* 0x01 */
-#define BTM_BLE_AD_TYPE_16SRV_PART      HCI_EIR_MORE_16BITS_UUID_TYPE       /* 0x02 */
-#define BTM_BLE_AD_TYPE_16SRV_CMPL      HCI_EIR_COMPLETE_16BITS_UUID_TYPE   /* 0x03 */
-#define BTM_BLE_AD_TYPE_32SRV_PART      HCI_EIR_MORE_32BITS_UUID_TYPE       /* 0x04 */
-#define BTM_BLE_AD_TYPE_32SRV_CMPL      HCI_EIR_COMPLETE_32BITS_UUID_TYPE   /* 0x05 */
-#define BTM_BLE_AD_TYPE_128SRV_PART     HCI_EIR_MORE_128BITS_UUID_TYPE       /* 0x06 */
-#define BTM_BLE_AD_TYPE_128SRV_CMPL     HCI_EIR_COMPLETE_128BITS_UUID_TYPE   /* 0x07 */
-#define BTM_BLE_AD_TYPE_NAME_SHORT      HCI_EIR_SHORTENED_LOCAL_NAME_TYPE       /* 0x08 */
-#define BTM_BLE_AD_TYPE_NAME_CMPL       HCI_EIR_COMPLETE_LOCAL_NAME_TYPE        /* 0x09 */
-#define BTM_BLE_AD_TYPE_TX_PWR          HCI_EIR_TX_POWER_LEVEL_TYPE             /* 0x0A */
-#define BTM_BLE_AD_TYPE_DEV_CLASS       0x0D
-#define BTM_BLE_AD_TYPE_SM_TK           0x10
-#define BTM_BLE_AD_TYPE_SM_OOB_FLAG     0x11
-#define BTM_BLE_AD_TYPE_INT_RANGE       0x12
-#define BTM_BLE_AD_TYPE_SOL_SRV_UUID    0x14
-#define BTM_BLE_AD_TYPE_128SOL_SRV_UUID 0x15
-#define BTM_BLE_AD_TYPE_SERVICE_DATA    0x16
-#define BTM_BLE_AD_TYPE_PUBLIC_TARGET   0x17
-#define BTM_BLE_AD_TYPE_RANDOM_TARGET   0x18
-#define BTM_BLE_AD_TYPE_APPEARANCE      0x19
-#define BTM_BLE_AD_TYPE_ADV_INT         0x1a
-#define BTM_BLE_AD_TYPE_32SOL_SRV_UUID  0x1b
-#define BTM_BLE_AD_TYPE_32SERVICE_DATA  0x1c
-#define BTM_BLE_AD_TYPE_128SERVICE_DATA 0x1d
+/* relate to ESP_BLE_AD_TYPE_xxx in esp_gap_ble_api.h */
+#define BTM_BLE_AD_TYPE_FLAG                HCI_EIR_FLAGS_TYPE                  /* 0x01 */
+#define BTM_BLE_AD_TYPE_16SRV_PART          HCI_EIR_MORE_16BITS_UUID_TYPE       /* 0x02 */
+#define BTM_BLE_AD_TYPE_16SRV_CMPL          HCI_EIR_COMPLETE_16BITS_UUID_TYPE   /* 0x03 */
+#define BTM_BLE_AD_TYPE_32SRV_PART          HCI_EIR_MORE_32BITS_UUID_TYPE       /* 0x04 */
+#define BTM_BLE_AD_TYPE_32SRV_CMPL          HCI_EIR_COMPLETE_32BITS_UUID_TYPE   /* 0x05 */
+#define BTM_BLE_AD_TYPE_128SRV_PART         HCI_EIR_MORE_128BITS_UUID_TYPE       /* 0x06 */
+#define BTM_BLE_AD_TYPE_128SRV_CMPL         HCI_EIR_COMPLETE_128BITS_UUID_TYPE   /* 0x07 */
+#define BTM_BLE_AD_TYPE_NAME_SHORT          HCI_EIR_SHORTENED_LOCAL_NAME_TYPE       /* 0x08 */
+#define BTM_BLE_AD_TYPE_NAME_CMPL           HCI_EIR_COMPLETE_LOCAL_NAME_TYPE        /* 0x09 */
+#define BTM_BLE_AD_TYPE_TX_PWR              HCI_EIR_TX_POWER_LEVEL_TYPE             /* 0x0A */
+#define BTM_BLE_AD_TYPE_DEV_CLASS           0x0D
+#define BTM_BLE_AD_TYPE_SM_TK               0x10
+#define BTM_BLE_AD_TYPE_SM_OOB_FLAG         0x11
+#define BTM_BLE_AD_TYPE_INT_RANGE           0x12
+#define BTM_BLE_AD_TYPE_SOL_SRV_UUID        0x14
+#define BTM_BLE_AD_TYPE_128SOL_SRV_UUID     0x15
+#define BTM_BLE_AD_TYPE_SERVICE_DATA        0x16
+#define BTM_BLE_AD_TYPE_PUBLIC_TARGET       0x17
+#define BTM_BLE_AD_TYPE_RANDOM_TARGET       0x18
+#define BTM_BLE_AD_TYPE_APPEARANCE          0x19
+#define BTM_BLE_AD_TYPE_ADV_INT             0x1a
+#define BTM_BLE_AD_TYPE_LE_DEV_ADDR         0x1b
+#define BTM_BLE_AD_TYPE_LE_ROLE             0x1c
+#define BTM_BLE_AD_TYPE_SPAIR_C256          0x1d
+#define BTM_BLE_AD_TYPE_SPAIR_R256          0x1e
+#define BTM_BLE_AD_TYPE_32SOL_SRV_UUID      0x1f
+#define BTM_BLE_AD_TYPE_32SERVICE_DATA      0x20
+#define BTM_BLE_AD_TYPE_128SERVICE_DATA     0x21
+#define BTM_BLE_AD_TYPE_LE_SECURE_CONFIRM   0x22
+#define BTM_BLE_AD_TYPE_LE_SECURE_RANDOM    0x23
+#define BTM_BLE_AD_TYPE_URI                 0x24
+#define BTM_BLE_AD_TYPE_INDOOR_POSITION     0x25
+#define BTM_BLE_AD_TYPE_TRANS_DISC_DATA     0x26
+#define BTM_BLE_AD_TYPE_LE_SUPPORT_FEATURE  0x27
+#define BTM_BLE_AD_TYPE_CHAN_MAP_UPDATE     0x28
 
 #define BTM_BLE_AD_TYPE_MANU            HCI_EIR_MANUFACTURER_SPECIFIC_TYPE      /* 0xff */
 typedef UINT8   tBTM_BLE_AD_TYPE;
@@ -849,6 +860,20 @@ tBTM_BLE_SCAN_SETUP_CBACK bta_ble_scan_setup_cb;
 extern "C" {
 #endif
 */
+
+/*******************************************************************************
+**
+** Function         BTM_BleRegiseterConnParamCallback
+**
+** Description      register connection parameters update callback func
+**
+** Parameters:      update_conn_param_cb
+**
+** Returns          void
+**
+*******************************************************************************/
+void BTM_BleRegiseterConnParamCallback(tBTM_UPDATE_CONN_PARAM_CBACK *update_conn_param_cb);
+
 /*******************************************************************************
 **
 ** Function         BTM_SecAddBleDevice
@@ -1179,7 +1204,23 @@ tBTM_STATUS BTM_BleWriteScanRspRaw(UINT8 *p_raw_scan_rsp, UINT32 raw_scan_rsp_le
 **
 *******************************************************************************/
 //extern
-tBTM_STATUS BTM_BleObserve(BOOLEAN start, UINT8 duration,
+tBTM_STATUS BTM_BleObserve(BOOLEAN start, UINT32 duration,
+                           tBTM_INQ_RESULTS_CB *p_results_cb, tBTM_CMPL_CB *p_cmpl_cb);
+
+/*******************************************************************************
+**
+** Function         BTM_BleScan
+**
+** Description      This procedure keep the device listening for advertising
+**                  events from a broadcast device.
+**
+** Parameters       start: start or stop scan.
+**
+** Returns          void
+**
+*******************************************************************************/
+//extern
+tBTM_STATUS BTM_BleScan(BOOLEAN start, UINT32 duration,
                            tBTM_INQ_RESULTS_CB *p_results_cb, tBTM_CMPL_CB *p_cmpl_cb);
 
 
@@ -1521,6 +1562,8 @@ UINT16 BTM_BleReadDiscoverability();
 //extern
 UINT16 BTM_BleReadConnectability ();
 
+void BTM_Recovery_Pre_State(void);
+
 /*******************************************************************************
 **
 ** Function         BTM_ReadDevInfo
@@ -1582,7 +1625,7 @@ tBTM_STATUS BTM_BleBroadcast(BOOLEAN start);
 **
 *******************************************************************************/
 //extern
-BOOLEAN BTM_BleConfigPrivacy(BOOLEAN enable);
+BOOLEAN BTM_BleConfigPrivacy(BOOLEAN enable, tBTM_SET_LOCAL_PRIVACY_CBACK *set_local_privacy_cabck);
 
 /*******************************************************************************
 **
@@ -1668,7 +1711,7 @@ void BTM_BleTurnOnPrivacyOnRemote(BD_ADDR bd_addr,
 **
 *******************************************************************************/
 //extern
-BOOLEAN BTM_BleUpdateAdvWhitelist(BOOLEAN add_remove, BD_ADDR emote_bda);
+BOOLEAN BTM_BleUpdateAdvWhitelist(BOOLEAN add_remove, BD_ADDR emote_bda, tBTM_ADD_WHITELIST_CBACK *add_wl_cb);
 
 /*******************************************************************************
 **

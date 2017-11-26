@@ -1,5 +1,5 @@
 /*
-  WiFi Web Server LED Blink
+ WiFi Web Server LED Blink
 
  A simple web server that lets you blink an LED via the web.
  This sketch will print the IP address of your WiFi Shield (once connected)
@@ -54,7 +54,7 @@ void setup()
     }
 
     Serial.println("");
-    Serial.println("WiFi connected");
+    Serial.println("WiFi connected.");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
     
@@ -68,7 +68,7 @@ void loop(){
  WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
-    Serial.println("new client");           // print a message out the serial port
+    Serial.println("New Client.");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
@@ -86,8 +86,8 @@ void loop(){
             client.println();
 
             // the content of the HTTP response follows the header:
-            client.print("Click <a href=\"/H\">here</a> turn the LED on pin 5 on<br>");
-            client.print("Click <a href=\"/L\">here</a> turn the LED on pin 5 off<br>");
+            client.print("Click <a href=\"/H\">here</a> to turn the LED on pin 5 on.<br>");
+            client.print("Click <a href=\"/L\">here</a> to turn the LED on pin 5 off.<br>");
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -111,6 +111,6 @@ void loop(){
     }
     // close the connection:
     client.stop();
-    Serial.println("client disonnected");
+    Serial.println("Client Disconnected.");
   }
 }

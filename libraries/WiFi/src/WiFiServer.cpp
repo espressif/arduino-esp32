@@ -21,6 +21,7 @@
 #include <lwip/netdb.h>
 
 #undef write
+#undef close
 
 int WiFiServer::setTimeout(uint32_t seconds){
   struct timeval tv;
@@ -40,13 +41,23 @@ void WiFiServer::stopAll(){}
 WiFiClient WiFiServer::available(){
   if(!_listening)
     return WiFiClient();
+  int client_sock;
+  if (_accepted_sockfd >= 0) {
+    client_sock = _accepted_sockfd;
+    _accepted_sockfd = -1;
+  }
+  else {
   struct sockaddr_in _client;
   int cs = sizeof(struct sockaddr_in);
-  int client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+  }
   if(client_sock >= 0){
     int val = 1;
-    if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK)
-      return WiFiClient(client_sock);
+    if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK) {
+      val = _noDelay;
+      if(setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, sizeof(int)) == ESP_OK)
+        return WiFiClient(client_sock);
+    }
   }
   return WiFiClient();
 }
@@ -67,11 +78,42 @@ void WiFiServer::begin(){
     return;
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   _listening = true;
+  _noDelay = false;
+  _accepted_sockfd = -1;
+}
+
+void WiFiServer::setNoDelay(bool nodelay) {
+    _noDelay = nodelay;
+}
+
+bool WiFiServer::getNoDelay() {
+    return _noDelay;
+}
+
+bool WiFiServer::hasClient() {
+    if (_accepted_sockfd >= 0) {
+      return true;
+    }
+    struct sockaddr_in _client;
+    int cs = sizeof(struct sockaddr_in);
+    _accepted_sockfd = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    if (_accepted_sockfd >= 0) {
+      return true;
+    }
+    return false;
 }
 
 void WiFiServer::end(){
-  close(sockfd);
+  lwip_close_r(sockfd);
   sockfd = -1;
   _listening = false;
+}
+
+void WiFiServer::close(){
+  end();
+}
+
+void WiFiServer::stop(){
+  end();
 }
 

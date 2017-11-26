@@ -22,13 +22,12 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 
-#define RTC_TOUCH_INUM 13
-
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
 
 typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __touchInterruptHandlers[10] = {0,};
+static intr_handle_t touch_intr_handle = NULL;
 
 void IRAM_ATTR __touchISR(void * arg)
 {
@@ -66,6 +65,7 @@ void __touchInit()
     if(initialized){
         return;
     }
+    initialized = true;
     SET_PERI_REG_BITS(RTC_IO_TOUCH_CFG_REG, RTC_IO_TOUCH_XPD_BIAS, 1, RTC_IO_TOUCH_XPD_BIAS_S);
     SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
     //clear touch enable
@@ -74,11 +74,7 @@ void __touchInit()
 
     __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
 
-    ESP_INTR_DISABLE(RTC_TOUCH_INUM);
-    intr_matrix_set(xPortGetCoreID(), ETS_RTC_CORE_INTR_SOURCE, RTC_TOUCH_INUM);
-    xt_set_interrupt_handler(RTC_TOUCH_INUM, &__touchISR, NULL);
-    ESP_INTR_ENABLE(RTC_TOUCH_INUM);
-    initialized = true;
+    esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __touchISR, NULL, &touch_intr_handle);
 }
 
 uint16_t __touchRead(uint8_t pin)

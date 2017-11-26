@@ -39,7 +39,16 @@ typedef enum {
 uint16_t analogRead(uint8_t pin);
 
 /*
- * Sets the sample bits
+ * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
+ * If between 9 and 12, it will equal the set hardware resolution, else value will be shifted.
+ * Range is 1 - 16
+ *
+ * Note: compatibility with Arduino SAM
+ */
+void analogReadResolution(uint8_t bits);
+
+/*
+ * Sets the sample bits and read resolution
  * Default is 12bit (0 - 4095)
  * Range is 9 - 12
  * */
@@ -87,6 +96,35 @@ void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
  * connected to pins 36(SVP) and 39(SVN)
  * */
 int hallRead();
+
+/*
+ * Non-Blocking API (almost)
+ *
+ * Note: ADC conversion can run only for single pin at a time.
+ *       That means that if you want to run ADC on two pins on the same bus,
+ *       you need to run them one after another. Probably the best use would be
+ *       to start conversion on both buses in parallel.
+ * */
+
+/*
+ * Attach pin to ADC (will also clear any other analog mode that could be on)
+ * */
+bool adcAttachPin(uint8_t pin);
+
+/*
+ * Start ADC conversion on attached pin's bus
+ * */
+bool adcStart(uint8_t pin);
+
+/*
+ * Check if conversion on the pin's ADC bus is currently running
+ * */
+bool adcBusy(uint8_t pin);
+
+/*
+ * Get the result of the conversion (will wait if it have not finished)
+ * */
+uint16_t adcEnd(uint8_t pin);
 
 #ifdef __cplusplus
 }

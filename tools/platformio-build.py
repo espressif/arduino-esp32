@@ -36,41 +36,53 @@ assert isdir(FRAMEWORK_DIR)
 
 env.Prepend(
     CPPDEFINES=[
-        ("ARDUINO", 10610),
-        "ARDUINO_ARCH_ESP32"
+        ("ARDUINO", 10805),
+        "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
     CFLAGS=["-Wno-old-style-declaration"],
 
     CCFLAGS=[
         "-Wno-error=deprecated-declarations",
+        "-Wno-error=unused-function",
         "-Wno-unused-parameter",
-        "-Wno-sign-compare"
+        "-Wno-sign-compare",
+        "-fstack-protector"
     ],
 
     CPPPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_trace"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bootloader_support"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_adc_cal"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "heap"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "jsmn"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls_port"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nvs_flash"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spi_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "sdmmc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "spiffs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
@@ -80,14 +92,12 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
-
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
-
     LIBS=[
-        "gcc", "stdc++", "app_update", "bootloader_support", "bt", "btdm_app", "c", "c_nano", "coap", "coexist", "core", "cxx", "driver", "esp32", "ethernet", "expat", "fatfs", "freertos", "hal", "json", "log", "lwip", "m", "mbedtls", "mdns", "micro-ecc", "net80211", "newlib", "nghttp", "nvs_flash", "openssl", "phy", "pp", "rtc", "sdmmc", "smartconfig", "spi_flash", "tcpip_adapter", "ulp", "vfs", "wpa", "wpa2", "wpa_supplicant", "wps", "xtensa-debug-module"
+        "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "hal", "newlib", "driver", "bootloader_support", "pp", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
     ],
 
     UPLOADERFLAGS=[
@@ -96,7 +106,19 @@ env.Prepend(
     ]
 )
 
+
+def _get_board_flash_mode(env):
+    mode = env.subst("$BOARD_FLASH_MODE")
+    if mode == "qio":
+        return "dio"
+    elif mode == "qout":
+        return "dout"
+    return mode
+
+
 env.Append(
+    __get_board_flash_mode=_get_board_flash_mode,
+
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -105,7 +127,9 @@ env.Append(
         "-Wl,-EL",
         "-T", "esp32.common.ld",
         "-T", "esp32.rom.ld",
-        "-T", "esp32.peripherals.ld"
+        "-T", "esp32.peripherals.ld",
+        "-T", "esp32.rom.spiram_incompatible_fns.ld",
+        "-u", "ld_include_panic_highint_hdl"
     ],
 
     UPLOADERFLAGS=[
@@ -115,6 +139,9 @@ env.Append(
         "0x10000"
     ]
 )
+
+if "$BOARD_FLASH_MODE" in env['UPLOADERFLAGS']:
+    env['UPLOADERFLAGS'][env['UPLOADERFLAGS'].index("$BOARD_FLASH_MODE")] = "${__get_board_flash_mode(__env__)}"
 
 env.Replace(
     UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
@@ -150,11 +177,11 @@ env.Prepend(LIBS=libs)
 #
 # Generate partition table
 #
-
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
-    join(FRAMEWORK_DIR, "tools", "partitions", "default.csv"),
-    '"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
-        FRAMEWORK_DIR, "tools", "gen_esp32part.py")
-)
+    join(FRAMEWORK_DIR, "tools", "partitions",
+         "%s.csv" % env.BoardConfig().get("build.partitions", "default")),
+    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
+        FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
+                      "Generating partitions $TARGET"))
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)

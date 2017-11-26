@@ -18,9 +18,8 @@
 
 #ifndef __FUTURE_H__
 #define __FUTURE_H__
-// #pragma once
 
-#include "osi_arch.h"
+#include "semaphore.h"
 
 struct future {
     bool ready_can_be_called;
@@ -49,4 +48,6 @@ void future_ready(future_t *future, void *value);
 // Frees the future before return. |future| may not be NULL.
 void *future_await(future_t *async_result);
 
+//Free the future if this "future" is not used
+void future_free(future_t *future);
 #endif /* __FUTURE_H__ */

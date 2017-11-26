@@ -27,7 +27,8 @@ typedef enum {
     I2C_ERROR_DEV,
     I2C_ERROR_ACK,
     I2C_ERROR_TIMEOUT,
-    I2C_ERROR_BUS
+    I2C_ERROR_BUS,
+    I2C_ERROR_BUSY
 } i2c_err_t;
 
 struct i2c_struct_t;
@@ -47,9 +48,10 @@ i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl);
 i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda);
 i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda);
 
-i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
-i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint8_t len, bool sendStop);
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint16_t len, bool sendStop);
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * data, uint16_t len, bool sendStop);
 
+void i2cReset(i2c_t* i2c);
 
 #ifdef __cplusplus
 }

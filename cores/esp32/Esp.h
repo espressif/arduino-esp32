@@ -45,6 +45,8 @@ typedef enum {
     FM_QOUT = 0x01,
     FM_DIO = 0x02,
     FM_DOUT = 0x03,
+    FM_FAST_READ = 0x04,
+    FM_SLOW_READ = 0x05,
     FM_UNKNOWN = 0xff
 } FlashMode_t;
 
@@ -55,14 +57,12 @@ public:
     ~EspClass() {}
     void restart();
     uint32_t getFreeHeap();
-
-    uint32_t getChipId();
-
+    uint8_t getChipRevision();
+    uint8_t getCpuFreqMHz(){ return CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ; }
+    uint32_t getCycleCount();
     const char * getSdkVersion();
 
     void deepSleep(uint32_t time_us);
-
-    uint8_t getCpuFreqMHz();
 
     uint32_t getFlashChipSize();
     uint32_t getFlashChipSpeed();
@@ -76,9 +76,8 @@ public:
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
     bool flashRead(uint32_t offset, uint32_t *data, size_t size);
 
-    bool eraseConfig();
+    uint64_t getEfuseMac();
 
-    uint32_t getCycleCount();
 };
 
 extern EspClass ESP;

@@ -17,59 +17,44 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
-
-#if !CONFIG_ESP32_PHY_AUTO_INIT
 #include "nvs_flash.h"
-#include "esp_phy_init.h"
-#include "rom/rtc.h"
-void arduino_phy_init()
+#include "nvs.h"
+#include "esp_partition.h"
+#include "esp_log.h"
+#include <sys/time.h>
+
+//Undocumented!!! Get chip temperature in Farenheit
+//Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
+uint8_t temprature_sens_read();
+
+float temperatureRead()
 {
-    static bool initialized = false;
-    if(initialized){
-        return;
-    }
-    esp_phy_calibration_mode_t calibration_mode = PHY_RF_CAL_PARTIAL;
-    if (rtc_get_reset_reason(0) == DEEPSLEEP_RESET) {
-        calibration_mode = PHY_RF_CAL_NONE;
-    }
-    const esp_phy_init_data_t* init_data = esp_phy_get_init_data();
-    if (init_data == NULL) {
-        printf("failed to obtain PHY init data\n");
-        abort();
-    }
-    esp_phy_calibration_data_t* cal_data =
-            (esp_phy_calibration_data_t*) calloc(sizeof(esp_phy_calibration_data_t), 1);
-    if (cal_data == NULL) {
-        printf("failed to allocate memory for RF calibration data\n");
-        abort();
-    }
-    esp_err_t err = esp_phy_load_cal_data_from_nvs(cal_data);
-    if (err != ESP_OK) {
-        printf("failed to load RF calibration data, falling back to full calibration\n");
-        calibration_mode = PHY_RF_CAL_FULL;
-    }
-
-    esp_phy_init(init_data, calibration_mode, cal_data);
-
-    if (calibration_mode != PHY_RF_CAL_NONE) {
-        err = esp_phy_store_cal_data_to_nvs(cal_data);
-    } else {
-        err = ESP_OK;
-    }
-    esp_phy_release_init_data(init_data);
-    free(cal_data); // PHY maintains a copy of calibration data, so we can free this
-    initialized = true;
+    return (temprature_sens_read() - 32) / 1.8;
 }
-#endif
 
-uint32_t IRAM_ATTR micros()
+void yield()
 {
-    uint32_t ccount;
+    vPortYield();
+}
+
+portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
+
+unsigned long IRAM_ATTR micros()
+{
+    static unsigned long lccount = 0;
+    static unsigned long overflow = 0;
+    unsigned long ccount;
+    portENTER_CRITICAL_ISR(&microsMux);
     __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) );
-    return ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    if(ccount < lccount){
+        overflow += UINT32_MAX / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+    }
+    lccount = ccount;
+    portEXIT_CRITICAL_ISR(&microsMux);
+    return overflow + (ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
 }
 
-uint32_t IRAM_ATTR millis()
+unsigned long IRAM_ATTR millis()
 {
     return xTaskGetTickCount() * portTICK_PERIOD_MS;
 }
@@ -83,7 +68,7 @@ void IRAM_ATTR delayMicroseconds(uint32_t us)
 {
     uint32_t m = micros();
     if(us){
-        uint32_t e = (m + us) % ((0xFFFFFFFF / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ) + 1);
+        uint32_t e = (m + us);
         if(m > e){ //overflow
             while(micros() > e){
                 NOP();
@@ -101,18 +86,31 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
-void initWiFi() __attribute__((weak));
-void initWiFi() {}
-
-void initArduino(){
-    nvs_flash_init();
+void initArduino()
+{
+    esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
+    esp_err_t err = nvs_flash_init();
+    if(err == ESP_ERR_NVS_NO_FREE_PAGES){
+        const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
+        if (partition != NULL) {
+            err = esp_partition_erase_range(partition, 0, partition->size);
+            if(!err){
+                err = nvs_flash_init();
+            } else {
+                log_e("Failed to format the broken NVS partition!");
+            }
+        }
+    }
+    if(err) {
+        log_e("Failed to initialize NVS! Error: %u", err);
+    }
     init();
     initVariant();
-    initWiFi();
 }
 
 //used by hal log
-const char * IRAM_ATTR pathToFileName(const char * path){
+const char * IRAM_ATTR pathToFileName(const char * path)
+{
     size_t i = 0;
     size_t pos = 0;
     char * p = (char *)path;

@@ -72,6 +72,8 @@ public:
     int peek(void);
     void flush(void);
 
+    void reset(void);
+
     inline size_t write(const char * s)
     {
         return write((uint8_t*) s, strlen(s));

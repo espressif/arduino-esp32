@@ -37,6 +37,7 @@ extern "C" {
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
 #include <lwip/ip_addr.h>
+#include "apps/dhcpserver_options.h"
 }
 
 
@@ -69,6 +70,9 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     if(lhs.ap.ssid_hidden != rhs.ap.ssid_hidden) {
         return false;
     }
+    if(lhs.ap.max_connection != rhs.ap.max_connection) {
+        return false;
+    }
     return true;
 }
 
@@ -79,12 +83,13 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
 
 /**
  * Set up an access point
- * @param ssid          Pointer to the SSID (max 63 char).
- * @param passphrase    (for WPA2 min 8 char, for open use NULL)
- * @param channel       WiFi channel number, 1 - 13.
- * @param ssid_hidden   Network cloaking (0 = broadcast SSID, 1 = hide SSID)
- */
-bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden)
+ * @param ssid              Pointer to the SSID (max 63 char).
+ * @param passphrase        (for WPA2 min 8 char, for open use NULL)
+ * @param channel           WiFi channel number, 1 - 13.
+ * @param ssid_hidden       Network cloaking (0 = broadcast SSID, 1 = hide SSID)
+ * @param max_connection    Max simultaneous connected clients, 1 - 4.
+*/
+bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection)
 {
 
     if(!WiFi.enableAP(true)) {
@@ -109,7 +114,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     conf.ap.channel = channel;
     conf.ap.ssid_len = strlen(ssid);
     conf.ap.ssid_hidden = ssid_hidden;
-    conf.ap.max_connection = 4;
+    conf.ap.max_connection = max_connection;
     conf.ap.beacon_interval = 100;
 
     if(!passphrase || strlen(passphrase) == 0) {
@@ -122,16 +127,11 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     wifi_config_t conf_current;
     esp_wifi_get_config(WIFI_IF_AP, &conf_current);
-    if(softap_config_equal(conf, conf_current)) {
-        //DEBUGV("softap config unchanged");
-        return true;
+    if(!softap_config_equal(conf, conf_current) && esp_wifi_set_config(WIFI_IF_AP, &conf) != ESP_OK) {
+        return false;
     }
 
-    bool ret;
-
-    ret = esp_wifi_set_config(WIFI_IF_AP, &conf) == ESP_OK;
-
-    return ret;
+    return true;
 }
 
 
@@ -149,12 +149,25 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
         return false;
     }
 
+    esp_wifi_start();
+
     tcpip_adapter_ip_info_t info;
     info.ip.addr = static_cast<uint32_t>(local_ip);
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
     tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
     if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info) == ESP_OK) {
+        dhcps_lease_t lease;
+        lease.enable = true;
+        lease.start_ip.addr = static_cast<uint32_t>(local_ip) + (1 << 24);
+        lease.end_ip.addr = static_cast<uint32_t>(local_ip) + (11 << 24);
+
+        tcpip_adapter_dhcps_option(
+            (tcpip_adapter_option_mode_t)TCPIP_ADAPTER_OP_SET,
+            (tcpip_adapter_option_id_t)REQUESTED_IP_ADDRESS,
+            (void*)&lease, sizeof(dhcps_lease_t)
+        );
+
         return tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP) == ESP_OK;
     }
     return false;

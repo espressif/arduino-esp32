@@ -3,7 +3,7 @@
     {
       "name": "esp32",
       "maintainer": "Espressif Systems",
-      "websiteURL": "https://github.com/espressif/esp32-arduino",
+      "websiteURL": "https://github.com/espressif/arduino-esp32",
       "email": "hristo@espressif.com",
       "help": {
         "online": "http://esp32.com"
@@ -33,12 +33,17 @@
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "1.22.0-61-gab8375a-5.2.0"
+              "version": "1.22.0-75-gbaf03c2-5.2.0"
             },
             {
               "packager": "esp32",
               "name": "esptool",
-              "version": "fe69994"
+              "version": "4dab24e"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.1"
             }
           ]
         }
@@ -46,69 +51,103 @@
       "tools": [
         {
           "name": "xtensa-esp32-elf-gcc",
-          "version": "1.22.0-61-gab8375a-5.2.0",
+          "version": "1.22.0-75-gbaf03c2-5.2.0",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0-2.zip",
-              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-61-gab8375a-5.2.0-2.zip",
-              "checksum": "SHA-256:c00dbdab8e8acc273d4aa319a74f7bb1d9496c843159823201d685359174168f",
-              "size": "76346909"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-75-gbaf03c2-5.2.0.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-75-gbaf03c2-5.2.0.zip",
+              "checksum": "SHA-256:b1735be3a24c3aa5edc672a67aeaa0bf0922c01d514a6bb905d5cd3d6fb86399",
+              "size": "78900581"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-61-gab8375a-5.2.0.tar.gz",
-              "checksum": "SHA-256:89a9a6084ec032ddcd4bdae37b428e533ed5fd0c0ab6b66ddf703e4b3f83d6e4",
-              "size": "40481812"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "checksum": "SHA-256:8bdaef8c88fa5e111837587e1ebd2af93125cba96a6ec7d717fe14803723a69b",
+              "size": "39897281"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz",
-              "checksum": "SHA-256:b74333fd7f622f035fee7c4e0ca57c3e2ccb2515de5d901f33e87e79cdf0d4f9",
-              "size": "37674568"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "checksum": "SHA-256:c65a719545b773149cad7008c618053443f57a9c15e4ad60877ccce0a5eef82a",
+              "size": "37642712"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-59.tar.gz",
-              "checksum": "SHA-256:b24817819f0078fb05895a640e806e0aca9aa96b47b80d2390ac8e2d9ddc955a",
-              "size": "32734156"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-75-gbaf03c2-5.2.0.tar.gz",
+              "checksum": "SHA-256:040f7e230941c785e44936236913b1c0585594f140880e2c34758b7be8709cf6",
+              "size": "38978071"
             }
           ]
         },
         {
           "name": "esptool",
-          "version": "fe69994",
+          "version": "4dab24e",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-fe69994-windows.zip",
-              "archiveFileName": "esptool-fe69994-windows.zip",
-              "checksum": "SHA-256:b2702efc045f5f61f821c72495301a0f2016e87e33f49fa16e262d0522d2b021",
-              "size": "3389457"
+              "url": "https://dl.espressif.com/dl/esptool-4dab24e-windows.zip",
+              "archiveFileName": "esptool-4dab24e-windows.zip",
+              "checksum": "SHA-256:604014edbd79616470ecda20d623bac3a8d916b1147d37f7a66a83959eff066c",
+              "size": "3462819"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-fe69994-macos.tar.gz",
-              "archiveFileName": "esptool-fe69994-macos.tar.gz",
-              "checksum": "SHA-256:49ab32fbdf4f855925638d4b76ffd292255a47c4445b1069737f7151f66a03aa",
-              "size": "3886730"
+              "url": "https://dl.espressif.com/dl/esptool-4dab24e-macos.tar.gz",
+              "archiveFileName": "esptool-4dab24e-macos.tar.gz",
+              "checksum": "SHA-256:92fe2f0505ed93051681bd4d5d766664eacfa32745976dda695c728b529dcc8f",
+              "size": "3869525"
+            }
+          ]
+        },
+        {
+          "name": "mkspiffs",
+          "version": "0.2.1",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-windows.zip",
+              "archiveFileName": "mkspiffs-0.2.1-windows.zip",
+              "checksum": "SHA-256:baf7b661f8f6128300a33ca20a2158fd9d0bcdad389c4424f913fe3ad08d2dd5",
+              "size": "347207"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.1-osx.tar.gz",
+              "checksum": "SHA-256:66e71f20d72fd7c5a75e016b5d88d51793558e68b0e069142dbe8ac1de30a431",
+              "size": "122716"
+            },
+            {
+              "host": "i386-apple-darwin",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.1-osx.tar.gz",
+              "checksum": "SHA-256:66e71f20d72fd7c5a75e016b5d88d51793558e68b0e069142dbe8ac1de30a431",
+              "size": "122716"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-fe69994-linux64.tar.gz",
-              "archiveFileName": "esptool-fe69994-linux64.tar.gz",
-              "checksum": "SHA-256:6ff54604bb3e1af39a7dd4f0e54b02b0f48bcd8a0b9259bc202385fdea573e05",
-              "size": "3937680"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux64.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.1-linux64.tar.gz",
+              "checksum": "SHA-256:cca5e947b4c953d4a2b15bae2cd69e052e20c6ac1975ec5d887596a37a24b41a",
+              "size": "49281"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-fe69994-linux32.tar.gz",
-              "archiveFileName": "esptool-fe69994-linux32.tar.gz",
-              "checksum": "SHA-256:4912aa39b3b78fbe4f959c496e52968b207e66e92cf186ad583812526a455f48",
-              "size": "3766885"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux32.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.1-linux32.tar.gz",
+              "checksum": "SHA-256:7ac82238f703ec97e2a1c2be65665cff055ad91fccf976ff34a95f63bb80a20a",
+              "size": "47944"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.1-linux-armhf.tar.gz",
+              "checksum": "SHA-256:2c2ae495502c054919ee03c9222eaf15fbdd3b45410129b5d978eb49845389c0",
+              "size": "43965"
             }
           ]
         }

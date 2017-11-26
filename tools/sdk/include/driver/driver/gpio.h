@@ -31,7 +31,13 @@ extern "C" {
 
 #define GPIO_SEL_0              (BIT(0))                         /*!< Pin 0 selected */
 #define GPIO_SEL_1              (BIT(1))                         /*!< Pin 1 selected */
-#define GPIO_SEL_2              (BIT(2))                         /*!< Pin 2 selected */
+#define GPIO_SEL_2              (BIT(2))                         /*!< Pin 2 selected 
+                                                                      @note There are more macros
+                                                                      like that up to pin 39,
+                                                                      excluding pins 20, 24 and 28..31.
+                                                                      They are not shown here 
+                                                                      to reduce redundant information. */
+/** @cond */
 #define GPIO_SEL_3              (BIT(3))                         /*!< Pin 3 selected */
 #define GPIO_SEL_4              (BIT(4))                         /*!< Pin 4 selected */
 #define GPIO_SEL_5              (BIT(5))                         /*!< Pin 5 selected */
@@ -109,19 +115,28 @@ extern "C" {
 #define GPIO_PRO_CPU_NMI_INTR_ENA  (BIT(3))
 #define GPIO_SDIO_EXT_INTR_ENA     (BIT(4))
 
+#define GPIO_MODE_DEF_DISABLE         (0)
 #define GPIO_MODE_DEF_INPUT           (BIT0)
 #define GPIO_MODE_DEF_OUTPUT          (BIT1)
 #define GPIO_MODE_DEF_OD              (BIT2)
 
+
 #define GPIO_PIN_COUNT              40
+/** @endcond */
+
 extern const uint32_t GPIO_PIN_MUX_REG[GPIO_PIN_COUNT];
-#define GPIO_IS_VALID_GPIO(gpio_num)      ((gpio_num < GPIO_PIN_COUNT && GPIO_PIN_MUX_REG[gpio_num] != 0))   //to decide whether it is a valid GPIO number
-#define GPIO_IS_VALID_OUTPUT_GPIO(gpio_num)      ((GPIO_IS_VALID_GPIO(gpio_num)) && (gpio_num < 34))         //to decide whether it can be a valid GPIO number of output mode
+#define GPIO_IS_VALID_GPIO(gpio_num)      ((gpio_num < GPIO_PIN_COUNT && GPIO_PIN_MUX_REG[gpio_num] != 0))   /*!< Check whether it is a valid GPIO number */
+#define GPIO_IS_VALID_OUTPUT_GPIO(gpio_num)      ((GPIO_IS_VALID_GPIO(gpio_num)) && (gpio_num < 34))         /*!< Check whether it can be a valid GPIO number of output mode */
 
 typedef enum {
     GPIO_NUM_0 = 0,     /*!< GPIO0, input and output */
     GPIO_NUM_1 = 1,     /*!< GPIO1, input and output */
-    GPIO_NUM_2 = 2,     /*!< GPIO2, input and output */
+    GPIO_NUM_2 = 2,     /*!< GPIO2, input and output
+                             @note There are more enumerations like that
+                             up to GPIO39, excluding GPIO20, GPIO24 and GPIO28..31.
+                             They are not shown here to reduce redundant information.
+                             @note GPIO34..39 are input mode only. */
+/** @cond */
     GPIO_NUM_3 = 3,     /*!< GPIO3, input and output */
     GPIO_NUM_4 = 4,     /*!< GPIO4, input and output */
     GPIO_NUM_5 = 5,     /*!< GPIO5, input and output */
@@ -149,7 +164,7 @@ typedef enum {
     GPIO_NUM_27 = 27,   /*!< GPIO27, input and output */
 
     GPIO_NUM_32 = 32,   /*!< GPIO32, input and output */
-    GPIO_NUM_33 = 33,   /*!< GPIO32, input and output */
+    GPIO_NUM_33 = 33,   /*!< GPIO33, input and output */
     GPIO_NUM_34 = 34,   /*!< GPIO34, input mode only */
     GPIO_NUM_35 = 35,   /*!< GPIO35, input mode only */
     GPIO_NUM_36 = 36,   /*!< GPIO36, input mode only */
@@ -157,6 +172,7 @@ typedef enum {
     GPIO_NUM_38 = 38,   /*!< GPIO38, input mode only */
     GPIO_NUM_39 = 39,   /*!< GPIO39, input mode only */
     GPIO_NUM_MAX = 40,
+/** @endcond */    
 } gpio_num_t;
 
 typedef enum {
@@ -170,6 +186,7 @@ typedef enum {
 } gpio_int_type_t;
 
 typedef enum {
+    GPIO_MODE_DISABLE = GPIO_MODE_DEF_DISABLE,                                        /*!< GPIO mode : disable input and output             */
     GPIO_MODE_INPUT = GPIO_MODE_DEF_INPUT,                                                         /*!< GPIO mode : input only                           */
     GPIO_MODE_OUTPUT = GPIO_MODE_DEF_OUTPUT,                                                       /*!< GPIO mode : output only mode                     */
     GPIO_MODE_OUTPUT_OD = ((GPIO_MODE_DEF_OUTPUT)|(GPIO_MODE_DEF_OD)),                             /*!< GPIO mode : output only with open-drain mode     */
@@ -205,6 +222,14 @@ typedef enum {
     GPIO_FLOATING,                  /*!< Pad floating           */
 } gpio_pull_mode_t;
 
+typedef enum {
+    GPIO_DRIVE_CAP_0       = 0,    /*!< Pad drive capability: weak          */
+    GPIO_DRIVE_CAP_1       = 1,    /*!< Pad drive capability: stronger      */
+    GPIO_DRIVE_CAP_2       = 2,    /*!< Pad drive capability: default value */
+    GPIO_DRIVE_CAP_DEFAULT = 2,    /*!< Pad drive capability: default value */
+    GPIO_DRIVE_CAP_3       = 3,    /*!< Pad drive capability: strongest     */
+    GPIO_DRIVE_CAP_MAX,
+} gpio_drive_cap_t;
 
 typedef void (*gpio_isr_t)(void*);
 typedef intr_handle_t gpio_isr_handle_t;
@@ -221,7 +246,7 @@ typedef intr_handle_t gpio_isr_handle_t;
  *     - ESP_ERR_INVALID_ARG Parameter error
  *
  */
-esp_err_t gpio_config(gpio_config_t *pGPIOConfig);
+esp_err_t gpio_config(const gpio_config_t *pGPIOConfig);
 
 
 /**
@@ -302,9 +327,9 @@ int gpio_get_level(gpio_num_t gpio_num);
 esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 
 /**
- * @brief  GPIO set pull
+ * @brief  Configure GPIO pull-up/pull-down resistors
  *
- * User this Function,configure GPIO pull mode,such as pull-up,pull-down
+ * Only pins that support both input & output have integrated pull-up and pull-down resistors. Input-only GPIOs 34-39 do not.
  *
  * @param  gpio_num GPIO number. If you want to set pull up or down mode for e.g. GPIO16, gpio_num should be GPIO_NUM_16 (16);
  * @param  pull GPIO pull up/down mode.
@@ -317,7 +342,7 @@ esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
 esp_err_t gpio_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
 
 /**
-  * @brief enable GPIO wake-up function.
+  * @brief Enable GPIO wake-up function.
   *
   * @param gpio_num GPIO number.
   *
@@ -341,15 +366,23 @@ esp_err_t gpio_wakeup_enable(gpio_num_t gpio_num, gpio_int_type_t intr_type);
 esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num);
 
 /**
- * @brief   register GPIO interrupt handler, the handler is an ISR.
+ * @brief   Register GPIO interrupt handler, the handler is an ISR.
  *          The handler will be attached to the same CPU core that this function is running on.
+ *
+ * This ISR function is called whenever any GPIO interrupt occurs. See
+ * the alternative gpio_install_isr_service() and
+ * gpio_isr_handler_add() API in order to have the driver support
+ * per-GPIO ISRs.
  *
  * @param  fn  Interrupt handler function.
  * @param  intr_alloc_flags Flags used to allocate the interrupt. One or multiple (ORred)
  *            ESP_INTR_FLAG_* values. See esp_intr_alloc.h for more info.
  * @param  arg  Parameter for handler function
- * @param  handle Pointer to return handle. If non-NULL, a handle for the interrupt will
- *            be returned here.
+ * @param  handle Pointer to return handle. If non-NULL, a handle for the interrupt will be returned here.
+ *
+ * \verbatim embed:rst:leading-asterisk
+ * To disable or remove the ISR, pass the returned handle to the :doc:`interrupt allocation functions </api-reference/system/intr_alloc>`.
+ * \endverbatim
  *
  * @return
  *     - ESP_OK Success ;
@@ -402,7 +435,9 @@ esp_err_t gpio_pulldown_en(gpio_num_t gpio_num);
 esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num);
 
 /**
-  * @brief Install a GPIO ISR service, so we can assign different ISR handler for different pins
+  * @brief Install the driver's GPIO ISR handler service, which allows per-pin GPIO interrupt handlers.
+  *
+  * This function is incompatible with gpio_isr_register() - if that function is used, a single global ISR is registered for all GPIO interrupts. If this function is used, the ISR service provides a global GPIO ISR and individual pin handlers are registered via the gpio_isr_handler_add() function.
   *
   * @param intr_alloc_flags Flags used to allocate the interrupt. One or multiple (ORred)
   *            ESP_INTR_FLAG_* values. See esp_intr_alloc.h for more info.
@@ -415,17 +450,24 @@ esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num);
 esp_err_t gpio_install_isr_service(int intr_alloc_flags);
 
 /**
-  * @brief Un-install GPIO ISR service, free the resources.
+  * @brief Uninstall the driver's GPIO ISR service, freeing related resources.
   */
 void gpio_uninstall_isr_service();
 
 /**
-  * @brief Add ISR handler for the corresponding GPIO.
+  * @brief Add ISR handler for the corresponding GPIO pin.
   *
-  *        Interrupt handlers no longer need to be declared with IRAM_ATTR, unless you pass the ESP_INTR_FLAG_IRAM flag
-  *        when allocating the ISR in gpio_install_isr_service().
-  *        This ISR handler will be called from an ISR. So there probably is some stack size limit, and this limit
-  *        is smaller compared to a "raw" interrupt handler due to another level of indirection.
+  * Call this function after using gpio_install_isr_service() to
+  * install the driver's GPIO ISR handler service.
+  *
+  * The pin ISR handlers no longer need to be declared with IRAM_ATTR,
+  * unless you pass the ESP_INTR_FLAG_IRAM flag when allocating the
+  * ISR in gpio_install_isr_service().
+  *
+  * This ISR handler will be called from an ISR. So there is a stack
+  * size limit (configurable as "ISR stack size" in menuconfig). This
+  * limit is smaller compared to a global GPIO interrupt handler due
+  * to the additional level of indirection.
   *
   * @param gpio_num GPIO number
   * @param isr_handler ISR handler function for the corresponding GPIO number.
@@ -439,7 +481,7 @@ void gpio_uninstall_isr_service();
 esp_err_t gpio_isr_handler_add(gpio_num_t gpio_num, gpio_isr_t isr_handler, void* args);
 
 /**
-  * @brief Remove ISR handler for the corresponding GPIO.
+  * @brief Remove ISR handler for the corresponding GPIO pin.
   *
   * @param gpio_num GPIO number
   *
@@ -450,6 +492,29 @@ esp_err_t gpio_isr_handler_add(gpio_num_t gpio_num, gpio_isr_t isr_handler, void
   */
 esp_err_t gpio_isr_handler_remove(gpio_num_t gpio_num);
 
+/**
+  * @brief Set GPIO pad drive capability
+  *
+  * @param gpio_num GPIO number, only support output GPIOs
+  * @param strength Drive capability of the pad
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_set_drive_capability(gpio_num_t gpio_num, gpio_drive_cap_t strength);
+
+/**
+  * @brief Get GPIO pad drive capability
+  *
+  * @param gpio_num GPIO number, only support output GPIOs
+  * @param strength Pointer to accept drive capability of the pad
+  *
+  * @return
+  *     - ESP_OK Success
+  *     - ESP_ERR_INVALID_ARG Parameter error
+  */
+esp_err_t gpio_get_drive_capability(gpio_num_t gpio_num, gpio_drive_cap_t* strength);
 
 #ifdef __cplusplus
 }

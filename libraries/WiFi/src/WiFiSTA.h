@@ -51,6 +51,7 @@ public:
     bool getAutoConnect();
 
     bool setAutoReconnect(bool autoReconnect);
+    bool getAutoReconnect();
 
     uint8_t waitForConnectResult();
 
@@ -84,6 +85,7 @@ public:
 protected:
     static wl_status_t _status;
     static bool _useStaticIp;
+    static bool _autoReconnect;
 
 public: 
     bool beginSmartConfig();

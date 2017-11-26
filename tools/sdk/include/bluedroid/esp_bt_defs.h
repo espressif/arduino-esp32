@@ -22,21 +22,57 @@
 extern "C" {
 #endif
 
+#define ESP_BLUEDROID_STATUS_CHECK(status)           \
+    if (esp_bluedroid_get_status() != (status)) {    \
+        return ESP_ERR_INVALID_STATE;                \
+    }
+
+
+/* relate to BT_STATUS_xxx in bt_def.h */
 /// Status Return Value
 typedef enum {
-    ESP_BT_STATUS_SUCCESS          =  0,          /* Successful operation. */
-    ESP_BT_STATUS_FAILURE          =  1,          /* Generic failure. */
-    ESP_BT_STATUS_PENDING          =  2,          /* API cannot be completed right now */
-    ESP_BT_STATUS_BUSY             =  3,
-    ESP_BT_STATUS_NO_RESOURCES     =  4,
-    ESP_BT_STATUS_WRONG_MODE       =  5,
+    ESP_BT_STATUS_SUCCESS       = 0,            /* relate to BT_STATUS_SUCCESS in bt_def.h */
+    ESP_BT_STATUS_FAIL,                         /* relate to BT_STATUS_FAIL in bt_def.h */
+    ESP_BT_STATUS_NOT_READY,                    /* relate to BT_STATUS_NOT_READY in bt_def.h */
+    ESP_BT_STATUS_NOMEM,                        /* relate to BT_STATUS_NOMEM in bt_def.h */
+    ESP_BT_STATUS_BUSY,                         /* relate to BT_STATUS_BUSY in bt_def.h */
+    ESP_BT_STATUS_DONE          = 5,            /* relate to BT_STATUS_DONE in bt_def.h */
+    ESP_BT_STATUS_UNSUPPORTED,                  /* relate to BT_STATUS_UNSUPPORTED in bt_def.h */
+    ESP_BT_STATUS_PARM_INVALID,                 /* relate to BT_STATUS_PARM_INVALID in bt_def.h */
+    ESP_BT_STATUS_UNHANDLED,                    /* relate to BT_STATUS_UNHANDLED in bt_def.h */
+    ESP_BT_STATUS_AUTH_FAILURE,                 /* relate to BT_STATUS_AUTH_FAILURE in bt_def.h */
+    ESP_BT_STATUS_RMT_DEV_DOWN  = 10,           /* relate to BT_STATUS_RMT_DEV_DOWN in bt_def.h */
+    ESP_BT_STATUS_AUTH_REJECTED,                /* relate to BT_STATUS_AUTH_REJECTED in bt_def.h */
+    ESP_BT_STATUS_INVALID_STATIC_RAND_ADDR,     /* relate to BT_STATUS_INVALID_STATIC_RAND_ADDR in bt_def.h */
+    ESP_BT_STATUS_PENDING,                      /* relate to BT_STATUS_PENDING in bt_def.h */
+    ESP_BT_STATUS_UNACCEPT_CONN_INTERVAL,       /* relate to BT_UNACCEPT_CONN_INTERVAL in bt_def.h */
+    ESP_BT_STATUS_PARAM_OUT_OF_RANGE,           /* relate to BT_PARAM_OUT_OF_RANGE in bt_def.h */
+    ESP_BT_STATUS_TIMEOUT,                      /* relate to BT_STATUS_TIMEOUT in bt_def.h */
+    ESP_BT_STATUS_PEER_LE_DATA_LEN_UNSUPPORTED, /* relate to BTM_PEER_LE_DATA_LEN_UNSUPPORTED in btm_api.h */
+    ESP_BT_STATUS_CONTROL_LE_DATA_LEN_UNSUPPORTED,/* relate to BTM_CONTROL_LE_DATA_LEN_UNSUPPORTED in btm_api.h */
+    ESP_BT_STATUS_ERR_ILLEGAL_PARAMETER_FMT,    /* relate to HCI_ERR_ILLEGAL_PARAMETER_FMT in hcidefs.h */
 } esp_bt_status_t;
+
+
+/*Define the bt octet 16 bit size*/
+#define ESP_BT_OCTET16_LEN    16
+typedef uint8_t esp_bt_octet16_t[ESP_BT_OCTET16_LEN];   /* octet array: size 16 */
+
+#define ESP_BT_OCTET8_LEN    8
+typedef uint8_t esp_bt_octet8_t[ESP_BT_OCTET8_LEN];   /* octet array: size 8 */
+
+typedef uint8_t esp_link_key[ESP_BT_OCTET16_LEN];      /* Link Key */
 
 /// Default GATT interface id
 #define ESP_DEFAULT_GATT_IF             0xff
 
-/// Default BLE connection param, if the value doesn't be overwritten
-#define ESP_BLE_CONN_PARAM_UNDEF        0xffff      /* use this value when a specific value not to be overwritten */
+#define ESP_BLE_CONN_INT_MIN                0x0006       /*!< relate to BTM_BLE_CONN_INT_MIN in btm_ble_api.h */
+#define ESP_BLE_CONN_INT_MAX                0x0C80       /*!< relate to BTM_BLE_CONN_INT_MAX in btm_ble_api.h */
+#define ESP_BLE_CONN_LATENCY_MAX            500          /*!< relate to ESP_BLE_CONN_LATENCY_MAX in btm_ble_api.h */
+#define ESP_BLE_CONN_SUP_TOUT_MIN           0x000A       /*!< relate to BTM_BLE_CONN_SUP_TOUT_MIN in btm_ble_api.h */
+#define ESP_BLE_CONN_SUP_TOUT_MAX           0x0C80       /*!< relate to ESP_BLE_CONN_SUP_TOUT_MAX in btm_ble_api.h */
+#define ESP_BLE_CONN_PARAM_UNDEF            0xffff       /* use this value when a specific value not to be overwritten */ /* relate to ESP_BLE_CONN_PARAM_UNDEF in btm_ble_api.h */
+#define ESP_BLE_SCAN_PARAM_UNDEF            0xffffffff   /* relate to ESP_BLE_SCAN_PARAM_UNDEF in btm_ble_api.h */
 
 /// Check the param is valid or not
 #define ESP_BLE_IS_VALID_PARAM(x, min, max)  (((x) >= (min) && (x) <= (max)) || ((x) == ESP_BLE_CONN_PARAM_UNDEF))
@@ -67,22 +103,6 @@ typedef enum {
 /// Bluetooth device address
 typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN];
 
-/// Own BD address source of the device
-typedef enum {
-    /// Public Address
-    BD_ADDR_PUBLIC,
-    /// Provided random address
-    BD_ADDR_PROVIDED_RND,
-    /// Provided static random address
-    BD_ADDR_GEN_STATIC_RND,
-    /// Generated resolvable private random address
-    BD_ADDR_GEN_RSLV,
-    /// Generated non-resolvable private random address
-    BD_ADDR_GEN_NON_RSLV,
-    /// Provided Reconnection address
-    BD_ADDR_PROVIDED_RECON,
-} esp_bd_addr_type_t;
-
 /// BLE device address type
 typedef enum {
     BLE_ADDR_TYPE_PUBLIC        = 0x00,
@@ -90,6 +110,16 @@ typedef enum {
     BLE_ADDR_TYPE_RPA_PUBLIC    = 0x02,
     BLE_ADDR_TYPE_RPA_RANDOM    = 0x03,
 } esp_ble_addr_type_t;
+
+/// Used to exchange the encrytyption key in the init key & response key
+#define ESP_BLE_ENC_KEY_MASK    (1 << 0)            /* relate to BTM_BLE_ENC_KEY_MASK in btm_api.h */
+/// Used to exchange the IRK key in the init key & response key
+#define ESP_BLE_ID_KEY_MASK     (1 << 1)            /* relate to BTM_BLE_ID_KEY_MASK in btm_api.h */
+/// Used to exchange the CSRK key in the init key & response key
+#define ESP_BLE_CSR_KEY_MASK    (1 << 2)            /* relate to BTM_BLE_CSR_KEY_MASK in btm_api.h */
+/// Used to exchange the link key(this key just used in the BLE & BR/EDR coexist mode) in the init key & response key
+#define ESP_BLE_LINK_KEY_MASK   (1 << 3)            /* relate to BTM_BLE_LINK_KEY_MASK in btm_api.h */
+typedef uint8_t esp_ble_key_mask_t;            /* the key mask type */
 
 /// Minimum of the application id
 #define ESP_APP_ID_MIN  0x0000

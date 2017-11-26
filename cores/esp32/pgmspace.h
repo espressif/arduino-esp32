@@ -29,8 +29,6 @@ typedef unsigned short prog_uint16_t;
 typedef long prog_int32_t;
 typedef unsigned long prog_uint32_t;
 
-#define SIZE_IRRELEVANT 0x7fffffff
-
 #define PROGMEM
 #define PGM_P         const char *
 #define PGM_VOID_P    const void *
@@ -56,21 +54,20 @@ typedef unsigned long prog_uint32_t;
 #define memccpy_P     memccpy
 #define memmem_P      memmem
 #define memcpy_P      memcpy
+#define strcpy_P      strcpy
 #define strncpy_P     strncpy
+#define strcat_p      strcat
 #define strncat_P     strncat
+#define strcmp_P      strcmp
 #define strncmp_P     strncmp
+#define strcasecmp_P  strcasecmp
 #define strncasecmp_P strncasecmp
+#define strlen_P      strlen
 #define strnlen_P     strnlen
 #define strstr_P      strstr
 #define printf_P      printf
 #define sprintf_P     sprintf
 #define snprintf_P    snprintf
 #define vsnprintf_P   vsnprintf
-
-#define strlen_P(strP)  strnlen_P((strP), SIZE_IRRELEVANT)
-#define strcasecmp_P(str1, str2P) strncasecmp_P((str1), (str2P), SIZE_IRRELEVANT)
-#define strcmp_P(str1, str2P) strncmp_P((str1), (str2P), SIZE_IRRELEVANT)
-#define strcat_P(dest, src) strncat_P((dest), (src), SIZE_IRRELEVANT)
-#define strcpy_P(dest, src) strncpy_P((dest), (src), SIZE_IRRELEVANT)
 
 #endif

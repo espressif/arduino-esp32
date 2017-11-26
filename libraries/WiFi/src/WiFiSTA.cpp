@@ -41,6 +41,7 @@ extern "C" {
 #include "lwip/err.h"
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
+#include <tcpip_adapter.h>
 }
 
 // -----------------------------------------------------------------------------------------------------------------------
@@ -83,6 +84,7 @@ static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
 // ---------------------------------------------------- STA function -----------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
 wl_status_t WiFiSTAClass::_status = WL_NO_SHIELD;
 /**
@@ -139,6 +141,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
     }
 
+    esp_wifi_start();
     if(connect) {
         esp_wifi_connect();
     }
@@ -196,23 +199,50 @@ void WiFiSTAClass::_setStatus(wl_status_t status)
  */
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
+    esp_err_t err = ESP_OK;
 
     if(!WiFi.enableSTA(true)) {
         return false;
     }
+    esp_wifi_start();
 
     tcpip_adapter_ip_info_t info;
-    info.ip.addr = static_cast<uint32_t>(local_ip);
-    info.gw.addr = static_cast<uint32_t>(gateway);
-    info.netmask.addr = static_cast<uint32_t>(subnet);
 
-    tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
-    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info) == ESP_OK) {
-        _useStaticIp = true;
+    if(local_ip != (uint32_t)0x00000000){
+        info.ip.addr = static_cast<uint32_t>(local_ip);
+        info.gw.addr = static_cast<uint32_t>(gateway);
+        info.netmask.addr = static_cast<uint32_t>(subnet);
     } else {
+        info.ip.addr = 0;
+        info.gw.addr = 0;
+        info.netmask.addr = 0;
+    }
+
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
+    if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+        log_e("DHCP could not be stopped! Error: %d", err);
         return false;
     }
+
+    err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info);
+    if(err != ERR_OK){
+        log_e("STA IP could not be configured! Error: %d", err);
+        return false;
+    }
+
+    if(info.ip.addr){
+        _useStaticIp = true;
+    } else {
+        err = tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
+        if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STARTED){
+            log_w("DHCP could not be started! Error: %d", err);
+            return false;
+        }
+        _useStaticIp = false;
+    }
+
     ip_addr_t d;
+    d.type = IPADDR_TYPE_V4;
 
     if(dns1 != (uint32_t)0x00000000) {
         // Set DNS1-Server
@@ -255,8 +285,10 @@ bool WiFiSTAClass::disconnect(bool wifioff)
     *conf.sta.ssid = 0;
     *conf.sta.password = 0;
 
+    WiFi.getMode();
+    esp_wifi_start();
     esp_wifi_set_config(WIFI_IF_STA, &conf);
-    ret = esp_wifi_set_config(WIFI_IF_STA, &conf) == ESP_OK;
+    ret = esp_wifi_disconnect() == ESP_OK;
 
     if(wifioff) {
         WiFi.enableSTA(false);
@@ -298,6 +330,17 @@ bool WiFiSTAClass::getAutoConnect()
     bool autoConnect;
     esp_wifi_get_auto_connect(&autoConnect);
     return autoConnect;
+}
+
+bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
+{
+    _autoReconnect = autoReconnect;
+    return true;
+}
+
+bool WiFiSTAClass::getAutoReconnect()
+{
+    return _autoReconnect;
 }
 
 /**
@@ -524,6 +567,7 @@ bool WiFiSTAClass::beginSmartConfig() {
         return false;
     }
 
+    esp_wifi_disconnect();
 
     esp_err_t err;
     err = esp_smartconfig_start(reinterpret_cast<sc_callback_t>(&WiFiSTAClass::_smartConfigCallback), 1);
@@ -556,17 +600,40 @@ bool WiFiSTAClass::smartConfigDone() {
     return _smartConfigDone;
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+const char * sc_status_strings[] = {
+    "WAIT",
+    "FIND_CHANNEL",
+    "GETTING_SSID_PSWD",
+    "LINK",
+    "LINK_OVER"
+};
+
+const char * sc_type_strings[] = {
+    "ESPTOUCH",
+    "AIRKISS",
+    "ESPTOUCH_AIRKISS"
+};
+#endif
+
 void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
     smartconfig_status_t status = (smartconfig_status_t) st;
-    if (status == SC_STATUS_LINK) {
+    log_d("Status: %s", sc_status_strings[st % 5]);
+    if (status == SC_STATUS_GETTING_SSID_PSWD) {
+        smartconfig_type_t * type = (smartconfig_type_t *)result;
+        log_d("Type: %s", sc_type_strings[*type % 3]);
+    } else if (status == SC_STATUS_LINK) {
         wifi_sta_config_t *sta_conf = reinterpret_cast<wifi_sta_config_t *>(result);
-
-        esp_wifi_set_config(WIFI_IF_AP, (wifi_config_t *)sta_conf);
-        esp_wifi_disconnect();
+        log_d("SSID: %s", (char *)(sta_conf->ssid));
+        sta_conf->bssid_set = 0;
+        esp_wifi_set_config(WIFI_IF_STA, (wifi_config_t *)sta_conf);
         esp_wifi_connect();
-
         _smartConfigDone = true;
     } else if (status == SC_STATUS_LINK_OVER) {
+        if(result){
+            ip4_addr_t * ip = (ip4_addr_t *)result;
+            log_d("Sender IP: " IPSTR, IP2STR(ip));
+        }
         WiFi.stopSmartConfig();
     }
 }

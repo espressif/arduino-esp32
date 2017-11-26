@@ -21,8 +21,8 @@
 #define GAP_INT_H
 
 #include "bt_target.h"
+#include "fixed_queue.h"
 #include "gap_api.h"
-#include "gki.h"
 #include "gatt_api.h"
 #define GAP_MAX_BLOCKS 2        /* Concurrent GAP commands pending at a time*/
 /* Define the Generic Access Profile control structure */
@@ -71,8 +71,8 @@ typedef struct {
     UINT16            rem_mtu_size;
 
     BOOLEAN           is_congested;
-    BUFFER_Q          tx_queue;             /* Queue of buffers waiting to be sent  */
-    BUFFER_Q          rx_queue;             /* Queue of buffers waiting to be read  */
+    fixed_queue_t     *tx_queue;             /* Queue of buffers waiting to be sent  */
+    fixed_queue_t     *rx_queue;             /* Queue of buffers waiting to be read  */
 
     UINT32            rx_queue_size;        /* Total data count in rx_queue         */
 
@@ -119,7 +119,7 @@ typedef struct {
     UINT16                  cl_op_uuid;
     BOOLEAN                 in_use;
     BOOLEAN                 connected;
-    BUFFER_Q                pending_req_q;
+    fixed_queue_t           *pending_req_q;
 
 } tGAP_CLCB;
 
@@ -127,15 +127,15 @@ typedef struct {
     tGAP_INFO        blk[GAP_MAX_BLOCKS];
     tBTM_CMPL_CB    *btm_cback[GAP_MAX_BLOCKS];
     UINT8            trace_level;
-    tGAP_FINDADDR_CB findaddr_cb;   /* Contains the control block for finding a device addr */
-    tBTM_INQ_INFO   *cur_inqptr;
+    //tGAP_FINDADDR_CB findaddr_cb;   /* Contains the control block for finding a device addr */
+    //tBTM_INQ_INFO   *cur_inqptr;
 
 #if GAP_CONN_INCLUDED == TRUE
     tGAP_CONN        conn;
 #endif
 
     /* LE GAP attribute database */
-#if BLE_INCLUDED == TRUE
+#if BLE_INCLUDED == TRUE && GATTS_INCLUDED == TRUE
     tGAP_ATTR               gatt_attr[GAP_MAX_CHAR_NUM];
     tGAP_CLCB               clcb[GAP_MAX_CL]; /* connection link*/
     tGATT_IF                gatt_if;
@@ -147,7 +147,7 @@ extern tGAP_CB  gap_cb;
 #if (GAP_CONN_INCLUDED == TRUE)
 extern void gap_conn_init(void);
 #endif
-#if (BLE_INCLUDED == TRUE)
+#if (BLE_INCLUDED == TRUE && GATTS_INCLUDED == TRUE)
 extern void gap_attr_db_init(void);
 #endif
 

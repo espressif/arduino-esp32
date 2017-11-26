@@ -124,6 +124,8 @@ typedef UINT8 tL2CAP_CHNL_DATA_RATE;
 */
 #define L2C_INVALID_PSM(psm)    (((psm) & 0x0101) != 0x0001)
 #define L2C_IS_VALID_PSM(psm)   (((psm) & 0x0101) == 0x0001)
+#define L2C_IS_VALID_LE_PSM(psm)   (((psm) > 0x0000) && ((psm) < 0x0100))
+
 
 /*****************************************************************************
 **  Type Definitions
@@ -163,6 +165,17 @@ typedef struct {
     tHCI_EXT_FLOW_SPEC    ext_flow_spec;
     UINT16      flags;                  /* bit 0: 0-no continuation, 1-continuation */
 } tL2CAP_CFG_INFO;
+
+/* Define a structure to hold the configuration parameter for LE L2CAP connection
+** oriented channels.
+*/
+typedef struct
+{
+    UINT16  mtu;
+    UINT16  mps;
+    UINT16  credits;
+} tL2CAP_LE_CFG_INFO;
+
 
 /* L2CAP channel configured field bitmap */
 #define L2CAP_CH_CFG_MASK_MTU           0x0001
@@ -306,10 +319,10 @@ typedef struct {
 typedef struct {
     UINT8       preferred_mode;
     UINT8       allowed_modes;
-    UINT8       user_rx_pool_id;
-    UINT8       user_tx_pool_id;
-    UINT8       fcr_rx_pool_id;
-    UINT8       fcr_tx_pool_id;
+    UINT16      user_rx_buf_size;
+    UINT16      user_tx_buf_size;
+    UINT16      fcr_rx_buf_size;
+    UINT16      fcr_tx_buf_size;
 
 } tL2CAP_ERTM_INFO;
 
@@ -331,6 +344,7 @@ extern "C"
 {
 #endif
 
+#if (CLASSIC_BT_INCLUDED == TRUE)
 /*******************************************************************************
 **
 ** Function         L2CA_Register
@@ -483,6 +497,74 @@ extern BOOLEAN L2CA_DisconnectReq (UINT16 cid);
 **
 *******************************************************************************/
 extern BOOLEAN L2CA_DisconnectRsp (UINT16 cid);
+#endif  ///CLASSIC_BT_INCLUDED == TRUE
+
+/*******************************************************************************
+**
+** Function         L2CA_RegisterLECoc
+**
+** Description      Other layers call this function to register for L2CAP
+**                  Connection Oriented Channel.
+**
+** Returns          PSM to use or zero if error. Typically, the PSM returned
+**                  is the same as was passed in, but for an outgoing-only
+**                  connection to a dynamic PSM, a "virtual" PSM is returned
+**                  and should be used in the calls to L2CA_ConnectLECocReq()
+**                  and BTM_SetSecurityLevel().
+**
+*******************************************************************************/
+extern UINT16 L2CA_RegisterLECoc (UINT16 psm, tL2CAP_APPL_INFO *p_cb_info);
+
+/*******************************************************************************
+**
+** Function         L2CA_DeregisterLECoc
+**
+** Description      Other layers call this function to deregister for L2CAP
+**                  Connection Oriented Channel.
+**
+** Returns          void
+**
+*******************************************************************************/
+extern void L2CA_DeregisterLECoc (UINT16 psm);
+
+/*******************************************************************************
+**
+** Function         L2CA_ConnectLECocReq
+**
+** Description      Higher layers call this function to create an L2CAP LE COC.
+**                  Note that the connection is not established at this time, but
+**                  connection establishment gets started. The callback function
+**                  will be invoked when connection establishes or fails.
+**
+** Returns          the CID of the connection, or 0 if it failed to start
+**
+*******************************************************************************/
+extern UINT16 L2CA_ConnectLECocReq (UINT16 psm, BD_ADDR p_bd_addr, tL2CAP_LE_CFG_INFO *p_cfg);
+
+/*******************************************************************************
+**
+** Function         L2CA_ConnectLECocRsp
+**
+** Description      Higher layers call this function to accept an incoming
+**                  L2CAP LE COC connection, for which they had gotten an connect
+**                  indication callback.
+**
+** Returns          TRUE for success, FALSE for failure
+**
+*******************************************************************************/
+extern BOOLEAN L2CA_ConnectLECocRsp (BD_ADDR p_bd_addr, UINT8 id, UINT16 lcid, UINT16 result,
+                                         UINT16 status, tL2CAP_LE_CFG_INFO *p_cfg);
+
+/*******************************************************************************
+**
+**  Function         L2CA_GetPeerLECocConfig
+**
+**  Description      Get peers configuration for LE Connection Oriented Channel.
+**
+**  Return value:    TRUE if peer is connected
+**
+*******************************************************************************/
+extern BOOLEAN L2CA_GetPeerLECocConfig (UINT16 lcid, tL2CAP_LE_CFG_INFO* peer_cfg);
 
 /*******************************************************************************
 **
@@ -496,6 +578,8 @@ extern BOOLEAN L2CA_DisconnectRsp (UINT16 cid);
 **
 *******************************************************************************/
 extern UINT8 L2CA_DataWrite (UINT16 cid, BT_HDR *p_data);
+
+#if (CLASSIC_BT_INCLUDED == TRUE)
 
 /*******************************************************************************
 **
@@ -519,6 +603,8 @@ extern BOOLEAN L2CA_Ping (BD_ADDR p_bd_addr, tL2CA_ECHO_RSP_CB *p_cb);
 **
 *******************************************************************************/
 extern BOOLEAN  L2CA_Echo (BD_ADDR p_bd_addr, BT_HDR *p_data, tL2CA_ECHO_DATA_CB *p_callback);
+#endif  ///CLASSIC_BT_INCLUDED == TRUE
+
 
 // Given a local channel identifier, |lcid|, this function returns the bound remote
 // channel identifier, |rcid|, and the ACL link handle, |handle|. If |lcid| is not
@@ -544,6 +630,7 @@ bool L2CA_GetIdentifiers(uint16_t lcid, uint16_t *rcid, uint16_t *handle);
 extern BOOLEAN L2CA_SetIdleTimeout (UINT16 cid, UINT16 timeout,
                                     BOOLEAN is_global);
 
+
 /*******************************************************************************
 **
 ** Function         L2CA_SetIdleTimeoutByBdAddr
@@ -566,6 +653,7 @@ extern BOOLEAN L2CA_SetIdleTimeout (UINT16 cid, UINT16 timeout,
 extern BOOLEAN L2CA_SetIdleTimeoutByBdAddr(BD_ADDR bd_addr, UINT16 timeout,
         tBT_TRANSPORT transport);
 
+
 /*******************************************************************************
 **
 ** Function         L2CA_SetTraceLevel
@@ -577,6 +665,7 @@ extern BOOLEAN L2CA_SetIdleTimeoutByBdAddr(BD_ADDR bd_addr, UINT16 timeout,
 **
 *******************************************************************************/
 extern UINT8 L2CA_SetTraceLevel (UINT8 trace_level);
+
 
 /*******************************************************************************
 **
@@ -595,7 +684,7 @@ extern UINT8 L2CA_SetTraceLevel (UINT8 trace_level);
 **
 *******************************************************************************/
 extern UINT8 L2CA_SetDesireRole (UINT8 new_role);
-
+#if (CLASSIC_BT_INCLUDED == TRUE)
 /*******************************************************************************
 **
 ** Function     L2CA_LocalLoopbackReq
@@ -722,6 +811,7 @@ typedef void (tL2CA_RESERVE_CMPL_CBACK) (void);
 **                  ACL link.
 *******************************************************************************/
 extern BOOLEAN L2CA_SetFlushTimeout (BD_ADDR bd_addr, UINT16 flush_tout);
+#endif  ///CLASSIC_BT_INCLUDED == TRUE
 
 /*******************************************************************************
 **
@@ -780,6 +870,8 @@ extern BOOLEAN L2CA_GetPeerFeatures (BD_ADDR bd_addr, UINT32 *p_ext_feat, UINT8 
 *******************************************************************************/
 extern BOOLEAN L2CA_GetBDAddrbyHandle (UINT16 handle, BD_ADDR bd_addr);
 
+#if (CLASSIC_BT_INCLUDED == TRUE)
+
 /*******************************************************************************
 **
 **  Function         L2CA_GetChnlFcrMode
@@ -792,6 +884,7 @@ extern BOOLEAN L2CA_GetBDAddrbyHandle (UINT16 handle, BD_ADDR bd_addr);
 **
 *******************************************************************************/
 extern UINT8 L2CA_GetChnlFcrMode (UINT16 lcid);
+#endif  ///CLASSIC_BT_INCLUDED == TRUE
 
 
 /*******************************************************************************
@@ -1044,6 +1137,7 @@ extern BOOLEAN L2CA_SetFixedChannelTout (BD_ADDR rem_bda, UINT16 fixed_cid, UINT
 
 #endif /* (L2CAP_NUM_FIXED_CHNLS > 0) */
 
+#if (CLASSIC_BT_INCLUDED == TRUE)
 /*******************************************************************************
 **
 ** Function     L2CA_GetCurrentConfig
@@ -1060,6 +1154,8 @@ extern BOOLEAN L2CA_SetFixedChannelTout (BD_ADDR rem_bda, UINT16 fixed_cid, UINT
 extern BOOLEAN L2CA_GetCurrentConfig (UINT16 lcid,
                                       tL2CAP_CFG_INFO **pp_our_cfg,  tL2CAP_CH_CFG_BITS *p_our_cfg_bits,
                                       tL2CAP_CFG_INFO **pp_peer_cfg, tL2CAP_CH_CFG_BITS *p_peer_cfg_bits);
+#endif  ///CLASSIC_BT_INCLUDED == TRUE
+
 
 #if (BLE_INCLUDED == TRUE)
 /*******************************************************************************

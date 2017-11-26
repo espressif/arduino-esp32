@@ -42,6 +42,7 @@ extern "C" {
     .set_card_clk = &sdmmc_host_set_card_clk, \
     .do_transaction = &sdmmc_host_do_transaction, \
     .deinit = &sdmmc_host_deinit, \
+    .command_timeout_ms = 0, \
 }
 
 /**
@@ -50,10 +51,12 @@ extern "C" {
 typedef struct {
     gpio_num_t gpio_cd;     ///< GPIO number of card detect signal
     gpio_num_t gpio_wp;     ///< GPIO number of write protect signal
+    uint8_t width;          ///< Bus width used by the slot (might be less than the max width supported)
 } sdmmc_slot_config_t;
 
 #define SDMMC_SLOT_NO_CD      ((gpio_num_t) -1)     ///< indicates that card detect line is not used
 #define SDMMC_SLOT_NO_WP      ((gpio_num_t) -1)     ///< indicates that write protect line is not used
+#define SDMMC_SLOT_WIDTH_DEFAULT 0 ///< use the default width for the slot (8 for slot 0, 4 for slot 1)
 
 /**
  * Macro defining default configuration of SDMMC host slot
@@ -61,6 +64,7 @@ typedef struct {
 #define SDMMC_SLOT_CONFIG_DEFAULT() {\
     .gpio_cd = SDMMC_SLOT_NO_CD, \
     .gpio_wp = SDMMC_SLOT_NO_WP, \
+    .width   = SDMMC_SLOT_WIDTH_DEFAULT, \
 }
 
 /**
@@ -139,6 +143,8 @@ esp_err_t sdmmc_host_set_card_clk(int slot, uint32_t freq_khz);
  *       can call sdmmc_host_do_transaction as long as other sdmmc_host_*
  *       functions are not called.
  *
+ * @attention Data buffer passed in cmdinfo->data must be in DMA capable memory
+ *
  * @param slot  slot number (SDMMC_HOST_SLOT_0 or SDMMC_HOST_SLOT_1)
  * @param cmdinfo   pointer to structure describing command and data to transfer
  * @return
@@ -146,6 +152,8 @@ esp_err_t sdmmc_host_set_card_clk(int slot, uint32_t freq_khz);
  *      - ESP_ERR_TIMEOUT if response or data transfer has timed out
  *      - ESP_ERR_INVALID_CRC if response or data transfer CRC check has failed
  *      - ESP_ERR_INVALID_RESPONSE if the card has sent an invalid response
+ *      - ESP_ERR_INVALID_SIZE if the size of data transfer is not valid in SD protocol
+ *      - ESP_ERR_INVALID_ARG if the data buffer is not in DMA capable memory
  */
 esp_err_t sdmmc_host_do_transaction(int slot, sdmmc_command_t* cmdinfo);
 

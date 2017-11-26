@@ -22,7 +22,6 @@
 #include "esp_attr.h"
 #include "esp_intr.h"
 
-#define HWTIMER_INUM 10
 #define HWTIMER_LOCK()      portENTER_CRITICAL(timer->lock)
 #define HWTIMER_UNLOCK()    portEXIT_CRITICAL(timer->lock)
 
@@ -66,7 +65,7 @@ static hw_timer_t hw_timer[4] = {
 };
 
 typedef void (*voidFuncPtr)(void);
-static voidFuncPtr __timerInterruptHandlers[4] = {0,};
+static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
 void IRAM_ATTR __timerISR(void * arg){
     uint32_t s0 = TIMERG0.int_st_timers.val;
@@ -79,19 +78,14 @@ void IRAM_ATTR __timerISR(void * arg){
     while(i--){
         hw_timer_reg_t * dev = hw_timer[i].dev;
         if((status & (1 << i)) && dev->config.autoreload){
-            dev->load_high = 0;
-            dev->load_low = 0;
-            dev->reload = 1;
             dev->config.alarm_en = 1;
         }
     }
     i = 4;
     //call callbacks
     while(i--){
-        if(status & (1 << i)){
-            if(__timerInterruptHandlers[i]){
-                __timerInterruptHandlers[i]();
-            }
+        if(__timerInterruptHandlers[i] && status & (1 << i)){
+            __timerInterruptHandlers[i]();
         }
     }
 }
@@ -190,20 +184,18 @@ bool timerAlarmEnabled(hw_timer_t *timer){
     return timer->dev->config.alarm_en;
 }
 
-
-
 hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     if(num > 3){
         return NULL;
     }
     hw_timer_t * timer = &hw_timer[num];
     if(timer->group) {
-        SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP1_CLK_EN);
-        CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP1_RST);
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP1_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP1_RST);
         TIMERG1.int_ena.val &= ~BIT(timer->timer);
     } else {
-        SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP_CLK_EN);
-        CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP_RST);
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP_RST);
         TIMERG0.int_ena.val &= ~BIT(timer->timer);
     }
     timer->dev->config.enable = 0;
@@ -223,7 +215,10 @@ void timerEnd(hw_timer_t *timer){
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     static bool initialized = false;
-    ESP_INTR_DISABLE(HWTIMER_INUM);
+    static intr_handle_t intr_handle = NULL;
+    if(intr_handle){
+        esp_intr_disable(intr_handle);
+    }
     if(fn == NULL){
         timer->dev->config.level_int_en = 0;
         timer->dev->config.edge_int_en = 0;
@@ -235,10 +230,6 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         }
         __timerInterruptHandlers[timer->num] = NULL;
     } else {
-        if(!initialized){
-            xt_set_interrupt_handler(HWTIMER_INUM, &__timerISR, NULL);
-            initialized = true;
-        }
         __timerInterruptHandlers[timer->num] = fn;
         timer->dev->config.level_int_en = edge?0:1;//When set, an alarm will generate a level type interrupt.
         timer->dev->config.edge_int_en = edge?1:0;//When set, an alarm will generate an edge type interrupt.
@@ -256,14 +247,21 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
                 intr_source = ETS_TG0_T0_EDGE_INTR_SOURCE + timer->timer;
             }
         }
-        intr_matrix_set(xPortGetCoreID(), intr_source, HWTIMER_INUM);
+        if(!initialized){
+            initialized = true;
+            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_EDGE), __timerISR, NULL, &intr_handle);
+        } else {
+            intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
+        }
         if(timer->group){
             TIMERG1.int_ena.val |= BIT(timer->timer);
         } else {
             TIMERG0.int_ena.val |= BIT(timer->timer);
         }
     }
-    ESP_INTR_ENABLE(HWTIMER_INUM);
+    if(intr_handle){
+        esp_intr_enable(intr_handle);
+    }
 }
 
 void timerDetachInterrupt(hw_timer_t *timer){

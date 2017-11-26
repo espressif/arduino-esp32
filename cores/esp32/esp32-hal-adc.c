@@ -28,12 +28,16 @@ static uint8_t __analogCycles = 8;
 static uint8_t __analogSamples = 0;//1 sample
 static uint8_t __analogClockDiv = 1;
 
+// Width of returned answer ()
+static uint8_t __analogReturnedWidth = 12;
+
 void __analogSetWidth(uint8_t bits){
     if(bits < 9){
         bits = 9;
     } else if(bits > 12){
         bits = 12;
     }
+    __analogReturnedWidth = bits;
     __analogWidth = bits - 9;
     SET_PERI_REG_BITS(SENS_SAR_START_FORCE_REG, SENS_SAR1_BIT_WIDTH, __analogWidth, SENS_SAR1_BIT_WIDTH_S);
     SET_PERI_REG_BITS(SENS_SAR_READ_CTRL_REG, SENS_SAR1_SAMPLE_BIT, __analogWidth, SENS_SAR1_SAMPLE_BIT_S);
@@ -124,14 +128,14 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
     }
 }
 
-uint16_t IRAM_ATTR __analogRead(uint8_t pin)
-{
+bool IRAM_ATTR __adcAttachPin(uint8_t pin){
+
     int8_t channel = digitalPinToAnalogChannel(pin);
     if(channel < 0){
-        return 0;//not adc pin
+        return false;//not adc pin
     }
-    int8_t pad = digitalPinToTouchChannel(pin);
 
+    int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
         uint32_t touch = READ_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG);
         if(touch & (1 << pad)){
@@ -149,22 +153,84 @@ uint16_t IRAM_ATTR __analogRead(uint8_t pin)
     pinMode(pin, ANALOG);
 
     __analogInit();
+    return true;
+}
 
-    if(channel > 7){
-        channel -= 10;
+bool IRAM_ATTR __adcStart(uint8_t pin){
 
-        SET_PERI_REG_BITS(SENS_SAR_MEAS_START2_REG, SENS_SAR2_EN_PAD, (1 << channel), SENS_SAR2_EN_PAD_S);
-        CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
-        SET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
-        while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DONE_SAR) == 0) {}; //read done
-        return GET_PERI_REG_BITS2(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DATA_SAR, SENS_MEAS2_DATA_SAR_S);
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    if(channel < 0){
+        return false;//not adc pin
     }
 
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_START1_REG, SENS_SAR1_EN_PAD, (1 << channel), SENS_SAR1_EN_PAD_S);
-    CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
-    SET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
-    while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0) {}; //read done
-    return GET_PERI_REG_BITS2(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DATA_SAR, SENS_MEAS1_DATA_SAR_S);
+    if(channel > 9){
+        channel -= 10;
+        CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
+        SET_PERI_REG_BITS(SENS_SAR_MEAS_START2_REG, SENS_SAR2_EN_PAD, (1 << channel), SENS_SAR2_EN_PAD_S);
+        SET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
+    } else {
+        CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
+        SET_PERI_REG_BITS(SENS_SAR_MEAS_START1_REG, SENS_SAR1_EN_PAD, (1 << channel), SENS_SAR1_EN_PAD_S);
+        SET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
+    }
+    return true;
+}
+
+bool IRAM_ATTR __adcBusy(uint8_t pin){
+
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    if(channel < 0){
+        return false;//not adc pin
+    }
+
+    if(channel > 7){
+        return (GET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DONE_SAR) == 0);
+    }
+    return (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0);
+}
+
+uint16_t IRAM_ATTR __adcEnd(uint8_t pin)
+{
+
+    uint16_t value = 0;
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    if(channel < 0){
+        return 0;//not adc pin
+    }
+    if(channel > 7){
+        while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DONE_SAR) == 0); //wait for conversion
+        value = GET_PERI_REG_BITS2(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DATA_SAR, SENS_MEAS2_DATA_SAR_S);
+    } else {
+        while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0); //wait for conversion
+        value = GET_PERI_REG_BITS2(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DATA_SAR, SENS_MEAS1_DATA_SAR_S);
+    }
+
+    // Shift result if necessary
+    uint8_t from = __analogWidth + 9;
+    if (from == __analogReturnedWidth) {
+        return value;
+    }
+    if (from > __analogReturnedWidth) {
+        return value >> (from - __analogReturnedWidth);
+    }
+    return value << (__analogReturnedWidth - from);
+}
+
+uint16_t IRAM_ATTR __analogRead(uint8_t pin)
+{
+    if(!__adcAttachPin(pin) || !__adcStart(pin)){
+        return 0;
+    }
+    return __adcEnd(pin);
+}
+
+void __analogReadResolution(uint8_t bits)
+{
+    if(!bits || bits > 16){
+        return;
+    }
+    __analogSetWidth(bits);         // hadware from 9 to 12
+    __analogReturnedWidth = bits;   // software from 1 to 16
 }
 
 int __hallRead()    //hall sensor without LNA
@@ -192,6 +258,7 @@ int __hallRead()    //hall sensor without LNA
 }
 
 extern uint16_t analogRead(uint8_t pin) __attribute__ ((weak, alias("__analogRead")));
+extern void analogReadResolution(uint8_t bits) __attribute__ ((weak, alias("__analogReadResolution")));
 extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSetWidth")));
 extern void analogSetCycles(uint8_t cycles) __attribute__ ((weak, alias("__analogSetCycles")));
 extern void analogSetSamples(uint8_t samples) __attribute__ ((weak, alias("__analogSetSamples")));
@@ -199,3 +266,8 @@ extern void analogSetClockDiv(uint8_t clockDiv) __attribute__ ((weak, alias("__a
 extern void analogSetAttenuation(adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetAttenuation")));
 extern void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetPinAttenuation")));
 extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
+
+extern bool adcAttachPin(uint8_t pin) __attribute__ ((weak, alias("__adcAttachPin")));
+extern bool adcStart(uint8_t pin) __attribute__ ((weak, alias("__adcStart")));
+extern bool adcBusy(uint8_t pin) __attribute__ ((weak, alias("__adcBusy")));
+extern uint16_t adcEnd(uint8_t pin) __attribute__ ((weak, alias("__adcEnd")));

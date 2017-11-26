@@ -177,6 +177,29 @@ esp_err_t spi_flash_mmap(size_t src_addr, size_t size, spi_flash_mmap_memory_t m
                          const void** out_ptr, spi_flash_mmap_handle_t* out_handle);
 
 /**
+ * @brief Map sequences of pages of flash memory into data or instruction address space
+ *
+ * This function allocates sufficient number of 64k MMU pages and configures
+ * them to map the indicated pages of flash memory contiguously into data address 
+ * space or into instruction address space. In this respect, it works in a similar
+ * way as spi_flash_mmap but it allows mapping a (maybe non-contiguous) set of pages
+ * into a contiguous region of memory.
+ *
+ * @param pages An array of numbers indicating the 64K pages in flash to be mapped
+ *              contiguously into memory. These indicate the indexes of the 64K pages,
+ *              not the byte-size addresses as used in other functions.
+ * @param pagecount  Size of the pages array
+ * @param memory  Memory space where the region should be mapped
+ * @param out_ptr  Output, pointer to the mapped memory region
+ * @param out_handle  Output, handle which should be used for spi_flash_munmap call
+ *
+ * @return  ESP_OK on success, ESP_ERR_NO_MEM if pages can not be allocated
+ */
+esp_err_t spi_flash_mmap_pages(int *pages, size_t pagecount, spi_flash_mmap_memory_t memory,
+                         const void** out_ptr, spi_flash_mmap_handle_t* out_handle);
+
+
+/**
  * @brief Release region previously obtained using spi_flash_mmap
  *
  * @note Calling this function will not necessarily unmap memory region.
@@ -196,6 +219,48 @@ void spi_flash_munmap(spi_flash_mmap_handle_t handle);
  * MMU table and corresponding reference counts.
  */
 void spi_flash_mmap_dump();
+
+
+#define SPI_FLASH_CACHE2PHYS_FAIL UINT32_MAX /*<! Result from spi_flash_cache2phys() if flash cache address is invalid */
+
+/**
+ * @brief Given a memory address where flash is mapped, return the corresponding physical flash offset.
+ *
+ * Cache address does not have have been assigned via spi_flash_mmap(), any address in flash map space can be looked up.
+ *
+ * @param cached Pointer to flashed cached memory.
+ *
+ * @return
+ * - SPI_FLASH_CACHE2PHYS_FAIL If cache address is outside flash cache region, or the address is not mapped.
+ * - Otherwise, returns physical offset in flash
+ */
+size_t spi_flash_cache2phys(const void *cached);
+
+/** @brief Given a physical offset in flash, return the address where it is mapped in the memory space.
+ *
+ * Physical address does not have to have been assigned via spi_flash_mmap(), any address in flash can be looked up.
+ *
+ * @note Only the first matching cache address is returned. If MMU flash cache table is configured so multiple entries
+ * point to the same physical address, there may be more than one cache address corresponding to that physical
+ * address. It is also possible for a single physical address to be mapped to both the IROM and DROM regions.
+ *
+ * @note This function doesn't impose any alignment constraints, but if memory argument is SPI_FLASH_MMAP_INST and
+ * phys_offs is not 4-byte aligned, then reading from the returned pointer will result in a crash.
+ *
+ * @param phys_offs Physical offset in flash memory to look up.
+ * @param memory Memory type to look up a flash cache address mapping for (IROM or DROM)
+ *
+ * @return
+ * - NULL if the physical address is invalid or not mapped to flash cache of the specified memory type.
+ * - Cached memory address (in IROM or DROM space) corresponding to phys_offs.
+ */
+const void *spi_flash_phys2cache(size_t phys_offs, spi_flash_mmap_memory_t memory);
+
+/** @brief Check at runtime if flash cache is enabled on both CPUs
+ *
+ * @return true if both CPUs have flash cache enabled, false otherwise.
+ */
+bool spi_flash_cache_enabled();
 
 /**
  * @brief SPI flash critical section enter function.
@@ -224,11 +289,15 @@ typedef void (*spi_flash_op_unlock_func_t)(void);
  *      is invoked before the call to one of ROM function above.
  *   - 'end' function should restore state of flash cache and non-IRAM interrupts and
  *      is invoked after the call to one of ROM function above.
+ *    These two functions are not recursive.
  * 2) Functions which synchronizes access to internal data used by flash API.
  *    This functions are mostly intended to synchronize access to flash API internal data
  *    in multithreaded environment and use OS primitives:
  *   - 'op_lock' locks access to flash API internal data.
  *   - 'op_unlock' unlocks access to flash API internal data.
+ *   These two functions are recursive and can be used around the outside of multiple calls to
+ *   'start' & 'end', in order to create atomic multi-part flash operations.
+ *
  * Different versions of the guarding functions should be used depending on the context of
  * execution (with or without functional OS). In normal conditions when flash API is called
  * from task the functions use OS primitives. When there is no OS at all or when
@@ -239,10 +308,10 @@ typedef void (*spi_flash_op_unlock_func_t)(void);
  *       For example structure can be placed in DRAM and functions in IRAM sections.
  */
 typedef struct {
-    spi_flash_guard_start_func_t    start;      /**< critical section start func */
-    spi_flash_guard_end_func_t      end;        /**< critical section end func */
-    spi_flash_op_lock_func_t        op_lock;    /**< flash access API lock func */
-    spi_flash_op_unlock_func_t      op_unlock;  /**< flash access API unlock func */
+    spi_flash_guard_start_func_t    start;      /**< critical section start function. */
+    spi_flash_guard_end_func_t      end;        /**< critical section end function. */
+    spi_flash_op_lock_func_t        op_lock;    /**< flash access API lock function.*/
+    spi_flash_op_unlock_func_t      op_unlock;  /**< flash access API unlock function.*/
 } spi_flash_guard_funcs_t;
 
 /**
@@ -254,6 +323,15 @@ typedef struct {
  * @param funcs pointer to structure holding flash access guard functions.
  */
 void spi_flash_guard_set(const spi_flash_guard_funcs_t* funcs);
+
+
+/**
+ * @brief Get the guard functions used for flash access
+ *
+ * @return The guard functions that were set via spi_flash_guard_set(). These functions
+ * can be called if implementing custom low-level SPI flash operations.
+ */
+const spi_flash_guard_funcs_t *spi_flash_guard_get();
 
 /**
  * @brief Default OS-aware flash access guard functions
