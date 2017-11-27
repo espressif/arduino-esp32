@@ -57,7 +57,7 @@ typedef struct {
     int status;
 } ardu_sdcard_t;
 
-static ardu_sdcard_t* s_cards[_VOLUMES] = { NULL };
+static ardu_sdcard_t* s_cards[FF_VOLUMES] = { NULL };
 
 /*
  * SD SPI
@@ -645,7 +645,7 @@ DRESULT ff_sd_ioctl(uint8_t pdrv, uint8_t cmd, void* buff)
 uint8_t sdcard_uninit(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
-    if (pdrv >= _VOLUMES || card == NULL) {
+    if (pdrv >= FF_VOLUMES || card == NULL) {
         return 1;
     }
     ff_diskio_register(pdrv, NULL);
@@ -700,7 +700,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 uint8_t sdcard_unmount(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
-    if (pdrv >= _VOLUMES || card == NULL) {
+    if (pdrv >= FF_VOLUMES || card == NULL) {
         return 1;
     }
     card->status |= STA_NOINIT;
@@ -714,7 +714,7 @@ uint8_t sdcard_unmount(uint8_t pdrv)
 bool sdcard_mount(uint8_t pdrv, const char* path)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
-    if(pdrv >= _VOLUMES || card == NULL){
+    if(pdrv >= FF_VOLUMES || card == NULL){
         return false;
     }
 
@@ -748,7 +748,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path)
 uint32_t sdcard_num_sectors(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
-    if(pdrv >= _VOLUMES || card == NULL){
+    if(pdrv >= FF_VOLUMES || card == NULL){
         return 0;
     }
     return card->sectors;
@@ -756,7 +756,7 @@ uint32_t sdcard_num_sectors(uint8_t pdrv)
 
 uint32_t sdcard_sector_size(uint8_t pdrv)
 {
-    if(pdrv >= _VOLUMES || s_cards[pdrv] == NULL){
+    if(pdrv >= FF_VOLUMES || s_cards[pdrv] == NULL){
         return 0;
     }
     return 512;
@@ -765,7 +765,7 @@ uint32_t sdcard_sector_size(uint8_t pdrv)
 sdcard_type_t sdcard_type(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
-    if(pdrv >= _VOLUMES || card == NULL){
+    if(pdrv >= FF_VOLUMES || card == NULL){
         return CARD_NONE;
     }
     return card->type;

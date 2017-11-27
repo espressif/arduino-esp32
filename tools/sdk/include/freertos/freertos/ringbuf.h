@@ -1,6 +1,14 @@
 #ifndef FREERTOS_RINGBUF_H
 #define FREERTOS_RINGBUF_H
 
+#ifndef INC_FREERTOS_H
+	#error "include FreeRTOS.h" must appear in source files before "include ringbuf.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 Header definitions for a FreeRTOS ringbuffer object
 
@@ -35,6 +43,8 @@ acceptable to push items of (buffer_size)-16 bytes into the buffer. When it's no
 maximum size is (buffer_size/2)-8 bytes. The bytebuf can fill the entire buffer with data, it has
 no overhead.
 */
+
+#include <freertos/queue.h>
 
 //An opaque handle for a ringbuff object.
 typedef void * RingbufHandle_t;
@@ -110,6 +120,8 @@ BaseType_t xRingbufferSendFromISR(RingbufHandle_t ringbuf, void *data, size_t da
 /**
  * @brief  Retrieve an item from the ring buffer
  *
+ * @note A call to vRingbufferReturnItem() is required after this to free up the data received.
+ *
  * @param  ringbuf - Ring buffer to retrieve the item from
  * @param  item_size - Pointer to a variable to which the size of the retrieved item will be written.
  * @param  xTicksToWait - Ticks to wait for items in the ringbuffer.
@@ -123,6 +135,8 @@ void *xRingbufferReceive(RingbufHandle_t ringbuf, size_t *item_size, TickType_t 
 /**
  * @brief  Retrieve an item from the ring buffer from an ISR
  *
+ * @note A call to vRingbufferReturnItemFromISR() is required after this to free up the data received
+ *
  * @param  ringbuf - Ring buffer to retrieve the item from
  * @param  item_size - Pointer to a variable to which the size of the retrieved item will be written.
  *
@@ -135,6 +149,8 @@ void *xRingbufferReceiveFromISR(RingbufHandle_t ringbuf, size_t *item_size);
 /**
  * @brief  Retrieve bytes from a ByteBuf type of ring buffer, specifying the maximum amount of bytes
  * to return
+
+ * @note A call to vRingbufferReturnItem() is required after this to free up the data received.
  *
  * @param  ringbuf - Ring buffer to retrieve the item from
  * @param  item_size - Pointer to a variable to which the size of the retrieved item will be written.
@@ -149,6 +165,8 @@ void *xRingbufferReceiveUpTo(RingbufHandle_t ringbuf, size_t *item_size, TickTyp
 /**
  * @brief  Retrieve bytes from a ByteBuf type of ring buffer, specifying the maximum amount of bytes
  * to return. Call this from an ISR.
+ *
+ * @note A call to vRingbufferReturnItemFromISR() is required after this to free up the data received
  *
  * @param  ringbuf - Ring buffer to retrieve the item from
  * @param  item_size - Pointer to a variable to which the size of the retrieved item will be written.
@@ -242,5 +260,9 @@ BaseType_t xRingbufferRemoveFromQueueSetWrite(RingbufHandle_t ringbuf, QueueSetH
  */
 void xRingbufferPrintInfo(RingbufHandle_t ringbuf);
 
-
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* FREERTOS_RINGBUF_H */
+
