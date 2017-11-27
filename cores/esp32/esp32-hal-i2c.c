@@ -348,6 +348,7 @@ void i2cInitFix(i2c_t * i2c){
     {
         log_e("Busy at initialization!");
     }
+    i2c->dev->ctr.trans_start = 1;
     uint16_t count = 50000;
     while ((!i2c->dev->command[2].done) && (--count > 0));
     I2C_MUTEX_UNLOCK();
@@ -363,13 +364,6 @@ void i2cReset(i2c_t* i2c){
     delay( 20 ); // Seems long but delay was chosen to ensure system teardown and setup without core generation
     periph_module_enable( moduleId );
     I2C_MUTEX_UNLOCK();
-}
-
-//** 11/2017 Stickbreaker attempt at ISR for I2C hardware
-// liberally stolen from ESP_IDF /drivers/i2c.c
-esp_err_t i2c_isr_free(intr_handle_t handle){
-
-return esp_intr_free(handle);
 }
 
 /* Stickbreaker ISR mode debug support
@@ -1163,7 +1157,7 @@ return reason;
 
 i2c_err_t i2cReleaseISR(i2c_t * i2c){
 if(i2c->intr_handle){
-  esp_err_t error =i2c_isr_free(i2c->intr_handle);
+  esp_err_t error =esp_intr_free(i2c->intr_handle);
 //  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
