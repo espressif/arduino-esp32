@@ -219,7 +219,7 @@ int xt_clock_freq(void) __attribute__((deprecated));
 #define configBENCHMARK					0		/* Provided by Xtensa port patch */
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			0
-#define configQUEUE_REGISTRY_SIZE		0
+#define configQUEUE_REGISTRY_SIZE		CONFIG_FREERTOS_QUEUE_REGISTRY_SIZE
 
 #define configUSE_MUTEXES				1
 #define configUSE_RECURSIVE_MUTEXES		1
@@ -253,6 +253,7 @@ int xt_clock_freq(void) __attribute__((deprecated));
 #define INCLUDE_uxTaskGetStackHighWaterMark	1
 #define INCLUDE_pcTaskGetTaskName			1
 #define INCLUDE_xTaskGetIdleTaskHandle      1
+#define INCLUDE_pxTaskGetStackStart			1
 
 #define INCLUDE_xSemaphoreGetMutexHolder    1
 
