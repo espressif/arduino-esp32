@@ -14,7 +14,7 @@
 ## Development Status
 - Most of the framework is implemented.
 - Differences: 
-    - `Wire()` for deeper explaination [README.md](libraries/Wire/docs/README.md)
+    - `Wire()` for deeper explanation [README.md](libraries/Wire/docs/README.md)
         - 64k-1 data transfers
         - Special handling for sendStop=false
 - Missing:

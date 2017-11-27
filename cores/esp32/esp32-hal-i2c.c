@@ -337,6 +337,7 @@ void i2cInitFix(i2c_t * i2c){
         return;
     }
     I2C_MUTEX_LOCK();
+    i2c->dev->ctr.trans_start = 0;
     i2cResetFiFo(i2c);
     i2c->dev->int_clr.val = 0xFFFFFFFF;
     i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
@@ -347,7 +348,6 @@ void i2cInitFix(i2c_t * i2c){
     {
         log_e("Busy at initialization!");
     }
-    i2c->dev->ctr.trans_start = 1;
     uint16_t count = 50000;
     while ((!i2c->dev->command[2].done) && (--count > 0));
     I2C_MUTEX_UNLOCK();
@@ -365,12 +365,20 @@ void i2cReset(i2c_t* i2c){
     I2C_MUTEX_UNLOCK();
 }
 
+//** 11/2017 Stickbreaker attempt at ISR for I2C hardware
+// liberally stolen from ESP_IDF /drivers/i2c.c
+esp_err_t i2c_isr_free(intr_handle_t handle){
+
+return esp_intr_free(handle);
+}
+
 /* Stickbreaker ISR mode debug support
 */
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
 #define INTBUFFMAX 64
 static uint32_t intBuff[INTBUFFMAX][3];
 static uint32_t intPos=0;
-
+#endif
 /* Stickbreaker ISR mode support
 */
 static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS){
@@ -546,7 +554,40 @@ if(INTS){ // don't want to prematurely enable fifo ints until ISR is ready to ha
 
 /* Stickbreaker ISR mode debug support
 */
-static void IRAM_ATTR dumpI2c(i2c_t * i2c){
+void i2cDumpDqData(i2c_t * i2c){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+uint16_t a=0;
+char buff[140];
+I2C_DATA_QUEUE_t *tdq;
+while(a<i2c->queueCount){
+  tdq=&i2c->dq[a];
+  log_e("[%d] %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,tdq->ctrl.addr,(tdq->ctrl.mode)?'R':'W',(tdq->ctrl.stop)?"STOP":"",tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
+  uint16_t offset = 0;
+  while(offset<tdq->length){
+    memset(buff,' ',140);
+    buff[139]='\0';
+    uint16_t i = 0,j;
+    j=sprintf(buff,"0x%04x: ",offset);
+    while((i<32)&&(offset < tdq->length)){
+      char ch = tdq->data[offset];
+      sprintf((char*)&buff[(i*3)+41],"%02x ",ch);
+      if((ch<32)||(ch>126)) ch='.';
+      j+=sprintf((char*)&buff[j],"%c",ch);
+      buff[j]=' ';
+      i++;
+      offset++;
+      }
+    log_e("%s",buff);
+    }
+  a++;
+  }
+#else
+log_n("Enable Core Debug Level \"Error\"");
+#endif
+}
+ 
+
+void i2cDumpI2c(i2c_t * i2c){
 log_e("i2c=%p",i2c);
 log_e("dev=%p",i2c->dev);
 log_e("lock=%p",i2c->lock);
@@ -560,13 +601,7 @@ log_e("dq=%p",i2c->dq);
 log_e("queueCount=%d",i2c->queueCount);
 log_e("queuePos=%d",i2c->queuePos);
 log_e("byteCnt=%d",i2c->byteCnt);
-uint16_t a=0;
-I2C_DATA_QUEUE_t *tdq;
-while(a<i2c->queueCount){
-  tdq=&i2c->dq[a];
-  log_e("[%d] %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,tdq->ctrl.addr,(tdq->ctrl.mode)?'R':'W',(tdq->ctrl.stop)?"STOP":"",tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
-  a++;
-  }
+if(i2c->dq) i2cDumpDqData(i2c);
 }
 
 /* Stickbreaker ISR mode debug support
@@ -657,9 +692,12 @@ while((a < i2c->queueCount)&&!(full || readEncountered)){
   
   if(full) readEncountered =false; //tx possibly needs more
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+
 // update debug buffer tx counts  
   cnt += intBuff[intPos][1]>>16;
   intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF)|(cnt<<16);
+#endif
 
   if(!(full||readEncountered)) a++; // check next buffer for tx
   }
@@ -698,9 +736,11 @@ if(tdq->ctrl.mode==1) { // read
       moveCnt = (tdq->length - tdq->position);
       }  
     }
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
 // update Debug rxCount
   cnt += (intBuff[intPos][1])&&0xffFF;
   intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF0000)|cnt;
+#endif
   }
 else {
   log_e("RxEmpty(%d) call on TxBuffer? dq=%d",moveCnt,i2c->queuePos);
@@ -766,11 +806,12 @@ if(p_i2c->stage==I2C_DONE){ //get Out
   log_e("eject int=%p, ena=%p",activeInt,p_i2c->dev->int_ena.val);
   p_i2c->dev->int_ena.val = 0;
   p_i2c->dev->int_clr.val = activeInt; //0x1FFF;
-  dumpI2c(p_i2c);
-  i2cDumpInts();
+//  i2cDumpI2c(p_i2c);
+//  i2cDumpInts();
   return;
   }
 while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important, don't change
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
   if(activeInt==(intBuff[intPos][0]&0x1fff)){
     intBuff[intPos][0] = (((intBuff[intPos][0]>>16)+1)<<16)|activeInt;
     }
@@ -782,7 +823,7 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     }
 
   intBuff[intPos][2] = xTaskGetTickCountFromISR(); // when IRQ fired
-
+#endif
   uint32_t oldInt =activeInt;
 
   if (activeInt & I2C_TRANS_START_INT_ST_M) {
@@ -891,12 +932,16 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
 }
  
 void i2cDumpInts(){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
 uint32_t b;
 log_e("row  count   INTR    TX     RX");
 for(uint32_t a=1;a<=INTBUFFMAX;a++){
   b=(a+intPos)%INTBUFFMAX;
   if(intBuff[b][0]!=0) log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0]>>16)&0xFFFF),(intBuff[b][0]&0xFFFF),((intBuff[b][1]>>16)&0xFFFF),(intBuff[b][1]&0xFFFF),intBuff[b][2]);
   }
+#else
+log_n("enable Core Debug Level \"Error\"");
+#endif
 }
  
 i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis){
@@ -920,11 +965,10 @@ I2C_MUTEX_LOCK();
 */
 i2c->stage = I2C_DONE; // until ready
 
-for(intPos=0;intPos<INTBUFFMAX;intPos++){
-  intBuff[intPos][0]=0;
-  intBuff[intPos][1]=0;
-  }
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+memset(intBuff,0,sizeof(intBuff));
 intPos=0;
+#endif
   
 if(!i2c->i2c_event){
   i2c->i2c_event = xEventGroupCreate();
@@ -1046,7 +1090,7 @@ if(i2c->exitCode!=eBits){ // try to recover from O/S failure
   }
 
 if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR_DATA_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK, DATA_NAK
-  dumpI2c(i2c);
+  i2cDumpI2c(i2c);
   i2cDumpInts();
   }
 
@@ -1081,7 +1125,7 @@ else { // GROSS timeout, shutdown ISR , report Timeout
   reason = I2C_ERROR_TIMEOUT;
   eBits = eBits | EVENT_ERROR_TIMEOUT|EVENT_ERROR|EVENT_DONE;
   log_e(" Gross Timeout Dead st=0x%x, ed=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
-  dumpI2c(i2c);
+  i2cDumpI2c(i2c);
   i2cDumpInts();
   }
 
@@ -1119,8 +1163,8 @@ return reason;
 
 i2c_err_t i2cReleaseISR(i2c_t * i2c){
 if(i2c->intr_handle){
-  esp_err_t error =esp_intr_free(i2c->intr_handle);
-  //  log_e("released ISR=%d",error);
+  esp_err_t error =i2c_isr_free(i2c->intr_handle);
+//  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
 if(i2c->i2c_event){

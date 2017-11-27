@@ -50,7 +50,7 @@ protected:
     uint8_t txBuffer[I2C_BUFFER_LENGTH];
     uint16_t txIndex;
     uint16_t txLength;
-    uint8_t txAddress;
+    uint16_t txAddress;
     uint16_t txQueued; //@stickbreaker
 
     uint8_t transmitting;
@@ -63,33 +63,42 @@ protected:
 		i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
     i2c_err_t processQueue(uint32_t *readCount);
     uint16_t _timeOutMillis;
+    bool _dump;
 
 public:
     TwoWire(uint8_t bus_num);
     void begin(int sda=-1, int scl=-1, uint32_t frequency=100000);
     void setClock(uint32_t);
-    void beginTransmission(uint8_t);
-    void beginTransmission(int);
-    uint8_t endTransmission(void);
-    uint8_t endTransmission(uint8_t);
-		size_t 	requestFrom(uint8_t address, size_t size, bool sendStop);
+    void beginTransmission(uint16_t);
+    uint8_t endTransmission(bool);
+		uint8_t	requestFrom(uint16_t address, uint8_t size, bool sendStop);
 //@stickBreaker for big blocks and ISR model
-    uint8_t writeTransaction(uint8_t address, uint8_t* buff, size_t size, bool sendStop);
-		size_t 	requestFrom(uint8_t address, uint8_t* buf, size_t size, bool sendStop);
-		size_t	transact(size_t readLen);
-    size_t  transact(uint8_t* readBuff, size_t readLen);
+    i2c_err_t writeTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
+    i2c_err_t readTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
+		uint16_t 	requestFrom(uint16_t address, uint8_t* buf, uint16_t size, bool sendStop);
+		uint8_t	transact(uint8_t readLen);
+    uint16_t transact(uint8_t* readBuff, uint16_t readLen);
 		uint8_t	lastError();
     char * getErrorText(uint8_t err);
+    void dumpOn(){_dump=true;}
+    void dumpOff(){_dump=false;}
     void dumpInts();
+    void dumpI2C(){i2cDumpI2c(i2c);}
     size_t getClock();
     void setTimeOut(uint16_t timeOutMillis);
     uint16_t getTimeOut();
 //		
+    void beginTransmission(uint8_t);
+    void beginTransmission(int);
+    uint8_t endTransmission(void);
+    uint8_t endTransmission(uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(uint8_t, uint8_t, uint8_t);
+    uint8_t requestFrom(uint16_t, uint8_t, uint8_t);
     uint8_t requestFrom(int, int);
     uint8_t requestFrom(int, int, int);
-		
+		uint8_t requestFrom(uint16_t, uint8_t);
+    
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
 

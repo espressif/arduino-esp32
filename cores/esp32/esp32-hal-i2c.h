@@ -169,6 +169,7 @@ i2c_err_t i2cFreeQueue(i2c_t *i2c);
 i2c_err_t i2cReleaseISR(i2c_t *i2c);
 //stickbreaker debug support
 void i2cDumpInts();
+void i2cDumpI2c(i2c_t *i2c);
 
 #ifdef __cplusplus
 }
