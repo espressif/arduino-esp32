@@ -36,16 +36,19 @@ assert isdir(FRAMEWORK_DIR)
 
 env.Prepend(
     CPPDEFINES=[
-        ("ARDUINO", 10610),
-        "ARDUINO_ARCH_ESP32"
+        ("ARDUINO", 10805),
+        "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
     CFLAGS=["-Wno-old-style-declaration"],
 
     CCFLAGS=[
         "-Wno-error=deprecated-declarations",
+        "-Wno-error=unused-function",
         "-Wno-unused-parameter",
-        "-Wno-sign-compare"
+        "-Wno-sign-compare",
+        "-fstack-protector"
     ],
 
     CPPPATH=[
@@ -115,7 +118,7 @@ def _get_board_flash_mode(env):
 
 env.Append(
     __get_board_flash_mode=_get_board_flash_mode,
-    
+
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -130,9 +133,9 @@ env.Append(
     ],
 
     UPLOADERFLAGS=[
-        "0x1000", '"%s"' % join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
-        "0x8000", '"%s"' % join("$BUILD_DIR", "partitions.bin"),
-        "0xe000", '"%s"' % join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
+        "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
+        "0x8000", join("$BUILD_DIR", "partitions.bin"),
+        "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
 )
@@ -174,11 +177,11 @@ env.Prepend(LIBS=libs)
 #
 # Generate partition table
 #
-
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
-    join(FRAMEWORK_DIR, "tools", "partitions", "default.csv"),
-    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' %
-                      join(FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
+    join(FRAMEWORK_DIR, "tools", "partitions",
+         "%s.csv" % env.BoardConfig().get("build.partitions", "default")),
+    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
+        FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
                       "Generating partitions $TARGET"))
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
