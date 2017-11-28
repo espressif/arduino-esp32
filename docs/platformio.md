@@ -5,7 +5,7 @@ Installation instructions for using PlatformIO
 
 - [What is PlatformIO?](http://docs.platformio.org/page/what-is-platformio.html)
 - [PlatformIO IDE](http://platformio.org/platformio-ide)
-- Quick Start with [PlatformIO IDE](http://docs.platformio.org/page/ide/atom.html#quick-start) or [PlatformIO Core](http://docs.platformio.org/page/core.html)
+- [PlatformIO Core (CLI)](http://docs.platformio.org/page/core.html)
 - [Integration with Cloud and Standalone IDEs](http://docs.platformio.org/page/ide.html) -
   Cloud9, Codeanywehre, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM and Visual Studio
 - [Project Examples](https://github.com/platformio/platform-espressif32/tree/develop/examples)
