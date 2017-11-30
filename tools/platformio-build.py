@@ -130,7 +130,8 @@ env.Append(
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.spiram_incompatible_fns.ld",
         "-u", "ld_include_panic_highint_hdl",
-        "-u", "__cxa_guard_dummy"
+        "-u", "__cxa_guard_dummy",
+        "-u", "__cxx_fatal_exception"
     ],
 
     UPLOADERFLAGS=[
