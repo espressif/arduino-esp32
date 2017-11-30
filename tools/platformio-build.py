@@ -48,7 +48,7 @@ env.Prepend(
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
-        "-fstack-protector"
+#         "-fstack-protector"
     ],
 
     CPPPATH=[
@@ -129,7 +129,8 @@ env.Append(
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.spiram_incompatible_fns.ld",
-        "-u", "ld_include_panic_highint_hdl"
+        "-u", "ld_include_panic_highint_hdl",
+        "-u", "__cxa_guard_dummy"
     ],
 
     UPLOADERFLAGS=[
