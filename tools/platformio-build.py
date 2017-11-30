@@ -48,7 +48,7 @@ env.Prepend(
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
-#         "-fstack-protector"
+        "-fstack-protector"
     ],
 
     CPPPATH=[
@@ -173,7 +173,7 @@ libs.append(envsafe.BuildLibrary(
     join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
 ))
 
-env.Prepend(LIBS=libs)
+env.Append(LIBS=libs)
 
 #
 # Generate partition table
