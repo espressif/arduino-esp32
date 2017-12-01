@@ -31,19 +31,19 @@
 
 #define DR_REG_I2C_EXT_BASE_FIXED               0x60013000
 #define DR_REG_I2C1_EXT_BASE_FIXED              0x60027000
-	
+  
 struct i2c_struct_t {
     i2c_dev_t * dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
     xSemaphoreHandle lock;
 #endif
     uint8_t num;
-		I2C_MODE_t mode;
+    I2C_MODE_t mode;
     I2C_STAGE_t stage;
-		I2C_ERROR_t error;
-		EventGroupHandle_t i2c_event; // a way to monitor ISR process
-		// maybe use it to trigger callback for OnRequest()
-		intr_handle_t intr_handle;       /*!< I2C interrupt handle*/
+    I2C_ERROR_t error;
+    EventGroupHandle_t i2c_event; // a way to monitor ISR process
+    // maybe use it to trigger callback for OnRequest()
+    intr_handle_t intr_handle;       /*!< I2C interrupt handle*/
     I2C_DATA_QUEUE_t * dq;
     uint16_t queueCount;
     uint16_t queuePos;
@@ -78,6 +78,7 @@ static i2c_t _i2c_bus_array[2] = {
 #endif
 
 /* Stickbreaker added for ISR 11/2017
+functional with Silicon date=0x16042000
 */
 static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, EventGroupHandle_t event){
 
@@ -153,6 +154,11 @@ i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr,
   //10bit read is kind of weird, first you do a 0byte Write with 10bit
   //  address, then a ReSTART then a 7bit Read using the the upper 7bit +
   // readBit.
+  
+  // this might cause an internal register pointer problem with 10bit
+  // devices, But, Don't have any to test agains.
+  // this is the Industry Standard specification.
+  
   if((i2cDeviceAddr &0xFC00)==0x7800){ // ten bit read
     i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,event);
     if(err==I2C_ERROR_OK){
@@ -218,26 +224,26 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
  * */
 void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
-	  I2C_COMMAND_t cmd;
-		cmd.val=0;
-		cmd.ack_en = ack_check;
-		cmd.ack_exp = ack_exp;
-		cmd.ack_val = ack_val;
-		cmd.byte_num = byte_num;
-		cmd.op_code = op_code;
+    I2C_COMMAND_t cmd;
+    cmd.val=0;
+    cmd.ack_en = ack_check;
+    cmd.ack_exp = ack_exp;
+    cmd.ack_val = ack_val;
+    cmd.byte_num = byte_num;
+    cmd.op_code = op_code;
     i2c->dev->command[index].val = cmd.val;
 }
 
 void i2cResetFiFo(i2c_t * i2c)
 {
-	I2C_FIFO_CONF_t f;
-	f.val = i2c->dev->fifo_conf.val;
-	f.tx_fifo_rst = 1;
-	f.rx_fifo_rst = 1;
-	i2c->dev->fifo_conf.val = f.val;
-	f.tx_fifo_rst = 0;
-	f.rx_fifo_rst = 0;
-	i2c->dev->fifo_conf.val = f.val;
+  I2C_FIFO_CONF_t f;
+  f.val = i2c->dev->fifo_conf.val;
+  f.tx_fifo_rst = 1;
+  f.rx_fifo_rst = 1;
+  i2c->dev->fifo_conf.val = f.val;
+  f.tx_fifo_rst = 0;
+  f.rx_fifo_rst = 0;
+  i2c->dev->fifo_conf.val = f.val;
 }
 
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
@@ -373,6 +379,24 @@ void i2cReset(i2c_t* i2c){
 static uint32_t intBuff[INTBUFFMAX][3];
 static uint32_t intPos=0;
 #endif
+
+/* Stickbreaker ISR mode debug support
+*/
+void IRAM_ATTR dumpCmdQueue(i2c_t *i2c){
+uint8_t i=0;
+while(i<16){
+  I2C_COMMAND_t c;
+  c.val=i2c->dev->command[i].val;
+  log_e("[%2d] %c op[%d] val[%d] exp[%d] en[%d] bytes[%d]",i,(c.done?'Y':'N'),
+  c.op_code,
+  c.ack_val,
+  c.ack_exp,
+  c.ack_en,
+  c.byte_num);
+  i++;
+  }
+}
+
 /* Stickbreaker ISR mode support
 */
 static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS){
@@ -438,7 +462,7 @@ while(!done){ // fill the command[] until either 0..14 filled or out of cmds and
   if((!done)&&(tdq->ctrl.addrCmdSent)){ //room in command[] for at least One data (read/Write) cmd
     uint8_t blkSize=0; // max is 255? does numBytes =0 actually mean 256? haven't tried it.
     //log_e("needed=%2d index=%d",*neededRead,cmdIdx);
-    while(( tdq->cmdBytesNeeded > tdq->ctrl.mode )&&(!done ))	{ // more bytes needed and room in cmd queue, leave room for END 
+    while(( tdq->cmdBytesNeeded > tdq->ctrl.mode )&&(!done )) { // more bytes needed and room in cmd queue, leave room for END 
       blkSize = (tdq->cmdBytesNeeded > 255)?255:(tdq->cmdBytesNeeded - tdq->ctrl.mode); // Last read cmd needs different ACK setting, so leave 1 byte remainer on reads
       tdq->cmdBytesNeeded -= blkSize; // 
       if(tdq->ctrl.mode==1){ //read mode
@@ -521,7 +545,7 @@ while(!done){ // fill the command[] until either 0..14 filled or out of cmds and
     
   if(cmdIdx==15){ //need continuation, even if STOP is in 14, it will not matter
   // cmd buffer is almost full, Add END as a continuation feature
-  //					log_e("END at %d, left=%d",cmdIdx,neededRead);
+  //          log_e("END at %d, left=%d",cmdIdx,neededRead);
     i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_END, 0,false,false,false);
     i2c->dev->int_ena.end_detect=1; //maybe?
     i2c->dev->int_clr.end_detect=1; //maybe?
@@ -583,7 +607,7 @@ log_n("Enable Core Debug Level \"Error\"");
 
 void i2cDumpI2c(i2c_t * i2c){
 log_e("i2c=%p",i2c);
-log_e("dev=%p",i2c->dev);
+log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
 log_e("lock=%p",i2c->lock);
 log_e("num=%d",i2c->num);
 log_e("mode=%d",i2c->mode);
@@ -596,23 +620,6 @@ log_e("queueCount=%d",i2c->queueCount);
 log_e("queuePos=%d",i2c->queuePos);
 log_e("byteCnt=%d",i2c->byteCnt);
 if(i2c->dq) i2cDumpDqData(i2c);
-}
-
-/* Stickbreaker ISR mode debug support
-*/
-void IRAM_ATTR dumpCmdQueue(i2c_t *i2c){
-uint8_t i=0;
-while(i<16){
-	I2C_COMMAND_t c;
-	c.val=i2c->dev->command[i].val;
-	log_e("[%2d] %c op[%d] val[%d] exp[%d] en[%d] bytes[%d]",i,(c.done?'Y':'N'),
-	c.op_code,
-	c.ack_val,
-	c.ack_exp,
-	c.ack_en,
-	c.byte_num);
-	i++;
-	}
 }
 
 /* Stickbreaker ISR mode support
@@ -872,7 +879,7 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     if (p_i2c->mode == I2C_MASTER) {
  //     log_e("AcK Err byteCnt=%d, queuepos=%d",p_i2c->byteCnt,p_i2c->queuePos);
       if(p_i2c->byteCnt==1) i2cIsrExit(p_i2c,EVENT_ERROR_NAK,true);
-			else if((p_i2c->byteCnt == 2) && (p_i2c->dq[p_i2c->queuePos].ctrl.addrReq == 2))
+      else if((p_i2c->byteCnt == 2) && (p_i2c->dq[p_i2c->queuePos].ctrl.addrReq == 2))
         i2cIsrExit(p_i2c,EVENT_ERROR_NAK,true);
       else i2cIsrExit(p_i2c,EVENT_ERROR_DATA_NAK,true);
       }
@@ -880,18 +887,21 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     }
     
   if (activeInt & I2C_TIME_OUT_INT_ST_M) {//fatal death Happens Here
-    i2cIsrExit(p_i2c,EVENT_ERROR_TIMEOUT,true);
-    return;
+ // let Gross timeout occure
+    p_i2c->dev->int_clr.time_out =1;
+    activeInt &=~I2C_TIME_OUT_INT_ST;
+//    i2cIsrExit(p_i2c,EVENT_ERROR_TIMEOUT,true);
+//    return;
     } 
-	
+  
   if (activeInt & I2C_TRANS_COMPLETE_INT_ST_M) { 
     i2cIsrExit(p_i2c,EVENT_DONE,false);
     return; // no more work to do
 /*    
     // how does slave mode act?
     if (p_i2c->mode == I2C_SLAVE) { // STOP detected
-		// empty fifo
-		// dispatch callback
+    // empty fifo
+    // dispatch callback
 */
     } 
   
@@ -899,7 +909,7 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     i2cIsrExit(p_i2c,EVENT_ERROR_ARBITRATION,true);
     return; // no more work to do
     } 
-	
+  
   if (activeInt & I2C_SLAVE_TRAN_COMP_INT_ST_M) {
     p_i2c->dev->int_clr.slave_tran_comp = 1;
 // need to complete this !  
@@ -908,7 +918,7 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
   if (activeInt & I2C_END_DETECT_INT_ST_M) {
     p_i2c->dev->int_ena.end_detect = 0;
     p_i2c->dev->int_clr.end_detect = 1;
-		p_i2c->dev->ctr.trans_start=0;
+    p_i2c->dev->ctr.trans_start=0;
     fillCmdQueue(p_i2c,true); // enable interrupts
     p_i2c->dev->ctr.trans_start=1; // go for it
     activeInt&=~I2C_END_DETECT_INT_ST_M;
@@ -948,7 +958,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 //log_e("procQueue i2c=%p",&i2c);
 *readCount = 0; //total reads accomplished in all queue elements
 if(i2c == NULL){
-	return I2C_ERROR_DEV;
+  return I2C_ERROR_DEV;
   }
 
 I2C_MUTEX_LOCK();
@@ -1172,7 +1182,6 @@ return i2cFreeQueue(i2c);
   24Nov17
   Need to think about not usings I2C_MASTER_TRAN_COMP_INT_ST to adjust queuePos.  This
     INT triggers every byte.  The only reason to know which byte is being transfered is 
-    to decide where to store a READ or if an error occured.  It may be possible to use
     the status_reg.tx_fifo_cnt and a .txQueued to do this in the fillRxFifo().  The
     same mechanism could work if an error occured in i2cErrorExit().
 */
