@@ -110,7 +110,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         return WL_CONNECT_FAILED;
     }
 
-    if(passphrase && strlen(passphrase) > 63) {
+    if(passphrase && strlen(passphrase) > 64) {
         // fail passphrase too long!
         return WL_CONNECT_FAILED;
     }
@@ -119,7 +119,10 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
     strcpy(reinterpret_cast<char*>(conf.sta.ssid), ssid);
 
     if(passphrase) {
-        strcpy(reinterpret_cast<char*>(conf.sta.password), passphrase);
+        if (strlen(passphrase) == 64) // it's not a passphrase, is the PSK
+            memcpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
+        else
+            strcpy(reinterpret_cast<char*>(conf.sta.password), passphrase);
     } else {
         *conf.sta.password = 0;
     }
