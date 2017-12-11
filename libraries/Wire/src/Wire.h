@@ -82,6 +82,7 @@ public:
     char * getErrorText(uint8_t err);
     void dumpOn(){_dump=true;}
     void dumpOff(){_dump=false;}
+    bool getDump(){return _dump;}
     void dumpInts();
     void dumpI2C(){i2cDumpI2c(i2c);}
     size_t getClock();

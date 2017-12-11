@@ -14,8 +14,8 @@ Wire.write(highByte(addr));
 Wire.write(lowByte(addr));
 uint8_t err =Wire.endTransmission(false); // don't send a STOP, just Pause I2C operations
 if(err==0){ // successfully set internal address pointer
-  err=Wire.requestFrom(addr,len);
-  if(err==0){ // read failed
+  uint8_t count=Wire.requestFrom(addr,len);
+  if(count==0){ // read failed
     Serial.print("Bad Stuff!! Read Failed\n");
     }
   else {// successful read
@@ -59,10 +59,10 @@ if(err == 7){ // Prior Operation has been queued
 // returned 0. So, if this if() was if(err==0), the Queue operation would be
 // considered an error.  This is the primary Difference.
 
-  err=Wire.requestFrom(addr,len);
+  uint8_t count=Wire.requestFrom(addr,len);
   if(Wire.lastError()!=0){ // complete/partial read failure
     Serial.printf("Bad Stuff!!\nRead of (%d) bytes read %d bytes\nFailed"
-      " lastError=%d, text=%s\n", len, err, Wire.lastError(), 
+      " lastError=%d, text=%s\n", len, count, Wire.lastError(), 
       Wire.getErrorText(Wire.lastError()));
     }
   // some of the read may have executed
@@ -82,7 +82,11 @@ Additionally this implementation of `Wire()` includes methods to handle local bu
     size_t transact(size_t readLen); // replacement for endTransmission(false),requestFrom(ID,readLen,true);
     size_t transact(uint8_t* readBuff, size_t readLen);// bigger Block read
     i2c_err_t lastError(); // Expose complete error
+    char * getErrorText(uint8_t err); // return char pointer for text of err
+    void dumpI2C(); // diagnostic dump of I2C control structure and buffers
     void dumpInts(); // diagnostic dump for the last 64 different i2c Interrupts
+    void dumpOn(); // Execute dumpI2C() and dumpInts() after every I2C procQueue()
+    void dumpOff(); // turn off dumpOn()
     size_t getClock(); // current i2c Clock rate
     void setTimeOut(uint16_t timeOutMillis); // allows users to configure Gross Timeout
     uint16_t getTimeOut();
@@ -95,7 +99,7 @@ Wire.beginTransmission(ID);
 Wire.write(highByte(addr));
 Wire.write(lowByte(addr));
 
-uint8_t err=Wire.transact(len); // transact() does both Wire.endTransmission(false); and Wire.requestFrom(ID,len,true);
+uint8_t count=Wire.transact(len); // transact() does both Wire.endTransmission(false); and Wire.requestFrom(ID,len,true);
 if(Wire.lastError != 0){ // complete/partial read failure
   Serial.printf("Bad Stuff!! Read Failed lastError=%d\n",Wire.lastError());
   }
@@ -107,6 +111,15 @@ Serial.println();
 
 ```
 
+### TIMEOUT's
+The ESP32 I2C hardware, what I call the StateMachine(SM) is not documented very well, most of the the corner conditions and errata has been discovered throught trial and error. TimeOuts have been the bain of our existance. 
+
+Most were caused by incorrect coding of ReSTART operations, but, a Valid TimeOut operation was discovered by @lonerzzz.  He was using a temperature/humidity sensor that uses SCL clock stretching while it does a sample conversion.  The issue we discovered was that the SM does not continue after the timeout.  It treats the timeout as a failure.  The SM's hardware timeout maxes out at 13.1ms, @lonerzzz sensor a (HTU21D), uses SCL stretching while it takes a measurement.  These SCL stretching events can last for over 120ms.  The SM will issue a TIMEOUT IRQ every 13.1ms while SCL is held low.  After SCL is release the SM immediately terminates the current command queue by issuing a STOP.  It does NOT continue with the READ command(a protcol violation).  In @lonerzzz's case the sensor acknowledges its I2C ID and the READ command, then it starts the sample conversion while holding SCL Low.  After it completes the conversion, the SCL signal is release.  When the SM sees SCL go HIGH, it initates an Abort by immediately issuing a STOP signal.  So, the Sample was taken but never read.
+ 
+The current library signals this occurence by returning I2C_ERROR_OK and a dataLength of 0(zero) back through the `Wire.requestFrom()` call.
+ 
+### Alpha
+
 This **APLHA** release should be compiled with ESP32 Dev Module as its target, and
 Set the "core debug level" to 'error'
 
@@ -114,3 +127,4 @@ There is MINIMAL to NO ERROR detection, BUS, BUSY.  because I have not encounter
 
 
 Chuck.
+ 

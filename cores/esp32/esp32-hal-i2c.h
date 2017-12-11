@@ -104,6 +104,7 @@ typedef enum {
 // on Exit.  Dispatcher will set bits for each dq before/after ISR completion
 #define EVENT_ERROR_NAK (BIT(0))
 #define EVENT_ERROR     (BIT(1))
+#define EVENT_ERROR_BUS_BUSY  (BIT(2))
 #define EVENT_RUNNING   (BIT(3)) 
 #define EVENT_DONE      (BIT(4))
 #define EVENT_IN_END    (BIT(5))

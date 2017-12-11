@@ -636,9 +636,14 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c){
 /*11/15/2017 will assume that I cannot queue tx after a READ until READ completes
 11/23/2017 Seems to be a TX fifo problem, the SM sends 0x40 for last rxbyte, I
 enable txEmpty, filltx fires, but the SM has already sent a bogus byte out the BUS.
-I am going so see if I can overlap Tx/Rx/Tx in the fifo
+  I am going so see if I can overlap Tx/Rx/Tx in the fifo
+12/01/2017 The Fifo's are independent, 32 bytes of tx and 32 bytes of Rx.
+   overlap is not an issue, just keep them full/empty the status_reg.xx_fifo_cnt
+   tells the truth. And the INT's fire correctly
 */
-bool readEncountered = false;  
+bool readEncountered = false;  // 12/01/2017 this needs to be removed
+// it is nolonger necessary, the fifo's are independent. Run thru the dq's
+// until the cmd[] is full or the txFifo is full.
 uint16_t a=i2c->queuePos; // currently executing dq,
 bool full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
 uint8_t cnt;
@@ -795,11 +800,8 @@ if(xResult == pdPASS){
 }  
  
 static void IRAM_ATTR i2c_isr_handler_default(void* arg){
-//log_e("isr Entry=%p",arg);
 i2c_t* p_i2c = (i2c_t*) arg; // recover data
 uint32_t activeInt = p_i2c->dev->int_status.val&0x1FFF;
-//log_e("int=%x",activeInt);
-//dumpI2c(p_i2c);
  
 portBASE_TYPE HPTaskAwoken = pdFALSE,xResult; 
 
@@ -886,12 +888,11 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
     return;
     }
     
-  if (activeInt & I2C_TIME_OUT_INT_ST_M) {//fatal death Happens Here
- // let Gross timeout occure
+  if (activeInt & I2C_TIME_OUT_INT_ST_M) {
+ // let Gross timeout occur, Slave may release SCL before the configured timeout expires
+ // the Statemachine only has a 13.1ms max timout, some Devices >500ms
     p_i2c->dev->int_clr.time_out =1;
     activeInt &=~I2C_TIME_OUT_INT_ST;
-//    i2cIsrExit(p_i2c,EVENT_ERROR_TIMEOUT,true);
-//    return;
     } 
   
   if (activeInt & I2C_TRANS_COMPLETE_INT_ST_M) { 
@@ -973,7 +974,9 @@ i2c->stage = I2C_DONE; // until ready
 memset(intBuff,0,sizeof(intBuff));
 intPos=0;
 #endif
-  
+// EventGroup is used to signal transmisison completion from ISR
+// not always reliable. Sometimes, the FreeRTOS scheduler is maxed out and refuses request
+// if that happens, this call hangs until the timeout period expires, then it continues.  
 if(!i2c->i2c_event){
   i2c->i2c_event = xEventGroupCreate();
   }
@@ -1046,7 +1049,7 @@ i2c->stage = I2C_STARTUP; // everything configured, now start the I2C StateMachi
 i2c->dev->int_ena.val = 
   I2C_ACK_ERR_INT_ENA | // (BIT(10))  Causes Fatal Error Exit
   I2C_TRANS_START_INT_ENA | // (BIT(9))  Triggered by trans_start=1, initial,END
-  I2C_TIME_OUT_INT_ENA  | //(BIT(8))  causes Fatal error Exit
+  I2C_TIME_OUT_INT_ENA  | //(BIT(8))  Trigger by SLAVE SCL stretching, NOT an ERROR
   I2C_TRANS_COMPLETE_INT_ENA | // (BIT(7))  triggered by STOP, successful exit
   I2C_MASTER_TRAN_COMP_INT_ENA | // (BIT(6))  counts each byte xfer'd, inc's queuePos
   I2C_ARBITRATION_LOST_INT_ENA | // (BIT(5))  cause fatal error exit
@@ -1071,7 +1074,7 @@ if(!i2c->intr_handle){ // create ISR I2C_0 only,
 // how many ticks should it take to transfer totalBytes thru the I2C hardware,
 // add user supplied timeOutMillis to Calc Value
  
-portTickType ticksTimeOut = ((totalBytes /(i2cGetFrequency(i2c)/(10*1000)))+timeOutMillis)/portTICK_PERIOD_MS;
+portTickType ticksTimeOut = ((totalBytes*10*1000)/(i2cGetFrequency(i2c))+timeOutMillis)/portTICK_PERIOD_MS;
 portTickType tBefore=xTaskGetTickCount();  
 
 //log_e("before startup @tick=%d will wait=%d",xTaskGetTickCount(),ticksTimeOut);
@@ -1094,11 +1097,24 @@ if(i2c->exitCode!=eBits){ // try to recover from O/S failure
   }
 
 if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR_DATA_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK, DATA_NAK
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
   i2cDumpI2c(i2c);
   i2cDumpInts();
+#else
+  log_n("I2C exitCode=%u",eBits);
+#endif
   }
 
 if(eBits&EVENT_DONE){ // no gross timeout
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+  uint32_t expected =(totalBytes*10*1000)/i2cGetFrequency(i2c);
+  if((tAfter-tBefore)>(expected+1)) { //used some of the timeout Period
+    // expected can be zero due to small packets
+    log_e("TimeoutRecovery: expected=%ums, actual=%ums",expected,(tAfter-tBefore));
+    i2cDumpI2c(i2c);
+    i2cDumpInts();
+    }
+#endif
   switch(i2c->error){
     case I2C_OK :
       reason = I2C_ERROR_OK;
@@ -1126,11 +1142,25 @@ else { // GROSS timeout, shutdown ISR , report Timeout
   i2c->stage = I2C_DONE;
   i2c->dev->int_ena.val =0;
   i2c->dev->int_clr.val = 0x1FFF;
-  reason = I2C_ERROR_TIMEOUT;
-  eBits = eBits | EVENT_ERROR_TIMEOUT|EVENT_ERROR|EVENT_DONE;
-  log_e(" Gross Timeout Dead st=0x%x, ed=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
+  if((i2c->queuePos==0)&&(i2c->byteCnt==0)){ // Bus Busy no bytes Moved
+    reason = I2C_ERROR_BUSY;
+    eBits = eBits | EVENT_ERROR_BUS_BUSY|EVENT_ERROR|EVENT_DONE;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+  log_e(" Busy Timeout start=0x%x, end=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
   i2cDumpI2c(i2c);
   i2cDumpInts();
+#endif
+    }
+  else { // just a timeout, some data made it out or in.
+    reason = I2C_ERROR_TIMEOUT;
+    eBits = eBits | EVENT_ERROR_TIMEOUT|EVENT_ERROR|EVENT_DONE;
+    
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+  log_e(" Gross Timeout Dead start=0x%x, end=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
+  i2cDumpI2c(i2c);
+  i2cDumpInts();
+#endif
+    }
   }
 
 // offloading all EventGroups to dispatch, EventGroups in ISR is not always successful
