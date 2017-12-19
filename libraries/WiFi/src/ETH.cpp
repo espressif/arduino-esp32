@@ -30,6 +30,7 @@ extern void tcpipInit();
 static int _eth_phy_mdc_pin = -1;
 static int _eth_phy_mdio_pin = -1;
 static int _eth_phy_power_pin = -1;
+static eth_clock_mode_t _eth_clk_mode = ETH_CLOCK_GPIO0_IN;
 static eth_phy_power_enable_func _eth_phy_power_enable_orig = NULL;
 
 static void _eth_phy_config_gpio(void)
@@ -56,7 +57,7 @@ ETHClass::ETHClass():initialized(false),started(false),staticIP(false)
 ETHClass::~ETHClass()
 {}
 
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type)
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
 {
     esp_err_t err;
     if(initialized){
@@ -84,6 +85,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     eth_config.phy_addr = (eth_phy_base_t)phy_addr;
+    eth_config.clock_mode = clock_mode;
     eth_config.gpio_config = _eth_phy_config_gpio;
     eth_config.tcpip_input = tcpip_adapter_eth_input;
     if(_eth_phy_power_pin >= 0){
