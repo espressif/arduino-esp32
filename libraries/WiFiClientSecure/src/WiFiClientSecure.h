@@ -28,7 +28,6 @@
 class WiFiClientSecure : public WiFiClient
 {
 protected:
-    bool _connected;
     sslclient_context *sslclient;
 
     const char *_CA_cert;

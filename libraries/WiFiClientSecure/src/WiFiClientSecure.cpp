@@ -134,7 +134,6 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     }
     int res = send_ssl_data(sslclient, buf, size);
     if (res < 0) {
-						   
         stop();
         res = 0;
     }
@@ -148,7 +147,6 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
     }
     int res = get_ssl_receive(sslclient, buf, size);
     if (res < 0) {
-							
         stop();
     }
     return res;
