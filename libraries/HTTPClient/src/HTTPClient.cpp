@@ -203,6 +203,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
     if (strlen(CAcert) == 0) {
         return false;
     }
+    _secure = true;
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
     return true;
 }
@@ -217,6 +218,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
     if (strlen(CAcert) == 0) {
         return false;
     }
+    _secure = true;
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert, cli_cert, cli_key));
     return true;
 }
@@ -561,18 +563,18 @@ int HTTPClient::getSize(void)
  */
 WiFiClient& HTTPClient::getStream(void)
 {
-    if(connected()) {
+    if (connected() && !_secure) {
         return *_tcp;
     }
 
-    log_d("getStream: not connected");
+    log_w("getStream: not connected");
     static WiFiClient empty;
     return empty;
 }
 
 /**
- * returns the stream of the tcp connection
- * @return WiFiClient *
+ * returns a pointer to the stream of the tcp connection
+ * @return WiFiClient*
  */
 WiFiClient* HTTPClient::getStreamPtr(void)
 {
@@ -580,7 +582,7 @@ WiFiClient* HTTPClient::getStreamPtr(void)
         return _tcp.get();
     }
 
-    log_d("getStreamPtr: not connected");
+    log_w("getStreamPtr: not connected");
     return nullptr;
 }
 
