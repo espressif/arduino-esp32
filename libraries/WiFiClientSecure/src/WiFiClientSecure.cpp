@@ -135,7 +135,6 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     }
     int res = send_ssl_data(sslclient, buf, size);
     if (res < 0) {
-						   
         stop();
         res = 0;
     }
@@ -149,7 +148,6 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
     }
     int res = get_ssl_receive(sslclient, buf, size);
     if (res < 0) {
-							
         stop();
     }
     return res;
@@ -190,14 +188,13 @@ void WiFiClientSecure::setPrivateKey (const char *private_key)
     _private_key = private_key;
 }
 
-int WiFiClientSecure::lastError(char *buf, size_t size)
+int WiFiClientSecure::lastError(char *buf, const size_t size)
 {
     if (!_lastError) {
         return 0;
     }
     char error_buf[100];
     mbedtls_strerror(_lastError, error_buf, 100);
-    snprintf(buf,size,"%s",error_buf);
+    snprintf(buf, size, "%s", error_buf);
     return _lastError;
 }
-
