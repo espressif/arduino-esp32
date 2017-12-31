@@ -24,7 +24,15 @@ else:
 if 'Windows' in platform.system():
     import requests
 
-current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+file_name = null
+try:
+    # Python 2
+    file_name = unicode(__file__)
+except:
+    # Python 3
+    file_name = __file__
+    
+current_dir = os.path.dirname(os.path.realpath(file_name))
 dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
