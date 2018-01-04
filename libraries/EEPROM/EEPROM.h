@@ -1,7 +1,10 @@
 /*
    EEPROM.h -ported by Paolo Becchi to Esp32
-            -Modified by Ifediora Elochukwu C. <eloifediora@fedironics.com>
-   use a one sector flash partition defined in partition table
+            -Modified by Ifediora Elochukwu C. <ifedioraelochukwuc@gmail.com>
+
+   Uses a one sector flash partition defined in partition table
+   OR
+   Multiple sector flash partitions defined by the name column in the partition table
 
   from esp8266 EEPROM
 
@@ -26,7 +29,7 @@
 #ifndef EEPROM_h
 #define EEPROM_h
 #ifndef EEPROM_FLASH_PARTITION_NAME
- #define EEPROM_FLASH_PARTITION_NAME "eeprom"
+#define EEPROM_FLASH_PARTITION_NAME "eeprom"
 #endif
 extern "C" {
 
@@ -37,45 +40,44 @@ extern "C" {
 }
 
 //
-//   need to define a flash partition for EEPROM  with above name
+//   need to define AT LEAST a flash partition for EEPROM  with above name
 //
 //           eeprom , data , 0x99, start address, 0x1000
 //
 class EEPROMClass {
-public:
-  EEPROMClass(uint32_t sector);
-  EEPROMClass(const char* name);
-  EEPROMClass(void);
-  ~EEPROMClass(void);
+  public:
+    EEPROMClass(uint32_t sector);
+    EEPROMClass(const char* name);
+    EEPROMClass(void);
+    ~EEPROMClass(void);
 
-  bool begin(size_t size);
-  uint8_t read(int address);
-  void write(int address, uint8_t val);
-  bool commit();
-  void end();
-
-  uint8_t * getDataPtr();
-
-  template<typename T>
-  T &get(int address, T &t) {
-    if (address < 0 || address + sizeof(T) > _size)
-      return t;
-
-    memcpy((uint8_t*) &t, _data + address, sizeof(T));
-    return t;
-  }
-
-  template<typename T>
-  const T &put(int address, const T &t) {
-    if (address < 0 || address + sizeof(T) > _size)
-      return t;
-
-    memcpy(_data + address, (const uint8_t*) &t, sizeof(T));
-    _dirty = true;
-    return t;
-  }
-
+    bool begin(size_t size);
+    uint8_t read(int address);
+    void write(int address, uint8_t val);
     uint16_t length();
+    bool commit();
+    void end();
+
+    uint8_t * getDataPtr();
+
+    template<typename T>
+    T &get(int address, T &t) {
+      if (address < 0 || address + sizeof(T) > _size)
+        return t;
+
+      memcpy((uint8_t*) &t, _data + address, sizeof(T));
+      return t;
+    }
+
+    template<typename T>
+    const T &put(int address, const T &t) {
+      if (address < 0 || address + sizeof(T) > _size)
+        return t;
+
+      memcpy(_data + address, (const uint8_t*) &t, sizeof(T));
+      _dirty = true;
+      return t;
+    }
 
     uint8_t readByte(int address);
     int8_t readChar(int address);
@@ -115,18 +117,17 @@ public:
     size_t writeBytes(int address, const void* value, size_t len);
     template <class T> T writeAll (int address, const T &);
 
-protected:
-  uint32_t _sector;
-  uint8_t* _data;
-  size_t _size;
-  bool _dirty;
-  const esp_partition_t * _mypart;
-  const char* _name;
+  protected:
+    uint32_t _sector;
+    uint8_t* _data;
+    size_t _size;
+    bool _dirty;
+    const esp_partition_t * _mypart;
+    const char* _name;
 };
 
-//#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_EEPROM)
-//extern EEPROMClass EEPROM;
-//#endif
-
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_EEPROM)
+extern EEPROMClass EEPROM;
 #endif
 
+#endif
