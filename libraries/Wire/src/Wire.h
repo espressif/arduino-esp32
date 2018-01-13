@@ -60,7 +60,7 @@ protected:
     void onRequestService(void);
     void onReceiveService(uint8_t*, int);
 */
-		i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
+    i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
     i2c_err_t processQueue(uint32_t *readCount);
     uint16_t _timeOutMillis;
     bool _dump;

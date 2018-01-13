@@ -45,8 +45,8 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,txAddress(0)
     ,txQueued(0)
     ,transmitting(0)
-    ,_timeOutMillis(50)
     ,last_error(I2C_ERROR_OK)
+    ,_timeOutMillis(50)
     ,_dump(false)
 		{}	
 
