@@ -103,6 +103,7 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert,
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
     int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key);
+    _lastError = ret;
     if (ret < 0) {
         log_e("lwip_connect_r: %d", errno);
         stop();
@@ -187,3 +188,13 @@ void WiFiClientSecure::setPrivateKey (const char *private_key)
     _private_key = private_key;
 }
 
+int WiFiClientSecure::lastError(char *buf, const size_t size)
+{
+    if (!_lastError) {
+        return 0;
+    }
+    char error_buf[100];
+    mbedtls_strerror(_lastError, error_buf, 100);
+    snprintf(buf, size, "%s", error_buf);
+    return _lastError;
+}
