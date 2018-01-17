@@ -91,7 +91,7 @@ void MDNSResponder::enableArduino(uint16_t port, bool auth){
         log_e("Failed adding Arduino service");
     }
 
-    if(mdns_service_txt_item_set("_arduino", "_tcp", "auth_upload", auth?"yes":"no")){
+    if(auth && mdns_service_txt_item_set("_arduino", "_tcp", "auth_upload", "yes")){
         log_e("Failed setting Arduino txt item");
     }
 }
