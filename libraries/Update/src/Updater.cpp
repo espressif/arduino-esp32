@@ -68,10 +68,10 @@ UpdateClass::UpdateClass()
 , _buffer(0)
 , _bufferLen(0)
 , _size(0)
+, _progress_callback(NULL)
 , _progress(0)
 , _command(U_FLASH)
 , _partition(NULL)
-, _progress_callback(NULL)
 {
 }
 

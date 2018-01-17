@@ -162,12 +162,12 @@ class UpdateClass {
     bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
 
-    THandlerFunction_Progress _progress_callback;
 
     uint8_t _error;
     uint8_t *_buffer;
     size_t _bufferLen;
     size_t _size;
+    THandlerFunction_Progress _progress_callback;
     uint32_t _progress;
     uint32_t _command;
     const esp_partition_t* _partition;
