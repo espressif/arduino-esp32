@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <MD5Builder.h>
+#include <functional>
 #include "esp_partition.h"
 
 #define UPDATE_ERROR_OK                 (0)
@@ -27,7 +28,15 @@
 
 class UpdateClass {
   public:
+    typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
+
     UpdateClass();
+
+    /*
+      This callback will be called when Update is receiving data
+    */
+    UpdateClass& onProgress(THandlerFunction_Progress fn);
+
     /*
       Call this to check the space needed for the update
       Will return false if there is not enough space
@@ -152,6 +161,8 @@ class UpdateClass {
     bool _writeBuffer();
     bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
+
+    THandlerFunction_Progress _progress_callback;
 
     uint8_t _error;
     uint8_t *_buffer;
