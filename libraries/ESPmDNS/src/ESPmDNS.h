@@ -42,18 +42,19 @@ License (MIT license):
 #define ESP32MDNS_H
 
 #include "Arduino.h"
+#include "IPv6Address.h"
 #include "mdns.h"
 
 //this should be defined at build time
-#ifndef ARDUINO_BOARD
-#define ARDUINO_BOARD "esp32"
+#ifndef ARDUINO_VARIANT
+#define ARDUINO_VARIANT "esp32"
 #endif
 
 class MDNSResponder {
 public:
   MDNSResponder();
   ~MDNSResponder();
-  bool begin(const char* hostName, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_STA, uint32_t ttl=120);
+  bool begin(const char* hostName);
   void end();
 
   void setInstanceName(String name);
@@ -83,15 +84,15 @@ public:
   void enableArduino(uint16_t port=3232, bool auth=false);
   void disableArduino();
 
-  void enableWorkstation();
+  void enableWorkstation(wifi_interface_t interface=ESP_IF_WIFI_STA);
   void disableWorkstation();
 
-  IPAddress queryHost(char *host);
-  IPAddress queryHost(const char *host){
-    return queryHost((char *)host);
+  IPAddress queryHost(char *host, uint32_t timeout=2000);
+  IPAddress queryHost(const char *host, uint32_t timeout=2000){
+    return queryHost((char *)host, timeout);
   }
-  IPAddress queryHost(String host){
-    return queryHost(host.c_str());
+  IPAddress queryHost(String host, uint32_t timeout=2000){
+    return queryHost(host.c_str(), timeout);
   }
   
   int queryService(char *service, char *proto);
@@ -104,12 +105,13 @@ public:
 
   String hostname(int idx);
   IPAddress IP(int idx);
+  IPv6Address IPv6(int idx);
   uint16_t port(int idx);
   
 private:
-  mdns_server_t * mdns;
-  tcpip_adapter_if_t _if;
   String _hostname;
+  mdns_result_t * results;
+  mdns_result_t * _getResult(int idx);
 };
 
 extern MDNSResponder MDNS;
