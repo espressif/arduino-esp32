@@ -46,8 +46,8 @@ License (MIT license):
 #include "mdns.h"
 
 //this should be defined at build time
-#ifndef ARDUINO_BOARD
-#define ARDUINO_BOARD "esp32"
+#ifndef ARDUINO_VARIANT
+#define ARDUINO_VARIANT "esp32"
 #endif
 
 class MDNSResponder {
