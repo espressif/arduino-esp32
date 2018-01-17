@@ -39,8 +39,13 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
+#include "WiFi.h"
 #include <functional>
 #include "esp_wifi.h"
+
+static void _on_sys_event(system_event_t *event){
+    mdns_handle_system_event(NULL, event);
+}
 
 MDNSResponder::MDNSResponder() :results(NULL) {}
 MDNSResponder::~MDNSResponder() {
@@ -52,6 +57,7 @@ bool MDNSResponder::begin(const char* hostName){
         log_e("Failed starting MDNS");
         return false;
     }
+    WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
     if(mdns_hostname_set(hostName)) {
         log_e("Failed setting MDNS hostname");
