@@ -358,7 +358,7 @@ uint8_t WiFiSTAClass::waitForConnectResult()
         return WL_DISCONNECTED;
     }
     int i = 0;
-    while(status() >= WL_DISCONNECTED && i++ < 100) {
+    while((!status() || status() >= WL_DISCONNECTED) && i++ < 100) {
         delay(100);
     }
     return status();
