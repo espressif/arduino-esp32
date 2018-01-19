@@ -10,15 +10,15 @@
 
 enum class DNSReplyCode
 {
-  NoError = 0,
+  NoError   = 0,
   FormError = 1,
-  ServerFailure = 2,
+  ServerFailure     = 2,
   NonExistentDomain = 3,
-  NotImplemented = 4,
-  Refused = 5,
-  YXDomain = 6,
-  YXRRSet = 7,
-  NXRRSet = 8
+  NotImplemented    = 4,
+  Refused   = 5,
+  YXDomain  = 6,
+  YXRRSet   = 7,
+  NXRRSet   = 8
 };
 
 enum DNSType

@@ -7,8 +7,8 @@ DNSServer::DNSServer()
 {
   _ttl = htonl(DNS_DEFAULT_TTL);
   _errorReplyCode = DNSReplyCode::NonExistentDomain;
-  _dnsHeader = NULL;
-  _buffer = NULL;
+  _dnsHeader  = NULL;
+  _buffer     = NULL;
   _currentPacketSize = 0;
   _port = 0;
 }
@@ -55,11 +55,17 @@ void DNSServer::processNextRequest()
   _currentPacketSize = _udp.parsePacket();
   if (_currentPacketSize)
   {
-    if (_buffer != NULL) free(_buffer);
+    // Allocate buffer for the DNS query
+    if (_buffer != NULL) 
+      free(_buffer);
     _buffer = (unsigned char*)malloc(_currentPacketSize * sizeof(char));
-    if (_buffer == NULL) return;
+    if (_buffer == NULL) 
+      return;
+
+    // Put the packet received in the buffer and get DNS header (beginning of message), 
+    // type and class (last 4 bytes of the message)
     _udp.read(_buffer, _currentPacketSize);
-    _dnsHeader = (DNSHeader*) _buffer;
+    _dnsHeader  = (DNSHeader*) _buffer;
     _type       = (uint16_t) ( (_buffer[_currentPacketSize - 4] << 8) + _buffer[_currentPacketSize - 3] ) ; 
     _class      = (uint16_t) ( (_buffer[_currentPacketSize - 2] << 8) + _buffer[_currentPacketSize - 1] ) ; 
 
@@ -89,15 +95,21 @@ bool DNSServer::requestIncludesOnlyOneQuestion()
          _dnsHeader->ARCount == 0;
 }
 
+
 String DNSServer::getDomainNameWithoutWwwPrefix()
 {
+  // Error checking : if the buffer containing the DNS request is a null pointer, return an empty domain
   String parsedDomainName = "";
-  if (_buffer == NULL) return parsedDomainName;
-  unsigned char *start = _buffer + 12;
+  if (_buffer == NULL) 
+    return parsedDomainName;
+  
+  // Set the start of the domain just after the header (12 bytes). If equal to null character, return an empty domain
+  unsigned char *start = _buffer + DNS_OFFSET_DOMAIN_NAME;
   if (*start == 0)
   {
     return parsedDomainName;
   }
+
   int pos = 0;
   while(true)
   {
