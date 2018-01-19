@@ -5,7 +5,7 @@
 
 DNSServer::DNSServer()
 {
-  _ttl = htonl(60);
+  _ttl = htonl(DNS_DEFAULT_TTL);
   _errorReplyCode = DNSReplyCode::NonExistentDomain;
   _dnsHeader = NULL;
   _buffer = NULL;

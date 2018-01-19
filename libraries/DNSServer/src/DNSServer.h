@@ -5,6 +5,7 @@
 #define DNS_QR_QUERY 0
 #define DNS_QR_RESPONSE 1
 #define DNS_OPCODE_QUERY 0
+#define DNS_DEFAULT_TTL 60        // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
 #define DNS_OFFSET_DOMAIN_NAME 12 // Offset in bytes to reach the domain name in the DNS message 
 
 enum class DNSReplyCode
