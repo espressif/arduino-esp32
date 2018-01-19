@@ -60,6 +60,8 @@ void DNSServer::processNextRequest()
     if (_buffer == NULL) return;
     _udp.read(_buffer, _currentPacketSize);
     _dnsHeader = (DNSHeader*) _buffer;
+    _type       = (uint16_t) ( (_buffer[_currentPacketSize - 4] << 8) + _buffer[_currentPacketSize - 3] ) ; 
+    _class      = (uint16_t) ( (_buffer[_currentPacketSize - 2] << 8) + _buffer[_currentPacketSize - 1] ) ; 
 
     if (_dnsHeader->QR == DNS_QR_QUERY &&
         _dnsHeader->OPCode == DNS_OPCODE_QUERY &&

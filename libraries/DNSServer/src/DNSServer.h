@@ -87,6 +87,8 @@ class DNSServer
     DNSHeader* _dnsHeader;
     uint32_t _ttl;
     DNSReplyCode _errorReplyCode;
+    uint16_t _type ; 
+    uint16_t _class ; 
 
     void downcaseAndRemoveWwwPrefix(String &domainName);
     String getDomainNameWithoutWwwPrefix();
