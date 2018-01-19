@@ -123,14 +123,29 @@ void DNSServer::replyWithIP()
   if (_buffer == NULL) return;
   _dnsHeader->QR = DNS_QR_RESPONSE;
   _dnsHeader->ANCount = _dnsHeader->QDCount;
-  _dnsHeader->QDCount = 0;
+  //_dnsHeader->QDCount = 0;
 
   _udp.beginPacket(_udp.remoteIP(), _udp.remotePort());
   _udp.write(_buffer, _currentPacketSize);
+
+  // Use DNS name compression : instead of repeating the name in this RNAME occurence,
+  // set the two MSB of the byte corresponding normally to the length to 1. The following
+  // 14 bits must be used to specify the offset of the domain name in the message 
+  // (<255 here so the first byte has the 6 LSB at 0) 
+  _udp.write((uint8_t) 0xC0); 
+  _udp.write((uint8_t) DNS_OFFSET_DOMAIN_NAME);  
+  // DNS type A : host address
+  _udp.write((uint8_t) (DNS_TYPE_A >> 8) ); 
+  _udp.write((uint8_t) (DNS_TYPE_A & 0xFF) );
+  // DNS class IN for INternet
+  _udp.write((uint8_t) (DNS_CLASS_IN >> 8) );
+  _udp.write((uint8_t) (DNS_CLASS_IN & 0xFF) );
+  // DNS Time To Live
   _udp.write((unsigned char*)&_ttl, 4);
-  _udp.write((uint8_t)0);
-  _udp.write((uint8_t)4);
-  _udp.write(_resolvedIP, 4);
+  // Returning an IPv4 address
+  _udp.write((uint8_t) (DNS_RDLENGTH_IPV4 >> 8) );
+  _udp.write((uint8_t) (DNS_RDLENGTH_IPV4 & 0xFF) );
+  _udp.write(_resolvedIP, sizeof(_resolvedIP));
   _udp.endPacket();
 }
 
