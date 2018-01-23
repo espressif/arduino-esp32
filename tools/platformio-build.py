@@ -136,7 +136,7 @@ env.Append(
 
     UPLOADERFLAGS=[
         "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
-        "0x8000", join("$BUILD_DIR", "partitions.bin"),
+        "0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin"),
         "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
