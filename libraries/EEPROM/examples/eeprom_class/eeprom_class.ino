@@ -3,9 +3,10 @@
 
   This simple example demonstrates using EEPROM library to store different data in
   ESP32 Flash memory in a multiple user-defined EEPROM partition (0x1000 or 4KB max size).
-  Usage: EEPROMClass ANY_OBJECT_NAME("partition name");
-         ANY_OBJECT_NAME.method()
-         ANY_OBJECT_NAME.member
+  
+  Install 'ESP32 Partiton Manager' ONCE from https://github.com/francis94c/ESP32Partitions
+  And create different partitions with 'partition_name'
+  Usage: EEPROMClass ANY_OBJECT_NAME("partition_name");
 
   Created for arduino-esp32 on 25 Dec, 2017
   by Ifediora Elochukwu (fedy0)
