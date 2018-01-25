@@ -400,7 +400,10 @@ typedef struct {
 
 typedef void (tBTA_SET_ADV_DATA_CMPL_CBACK) (tBTA_STATUS status);
 
-typedef void (tBTA_START_ADV_CMPL_CBACK) (tBTA_STATUS status);
+typedef tBTM_START_ADV_CMPL_CBACK tBTA_START_ADV_CMPL_CBACK;
+
+typedef tBTM_START_STOP_ADV_CMPL_CBACK tBTA_START_STOP_ADV_CMPL_CBACK;
+
 
 typedef tBTM_ADD_WHITELIST_CBACK tBTA_ADD_WHITELIST_CBACK;
 
@@ -782,6 +785,7 @@ typedef struct {
 typedef struct {
     BD_ADDR         bd_addr;            /* BD address peer device. */
     UINT8           status;             /* connection open/closed */
+    UINT8           reason;             /* link down reason */
     BOOLEAN         is_removed;         /* TRUE if device is removed when link is down */
 #if BLE_INCLUDED == TRUE
     tBTA_TRANSPORT  link_type;

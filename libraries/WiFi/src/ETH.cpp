@@ -30,7 +30,6 @@ extern void tcpipInit();
 static int _eth_phy_mdc_pin = -1;
 static int _eth_phy_mdio_pin = -1;
 static int _eth_phy_power_pin = -1;
-static eth_clock_mode_t _eth_clk_mode = ETH_CLOCK_GPIO0_IN;
 static eth_phy_power_enable_func _eth_phy_power_enable_orig = NULL;
 
 static void _eth_phy_config_gpio(void)

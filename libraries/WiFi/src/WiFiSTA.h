@@ -72,7 +72,7 @@ public:
     bool setHostname(const char * hostname);
 
     // STA WiFi info
-    wl_status_t status();
+    static wl_status_t status();
     String SSID() const;
     String psk() const;
 

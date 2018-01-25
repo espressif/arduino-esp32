@@ -81,15 +81,15 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
     LIBPATH=[
@@ -136,7 +136,7 @@ env.Append(
 
     UPLOADERFLAGS=[
         "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
-        "0x8000", join("$BUILD_DIR", "partitions.bin"),
+        "0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin"),
         "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]

@@ -17,7 +17,7 @@
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 
-#include "bt.h"
+#include "esp_bt.h"
 #include "esp_bt_defs.h"
 #include "esp_bt_main.h"
 

@@ -29,7 +29,8 @@ class WiFiClientSecure : public WiFiClient
 {
 protected:
     sslclient_context *sslclient;
-
+ 
+    int _lastError = 0;
     const char *_CA_cert;
     const char *_cert;
     const char *_private_key;
@@ -55,7 +56,7 @@ public:
     void flush() {}
     void stop();
     uint8_t connected();
-
+    int lastError(char *buf, const size_t size);
     void setCACert(const char *rootCA);
     void setCertificate(const char *client_ca);
     void setPrivateKey (const char *private_key);

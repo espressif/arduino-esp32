@@ -29,6 +29,7 @@
 
 typedef void (*WiFiEventCb)(system_event_id_t event);
 typedef void (*WiFiEventFullCb)(system_event_id_t event, system_event_info_t info);
+typedef void (*WiFiEventSysCb)(system_event_t *event);
 
 class WiFiGenericClass
 {
@@ -38,8 +39,10 @@ public:
 
     void onEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void onEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    void onEvent(WiFiEventSysCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    void removeEvent(WiFiEventSysCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
 
     int32_t channel(void);
 
