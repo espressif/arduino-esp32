@@ -4,7 +4,7 @@
   This simple example demonstrates using other EEPROM library resources
 
   Created for arduino-esp32 on 25 Dec, 2017
-  by Ifediora Elochukwu (fedy0)
+  by Elochukwu Ifediora (fedy0)
 */
 
 #include "EEPROM.h"

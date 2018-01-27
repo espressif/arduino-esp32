@@ -1,6 +1,6 @@
 /*
   EEPROM.h -ported by Paolo Becchi to Esp32 from esp8266 EEPROM
-           -Modified by Ifediora Elochukwu C. <ifedioraelochukwuc@gmail.com>
+           -Modified by Elochukwu Ifediora <ifedioraelochukwuc@gmail.com>
 
   Uses a one sector flash partition defined in partition table
   OR

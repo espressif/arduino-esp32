@@ -1,8 +1,10 @@
 /*
-  EEPROM.cpp -ported by Paolo Becchi to Esp32
-  Op
-  from esp8266 EEPROM emulation
-  -Modified by Ifediora Elochukwu C. <ifedioraelochukwuc@gmail.com>
+  EEPROM.h -ported by Paolo Becchi to Esp32 from esp8266 EEPROM
+           -Modified by Elochukwu Ifediora <ifedioraelochukwuc@gmail.com>
+
+  Uses a one sector flash partition defined in partition table
+  OR
+  Multiple sector flash partitions defined by the name column in the partition table
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
