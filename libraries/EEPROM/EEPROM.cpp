@@ -40,12 +40,13 @@ EEPROMClass::EEPROMClass(uint32_t sector)
 {
 }
 
-EEPROMClass::EEPROMClass(const char* name)
+EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
   : _sector(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
   , _name(name)
+  , _user_defined_size(user_defined_size)
 {
 }
 
@@ -165,11 +166,11 @@ uint8_t * EEPROMClass::getDataPtr() {
 }
 
 /*
-   Get EEPROM total size in byte
+   Get EEPROM total size in byte defined by the user
 */
 uint16_t EEPROMClass::length ()
 {
-  return SPI_FLASH_SEC_SIZE;
+  return _user_defined_size;
 }
 
 /*
