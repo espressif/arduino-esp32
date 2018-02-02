@@ -7,6 +7,7 @@
 #define DNS_OPCODE_QUERY 0
 #define DNS_DEFAULT_TTL 60        // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
 #define DNS_OFFSET_DOMAIN_NAME 12 // Offset in bytes to reach the domain name in the DNS message 
+#define DNS_HEADER_SIZE 12 
 
 enum class DNSReplyCode
 {
@@ -63,6 +64,14 @@ struct DNSHeader
   uint16_t ARCount;          // number of resource entries
 };
 
+struct DNSQuestion
+{
+  uint8_t   QName[255] ;
+  int8_t    QNameLength ; 
+  uint16_t  QType ; 
+  uint16_t  QClass ; 
+} ; 
+
 class DNSServer
 {
   public:
@@ -88,8 +97,8 @@ class DNSServer
     DNSHeader* _dnsHeader;
     uint32_t _ttl;
     DNSReplyCode _errorReplyCode;
-    uint16_t _type ; 
-    uint16_t _class ; 
+    DNSQuestion*    _dnsQuestion ; 
+
 
     void downcaseAndRemoveWwwPrefix(String &domainName);
     String getDomainNameWithoutWwwPrefix();
