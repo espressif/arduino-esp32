@@ -154,6 +154,7 @@ void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
         return;
     }
     pinMode(txPin, OUTPUT);
+    digitalWrite(txPin, HIGH);
     pinMatrixOutAttach(txPin, UART_TXD_IDX(uart->num), inverted, false);
 }
 
