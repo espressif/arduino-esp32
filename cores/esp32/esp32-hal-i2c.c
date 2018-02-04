@@ -72,7 +72,9 @@ i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
+    digitalWrite(scl, HIGH); // optional, tested successful in actually version 
     pinMode(scl, OUTPUT_OPEN_DRAIN | PULLUP);
+    // digitalWrite(scl, HIGH); // successful tested in a prev version, but fails in the actually so use optional!
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
     return I2C_ERROR_OK;
@@ -94,7 +96,9 @@ i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
     if(i2c == NULL){
         return I2C_ERROR_DEV;
     }
+    digitalWrite(sda, HIGH); // optional, tested successful in actually version
     pinMode(sda, OUTPUT_OPEN_DRAIN | PULLUP);
+    // digitalWrite(sda, HIGH); // successful tested in a prev version, but fails in the actually so use optional!
     pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
     pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
     return I2C_ERROR_OK;
