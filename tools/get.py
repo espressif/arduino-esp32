@@ -17,6 +17,7 @@ import zipfile
 import re
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
+    unicode = lambda s: str(s)
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
