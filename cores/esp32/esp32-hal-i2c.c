@@ -608,7 +608,9 @@ log_n("Enable Core Debug Level \"Error\"");
 void i2cDumpI2c(i2c_t * i2c){
 log_e("i2c=%p",i2c);
 log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
+#if !CONFIG_DISABLE_HAL_LOCKS
 log_e("lock=%p",i2c->lock);
+#endif
 log_e("num=%d",i2c->num);
 log_e("mode=%d",i2c->mode);
 log_e("stage=%d",i2c->stage);
