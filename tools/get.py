@@ -24,7 +24,14 @@ else:
 if 'Windows' in platform.system():
     import requests
 
-current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+def ensureUtf(s):
+  try:
+      if type(s) == unicode:
+        return s.encode('utf8', 'ignore')
+  except: 
+    return str(s)
+
+current_dir = os.path.dirname(os.path.realpath(ensureUtf(__file__)))
 dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
