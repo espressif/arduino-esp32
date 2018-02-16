@@ -1,15 +1,18 @@
 #include <Arduino.h>
 #include <Ticker.h>
 
+// attach a LED to GPIO 21
+#define LED_PIN 21
+
 Ticker tickerSetHigh;
 Ticker tickerSetLow;
 
 void setPin(int state) {
-  digitalWrite(LED_BUILTIN, state);
+  digitalWrite(LED_PIN, state);
 }
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
   digitalWrite(1, LOW);
   
   // every 25 ms, call setPin(0) 

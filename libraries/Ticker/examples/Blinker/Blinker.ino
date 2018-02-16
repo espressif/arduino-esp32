@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <Ticker.h>
 
+// attach a LED to pPIO 21
+#define LED_PIN 21
+
 Ticker blinker;
 Ticker toggler;
 Ticker changer;
@@ -12,7 +15,7 @@ void change() {
 }
 
 void blink() {
-  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+  digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 }
 
 void toggle() {
@@ -25,12 +28,12 @@ void toggle() {
     blinker.attach(blinkerPace, blink);
     isBlinking = true;
   }
-  digitalWrite(LED_BUILTIN, LOW);  //make sure LED on on after toggling (pin LOW = led ON)
+  digitalWrite(LED_PIN, LOW);  //make sure LED on on after toggling (pin LOW = led ON)
 }
 
 void setup() {
-	pinMode(LED_BUILTIN, OUTPUT);
-	toggler.attach(togglePeriod, toggle);
+  pinMode(LED_PIN, OUTPUT);
+  toggler.attach(togglePeriod, toggle);
   changer.once(30, change);
 }
 
