@@ -1108,7 +1108,7 @@ if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR_DATA_NAK|EVENT_ERR
   }
 
 if(eBits&EVENT_DONE){ // no gross timeout
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   uint32_t expected =(totalBytes*10*1000)/i2cGetFrequency(i2c);
   if((tAfter-tBefore)>(expected+1)) { //used some of the timeout Period
     // expected can be zero due to small packets
