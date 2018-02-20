@@ -316,7 +316,9 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
     } else if(event->event_id == SYSTEM_EVENT_STA_CONNECTED) {
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
-        if(WiFiSTAClass::status() == WL_IDLE_STATUS) {
+//#1081 https://github.com/espressif/arduino-esp32/issues/1081		
+//        if(WiFiSTAClass::status() == WL_IDLE_STATUS) 
+		{        
             WiFiSTAClass::_setStatus(WL_CONNECTED);
         }
     }
