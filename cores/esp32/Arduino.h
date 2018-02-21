@@ -187,4 +187,6 @@ long random(long);
 
 #include "pins_arduino.h"
 
+void arduino_task(void);
+
 #endif /* _ESP32_CORE_ARDUINO_H_ */

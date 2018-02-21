@@ -19,7 +19,7 @@ void loopTask(void *pvParameters)
     }
 }
 
-extern "C" void app_main()
+extern "C" void arduino_task()
 {
     initArduino();
     xTaskCreatePinnedToCore(loopTask, "loopTask", 8192, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
