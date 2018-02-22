@@ -29,8 +29,6 @@
 #include "esp_spp_api.h"
 
 #define SPP_SERVER_NAME "ESP32_SPP_SERVER"
-#define SPP_SHOW_DATA 0
-#define SPP_SHOW_MODE SPP_SHOW_DATA
 
 #define QUEUE_SIZE 256
 uint32_t client;
@@ -146,7 +144,7 @@ static bool _stop_bt()
 }
 
 /*
- * Serial Bluettorh Arduino
+ * Serial Bluetooth Arduino
  *
  * */
 
