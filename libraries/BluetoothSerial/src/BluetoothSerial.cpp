@@ -92,25 +92,24 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 
 static bool _init_bt(const char *deviceName)
 {
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    if (esp_bt_controller_init(&bt_cfg) != ESP_OK){
+    if(!btStarted() && !btStart()){
         ESP_LOGE(SPP_TAG, "%s initialize controller failed\n", __func__);
         return false;
     }
-
-    if (esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT) != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s enable controller failed\n", __func__);
-        return false;
+    
+    esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
+    if(bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
+        if (esp_bluedroid_init()) {
+            ESP_LOGE(SPP_TAG, "%s initialize bluedroid failed\n", __func__);
+            return false;
+        }
     }
-
-    if (esp_bluedroid_init() != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s initialize bluedroid failed\n", __func__);
-        return false;
-    }
-
-    if (esp_bluedroid_enable() != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s enable bluedroid failed\n", __func__);
-        return false;
+    
+    if(bt_state != ESP_BLUEDROID_STATUS_ENABLED){
+        if (esp_bluedroid_enable()) {
+            ESP_LOGE(SPP_TAG, "%s enable bluedroid failed\n", __func__);
+            return false;
+        }
     }
 
     if (esp_spp_register_callback(esp_spp_cb) != ESP_OK){
