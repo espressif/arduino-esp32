@@ -15,16 +15,19 @@ import sys
 import tarfile
 import zipfile
 import re
+_unicode = None
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
+    _unicode = str
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
+    _unicode = unicode
 
 if 'Windows' in platform.system():
     import requests
 
-current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+current_dir = os.path.dirname(os.path.realpath(_unicode(__file__)))
 dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
