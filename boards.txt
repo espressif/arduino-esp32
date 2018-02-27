@@ -82,6 +82,58 @@ esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+pico32.name=ESP32 Pico Kit
+
+pico32.upload.tool=esptool
+pico32.upload.maximum_size=1310720
+pico32.upload.maximum_data_size=294912
+pico32.upload.wait_for_upload_port=true
+
+pico32.serial.disableDTR=true
+pico32.serial.disableRTS=true
+
+pico32.build.mcu=esp32
+pico32.build.core=esp32
+pico32.build.variant=pico32
+pico32.build.board=ESP32_PICO
+
+pico32.build.f_cpu=240000000L
+pico32.build.flash_size=4MB
+pico32.build.flash_freq=80m
+pico32.build.flash_mode=qio
+pico32.build.boot=qio
+pico32.build.partitions=default
+
+pico32.menu.UploadSpeed.921600=921600
+pico32.menu.UploadSpeed.921600.upload.speed=921600
+pico32.menu.UploadSpeed.115200=115200
+pico32.menu.UploadSpeed.115200.upload.speed=115200
+pico32.menu.UploadSpeed.256000.windows=256000
+pico32.menu.UploadSpeed.256000.upload.speed=256000
+pico32.menu.UploadSpeed.230400.windows.upload.speed=256000
+pico32.menu.UploadSpeed.230400=230400
+pico32.menu.UploadSpeed.230400.upload.speed=230400
+pico32.menu.UploadSpeed.460800.linux=460800
+pico32.menu.UploadSpeed.460800.macosx=460800
+pico32.menu.UploadSpeed.460800.upload.speed=460800
+pico32.menu.UploadSpeed.512000.windows=512000
+pico32.menu.UploadSpeed.512000.upload.speed=512000
+
+pico32.menu.DebugLevel.none=None
+pico32.menu.DebugLevel.none.build.code_debug=0
+pico32.menu.DebugLevel.error=Error
+pico32.menu.DebugLevel.error.build.code_debug=1
+pico32.menu.DebugLevel.warn=Warn
+pico32.menu.DebugLevel.warn.build.code_debug=2
+pico32.menu.DebugLevel.info=Info
+pico32.menu.DebugLevel.info.build.code_debug=3
+pico32.menu.DebugLevel.debug=Debug
+pico32.menu.DebugLevel.debug.build.code_debug=4
+pico32.menu.DebugLevel.verbose=Verbose
+pico32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 esp32thing.name=SparkFun ESP32 Thing
 
 esp32thing.upload.tool=esptool
