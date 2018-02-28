@@ -38,6 +38,7 @@ env.Prepend(
     CPPDEFINES=[
         ("ARDUINO", 10805),
         "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
@@ -174,7 +175,7 @@ libs.append(envsafe.BuildLibrary(
     join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
 ))
 
-env.Append(LIBS=libs)
+env.Prepend(LIBS=libs)
 
 #
 # Generate partition table
