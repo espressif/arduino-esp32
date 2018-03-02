@@ -1,6 +1,6 @@
 /*
  ETH.h - espre ETH PHY support.
- Based on WiFi.h from Ardiono WiFi shield library.
+ Based on WiFi.h from Arduino WiFi shield library.
  Copyright (c) 2011-2014 Arduino.  All right reserved.
 
  This library is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@ ETHClass::ETHClass():initialized(false),started(false),staticIP(false)
 ETHClass::~ETHClass()
 {}
 
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type)
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
 {
     esp_err_t err;
     if(initialized){
@@ -84,6 +84,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     eth_config.phy_addr = (eth_phy_base_t)phy_addr;
+    eth_config.clock_mode = clock_mode;
     eth_config.gpio_config = _eth_phy_config_gpio;
     eth_config.tcpip_input = tcpip_adapter_eth_input;
     if(_eth_phy_power_pin >= 0){
@@ -108,26 +109,43 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     return false;
 }
 
-/*
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
-    if(!initialized){
+    esp_err_t err = ESP_OK;
+    tcpip_adapter_ip_info_t info;
+	
+    if(local_ip != (uint32_t)0x00000000){
+        info.ip.addr = static_cast<uint32_t>(local_ip);
+        info.gw.addr = static_cast<uint32_t>(gateway);
+        info.netmask.addr = static_cast<uint32_t>(subnet);
+    } else {
+        info.ip.addr = 0;
+        info.gw.addr = 0;
+        info.netmask.addr = 0;
+	}
+
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
+    if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+        log_e("DHCP could not be stopped! Error: %d", err);
         return false;
     }
 
-    tcpip_adapter_ip_info_t info;
-    info.ip.addr = static_cast<uint32_t>(local_ip);
-    info.gw.addr = static_cast<uint32_t>(gateway);
-    info.netmask.addr = static_cast<uint32_t>(subnet);
-
-    if(!staticIP){
-        tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
-    }
-    if(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_ETH, &info) == ESP_OK) {
+    err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_ETH, &info);
+    if(err != ERR_OK){
+        log_e("STA IP could not be configured! Error: %d", err);
+        return false;
+}
+    if(info.ip.addr){
         staticIP = true;
     } else {
-        return false;
+        err = tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_ETH);
+        if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STARTED){
+            log_w("DHCP could not be started! Error: %d", err);
+            return false;
+        }
+        staticIP = false;
     }
+
     ip_addr_t d;
     d.type = IPADDR_TYPE_V4;
 
@@ -145,7 +163,6 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
 
     return true;
 }
-*/
 
 IPAddress ETHClass::localIP()
 {

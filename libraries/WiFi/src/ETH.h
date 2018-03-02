@@ -44,7 +44,11 @@
 #define ETH_PHY_MDIO 18
 #endif
 
-typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_MAX} eth_phy_type_t;
+#ifndef ETH_CLK_MODE
+#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
+#endif
+
+typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_MAX } eth_phy_type_t;
 
 class ETHClass {
     private:
@@ -56,10 +60,9 @@ class ETHClass {
         ETHClass();
         ~ETHClass();
 
-        bool begin(uint8_t phy_addr=ETH_PHY_ADDR, int power=ETH_PHY_POWER, int mdc=ETH_PHY_MDC, int mdio=ETH_PHY_MDIO, eth_phy_type_t type=ETH_PHY_TYPE);
+        bool begin(uint8_t phy_addr=ETH_PHY_ADDR, int power=ETH_PHY_POWER, int mdc=ETH_PHY_MDC, int mdio=ETH_PHY_MDIO, eth_phy_type_t type=ETH_PHY_TYPE, eth_clock_mode_t clk_mode=ETH_CLK_MODE);
 
-        // NOT WORKING YET!
-        //bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
+        bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
 
         const char * getHostname();
         bool setHostname(const char * hostname);

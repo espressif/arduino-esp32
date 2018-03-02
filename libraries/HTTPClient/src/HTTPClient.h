@@ -30,6 +30,7 @@
 #include <memory>
 #include <Arduino.h>
 #include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 
 #define HTTPCLIENT_DEFAULT_TCP_TIMEOUT (5000)
 

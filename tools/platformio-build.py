@@ -81,15 +81,15 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
     LIBPATH=[
@@ -129,7 +129,9 @@ env.Append(
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.spiram_incompatible_fns.ld",
-        "-u", "ld_include_panic_highint_hdl"
+        "-u", "ld_include_panic_highint_hdl",
+        "-u", "__cxa_guard_dummy",
+        "-u", "__cxx_fatal_exception"
     ],
 
     UPLOADERFLAGS=[
@@ -172,7 +174,7 @@ libs.append(envsafe.BuildLibrary(
     join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
 ))
 
-env.Prepend(LIBS=libs)
+env.Append(LIBS=libs)
 
 #
 # Generate partition table

@@ -49,10 +49,17 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
         return;
     }
 
-    _sck = sck;
-    _miso = miso;
-    _mosi = mosi;
-    _ss = ss;
+    if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
+        _sck = (_spi_num == VSPI) ? SCK : 14;
+        _miso = (_spi_num == VSPI) ? MISO : 12;
+        _mosi = (_spi_num == VSPI) ? MOSI : 13;
+        _ss = (_spi_num == VSPI) ? SS : 15;
+    } else {
+        _sck = sck;
+        _miso = miso;
+        _mosi = mosi;
+        _ss = ss;
+    }
 
     spiAttachSCK(_spi, _sck);
     spiAttachMISO(_spi, _miso);
