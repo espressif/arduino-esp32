@@ -295,6 +295,11 @@ VFSFileImpl::operator bool()
     return (_isDirectory && _d != NULL) || _f != NULL;
 }
 
+time_t VFSFileImpl::getLastWrite() {
+    _getStat() ;
+    return _stat.st_mtime;
+}
+
 void VFSFileImpl::_getStat() const
 {
     if(!_path) {
