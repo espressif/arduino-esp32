@@ -387,6 +387,49 @@ lolin32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+lolin32-lite.name=WEMOS LOLIN32-Lite
+
+lolin32-lite.upload.tool=esptool
+lolin32-lite.upload.maximum_size=1310720
+lolin32-lite.upload.maximum_data_size=294912
+lolin32-lite.upload.wait_for_upload_port=true
+
+lolin32-lite.serial.disableDTR=true
+lolin32-lite.serial.disableRTS=true
+
+lolin32-lite.build.mcu=esp32
+lolin32-lite.build.core=esp32
+lolin32-lite.build.variant=lolin32-lite-lite
+lolin32-lite.build.board=LOLIN32-LITE
+
+lolin32-lite.build.f_cpu=240000000L
+lolin32-lite.build.flash_mode=dio
+lolin32-lite.build.flash_size=4MB
+lolin32-lite.build.boot=bootloader
+lolin32-lite.build.partitions=default
+
+lolin32-lite.menu.FlashFreq.80=80MHz
+lolin32-lite.menu.FlashFreq.80.build.flash_freq=80m
+lolin32-lite.menu.FlashFreq.40=40MHz
+lolin32-lite.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin32-lite.menu.UploadSpeed.921600=921600
+lolin32-lite.menu.UploadSpeed.921600.upload.speed=921600
+lolin32-lite.menu.UploadSpeed.115200=115200
+lolin32-lite.menu.UploadSpeed.115200.upload.speed=115200
+lolin32-lite.menu.UploadSpeed.256000.windows=256000
+lolin32-lite.menu.UploadSpeed.256000.upload.speed=256000
+lolin32-lite.menu.UploadSpeed.230400.windows.upload.speed=256000
+lolin32-lite.menu.UploadSpeed.230400=230400
+lolin32-lite.menu.UploadSpeed.230400.upload.speed=230400
+lolin32-lite.menu.UploadSpeed.460800.linux=460800
+lolin32-lite.menu.UploadSpeed.460800.macosx=460800
+lolin32-lite.menu.UploadSpeed.460800.upload.speed=460800
+lolin32-lite.menu.UploadSpeed.512000.windows=512000
+lolin32-lite.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 pocket_32.name=Dongsen Tech Pocket 32
 
 pocket_32.upload.tool=esptool
