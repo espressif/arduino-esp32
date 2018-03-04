@@ -232,9 +232,7 @@ void HTTPClient::end(void)
     if(connected()) {
         if(_tcp->available() > 0) {
             log_d("still data in buffer (%d), clean up.", _tcp->available());
-            while(_tcp->available() > 0) {
-                _tcp->read();
-            }
+            _tcp->flush();
         }
         if(_reuse && _canReuse) {
             log_d("tcp keep open for reuse");
