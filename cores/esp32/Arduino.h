@@ -80,8 +80,6 @@
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
 
-#define sei()
-#define cli()
 #define interrupts() sei()
 #define noInterrupts() cli()
 

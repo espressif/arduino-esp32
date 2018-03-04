@@ -61,6 +61,11 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp_system.h"
 
+#include <freertos/portmacro.h>
+
+void sei();
+void cli();
+
 //returns chip temperature in Celsius
 float temperatureRead();
 
