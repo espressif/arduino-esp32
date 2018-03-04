@@ -21,6 +21,7 @@
 #include "nvs.h"
 #include "esp_partition.h"
 #include "esp_log.h"
+#include "pthread.h"
 #include <sys/time.h>
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -40,7 +41,7 @@ void yield()
 portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
 static pthread_key_t microsStore=NULL; // Thread Local Storage Handle
 
-void* microsStoreDelete(void * storage) {  // release thread local data when task is delete.
+void microsStoreDelete(void * storage) {  // release thread local data when task is delete.
     if(storage) free(storage);
 }
 
