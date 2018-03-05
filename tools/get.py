@@ -1,9 +1,16 @@
 #!/usr/bin/env python
-# This script will download and extract required tools into the current directory.
-# Tools list is obtained from package/package_esp8266com_index.template.json file.
-# Written by Ivan Grokhotkov, 2015.
-#
+
+"""Script to download and extract tools
+
+This script will download and extract required tools into the current directory.
+Tools list is obtained from package/package_esp8266com_index.template.json file.
+"""
+
 from __future__ import print_function
+
+__author__ = "Ivan Grokhotkov"
+__version__ = "2015"
+
 import os
 import shutil
 import errno
@@ -15,8 +22,10 @@ import sys
 import tarfile
 import zipfile
 import re
+
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
+    unicode = lambda s: str(s)
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
@@ -54,7 +63,7 @@ def unpack(filename, destination):
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
         tfile.extractall(destination)
-        dirname= tfile.getnames()[0]
+        dirname = tfile.getnames()[0]
     elif filename.endswith('zip'):
         zfile = zipfile.ZipFile(filename)
         zfile.extractall(destination)
@@ -77,7 +86,7 @@ def get_tool(tool):
     url = tool['url']
     #real_hash = tool['checksum'].split(':')[1]
     if not os.path.isfile(local_path):
-        print('Downloading ' + archive_name);
+        print('Downloading ' + archive_name)
         sys.stdout.flush()
         if 'CYGWIN_NT' in sys_name:
             import ssl
