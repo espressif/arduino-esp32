@@ -188,6 +188,14 @@ int BluetoothSerial::peek(void)
     return -1;
 }
 
+bool BluetoothSerial::hasClient(void)
+{
+    if (client)
+        return true;
+	
+    return false;
+}
+
 int BluetoothSerial::read(void)
 {
     if (available()){
