@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -92,20 +92,20 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 
 static bool _init_bt(const char *deviceName)
 {
-    if(!btStarted() && !btStart()){
+    if (!btStarted() && !btStart()){
         ESP_LOGE(SPP_TAG, "%s initialize controller failed\n", __func__);
         return false;
     }
     
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
-    if(bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
+    if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
         if (esp_bluedroid_init()) {
             ESP_LOGE(SPP_TAG, "%s initialize bluedroid failed\n", __func__);
             return false;
         }
     }
     
-    if(bt_state != ESP_BLUEDROID_STATUS_ENABLED){
+    if (bt_state != ESP_BLUEDROID_STATUS_ENABLED){
         if (esp_bluedroid_enable()) {
             ESP_LOGE(SPP_TAG, "%s enable bluedroid failed\n", __func__);
             return false;
