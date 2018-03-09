@@ -29,6 +29,7 @@
 #include "esp_spp_api.h"
 
 #define SPP_SERVER_NAME "ESP32_SPP_SERVER"
+#define SPP_TAG "BluetoothSerial"
 
 #define QUEUE_SIZE 256
 uint32_t client;
@@ -186,6 +187,14 @@ int BluetoothSerial::peek(void)
         }
     }
     return -1;
+}
+
+bool BluetoothSerial::hasClient(void)
+{
+    if (client)
+        return true;
+	
+    return false;
 }
 
 int BluetoothSerial::read(void)

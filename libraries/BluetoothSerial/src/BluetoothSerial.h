@@ -40,6 +40,7 @@ class BluetoothSerial: public Stream
         bool begin(String localName=String());
         int available(void);
         int peek(void);
+        bool hasClient(void);
         int read(void);
         size_t write(uint8_t c);
         size_t write(const uint8_t *buffer, size_t size);
