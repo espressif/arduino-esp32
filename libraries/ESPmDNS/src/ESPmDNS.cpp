@@ -39,22 +39,28 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
+#include "WiFi.h"
 #include <functional>
 #include "esp_wifi.h"
 
-MDNSResponder::MDNSResponder() : mdns(NULL), _if(TCPIP_ADAPTER_IF_STA) {}
+static void _on_sys_event(system_event_t *event){
+    mdns_handle_system_event(NULL, event);
+}
+
+MDNSResponder::MDNSResponder() :results(NULL) {}
 MDNSResponder::~MDNSResponder() {
     end();
 }
 
-bool MDNSResponder::begin(const char* hostName, tcpip_adapter_if_t tcpip_if, uint32_t ttl){
-    _if = tcpip_if;
-    if(!mdns && mdns_init(_if, &mdns)){
+bool MDNSResponder::begin(const char* hostName){
+    if(mdns_init()){
         log_e("Failed starting MDNS");
         return false;
     }
+    WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
-    if(mdns_set_hostname(mdns, hostName)) {
+	_hostname.toLowerCase();
+    if(mdns_hostname_set(hostName)) {
         log_e("Failed setting MDNS hostname");
         return false;
     }
@@ -62,121 +68,216 @@ bool MDNSResponder::begin(const char* hostName, tcpip_adapter_if_t tcpip_if, uin
 }
 
 void MDNSResponder::end() {
-    if(!mdns){
-        return;
-    }
-    mdns_free(mdns);
-    mdns = NULL;
+    mdns_free();
 }
 
 void MDNSResponder::setInstanceName(String name) {
     if (name.length() > 63) return;
-    if(mdns_set_instance(mdns, name.c_str())){
+    if(mdns_instance_name_set(name.c_str())){
         log_e("Failed setting MDNS instance");
         return;
     }
 }
 
+
 void MDNSResponder::enableArduino(uint16_t port, bool auth){
-    const char * arduTxtData[4] = {
-            "board=" ARDUINO_BOARD,
-            "tcp_check=no",
-            "ssh_upload=no",
-            "auth_upload=no"
+    mdns_txt_item_t arduTxtData[4] = {
+        {(char*)"board"         ,(char*)ARDUINO_VARIANT},
+        {(char*)"tcp_check"     ,(char*)"no"},
+        {(char*)"ssh_upload"    ,(char*)"no"},
+        {(char*)"auth_upload"   ,(char*)"no"}
     };
-    if(auth){
-        arduTxtData[3] = "auth_upload=yes";
+
+    if(mdns_service_add(NULL, "_arduino", "_tcp", port, arduTxtData, 4)) {
+        log_e("Failed adding Arduino service");
     }
 
-    if(mdns_service_add(mdns, "_arduino", "_tcp", port)) {
-        log_e("Failed adding Arduino service");
-    } else if(mdns_service_txt_set(mdns, "_arduino", "_tcp", 4, arduTxtData)) {
-        log_e("Failed setting Arduino service TXT");
+    if(auth && mdns_service_txt_item_set("_arduino", "_tcp", "auth_upload", "yes")){
+        log_e("Failed setting Arduino txt item");
     }
 }
 
 void MDNSResponder::disableArduino(){
-    if(mdns_service_remove(mdns, "_arduino", "_tcp")) {
+    if(mdns_service_remove("_arduino", "_tcp")) {
         log_w("Failed removing Arduino service");
     }
 }
 
-void MDNSResponder::enableWorkstation(){
+void MDNSResponder::enableWorkstation(wifi_interface_t interface){
     char winstance[21+_hostname.length()];
     uint8_t mac[6];
-    esp_wifi_get_mac((wifi_interface_t)_if, mac);
+    esp_wifi_get_mac(interface, mac);
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    if(mdns_service_add(mdns, "_workstation", "_tcp", 9)) {
+    if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
         log_e("Failed adding Workstation service");
-    } else if(mdns_service_instance_set(mdns, "_workstation", "_tcp", winstance)) {
+    } else if(mdns_service_instance_name_set("_workstation", "_tcp", winstance)) {
         log_e("Failed setting Workstation service instance name");
     }
 }
 
 void MDNSResponder::disableWorkstation(){
-    if(mdns_service_remove(mdns, "_workstation", "_tcp")) {
+    if(mdns_service_remove("_workstation", "_tcp")) {
         log_w("Failed removing Workstation service");
     }
 }
 
 void MDNSResponder::addService(char *name, char *proto, uint16_t port){
-    if(mdns_service_add(mdns, name, proto, port)) {
+    char _name[strlen(name)+2];
+    char _proto[strlen(proto)+2];
+	if (name[0] == '_') {
+		sprintf(_name, "%s", name);
+	} else {
+		sprintf(_name, "_%s", name);
+	}
+	if (proto[0] == '_') {
+		sprintf(_proto, "%s", proto);
+	} else {
+		sprintf(_proto, "_%s", proto);
+	}
+
+    if(mdns_service_add(NULL, _name, _proto, port, NULL, 0)) {
         log_e("Failed adding service %s.%s.\n", name, proto);
     }
 }
 
 bool MDNSResponder::addServiceTxt(char *name, char *proto, char *key, char *value){
-    //ToDo: implement it in IDF. This will set the TXT to one record currently
-    String txt = String(key) + "=" + String(value);
-    const char * txt_chr[1] = {txt.c_str()};
-    if(mdns_service_txt_set(mdns, name, proto, 1, txt_chr)) {
+    char _name[strlen(name)+2];
+    char _proto[strlen(proto)+2];
+	if (name[0] == '_') {
+		sprintf(_name, "%s", name);
+	} else {
+		sprintf(_name, "_%s", name);
+	}
+	if (proto[0] == '_') {
+		sprintf(_proto, "%s", proto);
+	} else {
+		sprintf(_proto, "_%s", proto);
+	}
+
+    if(mdns_service_txt_item_set(_name, _proto, key, value)) {
         log_e("Failed setting service TXT");
         return false;
     }
     return true;
 }
 
-int MDNSResponder::queryService(char *service, char *proto) {
-    mdns_result_free(mdns);
-    if(proto){
-        char srv[strlen(service)+2];
-        char prt[strlen(proto)+2];
-        sprintf(srv, "_%s", service);
-        sprintf(prt, "_%s", proto);
-        return mdns_query(mdns, srv, prt, 2000);
-    }
-    return mdns_query(mdns, service, NULL, 2000);
-}
+IPAddress MDNSResponder::queryHost(char *host, uint32_t timeout){
+    struct ip4_addr addr;
+    addr.addr = 0;
 
-IPAddress MDNSResponder::queryHost(char *host){
-    mdns_result_free(mdns);
-    if(!mdns_query(mdns, host, NULL, 2000)){
+    esp_err_t err = mdns_query_a(host, timeout,  &addr);
+    if(err){
+        if(err == ESP_ERR_NOT_FOUND){
+            log_w("Host was not found!");
+            return IPAddress();
+        }
+        log_e("Query Failed");
         return IPAddress();
     }
-    return IP(0);
+    return IPAddress(addr.addr);
+}
+
+
+int MDNSResponder::queryService(char *service, char *proto) {
+    if(!service || !service[0] || !proto || !proto[0]){
+        log_e("Bad Parameters");
+        return 0;
+    }
+
+    if(results){
+        mdns_query_results_free(results);
+        results = NULL;
+    }
+
+    char srv[strlen(service)+2];
+    char prt[strlen(proto)+2];
+	if (service[0] == '_') {
+		sprintf(srv, "%s", service);
+	} else {
+		sprintf(srv, "_%s", service);
+	}
+	if (proto[0] == '_') {
+		sprintf(prt, "%s", proto);
+	} else {
+		sprintf(prt, "_%s", proto);
+	}
+
+    esp_err_t err = mdns_query_ptr(srv, prt, 3000, 20,  &results);
+    if(err){
+        log_e("Query Failed");
+        return 0;
+    }
+    if(!results){
+        log_w("No results found!");
+        return 0;
+    }
+
+    mdns_result_t * r = results;
+    int i = 0;
+    while(r){
+        i++;
+        r = r->next;
+    }
+    return i;
+}
+
+mdns_result_t * MDNSResponder::_getResult(int idx){
+    mdns_result_t * result = results;
+    int i = 0;
+    while(result){
+        if(i == idx){
+            break;
+        }
+        i++;
+        result = result->next;
+    }
+    return result;
 }
 
 String MDNSResponder::hostname(int idx) {
-    const mdns_result_t * result = mdns_result_get(mdns, idx);
+    mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
         return String();
     }
-    return String(result->host);
+    return String(result->hostname);
 }
 
 IPAddress MDNSResponder::IP(int idx) {
-    const mdns_result_t * result = mdns_result_get(mdns, idx);
+    mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
         return IPAddress();
     }
-    return IPAddress(result->addr.addr);
+    mdns_ip_addr_t * addr = result->addr;
+    while(addr){
+        if(addr->addr.type == MDNS_IP_PROTOCOL_V4){
+            return IPAddress(addr->addr.u_addr.ip4.addr);
+        }
+        addr = addr->next;
+    }
+    return IPAddress();
+}
+
+IPv6Address MDNSResponder::IPv6(int idx) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return IPv6Address();
+    }
+    mdns_ip_addr_t * addr = result->addr;
+    while(addr){
+        if(addr->addr.type == MDNS_IP_PROTOCOL_V6){
+            return IPv6Address(addr->addr.u_addr.ip6.addr);
+        }
+        addr = addr->next;
+    }
+    return IPv6Address();
 }
 
 uint16_t MDNSResponder::port(int idx) {
-    const mdns_result_t * result = mdns_result_get(mdns, idx);
+    mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
         return 0;

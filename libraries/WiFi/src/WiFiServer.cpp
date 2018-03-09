@@ -49,7 +49,7 @@ WiFiClient WiFiServer::available(){
   else {
   struct sockaddr_in _client;
   int cs = sizeof(struct sockaddr_in);
-    client_sock = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    client_sock = lwip_accept_r(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
   }
   if(client_sock >= 0){
     int val = 1;
@@ -96,7 +96,7 @@ bool WiFiServer::hasClient() {
     }
     struct sockaddr_in _client;
     int cs = sizeof(struct sockaddr_in);
-    _accepted_sockfd = accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
+    _accepted_sockfd = lwip_accept_r(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
     if (_accepted_sockfd >= 0) {
       return true;
     }

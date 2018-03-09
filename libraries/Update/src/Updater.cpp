@@ -68,10 +68,16 @@ UpdateClass::UpdateClass()
 , _buffer(0)
 , _bufferLen(0)
 , _size(0)
+, _progress_callback(NULL)
 , _progress(0)
 , _command(U_FLASH)
 , _partition(NULL)
 {
+}
+
+UpdateClass& UpdateClass::onProgress(THandlerFunction_Progress fn) {
+    _progress_callback = fn;
+    return *this;
 }
 
 void UpdateClass::_reset() {
@@ -306,7 +312,9 @@ size_t UpdateClass::writeStream(Stream &data) {
         _reset();
         return 0;
     }
-
+    if (_progress_callback) {
+        _progress_callback(0, _size);
+    }
     while(remaining()) {
         toRead = data.readBytes(_buffer + _bufferLen,  (SPI_FLASH_SEC_SIZE - _bufferLen));
         if(toRead == 0) { //Timeout
@@ -321,6 +329,12 @@ size_t UpdateClass::writeStream(Stream &data) {
         if((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer())
             return written;
         written += toRead;
+        if(_progress_callback) {
+            _progress_callback(_progress, _size);
+        }
+    }
+    if(_progress_callback) {
+        _progress_callback(_size, _size);
     }
     return written;
 }
