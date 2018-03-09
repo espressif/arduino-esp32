@@ -44,6 +44,10 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,transmitting(0)
 {}
 
+void TwoWire::setBus(uint8_t bus_num) {
+    num = bus_num & 1;
+}
+
 void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     if(sdaPin < 0) {

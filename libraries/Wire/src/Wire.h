@@ -52,6 +52,7 @@ protected:
 
 public:
     TwoWire(uint8_t bus_num);
+    void setBus(uint8_t bus_num);
     void begin(int sda=-1, int scl=-1, uint32_t frequency=100000);
     void setClock(uint32_t);
     void beginTransmission(uint8_t);
