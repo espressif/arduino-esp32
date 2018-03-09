@@ -38,6 +38,7 @@ env.Prepend(
     CPPDEFINES=[
         ("ARDUINO", 10805),
         "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
@@ -136,7 +137,7 @@ env.Append(
 
     UPLOADERFLAGS=[
         "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
-        "0x8000", join("$BUILD_DIR", "partitions.bin"),
+        "0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin"),
         "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
@@ -174,7 +175,7 @@ libs.append(envsafe.BuildLibrary(
     join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
 ))
 
-env.Append(LIBS=libs)
+env.Prepend(LIBS=libs)
 
 #
 # Generate partition table

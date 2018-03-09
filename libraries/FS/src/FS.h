@@ -70,6 +70,7 @@ public:
     size_t size() const;
     void close();
     operator bool() const;
+    time_t getLastWrite();
     const char* name() const;
 
     boolean isDirectory(void);

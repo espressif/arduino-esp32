@@ -218,7 +218,7 @@ bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 
 uint64_t EspClass::getEfuseMac(void)
 {
-    uint64_t _chipmacid;
+    uint64_t _chipmacid = 0LL;
     esp_efuse_mac_get_default((uint8_t*) (&_chipmacid));
     return _chipmacid;
 }
