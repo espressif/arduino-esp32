@@ -68,32 +68,48 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
         }
     }
 
+    i2cDetatchSCL(i2c,scl); // detach pins before resetting I2C perpherial 
+    i2cDetatchSDA(i2c,sda); // else a glitch will appear on the i2c bus
+    i2c = i2cInit(num);// i2cInit() now performs a hardware reset
     if(i2c == NULL) {
-        i2c = i2cInit(num);
-        if(i2c == NULL) {
-            return;
-        }
-    }
+      return;
+      }
 
     i2cSetFrequency(i2c, frequency);
 
-    if(sda >= 0 && sda != sdaPin ) {
-        i2cDetachSDA(i2c, sda);
-    }
-
-    if(scl >= 0 && scl != sclPin ) {
-        i2cDetachSCL(i2c, scl);
-    }
-     
     sda = sdaPin;
     scl = sclPin;
+// 03/10/2018 test I2C bus before attach. 
+// if the bus is not 'clear' try the recommended recovery sequence, START, 9 Clocks, STOP
+    digitalWrite(sda,HIGH);
+    digitalWrite(scl,HIGH);
+    pinMode(sda,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    pinMode(scl,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    
+    if(!digitalRead(sda)||~digitalRead(scl)){ // bus in busy state
+      log_d("invalid state sda=%d, scl=%d",digitalRead(sda),digitalRead(scl));
+      digitalWrite(sda,HIGH);
+      digitalWrite(scl,HIGH);
+      delayMicroseconds(50);
+      digitalWrite(sda,LOW);
+      for(uint8_t a=0; a<9;a++){
+        delayMicroseconds(50);
+        digitalWrite(scl,LOW);
+        delayMicroseconds(50);
+        digitalWrite(scl,HIGH);
+        }
+      delayMicroseconds(50);
+      digitalWrite(sda,HIGH);
+      }
 
     i2cAttachSDA(i2c, sda);
     i2cAttachSCL(i2c, scl);
 
     flush();
 
-    i2cInitFix(i2c);
+/* This function should no longer be necessary, the 
+   i2cInitFix(i2c);
+*/
 }
 
 void TwoWire::setTimeOut(uint16_t timeOutMillis){
