@@ -287,8 +287,13 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
     if(i2c == NULL){
         return 0;
     }
-
-    return APB_CLK_FREQ/(i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
+    uint32_t result = 0;
+    uint32_t old_count = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
+    if(old_count>0){
+      result = APB_CLK_FREQ / old_count;
+      }
+     else result = 0;
+  return result;
 }
 
 /*
@@ -313,6 +318,8 @@ i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detache
         }
     }
 #endif
+    I2C_MUTEX_LOCK();
+    uint32_t old_clock = i2cGetFrequency(i2c);
 
     if(i2c_num == 0) {
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
@@ -323,8 +330,6 @@ i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detache
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
-    
-    I2C_MUTEX_LOCK();
     i2c->dev->ctr.val = 0;
     i2c->dev->ctr.ms_mode = 1;
     i2c->dev->ctr.sda_force_out = 1 ;
@@ -338,6 +343,8 @@ i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detache
 
     i2c->dev->slave_addr.val = 0;
     I2C_MUTEX_UNLOCK();
+  
+    if(old_clock) i2cSetFrequency(i2c,old_clock); // reconfigure
 
     return i2c;
 }
@@ -967,7 +974,11 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 if(i2c == NULL){
   return I2C_ERROR_DEV;
   }
-
+if (i2c->dev->status_reg.bus_busy){
+  log_e("Bus busy, reinit");
+  i2cInit(i2c->num);
+  return I2C_ERROR_BUSY;
+  }
 I2C_MUTEX_LOCK();
 /* what about co-existance with SLAVE mode?
   Should I check if a slaveMode xfer is in progress and hang
