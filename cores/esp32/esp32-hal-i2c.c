@@ -176,7 +176,7 @@ i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
         return I2C_ERROR_DEV;
     }
     digitalWrite(scl, HIGH); 
-    pinMode(scl, OPEN_DRAIN | PULLUP);
+    pinMode(scl, OPEN_DRAIN | PULLUP | INPUT | OUTPUT);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
     return I2C_ERROR_OK;
@@ -189,7 +189,7 @@ i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
     }
     pinMatrixOutDetach(scl, false, false);
     pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
-    pinMode(scl, INPUT);
+    pinMode(scl, INPUT | PULLUP);
     return I2C_ERROR_OK;
 }
 
@@ -199,7 +199,7 @@ i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
         return I2C_ERROR_DEV;
     }
     digitalWrite(sda, HIGH); 
-    pinMode(sda, OPEN_DRAIN | PULLUP);
+    pinMode(sda, OPEN_DRAIN | PULLUP | INPUT | OUTPUT );
     pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
     pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
     return I2C_ERROR_OK;
@@ -212,7 +212,7 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
     }
     pinMatrixOutDetach(sda, false, false);
     pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
-    pinMode(sda, INPUT);
+    pinMode(sda, INPUT | PULLUP);
     return I2C_ERROR_OK;
 }
 
@@ -297,7 +297,7 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
  * addr_10bit_en - enable slave 10bit address mode.
  * */
 // 24Nov17 only supports Master Mode 
-i2c_t * i2cInit(uint8_t i2c_num)
+i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detached, else glitch
 {
     if(i2c_num > 1){
         return NULL;
@@ -315,9 +315,11 @@ i2c_t * i2cInit(uint8_t i2c_num)
 #endif
 
     if(i2c_num == 0) {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);//  release reset
     } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST); //reset Hardware
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
