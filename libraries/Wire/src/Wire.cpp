@@ -68,8 +68,8 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
         }
     }
 
-    i2cDetatchSCL(i2c,scl); // detach pins before resetting I2C perpherial 
-    i2cDetatchSDA(i2c,sda); // else a glitch will appear on the i2c bus
+    i2cDetachSCL(i2c,scl); // detach pins before resetting I2C perpherial 
+    i2cDetachSDA(i2c,sda); // else a glitch will appear on the i2c bus
     i2c = i2cInit(num);// i2cInit() now performs a hardware reset
     if(i2c == NULL) {
       return;
