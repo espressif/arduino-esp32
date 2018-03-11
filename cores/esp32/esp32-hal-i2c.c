@@ -975,9 +975,10 @@ if(i2c == NULL){
   return I2C_ERROR_DEV;
   }
 if (i2c->dev->status_reg.bus_busy){
-  log_e("Bus busy, reinit");
+  log_i("Bus busy, reinit");
   i2cInit(i2c->num);
-  return I2C_ERROR_BUSY;
+  if (i2c->dev->status_reg.bus_busy) return I2C_ERROR_BUSY;
+  else log_i("recovered");
   }
 I2C_MUTEX_LOCK();
 /* what about co-existance with SLAVE mode?
