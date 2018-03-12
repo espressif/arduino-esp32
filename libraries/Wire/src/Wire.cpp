@@ -67,12 +67,35 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
             return;
         }
     }
+  
+    if(!initHardware(sdaPin, sclPin, frequency)) return;
+
+	flush();
+
+}
+
+void TwoWire::setTimeOut(uint16_t timeOutMillis){
+  _timeOutMillis = timeOutMillis;
+}
+  
+uint16_t TwoWire::getTimeOut(){
+  return _timeOutMillis;
+}
+
+void TwoWire::setClock(uint32_t frequency)
+{
+    i2cSetFrequency(i2c, frequency);
+}
+
+/*@StickBreaker common handler for processing the queued commands
+*/
+bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
 
     i2cDetachSCL(i2c,scl); // detach pins before resetting I2C perpherial 
     i2cDetachSDA(i2c,sda); // else a glitch will appear on the i2c bus
     i2c = i2cInit(num);// i2cInit() now performs a hardware reset
     if(i2c == NULL) {
-      return;
+      return false;
       }
 
     i2cSetFrequency(i2c, frequency);
@@ -104,33 +127,14 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 
     i2cAttachSDA(i2c, sda);
     i2cAttachSCL(i2c, scl);
+    return true;
+}	
 
-    flush();
-
-/* This function should no longer be necessary, the 
-   i2cInitFix(i2c);
-*/
-}
-
-void TwoWire::setTimeOut(uint16_t timeOutMillis){
-  _timeOutMillis = timeOutMillis;
-}
-  
-uint16_t TwoWire::getTimeOut(){
-  return _timeOutMillis;
-}
-
-void TwoWire::setClock(uint32_t frequency)
-{
-    i2cSetFrequency(i2c, frequency);
-}
-/*@StickBreaker common handler for processing the queued commands
-*/
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
   if(last_error==I2C_ERROR_BUSY){ // try to clear the bus
-    begin(sda,scl,getClock());
-    last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+    if(initHardware(sda,scl,getClock()))
+      last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
     }
   
   rxIndex = 0;
