@@ -974,11 +974,9 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 if(i2c == NULL){
   return I2C_ERROR_DEV;
   }
-if (i2c->dev->status_reg.bus_busy){
+if (i2c->dev->status_reg.bus_busy){ // return error, let TwoWire() handle resetting the hardware.
   log_i("Bus busy, reinit");
-  i2cInit(i2c->num);
-  if (i2c->dev->status_reg.bus_busy) return I2C_ERROR_BUSY;
-  else log_i("recovered");
+  return I2C_ERROR_BUSY;
   }
 I2C_MUTEX_LOCK();
 /* what about co-existance with SLAVE mode?
