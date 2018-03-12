@@ -43,7 +43,7 @@
             {
               "packager": "esp32",
               "name": "mkspiffs",
-              "version": "0.2.1"
+              "version": "0.2.2"
             }
           ]
         }
@@ -105,49 +105,49 @@
         },
         {
           "name": "mkspiffs",
-          "version": "0.2.1",
+          "version": "0.2.2",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-windows.zip",
-              "archiveFileName": "mkspiffs-0.2.1-windows.zip",
-              "checksum": "SHA-256:baf7b661f8f6128300a33ca20a2158fd9d0bcdad389c4424f913fe3ad08d2dd5",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-win32.zip",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-win32.zip",
+              "checksum": "SHA-256:988baa2827005a20a7c7028f0c2d45d19df2e0a7d42319f4a7a5776a3f0dff2e",
               "size": "347207"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-osx.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.1-osx.tar.gz",
-              "checksum": "SHA-256:66e71f20d72fd7c5a75e016b5d88d51793558e68b0e069142dbe8ac1de30a431",
-              "size": "122716"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
+              "checksum": "SHA-256:7aee138be9a73fe7fd1f75cf3f3695f0afae812d04fcbf74b17da330f66ae4cd",
+              "size": "130211"
             },
             {
               "host": "i386-apple-darwin",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-osx.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.1-osx.tar.gz",
-              "checksum": "SHA-256:66e71f20d72fd7c5a75e016b5d88d51793558e68b0e069142dbe8ac1de30a431",
-              "size": "122716"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
+              "checksum": "SHA-256:7aee138be9a73fe7fd1f75cf3f3695f0afae812d04fcbf74b17da330f66ae4cd",
+              "size": "130211"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux64.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.1-linux64.tar.gz",
-              "checksum": "SHA-256:cca5e947b4c953d4a2b15bae2cd69e052e20c6ac1975ec5d887596a37a24b41a",
-              "size": "49281"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux64.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux64.tar.gz",
+              "checksum": "SHA-256:17f89d9b38d4f68f2f03f7561b951d1d3b6d6f5b74d35b6d3eb8da3440be3400",
+              "size": "50611"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux32.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.1-linux32.tar.gz",
-              "checksum": "SHA-256:7ac82238f703ec97e2a1c2be65665cff055ad91fccf976ff34a95f63bb80a20a",
-              "size": "47944"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux32.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux32.tar.gz",
+              "checksum": "SHA-256:181fca76210de04a23eb7af028d9886de5a73e638c63d351a691a24cfb9f03d3",
+              "size": "48730"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.1/mkspiffs-0.2.1-linux-armhf.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.1-linux-armhf.tar.gz",
-              "checksum": "SHA-256:2c2ae495502c054919ee03c9222eaf15fbdd3b45410129b5d978eb49845389c0",
-              "size": "43965"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux-armhf.tar.gz",
+              "checksum": "SHA-256:2e99cbdf5ee60b27d6ade096d4caf03a90edfd5f4edf4da2a8674d770aa4ca1b",
+              "size": "40658"
             }
           ]
         }

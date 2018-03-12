@@ -59,6 +59,7 @@ bool MDNSResponder::begin(const char* hostName){
     }
     WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
+	_hostname.toLowerCase();
     if(mdns_hostname_set(hostName)) {
         log_e("Failed setting MDNS hostname");
         return false;
@@ -122,13 +123,39 @@ void MDNSResponder::disableWorkstation(){
 }
 
 void MDNSResponder::addService(char *name, char *proto, uint16_t port){
-    if(mdns_service_add(NULL, name, proto, port, NULL, 0)) {
+    char _name[strlen(name)+2];
+    char _proto[strlen(proto)+2];
+	if (name[0] == '_') {
+		sprintf(_name, "%s", name);
+	} else {
+		sprintf(_name, "_%s", name);
+	}
+	if (proto[0] == '_') {
+		sprintf(_proto, "%s", proto);
+	} else {
+		sprintf(_proto, "_%s", proto);
+	}
+
+    if(mdns_service_add(NULL, _name, _proto, port, NULL, 0)) {
         log_e("Failed adding service %s.%s.\n", name, proto);
     }
 }
 
 bool MDNSResponder::addServiceTxt(char *name, char *proto, char *key, char *value){
-    if(mdns_service_txt_item_set(name, proto, key, value)) {
+    char _name[strlen(name)+2];
+    char _proto[strlen(proto)+2];
+	if (name[0] == '_') {
+		sprintf(_name, "%s", name);
+	} else {
+		sprintf(_name, "_%s", name);
+	}
+	if (proto[0] == '_') {
+		sprintf(_proto, "%s", proto);
+	} else {
+		sprintf(_proto, "_%s", proto);
+	}
+
+    if(mdns_service_txt_item_set(_name, _proto, key, value)) {
         log_e("Failed setting service TXT");
         return false;
     }
@@ -165,8 +192,16 @@ int MDNSResponder::queryService(char *service, char *proto) {
 
     char srv[strlen(service)+2];
     char prt[strlen(proto)+2];
-    sprintf(srv, "_%s", service);
-    sprintf(prt, "_%s", proto);
+	if (service[0] == '_') {
+		sprintf(srv, "%s", service);
+	} else {
+		sprintf(srv, "_%s", service);
+	}
+	if (proto[0] == '_') {
+		sprintf(prt, "%s", proto);
+	} else {
+		sprintf(prt, "_%s", proto);
+	}
 
     esp_err_t err = mdns_query_ptr(srv, prt, 3000, 20,  &results);
     if(err){

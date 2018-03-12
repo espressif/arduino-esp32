@@ -286,7 +286,7 @@ const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "S
 #endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
 const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT" };
-#define reason2str(r) ((r>176)?system_event_reasons[r-176]:system_event_reasons[r-1])
+#define reason2str(r) ((r>176)?system_event_reasons[r-177]:system_event_reasons[r-1])
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
@@ -316,7 +316,9 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
     } else if(event->event_id == SYSTEM_EVENT_STA_CONNECTED) {
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
-        if(WiFiSTAClass::status() == WL_IDLE_STATUS) {
+//#1081 https://github.com/espressif/arduino-esp32/issues/1081		
+//        if(WiFiSTAClass::status() == WL_IDLE_STATUS) 
+		{        
             WiFiSTAClass::_setStatus(WL_CONNECTED);
         }
     }
