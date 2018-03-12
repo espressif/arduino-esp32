@@ -110,7 +110,7 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
     pinMode(scl,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
     
     if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
-      log_d("invalid state sda=%d, scl=%d",digitalRead(sda),digitalRead(scl));
+ //     Serial.printf("invalid state sda=%d, scl=%d\n",digitalRead(sda),digitalRead(scl));
       digitalWrite(sda,HIGH);
       digitalWrite(scl,HIGH);
       delayMicroseconds(5);
@@ -124,17 +124,23 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
       delayMicroseconds(5);
       digitalWrite(sda,HIGH);
       }
-
     i2cAttachSDA(i2c, sda);
     i2cAttachSCL(i2c, scl);
+  
+    if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
+//      Serial.println("Bus Invalid State, TwoWire() Can't init");
+      return false; // bus is busy
+      }
+
     return true;
 }	
 
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
   if(last_error==I2C_ERROR_BUSY){ // try to clear the bus
-    if(initHardware(sda,scl,getClock()))
+    if(initHardware(sda,scl,getClock())){
       last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+      }
     }
   
   rxIndex = 0;
@@ -143,7 +149,7 @@ i2c_err_t TwoWire::processQueue(uint32_t * readCount){
   txQueued = 0; // the SendStop=true will restart all Queueing 
   if(_dump){
     i2cDumpI2c(i2c);
-    i2cDumpInts();
+    i2cDumpInts(num);
     }
   i2cFreeQueue(i2c);
   return last_error;
@@ -230,7 +236,7 @@ return last_error;
 /*stickbreaker Dump i2c Interrupt buffer, i2c isr Debugging
 */
 void TwoWire::dumpInts(){
-  i2cDumpInts();
+  i2cDumpInts(num);
 }
 
 /*stickbreaker i2c isr Debugging
