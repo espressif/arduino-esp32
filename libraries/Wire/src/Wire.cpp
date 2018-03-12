@@ -86,19 +86,19 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     pinMode(sda,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
     pinMode(scl,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
     
-    if(!digitalRead(sda)||~digitalRead(scl)){ // bus in busy state
+    if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
       log_d("invalid state sda=%d, scl=%d",digitalRead(sda),digitalRead(scl));
       digitalWrite(sda,HIGH);
       digitalWrite(scl,HIGH);
-      delayMicroseconds(50);
+      delayMicroseconds(5);
       digitalWrite(sda,LOW);
       for(uint8_t a=0; a<9;a++){
-        delayMicroseconds(50);
+        delayMicroseconds(5);
         digitalWrite(scl,LOW);
-        delayMicroseconds(50);
+        delayMicroseconds(5);
         digitalWrite(scl,HIGH);
         }
-      delayMicroseconds(50);
+      delayMicroseconds(5);
       digitalWrite(sda,HIGH);
       }
 
@@ -127,17 +127,22 @@ void TwoWire::setClock(uint32_t frequency)
 /*@StickBreaker common handler for processing the queued commands
 */
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
-   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
-   rxIndex = 0;
-   rxLength = rxQueued;
-   rxQueued = 0;
-   txQueued = 0; // the SendStop=true will restart all Queueing 
-   if(_dump){
-     i2cDumpI2c(i2c);
-     i2cDumpInts();
-     }
-   i2cFreeQueue(i2c);
-   return last_error;
+  last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+  if(last_error==I2C_ERROR_BUSY){ // try to clear the bus
+    begin(sda,scl,getClock());
+    last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+    }
+  
+  rxIndex = 0;
+  rxLength = rxQueued;
+  rxQueued = 0;
+  txQueued = 0; // the SendStop=true will restart all Queueing 
+  if(_dump){
+    i2cDumpI2c(i2c);
+    i2cDumpInts();
+    }
+  i2cFreeQueue(i2c);
+  return last_error;
 }
  
 /* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
