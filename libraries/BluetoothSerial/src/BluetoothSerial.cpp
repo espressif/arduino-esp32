@@ -201,15 +201,15 @@ int BluetoothSerial::read(void)
 {
     if (available()){
         if (!client || SerialQueueBT == NULL){
-            return 0;
+            return -1;
         }
 
         uint8_t c;
         if (xQueueReceive(SerialQueueBT, &c, 0)){
             return c;
         }
-        return 0;
     }
+    return -1;
 }
 
 size_t BluetoothSerial::write(uint8_t c)
