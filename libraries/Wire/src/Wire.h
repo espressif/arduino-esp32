@@ -65,6 +65,7 @@ protected:
     i2c_err_t processQueue(uint32_t *readCount);
     uint16_t _timeOutMillis;
     bool _dump;
+    bool initHardware(int sdaPin, int sclPin, uint32_t frequency);
 
 public:
     TwoWire(uint8_t bus_num);

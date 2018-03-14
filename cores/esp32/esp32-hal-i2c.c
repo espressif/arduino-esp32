@@ -176,7 +176,7 @@ i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
         return I2C_ERROR_DEV;
     }
     digitalWrite(scl, HIGH); 
-    pinMode(scl, OPEN_DRAIN | PULLUP);
+    pinMode(scl, OPEN_DRAIN | PULLUP | INPUT | OUTPUT);
     pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
     pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
     return I2C_ERROR_OK;
@@ -189,7 +189,7 @@ i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
     }
     pinMatrixOutDetach(scl, false, false);
     pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
-    pinMode(scl, INPUT);
+    pinMode(scl, INPUT | PULLUP);
     return I2C_ERROR_OK;
 }
 
@@ -199,7 +199,7 @@ i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
         return I2C_ERROR_DEV;
     }
     digitalWrite(sda, HIGH); 
-    pinMode(sda, OPEN_DRAIN | PULLUP);
+    pinMode(sda, OPEN_DRAIN | PULLUP | INPUT | OUTPUT );
     pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
     pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
     return I2C_ERROR_OK;
@@ -212,7 +212,7 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
     }
     pinMatrixOutDetach(sda, false, false);
     pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
-    pinMode(sda, INPUT);
+    pinMode(sda, INPUT | PULLUP);
     return I2C_ERROR_OK;
 }
 
@@ -287,8 +287,13 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
     if(i2c == NULL){
         return 0;
     }
-
-    return APB_CLK_FREQ/(i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
+    uint32_t result = 0;
+    uint32_t old_count = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
+    if(old_count>0){
+      result = APB_CLK_FREQ / old_count;
+      }
+     else result = 0;
+  return result;
 }
 
 /*
@@ -297,7 +302,7 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
  * addr_10bit_en - enable slave 10bit address mode.
  * */
 // 24Nov17 only supports Master Mode 
-i2c_t * i2cInit(uint8_t i2c_num)
+i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detached, else glitch
 {
     if(i2c_num > 1){
         return NULL;
@@ -313,16 +318,18 @@ i2c_t * i2cInit(uint8_t i2c_num)
         }
     }
 #endif
+    I2C_MUTEX_LOCK();
+    uint32_t old_clock = i2cGetFrequency(i2c);
 
     if(i2c_num == 0) {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);//  release reset
     } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST); //reset Hardware
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
     }
-    
-    I2C_MUTEX_LOCK();
     i2c->dev->ctr.val = 0;
     i2c->dev->ctr.ms_mode = 1;
     i2c->dev->ctr.sda_force_out = 1 ;
@@ -336,6 +343,8 @@ i2c_t * i2cInit(uint8_t i2c_num)
 
     i2c->dev->slave_addr.val = 0;
     I2C_MUTEX_UNLOCK();
+  
+    if(old_clock) i2cSetFrequency(i2c,old_clock); // reconfigure
 
     return i2c;
 }
@@ -376,10 +385,10 @@ void i2cReset(i2c_t* i2c){
 
 /* Stickbreaker ISR mode debug support
 */
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 #define INTBUFFMAX 64
-static uint32_t intBuff[INTBUFFMAX][3];
-static uint32_t intPos=0;
+static uint32_t intBuff[INTBUFFMAX][3][2];
+static uint32_t intPos[2]={0,0};
 #endif
 
 /* Stickbreaker ISR mode debug support
@@ -645,13 +654,10 @@ enable txEmpty, filltx fires, but the SM has already sent a bogus byte out the B
    overlap is not an issue, just keep them full/empty the status_reg.xx_fifo_cnt
    tells the truth. And the INT's fire correctly
 */
-bool readEncountered = false;  // 12/01/2017 this needs to be removed
-// it is nolonger necessary, the fifo's are independent. Run thru the dq's
-// until the cmd[] is full or the txFifo is full.
 uint16_t a=i2c->queuePos; // currently executing dq,
 bool full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
 uint8_t cnt;
-while((a < i2c->queueCount)&&!(full || readEncountered)){
+while((a < i2c->queueCount) && !full){
   I2C_DATA_QUEUE_t *tdq = &i2c->dq[a];
   cnt=0; 
 // add to address to fifo ctrl.addr already has R/W bit positioned correctly 
@@ -697,22 +703,19 @@ while((a < i2c->queueCount)&&!(full || readEncountered)){
         }
       }
     }
-//11/23/2017 overlap tx/rx/tx
-//  else readEncountered = true;
-  
-  if(full) readEncountered =false; //tx possibly needs more
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 
 // update debug buffer tx counts  
-  cnt += intBuff[intPos][1]>>16;
-  intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF)|(cnt<<16);
+  cnt += intBuff[intPos[i2c->num]][1][i2c->num]>>16;
+  intBuff[intPos[i2c->num]][1][i2c->num] = (intBuff[intPos[i2c->num]][1][i2c->num]&0xFFFF)|(cnt<<16);
+
 #endif
 
-  if(!(full||readEncountered)) a++; // check next buffer for tx
+  if(!full) a++; // check next buffer for tx
   }
 
-if((!full) || readEncountered || (a >= i2c->queueCount)){// disable IRQ, the next dq will re-enable it
+if(!full || (a >= i2c->queueCount)){// disable IRQ, the next dq will re-enable it
   i2c->dev->int_ena.tx_fifo_empty=0;
   }
 
@@ -746,10 +749,10 @@ if(tdq->ctrl.mode==1) { // read
       moveCnt = (tdq->length - tdq->position);
       }  
     }
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 // update Debug rxCount
-  cnt += (intBuff[intPos][1])&&0xffFF;
-  intBuff[intPos][1] = (intBuff[intPos][1]&0xFFFF0000)|cnt;
+  cnt += (intBuff[intPos[i2c->num]][1][i2c->num])&&0xffFF;
+  intBuff[intPos[i2c->num]][1][i2c->num] = (intBuff[intPos[i2c->num]][1][i2c->num]&0xFFFF0000)|cnt;
 #endif
   }
 else {
@@ -813,23 +816,22 @@ if(p_i2c->stage==I2C_DONE){ //get Out
   log_e("eject int=%p, ena=%p",activeInt,p_i2c->dev->int_ena.val);
   p_i2c->dev->int_ena.val = 0;
   p_i2c->dev->int_clr.val = activeInt; //0x1FFF;
-//  i2cDumpI2c(p_i2c);
-//  i2cDumpInts();
   return;
   }
 while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important, don't change
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-  if(activeInt==(intBuff[intPos][0]&0x1fff)){
-    intBuff[intPos][0] = (((intBuff[intPos][0]>>16)+1)<<16)|activeInt;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+  if(activeInt==(intBuff[intPos[p_i2c->num]][0][p_i2c->num]&0x1fff)){
+    intBuff[intPos[p_i2c->num]][0][p_i2c->num] = (((intBuff[intPos[p_i2c->num]][0][p_i2c->num]>>16)+1)<<16)|activeInt;
     }
   else{
-    intPos++;
-    intPos %= INTBUFFMAX;
-    intBuff[intPos][0]=(1<<16)|activeInt;
-    intBuff[intPos][1] = 0;
+    intPos[p_i2c->num]++;
+    intPos[p_i2c->num] %= INTBUFFMAX;
+    intBuff[intPos[p_i2c->num]][0][p_i2c->num] = (1<<16) | activeInt;
+    intBuff[intPos[p_i2c->num]][1][p_i2c->num] = 0;
     }
 
-  intBuff[intPos][2] = xTaskGetTickCountFromISR(); // when IRQ fired
+  intBuff[intPos[p_i2c->num]][2][p_i2c->num] = xTaskGetTickCountFromISR(); // when IRQ fired
+ 
 #endif
   uint32_t oldInt =activeInt;
 
@@ -940,13 +942,13 @@ while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important,
   }
 }
  
-void i2cDumpInts(){
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+void i2cDumpInts(uint8_t num){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 uint32_t b;
-log_e("row  count   INTR    TX     RX");
+log_e("%u row  count   INTR    TX     RX",num);
 for(uint32_t a=1;a<=INTBUFFMAX;a++){
-  b=(a+intPos)%INTBUFFMAX;
-  if(intBuff[b][0]!=0) log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0]>>16)&0xFFFF),(intBuff[b][0]&0xFFFF),((intBuff[b][1]>>16)&0xFFFF),(intBuff[b][1]&0xFFFF),intBuff[b][2]);
+  b=(a+intPos[num])%INTBUFFMAX;
+  if(intBuff[b][0][num]!=0) log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0][num]>>16)&0xFFFF),(intBuff[b][0][num]&0xFFFF),((intBuff[b][1][num]>>16)&0xFFFF),(intBuff[b][1][num]&0xFFFF),intBuff[b][2][num]);
   }
 #else
 log_n("enable Core Debug Level \"Error\"");
@@ -965,7 +967,10 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 if(i2c == NULL){
   return I2C_ERROR_DEV;
   }
-
+if (i2c->dev->status_reg.bus_busy){ // return error, let TwoWire() handle resetting the hardware.
+  log_i("Bus busy, reinit");
+  return I2C_ERROR_BUSY;
+  }
 I2C_MUTEX_LOCK();
 /* what about co-existance with SLAVE mode?
   Should I check if a slaveMode xfer is in progress and hang
@@ -974,9 +979,13 @@ I2C_MUTEX_LOCK();
 */
 i2c->stage = I2C_DONE; // until ready
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-memset(intBuff,0,sizeof(intBuff));
-intPos=0;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+for(uint16_t i=0;i<INTBUFFMAX;i++){
+  intBuff[i][0][i2c->num] = 0;
+  intBuff[i][1][i2c->num] = 0;
+  intBuff[i][2][i2c->num] = 0;
+  }
+intPos[i2c->num] = 0;
 #endif
 // EventGroup is used to signal transmisison completion from ISR
 // not always reliable. Sometimes, the FreeRTOS scheduler is maxed out and refuses request
@@ -1063,9 +1072,19 @@ i2c->dev->int_ena.val =
   I2C_TXFIFO_EMPTY_INT_ENA | // (BIT(1))    triggers fillTxFifo()
   I2C_RXFIFO_FULL_INT_ENA;  // (BIT(0))     trigger emptyRxFifo()
 
-if(!i2c->intr_handle){ // create ISR I2C_0 only, 
-//  log_e("create ISR");
-  uint32_t ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, 0, &i2c_isr_handler_default, i2c, &i2c->intr_handle);
+if(!i2c->intr_handle){ // create ISR for either peripheral 
+  log_i("create ISR");
+  uint32_t ret;
+  switch(i2c->num){
+    case 0:
+      ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, 0, &i2c_isr_handler_default, i2c, &i2c->intr_handle);
+      break;
+    case 1:
+      ret = esp_intr_alloc(ETS_I2C_EXT1_INTR_SOURCE, 0, &i2c_isr_handler_default, i2c, &i2c->intr_handle);
+      break;
+    default :;
+    }
+
   if(ret!=ESP_OK){
     log_e("install interrupt handler Failed=%d",ret);
     I2C_MUTEX_UNLOCK();
@@ -1101,11 +1120,11 @@ if(i2c->exitCode!=eBits){ // try to recover from O/S failure
   }
 
 if(!(eBits==EVENT_DONE)&&(eBits&~(EVENT_ERROR_NAK|EVENT_ERROR_DATA_NAK|EVENT_ERROR|EVENT_DONE))){ // not only Done, therefore error, exclude ADDR NAK, DATA_NAK
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
   i2cDumpI2c(i2c);
-  i2cDumpInts();
+  i2cDumpInts(i2c->num);
 #else
-  log_n("I2C exitCode=%u",eBits);
+  log_n("I2C exitCode=0x%x",eBits);
 #endif
   }
 
@@ -1116,7 +1135,7 @@ if(eBits&EVENT_DONE){ // no gross timeout
     // expected can be zero due to small packets
     log_e("TimeoutRecovery: expected=%ums, actual=%ums",expected,(tAfter-tBefore));
     i2cDumpI2c(i2c);
-    i2cDumpInts();
+    i2cDumpInts(i2c->num);
     }
 #endif
   switch(i2c->error){
@@ -1152,7 +1171,7 @@ else { // GROSS timeout, shutdown ISR , report Timeout
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
   log_e(" Busy Timeout start=0x%x, end=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
   i2cDumpI2c(i2c);
-  i2cDumpInts();
+  i2cDumpInts(i2c->num);
 #endif
     }
   else { // just a timeout, some data made it out or in.
@@ -1162,7 +1181,7 @@ else { // GROSS timeout, shutdown ISR , report Timeout
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
   log_e(" Gross Timeout Dead start=0x%x, end=0x%x, =%d, max=%d error=%d",tBefore,tAfter,(tAfter-tBefore),ticksTimeOut,i2c->error);
   i2cDumpI2c(i2c);
-  i2cDumpInts();
+  i2cDumpInts(i2c->num);
 #endif
     }
   }

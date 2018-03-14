@@ -67,33 +67,11 @@ void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
             return;
         }
     }
+  
+    if(!initHardware(sdaPin, sclPin, frequency)) return;
 
-    if(i2c == NULL) {
-        i2c = i2cInit(num);
-        if(i2c == NULL) {
-            return;
-        }
-    }
+	flush();
 
-    i2cSetFrequency(i2c, frequency);
-
-    if(sda >= 0 && sda != sdaPin ) {
-        i2cDetachSDA(i2c, sda);
-    }
-
-    if(scl >= 0 && scl != sclPin ) {
-        i2cDetachSCL(i2c, scl);
-    }
-     
-    sda = sdaPin;
-    scl = sclPin;
-
-    i2cAttachSDA(i2c, sda);
-    i2cAttachSCL(i2c, scl);
-
-    flush();
-
-    i2cInitFix(i2c);
 }
 
 void TwoWire::setTimeOut(uint16_t timeOutMillis){
@@ -108,20 +86,73 @@ void TwoWire::setClock(uint32_t frequency)
 {
     i2cSetFrequency(i2c, frequency);
 }
+
 /*@StickBreaker common handler for processing the queued commands
 */
+bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
+
+    i2cDetachSCL(i2c,scl); // detach pins before resetting I2C perpherial 
+    i2cDetachSDA(i2c,sda); // else a glitch will appear on the i2c bus
+    i2c = i2cInit(num);// i2cInit() now performs a hardware reset
+    if(i2c == NULL) {
+      return false;
+      }
+
+    i2cSetFrequency(i2c, frequency);
+
+    sda = sdaPin;
+    scl = sclPin;
+// 03/10/2018 test I2C bus before attach. 
+// if the bus is not 'clear' try the recommended recovery sequence, START, 9 Clocks, STOP
+    digitalWrite(sda,HIGH);
+    digitalWrite(scl,HIGH);
+    pinMode(sda,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    pinMode(scl,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    
+    if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
+ //     Serial.printf("invalid state sda=%d, scl=%d\n",digitalRead(sda),digitalRead(scl));
+      digitalWrite(sda,HIGH);
+      digitalWrite(scl,HIGH);
+      delayMicroseconds(5);
+      digitalWrite(sda,LOW);
+      for(uint8_t a=0; a<9;a++){
+        delayMicroseconds(5);
+        digitalWrite(scl,LOW);
+        delayMicroseconds(5);
+        digitalWrite(scl,HIGH);
+        }
+      delayMicroseconds(5);
+      digitalWrite(sda,HIGH);
+      }
+    i2cAttachSDA(i2c, sda);
+    i2cAttachSCL(i2c, scl);
+  
+    if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
+//      Serial.println("Bus Invalid State, TwoWire() Can't init");
+      return false; // bus is busy
+      }
+
+    return true;
+}	
+
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
-   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
-   rxIndex = 0;
-   rxLength = rxQueued;
-   rxQueued = 0;
-   txQueued = 0; // the SendStop=true will restart all Queueing 
-   if(_dump){
-     i2cDumpI2c(i2c);
-     i2cDumpInts();
-     }
-   i2cFreeQueue(i2c);
-   return last_error;
+  last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+  if(last_error==I2C_ERROR_BUSY){ // try to clear the bus
+    if(initHardware(sda,scl,getClock())){
+      last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
+      }
+    }
+  
+  rxIndex = 0;
+  rxLength = rxQueued;
+  rxQueued = 0;
+  txQueued = 0; // the SendStop=true will restart all Queueing 
+  if(_dump){
+    i2cDumpI2c(i2c);
+    i2cDumpInts(num);
+    }
+  i2cFreeQueue(i2c);
+  return last_error;
 }
  
 /* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
@@ -205,7 +236,7 @@ return last_error;
 /*stickbreaker Dump i2c Interrupt buffer, i2c isr Debugging
 */
 void TwoWire::dumpInts(){
-  i2cDumpInts();
+  i2cDumpInts(num);
 }
 
 /*stickbreaker i2c isr Debugging
