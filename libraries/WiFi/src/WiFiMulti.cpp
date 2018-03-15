@@ -119,7 +119,11 @@ uint8_t WiFiMulti::run(void)
                 status = WiFi.status();
 
                 // wait for connection or fail
-                while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED) {
+                static const uint32_t connectTimeout = 5000; //5s timeout
+                
+                auto startTime = millis();
+                // wait for connection, fail, or timeout
+                while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
                     delay(10);
                     status = WiFi.status();
                 }
