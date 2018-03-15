@@ -100,7 +100,7 @@ Wire.write(highByte(addr));
 Wire.write(lowByte(addr));
 
 uint8_t count=Wire.transact(len); // transact() does both Wire.endTransmission(false); and Wire.requestFrom(ID,len,true);
-if(Wire.lastError != 0){ // complete/partial read failure
+if(Wire.lastError() != 0){ // complete/partial read failure
   Serial.printf("Bad Stuff!! Read Failed lastError=%d\n",Wire.lastError());
   }
   // some of the read may have executed
@@ -118,13 +118,13 @@ Most were caused by incorrect coding of ReSTART operations, but, a Valid TimeOut
  
 The current library signals this occurence by returning I2C_ERROR_OK and a dataLength of 0(zero) back through the `Wire.requestFrom()` call.
  
-### Alpha
+### Beta
 
-This **APLHA** release should be compiled with ESP32 Dev Module as its target, and
-Set the "core debug level" to 'error'
+This **BETA** release can be compiled with ESP32 Dev Module as its target. Selecting this board allow Core Debug Level to be selected. Setting the "core debug level" to 'error' will route verbose debug out Serial (uart0) when an i2c error occurs.
 
-There is MINIMAL to NO ERROR detection, BUS, BUSY.  because I have not encounter any of them!
+This version V0.2.0 14MAR2018 includes code to handle `BUS_BUSY` conditions. This status is usually indicative of a hardware bus glitch.  The most common way for a `BUS_BUSY` condition to be created, is when the i2c peripheral has detected a low going spike on SDA and intrepreted it as another i2c MASTER device acquiring the bus.  It will wait FORE EVER for the other 'Master' to complete it's transaction.  Since this was a temporary signal glitch, not a secondary Master preforming operations, the only way to clear the `BUS_BUSY` condition is to reset the i2c peripheral.  So, when a `BUS_BUSY` conditions is detected, a hardware reset is performed.  
 
+This works great, as long as, there is not ACTUALLY another Master on the bus.  If this Library is used in a Multi-Master i2c configuration, it will FAIL with continuous `ARBITRATION` failures, `BUS_BUSY` errors.
 
 Chuck.
  
