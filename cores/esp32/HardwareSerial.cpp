@@ -62,7 +62,7 @@ int HardwareSerial::available(void)
 }
 int HardwareSerial::availableForWrite(void)
 {
-	return uartAvailableForWrite(_uart);
+    return uartAvailableForWrite(_uart);
 }
 
 int HardwareSerial::peek(void)

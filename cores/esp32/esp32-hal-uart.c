@@ -250,10 +250,10 @@ uint32_t uartAvailable(uart_t* uart)
 
 uint32_t uartAvailableForWrite(uart_t* uart)
 {
-	if(uart == NULL) {
-		return 0;
-	}
-	return 0x7f - uart->dev->status.txfifo_cnt;
+    if(uart == NULL) {
+        return 0;
+    }
+    return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
 uint8_t uartRead(uart_t* uart)
