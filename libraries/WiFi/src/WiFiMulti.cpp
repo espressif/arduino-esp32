@@ -42,7 +42,7 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
     return APlistAdd(ssid, passphrase);
 }
 
-uint8_t WiFiMulti::run(void)
+uint8_t WiFiMulti::run(uint32_t connectTimeout)
 {
 
     int8_t scanResult;
@@ -117,9 +117,6 @@ uint8_t WiFiMulti::run(void)
 
                 WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
                 status = WiFi.status();
-
-                // wait for connection or fail
-                static const uint32_t connectTimeout = 5000; //5s timeout
                 
                 auto startTime = millis();
                 // wait for connection, fail, or timeout
