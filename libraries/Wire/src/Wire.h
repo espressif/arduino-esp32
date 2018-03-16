@@ -30,7 +30,7 @@
 #include "freertos/queue.h"
 #include "Stream.h"
 
-#define STICKBREAKER
+#define STICKBREAKER V0.2.1
 #define I2C_BUFFER_LENGTH 128
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
@@ -69,6 +69,7 @@ protected:
 
 public:
     TwoWire(uint8_t bus_num);
+    ~TwoWire();
     void begin(int sda=-1, int scl=-1, uint32_t frequency=100000);
     void setClock(uint32_t);
     void beginTransmission(uint16_t);
@@ -113,8 +114,6 @@ public:
     int peek(void);
     void flush(void);
 
-    void reset(void);
-
     inline size_t write(const char * s)
     {
         return write((uint8_t*) s, strlen(s));
@@ -139,4 +138,8 @@ public:
 
 extern TwoWire Wire;
 
+
+/*
+V0.2.1 15MAR2018 Hardware reset, Glitch prevention, adding destructor for second i2c testing
+*/
 #endif

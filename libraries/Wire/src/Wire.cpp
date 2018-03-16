@@ -50,6 +50,16 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,_dump(false)
 		{}	
 
+TwoWire::~TwoWire(){
+flush();
+i2cDetachSCL(i2c,scl); // detach pins before resetting I2C perpherial 
+i2cDetachSDA(i2c,sda); // else a glitch will appear on the i2c bus
+if(i2c){
+  i2cReleaseAll(i2c);
+  i2c=NULL;
+  }
+}
+    
 void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     if(sdaPin < 0) {
@@ -102,6 +112,9 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
 
     sda = sdaPin;
     scl = sclPin;
+
+// 03/15/2018 What about MultiMaster? How can I be polite and still catch glitches?    
+
 // 03/10/2018 test I2C bus before attach. 
 // if the bus is not 'clear' try the recommended recovery sequence, START, 9 Clocks, STOP
     digitalWrite(sda,HIGH);
@@ -110,7 +123,7 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
     pinMode(scl,PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
     
     if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
- //     Serial.printf("invalid state sda=%d, scl=%d\n",digitalRead(sda),digitalRead(scl));
+      log_e("invalid state sda=%d, scl=%d\n",digitalRead(sda),digitalRead(scl));
       digitalWrite(sda,HIGH);
       digitalWrite(scl,HIGH);
       delayMicroseconds(5);
@@ -128,7 +141,7 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
     i2cAttachSCL(i2c, scl);
   
     if(!digitalRead(sda)||!digitalRead(scl)){ // bus in busy state
-//      Serial.println("Bus Invalid State, TwoWire() Can't init");
+      log_e("Bus Invalid State, TwoWire() Can't init");
       return false; // bus is busy
       }
 
@@ -199,7 +212,7 @@ uint16_t TwoWire::requestFrom(uint16_t address, uint8_t * readBuff, uint16_t siz
 */
 i2c_err_t TwoWire::writeTransmission(uint16_t address, uint8_t *buff, uint16_t size, bool sendStop){
 // will destroy any partially created beginTransaction()
-
+log_i("i2c=%p",i2c);
 last_error=i2cAddQueueWrite(i2c,address,buff,size,sendStop,NULL);
 
 if(last_error==I2C_ERROR_OK){ //queued
@@ -466,12 +479,5 @@ void TwoWire::flush(void)
     i2cFreeQueue(i2c); // cleanup
 }
 
-void TwoWire::reset(void)
-{
-    i2cReleaseISR(i2c); // remove ISR from Interrupt chain,Delete EventGroup,Free Heap memory
-    i2cReset( i2c );
-    i2c = NULL;
-    begin( sda, scl );
-}
 
 TwoWire Wire = TwoWire(0);
