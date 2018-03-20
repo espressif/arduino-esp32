@@ -1217,7 +1217,7 @@ m5stack-core-esp32.serial.disableRTS=true
 
 m5stack-core-esp32.build.mcu=esp32
 m5stack-core-esp32.build.core=esp32
-m5stack-core-esp32.build.variant=esp32
+m5stack-core-esp32.build.variant=m5stack_core_esp32
 m5stack-core-esp32.build.board=M5Stack_Core_ESP32
 
 m5stack-core-esp32.build.f_cpu=240000000L
