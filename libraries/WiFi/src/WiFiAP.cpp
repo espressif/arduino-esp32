@@ -184,8 +184,9 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
 {
     bool ret;
     wifi_config_t conf;
-    *conf.ap.ssid = 0;
+    *conf.ap.ssid     = 0;
     *conf.ap.password = 0;
+    conf.ap.authmode  = WIFI_AUTH_OPEN; // auth must be open if pass=0   
     ret = esp_wifi_set_config(WIFI_IF_AP, &conf) == ESP_OK;
 
     if(wifioff) {
