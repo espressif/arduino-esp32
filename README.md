@@ -12,10 +12,18 @@
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
 ## Development Status
-Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
-- 16 channels [LEDC](cores/esp32/esp32-hal-ledc.h) which is PWM
-- 8 channels [SigmaDelta](cores/esp32/esp32-hal-sigmadelta.h) which uses SigmaDelta modulation
-- 2 channels [DAC](cores/esp32/esp32-hal-dac.h) which gives real analog output
+- Most of the framework is implemented.
+- Differences: 
+    - `Wire()` for deeper explanation [README.md](libraries/Wire/docs/README.md)
+        - 64k-1 data transfers
+        - Special handling for sendStop=false
+- Missing:
+    - `analogWrite()` While analogWrite is on it's way, there are a few other options that you can use:
+        - 16 channels [LEDC](cores/esp32/esp32-hal-ledc.h) which is PWM
+        - 8 channels [SigmaDelta](cores/esp32/esp32-hal-sigmadelta.h) which uses SigmaDelta modulation
+        - 2 channels [DAC](cores/esp32/esp32-hal-dac.h) which gives real analog output
+    - `Wire.onReceive()`
+    - `Wire.onRequest()`
 
 ## Installation Instructions
 
