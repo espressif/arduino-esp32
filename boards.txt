@@ -471,6 +471,19 @@ WeMosBat.menu.UploadSpeed.460800.upload.speed=460800
 WeMosBat.menu.UploadSpeed.512000.windows=512000
 WeMosBat.menu.UploadSpeed.512000.upload.speed=512000
 
+WeMosBat.menu.DebugLevel.none=None
+WeMosBat.menu.DebugLevel.none.build.code_debug=0
+WeMosBat.menu.DebugLevel.error=Error
+WeMosBat.menu.DebugLevel.error.build.code_debug=1
+WeMosBat.menu.DebugLevel.warn=Warn
+WeMosBat.menu.DebugLevel.warn.build.code_debug=2
+WeMosBat.menu.DebugLevel.info=Info
+WeMosBat.menu.DebugLevel.info.build.code_debug=3
+WeMosBat.menu.DebugLevel.debug=Debug
+WeMosBat.menu.DebugLevel.debug.build.code_debug=4
+WeMosBat.menu.DebugLevel.verbose=Verbose
+WeMosBat.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 espea32.name=ESPea32
