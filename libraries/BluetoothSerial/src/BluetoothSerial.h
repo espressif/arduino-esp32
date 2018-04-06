@@ -19,14 +19,6 @@
 
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_bt.h"
-
 #include "Arduino.h"
 #include "Stream.h"
 
