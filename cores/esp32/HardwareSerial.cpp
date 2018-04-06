@@ -5,7 +5,9 @@
 
 #include "HardwareSerial.h"
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 HardwareSerial Serial(0);
+#endif
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 

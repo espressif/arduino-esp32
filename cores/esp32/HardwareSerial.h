@@ -76,6 +76,8 @@ protected:
     uart_t* _uart;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern HardwareSerial Serial;
+#endif
 
 #endif
