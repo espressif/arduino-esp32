@@ -2,6 +2,7 @@ menu.UploadSpeed=Upload Speed
 menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
 menu.FlashSize=Flash Size
+menu.PartitionScheme=Partition Scheme
 menu.DebugLevel=Core Debug Level
 
 ##############################################################
@@ -27,6 +28,13 @@ esp32.build.flash_freq=40m
 esp32.build.flash_mode=dio
 esp32.build.boot=dio
 esp32.build.partitions=default
+
+esp32.menu.PartitionScheme.default=Default
+esp32.menu.PartitionScheme.default.build.partitions=default
+esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
 
 esp32.menu.FlashMode.qio=QIO
 esp32.menu.FlashMode.qio.build.flash_mode=dio
