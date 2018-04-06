@@ -16,7 +16,7 @@
 
             ![Step 2](win-screenshots/win-gui-2.png)
             ![Step 3](win-screenshots/win-gui-3.png)
-    - open a `Git Bash` session pointing to ```ARDUINO_SKETCHBOOK_DIR``` and execute ```git submodule update --init --recursive``` 
+    - open a `Git Bash` session pointing to ```[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32``` and execute ```git submodule update --init --recursive``` 
     - Open ```[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32/tools``` and double-click ```get.exe```
 
         ![Step 4](win-screenshots/win-gui-4.png)
