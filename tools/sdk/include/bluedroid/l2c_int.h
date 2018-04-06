@@ -422,6 +422,7 @@ typedef struct t_l2c_linkcb {
 
     tBT_TRANSPORT       transport;
 #if (BLE_INCLUDED == TRUE)
+    tBLE_ADDR_TYPE      open_addr_type; /* be set by open API */
     tBLE_ADDR_TYPE      ble_addr_type;
     UINT16              tx_data_len;            /* tx data length used in data length extension */
     fixed_queue_t       *le_sec_pending_q;      /* LE coc channels waiting for security check completion */
@@ -767,7 +768,7 @@ extern BOOLEAN  l2c_fcr_renegotiate_chan(tL2C_CCB *p_ccb, tL2CAP_CFG_INFO *p_cfg
 extern UINT8    l2c_fcr_process_peer_cfg_req(tL2C_CCB *p_ccb, tL2CAP_CFG_INFO *p_cfg);
 extern void     l2c_fcr_adj_monitor_retran_timeout (tL2C_CCB *p_ccb);
 extern void     l2c_fcr_stop_timer (tL2C_CCB *p_ccb);
-
+extern void     l2c_fcr_free_timer (tL2C_CCB *p_ccb);
 /* Functions provided by l2c_ble.c
 ************************************
 */

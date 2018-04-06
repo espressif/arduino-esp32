@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2018 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,40 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef __ESP_COEXIST_H__
+#define __ESP_COEXIST_H__
+
 #include <stdbool.h>
+#include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief Init software coexist
- *
- * @return Init ok or failed.
+ * @brief coex prefer value
  */
-esp_err_t coex_init(void);
+typedef enum {
+    ESP_COEX_PREFER_WIFI = 0,       /*!< Prefer to WiFi, WiFi will have more opportunity to use RF */
+    ESP_COEX_PREFER_BT,             /*!< Prefer to bluetooth, bluetooth will have more opportunity to use RF */
+    ESP_COEX_PREFER_BALANCE,        /*!< Do balance of WiFi and bluetooth */
+    ESP_COEX_PREFER_NUM,            /*!< Prefer value numbers */
+} esp_coex_prefer_t;
 
 /**
- * @brief De-init software coexist
+ * @brief Get software coexist version string
+ *
+ * @return : version string
  */
-void coex_deinit(void);
+const char *esp_coex_version_get(void);
 
 /**
- * @brief Get software coexist enable or not
+ * @brief Set coexist preference of performance
+ *  For example, if prefer to bluetooth, then it will make A2DP(play audio via classic bt)
+ *  more smooth while wifi is runnning something.
+ *  If prefer to wifi, it will do similar things as prefer to bluetooth.
+ *  Default, it prefer to balance.
  *
- * @return software coexist enable status.
+ *  @param prefer : the prefer enumeration value
+ *  @return : ESP_OK - success, other - failed
  */
-bool coexist_get_enable(void);
-
-/**
- * @brief Set software coexist enable or not
- *
- * @param enable software coexist or disable it
- *
- * @return Void.
- */
-void coexist_set_enable(bool enable);
+esp_err_t esp_coex_preference_set(esp_coex_prefer_t prefer);
 
 #ifdef __cplusplus
 }
 #endif
+
+
+#endif /* __ESP_COEXIST_H__ */
