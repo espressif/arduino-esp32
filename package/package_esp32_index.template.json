@@ -38,7 +38,7 @@
             {
               "packager": "esp32",
               "name": "esptool",
-              "version": "4dab24e"
+              "version": "da31d9d"
             },
             {
               "packager": "esp32",
@@ -85,21 +85,21 @@
         },
         {
           "name": "esptool",
-          "version": "4dab24e",
+          "version": "da31d9d",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-4dab24e-windows.zip",
-              "archiveFileName": "esptool-4dab24e-windows.zip",
-              "checksum": "SHA-256:604014edbd79616470ecda20d623bac3a8d916b1147d37f7a66a83959eff066c",
-              "size": "3462819"
+              "url": "https://dl.espressif.com/dl/esptool-da31d9d-windows.zip",
+              "archiveFileName": "esptool-da31d9d-windows.zip",
+              "checksum": "SHA-256:6476f4d6e33a59167dea364e177d97167316253d2c9ac75f81b469ecb3ed3875",
+              "size": "3395925"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-4dab24e-macos.tar.gz",
-              "archiveFileName": "esptool-4dab24e-macos.tar.gz",
-              "checksum": "SHA-256:92fe2f0505ed93051681bd4d5d766664eacfa32745976dda695c728b529dcc8f",
-              "size": "3869525"
+              "url": "https://dl.espressif.com/dl/esptool-da31d9d-macos.tar.gz",
+              "archiveFileName": "esptool-da31d9d-macos.tar.gz",
+              "checksum": "SHA-256:76d53298366a294235356bb8d197a81b2afbfd62642851bfbaee252cc593faa9",
+              "size": "3810904"
             }
           ]
         },

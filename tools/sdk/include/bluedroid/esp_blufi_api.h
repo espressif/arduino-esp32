@@ -51,6 +51,8 @@ typedef enum {
     ESP_BLUFI_EVENT_RECV_SERVER_PRIV_KEY,                /*<! When Phone send Server Private key to ESP32, this event happen */
     ESP_BLUFI_EVENT_RECV_SLAVE_DISCONNECT_BLE,           /*<! When Phone send Disconnect key to ESP32, this event happen */
     ESP_BLUFI_EVENT_GET_WIFI_LIST,                       /*<! When Phone send get wifi list command to ESP32, this event happen */
+    ESP_BLUFI_EVENT_REPORT_ERROR,                        /*<! When Blufi report error, this event happen */
+    ESP_BLUFI_EVENT_RECV_CUSTOM_DATA,                    /*<! When Phone send custom data to ESP32, this event happen */
 } esp_blufi_cb_event_t;
 
 /// BLUFI config status
@@ -70,6 +72,18 @@ typedef enum {
     ESP_BLUFI_DEINIT_OK = 0,
     ESP_BLUFI_DEINIT_FAILED,
 } esp_blufi_deinit_state_t;
+
+typedef enum {
+    ESP_BLUFI_SEQUENCE_ERROR = 0,
+    ESP_BLUFI_CHECKSUM_ERROR,
+    ESP_BLUFI_DECRYPT_ERROR,
+    ESP_BLUFI_ENCRYPT_ERROR,
+    ESP_BLUFI_INIT_SECURITY_ERROR,
+    ESP_BLUFI_DH_MALLOC_ERROR,
+    ESP_BLUFI_DH_PARAM_ERROR,
+    ESP_BLUFI_READ_PARAM_ERROR,
+    ESP_BLUFI_MAKE_PUBLIC_ERROR,
+} esp_blufi_error_state_t;
 
 /**
  * @brief BLUFI  extra information structure
@@ -254,7 +268,21 @@ typedef union {
         uint8_t *pkey;                              /*!< Client Private Key point, if Client certificate not contain Key */
         int pkey_len;                               /*!< Client Private key length */
     } server_pkey;                                  /*!< Blufi callback param of ESP_BLUFI_EVENT_RECV_SERVER_PRIV_KEY */
-
+    /**
+     * @brief
+     * ESP_BLUFI_EVENT_REPORT_ERROR
+     */
+    struct blufi_get_error_evt_param {
+        esp_blufi_error_state_t state;              /*!< Blufi error state */
+    } report_error;                                 /*!< Blufi callback param of ESP_BLUFI_EVENT_REPORT_ERROR */
+    /**
+     * @brief 
+     * ESP_BLUFI_EVENT_RECV_CUSTOM_DATA
+     */
+    struct blufi_recv_custom_data_evt_param {
+        uint8_t *data;                              /*!< Custom data */
+        uint32_t data_len;                          /*!< Custom data Length */
+    } custom_data;                                  /*!< Blufi callback param of ESP_BLUFI_EVENT_RECV_CUSTOM_DATA */
 } esp_blufi_cb_param_t;
 
 /**
@@ -386,6 +414,26 @@ uint16_t esp_blufi_get_version(void);
  *
  */
 esp_err_t esp_blufi_close(esp_gatt_if_t gatts_if, uint16_t conn_id);
+
+/**
+ *
+ * @brief           This function is called to send blufi error information
+ * @param state :  error state
+ *
+ * @return          ESP_OK - success, other - failed
+ *
+ */
+esp_err_t esp_blufi_send_error_info(esp_blufi_error_state_t state);
+/**
+ *
+ * @brief           This function is called to custom data
+ * @param data :  custom data value
+ * @param data_len :  the length of custom data
+ *
+ * @return          ESP_OK - success, other - failed
+ *
+ */
+esp_err_t esp_blufi_send_custom_data(uint8_t *data, uint32_t data_len);
 #ifdef __cplusplus
 }
 #endif
