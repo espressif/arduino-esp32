@@ -35,6 +35,8 @@ esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
 esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 
 esp32.menu.FlashMode.qio=QIO
 esp32.menu.FlashMode.qio.build.flash_mode=dio
