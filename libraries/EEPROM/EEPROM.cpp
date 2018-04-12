@@ -29,8 +29,6 @@
 
 #include <esp_log.h>
 
-static const char* TAG = "eeprom";
-
 EEPROMClass::EEPROMClass(uint32_t sector)
   : _sector(sector)
   , _data(0)
