@@ -82,6 +82,8 @@ functional with Silicon date=0x16042000
 */
 static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, EventGroupHandle_t event){
 
+  if(i2c==NULL) return I2C_ERROR_DEV;
+
   I2C_DATA_QUEUE_t dqx;
   dqx.data = dataPtr;
   dqx.length = dataLen;
@@ -100,6 +102,7 @@ if(event){// an eventGroup exist, so, initialize it
   }
  
 if(i2c->dq!=NULL){ // expand
+//log_i("expand");
   I2C_DATA_QUEUE_t* tq =(I2C_DATA_QUEUE_t*)realloc(i2c->dq,sizeof(I2C_DATA_QUEUE_t)*(i2c->queueCount +1));
   if(tq!=NULL){// ok
     i2c->dq = tq;
@@ -111,6 +114,7 @@ if(i2c->dq!=NULL){ // expand
     }
   }
 else { // first Time
+//log_i("new");
   i2c->queueCount=0;
   i2c->dq =(I2C_DATA_QUEUE_t*)malloc(sizeof(I2C_DATA_QUEUE_t));
   if(i2c->dq!=NULL){
@@ -125,10 +129,12 @@ return I2C_ERROR_OK;
 }
 
 i2c_err_t i2cFreeQueue(i2c_t * i2c){
+if(i2c==NULL) return I2C_ERROR_DEV;
   // need to grab a MUTEX for exclusive Queue,
   // what out if ISR is running?
 i2c_err_t rc=I2C_ERROR_OK;
 if(i2c->dq!=NULL){
+//  log_i("free");
 // what about EventHandle?
   free(i2c->dq);
   i2c->dq = NULL;
@@ -319,6 +325,9 @@ i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detache
     }
 #endif
     I2C_MUTEX_LOCK();
+
+    i2cReleaseISR(i2c); // ISR exists, release it before disabling hardware
+
     uint32_t old_clock = i2cGetFrequency(i2c);
 
     if(i2c_num == 0) {
@@ -348,7 +357,7 @@ i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detache
 
     return i2c;
 }
-
+/* unused 03/15/2018
 void i2cInitFix(i2c_t * i2c){
     if(i2c == NULL){
         return;
@@ -370,7 +379,8 @@ void i2cInitFix(i2c_t * i2c){
     while ((!i2c->dev->command[2].done) && (--count > 0));
     I2C_MUTEX_UNLOCK();
 }
-
+/* 
+ unused 03/15/2018
 void i2cReset(i2c_t* i2c){
     if(i2c == NULL){
         return;
@@ -382,6 +392,7 @@ void i2cReset(i2c_t* i2c){
     periph_module_enable( moduleId );
     I2C_MUTEX_UNLOCK();
 }
+*/
 
 /* Stickbreaker ISR mode debug support
 */
@@ -615,7 +626,6 @@ log_n("Enable Core Debug Level \"Error\"");
 #endif
 }
  
-
 void i2cDumpI2c(i2c_t * i2c){
 log_e("i2c=%p",i2c);
 log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
@@ -960,7 +970,6 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
   install ISR if necessary
   setup EventGroup
   handle bus busy?
-  do I load command[] or just pass that off to the ISR
 */
 //log_e("procQueue i2c=%p",&i2c);
 *readCount = 0; //total reads accomplished in all queue elements
@@ -968,11 +977,24 @@ if(i2c == NULL){
   return I2C_ERROR_DEV;
   }
 if (i2c->dev->status_reg.bus_busy){ // return error, let TwoWire() handle resetting the hardware.
+/* if multi master then this if should be changed to this 03/12/2018
+  if(multiMaster){// try to let the bus clear by its self
+    uint32_t timeOutTick = millis();
+    while((i2c->dev->status_reg.bus_busy)&&(millis()-timeOutTick<timeOutMillis())){
+      delay(2); // allow task switch
+      }
+    }
+  if(i2c->dev->status_reg.bus_busy){ // still busy, so die
+    log_i("Bus busy, reinit");
+    return I2C_ERROR_BUSY;
+    }
+*/
   log_i("Bus busy, reinit");
   return I2C_ERROR_BUSY;
   }
+
 I2C_MUTEX_LOCK();
-/* what about co-existance with SLAVE mode?
+/* what about co-existence with SLAVE mode?
   Should I check if a slaveMode xfer is in progress and hang
   until it completes?
   if i2c->stage == I2C_RUNNING or I2C_SLAVE_ACTIVE
@@ -987,7 +1009,7 @@ for(uint16_t i=0;i<INTBUFFMAX;i++){
   }
 intPos[i2c->num] = 0;
 #endif
-// EventGroup is used to signal transmisison completion from ISR
+// EventGroup is used to signal transmission completion from ISR
 // not always reliable. Sometimes, the FreeRTOS scheduler is maxed out and refuses request
 // if that happens, this call hangs until the timeout period expires, then it continues.  
 if(!i2c->i2c_event){
@@ -995,8 +1017,6 @@ if(!i2c->i2c_event){
   }
 if(i2c->i2c_event) {
   uint32_t ret=xEventGroupClearBits(i2c->i2c_event, 0xFF);
-  
-//  log_e("after clearBits(%p)=%p",i2c->i2c_event,ret);
   }
 else {// failed to create EventGroup
   log_e("eventCreate failed=%p",i2c->i2c_event);
@@ -1032,7 +1052,7 @@ i2c->queuePos=0;
 i2c->byteCnt=0;
 uint32_t totalBytes=0; // total number of bytes to be Moved!
 // convert address field to required I2C format
-while(i2c->queuePos < i2c->queueCount){
+while(i2c->queuePos < i2c->queueCount){ // need to push these address modes upstream, to AddQueue
   I2C_DATA_QUEUE_t *tdq = &i2c->dq[i2c->queuePos++];
   uint16_t taddr=0;
   if(tdq->ctrl.addrReq ==2){ // 10bit address
@@ -1073,7 +1093,7 @@ i2c->dev->int_ena.val =
   I2C_RXFIFO_FULL_INT_ENA;  // (BIT(0))     trigger emptyRxFifo()
 
 if(!i2c->intr_handle){ // create ISR for either peripheral 
-  log_i("create ISR");
+ // log_i("create ISR %d",i2c->num);
   uint32_t ret;
   switch(i2c->num){
     case 0:
@@ -1218,19 +1238,40 @@ I2C_MUTEX_UNLOCK();
 return reason;
 }
 
-i2c_err_t i2cReleaseISR(i2c_t * i2c){
+void i2cReleaseISR(i2c_t * i2c){
 if(i2c->intr_handle){
+//  log_i("Release ISR %d",i2c->num);
   esp_err_t error =esp_intr_free(i2c->intr_handle);
 //  log_e("released ISR=%d",error);
   i2c->intr_handle=NULL;
   }
+}
+
+void i2cReleaseAll(i2c_t *i2c){ // release all resources, power down peripheral
+// gpio pins must be released BEFORE this function or a Glitch will appear
+
+I2C_MUTEX_LOCK();
+
+i2cReleaseISR(i2c);
+
 if(i2c->i2c_event){
   vEventGroupDelete(i2c->i2c_event);
   i2c->i2c_event = NULL;
   }
-return i2cFreeQueue(i2c);
-}
 
+i2cFreeQueue(i2c);
+
+// reset the I2C hardware and shut off the clock, power it down.
+if(i2c->num == 0) {
+  DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
+  DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN); // shutdown hardware
+} else {
+  DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST); //reset Hardware
+  DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN); // shutdown Hardware
+  }
+
+I2C_MUTEX_UNLOCK();
+}
 /* todo
   24Nov17
   Need to think about not usings I2C_MASTER_TRAN_COMP_INT_ST to adjust queuePos.  This
