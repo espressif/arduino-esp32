@@ -70,8 +70,10 @@ protected:
 public:
     TwoWire(uint8_t bus_num);
     ~TwoWire();
-    void begin(int sda=-1, int scl=-1, uint32_t frequency=100000);
-    void setClock(uint32_t);
+    void begin(int sda=-1, int scl=-1, uint32_t frequency=0); 
+       //defaults bus:0 sda=SDA, scl=SCL, frequency =100khz via variant pins_arduino.h
+       // bus:1 unspecified, emits Log_E()
+    void setClock(uint32_t); // change bus clock without initing hardware
     void beginTransmission(uint16_t);
     uint8_t endTransmission(bool);
 		uint8_t	requestFrom(uint16_t address, uint8_t size, bool sendStop);
@@ -88,7 +90,7 @@ public:
     bool getDump(){return _dump;}
     void dumpInts();
     void dumpI2C(){i2cDumpI2c(i2c);}
-    size_t getClock();
+    size_t getClock(); // current bus clock rate in hz
     void setTimeOut(uint16_t timeOutMillis);
     uint16_t getTimeOut();
 //		
@@ -140,6 +142,7 @@ extern TwoWire Wire;
 
 
 /*
+V0.2.2 13APR2018 preserve custom SCL,SDA,Frequency when no parameters passed to begin()
 V0.2.1 15MAR2018 Hardware reset, Glitch prevention, adding destructor for second i2c testing
 */
 #endif
