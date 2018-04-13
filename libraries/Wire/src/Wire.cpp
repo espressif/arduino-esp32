@@ -62,25 +62,37 @@ if(i2c){
     
 void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
-    if(sdaPin < 0) {
-        if(num == 0) {
-            sdaPin = SDA;
-        } else {
-            return;
-        }
+  if(sdaPin < 0) { // default param passed
+    if(num == 0) {
+      if(sda==-1) sdaPin = SDA; //use Default Pin
+      else sdaPin = sda; // reuse prior pin
+      } 
+    else {
+      if(sda==-1) {
+        log_e("no Default SDA Pin for Second Peripheral");
+        return; //no Default pin for Second Peripheral
+        }        
+      else sdaPin = sda; // reuse prior pin
+      }
     }
 
-    if(sclPin < 0) {
-        if(num == 0) {
-            sclPin = SCL;
-        } else {
-            return;
+  if(sclPin < 0) { // default param passed
+    if(num == 0) {
+      if(scl==-1) sclPin = SCL; // use Default pin
+      else sclPin = scl; // reuse prior pin
+      }
+    else {
+      if(scl==-1){
+        log_e("no Default SCL Pin for Second Peripheral");
+        return; //no Default pin for Second Peripheral
         }
+      else sclPin = scl; // reuse prior pin
+      }
     }
-  
-    if(!initHardware(sdaPin, sclPin, frequency)) return;
 
-	flush();
+  if(!initHardware(sdaPin, sclPin, frequency)) return;
+
+  flush();
 
 }
 
@@ -97,8 +109,6 @@ void TwoWire::setClock(uint32_t frequency)
     i2cSetFrequency(i2c, frequency);
 }
 
-/*@StickBreaker common handler for processing the queued commands
-*/
 bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
 
     i2cDetachSCL(i2c,scl); // detach pins before resetting I2C perpherial 
@@ -107,7 +117,12 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
     if(i2c == NULL) {
       return false;
       }
-
+  
+    if(frequency==0) {// don't change existing frequency
+      frequency = i2cGetFrequency(i2c);
+      }
+    if(frequency==0) frequency = 100000L; // default to 100khz
+	
     i2cSetFrequency(i2c, frequency);
 
     sda = sdaPin;
@@ -148,6 +163,8 @@ bool TwoWire::initHardware(int sdaPin, int sclPin, uint32_t frequency){
     return true;
 }	
 
+/*@StickBreaker common handler for processing the queued commands
+*/
 i2c_err_t TwoWire::processQueue(uint32_t * readCount){
   last_error=i2cProcQueue(i2c,readCount,_timeOutMillis);
   if(last_error==I2C_ERROR_BUSY){ // try to clear the bus
