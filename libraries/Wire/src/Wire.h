@@ -56,16 +56,13 @@ protected:
 
     uint8_t transmitting;
     /* slave Mode, not yet Stickbreaker
-    		static user_onRequest uReq[2];
-    		static user_onReceive uRcv[2];
+            static user_onRequest uReq[2];
+            static user_onReceive uRcv[2];
         void onRequestService(void);
         void onReceiveService(uint8_t*, int);
     */
     i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
-    i2c_err_t processQueue(uint32_t *readCount);
     uint16_t _timeOutMillis;
-    bool _dump;
-    bool initHardware(int sdaPin, int sclPin, uint32_t frequency);
 
 public:
     TwoWire(uint8_t bus_num);
@@ -83,8 +80,7 @@ public:
 
     //@stickBreaker for big blocks and ISR model
     i2c_err_t writeTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
-    i2c_err_t readTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
-    uint16_t  requestFrom(uint16_t address, uint8_t* buf, uint16_t size, bool sendStop);
+    i2c_err_t readTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true, uint32_t *readCount=NULL);
 
     void beginTransmission(uint16_t address);
     void beginTransmission(uint8_t address);
@@ -133,27 +129,8 @@ public:
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
 
-    uint8_t transact(uint8_t readLen);
-    uint16_t transact(uint8_t* readBuff, uint16_t readLen);
-
-    void dumpOn()
-    {
-        _dump=true;
-    }
-    void dumpOff()
-    {
-        _dump=false;
-    }
-    bool getDump()
-    {
-        return _dump;
-    }
     void dumpInts();
-    void dumpI2C()
-    {
-        i2cDumpI2c(i2c);
-    }
-
+    void dumpI2C();
 };
 
 extern TwoWire Wire;

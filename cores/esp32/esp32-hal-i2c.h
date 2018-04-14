@@ -41,11 +41,16 @@ typedef enum {
 struct i2c_struct_t;
 typedef struct i2c_struct_t i2c_t;
 
-i2c_t * i2cInit(uint8_t i2c_num);
-
+i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed);
+void i2cRelease(i2c_t *i2c); // free ISR, Free DQ, Power off peripheral clock.  Must call i2cInit() to recover
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis);
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount);
+i2c_err_t i2cFlush(i2c_t *i2c);
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
 
+//Functions below should be used only if well understood
+//Might be deprecated and removed in future
 i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl);
 i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl);
 i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda);
@@ -55,8 +60,6 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda);
 i2c_err_t i2cProcQueue(i2c_t *i2c, uint32_t *readCount, uint16_t timeOutMillis);
 i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
-i2c_err_t i2cFreeQueue(i2c_t *i2c);
-void i2cReleaseAll(i2c_t *i2c); // free ISR, Free DQ, Power off peripheral clock.  Must call i2cInit(),i2cSetFrequency() to recover
 
 //stickbreaker debug support
 void i2cDumpInts(uint8_t num);

@@ -143,6 +143,8 @@ struct i2c_struct_t {
     xSemaphoreHandle lock;
 #endif
     uint8_t num;
+    int8_t sda;
+    int8_t scl;
     I2C_MODE_t mode;
     I2C_STAGE_t stage;
     I2C_ERROR_t error;
@@ -169,169 +171,18 @@ enum {
 #define I2C_MUTEX_UNLOCK()
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), 0,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), 0, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0}
 };
 #else
 #define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTake(i2c->lock, portMAX_DELAY) != pdPASS)
 #define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0}
 };
 #endif
-
-/* Stickbreaker added for ISR 11/2017
-functional with Silicon date=0x16042000
- */
-static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, EventGroupHandle_t event)
-{
-
-    if(i2c==NULL) {
-        return I2C_ERROR_DEV;
-    }
-
-    I2C_DATA_QUEUE_t dqx;
-    dqx.data = dataPtr;
-    dqx.length = dataLen;
-    dqx.position = 0;
-    dqx.cmdBytesNeeded = dataLen;
-    dqx.ctrl.val = 0;
-    dqx.ctrl.addr = i2cDeviceAddr;
-    dqx.ctrl.mode = mode;
-    dqx.ctrl.stop= sendStop;
-    dqx.ctrl.addrReq = ((i2cDeviceAddr&0xFC00)==0x7800)?2:1; // 10bit or 7bit address
-    dqx.queueLength = dataLen + dqx.ctrl.addrReq;
-    dqx.queueEvent = event;
-
-    if(event) { // an eventGroup exist, so, initialize it
-        xEventGroupClearBits(event, EVENT_MASK); // all of them
-    }
-
-    if(i2c->dq!=NULL) { // expand
-        //log_i("expand");
-        I2C_DATA_QUEUE_t* tq =(I2C_DATA_QUEUE_t*)realloc(i2c->dq,sizeof(I2C_DATA_QUEUE_t)*(i2c->queueCount +1));
-        if(tq!=NULL) { // ok
-            i2c->dq = tq;
-            memmove(&i2c->dq[i2c->queueCount++],&dqx,sizeof(I2C_DATA_QUEUE_t));
-        } else { // bad stuff, unable to allocate more memory!
-            log_e("realloc Failure");
-            return I2C_ERROR_MEMORY;
-        }
-    } else { // first Time
-        //log_i("new");
-        i2c->queueCount=0;
-        i2c->dq =(I2C_DATA_QUEUE_t*)malloc(sizeof(I2C_DATA_QUEUE_t));
-        if(i2c->dq!=NULL) {
-            memmove(&i2c->dq[i2c->queueCount++],&dqx,sizeof(I2C_DATA_QUEUE_t));
-        } else {
-            log_e("malloc failure");
-            return I2C_ERROR_MEMORY;
-        }
-    }
-    return I2C_ERROR_OK;
-}
-
-i2c_err_t i2cFreeQueue(i2c_t * i2c)
-{
-    if(i2c==NULL) {
-        return I2C_ERROR_DEV;
-    }
-    // need to grab a MUTEX for exclusive Queue,
-    // what out if ISR is running?
-    i2c_err_t rc=I2C_ERROR_OK;
-    if(i2c->dq!=NULL) {
-        //  log_i("free");
-        // what about EventHandle?
-        free(i2c->dq);
-        i2c->dq = NULL;
-    }
-    i2c->queueCount=0;
-    i2c->queuePos=0;
-    // release Mutex
-    return rc;
-}
-
-i2c_err_t i2cAddQueueWrite(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
-{
-    // need to grab a MUTEX for exclusive Queue,
-    // what out if ISR is running?
-
-    return i2cAddQueue(i2c,0,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
-}
-
-i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
-{
-    // need to grab a MUTEX for exclusive Queue,
-    // what out if ISR is running?
-
-
-    //10bit read is kind of weird, first you do a 0byte Write with 10bit
-    //  address, then a ReSTART then a 7bit Read using the the upper 7bit +
-    // readBit.
-
-    // this might cause an internal register pointer problem with 10bit
-    // devices, But, Don't have any to test agains.
-    // this is the Industry Standard specification.
-
-    if((i2cDeviceAddr &0xFC00)==0x7800) { // ten bit read
-        i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,event);
-        if(err==I2C_ERROR_OK) {
-            return i2cAddQueue(i2c,1,(i2cDeviceAddr>>8),dataPtr,dataLen,sendStop,event);
-        } else {
-            return err;
-        }
-    }
-    return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
-}
-// Stickbreaker
-
-i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
-{
-    if(i2c == NULL) {
-        return I2C_ERROR_DEV;
-    }
-    digitalWrite(scl, HIGH);
-    pinMode(scl, OPEN_DRAIN | PULLUP | INPUT | OUTPUT);
-    pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
-    pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
-    return I2C_ERROR_OK;
-}
-
-i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
-{
-    if(i2c == NULL) {
-        return I2C_ERROR_DEV;
-    }
-    pinMatrixOutDetach(scl, false, false);
-    pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
-    pinMode(scl, INPUT | PULLUP);
-    return I2C_ERROR_OK;
-}
-
-i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
-{
-    if(i2c == NULL) {
-        return I2C_ERROR_DEV;
-    }
-    digitalWrite(sda, HIGH);
-    pinMode(sda, OPEN_DRAIN | PULLUP | INPUT | OUTPUT );
-    pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
-    pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
-    return I2C_ERROR_OK;
-}
-
-i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
-{
-    if(i2c == NULL) {
-        return I2C_ERROR_DEV;
-    }
-    pinMatrixOutDetach(sda, false, false);
-    pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
-    pinMode(sda, INPUT | PULLUP);
-    return I2C_ERROR_OK;
-}
 
 /*
  * index     - command index (0 to 15)
@@ -341,7 +192,7 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
  * ack_exp   - This bit is to set an expected ACK value for the transmitter.
  * ack_check - This bit is to decide whether the transmitter checks ACK bit. 1 means yes and 0 means no.
  * */
-void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
+static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
     I2C_COMMAND_t cmd;
     cmd.val=0;
@@ -352,173 +203,6 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
     cmd.op_code = op_code;
     i2c->dev->command[index].val = cmd.val;
 }
-
-void i2cResetFiFo(i2c_t * i2c)
-{
-    I2C_FIFO_CONF_t f;
-    f.val = i2c->dev->fifo_conf.val;
-    f.tx_fifo_rst = 1;
-    f.rx_fifo_rst = 1;
-    i2c->dev->fifo_conf.val = f.val;
-    f.tx_fifo_rst = 0;
-    f.rx_fifo_rst = 0;
-    i2c->dev->fifo_conf.val = f.val;
-}
-
-void i2cReleaseISR(i2c_t * i2c)
-{
-    if(i2c->intr_handle) {
-        //log_i("Release ISR %d",i2c->num);
-        //esp_err_t error =
-        esp_intr_free(i2c->intr_handle);
-        //log_e("released ISR=%d",error);
-        i2c->intr_handle=NULL;
-    }
-}
-
-i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
-{
-    if(i2c == NULL) {
-        return I2C_ERROR_DEV;
-    }
-
-    uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
-    uint32_t halfPeriod = period/2;
-    uint32_t quarterPeriod = period/4;
-
-    I2C_MUTEX_LOCK();
-    //the clock num during SCL is low level
-    i2c->dev->scl_low_period.period = period;
-    //the clock num during SCL is high level
-    i2c->dev->scl_high_period.period = period;
-
-    //the clock num between the negedge of SDA and negedge of SCL for start mark
-    i2c->dev->scl_start_hold.time = halfPeriod;
-    //the clock num between the posedge of SCL and the negedge of SDA for restart mark
-    i2c->dev->scl_rstart_setup.time = halfPeriod;
-
-    //the clock num after the STOP bit's posedge
-    i2c->dev->scl_stop_hold.time = halfPeriod;
-    //the clock num between the posedge of SCL and the posedge of SDA
-    i2c->dev->scl_stop_setup.time = halfPeriod;
-
-    //the clock num I2C used to hold the data after the negedge of SCL.
-    i2c->dev->sda_hold.time = quarterPeriod;
-    //the clock num I2C used to sample data on SDA after the posedge of SCL
-    i2c->dev->sda_sample.time = quarterPeriod;
-    I2C_MUTEX_UNLOCK();
-    return I2C_ERROR_OK;
-}
-
-uint32_t i2cGetFrequency(i2c_t * i2c)
-{
-    if(i2c == NULL) {
-        return 0;
-    }
-    uint32_t result = 0;
-    uint32_t old_count = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
-    if(old_count>0) {
-        result = APB_CLK_FREQ / old_count;
-    } else {
-        result = 0;
-    }
-    return result;
-}
-
-/*
- * mode          - 0 = Slave, 1 = Master
- * slave_addr    - I2C Address
- * addr_10bit_en - enable slave 10bit address mode.
- * */
-// 24Nov17 only supports Master Mode
-i2c_t * i2cInit(uint8_t i2c_num) //before this is called, pins should be detached, else glitch
-{
-    if(i2c_num > 1) {
-        return NULL;
-    }
-
-    i2c_t * i2c = &_i2c_bus_array[i2c_num];
-
-#if !CONFIG_DISABLE_HAL_LOCKS
-    if(i2c->lock == NULL) {
-        i2c->lock = xSemaphoreCreateMutex();
-        if(i2c->lock == NULL) {
-            return NULL;
-        }
-    }
-#endif
-    I2C_MUTEX_LOCK();
-
-    i2cReleaseISR(i2c); // ISR exists, release it before disabling hardware
-
-    uint32_t old_clock = i2cGetFrequency(i2c);
-
-    if(i2c_num == 0) {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);//  release reset
-    } else {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST); //reset Hardware
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
-    }
-    i2c->dev->ctr.val = 0;
-    i2c->dev->ctr.ms_mode = 1;
-    i2c->dev->ctr.sda_force_out = 1 ;
-    i2c->dev->ctr.scl_force_out = 1 ;
-    i2c->dev->ctr.clk_en = 1;
-
-    //the max clock number of receiving  a data
-    i2c->dev->timeout.tout = 400000;//clocks max=1048575
-    //disable apb nonfifo access
-    i2c->dev->fifo_conf.nonfifo_en = 0;
-
-    i2c->dev->slave_addr.val = 0;
-    I2C_MUTEX_UNLOCK();
-
-    if(old_clock) {
-        i2cSetFrequency(i2c,old_clock);    // reconfigure
-    }
-
-    return i2c;
-}
-/* unused 03/15/2018
-void i2cInitFix(i2c_t * i2c){
-    if(i2c == NULL){
-        return;
-    }
-    I2C_MUTEX_LOCK();
-    i2c->dev->ctr.trans_start = 0;
-    i2cResetFiFo(i2c);
-    i2c->dev->int_clr.val = 0xFFFFFFFF;
-    i2cSetCmd(i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
-    i2c->dev->fifo_data.data = 0;
-    i2cSetCmd(i2c, 1, I2C_CMD_WRITE, 1, false, false, false);
-    i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
-    if (i2c->dev->status_reg.bus_busy) // If this condition is true, the while loop will timeout as done will not be set
-    {
-        log_e("Busy at initialization!");
-    }
-    i2c->dev->ctr.trans_start = 1;
-    uint16_t count = 50000;
-    while ((!i2c->dev->command[2].done) && (--count > 0));
-    I2C_MUTEX_UNLOCK();
-}
- */
-/*
- unused 03/15/2018
-void i2cReset(i2c_t* i2c){
-    if(i2c == NULL){
-        return;
-    }
-    I2C_MUTEX_LOCK();
-    periph_module_t moduleId = (i2c == &_i2c_bus_array[0])?PERIPH_I2C0_MODULE:PERIPH_I2C1_MODULE;
-    periph_module_disable( moduleId );
-    delay( 20 ); // Seems long but delay was chosen to ensure system teardown and setup without core generation
-    periph_module_enable( moduleId );
-    I2C_MUTEX_UNLOCK();
-}
- */
 
 /* Stickbreaker ISR mode debug support
  */
@@ -720,65 +404,6 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
         if(ena_tx) {
             i2c->dev->int_ena.tx_fifo_empty = 1;
         }
-    }
-}
-
-/* Stickbreaker ISR mode debug support
- */
-void i2cDumpDqData(i2c_t * i2c)
-{
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    uint16_t a=0;
-    char buff[140];
-    I2C_DATA_QUEUE_t *tdq;
-    while(a<i2c->queueCount) {
-        tdq=&i2c->dq[a];
-        log_e("[%d] %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,tdq->ctrl.addr,(tdq->ctrl.mode)?'R':'W',(tdq->ctrl.stop)?"STOP":"",tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
-        uint16_t offset = 0;
-        while(offset<tdq->length) {
-            memset(buff,' ',140);
-            buff[139]='\0';
-            uint16_t i = 0,j;
-            j=sprintf(buff,"0x%04x: ",offset);
-            while((i<32)&&(offset < tdq->length)) {
-                char ch = tdq->data[offset];
-                sprintf((char*)&buff[(i*3)+41],"%02x ",ch);
-                if((ch<32)||(ch>126)) {
-                    ch='.';
-                }
-                j+=sprintf((char*)&buff[j],"%c",ch);
-                buff[j]=' ';
-                i++;
-                offset++;
-            }
-            log_e("%s",buff);
-        }
-        a++;
-    }
-#else
-    log_n("Enable Core Debug Level \"Error\"");
-#endif
-}
-
-void i2cDumpI2c(i2c_t * i2c)
-{
-    log_e("i2c=%p",i2c);
-    log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
-#if !CONFIG_DISABLE_HAL_LOCKS
-    log_e("lock=%p",i2c->lock);
-#endif
-    log_e("num=%d",i2c->num);
-    log_e("mode=%d",i2c->mode);
-    log_e("stage=%d",i2c->stage);
-    log_e("error=%d",i2c->error);
-    log_e("event=%p bits=%x",i2c->i2c_event,(i2c->i2c_event)?xEventGroupGetBits(i2c->i2c_event):0);
-    log_e("intr_handle=%p",i2c->intr_handle);
-    log_e("dq=%p",i2c->dq);
-    log_e("queueCount=%d",i2c->queueCount);
-    log_e("queuePos=%d",i2c->queuePos);
-    log_e("byteCnt=%d",i2c->byteCnt);
-    if(i2c->dq) {
-        i2cDumpDqData(i2c);
     }
 }
 
@@ -1098,21 +723,85 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
     }
 }
 
-void i2cDumpInts(uint8_t num)
+/* Stickbreaker added for ISR 11/2017
+functional with Silicon date=0x16042000
+ */
+static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, EventGroupHandle_t event)
 {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-    uint32_t b;
-    log_e("%u row  count   INTR    TX     RX",num);
-    for(uint32_t a=1; a<=INTBUFFMAX; a++) {
-        b=(a+intPos[num])%INTBUFFMAX;
-        if(intBuff[b][0][num]!=0) {
-            log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0][num]>>16)&0xFFFF),(intBuff[b][0][num]&0xFFFF),((intBuff[b][1][num]>>16)&0xFFFF),(intBuff[b][1][num]&0xFFFF),intBuff[b][2][num]);
+    // need to grab a MUTEX for exclusive Queue,
+    // what out if ISR is running?
+
+    if(i2c==NULL) {
+        return I2C_ERROR_DEV;
+    }
+
+    I2C_DATA_QUEUE_t dqx;
+    dqx.data = dataPtr;
+    dqx.length = dataLen;
+    dqx.position = 0;
+    dqx.cmdBytesNeeded = dataLen;
+    dqx.ctrl.val = 0;
+    dqx.ctrl.addr = i2cDeviceAddr;
+    dqx.ctrl.mode = mode;
+    dqx.ctrl.stop= sendStop;
+    dqx.ctrl.addrReq = ((i2cDeviceAddr&0xFC00)==0x7800)?2:1; // 10bit or 7bit address
+    dqx.queueLength = dataLen + dqx.ctrl.addrReq;
+    dqx.queueEvent = event;
+
+    if(event) { // an eventGroup exist, so, initialize it
+        xEventGroupClearBits(event, EVENT_MASK); // all of them
+    }
+
+    if(i2c->dq!=NULL) { // expand
+        //log_i("expand");
+        I2C_DATA_QUEUE_t* tq =(I2C_DATA_QUEUE_t*)realloc(i2c->dq,sizeof(I2C_DATA_QUEUE_t)*(i2c->queueCount +1));
+        if(tq!=NULL) { // ok
+            i2c->dq = tq;
+            memmove(&i2c->dq[i2c->queueCount++],&dqx,sizeof(I2C_DATA_QUEUE_t));
+        } else { // bad stuff, unable to allocate more memory!
+            log_e("realloc Failure");
+            return I2C_ERROR_MEMORY;
+        }
+    } else { // first Time
+        //log_i("new");
+        i2c->queueCount=0;
+        i2c->dq =(I2C_DATA_QUEUE_t*)malloc(sizeof(I2C_DATA_QUEUE_t));
+        if(i2c->dq!=NULL) {
+            memmove(&i2c->dq[i2c->queueCount++],&dqx,sizeof(I2C_DATA_QUEUE_t));
+        } else {
+            log_e("malloc failure");
+            return I2C_ERROR_MEMORY;
         }
     }
-#else
-    log_n("enable Core Debug Level \"Error\"");
-#endif
+    return I2C_ERROR_OK;
 }
+
+i2c_err_t i2cAddQueueWrite(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
+{
+    return i2cAddQueue(i2c,0,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
+}
+
+i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
+{
+    //10bit read is kind of weird, first you do a 0byte Write with 10bit
+    //  address, then a ReSTART then a 7bit Read using the the upper 7bit +
+    // readBit.
+
+    // this might cause an internal register pointer problem with 10bit
+    // devices, But, Don't have any to test agains.
+    // this is the Industry Standard specification.
+
+    if((i2cDeviceAddr &0xFC00)==0x7800) { // ten bit read
+        i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,event);
+        if(err==I2C_ERROR_OK) {
+            return i2cAddQueue(i2c,1,(i2cDeviceAddr>>8),dataPtr,dataLen,sendStop,event);
+        } else {
+            return err;
+        }
+    }
+    return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
+}
+// Stickbreaker
 
 i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 {
@@ -1122,7 +811,9 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     handle bus busy?
      */
     //log_e("procQueue i2c=%p",&i2c);
-    *readCount = 0; //total reads accomplished in all queue elements
+    if(readCount){ //total reads accomplished in all queue elements
+        *readCount = 0;
+    }
     if(i2c == NULL) {
         return I2C_ERROR_DEV;
     }
@@ -1359,7 +1050,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     b = 0;
 
     while(b < i2c->queueCount) {
-        if(i2c->dq[b].ctrl.mode==1) {
+        if(i2c->dq[b].ctrl.mode==1 && readCount) {
             *readCount += i2c->dq[b].position; // number of data bytes received
         }
         if(b < i2c->queuePos) { // before any error
@@ -1382,11 +1073,181 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     return reason;
 }
 
-void i2cReleaseAll(i2c_t *i2c)  // release all resources, power down peripheral
+static void i2cReleaseISR(i2c_t * i2c)
 {
-    // gpio pins must be released BEFORE this function or a Glitch will appear
+    if(i2c->intr_handle) {
+        esp_intr_free(i2c->intr_handle);
+        i2c->intr_handle=NULL;
+    }
+}
 
+static bool i2cCheckLineState(int8_t sda, int8_t scl){
+    if(sda < 0 || scl < 0){
+        return true;//return true since there is nothing to do
+    }
+    // if the bus is not 'clear' try the recommended recovery sequence, START, 9 Clocks, STOP
+    digitalWrite(sda, HIGH);
+    digitalWrite(scl, HIGH);
+    pinMode(sda, PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    pinMode(scl, PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+
+    if(!digitalRead(sda) || !digitalRead(scl)) { // bus in busy state
+        log_w("invalid state sda=%d, scl=%d\n", digitalRead(sda), digitalRead(scl));
+        digitalWrite(sda, HIGH);
+        digitalWrite(scl, HIGH);
+        delayMicroseconds(5);
+        digitalWrite(sda, LOW);
+        for(uint8_t a=0; a<9; a++) {
+            delayMicroseconds(5);
+            digitalWrite(scl, LOW);
+            delayMicroseconds(5);
+            digitalWrite(scl, HIGH);
+        }
+        delayMicroseconds(5);
+        digitalWrite(sda, HIGH);
+    }
+
+    if(!digitalRead(sda) || !digitalRead(scl)) { // bus in busy state
+        log_e("Bus Invalid State, TwoWire() Can't init");
+        return false; // bus is busy
+    }
+    return true;
+}
+
+i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl)
+{
+    if(i2c == NULL) {
+        return I2C_ERROR_DEV;
+    }
+    digitalWrite(scl, HIGH);
+    pinMode(scl, OPEN_DRAIN | PULLUP | INPUT | OUTPUT);
+    pinMatrixOutAttach(scl, I2C_SCL_IDX(i2c->num), false, false);
+    pinMatrixInAttach(scl, I2C_SCL_IDX(i2c->num), false);
+    return I2C_ERROR_OK;
+}
+
+i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl)
+{
+    if(i2c == NULL) {
+        return I2C_ERROR_DEV;
+    }
+    pinMatrixOutDetach(scl, false, false);
+    pinMatrixInDetach(I2C_SCL_IDX(i2c->num), false, false);
+    pinMode(scl, INPUT | PULLUP);
+    return I2C_ERROR_OK;
+}
+
+i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda)
+{
+    if(i2c == NULL) {
+        return I2C_ERROR_DEV;
+    }
+    digitalWrite(sda, HIGH);
+    pinMode(sda, OPEN_DRAIN | PULLUP | INPUT | OUTPUT );
+    pinMatrixOutAttach(sda, I2C_SDA_IDX(i2c->num), false, false);
+    pinMatrixInAttach(sda, I2C_SDA_IDX(i2c->num), false);
+    return I2C_ERROR_OK;
+}
+
+i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
+{
+    if(i2c == NULL) {
+        return I2C_ERROR_DEV;
+    }
+    pinMatrixOutDetach(sda, false, false);
+    pinMatrixInDetach(I2C_SDA_IDX(i2c->num), false, false);
+    pinMode(sda, INPUT | PULLUP);
+    return I2C_ERROR_OK;
+}
+
+/*
+ * PUBLIC API
+ * */
+// 24Nov17 only supports Master Mode
+i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) //before this is called, pins should be detached, else glitch
+{
+    if(i2c_num > 1) {
+        return NULL;
+    }
+
+    i2c_t * i2c = &_i2c_bus_array[i2c_num];
+
+    if(i2c->sda >= 0){
+        i2cDetachSDA(i2c, i2c->sda);
+    }
+    if(i2c->scl >= 0){
+        i2cDetachSCL(i2c, i2c->scl);
+    }
+    i2c->sda = sda;
+    i2c->scl = scl;
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(i2c->lock == NULL) {
+        i2c->lock = xSemaphoreCreateMutex();
+        if(i2c->lock == NULL) {
+            return NULL;
+        }
+    }
+#endif
     I2C_MUTEX_LOCK();
+
+    i2cReleaseISR(i2c); // ISR exists, release it before disabling hardware
+
+    if(frequency == 0) {// don't change existing frequency
+        frequency = i2cGetFrequency(i2c);
+        if(frequency == 0) {
+            frequency = 100000L;    // default to 100khz
+        }
+    }
+
+    if(i2c_num == 0) {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST); //reset hardware
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT0_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT0_RST);//  release reset
+    } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST); //reset Hardware
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG,DPORT_I2C_EXT1_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG,DPORT_I2C_EXT1_RST);
+    }
+    i2c->dev->ctr.val = 0;
+    i2c->dev->ctr.ms_mode = 1;
+    i2c->dev->ctr.sda_force_out = 1 ;
+    i2c->dev->ctr.scl_force_out = 1 ;
+    i2c->dev->ctr.clk_en = 1;
+
+    //the max clock number of receiving  a data
+    i2c->dev->timeout.tout = 400000;//clocks max=1048575
+    //disable apb nonfifo access
+    i2c->dev->fifo_conf.nonfifo_en = 0;
+
+    i2c->dev->slave_addr.val = 0;
+    I2C_MUTEX_UNLOCK();
+
+    i2cSetFrequency(i2c, frequency);    // reconfigure
+
+    if(!i2cCheckLineState(i2c->sda, i2c->scl)){
+        return NULL;
+    }
+
+    if(i2c->sda >= 0){
+        i2cAttachSDA(i2c, i2c->sda);
+    }
+    if(i2c->scl >= 0){
+        i2cAttachSCL(i2c, i2c->scl);
+    }
+    return i2c;
+}
+
+void i2cRelease(i2c_t *i2c)  // release all resources, power down peripheral
+{
+    I2C_MUTEX_LOCK();
+
+    if(i2c->sda >= 0){
+        i2cDetachSDA(i2c, i2c->sda);
+    }
+    if(i2c->scl >= 0){
+        i2cDetachSCL(i2c, i2c->scl);
+    }
 
     i2cReleaseISR(i2c);
 
@@ -1395,7 +1256,7 @@ void i2cReleaseAll(i2c_t *i2c)  // release all resources, power down peripheral
         i2c->i2c_event = NULL;
     }
 
-    i2cFreeQueue(i2c);
+    i2cFlush(i2c);
 
     // reset the I2C hardware and shut off the clock, power it down.
     if(i2c->num == 0) {
@@ -1408,6 +1269,190 @@ void i2cReleaseAll(i2c_t *i2c)  // release all resources, power down peripheral
 
     I2C_MUTEX_UNLOCK();
 }
+
+i2c_err_t i2cFlush(i2c_t * i2c)
+{
+    if(i2c==NULL) {
+        return I2C_ERROR_DEV;
+    }
+    // need to grab a MUTEX for exclusive Queue,
+    // what out if ISR is running?
+    i2c_err_t rc=I2C_ERROR_OK;
+    if(i2c->dq!=NULL) {
+        //  log_i("free");
+        // what about EventHandle?
+        free(i2c->dq);
+        i2c->dq = NULL;
+    }
+    i2c->queueCount=0;
+    i2c->queuePos=0;
+    // release Mutex
+    return rc;
+}
+
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+    i2c_err_t last_error = i2cAddQueueWrite(i2c, address, buff, size, sendStop, NULL);
+
+    if(last_error == I2C_ERROR_OK) { //queued
+        if(sendStop) { //now actually process the queued commands, including READs
+            last_error = i2cProcQueue(i2c, NULL, timeOutMillis);
+            if(last_error == I2C_ERROR_BUSY) { // try to clear the bus
+                if(i2cInit(i2c->num, i2c->sda, i2c->scl, 0)) {
+                    last_error = i2cProcQueue(i2c, NULL, timeOutMillis);
+                }
+            }
+            i2cFlush(i2c);
+        } else { // stop not received, so wait for I2C stop,
+            last_error = I2C_ERROR_CONTINUE;
+        }
+    }
+    return last_error;
+}
+
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+    i2c_err_t last_error=i2cAddQueueRead(i2c, address, buff, size, sendStop, NULL);
+
+    if(last_error == I2C_ERROR_OK) { //queued
+        if(sendStop) { //now actually process the queued commands, including READs
+            last_error = i2cProcQueue(i2c, readCount, timeOutMillis);
+            if(last_error == I2C_ERROR_BUSY) { // try to clear the bus
+                if(i2cInit(i2c->num, i2c->sda, i2c->scl, 0)) {
+                    last_error = i2cProcQueue(i2c, readCount, timeOutMillis);
+                }
+            }
+            i2cFlush(i2c);
+        } else { // stop not received, so wait for I2C stop,
+            last_error = I2C_ERROR_CONTINUE;
+        }
+    }
+    return last_error;
+}
+
+i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
+{
+    if(i2c == NULL) {
+        return I2C_ERROR_DEV;
+    }
+
+    uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
+    uint32_t halfPeriod = period/2;
+    uint32_t quarterPeriod = period/4;
+
+    I2C_MUTEX_LOCK();
+    //the clock num during SCL is low level
+    i2c->dev->scl_low_period.period = period;
+    //the clock num during SCL is high level
+    i2c->dev->scl_high_period.period = period;
+
+    //the clock num between the negedge of SDA and negedge of SCL for start mark
+    i2c->dev->scl_start_hold.time = halfPeriod;
+    //the clock num between the posedge of SCL and the negedge of SDA for restart mark
+    i2c->dev->scl_rstart_setup.time = halfPeriod;
+
+    //the clock num after the STOP bit's posedge
+    i2c->dev->scl_stop_hold.time = halfPeriod;
+    //the clock num between the posedge of SCL and the posedge of SDA
+    i2c->dev->scl_stop_setup.time = halfPeriod;
+
+    //the clock num I2C used to hold the data after the negedge of SCL.
+    i2c->dev->sda_hold.time = quarterPeriod;
+    //the clock num I2C used to sample data on SDA after the posedge of SCL
+    i2c->dev->sda_sample.time = quarterPeriod;
+    I2C_MUTEX_UNLOCK();
+    return I2C_ERROR_OK;
+}
+
+uint32_t i2cGetFrequency(i2c_t * i2c)
+{
+    if(i2c == NULL) {
+        return 0;
+    }
+    uint32_t result = 0;
+    uint32_t old_count = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
+    if(old_count>0) {
+        result = APB_CLK_FREQ / old_count;
+    } else {
+        result = 0;
+    }
+    return result;
+}
+
+
+/* Stickbreaker ISR mode debug support
+ */
+void i2cDumpDqData(i2c_t * i2c)
+{
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    uint16_t a=0;
+    char buff[140];
+    I2C_DATA_QUEUE_t *tdq;
+    while(a<i2c->queueCount) {
+        tdq=&i2c->dq[a];
+        log_e("[%d] %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,tdq->ctrl.addr,(tdq->ctrl.mode)?'R':'W',(tdq->ctrl.stop)?"STOP":"",tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
+        uint16_t offset = 0;
+        while(offset<tdq->length) {
+            memset(buff,' ',140);
+            buff[139]='\0';
+            uint16_t i = 0,j;
+            j=sprintf(buff,"0x%04x: ",offset);
+            while((i<32)&&(offset < tdq->length)) {
+                char ch = tdq->data[offset];
+                sprintf((char*)&buff[(i*3)+41],"%02x ",ch);
+                if((ch<32)||(ch>126)) {
+                    ch='.';
+                }
+                j+=sprintf((char*)&buff[j],"%c",ch);
+                buff[j]=' ';
+                i++;
+                offset++;
+            }
+            log_e("%s",buff);
+        }
+        a++;
+    }
+#else
+    log_n("Enable Core Debug Level \"Error\"");
+#endif
+}
+
+void i2cDumpI2c(i2c_t * i2c)
+{
+    log_e("i2c=%p",i2c);
+    log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
+#if !CONFIG_DISABLE_HAL_LOCKS
+    log_e("lock=%p",i2c->lock);
+#endif
+    log_e("num=%d",i2c->num);
+    log_e("mode=%d",i2c->mode);
+    log_e("stage=%d",i2c->stage);
+    log_e("error=%d",i2c->error);
+    log_e("event=%p bits=%x",i2c->i2c_event,(i2c->i2c_event)?xEventGroupGetBits(i2c->i2c_event):0);
+    log_e("intr_handle=%p",i2c->intr_handle);
+    log_e("dq=%p",i2c->dq);
+    log_e("queueCount=%d",i2c->queueCount);
+    log_e("queuePos=%d",i2c->queuePos);
+    log_e("byteCnt=%d",i2c->byteCnt);
+    if(i2c->dq) {
+        i2cDumpDqData(i2c);
+    }
+}
+
+void i2cDumpInts(uint8_t num)
+{
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+    uint32_t b;
+    log_e("%u row  count   INTR    TX     RX",num);
+    for(uint32_t a=1; a<=INTBUFFMAX; a++) {
+        b=(a+intPos[num])%INTBUFFMAX;
+        if(intBuff[b][0][num]!=0) {
+            log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0][num]>>16)&0xFFFF),(intBuff[b][0][num]&0xFFFF),((intBuff[b][1][num]>>16)&0xFFFF),(intBuff[b][1][num]&0xFFFF),intBuff[b][2][num]);
+        }
+    }
+#else
+    log_n("enable Core Debug Level \"Error\"");
+#endif
+}
+
 /* todo
   24Nov17
   Need to think about not usings I2C_MASTER_TRAN_COMP_INT_ST to adjust queuePos.  This
