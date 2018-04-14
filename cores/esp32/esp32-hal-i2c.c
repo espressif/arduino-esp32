@@ -532,6 +532,7 @@ static uint32_t intPos[2]= {0,0};
  */
 void IRAM_ATTR dumpCmdQueue(i2c_t *i2c)
 {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
     uint8_t i=0;
     while(i<16) {
         I2C_COMMAND_t c;
@@ -544,6 +545,7 @@ void IRAM_ATTR dumpCmdQueue(i2c_t *i2c)
               c.byte_num);
         i++;
     }
+#endif
 }
 
 /* Stickbreaker ISR mode support
@@ -1262,7 +1264,6 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     // add user supplied timeOutMillis to Calc Value
 
     portTickType ticksTimeOut = ((totalBytes*10*1000)/(i2cGetFrequency(i2c))+timeOutMillis)/portTICK_PERIOD_MS;
-    portTickType tBefore=xTaskGetTickCount();
 
     //log_e("before startup @tick=%d will wait=%d",xTaskGetTickCount(),ticksTimeOut);
 
@@ -1272,7 +1273,10 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 
     //log_e("after WaitBits=%x @tick=%d",eBits,xTaskGetTickCount());
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    portTickType tBefore=xTaskGetTickCount();
     portTickType tAfter=xTaskGetTickCount();
+#endif
 
     uint32_t b;
     // if xEventGroupSetBitsFromISR() failed, the ISR could have succeeded but never been
