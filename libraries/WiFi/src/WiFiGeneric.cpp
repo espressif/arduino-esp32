@@ -147,6 +147,9 @@ static bool espWiFiStart(){
         return false;
     }
     _esp_wifi_started = true;
+    system_event_t event; 
+    event.event_id = SYSTEM_EVENT_WIFI_READY; 
+    WiFiGenericClass::_eventCallback(nullptr, &event); 
     return true;
 }
 
