@@ -370,6 +370,9 @@ void ArduinoOTAClass::end() {
 }
 
 void ArduinoOTAClass::handle() {
+    if (!_initialized) {
+        return; 
+    }
     if (_state == OTA_RUNUPDATE) {
         _runUpdate();
         _state = OTA_IDLE;
