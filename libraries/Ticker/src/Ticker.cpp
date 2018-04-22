@@ -54,5 +54,18 @@ void Ticker::detach() {
     esp_timer_stop(_timer);
     esp_timer_delete(_timer);
     _timer = nullptr;
+	_callback_function = nullptr;
   }
+}
+
+void Ticker::_static_callback(void* arg){
+	Ticker* _this = (Ticker*)arg;
+	if (_this == nullptr)
+	{
+		return;
+	}
+	if (_this->_callback_function)
+	{
+		_this->_callback_function();
+	}
 }
