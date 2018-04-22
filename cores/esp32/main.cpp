@@ -1,6 +1,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "Arduino.h"
+#include "Schedule.h"
 
 #if CONFIG_AUTOSTART_ARDUINO
 
@@ -15,6 +16,7 @@ void loopTask(void *pvParameters)
     setup();
     for(;;) {
         loop();
+        run_scheduled_functions();
     }
 }
 
