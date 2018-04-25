@@ -109,6 +109,11 @@ void SPIClass::setClockDivider(uint32_t clockDiv)
     spiSetClockDiv(_spi, _div);
 }
 
+uint32_t SPIClass::getClockDivider()
+{
+    return spiGetClockDiv(_spi);
+}
+
 void SPIClass::setDataMode(uint8_t dataMode)
 {
     spiSetDataMode(_spi, dataMode);
