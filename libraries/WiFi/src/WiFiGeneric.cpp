@@ -168,12 +168,19 @@ static bool espWiFiStop(){
 // ------------------------------------------------- Generic WiFi function -----------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
-typedef struct {
+typedef struct WiFiEventCbList {
+    static size_t current_id;
+    size_t id;
     WiFiEventCb cb;
     WiFiEventFullCb fcb;
     WiFiEventSysCb scb;
+    WiFiEventFuncCb funcCb;
     system_event_id_t event;
+
+    WiFiEventCbList() : id(current_id++) {}
 } WiFiEventCbList_t;
+size_t WiFiEventCbList::current_id = 1;
+
 
 // arduino dont like std::vectors move static here
 static std::vector<WiFiEventCbList_t> cbEventList;
@@ -191,43 +198,64 @@ WiFiGenericClass::WiFiGenericClass()
  * @param cbEvent WiFiEventCb
  * @param event optional filter (WIFI_EVENT_MAX is all events)
  */
-void WiFiGenericClass::onEvent(WiFiEventCb cbEvent, system_event_id_t event)
+size_t WiFiGenericClass::onEvent(WiFiEventCb cbEvent, system_event_id_t event)
 {
     if(!cbEvent) {
-        return;
+        return 0;
     }
     WiFiEventCbList_t newEventHandler;
     newEventHandler.cb = cbEvent;
     newEventHandler.fcb = NULL;
     newEventHandler.scb = NULL;
+    newEventHandler.funcCb = NULL;
     newEventHandler.event = event;
     cbEventList.push_back(newEventHandler);
+    return newEventHandler.id;
 }
 
-void WiFiGenericClass::onEvent(WiFiEventFullCb cbEvent, system_event_id_t event)
+size_t WiFiGenericClass::onEvent(WiFiEventFullCb cbEvent, system_event_id_t event)
 {
     if(!cbEvent) {
-        return;
+        return 0;
     }
     WiFiEventCbList_t newEventHandler;
     newEventHandler.cb = NULL;
     newEventHandler.fcb = cbEvent;
     newEventHandler.scb = NULL;
+    newEventHandler.funcCb = NULL;
     newEventHandler.event = event;
     cbEventList.push_back(newEventHandler);
+    return newEventHandler.id;
 }
 
-void WiFiGenericClass::onEvent(WiFiEventSysCb cbEvent, system_event_id_t event)
+size_t WiFiGenericClass::onEvent(WiFiEventSysCb cbEvent, system_event_id_t event)
 {
     if(!cbEvent) {
-        return;
+        return 0;
     }
     WiFiEventCbList_t newEventHandler;
     newEventHandler.cb = NULL;
     newEventHandler.fcb = NULL;
     newEventHandler.scb = cbEvent;
+    newEventHandler.funcCb = NULL;
     newEventHandler.event = event;
     cbEventList.push_back(newEventHandler);
+    return newEventHandler.id;
+}
+
+size_t WiFiGenericClass::onEvent(WiFiEventFuncCb cbEvent, system_event_id_t event)
+{
+    if(!cbEvent) {
+        return 0;
+    }
+    WiFiEventCbList_t newEventHandler;
+    newEventHandler.cb = NULL;
+    newEventHandler.fcb = NULL;
+    newEventHandler.scb = NULL;
+    newEventHandler.funcCb = cbEvent;
+    newEventHandler.event = event;
+    cbEventList.push_back(newEventHandler);
+    return newEventHandler.id;
 }
 
 /**
@@ -272,6 +300,16 @@ void WiFiGenericClass::removeEvent(WiFiEventSysCb cbEvent, system_event_id_t eve
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         WiFiEventCbList_t entry = cbEventList[i];
         if(entry.scb == cbEvent && entry.event == event) {
+            cbEventList.erase(cbEventList.begin() + i);
+        }
+    }
+}
+
+void WiFiGenericClass::removeEvent(size_t id)
+{
+    for(uint32_t i = 0; i < cbEventList.size(); i++) {
+        WiFiEventCbList_t entry = cbEventList[i];
+        if(entry.id == id) {
             cbEventList.erase(cbEventList.begin() + i);
         }
     }
@@ -325,14 +363,16 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.cb || entry.fcb || entry.scb) {
+        if(entry.cb || entry.fcb || entry.scb || entry.funcCb) {
             if(entry.event == (system_event_id_t) event->event_id || entry.event == SYSTEM_EVENT_MAX) {
-                if(entry.cb){
+                if(entry.cb) {
                     entry.cb((system_event_id_t) event->event_id);
-                } else if(entry.fcb){
+                } else if(entry.fcb) {
                     entry.fcb((system_event_id_t) event->event_id, (system_event_info_t) event->event_info);
-                } else {
+                } else if(entry.scb) {
                     entry.scb(event);
+                } else{
+                    entry.funcCb((system_event_id_t) event->event_id, (system_event_info_t) event->event_info);
                 }
             }
         }

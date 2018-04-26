@@ -23,6 +23,7 @@
 #ifndef ESP32WIFIGENERIC_H_
 #define ESP32WIFIGENERIC_H_
 
+#include <functional>
 #include "WiFiType.h"
 #include <esp_err.h>
 #include <esp_event_loop.h>
@@ -30,6 +31,7 @@
 typedef void (*WiFiEventCb)(system_event_id_t event);
 typedef void (*WiFiEventFullCb)(system_event_id_t event, system_event_info_t info);
 typedef void (*WiFiEventSysCb)(system_event_t *event);
+typedef std::function<void(system_event_id_t event, system_event_info_t info)> WiFiEventFuncCb;
 
 class WiFiGenericClass
 {
@@ -37,12 +39,14 @@ public:
 
     WiFiGenericClass();
 
-    void onEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
-    void onEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
-    void onEvent(WiFiEventSysCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    size_t onEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    size_t onEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    size_t onEvent(WiFiEventSysCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    size_t onEvent(WiFiEventFuncCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventFullCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
     void removeEvent(WiFiEventSysCb cbEvent, system_event_id_t event = SYSTEM_EVENT_MAX);
+    void removeEvent(size_t id);
 
     int32_t channel(void);
 
