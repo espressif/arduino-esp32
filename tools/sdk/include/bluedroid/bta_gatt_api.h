@@ -181,12 +181,14 @@ typedef UINT8 tBTA_GATT_STATUS;
 #define BTA_GATTC_ADV_VSC_EVT           34 /* ADV VSC event */
 #define BTA_GATTC_CONNECT_EVT           35 /* GATTC CONNECT  event */
 #define BTA_GATTC_DISCONNECT_EVT        36 /* GATTC DISCONNECT  event */
-#define BTA_GATTC_READ_MUTIPLE_EVT      37 /* GATTC Read mutiple event */
+#define BTA_GATTC_READ_MULTIPLE_EVT     37 /* GATTC Read mutiple event */
 #define BTA_GATTC_QUEUE_FULL_EVT        38 /* GATTC queue full event */
 
 typedef UINT8 tBTA_GATTC_EVT;
 
 typedef tGATT_IF tBTA_GATTC_IF;
+
+typedef UINT8 tBTA_ADDR_TYPE;
 
 typedef struct {
     UINT16              unit;       /* as UUIUD defined by SIG */
@@ -387,27 +389,30 @@ typedef struct {
     BD_ADDR             remote_bda;
 } tBTA_GATTC_DISCONNECT;
 
-
+typedef struct {
+    UINT16              conn_id;
+    BD_ADDR             remote_bda;
+} tBTA_GATTC_SERVICE_CHANGE;
 
 typedef union {
     tBTA_GATT_STATUS        status;
 
-    tBTA_GATTC_SEARCH_CMPL  search_cmpl;          /* discovery complete */
-    tBTA_GATTC_SRVC_RES     srvc_res;          /* discovery result */
-    tBTA_GATTC_REG          reg_oper;              /* registration data */
+    tBTA_GATTC_SEARCH_CMPL  search_cmpl;    /* discovery complete */
+    tBTA_GATTC_SRVC_RES     srvc_res;       /* discovery result */
+    tBTA_GATTC_REG          reg_oper;       /* registration data */
     tBTA_GATTC_OPEN         open;
     tBTA_GATTC_CONNECT      connect;
     tBTA_GATTC_CLOSE        close;
     tBTA_GATTC_DISCONNECT   disconnect;
-    tBTA_GATTC_READ         read;             /* read attribute/descriptor data */
-    tBTA_GATTC_WRITE        write;            /* write complete data */
-    tBTA_GATTC_EXEC_CMPL    exec_cmpl;       /*  execute complete */
-    tBTA_GATTC_NOTIFY       notify;           /* notification/indication event data */
+    tBTA_GATTC_READ         read;           /* read attribute/descriptor data */
+    tBTA_GATTC_WRITE        write;          /* write complete data */
+    tBTA_GATTC_EXEC_CMPL    exec_cmpl;      /*  execute complete */
+    tBTA_GATTC_NOTIFY       notify;         /* notification/indication event data */
     tBTA_GATTC_ENC_CMPL_CB  enc_cmpl;
-    BD_ADDR                 remote_bda;     /* service change event */
     tBTA_GATTC_CFG_MTU      cfg_mtu;        /* configure MTU operation */
     tBTA_GATTC_CONGEST      congest;
     tBTA_GATTC_QUEUE_FULL   queue_full;
+    tBTA_GATTC_SERVICE_CHANGE srvc_chg;     /* service change event */
 } tBTA_GATTC;
 
 /* GATTC enable callback function */
@@ -737,13 +742,14 @@ extern void BTA_GATTC_AppDeregister (tBTA_GATTC_IF client_if);
 **
 ** Parameters       client_if: server interface.
 **                  remote_bda: remote device BD address.
+**                  remote_addr_type: remote device BD address type.
 **                  is_direct: direct connection or background auto connection
 **
 ** Returns          void
 **
 *******************************************************************************/
-extern void BTA_GATTC_Open(tBTA_GATTC_IF client_if, BD_ADDR remote_bda,
-                           BOOLEAN is_direct, tBTA_GATT_TRANSPORT transport);
+extern void BTA_GATTC_Open(tBTA_GATTC_IF client_if, BD_ADDR remote_bda, tBTA_ADDR_TYPE remote_addr_type,
+                    BOOLEAN is_direct, tBTA_GATT_TRANSPORT transport);
 
 /*******************************************************************************
 **

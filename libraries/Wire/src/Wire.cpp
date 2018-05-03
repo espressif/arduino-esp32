@@ -46,19 +46,27 @@ TwoWire::TwoWire(uint8_t bus_num)
 
 void TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
-    if(sdaPin < 0) {
+    if(sdaPin < 0) { // default param passed
         if(num == 0) {
-            sdaPin = SDA;
+            if(sda==-1) sdaPin = SDA; //use Default Pin
+            else sdaPin = sda; // reuse prior pin
         } else {
-            return;
+            if(sda==-1) {
+                log_e("no Default SDA Pin for Second Peripheral");
+                return; //no Default pin for Second Peripheral
+            } else sdaPin = sda; // reuse prior pin
         }
     }
 
-    if(sclPin < 0) {
+    if(sclPin < 0) { // default param passed
         if(num == 0) {
-            sclPin = SCL;
+            if(scl==-1) sclPin = SCL; // use Default pin
+            else sclPin = scl; // reuse prior pin
         } else {
-            return;
+            if(scl==-1){
+                log_e("no Default SCL Pin for Second Peripheral");
+                return; //no Default pin for Second Peripheral
+            } else sclPin = scl; // reuse prior pin
         }
     }
 

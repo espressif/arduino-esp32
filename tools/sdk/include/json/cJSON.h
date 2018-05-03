@@ -30,8 +30,8 @@ extern "C"
 
 /* project version */
 #define CJSON_VERSION_MAJOR 1
-#define CJSON_VERSION_MINOR 6
-#define CJSON_VERSION_PATCH 0
+#define CJSON_VERSION_MINOR 7
+#define CJSON_VERSION_PATCH 1
 
 #include <stddef.h>
 
@@ -165,6 +165,9 @@ CJSON_PUBLIC(cJSON_bool) cJSON_HasObjectItem(const cJSON *object, const char *st
 /* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse() returns 0. 0 when cJSON_Parse() succeeds. */
 CJSON_PUBLIC(const char *) cJSON_GetErrorPtr(void);
 
+/* Check if the item is a string and return its valuestring */
+CJSON_PUBLIC(char *) cJSON_GetStringValue(cJSON *item);
+
 /* These functions check the type of an item */
 CJSON_PUBLIC(cJSON_bool) cJSON_IsInvalid(const cJSON * const item);
 CJSON_PUBLIC(cJSON_bool) cJSON_IsFalse(const cJSON * const item);
@@ -188,6 +191,14 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateString(const char *string);
 CJSON_PUBLIC(cJSON *) cJSON_CreateRaw(const char *raw);
 CJSON_PUBLIC(cJSON *) cJSON_CreateArray(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateObject(void);
+
+/* Create a string where valuestring references a string so
+ * it will not be freed by cJSON_Delete */
+CJSON_PUBLIC(cJSON *) cJSON_CreateStringReference(const char *string);
+/* Create an object/arrray that only references it's elements so
+ * they will not be freed by cJSON_Delete */
+CJSON_PUBLIC(cJSON *) cJSON_CreateObjectReference(const cJSON *child);
+CJSON_PUBLIC(cJSON *) cJSON_CreateArrayReference(const cJSON *child);
 
 /* These utilities create an Array of count items. */
 CJSON_PUBLIC(cJSON *) cJSON_CreateIntArray(const int *numbers, int count);
@@ -234,14 +245,17 @@ CJSON_PUBLIC(cJSON_bool) cJSON_Compare(const cJSON * const a, const cJSON * cons
 
 CJSON_PUBLIC(void) cJSON_Minify(char *json);
 
-/* Macros for creating things quickly. */
-#define cJSON_AddNullToObject(object,name) cJSON_AddItemToObject(object, name, cJSON_CreateNull())
-#define cJSON_AddTrueToObject(object,name) cJSON_AddItemToObject(object, name, cJSON_CreateTrue())
-#define cJSON_AddFalseToObject(object,name) cJSON_AddItemToObject(object, name, cJSON_CreateFalse())
-#define cJSON_AddBoolToObject(object,name,b) cJSON_AddItemToObject(object, name, cJSON_CreateBool(b))
-#define cJSON_AddNumberToObject(object,name,n) cJSON_AddItemToObject(object, name, cJSON_CreateNumber(n))
-#define cJSON_AddStringToObject(object,name,s) cJSON_AddItemToObject(object, name, cJSON_CreateString(s))
-#define cJSON_AddRawToObject(object,name,s) cJSON_AddItemToObject(object, name, cJSON_CreateRaw(s))
+/* Helper functions for creating and adding items to an object at the same time.
+ * They return the added item or NULL on failure. */
+CJSON_PUBLIC(cJSON*) cJSON_AddNullToObject(cJSON * const object, const char * const name);
+CJSON_PUBLIC(cJSON*) cJSON_AddTrueToObject(cJSON * const object, const char * const name);
+CJSON_PUBLIC(cJSON*) cJSON_AddFalseToObject(cJSON * const object, const char * const name);
+CJSON_PUBLIC(cJSON*) cJSON_AddBoolToObject(cJSON * const object, const char * const name, const cJSON_bool boolean);
+CJSON_PUBLIC(cJSON*) cJSON_AddNumberToObject(cJSON * const object, const char * const name, const double number);
+CJSON_PUBLIC(cJSON*) cJSON_AddStringToObject(cJSON * const object, const char * const name, const char * const string);
+CJSON_PUBLIC(cJSON*) cJSON_AddRawToObject(cJSON * const object, const char * const name, const char * const raw);
+CJSON_PUBLIC(cJSON*) cJSON_AddObjectToObject(cJSON * const object, const char * const name);
+CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * const name);
 
 /* When assigning an integer value, it needs to be propagated to valuedouble too. */
 #define cJSON_SetIntValue(object, number) ((object) ? (object)->valueint = (object)->valuedouble = (number) : (number))

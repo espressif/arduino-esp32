@@ -3,7 +3,7 @@ BOOT_APP_BIN_ROOT := $(call dequote,$(COMPONENT_PATH))
 BOOT_APP_BIN_PATH := $(call dequote,$(abspath $(BOOT_APP_BIN_ROOT)/$(subst $(quote),,tools/partitions/boot_app0.bin)))
 
 ifndef CONFIG_PARTITION_TABLE_CUSTOM
-PARTITION_TABLE_CSV_PATH = $(call dequote,$(abspath $(BOOT_APP_BIN_ROOT)/$(subst $(quote),,tools/partitions/default.csv)))
+PARTITION_TABLE_CSV_PATH = $(call dequote,$(abspath $(BOOT_APP_BIN_ROOT)/$(subst $(quote),,tools/partitions/$(CONFIG_ARDUHAL_PARTITION_SCHEME).csv)))
 endif
 
 BOOT_APP_BIN_FLASH_CMD = $(ESPTOOLPY_SERIAL) write_flash $(BOOT_APP_BIN_OFFSET) $(BOOT_APP_BIN_PATH)

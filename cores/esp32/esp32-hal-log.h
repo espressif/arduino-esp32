@@ -107,9 +107,9 @@ int log_printf(const char *fmt, ...);
 #define log_e(format, ...)
 #endif
 
-#ifdef CONFIG_ARDUHAL_ESP_LOG
 #include "esp_log.h"
 
+#ifdef CONFIG_ARDUHAL_ESP_LOG
 #undef ESP_LOGE
 #undef ESP_LOGW
 #undef ESP_LOGI

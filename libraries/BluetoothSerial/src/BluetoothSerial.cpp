@@ -13,6 +13,13 @@
 // limitations under the License.
 
 #include "sdkconfig.h"
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -27,6 +34,11 @@
 #include "esp_gap_bt_api.h"
 #include "esp_bt_device.h"
 #include "esp_spp_api.h"
+#include <esp_log.h>
+
+#ifdef ARDUINO_ARCH_ESP32
+#include "esp32-hal-log.h"
+#endif
 
 #define SPP_SERVER_NAME "ESP32_SPP_SERVER"
 #define SPP_TAG "BluetoothSerial"
@@ -208,8 +220,8 @@ int BluetoothSerial::read(void)
         if (xQueueReceive(SerialQueueBT, &c, 0)){
             return c;
         }
-        return 0;
     }
+    return 0;
 }
 
 size_t BluetoothSerial::write(uint8_t c)

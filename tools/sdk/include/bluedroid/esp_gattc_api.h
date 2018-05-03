@@ -63,7 +63,7 @@ typedef enum {
     ESP_GATTC_UNREG_FOR_NOTIFY_EVT    = 39,       /*!< When unregister for notification of a service completes, the event comes */
     ESP_GATTC_CONNECT_EVT             = 40,       /*!< When the ble physical connection is set up, the event comes */
     ESP_GATTC_DISCONNECT_EVT          = 41,       /*!< When the ble physical connection disconnected, the event comes */
-    ESP_GATTC_READ_MUTIPLE_EVT        = 42,       /*!< When the ble characteristic or descriptor mutiple complete, the event comes */
+    ESP_GATTC_READ_MULTIPLE_EVT       = 42,       /*!< When the ble characteristic or descriptor multiple complete, the event comes */
     ESP_GATTC_QUEUE_FULL_EVT          = 43,       /*!< When the gattc command queue full, the event comes */
 } esp_gattc_cb_event_t;
 
@@ -283,6 +283,7 @@ esp_err_t esp_ble_gattc_app_unregister(esp_gatt_if_t gattc_if);
  *
  * @param[in]       gattc_if: Gatt client access interface.
  * @param[in]       remote_bda: remote device bluetooth device address.
+ * @param[in]       remote_addr_type: remote device bluetooth device the address type.
  * @param[in]       is_direct: direct connection or background auto connection
  *
  * @return
@@ -290,7 +291,7 @@ esp_err_t esp_ble_gattc_app_unregister(esp_gatt_if_t gattc_if);
  *                  - other: failed
  *
  */
-esp_err_t esp_ble_gattc_open(esp_gatt_if_t gattc_if, esp_bd_addr_t remote_bda, bool is_direct);
+esp_err_t esp_ble_gattc_open(esp_gatt_if_t gattc_if, esp_bd_addr_t remote_bda, esp_ble_addr_type_t remote_addr_type, bool is_direct);
 
 
 /**

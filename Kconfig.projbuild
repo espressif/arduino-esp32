@@ -78,6 +78,30 @@ config ARDUHAL_ESP_LOG
 
 endmenu
 
+choice ARDUHAL_PARTITION_SCHEME
+    bool "Used partition scheme"
+    default ARDUHAL_PARTITION_SCHEME_DEFAULT
+    help
+        Specify which partition scheme to be used.
+
+config ARDUHAL_PARTITION_SCHEME_DEFAULT
+    bool "Default"
+config ARDUHAL_PARTITION_SCHEME_MINIMAL
+    bool "Minimal (for 2MB FLASH)"
+config ARDUHAL_PARTITION_SCHEME_NO_OTA
+    bool "No OTA (for large apps)"
+config ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
+    bool "Minimal SPIFFS (for large apps with OTA)"
+endchoice
+
+config ARDUHAL_PARTITION_SCHEME
+    string
+    default "default" if ARDUHAL_PARTITION_SCHEME_DEFAULT
+    default "minimal" if ARDUHAL_PARTITION_SCHEME_MINIMAL
+    default "no_ota" if ARDUHAL_PARTITION_SCHEME_NO_OTA
+    default "min_spiffs" if ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
+
+
 config AUTOCONNECT_WIFI
     bool "Autoconnect WiFi on boot"
     default "n"

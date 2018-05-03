@@ -2,6 +2,7 @@ menu.UploadSpeed=Upload Speed
 menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
 menu.FlashSize=Flash Size
+menu.PartitionScheme=Partition Scheme
 menu.DebugLevel=Core Debug Level
 
 ##############################################################
@@ -27,6 +28,15 @@ esp32.build.flash_freq=40m
 esp32.build.flash_mode=dio
 esp32.build.boot=dio
 esp32.build.partitions=default
+
+esp32.menu.PartitionScheme.default=Default
+esp32.menu.PartitionScheme.default.build.partitions=default
+esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 
 esp32.menu.FlashMode.qio=QIO
 esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -100,8 +110,8 @@ pico32.build.board=ESP32_PICO
 pico32.build.f_cpu=240000000L
 pico32.build.flash_size=4MB
 pico32.build.flash_freq=80m
-pico32.build.flash_mode=qio
-pico32.build.boot=qio
+pico32.build.flash_mode=dio
+pico32.build.boot=dio
 pico32.build.partitions=default
 
 pico32.menu.UploadSpeed.921600=921600
@@ -470,6 +480,19 @@ WeMosBat.menu.UploadSpeed.460800.macosx=460800
 WeMosBat.menu.UploadSpeed.460800.upload.speed=460800
 WeMosBat.menu.UploadSpeed.512000.windows=512000
 WeMosBat.menu.UploadSpeed.512000.upload.speed=512000
+
+WeMosBat.menu.DebugLevel.none=None
+WeMosBat.menu.DebugLevel.none.build.code_debug=0
+WeMosBat.menu.DebugLevel.error=Error
+WeMosBat.menu.DebugLevel.error.build.code_debug=1
+WeMosBat.menu.DebugLevel.warn=Warn
+WeMosBat.menu.DebugLevel.warn.build.code_debug=2
+WeMosBat.menu.DebugLevel.info=Info
+WeMosBat.menu.DebugLevel.info.build.code_debug=3
+WeMosBat.menu.DebugLevel.debug=Debug
+WeMosBat.menu.DebugLevel.debug.build.code_debug=4
+WeMosBat.menu.DebugLevel.verbose=Verbose
+WeMosBat.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -1217,7 +1240,7 @@ m5stack-core-esp32.serial.disableRTS=true
 
 m5stack-core-esp32.build.mcu=esp32
 m5stack-core-esp32.build.core=esp32
-m5stack-core-esp32.build.variant=esp32
+m5stack-core-esp32.build.variant=m5stack_core_esp32
 m5stack-core-esp32.build.board=M5Stack_Core_ESP32
 
 m5stack-core-esp32.build.f_cpu=240000000L

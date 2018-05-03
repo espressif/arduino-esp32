@@ -296,9 +296,19 @@ typedef struct {
     esp_crypto_cipher_encrypt_t crypto_cipher_encrypt;        /**< function used to encrypt cipher when use TLSV1 */
     esp_crypto_cipher_decrypt_t crypto_cipher_decrypt;        /**< function used to decrypt cipher when use TLSV1 */
     esp_crypto_cipher_deinit_t crypto_cipher_deinit;          /**< function used to free context when use TLSV1 */
-    esp_sha256_vector_t sha256_vector;                        /**< function used to do X.509v3 certificate parsing and processing */
     esp_crypto_mod_exp_t crypto_mod_exp;                      /**< function used to do key exchange when use TLSV1 */
+    esp_sha256_vector_t sha256_vector;                        /**< function used to do X.509v3 certificate parsing and processing */
 } wpa2_crypto_funcs_t;
+
+/**
+  * @brief The crypto callback function structure used in mesh vendor IE encryption. The
+  *        structure can be set as software crypto or the crypto optimized by ESP32
+  *        hardware.
+  */
+typedef struct{
+    esp_aes_128_encrypt_t aes_128_encrypt;          /**< function used in mesh vendor IE encryption */
+    esp_aes_128_decrypt_t aes_128_decrypt;          /**< function used in mesh vendor IE decryption */
+} mesh_crypto_funcs_t;
 
 #ifdef __cplusplus
 }

@@ -54,7 +54,7 @@ public:
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
 
-    uint8_t run(void);
+    uint8_t run(uint32_t connectTimeout=5000);
 
 private:
     std::vector<WifiAPlist_t> APlist;
