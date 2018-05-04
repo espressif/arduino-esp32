@@ -35,8 +35,10 @@ esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
 esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 esp32.menu.FlashMode.qio=QIO
 esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -379,6 +381,15 @@ lolin32.menu.FlashFreq.80=80MHz
 lolin32.menu.FlashFreq.80.build.flash_freq=80m
 lolin32.menu.FlashFreq.40=40MHz
 lolin32.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin32.menu.PartitionScheme.default=Default
+lolin32.menu.PartitionScheme.default.build.partitions=default
+lolin32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+lolin32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+lolin32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lolin32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 lolin32.menu.UploadSpeed.921600=921600
 lolin32.menu.UploadSpeed.921600.upload.speed=921600
