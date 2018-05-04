@@ -110,8 +110,8 @@ pico32.build.board=ESP32_PICO
 pico32.build.f_cpu=240000000L
 pico32.build.flash_size=4MB
 pico32.build.flash_freq=80m
-pico32.build.flash_mode=qio
-pico32.build.boot=qio
+pico32.build.flash_mode=dio
+pico32.build.boot=dio
 pico32.build.partitions=default
 
 pico32.menu.UploadSpeed.921600=921600
