@@ -313,7 +313,7 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
-        if (res <= 0) {
+        if (res < 0) {
             switch (errno) {
                 case ENOTCONN:
                 case EPIPE:
@@ -328,7 +328,6 @@ uint8_t WiFiClient::connected()
             }
         }
         else {
-            // Should never happen since requested 0 bytes
             _connected = true;
         }
     }
