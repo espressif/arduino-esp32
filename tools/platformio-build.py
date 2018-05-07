@@ -181,10 +181,18 @@ env.Prepend(LIBS=libs)
 #
 # Generate partition table
 #
+
+# Export path to the partitions table
+env.Replace(
+    PARTITION_TABLE_CSV=join(
+        FRAMEWORK_DIR, "tools", "partitions",
+        "%s.csv" % env.BoardConfig().get("build.partitions", "default")
+    )
+)
+
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
-    join(FRAMEWORK_DIR, "tools", "partitions",
-         "%s.csv" % env.BoardConfig().get("build.partitions", "default")),
+    "$PARTITION_TABLE_CSV",
     env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
         FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
                       "Generating partitions $TARGET"))
