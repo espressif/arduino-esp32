@@ -100,27 +100,11 @@ env.Prepend(
     ],
     LIBS=[
         "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
-    ],
-
-    UPLOADERFLAGS=[
-        "--before", "default_reset",
-        "--after", "hard_reset"
     ]
 )
 
 
-def _get_board_flash_mode(env):
-    mode = env.subst("$BOARD_FLASH_MODE")
-    if mode == "qio":
-        return "dio"
-    elif mode == "qout":
-        return "dout"
-    return mode
-
-
 env.Append(
-    __get_board_flash_mode=_get_board_flash_mode,
-
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -136,19 +120,12 @@ env.Append(
         "-u", "__cxx_fatal_exception"
     ],
 
-    UPLOADERFLAGS=[
+    EXTRA_ESPTOOL_UPLOADFLAGS=[
         "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
         "0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin"),
         "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
         "0x10000"
     ]
-)
-
-if "$BOARD_FLASH_MODE" in env['UPLOADERFLAGS']:
-    env['UPLOADERFLAGS'][env['UPLOADERFLAGS'].index("$BOARD_FLASH_MODE")] = "${__get_board_flash_mode(__env__)}"
-
-env.Replace(
-    UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
 )
 
 #
