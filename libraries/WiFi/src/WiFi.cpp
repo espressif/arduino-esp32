@@ -56,9 +56,6 @@ void WiFiClass::printDiag(Print& p)
     wifi_second_chan_t secondChan;
     esp_wifi_get_channel(&primaryChan, &secondChan);
 
-    bool autoConnect;
-    esp_wifi_get_auto_connect(&autoConnect);
-
     p.print("Mode: ");
     p.println(modes[mode]);
 
@@ -71,8 +68,6 @@ void WiFiClass::printDiag(Print& p)
         p.print("Status: ");
         p.println(wifi_station_get_connect_status());
     */
-    p.print("Auto connect: ");
-    p.println(autoConnect);
 
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
