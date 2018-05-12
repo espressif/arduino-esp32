@@ -48,8 +48,8 @@ public:
 
     void persistent(bool persistent);
 
-    static bool mode(wifi_mode_t);
-    static wifi_mode_t getMode();
+    bool mode(wifi_mode_t);
+    wifi_mode_t getMode();
 
     bool enableSTA(bool enable);
     bool enableAP(bool enable);
@@ -57,8 +57,16 @@ public:
     static esp_err_t _eventCallback(void *arg, system_event_t *event);
 
 protected:
+
+    static bool _esp_wifi_started;
     static bool _persistent;
     static wifi_mode_t _forceSleepLastMode;
+
+    void tcpipInit();
+    bool espWiFiStart();
+    bool espWiFiStop();
+    bool wifiLowLevelInit();
+    bool wifiLowLevelDeinit();
 
 public:
 
