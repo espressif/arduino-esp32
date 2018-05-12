@@ -354,7 +354,7 @@ bool WiFiSTAClass::getAutoReconnect()
 uint8_t WiFiSTAClass::waitForConnectResult()
 {
     //1 and 3 have STA enabled
-    if((WiFiGenericClass::getMode() & WIFI_MODE_STA) == 0) {
+    if((WiFi.getMode() & WIFI_MODE_STA) == 0) {
         return WL_DISCONNECTED;
     }
     int i = 0;

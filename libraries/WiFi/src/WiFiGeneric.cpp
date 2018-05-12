@@ -99,7 +99,25 @@ static void _start_network_event_task(){
     esp_event_loop_init(&_network_event_cb, NULL);
 }
 
-void tcpipInit(){
+// -----------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------- Generic WiFi function -----------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------
+
+typedef struct {
+    WiFiEventCb cb;
+    WiFiEventFullCb fcb;
+    WiFiEventSysCb scb;
+    system_event_id_t event;
+} WiFiEventCbList_t;
+
+// arduino dont like std::vectors move static here
+static std::vector<WiFiEventCbList_t> cbEventList;
+
+bool WiFiGenericClass::_esp_wifi_started = false;
+bool WiFiGenericClass::_persistent = true;
+wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
+
+void WiFiGenericClass::tcpipInit(){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
@@ -108,32 +126,13 @@ void tcpipInit(){
     }
 }
 
-static bool wifiLowLevelInit(){
-    static bool lowLevelInitDone = false;
-    if(!lowLevelInitDone){
-        tcpipInit();
-        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-        esp_err_t err = esp_wifi_init(&cfg);
-        if(err){
-            log_e("esp_wifi_init %d", err);
-            return false;
-        }
-        esp_wifi_set_storage(WIFI_STORAGE_FLASH);
-        esp_wifi_set_mode(WIFI_MODE_NULL);
-        lowLevelInitDone = true;
-    }
-    return true;
-}
-
-static bool wifiLowLevelDeinit(){
+bool WiFiGenericClass::wifiLowLevelDeinit(){
     //deinit not working yet!
     //esp_wifi_deinit();
     return true;
 }
 
-static bool _esp_wifi_started = false;
-
-static bool espWiFiStart(){
+bool WiFiGenericClass::espWiFiStart(){
     if(_esp_wifi_started){
         return true;
     }
@@ -150,7 +149,7 @@ static bool espWiFiStart(){
     return true;
 }
 
-static bool espWiFiStop(){
+bool WiFiGenericClass::espWiFiStop(){
     esp_err_t err;
     if(!_esp_wifi_started){
         return true;
@@ -164,22 +163,24 @@ static bool espWiFiStop(){
     return wifiLowLevelDeinit();
 }
 
-// -----------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------- Generic WiFi function -----------------------------------------------
-// -----------------------------------------------------------------------------------------------------------------------
-
-typedef struct {
-    WiFiEventCb cb;
-    WiFiEventFullCb fcb;
-    WiFiEventSysCb scb;
-    system_event_id_t event;
-} WiFiEventCbList_t;
-
-// arduino dont like std::vectors move static here
-static std::vector<WiFiEventCbList_t> cbEventList;
-
-bool WiFiGenericClass::_persistent = true;
-wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
+bool WiFiGenericClass::wifiLowLevelInit(){
+    static bool lowLevelInitDone = false;
+    if(!lowLevelInitDone){
+        tcpipInit();
+        wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        esp_err_t err = esp_wifi_init(&cfg);
+        if(err){
+            log_e("esp_wifi_init %d", err);
+            return false;
+        }
+        if (!_persistent) {
+          esp_wifi_set_storage(WIFI_STORAGE_RAM);
+        }
+        esp_wifi_set_mode(WIFI_MODE_NULL);
+        lowLevelInitDone = true;
+    }
+    return true;
+}
 
 WiFiGenericClass::WiFiGenericClass()
 {
