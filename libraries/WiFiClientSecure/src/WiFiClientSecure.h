@@ -58,6 +58,7 @@ public:
     void setCACert(const char *rootCA);
     void setCertificate(const char *client_ca);
     void setPrivateKey (const char *private_key);
+    bool verify(const char* fingerprint, const char* domain_name);
 
     operator bool()
     {

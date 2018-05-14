@@ -210,6 +210,14 @@ void WiFiClientSecure::setPrivateKey (const char *private_key)
     _private_key = private_key;
 }
 
+bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
+{
+    if (!sslclient)
+        return false;
+
+    return verify_ssl_fingerprint(sslclient, fp, domain_name);
+}
+
 int WiFiClientSecure::lastError(char *buf, const size_t size)
 {
     if (!_lastError) {
