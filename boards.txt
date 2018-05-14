@@ -1048,7 +1048,7 @@ esp32vn-iot-uno.serial.disableRTS=true
 esp32vn-iot-uno.build.mcu=esp32
 esp32vn-iot-uno.build.core=esp32
 esp32vn-iot-uno.build.variant=esp32vn-iot-uno
-esp32vn-iot-uno.build.board=esp32vn-iot-uno
+esp32vn-iot-uno.build.board=esp32vn_iot_uno
 
 esp32vn-iot-uno.build.f_cpu=240000000L
 esp32vn-iot-uno.build.flash_mode=dio
@@ -1145,7 +1145,7 @@ esp32-evb.serial.disableRTS=true
 esp32-evb.build.mcu=esp32
 esp32-evb.build.core=esp32
 esp32-evb.build.variant=esp32-evb
-esp32-evb.build.board=ESP32-EVB
+esp32-evb.build.board=ESP32_EVB
 
 esp32-evb.build.f_cpu=240000000L
 esp32-evb.build.flash_mode=dio
@@ -1177,7 +1177,7 @@ esp32-gateway.serial.disableRTS=true
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
-esp32-gateway.build.board=ESP32-GATEWAY
+esp32-gateway.build.board=ESP32_GATEWAY
 
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio
