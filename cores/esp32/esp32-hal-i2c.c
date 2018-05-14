@@ -959,12 +959,15 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 
     i2c->dev->ctr.trans_start=1; // go for it
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    portTickType tBefore=xTaskGetTickCount();
+#endif
+    
     uint32_t eBits = xEventGroupWaitBits(i2c->i2c_event,EVENT_DONE,pdFALSE,pdTRUE,ticksTimeOut);
 
     //log_e("after WaitBits=%x @tick=%d",eBits,xTaskGetTickCount());
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    portTickType tBefore=xTaskGetTickCount();
     portTickType tAfter=xTaskGetTickCount();
 #endif
 
