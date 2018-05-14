@@ -71,7 +71,7 @@ typedef unsigned long prog_uint32_t;
 #define memcpy_P      memcpy
 #define strcpy_P      strcpy
 #define strncpy_P     strncpy
-#define strcat_p      strcat
+#define strcat_P      strcat
 #define strncat_P     strncat
 #define strcmp_P      strcmp
 #define strncmp_P     strncmp
