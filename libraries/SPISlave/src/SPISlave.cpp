@@ -1,7 +1,7 @@
 #include<SlaveSPIClass.h>
 
-int SlaveSPI::size = 0;
-SlaveSPI** SlaveSPI::SlaveSPIVector = NULL;
+int SPISlaveClass::size = 0;
+SPISlaveClass** SPISlaveClass::SlaveSPIVector = NULL;
 
 void setupIntr(spi_slave_transaction_t * trans) {
 	for(int i=0 ; i<SlaveSPI::size;i++) {
@@ -17,7 +17,7 @@ void transIntr(spi_slave_transaction_t * trans) {
 	}
 }
 
-SlaveSPI::SlaveSPI() {
+SPISlaveClass::SPISlaveClass() {
 	SlaveSPI** temp = new SlaveSPI * [size+1];
 	for (int i = 0; i < size; i++) {
 		temp[i] = SlaveSPIVector[i];
@@ -37,7 +37,7 @@ SlaveSPI::SlaveSPI() {
 /**
  * 
  **/
-void SlaveSPI::begin(gpio_num_t so, gpio_num_t si, gpio_num_t sclk, gpio_num_t ss) {
+void SPISlaveClass::begin(gpio_num_t so, gpio_num_t si, gpio_num_t sclk, gpio_num_t ss) {
 	driver = new spi_slave_transaction_t{SPI_BUFFER_LENGTH * 8, 0, heap_caps_malloc(SPI_BUFFER_LENGTH, MALLOC_CAP_DMA), heap_caps_malloc(SPI_BUFFER_LENGTH, MALLOC_CAP_DMA), NULL};
 	
 	spi_bus_config_t buscfg = {
@@ -56,7 +56,7 @@ void SlaveSPI::begin(gpio_num_t so, gpio_num_t si, gpio_num_t sclk, gpio_num_t s
 	spi_slave_queue_trans(HSPI_HOST, driver, portMAX_DELAY); // ready for input (no transmit)
 }
 
-void SlaveSPI::setup_intr(spi_slave_transaction_t *trans)
+void SPISlaveClass::setup_intr(spi_slave_transaction_t *trans)
 {//called when the trans is set in the queue
 	//didn't find use for it in the end.
 }
@@ -82,13 +82,13 @@ void SlaveSPI::trans_intr(spi_slave_transaction_t *trans) {
 	setDriver();
 }
 
-void SlaveSPI::trans_queue(String& transmission) {
+void SPISlaveClass::trans_queue(String& transmission) {
   //used to queue data to transmit
 	for (int i = 0; i < transmission.length(); i++)
 		transBuffer += transmission[i];
 }
 
-void SlaveSPI::trans_queue(uint8_t *buf, int len) {
+void SPISlaveClass::trans_queue(uint8_t *buf, int len) {
   //used to queue data to transmit
 	// bufferTx[0] = 2;
 	// bufferTx[1] = 0;
@@ -97,7 +97,7 @@ void SlaveSPI::trans_queue(uint8_t *buf, int len) {
 	}
 }
 
-void SlaveSPI::setData(uint8_t *buf, int len) {
+void SPISlaveClass::setData(uint8_t *buf, int len) {
   //used to queue data to transmit
 	bufferTx[0] = 2;
 	bufferTx[1] = 0;
@@ -109,7 +109,7 @@ void SlaveSPI::setData(uint8_t *buf, int len) {
 }
 
 
-void SlaveSPI::setStatus(uint8_t status) {
+void SPISlaveClass::setStatus(uint8_t status) {
   //used to queue data to transmit
 	for (int i=0; i < SPI_BUFFER_LENGTH; i++) {
 		bufferTx[i] = 0;
@@ -123,7 +123,7 @@ inline bool SlaveSPI::match(spi_slave_transaction_t * trans) {
 	return (this->driver == trans);
 }
 
-void SlaveSPI::setDriver() {
+void SPISlaveClass::setDriver() {
 	driver->user = NULL;
 	int i = 0;
 	
@@ -136,26 +136,26 @@ void SlaveSPI::setDriver() {
 	spi_slave_queue_trans(HSPI_HOST, driver, portMAX_DELAY);
 }
 
-void SlaveSPI::_data_rx(uint8_t * data, size_t len)
+void SPISlaveClass::_data_rx(uint8_t * data, size_t len)
 {
     if(_data_cb) {
 	Serial.println("-");
         _data_cb(data, len);
     }
 }
-void SlaveSPI::_status_rx(uint32_t data)
+void SPISlaveClass::_status_rx(uint32_t data)
 {
     if(_status_cb) {
         _status_cb(data);
     }
 }
-void SlaveSPI::_data_tx(void)
+void SPISlaveClass::_data_tx(void)
 {
     if(_data_sent_cb) {
         _data_sent_cb();
     }
 }
-void SlaveSPI::_status_tx(void)
+void SPISlaveClass::_status_tx(void)
 {
     if(_status_sent_cb) {
         _status_sent_cb();
@@ -163,19 +163,19 @@ void SlaveSPI::_status_tx(void)
 }
 
 
-void SlaveSPI::onData(SpiSlaveDataHandler cb)
+void SPISlaveClass::onData(SpiSlaveDataHandler cb)
 {
     _data_cb = cb;
 }
-void SlaveSPI::onDataSent(SpiSlaveSentHandler cb)
+void SPISlaveClass::onDataSent(SpiSlaveSentHandler cb)
 {
     _data_sent_cb = cb;
 }
-void SlaveSPI::onStatus(SpiSlaveStatusHandler cb)
+void SPISlaveClass::onStatus(SpiSlaveStatusHandler cb)
 {
     _status_cb = cb;
 }
-void SlaveSPI::onStatusSent(SpiSlaveSentHandler cb)
+void SPISlaveClass::onStatusSent(SpiSlaveSentHandler cb)
 {
     _status_sent_cb = cb;
 }

@@ -12,9 +12,9 @@ typedef std::function<void(void)> SpiSlaveSentHandler;
 
 void setupIntr(spi_slave_transaction_t * trans);
 void transIntr(spi_slave_transaction_t * trans);
-class SlaveSPI
+class SlaveSPIClass
 {
-	static SlaveSPI** SlaveSPIVector;
+	static SlaveSPIClass** SlaveSPIVector;
 	static int size;
 	friend void setupIntr(spi_slave_transaction_t * trans);
 	friend void transIntr(spi_slave_transaction_t * trans);
@@ -29,7 +29,7 @@ class SlaveSPI
 	boolean dataWaiting;
 	boolean statusWaiting;
 	public:
-	SlaveSPI();
+	SlaveSPIClass();
 		// : _data_cb(NULL)
     // , _status_cb(NULL)
     // , _data_sent_cb(NULL)
@@ -64,5 +64,8 @@ class SlaveSPI
 	inline String* getBuff(){return &buff;}
 
 };
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SPISLAVE)
+extern SPISlaveClass SPISlave;
+#endif
 
 #endif
