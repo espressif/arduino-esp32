@@ -14,8 +14,8 @@
 #define SCLK 16
 #define SS 34
 
-#include <WiFi.h>
-#include "SlaveSPI.h"
+//#include <WiFi.h>
+#include "SPISlave.h"
 
 void setup()
 {
@@ -71,4 +71,5 @@ void setup()
 }
 
 void loop() {}
+
 
