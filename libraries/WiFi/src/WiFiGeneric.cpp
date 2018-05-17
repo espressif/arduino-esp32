@@ -99,20 +99,15 @@ static void _start_network_event_task(){
     esp_event_loop_init(&_network_event_cb, NULL);
 }
 
-void tcpipInit(){
-    static bool initialized = false;
-    if(!initialized){
-        initialized = true;
-        _start_network_event_task();
-        tcpip_adapter_init();
-    }
-}
-
 static bool wifiLowLevelInit(bool persistent){
     static bool lowLevelInitDone = false;
     if(!lowLevelInitDone){
-        tcpipInit();
+        _start_network_event_task();
+        tcpip_adapter_init();
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+        if(!persistent){
+          cfg.nvs_enable = 0;
+        }
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
             log_e("esp_wifi_init %d", err);
@@ -121,7 +116,6 @@ static bool wifiLowLevelInit(bool persistent){
         if(!persistent){
           esp_wifi_set_storage(WIFI_STORAGE_RAM);
         }
-        esp_wifi_set_mode(WIFI_MODE_NULL);
         lowLevelInitDone = true;
     }
     return true;
@@ -404,9 +398,11 @@ wifi_mode_t WiFiGenericClass::getMode()
     if(!wifiLowLevelInit(_persistent)){
         return WIFI_MODE_MAX;
     }
-    uint8_t mode;
-    esp_wifi_get_mode((wifi_mode_t*)&mode);
-    return (wifi_mode_t)mode;
+    wifi_mode_t mode = WIFI_MODE_NULL;
+    if(_esp_wifi_started){
+      esp_wifi_get_mode(&mode);
+    }
+    return mode;
 }
 
 /**
