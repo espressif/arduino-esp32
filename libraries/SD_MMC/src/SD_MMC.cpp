@@ -42,7 +42,21 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
     }
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+    sdmmc_host_t host = {
+        .flags = SDMMC_HOST_FLAG_4BIT,
+        .slot = SDMMC_HOST_SLOT_1,
+        .max_freq_khz = SDMMC_FREQ_DEFAULT,
+        .io_voltage = 3.3f,
+        .init = &sdmmc_host_init,
+        .set_bus_width = &sdmmc_host_set_bus_width,
+        .get_bus_width = &sdmmc_host_get_slot_width,
+        .set_card_clk = &sdmmc_host_set_card_clk,
+        .do_transaction = &sdmmc_host_do_transaction,
+        .deinit = &sdmmc_host_deinit,
+        .io_int_enable = sdmmc_host_io_int_enable,
+        .io_int_wait = sdmmc_host_io_int_wait,
+        .command_timeout_ms = 0,
+    };
     host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
@@ -53,7 +67,8 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = false,
-        .max_files = 5
+        .max_files = 5,
+        .allocation_unit_size = 0
     };
 
     esp_err_t ret = esp_vfs_fat_sdmmc_mount(mountpoint, &host, &slot_config, &mount_config, &_card);
