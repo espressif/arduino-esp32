@@ -99,11 +99,19 @@ static void _start_network_event_task(){
     esp_event_loop_init(&_network_event_cb, NULL);
 }
 
+void tcpipInit(){
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        _start_network_event_task();
+        tcpip_adapter_init();
+    }
+}
+
 static bool wifiLowLevelInit(bool persistent){
     static bool lowLevelInitDone = false;
     if(!lowLevelInitDone){
-        _start_network_event_task();
-        tcpip_adapter_init();
+        tcpipInit();
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         if(!persistent){
           cfg.nvs_enable = 0;
