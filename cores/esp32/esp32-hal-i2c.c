@@ -630,13 +630,13 @@ void i2cDumpI2c(i2c_t * i2c){
 log_e("i2c=%p",i2c);
 char levelText[8];
 switch(ARDUHAL_LOG_LEVEL){
-  case 0 : levelText = sprintf("NONE"); break;
-  case 1 : levelText = sprintf("ERROR"); break;
-  case 2 : levelText = sprintf("WARN"); break;
-  case 3 : levelText = sprintf("INFO"); break;
-  case 4 : levelText = sprintf("DEBUG"); break;
-  case 5 : levelText = sprintf("VERBOSE"); break;
-    default : levelText = sprintf("uk=%d",ARDUHAL_LOG_LEVEL);
+  case 0 : sprintf(levelText,"NONE"); break;
+  case 1 : sprintf(levelText,"ERROR"); break;
+  case 2 : sprintf(levelText,"WARN"); break;
+  case 3 : sprintf(levelText,"INFO"); break;
+  case 4 : sprintf(levelText,"DEBUG"); break;
+  case 5 : sprintf(levelText,"VERBOSE"); break;
+    default : sprintf(levelText,"uk=%d",ARDUHAL_LOG_LEVEL);
 }
 log_e("dev=%p date=%p level=%s",i2c->dev,i2c->dev->date,levelText);
 #if !CONFIG_DISABLE_HAL_LOCKS
