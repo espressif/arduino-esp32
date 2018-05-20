@@ -30,7 +30,7 @@
 #include "freertos/queue.h"
 #include "Stream.h"
 
-#define STICKBREAKER V0.2.2
+#define STICKBREAKER "V0.2.3"
 #define I2C_BUFFER_LENGTH 128
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
