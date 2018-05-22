@@ -60,7 +60,7 @@ void sigmaDeltaWrite(uint8_t channel, uint8_t duty) //chan 0-7 duty 8 bit
     if(channel > 7) {
         return;
     }
-    duty += 128;
+    duty -= 128;
     SD_MUTEX_LOCK();
     SIGMADELTA.channel[channel].duty = duty;
     SD_MUTEX_UNLOCK();
@@ -72,7 +72,7 @@ uint8_t sigmaDeltaRead(uint8_t channel) //chan 0-7
         return 0;
     }
     SD_MUTEX_LOCK();
-    uint8_t duty = SIGMADELTA.channel[channel].duty - 128;
+    uint8_t duty = SIGMADELTA.channel[channel].duty + 128;
     SD_MUTEX_UNLOCK();
     return duty;
 }
