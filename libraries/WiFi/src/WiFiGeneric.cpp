@@ -381,7 +381,7 @@ void WiFiGenericClass::persistent(bool persistent)
 bool WiFiGenericClass::mode(wifi_mode_t m)
 {
     if (!_esp_wifi_started) {
-         wifiLowLevelInit(); 
+         wifiLowLevelInit(_persistent); 
     }
     wifi_mode_t cm = getMode();
     if(cm == WIFI_MODE_MAX){
@@ -391,7 +391,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
         return true;
     }
     if(m){
-        espWiFiStart();
+        espWiFiStart(_persistent);
     } else {
         return espWiFiStop();
     }
