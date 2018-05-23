@@ -356,6 +356,50 @@ nano32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+kidbright.name=KidBright32
+
+kidbright.upload.tool=esptool
+kidbright.upload.maximum_size=1310720
+kidbright.upload.maximum_data_size=294912
+kidbright.upload.wait_for_upload_port=true
+
+kidbright.serial.disableDTR=true
+kidbright.serial.disableRTS=true
+
+kidbright.build.mcu=esp32
+kidbright.build.core=esp32
+kidbright.build.variant=KidBright32
+kidbright.build.board=KidBright32
+
+kidbright.build.f_cpu=240000000L
+kidbright.build.flash_mode=dio
+kidbright.build.flash_size=4MB
+kidbright.build.boot=dio
+kidbright.build.partitions=default
+
+kidbright.menu.FlashFreq.80=80MHz
+kidbright.menu.FlashFreq.80.build.flash_freq=80m
+kidbright.menu.FlashFreq.40=40MHz
+kidbright.menu.FlashFreq.40.build.flash_freq=40m
+
+kidbright.menu.UploadSpeed.921600=921600
+kidbright.menu.UploadSpeed.921600.upload.speed=921600
+kidbright.menu.UploadSpeed.115200=115200
+kidbright.menu.UploadSpeed.115200.upload.speed=115200
+kidbright.menu.UploadSpeed.256000.windows=256000
+kidbright.menu.UploadSpeed.256000.upload.speed=256000
+kidbright.menu.UploadSpeed.230400.windows.upload.speed=256000
+kidbright.menu.UploadSpeed.230400=230400
+kidbright.menu.UploadSpeed.230400.upload.speed=230400
+kidbright.menu.UploadSpeed.460800.linux=460800
+kidbright.menu.UploadSpeed.460800.macosx=460800
+kidbright.menu.UploadSpeed.460800.upload.speed=460800
+kidbright.menu.UploadSpeed.512000.windows=512000
+kidbright.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+
 lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool

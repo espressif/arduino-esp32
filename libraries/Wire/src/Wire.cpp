@@ -227,3 +227,4 @@ void TwoWire::reset(void)
 }
 
 TwoWire Wire = TwoWire(0);
+TwoWire Wire1 = TwoWire(1);  // Wire 1 For HT16K33 On KidBright32 Board 

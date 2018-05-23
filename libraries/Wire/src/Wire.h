@@ -97,5 +97,5 @@ public:
 };
 
 extern TwoWire Wire;
-
+extern TwoWire Wire1;   // Wire 1 For HT16K33 On KidBright32 Board 
 #endif
