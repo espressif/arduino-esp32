@@ -149,6 +149,10 @@ static bool espWiFiStart(bool persistent){
         return false;
     }
     _esp_wifi_started = true;
+    system_event_t event; 
+    event.event_id = SYSTEM_EVENT_WIFI_READY; 
+    WiFiGenericClass::_eventCallback(nullptr, &event);
+
     return true;
 }
 
@@ -376,6 +380,9 @@ void WiFiGenericClass::persistent(bool persistent)
  */
 bool WiFiGenericClass::mode(wifi_mode_t m)
 {
+    if (!_esp_wifi_started) {
+         wifiLowLevelInit(_persistent); 
+    }
     wifi_mode_t cm = getMode();
     if(cm == WIFI_MODE_MAX){
         return false;
@@ -383,6 +390,12 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     if(cm == m) {
         return true;
     }
+    if(m){
+        espWiFiStart(_persistent);
+    } else {
+        return espWiFiStop();
+    }
+    
     esp_err_t err;
     err = esp_wifi_set_mode(m);
     if(err){
@@ -403,6 +416,7 @@ wifi_mode_t WiFiGenericClass::getMode()
 {
     if(!wifiLowLevelInit(_persistent)){
         return WIFI_MODE_MAX;
+
     }
     uint8_t mode;
     esp_wifi_get_mode((wifi_mode_t*)&mode);
