@@ -975,6 +975,15 @@ mhetesp32devkit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32devkit.menu.FlashFreq.40=40MHz
 mhetesp32devkit.menu.FlashFreq.40.build.flash_freq=40m
 
+mhetesp32devkit.menu.PartitionScheme.default=Default
+mhetesp32devkit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32devkit.menu.PartitionScheme.no_ota=No OTA (Large APP)
+mhetesp32devkit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mhetesp32devkit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mhetesp32devkit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+mhetesp32devkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mhetesp32devkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 mhetesp32devkit.menu.UploadSpeed.921600=921600
 mhetesp32devkit.menu.UploadSpeed.921600.upload.speed=921600
 mhetesp32devkit.menu.UploadSpeed.115200=115200
@@ -989,6 +998,19 @@ mhetesp32devkit.menu.UploadSpeed.460800.macosx=460800
 mhetesp32devkit.menu.UploadSpeed.460800.upload.speed=460800
 mhetesp32devkit.menu.UploadSpeed.512000.windows=512000
 mhetesp32devkit.menu.UploadSpeed.512000.upload.speed=512000
+
+mhetesp32devkit.menu.DebugLevel.none=None
+mhetesp32devkit.menu.DebugLevel.none.build.code_debug=0
+mhetesp32devkit.menu.DebugLevel.error=Error
+mhetesp32devkit.menu.DebugLevel.error.build.code_debug=1
+mhetesp32devkit.menu.DebugLevel.warn=Warn
+mhetesp32devkit.menu.DebugLevel.warn.build.code_debug=2
+mhetesp32devkit.menu.DebugLevel.info=Info
+mhetesp32devkit.menu.DebugLevel.info.build.code_debug=3
+mhetesp32devkit.menu.DebugLevel.debug=Debug
+mhetesp32devkit.menu.DebugLevel.debug.build.code_debug=4
+mhetesp32devkit.menu.DebugLevel.verbose=Verbose
+mhetesp32devkit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -1018,6 +1040,15 @@ mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32minikit.menu.FlashFreq.40=40MHz
 mhetesp32minikit.menu.FlashFreq.40.build.flash_freq=40m
 
+mhetesp32minikit.menu.PartitionScheme.default=Default
+mhetesp32minikit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32minikit.menu.PartitionScheme.no_ota=No OTA (Large APP)
+mhetesp32minikit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mhetesp32minikit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mhetesp32minikit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+mhetesp32minikit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mhetesp32minikit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 mhetesp32minikit.menu.UploadSpeed.921600=921600
 mhetesp32minikit.menu.UploadSpeed.921600.upload.speed=921600
 mhetesp32minikit.menu.UploadSpeed.115200=115200
@@ -1032,6 +1063,19 @@ mhetesp32minikit.menu.UploadSpeed.460800.macosx=460800
 mhetesp32minikit.menu.UploadSpeed.460800.upload.speed=460800
 mhetesp32minikit.menu.UploadSpeed.512000.windows=512000
 mhetesp32minikit.menu.UploadSpeed.512000.upload.speed=512000
+
+mhetesp32minikit.menu.DebugLevel.none=None
+mhetesp32minikit.menu.DebugLevel.none.build.code_debug=0
+mhetesp32minikit.menu.DebugLevel.error=Error
+mhetesp32minikit.menu.DebugLevel.error.build.code_debug=1
+mhetesp32minikit.menu.DebugLevel.warn=Warn
+mhetesp32minikit.menu.DebugLevel.warn.build.code_debug=2
+mhetesp32minikit.menu.DebugLevel.info=Info
+mhetesp32minikit.menu.DebugLevel.info.build.code_debug=3
+mhetesp32minikit.menu.DebugLevel.debug=Debug
+mhetesp32minikit.menu.DebugLevel.debug.build.code_debug=4
+mhetesp32minikit.menu.DebugLevel.verbose=Verbose
+mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
 
 #################################################################
 
