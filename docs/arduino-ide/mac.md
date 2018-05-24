@@ -13,11 +13,13 @@ Installation instructions for Mac OS
   cd tools && \
   python get.py
   ```
+  Where `~/Documents/Arduino` represents your sketch book location as per "Arduino" > "Preferences" > "Sketchbook location" (in the IDE once started). Adjust the command above accordingly if necessary!
+  
 - If you get the error below. Install the command line dev tools with xcode-select --install and try the command above again:
   
-```xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun```
-
-```xcode-select --install```
+  ```xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun```
+  
+  ```xcode-select --install```
 
 - Restart Arduino IDE
 
