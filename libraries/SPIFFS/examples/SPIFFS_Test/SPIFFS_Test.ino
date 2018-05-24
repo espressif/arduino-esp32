@@ -1,6 +1,8 @@
 #include "FS.h"
 #include "SPIFFS.h"
 
+#define FORMAT_SPIFFS false   //Set to true if you need to format
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\r\n", dirname);
 
@@ -151,7 +153,7 @@ void testFileIO(fs::FS &fs, const char * path){
 
 void setup(){
     Serial.begin(115200);
-    if(!SPIFFS.begin()){
+    if(!SPIFFS.begin(FORMAT_SPIFFS)){
         Serial.println("SPIFFS Mount Failed");
         return;
     }
