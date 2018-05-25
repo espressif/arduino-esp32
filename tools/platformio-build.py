@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import isdir, join
+from os.path import isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -158,17 +158,15 @@ env.Prepend(LIBS=libs)
 # Generate partition table
 #
 
-# Export path to the partitions table
+fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
+partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
 env.Replace(
-    PARTITION_TABLE_CSV=join(
-        FRAMEWORK_DIR, "tools", "partitions",
-        "%s.csv" % env.BoardConfig().get("build.partitions", "default")
-    )
-)
+    PARTITIONS_TABLE_CSV=join(fwpartitions_dir, partitions_csv) if isfile(
+        join(fwpartitions_dir, partitions_csv)) else partitions_csv)
 
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
-    "$PARTITION_TABLE_CSV",
+    "$PARTITIONS_TABLE_CSV",
     env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
         FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
                       "Generating partitions $TARGET"))
