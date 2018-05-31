@@ -318,9 +318,10 @@ bool WiFiSTAClass::isConnected()
  */
 bool WiFiSTAClass::setAutoConnect(bool autoConnect)
 {
-    bool ret;
+    /*bool ret;
     ret = esp_wifi_set_auto_connect(autoConnect);
-    return ret;
+    return ret;*/
+    return false;//now deprecated
 }
 
 /**
@@ -330,9 +331,10 @@ bool WiFiSTAClass::setAutoConnect(bool autoConnect)
  */
 bool WiFiSTAClass::getAutoConnect()
 {
-    bool autoConnect;
+    /*bool autoConnect;
     esp_wifi_get_auto_connect(&autoConnect);
-    return autoConnect;
+    return autoConnect;*/
+    return false;//now deprecated
 }
 
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
