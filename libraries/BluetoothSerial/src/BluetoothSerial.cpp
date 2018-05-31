@@ -56,28 +56,28 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     switch (event)
     {
     case ESP_SPP_INIT_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
+        log_i("ESP_SPP_INIT_EVT");
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         esp_spp_start_srv(sec_mask, role_slave, 0, SPP_SERVER_NAME);
         break;
-    case ESP_SPP_DISCOVERY_COMP_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_DISCOVERY_COMP_EVT");
+    case ESP_SPP_DISCOVERY_COMP_EVT://discovery complete
+        log_i("ESP_SPP_DISCOVERY_COMP_EVT");
         break;
-    case ESP_SPP_OPEN_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_OPEN_EVT");
+    case ESP_SPP_OPEN_EVT://Client connection open
+        log_i("ESP_SPP_OPEN_EVT");
         break;
-    case ESP_SPP_CLOSE_EVT:
+    case ESP_SPP_CLOSE_EVT://Client connection closed
         client = 0;
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT");
+        log_i("ESP_SPP_CLOSE_EVT");
         break;
-    case ESP_SPP_START_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_START_EVT");
+    case ESP_SPP_START_EVT://server started
+        log_i("ESP_SPP_START_EVT");
         break;
-    case ESP_SPP_CL_INIT_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CL_INIT_EVT");
+    case ESP_SPP_CL_INIT_EVT://client initiated a connection
+        log_i("ESP_SPP_CL_INIT_EVT");
         break;
-    case ESP_SPP_DATA_IND_EVT:
-        ESP_LOGV(SPP_TAG, "ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
+    case ESP_SPP_DATA_IND_EVT://connection received data
+        log_v("ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
         //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
 
         if (SerialQueueBT != 0){
@@ -85,18 +85,18 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                 xQueueSend(SerialQueueBT, param->data_ind.data + i, (TickType_t)0);
         }
         else {
-            ESP_LOGE(SPP_TAG, "SerialQueueBT ERROR");
+            log_e("SerialQueueBT ERROR");
         }
         break;
-    case ESP_SPP_CONG_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CONG_EVT");
+    case ESP_SPP_CONG_EVT://connection congestion status changed
+        log_i("ESP_SPP_CONG_EVT");
         break;
-    case ESP_SPP_WRITE_EVT:
-        ESP_LOGV(SPP_TAG, "ESP_SPP_WRITE_EVT");
+    case ESP_SPP_WRITE_EVT://write operation completed
+        log_v("ESP_SPP_WRITE_EVT");
         break;
-    case ESP_SPP_SRV_OPEN_EVT:
+    case ESP_SPP_SRV_OPEN_EVT://Server connection open
         client = param->open.handle;
-        ESP_LOGI(SPP_TAG, "ESP_SPP_SRV_OPEN_EVT");
+        log_i("ESP_SPP_SRV_OPEN_EVT");
         break;
     default:
         break;
@@ -106,38 +106,38 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 static bool _init_bt(const char *deviceName)
 {
     if (!btStarted() && !btStart()){
-        ESP_LOGE(SPP_TAG, "%s initialize controller failed\n", __func__);
+        log_e("%s initialize controller failed\n", __func__);
         return false;
     }
     
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
     if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
         if (esp_bluedroid_init()) {
-            ESP_LOGE(SPP_TAG, "%s initialize bluedroid failed\n", __func__);
+            log_e("%s initialize bluedroid failed\n", __func__);
             return false;
         }
     }
     
     if (bt_state != ESP_BLUEDROID_STATUS_ENABLED){
         if (esp_bluedroid_enable()) {
-            ESP_LOGE(SPP_TAG, "%s enable bluedroid failed\n", __func__);
+            log_e("%s enable bluedroid failed\n", __func__);
             return false;
         }
     }
 
     if (esp_spp_register_callback(esp_spp_cb) != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s spp register failed\n", __func__);
+        log_e("%s spp register failed\n", __func__);
         return false;
     }
 
     if (esp_spp_init(esp_spp_mode) != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s spp init failed\n", __func__);
+        log_e("%s spp init failed\n", __func__);
         return false;
     }
 
     SerialQueueBT = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t)); //initialize the queue
     if (SerialQueueBT == NULL){
-        ESP_LOGE(SPP_TAG, "%s Queue creation error\n", __func__);
+        log_e("%s Queue creation error\n", __func__);
         return false;
     }
     esp_bt_dev_set_device_name(deviceName);
