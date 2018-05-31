@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import isdir, join
+from os.path import isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -100,27 +100,11 @@ env.Prepend(
     ],
     LIBS=[
         "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
-    ],
-
-    UPLOADERFLAGS=[
-        "--before", "default_reset",
-        "--after", "hard_reset"
     ]
 )
 
 
-def _get_board_flash_mode(env):
-    mode = env.subst("$BOARD_FLASH_MODE")
-    if mode == "qio":
-        return "dio"
-    elif mode == "qout":
-        return "dout"
-    return mode
-
-
 env.Append(
-    __get_board_flash_mode=_get_board_flash_mode,
-
     LIBSOURCE_DIRS=[
         join(FRAMEWORK_DIR, "libraries")
     ],
@@ -136,19 +120,11 @@ env.Append(
         "-u", "__cxx_fatal_exception"
     ],
 
-    UPLOADERFLAGS=[
-        "0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin"),
-        "0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin"),
-        "0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
-        "0x10000"
+    FLASH_EXTRA_IMAGES=[
+        ("0x1000", join(FRAMEWORK_DIR, "tools", "sdk", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin")),
+        ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
+        ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"))
     ]
-)
-
-if "$BOARD_FLASH_MODE" in env['UPLOADERFLAGS']:
-    env['UPLOADERFLAGS'][env['UPLOADERFLAGS'].index("$BOARD_FLASH_MODE")] = "${__get_board_flash_mode(__env__)}"
-
-env.Replace(
-    UPLOADER=join(FRAMEWORK_DIR, "tools", "esptool.py")
 )
 
 #
@@ -181,10 +157,16 @@ env.Prepend(LIBS=libs)
 #
 # Generate partition table
 #
+
+fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
+partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
+env.Replace(
+    PARTITIONS_TABLE_CSV=join(fwpartitions_dir, partitions_csv) if isfile(
+        join(fwpartitions_dir, partitions_csv)) else partitions_csv)
+
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
-    join(FRAMEWORK_DIR, "tools", "partitions",
-         "%s.csv" % env.BoardConfig().get("build.partitions", "default")),
+    "$PARTITIONS_TABLE_CSV",
     env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
         FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
                       "Generating partitions $TARGET"))

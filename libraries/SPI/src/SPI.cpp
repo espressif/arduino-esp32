@@ -31,7 +31,7 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_ss(-1)
     ,_div(0)
     ,_freq(1000000)
-    , _inTransaction(false)
+    ,_inTransaction(false)
 {}
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -107,6 +107,11 @@ void SPIClass::setClockDivider(uint32_t clockDiv)
 {
     _div = clockDiv;
     spiSetClockDiv(_spi, _div);
+}
+
+uint32_t SPIClass::getClockDivider()
+{
+    return spiGetClockDiv(_spi);
 }
 
 void SPIClass::setDataMode(uint8_t dataMode)
