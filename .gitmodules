@@ -1,3 +1,6 @@
 [submodule "libraries/BLE"]
 	path = libraries/BLE
 	url = https://github.com/nkolban/ESP32_BLE_Arduino.git
+[submodule "libraries/AzureIoT"]
+	path = libraries/AzureIoT
+	url = https://github.com/VSChina/ESP32_AzureIoT_Arduino
