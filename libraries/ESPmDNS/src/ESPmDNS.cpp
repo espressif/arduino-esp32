@@ -285,4 +285,51 @@ uint16_t MDNSResponder::port(int idx) {
     return result->port;
 }
 
+int MDNSResponder::numTxt(int idx) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return 0;
+    }
+    return result->txt_count;
+}
+
+bool MDNSResponder::hasTxt(int idx, const char * key) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return false;
+    }
+    int i = 0;
+    while(i < result->txt_count) {
+        if (strcmp(result->txt[i].key, key) == 0) return true;
+        i++;
+    }
+    return false;
+}
+
+String MDNSResponder::txt(int idx, const char * key) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return "";
+    }
+    int i = 0;
+    while(i < result->txt_count) {
+        if (strcmp(result->txt[i].key, key) == 0) return result->txt[i].value;
+        i++;
+    }
+    return "";
+}
+
+String MDNSResponder::txt(int idx, int txtIdx) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return "";
+    }
+    if (txtIdx >= result->txt_count) return "";
+    return result->txt[txtIdx].value;
+}
+
 MDNSResponder MDNS;
