@@ -60,6 +60,8 @@ public:
     void setDataMode(uint8_t dataMode);
     void setFrequency(uint32_t freq);
     void setClockDivider(uint32_t clockDiv);
+    
+    uint32_t getClockDivider();
 
     void beginTransaction(SPISettings settings);
     void endTransaction(void);

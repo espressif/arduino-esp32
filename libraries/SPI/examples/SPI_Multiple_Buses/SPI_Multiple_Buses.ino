@@ -32,13 +32,13 @@ void setup() {
   //SCLK = 18, MISO = 19, MOSI = 23, SS = 5
   vspi->begin();
   //alternatively route through GPIO pins of your choice
-  //hspi->begin(5,6,7,8); //SCLK, MISO, MOSI, SS
+  //hspi->begin(0, 2, 4, 33); //SCLK, MISO, MOSI, SS
   
   //initialise hspi with default pins
   //SCLK = 14, MISO = 12, MOSI = 13, SS = 15
   hspi->begin(); 
   //alternatively route through GPIO pins
-  //hspi->begin(1,2,3,4); //SCLK, MISO, MOSI, SS
+  //hspi->begin(25, 26, 27, 32); //SCLK, MISO, MOSI, SS
 
   //set up slave select pins as outputs as the Arduino API
   //doesn't handle automatically pulling SS low
