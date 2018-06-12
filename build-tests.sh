@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#- set -e
+echo -e "travis_fold:start:sketch_test_env_prepare"
+
+pip install pyserial
+
+wget -O arduino.tar.xz https://www.arduino.cc/download.php?f=/arduino-nightly-linux64.tar.xz
+
+tar xf arduino.tar.xz
+
+mv arduino-nightly $HOME/arduino_ide
+
+mkdir -p $HOME/Arduino/libraries
+
+cd $HOME/arduino_ide/hardware
+
+mkdir espressif
+
+cd espressif
+
+ln -s $TRAVIS_BUILD_DIR esp32
+
+cd esp32
+
+git submodule update --init --recursive
+
+cd tools
+
+python get.py
+
+export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
+
+which arduino
+
+cd $TRAVIS_BUILD_DIR
+
+source tools/common.sh
+
+echo -e "travis_fold:end:sketch_test_env_prepare"
+
+echo -e "travis_fold:start:sketch_test"
+
+build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
+
+echo -e "travis_fold:end:sketch_test"
+
+echo -e "travis_fold:start:size_report"
+
+cat size.log
+
+echo -e "travis_fold:end:size_report"
+
+test library examples with PlatformIO
+
+echo -e "travis_fold:start:platformio_test_env_prepare"
+
+pip install -U https://github.com/platformio/platformio/archive/develop.zip
+
+platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage
+
+sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' ~/.platformio/platforms/espressif32/platform.json
+
+ln -s $TRAVIS_BUILD_DIR ~/.platformio/packages/framework-arduinoespressif32
+
+echo -e "travis_fold:end:platformio_test_env_prepare"
+
+echo -e "travis_fold:start:platformio_test"
+
+"python -c \"import glob,os,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), set([os.path.dirname(p) for p in glob.glob('libraries/*/examples/*/*.ino') + glob.glob('libraries/*/examples/*/*/*.ino')]))\""
+ 
+echo -e "travis_fold:end:platformio_test"
