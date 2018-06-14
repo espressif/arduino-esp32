@@ -1,7 +1,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "Arduino.h"
-#include "Schedule.h"
+#include "FunctionQueue.h"
 
 #if CONFIG_AUTOSTART_ARDUINO
 
@@ -11,13 +12,17 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
+
 void loopTask(void *pvParameters)
 {
     setup();
     for(;;) {
         loop();
-        run_scheduled_functions();
-    }
+        if (FunctionQueue::allSynced != 0)
+        {
+        	uint16_t er = xEventGroupSync(FunctionQueue::loopEventHandle,0x01,FunctionQueue::allSynced,portMAX_DELAY);
+        }
+     }
 }
 
 extern "C" void app_main()
