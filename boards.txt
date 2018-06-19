@@ -1176,6 +1176,60 @@ esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 ##############################################################
 
+espduino32doit.name=DOIT ESPduino-32
+
+espduino32doit.upload.tool=esptool
+espduino32doit.upload.maximum_size=1310720
+espduino32doit.upload.maximum_data_size=294912
+espduino32doit.upload.wait_for_upload_port=true
+
+espduino32doit.serial.disableDTR=true
+espduino32doit.serial.disableRTS=true
+
+espduino32doit.build.mcu=esp32
+espduino32doit.build.core=esp32
+espduino32doit.build.variant=doitESPduino32
+espduino32doit.build.board=ESPDUINO32
+
+espduino32doit.build.f_cpu=240000000L
+espduino32doit.build.flash_mode=dio
+espduino32doit.build.flash_size=4MB
+espduino32doit.build.boot=dio
+espduino32doit.build.partitions=default
+
+espduino32doit.menu.FlashFreq.80=80MHz
+espduino32doit.menu.FlashFreq.80.build.flash_freq=80m
+espduino32doit.menu.FlashFreq.40=40MHz
+espduino32doit.menu.FlashFreq.40.build.flash_freq=40m
+
+espduino32doit.menu.UploadSpeed.921600=921600
+espduino32doit.menu.UploadSpeed.921600.upload.speed=921600
+espduino32doit.menu.UploadSpeed.115200=115200
+espduino32doit.menu.UploadSpeed.115200.upload.speed=115200
+espduino32doit.menu.UploadSpeed.256000.windows=256000
+espduino32doit.menu.UploadSpeed.256000.upload.speed=256000
+espduino32doit.menu.UploadSpeed.230400.windows.upload.speed=256000
+espduino32doit.menu.UploadSpeed.230400=230400
+espduino32doit.menu.UploadSpeed.230400.upload.speed=230400
+espduino32doit.menu.UploadSpeed.460800.linux=460800
+espduino32doit.menu.UploadSpeed.460800.macosx=460800
+espduino32doit.menu.UploadSpeed.460800.upload.speed=460800
+espduino32doit.menu.UploadSpeed.512000.windows=512000
+espduino32doit.menu.UploadSpeed.512000.upload.speed=512000
+
+espduino32doit.menu.DebugLevel.none=None
+espduino32doit.menu.DebugLevel.none.build.code_debug=0
+espduino32doit.menu.DebugLevel.error=Error
+espduino32doit.menu.DebugLevel.error.build.code_debug=1
+espduino32doit.menu.DebugLevel.warn=Warn
+espduino32doit.menu.DebugLevel.warn.build.code_debug=2
+espduino32doit.menu.DebugLevel.info=Info
+espduino32doit.menu.DebugLevel.info.build.code_debug=3
+espduino32doit.menu.DebugLevel.debug=Debug
+espduino32doit.menu.DebugLevel.debug.build.code_debug=4
+
+##############################################################
+
 esp32-evb.name=OLIMEX ESP32-EVB
 
 esp32-evb.upload.tool=esptool
