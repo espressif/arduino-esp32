@@ -17,11 +17,9 @@ void loopTask(void *pvParameters)
 {
     setup();
     for(;;) {
-        loop();
-        if (FunctionQueue::allSynced != 0)
-        {
-        	uint16_t er = xEventGroupSync(FunctionQueue::loopEventHandle,0x01,FunctionQueue::allSynced,portMAX_DELAY);
-        }
+    	xEventGroupSync(FunctionQueue::loopEventHandle,0x00,FunctionQueue::allSynced,portMAX_DELAY);
+    	loop();
+        xEventGroupSetBits(FunctionQueue::loopEventHandle, FunctionQueue::loopIndex);// enable synced fq's to run
      }
 }
 

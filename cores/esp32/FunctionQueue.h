@@ -28,13 +28,16 @@ public:
 	};
 
 	FunctionQueue();
-	FunctionQueue(uint8_t);
+	FunctionQueue(bool);
 	virtual ~FunctionQueue();
 
 	static void staticFunction(void* pvParameters);
 	static EventGroupHandle_t loopEventHandle;
 	static uint8_t allSynced;
 	static SemaphoreHandle_t syncedMutex;
+	static const uint8_t loopIndex;
+
+	void processQueueItem();
 
 	bool scheduleFunction(std::function<void(void)>);
 
