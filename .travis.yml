@@ -7,44 +7,28 @@ python:
 os:
   - linux
 
+env:
+    global:
+        #2DO: replace by Arduino-ESP32 specific output of traviscli: travis encrypt ESP32_GITHUB_TOKEN="<GH_REPO_API_TOKEN>"
+        #- secure: "rZ5dID535OdWTzXReLawQQXzPeBeDoTy293FV3VdSxG4bQGfk52MH6pd9XzaVGNyvfeXlWpeOwgJauOEiCBQSe4j71SsWZUFWOSz2IJguF6HiHYi3ftG1oHPHi1J6kEZ6XdrHi6rPTmv2x8Bj5Wk6SV+eOfT0OlM89BovVnhOvXoCH65g4rqvc01XLngE/Lj5mxZIpWMDyBfdhQQcqmp6fZLxAziOauD4Xjd1U1IxGiSlYjWin4948P2UezuT9PbFRTfCKjedA5nXAtz6gwz0+SGM8gjTZRXMQ6aYtbQNSZmdX3HsHZiyVDFmdaYiZVYcr7iGvJgmgjvb9AUmpEVTybr7ph0SpA0il4gutojAiJik5sG4/fvNlsYnNiAxgCf7SmyE6z/pAnODrNN7CVc/jdHihmc5hNQgkbcLrPI902UXyFUuP4GIBK5Ph1qA88HKtg1gp0xe1yPh64KMi0SXtX8NIimOeOCNFV1Yp9/9sSDy2sbZRBHmE36LZH6duMGbpzPU9bp7xYy5SlcTnXCqd6II8JkICWJdkfQNZ39JuDIqJZFPKO+9RfglFq5TnPq64SupySe6wrhPjpHHrs7tikNsl4j9/OU0i1tqZc/H6hiZ0EF7nL0hO3Vm9lKbMlcwOy5DSv2OSe7uSnDX4bbbvvBWKJiX1okuwb9olQhmUc="
+        - REMOTE_URL=https://github.com/$TRAVIS_REPO_SLUG/releases/download/$TRAVIS_TAG
+    
 script:
-  #- set -e
-  - echo -e "travis_fold:start:sketch_test_env_prepare"
-  - pip install pyserial
-  - wget -O arduino.tar.xz https://www.arduino.cc/download.php?f=/arduino-nightly-linux64.tar.xz
-  - tar xf arduino.tar.xz
-  - mv arduino-nightly $HOME/arduino_ide
-  - mkdir -p $HOME/Arduino/libraries
-  - cd $HOME/arduino_ide/hardware
-  - mkdir espressif
-  - cd espressif
-  - ln -s $TRAVIS_BUILD_DIR esp32
-  - cd esp32
-  - git submodule update --init --recursive
-  - cd tools
-  - python get.py
-  - export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
-  - which arduino
-  - cd $TRAVIS_BUILD_DIR
-  - source tools/common.sh
-  - echo -e "travis_fold:end:sketch_test_env_prepare"
-  - echo -e "travis_fold:start:sketch_test"
-  - build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
-  - echo -e "travis_fold:end:sketch_test"
-  - echo -e "travis_fold:start:size_report"
-  - cat size.log
-  - echo -e "travis_fold:end:size_report"
+  #2DO: uncomment after successful TCI/GH integration
+  # build the package and run platformIO tests
+  # - bash $TRAVIS_BUILD_DIR/tools/build-tests.sh
+  
+  # zip the package if tagged build, otherwise finish here
+  - bash $TRAVIS_BUILD_DIR/tools/build-release.sh -a$ESP32_GITHUB_TOKEN
 
-  # test library examples with PlatformIO
-  - echo -e "travis_fold:start:platformio_test_env_prepare"
-  - pip install -U https://github.com/platformio/platformio/archive/develop.zip
-  - platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage
-  - sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' ~/.platformio/platforms/espressif32/platform.json
-  - ln -s $TRAVIS_BUILD_DIR ~/.platformio/packages/framework-arduinoespressif32
-  - echo -e "travis_fold:end:platformio_test_env_prepare"
-  - echo -e "travis_fold:start:platformio_test"
-  - "python -c \"import glob,os,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), set([os.path.dirname(p) for p in glob.glob('libraries/*/examples/*/*.ino') + glob.glob('libraries/*/examples/*/*/*.ino')]))\""
-  - echo -e "travis_fold:end:platformio_test"
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: bash $TRAVIS_BUILD_DIR/tools/deploy.sh -t$TRAVIS_TAG -a$ESP32_GITHUB_TOKEN -s$TRAVIS_REPO_SLUG -drelease
+
+  on:
+    tags: true
+
 
 notifications:
   email:
@@ -52,7 +36,8 @@ notifications:
     on_failure: change
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/cb057279c430d91a47a8
+      #2DO: replace with Arduino-ESP32 specific link
+      #- https://webhooks.gitter.im/e/6dfa09a8a8ffd43f9297
     on_success: change  # options: [always|never|change] default: always
     on_failure: always  # options: [always|never|change] default: always
-    on_start: false     # default: false
+    on_start: never     # options: [always|never|change] default: always
