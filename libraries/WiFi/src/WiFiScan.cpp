@@ -54,7 +54,7 @@ void* WiFiScanClass::_scanResult = 0;
  * @param show_hidden   show hidden networks
  * @return Number of discovered networks
  */
-int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan)
+int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan)
 {
     if(WiFiScanClass::_scanStarted) {
         return WIFI_SCAN_RUNNING;
@@ -89,7 +89,7 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, u
         while(!(WiFiScanClass::_scanComplete)) {
             delay(10);
         }
-        return WiFiScanClass::_scanCount;
+        return (int16_t) WiFiScanClass::_scanCount;
     } else {
         return WIFI_SCAN_FAILED;
     }

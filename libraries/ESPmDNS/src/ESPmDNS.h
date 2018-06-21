@@ -107,6 +107,10 @@ public:
   IPAddress IP(int idx);
   IPv6Address IPv6(int idx);
   uint16_t port(int idx);
+  int numTxt(int idx);
+  bool hasTxt(int idx, const char * key);
+  String txt(int idx, const char * key);
+  String txt(int idx, int txtIdx);
   
 private:
   String _hostname;
