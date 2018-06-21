@@ -1,6 +1,12 @@
 #!/bin/bash
 
 #- set -e
+
+if [ ! -z "$TRAVIS_TAG" ]; then
+	echo "No sketch builds & tests required for tagged TravisCI builds, exiting"
+	exit 0
+fi
+
 echo -e "travis_fold:start:sketch_test_env_prepare"
 
 pip install pyserial
