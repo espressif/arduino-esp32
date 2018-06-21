@@ -73,6 +73,10 @@ echo -e "travis_fold:end:platformio_test_env_prepare"
 
 echo -e "travis_fold:start:platformio_test"
 
-"python -c \"import glob,os,subprocess,sys; map(lambda p: (sys.stdout.write('Library example: %s\\n' % p), subprocess.call(['pio', 'ci', p, '--board', 'esp32dev'])), set([os.path.dirname(p) for p in glob.glob('libraries/*/examples/*/*.ino') + glob.glob('libraries/*/examples/*/*/*.ino')]))\""
- 
+platformio ci  --board esp32dev libraries/WiFi/examples/WiFiClient
+platformio ci  --board esp32dev libraries/WiFiClientSecure/examples/WiFiClientSecure
+platformio ci  --board esp32dev libraries/BluetoothSerial/examples/SerialToSerialBT 
+platformio ci  --board esp32dev libraries/BLE/examples/BLE_server 
+platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted 
+
 echo -e "travis_fold:end:platformio_test"
