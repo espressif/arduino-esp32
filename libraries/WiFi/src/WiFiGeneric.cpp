@@ -513,6 +513,6 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
         _dns_busy = false;
         return 0;
     }
-    return 1;
+    return aResult != 0;
 }
 
