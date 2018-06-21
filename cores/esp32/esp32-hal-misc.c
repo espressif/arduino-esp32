@@ -22,6 +22,7 @@
 #include "esp_partition.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "esp_bt.h"
 #include <sys/time.h>
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -75,6 +76,12 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+#ifdef CONFIG_BT_ENABLED
+//overwritten in esp32-hal-bt.c
+bool btInUse() __attribute__((weak));
+bool btInUse(){ return false; }
+#endif
+
 void initArduino()
 {
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
@@ -93,6 +100,11 @@ void initArduino()
     if(err) {
         log_e("Failed to initialize NVS! Error: %u", err);
     }
+#ifdef CONFIG_BT_ENABLED
+    if(!btInUse()){
+        esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    }
+#endif
     init();
     initVariant();
 }
