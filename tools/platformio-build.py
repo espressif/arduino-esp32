@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import isdir, isfile, join
+from os.path import abspath, isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -161,8 +161,9 @@ env.Prepend(LIBS=libs)
 fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
 partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
 env.Replace(
-    PARTITIONS_TABLE_CSV=join(fwpartitions_dir, partitions_csv) if isfile(
-        join(fwpartitions_dir, partitions_csv)) else partitions_csv)
+    PARTITIONS_TABLE_CSV=abspath(
+        join(fwpartitions_dir, partitions_csv) if isfile(
+            join(fwpartitions_dir, partitions_csv)) else partitions_csv))
 
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
