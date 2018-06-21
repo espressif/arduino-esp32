@@ -121,7 +121,6 @@ static bool wifiLowLevelInit(bool persistent){
         if(!persistent){
           esp_wifi_set_storage(WIFI_STORAGE_RAM);
         }
-        esp_wifi_set_mode(WIFI_MODE_NULL);
         lowLevelInitDone = true;
     }
     return true;
