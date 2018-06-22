@@ -1,3 +1,6 @@
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+
 #include "esp32-hal.h"
 #include "esp8266-compat.h"
 #include "soc/gpio_reg.h"
@@ -44,7 +47,7 @@ typedef enum {
 struct rmt_obj_s
 {
     bool allocated;
-    intr_handle_t intr_handle;
+    EventGroupHandle_t events;
     int pin;
     int channel;
     bool tx_not_rx;
@@ -61,8 +64,6 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
 };
 
 static  intr_handle_t intr_handle;
-static int state = 0;
-
 
 static bool periph_enabled = false;
 
@@ -181,7 +182,51 @@ bool rmtReceive(rmt_obj_t* rmt, size_t idle_thres)
     }
     int channel = rmt->channel;
 
+    RMT.int_clr.val |= _INT_ERROR(channel);
+    
+    RMT.int_ena.val |= _INT_ERROR(channel);
+
+    RMT.conf_ch[channel].conf1.mem_owner = 1;
     RMT.conf_ch[channel].conf0.idle_thres = idle_thres;
+
+    RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
+
+    RMT.conf_ch[channel].conf1.rx_en = 1;
+
+    return true;
+}
+
+bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t size, void* eventFlag)
+{
+    if (!rmt) {
+        return false;
+    }
+    int channel = rmt->channel;
+
+    if (g_rmt_objects[channel].buffers < size/MAX_DATA_PER_CHANNEL) {
+        return false;
+    }
+
+    if (eventFlag) {
+        xEventGroupClearBits(eventFlag, RMT_FLAGS_ALL);
+        rmt->events = eventFlag;
+    }
+
+    if (data && size>0) {
+        rmt->remaining_ptr = data;
+        rmt->remaining_to_send = size;
+    }
+
+    rmt->intr_mode = e_rx_intr;
+
+    RMT.conf_ch[channel].conf1.mem_owner = 1;
+    RMT.conf_ch[channel].conf0.idle_thres = idle_thres;
+
+    RMT.int_clr.val |= _INT_RX_END(channel);
+    RMT.int_clr.val |= _INT_ERROR(channel);
+    
+    RMT.int_ena.val |= _INT_RX_END(channel);
+    RMT.int_ena.val |= _INT_ERROR(channel);
 
     RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
 
@@ -354,10 +399,20 @@ static void IRAM_ATTR _rmt_isr(void* arg)
         if (intr_val&_INT_RX_END(ch)) {
             // clear the flag
             RMT.int_clr.val |= _INT_RX_END(ch);
-
             //
             if ((g_rmt_objects[ch].intr_mode)&e_rx_intr) {
-                // Not yet implemented
+
+                if (g_rmt_objects[ch].events) {
+                    xEventGroupSetBits(g_rmt_objects[ch].events, RMT_FLAG_RX_DONE);
+                }
+                if (g_rmt_objects[ch].remaining_ptr && g_rmt_objects[ch].remaining_to_send > 0) {
+                    size_t i;
+                    for (i = 0; i < g_rmt_objects[ch].remaining_to_send; i++ ) {
+                        *(g_rmt_objects[ch].remaining_ptr)++ = RMTMEM.chan[ch].data32[i].val;
+                    }
+                }
+                g_rmt_objects[ch].intr_mode &= ~e_rx_intr;
+
             } else {
                 // Report error and disable Rx interrupt
                 ets_printf("Unexpected Rx interrupt!\n");
@@ -368,11 +423,18 @@ static void IRAM_ATTR _rmt_isr(void* arg)
         if (intr_val&_INT_ERROR(ch)) {
             // clear the flag
             RMT.int_clr.val |= _INT_ERROR(ch);
+            RMT.int_ena.val &= ~_INT_ERROR(ch);
             // report error 
-            ets_printf("RMT Error!\n");
+            ets_printf("RMT Error %d!\n", ch);
+            if (g_rmt_objects[ch].events) {
+                xEventGroupSetBits(g_rmt_objects[ch].events, RMT_FLAG_ERROR);
+            }
 
+            // reset memory
             RMT.conf_ch[ch].conf1.mem_rd_rst = 1;
             RMT.conf_ch[ch].conf1.mem_rd_rst = 0;
+            RMT.conf_ch[ch].conf1.mem_wr_rst = 1;
+            RMT.conf_ch[ch].conf1.mem_wr_rst = 0;
         }
 
         if (intr_val&_INT_TX_END(ch)) {
