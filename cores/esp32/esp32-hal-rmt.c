@@ -12,7 +12,7 @@
 
 #define MAX_CHANNELS 8
 #define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 20
+#define MAX_DATA_PER_ITTERATION 40
 #define _ABS(a) (a>0?a:-a)
 #define _LIMIT(a,b) (a>b?b:a)
 #define __INT_TX_END     (1)
@@ -31,6 +31,7 @@ typedef enum {
     e_txthr_intr = 2,
     e_rx_intr = 4,
     e_end_trans = 8,
+    e_set_conti = 0x10,
 
 } intr_mode_t;
 
@@ -54,6 +55,8 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
 };
 
 static  intr_handle_t intr_handle;
+static int state = 0;
+
 
 static bool periph_enabled = false;
 
@@ -138,18 +141,18 @@ bool rmtSendQueued(rmt_obj_t* rmt, uint32_t* data, size_t size)
         RMT.int_clr.val |= _INT_TX_END(channel);
     digitalWrite(2, 0);
 #endif
-
+        state = 0;
         int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
         RMT.tx_lim_ch[channel].limit = half_tx_nr;
         rmt->remaining_to_send = size - MAX_DATA_PER_ITTERATION;
         rmt->remaining_ptr = data + MAX_DATA_PER_ITTERATION;
-        rmt->intr_mode = e_tx_intr | e_txthr_intr;
-        // RMT.conf_ch[channel].conf1.apb_mem_rst = 1;
-        // RMT.conf_ch[channel].conf1.apb_mem_rst = 0;
-        // RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-        // RMT.conf_ch[channel].conf1.mem_rd_rst = 0;
-        // RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-        // RMT.conf_ch[channel].conf1.mem_wr_rst = 0;
+        rmt->intr_mode = e_tx_intr | e_txthr_intr | e_set_conti;
+        RMT.conf_ch[channel].conf1.apb_mem_rst = 1;
+        RMT.conf_ch[channel].conf1.apb_mem_rst = 0;
+        RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
+        RMT.conf_ch[channel].conf1.mem_rd_rst = 0;
+        RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
+        RMT.conf_ch[channel].conf1.mem_wr_rst = 0;
         RMTMEM.chan[channel].data32[MAX_DATA_PER_ITTERATION].val = 0;
         fake_transaction = 1;
         // RMT.conf_ch[channel].conf1.mem_wr_rst = 1; 
@@ -310,6 +313,9 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, int entries, int period)
         return NULL;
     }
     rmt = _rmtAllocate(pin, i, buffers);
+        if (!intr_handle) {
+            esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, _rmt_isr, NULL, &intr_handle);
+        }
 
     size_t channel = i;
     rmt->pin = pin;
@@ -367,7 +373,6 @@ static void _initPin(int pin, int channel, bool tx_not_rx)
     }
 }
 
-static int state = 0;
 
 static void IRAM_ATTR _rmt_isr(void* arg)
 {
@@ -387,6 +392,8 @@ static void IRAM_ATTR _rmt_isr(void* arg)
         if (intr_val&_INT_ERROR(ch)) {
 
             // digitalWrite(4, 1);
+                digitalWrite(2, 1);
+
                 ets_printf("Error!\n");
 
 
@@ -410,14 +417,26 @@ static void IRAM_ATTR _rmt_isr(void* arg)
             } else 
 #endif
             {
-                digitalWrite(2, 1);
-                ets_printf("Tx_End!\n");
-                if (RMT.conf_ch[ch].conf1.tx_conti_mode) {
+                // digitalWrite(2, 1);
+                // ets_printf("Tx_End!\n");
+                if (g_rmt_objects[ch].intr_mode&e_end_trans) {
+                    ets_printf("Tx_End marked !\n");
                     RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-                } else {
-                    RMT.int_ena.val &= ~_INT_TX_END(ch);                
-                    RMT.int_ena.val &= ~_INT_THR_EVNT(ch);                
+                    g_rmt_objects[ch].intr_mode = e_no_intr;
+                    
+                } else if (g_rmt_objects[ch].intr_mode == e_no_intr) {
+                    ets_printf("Tx completed !\n");
+                    RMT.int_ena.val &= ~_INT_TX_END(ch);
+                    RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
                 }
+                // RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
+
+                // if (RMT.conf_ch[ch].conf1.tx_conti_mode) {
+                //     RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
+                // } else {
+                //     RMT.int_ena.val &= ~_INT_TX_END(ch);                
+                //     RMT.int_ena.val &= ~_INT_THR_EVNT(ch);                
+                // }
 
             }
 
@@ -487,11 +506,21 @@ static void IRAM_ATTR _rmt_isr(void* arg)
             // RMT.conf_ch[ch].conf1.mem_rd_rst = 0;
             // RMTMEM.chan[ch].data32[25].val = 0;
             // RMTMEM.chan[ch].data32[0].val = 0;
-            if (fake_transaction == 1) {
 
+            // if (fake_transaction == 1) {
+
+            //     RMT.conf_ch[ch].conf1.tx_conti_mode = 1;
+            //     fake_transaction = 2;
+            // }
+            if (g_rmt_objects[ch].intr_mode&e_set_conti) {
                 RMT.conf_ch[ch].conf1.tx_conti_mode = 1;
-                fake_transaction = 2;
+                g_rmt_objects[ch].intr_mode &= ~e_set_conti;
             }
+
+
+            // if (!RMT.conf_ch[ch].conf1.tx_conti_mode) {
+            //     RMT.conf_ch[ch].conf1.tx_conti_mode = 1;
+            // }
 
 
             RMT.int_clr.val |= _INT_THR_EVNT(ch);
@@ -510,42 +539,87 @@ static void IRAM_ATTR _rmt_isr(void* arg)
                 int i;
                 if (remaining_size > half_tx_nr) {
                     if (!state) {
+                        // ets_printf("first\n");
                         RMTMEM.chan[ch].data32[0].val = data[0] - 1;
                         for (i = 1; i < half_tx_nr; i++) {
                             RMTMEM.chan[ch].data32[i].val = data[i];
                         }
                     } else {
-                        for (i = 0; i < MAX_DATA_PER_ITTERATION; i++) {
+                        // ets_printf("second\n");
+                        for (i = 0; i < half_tx_nr; i++) {
                             RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
                         }
                     }
                     g_rmt_objects[ch].remaining_to_send -= half_tx_nr;
+                    g_rmt_objects[ch].remaining_ptr += half_tx_nr;
                     state ^= 1;
                 } else {
-                    RMTMEM.chan[ch].data32[0].val = data[0] - 1;
-                    for (i = 1; i < MAX_DATA_PER_ITTERATION; i++) {
-                        if (i < half_tx_nr) {
+                    // ets_printf("last chunk...");
+                    if (!state) {
+                        // ets_printf("first\n");
+                        RMTMEM.chan[ch].data32[0].val = data[0] - 1;
+                        for (i = 1; i < half_tx_nr; i++) {
                             if (i < remaining_size) {
                                 RMTMEM.chan[ch].data32[i].val = data[i];
                             } else {
                                 RMTMEM.chan[ch].data32[i].val = 0x000F000F;
                             }
-                        } else {
-                            // RMTMEM.chan[ch].data32[i].val = data[i%4];
                         }
-                }
-                // RMTMEM.chan[ch].data32[half_tx_nr].val = 0x000F000F;
-                RMTMEM.chan[ch].data32[MAX_DATA_PER_ITTERATION].val = 0;
-                g_rmt_objects[ch].remaining_ptr = NULL;
-                }
+                        // RMTMEM.chan[ch].data32[i].val = 0;
+                    } else {
+                        // ets_printf("second\n");
+                        for (i = 0; i < half_tx_nr; i++) {
+                            if (i < remaining_size) {
+                                RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
+                            } else {
+                                RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
+                            }
+                        }
+                        // RMTMEM.chan[ch].data32[i].val = 0;
+                    }
+                    state ^= 1;
+                    RMTMEM.chan[ch].data32[MAX_DATA_PER_ITTERATION].val = 0;
+                    g_rmt_objects[ch].remaining_ptr = NULL;
 
-                // RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-            } else {
-                // ets_printf("Finish\n");
-                int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-                int i;
-                for (i = half_tx_nr; i < MAX_DATA_PER_ITTERATION; i++) {
-                        RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+                    // for (i = 1; i < MAX_DATA_PER_ITTERATION; i++) {
+                    //     if (i < half_tx_nr) {
+                    //         if (i < remaining_size) {
+                    //             RMTMEM.chan[ch].data32[i].val = data[i];
+                    //         } else {
+                    //             RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+                    //         }
+                    //     } else {
+                    //         // RMTMEM.chan[ch].data32[i].val = data[i%4];
+                    //     }
+                    }
+                    // RMTMEM.chan[ch].data32[half_tx_nr].val = 0x000F000F;
+             } else {
+                if ((!(g_rmt_objects[ch].intr_mode&e_end_trans)) && (g_rmt_objects[ch].intr_mode != e_no_intr)) {
+                    // ets_printf("tail (empty)");
+                    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
+                    int i;
+                    if (!state) {
+                        // ets_printf("...first\n");
+                        for (i = 0; i < half_tx_nr; i++) {
+                            RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+                        }
+                        RMTMEM.chan[ch].data32[i].val = 0;
+
+                    } else {
+                        // ets_printf("...second\n");
+                        for (i = 0; i < half_tx_nr; i++) {
+                            RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
+                        }
+                        RMTMEM.chan[ch].data32[i].val = 0;
+                    }
+                    // int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
+                    // int i;
+                    // for (i = half_tx_nr; i < MAX_DATA_PER_ITTERATION; i++) {
+                    //         RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+                    // }
+                    g_rmt_objects[ch].intr_mode |= e_end_trans;
+                } else {
+                    // ets_printf("do_nothing\n");
                 }
                 #if 0
                 int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
