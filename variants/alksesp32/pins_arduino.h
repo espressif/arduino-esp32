@@ -11,7 +11,7 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-#define ALKSESP32 // for compability reasons with library
+#define ALKSESP32 // tell library to not map pins again
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
