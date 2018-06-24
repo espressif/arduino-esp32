@@ -5,7 +5,7 @@ namespace mime
 {
 
 // Table of extension->MIME strings stored in PROGMEM, needs to be global due to GCC section typing rules
-const Entry mimeTable[maxType] ICACHE_RODATA_ATTR = 
+const Entry mimeTable[maxType] = 
 {
     { ".html", "text/html" },
     { ".htm", "text/html" },

@@ -82,6 +82,16 @@ String getContentType(String filename) {
   return "text/plain";
 }
 
+bool exists(String path){
+  bool yes = false;
+  File file = SPIFFS.open(path, "r");
+  if(!file.isDirectory()){
+    yes = true;
+  }
+  file.close();
+  return yes;
+}
+
 bool handleFileRead(String path) {
   DBG_OUTPUT_PORT.println("handleFileRead: " + path);
   if (path.endsWith("/")) {
@@ -89,8 +99,8 @@ bool handleFileRead(String path) {
   }
   String contentType = getContentType(path);
   String pathWithGz = path + ".gz";
-  if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
-    if (SPIFFS.exists(pathWithGz)) {
+  if (exists(pathWithGz) || exists(path)) {
+    if (exists(pathWithGz)) {
       path += ".gz";
     }
     File file = SPIFFS.open(path, "r");
@@ -136,7 +146,7 @@ void handleFileDelete() {
   if (path == "/") {
     return server.send(500, "text/plain", "BAD PATH");
   }
-  if (!SPIFFS.exists(path)) {
+  if (!exists(path)) {
     return server.send(404, "text/plain", "FileNotFound");
   }
   SPIFFS.remove(path);
@@ -153,7 +163,7 @@ void handleFileCreate() {
   if (path == "/") {
     return server.send(500, "text/plain", "BAD PATH");
   }
-  if (SPIFFS.exists(path)) {
+  if (exists(path)) {
     return server.send(500, "text/plain", "FILE EXISTS");
   }
   File file = SPIFFS.open(path, "w");
@@ -189,7 +199,7 @@ void handleFileList() {
           output += "{\"type\":\"";
           output += (file.isDirectory()) ? "dir" : "file";
           output += "\",\"name\":\"";
-          output += String(file.name());
+          output += String(file.name()).substring(1);
           output += "\"}";
           file = root.openNextFile();
       }

@@ -240,6 +240,24 @@ size_t WiFiClient::write_P(PGM_P buf, size_t size)
     return write(buf, size);
 }
 
+size_t WiFiClient::write(Stream&stream)
+{
+    uint8_t * buf = (uint8_t *)malloc(1360);
+    if(!buf){
+        return 0;
+    }
+    size_t toRead = 0, toWrite = 0, written = 0;
+    size_t available = stream.available();
+    while(available){
+        toRead = (available > 1360)?1360:available;
+        toWrite = stream.readBytes(buf, toRead);
+        written += write(buf, toWrite);
+        available = stream.available();
+    }
+    free(buf);
+    return written;
+}
+
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
     if(!available()) {

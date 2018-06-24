@@ -6,6 +6,7 @@
 #include <WiFiClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
+#include <Update.h>
 
 const char* host = "esp32-webupdate";
 const char* ssid = "........";
