@@ -48,6 +48,7 @@ echo -e "travis_fold:end:sketch_test_env_prepare"
 echo -e "travis_fold:start:sketch_test"
 
 build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
+if [ $? -ne 0 ]; then exit 1; fi
 
 echo -e "travis_fold:end:sketch_test"
 
