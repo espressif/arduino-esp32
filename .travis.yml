@@ -13,6 +13,9 @@ env:
         - REMOTE_URL=https://github.com/$TRAVIS_REPO_SLUG/releases/download/$TRAVIS_TAG
     
 script:
+  # run cmake tests
+  - bash $TRAVIS_BUILD_DIR/tools/check_cmakelists.sh
+  
   # run sketch tests
   - bash $TRAVIS_BUILD_DIR/tools/build-tests.sh
   
