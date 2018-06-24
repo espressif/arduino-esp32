@@ -63,7 +63,7 @@ function build_sketches()
             echo "Build failed ($1)"
             echo "Build log:"
             cat build.log
-            return $result
+            exit $result
         fi
         rm build.log
         print_size_info $build_dir/*.elf >>size.log
