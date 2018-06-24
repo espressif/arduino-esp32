@@ -34,6 +34,7 @@ set(CORE_SRCS
 
 set(LIBRARY_SRCS
   libraries/ArduinoOTA/src/ArduinoOTA.cpp
+  libraries/AsyncUDP/src/AsyncUDP.cpp
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/EEPROM.cpp
@@ -41,6 +42,7 @@ set(LIBRARY_SRCS
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
+  libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
@@ -162,6 +164,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   variants/esp32/
   cores/esp32/
   libraries/ArduinoOTA/src
+  libraries/AsyncUDP/src
   libraries/AzureIoT/src
   libraries/BLE/src
   libraries/BluetoothSerial/src
@@ -170,6 +173,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/ESPmDNS/src
   libraries/FS/src
   libraries/HTTPClient/src
+  libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/SD_MMC/src
   libraries/SD/src
