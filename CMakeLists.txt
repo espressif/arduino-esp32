@@ -53,6 +53,9 @@ set(LIBRARY_SRCS
   libraries/SPI/src/SPI.cpp
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
+  libraries/WebServer/src/WebServer.cpp
+  libraries/WebServer/src/Parsing.cpp
+  libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
   libraries/WiFi/src/ETH.cpp
@@ -182,6 +185,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/SPI/src
   libraries/Ticker/src
   libraries/Update/src
+  libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src
   libraries/Wire/src
