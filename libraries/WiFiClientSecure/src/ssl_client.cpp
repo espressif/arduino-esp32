@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <string>
 #include "ssl_client.h"
+#include "WiFi.h"
 
 
 const char *pers = "esp32-tls";
@@ -60,14 +61,11 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return ssl_client->socket;
     }
 
-	struct hostent *server;
-    server = gethostbyname(host);
-    if (server == NULL) {
-        log_e("gethostbyname failed");
+    IPAddress srv((uint32_t)0);
+    if(!WiFiGenericClass::hostByName(host, srv)){
         return -1;
     }
-    IPAddress srv((const uint8_t *)(server->h_addr));
-	
+
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;

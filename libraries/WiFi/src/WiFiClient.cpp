@@ -18,6 +18,7 @@
 */
 
 #include "WiFiClient.h"
+#include "WiFi.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
@@ -105,12 +106,10 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 
 int WiFiClient::connect(const char *host, uint16_t port)
 {
-    struct hostent *server;
-    server = gethostbyname(host);
-    if (server == NULL) {
+    IPAddress srv((uint32_t)0);
+    if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
     }
-    IPAddress srv((const uint8_t *)(server->h_addr));
     return connect(srv, port);
 }
 
