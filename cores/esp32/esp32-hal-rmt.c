@@ -91,6 +91,9 @@ static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
+static bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size);
+
+
 static void IRAM_ATTR _rmt_isr(void* arg);
 
 
@@ -125,16 +128,17 @@ bool rmtDeinit(rmt_obj_t *rmt)
     return true;
 }
 
-bool rmtSendQueued(rmt_obj_t* rmt, uint32_t* data, size_t size)
+bool rmtSent(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
     if (!rmt) {
         return false;
     }
     
     int channel = rmt->channel;
+    int allocated_size = 64 * rmt->buffers;
 
-    if (size > MAX_DATA_PER_ITTERATION) {
-    // if (size > MAX_DATA_PER_CHANNEL) {
+    if (size > allocated_size) {
+
         int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
         RMT_MUTEX_LOCK(channel);
         // setup interrupt handler if not yet installed for half and full tx
@@ -172,10 +176,10 @@ bool rmtSendQueued(rmt_obj_t* rmt, uint32_t* data, size_t size)
         RMT_MUTEX_UNLOCK(channel);
 
         // start the transation
-        return rmtSend(rmt, data, MAX_DATA_PER_ITTERATION);
+        return _rmtSendOnce(rmt, data, MAX_DATA_PER_ITTERATION);
     } else {
         // use one-go mode if data fits one buffer 
-        return rmtSend(rmt, data, size);
+        return _rmtSendOnce(rmt, data, size);
     }
 }
 
@@ -269,7 +273,7 @@ bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t s
 }
 
 
-bool rmtSend(rmt_obj_t* rmt, uint32_t* data, size_t size)
+bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
     if (!rmt) {
         return false;
@@ -339,9 +343,9 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
     }
 }
 
-rmt_obj_t* rmtInit(int pin, bool tx_not_rx, int entries, int period)
+rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
-    int buffers = 1 + entries/MAX_DATA_PER_CHANNEL;
+    int buffers = memsize;
     rmt_obj_t* rmt;
     size_t i;
     size_t j;
