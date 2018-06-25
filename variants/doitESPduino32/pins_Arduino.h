@@ -11,7 +11,7 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-static const uint8_t LED_BUILTIN = ;//<----------------TODO: find it
+static const uint8_t LED_BUILTIN = 2;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 
