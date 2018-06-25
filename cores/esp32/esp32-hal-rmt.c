@@ -1,5 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 
 #include "esp32-hal.h"
 #include "esp8266-compat.h"
@@ -27,6 +28,14 @@
 #define _INT_RX_END(channel) (__INT_RX_END<<(channel*3))
 #define _INT_ERROR(channel)  (__INT_ERROR<<(channel*3))
 #define _INT_THR_EVNT(channel)  ((__INT_THR_EVNT)<<(channel))
+
+#if CONFIG_DISABLE_HAL_LOCKS
+# define UART_MUTEX_LOCK(channel)
+# define UART_MUTEX_UNLOCK(channel)
+#else
+# define RMT_MUTEX_LOCK(channel)    do {} while (xSemaphoreTake(g_rmt_objlocks[channel], portMAX_DELAY) != pdPASS)
+# define RMT_MUTEX_UNLOCK(channel)  xSemaphoreGive(g_rmt_objlocks[channel])
+#endif /* CONFIG_DISABLE_HAL_LOCKS */
 
 typedef enum {
     e_no_intr = 0,
@@ -58,7 +67,17 @@ struct rmt_obj_s
     transaction_state_t tx_state;
 };
 
+static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
 static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
+    { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
     { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
     { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
 };
@@ -66,6 +85,9 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
 static  intr_handle_t intr_handle;
 
 static bool periph_enabled = false;
+
+static xSemaphoreHandle g_rmt_block_lock = NULL;
+
 
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
@@ -84,6 +106,13 @@ bool rmtDeinit(rmt_obj_t *rmt)
     }
 
     size_t from = rmt->channel;
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(g_rmt_objlocks[from] != NULL) {
+        vSemaphoreDelete(g_rmt_objlocks[from]);
+    }
+#endif
+
     size_t to = rmt->buffers + rmt->channel;
     size_t i;
     
@@ -106,13 +135,13 @@ bool rmtSendQueued(rmt_obj_t* rmt, uint32_t* data, size_t size)
 
     if (size > MAX_DATA_PER_ITTERATION) {
     // if (size > MAX_DATA_PER_CHANNEL) {
-
+        int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
+        RMT_MUTEX_LOCK(channel);
         // setup interrupt handler if not yet installed for half and full tx
         if (!intr_handle) {
             esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, _rmt_isr, NULL, &intr_handle);
         }
 
-        int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
         rmt->remaining_to_send = size - MAX_DATA_PER_ITTERATION;
         rmt->remaining_ptr = data + MAX_DATA_PER_ITTERATION;
         rmt->intr_mode = e_tx_intr | e_txthr_intr; 
@@ -139,6 +168,8 @@ bool rmtSendQueued(rmt_obj_t* rmt, uint32_t* data, size_t size)
         RMT.int_ena.val |= _INT_TX_END(channel);
         RMT.int_ena.val |= _INT_THR_EVNT(channel);
         RMT.int_ena.val |= _INT_ERROR(channel);
+
+        RMT_MUTEX_UNLOCK(channel);
 
         // start the transation
         return rmtSend(rmt, data, MAX_DATA_PER_ITTERATION);
@@ -217,6 +248,7 @@ bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t s
         rmt->remaining_to_send = size;
     }
 
+    RMT_MUTEX_LOCK(channel);
     rmt->intr_mode = e_rx_intr;
 
     RMT.conf_ch[channel].conf1.mem_owner = 1;
@@ -231,6 +263,7 @@ bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t s
     RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
 
     RMT.conf_ch[channel].conf1.rx_en = 1;
+    RMT_MUTEX_UNLOCK(channel);
 
     return true;
 }
@@ -253,9 +286,10 @@ bool rmtSend(rmt_obj_t* rmt, uint32_t* data, size_t size)
         RMTMEM.chan[channel].data32[size].val = 0;
     }
 
+    RMT_MUTEX_LOCK(channel);
     RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-
     RMT.conf_ch[channel].conf1.tx_start = 1;
+    RMT_MUTEX_UNLOCK(channel);
 
     return true;
 }
@@ -292,7 +326,8 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
     float apb_tick = 12.5 * apb_div;
     float ref_tick = 1000.0 * ref_div;
     
-     size_t channel = rmt->channel;
+    size_t channel = rmt->channel;
+
     if (_ABS(apb_tick - tick) < _ABS(ref_tick - tick)) {
         RMT.conf_ch[channel].conf0.div_cnt = apb_div & 0xFF;
         RMT.conf_ch[channel].conf1.ref_always_on = 1;
@@ -310,6 +345,14 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, int entries, int period)
     rmt_obj_t* rmt;
     size_t i;
     size_t j;
+
+    // create common block mutex for protecting allocs from multiple threads
+    if (!g_rmt_block_lock) {
+        g_rmt_block_lock = xSemaphoreCreateMutex();
+    }
+    // lock
+    while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
+
     for (i=0; i<MAX_CHANNELS; i++) {
         for (j=0; j<buffers && i+j < MAX_CHANNELS; j++) {
             // if the space is ocupied break and continue on other channel
@@ -324,11 +367,26 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, int entries, int period)
         }
     }
     if (i == MAX_CHANNELS || i+j >= MAX_CHANNELS || j != buffers)  {
+        xSemaphoreGive(g_rmt_block_lock);
         return NULL;
     }
     rmt = _rmtAllocate(pin, i, buffers);
 
+    xSemaphoreGive(g_rmt_block_lock);
+
     size_t channel = i;
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(g_rmt_objlocks[channel] == NULL) {
+        g_rmt_objlocks[channel] = xSemaphoreCreateMutex();
+        if(g_rmt_objlocks[channel] == NULL) {
+            return NULL;
+        }
+    }
+#endif
+
+    RMT_MUTEX_LOCK(channel);
+
     rmt->pin = pin;
     rmt->tx_not_rx = tx_not_rx;
     rmt->buffers =buffers;
@@ -367,6 +425,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, int entries, int period)
     if (!intr_handle) {
         esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, _rmt_isr, NULL, &intr_handle);
     }
+    RMT_MUTEX_UNLOCK(channel);
 
     return rmt;
 }
