@@ -70,6 +70,7 @@ const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
 };
 
 typedef void (*voidFuncPtr)(void);
+typedef void (*voidFuncPtrArg)(void*);
 static voidFuncPtr __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
@@ -208,7 +209,11 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
         do {
             if(gpio_intr_status_l & ((uint32_t)1 << pin)) {
                 if(__pinInterruptHandlers[pin]) {
-                    __pinInterruptHandlers[pin]();
+					if(arg){
+						((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
+					} else {
+						__pinInterruptHandlers[pin]();
+					}
                 }
             }
         } while(++pin<32);
@@ -218,22 +223,26 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
         do {
             if(gpio_intr_status_h & ((uint32_t)1 << (pin - 32))) {
                 if(__pinInterruptHandlers[pin]) {
-                    __pinInterruptHandlers[pin]();
+					if(arg){
+						((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
+					} else {
+						__pinInterruptHandlers[pin]();
+					}
                 }
             }
         } while(++pin<GPIO_PIN_COUNT);
     }
 }
 
-extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
+extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type)
 {
     static bool interrupt_initialized = false;
     
     if(!interrupt_initialized) {
         interrupt_initialized = true;
-        esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __onPinInterrupt, NULL, &gpio_intr_handle);
+        esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __onPinInterrupt, arg, &gpio_intr_handle);
     }
-    __pinInterruptHandlers[pin] = userFunc;
+    __pinInterruptHandlers[pin] = (voidFuncPtr)userFunc;
     esp_intr_disable(gpio_intr_handle);
     if(esp_intr_get_cpu(gpio_intr_handle)) { //APP_CPU
         GPIO.pin[pin].int_ena = 1;
@@ -242,6 +251,10 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
     }
     GPIO.pin[pin].int_type = intr_type;
     esp_intr_enable(gpio_intr_handle);
+}
+
+extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type) {
+	__attachInterruptArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type);
 }
 
 extern void __detachInterrupt(uint8_t pin)
