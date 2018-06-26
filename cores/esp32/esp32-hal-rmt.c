@@ -1,3 +1,6 @@
+#ifndef MAIN_ESP32_HAL_RMT_H_
+#define MAIN_ESP32_HAL_RMT_H_
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
@@ -13,7 +16,9 @@
 #include "soc/rmt_struct.h"
 #include "esp_intr_alloc.h"
 
-
+/**
+ * Internal macros
+ */
 #define MAX_CHANNELS 8
 #define MAX_DATA_PER_CHANNEL 64
 #define MAX_DATA_PER_ITTERATION 40
@@ -37,6 +42,9 @@
 # define RMT_MUTEX_UNLOCK(channel)  xSemaphoreGive(g_rmt_objlocks[channel])
 #endif /* CONFIG_DISABLE_HAL_LOCKS */
 
+/**
+ * Typedefs for internal stuctures, enums
+ */
 typedef enum {
     e_no_intr = 0,
     e_tx_intr = 1,
@@ -52,7 +60,6 @@ typedef enum {
     e_set_conti =  8,
 } transaction_state_t;
 
-
 struct rmt_obj_s
 {
     bool allocated;
@@ -67,6 +74,9 @@ struct rmt_obj_s
     transaction_state_t tx_state;
 };
 
+/**
+ * Internal variables for channel descriptors
+ */
 static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
@@ -82,19 +92,67 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
     { false, NULL, 0, 0, 0, 0, 0, NULL, e_no_intr, e_inactive},
 };
 
+/**
+ * Internal variables for driver data
+ */
 static  intr_handle_t intr_handle;
 
 static bool periph_enabled = false;
 
 static xSemaphoreHandle g_rmt_block_lock = NULL;
 
-
+/**
+ * Internal method (private) declarations
+ */
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
 static bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size);
 
-
 static void IRAM_ATTR _rmt_isr(void* arg);
+
+bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size);
+
+static rmt_obj_t* _rmtAllocate(int pin, int from, int size);
+
+static void _initPin(int pin, int channel, bool tx_not_rx);
+
+
+/**
+ * Public method definitions
+ */
+bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high)
+{
+    if (!rmt || low > 0xFFFF || high > 0xFFFF) {
+        return false;
+    }
+    size_t channel = rmt->channel;
+
+    RMT_MUTEX_LOCK(channel);
+
+    RMT.carrier_duty_ch[channel].low = low;
+    RMT.carrier_duty_ch[channel].low = high;
+    RMT.conf_ch[channel].conf0.carrier_en = carrier_en;
+    RMT.conf_ch[channel].conf0.carrier_out_lv = carrier_level;
+
+    RMT_MUTEX_UNLOCK(channel);
+
+    return true;
+
+}
+
+bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value)
+{
+    if (!rmt || value > 0xFFFF) {
+        return false;
+    }
+    size_t channel = rmt->channel;
+
+    RMT_MUTEX_LOCK(channel);
+    RMT.conf_ch[channel].conf0.idle_thres = value;
+    RMT_MUTEX_UNLOCK(channel);
+
+    return true;
+}
 
 
 bool rmtDeinit(rmt_obj_t *rmt)
@@ -128,7 +186,7 @@ bool rmtDeinit(rmt_obj_t *rmt)
     return true;
 }
 
-bool rmtSent(rmt_obj_t* rmt, uint32_t* data, size_t size)
+bool rmtSend(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
     if (!rmt) {
         return false;
@@ -184,7 +242,7 @@ bool rmtSent(rmt_obj_t* rmt, uint32_t* data, size_t size)
 }
 
 
-bool rmtWaitForData(rmt_obj_t* rmt, uint32_t* data, size_t size)
+bool rmtGetData(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
     if (!rmt) {
         return false;
@@ -195,12 +253,6 @@ bool rmtWaitForData(rmt_obj_t* rmt, uint32_t* data, size_t size)
         return false;
     }
 
-    // wait for the interrupt
-    while (!(RMT.int_raw.val&_INT_RX_END(channel))) {}
-
-    // clear the interrupt
-    RMT.int_clr.val |= _INT_RX_END(channel);
-
     size_t i;
     volatile uint32_t* rmt_mem_ptr = &(RMTMEM.chan[channel].data32[0].val);
     for (i=0; i<size; i++) {
@@ -210,7 +262,7 @@ bool rmtWaitForData(rmt_obj_t* rmt, uint32_t* data, size_t size)
     return true;
 }
 
-bool rmtReceive(rmt_obj_t* rmt, size_t idle_thres)
+bool rmtBeginReceive(rmt_obj_t* rmt)
 {
     if (!rmt) {
         return false;
@@ -218,20 +270,32 @@ bool rmtReceive(rmt_obj_t* rmt, size_t idle_thres)
     int channel = rmt->channel;
 
     RMT.int_clr.val |= _INT_ERROR(channel);
-    
     RMT.int_ena.val |= _INT_ERROR(channel);
 
     RMT.conf_ch[channel].conf1.mem_owner = 1;
-    RMT.conf_ch[channel].conf0.idle_thres = idle_thres;
-
     RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-
     RMT.conf_ch[channel].conf1.rx_en = 1;
 
     return true;
 }
 
-bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t size, void* eventFlag)
+bool rmtReceiveCompleted(rmt_obj_t* rmt)
+{
+    if (!rmt) {
+        return false;
+    }
+    int channel = rmt->channel;
+
+    if (RMT.int_raw.val&_INT_RX_END(channel)) {
+        // RX end flag
+        RMT.int_clr.val |= _INT_RX_END(channel);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool rmtReceive(rmt_obj_t* rmt, uint32_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout)
 {
     if (!rmt) {
         return false;
@@ -256,7 +320,6 @@ bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t s
     rmt->intr_mode = e_rx_intr;
 
     RMT.conf_ch[channel].conf1.mem_owner = 1;
-    RMT.conf_ch[channel].conf0.idle_thres = idle_thres;
 
     RMT.int_clr.val |= _INT_RX_END(channel);
     RMT.int_clr.val |= _INT_ERROR(channel);
@@ -269,48 +332,17 @@ bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t s
     RMT.conf_ch[channel].conf1.rx_en = 1;
     RMT_MUTEX_UNLOCK(channel);
 
-    return true;
-}
-
-
-bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size)
-{
-    if (!rmt) {
-        return false;
-    }
-    int channel = rmt->channel;
-    RMT.apb_conf.fifo_mask = 1;
-    if (data && size>0) {
-        size_t i;
-        volatile uint32_t* rmt_mem_ptr = &(RMTMEM.chan[channel].data32[0].val);
-        for (i = 0; i < size; i++) {
-            *rmt_mem_ptr++ = data[i];
+    // wait for data if requested so
+    if (waitForData && eventFlag) {
+        uint32_t flags = xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
+                            pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
+        if (flags & RMT_FLAG_ERROR) {
+            return false;
         }
-        // tx end mark
-        RMTMEM.chan[channel].data32[size].val = 0;
     }
-
-    RMT_MUTEX_LOCK(channel);
-    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-    RMT.conf_ch[channel].conf1.tx_start = 1;
-    RMT_MUTEX_UNLOCK(channel);
 
     return true;
 }
-
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
-{
-    size_t i;
-    // setup how many buffers shall we use
-    g_rmt_objects[from].buffers = size;
-
-    for (i=0; i<size; i++) {
-        // mark the block of channels as used
-        g_rmt_objects[i+from].allocated = true;
-    }
-    return &(g_rmt_objects[from]);
-}
-
 
 float rmtSetTick(rmt_obj_t* rmt, float tick)
 {
@@ -400,12 +432,14 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     // Initialize the registers in default mode:
     // - no carrier, filter
     // - timebase tick of 1us
+    // - idle threshold set to 0x8000 (max pulse width + 1)
     RMT.conf_ch[channel].conf0.div_cnt = 1;
     RMT.conf_ch[channel].conf0.mem_size = buffers;
     RMT.conf_ch[channel].conf0.carrier_en = 0;
     RMT.conf_ch[channel].conf0.carrier_out_lv = 0;
     RMT.conf_ch[channel].conf0.mem_pd = 0;
 
+    RMT.conf_ch[channel].conf0.idle_thres = 0x8000;
     RMT.conf_ch[channel].conf1.rx_en = 0;
     RMT.conf_ch[channel].conf1.tx_conti_mode = 0;
     RMT.conf_ch[channel].conf1.ref_cnt_rst = 0;
@@ -433,6 +467,49 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 
     return rmt;
 }
+
+/**
+ * Private methods definitions
+ */
+bool _rmtSendOnce(rmt_obj_t* rmt, uint32_t* data, size_t size)
+{
+    if (!rmt) {
+        return false;
+    }
+    int channel = rmt->channel;
+    RMT.apb_conf.fifo_mask = 1;
+    if (data && size>0) {
+        size_t i;
+        volatile uint32_t* rmt_mem_ptr = &(RMTMEM.chan[channel].data32[0].val);
+        for (i = 0; i < size; i++) {
+            *rmt_mem_ptr++ = data[i];
+        }
+        // tx end mark
+        RMTMEM.chan[channel].data32[size].val = 0;
+    }
+
+    RMT_MUTEX_LOCK(channel);
+    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
+    RMT.conf_ch[channel].conf1.tx_start = 1;
+    RMT_MUTEX_UNLOCK(channel);
+
+    return true;
+}
+
+
+static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
+{
+    size_t i;
+    // setup how many buffers shall we use
+    g_rmt_objects[from].buffers = size;
+
+    for (i=0; i<size; i++) {
+        // mark the block of channels as used
+        g_rmt_objects[i+from].allocated = true;
+    }
+    return &(g_rmt_objects[from]);
+}
+
 
 static void _initPin(int pin, int channel, bool tx_not_rx) 
 {
@@ -617,3 +694,5 @@ static void IRAM_ATTR _rmt_isr(void* arg)
     digitalWrite(4, 0);
     digitalWrite(2, 0);
 }
+
+#endif /* MAIN_ESP32_HAL_RMT_H_ */

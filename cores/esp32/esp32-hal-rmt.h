@@ -43,31 +43,45 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 bool rmtSend(rmt_obj_t* rmt, uint32_t* data, size_t size);
 
 /**
-*    Initiates simple data receive without interrupts
-*
-*/
-bool rmtBeginReceive(rmt_obj_t* rmt, size_t idle_thres);
-
-/**
-*    Wait method for synchronous receive
-*
-*/
-bool rmtWaitForData(rmt_obj_t* rmt, uint32_t* data, size_t size);
-
-/**
 *    Initiates async receive, event flag indicates data received
 *
 */
-bool rmtReceiveAsync(rmt_obj_t* rmt, size_t idle_thres, uint32_t* data, size_t size, void* event_flags);
+bool rmtReceive(rmt_obj_t* rmt, uint32_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
+
+
+/*  Additional interface */
+
+/**
+*    Start reception
+*
+*/
+bool rmtBeginReceive(rmt_obj_t* rmt);
+
+/**
+*    Checks if reception completes
+*
+*/
+bool rmtReceiveCompleted(rmt_obj_t* rmt);
+
+/**
+*    Reads the data for particular channel
+*
+*/
+bool rmtGetData(rmt_obj_t* rmt, uint32_t* data, size_t size);
+
+/**
+ * Setting threshold for Rx completed
+ */
+bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value);
+
+bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
 
 // TODO:
-//  * add timeout to waiForData
-//  * try to eliminate idle_thres from the receiving functions
-//  * carrier interface
 //  * uninstall interrupt when all channels are deinit
 //  * send only-conti mode with circular-buffer
 //  * put sanity checks to some macro or inlines
 //  * doxy comments
+//  * error reporting
 
 #ifdef __cplusplus
 }
