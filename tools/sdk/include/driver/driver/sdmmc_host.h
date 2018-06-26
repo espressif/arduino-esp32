@@ -43,6 +43,8 @@ extern "C" {
     .set_card_clk = &sdmmc_host_set_card_clk, \
     .do_transaction = &sdmmc_host_do_transaction, \
     .deinit = &sdmmc_host_deinit, \
+    .io_int_enable = sdmmc_host_io_int_enable, \
+    .io_int_wait = sdmmc_host_io_int_wait, \
     .command_timeout_ms = 0, \
 }
 
@@ -53,6 +55,12 @@ typedef struct {
     gpio_num_t gpio_cd;     ///< GPIO number of card detect signal
     gpio_num_t gpio_wp;     ///< GPIO number of write protect signal
     uint8_t width;          ///< Bus width used by the slot (might be less than the max width supported)
+    uint32_t flags;         ///< Features used by this slot
+#define SDMMC_SLOT_FLAG_INTERNAL_PULLUP  BIT(0) 
+        /**< Enable internal pullups on enabled pins. The internal pullups
+         are insufficient however, please make sure external pullups are
+         connected on the bus. This is for debug / example purpose only.
+         */
 } sdmmc_slot_config_t;
 
 #define SDMMC_SLOT_NO_CD      ((gpio_num_t) -1)     ///< indicates that card detect line is not used
@@ -66,6 +74,7 @@ typedef struct {
     .gpio_cd = SDMMC_SLOT_NO_CD, \
     .gpio_wp = SDMMC_SLOT_NO_WP, \
     .width   = SDMMC_SLOT_WIDTH_DEFAULT, \
+    .flags = 0, \
 }
 
 /**
@@ -167,6 +176,26 @@ esp_err_t sdmmc_host_set_card_clk(int slot, uint32_t freq_khz);
 esp_err_t sdmmc_host_do_transaction(int slot, sdmmc_command_t* cmdinfo);
 
 /**
+ * @brief Enable IO interrupts
+ *
+ * This function configures the host to accept SDIO interrupts.
+ *
+ * @param slot  slot number (SDMMC_HOST_SLOT_0 or SDMMC_HOST_SLOT_1)
+ * @return returns ESP_OK, other errors possible in the future
+ */
+esp_err_t sdmmc_host_io_int_enable(int slot);
+
+/**
+ * @brief Block until an SDIO interrupt is received, or timeout occurs
+ * @param slot  slot number (SDMMC_HOST_SLOT_0 or SDMMC_HOST_SLOT_1)
+ * @param timeout_ticks  number of RTOS ticks to wait for the interrupt
+ * @return
+ *  - ESP_OK on success (interrupt received)
+ *  - ESP_ERR_TIMEOUT if the interrupt did not occur within timeout_ticks
+ */
+esp_err_t sdmmc_host_io_int_wait(int slot, TickType_t timeout_ticks);
+
+/**
  * @brief Disable SDMMC host and release allocated resources
  *
  * @note This function is not thread safe
@@ -176,6 +205,23 @@ esp_err_t sdmmc_host_do_transaction(int slot, sdmmc_command_t* cmdinfo);
  *      - ESP_ERR_INVALID_STATE if sdmmc_host_init function has not been called
  */
 esp_err_t sdmmc_host_deinit();
+
+/**
+ * @brief Enable the pull-ups of sd pins.
+ * 
+ * @note You should always place actual pullups on the lines instead of using
+ * this function. Internal pullup resistance are high and not sufficient, may
+ * cause instability in products. This is for debug or examples only.
+ * 
+ * @param slot Slot to use, normally set it to 1.
+ * @param width Bit width of your configuration, 1 or 4.
+ * 
+ * @return
+ *      - ESP_OK: if success
+ *      - ESP_ERR_INVALID_ARG: if configured width larger than maximum the slot can
+ *              support
+ */
+esp_err_t sdmmc_host_pullup_en(int slot, int width);
 
 #ifdef __cplusplus
 }

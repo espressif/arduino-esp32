@@ -25,12 +25,12 @@
 #ifndef __BTC_AV_H__
 #define __BTC_AV_H__
 
-#include "bt_target.h"
+#include "common/bt_target.h"
 #include "esp_a2dp_api.h"
-#include "btc_task.h"
-#include "btc_common.h"
-#include "btc_sm.h"
-#include "bta_av_api.h"
+#include "btc/btc_task.h"
+#include "btc/btc_common.h"
+#include "btc/btc_sm.h"
+#include "bta/bta_av_api.h"
 
 #if (BTC_AV_INCLUDED == TRUE)
 /*******************************************************************************
@@ -202,6 +202,18 @@ BOOLEAN btc_av_is_peer_edr(void);
 ** Returns          Void
 ********************************************************************************/
 void btc_av_clear_remote_suspend_flag(void);
+
+/*******************************************************************************
+ *
+ * Function         btc_av_get_service_id
+ *
+ * Description      Get the current AV service ID.
+ *
+ * Returns          The stream endpoint type: either BTA_A2DP_SOURCE_SERVICE_ID or
+ *                  BTA_A2DP_SINK_SERVICE_ID.
+ *
+ ******************************************************************************/
+uint8_t btc_av_get_service_id(void);
 
 #endif  ///BTC_AV_INCLUDED == TRUE
 
