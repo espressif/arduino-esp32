@@ -34,6 +34,7 @@ static const uint8_t IO35 = 35;
 static const uint8_t IO15 = 15;
 static const uint8_t IO33 = 33;
 static const uint8_t IO32 = 32;
+static const uint8_t IO0 = 0;
 
 //DIGITAL
 static const uint8_t IO13 = 13;
@@ -46,12 +47,14 @@ static const uint8_t IO25 = 25;
 static const uint8_t IO26 = 26;
 static const uint8_t TX0 = 1;
 static const uint8_t RX0 = 3;
-//DIGITAL+
-static const uint8_t SD2 = ;
-static const uint8_t SD3 = ;
-static const uint8_t CMD = ;
-static const uint8_t CLK = ;
-static const uint8_t SD0 = ;
-static const uint8_t SD1 = ;
+//SD
+static const uint8_t SD2 = 9;
+static const uint8_t SD3 = 10;
+static const uint8_t CMD = 11;
+static const uint8_t CLK = 6;
+static const uint8_t SD0 = 7;
+static const uint8_t SD1 = 8;
+
+// ESP-WROOM-32 does not have GPIO 14, 20(NC), 24, 28, 29, 30, 31, 36, 37, 38, 40+
 
 #endif /* Pins_Arduino_h */
