@@ -240,7 +240,7 @@ size_t WiFiClient::write_P(PGM_P buf, size_t size)
     return write(buf, size);
 }
 
-size_t WiFiClient::write(Stream&stream)
+size_t WiFiClient::write(Stream &stream)
 {
     uint8_t * buf = (uint8_t *)malloc(1360);
     if(!buf){
