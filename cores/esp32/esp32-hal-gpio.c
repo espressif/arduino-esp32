@@ -209,11 +209,11 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
         do {
             if(gpio_intr_status_l & ((uint32_t)1 << pin)) {
                 if(__pinInterruptHandlers[pin]) {
-					if(arg){
-						((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
-					} else {
-						__pinInterruptHandlers[pin]();
-					}
+                    if(arg){
+                        ((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
+                    } else {
+                        __pinInterruptHandlers[pin]();
+                    }
                 }
             }
         } while(++pin<32);
@@ -223,11 +223,11 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
         do {
             if(gpio_intr_status_h & ((uint32_t)1 << (pin - 32))) {
                 if(__pinInterruptHandlers[pin]) {
-					if(arg){
-						((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
-					} else {
-						__pinInterruptHandlers[pin]();
-					}
+                    if(arg){
+                        ((voidFuncPtrArg)__pinInterruptHandlers[pin])(arg);
+                    } else {
+                        __pinInterruptHandlers[pin]();
+                    }
                 }
             }
         } while(++pin<GPIO_PIN_COUNT);
@@ -254,7 +254,7 @@ extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * ar
 }
 
 extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type) {
-	__attachInterruptArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type);
+    __attachInterruptArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type);
 }
 
 extern void __detachInterrupt(uint8_t pin)
