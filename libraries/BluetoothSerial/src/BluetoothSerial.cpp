@@ -220,21 +220,24 @@ int BluetoothSerial::read(void)
 
 size_t BluetoothSerial::write(uint8_t c)
 {
-    if (_spp_client){
-        uint8_t buffer[1];
-        buffer[0] = c;
-        esp_spp_write(_spp_client, 1, buffer);
-        return 1;
+    if (!_spp_client){
+        return 0;
     }
-    return -1;
+
+    uint8_t buffer[1];
+    buffer[0] = c;
+    esp_err_t err = esp_spp_write(_spp_client, 1, buffer);
+    return (err == ESP_OK) ? 1 : 0;
 }
 
 size_t BluetoothSerial::write(const uint8_t *buffer, size_t size)
 {
-    if (_spp_client){
-        esp_spp_write(_spp_client, size, (uint8_t *)buffer);
+    if (!_spp_client){
+        return 0;
     }
-    return size;
+
+    esp_err_t err = esp_spp_write(_spp_client, size, (uint8_t *)buffer);
+    return (err == ESP_OK) ? size : 0;
 }
 
 void BluetoothSerial::flush()
