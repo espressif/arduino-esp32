@@ -62,9 +62,12 @@ WiFiClient WiFiServer::available(){
   return WiFiClient();
 }
 
-void WiFiServer::begin(){
+void WiFiServer::begin(uint16_t port){
   if(_listening)
     return;
+  if(port){
+      _port = port;
+  }
   struct sockaddr_in server;
   sockfd = socket(AF_INET , SOCK_STREAM, 0);
   if (sockfd < 0)

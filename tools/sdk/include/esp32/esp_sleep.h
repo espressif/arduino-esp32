@@ -38,6 +38,7 @@ typedef enum {
     ESP_PD_DOMAIN_RTC_PERIPH,      //!< RTC IO, sensors and ULP co-processor
     ESP_PD_DOMAIN_RTC_SLOW_MEM,    //!< RTC slow memory
     ESP_PD_DOMAIN_RTC_FAST_MEM,    //!< RTC fast memory
+    ESP_PD_DOMAIN_XTAL,            //!< XTAL oscillator
     ESP_PD_DOMAIN_MAX              //!< Number of domains
 } esp_sleep_pd_domain_t;
 
@@ -111,6 +112,9 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us);
  *       can not be used when RTC_PERIPH power domain is forced
  *       to be powered on (ESP_PD_OPTION_ON) or when ext0 wakeup
  *       source is used.
+ *
+ * @note The FSM mode of the touch button should be configured
+ *       as the timer trigger mode.
  *
  * @return
  *      - ESP_OK on success
