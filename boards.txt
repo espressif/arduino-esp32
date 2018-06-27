@@ -11,7 +11,7 @@ esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
 esp32.upload.maximum_size=1310720
-esp32.upload.maximum_data_size=294912
+esp32.upload.maximum_data_size=327680
 esp32.upload.wait_for_upload_port=true
 
 esp32.serial.disableDTR=true
@@ -98,7 +98,7 @@ pico32.name=ESP32 Pico Kit
 
 pico32.upload.tool=esptool
 pico32.upload.maximum_size=1310720
-pico32.upload.maximum_data_size=294912
+pico32.upload.maximum_data_size=327680
 pico32.upload.wait_for_upload_port=true
 
 pico32.serial.disableDTR=true
@@ -150,7 +150,7 @@ esp32thing.name=SparkFun ESP32 Thing
 
 esp32thing.upload.tool=esptool
 esp32thing.upload.maximum_size=1310720
-esp32thing.upload.maximum_data_size=294912
+esp32thing.upload.maximum_data_size=327680
 esp32thing.upload.wait_for_upload_port=true
 
 esp32thing.serial.disableDTR=true
@@ -193,7 +193,7 @@ nina_w10.name=u-blox NINA-W10 series (ESP32)
 
 nina_w10.upload.tool=esptool
 nina_w10.upload.maximum_size=1310720
-nina_w10.upload.maximum_data_size=294912
+nina_w10.upload.maximum_data_size=327680
 nina_w10.upload.wait_for_upload_port=true
 
 nina_w10.serial.disableDTR=true
@@ -231,7 +231,7 @@ widora-air.name=Widora AIR
 
 widora-air.upload.tool=esptool
 widora-air.upload.maximum_size=1310720
-widora-air.upload.maximum_data_size=294912
+widora-air.upload.maximum_data_size=327680
 widora-air.upload.wait_for_upload_port=true
 
 widora-air.serial.disableDTR=true
@@ -274,7 +274,7 @@ esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
 esp320.upload.maximum_size=1310720
-esp320.upload.maximum_data_size=294912
+esp320.upload.maximum_data_size=327680
 esp320.upload.wait_for_upload_port=true
 
 esp320.serial.disableDTR=true
@@ -317,7 +317,7 @@ nano32.name=Nano32
 
 nano32.upload.tool=esptool
 nano32.upload.maximum_size=1310720
-nano32.upload.maximum_data_size=294912
+nano32.upload.maximum_data_size=327680
 nano32.upload.wait_for_upload_port=true
 
 nano32.serial.disableDTR=true
@@ -360,7 +360,7 @@ lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool
 lolin32.upload.maximum_size=1310720
-lolin32.upload.maximum_data_size=294912
+lolin32.upload.maximum_data_size=327680
 lolin32.upload.wait_for_upload_port=true
 
 lolin32.serial.disableDTR=true
@@ -412,7 +412,7 @@ pocket_32.name=Dongsen Tech Pocket 32
 
 pocket_32.upload.tool=esptool
 pocket_32.upload.maximum_size=1310720
-pocket_32.upload.maximum_data_size=294912
+pocket_32.upload.maximum_data_size=327680
 pocket_32.upload.wait_for_upload_port=true
 
 pocket_32.serial.disableDTR=true
@@ -455,7 +455,7 @@ WeMosBat.name="WeMos" WiFi&Bluetooth Battery
 
 WeMosBat.upload.tool=esptool
 WeMosBat.upload.maximum_size=1310720
-WeMosBat.upload.maximum_data_size=294912
+WeMosBat.upload.maximum_data_size=327680
 WeMosBat.upload.wait_for_upload_port=true
 
 WeMosBat.serial.disableDTR=true
@@ -511,7 +511,7 @@ espea32.name=ESPea32
 
 espea32.upload.tool=esptool
 espea32.upload.maximum_size=1310720
-espea32.upload.maximum_data_size=294912
+espea32.upload.maximum_data_size=327680
 espea32.upload.wait_for_upload_port=true
 
 espea32.serial.disableDTR=true
@@ -554,7 +554,7 @@ quantum.name=Noduino Quantum
 
 quantum.upload.tool=esptool
 quantum.upload.maximum_size=1310720
-quantum.upload.maximum_data_size=294912
+quantum.upload.maximum_data_size=327680
 quantum.upload.wait_for_upload_port=true
 
 quantum.serial.disableDTR=true
@@ -597,7 +597,7 @@ node32s.name=Node32s
 
 node32s.upload.tool=esptool
 node32s.upload.maximum_size=1310720
-node32s.upload.maximum_data_size=294912
+node32s.upload.maximum_data_size=327680
 node32s.upload.wait_for_upload_port=true
 
 node32s.serial.disableDTR=true
@@ -640,7 +640,7 @@ hornbill32dev.name=Hornbill ESP32 Dev
 
 hornbill32dev.upload.tool=esptool
 hornbill32dev.upload.maximum_size=1310720
-hornbill32dev.upload.maximum_data_size=294912
+hornbill32dev.upload.maximum_data_size=327680
 hornbill32dev.upload.wait_for_upload_port=true
 
 hornbill32dev.serial.disableDTR=true
@@ -683,7 +683,7 @@ hornbill32minima.name=Hornbill ESP32 Minima
 
 hornbill32minima.upload.tool=esptool
 hornbill32minima.upload.maximum_size=1310720
-hornbill32minima.upload.maximum_data_size=294912
+hornbill32minima.upload.maximum_data_size=327680
 hornbill32minima.upload.wait_for_upload_port=true
 
 hornbill32minima.serial.disableDTR=true
@@ -725,7 +725,7 @@ firebeetle32.name=FireBeetle-ESP32
 
 firebeetle32.upload.tool=esptool
 firebeetle32.upload.maximum_size=1310720
-firebeetle32.upload.maximum_data_size=294912
+firebeetle32.upload.maximum_data_size=327680
 firebeetle32.upload.wait_for_upload_port=true
 
 firebeetle32.serial.disableDTR=true
@@ -768,7 +768,7 @@ intorobot-fig.name=IntoRobot Fig
 
 intorobot-fig.upload.tool=esptool
 intorobot-fig.upload.maximum_size=1310720
-intorobot-fig.upload.maximum_data_size=294912
+intorobot-fig.upload.maximum_data_size=327680
 intorobot-fig.upload.wait_for_upload_port=true
 
 intorobot-fig.serial.disableDTR=true
@@ -811,7 +811,7 @@ onehorse32dev.name=Onehorse ESP32 Dev Module
 
 onehorse32dev.upload.tool=esptool
 onehorse32dev.upload.maximum_size=1310720
-onehorse32dev.upload.maximum_data_size=294912
+onehorse32dev.upload.maximum_data_size=327680
 onehorse32dev.upload.wait_for_upload_port=true
 
 onehorse32dev.serial.disableDTR=true
@@ -854,7 +854,7 @@ featheresp32.name=Adafruit ESP32 Feather
 
 featheresp32.upload.tool=esptool
 featheresp32.upload.maximum_size=1310720
-featheresp32.upload.maximum_data_size=294912
+featheresp32.upload.maximum_data_size=327680
 featheresp32.upload.wait_for_upload_port=true
 
 featheresp32.serial.disableDTR=true
@@ -910,7 +910,7 @@ nodemcu-32s.name=NodeMCU-32S
 
 nodemcu-32s.upload.tool=esptool
 nodemcu-32s.upload.maximum_size=1310720
-nodemcu-32s.upload.maximum_data_size=294912
+nodemcu-32s.upload.maximum_data_size=327680
 nodemcu-32s.upload.wait_for_upload_port=true
 
 nodemcu-32s.serial.disableDTR=true
@@ -953,7 +953,7 @@ mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
 
 mhetesp32devkit.upload.tool=esptool
 mhetesp32devkit.upload.maximum_size=1310720
-mhetesp32devkit.upload.maximum_data_size=294912
+mhetesp32devkit.upload.maximum_data_size=327680
 mhetesp32devkit.upload.wait_for_upload_port=true
 
 mhetesp32devkit.serial.disableDTR=true
@@ -1018,7 +1018,7 @@ mhetesp32minikit.name=MH ET LIVE ESP32MiniKit
 
 mhetesp32minikit.upload.tool=esptool
 mhetesp32minikit.upload.maximum_size=1310720
-mhetesp32minikit.upload.maximum_data_size=294912
+mhetesp32minikit.upload.maximum_data_size=327680
 mhetesp32minikit.upload.wait_for_upload_port=true
 
 mhetesp32minikit.serial.disableDTR=true
@@ -1083,7 +1083,7 @@ esp32vn-iot-uno.name=ESP32vn IoT Uno
 
 esp32vn-iot-uno.upload.tool=esptool
 esp32vn-iot-uno.upload.maximum_size=1310720
-esp32vn-iot-uno.upload.maximum_data_size=294912
+esp32vn-iot-uno.upload.maximum_data_size=327680
 esp32vn-iot-uno.upload.wait_for_upload_port=true
 
 esp32vn-iot-uno.serial.disableDTR=true
@@ -1126,7 +1126,7 @@ esp32doit-devkit-v1.name=DOIT ESP32 DEVKIT V1
 
 esp32doit-devkit-v1.upload.tool=esptool
 esp32doit-devkit-v1.upload.maximum_size=1310720
-esp32doit-devkit-v1.upload.maximum_data_size=294912
+esp32doit-devkit-v1.upload.maximum_data_size=327680
 esp32doit-devkit-v1.upload.wait_for_upload_port=true
 
 esp32doit-devkit-v1.serial.disableDTR=true
@@ -1180,7 +1180,7 @@ esp32-evb.name=OLIMEX ESP32-EVB
 
 esp32-evb.upload.tool=esptool
 esp32-evb.upload.maximum_size=1310720
-esp32-evb.upload.maximum_data_size=294912
+esp32-evb.upload.maximum_data_size=327680
 esp32-evb.upload.wait_for_upload_port=true
 
 esp32-evb.serial.disableDTR=true
@@ -1212,7 +1212,7 @@ esp32-gateway.name=OLIMEX ESP32-GATEWAY
 
 esp32-gateway.upload.tool=esptool
 esp32-gateway.upload.maximum_size=1310720
-esp32-gateway.upload.maximum_data_size=294912
+esp32-gateway.upload.maximum_data_size=327680
 esp32-gateway.upload.wait_for_upload_port=true
 
 esp32-gateway.serial.disableDTR=true
@@ -1244,7 +1244,7 @@ espino32.name=ThaiEasyElec's ESPino32
 
 espino32.upload.tool=esptool
 espino32.upload.maximum_size=1310720
-espino32.upload.maximum_data_size=294912
+espino32.upload.maximum_data_size=327680
 espino32.upload.wait_for_upload_port=true
 
 espino32.serial.disableDTR=true
@@ -1287,7 +1287,7 @@ m5stack-core-esp32.name=M5Stack-Core-ESP32
 
 m5stack-core-esp32.upload.tool=esptool
 m5stack-core-esp32.upload.maximum_size=1310720
-m5stack-core-esp32.upload.maximum_data_size=294912
+m5stack-core-esp32.upload.maximum_data_size=327680
 m5stack-core-esp32.upload.wait_for_upload_port=true
 
 m5stack-core-esp32.serial.disableDTR=true
@@ -1365,7 +1365,7 @@ odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.upload.tool=esptool
 odroid_esp32.upload.maximum_size=1310720
-odroid_esp32.upload.maximum_data_size=294912
+odroid_esp32.upload.maximum_data_size=327680
 odroid_esp32.upload.wait_for_upload_port=true
 
 odroid_esp32.serial.disableDTR=true
@@ -1443,7 +1443,7 @@ heltec_wifi_kit_32.name=Heltec_WIFI_Kit_32
 
 heltec_wifi_kit_32.upload.tool=esptool
 heltec_wifi_kit_32.upload.maximum_size=1310720
-heltec_wifi_kit_32.upload.maximum_data_size=294912
+heltec_wifi_kit_32.upload.maximum_data_size=327680
 heltec_wifi_kit_32.upload.wait_for_upload_port=true
 
 heltec_wifi_kit_32.serial.disableDTR=true
@@ -1486,7 +1486,7 @@ heltec_wifi_lora_32.name=Heltec_WIFI_LoRa_32
 
 heltec_wifi_lora_32.upload.tool=esptool
 heltec_wifi_lora_32.upload.maximum_size=1310720
-heltec_wifi_lora_32.upload.maximum_data_size=294912
+heltec_wifi_lora_32.upload.maximum_data_size=327680
 heltec_wifi_lora_32.upload.wait_for_upload_port=true
 
 heltec_wifi_lora_32.serial.disableDTR=true
@@ -1529,7 +1529,7 @@ espectro32.name=ESPectro32
 
 espectro32.upload.tool=esptool
 espectro32.upload.maximum_size=1310720
-espectro32.upload.maximum_data_size=294912
+espectro32.upload.maximum_data_size=327680
 espectro32.upload.wait_for_upload_port=true
 
 espectro32.serial.disableDTR=true
@@ -1604,7 +1604,7 @@ CoreESP32.name=Microduino-CoreESP32
 
 CoreESP32.upload.tool=esptool
 CoreESP32.upload.maximum_size=1310720
-CoreESP32.upload.maximum_data_size=294912
+CoreESP32.upload.maximum_data_size=327680
 CoreESP32.upload.wait_for_upload_port=true
 
 CoreESP32.serial.disableDTR=true
