@@ -46,6 +46,16 @@ while getopts ":t:,:a:,:s:,:p:,:f:,:d:" opt; do
   esac
 done
 
+# use TravisCI env as default, if available
+if [ -z $varTagName ] && [ ! -z $TRAVIS_TAG ]; then
+	varTagName=$TRAVIS_TAG
+fi
+
+if [ -z $varTagName ]; then
+	echo "No tag name available => aborting"
+	exit 1
+fi
+
 #Check tag name for release/prerelease (prerelease tag contains '_RC' as for release-candidate. case-insensitive)
 shopt -s nocasematch
 if [ -z $varPrerelease ]; then
@@ -108,12 +118,23 @@ fi
 
 releaseNotes=$(perl -pe 's/\r?\n/\\n/' <<< ${releaseNotes})
 
-#JSON parameters to create a new release
-curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
+# Check possibly existing release for current tag 
+# (eg build invoked by Create New Release GHUI button -> GH default release pack created immediatelly including default assests)
+HTTP_RESPONSE=$(curl -L --silent --write-out "HTTPSTATUS:%{http_code}" https://api.github.com/repos/$varRepoSlug/releases/tags/$varTagName)
+HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
+HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
 
-#Create the release (initial source file assets created by GitHub)
-releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
-echo Release ID: $releaseId
+# if the release exists, append/update recent files to its assets vector
+if [ $HTTP_STATUS -eq 200 ]; then
+	releaseId=$(echo $HTTP_BODY | jq -r '.id')
+	echo "GH release exists for current $varTagName tag (id $releaseId)"
+#... or create a new release record
+else 
+	curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
+	#echo "DEBUG: curl --data \"${curlData}\" https://api.github.com/repos/${varRepoSlug}/releases?access_token=$varAccessToken | jq -r '.id'"
+	releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
+	echo "New GH release created for $varTagName tag (id $releaseId)"
+fi
 
 # Assets defined by dir contents
 if [ ! -z $varAssetsDir ]; then
@@ -133,7 +154,6 @@ if [ ! -z $varAssets ]; then
 	curlAuth="Authorization: token $varAccessToken"
 	for filename in $(echo $varAssets | tr ";" "\n")
 	do
-	  echo
 	  echo
 	  echo Uploading $filename...
 	  
