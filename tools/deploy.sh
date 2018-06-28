@@ -119,21 +119,24 @@ fi
 releaseNotes=$(perl -pe 's/\r?\n/\\n/' <<< ${releaseNotes})
 
 # Check possibly existing release for current tag 
+echo "Checking for possible releases of current tag $varTagName..."
 # (eg build invoked by Create New Release GHUI button -> GH default release pack created immediatelly including default assests)
-HTTP_RESPONSE=$(curl -L --silent --write-out "HTTPSTATUS:%{http_code}" https://api.github.com/repos/$varRepoSlug/releases/tags/$varTagName)
+HTTP_RESPONSE=$(curl -L --silent --write-out "HTTPSTATUS:%{http_code}" https://api.github.com/repos/$varRepoSlug/releases/tags/$varTagName?access_token=$varAccessToken)
 HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
 HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+
+echo "     HTTP server response code: $HTTP_STATUS"
 
 # if the release exists, append/update recent files to its assets vector
 if [ $HTTP_STATUS -eq 200 ]; then
 	releaseId=$(echo $HTTP_BODY | jq -r '.id')
-	echo "GH release exists for current $varTagName tag (id $releaseId)"
+	echo " - $varTagName release found (id $releaseId)"
 #... or create a new release record
 else 
 	curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
 	#echo "DEBUG: curl --data \"${curlData}\" https://api.github.com/repos/${varRepoSlug}/releases?access_token=$varAccessToken | jq -r '.id'"
 	releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
-	echo "New GH release created for $varTagName tag (id $releaseId)"
+	echo " - new release created for $varTagName (id $releaseId)"
 fi
 
 # Assets defined by dir contents
