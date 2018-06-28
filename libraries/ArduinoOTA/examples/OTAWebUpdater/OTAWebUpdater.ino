@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include <ESP32WebServer.h>
+#include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>
 
@@ -8,7 +8,7 @@ const char* host = "ESP32";
 const char* ssid = "xxx";
 const char* password = "xxxx";
 
-ESP32WebServer server(80);
+WebServer server(80);
 
 const char* loginIndex = "<form name='loginForm'>"
                          "<table width='20%' bgcolor='A09F9F' align='center'>"
