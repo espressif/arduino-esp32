@@ -11,17 +11,31 @@ extern "C" {
 struct rmt_obj_s;
 
 typedef enum {
-    e_reserve_64_items =  1,
-    e_reserve_128_items = 2,
-    e_reserve_192_items = 3,
-    e_reserve_256_items = 4,
-    e_reserve_320_items = 5,
-    e_reserve_384_items = 6,
-    e_reserve_448_items = 7,
-    e_reserve_512_items = 8,
+    RMT_MEM_64 =  1,
+    RMT_MEM_128 = 2,
+    RMT_MEM_192 = 3,
+    RMT_MEM_256 = 4,
+    RMT_MEM_320 = 5,
+    RMT_MEM_384 = 6,
+    RMT_MEM_448 = 7,
+    RMT_MEM_512 = 8,
 } rmt_reserve_memsize_t;
 
 typedef struct rmt_obj_s rmt_obj_t;
+
+typedef void (*rmt_rx_data_cb_t)(uint32_t *data, size_t len);
+
+typedef struct {
+    union {
+        struct {
+            uint32_t duration0 :15;
+            uint32_t level0 :1;
+            uint32_t duration1 :15;
+            uint32_t level1 :1;
+        };
+        uint32_t val;
+    };
+} rmt_data_t;
 
 /**
 *    Initialize the object
@@ -40,13 +54,20 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 *     (more data being send while updating buffers in interrupts)
 *
 */
-bool rmtSend(rmt_obj_t* rmt, uint32_t* data, size_t size);
+bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Initiates async receive, event flag indicates data received
 *
 */
-bool rmtReceive(rmt_obj_t* rmt, uint32_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
+bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
+
+/**
+*    Initiates async receive with automatic buffering
+*    and callback with data from ISR
+*
+*/
+bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb);
 
 
 /*  Additional interface */
@@ -67,14 +88,23 @@ bool rmtReceiveCompleted(rmt_obj_t* rmt);
 *    Reads the data for particular channel
 *
 */
-bool rmtGetData(rmt_obj_t* rmt, uint32_t* data, size_t size);
+bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size);
 
 /**
  * Setting threshold for Rx completed
  */
 bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value);
 
+/**
+ * Setting carrier
+ */
 bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
+
+/**
+ * Setting input filter
+ */
+bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
+
 
 // TODO:
 //  * uninstall interrupt when all channels are deinit

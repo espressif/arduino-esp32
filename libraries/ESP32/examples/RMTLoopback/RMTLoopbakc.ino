@@ -5,30 +5,32 @@
 
 #include "esp32-hal-rmt.h"
 
-uint32_t my_data[256];
-
-uint32_t data[256];
+rmt_data_t my_data[256];
+rmt_data_t data[256];
 
 rmt_obj_t* rmt_send = NULL;
 rmt_obj_t* rmt_recv = NULL;
 
+static EventGroupHandle_t events;
 
 void setup() 
 {
-    if ((rmt_send = rmtInit(18, true, 2, 1000)) == NULL)
+    Serial.begin(115200);
+    
+    if ((rmt_send = rmtInit(18, true, RMT_MEM_64)) == NULL)
     {
-        printf("init sender failed\n");
+        Serial.println("init sender failed\n");
     }
-    if ((rmt_recv = rmtInit(21, false, 2, 1000)) == NULL)
+    if ((rmt_recv = rmtInit(21, false, RMT_MEM_192)) == NULL)
     {
-        printf("init receiver failed\n");
+        Serial.println("init receiver failed\n");
     }
 
 
     float realTick = rmtSetTick(rmt_send, 400);
-    printf("real tick set to: %f\n", realTick);
+    Serial.printf("real tick set to: %f\n", realTick);
     realTick = rmtSetTick(rmt_recv, 400);
-    printf("real tick set to: %f\n", realTick);
+    Serial.printf("real tick set to: %f\n", realTick);
 
     events = xEventGroupCreate();
 }
@@ -38,15 +40,15 @@ void loop()
     // Init data
     int i;
     for (i=0; i<255; i++) {
-        data[i] = 0x80010001 + ((i%13)<<16) + 13-(i%13);
+        data[i].val = 0x80010001 + ((i%13)<<16) + 13-(i%13);
     }
-    data[255] = 0;
+    data[255].val = 0;
 
     // Start receiving
-    rmtReceiveAsync(rmt_recv, 0x4F, my_data, 60, events);
+    rmtReadAsync(rmt_recv, my_data, 100, events, false, 0);
 
     // Send in continous mode
-    rmtSendQueued(rmt_send, data, 56);
+    rmtWrite(rmt_send, data, 100);
 
     // Wait for data
     xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
@@ -54,10 +56,10 @@ void loop()
     // Printout the received data plus the original values
     for (i=0; i<60; i++)
     {
-        printf("%08x=%08x ", my_data[i], data[i] );
-        if (!((i+1)%4)) printf("\n");
+        Serial.printf("%08x=%08x ", my_data[i], data[i] );
+        if (!((i+1)%4)) Serial.println("\n");
     }
-    printf("\n");
+    Serial.println("\n");
 
     delay(2000);
 }
