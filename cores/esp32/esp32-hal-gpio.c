@@ -227,7 +227,7 @@ static void IRAM_ATTR __onPinInterrupt()
         do {
             if(gpio_intr_status_h & ((uint32_t)1 << (pin - 32))) {
                 if(__pinInterruptHandlers[pin].fn) {
-                    if(arg){
+                    if(__pinInterruptHandlers[pin].arg){
                         ((voidFuncPtrArg)__pinInterruptHandlers[pin].fn)(__pinInterruptHandlers[pin].arg);
                     } else {
                         __pinInterruptHandlers[pin].fn();
