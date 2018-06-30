@@ -14,12 +14,18 @@
 
 #include "esp32-hal-bt.h"
 
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+#ifdef CONFIG_BT_ENABLED
 
+bool btInUse(){ return true; }
 
+#ifdef CONFIG_BLUEDROID_ENABLED
 #include "esp_bt.h"
-#include "esp_bt_defs.h"
-#include "esp_bt_main.h"
+
+#ifdef CONFIG_CLASSIC_BT_ENABLED
+#define BT_MODE ESP_BT_MODE_BTDM
+#else
+#define BT_MODE ESP_BT_MODE_BLE
+#endif
 
 bool btStarted(){
     return (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
@@ -35,7 +41,7 @@ bool btStart(){
         while(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){}
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED){
-        if (esp_bt_controller_enable(ESP_BT_MODE_BTDM)) {
+        if (esp_bt_controller_enable(BT_MODE)) {
             log_e("BT Enable failed");
             return false;
         }
@@ -80,5 +86,6 @@ bool btStop()
 {
     return false;
 }
+#endif
 #endif
 

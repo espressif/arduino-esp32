@@ -149,13 +149,13 @@ int ArduinoOTAClass::parseInt(){
 
 String ArduinoOTAClass::readStringUntil(char end){
     String res = "";
-    char value;
+    int value;
     while(true){
         value = _udp_ota.read();
-        if(value == '\0' || value == end){
+        if(value <= 0 || value == end){
             return res;
         }
-        res += value;
+        res += (char)value;
     }
     return res;
 }

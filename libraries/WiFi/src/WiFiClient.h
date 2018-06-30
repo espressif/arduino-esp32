@@ -45,6 +45,7 @@ public:
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
     size_t write_P(PGM_P buf, size_t size);
+    size_t write(Stream &stream);
     int available();
     int read();
     int read(uint8_t *buf, size_t size);

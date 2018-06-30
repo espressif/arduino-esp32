@@ -1,8 +1,9 @@
 /**
  * \file bignum.h
  *
- * \brief  Multi-precision integer library
- *
+ * \brief Multi-precision integer library
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -70,7 +71,7 @@
  * Maximum size of MPIs allowed in bits and bytes for user-MPIs.
  * ( Default: 512 bytes => 4096 bits, Maximum tested: 2048 bytes => 16384 bits )
  *
- * Note: Calculations can results temporarily in larger MPIs. So the number
+ * Note: Calculations can temporarily result in larger MPIs. So the number
  * of limbs required (MBEDTLS_MPI_MAX_LIMBS) is higher.
  */
 #define MBEDTLS_MPI_MAX_SIZE                              1024     /**< Maximum number of bytes for usable MPIs. */
@@ -205,6 +206,8 @@ void mbedtls_mpi_free( mbedtls_mpi *X );
 /**
  * \brief          Enlarge to the specified number of limbs
  *
+ *                 This function does nothing if the MPI is already large enough.
+ *
  * \param X        MPI to grow
  * \param nblimbs  The target number of limbs
  *
@@ -216,19 +219,23 @@ int mbedtls_mpi_grow( mbedtls_mpi *X, size_t nblimbs );
 /**
  * \brief          Resize down, keeping at least the specified number of limbs
  *
+ *                 If \c X is smaller than \c nblimbs, it is resized up
+ *                 instead.
+ *
  * \param X        MPI to shrink
  * \param nblimbs  The minimum number of limbs to keep
  *
  * \return         0 if successful,
  *                 MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
+ *                 (this can only happen when resizing up).
  */
 int mbedtls_mpi_shrink( mbedtls_mpi *X, size_t nblimbs );
 
 /**
  * \brief          Copy the contents of Y into X
  *
- * \param X        Destination MPI
- * \param Y        Source MPI
+ * \param X        Destination MPI. It is enlarged if necessary.
+ * \param Y        Source MPI.
  *
  * \return         0 if successful,
  *                 MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
@@ -685,6 +692,10 @@ int mbedtls_mpi_exp_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
  *
  * \return         0 if successful,
  *                 MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed
+ *
+ * \note           The bytes obtained from the PRNG are interpreted
+ *                 as a big-endian representation of an MPI; this can
+ *                 be relevant in applications like deterministic ECDSA.
  */
 int mbedtls_mpi_fill_random( mbedtls_mpi *X, size_t size,
                      int (*f_rng)(void *, unsigned char *, size_t),

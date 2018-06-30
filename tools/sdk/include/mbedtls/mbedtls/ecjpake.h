@@ -2,7 +2,8 @@
  * \file ecjpake.h
  *
  * \brief Elliptic curve J-PAKE
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -55,6 +56,7 @@ typedef enum {
     MBEDTLS_ECJPAKE_SERVER,             /**< Server                         */
 } mbedtls_ecjpake_role;
 
+#if !defined(MBEDTLS_ECJPAKE_ALT)
 /**
  * EC J-PAKE context structure.
  *
@@ -84,6 +86,10 @@ typedef struct
 
     mbedtls_mpi s;                      /**< Pre-shared secret (passphrase) */
 } mbedtls_ecjpake_context;
+
+#else  /* MBEDTLS_ECJPAKE_ALT */
+#include "ecjpake_alt.h"
+#endif /* MBEDTLS_ECJPAKE_ALT */
 
 /**
  * \brief           Initialize a context
@@ -222,17 +228,22 @@ int mbedtls_ecjpake_derive_secret( mbedtls_ecjpake_context *ctx,
  */
 void mbedtls_ecjpake_free( mbedtls_ecjpake_context *ctx );
 
+
+
 #if defined(MBEDTLS_SELF_TEST)
+
 /**
  * \brief          Checkup routine
  *
  * \return         0 if successful, or 1 if a test failed
  */
 int mbedtls_ecjpake_self_test( int verbose );
-#endif
+
+#endif /* MBEDTLS_SELF_TEST */
 
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif /* ecjpake.h */
