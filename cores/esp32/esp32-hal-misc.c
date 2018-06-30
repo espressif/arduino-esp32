@@ -84,6 +84,9 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
+#if CONFIG_SPIRAM_SUPPORT
+    psramInit();
+#endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
     if(err == ESP_ERR_NVS_NO_FREE_PAGES){

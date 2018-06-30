@@ -59,6 +59,7 @@ void yield(void);
 #include "esp32-hal-sigmadelta.h"
 #include "esp32-hal-timer.h"
 #include "esp32-hal-bt.h"
+#include "esp32-hal-psram.h"
 #include "esp_system.h"
 
 //returns chip temperature in Celsius
