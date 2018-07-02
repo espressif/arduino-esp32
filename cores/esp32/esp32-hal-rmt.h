@@ -103,7 +103,7 @@ bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t
 /**
  * Setting input filter
  */
-bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
+bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level);
 
 
 // TODO:
@@ -112,6 +112,8 @@ bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
 //  * put sanity checks to some macro or inlines
 //  * doxy comments
 //  * error reporting
+//  * release internal buffers
+//  * rename internal structures to make it more sensibles
 
 #ifdef __cplusplus
 }
