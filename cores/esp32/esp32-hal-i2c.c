@@ -990,15 +990,6 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     }
 
     if(eBits&EVENT_DONE) { // no gross timeout
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-        uint32_t expected =(totalBytes*10*1000)/i2cGetFrequency(i2c);
-        if((tAfter-tBefore)>(expected+1)) { //used some of the timeout Period
-            // expected can be zero due to small packets
-            log_e("TimeoutRecovery: expected=%ums, actual=%ums",expected,(tAfter-tBefore));
-            i2cDumpI2c(i2c);
-            i2cDumpInts(i2c->num);
-        }
-#endif
         switch(i2c->error) {
         case I2C_OK :
             reason = I2C_ERROR_OK;
