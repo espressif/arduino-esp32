@@ -23,7 +23,8 @@ Prepare the sketch and configuration for initial upload with a serial port
 - Start Arduino IDE and load sketch OTAWebUpdater.ino available under File > Examples > OTAWebUpdater.ino
 - Update ssid and pass in the sketch so the module can join your Wi-Fi network
 - Open File > Preferences, look for “Show verbose output during:” and check out “compilation” option
-[! verbrose ] (docs/OTAWebUpdate/esp32verbose.png)
+
+[! verbrose] (docs/OTAWebUpdate/esp32verbose.png)
 
 - Upload sketch (Ctrl+U)
 
