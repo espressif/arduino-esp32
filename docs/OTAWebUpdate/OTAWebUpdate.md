@@ -27,7 +27,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 ![verbrose](esp32verbose.PNG)
 
 - Upload sketch (Ctrl+U)
-- Now open web browser and enter the url provided on Serial Monitor, i.e. http://ESP32.local. Once entered, browser should display a form
+- Now open web browser and enter the url, i.e. http://ESP32.local. Once entered, browser should display a form
 
 ![login](esp32login.PNG)
 
