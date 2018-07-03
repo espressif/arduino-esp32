@@ -49,7 +49,8 @@ build.flash_size=4MB
 build.flash_mode=dio
 build.boot=bootloader
 build.code_debug=0
-build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug}
+build.defines=
+build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
 
 # These can be overridden in platform.local.txt
 compiler.c.extra_flags=
