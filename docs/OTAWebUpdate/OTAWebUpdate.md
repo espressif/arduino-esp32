@@ -10,7 +10,7 @@ OTAWebUpdate is done with a web browser that can be useful in the following typi
 ## Implementation
 The sample implementation has been done using:
 - example sketch OTAWebUpdater.ino
-- NodeMCU 1.0 (ESP-12E Module)
+- ESP32 (Dev Module)
 You can use another module also if it meets Flash chip size of the sketch
 1-Before you begin, please make sure that you have the following software installed:
  - Arduino IDE
@@ -27,7 +27,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 ![verbrose](esp32verbose.PNG)
 
 - Upload sketch (Ctrl+U)
-- Now open web browser and enter the url, i.e. http://ESP32.local. Once entered, browser should display a form
+- Now open web browser and enter the url, i.e. http://esp32.local. Once entered, browser should display a form
 
 ![login](esp32login.PNG)
 
