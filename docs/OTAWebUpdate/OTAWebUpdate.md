@@ -9,12 +9,17 @@ OTAWebUpdate is done with a web browser that can be useful in the following typi
 
 ## Implementation
 The sample implementation has been done using:
-- example sketch OTAWebUpdate.ino
+- example sketch OTAWebUpdater.ino
 - NodeMCU 1.0 (ESP-12E Module)
 You can use another module also if it meets Flash chip size of the sketch
 1-Before you begin, please make sure that you have the following software installed:
  - Arduino IDE
  - Host software depending on O/S you use:
-   1- Avahi http://avahi.org/ for Linux
-   2- Bonjour http://www.apple.com/support/bonjour/ for Windows
-   3- Mac OSX and iOS - support is already built in / no any extra s/w is required
+   - Avahi http://avahi.org/ for Linux
+   - Bonjour http://www.apple.com/support/bonjour/ for Windows
+   - Mac OSX and iOS - support is already built in / no any extra s/w is required
+
+Prepare the sketch and configuration for initial upload with a serial port
+- Start Arduino IDE and load sketch OTAWebUpdater.ino available under File > Examples > OTAWebUpdater.ino
+- Update ssid and pass in the sketch so the module can join your Wi-Fi network
+- Open File > Preferences, look for “Show verbose output during:” and check out “compilation” option
