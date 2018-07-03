@@ -288,3 +288,4 @@ void SPIClass::writePattern_(uint8_t * data, uint8_t size, uint8_t repeat)
 }
 
 SPIClass SPI(VSPI);
+SPIClass SPI1(HSPI);
