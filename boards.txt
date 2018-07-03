@@ -11,7 +11,7 @@ esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
 esp32.upload.maximum_size=1310720
-esp32.upload.maximum_data_size=294912
+esp32.upload.maximum_data_size=327680
 esp32.upload.wait_for_upload_port=true
 
 esp32.serial.disableDTR=true
@@ -35,8 +35,10 @@ esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
 esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 esp32.menu.FlashMode.qio=QIO
 esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -96,7 +98,7 @@ pico32.name=ESP32 Pico Kit
 
 pico32.upload.tool=esptool
 pico32.upload.maximum_size=1310720
-pico32.upload.maximum_data_size=294912
+pico32.upload.maximum_data_size=327680
 pico32.upload.wait_for_upload_port=true
 
 pico32.serial.disableDTR=true
@@ -148,7 +150,7 @@ esp32thing.name=SparkFun ESP32 Thing
 
 esp32thing.upload.tool=esptool
 esp32thing.upload.maximum_size=1310720
-esp32thing.upload.maximum_data_size=294912
+esp32thing.upload.maximum_data_size=327680
 esp32thing.upload.wait_for_upload_port=true
 
 esp32thing.serial.disableDTR=true
@@ -191,7 +193,7 @@ nina_w10.name=u-blox NINA-W10 series (ESP32)
 
 nina_w10.upload.tool=esptool
 nina_w10.upload.maximum_size=1310720
-nina_w10.upload.maximum_data_size=294912
+nina_w10.upload.maximum_data_size=327680
 nina_w10.upload.wait_for_upload_port=true
 
 nina_w10.serial.disableDTR=true
@@ -229,7 +231,7 @@ widora-air.name=Widora AIR
 
 widora-air.upload.tool=esptool
 widora-air.upload.maximum_size=1310720
-widora-air.upload.maximum_data_size=294912
+widora-air.upload.maximum_data_size=327680
 widora-air.upload.wait_for_upload_port=true
 
 widora-air.serial.disableDTR=true
@@ -272,7 +274,7 @@ esp320.name=Electronic SweetPeas - ESP320
 
 esp320.upload.tool=esptool
 esp320.upload.maximum_size=1310720
-esp320.upload.maximum_data_size=294912
+esp320.upload.maximum_data_size=327680
 esp320.upload.wait_for_upload_port=true
 
 esp320.serial.disableDTR=true
@@ -315,7 +317,7 @@ nano32.name=Nano32
 
 nano32.upload.tool=esptool
 nano32.upload.maximum_size=1310720
-nano32.upload.maximum_data_size=294912
+nano32.upload.maximum_data_size=327680
 nano32.upload.wait_for_upload_port=true
 
 nano32.serial.disableDTR=true
@@ -358,7 +360,7 @@ lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool
 lolin32.upload.maximum_size=1310720
-lolin32.upload.maximum_data_size=294912
+lolin32.upload.maximum_data_size=327680
 lolin32.upload.wait_for_upload_port=true
 
 lolin32.serial.disableDTR=true
@@ -379,6 +381,15 @@ lolin32.menu.FlashFreq.80=80MHz
 lolin32.menu.FlashFreq.80.build.flash_freq=80m
 lolin32.menu.FlashFreq.40=40MHz
 lolin32.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin32.menu.PartitionScheme.default=Default
+lolin32.menu.PartitionScheme.default.build.partitions=default
+lolin32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+lolin32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+lolin32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lolin32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 lolin32.menu.UploadSpeed.921600=921600
 lolin32.menu.UploadSpeed.921600.upload.speed=921600
@@ -401,7 +412,7 @@ pocket_32.name=Dongsen Tech Pocket 32
 
 pocket_32.upload.tool=esptool
 pocket_32.upload.maximum_size=1310720
-pocket_32.upload.maximum_data_size=294912
+pocket_32.upload.maximum_data_size=327680
 pocket_32.upload.wait_for_upload_port=true
 
 pocket_32.serial.disableDTR=true
@@ -444,7 +455,7 @@ WeMosBat.name="WeMos" WiFi&Bluetooth Battery
 
 WeMosBat.upload.tool=esptool
 WeMosBat.upload.maximum_size=1310720
-WeMosBat.upload.maximum_data_size=294912
+WeMosBat.upload.maximum_data_size=327680
 WeMosBat.upload.wait_for_upload_port=true
 
 WeMosBat.serial.disableDTR=true
@@ -500,7 +511,7 @@ espea32.name=ESPea32
 
 espea32.upload.tool=esptool
 espea32.upload.maximum_size=1310720
-espea32.upload.maximum_data_size=294912
+espea32.upload.maximum_data_size=327680
 espea32.upload.wait_for_upload_port=true
 
 espea32.serial.disableDTR=true
@@ -543,7 +554,7 @@ quantum.name=Noduino Quantum
 
 quantum.upload.tool=esptool
 quantum.upload.maximum_size=1310720
-quantum.upload.maximum_data_size=294912
+quantum.upload.maximum_data_size=327680
 quantum.upload.wait_for_upload_port=true
 
 quantum.serial.disableDTR=true
@@ -586,7 +597,7 @@ node32s.name=Node32s
 
 node32s.upload.tool=esptool
 node32s.upload.maximum_size=1310720
-node32s.upload.maximum_data_size=294912
+node32s.upload.maximum_data_size=327680
 node32s.upload.wait_for_upload_port=true
 
 node32s.serial.disableDTR=true
@@ -629,7 +640,7 @@ hornbill32dev.name=Hornbill ESP32 Dev
 
 hornbill32dev.upload.tool=esptool
 hornbill32dev.upload.maximum_size=1310720
-hornbill32dev.upload.maximum_data_size=294912
+hornbill32dev.upload.maximum_data_size=327680
 hornbill32dev.upload.wait_for_upload_port=true
 
 hornbill32dev.serial.disableDTR=true
@@ -672,7 +683,7 @@ hornbill32minima.name=Hornbill ESP32 Minima
 
 hornbill32minima.upload.tool=esptool
 hornbill32minima.upload.maximum_size=1310720
-hornbill32minima.upload.maximum_data_size=294912
+hornbill32minima.upload.maximum_data_size=327680
 hornbill32minima.upload.wait_for_upload_port=true
 
 hornbill32minima.serial.disableDTR=true
@@ -714,7 +725,7 @@ firebeetle32.name=FireBeetle-ESP32
 
 firebeetle32.upload.tool=esptool
 firebeetle32.upload.maximum_size=1310720
-firebeetle32.upload.maximum_data_size=294912
+firebeetle32.upload.maximum_data_size=327680
 firebeetle32.upload.wait_for_upload_port=true
 
 firebeetle32.serial.disableDTR=true
@@ -757,7 +768,7 @@ intorobot-fig.name=IntoRobot Fig
 
 intorobot-fig.upload.tool=esptool
 intorobot-fig.upload.maximum_size=1310720
-intorobot-fig.upload.maximum_data_size=294912
+intorobot-fig.upload.maximum_data_size=327680
 intorobot-fig.upload.wait_for_upload_port=true
 
 intorobot-fig.serial.disableDTR=true
@@ -800,7 +811,7 @@ onehorse32dev.name=Onehorse ESP32 Dev Module
 
 onehorse32dev.upload.tool=esptool
 onehorse32dev.upload.maximum_size=1310720
-onehorse32dev.upload.maximum_data_size=294912
+onehorse32dev.upload.maximum_data_size=327680
 onehorse32dev.upload.wait_for_upload_port=true
 
 onehorse32dev.serial.disableDTR=true
@@ -843,7 +854,7 @@ featheresp32.name=Adafruit ESP32 Feather
 
 featheresp32.upload.tool=esptool
 featheresp32.upload.maximum_size=1310720
-featheresp32.upload.maximum_data_size=294912
+featheresp32.upload.maximum_data_size=327680
 featheresp32.upload.wait_for_upload_port=true
 
 featheresp32.serial.disableDTR=true
@@ -899,7 +910,7 @@ nodemcu-32s.name=NodeMCU-32S
 
 nodemcu-32s.upload.tool=esptool
 nodemcu-32s.upload.maximum_size=1310720
-nodemcu-32s.upload.maximum_data_size=294912
+nodemcu-32s.upload.maximum_data_size=327680
 nodemcu-32s.upload.wait_for_upload_port=true
 
 nodemcu-32s.serial.disableDTR=true
@@ -942,7 +953,7 @@ mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
 
 mhetesp32devkit.upload.tool=esptool
 mhetesp32devkit.upload.maximum_size=1310720
-mhetesp32devkit.upload.maximum_data_size=294912
+mhetesp32devkit.upload.maximum_data_size=327680
 mhetesp32devkit.upload.wait_for_upload_port=true
 
 mhetesp32devkit.serial.disableDTR=true
@@ -964,6 +975,15 @@ mhetesp32devkit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32devkit.menu.FlashFreq.40=40MHz
 mhetesp32devkit.menu.FlashFreq.40.build.flash_freq=40m
 
+mhetesp32devkit.menu.PartitionScheme.default=Default
+mhetesp32devkit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32devkit.menu.PartitionScheme.no_ota=No OTA (Large APP)
+mhetesp32devkit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mhetesp32devkit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mhetesp32devkit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+mhetesp32devkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mhetesp32devkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 mhetesp32devkit.menu.UploadSpeed.921600=921600
 mhetesp32devkit.menu.UploadSpeed.921600.upload.speed=921600
 mhetesp32devkit.menu.UploadSpeed.115200=115200
@@ -979,13 +999,26 @@ mhetesp32devkit.menu.UploadSpeed.460800.upload.speed=460800
 mhetesp32devkit.menu.UploadSpeed.512000.windows=512000
 mhetesp32devkit.menu.UploadSpeed.512000.upload.speed=512000
 
+mhetesp32devkit.menu.DebugLevel.none=None
+mhetesp32devkit.menu.DebugLevel.none.build.code_debug=0
+mhetesp32devkit.menu.DebugLevel.error=Error
+mhetesp32devkit.menu.DebugLevel.error.build.code_debug=1
+mhetesp32devkit.menu.DebugLevel.warn=Warn
+mhetesp32devkit.menu.DebugLevel.warn.build.code_debug=2
+mhetesp32devkit.menu.DebugLevel.info=Info
+mhetesp32devkit.menu.DebugLevel.info.build.code_debug=3
+mhetesp32devkit.menu.DebugLevel.debug=Debug
+mhetesp32devkit.menu.DebugLevel.debug.build.code_debug=4
+mhetesp32devkit.menu.DebugLevel.verbose=Verbose
+mhetesp32devkit.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 mhetesp32minikit.name=MH ET LIVE ESP32MiniKit
 
 mhetesp32minikit.upload.tool=esptool
 mhetesp32minikit.upload.maximum_size=1310720
-mhetesp32minikit.upload.maximum_data_size=294912
+mhetesp32minikit.upload.maximum_data_size=327680
 mhetesp32minikit.upload.wait_for_upload_port=true
 
 mhetesp32minikit.serial.disableDTR=true
@@ -1007,6 +1040,15 @@ mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32minikit.menu.FlashFreq.40=40MHz
 mhetesp32minikit.menu.FlashFreq.40.build.flash_freq=40m
 
+mhetesp32minikit.menu.PartitionScheme.default=Default
+mhetesp32minikit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32minikit.menu.PartitionScheme.no_ota=No OTA (Large APP)
+mhetesp32minikit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mhetesp32minikit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mhetesp32minikit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+mhetesp32minikit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mhetesp32minikit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 mhetesp32minikit.menu.UploadSpeed.921600=921600
 mhetesp32minikit.menu.UploadSpeed.921600.upload.speed=921600
 mhetesp32minikit.menu.UploadSpeed.115200=115200
@@ -1022,13 +1064,26 @@ mhetesp32minikit.menu.UploadSpeed.460800.upload.speed=460800
 mhetesp32minikit.menu.UploadSpeed.512000.windows=512000
 mhetesp32minikit.menu.UploadSpeed.512000.upload.speed=512000
 
+mhetesp32minikit.menu.DebugLevel.none=None
+mhetesp32minikit.menu.DebugLevel.none.build.code_debug=0
+mhetesp32minikit.menu.DebugLevel.error=Error
+mhetesp32minikit.menu.DebugLevel.error.build.code_debug=1
+mhetesp32minikit.menu.DebugLevel.warn=Warn
+mhetesp32minikit.menu.DebugLevel.warn.build.code_debug=2
+mhetesp32minikit.menu.DebugLevel.info=Info
+mhetesp32minikit.menu.DebugLevel.info.build.code_debug=3
+mhetesp32minikit.menu.DebugLevel.debug=Debug
+mhetesp32minikit.menu.DebugLevel.debug.build.code_debug=4
+mhetesp32minikit.menu.DebugLevel.verbose=Verbose
+mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
+
 #################################################################
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
 
 esp32vn-iot-uno.upload.tool=esptool
 esp32vn-iot-uno.upload.maximum_size=1310720
-esp32vn-iot-uno.upload.maximum_data_size=294912
+esp32vn-iot-uno.upload.maximum_data_size=327680
 esp32vn-iot-uno.upload.wait_for_upload_port=true
 
 esp32vn-iot-uno.serial.disableDTR=true
@@ -1037,7 +1092,7 @@ esp32vn-iot-uno.serial.disableRTS=true
 esp32vn-iot-uno.build.mcu=esp32
 esp32vn-iot-uno.build.core=esp32
 esp32vn-iot-uno.build.variant=esp32vn-iot-uno
-esp32vn-iot-uno.build.board=esp32vn-iot-uno
+esp32vn-iot-uno.build.board=esp32vn_iot_uno
 
 esp32vn-iot-uno.build.f_cpu=240000000L
 esp32vn-iot-uno.build.flash_mode=dio
@@ -1071,7 +1126,7 @@ esp32doit-devkit-v1.name=DOIT ESP32 DEVKIT V1
 
 esp32doit-devkit-v1.upload.tool=esptool
 esp32doit-devkit-v1.upload.maximum_size=1310720
-esp32doit-devkit-v1.upload.maximum_data_size=294912
+esp32doit-devkit-v1.upload.maximum_data_size=327680
 esp32doit-devkit-v1.upload.wait_for_upload_port=true
 
 esp32doit-devkit-v1.serial.disableDTR=true
@@ -1125,7 +1180,7 @@ esp32-evb.name=OLIMEX ESP32-EVB
 
 esp32-evb.upload.tool=esptool
 esp32-evb.upload.maximum_size=1310720
-esp32-evb.upload.maximum_data_size=294912
+esp32-evb.upload.maximum_data_size=327680
 esp32-evb.upload.wait_for_upload_port=true
 
 esp32-evb.serial.disableDTR=true
@@ -1134,7 +1189,7 @@ esp32-evb.serial.disableRTS=true
 esp32-evb.build.mcu=esp32
 esp32-evb.build.core=esp32
 esp32-evb.build.variant=esp32-evb
-esp32-evb.build.board=ESP32-EVB
+esp32-evb.build.board=ESP32_EVB
 
 esp32-evb.build.f_cpu=240000000L
 esp32-evb.build.flash_mode=dio
@@ -1157,7 +1212,7 @@ esp32-gateway.name=OLIMEX ESP32-GATEWAY
 
 esp32-gateway.upload.tool=esptool
 esp32-gateway.upload.maximum_size=1310720
-esp32-gateway.upload.maximum_data_size=294912
+esp32-gateway.upload.maximum_data_size=327680
 esp32-gateway.upload.wait_for_upload_port=true
 
 esp32-gateway.serial.disableDTR=true
@@ -1166,7 +1221,7 @@ esp32-gateway.serial.disableRTS=true
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
-esp32-gateway.build.board=ESP32-GATEWAY
+esp32-gateway.build.board=ESP32_GATEWAY
 
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio
@@ -1189,7 +1244,7 @@ espino32.name=ThaiEasyElec's ESPino32
 
 espino32.upload.tool=esptool
 espino32.upload.maximum_size=1310720
-espino32.upload.maximum_data_size=294912
+espino32.upload.maximum_data_size=327680
 espino32.upload.wait_for_upload_port=true
 
 espino32.serial.disableDTR=true
@@ -1232,7 +1287,7 @@ m5stack-core-esp32.name=M5Stack-Core-ESP32
 
 m5stack-core-esp32.upload.tool=esptool
 m5stack-core-esp32.upload.maximum_size=1310720
-m5stack-core-esp32.upload.maximum_data_size=294912
+m5stack-core-esp32.upload.maximum_data_size=327680
 m5stack-core-esp32.upload.wait_for_upload_port=true
 
 m5stack-core-esp32.serial.disableDTR=true
@@ -1267,6 +1322,15 @@ m5stack-core-esp32.menu.FlashFreq.80.build.flash_freq=80m
 m5stack-core-esp32.menu.FlashFreq.40=40MHz
 m5stack-core-esp32.menu.FlashFreq.40.build.flash_freq=40m
 
+m5stack-core-esp32.menu.PartitionScheme.default=Default
+m5stack-core-esp32.menu.PartitionScheme.default.build.partitions=default
+m5stack-core-esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stack-core-esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack-core-esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack-core-esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stack-core-esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack-core-esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 m5stack-core-esp32.menu.UploadSpeed.921600=921600
 m5stack-core-esp32.menu.UploadSpeed.921600.upload.speed=921600
 m5stack-core-esp32.menu.UploadSpeed.115200=115200
@@ -1297,11 +1361,89 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+odroid_esp32.name=ODROID ESP32
+
+odroid_esp32.upload.tool=esptool
+odroid_esp32.upload.maximum_size=1310720
+odroid_esp32.upload.maximum_data_size=327680
+odroid_esp32.upload.wait_for_upload_port=true
+
+odroid_esp32.serial.disableDTR=true
+odroid_esp32.serial.disableRTS=true
+
+odroid_esp32.build.mcu=esp32
+odroid_esp32.build.core=esp32
+odroid_esp32.build.variant=odroid_esp32
+odroid_esp32.build.board=ODROID_ESP32
+
+odroid_esp32.build.f_cpu=240000000L
+odroid_esp32.build.flash_size=16MB
+odroid_esp32.build.flash_mode=dio
+odroid_esp32.build.boot=dio
+odroid_esp32.build.partitions=default
+
+odroid_esp32.menu.FlashMode.qio=QIO
+odroid_esp32.menu.FlashMode.qio.build.flash_mode=dio
+odroid_esp32.menu.FlashMode.qio.build.boot=qio
+odroid_esp32.menu.FlashMode.dio=DIO
+odroid_esp32.menu.FlashMode.dio.build.flash_mode=dio
+odroid_esp32.menu.FlashMode.dio.build.boot=dio
+odroid_esp32.menu.FlashMode.qout=QOUT
+odroid_esp32.menu.FlashMode.qout.build.flash_mode=dout
+odroid_esp32.menu.FlashMode.qout.build.boot=qout
+odroid_esp32.menu.FlashMode.dout=DOUT
+odroid_esp32.menu.FlashMode.dout.build.flash_mode=dout
+odroid_esp32.menu.FlashMode.dout.build.boot=dout
+
+odroid_esp32.menu.FlashFreq.80=80MHz
+odroid_esp32.menu.FlashFreq.80.build.flash_freq=80m
+odroid_esp32.menu.FlashFreq.40=40MHz
+odroid_esp32.menu.FlashFreq.40.build.flash_freq=40m
+
+odroid_esp32.menu.PartitionScheme.default=Default
+odroid_esp32.menu.PartitionScheme.default.build.partitions=default
+odroid_esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+odroid_esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+odroid_esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+odroid_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+odroid_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+odroid_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+odroid_esp32.menu.UploadSpeed.921600=921600
+odroid_esp32.menu.UploadSpeed.921600.upload.speed=921600
+odroid_esp32.menu.UploadSpeed.115200=115200
+odroid_esp32.menu.UploadSpeed.115200.upload.speed=115200
+odroid_esp32.menu.UploadSpeed.256000.windows=256000
+odroid_esp32.menu.UploadSpeed.256000.upload.speed=256000
+odroid_esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+odroid_esp32.menu.UploadSpeed.230400=230400
+odroid_esp32.menu.UploadSpeed.230400.upload.speed=230400
+odroid_esp32.menu.UploadSpeed.460800.linux=460800
+odroid_esp32.menu.UploadSpeed.460800.macosx=460800
+odroid_esp32.menu.UploadSpeed.460800.upload.speed=460800
+odroid_esp32.menu.UploadSpeed.512000.windows=512000
+odroid_esp32.menu.UploadSpeed.512000.upload.speed=512000
+
+odroid_esp32.menu.DebugLevel.none=None
+odroid_esp32.menu.DebugLevel.none.build.code_debug=0
+odroid_esp32.menu.DebugLevel.error=Error
+odroid_esp32.menu.DebugLevel.error.build.code_debug=1
+odroid_esp32.menu.DebugLevel.warn=Warn
+odroid_esp32.menu.DebugLevel.warn.build.code_debug=2
+odroid_esp32.menu.DebugLevel.info=Info
+odroid_esp32.menu.DebugLevel.info.build.code_debug=3
+odroid_esp32.menu.DebugLevel.debug=Debug
+odroid_esp32.menu.DebugLevel.debug.build.code_debug=4
+odroid_esp32.menu.DebugLevel.verbose=Verbose
+odroid_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 heltec_wifi_kit_32.name=Heltec_WIFI_Kit_32
 
 heltec_wifi_kit_32.upload.tool=esptool
 heltec_wifi_kit_32.upload.maximum_size=1310720
-heltec_wifi_kit_32.upload.maximum_data_size=294912
+heltec_wifi_kit_32.upload.maximum_data_size=327680
 heltec_wifi_kit_32.upload.wait_for_upload_port=true
 
 heltec_wifi_kit_32.serial.disableDTR=true
@@ -1344,7 +1486,7 @@ heltec_wifi_lora_32.name=Heltec_WIFI_LoRa_32
 
 heltec_wifi_lora_32.upload.tool=esptool
 heltec_wifi_lora_32.upload.maximum_size=1310720
-heltec_wifi_lora_32.upload.maximum_data_size=294912
+heltec_wifi_lora_32.upload.maximum_data_size=327680
 heltec_wifi_lora_32.upload.wait_for_upload_port=true
 
 heltec_wifi_lora_32.serial.disableDTR=true
@@ -1387,7 +1529,7 @@ espectro32.name=ESPectro32
 
 espectro32.upload.tool=esptool
 espectro32.upload.maximum_size=1310720
-espectro32.upload.maximum_data_size=294912
+espectro32.upload.maximum_data_size=327680
 espectro32.upload.wait_for_upload_port=true
 
 espectro32.serial.disableDTR=true
@@ -1462,7 +1604,7 @@ CoreESP32.name=Microduino-CoreESP32
 
 CoreESP32.upload.tool=esptool
 CoreESP32.upload.maximum_size=1310720
-CoreESP32.upload.maximum_data_size=294912
+CoreESP32.upload.maximum_data_size=327680
 CoreESP32.upload.wait_for_upload_port=true
 
 CoreESP32.serial.disableDTR=true
@@ -1498,3 +1640,60 @@ CoreESP32.menu.UploadSpeed.460800.macosx=460800
 CoreESP32.menu.UploadSpeed.460800.upload.speed=460800
 CoreESP32.menu.UploadSpeed.512000.windows=512000
 CoreESP32.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+wipy3.name=WiPy 3.0
+
+wipy3.upload.tool=esptool
+wipy3.upload.maximum_size=1310720
+wipy3.upload.maximum_data_size=294912
+wipy3.upload.wait_for_upload_port=true
+
+wipy3.serial.disableDTR=true
+wipy3.serial.disableRTS=true
+
+wipy3.build.mcu=esp32
+wipy3.build.core=esp32
+wipy3.build.variant=wipy3
+wipy3.build.board=WIPY3
+
+wipy3.build.f_cpu=240000000L
+wipy3.build.flash_mode=dio
+wipy3.build.flash_size=8MB
+wipy3.build.boot=dio
+wipy3.build.partitions=default
+
+wipy3.menu.FlashFreq.80=80MHz
+wipy3.menu.FlashFreq.80.build.flash_freq=80m
+wipy3.menu.FlashFreq.40=40MHz
+wipy3.menu.FlashFreq.40.build.flash_freq=40m
+
+wipy3.menu.UploadSpeed.921600=921600
+wipy3.menu.UploadSpeed.921600.upload.speed=921600
+wipy3.menu.UploadSpeed.115200=115200
+wipy3.menu.UploadSpeed.115200.upload.speed=115200
+wipy3.menu.UploadSpeed.256000.windows=256000
+wipy3.menu.UploadSpeed.256000.upload.speed=256000
+wipy3.menu.UploadSpeed.230400.windows.upload.speed=256000
+wipy3.menu.UploadSpeed.230400=230400
+wipy3.menu.UploadSpeed.230400.upload.speed=230400
+wipy3.menu.UploadSpeed.460800.linux=460800
+wipy3.menu.UploadSpeed.460800.macosx=460800
+wipy3.menu.UploadSpeed.460800.upload.speed=460800
+wipy3.menu.UploadSpeed.512000.windows=512000
+wipy3.menu.UploadSpeed.512000.upload.speed=512000
+
+wipy3.menu.DebugLevel.none=None
+wipy3.menu.DebugLevel.none.build.code_debug=0
+wipy3.menu.DebugLevel.error=Error
+wipy3.menu.DebugLevel.error.build.code_debug=1
+wipy3.menu.DebugLevel.warn=Warn
+wipy3.menu.DebugLevel.warn.build.code_debug=2
+wipy3.menu.DebugLevel.info=Info
+wipy3.menu.DebugLevel.info.build.code_debug=3
+wipy3.menu.DebugLevel.debug=Debug
+wipy3.menu.DebugLevel.debug.build.code_debug=4
+wipy3.menu.DebugLevel.verbose=Verbose
+wipy3.menu.DebugLevel.verbose.build.code_debug=5
+

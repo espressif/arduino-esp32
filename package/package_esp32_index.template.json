@@ -38,12 +38,12 @@
             {
               "packager": "esp32",
               "name": "esptool",
-              "version": "da31d9d"
+              "version": "2.3.1"
             },
             {
               "packager": "esp32",
               "name": "mkspiffs",
-              "version": "0.2.2"
+              "version": "0.2.3"
             }
           ]
         }
@@ -85,69 +85,90 @@
         },
         {
           "name": "esptool",
-          "version": "da31d9d",
+          "version": "2.3.1",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-da31d9d-windows.zip",
-              "archiveFileName": "esptool-da31d9d-windows.zip",
-              "checksum": "SHA-256:6476f4d6e33a59167dea364e177d97167316253d2c9ac75f81b469ecb3ed3875",
-              "size": "3395925"
+              "url": "https://dl.espressif.com/dl/esptool-2.3.1-windows.zip",
+              "archiveFileName": "esptool-2.3.1-windows.zip",
+              "checksum": "SHA-256:c187763d0faac7da7c30a292a23c759bbc256fcd084dc8846ed284000cb0fe29",
+              "size": "3396085"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-da31d9d-macos.tar.gz",
-              "archiveFileName": "esptool-da31d9d-macos.tar.gz",
-              "checksum": "SHA-256:76d53298366a294235356bb8d197a81b2afbfd62642851bfbaee252cc593faa9",
-              "size": "3810904"
+              "url": "https://dl.espressif.com/dl/esptool-2.3.1-macos.tar.gz",
+              "archiveFileName": "esptool-2.3.1-macos.tar.gz",
+              "checksum": "SHA-256:cd922418f02e0ca11dc066b36a22646a1b441da00d762b4464ca598c902c5ecb",
+              "size": "3810932"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/esptool-2.3.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.3.1-linux.tar.gz",
+              "checksum": "SHA-256:cff30841dad80ed5d7d2d58a31843b63afa57528979a9c839806568167691d8e",
+              "size": "39563"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://dl.espressif.com/dl/esptool-2.3.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.3.1-linux.tar.gz",
+              "checksum": "SHA-256:cff30841dad80ed5d7d2d58a31843b63afa57528979a9c839806568167691d8e",
+              "size": "39563"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://dl.espressif.com/dl/esptool-2.3.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.3.1-linux.tar.gz",
+              "checksum": "SHA-256:cff30841dad80ed5d7d2d58a31843b63afa57528979a9c839806568167691d8e",
+              "size": "39563"
             }
           ]
         },
         {
           "name": "mkspiffs",
-          "version": "0.2.2",
+          "version": "0.2.3",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-win32.zip",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-win32.zip",
-              "checksum": "SHA-256:988baa2827005a20a7c7028f0c2d45d19df2e0a7d42319f4a7a5776a3f0dff2e",
-              "size": "347207"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-win32.zip",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-win32.zip",
+              "checksum": "SHA-256:b647f2c2efe6949819c85ea9404271b55c7c9c25bcb98d3b98a1d0ba771adf56",
+              "size": "249809"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
-              "checksum": "SHA-256:7aee138be9a73fe7fd1f75cf3f3695f0afae812d04fcbf74b17da330f66ae4cd",
-              "size": "130211"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "checksum": "SHA-256:9f43fc74a858cf564966b5035322c3e5e61c31a647c5a1d71b388ed6efc48423",
+              "size": "130270"
             },
             {
               "host": "i386-apple-darwin",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-osx.tar.gz",
-              "checksum": "SHA-256:7aee138be9a73fe7fd1f75cf3f3695f0afae812d04fcbf74b17da330f66ae4cd",
-              "size": "130211"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-osx.tar.gz",
+              "checksum": "SHA-256:9f43fc74a858cf564966b5035322c3e5e61c31a647c5a1d71b388ed6efc48423",
+              "size": "130270"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux64.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux64.tar.gz",
-              "checksum": "SHA-256:17f89d9b38d4f68f2f03f7561b951d1d3b6d6f5b74d35b6d3eb8da3440be3400",
-              "size": "50611"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz",
+              "checksum": "SHA-256:5e1a4ff41385e842f389f6b5254102a547e566a06b49babeffa93ef37115cb5d",
+              "size": "50646"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux32.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux32.tar.gz",
-              "checksum": "SHA-256:181fca76210de04a23eb7af028d9886de5a73e638c63d351a691a24cfb9f03d3",
-              "size": "48730"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux32.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux32.tar.gz",
+              "checksum": "SHA-256:464463a93e8833209cdc29ba65e1a12fec31718dc10075c195a2445b2c3f6cb0",
+              "size": "48751"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.2/mkspiffs-0.2.2-arduino-esp32-linux-armhf.tar.gz",
-              "archiveFileName": "mkspiffs-0.2.2-arduino-esp32-linux-armhf.tar.gz",
-              "checksum": "SHA-256:2e99cbdf5ee60b27d6ade096d4caf03a90edfd5f4edf4da2a8674d770aa4ca1b",
-              "size": "40658"
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",
+              "size": "40665"
             }
           ]
         }

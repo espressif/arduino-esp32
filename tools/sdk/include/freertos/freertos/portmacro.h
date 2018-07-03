@@ -74,7 +74,6 @@ extern "C" {
 
 #include <stdint.h>
 
-#include <xtensa/tie/xt_core.h>
 #include <xtensa/hal.h>
 #include <xtensa/config/core.h>
 #include <xtensa/config/system.h>	/* required for XSHAL_CLIB */
@@ -365,9 +364,13 @@ typedef struct {
 	#define PRIVILEGED_DATA
 #endif
 
+extern void esp_vApplicationIdleHook( void );
+extern void esp_vApplicationWaitiHook( void );
 
 void _xt_coproc_release(volatile void * coproc_sa_base);
+bool vApplicationSleep( TickType_t xExpectedIdleTime );
 
+#define portSUPPRESS_TICKS_AND_SLEEP( idleTime ) vApplicationSleep( idleTime )
 
 // porttrace
 #if configUSE_TRACE_FACILITY_2

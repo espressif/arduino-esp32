@@ -98,6 +98,7 @@ const char* serverIndex =
 /*
  * setup function
  */
+
 void setup(void) {
   Serial.begin(115200);
 

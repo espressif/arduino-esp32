@@ -38,6 +38,8 @@
 #include <sys/time.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/select.h>
 #include "esp_task.h"
 #include "esp_system.h"
 #include "sdkconfig.h"
@@ -294,6 +296,12 @@
  */
 #define TCP_QUEUE_OOSEQ                 CONFIG_TCP_QUEUE_OOSEQ
 
+/**
+ * ESP_TCP_KEEP_CONNECTION_WHEN_IP_CHANGES==1: Keep TCP connection when IP changed
+ * scenario happens: 192.168.0.2 -> 0.0.0.0 -> 192.168.0.2 or 192.168.0.2 -> 0.0.0.0
+ */
+
+#define ESP_TCP_KEEP_CONNECTION_WHEN_IP_CHANGES  CONFIG_ESP_TCP_KEEP_CONNECTION_WHEN_IP_CHANGES 
 /*
  *     LWIP_EVENT_API==1: The user defines lwip_tcp_event() to receive all
  *         events (accept, sent, etc) that happen in the system.
@@ -698,12 +706,15 @@
  */
 #define LWIP_POSIX_SOCKETS_IO_NAMES     0
 
-
 /**
- * Socket offset is also determined via the VFS layer at
- * filesystem registration time (see port/vfs_lwip.c)
+ * FD_SETSIZE from sys/types.h is the maximum number of supported file
+ * descriptors and CONFIG_LWIP_MAX_SOCKETS defines the number of sockets;
+ * LWIP_SOCKET_OFFSET is configured to use the largest numbers of file
+ * descriptors for sockets. File descriptors from 0 to LWIP_SOCKET_OFFSET-1
+ * are non-socket descriptors and from LWIP_SOCKET_OFFSET to FD_SETSIZE are
+ * socket descriptors.
  */
-#define LWIP_SOCKET_OFFSET              lwip_socket_offset
+#define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
 
 /* Enable all Espressif-only options */
 
@@ -726,6 +737,7 @@
 #define ESP_DHCP_TIMER                  1
 #define ESP_LWIP_LOGI(...)              ESP_LOGI("lwip", __VA_ARGS__)
 #define ESP_PING                        1
+#define ESP_HAS_SELECT                  1
 
 #if CONFIG_LWIP_IRAM_OPTIMIZATION
 #define ESP_IRAM_ATTR                   IRAM_ATTR
