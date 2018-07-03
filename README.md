@@ -28,6 +28,7 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
 - [Using PlatformIO](docs/platformio.md)
 - [Building with make](docs/make.md)
 - [Using as ESP-IDF component](docs/esp-idf_component.md)
+- [Using OTAWebUpdater](docs/OTAWebUpdate/OTAWebUpdate.md)
 
 #### Decoding exceptions
 
