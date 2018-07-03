@@ -15,6 +15,6 @@ You can use another module also if it meets Flash chip size of the sketch
 1-Before you begin, please make sure that you have the following software installed:
  - Arduino IDE
  - Host software depending on O/S you use:
-  1- Avahi http://avahi.org/ for Linux
-  2- Bonjour http://www.apple.com/support/bonjour/ for Windows
-  3- Mac OSX and iOS - support is already built in / no any extra s/w is required
+   1- Avahi http://avahi.org/ for Linux
+   2- Bonjour http://www.apple.com/support/bonjour/ for Windows
+   3- Mac OSX and iOS - support is already built in / no any extra s/w is required
