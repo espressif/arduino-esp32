@@ -32,6 +32,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 ![login](esp32login.PNG)
 
 > username= admin
+
 > password= admin
 
 **Note**-*If entering “http://ESP32.local” does not work, try replacing “ESP32” with module’s IP address.This workaround is useful in case the host software installed does not work*. 
@@ -39,6 +40,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 Now click on Login button and browser will display a upload form
 
 ![upload](esp32upload.PNG)
+
 For Uploading the New Firmware you need to provide the Binary File of your Code.
 
 Exporting Binary file of the Firmware (Code)
@@ -46,6 +48,7 @@ Exporting Binary file of the Firmware (Code)
 - Open up the Code, for Exporting up Binary file
 - Now go to Sketch > export compiled Binary
 ![export](exportTobinary.PNG)
+
 - Binary file is exported to the same Directory where your code is present
 
 Once you are comfortable with this procedure go ahead and modify OTAWebUpdater.ino sketch to print some additional messages, compile it, Export new binary file and upload it using web browser to see entered changes on a Serial Monitor
