@@ -11,6 +11,7 @@ OTAWebUpdate is done with a web browser that can be useful in the following typi
 The sample implementation has been done using:
 - example sketch OTAWebUpdater.ino
 - ESP32 (Dev Module)
+
 You can use another module also if it meets Flash chip size of the sketch
 1-Before you begin, please make sure that you have the following software installed:
  - Arduino IDE
