@@ -13,6 +13,7 @@ The sample implementation has been done using:
 - ESP32 (Dev Module)
 
 You can use another module also if it meets Flash chip size of the sketch
+
 1-Before you begin, please make sure that you have the following software installed:
  - Arduino IDE
  - Host software depending on O/S you use:
