@@ -83,6 +83,5 @@ public:
 };
 
 extern SPIClass SPI;
-extern SPIClass SPI1;
 
 #endif
