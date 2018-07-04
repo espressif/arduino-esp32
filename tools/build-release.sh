@@ -36,6 +36,8 @@ function downloadAndMergePackageJSON()
 	
 	#curl --verbose -sH "Authorization: token $curlAuthToken" -L -o "$old_json" "$jsonLink"
 	curl -L -o "$old_json" "$jsonLink?access_token=$curlAuthToken"
+	if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+
 	
 	#curl -L -o "$old_json" "$jsonLink"
 	
@@ -255,10 +257,7 @@ echo " - creating package ZIP archive (${package_name_zip})..."
 pushd $releaseDir >/dev/null
 
 zip -qr $package_name_zip $package_name
-if [ $? -ne 0 ]; then
-    echo "     !error: failed to create ${package_name_zip} (ZIP errno: $?) => aborting"
-	exit 1
-fi
+if [ $? -ne 0 ]; then echo "     !error: failed to create ${package_name_zip} (ZIP errno: $?) => aborting"; exit 1; fi
 
 # Calculate SHA sum and size of ZIP archive
 sha=`shasum -a 256 $package_name_zip | cut -f 1 -d ' '`
@@ -296,6 +295,7 @@ set +e
 
 releasesJson=$releaseDir/releases.json
 curl -sH "Authorization: token $curlAuth" https://api.github.com/repos/$TRAVIS_REPO_SLUG/releases > $releasesJson
+if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
 
 prev_release=$(jq -e -r '. | map(select(.draft == false and .prerelease == false)) | sort_by(.created_at | - fromdateiso8601) | .[0].tag_name' ${releasesJson})
 prev_any_release=$(jq -e -r '. | map(select(.draft == false)) | sort_by(.created_at | - fromdateiso8601)  | .[0].tag_name' ${releasesJson})
