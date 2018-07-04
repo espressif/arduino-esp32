@@ -1,17 +1,5 @@
 #include <Arduino.h>
 
-/*
-
-The next three lines are only needed when using an argument on attachInterrupt.
-This makes the core's internal function available for use in the sketch.
-
-*/
-typedef void (*voidFuncPtrArg)(void*);
-extern "C" {
-    void __attachInterruptArg(uint8_t pin, voidFuncPtrArg handler, void* arg, int mode);
-}
-
-
 struct Button {
     const uint8_t PIN;
     uint32_t numberKeyPresses;
