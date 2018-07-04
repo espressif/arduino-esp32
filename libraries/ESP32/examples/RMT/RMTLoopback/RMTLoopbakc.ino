@@ -3,7 +3,7 @@
 #include "freertos/event_groups.h"
 #include "Arduino.h"
 
-#include "esp32-hal-rmt.h"
+#include "esp32-hal.h"
 
 rmt_data_t my_data[256];
 rmt_data_t data[256];

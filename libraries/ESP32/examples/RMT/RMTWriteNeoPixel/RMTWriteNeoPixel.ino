@@ -3,7 +3,7 @@
 #include "freertos/event_groups.h"
 #include "Arduino.h"
 
-#include "esp32-hal-rmt.h"
+#include "esp32-hal.h"
 
 #define LED_MATRIX_SIZE 8*4*24
 
@@ -73,7 +73,7 @@ void loop()
             led_data[i].val = 0x80040008;
     }
     // make the led travel in the pannel
-    if ((++led_index)>=LED_MATRIX_SIZE) {
+    if ((++led_index)>=4*8) {
         led_index = 0;
     }
 

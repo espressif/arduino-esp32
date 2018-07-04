@@ -3,20 +3,40 @@
 #include "freertos/event_groups.h"
 #include "Arduino.h"
 
-#include "esp32-hal-rmt.h"
+#include "esp32-hal.h"
 
-#define XJT_VALID(i) (i->level0 && !i->level1 && i->duration0 >= 8 && i->duration0 <= 11)
+//
+// Note: This example uses a FrSKY device communication 
+//          using XJT D12 protocol 
+//
+// ; 0 bit = 6us low/10us high
+// ; 1 bit = 14us low/10us high
+// ;
+// ; --------+       +----------+                 +----------+
+// ;         |       |          |                 |          |
+// ;         |   0   |          |        1        |          |
+// ;         |       |          |                 |          |
+// ;         |       |          |                 |          |
+// ;         +-------+          +-----------------+          +---------
+// ;
+// ;         |  6us      10us   |       14us          10us   |
+// ;         |-------|----------|-----------------|----------|--------
+// ;         |       16us       |            24us            |
 
-
-rmt_obj_t* rmt_recv = NULL;
-
-static uint32_t *s_channels;
-
-static uint32_t channels[16];
-static uint8_t xjt_flags = 0x0;
-static uint8_t xjt_rxid = 0x0;
-
-
+//  Typedef of received frame
+//  
+// ; 0x00 - Sync, 0x7E (sync header ID)
+// ; 0x01 - Rx ID, 0x?? (receiver ID number, 0x00-0x??)
+// ; 0x02 - Flags 1, 0x?? (used for failsafe and binding)
+// ; 0x03 - Flags 2, 0x00 (reserved)
+// ; 0x04-0x06, Channels 1/9 and 2/10
+// ; 0x07-0x09, Channels 3/11 and 4/12
+// ; 0x0A-0x0C, Channels 5/13 and 6/14
+// ; 0x0D-0x0F, Channels 7/15 and 8/16
+// ; 0x10 - 0x00, always zero
+// ; 0x11 - CRC-16 High
+// ; 0x12 - CRC-16 Low
+// ; 0x13 - Tail, 0x7E (tail ID)
 typedef union {
         struct {
                 uint8_t head;//0x7E
@@ -39,6 +59,15 @@ typedef union {
         };
         uint8_t buffer[20];
 } xjt_packet_t;
+
+#define XJT_VALID(i) (i->level0 && !i->level1 && i->duration0 >= 8 && i->duration0 <= 11)
+
+rmt_obj_t* rmt_recv = NULL;
+
+static uint32_t *s_channels;
+static uint32_t channels[16];
+static uint8_t xjt_flags = 0x0;
+static uint8_t xjt_rxid = 0x0;
 
 static bool xjtReceiveBit(size_t index, bool bit){
     static xjt_packet_t xjt;
@@ -113,7 +142,7 @@ static bool xjtReceiveBit(size_t index, bool bit){
 
 void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels){
     size_t chan = 0;
-    bool valid = false;
+    bool valid = true;
     rmt_data_t* it = NULL;
 
     if (!channels)  {
@@ -122,9 +151,9 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels){
     }
     s_channels = channels;
 
-    valid = false;
     it = &items[0];
     for(size_t i = 0; i<len; i++){
+
         if(!valid){
             break;
         }
@@ -137,6 +166,9 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels){
             } else {
                 valid = false;
             }
+        } else if(!it->duration1 && !it->level1 && it->duration0 >= 5 && it->duration0 <= 8) {
+                    valid = xjtReceiveBit(i, false);
+
         }
     }
 }
@@ -158,7 +190,7 @@ void setup()
 
     // Setup 1us tick
     float realTick = rmtSetTick(rmt_recv, 1000);
-    printf("real tick set to: %fns\n", realTick);
+    Serial.printf("real tick set to: %fns\n", realTick);
 
     // Ask to start reading
     rmtRead(rmt_recv, receive_data);
