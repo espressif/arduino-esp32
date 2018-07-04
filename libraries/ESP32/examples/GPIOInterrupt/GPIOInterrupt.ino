@@ -23,7 +23,7 @@ void IRAM_ATTR isr() {
 void setup() {
     Serial.begin(115200);
     pinMode(button1.PIN, INPUT_PULLUP);
-    __attachInterruptArg(button1.PIN, isr, &button1, FALLING);
+    attachInterruptArg(button1.PIN, isr, &button1, FALLING);
     pinMode(button2.PIN, INPUT_PULLUP);
     attachInterrupt(button2.PIN, isr, FALLING);
 }
