@@ -5,7 +5,8 @@
 
 #include "esp32-hal.h"
 
-#define LED_MATRIX_SIZE 8*4*24
+#define NR_OF_LEDS   8*4
+#define NR_OF_PIXELS 24*NR_OF_LEDS
 
 //
 // Note: This example uses Neopixel LED board, 32 LEDs chained one
@@ -32,11 +33,9 @@
 //         +-------------+       +--
 //         |    0.8us    | 0.4us |
 
-rmt_data_t led_data[LED_MATRIX_SIZE];
+rmt_data_t led_data[NR_OF_PIXELS];
 
 rmt_obj_t* rmt_send = NULL;
-
-static EventGroupHandle_t events;
 
 void setup() 
 {
@@ -58,27 +57,27 @@ int led_index = 0;
 void loop() 
 {
     // Init data with only one led ON
-    int i;
-    int item, bit, inx;
-    for (i=0; i<LED_MATRIX_SIZE; i++) {
-
-        item = i/24;
-
-        bit = i%8;
-        inx = i/8;
-
-        if ( (color[inx%3] & (1<<(8-bit))) && (item == led_index) )
-            led_data[i].val = 0x80070006;
-        else
-            led_data[i].val = 0x80040008;
+    int led, col, bit;
+    int i=0;
+    for (led=0; led<NR_OF_LEDS; led++) {
+        for (col=0; col<3; col++ ) {
+            for (bit=0; bit<8; bit++){
+                if ( (color[col] & (1<<(8-bit))) && (led == led_index) ) {
+                    led_data[i].val = 0x80070006;
+                } else {
+                    led_data[i].val = 0x80040008;
+                }
+                i++;
+            }
+        }
     }
     // make the led travel in the pannel
-    if ((++led_index)>=4*8) {
+    if ((++led_index)>=NR_OF_LEDS) {
         led_index = 0;
     }
 
     // Send the data
-    rmtWrite(rmt_send, led_data, LED_MATRIX_SIZE);
+    rmtWrite(rmt_send, led_data, NR_OF_PIXELS);
 
     delay(100);
 }
