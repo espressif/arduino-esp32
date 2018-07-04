@@ -34,7 +34,7 @@ esp32.build.defines=
 esp32.menu.PSRAM.disabled=Disabled
 esp32.menu.PSRAM.disabled.build.defines=
 esp32.menu.PSRAM.enabled=Enabled
-esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 esp32.menu.PartitionScheme.default=Default
 esp32.menu.PartitionScheme.default.build.partitions=default
@@ -122,7 +122,7 @@ esp32wrover.build.flash_freq=40m
 esp32wrover.build.flash_mode=dio
 esp32wrover.build.boot=dio
 esp32wrover.build.partitions=default
-esp32wrover.build.defines=-DBOARD_HAS_PSRAM
+esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 esp32wrover.menu.PartitionScheme.default=Default
 esp32wrover.menu.PartitionScheme.default.build.partitions=default
