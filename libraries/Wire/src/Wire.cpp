@@ -364,3 +364,4 @@ void TwoWire::dumpI2C()
 }
 
 TwoWire Wire = TwoWire(0);
+TwoWire Wire1 = TwoWire(1);
