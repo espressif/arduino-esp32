@@ -26,13 +26,9 @@ void setup()
         Serial.println("init receiver failed\n");
     }
 
+    float realTick = rmtSetTick(rmt_send, 100);
+    printf("real tick set to: %fns\n", realTick);
 
-    float realTick = rmtSetTick(rmt_send, 400);
-    Serial.printf("real tick set to: %f\n", realTick);
-    realTick = rmtSetTick(rmt_recv, 400);
-    Serial.printf("real tick set to: %f\n", realTick);
-
-    events = xEventGroupCreate();
 }
 
 void loop() 
