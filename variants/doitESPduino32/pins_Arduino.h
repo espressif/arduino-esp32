@@ -20,9 +20,13 @@ static const uint8_t SCL = 22;
 
 //SPI
 static const uint8_t IO5    = 5;
+static const uint8_t SS    = 5;
 static const uint8_t IO23  = 23;
+static const uint8_t MOSI  = 23;
 static const uint8_t IO19  = 19;
+static const uint8_t MISO  = 19;
 static const uint8_t IO18   = 18;
+static const uint8_t SCK   = 18;
 
 //ANALOG
 static const uint8_t IO36 = 36;
@@ -45,9 +49,9 @@ static const uint8_t IO16 = 16;
 static const uint8_t IO17 = 17;
 static const uint8_t IO25 = 25;
 static const uint8_t IO26 = 26;
-static const uint8_t TX0 = 1;
-static const uint8_t RX0 = 3;
-//SD
+static const uint8_t TX = 1;
+static const uint8_t RX = 3;
+//TFlash(uSD)
 static const uint8_t SD2 = 9;
 static const uint8_t SD3 = 10;
 static const uint8_t CMD = 11;
@@ -56,5 +60,6 @@ static const uint8_t SD0 = 7;
 static const uint8_t SD1 = 8;
 
 // ESP-WROOM-32 does not have GPIO 14, 20(NC), 24, 28, 29, 30, 31, 36, 37, 38, 40+
+// All pins should be PWM capable
 
 #endif /* Pins_Arduino_h */
