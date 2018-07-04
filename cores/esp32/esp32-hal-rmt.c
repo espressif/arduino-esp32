@@ -21,7 +21,7 @@
  */
 #define MAX_CHANNELS 8
 #define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 40
+#define MAX_DATA_PER_ITTERATION 62
 #define _ABS(a) (a>0?a:-a)
 #define _LIMIT(a,b) (a>b?b:a)
 #define __INT_TX_END     (1)
@@ -41,6 +41,15 @@
 # define RMT_MUTEX_LOCK(channel)    do {} while (xSemaphoreTake(g_rmt_objlocks[channel], portMAX_DELAY) != pdPASS)
 # define RMT_MUTEX_UNLOCK(channel)  xSemaphoreGive(g_rmt_objlocks[channel])
 #endif /* CONFIG_DISABLE_HAL_LOCKS */
+
+#define _RMT_INTERNAL_DEBUG
+#ifdef _RMT_INTERNAL_DEBUG
+# define DEBUG_INTERRUPT_START(pin)    digitalWrite(pin, 1);
+# define DEBUG_INTERRUPT_END(pin)      digitalWrite(pin, 0);
+#else
+# define DEBUG_INTERRUPT_START(pin)
+# define DEBUG_INTERRUPT_END(pin)
+#endif /* _RMT_INTERNAL_DEBUG */
 
 /**
  * Typedefs for internal stuctures, enums
@@ -117,6 +126,10 @@ static rmt_obj_t* _rmtAllocate(int pin, int from, int size);
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
 static int IRAM_ATTR _rmt_get_mem_len(uint8_t channel);
+
+static void IRAM_ATTR _rmt_tx_mem_first(uint8_t ch);
+
+static void IRAM_ATTR _rmt_tx_mem_second(uint8_t ch);
 
 
 /**
@@ -234,7 +247,7 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
         rmt->tx_state = E_SET_CONTI | E_FIRST_HALF;
 
         // init the tx limit for interruption
-        RMT.tx_lim_ch[channel].limit = half_tx_nr;
+        RMT.tx_lim_ch[channel].limit = half_tx_nr+2;
         // reset memory pointer
         RMT.conf_ch[channel].conf1.apb_mem_rst = 1;
         RMT.conf_ch[channel].conf1.apb_mem_rst = 0;
@@ -588,15 +601,13 @@ static void _initPin(int pin, int channel, bool tx_not_rx)
 
 static void IRAM_ATTR _rmt_isr(void* arg)
 {
-    digitalWrite(4, 1);
-
     int intr_val = RMT.int_st.val;
     size_t ch;
     for (ch = 0; ch < MAX_CHANNELS; ch++) {
 
         if (intr_val & _INT_RX_END(ch)) {
             // clear the flag
-            RMT.int_clr.val = _INT_RX_END(ch); // TODO: replace clear interrupts
+            RMT.int_clr.val = _INT_RX_END(ch);
             RMT.int_ena.val &= ~_INT_RX_END(ch);
 
             if ((g_rmt_objects[ch].intr_mode) & E_RX_INTR) {
@@ -606,6 +617,7 @@ static void IRAM_ATTR _rmt_isr(void* arg)
                 if (g_rmt_objects[ch].data_ptr && g_rmt_objects[ch].data_size > 0) {
                     size_t i;
                     uint32_t * data = g_rmt_objects[ch].data_ptr;
+                    // in case of callback, provide switching between memories
                     if (g_rmt_objects[ch].cb) {
                         if (g_rmt_objects[ch].tx_state & E_FIRST_HALF) {
                             g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
@@ -617,7 +629,6 @@ static void IRAM_ATTR _rmt_isr(void* arg)
                     for (i = 0; i < g_rmt_objects[ch].data_size; i++ ) {
                         *data++ = RMTMEM.chan[ch].data32[i].val;
                     }
-                    // configured callback
                     if (g_rmt_objects[ch].cb) {
                         // actually received data ptr
                         uint32_t * data = g_rmt_objects[ch].data_ptr;
@@ -662,33 +673,7 @@ static void IRAM_ATTR _rmt_isr(void* arg)
         if (intr_val & _INT_TX_END(ch)) {
 
             RMT.int_clr.val = _INT_TX_END(ch);
-
-            if (g_rmt_objects[ch].tx_state & E_LAST_DATA) {
-                g_rmt_objects[ch].tx_state = E_END_TRANS;
-                RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-                    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-                    int i;
-                    if (g_rmt_objects[ch].tx_state & E_FIRST_HALF) {
-                        for (i = 0; i < half_tx_nr; i++) {
-                            RMTMEM.chan[ch].data32[i].val = 0x000F000F;
-                        }
-                        RMTMEM.chan[ch].data32[i].val = 0;
-                        g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-                    } else {
-                        for (i = 0; i < half_tx_nr; i++) {
-                            RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
-                        }
-                        RMTMEM.chan[ch].data32[i].val = 0;
-                        g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
-                    }
-                
-            } else if (g_rmt_objects[ch].tx_state & E_END_TRANS) {
-                RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-                RMT.int_ena.val &= ~_INT_TX_END(ch);
-                RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
-                g_rmt_objects[ch].intr_mode = E_NO_INTR;
-                g_rmt_objects[ch].tx_state = E_INACTIVE;
-            }
+            _rmt_tx_mem_second(ch);
         }
 
         if (intr_val & _INT_THR_EVNT(ch)) {
@@ -700,75 +685,112 @@ static void IRAM_ATTR _rmt_isr(void* arg)
                 RMT.conf_ch[ch].conf1.tx_conti_mode = 1;
                 g_rmt_objects[ch].intr_mode &= ~E_SET_CONTI;
             }
-
-            // check if still any data to be sent
-            uint32_t* data = g_rmt_objects[ch].data_ptr;
-            if (data)
-            {
-                int remaining_size = g_rmt_objects[ch].data_size;
-                int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-                int i;
-
-                // will the remaining data occupy the entire halfbuffer
-                if (remaining_size > half_tx_nr) {
-                    if (g_rmt_objects[ch].tx_state & E_FIRST_HALF) {
-                        // ets_printf("first\n");
-                        RMTMEM.chan[ch].data32[0].val = data[0] - 1;
-                        for (i = 1; i < half_tx_nr; i++) {
-                            RMTMEM.chan[ch].data32[i].val = data[i];
-                        }
-                        g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-                    } else {
-                        // ets_printf("second\n");
-                        for (i = 0; i < half_tx_nr; i++) {
-                            RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
-                        }
-                        g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
-                    }
-                    g_rmt_objects[ch].data_size -= half_tx_nr;
-                    g_rmt_objects[ch].data_ptr += half_tx_nr;
-                } else {
-                    // less remaining data than buffer size -> fill in with fake (inactive) pulses 
-                    //ets_printf("last chunk...");
-                    if (g_rmt_objects[ch].tx_state & E_FIRST_HALF) {
-                        //ets_printf("first\n");
-                        RMTMEM.chan[ch].data32[0].val = data[0] - 1;
-                        for (i = 1; i < half_tx_nr; i++) {
-                            if (i < remaining_size) {
-                                RMTMEM.chan[ch].data32[i].val = data[i];
-                            } else {
-                                RMTMEM.chan[ch].data32[i].val = 0x000F000F;
-                            }
-                        }
-                        g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-                    } else {
-                        //ets_printf("second\n");
-                        for (i = 0; i < half_tx_nr; i++) {
-                            if (i < remaining_size) {
-                                RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
-                            } else {
-                                RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
-                            }
-                        }
-                        g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
-                    }
-                    RMTMEM.chan[ch].data32[MAX_DATA_PER_ITTERATION].val = 0;
-                    // mark 
-                    g_rmt_objects[ch].data_ptr = NULL;
-                }
-            } else {
-                // no data left, just copy the fake (inactive) pulses 
-                if ( (!(g_rmt_objects[ch].tx_state & E_LAST_DATA)) &&
-                     (!(g_rmt_objects[ch].tx_state & E_END_TRANS)) ) {
-                    g_rmt_objects[ch].tx_state |= E_END_TRANS;
-                } else {
-                    // ...do_nothing
-                }
-            }
+            _rmt_tx_mem_first(ch);
         }
     }
-    digitalWrite(4, 0);
-    digitalWrite(2, 0);
+}
+
+static void IRAM_ATTR _rmt_tx_mem_second(uint8_t ch)
+{
+    DEBUG_INTERRUPT_START(4)
+    uint32_t* data = g_rmt_objects[ch].data_ptr;
+    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
+    int i;
+
+    RMT.tx_lim_ch[ch].limit = half_tx_nr+2;
+    RMT.int_clr.val = _INT_THR_EVNT(ch);
+    RMT.int_ena.val |= _INT_THR_EVNT(ch);
+
+    g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
+
+    if (data) {
+        int remaining_size = g_rmt_objects[ch].data_size;
+        // will the remaining data occupy the entire halfbuffer
+        if (remaining_size > half_tx_nr) {
+            for (i = 0; i < half_tx_nr; i++) {
+                RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
+            }
+            g_rmt_objects[ch].data_size -= half_tx_nr;
+            g_rmt_objects[ch].data_ptr += half_tx_nr;
+        } else {
+            for (i = 0; i < half_tx_nr; i++) {
+                if (i < remaining_size) {
+                    RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
+                } else {
+                    RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
+                }
+            }
+            g_rmt_objects[ch].data_ptr = NULL;
+
+        }
+    } else if   ((!(g_rmt_objects[ch].tx_state & E_LAST_DATA)) &&
+                 (!(g_rmt_objects[ch].tx_state & E_END_TRANS))) {
+        for (i = 0; i < half_tx_nr; i++) {
+            RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
+        }
+        RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0;
+        g_rmt_objects[ch].tx_state |= E_LAST_DATA;
+        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
+    } else {
+        log_d("RMT Tx finished %d!\n", ch);
+        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
+        RMT.int_ena.val &= ~_INT_TX_END(ch);
+        RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
+        g_rmt_objects[ch].intr_mode = E_NO_INTR;
+        g_rmt_objects[ch].tx_state = E_INACTIVE;
+    }
+    DEBUG_INTERRUPT_END(4);
+}
+
+static void IRAM_ATTR _rmt_tx_mem_first(uint8_t ch)
+{
+    DEBUG_INTERRUPT_START(2);
+    uint32_t* data = g_rmt_objects[ch].data_ptr;
+    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
+    int i;
+    RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
+    RMT.tx_lim_ch[ch].limit = 0;
+
+    if (data) {
+        int remaining_size = g_rmt_objects[ch].data_size;
+
+        // will the remaining data occupy the entire halfbuffer
+        if (remaining_size > half_tx_nr) {
+            RMTMEM.chan[ch].data32[0].val = data[0] - 1;
+            for (i = 1; i < half_tx_nr; i++) {
+                RMTMEM.chan[ch].data32[i].val = data[i];
+            }
+            g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
+            // turn off the treshold interrupt
+            RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
+            RMT.tx_lim_ch[ch].limit = 0;
+            g_rmt_objects[ch].data_size -= half_tx_nr;
+            g_rmt_objects[ch].data_ptr += half_tx_nr;
+        } else {
+            RMTMEM.chan[ch].data32[0].val = data[0] - 1;
+            for (i = 1; i < half_tx_nr; i++) {
+                if (i < remaining_size) {
+                    RMTMEM.chan[ch].data32[i].val = data[i];
+                } else {
+                    RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+                }
+            }
+
+            g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
+            g_rmt_objects[ch].data_ptr = NULL;
+        }
+    } else { 
+        for (i = 0; i < half_tx_nr; i++) {
+            RMTMEM.chan[ch].data32[i].val = 0x000F000F;
+        }
+        RMTMEM.chan[ch].data32[i].val = 0;
+
+        g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
+        RMT.tx_lim_ch[ch].limit = 0;
+        g_rmt_objects[ch].tx_state |= E_LAST_DATA;
+        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
+    }
+    DEBUG_INTERRUPT_END(2);
 }
 
 static int IRAM_ATTR _rmt_get_mem_len(uint8_t channel)
