@@ -34,10 +34,10 @@ enum HTTPUploadStatus { UPLOAD_FILE_START, UPLOAD_FILE_WRITE, UPLOAD_FILE_END,
 enum HTTPClientStatus { HC_NONE, HC_WAIT_READ, HC_WAIT_CLOSE };
 enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH };
 
-#define HTTP_DOWNLOAD_UNIT_SIZE 1460
+#define HTTP_DOWNLOAD_UNIT_SIZE 1436
 
 #ifndef HTTP_UPLOAD_BUFLEN
-#define HTTP_UPLOAD_BUFLEN 2048
+#define HTTP_UPLOAD_BUFLEN 1436
 #endif
 
 #define HTTP_MAX_DATA_WAIT 5000 //ms to wait for the client to send the request

@@ -359,7 +359,7 @@ uint8_t WebServer::_uploadReadByte(WiFiClient& client){
   int res = client.read();
   if(res == -1){
     while(!client.available() && client.connected())
-      yield();
+      delay(2);
     res = client.read();
   }
   return (uint8_t)res;
