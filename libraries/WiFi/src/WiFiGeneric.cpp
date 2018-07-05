@@ -376,6 +376,15 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+        uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
+        uint8_t * mask = (uint8_t *)&(event->event_info.got_ip.ip_info.netmask.addr);
+        uint8_t * gw = (uint8_t *)&(event->event_info.got_ip.ip_info.gw.addr);
+        log_d("STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
+            ip[0], ip[1], ip[2], ip[3],
+            mask[0], mask[1], mask[2], mask[3],
+            gw[0], gw[1], gw[2], gw[3]);
+#endif
         WiFiSTAClass::_setStatus(WL_CONNECTED);
         setStatusBits(STA_HAS_IP_BIT | STA_CONNECTED_BIT);
     } else if(event->event_id == SYSTEM_EVENT_STA_LOST_IP) {
@@ -403,6 +412,15 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
     } else if(event->event_id == SYSTEM_EVENT_ETH_DISCONNECTED) {
         clearStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
     } else if(event->event_id == SYSTEM_EVENT_ETH_GOT_IP) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+        uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
+        uint8_t * mask = (uint8_t *)&(event->event_info.got_ip.ip_info.netmask.addr);
+        uint8_t * gw = (uint8_t *)&(event->event_info.got_ip.ip_info.gw.addr);
+        log_d("ETH IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
+            ip[0], ip[1], ip[2], ip[3],
+            mask[0], mask[1], mask[2], mask[3],
+            gw[0], gw[1], gw[2], gw[3]);
+#endif
         setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT);
 
     } else if(event->event_id == SYSTEM_EVENT_GOT_IP6) {
