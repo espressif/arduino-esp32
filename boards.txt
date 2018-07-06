@@ -1647,7 +1647,7 @@ alksesp32.name=ALKS ESP32
 
 alksesp32.upload.tool=esptool
 alksesp32.upload.maximum_size=1310720
-alksesp32.upload.maximum_data_size=294912
+alksesp32.upload.maximum_data_size=327680
 alksesp32.upload.wait_for_upload_port=true
 
 alksesp32.serial.disableDTR=true
@@ -1664,6 +1664,12 @@ alksesp32.build.flash_freq=40m
 alksesp32.build.flash_mode=dio
 alksesp32.build.boot=dio
 alksesp32.build.partitions=default
+esp32.build.defines=
+
+alksesp32.menu.PSRAM.disabled=Disabled
+alksesp32.menu.PSRAM.disabled.build.defines=
+alksesp32.menu.PSRAM.enabled=Enabled
+alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 alksesp32.menu.PartitionScheme.default=Default
 alksesp32.menu.PartitionScheme.default.build.partitions=default
