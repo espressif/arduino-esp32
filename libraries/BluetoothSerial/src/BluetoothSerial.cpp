@@ -136,6 +136,16 @@ static bool _init_bt(const char *deviceName)
     }
     esp_bt_dev_set_device_name(deviceName);
 
+    // the default BTA_DM_COD_LOUDSPEAKER does not work with the macOS BT stack
+    esp_bt_cod_t cod;
+    cod.major = 0b00001;
+    cod.minor = 0b000100;
+    cod.service = 0b00000010110;
+    if (esp_bt_gap_set_cod(cod, ESP_BT_INIT_COD) != ESP_OK) {
+        log_e("%s set cod failed\n", __func__);
+        return false;
+    }
+
     return true;
 }
 
