@@ -101,6 +101,82 @@ esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+cw02.name=XinaBox CW02
+
+cw02.upload.tool=esptool
+cw02.upload.maximum_size=1310720
+cw02.upload.maximum_data_size=294912
+cw02.upload.wait_for_upload_port=true
+
+cw02.serial.disableDTR=true
+cw02.serial.disableRTS=true
+
+cw02.build.mcu=esp32
+cw02.build.core=esp32
+cw02.build.variant=xinabox
+cw02.build.board=ESP32_DEV
+
+cw02.build.f_cpu=240000000L
+cw02.build.flash_size=4MB
+cw02.build.flash_freq=40m
+cw02.build.flash_mode=dio
+cw02.build.boot=dio
+cw02.build.partitions=default
+
+cw02.menu.FlashMode.qio=QIO
+cw02.menu.FlashMode.qio.build.flash_mode=dio
+cw02.menu.FlashMode.qio.build.boot=qio
+cw02.menu.FlashMode.dio=DIO
+cw02.menu.FlashMode.dio.build.flash_mode=dio
+cw02.menu.FlashMode.dio.build.boot=dio
+cw02.menu.FlashMode.qout=QOUT
+cw02.menu.FlashMode.qout.build.flash_mode=dout
+cw02.menu.FlashMode.qout.build.boot=qout
+cw02.menu.FlashMode.dout=DOUT
+cw02.menu.FlashMode.dout.build.flash_mode=dout
+cw02.menu.FlashMode.dout.build.boot=dout
+
+cw02.menu.FlashFreq.80=80MHz
+cw02.menu.FlashFreq.80.build.flash_freq=80m
+cw02.menu.FlashFreq.40=40MHz
+cw02.menu.FlashFreq.40.build.flash_freq=40m
+
+cw02.menu.FlashSize.4M=4MB (32Mb)
+cw02.menu.FlashSize.4M.build.flash_size=4MB
+cw02.menu.FlashSize.2M=2MB (16Mb)
+cw02.menu.FlashSize.2M.build.flash_size=2MB
+cw02.menu.FlashSize.2M.build.partitions=minimal
+
+cw02.menu.UploadSpeed.921600=921600
+cw02.menu.UploadSpeed.921600.upload.speed=921600
+cw02.menu.UploadSpeed.115200=115200
+cw02.menu.UploadSpeed.115200.upload.speed=115200
+cw02.menu.UploadSpeed.256000.windows=256000
+cw02.menu.UploadSpeed.256000.upload.speed=256000
+cw02.menu.UploadSpeed.230400.windows.upload.speed=256000
+cw02.menu.UploadSpeed.230400=230400
+cw02.menu.UploadSpeed.230400.upload.speed=230400
+cw02.menu.UploadSpeed.460800.linux=460800
+cw02.menu.UploadSpeed.460800.macosx=460800
+cw02.menu.UploadSpeed.460800.upload.speed=460800
+cw02.menu.UploadSpeed.512000.windows=512000
+cw02.menu.UploadSpeed.512000.upload.speed=512000
+
+cw02.menu.DebugLevel.none=None
+cw02.menu.DebugLevel.none.build.code_debug=0
+cw02.menu.DebugLevel.error=Error
+cw02.menu.DebugLevel.error.build.code_debug=1
+cw02.menu.DebugLevel.warn=Warn
+cw02.menu.DebugLevel.warn.build.code_debug=2
+cw02.menu.DebugLevel.info=Info
+cw02.menu.DebugLevel.info.build.code_debug=3
+cw02.menu.DebugLevel.debug=Debug
+cw02.menu.DebugLevel.debug.build.code_debug=4
+cw02.menu.DebugLevel.verbose=Verbose
+cw02.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 esp32wrover.name=ESP32 Wrover Module
 
 esp32wrover.upload.tool=esptool
