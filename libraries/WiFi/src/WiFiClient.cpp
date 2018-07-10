@@ -438,23 +438,9 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
-        if (res < 0) {
-            switch (errno) {
-                case ENOTCONN:
-                case EPIPE:
-                case ECONNRESET:
-                case ECONNREFUSED:
-                case ECONNABORTED:
-                    _connected = false;
-                    break;
-                default:
-                    _connected = true;
-                    break;
-            }
-        } else if(res == 0){
+        if (res <= 0 && errno != EWOULDBLOCK) {
             _connected = false;
-        } else {
-            _connected = true;
+            log_i("Disconnected: RES: %d, ERR: %d", res, errno);
         }
     }
     return _connected;
