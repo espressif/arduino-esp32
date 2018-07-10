@@ -229,6 +229,7 @@ find $outdir -name '*.DS_Store' -exec rm -f {} \;
 # handles tool paths differently when package is installed in hardware folder
 echo " - updating platform.txt..."
 cat $srcdir/platform.txt | \
+sed "s/version=.*/version=$ver$extent/g" | \
 sed 's/runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf//g' | \
 sed 's/tools.esptool.path={runtime.platform.path}\/tools\/esptool/tools.esptool.path=\{runtime.tools.esptool.path\}/g' \
  > $outdir/platform.txt
