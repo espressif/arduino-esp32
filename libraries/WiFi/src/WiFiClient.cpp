@@ -451,8 +451,9 @@ uint8_t WiFiClient::connected()
                     _connected = true;
                     break;
             }
-        }
-        else {
+        } else if(res == 0){
+            _connected = false;
+        } else {
             _connected = true;
         }
     }
