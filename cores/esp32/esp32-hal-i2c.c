@@ -491,6 +491,18 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
 
     if(!full || (a >= i2c->queueCount)) { // disable IRQ, the next dq will re-enable it
         i2c->dev->int_ena.tx_fifo_empty=0;
+        
+        if(!full) { // add a byte to keep spurious tx_empty int
+          uint8_t filler=i2c->dev->fifo_conf.tx_fifo_empty_thrhd;
+          if(filler >( 31 - i2c->dev->status_reg.tx_fifo_cnt)){
+            filler = ( 31 - i2c->dev->status_reg.tx_fifo_cnt);
+          }
+          
+          while(filler > 0){
+            i2c->dev->fifo_data.val = 0xFE; // Just a dummy byte
+            filler--;
+          }
+        }
     }
 
     i2c->dev->int_clr.tx_fifo_empty=1;
@@ -563,9 +575,9 @@ static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal
     if(i2c->dq[i2c->queuePos].ctrl.mode == 1) {
         emptyRxFifo(i2c);    // grab last few characters
     }
-
+//    log_d("raw=0x%05x status=0x%05x",i2c->dev->int_raw.val,i2c->dev->int_status.val);
     i2c->dev->int_ena.val = 0; // shutdown interrupts
-    i2c->dev->int_clr.val = 0x1FFFF;
+    i2c->dev->int_clr.val = 0x1FFF;
     i2c->stage = I2C_DONE;
     i2c->exitCode = exitCode; //true eventcode
 
@@ -586,12 +598,16 @@ static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal
 static void IRAM_ATTR i2c_isr_handler_default(void* arg)
 {
     i2c_t* p_i2c = (i2c_t*) arg; // recover data
-    uint32_t activeInt = p_i2c->dev->int_status.val&0x1FFF;
+    uint32_t activeInt = p_i2c->dev->int_status.val&0x7FF;
 
-    //portBASE_TYPE HPTaskAwoken = pdFALSE,xResult;
-
-    if(p_i2c->stage==I2C_DONE) { //get Out
-        log_e("eject int=%p, ena=%p",activeInt,p_i2c->dev->int_ena.val);
+    if(!activeInt){ //spurious interrupt, possibly bus relate 20180711
+       log_d("raw=0x%05x status=0x%05x",p_i2c->dev->int_raw.val,p_i2c->dev->int_status.val);
+    }
+    if(p_i2c->stage==I2C_DONE) { //get Out, can't service, not configured
+      // this error is some kind of a race condition at high clock >400khz
+      // see #1588. it does not compromise i2c communications though, just
+      // a poke in the eye 
+        log_d("eject raw=%p, int=%p",p_i2c->dev->int_raw.val,activeInt);
         p_i2c->dev->int_ena.val = 0;
         p_i2c->dev->int_clr.val = activeInt; //0x1FFF;
         return;
@@ -610,8 +626,7 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
         intBuff[intPos[p_i2c->num]][2][p_i2c->num] = xTaskGetTickCountFromISR(); // when IRQ fired
 
 #endif
-        //uint32_t oldInt =activeInt;
-
+ 
         if (activeInt & I2C_TRANS_START_INT_ST_M) {
             //   p_i2c->byteCnt=0;
             if(p_i2c->stage==I2C_STARTUP) {
@@ -871,18 +886,21 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     f.rx_fifo_rst = 1; // fifo in reset
     f.tx_fifo_rst = 1; // fifo in reset
     f.nonfifo_en = 0; // use fifo mode
+    f.nonfifo_tx_thres =63;
     // need to adjust threshold based on I2C clock rate, at 100k, 30 usually works,
     // sometimes the emptyRx() actually moves 31 bytes
     // it hasn't overflowed yet, I cannot tell if the new byte is added while
     // emptyRX() is executing or before?
-    f.rx_fifo_full_thrhd = 30; // 30 bytes before INT is issued
+  // let i2cSetFrequency() set thrhds  
+  //   f.rx_fifo_full_thrhd = 30; // 30 bytes before INT is issued
+  //  f.tx_fifo_empty_thrhd = 0;
     f.fifo_addr_cfg_en = 0; // no directed access
     i2c->dev->fifo_conf.val = f.val; // post them all
 
     f.rx_fifo_rst = 0; // release fifo
     f.tx_fifo_rst = 0;
     i2c->dev->fifo_conf.val = f.val; // post them all
-
+    
     i2c->dev->int_clr.val = 0xFFFFFFFF; // kill them All!
     i2c->dev->ctr.ms_mode = 1; // master!
     i2c->queuePos=0;
@@ -936,9 +954,9 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
           ESP_INTR_FLAG_LOWMED;   //< Low and medium prio interrupts. These can be handled in C.
 
         if(i2c->num) {
-            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT1_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x1FFF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
+            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT1_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x7FF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
         } else {
-            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT0_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x1FFF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
+            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT0_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x7FF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
         }
 
         if(ret!=ESP_OK) {
@@ -1326,12 +1344,23 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     if(i2c == NULL) {
         return I2C_ERROR_DEV;
     }
-
+    I2C_FIFO_CONF_t f;
+  
     uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
 
     I2C_MUTEX_LOCK();
+
+    // Adjust Fifo thresholds based on frequency
+    f.val    = i2c->dev->fifo_conf.val;
+    uint32_t a = (clk_speed / 50000L )+1; 
+    if (a > 24) a=24;   
+    f.rx_fifo_full_thrhd = 32 - a;
+    f.tx_fifo_empty_thrhd = a;
+    i2c->dev->fifo_conf.val = f.val; // set thresholds
+    log_v("threshold=%d",a);
+
     //the clock num during SCL is low level
     i2c->dev->scl_low_period.period = period;
     //the clock num during SCL is high level
