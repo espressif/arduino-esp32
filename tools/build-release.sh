@@ -315,8 +315,8 @@ set -e
 rm -f "$releasesJson"
 
 echo "     previous Release: $prev_release"
-echo "     previous (?Pre-)release: $prev_any_release"
 echo "     previous Pre-release: $prev_pre_release"
+echo "     previous (any)release: $prev_any_release"
 
 # add generated items to JSON package-definition contents
 jq_arg=".packages[0].platforms[0].version = \"$ver\" | \
