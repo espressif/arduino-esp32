@@ -126,7 +126,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 }
 
                 IPAddress ip;
-                uint8_t * mac;
                 switch(status) {
                 case 3:
                     ip = WiFi.localIP();
