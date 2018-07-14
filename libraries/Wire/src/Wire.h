@@ -134,6 +134,7 @@ public:
 };
 
 extern TwoWire Wire;
+extern TwoWire Wire1;
 
 
 /*

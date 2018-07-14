@@ -33,6 +33,7 @@ extern "C" {
 #include <string.h>
 #include <math.h>
 #include "sdkconfig.h"
+#include "esp_system.h"
 
 #ifndef F_CPU
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
@@ -59,7 +60,13 @@ void yield(void);
 #include "esp32-hal-sigmadelta.h"
 #include "esp32-hal-timer.h"
 #include "esp32-hal-bt.h"
-#include "esp_system.h"
+#include "esp32-hal-psram.h"
+
+#ifndef BOARD_HAS_PSRAM
+#ifdef CONFIG_SPIRAM_SUPPORT
+#undef CONFIG_SPIRAM_SUPPORT
+#endif
+#endif
 
 //returns chip temperature in Celsius
 float temperatureRead();

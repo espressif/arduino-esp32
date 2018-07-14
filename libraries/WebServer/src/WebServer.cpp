@@ -94,11 +94,13 @@ WebServer::~WebServer() {
 void WebServer::begin() {
   close();
   _server.begin();
+  _server.setNoDelay(true);
 }
 
 void WebServer::begin(uint16_t port) {
   close();
   _server.begin(port);
+  _server.setNoDelay(true);
 }
 
 String WebServer::_extractParam(String& authReq,const String& param,const char delimit){

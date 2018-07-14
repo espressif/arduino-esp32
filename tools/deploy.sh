@@ -46,6 +46,16 @@ while getopts ":t:,:a:,:s:,:p:,:f:,:d:" opt; do
   esac
 done
 
+# use TravisCI env as default, if available
+if [ -z $varTagName ] && [ ! -z $TRAVIS_TAG ]; then
+	varTagName=$TRAVIS_TAG
+fi
+
+if [ -z $varTagName ]; then
+	echo "No tag name available => aborting"
+	exit 1
+fi
+
 #Check tag name for release/prerelease (prerelease tag contains '_RC' as for release-candidate. case-insensitive)
 shopt -s nocasematch
 if [ -z $varPrerelease ]; then
@@ -67,6 +77,10 @@ shopt -u nocasematch
 #	other lines: converted to bullets
 #	empty lines ignored
 #	if '* ' found as a first char pair, it's converted to '- ' to keep bulleting unified
+echo Preparing release notes
+echo -----------------------
+echo "Tag's message:"
+
 relNotesRaw=`git show -s --format=%b $varTagName`
 readarray -t msgArray <<<"$relNotesRaw"
 
@@ -83,12 +97,19 @@ if [ $arrLen > 3 ]; then
 				if [ "${oneLine:0:2}" == "* " ]; then oneLine=$(echo ${oneLine/\*/-}); fi
 				if [ "${oneLine:0:2}" != "- " ]; then releaseNotes+="- "; fi		
 				releaseNotes+="$oneLine\\n"
+				
+				#debug output
+				echo "   ${oneLine}"
 			fi
 		fi
 		let ind=$ind+1
 	done
+	echo "<tag's message end>"
 else
 	releaseNotes="#### Release of $varTagName\\n"
+	
+	#debug output
+	echo "   Release of $varTagName"
 fi
 
 # - list of commits (commits.txt must exit in the output dir)
@@ -97,23 +118,57 @@ if [ -e "$commitFile" ]; then
 	
 	releaseNotes+="\\n##### Commits\\n"
 	
+	#debug output
+	echo
+	echo "Commits:"
+		
 	IFS=$'\n'
 	for next in `cat $commitFile`
 	do
 		IFS=' ' read -r commitId commitMsg <<< "$next"
 		releaseNotes+="- [$commitId](https://github.com/$varRepoSlug/commit/$commitId) $commitMsg\\n"
+		
+		#debug output
+		echo "   - [$commitId](https://github.com/$varRepoSlug/commit/$commitId) $commitMsg"
 	done
 	rm -f $commitFile
 fi
 
 releaseNotes=$(perl -pe 's/\r?\n/\\n/' <<< ${releaseNotes})
 
-#JSON parameters to create a new release
-curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
+# Check possibly existing release for current tag 
+echo "Checking for possible releases of current tag $varTagName..."
+# (eg build invoked by Create New Release GHUI button -> GH default release pack created immediatelly including default assests)
+HTTP_RESPONSE=$(curl -L --silent --write-out "HTTPSTATUS:%{http_code}" https://api.github.com/repos/$varRepoSlug/releases/tags/$varTagName?access_token=$varAccessToken)
+HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
+HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+echo "     HTTP server response code: $HTTP_STATUS"
 
-#Create the release (initial source file assets created by GitHub)
-releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
-echo Release ID: $releaseId
+# if the release exists, append/update recent files to its assets vector
+if [ $HTTP_STATUS -eq 200 ]; then
+	releaseId=$(echo $HTTP_BODY | jq -r '.id')
+	echo " - $varTagName release found (id $releaseId)"
+	
+	#merge release notes and overwrite pre-release flag. all other attributes remain unchanged
+	releaseNotesGH=$(echo $HTTP_BODY | jq -r '.body')
+	releaseNotes="$releaseNotesGH\\n$releaseNotes"
+	
+	echo "    ... updating release notes and pre-release flag"
+	
+	curlData="{\"body\": \"$releaseNotes\",\"prerelease\": $varPrerelease}"
+	curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases/$releaseId?access_token=$varAccessToken
+	
+	if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+	
+#... or create a new release record
+else 
+	curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
+	#echo "DEBUG: curl --data \"${curlData}\" https://api.github.com/repos/${varRepoSlug}/releases?access_token=$varAccessToken | jq -r '.id'"
+	releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
+	echo " - new release created for $varTagName (id $releaseId)"
+	
+	if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi	
+fi
 
 # Assets defined by dir contents
 if [ ! -z $varAssetsDir ]; then
@@ -130,14 +185,22 @@ echo varAssets: $varAssets
 
 #Upload additional assets
 if [ ! -z $varAssets ]; then
+	echo
+	echo "Uploading assets:"
+	echo "-----------------"
+	
 	curlAuth="Authorization: token $varAccessToken"
 	for filename in $(echo $varAssets | tr ";" "\n")
 	do
-	  echo
-	  echo
-	  echo Uploading $filename...
-	  
+	  echo " - ${filename}..." 
 	  curl -X POST -sH "$curlAuth" -H "Content-Type: application/octet-stream" --data-binary @"$filename" https://uploads.github.com/repos/$varRepoSlug/releases/$releaseId/assets?name=$(basename $filename)
+	  
+	  if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+	  
+	  echo
+	  echo "OK"
+	  echo
+	  
 	done
 fi
 
