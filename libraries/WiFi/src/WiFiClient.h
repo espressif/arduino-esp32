@@ -28,11 +28,13 @@
 #include <memory>
 
 class WiFiClientSocketHandle;
+class WiFiClientRxBuffer;
 
 class WiFiClient : public Client
 {
 protected:
     std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
+    std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
     bool _connected;
 
 public:
@@ -45,6 +47,7 @@ public:
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
     size_t write_P(PGM_P buf, size_t size);
+    size_t write(Stream &stream);
     int available();
     int read();
     int read(uint8_t *buf, size_t size);

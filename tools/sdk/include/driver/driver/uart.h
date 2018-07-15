@@ -594,8 +594,7 @@ int uart_write_bytes(uart_port_t uart_num, const char* src, size_t size);
  * @param uart_num UART_NUM_0, UART_NUM_1 or UART_NUM_2
  * @param src   data buffer address
  * @param size  data length to send
- * @param brk_len break signal length (unit: the time it takes to send a complete byte
-                  including start, stop and parity bits at current_baudrate)
+ * @param brk_len break signal duration(unit: the time it takes to send one bit at current baudrate)
  *
  * @return
  *     - (-1) Parameter error
@@ -674,8 +673,11 @@ esp_err_t uart_disable_pattern_det_intr(uart_port_t uart_num);
  * @param pattern_chr character of the pattern
  * @param chr_num number of the character, 8bit value.
  * @param chr_tout timeout of the interval between each pattern characters, 24bit value, unit is APB (80Mhz) clock cycle.
+ *        When the duration is less than this value, it will not take this data as at_cmd char
  * @param post_idle idle time after the last pattern character, 24bit value, unit is APB (80Mhz) clock cycle.
+ *        When the duration is less than this value, it will not take the previous data as the last at_cmd char
  * @param pre_idle idle time before the first pattern character, 24bit value, unit is APB (80Mhz) clock cycle.
+ *        When the duration is less than this value, it will not take this data as the first at_cmd char
  *
  * @return
  *     - ESP_OK Success
@@ -701,6 +703,25 @@ esp_err_t uart_enable_pattern_det_intr(uart_port_t uart_num, char pattern_chr, u
  *     - others the pattern position in rx buffer.
  */
 int uart_pattern_pop_pos(uart_port_t uart_num);
+
+/**
+ * @brief Return the nearest detected pattern position in buffer.
+ *        The positions of the detected pattern are saved in a queue,
+ *        This function do nothing to the queue.
+ * @note  If the RX buffer is full and flow control is not enabled,
+ *        the detected pattern may not be found in the rx buffer due to overflow.
+ *
+ *        The following APIs will modify the pattern position info:
+ *        uart_flush_input, uart_read_bytes, uart_driver_delete, uart_pop_pattern_pos
+ *        It is the application's responsibility to ensure atomic access to the pattern queue and the rx data buffer
+ *        when using pattern detect feature.
+ *
+ * @param uart_num UART port number
+ * @return
+ *     - (-1) No pattern found for current index or parameter error
+ *     - others the pattern position in rx buffer.
+ */
+int uart_pattern_get_pos(uart_port_t uart_num);
 
 /**
  * @brief Allocate a new memory with the given length to save record the detected pattern position in rx buffer.

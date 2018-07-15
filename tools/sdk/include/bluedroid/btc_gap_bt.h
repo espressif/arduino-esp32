@@ -15,23 +15,30 @@
 #ifndef __BTC_GAP_BT_H__
 #define __BTC_GAP_BT_H__
 
-#include "bt_target.h"
+#include "common/bt_target.h"
 #include "esp_bt_defs.h"
 #include "esp_gap_bt_api.h"
-#include "btc_task.h"
+#include "btc/btc_task.h"
+#include "bta/utl.h"
 
 #if (BTC_GAP_BT_INCLUDED == TRUE)
+typedef enum {
+    BTC_GAP_BT_SEARCH_DEVICES_EVT = 0,
+    BTC_GAP_BT_SEARCH_SERVICES_EVT,
+    BTC_GAP_BT_SEARCH_SERVICE_RECORD_EVT,
+    BTC_GAP_BT_READ_RSSI_DELTA_EVT,
+    BTC_GAP_BT_AUTH_CMPL_EVT,
+}btc_gap_bt_evt_t;
 
 typedef enum {
     BTC_GAP_BT_ACT_SET_SCAN_MODE = 0,
-    BTC_GAP_BT_ACT_REG_CB,
     BTC_GAP_BT_ACT_START_DISCOVERY,
-    BTC_GAP_BT_ACT_SEARCH_DEVICES,
     BTC_GAP_BT_ACT_CANCEL_DISCOVERY,
     BTC_GAP_BT_ACT_GET_REMOTE_SERVICES,
-    BTC_GAP_BT_ACT_SEARCH_SERVICES,
     BTC_GAP_BT_ACT_GET_REMOTE_SERVICE_RECORD,
-    BTC_GAP_BT_ACT_SEARCH_SERVICE_RECORD,
+    BTC_GAP_BT_ACT_SET_COD,
+    BTC_GAP_BT_ACT_READ_RSSI_DELTA,
+    BTC_GAP_BT_ACT_REMOVE_BOND_DEVICE,
 } btc_gap_bt_act_t;
 
 /* btc_bt_gap_args_t */
@@ -48,20 +55,38 @@ typedef union {
         uint8_t num_rsps;
     } start_disc;
 
-    // BTC_BT_GAP_ACT_GET_REMOTE_SERVICES
+    // BTC_GAP_BT_ACT_GET_REMOTE_SERVICES
     bt_bdaddr_t bda;
 
-    // BTC_BT_GAP_ACT_GET_REMTOE_SERVICE_RECORD
+    // BTC_GAP_BT_ACT_GET_REMOTE_SERVICE_RECORD
     struct get_rmt_srv_rcd_args {
         bt_bdaddr_t bda;
         esp_bt_uuid_t uuid;
     } get_rmt_srv_rcd;
+
+    // BTC_GAP_BT_ACT_SET_COD
+    struct set_cod_args {
+       esp_bt_cod_t cod;
+       esp_bt_cod_mode_t mode;
+    } set_cod;
+
+    //BTC_GAP_BT_ACT_READ_RSSI_DELTA,
+    struct bt_read_rssi_delta_args {
+        bt_bdaddr_t bda;
+    } read_rssi_delta;
+
+    // BTC_GAP_BT_ACT_REMOVE_BOND_DEVICE
+    struct rm_bond_device_args {
+       bt_bdaddr_t bda;
+    } rm_bond_device;
 } btc_gap_bt_args_t;
 
 void btc_gap_bt_call_handler(btc_msg_t *msg);
+void btc_gap_bt_cb_handler(btc_msg_t *msg);
 
 void btc_gap_bt_busy_level_updated(uint8_t bl_flags);
 
+esp_err_t btc_gap_bt_get_cod(esp_bt_cod_t *cod);
 #endif /* #if BTC_GAP_BT_INCLUDED */
 
 #endif /* __BTC_GAP_BT_H__ */

@@ -315,11 +315,14 @@ void uartFlush(uart_t* uart)
     UART_MUTEX_LOCK();
     while(uart->dev->status.txfifo_cnt);
 
-    uart->dev->conf0.txfifo_rst = 1;
-    uart->dev->conf0.txfifo_rst = 0;
+    //Due to hardware issue, we can not use fifo_rst to reset uart fifo.
+    //See description about UART_TXFIFO_RST and UART_RXFIFO_RST in <<esp32_technical_reference_manual>> v2.6 or later.
 
-    uart->dev->conf0.rxfifo_rst = 1;
-    uart->dev->conf0.rxfifo_rst = 0;
+    // we read the data out and make `fifo_len == 0 && rd_addr == wr_addr`.
+    while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+        READ_PERI_REG(UART_FIFO_REG(uart->num));
+    }
+
     UART_MUTEX_UNLOCK();
 }
 

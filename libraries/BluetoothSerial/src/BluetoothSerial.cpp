@@ -40,63 +40,57 @@
 #include "esp32-hal-log.h"
 #endif
 
-#define SPP_SERVER_NAME "ESP32_SPP_SERVER"
-#define SPP_TAG "BluetoothSerial"
+const char * _spp_server_name = "ESP32_SPP_SERVER";
 
 #define QUEUE_SIZE 256
-uint32_t client;
-xQueueHandle SerialQueueBT;
-
-static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
-static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_NONE;
-static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
+static uint32_t _spp_client = 0;
+static xQueueHandle _spp_queue = NULL;
 
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
     switch (event)
     {
     case ESP_SPP_INIT_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
+        log_i("ESP_SPP_INIT_EVT");
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
-        esp_spp_start_srv(sec_mask, role_slave, 0, SPP_SERVER_NAME);
+        esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
         break;
-    case ESP_SPP_DISCOVERY_COMP_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_DISCOVERY_COMP_EVT");
+    case ESP_SPP_DISCOVERY_COMP_EVT://discovery complete
+        log_i("ESP_SPP_DISCOVERY_COMP_EVT");
         break;
-    case ESP_SPP_OPEN_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_OPEN_EVT");
+    case ESP_SPP_OPEN_EVT://Client connection open
+        log_i("ESP_SPP_OPEN_EVT");
         break;
-    case ESP_SPP_CLOSE_EVT:
-        client = 0;
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CLOSE_EVT");
+    case ESP_SPP_CLOSE_EVT://Client connection closed
+        _spp_client = 0;
+        log_i("ESP_SPP_CLOSE_EVT");
         break;
-    case ESP_SPP_START_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_START_EVT");
+    case ESP_SPP_START_EVT://server started
+        log_i("ESP_SPP_START_EVT");
         break;
-    case ESP_SPP_CL_INIT_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CL_INIT_EVT");
+    case ESP_SPP_CL_INIT_EVT://client initiated a connection
+        log_i("ESP_SPP_CL_INIT_EVT");
         break;
-    case ESP_SPP_DATA_IND_EVT:
-        ESP_LOGV(SPP_TAG, "ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
+    case ESP_SPP_DATA_IND_EVT://connection received data
+        log_v("ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
         //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
 
-        if (SerialQueueBT != 0){
+        if (_spp_queue != NULL){
             for (int i = 0; i < param->data_ind.len; i++)
-                xQueueSend(SerialQueueBT, param->data_ind.data + i, (TickType_t)0);
+                xQueueSend(_spp_queue, param->data_ind.data + i, (TickType_t)0);
+        } else {
+            log_e("SerialQueueBT ERROR");
         }
-        else {
-            ESP_LOGE(SPP_TAG, "SerialQueueBT ERROR");
-        }
         break;
-    case ESP_SPP_CONG_EVT:
-        ESP_LOGI(SPP_TAG, "ESP_SPP_CONG_EVT");
+    case ESP_SPP_CONG_EVT://connection congestion status changed
+        log_i("ESP_SPP_CONG_EVT");
         break;
-    case ESP_SPP_WRITE_EVT:
-        ESP_LOGV(SPP_TAG, "ESP_SPP_WRITE_EVT");
+    case ESP_SPP_WRITE_EVT://write operation completed
+        log_v("ESP_SPP_WRITE_EVT");
         break;
-    case ESP_SPP_SRV_OPEN_EVT:
-        client = param->open.handle;
-        ESP_LOGI(SPP_TAG, "ESP_SPP_SRV_OPEN_EVT");
+    case ESP_SPP_SRV_OPEN_EVT://Server connection open
+        _spp_client = param->open.handle;
+        log_i("ESP_SPP_SRV_OPEN_EVT");
         break;
     default:
         break;
@@ -106,41 +100,51 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 static bool _init_bt(const char *deviceName)
 {
     if (!btStarted() && !btStart()){
-        ESP_LOGE(SPP_TAG, "%s initialize controller failed\n", __func__);
+        log_e("%s initialize controller failed\n", __func__);
         return false;
     }
     
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
     if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
         if (esp_bluedroid_init()) {
-            ESP_LOGE(SPP_TAG, "%s initialize bluedroid failed\n", __func__);
+            log_e("%s initialize bluedroid failed\n", __func__);
             return false;
         }
     }
     
     if (bt_state != ESP_BLUEDROID_STATUS_ENABLED){
         if (esp_bluedroid_enable()) {
-            ESP_LOGE(SPP_TAG, "%s enable bluedroid failed\n", __func__);
+            log_e("%s enable bluedroid failed\n", __func__);
             return false;
         }
     }
 
     if (esp_spp_register_callback(esp_spp_cb) != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s spp register failed\n", __func__);
+        log_e("%s spp register failed\n", __func__);
         return false;
     }
 
-    if (esp_spp_init(esp_spp_mode) != ESP_OK){
-        ESP_LOGE(SPP_TAG, "%s spp init failed\n", __func__);
+    if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
+        log_e("%s spp init failed\n", __func__);
         return false;
     }
 
-    SerialQueueBT = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t)); //initialize the queue
-    if (SerialQueueBT == NULL){
-        ESP_LOGE(SPP_TAG, "%s Queue creation error\n", __func__);
+    _spp_queue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t)); //initialize the queue
+    if (_spp_queue == NULL){
+        log_e("%s Queue creation error\n", __func__);
         return false;
     }
     esp_bt_dev_set_device_name(deviceName);
+
+    // the default BTA_DM_COD_LOUDSPEAKER does not work with the macOS BT stack
+    esp_bt_cod_t cod;
+    cod.major = 0b00001;
+    cod.minor = 0b000100;
+    cod.service = 0b00000010110;
+    if (esp_bt_gap_set_cod(cod, ESP_BT_INIT_COD) != ESP_OK) {
+        log_e("%s set cod failed\n", __func__);
+        return false;
+    }
 
     return true;
 }
@@ -180,21 +184,21 @@ bool BluetoothSerial::begin(String localName)
 
 int BluetoothSerial::available(void)
 {
-    if (!client || SerialQueueBT == NULL){
+    if (!_spp_client || _spp_queue == NULL){
         return 0;
     }
-    return uxQueueMessagesWaiting(SerialQueueBT);
+    return uxQueueMessagesWaiting(_spp_queue);
 }
 
 int BluetoothSerial::peek(void)
 {
     if (available()){
-        if (!client || SerialQueueBT == NULL){
+        if (!_spp_client || _spp_queue == NULL){
             return 0;
         }
 
         uint8_t c;
-        if (xQueuePeek(SerialQueueBT, &c, 0)){
+        if (xQueuePeek(_spp_queue, &c, 0)){
             return c;
         }
     }
@@ -203,7 +207,7 @@ int BluetoothSerial::peek(void)
 
 bool BluetoothSerial::hasClient(void)
 {
-    if (client)
+    if (_spp_client)
         return true;
 	
     return false;
@@ -212,12 +216,12 @@ bool BluetoothSerial::hasClient(void)
 int BluetoothSerial::read(void)
 {
     if (available()){
-        if (!client || SerialQueueBT == NULL){
+        if (!_spp_client || _spp_queue == NULL){
             return 0;
         }
 
         uint8_t c;
-        if (xQueueReceive(SerialQueueBT, &c, 0)){
+        if (xQueueReceive(_spp_queue, &c, 0)){
             return c;
         }
     }
@@ -226,29 +230,32 @@ int BluetoothSerial::read(void)
 
 size_t BluetoothSerial::write(uint8_t c)
 {
-    if (client){
-        uint8_t buffer[1];
-        buffer[0] = c;
-        esp_spp_write(client, 1, buffer);
-        return 1;
+    if (!_spp_client){
+        return 0;
     }
-    return -1;
+
+    uint8_t buffer[1];
+    buffer[0] = c;
+    esp_err_t err = esp_spp_write(_spp_client, 1, buffer);
+    return (err == ESP_OK) ? 1 : 0;
 }
 
 size_t BluetoothSerial::write(const uint8_t *buffer, size_t size)
 {
-    if (client){
-        esp_spp_write(client, size, (uint8_t *)buffer);
+    if (!_spp_client){
+        return 0;
     }
-    return size;
+
+    esp_err_t err = esp_spp_write(_spp_client, size, (uint8_t *)buffer);
+    return (err == ESP_OK) ? size : 0;
 }
 
 void BluetoothSerial::flush()
 {
-    if (client){
+    if (_spp_client){
         int qsize = available();
         uint8_t buffer[qsize];
-        esp_spp_write(client, qsize, buffer);
+        esp_spp_write(_spp_client, qsize, buffer);
     }
 }
 
