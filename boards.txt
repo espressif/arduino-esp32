@@ -1553,6 +1553,93 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+m5stack-fire.name=M5Stack-FIRE
+
+m5stack-fire.upload.tool=esptool
+m5stack-fire.upload.maximum_size=1310720
+m5stack-fire.upload.maximum_data_size=327680
+m5stack-fire.upload.wait_for_upload_port=true
+
+m5stack-fire.serial.disableDTR=true
+m5stack-fire.serial.disableRTS=true
+
+m5stack-fire.build.mcu=esp32
+m5stack-fire.build.core=esp32
+m5stack-fire.build.variant=m5stack_fire
+m5stack-fire.build.board=M5STACK_FIRE
+
+m5stack-fire.build.f_cpu=240000000L
+m5stack-fire.build.flash_size=16MB
+m5stack-fire.build.flash_freq=40m
+m5stack-fire.build.flash_mode=dio
+m5stack-fire.build.boot=dio
+m5stack-fire.build.partitions=default
+m5stack-fire.build.defines=
+
+m5stack-fire.menu.PSRAM.disabled=Disabled
+m5stack-fire.menu.PSRAM.disabled.build.defines=
+m5stack-fire.menu.PSRAM.enabled=Enabled
+m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+m5stack-fire.menu.PartitionScheme.default=Default
+m5stack-fire.menu.PartitionScheme.default.build.partitions=default
+m5stack-fire.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+m5stack-fire.menu.PartitionScheme.minimal.build.partitions=minimal
+m5stack-fire.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stack-fire.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack-fire.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack-fire.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stack-fire.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack-fire.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+m5stack-fire.menu.FlashMode.qio=QIO
+m5stack-fire.menu.FlashMode.qio.build.flash_mode=dio
+m5stack-fire.menu.FlashMode.qio.build.boot=qio
+m5stack-fire.menu.FlashMode.dio=DIO
+m5stack-fire.menu.FlashMode.dio.build.flash_mode=dio
+m5stack-fire.menu.FlashMode.dio.build.boot=dio
+m5stack-fire.menu.FlashMode.qout=QOUT
+m5stack-fire.menu.FlashMode.qout.build.flash_mode=dout
+m5stack-fire.menu.FlashMode.qout.build.boot=qout
+m5stack-fire.menu.FlashMode.dout=DOUT
+m5stack-fire.menu.FlashMode.dout.build.flash_mode=dout
+m5stack-fire.menu.FlashMode.dout.build.boot=dout
+
+m5stack-fire.menu.FlashFreq.80=80MHz
+m5stack-fire.menu.FlashFreq.80.build.flash_freq=80m
+m5stack-fire.menu.FlashFreq.40=40MHz
+m5stack-fire.menu.FlashFreq.40.build.flash_freq=40m
+
+m5stack-fire.menu.UploadSpeed.921600=921600
+m5stack-fire.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-fire.menu.UploadSpeed.115200=115200
+m5stack-fire.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-fire.menu.UploadSpeed.256000.windows=256000
+m5stack-fire.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400=230400
+m5stack-fire.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-fire.menu.UploadSpeed.460800.linux=460800
+m5stack-fire.menu.UploadSpeed.460800.macosx=460800
+m5stack-fire.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-fire.menu.UploadSpeed.512000.windows=512000
+m5stack-fire.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack-fire.menu.DebugLevel.none=None
+m5stack-fire.menu.DebugLevel.none.build.code_debug=0
+m5stack-fire.menu.DebugLevel.error=Error
+m5stack-fire.menu.DebugLevel.error.build.code_debug=1
+m5stack-fire.menu.DebugLevel.warn=Warn
+m5stack-fire.menu.DebugLevel.warn.build.code_debug=2
+m5stack-fire.menu.DebugLevel.info=Info
+m5stack-fire.menu.DebugLevel.info.build.code_debug=3
+m5stack-fire.menu.DebugLevel.debug=Debug
+m5stack-fire.menu.DebugLevel.debug.build.code_debug=4
+m5stack-fire.menu.DebugLevel.verbose=Verbose
+m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.upload.tool=esptool
