@@ -365,14 +365,17 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
         } else if(reason == WIFI_REASON_BEACON_TIMEOUT || reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
             WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
         } else if(reason == WIFI_REASON_AUTH_EXPIRE) {
-            if(WiFi.getAutoReconnect()){
-                WiFi.begin();
-            }
+
         } else {
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL && WiFi.getAutoReconnect()){
+        if(((reason == WIFI_REASON_AUTH_EXPIRE) ||
+            (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
+            WiFi.getAutoReconnect())
+        {
+            WiFi.enableSTA(false);
+            WiFi.enableSTA(true);
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
