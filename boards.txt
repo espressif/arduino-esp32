@@ -1840,6 +1840,96 @@ CoreESP32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+
+alksesp32.name=ALKS ESP32
+
+alksesp32.upload.tool=esptool
+alksesp32.upload.maximum_size=1310720
+alksesp32.upload.maximum_data_size=327680
+alksesp32.upload.wait_for_upload_port=true
+
+alksesp32.serial.disableDTR=true
+alksesp32.serial.disableRTS=true
+
+alksesp32.build.mcu=esp32
+alksesp32.build.core=esp32
+alksesp32.build.variant=alksesp32
+alksesp32.build.board=ALKS
+
+alksesp32.build.f_cpu=240000000L
+alksesp32.build.flash_size=4MB
+alksesp32.build.flash_freq=40m
+alksesp32.build.flash_mode=dio
+alksesp32.build.boot=dio
+alksesp32.build.partitions=default
+alksesp32.build.defines=
+
+alksesp32.menu.PartitionScheme.default=Default
+alksesp32.menu.PartitionScheme.default.build.partitions=default
+alksesp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+alksesp32.menu.PartitionScheme.minimal.build.partitions=minimal
+alksesp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+alksesp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+alksesp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+alksesp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+alksesp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+alksesp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+alksesp32.menu.FlashMode.qio=QIO
+alksesp32.menu.FlashMode.qio.build.flash_mode=dio
+alksesp32.menu.FlashMode.qio.build.boot=qio
+alksesp32.menu.FlashMode.dio=DIO
+alksesp32.menu.FlashMode.dio.build.flash_mode=dio
+alksesp32.menu.FlashMode.dio.build.boot=dio
+alksesp32.menu.FlashMode.qout=QOUT
+alksesp32.menu.FlashMode.qout.build.flash_mode=dout
+alksesp32.menu.FlashMode.qout.build.boot=qout
+alksesp32.menu.FlashMode.dout=DOUT
+alksesp32.menu.FlashMode.dout.build.flash_mode=dout
+alksesp32.menu.FlashMode.dout.build.boot=dout
+
+alksesp32.menu.FlashFreq.80=80MHz
+alksesp32.menu.FlashFreq.80.build.flash_freq=80m
+alksesp32.menu.FlashFreq.40=40MHz
+alksesp32.menu.FlashFreq.40.build.flash_freq=40m
+
+alksesp32.menu.FlashSize.4M=4MB (32Mb)
+alksesp32.menu.FlashSize.4M.build.flash_size=4MB
+alksesp32.menu.FlashSize.2M=2MB (16Mb)
+alksesp32.menu.FlashSize.2M.build.flash_size=2MB
+alksesp32.menu.FlashSize.2M.build.partitions=minimal
+
+alksesp32.menu.UploadSpeed.921600=921600
+alksesp32.menu.UploadSpeed.921600.upload.speed=921600
+alksesp32.menu.UploadSpeed.115200=115200
+alksesp32.menu.UploadSpeed.115200.upload.speed=115200
+alksesp32.menu.UploadSpeed.256000.windows=256000
+alksesp32.menu.UploadSpeed.256000.upload.speed=256000
+alksesp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+alksesp32.menu.UploadSpeed.230400=230400
+alksesp32.menu.UploadSpeed.230400.upload.speed=230400
+alksesp32.menu.UploadSpeed.460800.linux=460800
+alksesp32.menu.UploadSpeed.460800.macosx=460800
+alksesp32.menu.UploadSpeed.460800.upload.speed=460800
+alksesp32.menu.UploadSpeed.512000.windows=512000
+alksesp32.menu.UploadSpeed.512000.upload.speed=512000
+
+alksesp32.menu.DebugLevel.none=None
+alksesp32.menu.DebugLevel.none.build.code_debug=0
+alksesp32.menu.DebugLevel.error=Error
+alksesp32.menu.DebugLevel.error.build.code_debug=1
+alksesp32.menu.DebugLevel.warn=Warn
+alksesp32.menu.DebugLevel.warn.build.code_debug=2
+alksesp32.menu.DebugLevel.info=Info
+alksesp32.menu.DebugLevel.info.build.code_debug=3
+alksesp32.menu.DebugLevel.debug=Debug
+alksesp32.menu.DebugLevel.debug.build.code_debug=4
+alksesp32.menu.DebugLevel.verbose=Verbose
+alksesp32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+
 wipy3.name=WiPy 3.0
 
 wipy3.upload.tool=esptool
@@ -1894,4 +1984,3 @@ wipy3.menu.DebugLevel.debug=Debug
 wipy3.menu.DebugLevel.debug.build.code_debug=4
 wipy3.menu.DebugLevel.verbose=Verbose
 wipy3.menu.DebugLevel.verbose.build.code_debug=5
-
