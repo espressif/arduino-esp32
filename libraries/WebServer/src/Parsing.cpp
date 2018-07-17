@@ -32,6 +32,10 @@
 #define DEBUG_OUTPUT Serial
 #endif
 
+#ifndef WEBSERVER_MAX_POST_ARGS
+#define WEBSERVER_MAX_POST_ARGS 32
+#endif
+
 static const char Content_Type[] PROGMEM = "Content-Type";
 static const char filename[] PROGMEM = "filename";
 
@@ -383,8 +387,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
   client.readStringUntil('\n');
   //start reading the form
   if (line == ("--"+boundary)){
-    RequestArgument* postArgs = new RequestArgument[32];
-    int postArgsLen = 0;
+	 if(_postArgs) delete[] _postArgs;
+	 _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
+     _postArgsLen = 0;
     while(1){
       String argName;
       String argValue;
@@ -445,7 +450,7 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             DEBUG_OUTPUT.println();
 #endif
 
-            RequestArgument& arg = postArgs[postArgsLen++];
+            RequestArgument& arg = _postArgs[_postArgsLen++];
             arg.key = argName;
             arg.value = argValue;
 
@@ -552,22 +557,25 @@ readfile:
     }
 
     int iarg;
-    int totalArgs = ((32 - postArgsLen) < _currentArgCount)?(32 - postArgsLen):_currentArgCount;
+    int totalArgs = ((WEBSERVER_MAX_POST_ARGS - _postArgsLen) < _currentArgCount)?(WEBSERVER_MAX_POST_ARGS - _postArgsLen):_currentArgCount;
     for (iarg = 0; iarg < totalArgs; iarg++){
-      RequestArgument& arg = postArgs[postArgsLen++];
+      RequestArgument& arg = _postArgs[_postArgsLen++];
       arg.key = _currentArgs[iarg].key;
       arg.value = _currentArgs[iarg].value;
     }
     if (_currentArgs) delete[] _currentArgs;
-    _currentArgs = new RequestArgument[postArgsLen];
-    for (iarg = 0; iarg < postArgsLen; iarg++){
+    _currentArgs = new RequestArgument[_postArgsLen];
+    for (iarg = 0; iarg < _postArgsLen; iarg++){
       RequestArgument& arg = _currentArgs[iarg];
-      arg.key = postArgs[iarg].key;
-      arg.value = postArgs[iarg].value;
+      arg.key = _postArgs[iarg].key;
+      arg.value = _postArgs[iarg].value;
     }
     _currentArgCount = iarg;
-    if (postArgs) 
-      delete[] postArgs;
+    if (_postArgs) {
+      delete[] _postArgs;
+      _postArgs=nullptr;
+      _postArgsLen = 0;
+    }
     return true;
   }
 #ifdef DEBUG_ESP_HTTP_SERVER
