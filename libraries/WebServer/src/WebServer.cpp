@@ -54,6 +54,8 @@ WebServer::WebServer(IPAddress addr, int port)
 , _lastHandler(nullptr)
 , _currentArgCount(0)
 , _currentArgs(nullptr)
+, _postArgsLen(0)
+, _postArgs(nullptr)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
@@ -72,6 +74,8 @@ WebServer::WebServer(int port)
 , _lastHandler(nullptr)
 , _currentArgCount(0)
 , _currentArgs(nullptr)
+, _postArgsLen(0)
+, _postArgs(nullptr)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
@@ -507,6 +511,10 @@ void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, 
 
 
 String WebServer::arg(String name) {
+  for (int j = 0; j < _postArgsLen; ++j) {
+	    if ( _postArgs[j].key == name )
+	      return _postArgs[j].value;
+	  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if ( _currentArgs[i].key == name )
       return _currentArgs[i].value;
@@ -531,6 +539,10 @@ int WebServer::args() {
 }
 
 bool WebServer::hasArg(String  name) {
+  for (int j = 0; j < _postArgsLen; ++j) {
+	    if (_postArgs[j].key == name)
+	      return true;
+	  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if (_currentArgs[i].key == name)
       return true;
