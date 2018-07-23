@@ -7,6 +7,9 @@
 
 #define INT_BUFFER_SIZE 16
 
+#ifndef OTA_TIMEOUT_DURATION_MS
+#define OTA_TIMEOUT_DURATION_MS 1000
+#endif
 
 typedef enum {
   OTA_IDLE,
