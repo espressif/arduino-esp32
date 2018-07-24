@@ -106,7 +106,7 @@ config AUTOCONNECT_WIFI
     bool "Autoconnect WiFi on boot"
     default "n"
     depends on AUTOSTART_ARDUINO
-    depends on ARDUINO_SELECTIVE_WiFi
+    select ARDUINO_SELECTIVE_WiFi
     help
         If enabled, WiFi will connect to the last used SSID (if station was enabled),
         else connection will be started only after calling WiFi.begin(ssid, password)
