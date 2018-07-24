@@ -7,7 +7,6 @@
 
 #define INT_BUFFER_SIZE 16
 
-
 typedef enum {
   OTA_IDLE,
   OTA_WAITAUTH,
@@ -25,9 +24,9 @@ typedef enum {
 class ArduinoOTAClass
 {
   public:
-	typedef std::function<void(void)> THandlerFunction;
-	typedef std::function<void(ota_error_t)> THandlerFunction_Error;
-	typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
+    typedef std::function<void(void)> THandlerFunction;
+    typedef std::function<void(ota_error_t)> THandlerFunction_Error;
+    typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
 
     ArduinoOTAClass();
     ~ArduinoOTAClass();
@@ -75,6 +74,8 @@ class ArduinoOTAClass
     //Gets update command type after OTA has started. Either U_FLASH or U_SPIFFS
     int getCommand();
 
+    void setTimeout(int timeoutInMillis);
+
   private:
     int _port;
     String _password;
@@ -88,6 +89,7 @@ class ArduinoOTAClass
     int _size;
     int _cmd;
     int _ota_port;
+    int _ota_timeout;
     IPAddress _ota_ip;
     String _md5;
 

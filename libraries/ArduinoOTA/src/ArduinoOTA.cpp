@@ -9,7 +9,7 @@
 #include "Update.h"
 
 
-//#define OTA_DEBUG Serial
+// #define OTA_DEBUG Serial
 
 ArduinoOTAClass::ArduinoOTAClass()
 : _port(0)
@@ -20,6 +20,7 @@ ArduinoOTAClass::ArduinoOTAClass()
 , _size(0)
 , _cmd(0)
 , _ota_port(0)
+, _ota_timeout(1000)
 , _start_callback(NULL)
 , _end_callback(NULL)
 , _error_callback(NULL)
@@ -260,8 +261,9 @@ void ArduinoOTAClass::_runUpdate() {
     }
 
     uint32_t written = 0, total = 0, tried = 0;
+
     while (!Update.isFinished() && client.connected()) {
-        size_t waited = 1000;
+        size_t waited = _ota_timeout;
         size_t available = client.available();
         while (!available && waited){
             delay(1);
@@ -385,6 +387,10 @@ void ArduinoOTAClass::handle() {
 
 int ArduinoOTAClass::getCommand() {
     return _cmd;
+}
+
+void ArduinoOTAClass::setTimeout(int timeoutInMillis) {
+    _ota_timeout = timeoutInMillis;
 }
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ARDUINOOTA)
