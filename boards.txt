@@ -8,6 +8,62 @@ menu.PSRAM=PSRAM
 
 ##############################################################
 
+ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
+
+ttgo-lora32-v1.upload.tool=esptool
+ttgo-lora32-v1.upload.maximum_size=1310720
+ttgo-lora32-v1.upload.maximum_data_size=294912
+ttgo-lora32-v1.upload.wait_for_upload_port=true
+
+ttgo-lora32-v1.serial.disableDTR=true
+ttgo-lora32-v1.serial.disableRTS=true
+
+ttgo-lora32-v1.build.mcu=esp32
+ttgo-lora32-v1.build.core=esp32
+ttgo-lora32-v1.build.variant=ttgo-lora32-v1
+ttgo-lora32-v1.build.board=TTGO_LoRa32_V1
+
+ttgo-lora32-v1.build.f_cpu=240000000L
+ttgo-lora32-v1.build.flash_mode=dio
+ttgo-lora32-v1.build.flash_size=4MB
+ttgo-lora32-v1.build.boot=dio
+ttgo-lora32-v1.build.partitions=default
+
+ttgo-lora32-v1.menu.FlashFreq.80=80MHz
+ttgo-lora32-v1.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-lora32-v1.menu.FlashFreq.40=40MHz
+ttgo-lora32-v1.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-lora32-v1.menu.UploadSpeed.921600=921600
+ttgo-lora32-v1.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-lora32-v1.menu.UploadSpeed.115200=115200
+ttgo-lora32-v1.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-lora32-v1.menu.UploadSpeed.256000.windows=256000
+ttgo-lora32-v1.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-lora32-v1.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-lora32-v1.menu.UploadSpeed.230400=230400
+ttgo-lora32-v1.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-lora32-v1.menu.UploadSpeed.460800.linux=460800
+ttgo-lora32-v1.menu.UploadSpeed.460800.macosx=460800
+ttgo-lora32-v1.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-lora32-v1.menu.UploadSpeed.512000.windows=512000
+ttgo-lora32-v1.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-lora32-v1.menu.DebugLevel.none=None
+ttgo-lora32-v1.menu.DebugLevel.none.build.code_debug=0
+ttgo-lora32-v1.menu.DebugLevel.error=Error
+ttgo-lora32-v1.menu.DebugLevel.error.build.code_debug=1
+ttgo-lora32-v1.menu.DebugLevel.warn=Warn
+ttgo-lora32-v1.menu.DebugLevel.warn.build.code_debug=2
+ttgo-lora32-v1.menu.DebugLevel.info=Info
+ttgo-lora32-v1.menu.DebugLevel.info.build.code_debug=3
+ttgo-lora32-v1.menu.DebugLevel.debug=Debug
+ttgo-lora32-v1.menu.DebugLevel.debug.build.code_debug=4
+ttgo-lora32-v1.menu.DebugLevel.verbose=Verbose
+ttgo-lora32-v1.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 esp32.name=ESP32 Dev Module
 
 esp32.upload.tool=esptool
