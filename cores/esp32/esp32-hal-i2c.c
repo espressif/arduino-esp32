@@ -205,8 +205,8 @@ static i2c_t _i2c_bus_array[2] = {
 #define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0}
 };
 #endif
 
@@ -637,7 +637,9 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
     uint32_t activeInt = p_i2c->dev->int_status.val&0x7FF;
 
     if(p_i2c->stage==I2C_DONE) { //get Out, can't service, not configured
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
         uint32_t raw = p_i2c->dev->int_raw.val;
+#endif
         p_i2c->dev->int_ena.val = 0;
         p_i2c->dev->int_clr.val = 0x1FFF;
         log_v("eject raw=%p, int=%p",raw,activeInt);
@@ -1435,7 +1437,7 @@ void i2cDumpDqData(i2c_t * i2c)
         tdq=&i2c->dq[a];
         log_e("[%d] %sbit %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,
         (tdq->ctrl.addr>0x100)?"10":"7",
-        (tdq->ctrl.addr>0x100)?((tdq->ctrl.addr&0x600)>>1)|tdq->ctrl.addr&0xff:(tdq->ctrl.addr>>1),
+        (tdq->ctrl.addr>0x100)?(((tdq->ctrl.addr&0x600)>>1)|(tdq->ctrl.addr&0xff)):(tdq->ctrl.addr>>1),
         (tdq->ctrl.mode)?'R':'W',
         (tdq->ctrl.stop)?"STOP":"",
         tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
