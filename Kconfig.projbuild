@@ -106,8 +106,147 @@ config AUTOCONNECT_WIFI
     bool "Autoconnect WiFi on boot"
     default "n"
     depends on AUTOSTART_ARDUINO
+    select ARDUINO_SELECTIVE_WiFi
     help
         If enabled, WiFi will connect to the last used SSID (if station was enabled),
         else connection will be started only after calling WiFi.begin(ssid, password)
+
+config ARDUINO_SELECTIVE_COMPILATION
+    bool "Include only specific Arduino libraries"
+    default n
+
+config ARDUINO_SELECTIVE_ArduinoOTA
+    bool "Enable ArduinoOTA"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    select ARDUINO_SELECTIVE_ESPmDNS
+    default y
+
+config ARDUINO_SELECTIVE_AsyncUDP
+    bool "Enable AsyncUDP"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_AzureIoT
+    bool "Enable AzureIoT"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_HTTPClient
+    default y
+
+config ARDUINO_SELECTIVE_BLE
+    bool "Enable BLE"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_BluetoothSerial
+    bool "Enable BluetoothSerial"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_DNSServer
+    bool "Enable DNSServer"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_EEPROM
+    bool "Enable EEPROM"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_ESP32
+    bool "Enable ESP32"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_ESPmDNS
+    bool "Enable ESPmDNS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_FS
+    bool "Enable FS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_HTTPClient
+    bool "Enable HTTPClient"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    select ARDUINO_SELECTIVE_WiFiClientSecure
+    default y
+
+config ARDUINO_SELECTIVE_NetBIOS
+    bool "Enable NetBIOS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_Preferences
+    bool "Enable Preferences"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SD
+    bool "Enable SD"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_SD_MMC
+    bool "Enable SD_MMC"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_SimpleBLE
+    bool "Enable SimpleBLE"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SPI
+    bool "Enable SPI"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SPIFFS
+    bool "Enable SPIFFS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_Ticker
+    bool "Enable Ticker"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_Update
+    bool "Enable Update"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_WebServer
+    bool "Enable WebServer"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+    select ARDUINO_SELECTIVE_FS
+
+config ARDUINO_SELECTIVE_WiFi
+    bool "Enable WiFi"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_WiFiClientSecure
+    bool "Enable WiFiClientSecure"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_Wire
+    bool "Enable Wire"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 
 endmenu
