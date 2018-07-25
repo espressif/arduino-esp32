@@ -359,14 +359,14 @@ void WebServer::_uploadWriteByte(uint8_t b){
   _currentUpload->buf[_currentUpload->currentSize++] = b;
 }
 
-uint8_t WebServer::_uploadReadByte(WiFiClient& client){
+int WebServer::_uploadReadByte(WiFiClient& client){
   int res = client.read();
   if(res == -1){
     while(!client.available() && client.connected())
       delay(2);
     res = client.read();
   }
-  return (uint8_t)res;
+  return res;
 }
 
 bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
@@ -477,19 +477,20 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             _currentUpload->status = UPLOAD_FILE_WRITE;
-            uint8_t argByte = _uploadReadByte(client);
+            int argByte;
 readfile:
-            while(argByte != 0x0D){
-              if (!client.connected()) return _parseFormUploadAborted();
-              _uploadWriteByte(argByte);
+
+            do{
               argByte = _uploadReadByte(client);
-            }
+                if(argByte < 0) return _parseFormUploadAborted();
+                _uploadWriteByte(argByte);
+            }while(argByte != 0x0D);
 
             argByte = _uploadReadByte(client);
-            if (!client.connected()) return _parseFormUploadAborted();
+            if(argByte < 0) return _parseFormUploadAborted();
             if (argByte == 0x0A){
               argByte = _uploadReadByte(client);
-              if (!client.connected()) return _parseFormUploadAborted();
+              if(argByte < 0) return _parseFormUploadAborted();
               if ((char)argByte != '-'){
                 //continue reading the file
                 _uploadWriteByte(0x0D);
@@ -497,7 +498,7 @@ readfile:
                 goto readfile;
               } else {
                 argByte = _uploadReadByte(client);
-                if (!client.connected()) return _parseFormUploadAborted();
+                if(argByte < 0) return _parseFormUploadAborted();
                 if ((char)argByte != '-'){
                   //continue reading the file
                   _uploadWriteByte(0x0D);
