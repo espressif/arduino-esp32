@@ -221,9 +221,10 @@ int WiFiUDP::parsePacket(){
   }
   remote_ip = IPAddress(si_other.sin_addr.s_addr);
   remote_port = ntohs(si_other.sin_port);
-  if (len == 0) return 0;
-  rx_buffer = new cbuf(len);
-  rx_buffer->write(buf, len);
+  if (len > 0) {
+    rx_buffer = new cbuf(len);
+    rx_buffer->write(buf, len);
+  }
   delete[] buf;
   return len;
 }
