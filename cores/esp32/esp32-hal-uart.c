@@ -96,7 +96,8 @@ static void IRAM_ATTR _uart_isr(void *arg)
 void uartEnableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
-    uart->dev->conf1.rxfifo_full_thrhd = 112;
+    //uart->dev->conf1.rxfifo_full_thrhd = 112; //original
+    uart->dev->conf1.rxfifo_full_thrhd = 1; //fix for "realtime" uart
     uart->dev->conf1.rx_tout_thrhd = 2;
     uart->dev->conf1.rx_tout_en = 1;
     uart->dev->int_ena.rxfifo_full = 1;
