@@ -19,7 +19,11 @@ Most of the framework is implemented. Most noticable is the missing analogWrite.
 
 ## Installation Instructions
 
-- Using Arduino IDE
+#### [Latest release ![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic) ![Release Date](https://img.shields.io/github/release-date/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/)
+
+- Using Arduino IDE Boards Manager (preferred)
+  + [Instructions for Boards Manager](docs/arduino-ide/boards_manager.md)
+- Using Arduino IDE with the development repository
   + [Instructions for Windows](docs/arduino-ide/windows.md)
   + [Instructions for Mac](docs/arduino-ide/mac.md)
   + [Instructions for Debian/Ubuntu Linux](docs/arduino-ide/debian_ubuntu.md)
