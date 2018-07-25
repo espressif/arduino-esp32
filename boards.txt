@@ -1609,6 +1609,64 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+m5stack-fire.name=M5Stack-FIRE
+
+m5stack-fire.upload.tool=esptool
+m5stack-fire.upload.maximum_size=1310720
+m5stack-fire.upload.maximum_data_size=327680
+m5stack-fire.upload.wait_for_upload_port=true
+
+m5stack-fire.serial.disableDTR=true
+m5stack-fire.serial.disableRTS=true
+
+m5stack-fire.build.mcu=esp32
+m5stack-fire.build.core=esp32
+m5stack-fire.build.variant=m5stack_fire
+m5stack-fire.build.board=M5STACK_FIRE
+
+m5stack-fire.build.f_cpu=240000000L
+m5stack-fire.build.flash_size=16MB
+m5stack-fire.build.flash_freq=80m
+m5stack-fire.build.flash_mode=dio
+m5stack-fire.build.boot=dio
+m5stack-fire.build.partitions=default
+m5stack-fire.build.defines=
+
+m5stack-fire.menu.PSRAM.enabled=Enabled
+m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-fire.menu.PSRAM.disabled=Disabled
+m5stack-fire.menu.PSRAM.disabled.build.defines=
+
+m5stack-fire.menu.UploadSpeed.921600=921600
+m5stack-fire.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-fire.menu.UploadSpeed.115200=115200
+m5stack-fire.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-fire.menu.UploadSpeed.256000.windows=256000
+m5stack-fire.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400=230400
+m5stack-fire.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-fire.menu.UploadSpeed.460800.linux=460800
+m5stack-fire.menu.UploadSpeed.460800.macosx=460800
+m5stack-fire.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-fire.menu.UploadSpeed.512000.windows=512000
+m5stack-fire.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack-fire.menu.DebugLevel.none=None
+m5stack-fire.menu.DebugLevel.none.build.code_debug=0
+m5stack-fire.menu.DebugLevel.error=Error
+m5stack-fire.menu.DebugLevel.error.build.code_debug=1
+m5stack-fire.menu.DebugLevel.warn=Warn
+m5stack-fire.menu.DebugLevel.warn.build.code_debug=2
+m5stack-fire.menu.DebugLevel.info=Info
+m5stack-fire.menu.DebugLevel.info.build.code_debug=3
+m5stack-fire.menu.DebugLevel.debug=Debug
+m5stack-fire.menu.DebugLevel.debug.build.code_debug=4
+m5stack-fire.menu.DebugLevel.verbose=Verbose
+m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.upload.tool=esptool
