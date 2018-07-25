@@ -477,14 +477,14 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             _currentUpload->status = UPLOAD_FILE_WRITE;
-            int argByte;
+            int argByte = _uploadReadByte(client);
 readfile:
 
-            do{
-              argByte = _uploadReadByte(client);
+            while(argByte != 0x0D){
                 if(argByte < 0) return _parseFormUploadAborted();
                 _uploadWriteByte(argByte);
-            }while(argByte != 0x0D);
+                argByte = _uploadReadByte(client);
+            }
 
             argByte = _uploadReadByte(client);
             if(argByte < 0) return _parseFormUploadAborted();
