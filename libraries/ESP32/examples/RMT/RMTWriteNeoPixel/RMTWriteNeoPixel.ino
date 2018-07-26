@@ -6,7 +6,7 @@
 #include "esp32-hal.h"
 
 #define NR_OF_LEDS   8*4
-#define NR_OF_PIXELS 24*NR_OF_LEDS
+#define NR_OF_ALL_BITS 24*NR_OF_LEDS
 
 //
 // Note: This example uses Neopixel LED board, 32 LEDs chained one
@@ -16,24 +16,24 @@
 //      Bits encoded as pulses as follows:
 //
 //      "0":
-//      ---+       +--------------+
-//         |       |              |
-//         |       |              |
-//         |       |              |
-//         |       |              |
 //         +-------+              +--
+//         |       |              |
+//         |       |              |
+//         |       |              |
+//      ---|       |--------------|
+//         +       +              +
 //         | 0.4us |   0.85 0us   |
 //
 //      "1":
-//      ---+             +-------+
-//         |             |       |
-//         |             |       |
-//         |             |       |
-//         |             |       |
 //         +-------------+       +--
+//         |             |       |
+//         |             |       |
+//         |             |       |
+//         |             |       |
+//      ---+             +-------+
 //         |    0.8us    | 0.4us |
 
-rmt_data_t led_data[NR_OF_PIXELS];
+rmt_data_t led_data[NR_OF_ALL_BITS];
 
 rmt_obj_t* rmt_send = NULL;
 
@@ -63,9 +63,15 @@ void loop()
         for (col=0; col<3; col++ ) {
             for (bit=0; bit<8; bit++){
                 if ( (color[col] & (1<<(8-bit))) && (led == led_index) ) {
-                    led_data[i].val = 0x80070006;
+                    led_data[i].level0 = 1;
+                    led_data[i].duration0 = 8;
+                    led_data[i].level1 = 0;
+                    led_data[i].duration1 = 4;
                 } else {
-                    led_data[i].val = 0x80040008;
+                    led_data[i].level0 = 1;
+                    led_data[i].duration0 = 4;
+                    led_data[i].level1 = 0;
+                    led_data[i].duration1 = 8;
                 }
                 i++;
             }
@@ -77,7 +83,7 @@ void loop()
     }
 
     // Send the data
-    rmtWrite(rmt_send, led_data, NR_OF_PIXELS);
+    rmtWrite(rmt_send, led_data, NR_OF_ALL_BITS);
 
     delay(100);
 }
