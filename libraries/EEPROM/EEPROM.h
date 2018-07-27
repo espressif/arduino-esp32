@@ -29,6 +29,7 @@
 #ifndef EEPROM_FLASH_PARTITION_NAME
 #define EEPROM_FLASH_PARTITION_NAME "eeprom"
 #endif
+#include <Arduino.h>
 extern "C" {
 
 #include <stddef.h>

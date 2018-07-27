@@ -31,8 +31,6 @@ const char* password = "**********";
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
-HardwareSerial Serial1(2);  // UART1/Serial1 pins 16,17
-
 void setup() {
   Serial.begin(115200);
   Serial.println("\nConnecting");
@@ -62,7 +60,7 @@ void setup() {
   }
 
   //start UART and the server
-  Serial1.begin(9600);
+  Serial2.begin(9600);
   server.begin();
   server.setNoDelay(true);
 
@@ -98,7 +96,7 @@ void loop() {
       if (serverClients[i] && serverClients[i].connected()){
         if(serverClients[i].available()){
           //get data from the telnet client and push it to the UART
-          while(serverClients[i].available()) Serial1.write(serverClients[i].read());
+          while(serverClients[i].available()) Serial2.write(serverClients[i].read());
         }
       }
       else {
@@ -108,10 +106,10 @@ void loop() {
       }
     }
     //check UART for data
-    if(Serial1.available()){
-      size_t len = Serial1.available();
+    if(Serial2.available()){
+      size_t len = Serial2.available();
       uint8_t sbuf[len];
-      Serial1.readBytes(sbuf, len);
+      Serial2.readBytes(sbuf, len);
       //push UART data to all connected telnet clients
       for(i = 0; i < MAX_SRV_CLIENTS; i++){
         if (serverClients[i] && serverClients[i].connected()){

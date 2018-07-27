@@ -31,6 +31,118 @@
 #undef write
 #undef read
 
+class WiFiClientRxBuffer {
+private:
+        size_t _size;
+        uint8_t *_buffer;
+        size_t _pos;
+        size_t _fill;
+        int _fd;
+        bool _failed;
+
+        size_t r_available()
+        {
+            if(_fd < 0){
+                return 0;
+            }
+            int count;
+            int res = lwip_ioctl_r(_fd, FIONREAD, &count);
+            if(res < 0) {
+                _failed = true;
+                return 0;
+            }
+            return count;
+        }
+
+        size_t fillBuffer()
+        {
+            if(!_buffer){
+                _buffer = (uint8_t *)malloc(_size);
+            }
+            if(_fill && _pos == _fill){
+                _fill = 0;
+                _pos = 0;
+            }
+            if(!_buffer || _size <= _fill || !r_available()) {
+                return 0;
+            }
+            int res = recv(_fd, _buffer + _fill, _size - _fill, MSG_DONTWAIT);
+            if(res < 0 && errno != EWOULDBLOCK) {
+                _failed = true;
+                return 0;
+            }
+            _fill += res;
+            return res;
+        }
+
+public:
+    WiFiClientRxBuffer(int fd, size_t size=1436)
+        :_size(size)
+        ,_buffer(NULL)
+        ,_pos(0)
+        ,_fill(0)
+        ,_fd(fd)
+        ,_failed(false)
+    {
+        //_buffer = (uint8_t *)malloc(_size);
+    }
+
+    ~WiFiClientRxBuffer()
+    {
+        free(_buffer);
+    }
+
+    bool failed(){
+        return _failed;
+    }
+
+    int read(uint8_t * dst, size_t len){
+        if(!dst || !len || (_pos == _fill && !fillBuffer())){
+            return -1;
+        }
+        size_t a = _fill - _pos;
+        if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
+            if(len == 1){
+                *dst = _buffer[_pos];
+            } else {
+                memcpy(dst, _buffer + _pos, len);
+            }
+            _pos += len;
+            return len;
+        }
+        size_t left = len;
+        size_t toRead = a;
+        uint8_t * buf = dst;
+        memcpy(buf, _buffer + _pos, toRead);
+        _pos += toRead;
+        left -= toRead;
+        buf += toRead;
+        while(left){
+            if(!fillBuffer()){
+                return len - left;
+            }
+            a = _fill - _pos;
+            toRead = (a > left)?left:a;
+            memcpy(buf, _buffer + _pos, toRead);
+            _pos += toRead;
+            left -= toRead;
+            buf += toRead;
+        }
+        return len;
+    }
+
+    int peek(){
+        if(_pos == _fill && !fillBuffer()){
+            return -1;
+        }
+        return _buffer[_pos];
+    }
+
+    size_t available(){
+        return _fill - _pos + r_available();
+    }
+};
+
 class WiFiClientSocketHandle {
 private:
     int sockfd;
@@ -58,6 +170,7 @@ WiFiClient::WiFiClient():_connected(false),next(NULL)
 WiFiClient::WiFiClient(int fd):_connected(true),next(NULL)
 {
     clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
+    _rxBuffer.reset(new WiFiClientRxBuffer(fd));
 }
 
 WiFiClient::~WiFiClient()
@@ -69,6 +182,7 @@ WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
     stop();
     clientSocketHandle = other.clientSocketHandle;
+    _rxBuffer = other._rxBuffer;
     _connected = other._connected;
     return *this;
 }
@@ -76,6 +190,7 @@ WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 void WiFiClient::stop()
 {
     clientSocketHandle = NULL;
+    _rxBuffer = NULL;
     _connected = false;
 }
 
@@ -100,6 +215,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
         return 0;
     }
     clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
+    _rxBuffer.reset(new WiFiClientRxBuffer(sockfd));
     _connected = true;
     return 1;
 }
@@ -260,11 +376,9 @@ size_t WiFiClient::write(Stream &stream)
 
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
-    if(!available()) {
-        return -1;
-    }
-    int res = recv(fd(), buf, size, MSG_DONTWAIT);
-    if(res < 0 && errno != EWOULDBLOCK) {
+    int res = -1;
+    res = _rxBuffer->read(buf, size);
+    if(_rxBuffer->failed()) {
         log_e("%d", errno);
         stop();
     }
@@ -273,16 +387,12 @@ int WiFiClient::read(uint8_t *buf, size_t size)
 
 int WiFiClient::peek()
 {
-    if(!available()) {
-        return -1;
-    }
-    uint8_t data = 0;
-    int res = recv(fd(), &data, 1, MSG_PEEK);
-    if(res < 0 && errno != EWOULDBLOCK) {
+    int res = _rxBuffer->peek();
+    if(_rxBuffer->failed()) {
         log_e("%d", errno);
         stop();
     }
-    return data;
+    return res;
 }
 
 int WiFiClient::available()
@@ -290,14 +400,12 @@ int WiFiClient::available()
     if(!_connected) {
         return 0;
     }
-    int count;
-    int res = lwip_ioctl_r(fd(), FIONREAD, &count);
-    if(res < 0) {
+    int res = _rxBuffer->available();
+    if(_rxBuffer->failed()) {
         log_e("%d", errno);
         stop();
-        return 0;
     }
-    return count;
+    return res;
 }
 
 // Though flushing means to send all pending data,
@@ -330,22 +438,23 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
-        if (res < 0) {
-            switch (errno) {
-                case ENOTCONN:
-                case EPIPE:
-                case ECONNRESET:
-                case ECONNREFUSED:
-                case ECONNABORTED:
-                    _connected = false;
-                    break;
-                default:
-                    _connected = true;
-                    break;
-            }
-        }
-        else {
-            _connected = true;
+        switch (errno) {
+            case EWOULDBLOCK:
+            case ENOENT: //caused by vfs
+                _connected = true;
+                break;
+            case ENOTCONN:
+            case EPIPE:
+            case ECONNRESET:
+            case ECONNREFUSED:
+            case ECONNABORTED:
+                _connected = false;
+                log_d("Disconnected: RES: %d, ERR: %d", res, errno);
+                break;
+            default:
+                log_i("Unexpected: RES: %d, ERR: %d", res, errno);
+                _connected = true;
+                break;
         }
     }
     return _connected;

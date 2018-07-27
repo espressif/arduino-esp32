@@ -32,6 +32,10 @@
 #define DEBUG_OUTPUT Serial
 #endif
 
+#ifndef WEBSERVER_MAX_POST_ARGS
+#define WEBSERVER_MAX_POST_ARGS 32
+#endif
+
 static const char Content_Type[] PROGMEM = "Content-Type";
 static const char filename[] PROGMEM = "filename";
 
@@ -355,14 +359,14 @@ void WebServer::_uploadWriteByte(uint8_t b){
   _currentUpload->buf[_currentUpload->currentSize++] = b;
 }
 
-uint8_t WebServer::_uploadReadByte(WiFiClient& client){
+int WebServer::_uploadReadByte(WiFiClient& client){
   int res = client.read();
   if(res == -1){
     while(!client.available() && client.connected())
-      yield();
+      delay(2);
     res = client.read();
   }
-  return (uint8_t)res;
+  return res;
 }
 
 bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
@@ -383,8 +387,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
   client.readStringUntil('\n');
   //start reading the form
   if (line == ("--"+boundary)){
-    RequestArgument* postArgs = new RequestArgument[32];
-    int postArgsLen = 0;
+	 if(_postArgs) delete[] _postArgs;
+	 _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
+     _postArgsLen = 0;
     while(1){
       String argName;
       String argValue;
@@ -445,7 +450,7 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             DEBUG_OUTPUT.println();
 #endif
 
-            RequestArgument& arg = postArgs[postArgsLen++];
+            RequestArgument& arg = _postArgs[_postArgsLen++];
             arg.key = argName;
             arg.value = argValue;
 
@@ -472,19 +477,20 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             _currentUpload->status = UPLOAD_FILE_WRITE;
-            uint8_t argByte = _uploadReadByte(client);
+            int argByte = _uploadReadByte(client);
 readfile:
+
             while(argByte != 0x0D){
-              if (!client.connected()) return _parseFormUploadAborted();
-              _uploadWriteByte(argByte);
-              argByte = _uploadReadByte(client);
+                if(argByte < 0) return _parseFormUploadAborted();
+                _uploadWriteByte(argByte);
+                argByte = _uploadReadByte(client);
             }
 
             argByte = _uploadReadByte(client);
-            if (!client.connected()) return _parseFormUploadAborted();
+            if(argByte < 0) return _parseFormUploadAborted();
             if (argByte == 0x0A){
               argByte = _uploadReadByte(client);
-              if (!client.connected()) return _parseFormUploadAborted();
+              if(argByte < 0) return _parseFormUploadAborted();
               if ((char)argByte != '-'){
                 //continue reading the file
                 _uploadWriteByte(0x0D);
@@ -492,7 +498,7 @@ readfile:
                 goto readfile;
               } else {
                 argByte = _uploadReadByte(client);
-                if (!client.connected()) return _parseFormUploadAborted();
+                if(argByte < 0) return _parseFormUploadAborted();
                 if ((char)argByte != '-'){
                   //continue reading the file
                   _uploadWriteByte(0x0D);
@@ -552,22 +558,25 @@ readfile:
     }
 
     int iarg;
-    int totalArgs = ((32 - postArgsLen) < _currentArgCount)?(32 - postArgsLen):_currentArgCount;
+    int totalArgs = ((WEBSERVER_MAX_POST_ARGS - _postArgsLen) < _currentArgCount)?(WEBSERVER_MAX_POST_ARGS - _postArgsLen):_currentArgCount;
     for (iarg = 0; iarg < totalArgs; iarg++){
-      RequestArgument& arg = postArgs[postArgsLen++];
+      RequestArgument& arg = _postArgs[_postArgsLen++];
       arg.key = _currentArgs[iarg].key;
       arg.value = _currentArgs[iarg].value;
     }
     if (_currentArgs) delete[] _currentArgs;
-    _currentArgs = new RequestArgument[postArgsLen];
-    for (iarg = 0; iarg < postArgsLen; iarg++){
+    _currentArgs = new RequestArgument[_postArgsLen];
+    for (iarg = 0; iarg < _postArgsLen; iarg++){
       RequestArgument& arg = _currentArgs[iarg];
-      arg.key = postArgs[iarg].key;
-      arg.value = postArgs[iarg].value;
+      arg.key = _postArgs[iarg].key;
+      arg.value = _postArgs[iarg].value;
     }
     _currentArgCount = iarg;
-    if (postArgs) 
-      delete[] postArgs;
+    if (_postArgs) {
+      delete[] _postArgs;
+      _postArgs=nullptr;
+      _postArgsLen = 0;
+    }
     return true;
   }
 #ifdef DEBUG_ESP_HTTP_SERVER

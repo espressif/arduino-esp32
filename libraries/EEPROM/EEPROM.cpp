@@ -24,7 +24,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "Arduino.h"
 #include "EEPROM.h"
 
 #include <esp_log.h>
@@ -296,9 +295,9 @@ String EEPROMClass::readString (int address)
   if (address + len > _size)
     return String(0);
 
-  char value[len + 1];
+  char value[len];
   memcpy((uint8_t*) value, _data + address, len);
-  value[len + 1] = 0;
+  value[len] = 0;
   return String(value);
 }
 

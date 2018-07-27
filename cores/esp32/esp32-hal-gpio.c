@@ -70,7 +70,12 @@ const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
 };
 
 typedef void (*voidFuncPtr)(void);
-static voidFuncPtr __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
+typedef void (*voidFuncPtrArg)(void*);
+typedef struct {
+    voidFuncPtr fn;
+    void* arg;
+} InterruptHandle_t;
+static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
@@ -193,7 +198,7 @@ extern int IRAM_ATTR __digitalRead(uint8_t pin)
 
 static intr_handle_t gpio_intr_handle = NULL;
 
-static void IRAM_ATTR __onPinInterrupt(void *arg)
+static void IRAM_ATTR __onPinInterrupt()
 {
     uint32_t gpio_intr_status_l=0;
     uint32_t gpio_intr_status_h=0;
@@ -207,8 +212,12 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
     if(gpio_intr_status_l) {
         do {
             if(gpio_intr_status_l & ((uint32_t)1 << pin)) {
-                if(__pinInterruptHandlers[pin]) {
-                    __pinInterruptHandlers[pin]();
+                if(__pinInterruptHandlers[pin].fn) {
+                    if(__pinInterruptHandlers[pin].arg){
+                        ((voidFuncPtrArg)__pinInterruptHandlers[pin].fn)(__pinInterruptHandlers[pin].arg);
+                    } else {
+                        __pinInterruptHandlers[pin].fn();
+                    }
                 }
             }
         } while(++pin<32);
@@ -217,15 +226,19 @@ static void IRAM_ATTR __onPinInterrupt(void *arg)
         pin=32;
         do {
             if(gpio_intr_status_h & ((uint32_t)1 << (pin - 32))) {
-                if(__pinInterruptHandlers[pin]) {
-                    __pinInterruptHandlers[pin]();
+                if(__pinInterruptHandlers[pin].fn) {
+                    if(__pinInterruptHandlers[pin].arg){
+                        ((voidFuncPtrArg)__pinInterruptHandlers[pin].fn)(__pinInterruptHandlers[pin].arg);
+                    } else {
+                        __pinInterruptHandlers[pin].fn();
+                    }
                 }
             }
         } while(++pin<GPIO_PIN_COUNT);
     }
 }
 
-extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
+extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type)
 {
     static bool interrupt_initialized = false;
     
@@ -233,7 +246,8 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
         interrupt_initialized = true;
         esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __onPinInterrupt, NULL, &gpio_intr_handle);
     }
-    __pinInterruptHandlers[pin] = userFunc;
+    __pinInterruptHandlers[pin].fn = (voidFuncPtr)userFunc;
+    __pinInterruptHandlers[pin].arg = arg;
     esp_intr_disable(gpio_intr_handle);
     if(esp_intr_get_cpu(gpio_intr_handle)) { //APP_CPU
         GPIO.pin[pin].int_ena = 1;
@@ -244,10 +258,15 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type)
     esp_intr_enable(gpio_intr_handle);
 }
 
+extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type) {
+    __attachInterruptArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type);
+}
+
 extern void __detachInterrupt(uint8_t pin)
 {
     esp_intr_disable(gpio_intr_handle);
-    __pinInterruptHandlers[pin] = NULL;
+    __pinInterruptHandlers[pin].fn = NULL;
+    __pinInterruptHandlers[pin].arg = NULL;
     GPIO.pin[pin].int_ena = 0;
     GPIO.pin[pin].int_type = 0;
     esp_intr_enable(gpio_intr_handle);
@@ -258,5 +277,6 @@ extern void pinMode(uint8_t pin, uint8_t mode) __attribute__ ((weak, alias("__pi
 extern void digitalWrite(uint8_t pin, uint8_t val) __attribute__ ((weak, alias("__digitalWrite")));
 extern int digitalRead(uint8_t pin) __attribute__ ((weak, alias("__digitalRead")));
 extern void attachInterrupt(uint8_t pin, voidFuncPtr handler, int mode) __attribute__ ((weak, alias("__attachInterrupt")));
+extern void attachInterruptArg(uint8_t pin, voidFuncPtr handler, void * arg, int mode) __attribute__ ((weak, alias("__attachInterruptArg")));
 extern void detachInterrupt(uint8_t pin) __attribute__ ((weak, alias("__detachInterrupt")));
 

@@ -28,11 +28,13 @@
 #include <memory>
 
 class WiFiClientSocketHandle;
+class WiFiClientRxBuffer;
 
 class WiFiClient : public Client
 {
 protected:
     std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
+    std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
     bool _connected;
 
 public:

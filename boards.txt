@@ -4,6 +4,63 @@ menu.FlashMode=Flash Mode
 menu.FlashSize=Flash Size
 menu.PartitionScheme=Partition Scheme
 menu.DebugLevel=Core Debug Level
+menu.PSRAM=PSRAM
+
+##############################################################
+
+ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
+
+ttgo-lora32-v1.upload.tool=esptool
+ttgo-lora32-v1.upload.maximum_size=1310720
+ttgo-lora32-v1.upload.maximum_data_size=294912
+ttgo-lora32-v1.upload.wait_for_upload_port=true
+
+ttgo-lora32-v1.serial.disableDTR=true
+ttgo-lora32-v1.serial.disableRTS=true
+
+ttgo-lora32-v1.build.mcu=esp32
+ttgo-lora32-v1.build.core=esp32
+ttgo-lora32-v1.build.variant=ttgo-lora32-v1
+ttgo-lora32-v1.build.board=TTGO_LoRa32_V1
+
+ttgo-lora32-v1.build.f_cpu=240000000L
+ttgo-lora32-v1.build.flash_mode=dio
+ttgo-lora32-v1.build.flash_size=4MB
+ttgo-lora32-v1.build.boot=dio
+ttgo-lora32-v1.build.partitions=default
+
+ttgo-lora32-v1.menu.FlashFreq.80=80MHz
+ttgo-lora32-v1.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-lora32-v1.menu.FlashFreq.40=40MHz
+ttgo-lora32-v1.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-lora32-v1.menu.UploadSpeed.921600=921600
+ttgo-lora32-v1.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-lora32-v1.menu.UploadSpeed.115200=115200
+ttgo-lora32-v1.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-lora32-v1.menu.UploadSpeed.256000.windows=256000
+ttgo-lora32-v1.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-lora32-v1.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-lora32-v1.menu.UploadSpeed.230400=230400
+ttgo-lora32-v1.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-lora32-v1.menu.UploadSpeed.460800.linux=460800
+ttgo-lora32-v1.menu.UploadSpeed.460800.macosx=460800
+ttgo-lora32-v1.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-lora32-v1.menu.UploadSpeed.512000.windows=512000
+ttgo-lora32-v1.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-lora32-v1.menu.DebugLevel.none=None
+ttgo-lora32-v1.menu.DebugLevel.none.build.code_debug=0
+ttgo-lora32-v1.menu.DebugLevel.error=Error
+ttgo-lora32-v1.menu.DebugLevel.error.build.code_debug=1
+ttgo-lora32-v1.menu.DebugLevel.warn=Warn
+ttgo-lora32-v1.menu.DebugLevel.warn.build.code_debug=2
+ttgo-lora32-v1.menu.DebugLevel.info=Info
+ttgo-lora32-v1.menu.DebugLevel.info.build.code_debug=3
+ttgo-lora32-v1.menu.DebugLevel.debug=Debug
+ttgo-lora32-v1.menu.DebugLevel.debug.build.code_debug=4
+ttgo-lora32-v1.menu.DebugLevel.verbose=Verbose
+ttgo-lora32-v1.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -28,6 +85,12 @@ esp32.build.flash_freq=40m
 esp32.build.flash_mode=dio
 esp32.build.boot=dio
 esp32.build.partitions=default
+esp32.build.defines=
+
+esp32.menu.PSRAM.disabled=Disabled
+esp32.menu.PSRAM.disabled.build.defines=
+esp32.menu.PSRAM.enabled=Enabled
+esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 esp32.menu.PartitionScheme.default=Default
 esp32.menu.PartitionScheme.default.build.partitions=default
@@ -94,6 +157,164 @@ esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+cw02.name=XinaBox CW02
+
+cw02.upload.tool=esptool
+cw02.upload.maximum_size=1310720
+cw02.upload.maximum_data_size=294912
+cw02.upload.wait_for_upload_port=true
+
+cw02.serial.disableDTR=true
+cw02.serial.disableRTS=true
+
+cw02.build.mcu=esp32
+cw02.build.core=esp32
+cw02.build.variant=xinabox
+cw02.build.board=ESP32_DEV
+
+cw02.build.f_cpu=240000000L
+cw02.build.flash_size=4MB
+cw02.build.flash_freq=40m
+cw02.build.flash_mode=dio
+cw02.build.boot=dio
+cw02.build.partitions=default
+
+cw02.menu.FlashMode.qio=QIO
+cw02.menu.FlashMode.qio.build.flash_mode=dio
+cw02.menu.FlashMode.qio.build.boot=qio
+cw02.menu.FlashMode.dio=DIO
+cw02.menu.FlashMode.dio.build.flash_mode=dio
+cw02.menu.FlashMode.dio.build.boot=dio
+cw02.menu.FlashMode.qout=QOUT
+cw02.menu.FlashMode.qout.build.flash_mode=dout
+cw02.menu.FlashMode.qout.build.boot=qout
+cw02.menu.FlashMode.dout=DOUT
+cw02.menu.FlashMode.dout.build.flash_mode=dout
+cw02.menu.FlashMode.dout.build.boot=dout
+
+cw02.menu.FlashFreq.80=80MHz
+cw02.menu.FlashFreq.80.build.flash_freq=80m
+cw02.menu.FlashFreq.40=40MHz
+cw02.menu.FlashFreq.40.build.flash_freq=40m
+
+cw02.menu.FlashSize.4M=4MB (32Mb)
+cw02.menu.FlashSize.4M.build.flash_size=4MB
+cw02.menu.FlashSize.2M=2MB (16Mb)
+cw02.menu.FlashSize.2M.build.flash_size=2MB
+cw02.menu.FlashSize.2M.build.partitions=minimal
+
+cw02.menu.UploadSpeed.921600=921600
+cw02.menu.UploadSpeed.921600.upload.speed=921600
+cw02.menu.UploadSpeed.115200=115200
+cw02.menu.UploadSpeed.115200.upload.speed=115200
+cw02.menu.UploadSpeed.256000.windows=256000
+cw02.menu.UploadSpeed.256000.upload.speed=256000
+cw02.menu.UploadSpeed.230400.windows.upload.speed=256000
+cw02.menu.UploadSpeed.230400=230400
+cw02.menu.UploadSpeed.230400.upload.speed=230400
+cw02.menu.UploadSpeed.460800.linux=460800
+cw02.menu.UploadSpeed.460800.macosx=460800
+cw02.menu.UploadSpeed.460800.upload.speed=460800
+cw02.menu.UploadSpeed.512000.windows=512000
+cw02.menu.UploadSpeed.512000.upload.speed=512000
+
+cw02.menu.DebugLevel.none=None
+cw02.menu.DebugLevel.none.build.code_debug=0
+cw02.menu.DebugLevel.error=Error
+cw02.menu.DebugLevel.error.build.code_debug=1
+cw02.menu.DebugLevel.warn=Warn
+cw02.menu.DebugLevel.warn.build.code_debug=2
+cw02.menu.DebugLevel.info=Info
+cw02.menu.DebugLevel.info.build.code_debug=3
+cw02.menu.DebugLevel.debug=Debug
+cw02.menu.DebugLevel.debug.build.code_debug=4
+cw02.menu.DebugLevel.verbose=Verbose
+cw02.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+esp32wrover.name=ESP32 Wrover Module
+
+esp32wrover.upload.tool=esptool
+esp32wrover.upload.maximum_size=1310720
+esp32wrover.upload.maximum_data_size=327680
+esp32wrover.upload.wait_for_upload_port=true
+
+esp32wrover.serial.disableDTR=true
+esp32wrover.serial.disableRTS=true
+
+esp32wrover.build.mcu=esp32
+esp32wrover.build.core=esp32
+esp32wrover.build.variant=esp32
+esp32wrover.build.board=ESP32_DEV
+
+esp32wrover.build.f_cpu=240000000L
+esp32wrover.build.flash_size=4MB
+esp32wrover.build.flash_freq=40m
+esp32wrover.build.flash_mode=dio
+esp32wrover.build.boot=dio
+esp32wrover.build.partitions=default
+esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+esp32wrover.menu.PartitionScheme.default=Default
+esp32wrover.menu.PartitionScheme.default.build.partitions=default
+esp32wrover.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+esp32wrover.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32wrover.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32wrover.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32wrover.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32wrover.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32wrover.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32wrover.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32wrover.menu.FlashMode.qio=QIO
+esp32wrover.menu.FlashMode.qio.build.flash_mode=dio
+esp32wrover.menu.FlashMode.qio.build.boot=qio
+esp32wrover.menu.FlashMode.dio=DIO
+esp32wrover.menu.FlashMode.dio.build.flash_mode=dio
+esp32wrover.menu.FlashMode.dio.build.boot=dio
+esp32wrover.menu.FlashMode.qout=QOUT
+esp32wrover.menu.FlashMode.qout.build.flash_mode=dout
+esp32wrover.menu.FlashMode.qout.build.boot=qout
+esp32wrover.menu.FlashMode.dout=DOUT
+esp32wrover.menu.FlashMode.dout.build.flash_mode=dout
+esp32wrover.menu.FlashMode.dout.build.boot=dout
+
+esp32wrover.menu.FlashFreq.80=80MHz
+esp32wrover.menu.FlashFreq.80.build.flash_freq=80m
+esp32wrover.menu.FlashFreq.40=40MHz
+esp32wrover.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32wrover.menu.UploadSpeed.921600=921600
+esp32wrover.menu.UploadSpeed.921600.upload.speed=921600
+esp32wrover.menu.UploadSpeed.115200=115200
+esp32wrover.menu.UploadSpeed.115200.upload.speed=115200
+esp32wrover.menu.UploadSpeed.256000.windows=256000
+esp32wrover.menu.UploadSpeed.256000.upload.speed=256000
+esp32wrover.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32wrover.menu.UploadSpeed.230400=230400
+esp32wrover.menu.UploadSpeed.230400.upload.speed=230400
+esp32wrover.menu.UploadSpeed.460800.linux=460800
+esp32wrover.menu.UploadSpeed.460800.macosx=460800
+esp32wrover.menu.UploadSpeed.460800.upload.speed=460800
+esp32wrover.menu.UploadSpeed.512000.windows=512000
+esp32wrover.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32wrover.menu.DebugLevel.none=None
+esp32wrover.menu.DebugLevel.none.build.code_debug=0
+esp32wrover.menu.DebugLevel.error=Error
+esp32wrover.menu.DebugLevel.error.build.code_debug=1
+esp32wrover.menu.DebugLevel.warn=Warn
+esp32wrover.menu.DebugLevel.warn.build.code_debug=2
+esp32wrover.menu.DebugLevel.info=Info
+esp32wrover.menu.DebugLevel.info.build.code_debug=3
+esp32wrover.menu.DebugLevel.debug=Debug
+esp32wrover.menu.DebugLevel.debug.build.code_debug=4
+esp32wrover.menu.DebugLevel.verbose=Verbose
+esp32wrover.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 pico32.name=ESP32 Pico Kit
 
 pico32.upload.tool=esptool
@@ -115,6 +336,7 @@ pico32.build.flash_freq=80m
 pico32.build.flash_mode=dio
 pico32.build.boot=dio
 pico32.build.partitions=default
+pico32.build.defines=
 
 pico32.menu.UploadSpeed.921600=921600
 pico32.menu.UploadSpeed.921600.upload.speed=921600
@@ -166,6 +388,7 @@ esp32thing.build.flash_mode=dio
 esp32thing.build.flash_size=4MB
 esp32thing.build.boot=dio
 esp32thing.build.partitions=default
+esp32thing.build.defines=
 
 esp32thing.menu.FlashFreq.80=80MHz
 esp32thing.menu.FlashFreq.80.build.flash_freq=80m
@@ -209,6 +432,7 @@ nina_w10.build.partitions=minimal
 nina_w10.build.flash_mode=dio
 nina_w10.build.flash_size=2MB
 nina_w10.build.flash_freq=40m
+nina_w10.build.defines=
 
 nina_w10.menu.UploadSpeed.921600=921600
 nina_w10.menu.UploadSpeed.921600.upload.speed=921600
@@ -247,6 +471,7 @@ widora-air.build.flash_mode=dio
 widora-air.build.flash_size=16MB
 widora-air.build.boot=dio
 widora-air.build.partitions=default
+widora-air.build.defines=
 
 widora-air.menu.FlashFreq.80=80MHz
 widora-air.menu.FlashFreq.80.build.flash_freq=80m
@@ -290,6 +515,7 @@ esp320.build.flash_mode=qio
 esp320.build.flash_size=4MB
 esp320.build.boot=dio
 esp320.build.partitions=default
+esp320.build.defines=
 
 esp320.menu.FlashFreq.80=80MHz
 esp320.menu.FlashFreq.80.build.flash_freq=80m
@@ -333,6 +559,7 @@ nano32.build.flash_mode=dio
 nano32.build.flash_size=4MB
 nano32.build.boot=dio
 nano32.build.partitions=default
+nano32.build.defines=
 
 nano32.menu.FlashFreq.80=80MHz
 nano32.menu.FlashFreq.80.build.flash_freq=80m
@@ -376,6 +603,7 @@ lolin32.build.flash_mode=dio
 lolin32.build.flash_size=4MB
 lolin32.build.boot=dio
 lolin32.build.partitions=default
+lolin32.build.defines=
 
 lolin32.menu.FlashFreq.80=80MHz
 lolin32.menu.FlashFreq.80.build.flash_freq=80m
@@ -428,6 +656,7 @@ pocket_32.build.flash_mode=dio
 pocket_32.build.flash_size=4MB
 pocket_32.build.boot=dio
 pocket_32.build.partitions=default
+pocket_32.build.defines=
 
 pocket_32.menu.FlashFreq.80=80MHz
 pocket_32.menu.FlashFreq.80.build.flash_freq=80m
@@ -471,6 +700,7 @@ WeMosBat.build.flash_mode=dio
 WeMosBat.build.flash_size=4MB
 WeMosBat.build.boot=dio
 WeMosBat.build.partitions=default
+WeMosBat.build.defines=
 
 WeMosBat.menu.FlashFreq.80=80MHz
 WeMosBat.menu.FlashFreq.80.build.flash_freq=80m
@@ -527,6 +757,7 @@ espea32.build.flash_mode=dio
 espea32.build.flash_size=4MB
 espea32.build.boot=dio
 espea32.build.partitions=default
+espea32.build.defines=
 
 espea32.menu.FlashFreq.80=80MHz
 espea32.menu.FlashFreq.80.build.flash_freq=80m
@@ -570,6 +801,7 @@ quantum.build.flash_mode=qio
 quantum.build.flash_size=16MB
 quantum.build.boot=dio
 quantum.build.partitions=default
+quantum.build.defines=
 
 quantum.menu.FlashFreq.80=80MHz
 quantum.menu.FlashFreq.80.build.flash_freq=80m
@@ -613,6 +845,7 @@ node32s.build.flash_mode=dio
 node32s.build.flash_size=4MB
 node32s.build.boot=dio
 node32s.build.partitions=default
+node32s.build.defines=
 
 node32s.menu.FlashFreq.80=80MHz
 node32s.menu.FlashFreq.80.build.flash_freq=80m
@@ -656,6 +889,7 @@ hornbill32dev.build.flash_mode=dio
 hornbill32dev.build.flash_size=4MB
 hornbill32dev.build.boot=dio
 hornbill32dev.build.partitions=default
+hornbill32dev.build.defines=
 
 hornbill32dev.menu.FlashFreq.80=80MHz
 hornbill32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -698,6 +932,7 @@ hornbill32minima.build.flash_mode=dio
 hornbill32minima.build.flash_size=4MB
 hornbill32minima.build.boot=dio
 hornbill32minima.build.partitions=default
+hornbill32minima.build.defines=
 
 hornbill32minima.menu.FlashFreq.80=80MHz
 hornbill32minima.menu.FlashFreq.80.build.flash_freq=80m
@@ -741,6 +976,7 @@ firebeetle32.build.flash_mode=dio
 firebeetle32.build.flash_size=4MB
 firebeetle32.build.boot=dio
 firebeetle32.build.partitions=default
+firebeetle32.build.defines=
 
 firebeetle32.menu.FlashFreq.80=80MHz
 firebeetle32.menu.FlashFreq.80.build.flash_freq=80m
@@ -784,6 +1020,7 @@ intorobot-fig.build.flash_mode=dio
 intorobot-fig.build.flash_size=4MB
 intorobot-fig.build.boot=dio
 intorobot-fig.build.partitions=default
+intorobot-fig.build.defines=
 
 intorobot-fig.menu.FlashFreq.80=80MHz
 intorobot-fig.menu.FlashFreq.80.build.flash_freq=80m
@@ -827,6 +1064,7 @@ onehorse32dev.build.flash_mode=dout
 onehorse32dev.build.flash_size=4MB
 onehorse32dev.build.boot=dio
 onehorse32dev.build.partitions=default
+onehorse32dev.build.defines=
 
 onehorse32dev.menu.FlashFreq.80=80MHz
 onehorse32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -870,6 +1108,7 @@ featheresp32.build.flash_mode=dio
 featheresp32.build.flash_size=4MB
 featheresp32.build.boot=dio
 featheresp32.build.partitions=default
+featheresp32.build.defines=
 
 featheresp32.menu.FlashFreq.80=80MHz
 featheresp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -926,6 +1165,7 @@ nodemcu-32s.build.flash_mode=dio
 nodemcu-32s.build.flash_size=4MB
 nodemcu-32s.build.boot=dio
 nodemcu-32s.build.partitions=default
+nodemcu-32s.build.defines=
 
 nodemcu-32s.menu.FlashFreq.80=80MHz
 nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
@@ -969,6 +1209,7 @@ mhetesp32devkit.build.flash_mode=dio
 mhetesp32devkit.build.flash_size=4MB
 mhetesp32devkit.build.boot=dio
 mhetesp32devkit.build.partitions=default
+mhetesp32devkit.build.defines=
 
 mhetesp32devkit.menu.FlashFreq.80=80MHz
 mhetesp32devkit.menu.FlashFreq.80.build.flash_freq=80m
@@ -1034,6 +1275,7 @@ mhetesp32minikit.build.flash_mode=dio
 mhetesp32minikit.build.flash_size=4MB
 mhetesp32minikit.build.boot=dio
 mhetesp32minikit.build.partitions=default
+mhetesp32minikit.build.defines=
 
 mhetesp32minikit.menu.FlashFreq.80=80MHz
 mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
@@ -1099,6 +1341,7 @@ esp32vn-iot-uno.build.flash_mode=dio
 esp32vn-iot-uno.build.flash_size=4MB
 esp32vn-iot-uno.build.boot=dio
 esp32vn-iot-uno.build.partitions=default
+esp32vn-iot-uno.build.defines=
 
 esp32vn-iot-uno.menu.FlashFreq.80=80MHz
 esp32vn-iot-uno.menu.FlashFreq.80.build.flash_freq=80m
@@ -1142,6 +1385,7 @@ esp32doit-devkit-v1.build.flash_mode=dio
 esp32doit-devkit-v1.build.flash_size=4MB
 esp32doit-devkit-v1.build.boot=dio
 esp32doit-devkit-v1.build.partitions=default
+esp32doit-devkit-v1.build.defines=
 
 esp32doit-devkit-v1.menu.FlashFreq.80=80MHz
 esp32doit-devkit-v1.menu.FlashFreq.80.build.flash_freq=80m
@@ -1196,6 +1440,7 @@ esp32-evb.build.flash_mode=dio
 esp32-evb.build.flash_size=4MB
 esp32-evb.build.boot=dio
 esp32-evb.build.partitions=default
+esp32-evb.build.defines=
 
 esp32-evb.menu.FlashFreq.80=80MHz
 esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
@@ -1228,6 +1473,7 @@ esp32-gateway.build.flash_mode=dio
 esp32-gateway.build.flash_size=4MB
 esp32-gateway.build.boot=dio
 esp32-gateway.build.partitions=default
+esp32-gateway.build.defines=
 
 esp32-gateway.menu.FlashFreq.80=80MHz
 esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
@@ -1260,6 +1506,7 @@ espino32.build.flash_mode=dio
 espino32.build.flash_size=4MB
 espino32.build.boot=dio
 espino32.build.partitions=default
+espino32.build.defines=
 
 espino32.menu.FlashFreq.80=80MHz
 espino32.menu.FlashFreq.80.build.flash_freq=80m
@@ -1303,6 +1550,7 @@ m5stack-core-esp32.build.flash_size=4MB
 m5stack-core-esp32.build.flash_mode=dio
 m5stack-core-esp32.build.boot=dio
 m5stack-core-esp32.build.partitions=default
+m5stack-core-esp32.build.defines=
 
 m5stack-core-esp32.menu.FlashMode.qio=QIO
 m5stack-core-esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -1361,6 +1609,64 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+m5stack-fire.name=M5Stack-FIRE
+
+m5stack-fire.upload.tool=esptool
+m5stack-fire.upload.maximum_size=1310720
+m5stack-fire.upload.maximum_data_size=327680
+m5stack-fire.upload.wait_for_upload_port=true
+
+m5stack-fire.serial.disableDTR=true
+m5stack-fire.serial.disableRTS=true
+
+m5stack-fire.build.mcu=esp32
+m5stack-fire.build.core=esp32
+m5stack-fire.build.variant=m5stack_fire
+m5stack-fire.build.board=M5STACK_FIRE
+
+m5stack-fire.build.f_cpu=240000000L
+m5stack-fire.build.flash_size=16MB
+m5stack-fire.build.flash_freq=80m
+m5stack-fire.build.flash_mode=dio
+m5stack-fire.build.boot=dio
+m5stack-fire.build.partitions=default
+m5stack-fire.build.defines=
+
+m5stack-fire.menu.PSRAM.enabled=Enabled
+m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-fire.menu.PSRAM.disabled=Disabled
+m5stack-fire.menu.PSRAM.disabled.build.defines=
+
+m5stack-fire.menu.UploadSpeed.921600=921600
+m5stack-fire.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-fire.menu.UploadSpeed.115200=115200
+m5stack-fire.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-fire.menu.UploadSpeed.256000.windows=256000
+m5stack-fire.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-fire.menu.UploadSpeed.230400=230400
+m5stack-fire.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-fire.menu.UploadSpeed.460800.linux=460800
+m5stack-fire.menu.UploadSpeed.460800.macosx=460800
+m5stack-fire.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-fire.menu.UploadSpeed.512000.windows=512000
+m5stack-fire.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack-fire.menu.DebugLevel.none=None
+m5stack-fire.menu.DebugLevel.none.build.code_debug=0
+m5stack-fire.menu.DebugLevel.error=Error
+m5stack-fire.menu.DebugLevel.error.build.code_debug=1
+m5stack-fire.menu.DebugLevel.warn=Warn
+m5stack-fire.menu.DebugLevel.warn.build.code_debug=2
+m5stack-fire.menu.DebugLevel.info=Info
+m5stack-fire.menu.DebugLevel.info.build.code_debug=3
+m5stack-fire.menu.DebugLevel.debug=Debug
+m5stack-fire.menu.DebugLevel.debug.build.code_debug=4
+m5stack-fire.menu.DebugLevel.verbose=Verbose
+m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.upload.tool=esptool
@@ -1381,6 +1687,7 @@ odroid_esp32.build.flash_size=16MB
 odroid_esp32.build.flash_mode=dio
 odroid_esp32.build.boot=dio
 odroid_esp32.build.partitions=default
+odroid_esp32.build.defines=
 
 odroid_esp32.menu.FlashMode.qio=QIO
 odroid_esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -1459,6 +1766,7 @@ heltec_wifi_kit_32.build.flash_mode=dio
 heltec_wifi_kit_32.build.flash_size=4MB
 heltec_wifi_kit_32.build.boot=dio
 heltec_wifi_kit_32.build.partitions=default
+heltec_wifi_kit_32.build.defines=
 
 heltec_wifi_kit_32.menu.FlashFreq.80=80MHz
 heltec_wifi_kit_32.menu.FlashFreq.80.build.flash_freq=80m
@@ -1502,6 +1810,7 @@ heltec_wifi_lora_32.build.flash_mode=dio
 heltec_wifi_lora_32.build.flash_size=4MB
 heltec_wifi_lora_32.build.boot=dio
 heltec_wifi_lora_32.build.partitions=default
+heltec_wifi_lora_32.build.defines=
 
 heltec_wifi_lora_32.menu.FlashFreq.80=80MHz
 heltec_wifi_lora_32.menu.FlashFreq.80.build.flash_freq=80m
@@ -1545,6 +1854,7 @@ espectro32.build.flash_size=4MB
 espectro32.build.flash_mode=dio
 espectro32.build.boot=dio
 espectro32.build.partitions=default
+espectro32.build.defines=
 
 espectro32.menu.FlashMode.qio=QIO
 espectro32.menu.FlashMode.qio.build.flash_mode=dio
@@ -1620,6 +1930,7 @@ CoreESP32.build.flash_mode=dio
 CoreESP32.build.flash_size=4MB
 CoreESP32.build.boot=dio
 CoreESP32.build.partitions=default
+CoreESP32.build.defines=
 
 CoreESP32.menu.FlashFreq.80=80MHz
 CoreESP32.menu.FlashFreq.80.build.flash_freq=80m
@@ -1643,6 +1954,96 @@ CoreESP32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+
+alksesp32.name=ALKS ESP32
+
+alksesp32.upload.tool=esptool
+alksesp32.upload.maximum_size=1310720
+alksesp32.upload.maximum_data_size=327680
+alksesp32.upload.wait_for_upload_port=true
+
+alksesp32.serial.disableDTR=true
+alksesp32.serial.disableRTS=true
+
+alksesp32.build.mcu=esp32
+alksesp32.build.core=esp32
+alksesp32.build.variant=alksesp32
+alksesp32.build.board=ALKS
+
+alksesp32.build.f_cpu=240000000L
+alksesp32.build.flash_size=4MB
+alksesp32.build.flash_freq=40m
+alksesp32.build.flash_mode=dio
+alksesp32.build.boot=dio
+alksesp32.build.partitions=default
+alksesp32.build.defines=
+
+alksesp32.menu.PartitionScheme.default=Default
+alksesp32.menu.PartitionScheme.default.build.partitions=default
+alksesp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+alksesp32.menu.PartitionScheme.minimal.build.partitions=minimal
+alksesp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+alksesp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+alksesp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+alksesp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+alksesp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+alksesp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+alksesp32.menu.FlashMode.qio=QIO
+alksesp32.menu.FlashMode.qio.build.flash_mode=dio
+alksesp32.menu.FlashMode.qio.build.boot=qio
+alksesp32.menu.FlashMode.dio=DIO
+alksesp32.menu.FlashMode.dio.build.flash_mode=dio
+alksesp32.menu.FlashMode.dio.build.boot=dio
+alksesp32.menu.FlashMode.qout=QOUT
+alksesp32.menu.FlashMode.qout.build.flash_mode=dout
+alksesp32.menu.FlashMode.qout.build.boot=qout
+alksesp32.menu.FlashMode.dout=DOUT
+alksesp32.menu.FlashMode.dout.build.flash_mode=dout
+alksesp32.menu.FlashMode.dout.build.boot=dout
+
+alksesp32.menu.FlashFreq.80=80MHz
+alksesp32.menu.FlashFreq.80.build.flash_freq=80m
+alksesp32.menu.FlashFreq.40=40MHz
+alksesp32.menu.FlashFreq.40.build.flash_freq=40m
+
+alksesp32.menu.FlashSize.4M=4MB (32Mb)
+alksesp32.menu.FlashSize.4M.build.flash_size=4MB
+alksesp32.menu.FlashSize.2M=2MB (16Mb)
+alksesp32.menu.FlashSize.2M.build.flash_size=2MB
+alksesp32.menu.FlashSize.2M.build.partitions=minimal
+
+alksesp32.menu.UploadSpeed.921600=921600
+alksesp32.menu.UploadSpeed.921600.upload.speed=921600
+alksesp32.menu.UploadSpeed.115200=115200
+alksesp32.menu.UploadSpeed.115200.upload.speed=115200
+alksesp32.menu.UploadSpeed.256000.windows=256000
+alksesp32.menu.UploadSpeed.256000.upload.speed=256000
+alksesp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+alksesp32.menu.UploadSpeed.230400=230400
+alksesp32.menu.UploadSpeed.230400.upload.speed=230400
+alksesp32.menu.UploadSpeed.460800.linux=460800
+alksesp32.menu.UploadSpeed.460800.macosx=460800
+alksesp32.menu.UploadSpeed.460800.upload.speed=460800
+alksesp32.menu.UploadSpeed.512000.windows=512000
+alksesp32.menu.UploadSpeed.512000.upload.speed=512000
+
+alksesp32.menu.DebugLevel.none=None
+alksesp32.menu.DebugLevel.none.build.code_debug=0
+alksesp32.menu.DebugLevel.error=Error
+alksesp32.menu.DebugLevel.error.build.code_debug=1
+alksesp32.menu.DebugLevel.warn=Warn
+alksesp32.menu.DebugLevel.warn.build.code_debug=2
+alksesp32.menu.DebugLevel.info=Info
+alksesp32.menu.DebugLevel.info.build.code_debug=3
+alksesp32.menu.DebugLevel.debug=Debug
+alksesp32.menu.DebugLevel.debug.build.code_debug=4
+alksesp32.menu.DebugLevel.verbose=Verbose
+alksesp32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+
 wipy3.name=WiPy 3.0
 
 wipy3.upload.tool=esptool
@@ -1663,6 +2064,7 @@ wipy3.build.flash_mode=dio
 wipy3.build.flash_size=8MB
 wipy3.build.boot=dio
 wipy3.build.partitions=default
+wipy3.build.defines=
 
 wipy3.menu.FlashFreq.80=80MHz
 wipy3.menu.FlashFreq.80.build.flash_freq=80m
@@ -1696,4 +2098,3 @@ wipy3.menu.DebugLevel.debug=Debug
 wipy3.menu.DebugLevel.debug.build.code_debug=4
 wipy3.menu.DebugLevel.verbose=Verbose
 wipy3.menu.DebugLevel.verbose.build.code_debug=5
-

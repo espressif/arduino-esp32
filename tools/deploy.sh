@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+json_escape () {
+    printf '%s' "$1" | python -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+	#printf '%s' "$1" | php -r 'echo json_encode(file_get_contents("php://stdin"));'
+}
+
 set -e
 
 #Cmdline options
@@ -77,6 +83,11 @@ shopt -u nocasematch
 #	other lines: converted to bullets
 #	empty lines ignored
 #	if '* ' found as a first char pair, it's converted to '- ' to keep bulleting unified
+echo
+echo Preparing release notes
+echo -----------------------
+echo "Tag's message:"
+
 relNotesRaw=`git show -s --format=%b $varTagName`
 readarray -t msgArray <<<"$relNotesRaw"
 
@@ -85,58 +96,124 @@ if [ $arrLen > 3 ]; then
 	ind=3
 	while [ $ind -lt $arrLen ]; do
 		if [ $ind -eq 3 ]; then
-			releaseNotes="#### ${msgArray[ind]}\\n"
+			releaseNotes="#### ${msgArray[ind]}"
+			releaseNotes+=$'\r\n'
 		else
 			oneLine="$(echo -e "${msgArray[ind]}" | sed -e 's/^[[:space:]]*//')"
 			
 			if [ ${#oneLine} -gt 0 ]; then
 				if [ "${oneLine:0:2}" == "* " ]; then oneLine=$(echo ${oneLine/\*/-}); fi
 				if [ "${oneLine:0:2}" != "- " ]; then releaseNotes+="- "; fi		
-				releaseNotes+="$oneLine\\n"
+				releaseNotes+="$oneLine"
+				releaseNotes+=$'\r\n'
+				
+				#debug output
+				echo "   ${oneLine}"
 			fi
 		fi
 		let ind=$ind+1
 	done
 else
-	releaseNotes="#### Release of $varTagName\\n"
+	releaseNotes="#### Release of $varTagName"
+	releaseNotes+=$'\r\n'
+	
+	#debug output
+	echo "   Release of $varTagName"
 fi
 
 # - list of commits (commits.txt must exit in the output dir)
 commitFile=$varAssetsDir/commits.txt
-if [ -e "$commitFile" ]; then
+if [ -s "$commitFile" ]; then
 	
-	releaseNotes+="\\n##### Commits\\n"
+	releaseNotes+=$'\r\n##### Commits\r\n'
 	
+	echo
+	echo "Commits:"
+		
 	IFS=$'\n'
 	for next in `cat $commitFile`
 	do
 		IFS=' ' read -r commitId commitMsg <<< "$next"
-		releaseNotes+="- [$commitId](https://github.com/$varRepoSlug/commit/$commitId) $commitMsg\\n"
+		commitLine="- [$commitId](https://github.com/$varRepoSlug/commit/$commitId) $commitMsg"
+		echo "   $commitLine"
+		
+		releaseNotes+="$commitLine"
+		releaseNotes+=$'\r\n'
 	done
 	rm -f $commitFile
 fi
 
-releaseNotes=$(perl -pe 's/\r?\n/\\n/' <<< ${releaseNotes})
-
 # Check possibly existing release for current tag 
-echo "Checking for possible releases of current tag $varTagName..."
-# (eg build invoked by Create New Release GHUI button -> GH default release pack created immediatelly including default assests)
+echo
+echo "Processing GitHub release record for $varTagName:"
+echo "-------------------------------------------------"
+
+echo " - check $varTagName possible existence..."
+
+# (eg build invoked by Create New Release GHUI button -> GH default release pack created immediately including default assests)
 HTTP_RESPONSE=$(curl -L --silent --write-out "HTTPSTATUS:%{http_code}" https://api.github.com/repos/$varRepoSlug/releases/tags/$varTagName?access_token=$varAccessToken)
+if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+
 HTTP_BODY=$(echo $HTTP_RESPONSE | sed -e 's/HTTPSTATUS\:.*//g')
 HTTP_STATUS=$(echo $HTTP_RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
-
-echo "     HTTP server response code: $HTTP_STATUS"
+echo " ---> GitHub server HTTP response: $HTTP_STATUS"
 
 # if the release exists, append/update recent files to its assets vector
 if [ $HTTP_STATUS -eq 200 ]; then
 	releaseId=$(echo $HTTP_BODY | jq -r '.id')
 	echo " - $varTagName release found (id $releaseId)"
+	
+	#Merge release notes and overwrite pre-release flag. all other attributes remain unchanged:
+	
+	# 1. take existing notes from server (added by release creator)
+	releaseNotesGH=$(echo $HTTP_BODY | jq -r '.body')
+	
+	# - strip possibly trailing CR
+	if [ "${releaseNotesGH: -1}" == $'\r' ]; then 		
+		releaseNotesTemp="${releaseNotesGH:0:-1}"
+	else 
+		releaseNotesTemp="$releaseNotesGH"
+	fi
+	# - add CRLF to make relnotes consistent for JSON encoding
+	releaseNotesTemp+=$'\r\n'
+	
+	# 2. #append generated relnotes (usually commit oneliners)
+	releaseNotes="$releaseNotesTemp$releaseNotes"
+	
+	# 3. JSON-encode whole string for GH API transfer
+	releaseNotes=$(json_escape "$releaseNotes")
+	
+	# 4. remove extra quotes returned by python (dummy but whatever)
+	releaseNotes=${releaseNotes:1:-1}
+	
+	#Update current GH release record
+	echo " - updating release notes and pre-release flag:"
+	
+	curlData="{\"body\": \"$releaseNotes\",\"prerelease\": $varPrerelease}"
+	echo "   <data.begin>$curlData<data.end>"
+	echo
+	#echo "DEBUG: curl --data \"$curlData\" https://api.github.com/repos/$varRepoSlug/releases/$releaseId?access_token=$varAccessToken"
+	
+	curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases/$releaseId?access_token=$varAccessToken
+	if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+	
+	echo " - $varTagName release record successfully updated"
+	
 #... or create a new release record
 else 
+	releaseNotes=$(json_escape "$releaseNotes")
+	releaseNotes=${releaseNotes:1:-1}
+
+	echo " - release $varTagName not found, creating a new record:"
+	
 	curlData="{\"tag_name\": \"$varTagName\",\"target_commitish\": \"master\",\"name\": \"v$varTagName\",\"body\": \"$releaseNotes\",\"draft\": false,\"prerelease\": $varPrerelease}"
+	echo "   <data.begin>$curlData<data.end>"
+	
 	#echo "DEBUG: curl --data \"${curlData}\" https://api.github.com/repos/${varRepoSlug}/releases?access_token=$varAccessToken | jq -r '.id'"
 	releaseId=$(curl --data "$curlData" https://api.github.com/repos/$varRepoSlug/releases?access_token=$varAccessToken | jq -r '.id')
-	echo " - new release created for $varTagName (id $releaseId)"
+	if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi	
+	
+	echo " - $varTagName release record successfully created (id $releaseId)"
 fi
 
 # Assets defined by dir contents
@@ -149,22 +226,26 @@ if [ ! -z $varAssetsDir ]; then
 	done	
 fi
 
-echo
-echo varAssets: $varAssets
-
 #Upload additional assets
 if [ ! -z $varAssets ]; then
+	echo
+	echo "Uploading assets:"
+	echo "-----------------"
+	echo " Files to upload:"
+	echo "   $varAssets"
+	echo
+	
 	curlAuth="Authorization: token $varAccessToken"
 	for filename in $(echo $varAssets | tr ";" "\n")
 	do
-	  echo
-	  echo Uploading $filename...
-	  
+	  echo " - ${filename}:" 
 	  curl -X POST -sH "$curlAuth" -H "Content-Type: application/octet-stream" --data-binary @"$filename" https://uploads.github.com/repos/$varRepoSlug/releases/$releaseId/assets?name=$(basename $filename)
+	  
+	  if [ $? -ne 0 ]; then echo "FAILED: $? => aborting"; exit 1; fi
+	  
+	  echo
+	  echo "OK"
+	  echo
+	  
 	done
 fi
-
-echo
-echo
-	
-

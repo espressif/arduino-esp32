@@ -34,10 +34,10 @@ enum HTTPUploadStatus { UPLOAD_FILE_START, UPLOAD_FILE_WRITE, UPLOAD_FILE_END,
 enum HTTPClientStatus { HC_NONE, HC_WAIT_READ, HC_WAIT_CLOSE };
 enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH };
 
-#define HTTP_DOWNLOAD_UNIT_SIZE 1460
+#define HTTP_DOWNLOAD_UNIT_SIZE 1436
 
 #ifndef HTTP_UPLOAD_BUFLEN
-#define HTTP_UPLOAD_BUFLEN 2048
+#define HTTP_UPLOAD_BUFLEN 1436
 #endif
 
 #define HTTP_MAX_DATA_WAIT 5000 //ms to wait for the client to send the request
@@ -147,7 +147,7 @@ protected:
   bool _parseForm(WiFiClient& client, String boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
-  uint8_t _uploadReadByte(WiFiClient& client);
+  int _uploadReadByte(WiFiClient& client);
   void _prepareHeader(String& response, int code, const char* content_type, size_t contentLength);
   bool _collectHeader(const char* headerName, const char* headerValue);
  
@@ -179,6 +179,9 @@ protected:
 
   int              _currentArgCount;
   RequestArgument* _currentArgs;
+  int              _postArgsLen;
+  RequestArgument* _postArgs;
+
   std::unique_ptr<HTTPUpload> _currentUpload;
 
   int              _headerKeysCount;

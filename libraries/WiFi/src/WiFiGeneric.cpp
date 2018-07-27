@@ -334,7 +334,7 @@ void WiFiGenericClass::removeEvent(wifi_event_id_t id)
  * @param arg
  */
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
+const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
 #endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
 const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "UNSPECIFIED", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT" };
@@ -365,17 +365,29 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
         } else if(reason == WIFI_REASON_BEACON_TIMEOUT || reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
             WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
         } else if(reason == WIFI_REASON_AUTH_EXPIRE) {
-            if(WiFi.getAutoReconnect()){
-                WiFi.begin();
-            }
+
         } else {
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL && WiFi.getAutoReconnect()){
+        if(((reason == WIFI_REASON_AUTH_EXPIRE) ||
+            (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
+            WiFi.getAutoReconnect())
+        {
+            WiFi.enableSTA(false);
+            WiFi.enableSTA(true);
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+        uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
+        uint8_t * mask = (uint8_t *)&(event->event_info.got_ip.ip_info.netmask.addr);
+        uint8_t * gw = (uint8_t *)&(event->event_info.got_ip.ip_info.gw.addr);
+        log_d("STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
+            ip[0], ip[1], ip[2], ip[3],
+            mask[0], mask[1], mask[2], mask[3],
+            gw[0], gw[1], gw[2], gw[3]);
+#endif
         WiFiSTAClass::_setStatus(WL_CONNECTED);
         setStatusBits(STA_HAS_IP_BIT | STA_CONNECTED_BIT);
     } else if(event->event_id == SYSTEM_EVENT_STA_LOST_IP) {
@@ -403,6 +415,15 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
     } else if(event->event_id == SYSTEM_EVENT_ETH_DISCONNECTED) {
         clearStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
     } else if(event->event_id == SYSTEM_EVENT_ETH_GOT_IP) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+        uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
+        uint8_t * mask = (uint8_t *)&(event->event_info.got_ip.ip_info.netmask.addr);
+        uint8_t * gw = (uint8_t *)&(event->event_info.got_ip.ip_info.gw.addr);
+        log_d("ETH IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
+            ip[0], ip[1], ip[2], ip[3],
+            mask[0], mask[1], mask[2], mask[3],
+            gw[0], gw[1], gw[2], gw[3]);
+#endif
         setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT);
 
     } else if(event->event_id == SYSTEM_EVENT_GOT_IP6) {

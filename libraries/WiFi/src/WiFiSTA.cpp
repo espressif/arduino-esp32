@@ -399,6 +399,9 @@ uint8_t WiFiSTAClass::waitForConnectResult()
  */
 IPAddress WiFiSTAClass::localIP()
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
     tcpip_adapter_ip_info_t ip;
     tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
     return IPAddress(ip.ip.addr);
@@ -412,7 +415,9 @@ IPAddress WiFiSTAClass::localIP()
  */
 uint8_t* WiFiSTAClass::macAddress(uint8_t* mac)
 {
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    if(WiFiGenericClass::getMode() != WIFI_MODE_NULL){
+        esp_wifi_get_mac(WIFI_IF_STA, mac);
+    }
     return mac;
 }
 
@@ -424,6 +429,9 @@ String WiFiSTAClass::macAddress(void)
 {
     uint8_t mac[6];
     char macStr[18] = { 0 };
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return String();
+    }
     esp_wifi_get_mac(WIFI_IF_STA, mac);
 
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -436,6 +444,9 @@ String WiFiSTAClass::macAddress(void)
  */
 IPAddress WiFiSTAClass::subnetMask()
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
     tcpip_adapter_ip_info_t ip;
     tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
     return IPAddress(ip.netmask.addr);
@@ -447,6 +458,9 @@ IPAddress WiFiSTAClass::subnetMask()
  */
 IPAddress WiFiSTAClass::gatewayIP()
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
     tcpip_adapter_ip_info_t ip;
     tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
     return IPAddress(ip.gw.addr);
@@ -459,6 +473,9 @@ IPAddress WiFiSTAClass::gatewayIP()
  */
 IPAddress WiFiSTAClass::dnsIP(uint8_t dns_no)
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
     ip_addr_t dns_ip = dns_getserver(dns_no);
     return IPAddress(dns_ip.u_addr.ip4.addr);
 }
@@ -469,6 +486,9 @@ IPAddress WiFiSTAClass::dnsIP(uint8_t dns_no)
  */
 String WiFiSTAClass::SSID() const
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return String();
+    }
     wifi_ap_record_t info;
     if(!esp_wifi_sta_get_ap_info(&info)) {
         return String(reinterpret_cast<char*>(info.ssid));
@@ -482,6 +502,9 @@ String WiFiSTAClass::SSID() const
  */
 String WiFiSTAClass::psk() const
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return String();
+    }
     wifi_config_t conf;
     esp_wifi_get_config(WIFI_IF_STA, &conf);
     return String(reinterpret_cast<char*>(conf.sta.password));
@@ -495,6 +518,9 @@ uint8_t* WiFiSTAClass::BSSID(void)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return NULL;
+    }
     if(!esp_wifi_sta_get_ap_info(&info)) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
@@ -523,6 +549,9 @@ String WiFiSTAClass::BSSIDstr(void)
  */
 int8_t WiFiSTAClass::RSSI(void)
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return 0;
+    }
     wifi_ap_record_t info;
     if(!esp_wifi_sta_get_ap_info(&info)) {
         return info.rssi;
@@ -536,7 +565,10 @@ int8_t WiFiSTAClass::RSSI(void)
  */
 const char * WiFiSTAClass::getHostname()
 {
-    const char * hostname;
+    const char * hostname = NULL;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return hostname;
+    }
     if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_STA, &hostname)){
         return NULL;
     }
@@ -550,6 +582,9 @@ const char * WiFiSTAClass::getHostname()
  */
 bool WiFiSTAClass::setHostname(const char * hostname)
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return false;
+    }
     return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname) == 0;
 }
 
@@ -559,6 +594,9 @@ bool WiFiSTAClass::setHostname(const char * hostname)
  */
 bool WiFiSTAClass::enableIpV6()
 {
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return false;
+    }
     return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA) == 0;
 }
 
@@ -569,6 +607,9 @@ bool WiFiSTAClass::enableIpV6()
 IPv6Address WiFiSTAClass::localIPv6()
 {
     static ip6_addr_t addr;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPv6Address();
+    }
     if(tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_STA, &addr)){
         return IPv6Address();
     }

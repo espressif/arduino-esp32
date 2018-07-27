@@ -286,6 +286,8 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, 
     _len = pb->len;
     _index = 0;
 
+    pbuf_ref(_pb);
+
     //memcpy(&_remoteIp, raddr, sizeof(ip_addr_t));
     _remoteIp.type = raddr->type;
     _localIp.type = _remoteIp.type;
