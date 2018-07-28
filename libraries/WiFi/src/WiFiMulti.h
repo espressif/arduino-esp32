@@ -31,16 +31,6 @@
 #undef max
 #include <vector>
 
-#ifdef DEBUG_ESP_WIFI
-#ifdef DEBUG_ESP_PORT
-#define DEBUG_WIFI_MULTI(...) DEBUG_ESP_PORT.printf( __VA_ARGS__ )
-#endif
-#endif
-
-#ifndef DEBUG_WIFI_MULTI
-#define DEBUG_WIFI_MULTI(...)
-#endif
-
 typedef struct {
     char * ssid;
     char * passphrase;
