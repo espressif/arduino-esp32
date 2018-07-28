@@ -76,11 +76,11 @@ shopt -u nocasematch
 #
 # Prepare Markdown release notes:
 #################################
-#
-# - tag's description:
-# 	ignore first 3 lines - commiter, tagname, blank
-#	first line of message: heading
-#	other lines: converted to bullets
+# - annotated tags only, lightweight tags just display message of referred commit
+# - tag's description conversion to relnotes:
+# 	first 3 lines (tagname, commiter, blank): ignored
+#	4th line: relnotes heading
+#	remaining lines: each converted to bullet-list item
 #	empty lines ignored
 #	if '* ' found as a first char pair, it's converted to '- ' to keep bulleting unified
 echo
@@ -90,9 +90,10 @@ echo "Tag's message:"
 
 relNotesRaw=`git show -s --format=%b $varTagName`
 readarray -t msgArray <<<"$relNotesRaw"
-
 arrLen=${#msgArray[@]}
-if [ $arrLen > 3 ]; then 
+
+#process annotated tags only
+if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then 
 	ind=3
 	while [ $ind -lt $arrLen ]; do
 		if [ $ind -eq 3 ]; then
@@ -113,13 +114,9 @@ if [ $arrLen > 3 ]; then
 		fi
 		let ind=$ind+1
 	done
-else
-	releaseNotes="#### Release of $varTagName"
-	releaseNotes+=$'\r\n'
-	
-	#debug output
-	echo "   Release of $varTagName"
 fi
+
+echo "$releaseNotes"
 
 # - list of commits (commits.txt must exit in the output dir)
 commitFile=$varAssetsDir/commits.txt
