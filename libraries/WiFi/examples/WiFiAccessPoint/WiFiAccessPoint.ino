@@ -14,6 +14,8 @@
 #include <WiFiClient.h> 
 #include <WiFiAP.h>
 
+# define LED_BUILTIN  2           // Put the pin number where you connected your test LED or comment this line if you've an on-board/built-in LED
+
 /* Set these to your desired credentials. */
 const char *ssid = "yourAP";
 const char *password = "yourPassword";
