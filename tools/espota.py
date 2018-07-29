@@ -179,6 +179,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
       try:
         connection.sendall(chunk)
         res = connection.recv(10)
+        lastResponseContainedOK = 'OK' in res.decode()
       except:
         sys.stderr.write('\n')
         logging.error('Error Uploading')
@@ -186,6 +187,13 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
         f.close()
         sock.close()
         return 1
+
+    if lastResponseContainedOK:
+      logging.info('Success')
+      connection.close()
+      f.close()
+      sock.close()
+      return 0
 
     sys.stderr.write('\n')
     logging.info('Waiting for result...')
