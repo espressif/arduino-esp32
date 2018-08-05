@@ -357,7 +357,7 @@ char * TwoWire::getErrorText(uint8_t err)
  */
  
 uint32_t TwoWire::setDebugFlags( uint32_t setBits, uint32_t resetBits){
-  i2cDebug(i2c,setBits,resetBits);
+  return i2cDebug(i2c,setBits,resetBits);
 }
 
 bool TwoWire::busy(void){
