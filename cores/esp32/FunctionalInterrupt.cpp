@@ -13,7 +13,7 @@ typedef void (*voidFuncPtrArg)(void*);
 
 extern "C"
 {
-	extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type);
+	extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type, bool functional);
 }
 
 void interruptFunctional(void* arg)
@@ -28,7 +28,7 @@ void interruptFunctional(void* arg)
 void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode)
 {
 	// use the local interrupt routine which takes the ArgStructure as argument
-	__attachInterruptArg (pin, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{intRoutine}, mode);
+	__attachInterruptFunctionalArg (pin, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{intRoutine}, mode, true);
 }
 
 extern "C"
