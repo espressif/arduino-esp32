@@ -11,17 +11,18 @@
 * Change IDENTITY
 * Change password
 * Upload sketch and enjoy!
+* After sucessful assign of IP address, board will connect to HTTP page on internet to verify your authentification
 
 # Tested locations
 * Technical University in Košice (Slovakia) - Working
 * Slovak Technical University in Bratislava (Slovakia) - Working
 * University of Antwerp (Belgium) - Working
 * UPV Universitat Politècnica de València (Spain) - Working
-* Local RADIUS network under Linux Zeroshell - Unsuccessful
+* Local RADIUS network under Linux Zeroshell - Unsuccessful connection
 
-# Sucessful connection
+# Sucessful connection example
  ![alt text](https://i.nahraj.to/f/24Kc.png)
-# Unsucessful connection
+# Unsucessful connection example
  ![alt text](https://camo.githubusercontent.com/87e47d1b27f4e8ace87423e40e8edbce7983bafa/68747470733a2f2f692e6e616872616a2e746f2f662f323435572e504e47)
 
 # Boards
