@@ -468,3 +468,13 @@ size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
     }
     return len;
 }
+
+size_t Preferences::freeEntries() {
+    nvs_stats_t nvs_stats;
+    esp_err_t err = nvs_get_stats(NULL, &nvs_stats);
+    if(err){
+        log_e("Failed to get nvs statistics");
+        return 0;
+    }
+    return nvs_stats.free_entries;
+}
