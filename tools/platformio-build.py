@@ -34,23 +34,65 @@ platform = env.PioPlatform()
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 assert isdir(FRAMEWORK_DIR)
 
-env.Prepend(
-    CPPDEFINES=[
-        ("ARDUINO", 10805),
-        "ARDUINO_ARCH_ESP32",
-        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
-        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
+env.Append(
+    ASFLAGS=["-x", "assembler-with-cpp"],
+
+    CFLAGS=[
+        "-std=gnu99",
+        "-Wno-old-style-declaration"
     ],
 
-    CFLAGS=["-Wno-old-style-declaration"],
-
     CCFLAGS=[
+        "-Os",
+        "-Wall",
+        "-nostdlib",
+        "-Wpointer-arith",
+        "-Wno-error=unused-but-set-variable",
+        "-Wno-error=unused-variable",
+        "-mlongcalls",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fstrict-volatile-bitfields",
         "-Wno-error=deprecated-declarations",
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
         "-fstack-protector",
         "-fexceptions"
+    ],
+
+    CXXFLAGS=[
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-std=gnu++11"
+    ],
+
+    LINKFLAGS=[
+        "-nostdlib",
+        "-Wl,-static",
+        "-u", "call_user_start_cpu0",
+        "-Wl,--undefined=uxTopUsedPriority",
+        "-Wl,--gc-sections",
+        "-Wl,-EL",
+        "-T", "esp32.common.ld",
+        "-T", "esp32.rom.ld",
+        "-T", "esp32.peripherals.ld",
+        "-T", "esp32.rom.spiram_incompatible_fns.ld",
+        "-u", "ld_include_panic_highint_hdl",
+        "-u", "__cxa_guard_dummy",
+        "-u", "__cxx_fatal_exception"
+    ],
+
+    CPPDEFINES=[
+        "ESP32",
+        "ESP_PLATFORM",
+        ("F_CPU", "$BOARD_F_CPU"),
+        "HAVE_CONFIG_H",
+        ("MBEDTLS_CONFIG_FILE", '\\"mbedtls/esp_config.h\\"'),
+        ("ARDUINO", 10805),
+        "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
 
     CPPPATH=[
@@ -98,30 +140,18 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
+
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
+
     LIBS=[
         "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "esp_http_client", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "esp-tls", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "smartconfig_ack", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
-    ]
-)
-
-
-env.Append(
-    LIBSOURCE_DIRS=[
-        join(FRAMEWORK_DIR, "libraries")
     ],
 
-    LINKFLAGS=[
-        "-Wl,-EL",
-        "-T", "esp32.common.ld",
-        "-T", "esp32.rom.ld",
-        "-T", "esp32.peripherals.ld",
-        "-T", "esp32.rom.spiram_incompatible_fns.ld",
-        "-u", "ld_include_panic_highint_hdl",
-        "-u", "__cxa_guard_dummy",
-        "-u", "__cxx_fatal_exception"
+    LIBSOURCE_DIRS=[
+        join(FRAMEWORK_DIR, "libraries")
     ],
 
     FLASH_EXTRA_IMAGES=[
