@@ -36,17 +36,21 @@
 /* Stickbreaker ISR mode debug support
 
 ENABLE_I2C_DEBUG_BUFFER
-  Enable debug interrupt history buffer, setting this define will result in 1544 bytes of RAM
-  being used whenever CORE_DEBUG_LEVEL is higher than WARNING. Unless you are debugging
-  a problem in the I2C subsystem I would recommend you leave it commented out.
+  Enable debug interrupt history buffer, fifoTx history buffer.
+  Setting this define will result in 2570 bytes of RAM being used whenever CORE_DEBUG_LEVEL
+  is higher than WARNING. Unless you are debugging a problem in the I2C subsystem,
+  I would recommend you leave it commented out.
   */
 
 //#define ENABLE_I2C_DEBUG_BUFFER
 
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)
 #define INTBUFFMAX 64
+#define FIFOMAX 512
 static uint32_t intBuff[INTBUFFMAX][3][2];
 static uint32_t intPos[2]= {0,0};
+static uint16_t fifoBuffer[FIFOMAX];
+static uint16_t fifoPos = 0;
 #endif
 
 // start from tools/sdk/include/soc/soc/i2c_struct.h
@@ -154,7 +158,7 @@ typedef union {
 
 // individual dq element
 typedef struct {
-    uint8_t *data;           // datapointer for read/write buffer
+    uint8_t *data;           // data pointer for read/write buffer
     uint16_t length;         // size of data buffer
     uint16_t position;       // current position for next char in buffer (<length)
     uint16_t cmdBytesNeeded; // used to control number of I2C_COMMAND_t blocks added to queue
@@ -179,9 +183,10 @@ struct i2c_struct_t {
     I2C_DATA_QUEUE_t * dq;
     uint16_t queueCount; // number of dq entries in queue.
     uint16_t queuePos; // current queue that still has or needs data (out/in)
-    uint16_t errorByteCnt;  // count of bytes moved (both in and out)
+    int16_t  errorByteCnt;  // byte pos where error happened, -1 devId, 0..(length-1) data
     uint16_t errorQueue; // errorByteCnt is in this queue,(for error locus)
     uint32_t exitCode;
+    uint32_t debugFlags;
 };
 
 enum {
@@ -197,16 +202,16 @@ enum {
 #define I2C_MUTEX_UNLOCK()
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), 0, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), 0, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0}
 };
 #else
 #define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTake(i2c->lock, portMAX_DELAY) != pdPASS)
 #define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
 
 static i2c_t _i2c_bus_array[2] = {
-    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0},
-    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0}
+    {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0,0},
+    {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), NULL, 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0,0}
 };
 #endif
 
@@ -218,6 +223,222 @@ static i2c_t _i2c_bus_array[2] = {
  * ack_exp   - This bit is to set an expected ACK value for the transmitter.
  * ack_check - This bit is to decide whether the transmitter checks ACK bit. 1 means yes and 0 means no.
  * */
+
+
+/* Stickbreaker ISR mode debug support
+ */
+static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
+{
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+    static const char * const cmdName[] ={"RSTART","WRITE","READ","STOP","END"};
+    uint8_t i=0;
+    while(i<16) {
+        I2C_COMMAND_t c;
+        c.val=i2c->dev->command[i].val;
+        log_e("[%2d]\t%c\t%s\tval[%d]\texp[%d]\ten[%d]\tbytes[%d]",i,(c.done?'Y':'N'),
+              cmdName[c.op_code],
+              c.ack_val,
+              c.ack_exp,
+              c.ack_en,
+              c.byte_num);
+        i++;
+    }
+#endif
+}
+
+/* Stickbreaker ISR mode debug support
+ */
+static void i2cDumpDqData(i2c_t * i2c)
+{
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+    uint16_t a=0;
+    char buff[140];
+    I2C_DATA_QUEUE_t *tdq;
+    int digits=0,lenDigits=0;
+    a = i2c->queueCount;
+    while(a>0) {
+        digits++;
+        a /= 10;
+    }
+    while(a<i2c->queueCount) { // find maximum number of len decimal digits for formatting
+        if (i2c->dq[a].length > lenDigits ) lenDigits = i2c->dq[a].length;
+        a++;
+    }
+    a=0;
+    while(lenDigits>0){
+      a++;
+      lenDigits /= 10;
+    }
+    lenDigits = a;
+    a = 0;
+    while(a<i2c->queueCount) {
+        tdq=&i2c->dq[a];
+        char buf1[10],buf2[10];
+        sprintf(buf1,"%0*d",lenDigits,tdq->length);
+        sprintf(buf2,"%0*d",lenDigits,tdq->position);
+        log_i("[%0*d] %sbit %x %c %s buf@=%p, len=%s, pos=%s, ctrl=%d%d%d%d%d",digits,a,
+        (tdq->ctrl.addr>0x100)?"10":"7",
+        (tdq->ctrl.addr>0x100)?(((tdq->ctrl.addr&0x600)>>1)|(tdq->ctrl.addr&0xff)):(tdq->ctrl.addr>>1),
+        (tdq->ctrl.mode)?'R':'W',
+        (tdq->ctrl.stop)?"STOP":"",
+        tdq->data,
+        buf1,buf2,
+        tdq->ctrl.startCmdSent,tdq->ctrl.addrCmdSent,tdq->ctrl.dataCmdSent,(tdq->ctrl.stop)?tdq->ctrl.stopCmdSent:0,tdq->ctrl.addrSent
+        );
+        uint16_t offset = 0;
+        while(offset<tdq->length) {
+            memset(buff,' ',140);
+            buff[139]='\0';
+            uint16_t i = 0,j;
+            j=sprintf(buff,"0x%04x: ",offset);
+            while((i<32)&&(offset < tdq->length)) {
+                char ch = tdq->data[offset];
+                sprintf((char*)&buff[(i*3)+41],"%02x ",ch);
+                if((ch<32)||(ch>126)) {
+                    ch='.';
+                }
+                j+=sprintf((char*)&buff[j],"%c",ch);
+                buff[j]=' ';
+                i++;
+                offset++;
+            }
+            log_i("%s",buff);
+        }
+        a++;
+    }
+#endif
+}
+
+static void i2cDumpI2c(i2c_t * i2c)
+{
+    log_e("i2c=%p",i2c);
+    log_i("dev=%p date=%p",i2c->dev,i2c->dev->date);
+#if !CONFIG_DISABLE_HAL_LOCKS
+    log_i("lock=%p",i2c->lock);
+#endif
+    log_i("num=%d",i2c->num);
+    log_i("mode=%d",i2c->mode);
+    log_i("stage=%d",i2c->stage);
+    log_i("error=%d",i2c->error);
+    log_i("event=%p bits=%x",i2c->i2c_event,(i2c->i2c_event)?xEventGroupGetBits(i2c->i2c_event):0);
+    log_i("intr_handle=%p",i2c->intr_handle);
+    log_i("dq=%p",i2c->dq);
+    log_i("queueCount=%d",i2c->queueCount);
+    log_i("queuePos=%d",i2c->queuePos);
+    log_i("errorByteCnt=%d",i2c->errorByteCnt);
+    log_i("errorQueue=%d",i2c->errorQueue);
+    log_i("debugFlags=0x%08X",i2c->debugFlags);
+    if(i2c->dq) {
+        i2cDumpDqData(i2c);
+    }
+}
+
+static void i2cDumpInts(uint8_t num)
+{
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)  
+
+    uint32_t b;
+    log_i("%u row\tcount\tINTR\tTX\tRX\tTick ",num);
+    for(uint32_t a=1; a<=INTBUFFMAX; a++) {
+        b=(a+intPos[num])%INTBUFFMAX;
+        if(intBuff[b][0][num]!=0) {
+            log_i("[%02d]\t0x%04x\t0x%04x\t0x%04x\t0x%04x\t0x%08x",b,((intBuff[b][0][num]>>16)&0xFFFF),(intBuff[b][0][num]&0xFFFF),((intBuff[b][1][num]>>16)&0xFFFF),(intBuff[b][1][num]&0xFFFF),intBuff[b][2][num]);
+        }
+    }
+#else
+    log_i("Debug Buffer not Enabled");
+#endif
+}
+
+static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+    typedef union {
+        struct {
+            uint32_t ack_rec:             1;        /*This register stores the value of ACK bit.*/
+            uint32_t slave_rw:            1;        /*when in slave mode  1：master read slave  0: master write slave.*/
+            uint32_t time_out:            1;        /*when I2C takes more than time_out_reg clocks to receive a data then this register changes to high level.*/
+            uint32_t arb_lost:            1;        /*when I2C lost control of SDA line  this register changes to high level.*/
+            uint32_t bus_busy:            1;        /*1:I2C bus is busy transferring data. 0:I2C bus is in idle state.*/
+            uint32_t slave_addressed:     1;        /*when configured as i2c slave  and the address send by master is equal to slave's address  then this bit will be high level.*/
+            uint32_t byte_trans:          1;        /*This register changes to high level when one byte is transferred.*/
+            uint32_t reserved7:           1;
+            uint32_t rx_fifo_cnt:         6;        /*This register represent the amount of data need to send.*/
+            uint32_t reserved14:          4;
+            uint32_t tx_fifo_cnt:         6;        /*This register stores the amount of received data  in ram.*/
+            uint32_t scl_main_state_last: 3;        /*This register stores the value of state machine for i2c module.  3'h0: SCL_MAIN_IDLE  3'h1: SCL_ADDRESS_SHIFT 3'h2: SCL_ACK_ADDRESS  3'h3: SCL_RX_DATA  3'h4 SCL_TX_DATA  3'h5:SCL_SEND_ACK 3'h6:SCL_WAIT_ACK*/
+            uint32_t reserved27:          1;
+            uint32_t scl_state_last:      3;        /*This register stores the value of state machine to produce SCL. 3'h0: SCL_IDLE  3'h1:SCL_START   3'h2:SCL_LOW_EDGE  3'h3: SCL_LOW   3'h4:SCL_HIGH_EDGE   3'h5:SCL_HIGH  3'h6:SCL_STOP*/
+            uint32_t reserved31:          1;
+        };
+        uint32_t val;
+    } status_reg;
+     
+    status_reg sr;
+    sr.val= i2c->dev->status_reg.val;
+    
+    log_i("ack(%d) sl_rw(%d) to(%d) arb(%d) busy(%d) sl(%d) trans(%d) rx(%d) tx(%d) sclMain(%d) scl(%d)",sr.ack_rec,sr.slave_rw,sr.time_out,sr.arb_lost,sr.bus_busy,sr.slave_addressed,sr.byte_trans, sr.rx_fifo_cnt, sr.tx_fifo_cnt,sr.scl_main_state_last, sr.scl_state_last);
+#endif
+}
+
+static void i2cDumpFifo(i2c_t * i2c){
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+char buf[64];
+uint16_t k = 0;
+uint16_t i = fifoPos+1;
+  i %=FIFOMAX;
+while((fifoBuffer[i]==0)&&(i!=fifoPos)){
+  i++;
+  i %=FIFOMAX;
+}
+if(i != fifoPos){// actual data
+    do{
+      if(fifoBuffer[i] & 0x8000){ // address byte
+        if(fifoBuffer[i] & 0x100) { // read
+          if(fifoBuffer[i] & 0x1) { // valid read dev id
+            k+= sprintf(&buf[k],"READ  0x%02X",(fifoBuffer[i]&0xff)>>1);
+          } else { // invalid read dev id
+            k+= sprintf(&buf[k],"Bad READ  0x%02X",(fifoBuffer[i]&0xff));
+          }
+        } else { // write
+          if(fifoBuffer[i] & 0x1) { // bad write dev id
+            k+= sprintf(&buf[k],"bad WRITE 0x%02X",(fifoBuffer[i]&0xff));
+          } else { // good Write
+            k+= sprintf(&buf[k],"WRITE 0x%02X",(fifoBuffer[i]&0xff)>>1);
+          }
+        }
+      } else k += sprintf(&buf[k],"% 4X ",fifoBuffer[i]);
+
+      i++;
+      i %= FIFOMAX;
+      bool outBuffer=false;
+      if( fifoBuffer[i] & 0x8000){
+        outBuffer=true;
+        k=0;
+      }
+      if((outBuffer)||(k>50)||(i==fifoPos)) log_i("%s",buf);
+      outBuffer = false;
+      if(k>50) {
+        k=sprintf(buf,"-> ");
+      }
+    }while( i!= fifoPos);
+}
+#endif
+}
+
+static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+    if( trigger ){
+      log_i("%s",locus);      
+      if(trigger & 1) i2cDumpI2c(i2c);
+      if(trigger & 2) i2cDumpInts(i2c->num);
+      if(trigger & 4) i2cDumpCmdQueue(i2c);
+      if(trigger & 8) i2cDumpStatus(i2c);
+      if(trigger & 16) i2cDumpFifo(i2c);
+    }
+#endif    
+}
+ // end of debug support routines
+ 
 static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
     I2C_COMMAND_t cmd;
@@ -229,43 +450,24 @@ static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uin
     cmd.op_code = op_code;
     i2c->dev->command[index].val = cmd.val;
 }
+ 
 
-
-/* Stickbreaker ISR mode debug support
- */
-void IRAM_ATTR dumpCmdQueue(i2c_t *i2c)
-{
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    uint8_t i=0;
-    while(i<16) {
-        I2C_COMMAND_t c;
-        c.val=i2c->dev->command[i].val;
-        log_e("[%2d] %c op[%d] val[%d] exp[%d] en[%d] bytes[%d]",i,(c.done?'Y':'N'),
-              c.op_code,
-              c.ack_val,
-              c.ack_exp,
-              c.ack_en,
-              c.byte_num);
-        i++;
-    }
-#endif
-}
-
-/* Stickbreaker ISR mode support
- */
 static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
 {
     /* this function is called on initial i2cProcQueue() or when a I2C_END_DETECT_INT occurs
      */
     uint16_t cmdIdx = 0;
-    uint16_t qp = i2c->queuePos;
+    uint16_t qp = i2c->queuePos; // all queues before queuePos have been completely processed,
+      // so look start by checking the 'current queue' so see if it needs commands added to
+      // hardware peripheral command list. walk through each queue entry until all queues have been
+      // checked
     bool done;
     bool needMoreCmds = false;
     bool ena_rx=false; // if we add a read op, better enable Rx_Fifo IRQ
     bool ena_tx=false; // if we add a Write op, better enable TX_Fifo IRQ
 
     while(!needMoreCmds&&(qp < i2c->queueCount)) { // check if more possible cmds
-        if(i2c->dq[qp].ctrl.stopCmdSent) {
+        if(i2c->dq[qp].ctrl.stopCmdSent) {// marks that all required cmds[] have been added to peripheral 
             qp++;
         } else {
             needMoreCmds=true;
@@ -282,7 +484,6 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
             // (cmdIdx<14)  because a START op cannot directly precede an END op, else a time out cascade occurs
             i2cSetCmd(i2c, cmdIdx++, I2C_CMD_RSTART, 0, false, false, false);
             tdq->ctrl.startCmdSent=1;
-            done = (cmdIdx>14);
         }
 
         //CMD WRITE ADDRESS
@@ -341,11 +542,11 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
             tdq->ctrl.dataCmdSent=(tdq->cmdBytesNeeded==0); // enough command[] to send all data
 
             if((!done)&&(tdq->ctrl.dataCmdSent)) { // possibly add stop
-                if(tdq->ctrl.stop) { //send a stop
-                    i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_STOP,0,false,false,false);
-                    done = cmdIdx > 14;
-                    tdq->ctrl.stopCmdSent = 1;
-                } else { // dummy a stop because this is a restart
+                if(!tdq->ctrl.stopCmdSent){
+                    if(tdq->ctrl.stop) { //send a stop
+                        i2cSetCmd(i2c, (cmdIdx)++,I2C_CMD_STOP,0,false,false,false);
+                        done = cmdIdx > 14;
+                    }
                     tdq->ctrl.stopCmdSent = 1;
                 }
             }
@@ -370,7 +571,7 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
                         i--;
                     } else { // unable to stretch, fatal
                         log_e("invalid CMD[] layout Stretch Failed");
-                        dumpCmdQueue(i2c);
+                        i2cDumpCmdQueue(i2c);
                         done = true;
                     }
                 }
@@ -409,8 +610,6 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
     }
 }
 
-/* Stickbreaker ISR mode support
- */
 static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
 {
     /*
@@ -421,6 +620,7 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
     uint16_t a=i2c->queuePos; // currently executing dq,
     bool full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
     uint8_t cnt;
+    bool rxQueueEncountered = false;
     while((a < i2c->queueCount) && !full) {
         I2C_DATA_QUEUE_t *tdq = &i2c->dq[a];
         cnt=0;
@@ -449,24 +649,38 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
                         i2c->dev->fifo_data.val = tdq->ctrl.addr&0xFF;
                         cnt++;
                         tdq->ctrl.addrSent=1; // 7bit lowbyte sent
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)
+                        uint16_t a = 0x8000 | tdq->ctrl.addr | (tdq->ctrl.mode<<8);
+                        fifoBuffer[fifoPos++] = a;
+                        fifoPos %= FIFOMAX;
+#endif
                     }
                 }
             }
         }
-        full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
         // add write data to fifo
-        //21NOV2017 might want to look into using local capacity counter instead of reading status_reg
-        //  a double while loop, like emptyRxFifo()
         if(tdq->ctrl.mode==0) { // write
             if(tdq->ctrl.addrSent == tdq->ctrl.addrReq) { //address has been sent, is Write Mode!
-                while((!full)&&(tdq->position < tdq->length)) {
+                uint32_t moveCnt = 32 - i2c->dev->status_reg.tx_fifo_cnt; // how much room in txFifo?
+                while(( moveCnt>0)&&(tdq->position < tdq->length)) {
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)
+                    fifoBuffer[fifoPos++] =  tdq->data[tdq->position];
+                    fifoPos %= FIFOMAX;
+#endif
                     i2c->dev->fifo_data.val = tdq->data[tdq->position++];
                     cnt++;
-                    full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
+                    moveCnt--;
+
                 }
             }
+        } else { // read Queue Encountered, can't update QueuePos past this point, emptyRxfifo will do it
+            if( ! rxQueueEncountered ) {
+              rxQueueEncountered = true;
+              if(a > i2c->queuePos){
+                i2c->queuePos = a; 
+              }
+           }              
         }
-
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)
 
         // update debug buffer tx counts
@@ -474,65 +688,78 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
         intBuff[intPos[i2c->num]][1][i2c->num] = (intBuff[intPos[i2c->num]][1][i2c->num]&0xFFFF)|(cnt<<16);
 
 #endif
-
+        full=!(i2c->dev->status_reg.tx_fifo_cnt<31);
         if(!full) {
-            a++;    // check next buffer for tx
+            a++;    // check next buffer for address tx, or write data
         }
     }
 
-    if(a >= i2c->queueCount ) { // disable IRQ, the next dq will re-enable it
-        // (a >= i2c->queueCount) means no more data is available
+    if(a >= i2c->queueCount ) { // disable TX IRQ, all tx Data has been queued
         i2c->dev->int_ena.tx_fifo_empty= 0;
     }
 
     i2c->dev->int_clr.tx_fifo_empty=1;
 }
 
-/* Stickbreaker ISR mode support
- */
+
 static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
 {
     uint32_t d, cnt=0, moveCnt;
+    
     moveCnt = i2c->dev->status_reg.rx_fifo_cnt;//no need to check the reg until this many are read
+
     while((moveCnt > 0)&&(i2c->queuePos < i2c->queueCount)){ // data to move    
-      I2C_DATA_QUEUE_t *tdq =&i2c->dq[i2c->queuePos]; //short cut
-      if(tdq->ctrl.mode == 1){ // read command
-         if(moveCnt > (tdq->length - tdq->position)) { //make sure they go in this dq
-        // part of these reads go into the next dq
-            moveCnt = (tdq->length - tdq->position);
-         }
-      } else {// error
-         log_e("RxEmpty(%d) call on TxBuffer? dq=%d",moveCnt,i2c->queuePos);
-         return; 
-      }
-      while(moveCnt > 0) {
-         d = i2c->dev->fifo_data.val;
-         moveCnt--;
-         cnt++;
-         tdq->data[tdq->position++] = (d&0xFF);
-         }
-      if(tdq->position >= tdq->length ){ // inc queuePos until next READ command or end of queue
-        i2c->queuePos++;
-        while((i2c->queuePos < i2c->queueCount)&&(i2c->dq[i2c->queuePos].ctrl.mode !=1)){
-          i2c->queuePos++;
-          }
-        if(i2c->queuePos < i2c->queueCount){ // found new place to store rx data
-            tdq = &i2c->dq[i2c->queuePos]; // update shortcut
-            // see if any more chars showed up while empting Fifo.
-            moveCnt = i2c->dev->status_reg.rx_fifo_cnt;
+
+        I2C_DATA_QUEUE_t *tdq =&i2c->dq[i2c->queuePos]; //short cut
+
+        while((tdq->position >= tdq->length)&&( i2c->queuePos < i2c->queueCount)){ // find were to store
+            i2c->queuePos++;
+            tdq = &i2c->dq[i2c->queuePos];
+        }
+      
+        if(i2c->queuePos >= i2c->queueCount){ // bad stuff, rx data but no place to put it!
+            log_e("no Storage location for %d",moveCnt);
+        // discard
+            while(moveCnt>0){
+                d = i2c->dev->fifo_data.val;
+                moveCnt--;
+                cnt++;
+            }
+            break;
+        }
+        
+        if(tdq->ctrl.mode == 1){ // read command
             if(moveCnt > (tdq->length - tdq->position)) { //make sure they go in this dq
-                // part of these reads go into the next dq
+        // part of these reads go into the next dq
                 moveCnt = (tdq->length - tdq->position);
             }
+        } else {// error
+            log_e("RxEmpty(%d) call on TxBuffer? dq=%d",moveCnt,i2c->queuePos);
+        // discard
+            while(moveCnt>0){
+                d = i2c->dev->fifo_data.val;
+                moveCnt--;
+                cnt++;
+            }
+            break;
         }
-      }
+
+        while(moveCnt > 0) { // store data
+            d = i2c->dev->fifo_data.val;
+            moveCnt--;
+            cnt++;
+            tdq->data[tdq->position++] = (d&0xFF);
+        }
+
+        moveCnt = i2c->dev->status_reg.rx_fifo_cnt; //any more out there?
     }
+    
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&& (defined ENABLE_I2C_DEBUG_BUFFER)
         // update Debug rxCount
-        cnt += (intBuff[intPos[i2c->num]][1][i2c->num])&&0xffFF;
+        cnt += (intBuff[intPos[i2c->num]][1][i2c->num])&0xffFF;
         intBuff[intPos[i2c->num]][1][i2c->num] = (intBuff[intPos[i2c->num]][1][i2c->num]&0xFFFF0000)|cnt;
 #endif
- }
+}
 
 static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal)
 {
@@ -578,16 +805,17 @@ static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal
     }
 
 }
+
+static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
+{
 /* i2c_update_error_byte_cnt 07/18/2018
   Only called after an error has occurred, so, most of the time this function is never used.
   This function obliterates the need to interrupt monitor each byte transferred, at high bitrates
   the byte interrupts were overwhelming the OS.  Spurious Interrupts were being generated.
-  it update errorByteCnt, errorQueue. 
+  it updates errorByteCnt, errorQueue. 
  */
-static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
-{
     uint16_t a=0; // start at top of DQ, count how many bytes added to tx fifo, and received from rx_fifo.
-    uint16_t bc = 0;
+    int16_t bc = 0;
     I2C_DATA_QUEUE_t *tdq;
     i2c->errorByteCnt = 0; 
     while( a < i2c->queueCount){ // add up all bytes loaded into fifo's
@@ -596,40 +824,34 @@ static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
         i2c->errorByteCnt += tdq->position; 
         a++;
     }
-//  log_v("errorByteCnt=%d",i2c->errorByteCnt);
   // now errorByteCnt contains total bytes moved into and out of FIFO's
   // but, there may still be bytes waiting in Fifo's
     i2c->errorByteCnt -= i2c->dev->status_reg.tx_fifo_cnt; // waiting to go out;
     i2c->errorByteCnt += i2c->dev->status_reg.rx_fifo_cnt; // already received
 // now walk thru DQ again, find which byte is 'current'
-    bool done = false;
     bc = i2c->errorByteCnt;
     i2c->errorQueue = 0;
-    while(( i2c->errorQueue < i2c->queueCount)&&( !done )){
+    while( i2c->errorQueue < i2c->queueCount ){
         tdq = &i2c->dq[i2c->errorQueue];
         if(bc>0){ // not found yet
             if( tdq->ctrl.addrSent >= bc){ // in address
-                done = true;
-                continue;
+                bc = -1; // in address
+                break;
             } else {
                 bc -= tdq->ctrl.addrSent;
-                if( tdq->position >= bc) { // data nak
-                    done = true;
-                    continue;
+                if( tdq->length > bc) { // data nak
+                    break;
                 } else { // count down
-                    bc -= tdq->position;
+                    bc -= tdq->length;
                 }
             }
-        } else {
-            done= true;
-            continue;
-        }
+        } else break;
+        
         i2c->errorQueue++;
     }  
-//  log_v("errorByteCnt=%d errorQueue=%d",i2c->errorByteCnt,i2c->errorQueue);
   
     i2c->errorByteCnt = bc;
-}
+ }
 
 static void IRAM_ATTR i2c_isr_handler_default(void* arg)
 {
@@ -637,17 +859,14 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
     uint32_t activeInt = p_i2c->dev->int_status.val&0x7FF;
 
     if(p_i2c->stage==I2C_DONE) { //get Out, can't service, not configured
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-        uint32_t raw = p_i2c->dev->int_raw.val;
-#endif
         p_i2c->dev->int_ena.val = 0;
         p_i2c->dev->int_clr.val = 0x1FFF;
-        log_v("eject raw=%p, int=%p",raw,activeInt);
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        uint32_t raw = p_i2c->dev->int_raw.val;
+        log_w("eject raw=%p, int=%p",raw,activeInt);
+#endif
         return;
-    }else if(!activeInt){ //spurious interrupt, possibly bus relate 20180711
-       log_v("r=0x%x s=0x%x %d",p_i2c->dev->int_raw.val,p_i2c->dev->int_status.val,p_i2c->stage);
     }
-
     while (activeInt != 0) { // Ordering of 'if(activeInt)' statements is important, don't change
 
     #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)
@@ -690,8 +909,7 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
         if (activeInt & I2C_ACK_ERR_INT_ST_M) {//fatal error, abort i2c service
             if (p_i2c->mode == I2C_MASTER) {
                 i2c_update_error_byte_cnt(p_i2c); // calc which byte caused ack Error, check if address or data
-                log_v("AcK Err errorByteCnt=%d, errorQueue=%d queuepos=%d",p_i2c->errorByteCnt,p_i2c->errorQueue, p_i2c->queuePos);
-                if(p_i2c->errorByteCnt <= p_i2c->dq[p_i2c->errorQueue].ctrl.addrReq) { // address
+                if(p_i2c->errorByteCnt < 0 ) { // address
                     i2cIsrExit(p_i2c,EVENT_ERROR_NAK,true);
                 } else {
                     i2cIsrExit(p_i2c,EVENT_ERROR_DATA_NAK,true); //data
@@ -750,14 +968,16 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
             p_i2c->dev->int_ena.val = p_i2c->dev->int_ena.val & (~activeInt);
         }
 
-        activeInt = p_i2c->dev->int_status.val; // start all over if another interrupt happened
+//        activeInt = p_i2c->dev->int_status.val; // start all over if another interrupt happened
+// 01AUG2018 if another interrupt happened, the OS will schedule another interrupt
+// this is the source of spurious interrupts
     }
 }
 
 /* Stickbreaker added for ISR 11/2017
 functional with Silicon date=0x16042000
  */
-static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, EventGroupHandle_t event)
+static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop, bool dataOnly, EventGroupHandle_t event)
 {
     // need to grab a MUTEX for exclusive Queue,
     // what about if ISR is running?
@@ -772,10 +992,21 @@ static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, u
     dqx.position = 0;
     dqx.cmdBytesNeeded = dataLen;
     dqx.ctrl.val = 0;
+    if( dataOnly) {
+     /* special case to add a queue data only element.
+        START and devAddr will not be sent, this dq element can have a STOP.
+        allows multiple buffers to be used for one transaction.
+        sequence: normal transaction(sendStop==false), [dataonly(sendStop==false)],dataOnly(sendStop==true)
+       *** Currently only works with WRITE, final byte NAK an READ will cause a fail between dq buffer elements.  (in progress 30JUL2018)
+        */
+        dqx.ctrl.startCmdSent = 1; // mark as already sent
+        dqx.ctrl.addrCmdSent = 1;
+    } else {
+        dqx.ctrl.addrReq = ((i2cDeviceAddr&0xFC00)==0x7800)?2:1; // 10bit or 7bit address
+    }
     dqx.ctrl.addr = i2cDeviceAddr;
     dqx.ctrl.mode = mode;
     dqx.ctrl.stop= sendStop;
-    dqx.ctrl.addrReq = ((i2cDeviceAddr&0xFC00)==0x7800)?2:1; // 10bit or 7bit address
     dqx.queueEvent = event;
 
     if(event) { // an eventGroup exist, so, initialize it
@@ -808,7 +1039,7 @@ static i2c_err_t i2cAddQueue(i2c_t * i2c,uint8_t mode, uint16_t i2cDeviceAddr, u
 
 i2c_err_t i2cAddQueueWrite(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
 {
-    return i2cAddQueue(i2c,0,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
+    return i2cAddQueue(i2c,0,i2cDeviceAddr,dataPtr,dataLen,sendStop,false,event);
 }
 
 i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen,bool sendStop,EventGroupHandle_t event)
@@ -822,16 +1053,15 @@ i2c_err_t i2cAddQueueRead(i2c_t * i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr,
     // this is the Industry Standard specification.
 
     if((i2cDeviceAddr &0xFC00)==0x7800) { // ten bit read
-        i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,event);
+        i2c_err_t err = i2cAddQueue(i2c,0,i2cDeviceAddr,NULL,0,false,false,event);
         if(err==I2C_ERROR_OK) {
-            return i2cAddQueue(i2c,1,(i2cDeviceAddr>>8),dataPtr,dataLen,sendStop,event);
+            return i2cAddQueue(i2c,1,(i2cDeviceAddr>>8),dataPtr,dataLen,sendStop,false,event);
         } else {
             return err;
         }
     }
-    return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,event);
+    return i2cAddQueue(i2c,1,i2cDeviceAddr,dataPtr,dataLen,sendStop,false,event);
 }
-// Stickbreaker
 
 i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
 {
@@ -847,6 +1077,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     if(i2c == NULL) {
         return I2C_ERROR_DEV;
     }
+    if(i2c->debugFlags & 0xff000000) i2cTriggerDumps(i2c,(i2c->debugFlags>>24),"before ProcQueue");
     if (i2c->dev->status_reg.bus_busy) { // return error, let TwoWire() handle resetting the hardware.
         /* if multi master then this if should be changed to this 03/12/2018
         if(multiMaster){// try to let the bus clear by its self
@@ -876,6 +1107,8 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
         intBuff[i][2][i2c->num] = 0;
     }
     intPos[i2c->num] = 0;
+    fifoPos = 0;
+    memset(fifoBuffer,0,FIFOMAX);
 #endif
     // EventGroup is used to signal transmission completion from ISR
     // not always reliable. Sometimes, the FreeRTOS scheduler is maxed out and refuses request
@@ -950,20 +1183,20 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     // receives the TRANS_START
 
     
-    
-    i2c->dev->int_ena.val =
+    uint32_t interruptsEnabled =
         I2C_ACK_ERR_INT_ENA | // (BIT(10))  Causes Fatal Error Exit
         I2C_TRANS_START_INT_ENA | // (BIT(9))  Triggered by trans_start=1, initial,END
         I2C_TIME_OUT_INT_ENA  | //(BIT(8))  Trigger by SLAVE SCL stretching, NOT an ERROR
         I2C_TRANS_COMPLETE_INT_ENA | // (BIT(7))  triggered by STOP, successful exit
-//        I2C_MASTER_TRAN_COMP_INT_ENA | // (BIT(6))  counts each byte xfer'd, inc's queuePos
         I2C_ARBITRATION_LOST_INT_ENA | // (BIT(5))  cause fatal error exit
         I2C_SLAVE_TRAN_COMP_INT_ENA  | // (BIT(4))  unhandled
         I2C_END_DETECT_INT_ENA  | // (BIT(3))   refills cmd[] list
         I2C_RXFIFO_OVF_INT_ENA  | //(BIT(2))  unhandled
         I2C_TXFIFO_EMPTY_INT_ENA | // (BIT(1))    triggers fillTxFifo()
         I2C_RXFIFO_FULL_INT_ENA;  // (BIT(0))     trigger emptyRxFifo()
-
+  
+    i2c->dev->int_ena.val = interruptsEnabled;
+ 
     if(!i2c->intr_handle) { // create ISR for either peripheral
         // log_i("create ISR %d",i2c->num);
         uint32_t ret = 0;
@@ -972,9 +1205,9 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
           ESP_INTR_FLAG_LOWMED;   //< Low and medium prio interrupts. These can be handled in C.
 
         if(i2c->num) {
-            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT1_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x7FF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
+            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT1_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, interruptsEnabled, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
         } else {
-            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT0_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, 0x7FF, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
+            ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT0_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, interruptsEnabled, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
         }
 
         if(ret!=ESP_OK) {
@@ -983,7 +1216,6 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
             return I2C_ERROR_MEMORY;
         }
     }
-
     //hang until it completes.
 
     // how many ticks should it take to transfer totalBytes through the I2C hardware,
@@ -1052,7 +1284,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
         i2c->dev->int_ena.val =0;
         i2c->dev->int_clr.val = 0x1FFF;
         i2c_update_error_byte_cnt(i2c);
-        if(i2c->errorByteCnt == 0) { // Bus Busy no bytes Moved
+        if((i2c->errorByteCnt == 0)&&(i2c->errorQueue==0)) { // Bus Busy no bytes Moved
             reason = I2C_ERROR_BUSY;
             eBits = eBits | EVENT_ERROR_BUS_BUSY|EVENT_ERROR|EVENT_DONE;
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
@@ -1103,6 +1335,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
         }
         b++;
     }
+    if(i2c->debugFlags & 0x00ff0000) i2cTriggerDumps(i2c,(i2c->debugFlags>>16),"after ProcQueue");
 
     I2C_MUTEX_UNLOCK();
     return reason;
@@ -1311,6 +1544,8 @@ i2c_err_t i2cFlush(i2c_t * i2c)
     if(i2c==NULL) {
         return I2C_ERROR_DEV;
     }
+    i2cTriggerDumps(i2c,i2c->debugFlags & 0xff, "FLUSH");
+
     // need to grab a MUTEX for exclusive Queue,
     // what out if ISR is running?
     i2c_err_t rc=I2C_ERROR_OK;
@@ -1425,91 +1660,27 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
 }
 
 
-/* Stickbreaker ISR mode debug support
- */
-void i2cDumpDqData(i2c_t * i2c)
-{
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    uint16_t a=0;
-    char buff[140];
-    I2C_DATA_QUEUE_t *tdq;
-    while(a<i2c->queueCount) {
-        tdq=&i2c->dq[a];
-        log_e("[%d] %sbit %x %c %s buf@=%p, len=%d, pos=%d, eventH=%p bits=%x",a,
-        (tdq->ctrl.addr>0x100)?"10":"7",
-        (tdq->ctrl.addr>0x100)?(((tdq->ctrl.addr&0x600)>>1)|(tdq->ctrl.addr&0xff)):(tdq->ctrl.addr>>1),
-        (tdq->ctrl.mode)?'R':'W',
-        (tdq->ctrl.stop)?"STOP":"",
-        tdq->data,tdq->length,tdq->position,tdq->queueEvent,(tdq->queueEvent)?xEventGroupGetBits(tdq->queueEvent):0);
-        uint16_t offset = 0;
-        while(offset<tdq->length) {
-            memset(buff,' ',140);
-            buff[139]='\0';
-            uint16_t i = 0,j;
-            j=sprintf(buff,"0x%04x: ",offset);
-            while((i<32)&&(offset < tdq->length)) {
-                char ch = tdq->data[offset];
-                sprintf((char*)&buff[(i*3)+41],"%02x ",ch);
-                if((ch<32)||(ch>126)) {
-                    ch='.';
-                }
-                j+=sprintf((char*)&buff[j],"%c",ch);
-                buff[j]=' ';
-                i++;
-                offset++;
-            }
-            log_e("%s",buff);
-        }
-        a++;
+uint32_t i2cDebug(i2c_t * i2c, uint32_t setBits, uint32_t resetBits){
+    if(i2c != NULL) {
+        i2c->debugFlags = ((i2c->debugFlags | setBits) & ~resetBits);
+        return i2c->debugFlags;
     }
-#endif
-}
-
-void i2cDumpI2c(i2c_t * i2c)
-{
-    log_e("i2c=%p",i2c);
-    log_e("dev=%p date=%p",i2c->dev,i2c->dev->date);
-#if !CONFIG_DISABLE_HAL_LOCKS
-    log_e("lock=%p",i2c->lock);
-#endif
-    log_e("num=%d",i2c->num);
-    log_e("mode=%d",i2c->mode);
-    log_e("stage=%d",i2c->stage);
-    log_e("error=%d",i2c->error);
-    log_e("event=%p bits=%x",i2c->i2c_event,(i2c->i2c_event)?xEventGroupGetBits(i2c->i2c_event):0);
-    log_e("intr_handle=%p",i2c->intr_handle);
-    log_e("dq=%p",i2c->dq);
-    log_e("queueCount=%d",i2c->queueCount);
-    log_e("queuePos=%d",i2c->queuePos);
-    log_e("errorByteCnt=%d",i2c->errorByteCnt);
-    log_e("errorQueue=%d",i2c->errorQueue);
-    if(i2c->dq) {
-        i2cDumpDqData(i2c);
+    return 0;
+    
+ }
+ 
+uint32_t i2cGetStatus(i2c_t * i2c){
+    if(i2c != NULL){
+        return i2c->dev->status_reg.val;
     }
+    else return 0;
 }
-
-void i2cDumpInts(uint8_t num)
-{
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)  
-
-    uint32_t b;
-    log_e("%u row  count   INTR    TX     RX",num);
-    for(uint32_t a=1; a<=INTBUFFMAX; a++) {
-        b=(a+intPos[num])%INTBUFFMAX;
-        if(intBuff[b][0][num]!=0) {
-            log_e("[%02d] 0x%04x 0x%04x 0x%04x 0x%04x 0x%08x",b,((intBuff[b][0][num]>>16)&0xFFFF),(intBuff[b][0][num]&0xFFFF),((intBuff[b][1][num]>>16)&0xFFFF),(intBuff[b][1][num]&0xFFFF),intBuff[b][2][num]);
-        }
-    }
-#else
-    log_i("Debug Buffer not Enabled");
-#endif
-}
-
 /* todo
   22JUL18
     need to add multi-thread capability, use dq.queueEvent as the group marker. When multiple threads
     transactions are present in the same queue, and an error occurs, abort all succeeding unserviced transactions
     with the same dq.queueEvent value.  Succeeding unserviced transactions with different dq.queueEvent values
     can be re-queued and processed independently. 
+  30JUL18 complete data only queue elements, this will allow transfers to use multiple data blocks, 
  */
 

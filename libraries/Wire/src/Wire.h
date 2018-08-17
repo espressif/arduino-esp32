@@ -30,7 +30,7 @@
 #include "freertos/queue.h"
 #include "Stream.h"
 
-#define STICKBREAKER V0.2.2
+#define STICKBREAKER V1.0.1
 #define I2C_BUFFER_LENGTH 128
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
@@ -67,7 +67,7 @@ protected:
 public:
     TwoWire(uint8_t bus_num);
     ~TwoWire();
-    void begin(int sda=-1, int scl=-1, uint32_t frequency=0);
+    bool begin(int sda=-1, int scl=-1, uint32_t frequency=0);
 
     void setClock(uint32_t frequency); // change bus clock without initing hardware
     size_t getClock(); // current bus clock rate in hz
@@ -129,8 +129,8 @@ public:
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
 
-    void dumpInts();
-    void dumpI2C();
+    uint32_t setDebugFlags( uint32_t setBits, uint32_t resetBits);
+    bool busy();
 };
 
 extern TwoWire Wire;
@@ -138,6 +138,9 @@ extern TwoWire Wire1;
 
 
 /*
+V1.0.1 02AUG2018 First Fix after release, Correct ReSTART handling, change Debug control, change begin()
+  to a function, this allow reporting if bus cannot be initialized, Wire.begin() can be used to recover
+  a hung bus busy condition.
 V0.2.2 13APR2018 preserve custom SCL,SDA,Frequency when no parameters passed to begin()
 V0.2.1 15MAR2018 Hardware reset, Glitch prevention, adding destructor for second i2c testing
 */

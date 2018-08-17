@@ -48,6 +48,7 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, b
 i2c_err_t i2cFlush(i2c_t *i2c);
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed);
 uint32_t i2cGetFrequency(i2c_t * i2c);
+uint32_t i2cGetStatus(i2c_t * i2c); // Status register of peripheral
 
 //Functions below should be used only if well understood
 //Might be deprecated and removed in future
@@ -62,8 +63,17 @@ i2c_err_t i2cAddQueueWrite(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr,
 i2c_err_t i2cAddQueueRead(i2c_t *i2c, uint16_t i2cDeviceAddr, uint8_t *dataPtr, uint16_t dataLen, bool SendStop, EventGroupHandle_t event);
 
 //stickbreaker debug support
-void i2cDumpInts(uint8_t num);
-void i2cDumpI2c(i2c_t *i2c);
+uint32_t i2cDebug(i2c_t *, uint32_t setBits, uint32_t resetBits);
+//  Debug actions have 3 currently defined locus 
+// 0xXX------ : at entry of ProcQueue 
+// 0x--XX---- : at exit of ProcQueue
+// 0x------XX : at entry of Flush
+// 
+// bit 0 causes DumpI2c to execute 
+// bit 1 causes DumpInts to execute
+// bit 2 causes DumpCmdqueue to execute
+// bit 3 causes DumpStatus to execute
+// bit 4 causes DumpFifo to execute
 
 #ifdef __cplusplus
 }
