@@ -114,7 +114,12 @@ void EspClass::restart(void)
 
 uint32_t EspClass::getFreeHeap(void)
 {
-    return esp_get_free_heap_size();
+    return heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getFreePsram(void)
+{
+    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 }
 
 uint8_t EspClass::getChipRevision(void)
