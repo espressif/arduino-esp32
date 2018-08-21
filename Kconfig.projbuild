@@ -5,7 +5,6 @@ config ENABLE_ARDUINO_DEPENDS
     select LWIP_SO_RCVBUF
     select ETHERNET
     select WIFI_ENABLED
-    select ESP32_PHY_CALIBRATION_AND_DATA_STORAGE
     select MEMMAP_SMP
     default "y"
 
