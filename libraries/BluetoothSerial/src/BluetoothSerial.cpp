@@ -152,6 +152,9 @@ static bool _init_bt(const char *deviceName)
 static bool _stop_bt()
 {
     if (btStarted()){
+        if(_spp_client)
+            esp_spp_disconnect(_spp_client);
+        esp_spp_deinit();
         esp_bluedroid_disable();
         esp_bluedroid_deinit();
         btStop();
@@ -172,6 +175,7 @@ BluetoothSerial::BluetoothSerial()
 BluetoothSerial::~BluetoothSerial(void)
 {
     _stop_bt();
+    vQueueDelete(_spp_queue);
 }
 
 bool BluetoothSerial::begin(String localName)
@@ -262,6 +266,7 @@ void BluetoothSerial::flush()
 void BluetoothSerial::end()
 {
     _stop_bt();
+    vQueueDelete(_spp_queue);
 }
 
 #endif
