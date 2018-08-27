@@ -31,6 +31,17 @@ F_Fat::F_Fat(FSImplPtr impl)
     : FS(impl)
 {}
 
+const esp_partition_t *check_partition(const char* label)
+{
+    const esp_partition_t* ck_part = esp_partition_find_first(
+       ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, label);
+    if (!ck_part) {
+        log_e("No FAT partition found with label %s", label);
+        return false;
+    }
+    return ck_part;
+}
+
 bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
     if(_wl_handle){
@@ -38,12 +49,7 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
         return true;
     }     
 
-    esp_partition_subtype_t subtype = ESP_PARTITION_SUBTYPE_DATA_FAT;
-    const esp_partition_t *ffat_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, subtype, partitionLabel);
-    if (!ffat_partition) {
-        log_e("No FAT partition found with label %s",partitionLabel);
-        return false;
-    }
+    if (!check_partition(partitionLabel)) return false;
 
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
@@ -81,12 +87,8 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
       .max_files = 1
     };
 // Attempt to mount to see if there is already data
-    esp_partition_subtype_t subtype = ESP_PARTITION_SUBTYPE_DATA_FAT;
-    const esp_partition_t *ffat_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, subtype, partitionLabel);
-    if (!ffat_partition) {
-        log_e("No FAT partition found with label %s",partitionLabel);
-        return false;
-    }
+    const esp_partition_t *ffat_partition = check_partition(partitionLabel);
+    if (!ffat_partition) return false;
     result = wl_mount(ffat_partition, &temp_handle);
 
     if (result == ESP_OK) {
