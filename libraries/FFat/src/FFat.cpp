@@ -37,6 +37,14 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
         log_w("Already Mounted!");
         return true;
     }     
+
+    esp_partition_subtype_t subtype = ESP_PARTITION_SUBTYPE_DATA_FAT;
+    const esp_partition_t *ffat_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, subtype, partitionLabel);
+    if (!ffat_partition) {
+        log_e("No FAT partition found with label %s",partitionLabel);
+        return false;
+    }
+
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
       .max_files = maxOpenFiles
@@ -75,6 +83,10 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 // Attempt to mount to see if there is already data
     esp_partition_subtype_t subtype = ESP_PARTITION_SUBTYPE_DATA_FAT;
     const esp_partition_t *ffat_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, subtype, partitionLabel);
+    if (!ffat_partition) {
+        log_e("No FAT partition found with label %s",partitionLabel);
+        return false;
+    }
     result = wl_mount(ffat_partition, &temp_handle);
 
     if (result == ESP_OK) {
