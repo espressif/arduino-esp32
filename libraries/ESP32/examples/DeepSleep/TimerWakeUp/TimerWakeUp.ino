@@ -84,7 +84,7 @@ void setup(){
   reset occurs.
   */
   Serial.println("Going to sleep now");
-  delay(50); //time to write to serial
+  Serial.flush(); 
   esp_deep_sleep_start();
   Serial.println("This will never be printed");
 }
