@@ -13,11 +13,7 @@
 // limitations under the License.
 
 #include "vfs_api.h"
-
 extern "C" {
-#include <sys/unistd.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include "esp_vfs_fat.h"
 #include "diskio.h"
 #include "diskio_wl.h"
@@ -31,7 +27,7 @@ F_Fat::F_Fat(FSImplPtr impl)
     : FS(impl)
 {}
 
-const esp_partition_t *check_partition(const char* label)
+const esp_partition_t *check_ffat_partition(const char* label)
 {
     const esp_partition_t* ck_part = esp_partition_find_first(
        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, label);
@@ -49,13 +45,12 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
         return true;
     }     
 
-    if (!check_partition(partitionLabel)) return false;
+    if (!check_ffat_partition(partitionLabel)) return false;
 
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
       .max_files = maxOpenFiles
     };
-
     esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
         log_e("Mounting FatFlash failed! Error: %d", err);
@@ -82,23 +77,22 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
     wl_handle_t temp_handle;
-    esp_vfs_fat_mount_config_t conf = {
-      .format_if_mount_failed = false,
-      .max_files = 1
-    };
 // Attempt to mount to see if there is already data
-    const esp_partition_t *ffat_partition = check_partition(partitionLabel);
+    const esp_partition_t *ffat_partition = check_ffat_partition(partitionLabel);
     if (!ffat_partition) return false;
     result = wl_mount(ffat_partition, &temp_handle);
 
     if (result == ESP_OK) {
 // Wipe disk- quick just wipes the FAT. Full zeroes the whole disk
-        //result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
         uint32_t wipe_size = full_wipe ? wl_size(temp_handle) : 16384;
         wl_erase_range(temp_handle, 0, wipe_size);
-        esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
+        wl_unmount(temp_handle);
     }
-    conf.format_if_mount_failed = true;
+// Now do a mount with format_if_fail (which it will)
+    esp_vfs_fat_mount_config_t conf = {
+      .format_if_mount_failed = true,
+      .max_files = 1
+    };
     result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
     esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
     return result;
