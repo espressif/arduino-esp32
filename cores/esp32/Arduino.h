@@ -176,8 +176,8 @@ extern "C" void configTzTime(const char* tz,
 long random(long);
 #endif /* __cplusplus */
 
-#ifndef _GLIBCXX_VECTOR
-// arduino is not compatible with std::vector
+#if !defined(_GLIBCXX_VECTOR) && !defined(_GLIBCXX_FUNCTIONAL)
+// arduino is not compatible with std::vector or std::function
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 #endif
