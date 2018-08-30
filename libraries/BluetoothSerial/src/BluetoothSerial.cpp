@@ -47,6 +47,7 @@ const char * _spp_server_name = "ESP32SPP";
 static uint32_t _spp_client = 0;
 static xQueueHandle _spp_rx_queue = NULL;
 static xQueueHandle _spp_tx_queue = NULL;
+static SemaphoreHandle_t _spp_tx_done = NULL;
 static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 
@@ -99,6 +100,11 @@ static bool _spp_send_buffer(){
             log_e("SPP Write Failed! [0x%X]", err);
             return false;
         }
+        _spp_tx_buffer_len = 0;
+        if(xSemaphoreTake(_spp_tx_done, portMAX_DELAY) != pdTRUE){
+            log_e("SPP Ack Failed!");
+            return false;
+        }
         return true;
     }
     return false;
@@ -118,8 +124,6 @@ static void _spp_tx_task(void * arg){
                 packet = NULL;
                 if(SPP_TX_MAX == _spp_tx_buffer_len || uxQueueMessagesWaiting(_spp_tx_queue) == 0){
                     _spp_send_buffer();
-                    _spp_tx_buffer_len = 0;
-                    delay(2);
                 }
             } else {
                 len = packet->len;
@@ -130,16 +134,12 @@ static void _spp_tx_task(void * arg){
                 data += to_send;
                 len -= to_send;
                 _spp_send_buffer();
-                _spp_tx_buffer_len = 0;
-                delay(2);
                 while(len >= SPP_TX_MAX){
                     memcpy(_spp_tx_buffer, data, SPP_TX_MAX);
                     _spp_tx_buffer_len = SPP_TX_MAX;
                     data += SPP_TX_MAX;
                     len -= SPP_TX_MAX;
                     _spp_send_buffer();
-                    _spp_tx_buffer_len = 0;
-                    delay(2);
                 }
                 if(len){
                     memcpy(_spp_tx_buffer, data, len);
@@ -149,8 +149,6 @@ static void _spp_tx_task(void * arg){
                     packet = NULL;
                     if(uxQueueMessagesWaiting(_spp_tx_queue) == 0){
                         _spp_send_buffer();
-                        _spp_tx_buffer_len = 0;
-                        delay(2);
                     }
                 }
             }
@@ -199,6 +197,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         if(param->write.cong){
             xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
         }
+        xSemaphoreGive(_spp_tx_done);//we can try to send another packet
         log_v("ESP_SPP_WRITE_EVT: %u %s", param->write.len, param->write.cong?"CONGESTED":"FREE");
         break;
 
@@ -244,8 +243,6 @@ static bool _init_bt(const char *deviceName)
         }
         xEventGroupClearBits(_spp_event_group, 0xFFFFFF);
         xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-        //((xEventGroupGetBits(_spp_event_group) & SPP_CONGESTED) == SPP_CONGESTED);
-        //((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED) == SPP_CONGESTED);
     }
     if (_spp_rx_queue == NULL){
         _spp_rx_queue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t)); //initialize the queue
@@ -261,6 +258,15 @@ static bool _init_bt(const char *deviceName)
             return false;
         }
     }
+    if(_spp_tx_done == NULL){
+        _spp_tx_done = xSemaphoreCreateBinary();
+        if (_spp_tx_done == NULL){
+            log_e("TX Semaphore Create Failed");
+            return false;
+        }
+        xSemaphoreTake(_spp_tx_done, 0);
+    }
+
     if(!_spp_task_handle){
         xTaskCreate(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle);
         if(!_spp_task_handle){
@@ -324,15 +330,27 @@ static bool _stop_bt()
         esp_bluedroid_deinit();
         btStop();
     }
-    vTaskDelete(_spp_task_handle);
-    vEventGroupDelete(_spp_event_group);
-    vQueueDelete(_spp_rx_queue);
-    vQueueDelete(_spp_tx_queue);//todo: free all queued packets
     _spp_client = 0;
-    _spp_rx_queue = NULL;
-    _spp_tx_queue = NULL;
-    _spp_task_handle = NULL;
-    _spp_event_group = NULL;
+    if(_spp_task_handle){
+        vTaskDelete(_spp_task_handle);
+        _spp_task_handle = NULL;
+    }
+    if(_spp_event_group){
+        vEventGroupDelete(_spp_event_group);
+        _spp_event_group = NULL;
+    }
+    if(_spp_rx_queue){
+        vQueueDelete(_spp_rx_queue);
+        _spp_rx_queue = NULL;
+    }
+    if(_spp_tx_queue){
+        vQueueDelete(_spp_tx_queue);//todo: free all queued packets
+        _spp_tx_queue = NULL;
+    }
+    if (_spp_tx_done) {
+        vSemaphoreDelete(_spp_tx_done);
+        _spp_tx_done = NULL;
+    }
     return true;
 }
 
