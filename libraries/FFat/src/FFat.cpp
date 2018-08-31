@@ -53,7 +53,7 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
     };
     esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
-        log_e("Mounting FatFlash failed! Error: %d", err);
+        log_e("Mounting FFat partition failed! Error: %d", err);
         return false;
     }
     _impl->mountpoint(basePath);
@@ -65,7 +65,7 @@ void F_Fat::end()
     if(_wl_handle){
         esp_err_t err = esp_vfs_fat_spiflash_unmount(_impl->mountpoint(), _wl_handle);
         if(err){
-            log_e("Unmounting FatFlash failed! Error: %d", err);
+            log_e("Unmounting FFat partition failed! Error: %d", err);
             return;
         }
         _wl_handle = NULL;
@@ -76,6 +76,10 @@ void F_Fat::end()
 bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
+    if(_wl_handle){
+        log_w("Already Mounted!");
+        return false;
+    }
     wl_handle_t temp_handle;
 // Attempt to mount to see if there is already data
     const esp_partition_t *ffat_partition = check_ffat_partition(partitionLabel);
@@ -107,7 +111,7 @@ size_t F_Fat::totalBytes()
     char drv[3] = {(char)'0' + pdrv, ':', 0};
     FRESULT res = f_getfree(drv, &free_clust, &fs);
     tot_sect = (fs->n_fatent - 2) * fs->csize;
-    sect_size=CONFIG_WL_SECTOR_SIZE;
+    sect_size = CONFIG_WL_SECTOR_SIZE;
     return tot_sect * sect_size;
 }
 
@@ -121,7 +125,7 @@ size_t F_Fat::freeBytes()
     char drv[3] = {(char)'0' + pdrv, ':', 0};
     FRESULT res = f_getfree(drv, &free_clust, &fs);
     free_sect = free_clust * fs->csize;
-    sect_size=CONFIG_WL_SECTOR_SIZE;
+    sect_size = CONFIG_WL_SECTOR_SIZE;
     return free_sect * sect_size;
 }
 

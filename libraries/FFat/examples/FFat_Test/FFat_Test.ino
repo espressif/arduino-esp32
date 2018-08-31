@@ -1,9 +1,7 @@
 #include "FS.h"
 #include "FFat.h"
 
-/* You only need to format FFat the first time you run a
-   test or else use the FFat plugin to create a partition
-   https://github.com/me-no-dev/arduino-esp32fs-plugin */
+// You only need to format FFat the first time you run a test
 #define FORMAT_FFAT true
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){

@@ -44,4 +44,4 @@ private:
 
 extern fs::F_Fat FFat;
 
-#endif /* _FAT_FLASH_H_ */
+#endif /* _FFAT_H_ */
