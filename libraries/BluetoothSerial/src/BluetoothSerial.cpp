@@ -57,7 +57,7 @@ static EventGroupHandle_t _spp_event_group = NULL;
 
 typedef struct {
         size_t len;
-        uint8_t * data;
+        uint8_t data[];
 } spp_packet_t;
 
 static esp_err_t _spp_queue_packet(uint8_t *data, size_t len){
@@ -65,24 +65,15 @@ static esp_err_t _spp_queue_packet(uint8_t *data, size_t len){
         log_w("No data provided");
         return ESP_FAIL;
     }
-    spp_packet_t * packet = (spp_packet_t*)malloc(sizeof(spp_packet_t));
+    spp_packet_t * packet = (spp_packet_t*)malloc(sizeof(spp_packet_t) + len);
     if(!packet){
         log_w("SPP TX Packet Malloc Failed!");
         return ESP_FAIL;
     }
     packet->len = len;
-    packet->data = NULL;
-    uint8_t * pdata = (uint8_t*)malloc(len);
-    if(!pdata){
-        log_w("SPP TX Packet Data Malloc Failed!");
-        free(packet);
-        return ESP_FAIL;
-    }
-    memcpy(pdata, data, len);
-    packet->data = pdata;
+    memcpy(packet->data, data, len);
     if (xQueueSend(_spp_tx_queue, &packet, portMAX_DELAY) != pdPASS) {
         log_w("SPP TX Queue Send Failed!");
-        free(packet->data);
         free(packet);
         return ESP_FAIL;
     }
@@ -119,7 +110,6 @@ static void _spp_tx_task(void * arg){
             if(packet->len <= (SPP_TX_MAX - _spp_tx_buffer_len)){
                 memcpy(_spp_tx_buffer+_spp_tx_buffer_len, packet->data, packet->len);
                 _spp_tx_buffer_len+=packet->len;
-                free(packet->data);
                 free(packet);
                 packet = NULL;
                 if(SPP_TX_MAX == _spp_tx_buffer_len || uxQueueMessagesWaiting(_spp_tx_queue) == 0){
@@ -144,7 +134,6 @@ static void _spp_tx_task(void * arg){
                 if(len){
                     memcpy(_spp_tx_buffer, data, len);
                     _spp_tx_buffer_len += len;
-                    free(packet->data);
                     free(packet);
                     packet = NULL;
                     if(uxQueueMessagesWaiting(_spp_tx_queue) == 0){
@@ -204,6 +193,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     case ESP_SPP_DATA_IND_EVT://connection received data
         log_v("ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
         //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
+        //ets_printf("r:%u\n", param->data_ind.len);
 
         if (_spp_rx_queue != NULL){
             for (int i = 0; i < param->data_ind.len; i++){
@@ -341,10 +331,15 @@ static bool _stop_bt()
     }
     if(_spp_rx_queue){
         vQueueDelete(_spp_rx_queue);
+        //ToDo: clear RX queue when in packet mode
         _spp_rx_queue = NULL;
     }
     if(_spp_tx_queue){
-        vQueueDelete(_spp_tx_queue);//todo: free all queued packets
+        spp_packet_t *packet = NULL;
+        while(xQueueReceive(_spp_tx_queue, &packet, 0) == pdTRUE){
+            free(packet);
+        }
+        vQueueDelete(_spp_tx_queue);
         _spp_tx_queue = NULL;
     }
     if (_spp_tx_done) {
