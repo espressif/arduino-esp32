@@ -50,12 +50,13 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
         .init = &sdmmc_host_init,
         .set_bus_width = &sdmmc_host_set_bus_width,
         .get_bus_width = &sdmmc_host_get_slot_width,
+        .set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode,
         .set_card_clk = &sdmmc_host_set_card_clk,
         .do_transaction = &sdmmc_host_do_transaction,
         .deinit = &sdmmc_host_deinit,
-        .io_int_enable = sdmmc_host_io_int_enable,
-        .io_int_wait = sdmmc_host_io_int_wait,
-        .command_timeout_ms = 0,
+        .io_int_enable = &sdmmc_host_io_int_enable,
+        .io_int_wait = &sdmmc_host_io_int_wait,
+        .command_timeout_ms = 0
     };
     host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 #ifdef BOARD_HAS_1BIT_SDMMC

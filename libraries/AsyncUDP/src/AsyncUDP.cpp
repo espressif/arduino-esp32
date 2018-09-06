@@ -15,7 +15,7 @@ extern "C" {
 #include "lwip/priv/tcpip_priv.h"
 
 typedef struct {
-    struct tcpip_api_call call;
+    struct tcpip_api_call_data call;
     udp_pcb * pcb;
     const ip_addr_t *addr;
     uint16_t port;
@@ -24,7 +24,7 @@ typedef struct {
     err_t err;
 } udp_api_call_t;
 
-static err_t _udp_connect_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_connect_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = udp_connect(msg->pcb, msg->addr, msg->port);
     return msg->err;
@@ -35,11 +35,11 @@ static err_t _udp_connect(struct udp_pcb *pcb, const ip_addr_t *addr, u16_t port
     msg.pcb = pcb;
     msg.addr = addr;
     msg.port = port;
-    tcpip_api_call(_udp_connect_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_connect_api, (struct tcpip_api_call_data*)&msg);
     return msg.err;
 }
 
-static err_t _udp_disconnect_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_disconnect_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = 0;
     udp_disconnect(msg->pcb);
@@ -49,10 +49,10 @@ static err_t _udp_disconnect_api(struct tcpip_api_call *api_call_msg){
 static void  _udp_disconnect(struct udp_pcb *pcb){
     udp_api_call_t msg;
     msg.pcb = pcb;
-    tcpip_api_call(_udp_disconnect_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_disconnect_api, (struct tcpip_api_call_data*)&msg);
 }
 
-static err_t _udp_remove_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_remove_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = 0;
     udp_remove(msg->pcb);
@@ -62,10 +62,10 @@ static err_t _udp_remove_api(struct tcpip_api_call *api_call_msg){
 static void  _udp_remove(struct udp_pcb *pcb){
     udp_api_call_t msg;
     msg.pcb = pcb;
-    tcpip_api_call(_udp_remove_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_remove_api, (struct tcpip_api_call_data*)&msg);
 }
 
-static err_t _udp_bind_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_bind_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = udp_bind(msg->pcb, msg->addr, msg->port);
     return msg->err;
@@ -76,11 +76,11 @@ static err_t _udp_bind(struct udp_pcb *pcb, const ip_addr_t *addr, u16_t port){
     msg.pcb = pcb;
     msg.addr = addr;
     msg.port = port;
-    tcpip_api_call(_udp_bind_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_bind_api, (struct tcpip_api_call_data*)&msg);
     return msg.err;
 }
 
-static err_t _udp_sendto_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_sendto_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = udp_sendto(msg->pcb, msg->pb, msg->addr, msg->port);
     return msg->err;
@@ -92,11 +92,11 @@ static err_t _udp_sendto(struct udp_pcb *pcb, struct pbuf *pb, const ip_addr_t *
     msg.addr = addr;
     msg.port = port;
     msg.pb = pb;
-    tcpip_api_call(_udp_sendto_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_sendto_api, (struct tcpip_api_call_data*)&msg);
     return msg.err;
 }
 
-static err_t _udp_sendto_if_api(struct tcpip_api_call *api_call_msg){
+static err_t _udp_sendto_if_api(struct tcpip_api_call_data *api_call_msg){
     udp_api_call_t * msg = (udp_api_call_t *)api_call_msg;
     msg->err = udp_sendto_if(msg->pcb, msg->pb, msg->addr, msg->port, msg->netif);
     return msg->err;
@@ -109,7 +109,7 @@ static err_t _udp_sendto_if(struct udp_pcb *pcb, struct pbuf *pb, const ip_addr_
     msg.port = port;
     msg.pb = pb;
     msg.netif = netif;
-    tcpip_api_call(_udp_sendto_if_api, (struct tcpip_api_call*)&msg);
+    tcpip_api_call(_udp_sendto_if_api, (struct tcpip_api_call_data*)&msg);
     return msg.err;
 }
 

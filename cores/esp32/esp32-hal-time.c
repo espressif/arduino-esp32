@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "esp32-hal.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
 
 static void setTimeZone(long offset, int daylight)
 {
