@@ -24,7 +24,7 @@ Installation instructions for Debian / Ubuntu OS
 
 - If you have Arduino installed to ~/, modify the installation as follows, beginning at `mkdir -p ~/Arduino/hardware`:
 
-```bash
+  ```bash
   cd ~/Arduino/hardware
   mkdir -p espressif && \
   cd espressif && \
@@ -32,4 +32,5 @@ Installation instructions for Debian / Ubuntu OS
   cd esp32 && \
   git submodule update --init --recursive && \
   cd tools && \
-  python2 get.py```
+  python2 get.py
+  ```
