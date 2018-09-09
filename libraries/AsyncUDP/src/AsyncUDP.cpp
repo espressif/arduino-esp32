@@ -452,16 +452,24 @@ size_t AsyncUDPPacket::send(AsyncUDPMessage &message)
     return write(message.data(), message.length());
 }
 
-AsyncUDP::AsyncUDP()
-{
+bool AsyncUDP::_init(){
+    if(_pcb){
+        return true;
+    }
     _pcb = udp_new();
-    _connected = false;
-    _handler = NULL;
     if(!_pcb){
-        return;
+        return false;
     }
     //_lock = xSemaphoreCreateMutex();
     udp_recv(_pcb, &_udp_recv, (void *) this);
+    return true;
+}
+
+AsyncUDP::AsyncUDP()
+{
+    _pcb = NULL;
+    _connected = false;
+    _handler = NULL;
 }
 
 AsyncUDP::~AsyncUDP()
@@ -495,7 +503,7 @@ bool AsyncUDP::connect(const ip_addr_t *addr, uint16_t port)
         log_e("failed to start task");
         return false;
     }
-    if(_pcb == NULL) {
+    if(!_init()) {
         return false;
     }
     close();
@@ -516,7 +524,7 @@ bool AsyncUDP::listen(const ip_addr_t *addr, uint16_t port)
         log_e("failed to start task");
         return false;
     }
-    if(_pcb == NULL) {
+    if(!_init()) {
         return false;
     }
     close();

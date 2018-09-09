@@ -95,6 +95,7 @@ protected:
     bool _connected;
     AuPacketHandlerFunction _handler;
 
+    bool _init();
     void _recv(udp_pcb *upcb, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif * netif);
 
 public:
