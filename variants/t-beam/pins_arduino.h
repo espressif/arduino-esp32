@@ -17,16 +17,9 @@
 #define LORA_MOSI 27    // GPIO27 - SX1276 MOSI
 #define LORA_CS 18      // GPIO18 - SX1276 CS
 #define LORA_RST 23     // GPIO23 - SX1276 RST
-#define LORA_IO0 26     // GPIO26 - SX1276 IO0
-#define LORA_IO1 33     // GPIO33 - SX1276 IO1
-#define LORA_IO2 32     // GPIO32 - SX1276 IO2
-
-static const uint8_t SD0 = 2;
-static const uint8_t SD1 = 4;
-static const uint8_t SD2 = 12;
-static const uint8_t SD3 = 13;
-static const uint8_t CMD = 15;
-static const uint8_t CLK = 14;
+#define LORA_IO0 26     // GPIO23 - SX1276 IO0
+#define LORA_IO1 33     // GPIO23 - SX1276 IO1
+#define LORA_IO2 32     // GPIO23 - SX1276 IO2
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -48,7 +41,13 @@ static const uint8_t A17 = 27;
 static const uint8_t A18 = 25;
 static const uint8_t A19 = 26;
 
+static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;
+static const uint8_t T2 = 2;
+static const uint8_t T3 = 15;
+static const uint8_t T4 = 13;
+static const uint8_t T5 = 12;
+static const uint8_t T6 = 14;
 static const uint8_t T8 = 32;
 static const uint8_t T9 = 33;
 
