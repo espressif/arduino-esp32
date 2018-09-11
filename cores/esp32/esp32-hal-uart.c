@@ -240,6 +240,26 @@ void uartEnd(uart_t* uart)
     uartDetachTx(uart);
 }
 
+size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    if(uart->queue != NULL) {
+        uint8_t c;
+        while(xQueueReceive(uart->queue, &c, 0));
+        vQueueDelete(uart->queue);
+        uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
+        if(uart->queue == NULL) {
+            return NULL;
+        }
+    }
+    UART_MUTEX_UNLOCK();
+
+    return new_size;
+}
+
 uint32_t uartAvailable(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {

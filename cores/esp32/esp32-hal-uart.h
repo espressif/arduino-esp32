@@ -67,6 +67,8 @@ void uartFlush(uart_t* uart);
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
+size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
+
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
