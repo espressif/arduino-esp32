@@ -28,8 +28,8 @@ class F_Fat : public FS
 {
 public:
     F_Fat(FSImplPtr impl);
-    bool begin(bool formatOnFail=false, const char * basePath="/ffat", uint8_t maxOpenFiles=10, const char * partitionLabel = FFAT_PARTITION_LABEL);
-    bool format(bool full_wipe = FFAT_WIPE_QUICK, char* partitionLabel = FFAT_PARTITION_LABEL);
+    bool begin(bool formatOnFail=false, const char * basePath="/ffat", uint8_t maxOpenFiles=10, const char * partitionLabel = (char*)FFAT_PARTITION_LABEL);
+    bool format(bool full_wipe = FFAT_WIPE_QUICK, char* partitionLabel = (char*)FFAT_PARTITION_LABEL);
     size_t totalBytes();
     size_t freeBytes();
     void end();

@@ -33,7 +33,7 @@ const esp_partition_t *check_ffat_partition(const char* label)
        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, label);
     if (!ck_part) {
         log_e("No FAT partition found with label %s", label);
-        return false;
+        return NULL;
     }
     return ck_part;
 }
@@ -108,7 +108,7 @@ size_t F_Fat::totalBytes()
     DWORD free_clust, tot_sect, sect_size;
 
     BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
-    char drv[3] = {(char)'0' + pdrv, ':', 0};
+    char drv[3] = {(char)(48+pdrv), ':', 0};
     FRESULT res = f_getfree(drv, &free_clust, &fs);
     tot_sect = (fs->n_fatent - 2) * fs->csize;
     sect_size = CONFIG_WL_SECTOR_SIZE;
@@ -122,7 +122,7 @@ size_t F_Fat::freeBytes()
     DWORD free_clust, free_sect, sect_size;
 
     BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
-    char drv[3] = {(char)'0' + pdrv, ':', 0};
+    char drv[3] = {(char)(48+pdrv), ':', 0};
     FRESULT res = f_getfree(drv, &free_clust, &fs);
     free_sect = free_clust * fs->csize;
     sect_size = CONFIG_WL_SECTOR_SIZE;
