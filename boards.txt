@@ -395,6 +395,15 @@ esp32thing.menu.FlashFreq.80.build.flash_freq=80m
 esp32thing.menu.FlashFreq.40=40MHz
 esp32thing.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32thing.menu.PartitionScheme.default=Default
+esp32thing.menu.PartitionScheme.default.build.partitions=default
+esp32thing.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32thing.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32thing.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32thing.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32thing.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32thing.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 esp32thing.menu.UploadSpeed.921600=921600
 esp32thing.menu.UploadSpeed.921600.upload.speed=921600
 esp32thing.menu.UploadSpeed.115200=115200
@@ -409,6 +418,20 @@ esp32thing.menu.UploadSpeed.460800.macosx=460800
 esp32thing.menu.UploadSpeed.460800.upload.speed=460800
 esp32thing.menu.UploadSpeed.512000.windows=512000
 esp32thing.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32thing.menu.DebugLevel.none=None
+esp32thing.menu.DebugLevel.none.build.code_debug=0
+esp32thing.menu.DebugLevel.error=Error
+esp32thing.menu.DebugLevel.error.build.code_debug=1
+esp32thing.menu.DebugLevel.warn=Warn
+esp32thing.menu.DebugLevel.warn.build.code_debug=2
+esp32thing.menu.DebugLevel.info=Info
+esp32thing.menu.DebugLevel.info.build.code_debug=3
+esp32thing.menu.DebugLevel.debug=Debug
+esp32thing.menu.DebugLevel.debug.build.code_debug=4
+esp32thing.menu.DebugLevel.verbose=Verbose
+esp32thing.menu.DebugLevel.verbose.build.code_debug=5
+
 
 ##############################################################
 
