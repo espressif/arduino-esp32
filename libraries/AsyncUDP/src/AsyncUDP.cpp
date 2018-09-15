@@ -556,34 +556,42 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     if(addr->type == IPADDR_TYPE_V6){
         multicast_if_addr.type = IPADDR_TYPE_V6;
 
-        if((tcpip_if == TCPIP_ADAPTER_IF_STA && (mode & WIFI_MODE_STA))
-            || (tcpip_if == TCPIP_ADAPTER_IF_AP && (mode & WIFI_MODE_AP))
-            || (tcpip_if == TCPIP_ADAPTER_IF_ETH)) {
-            if(tcpip_adapter_get_ip6_linklocal(tcpip_if, &multicast_if_addr.u_addr.ip6)){
+        if(tcpip_if < TCPIP_ADAPTER_IF_MAX){
+            if((tcpip_if == TCPIP_ADAPTER_IF_STA && (mode & WIFI_MODE_STA))
+                || (tcpip_if == TCPIP_ADAPTER_IF_AP && (mode & WIFI_MODE_AP))
+                || (tcpip_if == TCPIP_ADAPTER_IF_ETH)) {
+                if(tcpip_adapter_get_ip6_linklocal(tcpip_if, &multicast_if_addr.u_addr.ip6)){
+                    return false;
+                }
+            } else {
                 return false;
             }
         } else {
-            return false;
+            memset(&(multicast_if_addr.u_addr.ip6.addr[0]), 0, 16);
         }
 
         if (mld6_joingroup(&(multicast_if_addr.u_addr.ip6), &(addr->u_addr.ip6))) {
             return false;
         }
     } else if(addr->type == IPADDR_TYPE_V4){
-        tcpip_adapter_ip_info_t ifIpInfo;
+        multicast_if_addr.type = IPADDR_TYPE_V4;
 
-        if((tcpip_if == TCPIP_ADAPTER_IF_STA && (mode & WIFI_MODE_STA))
-            || (tcpip_if == TCPIP_ADAPTER_IF_AP && (mode & WIFI_MODE_AP))
-            || (tcpip_if == TCPIP_ADAPTER_IF_ETH)) {
-            if(tcpip_adapter_get_ip_info(tcpip_if, &ifIpInfo)){
+        if(tcpip_if < TCPIP_ADAPTER_IF_MAX){
+            tcpip_adapter_ip_info_t ifIpInfo;
+            if((tcpip_if == TCPIP_ADAPTER_IF_STA && (mode & WIFI_MODE_STA))
+                || (tcpip_if == TCPIP_ADAPTER_IF_AP && (mode & WIFI_MODE_AP))
+                || (tcpip_if == TCPIP_ADAPTER_IF_ETH)) {
+                if(tcpip_adapter_get_ip_info(tcpip_if, &ifIpInfo)){
+                    return false;
+                }
+                multicast_if_addr.u_addr.ip4.addr = ifIpInfo.ip.addr;
+            } else {
                 return false;
             }
         } else {
-            return false;
+            multicast_if_addr.u_addr.ip4.addr = IPADDR_ANY;
         }
 
-        multicast_if_addr.type = IPADDR_TYPE_V4;
-        multicast_if_addr.u_addr.ip4.addr = ifIpInfo.ip.addr;
 
         if (igmp_joingroup((const ip4_addr *)&multicast_if_addr.u_addr.ip4, (const ip4_addr *)&addr->u_addr.ip4)!= ERR_OK) {
             return false;
@@ -592,7 +600,7 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
         return false;
     }
 
-    if(!listen(&multicast_if_addr, port)) {
+    if(!listen(NULL, port)) {
         return false;
     }
 
@@ -600,9 +608,6 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     _pcb->mcast_ttl = ttl;
     _pcb->remote_port = port;
     ip_addr_copy(_pcb->remote_ip, *addr);
-    if(addr->type == IPADDR_TYPE_V4){
-        ip_addr_copy(_pcb->multicast_ip, multicast_if_addr);
-    }
     UDP_MUTEX_UNLOCK();
 
     return true;
@@ -627,7 +632,7 @@ size_t AsyncUDP::writeTo(const uint8_t * data, size_t len, const ip_addr_t * add
         uint8_t* dst = reinterpret_cast<uint8_t*>(pbt->payload);
         memcpy(dst, data, len);
         UDP_MUTEX_LOCK();
-        if(tcpip_if != TCPIP_ADAPTER_IF_MAX){
+        if(tcpip_if < TCPIP_ADAPTER_IF_MAX){
             void * nif = NULL;
             tcpip_adapter_get_netif((tcpip_adapter_if_t)tcpip_if, &nif);
             if(!nif){
