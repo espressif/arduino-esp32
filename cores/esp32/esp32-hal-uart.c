@@ -80,7 +80,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
-        while(uart->dev->status.rxfifo_cnt) {
+        while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
             if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
@@ -238,6 +238,26 @@ void uartEnd(uart_t* uart)
 
     uartDetachRx(uart);
     uartDetachTx(uart);
+}
+
+size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    if(uart->queue != NULL) {
+        uint8_t c;
+        while(xQueueReceive(uart->queue, &c, 0));
+        vQueueDelete(uart->queue);
+        uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
+        if(uart->queue == NULL) {
+            return NULL;
+        }
+    }
+    UART_MUTEX_UNLOCK();
+
+    return new_size;
 }
 
 uint32_t uartAvailable(uart_t* uart)

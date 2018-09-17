@@ -1350,33 +1350,32 @@ static void i2cReleaseISR(i2c_t * i2c)
 }
 
 static bool i2cCheckLineState(int8_t sda, int8_t scl){
-    if(sda < 0 || scl < 0){
-        return true;//return true since there is nothing to do
+     if(sda < 0 || scl < 0){
+        return false;//return false since there is nothing to do
     }
-    // if the bus is not 'clear' try the recommended recovery sequence, START, 9 Clocks, STOP
+    // if the bus is not 'clear' try the cycling SCL until SDA goes High or 9 cycles
     digitalWrite(sda, HIGH);
     digitalWrite(scl, HIGH);
-    pinMode(sda, PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
-    pinMode(scl, PULLUP|OPEN_DRAIN|OUTPUT|INPUT);
+    pinMode(sda, PULLUP|OPEN_DRAIN|INPUT);
+    pinMode(scl, PULLUP|OPEN_DRAIN|OUTPUT);
 
     if(!digitalRead(sda) || !digitalRead(scl)) { // bus in busy state
-        log_w("invalid state sda=%d, scl=%d\n", digitalRead(sda), digitalRead(scl));
-        digitalWrite(sda, HIGH);
+        log_w("invalid state sda(%d)=%d, scl(%d)=%d", sda, digitalRead(sda), scl, digitalRead(scl));
         digitalWrite(scl, HIGH);
-        delayMicroseconds(5);
-        digitalWrite(sda, LOW);
         for(uint8_t a=0; a<9; a++) {
             delayMicroseconds(5);
             digitalWrite(scl, LOW);
             delayMicroseconds(5);
             digitalWrite(scl, HIGH);
+            if(digitalRead(sda)){ // bus recovered
+                log_d("Recovered after %d Cycles",a+1);
+                break;
+            }
         }
-        delayMicroseconds(5);
-        digitalWrite(sda, HIGH);
     }
 
     if(!digitalRead(sda) || !digitalRead(scl)) { // bus in busy state
-        log_e("Bus Invalid State, TwoWire() Can't init");
+        log_e("Bus Invalid State, TwoWire() Can't init sda=%d, scl=%d",digitalRead(sda),digitalRead(scl));
         return false; // bus is busy
     }
     return true;

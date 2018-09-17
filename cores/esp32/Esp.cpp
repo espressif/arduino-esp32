@@ -112,9 +112,48 @@ void EspClass::restart(void)
     esp_restart();
 }
 
+uint32_t EspClass::getHeapSize(void)
+{
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
+    return info.total_free_bytes + info.total_allocated_bytes;
+}
+
 uint32_t EspClass::getFreeHeap(void)
 {
-    return esp_get_free_heap_size();
+    return heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getMinFreeHeap(void)
+{
+    return heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getMaxAllocHeap(void)
+{
+    return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getPsramSize(void)
+{
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+    return info.total_free_bytes + info.total_allocated_bytes;
+}
+
+uint32_t EspClass::getFreePsram(void)
+{
+    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+}
+
+uint32_t EspClass::getMinFreePsram(void)
+{
+    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+}
+
+uint32_t EspClass::getMaxAllocPsram(void)
+{
+    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
 }
 
 uint8_t EspClass::getChipRevision(void)
