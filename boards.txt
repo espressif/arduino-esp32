@@ -2275,6 +2275,49 @@ wipy3.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+bpi-bit.name=BPI-BIT
+
+bpi-bit.upload.tool=esptool
+bpi-bit.upload.maximum_size=1310720
+bpi-bit.upload.maximum_data_size=294912
+bpi-bit.upload.wait_for_upload_port=true
+
+bpi-bit.serial.disableDTR=true
+bpi-bit.serial.disableRTS=true
+
+bpi-bit.build.mcu=esp32
+bpi-bit.build.core=esp32
+bpi-bit.build.variant=bpi-bit
+bpi-bit.build.board=BPI-BIT
+
+bpi-bit.build.f_cpu=160000000L
+bpi-bit.build.flash_mode=dio
+bpi-bit.build.flash_size=4MB
+bpi-bit.build.boot=dio
+bpi-bit.build.partitions=default
+
+bpi-bit.menu.FlashFreq.80=80MHz
+bpi-bit.menu.FlashFreq.80.build.flash_freq=80m
+bpi-bit.menu.FlashFreq.40=40MHz
+bpi-bit.menu.FlashFreq.40.build.flash_freq=40m
+
+bpi-bit.menu.UploadSpeed.921600=921600
+bpi-bit.menu.UploadSpeed.921600.upload.speed=921600
+bpi-bit.menu.UploadSpeed.115200=115200
+bpi-bit.menu.UploadSpeed.115200.upload.speed=115200
+bpi-bit.menu.UploadSpeed.256000.windows=256000
+bpi-bit.menu.UploadSpeed.256000.upload.speed=256000
+bpi-bit.menu.UploadSpeed.230400.windows.upload.speed=256000
+bpi-bit.menu.UploadSpeed.230400=230400
+bpi-bit.menu.UploadSpeed.230400.upload.speed=230400
+bpi-bit.menu.UploadSpeed.460800.linux=460800
+bpi-bit.menu.UploadSpeed.460800.macosx=460800
+bpi-bit.menu.UploadSpeed.460800.upload.speed=460800
+bpi-bit.menu.UploadSpeed.512000.windows=512000
+bpi-bit.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 wesp32.name=Silicognition wESP32
 
 wesp32.upload.tool=esptool
