@@ -40,6 +40,7 @@ set(LIBRARY_SRCS
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
+  libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
@@ -175,6 +176,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/DNSServer/src
   libraries/ESP32/src
   libraries/ESPmDNS/src
+  libraries/FFat/src
   libraries/FS/src
   libraries/HTTPClient/src
   libraries/NetBIOS/src
