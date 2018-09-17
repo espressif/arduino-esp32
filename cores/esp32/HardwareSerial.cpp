@@ -46,6 +46,10 @@ void HardwareSerial::end()
     _uart = 0;
 }
 
+size_t HardwareSerial::setRxBufferSize(size_t new_size) {
+    return uartResizeRxBuffer(_uart, new_size);
+}
+
 void HardwareSerial::setDebugOutput(bool en)
 {
     if(_uart == 0) {

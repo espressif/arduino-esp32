@@ -9,11 +9,11 @@ static const uint8_t LED_BUILTIN = 5;
 static const uint8_t _VBAT = 35; // battery voltage
 
 
-static const uint8_t TF_CS = 4;    // TF (Micro SD Card) CS pin
-static const uint8_t TS_CS = 12;   // Touch Screen CS pin
-static const uint8_t TFT_CS = 14;  // TFT CS pin
-static const uint8_t TFT_LED = 32; // TFT backlight control pin
-static const uint8_t TFT_RST = 33; // TFT reset pin
-static const uint8_t TFT_DC = 27;  // TFT DC pin
+#define TF_CS   4  // TF (Micro SD Card) CS pin
+#define TS_CS   12 // Touch Screen CS pin
+#define TFT_CS  14 // TFT CS pin
+#define TFT_LED 32 // TFT backlight control pin
+#define TFT_RST 33 // TFT reset pin
+#define TFT_DC  27 // TFT DC pin
 
 #endif /* Pins_Arduino_h */

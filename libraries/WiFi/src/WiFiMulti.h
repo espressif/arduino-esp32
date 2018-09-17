@@ -27,8 +27,6 @@
 #define WIFICLIENTMULTI_H_
 
 #include "WiFi.h"
-#undef min
-#undef max
 #include <vector>
 
 typedef struct {
