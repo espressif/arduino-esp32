@@ -107,11 +107,14 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_adc_cal"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_http_client"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_ota"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-mqtt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-tls"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "heap"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "http_server"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "jsmn"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
@@ -125,15 +128,16 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "smartconfig_ack"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spiffs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcp_transport"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
@@ -147,7 +151,7 @@ env.Append(
     ],
 
     LIBS=[
-        "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "esp_http_client", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "esp-tls", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "smartconfig_ack", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
+        "gcc", "openssl", "btdm_app", "fatfs", "wps", "http_server", "coexist", "wear_levelling", "esp_http_client", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "tcp_transport", "mdns", "vfs", "esp_ringbuf", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "esp-tls", "asio", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "smartconfig_ack", "expat", "m", "mqtt", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "esp_https_ota", "stdc++"
     ],
 
     LIBSOURCE_DIRS=[

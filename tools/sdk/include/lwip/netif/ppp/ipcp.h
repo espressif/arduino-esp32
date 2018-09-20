@@ -42,7 +42,7 @@
  * $Id: ipcp.h,v 1.14 2002/12/04 23:03:32 paulus Exp $
  */
 
-#include "lwip/opt.h"
+#include "netif/ppp/ppp_opts.h"
 #if PPP_SUPPORT && PPP_IPV4_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
 #ifndef IPCP_H

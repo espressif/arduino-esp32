@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Memory pool API
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -33,6 +38,8 @@
 #ifndef LWIP_HDR_MEMP_H
 #define LWIP_HDR_MEMP_H
 
+#include "lwip/opt.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,7 +48,7 @@ extern "C" {
 #define LWIP_MEMPOOL(name,num,size,desc)
 #include "lwip/priv/memp_std.h"
 
-/* Create the list of all memory pools managed by memp. MEMP_MAX represents a NULL pool at the end */
+/** Create the list of all memory pools managed by memp. MEMP_MAX represents a NULL pool at the end */
 typedef enum {
 #define LWIP_MEMPOOL(name,num,size,desc)  MEMP_##name,
 #include "lwip/priv/memp_std.h"
@@ -49,8 +56,32 @@ typedef enum {
 } memp_t;
 
 #include "lwip/priv/memp_priv.h"
+#include "lwip/stats.h"
 
-/* Private mempools example:
+extern const struct memp_desc* const memp_pools[MEMP_MAX];
+
+/**
+ * @ingroup mempool
+ * Declare prototype for private memory pool if it is used in multiple files
+ */
+#define LWIP_MEMPOOL_PROTOTYPE(name) extern const struct memp_desc memp_ ## name
+
+#if MEMP_MEM_MALLOC
+
+#define LWIP_MEMPOOL_DECLARE(name,num,size,desc) \
+  LWIP_MEMPOOL_DECLARE_STATS_INSTANCE(memp_stats_ ## name) \
+  const struct memp_desc memp_ ## name = { \
+    DECLARE_LWIP_MEMPOOL_DESC(desc) \
+    LWIP_MEMPOOL_DECLARE_STATS_REFERENCE(memp_stats_ ## name) \
+    LWIP_MEM_ALIGN_SIZE(size) \
+  };
+
+#else /* MEMP_MEM_MALLOC */
+
+/**
+ * @ingroup mempool
+ * Declare a private memory pool
+ * Private mempools example:
  * .h: only when pool is used in multiple .c files: LWIP_MEMPOOL_PROTOTYPE(my_private_pool);
  * .c:
  *   - in global variables section: LWIP_MEMPOOL_DECLARE(my_private_pool, 10, sizeof(foo), "Some description")
@@ -61,74 +92,50 @@ typedef enum {
  * To relocate a pool, declare it as extern in cc.h. Example for GCC:
  *   extern u8_t __attribute__((section(".onchip_mem"))) memp_memory_my_private_pool[];
  */
-
-extern const struct memp_desc* const memp_pools[MEMP_MAX];
-
-#define LWIP_MEMPOOL_PROTOTYPE(name) extern const struct memp_desc memp_ ## name
-
-#if MEMP_MEM_MALLOC
-
-#include "lwip/mem.h"
-
-#define memp_init()
-#if ESP_STATS_MEM
-static inline void* memp_malloc(int type)
-{
-    ESP_CNT_MEM_MALLOC_INC(type);
-    return mem_malloc(memp_pools[type]->size);
-}
-
-static inline void memp_free(int type, void *mem)
-{
-    ESP_CNT_MEM_FREE_INC(type);
-    mem_free(mem);
-}
-
-//#define memp_malloc(type)     mem_malloc(memp_pools[type]->size); ESP_CNT_MEM_MALLOC_INC(type)
-//#define memp_free(type, mem)  mem_free(mem); ESP_CNT_MEM_FREE_INC(type)
-#else
-#define memp_malloc(type)     mem_malloc(memp_pools[type]->size)
-#define memp_free(type, mem)  mem_free(mem)
-#endif
-
 #define LWIP_MEMPOOL_DECLARE(name,num,size,desc) \
-  const struct memp_desc memp_ ## name = { \
-    LWIP_MEM_ALIGN_SIZE(size) \
-  };
-
-#define LWIP_MEMPOOL_INIT(name)
-#define LWIP_MEMPOOL_ALLOC(name)   mem_malloc(memp_ ## name.size)
-#define LWIP_MEMPOOL_FREE(name, x) mem_free(x)
-
-#else /* MEMP_MEM_MALLOC */
-
-#define LWIP_MEMPOOL_DECLARE(name,num,size,desc) u8_t memp_memory_ ## name ## _base \
-    [((num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size)))]; \
+  LWIP_DECLARE_MEMORY_ALIGNED(memp_memory_ ## name ## _base, ((num) * (MEMP_SIZE + MEMP_ALIGN_SIZE(size)))); \
+    \
+  LWIP_MEMPOOL_DECLARE_STATS_INSTANCE(memp_stats_ ## name) \
     \
   static struct memp *memp_tab_ ## name; \
     \
   const struct memp_desc memp_ ## name = { \
+    DECLARE_LWIP_MEMPOOL_DESC(desc) \
+    LWIP_MEMPOOL_DECLARE_STATS_REFERENCE(memp_stats_ ## name) \
     LWIP_MEM_ALIGN_SIZE(size), \
     (num), \
-    DECLARE_LWIP_MEMPOOL_DESC(desc) \
     memp_memory_ ## name ## _base, \
     &memp_tab_ ## name \
   };
 
+#endif /* MEMP_MEM_MALLOC */
+
+/**
+ * @ingroup mempool
+ * Initialize a private memory pool
+ */
 #define LWIP_MEMPOOL_INIT(name)    memp_init_pool(&memp_ ## name)
+/**
+ * @ingroup mempool
+ * Allocate from a private memory pool
+ */
 #define LWIP_MEMPOOL_ALLOC(name)   memp_malloc_pool(&memp_ ## name)
+/**
+ * @ingroup mempool
+ * Free element from a private memory pool
+ */
 #define LWIP_MEMPOOL_FREE(name, x) memp_free_pool(&memp_ ## name, (x))
 
 #if MEM_USE_POOLS
-/** This structure is used to save the pool one element came from. */
+/** This structure is used to save the pool one element came from.
+ * This has to be defined here as it is required for pool size calculation. */
 struct memp_malloc_helper
 {
    memp_t poolnr;
-#if MEMP_OVERFLOW_CHECK
+#if MEMP_OVERFLOW_CHECK || (LWIP_STATS && MEM_STATS)
    u16_t size;
-#endif /* MEMP_OVERFLOW_CHECK */
+#endif /* MEMP_OVERFLOW_CHECK || (LWIP_STATS && MEM_STATS) */
 };
-
 #endif /* MEM_USE_POOLS */
 
 void  memp_init(void);
@@ -140,8 +147,6 @@ void *memp_malloc_fn(memp_t type, const char* file, const int line);
 void *memp_malloc(memp_t type);
 #endif
 void  memp_free(memp_t type, void *mem);
-
-#endif /* MEMP_MEM_MALLOC */
 
 #ifdef __cplusplus
 }
