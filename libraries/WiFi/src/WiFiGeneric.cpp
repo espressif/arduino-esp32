@@ -46,9 +46,6 @@ extern "C" {
 } //extern "C"
 
 #include "esp32-hal-log.h"
-
-#undef min
-#undef max
 #include <vector>
 
 #include "sdkconfig.h"
@@ -156,8 +153,8 @@ static bool espWiFiStart(bool persistent){
         return false;
     }
     _esp_wifi_started = true;
-    system_event_t event; 
-    event.event_id = SYSTEM_EVENT_WIFI_READY; 
+    system_event_t event;
+    event.event_id = SYSTEM_EVENT_WIFI_READY;
     WiFiGenericClass::_eventCallback(nullptr, &event);
 
     return true;
@@ -496,7 +493,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     } else if(cm && !m){
         return espWiFiStop();
     }
-    
+
     esp_err_t err;
     err = esp_wifi_set_mode(m);
     if(err){

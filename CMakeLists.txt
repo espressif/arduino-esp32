@@ -16,7 +16,9 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-timer.c
   cores/esp32/esp32-hal-touch.c
   cores/esp32/esp32-hal-uart.c
+  cores/esp32/esp32-hal-rmt.c
   cores/esp32/Esp.cpp
+  cores/esp32/FunctionalInterrupt.cpp
   cores/esp32/HardwareSerial.cpp
   cores/esp32/IPAddress.cpp
   cores/esp32/IPv6Address.cpp
@@ -40,6 +42,7 @@ set(LIBRARY_SRCS
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
+  libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
@@ -175,6 +178,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/DNSServer/src
   libraries/ESP32/src
   libraries/ESPmDNS/src
+  libraries/FFat/src
   libraries/FS/src
   libraries/HTTPClient/src
   libraries/NetBIOS/src
