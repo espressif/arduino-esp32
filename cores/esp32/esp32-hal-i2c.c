@@ -1200,10 +1200,10 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     if(!i2c->intr_handle) { // create ISR for either peripheral
         // log_i("create ISR %d",i2c->num);
         uint32_t ret = 0;
-        uint32_t flags = ESP_INTR_FLAG_EDGE |  //< Edge-triggered interrupt
-          ESP_INTR_FLAG_IRAM |  //< ISR can be called if cache is disabled
-          ESP_INTR_FLAG_LOWMED;   //< Low and medium prio interrupts. These can be handled in C.
-
+        uint32_t flags = ESP_INTR_FLAG_IRAM |  //< ISR can be called if cache is disabled
+          ESP_INTR_FLAG_LOWMED |   //< Low and medium prio interrupts. These can be handled in C.
+          ESP_INTR_FLAG_SHARED; //< Reduce resource requirements, Share interrupts
+      
         if(i2c->num) {
             ret = esp_intr_alloc_intrstatus(ETS_I2C_EXT1_INTR_SOURCE, flags, (uint32_t)&i2c->dev->int_status.val, interruptsEnabled, &i2c_isr_handler_default,i2c, &i2c->intr_handle);
         } else {
