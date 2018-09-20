@@ -63,17 +63,17 @@ typedef struct {
 static esp_err_t _spp_queue_packet(uint8_t *data, size_t len){
     if(!data || !len){
         log_w("No data provided");
-        return ESP_FAIL;
+        return ESP_OK;
     }
     spp_packet_t * packet = (spp_packet_t*)malloc(sizeof(spp_packet_t) + len);
     if(!packet){
-        log_w("SPP TX Packet Malloc Failed!");
+        log_e("SPP TX Packet Malloc Failed!");
         return ESP_FAIL;
     }
     packet->len = len;
     memcpy(packet->data, data, len);
     if (xQueueSend(_spp_tx_queue, &packet, portMAX_DELAY) != pdPASS) {
-        log_w("SPP TX Queue Send Failed!");
+        log_e("SPP TX Queue Send Failed!");
         free(packet);
         return ESP_FAIL;
     }
