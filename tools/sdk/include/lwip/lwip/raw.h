@@ -1,3 +1,9 @@
+/**
+ * @file
+ * raw API (to be used from TCPIP thread)\n
+ * See also @ref raw_raw
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -61,6 +67,7 @@ struct raw_pcb;
 typedef u8_t (*raw_recv_fn)(void *arg, struct raw_pcb *pcb, struct pbuf *p,
     const ip_addr_t *addr);
 
+/** the RAW protocol control block */
 struct raw_pcb {
   /* Common members of all PCB types */
   IP_PCB;
@@ -96,6 +103,8 @@ void             raw_recv       (struct raw_pcb *pcb, raw_recv_fn recv, void *re
 /* The following functions are the lower layer interface to RAW. */
 u8_t             raw_input      (struct pbuf *p, struct netif *inp);
 #define raw_init() /* Compatibility define, no init needed. */
+
+void raw_netif_ip_addr_changed(const ip_addr_t* old_addr, const ip_addr_t* new_addr);
 
 /* for compatibility with older implementation */
 #define raw_new_ip6(proto) raw_new_ip_type(IPADDR_TYPE_V6, proto)

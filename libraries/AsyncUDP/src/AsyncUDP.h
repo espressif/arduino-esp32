@@ -53,6 +53,7 @@ protected:
     uint16_t _localPort;
     ip_addr_t _remoteIp;
     uint16_t _remotePort;
+    uint8_t _remoteMac[6];
     uint8_t *_data;
     size_t _len;
     size_t _index;
@@ -74,6 +75,7 @@ public:
     IPAddress remoteIP();
     IPv6Address remoteIPv6();
     uint16_t remotePort();
+    void remoteMac(uint8_t * mac);
 
     size_t send(AsyncUDPMessage &message);
 
@@ -95,6 +97,7 @@ protected:
     bool _connected;
     AuPacketHandlerFunction _handler;
 
+    bool _init();
     void _recv(udp_pcb *upcb, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif * netif);
 
 public:
@@ -109,9 +112,9 @@ public:
     bool listen(const IPv6Address addr, uint16_t port);
     bool listen(uint16_t port);
 
-    bool listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_STA);
-    bool listenMulticast(const IPAddress addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_STA);
-    bool listenMulticast(const IPv6Address addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_STA);
+    bool listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
+    bool listenMulticast(const IPAddress addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
+    bool listenMulticast(const IPv6Address addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
 
     bool connect(const ip_addr_t *addr, uint16_t port);
     bool connect(const IPAddress addr, uint16_t port);

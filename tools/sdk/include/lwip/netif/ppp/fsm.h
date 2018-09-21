@@ -42,7 +42,7 @@
  * $Id: fsm.h,v 1.10 2004/11/13 02:28:15 paulus Exp $
  */
 
-#include "lwip/opt.h"
+#include "netif/ppp/ppp_opts.h"
 #if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
 #ifndef FSM_H
@@ -150,12 +150,12 @@ typedef struct fsm_callbacks {
 /*
  * Timeouts.
  */
-#if 0 /* moved to opt.h */
+#if 0 /* moved to ppp_opts.h */
 #define DEFTIMEOUT	3	/* Timeout time in seconds */
 #define DEFMAXTERMREQS	2	/* Maximum Terminate-Request transmissions */
 #define DEFMAXCONFREQS	10	/* Maximum Configure-Request transmissions */
 #define DEFMAXNAKLOOPS	5	/* Maximum number of nak loops */
-#endif /* moved to opt.h */
+#endif /* moved to ppp_opts.h */
 
 
 /*

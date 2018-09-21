@@ -62,6 +62,7 @@ SUBTYPES = {
 
 quiet = False
 md5sum = True
+secure = False
 offset_part_table = 0
 
 def status(msg):
@@ -95,19 +96,23 @@ class PartitionTable(list):
             if line.startswith("#") or len(line) == 0:
                 continue
             try:
-                res.append(PartitionDefinition.from_csv(line))
+                res.append(PartitionDefinition.from_csv(line, line_no+1))
             except InputError as e:
                 raise InputError("Error at line %d: %s" % (line_no+1, e))
             except Exception:
-                critical("Unexpected error parsing line %d: %s" % (line_no+1, line))
+                critical("Unexpected error parsing CSV line %d: %s" % (line_no+1, line))
                 raise
 
         # fix up missing offsets & negative sizes
         last_end = offset_part_table + PARTITION_TABLE_SIZE # first offset after partition table
         for e in res:
-            if offset_part_table != 0 and e.offset is not None and e.offset < last_end:
-                critical("WARNING: 0x%x address in the partition table is below 0x%x" % (e.offset, last_end))
-                e.offset = None
+            if e.offset is not None and e.offset < last_end:
+                if e == res[0]:
+                    raise InputError("CSV Error: First partition offset 0x%x overlaps end of partition table 0x%x"
+                                     % (e.offset, last_end))
+                else:
+                    raise InputError("CSV Error: Partitions overlap. Partition at line %d sets offset 0x%x. Previous partition ends 0x%x"
+                                     % (e.line_no, e.offset, last_end))
             if e.offset is None:
                 pad_to = 0x10000 if e.type == APP_TYPE else 4
                 if last_end % pad_to != 0:
@@ -164,6 +169,19 @@ class PartitionTable(list):
         # verify each partition individually
         for p in self:
             p.verify()
+        
+        # check on duplicate name
+        names = [ p.name for p in self ]
+        duplicates = set( n for n in names if names.count(n) > 1 )
+        
+        # print sorted duplicate partitions by name
+        if len(duplicates) != 0:
+            print("A list of partitions that have the same name:")
+            for p in sorted(self, key=lambda x:x.name):
+                if len(duplicates.intersection([p.name])) != 0:
+                    print("%s" % (p.to_csv()))
+            raise InputError("Partition names must be unique")
+        
         # check for overlaps
         last = None
         for p in sorted(self, key=lambda x:x.offset):
@@ -245,12 +263,13 @@ class PartitionDefinition(object):
         self.encrypted = False
 
     @classmethod
-    def from_csv(cls, line):
+    def from_csv(cls, line, line_no):
         """ Parse a line from the CSV """
         line_w_defaults = line + ",,,,"  # lazy way to support default fields
         fields = [ f.strip() for f in line_w_defaults.split(",") ]
 
         res = PartitionDefinition()
+        res.line_no = line_no
         res.name = fields[0]
         res.type = res.parse_type(fields[1])
         res.subtype = res.parse_subtype(fields[2])
@@ -322,6 +341,8 @@ class PartitionDefinition(object):
         align = self.ALIGNMENT.get(self.type, 4)
         if self.offset % align:
             raise ValidationError(self, "Offset 0x%x is not aligned to 0x%x" % (self.offset, align))
+        if self.size % align and secure:
+            raise ValidationError(self, "Size 0x%x is not aligned to 0x%x" % (self.size, align))
         if self.size is None:
             raise ValidationError(self, "Size field is not set")
 
@@ -414,6 +435,7 @@ def main():
     global quiet
     global md5sum
     global offset_part_table
+    global secure
     parser = argparse.ArgumentParser(description='ESP32 partition table utility')
 
     parser.add_argument('--flash-size', help='Optional flash size limit, checks partition table fits in flash',
@@ -423,7 +445,7 @@ def main():
     parser.add_argument('--verify', '-v', help="Verify partition table fields (deprecated, this behaviour is enabled by default and this flag does nothing.", action='store_true')
     parser.add_argument('--quiet', '-q', help="Don't print non-critical status messages to stderr", action='store_true')
     parser.add_argument('--offset', '-o', help='Set offset partition table', default='0x8000')
-    
+    parser.add_argument('--secure', help="Require app partitions to be suitable for secure boot", action='store_true')
     parser.add_argument('input', help='Path to CSV or binary file to parse.', type=argparse.FileType('rb'))
     parser.add_argument('output', help='Path to output converted binary or CSV file. Will use stdout if omitted.',
                         nargs='?', default='-')
@@ -432,6 +454,7 @@ def main():
 
     quiet = args.quiet
     md5sum = not args.disable_md5sum
+    secure = args.secure
     offset_part_table = int(args.offset, 0)
     input = args.input.read()
     input_is_binary = input[0:2] == PartitionDefinition.MAGIC_BYTES

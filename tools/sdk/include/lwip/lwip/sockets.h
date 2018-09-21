@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Socket API (to be used from non-TCPIP threads)
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -38,12 +43,10 @@
 
 #if LWIP_SOCKET /* don't build if not configured for use in lwipopts.h */
 
-#include <stddef.h> /* for size_t */
-#include <string.h> /* for FD_ZERO */
-
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/inet.h"
+#include "lwip/errno.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -191,6 +194,7 @@ struct msghdr {
 #define SO_CONTIMEO    0x1009 /* Unimplemented: connect timeout */
 #define SO_NO_CHECK    0x100a /* don't create UDP checksum */
 
+
 /*
  * Structure used for manipulating linger option.
  */
@@ -250,11 +254,6 @@ struct linger {
 #define TCP_KEEPIDLE   0x03    /* set pcb->keep_idle  - Same as TCP_KEEPALIVE, but use seconds for get/setsockopt */
 #define TCP_KEEPINTVL  0x04    /* set pcb->keep_intvl - Use seconds for get/setsockopt */
 #define TCP_KEEPCNT    0x05    /* set pcb->keep_cnt   - Use number of probes sent for get/setsockopt */
-#if ESP_PER_SOC_TCP_WND
-#define TCP_WINDOW     0x06    /* set pcb->per_soc_tcp_wnd */
-#define TCP_SNDBUF     0x07    /* set pcb->per_soc_tcp_snd_buf */
-#endif
-
 #endif /* LWIP_TCP */
 
 #if LWIP_IPV6
@@ -264,6 +263,7 @@ struct linger {
 #define IPV6_CHECKSUM       7  /* RFC3542: calculate and insert the ICMPv6 checksum for raw sockets. */
 #define IPV6_V6ONLY         27 /* RFC3493: boolean control to restrict AF_INET6 sockets to IPv6 communications only. */
 
+#if ESP_LWIP
 #if LWIP_IPV6_MLD
 /* Socket options for IPV6 multicast, uses the MLD interface to manage group memberships. RFC2133. */
 #define IPV6_MULTICAST_IF 0x300
@@ -283,6 +283,7 @@ typedef struct ip6_mreq {
 #define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
 
 #endif /* LWIP_IPV6_MLD */
+#endif
 
 #endif /* LWIP_IPV6 */
 
@@ -466,8 +467,6 @@ void lwip_socket_thread_init(void); /* LWIP_NETCONN_SEM_PER_THREAD==1: initializ
 void lwip_socket_thread_cleanup(void); /* LWIP_NETCONN_SEM_PER_THREAD==1: destroy thread-local semaphore */
 
 #if LWIP_COMPAT_SOCKETS == 2
-
-
 /* This helps code parsers/code completion by not having the COMPAT functions as defines */
 #define lwip_accept       accept
 #define lwip_bind         bind
@@ -541,6 +540,7 @@ int lwip_setsockopt_r (int s, int level, int optname, const void *optval, sockle
 int lwip_close_r(int s);
 int lwip_connect_r(int s, const struct sockaddr *name, socklen_t namelen);
 int lwip_listen_r(int s, int backlog);
+int lwip_recvmsg_r(int s, struct msghdr *message, int flags);
 int lwip_recv_r(int s, void *mem, size_t len, int flags);
 int lwip_read_r(int s, void *mem, size_t len); 
 int lwip_recvfrom_r(int s, void *mem, size_t len, int flags,
@@ -577,6 +577,8 @@ static inline int connect(int s,const struct sockaddr *name,socklen_t namelen)
 { return lwip_connect_r(s,name,namelen); }
 static inline int listen(int s,int backlog)
 { return lwip_listen_r(s,backlog); }
+static inline int recvmsg(int sockfd, struct msghdr *msg, int flags)
+{ return lwip_recvmsg_r(sockfd, msg, flags); } 
 static inline int recv(int s,void *mem,size_t len,int flags)
 { return lwip_recv_r(s,mem,len,flags); }
 static inline int recvfrom(int s,void *mem,size_t len,int flags,struct sockaddr *from,socklen_t *fromlen)
@@ -609,71 +611,106 @@ static inline int fcntl(int s,int cmd,int val)
 { return lwip_fcntl_r(s,cmd,val); }
 static inline int ioctl(int s,long cmd,void *argp)
 { return lwip_ioctl_r(s,cmd,argp); }
-#endif /* { RETURN LWIP_POSIX_SOCKETS_IO_NAMES */
+#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #else
 
-static inline int accept(int s,struct sockaddr *addr,socklen_t *addrlen)
-{ return lwip_accept(s,addr,addrlen); }
-static inline int bind(int s,const struct sockaddr *name,socklen_t namelen)
-{ return lwip_bind(s,name,namelen); }
-static inline int shutdown(int s,int how)
-{ return lwip_shutdown(s,how); }
-static inline int getpeername(int s,struct sockaddr *name,socklen_t *namelen)
-{ return lwip_getpeername(s,name,namelen); }
-static inline int getsockname(int s,struct sockaddr *name,socklen_t *namelen)
-{ return lwip_getsockname(s,name,namelen); }
-static inline int setsockopt(int s,int level,int optname,const void *opval,socklen_t optlen)
-{ return lwip_setsockopt(s,level,optname,opval,optlen); }
-static inline int getsockopt(int s,int level,int optname,void *opval,socklen_t *optlen)
-{ return lwip_getsockopt(s,level,optname,opval,optlen); }
-static inline int closesocket(int s)
-{ return lwip_close(s); }
-static inline int connect(int s,const struct sockaddr *name,socklen_t namelen)
-{ return lwip_connect(s,name,namelen); }
-static inline int listen(int s,int backlog)
-{ return lwip_listen(s,backlog); }
-static inline int recv(int s,void *mem,size_t len,int flags)
-{ return lwip_recv(s,mem,len,flags); }
-static inline int recvfrom(int s,void *mem,size_t len,int flags,struct sockaddr *from,socklen_t *fromlen)
-{ return lwip_recvfrom(s,mem,len,flags,from,fromlen); }
-static inline int send(int s,const void *dataptr,size_t size,int flags)
-{ return lwip_send(s,dataptr,size,flags); }
-static inline int sendmsg(int s,const struct msghdr *message,int flags)
-{ return lwip_sendmsg(s,message,flags); }
-static inline int sendto(int s,const void *dataptr,size_t size,int flags,const struct sockaddr *to,socklen_t tolen)
-{ return lwip_sendto(s,dataptr,size,flags,to,tolen); }
-static inline int socket(int domain,int type,int protocol)
-{ return lwip_socket(domain,type,protocol); }
-#ifndef ESP_HAS_SELECT
-static inline int select(int maxfdp1,fd_set t*readset,fd_set *writeset,fd_set *exceptset,struct timeval *timeout)
-{ return lwip_select(maxfdp1,readset,writeset,exceptset,timeout); }
-#endif /* ESP_HAS_SELECT */
-static inline int ioctlsocket(int s,long cmd,void *argp)
-{ return lwip_ioctl(s,cmd,argp); }
+/** @ingroup socket */
+#define accept(s,addr,addrlen)                    lwip_accept(s,addr,addrlen)
+/** @ingroup socket */
+#define bind(s,name,namelen)                      lwip_bind(s,name,namelen)
+/** @ingroup socket */
+#define shutdown(s,how)                           lwip_shutdown(s,how)
+/** @ingroup socket */
+#define getpeername(s,name,namelen)               lwip_getpeername(s,name,namelen)
+/** @ingroup socket */
+#define getsockname(s,name,namelen)               lwip_getsockname(s,name,namelen)
+/** @ingroup socket */
+#define setsockopt(s,level,optname,opval,optlen)  lwip_setsockopt(s,level,optname,opval,optlen)
+/** @ingroup socket */
+#define getsockopt(s,level,optname,opval,optlen)  lwip_getsockopt(s,level,optname,opval,optlen)
+/** @ingroup socket */
+#define closesocket(s)                            lwip_close(s)
+/** @ingroup socket */
+#define connect(s,name,namelen)                   lwip_connect(s,name,namelen)
+/** @ingroup socket */
+#define listen(s,backlog)                         lwip_listen(s,backlog)
+/** @ingroup socket */
+#define recv(s,mem,len,flags)                     lwip_recv(s,mem,len,flags)
+/** @ingroup socket */
+#define recvfrom(s,mem,len,flags,from,fromlen)    lwip_recvfrom(s,mem,len,flags,from,fromlen)
+/** @ingroup socket */
+#define send(s,dataptr,size,flags)                lwip_send(s,dataptr,size,flags)
+/** @ingroup socket */
+#define sendmsg(s,message,flags)                  lwip_sendmsg(s,message,flags)
+/** @ingroup socket */
+#define sendto(s,dataptr,size,flags,to,tolen)     lwip_sendto(s,dataptr,size,flags,to,tolen)
+/** @ingroup socket */
+#define socket(domain,type,protocol)              lwip_socket(domain,type,protocol)
+/** @ingroup socket */
+#define select(maxfdp1,readset,writeset,exceptset,timeout)     lwip_select(maxfdp1,readset,writeset,exceptset,timeout)
+/** @ingroup socket */
+#define ioctlsocket(s,cmd,argp)                   lwip_ioctl(s,cmd,argp)
 
 #if LWIP_POSIX_SOCKETS_IO_NAMES
-static inline int read(int s,void *mem,size_t len)
-{ return lwip_read(s,mem,len); }
-static inline int write(int s,const void *dataptr,size_t len)
-{ return lwip_write(s,dataptr,len); }
-static inline int writev(int s,const struct iovec *iov,int iovcnt)
-{ return lwip_writev(s,iov,iovcnt); }
-static inline int close(int s)
-{ return lwip_close(s); }
-static inline int fcntl(int s,long cmd,void *val)
-{ return lwip_fcntl(s,cmd,val); }
-static inline int ioctl(int s,int cmd,int argp)
-{ return lwip_ioctl(s,cmd,argp); }
+/** @ingroup socket */
+#define read(s,mem,len)                           lwip_read(s,mem,len)
+/** @ingroup socket */
+#define write(s,dataptr,len)                      lwip_write(s,dataptr,len)
+/** @ingroup socket */
+#define writev(s,iov,iovcnt)                      lwip_writev(s,iov,iovcnt)
+/** @ingroup socket */
+#define close(s)                                  lwip_close(s)
+/** @ingroup socket */
+#define fcntl(s,cmd,val)                          lwip_fcntl(s,cmd,val)
+/** @ingroup socket */
+#define ioctl(s,cmd,argp)                         lwip_ioctl(s,cmd,argp)
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
-#endif /* ESP_THREAD_SAFE */
 
+#endif /* ESP_THREAD_SAFE */
 #endif /* LWIP_COMPAT_SOCKETS != 2 */
 
+#if ESP_LWIP
 #if LWIP_IPV4 && LWIP_IPV6
+#define lwip_inet_ntop(af,src,dst,size) \
+    (((af) == AF_INET6) ? ip6addr_ntoa_r((const ip6_addr_t*)(src),(dst),(size)) \
+    : (((af) == AF_INET) ? ip4addr_ntoa_r((const ip4_addr_t*)(src),(dst),(size)) : NULL))
+#define lwip_inet_pton(af,src,dst) \
+    (((af) == AF_INET6) ? ip6addr_aton((src),(ip6_addr_t*)(dst)) \
+    : (((af) == AF_INET) ? ip4addr_aton((src),(ip4_addr_t*)(dst)) : 0))
+#elif LWIP_IPV4 /* LWIP_IPV4 && LWIP_IPV6 */
+#define lwip_inet_ntop(af,src,dst,size) \
+    (((af) == AF_INET) ? ip4addr_ntoa_r((const ip4_addr_t*)(src),(dst),(size)) : NULL)
+#define lwip_inet_pton(af,src,dst) \
+    (((af) == AF_INET) ? ip4addr_aton((src),(ip4_addr_t*)(dst)) : 0)
+#else /* LWIP_IPV4 && LWIP_IPV6 */
+#define lwip_inet_ntop(af,src,dst,size) \
+    (((af) == AF_INET6) ? ip6addr_ntoa_r((const ip6_addr_t*)(src),(dst),(size)) : NULL)
+#define lwip_inet_pton(af,src,dst) \
+    (((af) == AF_INET6) ? ip6addr_aton((src),(ip6_addr_t*)(dst)) : 0)
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+                                                           
+#if LWIP_COMPAT_SOCKET_INET == 1
+/* Some libraries have problems with inet_... being macros, so please use this define 
+   to declare normal functions */
+static inline const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{ lwip_inet_ntop(af, src, dst, size);    return dst; }
+static inline int inet_pton(int af, const char *src, void *dst)
+{ lwip_inet_pton(af, src, dst); return 1; }   
+#else
+/* By default fall back to original inet_... macros */
+# define inet_ntop(a,b,c,d) lwip_inet_ntop(a,b,c,d) 
+# define inet_pton(a,b,c)   lwip_inet_pton(a,b,c)   
+#endif /* LWIP_COMPAT_SOCKET_INET */
+
+#else /* ESP_LWIP*/
+
+#if LWIP_IPV4 && LWIP_IPV6
+/** @ingroup socket */
 #define inet_ntop(af,src,dst,size) \
     (((af) == AF_INET6) ? ip6addr_ntoa_r((const ip6_addr_t*)(src),(dst),(size)) \
      : (((af) == AF_INET) ? ip4addr_ntoa_r((const ip4_addr_t*)(src),(dst),(size)) : NULL))
+/** @ingroup socket */
 #define inet_pton(af,src,dst) \
     (((af) == AF_INET6) ? ip6addr_aton((src),(ip6_addr_t*)(dst)) \
      : (((af) == AF_INET) ? ip4addr_aton((src),(ip4_addr_t*)(dst)) : 0))
@@ -689,6 +726,7 @@ static inline int ioctl(int s,int cmd,int argp)
     (((af) == AF_INET6) ? ip6addr_aton((src),(ip6_addr_t*)(dst)) : 0)
 #endif /* LWIP_IPV4 && LWIP_IPV6 */
 
+#endif /* ESP_LWIP */
 #endif /* LWIP_COMPAT_SOCKETS */
 
 #ifdef __cplusplus

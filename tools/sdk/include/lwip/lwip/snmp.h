@@ -1,7 +1,6 @@
 /**
  * @file
- * MIB2 callback functions called from throughout the stack to integrate a MIB2
- * into lwIP (together with MIB2_STATS).
+ * SNMP support API for implementing netifs and statitics for MIB2
  */
 
 /*
@@ -48,9 +47,15 @@ extern "C" {
 struct udp_pcb;
 struct netif;
 
+/**
+ * @defgroup netif_mib2 MIB2 statistics
+ * @ingroup netif
+ */
+
 /* MIB2 statistics functions */
 #if MIB2_STATS  /* don't build if not configured for use in lwipopts.h */
 /**
+ * @ingroup netif_mib2
  * @see RFC1213, "MIB-II, 6. Definitions"
  */
 enum snmp_ifType {
@@ -88,18 +93,31 @@ enum snmp_ifType {
   snmp_ifType_frame_relay
 };
 
-/* This macro has a precision of ~49 days because sys_now returns u32_t. #define your own if you want ~490 days. */
+/** This macro has a precision of ~49 days because sys_now returns u32_t. \#define your own if you want ~490 days. */
 #ifndef MIB2_COPY_SYSUPTIME_TO
 #define MIB2_COPY_SYSUPTIME_TO(ptrToVal) (*(ptrToVal) = (sys_now() / 10))
 #endif
 
+/**
+ * @ingroup netif_mib2
+ * Increment stats member for SNMP MIB2 stats (struct stats_mib2_netif_ctrs)
+ */
 #define MIB2_STATS_NETIF_INC(n, x)      do { ++(n)->mib2_counters.x; } while(0)
+/**
+ * @ingroup netif_mib2
+ * Add value to stats member for SNMP MIB2 stats (struct stats_mib2_netif_ctrs)
+ */
 #define MIB2_STATS_NETIF_ADD(n, x, val) do { (n)->mib2_counters.x += (val); } while(0)
 
+/**
+ * @ingroup netif_mib2
+ * Init MIB2 statistic counters in netif
+ * @param netif Netif to init
+ * @param type one of enum @ref snmp_ifType
+ * @param speed your link speed here (units: bits per second)
+ */
 #define MIB2_INIT_NETIF(netif, type, speed) do { \
-  /* use "snmp_ifType" enum from snmp_mib2.h for "type", snmp_ifType_ethernet_csmacd by example */ \
   (netif)->link_type = (type);  \
-  /* your link speed here (units: bits per second) */  \
   (netif)->link_speed = (speed);\
   (netif)->ts = 0;              \
   (netif)->mib2_counters.ifinoctets = 0;      \

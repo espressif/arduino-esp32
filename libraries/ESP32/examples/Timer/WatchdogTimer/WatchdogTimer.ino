@@ -6,7 +6,7 @@ hw_timer_t *timer = NULL;
 
 void IRAM_ATTR resetModule() {
   ets_printf("reboot\n");
-  esp_restart_noos();
+  esp_restart();
 }
 
 void setup() {

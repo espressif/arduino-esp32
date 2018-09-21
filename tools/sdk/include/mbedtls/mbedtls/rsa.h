@@ -5,7 +5,7 @@
  *
  * The RSA public-key cryptosystem is defined in <em>Public-Key
  * Cryptography Standards (PKCS) #1 v1.5: RSA Encryption</em>
- * and <em>Public-Key Cryptography Standards (PKCS) #1 v2.1: 
+ * and <em>Public-Key Cryptography Standards (PKCS) #1 v2.1:
  * RSA Cryptography Specifications</em>.
  *
  */
@@ -781,7 +781,7 @@ int mbedtls_rsa_rsaes_pkcs1_v15_decrypt( mbedtls_rsa_context *ctx,
  * \param olen       The length of the plaintext.
  * \param input      The buffer holding the encrypted data.
  * \param output     The buffer to hold the plaintext.
- * \param output_max_len    The maximum length of the output buffer. 
+ * \param output_max_len    The maximum length of the output buffer.
  *
  * \return         \c 0 on success.
  * \return         An \c MBEDTLS_ERR_RSA_XXX error code on failure.

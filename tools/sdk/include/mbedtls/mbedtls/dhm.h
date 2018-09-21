@@ -1,12 +1,12 @@
 /**
  * \file dhm.h
  *
- * \brief   This file contains Diffie-Hellman-Merkle (DHM) key exchange 
+ * \brief   This file contains Diffie-Hellman-Merkle (DHM) key exchange
  *          definitions and functions.
  *
  * Diffie-Hellman-Merkle (DHM) key exchange is defined in
- * <em>RFC-2631: Diffie-Hellman Key Agreement Method</em> and 
- * <em>Public-Key Cryptography Standards (PKCS) #3: Diffie 
+ * <em>RFC-2631: Diffie-Hellman Key Agreement Method</em> and
+ * <em>Public-Key Cryptography Standards (PKCS) #3: Diffie
  * Hellman Key Agreement Standard</em>.
  *
  * <em>RFC-3526: More Modular Exponential (MODP) Diffie-Hellman groups for

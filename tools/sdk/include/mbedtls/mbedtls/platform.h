@@ -9,7 +9,7 @@
  *        system services, making the library easier to port and embed.
  *        Application developers and users of the library can provide their own
  *        implementations of these functions, or implementations specific to
- *        their platform, which can be statically linked to the library or 
+ *        their platform, which can be statically linked to the library or
  *        dynamically configured at runtime.
  */
 /*
@@ -40,7 +40,7 @@
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include "mbedtls/platform_time.h"
+#include "platform_time.h"
 #endif
 
 #ifdef __cplusplus
@@ -121,8 +121,8 @@ extern "C" {
 #else
 /* For size_t */
 #include <stddef.h>
-extern void * (*mbedtls_calloc)( size_t n, size_t size );
-extern void (*mbedtls_free)( void *ptr );
+extern void *mbedtls_calloc( size_t n, size_t size );
+extern void mbedtls_free( void *ptr );
 
 /**
  * \brief               This function dynamically sets the memory-management
@@ -223,7 +223,7 @@ int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
 #if defined(MBEDTLS_PLATFORM_SNPRINTF_MACRO)
 #define mbedtls_snprintf   MBEDTLS_PLATFORM_SNPRINTF_MACRO
 #else
-#define mbedtls_snprintf   snprintf
+#define mbedtls_snprintf   MBEDTLS_PLATFORM_STD_SNPRINTF
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_MACRO */
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_ALT */
 
@@ -331,7 +331,7 @@ mbedtls_platform_context;
  * \note    This function should be called before any other library functions.
  *
  *          Its implementation is platform-specific, and unless
- *          platform-specific code is provided, it does nothing. 
+ *          platform-specific code is provided, it does nothing.
  *
  * \note    The usage and necessity of this function is dependent on the platform.
  *

@@ -3,7 +3,7 @@
  *
  * \brief This file contains SHA-1 definitions and functions.
  *
- * The Secure Hash Algorithm 1 (SHA-1) cryptographic hash function is defined in 
+ * The Secure Hash Algorithm 1 (SHA-1) cryptographic hash function is defined in
  * <em>FIPS 180-4: Secure Hash Standard (SHS)</em>.
  *
  * \warning   SHA-1 is considered a weak message digest and its use constitutes
