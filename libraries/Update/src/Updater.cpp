@@ -303,6 +303,7 @@ size_t UpdateClass::write(uint8_t *data, size_t len) {
 }
 
 size_t UpdateClass::writeStream(Stream &data) {
+    data.setTimeout(10000);
     size_t written = 0;
     size_t toRead = 0;
     if(hasError() || !isRunning())
