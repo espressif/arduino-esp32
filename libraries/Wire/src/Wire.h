@@ -87,7 +87,6 @@ public:
     void beginTransmission(int address);
 
     uint8_t endTransmission(bool sendStop);
-    uint8_t endTransmission(uint8_t sendStop);
     uint8_t endTransmission(void);
 
     uint8_t requestFrom(uint16_t address, uint8_t size, bool sendStop);
