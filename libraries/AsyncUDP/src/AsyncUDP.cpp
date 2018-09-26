@@ -132,7 +132,7 @@ static void _udp_task(void *pvParameters){
         if(xQueueReceive(_udp_queue, &e, portMAX_DELAY) == pdTRUE){
             if(!e->pb){
                 free((void*)(e));
-                break;
+                continue;
             }
             AsyncUDP::_s_recv(e->arg, e->pcb, e->pb, e->addr, e->port, e->netif);
             free((void*)(e));
