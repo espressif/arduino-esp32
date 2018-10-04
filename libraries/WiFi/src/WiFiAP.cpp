@@ -94,11 +94,19 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     if(!WiFi.enableAP(true)) {
         // enable AP failed
+        log_e("enable AP first!");
         return false;
     }
 
     if(!ssid || *ssid == 0) {
-        // fail SSID missing!
+        // fail SSID missing
+        log_e("SSID missing!");
+        return false;
+    }
+
+    if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
+        // fail passphrase too short
+        log_e("passphrase too short!");
         return false;
     }
 
@@ -112,7 +120,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     conf.ap.max_connection = max_connection;
     conf.ap.beacon_interval = 100;
 
-    if(!passphrase || strlen(passphrase) < 8) {
+    if(!passphrase || strlen(passphrase) == 0) {
         conf.ap.authmode = WIFI_AUTH_OPEN;
         *conf.ap.password = 0;
     } else {
