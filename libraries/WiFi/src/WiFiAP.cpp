@@ -97,32 +97,27 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
         return false;
     }
 
-    if(!ssid || *ssid == 0 || strlen(ssid) > 31) {
-        // fail SSID too long or missing!
-        return false;
-    }
-
-    if(passphrase && (strlen(passphrase) > 63 || strlen(passphrase) < 8)) {
-        // fail passphrase to long or short!
+    if(!ssid || *ssid == 0) {
+        // fail SSID missing!
         return false;
     }
 
     esp_wifi_start();
 
     wifi_config_t conf;
-    strcpy(reinterpret_cast<char*>(conf.ap.ssid), ssid);
+    strlcpy(reinterpret_cast<char*>(conf.ap.ssid), ssid, sizeof(conf.ap.ssid));
     conf.ap.channel = channel;
-    conf.ap.ssid_len = strlen(ssid);
+    conf.ap.ssid_len = strlen(reinterpret_cast<char *>(conf.ap.ssid));
     conf.ap.ssid_hidden = ssid_hidden;
     conf.ap.max_connection = max_connection;
     conf.ap.beacon_interval = 100;
 
-    if(!passphrase || strlen(passphrase) == 0) {
+    if(!passphrase || strlen(passphrase) < 8) {
         conf.ap.authmode = WIFI_AUTH_OPEN;
         *conf.ap.password = 0;
     } else {
         conf.ap.authmode = WIFI_AUTH_WPA2_PSK;
-        strcpy(reinterpret_cast<char*>(conf.ap.password), passphrase);
+        strlcpy(reinterpret_cast<char*>(conf.ap.password), passphrase, sizeof(conf.ap.password));
     }
 
     wifi_config_t conf_current;
