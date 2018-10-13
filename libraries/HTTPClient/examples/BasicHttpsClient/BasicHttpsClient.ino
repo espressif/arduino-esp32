@@ -1,7 +1,7 @@
 /**
-   BasicHTTPClient.ino
+   BasicHTTPSClient.ino
 
-    Created on: 24.05.2015
+    Created on: 20.08.2018
 
 */
 
@@ -12,7 +12,9 @@
 
 #include <ESP8266HTTPClient.h>
 
-#include <WiFiClient.h>
+#include <WiFiClientSecureBearSSL.h>
+// Fingerprint for demo URL, expires on June 2, 2019, needs to be updated well before this date
+const uint8_t fingerprint[20] = {0x5A, 0xCF, 0xFE, 0xF0, 0xF1, 0xA6, 0xF4, 0x5F, 0xD2, 0x11, 0x11, 0xC6, 0x1D, 0x2F, 0x0E, 0xBC, 0x39, 0x8D, 0x50, 0xE0};
 
 ESP8266WiFiMulti WiFiMulti;
 
@@ -33,43 +35,46 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP("SSID", "PASSWORD");
-
 }
 
 void loop() {
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
-    WiFiClient client;
+    BearSSL::WiFiClientSecure *client = new BearSSL::WiFiClientSecure;
 
-    HTTPClient http;
+    client->setFingerprint(fingerprint);
 
-    Serial.print("[HTTP] begin...\n");
-    if (http.begin(client, "http://jigsaw.w3.org/HTTP/connection.html")) {  // HTTP
+    HTTPClient https;
+
+    Serial.print("[HTTPS] begin...\n");
+    if (https.begin(*client, "https://jigsaw.w3.org/HTTP/connection.html")) {  // HTTPS
 
 
-      Serial.print("[HTTP] GET...\n");
+      Serial.print("[HTTPS] GET...\n");
       // start connection and send HTTP header
-      int httpCode = http.GET();
+      int httpCode = https.GET();
 
       // httpCode will be negative on error
       if (httpCode > 0) {
         // HTTP header has been send and Server response header has been handled
-        Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+        Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
 
         // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          String payload = http.getString();
+          String payload = https.getString();
           Serial.println(payload);
         }
       } else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
       }
 
-      http.end();
+      https.end();
     } else {
-      Serial.printf("[HTTP} Unable to connect\n");
+      Serial.printf("[HTTPS] Unable to connect\n");
     }
+
+    delete client;
   }
 
   delay(10000);
