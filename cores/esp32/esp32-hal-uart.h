@@ -72,6 +72,8 @@ size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
+unsigned long uartDetectBaudrate(uart_t *uart);
+
 #ifdef __cplusplus
 }
 #endif
