@@ -64,6 +64,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         end();
 
         if(detectedBaudRate) {
+            delay(100); // Give some time...
             _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
