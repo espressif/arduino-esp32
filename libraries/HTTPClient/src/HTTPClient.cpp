@@ -305,23 +305,19 @@ void HTTPClient::end(void)
 void HTTPClient::disconnect()
 {
     if(connected()) {
-        if(_client) {
-            if(_client->available() > 0) {
-                log_d("still data in buffer (%d), clean up.\n", _client->available());
-                while(_client->available() > 0) {
-                    _client->read();
-                }
+        if(_client->available() > 0) {
+            log_d("still data in buffer (%d), clean up.\n", _client->available());
+            while(_client->available() > 0) {
+                _client->read();
             }
-
         }
+
         if(_reuse && _canReuse) {
             log_d("tcp keep open for reuse\n");
         } else {
             log_d("tcp stop\n");
-            if(_client) {
-                _client->stop();
-                _client = nullptr;
-            }
+            _client->stop();
+            _client = nullptr;
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
             if(_tcpDeprecated) {
                 _transportTraits.reset(nullptr);
