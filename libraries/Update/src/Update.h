@@ -41,7 +41,7 @@ class UpdateClass {
       Call this to check the space needed for the update
       Will return false if there is not enough space
     */
-    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH);
+    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, int ledPin = -1, uint8_t ledOn = LOW);
 
     /*
       Writes a buffer to the flash and increments the address
@@ -174,6 +174,9 @@ class UpdateClass {
 
     String _target_md5;
     MD5Builder _md5;
+
+    int _ledPin;
+    uint8_t _ledOn;
 };
 
 extern UpdateClass Update;
