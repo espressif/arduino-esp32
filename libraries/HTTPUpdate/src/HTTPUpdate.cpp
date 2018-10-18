@@ -230,7 +230,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                 }
 
                 if(!spiffs) {
-/* To check
+/* To do
                     uint8_t buf[4];
                     if(tcp->peekBytes(&buf[0], 4) != 4) {
                         log_e("peekBytes magic header failed\n");
