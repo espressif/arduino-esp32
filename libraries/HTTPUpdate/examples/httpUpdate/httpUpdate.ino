@@ -48,7 +48,7 @@ void loop() {
     // On a good connection the LED should flash regularly. On a bad connection the LED will be
     // on much longer than it will be off. Other pins than LED_BUILTIN may be used. The second
     // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
-    httpUpdate.setLedPin(LED_BUILTIN, LOW);
+    // httpUpdate.setLedPin(LED_BUILTIN, LOW);
 
     t_httpUpdate_return ret = httpUpdate.update(client, "http://server/file.bin");
     // Or:
