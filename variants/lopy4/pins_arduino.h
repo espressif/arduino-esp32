@@ -21,7 +21,7 @@
 #define LORA_IO2 23     // GPIO23 - SX1276 IO2 tied by diode to IO0
 
 // Antenna select
-#define ANT_SELECT 16   // GPIO16 - External Antenna Switch
+#define ANT_SELECT 21   // GPIO16 - External Antenna Switch
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
