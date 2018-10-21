@@ -121,20 +121,26 @@ void HTTPClient::clear()
  * @return success bool
  */
 bool HTTPClient::begin(WiFiClient &client, String url) {
-//    end();	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+    if(_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+#endif
 
     _client = &client;
 
     // check for : (http: or https:)
     int index = url.indexOf(':');
     if(index < 0) {
-        log_d("failed to parse protocol\n");
+        log_d("failed to parse protocol");
         return false;
     }
 
     String protocol = url.substring(0, index);
     if(protocol != "http" && protocol != "https") {
-        log_d("unknown protocol '%s'\n", protocol.c_str());
+        log_d("unknown protocol '%s'", protocol.c_str());
         return false;
     }
 
@@ -154,7 +160,13 @@ bool HTTPClient::begin(WiFiClient &client, String url) {
  */
 bool HTTPClient::begin(WiFiClient &client, String host, uint16_t port, String uri, bool https)
 {
-//    end(); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+    if(_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+#endif
 
     _client = &client;
 
@@ -170,7 +182,12 @@ bool HTTPClient::begin(WiFiClient &client, String host, uint16_t port, String ur
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
 bool HTTPClient::begin(String url, const char* CAcert)
 {
-    _transportTraits.reset(nullptr);
+    if(_client && !_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+
     _port = 443;
     if (!beginInternal(url, "https")) {
         return false;
@@ -186,8 +203,12 @@ bool HTTPClient::begin(String url, const char* CAcert)
  */
 bool HTTPClient::begin(String url)
 {
+    if(_client && !_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
 
-    _transportTraits.reset(nullptr);
     _port = 80;
     if (!beginInternal(url, "http")) {
         return begin(url, (const char*)NULL);
@@ -247,6 +268,12 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
 bool HTTPClient::begin(String host, uint16_t port, String uri)
 {
+    if(_client && !_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+
     clear();
     _host = host;
     _port = port;
@@ -258,6 +285,12 @@ bool HTTPClient::begin(String host, uint16_t port, String uri)
 
 bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcert)
 {
+    if(_client && !_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+
     clear();
     _host = host;
     _port = port;
@@ -273,6 +306,12 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
 
 bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcert, const char* cli_cert, const char* cli_key)
 {
+    if(_client && !_tcpDeprecated) {
+        log_d("mix up of new and deprecated api");
+        _canReuse = false;
+        end();
+    }
+
     clear();
     _host = host;
     _port = port;
