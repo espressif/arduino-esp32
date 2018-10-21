@@ -27,6 +27,7 @@
 |Universidad de Granada (Spain)|Lolin D32 Pro|PEAP + MsCHAPv2|Working|
 |Universidad de Granada (Spain)|Lolin D32|PEAP + MsCHAPv2|Working|
 |Universidade Federal de Santa Catarina (Brazil)|xxx|EAP-TTLS + MsCHAPv2|Working|
+|University of Regensburg (Germany)|Lolin32|PEAP + MsCHAPv2|Working|
 
 # Common errors - Switch to Debug mode for Serial monitor prints
 |Error|Appearance|Solution|
