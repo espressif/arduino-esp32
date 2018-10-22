@@ -434,8 +434,8 @@ void HTTPClient::setAuthorization(const char * auth)
 void HTTPClient::setTimeout(uint16_t timeout)
 {
     _tcpTimeout = timeout;
-    if(connected() && !_secure) {
-        _client->setTimeout(timeout);
+    if(connected()) {
+        _client->setTimeout((timeout + 500) / 1000);
     }
 }
 
@@ -686,7 +686,7 @@ int HTTPClient::getSize(void)
  */
 WiFiClient& HTTPClient::getStream(void)
 {
-    if (connected() && !_secure) {
+    if (connected()) {
         return *_client;
     }
 
@@ -965,7 +965,8 @@ bool HTTPClient::connect(void)
         return false;
     }
 
-    _client->setTimeout(_tcpTimeout);	
+    // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
+    _client->setTimeout((_tcpTimeout + 500) / 1000);	
 
     if(!_client->connect(_host.c_str(), _port)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
@@ -983,8 +984,6 @@ bool HTTPClient::connect(void)
 #endif
 
 
-    // set Timeout for readBytesUntil and readStringUntil
-//    setTimeout(_tcpTimeout);
 /*
 #ifdef ESP8266
     _client->setNoDelay(true);
