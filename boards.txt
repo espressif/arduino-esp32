@@ -1665,6 +1665,39 @@ esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
 ##############################################################
 
+esp32-poe.name=OLIMEX ESP32-PoE
+
+esp32-poe.upload.tool=esptool
+esp32-poe.upload.maximum_size=1310720
+esp32-poe.upload.maximum_data_size=327680
+esp32-poe.upload.wait_for_upload_port=true
+
+esp32-poe.serial.disableDTR=true
+esp32-poe.serial.disableRTS=true
+
+esp32-poe.build.mcu=esp32
+esp32-poe.build.core=esp32
+esp32-poe.build.variant=esp32-poe
+esp32-poe.build.board=ESP32_POE
+
+esp32-poe.build.f_cpu=240000000L
+esp32-poe.build.flash_mode=dio
+esp32-poe.build.flash_size=4MB
+esp32-poe.build.boot=dio
+esp32-poe.build.partitions=default
+esp32-poe.build.defines=
+
+esp32-poe.menu.FlashFreq.80=80MHz
+esp32-poe.menu.FlashFreq.80.build.flash_freq=80m
+esp32-poe.menu.FlashFreq.40=40MHz
+esp32-poe.menu.FlashFreq.40.build.flash_freq=40m
+
+
+esp32-poe.menu.UploadSpeed.115200=115200
+esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
+
+##############################################################
+
 espino32.name=ThaiEasyElec's ESPino32
 
 espino32.upload.tool=esptool
