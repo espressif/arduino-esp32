@@ -64,6 +64,7 @@ class Preferences {
         size_t getString(const char* key, char* value, size_t maxLen);
         String getString(const char* key, String defaultValue = String());
         size_t getBytes(const char* key, void * buf, size_t maxLen);
+        size_t freeEntries();
 };
 
 #endif

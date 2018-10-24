@@ -36,9 +36,6 @@
  * This is a AutoIP implementation for the lwIP TCP/IP stack. It aims to conform
  * with RFC 3927.
  *
- *
- * Please coordinate changes and requests with Dominik Spies
- * <kontakt@dspies.de>
  */
 
 #ifndef LWIP_HDR_AUTOIP_H
@@ -50,16 +47,17 @@
 
 #include "lwip/netif.h"
 /* #include "lwip/udp.h" */
-#include "netif/etharp.h"
+#include "lwip/etharp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* AutoIP Timing */
+/** AutoIP Timing */
 #define AUTOIP_TMR_INTERVAL      100
 #define AUTOIP_TICKS_PER_SECOND (1000 / AUTOIP_TMR_INTERVAL)
 
+#if ESP_LWIP
 /* RFC 3927 Constants */
 #define PROBE_WAIT               1   /* second   (initial random delay)                 */
 #define PROBE_MIN                1   /* second   (minimum delay till repeated probe)    */
@@ -77,43 +75,40 @@ extern "C" {
 #define AUTOIP_STATE_PROBING     1
 #define AUTOIP_STATE_ANNOUNCING  2
 #define AUTOIP_STATE_BOUND       3
+#endif
 
+/** AutoIP state information per netif */
 struct autoip
 {
-  ip4_addr_t llipaddr;      /* the currently selected, probed, announced or used LL IP-Address */
-  u8_t state;               /* current AutoIP state machine state */
-  u8_t sent_num;            /* sent number of probes or announces, dependent on state */
-  u16_t ttw;                /* ticks to wait, tick is AUTOIP_TMR_INTERVAL long */
-  u8_t lastconflict;        /* ticks until a conflict can be solved by defending */
-  u8_t tried_llipaddr;      /* total number of probed/used Link Local IP-Addresses */
+  /** the currently selected, probed, announced or used LL IP-Address */
+  ip4_addr_t llipaddr;
+  /** current AutoIP state machine state */
+  u8_t state;
+  /** sent number of probes or announces, dependent on state */
+  u8_t sent_num;
+  /** ticks to wait, tick is AUTOIP_TMR_INTERVAL long */
+  u16_t ttw;
+  /** ticks until a conflict can be solved by defending */
+  u8_t lastconflict;
+  /** total number of probed/used Link Local IP-Addresses */
+  u8_t tried_llipaddr;
 };
 
 
-#define autoip_init() /* Compatibility define, no init needed. */
-
-/** Set a struct autoip allocated by the application to work with */
 void autoip_set_struct(struct netif *netif, struct autoip *autoip);
-
 /** Remove a struct autoip previously set to the netif using autoip_set_struct() */
 #define autoip_remove_struct(netif) do { (netif)->autoip = NULL; } while (0)
-
-/** Start AutoIP client */
 err_t autoip_start(struct netif *netif);
-
-/** Stop AutoIP client */
 err_t autoip_stop(struct netif *netif);
-
-/** Handles every incoming ARP Packet, called by etharp_arp_input */
 void autoip_arp_reply(struct netif *netif, struct etharp_hdr *hdr);
-
-/** Has to be called in loop every AUTOIP_TMR_INTERVAL milliseconds */
 void autoip_tmr(void);
-
-/** Handle a possible change in the network configuration */
 void autoip_network_changed(struct netif *netif);
+u8_t autoip_supplied_address(const struct netif *netif);
 
-/** check if AutoIP supplied netif->ip_addr */
-u8_t autoip_supplied_address(struct netif *netif);
+/* for lwIP internal use by ip4.c */
+u8_t autoip_accept_packet(struct netif *netif, const ip4_addr_t *addr);
+
+#define netif_autoip_data(netif) ((struct autoip*)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_AUTOIP))
 
 #ifdef __cplusplus
 }

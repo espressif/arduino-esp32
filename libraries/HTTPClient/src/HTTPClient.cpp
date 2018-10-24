@@ -252,7 +252,7 @@ void HTTPClient::end(void)
 bool HTTPClient::connected()
 {
     if(_tcp) {
-        return (_tcp->connected() || (_tcp->available() > 0));
+        return ((_tcp->available() > 0) || _tcp->connected());
     }
     return false;
 }

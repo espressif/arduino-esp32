@@ -34,17 +34,25 @@ platform = env.PioPlatform()
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 assert isdir(FRAMEWORK_DIR)
 
-env.Prepend(
-    CPPDEFINES=[
-        ("ARDUINO", 10805),
-        "ARDUINO_ARCH_ESP32",
-        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
-        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
+env.Append(
+    ASFLAGS=["-x", "assembler-with-cpp"],
+
+    CFLAGS=[
+        "-std=gnu99",
+        "-Wno-old-style-declaration"
     ],
 
-    CFLAGS=["-Wno-old-style-declaration"],
-
     CCFLAGS=[
+        "-Os",
+        "-Wall",
+        "-nostdlib",
+        "-Wpointer-arith",
+        "-Wno-error=unused-but-set-variable",
+        "-Wno-error=unused-variable",
+        "-mlongcalls",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fstrict-volatile-bitfields",
         "-Wno-error=deprecated-declarations",
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
@@ -53,9 +61,44 @@ env.Prepend(
         "-fexceptions"
     ],
 
+    CXXFLAGS=[
+        "-fno-rtti",
+        "-fno-exceptions",
+        "-std=gnu++11"
+    ],
+
+    LINKFLAGS=[
+        "-nostdlib",
+        "-Wl,-static",
+        "-u", "call_user_start_cpu0",
+        "-Wl,--undefined=uxTopUsedPriority",
+        "-Wl,--gc-sections",
+        "-Wl,-EL",
+        "-T", "esp32.common.ld",
+        "-T", "esp32.rom.ld",
+        "-T", "esp32.peripherals.ld",
+        "-T", "esp32.rom.spiram_incompatible_fns.ld",
+        "-u", "ld_include_panic_highint_hdl",
+        "-u", "__cxa_guard_dummy",
+        "-u", "__cxx_fatal_exception"
+    ],
+
+    CPPDEFINES=[
+        "ESP32",
+        "ESP_PLATFORM",
+        ("F_CPU", "$BOARD_F_CPU"),
+        "HAVE_CONFIG_H",
+        ("MBEDTLS_CONFIG_FILE", '\\"mbedtls/esp_config.h\\"'),
+        ("ARDUINO", 10805),
+        "ARDUINO_ARCH_ESP32",
+        ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
+    ],
+
     CPPPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bluedroid", "api"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_trace"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "bootloader_support"),
@@ -63,10 +106,15 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_adc_cal"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_http_client"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_ota"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-mqtt"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-tls"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "heap"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "http_server"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "jsmn"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
@@ -77,47 +125,37 @@ env.Prepend(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spi_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "sdmmc"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "smartconfig_ack"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "spiffs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcp_transport"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
+
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
+
     LIBS=[
-        "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "mdns", "vfs", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "expat", "m", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "stdc++"
-    ]
-)
-
-
-env.Append(
-    LIBSOURCE_DIRS=[
-        join(FRAMEWORK_DIR, "libraries")
+        "gcc", "openssl", "btdm_app", "fatfs", "wps", "http_server", "coexist", "wear_levelling", "esp_http_client", "hal", "newlib", "driver", "bootloader_support", "pp", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "tcp_transport", "mdns", "vfs", "esp_ringbuf", "soc", "core", "sdmmc", "coap", "tcpip_adapter", "c_nano", "esp-tls", "asio", "rtc", "spi_flash", "wpa2", "esp32", "app_update", "nghttp", "spiffs", "espnow", "nvs_flash", "esp_adc_cal", "log", "smartconfig_ack", "expat", "m", "mqtt", "c", "heap", "mbedtls", "lwip", "net80211", "pthread", "json", "esp_https_ota", "stdc++"
     ],
 
-    LINKFLAGS=[
-        "-Wl,-EL",
-        "-T", "esp32.common.ld",
-        "-T", "esp32.rom.ld",
-        "-T", "esp32.peripherals.ld",
-        "-T", "esp32.rom.spiram_incompatible_fns.ld",
-        "-u", "ld_include_panic_highint_hdl",
-        "-u", "__cxa_guard_dummy",
-        "-u", "__cxx_fatal_exception"
+    LIBSOURCE_DIRS=[
+        join(FRAMEWORK_DIR, "libraries")
     ],
 
     FLASH_EXTRA_IMAGES=[

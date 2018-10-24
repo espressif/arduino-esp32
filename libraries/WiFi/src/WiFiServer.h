@@ -39,7 +39,7 @@ class WiFiServer : public Server {
     ~WiFiServer(){ end();}
     WiFiClient available();
     WiFiClient accept(){return available();}
-    void begin();
+    void begin(uint16_t port=0);
     void setNoDelay(bool nodelay);
     bool getNoDelay();
     bool hasClient();

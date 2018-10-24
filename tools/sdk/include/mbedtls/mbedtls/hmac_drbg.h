@@ -2,7 +2,8 @@
  * \file hmac_drbg.h
  *
  * \brief HMAC_DRBG (NIST SP 800-90A)
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -26,7 +27,7 @@
 #include "md.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "threading.h"
 #endif
 
 /*

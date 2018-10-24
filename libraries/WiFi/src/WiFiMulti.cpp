@@ -60,13 +60,12 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
             uint8_t bestBSSID[6];
             int32_t bestChannel = 0;
 
-            DEBUG_WIFI_MULTI("[WIFI] scan done\n");
-            delay(0);
+            log_i("[WIFI] scan done");
 
             if(scanResult <= 0) {
-                DEBUG_WIFI_MULTI("[WIFI] no networks found\n");
+                log_e("[WIFI] no networks found");
             } else {
-                DEBUG_WIFI_MULTI("[WIFI] %d networks found\n", scanResult);
+                log_i("[WIFI] %d networks found", scanResult);
                 for(int8_t i = 0; i < scanResult; ++i) {
 
                     String ssid_scan;
@@ -96,24 +95,18 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                     }
 
                     if(known) {
-                        DEBUG_WIFI_MULTI(" ---> ");
+                        log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
                     } else {
-                        DEBUG_WIFI_MULTI("      ");
+                        log_d("       %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
                     }
-
-                    DEBUG_WIFI_MULTI(" %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c\n", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
-                    delay(0);
                 }
             }
 
             // clean up ram
             WiFi.scanDelete();
 
-            DEBUG_WIFI_MULTI("\n\n");
-            delay(0);
-
             if(bestNetwork.ssid) {
-                DEBUG_WIFI_MULTI("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channal: %d (%d)\n", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
+                log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channal: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
 
                 WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
                 status = WiFi.status();
@@ -131,31 +124,31 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 case 3:
                     ip = WiFi.localIP();
                     mac = WiFi.BSSID();
-                    DEBUG_WIFI_MULTI("[WIFI] Connecting done.\n");
-                    DEBUG_WIFI_MULTI("[WIFI] SSID: %s\n", WiFi.SSID());
-                    DEBUG_WIFI_MULTI("[WIFI] IP: %d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
-                    DEBUG_WIFI_MULTI("[WIFI] MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-                    DEBUG_WIFI_MULTI("[WIFI] Channel: %d\n", WiFi.channel());
+                    log_i("[WIFI] Connecting done.");
+                    log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
+                    log_d("[WIFI] IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+                    log_d("[WIFI] MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+                    log_d("[WIFI] Channel: %d", WiFi.channel());
                     break;
                 case 1:
-                    DEBUG_WIFI_MULTI("[WIFI] Connecting Failed AP not found.\n");
+                    log_e("[WIFI] Connecting Failed AP not found.");
                     break;
                 case 4:
-                    DEBUG_WIFI_MULTI("[WIFI] Connecting Failed.\n");
+                    log_e("[WIFI] Connecting Failed.");
                     break;
                 default:
-                    DEBUG_WIFI_MULTI("[WIFI] Connecting Failed (%d).\n", status);
+                    log_e("[WIFI] Connecting Failed (%d).", status);
                     break;
                 }
             } else {
-                DEBUG_WIFI_MULTI("[WIFI] no matching wifi found!\n");
+                log_e("[WIFI] no matching wifi found!");
             }
         } else {
             // start scan
-            DEBUG_WIFI_MULTI("[WIFI] delete old wifi config...\n");
+            log_d("[WIFI] delete old wifi config...");
             WiFi.disconnect();
 
-            DEBUG_WIFI_MULTI("[WIFI] start scan\n");
+            log_d("[WIFI] start scan");
             // scan wifi async mode
             WiFi.scanNetworks(true);
         }
@@ -172,34 +165,34 @@ bool WiFiMulti::APlistAdd(const char* ssid, const char *passphrase)
 
     if(!ssid || *ssid == 0x00 || strlen(ssid) > 31) {
         // fail SSID to long or missing!
-        DEBUG_WIFI_MULTI("[WIFI][APlistAdd] no ssid or ssid to long\n");
+        log_e("[WIFI][APlistAdd] no ssid or ssid to long");
         return false;
     }
 
     if(passphrase && strlen(passphrase) > 63) {
         // fail passphrase to long!
-        DEBUG_WIFI_MULTI("[WIFI][APlistAdd] passphrase to long\n");
+        log_e("[WIFI][APlistAdd] passphrase to long");
         return false;
     }
 
     newAP.ssid = strdup(ssid);
 
     if(!newAP.ssid) {
-        DEBUG_WIFI_MULTI("[WIFI][APlistAdd] fail newAP.ssid == 0\n");
+        log_e("[WIFI][APlistAdd] fail newAP.ssid == 0");
         return false;
     }
 
     if(passphrase && *passphrase != 0x00) {
         newAP.passphrase = strdup(passphrase);
         if(!newAP.passphrase) {
-            DEBUG_WIFI_MULTI("[WIFI][APlistAdd] fail newAP.passphrase == 0\n");
+            log_e("[WIFI][APlistAdd] fail newAP.passphrase == 0");
             free(newAP.ssid);
             return false;
         }
     }
 
     APlist.push_back(newAP);
-    DEBUG_WIFI_MULTI("[WIFI][APlistAdd] add SSID: %s\n", newAP.ssid);
+    log_i("[WIFI][APlistAdd] add SSID: %s", newAP.ssid);
     return true;
 }
 

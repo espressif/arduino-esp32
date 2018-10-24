@@ -1,3 +1,8 @@
+/**
+ * @file
+ * IGMP API
+ */
+
 /*
  * Copyright (c) 2002 CITEL Technologies Ltd.
  * All rights reserved.
@@ -46,17 +51,14 @@
 extern "C" {
 #endif
 
-
 /* IGMP timer */
 #define IGMP_TMR_INTERVAL              100 /* Milliseconds */
 #define IGMP_V1_DELAYING_MEMBER_TMR   (1000/IGMP_TMR_INTERVAL)
 #define IGMP_JOIN_DELAYING_MEMBER_TMR (500 /IGMP_TMR_INTERVAL)
 
-/* MAC Filter Actions, these are passed to a netif's
- * igmp_mac_filter callback function. */
-#define IGMP_DEL_MAC_FILTER            0
-#define IGMP_ADD_MAC_FILTER            1
-
+/* Compatibility defines (don't use for new code) */
+#define IGMP_DEL_MAC_FILTER            NETIF_DEL_MAC_FILTER
+#define IGMP_ADD_MAC_FILTER            NETIF_ADD_MAC_FILTER
 
 /**
  * igmp group structure - there is
@@ -70,10 +72,8 @@ extern "C" {
  * from all the other groups
  */
 struct igmp_group {
-    /** next link */
+  /** next link */
   struct igmp_group *next;
-  /** interface on which the group is active */
-  struct netif      *netif;
   /** multicast address */
   ip4_addr_t         group_address;
   /** signifies we were the last person to report */
@@ -83,7 +83,7 @@ struct igmp_group {
   /** timer for reporting, negative is OFF */
   u16_t              timer;
   /** counter of simultaneous uses */
-  u8_t               use; 
+  u8_t               use;
 };
 
 /*  Prototypes */
@@ -98,6 +98,13 @@ err_t  igmp_joingroup_netif(struct netif *netif, const ip4_addr_t *groupaddr);
 err_t  igmp_leavegroup(const ip4_addr_t *ifaddr, const ip4_addr_t *groupaddr);
 err_t  igmp_leavegroup_netif(struct netif *netif, const ip4_addr_t *groupaddr);
 void   igmp_tmr(void);
+
+/** @ingroup igmp 
+ * Get list head of IGMP groups for netif.
+ * Note: The allsystems group IP is contained in the list as first entry.
+ * @see @ref netif_set_igmp_mac_filter()
+ */
+#define netif_igmp_data(netif) ((struct igmp_group *)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_IGMP))
 
 #ifdef __cplusplus
 }

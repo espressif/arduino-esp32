@@ -81,6 +81,7 @@ void WiFiClientSecure::stop()
         close(sslclient->socket);
         sslclient->socket = -1;
         _connected = false;
+        _peek = -1;
     }
     stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
 }
@@ -105,7 +106,7 @@ int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_c
     int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key);
     _lastError = ret;
     if (ret < 0) {
-        log_e("lwip_connect_r: %d", errno);
+        log_e("start_ssl_client: %d", ret);
         stop();
         return 0;
     }
@@ -117,7 +118,7 @@ int WiFiClientSecure::peek(){
     if(_peek >= 0){
         return _peek;
     }
-    _peek = read();
+    _peek = timedRead();
     return _peek;
 }
 
@@ -158,21 +159,30 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
 
 int WiFiClientSecure::read(uint8_t *buf, size_t size)
 {
-    if(_peek >= 0){
-        uint8_t data = -1;
-        data = _peek;
-        _peek = -1;
-        return data;
-    }
-    
-    if (!available()) {
+    int peeked = 0;
+    if ((!buf && size) || (_peek < 0 && !available())) {
         return -1;
     }
+    if(!size){
+        return 0;
+    }
+    if(_peek >= 0){
+        buf[0] = _peek;
+        _peek = -1;
+        size--;
+        if(!size || !available()){
+            return 1;
+        }
+        buf++;
+        peeked = 1;
+    }
+    
     int res = get_ssl_receive(sslclient, buf, size);
     if (res < 0) {
         stop();
+        return res;
     }
-    return res;
+    return res + peeked;
 }
 
 int WiFiClientSecure::available()
@@ -183,7 +193,9 @@ int WiFiClientSecure::available()
     int res = data_to_read(sslclient);
     if (res < 0 ) {
         stop();
-    }    
+    } else if(_peek >= 0) {
+        res += 1;
+    }
     return res;
 }
 

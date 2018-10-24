@@ -26,10 +26,10 @@
 
 #if (BLE_INCLUDED == TRUE && SMP_INCLUDED == TRUE)
 
-#include "btu.h"
-#include "btm_ble_api.h"
-#include "btm_api.h"
-#include "smp_api.h"
+#include "stack/btu.h"
+#include "stack/btm_ble_api.h"
+#include "stack/btm_api.h"
+#include "stack/smp_api.h"
 
 #define SMP_MODEL_ENCRYPTION_ONLY  0   /* Legacy mode, Just Works model */
 #define SMP_MODEL_PASSKEY       1   /* Legacy mode, Passkey Entry model, this side inputs the key */
@@ -131,6 +131,8 @@ typedef UINT8 tSMP_EVENT;
 
 /* Assumption it's only using the low 8 bits, if bigger than that, need to expand it to 16 bits */
 #define SMP_SEC_KEY_MASK                    0x00ff
+
+#define SMP_PASSKEY_MASK    0xfff00000
 
 /* SMP pairing state */
 enum {
@@ -331,6 +333,8 @@ typedef struct {
     UINT8           rcvd_cmd_len;
     UINT16          total_tx_unacked;
     BOOLEAN         wait_for_authorization_complete;
+    BOOLEAN         use_static_passkey;
+    UINT32          static_passkey;
 } tSMP_CB;
 
 /* Server Action functions are of this type */

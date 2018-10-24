@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal.h"
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -22,7 +21,9 @@
 #include "esp_partition.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "esp_bt.h"
 #include <sys/time.h>
+#include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
@@ -75,8 +76,17 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+#ifdef CONFIG_BT_ENABLED
+//overwritten in esp32-hal-bt.c
+bool btInUse() __attribute__((weak));
+bool btInUse(){ return false; }
+#endif
+
 void initArduino()
 {
+#if CONFIG_SPIRAM_SUPPORT
+    psramInit();
+#endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
     if(err == ESP_ERR_NVS_NO_FREE_PAGES){
@@ -93,6 +103,11 @@ void initArduino()
     if(err) {
         log_e("Failed to initialize NVS! Error: %u", err);
     }
+#ifdef CONFIG_BT_ENABLED
+    if(!btInUse()){
+        esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    }
+#endif
     init();
     initVariant();
 }

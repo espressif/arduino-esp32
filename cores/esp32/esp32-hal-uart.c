@@ -80,7 +80,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
-        while(uart->dev->status.rxfifo_cnt) {
+        while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
             if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
@@ -240,6 +240,26 @@ void uartEnd(uart_t* uart)
     uartDetachTx(uart);
 }
 
+size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    if(uart->queue != NULL) {
+        uint8_t c;
+        while(xQueueReceive(uart->queue, &c, 0));
+        vQueueDelete(uart->queue);
+        uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
+        if(uart->queue == NULL) {
+            return NULL;
+        }
+    }
+    UART_MUTEX_UNLOCK();
+
+    return new_size;
+}
+
 uint32_t uartAvailable(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
@@ -315,11 +335,14 @@ void uartFlush(uart_t* uart)
     UART_MUTEX_LOCK();
     while(uart->dev->status.txfifo_cnt);
 
-    uart->dev->conf0.txfifo_rst = 1;
-    uart->dev->conf0.txfifo_rst = 0;
+    //Due to hardware issue, we can not use fifo_rst to reset uart fifo.
+    //See description about UART_TXFIFO_RST and UART_RXFIFO_RST in <<esp32_technical_reference_manual>> v2.6 or later.
 
-    uart->dev->conf0.rxfifo_rst = 1;
-    uart->dev->conf0.rxfifo_rst = 0;
+    // we read the data out and make `fifo_len == 0 && rd_addr == wr_addr`.
+    while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+        READ_PERI_REG(UART_FIFO_REG(uart->num));
+    }
+
     UART_MUTEX_UNLOCK();
 }
 

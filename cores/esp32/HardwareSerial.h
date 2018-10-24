@@ -70,6 +70,7 @@ public:
     uint32_t baudRate();
     operator bool() const;
 
+    size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
 
 protected:
@@ -79,6 +80,8 @@ protected:
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern HardwareSerial Serial;
+extern HardwareSerial Serial1;
+extern HardwareSerial Serial2;
 #endif
 
 #endif

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * 6LowPAN options list
+ */
+
 /*
  * Copyright (c) 2015 Inico Technologies Ltd.
  * All rights reserved.
