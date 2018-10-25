@@ -20,8 +20,10 @@
 #define LORA_IO1 23     // GPIO23 - SX1276 IO1 tied by diode to IO0
 #define LORA_IO2 23     // GPIO23 - SX1276 IO2 tied by diode to IO0
 
-// Antenna select
-#define ANT_SELECT 21   // GPIO16 - External Antenna Switch
+static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
+#define ANT_SELECT 21   // GPIO21 - External Antenna Switch
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -31,7 +33,7 @@ static const uint8_t SCL = 13;
  
 static const uint8_t MOSI  = 22;
 static const uint8_t MISO  = 37;
-static const uint8_t SCK   = 5;
+static const uint8_t SCK   = 13;
 
 static const uint8_t A0 = 36;
 static const uint8_t A1 = 37;
