@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        24
+#define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       18
 
 #define analogInputToDigitalPin(p)  (((p)<40)?(esp32_adc2gpio[(p)]):-1)
