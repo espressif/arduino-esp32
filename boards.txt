@@ -2509,8 +2509,8 @@ lopy4.serial.disableRTS=true
 
 lopy4.build.mcu=esp32
 lopy4.build.core=esp32
-lopy4.build.variant=lopy
-lopy4.build.board=LoPy
+lopy4.build.variant=lopy4
+lopy4.build.board=LoPy4
 
 lopy4.build.f_cpu=240000000L
 lopy4.build.flash_mode=dio
