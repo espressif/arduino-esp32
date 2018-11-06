@@ -101,5 +101,6 @@ void loop() {
    Serial.println(line);
   }else{
       Serial.println("Connection unsucessful");
-    }  
+    }
+  delay(5000);
 }
