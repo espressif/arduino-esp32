@@ -60,6 +60,5 @@ static const uint8_t D10 = 1;
 // OLed
 static const uint8_t OLED_SCL = SCL;
 static const uint8_t OLED_SDA = SDA;
-static const uint8_t OLED_RST = 15;
 
 #endif /* Pins_Arduino_h */
