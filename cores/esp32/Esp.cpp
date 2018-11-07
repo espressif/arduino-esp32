@@ -168,7 +168,7 @@ uint32_t EspClass::getSketchSize () {
     return sketchSize(SKETCH_SIZE_TOTAL);
 }
 
-uint32_t EspClass::getFreeSketchSize () {
+uint32_t EspClass::getFreeSketchSpace () {
     return sketchSize(SKETCH_SIZE_FREE);
 }
 

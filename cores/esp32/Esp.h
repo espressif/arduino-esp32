@@ -90,7 +90,7 @@ public:
     FlashMode_t magicFlashChipMode(uint8_t byte);
 
     uint32_t getSketchSize();
-    uint32_t getFreeSketchSize();
+    uint32_t getFreeSketchSpace();
 
     bool flashEraseSector(uint32_t sector);
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
