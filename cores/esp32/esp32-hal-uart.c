@@ -242,7 +242,7 @@ void uartEnd(uart_t* uart)
 
 size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
     if(uart == NULL) {
-        return;
+        return 0;
     }
 
     UART_MUTEX_LOCK();
