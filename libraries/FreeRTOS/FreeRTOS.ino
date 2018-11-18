@@ -22,7 +22,7 @@ void setup() {
   xTaskCreatePinnedToCore(
     TaskBlink
     ,  "TaskBlink"   // A name just for humans
-    ,  128  // This stack size can be checked & adjusted by reading the Stack Highwater
+    ,  1024  // This stack size can be checked & adjusted by reading the Stack Highwater
     ,  NULL
     ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     ,  NULL 
@@ -31,7 +31,7 @@ void setup() {
   xTaskCreatePinnedToCore(
     TaskAnalogReadA3
     ,  "AnalogReadA3"
-    ,  128  // Stack size
+    ,  1024  // Stack size
     ,  NULL
     ,  1  // Priority
     ,  NULL 
@@ -81,7 +81,7 @@ void TaskAnalogReadA3(void *pvParameters)  // This is a task.
   AnalogReadSerial
   Reads an analog input on pin A3, prints the result to the serial monitor.
   Graphical representation is available using serial plotter (Tools > Serial Plotter menu)
-  Attach the center pin of a potentiometer to pin A#, and the outside pins to +5V and ground.
+  Attach the center pin of a potentiometer to pin A3, and the outside pins to +5V and ground.
 
   This example code is in the public domain.
 */
