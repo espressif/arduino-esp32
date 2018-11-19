@@ -2480,6 +2480,77 @@ t-beam.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+d-duino-32.name=D-duino-32
+
+d-duino-32.upload.tool=esptool
+d-duino-32.upload.maximum_size=1310720
+d-duino-32.upload.maximum_data_size=327680
+d-duino-32.upload.wait_for_upload_port=true
+
+d-duino-32.serial.disableDTR=true
+d-duino-32.serial.disableRTS=true
+
+d-duino-32.build.mcu=esp32
+d-duino-32.build.core=esp32
+d-duino-32.build.variant=d-duino-32
+d-duino-32.build.board=D-duino-32
+
+d-duino-32.build.f_cpu=240000000L
+d-duino-32.build.flash_size=4MB
+d-duino-32.build.flash_freq=40m
+d-duino-32.build.flash_mode=dio
+d-duino-32.build.boot=dio
+d-duino-32.build.partitions=default
+d-duino-32.build.defines=
+
+d-duino-32.menu.PartitionScheme.default=Default
+d-duino-32.menu.PartitionScheme.default.build.partitions=default
+d-duino-32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+d-duino-32.menu.PartitionScheme.minimal.build.partitions=minimal
+d-duino-32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+d-duino-32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+d-duino-32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+d-duino-32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+d-duino-32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+d-duino-32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+d-duino-32.menu.PartitionScheme.fatflash=16M Fat
+d-duino-32.menu.PartitionScheme.fatflash.build.partitions=ffat
+
+d-duino-32.menu.FlashFreq.80=80MHz
+d-duino-32.menu.FlashFreq.80.build.flash_freq=80m
+d-duino-32.menu.FlashFreq.40=40MHz
+d-duino-32.menu.FlashFreq.40.build.flash_freq=40m
+
+d-duino-32.menu.UploadSpeed.921600=921600
+d-duino-32.menu.UploadSpeed.921600.upload.speed=921600
+d-duino-32.menu.UploadSpeed.115200=115200
+d-duino-32.menu.UploadSpeed.115200.upload.speed=115200
+d-duino-32.menu.UploadSpeed.256000.windows=256000
+d-duino-32.menu.UploadSpeed.256000.upload.speed=256000
+d-duino-32.menu.UploadSpeed.230400.windows.upload.speed=256000
+d-duino-32.menu.UploadSpeed.230400=230400
+d-duino-32.menu.UploadSpeed.230400.upload.speed=230400
+d-duino-32.menu.UploadSpeed.460800.linux=460800
+d-duino-32.menu.UploadSpeed.460800.macosx=460800
+d-duino-32.menu.UploadSpeed.460800.upload.speed=460800
+d-duino-32.menu.UploadSpeed.512000.windows=512000
+d-duino-32.menu.UploadSpeed.512000.upload.speed=512000
+
+d-duino-32.menu.DebugLevel.none=None
+d-duino-32.menu.DebugLevel.none.build.code_debug=0
+d-duino-32.menu.DebugLevel.error=Error
+d-duino-32.menu.DebugLevel.error.build.code_debug=1
+d-duino-32.menu.DebugLevel.warn=Warn
+d-duino-32.menu.DebugLevel.warn.build.code_debug=2
+d-duino-32.menu.DebugLevel.info=Info
+d-duino-32.menu.DebugLevel.info.build.code_debug=3
+d-duino-32.menu.DebugLevel.debug=Debug
+d-duino-32.menu.DebugLevel.debug.build.code_debug=4
+d-duino-32.menu.DebugLevel.verbose=Verbose
+d-duino-32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 lopy.name=LoPy
 
 lopy.upload.tool=esptool
@@ -2594,5 +2665,3 @@ lopy4.menu.DebugLevel.debug=Debug
 lopy4.menu.DebugLevel.debug.build.code_debug=4
 lopy4.menu.DebugLevel.verbose=Verbose
 lopy4.menu.DebugLevel.verbose.build.code_debug=5
-
-
