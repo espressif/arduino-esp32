@@ -50,6 +50,7 @@ static xQueueHandle _spp_tx_queue = NULL;
 static SemaphoreHandle_t _spp_tx_done = NULL;
 static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
+static boolean secondConnectionAttempt;
 
 #define SPP_RUNNING     0x01
 #define SPP_CONNECTED   0x02
@@ -162,13 +163,22 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
 
     case ESP_SPP_SRV_OPEN_EVT://Server connection open
-        _spp_client = param->open.handle;
+        if (!_spp_client){
+            _spp_client = param->open.handle;
+        } else {
+            secondConnectionAttempt = true;
+            esp_spp_disconnect(param->open.handle);
+        }
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         log_i("ESP_SPP_SRV_OPEN_EVT");
         break;
 
     case ESP_SPP_CLOSE_EVT://Client connection closed
-        _spp_client = 0;
+        if(secondConnectionAttempt) {
+            secondConnectionAttempt = false;
+        } else {
+            _spp_client = 0;
+        }
         xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
         log_i("ESP_SPP_CLOSE_EVT");
         break;

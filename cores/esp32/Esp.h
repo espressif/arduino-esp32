@@ -50,6 +50,11 @@ typedef enum {
     FM_UNKNOWN = 0xff
 } FlashMode_t;
 
+typedef enum {
+    SKETCH_SIZE_TOTAL = 0,
+    SKETCH_SIZE_FREE = 1
+} sketchSize_t;
+
 class EspClass
 {
 public:
@@ -83,6 +88,9 @@ public:
     uint32_t magicFlashChipSize(uint8_t byte);
     uint32_t magicFlashChipSpeed(uint8_t byte);
     FlashMode_t magicFlashChipMode(uint8_t byte);
+
+    uint32_t getSketchSize();
+    uint32_t getFreeSketchSpace();
 
     bool flashEraseSector(uint32_t sector);
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);

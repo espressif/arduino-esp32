@@ -37,8 +37,7 @@ extern "C" {
  */
 String base64::encode(uint8_t * data, size_t length)
 {
-    // base64 needs more size then the source data
-    size_t size = ((length * 1.6f) + 1);
+    size_t size = base64_encode_expected_len(length) + 1;
     char * buffer = (char *) malloc(size);
     if(buffer) {
         base64_encodestate _state;

@@ -94,25 +94,28 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     if(!WiFi.enableAP(true)) {
         // enable AP failed
+        log_e("enable AP first!");
         return false;
     }
 
-    if(!ssid || *ssid == 0 || strlen(ssid) > 31) {
-        // fail SSID too long or missing!
+    if(!ssid || *ssid == 0) {
+        // fail SSID missing
+        log_e("SSID missing!");
         return false;
     }
 
-    if(passphrase && (strlen(passphrase) > 63 || strlen(passphrase) < 8)) {
-        // fail passphrase to long or short!
+    if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
+        // fail passphrase too short
+        log_e("passphrase too short!");
         return false;
     }
 
     esp_wifi_start();
 
     wifi_config_t conf;
-    strcpy(reinterpret_cast<char*>(conf.ap.ssid), ssid);
+    strlcpy(reinterpret_cast<char*>(conf.ap.ssid), ssid, sizeof(conf.ap.ssid));
     conf.ap.channel = channel;
-    conf.ap.ssid_len = strlen(ssid);
+    conf.ap.ssid_len = strlen(reinterpret_cast<char *>(conf.ap.ssid));
     conf.ap.ssid_hidden = ssid_hidden;
     conf.ap.max_connection = max_connection;
     conf.ap.beacon_interval = 100;
@@ -122,7 +125,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
         *conf.ap.password = 0;
     } else {
         conf.ap.authmode = WIFI_AUTH_WPA2_PSK;
-        strcpy(reinterpret_cast<char*>(conf.ap.password), passphrase);
+        strlcpy(reinterpret_cast<char*>(conf.ap.password), passphrase, sizeof(conf.ap.password));
     }
 
     wifi_config_t conf_current;

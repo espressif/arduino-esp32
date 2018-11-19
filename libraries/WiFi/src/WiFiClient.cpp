@@ -240,6 +240,7 @@ int WiFiClient::setSocketOption(int option, char* value, size_t len)
 
 int WiFiClient::setTimeout(uint32_t seconds)
 {
+    Client::setTimeout(seconds * 1000);
     struct timeval tv;
     tv.tv_sec = seconds;
     tv.tv_usec = 0;

@@ -260,6 +260,7 @@ public:
     // parsing/conversion
     long toInt(void) const;
     float toFloat(void) const;
+    double toDouble(void) const;
 
 protected:
     char *buffer;	        // the actual char array

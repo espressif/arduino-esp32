@@ -882,6 +882,12 @@ float String::toFloat(void) const
     return 0;
 }
 
+double String::toDouble(void) const {
+    if (buffer) {
+        return atof(buffer);    
+    }
+    return 0;
+}
 
 unsigned char String::equalsConstantTime(const String &s2) const {
     // To avoid possible time-based attacks present function
