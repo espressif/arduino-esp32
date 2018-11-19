@@ -242,7 +242,7 @@ void uartEnd(uart_t* uart)
 
 size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
     if(uart == NULL) {
-        return;
+        return 0;
     }
 
     UART_MUTEX_LOCK();
@@ -454,4 +454,66 @@ int log_printf(const char *format, ...)
         free(temp);
     }
     return len;
+}
+
+/*
+ * if enough pulses are detected return the minimum high pulse duration + minimum low pulse duration divided by two. 
+ * This equals one bit period. If flag is true the function return inmediately, otherwise it waits for enough pulses.
+ */
+unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
+{
+    while(uart->dev->rxd_cnt.edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
+        if(flg) return 0;
+        ets_delay_us(1000);
+    }
+
+    UART_MUTEX_LOCK();
+    unsigned long ret = ((uart->dev->lowpulse.min_cnt + uart->dev->highpulse.min_cnt) >> 1) + 12;
+    UART_MUTEX_UNLOCK();
+
+    return ret;
+}
+
+/*
+ * To start detection of baud rate with the uart the auto_baud.en bit needs to be cleared and set. The bit period is 
+ * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
+ * rounded to the closed real baudrate.
+*/
+unsigned long
+uartDetectBaudrate(uart_t *uart)
+{
+    static bool uartStateDetectingBaudrate = false;
+
+    if(!uartStateDetectingBaudrate) {
+        uart->dev->auto_baud.glitch_filt = 0x08;
+        uart->dev->auto_baud.en = 0;
+        uart->dev->auto_baud.en = 1;
+        uartStateDetectingBaudrate = true;
+    }
+
+    unsigned long divisor = uartBaudrateDetect(uart, true);
+    if (!divisor) {
+        return 0;
+    }
+
+    uart->dev->auto_baud.en = 0;
+    uartStateDetectingBaudrate = false; // Initialize for the next round
+
+    unsigned long baudrate = UART_CLK_FREQ / divisor;
+
+    static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
+
+    size_t i;
+    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)	// find the nearest real baudrate
+    {
+        if (baudrate <= default_rates[i])
+        {
+            if (baudrate - default_rates[i - 1] < default_rates[i] - baudrate) {
+                i--;
+            }
+            break;
+        }
+    }
+
+    return default_rates[i];
 }
