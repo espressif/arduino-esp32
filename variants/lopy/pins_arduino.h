@@ -7,22 +7,32 @@
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       18
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<40)?(esp32_adc2gpio[(p)]):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
+
+// SPI LoRa Radio
+#define LORA_SCK 5      // GPIO5  - SX1276 SCK
+#define LORA_MISO 19    // GPIO19 - SX1276 MISO
+#define LORA_MOSI 27    // GPIO27 - SX1276 MOSI
+#define LORA_CS 17      // GPIO17 - SX1276 CS
+#define LORA_RST 18     // GPIO18 - SX1276 RST
+#define LORA_IO0 23     // GPIO23 - SX1276 IO0
+#define LORA_IO1 23     // GPIO23 - SX1276 IO1 tied by diode to IO0
+#define LORA_IO2 23     // GPIO23 - SX1276 IO2 tied by diode to IO0
 
 static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
-#define ANT_SELECT 21   // GPIO21 - External Antenna Switch
+#define ANT_SELECT 16   // GPIO16 - External Antenna Switch
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t SDA = 12;
 static const uint8_t SCL = 13;
-
-static const uint8_t SS    = 2;
+ 
+static const uint8_t SS    = 17;
 static const uint8_t MOSI  = 22;
 static const uint8_t MISO  = 37;
 static const uint8_t SCK   = 13;
@@ -40,7 +50,7 @@ static const uint8_t A11 = 0;
 static const uint8_t A12 = 2;
 static const uint8_t A13 = 15;
 static const uint8_t A14 = 13;
-static const uint8_t A15 = 12;
+static const uint8_t A14 = 12;
 static const uint8_t A16 = 14;
 static const uint8_t A17 = 27;
 static const uint8_t A18 = 25;
