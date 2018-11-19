@@ -509,6 +509,11 @@ void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, 
   send(200, contentType, "");
 }
 
+String WebServer::pathArg(unsigned int i) { 
+  if (_currentHandler != nullptr)
+    return _currentHandler->pathArg(i);
+  return "";
+}
 
 String WebServer::arg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {

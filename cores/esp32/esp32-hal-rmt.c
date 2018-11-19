@@ -46,8 +46,8 @@
 #define _INT_THR_EVNT(channel)  ((__INT_THR_EVNT)<<(channel))
 
 #if CONFIG_DISABLE_HAL_LOCKS
-# define UART_MUTEX_LOCK(channel)
-# define UART_MUTEX_UNLOCK(channel)
+# define RMT_MUTEX_LOCK(channel)
+# define RMT_MUTEX_UNLOCK(channel)
 #else
 # define RMT_MUTEX_LOCK(channel)    do {} while (xSemaphoreTake(g_rmt_objlocks[channel], portMAX_DELAY) != pdPASS)
 # define RMT_MUTEX_UNLOCK(channel)  xSemaphoreGive(g_rmt_objlocks[channel])

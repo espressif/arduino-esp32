@@ -17,14 +17,13 @@ static const uint8_t BUTTON_A = 35;
 static const uint8_t BUTTON_B = 27;
 
 static const uint8_t RGB_LED = 4;
-static const uint8_t RGB_LED_POWER = 2;
 
 static const uint8_t LIGHT_SENSOR1 = 36;
 static const uint8_t LIGHT_SENSOR2 = 39;
 
 static const uint8_t TEMPERATURE_SENSOR = 34;
 
-static const uint8_t MPU9250_AD0 = 0;
+static const uint8_t MPU9250_INT = 0;
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -35,7 +34,7 @@ static const uint8_t SCL = 22;
 static const uint8_t SS = 5;
 static const uint8_t MOSI = 23;
 static const uint8_t MISO = 19;
-static const uint8_t SCK = 23;
+static const uint8_t SCK = 18;
 
 static const uint8_t P0 = 25;
 static const uint8_t P1 = 32;

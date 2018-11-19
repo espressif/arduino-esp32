@@ -58,6 +58,9 @@ public:
     void setCACert(const char *rootCA);
     void setCertificate(const char *client_ca);
     void setPrivateKey (const char *private_key);
+    bool loadCACert(Stream& stream, size_t size);
+    bool loadCertificate(Stream& stream, size_t size);
+    bool loadPrivateKey(Stream& stream, size_t size);
     bool verify(const char* fingerprint, const char* domain_name);
 
     operator bool()
@@ -83,6 +86,9 @@ public:
     {
         return sslclient->socket = -1;
     }
+
+private:
+    char *_streamLoad(Stream& stream, size_t size);
 
     //friend class WiFiServer;
     using Print::write;
