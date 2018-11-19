@@ -1175,6 +1175,10 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                 if(readBytes > buff_size) {
                     readBytes = buff_size;
                 }
+		    
+		// stop if no more reading    
+		if (readBytes == 0)
+			break;
 
                 // read data
                 int bytesRead = _client->readBytes(buff, readBytes);
