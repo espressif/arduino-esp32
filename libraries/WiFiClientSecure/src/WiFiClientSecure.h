@@ -62,6 +62,7 @@ public:
     bool loadCertificate(Stream& stream, size_t size);
     bool loadPrivateKey(Stream& stream, size_t size);
     bool verify(const char* fingerprint, const char* domain_name);
+    void setHandshakeTimeout(unsigned long handshake_timeout);
 
     operator bool()
     {

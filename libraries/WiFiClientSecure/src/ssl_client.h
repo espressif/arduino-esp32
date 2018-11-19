@@ -23,6 +23,8 @@ typedef struct sslclient_context {
     mbedtls_x509_crt ca_cert;
     mbedtls_x509_crt client_cert;
     mbedtls_pk_context client_key;
+
+    unsigned long handshake_timeout;
 } sslclient_context;
 
 

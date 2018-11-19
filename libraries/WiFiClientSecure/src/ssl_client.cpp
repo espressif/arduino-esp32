@@ -163,7 +163,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             return handle_error(ret);
         }
-        if((millis()-handshake_start_time)>120000)
+        if((millis()-handshake_start_time)>ssl_client->handshake_timeout)
 			return -1;
 	    vTaskDelay(10 / portTICK_PERIOD_MS);
     }
