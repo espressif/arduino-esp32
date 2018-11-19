@@ -68,10 +68,10 @@ static const uint8_t T4 = 13;
 static const uint8_t T5 = 12;
 static const uint8_t T6 = 14;
 static const uint8_t T7 = 27;
-static const uint8_t T8 = 32;
-static const uint8_t T9 = 33;
+static const uint8_t T8 = 33;
+static const uint8_t T9 = 32;
 
-static const uint8_t DAC1 = 26;
-static const uint8_t DAC2 = 25;
+static const uint8_t DAC1 = 25;
+static const uint8_t DAC2 = 26;
 
 #endif /* Pins_Arduino_h */
