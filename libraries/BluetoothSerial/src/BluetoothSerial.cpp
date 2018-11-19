@@ -50,6 +50,7 @@ static xQueueHandle _spp_tx_queue = NULL;
 static SemaphoreHandle_t _spp_tx_done = NULL;
 static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
+static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
 
 #define SPP_RUNNING     0x01
