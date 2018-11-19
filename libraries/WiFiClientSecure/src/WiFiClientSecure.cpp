@@ -289,5 +289,5 @@ int WiFiClientSecure::lastError(char *buf, const size_t size)
 
 void WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
 {
-    sslclient->handshake_timeout = handshake_timeout;
+    sslclient->handshake_timeout = handshake_timeout * 1000;
 }
