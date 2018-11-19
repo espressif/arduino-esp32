@@ -333,7 +333,7 @@ void uartFlush(uart_t* uart)
     }
 
     UART_MUTEX_LOCK();
-    while(uart->dev->status.txfifo_cnt);
+    while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
 
     //Due to hardware issue, we can not use fifo_rst to reset uart fifo.
     //See description about UART_TXFIFO_RST and UART_RXFIFO_RST in <<esp32_technical_reference_manual>> v2.6 or later.
