@@ -230,6 +230,51 @@ bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
     return verify_ssl_fingerprint(sslclient, fp, domain_name);
 }
 
+char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
+  char *dest = (char*)malloc(size);
+  if (!dest) {
+    return nullptr;
+  }
+  if (size != stream.readBytes(dest, size)) {
+    free(dest);
+    return nullptr;
+  }
+  char ret[size+1];
+  snprintf(ret, size, "%s", dest);
+  free(dest);
+  return ret;
+}
+
+bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setCACert(dest);
+    ret = true;
+  }
+  return ret;
+}
+
+bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setCertificate(dest);
+    ret = true;
+  }
+  return ret;
+}
+
+bool WiFiClientSecure::loadPrivateKey(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setPrivateKey(dest);
+    ret = true;
+  }
+  return ret;
+}
+
 int WiFiClientSecure::lastError(char *buf, const size_t size)
 {
     if (!_lastError) {
