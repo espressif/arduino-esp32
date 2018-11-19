@@ -25,20 +25,11 @@
 #include <memory>
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
-
-/* Main header of binary image */
-typedef struct {
-    uint8_t magic;
-    uint8_t segment_count;
-    uint8_t spi_mode;      /* flash read mode (esp_image_spi_mode_t as uint8_t) */
-    uint8_t spi_speed: 4;  /* flash frequency (esp_image_spi_freq_t as uint8_t) */
-    uint8_t spi_size: 4;   /* flash chip size (esp_image_flash_size_t as uint8_t) */
-    uint32_t entry_addr;
-    uint8_t encrypt_flag;    /* encrypt flag */
-    uint8_t extra_header[15]; /* ESP32 additional header, unused by second bootloader */
-} esp_image_header_t;
-
-#define ESP_IMAGE_HEADER_MAGIC 0xE9
+#include <esp_partition.h>
+#include <esp_ota_ops.h>
+extern "C" {
+#include <esp_image_format.h>
+}
 
 /**
  * User-defined Literals
@@ -154,6 +145,31 @@ uint32_t EspClass::getMinFreePsram(void)
 uint32_t EspClass::getMaxAllocPsram(void)
 {
     return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+}
+
+static uint32_t sketchSize(sketchSize_t response) {
+    esp_image_metadata_t data;
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    if (!running) return 0;
+    const esp_partition_pos_t running_pos  = {
+        .offset = running->address,
+        .size = running->size,
+    };
+    data.start_addr = running_pos.offset;
+    esp_image_load(ESP_IMAGE_VERIFY, &running_pos, &data);
+    if (response) {
+    return running_pos.size - data.image_len;
+    } else {
+    return data.image_len;
+    }
+}
+    
+uint32_t EspClass::getSketchSize () {
+    return sketchSize(SKETCH_SIZE_TOTAL);
+}
+
+uint32_t EspClass::getFreeSketchSpace () {
+    return sketchSize(SKETCH_SIZE_FREE);
 }
 
 uint8_t EspClass::getChipRevision(void)
