@@ -1791,8 +1791,8 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 m5stack-fire.name=M5Stack-FIRE
 
 m5stack-fire.upload.tool=esptool
-m5stack-fire.upload.maximum_size=1310720
-m5stack-fire.upload.maximum_data_size=327680
+m5stack-fire.upload.maximum_size=6553600
+m5stack-fire.upload.maximum_data_size=4521984
 m5stack-fire.upload.wait_for_upload_port=true
 
 m5stack-fire.serial.disableDTR=true
@@ -1808,13 +1808,19 @@ m5stack-fire.build.flash_size=16MB
 m5stack-fire.build.flash_freq=80m
 m5stack-fire.build.flash_mode=dio
 m5stack-fire.build.boot=dio
-m5stack-fire.build.partitions=default
+m5stack-fire.build.partitions=default_16MB
 m5stack-fire.build.defines=
 
 m5stack-fire.menu.PSRAM.enabled=Enabled
 m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 m5stack-fire.menu.PSRAM.disabled=Disabled
 m5stack-fire.menu.PSRAM.disabled.build.defines=
+
+m5stack-fire.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
+m5stack-fire.menu.PartitionScheme.default.build.partitions=default_16MB
+m5stack-fire.menu.PartitionScheme.large_spiffs=Large SPIFFS (7 MB)
+m5stack-fire.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+m5stack-fire.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
 
 m5stack-fire.menu.UploadSpeed.921600=921600
 m5stack-fire.menu.UploadSpeed.921600.upload.speed=921600
