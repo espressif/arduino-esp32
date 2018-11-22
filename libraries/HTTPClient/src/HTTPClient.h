@@ -208,7 +208,7 @@ protected:
     std::unique_ptr<WiFiClient> _tcpDeprecated;
 #endif
 
-    WiFiClient* _client;
+    WiFiClient* _client = nullptr;
 
     /// request handling
     String _host;
