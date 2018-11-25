@@ -22,24 +22,10 @@
 #include "esp_err.h"
 
 typedef enum {
-    ESP_SPIRAM_VOLT_3V3 = 0,       /*!< SPI RAM voltage is 3.3v */
-    ESP_SPIRAM_VOLT_1V8 = 1,       /*!< SPI RAM voltage is 1.8v */
-    ESP_SPIRAM_VOLT_INVALID,       /*!< SPI RAM voltage is invalid*/
-} esp_spiram_volt_t;
-
-typedef enum {
     ESP_SPIRAM_SIZE_32MBITS = 0,   /*!< SPI RAM size is 32 MBits */
     ESP_SPIRAM_SIZE_64MBITS = 1,   /*!< SPI RAM size is 64 MBits */
     ESP_SPIRAM_SIZE_INVALID,       /*!< SPI RAM size is invalid */
 } esp_spiram_size_t;
-
-/**
- * @brief get SPI RAM voltage
- * @return
- *     - ESP_SPIRAM_VOLT_INVALID if SPI RAM not enabled or not valid.
- *     - SPI RAM voltage
- */
-esp_spiram_volt_t esp_spiram_get_chip_volt();
 
 /**
  * @brief get SPI RAM size
@@ -70,7 +56,7 @@ void esp_spiram_init_cache();
 
 /**
  * @brief Memory test for SPI RAM. Should be called after SPI RAM is initialized and
- * (in case of a dual-core system) the app CPU is online. This test overwrites the 
+ * (in case of a dual-core system) the app CPU is online. This test overwrites the
  * memory with crap, so do not call after e.g. the heap allocator has stored important
  * stuff in SPI RAM.
  *
@@ -114,6 +100,16 @@ void esp_spiram_writeback_cache();
  *          - ESP_ERR_NO_MEM when no memory available for pool
  */
 esp_err_t esp_spiram_reserve_dma_pool(size_t size);
+
+
+/**
+ * @brief If SPI RAM(PSRAM) has been initialized
+ *
+ * @return
+ *          - true SPI RAM has been initialized successfully
+ *          - false SPI RAM hasn't been initialized or initialized failed
+ */
+bool esp_spiram_is_initialized(void);
 
 
 #endif

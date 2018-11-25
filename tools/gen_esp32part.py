@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function, division
+from __future__ import unicode_literals
 import argparse
 import os
 import re
@@ -54,6 +55,7 @@ SUBTYPES = {
         "phy" : 0x01,
         "nvs" : 0x02,
         "coredump" : 0x03,
+        "nvs_keys" : 0x04,
         "esphttpd" : 0x80,
         "fat" : 0x81,
         "spiffs" : 0x82,
@@ -354,7 +356,7 @@ class PartitionDefinition(object):
         if self.name in all_subtype_names and SUBTYPES.get(self.type, {}).get(self.name, "") != self.subtype:
             critical("WARNING: Partition has name '%s' which is a partition subtype, but this partition has non-matching type 0x%x and subtype 0x%x. Mistake in partition table?" % (self.name, self.type, self.subtype))
 
-    STRUCT_FORMAT = "<2sBBLL16sL"
+    STRUCT_FORMAT = b"<2sBBLL16sL"
 
     @classmethod
     def from_binary(cls, b):

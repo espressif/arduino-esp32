@@ -315,7 +315,8 @@ int mbedtls_platform_set_nv_seed(
  * \note    This structure may be used to assist platform-specific
  *          setup or teardown operations.
  */
-typedef struct {
+typedef struct mbedtls_platform_context
+{
     char dummy; /**< A placeholder member, as empty structs are not portable. */
 }
 mbedtls_platform_context;

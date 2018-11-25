@@ -57,26 +57,6 @@ extern "C" {
 #define AUTOIP_TMR_INTERVAL      100
 #define AUTOIP_TICKS_PER_SECOND (1000 / AUTOIP_TMR_INTERVAL)
 
-#if ESP_LWIP
-/* RFC 3927 Constants */
-#define PROBE_WAIT               1   /* second   (initial random delay)                 */
-#define PROBE_MIN                1   /* second   (minimum delay till repeated probe)    */
-#define PROBE_MAX                2   /* seconds  (maximum delay till repeated probe)    */
-#define PROBE_NUM                3   /*          (number of probe packets)              */
-#define ANNOUNCE_NUM             2   /*          (number of announcement packets)       */
-#define ANNOUNCE_INTERVAL        2   /* seconds  (time between announcement packets)    */
-#define ANNOUNCE_WAIT            2   /* seconds  (delay before announcing)              */
-#define MAX_CONFLICTS            LWIP_AUTOIP_MAX_CONFLICTS   /*          (max conflicts before rate limiting)   */
-#define RATE_LIMIT_INTERVAL      LWIP_AUTOIP_RATE_LIMIT_INTERVAL  /* seconds  (delay between successive attempts)    */
-#define DEFEND_INTERVAL          10  /* seconds  (min. wait between defensive ARPs)     */
-
-/* AutoIP client states */
-#define AUTOIP_STATE_OFF         0
-#define AUTOIP_STATE_PROBING     1
-#define AUTOIP_STATE_ANNOUNCING  2
-#define AUTOIP_STATE_BOUND       3
-#endif
-
 /** AutoIP state information per netif */
 struct autoip
 {

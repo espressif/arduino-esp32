@@ -244,15 +244,13 @@ void spi_flash_mmap_dump();
 /**
  * @brief get free pages number which can be mmap
  *
- * This function will return free page number of the mmu table which can mmap,
- * when you want to call spi_flash_mmap to mmap an ranger of flash data to Dcache or Icache
- * memmory region, maybe the size of  MMU table will exceed,so if you are not sure the
- * size need mmap is ok, can call the interface and watch how many MMU table page can be
- * mmaped.
+ * This function will return number of free pages available in mmu table. This could be useful
+ * before calling actual spi_flash_mmap (maps flash range to DCache or ICache memory) to check
+ * if there is sufficient space available for mapping.
  *
- * @param memory  memmory type of MMU table free page
+ * @param memory memory type of MMU table free page
  *
- * @return  number of free pages which can be mmaped
+ * @return number of free pages which can be mmaped
  */
 uint32_t spi_flash_mmap_get_free_pages(spi_flash_mmap_memory_t memory);
 
@@ -315,6 +313,10 @@ typedef void (*spi_flash_op_lock_func_t)(void);
  * @brief SPI flash operation unlock function.
  */
 typedef void (*spi_flash_op_unlock_func_t)(void);
+/**
+ * @brief Function to protect SPI flash critical regions corruption.
+ */
+typedef bool (*spi_flash_is_safe_write_address_t)(size_t addr, size_t size);
 
 /**
  * Structure holding SPI flash access critical sections management functions.
@@ -334,6 +336,9 @@ typedef void (*spi_flash_op_unlock_func_t)(void);
  *   - 'op_unlock' unlocks access to flash API internal data.
  *   These two functions are recursive and can be used around the outside of multiple calls to
  *   'start' & 'end', in order to create atomic multi-part flash operations.
+ * 3) When CONFIG_SPI_FLASH_WRITING_DANGEROUS_REGIONS_ALLOWED is disabled, flash writing/erasing
+ *    API checks for addresses provided by user to avoid corruption of critical flash regions
+ *    (bootloader, partition table, running application etc.).
  *
  * Different versions of the guarding functions should be used depending on the context of
  * execution (with or without functional OS). In normal conditions when flash API is called
@@ -345,10 +350,13 @@ typedef void (*spi_flash_op_unlock_func_t)(void);
  *       For example structure can be placed in DRAM and functions in IRAM sections.
  */
 typedef struct {
-    spi_flash_guard_start_func_t    start;      /**< critical section start function. */
-    spi_flash_guard_end_func_t      end;        /**< critical section end function. */
-    spi_flash_op_lock_func_t        op_lock;    /**< flash access API lock function.*/
-    spi_flash_op_unlock_func_t      op_unlock;  /**< flash access API unlock function.*/
+    spi_flash_guard_start_func_t        start;      /**< critical section start function. */
+    spi_flash_guard_end_func_t          end;        /**< critical section end function. */
+    spi_flash_op_lock_func_t            op_lock;    /**< flash access API lock function.*/
+    spi_flash_op_unlock_func_t          op_unlock;  /**< flash access API unlock function.*/
+#if !CONFIG_SPI_FLASH_WRITING_DANGEROUS_REGIONS_ALLOWED
+    spi_flash_is_safe_write_address_t   is_safe_write_address; /**< checks flash write addresses.*/
+#endif
 } spi_flash_guard_funcs_t;
 
 /**
@@ -360,7 +368,6 @@ typedef struct {
  * @param funcs pointer to structure holding flash access guard functions.
  */
 void spi_flash_guard_set(const spi_flash_guard_funcs_t* funcs);
-
 
 /**
  * @brief Get the guard functions used for flash access

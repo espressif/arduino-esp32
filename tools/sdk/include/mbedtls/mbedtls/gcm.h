@@ -53,7 +53,8 @@ extern "C" {
 /**
  * \brief          The GCM context structure.
  */
-typedef struct {
+typedef struct mbedtls_gcm_context
+{
     mbedtls_cipher_context_t cipher_ctx;  /*!< The cipher context used. */
     uint64_t HL[16];                      /*!< Precalculated HTable low. */
     uint64_t HH[16];                      /*!< Precalculated HTable high. */

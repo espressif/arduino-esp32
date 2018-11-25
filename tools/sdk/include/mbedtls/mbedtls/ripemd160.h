@@ -46,7 +46,7 @@ extern "C" {
 /**
  * \brief          RIPEMD-160 context structure
  */
-typedef struct
+typedef struct mbedtls_ripemd160_context
 {
     uint32_t total[2];          /*!< number of bytes processed  */
     uint32_t state[5];          /*!< intermediate digest state  */

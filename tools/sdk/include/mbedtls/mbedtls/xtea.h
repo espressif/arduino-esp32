@@ -50,7 +50,7 @@ extern "C" {
 /**
  * \brief          XTEA context structure
  */
-typedef struct
+typedef struct mbedtls_xtea_context
 {
     uint32_t k[4];       /*!< key */
 }
