@@ -24,6 +24,7 @@ set(CORE_SRCS
   cores/esp32/IPv6Address.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
+  cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
   cores/esp32/stdlib_noniso.c
@@ -201,6 +202,6 @@ set(COMPONENT_ADD_INCLUDEDIRS
 set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
 
 set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet)
-set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl)
+set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt)
 
 register_component()
