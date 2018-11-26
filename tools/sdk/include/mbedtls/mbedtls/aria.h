@@ -62,7 +62,7 @@ extern "C" {
 /**
  * \brief The ARIA context-type definition.
  */
-typedef struct
+typedef struct mbedtls_aria_context
 {
     unsigned char nr;           /*!< The number of rounds (12, 14 or 16) */
     /*! The ARIA round keys. */

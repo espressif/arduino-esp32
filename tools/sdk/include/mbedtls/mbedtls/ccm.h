@@ -68,7 +68,8 @@ extern "C" {
  * \brief    The CCM context-type definition. The CCM context is passed
  *           to the APIs called.
  */
-typedef struct {
+typedef struct mbedtls_ccm_context
+{
     mbedtls_cipher_context_t cipher_ctx;    /*!< The cipher context used. */
 }
 mbedtls_ccm_context;

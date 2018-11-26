@@ -179,7 +179,7 @@ extern "C" {
 /**
  * \brief          MPI structure
  */
-typedef struct
+typedef struct mbedtls_mpi
 {
     int s;              /*!<  integer sign      */
     size_t n;           /*!<  total # of limbs  */

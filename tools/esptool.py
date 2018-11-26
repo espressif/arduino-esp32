@@ -51,7 +51,7 @@ except TypeError:
     pass  # __doc__ returns None for pyserial
 
 
-__version__ = "2.5.0"
+__version__ = "2.6-beta1"
 
 MAX_UINT32 = 0xffffffff
 MAX_UINT24 = 0xffffff
@@ -243,17 +243,19 @@ class ESPLoader(object):
         """
         detect_port = ESPLoader(port, baud, trace_enabled=trace_enabled)
         detect_port.connect(connect_mode)
-        print('Detecting chip type...', end='')
-        sys.stdout.flush()
-        date_reg = detect_port.read_reg(ESPLoader.UART_DATA_REG_ADDR)
+        try:
+            print('Detecting chip type...', end='')
+            sys.stdout.flush()
+            date_reg = detect_port.read_reg(ESPLoader.UART_DATA_REG_ADDR)
 
-        for cls in [ESP8266ROM, ESP32ROM]:
-            if date_reg == cls.DATE_REG_VALUE:
-                # don't connect a second time
-                inst = cls(detect_port._port, baud, trace_enabled=trace_enabled)
-                print(' %s' % inst.CHIP_NAME)
-                return inst
-        print('')
+            for cls in [ESP8266ROM, ESP32ROM]:
+                if date_reg == cls.DATE_REG_VALUE:
+                    # don't connect a second time
+                    inst = cls(detect_port._port, baud, trace_enabled=trace_enabled)
+                    print(' %s' % inst.CHIP_NAME, end='')
+                    return inst
+        finally:
+            print('')  # end line
         raise FatalError("Unexpected UART datecode value 0x%08x. Failed to autodetect chip type." % date_reg)
 
     """ Read a SLIP packet from the serial port """
@@ -681,6 +683,8 @@ class ESPLoader(object):
         while len(data) < length:
             p = self.read()
             data += p
+            if len(data) < length and len(p) < self.FLASH_SECTOR_SIZE:
+                raise FatalError('Corrupt data, expected 0x%x bytes but received 0x%x bytes' % (self.FLASH_SECTOR_SIZE, len(p)))
             self.write(struct.pack('<I', len(data)))
             if progress_fn and (len(data) % 1024 == 0 or len(data) == length):
                 progress_fn(len(data), length)
@@ -1115,6 +1119,18 @@ class ESP32ROM(ESPLoader):
         adc_vref = (word4 >> 8) & 0x1F
         if adc_vref:
             features += ["VRef calibration in efuse"]
+
+        blk3_part_res = word3 >> 14 & 0x1
+        if blk3_part_res:
+            features += ["BLK3 partially reserved"]
+
+        word6 = self.read_efuse(6)
+        coding_scheme = word6 & 0x3
+        features += ["Coding Scheme %s" % {
+            0: "None",
+            1: "3/4",
+            2: "Repeat (UNSUPPORTED)",
+            3: "Invalid"}[coding_scheme]]
 
         return features
 
@@ -2549,7 +2565,7 @@ def main():
                     esp = chip_class(each_port, initial_baud, args.trace)
                     esp.connect(args.before)
                 break
-            except FatalError as err:
+            except (FatalError, OSError) as err:
                 if args.port is not None:
                     raise
                 print("%s failed to connect: %s" % (each_port, err))

@@ -108,7 +108,7 @@ extern "C" {
 /**
  * \brief          The CTR_DRBG context structure.
  */
-typedef struct
+typedef struct mbedtls_ctr_drbg_context
 {
     unsigned char counter[16];  /*!< The counter (V). */
     int reseed_counter;         /*!< The reseed counter. */

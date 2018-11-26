@@ -79,7 +79,7 @@ extern "C" {
 /**
  * \brief The AES context-type definition.
  */
-typedef struct
+typedef struct mbedtls_aes_context
 {
     int nr;                     /*!< The number of rounds. */
     uint32_t *rk;               /*!< AES round keys. */
@@ -98,7 +98,7 @@ mbedtls_aes_context;
 /**
  * \brief The AES XTS context-type definition.
  */
-typedef struct
+typedef struct mbedtls_aes_xts_context
 {
     mbedtls_aes_context crypt; /*!< The AES context to use for AES block
                                         encryption or decryption. */

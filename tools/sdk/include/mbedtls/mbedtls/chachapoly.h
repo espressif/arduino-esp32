@@ -60,7 +60,7 @@ mbedtls_chachapoly_mode_t;
 
 #include "chacha20.h"
 
-typedef struct
+typedef struct mbedtls_chachapoly_context
 {
     mbedtls_chacha20_context chacha20_ctx;  /**< The ChaCha20 context. */
     mbedtls_poly1305_context poly1305_ctx;  /**< The Poly1305 context. */

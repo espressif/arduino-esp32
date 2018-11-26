@@ -68,7 +68,7 @@ typedef enum {
  * convetion from the Thread v1.0 spec. Correspondance is indicated in the
  * description as a pair C: client name, S: server name
  */
-typedef struct
+typedef struct mbedtls_ecjpake_context
 {
     const mbedtls_md_info_t *md_info;   /**< Hash to use                    */
     mbedtls_ecp_group grp;              /**< Elliptic curve                 */

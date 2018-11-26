@@ -55,7 +55,7 @@ extern "C" {
 /**
  * \brief          Blowfish context structure
  */
-typedef struct
+typedef struct mbedtls_blowfish_context
 {
     uint32_t P[MBEDTLS_BLOWFISH_ROUNDS + 2];    /*!<  Blowfish round keys    */
     uint32_t S[4][256];                 /*!<  key dependent S-boxes  */

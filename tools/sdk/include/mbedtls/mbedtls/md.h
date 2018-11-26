@@ -80,7 +80,8 @@ typedef struct mbedtls_md_info_t mbedtls_md_info_t;
 /**
  * The generic message-digest context.
  */
-typedef struct {
+typedef struct mbedtls_md_context_t
+{
     /** Information about the associated message digest. */
     const mbedtls_md_info_t *md_info;
 

@@ -52,7 +52,7 @@ extern "C" {
 
 #if !defined(MBEDTLS_CHACHA20_ALT)
 
-typedef struct
+typedef struct mbedtls_chacha20_context
 {
     uint32_t state[16];          /*! The state (before round operations). */
     uint8_t  keystream8[64];     /*! Leftover keystream bytes. */
