@@ -96,7 +96,7 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
+       join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_trace"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "asio"),
@@ -153,14 +153,14 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
-    
+
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "ld")
     ],
-    
+
     LIBS=[
-        "gcc", "openssl", "btdm_app", "fatfs", "wps", "coexist", "wear_levelling", "esp_http_client", "protobuf-c", "hal", "newlib", "driver", "bootloader_support", "pp", "freemodbus", "mesh", "smartconfig", "jsmn", "wpa", "ethernet", "phy", "app_trace", "console", "ulp", "wpa_supplicant", "freertos", "bt", "micro-ecc", "cxx", "xtensa-debug-module", "tcp_transport", "mdns", "vfs", "esp_ringbuf", "soc", "core", "sdmmc", "libsodium", "coap", "tcpip_adapter", "protocomm", "esp_event", "c_nano", "esp-tls", "asio", "rtc", "spi_flash", "wpa2", "wifi_provisioning", "esp32", "app_update", "nghttp", "spiffs", "unity", "esp_https_server", "espnow", "nvs_flash", "esp_adc_cal", "log", "smartconfig_ack", "expat", "m", "mqtt", "c", "heap", "mbedtls", "lwip", "net80211", "esp_http_server", "pthread", "json", "esp_https_ota", "stdc++"
+        "-lgcc", "-lopenssl", "-lbtdm_app", "-lfatfs", "-lwps", "-lcoexist", "-lwear_levelling", "-lesp_http_client", "-lprotobuf-c", "-lhal", "-lnewlib", "-ldriver", "-lbootloader_support", "-lpp", "-lfreemodbus", "-lmesh", "-lsmartconfig", "-ljsmn", "-lwpa", "-lethernet", "-lphy", "-lapp_trace", "-lconsole", "-lulp", "-lwpa_supplicant", "-lfreertos", "-lbt", "-lmicro-ecc", "-lcxx", "-lxtensa-debug-module", "-ltcp_transport", "-lmdns", "-lvfs", "-lesp_ringbuf", "-lsoc", "-lcore", "-lsdmmc", "-llibsodium", "-lcoap", "-ltcpip_adapter", "-lprotocomm", "-lesp_event", "-lc_nano", "-lesp-tls", "-lasio", "-lrtc", "-lspi_flash", "-lwpa2", "-lwifi_provisioning", "-lesp32", "-lapp_update", "-lnghttp", "-lspiffs", "-lunity", "-lesp_https_server", "-lespnow", "-lnvs_flash", "-lesp_adc_cal", "-llog", "-lsmartconfig_ack", "-lexpat", "-lm", "-lmqtt", "-lc", "-lheap", "-lmbedtls", "-llwip", "-lnet80211", "-lesp_http_server", "-lpthread", "-ljson", "-lesp_https_ota", "-lstdc++"
     ],
 
     LIBSOURCE_DIRS=[
