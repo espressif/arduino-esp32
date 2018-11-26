@@ -158,12 +158,14 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     mbedtls_ssl_set_bio(&ssl_client->ssl_ctx, &ssl_client->socket, mbedtls_net_send, mbedtls_net_recv, NULL );
 
     log_v("Performing the SSL/TLS handshake...");
-
+    unsigned long handshake_start_time=millis();
     while ((ret = mbedtls_ssl_handshake(&ssl_client->ssl_ctx)) != 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             return handle_error(ret);
         }
-	vTaskDelay(10 / portTICK_PERIOD_MS);
+        if((millis()-handshake_start_time)>ssl_client->handshake_timeout)
+			return -1;
+	    vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
 

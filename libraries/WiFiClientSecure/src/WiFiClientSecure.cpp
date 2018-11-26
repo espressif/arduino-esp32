@@ -35,7 +35,7 @@ WiFiClientSecure::WiFiClientSecure()
     sslclient = new sslclient_context;
     ssl_init(sslclient);
     sslclient->socket = -1;
-
+    sslclient->handshake_timeout = 120000;
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
@@ -50,6 +50,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     sslclient = new sslclient_context;
     ssl_init(sslclient);
     sslclient->socket = sock;
+    sslclient->handshake_timeout = 120000;
 
     if (sock >= 0) {
         _connected = true;
@@ -284,4 +285,9 @@ int WiFiClientSecure::lastError(char *buf, const size_t size)
     mbedtls_strerror(_lastError, error_buf, 100);
     snprintf(buf, size, "%s", error_buf);
     return _lastError;
+}
+
+void WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
+{
+    sslclient->handshake_timeout = handshake_timeout * 1000;
 }
