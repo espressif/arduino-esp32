@@ -26,6 +26,9 @@
 #include "HTTPUpdate.h"
 #include <StreamString.h>
 
+#include <esp_partition.h>
+#include <esp_ota_ops.h>                // get running partition
+
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
 
@@ -121,6 +124,32 @@ String HTTPUpdate::getLastErrorString(void)
 }
 
 
+String getSketchSHA256() {
+  const size_t HASH_LEN = 32; // SHA-256 digest length
+
+  uint8_t sha_256[HASH_LEN] = { 0 };
+
+// get sha256 digest for running partition
+  if(esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256) == 0) {
+    char buffer[2 * HASH_LEN + 1];
+
+    for(size_t index = 0; index < HASH_LEN; index++) {
+      uint8_t nibble = (sha_256[index] & 0xf0) >> 4;
+      buffer[2 * index] = nibble < 10 ? char(nibble + '0') : char(nibble - 10 + 'A');
+
+      nibble = sha_256[index] & 0x0f;
+      buffer[2 * index + 1] = nibble < 10 ? char(nibble + '0') : char(nibble - 10 + 'A');
+    }
+
+    buffer[2 * HASH_LEN] = '\0';
+
+    return String(buffer);
+  } else {
+
+    return String();
+  }
+}
+
 /**
  *
  * @param http HTTPClient *
@@ -139,10 +168,15 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.addHeader(F("Cache-Control"), F("no-cache"));
     http.addHeader(F("x-ESP32-STA-MAC"), WiFi.macAddress());
     http.addHeader(F("x-ESP32-AP-MAC"), WiFi.softAPmacAddress());
-// To do    http.addHeader(F("x-ESP32-free-space"), String(ESP.getFreeSketchSpace()));
-// To do    http.addHeader(F("x-ESP32-sketch-size"), String(ESP.getSketchSize()));
+    http.addHeader(F("x-ESP32-free-space"), String(ESP.getFreeSketchSpace()));
+    http.addHeader(F("x-ESP32-sketch-size"), String(ESP.getSketchSize()));
 // To do    http.addHeader(F("x-ESP32-sketch-md5"), String(ESP.getSketchMD5()));
-// To do    http.addHeader(F("x-ESP32-chip-size"), String(ESP.getFlashChipRealSize()));
+    // Sketch MD5 is not supported by the core, but SHA256 is, so add a SHA256 instead
+    String sketchSHA256 = getSketchSHA256();
+    if(sketchSHA256.length() != 0) {
+      http.addHeader(F("x-ESP32-sketch-sha256"), sketchSHA256);
+    }
+    http.addHeader(F("x-ESP32-chip-size"), String(ESP.getFlashChipSize()));
     http.addHeader(F("x-ESP32-sdk-version"), ESP.getSdkVersion());
 
     if(spiffs) {
@@ -183,8 +217,8 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     }
 
     log_d("ESP32 info:\n");
-// To do    log_d(" - free Space: %d\n", ESP.getFreeSketchSpace());
-// To do    log_d(" - current Sketch Size: %d\n", ESP.getSketchSize());
+    log_d(" - free Space: %d\n", ESP.getFreeSketchSpace());
+    log_d(" - current Sketch Size: %d\n", ESP.getSketchSize());
 
     if(currentVersion && currentVersion[0] != 0x00) {
         log_d(" - current version: %s\n", currentVersion.c_str() );
@@ -201,10 +235,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
 // To do                    startUpdate = false;
 // To do                }
             } else {
-// To do                if(len > (int) ESP.getFreeSketchSpace()) {
-// To do                    log_e("FreeSketchSpace to low (%d) needed: %d\n", ESP.getFreeSketchSpace(), len);
-// To do                    startUpdate = false;
-// To do                }
+                if(len > (int) ESP.getFreeSketchSpace()) {
+                    log_e("FreeSketchSpace to low (%d) needed: %d\n", ESP.getFreeSketchSpace(), len);
+                    startUpdate = false;
+                }
             }
 
             if(!startUpdate) {
