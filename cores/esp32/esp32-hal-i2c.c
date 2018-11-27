@@ -1142,7 +1142,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
         if(tdq->ctrl.addrReq ==2) { // 10bit address
             taddr =((tdq->ctrl.addr >> 7) & 0xFE)
                    |tdq->ctrl.mode;
-            taddr = (taddr <<8) || (tdq->ctrl.addr&0xFF);
+            taddr = (taddr <<8) | (tdq->ctrl.addr&0xFF);
         } else { // 7bit address
             taddr =  ((tdq->ctrl.addr<<1)&0xFE)
                      |tdq->ctrl.mode;
