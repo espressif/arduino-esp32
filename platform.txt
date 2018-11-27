@@ -1,5 +1,6 @@
 name=ESP32 Arduino
-version=0.0.1
+# Second Release, 27 November 2018
+version=1.0.1
 
 runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 
