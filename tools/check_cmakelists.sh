@@ -11,7 +11,8 @@ set -e
 cd "`dirname $0`/.."  # cd to arduino-esp32 root
 
 # find all source files in repo
-REPO_SRCS=`find cores/esp32/ libraries/ -name 'examples' -prune -o -name 'main.cpp' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort`
+#REPO_SRCS=`find cores/esp32/ libraries/ -name 'examples' -prune -o -name 'main.cpp' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort`
+REPO_SRCS=`find cores/esp32/ libraries/ -name 'examples' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort`
 
 # find all source files named in CMakeLists.txt COMPONENT_SRCS
 CMAKE_SRCS=`cmake --trace-expand -C CMakeLists.txt 2>&1 | grep COMPONENT_SRCS | sed 's/.\+COMPONENT_SRCS //' | sed 's/ )//' | tr ' ;' '\n' | sort`
