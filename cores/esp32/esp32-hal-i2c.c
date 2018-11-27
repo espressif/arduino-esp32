@@ -248,7 +248,7 @@ static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
 
 /* Stickbreaker ISR mode debug support
  */
- #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
 static void i2cDumpDqData(i2c_t * i2c)
 {
 #if defined (ENABLE_I2C_DEBUG_BUFFER)
