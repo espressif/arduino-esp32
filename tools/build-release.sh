@@ -336,7 +336,7 @@ if [ ! -z "$prev_any_release" ] && [ "$prev_any_release" != "null" ]; then
 	downloadAndMergePackageJSON "https://github.com/$TRAVIS_REPO_SLUG/releases/download/${prev_any_release}/${PACKAGE_JSON_DEV}" "${pkgJsonDev}" "${curlAuth}" "$releaseDir"
 	
 	# Release notes: GIT log comments (prev_any_release, current_release>
-	echo " - executing: git log --oneline $prev_release.."
+	echo " - executing: git log --oneline $prev_any_release.."
 	git log --oneline $prev_any_release.. > $releaseDir/commits.txt
 fi	
 
