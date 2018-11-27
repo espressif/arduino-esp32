@@ -350,7 +350,7 @@ if [ $bIsPrerelease -eq 0 ]; then
 		downloadAndMergePackageJSON "https://github.com/$TRAVIS_REPO_SLUG/releases/download/${prev_release}/${PACKAGE_JSON_REL}" "${pkgJsonRel}" "${curlAuth}" "$releaseDir"
 		
 		# Release notes: GIT log comments (prev_release, current_release>
-		git log --oneline $prev_release.. > $releaseDir/commits.txt
+		cd $srcdir && git log --oneline $prev_release.. > $releaseDir/commits.txt
 	fi
 fi
 
