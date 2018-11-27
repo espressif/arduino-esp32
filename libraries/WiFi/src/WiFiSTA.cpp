@@ -683,7 +683,9 @@ void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
     smartconfig_status_t status = (smartconfig_status_t) st;
     log_d("Status: %s", sc_status_strings[st % 5]);
     if (status == SC_STATUS_GETTING_SSID_PSWD) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
         smartconfig_type_t * type = (smartconfig_type_t *)result;
+#endif
         log_d("Type: %s", sc_type_strings[*type % 3]);
     } else if (status == SC_STATUS_LINK) {
         wifi_sta_config_t *sta_conf = reinterpret_cast<wifi_sta_config_t *>(result);
@@ -694,7 +696,9 @@ void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
         _smartConfigDone = true;
     } else if (status == SC_STATUS_LINK_OVER) {
         if(result){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
             ip4_addr_t * ip = (ip4_addr_t *)result;
+#endif
             log_d("Sender IP: " IPSTR, IP2STR(ip));
         }
         WiFi.stopSmartConfig();
