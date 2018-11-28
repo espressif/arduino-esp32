@@ -93,31 +93,31 @@ String HTTPUpdate::getLastErrorString(void)
         StreamString error;
         Update.printError(error);
         error.trim(); // remove line ending
-        return String(F("Update error: ")) + error;
+        return String("Update error: ") + error;
     }
 
     // error from http client
     if(_lastError > -100) {
-        return String(F("HTTP error: ")) + HTTPClient::errorToString(_lastError);
+        return String("HTTP error: ") + HTTPClient::errorToString(_lastError);
     }
 
     switch(_lastError) {
     case HTTP_UE_TOO_LESS_SPACE:
-        return F("Not Enough space");
+        return "Not Enough space";
     case HTTP_UE_SERVER_NOT_REPORT_SIZE:
-        return F("Server Did Not Report Size");
+        return "Server Did Not Report Size";
     case HTTP_UE_SERVER_FILE_NOT_FOUND:
-        return F("File Not Found (404)");
+        return "File Not Found (404)";
     case HTTP_UE_SERVER_FORBIDDEN:
-        return F("Forbidden (403)");
+        return "Forbidden (403)";
     case HTTP_UE_SERVER_WRONG_HTTP_CODE:
-        return F("Wrong HTTP Code");
+        return "Wrong HTTP Code";
     case HTTP_UE_SERVER_FAULTY_MD5:
-        return F("Wrong MD5");
+        return "Wrong MD5";
     case HTTP_UE_BIN_VERIFY_HEADER_FAILED:
-        return F("Verify Bin Header Failed");
+        return "Verify Bin Header Failed";
     case HTTP_UE_BIN_FOR_WRONG_FLASH:
-        return F("New Binary Does Not Fit Flash Size");
+        return "New Binary Does Not Fit Flash Size";
     }
 
     return String();
@@ -164,29 +164,29 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     // use HTTP/1.0 for update since the update handler not support any transfer Encoding
     http.useHTTP10(true);
     http.setTimeout(_httpClientTimeout);
-    http.setUserAgent(F("ESP32-http-Update"));
-    http.addHeader(F("Cache-Control"), F("no-cache"));
-    http.addHeader(F("x-ESP32-STA-MAC"), WiFi.macAddress());
-    http.addHeader(F("x-ESP32-AP-MAC"), WiFi.softAPmacAddress());
-    http.addHeader(F("x-ESP32-free-space"), String(ESP.getFreeSketchSpace()));
-    http.addHeader(F("x-ESP32-sketch-size"), String(ESP.getSketchSize()));
-// To do    http.addHeader(F("x-ESP32-sketch-md5"), String(ESP.getSketchMD5()));
+    http.setUserAgent("ESP32-http-Update");
+    http.addHeader("Cache-Control", "no-cache");
+    http.addHeader("x-ESP32-STA-MAC", WiFi.macAddress());
+    http.addHeader("x-ESP32-AP-MAC", WiFi.softAPmacAddress());
+    http.addHeader("x-ESP32-free-space", String(ESP.getFreeSketchSpace()));
+    http.addHeader("x-ESP32-sketch-size", String(ESP.getSketchSize()));
+// To do    http.addHeader("x-ESP32-sketch-md5", String(ESP.getSketchMD5()));
     // Sketch MD5 is not supported by the core, but SHA256 is, so add a SHA256 instead
     String sketchSHA256 = getSketchSHA256();
     if(sketchSHA256.length() != 0) {
-      http.addHeader(F("x-ESP32-sketch-sha256"), sketchSHA256);
+      http.addHeader("x-ESP32-sketch-sha256", sketchSHA256);
     }
-    http.addHeader(F("x-ESP32-chip-size"), String(ESP.getFlashChipSize()));
-    http.addHeader(F("x-ESP32-sdk-version"), ESP.getSdkVersion());
+    http.addHeader("x-ESP32-chip-size", String(ESP.getFlashChipSize()));
+    http.addHeader("x-ESP32-sdk-version", ESP.getSdkVersion());
 
     if(spiffs) {
-        http.addHeader(F("x-ESP32-mode"), F("spiffs"));
+        http.addHeader("x-ESP32-mode", "spiffs");
     } else {
-        http.addHeader(F("x-ESP32-mode"), F("sketch"));
+        http.addHeader("x-ESP32-mode", "sketch");
     }
 
     if(currentVersion && currentVersion[0] != 0x00) {
-        http.addHeader(F("x-ESP32-version"), currentVersion);
+        http.addHeader("x-ESP32-version", currentVersion);
     }
 
     const char * headerkeys[] = { "x-MD5" };
