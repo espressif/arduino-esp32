@@ -27,7 +27,7 @@
 #include <sys/reent.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-//#include <sys/termios.h>
+#include <sys/termios.h>
 #include <dirent.h>
 #include <string.h>
 #include "sdkconfig.h"

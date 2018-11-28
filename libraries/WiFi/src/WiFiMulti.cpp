@@ -120,17 +120,11 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
                 switch(status) {
                 case 3:
-                    {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-                    IPAddress ip = WiFi.localIP();
-                    uint8_t * mac = WiFi.BSSID();
-#endif
                     log_i("[WIFI] Connecting done.");
                     log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
-                    log_d("[WIFI] IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-                    log_d("[WIFI] MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+                    log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
+                    log_d("[WIFI] MAC: %s", WiFi.BSSID().toString().c_str());
                     log_d("[WIFI] Channel: %d", WiFi.channel());
-                    }   
                     break;
                 case 1:
                     log_e("[WIFI] Connecting Failed AP not found.");
