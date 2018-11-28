@@ -338,7 +338,7 @@ if [ ! -z "$prev_any_release" ] && [ "$prev_any_release" != "null" ]; then
 	
 	# Release notes: GIT log comments (prev_any_release, current_release>
 	echo " - executing: git log --oneline $prev_any_release.."
-	#git log --oneline $prev_any_release.. > $releaseDir/commits.txt
+	git log --oneline $prev_any_release.. > $releaseDir/commits.txt
 fi	
 
 # for RELEASE run update REL JSON as well
@@ -353,7 +353,7 @@ if [ $bIsPrerelease -eq 0 ]; then
 		
 		# Release notes: GIT log comments (prev_release, current_release>
 		echo " - executing: git log --oneline $prev_release.."
-		#git log --oneline $prev_release.. > $releaseDir/commits.txt
+		git log --oneline $prev_release.. > $releaseDir/commits.txt
 	fi
 fi
 
