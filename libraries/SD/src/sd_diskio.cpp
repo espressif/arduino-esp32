@@ -16,7 +16,7 @@ extern "C" {
     #include "diskio.h"
     #include "ffconf.h"
     #include "ff.h"
-    #include "esp_vfs.h"
+    //#include "esp_vfs.h"
     #include "esp_vfs_fat.h"
     char CRC7(const char* data, int length);
     unsigned short CRC16(const char* data, int length);
