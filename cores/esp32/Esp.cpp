@@ -156,7 +156,7 @@ static uint32_t sketchSize(sketchSize_t response) {
         .size = running->size,
     };
     data.start_addr = running_pos.offset;
-    esp_image_load(ESP_IMAGE_VERIFY, &running_pos, &data);
+    esp_image_verify(ESP_IMAGE_VERIFY, &running_pos, &data);
     if (response) {
     return running_pos.size - data.image_len;
     } else {

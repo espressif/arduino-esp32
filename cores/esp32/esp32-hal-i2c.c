@@ -248,9 +248,10 @@ static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
 
 /* Stickbreaker ISR mode debug support
  */
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
 static void i2cDumpDqData(i2c_t * i2c)
 {
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+#if defined (ENABLE_I2C_DEBUG_BUFFER)
     uint16_t a=0;
     char buff[140];
     I2C_DATA_QUEUE_t *tdq;
@@ -306,9 +307,12 @@ static void i2cDumpDqData(i2c_t * i2c)
         }
         a++;
     }
+#else
+    log_i("Debug Buffer not Enabled");
 #endif
 }
-
+#endif
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 static void i2cDumpI2c(i2c_t * i2c)
 {
     log_e("i2c=%p",i2c);
@@ -332,11 +336,12 @@ static void i2cDumpI2c(i2c_t * i2c)
         i2cDumpDqData(i2c);
     }
 }
+#endif
 
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)  
 static void i2cDumpInts(uint8_t num)
 {
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) && (defined ENABLE_I2C_DEBUG_BUFFER)  
-
+#if defined (ENABLE_I2C_DEBUG_BUFFER)
     uint32_t b;
     log_i("%u row\tcount\tINTR\tTX\tRX\tTick ",num);
     for(uint32_t a=1; a<=INTBUFFMAX; a++) {
@@ -349,9 +354,10 @@ static void i2cDumpInts(uint8_t num)
     log_i("Debug Buffer not Enabled");
 #endif
 }
+#endif
 
-static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
     typedef union {
         struct {
             uint32_t ack_rec:             1;        /*This register stores the value of ACK bit.*/
@@ -377,11 +383,11 @@ static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
     sr.val= i2c->dev->status_reg.val;
     
     log_i("ack(%d) sl_rw(%d) to(%d) arb(%d) busy(%d) sl(%d) trans(%d) rx(%d) tx(%d) sclMain(%d) scl(%d)",sr.ack_rec,sr.slave_rw,sr.time_out,sr.arb_lost,sr.bus_busy,sr.slave_addressed,sr.byte_trans, sr.rx_fifo_cnt, sr.tx_fifo_cnt,sr.scl_main_state_last, sr.scl_state_last);
-#endif
 }
+#endif
 
-static void i2cDumpFifo(i2c_t * i2c){
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
+static void i2cDumpFifo(i2c_t * i2c){
 char buf[64];
 uint16_t k = 0;
 uint16_t i = fifoPos+1;
@@ -422,8 +428,8 @@ if(i != fifoPos){// actual data
       }
     }while( i!= fifoPos);
 }
-#endif
 }
+#endif
 
 static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
