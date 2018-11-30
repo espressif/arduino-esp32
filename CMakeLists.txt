@@ -150,6 +150,8 @@ set(BLE_SRCS
   libraries/BLE/src/BLEDescriptor.cpp
   libraries/BLE/src/BLEDescriptorMap.cpp
   libraries/BLE/src/BLEDevice.cpp
+  libraries/BLE/src/BLEEddystoneTLM.cpp
+  libraries/BLE/src/BLEEddystoneURL.cpp
   libraries/BLE/src/BLEExceptions.cpp
   libraries/BLE/src/BLEHIDDevice.cpp
   libraries/BLE/src/BLERemoteCharacteristic.cpp
