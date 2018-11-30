@@ -123,7 +123,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                     log_i("[WIFI] Connecting done.");
                     log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
                     log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
-                    log_d("[WIFI] MAC: %s", WiFi.BSSID().toString().c_str());
+                    log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
                     log_d("[WIFI] Channel: %d", WiFi.channel());
                     break;
                 case 1:
