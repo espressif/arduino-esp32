@@ -45,7 +45,7 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key)
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey)
 {
     char buf[512];
     int ret, flags, timeout;
@@ -114,6 +114,36 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
         //mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
         if (ret < 0) {
+            return handle_error(ret);
+        }
+    } else if (pskIdent != NULL && psKey != NULL) {
+        log_v("Setting up PSK");
+        // convert PSK from hex to binary
+        if ((strlen(psKey) & 1) != 0 || strlen(psKey) > 2*MBEDTLS_PSK_MAX_LEN) {
+            log_e("pre-shared key not valid hex or too long");
+            return -1;
+        }
+        unsigned char psk[MBEDTLS_PSK_MAX_LEN];
+        size_t psk_len = strlen(psKey)/2;
+        for (int j=0; j<strlen(psKey); j+= 2) {
+            char c = psKey[j];
+            if (c >= '0' && c <= '9') c -= '0';
+            else if (c >= 'A' && c <= 'F') c -= 'A' - 10;
+            else if (c >= 'a' && c <= 'f') c -= 'a' - 10;
+            else return -1;
+            psk[j/2] = c<<4;
+            c = psKey[j+1];
+            if (c >= '0' && c <= '9') c -= '0';
+            else if (c >= 'A' && c <= 'F') c -= 'A' - 10;
+            else if (c >= 'a' && c <= 'f') c -= 'a' - 10;
+            else return -1;
+            psk[j/2] |= c;
+        }
+        // set mbedtls config
+        ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, psk, psk_len,
+                 (const unsigned char *)pskIdent, strlen(pskIdent));
+        if (ret != 0) {
+            log_e("mbedtls_ssl_conf_psk returned %d", ret);
             return handle_error(ret);
         }
     } else {
