@@ -21,6 +21,7 @@
 
 #include "Arduino.h"
 #include "Stream.h"
+#include <esp_spp_api.h>
 
 class BluetoothSerial: public Stream
 {
@@ -38,6 +39,7 @@ class BluetoothSerial: public Stream
         size_t write(const uint8_t *buffer, size_t size);
         void flush();
         void end(void);
+        esp_err_t register_callback(esp_spp_cb_t * callback);
 
     private:
         String local_name;

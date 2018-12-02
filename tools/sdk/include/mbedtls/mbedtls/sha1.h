@@ -58,7 +58,7 @@ extern "C" {
  *                 stronger message digests instead.
  *
  */
-typedef struct
+typedef struct mbedtls_sha1_context
 {
     uint32_t total[2];          /*!< The number of Bytes processed.  */
     uint32_t state[5];          /*!< The intermediate digest state.  */

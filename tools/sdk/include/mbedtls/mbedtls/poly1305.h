@@ -52,7 +52,7 @@ extern "C" {
 
 #if !defined(MBEDTLS_POLY1305_ALT)
 
-typedef struct
+typedef struct mbedtls_poly1305_context
 {
     uint32_t r[4];      /** The value for 'r' (low 128 bits of the key). */
     uint32_t s[4];      /** The value for 's' (high 128 bits of the key). */

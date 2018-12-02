@@ -21,6 +21,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function, division
+from __future__ import unicode_literals
 import argparse
 import os
 import re
@@ -28,6 +29,7 @@ import struct
 import sys
 import hashlib
 import binascii
+import errno
 
 MAX_PARTITION_LENGTH = 0xC00   # 3K for partition data (96 entries) leaves 1K in a 4K sector for signature
 MD5_PARTITION_BEGIN = b"\xEB\xEB" + b"\xFF" * 14 # The first 2 bytes are like magic numbers for MD5 sum
@@ -54,6 +56,7 @@ SUBTYPES = {
         "phy" : 0x01,
         "nvs" : 0x02,
         "coredump" : 0x03,
+        "nvs_keys" : 0x04,
         "esphttpd" : 0x80,
         "fat" : 0x81,
         "spiffs" : 0x82,
@@ -354,7 +357,7 @@ class PartitionDefinition(object):
         if self.name in all_subtype_names and SUBTYPES.get(self.type, {}).get(self.name, "") != self.subtype:
             critical("WARNING: Partition has name '%s' which is a partition subtype, but this partition has non-matching type 0x%x and subtype 0x%x. Mistake in partition table?" % (self.name, self.type, self.subtype))
 
-    STRUCT_FORMAT = "<2sBBLL16sL"
+    STRUCT_FORMAT = b"<2sBBLL16sL"
 
     @classmethod
     def from_binary(cls, b):
@@ -477,6 +480,16 @@ def main():
         if size < table_size:
             raise InputError("Partitions defined in '%s' occupy %.1fMB of flash (%d bytes) which does not fit in configured flash size %dMB. Change the flash size in menuconfig under the 'Serial Flasher Config' menu." %
                              (args.input.name, table_size / 1024.0 / 1024.0, table_size, size_mb))
+
+    # Make sure that the output directory is created
+    output_dir = os.path.abspath(os.path.dirname(args.output))
+
+    if not os.path.exists(output_dir):
+        try:
+            os.makedirs(output_dir)
+        except OSError as exc: 
+            if exc.errno != errno.EEXIST:
+                raise
 
     if input_is_binary:
         output = table.to_csv()

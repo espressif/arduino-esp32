@@ -17,9 +17,9 @@
 
 static void setTimeZone(long offset, int daylight)
 {
-    char cst[16] = {0};
-    char cdt[16] = "DST";
-    char tz[32] = {0};
+    char cst[17] = {0};
+    char cdt[17] = "DST";
+    char tz[33] = {0};
 
     if(offset % 3600){
         sprintf(cst, "UTC%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));

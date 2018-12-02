@@ -35,7 +35,7 @@ WiFiClientSecure::WiFiClientSecure()
     sslclient = new sslclient_context;
     ssl_init(sslclient);
     sslclient->socket = -1;
-
+    sslclient->handshake_timeout = 120000;
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
@@ -50,6 +50,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     sslclient = new sslclient_context;
     ssl_init(sslclient);
     sslclient->socket = sock;
+    sslclient->handshake_timeout = 120000;
 
     if (sock >= 0) {
         _connected = true;
@@ -230,6 +231,52 @@ bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
     return verify_ssl_fingerprint(sslclient, fp, domain_name);
 }
 
+char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
+  static char *dest = nullptr;
+  if(dest) {
+      free(dest);
+  }
+  dest = (char*)malloc(size);
+  if (!dest) {
+    return nullptr;
+  }
+  if (size != stream.readBytes(dest, size)) {
+    free(dest);
+    dest = nullptr;
+  }
+  return dest;
+}
+
+bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setCACert(dest);
+    ret = true;
+  }
+  return ret;
+}
+
+bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setCertificate(dest);
+    ret = true;
+  }
+  return ret;
+}
+
+bool WiFiClientSecure::loadPrivateKey(Stream& stream, size_t size) {
+  char *dest = _streamLoad(stream, size);
+  bool ret = false;
+  if (dest) {
+    setPrivateKey(dest);
+    ret = true;
+  }
+  return ret;
+}
+
 int WiFiClientSecure::lastError(char *buf, const size_t size)
 {
     if (!_lastError) {
@@ -239,4 +286,9 @@ int WiFiClientSecure::lastError(char *buf, const size_t size)
     mbedtls_strerror(_lastError, error_buf, 100);
     snprintf(buf, size, "%s", error_buf);
     return _lastError;
+}
+
+void WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
+{
+    sslclient->handshake_timeout = handshake_timeout * 1000;
 }

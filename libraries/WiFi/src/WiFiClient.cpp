@@ -240,6 +240,7 @@ int WiFiClient::setSocketOption(int option, char* value, size_t len)
 
 int WiFiClient::setTimeout(uint32_t seconds)
 {
+    Client::setTimeout(seconds * 1000);
     struct timeval tv;
     tv.tv_sec = seconds;
     tv.tv_usec = 0;
@@ -438,6 +439,9 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
+        if(res < 0) {
+            log_e("RES: %d", res);
+        }
         switch (errno) {
             case EWOULDBLOCK:
             case ENOENT: //caused by vfs

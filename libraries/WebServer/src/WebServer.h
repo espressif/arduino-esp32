@@ -97,6 +97,7 @@ public:
   virtual WiFiClient client() { return _currentClient; }
   HTTPUpload& upload() { return *_currentUpload; }
 
+  String pathArg(unsigned int i); // get request path argument by number
   String arg(String name);        // get request argument value by name
   String arg(int i);              // get request argument value by number
   String argName(int i);          // get request argument name by number

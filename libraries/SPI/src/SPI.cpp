@@ -214,6 +214,11 @@ void SPIClass::writeBytes(uint8_t * data, uint32_t size)
     spiEndTransaction(_spi);
 }
 
+void SPIClass::transfer(uint8_t * data, uint32_t size) 
+{ 
+	transferBytes(data, data, size); 
+}
+
 /**
  * @param data void *
  * @param size uint32_t

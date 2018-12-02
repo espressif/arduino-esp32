@@ -1,12 +1,10 @@
-//Sketch edited by: martinius96 (Martin Chlebovec)
-//Personal website: https://arduino.php5.sk
-#include "esp_wpa2.h"
-#include <WiFi.h>
-#define EAP_IDENTITY "login@university.domain" //eduroam login --> identity@youruniversity.domain
+#include <WiFi.h> //Wifi library
+#include "esp_wpa2.h" //wpa2 library for connections to Enterprise networks
+#define EAP_IDENTITY "login" //if connecting from another corporation, use identity@organisation.domain in Eduroam 
 #define EAP_PASSWORD "password" //your Eduroam password
-String line; //variable for response
 const char* ssid = "eduroam"; // Eduroam SSID
 const char* host = "arduino.php5.sk"; //external server domain for HTTP connection after authentification
+int counter = 0;
 void setup() {
   Serial.begin(115200);
   delay(10);
@@ -14,51 +12,58 @@ void setup() {
   Serial.print("Connecting to network: ");
   Serial.println(ssid);
   WiFi.disconnect(true);  //disconnect form wifi to set new wifi connection
-  WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA); //init wifi mode
   esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide identity
-  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
+  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username --> identity and username is same
   esp_wifi_sta_wpa2_ent_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
-  esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT(); //set config to default (fixed for 2018 and Arduino 1.8.5+)
-  esp_wifi_sta_wpa2_ent_enable(&config); //set config to enable function (fixed for 2018 and Arduino 1.8.5+)
-  WiFi.begin(ssid); //connect to Eduroam function
-  WiFi.setHostname("ESP32Name"); //set Hostname for your device - not neccesary
+  esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT(); //set config settings to default
+  esp_wifi_sta_wpa2_ent_enable(&config); //set config settings to enable function
+  WiFi.begin(ssid); //connect to wifi
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    counter++;
+    if(counter>=60){ //after 30 seconds timeout - reset board
+      ESP.restart();
+    }
   }
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address set: "); 
   Serial.println(WiFi.localIP()); //print LAN IP
-
 }
 void loop() {
-  delay(5000);
-  if (WiFi.status() != WL_CONNECTED) { //if we lost connection, retry
-    WiFi.begin(ssid);
-    delay(500);        
-}
+  if (WiFi.status() == WL_CONNECTED) { //if we are connected to Eduroam network
+    counter = 0; //reset counter
+    Serial.println("Wifi is still connected with IP: "); 
+    Serial.println(WiFi.localIP());   //inform user about his IP address
+  }else if (WiFi.status() != WL_CONNECTED) { //if we lost connection, retry
+    WiFi.begin(ssid);      
+  }
+  while (WiFi.status() != WL_CONNECTED) { //during lost connection, print dots
+    delay(500);
+    Serial.print(".");
+    counter++;
+    if(counter>=60){ //30 seconds timeout - reset board
+    ESP.restart();
+    }
+  }
   Serial.print("Connecting to website: ");
   Serial.println(host);
   WiFiClient client;
-  if (!client.connect(host, 80)) { // HTTP connection on port 80
-    Serial.println("Connection lost! - Failed response");
-  }
-  String url = "/rele/rele1.txt"; //read .txt file    
-  Serial.print("Requesting URL: ");
-  Serial.println(url);
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
-  unsigned long timeout = millis();
-  while (client.available() == 0) {
-    if (millis() - timeout > 5000) {
-      Serial.println("Client timed out! - retry");
+  if (client.connect(host, 80)) {
+    String url = "/rele/rele1.txt";
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: ESP32\r\n" + "Connection: close\r\n\r\n");
+
+    while (client.connected()) {
+      String line = client.readStringUntil('\n');
+      if (line == "\r") {
+        break;
+      }
     }
-  }
-  while(client.available()) {
-    line = client.readStringUntil('\n');
-    Serial.println(line);  
-  }
-  Serial.println();
-  Serial.println("End connection");
-  client.stop();
+    String line = client.readStringUntil('\n');
+   Serial.println(line);
+  }else{
+      Serial.println("Connection unsucessful");
+    }  
 }

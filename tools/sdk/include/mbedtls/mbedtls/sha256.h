@@ -53,7 +53,7 @@ extern "C" {
  *                 checksum calculations. The choice between these two is
  *                 made in the call to mbedtls_sha256_starts_ret().
  */
-typedef struct
+typedef struct mbedtls_sha256_context
 {
     uint32_t total[2];          /*!< The number of Bytes processed.  */
     uint32_t state[8];          /*!< The intermediate digest state.  */

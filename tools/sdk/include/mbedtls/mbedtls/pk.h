@@ -87,7 +87,7 @@ typedef enum {
  * \brief           Options for RSASSA-PSS signature verification.
  *                  See \c mbedtls_rsa_rsassa_pss_verify_ext()
  */
-typedef struct
+typedef struct mbedtls_pk_rsassa_pss_options
 {
     mbedtls_md_type_t mgf1_hash_id;
     int expected_salt_len;
@@ -107,7 +107,7 @@ typedef enum
 /**
  * \brief           Item to send to the debug module
  */
-typedef struct
+typedef struct mbedtls_pk_debug_item
 {
     mbedtls_pk_debug_type type;
     const char *name;
@@ -125,7 +125,7 @@ typedef struct mbedtls_pk_info_t mbedtls_pk_info_t;
 /**
  * \brief           Public key container
  */
-typedef struct
+typedef struct mbedtls_pk_context
 {
     const mbedtls_pk_info_t *   pk_info; /**< Public key informations        */
     void *                      pk_ctx;  /**< Underlying public key context  */

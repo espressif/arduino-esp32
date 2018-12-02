@@ -308,11 +308,6 @@ uint8_t TwoWire::endTransmission(void)
     return endTransmission(true);
 }
 
-uint8_t TwoWire::endTransmission(uint8_t sendStop)
-{
-    return endTransmission(static_cast<bool>(sendStop));
-}
-
 /* stickbreaker Nov2017 better error reporting
  */
 uint8_t TwoWire::lastError()

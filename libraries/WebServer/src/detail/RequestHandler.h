@@ -1,6 +1,9 @@
 #ifndef REQUESTHANDLER_H
 #define REQUESTHANDLER_H
 
+#include <vector>
+#include <assert.h>
+
 class RequestHandler {
 public:
     virtual ~RequestHandler() { }
@@ -14,6 +17,15 @@ public:
 
 private:
     RequestHandler* _next = nullptr;
+
+protected:
+    std::vector<String> pathArgs;
+
+public:
+    const String& pathArg(unsigned int i) { 
+        assert(i < pathArgs.size());
+        return pathArgs[i];
+    }
 };
 
 #endif //REQUESTHANDLER_H

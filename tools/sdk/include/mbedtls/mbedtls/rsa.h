@@ -92,7 +92,7 @@ extern "C" {
  *          is deprecated. All manipulation should instead be done through
  *          the public interface functions.
  */
-typedef struct
+typedef struct mbedtls_rsa_context
 {
     int ver;                    /*!<  Always 0.*/
     size_t len;                 /*!<  The size of \p N in Bytes. */
