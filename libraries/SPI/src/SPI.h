@@ -65,10 +65,11 @@ public:
 
     void beginTransaction(SPISettings settings);
     void endTransaction(void);
-
+    void transfer(uint8_t * data, uint32_t size);
     uint8_t transfer(uint8_t data);
     uint16_t transfer16(uint16_t data);
     uint32_t transfer32(uint32_t data);
+  
     void transferBytes(uint8_t * data, uint8_t * out, uint32_t size);
     void transferBits(uint32_t data, uint32_t * out, uint8_t bits);
 
