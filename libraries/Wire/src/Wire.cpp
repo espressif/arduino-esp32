@@ -154,14 +154,15 @@ void TwoWire::beginTransmission(uint16_t address)
 uint8_t TwoWire::endTransmission(bool sendStop)  // Assumes Wire.beginTransaction(), Wire.write()
 {
     if(transmitting == 1) {
-        last_error = writeTransmission(txAddress, &txBuffer[txQueued], txLength - txQueued, sendStop);
-        rxIndex = 0;
-        rxLength = rxQueued;
-        rxQueued = 0;
-        txQueued = 0; // the SendStop=true will restart all Queueing
-        if(last_error == I2C_ERROR_CONTINUE){
             // txlength is howmany bytes in txbuffer have been use
+        last_error = writeTransmission(txAddress, &txBuffer[txQueued], txLength - txQueued, sendStop);
+        if(last_error == I2C_ERROR_CONTINUE){
             txQueued = txLength;
+        } else if( last_error == I2C_ERROR_OK){
+          rxIndex = 0;
+          rxLength = rxQueued;
+          rxQueued = 0;
+          txQueued = 0; // the SendStop=true will restart all Queueing
         }
     } else {
         last_error = I2C_ERROR_NO_BEGIN;
@@ -170,7 +171,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)  // Assumes Wire.beginTransactio
     txIndex = 0;
     txLength = 0;
     transmitting = 0;
-    return (last_error == I2C_ERROR_CONTINUE)?I2C_ERROR_OK:last_error; // Don't return Continue for compatibilty.
+    return (last_error == I2C_ERROR_CONTINUE)?I2C_ERROR_OK:last_error; // Don't return Continue for compatibility.
 }
 
 /* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
@@ -192,11 +193,7 @@ uint8_t TwoWire::requestFrom(uint16_t address, uint8_t size, bool sendStop)
     last_error = readTransmission(address, &rxBuffer[cnt], size, sendStop, &cnt);
     rxIndex = 0;
   
-    if(cnt == size){ // full recieve
-        rxLength = rxQueued;
-    } else { // handle partial receive
-        rxLength = rxQueued - size + cnt;
-    }
+    rxLength = cnt;
   
     if( last_error != I2C_ERROR_CONTINUE){ // not a  buffered ReSTART operation
       // so this operation actually moved data, queuing is done.
