@@ -39,6 +39,8 @@ WiFiClientSecure::WiFiClientSecure()
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
+    _pskIdent = NULL;
+    _psKey = NULL;
     next = NULL;
 }
 
@@ -59,6 +61,8 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     _CA_cert = NULL;
     _cert = NULL;
     _private_key = NULL;
+    _pskIdent = NULL;
+    _psKey = NULL;
     next = NULL;
 }
 
@@ -89,11 +93,15 @@ void WiFiClientSecure::stop()
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
 {
+    if (_pskIdent && _psKey)
+        return connect(ip, port, _pskIdent, _psKey);
     return connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port)
 {
+    if (_pskIdent && _psKey)
+        return connect(host, port, _pskIdent, _psKey);
     return connect(host, port, _CA_cert, _cert, _private_key);
 }
 
@@ -104,7 +112,24 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert,
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
-    int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key);
+    int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key, NULL, NULL);
+    _lastError = ret;
+    if (ret < 0) {
+        log_e("start_ssl_client: %d", ret);
+        stop();
+        return 0;
+    }
+    _connected = true;
+    return 1;
+}
+
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent, const char *psKey) {
+    return connect(ip.toString().c_str(), port,_pskIdent, _psKey);
+}
+
+int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
+    log_v("start_ssl_client with PSK");
+    int ret = start_ssl_client(sslclient, host, port, NULL, NULL, NULL, _pskIdent, _psKey);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -221,6 +246,11 @@ void WiFiClientSecure::setCertificate (const char *client_ca)
 void WiFiClientSecure::setPrivateKey (const char *private_key)
 {
     _private_key = private_key;
+}
+
+void WiFiClientSecure::setPreSharedKey(const char *pskIdent, const char *psKey) {
+    _pskIdent = pskIdent;
+    _psKey = psKey;
 }
 
 bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
