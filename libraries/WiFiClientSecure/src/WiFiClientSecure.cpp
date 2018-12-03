@@ -209,13 +209,15 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
 
 int WiFiClientSecure::available()
 {
-    if (!_connected) {
-        return 0;
+    int res = 0;
+    if (_connected) {
+        res = data_to_read(sslclient);
+        if (res < 0 ) {
+            stop();
+            res = 0;
+        } 
     }
-    int res = data_to_read(sslclient);
-    if (res < 0 ) {
-        stop();
-    } else if(_peek >= 0) {
+    if(_peek >= 0) {
         res += 1;
     }
     return res;
