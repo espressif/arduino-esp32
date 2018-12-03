@@ -439,9 +439,8 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
-        if(res < 0) {
-            log_e("RES: %d", res);
-        }
+        // avoid unused var warning by gcc
+        (void)res;
         switch (errno) {
             case EWOULDBLOCK:
             case ENOENT: //caused by vfs
