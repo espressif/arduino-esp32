@@ -185,7 +185,6 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
 
 int WiFiClientSecure::read(uint8_t *buf, size_t size)
 {
-    int peeked = 0;
     if ((!buf && size) || (_peek < 0 && !available())) {
         return -1;
     }
@@ -196,11 +195,8 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
         buf[0] = _peek;
         _peek = -1;
         size--;
-        if(!size || !available()){
-            return 1;
-        }
-        buf++;
-        peeked = 1;
+        int ret = read(buf+1, size-1);
+        return 1 + ((ret > 0) ? ret : 0);
     }
     
     int res = get_ssl_receive(sslclient, buf, size);
@@ -208,7 +204,7 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
         stop();
         return res;
     }
-    return res + peeked;
+    return res;
 }
 
 int WiFiClientSecure::available()
