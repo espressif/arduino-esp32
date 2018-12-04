@@ -157,12 +157,6 @@ int WiFiClientSecure::read()
 {
     uint8_t data = -1;
 
-    if(_peek >= 0){
-        data = _peek;
-        _peek = -1;
-        return data;
-    }
-
     int res = read(&data, 1);
     if (res < 0) {
         return res;
