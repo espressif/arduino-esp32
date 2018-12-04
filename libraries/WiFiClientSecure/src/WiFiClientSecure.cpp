@@ -188,7 +188,6 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
     if(_peek >= 0){
         buf[0] = _peek;
         _peek = -1;
-        size--;
         int ret = read(buf+1, size-1);
         return 1 + ((ret > 0) ? ret : 0);
     }
