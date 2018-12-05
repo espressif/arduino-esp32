@@ -398,9 +398,6 @@ int WiFiClient::peek()
 
 int WiFiClient::available()
 {
-    if(!_connected) {
-        return 0;
-    }
     int res = _rxBuffer->available();
     if(_rxBuffer->failed()) {
         log_e("%d", errno);
@@ -439,9 +436,8 @@ uint8_t WiFiClient::connected()
     if (_connected) {
         uint8_t dummy;
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
-        if(res < 0) {
-            log_e("RES: %d", res);
-        }
+        // avoid unused var warning by gcc
+        (void)res;
         switch (errno) {
             case EWOULDBLOCK:
             case ENOENT: //caused by vfs
