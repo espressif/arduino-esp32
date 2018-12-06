@@ -251,14 +251,14 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     startUpdate = false;
                 }
             } else {
-                const esp_partition_t* _partition = esp_ota_get_next_update_partition(NULL);
-                if(!_partition){
+                int sketchFreeSpace = ESP.getFreeSketchSpace();
+                if(!sketchFreeSpace){
                     _lastError = HTTP_UE_NO_PARTITION;
                     return HTTP_UPDATE_FAILED;
                 }
 
-                if(len > _partition->size) {
-                    log_e("FreeSketchSpace to low (%d) needed: %d\n", _partition->size, len);
+                if(len > sketchFreeSpace) {
+                    log_e("FreeSketchSpace to low (%d) needed: %d\n", sketchFreeSpace, len);
                     startUpdate = false;
                 }
             }
@@ -389,8 +389,6 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
     }
 
 // To do: the SHA256 could be checked if the server sends it
-
-    delay(0);
 
     if(Update.writeStream(in) != size) {
         _lastError = Update.getError();
