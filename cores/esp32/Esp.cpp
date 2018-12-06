@@ -169,7 +169,12 @@ uint32_t EspClass::getSketchSize () {
 }
 
 uint32_t EspClass::getFreeSketchSpace () {
-    return sketchSize(SKETCH_SIZE_FREE);
+    const esp_partition_t* _partition = esp_ota_get_next_update_partition(NULL);
+    if(!_partition){
+        return 0;
+    }
+
+    return _partition->size;
 }
 
 uint8_t EspClass::getChipRevision(void)

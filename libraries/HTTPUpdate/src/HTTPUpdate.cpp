@@ -127,6 +127,8 @@ String HTTPUpdate::getLastErrorString(void)
         return "Verify Bin Header Failed";
     case HTTP_UE_BIN_FOR_WRONG_FLASH:
         return "New Binary Does Not Fit Flash Size";
+    case HTTP_UE_NO_PARTITION:
+        return "Partition Could Not be Found";
     }
 
     return String();
@@ -238,14 +240,25 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
         if(len > 0) {
             bool startUpdate = true;
             if(spiffs) {
-// To do                size_t spiffsSize = ((size_t) &_SPIFFS_end - (size_t) &_SPIFFS_start);
-// To do                if(len > (int) spiffsSize) {
-// To do                    log_e("spiffsSize to low (%d) needed: %d\n", spiffsSize, len);
-// To do                    startUpdate = false;
-// To do                }
+                const esp_partition_t* _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+                if(!_partition){
+                    _lastError = HTTP_UE_NO_PARTITION;
+                    return HTTP_UPDATE_FAILED;
+                }
+
+                if(len > _partition->size) {
+                    log_e("spiffsSize to low (%d) needed: %d\n", _partition->size, len);
+                    startUpdate = false;
+                }
             } else {
-                if(len > (int) ESP.getFreeSketchSpace()) {
-                    log_e("FreeSketchSpace to low (%d) needed: %d\n", ESP.getFreeSketchSpace(), len);
+                int sketchFreeSpace = ESP.getFreeSketchSpace();
+                if(!sketchFreeSpace){
+                    _lastError = HTTP_UE_NO_PARTITION;
+                    return HTTP_UPDATE_FAILED;
+                }
+
+                if(len > sketchFreeSpace) {
+                    log_e("FreeSketchSpace to low (%d) needed: %d\n", sketchFreeSpace, len);
                     startUpdate = false;
                 }
             }
@@ -374,6 +387,8 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
             return false;
         }
     }
+
+// To do: the SHA256 could be checked if the server sends it
 
     if(Update.writeStream(in) != size) {
         _lastError = Update.getError();
