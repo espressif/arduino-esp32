@@ -181,8 +181,11 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.addHeader("x-ESP32-AP-MAC", WiFi.softAPmacAddress());
     http.addHeader("x-ESP32-free-space", String(ESP.getFreeSketchSpace()));
     http.addHeader("x-ESP32-sketch-size", String(ESP.getSketchSize()));
-// To do    http.addHeader("x-ESP32-sketch-md5", String(ESP.getSketchMD5()));
-    // Sketch MD5 is not supported by the core, but SHA256 is, so add a SHA256 instead
+    String sketchMD5 = ESP.getSketchMD5();
+    if(sketchMD5.length() != 0) {
+        http.addHeader("x-ESP32-sketch-md5", sketchMD5);
+    }
+    // Add also a SHA256
     String sketchSHA256 = getSketchSHA256();
     if(sketchSHA256.length() != 0) {
       http.addHeader("x-ESP32-sketch-sha256", sketchSHA256);
