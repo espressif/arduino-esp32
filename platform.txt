@@ -71,10 +71,10 @@ recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpreprocessor
 recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.S.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
 
 ## Create archives
-recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{build.path}/arduino.ar" "{object_file}"
+recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{build.path}/arduino.ar" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create eeprom
 recipe.objcopy.eep.pattern={tools.gen_esp32part.cmd} -q "{runtime.platform.path}/tools/partitions/{build.partitions}.csv" "{build.path}/{build.project_name}.partitions.bin"
