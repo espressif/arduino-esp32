@@ -26,10 +26,11 @@
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
 #include <esp_partition.h>
-#include <esp_ota_ops.h>
 extern "C" {
-#include <esp_image_format.h>
+#include "esp_ota_ops.h"
+#include "esp_image_format.h"
 }
+#include <MD5Builder.h>
 
 /**
  * User-defined Literals
@@ -158,9 +159,9 @@ static uint32_t sketchSize(sketchSize_t response) {
     data.start_addr = running_pos.offset;
     esp_image_verify(ESP_IMAGE_VERIFY, &running_pos, &data);
     if (response) {
-    return running_pos.size - data.image_len;
+        return running_pos.size - data.image_len;
     } else {
-    return data.image_len;
+        return data.image_len;
     }
 }
     
@@ -168,8 +169,53 @@ uint32_t EspClass::getSketchSize () {
     return sketchSize(SKETCH_SIZE_TOTAL);
 }
 
+String EspClass::getSketchMD5()
+{
+    static String result;
+    if (result.length()) {
+        return result;
+    }
+    uint32_t lengthLeft = getSketchSize();
+
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    if (!running) {
+        log_e("Partition could not be found");
+
+        return String();
+    }
+    const size_t bufSize = SPI_FLASH_SEC_SIZE;
+    std::unique_ptr<uint8_t[]> buf(new uint8_t[bufSize]);
+    uint32_t offset = 0;
+    if(!buf.get()) {
+        log_e("Not enough memory to allocate buffer");
+
+        return String();
+    }
+    MD5Builder md5;
+    md5.begin();
+    while( lengthLeft > 0) {
+        size_t readBytes = (lengthLeft < bufSize) ? lengthLeft : bufSize;
+        if (!ESP.flashRead(running->address + offset, reinterpret_cast<uint32_t*>(buf.get()), (readBytes + 3) & ~3)) {
+            log_e("Could not read buffer from flash");
+
+            return String();
+        }
+        md5.add(buf.get(), readBytes);
+        lengthLeft -= readBytes;
+        offset += readBytes;
+    }
+    md5.calculate();
+    result = md5.toString();
+    return result;
+}
+
 uint32_t EspClass::getFreeSketchSpace () {
-    return sketchSize(SKETCH_SIZE_FREE);
+    const esp_partition_t* _partition = esp_ota_get_next_update_partition(NULL);
+    if(!_partition){
+        return 0;
+    }
+
+    return _partition->size;
 }
 
 uint8_t EspClass::getChipRevision(void)

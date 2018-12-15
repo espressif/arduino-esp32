@@ -49,14 +49,20 @@ HTTPUpdate::~HTTPUpdate(void)
 HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion)
 {
     HTTPClient http;
-    http.begin(client, url);
+    if(!http.begin(client, url))
+    {
+        return HTTP_UPDATE_FAILED;
+    }
     return handleUpdate(http, currentVersion, false);
 }
 
 HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion)
 {
     HTTPClient http;
-    http.begin(client, url);
+    if(!http.begin(client, url))
+    {
+        return HTTP_UPDATE_FAILED;
+    }
     return handleUpdate(http, currentVersion, true);
 }
 
@@ -64,7 +70,10 @@ HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint
         const String& currentVersion)
 {
     HTTPClient http;
-    http.begin(client, host, port, uri);
+    if(!http.begin(client, host, port, uri))
+    {
+        return HTTP_UPDATE_FAILED;
+    }
     return handleUpdate(http, currentVersion, false);
 }
 
@@ -118,6 +127,8 @@ String HTTPUpdate::getLastErrorString(void)
         return "Verify Bin Header Failed";
     case HTTP_UE_BIN_FOR_WRONG_FLASH:
         return "New Binary Does Not Fit Flash Size";
+    case HTTP_UE_NO_PARTITION:
+        return "Partition Could Not be Found";
     }
 
     return String();
@@ -170,8 +181,11 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.addHeader("x-ESP32-AP-MAC", WiFi.softAPmacAddress());
     http.addHeader("x-ESP32-free-space", String(ESP.getFreeSketchSpace()));
     http.addHeader("x-ESP32-sketch-size", String(ESP.getSketchSize()));
-// To do    http.addHeader("x-ESP32-sketch-md5", String(ESP.getSketchMD5()));
-    // Sketch MD5 is not supported by the core, but SHA256 is, so add a SHA256 instead
+    String sketchMD5 = ESP.getSketchMD5();
+    if(sketchMD5.length() != 0) {
+        http.addHeader("x-ESP32-sketch-md5", sketchMD5);
+    }
+    // Add also a SHA256
     String sketchSHA256 = getSketchSHA256();
     if(sketchSHA256.length() != 0) {
       http.addHeader("x-ESP32-sketch-sha256", sketchSHA256);
@@ -229,14 +243,25 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
         if(len > 0) {
             bool startUpdate = true;
             if(spiffs) {
-// To do                size_t spiffsSize = ((size_t) &_SPIFFS_end - (size_t) &_SPIFFS_start);
-// To do                if(len > (int) spiffsSize) {
-// To do                    log_e("spiffsSize to low (%d) needed: %d\n", spiffsSize, len);
-// To do                    startUpdate = false;
-// To do                }
+                const esp_partition_t* _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+                if(!_partition){
+                    _lastError = HTTP_UE_NO_PARTITION;
+                    return HTTP_UPDATE_FAILED;
+                }
+
+                if(len > _partition->size) {
+                    log_e("spiffsSize to low (%d) needed: %d\n", _partition->size, len);
+                    startUpdate = false;
+                }
             } else {
-                if(len > (int) ESP.getFreeSketchSpace()) {
-                    log_e("FreeSketchSpace to low (%d) needed: %d\n", ESP.getFreeSketchSpace(), len);
+                int sketchFreeSpace = ESP.getFreeSketchSpace();
+                if(!sketchFreeSpace){
+                    _lastError = HTTP_UE_NO_PARTITION;
+                    return HTTP_UPDATE_FAILED;
+                }
+
+                if(len > sketchFreeSpace) {
+                    log_e("FreeSketchSpace to low (%d) needed: %d\n", sketchFreeSpace, len);
                     startUpdate = false;
                 }
             }
@@ -365,6 +390,8 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
             return false;
         }
     }
+
+// To do: the SHA256 could be checked if the server sends it
 
     if(Update.writeStream(in) != size) {
         _lastError = Update.getError();

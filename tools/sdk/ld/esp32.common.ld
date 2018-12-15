@@ -285,6 +285,9 @@ SECTIONS
   {
     _rodata_start = ABSOLUTE(.);
 
+    *(.rodata_desc .rodata_desc.*)               /* Should be the first.  App version info.        DO NOT PUT ANYTHING BEFORE IT! */
+    *(.rodata_custom_desc .rodata_custom_desc.*) /* Should be the second. Custom app version info. DO NOT PUT ANYTHING BEFORE IT! */
+
     *(EXCLUDE_FILE(*libapp_trace.a *libesp32.a:panic.* *libphy.a *libsoc.a:rtc_clk.* *libgcov.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.*) .rodata EXCLUDE_FILE(*libapp_trace.a *libesp32.a:panic.* *libphy.a *libsoc.a:rtc_clk.* *libgcov.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.*) .rodata.*)
 
     *(.irom1.text) /* catch stray ICACHE_RODATA_ATTR */

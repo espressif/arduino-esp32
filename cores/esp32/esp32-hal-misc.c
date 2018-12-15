@@ -21,7 +21,9 @@
 #include "esp_partition.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#ifdef CONFIG_BT_ENABLED
 #include "esp_bt.h"
+#endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "esp32-hal.h"
 

@@ -18,7 +18,7 @@
 |University|Board|Method|Result|
 |-------------|-------------| -----|------|
 |Technical University in Košice (Slovakia)|ESP32 Devkit v1|PEAP + MsCHAPv2|Working|
-|Technical University in Košice (Slovakia)|ESP32 DevKitc v4|PEAP + MsCHAPv2|Working|
+|Technical University in Košice (Slovakia)|ESP32 Devmodule v4|PEAP + MsCHAPv2|Working on 6th attempt in loop|
 |Slovak Technical University in Bratislava (Slovakia)|ESP32 Devkit v1|PEAP + MsCHAPv2|Working|
 |University of Antwerp (Belgium)|Lolin32|PEAP + MsCHAPv2|Working|
 |UPV Universitat Politècnica de València (Spain)|ESP32 Devmodule v4|PEAP + MsCHAPv2|Working|
@@ -27,7 +27,8 @@
 |Universidad de Granada (Spain)|Lolin D32 Pro|PEAP + MsCHAPv2|Working|
 |Universidad de Granada (Spain)|Lolin D32|PEAP + MsCHAPv2|Working|
 |Universidade Federal de Santa Catarina (Brazil)|xxx|EAP-TTLS + MsCHAPv2|Working|
-|University of Regensburg (Germany)|Lolin32|PEAP + MsCHAPv2|Working|
+|University of Central Florida (Orlando, Florida)|ESP32 Built-in OLED – Heltec WiFi Kit 32|PEAP + MsCHAPv2|Working|
+|Université de Montpellier (France)|NodeMCU-32S|PEAP + MsCHAPv2|Working|
 
 # Common errors - Switch to Debug mode for Serial monitor prints
 |Error|Appearance|Solution|
