@@ -398,6 +398,10 @@ int WiFiClient::peek()
 
 int WiFiClient::available()
 {
+    if(!_rxBuffer)
+    {
+        return 0;
+    }
     int res = _rxBuffer->available();
     if(_rxBuffer->failed()) {
         log_e("%d", errno);

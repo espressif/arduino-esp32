@@ -16,4 +16,6 @@ static const uint8_t _VBAT = 35; // battery voltage
 #define TFT_RST 33 // TFT reset pin
 #define TFT_DC  27 // TFT DC pin
 
+#define SS      TF_CS
+
 #endif /* Pins_Arduino_h */

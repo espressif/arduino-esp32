@@ -90,6 +90,7 @@ public:
     FlashMode_t magicFlashChipMode(uint8_t byte);
 
     uint32_t getSketchSize();
+    String getSketchMD5();
     uint32_t getFreeSketchSpace();
 
     bool flashEraseSector(uint32_t sector);
