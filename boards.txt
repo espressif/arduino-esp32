@@ -10,7 +10,7 @@ menu.PSRAM=PSRAM
 
 esp32.name=ESP32 Dev Module
 
-esp32.upload.tool=esptool
+esp32.upload.tool=esptool_py
 esp32.upload.maximum_size=1310720
 esp32.upload.maximum_data_size=327680
 esp32.upload.wait_for_upload_port=true
@@ -108,7 +108,7 @@ esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32wrover.name=ESP32 Wrover Module
 
-esp32wrover.upload.tool=esptool
+esp32wrover.upload.tool=esptool_py
 esp32wrover.upload.maximum_size=1310720
 esp32wrover.upload.maximum_data_size=327680
 esp32wrover.upload.wait_for_upload_port=true
@@ -190,7 +190,7 @@ esp32wrover.menu.DebugLevel.verbose.build.code_debug=5
 
 pico32.name=ESP32 Pico Kit
 
-pico32.upload.tool=esptool
+pico32.upload.tool=esptool_py
 pico32.upload.maximum_size=1310720
 pico32.upload.maximum_data_size=327680
 pico32.upload.wait_for_upload_port=true
@@ -243,7 +243,7 @@ pico32.menu.DebugLevel.verbose.build.code_debug=5
 
 ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
 
-ttgo-lora32-v1.upload.tool=esptool
+ttgo-lora32-v1.upload.tool=esptool_py
 ttgo-lora32-v1.upload.maximum_size=1310720
 ttgo-lora32-v1.upload.maximum_data_size=294912
 ttgo-lora32-v1.upload.wait_for_upload_port=true
@@ -299,7 +299,7 @@ ttgo-lora32-v1.menu.DebugLevel.verbose.build.code_debug=5
 
 cw02.name=XinaBox CW02
 
-cw02.upload.tool=esptool
+cw02.upload.tool=esptool_py
 cw02.upload.maximum_size=1310720
 cw02.upload.maximum_data_size=294912
 cw02.upload.wait_for_upload_port=true
@@ -375,7 +375,7 @@ cw02.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32thing.name=SparkFun ESP32 Thing
 
-esp32thing.upload.tool=esptool
+esp32thing.upload.tool=esptool_py
 esp32thing.upload.maximum_size=1310720
 esp32thing.upload.maximum_data_size=327680
 esp32thing.upload.wait_for_upload_port=true
@@ -442,7 +442,7 @@ esp32thing.menu.DebugLevel.verbose.build.code_debug=5
 
 nina_w10.name=u-blox NINA-W10 series (ESP32)
 
-nina_w10.upload.tool=esptool
+nina_w10.upload.tool=esptool_py
 nina_w10.upload.maximum_size=1310720
 nina_w10.upload.maximum_data_size=327680
 nina_w10.upload.wait_for_upload_port=true
@@ -481,7 +481,7 @@ nina_w10.menu.UploadSpeed.512000.upload.speed=512000
 
 widora-air.name=Widora AIR
 
-widora-air.upload.tool=esptool
+widora-air.upload.tool=esptool_py
 widora-air.upload.maximum_size=1310720
 widora-air.upload.maximum_data_size=327680
 widora-air.upload.wait_for_upload_port=true
@@ -525,7 +525,7 @@ widora-air.menu.UploadSpeed.512000.upload.speed=512000
 
 esp320.name=Electronic SweetPeas - ESP320
 
-esp320.upload.tool=esptool
+esp320.upload.tool=esptool_py
 esp320.upload.maximum_size=1310720
 esp320.upload.maximum_data_size=327680
 esp320.upload.wait_for_upload_port=true
@@ -569,7 +569,7 @@ esp320.menu.UploadSpeed.512000.upload.speed=512000
 
 nano32.name=Nano32
 
-nano32.upload.tool=esptool
+nano32.upload.tool=esptool_py
 nano32.upload.maximum_size=1310720
 nano32.upload.maximum_data_size=327680
 nano32.upload.wait_for_upload_port=true
@@ -613,7 +613,7 @@ nano32.menu.UploadSpeed.512000.upload.speed=512000
 
 d32.name=LOLIN D32
 
-d32.upload.tool=esptool
+d32.upload.tool=esptool_py
 d32.upload.maximum_size=1310720
 d32.upload.maximum_data_size=327680
 d32.upload.wait_for_upload_port=true
@@ -686,7 +686,7 @@ d32.menu.DebugLevel.verbose.build.code_debug=5
 
 d32_pro.name=LOLIN D32 PRO
 
-d32_pro.upload.tool=esptool
+d32_pro.upload.tool=esptool_py
 d32_pro.upload.maximum_size=1310720
 d32_pro.upload.maximum_data_size=327680
 d32_pro.upload.wait_for_upload_port=true
@@ -764,7 +764,7 @@ d32_pro.menu.DebugLevel.verbose.build.code_debug=5
 
 lolin32.name=WEMOS LOLIN32
 
-lolin32.upload.tool=esptool
+lolin32.upload.tool=esptool_py
 lolin32.upload.maximum_size=1310720
 lolin32.upload.maximum_data_size=327680
 lolin32.upload.wait_for_upload_port=true
@@ -817,7 +817,7 @@ lolin32.menu.UploadSpeed.512000.upload.speed=512000
 
 pocket_32.name=Dongsen Tech Pocket 32
 
-pocket_32.upload.tool=esptool
+pocket_32.upload.tool=esptool_py
 pocket_32.upload.maximum_size=1310720
 pocket_32.upload.maximum_data_size=327680
 pocket_32.upload.wait_for_upload_port=true
@@ -861,7 +861,7 @@ pocket_32.menu.UploadSpeed.512000.upload.speed=512000
 
 WeMosBat.name="WeMos" WiFi&Bluetooth Battery
 
-WeMosBat.upload.tool=esptool
+WeMosBat.upload.tool=esptool_py
 WeMosBat.upload.maximum_size=1310720
 WeMosBat.upload.maximum_data_size=327680
 WeMosBat.upload.wait_for_upload_port=true
@@ -918,7 +918,7 @@ WeMosBat.menu.DebugLevel.verbose.build.code_debug=5
 
 espea32.name=ESPea32
 
-espea32.upload.tool=esptool
+espea32.upload.tool=esptool_py
 espea32.upload.maximum_size=1310720
 espea32.upload.maximum_data_size=327680
 espea32.upload.wait_for_upload_port=true
@@ -962,7 +962,7 @@ espea32.menu.UploadSpeed.512000.upload.speed=512000
 
 quantum.name=Noduino Quantum
 
-quantum.upload.tool=esptool
+quantum.upload.tool=esptool_py
 quantum.upload.maximum_size=1310720
 quantum.upload.maximum_data_size=327680
 quantum.upload.wait_for_upload_port=true
@@ -1006,7 +1006,7 @@ quantum.menu.UploadSpeed.512000.upload.speed=512000
 
 node32s.name=Node32s
 
-node32s.upload.tool=esptool
+node32s.upload.tool=esptool_py
 node32s.upload.maximum_size=1310720
 node32s.upload.maximum_data_size=327680
 node32s.upload.wait_for_upload_port=true
@@ -1050,7 +1050,7 @@ node32s.menu.UploadSpeed.512000.upload.speed=512000
 
 hornbill32dev.name=Hornbill ESP32 Dev
 
-hornbill32dev.upload.tool=esptool
+hornbill32dev.upload.tool=esptool_py
 hornbill32dev.upload.maximum_size=1310720
 hornbill32dev.upload.maximum_data_size=327680
 hornbill32dev.upload.wait_for_upload_port=true
@@ -1094,7 +1094,7 @@ hornbill32dev.menu.UploadSpeed.512000.upload.speed=512000
 
 hornbill32minima.name=Hornbill ESP32 Minima
 
-hornbill32minima.upload.tool=esptool
+hornbill32minima.upload.tool=esptool_py
 hornbill32minima.upload.maximum_size=1310720
 hornbill32minima.upload.maximum_data_size=327680
 hornbill32minima.upload.wait_for_upload_port=true
@@ -1137,7 +1137,7 @@ hornbill32minima.menu.UploadSpeed.512000.upload.speed=512000
 
 firebeetle32.name=FireBeetle-ESP32
 
-firebeetle32.upload.tool=esptool
+firebeetle32.upload.tool=esptool_py
 firebeetle32.upload.maximum_size=1310720
 firebeetle32.upload.maximum_data_size=327680
 firebeetle32.upload.wait_for_upload_port=true
@@ -1181,7 +1181,7 @@ firebeetle32.menu.UploadSpeed.512000.upload.speed=512000
 
 intorobot-fig.name=IntoRobot Fig
 
-intorobot-fig.upload.tool=esptool
+intorobot-fig.upload.tool=esptool_py
 intorobot-fig.upload.maximum_size=1310720
 intorobot-fig.upload.maximum_data_size=327680
 intorobot-fig.upload.wait_for_upload_port=true
@@ -1225,7 +1225,7 @@ intorobot-fig.menu.UploadSpeed.512000.upload.speed=512000
 
 onehorse32dev.name=Onehorse ESP32 Dev Module
 
-onehorse32dev.upload.tool=esptool
+onehorse32dev.upload.tool=esptool_py
 onehorse32dev.upload.maximum_size=1310720
 onehorse32dev.upload.maximum_data_size=327680
 onehorse32dev.upload.wait_for_upload_port=true
@@ -1269,7 +1269,7 @@ onehorse32dev.menu.UploadSpeed.512000.upload.speed=512000
 
 featheresp32.name=Adafruit ESP32 Feather
 
-featheresp32.upload.tool=esptool
+featheresp32.upload.tool=esptool_py
 featheresp32.upload.maximum_size=1310720
 featheresp32.upload.maximum_data_size=327680
 featheresp32.upload.wait_for_upload_port=true
@@ -1326,7 +1326,7 @@ featheresp32.menu.DebugLevel.verbose.build.code_debug=5
 
 nodemcu-32s.name=NodeMCU-32S
 
-nodemcu-32s.upload.tool=esptool
+nodemcu-32s.upload.tool=esptool_py
 nodemcu-32s.upload.maximum_size=1310720
 nodemcu-32s.upload.maximum_data_size=327680
 nodemcu-32s.upload.wait_for_upload_port=true
@@ -1370,7 +1370,7 @@ nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
 
 mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
 
-mhetesp32devkit.upload.tool=esptool
+mhetesp32devkit.upload.tool=esptool_py
 mhetesp32devkit.upload.maximum_size=1310720
 mhetesp32devkit.upload.maximum_data_size=327680
 mhetesp32devkit.upload.wait_for_upload_port=true
@@ -1436,7 +1436,7 @@ mhetesp32devkit.menu.DebugLevel.verbose.build.code_debug=5
 
 mhetesp32minikit.name=MH ET LIVE ESP32MiniKit
 
-mhetesp32minikit.upload.tool=esptool
+mhetesp32minikit.upload.tool=esptool_py
 mhetesp32minikit.upload.maximum_size=1310720
 mhetesp32minikit.upload.maximum_data_size=327680
 mhetesp32minikit.upload.wait_for_upload_port=true
@@ -1502,7 +1502,7 @@ mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
 
-esp32vn-iot-uno.upload.tool=esptool
+esp32vn-iot-uno.upload.tool=esptool_py
 esp32vn-iot-uno.upload.maximum_size=1310720
 esp32vn-iot-uno.upload.maximum_data_size=327680
 esp32vn-iot-uno.upload.wait_for_upload_port=true
@@ -1546,7 +1546,7 @@ esp32vn-iot-uno.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32doit-devkit-v1.name=DOIT ESP32 DEVKIT V1
 
-esp32doit-devkit-v1.upload.tool=esptool
+esp32doit-devkit-v1.upload.tool=esptool_py
 esp32doit-devkit-v1.upload.maximum_size=1310720
 esp32doit-devkit-v1.upload.maximum_data_size=327680
 esp32doit-devkit-v1.upload.wait_for_upload_port=true
@@ -1601,7 +1601,7 @@ esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 esp32-evb.name=OLIMEX ESP32-EVB
 
-esp32-evb.upload.tool=esptool
+esp32-evb.upload.tool=esptool_py
 esp32-evb.upload.maximum_size=1310720
 esp32-evb.upload.maximum_data_size=327680
 esp32-evb.upload.wait_for_upload_port=true
@@ -1634,7 +1634,7 @@ esp32-evb.menu.UploadSpeed.115200.upload.speed=115200
 
 esp32-gateway.name=OLIMEX ESP32-GATEWAY
 
-esp32-gateway.upload.tool=esptool
+esp32-gateway.upload.tool=esptool_py
 esp32-gateway.upload.maximum_size=1310720
 esp32-gateway.upload.maximum_data_size=327680
 esp32-gateway.upload.wait_for_upload_port=true
@@ -1667,7 +1667,7 @@ esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
 esp32-poe.name=OLIMEX ESP32-PoE
 
-esp32-poe.upload.tool=esptool
+esp32-poe.upload.tool=esptool_py
 esp32-poe.upload.maximum_size=1310720
 esp32-poe.upload.maximum_data_size=327680
 esp32-poe.upload.wait_for_upload_port=true
@@ -1700,7 +1700,7 @@ esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
 
 espino32.name=ThaiEasyElec's ESPino32
 
-espino32.upload.tool=esptool
+espino32.upload.tool=esptool_py
 espino32.upload.maximum_size=1310720
 espino32.upload.maximum_data_size=327680
 espino32.upload.wait_for_upload_port=true
@@ -1744,7 +1744,7 @@ espino32.menu.UploadSpeed.512000.upload.speed=512000
 
 m5stack-core-esp32.name=M5Stack-Core-ESP32
 
-m5stack-core-esp32.upload.tool=esptool
+m5stack-core-esp32.upload.tool=esptool_py
 m5stack-core-esp32.upload.maximum_size=1310720
 m5stack-core-esp32.upload.maximum_data_size=327680
 m5stack-core-esp32.upload.wait_for_upload_port=true
@@ -1823,7 +1823,7 @@ m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 m5stack-fire.name=M5Stack-FIRE
 
-m5stack-fire.upload.tool=esptool
+m5stack-fire.upload.tool=esptool_py
 m5stack-fire.upload.maximum_size=6553600
 m5stack-fire.upload.maximum_data_size=4521984
 m5stack-fire.upload.wait_for_upload_port=true
@@ -1887,7 +1887,7 @@ m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
 
 odroid_esp32.name=ODROID ESP32
 
-odroid_esp32.upload.tool=esptool
+odroid_esp32.upload.tool=esptool_py
 odroid_esp32.upload.maximum_size=1310720
 odroid_esp32.upload.maximum_data_size=327680
 odroid_esp32.upload.wait_for_upload_port=true
@@ -1966,7 +1966,7 @@ odroid_esp32.menu.DebugLevel.verbose.build.code_debug=5
 
 heltec_wifi_kit_32.name=Heltec_WIFI_Kit_32
 
-heltec_wifi_kit_32.upload.tool=esptool
+heltec_wifi_kit_32.upload.tool=esptool_py
 heltec_wifi_kit_32.upload.maximum_size=1310720
 heltec_wifi_kit_32.upload.maximum_data_size=327680
 heltec_wifi_kit_32.upload.wait_for_upload_port=true
@@ -2010,7 +2010,7 @@ heltec_wifi_kit_32.menu.UploadSpeed.512000.upload.speed=512000
 
 heltec_wifi_lora_32.name=Heltec_WIFI_LoRa_32
 
-heltec_wifi_lora_32.upload.tool=esptool
+heltec_wifi_lora_32.upload.tool=esptool_py
 heltec_wifi_lora_32.upload.maximum_size=1310720
 heltec_wifi_lora_32.upload.maximum_data_size=327680
 heltec_wifi_lora_32.upload.wait_for_upload_port=true
@@ -2054,7 +2054,7 @@ heltec_wifi_lora_32.menu.UploadSpeed.512000.upload.speed=512000
 
 espectro32.name=ESPectro32
 
-espectro32.upload.tool=esptool
+espectro32.upload.tool=esptool_py
 espectro32.upload.maximum_size=1310720
 espectro32.upload.maximum_data_size=327680
 espectro32.upload.wait_for_upload_port=true
@@ -2130,7 +2130,7 @@ espectro32.menu.DebugLevel.verbose.build.code_debug=5
 ##############################################################
 CoreESP32.name=Microduino-CoreESP32
 
-CoreESP32.upload.tool=esptool
+CoreESP32.upload.tool=esptool_py
 CoreESP32.upload.maximum_size=1310720
 CoreESP32.upload.maximum_data_size=327680
 CoreESP32.upload.wait_for_upload_port=true
@@ -2175,7 +2175,7 @@ CoreESP32.menu.UploadSpeed.512000.upload.speed=512000
 
 alksesp32.name=ALKS ESP32
 
-alksesp32.upload.tool=esptool
+alksesp32.upload.tool=esptool_py
 alksesp32.upload.maximum_size=1310720
 alksesp32.upload.maximum_data_size=327680
 alksesp32.upload.wait_for_upload_port=true
@@ -2264,7 +2264,7 @@ alksesp32.menu.DebugLevel.verbose.build.code_debug=5
 
 wipy3.name=WiPy 3.0
 
-wipy3.upload.tool=esptool
+wipy3.upload.tool=esptool_py
 wipy3.upload.maximum_size=1310720
 wipy3.upload.maximum_data_size=294912
 wipy3.upload.wait_for_upload_port=true
@@ -2321,7 +2321,7 @@ wipy3.menu.DebugLevel.verbose.build.code_debug=5
 
 bpi-bit.name=BPI-BIT
 
-bpi-bit.upload.tool=esptool
+bpi-bit.upload.tool=esptool_py
 bpi-bit.upload.maximum_size=1310720
 bpi-bit.upload.maximum_data_size=294912
 bpi-bit.upload.wait_for_upload_port=true
@@ -2364,7 +2364,7 @@ bpi-bit.menu.UploadSpeed.512000.upload.speed=512000
 
 wesp32.name=Silicognition wESP32
 
-wesp32.upload.tool=esptool
+wesp32.upload.tool=esptool_py
 wesp32.upload.maximum_size=1310720
 wesp32.upload.maximum_data_size=327680
 wesp32.upload.wait_for_upload_port=true
@@ -2421,7 +2421,7 @@ wesp32.menu.DebugLevel.verbose.build.code_debug=5
 
 t-beam.name=T-Beam
 
-t-beam.upload.tool=esptool
+t-beam.upload.tool=esptool_py
 t-beam.upload.maximum_size=1310720
 t-beam.upload.maximum_data_size=327680
 t-beam.upload.wait_for_upload_port=true
@@ -2482,7 +2482,7 @@ t-beam.menu.DebugLevel.verbose.build.code_debug=5
 
 d-duino-32.name=D-duino-32
 
-d-duino-32.upload.tool=esptool
+d-duino-32.upload.tool=esptool_py
 d-duino-32.upload.maximum_size=1310720
 d-duino-32.upload.maximum_data_size=327680
 d-duino-32.upload.wait_for_upload_port=true
@@ -2553,7 +2553,7 @@ d-duino-32.menu.DebugLevel.verbose.build.code_debug=5
 
 lopy.name=LoPy
 
-lopy.upload.tool=esptool
+lopy.upload.tool=esptool_py
 lopy.upload.maximum_size=1310720
 lopy.upload.maximum_data_size=327680
 lopy.upload.wait_for_upload_port=true
@@ -2609,7 +2609,7 @@ lopy.menu.DebugLevel.verbose.build.code_debug=5
 
 lopy4.name=LoPy4
 
-lopy4.upload.tool=esptool
+lopy4.upload.tool=esptool_py
 lopy4.upload.maximum_size=1310720
 lopy4.upload.maximum_data_size=327680
 lopy4.upload.wait_for_upload_port=true

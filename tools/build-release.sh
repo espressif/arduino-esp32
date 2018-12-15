@@ -231,7 +231,7 @@ echo " - updating platform.txt..."
 cat $srcdir/platform.txt | \
 sed "s/version=.*/version=$ver$extent/g" | \
 sed 's/runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf//g' | \
-sed 's/tools.esptool.path={runtime.platform.path}\/tools\/esptool/tools.esptool.path=\{runtime.tools.esptool.path\}/g' \
+sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' \
  > $outdir/platform.txt
 
 # Put core version and short hash of git version into core_version.h

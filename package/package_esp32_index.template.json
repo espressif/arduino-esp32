@@ -37,8 +37,8 @@
             },
             {
               "packager": "esp32",
-              "name": "esptool",
-              "version": "2.5.0"
+              "name": "esptool_py",
+              "version": "2.6.0"
             },
             {
               "packager": "esp32",
@@ -84,43 +84,43 @@
           ]
         },
         {
-          "name": "esptool",
-          "version": "2.5.0",
+          "name": "esptool_py",
+          "version": "2.6.0",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-2.5.0-windows.zip",
-              "archiveFileName": "esptool-2.5.0-windows.zip",
-              "checksum": "SHA-256:576b8068b577cae0e6e937566a9d32a08ff7ff82963fb60400eacb6691f2fbfb",
-              "size": "3420959"
+              "url": "https://dl.espressif.com/dl/esptool-2.6.0-windows.zip",
+              "archiveFileName": "esptool-2.6.0-windows.zip",
+              "checksum": "SHA-256:a73f4cf68db240d7f1d250c5c7f2dfcb53c17a37483729f1bf71f8f43d79a799",
+              "size": "3421208"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-2.5.0-macos.tar.gz",
-              "archiveFileName": "esptool-2.5.0-macos.tar.gz",
-              "checksum": "SHA-256:2da8ba3b83d99b5d808cab955a077e3e0738ec640b51de932d047cad7fac1157",
-              "size": "3835397"
+              "url": "https://dl.espressif.com/dl/esptool-2.6.0-macos.tar.gz",
+              "archiveFileName": "esptool-2.6.0-macos.tar.gz",
+              "checksum": "SHA-256:0a881b91547c840fab8c72ae3d031069384278b8c2e5241647e8c8292c5e4a4b",
+              "size": "3835660"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-2.5.0-linux.tar.gz",
-              "archiveFileName": "esptool-2.5.0-linux.tar.gz",
-              "checksum": "SHA-256:34d63b9a0bf2acb9b6fdac15f91a8756f4e722065de031e8fbce4e4abc369e54",
-              "size": "43468"
+              "url": "https://dl.espressif.com/dl/esptool-2.6.0-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.0-linux.tar.gz",
+              "checksum": "SHA-256:6d162f70f395ca31f5008829dd7e833e729f044a9c7355d5be8ce333a054e110",
+              "size": "43535"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-2.5.0-linux.tar.gz",
-              "archiveFileName": "esptool-2.5.0-linux.tar.gz",
-              "checksum": "SHA-256:34d63b9a0bf2acb9b6fdac15f91a8756f4e722065de031e8fbce4e4abc369e54",
-              "size": "43468"
+              "url": "https://dl.espressif.com/dl/esptool-2.6.0-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.0-linux.tar.gz",
+              "checksum": "SHA-256:6d162f70f395ca31f5008829dd7e833e729f044a9c7355d5be8ce333a054e110",
+              "size": "43535"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/esptool-2.5.0-linux.tar.gz",
-              "archiveFileName": "esptool-2.5.0-linux.tar.gz",
-              "checksum": "SHA-256:34d63b9a0bf2acb9b6fdac15f91a8756f4e722065de031e8fbce4e4abc369e54",
-              "size": "43468"
+              "url": "https://dl.espressif.com/dl/esptool-2.6.0-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.0-linux.tar.gz",
+              "checksum": "SHA-256:6d162f70f395ca31f5008829dd7e833e729f044a9c7355d5be8ce333a054e110",
+              "size": "43535"
             }
           ]
         },
