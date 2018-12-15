@@ -26,9 +26,9 @@
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
 #include <esp_partition.h>
-#include <esp_ota_ops.h>
 extern "C" {
-#include <esp_image_format.h>
+#include "esp_ota_ops.h"
+#include "esp_image_format.h"
 }
 #include <MD5Builder.h>
 
