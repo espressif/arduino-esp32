@@ -205,7 +205,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
         data = connection.recv(32).decode()
         logging.info('Result: %s' ,data)
 
-        if data == "OK":
+        if "OK" in data:
           logging.info('Success')
           connection.close()
           f.close()
