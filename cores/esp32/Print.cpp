@@ -63,7 +63,7 @@ size_t Print::printf(const char *format, ...)
     len = vsnprintf(temp, len+1, format, arg);
     write((uint8_t*)temp, len);
     va_end(arg);
-    if(len > 64){
+    if(len >= sizeof(loc_buf)){
         delete[] temp;
     }
     return len;
