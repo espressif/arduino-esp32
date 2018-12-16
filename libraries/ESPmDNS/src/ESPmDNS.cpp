@@ -43,6 +43,14 @@ License (MIT license):
 #include <functional>
 #include "esp_wifi.h"
 
+// Add quotes around defined value
+#ifdef __IN_ECLIPSE__
+#define STR_EXPAND(tok) #tok
+#define STR(tok) STR_EXPAND(tok)
+#else
+#define STR(tok) tok
+#endif
+
 static void _on_sys_event(system_event_t *event){
     mdns_handle_system_event(NULL, event);
 }
@@ -82,7 +90,7 @@ void MDNSResponder::setInstanceName(String name) {
 
 void MDNSResponder::enableArduino(uint16_t port, bool auth){
     mdns_txt_item_t arduTxtData[4] = {
-        {(char*)"board"         ,(char*)ARDUINO_VARIANT},
+        {(char*)"board"         ,(char*)STR(ARDUINO_VARIANT)},
         {(char*)"tcp_check"     ,(char*)"no"},
         {(char*)"ssh_upload"    ,(char*)"no"},
         {(char*)"auth_upload"   ,(char*)"no"}
