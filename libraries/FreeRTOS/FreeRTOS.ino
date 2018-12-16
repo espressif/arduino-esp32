@@ -4,6 +4,10 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 13
+#endif
+
 // define two tasks for Blink & AnalogRead
 void TaskBlink( void *pvParameters );
 void TaskAnalogReadA3( void *pvParameters );
@@ -14,10 +18,6 @@ void setup() {
   // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
   
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB, on LEONARDO, MICRO, YUN, and other 32u4 based boards.
-  }
-
   // Now set up two tasks to run independently.
   xTaskCreatePinnedToCore(
     TaskBlink
@@ -42,7 +42,7 @@ void setup() {
 
 void loop()
 {
-  for(;;);// Empty. Things are done in Tasks.
+  // Empty. Things are done in Tasks.
 }
 
 /*--------------------------------------------------*/
