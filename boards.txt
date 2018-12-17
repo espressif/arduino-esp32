@@ -241,6 +241,49 @@ pico32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+turta_iot_node.name=Turta IoT Node
+
+turta_iot_node.upload.tool=esptool_py
+turta_iot_node.upload.maximum_size=1310720
+turta_iot_node.upload.maximum_data_size=327680
+turta_iot_node.upload.wait_for_upload_port=true
+
+turta_iot_node.serial.disableDTR=true
+turta_iot_node.serial.disableRTS=true
+
+turta_iot_node.build.mcu=esp32
+turta_iot_node.build.core=esp32
+turta_iot_node.build.variant=pico32
+turta_iot_node.build.board=ESP32_PICO
+
+turta_iot_node.build.f_cpu=240000000L
+turta_iot_node.build.flash_size=4MB
+turta_iot_node.build.flash_freq=80m
+turta_iot_node.build.flash_mode=dio
+turta_iot_node.build.boot=dio
+turta_iot_node.build.partitions=default
+turta_iot_node.build.defines=
+
+turta_iot_node.menu.UploadSpeed.921600=921600
+turta_iot_node.menu.UploadSpeed.921600.upload.speed=921600
+turta_iot_node.menu.UploadSpeed.115200=115200
+turta_iot_node.menu.UploadSpeed.115200.upload.speed=115200
+
+turta_iot_node.menu.DebugLevel.none=None
+turta_iot_node.menu.DebugLevel.none.build.code_debug=0
+turta_iot_node.menu.DebugLevel.error=Error
+turta_iot_node.menu.DebugLevel.error.build.code_debug=1
+turta_iot_node.menu.DebugLevel.warn=Warn
+turta_iot_node.menu.DebugLevel.warn.build.code_debug=2
+turta_iot_node.menu.DebugLevel.info=Info
+turta_iot_node.menu.DebugLevel.info.build.code_debug=3
+turta_iot_node.menu.DebugLevel.debug=Debug
+turta_iot_node.menu.DebugLevel.debug.build.code_debug=4
+turta_iot_node.menu.DebugLevel.verbose=Verbose
+turta_iot_node.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
 
 ttgo-lora32-v1.upload.tool=esptool_py
