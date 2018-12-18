@@ -72,6 +72,9 @@ void yield(void);
 //returns chip temperature in Celsius
 float temperatureRead();
 
+bool cpuFrequencySet(uint32_t cpu_freq_mhz);
+uint32_t cpuFrequencyGet();
+
 unsigned long micros();
 unsigned long millis();
 void delay(uint32_t);

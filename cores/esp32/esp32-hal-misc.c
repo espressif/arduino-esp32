@@ -25,6 +25,7 @@
 #include "esp_bt.h"
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
+#include "soc/rtc.h"
 #include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -41,19 +42,41 @@ void yield()
     vPortYield();
 }
 
+static uint32_t _cpu_freq_mhz = 240;
+
+bool cpuFrequencySet(uint32_t cpu_freq_mhz){
+    if(_cpu_freq_mhz == cpu_freq_mhz){
+        return true;
+    }
+    rtc_cpu_freq_config_t conf;
+    if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
+        log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
+        return false;
+    }
+    rtc_clk_cpu_freq_set_config(&conf);
+    _cpu_freq_mhz = conf.freq_mhz;
+    return true;
+}
+
+uint32_t cpuFrequencyGet(){
+    rtc_cpu_freq_config_t conf;
+    rtc_clk_cpu_freq_get_config(&conf);
+    return conf.freq_mhz;
+}
+
 unsigned long IRAM_ATTR micros()
 {
-    return (unsigned long) esp_timer_get_time();
+    return (unsigned long) (esp_timer_get_time() * (240 / _cpu_freq_mhz));
 }
 
 unsigned long IRAM_ATTR millis()
 {
-    return (unsigned long) (esp_timer_get_time() / 1000);
+    return (unsigned long) (micros() / 1000);
 }
 
 void delay(uint32_t ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS);
+    vTaskDelay(ms / portTICK_PERIOD_MS / (240 / _cpu_freq_mhz));
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
