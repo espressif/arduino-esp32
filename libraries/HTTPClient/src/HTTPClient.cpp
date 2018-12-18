@@ -966,13 +966,13 @@ bool HTTPClient::connect(void)
         return false;
     }
 
-    // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
-    _client->setTimeout((_tcpTimeout + 500) / 1000);	
-
     if(!_client->connect(_host.c_str(), _port)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
         return false;
     }
+
+    // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
+    _client->setTimeout((_tcpTimeout + 500) / 1000);	
 
     log_d(" connected to %s:%u", _host.c_str(), _port);
 
