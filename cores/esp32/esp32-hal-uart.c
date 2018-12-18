@@ -91,12 +91,12 @@ static void IRAM_ATTR _uart_isr(void *arg)
         if(uart->intr_handle == NULL){
             continue;
         }
-		while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
-			c = uart->dev->fifo.rw_byte;
-       		if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
-        		xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
-       		}
-		}
+        while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)){
+            c = uart->dev->fifo.rw_byte;
+            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+                xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+            }
+        }
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
