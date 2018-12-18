@@ -66,7 +66,7 @@ static uart_t _uart_bus_array[3] = {
 };
 #endif
 
-static void _uart_rx_flush( uart_t * uart){
+static void _uart_rx_read_fifo( uart_t * uart){
     uint8_t c;
     UART_MUTEX_LOCK();
     UBaseType_t spaces=0;
@@ -100,7 +100,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
- 	}
+    }
 
     if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR();
@@ -294,7 +294,7 @@ uint32_t uartAvailable(uart_t* uart)
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
-    _uart_rx_flush(uart);
+    _uart_rx_read_fifo(uart);
     return uxQueueMessagesWaiting(uart->queue);
 }
 
@@ -315,7 +315,7 @@ uint8_t uartRead(uart_t* uart)
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
     } else {
-        _uart_rx_flush(uart);
+        _uart_rx_read_fifo(uart);
         if(xQueueReceive(uart->queue, &c, 0)) {
             return c;
         }
@@ -332,7 +332,7 @@ uint8_t uartPeek(uart_t* uart)
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
     } else {
-        _uart_rx_flush(uart);
+        _uart_rx_read_fifo(uart);
         if(xQueuePeek(uart->queue, &c, 0)) {
             return c;
         }
