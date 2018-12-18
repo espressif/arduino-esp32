@@ -77,7 +77,7 @@ static void _uart_rx_flush( uart_t * uart){
         c = uart->dev->fifo.rw_byte;
         xQueueSend(uart->queue, &c,0);
     }
-	UART_MUTEX_UNLOCK();
+    UART_MUTEX_UNLOCK();
 }
 
 static void IRAM_ATTR _uart_isr(void *arg)
