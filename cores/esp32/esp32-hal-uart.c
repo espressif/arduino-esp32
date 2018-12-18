@@ -82,19 +82,19 @@ static void _uart_rx_flush( uart_t * uart){
 
 static void IRAM_ATTR _uart_isr(void *arg)
 {
-    uint8_t i,c;
+    uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
     uart_t* uart;
 
-    for(i=0;i<3;i++){
+    for(i=0;i<3;i++){ // i'm not really sure that all 3 UARTS should be emptied when any are full?
         uart = &_uart_bus_array[i];
         if(uart->intr_handle == NULL){
             continue;
         }
-		while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+	while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
         	c = uart->dev->fifo.rw_byte;
         	if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
-            	xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+        	    	xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
         	}
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
@@ -333,7 +333,7 @@ uint8_t uartPeek(uart_t* uart)
         return c;
     } else {
         _uart_rx_flush(uart);
-        if(xQueueReceive(uart->queue, &c, 0)) {
+        if(xQueuePeek(uart->queue, &c, 0)) {
             return c;
         }
     }
