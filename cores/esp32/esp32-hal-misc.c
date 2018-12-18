@@ -66,7 +66,7 @@ uint32_t cpuFrequencyGet(){
 
 unsigned long IRAM_ATTR micros()
 {
-    return (unsigned long) (esp_timer_get_time() * (240 / _cpu_freq_mhz));
+    return (unsigned long) ((esp_timer_get_time() * 240) / _cpu_freq_mhz);
 }
 
 unsigned long IRAM_ATTR millis()
@@ -76,7 +76,7 @@ unsigned long IRAM_ATTR millis()
 
 void delay(uint32_t ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS / (240 / _cpu_freq_mhz));
+    vTaskDelay((ms * _cpu_freq_mhz) / (portTICK_PERIOD_MS * 240));
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
