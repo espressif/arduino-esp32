@@ -66,9 +66,23 @@ static uart_t _uart_bus_array[3] = {
 };
 #endif
 
+static void _uart_rx_flush( uart_t * uart){
+    uint8_t c;
+    UART_MUTEX_LOCK();
+    UBaseType_t spaces=0;
+    if(uart->queue != NULL) {
+        spaces=uxQueueSpacesAvailable( uart->queue);
+    }
+    while(((spaces--) >0)&&(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr))) {
+        c = uart->dev->fifo.rw_byte;
+        xQueueSend(uart->queue, &c,0);
+    }
+	UART_MUTEX_UNLOCK();
+}
+
 static void IRAM_ATTR _uart_isr(void *arg)
 {
-    uint8_t i, c;
+    uint8_t i,c;
     BaseType_t xHigherPriorityTaskWoken;
     uart_t* uart;
 
@@ -77,15 +91,15 @@ static void IRAM_ATTR _uart_isr(void *arg)
         if(uart->intr_handle == NULL){
             continue;
         }
+		while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+        	c = uart->dev->fifo.rw_byte;
+        	if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+            	xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+        	}
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
-        while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
-            c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
-                xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
-            }
-        }
+    	}
     }
 
     if (xHigherPriorityTaskWoken) {
@@ -96,14 +110,14 @@ static void IRAM_ATTR _uart_isr(void *arg)
 void uartEnableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
-    uart->dev->conf1.rxfifo_full_thrhd = 112;
-    uart->dev->conf1.rx_tout_thrhd = 2;
+    uart->dev->conf1.rxfifo_full_thrhd = 112; // needs speed compensation?
+    uart->dev->conf1.rx_tout_thrhd = 32; // no need to force rxFiFo empty, because uartRead() will empty if necessary
     uart->dev->conf1.rx_tout_en = 1;
     uart->dev->int_ena.rxfifo_full = 1;
     uart->dev->int_ena.frm_err = 1;
     uart->dev->int_ena.rxfifo_tout = 1;
     uart->dev->int_clr.val = 0xffffffff;
-
+// can this share an interrupt?
     esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
     UART_MUTEX_UNLOCK();
 }
@@ -185,12 +199,15 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         }
     }
     if(uart_nr == 1){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
     } else if(uart_nr == 2){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
     } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
     }
@@ -224,7 +241,23 @@ void uartEnd(uart_t* uart)
         return;
     }
 
+    uartDetachRx(uart); // release pin, disable interrupt
+    uartDetachTx(uart); // release pin
+
     UART_MUTEX_LOCK();
+
+    uart->dev->conf0.val = 0;
+    // power down uart, disable clocking
+    if(uart->num == 1){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART1_CLK_EN);
+    } else if(uart->num == 2){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
+    } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART_CLK_EN);
+    }
     if(uart->queue != NULL) {
         uint8_t c;
         while(xQueueReceive(uart->queue, &c, 0));
@@ -232,12 +265,8 @@ void uartEnd(uart_t* uart)
         uart->queue = NULL;
     }
 
-    uart->dev->conf0.val = 0;
-
     UART_MUTEX_UNLOCK();
 
-    uartDetachRx(uart);
-    uartDetachTx(uart);
 }
 
 size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
@@ -265,6 +294,7 @@ uint32_t uartAvailable(uart_t* uart)
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
+    _uart_rx_flush(uart);
     return uxQueueMessagesWaiting(uart->queue);
 }
 
@@ -284,6 +314,11 @@ uint8_t uartRead(uart_t* uart)
     uint8_t c;
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
+    } else {
+        _uart_rx_flush(uart);
+        if(xQueueReceive(uart->queue, &c, 0)) {
+            return c;
+        }
     }
     return 0;
 }
@@ -296,6 +331,11 @@ uint8_t uartPeek(uart_t* uart)
     uint8_t c;
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
+    } else {
+        _uart_rx_flush(uart);
+        if(xQueueReceive(uart->queue, &c, 0)) {
+            return c;
+        }
     }
     return 0;
 }
