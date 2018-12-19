@@ -43,6 +43,7 @@ void yield()
 }
 
 static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+static uint32_t _sys_time_multiplier = 1;
 
 bool setCpuFrequency(uint32_t cpu_freq_mhz){
     rtc_cpu_freq_config_t conf, cconf;
@@ -54,10 +55,13 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
         log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
         return false;
     }
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
-    delay(1);
+    delay(10);
+#endif
     rtc_clk_cpu_freq_set_config(&conf);
     _cpu_freq_mhz = conf.freq_mhz;
+    _sys_time_multiplier = 80 / getApbFrequency();
     return true;
 }
 
@@ -68,12 +72,12 @@ uint32_t getCpuFrequency(){
 }
 
 uint32_t getApbFrequency(){
-    return rtc_clk_apb_freq_get();
+    return rtc_clk_apb_freq_get() / 1000000;
 }
 
 unsigned long IRAM_ATTR micros()
 {
-    return (unsigned long) ((esp_timer_get_time() * 240) / _cpu_freq_mhz);
+    return (unsigned long) (esp_timer_get_time()) * _sys_time_multiplier;
 }
 
 unsigned long IRAM_ATTR millis()
@@ -116,8 +120,8 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
-#ifdef ARDUINO_CPU_FREQ
-    setCpuFrequency(ARDUINO_CPU_FREQ);
+#ifdef F_CPU
+    setCpuFrequency(F_CPU/1000000L);
 #endif
 #if CONFIG_SPIRAM_SUPPORT
     psramInit();
