@@ -59,7 +59,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
     delay(10);
 #endif
-    rtc_clk_cpu_freq_set_config(&conf);
+    rtc_clk_cpu_freq_set_config_fast(&conf);
     _cpu_freq_mhz = conf.freq_mhz;
     _sys_time_multiplier = 80 / getApbFrequency();
     return true;
