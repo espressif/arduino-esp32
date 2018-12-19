@@ -306,10 +306,10 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
-uint8_t uartRead(uart_t* uart)
+int16_t uartRead(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
-        return 0;
+        return -1;
     }
     uint8_t c;
     if(xQueueReceive(uart->queue, &c, 0)) {
@@ -320,13 +320,13 @@ uint8_t uartRead(uart_t* uart)
             return c;
         }
     }
-    return 0;
+    return -1;
 }
 
-uint8_t uartPeek(uart_t* uart)
+int16_t uartPeek(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
-        return 0;
+        return -1;
     }
     uint8_t c;
     if(xQueuePeek(uart->queue, &c, 0)) {
@@ -337,7 +337,7 @@ uint8_t uartPeek(uart_t* uart)
             return c;
         }
     }
-    return 0;
+    return -1;
 }
 
 void uartWrite(uart_t* uart, uint8_t c)
