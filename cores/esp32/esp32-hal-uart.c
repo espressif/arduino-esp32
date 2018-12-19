@@ -306,7 +306,7 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
-int16_t uartRead(uart_t* uart)
+int uartRead(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
         return -1;
@@ -323,7 +323,7 @@ int16_t uartRead(uart_t* uart)
     return -1;
 }
 
-int16_t uartPeek(uart_t* uart)
+int uartPeek(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
         return -1;
