@@ -111,18 +111,12 @@ int HardwareSerial::availableForWrite(void)
 
 int HardwareSerial::peek(void)
 {
-    if (available()) {
-        return uartPeek(_uart);
-    }
-    return -1;
+    return uartPeek(_uart);
 }
 
 int HardwareSerial::read(void)
 {
-    if(available()) {
-        return uartRead(_uart);
-    }
-    return -1;
+    return uartRead(_uart);
 }
 
 void HardwareSerial::flush()
