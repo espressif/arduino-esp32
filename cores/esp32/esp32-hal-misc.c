@@ -42,26 +42,33 @@ void yield()
     vPortYield();
 }
 
-static uint32_t _cpu_freq_mhz = 240;
+static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
 
-bool cpuFrequencySet(uint32_t cpu_freq_mhz){
-    if(_cpu_freq_mhz == cpu_freq_mhz){
+bool setCpuFrequency(uint32_t cpu_freq_mhz){
+    rtc_cpu_freq_config_t conf, cconf;
+    rtc_clk_cpu_freq_get_config(&cconf);
+    if(cconf.freq_mhz == cpu_freq_mhz && _cpu_freq_mhz == cpu_freq_mhz){
         return true;
     }
-    rtc_cpu_freq_config_t conf;
     if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
         log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
         return false;
     }
+    log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
+    delay(1);
     rtc_clk_cpu_freq_set_config(&conf);
     _cpu_freq_mhz = conf.freq_mhz;
     return true;
 }
 
-uint32_t cpuFrequencyGet(){
+uint32_t getCpuFrequency(){
     rtc_cpu_freq_config_t conf;
     rtc_clk_cpu_freq_get_config(&conf);
     return conf.freq_mhz;
+}
+
+uint32_t getApbFrequency(){
+    return rtc_clk_apb_freq_get();
 }
 
 unsigned long IRAM_ATTR micros()
@@ -109,6 +116,9 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
+#ifdef ARDUINO_CPU_FREQ
+    setCpuFrequency(ARDUINO_CPU_FREQ);
+#endif
 #if CONFIG_SPIRAM_SUPPORT
     psramInit();
 #endif

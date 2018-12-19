@@ -72,8 +72,14 @@ void yield(void);
 //returns chip temperature in Celsius
 float temperatureRead();
 
-bool cpuFrequencySet(uint32_t cpu_freq_mhz);
-uint32_t cpuFrequencyGet();
+//function takes the following frequencies as valid values:
+//  240, 160, 80                     <<< For all XTAL types
+//  40, 20, 13, 10, 8, 5, 4, 3, 2, 1 <<< For 40MHz XTAL
+//  26, 13, 5, 4, 3, 2, 1            <<< For 26MHz XTAL
+//  24, 12, 8, 6, 4, 3, 2, 1         <<< For 24MHz XTAL
+bool setCpuFrequency(uint32_t cpu_freq_mhz);
+uint32_t getCpuFrequency();
+uint32_t getApbFrequency();
 
 unsigned long micros();
 unsigned long millis();

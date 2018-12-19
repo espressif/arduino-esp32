@@ -84,7 +84,7 @@ void IRAM_ATTR __timerISR(void * arg){
     i = 4;
     //call callbacks
     while(i--){
-        if(__timerInterruptHandlers[i] && status & (1 << i)){
+        if(__timerInterruptHandlers[i] && (status & (1 << i))){
             __timerInterruptHandlers[i]();
         }
     }

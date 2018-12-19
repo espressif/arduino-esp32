@@ -27,6 +27,7 @@
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/dport_reg.h"
+#include "soc/rtc.h"
 #include "esp_intr_alloc.h"
 
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
@@ -352,7 +353,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uint32_t clk_div = ((UART_CLK_FREQ<<4)/baud_rate);
+    uint32_t clk_div = ((rtc_clk_apb_freq_get()<<4)/baud_rate);
     uart->dev->clk_div.div_int = clk_div>>4 ;
     uart->dev->clk_div.div_frag = clk_div & 0xf;
     UART_MUTEX_UNLOCK();
