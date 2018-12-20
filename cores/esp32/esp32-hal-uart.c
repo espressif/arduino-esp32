@@ -353,7 +353,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uint32_t clk_div = ((rtc_clk_apb_freq_get()<<4)/baud_rate);
+    uint32_t clk_div = ((getApbFrequency()<<4)/baud_rate);
     uart->dev->clk_div.div_int = clk_div>>4 ;
     uart->dev->clk_div.div_frag = clk_div & 0xf;
     UART_MUTEX_UNLOCK();

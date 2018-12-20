@@ -26,6 +26,8 @@
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
+#include "soc/rtc_cntl_reg.h"
+#include "rom/rtc.h"
 #include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -72,7 +74,12 @@ uint32_t getCpuFrequency(){
 }
 
 uint32_t getApbFrequency(){
-    return rtc_clk_apb_freq_get() / 1000000;
+    rtc_cpu_freq_config_t conf;
+    rtc_clk_cpu_freq_get_config(&conf);
+    if(conf.freq_mhz >= 80){
+        return 80000000;
+    }
+    return (conf.source_freq_mhz * 1000000) / conf.div;
 }
 
 unsigned long IRAM_ATTR micros()

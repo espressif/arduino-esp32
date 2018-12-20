@@ -1022,14 +1022,14 @@ typedef union {
 
 uint32_t spiClockDivToFrequency(uint32_t clockDiv)
 {
-    uint32_t apb_freq = rtc_clk_apb_freq_get();
+    uint32_t apb_freq = getApbFrequency();
     spiClk_t reg = { clockDiv };
     return ClkRegToFreq(&reg);
 }
 
 uint32_t spiFrequencyToClockDiv(uint32_t freq)
 {
-    uint32_t apb_freq = rtc_clk_apb_freq_get();
+    uint32_t apb_freq = getApbFrequency();
 
     if(freq >= apb_freq) {
         return SPI_CLK_EQU_SYSCLK;
