@@ -43,7 +43,8 @@ uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-31
         _sd_sys_lock = xSemaphoreCreateMutex();
     }
 #endif
-    uint32_t prescale = (10000000/(freq*32)) - 1;
+    uint32_t apb_freq = getApbFrequency();
+    uint32_t prescale = (apb_freq/(freq*256)) - 1;
     if(prescale > 0xFF) {
         prescale = 0xFF;
     }
@@ -52,7 +53,7 @@ uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-31
     SIGMADELTA.cg.clk_en = 0;
     SIGMADELTA.cg.clk_en = 1;
     SD_MUTEX_UNLOCK();
-    return 10000000/((prescale + 1) * 32);
+    return apb_freq/((prescale + 1) * 256);
 }
 
 void sigmaDeltaWrite(uint8_t channel, uint8_t duty) //chan 0-7 duty 8 bit

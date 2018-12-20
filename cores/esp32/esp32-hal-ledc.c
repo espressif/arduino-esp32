@@ -84,7 +84,7 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
 //max bit_num 0x1F (31)
 static double _ledcSetupTimerFreq(uint8_t chan, double freq, uint8_t bit_num)
 {
-    uint64_t clk_freq = APB_CLK_FREQ;
+    uint64_t clk_freq = getApbFrequency();
     clk_freq <<= 8;//div_num is 8 bit decimal
     uint32_t div_num = (clk_freq >> bit_num) / freq;
     bool apb_clk = true;
@@ -117,7 +117,7 @@ static double _ledcTimerRead(uint8_t chan)
     LEDC_MUTEX_UNLOCK();
     uint64_t clk_freq = 1000000;
     if(apb_clk) {
-        clk_freq *= 80;
+        clk_freq = getApbFrequency();
     }
     clk_freq <<= 8;//div_num is 8 bit decimal
     return (clk_freq >> bit_num) / (double)div_num;

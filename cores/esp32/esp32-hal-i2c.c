@@ -1611,7 +1611,7 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     }
     I2C_FIFO_CONF_t f;
   
-    uint32_t period = (APB_CLK_FREQ/clk_speed) / 2;
+    uint32_t period = (getApbFrequency()/clk_speed) / 2;
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
 
@@ -1657,7 +1657,7 @@ uint32_t i2cGetFrequency(i2c_t * i2c)
     uint32_t result = 0;
     uint32_t old_count = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period);
     if(old_count>0) {
-        result = APB_CLK_FREQ / old_count;
+        result = getApbFrequency() / old_count;
     } else {
         result = 0;
     }

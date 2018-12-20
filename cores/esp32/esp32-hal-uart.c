@@ -27,6 +27,7 @@
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/dport_reg.h"
+#include "soc/rtc.h"
 #include "esp_intr_alloc.h"
 
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
@@ -352,7 +353,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uint32_t clk_div = ((UART_CLK_FREQ<<4)/baud_rate);
+    uint32_t clk_div = ((getApbFrequency()<<4)/baud_rate);
     uart->dev->clk_div.div_int = clk_div>>4 ;
     uart->dev->clk_div.div_frag = clk_div & 0xf;
     UART_MUTEX_UNLOCK();
@@ -385,17 +386,8 @@ static void IRAM_ATTR uart2_write_char(char c)
     ESP_REG(DR_REG_UART2_BASE) = c;
 }
 
-void uartSetDebug(uart_t* uart)
+void uart_install_putc()
 {
-    if(uart == NULL || uart->num > 2) {
-        s_uart_debug_nr = -1;
-        ets_install_putc1(NULL);
-        return;
-    }
-    if(s_uart_debug_nr == uart->num) {
-        return;
-    }
-    s_uart_debug_nr = uart->num;
     switch(s_uart_debug_nr) {
     case 0:
         ets_install_putc1((void (*)(char)) &uart0_write_char);
@@ -410,6 +402,20 @@ void uartSetDebug(uart_t* uart)
         ets_install_putc1(NULL);
         break;
     }
+}
+
+void uartSetDebug(uart_t* uart)
+{
+    if(uart == NULL || uart->num > 2) {
+        s_uart_debug_nr = -1;
+        //ets_install_putc1(NULL);
+        //return;
+    } else
+    if(s_uart_debug_nr == uart->num) {
+        return;
+    } else
+    s_uart_debug_nr = uart->num;
+    uart_install_putc();
 }
 
 int uartGetDebug()
