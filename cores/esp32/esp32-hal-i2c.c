@@ -1604,18 +1604,34 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, b
     return last_error;
 }
 
+#define MIN_I2C_CLKS 100
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 {
     if(i2c == NULL) {
         return I2C_ERROR_DEV;
     }
-    I2C_FIFO_CONF_t f;
-  
-    uint32_t period = (getApbFrequency()/clk_speed) / 2;
+    uint32_t apb = getApbFrequency(); 
+    uint32_t period = (apb/clk_speed) / 2;
+
+    if((apb/8192 > clk_speed)||(apb/MIN_I2C_CLKS < clk_speed)){ //out of bounds
+        log_w("i2c freq(%d) out of bounds.vs APB Clock(%d), min=%d, max=%d",clk_speed,apb,(apb/8192),(apb/MIN_I2C_CLKS));
+    }
+    if(period < (MIN_I2C_CLKS/2) ){
+        period = (MIN_I2C_CLKS/2);
+        clk_speed = apb/(period*2);
+        log_w("APB Freq too slow, Reducing i2c Freq to %d Hz",clk_speed);
+    } else if ( period> 4095) {
+        period = 4095;
+        clk_speed = apb/(period*2);
+        log_w("APB Freq too fast, Increasing i2c Freq to %d Hz",clk_speed);
+    }
+      
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
 
     I2C_MUTEX_LOCK();
+
+    I2C_FIFO_CONF_t f;
 
     // Adjust Fifo thresholds based on frequency
     f.val    = i2c->dev->fifo_conf.val;
