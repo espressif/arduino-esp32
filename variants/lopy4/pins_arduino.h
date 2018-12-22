@@ -30,7 +30,8 @@ static const uint8_t RX = 3;
 
 static const uint8_t SDA = 12;
 static const uint8_t SCL = 13;
- 
+
+static const uint8_t SS    = 18;
 static const uint8_t MOSI  = 22;
 static const uint8_t MISO  = 37;
 static const uint8_t SCK   = 13;
