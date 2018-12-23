@@ -73,6 +73,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 }
 
+void HardwareSerial::updateBaudRate(unsigned long baud)
+{
+	uartSetBaudRate(_uart, baud);
+}
+
 void HardwareSerial::end()
 {
     if(uartGetDebug() == _uart_nr) {
