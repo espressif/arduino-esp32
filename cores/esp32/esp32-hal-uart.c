@@ -456,7 +456,7 @@ int log_printf(const char *format, ...)
     ets_printf("%s", temp);
 #endif
     va_end(arg);
-    if(len > 64){
+    if(len > sizeof(loc_buf)){
         free(temp);
     }
     return len;
