@@ -17,7 +17,8 @@
 #define LORA_MOSI 27    // GPIO27 - SX1276 MOSI
 #define LORA_CS 18      // GPIO18 - SX1276 CS
 #define LORA_RST 23     // GPIO23 - SX1276 RST
-#define LORA_IO0 26     // GPIO26 - SX1276 IO0
+#define LORA_IRQ 26     // GPIO26 - SX1276 IO0
+#define LORA_IO0 LORA_IRQ  // alias
 #define LORA_IO1 33     // GPIO33 - SX1276 IO1
 #define LORA_IO2 32     // GPIO32 - SX1276 IO2
 
