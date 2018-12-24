@@ -18,6 +18,7 @@
 #define LORA_CS 17      // GPIO17 - SX1276 CS
 #define LORA_RST 18     // GPIO18 - SX1276 RST
 #define LORA_IRQ 23     // GPIO23 - SX1276 IO0
+#define LORA_IO0 23     // GPIO23 - SX1276 IO0
 #define LORA_IO1 23     // GPIO23 - SX1276 IO1 tied by diode to IO0
 #define LORA_IO2 23     // GPIO23 - SX1276 IO2 tied by diode to IO0
 
