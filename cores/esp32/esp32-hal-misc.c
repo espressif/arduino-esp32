@@ -63,7 +63,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
 #endif
     rtc_clk_cpu_freq_set_config_fast(&conf);
     _cpu_freq_mhz = conf.freq_mhz;
-    _sys_time_multiplier = 80 / getApbFrequency();
+    _sys_time_multiplier = 80000000 / getApbFrequency();
     return true;
 }
 
