@@ -287,7 +287,7 @@ extern void __detachInterrupt(uint8_t pin)
     }
     __pinInterruptHandlers[pin].fn = NULL;
     __pinInterruptHandlers[pin].arg = NULL;
-    __pinInterruptHandlers[pin].arg = false;
+    __pinInterruptHandlers[pin].functional = false;
 
     GPIO.pin[pin].int_ena = 0;
     GPIO.pin[pin].int_type = 0;
