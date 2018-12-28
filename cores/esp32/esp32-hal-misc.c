@@ -28,6 +28,7 @@
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "rom/rtc.h"
+#include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -43,6 +44,47 @@ void yield()
 {
     vPortYield();
 }
+
+#if CONFIG_AUTOSTART_ARDUINO
+
+extern TaskHandle_t loopTaskHandle;
+extern bool loopTaskWDTEnabled;
+
+void enableLoopWDT(){
+    if(loopTaskHandle != NULL){
+        if(esp_task_wdt_add(loopTaskHandle) != ESP_OK){
+            log_e("Failed to add loop task to WDT");
+        } else {
+            loopTaskWDTEnabled = true;
+        }
+    }
+}
+
+void disableLoopWDT(){
+    if(loopTaskHandle != NULL && loopTaskWDTEnabled){
+        loopTaskWDTEnabled = false;
+        if(esp_task_wdt_delete(loopTaskHandle) != ESP_OK){
+            log_e("Failed to remove loop task from WDT");
+        }
+    }
+}
+#endif
+
+#ifndef CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU1
+void enableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_add(idle_1) != ESP_OK){
+        log_e("Failed to add Core 1 IDLE task to WDT");
+    }
+}
+
+void disableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK){
+        log_e("Failed to remove Core 1 IDLE task from WDT");
+    }
+}
+#endif
 
 static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
 static uint32_t _sys_time_multiplier = 1;

@@ -72,6 +72,18 @@ void yield(void);
 //returns chip temperature in Celsius
 float temperatureRead();
 
+#if CONFIG_AUTOSTART_ARDUINO
+//enable/disable WDT for Arduino's setup and loop functions
+void enableLoopWDT();
+void disableLoopWDT();
+#endif
+
+#ifndef CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU1
+//enable/disable WDT for the IDLE task on Core 1
+void enableCore1WDT();
+void disableCore1WDT();
+#endif
+
 //function takes the following frequencies as valid values:
 //  240, 160, 80                     <<< For all XTAL types
 //  40, 20, 13, 10, 8, 5, 4, 3, 2, 1 <<< For 40MHz XTAL
