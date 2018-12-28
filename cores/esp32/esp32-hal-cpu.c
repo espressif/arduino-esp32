@@ -1,0 +1,169 @@
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "freertos/task.h"
+#include "esp_attr.h"
+#include "esp_log.h"
+#include "soc/rtc.h"
+#include "soc/rtc_cntl_reg.h"
+#include "rom/rtc.h"
+#include "esp32-hal.h"
+#include "esp32-hal-cpu.h"
+
+typedef struct apb_change_cb_s {
+        struct apb_change_cb_s * next;
+        void * arg;
+        apb_change_cb_t cb;
+} apb_change_t;
+
+static apb_change_t * apb_change_callbacks = NULL;
+static xSemaphoreHandle apb_change_lock = NULL;
+
+static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
+static uint32_t _sys_time_multiplier = 1;
+
+uint64_t IRAM_ATTR micros64(){
+    return (uint64_t)(esp_timer_get_time()) * _sys_time_multiplier;
+}
+
+//ToDo: figure out how to set FreeRTOS tick properly
+void delay(uint32_t ms){
+    vTaskDelay((ms * _cpu_freq_mhz) / (portTICK_PERIOD_MS * CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ));
+}
+
+static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
+    if(conf->freq_mhz >= 80){
+        return 80000000;
+    }
+    return (conf->source_freq_mhz * 1000000) / conf->div;
+}
+
+static void initApbChangeCallback(){
+    static volatile bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        apb_change_lock = xSemaphoreCreateMutex();
+        if(!apb_change_lock){
+            initialized = false;
+        }
+    }
+}
+
+static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+    initApbChangeCallback();
+    xSemaphoreTake(apb_change_lock, portMAX_DELAY);
+    apb_change_t * r = apb_change_callbacks;
+    while(r != NULL){
+        r->cb(r->arg, ev_type, old_apb, new_apb);
+    }
+    xSemaphoreGive(apb_change_lock);
+}
+
+bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
+    initApbChangeCallback();
+    apb_change_t * c = (apb_change_t*)malloc(sizeof(apb_change_t));
+    if(!c){
+        log_e("Callback Object Malloc Failed");
+        return false;
+    }
+    c->next = NULL;
+    c->arg = arg;
+    c->cb = cb;
+    xSemaphoreTake(apb_change_lock, portMAX_DELAY);
+    if(apb_change_callbacks == NULL){
+        apb_change_callbacks = c;
+    } else {
+        apb_change_t * r = apb_change_callbacks;
+        if(r->cb != cb || r->arg != arg){
+            while(r->next){
+                r = r->next;
+                if(r->cb == cb && r->arg == arg){
+                    goto unlock_and_exit;
+                }
+            }
+            r->next = c;
+        }
+    }
+unlock_and_exit:
+    xSemaphoreGive(apb_change_lock);
+    return true;
+}
+
+bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
+    initApbChangeCallback();
+    xSemaphoreTake(apb_change_lock, portMAX_DELAY);
+    apb_change_t * r = apb_change_callbacks;
+    if(r == NULL){
+        xSemaphoreGive(apb_change_lock);
+        return false;
+    }
+    if(r->cb == cb && r->arg == arg){
+        apb_change_callbacks = r->next;
+        free(r);
+    } else {
+        while(r->next && (r->next->cb != cb || r->next->arg != arg)){
+            r = r->next;
+        }
+        if(r->next == NULL || r->next->cb != cb || r->next->arg != arg){
+            xSemaphoreGive(apb_change_lock);
+            return false;
+        }
+        apb_change_t * c = r->next;
+        r->next = c->next;
+        free(c);
+    }
+    xSemaphoreGive(apb_change_lock);
+    return true;
+}
+
+bool setCpuFrequency(uint32_t cpu_freq_mhz){
+    rtc_cpu_freq_config_t conf, cconf;
+    uint32_t capb, apb;
+    rtc_clk_cpu_freq_get_config(&cconf);
+    if(cconf.freq_mhz == cpu_freq_mhz && _cpu_freq_mhz == cpu_freq_mhz){
+        return true;
+    }
+    if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
+        log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
+        return false;
+    }
+    capb = calculateApb(&cconf);
+    apb = calculateApb(&conf);
+    log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
+    if(capb != apb && apb_change_callbacks){
+        triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
+    }
+    rtc_clk_cpu_freq_set_config_fast(&conf);
+    _cpu_freq_mhz = conf.freq_mhz;
+    _sys_time_multiplier = 80000000 / apb;
+    if(capb != apb && apb_change_callbacks){
+        triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
+    }
+    return true;
+}
+
+uint32_t getCpuFrequency(){
+    rtc_cpu_freq_config_t conf;
+    rtc_clk_cpu_freq_get_config(&conf);
+    return conf.freq_mhz;
+}
+
+uint32_t getApbFrequency(){
+    rtc_cpu_freq_config_t conf;
+    rtc_clk_cpu_freq_get_config(&conf);
+    return calculateApb(&conf);
+}

@@ -100,57 +100,12 @@ void disableCore1WDT(){
 }
 #endif
 
-static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
-static uint32_t _sys_time_multiplier = 1;
-
-bool setCpuFrequency(uint32_t cpu_freq_mhz){
-    rtc_cpu_freq_config_t conf, cconf;
-    rtc_clk_cpu_freq_get_config(&cconf);
-    if(cconf.freq_mhz == cpu_freq_mhz && _cpu_freq_mhz == cpu_freq_mhz){
-        return true;
-    }
-    if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
-        log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
-        return false;
-    }
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-    log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
-    delay(10);
-#endif
-    rtc_clk_cpu_freq_set_config_fast(&conf);
-    _cpu_freq_mhz = conf.freq_mhz;
-    _sys_time_multiplier = 80000000 / getApbFrequency();
-    return true;
+unsigned long IRAM_ATTR micros(){
+    return (unsigned long) (micros64());
 }
 
-uint32_t getCpuFrequency(){
-    rtc_cpu_freq_config_t conf;
-    rtc_clk_cpu_freq_get_config(&conf);
-    return conf.freq_mhz;
-}
-
-uint32_t getApbFrequency(){
-    rtc_cpu_freq_config_t conf;
-    rtc_clk_cpu_freq_get_config(&conf);
-    if(conf.freq_mhz >= 80){
-        return 80000000;
-    }
-    return (conf.source_freq_mhz * 1000000) / conf.div;
-}
-
-unsigned long IRAM_ATTR micros()
-{
-    return (unsigned long) (esp_timer_get_time()) * _sys_time_multiplier;
-}
-
-unsigned long IRAM_ATTR millis()
-{
-    return (unsigned long) (micros() / 1000);
-}
-
-void delay(uint32_t ms)
-{
-    vTaskDelay((ms * _cpu_freq_mhz) / (portTICK_PERIOD_MS * 240));
+unsigned long IRAM_ATTR millis(){
+    return (unsigned long) (micros64() / 1000);
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
