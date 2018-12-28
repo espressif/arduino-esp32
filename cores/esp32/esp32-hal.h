@@ -78,8 +78,11 @@ void enableLoopWDT();
 void disableLoopWDT();
 #endif
 
-#ifndef CONFIG_TASK_WDT_CHECK_IDLE_TASK_CPU1
-//enable/disable WDT for the IDLE task on Core 1
+//enable/disable WDT for the IDLE task on Core 0 (SYSTEM)
+void enableCore0WDT();
+void disableCore0WDT();
+#ifndef CONFIG_FREERTOS_UNICORE
+//enable/disable WDT for the IDLE task on Core 1 (Arduino)
 void enableCore1WDT();
 void disableCore1WDT();
 #endif

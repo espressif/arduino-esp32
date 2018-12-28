@@ -39,11 +39,16 @@ bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFi
       .base_path = basePath,
       .partition_label = NULL,
       .max_files = maxOpenFiles,
-      .format_if_mount_failed = formatOnFail
+      .format_if_mount_failed = false
     };
 
     esp_err_t err = esp_vfs_spiffs_register(&conf);
-    if(err){
+    if(err == ESP_FAIL && formatOnFail){
+        if(format()){
+            err = esp_vfs_spiffs_register(&conf);
+        }
+    }
+    if(err != ESP_OK){
         log_e("Mounting SPIFFS failed! Error: %d", err);
         return false;
     }
@@ -65,7 +70,9 @@ void SPIFFSFS::end()
 
 bool SPIFFSFS::format()
 {
+    disableCore0WDT();
     esp_err_t err = esp_spiffs_format(NULL);
+    enableCore0WDT();
     if(err){
         log_e("Formatting SPIFFS failed! Error: %d", err);
         return false;
