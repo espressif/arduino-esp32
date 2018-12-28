@@ -14,7 +14,7 @@ SECTIONS
   {
     . = ALIGN(4);
 
-    *( .rtc.literal  .rtc.text)
+    *( .rtc.literal  .rtc.text  .rtc.text.*)
 
     *rtc_wake_stub*.*(.literal .text .literal.* .text.*)
     _rtc_text_end = ABSOLUTE(.);
@@ -56,7 +56,7 @@ SECTIONS
   {
     _rtc_data_start = ABSOLUTE(.);
 
-    *( .rtc.data  .rtc.rodata)
+    *( .rtc.data  .rtc.data.*  .rtc.rodata  .rtc.rodata.*)
 
     *rtc_wake_stub*.*(.data .rodata .data.* .rodata.* .bss .bss.*)
     _rtc_data_end = ABSOLUTE(.);
