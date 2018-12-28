@@ -187,7 +187,7 @@ typedef struct WiFiEventCbList {
     WiFiEventSysCb scb;
     system_event_id_t event;
 
-    WiFiEventCbList() : id(current_id++) {}
+    WiFiEventCbList() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(SYSTEM_EVENT_WIFI_READY) {}
 } WiFiEventCbList_t;
 wifi_event_id_t WiFiEventCbList::current_id = 1;
 
@@ -371,8 +371,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
             WiFi.getAutoReconnect())
         {
-            WiFi.enableSTA(false);
-            WiFi.enableSTA(true);
+            WiFi.disconnect(true);
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
