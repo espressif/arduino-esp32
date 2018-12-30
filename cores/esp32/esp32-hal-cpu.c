@@ -16,6 +16,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include "freertos/xtensa_timer.h"
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "soc/rtc.h"
@@ -32,18 +33,6 @@ typedef struct apb_change_cb_s {
 
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
-
-static uint32_t _cpu_freq_mhz = CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
-static uint32_t _sys_time_multiplier = 1;
-
-uint64_t IRAM_ATTR micros64(){
-    return (uint64_t)(esp_timer_get_time()) * _sys_time_multiplier;
-}
-
-//ToDo: figure out how to set FreeRTOS tick properly
-void delay(uint32_t ms){
-    vTaskDelay((ms * _cpu_freq_mhz) / (portTICK_PERIOD_MS * CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ));
-}
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
     if(conf->freq_mhz >= 80){
@@ -130,11 +119,13 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     return true;
 }
 
+void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us); //private in IDF
+
 bool setCpuFrequency(uint32_t cpu_freq_mhz){
     rtc_cpu_freq_config_t conf, cconf;
     uint32_t capb, apb;
     rtc_clk_cpu_freq_get_config(&cconf);
-    if(cconf.freq_mhz == cpu_freq_mhz && _cpu_freq_mhz == cpu_freq_mhz){
+    if(cconf.freq_mhz == cpu_freq_mhz){
         return true;
     }
     if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
@@ -148,9 +139,11 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
         triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
     }
     rtc_clk_cpu_freq_set_config_fast(&conf);
-    _cpu_freq_mhz = conf.freq_mhz;
-    _sys_time_multiplier = 80000000 / apb;
+    //Update FreeRTOS Tick Divisor
+    _xt_tick_divisor = cpu_freq_mhz * 1000000 / XT_TICK_PER_SEC;
     if(capb != apb && apb_change_callbacks){
+        //Update esp_timer divisor
+        esp_timer_impl_update_apb_freq(apb / 1000000);
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
     }
     return true;

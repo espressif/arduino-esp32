@@ -101,11 +101,15 @@ void disableCore1WDT(){
 #endif
 
 unsigned long IRAM_ATTR micros(){
-    return (unsigned long) (micros64());
+    return (unsigned long) (esp_timer_get_time());
 }
 
 unsigned long IRAM_ATTR millis(){
-    return (unsigned long) (micros64() / 1000);
+    return (unsigned long) (esp_timer_get_time() / 1000);
+}
+
+void delay(uint32_t ms){
+    vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)

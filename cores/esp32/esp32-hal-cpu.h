@@ -40,8 +40,6 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz);
 uint32_t getCpuFrequency(); // In MHz
 uint32_t getApbFrequency(); // In Hz
 
-uint64_t micros64(); // 64bit version of micros()
-
 #ifdef __cplusplus
 }
 #endif
