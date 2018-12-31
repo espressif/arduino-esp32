@@ -150,11 +150,10 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     //Make the frequency change
     rtc_clk_cpu_freq_set_config_fast(&conf);
     if(capb != apb){
-        //Update REF_TICK
-        uint32_t xtal_mhz = rtc_clk_xtal_freq_get();
-        uint32_t tick_freq_mhz = (conf.freq_mhz >= xtal_mhz)?xtal_mhz:conf.freq_mhz;
-        uint32_t tick_conf = tick_freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
-        ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = tick_conf;
+        //Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
+        //if(conf.freq_mhz < 80){
+        //    ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = conf.freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
+        //}
         //Update APB Freq REG
         rtc_clk_apb_freq_update(apb);
         //Update esp_timer divisor

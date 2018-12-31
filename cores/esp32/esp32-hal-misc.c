@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
+#include "soc/apb_ctrl_reg.h"
 #include "rom/rtc.h"
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
@@ -145,8 +146,10 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
 #ifdef F_CPU
-    setCpuFrequency(F_CPU/1000000L);
+    setCpuFrequency(F_CPU/1000000);
 #endif
 #if CONFIG_SPIRAM_SUPPORT
     psramInit();
