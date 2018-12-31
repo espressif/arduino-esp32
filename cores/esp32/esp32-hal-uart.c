@@ -323,10 +323,9 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     }
     UART_MUTEX_LOCK();
     while(len) {
-        while(len && uart->dev->status.txfifo_cnt < 0x7F) {
-            uart->dev->fifo.rw_byte = *data++;
-            len--;
-        }
+        while(uart->dev->status.txfifo_cnt == 0x7F);
+        uart->dev->fifo.rw_byte = *data++;
+        len--;
     }
     UART_MUTEX_UNLOCK();
 }
@@ -540,7 +539,7 @@ uartDetectBaudrate(uart_t *uart)
     uart->dev->auto_baud.en = 0;
     uartStateDetectingBaudrate = false; // Initialize for the next round
 
-    unsigned long baudrate = UART_CLK_FREQ / divisor;
+    unsigned long baudrate = getApbFrequency() / divisor;
 
     static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
