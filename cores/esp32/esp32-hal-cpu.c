@@ -22,6 +22,7 @@
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "rom/rtc.h"
+#include "soc/apb_ctrl_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
 
@@ -31,15 +32,10 @@ typedef struct apb_change_cb_s {
         apb_change_cb_t cb;
 } apb_change_t;
 
+const uint32_t MHZ = 1000000;
+
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
-
-static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
-    if(conf->freq_mhz >= 80){
-        return 80000000;
-    }
-    return (conf->source_freq_mhz * 1000000) / conf->div;
-}
 
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
@@ -119,31 +115,56 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     return true;
 }
 
+static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
+    if(conf->freq_mhz >= 80){
+        return 80 * MHZ;
+    }
+    return (conf->source_freq_mhz * MHZ) / conf->div;
+}
+
 void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us); //private in IDF
 
 bool setCpuFrequency(uint32_t cpu_freq_mhz){
     rtc_cpu_freq_config_t conf, cconf;
     uint32_t capb, apb;
+    //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
+    //return if frequency has not changed
     if(cconf.freq_mhz == cpu_freq_mhz){
         return true;
     }
+    //Get configuration for the new CPU frequency
     if(!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)){
         log_e("CPU clock could not be set to %u MHz", cpu_freq_mhz);
         return false;
     }
+    //Current APB
     capb = calculateApb(&cconf);
+    //New APB
     apb = calculateApb(&conf);
-    log_i("%s: %u / %u = %u Mhz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz);
+    log_i("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+    //Call peripheral functions before the APB change
     if(capb != apb && apb_change_callbacks){
         triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
     }
+    //Make the frequency change
     rtc_clk_cpu_freq_set_config_fast(&conf);
-    //Update FreeRTOS Tick Divisor
-    _xt_tick_divisor = cpu_freq_mhz * 1000000 / XT_TICK_PER_SEC;
-    if(capb != apb && apb_change_callbacks){
+    if(capb != apb){
+        //Update REF_TICK
+        uint32_t xtal_mhz = rtc_clk_xtal_freq_get();
+        uint32_t tick_freq_mhz = (conf.freq_mhz >= xtal_mhz)?xtal_mhz:conf.freq_mhz;
+        uint32_t tick_conf = tick_freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
+        ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = tick_conf;
+        //Update APB Freq REG
+        rtc_clk_apb_freq_update(apb);
         //Update esp_timer divisor
-        esp_timer_impl_update_apb_freq(apb / 1000000);
+        esp_timer_impl_update_apb_freq(apb / MHZ);
+    }
+    //Update FreeRTOS Tick Divisor
+    uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
+    _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
+    //Call peripheral functions after the APB change
+    if(capb != apb && apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
     }
     return true;
