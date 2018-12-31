@@ -145,7 +145,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     apb = calculateApb(&conf);
     log_i("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
     //Call peripheral functions before the APB change
-    if(capb != apb && apb_change_callbacks){
+    if(apb_change_callbacks){
         triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
     }
     //Make the frequency change
@@ -164,7 +164,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
     //Call peripheral functions after the APB change
-    if(capb != apb && apb_change_callbacks){
+    if(apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
     }
     return true;

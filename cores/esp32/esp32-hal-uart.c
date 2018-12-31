@@ -231,8 +231,6 @@ void uartEnd(uart_t* uart)
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
-        uint8_t c;
-        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
         uart->queue = NULL;
     }
@@ -252,8 +250,6 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
-        uint8_t c;
-        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
         uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
         if(uart->queue == NULL) {
