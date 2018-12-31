@@ -54,6 +54,7 @@ static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
     apb_change_t * r = apb_change_callbacks;
     while(r != NULL){
         r->cb(r->arg, ev_type, old_apb, new_apb);
+        r=r->next;
     }
     xSemaphoreGive(apb_change_lock);
 }

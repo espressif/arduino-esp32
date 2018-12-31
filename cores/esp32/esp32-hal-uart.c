@@ -67,6 +67,8 @@ static uart_t _uart_bus_array[3] = {
 };
 #endif
 
+static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
+
 static void IRAM_ATTR _uart_isr(void *arg)
 {
     uint8_t i, c;
@@ -216,6 +218,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         uartAttachTx(uart, txPin, inverted);
     }
 
+    addApbChangeCallback(uart, uart_on_apb_change);
     return uart;
 }
 
@@ -224,6 +227,7 @@ void uartEnd(uart_t* uart)
     if(uart == NULL) {
         return;
     }
+    removeApbChangeCallback(uart, uart_on_apb_change);
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
@@ -359,13 +363,44 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
     UART_MUTEX_UNLOCK();
 }
 
+static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb)
+{
+    uart_t* uart = (uart_t*)arg;
+    if(ev_type == APB_BEFORE_CHANGE){
+        //todo:
+        UART_MUTEX_LOCK();
+        // detach RX
+        // read RX fifo
+        uint8_t c;
+        BaseType_t xHigherPriorityTaskWoken;
+        while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+            c = uart->dev->fifo.rw_byte;
+            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+                xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+            }
+        }
+        // wait TX empty
+        while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
+    } else {
+        //todo:
+        // set baudrate
+        uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
+        uint32_t baud_rate = ((old_apb<<4)/clk_div);
+        clk_div = ((new_apb<<4)/baud_rate);
+        uart->dev->clk_div.div_int = clk_div>>4 ;
+        uart->dev->clk_div.div_frag = clk_div & 0xf;
+        // attach rx
+        UART_MUTEX_UNLOCK();
+    }
+}
+
 uint32_t uartGetBaudRate(uart_t* uart)
 {
     if(uart == NULL) {
         return 0;
     }
     uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
-    return ((UART_CLK_FREQ<<4)/clk_div);
+    return ((getApbFrequency()<<4)/clk_div);
 }
 
 static void IRAM_ATTR uart0_write_char(char c)
