@@ -240,6 +240,7 @@ size_t Stream::readBytes(char *buffer, size_t length)
         if(c < 0) {
             break;
         }
+	vTaskDelay(8);
         *buffer++ = (char) c;
         count++;
     }
@@ -261,6 +262,7 @@ size_t Stream::readBytesUntil(char terminator, char *buffer, size_t length)
         if(c < 0 || c == terminator) {
             break;
         }
+	vTaskDelay(8);
         *buffer++ = (char) c;
         index++;
     }
