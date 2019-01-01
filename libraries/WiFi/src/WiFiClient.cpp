@@ -59,6 +59,7 @@ private:
             if(!_buffer){
                 _buffer = (uint8_t *)malloc(_size);
                 if(!_buffer) {
+                    log_e("Not enough memory to allocate buffer");
                     _failed = true;
                     return 0;
                 }
