@@ -78,6 +78,7 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
             while(r->next){
                 r = r->next;
                 if(r->cb == cb && r->arg == arg){
+                    free(c);
                     goto unlock_and_exit;
                 }
             }

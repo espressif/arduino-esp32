@@ -362,9 +362,10 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
 {
     uart_t* uart = (uart_t*)arg;
     if(ev_type == APB_BEFORE_CHANGE){
-        //todo:
         UART_MUTEX_LOCK();
-        // detach RX
+        //disabple interrupt
+        uart->dev->int_ena.val = 0;
+        uart->dev->int_clr.val = 0xffffffff;
         // read RX fifo
         uint8_t c;
         BaseType_t xHigherPriorityTaskWoken;
@@ -384,7 +385,11 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
         clk_div = ((new_apb<<4)/baud_rate);
         uart->dev->clk_div.div_int = clk_div>>4 ;
         uart->dev->clk_div.div_frag = clk_div & 0xf;
-        // attach rx
+        //enable interrupts
+        uart->dev->int_ena.rxfifo_full = 1;
+        uart->dev->int_ena.frm_err = 1;
+        uart->dev->int_ena.rxfifo_tout = 1;
+        uart->dev->int_clr.val = 0xffffffff;
         UART_MUTEX_UNLOCK();
     }
 }
