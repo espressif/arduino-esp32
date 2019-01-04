@@ -23,12 +23,13 @@ extern "C" {
 #include <stdbool.h>
 #include <stdlib.h>
 
-typedef enum { APB_BEFORE_CHANGE, APB_AFTER_CHANGE } apb_change_ev_t;
+typedef enum { APB_BEFORE_CHANGE, APB_AFTER_CHANGE, APB_ABORT_CHANGE} apb_change_ev_t;
 
-typedef void (* apb_change_cb_t)(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
+typedef bool (* apb_change_cb_t)(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
 bool addApbChangeCallback(void * arg, apb_change_cb_t cb);
 bool removeApbChangeCallback(void * arg, apb_change_cb_t cb);
+bool runCallbackList(void);
 
 //function takes the following frequencies as valid values:
 //  240, 160, 80                     <<< For all XTAL types
@@ -37,8 +38,13 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb);
 //  24, 12, 8, 6, 4, 3, 2, 1         <<< For 24MHz XTAL
 bool setCpuFrequency(uint32_t cpu_freq_mhz);
 
-uint32_t getCpuFrequency(); // In MHz
+uint32_t getCpuFrequencyMHz(); // In MHz
 uint32_t getApbFrequency(); // In Hz
+
+#define D_A 18
+#define D_B 19
+ 
+void twiddle( const char* pattern);
 
 #ifdef __cplusplus
 }

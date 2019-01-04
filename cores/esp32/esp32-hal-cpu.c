@@ -28,6 +28,7 @@
 
 typedef struct apb_change_cb_s {
         struct apb_change_cb_s * next;
+        struct apb_change_cb_s * prev;
         void * arg;
         apb_change_cb_t cb;
 } apb_change_t;
@@ -37,54 +38,110 @@ const uint32_t MHZ = 1000000;
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
 
+void IRAM_ATTR twiddle( const char* pattern){
+int len=strlen(pattern),pos=0;
+digitalWrite(D_A,HIGH);
+digitalWrite(D_B,LOW);
+while(pos<len){
+  if(pattern[pos++]=='1'){
+    digitalWrite(D_B,HIGH);
+  } else {
+    digitalWrite(D_B,LOW);
+  }
+  digitalWrite(D_B,LOW);
+}
+digitalWrite(D_A,LOW);
+digitalWrite(D_B,LOW);
+}  
+
+
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
     if(!initialized){
-        initialized = true;
         apb_change_lock = xSemaphoreCreateMutex();
-        if(!apb_change_lock){
-            initialized = false;
-        }
+        initialized = apb_change_lock != NULL;
     }
 }
 
-static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+static bool triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     initApbChangeCallback();
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
     apb_change_t * r = apb_change_callbacks;
-    while(r != NULL){
-        r->cb(r->arg, ev_type, old_apb, new_apb);
-        r=r->next;
+    bool success = true;
+    while((r != NULL)&& success){
+/*
+        switch(ev_type){
+ 
+            case APB_BEFORE_CHANGE:
+                twiddle("1100");
+                break;
+
+            case APB_AFTER_CHANGE:
+                twiddle("1000");
+                break;
+            default :;
+        }
+*/
+//        log_i("callback %p(%d)",r->cb,ev_type);
+        success = r->cb(r->arg, ev_type, old_apb, new_apb);
+        if(ev_type == APB_AFTER_CHANGE){
+            r = r->next;
+            success = true; // don't care after processor clock change
+        } else { //APB_BEFORE_CHANGE
+            if(success){
+                r = r->next;
+            }
+        }
     }
+    if(!success && ev_type == APB_BEFORE_CHANGE){
+        if(r != NULL) r=r->prev;
+        while(r != NULL){
+            r->cb(r->arg, APB_ABORT_CHANGE, old_apb, new_apb);
+            r = r->prev;
+        }
+    }
+/*        
+        switch(ev_type){
+            case APB_BEFORE_CHANGE:
+                twiddle("1101");
+                break;
+
+            case APB_AFTER_CHANGE:
+                twiddle("1001");
+                break;
+            default :;
+        }
+*/
     xSemaphoreGive(apb_change_lock);
+    return success;
+
 }
 
 bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
     initApbChangeCallback();
-    apb_change_t * c = (apb_change_t*)malloc(sizeof(apb_change_t));
-    if(!c){
-        log_e("Callback Object Malloc Failed");
-        return false;
-    }
-    c->next = NULL;
-    c->arg = arg;
-    c->cb = cb;
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
-    if(apb_change_callbacks == NULL){
-        apb_change_callbacks = c;
-    } else {
-        apb_change_t * r = apb_change_callbacks;
-        if(r->cb != cb || r->arg != arg){
-            while(r->next){
-                r = r->next;
-                if(r->cb == cb && r->arg == arg){
-                    goto unlock_and_exit;
-                }
-            }
-            r->next = c;
+    apb_change_t * r = apb_change_callbacks;
+    
+    while(( r != NULL)&& !((r->arg == arg) && (r->cb == cb))) r=r->next;
+    if( r == NULL ){ // not already in list
+        r = (apb_change_t*)malloc(sizeof(apb_change_t));
+        if( r == NULL ){
+            log_e("Callback Object Malloc Failed");
+            xSemaphoreGive(apb_change_lock);
+            return false;
         }
+        log_i("add callback %p(%p) at %p",cb,arg,r);
+        r->arg = arg;
+        r->cb = cb;
+        r->prev = NULL;
+        r->next = apb_change_callbacks; // add at front
+        apb_change_callbacks = r;
+        if(r->next != NULL) { // install back link
+            r->next->prev = r;
+        }
+    } else {
+        log_i("ReAdd callback %p(%p) at %p",cb,arg,r);
     }
-unlock_and_exit:
     xSemaphoreGive(apb_change_lock);
     return true;
 }
@@ -97,23 +154,51 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
         xSemaphoreGive(apb_change_lock);
         return false;
     }
-    if(r->cb == cb && r->arg == arg){
-        apb_change_callbacks = r->next;
-        free(r);
-    } else {
-        while(r->next && (r->next->cb != cb || r->next->arg != arg)){
+    bool found = false;
+    bool done = false;
+    while( !found && !done ){
+        found = ((r->cb == cb)&&(r->arg == arg));
+        if(!found) {
             r = r->next;
         }
-        if(r->next == NULL || r->next->cb != cb || r->next->arg != arg){
-            xSemaphoreGive(apb_change_lock);
-            return false;
+        done = r==NULL;
+    }
+    if(found){
+        log_i("remove callback %p",cb);
+        if(r->prev != NULL) {
+            r->prev->next = r->next;
+        } else {
+            apb_change_callbacks = r->next;
+            log_i("was head");
         }
-        apb_change_t * c = r->next;
-        r->next = c->next;
-        free(c);
+        if(r->next != NULL) {
+            r->next->prev = r->prev;
+        } else {
+            log_i("was tail");
+        }
+        free(r);
+    } else {
+        xSemaphoreGive(apb_change_lock);
+        return false; // did not exist
     }
     xSemaphoreGive(apb_change_lock);
     return true;
+}
+
+bool runCallbackList(){
+    initApbChangeCallback();
+    xSemaphoreTake(apb_change_lock, portMAX_DELAY);
+    apb_change_t * r = apb_change_callbacks;
+    if(r == NULL){
+        xSemaphoreGive(apb_change_lock);
+        return false;
+    }
+    log_i("APB callback List head=%p",apb_change_callbacks);
+    while(r != NULL){
+        log_i("[%p](cb=%p, arg=%p, next=%p, prev=%p)",r,r->cb,r->arg,r->next,r->prev);
+        r = r->next;
+    }
+    xSemaphoreGive(apb_change_lock);
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
@@ -146,21 +231,28 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     log_i("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
     //Call peripheral functions before the APB change
     if(apb_change_callbacks){
-        triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
+        if(!triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb)){ // some driver refused to acceptchange;
+            log_e("callback refused clockChange");
+            return false;
+        }
     }
     //Make the frequency change
+//    twiddle("10010");
     rtc_clk_cpu_freq_set_config_fast(&conf);
     if(capb != apb){
-        //Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
-        //if(conf.freq_mhz < 80){
+        // Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
+        // if(conf.freq_mhz < 80){
         //    ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = conf.freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
-        //}
+        // }
         //Update APB Freq REG
+//    twiddle("10011");
         rtc_clk_apb_freq_update(apb);
         //Update esp_timer divisor
+//    twiddle("10100");
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
     //Update FreeRTOS Tick Divisor
+    twiddle("10101");
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
     //Call peripheral functions after the APB change
@@ -170,7 +262,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     return true;
 }
 
-uint32_t getCpuFrequency(){
+uint32_t getCpuFrequencyMHz(){
     rtc_cpu_freq_config_t conf;
     rtc_clk_cpu_freq_get_config(&conf);
     return conf.freq_mhz;
