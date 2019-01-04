@@ -58,8 +58,11 @@ digitalWrite(D_B,LOW);
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
     if(!initialized){
+        initialized = true;
         apb_change_lock = xSemaphoreCreateMutex();
-        initialized = apb_change_lock != NULL;
+        if(!apb_change_lock){
+            initialized = false;
+        }
     }
 }
 
@@ -90,17 +93,17 @@ static bool triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
         } else { //APB_BEFORE_CHANGE
             if(success){
                 r = r->next;
+            } else { // unwind because a driver refused to accept the change
+                r = r->prev;
+                while( r != NULL ){ 
+                    r->cb(r->arg, APB_ABORT_CHANGE, old_apb, new_apb);
+                    r = r->prev;
+                }
+                break;
             }
         }
     }
-    if(!success && ev_type == APB_BEFORE_CHANGE){
-        if(r != NULL) r=r->prev;
-        while(r != NULL){
-            r->cb(r->arg, APB_ABORT_CHANGE, old_apb, new_apb);
-            r = r->prev;
-        }
-    }
-/*        
+ /*        
         switch(ev_type){
             case APB_BEFORE_CHANGE:
                 twiddle("1101");
