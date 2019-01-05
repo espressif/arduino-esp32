@@ -54,10 +54,10 @@ typedef struct uart_struct_t uart_t;
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted);
 void uartEnd(uart_t* uart);
 
-uint32_t uartAvailable(uart_t* uart);
-uint32_t uartAvailableForWrite(uart_t* uart);
-int16_t uartRead(uart_t* uart);
-int16_t uartPeek(uart_t* uart);
+int uartAvailable(uart_t* uart);
+int uartAvailableForWrite(uart_t* uart);
+int uartRead(uart_t* uart);
+int uartPeek(uart_t* uart);
 
 void uartWrite(uart_t* uart, uint8_t c);
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len);

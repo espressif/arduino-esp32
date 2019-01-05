@@ -47,6 +47,7 @@ struct uart_struct_t {
     intr_handle_t intr_handle;
     int8_t rx_pin;
     bool invertedLogic;
+    uint16_t queue_len;
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -54,18 +55,18 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[3] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL, NULL,-1,false},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), 1, NULL, NULL,-1,false},
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL, NULL,-1,false}
+    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL, NULL,-1,false,0},
+    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), 1, NULL, NULL,-1,false,0},
+    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL, NULL,-1,false,0}
 };
 #else
 #define UART_MUTEX_LOCK()    do {} while (xSemaphoreTakeRecursive(uart->lock, portMAX_DELAY) != pdPASS)
 #define UART_MUTEX_UNLOCK()  xSemaphoreGiveRecursive(uart->lock)
 
 static uart_t _uart_bus_array[3] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL, NULL,-1,false},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL, NULL,-1,false},
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL, NULL,-1,false}
+    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL, NULL,-1,false,0},
+    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL, NULL,-1,false,0},
+    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL, NULL,-1,false,0}
 };
 #endif
 
@@ -110,8 +111,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         UBaseType_t spaces=0,count=0;
         count = (uart->dev->mem_rx_status.wr_addr - uart->dev->mem_rx_status.rd_addr)%0x80;
         if(uart->queue != NULL) {
-            spaces=uxQueueSpacesAvailable( uart->queue);
-        
+            spaces = uart->queue_len - uxQueueMessagesWaitingFromISR( uart->queue);
      
             while((spaces > 0 )&&( (count--) > 0 )){ // if room in queue move from fifo to queue
           // store it
@@ -239,8 +239,10 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart->invertedLogic = inverted;
 
     if(queueLen && uart->queue == NULL) {
+        uart->queue_len = queueLen;
         uart->queue = xQueueCreate(queueLen, sizeof(uint8_t)); //initialize the queue
         if(uart->queue == NULL) {
+            uart->queue_len = 0;
             return NULL;
         }
     }
@@ -373,13 +375,14 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
 #ifdef DEBUG_RX
         digitalWrite(25,HIGH);
 #endif
-        uint8_t c;
-        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
+        uart->queue_len = 0;
     }
     if( new_size > 0){
+        uart->queue_len = new_size;
         uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
         if(uart->queue == NULL) {
+            uart->queue_len = 0;
             return NULL;
         } else { // reEnable interrupt
             uart->dev->int_ena.rxfifo_full = 1;
@@ -395,10 +398,10 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
     return new_size;
 }
 
-uint32_t uartAvailable(uart_t* uart)
+int uartAvailable(uart_t* uart)
 {
     if(uart == NULL ){
-        return 0;
+        return -1; // invalid uart control block
     }
     UART_MUTEX_LOCK();
     uint32_t count = 0;
@@ -412,15 +415,15 @@ uint32_t uartAvailable(uart_t* uart)
     return count;
 }
 
-uint32_t uartAvailableForWrite(uart_t* uart)
+int uartAvailableForWrite(uart_t* uart)
 {
     if(uart == NULL) {
-        return 0;
+        return -1; // invalid uart control block
     }
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
-int16_t uartRead(uart_t* uart)
+int uartRead(uart_t* uart)
 {
     if(uart == NULL ) {
         return -1;
@@ -449,7 +452,7 @@ int16_t uartRead(uart_t* uart)
     return -1;
 }
 
-int16_t uartPeek(uart_t* uart) // peek cannot work without Queue
+int uartPeek(uart_t* uart) // peek cannot work without Queue
 {
     if(uart == NULL || uart->queue == NULL) {
         return -1;
