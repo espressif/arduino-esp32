@@ -86,6 +86,10 @@ public:
     {
         return write((uint8_t) n);
     }
+    void setBaudRate(uint32_t baud) 
+    {
+        uartSetBaudRate(_uart, baud);
+    }
     uint32_t baudRate();
     operator bool() const;
 
