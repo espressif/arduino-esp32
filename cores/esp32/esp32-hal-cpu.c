@@ -37,24 +37,6 @@ const uint32_t MHZ = 1000000;
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
 
-/*
-void IRAM_ATTR twiddle( const char* pattern){
-int len=strlen(pattern),pos=0;
-digitalWrite(D_A,HIGH);
-digitalWrite(D_B,LOW);
-while(pos<len){
-  if(pattern[pos++]=='1'){
-    digitalWrite(D_B,HIGH);
-  } else {
-    digitalWrite(D_B,LOW);
-  }
-  digitalWrite(D_B,LOW);
-}
-digitalWrite(D_A,LOW);
-digitalWrite(D_B,LOW);
-}  
-*/
-
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
     if(!initialized){
@@ -106,14 +88,12 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
             xSemaphoreGive(apb_change_lock);
             return false;
         }
-        log_v("add callback %p(%p) at %p",cb,arg,r);
         r->arg = arg;
         r->cb = cb;
         r->next = apb_change_callbacks; // add at front
         apb_change_callbacks = r;
         
     } else {
-        log_v("ReAdd callback %p(%p) at %p",cb,arg,r);
     }
     xSemaphoreGive(apb_change_lock);
     return true;
@@ -138,7 +118,6 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
         done = r==NULL;
     }
     if(found){
-        log_v("remove callback %p",cb);
         if(r1 != NULL) {
             r1->next = r->next;
         } else {
@@ -155,22 +134,6 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     }
     xSemaphoreGive(apb_change_lock);
     return true;
-}
-
-bool runCallbackList(){
-    initApbChangeCallback();
-    xSemaphoreTake(apb_change_lock, portMAX_DELAY);
-    apb_change_t * r = apb_change_callbacks;
-    if(r == NULL){
-        xSemaphoreGive(apb_change_lock);
-        return false;
-    }
-    log_i("APB callback List head=%p",apb_change_callbacks);
-    while(r != NULL){
-        log_i("[%p](cb=%p, arg=%p, next=%p)",r,r->cb,r->arg,r->next);
-        r = r->next;
-    }
-    xSemaphoreGive(apb_change_lock);
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
@@ -221,7 +184,6 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
     //Update FreeRTOS Tick Divisor
-//    twiddle("10101");
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
     //Call peripheral functions after the APB change
