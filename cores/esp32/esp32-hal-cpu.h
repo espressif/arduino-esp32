@@ -31,14 +31,15 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb);
 bool removeApbChangeCallback(void * arg, apb_change_cb_t cb);
 
 //function takes the following frequencies as valid values:
-//  240, 160, 80                     <<< For all XTAL types
-//  40, 20, 13, 10, 8, 5, 4, 3, 2, 1 <<< For 40MHz XTAL
-//  26, 13, 5, 4, 3, 2, 1            <<< For 26MHz XTAL
-//  24, 12, 8, 6, 4, 3, 2, 1         <<< For 24MHz XTAL
-bool setCpuFrequency(uint32_t cpu_freq_mhz);
+//  240, 160, 80    <<< For all XTAL types
+//  40, 20, 10      <<< For 40MHz XTAL
+//  26, 13          <<< For 26MHz XTAL
+//  24, 12          <<< For 24MHz XTAL
+bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz);
 
-uint32_t getCpuFrequency(); // In MHz
-uint32_t getApbFrequency(); // In Hz
+uint32_t getCpuFrequencyMhz();  // In MHz
+uint32_t getXtalFrequencyMhz(); // In MHz
+uint32_t getApbFrequency();     // In Hz
 
 #ifdef __cplusplus
 }

@@ -126,9 +126,32 @@ static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
 
 void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us); //private in IDF
 
-bool setCpuFrequency(uint32_t cpu_freq_mhz){
+bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     rtc_cpu_freq_config_t conf, cconf;
     uint32_t capb, apb;
+    //Get XTAL Frequency and calculate min CPU MHz
+    rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
+    uint32_t min_cpu_mhz = 10;
+    if(xtal > RTC_XTAL_FREQ_AUTO){
+        if(xtal < RTC_XTAL_FREQ_40M) {
+            min_cpu_mhz = xtal / 2; //13Mhz for 26Mhz XTAL
+            if(cpu_freq_mhz <= xtal && cpu_freq_mhz != xtal && cpu_freq_mhz != (xtal/2)){
+                log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
+                return false;
+            }
+        } else if(cpu_freq_mhz <= xtal && cpu_freq_mhz != xtal && cpu_freq_mhz != (xtal/2) && cpu_freq_mhz != (xtal/4)){
+            log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
+            return false;
+        }
+    }
+    if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 80){
+        if(xtal >= RTC_XTAL_FREQ_40M){
+            log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
+        } else {
+            log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
+        }
+        return false;
+    }
     //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
     //return if frequency has not changed
@@ -144,7 +167,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     capb = calculateApb(&cconf);
     //New APB
     apb = calculateApb(&conf);
-    log_i("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+    log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
     //Call peripheral functions before the APB change
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);
@@ -171,10 +194,14 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     return true;
 }
 
-uint32_t getCpuFrequency(){
+uint32_t getCpuFrequencyMhz(){
     rtc_cpu_freq_config_t conf;
     rtc_clk_cpu_freq_get_config(&conf);
     return conf.freq_mhz;
+}
+
+uint32_t getXtalFrequencyMhz(){
+    return rtc_clk_xtal_freq_get();
 }
 
 uint32_t getApbFrequency(){

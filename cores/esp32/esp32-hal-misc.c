@@ -149,7 +149,7 @@ void initArduino()
     //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
     //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
 #ifdef F_CPU
-    setCpuFrequency(F_CPU/1000000);
+    setCpuFrequencyMhz(F_CPU/1000000);
 #endif
 #if CONFIG_SPIRAM_SUPPORT
     psramInit();
