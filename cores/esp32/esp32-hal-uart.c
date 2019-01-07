@@ -553,7 +553,6 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
     uartAttachRx(uart,oldPin,uart->invertedLogic);
     UART_MUTEX_UNLOCK();
 }
-
 uint32_t uartGetBaudRate(uart_t* uart)
 {
     if(uart == NULL) {
