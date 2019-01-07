@@ -25,6 +25,11 @@ extern "C" {
 
 typedef enum { APB_BEFORE_CHANGE, APB_AFTER_CHANGE, APB_ABORT_CHANGE} apb_change_ev_t;
 
+/* apb_change_cb callback can refuse the requested change by returning false while processing APB_BEFORE_CHANGE
+  cycle.  If any callback refuses the change, all callbacks that successfully prepared for the change
+  will receive APB_ABORT_CHANGE, the callback must then restore to the old_apb frequency, when this happens
+  APB_AFTER_CHANGE will not be sent.
+  */
 typedef bool (* apb_change_cb_t)(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
 bool addApbChangeCallback(void * arg, apb_change_cb_t cb);
@@ -40,11 +45,6 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz);
 
 uint32_t getCpuFrequencyMHz(); // In MHz
 uint32_t getApbFrequency(); // In Hz
-
-#define D_A 18
-#define D_B 19
- 
-void twiddle( const char* pattern);
 
 #ifdef __cplusplus
 }

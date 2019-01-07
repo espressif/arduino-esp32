@@ -70,8 +70,6 @@ static uart_t _uart_bus_array[3] = {
 };
 #endif
 
-//#define DEBUG_RX
-
 static bool uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
 static void _uart_rx_read_fifo( uart_t * uart){
@@ -94,10 +92,6 @@ static void _uart_rx_read_fifo( uart_t * uart){
     }  
     if(spaces == 0){ // disable rxFifo_full interrupt, no room in Queue or queue does not exit
         uart->dev->int_ena.rxfifo_full = 0;
-        uart->dev->int_ena.rxfifo_tout = 0;
-#ifdef DEBUG_RX
-        digitalWrite(25,HIGH);
-#endif
     }
     UART_MUTEX_UNLOCK();
 }
@@ -124,14 +118,9 @@ static void IRAM_ATTR _uart_isr(void *arg)
         if(spaces==0) { // disable interrupts until space exists in queue
         // if fifo overflows then, characters are lost.  But which characters? top of fifo or bottom?
            uart->dev->int_ena.rxfifo_full = 0;
-           uart->dev->int_ena.rxfifo_tout = 0;
-#ifdef DEBUG_RX
-           digitalWrite(25,HIGH);
-#endif
         }
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
-        uart->dev->int_clr.rxfifo_tout = 1;
     }
 
     if (xHigherPriorityTaskWoken) {
@@ -154,9 +143,6 @@ static void uartEnableInterrupt(uart_t* uart)
         log_e("unable to configure interrupt %u",ret);
     } else {
         uart->dev->int_ena.val = interrupts_enabled;
-#ifdef DEBUG_RX
-        digitalWrite(25,LOW);
-#endif
     }
     UART_MUTEX_UNLOCK();
 }
@@ -364,10 +350,6 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
         uart->dev->int_ena.rxfifo_full = 0; // shut off interrupt
-        uart->dev->int_ena.rxfifo_tout = 0;
-#ifdef DEBUG_RX
-        digitalWrite(25,HIGH);
-#endif
         vQueueDelete(uart->queue);
         uart->queue_len = 0;
     }
@@ -379,10 +361,6 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
             return NULL;
         } else { // reEnable interrupt
             uart->dev->int_ena.rxfifo_full = 1;
-            uart->dev->int_ena.rxfifo_tout = 1;
-#ifdef DEBUG_RX
-            digitalWrite(25,LOW);
-#endif
         }
     
     }
@@ -422,12 +400,8 @@ int uartRead(uart_t* uart)
         return -1;
     }
     uint8_t c;
-    uart->dev->int_ena.rxfifo_full = 1;
-    uart->dev->int_ena.rxfifo_tout = 1;
-#ifdef DEBUG_RX
-    digitalWrite(25,LOW);
-#endif
     if(uart->queue != NULL){
+        uart->dev->int_ena.rxfifo_full = 1; //more room in queue
         if(xQueueReceive(uart->queue, &c, 0)) {
             return c;
         } else {
@@ -469,10 +443,7 @@ void uartWrite(uart_t* uart, uint8_t c)
     }
     
     UART_MUTEX_LOCK();
-    while(uart->dev->status.txfifo_cnt == 0x7F){
-      digitalWrite(25,HIGH);
-    }
-    digitalWrite(25,LOW);
+    while(uart->dev->status.txfifo_cnt == 0x7F); // wait for more room
     uart->dev->fifo.rw_byte = c;
     UART_MUTEX_UNLOCK();
 }
@@ -488,9 +459,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
             uart->dev->fifo.rw_byte = *data++;
             len--;
         }
-        if (len) digitalWrite(25,HIGH);
     }
-    digitalWrite(25,LOW);
     UART_MUTEX_UNLOCK();
 }
 
@@ -525,11 +494,10 @@ void uartDrain(uart_t * uart)
     }
 
     UART_MUTEX_LOCK(); 
+
     //wait for txFifo to empty
-    while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out){
-        digitalWrite(25,HIGH);
-    }
-    digitalWrite(25,LOW);
+    while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
+
     //empty rxFifo, save rx characters so reset of UART doesn't cause problem
     _uart_rx_read_fifo(uart);
 

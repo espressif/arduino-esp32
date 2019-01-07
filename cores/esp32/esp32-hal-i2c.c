@@ -467,7 +467,6 @@ static bool i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t o
             I2C_MUTEX_UNLOCK();
             break;
         case APB_AFTER_CHANGE :
-//            twiddle("1000111");
             oldFreq = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period); //read old apbCycles 
             if(oldFreq>0) { // was configured with value
                 oldFreq = old_apb / oldFreq;
