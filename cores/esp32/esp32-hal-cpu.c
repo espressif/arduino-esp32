@@ -28,7 +28,6 @@
 
 typedef struct apb_change_cb_s {
         struct apb_change_cb_s * next;
-        struct apb_change_cb_s * prev;
         void * arg;
         apb_change_cb_t cb;
 } apb_change_t;
@@ -38,6 +37,7 @@ const uint32_t MHZ = 1000000;
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
 
+/*
 void IRAM_ATTR twiddle( const char* pattern){
 int len=strlen(pattern),pos=0;
 digitalWrite(D_A,HIGH);
@@ -53,7 +53,7 @@ while(pos<len){
 digitalWrite(D_A,LOW);
 digitalWrite(D_B,LOW);
 }  
-
+*/
 
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
@@ -72,20 +72,6 @@ static bool triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
     apb_change_t * r = apb_change_callbacks;
     bool success = true;
     while((r != NULL)&& success){
-/*
-        switch(ev_type){
- 
-            case APB_BEFORE_CHANGE:
-                twiddle("1100");
-                break;
-
-            case APB_AFTER_CHANGE:
-                twiddle("1000");
-                break;
-            default :;
-        }
-*/
-//        log_i("callback %p(%d)",r->cb,ev_type);
         success = r->cb(r->arg, ev_type, old_apb, new_apb);
         if(ev_type == APB_AFTER_CHANGE){
             r = r->next;
@@ -94,30 +80,17 @@ static bool triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
             if(success){
                 r = r->next;
             } else { // unwind because a driver refused to accept the change
-                r = r->prev;
-                while( r != NULL ){ 
-                    r->cb(r->arg, APB_ABORT_CHANGE, old_apb, new_apb);
-                    r = r->prev;
+                apb_change_t * r1 = apb_change_callbacks;
+                while( r1 != r ){ 
+                    r1->cb(r1->arg, APB_ABORT_CHANGE, old_apb, new_apb);
+                    r1 = r1->next;
                 }
                 break;
             }
         }
     }
- /*        
-        switch(ev_type){
-            case APB_BEFORE_CHANGE:
-                twiddle("1101");
-                break;
-
-            case APB_AFTER_CHANGE:
-                twiddle("1001");
-                break;
-            default :;
-        }
-*/
     xSemaphoreGive(apb_change_lock);
     return success;
-
 }
 
 bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
@@ -133,17 +106,14 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
             xSemaphoreGive(apb_change_lock);
             return false;
         }
-        log_i("add callback %p(%p) at %p",cb,arg,r);
+        log_v("add callback %p(%p) at %p",cb,arg,r);
         r->arg = arg;
         r->cb = cb;
-        r->prev = NULL;
         r->next = apb_change_callbacks; // add at front
         apb_change_callbacks = r;
-        if(r->next != NULL) { // install back link
-            r->next->prev = r;
-        }
+        
     } else {
-        log_i("ReAdd callback %p(%p) at %p",cb,arg,r);
+        log_v("ReAdd callback %p(%p) at %p",cb,arg,r);
     }
     xSemaphoreGive(apb_change_lock);
     return true;
@@ -152,7 +122,7 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
 bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     initApbChangeCallback();
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
-    apb_change_t * r = apb_change_callbacks;
+    apb_change_t * r = apb_change_callbacks, *r1=NULL;
     if(r == NULL){
         xSemaphoreGive(apb_change_lock);
         return false;
@@ -162,22 +132,21 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     while( !found && !done ){
         found = ((r->cb == cb)&&(r->arg == arg));
         if(!found) {
+            r1 = r;
             r = r->next;
         }
         done = r==NULL;
     }
     if(found){
-        log_i("remove callback %p",cb);
-        if(r->prev != NULL) {
-            r->prev->next = r->next;
+        log_v("remove callback %p",cb);
+        if(r1 != NULL) {
+            r1->next = r->next;
         } else {
             apb_change_callbacks = r->next;
-            log_i("was head");
+            log_v("was head");
         }
-        if(r->next != NULL) {
-            r->next->prev = r->prev;
-        } else {
-            log_i("was tail");
+        if(r->next == NULL) {
+            log_v("was tail");
         }
         free(r);
     } else {
@@ -198,7 +167,7 @@ bool runCallbackList(){
     }
     log_i("APB callback List head=%p",apb_change_callbacks);
     while(r != NULL){
-        log_i("[%p](cb=%p, arg=%p, next=%p, prev=%p)",r,r->cb,r->arg,r->next,r->prev);
+        log_i("[%p](cb=%p, arg=%p, next=%p)",r,r->cb,r->arg,r->next);
         r = r->next;
     }
     xSemaphoreGive(apb_change_lock);
@@ -231,7 +200,7 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
     capb = calculateApb(&cconf);
     //New APB
     apb = calculateApb(&conf);
-    log_i("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+    log_v("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
     //Call peripheral functions before the APB change
     if(apb_change_callbacks){
         if(!triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb)){ // some driver refused to acceptchange;
@@ -240,7 +209,6 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
         }
     }
     //Make the frequency change
-//    twiddle("10010");
     rtc_clk_cpu_freq_set_config_fast(&conf);
     if(capb != apb){
         // Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
@@ -248,14 +216,12 @@ bool setCpuFrequency(uint32_t cpu_freq_mhz){
         //    ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = conf.freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
         // }
         //Update APB Freq REG
-//    twiddle("10011");
         rtc_clk_apb_freq_update(apb);
         //Update esp_timer divisor
-//    twiddle("10100");
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
     //Update FreeRTOS Tick Divisor
-    twiddle("10101");
+//    twiddle("10101");
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
     //Call peripheral functions after the APB change

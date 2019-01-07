@@ -1674,7 +1674,7 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
         clk_speed = apb/(period*2);
         log_d("APB Freq too fast, Increasing i2c Freq to %d Hz",clk_speed);
     }
-    log_d("freq=%dHz",clk_speed);
+    log_v("freq=%dHz",clk_speed);
       
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
@@ -1689,7 +1689,7 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     available when a Fifo interrupt is triggered.  This allows enough room in the Fifo so that
     interrupt latency does not cause a Fifo overflow/underflow event.
 */
-    log_d("cpu Freq=%dMhz, i2c Freq=%dHz",getCpuFrequencyMHz(),clk_speed);
+    log_v("cpu Freq=%dMhz, i2c Freq=%dHz",getCpuFrequencyMHz(),clk_speed);
     uint32_t fifo_delta = (INTERRUPT_CYCLE_OVERHEAD/((getCpuFrequencyMHz()*1000000 / clk_speed)*10))+1; 
     if (fifo_delta > 24) fifo_delta=24;   
     f.rx_fifo_full_thrhd = 32 - fifo_delta;

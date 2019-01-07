@@ -62,7 +62,7 @@ int uartPeek(uart_t* uart);
 void uartWrite(uart_t* uart, uint8_t c);
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len);
 
-void uartFlush(uart_t* uart); //wait for txFifo to empty, then Discard anything left in RxFifo, Queue contents left alone?
+void uartFlush(uart_t* uart); //wait for txFifo to empty, then Discard anything left in RxFifo, empty rx Queue contents?
 void uartDrain(uart_t* uart); //wait for txFifo to empty, the add anything in rxFifo to Queue
 
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate); 

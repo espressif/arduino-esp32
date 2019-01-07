@@ -142,24 +142,21 @@ static void IRAM_ATTR _uart_isr(void *arg)
 static void uartEnableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
+    uart->dev->int_clr.val = 0xffffffff; // clear all pending interrupt
+    uart->dev->int_ena.val = 0;  // disable all new interrupts
     uart->dev->conf1.rxfifo_full_thrhd = 112; // needs speed compensation?
-    uart->dev->conf1.rx_tout_thrhd = 32; // no need to force rxFiFo empty, because uartRead() will empty if necessary
-    uart->dev->conf1.rx_tout_en = 1;
-    uart->dev->int_ena.rxfifo_full = 1;
-    uart->dev->int_ena.frm_err = 1;
-    uart->dev->int_ena.rxfifo_tout = 1;
-    uart->dev->int_clr.val = 0xffffffff;
-#ifdef DEBUG_RX
-    digitalWrite(25,LOW);
-#endif
-// can this share an interrupt?
+//    uart->dev->conf1.rx_tout_thrhd = 32; // no need to force rxFiFo empty, because uartRead() will empty if necessary
+    uart->dev->conf1.rx_tout_en = 0;
     uint32_t flags = ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_LOWMED;
-//    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, uart, &uart->intr_handle);
-    uint32_t ret = 0;
-    uint32_t interrupts_enabled = uart->dev->int_ena.val;
-    ret = esp_intr_alloc_intrstatus(UART_INTR_SOURCE(uart->num), flags, (uint32_t)&uart->dev->int_st.val, interrupts_enabled, _uart_isr,uart, &uart->intr_handle);
+    uint32_t interrupts_enabled =  UART_RXFIFO_OVF_INT_ENA | UART_FRM_ERR_INT_ENA | UART_RXFIFO_FULL_INT_ENA;
+    uint32_t ret = esp_intr_alloc_intrstatus(UART_INTR_SOURCE(uart->num), flags, (uint32_t)&uart->dev->int_st.val, interrupts_enabled, _uart_isr,uart, &uart->intr_handle);
     if(ret != ESP_OK ){
         log_e("unable to configure interrupt %u",ret);
+    } else {
+        uart->dev->int_ena.val = interrupts_enabled;
+#ifdef DEBUG_RX
+        digitalWrite(25,LOW);
+#endif
     }
     UART_MUTEX_UNLOCK();
 }
@@ -237,7 +234,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 #endif
     UART_MUTEX_LOCK();
     uart->invertedLogic = inverted;
-
     if(queueLen && uart->queue == NULL) {
         uart->queue_len = queueLen;
         uart->queue = xQueueCreate(queueLen, sizeof(uint8_t)); //initialize the queue
@@ -246,33 +242,8 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
             return NULL;
         }
     }
-    uartDetachRx(uart); // release ISR
-    uartDetachTx(uart);
-    
-    if(uart_nr == 1){
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART1_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
-    } else if(uart_nr == 2){
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
-    } else {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
-    }
-    uartSetBaudRate(uart, baudrate);
-    uart->dev->conf0.val = config;
-    uart->dev->mem_conf.mem_pd=0; // power up Fifo memory
-    uartFlush(uart);
-    #define TWO_STOP_BITS_CONF 0x3
-    #define ONE_STOP_BITS_CONF 0x1
-
-    if ( uart->dev->conf0.stop_bit_num == TWO_STOP_BITS_CONF) {
-        uart->dev->conf0.stop_bit_num = ONE_STOP_BITS_CONF;
-        uart->dev->rs485_conf.dl1_en = 1;
-    }
+//    uartDetachRx(uart); // release ISR
+//    uartDetachTx(uart);
 
     if(txPin != -1) {
         uartAttachTx(uart, txPin, inverted);
@@ -281,7 +252,29 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     if(rxPin != -1) {
         uartAttachRx(uart, rxPin, inverted); //Attach ISR interrupt also
     }
+        
+    if(uart_nr == 1){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART1_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
+    } else if(uart_nr == 2){
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
+    } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
+    }
 
+    uartSetBaudRate(uart, baudrate);
+    uart->dev->conf0.val = config;
+//    uart->dev->mem_conf.mem_pd=0; // power up Fifo memory
+    #define TWO_STOP_BITS_CONF 0x3
+    #define ONE_STOP_BITS_CONF 0x1
+
+    if ( uart->dev->conf0.stop_bit_num == TWO_STOP_BITS_CONF) {
+        uart->dev->conf0.stop_bit_num = ONE_STOP_BITS_CONF;
+        uart->dev->rs485_conf.dl1_en = 1;
+    }
+    uartFlush(uart);
     UART_MUTEX_UNLOCK();
     addApbChangeCallback(uart, uart_on_apb_change);
 
@@ -518,7 +511,10 @@ void uartFlush(uart_t* uart)
     while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
         READ_PERI_REG(UART_FIFO_REG(uart->num));
     }
-
+    if(uart->queue != NULL){ // empty input queue
+        uint8_t c;
+        while(xQueueReceive(uart->queue, &c, 0));
+    }
     UART_MUTEX_UNLOCK();
 }
 
