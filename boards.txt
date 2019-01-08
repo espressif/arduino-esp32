@@ -50,11 +50,11 @@ esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 esp32.menu.PartitionScheme.fatflash=16M Fat
 esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 
-esp32.menu.CPUFreq.240=240MHz
+esp32.menu.CPUFreq.240=240MHz (WiFi/BT)
 esp32.menu.CPUFreq.240.build.f_cpu=240000000L
-esp32.menu.CPUFreq.160=160MHz
+esp32.menu.CPUFreq.160=160MHz (WiFi/BT)
 esp32.menu.CPUFreq.160.build.f_cpu=160000000L
-esp32.menu.CPUFreq.80=80MHz
+esp32.menu.CPUFreq.80=80MHz (WiFi/BT)
 esp32.menu.CPUFreq.80.build.f_cpu=80000000L
 esp32.menu.CPUFreq.40=40MHz (40MHz XTAL)
 esp32.menu.CPUFreq.40.build.f_cpu=40000000L
