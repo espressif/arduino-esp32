@@ -209,7 +209,7 @@ env.Prepend(LIBS=libs)
 #
 
 fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
-partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
+partitions_csv = env.BoardConfig().get("build.partitions", "huge_app.csv")
 env.Replace(
     PARTITIONS_TABLE_CSV=abspath(
         join(fwpartitions_dir, partitions_csv) if isfile(
