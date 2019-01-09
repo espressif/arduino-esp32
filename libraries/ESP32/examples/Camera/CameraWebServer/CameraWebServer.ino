@@ -124,7 +124,7 @@ void setup() {
 
   //drop down frame size for higher initial frame rate
   sensor_t * s = esp_camera_sensor_get();
-  s->set_framesize(s, FRAMESIZE_CIF);
+  s->set_framesize(s, FRAMESIZE_QVGA);
 
   WiFi.begin(ssid, password);
 
@@ -144,5 +144,5 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  delay(10000);
 }
