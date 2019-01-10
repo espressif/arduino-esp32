@@ -1609,6 +1609,9 @@ i2c_err_t i2cFlush(i2c_t * i2c)
 }
 
 i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+    if((i2c==NULL)||((size>0)&&(buff==NULL))) { // need to have location to store requested data
+        return I2C_ERROR_DEV;
+    }
     i2c_err_t last_error = i2cAddQueueWrite(i2c, address, buff, size, sendStop, NULL);
 
     if(last_error == I2C_ERROR_OK) { //queued
@@ -1628,6 +1631,9 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, 
 }
 
 i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+    if((size == 0)||(i2c == NULL)||(buff==NULL)){ // hardware will hang if no data requested on READ
+        return I2C_ERROR_DEV;
+    }
     i2c_err_t last_error=i2cAddQueueRead(i2c, address, buff, size, sendStop, NULL);
 
     if(last_error == I2C_ERROR_OK) { //queued
