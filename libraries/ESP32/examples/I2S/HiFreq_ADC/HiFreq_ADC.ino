@@ -1,7 +1,7 @@
 /*
  * This is an example to read analog data at high frequency using the I2S peripheral
  * Run a wire between pins 27 & 32
- * The readings from the device will be 12bit (0-4096)
+ * The readings from the device will be 12bit (0-4096) 
  */
 #include <driver/i2s.h>
 
