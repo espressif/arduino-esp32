@@ -31,6 +31,26 @@
 xSemaphoreHandle _sd_sys_lock;
 #endif
 
+static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+    if(old_apb == new_apb){
+        return;
+    }
+    uint32_t iarg = (uint32_t)arg;
+    uint8_t channel = iarg;
+    if(ev_type == APB_BEFORE_CHANGE){
+        SIGMADELTA.cg.clk_en = 0;
+    } else {
+        old_apb /= 1000000;
+        new_apb /= 1000000;
+        SD_MUTEX_LOCK();
+        uint32_t old_prescale = SIGMADELTA.channel[channel].prescale + 1;
+        SIGMADELTA.channel[channel].prescale = ((new_apb * old_prescale) / old_apb) - 1;
+        SIGMADELTA.cg.clk_en = 0;
+        SIGMADELTA.cg.clk_en = 1;
+        SD_MUTEX_UNLOCK();
+    }
+}
+
 uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
 {
     if(channel > 7) {
@@ -53,6 +73,8 @@ uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-31
     SIGMADELTA.cg.clk_en = 0;
     SIGMADELTA.cg.clk_en = 1;
     SD_MUTEX_UNLOCK();
+    uint32_t iarg = channel;
+    addApbChangeCallback((void*)iarg, _on_apb_change);
     return apb_freq/((prescale + 1) * 256);
 }
 

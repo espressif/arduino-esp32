@@ -10,9 +10,9 @@
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
 ## Development Status
-[Latest stable release ![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32.svg?style=plastic) ![Release Date](https://img.shields.io/github/release-date/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/)
+[Latest stable release ![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32.svg?style=plastic) ![Release Date](https://img.shields.io/github/release-date/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) ![Downloads](https://img.shields.io/github/downloads/espressif/arduino-esp32/latest/total.svg?style=plastic)
 
-[Latest development release ![Development Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic) ![Development Date](https://img.shields.io/github/release-date-pre/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/)
+[Latest development release ![Development Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic) ![Development Date](https://img.shields.io/github/release-date-pre/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) ![Downloads](https://img.shields.io/github/downloads-pre/espressif/arduino-esp32/latest/total.svg?style=plastic)
 
 Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
 - 16 channels [LEDC](cores/esp32/esp32-hal-ledc.h) which is PWM

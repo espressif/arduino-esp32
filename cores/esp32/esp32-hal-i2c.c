@@ -24,7 +24,7 @@
 #include "soc/i2c_struct.h"
 #include "soc/dport_reg.h"
 #include "esp_attr.h"
-
+#include "esp32-hal-cpu.h" // cpu clock change support 31DEC2018
 //#define I2C_DEV(i)   (volatile i2c_dev_t *)((i)?DR_REG_I2C1_EXT_BASE:DR_REG_I2C_EXT_BASE)
 //#define I2C_DEV(i)   ((i2c_dev_t *)(REG_I2C_BASE(i)))
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
@@ -206,8 +206,8 @@ static i2c_t _i2c_bus_array[2] = {
     {(volatile i2c_dev_t *)(DR_REG_I2C1_EXT_BASE_FIXED), 1, -1, -1,I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0}
 };
 #else
-#define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTake(i2c->lock, portMAX_DELAY) != pdPASS)
-#define I2C_MUTEX_UNLOCK()  xSemaphoreGive(i2c->lock)
+#define I2C_MUTEX_LOCK()    do {} while (xSemaphoreTakeRecursive(i2c->lock, portMAX_DELAY) != pdPASS)
+#define I2C_MUTEX_UNLOCK()  xSemaphoreGiveRecursive(i2c->lock)
 
 static i2c_t _i2c_bus_array[2] = {
     {(volatile i2c_dev_t *)(DR_REG_I2C_EXT_BASE_FIXED), NULL, 0, -1, -1, I2C_NONE,I2C_NONE,I2C_ERROR_OK,NULL,NULL,NULL,0,0,0,0,0,0},
@@ -445,6 +445,39 @@ static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char l
 }
  // end of debug support routines
  
+/* Start of CPU Clock change Support
+*/
+
+static void i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+    i2c_t* i2c = (i2c_t*) arg; // recover data
+    if(i2c == NULL) {  // point to peripheral control block does not exits
+        return false;
+    }
+    uint32_t oldFreq=0;
+    switch(ev_type){
+        case APB_BEFORE_CHANGE : 
+            if(new_apb < 3000000) {// too slow
+                log_e("apb speed %d too slow",new_apb);
+                break;
+            }
+            I2C_MUTEX_LOCK(); // lock will spin until current transaction is completed
+            break;
+        case APB_AFTER_CHANGE :
+            oldFreq = (i2c->dev->scl_low_period.period+i2c->dev->scl_high_period.period); //read old apbCycles 
+            if(oldFreq>0) { // was configured with value
+                oldFreq = old_apb / oldFreq;
+                i2cSetFrequency(i2c,oldFreq);
+            }
+            I2C_MUTEX_UNLOCK();
+            break;
+        default : 
+            log_e("unk ev %u",ev_type);
+            I2C_MUTEX_UNLOCK();
+    }
+    return;
+}
+/* End of CPU Clock change Support
+*/ 
 static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
     I2C_COMMAND_t cmd;
@@ -1221,6 +1254,12 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
             I2C_MUTEX_UNLOCK();
             return I2C_ERROR_MEMORY;
         }
+        if( !addApbChangeCallback( i2c, i2cApbChangeCallback)) {
+            log_e("install apb Callback failed");
+            I2C_MUTEX_UNLOCK();
+            return I2C_ERROR_DEV;
+        }
+
     }
     //hang until it completes.
 
@@ -1352,6 +1391,9 @@ static void i2cReleaseISR(i2c_t * i2c)
     if(i2c->intr_handle) {
         esp_intr_free(i2c->intr_handle);
         i2c->intr_handle=NULL;
+        if (!removeApbChangeCallback( i2c, i2cApbChangeCallback)) {
+            log_e("unable to release apbCallback");
+        }
     }
 }
 
@@ -1437,8 +1479,7 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
  * PUBLIC API
  * */
 // 24Nov17 only supports Master Mode
-i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) //before this is called, pins should be detached, else glitch
-{
+i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
   log_v("num=%d sda=%d scl=%d freq=%d",i2c_num, sda, scl, frequency);
     if(i2c_num > 1) {
         return NULL;
@@ -1446,6 +1487,7 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) //b
 
     i2c_t * i2c = &_i2c_bus_array[i2c_num];
 
+    // pins should be detached, else glitch
     if(i2c->sda >= 0){
         i2cDetachSDA(i2c, i2c->sda);
     }
@@ -1457,7 +1499,7 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) //b
 
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(i2c->lock == NULL) {
-        i2c->lock = xSemaphoreCreateMutex();
+        i2c->lock = xSemaphoreCreateRecursiveMutex();
         if(i2c->lock == NULL) {
             return NULL;
         }
@@ -1567,6 +1609,9 @@ i2c_err_t i2cFlush(i2c_t * i2c)
 }
 
 i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+    if((i2c==NULL)||((size>0)&&(buff==NULL))) { // need to have location to store requested data
+        return I2C_ERROR_DEV;
+    }
     i2c_err_t last_error = i2cAddQueueWrite(i2c, address, buff, size, sendStop, NULL);
 
     if(last_error == I2C_ERROR_OK) { //queued
@@ -1586,6 +1631,9 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, 
 }
 
 i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+    if((size == 0)||(i2c == NULL)||(buff==NULL)){ // hardware will hang if no data requested on READ
+        return I2C_ERROR_DEV;
+    }
     i2c_err_t last_error=i2cAddQueueRead(i2c, address, buff, size, sendStop, NULL);
 
     if(last_error == I2C_ERROR_OK) { //queued
@@ -1604,7 +1652,8 @@ i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, b
     return last_error;
 }
 
-#define MIN_I2C_CLKS 100
+#define MIN_I2C_CLKS 100              // minimum ratio between cpu and i2c Bus clocks
+#define INTERRUPT_CYCLE_OVERHEAD 16000 // number of cpu clocks necessary to respond to interrupt
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 {
     if(i2c == NULL) {
@@ -1614,17 +1663,18 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     uint32_t period = (apb/clk_speed) / 2;
 
     if((apb/8192 > clk_speed)||(apb/MIN_I2C_CLKS < clk_speed)){ //out of bounds
-        log_w("i2c freq(%d) out of bounds.vs APB Clock(%d), min=%d, max=%d",clk_speed,apb,(apb/8192),(apb/MIN_I2C_CLKS));
+        log_d("i2c freq(%d) out of bounds.vs APB Clock(%d), min=%d, max=%d",clk_speed,apb,(apb/8192),(apb/MIN_I2C_CLKS));
     }
     if(period < (MIN_I2C_CLKS/2) ){
         period = (MIN_I2C_CLKS/2);
         clk_speed = apb/(period*2);
-        log_w("APB Freq too slow, Reducing i2c Freq to %d Hz",clk_speed);
+        log_d("APB Freq too slow, Reducing i2c Freq to %d Hz",clk_speed);
     } else if ( period> 4095) {
         period = 4095;
         clk_speed = apb/(period*2);
-        log_w("APB Freq too fast, Increasing i2c Freq to %d Hz",clk_speed);
+        log_d("APB Freq too fast, Increasing i2c Freq to %d Hz",clk_speed);
     }
+    log_v("freq=%dHz",clk_speed);
       
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
@@ -1633,14 +1683,19 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
 
     I2C_FIFO_CONF_t f;
 
-    // Adjust Fifo thresholds based on frequency
     f.val    = i2c->dev->fifo_conf.val;
-    uint32_t a = (clk_speed / 50000L )+1; 
-    if (a > 24) a=24;   
-    f.rx_fifo_full_thrhd = 32 - a;
-    f.tx_fifo_empty_thrhd = a;
+/*  Adjust Fifo thresholds based on differential between cpu frequency and bus clock.
+    The fifo_delta is calculated such that at least INTERRUPT_CYCLE_OVERHEAD cpu clocks are
+    available when a Fifo interrupt is triggered.  This allows enough room in the Fifo so that
+    interrupt latency does not cause a Fifo overflow/underflow event.
+*/
+    log_v("cpu Freq=%dMhz, i2c Freq=%dHz",getCpuFrequencyMhz(),clk_speed);
+    uint32_t fifo_delta = (INTERRUPT_CYCLE_OVERHEAD/((getCpuFrequencyMhz()*1000000 / clk_speed)*10))+1; 
+    if (fifo_delta > 24) fifo_delta=24;   
+    f.rx_fifo_full_thrhd = 32 - fifo_delta;
+    f.tx_fifo_empty_thrhd = fifo_delta;
     i2c->dev->fifo_conf.val = f.val; // set thresholds
-    log_v("Fifo threshold=%d",a);
+    log_v("Fifo delta=%d",fifo_delta);
 
     //the clock num during SCL is low level
     i2c->dev->scl_low_period.period = period;
@@ -1696,6 +1751,8 @@ uint32_t i2cGetStatus(i2c_t * i2c){
     }
     else return 0;
 }
+
+
 /* todo
   22JUL18
     need to add multi-thread capability, use dq.queueEvent as the group marker. When multiple threads

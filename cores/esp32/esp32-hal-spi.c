@@ -372,6 +372,18 @@ void spiSetBitOrder(spi_t * spi, uint8_t bitOrder)
     SPI_MUTEX_UNLOCK();
 }
 
+static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb)
+{
+    spi_t * spi = (spi_t *)arg;
+    if(ev_type == APB_BEFORE_CHANGE){
+        SPI_MUTEX_LOCK();
+        while(spi->dev->cmd.usr);
+    } else {
+        spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+        SPI_MUTEX_UNLOCK();
+    }
+}
+
 void spiStopBus(spi_t * spi)
 {
     if(!spi) {
@@ -388,6 +400,7 @@ void spiStopBus(spi_t * spi)
     spi->dev->ctrl2.val = 0;
     spi->dev->clock.val = 0;
     SPI_MUTEX_UNLOCK();
+    removeApbChangeCallback(spi, _on_apb_change);
 }
 
 spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
@@ -434,6 +447,7 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     }
     SPI_MUTEX_UNLOCK();
 
+    addApbChangeCallback(spi, _on_apb_change);
     return spi;
 }
 
@@ -1008,17 +1022,17 @@ void IRAM_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, size_t len){
  * */
 
 typedef union {
-    uint32_t regValue;
+    uint32_t value;
     struct {
-        unsigned regL :6;
-        unsigned regH :6;
-        unsigned regN :6;
-        unsigned regPre :13;
-        unsigned regEQU :1;
+            uint32_t clkcnt_l:       6;                     /*it must be equal to spi_clkcnt_N.*/
+            uint32_t clkcnt_h:       6;                     /*it must be floor((spi_clkcnt_N+1)/2-1).*/
+            uint32_t clkcnt_n:       6;                     /*it is the divider of spi_clk. So spi_clk frequency is system/(spi_clkdiv_pre+1)/(spi_clkcnt_N+1)*/
+            uint32_t clkdiv_pre:    13;                     /*it is pre-divider of spi_clk.*/
+            uint32_t clk_equ_sysclk: 1;                     /*1: spi_clk is eqaul to system 0: spi_clk is divided from system clock.*/
     };
 } spiClk_t;
 
-#define ClkRegToFreq(reg) (apb_freq / (((reg)->regPre + 1) * ((reg)->regN + 1)))
+#define ClkRegToFreq(reg) (apb_freq / (((reg)->clkdiv_pre + 1) * ((reg)->clkcnt_n + 1)))
 
 uint32_t spiClockDivToFrequency(uint32_t clockDiv)
 {
@@ -1038,7 +1052,7 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
     const spiClk_t minFreqReg = { 0x7FFFF000 };
     uint32_t minFreq = ClkRegToFreq((spiClk_t*) &minFreqReg);
     if(freq < minFreq) {
-        return minFreqReg.regValue;
+        return minFreqReg.value;
     }
 
     uint8_t calN = 1;
@@ -1051,18 +1065,18 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
         int32_t calPre;
         int8_t calPreVari = -2;
 
-        reg.regN = calN;
+        reg.clkcnt_n = calN;
 
         while(calPreVari++ <= 1) {
-            calPre = (((apb_freq / (reg.regN + 1)) / freq) - 1) + calPreVari;
+            calPre = (((apb_freq / (reg.clkcnt_n + 1)) / freq) - 1) + calPreVari;
             if(calPre > 0x1FFF) {
-                reg.regPre = 0x1FFF;
+                reg.clkdiv_pre = 0x1FFF;
             } else if(calPre <= 0) {
-                reg.regPre = 0;
+                reg.clkdiv_pre = 0;
             } else {
-                reg.regPre = calPre;
+                reg.clkdiv_pre = calPre;
             }
-            reg.regL = ((reg.regN + 1) / 2);
+            reg.clkcnt_l = ((reg.clkcnt_n + 1) / 2);
             calFreq = ClkRegToFreq(&reg);
             if(calFreq == (int32_t) freq) {
                 memcpy(&bestReg, &reg, sizeof(bestReg));
@@ -1079,6 +1093,6 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
         }
         calN++;
     }
-    return bestReg.regValue;
+    return bestReg.value;
 }
 

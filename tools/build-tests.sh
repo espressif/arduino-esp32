@@ -48,6 +48,7 @@ platformio ci  --board esp32dev libraries/WiFi/examples/WiFiClient && \
 platformio ci  --board esp32dev libraries/WiFiClientSecure/examples/WiFiClientSecure && \
 platformio ci  --board esp32dev libraries/BluetoothSerial/examples/SerialToSerialBT && \
 platformio ci  --board esp32dev libraries/BLE/examples/BLE_server && \
-platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted
+platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted && \
+platformio ci  --board esp32dev libraries/ESP32/examples/Camera/CameraWebServer --project-option="board_build.partitions = huge_app.csv"
 if [ $? -ne 0 ]; then exit 1; fi
 echo -e "travis_fold:end:platformio_test"
