@@ -131,10 +131,8 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     uint32_t capb, apb;
     //Get XTAL Frequency and calculate min CPU MHz
     rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
-    uint32_t min_cpu_mhz = 10;
     if(xtal > RTC_XTAL_FREQ_AUTO){
         if(xtal < RTC_XTAL_FREQ_40M) {
-            min_cpu_mhz = xtal / 2; //13Mhz for 26Mhz XTAL
             if(cpu_freq_mhz <= xtal && cpu_freq_mhz != xtal && cpu_freq_mhz != (xtal/2)){
                 log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
                 return false;
