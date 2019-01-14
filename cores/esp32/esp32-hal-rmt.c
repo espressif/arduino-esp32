@@ -156,7 +156,7 @@ bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t
     RMT_MUTEX_LOCK(channel);
 
     RMT.carrier_duty_ch[channel].low = low;
-    RMT.carrier_duty_ch[channel].low = high;
+    RMT.carrier_duty_ch[channel].high = high;
     RMT.conf_ch[channel].conf0.carrier_en = carrier_en;
     RMT.conf_ch[channel].conf0.carrier_out_lv = carrier_level;
 
