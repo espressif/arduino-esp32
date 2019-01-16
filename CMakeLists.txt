@@ -181,6 +181,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/BLE/src
   libraries/BluetoothSerial/src
   libraries/DNSServer/src
+  libraries/EEPROM/src
   libraries/ESP32/src
   libraries/ESPmDNS/src
   libraries/FFat/src
