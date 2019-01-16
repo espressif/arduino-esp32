@@ -42,7 +42,7 @@ set(LIBRARY_SRCS
   libraries/AsyncUDP/src/AsyncUDP.cpp
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
   libraries/DNSServer/src/DNSServer.cpp
-  libraries/EEPROM/EEPROM.cpp
+  libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
