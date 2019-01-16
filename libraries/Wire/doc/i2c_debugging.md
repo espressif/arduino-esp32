@@ -1,6 +1,6 @@
 # Debugging I2C
 
-With the release of Arduino-ESP32 V1.0.0 the I2C subsystem contains code to exhaustively report communication errors.  
+With the release of Arduino-ESP32 V1.0.1 the I2C subsystem contains code to exhaustively report communication errors.  
 * Basic debugging can be enable by setting the *CORE DEBUG LEVEL* at or above *ERROR*. All errors will be directed the the *DEBUG OUTPUT* normally connected to `Serial()`.  
 * Enhanced debugging can be used to generate specified information at specific positions during the i2c communication sequence. Increase *CORE DEBUG LEVEL* to ***DEBUG***
 
