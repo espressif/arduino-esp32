@@ -16,7 +16,7 @@ Installation instructions for Debian / Ubuntu OS
   cd esp32 && \
   git submodule update --init --recursive && \
   cd tools && \
-  python2 get.py
+  python3 get.py
   ```
 - Restart Arduino IDE
 
@@ -32,5 +32,5 @@ Installation instructions for Debian / Ubuntu OS
   cd esp32 && \
   git submodule update --init --recursive && \
   cd tools && \
-  python2 get.py
+  python3 get.py
   ```
