@@ -637,13 +637,13 @@ static void IRAM_ATTR _rmt_isr(void* arg)
                             data += MAX_DATA_PER_CHANNEL*(g_rmt_objects[ch].buffers);
                         }
                     }
+                    uint32_t *data_received = data;
                     for (i = 0; i < g_rmt_objects[ch].data_size; i++ ) {
                         *data++ = RMTMEM.chan[ch].data32[i].val;
                     }
                     if (g_rmt_objects[ch].cb) {
-                        // actually received data ptr
-                        uint32_t * data = g_rmt_objects[ch].data_ptr;
-                        (g_rmt_objects[ch].cb)(data, _rmt_get_mem_len(ch));
+                        // actually received data ptr                        
+                        (g_rmt_objects[ch].cb)(data_received, _rmt_get_mem_len(ch));
 
                         // restart the reception
                         RMT.conf_ch[ch].conf1.mem_owner = 1;
