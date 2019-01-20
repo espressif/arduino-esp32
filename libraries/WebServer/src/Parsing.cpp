@@ -110,9 +110,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   }
   _currentMethod = method;
 
-  log_v("method: %s", methodStr.c_str());
-  log_v(" url: %s", url.c_str());
-  log_v(" search: %s", searchStr.c_str());
+  log_v("method: %s url: %s search: %s", methodStr.c_str(), url.c_str(), searchStr.c_str());
 
   //attach handler
   RequestHandler* handler;
@@ -272,9 +270,7 @@ void WebServer::_parseArguments(String data) {
   for (iarg = 0; iarg < _currentArgCount;) {
     int equal_sign_index = data.indexOf('=', pos);
     int next_arg_index = data.indexOf('&', pos);
-    log_v("pos %d", pos);
-    log_v("=@ %d", equal_sign_index);
-    log_v(" &@ %d", next_arg_index);
+    log_v("pos %d =@%d &@%d", pos, equal_sign_index, next_arg_index);
     if ((equal_sign_index == -1) || ((equal_sign_index > next_arg_index) && (next_arg_index != -1))) {
       log_e("arg missing value: %d", iarg);
       if (next_arg_index == -1)
@@ -285,9 +281,7 @@ void WebServer::_parseArguments(String data) {
     RequestArgument& arg = _currentArgs[iarg];
     arg.key = urlDecode(data.substring(pos, equal_sign_index));
     arg.value = urlDecode(data.substring(equal_sign_index + 1, next_arg_index));
-    log_v("arg %d", iarg);
-    log_v(" key: %s", arg.key.c_str());
-    log_v(" value: %s", arg.value.c_str());
+    log_v("arg %d key: %s value: %s", iarg, arg.key.c_str(), arg.value.c_str());
     ++iarg;
     if (next_arg_index == -1)
       break;
@@ -320,8 +314,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
 
 bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
   (void) len;
-  log_v("Parse Form: Boundary: %s", boundary.c_str());
-  log_v(" Length: %d", len);
+  log_v("Parse Form: Boundary: %s Length: %d", boundary.c_str(), len);
   String line;
   int retry = 0;
   do {
@@ -398,8 +391,7 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             _currentUpload->type = argType;
             _currentUpload->totalSize = 0;
             _currentUpload->currentSize = 0;
-            log_v("Start File: %s", _currentUpload->filename.c_str());
-            log_v(" Type: %s", _currentUpload->type.c_str());
+            log_v("Start File: %s Type: %s", _currentUpload->filename.c_str(), _currentUpload->type.c_str());
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             _currentUpload->status = UPLOAD_FILE_WRITE;
@@ -444,9 +436,7 @@ readfile:
                 _currentUpload->status = UPLOAD_FILE_END;
                 if(_currentHandler && _currentHandler->canUpload(_currentUri))
                   _currentHandler->upload(*this, _currentUri, *_currentUpload);
-                log_v("End File: %s", _currentUpload->filename.c_str());
-                log_v(" Type: %s", _currentUpload->type.c_str());
-                log_v(" Size: %d", _currentUpload->totalSize);
+                log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), _currentUpload->totalSize);
                 line = client.readStringUntil(0x0D);
                 client.readStringUntil(0x0A);
                 if (line == "--"){
