@@ -4,7 +4,14 @@ With the release of Arduino-ESP32 V1.0.1 the I2C subsystem contains code to exha
 * Basic debugging can be enable by setting the *CORE DEBUG LEVEL* at or above *ERROR*. All errors will be directed the the *DEBUG OUTPUT* normally connected to `Serial()`.  
 * Enhanced debugging can be used to generate specified information at specific positions during the i2c communication sequence. Increase *CORE DEBUG LEVEL* to ***DEBUG***
 
-The Enhanced debug features are enabled by uncommenting the `\\#define ENABLE_I2C_DEBUG_BUFFER` at line 45 of `esp32-hal-i2c.c`.
+## Enable Debug Buffer
+The Enhanced debug features are enabled by uncommenting the `\\#define ENABLE_I2C_DEBUG_BUFFER` at line 45 of `esp32-hal-i2c.c`.  
+* When Arduino-Esp32 is installed in Windows with Arduino Boards Manager, `esp32-hal-i2c.c` can be found in:
+`C:\Users\{user}\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.1\cores\esp32\`
+* When Arduino-Esp32 Development version is installed from GitHub, `esp32-hal-i2c.c` can be found in:
+`{arduino Sketch}\hardware\espressif\esp32\cores\esp32\`
+
+
 ```c++ 
 //#define ENABLE_I2C_DEBUG_BUFFER
 ```
@@ -15,6 +22,7 @@ Change it to:
 and recompile/upload the resulting code to your ESP32.
 
 Enabling this `#define` will consume an additional 2570 bytes of RAM and include a commensurate amount of code FLASH. If you see the message `"Debug Buffer not Enabled"` in your console log I would suggest you un-comment the line and regenerate the error.  Additional information will be supplied on the log console.
+
 ## Manually controlled Debugging
 Manual logging of the i2c control data buffers can be accomplished by using the debug control function of `Wire()`:
 ```c++
@@ -61,7 +69,7 @@ Wire.setDebugFlags(0,debugFlag); // don't add any new debug, remove debugFlag
 # Debug Log example
 ### Code
 To read eight bytes of data from a DS1307 RTCC
-```c++
+```
     uint32_t debugFlag = 0x001F0000;
     uint8_t ID = 0x68;
     uint8_t block=8;
@@ -185,7 +193,7 @@ variable | description
 ```
 variable | description
 --- | ---
-**[n]** | *index of data queue element
+**[n]** | *index of data queue element*
 **i2c address** | *7bit= 7bit i2c slave address, 10bit= 10bit i2c slave address*
 **direction** | *W=Write, R=READ*
 **STOP** | *command issued a I2C STOP, else if blank, a RESTART was issued by next dq element.*
@@ -232,7 +240,7 @@ variable | description
 ```
 Column | description
 ---- | ----
-**command** | *RSTART= generate i2c START sequence, WRITE= output byte(s), READ= input byte(s), STOP= generate i2c STOP sequence, END= continuation flag for peripheral to pause execution waiting for a refilled command list
+**command** | *RSTART= generate i2c START sequence, WRITE= output byte(s), READ= input byte(s), STOP= generate i2c STOP sequence, END= continuation flag for peripheral to pause execution waiting for a refilled command list*
 **val** | *value for ACK bit, 0 = LOW, 1= HIGH*
 **exp** | *test of ACK bit 0=no, 1=yes*
 **en** | *output of val, 0=no, 1=yes*
@@ -265,3 +273,4 @@ Mode | datavalues
 --- | ---
 **WRITE** | the following bytes added to the txFifo are in response to a WRITE command
 **READ** | the following bytes added to the txFifo are in response to a READ command
+
