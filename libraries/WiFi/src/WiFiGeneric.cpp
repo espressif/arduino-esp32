@@ -339,7 +339,7 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
-    log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
+    if(event->event_id < 26) log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
 
