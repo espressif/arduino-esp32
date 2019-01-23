@@ -168,7 +168,7 @@ static bool espWiFiStop(){
     _esp_wifi_started = false;
     err = esp_wifi_stop();
     if(err){
-        log_e("Could not stop WiFi! %u", err);
+        log_e("Could not stop WiFi! %d", err);
         _esp_wifi_started = true;
         return false;
     }
@@ -496,7 +496,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     esp_err_t err;
     err = esp_wifi_set_mode(m);
     if(err){
-        log_e("Could not set mode! %u", err);
+        log_e("Could not set mode! %d", err);
         return false;
     }
     return true;
