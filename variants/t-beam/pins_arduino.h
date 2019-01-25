@@ -22,6 +22,11 @@
 #define LORA_IO1 33     // GPIO33 - SX1276 IO1 -> wired on pcb AND connected to header pin LORA1
 #define LORA_IO2 32     // GPIO32 - SX1276 IO2 -> wired on pcb AND connected to header pin LORA2
 
+static const uint8_t KEY_BUILTIN = 39;
+
+static const uint8_t LED_BUILTIN = 14;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
