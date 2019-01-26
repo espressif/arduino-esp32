@@ -25,7 +25,6 @@
 
 #define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
 #define WIFI_CLIENT_SELECT_TIMEOUT_US (1000000)
-#define WIFI_CLIENT_CONNECT_TIMEOUT_MS (60000)
 #define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
 
 #undef connect
@@ -204,9 +203,9 @@ void WiFiClient::stop()
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
-    return connect(ip,port,WIFI_CLIENT_CONNECT_TIMEOUT_MS);
+    return connect(ip,port,-1);
 }
-int WiFiClient::connect(IPAddress ip, uint16_t port, uint32_t timeout)
+int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -228,7 +227,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, uint32_t timeout)
     tv.tv_sec = 0;
     tv.tv_usec = timeout * 1000;
     lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
-    int res = select(sockfd + 1, NULL, &fdset, NULL, &tv);
+    int res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
     if (res != 1)
     {
         log_e("select: %d",errno);
@@ -244,9 +243,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, uint32_t timeout)
 
 int WiFiClient::connect(const char *host, uint16_t port)
 {
-    return connect(host,port,WIFI_CLIENT_CONNECT_TIMEOUT_MS);
+    return connect(host,port,-1);
 }
-int WiFiClient::connect(const char *host, uint16_t port, uint32_t timeout)
+int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
 {
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
