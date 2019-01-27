@@ -367,9 +367,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(((reason == WIFI_REASON_AUTH_EXPIRE) ||
-            (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
-            WiFi.getAutoReconnect())
+        if((reason == WIFI_REASON_AUTH_EXPIRE) && WiFi.getAutoReconnect())
         {
             WiFi.disconnect(true);
             WiFi.begin();
