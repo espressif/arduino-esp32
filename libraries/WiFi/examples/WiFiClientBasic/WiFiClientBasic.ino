@@ -39,9 +39,7 @@ void loop()
     const uint16_t port = 80;
     const char * host = "192.168.1.1"; // ip or dns
 
-
-
-    Serial.print("connecting to ");
+    Serial.print("Connecting to ");
     Serial.println(host);
 
     // Use WiFiClient class to create TCP connections
