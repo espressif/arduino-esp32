@@ -11,6 +11,8 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
+#define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+#define ETH_PHY_POWER 12
 
 static const uint8_t KEY_BUILTIN = 34;
 
@@ -24,5 +26,7 @@ static const uint8_t SS    = 5;
 static const uint8_t MOSI  = 2;
 static const uint8_t MISO  = 15;
 static const uint8_t SCK   = 14;
+
+#define BOARD_HAS_1BIT_SDMMC
 
 #endif /* Pins_Arduino_h */
