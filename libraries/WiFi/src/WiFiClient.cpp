@@ -58,6 +58,11 @@ private:
         {
             if(!_buffer){
                 _buffer = (uint8_t *)malloc(_size);
+                if(!_buffer) {
+                    log_e("Not enough memory to allocate buffer");
+                    _failed = true;
+                    return 0;
+                }
             }
             if(_fill && _pos == _fill){
                 _fill = 0;
@@ -67,8 +72,10 @@ private:
                 return 0;
             }
             int res = recv(_fd, _buffer + _fill, _size - _fill, MSG_DONTWAIT);
-            if(res < 0 && errno != EWOULDBLOCK) {
-                _failed = true;
+            if(res < 0) {
+                if(errno != EWOULDBLOCK) {
+                    _failed = true;
+                }
                 return 0;
             }
             _fill += res;
