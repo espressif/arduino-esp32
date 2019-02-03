@@ -2738,7 +2738,7 @@ lopy4.menu.DebugLevel.verbose.build.code_debug=5
 oroca_edubot.name=OROCA EduBot
 
 oroca_edubot.upload.tool=esptool_py
-oroca_edubot.upload.maximum_size=1310720
+oroca_edubot.upload.maximum_size=2097152
 oroca_edubot.upload.maximum_data_size=327680
 oroca_edubot.upload.wait_for_upload_port=true
 
@@ -2754,7 +2754,7 @@ oroca_edubot.build.f_cpu=240000000L
 oroca_edubot.build.flash_mode=dio
 oroca_edubot.build.flash_size=4MB
 oroca_edubot.build.boot=dio
-oroca_edubot.build.partitions=default
+oroca_edubot.build.partitions=no_ota
 oroca_edubot.build.defines=
 
 oroca_edubot.menu.FlashFreq.80=80MHz
