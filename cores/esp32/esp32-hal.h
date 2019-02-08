@@ -62,6 +62,7 @@ void yield(void);
 #include "esp32-hal-timer.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
+#include "esp32-hal-cpu.h"
 
 #ifndef BOARD_HAS_PSRAM
 #ifdef CONFIG_SPIRAM_SUPPORT
@@ -86,15 +87,6 @@ void disableCore0WDT();
 void enableCore1WDT();
 void disableCore1WDT();
 #endif
-
-//function takes the following frequencies as valid values:
-//  240, 160, 80                     <<< For all XTAL types
-//  40, 20, 13, 10, 8, 5, 4, 3, 2, 1 <<< For 40MHz XTAL
-//  26, 13, 5, 4, 3, 2, 1            <<< For 26MHz XTAL
-//  24, 12, 8, 6, 4, 3, 2, 1         <<< For 24MHz XTAL
-bool setCpuFrequency(uint32_t cpu_freq_mhz);
-uint32_t getCpuFrequency();
-uint32_t getApbFrequency();
 
 unsigned long micros();
 unsigned long millis();
