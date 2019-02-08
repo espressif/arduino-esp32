@@ -90,6 +90,8 @@ config ARDUHAL_PARTITION_SCHEME_MINIMAL
     bool "Minimal (for 2MB FLASH)"
 config ARDUHAL_PARTITION_SCHEME_NO_OTA
     bool "No OTA (for large apps)"
+config ARDUHAL_PARTITION_SCHEME_HUGE_APP
+    bool "Huge App (for very large apps)"
 config ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
     bool "Minimal SPIFFS (for large apps with OTA)"
 endchoice
@@ -99,6 +101,7 @@ config ARDUHAL_PARTITION_SCHEME
     default "default" if ARDUHAL_PARTITION_SCHEME_DEFAULT
     default "minimal" if ARDUHAL_PARTITION_SCHEME_MINIMAL
     default "no_ota" if ARDUHAL_PARTITION_SCHEME_NO_OTA
+    default "huge_app" if ARDUHAL_PARTITION_SCHEME_HUGE_APP
     default "min_spiffs" if ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
 
 

@@ -77,6 +77,8 @@ float temperatureRead();
 //enable/disable WDT for Arduino's setup and loop functions
 void enableLoopWDT();
 void disableLoopWDT();
+//feed WDT for the loop task
+void feedLoopWDT();
 #endif
 
 //enable/disable WDT for the IDLE task on Core 0 (SYSTEM)

@@ -56,7 +56,7 @@ static const uint8_t P16 = 5;
 static const uint8_t P19 = 22;
 static const uint8_t P20 = 21;
 
-static const uint8_t DAC1 = 26;
-static const uint8_t DAC2 = 25;
+static const uint8_t DAC1 = 25;
+static const uint8_t DAC2 = 26;
 
 #endif /* Pins_Arduino_h */

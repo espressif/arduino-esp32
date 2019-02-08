@@ -1,7 +1,7 @@
 /*
  * This is an example to read analog data at high frequency using the I2S peripheral
  * Run a wire between pins 27 & 32
- * The readings from the device will be 12bit (0-4096)
+ * The readings from the device will be 12bit (0-4096) 
  */
 #include <driver/i2s.h>
 
@@ -9,7 +9,9 @@
 #define ADC_INPUT ADC1_CHANNEL_4 //pin 32
 #define OUTPUT_PIN 27
 #define OUTPUT_VALUE 3800
-#define READ_DELAY 10000 //microseconds
+#define READ_DELAY 9000 //microseconds
+
+uint16_t adc_reading;
 
 void i2sInit()
 {
@@ -34,23 +36,29 @@ void i2sInit()
 void reader(void *pvParameters) {
   uint32_t read_counter = 0;
   uint64_t read_sum = 0;
+// The 4 high bits are the channel, and the data is inverted
+  uint16_t offset = (int)ADC_INPUT * 0x1000 + 0xFFF;
+  size_t bytes_read;
   while(1){
-    size_t bytes_read = 0;
-    uint16_t buffer = 0;
-    i2s_read(I2S_NUM_0, &buffer, sizeof(buffer), &bytes_read, portMAX_DELAY);
-    buffer = ~buffer;            // The data is inverted
-    //Serial.println(buffer % 0x1000);
-    read_sum += buffer % 0x1000; // The 4 high bits are the channel
-    read_counter++;
-    if (bytes_read != sizeof(buffer)) Serial.println("buffer empty!");
+    uint16_t buffer[2] = {0};
+    i2s_read(I2S_NUM_0, &buffer, sizeof(buffer), &bytes_read, 15);
+    //Serial.printf("%d  %d\n", offset - buffer[0], offset - buffer[1]);
+    if (bytes_read == sizeof(buffer)) {
+      read_sum += offset - buffer[0];
+      read_sum += offset - buffer[1];
+      read_counter++;
+    } else {
+      Serial.println("buffer empty");
+    }
     if (read_counter == I2S_SAMPLE_RATE) {
-      Serial.printf("avg: %d\n", read_sum/I2S_SAMPLE_RATE);
+      adc_reading = read_sum / I2S_SAMPLE_RATE / 2;
+      //Serial.printf("avg: %d millis: ", adc_reading);
+      //Serial.println(millis());
       read_counter = 0;
       read_sum = 0;
       i2s_adc_disable(I2S_NUM_0);
       delay(READ_DELAY);
       i2s_adc_enable(I2S_NUM_0);
-
     }
   }
 }
@@ -68,4 +76,8 @@ void setup() {
   xTaskCreatePinnedToCore(reader, "ADC_reader", 2048, NULL, 1, NULL, 1);
 }
 
-void loop() {}
+void loop() {
+  delay(1020);
+  Serial.printf("ADC reading: %d\n", adc_reading);
+  delay(READ_DELAY);
+}
