@@ -115,7 +115,7 @@ unsigned long IRAM_ATTR micros()
 
 unsigned long IRAM_ATTR millis()
 {
-    return (unsigned long) (esp_timer_get_time() / 1000);
+    return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
 void delay(uint32_t ms)
