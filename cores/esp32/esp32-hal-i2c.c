@@ -451,7 +451,7 @@ static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char l
 static void i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     i2c_t* i2c = (i2c_t*) arg; // recover data
     if(i2c == NULL) {  // point to peripheral control block does not exits
-        return false;
+        return;
     }
     uint32_t oldFreq=0;
     switch(ev_type){
