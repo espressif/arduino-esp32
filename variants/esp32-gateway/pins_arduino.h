@@ -11,6 +11,11 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
+#if	ARDUINO_ESP32_GATEWAY >= 'D'
+#define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+#define ETH_PHY_POWER 5
+#endif
+
 static const uint8_t LED_BUILTIN = 33;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
@@ -34,5 +39,9 @@ static const uint8_t A4 = 32;
 static const uint8_t A7 = 35;
 
 static const uint8_t T9 = 32;
+
+#if	ARDUINO_ESP32_GATEWAY >= 'F'
+#define BOARD_HAS_1BIT_SDMMC
+#endif
 
 #endif /* Pins_Arduino_h */

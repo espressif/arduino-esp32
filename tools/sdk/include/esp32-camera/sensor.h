@@ -86,6 +86,7 @@ typedef struct _sensor {
     uint8_t  slv_addr;          // Sensor I2C slave address.
     pixformat_t pixformat;
     camera_status_t status;
+    int xclk_freq_hz;
 
     // Sensor function pointers
     int  (*init_status)         (sensor_t *sensor);

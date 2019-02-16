@@ -6,6 +6,7 @@ menu.FlashSize=Flash Size
 menu.PartitionScheme=Partition Scheme
 menu.DebugLevel=Core Debug Level
 menu.PSRAM=PSRAM
+menu.Revision=Board Revision
 
 ##############################################################
 
@@ -1697,6 +1698,15 @@ esp32-evb.menu.FlashFreq.40.build.flash_freq=40m
 esp32-evb.menu.UploadSpeed.115200=115200
 esp32-evb.menu.UploadSpeed.115200.upload.speed=115200
 
+esp32-evb.menu.PartitionScheme.default=Default
+esp32-evb.menu.PartitionScheme.default.build.partitions=default
+esp32-evb.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32-evb.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32-evb.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32-evb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32-evb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32-evb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 ##############################################################
 
 esp32-gateway.name=OLIMEX ESP32-GATEWAY
@@ -1712,7 +1722,13 @@ esp32-gateway.serial.disableRTS=true
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
-esp32-gateway.build.board=ESP32_GATEWAY
+#esp32-gateway.build.board=ESP32_GATEWAY
+esp32-gateway.menu.Revision.RevC=Revision C or older
+esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY='C'
+esp32-gateway.menu.Revision.RevE=Revision E
+esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY='E'
+esp32-gateway.menu.Revision.RevF=Revision F
+esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY='F'
 
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio
@@ -1729,6 +1745,15 @@ esp32-gateway.menu.FlashFreq.40.build.flash_freq=40m
 
 esp32-gateway.menu.UploadSpeed.115200=115200
 esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
+
+esp32-gateway.menu.PartitionScheme.default=Default
+esp32-gateway.menu.PartitionScheme.default.build.partitions=default
+esp32-gateway.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32-gateway.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32-gateway.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32-gateway.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32-gateway.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32-gateway.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 ##############################################################
 
@@ -1762,6 +1787,15 @@ esp32-poe.menu.FlashFreq.40.build.flash_freq=40m
 
 esp32-poe.menu.UploadSpeed.115200=115200
 esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
+
+esp32-poe.menu.PartitionScheme.default=Default
+esp32-poe.menu.PartitionScheme.default.build.partitions=default
+esp32-poe.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32-poe.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32-poe.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32-poe.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32-poe.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32-poe.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 ##############################################################
 
@@ -2738,7 +2772,7 @@ lopy4.menu.DebugLevel.verbose.build.code_debug=5
 oroca_edubot.name=OROCA EduBot
 
 oroca_edubot.upload.tool=esptool_py
-oroca_edubot.upload.maximum_size=1310720
+oroca_edubot.upload.maximum_size=3145728
 oroca_edubot.upload.maximum_data_size=327680
 oroca_edubot.upload.wait_for_upload_port=true
 
@@ -2754,8 +2788,15 @@ oroca_edubot.build.f_cpu=240000000L
 oroca_edubot.build.flash_mode=dio
 oroca_edubot.build.flash_size=4MB
 oroca_edubot.build.boot=dio
-oroca_edubot.build.partitions=default
+oroca_edubot.build.partitions=huge_app
 oroca_edubot.build.defines=
+
+oroca_edubot.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA)
+oroca_edubot.menu.PartitionScheme.huge_app.build.partitions=huge_app
+oroca_edubot.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+oroca_edubot.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+oroca_edubot.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+oroca_edubot.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 oroca_edubot.menu.FlashFreq.80=80MHz
 oroca_edubot.menu.FlashFreq.80.build.flash_freq=80m
