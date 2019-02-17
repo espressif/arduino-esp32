@@ -20,7 +20,6 @@
 #define LORA_IO0 LORA_IRQ  // alias
 #define LORA_IO1 LORA_IRQ   // tied by diode to IO0
 #define LORA_IO2 LORA_IRQ   // tied by diode to IO0
-#define LORA_RST NOT_A_PIN
 
 static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
