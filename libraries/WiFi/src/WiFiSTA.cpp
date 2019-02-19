@@ -415,9 +415,7 @@ IPAddress WiFiSTAClass::localIP()
  */
 uint8_t* WiFiSTAClass::macAddress(uint8_t* mac)
 {
-    if(WiFiGenericClass::getMode() != WIFI_MODE_NULL){
-        esp_wifi_get_mac(WIFI_IF_STA, mac);
-    }
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
     return mac;
 }
 
@@ -429,11 +427,7 @@ String WiFiSTAClass::macAddress(void)
 {
     uint8_t mac[6];
     char macStr[18] = { 0 };
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return String();
-    }
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
-
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
 }
