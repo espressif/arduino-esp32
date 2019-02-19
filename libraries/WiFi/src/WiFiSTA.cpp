@@ -1,5 +1,5 @@
 /*
- ESP8266WiFiSTA.cpp - WiFi library for esp8266
+ WiFiSTA.cpp - WiFi library for esp32
 
  Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
  This file is part of the esp8266 core for Arduino environment.
