@@ -44,6 +44,7 @@ env.Append(
 
     CCFLAGS=[
         "-Os",
+        "-g3",
         "-Wall",
         "-nostdlib",
         "-Wpointer-arith",
