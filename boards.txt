@@ -1722,7 +1722,7 @@ esp32-gateway.serial.disableRTS=true
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
-#esp32-gateway.build.board=ESP32_GATEWAY
+esp32-gateway.build.board=ESP32_GATEWAY
 esp32-gateway.menu.Revision.RevC=Revision C or older
 esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY='C'
 esp32-gateway.menu.Revision.RevE=Revision E

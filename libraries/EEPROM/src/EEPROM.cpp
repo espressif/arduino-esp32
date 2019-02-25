@@ -279,6 +279,7 @@ size_t EEPROMClass::readString (int address, char* value, size_t maxLen)
     return 0;
 
   memcpy((uint8_t*) value, _data + address, len);
+  value[len] = 0;
   return len;
 }
 

@@ -94,7 +94,7 @@ typedef struct {
     int pin_href;                   /*!< GPIO pin for camera HREF line */
     int pin_pclk;                   /*!< GPIO pin for camera PCLK line */
 
-    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. Either 10KHz or 20KHz */
+    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental) */
 
     ledc_timer_t ledc_timer;        /*!< LEDC timer to be used for generating XCLK  */
     ledc_channel_t ledc_channel;    /*!< LEDC channel to be used for generating XCLK  */
