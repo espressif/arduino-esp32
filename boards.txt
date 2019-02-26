@@ -2859,7 +2859,7 @@ frogboard.serial.disableRTS=true
 
 frogboard.build.mcu=esp32
 frogboard.build.core=esp32
-frogboard.build.variant=esp32
+frogboard.build.variant=frog32
 frogboard.build.board=FROG_ESP32
 frogboard.build.f_cpu=240000000L
 frogboard.build.flash_size=4MB
