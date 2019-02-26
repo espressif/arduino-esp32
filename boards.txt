@@ -2849,7 +2849,7 @@ fm-devkit.menu.DebugLevel.verbose.build.code_debug=5
 
 frogboard.name=Frog Board ESP32
 
-frogboard.upload.tool=esptool
+frogboard.upload.tool=esptool_py
 frogboard.upload.maximum_size=1310720
 frogboard.upload.maximum_data_size=327680
 frogboard.upload.wait_for_upload_port=true
