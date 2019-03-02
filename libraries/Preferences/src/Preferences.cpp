@@ -447,7 +447,7 @@ String Preferences::getString(const char* key, const String defaultValue){
     return String(buf);
 }
 
-size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
+size_t Preferences::getBytesLength(const char* key){
     size_t len = 0;
     if(!_started || !key){
         return 0;
@@ -457,14 +457,19 @@ size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
         log_e("nvs_get_blob len fail: %s %s", key, nvs_error(err));
         return 0;
     }
-    if(!buf || !maxLen){
+    return len;
+}
+
+size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
+    size_t len = getBytesLength(key);
+    if(!len || !buf || !maxLen){
         return len;
     }
     if(len > maxLen){
         log_e("not enough space in buffer: %u < %u", maxLen, len);
         return 0;
     }
-    err = nvs_get_blob(_handle, key, buf, &len);
+    esp_err_t err = nvs_get_blob(_handle, key, buf, &len);
     if(err){
         log_e("nvs_get_blob fail: %s %s", key, nvs_error(err));
         return 0;
