@@ -3256,3 +3256,96 @@ fm-devkit.menu.DebugLevel.debug.build.code_debug=4
 fm-devkit.menu.DebugLevel.verbose=Verbose
 fm-devkit.menu.DebugLevel.verbose.build.code_debug=5
 
+##############################################################
+
+frogboard.name=Frog Board ESP32
+
+frogboard.upload.tool=esptool_py
+frogboard.upload.maximum_size=1310720
+frogboard.upload.maximum_data_size=327680
+frogboard.upload.wait_for_upload_port=true
+
+frogboard.serial.disableDTR=true
+frogboard.serial.disableRTS=true
+
+frogboard.build.mcu=esp32
+frogboard.build.core=esp32
+frogboard.build.variant=frog32
+frogboard.build.board=FROG_ESP32
+frogboard.build.f_cpu=240000000L
+frogboard.build.flash_size=4MB
+frogboard.build.flash_freq=40m
+frogboard.build.flash_mode=dio
+frogboard.build.boot=dio
+frogboard.build.partitions=default
+frogboard.build.defines=
+
+frogboard.menu.PSRAM.disabled=Disabled
+frogboard.menu.PSRAM.disabled.build.defines=
+frogboard.menu.PSRAM.enabled=Enabled
+frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+frogboard.menu.PartitionScheme.default=Default
+frogboard.menu.PartitionScheme.default.build.partitions=default
+frogboard.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+frogboard.menu.PartitionScheme.minimal.build.partitions=minimal
+frogboard.menu.PartitionScheme.no_ota=No OTA (Large APP)
+frogboard.menu.PartitionScheme.no_ota.build.partitions=no_ota
+frogboard.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+frogboard.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+frogboard.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+frogboard.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+frogboard.menu.FlashMode.qio=QIO
+frogboard.menu.FlashMode.qio.build.flash_mode=dio
+frogboard.menu.FlashMode.qio.build.boot=qio
+frogboard.menu.FlashMode.dio=DIO
+frogboard.menu.FlashMode.dio.build.flash_mode=dio
+frogboard.menu.FlashMode.dio.build.boot=dio
+frogboard.menu.FlashMode.qout=QOUT
+frogboard.menu.FlashMode.qout.build.flash_mode=dout
+frogboard.menu.FlashMode.qout.build.boot=qout
+frogboard.menu.FlashMode.dout=DOUT
+frogboard.menu.FlashMode.dout.build.flash_mode=dout
+frogboard.menu.FlashMode.dout.build.boot=dout
+frogboard.menu.FlashFreq.80=80MHz
+frogboard.menu.FlashFreq.80.build.flash_freq=80m
+frogboard.menu.FlashFreq.40=40MHz
+frogboard.menu.FlashFreq.40.build.flash_freq=40m
+frogboard.menu.FlashSize.4M=4MB (32Mb)
+frogboard.menu.FlashSize.4M.build.flash_size=4MB
+frogboard.menu.FlashSize.2M=2MB (16Mb)
+frogboard.menu.FlashSize.2M.build.flash_size=2MB
+frogboard.menu.FlashSize.2M.build.partitions=minimal
+
+frogboard.menu.UploadSpeed.921600=921600
+frogboard.menu.UploadSpeed.921600.upload.speed=921600
+frogboard.menu.UploadSpeed.115200=115200
+frogboard.menu.UploadSpeed.115200.upload.speed=115200
+frogboard.menu.UploadSpeed.256000.windows=256000
+frogboard.menu.UploadSpeed.256000.upload.speed=256000
+frogboard.menu.UploadSpeed.230400.windows.upload.speed=256000
+frogboard.menu.UploadSpeed.230400=230400
+frogboard.menu.UploadSpeed.230400.upload.speed=230400
+frogboard.menu.UploadSpeed.460800.linux=460800
+frogboard.menu.UploadSpeed.460800.macosx=460800
+frogboard.menu.UploadSpeed.460800.upload.speed=460800
+frogboard.menu.UploadSpeed.512000.windows=512000
+frogboard.menu.UploadSpeed.512000.upload.speed=512000
+
+frogboard.menu.DebugLevel.none=None
+frogboard.menu.DebugLevel.none.build.code_debug=0
+frogboard.menu.DebugLevel.error=Error
+frogboard.menu.DebugLevel.error.build.code_debug=1
+frogboard.menu.DebugLevel.warn=Warn
+frogboard.menu.DebugLevel.warn.build.code_debug=2
+frogboard.menu.DebugLevel.info=Info
+frogboard.menu.DebugLevel.info.build.code_debug=3
+frogboard.menu.DebugLevel.debug=Debug
+frogboard.menu.DebugLevel.debug.build.code_debug=4
+frogboard.menu.DebugLevel.verbose=Verbose
+frogboard.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+
