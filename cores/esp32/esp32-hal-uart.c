@@ -558,3 +558,10 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 }
+
+/*
+ * Returns the status of the RX state machine, if the value is non-zero the state machine is active.
+ */
+bool uartRxActive(uart_t* uart) {
+    return uart->dev->status.st_urx_out != 0;
+}
