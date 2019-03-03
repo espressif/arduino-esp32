@@ -55,7 +55,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
     if(scanResult == WIFI_SCAN_RUNNING) {
         // scan is running
         return WL_NO_SSID_AVAIL;
-    } else if(scanResult > 0) {
+    } else if(scanResult >= 0) {
         // scan done analyze
         WifiAPlist_t bestNetwork { NULL, NULL };
         int bestNetworkDb = INT_MIN;
@@ -64,7 +64,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
         log_i("[WIFI] scan done");
 
-        if(scanResult <= 0) {
+        if(scanResult == 0) {
             log_e("[WIFI] no networks found");
         } else {
             log_i("[WIFI] %d networks found", scanResult);
