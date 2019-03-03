@@ -11,8 +11,8 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-#define TX1   13
-#define RX1   12
+#define TX1   12
+#define RX1   13
 #define TX2   33
 #define RX2   39
 
@@ -20,7 +20,7 @@ static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t SCL = 4;
-static const uint8_t SDA = 2;
+static const uint8_t SDA = 15;
 
 static const uint8_t SS    = 5;
 static const uint8_t MOSI  = 23;
