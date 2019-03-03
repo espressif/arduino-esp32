@@ -1,6 +1,6 @@
 /**
  *
- * @file ESP8266WiFiMulti.cpp
+ * @file WiFiMulti.cpp
  * @date 16.05.2015
  * @author Markus Sattler
  *
@@ -48,7 +48,14 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
     int8_t scanResult;
     uint8_t status = WiFi.status();
     if(status == WL_CONNECTED) {
-        return status;
+        for(uint32_t x = 0; x < APlist.size(); x++) {
+            if(WiFi.SSID()==APlist[x].ssid){
+                return status;
+            }
+        }
+        WiFi.disconnect(false,false);
+        delay(10);
+        status = WiFi.status();
     }
 
     scanResult = WiFi.scanNetworks();
