@@ -25,12 +25,25 @@ extern "C"
 #define NOSE_EYE_RATIO_THRES_MIN 0.49f
 #define NOSE_EYE_RATIO_THRES_MAX 2.04f
 
-#define FLASH_INFO_FLAG 12138
-#define FLASH_PARTITION_NAME "fr"
-
 /**
  * @brief      HTTP Client events data
  */
+#define ENROLL_NAME_LEN 16
+    typedef struct tag_face_id_node
+    {
+        struct tag_face_id_node *next;
+        char id_name[ENROLL_NAME_LEN];
+        dl_matrix3d_t *id_vec;
+    } face_id_node;
+
+    typedef struct
+    {
+        face_id_node *head;               /*!< head pointer of the id list */
+        face_id_node *tail;               /*!< tail pointer of the id list */
+        uint8_t count;              /*!< number of enrolled ids */
+        uint8_t confirm_times;      /*!< images needed for one enrolling */
+    } face_id_name_list;
+	
     typedef struct
     {
         uint8_t head;               /*!< head index of the id list */
@@ -51,6 +64,7 @@ extern "C"
      * @return dl_matrix3du_t*          Size: 1xFACE_WIDTHxFACE_HEIGHTx3
      */
     void face_id_init(face_id_list *l, uint8_t size, uint8_t confirm_times);
+    void face_id_name_init(face_id_name_list *l, uint8_t size, uint8_t confirm_times);
 
     /**
      * @brief Alloc memory for aligned face.
@@ -90,7 +104,9 @@ extern "C"
      */
     int8_t recognize_face(face_id_list *l,
                             dl_matrix3du_t *algined_face);
-
+							
+    face_id_node *recognize_face_with_name(face_id_name_list *l,
+                            dl_matrix3du_t *algined_face);
     /**
      * @brief Produce face id according to the input aligned face, and save it to dest_id.
      * 
@@ -103,6 +119,10 @@ extern "C"
      */
     int8_t enroll_face(face_id_list *l, 
                     dl_matrix3du_t *aligned_face);
+					
+    int8_t enroll_face_with_name(face_id_name_list *l, 
+                    dl_matrix3du_t *aligned_face,
+                    char *name);
 
     /**
      * @brief Alloc memory for aligned face.
@@ -111,6 +131,8 @@ extern "C"
      * @return uint8_t              left count
      */
     uint8_t delete_face(face_id_list *l);
+	int8_t delete_face_with_name(face_id_name_list *l, char *name);
+    void delete_face_all_with_name(face_id_name_list *l);
 #if __cplusplus
 }
 #endif
