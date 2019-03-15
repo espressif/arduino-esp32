@@ -1529,8 +1529,10 @@ mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32minikit.menu.FlashFreq.40=40MHz
 mhetesp32minikit.menu.FlashFreq.40.build.flash_freq=40m
 
-mhetesp32minikit.menu.PartitionScheme.default=Default
+mhetesp32minikit.menu.PartitionScheme.default=Default with spiffs
 mhetesp32minikit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32minikit.menu.PartitionScheme.defaultffat=Default with Fat
+mhetesp32minikit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 mhetesp32minikit.menu.PartitionScheme.no_ota=No OTA (Large APP)
 mhetesp32minikit.menu.PartitionScheme.no_ota.build.partitions=no_ota
 mhetesp32minikit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
