@@ -340,6 +340,8 @@ void VFSFileImpl::flush()
         return;
     }
     fflush(_f);
+    // workaround for https://github.com/espressif/arduino-esp32/issues/1293
+    fsync(fileno(_f));
 }
 
 bool VFSFileImpl::seek(uint32_t pos, SeekMode mode)
