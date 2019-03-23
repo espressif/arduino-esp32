@@ -153,6 +153,7 @@ public:
     void setUserAgent(const String& userAgent);
     void setAuthorization(const char * user, const char * password);
     void setAuthorization(const char * auth);
+    void setConnectTimeout(int32_t connectTimeout);
     void setTimeout(uint16_t timeout);
 
     void useHTTP10(bool usehttp10 = true);
@@ -213,6 +214,7 @@ protected:
     /// request handling
     String _host;
     uint16_t _port = 0;
+    int32_t _connectTimeout = -1;
     bool _reuse = false;
     uint16_t _tcpTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _useHTTP10 = false;

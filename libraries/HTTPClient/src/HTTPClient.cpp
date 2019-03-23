@@ -429,6 +429,15 @@ void HTTPClient::setAuthorization(const char * auth)
 }
 
 /**
+ * set the timeout (ms) for establishing a connection to the server
+ * @param connectTimeout int32_t
+ */
+void HTTPClient::setConnectTimeout(int32_t connectTimeout)
+{
+    _connectTimeout = connectTimeout;
+}
+
+/**
  * set the timeout for the TCP connection
  * @param timeout unsigned int
  */
@@ -442,7 +451,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 
 /**
  * use HTTP1.0
- * @param timeout
+ * @param use
  */
 void HTTPClient::useHTTP10(bool useHTTP10)
 {
@@ -966,7 +975,7 @@ bool HTTPClient::connect(void)
         return false;
     }
 
-    if(!_client->connect(_host.c_str(), _port)) {
+    if(!_client->connect(_host.c_str(), _port, _connectTimeout)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
         return false;
     }
