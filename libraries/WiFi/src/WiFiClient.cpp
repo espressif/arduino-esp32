@@ -358,6 +358,7 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
                 } else {
                     buf += res;
                     bytesRemaining -= res;
+                    retry = WIFI_CLIENT_MAX_WRITE_RETRY;
                 }
             }
             else if(res < 0) {
