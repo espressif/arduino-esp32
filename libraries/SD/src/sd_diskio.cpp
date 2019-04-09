@@ -711,7 +711,7 @@ uint8_t sdcard_unmount(uint8_t pdrv)
     return 0;
 }
 
-bool sdcard_mount(uint8_t pdrv, const char* path)
+bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     if(pdrv >= FF_VOLUMES || card == NULL){
@@ -725,7 +725,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path)
 
     FATFS* fs;
     char drv[3] = {(char)('0' + pdrv), ':', 0};
-    esp_err_t err = esp_vfs_fat_register(path, drv, 5, &fs);
+    esp_err_t err = esp_vfs_fat_register(path, drv, max_files, &fs);
     if (err == ESP_ERR_INVALID_STATE) {
         log_e("esp_vfs_fat_register failed 0x(%x): SD is registered.", err);
         return false;
