@@ -2016,6 +2016,68 @@ m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+m5stick-c.name=M5Stick-C
+
+m5stick-c.upload.tool=esptool_py
+m5stick-c.upload.maximum_size=1310720
+m5stick-c.upload.maximum_data_size=327680
+m5stick-c.upload.wait_for_upload_port=true
+
+m5stick-c.serial.disableDTR=true
+m5stick-c.serial.disableRTS=true
+
+m5stick-c.build.mcu=esp32
+m5stick-c.build.core=esp32
+m5stick-c.build.variant=m5stick_c
+m5stick-c.build.board=M5Stick_C
+
+m5stick-c.build.f_cpu=240000000L
+m5stick-c.build.flash_size=4MB
+m5stick-c.build.flash_freq=80m
+m5stick-c.build.flash_mode=dio
+m5stick-c.build.boot=dio
+m5stick-c.build.partitions=default
+m5stick-c.build.defines=
+
+m5stick-c.menu.PartitionScheme.default=Default
+m5stick-c.menu.PartitionScheme.default.build.partitions=default
+m5stick-c.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stick-c.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stick-c.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stick-c.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stick-c.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stick-c.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+
+m5stick-c.menu.UploadSpeed.1500000=1500000
+m5stick-c.menu.UploadSpeed.1500000.upload.speed=1500000
+m5stick-c.menu.UploadSpeed.750000=750000
+m5stick-c.menu.UploadSpeed.750000.upload.speed=750000
+m5stick-c.menu.UploadSpeed.500000=500000
+m5stick-c.menu.UploadSpeed.500000.upload.speed=500000
+m5stick-c.menu.UploadSpeed.250000=250000
+m5stick-c.menu.UploadSpeed.250000.upload.speed=250000
+m5stick-c.menu.UploadSpeed.115200=115200
+m5stick-c.menu.UploadSpeed.115200.upload.speed=115200
+
+
+
+m5stick-c.menu.DebugLevel.none=None
+m5stick-c.menu.DebugLevel.none.build.code_debug=0
+m5stick-c.menu.DebugLevel.error=Error
+m5stick-c.menu.DebugLevel.error.build.code_debug=1
+m5stick-c.menu.DebugLevel.warn=Warn
+m5stick-c.menu.DebugLevel.warn.build.code_debug=2
+m5stick-c.menu.DebugLevel.info=Info
+m5stick-c.menu.DebugLevel.info.build.code_debug=3
+m5stick-c.menu.DebugLevel.debug=Debug
+m5stick-c.menu.DebugLevel.debug.build.code_debug=4
+m5stick-c.menu.DebugLevel.verbose=Verbose
+m5stick-c.menu.DebugLevel.verbose.build.code_debug=5
+
+
+##############################################################
+
 odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.upload.tool=esptool_py
