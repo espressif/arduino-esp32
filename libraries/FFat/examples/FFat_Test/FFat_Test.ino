@@ -1,6 +1,10 @@
 #include "FS.h"
 #include "FFat.h"
 
+// This file should be compiled with 'Partition Scheme' (in Tools menu)
+// set to 'Default with ffat' if you have a 4MB ESP32 dev module or
+// set to '16M Fat' if you have a 16MB ESP32 dev module.
+
 // You only need to format FFat the first time you run a test
 #define FORMAT_FFAT true
 
@@ -160,7 +164,7 @@ void setup(){
         Serial.println("FFat Mount Failed");
         return;
     }
-    
+
     Serial.printf("Total space: %10lu\n", FFat.totalBytes());
     Serial.printf("Free space: %10lu\n", FFat.freeBytes());
     listDir(FFat, "/", 0);

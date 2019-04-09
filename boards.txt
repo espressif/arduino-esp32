@@ -64,8 +64,10 @@ esp32.menu.PSRAM.disabled.build.defines=
 esp32.menu.PSRAM.enabled=Enabled
 esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
-esp32.menu.PartitionScheme.default=Default
+esp32.menu.PartitionScheme.default=Default with spiffs (4MB FLASH)
 esp32.menu.PartitionScheme.default.build.partitions=default
+esp32.menu.PartitionScheme.defaultffat=Default with ffat (4MB FLASH)
+esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 esp32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
@@ -1555,8 +1557,10 @@ mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
 mhetesp32minikit.menu.FlashFreq.40=40MHz
 mhetesp32minikit.menu.FlashFreq.40.build.flash_freq=40m
 
-mhetesp32minikit.menu.PartitionScheme.default=Default
+mhetesp32minikit.menu.PartitionScheme.default=Default with spiffs
 mhetesp32minikit.menu.PartitionScheme.default.build.partitions=default
+mhetesp32minikit.menu.PartitionScheme.defaultffat=Default with ffat
+mhetesp32minikit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 mhetesp32minikit.menu.PartitionScheme.no_ota=No OTA (Large APP)
 mhetesp32minikit.menu.PartitionScheme.no_ota.build.partitions=no_ota
 mhetesp32minikit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
