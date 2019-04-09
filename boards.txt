@@ -2006,7 +2006,7 @@ odroid_esp32.build.flash_size=16MB
 odroid_esp32.build.flash_mode=dio
 odroid_esp32.build.boot=dio
 odroid_esp32.build.partitions=default
-odroid_esp32.build.defines=
+odroid_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 odroid_esp32.menu.FlashMode.qio=QIO
 odroid_esp32.menu.FlashMode.qio.build.flash_mode=dio
