@@ -160,6 +160,8 @@ public:
 
     /// request handling
     int GET();
+    int PATCH(uint8_t * payload, size_t size);
+    int PATCH(String payload);
     int POST(uint8_t * payload, size_t size);
     int POST(String payload);
     int PUT(uint8_t * payload, size_t size);

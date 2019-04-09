@@ -484,6 +484,22 @@ int HTTPClient::POST(String payload)
 }
 
 /**
+ * sends a patch request to the server
+ * @param payload uint8_t *
+ * @param size size_t
+ * @return http code
+ */
+int HTTPClient::PATCH(uint8_t * payload, size_t size)
+{
+    return sendRequest("PATCH", payload, size);
+}
+
+int HTTPClient::PATCH(String payload)
+{
+    return PATCH((uint8_t *) payload.c_str(), payload.length());
+}
+
+/**
  * sends a put request to the server
  * @param payload uint8_t *
  * @param size size_t
