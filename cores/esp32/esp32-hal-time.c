@@ -76,23 +76,15 @@ void configTzTime(const char* tz, const char* server1, const char* server2, cons
 
 bool getLocalTime(struct tm * info, uint32_t ms)
 {
-    uint32_t count = ms / 10;
+    uint32_t start = millis();
     time_t now;
-
-    time(&now);
-    localtime_r(&now, info);
-
-    if(info->tm_year > (2016 - 1900)){
-        return true;
-    }
-
-    while(count--) {
-        delay(10);
+    while((millis()-start) <= ms) {
         time(&now);
         localtime_r(&now, info);
         if(info->tm_year > (2016 - 1900)){
             return true;
         }
+        delay(10);
     }
     return false;
 }
