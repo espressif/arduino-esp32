@@ -304,10 +304,27 @@ void WebServer::_uploadWriteByte(uint8_t b){
 
 int WebServer::_uploadReadByte(WiFiClient& client){
   int res = client.read();
-  if(res == -1){
-    while(!client.available() && client.connected())
+  const uint8_t max_retries = 3;
+  uint8_t numRetries = 0;
+  while(numRetries < max_retries && res == -1){
+    while(!client.available() && client.connected()){
       delay(2);
+    }
+
     res = client.read();
+    // NOTE: it is possible to get here and have all of the following
+    //       assertions hold true
+    //
+    //       -- client.available() > 0
+    //       -- client.connected == true
+    //       -- res == -1
+    //
+    //       a simple retry strategy overcomes this which is to say the
+    //       assertion is not permanent, but the reason that this works
+    //       is ellusive, and possibly indicative of a more subtle underlying
+    //       issue
+
+    numRetries++;
   }
   return res;
 }
