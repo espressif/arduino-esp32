@@ -307,7 +307,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
   if(res < 0) {
     // keep trying until you either read a valid byte or timeout
     const unsigned long startMillis = millis();
-    const long timeoutIntervalMillis = HTTP_MAX_POST_WAIT;
+    const long timeoutIntervalMillis = client.getTimeout();
     unsigned long currentMillis = startMillis;
     for(;;) {
       // loosely modeled after blinkWithoutDelay pattern
