@@ -331,7 +331,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       //
       //       a simple retry strategy overcomes this which is to say the
       //       assertion is not permanent, but the reason that this works
-      //       is ellusive, and possibly indicative of a more subtle underlying
+      //       is elusive, and possibly indicative of a more subtle underlying
       //       issue
 
       if(timedOut) {
