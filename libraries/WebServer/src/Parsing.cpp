@@ -306,13 +306,16 @@ int WebServer::_uploadReadByte(WiFiClient& client){
   int res = client.read();
   if(res < 0) {
     // keep trying until you either read a valid byte or timeout
-    const unsigned long startMillis = millis();
-    const long timeoutIntervalMillis = client.getTimeout();
+    unsigned long startMillis = millis();
+    long timeoutIntervalMillis = client.getTimeout();
     unsigned long currentMillis = startMillis;
+    boolean timedOut = false;
     for(;;) {
       // loosely modeled after blinkWithoutDelay pattern
-      while(!client.available() && client.connected()){
+      while(!timedOut && !client.available() && client.connected()){
         delay(2);
+        currentMillis = millis();
+        timedOut = currentMillis - startMillis >= timeoutIntervalMillis;
       }
 
       res = client.read();
@@ -331,9 +334,8 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       //       is ellusive, and possibly indicative of a more subtle underlying
       //       issue
 
-      currentMillis = millis();
-      if(currentMillis - startMillis >= timeoutIntervalMillis) {
-        return -1; // exit on a timeout
+      if(timedOut) {
+        return res; // exit on a timeout
       }
     }
   }
