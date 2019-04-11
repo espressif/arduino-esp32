@@ -332,6 +332,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       //       is elusive, and possibly indicative of a more subtle underlying
       //       issue
 
+      timedOut = millis() - startMillis >= timeoutIntervalMillis;
       if(timedOut) {
         return res; // exit on a timeout
       }
