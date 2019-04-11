@@ -337,6 +337,8 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       }
     }
   }
+
+  return res;
 }
 
 bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
