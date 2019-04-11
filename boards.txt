@@ -64,9 +64,9 @@ esp32.menu.PSRAM.disabled.build.defines=
 esp32.menu.PSRAM.enabled=Enabled
 esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
-esp32.menu.PartitionScheme.default=Default with spiffs (4MB FLASH)
+esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32.menu.PartitionScheme.default.build.partitions=default
-esp32.menu.PartitionScheme.defaultffat=Default with ffat (4MB FLASH)
+esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
