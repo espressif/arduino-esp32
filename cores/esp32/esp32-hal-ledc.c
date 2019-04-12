@@ -167,7 +167,7 @@ static void _ledcSetupChannel(uint8_t chan, uint8_t idle_level)
     LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
     LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
     if(group) {
-        LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
+        LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
     } else {
         LEDC_CHAN(group, channel).conf0.clk_en = 0;
     }
@@ -196,7 +196,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         LEDC_CHAN(group, channel).conf0.sig_out_en = 1;//This is the output enable control bit for channel
         LEDC_CHAN(group, channel).conf1.duty_start = 1;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            LEDC_CHAN(group, channel).conf0.val |= BIT(4);
+            LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
         } else {
             LEDC_CHAN(group, channel).conf0.clk_en = 1;
         }
@@ -204,7 +204,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
         LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
+            LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
         } else {
             LEDC_CHAN(group, channel).conf0.clk_en = 0;
         }
