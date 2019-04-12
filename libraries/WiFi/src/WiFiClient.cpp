@@ -279,7 +279,7 @@ int WiFiClient::setOption(int option, int *value)
 {
     int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
     if(res < 0) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
@@ -289,7 +289,7 @@ int WiFiClient::getOption(int option, int *value)
     size_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
@@ -362,7 +362,7 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
                 }
             }
             else if(res < 0) {
-                log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+                log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
                 if(errno != EAGAIN) {
                     //if resource was busy, can try again, otherwise give up
                     stop();
@@ -406,7 +406,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     int res = -1;
     res = _rxBuffer->read(buf, size);
     if(_rxBuffer->failed()) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
         stop();
     }
     return res;
@@ -416,7 +416,7 @@ int WiFiClient::peek()
 {
     int res = _rxBuffer->peek();
     if(_rxBuffer->failed()) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
         stop();
     }
     return res;
@@ -430,7 +430,7 @@ int WiFiClient::available()
     }
     int res = _rxBuffer->available();
     if(_rxBuffer->failed()) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
         stop();
     }
     return res;
@@ -452,7 +452,7 @@ void WiFiClient::flush() {
         toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
         res = recv(fd(), buf, toRead, MSG_DONTWAIT);
         if(res < 0) {
-            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, esp_err_to_name(errno));
+            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
             stop();
             break;
         }
