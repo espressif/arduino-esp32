@@ -544,6 +544,7 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"brightness\":%d,", s->status.brightness);
     p+=sprintf(p, "\"contrast\":%d,", s->status.contrast);
     p+=sprintf(p, "\"saturation\":%d,", s->status.saturation);
+    p+=sprintf(p, "\"sharpness\":%d,", s->status.sharpness);
     p+=sprintf(p, "\"special_effect\":%u,", s->status.special_effect);
     p+=sprintf(p, "\"wb_mode\":%u,", s->status.wb_mode);
     p+=sprintf(p, "\"awb\":%u,", s->status.awb);
@@ -576,7 +577,11 @@ static esp_err_t status_handler(httpd_req_t *req){
 static esp_err_t index_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    return httpd_resp_send(req, (const char *)index_html_gz, index_html_gz_len);
+    sensor_t * s = esp_camera_sensor_get();
+    if (s->id.PID == OV3660_PID) {
+        return httpd_resp_send(req, (const char *)index_ov3660_html_gz, index_ov3660_html_gz_len);
+    }
+    return httpd_resp_send(req, (const char *)index_ov2640_html_gz, index_ov2640_html_gz_len);
 }
 
 void startCameraServer(){

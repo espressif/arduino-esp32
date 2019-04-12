@@ -1,4 +1,4 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <utime.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_err.h"
@@ -28,7 +27,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/termios.h>
-#include <sys/poll.h>
 #include <dirent.h>
 #include <string.h>
 #include "sdkconfig.h"
@@ -182,10 +180,6 @@ typedef struct
         int (*truncate_p)(void* ctx, const char *path, off_t length);
         int (*truncate)(const char *path, off_t length);
     };
-    union {
-        int (*utime_p)(void* ctx, const char *path, const struct utimbuf *times);
-        int (*utime)(const char *path, const struct utimbuf *times);
-    };
 #ifdef CONFIG_SUPPORT_TERMIOS
     union {
         int (*tcsetattr_p)(void *ctx, int fd, int optional_actions, const struct termios *p);
@@ -336,7 +330,6 @@ int esp_vfs_stat(struct _reent *r, const char * path, struct stat * st);
 int esp_vfs_link(struct _reent *r, const char* n1, const char* n2);
 int esp_vfs_unlink(struct _reent *r, const char *path);
 int esp_vfs_rename(struct _reent *r, const char *src, const char *dst);
-int esp_vfs_utime(const char *path, const struct utimbuf *times);
 /**@}*/
 
 /**
@@ -385,22 +378,6 @@ void esp_vfs_select_triggered(SemaphoreHandle_t *signal_sem);
  * @param woken is set to pdTRUE if the function wakes up a task with higher priority
  */
 void esp_vfs_select_triggered_isr(SemaphoreHandle_t *signal_sem, BaseType_t *woken);
-
-/**
- * @brief Implements the VFS layer for synchronous I/O multiplexing by poll()
- *
- * The implementation is based on esp_vfs_select. The parameters and return values are compatible with POSIX poll().
- *
- * @param fds         Pointer to the array containing file descriptors and events poll() should consider.
- * @param nfds        Number of items in the array fds.
- * @param timeout     Poll() should wait at least timeout milliseconds. If the value is 0 then it should return
- *                    immediately. If the value is -1 then it should wait (block) until the event occurs.
- *
- * @return            A positive return value indicates the number of file descriptors that have been selected. The 0
- *                    return value indicates a timed-out poll. -1 is return on failure and errno is set accordingly.
- *
- */
-int esp_vfs_poll(struct pollfd *fds, nfds_t nfds, int timeout);
 
 #ifdef __cplusplus
 } // extern "C"
