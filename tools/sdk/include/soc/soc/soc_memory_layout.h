@@ -144,11 +144,6 @@ inline static bool IRAM_ATTR esp_ptr_dma_capable(const void *p)
     return (intptr_t)p >= SOC_DMA_LOW && (intptr_t)p < SOC_DMA_HIGH;
 }
 
-inline static bool IRAM_ATTR esp_ptr_word_aligned(const void *p)
-{
-    return ((intptr_t)p) % 4 == 0;
-}
-
 inline static bool IRAM_ATTR esp_ptr_executable(const void *p)
 {
     intptr_t ip = (intptr_t) p;
@@ -193,4 +188,12 @@ inline static bool IRAM_ATTR esp_ptr_in_drom(const void *p) {
 
 inline static bool IRAM_ATTR esp_ptr_in_dram(const void *p) {
     return ((intptr_t)p >= SOC_DRAM_LOW && (intptr_t)p < SOC_DRAM_HIGH);
+}
+
+inline static bool IRAM_ATTR esp_ptr_in_diram_dram(const void *p) {
+    return ((intptr_t)p >= SOC_DIRAM_DRAM_LOW && (intptr_t)p < SOC_DIRAM_DRAM_HIGH);
+}
+
+inline static bool IRAM_ATTR esp_ptr_in_diram_iram(const void *p) {
+    return ((intptr_t)p >= SOC_DIRAM_IRAM_LOW && (intptr_t)p < SOC_DIRAM_IRAM_HIGH);
 }

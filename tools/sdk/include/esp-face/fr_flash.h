@@ -25,7 +25,7 @@ extern "C"
             dl_matrix3du_t *aligned_face);
 
     int8_t enroll_face_id_to_flash_with_name(face_id_name_list *l,
-            dl_matrix3du_t *aligned_face,
+            dl_matrix3d_t *new_id,
             char *name);
     /**
      * @brief Read the enrolled face IDs from the flash.

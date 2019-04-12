@@ -86,6 +86,8 @@ extern "C"
                       dl_matrix3du_t *src,
                       dl_matrix3du_t *dest);
 
+    dl_matrix3d_t *get_face_id(dl_matrix3du_t *aligned_face);
+
     /**
      * @brief Add src_id to dest_id
      * 
@@ -106,7 +108,7 @@ extern "C"
                             dl_matrix3du_t *algined_face);
 							
     face_id_node *recognize_face_with_name(face_id_name_list *l,
-                            dl_matrix3du_t *algined_face);
+                            dl_matrix3d_t *face_id);
     /**
      * @brief Produce face id according to the input aligned face, and save it to dest_id.
      * 
@@ -121,7 +123,7 @@ extern "C"
                     dl_matrix3du_t *aligned_face);
 					
     int8_t enroll_face_with_name(face_id_name_list *l, 
-                    dl_matrix3du_t *aligned_face,
+                    dl_matrix3d_t *new_id,
                     char *name);
 
     /**
