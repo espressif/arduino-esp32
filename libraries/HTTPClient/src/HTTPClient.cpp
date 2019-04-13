@@ -429,6 +429,15 @@ void HTTPClient::setAuthorization(const char * auth)
 }
 
 /**
+ * set the timeout (ms) for establishing a connection to the server
+ * @param connectTimeout int32_t
+ */
+void HTTPClient::setConnectTimeout(int32_t connectTimeout)
+{
+    _connectTimeout = connectTimeout;
+}
+
+/**
  * set the timeout for the TCP connection
  * @param timeout unsigned int
  */
@@ -442,7 +451,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 
 /**
  * use HTTP1.0
- * @param timeout
+ * @param use
  */
 void HTTPClient::useHTTP10(bool useHTTP10)
 {
@@ -472,6 +481,22 @@ int HTTPClient::POST(uint8_t * payload, size_t size)
 int HTTPClient::POST(String payload)
 {
     return POST((uint8_t *) payload.c_str(), payload.length());
+}
+
+/**
+ * sends a patch request to the server
+ * @param payload uint8_t *
+ * @param size size_t
+ * @return http code
+ */
+int HTTPClient::PATCH(uint8_t * payload, size_t size)
+{
+    return sendRequest("PATCH", payload, size);
+}
+
+int HTTPClient::PATCH(String payload)
+{
+    return PATCH((uint8_t *) payload.c_str(), payload.length());
 }
 
 /**
@@ -966,7 +991,7 @@ bool HTTPClient::connect(void)
         return false;
     }
 
-    if(!_client->connect(_host.c_str(), _port)) {
+    if(!_client->connect(_host.c_str(), _port, _connectTimeout)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
         return false;
     }

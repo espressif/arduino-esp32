@@ -150,7 +150,7 @@ static bool _udp_task_start(){
         }
     }
     if(!_udp_task_handle){
-        xTaskCreate(_udp_task, "async_udp", 4096, NULL, 3, (TaskHandle_t*)&_udp_task_handle);
+        xTaskCreateUniversal(_udp_task, "async_udp", 4096, NULL, 3, (TaskHandle_t*)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE);
         if(!_udp_task_handle){
             return false;
         }
@@ -682,9 +682,8 @@ void AsyncUDP::_recv(udp_pcb *upcb, pbuf *pb, const ip_addr_t *addr, uint16_t po
         if(_handler) {
             AsyncUDPPacket packet(this, this_pb, addr, port, netif);
             _handler(packet);
-        } else {
-            pbuf_free(this_pb);
         }
+        pbuf_free(this_pb);
     }
 }
 

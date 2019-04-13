@@ -59,7 +59,7 @@ public:
 // parsing methods
 
     void setTimeout(unsigned long timeout);  // sets maximum milliseconds to wait for stream data, default is 1 second
-
+    unsigned long getTimeout(void);
     bool find(const char *target);   // reads data from the stream until the target string is found
     bool find(uint8_t *target)
     {

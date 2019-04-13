@@ -122,6 +122,10 @@ bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t
  */
 bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level);
 
+/**
+ * Deinitialize the driver
+ */
+bool rmtDeinit(rmt_obj_t *rmt);
 
 // TODO:
 //  * uninstall interrupt when all channels are deinit

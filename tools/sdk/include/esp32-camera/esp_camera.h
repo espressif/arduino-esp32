@@ -94,7 +94,7 @@ typedef struct {
     int pin_href;                   /*!< GPIO pin for camera HREF line */
     int pin_pclk;                   /*!< GPIO pin for camera PCLK line */
 
-    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. Either 10KHz or 20KHz */
+    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental) */
 
     ledc_timer_t ledc_timer;        /*!< LEDC timer to be used for generating XCLK  */
     ledc_channel_t ledc_channel;    /*!< LEDC channel to be used for generating XCLK  */
@@ -120,7 +120,8 @@ typedef struct {
 #define ESP_ERR_CAMERA_BASE 0x20000
 #define ESP_ERR_CAMERA_NOT_DETECTED             (ESP_ERR_CAMERA_BASE + 1)
 #define ESP_ERR_CAMERA_FAILED_TO_SET_FRAME_SIZE (ESP_ERR_CAMERA_BASE + 2)
-#define ESP_ERR_CAMERA_NOT_SUPPORTED            (ESP_ERR_CAMERA_BASE + 3)
+#define ESP_ERR_CAMERA_FAILED_TO_SET_OUT_FORMAT (ESP_ERR_CAMERA_BASE + 3)
+#define ESP_ERR_CAMERA_NOT_SUPPORTED            (ESP_ERR_CAMERA_BASE + 4)
 
 /**
  * @brief Initialize the camera driver

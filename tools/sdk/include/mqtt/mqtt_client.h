@@ -45,6 +45,7 @@ typedef enum {
                                         - current_data_offset  offset of the current data for this event
                                         - total_data_len       total length of the data received
                                          */
+    MQTT_EVENT_BEFORE_CONNECT,     /*!< The event occurs before connecting */
 } esp_mqtt_event_id_t;
 
 typedef enum {
@@ -103,6 +104,7 @@ typedef struct {
     const char *client_cert_pem;            /*!< Pointer to certificate data in PEM format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_key_pem` has to be provided. */
     const char *client_key_pem;             /*!< Pointer to private key data in PEM format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_cert_pem` has to be provided. */
     esp_mqtt_transport_t transport;         /*!< overrides URI transport */
+    int refresh_connection_after_ms;        /*!< Refresh connection after this value (in milliseconds) */
 } esp_mqtt_client_config_t;
 
 esp_mqtt_client_handle_t esp_mqtt_client_init(const esp_mqtt_client_config_t *config);
@@ -113,6 +115,7 @@ esp_err_t esp_mqtt_client_subscribe(esp_mqtt_client_handle_t client, const char 
 esp_err_t esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *topic);
 int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, int qos, int retain);
 esp_err_t esp_mqtt_client_destroy(esp_mqtt_client_handle_t client);
+esp_err_t esp_mqtt_set_config(esp_mqtt_client_handle_t client, const esp_mqtt_client_config_t *config);
 
 #ifdef __cplusplus
 }

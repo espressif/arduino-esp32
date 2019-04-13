@@ -451,7 +451,7 @@ static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char l
 static void i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     i2c_t* i2c = (i2c_t*) arg; // recover data
     if(i2c == NULL) {  // point to peripheral control block does not exits
-        return false;
+        return;
     }
     uint32_t oldFreq=0;
     switch(ev_type){
@@ -1480,7 +1480,9 @@ i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda)
  * */
 // 24Nov17 only supports Master Mode
 i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
+#ifdef ENABLE_I2C_DEBUG_BUFFER
   log_v("num=%d sda=%d scl=%d freq=%d",i2c_num, sda, scl, frequency);
+#endif
     if(i2c_num > 1) {
         return NULL;
     }
@@ -1674,8 +1676,9 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
         clk_speed = apb/(period*2);
         log_d("APB Freq too fast, Increasing i2c Freq to %d Hz",clk_speed);
     }
+#ifdef ENABLE_I2C_DEBUG_BUFFER
     log_v("freq=%dHz",clk_speed);
-      
+#endif      
     uint32_t halfPeriod = period/2;
     uint32_t quarterPeriod = period/4;
 
@@ -1689,14 +1692,17 @@ i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed)
     available when a Fifo interrupt is triggered.  This allows enough room in the Fifo so that
     interrupt latency does not cause a Fifo overflow/underflow event.
 */
+#ifdef ENABLE_I2C_DEBUG_BUFFER
     log_v("cpu Freq=%dMhz, i2c Freq=%dHz",getCpuFrequencyMhz(),clk_speed);
+#endif
     uint32_t fifo_delta = (INTERRUPT_CYCLE_OVERHEAD/((getCpuFrequencyMhz()*1000000 / clk_speed)*10))+1; 
     if (fifo_delta > 24) fifo_delta=24;   
     f.rx_fifo_full_thrhd = 32 - fifo_delta;
     f.tx_fifo_empty_thrhd = fifo_delta;
     i2c->dev->fifo_conf.val = f.val; // set thresholds
+#ifdef ENABLE_I2C_DEBUG_BUFFER
     log_v("Fifo delta=%d",fifo_delta);
-
+#endif
     //the clock num during SCL is low level
     i2c->dev->scl_low_period.period = period;
     //the clock num during SCL is high level

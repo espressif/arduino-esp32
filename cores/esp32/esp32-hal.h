@@ -90,6 +90,16 @@ void enableCore1WDT();
 void disableCore1WDT();
 #endif
 
+//if xCoreID < 0 or CPU is unicore, it will use xTaskCreate, else xTaskCreatePinnedToCore
+//allows to easily handle all possible situations without repetitive code
+BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
+                        const char * const pcName,
+                        const uint32_t usStackDepth,
+                        void * const pvParameters,
+                        UBaseType_t uxPriority,
+                        TaskHandle_t * const pxCreatedTask,
+                        const BaseType_t xCoreID );
+
 unsigned long micros();
 unsigned long millis();
 void delay(uint32_t);

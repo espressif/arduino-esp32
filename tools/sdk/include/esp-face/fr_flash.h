@@ -24,6 +24,9 @@ extern "C"
     int8_t enroll_face_id_to_flash(face_id_list *l,
             dl_matrix3du_t *aligned_face);
 
+    int8_t enroll_face_id_to_flash_with_name(face_id_name_list *l,
+            dl_matrix3d_t *new_id,
+            char *name);
     /**
      * @brief Read the enrolled face IDs from the flash.
      * 
@@ -32,6 +35,8 @@ extern "C"
      */
     int8_t read_face_id_from_flash(face_id_list *l);
 
+    int8_t read_face_id_from_flash_with_name(face_id_name_list *l);
+
     /**
      * @brief Delete the enrolled face IDs in the flash.
      * 
@@ -39,6 +44,8 @@ extern "C"
      * @return int8_t               The number of IDs remaining in flash
      */
     int8_t delete_face_id_in_flash(face_id_list *l);
+	int8_t delete_face_id_in_flash_with_name(face_id_name_list *l, char *name);
+    void delete_face_all_in_flash_with_name(face_id_name_list *l);
 
 #if __cplusplus
 }

@@ -13,6 +13,7 @@
 #define OV9650_PID     (0x96)
 #define OV2640_PID     (0x26)
 #define OV7725_PID     (0x77)
+#define OV3660_PID     (0x36)
 
 typedef enum {
     PIXFORMAT_RGB565,    // 2BPP/RGB565
@@ -20,6 +21,9 @@ typedef enum {
     PIXFORMAT_GRAYSCALE, // 1BPP/GRAYSCALE
     PIXFORMAT_JPEG,      // JPEG/COMPRESSED
     PIXFORMAT_RGB888,    // 3BPP/RGB888
+    PIXFORMAT_RAW,       // RAW
+    PIXFORMAT_RGB444,    // 3BP2P/RGB444
+    PIXFORMAT_RGB555,    // 3BP2P/RGB555
 } pixformat_t;
 
 typedef enum {
@@ -34,6 +38,8 @@ typedef enum {
     FRAMESIZE_XGA,      // 1024x768
     FRAMESIZE_SXGA,     // 1280x1024
     FRAMESIZE_UXGA,     // 1600x1200
+    FRAMESIZE_QXGA,     // 2048*1536
+    FRAMESIZE_INVALID
 } framesize_t;
 
 typedef enum {
@@ -59,6 +65,8 @@ typedef struct {
     int8_t brightness;//-2 - 2
     int8_t contrast;//-2 - 2
     int8_t saturation;//-2 - 2
+    int8_t sharpness;//-2 - 2
+    uint8_t denoise;
     uint8_t special_effect;//0 - 6
     uint8_t wb_mode;//0 - 4
     uint8_t awb;
@@ -86,6 +94,7 @@ typedef struct _sensor {
     uint8_t  slv_addr;          // Sensor I2C slave address.
     pixformat_t pixformat;
     camera_status_t status;
+    int xclk_freq_hz;
 
     // Sensor function pointers
     int  (*init_status)         (sensor_t *sensor);
@@ -95,6 +104,8 @@ typedef struct _sensor {
     int  (*set_contrast)        (sensor_t *sensor, int level);
     int  (*set_brightness)      (sensor_t *sensor, int level);
     int  (*set_saturation)      (sensor_t *sensor, int level);
+    int  (*set_sharpness)       (sensor_t *sensor, int level);
+    int  (*set_denoise)         (sensor_t *sensor, int level);
     int  (*set_gainceiling)     (sensor_t *sensor, gainceiling_t gainceiling);
     int  (*set_quality)         (sensor_t *sensor, int quality);
     int  (*set_colorbar)        (sensor_t *sensor, int enable);

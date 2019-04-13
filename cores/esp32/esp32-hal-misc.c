@@ -21,6 +21,9 @@
 #include "esp_partition.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
+#include "esp_ota_ops.h"
+#endif //CONFIG_APP_ROLLBACK_ENABLE
 #ifdef CONFIG_BT_ENABLED
 #include "esp_bt.h"
 #endif //CONFIG_BT_ENABLED
@@ -108,6 +111,24 @@ void disableCore1WDT(){
 }
 #endif
 
+BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
+                        const char * const pcName,
+                        const uint32_t usStackDepth,
+                        void * const pvParameters,
+                        UBaseType_t uxPriority,
+                        TaskHandle_t * const pxCreatedTask,
+                        const BaseType_t xCoreID ){
+#ifndef CONFIG_FREERTOS_UNICORE
+    if(xCoreID >= 0 && xCoreID < 2) {
+        return xTaskCreatePinnedToCore(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask, xCoreID);
+    } else {
+#endif
+    return xTaskCreate(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask);
+#ifndef CONFIG_FREERTOS_UNICORE
+    }
+#endif
+}
+
 unsigned long IRAM_ATTR micros()
 {
     return (unsigned long) (esp_timer_get_time());
@@ -115,7 +136,7 @@ unsigned long IRAM_ATTR micros()
 
 unsigned long IRAM_ATTR millis()
 {
-    return (unsigned long) (esp_timer_get_time() / 1000);
+    return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
 void delay(uint32_t ms)
@@ -145,6 +166,9 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+bool verifyOta() __attribute__((weak));
+bool verifyOta() { return true; }
+
 #ifdef CONFIG_BT_ENABLED
 //overwritten in esp32-hal-bt.c
 bool btInUse() __attribute__((weak));
@@ -153,6 +177,20 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_ota_img_states_t ota_state;
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+            if (verifyOta()) {
+                esp_ota_mark_app_valid_cancel_rollback();
+            } else {
+                log_e("OTA verification failed! Start rollback to the previous version ...");
+                esp_ota_mark_app_invalid_rollback_and_reboot();
+            }
+        }
+    }
+#endif
     //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
     //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
 #ifdef F_CPU

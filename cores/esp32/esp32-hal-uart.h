@@ -74,6 +74,8 @@ int uartGetDebug();
 
 unsigned long uartDetectBaudrate(uart_t *uart);
 
+bool uartRxActive(uart_t* uart);
+
 #ifdef __cplusplus
 }
 #endif

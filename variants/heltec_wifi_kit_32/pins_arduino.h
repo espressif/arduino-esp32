@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#define WIFI_Kit_32	true
+#define DISPLAY_HEIGHT 64
+#define DISPLAY_WIDTH  128
+
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
@@ -60,5 +64,11 @@ static const uint8_t T9 = 32;
 
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
+
+static const uint8_t Vext = 21;
+static const uint8_t LED  = 25;
+static const uint8_t RST_OLED = 16;
+static const uint8_t SCL_OLED = 15;
+static const uint8_t SDA_OLED = 4;
 
 #endif /* Pins_Arduino_h */
