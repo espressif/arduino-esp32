@@ -2,7 +2,7 @@
 
 /* The ESP32 has four SPi buses, however as of right now only two of
  * them are available to use, HSPI and VSPI. Simply using the SPI API 
- * as illustrated in Arduino examples will use HSPI, leaving VSPI unused.
+ * as illustrated in Arduino examples will use VSPI, leaving HSPI unused.
  * 
  * However if we simply intialise two instance of the SPI class for both
  * of these buses both can be used. However when just using these the Arduino

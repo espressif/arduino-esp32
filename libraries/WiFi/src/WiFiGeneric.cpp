@@ -168,7 +168,7 @@ static bool espWiFiStop(){
     _esp_wifi_started = false;
     err = esp_wifi_stop();
     if(err){
-        log_e("Could not stop WiFi! %u", err);
+        log_e("Could not stop WiFi! %d", err);
         _esp_wifi_started = true;
         return false;
     }
@@ -187,7 +187,7 @@ typedef struct WiFiEventCbList {
     WiFiEventSysCb scb;
     system_event_id_t event;
 
-    WiFiEventCbList() : id(current_id++) {}
+    WiFiEventCbList() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(SYSTEM_EVENT_WIFI_READY) {}
 } WiFiEventCbList_t;
 wifi_event_id_t WiFiEventCbList::current_id = 1;
 
@@ -339,7 +339,7 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
-    log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
+    if(event->event_id < 26) log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
 
@@ -371,8 +371,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
             WiFi.getAutoReconnect())
         {
-            WiFi.enableSTA(false);
-            WiFi.enableSTA(true);
+            WiFi.disconnect(true);
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
@@ -497,7 +496,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     esp_err_t err;
     err = esp_wifi_set_mode(m);
     if(err){
-        log_e("Could not set mode! %u", err);
+        log_e("Could not set mode! %d", err);
         return false;
     }
     return true;

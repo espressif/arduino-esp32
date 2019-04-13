@@ -17,7 +17,8 @@
 #define LORA_MOSI 27    // GPIO27 - SX1276 MOSI
 #define LORA_CS 18      // GPIO18 - SX1276 CS
 #define LORA_RST 23     // GPIO23 - SX1276 RST
-#define LORA_IO0 26     // GPIO26 - SX1276 IO0
+#define LORA_IRQ 26     // GPIO26 - SX1276 IO0
+#define LORA_IO0 LORA_IRQ  // alias
 #define LORA_IO1 33     // GPIO33 - SX1276 IO1
 #define LORA_IO2 32     // GPIO32 - SX1276 IO2
 
@@ -53,9 +54,9 @@ static const uint8_t T1 = 0;
 static const uint8_t T2 = 2;
 static const uint8_t T4 = 13;
 static const uint8_t T6 = 14;
-static const uint8_t T8 = 32;
-static const uint8_t T9 = 33;
+static const uint8_t T8 = 33;
+static const uint8_t T9 = 32;
 
-static const uint8_t DAC2 = 25;
+static const uint8_t DAC2 = 26;
 
 #endif /* Pins_Arduino_h */

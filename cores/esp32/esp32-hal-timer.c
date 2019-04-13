@@ -84,7 +84,7 @@ void IRAM_ATTR __timerISR(void * arg){
     i = 4;
     //call callbacks
     while(i--){
-        if(__timerInterruptHandlers[i] && status & (1 << i)){
+        if(__timerInterruptHandlers[i] && (status & (1 << i))){
             __timerInterruptHandlers[i]();
         }
     }
@@ -184,6 +184,18 @@ bool timerAlarmEnabled(hw_timer_t *timer){
     return timer->dev->config.alarm_en;
 }
 
+static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+    hw_timer_t * timer = (hw_timer_t *)arg;
+    if(ev_type == APB_BEFORE_CHANGE){
+        timer->dev->config.enable = 0;
+    } else {
+        old_apb /= 1000000;
+        new_apb /= 1000000;
+        timer->dev->config.divider = (new_apb * timer->dev->config.divider) / old_apb;
+        timer->dev->config.enable = 1;
+    }
+}
+
 hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     if(num > 3){
         return NULL;
@@ -205,12 +217,14 @@ hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     timerAttachInterrupt(timer, NULL, false);
     timerWrite(timer, 0);
     timer->dev->config.enable = 1;
+    addApbChangeCallback(timer, _on_apb_change);
     return timer;
 }
 
 void timerEnd(hw_timer_t *timer){
     timer->dev->config.enable = 0;
     timerAttachInterrupt(timer, NULL, false);
+    removeApbChangeCallback(timer, _on_apb_change);
 }
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
@@ -271,23 +285,23 @@ void timerDetachInterrupt(hw_timer_t *timer){
 uint64_t timerReadMicros(hw_timer_t *timer){
     uint64_t timer_val = timerRead(timer);
     uint16_t div = timerGetDivider(timer);
-    return timer_val * div / 80;
+    return timer_val * div / (getApbFrequency() / 1000000);
 }
 
 double timerReadSeconds(hw_timer_t *timer){
     uint64_t timer_val = timerRead(timer);
     uint16_t div = timerGetDivider(timer);
-    return (double)timer_val * div / 80000000;
+    return (double)timer_val * div / getApbFrequency();
 }
 
 uint64_t timerAlarmReadMicros(hw_timer_t *timer){
     uint64_t timer_val = timerAlarmRead(timer);
     uint16_t div = timerGetDivider(timer);
-    return timer_val * div / 80;
+    return timer_val * div / (getApbFrequency() / 1000000);
 }
 
 double timerAlarmReadSeconds(hw_timer_t *timer){
     uint64_t timer_val = timerAlarmRead(timer);
     uint16_t div = timerGetDivider(timer);
-    return (double)timer_val * div / 80000000;
+    return (double)timer_val * div / getApbFrequency();
 }

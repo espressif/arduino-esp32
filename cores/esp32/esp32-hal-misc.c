@@ -25,6 +25,11 @@
 #include "esp_bt.h"
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
+#include "soc/rtc.h"
+#include "soc/rtc_cntl_reg.h"
+#include "soc/apb_ctrl_reg.h"
+#include "rom/rtc.h"
+#include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
@@ -41,9 +46,71 @@ void yield()
     vPortYield();
 }
 
+#if CONFIG_AUTOSTART_ARDUINO
+
+extern TaskHandle_t loopTaskHandle;
+extern bool loopTaskWDTEnabled;
+
+void enableLoopWDT(){
+    if(loopTaskHandle != NULL){
+        if(esp_task_wdt_add(loopTaskHandle) != ESP_OK){
+            log_e("Failed to add loop task to WDT");
+        } else {
+            loopTaskWDTEnabled = true;
+        }
+    }
+}
+
+void disableLoopWDT(){
+    if(loopTaskHandle != NULL && loopTaskWDTEnabled){
+        loopTaskWDTEnabled = false;
+        if(esp_task_wdt_delete(loopTaskHandle) != ESP_OK){
+            log_e("Failed to remove loop task from WDT");
+        }
+    }
+}
+
+void feedLoopWDT(){
+    esp_err_t err = esp_task_wdt_reset();
+    if(err != ESP_OK){
+        log_e("Failed to feed WDT! Error: %d", err);
+    }
+}
+#endif
+
+void enableCore0WDT(){
+    TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+    if(idle_0 == NULL || esp_task_wdt_add(idle_0) != ESP_OK){
+        log_e("Failed to add Core 0 IDLE task to WDT");
+    }
+}
+
+void disableCore0WDT(){
+    TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+    if(idle_0 == NULL || esp_task_wdt_delete(idle_0) != ESP_OK){
+        log_e("Failed to remove Core 0 IDLE task from WDT");
+    }
+}
+
+#ifndef CONFIG_FREERTOS_UNICORE
+void enableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_add(idle_1) != ESP_OK){
+        log_e("Failed to add Core 1 IDLE task to WDT");
+    }
+}
+
+void disableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK){
+        log_e("Failed to remove Core 1 IDLE task from WDT");
+    }
+}
+#endif
+
 unsigned long IRAM_ATTR micros()
 {
-    return (unsigned long) esp_timer_get_time();
+    return (unsigned long) (esp_timer_get_time());
 }
 
 unsigned long IRAM_ATTR millis()
@@ -86,6 +153,11 @@ bool btInUse(){ return false; }
 
 void initArduino()
 {
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#ifdef F_CPU
+    setCpuFrequencyMhz(F_CPU/1000000);
+#endif
 #if CONFIG_SPIRAM_SUPPORT
     psramInit();
 #endif

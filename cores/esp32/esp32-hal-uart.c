@@ -27,6 +27,7 @@
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/dport_reg.h"
+#include "soc/rtc.h"
 #include "esp_intr_alloc.h"
 
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
@@ -65,6 +66,8 @@ static uart_t _uart_bus_array[3] = {
     {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL, NULL}
 };
 #endif
+
+static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
 static void IRAM_ATTR _uart_isr(void *arg)
 {
@@ -215,6 +218,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         uartAttachTx(uart, txPin, inverted);
     }
 
+    addApbChangeCallback(uart, uart_on_apb_change);
     return uart;
 }
 
@@ -223,11 +227,10 @@ void uartEnd(uart_t* uart)
     if(uart == NULL) {
         return;
     }
+    removeApbChangeCallback(uart, uart_on_apb_change);
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
-        uint8_t c;
-        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
         uart->queue = NULL;
     }
@@ -247,8 +250,6 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
 
     UART_MUTEX_LOCK();
     if(uart->queue != NULL) {
-        uint8_t c;
-        while(xQueueReceive(uart->queue, &c, 0));
         vQueueDelete(uart->queue);
         uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
         if(uart->queue == NULL) {
@@ -318,10 +319,9 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     }
     UART_MUTEX_LOCK();
     while(len) {
-        while(len && uart->dev->status.txfifo_cnt < 0x7F) {
-            uart->dev->fifo.rw_byte = *data++;
-            len--;
-        }
+        while(uart->dev->status.txfifo_cnt == 0x7F);
+        uart->dev->fifo.rw_byte = *data++;
+        len--;
     }
     UART_MUTEX_UNLOCK();
 }
@@ -352,10 +352,46 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uint32_t clk_div = ((UART_CLK_FREQ<<4)/baud_rate);
+    uint32_t clk_div = ((getApbFrequency()<<4)/baud_rate);
     uart->dev->clk_div.div_int = clk_div>>4 ;
     uart->dev->clk_div.div_frag = clk_div & 0xf;
     UART_MUTEX_UNLOCK();
+}
+
+static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb)
+{
+    uart_t* uart = (uart_t*)arg;
+    if(ev_type == APB_BEFORE_CHANGE){
+        UART_MUTEX_LOCK();
+        //disabple interrupt
+        uart->dev->int_ena.val = 0;
+        uart->dev->int_clr.val = 0xffffffff;
+        // read RX fifo
+        uint8_t c;
+        BaseType_t xHigherPriorityTaskWoken;
+        while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+            c = uart->dev->fifo.rw_byte;
+            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+                xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+            }
+        }
+        // wait TX empty
+        while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
+    } else {
+        //todo:
+        // set baudrate
+        uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
+        uint32_t baud_rate = ((old_apb<<4)/clk_div);
+        clk_div = ((new_apb<<4)/baud_rate);
+        uart->dev->clk_div.div_int = clk_div>>4 ;
+        uart->dev->clk_div.div_frag = clk_div & 0xf;
+        //enable interrupts
+        uart->dev->int_ena.rxfifo_full = 1;
+        uart->dev->int_ena.frm_err = 1;
+        uart->dev->int_ena.rxfifo_tout = 1;
+        uart->dev->int_clr.val = 0xffffffff;
+        UART_MUTEX_UNLOCK();
+    }
 }
 
 uint32_t uartGetBaudRate(uart_t* uart)
@@ -364,7 +400,7 @@ uint32_t uartGetBaudRate(uart_t* uart)
         return 0;
     }
     uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
-    return ((UART_CLK_FREQ<<4)/clk_div);
+    return ((getApbFrequency()<<4)/clk_div);
 }
 
 static void IRAM_ATTR uart0_write_char(char c)
@@ -385,17 +421,8 @@ static void IRAM_ATTR uart2_write_char(char c)
     ESP_REG(DR_REG_UART2_BASE) = c;
 }
 
-void uartSetDebug(uart_t* uart)
+void uart_install_putc()
 {
-    if(uart == NULL || uart->num > 2) {
-        s_uart_debug_nr = -1;
-        ets_install_putc1(NULL);
-        return;
-    }
-    if(s_uart_debug_nr == uart->num) {
-        return;
-    }
-    s_uart_debug_nr = uart->num;
     switch(s_uart_debug_nr) {
     case 0:
         ets_install_putc1((void (*)(char)) &uart0_write_char);
@@ -410,6 +437,20 @@ void uartSetDebug(uart_t* uart)
         ets_install_putc1(NULL);
         break;
     }
+}
+
+void uartSetDebug(uart_t* uart)
+{
+    if(uart == NULL || uart->num > 2) {
+        s_uart_debug_nr = -1;
+        //ets_install_putc1(NULL);
+        //return;
+    } else
+    if(s_uart_debug_nr == uart->num) {
+        return;
+    } else
+    s_uart_debug_nr = uart->num;
+    uart_install_putc();
 }
 
 int uartGetDebug()
@@ -440,7 +481,7 @@ int log_printf(const char *format, ...)
     vsnprintf(temp, len+1, format, arg);
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_uart_bus_array[s_uart_debug_nr].lock){
-        while (xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY) != pdPASS);
+        xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
         ets_printf("%s", temp);
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     } else {
@@ -450,7 +491,7 @@ int log_printf(const char *format, ...)
     ets_printf("%s", temp);
 #endif
     va_end(arg);
-    if(len > 64){
+    if(len >= sizeof(loc_buf)){
         free(temp);
     }
     return len;
@@ -499,7 +540,7 @@ uartDetectBaudrate(uart_t *uart)
     uart->dev->auto_baud.en = 0;
     uartStateDetectingBaudrate = false; // Initialize for the next round
 
-    unsigned long baudrate = UART_CLK_FREQ / divisor;
+    unsigned long baudrate = getApbFrequency() / divisor;
 
     static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
