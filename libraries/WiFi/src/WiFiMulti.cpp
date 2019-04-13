@@ -194,6 +194,8 @@ bool WiFiMulti::APlistAdd(const char* ssid, const char *passphrase)
             free(newAP.ssid);
             return false;
         }
+    } else {
+        newAP.passphrase = NULL;
     }
 
     APlist.push_back(newAP);
