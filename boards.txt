@@ -3451,4 +3451,75 @@ esp32cam.build.code_debug=0
 
 ##############################################################
 
+sparkfun_lora_gateway_1-channel.name=SparkFun LoRa Gateway 1-Channel
+
+sparkfun_lora_gateway_1-channel.upload.tool=esptool_py
+sparkfun_lora_gateway_1-channel.upload.maximum_size=1310720
+sparkfun_lora_gateway_1-channel.upload.maximum_data_size=294912
+sparkfun_lora_gateway_1-channel.upload.wait_for_upload_port=true
+
+sparkfun_lora_gateway_1-channel.serial.disableDTR=true
+sparkfun_lora_gateway_1-channel.serial.disableRTS=true
+
+sparkfun_lora_gateway_1-channel.build.mcu=esp32
+sparkfun_lora_gateway_1-channel.build.core=esp32
+sparkfun_lora_gateway_1-channel.build.variant=sparkfun_lora_gateway_1-channel
+sparkfun_lora_gateway_1-channel.build.board=ESP32_DEV
+
+sparkfun_lora_gateway_1-channel.build.f_cpu=240000000L
+sparkfun_lora_gateway_1-channel.build.flash_size=4MB
+sparkfun_lora_gateway_1-channel.build.flash_freq=40m
+sparkfun_lora_gateway_1-channel.build.flash_mode=dio
+sparkfun_lora_gateway_1-channel.build.boot=dio
+sparkfun_lora_gateway_1-channel.build.partitions=default
+
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.default=Default
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.default.build.partitions=default
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.minimal.build.partitions=minimal
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.no_ota=No OTA (Large APP)
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.no_ota.build.partitions=no_ota
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+sparkfun_lora_gateway_1-channel.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qio=QIO
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qio.build.flash_mode=dio
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qio.build.boot=qio
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dio=DIO
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dio.build.flash_mode=dio
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dio.build.boot=dio
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qout=QOUT
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qout.build.flash_mode=dout
+sparkfun_lora_gateway_1-channel.menu.FlashMode.qout.build.boot=qout
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dout=DOUT
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dout.build.flash_mode=dout
+sparkfun_lora_gateway_1-channel.menu.FlashMode.dout.build.boot=dout
+
+sparkfun_lora_gateway_1-channel.menu.FlashFreq.80=80MHz
+sparkfun_lora_gateway_1-channel.menu.FlashFreq.80.build.flash_freq=80m
+sparkfun_lora_gateway_1-channel.menu.FlashFreq.40=40MHz
+sparkfun_lora_gateway_1-channel.menu.FlashFreq.40.build.flash_freq=40m
+
+sparkfun_lora_gateway_1-channel.menu.FlashSize.4M=4MB (32Mb)
+sparkfun_lora_gateway_1-channel.menu.FlashSize.4M.build.flash_size=4MB
+
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.921600=921600
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.921600.upload.speed=921600
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.115200=115200
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.115200.upload.speed=115200
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.256000.windows=256000
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.256000.upload.speed=256000
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.230400.windows.upload.speed=256000
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.230400=230400
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.230400.upload.speed=230400
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.460800.linux=460800
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.460800.macosx=460800
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.460800.upload.speed=460800
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.windows=512000
+sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 
