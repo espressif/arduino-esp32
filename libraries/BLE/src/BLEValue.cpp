@@ -31,7 +31,7 @@ BLEValue::BLEValue() {
  * @param [in] part A message part being added.
  */
 void BLEValue::addPart(std::string part) {
-	ESP_LOGD(LOG_TAG, ">> addPart: length=%d", part.length());
+	ESP_LOGV(LOG_TAG, ">> addPart: length=%d", part.length());
 	m_accumulation += part;
 } // addPart
 
@@ -43,7 +43,7 @@ void BLEValue::addPart(std::string part) {
  * @param [in] length The number of bytes being added.
  */
 void BLEValue::addPart(uint8_t* pData, size_t length) {
-	ESP_LOGD(LOG_TAG, ">> addPart: length=%d", length);
+	ESP_LOGV(LOG_TAG, ">> addPart: length=%d", length);
 	m_accumulation += std::string((char*) pData, length);
 } // addPart
 
@@ -52,7 +52,7 @@ void BLEValue::addPart(uint8_t* pData, size_t length) {
  * @brief Cancel the current accumulation.
  */
 void BLEValue::cancel() {
-	ESP_LOGD(LOG_TAG, ">> cancel");
+	ESP_LOGV(LOG_TAG, ">> cancel");
 	m_accumulation = "";
 	m_readOffset   = 0;
 } // cancel
@@ -65,7 +65,7 @@ void BLEValue::cancel() {
  * we now have the complete message and commit the change as a unit.
  */
 void BLEValue::commit() {
-	ESP_LOGD(LOG_TAG, ">> commit");
+	ESP_LOGV(LOG_TAG, ">> commit");
 	// If there is nothing to commit, do nothing.
 	if (m_accumulation.length() == 0) return;
 	setValue(m_accumulation);

@@ -201,7 +201,7 @@ void BLEScan::setWindow(uint16_t windowMSecs) {
  * @return True if scan started or false if there was an error.
  */
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
-	ESP_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
+	ESP_LOGV(LOG_TAG, ">> start(duration=%d)", duration);
 
 	m_semaphoreScanEnd.take(std::string("start"));
 	m_scanCompleteCB = scanCompleteCB;                  // Save the callback to be invoked when the scan completes.
@@ -233,7 +233,7 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
 
 	m_stopped = false;
 
-	ESP_LOGD(LOG_TAG, "<< start()");
+	ESP_LOGV(LOG_TAG, "<< start()");
 	return true;
 } // start
 
@@ -256,7 +256,7 @@ BLEScanResults BLEScan::start(uint32_t duration, bool is_continue) {
  * @return N/A.
  */
 void BLEScan::stop() {
-	ESP_LOGD(LOG_TAG, ">> stop()");
+	ESP_LOGV(LOG_TAG, ">> stop()");
 
 	esp_err_t errRc = ::esp_ble_gap_stop_scanning();
 
@@ -268,7 +268,7 @@ void BLEScan::stop() {
 		return;
 	}
 
-	ESP_LOGD(LOG_TAG, "<< stop()");
+	ESP_LOGV(LOG_TAG, "<< stop()");
 } // stop
 
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
@@ -284,7 +284,7 @@ void BLEScan::erase(BLEAddress address) {
  * @brief Dump the scan results to the log.
  */
 void BLEScanResults::dump() {
-	ESP_LOGD(LOG_TAG, ">> Dump scan results:");
+	ESP_LOGV(LOG_TAG, ">> Dump scan results:");
 	for (int i=0; i<getCount(); i++) {
 		ESP_LOGD(LOG_TAG, "- %s", getDevice(i).toString().c_str());
 	}

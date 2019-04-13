@@ -281,7 +281,7 @@ BLEUUID BLEUUID::fromString(std::string _uuid) {
 esp_bt_uuid_t* BLEUUID::getNative() {
 	//ESP_LOGD(TAG, ">> getNative()")
 	if (m_valueSet == false) {
-		ESP_LOGD(LOG_TAG, "<< Return of un-initialized UUID!");
+		ESP_LOGV(LOG_TAG, "<< Return of un-initialized UUID!");
 		return nullptr;
 	}
 	//ESP_LOGD(TAG, "<< getNative()");
@@ -296,7 +296,7 @@ esp_bt_uuid_t* BLEUUID::getNative() {
  * will convert 16 or 32 bit representations to the full 128bit.
  */
 BLEUUID BLEUUID::to128() {
-	//ESP_LOGD(LOG_TAG, ">> toFull() - %s", toString().c_str());
+	//ESP_LOGV(LOG_TAG, ">> toFull() - %s", toString().c_str());
 
 	// If we either don't have a value or are already a 128 bit UUID, nothing further to do.
 	if (!m_valueSet || m_uuid.len == ESP_UUID_LEN_128) {
