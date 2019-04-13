@@ -59,7 +59,7 @@ BLEUUID BLERemoteDescriptor::getUUID() {
 
 
 std::string BLERemoteDescriptor::readValue() {
-	ESP_LOGD(LOG_TAG, ">> readValue: %s", toString().c_str());
+	ESP_LOGV(LOG_TAG, ">> readValue: %s", toString().c_str());
 
 	// Check to see that we are connected.
 	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
@@ -85,7 +85,7 @@ std::string BLERemoteDescriptor::readValue() {
 	// in m_value will contain our data.
 	m_semaphoreReadDescrEvt.wait("readValue");
 
-	ESP_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
+	ESP_LOGV(LOG_TAG, "<< readValue(): length: %d", m_value.length());
 	return m_value;
 } // readValue
 
@@ -135,7 +135,7 @@ std::string BLERemoteDescriptor::toString() {
  * @param [in] response True if we expect a response.
  */
 void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response) {
-	ESP_LOGD(LOG_TAG, ">> writeValue: %s", toString().c_str());
+	ESP_LOGV(LOG_TAG, ">> writeValue: %s", toString().c_str());
 	// Check to see that we are connected.
 	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
 		ESP_LOGE(LOG_TAG, "Disconnected");
@@ -154,7 +154,7 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 	if (errRc != ESP_OK) {
 		ESP_LOGE(LOG_TAG, "esp_ble_gattc_write_char_descr: %d", errRc);
 	}
-	ESP_LOGD(LOG_TAG, "<< writeValue");
+	ESP_LOGV(LOG_TAG, "<< writeValue");
 } // writeValue
 
 
