@@ -14,7 +14,7 @@
 #include <esp_err.h>
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
+
 #else
 #include "esp_log.h"
 static const char* LOG_TAG = "BLERemoteService";
@@ -29,7 +29,7 @@ BLERemoteService::BLERemoteService(
 		uint16_t      endHandle
 	) {
 
-	ESP_LOGV(LOG_TAG, ">> BLERemoteService()");
+	ESP_LOGV(">> BLERemoteService()");
 	m_srvcId  = srvcId;
 	m_pClient = pClient;
 	m_uuid    = BLEUUID(m_srvcId);
@@ -37,7 +37,7 @@ BLERemoteService::BLERemoteService(
 	m_startHandle = startHandle;
 	m_endHandle = endHandle;
 
-	ESP_LOGV(LOG_TAG, "<< BLERemoteService()");
+	ESP_LOGV("<< BLERemoteService()");
 }
 
 
@@ -103,7 +103,7 @@ void BLERemoteService::gattClientEventHandler(
 					&m_srvcId,
 					&evtParam->get_char.char_id);
 			if (errRc != ESP_OK) {
-				ESP_LOGE(LOG_TAG, "esp_ble_gattc_get_characteristic: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				ESP_LOGE("esp_ble_gattc_get_characteristic: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 				break;
 			}
 
@@ -165,7 +165,7 @@ BLERemoteCharacteristic* BLERemoteService::getCharacteristic(BLEUUID uuid) {
  * @return N/A
  */
 void BLERemoteService::retrieveCharacteristics() {
-	ESP_LOGV(LOG_TAG, ">> getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGV(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
 
 	removeCharacteristics(); // Forget any previous characteristics.
 
@@ -188,7 +188,7 @@ void BLERemoteService::retrieveCharacteristics() {
 		}
 
 		if (status != ESP_GATT_OK) {   // If we got an error, end.
-			ESP_LOGE(LOG_TAG, "esp_ble_gattc_get_all_char: %s", BLEUtils::gattStatusToString(status).c_str());
+			ESP_LOGE("esp_ble_gattc_get_all_char: %s", BLEUtils::gattStatusToString(status).c_str());
 			break;
 		}
 
@@ -196,7 +196,7 @@ void BLERemoteService::retrieveCharacteristics() {
 			break;
 		}
 
-		ESP_LOGD(LOG_TAG, "Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
+		ESP_LOGD("Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
 
 		// We now have a new characteristic ... let us add that to our set of known characteristics
 		BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(
@@ -212,7 +212,7 @@ void BLERemoteService::retrieveCharacteristics() {
 	} // Loop forever (until we break inside the loop).
 
 	m_haveCharacteristics = true; // Remember that we have received the characteristics.
-	ESP_LOGV(LOG_TAG, "<< getCharacteristics()");
+	ESP_LOGV("<< getCharacteristics()");
 } // getCharacteristics
 
 
@@ -221,14 +221,14 @@ void BLERemoteService::retrieveCharacteristics() {
  * @return A map of all the characteristics of this service.
  */
 std::map<std::string, BLERemoteCharacteristic*>* BLERemoteService::getCharacteristics() {
-	ESP_LOGV(LOG_TAG, ">> getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGV(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
 	// If is possible that we have not read the characteristics associated with the service so do that
 	// now.  The request to retrieve the characteristics by calling "retrieveCharacteristics" is a blocking
 	// call and does not return until all the characteristics are available.
 	if (!m_haveCharacteristics) {
 		retrieveCharacteristics();
 	}
-	ESP_LOGV(LOG_TAG, "<< getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGV("<< getCharacteristics() for service: %s", getUUID().toString().c_str());
 	return &m_characteristicMap;
 } // getCharacteristics
 
@@ -265,8 +265,8 @@ uint16_t BLERemoteService::getStartHandle() {
 
 
 uint16_t BLERemoteService::getHandle() {
-	ESP_LOGV(LOG_TAG, ">> getHandle: service: %s", getUUID().toString().c_str());
-	ESP_LOGV(LOG_TAG, "<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
+	ESP_LOGV(">> getHandle: service: %s", getUUID().toString().c_str());
+	ESP_LOGV("<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
 	return getStartHandle();
 } // getHandle
 
@@ -279,9 +279,9 @@ BLEUUID BLERemoteService::getUUID() {
  * @brief Read the value of a characteristic associated with this service.
  */
 std::string BLERemoteService::getValue(BLEUUID characteristicUuid) {
-	ESP_LOGV(LOG_TAG, ">> readValue: uuid: %s", characteristicUuid.toString().c_str());
+	ESP_LOGV(">> readValue: uuid: %s", characteristicUuid.toString().c_str());
 	std::string ret =  getCharacteristic(characteristicUuid)->readValue();
-	ESP_LOGV(LOG_TAG, "<< readValue");
+	ESP_LOGV("<< readValue");
 	return ret;
 } // readValue
 
@@ -314,9 +314,9 @@ void BLERemoteService::removeCharacteristics() {
  * @throws BLEUuidNotFound
  */
 void BLERemoteService::setValue(BLEUUID characteristicUuid, std::string value) {
-	ESP_LOGV(LOG_TAG, ">> setValue: uuid: %s", characteristicUuid.toString().c_str());
+	ESP_LOGV(">> setValue: uuid: %s", characteristicUuid.toString().c_str());
 	getCharacteristic(characteristicUuid)->writeValue(value);
-	ESP_LOGV(LOG_TAG, "<< setValue");
+	ESP_LOGV("<< setValue");
 } // setValue
 
 

@@ -18,7 +18,7 @@
 #include "BLEUtils.h"
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
+
 #else
 #include "esp_log.h"
 static const char* LOG_TAG="BLEAdvertisedDevice";
@@ -249,7 +249,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 			length--;
 
 			char* pHex = BLEUtils::buildHexData(nullptr, payload, length);
-			ESP_LOGD(LOG_TAG, "Type: 0x%.2x (%s), length: %d, data: %s",
+			ESP_LOGD("Type: 0x%.2x (%s), length: %d, data: %s",
 					ad_type, BLEUtils::advTypeToString(ad_type), length, pHex);
 			free(pHex);
 
@@ -308,7 +308,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 				case ESP_BLE_AD_TYPE_SERVICE_DATA: {  // Adv Data Type: 0x16 (Service Data) - 2 byte UUID
 					if (length < 2) {
-						ESP_LOGE(LOG_TAG, "Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
+						ESP_LOGE("Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
 						break;
 					}
 					uint16_t uuid = *(uint16_t*)payload;
@@ -321,7 +321,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 				case ESP_BLE_AD_TYPE_32SERVICE_DATA: {  // Adv Data Type: 0x20 (Service Data) - 4 byte UUID
 					if (length < 4) {
-						ESP_LOGE(LOG_TAG, "Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
+						ESP_LOGE("Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
 						break;
 					}
 					uint32_t uuid = *(uint32_t*) payload;
@@ -334,7 +334,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 				case ESP_BLE_AD_TYPE_128SERVICE_DATA: {  // Adv Data Type: 0x21 (Service Data) - 16 byte UUID
 					if (length < 16) {
-						ESP_LOGE(LOG_TAG, "Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
+						ESP_LOGE("Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
 						break;
 					}
 
@@ -346,7 +346,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 				} //ESP_BLE_AD_TYPE_32SERVICE_DATA
 
 				default: {
-					ESP_LOGD(LOG_TAG, "Unhandled type: adType: %d - 0x%.2x", ad_type, ad_type);
+					ESP_LOGD("Unhandled type: adType: %d - 0x%.2x", ad_type, ad_type);
 					break;
 				}
 			} // switch
@@ -386,7 +386,7 @@ void BLEAdvertisedDevice::setAdFlag(uint8_t adFlag) {
 void BLEAdvertisedDevice::setAppearance(uint16_t appearance) {
 	m_appearance     = appearance;
 	m_haveAppearance = true;
-	ESP_LOGD(LOG_TAG, "- appearance: %d", m_appearance);
+	ESP_LOGD("- appearance: %d", m_appearance);
 } // setAppearance
 
 
@@ -398,7 +398,7 @@ void BLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
 	m_manufacturerData     = manufacturerData;
 	m_haveManufacturerData = true;
 	char* pHex = BLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.data(), (uint8_t) m_manufacturerData.length());
-	ESP_LOGD(LOG_TAG, "- manufacturer data: %s", pHex);
+	ESP_LOGD("- manufacturer data: %s", pHex);
 	free(pHex);
 } // setManufacturerData
 
@@ -410,7 +410,7 @@ void BLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
 void BLEAdvertisedDevice::setName(std::string name) {
 	m_name     = name;
 	m_haveName = true;
-	ESP_LOGD(LOG_TAG, "- setName(): name: %s", m_name.c_str());
+	ESP_LOGD("- setName(): name: %s", m_name.c_str());
 } // setName
 
 
@@ -421,7 +421,7 @@ void BLEAdvertisedDevice::setName(std::string name) {
 void BLEAdvertisedDevice::setRSSI(int rssi) {
 	m_rssi     = rssi;
 	m_haveRSSI = true;
-	ESP_LOGD(LOG_TAG, "- setRSSI(): rssi: %d", m_rssi);
+	ESP_LOGD("- setRSSI(): rssi: %d", m_rssi);
 } // setRSSI
 
 
@@ -450,7 +450,7 @@ void BLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
 void BLEAdvertisedDevice::setServiceUUID(BLEUUID serviceUUID) {
 	m_serviceUUIDs.push_back(serviceUUID);
 	m_haveServiceUUID = true;
-	ESP_LOGD(LOG_TAG, "- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
+	ESP_LOGD("- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
 } // setServiceUUID
 
 
@@ -481,7 +481,7 @@ void BLEAdvertisedDevice::setServiceDataUUID(BLEUUID uuid) {
 void BLEAdvertisedDevice::setTXPower(int8_t txPower) {
 	m_txPower     = txPower;
 	m_haveTXPower = true;
-	ESP_LOGD(LOG_TAG, "- txPower: %d", m_txPower);
+	ESP_LOGD("- txPower: %d", m_txPower);
 } // setTXPower
 
 

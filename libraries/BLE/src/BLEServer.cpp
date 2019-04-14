@@ -19,7 +19,7 @@
 #include <unordered_set>
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
+
 #else
 #include "esp_log.h"
 static const char* LOG_TAG = "BLEServer";
@@ -73,12 +73,12 @@ BLEService* BLEServer::createService(const char* uuid) {
  * @return A reference to the new service object.
  */
 BLEService* BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
-	ESP_LOGV(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
+	ESP_LOGV(">> createService - %s", uuid.toString().c_str());
 	m_semaphoreCreateEvt.take("createService");
 
 	// Check that a service with the supplied UUID does not already exist.
 	if (m_serviceMap.getByUUID(uuid) != nullptr) {
-		ESP_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
+		ESP_LOGW("<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
 			uuid.toString().c_str());
 	}
 
@@ -89,7 +89,7 @@ BLEService* BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t 
 
 	m_semaphoreCreateEvt.wait("createService");
 
-	ESP_LOGV(LOG_TAG, "<< createService");
+	ESP_LOGV("<< createService");
 	return pService;
 } // createService
 
@@ -149,7 +149,7 @@ uint16_t BLEServer::getGattsIf() {
  *
  */
 void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) {
-	ESP_LOGV(LOG_TAG, ">> handleGATTServerEvent: %s",
+	ESP_LOGV(">> handleGATTServerEvent: %s",
 		BLEUtils::gattServerEventTypeToString(event).c_str());
 
 	switch(event) {
@@ -277,7 +277,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 	// Invoke the handler for every Service we have.
 	m_serviceMap.handleGATTServerEvent(event, gatts_if, param);
 
-	ESP_LOGV(LOG_TAG, "<< handleGATTServerEvent");
+	ESP_LOGV("<< handleGATTServerEvent");
 } // handleGATTServerEvent
 
 
@@ -287,11 +287,11 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
  * @return N/A
  */
 void BLEServer::registerApp(uint16_t m_appId) {
-	ESP_LOGV(LOG_TAG, ">> registerApp - %d", m_appId);
+	ESP_LOGV(">> registerApp - %d", m_appId);
 	m_semaphoreRegisterAppEvt.take("registerApp"); // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
 	::esp_ble_gatts_app_register(m_appId);
 	m_semaphoreRegisterAppEvt.wait("registerApp");
-	ESP_LOGV(LOG_TAG, "<< registerApp");
+	ESP_LOGV("<< registerApp");
 } // registerApp
 
 
@@ -324,9 +324,9 @@ void BLEServer::removeService(BLEService* service) {
  * retrieving the advertising object and invoking start upon it.
  */
 void BLEServer::startAdvertising() {
-	ESP_LOGV(LOG_TAG, ">> startAdvertising");
+	ESP_LOGV(">> startAdvertising");
 	BLEDevice::startAdvertising();
-	ESP_LOGV(LOG_TAG, "<< startAdvertising");
+	ESP_LOGV("<< startAdvertising");
 } // startAdvertising
 
 /**
@@ -344,12 +344,12 @@ bool BLEServer::connect(BLEAddress address) {
 		1                              // direct connection
 	);
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		ESP_LOGE("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return false;
 	}
 
 	uint32_t rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
-	ESP_LOGV(LOG_TAG, "<< connect(), rc=%d", rc==ESP_GATT_OK);
+	ESP_LOGV("<< connect(), rc=%d", rc==ESP_GATT_OK);
 	return rc == ESP_GATT_OK;
 } // connect
 

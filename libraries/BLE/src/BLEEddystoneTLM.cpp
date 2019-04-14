@@ -117,7 +117,7 @@ std::string BLEEddystoneTLM::toString() {
  */
 void BLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
-		ESP_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+		ESP_LOGE("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
 		return;
 	}
   memcpy(&m_eddystoneData, data.data(), data.length());

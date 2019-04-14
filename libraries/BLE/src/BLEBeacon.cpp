@@ -10,7 +10,7 @@
 #include "BLEBeacon.h"
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
+
 #else
 #include "esp_log.h"
 static const char* LOG_TAG = "BLEBeacon";
@@ -58,7 +58,7 @@ int8_t BLEBeacon::getSignalPower() {
  */
 void BLEBeacon::setData(std::string data) {
 	if (data.length() != sizeof(m_beaconData)) {
-		ESP_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
+		ESP_LOGE("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
 		return;
 	}
 	memcpy(&m_beaconData, data.data(), sizeof(m_beaconData));
