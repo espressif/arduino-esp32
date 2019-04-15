@@ -15,16 +15,7 @@
 #include "BLEService.h"
 #include "BLEDescriptor.h"
 #include "GeneralUtils.h"
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "BLEDescriptor";
-#endif
-
-
-
 
 #define NULL_HANDLE (0xffff)
 
@@ -63,10 +54,10 @@ BLEDescriptor::~BLEDescriptor() {
  * @param [in] pCharacteristic The characteristic to which to register this descriptor.
  */
 void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
-	ESP_LOGD(LOG_TAG, ">> executeCreate(): %s", toString().c_str());
+	log_v(">> executeCreate(): %s", toString().c_str());
 
 	if (m_handle != NULL_HANDLE) {
-		ESP_LOGE(LOG_TAG, "Descriptor already has a handle.");
+		log_e("Descriptor already has a handle.");
 		return;
 	}
 
@@ -82,12 +73,12 @@ void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
 			&m_value,
 			&control);
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_add_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		log_e("<< esp_ble_gatts_add_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return;
 	}
 
 	m_semaphoreCreateEvt.wait("executeCreate");
-	ESP_LOGD(LOG_TAG, "<< executeCreate");
+	log_v("<< executeCreate");
 } // executeCreate
 
 
@@ -213,9 +204,9 @@ void BLEDescriptor::handleGATTServerEvent(
  * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
 void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks* pCallback) {
-	ESP_LOGD(LOG_TAG, ">> setCallbacks: 0x%x", (uint32_t) pCallback);
+	log_v(">> setCallbacks: 0x%x", (uint32_t) pCallback);
 	m_pCallback = pCallback;
-	ESP_LOGD(LOG_TAG, "<< setCallbacks");
+	log_v("<< setCallbacks");
 } // setCallbacks
 
 
@@ -226,9 +217,9 @@ void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks* pCallback) {
  * @return N/A.
  */
 void BLEDescriptor::setHandle(uint16_t handle) {
-	ESP_LOGD(LOG_TAG, ">> setHandle(0x%.2x): Setting descriptor handle to be 0x%.2x", handle, handle);
+	log_v(">> setHandle(0x%.2x): Setting descriptor handle to be 0x%.2x", handle, handle);
 	m_handle = handle;
-	ESP_LOGD(LOG_TAG, "<< setHandle()");
+	log_v("<< setHandle()");
 } // setHandle
 
 
@@ -239,7 +230,7 @@ void BLEDescriptor::setHandle(uint16_t handle) {
  */
 void BLEDescriptor::setValue(uint8_t* data, size_t length) {
 	if (length > ESP_GATT_MAX_ATTR_LEN) {
-		ESP_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
+		log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
 		return;
 	}
 	m_value.attr_len = length;
@@ -278,8 +269,8 @@ BLEDescriptorCallbacks::~BLEDescriptorCallbacks() {}
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void BLEDescriptorCallbacks::onRead(BLEDescriptor* pDescriptor) {
-	ESP_LOGD("BLEDescriptorCallbacks", ">> onRead: default");
-	ESP_LOGD("BLEDescriptorCallbacks", "<< onRead");
+	log_d("BLEDescriptorCallbacks", ">> onRead: default");
+	log_d("BLEDescriptorCallbacks", "<< onRead");
 } // onRead
 
 
@@ -288,8 +279,8 @@ void BLEDescriptorCallbacks::onRead(BLEDescriptor* pDescriptor) {
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void BLEDescriptorCallbacks::onWrite(BLEDescriptor* pDescriptor) {
-	ESP_LOGD("BLEDescriptorCallbacks", ">> onWrite: default");
-	ESP_LOGD("BLEDescriptorCallbacks", "<< onWrite");
+	log_d("BLEDescriptorCallbacks", ">> onWrite: default");
+	log_d("BLEDescriptorCallbacks", "<< onWrite");
 } // onWrite
 
 

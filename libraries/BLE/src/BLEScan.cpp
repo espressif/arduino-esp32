@@ -16,16 +16,7 @@
 #include "BLEScan.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "BLEScan";
-#endif
-
-
-
 
 /**
  * Constructor
@@ -75,7 +66,7 @@ void BLEScan::handleGAPEvent(
 				// Event that indicates that the duration allowed for the search has completed or that we have been
 				// asked to stop.
 				case ESP_GAP_SEARCH_INQ_CMPL_EVT: {
-					ESP_LOGW(LOG_TAG, "ESP_GAP_SEARCH_INQ_CMPL_EVT");
+					log_w("ESP_GAP_SEARCH_INQ_CMPL_EVT");
 					m_stopped = true;
 					m_semaphoreScanEnd.give();
 					if (m_scanCompleteCB != nullptr) {
@@ -103,15 +94,15 @@ void BLEScan::handleGAPEvent(
 					}
 
 					if (found && !m_wantDuplicates) {  // If we found a previous entry AND we don't want duplicates, then we are done.
-						ESP_LOGD(LOG_TAG, "Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
+						log_d("Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
 						vTaskDelay(1);  // <--- allow to switch task in case we scan infinity and dont have new devices to report, or we are blocked here
 						break;
 					}
 
 					// We now construct a model of the advertised device that we have just found for the first
 					// time.
-					// ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, (uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len, ESP_LOG_DEBUG);
-					// ESP_LOGW(LOG_TAG, "bytes length: %d + %d, addr type: %d", param->scan_rst.adv_data_len, param->scan_rst.scan_rsp_len, param->scan_rst.ble_addr_type);
+					// ESP_LOG_BUFFER_HEXDUMP((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len, ESP_LOG_DEBUG);
+					// log_w("bytes length: %d + %d, addr type: %d", param->scan_rst.adv_data_len, param->scan_rst.scan_rsp_len, param->scan_rst.ble_addr_type);
 					BLEAdvertisedDevice *advertisedDevice = new BLEAdvertisedDevice();
 					advertisedDevice->setAddress(advertisedAddress);
 					advertisedDevice->setRSSI(param->scan_rst.rssi);
@@ -201,7 +192,7 @@ void BLEScan::setWindow(uint16_t windowMSecs) {
  * @return True if scan started or false if there was an error.
  */
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
-	ESP_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
+	log_v(">> start(duration=%d)", duration);
 
 	m_semaphoreScanEnd.take(std::string("start"));
 	m_scanCompleteCB = scanCompleteCB;                  // Save the callback to be invoked when the scan completes.
@@ -218,7 +209,7 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
 	esp_err_t errRc = ::esp_ble_gap_set_scan_params(&m_scan_params);
 
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_set_scan_params: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
+		log_e("esp_ble_gap_set_scan_params: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
 		m_semaphoreScanEnd.give();
 		return false;
 	}
@@ -226,14 +217,14 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
 	errRc = ::esp_ble_gap_start_scanning(duration);
 
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_start_scanning: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
+		log_e("esp_ble_gap_start_scanning: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
 		m_semaphoreScanEnd.give();
 		return false;
 	}
 
 	m_stopped = false;
 
-	ESP_LOGD(LOG_TAG, "<< start()");
+	log_v("<< start()");
 	return true;
 } // start
 
@@ -256,7 +247,7 @@ BLEScanResults BLEScan::start(uint32_t duration, bool is_continue) {
  * @return N/A.
  */
 void BLEScan::stop() {
-	ESP_LOGD(LOG_TAG, ">> stop()");
+	log_v(">> stop()");
 
 	esp_err_t errRc = ::esp_ble_gap_stop_scanning();
 
@@ -264,16 +255,16 @@ void BLEScan::stop() {
 	m_semaphoreScanEnd.give();
 
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_stop_scanning: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
+		log_e("esp_ble_gap_stop_scanning: err: %d, text: %s", errRc, GeneralUtils::errorToString(errRc));
 		return;
 	}
 
-	ESP_LOGD(LOG_TAG, "<< stop()");
+	log_v("<< stop()");
 } // stop
 
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
 void BLEScan::erase(BLEAddress address) {
-	ESP_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
+	log_i("erase device: %s", address.toString().c_str());
 	BLEAdvertisedDevice *advertisedDevice = m_scanResults.m_vectorAdvertisedDevices.find(address.toString())->second;
 	m_scanResults.m_vectorAdvertisedDevices.erase(address.toString());
 	delete advertisedDevice;
@@ -284,9 +275,9 @@ void BLEScan::erase(BLEAddress address) {
  * @brief Dump the scan results to the log.
  */
 void BLEScanResults::dump() {
-	ESP_LOGD(LOG_TAG, ">> Dump scan results:");
+	log_v(">> Dump scan results:");
 	for (int i=0; i<getCount(); i++) {
-		ESP_LOGD(LOG_TAG, "- %s", getDevice(i).toString().c_str());
+		log_d("- %s", getDevice(i).toString().c_str());
 	}
 } // dump
 

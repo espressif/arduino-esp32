@@ -18,13 +18,7 @@
 #include "BLEUtils.h"
 #include "BLE2902.h"
 #include "GeneralUtils.h"
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "BLECharacteristic";
-#endif
 
 #define NULL_HANDLE (0xffff)
 
@@ -70,9 +64,9 @@ BLECharacteristic::~BLECharacteristic() {
  * @return N/A.
  */
 void BLECharacteristic::addDescriptor(BLEDescriptor* pDescriptor) {
-	ESP_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
+	log_v(">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
 	m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
-	ESP_LOGD(LOG_TAG, "<< addDescriptor()");
+	log_v("<< addDescriptor()");
 } // addDescriptor
 
 
@@ -81,16 +75,16 @@ void BLECharacteristic::addDescriptor(BLEDescriptor* pDescriptor) {
  * @param [in] pService The service with which to associate this characteristic.
  */
 void BLECharacteristic::executeCreate(BLEService* pService) {
-	ESP_LOGD(LOG_TAG, ">> executeCreate()");
+	log_v(">> executeCreate()");
 
 	if (m_handle != NULL_HANDLE) {
-		ESP_LOGE(LOG_TAG, "Characteristic already has a handle.");
+		log_e("Characteristic already has a handle.");
 		return;
 	}
 
 	m_pService = pService; // Save the service to which this characteristic belongs.
 
-	ESP_LOGD(LOG_TAG, "Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s",
+	log_d("Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s",
 		getUUID().toString().c_str(),
 		m_pService->toString().c_str());
 
@@ -107,7 +101,7 @@ void BLECharacteristic::executeCreate(BLEService* pService) {
 		&control); // Whether to auto respond or not.
 
 	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_add_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		log_e("<< esp_ble_gatts_add_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return;
 	}
 	m_semaphoreCreateEvt.wait("executeCreate");
@@ -118,7 +112,7 @@ void BLECharacteristic::executeCreate(BLEService* pService) {
 		pDescriptor = m_descriptorMap.getNext();
 	} // End while
 
-	ESP_LOGD(LOG_TAG, "<< executeCreate");
+	log_v("<< executeCreate");
 } // executeCreate
 
 
@@ -200,7 +194,7 @@ void BLECharacteristic::handleGATTServerEvent(
 		esp_gatts_cb_event_t      event,
 		esp_gatt_if_t             gatts_if,
 		esp_ble_gatts_cb_param_t* param) {
-	ESP_LOGD(LOG_TAG, ">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
+	log_v(">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
 
 	switch(event) {
 	// Events handled:
@@ -238,7 +232,7 @@ void BLECharacteristic::handleGATTServerEvent(
 					param->write.conn_id,
 					param->write.trans_id, ESP_GATT_OK, nullptr);
 			if (errRc != ESP_OK) {
-				ESP_LOGE(LOG_TAG, "esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			}
 			break;
 		} // ESP_GATTS_EXEC_WRITE_EVT
@@ -288,11 +282,11 @@ void BLECharacteristic::handleGATTServerEvent(
 					setValue(param->write.value, param->write.len);
 				}
 
-				ESP_LOGD(LOG_TAG, " - Response to write event: New value: handle: %.2x, uuid: %s",
+				log_d(" - Response to write event: New value: handle: %.2x, uuid: %s",
 						getHandle(), getUUID().toString().c_str());
 
 				char* pHexData = BLEUtils::buildHexData(nullptr, param->write.value, param->write.len);
-				ESP_LOGD(LOG_TAG, " - Data: length: %d, data: %s", param->write.len, pHexData);
+				log_d(" - Data: length: %d, data: %s", param->write.len, pHexData);
 				free(pHexData);
 
 				if (param->write.need_rsp) {
@@ -309,7 +303,7 @@ void BLECharacteristic::handleGATTServerEvent(
 							param->write.conn_id,
 							param->write.trans_id, ESP_GATT_OK, &rsp);
 					if (errRc != ESP_OK) {
-						ESP_LOGE(LOG_TAG, "esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+						log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 					}
 				} // Response needed
 
@@ -361,9 +355,9 @@ void BLECharacteristic::handleGATTServerEvent(
 
 				// get mtu for peer device that we are sending read request to
 				uint16_t maxOffset =  getService()->getServer()->getPeerMTU(param->read.conn_id) - 1;
-				ESP_LOGD(LOG_TAG, "mtu value: %d", maxOffset);
+				log_d("mtu value: %d", maxOffset);
 				if (param->read.need_rsp) {
-					ESP_LOGD(LOG_TAG, "Sending a response (esp_ble_gatts_send_response)");
+					log_d("Sending a response (esp_ble_gatts_send_response)");
 					esp_gatt_rsp_t rsp;
 
 					if (param->read.is_long) {
@@ -407,7 +401,7 @@ void BLECharacteristic::handleGATTServerEvent(
 					rsp.attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
 
 					char *pHexData = BLEUtils::buildHexData(nullptr, rsp.attr_value.value, rsp.attr_value.len);
-					ESP_LOGD(LOG_TAG, " - Data: length=%d, data=%s, offset=%d", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
+					log_d(" - Data: length=%d, data=%s, offset=%d", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
 					free(pHexData);
 
 					esp_err_t errRc = ::esp_ble_gatts_send_response(
@@ -416,7 +410,7 @@ void BLECharacteristic::handleGATTServerEvent(
 							ESP_GATT_OK,
 							&rsp);
 					if (errRc != ESP_OK) {
-						ESP_LOGE(LOG_TAG, "esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+						log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 					}
 				} // Response needed
 			} // Handle matches this characteristic.
@@ -431,7 +425,7 @@ void BLECharacteristic::handleGATTServerEvent(
 		// - uint16_t          conn_id – The connection used.
 		//
 		case ESP_GATTS_CONF_EVT: {
-			// ESP_LOGD(LOG_TAG, "m_handle = %d, conf->handle = %d", m_handle, param->conf.handle);
+			// log_d("m_handle = %d, conf->handle = %d", m_handle, param->conf.handle);
 			if(param->conf.conn_id == getService()->getServer()->getConnId()) // && param->conf.handle == m_handle) // bug in esp-idf and not implemented in arduino yet
 				m_semaphoreConfEvt.give(param->conf.status);
 			break;
@@ -456,7 +450,7 @@ void BLECharacteristic::handleGATTServerEvent(
 	// event.
 
 	m_descriptorMap.handleGATTServerEvent(event, gatts_if, param);
-	ESP_LOGD(LOG_TAG, "<< handleGATTServerEvent");
+	log_v("<< handleGATTServerEvent");
 } // handleGATTServerEvent
 
 
@@ -468,9 +462,9 @@ void BLECharacteristic::handleGATTServerEvent(
  */
 void BLECharacteristic::indicate() {
 
-	ESP_LOGD(LOG_TAG, ">> indicate: length: %d", m_value.getValue().length());
+	log_v(">> indicate: length: %d", m_value.getValue().length());
 	notify(false);
-	ESP_LOGD(LOG_TAG, "<< indicate");
+	log_v("<< indicate");
 } // indicate
 
 
@@ -481,7 +475,7 @@ void BLECharacteristic::indicate() {
  * @return N/A.
  */
 void BLECharacteristic::notify(bool is_notification) {
-	ESP_LOGD(LOG_TAG, ">> notify: length: %d", m_value.getValue().length());
+	log_v(">> notify: length: %d", m_value.getValue().length());
 
 	assert(getService() != nullptr);
 	assert(getService()->getServer() != nullptr);
@@ -489,7 +483,7 @@ void BLECharacteristic::notify(bool is_notification) {
 	GeneralUtils::hexDump((uint8_t*)m_value.getValue().data(), m_value.getValue().length());
 
 	if (getService()->getServer()->getConnectedCount() == 0) {
-		ESP_LOGD(LOG_TAG, "<< notify: No connected clients.");
+		log_v("<< notify: No connected clients.");
 		return;
 	}
 
@@ -499,20 +493,20 @@ void BLECharacteristic::notify(bool is_notification) {
 	BLE2902 *p2902 = (BLE2902*)getDescriptorByUUID((uint16_t)0x2902);
 	if(is_notification) {
 		if (p2902 != nullptr && !p2902->getNotifications()) {
-			ESP_LOGD(LOG_TAG, "<< notifications disabled; ignoring");
+			log_v("<< notifications disabled; ignoring");
 			return;
 		}
 	}
 	else{
 		if (p2902 != nullptr && !p2902->getIndications()) {
-			ESP_LOGD(LOG_TAG, "<< indications disabled; ignoring");
+			log_v("<< indications disabled; ignoring");
 			return;
 		}
 	}
 	for (auto &myPair : getService()->getServer()->getPeerDevices(false)) {
 		uint16_t _mtu = (myPair.second.mtu);
 		if (m_value.getValue().length() > _mtu - 3) {
-			ESP_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+			log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
 		}
 
 		size_t length = m_value.getValue().length();
@@ -523,14 +517,14 @@ void BLECharacteristic::notify(bool is_notification) {
 				myPair.first,
 				getHandle(), length, (uint8_t*)m_value.getValue().data(), !is_notification); // The need_confirm = false makes this a notify.
 		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_send_ %s: rc=%d %s",is_notification?"notify":"indicate", errRc, GeneralUtils::errorToString(errRc));
+			log_e("<< esp_ble_gatts_send_ %s: rc=%d %s",is_notification?"notify":"indicate", errRc, GeneralUtils::errorToString(errRc));
 			m_semaphoreConfEvt.give();
 			return;
 		}
 		if(!is_notification)
 			m_semaphoreConfEvt.wait("indicate");
 	}
-	ESP_LOGD(LOG_TAG, "<< notify");
+	log_v("<< notify");
 } // Notify
 
 
@@ -542,7 +536,7 @@ void BLECharacteristic::notify(bool is_notification) {
  * @return N/A
  */
 void BLECharacteristic::setBroadcastProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setBroadcastProperty(%d)", value);
+	//log_d("setBroadcastProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_BROADCAST);
 	} else {
@@ -556,9 +550,9 @@ void BLECharacteristic::setBroadcastProperty(bool value) {
  * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
  */
 void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks* pCallbacks) {
-	ESP_LOGD(LOG_TAG, ">> setCallbacks: 0x%x", (uint32_t)pCallbacks);
+	log_v(">> setCallbacks: 0x%x", (uint32_t)pCallbacks);
 	m_pCallbacks = pCallbacks;
-	ESP_LOGD(LOG_TAG, "<< setCallbacks");
+	log_v("<< setCallbacks");
 } // setCallbacks
 
 
@@ -573,9 +567,9 @@ void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks* pCallbacks) {
  * @param [in] handle The handle associated with this characteristic.
  */
 void BLECharacteristic::setHandle(uint16_t handle) {
-	ESP_LOGD(LOG_TAG, ">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString().c_str());
+	log_v(">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString().c_str());
 	m_handle = handle;
-	ESP_LOGD(LOG_TAG, "<< setHandle");
+	log_v("<< setHandle");
 } // setHandle
 
 
@@ -584,7 +578,7 @@ void BLECharacteristic::setHandle(uint16_t handle) {
  * @param [in] value Set to true if we are to allow indicate messages.
  */
 void BLECharacteristic::setIndicateProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setIndicateProperty(%d)", value);
+	//log_d("setIndicateProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_INDICATE);
 	} else {
@@ -598,7 +592,7 @@ void BLECharacteristic::setIndicateProperty(bool value) {
  * @param [in] value Set to true if we are to allow notification messages.
  */
 void BLECharacteristic::setNotifyProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setNotifyProperty(%d)", value);
+	//log_d("setNotifyProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_NOTIFY);
 	} else {
@@ -612,7 +606,7 @@ void BLECharacteristic::setNotifyProperty(bool value) {
  * @param [in] value Set to true if we are to allow reads.
  */
 void BLECharacteristic::setReadProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setReadProperty(%d)", value);
+	//log_d("setReadProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_READ);
 	} else {
@@ -628,14 +622,14 @@ void BLECharacteristic::setReadProperty(bool value) {
  */
 void BLECharacteristic::setValue(uint8_t* data, size_t length) {
 	char* pHex = BLEUtils::buildHexData(nullptr, data, length);
-	ESP_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+	log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
 	free(pHex);
 	if (length > ESP_GATT_MAX_ATTR_LEN) {
-		ESP_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
+		log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
 		return;
 	}
 	m_value.setValue(data, length);
-	ESP_LOGD(LOG_TAG, "<< setValue");
+	log_v("<< setValue");
 } // setValue
 
 
@@ -693,7 +687,7 @@ void BLECharacteristic::setValue(double& data64) {
  * @param [in] value Set to true if we are to allow writes with no response.
  */
 void BLECharacteristic::setWriteNoResponseProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setWriteNoResponseProperty(%d)", value);
+	//log_d("setWriteNoResponseProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE_NR);
 	} else {
@@ -707,7 +701,7 @@ void BLECharacteristic::setWriteNoResponseProperty(bool value) {
  * @param [in] value Set to true if we are to allow writes.
  */
 void BLECharacteristic::setWriteProperty(bool value) {
-	//ESP_LOGD(LOG_TAG, "setWriteProperty(%d)", value);
+	//log_d("setWriteProperty(%d)", value);
 	if (value) {
 		m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE);
 	} else {
@@ -743,8 +737,8 @@ BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
-	ESP_LOGD("BLECharacteristicCallbacks", ">> onRead: default");
-	ESP_LOGD("BLECharacteristicCallbacks", "<< onRead");
+	log_d("BLECharacteristicCallbacks", ">> onRead: default");
+	log_d("BLECharacteristicCallbacks", "<< onRead");
 } // onRead
 
 
@@ -753,8 +747,8 @@ void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
-	ESP_LOGD("BLECharacteristicCallbacks", ">> onWrite: default");
-	ESP_LOGD("BLECharacteristicCallbacks", "<< onWrite");
+	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
+	log_d("BLECharacteristicCallbacks", "<< onWrite");
 } // onWrite
 
 #endif /* CONFIG_BT_ENABLED */

@@ -8,7 +8,7 @@
 #if defined(CONFIG_BT_ENABLED)
 #include <string.h>
 #include <sstream>
-#include <esp_log.h>
+#include "esp32-hal-log.h"
 #include "BLEEddystoneTLM.h"
 
 static const char LOG_TAG[] = "BLEEddystoneTLM";
@@ -117,7 +117,7 @@ std::string BLEEddystoneTLM::toString() {
  */
 void BLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
-		ESP_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
 		return;
 	}
   memcpy(&m_eddystoneData, data.data(), data.length());
