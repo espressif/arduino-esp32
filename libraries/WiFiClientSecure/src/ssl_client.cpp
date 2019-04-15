@@ -74,9 +74,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
         if(timeout <= 0){
-            timeout = 30;
+            timeout = 30000;
         }
-        timeout *= 1000;//to milliseconds
         lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
         lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
         lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));

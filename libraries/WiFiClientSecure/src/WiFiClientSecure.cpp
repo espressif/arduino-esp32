@@ -124,7 +124,7 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert,
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
     if(_timeout > 0){
-        sslclient->handshake_timeout = _timeout * 1000;
+        sslclient->handshake_timeout = _timeout;
     }
     int ret = start_ssl_client(sslclient, host, port, _timeout, _CA_cert, _cert, _private_key, NULL, NULL);
     _lastError = ret;
@@ -144,7 +144,7 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent,
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
     log_v("start_ssl_client with PSK");
     if(_timeout > 0){
-        sslclient->handshake_timeout = _timeout * 1000;
+        sslclient->handshake_timeout = _timeout;
     }
     int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, NULL, NULL, _pskIdent, _psKey);
     _lastError = ret;
