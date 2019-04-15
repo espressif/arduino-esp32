@@ -48,6 +48,7 @@ WiFiClientSecure::WiFiClientSecure()
 WiFiClientSecure::WiFiClientSecure(int sock)
 {
     _connected = false;
+    _timeout = 0;
 
     sslclient = new sslclient_context;
     ssl_init(sslclient);
@@ -98,11 +99,21 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
     return connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, int32_t timeout){
+    _timeout = timeout;
+    return connect(ip, port);
+}
+
 int WiFiClientSecure::connect(const char *host, uint16_t port)
 {
     if (_pskIdent && _psKey)
         return connect(host, port, _pskIdent, _psKey);
     return connect(host, port, _CA_cert, _cert, _private_key);
+}
+
+int WiFiClientSecure::connect(const char *host, uint16_t port, int32_t timeout){
+    _timeout = timeout;
+    return connect(host, port);
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
@@ -112,7 +123,10 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *_CA_cert,
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_cert, const char *_cert, const char *_private_key)
 {
-    int ret = start_ssl_client(sslclient, host, port, _CA_cert, _cert, _private_key, NULL, NULL);
+    if(_timeout > 0){
+        sslclient->handshake_timeout = _timeout * 1000;
+    }
+    int ret = start_ssl_client(sslclient, host, port, _timeout, _CA_cert, _cert, _private_key, NULL, NULL);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -129,7 +143,10 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent,
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
     log_v("start_ssl_client with PSK");
-    int ret = start_ssl_client(sslclient, host, port, NULL, NULL, NULL, _pskIdent, _psKey);
+    if(_timeout > 0){
+        sslclient->handshake_timeout = _timeout * 1000;
+    }
+    int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, NULL, NULL, _pskIdent, _psKey);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);

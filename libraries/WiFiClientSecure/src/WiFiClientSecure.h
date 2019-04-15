@@ -32,6 +32,7 @@ protected:
  
     int _lastError = 0;
 	int _peek = -1;
+    int _timeout = 0;
     const char *_CA_cert;
     const char *_cert;
     const char *_private_key;
@@ -44,7 +45,9 @@ public:
     WiFiClientSecure(int socket);
     ~WiFiClientSecure();
     int connect(IPAddress ip, uint16_t port);
+    int connect(IPAddress ip, uint16_t port, int32_t timeout);
     int connect(const char *host, uint16_t port);
+    int connect(const char *host, uint16_t port, int32_t timeout);
     int connect(IPAddress ip, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     int connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     int connect(IPAddress ip, uint16_t port, const char *pskIdent, const char *psKey);
