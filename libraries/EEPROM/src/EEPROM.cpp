@@ -286,7 +286,7 @@ size_t EEPROMClass::readString (int address, char* value, size_t maxLen)
 String EEPROMClass::readString (int address)
 {
   if (address < 0 || address > _size)
-    return String(0);
+    return String();
 
   uint16_t len;
   for (len = 0; len <= _size; len++)
@@ -294,7 +294,7 @@ String EEPROMClass::readString (int address)
       break;
 
   if (address + len > _size)
-    return String(0);
+    return String();
 
   char value[len];
   memcpy((uint8_t*) value, _data + address, len);
