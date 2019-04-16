@@ -1,10 +1,9 @@
 /*
   EEPROM.h -ported by Paolo Becchi to Esp32 from esp8266 EEPROM
            -Modified by Elochukwu Ifediora <ifedioraelochukwuc@gmail.com>
+           -Converted to nvs lbernstone@gmail.com
 
-  Uses a one sector flash partition defined in partition table
-  OR
-  Multiple sector flash partitions defined by the name column in the partition table
+  Uses a nvs byte array to emulate EEPROM
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
@@ -28,36 +27,34 @@
 
 #include <esp_log.h>
 
-EEPROMClass::EEPROMClass(uint32_t sector)
-  : _sector(sector)
-  , _data(0)
+EEPROMClass::EEPROMClass(void)
+  : _data(0)
   , _size(0)
   , _dirty(false)
-  , _mypart(NULL)
+  , _handle(NULL)
+  , _name("eeprom")
+  , _user_defined_size(0)
+{
+}
+
+EEPROMClass::EEPROMClass(uint32_t sector)
+// Only for compatiility, no sectors in nvs!
+  : _data(0)
+  , _size(0)
+  , _dirty(false)
+  , _handle(NULL)
   , _name("eeprom")
   , _user_defined_size(0)
 {
 }
 
 EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
-  : _sector(0)
-  , _data(0)
+  : _data(0)
   , _size(0)
   , _dirty(false)
-  , _mypart(NULL)
+  , _handle(NULL)
   , _name(name)
   , _user_defined_size(user_defined_size)
-{
-}
-
-EEPROMClass::EEPROMClass(void)
-  : _sector(0)// (((uint32_t)&_SPIFFS_end - 0x40200000) / SPI_FLASH_SEC_SIZE))
-  , _data(0)
-  , _size(0)
-  , _dirty(false)
-  , _mypart(NULL)
-  , _name("eeprom")
-  , _user_defined_size(0)
 {
 }
 
@@ -66,18 +63,50 @@ EEPROMClass::~EEPROMClass() {
 }
 
 bool EEPROMClass::begin(size_t size) {
-  if (size <= 0) {
-    return false;
+  if (size <= 0) return false;
+
+  esp_err_t res = nvs_open(_name, NVS_READWRITE, &_handle);
+  if (res != ESP_OK) {
+      log_e("Unable to open NVS namespace: %d", res);
+      return false;
   }
-  if (size > SPI_FLASH_SEC_SIZE) {
-    size = SPI_FLASH_SEC_SIZE;
+
+  size_t key_size = 0;
+  res = nvs_get_blob(_handle, _name, NULL, &key_size);
+  if(res != ESP_OK && res != ESP_ERR_NVS_NOT_FOUND) {
+      log_e("Unable to read NVS key: %d", res);
+      return false;
   }
-  //  _mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA,ESP_PARTITION_SUBTYPE_ANY, EEPROM_FLASH_PARTITION_NAME);
-  _mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, _name);
-  if (_mypart == NULL) {
-    return false;
+  if (size < key_size) { // truncate
+      log_w("truncating EEPROM from %d to %d", key_size, size);
+      uint8_t* trunc_key = (uint8_t*) malloc(size);
+      nvs_get_blob(_handle, _name, trunc_key, &size);
+      nvs_set_blob(_handle, _name, trunc_key, size);
+      nvs_commit(_handle);
+      free(trunc_key);
   }
-  size = (size + 3) & (~3);
+  if (size > key_size) { // expand or new
+      size_t expand_size = size - key_size;
+      uint8_t* expand_key = (uint8_t*) malloc(expand_size);
+      if(nvs_set_blob(_handle, "expand", expand_key, expand_size)) {
+        log_e("Not enough space to expand EEPROM from %d to %d", key_size, size);
+        free(expand_key);
+        return false;
+      }
+      free(expand_key);
+      nvs_erase_key(_handle, "expand");
+      uint8_t* hold_data = (uint8_t*) malloc(size);
+      memset(hold_data, 0, size);
+      if(key_size) {
+        log_i("Expanding EEPROM from %d to %d", key_size, size);
+        nvs_get_blob(_handle, _name, hold_data, &key_size);
+        nvs_erase_key(_handle, _name);
+      }
+      nvs_commit(_handle);
+      nvs_set_blob(_handle, _name, hold_data, size);
+      free(hold_data);
+      nvs_commit(_handle);
+  }
 
   if (_data) {
     delete[] _data;
@@ -85,12 +114,8 @@ bool EEPROMClass::begin(size_t size) {
 
   _data = new uint8_t[size];
   _size = size;
-  bool ret = false;
-  if (esp_partition_read (_mypart, 0, (void *) _data, _size) == ESP_OK) {
-    ret = true;
-  }
-
-  return ret;
+  nvs_get_blob(_handle, _name, _data, &_size);
+  return true;
 }
 
 void EEPROMClass::end() {
@@ -134,29 +159,15 @@ void EEPROMClass::write(int address, uint8_t value) {
 
 bool EEPROMClass::commit() {
   bool ret = false;
-  if (!_size)
-    return false;
-  if (!_dirty)
-    return true;
-  if (!_data)
-    return false;
+  if (!_size) return false;
+  if (!_data) return false;
+  if (!_dirty) return true;
 
-
-  if (esp_partition_erase_range(_mypart, 0, SPI_FLASH_SEC_SIZE) != ESP_OK)
-  {
-    log_e( "partition erase err.");
-  }
-  else
-  {
-    if (esp_partition_write(_mypart, 0, (void *)_data, _size) == ESP_ERR_INVALID_SIZE)
-    {
-      log_e( "error in Write");
-    }
-    else
-    {
+  if (ESP_OK != nvs_set_blob(_handle, _name, _data, _size)) {
+      log_e( "error in write");
+  } else {
       _dirty = false;
       ret = true;
-    }
   }
 
   return ret;

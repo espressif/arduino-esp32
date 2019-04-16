@@ -13,7 +13,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("\nTesting EEPROM Library\n");
-  if (!EEPROM.begin(EEPROM.length())) {
+  if (!EEPROM.begin(1000)) {
     Serial.println("Failed to initialise EEPROM");
     Serial.println("Restarting...");
     delay(1000);
