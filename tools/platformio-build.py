@@ -97,7 +97,7 @@ env.Append(
     ],
 
     CPPPATH=[
-       join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_trace"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "asio"),
