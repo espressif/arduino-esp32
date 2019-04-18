@@ -3522,4 +3522,72 @@ sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
+ttgo-t-watch.name=TTGO T-Watch
+
+ttgo-t-watch.upload.tool=esptool_py
+ttgo-t-watch.upload.maximum_size=6553600
+ttgo-t-watch.upload.maximum_data_size=4521984
+ttgo-t-watch.upload.wait_for_upload_port=true
+
+ttgo-t-watch.serial.disableDTR=true
+ttgo-t-watch.serial.disableRTS=true
+
+ttgo-t-watch.build.mcu=esp32
+ttgo-t-watch.build.core=esp32
+ttgo-t-watch.build.variant=t-watch
+ttgo-t-watch.build.board=T-Watch
+
+ttgo-t-watch.build.f_cpu=240000000L
+ttgo-t-watch.build.flash_size=16MB
+ttgo-t-watch.build.flash_freq=80m
+ttgo-t-watch.build.flash_mode=dio
+ttgo-t-watch.build.boot=dio
+ttgo-t-watch.build.partitions=default_16MB
+ttgo-t-watch.build.defines=
+
+ttgo-t-watch.menu.PSRAM.enabled=Enabled
+ttgo-t-watch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+ttgo-t-watch.menu.PSRAM.disabled=Disabled
+ttgo-t-watch.menu.PSRAM.disabled.build.defines=
+
+ttgo-t-watch.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
+ttgo-t-watch.menu.PartitionScheme.default.build.partitions=default_16MB
+ttgo-t-watch.menu.PartitionScheme.large_spiffs=Large SPIFFS (7 MB)
+ttgo-t-watch.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+ttgo-t-watch.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
+
+ttgo-t-watch.menu.UploadSpeed.2000000=2000000
+ttgo-t-watch.menu.UploadSpeed.2000000.upload.speed=2000000
+ttgo-t-watch.menu.UploadSpeed.1152000=1152000
+ttgo-t-watch.menu.UploadSpeed.1152000.upload.speed=1152000
+ttgo-t-watch.menu.UploadSpeed.921600=921600
+ttgo-t-watch.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-t-watch.menu.UploadSpeed.115200=115200
+ttgo-t-watch.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-t-watch.menu.UploadSpeed.256000.windows=256000
+ttgo-t-watch.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-t-watch.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-t-watch.menu.UploadSpeed.230400=230400
+ttgo-t-watch.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-t-watch.menu.UploadSpeed.460800.linux=460800
+ttgo-t-watch.menu.UploadSpeed.460800.macosx=460800
+ttgo-t-watch.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-t-watch.menu.UploadSpeed.512000.windows=512000
+ttgo-t-watch.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-t-watch.menu.DebugLevel.none=None
+ttgo-t-watch.menu.DebugLevel.none.build.code_debug=0
+ttgo-t-watch.menu.DebugLevel.error=Error
+ttgo-t-watch.menu.DebugLevel.error.build.code_debug=1
+ttgo-t-watch.menu.DebugLevel.warn=Warn
+ttgo-t-watch.menu.DebugLevel.warn.build.code_debug=2
+ttgo-t-watch.menu.DebugLevel.info=Info
+ttgo-t-watch.menu.DebugLevel.info.build.code_debug=3
+ttgo-t-watch.menu.DebugLevel.debug=Debug
+ttgo-t-watch.menu.DebugLevel.debug.build.code_debug=4
+ttgo-t-watch.menu.DebugLevel.verbose=Verbose
+ttgo-t-watch.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 
