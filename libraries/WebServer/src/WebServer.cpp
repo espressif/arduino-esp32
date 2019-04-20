@@ -350,11 +350,6 @@ void WebServer::stop() {
   close();
 }
 
-void setCORS(boolean value) {
-
-}
-
-
 void WebServer::sendHeader(const String& name, const String& value, bool first) {
   String headerLine = name;
   headerLine += F(": ");
