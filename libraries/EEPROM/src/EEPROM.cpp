@@ -63,7 +63,9 @@ EEPROMClass::~EEPROMClass() {
 }
 
 bool EEPROMClass::begin(size_t size) {
-  if (size <= 0) return false;
+  if (!size) {
+      return false;
+  }
 
   esp_err_t res = nvs_open(_name, NVS_READWRITE, &_handle);
   if (res != ESP_OK) {
@@ -79,15 +81,16 @@ bool EEPROMClass::begin(size_t size) {
   }
   if (size < key_size) { // truncate
       log_w("truncating EEPROM from %d to %d", key_size, size);
-      uint8_t* trunc_key = (uint8_t*) malloc(size);
-      nvs_get_blob(_handle, _name, trunc_key, &size);
-      nvs_set_blob(_handle, _name, trunc_key, size);
+      uint8_t* key_data = (uint8_t*) malloc(key_size);
+      nvs_get_blob(_handle, _name, key_data, &key_size);
+      nvs_set_blob(_handle, _name, key_data, size);
       nvs_commit(_handle);
-      free(trunc_key);
+      free(key_data);
   }
-  if (size > key_size) { // expand or new
+  else if (size > key_size) { // expand or new
       size_t expand_size = size - key_size;
       uint8_t* expand_key = (uint8_t*) malloc(expand_size);
+      // check for adequate free space
       if(nvs_set_blob(_handle, "expand", expand_key, expand_size)) {
         log_e("Not enough space to expand EEPROM from %d to %d", key_size, size);
         free(expand_key);
@@ -95,16 +98,19 @@ bool EEPROMClass::begin(size_t size) {
       }
       free(expand_key);
       nvs_erase_key(_handle, "expand");
-      uint8_t* hold_data = (uint8_t*) malloc(size);
-      memset(hold_data, 0, size);
+      uint8_t* key_data = (uint8_t*) malloc(size);
+      memset(key_data, 0, size);
       if(key_size) {
         log_i("Expanding EEPROM from %d to %d", key_size, size);
-        nvs_get_blob(_handle, _name, hold_data, &key_size);
+	// hold data while key is deleted
+        nvs_get_blob(_handle, _name, key_data, &key_size);
         nvs_erase_key(_handle, _name);
+      } else {
+        log_i("New EEPROM of %d bytes", size);
       }
       nvs_commit(_handle);
-      nvs_set_blob(_handle, _name, hold_data, size);
-      free(hold_data);
+      nvs_set_blob(_handle, _name, key_data, size);
+      free(key_data);
       nvs_commit(_handle);
   }
 
@@ -113,7 +119,6 @@ bool EEPROMClass::begin(size_t size) {
   }
 
   _data = new uint8_t[size];
-  _size = size;
   nvs_get_blob(_handle, _name, _data, &_size);
   return true;
 }
@@ -159,9 +164,15 @@ void EEPROMClass::write(int address, uint8_t value) {
 
 bool EEPROMClass::commit() {
   bool ret = false;
-  if (!_size) return false;
-  if (!_data) return false;
-  if (!_dirty) return true;
+  if (!_size) {
+      return false;
+  }
+  if (!_data) {
+      return false;
+  }
+  if (!_dirty) {
+      return true;
+  }
 
   if (ESP_OK != nvs_set_blob(_handle, _name, _data, _size)) {
       log_e( "error in write");
