@@ -368,8 +368,12 @@ void WebServer::setContentLength(const size_t contentLength) {
     _contentLength = contentLength;
 }
 
-void WebServer::setCORS(boolean value) {
+void WebServer::enableCORS(boolean value) {
   _corsEnabled = value;
+}
+
+void WebServer::enableCrossOrigin(boolean value) {
+  enableCORS(value);
 }
 
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {

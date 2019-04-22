@@ -122,7 +122,9 @@ public:
   void send_P(int code, PGM_P content_type, PGM_P content);
   void send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength);
 
-  void setCORS(boolean value);
+  void enableCORS(boolean value = true);
+  void enableCrossOrigin(boolean value = true);
+
   void setContentLength(const size_t contentLength);
   void sendHeader(const String& name, const String& value, bool first = false);
   void sendContent(const String& content);
