@@ -24,7 +24,7 @@
 */
 
 #include "EEPROM.h"
-
+#include <nvs.h>
 #include <esp_log.h>
 
 EEPROMClass::EEPROMClass(void)

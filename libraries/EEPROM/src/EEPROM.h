@@ -1,7 +1,7 @@
 /*
   EEPROM.h -ported by Paolo Becchi to Esp32 from esp8266 EEPROM
            -Modified by Elochukwu Ifediora <ifedioraelochukwuc@gmail.com>
-	   -Converted to nvs lbernstone@gmail.com
+           -Converted to nvs lbernstone@gmail.com
 
   Uses a nvs byte array to emulate EEPROM
 
@@ -29,7 +29,8 @@
 #define EEPROM_FLASH_PARTITION_NAME "eeprom"
 #endif
 #include <Arduino.h>
-#include <nvs.h>
+
+typedef uint32_t nvs_handle;
 
 class EEPROMClass {
   public:
