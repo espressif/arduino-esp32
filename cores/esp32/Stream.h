@@ -97,8 +97,8 @@ public:
 
     float parseFloat();               // float version of parseInt
 
-    size_t readBytes(char *buffer, size_t length); // read chars from stream into buffer
-    size_t readBytes(uint8_t *buffer, size_t length)
+    virtual size_t readBytes(char *buffer, size_t length); // read chars from stream into buffer
+    virtual size_t readBytes(uint8_t *buffer, size_t length)
     {
         return readBytes((char *) buffer, length);
     }
@@ -114,7 +114,7 @@ public:
     // returns the number of characters placed in the buffer (0 means no valid data found)
 
     // Arduino String functions to be added here
-    String readString();
+    virtual String readString();
     String readStringUntil(char terminator);
 
 protected:
