@@ -68,7 +68,7 @@ void setup() {
 
   String sentence = "I love ESP32.";
   EEPROM.writeString(address, sentence);
-  address += sentence.length();
+  address += sentence.length() + 1;
 
   char gratitude[21] = "Thank You Espressif!";
   EEPROM.writeString(address, gratitude);
@@ -81,7 +81,7 @@ void setup() {
   Serial.println(EEPROM.readByte(address));
   address += sizeof(byte);
 
-  Serial.println(char(EEPROM.readChar(address)));
+  Serial.println((char)EEPROM.readChar(address));
   address += sizeof(char);
 
   Serial.println(EEPROM.readUChar(address));
@@ -127,7 +127,7 @@ void setup() {
   address += sizeof(bool);
 
   Serial.println(EEPROM.readString(address));
-  address += sentence.length();
+  address += sentence.length() + 1;
 
   Serial.println(EEPROM.readString(address));
   address += 21;
