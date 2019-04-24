@@ -131,6 +131,7 @@ bool EEPROMClass::begin(size_t size) {
   }
 
   _data = new uint8_t[size];
+  _size = size;
   nvs_get_blob(_handle, _name, _data, &_size);
   return true;
 }
