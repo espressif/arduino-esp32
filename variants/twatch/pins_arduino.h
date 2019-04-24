@@ -22,10 +22,12 @@
 #define BMA42X_INT1         39
 #define BMA42X_INT2         4
 
-static const uint8_t KEY_BUILTIN = 36;
 //Serial1 Already assigned to GPS LORA
-static const uint8_t TX1 = 33;
-static const uint8_t RX1 = 34;
+#define TX1                 33
+#define RX1                 34
+
+static const uint8_t KEY_BUILTIN = 36;
+
 // Already assigned to BMA423 PCF8563 and external extensions
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
