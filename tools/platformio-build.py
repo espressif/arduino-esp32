@@ -59,7 +59,8 @@ env.Append(
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
         "-fstack-protector",
-        "-fexceptions"
+        "-fexceptions",
+        "-Werror=reorder"
     ],
 
     CXXFLAGS=[
