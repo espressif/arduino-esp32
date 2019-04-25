@@ -28,10 +28,10 @@
 #include <esp_log.h>
 
 EEPROMClass::EEPROMClass(void)
-  : _data(0)
+  : _handle(NULL)
+  , _data(0)
   , _size(0)
   , _dirty(false)
-  , _handle(NULL)
   , _name("eeprom")
   , _user_defined_size(0)
 {
@@ -39,20 +39,20 @@ EEPROMClass::EEPROMClass(void)
 
 EEPROMClass::EEPROMClass(uint32_t sector)
 // Only for compatiility, no sectors in nvs!
-  : _data(0)
+  : _handle(NULL)
+  , _data(0)
   , _size(0)
   , _dirty(false)
-  , _handle(NULL)
   , _name("eeprom")
   , _user_defined_size(0)
 {
 }
 
 EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
-  : _data(0)
+  : _handle(NULL)
+  , _data(0)
   , _size(0)
   , _dirty(false)
-  , _handle(NULL)
   , _name(name)
   , _user_defined_size(user_defined_size)
 {
