@@ -130,7 +130,12 @@ bool EEPROMClass::begin(size_t size) {
     delete[] _data;
   }
 
-  _data = new uint8_t[size];
+  _data = (uint8_t*) malloc(size);
+  if(!_data) {
+    log_e("Not enough memory for %d bytes in EEPROM");
+    return false;
+  }
+  _size = size;
   nvs_get_blob(_handle, _name, _data, &_size);
   return true;
 }
