@@ -3648,73 +3648,73 @@ ttgo-t-watch.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-mini32.name=WEMOS D1 MINI ESP32
+d1_mini32.name=WEMOS D1 MINI ESP32
 
-mini32.upload.tool=esptool_py
-mini32.upload.maximum_size=1310720
-mini32.upload.maximum_data_size=327680
-mini32.upload.wait_for_upload_port=true
+d1_mini32.upload.tool=esptool_py
+d1_mini32.upload.maximum_size=1310720
+d1_mini32.upload.maximum_data_size=327680
+d1_mini32.upload.wait_for_upload_port=true
 
-mini32.serial.disableDTR=true
-mini32.serial.disableRTS=true
+d1_mini32.serial.disableDTR=true
+d1_mini32.serial.disableRTS=true
 
-mini32.build.mcu=esp32
-mini32.build.core=esp32
-mini32.build.variant=mini32
-mini32.build.board=MINI32
+d1_mini32.build.mcu=esp32
+d1_mini32.build.core=esp32
+d1_mini32.build.variant=d1_mini32
+d1_mini32.build.board=D1_MINI32
 
-mini32.build.f_cpu=240000000L
-mini32.build.flash_mode=dio
-mini32.build.flash_size=4MB
-mini32.build.boot=dio
-mini32.build.partitions=default
-mini32.build.defines=
+d1_mini32.build.f_cpu=240000000L
+d1_mini32.build.flash_mode=dio
+d1_mini32.build.flash_size=4MB
+d1_mini32.build.boot=dio
+d1_mini32.build.partitions=default
+d1_mini32.build.defines=
 
-mini32.menu.FlashFreq.80=80MHz
-mini32.menu.FlashFreq.80.build.flash_freq=80m
-mini32.menu.FlashFreq.40=40MHz
-mini32.menu.FlashFreq.40.build.flash_freq=40m
+d1_mini32.menu.FlashFreq.80=80MHz
+d1_mini32.menu.FlashFreq.80.build.flash_freq=80m
+d1_mini32.menu.FlashFreq.40=40MHz
+d1_mini32.menu.FlashFreq.40.build.flash_freq=40m
 
-mini32.menu.PartitionScheme.default=Default
-mini32.menu.PartitionScheme.default.build.partitions=default
-mini32.menu.PartitionScheme.no_ota=No OTA (Large APP)
-mini32.menu.PartitionScheme.no_ota.build.partitions=no_ota
-mini32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-mini32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
-mini32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-mini32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+d1_mini32.menu.PartitionScheme.default=Default
+d1_mini32.menu.PartitionScheme.default.build.partitions=default
+d1_mini32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+d1_mini32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+d1_mini32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+d1_mini32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+d1_mini32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+d1_mini32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-mini32.menu.CPUFreq.240=240MHz (WiFi/BT)
-mini32.menu.CPUFreq.240.build.f_cpu=240000000L
-mini32.menu.CPUFreq.160=160MHz (WiFi/BT)
-mini32.menu.CPUFreq.160.build.f_cpu=160000000L
-mini32.menu.CPUFreq.80=80MHz (WiFi/BT)
-mini32.menu.CPUFreq.80.build.f_cpu=80000000L
-mini32.menu.CPUFreq.40=40MHz (40MHz XTAL)
-mini32.menu.CPUFreq.40.build.f_cpu=40000000L
-mini32.menu.CPUFreq.26=26MHz (26MHz XTAL)
-mini32.menu.CPUFreq.26.build.f_cpu=26000000L
-mini32.menu.CPUFreq.20=20MHz (40MHz XTAL)
-mini32.menu.CPUFreq.20.build.f_cpu=20000000L
-mini32.menu.CPUFreq.13=13MHz (26MHz XTAL)
-mini32.menu.CPUFreq.13.build.f_cpu=13000000L
-mini32.menu.CPUFreq.10=10MHz (40MHz XTAL)
-mini32.menu.CPUFreq.10.build.f_cpu=10000000L
+d1_mini32.menu.CPUFreq.240=240MHz (WiFi/BT)
+d1_mini32.menu.CPUFreq.240.build.f_cpu=240000000L
+d1_mini32.menu.CPUFreq.160=160MHz (WiFi/BT)
+d1_mini32.menu.CPUFreq.160.build.f_cpu=160000000L
+d1_mini32.menu.CPUFreq.80=80MHz (WiFi/BT)
+d1_mini32.menu.CPUFreq.80.build.f_cpu=80000000L
+d1_mini32.menu.CPUFreq.40=40MHz (40MHz XTAL)
+d1_mini32.menu.CPUFreq.40.build.f_cpu=40000000L
+d1_mini32.menu.CPUFreq.26=26MHz (26MHz XTAL)
+d1_mini32.menu.CPUFreq.26.build.f_cpu=26000000L
+d1_mini32.menu.CPUFreq.20=20MHz (40MHz XTAL)
+d1_mini32.menu.CPUFreq.20.build.f_cpu=20000000L
+d1_mini32.menu.CPUFreq.13=13MHz (26MHz XTAL)
+d1_mini32.menu.CPUFreq.13.build.f_cpu=13000000L
+d1_mini32.menu.CPUFreq.10=10MHz (40MHz XTAL)
+d1_mini32.menu.CPUFreq.10.build.f_cpu=10000000L
 
-mini32.menu.UploadSpeed.921600=921600
-mini32.menu.UploadSpeed.921600.upload.speed=921600
-mini32.menu.UploadSpeed.115200=115200
-mini32.menu.UploadSpeed.115200.upload.speed=115200
-mini32.menu.UploadSpeed.256000.windows=256000
-mini32.menu.UploadSpeed.256000.upload.speed=256000
-mini32.menu.UploadSpeed.230400.windows.upload.speed=256000
-mini32.menu.UploadSpeed.230400=230400
-mini32.menu.UploadSpeed.230400.upload.speed=230400
-mini32.menu.UploadSpeed.460800.linux=460800
-mini32.menu.UploadSpeed.460800.macosx=460800
-mini32.menu.UploadSpeed.460800.upload.speed=460800
-mini32.menu.UploadSpeed.512000.windows=512000
-mini32.menu.UploadSpeed.512000.upload.speed=512000
+d1_mini32.menu.UploadSpeed.921600=921600
+d1_mini32.menu.UploadSpeed.921600.upload.speed=921600
+d1_mini32.menu.UploadSpeed.115200=115200
+d1_mini32.menu.UploadSpeed.115200.upload.speed=115200
+d1_mini32.menu.UploadSpeed.256000.windows=256000
+d1_mini32.menu.UploadSpeed.256000.upload.speed=256000
+d1_mini32.menu.UploadSpeed.230400.windows.upload.speed=256000
+d1_mini32.menu.UploadSpeed.230400=230400
+d1_mini32.menu.UploadSpeed.230400.upload.speed=230400
+d1_mini32.menu.UploadSpeed.460800.linux=460800
+d1_mini32.menu.UploadSpeed.460800.macosx=460800
+d1_mini32.menu.UploadSpeed.460800.upload.speed=460800
+d1_mini32.menu.UploadSpeed.512000.windows=512000
+d1_mini32.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
