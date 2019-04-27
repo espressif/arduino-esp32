@@ -20,8 +20,8 @@ static const uint8_t D5   = 18;
 static const uint8_t D6   = 19;
 static const uint8_t D7   = 23;
 static const uint8_t D8   = 5;
-static const uint8_t RXD0 = 3;
-static const uint8_t TXD0 = 1;
+static const uint8_t RXD  = 3;
+static const uint8_t TXD  = 1;
 
 #define PIN_SPI_SS   SS   // backward compatibility
 #define PIN_SPI_MOSI MOSI // backward compatibility
