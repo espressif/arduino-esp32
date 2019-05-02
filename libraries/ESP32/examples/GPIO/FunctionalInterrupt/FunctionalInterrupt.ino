@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <FunctionalInterrupt.h>
+#include "FunctionalInterrupt.h"
 
 #define BUTTON1 16
 #define BUTTON2 17
@@ -29,8 +29,8 @@ public:
 
 private:
 	const uint8_t PIN;
-    volatile uint32_t numberKeyPresses;
-    volatile bool pressed;
+	volatile uint32_t numberKeyPresses;
+	volatile bool pressed;
 };
 
 Button button1(BUTTON1);
@@ -38,7 +38,7 @@ Button button2(BUTTON2);
 
 
 void setup() {
-    Serial.begin(115200);
+	Serial.begin(115200);
 }
 
 void loop() {

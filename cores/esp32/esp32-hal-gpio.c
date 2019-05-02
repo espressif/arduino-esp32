@@ -74,7 +74,6 @@ typedef void (*voidFuncPtrArg)(void*);
 typedef struct {
     voidFuncPtr fn;
     void* arg;
-    bool functional;
 } InterruptHandle_t;
 static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
@@ -239,9 +238,7 @@ static void IRAM_ATTR __onPinInterrupt()
     }
 }
 
-extern void cleanupFunctional(void* arg);
-
-extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type, bool functional)
+extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void* arg, int intr_type)
 {
     static bool interrupt_initialized = false;
 
@@ -250,14 +247,8 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
         esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __onPinInterrupt, NULL, &gpio_intr_handle);
     }
 
-    // if new attach without detach remove old info
-    if (__pinInterruptHandlers[pin].functional && __pinInterruptHandlers[pin].arg)
-    {
-    	cleanupFunctional(__pinInterruptHandlers[pin].arg);
-    }
     __pinInterruptHandlers[pin].fn = (voidFuncPtr)userFunc;
     __pinInterruptHandlers[pin].arg = arg;
-    __pinInterruptHandlers[pin].functional = functional;
 
     esp_intr_disable(gpio_intr_handle);
     if(esp_intr_get_cpu(gpio_intr_handle)) { //APP_CPU
@@ -269,25 +260,15 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
     esp_intr_enable(gpio_intr_handle);
 }
 
-extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type)
-{
-	__attachInterruptFunctionalArg(pin, userFunc, arg, intr_type, false);
-}
-
 extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type) {
-    __attachInterruptFunctionalArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type, false);
+    __attachInterruptArg(pin, (voidFuncPtrArg)userFunc, NULL, intr_type);
 }
 
 extern void __detachInterrupt(uint8_t pin)
 {
     esp_intr_disable(gpio_intr_handle);
-    if (__pinInterruptHandlers[pin].functional && __pinInterruptHandlers[pin].arg)
-    {
-    	cleanupFunctional(__pinInterruptHandlers[pin].arg);
-    }
     __pinInterruptHandlers[pin].fn = NULL;
     __pinInterruptHandlers[pin].arg = NULL;
-    __pinInterruptHandlers[pin].functional = false;
 
     GPIO.pin[pin].int_ena = 0;
     GPIO.pin[pin].int_type = 0;

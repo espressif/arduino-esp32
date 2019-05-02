@@ -19,7 +19,6 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-uart.c
   cores/esp32/esp32-hal-rmt.c
   cores/esp32/Esp.cpp
-  cores/esp32/FunctionalInterrupt.cpp
   cores/esp32/HardwareSerial.cpp
   cores/esp32/IPAddress.cpp
   cores/esp32/IPv6Address.cpp
