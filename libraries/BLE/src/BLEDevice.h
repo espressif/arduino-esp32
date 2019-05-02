@@ -50,6 +50,7 @@ public:
 	/* move advertising to BLEDevice for saving ram and flash in beacons */
 	static BLEAdvertising* 	getAdvertising();
 	static void		   		startAdvertising();
+	static void		   		stopAdvertising();
 	static uint16_t 	m_appId;
 	/* multi connect */
 	static std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
