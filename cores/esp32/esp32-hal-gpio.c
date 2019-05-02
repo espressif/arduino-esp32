@@ -275,6 +275,10 @@ extern void __detachInterrupt(uint8_t pin)
     esp_intr_enable(gpio_intr_handle);
 }
 
+extern InterruptHandle_t* __getInterruptHandler(uint8_t pin) {
+	return (pin < GPIO_PIN_COUNT) ? &__pinInterruptHandlers[pin] : NULL;
+}
+
 
 extern void pinMode(uint8_t pin, uint8_t mode) __attribute__ ((weak, alias("__pinMode")));
 extern void digitalWrite(uint8_t pin, uint8_t val) __attribute__ ((weak, alias("__digitalWrite")));
