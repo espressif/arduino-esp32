@@ -1,21 +1,31 @@
 #include <Arduino.h>
-#include "FunctionalInterrupt.h"
+#include "FunctionalInterrupts.h"
 
+#if defined(ESP8266) || defined(ARDUINO_D1_MINI32)
+#define BUTTON1 D3
+#define BUTTON2 D4
+#else
 #define BUTTON1 16
 #define BUTTON2 17
+#endif
 
 class Button
 {
 public:
-	Button(uint8_t reqPin) : PIN(reqPin){
+	Button(uint8_t reqPin) : PIN(reqPin) {
 		pinMode(PIN, INPUT_PULLUP);
 		attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
 	};
 	~Button() {
-		detachInterrupt(PIN);
+		detachFunctionalInterrupt(PIN);
 	}
 
-	void IRAM_ATTR isr() {
+#if defined(ESP8266)
+	void ICACHE_RAM_ATTR isr()
+#elif defined(ESP32)
+	void IRAM_ATTR isr()
+#endif
+	{
 		numberKeyPresses += 1;
 		pressed = true;
 	}
