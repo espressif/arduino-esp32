@@ -1,12 +1,15 @@
 #include <Arduino.h>
 #include "FunctionalInterrupts.h"
 
-#if defined(ESP8266) || defined(ARDUINO_D1_MINI32)
-#define BUTTON1 D3
-#define BUTTON2 D4
-#else
+#if defined(ESP32)
 #define BUTTON1 16
 #define BUTTON2 17
+#elif defined(ARDUINO_ESP8266_WEMOS_D1MINI)
+#define BUTTON1 D4
+#define BUTTON2 D3
+#else
+#define BUTTON1 2
+#define BUTTON2 0
 #endif
 
 class Button
