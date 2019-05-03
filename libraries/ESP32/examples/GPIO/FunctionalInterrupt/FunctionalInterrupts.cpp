@@ -2,38 +2,6 @@
 #include "Schedule.h"
 #include "Arduino.h"
 
-#if defined(ESP8266)
-
-// Duplicate typedefs from core_esp8266_wiring_digital.cpp
-// Keep in sync
-typedef void (*voidFuncPtr)(void);
-typedef void (*voidFuncPtrArg)(void*);
-
-typedef struct {
-	uint8_t mode;
-	voidFuncPtr fn;
-	void* arg;
-} interrupt_handler_t;
-
-// Helper functions for Functional interrupt routines
-extern "C" interrupt_handler_t* __getInterruptHandler(uint8_t pin);
-
-#elif defined(ESP32)
-
-// Duplicate typedefs from esp32-hal-gpio.c
-// Keep in sync
-typedef void (*voidFuncPtr)(void);
-typedef void (*voidFuncPtrArg)(void*);
-typedef struct {
-	voidFuncPtr fn;
-	void* arg;
-} InterruptHandle_t;
-
-// Helper functions for Functional interrupt routines
-extern "C" InterruptHandle_t* __getInterruptHandler(uint8_t pin);
-
-#endif
-
 void ICACHE_RAM_ATTR interruptFunctional(void* arg)
 {
 	ArgStructure* localArg = static_cast<ArgStructure*>(arg);
@@ -44,7 +12,9 @@ void ICACHE_RAM_ATTR interruptFunctional(void* arg)
 	}
 	if (localArg->functionInfo->reqScheduledFunction)
 	{
-		schedule_function(std::bind(localArg->functionInfo->reqScheduledFunction,InterruptInfo(*(localArg->interruptInfo))));
+		schedule_function(
+			[reqScheduledFunction = localArg->functionInfo->reqScheduledFunction,
+				interruptInfo = *localArg->interruptInfo]() { reqScheduledFunction(interruptInfo); });
 	}
 	if (localArg->functionInfo->reqFunction)
 	{
@@ -52,24 +22,20 @@ void ICACHE_RAM_ATTR interruptFunctional(void* arg)
 	}
 }
 
-   void cleanupFunctional(void* arg)
-   {
-	 ArgStructure* localArg = static_cast<ArgStructure*>(arg);
-	 delete localArg;
-   }
+void cleanupFunctional(void* arg)
+{
+	ArgStructure* localArg = static_cast<ArgStructure*>(arg);
+	delete localArg;
+}
 
 void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode)
 {
 	// use the local interrupt routine which takes the ArgStructure as argument
 
-#if defined(ESP8266)
-	interrupt_handler_t* handler = __getInterruptHandler(pin);
-#elif defined(ESP32)
-	InterruptHandle_t* handler = __getInterruptHandler(pin);
-#endif
-	if (handler->arg)
+	void* localArg = detachInterruptArg(pin);
+	if (localArg)
 	{
-		cleanupFunctional(handler->arg);
+		cleanupFunctional(localArg);
 	}
 
 	FunctionInfo* fi = new FunctionInfo;
@@ -78,19 +44,15 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
 	ArgStructure* as = new ArgStructure;
 	as->functionInfo = fi;
 
-	::attachInterruptArg (pin, static_cast<voidFuncPtrArg>(interruptFunctional), as, mode);
+	attachInterruptArg (pin, interruptFunctional, as, mode);
 }
 
 void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> scheduledIntRoutine, int mode)
 {
-#if defined(ESP8266)
-	interrupt_handler_t* handler = __getInterruptHandler(pin);
-#elif defined(ESP32)
-	InterruptHandle_t* handler = __getInterruptHandler(pin);
-#endif
-	if (handler->arg)
+	void* localArg = detachInterruptArg(pin);
+	if (localArg)
 	{
-		cleanupFunctional(handler->arg);
+		cleanupFunctional(localArg);
 	}
 
 	InterruptInfo* ii = new InterruptInfo(pin);
@@ -102,20 +64,14 @@ void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> sc
 	as->interruptInfo = ii;
 	as->functionInfo = fi;
 
-	::attachInterruptArg (pin, static_cast<voidFuncPtrArg>(interruptFunctional), as, mode);
+	attachInterruptArg(pin, interruptFunctional, as, mode);
 }
 
 void detachFunctionalInterrupt(uint8_t pin)
 {
-#if defined(ESP8266)
-	interrupt_handler_t* handler = __getInterruptHandler(pin);
-#elif defined(ESP32)
-	InterruptHandle_t* handler = __getInterruptHandler(pin);
-#endif
-	if (handler->arg)
+	void* localArg = detachInterruptArg(pin);
+	if (localArg)
 	{
-		cleanupFunctional(handler->arg);
+		cleanupFunctional(localArg);
 	}
-	::detachInterrupt (pin);
 }
-

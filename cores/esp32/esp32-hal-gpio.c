@@ -75,7 +75,7 @@ typedef struct {
     voidFuncPtr fn;
     void* arg;
 } InterruptHandle_t;
-static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
+static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = { {0,0}, };
 
 #include "driver/rtc_io.h"
 
@@ -275,15 +275,16 @@ extern void __detachInterrupt(uint8_t pin)
     esp_intr_enable(gpio_intr_handle);
 }
 
-extern InterruptHandle_t* __getInterruptHandler(uint8_t pin) {
-	return (pin < GPIO_PIN_COUNT) ? &__pinInterruptHandlers[pin] : NULL;
+extern void* __detachInterruptArg(uint8_t pin) {
+	void* arg = (pin < GPIO_PIN_COUNT) ? __pinInterruptHandlers[pin].arg : NULL;
+	__detachInterrupt(pin);
+	return arg;
 }
-
 
 extern void pinMode(uint8_t pin, uint8_t mode) __attribute__ ((weak, alias("__pinMode")));
 extern void digitalWrite(uint8_t pin, uint8_t val) __attribute__ ((weak, alias("__digitalWrite")));
 extern int digitalRead(uint8_t pin) __attribute__ ((weak, alias("__digitalRead")));
 extern void attachInterrupt(uint8_t pin, voidFuncPtr handler, int mode) __attribute__ ((weak, alias("__attachInterrupt")));
+extern void detachInterrupt(uint8_t pin) __attribute__((weak, alias("__detachInterrupt")));
 extern void attachInterruptArg(uint8_t pin, voidFuncPtrArg handler, void * arg, int mode) __attribute__ ((weak, alias("__attachInterruptArg")));
-extern void detachInterrupt(uint8_t pin) __attribute__ ((weak, alias("__detachInterrupt")));
-
+extern void* detachInterruptArg(uint8_t pin) __attribute__((weak, alias("__detachInterruptArg")));
