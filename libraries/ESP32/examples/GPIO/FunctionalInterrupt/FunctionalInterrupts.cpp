@@ -1,5 +1,5 @@
 #include "FunctionalInterrupts.h"
-#include "Schedule.h"
+#include <Schedule.h>
 #include "Arduino.h"
 
 void ICACHE_RAM_ATTR interruptFunctional(void* arg)
@@ -33,10 +33,7 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
 	// use the local interrupt routine which takes the ArgStructure as argument
 
 	void* localArg = detachInterruptArg(pin);
-	if (localArg)
-	{
-		cleanupFunctional(localArg);
-	}
+	if (localArg) cleanupFunctional(localArg);
 
 	FunctionInfo* fi = new FunctionInfo;
 	fi->reqFunction = intRoutine;
@@ -50,10 +47,7 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
 void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> scheduledIntRoutine, int mode)
 {
 	void* localArg = detachInterruptArg(pin);
-	if (localArg)
-	{
-		cleanupFunctional(localArg);
-	}
+	if (localArg) cleanupFunctional(localArg);
 
 	InterruptInfo* ii = new InterruptInfo(pin);
 
@@ -70,8 +64,5 @@ void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> sc
 void detachFunctionalInterrupt(uint8_t pin)
 {
 	void* localArg = detachInterruptArg(pin);
-	if (localArg)
-	{
-		cleanupFunctional(localArg);
-	}
+	if (localArg) cleanupFunctional(localArg);
 }
