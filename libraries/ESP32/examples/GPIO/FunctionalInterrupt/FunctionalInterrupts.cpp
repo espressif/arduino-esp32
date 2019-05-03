@@ -1,5 +1,5 @@
 #include "FunctionalInterrupts.h"
-#include <Schedule.h>
+#include "Schedule.h"
 #include <Arduino.h>
 
 void ICACHE_RAM_ATTR interruptFunctional(void* arg)

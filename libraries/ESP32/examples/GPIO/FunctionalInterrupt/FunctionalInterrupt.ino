@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Schedule.h>
+#include "Schedule.h"
 #include "FunctionalInterrupts.h"
 
 #if defined(ESP32)
@@ -78,4 +78,6 @@ void setup() {
 void loop() {
   button1->checkPressed();
   button2->checkPressed();
+
+  run_scheduled_functions();
 }
