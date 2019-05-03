@@ -1,6 +1,6 @@
 #include "FunctionalInterrupts.h"
 #include <Schedule.h>
-#include "Arduino.h"
+#include <Arduino.h>
 
 void ICACHE_RAM_ATTR interruptFunctional(void* arg)
 {
@@ -16,7 +16,7 @@ void ICACHE_RAM_ATTR interruptFunctional(void* arg)
 			[reqScheduledFunction = localArg->functionInfo->reqScheduledFunction,
 				interruptInfo = *localArg->interruptInfo]() { reqScheduledFunction(interruptInfo); });
 	}
-	if (localArg->functionInfo->reqFunction)
+	else if (localArg->functionInfo->reqFunction)
 	{
 	  localArg->functionInfo->reqFunction();
 	}
