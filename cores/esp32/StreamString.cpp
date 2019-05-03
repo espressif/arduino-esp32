@@ -24,11 +24,12 @@
 #include "StreamString.h"
 
 size_t StreamString::write(const uint8_t *data, size_t size) {
-    if(size && data) {
-        if(reserve(length() + size + 1)) {
-            memcpy((void *) (wbuffer() + len()), (const void *) data, size);
-            setLen(len() + size);
-            *(wbuffer() + len()) = 0x00; // add null for string end
+    if (size && data) {
+        const unsigned int newlen = length() + size;
+        if (reserve(newlen + 1)) {
+            memcpy((void *)(wbuffer() + len()), (const void *)data, size);
+            setLen(newlen);
+            *(wbuffer() + newlen) = 0x00; // add null for string end
             return size;
         }
     }
@@ -36,7 +37,7 @@ size_t StreamString::write(const uint8_t *data, size_t size) {
 }
 
 size_t StreamString::write(uint8_t data) {
-    return concat((char) data);
+    return concat((char)data);
 }
 
 int StreamString::available() {
@@ -44,7 +45,7 @@ int StreamString::available() {
 }
 
 int StreamString::read() {
-    if(length()) {
+    if (length()) {
         char c = charAt(0);
         remove(0, 1);
         return c;
@@ -54,7 +55,7 @@ int StreamString::read() {
 }
 
 int StreamString::peek() {
-    if(length()) {
+    if (length()) {
         char c = charAt(0);
         return c;
     }
