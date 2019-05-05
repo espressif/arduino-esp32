@@ -156,6 +156,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
+#include "Schedule.h"
 
 using std::abs;
 using std::isinf;
