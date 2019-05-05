@@ -17,6 +17,7 @@ void loopTask(void *pvParameters)
             esp_task_wdt_reset();
         }
         loop();
+        run_scheduled_functions();
     }
 }
 
