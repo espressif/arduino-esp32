@@ -1,5 +1,6 @@
 #include <Arduino.h>
-#include "FunctionalInterrupts.h"
+#include <Schedule.h>
+#include <FunctionalInterrupt.h>
 
 #if defined(ESP32)
 #define BUTTON1 16
@@ -17,13 +18,16 @@ class Button {
     Button(uint8_t reqPin) : PIN(reqPin) {
       pinMode(PIN, INPUT_PULLUP);
       // Arduino C API:
-      attachInterruptArg(PIN, [](void* self) {
-        static_cast<Button*>(self)->isr();
-      }, this, FALLING); // works on ESP32; fails on ESP8266: "ISR not in IRAM"
+      //attachInterruptArg(PIN, [](void* self) {
+      //  static_cast<Button*>(self)->isr();
+      //}, this, FALLING); // works on ESP32; fails on ESP8266: "ISR not in IRAM"
       //attachInterruptArg(PIN, reinterpret_cast<void(*)(void*)>(&isr_static), this, FALLING); // works on ESP32; works on ESP8266
       // FunctionalInterrupts API:
-      //attachInterrupt(PIN, [this]() { isr(); }, FALLING); // works on ESP32; works on ESP8266
-      //attachScheduledInterrupt(PIN, [this](InterruptInfo ii) { Serial.print("Pin "); Serial.println(ii.pin); isr(); }, FALLING); // works on ESP32; works on ESP8266
+      attachScheduledInterrupt(PIN, [this](InterruptInfo ii) {
+        Serial.print("Pin ");
+        Serial.println(ii.pin);
+        isr();
+      }, FALLING); // works on ESP32; works on ESP8266
     };
     ~Button() {
       detachInterrupt(PIN);
@@ -70,7 +74,7 @@ void setup() {
   schedule_function([]() {
     Serial.println("Scheduled function");
   });
-  Serial.println("FunctionalInterrupt test/example");
+  Serial.println("ScheduledInterrupt test/example");
 
   button1 = new Button(BUTTON1);
   button2 = new Button(BUTTON2);
@@ -81,6 +85,4 @@ void setup() {
 void loop() {
   button1->checkPressed();
   button2->checkPressed();
-
-  run_scheduled_functions();
 }
