@@ -5,19 +5,22 @@
 
 // Structures for communication
 
-struct InterruptInfo {
+struct InterruptInfo
+{
     InterruptInfo(uint8_t _pin) : pin(_pin) {}
     const uint8_t pin;
     uint8_t value = 0;
     uint32_t micro = 0;
 };
 
-struct FunctionInfo {
+struct FunctionInfo
+{
     std::function<void(void)> reqFunction = nullptr;
     std::function<void(InterruptInfo)> reqScheduledFunction = nullptr;
 };
 
-struct ArgStructure {
+struct ArgStructure
+{
     ~ArgStructure()
     {
         delete functionInfo;
