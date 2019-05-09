@@ -79,6 +79,7 @@ env.Append(
         "-T", "esp32.common.ld",
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
+        "-T", "esp32.rom.libgcc.ld",
         "-T", "esp32.rom.spiram_incompatible_fns.ld",
         "-u", "ld_include_panic_highint_hdl",
         "-u", "__cxa_guard_dummy",
