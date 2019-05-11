@@ -378,6 +378,128 @@ ttgo-lora32-v1.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+ttgo-t1.name=TTGO T1
+
+ttgo-t1.upload.tool=esptool_py
+ttgo-t1.upload.maximum_size=1310720
+ttgo-t1.upload.maximum_data_size=327680
+ttgo-t1.upload.wait_for_upload_port=true
+
+ttgo-t1.serial.disableDTR=true
+ttgo-t1.serial.disableRTS=true
+
+ttgo-t1.build.mcu=esp32
+ttgo-t1.build.core=esp32
+ttgo-t1.build.variant=ttgo-t1
+ttgo-t1.build.board=TTGO_T1
+
+ttgo-t1.build.f_cpu=240000000L
+ttgo-t1.build.flash_size=4MB
+ttgo-t1.build.flash_freq=40m
+ttgo-t1.build.flash_mode=dio
+ttgo-t1.build.boot=dio
+ttgo-t1.build.partitions=default
+ttgo-t1.build.defines=
+
+ttgo-t1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ttgo-t1.menu.PartitionScheme.default.build.partitions=default
+ttgo-t1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ttgo-t1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ttgo-t1.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ttgo-t1.menu.PartitionScheme.minimal.build.partitions=minimal
+ttgo-t1.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ttgo-t1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ttgo-t1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ttgo-t1.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ttgo-t1.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ttgo-t1.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ttgo-t1.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ttgo-t1.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ttgo-t1.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ttgo-t1.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ttgo-t1.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ttgo-t1.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ttgo-t1.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ttgo-t1.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ttgo-t1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ttgo-t1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+ttgo-t1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ttgo-t1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+ttgo-t1.menu.CPUFreq.240=240MHz (WiFi/BT)
+ttgo-t1.menu.CPUFreq.240.build.f_cpu=240000000L
+ttgo-t1.menu.CPUFreq.160=160MHz (WiFi/BT)
+ttgo-t1.menu.CPUFreq.160.build.f_cpu=160000000L
+ttgo-t1.menu.CPUFreq.80=80MHz (WiFi/BT)
+ttgo-t1.menu.CPUFreq.80.build.f_cpu=80000000L
+ttgo-t1.menu.CPUFreq.40=40MHz (40MHz XTAL)
+ttgo-t1.menu.CPUFreq.40.build.f_cpu=40000000L
+ttgo-t1.menu.CPUFreq.26=26MHz (26MHz XTAL)
+ttgo-t1.menu.CPUFreq.26.build.f_cpu=26000000L
+ttgo-t1.menu.CPUFreq.20=20MHz (40MHz XTAL)
+ttgo-t1.menu.CPUFreq.20.build.f_cpu=20000000L
+ttgo-t1.menu.CPUFreq.13=13MHz (26MHz XTAL)
+ttgo-t1.menu.CPUFreq.13.build.f_cpu=13000000L
+ttgo-t1.menu.CPUFreq.10=10MHz (40MHz XTAL)
+ttgo-t1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+ttgo-t1.menu.FlashMode.qio=QIO
+ttgo-t1.menu.FlashMode.qio.build.flash_mode=dio
+ttgo-t1.menu.FlashMode.qio.build.boot=qio
+ttgo-t1.menu.FlashMode.dio=DIO
+ttgo-t1.menu.FlashMode.dio.build.flash_mode=dio
+ttgo-t1.menu.FlashMode.dio.build.boot=dio
+ttgo-t1.menu.FlashMode.qout=QOUT
+ttgo-t1.menu.FlashMode.qout.build.flash_mode=dout
+ttgo-t1.menu.FlashMode.qout.build.boot=qout
+ttgo-t1.menu.FlashMode.dout=DOUT
+ttgo-t1.menu.FlashMode.dout.build.flash_mode=dout
+ttgo-t1.menu.FlashMode.dout.build.boot=dout
+
+ttgo-t1.menu.FlashFreq.80=80MHz
+ttgo-t1.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-t1.menu.FlashFreq.40=40MHz
+ttgo-t1.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-t1.menu.FlashSize.4M=4MB (32Mb)
+ttgo-t1.menu.FlashSize.4M.build.flash_size=4MB
+ttgo-t1.menu.FlashSize.2M=2MB (16Mb)
+ttgo-t1.menu.FlashSize.2M.build.flash_size=2MB
+ttgo-t1.menu.FlashSize.2M.build.partitions=minimal
+ttgo-t1.menu.FlashSize.16M=16MB (128Mb)
+ttgo-t1.menu.FlashSize.16M.build.flash_size=16MB
+ttgo-t1.menu.FlashSize.16M.build.partitions=ffat
+
+ttgo-t1.menu.UploadSpeed.921600=921600
+ttgo-t1.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-t1.menu.UploadSpeed.115200=115200
+ttgo-t1.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-t1.menu.UploadSpeed.256000.windows=256000
+ttgo-t1.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-t1.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-t1.menu.UploadSpeed.230400=230400
+ttgo-t1.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-t1.menu.UploadSpeed.460800.linux=460800
+ttgo-t1.menu.UploadSpeed.460800.macosx=460800
+ttgo-t1.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-t1.menu.UploadSpeed.512000.windows=512000
+ttgo-t1.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-t1.menu.DebugLevel.none=None
+ttgo-t1.menu.DebugLevel.none.build.code_debug=0
+ttgo-t1.menu.DebugLevel.error=Error
+ttgo-t1.menu.DebugLevel.error.build.code_debug=1
+ttgo-t1.menu.DebugLevel.warn=Warn
+ttgo-t1.menu.DebugLevel.warn.build.code_debug=2
+ttgo-t1.menu.DebugLevel.info=Info
+ttgo-t1.menu.DebugLevel.info.build.code_debug=3
+ttgo-t1.menu.DebugLevel.debug=Debug
+ttgo-t1.menu.DebugLevel.debug.build.code_debug=4
+ttgo-t1.menu.DebugLevel.verbose=Verbose
+ttgo-t1.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 cw02.name=XinaBox CW02
 
 cw02.upload.tool=esptool_py
@@ -3715,6 +3837,62 @@ d1_mini32.menu.UploadSpeed.460800.macosx=460800
 d1_mini32.menu.UploadSpeed.460800.upload.speed=460800
 d1_mini32.menu.UploadSpeed.512000.windows=512000
 d1_mini32.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+gpy.name=Pycom GPy
+
+gpy.upload.tool=esptool_py
+gpy.upload.maximum_size=1310720
+gpy.upload.maximum_data_size=327680
+gpy.upload.wait_for_upload_port=true
+
+gpy.serial.disableDTR=true
+gpy.serial.disableRTS=true
+
+gpy.build.mcu=esp32
+gpy.build.core=esp32
+gpy.build.variant=gpy
+gpy.build.board=PYCOM_GPY
+
+gpy.build.f_cpu=240000000L
+gpy.build.flash_mode=dio
+gpy.build.flash_size=8MB
+gpy.build.boot=dio
+gpy.build.partitions=default
+
+gpy.menu.FlashFreq.80=80MHz
+gpy.menu.FlashFreq.80.build.flash_freq=80m
+gpy.menu.FlashFreq.40=40MHz
+gpy.menu.FlashFreq.40.build.flash_freq=40m
+
+gpy.menu.UploadSpeed.921600=921600
+gpy.menu.UploadSpeed.921600.upload.speed=921600
+gpy.menu.UploadSpeed.115200=115200
+gpy.menu.UploadSpeed.115200.upload.speed=115200
+gpy.menu.UploadSpeed.256000.windows=256000
+gpy.menu.UploadSpeed.256000.upload.speed=256000
+gpy.menu.UploadSpeed.230400.windows.upload.speed=256000
+gpy.menu.UploadSpeed.230400=230400
+gpy.menu.UploadSpeed.230400.upload.speed=230400
+gpy.menu.UploadSpeed.460800.linux=460800
+gpy.menu.UploadSpeed.460800.macosx=460800
+gpy.menu.UploadSpeed.460800.upload.speed=460800
+gpy.menu.UploadSpeed.512000.windows=512000
+gpy.menu.UploadSpeed.512000.upload.speed=512000
+
+gpy.menu.DebugLevel.none=None
+gpy.menu.DebugLevel.none.build.code_debug=0
+gpy.menu.DebugLevel.error=Error
+gpy.menu.DebugLevel.error.build.code_debug=1
+gpy.menu.DebugLevel.warn=Warn
+gpy.menu.DebugLevel.warn.build.code_debug=2
+gpy.menu.DebugLevel.info=Info
+gpy.menu.DebugLevel.info.build.code_debug=3
+gpy.menu.DebugLevel.debug=Debug
+gpy.menu.DebugLevel.debug.build.code_debug=4
+gpy.menu.DebugLevel.verbose=Verbose
+gpy.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
