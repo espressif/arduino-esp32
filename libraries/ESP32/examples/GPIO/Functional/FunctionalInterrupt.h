@@ -1,5 +1,5 @@
-#ifndef FUNCTIONALINTERRUPTS_H
-#define FUNCTIONALINTERRUPTS_H
+#ifndef FUNCTIONALINTERRUPT_H
+#define FUNCTIONALINTERRUPT_H
 
 #include <functional>
 
@@ -34,4 +34,4 @@ void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode
 void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> scheduledIntRoutine, int mode);
 void detachFunctionalInterrupt(uint8_t pin);
 
-#endif //INTERRUPTS_H
+#endif //FUNCTIONALINTERRUPT_H

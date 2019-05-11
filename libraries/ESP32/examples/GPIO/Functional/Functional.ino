@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Schedule.h"
-#include "FunctionalInterrupts.h"
+#include "FunctionalInterrupt.h"
 
 #if defined(ESP32)
 #define BUTTON1 16
