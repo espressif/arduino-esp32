@@ -14,10 +14,6 @@
 #ifndef _SPIFFS_H_
 #define _SPIFFS_H_
 
-#pragma once
-
-#include "FS.h"
-#include "FSImpl.h"
 #include "vfs_api.h"
 
 namespace fs
