@@ -85,6 +85,22 @@ dl_matrix3dq_t *dl_matrix3dq_conv (dl_matrix3dq_t *in, dl_matrix3dq_t *filter, d
 dl_matrix3dq_t *dl_matrix3dq_conv_normal (dl_matrix3dq_t *in, dl_matrix3dq_t *filter, dl_matrix3dq_t *bias,
                                     int stride_x, int stride_y, int padding, int exponent, int mode);
 
+void dl_matrix3dq_conv_1x1 (dl_matrix3dq_t *out, dl_matrix3dq_t *in, dl_matrix3dq_t *f, dl_conv_mode mode);
+
+void dl_matrix3dq_conv_3x3_normal (dl_matrix3dq_t *out,
+                                    dl_matrix3dq_t *in,
+                                    dl_matrix3dq_t *f,
+                                    int step_x,
+                                    int step_y);
+dl_matrix3dq_t *dl_matrix3dq_conv_3x3_with_bn (dl_matrix3dq_t *in,
+                                    dl_matrix3dq_t *f,
+                                    dl_matrix3dq_t *scale,
+                                    dl_matrix3dq_t *offset,
+                                    int step_x,
+                                    int step_y,
+                                    int padding,
+                                    int exponent,
+                                    int relu);
 /**
  * @brief Print the matrix3d items
  *
@@ -95,6 +111,15 @@ void dl_matrix3dq_print (dl_matrix3dq_t *m, char *message);
 
 dl_matrix3dq_t *dl_matrix3dq_depthwise_conv (dl_matrix3dq_t *in, dl_matrix3dq_t *filter,
                                     int stride_x, int stride_y, int padding, int exponent, int mode);
+dl_matrix3dq_t *dl_matrix3dq_depthwise_conv_3x3_with_bn(dl_matrix3dq_t *in,
+                                            dl_matrix3dq_t *f,
+                                            dl_matrix3dq_t *scale,
+                                            dl_matrix3dq_t *offset,
+                                            int step_x,
+                                            int step_y,
+                                            int padding,
+                                            int exponent,
+                                            int relu);
 
 void dl_matrix3dq_relu (dl_matrix3dq_t *m, fptp_t clip);
 

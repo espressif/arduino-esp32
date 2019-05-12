@@ -5,7 +5,8 @@ extern "C"
 {
 #endif
 
-#include "dl_lib.h"
+#include "dl_lib_matrix3d.h"
+#include "dl_lib_matrix3dq.h"
 
     /**
      * @brief 
