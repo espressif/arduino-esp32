@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "vfs_api.h"
+
 extern "C" {
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -22,6 +24,14 @@ extern "C" {
 #include "SPIFFS.h"
 
 using namespace fs;
+
+class SPIFFSImpl : public VFSImpl
+{
+public:
+    SPIFFSImpl();
+    virtual ~SPIFFSImpl() { }
+    virtual bool exists(const char* path);
+};
 
 SPIFFSImpl::SPIFFSImpl()
 {

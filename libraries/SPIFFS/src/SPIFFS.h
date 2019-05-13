@@ -14,18 +14,10 @@
 #ifndef _SPIFFS_H_
 #define _SPIFFS_H_
 
-#include "vfs_api.h"
+#include "FS.h"
 
 namespace fs
 {
-
-class SPIFFSImpl : public VFSImpl
-{
-public:
-    SPIFFSImpl();
-    virtual ~SPIFFSImpl() { }
-    virtual bool exists(const char* path);
-};
 
 class SPIFFSFS : public FS
 {
