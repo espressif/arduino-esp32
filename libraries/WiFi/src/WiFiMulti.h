@@ -32,6 +32,7 @@
 typedef struct {
     char * ssid;
     char * passphrase;
+    bool fail;
 } WifiAPlist_t;
 
 class WiFiMulti
@@ -42,12 +43,31 @@ public:
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
 
+    void setStrictMode(bool bStrict);
+    void setAllowOpenAP(bool bAllowOpenAP);
+    void setTestConnection(bool bTestConnection);
+    void setTestPhrase(const char* testPhrase);
+    void setTestURL(String url);
+
     uint8_t run(uint32_t connectTimeout=5000);
+
+    void APlistClean(void);
 
 private:
     std::vector<WifiAPlist_t> APlist;
+
+    bool _bStrict = true;
+    bool _bAllowOpenAP = false;
+    bool _bTestConnection = false;
+    String _testPhrase = "This is a very simple HTML file.";
+    String _testURL = "http://www.brainjar.com/java/host/test.html";
+
+    void markAsFailed(int32_t i);
+    void resetFails();
+
+    bool testConnection(int32_t i);
     bool APlistAdd(const char* ssid, const char *passphrase = NULL);
-    void APlistClean(void);
+
 
 };
 
