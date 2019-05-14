@@ -48,9 +48,18 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
     int8_t scanResult;
     uint8_t status = WiFi.status();
     if(status == WL_CONNECTED) {
-        for(uint32_t x = 0; x < APlist.size(); x++) {
-            if(!_bStrict || WiFi.SSID()==APlist[x].ssid){
+        if (_bTestConnection && !_bWFMInit){
+            if (testConnection()) {
+                _bWFMInit = true;
                 return status;
+            }
+        } else if (!_bStrict) {
+            return status;
+        } else {
+            for(uint32_t x = 0; x < APlist.size(); x++) {
+                if(WiFi.SSID()==APlist[x].ssid){
+                    return status;
+                }
             }
         }
         WiFi.disconnect(false,false);
@@ -62,7 +71,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
     if(scanResult == WIFI_SCAN_RUNNING) {
         // scan is running
         return WL_NO_SSID_AVAIL;
-    } else if(scanResult >= 0) {
+    } else if (scanResult >= 0) {
         // scan done analyze
         int32_t bestIndex = 0;
         WifiAPlist_t bestNetwork { NULL, NULL, NULL };
@@ -157,11 +166,12 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
             WiFi.begin(bestNetwork.ssid, (_bAllowOpenAP && bestNetworkSec == WIFI_AUTH_OPEN) ? NULL:bestNetwork.passphrase, bestChannel, bestBSSID);
             status = WiFi.status();
+            _bWFMInit = true;
             
             auto startTime = millis();
             // wait for connection, fail, or timeout
             while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
-                delay(10);
+                delay(100);
                 status = WiFi.status();
             }
             
@@ -175,14 +185,12 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 
                 if (_bTestConnection){
                     // We connected to an AP but if it's a captive portal we're not going anywhere.  Test it.
-                    if (testConnection(bestIndex)){
-                        log_d("[WIFI] TestConnection returned true...");
+                    if (testConnection()){
                         resetFails();
                     } else {
-                        log_e("[WIFI] TestConnection returned false...");
                         markAsFailed(bestIndex);
-                        WiFi.disconnect();
-                        delay(500);
+                        WiFi.disconnect(false,false);
+                        delay(100);
                         status = WiFi.status();
                     }
                 } else {
@@ -250,7 +258,7 @@ void WiFiMulti::setTestURL(String testURL){
     _testURL = testURL;
 }
 
-bool WiFiMulti::testConnection(int32_t i){
+bool WiFiMulti::testConnection(){
     //parse url
     int8_t split = _testURL.indexOf('/',7);
     String host = _testURL.substring(7, split);
@@ -261,12 +269,10 @@ bool WiFiMulti::testConnection(int32_t i){
     WiFiClient client;
     const int httpPort = 80;
     if (!client.connect(host.c_str(), httpPort)) {
-        log_e("connection failed");
-        Serial.println("connection failed");
-        markAsFailed(i);
+        log_e("Connection failed");
         return false;
     } else {
-        log_i("connection to test host successful");
+        log_i("Connected to test host");
     }
 
     // This will send the request to the server
@@ -277,17 +283,22 @@ bool WiFiMulti::testConnection(int32_t i){
     while (client.available() == 0) {
         if (millis() - timeout > 5000) {
             log_e(">>>Client timeout!");
-            markAsFailed(i);
             client.stop();
             return false;
         }
     }
-
+    bool bSuccess = false;
     // Read all the lines of the reply from server and print them to Serial
     while(client.available()) {
         // String line = client.readStringUntil('\r');
         // Serial.print(line);
-        return client.find(_testPhrase.c_str());
+        bSuccess = client.find(_testPhrase.c_str());
+        if (bSuccess){
+             log_i("Success. Found test phrase");
+        } else {
+            log_e("Failed.  Can't find test phrase");
+        }
+        return bSuccess;
     }
 
 }

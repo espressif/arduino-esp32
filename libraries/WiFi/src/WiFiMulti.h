@@ -59,13 +59,14 @@ private:
     bool _bStrict = true;
     bool _bAllowOpenAP = false;
     bool _bTestConnection = false;
-    String _testPhrase = "This is a very simple HTML file.";
+    String _testPhrase = "simple HTML file.";
     String _testURL = "http://www.brainjar.com/java/host/test.html";
+    bool _bWFMInit = false;
 
     void markAsFailed(int32_t i);
     void resetFails();
 
-    bool testConnection(int32_t i);
+    bool testConnection();
     bool APlistAdd(const char* ssid, const char *passphrase = NULL);
 
 
