@@ -20,13 +20,33 @@ extern "C" {
 #include <dirent.h>
 #include "esp_spiffs.h"
 }
+
 #include "SPIFFS.h"
 
 using namespace fs;
 
-SPIFFSFS::SPIFFSFS(FSImplPtr impl)
-    : FS(impl)
-{}
+class SPIFFSImpl : public VFSImpl
+{
+public:
+    SPIFFSImpl();
+    virtual ~SPIFFSImpl() { }
+    virtual bool exists(const char* path);
+};
+
+SPIFFSImpl::SPIFFSImpl()
+{
+}
+
+bool SPIFFSImpl::exists(const char* path)
+{
+    File f = open(path, "r");
+    return (f == true) && !f.isDirectory();
+}
+
+SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl()))
+{
+
+}
 
 bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles)
 {
@@ -98,16 +118,5 @@ size_t SPIFFSFS::usedBytes()
     return used;
 }
 
-bool SPIFFSFS::exists(const char* path)
-{
-    File f = open(path, "r");
-    return (f == true) && !f.isDirectory();
-}
+SPIFFSFS SPIFFS;
 
-bool SPIFFSFS::exists(const String& path)
-{
-    return exists(path.c_str());
-}
-
-
-SPIFFSFS SPIFFS = SPIFFSFS(FSImplPtr(new VFSImpl()));
