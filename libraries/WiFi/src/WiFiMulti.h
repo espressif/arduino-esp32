@@ -59,7 +59,7 @@ private:
     bool _bStrict = true;
     bool _bAllowOpenAP = false;
     bool _bTestConnection = false;
-    String _testPhrase = "simple HTML file.";
+    String _testPhrase = "200 OK";
     String _testURL = "http://www.brainjar.com/java/host/test.html";
     bool _bWFMInit = false;
 

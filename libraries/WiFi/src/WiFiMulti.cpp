@@ -56,8 +56,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         } else if (!_bStrict) {
             return status;
         } else {
-            for(uint32_t x = 0; x < APlist.size(); x++) {
-                if(WiFi.SSID()==APlist[x].ssid){
+            for(auto ap : APlist) {
+                if(WiFi.SSID() == ap.ssid) {
                     return status;
                 }
             }
@@ -189,7 +189,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                         resetFails();
                     } else {
                         markAsFailed(bestIndex);
-                        WiFi.disconnect(false,false);
+                        WiFi.disconnect();
                         delay(100);
                         status = WiFi.status();
                     }
