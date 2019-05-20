@@ -226,9 +226,15 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     FD_SET(sockfd, &fdset);
     tv.tv_sec = 0;
     tv.tv_usec = timeout * 1000;
-    lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
-    int res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
 
+    int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    if (res < 0 && errno != EINPROGRESS) {
+        log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
+        close(sockfd);
+        return 0;
+    }
+
+    res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
     if (res < 0) {
         log_e("select on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
