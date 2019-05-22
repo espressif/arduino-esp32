@@ -7,11 +7,11 @@
 #include "HardwareSerial.h"
 
 #ifndef RX1
-#define RX1 9
+#define RX1 2
 #endif
 
 #ifndef TX1
-#define TX1 10
+#define TX1 4
 #endif
 
 #ifndef RX2
