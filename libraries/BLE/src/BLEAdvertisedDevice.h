@@ -95,7 +95,7 @@ private:
 	int8_t      m_txPower;
 	std::string m_serviceData;
 	BLEUUID     m_serviceDataUUID;
-	uint8_t*	m_payload;
+	uint8_t*	m_payload = nullptr;
 	size_t		m_payloadLength = 0;
 	esp_ble_addr_type_t m_addressType;
 };
@@ -116,7 +116,8 @@ public:
 	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
 	 * device that was found.  During any individual scan, a device will only be detected one time.
 	 */
-	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
+	virtual void onResult(BLEAdvertisedDevice advertisedDevice);
+	virtual void onResult(BLEAdvertisedDevice* advertisedDevice);
 };
 
 #endif /* CONFIG_BT_ENABLED */

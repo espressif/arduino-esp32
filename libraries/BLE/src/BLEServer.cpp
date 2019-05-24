@@ -9,6 +9,7 @@
 #if defined(CONFIG_BT_ENABLED)
 #include <esp_bt.h>
 #include <esp_bt_main.h>
+#include <esp_gatts_api.h>
 #include "GeneralUtils.h"
 #include "BLEDevice.h"
 #include "BLEServer.h"
@@ -412,4 +413,9 @@ void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval,
 	conn_params.timeout = timeout;    // timeout = 400*10ms = 4000ms
 	esp_ble_gap_update_conn_params(&conn_params); 
 }
+
+void BLEServer::disconnect(uint16_t connId){
+	esp_ble_gatts_close(m_gatts_if, connId);
+}
+
 #endif // CONFIG_BT_ENABLED

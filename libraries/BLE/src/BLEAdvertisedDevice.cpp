@@ -519,5 +519,8 @@ size_t BLEAdvertisedDevice::getPayloadLength() {
 	return m_payloadLength;
 }
 
+void BLEAdvertisedDeviceCallbacks::onResult(BLEAdvertisedDevice dev) {}
+void BLEAdvertisedDeviceCallbacks::onResult(BLEAdvertisedDevice* dev) {}
+
 #endif /* CONFIG_BT_ENABLED */
 

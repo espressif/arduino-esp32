@@ -50,7 +50,7 @@ public:
 
 	bool                                       isConnected();                 // Return true if we are connected.
 
-	void                                       setClientCallbacks(BLEClientCallbacks *pClientCallbacks);
+	void                                       setClientCallbacks(BLEClientCallbacks *pClientCallbacks, bool deleteCallbacks = true);
 	void                                       setValue(BLEUUID serviceUUID, BLEUUID characteristicUUID, std::string value);   // Set the value of a given characteristic at a given service.
 
 	std::string                                toString();                    // Return a string representation of this client.
@@ -65,19 +65,16 @@ private:
 	friend class BLERemoteCharacteristic;
 	friend class BLERemoteDescriptor;
 
-	void                                       gattClientEventHandler(
-		esp_gattc_cb_event_t event,
-		esp_gatt_if_t gattc_if,
-		esp_ble_gattc_cb_param_t* param);
+	void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* param);
 
 	BLEAddress    m_peerAddress = BLEAddress((uint8_t*)"\0\0\0\0\0\0");   // The BD address of the remote server.
 	uint16_t      m_conn_id;
-//	int           m_deviceType;
 	esp_gatt_if_t m_gattc_if;
 	bool          m_haveServices = false;    // Have we previously obtain the set of services from the remote server.
 	bool          m_isConnected = false;     // Are we currently connected.
+	bool		  m_deleteCallbacks = true;
 
-	BLEClientCallbacks* m_pClientCallbacks;
+	BLEClientCallbacks* m_pClientCallbacks = nullptr;
 	FreeRTOS::Semaphore m_semaphoreRegEvt        = FreeRTOS::Semaphore("RegEvt");
 	FreeRTOS::Semaphore m_semaphoreOpenEvt       = FreeRTOS::Semaphore("OpenEvt");
 	FreeRTOS::Semaphore m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");

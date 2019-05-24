@@ -47,6 +47,21 @@ BLEClient::BLEClient() {
 	m_gattc_if         = ESP_GATT_IF_NONE;
 	m_haveServices     = false;
 	m_isConnected      = false;  // Initially, we are flagged as not connected.
+
+
+	m_appId = BLEDevice::m_appId++;
+	m_appId = m_appId%100;
+	BLEDevice::addPeerDevice(this, true, m_appId);
+	m_semaphoreRegEvt.take("connect");
+
+	esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
+	if (errRc != ESP_OK) {
+		ESP_LOGE(LOG_TAG, "esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		return;
+	}
+
+	m_semaphoreRegEvt.wait("connect");
+
 } // BLEClient
 
 
@@ -56,10 +71,12 @@ BLEClient::BLEClient() {
 BLEClient::~BLEClient() {
 	// We may have allocated service references associated with this client.  Before we are finished
 	// with the client, we must release resources.
-	for (auto &myPair : m_servicesMap) {
-	   delete myPair.second;
-	}
-	m_servicesMap.clear();
+	clearServices();
+	esp_ble_gattc_app_unregister(m_gattc_if);
+	BLEDevice::removePeerDevice(m_appId, true);
+	if(m_deleteCallbacks)
+		delete m_pClientCallbacks;
+
 } // ~BLEClient
 
 
@@ -74,6 +91,7 @@ void BLEClient::clearServices() {
 	   delete myPair.second;
 	}
 	m_servicesMap.clear();
+	m_servicesMapByInstID.clear();
 	m_haveServices = false;
 	log_v("<< clearServices");
 } // clearServices
@@ -95,26 +113,12 @@ bool BLEClient::connect(BLEAdvertisedDevice* device) {
 bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	log_v(">> connect(%s)", address.toString().c_str());
 
-// We need the connection handle that we get from registering the application.  We register the app
-// and then block on its completion.  When the event has arrived, we will have the handle.
-	m_appId = BLEDevice::m_appId++;
-	BLEDevice::addPeerDevice(this, true, m_appId);
-	m_semaphoreRegEvt.take("connect");
-
-	// clearServices(); // we dont need to delete services since every client is unique?
-	esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
-	if (errRc != ESP_OK) {
-		log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-		return false;
-	}
-
-	m_semaphoreRegEvt.wait("connect");
-
+	clearServices();
 	m_peerAddress = address;
 
 	// Perform the open connection request against the target BLE Server.
 	m_semaphoreOpenEvt.take("connect");
-	errRc = ::esp_ble_gattc_open(
+	esp_err_t errRc = ::esp_ble_gattc_open(
 		m_gattc_if,
 		*getPeerAddress().getNative(), // address
 		type,          // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
@@ -161,14 +165,14 @@ void BLEClient::gattClientEventHandler(
 	switch(event) {
 
 		case ESP_GATTC_SRVC_CHG_EVT:
-			log_i("SERVICE CHANGED");
+			if(m_gattc_if != gattc_if)
+				break;
+
+			ESP_LOGI(LOG_TAG, "SERVICE CHANGED");
 			break;
 
-		case ESP_GATTC_CLOSE_EVT: {
-				// esp_ble_gattc_app_unregister(m_appId);
-				// BLEDevice::removePeerDevice(m_gattc_if, true);
+		case ESP_GATTC_CLOSE_EVT: 
 			break;
-		}
 
 		//
 		// ESP_GATTC_DISCONNECT_EVT
@@ -178,17 +182,20 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		// - esp_bd_addr_t     remote_bda
 		case ESP_GATTC_DISCONNECT_EVT: {
-				// If we receive a disconnect event, set the class flag that indicates that we are
-				// no longer connected.
-				m_isConnected = false;
-				if (m_pClientCallbacks != nullptr) {
-					m_pClientCallbacks->onDisconnect(this);
-				}
-				BLEDevice::removePeerDevice(m_appId, true);
-				esp_ble_gattc_app_unregister(m_gattc_if);
-				m_semaphoreRssiCmplEvt.give();
-				m_semaphoreSearchCmplEvt.give(1);
+			ESP_LOGE(__func__, "disconnect event, reason: %d, connId: %d, my connId: %d, my IF: %d, gattc_if: %d", (int)evtParam->disconnect.reason, evtParam->disconnect.conn_id, getConnId(), getGattcIf(), gattc_if);
+			if(m_gattc_if != gattc_if)
 				break;
+			m_semaphoreOpenEvt.give(evtParam->disconnect.reason);
+			if(!m_isConnected)
+				break;
+			// If we receive a disconnect event, set the class flag that indicates that we are
+			// no longer connected.
+			esp_ble_gattc_close(m_gattc_if, m_conn_id);
+			m_isConnected = false;
+			if (m_pClientCallbacks != nullptr) {
+				m_pClientCallbacks->onDisconnect(this);
+			}
+			break;
 		} // ESP_GATTC_DISCONNECT_EVT
 
 		//
@@ -200,12 +207,15 @@ void BLEClient::gattClientEventHandler(
 		// - esp_bd_addr_t     remote_bda
 		//
 		case ESP_GATTC_OPEN_EVT: {
+			if(m_gattc_if != gattc_if)
+				break;
 			m_conn_id = evtParam->open.conn_id;
 			if (m_pClientCallbacks != nullptr) {
 				m_pClientCallbacks->onConnect(this);
 			}
 			if (evtParam->open.status == ESP_GATT_OK) {
 				m_isConnected = true;   // Flag us as connected.
+				m_mtu = evtParam->open.mtu;
 			}
 			m_semaphoreOpenEvt.give(evtParam->open.status);
 			break;
@@ -220,8 +230,11 @@ void BLEClient::gattClientEventHandler(
 		// uint16_t          app_id
 		//
 		case ESP_GATTC_REG_EVT: {
-			m_gattc_if = gattc_if;
-			m_semaphoreRegEvt.give();
+			if(m_appId == evtParam->reg.app_id){
+				ESP_LOGI(__func__, "register app id: %d, %d, gattc_if: %d", m_appId, evtParam->reg.app_id, gattc_if);
+				m_gattc_if = gattc_if;
+				m_semaphoreRegEvt.give();
+			}
 			break;
 		} // ESP_GATTC_REG_EVT
 
@@ -229,10 +242,14 @@ void BLEClient::gattClientEventHandler(
 			if(evtParam->cfg_mtu.status != ESP_GATT_OK) {
 				log_e("Config mtu failed");
 			}
-			m_mtu = evtParam->cfg_mtu.mtu;
+			else
+				m_mtu = evtParam->cfg_mtu.mtu;
 			break;
 
 		case ESP_GATTC_CONNECT_EVT: {
+			if(m_gattc_if != gattc_if)
+				break;
+			m_conn_id = evtParam->connect.conn_id;
 			BLEDevice::updatePeerDevice(this, true, m_gattc_if);
 			esp_err_t errRc = esp_ble_gattc_send_mtu_req(gattc_if, evtParam->connect.conn_id);
 			if (errRc != ESP_OK) {
@@ -254,10 +271,10 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		//
 		case ESP_GATTC_SEARCH_CMPL_EVT: {
-			esp_ble_gattc_cb_param_t* p_data = (esp_ble_gattc_cb_param_t*)evtParam;
-			if (p_data->search_cmpl.status != ESP_GATT_OK){
-				log_e("search service failed, error status = %x", p_data->search_cmpl.status);
+			if(m_gattc_if != gattc_if)
 				break;
+			if (evtParam->search_cmpl.status != ESP_GATT_OK){
+				ESP_LOGE(LOG_TAG, "search service failed, error status = %x", evtParam->search_cmpl.status);
 			}
 #ifndef ARDUINO_ARCH_ESP32
 // commented out just for now to keep backward compatibility			
@@ -269,7 +286,7 @@ void BLEClient::gattClientEventHandler(
 			// 	log_i("unknown service source");
 			// }
 #endif
-			m_semaphoreSearchCmplEvt.give(0);
+			m_semaphoreSearchCmplEvt.give(evtParam->search_cmpl.status);
 			break;
 		} // ESP_GATTC_SEARCH_CMPL_EVT
 
@@ -284,6 +301,9 @@ void BLEClient::gattClientEventHandler(
 		// - esp_gatt_id_t srvc_id
 		//
 		case ESP_GATTC_SEARCH_RES_EVT: {
+			if(m_gattc_if != gattc_if)
+				break;
+
 			BLEUUID uuid = BLEUUID(evtParam->search_res.srvc_id);
 			BLERemoteService* pRemoteService = new BLERemoteService(
 				evtParam->search_res.srvc_id,
@@ -489,8 +509,9 @@ bool BLEClient::isConnected() {
 /**
  * @brief Set the callbacks that will be invoked.
  */
-void BLEClient::setClientCallbacks(BLEClientCallbacks* pClientCallbacks) {
+void BLEClient::setClientCallbacks(BLEClientCallbacks* pClientCallbacks, bool deleteCallbacks) {
 	m_pClientCallbacks = pClientCallbacks;
+	m_deleteCallbacks = deleteCallbacks;
 } // setClientCallbacks
 
 

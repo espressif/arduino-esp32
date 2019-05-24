@@ -67,7 +67,7 @@ public:
 private:
 	static BLEServer*	m_pServer;
 	static BLEScan*		m_pScan;
-	static BLEClient*	m_pClient;
+	// static BLEClient*	m_pClient;
 	static BLESecurityCallbacks* m_securityCallbacks;
 	static BLEAdvertising* m_bleAdvertising;
 	static esp_gatt_if_t getGattcIF();

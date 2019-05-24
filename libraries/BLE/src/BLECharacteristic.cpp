@@ -218,21 +218,24 @@ void BLECharacteristic::handleGATTServerEvent(
 		// - uint8_t exec_write_flag - Either ESP_GATT_PREP_WRITE_EXEC or ESP_GATT_PREP_WRITE_CANCEL
 		//
 		case ESP_GATTS_EXEC_WRITE_EVT: {
-			if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
-				m_value.commit();
-				if (m_pCallbacks != nullptr) {
-					m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
+			if(m_writeEvt){
+				m_writeEvt = false;
+				if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
+					m_value.commit();
+					if (m_pCallbacks != nullptr) {
+						m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
+					}
+				} else {
+					m_value.cancel();
 				}
-			} else {
-				m_value.cancel();
-			}
-// ???
-			esp_err_t errRc = ::esp_ble_gatts_send_response(
-					gatts_if,
-					param->write.conn_id,
-					param->write.trans_id, ESP_GATT_OK, nullptr);
-			if (errRc != ESP_OK) {
-				log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+	// ???
+				esp_err_t errRc = ::esp_ble_gatts_send_response(
+						gatts_if,
+						param->write.conn_id,
+						param->write.trans_id, ESP_GATT_OK, nullptr);
+				if (errRc != ESP_OK) {
+					ESP_LOGE(LOG_TAG, "esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				}
 			}
 			break;
 		} // ESP_GATTS_EXEC_WRITE_EVT
@@ -278,8 +281,12 @@ void BLECharacteristic::handleGATTServerEvent(
 			if (param->write.handle == m_handle) {
 				if (param->write.is_prep) {
 					m_value.addPart(param->write.value, param->write.len);
+					m_writeEvt = true;
 				} else {
 					setValue(param->write.value, param->write.len);
+					if (m_pCallbacks != nullptr && param->write.is_prep != true) {
+						m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
+					}
 				}
 
 				log_d(" - Response to write event: New value: handle: %.2x, uuid: %s",
@@ -307,9 +314,6 @@ void BLECharacteristic::handleGATTServerEvent(
 					}
 				} // Response needed
 
-				if (m_pCallbacks != nullptr && param->write.is_prep != true) {
-					m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
-				}
 			} // Match on handles.
 			break;
 		} // ESP_GATTS_WRITE_EVT
@@ -378,6 +382,9 @@ void BLECharacteristic::handleGATTServerEvent(
 						}
 					} else { // read.is_long == false
 
+						if (m_pCallbacks != nullptr) {  // If is.long is false then this is the first (or only) request to read data, so invoke the callback
+							m_pCallbacks->onRead(this);   // Invoke the read callback.
+						}
 						std::string value = m_value.getValue();
 
 						if (value.length() + 1 > maxOffset) {
@@ -393,9 +400,9 @@ void BLECharacteristic::handleGATTServerEvent(
 							memcpy(rsp.attr_value.value, value.data(), rsp.attr_value.len);
 						}
 
-						if (m_pCallbacks != nullptr) {  // If is.long is false then this is the first (or only) request to read data, so invoke the callback
-							m_pCallbacks->onRead(this);   // Invoke the read callback.
-						}
+						// if (m_pCallbacks != nullptr) {  // If is.long is false then this is the first (or only) request to read data, so invoke the callback
+						// 	m_pCallbacks->onRead(this);   // Invoke the read callback.
+						// }
 					}
 					rsp.attr_value.handle   = param->read.handle;
 					rsp.attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
@@ -490,7 +497,11 @@ void BLECharacteristic::notify(bool is_notification) {
 	// Test to see if we have a 0x2902 descriptor.  If we do, then check to see if notification is enabled
 	// and, if not, prevent the notification.
 
-	BLE2902 *p2902 = (BLE2902*)getDescriptorByUUID((uint16_t)0x2902);
+	BLE2902* p2902 = (BLE2902*)getDescriptorByUUID((uint16_t)0x2902);
+	if(p2902 == nullptr){
+		ESP_LOGE(LOG_TAG, "Characteristic without 0x2902 descriptor");
+		return;
+	}
 	if(is_notification) {
 		if (p2902 != nullptr && !p2902->getNotifications()) {
 			log_v("<< notifications disabled; ignoring");

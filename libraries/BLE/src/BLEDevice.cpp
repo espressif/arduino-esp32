@@ -46,7 +46,7 @@ static const char* LOG_TAG = "BLEDevice";
  */
 BLEServer* BLEDevice::m_pServer = nullptr;
 BLEScan*   BLEDevice::m_pScan   = nullptr;
-BLEClient* BLEDevice::m_pClient = nullptr;
+// BLEClient* BLEDevice::m_pClient = nullptr;
 bool       initialized          = false;  
 esp_ble_sec_act_t BLEDevice::m_securityLevel = (esp_ble_sec_act_t)0;
 BLESecurityCallbacks* BLEDevice::m_securityCallbacks = nullptr;
@@ -68,7 +68,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 	log_e("BLE GATTC is not enabled - CONFIG_GATTC_ENABLE not defined");
 	abort();
 #endif  // CONFIG_GATTC_ENABLE
-	m_pClient = new BLEClient();
+	BLEClient* m_pClient = new BLEClient();
 	log_v("<< createClient");
 	return m_pClient;
 } // createClient
@@ -84,7 +84,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 	log_e("BLE GATTS is not enabled - CONFIG_GATTS_ENABLE not defined");
 	abort();
 #endif // CONFIG_GATTS_ENABLE
-	m_pServer = new BLEServer();
+	BLEDevice::m_pServer = new BLEServer();
 	m_pServer->createApp(m_appId++);
 	log_v("<< createServer");
 	return m_pServer;
@@ -267,10 +267,6 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			break;
 		}
 	} // switch
-
-	if (BLEDevice::m_pClient != nullptr) {
-		BLEDevice::m_pClient->handleGAPEvent(event, param);
-	}
 
 	if (BLEDevice::m_pScan != nullptr) {
 		BLEDevice::getScan()->handleGAPEvent(event, param);

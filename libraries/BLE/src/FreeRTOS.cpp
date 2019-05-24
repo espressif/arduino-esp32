@@ -62,6 +62,7 @@ uint32_t FreeRTOS::getTimeSinceStart() {
 uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 	
+	m_owner = owner;
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
 	} else {
@@ -109,7 +110,6 @@ FreeRTOS::Semaphore::~Semaphore() {
  */
 void FreeRTOS::Semaphore::give() {
 	log_v("Semaphore giving: %s", toString().c_str());
-	m_owner = std::string("<N/A>");
 	
 	if (m_usePthreads) {
 		pthread_mutex_unlock(&m_pthread_mutex);
@@ -120,6 +120,7 @@ void FreeRTOS::Semaphore::give() {
 // 	FreeRTOS::sleep(10);
 // #endif
 
+	m_owner = std::string("<N/A>");
 } // Semaphore::give
 
 
