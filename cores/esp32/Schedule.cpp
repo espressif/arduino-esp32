@@ -31,8 +31,8 @@ bool IRAM_ATTR schedule_function_us(std::function<bool(void)>&& fn, uint32_t rep
     scheduled_fn_t item;
     item.mFunc = std::move(fn);
     if (repeat_us) item.callNow.reset(repeat_us);
-    return schedule_queue.push(std::move(item));
     item.policy = policy;
+    return schedule_queue.push(std::move(item));
 }
 
 bool IRAM_ATTR schedule_function_us(const std::function<bool(void)>& fn, uint32_t repeat_us, schedule_e policy)
