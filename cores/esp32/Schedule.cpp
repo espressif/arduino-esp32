@@ -1,78 +1,88 @@
+
 #include "Schedule.h"
+#include "PolledTimeout.h"
+#ifdef ESP8266
+#include "interrupts.h"
+#else
+#include <mutex>
+#endif
+#include "circular_queue.h"
+
+typedef std::function<bool(void)> mFuncT;
 
 struct scheduled_fn_t
 {
-    scheduled_fn_t* mNext;
-    std::function<void(void)> mFunc;
+    mFuncT mFunc;
+    esp8266::polledTimeout::periodicFastUs callNow;
+    schedule_e policy;
+
+    scheduled_fn_t() : callNow(esp8266::polledTimeout::periodicFastUs::alwaysExpired) { }
 };
 
-static scheduled_fn_t* sFirst = 0;
-static scheduled_fn_t* sLast = 0;
+namespace {
+    static circular_queue_mp<scheduled_fn_t> schedule_queue(SCHEDULED_FN_MAX_COUNT);
+#ifndef ESP8266
+    std::mutex schedulerMutex;
+#endif
+};
 
-static scheduled_fn_t* sFirstUnused = 0;
-static scheduled_fn_t* sLastUnused = 0;
+bool IRAM_ATTR schedule_function_us(std::function<bool(void)>&& fn, uint32_t repeat_us, schedule_e policy)
+{
+    scheduled_fn_t item;
+    item.mFunc = std::move(fn);
+    if (repeat_us) item.callNow.reset(repeat_us);
+    return schedule_queue.push(std::move(item));
+    item.policy = policy;
+}
 
-static int sCount = 0;
+bool IRAM_ATTR schedule_function_us(const std::function<bool(void)>& fn, uint32_t repeat_us, schedule_e policy)
+{
+    return schedule_function_us(std::function<bool(void)>(fn), repeat_us, policy);
+}
 
-static scheduled_fn_t* get_fn() {
-    scheduled_fn_t* result = NULL;
-    // try to get an item from unused items list
-    if (sFirstUnused) {
-        result = sFirstUnused;
-        sFirstUnused = result->mNext;
-        if (sFirstUnused == NULL) {
-            sLastUnused = NULL;
+bool IRAM_ATTR schedule_function(std::function<void(void)>&& fn, schedule_e policy)
+{
+    return schedule_function_us([fn = std::move(fn)]() { fn(); return false; }, 0, policy);
+}
+
+bool IRAM_ATTR schedule_function(const std::function<void(void)>& fn, schedule_e policy)
+{
+    return schedule_function(std::function<void(void)>(fn), policy);
+}
+
+void run_scheduled_functions(schedule_e policy)
+{
+    // Note to the reader:
+    // There is no exposed API to remove a scheduled function:
+    // Scheduled functions are removed only from this function, and
+    // its purpose is that it is never called from an interrupt
+    // (always on cont stack).
+
+    static bool fence = false;
+    {
+#ifdef ESP8266
+        InterruptLock lockAllInterruptsInThisScope;
+#else
+        std::lock_guard<std::mutex> lock(schedulerMutex);
+#endif
+        if (fence) {
+            // prevent recursive calls from yield()
+            return;
         }
-    }
-    // if no unused items, and count not too high, allocate a new one
-    else if (sCount != SCHEDULED_FN_MAX_COUNT) {
-        result = new scheduled_fn_t;
-        result->mNext = NULL;
-        ++sCount;
-    }
-    return result;
-}
+        fence = true;
 
-static void recycle_fn(scheduled_fn_t* fn)
-{
-    if (!sLastUnused) {
-        sFirstUnused = fn;
+        // run scheduled function:
+        // - when its schedule policy allows it anytime
+        // - or if we are called at loop() time
+        // and
+        // - its time policy allows it
     }
-    else {
-        sLastUnused->mNext = fn;
-    }
-    fn->mNext = NULL;
-    sLastUnused = fn;
-}
-
-bool schedule_function(std::function<void(void)> fn)
-{
-    scheduled_fn_t* item = get_fn();
-    if (!item) {
-        return false;
-    }
-    item->mFunc = fn;
-    item->mNext = NULL;
-    if (!sFirst) {
-        sFirst = item;
-    }
-    else {
-        sLast->mNext = item;
-    }
-    sLast = item;
-    return true;
-}
-
-void run_scheduled_functions()
-{
-	scheduled_fn_t* rFirst = sFirst;
-	sFirst = NULL;
-	sLast  = NULL;
-    while (rFirst) {
-        scheduled_fn_t* item = rFirst;
-        rFirst = item->mNext;
-        item->mFunc();
-        item->mFunc = std::function<void(void)>();
-        recycle_fn(item);
-    }
+    schedule_queue.for_each_requeue([policy](scheduled_fn_t& func)
+        {
+            return
+                (func.policy != SCHEDULE_FUNCTION_WITHOUT_YIELDELAYCALLS && policy != SCHEDULE_FUNCTION_FROM_LOOP)
+                || !func.callNow
+                || func.mFunc();
+        });
+    fence = false;
 }
