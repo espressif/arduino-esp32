@@ -1,8 +1,8 @@
-
 #include "Schedule.h"
 #include "PolledTimeout.h"
 #ifdef ESP8266
 #include "interrupts.h"
+#include "coredecls.h"
 #else
 #include <mutex>
 #endif
@@ -29,9 +29,9 @@ namespace {
 bool IRAM_ATTR schedule_function_us(std::function<bool(void)>&& fn, uint32_t repeat_us, schedule_e policy)
 {
     scheduled_fn_t item;
+    item.policy = policy;
     item.mFunc = std::move(fn);
     if (repeat_us) item.callNow.reset(repeat_us);
-    item.policy = policy;
     return schedule_queue.push(std::move(item));
 }
 
@@ -70,15 +70,24 @@ void run_scheduled_functions(schedule_e policy)
             return;
         }
         fence = true;
-
-        // run scheduled function:
-        // - when its schedule policy allows it anytime
-        // - or if we are called at loop() time
-        // and
-        // - its time policy allows it
     }
-    schedule_queue.for_each_requeue([policy](scheduled_fn_t& func)
+
+    esp8266::polledTimeout::periodicFastMs yieldNow(100); // yield every 100ms
+
+    // run scheduled function:
+    // - when its schedule policy allows it anytime
+    // - or if we are called at loop() time
+    // and
+    // - its time policy allows it
+    schedule_queue.for_each_requeue([policy, &yieldNow](scheduled_fn_t& func)
         {
+            if (yieldNow) {
+#ifdef ESP8266
+                cont_yield(g_pcont);
+#else
+                yield();
+#endif
+            }
             return
                 (func.policy != SCHEDULE_FUNCTION_WITHOUT_YIELDELAYCALLS && policy != SCHEDULE_FUNCTION_FROM_LOOP)
                 || !func.callNow
