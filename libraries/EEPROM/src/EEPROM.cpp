@@ -228,10 +228,8 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
     return result;
   }
 
-  size_t size;
-  size = mypart->size;
-  uint8_t* data;
-  data = (uint8_t*) malloc(size);
+  size_t size = mypart->size;
+  uint8_t* data = (uint8_t*) malloc(size);
   if (!data) {
     log_e("Not enough memory to convert EEPROM!");
     goto exit;
@@ -274,7 +272,7 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
   } 
 exit:
   free(data);
-  return size;
+  return result;
 }
 
 /*
