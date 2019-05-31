@@ -112,7 +112,7 @@ bool EEPROMClass::begin(size_t size) {
          log_e("Not enough memory to expand EEPROM!");
          return false;
       }
-      memset(key_data, 0, size);
+      memset(key_data, 0xFF, size);
       if(key_size) {
         log_i("Expanding EEPROM from %d to %d", key_size, size);
 	// hold data while key is deleted
@@ -236,7 +236,7 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
   }
 
   if (esp_partition_read (mypart, 0, (void *) data, size) != ESP_OK) {
-    log_i("Unable to read EEPROM partition");
+    log_e("Unable to read EEPROM partition");
     goto exit;
   }
 
@@ -255,19 +255,19 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
 
   nvs_handle handle;
   if (nvs_open(nvsname, NVS_READWRITE, &handle) != ESP_OK) {
-    log_i("Unable to open NVS");
+    log_e("Unable to open NVS");
     goto exit;
   }
   esp_err_t err;
   err = nvs_set_blob(handle, nvsname, data, size);
   if (err != ESP_OK) {
-    log_i("Unable to add EEPROM data to NVS: %s", esp_err_to_name(err));
+    log_e("Unable to add EEPROM data to NVS: %s", esp_err_to_name(err));
     goto exit;
   }
   
   if (clear) {
     if (esp_partition_erase_range (mypart, 0, size) != ESP_OK) {
-      log_i("Unable to clear EEPROM partition");
+      log_w("Unable to clear EEPROM partition");
     }
   } 
 exit:
