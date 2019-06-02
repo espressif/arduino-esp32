@@ -31,17 +31,17 @@ namespace {
 	{
 		auto repeat_ms = (repeat_us + 500) / 1000;
 		ticker->once_ms(repeat_ms, [ticker, fn, repeat_us, policy]()
-		{
-			if (!schedule_function([ticker, fn, repeat_us, policy]()
-				{
-					if (fn()) ticker_scheduled(ticker, fn, repeat_us, policy);
-					else delete ticker;
-					return false;
-				}, policy))
 			{
-				ticker_scheduled(ticker, fn, repeat_us, policy);
-			}
-		});
+				if (!schedule_function([ticker, fn, repeat_us, policy]()
+					{
+						if (fn()) ticker_scheduled(ticker, fn, repeat_us, policy);
+						else delete ticker;
+						return false;
+					}, policy))
+				{
+					ticker_scheduled(ticker, fn, repeat_us, policy);
+				}
+			});
 	}
 };
 
@@ -119,8 +119,10 @@ void run_scheduled_functions(schedule_e policy)
 	schedule_queue.for_each_requeue([policy, &yieldNow](scheduled_fn_t& func)
 		{
 			if (yieldNow) {
-#ifdef ESP8266
+#if defined(ESP8266)
 				cont_yield(g_pcont);
+#elif defined(ESP32)
+				vPortYield();
 #else
 				yield();
 #endif

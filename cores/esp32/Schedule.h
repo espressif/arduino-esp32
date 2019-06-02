@@ -1,8 +1,6 @@
 #ifndef ESP_SCHEDULE_H
 #define ESP_SCHEDULE_H
 
-#include <functional>
-
 // This API is stabilizing
 // Function signatures may change, internal queue will remain FIFO.
 //
@@ -24,13 +22,21 @@
 // * Returns false if the number of scheduled functions exceeds
 //   SCHEDULED_FN_MAX_COUNT.
 
+#ifdef __cplusplus
+#include <functional>
+extern "C" {
+#endif
+
 #define SCHEDULED_FN_MAX_COUNT 32
 
-enum schedule_e
+typedef enum schedule_e_t
 {
     SCHEDULE_FUNCTION_FROM_LOOP,
     SCHEDULE_FUNCTION_WITHOUT_YIELDELAYCALLS
-};
+} schedule_e;
+
+#ifdef __cplusplus
+}
 
 // * Run the lambda only once next time
 bool schedule_function(std::function<void(void)>&& fn,
@@ -50,9 +56,18 @@ bool schedule_function_us(const std::function<bool(void)>& fn,
                           uint32_t repeat_us,
                           schedule_e policy = SCHEDULE_FUNCTION_FROM_LOOP);
 
+extern "C" {
+#endif /* __cplusplus */
+
 // Run all scheduled functions.
 // Use this function if your are not using `loop`, or `loop` does not return
 // on a regular basis.
-void run_scheduled_functions(schedule_e policy = SCHEDULE_FUNCTION_FROM_LOOP);
+
+#ifndef __cplusplus
+    void run_scheduled_functions(schedule_e policy);
+#else
+    void run_scheduled_functions(schedule_e policy = SCHEDULE_FUNCTION_FROM_LOOP);
+}
+#endif
 
 #endif //ESP_SCHEDULE_H
