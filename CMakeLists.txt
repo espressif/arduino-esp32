@@ -107,6 +107,7 @@ set(LIBRARY_SRCS
   libraries/SimpleBLE/src/SimpleBLE.cpp
   libraries/SPIFFS/src/SPIFFS.cpp
   libraries/SPI/src/SPI.cpp
+  libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/USB/src/USBHID.cpp
@@ -195,6 +196,7 @@ set(includedirs
   libraries/SimpleBLE/src
   libraries/SPIFFS/src
   libraries/SPI/src
+  libraries/Ticker/src
   libraries/Update/src
   libraries/USB/src
   libraries/WebServer/src
