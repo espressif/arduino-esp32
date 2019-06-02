@@ -47,10 +47,10 @@ void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t 
 	}
 	esp_timer_create(&_timerConfig, &_timer);
 	if (repeat) {
-		esp_timer_start_periodic(_timer, milliseconds * 1000ULL);
+		esp_timer_start_periodic(_timer, milliseconds * 1000);
 	}
 	else {
-		esp_timer_start_once(_timer, milliseconds * 1000ULL);
+		esp_timer_start_once(_timer, milliseconds * 1000);
 	}
 }
 
@@ -62,9 +62,9 @@ void Ticker::detach() {
 	}
 }
 
-bool Ticker::active() const {
-    if (!_timer) return false;
-    return esp_timer_is_active(_timer);
+bool Ticker::active() const
+{
+	return _timer;
 }
 
 void Ticker::_static_callback(void* arg)
@@ -73,4 +73,3 @@ void Ticker::_static_callback(void* arg)
 	if (!_this) return;
 	if (_this->_callback_function) _this->_callback_function();
 }
-
