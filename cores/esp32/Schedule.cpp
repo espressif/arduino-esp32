@@ -56,7 +56,12 @@ namespace {
 
 	void ticker_scheduled(SchedulerTicker* ticker, const std::function<bool(void)>& fn, uint32_t repeat_us, schedule_e policy)
 	{
+#ifdef ESP8266
+		auto repeat_ms = (repeat_us + 500) / 1000;
+		ticker->once_ms(repeat_ms, [ticker, fn, repeat_us, policy]()
+#else
 		ticker->once_us(repeat_us, [ticker, fn, repeat_us, policy]()
+#endif
 			{
 				if (!schedule_function([ticker, fn, repeat_us, policy]()
 					{
