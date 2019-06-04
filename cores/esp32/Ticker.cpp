@@ -34,7 +34,17 @@ Ticker::~Ticker()
 	detach();
 }
 
+void Ticker::_attach_s(float seconds, bool repeat, callback_with_arg_t callback, void* arg)
+{
+	_attach_us(1000000 * seconds, repeat, callback, arg);
+}
+
 void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback, void* arg)
+{
+	_attach_us(1000 * milliseconds, repeat, callback, arg);
+}
+
+void Ticker::_attach_us(uint32_t micros, bool repeat, callback_with_arg_t callback, void* arg)
 {
 	esp_timer_create_args_t _timerConfig;
 	_timerConfig.arg = reinterpret_cast<void*>(arg);
@@ -47,10 +57,10 @@ void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t 
 	}
 	esp_timer_create(&_timerConfig, &_timer);
 	if (repeat) {
-		esp_timer_start_periodic(_timer, milliseconds * 1000);
+		esp_timer_start_periodic(_timer, micros);
 	}
 	else {
-		esp_timer_start_once(_timer, milliseconds * 1000);
+		esp_timer_start_once(_timer, micros);
 	}
 }
 
@@ -59,6 +69,7 @@ void Ticker::detach() {
 		esp_timer_stop(_timer);
 		esp_timer_delete(_timer);
 		_timer = nullptr;
+		_callback_function = nullptr;
 	}
 }
 
@@ -70,6 +81,6 @@ bool Ticker::active() const
 void Ticker::_static_callback(void* arg)
 {
 	Ticker* _this = reinterpret_cast<Ticker*>(arg);
-	if (!_this) return;
-	if (_this->_callback_function) _this->_callback_function();
+	if (_this && _this->_callback_function)
+		_this->_callback_function();
 }
