@@ -11,8 +11,6 @@
 
 typedef std::function<bool(void)> mFuncT;
 
-constexpr uint32_t TICKER_MIN_US = 5000;
-
 struct scheduled_fn_t
 {
 	mFuncT mFunc = nullptr;
@@ -58,8 +56,7 @@ namespace {
 
 	void ticker_scheduled(SchedulerTicker* ticker, const std::function<bool(void)>& fn, uint32_t repeat_us, schedule_e policy)
 	{
-		auto repeat_ms = (repeat_us + 500) / 1000;
-		ticker->once_ms(repeat_ms, [ticker, fn, repeat_us, policy]()
+		ticker->once_us(repeat_us, [ticker, fn, repeat_us, policy]()
 			{
 				if (!schedule_function([ticker, fn, repeat_us, policy]()
 					{
@@ -72,6 +69,12 @@ namespace {
 				}
 			});
 	}
+
+#ifdef ESP8266
+	constexpr uint32_t TICKER_MIN_US = 5000;
+#else
+	constexpr uint32_t TICKER_MIN_US = 5000;
+#endif
 };
 
 bool IRAM_ATTR schedule_function_us(std::function<bool(void)>&& fn, uint32_t repeat_us, schedule_e policy)
