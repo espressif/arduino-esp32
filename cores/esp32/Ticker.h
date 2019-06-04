@@ -29,6 +29,7 @@ extern "C" {
 #include "esp_timer.h"
 }
 #include <functional>
+#include <Schedule.h>
 
 class Ticker
 {
@@ -51,6 +52,17 @@ public:
 		_attach_ms(milliseconds, true, _static_callback, this);
 	}
 
+	void attach_us_scheduled(uint32_t micros, callback_function_t callback)
+	{
+		attach_us(micros, [callback]() { schedule_function(callback); });
+	}
+
+	void attach_us(uint32_t micros, callback_function_t callback)
+	{
+		_callback_function = std::move(callback);
+		_attach_us(micros, true, _static_callback, this);
+	}
+
 	template<typename TArg>
 	void attach(float seconds, void (*callback)(TArg), TArg arg)
 	{
@@ -68,6 +80,13 @@ public:
 		_attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
+	template<typename TArg>
+	void attach_us(uint32_t micros, void (*callback)(TArg), TArg arg)
+	{
+		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
+		_attach_us(micros, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+	}
+
 	void once(float seconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
@@ -78,6 +97,17 @@ public:
 	{
 		_callback_function = std::move(callback);
 		_attach_ms(milliseconds, false, _static_callback, this);
+	}
+
+	void once_us_scheduled(uint32_t micros, callback_function_t callback)
+	{
+		once_us(micros, [callback]() { schedule_function(callback); });
+	}
+
+	void once_us(uint32_t micros, callback_function_t callback)
+	{
+		_callback_function = std::move(callback);
+		_attach_us(micros, false, _static_callback, this);
 	}
 
 	template<typename TArg>
@@ -92,6 +122,13 @@ public:
 	{
 		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
 		_attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+	}
+
+	template<typename TArg>
+	void once_us(uint32_t micros, void (*callback)(TArg), TArg arg)
+	{
+		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
+		_attach_us(micros, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
 	void detach();
