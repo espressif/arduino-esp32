@@ -1,5 +1,5 @@
 #include "Schedule.h"
-#include "PolledTimeout.h"
+#include "PolledTimeout/PolledTimeout.h"
 #include "Ticker.h"
 #ifdef ESP8266
 #include "interrupts.h"
@@ -7,7 +7,17 @@
 #else
 #include <mutex>
 #endif
-#include "circular_queue.h"
+#include "circular_queue/circular_queue.h"
+
+void loop_completed()
+{
+	run_scheduled_functions(SCHEDULE_FUNCTION_FROM_LOOP);
+}
+
+void yield_completed()
+{
+	run_scheduled_functions(SCHEDULE_FUNCTION_WITHOUT_YIELDELAYCALLS);
+}
 
 typedef std::function<bool(void)> mFuncT;
 

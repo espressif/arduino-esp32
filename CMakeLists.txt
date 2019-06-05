@@ -29,7 +29,6 @@ set(CORE_SRCS
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
   cores/esp32/stdlib_noniso.c
-  cores/esp32/Schedule.cpp
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
   cores/esp32/wiring_pulse.c
@@ -52,6 +51,7 @@ set(LIBRARY_SRCS
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
+  libraries/Schedule/src/Schedule.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -191,6 +191,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/HTTPUpdate/src
   libraries/NetBIOS/src
   libraries/Preferences/src
+  libraries/Schedule/src
   libraries/SD_MMC/src
   libraries/SD/src
   libraries/SimpleBLE/src
