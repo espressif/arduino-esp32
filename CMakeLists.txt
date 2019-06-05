@@ -29,7 +29,6 @@ set(CORE_SRCS
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
   cores/esp32/stdlib_noniso.c
-  cores/esp32/Schedule.cpp
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
   cores/esp32/wiring_pulse.c
