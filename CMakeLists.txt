@@ -209,3 +209,8 @@ set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet)
 set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt)
 
 register_component()
+
+set_source_files_properties(libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
+    PROPERTIES COMPILE_FLAGS
+    -Wno-maybe-uninitialized
+)
