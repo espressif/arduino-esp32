@@ -60,7 +60,6 @@ set(CORE_SRCS
   cores/esp32/StreamString.cpp
   cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
-  cores/esp32/Ticker.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
   cores/esp32/USBMSC.cpp

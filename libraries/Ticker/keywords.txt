@@ -8,7 +8,14 @@ Ticker	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+attach_scheduled	KEYWORD2
 attach	KEYWORD2
+attach_ms_scheduled	KEYWORD2
 attach_ms	KEYWORD2
+once_scheduled	KEYWORD2
 once	KEYWORD2
+once_ms_scheduled	KEYWORD2
+once_ms	KEYWORD2
 detach	KEYWORD2
+active	KEYWORD2
+
