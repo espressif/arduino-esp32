@@ -42,13 +42,19 @@ public:
 	void attach(float seconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
-		_attach_ms(seconds * 1000, true, _static_callback, this);
+		_attach_s(seconds, true, _static_callback, this);
 	}
 
 	void attach_ms(uint32_t milliseconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_ms(milliseconds, true, _static_callback, this);
+	}
+
+	void attach_us(uint32_t micros, callback_function_t callback)
+	{
+		_callback_function = std::move(callback);
+		_attach_us(micros, true, _static_callback, this);
 	}
 
 	template<typename TArg>
@@ -58,7 +64,7 @@ public:
 		// C-cast serves two purposes:
 		// static_cast for smaller integer types,
 		// reinterpret_cast + const_cast for pointer types
-		_attach_ms(seconds * 1000, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+		_attach_s(seconds, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
 	template<typename TArg>
@@ -68,10 +74,17 @@ public:
 		_attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
+	template<typename TArg>
+	void attach_us(uint32_t micros, void (*callback)(TArg), TArg arg)
+	{
+		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
+		_attach_us(micros, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+	}
+
 	void once(float seconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
-		_attach_ms(seconds * 1000, false, _static_callback, this);
+		_attach_s(seconds, false, _static_callback, this);
 	}
 
 	void once_ms(uint32_t milliseconds, callback_function_t callback)
@@ -80,11 +93,17 @@ public:
 		_attach_ms(milliseconds, false, _static_callback, this);
 	}
 
+	void once_us(uint32_t micros, callback_function_t callback)
+	{
+		_callback_function = std::move(callback);
+		_attach_us(micros, false, _static_callback, this);
+	}
+
 	template<typename TArg>
 	void once(float seconds, void (*callback)(TArg), TArg arg)
 	{
 		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
-		_attach_ms(seconds * 1000, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+		_attach_s(seconds, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
 	template<typename TArg>
@@ -92,6 +111,13 @@ public:
 	{
 		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
 		_attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
+	}
+
+	template<typename TArg>
+	void once_us(uint32_t micros, void (*callback)(TArg), TArg arg)
+	{
+		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
+		_attach_us(micros, false, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
 
 	void detach();
@@ -103,8 +129,11 @@ protected:
 
 	callback_function_t _callback_function = nullptr;
 
-protected:
 	esp_timer_handle_t _timer;
+
+private:
+	void _attach_us(uint32_t micros, bool repeat, callback_with_arg_t callback, void* arg);
+	void _attach_s(float seconds, bool repeat, callback_with_arg_t callback, void* arg);
 };
 
 
