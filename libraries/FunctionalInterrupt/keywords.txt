@@ -2,13 +2,12 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-FunctionalInterrupt	KEYWORD1
 InterruptInfo	KEYWORD1
+ArgStructure	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-attachInterrupt	KEYWORD2
 attachScheduledInterrupt	KEYWORD2
 detachFunctionalInterrupt	KEYWORD2
