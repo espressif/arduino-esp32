@@ -40,27 +40,37 @@ public:
 	typedef void (*callback_with_arg_t)(void*);
 	typedef std::function<void(void)> callback_function_t;
 
+	void attach_scheduled(float seconds, callback_function_t callback)
+	{
+		attach(seconds, [callback]() { schedule_function(callback); });
+	}
+
 	void attach(float seconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_s(seconds, true, _static_callback, this);
 	}
 
+	void attach_ms_scheduled(uint32_t milliseconds, callback_function_t callback)
+	{
+		attach_ms(milliseconds, [callback]() { schedule_function(callback); });
+	}
+
 	void attach_ms(uint32_t milliseconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_ms(milliseconds, true, _static_callback, this);
 	}
 
+	void attach_us_scheduled(uint32_t micros, callback_function_t callback)
+	{
+		attach_us(micros, [callback]() { schedule_function(callback); });
+	}
+
 	void attach_us(uint32_t micros, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_us(micros, true, _static_callback, this);
-
-	void attach_ms(uint32_t milliseconds, callback_function_t callback)
-	{
-		_callback_function = std::move(callback);
-		_attach_ms(milliseconds, true, _static_callback, this);
 	}
 
 	template<typename TArg>
@@ -86,17 +96,32 @@ public:
 		static_assert(sizeof(TArg) <= sizeof(void*), "attach() callback argument size must be <= sizeof(void*)");
 		_attach_us(micros, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
 	}
-
+	
+	void once_scheduled(float seconds, callback_function_t callback)
+	{
+		once(seconds, [callback]() { schedule_function(callback); });
+	}
+	
 	void once(float seconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_s(seconds, false, _static_callback, this);
 	}
 
+	void once_ms_scheduled(uint32_t milliseconds, callback_function_t callback)
+	{
+		once_ms(milliseconds, [callback]() { schedule_function(callback); });
+	}
+
 	void once_ms(uint32_t milliseconds, callback_function_t callback)
 	{
 		_callback_function = std::move(callback);
 		_attach_ms(milliseconds, false, _static_callback, this);
+	}
+
+	void once_us_scheduled(uint32_t micros, callback_function_t callback)
+	{
+		once_us(micros, [callback]() { schedule_function(callback); });
 	}
 
 	void once_us(uint32_t micros, callback_function_t callback)
