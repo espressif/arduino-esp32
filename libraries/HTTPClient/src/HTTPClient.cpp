@@ -1046,7 +1046,7 @@ bool HTTPClient::sendHeader(const char * type)
     header += String(F("\r\nUser-Agent: ")) + _userAgent +
               F("\r\nConnection: ");
 
-    if(_reuse) {
+    if(_reuse && !_useHTTP10) {
         header += F("keep-alive");
     } else {
         header += F("close");
