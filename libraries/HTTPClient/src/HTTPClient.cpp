@@ -1099,8 +1099,8 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(headerLine.startsWith("HTTP/1.")) {
+                _canReuse = (headerLine[sizeof "HTTP/1."] != '0');
                 _returnCode = headerLine.substring(9, headerLine.indexOf(' ', 9)).toInt();
-                _canReuse = (_returnCode != '0');
             } else if(headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
