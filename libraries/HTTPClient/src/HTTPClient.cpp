@@ -456,6 +456,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 void HTTPClient::useHTTP10(bool useHTTP10)
 {
     _useHTTP10 = useHTTP10;
+    _reuse = !useHTTP10;
 }
 
 /**
@@ -1046,7 +1047,7 @@ bool HTTPClient::sendHeader(const char * type)
     header += String(F("\r\nUser-Agent: ")) + _userAgent +
               F("\r\nConnection: ");
 
-    if(_reuse && !_useHTTP10) {
+    if(_reuse) {
         header += F("keep-alive");
     } else {
         header += F("close");
