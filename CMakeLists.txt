@@ -190,6 +190,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
   libraries/NetBIOS/src
+  libraries/PolledTimeout/src
   libraries/Preferences/src
   libraries/Schedule/src
   libraries/SD_MMC/src

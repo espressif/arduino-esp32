@@ -1,9 +1,9 @@
 #include "Schedule.h"
-#include "PolledTimeout/PolledTimeout.h"
-#include "Ticker.h"
+#include <PolledTimeout.h>
+#include <Ticker.h>
 #ifdef ESP8266
-#include "interrupts.h"
-#include "coredecls.h"
+#include <interrupts.h>
+#include <coredecls.h>
 #else
 #include <mutex>
 #endif
