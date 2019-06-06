@@ -39,6 +39,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
 	m_charProp       = charProp;
 	m_pRemoteService = pRemoteService;
 	m_notifyCallback = nullptr;
+	m_rawData = nullptr;
 
 	retrieveDescriptors(); // Get the descriptors for this characteristic
 	log_v("<< BLERemoteCharacteristic");
