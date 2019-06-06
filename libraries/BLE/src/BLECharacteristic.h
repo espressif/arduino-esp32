@@ -117,6 +117,7 @@ private:
 	void                 setHandle(uint16_t handle);
 	FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
 	FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
+	FreeRTOS::Semaphore m_semaphoreSetValue  = FreeRTOS::Semaphore("SetValue");  
 }; // BLECharacteristic
 
 
