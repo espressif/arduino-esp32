@@ -264,7 +264,8 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
     log_e("Unable to add EEPROM data to NVS: %s", esp_err_to_name(err));
     goto exit;
   }
-  
+  result = size;
+ 
   if (clear) {
     if (esp_partition_erase_range (mypart, 0, size) != ESP_OK) {
       log_w("Unable to clear EEPROM partition");
