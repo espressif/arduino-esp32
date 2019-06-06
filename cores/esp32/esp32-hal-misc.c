@@ -44,11 +44,6 @@ float temperatureRead()
     return (temprature_sens_read() - 32) / 1.8;
 }
 
-void yield()
-{
-    vPortYield();
-}
-
 #if CONFIG_AUTOSTART_ARDUINO
 
 extern TaskHandle_t loopTaskHandle;
@@ -139,9 +134,34 @@ unsigned long IRAM_ATTR millis()
     return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
+void initVariant() __attribute__((weak));
+void initVariant() {}
+
+void init() __attribute__((weak));
+void init() {}
+
+void yield_completed() __attribute__((weak));
+void yield_completed() {}
+
+bool verifyOta() __attribute__((weak));
+bool verifyOta() { return true; }
+
+#ifdef CONFIG_BT_ENABLED
+//overwritten in esp32-hal-bt.c
+bool btInUse() __attribute__((weak));
+bool btInUse() { return false; }
+#endif
+
+void yield()
+{
+	vPortYield();
+	yield_completed();
+}
+
 void delay(uint32_t ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS);
+	vTaskDelay(ms / portTICK_PERIOD_MS);
+	yield_completed();
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
@@ -159,21 +179,6 @@ void IRAM_ATTR delayMicroseconds(uint32_t us)
         }
     }
 }
-
-void initVariant() __attribute__((weak));
-void initVariant() {}
-
-void init() __attribute__((weak));
-void init() {}
-
-bool verifyOta() __attribute__((weak));
-bool verifyOta() { return true; }
-
-#ifdef CONFIG_BT_ENABLED
-//overwritten in esp32-hal-bt.c
-bool btInUse() __attribute__((weak));
-bool btInUse(){ return false; }
-#endif
 
 void initArduino()
 {
