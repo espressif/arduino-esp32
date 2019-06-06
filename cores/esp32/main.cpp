@@ -17,6 +17,7 @@ void loopTask(void *pvParameters)
             esp_task_wdt_reset();
         }
         loop();
+        loop_completed();
     }
 }
 
@@ -26,5 +27,8 @@ extern "C" void app_main()
     initArduino();
     xTaskCreateUniversal(loopTask, "loopTask", 8192, NULL, 1, &loopTaskHandle, CONFIG_ARDUINO_RUNNING_CORE);
 }
+
+extern "C" void loop_completed() __attribute__((weak));
+extern "C" void loop_completed() {}
 
 #endif

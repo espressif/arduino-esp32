@@ -130,6 +130,9 @@ void init(void);
 void initVariant(void);
 void initArduino(void);
 
+void yield_completed(void);
+void loop_completed(void);
+
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
 
