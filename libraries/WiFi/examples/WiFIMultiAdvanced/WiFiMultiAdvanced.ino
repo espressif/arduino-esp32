@@ -21,14 +21,14 @@ void setup()
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
     wifiMulti.setStrictMode(false);  // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
-    wifiMulti.setAllowOpenAP(true);   // Default is false.  True adds open APs to the list.
+    wifiMulti.setAllowOpenAP(true);   // Default is false.  True adds open APs to the AP list.
     wifiMulti.setTestConnection(true);   // Default is false.  Attempts to connect to a remote webserver in case of captive portals.  Most useful with AllowOpenAP = true.
 
-    // Optional - defaults to brainjar, but you should set this to a simple test page on your own server to ensure you can reach it
+    // Optional - defaults to http://www.amazon.com with testphrase 301 Moved.
+    // You can also set this to a simple test page on your own server to ensure you can reach it
     // wifiMulti.setTestURL("http://www.brainjar.com/java/host/test.html");  // Must include http://
-    // wifiMulti.setTestPhrase("200 OK");  // Defaults to non-302 status code to single out captive portals.  Can be anything in the webpage.
+    // wifiMulti.setTestPhrase("200 OK");  // Use a non-302 status code to ensure we bypass captive portals.  Can be any text in the webpage.
     
-
     Serial.println("Connecting Wifi...");
     if(wifiMulti.run() == WL_CONNECTED) {
         Serial.println("");
@@ -42,6 +42,6 @@ void loop()
 {
     if( wifiMulti.run() != WL_CONNECTED) {
         Serial.println("WiFi not connected!");
-        delay(1000);
+        delay(5000);
     }
 }

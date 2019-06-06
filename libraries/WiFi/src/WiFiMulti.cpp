@@ -110,8 +110,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                     if (!found){
                         log_i("[WIFI] added %s to APList", ssid_scan);
                         APlistAdd(ssid_scan.c_str());
-                        // failCount++;
-                        // foundCount++;
                     }
                 }
 
@@ -163,18 +161,20 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
         if(bestNetwork.ssid) {
             log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
-
+            
+            WiFi.disconnect();
+            delay(100);
             WiFi.begin(bestNetwork.ssid, (_bAllowOpenAP && bestNetworkSec == WIFI_AUTH_OPEN) ? NULL:bestNetwork.passphrase, bestChannel, bestBSSID);
             status = WiFi.status();
             _bWFMInit = true;
             
             auto startTime = millis();
             // wait for connection, fail, or timeout
-            while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
-                delay(100);
+            while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && (millis() - startTime) <= connectTimeout) {  // && status != WL_CONNECT_FAILED
+                delay(500);
                 status = WiFi.status();
             }
-            
+
             switch(status) {
             case 3:
                 log_i("[WIFI] Connecting done.");
@@ -196,7 +196,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 } else {
                     resetFails();
                 }
-
                 break;
             case 1:
                 log_e("[WIFI] Connecting Failed AP not found.");
@@ -211,9 +210,11 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 markAsFailed(bestIndex);
                 break;
             }
+            
         } else {
             log_e("[WIFI] no matching wifi found!");
         }
+        delay(2000);  //letting wifi stabilize...
     } else {
         // start scan
         log_d("[WIFI] delete old wifi config...");
@@ -223,7 +224,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         // scan wifi async mode
         WiFi.scanNetworks(true);
     }
-
     return status;
 }
 
@@ -231,7 +231,6 @@ void WiFiMulti::markAsFailed(int32_t i) {
     APlist[i].fail = true;
     log_i("marked %s as failed",APlist[i].ssid);
 }
-
 
 void WiFiMulti::resetFails(){
     log_i("resetting failure flags");
@@ -262,8 +261,7 @@ bool WiFiMulti::testConnection(){
     //parse url
     int8_t split = _testURL.indexOf('/',7);
     String host = _testURL.substring(7, split);
-    String url = _testURL.substring(split,_testURL.length());
-
+    String url = (split < 0) ? "/":_testURL.substring(split,_testURL.length());
     log_i("Testing connection to %s.  Test phrase is \"%s\"",_testURL.c_str(), _testPhrase.c_str());
     // Use WiFiClient class to create TCP connections
     WiFiClient client;
@@ -287,20 +285,20 @@ bool WiFiMulti::testConnection(){
             return false;
         }
     }
-    bool bSuccess = false;
-    // Read all the lines of the reply from server and print them to Serial
-    while(client.available()) {
-        // String line = client.readStringUntil('\r');
-        // Serial.print(line);
-        bSuccess = client.find(_testPhrase.c_str());
-        if (bSuccess){
-             log_i("Success. Found test phrase");
-        } else {
-            log_e("Failed.  Can't find test phrase");
-        }
-        return bSuccess;
-    }
 
+    bool bSuccess = false;
+    timeout = millis();
+    while(client.available()) {
+        if (millis() - timeout > 5000) {
+            bSuccess = client.find(_testPhrase.c_str());
+            if (bSuccess){
+                log_i("Success. Found test phrase");
+            } else {
+                log_e("Failed.  Can't find test phrase");
+            }
+            return bSuccess;
+        }
+    }
 }
 
 // ##################################################################################

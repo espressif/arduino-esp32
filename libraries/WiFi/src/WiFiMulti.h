@@ -59,8 +59,8 @@ private:
     bool _bStrict = true;
     bool _bAllowOpenAP = false;
     bool _bTestConnection = false;
-    String _testPhrase = "200 OK";
-    String _testURL = "http://www.brainjar.com/java/host/test.html";
+    String _testPhrase = "301 Moved";
+    String _testURL = "http://www.amazon.com";
     bool _bWFMInit = false;
 
     void markAsFailed(int32_t i);
@@ -68,8 +68,6 @@ private:
 
     bool testConnection();
     bool APlistAdd(const char* ssid, const char *passphrase = NULL);
-
-
 };
 
 #endif /* WIFICLIENTMULTI_H_ */
