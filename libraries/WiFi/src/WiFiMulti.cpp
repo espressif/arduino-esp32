@@ -289,7 +289,7 @@ bool WiFiMulti::testConnection(){
     bool bSuccess = false;
     timeout = millis();
     while(client.available()) {
-        if (millis() - timeout > 5000) {
+        if (millis() - timeout < 5000) {
             bSuccess = client.find(_testPhrase.c_str());
             if (bSuccess){
                 log_i("Success. Found test phrase");
@@ -297,6 +297,9 @@ bool WiFiMulti::testConnection(){
                 log_e("Failed.  Can't find test phrase");
             }
             return bSuccess;
+        } else {
+            log_e("Test phrase check timed out!");
+            break;
         }
     }
 }
