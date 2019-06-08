@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map SPI Slave
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SPISlave	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setData	KEYWORD2
+setStatus	KEYWORD2
+onData	KEYWORD2
+onDataSent	KEYWORD2
+onStatus	KEYWORD2
+onStatusSent	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
