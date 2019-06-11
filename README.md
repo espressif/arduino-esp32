@@ -43,7 +43,7 @@ Before reporting an issue, make sure you've searched for similar one that was al
 Finally, if you're sure no one else had the issue, follow the [ISSUE_TEMPLATE](docs/ISSUE_TEMPLATE.md) while reporting any issue.
 
 
-## ESP32Dev Board PINMAP
+## ESP32 DOIT Dev Board PINMAP
 
 ![Pin Functions](docs/esp32_pinmap.png)
 
