@@ -480,10 +480,20 @@ void BLECharacteristic::notify(bool is_notification) {
 	assert(getService() != nullptr);
 	assert(getService()->getServer() != nullptr);
 
+	auto cb = BLECharacteristicCallbacks();
+
+	BLECharacteristicCallbacks * callback = &cb;
+	if(m_pCallbacks != nullptr){
+		callback = m_pCallbacks;
+	}
+
+	callback->onNotify(this);   // Invoke the notify callback.
+
 	GeneralUtils::hexDump((uint8_t*)m_value.getValue().data(), m_value.getValue().length());
 
 	if (getService()->getServer()->getConnectedCount() == 0) {
 		log_v("<< notify: No connected clients.");
+		callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_CLIENT, 0);
 		return;
 	}
 
@@ -494,12 +504,14 @@ void BLECharacteristic::notify(bool is_notification) {
 	if(is_notification) {
 		if (p2902 != nullptr && !p2902->getNotifications()) {
 			log_v("<< notifications disabled; ignoring");
+			callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NOTIFY_DISABLED, 0);   // Invoke the notify callback.
 			return;
 		}
 	}
 	else{
 		if (p2902 != nullptr && !p2902->getIndications()) {
 			log_v("<< indications disabled; ignoring");
+			callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED, 0);   // Invoke the notify callback.
 			return;
 		}
 	}
@@ -510,7 +522,7 @@ void BLECharacteristic::notify(bool is_notification) {
 		}
 
 		size_t length = m_value.getValue().length();
-		if(!is_notification)
+		if(!is_notification) // is indication
 			m_semaphoreConfEvt.take("indicate");
 		esp_err_t errRc = ::esp_ble_gatts_send_indicate(
 				getService()->getServer()->getGattsIf(),
@@ -519,10 +531,23 @@ void BLECharacteristic::notify(bool is_notification) {
 		if (errRc != ESP_OK) {
 			log_e("<< esp_ble_gatts_send_ %s: rc=%d %s",is_notification?"notify":"indicate", errRc, GeneralUtils::errorToString(errRc));
 			m_semaphoreConfEvt.give();
+			callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_GATT, errRc);   // Invoke the notify callback.
 			return;
 		}
-		if(!is_notification)
-			m_semaphoreConfEvt.wait("indicate");
+		if(!is_notification){ // is indication
+			if(!m_semaphoreConfEvt.timedWait("indicate", indicationTimeout)){
+				callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, 0);   // Invoke the notify callback.
+			} else {
+				auto code = (esp_gatt_status_t) m_semaphoreConfEvt.value();
+				if(code == ESP_GATT_OK) {
+					callback->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_INDICATE, code);   // Invoke the notify callback.
+				} else {
+					callback->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, code);
+				}
+			}
+		} else {
+			callback->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);   // Invoke the notify callback.
+		}
 	}
 	log_v("<< notify");
 } // Notify
@@ -753,5 +778,28 @@ void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
 	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
 	log_d("BLECharacteristicCallbacks", "<< onWrite");
 } // onWrite
+
+
+/**
+ * @brief Callback function to support a Notify request.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ */
+void BLECharacteristicCallbacks::onNotify(BLECharacteristic* pCharacteristic) {
+	log_d("BLECharacteristicCallbacks", ">> onNotify: default");
+	log_d("BLECharacteristicCallbacks", "<< onNotify");
+} // onNotify
+
+
+/**
+ * @brief Callback function to support a Notify/Indicate Status report.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] s Status of the notification/indication
+ * @param [in] code Additional code of underlying errors
+ */
+void BLECharacteristicCallbacks::onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code) {
+	log_d("BLECharacteristicCallbacks", ">> onStatus: default");
+	log_d("BLECharacteristicCallbacks", "<< onStatus");
+} // onStatus
+
 
 #endif /* CONFIG_BT_ENABLED */
