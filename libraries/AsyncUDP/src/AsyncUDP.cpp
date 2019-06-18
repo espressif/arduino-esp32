@@ -285,6 +285,7 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, 
     _if = TCPIP_ADAPTER_IF_MAX;
     _data = (uint8_t*)(pb->payload);
     _len = pb->len;
+    _remainingLen = pb->tot_len;
     _index = 0;
 
     pbuf_ref(_pb);
@@ -337,6 +338,11 @@ uint8_t * AsyncUDPPacket::data()
 size_t AsyncUDPPacket::length()
 {
     return _len;
+}
+
+size_t AsyncUDPPacket::remainingLength()
+{
+    return _remainingLen;
 }
 
 int AsyncUDPPacket::available(){

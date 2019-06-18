@@ -56,6 +56,7 @@ protected:
     uint8_t _remoteMac[6];
     uint8_t *_data;
     size_t _len;
+    size_t _remainingLen;
     size_t _index;
 public:
     AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif * netif);
@@ -63,6 +64,7 @@ public:
 
     uint8_t * data();
     size_t length();
+    size_t remainingLength();
     bool isBroadcast();
     bool isMulticast();
     bool isIPv6();
