@@ -2,29 +2,42 @@
 #include <Schedule.h>
 #include <Arduino.h>
 
-void ICACHE_RAM_ATTR interruptFunctional(void* arg)
-{
-    ArgStructure* localArg = static_cast<ArgStructure*>(arg);
-    if (localArg->interruptInfo)
+namespace {
+
+    struct ArgStructure
     {
-        localArg->interruptInfo->value = digitalRead(localArg->interruptInfo->pin);
-        localArg->interruptInfo->micro = micros();
-    }
-    if (localArg->scheduledFunction)
+        std::function<void()> function = nullptr;
+    };
+
+    void ICACHE_RAM_ATTR interruptFunctional(void* arg)
     {
-        schedule_function(
-            [scheduledFunction = localArg->scheduledFunction,
-                               interruptInfo = *localArg->interruptInfo]()
-        {
-            scheduledFunction(interruptInfo);
-        });
+        ArgStructure* localArg = static_cast<ArgStructure*>(arg);
+        localArg->function();
     }
+
+    void cleanupFunctional(void* arg)
+    {
+        ArgStructure* localArg = static_cast<ArgStructure*>(arg);
+        delete localArg;
+    }
+
 }
 
-void cleanupFunctional(void* arg)
+void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode)
 {
-    ArgStructure* localArg = static_cast<ArgStructure*>(arg);
-    delete localArg;
+    void* localArg = detachInterruptArg(pin);
+    if (localArg)
+    {
+        cleanupFunctional(localArg);
+    }
+
+    if (intRoutine)
+    {
+        ArgStructure* arg = new ArgStructure;
+        arg->function = std::move(intRoutine);
+
+        attachInterruptArg(pin, interruptFunctional, arg, mode);
+    }
 }
 
 void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> scheduledIntRoutine, int mode)
@@ -35,11 +48,19 @@ void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> sc
         cleanupFunctional(localArg);
     }
 
-    ArgStructure* as = new ArgStructure;
-    as->interruptInfo = new InterruptInfo(pin);
-    as->scheduledFunction = scheduledIntRoutine;
+    if (scheduledIntRoutine)
+    {
+        ArgStructure* arg = new ArgStructure;
+        arg->function = [scheduledIntRoutine = std::move(scheduledIntRoutine), pin]()
+        {
+            InterruptInfo interruptInfo(pin);
+            interruptInfo.value = digitalRead(pin);
+            interruptInfo.micro = micros();
+            schedule_function([scheduledIntRoutine, interruptInfo]() { scheduledIntRoutine(std::move(interruptInfo)); });
+        };
 
-    attachInterruptArg(pin, interruptFunctional, as, mode);
+        attachInterruptArg(pin, interruptFunctional, arg, mode);
+    }
 }
 
 void detachFunctionalInterrupt(uint8_t pin)

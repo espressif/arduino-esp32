@@ -13,16 +13,7 @@ struct InterruptInfo
     uint32_t micro = 0;
 };
 
-struct ArgStructure
-{
-    ~ArgStructure()
-    {
-        delete interruptInfo;
-    }
-    InterruptInfo* interruptInfo = nullptr;
-    std::function<void(InterruptInfo)> scheduledFunction = nullptr;
-};
-
+void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode);
 void attachScheduledInterrupt(uint8_t pin, std::function<void(InterruptInfo)> scheduledIntRoutine, int mode);
 void detachFunctionalInterrupt(uint8_t pin);
 
