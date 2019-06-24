@@ -15,7 +15,7 @@
 #include <string.h>
 #include <map>
 #include <string>
-#include "BLEExceptions.h"
+//#include "BLEExceptions.h"
 #include "BLERemoteService.h"
 #include "BLEService.h"
 #include "BLEAddress.h"

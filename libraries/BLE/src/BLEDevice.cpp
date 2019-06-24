@@ -479,9 +479,8 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
  * @return A string representation of the nature of this device.
  */
 /* STATIC */ std::string BLEDevice::toString() {
-	std::ostringstream oss;
-	oss << "BD Address: " << getAddress().toString();
-	return oss.str();
+	std::string res = "BD Address: " + getAddress().toString();
+	return res;
 } // toString
 
 

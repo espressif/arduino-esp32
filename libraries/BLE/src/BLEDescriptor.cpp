@@ -255,10 +255,10 @@ void BLEDescriptor::setAccessPermissions(esp_gatt_perm_t perm) {
  * @return A string representation of the descriptor.
  */
 std::string BLEDescriptor::toString() {
-	std::stringstream stringstream;
-	stringstream << std::hex << std::setfill('0');
-	stringstream << "UUID: " << m_bleUUID.toString() + ", handle: 0x" << std::setw(2) << m_handle;
-	return stringstream.str();
+	char hex[5];
+	snprintf(hex, sizeof(hex), "%04x", m_handle);
+	std::string res = "UUID: " + m_bleUUID.toString() + ", handle: 0x" + hex;
+	return res;
 } // toString
 
 
