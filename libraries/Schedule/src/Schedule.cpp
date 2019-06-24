@@ -149,7 +149,7 @@ void run_scheduled_functions(schedule_e policy)
 	static bool fence = false;
 	{
 #ifdef ESP8266
-		InterruptLock lockAllInterruptsInThisScope;
+		esp8266::InterruptLock lockAllInterruptsInThisScope;
 #else
 		std::lock_guard<std::mutex> lock(schedulerMutex);
 #endif

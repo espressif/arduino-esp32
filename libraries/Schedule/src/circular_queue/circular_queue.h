@@ -316,7 +316,7 @@ public:
     bool capacity(const size_t cap)
     {
 #ifdef ESP8266
-        InterruptLock lock;
+        esp8266::InterruptLock lock;
 #else
         std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
@@ -326,7 +326,7 @@ public:
     bool IRAM_ATTR push(T&& val)
     {
 #ifdef ESP8266
-        InterruptLock lock;
+        esp8266::InterruptLock lock;
 #else
         std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
@@ -342,7 +342,7 @@ public:
     bool IRAM_ATTR push(const T& val)
     {
 #ifdef ESP8266
-        InterruptLock lock;
+        esp8266::InterruptLock lock;
 #else
         std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
@@ -359,7 +359,7 @@ public:
     size_t push_n(const T* buffer, size_t size)
     {
 #ifdef ESP8266
-        InterruptLock lock;
+        esp8266::InterruptLock lock;
 #else
         std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
@@ -375,7 +375,7 @@ public:
     T& pop_requeue()
     {
 #ifdef ESP8266
-        InterruptLock lock;
+        esp8266::InterruptLock lock;
 #else
         std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
@@ -408,7 +408,7 @@ public:
             if (fun(val))
             {
 #ifdef ESP8266
-                InterruptLock lock;
+                esp8266::InterruptLock lock;
 #else
                 std::lock_guard<std::mutex> lock(m_pushMtx);
 #endif
