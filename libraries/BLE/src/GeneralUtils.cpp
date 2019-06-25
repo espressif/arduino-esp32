@@ -332,12 +332,12 @@ void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
  * @return A string representation of the IP address.
  */
 std::string GeneralUtils::ipToString(uint8_t *ip) {
-	char *val = (char*)malloc(16);
-	snprintf(val, 16, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+	auto size = 16;
+	char *val = (char*)malloc(size);
+	snprintf(val, size, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 	std::string res(val);
 	free(val);
 	return res;
-	return std::string();
 } // ipToString
 
 

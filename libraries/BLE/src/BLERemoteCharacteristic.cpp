@@ -400,7 +400,8 @@ std::string BLERemoteCharacteristic::readValue() {
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-//		throw BLEDisconnectedException();
+//		throw BLEDisconnectedException(); TODO:: think about error reporting mechanism
+		return std::string();
 	}
 
 	m_semaphoreReadCharEvt.take("readValue");

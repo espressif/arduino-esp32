@@ -95,7 +95,7 @@ std::string BLEDescriptorMap::toString() {
 	int count = 0;
 	for (auto &myPair : m_uuidMap) {
 		if (count > 0) {res += "\n";}
-		snprintf(hex, 3, "%04x", myPair.first->getHandle());
+		snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
 		count++;
 		res += "handle: 0x";
 		res += hex;

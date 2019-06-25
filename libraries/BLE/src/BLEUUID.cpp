@@ -367,8 +367,9 @@ std::string BLEUUID::toString() {
 	//
 	// UUID string format:
 	// AABBCCDD-EEFF-GGHH-IIJJ-KKLLMMNNOOPP
-	char *hex = (char *)malloc(35);
-	snprintf(hex, 35, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+	auto size = 35;
+	char *hex = (char *)malloc(size);
+	snprintf(hex, size, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 			m_uuid.uuid.uuid128[15], m_uuid.uuid.uuid128[14],
 			m_uuid.uuid.uuid128[13], m_uuid.uuid.uuid128[12],
 			m_uuid.uuid.uuid128[11], m_uuid.uuid.uuid128[10],
