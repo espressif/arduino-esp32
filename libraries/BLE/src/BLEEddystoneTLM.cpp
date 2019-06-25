@@ -56,7 +56,6 @@ uint32_t BLEEddystoneTLM::getTime() {
 std::string BLEEddystoneTLM::toString() {
   std::string out = "";
   uint32_t rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
-  float temp = (float)m_eddystoneData.temp;
   char val[6];
 
   out += "Version " + m_eddystoneData.version;
@@ -65,12 +64,9 @@ std::string BLEEddystoneTLM::toString() {
   out += " mV\n";
 
   out += "Temperature ";
-  snprintf(val, sizeof(val), "%d", (int)m_eddystoneData.temp);
+  snprintf(val, sizeof(val), "%d", m_eddystoneData.temp);
   out += val;
-  out += ".";
-  snprintf(val, sizeof(val), "%d", ((int)(m_eddystoneData.temp * 100)) % 100);
-  out += val;
-  out += " °C\n";
+  out += ".0 °C\n";
 
   out += "Adv. Count ";
   snprintf(val, sizeof(val), "%d", ENDIAN_CHANGE_U32(m_eddystoneData.advCount));
