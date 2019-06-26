@@ -216,7 +216,7 @@ protected:
     /// request handling
     String _host;
     uint16_t _port = 0;
-    int32_t _connectTimeout = 60;
+    int32_t _connectTimeout = 60000;
     bool _reuse = true;
     uint16_t _tcpTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _useHTTP10 = false;
