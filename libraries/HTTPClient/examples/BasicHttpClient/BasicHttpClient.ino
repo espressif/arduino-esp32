@@ -70,8 +70,8 @@ void loop() {
     if((wifiMulti.run() == WL_CONNECTED)) {
 
         HTTPClient http;
-        // Set connection Timeout seconds
-        //http.setConnectTimeout(10)
+        // Set connection Timeout millis seconds
+        //http.setConnectTimeout(10000)
         USE_SERIAL.print("[HTTP] begin...\n");
         // configure traged server and url
         //http.begin("https://www.howsmyssl.com/a/check", ca); //HTTPS
