@@ -115,6 +115,7 @@ typedef struct {
     int                         buffer_size;              /*!< HTTP buffer size (both send and receive) */
     void                        *user_data;               /*!< HTTP user_data context */
     bool                        is_async;                 /*!< Set asynchronous mode, only supported with HTTPS for now */
+    bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
 } esp_http_client_config_t;
 
 
@@ -373,6 +374,18 @@ esp_err_t esp_http_client_cleanup(esp_http_client_handle_t client);
  */
 esp_http_client_transport_t esp_http_client_get_transport_type(esp_http_client_handle_t client);
 
+/**
+ * @brief      Set redirection URL.
+ *             When received the 30x code from the server, the client stores the redirect URL provided by the server.
+ *             This function will set the current URL to redirect to enable client to execute the redirection request.
+ *
+ * @param[in]  client  The esp_http_client handle
+ *
+ * @return
+ *     - ESP_OK
+ *     - ESP_FAIL
+ */
+esp_err_t esp_http_client_set_redirection(esp_http_client_handle_t client);
 
 #ifdef __cplusplus
 }

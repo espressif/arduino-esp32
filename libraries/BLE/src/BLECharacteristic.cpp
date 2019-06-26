@@ -628,7 +628,9 @@ void BLECharacteristic::setValue(uint8_t* data, size_t length) {
 		log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
 		return;
 	}
+	m_semaphoreSetValue.take();  
 	m_value.setValue(data, length);
+	m_semaphoreSetValue.give();  
 	log_v("<< setValue");
 } // setValue
 

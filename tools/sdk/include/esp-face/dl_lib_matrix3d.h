@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 typedef float fptp_t;
 typedef uint8_t uc_t;
 
@@ -92,6 +93,16 @@ void dl_matrix3d_free(dl_matrix3d_t *m);
  */
 void dl_matrix3du_free(dl_matrix3du_t *m);
 
+
+/*
+ * @brief Dot product with a vector and matrix
+ *
+ * @param out   Space to put the result
+ * @param in    input vector
+ * @param f     filter matrix
+ */
+void dl_matrix3d_dot_product(dl_matrix3d_t *out, dl_matrix3d_t *in, dl_matrix3d_t *f);
+
 /**
  * @brief Do a relu (Rectifier Linear Unit) operation, update the input matrix3d
  *
@@ -162,6 +173,9 @@ void dl_matrix3du_slice_copy(dl_matrix3du_t *dst,
                              int w,
                              int h);
 
+
+void dl_matrix3d_conv_1x1 (dl_matrix3d_t *out, dl_matrix3d_t *in, dl_matrix3d_t *f);
+
 /**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
@@ -183,6 +197,11 @@ dl_matrix3d_t *dl_matrix3d_conv(dl_matrix3d_t *in,
                                 int padding,
                                 int mode);
 
+void dl_matrix3d_conv_3x3_normal (dl_matrix3d_t *out,
+                                    dl_matrix3d_t *in,
+                                    dl_matrix3d_t *f,
+                                    int step_x,
+                                    int step_y);
 /**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
@@ -223,6 +242,11 @@ dl_matrix3d_t *dl_matrix3d_depthwise_conv(dl_matrix3d_t *in,
                                           int padding,
                                           int mode);
 
+void dl_matrix3d_depthwise_conv_3x3_normal(dl_matrix3d_t *out,
+                                            dl_matrix3d_t *in,
+                                            dl_matrix3d_t *f,
+                                            int step_x,
+                                            int step_y);
 /**
  * @brief Do a mobilenet block forward, dimension is (number, width, height, channel)
  *
@@ -418,3 +442,8 @@ void dl_matrix3d_print(dl_matrix3d_t *m, char *message);
  * @param message        name of matrix
  */
 void dl_matrix3du_print(dl_matrix3du_t *m, char *message);
+
+
+void dl_matrix3d_init_bias (dl_matrix3d_t *out, dl_matrix3d_t *bias);
+
+void dl_matrix3d_multiply(dl_matrix3d_t *out, dl_matrix3d_t *in1, dl_matrix3d_t *in2);

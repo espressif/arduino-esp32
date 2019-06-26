@@ -26,8 +26,8 @@
 #include "EEPROM.h"
 
 // Instantiate eeprom objects with parameter/argument names and size same as in the partition table
-EEPROMClass  NAMES("eeprom0", 0x1000);
-EEPROMClass  HEIGHT("eeprom1", 0x500);
+EEPROMClass  NAMES("eeprom0", 0x500);
+EEPROMClass  HEIGHT("eeprom1", 0x200);
 EEPROMClass  AGE("eeprom2", 0x100);
 
 void setup() {

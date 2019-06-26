@@ -21,9 +21,8 @@ static const uint8_t LED_BUILTIN = 33;
 
 static const uint8_t KEY_BUILTIN = 34;
 
-// See https://github.com/OLIMEX/ESP32-GATEWAY/blob/master/SOFTWARE/MOD-RTC/main/main.c for more info about IIC on the GATEWAY
-static const uint8_t SCL = 16; // This is pin 11
-static const uint8_t SDA = 17; // This is pin 12
+static const uint8_t SCL = 16; // This is extention pin 11
+static const uint8_t SDA = 32; // This is extention pin 13
 
 static const uint8_t SS    = 5;
 static const uint8_t MOSI  = 23;

@@ -39,7 +39,8 @@ static const char Content_Length[] = "Content-Length";
 
 
 WebServer::WebServer(IPAddress addr, int port)
-: _server(addr, port)
+: _corsEnabled(false)
+, _server(addr, port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
@@ -60,7 +61,8 @@ WebServer::WebServer(IPAddress addr, int port)
 }
 
 WebServer::WebServer(int port)
-: _server(port)
+: _corsEnabled(false)
+, _server(port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
