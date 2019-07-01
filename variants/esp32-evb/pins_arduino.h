@@ -17,6 +17,9 @@ static const uint8_t KEY_BUILTIN = 34;
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
+#define TX1 4
+#define RX1 36
+
 static const uint8_t SDA = 13;
 static const uint8_t SCL = 16;
 
