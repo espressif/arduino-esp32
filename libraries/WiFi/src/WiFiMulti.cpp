@@ -44,12 +44,11 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
 
 uint8_t WiFiMulti::run(uint32_t connectTimeout)
 {
-
     int8_t scanResult;
     uint8_t status = WiFi.status();
     if(status == WL_CONNECTED) {
         for(uint32_t x = 0; x < APlist.size(); x++) {
-            if(WiFi.SSID()==APlist[x].ssid){
+            if(WiFi.SSID()==APlist[x].ssid) {
                 return status;
             }
         }
@@ -119,7 +118,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
             WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
             status = WiFi.status();
-            
+
             auto startTime = millis();
             // wait for connection, fail, or timeout
             while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
@@ -165,7 +164,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
 bool WiFiMulti::APlistAdd(const char* ssid, const char *passphrase)
 {
-
     WifiAPlist_t newAP;
 
     if(!ssid || *ssid == 0x00 || strlen(ssid) > 31) {
@@ -216,4 +214,3 @@ void WiFiMulti::APlistClean(void)
     }
     APlist.clear();
 }
-

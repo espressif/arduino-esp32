@@ -48,7 +48,6 @@ private:
     std::vector<WifiAPlist_t> APlist;
     bool APlistAdd(const char* ssid, const char *passphrase = NULL);
     void APlistClean(void);
-
 };
 
 #endif /* WIFICLIENTMULTI_H_ */
