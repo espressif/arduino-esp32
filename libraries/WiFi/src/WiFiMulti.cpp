@@ -128,17 +128,17 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
             }
 
             switch(status) {
-            case 3:
+            case WL_CONNECTED:
                 log_i("[WIFI] Connecting done.");
                 log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
                 log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
                 log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
                 log_d("[WIFI] Channel: %d", WiFi.channel());
                 break;
-            case 1:
+            case WL_NO_SSID_AVAIL:
                 log_e("[WIFI] Connecting Failed AP not found.");
                 break;
-            case 4:
+            case WL_CONNECT_FAILED:
                 log_e("[WIFI] Connecting Failed.");
                 break;
             default:
