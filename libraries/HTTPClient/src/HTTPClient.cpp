@@ -195,6 +195,11 @@ bool HTTPClient::begin(String url, const char* CAcert)
     }
     _secure = true;
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
+    if(!_transportTraits) {
+        log_e("could not create transport traits");
+        return false;
+    }
+
     return true;
 }
 
@@ -215,6 +220,11 @@ bool HTTPClient::begin(String url)
         return begin(url, (const char*)NULL);
     }
     _transportTraits = TransportTraitsPtr(new TransportTraits());
+    if(!_transportTraits) {
+        log_e("could not create transport traits");
+        return false;
+    }
+
     return true;
 }
 #endif // HTTPCLIENT_1_1_COMPATIBLE
@@ -981,14 +991,19 @@ bool HTTPClient::connect(void)
     }
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-     if(!_client) {
+     if(_transportTraits && !_client) {
         _tcpDeprecated = _transportTraits->create();
+        if(!_tcpDeprecated) {
+            log_e("failed to create client");
+            return false;
+        }
         _client = _tcpDeprecated.get();
      }
 #endif
 
     if (!_client) {
         log_d("HTTPClient::begin was not called or returned error");
+Serial.println("HERE");
         return false;
     }
 
@@ -1100,7 +1115,9 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(headerLine.startsWith("HTTP/1.")) {
-                _canReuse = (headerLine[sizeof "HTTP/1."] != '0');
+                if(_canReuse) {
+                    _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
+                }
                 _returnCode = headerLine.substring(9, headerLine.indexOf(' ', 9)).toInt();
             } else if(headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
