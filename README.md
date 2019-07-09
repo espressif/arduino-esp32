@@ -14,7 +14,7 @@
 
 [Latest development release ![Development Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic) ![Development Date](https://img.shields.io/github/release-date-pre/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) ![Downloads](https://img.shields.io/github/downloads-pre/espressif/arduino-esp32/latest/total.svg?style=plastic)
 
-Most of the framework is implemented. Most noticable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
+Most of the framework is implemented. Most noticeable is the missing analogWrite. While analogWrite is on it's way, there are a few other options that you can use:
 - 16 channels [LEDC](cores/esp32/esp32-hal-ledc.h) which is PWM
 - 8 channels [SigmaDelta](cores/esp32/esp32-hal-sigmadelta.h) which uses SigmaDelta modulation
 - 2 channels [DAC](cores/esp32/esp32-hal-dac.h) which gives real analog output
