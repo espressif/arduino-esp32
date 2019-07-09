@@ -232,6 +232,12 @@ config ARDUINO_SELECTIVE_ESPmDNS
     select ARDUINO_SELECTIVE_WiFi
     default y
 
+config ARDUINO_SELECTIVE_FFat
+    bool "Enable FFat"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
 config ARDUINO_SELECTIVE_FS
     bool "Enable FS"
     depends on ARDUINO_SELECTIVE_COMPILATION
