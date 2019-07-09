@@ -68,7 +68,7 @@ void F_Fat::end()
             log_e("Unmounting FFat partition failed! Error: %d", err);
             return;
         }
-        _wl_handle = NULL;
+        _wl_handle = 0;
         _impl->mountpoint(NULL);
     }
 }
@@ -109,7 +109,9 @@ size_t F_Fat::totalBytes()
 
     BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
     char drv[3] = {(char)(48+pdrv), ':', 0};
-    FRESULT res = f_getfree(drv, &free_clust, &fs);
+    if ( f_getfree(drv, &free_clust, &fs) != FR_OK){
+        return 0;
+    }
     tot_sect = (fs->n_fatent - 2) * fs->csize;
     sect_size = CONFIG_WL_SECTOR_SIZE;
     return tot_sect * sect_size;
@@ -123,7 +125,9 @@ size_t F_Fat::freeBytes()
 
     BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
     char drv[3] = {(char)(48+pdrv), ':', 0};
-    FRESULT res = f_getfree(drv, &free_clust, &fs);
+    if ( f_getfree(drv, &free_clust, &fs) != FR_OK){
+        return 0;
+    }
     free_sect = free_clust * fs->csize;
     sect_size = CONFIG_WL_SECTOR_SIZE;
     return free_sect * sect_size;
