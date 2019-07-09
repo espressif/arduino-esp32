@@ -484,23 +484,29 @@ void BLEAdvertisedDevice::setTXPower(int8_t txPower) {
  * @return A string representation of this device.
  */
 std::string BLEAdvertisedDevice::toString() {
-	std::stringstream ss;
-	ss << "Name: " << getName() << ", Address: " << getAddress().toString();
+	std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
 	if (haveAppearance()) {
-		ss << ", appearance: " << getAppearance();
+		char val[6];
+		snprintf(val, sizeof(val), "%d", getAppearance());
+		res += ", appearance: ";
+		res += val;
 	}
 	if (haveManufacturerData()) {
 		char *pHex = BLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().data(), getManufacturerData().length());
-		ss << ", manufacturer data: " << pHex;
+		res += ", manufacturer data: ";
+		res += pHex;
 		free(pHex);
 	}
 	if (haveServiceUUID()) {
-		ss << ", serviceUUID: " << getServiceUUID().toString();
+		res += ", serviceUUID: " + getServiceUUID().toString();
 	}
 	if (haveTXPower()) {
-		ss << ", txPower: " << (int)getTXPower();
+		char val[4];
+		snprintf(val, sizeof(val), "%d", getTXPower());
+		res += ", txPower: ";
+		res += val;
 	}
-	return ss.str();
+	return res;
 } // toString
 
 uint8_t* BLEAdvertisedDevice::getPayload() {
