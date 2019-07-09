@@ -279,6 +279,64 @@ pico32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+tinypico.name=TinyPICO
+
+tinypico.upload.tool=esptool_py
+tinypico.upload.maximum_size=1310720
+tinypico.upload.maximum_data_size=327680
+tinypico.upload.wait_for_upload_port=true
+
+tinypico.serial.disableDTR=true
+tinypico.serial.disableRTS=true
+
+tinypico.build.mcu=esp32
+tinypico.build.core=esp32
+tinypico.build.variant=pico32
+tinypico.build.board=ESP32_PICO
+
+tinypico.build.f_cpu=240000000L
+tinypico.build.flash_size=4MB
+tinypico.build.flash_freq=80m
+tinypico.build.flash_mode=dio
+tinypico.build.boot=dio
+tinypico.build.partitions=default
+tinypico.build.defines=
+
+tinypico.menu.UploadSpeed.921600=921600
+tinypico.menu.UploadSpeed.921600.upload.speed=921600
+tinypico.menu.UploadSpeed.115200=115200
+tinypico.menu.UploadSpeed.115200.upload.speed=115200
+tinypico.menu.UploadSpeed.256000.windows=256000
+tinypico.menu.UploadSpeed.256000.upload.speed=256000
+tinypico.menu.UploadSpeed.230400.windows.upload.speed=256000
+tinypico.menu.UploadSpeed.230400=230400
+tinypico.menu.UploadSpeed.230400.upload.speed=230400
+tinypico.menu.UploadSpeed.460800.linux=460800
+tinypico.menu.UploadSpeed.460800.macosx=460800
+tinypico.menu.UploadSpeed.460800.upload.speed=460800
+tinypico.menu.UploadSpeed.512000.windows=512000
+tinypico.menu.UploadSpeed.512000.upload.speed=512000
+
+tinypico.menu.PSRAM.enabled=Enabled
+tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+tinypico.menu.PSRAM.disabled=Disabled
+tinypico.menu.PSRAM.disabled.build.defines=
+
+tinypico.menu.DebugLevel.none=None
+tinypico.menu.DebugLevel.none.build.code_debug=0
+tinypico.menu.DebugLevel.error=Error
+tinypico.menu.DebugLevel.error.build.code_debug=1
+tinypico.menu.DebugLevel.warn=Warn
+tinypico.menu.DebugLevel.warn.build.code_debug=2
+tinypico.menu.DebugLevel.info=Info
+tinypico.menu.DebugLevel.info.build.code_debug=3
+tinypico.menu.DebugLevel.debug=Debug
+tinypico.menu.DebugLevel.debug.build.code_debug=4
+tinypico.menu.DebugLevel.verbose=Verbose
+tinypico.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 turta_iot_node.name=Turta IoT Node
 
 turta_iot_node.upload.tool=esptool_py
