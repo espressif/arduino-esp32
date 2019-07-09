@@ -72,6 +72,7 @@ public:
 	BLEService* 	getServiceByUUID(const char* uuid);
 	BLEService* 	getServiceByUUID(BLEUUID uuid);
 	bool 			connect(BLEAddress address);
+	void 			disconnect(uint16_t connId);
 	uint16_t		m_appId;
 	void			updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
 
