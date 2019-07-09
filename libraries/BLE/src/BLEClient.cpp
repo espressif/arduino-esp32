@@ -516,14 +516,13 @@ uint16_t BLEClient::getMTU() {
  * @return A string representation of this client.
  */
 std::string BLEClient::toString() {
-	std::ostringstream ss;
-	ss << "peer address: " << m_peerAddress.toString();
-	ss << "\nServices:\n";
+	std::string res = "peer address: " + m_peerAddress.toString();
+	res += "\nServices:\n";
 	for (auto &myPair : m_servicesMap) {
-		ss << myPair.second->toString() << "\n";
+		res += myPair.second->toString() + "\n";
 	  // myPair.second is the value
 	}
-	return ss.str();
+	return res;
 } // toString
 
 

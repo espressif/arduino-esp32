@@ -6,7 +6,7 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-#include <sstream>
+#include <stdio.h>
 #include <iomanip>
 #include "BLEService.h"
 
@@ -73,12 +73,15 @@ void BLEServiceMap::setByHandle(uint16_t handle, BLEService* service) {
  * @return A string representation of the service map.
  */
 std::string BLEServiceMap::toString() {
-	std::stringstream stringStream;
-	stringStream << std::hex << std::setfill('0');
+	std::string res;
+	char hex[5];
 	for (auto &myPair: m_handleMap) {
-		stringStream << "handle: 0x" << std::setw(2) << myPair.first << ", uuid: " + myPair.second->getUUID().toString() << "\n";
+		res += "handle: 0x";
+		snprintf(hex, sizeof(hex), "%04x", myPair.first);
+		res += hex;
+		res += ", uuid: " + myPair.second->getUUID().toString() + "\n";
 	}
-	return stringStream.str();
+	return res;
 } // toString
 
 void BLEServiceMap::handleGATTServerEvent(
