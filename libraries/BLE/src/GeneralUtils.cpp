@@ -332,9 +332,12 @@ void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
  * @return A string representation of the IP address.
  */
 std::string GeneralUtils::ipToString(uint8_t *ip) {
-	std::stringstream s;
-	s << (int) ip[0] << '.' << (int) ip[1] << '.' << (int) ip[2] << '.' << (int) ip[3];
-	return s.str();
+	auto size = 16;
+	char *val = (char*)malloc(size);
+	snprintf(val, size, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+	std::string res(val);
+	free(val);
+	return res;
 } // ipToString
 
 
@@ -347,11 +350,14 @@ std::string GeneralUtils::ipToString(uint8_t *ip) {
 std::vector<std::string> GeneralUtils::split(std::string source, char delimiter) {
 	// See also: https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
 	std::vector<std::string> strings;
-	std::istringstream iss(source);
-	std::string s;
-	while (std::getline(iss, s, delimiter)) {
-		strings.push_back(trim(s));
+	std::size_t current, previous = 0;
+	current = source.find(delimiter);
+	while (current != std::string::npos) {
+		strings.push_back(trim(source.substr(previous, current - previous)));
+		previous = current + 1;
+		current = source.find(delimiter, previous);
 	}
+	strings.push_back(trim(source.substr(previous, current - previous)));
 	return strings;
 } // split
 

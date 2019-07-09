@@ -202,9 +202,12 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
  * @return A string representation of the semaphore.
  */
 std::string FreeRTOS::Semaphore::toString() {
-	std::stringstream stringStream;
-	stringStream << "name: "<< m_name << " (0x" << std::hex << std::setfill('0') << (uint32_t)m_semaphore << "), owner: " << m_owner;
-	return stringStream.str();
+	char hex[9];
+	std::string res = "name: " + m_name + " (0x";
+	snprintf(hex, sizeof(hex), "%08x", (uint32_t)m_semaphore);
+	res += hex;
+	res += "), owner: " + m_owner;
+	return res;
 } // toString
 
 
