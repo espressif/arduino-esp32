@@ -322,6 +322,18 @@ tinypico.menu.UploadSpeed.460800.upload.speed=460800
 tinypico.menu.UploadSpeed.512000.windows=512000
 tinypico.menu.UploadSpeed.512000.upload.speed=512000
 
+tinypico.menu.FlashMode.qio=QIO
+tinypico.menu.FlashMode.qio.build.flash_mode=dio
+tinypico.menu.FlashMode.qio.build.boot=qio
+tinypico.menu.FlashMode.dio=DIO
+tinypico.menu.FlashMode.dio.build.flash_mode=dio
+tinypico.menu.FlashMode.dio.build.boot=dio
+
+tinypico.menu.FlashFreq.80=80MHz
+tinypico.menu.FlashFreq.80.build.flash_freq=80m
+tinypico.menu.FlashFreq.40=40MHz
+tinypico.menu.FlashFreq.40.build.flash_freq=40m
+
 tinypico.menu.PSRAM.enabled=Enabled
 tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 tinypico.menu.PSRAM.disabled=Disabled
