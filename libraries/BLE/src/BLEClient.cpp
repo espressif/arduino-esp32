@@ -184,10 +184,11 @@ void BLEClient::gattClientEventHandler(
 				if (m_pClientCallbacks != nullptr) {
 					m_pClientCallbacks->onDisconnect(this);
 				}
-				BLEDevice::removePeerDevice(m_appId, true);
 				esp_ble_gattc_app_unregister(m_gattc_if);
+				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
 				m_semaphoreSearchCmplEvt.give(1);
+				BLEDevice::removePeerDevice(m_appId, true);
 				break;
 		} // ESP_GATTC_DISCONNECT_EVT
 

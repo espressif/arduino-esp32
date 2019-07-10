@@ -55,7 +55,6 @@ std::string BLERemoteDescriptor::readValue() {
 	// Check to see that we are connected.
 	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-//		throw BLEDisconnectedException(); TODO:: think about error reporting mechanism
 		return std::string();
 	}
 
@@ -134,7 +133,6 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 	// Check to see that we are connected.
 	if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-//		throw BLEDisconnectedException(); TODO:: think about error reporting mechanism
 		return;
 	}
 
