@@ -198,6 +198,12 @@ wl_status_t WiFiSTAClass::begin()
         return WL_CONNECT_FAILED;
     }
 
+    wifi_config_t current_conf;
+    if(esp_wifi_get_config(WIFI_IF_STA, &current_conf) != ESP_OK || esp_wifi_set_config(WIFI_IF_STA, &current_conf) != ESP_OK) {
+        log_e("config failed");
+        return WL_CONNECT_FAILED;
+    }
+
     if(!_useStaticIp) {
         if(tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA) == ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED){
             log_e("dhcp client start failed!");
