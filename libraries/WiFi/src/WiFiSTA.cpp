@@ -162,6 +162,8 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         esp_wifi_set_config(WIFI_IF_STA, &conf);
     } else if(status() == WL_CONNECTED){
         return WL_CONNECTED;
+    } else {
+        esp_wifi_set_config(WIFI_IF_STA, &conf);
     }
 
     if(!_useStaticIp) {
