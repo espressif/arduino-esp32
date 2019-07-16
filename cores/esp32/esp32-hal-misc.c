@@ -44,10 +44,12 @@ float temperatureRead()
     return (temprature_sens_read() - 32) / 1.8;
 }
 
-void yield()
+void __yield()
 {
     vPortYield();
 }
+
+void yield() __attribute__ ((weak, alias("__yield")));
 
 #if CONFIG_AUTOSTART_ARDUINO
 
@@ -139,10 +141,12 @@ unsigned long IRAM_ATTR millis()
     return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
-void delay(uint32_t ms)
+void __delay(uint32_t ms)
 {
     vTaskDelay(ms / portTICK_PERIOD_MS);
 }
+
+void delay(uint32_t ms) __attribute__ ((weak, alias("__delay"))); 
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
 {

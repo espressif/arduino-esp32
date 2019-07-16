@@ -9,6 +9,13 @@ TaskHandle_t loopTaskHandle = NULL;
 
 bool loopTaskWDTEnabled;
 
+extern "C" void __loop_end(void)
+{
+    /* do nothing by default */
+}
+
+extern "C" void loop_end(void) __attribute__((weak, alias("__loop_end")));
+
 void loopTask(void *pvParameters)
 {
     setup();
@@ -17,6 +24,7 @@ void loopTask(void *pvParameters)
             esp_task_wdt_reset();
         }
         loop();
+        loop_end();
     }
 }
 
