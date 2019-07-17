@@ -29,6 +29,7 @@
 #include "soc/dport_reg.h"
 #include "soc/rtc.h"
 #include "esp_intr_alloc.h"
+#include "sdkconfig.h"
 
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
 #define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:(         (u==2)?U2RXD_IN_IDX:0)))
@@ -277,26 +278,24 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
-uint8_t uartRead(uart_t* uart)
+uint8_t uartRead(uart_t* uart, uint8_t *data, size_t to)
 {
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
-    uint8_t c;
-    if(xQueueReceive(uart->queue, &c, 0)) {
-        return c;
+    if(xQueueReceive(uart->queue, data, to)) {
+        return 1;
     }
     return 0;
 }
 
-uint8_t uartPeek(uart_t* uart)
+uint8_t uartPeek(uart_t* uart, uint8_t *data, size_t to)
 {
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
-    uint8_t c;
-    if(xQueuePeek(uart->queue, &c, 0)) {
-        return c;
+    if(xQueuePeek(uart->queue, data, to)) {
+        return 1;
     }
     return 0;
 }
@@ -377,6 +376,10 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
         }
         // wait TX empty
         while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
+
+        if (xHigherPriorityTaskWoken) {
+			portYIELD_FROM_ISR();
+		}
     } else {
         //todo:
         // set baudrate
