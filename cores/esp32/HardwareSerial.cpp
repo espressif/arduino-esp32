@@ -116,23 +116,41 @@ int HardwareSerial::availableForWrite(void)
 
 int HardwareSerial::peek(void)
 {
-    if (available()) {
-        return uartPeek(_uart);
-    }
-    return -1;
+	uint8_t data;
+	if (!uartPeek(_uart, &data, 0))
+		return -1;
+
+	return data;
 }
 
 int HardwareSerial::read(void)
 {
-    if(available()) {
-        return uartRead(_uart);
-    }
-    return -1;
+	uint8_t data;
+	if (!uartRead(_uart, &data, 0))
+		return -1;
+
+	return data;
 }
 
 void HardwareSerial::flush()
 {
     uartFlush(_uart);
+}
+
+int HardwareSerial::timedPeek() {
+	uint8_t data;
+	if (!uartPeek(_uart, &data, _timeout))
+		return -1;
+
+	return data;
+}
+
+int HardwareSerial::timedRead() {
+	uint8_t data;
+	if (!uartRead(_uart, &data, _timeout))
+		return -1;
+
+	return data;
 }
 
 size_t HardwareSerial::write(uint8_t c)
