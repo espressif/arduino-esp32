@@ -230,7 +230,6 @@ esp32wrover.menu.DebugLevel.verbose=Verbose
 esp32wrover.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 pico32.name=ESP32 Pico Kit
 
 pico32.upload.tool=esptool_py
@@ -353,7 +352,41 @@ tinypico.menu.DebugLevel.verbose=Verbose
 tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+magicbit.name=MagicBit
 
+magicbit.upload.tool=esptool_py
+magicbit.upload.maximum_size=1310720
+magicbit.upload.maximum_data_size=327680
+magicbit.upload.wait_for_upload_port=true
+
+magicbit.serial.disableDTR=true
+magicbit.serial.disableRTS=true
+
+magicbit.build.mcu=esp32
+magicbit.build.core=esp32
+magicbit.build.variant=esp32
+magicbit.build.board=ESP32_DEV
+
+magicbit.build.f_cpu=240000000L
+magicbit.build.flash_size=4MB
+magicbit.build.flash_freq=40m
+magicbit.build.flash_mode=dio
+magicbit.build.boot=dio
+magicbit.build.partitions=default
+
+magicbit.menu.CPUFreq.240=240MHz (WiFi/BT)
+magicbit.menu.CPUFreq.240.build.f_cpu=240000000L
+magicbit.menu.CPUFreq.160=160MHz (WiFi/BT)
+magicbit.menu.CPUFreq.160.build.f_cpu=160000000L
+magicbit.menu.CPUFreq.80=80MHz (WiFi/BT)
+magicbit.menu.CPUFreq.80.build.f_cpu=80000000L
+magicbit.menu.CPUFreq.40=40MHz (40MHz XTAL)
+
+magicbit.menu.UploadSpeed.921600=921600
+magicbit.menu.UploadSpeed.921600.upload.speed=921600
+magicbit.menu.UploadSpeed.115200=115200
+magicbit.menu.UploadSpeed.115200.upload.speed=115200
+##############################################################
 turta_iot_node.name=Turta IoT Node
 
 turta_iot_node.upload.tool=esptool_py
