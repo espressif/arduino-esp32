@@ -135,6 +135,7 @@ extern "C"
     uint8_t delete_face(face_id_list *l);
     int8_t delete_face_with_name(face_id_name_list *l, char *name);
     void delete_face_all_with_name(face_id_name_list *l);
+    dl_matrix3d_t *get_face_id(dl_matrix3du_t *aligned_face);
 #if __cplusplus
 }
 #endif
