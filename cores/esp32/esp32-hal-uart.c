@@ -343,6 +343,8 @@ void uartFlush(uart_t* uart)
         READ_PERI_REG(UART_FIFO_REG(uart->num));
     }
 
+    xQueueReset(uart->queue);
+
     UART_MUTEX_UNLOCK();
 }
 
