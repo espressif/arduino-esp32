@@ -253,7 +253,7 @@ IPAddress WiFiAPClass::softAPBroadcastIP()
  * Get the softAP network ID.
  * @return IPAddress softAP networkID
  */
-IPAddress WiFiAPClass::softAPNetwrokID()
+IPAddress WiFiAPClass::softAPNetworkID()
 {
     tcpip_adapter_ip_info_t ip;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
