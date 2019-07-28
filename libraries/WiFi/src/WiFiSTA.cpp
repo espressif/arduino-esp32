@@ -508,9 +508,9 @@ IPAddress WiFiSTAClass::broadcastIP()
 
 /**
  * Get the network id.
- * @return IPAddress netwrokID
+ * @return IPAddress networkID
  */
-IPAddress WiFiSTAClass::netwrokID()
+IPAddress WiFiSTAClass::networkID()
 {
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return IPAddress();
@@ -522,7 +522,7 @@ IPAddress WiFiSTAClass::netwrokID()
 
 /**
  * Get the network id.
- * @return uint8_t netwrokID
+ * @return uint8_t subnetCIDR
  */
 uint8_t WiFiSTAClass::subnetCIDR()
 {
