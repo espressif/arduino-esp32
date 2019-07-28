@@ -521,7 +521,7 @@ IPAddress WiFiSTAClass::networkID()
 }
 
 /**
- * Get the network id.
+ * Get the subnet CIDR.
  * @return uint8_t subnetCIDR
  */
 uint8_t WiFiSTAClass::subnetCIDR()
