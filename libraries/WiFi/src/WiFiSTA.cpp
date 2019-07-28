@@ -493,6 +493,48 @@ IPAddress WiFiSTAClass::dnsIP(uint8_t dns_no)
 }
 
 /**
+ * Get the broadcast ip address.
+ * @return IPAddress broadcastIP
+ */
+IPAddress WiFiSTAClass::broadcastIP()
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
+    tcpip_adapter_ip_info_t ip;
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+    return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+/**
+ * Get the network id.
+ * @return IPAddress netwrokID
+ */
+IPAddress WiFiSTAClass::netwrokID()
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
+    tcpip_adapter_ip_info_t ip;
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+    return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+/**
+ * Get the network id.
+ * @return uint8_t netwrokID
+ */
+uint8_t WiFiSTAClass::subnetCIDR()
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return (uint8_t)0;
+    }
+    tcpip_adapter_ip_info_t ip;
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
+}
+
+/**
  * Return the current SSID associated with the network
  * @return SSID
  */
