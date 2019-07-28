@@ -66,7 +66,7 @@ public:
     IPAddress dnsIP(uint8_t dns_no = 0);
 
     IPAddress broadcastIP();
-    IPAddress netwrokID();
+    IPAddress networkID();
     uint8_t subnetCIDR();
     
     bool enableIpV6();
