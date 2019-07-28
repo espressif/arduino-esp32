@@ -46,7 +46,7 @@ public:
     IPAddress softAPIP();
 
     IPAddress softAPBroadcastIP();
-    IPAddress softAPNetwrokID();
+    IPAddress softAPNetworkID();
     uint8_t softAPSubnetCIDR();
 
     bool softAPenableIpV6();
