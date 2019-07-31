@@ -14,9 +14,10 @@ onlyLabels: []
 exemptLabels:
   - pinned
   - security
-  - "[Status] Maybe Later"
+  - "to be implemented"
   - "for reference"
   - "move to PR"
+  - "enhancement"
 
 # Set to true to ignore issues in a project (defaults to false)
 exemptProjects: false
@@ -28,7 +29,7 @@ exemptMilestones: false
 exemptAssignees: false
 
 # Label to use when marking as stale
-staleLabel: wontfix
+staleLabel: stale
 
 # Comment to post when marking as stale. Set to `false` to disable
 markComment: >
