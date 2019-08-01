@@ -38,12 +38,12 @@ markComment: >
   for your contributions.
 
 # Comment to post when removing the stale label.
-unmarkComment: >
-  This stale issue has been automatically closed. Thank you for your contributions.
+# unmarkComment: >
+#   Your comment here.
 
 # Comment to post when closing a stale Issue or Pull Request.
-# closeComment: >
-#   Your comment here.
+closeComment: >
+  This stale issue has been automatically closed. Thank you for your contributions.
 
 # Limit the number of actions per hour, from 1-30. Default is 30
 limitPerRun: 30
