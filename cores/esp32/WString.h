@@ -27,6 +27,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <pgmspace.h>
+#include <stdint.h>
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
