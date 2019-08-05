@@ -302,7 +302,9 @@ void WebServer::handleClient() {
       // Wait for data from client to become available
       if (_currentClient.available()) {
         if (_parseRequest(_currentClient)) {
-          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT);
+          // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
+          // it must be divided by 1000
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
           _contentLength = CONTENT_LENGTH_NOT_SET;
           _handleRequest();
 

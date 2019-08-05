@@ -1,20 +1,19 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
 typedef float fptp_t;
 typedef uint8_t uc_t;
 
 typedef enum
 {
-    DL_C_IMPL = 0,
-    DL_XTENSA_IMPL = 1
-} dl_conv_mode;
-
-typedef enum
-{
-    INPUT_UINT8 = 0,
-    INPUT_FLOAT = 1,
-} dl_op_type;
+    DL_SUCCESS = 0,
+    DL_FAIL = 1,
+} dl_error_type;
 
 typedef enum
 {
@@ -53,9 +52,7 @@ typedef struct
     int stride_x;
     int stride_y;
     dl_padding_type padding;
-    dl_conv_mode mode;
-    dl_op_type type;
-} dl_matrix3d_conv_config_t;
+} dl_matrix3d_mobilenet_config_t;
 
 /*
  * @brief Allocate a 3D matrix with float items, the access sequence is NHWC
@@ -93,7 +90,6 @@ void dl_matrix3d_free(dl_matrix3d_t *m);
  */
 void dl_matrix3du_free(dl_matrix3du_t *m);
 
-
 /*
  * @brief Dot product with a vector and matrix
  *
@@ -101,24 +97,7 @@ void dl_matrix3du_free(dl_matrix3du_t *m);
  * @param in    input vector
  * @param f     filter matrix
  */
-void dl_matrix3d_dot_product(dl_matrix3d_t *out, dl_matrix3d_t *in, dl_matrix3d_t *f);
-
-/**
- * @brief Do a relu (Rectifier Linear Unit) operation, update the input matrix3d
- *
- * @param in        Floating point input matrix3d
- * @param clip      If value is higher than this, it will be clipped to this value
- */
-void dl_matrix3d_relu(dl_matrix3d_t *m, fptp_t clip);
-
-/**
- * @brief Do a leaky relu (Rectifier Linear Unit) operation, update the input matrix3d
- *
- * @param in        Floating point input matrix3d
- * @param clip      If value is higher than this, it will be clipped to this value
- * @param alpha     If value is less than zero, it will be updated by multiplying this factor
- */
-void dl_matrix3d_leaky_relu(dl_matrix3d_t *m, fptp_t clip, fptp_t alpha);
+void dl_matrix3dff_dot_product(dl_matrix3d_t *out, dl_matrix3d_t *in, dl_matrix3d_t *f);
 
 /**
  * @brief Do a softmax operation on a matrix3d
@@ -126,18 +105,6 @@ void dl_matrix3d_leaky_relu(dl_matrix3d_t *m, fptp_t clip, fptp_t alpha);
  * @param in        Input matrix3d
  */
 void dl_matrix3d_softmax(dl_matrix3d_t *m);
-
-/**
- * @brief Do a general fully connected layer pass, dimension is (number, width, height, channel)
- *
- * @param in             Input matrix3d, size is (1, w, 1, 1)
- * @param filter         Weights of the neurons, size is (1, w, h, 1)
- * @param bias           Bias for the fc layer, size is (1, 1, 1, h)
- * @return               The result of fc layer, size is (1, 1, 1, h)
- */
-dl_matrix3d_t *dl_matrix3d_fc(dl_matrix3d_t *in,
-                              dl_matrix3d_t *filter,
-                              dl_matrix3d_t *bias);
 
 /**
  * @brief Copy a range of float items from an existing matrix to a preallocated matrix
@@ -173,9 +140,6 @@ void dl_matrix3du_slice_copy(dl_matrix3du_t *dst,
                              int w,
                              int h);
 
-
-void dl_matrix3d_conv_1x1 (dl_matrix3d_t *out, dl_matrix3d_t *in, dl_matrix3d_t *f);
-
 /**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
@@ -197,11 +161,6 @@ dl_matrix3d_t *dl_matrix3d_conv(dl_matrix3d_t *in,
                                 int padding,
                                 int mode);
 
-void dl_matrix3d_conv_3x3_normal (dl_matrix3d_t *out,
-                                    dl_matrix3d_t *in,
-                                    dl_matrix3d_t *f,
-                                    int step_x,
-                                    int step_y);
 /**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
@@ -215,57 +174,6 @@ void dl_matrix3d_conv_3x3_normal (dl_matrix3d_t *out,
  *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
  * @return               The result of CNN layer
  */
-dl_matrix3d_t *dl_matrix3du_conv(dl_matrix3du_t *in,
-                                 dl_matrix3d_t *filter,
-                                 dl_matrix3d_t *bias,
-                                 int stride_x,
-                                 int stride_y,
-                                 int padding,
-                                 int mode);
-
-/**
- * @brief Do a depthwise CNN layer pass, dimension is (number, width, height, channel)
- *
- * @param in             Input matrix3d
- * @param filter         Weights of the neurons
- * @param stride_x       The step length of the convolution window in x(width) direction
- * @param stride_y       The step length of the convolution window in y(height) direction
- * @param padding        One of VALID or SAME
- * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
- *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
- * @return               The result of depthwise CNN layer
- */
-dl_matrix3d_t *dl_matrix3d_depthwise_conv(dl_matrix3d_t *in,
-                                          dl_matrix3d_t *filter,
-                                          int stride_x,
-                                          int stride_y,
-                                          int padding,
-                                          int mode);
-
-void dl_matrix3d_depthwise_conv_3x3_normal(dl_matrix3d_t *out,
-                                            dl_matrix3d_t *in,
-                                            dl_matrix3d_t *f,
-                                            int step_x,
-                                            int step_y);
-/**
- * @brief Do a mobilenet block forward, dimension is (number, width, height, channel)
- *
- * @param in             Input matrix3d
- * @param filter         Weights of the neurons
- * @param stride_x       The step length of the convolution window in x(width) direction
- * @param stride_y       The step length of the convolution window in y(height) direction
- * @param padding        One of VALID or SAME
- * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
- *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
- * @return               The result of depthwise CNN layer
- */
-dl_matrix3d_t *dl_matrix3d_mobilenet(void *in,
-                                     dl_matrix3d_t *dilate,
-                                     dl_matrix3d_t *depthwise,
-                                     dl_matrix3d_t *compress,
-                                     dl_matrix3d_t *bias,
-                                     dl_matrix3d_t *prelu,
-                                     dl_matrix3d_conv_config_t *config);
 
 /**
  * @brief Do a global average pooling layer pass, dimension is (number, width, height, channel)
@@ -296,13 +204,6 @@ void dl_matrix3d_batch_normalize(dl_matrix3d_t *m,
  * @return               Added data
  */
 dl_matrix3d_t *dl_matrix3d_add(dl_matrix3d_t *in_1, dl_matrix3d_t *in_2);
-
-/**
- * @brief Do a standard relu operation, update the input matrix3d
- *
- * @param m        Floating point input matrix3d
- */
-void dl_matrix3d_relu_std(dl_matrix3d_t *m);
 
 /**
  * @brief Concatenate the channels of two matrix3ds into a new matrix3d
@@ -372,7 +273,7 @@ dl_matrix3d_t *dl_matrix3d_concat_8(dl_matrix3d_t *in_1,
  *                              If ESP_PLATFORM is not defined, this value is not used. Default is 0
  * @return                      The result of a mobilefacenet block
  */
-dl_matrix3d_t *dl_matrix3d_mobilefaceblock(void *in,
+dl_matrix3d_t *dl_matrix3d_mobilefaceblock(dl_matrix3d_t *in,
                                            dl_matrix3d_t *pw,
                                            dl_matrix3d_t *pw_bn_scale,
                                            dl_matrix3d_t *pw_bn_offset,
@@ -410,7 +311,7 @@ dl_matrix3d_t *dl_matrix3d_mobilefaceblock(void *in,
  *                              If ESP_PLATFORM is not defined, this value is not used. Default is 0
  * @return                      The result of a mobilefacenet block
  */
-dl_matrix3d_t *dl_matrix3d_mobilefaceblock_split(void *in,
+dl_matrix3d_t *dl_matrix3d_mobilefaceblock_split(dl_matrix3d_t *in,
                                                  dl_matrix3d_t *pw_1,
                                                  dl_matrix3d_t *pw_2,
                                                  dl_matrix3d_t *pw_bn_scale,
@@ -427,23 +328,200 @@ dl_matrix3d_t *dl_matrix3d_mobilefaceblock_split(void *in,
                                                  int padding,
                                                  int mode,
                                                  int shortcut);
-/**
- * @brief Print the matrix3d items
- *
- * @param m              dl_matrix3d_t to be printed
- * @param message        name of matrix
- */
-void dl_matrix3d_print(dl_matrix3d_t *m, char *message);
 
-/**
- * @brief Print the matrix3du items
- *
- * @param m              dl_matrix3du_t to be printed
- * @param message        name of matrix
- */
-void dl_matrix3du_print(dl_matrix3du_t *m, char *message);
-
-
-void dl_matrix3d_init_bias (dl_matrix3d_t *out, dl_matrix3d_t *bias);
+void dl_matrix3d_init_bias(dl_matrix3d_t *out, dl_matrix3d_t *bias);
 
 void dl_matrix3d_multiply(dl_matrix3d_t *out, dl_matrix3d_t *in1, dl_matrix3d_t *in2);
+
+//
+// Activation
+//
+
+/**
+ * @brief Do a standard relu operation, update the input matrix3d
+ *
+ * @param m        Floating point input matrix3d
+ */
+void dl_matrix3d_relu(dl_matrix3d_t *m);
+
+/**
+ * @brief Do a relu (Rectifier Linear Unit) operation, update the input matrix3d
+ *
+ * @param in        Floating point input matrix3d
+ * @param clip      If value is higher than this, it will be clipped to this value
+ */
+void dl_matrix3d_relu_clip(dl_matrix3d_t *m, fptp_t clip);
+
+/**
+ * @brief Do a Prelu (Rectifier Linear Unit) operation, update the input matrix3d
+ *
+ * @param in        Floating point input matrix3d
+ * @param alpha     If value is less than zero, it will be updated by multiplying this factor
+ */
+void dl_matrix3d_p_relu(dl_matrix3d_t *in, dl_matrix3d_t *alpha);
+
+/**
+ * @brief Do a leaky relu (Rectifier Linear Unit) operation, update the input matrix3d
+ *
+ * @param in        Floating point input matrix3d
+ * @param alpha     If value is less than zero, it will be updated by multiplying this factor
+ */
+void dl_matrix3d_leaky_relu(dl_matrix3d_t *m, fptp_t alpha);
+
+//
+// Conv 1x1
+//
+void dl_matrix3dff_conv_1x1(dl_matrix3d_t *out,
+                            dl_matrix3d_t *in,
+                            dl_matrix3d_t *filter);
+
+void dl_matrix3dff_conv_1x1_with_bias(dl_matrix3d_t *out,
+                                      dl_matrix3d_t *in,
+                                      dl_matrix3d_t *filter,
+                                      dl_matrix3d_t *bias);
+
+void dl_matrix3duf_conv_1x1(dl_matrix3d_t *out,
+                            dl_matrix3du_t *in,
+                            dl_matrix3d_t *filter);
+
+void dl_matrix3duf_conv_1x1_with_bias(dl_matrix3d_t *out,
+                                      dl_matrix3du_t *in,
+                                      dl_matrix3d_t *filter,
+                                      dl_matrix3d_t *bias);
+
+//
+// Conv 3x3
+//
+void dl_matrix3dff_conv_3x3_op(dl_matrix3d_t *out,
+                               dl_matrix3d_t *in,
+                               dl_matrix3d_t *f,
+                               int step_x,
+                               int step_y);
+
+dl_matrix3d_t *dl_matrix3dff_conv_3x3(dl_matrix3d_t *in,
+                                      dl_matrix3d_t *filter,
+                                      dl_matrix3d_t *bias,
+                                      int stride_x,
+                                      int stride_y,
+                                      dl_padding_type padding);
+
+//
+// Conv Common
+//
+
+dl_matrix3d_t *dl_matrix3duf_conv_common(dl_matrix3du_t *in,
+                                         dl_matrix3d_t *filter,
+                                         dl_matrix3d_t *bias,
+                                         int stride_x,
+                                         int stride_y,
+                                         dl_padding_type padding);
+
+//
+// Depthwise 3x3
+//
+
+dl_matrix3d_t *dl_matrix3dff_depthwise_conv_3x3(dl_matrix3d_t *in,
+                                                dl_matrix3d_t *filter,
+                                                int stride_x,
+                                                int stride_y,
+                                                int padding);
+
+dl_matrix3d_t *dl_matrix3duf_depthwise_conv_3x3(dl_matrix3du_t *in,
+                                                dl_matrix3d_t *filter,
+                                                int stride_x,
+                                                int stride_y,
+                                                int padding);
+
+void dl_matrix3dff_depthwise_conv_3x3_op(dl_matrix3d_t *out,
+                                         dl_matrix3d_t *in,
+                                         dl_matrix3d_t *f,
+                                         int step_x,
+                                         int step_y);
+
+//
+// Depthwise Common
+//
+
+/**
+ * @brief Do a depthwise CNN layer pass, dimension is (number, width, height, channel)
+ *
+ * @param in             Input matrix3d
+ * @param filter         Weights of the neurons
+ * @param stride_x       The step length of the convolution window in x(width) direction
+ * @param stride_y       The step length of the convolution window in y(height) direction
+ * @param padding        One of VALID or SAME
+ * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
+ *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
+ * @return               The result of depthwise CNN layer
+ */
+dl_matrix3d_t *dl_matrix3dff_depthwise_conv_common(dl_matrix3d_t *in,
+                                                   dl_matrix3d_t *filter,
+                                                   int stride_x,
+                                                   int stride_y,
+                                                   dl_padding_type padding);
+
+//
+// FC
+//
+/**
+ * @brief Do a general fully connected layer pass, dimension is (number, width, height, channel)
+ *
+ * @param in             Input matrix3d, size is (1, w, 1, 1)
+ * @param filter         Weights of the neurons, size is (1, w, h, 1)
+ * @param bias           Bias for the fc layer, size is (1, 1, 1, h)
+ * @return               The result of fc layer, size is (1, 1, 1, h)
+ */
+void dl_matrix3dff_fc(dl_matrix3d_t *out,
+                      dl_matrix3d_t *in,
+                      dl_matrix3d_t *filter);
+
+void dl_matrix3dff_fc_with_bias(dl_matrix3d_t *out,
+                                dl_matrix3d_t *in,
+                                dl_matrix3d_t *filter,
+                                dl_matrix3d_t *bias);
+
+//
+// Mobilenet
+//
+
+/**
+ * @brief Do a mobilenet block forward, dimension is (number, width, height, channel)
+ *
+ * @param in             Input matrix3d
+ * @param filter         Weights of the neurons
+ * @param stride_x       The step length of the convolution window in x(width) direction
+ * @param stride_y       The step length of the convolution window in y(height) direction
+ * @param padding        One of VALID or SAME
+ * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
+ *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
+ * @return               The result of depthwise CNN layer
+ */
+dl_matrix3d_t *dl_matrix3dff_mobilenet(dl_matrix3d_t *in,
+                                       dl_matrix3d_t *dilate_filter,
+                                       dl_matrix3d_t *dilate_prelu,
+                                       dl_matrix3d_t *depthwise_filter,
+                                       dl_matrix3d_t *depthwise_prelu,
+                                       dl_matrix3d_t *compress_filter,
+                                       dl_matrix3d_t *bias,
+                                       dl_matrix3d_mobilenet_config_t config);
+
+/**
+ * @brief Do a mobilenet block forward, dimension is (number, width, height, channel)
+ *
+ * @param in             Input matrix3du
+ * @param filter         Weights of the neurons
+ * @param stride_x       The step length of the convolution window in x(width) direction
+ * @param stride_y       The step length of the convolution window in y(height) direction
+ * @param padding        One of VALID or SAME
+ * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
+ *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
+ * @return               The result of depthwise CNN layer
+ */
+dl_matrix3d_t *dl_matrix3duf_mobilenet(dl_matrix3du_t *in,
+                                       dl_matrix3d_t *dilate_filter,
+                                       dl_matrix3d_t *dilate_prelu,
+                                       dl_matrix3d_t *depthwise_filter,
+                                       dl_matrix3d_t *depthwise_prelu,
+                                       dl_matrix3d_t *compress_filter,
+                                       dl_matrix3d_t *bias,
+                                       dl_matrix3d_mobilenet_config_t config);

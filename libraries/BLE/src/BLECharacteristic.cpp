@@ -378,6 +378,10 @@ void BLECharacteristic::handleGATTServerEvent(
 						}
 					} else { // read.is_long == false
 
+						if (m_pCallbacks != nullptr) {  // If is.long is false then this is the first (or only) request to read data, so invoke the callback
+							m_pCallbacks->onRead(this);   // Invoke the read callback.
+						}
+
 						std::string value = m_value.getValue();
 
 						if (value.length() + 1 > maxOffset) {
@@ -391,10 +395,6 @@ void BLECharacteristic::handleGATTServerEvent(
 							rsp.attr_value.len    = value.length();
 							rsp.attr_value.offset = 0;
 							memcpy(rsp.attr_value.value, value.data(), rsp.attr_value.len);
-						}
-
-						if (m_pCallbacks != nullptr) {  // If is.long is false then this is the first (or only) request to read data, so invoke the callback
-							m_pCallbacks->onRead(this);   // Invoke the read callback.
 						}
 					}
 					rsp.attr_value.handle   = param->read.handle;
@@ -717,17 +717,18 @@ void BLECharacteristic::setWriteProperty(bool value) {
  * @return A string representation of the characteristic.
  */
 std::string BLECharacteristic::toString() {
-	std::stringstream stringstream;
-	stringstream << std::hex << std::setfill('0');
-	stringstream << "UUID: " << m_bleUUID.toString() + ", handle: 0x" << std::setw(2) << m_handle;
-	stringstream << " " <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_READ) ? "Read " : "") <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE) ? "Write " : "") <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE_NR) ? "WriteNoResponse " : "") <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_BROADCAST) ? "Broadcast " : "") <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_NOTIFY) ? "Notify " : "") <<
-		((m_properties & ESP_GATT_CHAR_PROP_BIT_INDICATE) ? "Indicate " : "");
-	return stringstream.str();
+	std::string res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
+	char hex[5];
+	snprintf(hex, sizeof(hex), "%04x", m_handle);
+	res += hex;
+	res += " ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_READ) res += "Read ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE) res += "Write ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE_NR) res += "WriteNoResponse ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_BROADCAST) res += "Broadcast ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_NOTIFY) res += "Notify ";
+	if (m_properties & ESP_GATT_CHAR_PROP_BIT_INDICATE) res += "Indicate ";
+	return res;
 } // toString
 
 

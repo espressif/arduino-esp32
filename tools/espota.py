@@ -236,7 +236,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
 def parser(unparsed_args):
   parser = optparse.OptionParser(
     usage = "%prog [options]",
-    description = "Transmit image over the air to the esp8266 module with OTA support."
+    description = "Transmit image over the air to the esp32 module with OTA support."
   )
 
   # destination ip and port
@@ -244,7 +244,7 @@ def parser(unparsed_args):
   group.add_option("-i", "--ip",
     dest = "esp_ip",
     action = "store",
-    help = "ESP8266 IP Address.",
+    help = "ESP32 IP Address.",
     default = False
   )
   group.add_option("-I", "--host_ip",
@@ -256,8 +256,8 @@ def parser(unparsed_args):
   group.add_option("-p", "--port",
     dest = "esp_port",
     type = "int",
-    help = "ESP8266 ota Port. Default 8266",
-    default = 8266
+    help = "ESP32 ota Port. Default 3232",
+    default = 3232
   )
   group.add_option("-P", "--host_port",
     dest = "host_port",
@@ -310,7 +310,7 @@ def parser(unparsed_args):
   group.add_option("-t", "--timeout",
     dest = "timeout",
     type = "int",
-    help = "Timeout to wait for the ESP8266 to accept invitation",
+    help = "Timeout to wait for the ESP32 to accept invitation",
     default = 10
   )
   parser.add_option_group(group)

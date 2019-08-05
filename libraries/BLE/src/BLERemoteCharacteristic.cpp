@@ -14,7 +14,7 @@
 #include <esp_err.h>
 
 #include <sstream>
-#include "BLEExceptions.h"
+//#include "BLEExceptions.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include "BLERemoteDescriptor.h"
@@ -400,7 +400,7 @@ std::string BLERemoteCharacteristic::readValue() {
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-		throw BLEDisconnectedException();
+		return std::string();
 	}
 
 	m_semaphoreReadCharEvt.take("readValue");
@@ -501,11 +501,16 @@ void BLERemoteCharacteristic::removeDescriptors() {
  * @return a String representation.
  */
 std::string BLERemoteCharacteristic::toString() {
-	std::ostringstream ss;
-	ss << "Characteristic: uuid: " << m_uuid.toString() <<
-		", handle: " << getHandle() << " 0x" << std::hex << getHandle() <<
-		", props: " << BLEUtils::characteristicPropertiesToString(m_charProp);
-	return ss.str();
+	std::string res = "Characteristic: uuid: " + m_uuid.toString();
+	char val[6];
+	res += ", handle: ";
+	snprintf(val, sizeof(val), "%d", getHandle());
+	res += val;
+	res += " 0x";
+	snprintf(val, sizeof(val), "%04x", getHandle());
+	res += val;
+	res += ", props: " + BLEUtils::characteristicPropertiesToString(m_charProp);
+	return res;
 } // toString
 
 
@@ -546,7 +551,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-		throw BLEDisconnectedException();
+		return;
 	}
 
 	m_semaphoreWriteCharEvt.take("writeValue");
