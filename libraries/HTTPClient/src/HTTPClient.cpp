@@ -1,3 +1,4 @@
+#include <HardwareSerial.h>
 /**
  * HTTPClient.cpp
  *
@@ -343,7 +344,8 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
  */
 void HTTPClient::end(void)
 {
-    disconnect();
+    disconnect(false);
+    clear();
 }
 
 
@@ -352,7 +354,7 @@ void HTTPClient::end(void)
  * disconnect
  * close the TCP socket
  */
-void HTTPClient::disconnect()
+void HTTPClient::disconnect(bool preserveClient)
 {
     if(connected()) {
         if(_client->available() > 0) {
@@ -367,7 +369,9 @@ void HTTPClient::disconnect()
         } else {
             log_d("tcp stop\n");
             _client->stop();
-            _client = nullptr;
+            if(!preserveClient) {
+                _client = nullptr;
+            }
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
             if(_tcpDeprecated) {
                 _transportTraits.reset(nullptr);
@@ -827,7 +831,8 @@ int HTTPClient::writeToStream(Stream * stream)
         return returnError(HTTPC_ERROR_ENCODING);
     }
 
-    end();
+//    end();
+    disconnect(true);
     return ret;
 }
 
@@ -981,9 +986,12 @@ bool HTTPClient::hasHeader(const char* name)
  */
 bool HTTPClient::connect(void)
 {
-
     if(connected()) {
-        log_d("already connected, try reuse!");
+        if(_reuse) {
+            log_d("already connected, reusing connection");
+        } else {
+            log_d("already connected, try reuse!");
+        }
         while(_client->available() > 0) {
             _client->read();
         }
@@ -1003,7 +1011,6 @@ bool HTTPClient::connect(void)
 
     if (!_client) {
         log_d("HTTPClient::begin was not called or returned error");
-Serial.println("HERE");
         return false;
     }
 
@@ -1096,11 +1103,12 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    _canReuse = !_useHTTP10;
+    clear();
+
+    _canReuse = _reuse;
 
     String transferEncoding;
-    _returnCode = -1;
-    _size = -1;
+
     _transferEncoding = HTTPC_TE_IDENTITY;
     unsigned long lastDataTime = millis();
 
@@ -1128,8 +1136,10 @@ int HTTPClient::handleHeaderResponse()
                     _size = headerValue.toInt();
                 }
 
-                if(headerName.equalsIgnoreCase("Connection")) {
-                    _canReuse = headerValue.equalsIgnoreCase("keep-alive");
+                if(_canReuse && headerName.equalsIgnoreCase("Connection")) {
+                    if(headerValue.indexOf("close") >= 0 && headerValue.indexOf("keep-alive") < 0) {
+                        _canReuse = false;
+                    }
                 }
 
                 if(headerName.equalsIgnoreCase("Transfer-Encoding")) {
