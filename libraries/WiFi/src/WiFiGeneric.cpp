@@ -367,7 +367,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
             WiFi.getAutoReconnect())
         {
-            WiFi.disconnect(true);
+            WiFi.disconnect();
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
