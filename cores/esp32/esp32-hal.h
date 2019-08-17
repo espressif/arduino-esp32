@@ -63,7 +63,8 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
-
+#include "esp32-hal-pwm.h"
+ 
 #ifndef BOARD_HAS_PSRAM
 #ifdef CONFIG_SPIRAM_SUPPORT
 #undef CONFIG_SPIRAM_SUPPORT
