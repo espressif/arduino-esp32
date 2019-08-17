@@ -44,6 +44,8 @@ esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIF
 esp32.menu.PartitionScheme.default.build.partitions=default
 esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -104,6 +106,9 @@ esp32.menu.FlashFreq.40.build.flash_freq=40m
 
 esp32.menu.FlashSize.4M=4MB (32Mb)
 esp32.menu.FlashSize.4M.build.flash_size=4MB
+esp32.menu.FlashSize.8M=8MB (64Mb)
+esp32.menu.FlashSize.8M.build.flash_size=8MB
+esp32.menu.FlashSize.8M.build.partitions=default_8MB
 esp32.menu.FlashSize.2M=2MB (16Mb)
 esp32.menu.FlashSize.2M.build.flash_size=2MB
 esp32.menu.FlashSize.2M.build.partitions=minimal
@@ -225,7 +230,6 @@ esp32wrover.menu.DebugLevel.verbose=Verbose
 esp32wrover.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 pico32.name=ESP32 Pico Kit
 
 pico32.upload.tool=esptool_py
@@ -279,6 +283,98 @@ pico32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+tinypico.name=TinyPICO
+
+tinypico.upload.tool=esptool_py
+tinypico.upload.maximum_size=1310720
+tinypico.upload.maximum_data_size=327680
+tinypico.upload.wait_for_upload_port=true
+
+tinypico.serial.disableDTR=true
+tinypico.serial.disableRTS=true
+
+tinypico.build.mcu=esp32
+tinypico.build.core=esp32
+tinypico.build.variant=pico32
+tinypico.build.board=ESP32_PICO
+
+tinypico.build.f_cpu=240000000L
+tinypico.build.flash_size=4MB
+tinypico.build.flash_freq=80m
+tinypico.build.flash_mode=dio
+tinypico.build.boot=dio
+tinypico.build.partitions=default
+tinypico.build.defines=
+
+tinypico.menu.UploadSpeed.921600=921600
+tinypico.menu.UploadSpeed.921600.upload.speed=921600
+tinypico.menu.UploadSpeed.115200=115200
+tinypico.menu.UploadSpeed.115200.upload.speed=115200
+tinypico.menu.UploadSpeed.256000.windows=256000
+tinypico.menu.UploadSpeed.256000.upload.speed=256000
+tinypico.menu.UploadSpeed.230400.windows.upload.speed=256000
+tinypico.menu.UploadSpeed.230400=230400
+tinypico.menu.UploadSpeed.230400.upload.speed=230400
+tinypico.menu.UploadSpeed.460800.linux=460800
+tinypico.menu.UploadSpeed.460800.macosx=460800
+tinypico.menu.UploadSpeed.460800.upload.speed=460800
+tinypico.menu.UploadSpeed.512000.windows=512000
+tinypico.menu.UploadSpeed.512000.upload.speed=512000
+
+tinypico.menu.PSRAM.enabled=Enabled
+tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+tinypico.menu.PSRAM.disabled=Disabled
+tinypico.menu.PSRAM.disabled.build.defines=
+
+tinypico.menu.DebugLevel.none=None
+tinypico.menu.DebugLevel.none.build.code_debug=0
+tinypico.menu.DebugLevel.error=Error
+tinypico.menu.DebugLevel.error.build.code_debug=1
+tinypico.menu.DebugLevel.warn=Warn
+tinypico.menu.DebugLevel.warn.build.code_debug=2
+tinypico.menu.DebugLevel.info=Info
+tinypico.menu.DebugLevel.info.build.code_debug=3
+tinypico.menu.DebugLevel.debug=Debug
+tinypico.menu.DebugLevel.debug.build.code_debug=4
+tinypico.menu.DebugLevel.verbose=Verbose
+tinypico.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+magicbit.name=MagicBit
+
+magicbit.upload.tool=esptool_py
+magicbit.upload.maximum_size=1310720
+magicbit.upload.maximum_data_size=327680
+magicbit.upload.wait_for_upload_port=true
+
+magicbit.serial.disableDTR=true
+magicbit.serial.disableRTS=true
+
+magicbit.build.mcu=esp32
+magicbit.build.core=esp32
+magicbit.build.variant=esp32
+magicbit.build.board=ESP32_DEV
+
+magicbit.build.f_cpu=240000000L
+magicbit.build.flash_size=4MB
+magicbit.build.flash_freq=40m
+magicbit.build.flash_mode=dio
+magicbit.build.boot=dio
+magicbit.build.partitions=default
+
+magicbit.menu.CPUFreq.240=240MHz (WiFi/BT)
+magicbit.menu.CPUFreq.240.build.f_cpu=240000000L
+magicbit.menu.CPUFreq.160=160MHz (WiFi/BT)
+magicbit.menu.CPUFreq.160.build.f_cpu=160000000L
+magicbit.menu.CPUFreq.80=80MHz (WiFi/BT)
+magicbit.menu.CPUFreq.80.build.f_cpu=80000000L
+magicbit.menu.CPUFreq.40=40MHz (40MHz XTAL)
+
+magicbit.menu.UploadSpeed.921600=921600
+magicbit.menu.UploadSpeed.921600.upload.speed=921600
+magicbit.menu.UploadSpeed.115200=115200
+magicbit.menu.UploadSpeed.115200.upload.speed=115200
+##############################################################
 turta_iot_node.name=Turta IoT Node
 
 turta_iot_node.upload.tool=esptool_py
@@ -2697,7 +2793,7 @@ heltec_wifi_lora_32_V2.menu.FlashFreq.40.build.flash_freq=40m
 
 heltec_wifi_lora_32_V2.menu.FlashSize.8M=8MB (64Mb)
 heltec_wifi_lora_32_V2.menu.FlashSize.8M.build.flash_size=8MB
-heltec_wifi_lora_32_V2.menu.FlashSize.2M.build.partitions=default_8MB
+heltec_wifi_lora_32_V2.menu.FlashSize.8M.build.partitions=default_8MB
 heltec_wifi_lora_32_V2.menu.FlashSize.4M=4MB (32Mb)
 heltec_wifi_lora_32_V2.menu.FlashSize.4M.build.flash_size=4MB
 heltec_wifi_lora_32_V2.menu.FlashSize.2M=2MB (16Mb)

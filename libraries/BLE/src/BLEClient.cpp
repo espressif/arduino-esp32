@@ -184,10 +184,11 @@ void BLEClient::gattClientEventHandler(
 				if (m_pClientCallbacks != nullptr) {
 					m_pClientCallbacks->onDisconnect(this);
 				}
-				BLEDevice::removePeerDevice(m_appId, true);
 				esp_ble_gattc_app_unregister(m_gattc_if);
+				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
 				m_semaphoreSearchCmplEvt.give(1);
+				BLEDevice::removePeerDevice(m_appId, true);
 				break;
 		} // ESP_GATTC_DISCONNECT_EVT
 
@@ -515,14 +516,13 @@ uint16_t BLEClient::getMTU() {
  * @return A string representation of this client.
  */
 std::string BLEClient::toString() {
-	std::ostringstream ss;
-	ss << "peer address: " << m_peerAddress.toString();
-	ss << "\nServices:\n";
+	std::string res = "peer address: " + m_peerAddress.toString();
+	res += "\nServices:\n";
 	for (auto &myPair : m_servicesMap) {
-		ss << myPair.second->toString() << "\n";
+		res += myPair.second->toString() + "\n";
 	  // myPair.second is the value
 	}
-	return ss.str();
+	return res;
 } // toString
 
 

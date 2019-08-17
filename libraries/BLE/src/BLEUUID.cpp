@@ -349,51 +349,38 @@ BLEUUID BLEUUID::to128() {
  */
 std::string BLEUUID::toString() {
 	if (!m_valueSet) return "<NULL>";   // If we have no value, nothing to format.
-
 	// If the UUIDs are 16 or 32 bit, pad correctly.
-	std::stringstream ss;
 
 	if (m_uuid.len == ESP_UUID_LEN_16) {  // If the UUID is 16bit, pad correctly.
-		ss << "0000" <<
-			std::hex <<
-			std::setfill('0') <<
-			std::setw(4) <<
-			m_uuid.uuid.uuid16 <<
-			"-0000-1000-8000-00805f9b34fb";
-		return ss.str();                    // Return the string
+		char hex[5];
+		snprintf(hex, sizeof(hex), "%04x", m_uuid.uuid.uuid16);
+		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 16bit UUID
 
 	if (m_uuid.len == ESP_UUID_LEN_32) {  // If the UUID is 32bit, pad correctly.
-		ss << std::hex <<
-			std::setfill('0') <<
-			std::setw(8) <<
-			m_uuid.uuid.uuid32 <<
-			"-0000-1000-8000-00805f9b34fb";
-		return ss.str();                    // return the string
+		char hex[9];
+		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid32);
+		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 32bit UUID
 
 	// The UUID is not 16bit or 32bit which means that it is 128bit.
 	//
 	// UUID string format:
 	// AABBCCDD-EEFF-GGHH-IIJJ-KKLLMMNNOOPP
-	ss << std::hex << std::setfill('0') <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[15] <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[14] <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[13] <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[12] << "-" <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[11] <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[10] << "-" <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[9]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[8]  << "-" <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[7]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[6]  << "-" <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[5]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[4]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[3]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[2]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[1]  <<
-		std::setw(2) << (int) m_uuid.uuid.uuid128[0];
-	return ss.str();
+	auto size = 35;
+	char *hex = (char *)malloc(size);
+	snprintf(hex, size, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+			m_uuid.uuid.uuid128[15], m_uuid.uuid.uuid128[14],
+			m_uuid.uuid.uuid128[13], m_uuid.uuid.uuid128[12],
+			m_uuid.uuid.uuid128[11], m_uuid.uuid.uuid128[10],
+			m_uuid.uuid.uuid128[9], m_uuid.uuid.uuid128[8],
+			m_uuid.uuid.uuid128[7], m_uuid.uuid.uuid128[6],
+			m_uuid.uuid.uuid128[5], m_uuid.uuid.uuid128[4],
+			m_uuid.uuid.uuid128[3], m_uuid.uuid.uuid128[2],
+			m_uuid.uuid.uuid128[1], m_uuid.uuid.uuid128[0]);
+	std::string res(hex);
+	free(hex);
+	return res;
 } // toString
 
 #endif /* CONFIG_BT_ENABLED */

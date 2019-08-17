@@ -317,15 +317,25 @@ void BLERemoteService::setValue(BLEUUID characteristicUuid, std::string value) {
  * @return A string representation of this remote service.
  */
 std::string BLERemoteService::toString() {
-	std::ostringstream ss;
-	ss << "Service: uuid: " + m_uuid.toString();
-	ss << ", start_handle: " << std::dec << m_startHandle << " 0x" << std::hex << m_startHandle <<
-			", end_handle: " << std::dec << m_endHandle << " 0x" << std::hex << m_endHandle;
+	std::string res = "Service: uuid: " + m_uuid.toString();
+	char val[6];
+	res += ", start_handle: ";
+	snprintf(val, sizeof(val), "%d", m_startHandle);
+	res += val;
+	snprintf(val, sizeof(val), "%04x", m_startHandle);
+	res += " 0x";
+	res += val;
+	res += ", end_handle: ";
+	snprintf(val, sizeof(val), "%d", m_endHandle);
+	res += val;
+	snprintf(val, sizeof(val), "%04x", m_endHandle);
+	res += " 0x";
+	res += val;
 	for (auto &myPair : m_characteristicMap) {
-		ss << "\n" << myPair.second->toString();
+		res += "\n" + myPair.second->toString();
 	   // myPair.second is the value
 	}
-	return ss.str();
+	return res;
 } // toString
 
 
