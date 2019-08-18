@@ -21,6 +21,10 @@
 #include "soc/dport_reg.h"
 #include "soc/ledc_reg.h"
 #include "soc/ledc_struct.h"
+#include "math.h"
+
+static uint16_t __freq = 1000;//1000Hz
+static uint8_t __resolution = 8;//8 bits
 
 #if CONFIG_DISABLE_HAL_LOCKS
 #define LEDC_MUTEX_LOCK()
@@ -268,3 +272,103 @@ void ledcDetachPin(uint8_t pin)
 {
     pinMatrixOutDetach(pin, false, false);
 }
+
+void __analogWriteResolution(uint8_t bits){
+__resolution=bits;	
+	
+}
+
+void __analogWriteFrequency(uint16_t feq)
+{
+	__freq=feq;
+	
+}
+
+void __analogWrite(uint8_t pin,uint16_t val)    //hall sensor without LNA
+{
+    pinMode(pin,OUTPUT);
+	if (val == 0)
+	{
+		digitalWrite(pin, LOW);
+	}
+	else if (val >=pow(2,__resolution))
+	{
+		digitalWrite(pin, HIGH);
+	}
+	else
+	{
+   
+	int Channel = pwmChannel(pin);
+	ledcAttachPin(pin,  Channel);
+	ledcSetup( Channel, __freq, __resolution);
+	if( 0 <= val || 100 >= val )
+   {
+	ledcWrite(pwmChannel(pin), val);
+   } 
+	}
+	
+	
+}
+
+int  pwmChannel(int pin)
+{
+  int ledChannel = 0;
+  
+  switch(pin)
+  {
+    case 16:
+    ledChannel = 0;
+    break;
+    case 17:
+    ledChannel = 1;
+    break;
+    case 25:
+    ledChannel = 2;
+    break;
+    case 32:
+    ledChannel = 3;
+    break;
+    case 33:
+    ledChannel = 4;
+    break;
+    case 18:
+    ledChannel = 5;
+    break;
+    case 21:
+    ledChannel = 6;
+    break; 
+    case 22:
+    ledChannel = 7;
+    break; 
+    case 26:
+    ledChannel = 8;
+    break;    
+    case 27:
+    ledChannel = 9;
+    break;
+    case 1:
+    ledChannel = 10;
+    break;
+    case 2:
+    ledChannel = 11;
+    break;
+    case 12:
+    ledChannel = 12;
+    break;
+    case 13:
+    ledChannel = 13;
+    break;
+    case 14:
+    ledChannel = 14;
+    break;
+    case 15:
+    ledChannel = 15;
+    break;                
+    }
+    return ledChannel;
+  }
+
+
+extern void analogWrite(uint8_t pin,uint16_t val) __attribute__ ((weak, alias("__analogWrite")));
+extern void analogWriteResolution(uint8_t bits) __attribute__ ((weak, alias("__analogWriteResolution")));
+extern void analogWriteFrequency(uint16_t feq) __attribute__ ((weak, alias("__analogWriteFrequency")));
