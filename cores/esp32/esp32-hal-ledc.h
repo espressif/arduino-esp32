@@ -35,6 +35,9 @@ uint32_t    ledcRead(uint8_t channel);
 double      ledcReadFreq(uint8_t channel);
 void        ledcAttachPin(uint8_t pin, uint8_t channel);
 void        ledcDetachPin(uint8_t pin);
+void        analogWrite(uint8_t pin,uint16_t val);
+void         analogWriteResolution(uint8_t bits);
+void         analogWriteFrequency(uint16_t feq);
 
 
 #ifdef __cplusplus
