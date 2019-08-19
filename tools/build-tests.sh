@@ -32,9 +32,9 @@ if [ $? -ne 0 ]; then exit 1; fi
 echo -e "travis_fold:end:platformio_test_env_prepare"
 
 echo "PATH=$PATH"
+cd $TRAVIS_BUILD_DIR
 
 # echo -e "travis_fold:start:sketch_test"
-# cd $TRAVIS_BUILD_DIR
 # export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
 # source tools/common.sh
 # build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
