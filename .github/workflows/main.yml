@@ -15,9 +15,23 @@ jobs:
       run: bash ./tools/check_cmakelists.sh
     - name: Install Python Wheel
       run: pip install wheel
-    - name: Build Test Sketches
+    - name: Install Arduino IDE
       env:
         ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_EVENT_NAME: ${{ github.event_name }}
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/build-tests.sh
+      run: bash ./tools/prep-arduino-ide.sh
+    - name: Install PlatformIO
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: bash ./tools/prep-platformio.sh
+    - name: Test Arduino IDE
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: bash ./tools/test-arduino-ide.sh
+    - name: Sketch Sizes
+      run: cat size.log
+    - name: Test PlatformIO
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: bash ./tools/test-platformio.sh
