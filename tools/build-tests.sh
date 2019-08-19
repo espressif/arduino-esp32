@@ -7,6 +7,7 @@ fi
 
 echo -e "travis_fold:start:sketch_test_env_prepare"
 tools/prep-arduino-ide.sh
+if [ $? -ne 0 ]; then exit 1; fi
 echo -e "travis_fold:end:sketch_test_env_prepare"
 
 echo -e "travis_fold:start:platformio_test_env_prepare"

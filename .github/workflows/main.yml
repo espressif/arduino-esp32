@@ -1,10 +1,11 @@
-name: CI
+name: ESP32 Arduino CI
 
 on: [push]
 
 jobs:
-  build:
-    name: Build Test
+
+  build-arduino:
+    name: Build Arduino IDE Tests
     runs-on: ubuntu-latest
     
     steps:
@@ -13,24 +14,40 @@ jobs:
       run: git submodule update --init --recursive
     - name: Run CMake Check
       run: bash ./tools/check_cmakelists.sh
-    - name: Install Python Wheel
-      run: pip install wheel
+
     - name: Install Arduino IDE
       env:
         ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_EVENT_NAME: ${{ github.event_name }}
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
       run: bash ./tools/prep-arduino-ide.sh
-    - name: Install PlatformIO
-      env:
-        TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/prep-platformio.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
       run: bash ./tools/test-arduino-ide.sh
     - name: Sketch Sizes
       run: cat size.log
+
+
+  build-platformio:
+    name: Build PlatformIO Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Pull submodules
+      run: git submodule update --init --recursive
+    - name: Run CMake Check
+      run: bash ./tools/check_cmakelists.sh
+
+    - name: Install Python Wheel
+      run: pip install wheel
+    - name: Install GCC Toolchain
+      run: cd tools && python get.py
+    - name: Install PlatformIO
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: bash ./tools/prep-platformio.sh
     - name: Test PlatformIO
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
