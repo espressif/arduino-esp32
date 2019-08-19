@@ -1,0 +1,15 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run a one-line script
+      env:
+        ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: bash ./tools/build.sh
