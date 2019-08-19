@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -9,36 +9,15 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Dump strategy context
-      env:
-        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-      run: echo "$STRATEGY_CONTEXT"
-    - name: Dump matrix context
-      env:
-        MATRIX_CONTEXT: ${{ toJson(matrix) }}
-      run: echo "$MATRIX_CONTEXT"
-    - name: Dump job context
-      env:
-        JOB_CONTEXT: ${{ toJson(job) }}
-      run: echo "$JOB_CONTEXT"
-    - name: Dump runner context
-      env:
-        RUNNER_CONTEXT: ${{ toJson(runner) }}
-      run: echo "$RUNNER_CONTEXT"
-    - name: Dump steps context
-      env:
-        STEPS_CONTEXT: ${{ toJson(steps) }}
-      run: echo "$STEPS_CONTEXT"
     - name: Pull submodules
       run: git submodule update --init --recursive
     - name: Run CMake Check
       run: bash ./tools/check_cmakelists.sh
+    - name: Install Python Wheel
+      run: pip install wheel
     - name: Build Test Sketches
       env:
         ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TRAVIS_BUILD_DIR: /home/runner/work/arduino-esp32/arduino-esp32
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
       run: bash ./tools/build-tests.sh
