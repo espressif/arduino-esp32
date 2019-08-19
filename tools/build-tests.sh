@@ -25,7 +25,7 @@ echo -e "travis_fold:end:sketch_test_env_prepare"
 
 echo -e "travis_fold:start:platformio_test_env_prepare"
 pip install -U https://github.com/platformio/platformio/archive/develop.zip && \
-platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage && \
+python -m platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage && \
 sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' ~/.platformio/platforms/espressif32/platform.json && \
 ln -s $TRAVIS_BUILD_DIR ~/.platformio/packages/framework-arduinoespressif32
 if [ $? -ne 0 ]; then exit 1; fi
