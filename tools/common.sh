@@ -55,8 +55,6 @@ function build_sketches()
             continue
         fi
         echo -e "\n ------------ Building $sketch ------------ \n";
-        # $arduino --verify $sketch;
-        #echo "$build_cmd $sketch"
         time ($build_cmd $sketch >build.log)
         local result=$?
         if [ $result -ne 0 ]; then

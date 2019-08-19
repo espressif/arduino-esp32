@@ -21,19 +21,7 @@ cd esp32
 git submodule update --init --recursive
 cd tools
 python get.py
-cd $TRAVIS_BUILD_DIR
-export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
-source tools/common.sh
 echo -e "travis_fold:end:sketch_test_env_prepare"
-
-echo -e "travis_fold:start:sketch_test"
-build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
-if [ $? -ne 0 ]; then exit 1; fi
-echo -e "travis_fold:end:sketch_test"
-
-echo -e "travis_fold:start:size_report"
-cat size.log
-echo -e "travis_fold:end:size_report"
 
 echo -e "travis_fold:start:platformio_test_env_prepare"
 pip install -U https://github.com/platformio/platformio/archive/develop.zip && \
@@ -43,12 +31,26 @@ ln -s $TRAVIS_BUILD_DIR ~/.platformio/packages/framework-arduinoespressif32
 if [ $? -ne 0 ]; then exit 1; fi
 echo -e "travis_fold:end:platformio_test_env_prepare"
 
+echo "PATH=$PATH"
+
+# echo -e "travis_fold:start:sketch_test"
+# cd $TRAVIS_BUILD_DIR
+# export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
+# source tools/common.sh
+# build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
+# if [ $? -ne 0 ]; then exit 1; fi
+# echo -e "travis_fold:end:sketch_test"
+
+# echo -e "travis_fold:start:size_report"
+# cat size.log
+# echo -e "travis_fold:end:size_report"
+
 echo -e "travis_fold:start:platformio_test"
-platformio ci  --board esp32dev libraries/WiFi/examples/WiFiClient && \
-platformio ci  --board esp32dev libraries/WiFiClientSecure/examples/WiFiClientSecure && \
-platformio ci  --board esp32dev libraries/BluetoothSerial/examples/SerialToSerialBT && \
-platformio ci  --board esp32dev libraries/BLE/examples/BLE_server && \
-platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted && \
-platformio ci  --board esp32dev libraries/ESP32/examples/Camera/CameraWebServer --project-option="board_build.partitions = huge_app.csv"
+python -m platformio ci  --board esp32dev libraries/WiFi/examples/WiFiClient && \
+python -m platformio ci  --board esp32dev libraries/WiFiClientSecure/examples/WiFiClientSecure && \
+python -m platformio ci  --board esp32dev libraries/BluetoothSerial/examples/SerialToSerialBT && \
+python -m platformio ci  --board esp32dev libraries/BLE/examples/BLE_server && \
+python -m platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted && \
+python -m platformio ci  --board esp32dev libraries/ESP32/examples/Camera/CameraWebServer --project-option="board_build.partitions = huge_app.csv"
 if [ $? -ne 0 ]; then exit 1; fi
 echo -e "travis_fold:end:platformio_test"
