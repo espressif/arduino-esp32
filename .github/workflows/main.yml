@@ -8,8 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v1
-    - name: Run a one-line script
       env:
         ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v1
+    - name: Pull submodules
+      run: git submodule update --init --recursive
+    - name: Build Test Sketches
       run: bash ./tools/build.sh
