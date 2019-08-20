@@ -66,6 +66,6 @@ static const uint8_t MOTOR1A = 32;
 static const uint8_t MOTOR1B = 33;
 static const uint8_t MOTOR2A = 16;
 static const uint8_t MOTOR2B = 17;
-
+static const uint8_t LED_BUILTIN=16;
 
 #endif /* Pins_Arduino_h */

@@ -364,7 +364,7 @@ magicbit.serial.disableRTS=true
 
 magicbit.build.mcu=esp32
 magicbit.build.core=esp32
-magicbit.build.variant=esp32
+magicbit.build.variant=magicbit
 magicbit.build.board=ESP32_DEV
 
 magicbit.build.f_cpu=240000000L
