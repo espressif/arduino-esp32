@@ -1,32 +1,33 @@
 #!/bin/bash
 
-if [ ! -z "$TRAVIS_TAG" ]; then
-	echo "No sketch builds & tests required for tagged TravisCI builds, exiting"
-	exit 0
-fi
+# CMake Test
+echo -e "travis_fold:start:check_cmakelists"
+tools/check_cmakelists.sh
+if [ $? -ne 0 ]; then exit 1; fi
+echo -e "travis_fold:end:check_cmakelists"
 
-echo -e "travis_fold:start:sketch_test_env_prepare"
+# ArduinoIDE Test
+echo -e "travis_fold:start:prep_arduino_ide"
 tools/prep-arduino-ide.sh
 if [ $? -ne 0 ]; then exit 1; fi
-echo -e "travis_fold:end:sketch_test_env_prepare"
+echo -e "travis_fold:end:prep_arduino_ide"
 
-echo -e "travis_fold:start:platformio_test_env_prepare"
-tools/prep-platformio.sh
-if [ $? -ne 0 ]; then exit 1; fi
-echo -e "travis_fold:end:platformio_test_env_prepare"
-
-cd $TRAVIS_BUILD_DIR
-
-echo -e "travis_fold:start:sketch_test"
+echo -e "travis_fold:start:test_arduino_ide"
 tools/test-arduino-ide.sh
 if [ $? -ne 0 ]; then exit 1; fi
-echo -e "travis_fold:end:sketch_test"
+echo -e "travis_fold:end:test_arduino_ide"
 
 echo -e "travis_fold:start:size_report"
 cat size.log
 echo -e "travis_fold:end:size_report"
 
-echo -e "travis_fold:start:platformio_test"
+# PlatformIO Test
+echo -e "travis_fold:start:prep_platformio"
+tools/prep-platformio.sh
+if [ $? -ne 0 ]; then exit 1; fi
+echo -e "travis_fold:end:prep_platformio"
+
+echo -e "travis_fold:start:test_platformio"
 tools/test-platformio.sh
 if [ $? -ne 0 ]; then exit 1; fi
-echo -e "travis_fold:end:platformio_test"
+echo -e "travis_fold:end:test_platformio"

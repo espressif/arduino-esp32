@@ -5,5 +5,5 @@ if [ ! -z "$TRAVIS_TAG" ]; then
     tools/build-release.sh -a$ESP32_GITHUB_TOKEN
 #else
     # run cmake and sketch tests
-    #tools/check_cmakelists.sh && tools/build-tests.sh
+    #tools/build-tests.sh
 fi

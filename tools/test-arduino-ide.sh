@@ -55,8 +55,7 @@ function print_size_info()
 function build_sketch()
 {
 	local sketch=$1
-    echo -e "\n ------------ Building $sketch ------------ \n";
-    #return 0 ####
+    echo -e "\n------------ Building $sketch ------------\n";
     rm -rf $EXAMPLES_BUILD_DIR/*
     time ($EXAMPLES_BUILD_CMD $sketch >build.log)
     local result=$?
@@ -67,8 +66,6 @@ function build_sketch()
         return $result
     fi
     rm build.log
-    #print_size_info
-    #print_size_info $EXAMPLES_BUILD_DIR/*.elf
     return 0
 }
 
@@ -122,9 +119,10 @@ function build_sketches()
     local start_num=$(( $start_index + 1 ))
     #echo -e "Sketches: \n$sketches\n"
     echo "Found $sketchcount Sketches";
-    #echo "Chunk Size $chunk_size"
-    echo "Start $start_num"
-    echo "End $end_index"
+    echo "Chunk Count : $chunks_num"
+    echo "Chunk Size  : $chunk_size"
+    echo "Start Sketch: $start_num"
+    echo "End Sketch  : $end_index"
 
     local sketchnum=0
     print_size_info >size.log
@@ -159,10 +157,6 @@ function build_sketches()
     return 0
 }
 
-#count_sketches
 build_sketches $CHUNK_INDEX $CHUNKS_CNT
 
-#export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
-#source tools/common.sh
-#build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
 if [ $? -ne 0 ]; then exit 1; fi
