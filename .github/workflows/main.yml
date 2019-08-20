@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
 
-  build-arduino:
+  build-arduino-0:
     name: Build Arduino IDE Tests
     runs-on: ubuntu-latest
     
@@ -13,18 +13,40 @@ jobs:
     - name: Pull submodules
       run: git submodule update --init --recursive
     - name: Run CMake Check
-      run: bash ./tools/check_cmakelists.sh
+      run: ./tools/check_cmakelists.sh
 
     - name: Install Arduino IDE
       env:
         ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_EVENT_NAME: ${{ github.event_name }}
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/prep-arduino-ide.sh
+      run: ./tools/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/test-arduino-ide.sh
+      run: ./tools/test-arduino-ide.sh 0 9
+    - name: Sketch Sizes
+      run: cat size.log
+
+  build-arduino-1:
+    name: Build Arduino IDE Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Pull submodules
+      run: git submodule update --init --recursive
+    - name: Run CMake Check
+      run: ./tools/check_cmakelists.sh
+
+    - name: Install Arduino IDE
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: ./tools/prep-arduino-ide.sh
+    - name: Test Arduino IDE
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
+      run: ./tools/test-arduino-ide.sh 1 9
     - name: Sketch Sizes
       run: cat size.log
 
@@ -38,7 +60,7 @@ jobs:
     - name: Pull submodules
       run: git submodule update --init --recursive
     - name: Run CMake Check
-      run: bash ./tools/check_cmakelists.sh
+      run: ./tools/check_cmakelists.sh
 
     - name: Install Python Wheel
       run: pip install wheel
@@ -47,8 +69,6 @@ jobs:
     - name: Install PlatformIO
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/prep-platformio.sh
+      run: ./tools/prep-platformio.sh
     - name: Test PlatformIO
-      env:
-        TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: bash ./tools/test-platformio.sh
+      run: ./tools/test-platformio.sh

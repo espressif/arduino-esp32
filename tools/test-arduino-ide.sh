@@ -1,6 +1,156 @@
 #!/bin/bash
 
-export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
-source tools/common.sh
+CHUNK_INDEX=$1
+CHUNKS_CNT=$2
+if [ "$#" -lt 2 ]; then
+	echo "Building all sketches"
+	CHUNK_INDEX=0
+	CHUNKS_CNT=1
+fi
+if [ "$CHUNKS_CNT" -le 0 ]; then
+	echo "Chunks count must be positive number"
+	exit 1
+fi
+if [ "$CHUNK_INDEX" -ge "$CHUNKS_CNT" ]; then
+	echo "Chunk index must be less than chunks count"
+	exit 1
+fi
+
+export ARDUINO_IDE_PATH=$HOME/arduino_ide
+export ARDUINO_LIB_PATH=$HOME/Arduino/libraries
+export EXAMPLES_PATH=$TRAVIS_BUILD_DIR/libraries
+export EXAMPLES_BUILD_DIR=$TRAVIS_BUILD_DIR/build.tmp
+export EXAMPLES_BUILD_CMD="python tools/build.py -b esp32 -v -k -p $EXAMPLES_BUILD_DIR -l $ARDUINO_LIB_PATH "
+export EXAMPLES_SIZE_BIN=$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin/xtensa-esp32-elf-size
+
+function print_size_info()
+{
+    elf_file=$1
+
+    if [ -z "$elf_file" ]; then
+        printf "sketch                           iram0.text flash.text flash.rodata dram0.data dram0.bss    dram     flash\n"
+        return 0
+    fi
+
+    elf_name=$(basename $elf_file)
+    sketch_name="${elf_name%.*}"
+    # echo $sketch_name
+    declare -A segments
+    while read -a tokens; do
+        seg=${tokens[0]}
+        seg=${seg//./}
+        size=${tokens[1]}
+        addr=${tokens[2]}
+        if [ "$addr" -eq "$addr" -a "$addr" -ne "0" ] 2>/dev/null; then
+            segments[$seg]=$size
+        fi
+    done < <($EXAMPLES_SIZE_BIN --format=sysv $elf_file)
+
+    total_ram=$((${segments[dram0data]} + ${segments[dram0bss]}))
+    total_flash=$((${segments[iram0text]} + ${segments[flashtext]} + ${segments[dram0data]} + ${segments[flashrodata]}))
+    printf "%-32s %-8d   %-8d   %-8d     %-8d   %-8d     %-8d %-8d\n" $sketch_name ${segments[iram0text]} ${segments[flashtext]} ${segments[flashrodata]} ${segments[dram0data]} ${segments[dram0bss]} $total_ram $total_flash
+    return 0
+}
+
+function build_sketch()
+{
+	local sketch=$1
+    echo -e "\n ------------ Building $sketch ------------ \n";
+    #return 0 ####
+    rm -rf $EXAMPLES_BUILD_DIR/*
+    time ($EXAMPLES_BUILD_CMD $sketch >build.log)
+    local result=$?
+    if [ $result -ne 0 ]; then
+        echo "Build failed ($1)"
+        echo "Build log:"
+        cat build.log
+        return $result
+    fi
+    rm build.log
+    #print_size_info
+    #print_size_info $EXAMPLES_BUILD_DIR/*.elf
+    return 0
+}
+
+function count_sketches()
+{
+    local sketches=$(find $EXAMPLES_PATH -name *.ino)
+    local sketchnum=0
+    rm -rf sketches.txt
+    for sketch in $sketches; do
+        local sketchdir=$(dirname $sketch)
+        local sketchdirname=$(basename $sketchdir)
+        local sketchname=$(basename $sketch)
+        if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
+            continue
+        fi;
+        if [[ -f "$sketchdir/.test.skip" ]]; then
+            continue
+        fi
+        echo $sketch >> sketches.txt
+        sketchnum=$(($sketchnum + 1))
+    done
+    return $sketchnum
+}
+
+function build_sketches()
+{
+    mkdir -p $EXAMPLES_BUILD_DIR
+    local chunk_idex=$1
+    local chunks_num=$2
+    count_sketches
+    local sketchcount=$?
+    local sketches=$(cat sketches.txt)
+    echo -e "Sketches: \n$sketches\n"
+    echo "Found $sketchcount Sketches";
+    local chunk_size=$(( $(( $sketchcount / $chunks_num )) + 1 ))
+    echo "Chunk Size $chunk_size"
+    local start_index=$(( $chunk_idex * $chunk_size ))
+    echo "Start $start_index"
+    local end_index=$(( $(( $chunk_idex + 1 )) * $chunk_size ))
+    if [ "$end_index" -gt "$sketchcount" ]; then
+    	end_index=$sketchcount
+    fi
+    echo "End $end_index"
+
+    #local sketches=$(find $EXAMPLES_PATH -name *.ino)
+    local sketchnum=0
+    print_size_info >size.log
+    for sketch in $sketches; do
+        local sketchdir=$(dirname $sketch)
+        local sketchdirname=$(basename $sketchdir)
+        local sketchname=$(basename $sketch)
+        if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
+            #echo "Skipping $sketch, beacause it is not the main sketch file";
+            continue
+        fi;
+        if [[ -f "$sketchdir/.test.skip" ]]; then
+            #echo "Skipping $sketch marked";
+            continue
+        fi
+        sketchnum=$(($sketchnum + 1))
+        if [ "$sketchnum" -le "$start_index" ]; then
+        	#echo "Skipping $sketch index low"
+        	continue
+        fi
+        if [ "$sketchnum" -gt "$end_index" ]; then
+        	#echo "Skipping $sketch index high"
+        	continue
+        fi
+        build_sketch $sketch
+        local result=$?
+        if [ $result -ne 0 ]; then
+            return $result
+        fi
+        print_size_info $EXAMPLES_BUILD_DIR/*.elf >>size.log
+    done
+    return 0
+}
+
+#count_sketches
+build_sketches $CHUNK_INDEX $CHUNKS_CNT
+
+#export PATH="$HOME/arduino_ide:$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin:$PATH"
+#source tools/common.sh
 #build_sketches $HOME/arduino_ide $TRAVIS_BUILD_DIR/libraries "-l $HOME/Arduino/libraries"
 if [ $? -ne 0 ]; then exit 1; fi
