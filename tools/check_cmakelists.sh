@@ -10,8 +10,10 @@ set -e
 
 cd "`dirname $0`/.."  # cd to arduino-esp32 root
 
+# pull all submodules
+git submodule update --init --recursive
+
 # find all source files in repo
-#REPO_SRCS=`find cores/esp32/ libraries/ -name 'examples' -prune -o -name 'main.cpp' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort`
 REPO_SRCS=`find cores/esp32/ libraries/ -name 'examples' -prune -o -name '*.c' -print -o -name '*.cpp' -print | sort`
 
 # find all source files named in CMakeLists.txt COMPONENT_SRCS
