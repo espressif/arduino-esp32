@@ -22,31 +22,32 @@ jobs:
   include:
 
     - name: "Build Arduino 0"
-      if: type = pull_request OR (type = push AND branch = master)
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 0 4
 
     - name: "Build Arduino 1"
-      if: type = pull_request OR (type = push AND branch = master)
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 1 4
 
     - name: "Build Arduino 2"
-      if: type = pull_request OR (type = push AND branch = master)
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 2 4
 
     - name: "Build Arduino 3"
-      if: type = pull_request OR (type = push AND branch = master)
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 3 4
 
     - name: "Build PlatformIO"
-      if: type = pull_request OR (type = push AND branch = master)
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 4 4
 
     - name: "Package & Deploy"
+      if: tag IS present
       stage: deploy
       script: bash $TRAVIS_BUILD_DIR/tools/build-release.sh
       env:
