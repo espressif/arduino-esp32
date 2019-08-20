@@ -25,6 +25,42 @@ jobs:
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 0 10
 
+    - name: "Build Arduino 1"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 1 10
+
+    - name: "Build Arduino 2"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 2 10
+
+    - name: "Build Arduino 3"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 3 10
+
+    - name: "Build Arduino 4"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 4 10
+
+    - name: "Build Arduino 5"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 5 10
+
+    - name: "Build Arduino 6"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 6 10
+
+    - name: "Build Arduino 7"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 7 10
+
+    - name: "Build Arduino 8"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 8 10
+
+    - name: "Build Arduino 9"
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 9 10
+
     - name: "Build PlatformIO"
       stage: build
       script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 10 10
