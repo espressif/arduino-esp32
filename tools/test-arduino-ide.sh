@@ -101,19 +101,31 @@ function build_sketches()
     count_sketches
     local sketchcount=$?
     local sketches=$(cat sketches.txt)
-    echo -e "Sketches: \n$sketches\n"
-    echo "Found $sketchcount Sketches";
-    local chunk_size=$(( $(( $sketchcount / $chunks_num )) + 1 ))
-    echo "Chunk Size $chunk_size"
+
+    local chunk_size=$(( $sketchcount / $chunks_num ))
+    local all_chunks=$(( $chunks_num * $chunk_size ))
+    if [ "$all_chunks" -lt "$sketchcount" ]; then
+    	chunk_size=$(( $chunk_size + 1 ))
+    fi
+
     local start_index=$(( $chunk_idex * $chunk_size ))
-    echo "Start $start_index"
+    if [ "$sketchcount" -le "$start_index" ]; then
+    	echo "Skipping job"
+    	return 0
+    fi
+
     local end_index=$(( $(( $chunk_idex + 1 )) * $chunk_size ))
     if [ "$end_index" -gt "$sketchcount" ]; then
     	end_index=$sketchcount
     fi
+
+    local start_num=$(( $start_index + 1 ))
+    #echo -e "Sketches: \n$sketches\n"
+    echo "Found $sketchcount Sketches";
+    #echo "Chunk Size $chunk_size"
+    echo "Start $start_num"
     echo "End $end_index"
 
-    #local sketches=$(find $EXAMPLES_PATH -name *.ino)
     local sketchnum=0
     print_size_info >size.log
     for sketch in $sketches; do
