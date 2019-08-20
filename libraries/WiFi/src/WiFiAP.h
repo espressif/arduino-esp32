@@ -45,6 +45,10 @@ public:
 
     IPAddress softAPIP();
 
+    IPAddress softAPBroadcastIP();
+    IPAddress softAPNetworkID();
+    uint8_t softAPSubnetCIDR();
+
     bool softAPenableIpV6();
     IPv6Address softAPIPv6();
 

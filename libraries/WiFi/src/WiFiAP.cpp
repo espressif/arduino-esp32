@@ -235,6 +235,47 @@ IPAddress WiFiAPClass::softAPIP()
     return IPAddress(ip.ip.addr);
 }
 
+/**
+ * Get the softAP broadcast IP address.
+ * @return IPAddress softAP broadcastIP
+ */
+IPAddress WiFiAPClass::softAPBroadcastIP()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip);
+    return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+/**
+ * Get the softAP network ID.
+ * @return IPAddress softAP networkID
+ */
+IPAddress WiFiAPClass::softAPNetworkID()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip);
+    return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+/**
+ * Get the softAP subnet CIDR.
+ * @return uint8_t softAP subnetCIDR
+ */
+uint8_t WiFiAPClass::softAPSubnetCIDR()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return (uint8_t)0;
+    }
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip);
+    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
+}
 
 /**
  * Get the softAP interface MAC address.

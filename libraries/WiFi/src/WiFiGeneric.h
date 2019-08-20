@@ -108,6 +108,10 @@ class WiFiGenericClass
   public:
     static int hostByName(const char *aHostname, IPAddress &aResult);
 
+    static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
+    static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);
+    static uint8_t calculateSubnetCIDR(IPAddress subnetMask);
+
   protected:
     friend class WiFiSTAClass;
     friend class WiFiScanClass;
