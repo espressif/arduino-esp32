@@ -164,7 +164,7 @@ void BLERemoteService::retrieveCharacteristics() {
 	uint16_t offset = 0;
 	esp_gattc_char_elem_t result;
 	while (true) {
-		uint16_t count = 10;  // this value is used as in parameter that allows to search max 10 chars with the same uuid
+		uint16_t count = 1; // only room for 1 result allocated, so go one by one
 		esp_gatt_status_t status = ::esp_ble_gattc_get_all_char(
 			getClient()->getGattcIf(),
 			getClient()->getConnId(),
@@ -317,15 +317,25 @@ void BLERemoteService::setValue(BLEUUID characteristicUuid, std::string value) {
  * @return A string representation of this remote service.
  */
 std::string BLERemoteService::toString() {
-	std::ostringstream ss;
-	ss << "Service: uuid: " + m_uuid.toString();
-	ss << ", start_handle: " << std::dec << m_startHandle << " 0x" << std::hex << m_startHandle <<
-			", end_handle: " << std::dec << m_endHandle << " 0x" << std::hex << m_endHandle;
+	std::string res = "Service: uuid: " + m_uuid.toString();
+	char val[6];
+	res += ", start_handle: ";
+	snprintf(val, sizeof(val), "%d", m_startHandle);
+	res += val;
+	snprintf(val, sizeof(val), "%04x", m_startHandle);
+	res += " 0x";
+	res += val;
+	res += ", end_handle: ";
+	snprintf(val, sizeof(val), "%d", m_endHandle);
+	res += val;
+	snprintf(val, sizeof(val), "%04x", m_endHandle);
+	res += " 0x";
+	res += val;
 	for (auto &myPair : m_characteristicMap) {
-		ss << "\n" << myPair.second->toString();
+		res += "\n" + myPair.second->toString();
 	   // myPair.second is the value
 	}
-	return ss.str();
+	return res;
 } // toString
 
 

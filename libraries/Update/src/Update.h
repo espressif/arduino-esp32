@@ -62,7 +62,7 @@ class UpdateClass {
       If all bytes are written
       this call will write the config to eboot
       and return true
-      If there is already an update running but is not finished and !evenIfRemainanig
+      If there is already an update running but is not finished and !evenIfRemaining
       or there is an error
       this will clear everything and return false
       the last error is available through getError()

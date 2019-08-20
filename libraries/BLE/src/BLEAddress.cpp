@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <string.h>
 #include <stdio.h>
+#include <malloc.h>
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
 #endif
@@ -83,13 +84,11 @@ esp_bd_addr_t *BLEAddress::getNative() {
  * @return The string representation of the address.
  */
 std::string BLEAddress::toString() {
-	std::stringstream stream;
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[0] << ':';
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[1] << ':';
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[2] << ':';
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[3] << ':';
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[4] << ':';
-	stream << std::setfill('0') << std::setw(2) << std::hex << (int) ((uint8_t*) (m_address))[5];
-	return stream.str();
+	auto size = 18;
+	char *res = (char*)malloc(size);
+	snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
+	std::string ret(res);
+	free(res);
+	return ret;
 } // toString
 #endif

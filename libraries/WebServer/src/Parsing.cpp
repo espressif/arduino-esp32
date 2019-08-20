@@ -303,6 +303,7 @@ void WebServer::_uploadWriteByte(uint8_t b){
 }
 
 int WebServer::_uploadReadByte(WiFiClient& client){
+  if (!client.connected()) return -1;
   int res = client.read();
   if(res < 0) {
     // keep trying until you either read a valid byte or timeout

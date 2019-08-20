@@ -197,7 +197,7 @@ protected:
     };
 
     bool beginInternal(String url, const char* expectedProtocol);
-    void disconnect();
+    void disconnect(bool preserveClient = false);
     void clear();
     int returnError(int error);
     bool connect(void);
