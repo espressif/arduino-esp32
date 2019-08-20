@@ -5,7 +5,7 @@ on: [push]
 jobs:
 
   build-arduino-0:
-    name: Build Arduino IDE Tests
+    name: Build Arduino IDE Tests 0
     runs-on: ubuntu-latest
     
     steps:
@@ -29,7 +29,7 @@ jobs:
       run: cat size.log
 
   build-arduino-1:
-    name: Build Arduino IDE Tests
+    name: Build Arduino IDE Tests 1
     runs-on: ubuntu-latest
     
     steps:
