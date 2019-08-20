@@ -24,7 +24,7 @@ https://github.com/me-no-dev/EspExceptionDecoder
 
 ### Hardware:
 Board:							?ESP32 Dev Module? ?node32? ?ttgo_lora?
-Core Installation version:			?1.0.0? ?1.0.1-rc4? ?1.0.1? ?1.0.1-git?
+Core Installation version:			?1.0.0? ?1.0.1-rc4? ?1.0.1? ?1.0.1-git? ?1.0.2? ?1.0.3?
 IDE name:						?Arduino IDE? ?Platform.io? ?IDF component?
 Flash Frequency:					?40Mhz?
 PSRAM enabled:                                    ?no? ?yes?
