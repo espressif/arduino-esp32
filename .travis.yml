@@ -10,22 +10,73 @@ os:
 git:
   depth: false
 
-env:
-    global:
+# new script start
+before_install:
+  - git submodule update --init --recursive
+
+stages:
+  - build
+  - deploy
+
+jobs:
+  include:
+
+    - name: "Build Arduino 0"
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 0 4
+
+    - name: "Build Arduino 1"
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 1 4
+
+    - name: "Build Arduino 2"
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 2 4
+
+    - name: "Build Arduino 3"
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 3 4
+
+    - name: "Build PlatformIO"
+      if: tag IS blank AND (type = pull_request OR (type = push AND branch = master))
+      stage: build
+      script: $TRAVIS_BUILD_DIR/tools/build-tests.sh 4 4
+
+    - name: "Package & Deploy"
+      if: tag IS present
+      stage: deploy
+      env:
         - secure: "l/4Dt+KQ/mACtGAHDUsPr66fUte840PZoQ4xpPikqWZI0uARu4l+Ym7+sHinnT6fBqrj8AJeBYGz4nFa8NK4LutZn9mSD40w+sxl0wSV4oHV8rzKe3Cd8+sMG3+o33yWoikMNjSvqa73Q0rm+SgrlInNdZbuAyixL+a2alaWSnGPm4F2xwUGj+S33TOy5P/Xp77CYtCV5S8vzyk/eEdNhoF0GYePJVdfuzCOUjXMyT5OWxORkzzQ7Hnn/Ka/RDfV8Si4HgujLQBrK5q6iPnNBFqBSqilYBepSMn4opnOBpIm0SCgePz7XQEFC83buA7GUcnCnfg38bf+dCwHaODf1d1PmqVRYt2QmfinexXtM4afAtL0iBUDtvrfnXHzwW9w82VeZhpbJSVh9DUQvB0IlsZeCz9J9PUBAi3N+SMX+9l+BomYwRUlPuKY+Ef2JKk9q6mxtUkky5R0daAlVxEhpVdQks1rT+T+NMoDMemxQ3SKEiqAHh6EgHecruszffmZ71uLX9MpERpew0qN+UFiafws+jkTjx+3yF9yut0Hf9sMbeAYzzkGzRqJTUEBJ6B29Cql8M0yRXCNN/8wuuTHhG8esstozga4ZQoIVrq7mEAgup376PTcNfr1+imbbWVQ7lJdYIuDe6OS5V3OX6np11vgK/DbhfyzvQv9Z1zAGnM="
         - REMOTE_URL=https://github.com/$TRAVIS_REPO_SLUG/releases/download/$TRAVIS_TAG
+      script: bash $TRAVIS_BUILD_DIR/tools/build-release.sh -a$ESP32_GITHUB_TOKEN
+      before_deploy: git submodule update --init
+      deploy:
+      - provider: script
+        skip_cleanup: true
+        script: bash $TRAVIS_BUILD_DIR/tools/deploy.sh -t$TRAVIS_TAG -a$ESP32_GITHUB_TOKEN -s$TRAVIS_REPO_SLUG -drelease
+        on:
+          tags: true
+
+# old script start
+# env:
+#     global:
+#         - secure: "l/4Dt+KQ/mACtGAHDUsPr66fUte840PZoQ4xpPikqWZI0uARu4l+Ym7+sHinnT6fBqrj8AJeBYGz4nFa8NK4LutZn9mSD40w+sxl0wSV4oHV8rzKe3Cd8+sMG3+o33yWoikMNjSvqa73Q0rm+SgrlInNdZbuAyixL+a2alaWSnGPm4F2xwUGj+S33TOy5P/Xp77CYtCV5S8vzyk/eEdNhoF0GYePJVdfuzCOUjXMyT5OWxORkzzQ7Hnn/Ka/RDfV8Si4HgujLQBrK5q6iPnNBFqBSqilYBepSMn4opnOBpIm0SCgePz7XQEFC83buA7GUcnCnfg38bf+dCwHaODf1d1PmqVRYt2QmfinexXtM4afAtL0iBUDtvrfnXHzwW9w82VeZhpbJSVh9DUQvB0IlsZeCz9J9PUBAi3N+SMX+9l+BomYwRUlPuKY+Ef2JKk9q6mxtUkky5R0daAlVxEhpVdQks1rT+T+NMoDMemxQ3SKEiqAHh6EgHecruszffmZ71uLX9MpERpew0qN+UFiafws+jkTjx+3yF9yut0Hf9sMbeAYzzkGzRqJTUEBJ6B29Cql8M0yRXCNN/8wuuTHhG8esstozga4ZQoIVrq7mEAgup376PTcNfr1+imbbWVQ7lJdYIuDe6OS5V3OX6np11vgK/DbhfyzvQv9Z1zAGnM="
+#         - REMOTE_URL=https://github.com/$TRAVIS_REPO_SLUG/releases/download/$TRAVIS_TAG
     
-script:
-  - bash $TRAVIS_BUILD_DIR/tools/build.sh
+# script:
+#   - bash $TRAVIS_BUILD_DIR/tools/build.sh
 
-deploy:
-  provider: script
-  skip_cleanup: true
-  script: bash $TRAVIS_BUILD_DIR/tools/deploy.sh -t$TRAVIS_TAG -a$ESP32_GITHUB_TOKEN -s$TRAVIS_REPO_SLUG -drelease
+# deploy:
+#   provider: script
+#   skip_cleanup: true
+#   script: bash $TRAVIS_BUILD_DIR/tools/deploy.sh -t$TRAVIS_TAG -a$ESP32_GITHUB_TOKEN -s$TRAVIS_REPO_SLUG -drelease
 
-  on:
-    tags: true
-
+#   on:
+#     tags: true
 
 notifications:
   email:

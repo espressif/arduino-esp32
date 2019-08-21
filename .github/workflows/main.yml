@@ -1,6 +1,11 @@
 name: ESP32 Arduino CI
 
-on: [pull_request]
+on:
+  push:
+    branches:
+    - master
+    - release/*
+  pull_request:
 
 jobs:
 
@@ -17,8 +22,7 @@ jobs:
 
     - name: Install Arduino IDE
       env:
-        ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        #ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
       run: ./tools/prep-arduino-ide.sh
     - name: Test Arduino IDE
@@ -36,9 +40,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -58,9 +59,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -80,9 +78,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -102,9 +97,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -124,9 +116,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -146,9 +135,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -168,9 +154,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -190,9 +173,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -212,9 +192,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -234,9 +211,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -256,9 +230,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -278,9 +249,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -300,9 +268,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -322,9 +287,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -344,9 +306,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -366,9 +325,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -388,9 +344,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
@@ -411,9 +364,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: Pull submodules
       run: git submodule update --init --recursive
-    - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
-
     - name: Install Python Wheel
       run: pip install wheel
     - name: Install GCC Toolchain
