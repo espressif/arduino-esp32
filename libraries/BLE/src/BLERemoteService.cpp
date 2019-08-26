@@ -14,6 +14,8 @@
 #include <esp_err.h>
 #include "esp32-hal-log.h"
 
+#pragma GCC diagnostic warning "-Wunused-but-set-parameter"
+
 BLERemoteService::BLERemoteService(
 		esp_gatt_id_t srvcId,
 		BLEClient*    pClient,
