@@ -228,7 +228,6 @@ std::map<std::string, BLERemoteCharacteristic*>* BLERemoteService::getCharacteri
  * @brief This function is designed to get characteristics map when we have multiple characteristics with the same UUID
  */
 void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap) {
-#pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
 	pCharacteristicMap = &m_characteristicMapByHandle;
 }  // Get the characteristics map.
 
