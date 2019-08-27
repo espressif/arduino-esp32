@@ -29,7 +29,7 @@ fi
 # CMake Test
 if [ "$CHUNK_INDEX" -eq 0 ]; then
 	echo -e "travis_fold:start:check_cmakelists"
-	tools/check_cmakelists.sh
+	tools/check-cmakelists.sh
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:check_cmakelists"
 fi
