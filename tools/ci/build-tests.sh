@@ -29,7 +29,7 @@ fi
 # CMake Test
 if [ "$CHUNK_INDEX" -eq 0 ]; then
 	echo -e "travis_fold:start:check_cmakelists"
-	tools/check_cmakelists.sh
+	tools/ci/check-cmakelists.sh
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:check_cmakelists"
 fi
@@ -37,12 +37,12 @@ fi
 if [ "$BUILD_PIO" -eq 0 ]; then
 	# ArduinoIDE Test
 	echo -e "travis_fold:start:prep_arduino_ide"
-	tools/prep-arduino-ide.sh
+	tools/ci/prep-arduino-ide.sh
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:prep_arduino_ide"
 
 	echo -e "travis_fold:start:test_arduino_ide"
-	tools/test-arduino-ide.sh $CHUNK_INDEX $CHUNKS_CNT
+	tools/ci/test-arduino-ide.sh $CHUNK_INDEX $CHUNKS_CNT
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:test_arduino_ide"
 
@@ -53,12 +53,12 @@ else
 	# PlatformIO Test
 	echo -e "travis_fold:start:prep_platformio"
 	cd tools && python get.py && cd ..
-	tools/prep-platformio.sh
+	tools/ci/prep-platformio.sh
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:prep_platformio"
 
 	echo -e "travis_fold:start:test_platformio"
-	tools/test-platformio.sh
+	tools/ci/test-platformio.sh
 	if [ $? -ne 0 ]; then exit 1; fi
 	echo -e "travis_fold:end:test_platformio"
 fi
