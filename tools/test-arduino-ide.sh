@@ -98,6 +98,9 @@ function build_sketches()
 {
     mkdir -p $EXAMPLES_BUILD_DIR
     mkdir -p $EXAMPLES_CACHE_DIR
+    mkdir -p $ARDUINO_USR_PATH/libraries
+    mkdir -p $ARDUINO_USR_PATH/hardware
+    
     local chunk_idex=$1
     local chunks_num=$2
     count_sketches
