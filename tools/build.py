@@ -74,7 +74,7 @@ def parse_args():
     parser.add_argument('-u', '--usr_path', help='Arduino Home directory (holds your sketches, libraries and hardware)')
     parser.add_argument('-f', '--fqbn', help='Arduino Board FQBN')
     parser.add_argument('-l', '--library_path', help='Additional library path', action='append')
-    parser.add_argument('-h', '--hardware_path', help='Additional hardware path', action='append')
+    parser.add_argument('-d', '--hardware_path', help='Additional hardware path', action='append')
     parser.add_argument('-t', '--tools_path', help='Additional tools path', action='append')
     parser.add_argument('-w', '--warnings', help='Compilation warnings level', default='none', choices=['none', 'all', 'more', 'default'])
     parser.add_argument('-o', '--output_binary', help='File name for output binary')
