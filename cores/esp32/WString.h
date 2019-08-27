@@ -83,6 +83,12 @@ class String {
                 return 0;
             }
         }
+        inline void clear(void) {
+            setLen(0);
+        }
+        inline bool isEmpty(void) const {
+            return length() == 0;
+        }
 
         // creates a copy of the assigned value.  if the value is null or
         // invalid, or if the memory allocation fails, the string will be
@@ -99,7 +105,7 @@ class String {
 
         // returns true on success, false on failure (in which case, the string
         // is left unchanged).  if the argument is null or invalid, the
-        // concatenation is considered unsucessful.
+        // concatenation is considered unsuccessful.
         unsigned char concat(const String &str);
         unsigned char concat(const char *cstr);
         unsigned char concat(char c);
@@ -200,7 +206,7 @@ class String {
         unsigned char startsWith(const String &prefix, unsigned int offset) const;
         unsigned char endsWith(const String &suffix) const;
 
-        // character acccess
+        // character access
         char charAt(unsigned int index) const;
         void setCharAt(unsigned int index, char c);
         char operator [](unsigned int index) const;
@@ -251,27 +257,29 @@ class String {
             uint16_t cap;
             uint16_t len;
         };
-
-        // SSO is handled by checking the last byte of sso_buff.
-        // When not in SSO mode, that byte is set to 0xff, while when in SSO mode it is always 0x00 (so it can serve as the string terminator as well as a flag)
-        // This allows strings up up to 12 (11 + \0 termination) without any extra space.
-        enum { SSOSIZE = sizeof(struct _ptr) + 4 }; // Characters to allocate space for SSO, must be 12 or more
-        enum { CAPACITY_MAX = 65535 }; // If size of capacity changed, be sure to update this enum
+        // This allows strings up up to 11 (10 + \0 termination) without any extra space.
+        enum { SSOSIZE = sizeof(struct _ptr) + 4 - 1 }; // Characters to allocate space for SSO, must be 12 or more
+        struct _sso {
+            char     buff[SSOSIZE];
+            unsigned char len   : 7; // Ensure only one byte is allocated by GCC for the bitfields
+            unsigned char isSSO : 1;
+        } __attribute__((packed)); // Ensure that GCC doesn't expand the flag byte to a 32-bit word for alignment issues
+        enum { CAPACITY_MAX = 65535 }; // If typeof(cap) changed from uint16_t, be sure to update this enum to the max value storable in the type
         union {
             struct _ptr ptr;
-            char sso_buf[SSOSIZE];
+            struct _sso sso;
         };
         // Accessor functions
-        inline bool sso() const { return sso_buf[SSOSIZE - 1] == 0; }
-        inline unsigned int len() const { return sso() ? strlen(sso_buf) : ptr.len; }
-        inline unsigned int capacity() const { return sso() ? SSOSIZE - 1 : ptr.cap; }
-        inline void setSSO(bool sso) { sso_buf[SSOSIZE - 1] = sso ? 0x00 : 0xff; }
-        inline void setLen(int len) { if (!sso()) ptr.len = len; }
-        inline void setCapacity(int cap) { if (!sso()) ptr.cap = cap; }
-	inline void setBuffer(char *buff) { if (!sso()) ptr.buff = buff; }
+        inline bool isSSO() const { return sso.isSSO; }
+        inline unsigned int len() const { return isSSO() ? sso.len : ptr.len; }
+        inline unsigned int capacity() const { return isSSO() ? (unsigned int)SSOSIZE - 1 : ptr.cap; } // Size of max string not including terminal NUL
+        inline void setSSO(bool set) { sso.isSSO = set; }
+        inline void setLen(int len) { if (isSSO()) sso.len = len; else ptr.len = len; }
+        inline void setCapacity(int cap) { if (!isSSO()) ptr.cap = cap; }
+	inline void setBuffer(char *buff) { if (!isSSO()) ptr.buff = buff; }
         // Buffer accessor functions
-        inline const char *buffer() const { return (const char *)(sso() ? sso_buf : ptr.buff); }
-        inline char *wbuffer() const { return sso() ? const_cast<char *>(sso_buf) : ptr.buff; } // Writable version of buffer
+        inline const char *buffer() const { return (const char *)(isSSO() ? sso.buff : ptr.buff); }
+        inline char *wbuffer() const { return isSSO() ? const_cast<char *>(sso.buff) : ptr.buff; } // Writable version of buffer
 
     protected:
         void init(void);
