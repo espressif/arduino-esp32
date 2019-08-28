@@ -16,11 +16,15 @@ if [ "$CHUNK_INDEX" -ge "$CHUNKS_CNT" ]; then
 	exit 1
 fi
 
+export ARDUINO_BOARD_FQBN="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,CPUFreq=240,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none"
+
 export ARDUINO_IDE_PATH=$HOME/arduino_ide
-export ARDUINO_LIB_PATH=$HOME/Arduino/libraries
+export ARDUINO_USR_PATH=$HOME/Arduino
+
 export EXAMPLES_PATH=$TRAVIS_BUILD_DIR/libraries
-export EXAMPLES_BUILD_DIR=$TRAVIS_BUILD_DIR/build.tmp
-export EXAMPLES_BUILD_CMD="python tools/build.py -b esp32 -v -k -p $EXAMPLES_BUILD_DIR -l $ARDUINO_LIB_PATH "
+export EXAMPLES_BUILD_DIR=$HOME/build.tmp
+export EXAMPLES_CACHE_DIR=$HOME/cache.tmp
+export EXAMPLES_BUILD_CMD="python $TRAVIS_BUILD_DIR/tools/ci/build-sketch.py -v -k -b $EXAMPLES_BUILD_DIR -c $EXAMPLES_CACHE_DIR -u $ARDUINO_USR_PATH -f $ARDUINO_BOARD_FQBN "
 export EXAMPLES_SIZE_BIN=$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin/xtensa-esp32-elf-size
 
 function print_size_info()
@@ -93,6 +97,10 @@ function count_sketches()
 function build_sketches()
 {
     mkdir -p $EXAMPLES_BUILD_DIR
+    mkdir -p $EXAMPLES_CACHE_DIR
+    mkdir -p $ARDUINO_USR_PATH/libraries
+    mkdir -p $ARDUINO_USR_PATH/hardware
+    
     local chunk_idex=$1
     local chunks_num=$2
     count_sketches
