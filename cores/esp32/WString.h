@@ -54,6 +54,7 @@ class String {
         // if the initial value is null or invalid, or if memory allocation
         // fails, the string will be marked as invalid (i.e. "if (s)" will
         // be false).
+        String();
         String(const char *cstr = "");
         String(const String &str);
         String(const __FlashStringHelper *str);
