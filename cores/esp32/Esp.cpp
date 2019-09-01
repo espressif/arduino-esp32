@@ -92,13 +92,6 @@ void EspClass::deepSleep(uint32_t time_us)
     esp_deep_sleep(time_us);
 }
 
-uint32_t EspClass::getCycleCount()
-{
-    uint32_t ccount;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
-    return ccount;
-}
-
 void EspClass::restart(void)
 {
     esp_restart();
