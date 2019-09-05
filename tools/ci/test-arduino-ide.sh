@@ -24,7 +24,7 @@ export ARDUINO_USR_PATH=$HOME/Arduino
 export EXAMPLES_PATH=$TRAVIS_BUILD_DIR/libraries
 export EXAMPLES_BUILD_DIR=$HOME/build.tmp
 export EXAMPLES_CACHE_DIR=$HOME/cache.tmp
-export EXAMPLES_BUILD_CMD="python $TRAVIS_BUILD_DIR/tools/ci/build-sketch.py -v -k -b $EXAMPLES_BUILD_DIR -c $EXAMPLES_CACHE_DIR -u $ARDUINO_USR_PATH -f $ARDUINO_BOARD_FQBN "
+export EXAMPLES_BUILD_CMD="$ARDUINO_IDE_PATH/arduino-builder -compile -logger=human -core-api-version=\"10810\" -hardware \"$ARDUINO_IDE_PATH/hardware\" -hardware \"$ARDUINO_USR_PATH/hardware\" -tools \"$ARDUINO_IDE_PATH/tools-builder\" -built-in-libraries \"$ARDUINO_IDE_PATH/libraries\" -libraries \"$ARDUINO_USR_PATH/libraries\" -fqbn=$ARDUINO_BOARD_FQBN -warnings=\"all\" -build-cache \"$EXAMPLES_CACHE_DIR\" -build-path \"$EXAMPLES_BUILD_DIR\" -verbose"
 export EXAMPLES_SIZE_BIN=$TRAVIS_BUILD_DIR/tools/xtensa-esp32-elf/bin/xtensa-esp32-elf-size
 
 function print_size_info()
