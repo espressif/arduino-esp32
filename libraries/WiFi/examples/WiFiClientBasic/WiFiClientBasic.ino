@@ -14,8 +14,7 @@ void setup()
     delay(10);
 
     // We start by connecting to a WiFi network
-//    WiFiMulti.addAP("SSID", "passpasspass");
-    WiFiMulti.addAP("ARRIS-6089", "LaserJet4");
+    WiFiMulti.addAP("SSID", "passpasspass");
 
     Serial.println();
     Serial.println();
