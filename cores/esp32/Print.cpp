@@ -66,12 +66,11 @@ size_t Print::printf(const char *format, ...)
         }
         len = vsnprintf(temp, len+1, format, arg);
     }
-    write((uint8_t*)temp, len);
     va_end(arg);
-    if(len >= sizeof(loc_buf)) {
+    if(temp != loc_buf){
         free(temp);
     }
-    return len;
+    return write((uint8_t*)temp, len);
 }
 
 size_t Print::print(const __FlashStringHelper *ifsh)
