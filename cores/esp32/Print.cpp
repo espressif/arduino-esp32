@@ -61,6 +61,7 @@ size_t Print::printf(const char *format, ...)
     if(len >= sizeof(loc_buf)){
         temp = new char[len+1];
         if(temp == NULL) {
+            va_end(arg);
             return 0;
         }
         len = vsnprintf(temp, len+1, format, arg);
