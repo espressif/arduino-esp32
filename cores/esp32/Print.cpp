@@ -59,7 +59,7 @@ size_t Print::printf(const char *format, ...)
         return 0;
     };
     if(len >= sizeof(loc_buf)){
-        temp = new char[len+1];
+        temp = (char*) malloc(len+1);
         if(temp == NULL) {
             va_end(arg);
             return 0;
@@ -68,8 +68,8 @@ size_t Print::printf(const char *format, ...)
     }
     write((uint8_t*)temp, len);
     va_end(arg);
-    if(len >= sizeof(loc_buf)){
-        delete[] temp;
+    if(len >= sizeof(loc_buf)) {
+        free(temp);
     }
     return len;
 }
