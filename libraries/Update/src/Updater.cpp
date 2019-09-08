@@ -189,6 +189,9 @@ bool UpdateClass::_writeBuffer(){
         //this ensures that partially written firmware will not be bootable
         _buffer[0] = 0xFF;
     }
+    if (!_progress && _progress_callback) {
+        _progress_callback(0, _size);
+    }
     if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
         _abort(UPDATE_ERROR_ERASE);
         return false;
@@ -204,6 +207,9 @@ bool UpdateClass::_writeBuffer(){
     _md5.add(_buffer, _bufferLen);
     _progress += _bufferLen;
     _bufferLen = 0;
+    if (_progress_callback) {
+        _progress_callback(_progress, _size);
+    }
     return true;
 }
 
@@ -319,9 +325,6 @@ size_t UpdateClass::writeStream(Stream &data) {
         _reset();
         return 0;
     }
-    if (_progress_callback) {
-        _progress_callback(0, _size);
-    }
 
     if(_ledPin != -1) {
         pinMode(_ledPin, OUTPUT);
@@ -352,12 +355,6 @@ size_t UpdateClass::writeStream(Stream &data) {
         if((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer())
             return written;
         written += toRead;
-        if(_progress_callback) {
-            _progress_callback(_progress, _size);
-        }
-    }
-    if(_progress_callback) {
-        _progress_callback(_size, _size);
     }
     return written;
 }

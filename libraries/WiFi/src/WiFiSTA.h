@@ -64,6 +64,10 @@ public:
     IPAddress subnetMask();
     IPAddress gatewayIP();
     IPAddress dnsIP(uint8_t dns_no = 0);
+
+    IPAddress broadcastIP();
+    IPAddress networkID();
+    uint8_t subnetCIDR();
     
     bool enableIpV6();
     IPv6Address localIPv6();
