@@ -83,6 +83,7 @@ class WiFiGenericClass
     int32_t channel(void);
 
     void persistent(bool persistent);
+    void enableLongRange(bool enable);
 
     static bool mode(wifi_mode_t);
     static wifi_mode_t getMode();
@@ -100,6 +101,7 @@ class WiFiGenericClass
 
   protected:
     static bool _persistent;
+    static bool _long_range;
     static wifi_mode_t _forceSleepLastMode;
 
     static int setStatusBits(int bits);
