@@ -401,7 +401,12 @@ uint32_t uartGetBaudRate(uart_t* uart)
     if(uart == NULL) {
         return 0;
     }
+
     uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
+    if(!clk_div) {
+        return 0;
+    }
+
     return ((getApbFrequency()<<4)/clk_div);
 }
 
