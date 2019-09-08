@@ -520,6 +520,14 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
  * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
  * rounded to the closed real baudrate.
 */
+void uartStartDetectBaudrate(uart_t *uart) {
+  if(!uart) return;
+
+  uart->dev->auto_baud.glitch_filt = 0x08;
+  uart->dev->auto_baud.en = 0;
+  uart->dev->auto_baud.en = 1;
+}
+
 unsigned long
 uartDetectBaudrate(uart_t *uart)
 {
