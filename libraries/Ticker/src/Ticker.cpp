@@ -39,12 +39,12 @@ void Ticker::_attach_s(float seconds, bool repeat, callback_with_arg_t callback,
 	_attach_us(1000000ULL * seconds, repeat, callback, arg);
 }
 
-void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback, void* arg)
+void Ticker::_attach_ms(uint64_t milliseconds, bool repeat, callback_with_arg_t callback, void* arg)
 {
 	_attach_us(1000ULL * milliseconds, repeat, callback, arg);
 }
 
-void Ticker::_attach_us(uint32_t micros, bool repeat, callback_with_arg_t callback, void* arg)
+void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg)
 {
 	esp_timer_create_args_t _timerConfig;
 	_timerConfig.arg = reinterpret_cast<void*>(arg);
