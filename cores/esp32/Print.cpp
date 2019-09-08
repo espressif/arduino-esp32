@@ -159,8 +159,10 @@ size_t Print::print(struct tm * timeinfo, const char * format)
     }
     char buf[64];
     size_t written = strftime(buf, 64, f, timeinfo);
-    print(buf);
-    return written;
+    if(written == 0){
+        return written;
+    }
+    return print(buf);
 }
 
 size_t Print::println(void)
