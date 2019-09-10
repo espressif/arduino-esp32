@@ -70,6 +70,9 @@ esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
 esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
 esp32.menu.CPUFreq.240=240MHz (WiFi/BT)
 esp32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -116,7 +119,6 @@ esp32.menu.FlashSize.2M.build.flash_size=2MB
 esp32.menu.FlashSize.2M.build.partitions=minimal
 esp32.menu.FlashSize.16M=16MB (128Mb)
 esp32.menu.FlashSize.16M.build.flash_size=16MB
-esp32.menu.FlashSize.16M.build.partitions=ffat
 
 esp32.menu.UploadSpeed.921600=921600
 esp32.menu.UploadSpeed.921600.upload.speed=921600
