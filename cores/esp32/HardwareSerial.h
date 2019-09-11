@@ -97,6 +97,8 @@ protected:
     uart_t* _uart;
 };
 
+extern void serialEventRun(void) __attribute__((weak));
+
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern HardwareSerial Serial;
 extern HardwareSerial Serial1;

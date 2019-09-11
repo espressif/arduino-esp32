@@ -9,11 +9,6 @@ TaskHandle_t loopTaskHandle = NULL;
 
 bool loopTaskWDTEnabled;
 
-extern "C" void esp_loop(void) __attribute__((weak));
-extern "C" void esp_loop(void) {
-    loop();
-}
-
 void loopTask(void *pvParameters)
 {
     setup();
@@ -21,7 +16,8 @@ void loopTask(void *pvParameters)
         if(loopTaskWDTEnabled){
             esp_task_wdt_reset();
         }
-        esp_loop();
+        loop();
+        if (serialEventRun) serialEventRun();
     }
 }
 
