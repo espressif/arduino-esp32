@@ -22,6 +22,7 @@
 
  */
 
+
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiScan.h"
@@ -42,7 +43,8 @@ extern "C" {
 }
 
 bool WiFiScanClass::_scanAsync = false;
-
+uint32_t WiFiScanClass::_scanStarted = 0;
+uint32_t WiFiScanClass::_scanTimeout = 10000;
 uint16_t WiFiScanClass::_scanCount = 0;
 void* WiFiScanClass::_scanResult = 0;
 
@@ -58,6 +60,7 @@ int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, 
         return WIFI_SCAN_RUNNING;
     }
 
+    WiFiScanClass::_scanTimeout = max_ms_per_chan * 20;
     WiFiScanClass::_scanAsync = async;
 
     WiFi.enableSTA(true);
@@ -78,6 +81,11 @@ int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, 
         config.scan_time.active.max = max_ms_per_chan;
     }
     if(esp_wifi_scan_start(&config, false) == ESP_OK) {
+        _scanStarted = millis();
+        if (!_scanStarted) { //Prevent 0 from millis overflow
+	    ++_scanStarted;
+	}
+
         WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
         WiFiGenericClass::setStatusBits(WIFI_SCANNING_BIT);
 
@@ -107,6 +115,7 @@ void WiFiScanClass::_scanDone()
             WiFiScanClass::_scanCount = 0;
         }
     }
+    WiFiScanClass::_scanStarted=0; //Reset after a scan is completed for normal behavior
     WiFiGenericClass::setStatusBits(WIFI_SCAN_DONE_BIT);
     WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
 }
@@ -132,6 +141,11 @@ void * WiFiScanClass::_getScanInfoByIndex(int i)
  */
 int16_t WiFiScanClass::scanComplete()
 {
+    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
+    	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
+	return WIFI_SCAN_FAILED;
+    }
+
     if(WiFiGenericClass::getStatusBits() & WIFI_SCAN_DONE_BIT) {
         return WiFiScanClass::_scanCount;
     }
