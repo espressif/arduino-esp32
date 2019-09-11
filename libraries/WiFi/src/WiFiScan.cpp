@@ -60,7 +60,7 @@ int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, 
         return WIFI_SCAN_RUNNING;
     }
 
-    WiFiScanClass::_scanTimeout = max_ms_per_chan * 20
+    WiFiScanClass::_scanTimeout = max_ms_per_chan * 20;
     WiFiScanClass::_scanAsync = async;
 
     WiFi.enableSTA(true);
