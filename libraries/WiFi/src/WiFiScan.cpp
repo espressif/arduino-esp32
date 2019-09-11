@@ -83,8 +83,8 @@ int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, 
     if(esp_wifi_scan_start(&config, false) == ESP_OK) {
         _scanStarted = millis();
         if (!_scanStarted) { //Prevent 0 from millis overflow
-		    ++_scanStarted;
-	    }
+	    ++_scanStarted;
+	}
 
         WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
         WiFiGenericClass::setStatusBits(WIFI_SCANNING_BIT);
@@ -143,8 +143,8 @@ int16_t WiFiScanClass::scanComplete()
 {
     if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
     	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
-		return WIFI_SCAN_FAILED;
-	}
+	return WIFI_SCAN_FAILED;
+    }
 
     if(WiFiGenericClass::getStatusBits() & WIFI_SCAN_DONE_BIT) {
         return WiFiScanClass::_scanCount;
