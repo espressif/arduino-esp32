@@ -18,17 +18,17 @@ jobs:
     - name: Pull submodules
       run: git submodule update --init --recursive
     - name: Run CMake Check
-      run: ./tools/check_cmakelists.sh
+      run: ./tools/ci/check-cmakelists.sh
 
     - name: Install Arduino IDE
       env:
         #ESP32_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 0 18
+      run: ./tools/ci/test-arduino-ide.sh 0 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -43,11 +43,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 1 18
+      run: ./tools/ci/test-arduino-ide.sh 1 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -62,11 +62,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 2 18
+      run: ./tools/ci/test-arduino-ide.sh 2 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -81,11 +81,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 3 18
+      run: ./tools/ci/test-arduino-ide.sh 3 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -100,11 +100,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 4 18
+      run: ./tools/ci/test-arduino-ide.sh 4 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -119,11 +119,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 5 18
+      run: ./tools/ci/test-arduino-ide.sh 5 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -138,11 +138,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 6 18
+      run: ./tools/ci/test-arduino-ide.sh 6 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -157,11 +157,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 7 18
+      run: ./tools/ci/test-arduino-ide.sh 7 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -176,11 +176,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 8 18
+      run: ./tools/ci/test-arduino-ide.sh 8 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -195,11 +195,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 9 18
+      run: ./tools/ci/test-arduino-ide.sh 9 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -214,11 +214,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 10 18
+      run: ./tools/ci/test-arduino-ide.sh 10 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -233,11 +233,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 11 18
+      run: ./tools/ci/test-arduino-ide.sh 11 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -252,11 +252,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 12 18
+      run: ./tools/ci/test-arduino-ide.sh 12 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -271,11 +271,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 13 18
+      run: ./tools/ci/test-arduino-ide.sh 13 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -290,11 +290,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 14 18
+      run: ./tools/ci/test-arduino-ide.sh 14 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -309,11 +309,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 15 18
+      run: ./tools/ci/test-arduino-ide.sh 15 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -328,11 +328,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 16 18
+      run: ./tools/ci/test-arduino-ide.sh 16 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -347,11 +347,11 @@ jobs:
     - name: Install Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-arduino-ide.sh
+      run: ./tools/ci/prep-arduino-ide.sh
     - name: Test Arduino IDE
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/test-arduino-ide.sh 17 18
+      run: ./tools/ci/test-arduino-ide.sh 17 18
     - name: Sketch Sizes
       run: cat size.log
 
@@ -371,6 +371,6 @@ jobs:
     - name: Install PlatformIO
       env:
         TRAVIS_BUILD_DIR: ${{ github.workspace }}
-      run: ./tools/prep-platformio.sh
+      run: ./tools/ci/prep-platformio.sh
     - name: Test PlatformIO
-      run: ./tools/test-platformio.sh
+      run: ./tools/ci/test-platformio.sh
