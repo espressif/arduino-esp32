@@ -32,13 +32,7 @@
 #include "esp32-hal-bt.h"
 #endif
 
-#if defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
-
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "BLEDevice";
-#endif
 
 
 /**
