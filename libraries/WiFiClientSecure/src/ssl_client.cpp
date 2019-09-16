@@ -22,7 +22,7 @@
 
 const char *pers = "esp32-tls";
 
-static int handle_error(int err)
+static int _handle_error(int err, const char * file, int line)
 {
     if(err == -30848){
         return err;
@@ -30,11 +30,14 @@ static int handle_error(int err)
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
     mbedtls_strerror(err, error_buf, 100);
-    log_e("%s", error_buf);
+    log_e("[%s():%d]: (%d) %s", file, line, err, error_buf);
+#else
+    log_e("[%s():%d]: code %d", file, line, err);
 #endif
-    log_e("MbedTLS message code: %d", err);
     return err;
 }
+
+#define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
 
 void ssl_init(sslclient_context *ssl_client)
