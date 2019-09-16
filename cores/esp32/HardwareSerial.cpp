@@ -55,6 +55,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
 
     if(!baud) {
+        uartStartDetectBaudrate(_uart);
         time_t startMillis = millis();
         unsigned long detectedBaudRate = 0;
         while(millis() - startMillis < timeout_ms && !(detectedBaudRate = uartDetectBaudrate(_uart))) {

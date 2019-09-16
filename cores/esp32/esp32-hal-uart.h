@@ -72,6 +72,7 @@ size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
+void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
 
 bool uartRxActive(uart_t* uart);

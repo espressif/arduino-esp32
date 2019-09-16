@@ -1,3 +1,4 @@
+#include <HardwareSerial.h>
 /**
  * HTTPClient.cpp
  *
@@ -195,6 +196,11 @@ bool HTTPClient::begin(String url, const char* CAcert)
     }
     _secure = true;
     _transportTraits = TransportTraitsPtr(new TLSTraits(CAcert));
+    if(!_transportTraits) {
+        log_e("could not create transport traits");
+        return false;
+    }
+
     return true;
 }
 
@@ -215,6 +221,11 @@ bool HTTPClient::begin(String url)
         return begin(url, (const char*)NULL);
     }
     _transportTraits = TransportTraitsPtr(new TransportTraits());
+    if(!_transportTraits) {
+        log_e("could not create transport traits");
+        return false;
+    }
+
     return true;
 }
 #endif // HTTPCLIENT_1_1_COMPATIBLE
@@ -333,7 +344,8 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char* CAcer
  */
 void HTTPClient::end(void)
 {
-    disconnect();
+    disconnect(false);
+    clear();
 }
 
 
@@ -342,7 +354,7 @@ void HTTPClient::end(void)
  * disconnect
  * close the TCP socket
  */
-void HTTPClient::disconnect()
+void HTTPClient::disconnect(bool preserveClient)
 {
     if(connected()) {
         if(_client->available() > 0) {
@@ -357,7 +369,9 @@ void HTTPClient::disconnect()
         } else {
             log_d("tcp stop\n");
             _client->stop();
-            _client = nullptr;
+            if(!preserveClient) {
+                _client = nullptr;
+            }
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
             if(_tcpDeprecated) {
                 _transportTraits.reset(nullptr);
@@ -456,6 +470,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 void HTTPClient::useHTTP10(bool useHTTP10)
 {
     _useHTTP10 = useHTTP10;
+    _reuse = !useHTTP10;
 }
 
 /**
@@ -816,7 +831,8 @@ int HTTPClient::writeToStream(Stream * stream)
         return returnError(HTTPC_ERROR_ENCODING);
     }
 
-    end();
+//    end();
+    disconnect(true);
     return ret;
 }
 
@@ -970,9 +986,12 @@ bool HTTPClient::hasHeader(const char* name)
  */
 bool HTTPClient::connect(void)
 {
-
     if(connected()) {
-        log_d("already connected, try reuse!");
+        if(_reuse) {
+            log_d("already connected, reusing connection");
+        } else {
+            log_d("already connected, try reuse!");
+        }
         while(_client->available() > 0) {
             _client->read();
         }
@@ -980,8 +999,12 @@ bool HTTPClient::connect(void)
     }
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-     if(!_client) {
+     if(_transportTraits && !_client) {
         _tcpDeprecated = _transportTraits->create();
+        if(!_tcpDeprecated) {
+            log_e("failed to create client");
+            return false;
+        }
         _client = _tcpDeprecated.get();
      }
 #endif
@@ -1080,11 +1103,12 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    _canReuse = !_useHTTP10;
+    clear();
+
+    _canReuse = _reuse;
 
     String transferEncoding;
-    _returnCode = -1;
-    _size = -1;
+
     _transferEncoding = HTTPC_TE_IDENTITY;
     unsigned long lastDataTime = millis();
 
@@ -1099,8 +1123,10 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(headerLine.startsWith("HTTP/1.")) {
+                if(_canReuse) {
+                    _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
+                }
                 _returnCode = headerLine.substring(9, headerLine.indexOf(' ', 9)).toInt();
-                _canReuse = (_returnCode != '0');
             } else if(headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
@@ -1110,8 +1136,10 @@ int HTTPClient::handleHeaderResponse()
                     _size = headerValue.toInt();
                 }
 
-                if(headerName.equalsIgnoreCase("Connection")) {
-                    _canReuse = headerValue.equalsIgnoreCase("keep-alive");
+                if(_canReuse && headerName.equalsIgnoreCase("Connection")) {
+                    if(headerValue.indexOf("close") >= 0 && headerValue.indexOf("keep-alive") < 0) {
+                        _canReuse = false;
+                    }
                 }
 
                 if(headerName.equalsIgnoreCase("Transfer-Encoding")) {

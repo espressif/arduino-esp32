@@ -89,6 +89,12 @@ extern "C"
                        dl_matrix3du_t *src,
                        dl_matrix3du_t *dest);
 
+    /**
+     * @brief Run the face recognition model to get the face feature
+     * 
+     * @param aligned_face      A 56x56x3 image, the variable need to do align_face first
+     * @return face_id          A 512 vector, size (1, 1, 1, 512)
+     */
     dl_matrix3d_t *get_face_id(dl_matrix3du_t *aligned_face);
 
     /**

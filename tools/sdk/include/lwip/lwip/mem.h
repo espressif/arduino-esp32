@@ -55,22 +55,6 @@ typedef size_t mem_size_t;
 typedef u16_t mem_size_t;
 #define MEM_SIZE_F U16_F
 
-#if ESP_LWIP
-/**
- * lwip_malloc: if CONFIG_ALLOC_MEMORY_IN_SPIRAM_FIRST is enabled, Try to
- * allocate memory for lwip in SPIRAM firstly. If failed, try to allocate
- * internal memory then.
- */
-#if CONFIG_WIFI_LWIP_ALLOCATION_FROM_SPIRAM_FIRST
-#ifndef mem_malloc
-#define mem_malloc(size)    heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)
-#endif
-#ifndef mem_calloc
-#define mem_calloc(n, size) heap_caps_calloc_prefer(n, size, 2, MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)
-#endif
-#endif
-#endif
-
 #else
 
 /* MEM_SIZE would have to be aligned, but using 64000 here instead of
