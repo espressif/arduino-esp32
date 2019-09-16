@@ -363,4 +363,8 @@ void UpdateClass::printError(Stream &out){
     out.println(_err2str(_error));
 }
 
+const char * UpdateClass::errorString(){
+    return _err2str(_error);
+}
+
 UpdateClass Update;
