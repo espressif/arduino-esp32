@@ -53,18 +53,11 @@ static EventGroupHandle_t _spp_event_group = NULL;
 static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
 
-#define SPP_TAG "BluetoothSerial"
-static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
-static const esp_spp_role_t role_master = ESP_SPP_ROLE_MASTER;
+#define INQ_LEN 30;
+#define INQ_NUM_RSPS 0;
 static esp_bd_addr_t _peer_bd_addr;
-static uint8_t peer_bdname_len;
-static char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
-static const esp_bt_inq_mode_t inq_mode = ESP_BT_INQ_MODE_GENERAL_INQUIRY;
-static const uint8_t inq_len = 30;
-static const uint8_t inq_num_rsps = 0;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 static bool _isRemoteAddressSet;
-static esp_bd_addr_t _remote_address;
 static bool _isMaster;
 static esp_bt_pin_code_t _pin_code;
 static int _pin_len;
@@ -295,7 +288,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         log_i("ESP_SPP_DISCOVERY_COMP_EVT");
         if (param->disc_comp.status == ESP_SPP_SUCCESS) {
             log_i("ESP_SPP_DISCOVERY_COMP_EVT: spp connect to remote");
-            esp_spp_connect(sec_mask, role_master, param->disc_comp.scn[0], _peer_bd_addr);
+            esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], _peer_bd_addr);
         }
         break;
     case ESP_SPP_OPEN_EVT://Client connection open
@@ -325,8 +318,9 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
     switch(event){
         case ESP_BT_GAP_DISC_RES_EVT:
             log_i("ESP_BT_GAP_DISC_RES_EVT");
-            esp_log_buffer_hex(SPP_TAG, param->disc_res.bda, ESP_BD_ADDR_LEN);
             for (int i = 0; i < param->disc_res.num_prop; i++){
+                uint8_t peer_bdname_len;
+                peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
                 if (param->disc_res.prop[i].type == ESP_BT_GAP_DEV_PROP_EIR
                     && get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)){
                     log_v("ESP_BT_GAP_DISC_RES_EVT : EIR : %s", peer_bdname);
@@ -366,7 +360,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         case ESP_BT_GAP_AUTH_CMPL_EVT:{
             if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
                 log_v("authentication success: %s", param->auth_cmpl.device_name);
-                esp_log_buffer_hex(SPP_TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
             } else {
                 log_e("authentication failed, status:%d", param->auth_cmpl.stat);
             }
@@ -675,7 +668,7 @@ bool BluetoothSerial::connect(String remoteName)
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
     // will first resolve name to address
-    return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK); 
+    return (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK);
 }
 
 bool BluetoothSerial::connect(uint8_t remoteAddress[])
@@ -702,7 +695,7 @@ bool BluetoothSerial::connect()
     } else if (_remote_name[0]) {
         log_i("master : remoteName");
         // will resolve name to address first - it may take a while
-        return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK);
+        return (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK);
     } else  {
         log_e("Neither Remote name nor address was provided");
     }
@@ -725,7 +718,7 @@ bool BluetoothSerial::connected() {
 bool BluetoothSerial::isReady(bool checkMaster)
 {
     if (checkMaster && !_isMaster) {
-        log_e("Master mode is not active. Call begin(localName, true) to enanbe Master mode");
+        log_e("Master mode is not active. Call begin(localName, true) to enable Master mode");
         return false;
     }
     // btStarted() is not sufficient to indicate ESP_SPP_INIT_EVT is complete
@@ -733,7 +726,7 @@ bool BluetoothSerial::isReady(bool checkMaster)
         int retry = 10;
         do {
             delay(500); 
-            log_i("waiting for intialization to complete...");
+            log_i("waiting for initialization to complete...");
         } while(!_isInitialized && retry-- > 0);        
     }
     if (!_isInitialized) {
