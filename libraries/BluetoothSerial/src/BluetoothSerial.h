@@ -48,7 +48,7 @@ class BluetoothSerial: public Stream
         bool connect();
         bool connected(int timeout=0);
         bool isReady(bool checkMaster=false, int timeout=0);
-        bool disconnect();
+        bool disconnect(int timeout=0);
 
     private:
         String local_name;

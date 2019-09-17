@@ -27,9 +27,16 @@ void setup() {
   //delay(2000);
   SerialBT.connect(address); 
   //SerialBT.connect(name); //slow as it needs to resolve name to address first, but allows to connect to different devices with the same name
-  while(!SerialBT.connected()) {delay(1000); }
-  SerialBT.disconnect();
-  while(SerialBT.connected()) {delay(1000); }
+  if(SerialBT.connected(60*1000)) {
+    Serial.println("Connected Succesfully!");
+  } else {
+    Serial.println("Not connected yet?");
+  }
+  if (SerialBT.disconnect(2000)) {
+    Serial.println("Disconnected Succesfully!");
+  } else {
+    Serial.println("Not disconnected yet?");
+  }
   SerialBT.connect();
 }
 
