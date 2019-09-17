@@ -669,7 +669,8 @@ bool BluetoothSerial::connect(String remoteName)
     strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
-    return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK);
+    // will first resolve name to address
+    return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK); 
 }
 
 bool BluetoothSerial::connect(uint8_t remoteAddress[])
@@ -681,8 +682,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[])
     }
     _remote_name[0] = 0;
     _isRemoteAddressSet = true;
-    memcpy(_remote_address, remoteAddress, ESP_BD_ADDR_LEN);
-    memcpy(_peer_bd_addr, _remote_address, ESP_BD_ADDR_LEN);
+    memcpy(_peer_bd_addr, remoteAddress, ESP_BD_ADDR_LEN);
     log_i("master : remoteAddress");
     return ( esp_spp_start_discovery(_peer_bd_addr) == ESP_OK);
 }
@@ -690,14 +690,15 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[])
 bool BluetoothSerial::connect()
 {
     if (!isReady(true)) return false;
-    if (_remote_name[0]) {
-        log_i("master : remoteName");
-        return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK);
-    } else if (_isRemoteAddressSet){
+    if (_isRemoteAddressSet){
+        // use resolved or set address first
         log_i("master : remoteAddress");
-        memcpy(_peer_bd_addr, _remote_address, ESP_BD_ADDR_LEN);
         return (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK);
-    } else {
+    } else if (_remote_name[0]) {
+        log_i("master : remoteName");
+        // will resolve name to address first - it may take a while
+        return (esp_bt_gap_start_discovery(inq_mode, inq_len, inq_num_rsps) == ESP_OK);
+    } else  {
         log_e("Neither Remote name nor address was provided");
     }
     return false;           
@@ -705,6 +706,8 @@ bool BluetoothSerial::connect()
 
 bool BluetoothSerial::disconnect() {
     if (_spp_client) {
+        flush();
+        log_i("disconnecting");
         return (esp_spp_disconnect(_spp_client) == ESP_OK);
     }
     return false;

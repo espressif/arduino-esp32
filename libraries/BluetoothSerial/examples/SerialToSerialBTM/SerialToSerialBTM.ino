@@ -14,6 +14,7 @@ BluetoothSerial SerialBT;
 
 String MACadd = "AA:BB:CC:11:22:33";
 uint8_t address[6]  = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};
+//uint8_t address[6]  = {0x00, 0x1D, 0xA5, 0x02, 0xC3, 0x22};
 String name = "OBDII";
 char *pin = "1234"; //<- standard pin would be provided by default
 
@@ -25,7 +26,11 @@ void setup() {
   Serial.println("The device started in master mode, make sure remote BT device is on!");
   //delay(2000);
   SerialBT.connect(address); 
-  //SerialBT.connect(name);
+  //SerialBT.connect(name); //slow as it needs to resolve name to address first, but allows to connect to different devices with the same name
+  while(!SerialBT.connected()) {delay(1000); }
+  SerialBT.disconnect();
+  while(SerialBT.connected()) {delay(1000); }
+  SerialBT.connect();
 }
 
 void loop() {
