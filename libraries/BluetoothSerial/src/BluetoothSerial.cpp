@@ -115,9 +115,16 @@ static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
 }
 
 static bool btSetPin() {
+    esp_bt_pin_type_t pin_type;
     if (_isPinSet) {
-        log_i("pin set");
-        esp_bt_pin_type_t pin_type = ESP_BT_PIN_TYPE_FIXED;
+        if (_pin_len) {
+            log_i("pin set");
+            pin_type = ESP_BT_PIN_TYPE_FIXED;
+        } else {
+            _isPinSet = false;
+            log_i("pin reset");
+            pin_type = ESP_BT_PIN_TYPE_VARIABLE; // pin_code would be ignored (default)
+        }
         return (esp_bt_gap_set_pin(pin_type, _pin_len, _pin_code) == ESP_OK);        
     }
     return false;
@@ -294,13 +301,13 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     case ESP_SPP_OPEN_EVT://Client connection open
         if (!_spp_client){
                 _spp_client = param->open.handle;
-            } else {
-                secondConnectionAttempt = true;
-                esp_spp_disconnect(param->open.handle);
-            }
-            xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-            log_i("ESP_SPP_OPEN_EVT");
-       break;
+        } else {
+            secondConnectionAttempt = true;
+            esp_spp_disconnect(param->open.handle);
+        }
+        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
+        log_i("ESP_SPP_OPEN_EVT");
+        break;
     case ESP_SPP_START_EVT://server started
         log_i("ESP_SPP_START_EVT");
         break;
@@ -332,8 +339,9 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                         esp_bt_gap_cancel_discovery();
                     }
                 } else if (param->disc_res.prop[i].type == ESP_BT_GAP_DEV_PROP_BDNAME) {
-                    strcpy(peer_bdname, (char *)param->disc_res.prop[i].val);
-                    peer_bdname_len = strlen(peer_bdname);
+                    peer_bdname_len = param->disc_res.prop[i].len;
+                    memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
+                    peer_bdname[peer_bdname_len] = '\0';
                     log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s", peer_bdname);
                     if (strlen(_remote_name) == peer_bdname_len
                         && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
@@ -369,7 +377,8 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             log_i("ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
             if (param->pin_req.min_16_digit) {
                 log_i("Input pin code: 0000 0000 0000 0000");
-                esp_bt_pin_code_t pin_code = {0};
+                esp_bt_pin_code_t pin_code;
+                memset(pin_code, '0', ESP_BT_PIN_CODE_LEN);
                 esp_bt_gap_pin_reply(param->pin_req.bda, true, 16, pin_code);
             } else {
                 log_i("Input pin code: 1234");
@@ -637,19 +646,15 @@ void BluetoothSerial::enableSSP() {
      * Set default parameters for Legacy Pairing
      * Use fixed pin code
 */
-bool BluetoothSerial::setPin(const char * pin) {
-    if (pin && *pin) {
-        int i = 0;
-        while(*(pin + i) && i < ESP_BT_PIN_CODE_LEN) {
-            _pin_code[i] = *(pin+i);
-            i++;     
-        }
-        _pin_len = i;
-    } else if (pin){
-        _pin_len = 0; // resetting pin to none
+bool BluetoothSerial::setPin(const char *pin) {
+    bool isEmpty =  !(pin  && *pin);
+    if (isEmpty && !_isPinSet) {
+        return true; // nothing to do
+    } else if (!isEmpty){
+        _pin_len = strlen(pin);
+        memcpy(_pin_code, pin, _pin_len);
     } else {
-        log_e("No pin is provided");
-        return false;
+        _pin_len = 0; // resetting pin to none (default)
     }
     _isPinSet = true;
     if (isReady(false)) {
