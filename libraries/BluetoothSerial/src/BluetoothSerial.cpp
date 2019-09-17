@@ -371,10 +371,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             } else {
                 log_i("Input pin code: 1234");
                 esp_bt_pin_code_t pin_code;
-                pin_code[0] = '1';
-                pin_code[1] = '2';
-                pin_code[2] = '3';
-                pin_code[3] = '4';
+                memcpy(pin_code, "1234", 4);
                 esp_bt_gap_pin_reply(param->pin_req.bda, true, 4, pin_code);
             }
             break;
@@ -687,10 +684,9 @@ bool BluetoothSerial::connect()
         log_i("master : remoteName");
         // will resolve name to address first - it may take a while
         return (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK);
-    } else  {
-        log_e("Neither Remote name nor address was provided");
     }
-    return false;           
+    log_e("Neither Remote name nor address was provided");
+    return false;
 }
 
 bool BluetoothSerial::disconnect() {
@@ -706,11 +702,9 @@ bool BluetoothSerial::connected(int timeout) {
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
     if((xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED)) {
         return true;
-    } else {
-        log_e("Timeout waiting for connected state");
-         return false;
     }
-    return _spp_client != 0;
+    log_e("Timeout waiting for connected state");
+    return false;
 }
 
 bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
@@ -725,10 +719,9 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
     if((xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING)) {
         return true;
-    } else {
-        log_e("Timeout waiting for bt initialization to complete");
-         return false;
     }
+    log_e("Timeout waiting for bt initialization to complete");
+    return false;
 
 }
 #endif
