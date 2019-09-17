@@ -76,6 +76,7 @@ void F_Fat::end()
 bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
+    bool res = true;
     if(_wl_handle){
         log_w("Already Mounted!");
         return false;
@@ -83,7 +84,10 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
     wl_handle_t temp_handle;
 // Attempt to mount to see if there is already data
     const esp_partition_t *ffat_partition = check_ffat_partition(partitionLabel);
-    if (!ffat_partition) return false;
+    if (!ffat_partition){
+        log_w("No partition!");
+        return false;
+    } 
     result = wl_mount(ffat_partition, &temp_handle);
 
     if (result == ESP_OK) {
@@ -91,6 +95,9 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
         uint32_t wipe_size = full_wipe ? wl_size(temp_handle) : 16384;
         wl_erase_range(temp_handle, 0, wipe_size);
         wl_unmount(temp_handle);
+    } else {
+        res = false;
+        log_w("wl_mount failed!");
     }
 // Now do a mount with format_if_fail (which it will)
     esp_vfs_fat_mount_config_t conf = {
@@ -99,7 +106,11 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
     };
     result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
     esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
-    return result;
+    if (result != ESP_OK){
+        res = false;
+        log_w("esp_vfs_fat_spiflash_mount failed!");
+    }
+    return res;
 }
 
 size_t F_Fat::totalBytes()
