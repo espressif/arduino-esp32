@@ -228,6 +228,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
 
     case ESP_SPP_SRV_OPEN_EVT://Server connection open
+        log_i("ESP_SPP_SRV_OPEN_EVT");
         if (!_spp_client){
             _spp_client = param->open.handle;
         } else {
@@ -235,10 +236,10 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_disconnect(param->open.handle);
         }
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-        log_i("ESP_SPP_SRV_OPEN_EVT");
         break;
 
     case ESP_SPP_CLOSE_EVT://Client connection closed
+        log_i("ESP_SPP_CLOSE_EVT");
         if(secondConnectionAttempt) {
             secondConnectionAttempt = false;
         } else {
@@ -246,7 +247,6 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
         }        
         xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
-        log_i("ESP_SPP_CLOSE_EVT");
         break;
 
     case ESP_SPP_CONG_EVT://connection congestion status changed
@@ -290,6 +290,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         }
         break;
     case ESP_SPP_OPEN_EVT://Client connection open
+        log_i("ESP_SPP_OPEN_EVT");
         if (!_spp_client){
                 _spp_client = param->open.handle;
         } else {
@@ -297,7 +298,6 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_disconnect(param->open.handle);
         }
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-        log_i("ESP_SPP_OPEN_EVT");
         break;
     case ESP_SPP_START_EVT://server started
         log_i("ESP_SPP_START_EVT");
