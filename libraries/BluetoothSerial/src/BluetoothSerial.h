@@ -46,8 +46,8 @@ class BluetoothSerial: public Stream
         bool connect(String remoteName);
         bool connect(uint8_t remoteAddress[]);
         bool connect();
-        bool connected();
-        bool isReady(bool checkMaster=false);
+        bool connected(int timeout=0);
+        bool isReady(bool checkMaster=false, int timeout=0);
         bool disconnect();
 
     private:

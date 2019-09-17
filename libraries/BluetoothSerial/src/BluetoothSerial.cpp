@@ -53,8 +53,8 @@ static EventGroupHandle_t _spp_event_group = NULL;
 static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
 
-#define INQ_LEN 30;
-#define INQ_NUM_RSPS 0;
+#define INQ_LEN 30
+#define INQ_NUM_RSPS 0
 static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 static bool _isRemoteAddressSet;
@@ -63,8 +63,6 @@ static esp_bt_pin_code_t _pin_code;
 static int _pin_len;
 static bool _isPinSet;
 static bool _enableSSP;
-static bool _isInitializing;
-static bool _isInitialized;
 
 #define SPP_RUNNING     0x01
 #define SPP_CONNECTED   0x02
@@ -225,9 +223,6 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
         }
         xEventGroupSetBits(_spp_event_group, SPP_RUNNING);
-        _isInitialized = true;
-        _isInitializing = false;
-
         break;
 
     case ESP_SPP_SRV_OPEN_EVT://Server connection open
@@ -320,7 +315,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             log_i("ESP_BT_GAP_DISC_RES_EVT");
             for (int i = 0; i < param->disc_res.num_prop; i++){
                 uint8_t peer_bdname_len;
-                peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
+                char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
                 if (param->disc_res.prop[i].type == ESP_BT_GAP_DEV_PROP_EIR
                     && get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)){
                     log_v("ESP_BT_GAP_DISC_RES_EVT : EIR : %s", peer_bdname);
@@ -401,7 +396,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
 
 static bool _init_bt(const char *deviceName)
 {
-    _isInitializing = false;
     if(!_spp_event_group){
         _spp_event_group = xEventGroupCreate();
         if(!_spp_event_group){
@@ -500,14 +494,11 @@ static bool _init_bt(const char *deviceName)
         log_e("set cod failed");
         return false;
     }
-    _isInitializing = true;
     return true;
 }
 
 static bool _stop_bt()
 {
-    _isInitialized = false;
-    _isInitializing = false;
     if (btStarted()){
         if(_spp_client)
             esp_spp_disconnect(_spp_client);
@@ -711,28 +702,33 @@ bool BluetoothSerial::disconnect() {
     return false;
 }
 
-bool BluetoothSerial::connected() {
+bool BluetoothSerial::connected(int timeout) {
+    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
+    if((xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED)) {
+        return true;
+    } else {
+        log_e("Timeout waiting for connected state");
+         return false;
+    }
     return _spp_client != 0;
 }
 
-bool BluetoothSerial::isReady(bool checkMaster)
-{
+bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
     if (checkMaster && !_isMaster) {
         log_e("Master mode is not active. Call begin(localName, true) to enable Master mode");
         return false;
     }
-    // btStarted() is not sufficient to indicate ESP_SPP_INIT_EVT is complete
-    if (_isInitializing) {
-        int retry = 10;
-        do {
-            delay(500); 
-            log_i("waiting for initialization to complete...");
-        } while(!_isInitialized && retry-- > 0);        
-    }
-    if (!_isInitialized) {
-        log_e("Timeout waiting for bt initialization to complete");
+    if (!btStarted()) {
+        log_e("BT is not initialized. Call begin() first");
         return false;
     }
-    return true;
- }
+    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
+    if((xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING)) {
+        return true;
+    } else {
+        log_e("Timeout waiting for bt initialization to complete");
+         return false;
+    }
+
+}
 #endif
