@@ -317,8 +317,8 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         case ESP_BT_GAP_DISC_RES_EVT:
             log_i("ESP_BT_GAP_DISC_RES_EVT");
             for (int i = 0; i < param->disc_res.num_prop; i++){
-                static uint8_t peer_bdname_len;
-                static char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
+                uint8_t peer_bdname_len;
+                char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
                 switch(param->disc_res.prop[i].type) {
                     case ESP_BT_GAP_DEV_PROP_EIR:                 
                         if (get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
