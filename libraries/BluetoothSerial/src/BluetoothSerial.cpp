@@ -335,7 +335,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             log_i("ESP_BT_GAP_DISC_RES_EVT");
             char bda_str[18];
             log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
-            for (int i = 0; i < param->disc_res.num_prop; i++){
+            for (int i = 0; i < param->disc_res.num_prop; i++) {
                 uint8_t peer_bdname_len;
                 char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
                 switch(param->disc_res.prop[i].type) {
@@ -375,6 +375,8 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                     default:
                         break;
                 }
+                if (_isRemoteAddressSet)
+                    break;
             }
             break;
         case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:
