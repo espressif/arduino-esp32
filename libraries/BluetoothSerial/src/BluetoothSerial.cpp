@@ -250,6 +250,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             secondConnectionAttempt = true;
             esp_spp_disconnect(param->open.handle);
         }
+        xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         break;
 
@@ -312,6 +313,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             secondConnectionAttempt = true;
             esp_spp_disconnect(param->open.handle);
         }
+        xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         break;
     case ESP_SPP_START_EVT://server started
@@ -435,6 +437,7 @@ static bool _init_bt(const char *deviceName)
         }
         xEventGroupClearBits(_spp_event_group, 0xFFFFFF);
         xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
+        xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
     }
     if (_spp_rx_queue == NULL){
         _spp_rx_queue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t)); //initialize the queue
