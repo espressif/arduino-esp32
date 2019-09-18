@@ -669,6 +669,10 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
     return ESP_OK;
 }
 
+static bool waitForConnect(int timeout) {
+    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
+    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED);
+}
 
 //Simple Secure Pairing
 void BluetoothSerial::enableSSP() {
@@ -710,10 +714,7 @@ bool BluetoothSerial::connect(String remoteName)
     // will first resolve name to address
     esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
     if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
-        TickType_t xTicksToWait = SCAN_TIMEOUT / portTICK_PERIOD_MS;
-        if((xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED)) {
-            return true;
-        }
+        return waitForConnect(SCAN_TIMEOUT);
     }
     return false;
 }
@@ -731,10 +732,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[])
     memcpy(_peer_bd_addr, remoteAddress, ESP_BD_ADDR_LEN);
     log_i("master : remoteAddress");
     if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
-        TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-        if((xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED)) {
-            return true;
-        }
+        return waitForConnect(READY_TIMEOUT);
     }
     return false;
 }
@@ -747,10 +745,7 @@ bool BluetoothSerial::connect()
         // use resolved or set address first
         log_i("master : remoteAddress");
         if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
-            TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-            if(xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED) {
-                return true;
-            }
+            return waitForConnect(READY_TIMEOUT);
         }
         return false;
     } else if (_remote_name[0]) {
@@ -759,10 +754,7 @@ bool BluetoothSerial::connect()
         // will resolve name to address first - it may take a while
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
         if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
-            TickType_t xTicksToWait = SCAN_TIMEOUT / portTICK_PERIOD_MS;
-            if(xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED) {
-                return true;
-            }
+            return waitForConnect(SCAN_TIMEOUT);
         }
         return false;
     }
@@ -776,22 +768,14 @@ bool BluetoothSerial::disconnect() {
         log_i("disconnecting");
         if (esp_spp_disconnect(_spp_client) == ESP_OK) {
             TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-            if((xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED)) {
-                return true;
-            }
+            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED);
         }
     }
     return false;
 }
 
 bool BluetoothSerial::connected(int timeout) {
-    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    if((xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED)) {
-        return true;
-    }
-    if (timeout)
-        log_e("Timeout waiting for connected state");
-    return false;
+    return waitForConnect(timeout);
 }
 
 bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
@@ -804,12 +788,6 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
         return false;
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    if((xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING)) {
-        return true;
-    }
-    if (timeout)
-        log_e("Timeout waiting for bt initialization to complete");
-    return false;
-
+    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING);
 }
 #endif
