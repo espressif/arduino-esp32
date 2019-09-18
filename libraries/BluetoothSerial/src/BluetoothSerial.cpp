@@ -297,7 +297,6 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         }
         break;
 
-        //should maybe delete those.
     case ESP_SPP_DISCOVERY_COMP_EVT://discovery complete
         log_i("ESP_SPP_DISCOVERY_COMP_EVT");
         if (param->disc_comp.status == ESP_SPP_SUCCESS) {
@@ -305,6 +304,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], _peer_bd_addr);
         }
         break;
+
     case ESP_SPP_OPEN_EVT://Client connection open
         log_i("ESP_SPP_OPEN_EVT");
         if (!_spp_client){
@@ -316,12 +316,15 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
         xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         break;
+
     case ESP_SPP_START_EVT://server started
         log_i("ESP_SPP_START_EVT");
         break;
+
     case ESP_SPP_CL_INIT_EVT://client initiated a connection
         log_i("ESP_SPP_CL_INIT_EVT");
         break;
+
     default:
         break;
     }
@@ -347,11 +350,12 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                                 log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_EIR : %s", peer_bdname, peer_bdname_len);
                                 _isRemoteAddressSet = true;
                                 memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-                                esp_spp_start_discovery(_peer_bd_addr);
                                 esp_bt_gap_cancel_discovery();
+                                esp_spp_start_discovery(_peer_bd_addr);
                             }
                         }
                         break;
+
                     case ESP_BT_GAP_DEV_PROP_BDNAME:
                         peer_bdname_len = param->disc_res.prop[i].len;
                         memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
@@ -362,16 +366,19 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                             log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
                             _isRemoteAddressSet = true;
                             memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-                            esp_spp_start_discovery(_peer_bd_addr);
                             esp_bt_gap_cancel_discovery();
+                            esp_spp_start_discovery(_peer_bd_addr);
                         } 
                         break;
+
                     case ESP_BT_GAP_DEV_PROP_COD:
                         //log_i("ESP_BT_GAP_DEV_PROP_COD");
                         break;
+
                     case ESP_BT_GAP_DEV_PROP_RSSI:
                         //log_i("ESP_BT_GAP_DEV_PROP_RSSI");
                         break;
+                        
                     default:
                         break;
                 }
@@ -382,21 +389,24 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:
             log_i("ESP_BT_GAP_DISC_STATE_CHANGED_EVT");
             break;
+
         case ESP_BT_GAP_RMT_SRVCS_EVT:
             log_i( "ESP_BT_GAP_RMT_SRVCS_EVT");
             break;
+
         case ESP_BT_GAP_RMT_SRVC_REC_EVT:
             log_i("ESP_BT_GAP_RMT_SRVC_REC_EVT");
             break;
-        case ESP_BT_GAP_AUTH_CMPL_EVT:{
+
+        case ESP_BT_GAP_AUTH_CMPL_EVT:
             if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
                 log_v("authentication success: %s", param->auth_cmpl.device_name);
             } else {
                 log_e("authentication failed, status:%d", param->auth_cmpl.stat);
             }
             break;
-        }
-        case ESP_BT_GAP_PIN_REQ_EVT:{
+
+        case ESP_BT_GAP_PIN_REQ_EVT:
             // default pairing pins
             log_i("ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
             if (param->pin_req.min_16_digit) {
@@ -411,17 +421,20 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                 esp_bt_gap_pin_reply(param->pin_req.bda, true, 4, pin_code);
             }
             break;
-        }        
+       
         case ESP_BT_GAP_CFM_REQ_EVT:
             log_i("ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
             esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
             break;
+
         case ESP_BT_GAP_KEY_NOTIF_EVT:
             log_i("ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
             break;
+
         case ESP_BT_GAP_KEY_REQ_EVT:
             log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
             break;
+
         default:
             break;
     }
