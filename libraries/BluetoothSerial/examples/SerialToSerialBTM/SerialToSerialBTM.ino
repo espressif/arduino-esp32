@@ -24,9 +24,12 @@ void setup() {
   SerialBT.begin("ESP32test", true); 
   //SerialBT.setPin(pin);
   Serial.println("The device started in master mode, make sure remote BT device is on!");
-  //delay(2000);
+  
+  // connect(name) is slow as it needs to resolve name to address first, 
+  // but allows to connect to different devices with the same name
+  // Enable CoreDebugLevel to Info to view devices bluetooth address or Verbose to see device names
+  //SerialBT.connect(name); 
   SerialBT.connect(address); 
-  //SerialBT.connect(name); //slow as it needs to resolve name to address first, but allows to connect to different devices with the same name
   
   // wait at least 30 secs after connect(name) or 5 secs after connect(address)
   if(SerialBT.connected(30*1000)) { 
