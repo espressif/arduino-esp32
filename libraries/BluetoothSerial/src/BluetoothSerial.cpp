@@ -700,7 +700,7 @@ bool BluetoothSerial::connect(String remoteName)
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
     // will first resolve name to address
-    esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
+    esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
     if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
         return waitForConnect(SCAN_TIMEOUT);
     }
@@ -740,7 +740,7 @@ bool BluetoothSerial::connect()
         disconnect();
         log_i("master : remoteName");
         // will resolve name to address first - it may take a while
-        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
+        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
             return waitForConnect(SCAN_TIMEOUT);
         }
