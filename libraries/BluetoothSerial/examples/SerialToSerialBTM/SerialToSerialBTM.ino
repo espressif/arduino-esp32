@@ -17,6 +17,7 @@ uint8_t address[6]  = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};
 //uint8_t address[6]  = {0x00, 0x1D, 0xA5, 0x02, 0xC3, 0x22};
 String name = "OBDII";
 char *pin = "1234"; //<- standard pin would be provided by default
+bool connected;
 
 void setup() {
   Serial.begin(115200);
@@ -25,14 +26,13 @@ void setup() {
   //SerialBT.setPin(pin);
   Serial.println("The device started in master mode, make sure remote BT device is on!");
   
-  // connect(name) is slow as it needs to resolve name to address first, 
-  // but it allows to connect to different devices with the same name
-  // Set CoreDebugLevel to Info to view devices bluetooth address or Verbose to see device names
-  //SerialBT.connect(name); 
-  SerialBT.connect(address); 
+  // connect(address) is fast (upto 5 secs max), connect(name) is slow (upto 30 secs max) as it needs
+  // to resolve name to address first, but it allows to connect to different devices with the same name.
+  // Set CoreDebugLevel to Info to view devices bluetooth address and device names
+  //connected = SerialBT.connect(name);
+  connected = SerialBT.connect(address);
   
-  // wait at least 30 secs after connect(name) or 5 secs after connect(address)
-  if(SerialBT.connected(30*1000)) { 
+  if(SerialBT.connected(5000)) {
     Serial.println("Connected Succesfully!");
   } else {
     while(!SerialBT.connected()) {
@@ -40,15 +40,13 @@ void setup() {
       delay(10000);
     }
   }
-  // wait for a few secs for disconnect to complete
-  if (SerialBT.disconnect(2000)) {
+  // disconnect() may take upto 5 secs max
+  if (SerialBT.disconnect()) {
     Serial.println("Disconnected Succesfully!");
   } else {
     Serial.println("Not disconnected yet?");
   }
-  // calling connect(...) while other connect(...) still in progress may cause crash,
-  // use connected(timeout) with recommended timeout before issuing another connect(...)
-  SerialBT.connect(); 
+  SerialBT.connect();
 }
 
 void loop() {
