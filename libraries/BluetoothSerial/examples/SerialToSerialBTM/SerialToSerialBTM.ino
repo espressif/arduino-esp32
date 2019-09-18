@@ -26,8 +26,8 @@ void setup() {
   Serial.println("The device started in master mode, make sure remote BT device is on!");
   
   // connect(name) is slow as it needs to resolve name to address first, 
-  // but allows to connect to different devices with the same name
-  // Enable CoreDebugLevel to Info to view devices bluetooth address or Verbose to see device names
+  // but it allows to connect to different devices with the same name
+  // Set CoreDebugLevel to Info to view devices bluetooth address or Verbose to see device names
   //SerialBT.connect(name); 
   SerialBT.connect(address); 
   
@@ -40,13 +40,13 @@ void setup() {
       delay(10000);
     }
   }
-  // wait for a few second for disconnect to complete
+  // wait for a few secs for disconnect to complete
   if (SerialBT.disconnect(2000)) {
     Serial.println("Disconnected Succesfully!");
   } else {
     Serial.println("Not disconnected yet?");
   }
-  // calling another connect(...) while other connect(...) still in progress may cause crash,
+  // calling connect(...) while other connect(...) still in progress may cause crash,
   // use connected(timeout) with recommended timeout before issuing another connect(...)
   SerialBT.connect(); 
 }
