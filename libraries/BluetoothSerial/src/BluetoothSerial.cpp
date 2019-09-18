@@ -55,7 +55,7 @@ static esp_spp_cb_t * custom_spp_callback = NULL;
 
 #define INQ_LEN 0x10
 #define INQ_NUM_RSPS 20
-#define READY_TIMEOUT 5000
+#define READY_TIMEOUT (10 * 1000)
 #define SCAN_TIMEOUT (INQ_LEN * 2 * 1000)
 static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
