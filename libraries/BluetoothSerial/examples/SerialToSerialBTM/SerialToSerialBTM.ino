@@ -29,10 +29,10 @@ void setup() {
   // connect(address) is fast (upto 5 secs max), connect(name) is slow (upto 30 secs max) as it needs
   // to resolve name to address first, but it allows to connect to different devices with the same name.
   // Set CoreDebugLevel to Info to view devices bluetooth address and device names
-  //connected = SerialBT.connect(name);
-  connected = SerialBT.connect(address);
+  connected = SerialBT.connect(name);
+  //connected = SerialBT.connect(address);
   
-  if(SerialBT.connected(5000)) {
+  if(connected)) {
     Serial.println("Connected Succesfully!");
   } else {
     while(!SerialBT.connected()) {
