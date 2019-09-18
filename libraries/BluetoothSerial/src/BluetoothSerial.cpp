@@ -92,14 +92,12 @@ static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
     uint8_t *rmt_bdname = NULL;
     uint8_t rmt_bdname_len = 0;
 
-    if (bdname) {
-        *bdname_len = 0;
-        *bdname = 0;
-    }
-
     if (!eir || !bdname || !bdname_len) {
         return false;
     }
+
+    *bdname_len = 0;
+    *bdname = 0;
 
     rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &rmt_bdname_len);
     if (!rmt_bdname) {
