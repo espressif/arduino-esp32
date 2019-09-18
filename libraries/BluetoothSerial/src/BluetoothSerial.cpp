@@ -681,7 +681,7 @@ bool BluetoothSerial::setPin(const char *pin) {
         _pin_len = 0; // resetting pin to none (default)
     }
     _isPinSet = true;
-    if (isReady(false)) {
+    if (isReady(false, READY_TIMEOUT)) {
         btSetPin();
     }
     return true;
