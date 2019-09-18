@@ -90,36 +90,24 @@ static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
 
 static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
 {
-    uint8_t *rmt_bdname = NULL;
-    uint8_t rmt_bdname_len = 0;
-
     if (!eir || !bdname || !bdname_len) {
         return false;
     }
 
-    *bdname_len = 0;
-    *bdname = 0;
+    uint8_t *rmt_bdname, rmt_bdname_len;
+    *bdname = *bdname_len = rmt_bdname_len = 0;
 
     rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &rmt_bdname_len);
     if (!rmt_bdname) {
         rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, &rmt_bdname_len);
     }
-
     if (rmt_bdname) {
-        if (rmt_bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN) {
-            rmt_bdname_len = ESP_BT_GAP_MAX_BDNAME_LEN;
-        }
-
-        if (bdname) {
-            memcpy(bdname, rmt_bdname, rmt_bdname_len);
-            bdname[rmt_bdname_len] = '\0';
-        }
-        if (bdname_len) {
-            *bdname_len = rmt_bdname_len;
-        }
+        rmt_bdname_len = rmt_bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN ? ESP_BT_GAP_MAX_BDNAME_LEN : rmt_bdname_len;
+        memcpy(bdname, rmt_bdname, rmt_bdname_len);
+        bdname[rmt_bdname_len] = 0;
+        *bdname_len = rmt_bdname_len;
         return true;
     }
-
     return false;
 }
 
