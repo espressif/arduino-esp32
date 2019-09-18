@@ -751,6 +751,8 @@ bool BluetoothSerial::disconnect(int timeout) {
                 if((xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED)) {
                     return true;
                 }         
+            } else {
+                return true;
             }
         }
     }
