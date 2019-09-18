@@ -32,7 +32,7 @@ void setup() {
   connected = SerialBT.connect(name);
   //connected = SerialBT.connect(address);
   
-  if(connected)) {
+  if(connected) {
     Serial.println("Connected Succesfully!");
   } else {
     while(!SerialBT.connected()) {

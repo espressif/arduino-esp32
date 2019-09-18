@@ -572,6 +572,11 @@ static bool _stop_bt()
     return true;
 }
 
+static bool waitForConnect(int timeout) {
+    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
+    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED);
+}
+
 /*
  * Serial Bluetooth Arduino
  *
@@ -655,11 +660,6 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
 {
     custom_spp_callback = callback;
     return ESP_OK;
-}
-
-static bool waitForConnect(int timeout) {
-    TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED);
 }
 
 //Simple Secure Pairing
