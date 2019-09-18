@@ -56,7 +56,11 @@ extern bool loopTaskWDTEnabled;
 
 void IRAM_ATTR abortLoopDelay(){
     if(loopTaskHandle != NULL){
-        vTaskNotifyGiveFromISR(loopTaskHandle, NULL);
+        if (xPortInIsrContext()){
+            vTaskNotifyGiveFromISR(loopTaskHandle, NULL);
+        } else {
+            xTaskNotifyGive(loopTaskHandle);
+        }
     }
 }
 
