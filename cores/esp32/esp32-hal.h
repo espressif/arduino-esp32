@@ -74,6 +74,7 @@ void yield(void);
 float temperatureRead();
 
 #if CONFIG_AUTOSTART_ARDUINO
+void abortLoopDelay();
 //enable/disable WDT for Arduino's setup and loop functions
 void enableLoopWDT();
 void disableLoopWDT();

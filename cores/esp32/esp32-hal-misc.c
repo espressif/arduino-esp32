@@ -54,6 +54,12 @@ void yield()
 extern TaskHandle_t loopTaskHandle;
 extern bool loopTaskWDTEnabled;
 
+void IRAM_ATTR abortLoopDelay(){
+    if(loopTaskHandle != NULL){
+        vTaskNotifyGiveFromISR(loopTaskHandle, NULL);
+    }
+}
+
 void enableLoopWDT(){
     if(loopTaskHandle != NULL){
         if(esp_task_wdt_add(loopTaskHandle) != ESP_OK){
@@ -141,7 +147,7 @@ unsigned long IRAM_ATTR millis()
 
 void delay(uint32_t ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS);
+    ulTaskNotifyTake(pdTRUE, ms / portTICK_PERIOD_MS);
 }
 
 void IRAM_ATTR delayMicroseconds(uint32_t us)
