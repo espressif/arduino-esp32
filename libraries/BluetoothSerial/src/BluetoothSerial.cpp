@@ -359,7 +359,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                     case ESP_BT_GAP_DEV_PROP_BDNAME:
                         peer_bdname_len = param->disc_res.prop[i].len;
                         memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
-                        peer_bdname_len--; // the len include 0 terminator
+                        peer_bdname_len--; // len includes 0 terminator
                         log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
                         if (strlen(_remote_name) == peer_bdname_len
                             && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
