@@ -53,8 +53,8 @@ static EventGroupHandle_t _spp_event_group = NULL;
 static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
 
-#define INQ_LEN 30
-#define INQ_NUM_RSPS 0
+#define INQ_LEN 0x10
+#define INQ_NUM_RSPS 20
 #define READY_TIMEOUT 5000
 static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
@@ -75,12 +75,29 @@ typedef struct {
         uint8_t data[];
 } spp_packet_t;
 
+static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
+{
+  if (bda == NULL || str == NULL || size < 18) {
+    return NULL;
+  }
+
+  uint8_t *p = bda;
+  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
+          p[0], p[1], p[2], p[3], p[4], p[5]);
+  return str;
+}
+
 static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
 {
     uint8_t *rmt_bdname = NULL;
     uint8_t rmt_bdname_len = 0;
 
-    if (!eir) {
+    if (bdname) {
+        *bdname_len = 0;
+        *bdname = 0;
+    }
+
+    if (!eir || !bdname || !bdname_len) {
         return false;
     }
 
@@ -316,16 +333,18 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
     switch(event){
         case ESP_BT_GAP_DISC_RES_EVT:
             log_i("ESP_BT_GAP_DISC_RES_EVT");
+            char bda_str[18];
+            log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
             for (int i = 0; i < param->disc_res.num_prop; i++){
                 uint8_t peer_bdname_len;
                 char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
                 switch(param->disc_res.prop[i].type) {
-                    case ESP_BT_GAP_DEV_PROP_EIR:                 
+                    case ESP_BT_GAP_DEV_PROP_EIR:  
                         if (get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
                             log_v("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %d", peer_bdname, peer_bdname_len);
                             if (strlen(_remote_name) == peer_bdname_len
                                 && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                                log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_DISCOVERY_EIR : %s", peer_bdname, peer_bdname_len);
+                                log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_EIR : %s", peer_bdname, peer_bdname_len);
                                 _isRemoteAddressSet = true;
                                 memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
                                 esp_spp_start_discovery(_peer_bd_addr);
@@ -340,12 +359,18 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                         log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
                         if (strlen(_remote_name) == peer_bdname_len
                             && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                            log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_DISCOVERY_BDNAME : %s", peer_bdname);
+                            log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
                             _isRemoteAddressSet = true;
                             memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
                             esp_spp_start_discovery(_peer_bd_addr);
                             esp_bt_gap_cancel_discovery();
                         } 
+                        break;
+                    case ESP_BT_GAP_DEV_PROP_COD:
+                        //log_i("ESP_BT_GAP_DEV_PROP_COD");
+                        break;
+                    case ESP_BT_GAP_DEV_PROP_RSSI:
+                        //log_i("ESP_BT_GAP_DEV_PROP_RSSI");
                         break;
                     default:
                         break;
@@ -665,6 +690,7 @@ bool BluetoothSerial::connect(String remoteName)
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
     // will first resolve name to address
+    esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
     return (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK);
 }
 
@@ -692,6 +718,7 @@ bool BluetoothSerial::connect()
     } else if (_remote_name[0]) {
         log_i("master : remoteName");
         // will resolve name to address first - it may take a while
+        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE);
         return (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK);
     }
     log_e("Neither Remote name nor address was provided");
