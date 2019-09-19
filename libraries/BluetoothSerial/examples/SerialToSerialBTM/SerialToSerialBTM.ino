@@ -41,6 +41,7 @@ void setup() {
   if (SerialBT.disconnect()) {
     Serial.println("Disconnected Succesfully!");
   }
+  // this would reconnect to the name(will use address, if resolved) or address used with connect(name/address).
   SerialBT.connect();
 }
 
