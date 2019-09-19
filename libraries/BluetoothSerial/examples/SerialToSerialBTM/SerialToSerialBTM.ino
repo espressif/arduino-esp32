@@ -1,8 +1,10 @@
 //This example code is in the Public Domain (or CC0 licensed, at your option.)
-//By Evandro Copercini - 2018
+//By Victor Tchistiak - 2019
 //
-//This example creates a bridge between Serial and Classical Bluetooth (SPP)
-//and also demonstrate that SerialBT have the same functionalities of a normal Serial
+//This example demostrates master mode bluetooth connection and pin 
+//it creates a bridge between Serial and Classical Bluetooth (SPP)
+//this is an extention of the SerialToSerialBT example by Evandro Copercini - 2018
+//
 
 #include "BluetoothSerial.h"
 
@@ -26,7 +28,7 @@ void setup() {
   //SerialBT.setPin(pin);
   Serial.println("The device started in master mode, make sure remote BT device is on!");
   
-  // connect(address) is fast (upto 5 secs max), connect(name) is slow (upto 30 secs max) as it needs
+  // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
   // to resolve name to address first, but it allows to connect to different devices with the same name.
   // Set CoreDebugLevel to Info to view devices bluetooth address and device names
   connected = SerialBT.connect(name);
@@ -35,16 +37,13 @@ void setup() {
   if(connected) {
     Serial.println("Connected Succesfully!");
   } else {
-    while(!SerialBT.connected()) {
-      Serial.println("Not connected yet?");
-      delay(10000);
+    while(!SerialBT.connected(10000)) {
+      Serial.println("Failed to connect. Make sure remote device is available and in range, then restart app."); 
     }
   }
-  // disconnect() may take upto 5 secs max
+  // disconnect() may take upto 10 secs max
   if (SerialBT.disconnect()) {
     Serial.println("Disconnected Succesfully!");
-  } else {
-    Serial.println("Not disconnected yet?");
   }
   SerialBT.connect();
 }
