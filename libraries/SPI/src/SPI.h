@@ -76,7 +76,7 @@ public:
     void write(uint8_t data);
     void write16(uint16_t data);
     void write32(uint32_t data);
-    void writeBytes(uint8_t * data, uint32_t size);
+    void writeBytes(const uint8_t * data, uint32_t size);
     void writePixels(const void * data, uint32_t size);//ili9341 compatible
     void writePattern(uint8_t * data, uint8_t size, uint32_t repeat);
 
