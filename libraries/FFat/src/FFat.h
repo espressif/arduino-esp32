@@ -37,7 +37,7 @@ public:
     bool exists(const String& path);
 
 private:
-    wl_handle_t _wl_handle;
+    wl_handle_t _wl_handle = WL_INVALID_HANDLE;
 };
 
 }
