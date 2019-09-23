@@ -81,7 +81,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
     bool res = true;
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return false;
     }
