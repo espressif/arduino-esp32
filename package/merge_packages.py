@@ -36,7 +36,11 @@ def pkgVersionNormalized(versionString):
     verParts = re.split('\.|-rc', verStr, flags=re.IGNORECASE)
     
     if len(verParts) == 3:
-        verStr = str(versionString) + '-rc' + str(sys.maxint)
+        if (sys.version_info > (3, 0)): # Python 3
+            verStr = str(versionString) + '-rc' + str(sys.maxsize)
+        else: # Python 2
+            verStr = str(versionString) + '-rc' + str(sys.maxint)
+        
     elif len(verParts) != 4:
         print("pkgVersionNormalized WARNING: unexpected version format: {0})".format(verStr), file=sys.stderr)
         

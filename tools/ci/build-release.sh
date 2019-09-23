@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -z "$TRAVIS_TAG" ]; then
+	echo "Skipping Packaging: Regular build"
+	exit 0
+fi
+
 ############################################################
 # $1 - download link
 # $2 - JSON output file 

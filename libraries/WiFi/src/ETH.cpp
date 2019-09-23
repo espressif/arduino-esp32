@@ -197,6 +197,33 @@ IPAddress ETHClass::dnsIP(uint8_t dns_no)
     return IPAddress(dns_ip.u_addr.ip4.addr);
 }
 
+IPAddress ETHClass::broadcastIP()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+        return IPAddress();
+    }
+    return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+IPAddress ETHClass::networkID()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+        return IPAddress();
+    }
+    return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
+}
+
+uint8_t ETHClass::subnetCIDR()
+{
+    tcpip_adapter_ip_info_t ip;
+    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+        return (uint8_t)0;
+    }
+    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
+}
+
 const char * ETHClass::getHostname()
 {
     const char * hostname;

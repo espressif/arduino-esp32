@@ -50,8 +50,11 @@ public:
 protected:
 
     static bool _scanAsync;
-
+    
+    static uint32_t _scanStarted;
+    static uint32_t _scanTimeout;
     static uint16_t _scanCount;
+    
     static void* _scanResult;
 
     static void * _getScanInfoByIndex(int i);

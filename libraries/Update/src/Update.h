@@ -80,6 +80,8 @@ class UpdateClass {
     */
     void printError(Stream &out);
 
+    const char * errorString();
+
     /*
       sets the expected MD5 for the firmware (hexString)
     */

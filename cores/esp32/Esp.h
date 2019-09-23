@@ -75,8 +75,8 @@ public:
     uint32_t getMaxAllocPsram();
 
     uint8_t getChipRevision();
-    uint8_t getCpuFreqMHz(){ return CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ; }
-    uint32_t getCycleCount();
+    uint32_t getCpuFreqMHz(){ return getCpuFrequencyMhz(); }
+    inline uint32_t getCycleCount() __attribute__((always_inline));
     const char * getSdkVersion();
 
     void deepSleep(uint32_t time_us);
@@ -100,6 +100,13 @@ public:
     uint64_t getEfuseMac();
 
 };
+
+uint32_t IRAM_ATTR EspClass::getCycleCount()
+{
+    uint32_t ccount;
+    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+    return ccount;
+}
 
 extern EspClass ESP;
 
