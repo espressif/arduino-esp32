@@ -50,6 +50,8 @@ void setup(void) {
           Update.printError(Serial);
         }
         Serial.setDebugOutput(false);
+      } else {
+        Serial.printf("Update Failed Unexpectedly (likely broken connection): status=%d\n", upload.status);
       }
     });
     server.begin();

@@ -39,7 +39,8 @@ static const char Content_Length[] = "Content-Length";
 
 
 WebServer::WebServer(IPAddress addr, int port)
-: _server(addr, port)
+: _corsEnabled(false)
+, _server(addr, port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
@@ -59,7 +60,8 @@ WebServer::WebServer(IPAddress addr, int port)
 }
 
 WebServer::WebServer(int port)
-: _server(port)
+: _corsEnabled(false)
+, _server(port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
@@ -104,7 +106,7 @@ void WebServer::begin(uint16_t port) {
 
 String WebServer::_extractParam(String& authReq,const String& param,const char delimit){
   int _begin = authReq.indexOf(param);
-  if (_begin == -1) 
+  if (_begin == -1)
     return "";
   return authReq.substring(_begin+param.length(),authReq.indexOf(delimit,_begin+param.length()));
 }
@@ -300,7 +302,9 @@ void WebServer::handleClient() {
       // Wait for data from client to become available
       if (_currentClient.available()) {
         if (_parseRequest(_currentClient)) {
-          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT);
+          // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
+          // it must be divided by 1000
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
           _contentLength = CONTENT_LENGTH_NOT_SET;
           _handleRequest();
 
@@ -366,6 +370,14 @@ void WebServer::setContentLength(const size_t contentLength) {
     _contentLength = contentLength;
 }
 
+void WebServer::enableCORS(boolean value) {
+  _corsEnabled = value;
+}
+
+void WebServer::enableCrossOrigin(boolean value) {
+  enableCORS(value);
+}
+
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
     response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
     response += String(code);
@@ -387,6 +399,9 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
       _chunked = true;
       sendHeader(String(F("Accept-Ranges")),String(F("none")));
       sendHeader(String(F("Transfer-Encoding")),String(F("chunked")));
+    }
+    if (_corsEnabled) {
+        sendHeader(String(FPSTR("Access-Control-Allow-Origin")), String("*"));
     }
     sendHeader(String(F("Connection")), String(F("close")));
 
@@ -494,7 +509,7 @@ void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, 
   send(200, contentType, "");
 }
 
-String WebServer::pathArg(unsigned int i) { 
+String WebServer::pathArg(unsigned int i) {
   if (_currentHandler != nullptr)
     return _currentHandler->pathArg(i);
   return "";

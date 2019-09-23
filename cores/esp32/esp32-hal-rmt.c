@@ -665,7 +665,6 @@ static void IRAM_ATTR _rmt_isr(void* arg)
         }
 
         if (intr_val & _INT_ERROR(ch)) {
-            digitalWrite(2, 1);
             // clear the flag
             RMT.int_clr.val = _INT_ERROR(ch);
             RMT.int_ena.val &= ~_INT_ERROR(ch);

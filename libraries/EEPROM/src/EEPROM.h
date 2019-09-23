@@ -1,10 +1,9 @@
 /*
   EEPROM.h -ported by Paolo Becchi to Esp32 from esp8266 EEPROM
            -Modified by Elochukwu Ifediora <ifedioraelochukwuc@gmail.com>
+           -Converted to nvs lbernstone@gmail.com
 
-  Uses a one sector flash partition defined in partition table
-  OR
-  Multiple sector flash partitions defined by the name column in the partition table
+  Uses a nvs byte array to emulate EEPROM
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
@@ -30,19 +29,9 @@
 #define EEPROM_FLASH_PARTITION_NAME "eeprom"
 #endif
 #include <Arduino.h>
-extern "C" {
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-#include <esp_partition.h>
-}
+typedef uint32_t nvs_handle;
 
-//
-//   need to define AT LEAST a flash partition for EEPROM  with above name
-//
-//           eeprom , data , 0x99, start address, 0x1000
-//
 class EEPROMClass {
   public:
     EEPROMClass(uint32_t sector);
@@ -58,6 +47,7 @@ class EEPROMClass {
     void end();
 
     uint8_t * getDataPtr();
+    uint16_t convert(bool clear, const char* EEPROMname = "eeprom", const char* nvsname = "eeprom");
 
     template<typename T>
     T &get(int address, T &t) {
@@ -117,11 +107,10 @@ class EEPROMClass {
     template <class T> T writeAll (int address, const T &);
 
   protected:
-    uint32_t _sector;
+    nvs_handle _handle;
     uint8_t* _data;
     size_t _size;
     bool _dirty;
-    const esp_partition_t * _mypart;
     const char* _name;
     uint32_t _user_defined_size;
 };

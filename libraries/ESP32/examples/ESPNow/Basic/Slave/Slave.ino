@@ -51,7 +51,7 @@ void InitESPNow() {
 
 // config AP SSID
 void configDeviceAP() {
-  char* SSID = "Slave_1";
+  const char *SSID = "Slave_1";
   bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
   if (!result) {
     Serial.println("AP Config failed.");

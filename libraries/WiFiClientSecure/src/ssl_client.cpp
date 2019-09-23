@@ -22,7 +22,7 @@
 
 const char *pers = "esp32-tls";
 
-static int handle_error(int err)
+static int _handle_error(int err, const char * file, int line)
 {
     if(err == -30848){
         return err;
@@ -30,11 +30,14 @@ static int handle_error(int err)
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
     mbedtls_strerror(err, error_buf, 100);
-    log_e("%s", error_buf);
+    log_e("[%s():%d]: (%d) %s", file, line, err, error_buf);
+#else
+    log_e("[%s():%d]: code %d", file, line, err);
 #endif
-    log_e("MbedTLS message code: %d", err);
     return err;
 }
+
+#define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
 
 void ssl_init(sslclient_context *ssl_client)
@@ -45,10 +48,10 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey)
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey)
 {
     char buf[512];
-    int ret, flags, timeout;
+    int ret, flags;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
 
@@ -73,7 +76,9 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     serv_addr.sin_port = htons(port);
 
     if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
-        timeout = 30000;
+        if(timeout <= 0){
+            timeout = 30000;
+        }
         lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
         lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
         lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));

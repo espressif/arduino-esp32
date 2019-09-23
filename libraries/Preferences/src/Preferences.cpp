@@ -291,7 +291,7 @@ int8_t Preferences::getChar(const char* key, const int8_t defaultValue){
     }
     esp_err_t err = nvs_get_i8(_handle, key, &value);
     if(err){
-        log_e("nvs_get_i8 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_i8 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -303,7 +303,7 @@ uint8_t Preferences::getUChar(const char* key, const uint8_t defaultValue){
     }
     esp_err_t err = nvs_get_u8(_handle, key, &value);
     if(err){
-        log_e("nvs_get_u8 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_u8 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -315,7 +315,7 @@ int16_t Preferences::getShort(const char* key, const int16_t defaultValue){
     }
     esp_err_t err = nvs_get_i16(_handle, key, &value);
     if(err){
-        log_e("nvs_get_i16 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_i16 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -327,7 +327,7 @@ uint16_t Preferences::getUShort(const char* key, const uint16_t defaultValue){
     }
     esp_err_t err = nvs_get_u16(_handle, key, &value);
     if(err){
-        log_e("nvs_get_u16 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_u16 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -339,7 +339,7 @@ int32_t Preferences::getInt(const char* key, const int32_t defaultValue){
     }
     esp_err_t err = nvs_get_i32(_handle, key, &value);
     if(err){
-        log_e("nvs_get_i32 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_i32 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -351,7 +351,7 @@ uint32_t Preferences::getUInt(const char* key, const uint32_t defaultValue){
     }
     esp_err_t err = nvs_get_u32(_handle, key, &value);
     if(err){
-        log_e("nvs_get_u32 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_u32 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -371,7 +371,7 @@ int64_t Preferences::getLong64(const char* key, const int64_t defaultValue){
     }
     esp_err_t err = nvs_get_i64(_handle, key, &value);
     if(err){
-        log_e("nvs_get_i64 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_i64 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -383,7 +383,7 @@ uint64_t Preferences::getULong64(const char* key, const uint64_t defaultValue){
     }
     esp_err_t err = nvs_get_u64(_handle, key, &value);
     if(err){
-        log_e("nvs_get_u64 fail: %s %s", key, nvs_error(err));
+        log_v("nvs_get_u64 fail: %s %s", key, nvs_error(err));
     }
     return value;
 }
@@ -447,9 +447,9 @@ String Preferences::getString(const char* key, const String defaultValue){
     return String(buf);
 }
 
-size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
+size_t Preferences::getBytesLength(const char* key){
     size_t len = 0;
-    if(!_started || !key || !buf || !maxLen){
+    if(!_started || !key){
         return 0;
     }
     esp_err_t err = nvs_get_blob(_handle, key, NULL, &len);
@@ -457,11 +457,19 @@ size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
         log_e("nvs_get_blob len fail: %s %s", key, nvs_error(err));
         return 0;
     }
+    return len;
+}
+
+size_t Preferences::getBytes(const char* key, void * buf, size_t maxLen){
+    size_t len = getBytesLength(key);
+    if(!len || !buf || !maxLen){
+        return len;
+    }
     if(len > maxLen){
         log_e("not enough space in buffer: %u < %u", maxLen, len);
         return 0;
     }
-    err = nvs_get_blob(_handle, key, buf, &len);
+    esp_err_t err = nvs_get_blob(_handle, key, buf, &len);
     if(err){
         log_e("nvs_get_blob fail: %s %s", key, nvs_error(err));
         return 0;

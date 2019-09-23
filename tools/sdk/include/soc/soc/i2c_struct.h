@@ -14,8 +14,6 @@
 #ifndef _SOC_I2C_STRUCT_H_
 #define _SOC_I2C_STRUCT_H_
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

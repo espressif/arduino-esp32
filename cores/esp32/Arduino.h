@@ -68,12 +68,6 @@
 #define __STRINGIFY(a) #a
 #endif
 
-// undefine stdlib's abs if encountered
-#ifdef abs
-#undef abs
-#endif
-
-#define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
@@ -160,6 +154,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "HardwareSerial.h"
 #include "Esp.h"
 
+using std::abs;
 using std::isinf;
 using std::isnan;
 using std::max;

@@ -20,7 +20,6 @@
 
 #include "fb_gfx.h"
 #include "fd_forward.h"
-#include "dl_lib.h"
 #include "fr_forward.h"
 
 #define ENROLL_CONFIRM_TIMES 5
@@ -230,6 +229,7 @@ static esp_err_t capture_handler(httpd_req_t *req){
 
     httpd_resp_set_type(req, "image/jpeg");
     httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     size_t out_len, out_width, out_height;
     uint8_t * out_buf;
@@ -283,6 +283,7 @@ static esp_err_t capture_handler(httpd_req_t *req){
             face_id = run_face_recognition(image_matrix, net_boxes);
         }
         draw_face_boxes(image_matrix, net_boxes, face_id);
+        free(net_boxes->score);
         free(net_boxes->box);
         free(net_boxes->landmark);
         free(net_boxes);
@@ -325,6 +326,8 @@ static esp_err_t stream_handler(httpd_req_t *req){
     if(res != ESP_OK){
         return res;
     }
+
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     while(true){
         detected = false;
@@ -379,6 +382,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
                                 }
                                 fr_recognize = esp_timer_get_time();
                                 draw_face_boxes(image_matrix, net_boxes, face_id);
+                                free(net_boxes->score);
                                 free(net_boxes->box);
                                 free(net_boxes->landmark);
                                 free(net_boxes);
@@ -544,6 +548,7 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"brightness\":%d,", s->status.brightness);
     p+=sprintf(p, "\"contrast\":%d,", s->status.contrast);
     p+=sprintf(p, "\"saturation\":%d,", s->status.saturation);
+    p+=sprintf(p, "\"sharpness\":%d,", s->status.sharpness);
     p+=sprintf(p, "\"special_effect\":%u,", s->status.special_effect);
     p+=sprintf(p, "\"wb_mode\":%u,", s->status.wb_mode);
     p+=sprintf(p, "\"awb\":%u,", s->status.awb);
@@ -576,7 +581,11 @@ static esp_err_t status_handler(httpd_req_t *req){
 static esp_err_t index_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    return httpd_resp_send(req, (const char *)index_html_gz, index_html_gz_len);
+    sensor_t * s = esp_camera_sensor_get();
+    if (s->id.PID == OV3660_PID) {
+        return httpd_resp_send(req, (const char *)index_ov3660_html_gz, index_ov3660_html_gz_len);
+    }
+    return httpd_resp_send(req, (const char *)index_ov2640_html_gz, index_ov2640_html_gz_len);
 }
 
 void startCameraServer(){
@@ -620,15 +629,18 @@ void startCameraServer(){
 
     ra_filter_init(&ra_filter, 20);
     
+    mtmn_config.type = FAST;
     mtmn_config.min_face = 80;
-    mtmn_config.pyramid = 0.7;
+    mtmn_config.pyramid = 0.707;
+    mtmn_config.pyramid_times = 4;
     mtmn_config.p_threshold.score = 0.6;
     mtmn_config.p_threshold.nms = 0.7;
+    mtmn_config.p_threshold.candidate_number = 20;
     mtmn_config.r_threshold.score = 0.7;
     mtmn_config.r_threshold.nms = 0.7;
-    mtmn_config.r_threshold.candidate_number = 4;
+    mtmn_config.r_threshold.candidate_number = 10;
     mtmn_config.o_threshold.score = 0.7;
-    mtmn_config.o_threshold.nms = 0.4;
+    mtmn_config.o_threshold.nms = 0.7;
     mtmn_config.o_threshold.candidate_number = 1;
     
     face_id_init(&id_list, FACE_ID_SAVE_NUMBER, ENROLL_CONFIRM_TIMES);

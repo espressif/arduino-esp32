@@ -26,7 +26,7 @@ WiFiClient client;
 
 // Variables to validate
 // response from S3
-int contentLength = 0;
+long contentLength = 0;
 bool isValidContentType = false;
 
 // Your SSID and PSWD that the chip needs
@@ -120,7 +120,7 @@ void execOTA() {
       // extract headers here
       // Start with content length
       if (line.startsWith("Content-Length: ")) {
-        contentLength = atoi((getHeaderValue(line, "Content-Length: ")).c_str());
+        contentLength = atol((getHeaderValue(line, "Content-Length: ")).c_str());
         Serial.println("Got " + String(contentLength) + " bytes from server");
       }
 

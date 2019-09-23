@@ -22,7 +22,7 @@ using namespace fs;
 
 SDFS::SDFS(FSImplPtr impl): FS(impl), _pdrv(0xFF) {}
 
-bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint)
+bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint, uint8_t max_files)
 {
     if(_pdrv != 0xFF) {
         return true;
@@ -35,7 +35,7 @@ bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * 
         return false;
     }
 
-    if(!sdcard_mount(_pdrv, mountpoint)){
+    if(!sdcard_mount(_pdrv, mountpoint, max_files)){
         sdcard_unmount(_pdrv);
         sdcard_uninit(_pdrv);
         _pdrv = 0xFF;
