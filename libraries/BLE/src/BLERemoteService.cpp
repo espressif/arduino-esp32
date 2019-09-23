@@ -12,9 +12,15 @@
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include <esp_err.h>
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
+#define LOG_TAG ""
+#else
+#include "esp_log.h"
+static const char* LOG_TAG = "BLERemoteService";
+#endif
 
-#pragma GCC diagnostic warning "-Wunused-but-set-parameter"
+
 
 BLERemoteService::BLERemoteService(
 		esp_gatt_id_t srvcId,
@@ -23,7 +29,7 @@ BLERemoteService::BLERemoteService(
 		uint16_t      endHandle
 	) {
 
-	log_v(">> BLERemoteService()");
+	ESP_LOGD(LOG_TAG, ">> BLERemoteService()");
 	m_srvcId  = srvcId;
 	m_pClient = pClient;
 	m_uuid    = BLEUUID(m_srvcId);
@@ -31,7 +37,7 @@ BLERemoteService::BLERemoteService(
 	m_startHandle = startHandle;
 	m_endHandle = endHandle;
 
-	log_v("<< BLERemoteService()");
+	ESP_LOGD(LOG_TAG, "<< BLERemoteService()");
 }
 
 
@@ -97,7 +103,7 @@ void BLERemoteService::gattClientEventHandler(
 					&m_srvcId,
 					&evtParam->get_char.char_id);
 			if (errRc != ESP_OK) {
-				log_e("esp_ble_gattc_get_characteristic: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				ESP_LOGE(LOG_TAG, "esp_ble_gattc_get_characteristic: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 				break;
 			}
 
@@ -159,14 +165,14 @@ BLERemoteCharacteristic* BLERemoteService::getCharacteristic(BLEUUID uuid) {
  * @return N/A
  */
 void BLERemoteService::retrieveCharacteristics() {
-	log_v(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> getCharacteristics() for service: %s", getUUID().toString().c_str());
 
 	removeCharacteristics(); // Forget any previous characteristics.
 
 	uint16_t offset = 0;
 	esp_gattc_char_elem_t result;
 	while (true) {
-		uint16_t count = 1; // only room for 1 result allocated, so go one by one
+		uint16_t count = 10;  // this value is used as in parameter that allows to search max 10 chars with the same uuid
 		esp_gatt_status_t status = ::esp_ble_gattc_get_all_char(
 			getClient()->getGattcIf(),
 			getClient()->getConnId(),
@@ -182,7 +188,7 @@ void BLERemoteService::retrieveCharacteristics() {
 		}
 
 		if (status != ESP_GATT_OK) {   // If we got an error, end.
-			log_e("esp_ble_gattc_get_all_char: %s", BLEUtils::gattStatusToString(status).c_str());
+			ESP_LOGE(LOG_TAG, "esp_ble_gattc_get_all_char: %s", BLEUtils::gattStatusToString(status).c_str());
 			break;
 		}
 
@@ -190,7 +196,7 @@ void BLERemoteService::retrieveCharacteristics() {
 			break;
 		}
 
-		log_d("Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
+		ESP_LOGD(LOG_TAG, "Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
 
 		// We now have a new characteristic ... let us add that to our set of known characteristics
 		BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(
@@ -206,7 +212,7 @@ void BLERemoteService::retrieveCharacteristics() {
 	} // Loop forever (until we break inside the loop).
 
 	m_haveCharacteristics = true; // Remember that we have received the characteristics.
-	log_v("<< getCharacteristics()");
+	ESP_LOGD(LOG_TAG, "<< getCharacteristics()");
 } // getCharacteristics
 
 
@@ -215,14 +221,14 @@ void BLERemoteService::retrieveCharacteristics() {
  * @return A map of all the characteristics of this service.
  */
 std::map<std::string, BLERemoteCharacteristic*>* BLERemoteService::getCharacteristics() {
-	log_v(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> getCharacteristics() for service: %s", getUUID().toString().c_str());
 	// If is possible that we have not read the characteristics associated with the service so do that
 	// now.  The request to retrieve the characteristics by calling "retrieveCharacteristics" is a blocking
 	// call and does not return until all the characteristics are available.
 	if (!m_haveCharacteristics) {
 		retrieveCharacteristics();
 	}
-	log_v("<< getCharacteristics() for service: %s", getUUID().toString().c_str());
+	ESP_LOGD(LOG_TAG, "<< getCharacteristics() for service: %s", getUUID().toString().c_str());
 	return &m_characteristicMap;
 } // getCharacteristics
 
@@ -230,6 +236,7 @@ std::map<std::string, BLERemoteCharacteristic*>* BLERemoteService::getCharacteri
  * @brief This function is designed to get characteristics map when we have multiple characteristics with the same UUID
  */
 void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap) {
+#pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
 	pCharacteristicMap = &m_characteristicMapByHandle;
 }  // Get the characteristics map.
 
@@ -258,8 +265,8 @@ uint16_t BLERemoteService::getStartHandle() {
 
 
 uint16_t BLERemoteService::getHandle() {
-	log_v(">> getHandle: service: %s", getUUID().toString().c_str());
-	log_v("<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
+	ESP_LOGD(LOG_TAG, ">> getHandle: service: %s", getUUID().toString().c_str());
+	ESP_LOGD(LOG_TAG, "<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
 	return getStartHandle();
 } // getHandle
 
@@ -272,9 +279,9 @@ BLEUUID BLERemoteService::getUUID() {
  * @brief Read the value of a characteristic associated with this service.
  */
 std::string BLERemoteService::getValue(BLEUUID characteristicUuid) {
-	log_v(">> readValue: uuid: %s", characteristicUuid.toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> readValue: uuid: %s", characteristicUuid.toString().c_str());
 	std::string ret =  getCharacteristic(characteristicUuid)->readValue();
-	log_v("<< readValue");
+	ESP_LOGD(LOG_TAG, "<< readValue");
 	return ret;
 } // readValue
 
@@ -307,9 +314,9 @@ void BLERemoteService::removeCharacteristics() {
  * @throws BLEUuidNotFound
  */
 void BLERemoteService::setValue(BLEUUID characteristicUuid, std::string value) {
-	log_v(">> setValue: uuid: %s", characteristicUuid.toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> setValue: uuid: %s", characteristicUuid.toString().c_str());
 	getCharacteristic(characteristicUuid)->writeValue(value);
-	log_v("<< setValue");
+	ESP_LOGD(LOG_TAG, "<< setValue");
 } // setValue
 
 
@@ -318,25 +325,15 @@ void BLERemoteService::setValue(BLEUUID characteristicUuid, std::string value) {
  * @return A string representation of this remote service.
  */
 std::string BLERemoteService::toString() {
-	std::string res = "Service: uuid: " + m_uuid.toString();
-	char val[6];
-	res += ", start_handle: ";
-	snprintf(val, sizeof(val), "%d", m_startHandle);
-	res += val;
-	snprintf(val, sizeof(val), "%04x", m_startHandle);
-	res += " 0x";
-	res += val;
-	res += ", end_handle: ";
-	snprintf(val, sizeof(val), "%d", m_endHandle);
-	res += val;
-	snprintf(val, sizeof(val), "%04x", m_endHandle);
-	res += " 0x";
-	res += val;
+	std::ostringstream ss;
+	ss << "Service: uuid: " + m_uuid.toString();
+	ss << ", start_handle: " << std::dec << m_startHandle << " 0x" << std::hex << m_startHandle <<
+			", end_handle: " << std::dec << m_endHandle << " 0x" << std::hex << m_endHandle;
 	for (auto &myPair : m_characteristicMap) {
-		res += "\n" + myPair.second->toString();
+		ss << "\n" << myPair.second->toString();
 	   // myPair.second is the value
 	}
-	return res;
+	return ss.str();
 } // toString
 
 
