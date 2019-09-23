@@ -1159,7 +1159,11 @@ int HTTPClient::handleHeaderResponse()
 
                 if(_size > 0) {
                     log_d("size: %d", _size);
-                }
+                }else{
+		  if(_client->available() > 0){
+		    _size = _client->available();
+		  }
+		}
 
                 if(transferEncoding.length() > 0) {
                     log_d("Transfer-Encoding: %s", transferEncoding.c_str());
