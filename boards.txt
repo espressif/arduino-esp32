@@ -1654,6 +1654,15 @@ featheresp32.menu.DebugLevel.debug.build.code_debug=4
 featheresp32.menu.DebugLevel.verbose=Verbose
 featheresp32.menu.DebugLevel.verbose.build.code_debug=5
 
+featheresp32.menu.PartitionScheme.default=Default
+featheresp32.menu.PartitionScheme.default.build.partitions=default
+featheresp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+featheresp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+featheresp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+featheresp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+featheresp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+featheresp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 ##############################################################
 
 nodemcu-32s.name=NodeMCU-32S
