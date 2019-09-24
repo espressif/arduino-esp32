@@ -257,6 +257,15 @@ pico32.build.boot=dio
 pico32.build.partitions=default
 pico32.build.defines=
 
+pico32.menu.PartitionScheme.default=Default
+pico32.menu.PartitionScheme.default.build.partitions=default
+pico32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+pico32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pico32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pico32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+pico32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pico32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 pico32.menu.UploadSpeed.921600=921600
 pico32.menu.UploadSpeed.921600.upload.speed=921600
 pico32.menu.UploadSpeed.115200=115200
@@ -1653,6 +1662,15 @@ featheresp32.menu.DebugLevel.debug=Debug
 featheresp32.menu.DebugLevel.debug.build.code_debug=4
 featheresp32.menu.DebugLevel.verbose=Verbose
 featheresp32.menu.DebugLevel.verbose.build.code_debug=5
+
+featheresp32.menu.PartitionScheme.default=Default
+featheresp32.menu.PartitionScheme.default.build.partitions=default
+featheresp32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+featheresp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+featheresp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+featheresp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+featheresp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+featheresp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
 ##############################################################
 
@@ -4124,6 +4142,63 @@ gpy.menu.DebugLevel.debug=Debug
 gpy.menu.DebugLevel.debug.build.code_debug=4
 gpy.menu.DebugLevel.verbose=Verbose
 gpy.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+vintlabs-devkit-v1.name=VintLabs ESP32 Devkit
+
+vintlabs-devkit-v1.upload.tool=esptool_py
+vintlabs-devkit-v1.upload.maximum_size=1310720
+vintlabs-devkit-v1.upload.maximum_data_size=327680
+vintlabs-devkit-v1.upload.wait_for_upload_port=true
+
+vintlabs-devkit-v1.serial.disableDTR=true
+vintlabs-devkit-v1.serial.disableRTS=true
+
+vintlabs-devkit-v1.build.mcu=esp32
+vintlabs-devkit-v1.build.core=esp32
+vintlabs-devkit-v1.build.variant=vintlabsdevkitv1
+vintlabs-devkit-v1.build.board=ESP32_DEV
+
+vintlabs-devkit-v1.build.f_cpu=240000000L
+vintlabs-devkit-v1.build.flash_mode=dio
+vintlabs-devkit-v1.build.flash_size=4MB
+vintlabs-devkit-v1.build.boot=dio
+vintlabs-devkit-v1.build.partitions=default
+vintlabs-devkit-v1.build.defines=
+
+vintlabs-devkit-v1.menu.FlashFreq.80=80MHz
+vintlabs-devkit-v1.menu.FlashFreq.80.build.flash_freq=80m
+vintlabs-devkit-v1.menu.FlashFreq.40=40MHz
+vintlabs-devkit-v1.menu.FlashFreq.40.build.flash_freq=40m
+
+vintlabs-devkit-v1.menu.UploadSpeed.2000000=2000000
+vintlabs-devkit-v1.menu.UploadSpeed.2000000.upload.speed=2000000
+vintlabs-devkit-v1.menu.UploadSpeed.921600=921600
+vintlabs-devkit-v1.menu.UploadSpeed.921600.upload.speed=921600
+vintlabs-devkit-v1.menu.UploadSpeed.115200=115200
+vintlabs-devkit-v1.menu.UploadSpeed.115200.upload.speed=115200
+vintlabs-devkit-v1.menu.UploadSpeed.256000.windows=256000
+vintlabs-devkit-v1.menu.UploadSpeed.256000.upload.speed=256000
+vintlabs-devkit-v1.menu.UploadSpeed.230400.windows.upload.speed=256000
+vintlabs-devkit-v1.menu.UploadSpeed.230400=230400
+vintlabs-devkit-v1.menu.UploadSpeed.230400.upload.speed=230400
+vintlabs-devkit-v1.menu.UploadSpeed.460800.linux=460800
+vintlabs-devkit-v1.menu.UploadSpeed.460800.macosx=460800
+vintlabs-devkit-v1.menu.UploadSpeed.460800.upload.speed=460800
+vintlabs-devkit-v1.menu.UploadSpeed.512000.windows=512000
+vintlabs-devkit-v1.menu.UploadSpeed.512000.upload.speed=512000
+
+vintlabs-devkit-v1.menu.DebugLevel.none=None
+vintlabs-devkit-v1.menu.DebugLevel.none.build.code_debug=0
+vintlabs-devkit-v1.menu.DebugLevel.error=Error
+vintlabs-devkit-v1.menu.DebugLevel.error.build.code_debug=1
+vintlabs-devkit-v1.menu.DebugLevel.warn=Warn
+vintlabs-devkit-v1.menu.DebugLevel.warn.build.code_debug=2
+vintlabs-devkit-v1.menu.DebugLevel.info=Info
+vintlabs-devkit-v1.menu.DebugLevel.info.build.code_debug=3
+vintlabs-devkit-v1.menu.DebugLevel.debug=Debug
+vintlabs-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 ##############################################################
 
