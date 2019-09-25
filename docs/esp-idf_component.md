@@ -1,7 +1,15 @@
 To use as a component of ESP-IDF
 =================================================
 
-## Installation
+## Quick Installation
+
+- Clone the [arduino lib builder](https://github.com/espressif/esp32-arduino-lib-builder)
+- Modify the sdkconfig and tools/config.sh as needed
+- Run build.sh (it's not stuck, it just takes a really long time to clone the submodules)
+- If you need to run make menuconfig, you can abort the compilation, and run `IDF_PATH=./esp-idf make menuconfig`, then run build.sh again.
+- Copy the archived libraries from the out folder into \<esp32\>/tools/sdk/lib
+
+## Full Installation
 
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
 - Create blank idf project (from one of the examples)
