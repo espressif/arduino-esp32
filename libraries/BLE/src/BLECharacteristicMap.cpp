@@ -116,18 +116,17 @@ void BLECharacteristicMap::setByUUID(BLECharacteristic* pCharacteristic, BLEUUID
  * @return A string representation of the characteristic map.
  */
 std::string BLECharacteristicMap::toString() {
-	std::string res;
+	std::stringstream stringStream;
+	stringStream << std::hex << std::setfill('0');
 	int count = 0;
-	char hex[5];
 	for (auto &myPair: m_uuidMap) {
-		if (count > 0) {res += "\n";}
-		snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
+		if (count > 0) {
+			stringStream << "\n";
+		}
 		count++;
-		res += "handle: 0x";
-		res += hex;
-		res += ", uuid: " + myPair.first->getUUID().toString();
+		stringStream << "handle: 0x" << std::setw(2) << myPair.first->getHandle() << ", uuid: " + myPair.first->getUUID().toString();
 	}
-	return res;
+	return stringStream.str();
 } // toString
 
 

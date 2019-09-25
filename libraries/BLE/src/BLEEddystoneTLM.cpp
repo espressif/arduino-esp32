@@ -7,8 +7,8 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 #include <string.h>
-#include <stdio.h>
-#include "esp32-hal-log.h"
+#include <sstream>
+#include <esp_log.h>
 #include "BLEEddystoneTLM.h"
 
 static const char LOG_TAG[] = "BLEEddystoneTLM";
@@ -54,44 +54,62 @@ uint32_t BLEEddystoneTLM::getTime() {
 } // getTime
 
 std::string BLEEddystoneTLM::toString() {
-  std::string out = "";
-  uint32_t rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
-  char val[6];
+	std::stringstream ss;
+	std::string out = "";
+  uint32_t rawsec;
+  ss << "Version ";
+  ss << std::dec << m_eddystoneData.version;
+  ss << "\n";
 
-  out += "Version " + m_eddystoneData.version;
-  out += "\n";
-  out += "Battery Voltage " + ENDIAN_CHANGE_U16(m_eddystoneData.volt);
-  out += " mV\n";
+  ss << "Battery Voltage ";
+  ss << std::dec << ENDIAN_CHANGE_U16(m_eddystoneData.volt);
+  ss << " mV\n";
 
-  out += "Temperature ";
-  snprintf(val, sizeof(val), "%d", m_eddystoneData.temp);
-  out += val;
-  out += ".0 °C\n";
+  ss << "Temperature ";
+  ss << (float) m_eddystoneData.temp;
+  ss << " °C\n";
 
-  out += "Adv. Count ";
-  snprintf(val, sizeof(val), "%d", ENDIAN_CHANGE_U32(m_eddystoneData.advCount));
-  out += val;
-  out += "\n";
+  ss << "Adv. Count ";
+  ss << std::dec << ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
 
-  out += "Time ";
+  ss << "\n";
 
-  snprintf(val, sizeof(val), "%04d", rawsec / 864000);
-  out += val;
-  out += ".";
+  ss << "Time ";
 
-  snprintf(val, sizeof(val), "%02d", (rawsec / 36000) % 24);
-  out += val;
-  out += ":";
+  rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
+  std::stringstream buffstream;
+  buffstream << "0000";
+  buffstream << std::dec << rawsec / 864000;
+  std::string buff = buffstream.str();
 
-  snprintf(val, sizeof(val), "%02d", (rawsec / 600) % 60);
-  out += val;
-  out += ":";
+  ss << buff.substr(buff.length() - 4, buff.length());
+  ss << ".";
 
-  snprintf(val, sizeof(val), "%02d", (rawsec / 10) % 60);
-  out += val;
-  out += "\n";
+  buffstream.str("");
+  buffstream.clear();
+  buffstream << "00";
+  buffstream << std::dec << (rawsec / 36000) % 24;
+  buff = buffstream.str();
+  ss << buff.substr(buff.length()-2, buff.length());
+  ss << ":";
 
-  return out;
+  buffstream.str("");
+  buffstream.clear();
+  buffstream << "00";
+  buffstream << std::dec << (rawsec / 600) % 60;
+  buff = buffstream.str();
+  ss << buff.substr(buff.length() - 2, buff.length());
+  ss << ":";
+
+  buffstream.str("");
+  buffstream.clear();
+  buffstream << "00";
+  buffstream << std::dec << (rawsec / 10) % 60;
+  buff = buffstream.str();
+  ss << buff.substr(buff.length() - 2, buff.length());
+  ss << "\n";
+
+  return ss.str();
 } // toString
 
 /**
@@ -99,7 +117,7 @@ std::string BLEEddystoneTLM::toString() {
  */
 void BLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
-		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+		ESP_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
 		return;
 	}
   memcpy(&m_eddystoneData, data.data(), data.length());

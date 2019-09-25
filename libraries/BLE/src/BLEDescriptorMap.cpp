@@ -90,18 +90,17 @@ void BLEDescriptorMap::setByHandle(uint16_t handle, BLEDescriptor* pDescriptor) 
  * @return A string representation of the descriptor map.
  */
 std::string BLEDescriptorMap::toString() {
-	std::string res;
-	char hex[5];
+	std::stringstream stringStream;
+	stringStream << std::hex << std::setfill('0');
 	int count = 0;
 	for (auto &myPair : m_uuidMap) {
-		if (count > 0) {res += "\n";}
-		snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
+		if (count > 0) {
+			stringStream << "\n";
+		}
 		count++;
-		res += "handle: 0x";
-		res += hex;
-		res += ", uuid: " + myPair.first->getUUID().toString();
+		stringStream << "handle: 0x" << std::setw(2) << myPair.first->getHandle() << ", uuid: " + myPair.first->getUUID().toString();
 	}
-	return res;
+	return stringStream.str();
 } // toString
 
 
