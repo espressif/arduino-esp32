@@ -27,24 +27,22 @@ typedef enum
  */
 typedef struct
 {
-    /******* fix start *******/
-    int w; // Width
-    int h; // Height
-    int c; // Channel
-    int n; // Number, to record filter's out_channels. input and output must be 1
-    int stride;
-    fptp_t *item;
-    /******* fix end *******/
+    int w;          /*!< Width */
+    int h;          /*!< Height */
+    int c;          /*!< Channel */
+    int n;          /*!< Number of filter, input and output must be 1 */
+    int stride;     /*!< Step between lines */
+    fptp_t *item;   /*!< Data */
 } dl_matrix3d_t;
 
 typedef struct
 {
-    int w; // Width
-    int h; // Height
-    int c; // Channel
-    int n; // Number, to record filter's out_channels. input and output must be 1
-    int stride;
-    uc_t *item;
+    int w;          /*!< Width */
+    int h;          /*!< Height */
+    int c;          /*!< Channel */
+    int n;          /*!< Number of filter, input and output must be 1 */
+    int stride;     /*!< Step between lines */
+    uc_t *item;     /*!< Data */
 } dl_matrix3du_t;
 
 typedef struct
