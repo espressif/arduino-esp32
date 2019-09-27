@@ -59,6 +59,7 @@ protected:
     size_t _index;
 public:
     AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif * netif);
+    AsyncUDPPacket(const AsyncUDPPacket &packet);
     virtual ~AsyncUDPPacket();
 
     uint8_t * data();
