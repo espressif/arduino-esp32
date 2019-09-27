@@ -367,6 +367,8 @@ jobs:
     - name: Install Python Wheel
       run: pip install wheel
     - name: Install GCC Toolchain
+      env:
+        TRAVIS_BUILD_DIR: ${{ github.workspace }}
       run: cd tools && python get.py
     - name: Install PlatformIO
       env:
