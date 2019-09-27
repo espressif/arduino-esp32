@@ -331,7 +331,7 @@ AsyncUDPPacket::AsyncUDPPacket(const AsyncUDPPacket &packet)
       _localIp(packet._localIp),
       _localPort(packet._localPort),
       _remoteIp(packet._remoteIp),
-      _remotePort(packet.remotePort),
+      _remotePort(packet._remotePort),
       _data(packet._data),
       _len(packet._len),
       _index(packet._index)
