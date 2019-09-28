@@ -762,6 +762,14 @@ bool BluetoothSerial::disconnect() {
     return false;
 }
 
+bool BluetoothSerial::remove_bond_device(uint8_t remoteAddress[]) {
+    if (isReady(false, READY_TIMEOUT)) {
+        log_i("removing bonded device");
+        return (esp_bt_gap_remove_bond_device(remoteAddress) == ESP_OK);
+    }
+    return false;
+}
+
 bool BluetoothSerial::connected(int timeout) {
     return waitForConnect(timeout);
 }

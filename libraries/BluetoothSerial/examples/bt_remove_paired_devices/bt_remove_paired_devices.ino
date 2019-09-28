@@ -2,9 +2,11 @@
 //By Victor Tchistiak - 2019
 //
 //This example demonstrates reading and removing paired devices stored on the ESP32 flash memory
-//Sometimes you may find your ESP32 device could not connect to the remote device despite many
-//successful connections earlier. It may be a result of loading sketch to multiple ESP32 devices
-//but using the same bluetooth localName (default is "ESP32").
+//Sometimes you may find your ESP32 device could not connect to the remote device despite
+//many successful connections earlier. This is most likely a result of client replacing your paired
+//device info with new one from other device. The BT clients stores connection info for paired devices,
+//but it is limited to a few devices only, when new device pairs one of the previously paired devices
+//would be replaced with new one, if number of stored devices is exceeded.
 //The only remedy is to delete this saved bound device from your device flash memory
 //and pair with the other device again.
 //
@@ -53,7 +55,7 @@ void setup() {
  
   initBluetooth();
   Serial.print("ESP32 bluetooth address: "); Serial.println(bda2str(esp_bt_dev_get_address(), bda_str, 18));
-  // Get the numbers of bonded/paired devices to the BT module
+  // Get the numbers of bonded/paired devices in the BT module
   int count = esp_bt_gap_get_bond_device_num();
   if(!count) {
     Serial.println("No bonded device found.");
@@ -77,7 +79,7 @@ void setup() {
           }
           Serial.println(i);
         }
-      }
+      }        
     }
   }
 }
