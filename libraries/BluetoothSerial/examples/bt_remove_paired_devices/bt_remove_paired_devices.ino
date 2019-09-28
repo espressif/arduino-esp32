@@ -21,17 +21,17 @@ char bda_str[18];
 
 bool initBluetooth()
 {
-  if (!btStart()) {
+  if(!btStart()) {
     Serial.println("Failed to initialize controller");
     return false;
   }
  
-  if (esp_bluedroid_init() != ESP_OK) {
+  if(esp_bluedroid_init() != ESP_OK) {
     Serial.println("Failed to initialize bluedroid");
     return false;
   }
  
-  if (esp_bluedroid_enable() != ESP_OK) {
+  if(esp_bluedroid_enable() != ESP_OK) {
     Serial.println("Failed to enable bluedroid");
     return false;
   }
@@ -53,20 +53,19 @@ void setup() {
  
   initBluetooth();
   Serial.print("ESP32 bluetooth address: "); Serial.println(bda2str(esp_bt_dev_get_address(), bda_str, 18));
-  /*********************************************************** 
-  * Get the numbers of bonded/paired devices to the BT module 
-  ************************************************************/
+  // Get the numbers of bonded/paired devices to the BT module
   int count = esp_bt_gap_get_bond_device_num();
-  if (count)
-  {
+  if(!count) {
+    Serial.println("No bonded device found.");
+  } else {
     Serial.print("Bonded device count: "); Serial.println(count);
-    if (PAIR_MAX_DEVICES < count) {
+    if(PAIR_MAX_DEVICES < count) {
       count = PAIR_MAX_DEVICES; 
       Serial.print("Reset bonded device count: "); Serial.println(count);
     }
     esp_err_t tError =  esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
-    if (ESP_OK == tError) {
-      for (int i = 0; i < count; i++) {
+    if(ESP_OK == tError) {
+      for(int i = 0; i < count; i++) {
         Serial.print("Found bonded device # "); Serial.print(i); Serial.print(" -> ");
         Serial.println(bda2str(pairedDeviceBtAddr[i], bda_str, 18));     
         if(REMOVE_BONDED_DEVICES) {
@@ -74,12 +73,11 @@ void setup() {
           if(ESP_OK == tError) {
             Serial.print("Removed bonded device # "); 
           } else {
-            Serial.print("Failed to Bonded bonded device # ");
+            Serial.print("Failed to remove bonded device # ");
           }
           Serial.println(i);
         }
-      } 
-        
+      }
     }
   }
 }
