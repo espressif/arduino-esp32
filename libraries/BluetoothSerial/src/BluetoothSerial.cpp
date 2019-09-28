@@ -762,7 +762,7 @@ bool BluetoothSerial::disconnect() {
     return false;
 }
 
-bool BluetoothSerial::removePairedDevice(uint8_t remoteAddress[]) {
+bool BluetoothSerial::unpairDevice(uint8_t remoteAddress[]) {
     if (isReady(false, READY_TIMEOUT)) {
         log_i("removing bonded device");
         return (esp_bt_gap_remove_bond_device(remoteAddress) == ESP_OK);
