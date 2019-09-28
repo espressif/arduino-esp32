@@ -4,9 +4,9 @@
 //This example demonstrates reading and removing paired devices stored on the ESP32 flash memory
 //Sometimes you may find your ESP32 device could not connect to the remote device despite
 //many successful connections earlier. This is most likely a result of client replacing your paired
-//device info with new one from other device. The BT clients stores connection info for paired devices,
-//but it is limited to a few devices only, when new device pairs one of the previously paired devices
-//would be replaced with new one, if number of stored devices is exceeded.
+//device info with new one from other device. The BT clients store connection info for paired devices,
+//but it is limited to a few devices only. When new device pairs and number of stored devices is exceeded,
+//one of the previously paired devices would be replaced with new one.
 //The only remedy is to delete this saved bound device from your device flash memory
 //and pair with the other device again.
 //
