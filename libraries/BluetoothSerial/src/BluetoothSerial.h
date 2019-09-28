@@ -49,7 +49,7 @@ class BluetoothSerial: public Stream
         bool connected(int timeout=0);
         bool isReady(bool checkMaster=false, int timeout=0);
         bool disconnect();
-        bool remove_bond_device(uint8_t remoteAddress[]);
+        bool removePairedDevice(uint8_t remoteAddress[]);
 
     private:
         String local_name;
