@@ -51,6 +51,6 @@ else
 	python -m platformio ci  --board esp32dev libraries/BLE/examples/BLE_server && \
 	python -m platformio ci  --board esp32dev libraries/AzureIoT/examples/GetStarted && \
 	python -m platformio ci  --board esp32dev libraries/ESP32/examples/Camera/CameraWebServer --project-option="board_build.partitions = huge_app.csv"
-	#build_pio_sketches libraries "esp32dev" "$CHUNK_INDEX" "$CHUNKS_CNT"
+	#build_pio_sketches libraries esp32dev $CHUNK_INDEX $CHUNKS_CNT
 	if [ $? -ne 0 ]; then exit 1; fi
 fi

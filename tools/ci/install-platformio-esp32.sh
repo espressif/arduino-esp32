@@ -71,7 +71,6 @@ function build_pio_sketches() # build_pio_sketches <examples-path> <board> <chun
     local board=$2
     local chunk_idex=$3
     local chunks_num=$4
-    local xtra_opts=$5
 
 	if [ "$chunks_num" -le 0 ]; then
 		echo "ERROR: Chunks count must be positive number"
@@ -85,6 +84,7 @@ function build_pio_sketches() # build_pio_sketches <examples-path> <board> <chun
     count_sketches "$examples"
     local sketchcount=$?
     local sketches=$(cat sketches.txt)
+    rm -rf sketches.txt
 
     local chunk_size=$(( $sketchcount / $chunks_num ))
     local all_chunks=$(( $chunks_num * $chunk_size ))
@@ -115,21 +115,13 @@ function build_pio_sketches() # build_pio_sketches <examples-path> <board> <chun
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
         local sketchname=$(basename $sketch)
-        if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
-            #echo "Skipping $sketch, beacause it is not the main sketch file";
-            continue
-        fi;
-        if [[ -f "$sketchdir/.test.skip" ]]; then
-            #echo "Skipping $sketch marked";
+        if [ "${sketchdirname}.ino" != "$sketchname" ] \
+        || [ -f "$sketchdir/.test.skip" ]; then
             continue
         fi
         sketchnum=$(($sketchnum + 1))
-        if [ "$sketchnum" -le "$start_index" ]; then
-        	#echo "Skipping $sketch index low"
-        	continue
-        fi
-        if [ "$sketchnum" -gt "$end_index" ]; then
-        	#echo "Skipping $sketch index high"
+        if [ "$sketchnum" -le "$start_index" ] \
+        || [ "$sketchnum" -gt "$end_index" ]; then
         	continue
         fi
         build_pio_sketch "$board" "$sketch"
