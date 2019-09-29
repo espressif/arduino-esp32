@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: ./tools/ci/on-push ${{ matrix.chunk }} 11
+      run: bash ./tools/ci/on-push ${{ matrix.chunk }} 11
 
   build-arduino-mac:
     name: Build Arduino ${{ matrix.chunk }} on macOS-latest
@@ -31,7 +31,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: ./tools/ci/on-push ${{ matrix.chunk }} 20
+      run: bash ./tools/ci/on-push ${{ matrix.chunk }} 20
 
   build-arduino-win:
     name: Build Arduino ${{ matrix.chunk }} on windows-latest
@@ -43,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: ./tools/ci/on-push ${{ matrix.chunk }} 30
+      run: bash ./tools/ci/on-push ${{ matrix.chunk }} 30
 
   build-platformio:
     name: Build PlatformIO on ${{ matrix.os }}
@@ -55,4 +55,4 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: ./tools/ci/on-push 1 1
+      run: bash ./tools/ci/on-push 1 1
