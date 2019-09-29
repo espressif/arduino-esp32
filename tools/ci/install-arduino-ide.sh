@@ -63,7 +63,7 @@ if [ ! -d "$ARDUINO_IDE_PATH" ]; then
 		unzip "arduino.$ARCHIVE_FORMAT" > /dev/null
 		if [ $? -ne 0 ]; then exit 1; fi
 		if [ "$OS_IS_MACOS" == "1" ]; then
-			mv "Arduino.app" "$HOME/Arduino.app"
+			mv "Arduino.app" "/Applications/Arduino.app"
 		else
 			mv arduino-nightly "$ARDUINO_IDE_PATH"
 		fi

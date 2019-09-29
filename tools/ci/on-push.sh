@@ -5,9 +5,6 @@ if [ ! -z "$TRAVIS_TAG" ]; then
 	exit 0
 fi
 
-#GITHUB_REPOSITORY
-#GITHUB_WORKSPACE
-
 if [ ! -z "$GITHUB_WORKSPACE" ]; then
 	export TRAVIS_BUILD_DIR="$GITHUB_WORKSPACE"
 	export TRAVIS_REPO_SLUG="$GITHUB_REPOSITORY"
@@ -42,21 +39,11 @@ fi
 
 if [ "$BUILD_PIO" -eq 0 ]; then
 	# ArduinoIDE Test
-	# tools/ci/prep-arduino-ide.sh
-	# if [ $? -ne 0 ]; then exit 1; fi
-	# tools/ci/test-arduino-ide.sh $CHUNK_INDEX $CHUNKS_CNT
-	# if [ $? -ne 0 ]; then exit 1; fi
-	# cat size.log
 	source ./tools/ci/install-arduino-ide.sh
 	source ./tools/ci/install-arduino-core-esp32.sh
-	build_sketches "$ARDUINO_USR_PATH/hardware/espressif/esp32/libraries" "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app" "$CHUNK_INDEX" "$CHUNKS_CNT"
+	build_sketches "$GITHUB_WORKSPACE/libraries" "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app" "$CHUNK_INDEX" "$CHUNKS_CNT"
 else
 	# PlatformIO Test
-	# cd tools && python get.py && cd ..
-	# tools/ci/prep-platformio.sh
-	# if [ $? -ne 0 ]; then exit 1; fi
-	# tools/ci/test-platformio.sh
-	# if [ $? -ne 0 ]; then exit 1; fi
 	source ./tools/ci/install-platformio-esp32.sh
 	python -m platformio ci  --board esp32dev libraries/WiFi/examples/WiFiClient && \
 	python -m platformio ci  --board esp32dev libraries/WiFiClientSecure/examples/WiFiClientSecure && \
