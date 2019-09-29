@@ -10,6 +10,9 @@
    * ETH_CLOCK_GPIO16_OUT - 50MHz clock from internal APLL output on GPIO16 - possibly an inverter is needed for LAN8720
    * ETH_CLOCK_GPIO17_OUT - 50MHz clock from internal APLL inverted output on GPIO17 - tested with LAN8720
 */
+#ifdef ETH_CLK_MODE
+#undef ETH_CLK_MODE
+#endif
 #define ETH_CLK_MODE    ETH_CLOCK_GPIO17_OUT
 
 // Pin# of the enable signal for the external crystal oscillator (-1 to disable for internal APLL source)

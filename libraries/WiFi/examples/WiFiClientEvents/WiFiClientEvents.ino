@@ -121,6 +121,7 @@ void WiFiEvent(WiFiEvent_t event)
         case SYSTEM_EVENT_ETH_GOT_IP:
             Serial.println("Obtained IP address");
             break;
+        default: break;
     }}
 
 void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
