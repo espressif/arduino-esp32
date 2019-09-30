@@ -235,7 +235,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     if(custom_spp_callback)(*custom_spp_callback)(event, param);
 }
 
-static bool _init_bt(const char *deviceName)
+static bool _init_bt(const char *deviceName, const char *pswd)
 {
     if(!_spp_event_group){
         _spp_event_group = xEventGroupCreate();
@@ -319,6 +319,11 @@ static bool _init_bt(const char *deviceName)
         return false;
     }
 
+    if (esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, strlen(pswd), (uint8_t *)pswd) != ESP_OK) {
+        log_e("set pincode failed");
+        return false;
+    }
+
     return true;
 }
 
@@ -369,6 +374,7 @@ static bool _stop_bt()
 BluetoothSerial::BluetoothSerial()
 {
     local_name = "ESP32"; //default bluetooth name
+    pin_code = "0000"; //default bluetooth password
 }
 
 BluetoothSerial::~BluetoothSerial(void)
@@ -381,7 +387,17 @@ bool BluetoothSerial::begin(String localName)
     if (localName.length()){
         local_name = localName;
     }
-    return _init_bt(local_name.c_str());
+    return _init_bt(local_name.c_str(), pin_code.c_str());
+}
+
+bool BluetoothSerial::pinCode(String pswd)
+{
+    if (pswd.length() == 0 || pswd.length() > ESP_BT_PIN_CODE_LEN) {
+        return false;
+    }
+    
+    esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, pswd.length(), (uint8_t *)pswd.c_str());
+    return true;
 }
 
 int BluetoothSerial::available(void)
