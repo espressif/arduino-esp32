@@ -37,7 +37,8 @@ void setup() {
     ESP.restart();
   }
 
-  char* name = "Teo Swee Ann";
+  const char* name = "Teo Swee Ann";
+  char rname[32];
   double height = 5.8;
   uint32_t age = 47;
 
@@ -60,10 +61,10 @@ void setup() {
   Serial.println("------------------------------------\n");
 
   // Read: Variables <--- EEPROM stores
-  NAMES.get(0, name);
+  NAMES.get(0, rname);
   HEIGHT.get(0, height);
   AGE.get(0, age);
-  Serial.print("name: ");   Serial.println(name);
+  Serial.print("name: ");   Serial.println(rname);
   Serial.print("height: "); Serial.println(height);
   Serial.print("age: ");    Serial.println(age);
   

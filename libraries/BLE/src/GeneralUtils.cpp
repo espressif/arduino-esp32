@@ -104,11 +104,10 @@ bool GeneralUtils::base64Encode(const std::string& in, std::string* out) {
  * * Amount of free RAM
  */
 void GeneralUtils::dumpInfo() {
-	size_t freeHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
 	esp_chip_info_t chipInfo;
 	esp_chip_info(&chipInfo);
 	log_v("--- dumpInfo ---");
-	log_v("Free heap: %d", freeHeap);
+	log_v("Free heap: %d", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 	log_v("Chip Info: Model: %d, cores: %d, revision: %d", chipInfo.model, chipInfo.cores, chipInfo.revision);
 	log_v("ESP-IDF version: %s", esp_get_idf_version());
 	log_v("---");
