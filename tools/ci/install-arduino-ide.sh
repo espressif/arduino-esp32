@@ -45,9 +45,8 @@ else
 	export ARDUINO_USR_PATH="$HOME/Arduino"
 fi
 
-echo "Installing Arduino IDE on $OS_NAME..."
-
 if [ ! -d "$ARDUINO_IDE_PATH" ]; then
+	echo "Installing Arduino IDE on $OS_NAME..."
 	echo "Downloading 'arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT'..."
 	if [ "$OS_IS_LINUX" == "1" ]; then
 		wget -O "arduino.$ARCHIVE_FORMAT" "https://www.arduino.cc/download.php?f=/arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
@@ -70,12 +69,21 @@ if [ ! -d "$ARDUINO_IDE_PATH" ]; then
 	fi
 	if [ $? -ne 0 ]; then exit 1; fi
 	rm -rf "arduino.$ARCHIVE_FORMAT"
+
+	mkdir -p "$ARDUINO_USR_PATH/libraries"
+	mkdir -p "$ARDUINO_USR_PATH/hardware"
+
+	echo "Arduino IDE Installed in '$ARDUINO_IDE_PATH'"
+	echo ""
 fi
 
-mkdir -p "$ARDUINO_USR_PATH/libraries"
-mkdir -p "$ARDUINO_USR_PATH/hardware"
-
 function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
+    if [ "$#" -lt 2 ]; then
+		echo "ERROR: Illegal number of parameters"
+		echo "USAGE: build_sketch <fqbn> <path-to-ino> [extra-options]"
+		return 1
+	fi
+
 	local fqbn="$1"
 	local sketch="$2"
 	local xtra_opts="$3"
@@ -126,13 +134,25 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_sketches() # build_sketches <examples-path> <fqbn> <chunk> <total-chunks> [extra-options]
+function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total-chunks> [extra-options]
 {
-    local examples=$1
-    local fqbn=$2
+    local fqbn=$1
+    local examples=$2
     local chunk_idex=$3
     local chunks_num=$4
     local xtra_opts=$5
+
+    if [ "$#" -lt 2 ]; then
+		echo "ERROR: Illegal number of parameters"
+		echo "USAGE: build_sketches <fqbn> <examples-path> [<chunk> <total-chunks>] [extra-options]"
+		return 1
+	fi
+
+    if [ "$#" -lt 4 ]; then
+		chunk_idex="0"
+		chunks_num="1"
+		xtra_opts=$3
+	fi
 
 	if [ "$chunks_num" -le 0 ]; then
 		echo "ERROR: Chunks count must be positive number"
@@ -194,10 +214,4 @@ function build_sketches() # build_sketches <examples-path> <fqbn> <chunk> <total
     done
     return 0
 }
-
-echo "Arduino IDE Installed in '$ARDUINO_IDE_PATH'"
-# echo "You can install boards in '$ARDUINO_IDE_PATH/hardware' or in '$ARDUINO_USR_PATH/hardware'"
-# echo "User libraries should be installed in '$ARDUINO_USR_PATH/libraries'"
-# echo "Then you can call 'build_sketch <fqbn> <path-to-ino> [extra-options]' to build your sketches"
-echo ""
 
