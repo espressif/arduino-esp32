@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
+
 echo "Installing Python Wheel..."
 pip install wheel > /dev/null 2>&1
 if [ $? -ne 0 ]; then echo "ERROR: Install failed"; exit 1; fi
@@ -23,10 +25,10 @@ if [ $? -ne 0 ]; then echo "ERROR: Replace failed"; exit 1; fi
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..." && \
-	ln -s $GITHUB_WORKSPACE "$HOME/.platformio/packages/framework-arduinoespressif32"
+	ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
 else
 	echo "Cloning Core Repository..." && \
-	git clone https://github.com/espressif/arduino-esp32.git "$HOME/.platformio/packages/framework-arduinoespressif32" > /dev/null 2>&1
+	git clone https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
 	if [ $? -ne 0 ]; then echo "ERROR: GIT clone failed"; exit 1; fi
 fi
 
@@ -34,7 +36,13 @@ echo "PlatformIO for ESP32 has been installed"
 echo ""
 
 
-function build_pio_sketch(){ # build_pio_sketch <board> <path-to-ino> [extra-options]
+function build_pio_sketch(){ # build_pio_sketch <board> <path-to-ino>
+    if [ "$#" -lt 2 ]; then
+        echo "ERROR: Illegal number of parameters"
+        echo "USAGE: build_pio_sketch <board> <path-to-ino>"
+        return 1
+    fi
+
 	local board="$1"
 	local sketch="$2"
 	local sketch_dir=$(dirname "$sketch")
@@ -65,12 +73,23 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_pio_sketches() # build_pio_sketches <examples-path> <board> <chunk> <total-chunks>
+function build_pio_sketches() # build_pio_sketches <board> <examples-path> <chunk> <total-chunks>
 {
-    local examples=$1
-    local board=$2
+    if [ "$#" -lt 2 ]; then
+        echo "ERROR: Illegal number of parameters"
+        echo "USAGE: build_pio_sketches <board> <examples-path> [<chunk> <total-chunks>]"
+        return 1
+    fi
+
+    local board=$1
+    local examples=$2
     local chunk_idex=$3
     local chunks_num=$4
+
+    if [ "$#" -lt 4 ]; then
+        chunk_idex="0"
+        chunks_num="1"
+    fi
 
 	if [ "$chunks_num" -le 0 ]; then
 		echo "ERROR: Chunks count must be positive number"
