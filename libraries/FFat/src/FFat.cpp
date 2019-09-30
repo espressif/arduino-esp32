@@ -58,6 +58,8 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
     esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
         log_e("Mounting FFat partition failed! Error: %d", err);
+        esp_vfs_fat_spiflash_unmount(basePath, _wl_handle);
+        _wl_handle = WL_INVALID_HANDLE;
         return false;
     }
     _impl->mountpoint(basePath);

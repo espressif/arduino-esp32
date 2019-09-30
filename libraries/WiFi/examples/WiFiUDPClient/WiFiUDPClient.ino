@@ -34,7 +34,7 @@ void loop(){
   if(connected){
     //Send a packet
     udp.beginPacket(udpAddress,udpPort);
-    udp.printf("Seconds since boot: %u", millis()/1000);
+    udp.printf("Seconds since boot: %lu", millis()/1000);
     udp.endPacket();
   }
   //Wait for 1 second
@@ -71,5 +71,6 @@ void WiFiEvent(WiFiEvent_t event){
           Serial.println("WiFi lost connection");
           connected = false;
           break;
+      default: break;
     }
 }
