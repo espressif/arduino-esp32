@@ -18,7 +18,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 	fi
 
 	cd esp32 && \
-	echo "Updating submodules..." && \
+	echo "Updating Submodules..." && \
 	git submodule update --init --recursive > /dev/null 2>&1
 	if [ $? -ne 0 ]; then echo "ERROR: Submodule update failed"; exit 1; fi
 
@@ -32,8 +32,8 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 		if [ $? -ne 0 ]; then echo "ERROR: Install failed"; exit 1; fi
 	fi
 
-	echo "Downloading the tools and the toolchain..."
-	cd tools && python get.py > /dev/null
+	echo "Installing Platform Tools..."
+	cd tools && python get.py
 	if [ $? -ne 0 ]; then echo "ERROR: Download failed"; exit 1; fi
 	cd $script_init_path
 
