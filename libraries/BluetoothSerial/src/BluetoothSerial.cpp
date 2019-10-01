@@ -574,7 +574,7 @@ static bool _stop_bt()
 
 static bool waitForConnect(int timeout) {
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
 }
 
 /*
@@ -680,6 +680,7 @@ bool BluetoothSerial::setPin(const char *pin) {
     } else {
         _pin_len = 0; // resetting pin to none (default)
     }
+    _pin_code[_pin_len] = 0;
     _isPinSet = true;
     if (isReady(false, READY_TIMEOUT)) {
         btSetPin();
@@ -756,7 +757,7 @@ bool BluetoothSerial::disconnect() {
         log_i("disconnecting");
         if (esp_spp_disconnect(_spp_client) == ESP_OK) {
             TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED);
+            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
         }
     }
     return false;
@@ -784,6 +785,6 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
         return false;
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) != 0);
 }
 #endif
