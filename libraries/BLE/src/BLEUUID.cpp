@@ -367,7 +367,7 @@ std::string BLEUUID::toString() {
 	//
 	// UUID string format:
 	// AABBCCDD-EEFF-GGHH-IIJJ-KKLLMMNNOOPP
-	auto size = 37;
+	auto size = 37; // 32 for UUID data, 4 for '-' delimiters and one for a terminator == 37 chars
 	char *hex = (char *)malloc(size);
 	snprintf(hex, size, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 			m_uuid.uuid.uuid128[15], m_uuid.uuid.uuid128[14],

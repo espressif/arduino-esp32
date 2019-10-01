@@ -49,11 +49,11 @@ void setup() {
   EEPROM.writeULong(address, 4294967295);           // Same as writeUInt and readUInt
   address += sizeof(unsigned long);
 
-  int64_t value = -9223372036854775808;             // -2^63
+  int64_t value = -1223372036854775808LL;             // -2^63
   EEPROM.writeLong64(address, value);
   address += sizeof(int64_t);
 
-  uint64_t  Value = 18446744073709551615;           // 2^64 - 1
+  uint64_t  Value = 18446744073709551615ULL;           // 2^64 - 1
   EEPROM.writeULong64(address, Value);
   address += sizeof(uint64_t);
 
