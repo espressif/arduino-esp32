@@ -10,4 +10,4 @@ Starting with 1.6.4, Arduino allows installation of third-party platform package
 
 Stable release link: `https://dl.espressif.com/dl/package_esp32_index.json`
 
-Development release link: `https://dl.espressif.com/dl/package_esp32_dev_index.json`
+Development release link: `https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json`

@@ -8,8 +8,6 @@
 
 set -e
 
-cd "`dirname $0`/.."  # cd to arduino-esp32 root
-
 # pull all submodules
 git submodule update --init --recursive
 

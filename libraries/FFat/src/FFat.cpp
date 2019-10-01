@@ -40,20 +40,26 @@ const esp_partition_t *check_ffat_partition(const char* label)
 
 bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return true;
     }     
 
-    if (!check_ffat_partition(partitionLabel)) return false;
+    if (!check_ffat_partition(partitionLabel)){
+        log_e("No fat partition found on flash");
+        return false;
+    }
 
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
-      .max_files = maxOpenFiles
+      .max_files = maxOpenFiles,
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
     esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
         log_e("Mounting FFat partition failed! Error: %d", err);
+        esp_vfs_fat_spiflash_unmount(basePath, _wl_handle);
+        _wl_handle = WL_INVALID_HANDLE;
         return false;
     }
     _impl->mountpoint(basePath);
@@ -62,13 +68,13 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
 
 void F_Fat::end()
 {
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         esp_err_t err = esp_vfs_fat_spiflash_unmount(_impl->mountpoint(), _wl_handle);
         if(err){
             log_e("Unmounting FFat partition failed! Error: %d", err);
             return;
         }
-        _wl_handle = 0;
+        _wl_handle = WL_INVALID_HANDLE;
         _impl->mountpoint(NULL);
     }
 }
@@ -77,7 +83,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
     bool res = true;
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return false;
     }
@@ -102,7 +108,8 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 // Now do a mount with format_if_fail (which it will)
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = true,
-      .max_files = 1
+      .max_files = 1,
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
     };
     result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
     esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
