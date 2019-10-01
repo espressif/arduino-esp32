@@ -159,7 +159,7 @@ def identify_platform():
     sys_name = platform.system()
     sys_platform = platform.platform()
     print('System: %s, Info: %s' % (sys_name, sys_platform))
-    if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64')):
+    if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64') > 0):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'
