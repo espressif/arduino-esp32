@@ -20,14 +20,14 @@ function git_remove_from_pages(){
     local info=`curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.object+json" -X GET "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path?ref=gh-pages"`
     local type=`echo "$info" | jq -r '.type'`
     if [ ! $type == "file" ]; then
-    	if [ ! $type == "null" ]; then
-        	echo "Wrong type '$type'"
-    	else
-    		echo "File is not on Pages"
-    	fi
+        if [ ! $type == "null" ]; then
+            echo "Wrong type '$type'"
+        else
+            echo "File is not on Pages"
+        fi
         return 0
     fi
-    local sha=`echo "$finfo" | jq -r '.sha'`
+    local sha=`echo "$info" | jq -r '.sha'`
     local message="Deleting "$(basename $path)
     local json="{\"branch\":\"gh-pages\",\"message\":\"$message\",\"sha\":\"$sha\"}"
     echo "$json" | curl -s -k -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw+json" -X DELETE --data @- "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$path"
@@ -92,39 +92,39 @@ pages_modified=`echo "$EVENT_JSON" | jq -r '.commits[].modified[]'`
 pages_removed=`echo "$EVENT_JSON" | jq -r '.commits[].removed[]'`
 
 for page in $pages_added; do
-	if [[ $page != "README.md" && $page != "docs/"* ]]; then
-		continue
-	fi
-	echo "Adding '$page' to pages ..."
-	if [[ $page == "README.md" ]]; then
-		git_safe_upload_to_pages "index.md" "README.md"
-	else
-		git_safe_upload_to_pages "$page" "$page"
-	fi
+    if [[ $page != "README.md" && $page != "docs/"* ]]; then
+        continue
+    fi
+    echo "Adding '$page' to pages ..."
+    if [[ $page == "README.md" ]]; then
+        git_safe_upload_to_pages "index.md" "README.md"
+    else
+        git_safe_upload_to_pages "$page" "$page"
+    fi
 done
 
 for page in $pages_modified; do
-	if [[ $page != "README.md" && $page != "docs/"* ]]; then
-		continue
-	fi
-	echo "Modifying '$page' ..."
-	if [[ $page == "README.md" ]]; then
-		git_safe_upload_to_pages "index.md" "README.md"
-	else
-		git_safe_upload_to_pages "$page" "$page"
-	fi
+    if [[ $page != "README.md" && $page != "docs/"* ]]; then
+        continue
+    fi
+    echo "Modifying '$page' ..."
+    if [[ $page == "README.md" ]]; then
+        git_safe_upload_to_pages "index.md" "README.md"
+    else
+        git_safe_upload_to_pages "$page" "$page"
+    fi
 done
 
 for page in $pages_removed; do
-	if [[ $page != "README.md" && $page != "docs/"* ]]; then
-		continue
-	fi
-	echo "Removing '$page' from pages ..."
-	if [[ $page == "README.md" ]]; then
-		git_remove_from_pages "README.md"
-	else
-		git_remove_from_pages "$page"
-	fi
+    if [[ $page != "README.md" && $page != "docs/"* ]]; then
+        continue
+    fi
+    echo "Removing '$page' from pages ..."
+    if [[ $page == "README.md" ]]; then
+        git_remove_from_pages "README.md" > /dev/null
+    else
+        git_remove_from_pages "$page" > /dev/null
+    fi
 done
 
 echo
