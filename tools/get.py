@@ -153,11 +153,11 @@ def identify_platform():
         bits = 64
     sys_name = platform.system()
     sys_platform = platform.platform()
-    print('System: %s, Info: %s' % (sys_name, sys_platform))
     if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64') > 0):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'
+    print('System: %s, Bits: %d, Info: %s' % (sys_name, bits, sys_platform))
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
@@ -167,4 +167,4 @@ if __name__ == '__main__':
     mkdir_p(dist_dir)
     for tool in tools_to_download:
         get_tool(tool)
-    print('Done')
+    print('Platform Tools Installed')
