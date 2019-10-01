@@ -122,7 +122,7 @@ def get_tool(tool):
             f.write(r.content)
             f.close()
         else:
-            is_ci = os.environ.get('TRAVIS_BUILD_DIR');
+            is_ci = os.environ.get('GITHUB_WORKSPACE');
             if is_ci:
                 download_file(url, local_path)
             else:
@@ -159,7 +159,7 @@ def identify_platform():
     sys_name = platform.system()
     sys_platform = platform.platform()
     print('System: %s, Info: %s' % (sys_name, sys_platform))
-    if 'Linux' in sys_name and sys_platform.find('arm') > 0:
+    if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64')):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'

@@ -12,7 +12,7 @@ if [[ "$OSTYPE" == "linux"* ]]; then
 		OS_NAME="linux32"
 	elif [[ "$OSBITS" == "x86_64" ]]; then
 		OS_NAME="linux64"
-	elif [[ "$OSBITS" == "armv7l" ]]; then
+	elif [[ "$OSBITS" == "armv7l" || "$OSBITS" == "aarch64" ]]; then
 		OS_NAME="linuxarm"
 	else
 		OS_NAME="$OSTYPE-$OSBITS"
@@ -214,4 +214,3 @@ function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total
     done
     return 0
 }
-
