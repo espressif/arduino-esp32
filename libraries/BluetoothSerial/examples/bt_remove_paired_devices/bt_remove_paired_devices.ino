@@ -37,7 +37,7 @@ bool initBluetooth()
     Serial.println("Failed to enable bluedroid");
     return false;
   }
- 
+  return true;
 }
 
 char *bda2str(const uint8_t* bda, char *str, size_t size)
