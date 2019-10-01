@@ -204,7 +204,7 @@ void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)
  * @param data uint8_t *
  * @param size uint32_t
  */
-void SPIClass::writeBytes(uint8_t * data, uint32_t size)
+void SPIClass::writeBytes(const uint8_t * data, uint32_t size)
 {
     if(_inTransaction){
         return spiWriteNL(_spi, data, size);

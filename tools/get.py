@@ -25,10 +25,12 @@ import re
 
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
+    from urllib.request import urlopen
     unicode = lambda s: str(s)
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
+    from urllib import urlopen
 
 if 'Windows' in platform.system():
     import requests
@@ -79,6 +81,26 @@ def unpack(filename, destination):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
 
+def download_file(url,filename):
+    import ssl
+    import contextlib
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    with contextlib.closing(urlopen(url,context=ctx)) as fp:
+        block_size = 1024 * 8
+        block = fp.read(block_size)
+        if block:
+            with open(filename,'wb') as out_file:
+                out_file.write(block)
+                while True:
+                    block = fp.read(block_size)
+                    if not block:
+                        break
+                    out_file.write(block)
+        else:
+            raise Exception ('nonexisting file or connection error')
+
 def get_tool(tool):
     sys_name = platform.system()
     archive_name = tool['archiveFileName']
@@ -100,7 +122,11 @@ def get_tool(tool):
             f.write(r.content)
             f.close()
         else:
-            urlretrieve(url, local_path, report_progress)
+            is_ci = os.environ.get('TRAVIS_BUILD_DIR');
+            if is_ci:
+                download_file(url, local_path)
+            else:
+                urlretrieve(url, local_path, report_progress)
         sys.stdout.write("\rDone\n")
         sys.stdout.flush()
     else:

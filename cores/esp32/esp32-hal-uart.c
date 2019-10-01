@@ -401,7 +401,12 @@ uint32_t uartGetBaudRate(uart_t* uart)
     if(uart == NULL) {
         return 0;
     }
+
     uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
+    if(!clk_div) {
+        return 0;
+    }
+
     return ((getApbFrequency()<<4)/clk_div);
 }
 
@@ -522,6 +527,14 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
  * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
  * rounded to the closed real baudrate.
 */
+void uartStartDetectBaudrate(uart_t *uart) {
+  if(!uart) return;
+
+  uart->dev->auto_baud.glitch_filt = 0x08;
+  uart->dev->auto_baud.en = 0;
+  uart->dev->auto_baud.en = 1;
+}
+
 unsigned long
 uartDetectBaudrate(uart_t *uart)
 {

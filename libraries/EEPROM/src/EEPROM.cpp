@@ -29,7 +29,7 @@
 #include <esp_log.h>
 
 EEPROMClass::EEPROMClass(void)
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -40,7 +40,7 @@ EEPROMClass::EEPROMClass(void)
 
 EEPROMClass::EEPROMClass(uint32_t sector)
 // Only for compatiility, no sectors in nvs!
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -50,7 +50,7 @@ EEPROMClass::EEPROMClass(uint32_t sector)
 }
 
 EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -60,7 +60,7 @@ EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
 }
 
 EEPROMClass::~EEPROMClass() {
-  // end();
+  end();
 }
 
 bool EEPROMClass::begin(size_t size) {
@@ -152,6 +152,9 @@ void EEPROMClass::end() {
   }
   _data = 0;
   _size = 0;
+
+  nvs_close(_handle);
+  _handle = 0;
 }
 
 uint8_t EEPROMClass::read(int address) {

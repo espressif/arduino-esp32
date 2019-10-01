@@ -23,6 +23,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "rom/rtc.h"
 #include "soc/apb_ctrl_reg.h"
+#include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
 
@@ -149,6 +150,15 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
             log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
         }
         return false;
+    }
+    //check if cpu supports the frequency
+    if(cpu_freq_mhz == 240){
+        //Check if ESP32 is rated for a CPU frequency of 160MHz only
+        if (REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) &&
+            REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW)) {
+            log_e("Can not switch to 240 MHz! Chip CPU frequency rated for 160MHz.");
+            cpu_freq_mhz = 160;
+        }
     }
     //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
