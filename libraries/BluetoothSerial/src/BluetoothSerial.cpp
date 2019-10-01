@@ -136,12 +136,12 @@ static void _spp_tx_task(void * arg){
                 if(len){
                     memcpy(_spp_tx_buffer, data, len);
                     _spp_tx_buffer_len += len;
-                    free(packet);
-                    packet = NULL;
                     if(uxQueueMessagesWaiting(_spp_tx_queue) == 0){
                         _spp_send_buffer();
                     }
                 }
+                free(packet);
+                packet = NULL;
             }
         } else {
             log_e("Something went horribly wrong");
