@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: bash ./tools/ci/on-push.sh ${{ matrix.chunk }} 15
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
   # Windows and MacOS
   build-arduino-win-mac:
@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: bash ./tools/ci/on-push.sh
+      run: bash ./.github/scripts/on-push.sh
 
   # PlatformIO on Windows, Ubuntu and Mac
   build-platformio:
@@ -46,4 +46,4 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build Sketches
-      run: bash ./tools/ci/on-push.sh 1 1 #equal and non-zero to trigger PIO
+      run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
