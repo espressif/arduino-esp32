@@ -33,7 +33,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 	fi
 
 	echo "Downloading the tools and the toolchain..."
-	cd tools && python get.py > /dev/null
+	cd tools && python get.py
 	if [ $? -ne 0 ]; then echo "ERROR: Download failed"; exit 1; fi
 	cd $script_init_path
 
