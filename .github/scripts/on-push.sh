@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ ! -z "$TRAVIS_TAG" ]; then
 	echo "Skipping Test: Tagged build"
 	exit 0
@@ -52,7 +54,6 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		# CMake Test
 		if [ "$CHUNK_INDEX" -eq 0 ]; then
 			bash "$ARDUINO_ESP32_PATH/.github/scripts/check-cmakelists.sh"
-			if [ $? -ne 0 ]; then exit 1; fi
 		fi
 		build_sketches "$FQBN" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
 	fi
@@ -68,4 +69,3 @@ else
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 	#build_pio_sketches esp32dev "$PLATFORMIO_ESP32_PATH/libraries"
 fi
-if [ $? -ne 0 ]; then exit 1; fi
