@@ -40,6 +40,9 @@ ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
 if [ "$OS_IS_MACOS" == "1" ]; then
 	export ARDUINO_IDE_PATH="/Applications/Arduino.app/Contents/Java"
 	export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
+elif [ "$OS_IS_WINDOWS" == "1" ]; then
+	export ARDUINO_IDE_PATH="$HOME/arduino_ide"
+	export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
 else
 	export ARDUINO_IDE_PATH="$HOME/arduino_ide"
 	export ARDUINO_USR_PATH="$HOME/Arduino"
