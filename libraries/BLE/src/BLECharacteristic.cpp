@@ -693,15 +693,13 @@ void BLECharacteristic::setValue(int& data32) {
 } // setValue
 
 void BLECharacteristic::setValue(float& data32) {
-	uint8_t temp[4];
-	*((float*)temp) = data32;
-	setValue(temp, 4);
+	float temp = data32;
+	setValue((uint8_t*)&temp, 4);
 } // setValue
 
 void BLECharacteristic::setValue(double& data64) {
-	uint8_t temp[8];
-	*((double*)temp) = data64;
-	setValue(temp, 8);
+	double temp = data64;
+	setValue((uint8_t*)&temp, 8);
 } // setValue
 
 

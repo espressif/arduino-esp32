@@ -87,6 +87,7 @@ bool connectToServer() {
       pRemoteCharacteristic->registerForNotify(notifyCallback);
 
     connected = true;
+    return true;
 }
 /**
  * Scan for BLE servers and find the first one that advertises the service we are looking for.

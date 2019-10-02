@@ -40,8 +40,6 @@ Method to print the touchpad by which ESP32
 has been awaken from sleep
 */
 void print_wakeup_touchpad(){
-  touch_pad_t pin;
-
   touchPin = esp_sleep_get_touchpad_wakeup_status();
 
   switch(touchPin)

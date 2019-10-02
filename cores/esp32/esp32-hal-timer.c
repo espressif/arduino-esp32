@@ -165,6 +165,7 @@ void timerStop(hw_timer_t *timer){
 
 void timerRestart(hw_timer_t *timer){
     timer->dev->config.enable = 0;
+    timer->dev->reload = 1;
     timer->dev->config.enable = 1;
 }
 
