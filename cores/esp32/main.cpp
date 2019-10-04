@@ -2,6 +2,7 @@
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
 #include "Arduino.h"
+#include "Schedule.h"
 
 TaskHandle_t loopTaskHandle = NULL;
 
@@ -17,6 +18,7 @@ void loopTask(void *pvParameters)
             esp_task_wdt_reset();
         }
         loop();
+        run_scheduled_functions();
     }
 }
 

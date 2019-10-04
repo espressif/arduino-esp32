@@ -25,6 +25,9 @@
 #ifndef TICKER_H
 #define TICKER_H
 
+#include <functional>
+#include "Schedule.h"
+
 extern "C" {
   #include "esp_timer.h"
 }
@@ -36,15 +39,28 @@ public:
   ~Ticker();
   typedef void (*callback_t)(void);
   typedef void (*callback_with_arg_t)(void*);
+  typedef std::function<void(void)> callback_function_t;
 
-  void attach(float seconds, callback_t callback)
+  void attach_scheduled(float seconds, callback_function_t callback)
   {
-    _attach_ms(seconds * 1000, true, reinterpret_cast<callback_with_arg_t>(callback), 0);
+	attach(seconds,std::bind(schedule_function, callback));
   }
 
-  void attach_ms(uint32_t milliseconds, callback_t callback)
+  void attach(float seconds, callback_function_t callback)
   {
-    _attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), 0);
+	_callback_function = callback;
+	attach(seconds, _static_callback, (void*)this);
+  }
+
+  void attach_ms_scheduled(uint32_t milliseconds, callback_function_t callback)
+  {
+	attach_ms(milliseconds, std::bind(schedule_function, callback));
+  }
+
+  void attach_ms(uint32_t milliseconds, callback_function_t callback)
+  {
+	_callback_function = callback;
+	attach_ms(milliseconds, _static_callback, (void*)this);
   }
 
   template<typename TArg>
@@ -66,14 +82,26 @@ public:
     _attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), arg32);
   }
 
-  void once(float seconds, callback_t callback)
+  void once_scheduled(float seconds, callback_function_t callback)
   {
-    _attach_ms(seconds * 1000, false, reinterpret_cast<callback_with_arg_t>(callback), 0);
+	once(seconds, std::bind(schedule_function, callback));
   }
 
-  void once_ms(uint32_t milliseconds, callback_t callback)
+  void once(float seconds, callback_function_t callback)
   {
-    _attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), 0);	
+	_callback_function = callback;
+	once(seconds, _static_callback, (void*)this);
+  }
+
+  void once_ms_scheduled(uint32_t milliseconds, callback_function_t callback)
+  {
+	once_ms(milliseconds, std::bind(schedule_function, callback));
+  }
+
+  void once_ms(uint32_t milliseconds, callback_function_t callback)
+  {
+	_callback_function = callback;
+	once_ms(milliseconds, _static_callback, (void*)this);
   }
 
   template<typename TArg>
@@ -97,10 +125,11 @@ public:
 
 protected:	
   void _attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback, uint32_t arg);
-
+  static void _static_callback (void* arg);
 
 protected:
   esp_timer_handle_t _timer;
+  callback_function_t _callback_function = nullptr;
 };
 
 
