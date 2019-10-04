@@ -12,7 +12,7 @@ if [[ "$OSTYPE" == "linux"* ]]; then
 		OS_NAME="linux32"
 	elif [[ "$OSBITS" == "x86_64" ]]; then
 		OS_NAME="linux64"
-	elif [[ "$OSBITS" == "armv7l" ]]; then
+	elif [[ "$OSBITS" == "armv7l" || "$OSBITS" == "aarch64" ]]; then
 		OS_NAME="linuxarm"
 	else
 		OS_NAME="$OSTYPE-$OSBITS"
@@ -40,34 +40,32 @@ ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
 if [ "$OS_IS_MACOS" == "1" ]; then
 	export ARDUINO_IDE_PATH="/Applications/Arduino.app/Contents/Java"
 	export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
+elif [ "$OS_IS_WINDOWS" == "1" ]; then
+	export ARDUINO_IDE_PATH="$HOME/arduino_ide"
+	export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
 else
 	export ARDUINO_IDE_PATH="$HOME/arduino_ide"
 	export ARDUINO_USR_PATH="$HOME/Arduino"
 fi
 
 if [ ! -d "$ARDUINO_IDE_PATH" ]; then
-	echo "Installing Arduino IDE on $OS_NAME..."
-	echo "Downloading 'arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT'..."
+	echo "Installing Arduino IDE on $OS_NAME ..."
+	echo "Downloading 'arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT' ..."
 	if [ "$OS_IS_LINUX" == "1" ]; then
 		wget -O "arduino.$ARCHIVE_FORMAT" "https://www.arduino.cc/download.php?f=/arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
-		if [ $? -ne 0 ]; then echo "ERROR: Download failed"; exit 1; fi
-		echo "Extracting 'arduino.$ARCHIVE_FORMAT'..."
+		echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
 		tar xf "arduino.$ARCHIVE_FORMAT" > /dev/null
-		if [ $? -ne 0 ]; then exit 1; fi
 		mv arduino-nightly "$ARDUINO_IDE_PATH"
 	else
 		curl -o "arduino.$ARCHIVE_FORMAT" -L "https://www.arduino.cc/download.php?f=/arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
-		if [ $? -ne 0 ]; then echo "ERROR: Download failed"; exit 1; fi
-		echo "Extracting 'arduino.$ARCHIVE_FORMAT'..."
+		echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
 		unzip "arduino.$ARCHIVE_FORMAT" > /dev/null
-		if [ $? -ne 0 ]; then exit 1; fi
 		if [ "$OS_IS_MACOS" == "1" ]; then
 			mv "Arduino.app" "/Applications/Arduino.app"
 		else
 			mv arduino-nightly "$ARDUINO_IDE_PATH"
 		fi
 	fi
-	if [ $? -ne 0 ]; then exit 1; fi
 	rm -rf "arduino.$ARCHIVE_FORMAT"
 
 	mkdir -p "$ARDUINO_USR_PATH/libraries"
@@ -95,7 +93,7 @@ function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
 	fi
 
 	echo ""
-	echo "Compiling '"$(basename "$sketch")"'..."
+	echo "Compiling '"$(basename "$sketch")"' ..."
 	mkdir -p "$ARDUINO_BUILD_DIR"
 	mkdir -p "$ARDUINO_CACHE_DIR"
 	$ARDUINO_IDE_PATH/arduino-builder -compile -logger=human -core-api-version=10810 \
@@ -115,9 +113,13 @@ function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
 function count_sketches() # count_sketches <examples-path>
 {
 	local examples="$1"
+    rm -rf sketches.txt
+	if [ ! -d "$examples" ]; then
+		touch sketches.txt
+		return 0
+	fi
     local sketches=$(find $examples -name *.ino)
     local sketchnum=0
-    rm -rf sketches.txt
     for sketch in $sketches; do
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
@@ -163,8 +165,10 @@ function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total
 		return 1
 	fi
 
+	set +e
     count_sketches "$examples"
     local sketchcount=$?
+	set -e
     local sketches=$(cat sketches.txt)
     rm -rf sketches.txt
 
@@ -214,4 +218,3 @@ function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total
     done
     return 0
 }
-
