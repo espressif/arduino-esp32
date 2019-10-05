@@ -100,7 +100,7 @@ void ScanForSlave() {
         // Get BSSID => Mac Address of the Slave
         int mac[6];
 
-        if ( 6 == sscanf(BSSIDstr.c_str(), "%x:%x:%x:%x:%x:%x%c",  &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5] ) ) {
+        if ( 6 == sscanf(BSSIDstr.c_str(), "%x:%x:%x:%x:%x:%x",  &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5] ) ) {
           for (int ii = 0; ii < 6; ++ii ) {
             slaves[SlaveCnt].peer_addr[ii] = (uint8_t) mac[ii];
           }
@@ -127,8 +127,6 @@ void ScanForSlave() {
 void manageSlave() {
   if (SlaveCnt > 0) {
     for (int i = 0; i < SlaveCnt; i++) {
-      const esp_now_peer_info_t *peer = &slaves[i];
-      const uint8_t *peer_addr = slaves[i].peer_addr;
       Serial.print("Processing: ");
       for (int ii = 0; ii < 6; ++ii ) {
         Serial.print((uint8_t) slaves[i].peer_addr[ii], HEX);
@@ -136,13 +134,13 @@ void manageSlave() {
       }
       Serial.print(" Status: ");
       // check if the peer exists
-      bool exists = esp_now_is_peer_exist(peer_addr);
+      bool exists = esp_now_is_peer_exist(slaves[i].peer_addr);
       if (exists) {
         // Slave already paired.
         Serial.println("Already Paired");
       } else {
         // Slave not paired, attempt pair
-        esp_err_t addStatus = esp_now_add_peer(peer);
+        esp_err_t addStatus = esp_now_add_peer(&slaves[i]);
         if (addStatus == ESP_OK) {
           // Pair success
           Serial.println("Pair success");

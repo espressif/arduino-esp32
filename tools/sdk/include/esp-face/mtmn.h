@@ -30,18 +30,33 @@ extern "C"
 #include "dl_lib_matrix3d.h"
 #include "dl_lib_matrix3dq.h"
 
+    /**
+     * Detection results with MTMN.
+     *
+     */
     typedef struct
     {
-        dl_matrix3d_t *category;
-        dl_matrix3d_t *offset;
-        dl_matrix3d_t *landmark;
+        dl_matrix3d_t *category;    /*!< Classification result after softmax, channel is 2 */
+        dl_matrix3d_t *offset;      /*!< Bounding box offset of 2 points: top-left and bottom-right, channel is 4 */
+        dl_matrix3d_t *landmark;    /*!< Offsets of 5 landmarks:
+                                     * - Left eye
+                                     * - Mouth leftside
+                                     * - Nose
+                                     * - Right eye
+                                     * - Mouth rightside
+                                     *
+                                     * channel is 10
+                                     * */
     } mtmn_net_t;
+
 
     /**
      * @brief Free a mtmn_net_t
      *
      * @param p         A mtmn_net_t pointer
+     *
      */
+
     void mtmn_net_t_free(mtmn_net_t *p);
 
     /**
