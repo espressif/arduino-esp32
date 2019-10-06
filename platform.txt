@@ -78,7 +78,7 @@ compiler.elf2hex.extra_flags=
 # recipe.hooks.savehex.presavehex.NUMBER.pattern (called before savehex recipe execution)
 # recipe.hooks.savehex.postsavehex.NUMBER.pattern (called after savehex recipe execution)
 
-recipe.hooks.prebuild.1.pattern=bash -c "[ -f {build.source.path}/partitions.csv ] && cp {build.source.path}/partitions.csv {build.path}/partitions.csv"
+recipe.hooks.prebuild.1.pattern=bash -c "[ -f {build.source.path}/partitions.csv ] && cp {build.source.path}/partitions.csv {build.path}/partitions.csv || exit 0"
 recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
 recipe.hooks.prebuild.3.pattern=cat "{build.path}/partitions.csv"
 
