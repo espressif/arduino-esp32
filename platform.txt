@@ -61,6 +61,13 @@ compiler.ar.extra_flags=
 compiler.objcopy.eep.extra_flags=
 compiler.elf2hex.extra_flags=
 
+# Build Dir: {build.path}
+# Sketch Dir: {build.source.path}
+recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
+recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
+recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" copy /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" copy "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
+
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.c.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
 
@@ -77,7 +84,7 @@ recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compil
 recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create eeprom
-recipe.objcopy.eep.pattern={tools.gen_esp32part.cmd} -q "{runtime.platform.path}/tools/partitions/{build.partitions}.csv" "{build.path}/{build.project_name}.partitions.bin"
+recipe.objcopy.eep.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
 
 ## Create hex
 recipe.objcopy.hex.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
