@@ -63,7 +63,7 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
     if(file.print(message)){
         Serial.println("- file written");
     } else {
-        Serial.println("- frite failed");
+        Serial.println("- write failed");
     }
 }
 

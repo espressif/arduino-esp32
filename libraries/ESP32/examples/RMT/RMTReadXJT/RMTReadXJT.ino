@@ -141,7 +141,6 @@ static bool xjtReceiveBit(size_t index, bool bit){
 }
 
 void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels){
-    size_t chan = 0;
     bool valid = true;
     rmt_data_t* it = NULL;
 

@@ -389,6 +389,17 @@ uint8_t BLERemoteCharacteristic::readUInt8() {
 	return 0;
 } // readUInt8
 
+/**
+ * @brief Read a float value.
+ * @return the float value.
+ */
+float BLERemoteCharacteristic::readFloat() {
+	std::string value = readValue();
+	if (value.length() >= 4) {
+		return *(float*)(value.data());
+	}
+	return 0.0;
+} // readFloat
 
 /**
  * @brief Read the value of the remote characteristic.

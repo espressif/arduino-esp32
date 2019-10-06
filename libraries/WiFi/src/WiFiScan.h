@@ -45,13 +45,17 @@ public:
     uint8_t * BSSID(uint8_t networkItem);
     String BSSIDstr(uint8_t networkItem);
     int32_t channel(uint8_t networkItem);
+    static void * getScanInfoByIndex(int i) { return _getScanInfoByIndex(i); }; 
 
     static void _scanDone();
 protected:
 
     static bool _scanAsync;
-
+    
+    static uint32_t _scanStarted;
+    static uint32_t _scanTimeout;
     static uint16_t _scanCount;
+    
     static void* _scanResult;
 
     static void * _getScanInfoByIndex(int i);

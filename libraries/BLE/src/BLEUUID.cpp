@@ -352,8 +352,8 @@ std::string BLEUUID::toString() {
 	// If the UUIDs are 16 or 32 bit, pad correctly.
 
 	if (m_uuid.len == ESP_UUID_LEN_16) {  // If the UUID is 16bit, pad correctly.
-		char hex[5];
-		snprintf(hex, sizeof(hex), "%04x", m_uuid.uuid.uuid16);
+		char hex[9];
+		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid16);
 		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 16bit UUID
 
@@ -367,7 +367,7 @@ std::string BLEUUID::toString() {
 	//
 	// UUID string format:
 	// AABBCCDD-EEFF-GGHH-IIJJ-KKLLMMNNOOPP
-	auto size = 35;
+	auto size = 37; // 32 for UUID data, 4 for '-' delimiters and one for a terminator == 37 chars
 	char *hex = (char *)malloc(size);
 	snprintf(hex, size, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 			m_uuid.uuid.uuid128[15], m_uuid.uuid.uuid128[14],
