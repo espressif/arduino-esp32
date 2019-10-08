@@ -33,7 +33,7 @@
 
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
-static const char qop_auth[] = "qop=auth";
+static const char qop_auth[] = "qop=\"auth\"";
 static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
 
@@ -161,17 +161,17 @@ bool WebServer::authenticate(const char * username, const char * password){
     } else if(authReq.startsWith(F("Digest"))) {
       authReq = authReq.substring(7);
       log_v("%s", authReq.c_str());
-      String _username = _extractParam(authReq,F("username=\""));
+      String _username = _extractParam(authReq,F("username=\""),'\"');
       if(!_username.length() || _username != String(username)) {
         authReq = "";
         return false;
       }
       // extracting required parameters for RFC 2069 simpler Digest
-      String _realm    = _extractParam(authReq, F("realm=\""));
-      String _nonce    = _extractParam(authReq, F("nonce=\""));
-      String _uri      = _extractParam(authReq, F("uri=\""));
-      String _response = _extractParam(authReq, F("response=\""));
-      String _opaque   = _extractParam(authReq, F("opaque=\""));
+      String _realm    = _extractParam(authReq, F("realm=\""),'\"');
+      String _nonce    = _extractParam(authReq, F("nonce=\""),'\"');
+      String _uri      = _extractParam(authReq, F("uri=\""),'\"');
+      String _response = _extractParam(authReq, F("response=\""),'\"');
+      String _opaque   = _extractParam(authReq, F("opaque=\""),'\"');
 
       if((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length())) {
         authReq = "";
@@ -185,7 +185,7 @@ bool WebServer::authenticate(const char * username, const char * password){
       String _nc,_cnonce;
       if(authReq.indexOf(FPSTR(qop_auth)) != -1) {
         _nc = _extractParam(authReq, F("nc="), ',');
-        _cnonce = _extractParam(authReq, F("cnonce=\""));
+        _cnonce = _extractParam(authReq, F("cnonce=\""),'\"');
       }
       String _H1 = md5str(String(username) + ':' + _realm + ':' + String(password));
       log_v("Hash of user:realm:pass=%s", _H1.c_str());
