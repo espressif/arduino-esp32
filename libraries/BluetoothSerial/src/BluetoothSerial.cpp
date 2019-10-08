@@ -76,6 +76,7 @@ typedef struct {
         uint8_t data[];
 } spp_packet_t;
 
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
 static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
 {
   if (bda == NULL || str == NULL || size < 18) {
@@ -87,6 +88,7 @@ static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
           p[0], p[1], p[2], p[3], p[4], p[5]);
   return str;
 }
+#endif
 
 static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
 {
@@ -325,8 +327,10 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
     switch(event){
         case ESP_BT_GAP_DISC_RES_EVT:
             log_i("ESP_BT_GAP_DISC_RES_EVT");
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
             char bda_str[18];
             log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
+#endif
             for (int i = 0; i < param->disc_res.num_prop; i++) {
                 uint8_t peer_bdname_len;
                 char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
