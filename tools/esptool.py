@@ -1018,11 +1018,6 @@ class ESP8266ROM(ESPLoader):
 
     BOOTLOADER_FLASH_OFFSET = 0
 
-    MEMORY_MAP = [[0x3FF00000, 0x3FF00010, "DPORT"],
-                  [0x3FFE8000, 0x40000000, "DRAM"],
-                  [0x40100000, 0x40108000, "IRAM"],
-                  [0x40201010, 0x402E1010, "IROM"]]
-
     def get_efuses(self):
         # Return the 128 bits of ESP8266 efuse as a single Python integer
         return (self.read_reg(0x3ff0005c) << 96 |
@@ -1121,7 +1116,6 @@ class ESP32ROM(ESPLoader):
 
     """
     CHIP_NAME = "ESP32"
-    IMAGE_CHIP_ID = 0
     IS_STUB = False
 
     DATE_REG_VALUE = 0x15122500
@@ -1157,22 +1151,6 @@ class ESP32ROM(ESPLoader):
     BOOTLOADER_FLASH_OFFSET = 0x1000
 
     OVERRIDE_VDDSDIO_CHOICES = ["1.8V", "1.9V", "OFF"]
-
-    MEMORY_MAP = [[0x3F400000, 0x3F800000, "DROM"],
-                  [0x3F800000, 0x3FC00000, "EXTRAM_DATA"],
-                  [0x3FF80000, 0x3FF82000, "RTC_DRAM"],
-                  [0x3FF90000, 0x40000000, "BYTE_ACCESSIBLE"],
-                  [0x3FFAE000, 0x40000000, "DRAM"],
-                  [0x3FFAE000, 0x40000000, "DMA"],
-                  [0x3FFE0000, 0x3FFFFFFC, "DIRAM_DRAM"],
-                  [0x40000000, 0x40070000, "IROM"],
-                  [0x40070000, 0x40078000, "CACHE_PRO"],
-                  [0x40078000, 0x40080000, "CACHE_APP"],
-                  [0x40080000, 0x400A0000, "IRAM"],
-                  [0x400A0000, 0x400BFFFC, "DIRAM_IRAM"],
-                  [0x400C0000, 0x400C2000, "RTC_IRAM"],
-                  [0x400D0000, 0x40400000, "IROM"],
-                  [0x50000000, 0x50002000, "RTC_DATA"]]
 
     """ Try to read the BLOCK1 (encryption key) and check if it is valid """
 
@@ -1714,7 +1692,7 @@ class ESP32FirmwareImage(BaseFirmwareImage):
     # to be set to this value so ROM bootloader will skip it.
     WP_PIN_DISABLED = 0xEE
 
-    EXTENDED_HEADER_STRUCT_FMT = "<BBBBHB" + ("B" * 8) + "B"
+    EXTENDED_HEADER_STRUCT_FMT = "B" * 16
 
     IROM_ALIGN = 65536
 
@@ -1732,7 +1710,6 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         self.cs_drv = 0
         self.hd_drv = 0
         self.wp_drv = 0
-        self.min_rev = 0
 
         self.append_digest = True
 
@@ -1902,20 +1879,14 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         self.d_drv, self.cs_drv = split_byte(fields[2])
         self.hd_drv, self.wp_drv = split_byte(fields[3])
 
-        chip_id = fields[4]
-        if chip_id != self.ROM_LOADER.IMAGE_CHIP_ID:
-            print("Unexpected chip id in image. Expected %d but value was %d. Is this image for a different chip model?" % (self.ROM_LOADER.IMAGE_CHIP_ID, chip_id))
-
-        # reserved fields in the middle should all be zero
-        if any(f for f in fields[6:-1] if f != 0):
-            print("Warning: some reserved header fields have non-zero values. This image may be from a newer esptool.py?")
-
-        append_digest = fields[-1]  # last byte is append_digest
-        if append_digest in [0, 1]:
-            self.append_digest = (append_digest == 1)
+        if fields[15] in [0, 1]:
+            self.append_digest = (fields[15] == 1)
         else:
-            raise RuntimeError("Invalid value for append_digest field (0x%02x). Should be 0 or 1.", append_digest)
+            raise RuntimeError("Invalid value for append_digest field (0x%02x). Should be 0 or 1.", fields[15])
 
+        # remaining fields in the middle should all be zero
+        if any(f for f in fields[4:15] if f != 0):
+            print("Warning: some reserved header fields have non-zero values. This image may be from a newer esptool.py?")
 
     def save_extended_header(self, save_file):
         def join_byte(ln,hn):
@@ -1926,10 +1897,8 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         fields = [self.wp_pin,
                   join_byte(self.clk_drv, self.q_drv),
                   join_byte(self.d_drv, self.cs_drv),
-                  join_byte(self.hd_drv, self.wp_drv),
-                  self.ROM_LOADER.IMAGE_CHIP_ID,
-                  self.min_rev]
-        fields += [0] * 8  # padding
+                  join_byte(self.hd_drv, self.wp_drv)]
+        fields += [0] * 11
         fields += [append_digest]
 
         packed = struct.pack(self.EXTENDED_HEADER_STRUCT_FMT, *fields)
@@ -2432,8 +2401,7 @@ def image_info(args):
     idx = 0
     for seg in image.segments:
         idx += 1
-        seg_name = ", ".join([seg_range[2] for seg_range in image.ROM_LOADER.MEMORY_MAP if seg_range[0] <= seg.addr < seg_range[1]])
-        print('Segment %d: %r [%s]' % (idx, seg, seg_name))
+        print('Segment %d: %r' % (idx, seg))
     calc_checksum = image.calculate_checksum()
     print('Checksum: %02x (%s)' % (image.checksum,
                                    'valid' if image.checksum == calc_checksum else 'invalid - calculated %02x' % calc_checksum))
@@ -2471,7 +2439,6 @@ def elf2image(args):
     if args.chip == 'esp32':
         image = ESP32FirmwareImage()
         image.secure_pad = args.secure_pad
-        image.min_rev = int(args.min_rev)
     elif args.version == '1':  # ESP8266
         image = ESP8266ROMFirmwareImage()
     else:
@@ -2770,7 +2737,6 @@ def main(custom_commandline=None):
     parser_elf2image.add_argument('input', help='Input ELF file')
     parser_elf2image.add_argument('--output', '-o', help='Output filename prefix (for version 1 image), or filename (for version 2 single image)', type=str)
     parser_elf2image.add_argument('--version', '-e', help='Output image version', choices=['1','2'], default='1')
-    parser_elf2image.add_argument('--min-rev', '-r', help='Minimum chip revision', choices=['0','1','2','3'], default='0')
     parser_elf2image.add_argument('--secure-pad', action='store_true', help='Pad image so once signed it will end on a 64KB boundary. For ESP32 images only.')
     parser_elf2image.add_argument('--elf-sha256-offset', help='If set, insert SHA256 hash (32 bytes) of the input ELF file at specified offset in the binary.',
                                   type=arg_auto_int, default=None)
