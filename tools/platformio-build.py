@@ -76,7 +76,7 @@ env.Append(
         "-Wl,--undefined=uxTopUsedPriority",
         "-Wl,--gc-sections",
         "-Wl,-EL",
-        "-T", "esp32.common.ld",
+        "-T", "esp32.project.ld",
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.libgcc.ld",
