@@ -6,16 +6,6 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-//
-// WARNING!!! Make sure that you have either selected ESP32 Wrover Module,
-//            or another board which has PSRAM enabled
-//
-
-// Select camera model
-//#define CAMERA_MODEL_WROVER_KIT
-//#define CAMERA_MODEL_ESP_EYE
-//#define CAMERA_MODEL_M5STACK_PSRAM
-//#define CAMERA_MODEL_M5STACK_WIDE
 #define CAMERA_MODEL_AI_THINKER
 
 #include "camera_pins.h"
@@ -27,6 +17,8 @@ const char* password = "utah3863ski2458bin";
 //const char* password = "nasturtium";
 
 void startCameraServer();
+
+IPAddress ip;
 
 void setup() {
   Serial.begin(115200);
@@ -156,6 +148,11 @@ void loop() {
       delay(2000);
     }
     Serial.println("reconnected!");
+  }
+  if (ip != WiFi.localIP()){
+    ip = WiFi.localIP();
+    Serial.println("new ip address");
+    Serial.print(ip);
   }
   delay(5000);
 }
