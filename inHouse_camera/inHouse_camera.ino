@@ -20,12 +20,6 @@
 
 #include "camera_pins.h"
 
-//const char* ssid = "TP-Link_D374";
-//const char* password = "34512159";
-
-//const char* ssid = "TP-Link_375C";
-//const char* password = "70281057";
-
 const char* ssid = "homenetwork";
 const char* password = "utah3863ski2458bin";
 
@@ -60,6 +54,7 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
+  //config.pixel_format = PIXFORMAT_RAW;
   //init with high specs to pre-allocate larger buffers
   if(psramFound()){
     config.frame_size = FRAMESIZE_UXGA;
