@@ -92,7 +92,6 @@ bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg);
  */
 bool rmtEnd(rmt_obj_t* rmt);
 
-
 /*  Additional interface */
 
 /**
