@@ -172,7 +172,7 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels){
     }
 }
 
-extern "C" void receive_data(uint32_t *data, size_t len)
+extern "C" void receive_data(uint32_t *data, size_t len, void * arg)
 {
     parseRmt((rmt_data_t*) data, len, channels);
 }
