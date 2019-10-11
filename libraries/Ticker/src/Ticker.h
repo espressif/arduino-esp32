@@ -39,9 +39,23 @@ public:
     typedef void (*callback_with_arg_t)(void*);
     typedef std::function<void(void)> callback_function_t;
 
-    void attach(float seconds, callback_function_t callback);
-    void attach_ms(uint64_t milliseconds, callback_function_t callback);
-    void attach_us(uint64_t micros, callback_function_t callback);
+    void attach(float seconds, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(1000000ULL * seconds, true, _static_callback, this);
+    }
+
+    void attach_ms(uint64_t milliseconds, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(1000ULL * milliseconds, true, _static_callback, this);
+    }
+
+    void attach_us(uint64_t micros, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(micros, true, _static_callback, this);
+    }
 
     template<typename TArg>
     void attach(float seconds, void (*callback)(TArg), TArg arg)
@@ -67,9 +81,23 @@ public:
         _attach_us(micros, true, reinterpret_cast<callback_with_arg_t>(callback), (void*)arg);
     }
 
-    void once(float seconds, callback_function_t callback);
-    void once_ms(uint64_t milliseconds, callback_function_t callback);
-    void once_us(uint64_t micros, callback_function_t callback);
+    void once(float seconds, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(1000000ULL * seconds, false, _static_callback, this);
+    }
+
+    void once_ms(uint64_t milliseconds, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(1000ULL * milliseconds, false, _static_callback, this);
+    }
+
+    void once_us(uint64_t micros, callback_function_t callback)
+    {
+        _callback_function = std::move(callback);
+        _attach_us(micros, false, _static_callback, this);
+    }
 
     template<typename TArg>
     void once(float seconds, void (*callback)(TArg), TArg arg)

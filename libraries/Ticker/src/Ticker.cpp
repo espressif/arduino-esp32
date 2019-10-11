@@ -32,42 +32,6 @@ Ticker::~Ticker()
     detach();
 }
 
-void Ticker::attach(float seconds, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(1000000ULL * seconds, true, _static_callback, this);
-}
-
-void Ticker::attach_ms(uint64_t milliseconds, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(1000ULL * milliseconds, true, _static_callback, this);
-}
-
-void Ticker::attach_us(uint64_t micros, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(micros, true, _static_callback, this);
-}
-
-void Ticker::once(float seconds, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(1000000ULL * seconds, false, _static_callback, this);
-}
-
-void Ticker::once_ms(uint64_t milliseconds, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(1000ULL * milliseconds, false, _static_callback, this);
-}
-
-void Ticker::once_us(uint64_t micros, callback_function_t callback)
-{
-    _callback_function = std::move(callback);
-    _attach_us(micros, false, _static_callback, this);
-}
-
 void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg)
 {
     esp_timer_create_args_t _timerConfig;
