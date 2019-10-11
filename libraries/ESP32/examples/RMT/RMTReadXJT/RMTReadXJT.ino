@@ -192,7 +192,7 @@ void setup()
     Serial.printf("real tick set to: %fns\n", realTick);
 
     // Ask to start reading
-    rmtRead(rmt_recv, receive_data);
+    rmtRead(rmt_recv, receive_data, NULL);
 }
 
 void loop() 
