@@ -114,6 +114,7 @@ static esp_err_t capture_handler(httpd_req_t *req){
     return res;
 }
 
+
 void startCameraServer(){
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
@@ -124,7 +125,6 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-    
     Serial.printf("Starting web server on port: '%d'\n", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &capture_uri);
