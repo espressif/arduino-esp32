@@ -1,5 +1,3 @@
-#include <dummy.h>
-
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
@@ -10,8 +8,8 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "inHouse";
-const char* password = "unusualcoconut362";
+const char* ssid = "ssid";
+const char* password = "password";
 
 
 void startCameraServer();
