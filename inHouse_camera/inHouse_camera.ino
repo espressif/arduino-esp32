@@ -10,11 +10,9 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "homenetwork";
-const char* password = "utah3863ski2458bin";
+const char* ssid = "inHouse";
+const char* password = "unusualcoconut362";
 
-//const char* ssid = "inHouse Workshop";
-//const char* password = "nasturtium";
 
 void startCameraServer();
 
@@ -48,12 +46,15 @@ void setup() {
   config.pixel_format = PIXFORMAT_JPEG;
   //config.pixel_format = PIXFORMAT_RAW;
   //init with high specs to pre-allocate larger buffers
+  Serial.printf("psramFound(): ",psramFound());
   if(psramFound()){
     config.frame_size = FRAMESIZE_UXGA;
+    Serial.printf("framesize UXGA");
     config.jpeg_quality = 10;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
+    Serial.printf("framesize SVGA");
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
