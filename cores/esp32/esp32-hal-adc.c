@@ -166,7 +166,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         }
         if(!__analogVRef){
             __analogVRef = DEFAULT_VREF;
-            if(__analogVRefPin > 24 && __analogVRefPin << 28){
+            if(__analogVRefPin > 24 && __analogVRefPin < 28){
                 esp_adc_cal_characteristics_t * chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
                 if(chars != NULL){
                     if(adc2_vref_to_gpio(__analogVRefPin) == ESP_OK){
