@@ -4,9 +4,20 @@
  
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
+ // The pins which will be connected to the 2 relay
+ int humidPin = 2;
+ int tempPin = 14;
+
+ // the temperature and humidity threshholds to trigger relay
+ float tempLimit = 73.0;
+ float humidLimit = 97.0;
  
 void setup() {
   Serial.begin(74880);
+
+  // sets the digital pins as output
+  pinMode(humidPin, OUTPUT);
+  pinMode(tempPin, OUTPUT);
 }
 
 // initializes sht31
@@ -32,6 +43,15 @@ void printShtMeasurments(float temp, float hum) {
     Serial.println("Failed to read humidity");
   }
 }
+
+// Sets relay pins to high or low depending on measurements
+void relayPower(int pin,float cur, float limit) {
+  if(cur < limit) {
+    digitalWrite(pin, HIGH);
+  } else {
+    digitalWrite(pin, LOW);
+  }
+}
  
 void loop() {
   shtInit();
@@ -39,6 +59,9 @@ void loop() {
   float h = sht31.readHumidity();
 
   printShtMeasurments(t, h);
+
+  relayPower(humidPin, h, humidLimit);
+  relayPower(tempPin, t, tempLimit);
   
   Serial.println();
   
