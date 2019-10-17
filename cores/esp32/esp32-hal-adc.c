@@ -130,11 +130,11 @@ uint16_t __analogRead(uint8_t pin)
         if ( r == ESP_OK ) {
             return value;
         } else if ( r == ESP_ERR_INVALID_STATE ) {
-            log_e("%s: ADC2 not initialized yet.", esp_err_to_name(r));
+            log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
         } else if ( r == ESP_ERR_TIMEOUT ) {
-            log_e("%s: ADC2 is in use by Wi-Fi.", esp_err_to_name(r));
+            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi.", pin, esp_err_to_name(r));
         } else {
-            log_e("%s", esp_err_to_name(r));
+            log_e("GPIO%u: %s", pin, esp_err_to_name(r));
         }
     } else {
         return adc1_get_raw(channel);
