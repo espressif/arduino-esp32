@@ -75,6 +75,10 @@ static void IRAM_ATTR _uart_isr(void *arg)
     BaseType_t xHigherPriorityTaskWoken;
     uart_t* uart;
 
+	if(arg != NULL) {
+	  (*((void(**)())arg))();
+    }
+
     for(i=0;i<3;i++){
         uart = &_uart_bus_array[i];
         if(uart->intr_handle == NULL){
@@ -96,6 +100,22 @@ static void IRAM_ATTR _uart_isr(void *arg)
     }
 }
 
+void uartEnableInterrupt(uart_t* uart,void * func)
+{
+    UART_MUTEX_LOCK();
+    uart->dev->conf1.rxfifo_full_thrhd = 112;
+    uart->dev->conf1.rx_tout_thrhd = 2;
+    uart->dev->conf1.rx_tout_en = 1;
+    uart->dev->int_ena.rxfifo_full = 1;
+    uart->dev->int_ena.frm_err = 1;
+    uart->dev->int_ena.rxfifo_tout = 1;
+    uart->dev->int_clr.val = 0xffffffff;
+
+    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, func, &uart->intr_handle);
+    UART_MUTEX_UNLOCK();
+}
+
+/* 
 void uartEnableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
@@ -110,7 +130,7 @@ void uartEnableInterrupt(uart_t* uart)
     esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
     UART_MUTEX_UNLOCK();
 }
-
+ */
 void uartDisableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
@@ -148,8 +168,18 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     }
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
-    uartEnableInterrupt(uart);
+    uartEnableInterrupt(uart,NULL);
 }
+
+// void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
+// {
+    // if(uart == NULL || rxPin > 39) {
+        // return;
+    // }
+    // pinMode(rxPin, INPUT);
+    // pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
+    // uartEnableInterrupt(uart);
+// }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
 {

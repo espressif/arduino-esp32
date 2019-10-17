@@ -81,4 +81,7 @@ bool uartRxActive(uart_t* uart);
 }
 #endif
 
+void uartDisableInterrupt(uart_t* uart);
+void uartEnableInterrupt(uart_t* uart,void * func );
+
 #endif /* MAIN_ESP32_HAL_UART_H_ */
