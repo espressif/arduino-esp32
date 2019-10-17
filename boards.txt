@@ -334,6 +334,15 @@ tinypico.build.boot=dio
 tinypico.build.partitions=default
 tinypico.build.defines=
 
+tinypico.menu.PartitionScheme.default=Default
+tinypico.menu.PartitionScheme.default.build.partitions=default
+tinypico.menu.PartitionScheme.no_ota=No OTA (Large APP)
+tinypico.menu.PartitionScheme.no_ota.build.partitions=no_ota
+tinypico.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+tinypico.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+tinypico.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+tinypico.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 tinypico.menu.UploadSpeed.921600=921600
 tinypico.menu.UploadSpeed.921600.upload.speed=921600
 tinypico.menu.UploadSpeed.115200=115200
