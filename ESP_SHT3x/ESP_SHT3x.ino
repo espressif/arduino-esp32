@@ -7,7 +7,17 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
  
 void setup() {
   Serial.begin(74880);
+  /*
+  // initializes sht31
+  if (! sht31.begin(0x44)) {
+    Serial.println("Couldn't find SHT31");
+  } else {
+    Serial.println("SHT31 Found");
+  }
+  */
+}
 
+void shtInit() {
   // initializes sht31
   if (! sht31.begin(0x44)) {
     Serial.println("Couldn't find SHT31");
@@ -32,6 +42,7 @@ void printShtMeasurments(float temp, float hum) {
 }
  
 void loop() {
+  shtInit();
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
 
