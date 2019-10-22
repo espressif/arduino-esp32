@@ -9,9 +9,6 @@
 
 //const char* ssid = "TP-Link_4346";
 //const char* password = "84850034";
-
-const char* ssid = "inHouseTest1";
-const char* password = "nasturtium";
  
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
