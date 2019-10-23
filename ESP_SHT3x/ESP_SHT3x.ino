@@ -4,25 +4,38 @@
 #include <ArduinoOTA.h>
 #include <Arduino.h>
 #include <Wire.h>
+#include <DallasTemperature.h>
 #include "Adafruit_SHT31.h"
 
-const char* ssid = "TP-Link_4346";
-const char* password = "84850034";
+
+const char* ssid = "***";
+const char* password = "***";
  
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
- // The pins which will be connected to the 2 relay
- int humidPin = 2;
- int tempPin = 14;
+// The pins which will be connected to the 2 relay
+int humidPin = 2;
+int tempPin = 14;
 
- // the temperature and humidity threshholds to trigger relay
- float tempLimit = 22.78;
- float humidLimit = 97.0;
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 0;     
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
+
+// the temperature (Cecius) and humidity (%) threshholds to trigger relay
+float tempLimit = 22.78;
+float humidLimit = 97.0;
  
 void setup() {
   Serial.begin(115200);
+  // Enables DS18B20
+  sensors.begin();
 
-  // sets the digital pins as output
+  // Sets the digital pins as output
   pinMode(humidPin, OUTPUT);
   pinMode(tempPin, OUTPUT);
 
@@ -58,31 +71,28 @@ void OTAinit() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
+    switch (error) {
+      case OTA_AUTH_ERROR:
+        Serial.println("Auth Failed");
+        break;
+      case OTA_BEGIN_ERROR:
+        Serial.println("Begin Failed");
+        break;
+      case OTA_CONNECT_ERROR:
+        Serial.println("Connect Failed");
+        break;
+      case OTA_RECEIVE_ERROR:
+        Serial.println("Receive Failed");
+        break;
+      case OTA_END_ERROR:
+        Serial.println("End Failed");
+        break;
     }
   });
   ArduinoOTA.begin();
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-}
-
-// initializes sht31
-void shtInit() {
-  if (! sht31.begin(0x44)) {
-    Serial.println("Couldn't find SHT31");
-  } else {
-    Serial.println("SHT31 Found");
-  }  
 }
 
 // Outputs measured temperature and humidity to serial monitor
@@ -101,28 +111,49 @@ void printShtMeasurments(float temp, float hum) {
 }
 
 // Sets relay pins to high or low depending on measurements
-void relayPower(int pin,float current, float limit) {
+void relayPower(int pin, float current, float limit) {
   if(current < limit) {
     digitalWrite(pin, LOW);
   } else {
     digitalWrite(pin, HIGH);
   }
 }
- 
-void loop() {
-  // Checks and initializes sht31
-  shtInit();
 
+void shtAlgorithm() {
   // Reads temperature and humidity from sht31 and stores it to appropriate variables
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
-
   // Displays current readings
   printShtMeasurments(t, h);
 
   // Sets relay relevent pins to appropriate voltage levels
   relayPower(humidPin, h, humidLimit);
   relayPower(tempPin, t, tempLimit);
+
+  // Checks for FOTA update
+  ArduinoOTA.handle();
+  
+  // Sets relay relevent pins to appropriate voltage levels
+  relayPower(humidPin, h, humidLimit);
+  relayPower(tempPin, t, tempLimit);
+}
+
+void DS18B20Algorithm() {
+  sensors.requestTemperatures(); 
+  float temperatureC = sensors.getTempCByIndex(0);
+
+  relayPower(tempPin, temperatureC, tempLimit);
+  
+  Serial.print(temperatureC);
+  Serial.println("ºC");
+}
+ 
+void loop() {
+  if(sht31.begin(0x44)) {
+    shtAlgorithm();
+  } else {
+    DS18B20Algorithm();
+  }
 
   // Checks for FOTA update
   ArduinoOTA.handle();
