@@ -7,11 +7,9 @@
 #include <DallasTemperature.h>
 #include "Adafruit_SHT31.h"
 
-//const char* ssid = "TP-Link_4346";
-//const char* password = "84850034";
 
-const char* ssid = "inHouseTest1";
-const char* password = "nasturtium";
+const char* ssid = "***";
+const char* password = "***";
  
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
@@ -74,16 +72,22 @@ void OTAinit() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
+    switch (error) {
+      case OTA_AUTH_ERROR:
+        Serial.println("Auth Failed");
+        break;
+      case OTA_BEGIN_ERROR:
+        Serial.println("Begin Failed");
+        break;
+      case OTA_CONNECT_ERROR:
+        Serial.println("Connect Failed");
+        break;
+      case OTA_RECEIVE_ERROR:
+        Serial.println("Receive Failed");
+        break;
+      case OTA_END_ERROR:
+        Serial.println("End Failed");
+        break;
     }
   });
   ArduinoOTA.begin();
@@ -108,7 +112,7 @@ void printShtMeasurments(float temp, float hum) {
 }
 
 // Sets relay pins to high or low depending on measurements
-void relayPower(int pin,float current, float limit) {
+void relayPower(int pin, float current, float limit) {
   if(current < limit) {
     digitalWrite(pin, LOW);
   } else {
@@ -143,7 +147,7 @@ void DS18B20Algorithm() {
 void loop() {
   if(sht31.begin(0x44)) {
     shtAlgorithm();
-  }else {
+  } else {
     DS18B20Algorithm();
   }
 
