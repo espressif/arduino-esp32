@@ -32,7 +32,6 @@ float humidLimit = 97.0;
  
 void setup() {
   Serial.begin(115200);
-
   // Enables DS18B20
   sensors.begin();
 
@@ -120,14 +119,19 @@ void relayPower(int pin, float current, float limit) {
   }
 }
 
-
 void shtAlgorithm() {
   // Reads temperature and humidity from sht31 and stores it to appropriate variables
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
-  
   // Displays current readings
   printShtMeasurments(t, h);
+
+  // Sets relay relevent pins to appropriate voltage levels
+  relayPower(humidPin, h, humidLimit);
+  relayPower(tempPin, t, tempLimit);
+
+  // Checks for FOTA update
+  ArduinoOTA.handle();
   
   // Sets relay relevent pins to appropriate voltage levels
   relayPower(humidPin, h, humidLimit);
