@@ -62,6 +62,8 @@ public:
     int availableForWrite(void);
     int peek(void);
     int read(void);
+    virtual int timedRead();    // private method to read uart with timeout
+	virtual int timedPeek();    // private method to peek uart with timeout
     void flush(void);
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
