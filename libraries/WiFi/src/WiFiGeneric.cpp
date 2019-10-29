@@ -47,7 +47,6 @@ extern "C" {
 
 #include "esp32-hal-log.h"
 #include <vector>
-
 #include "sdkconfig.h"
 
 static xQueueHandle _network_event_queue;
@@ -133,24 +132,19 @@ static bool wifiLowLevelDeinit(){
 
 static bool _esp_wifi_started = false;
 
-static bool espWiFiStart(bool persistent){
+static bool espWiFiStart(){
     if(_esp_wifi_started){
         return true;
-    }
-    if(!wifiLowLevelInit(persistent)){
-        return false;
     }
     esp_err_t err = esp_wifi_start();
     if (err != ESP_OK) {
         log_e("esp_wifi_start %d", err);
-        wifiLowLevelDeinit();
         return false;
     }
     _esp_wifi_started = true;
     system_event_t event;
     event.event_id = SYSTEM_EVENT_WIFI_READY;
     WiFiGenericClass::_eventCallback(nullptr, &event);
-
     return true;
 }
 
@@ -190,6 +184,7 @@ wifi_event_id_t WiFiEventCbList::current_id = 1;
 static std::vector<WiFiEventCbList_t> cbEventList;
 
 bool WiFiGenericClass::_persistent = true;
+bool WiFiGenericClass::_long_range = false;
 wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
 
 WiFiGenericClass::WiFiGenericClass()
@@ -472,6 +467,16 @@ void WiFiGenericClass::persistent(bool persistent)
 
 
 /**
+ * enable WiFi long range mode
+ * @param enable
+ */
+void WiFiGenericClass::enableLongRange(bool enable)
+{
+    _long_range = enable;
+}
+
+
+/**
  * set new mode
  * @param m WiFiMode_t
  */
@@ -482,7 +487,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
         return true;
     }
     if(!cm && m){
-        if(!espWiFiStart(_persistent)){
+        if(!wifiLowLevelInit(_persistent)){
             return false;
         }
     } else if(cm && !m){
@@ -495,6 +500,25 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
         log_e("Could not set mode! %d", err);
         return false;
     }
+    if(_long_range){
+        if(m & WIFI_MODE_STA){
+            err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR);
+            if(err != ESP_OK){
+                log_e("Could not enable long range on STA! %d", err);
+                return false;
+            }
+        }
+        if(m & WIFI_MODE_AP){
+            err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_LR);
+            if(err != ESP_OK){
+                log_e("Could not enable long range on AP! %d", err);
+                return false;
+            }
+        }
+    }
+    if(!espWiFiStart()){
+        return false;
+    }
     return true;
 }
 
@@ -504,7 +528,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
  */
 wifi_mode_t WiFiGenericClass::getMode()
 {
-    if(!_esp_wifi_started){
+    if(!lowLevelInitDone){
         return WIFI_MODE_NULL;
     }
     wifi_mode_t mode;
