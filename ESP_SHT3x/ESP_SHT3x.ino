@@ -8,11 +8,8 @@
 #include "Adafruit_SHT31.h"
 #include <NTPClient.h>
 
-//const char* ssid = "TP-Link_4346";
-//const char* password = "84850034";
-
-const char* ssid = "inHouseTest1";
-const char* password = "nasturtium";
+const char* ssid = "***";
+const char* password = "***";
 
 // Enables ntp server for time and date
 WiFiUDP ntpUDP;
