@@ -193,11 +193,12 @@ void loop() {
 
   Serial.println();
 
-  Serial.println(currentTime);
-  Serial.print("Humidity: ");
-  Serial.println(digitalRead(humidPin));
-  Serial.print("Temperature: ");
-  Serial.println(digitalRead(tempPin));
+//  Commented code for testing purposes.
+//  Serial.println(currentTime);
+//  Serial.print("Humidity: ");
+//  Serial.println(digitalRead(humidPin));
+//  Serial.print("Temperature: ");
+//  Serial.println(digitalRead(tempPin));
   
   Serial.println();
   
