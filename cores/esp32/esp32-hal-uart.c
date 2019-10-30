@@ -326,7 +326,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     UART_MUTEX_UNLOCK();
 }
 
-vois uartFlush(uart_t* uart)
+void uartFlush(uart_t* uart)
 {
     uartFlushTxOnly(uart,false);
 }
