@@ -7,13 +7,12 @@
 #include <DallasTemperature.h>
 #include "Adafruit_SHT31.h"
 #include <NTPClient.h>
-
 #include <ESP8266HTTPClient.h>
 
-const char* ssid = "inHouseTest1";
-const char* password = "nasturtium";
+const char* ssid = "***";
+const char* password = "***";
 
-const String postAddress = "http://10.39.242.79:8090/post";
+const String postAddress = "http://***ip****:***port***/post";
 
 // Enables ntp server for time and date
 WiFiUDP ntpUDP;
