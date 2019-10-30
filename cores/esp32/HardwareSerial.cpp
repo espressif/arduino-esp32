@@ -133,12 +133,12 @@ int HardwareSerial::read(void)
 
 void HardwareSerial::flush(void)
 {
-    uartFlush(_uart, false);
+    uartFlush(_uart);
 }
 
 void HardwareSerial::flush(bool txOnly)
 {
-    uartFlush(_uart, txOnly);
+    uartFlushTxOnly(_uart, txOnly);
 }
 
 size_t HardwareSerial::write(uint8_t c)
