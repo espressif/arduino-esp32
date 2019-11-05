@@ -57,7 +57,6 @@ void setup() {
   // Initializes current epoch time.
   timeClient.begin();
   currentTime = timeClient.getEpochTime();
-
   OTAinit();
 }
 
@@ -132,13 +131,12 @@ void printShtMeasurments(float temp, float hum) {
 // Sets relay pins to high or low depending on measurements
 void relayPower(int pin, float current, float limit, int *lastTime) {
   int oldPinPow = digitalRead(pin);
-  
   if(current < limit) {
     digitalWrite(pin, LOW);
   } else {
     digitalWrite(pin, HIGH);
   }
-
+  
   if(oldPinPow != digitalRead(pin)) {
     *lastTime = currentTime;
   }
@@ -154,13 +152,14 @@ void shtAlgorithm() {
   // Sets relay relevent pins to appropriate voltage levels
   relayPower(humidPin, h, humidLimit, &humLastTime);
   relayPower(tempPin, t, tempLimit, &temLastTime);
+
 }
 
 void DS18B20Algorithm() {
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
 
-  if(-127 < temperatureC && temperatureC < 85) {
+  if(10 < temperatureC && temperatureC < 35) {
     relayPower(tempPin, temperatureC, tempLimit, &temLastTime);
     Serial.print(temperatureC);
     Serial.println("ºC");

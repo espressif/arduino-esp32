@@ -1,32 +1,20 @@
-#include <dummy.h>
-
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-//
-// WARNING!!! Make sure that you have either selected ESP32 Wrover Module,
-//            or another board which has PSRAM enabled
-//
-
-// Select camera model
-//#define CAMERA_MODEL_WROVER_KIT
-//#define CAMERA_MODEL_ESP_EYE
-//#define CAMERA_MODEL_M5STACK_PSRAM
-//#define CAMERA_MODEL_M5STACK_WIDE
 #define CAMERA_MODEL_AI_THINKER
 
 #include "camera_pins.h"
 
-const char* ssid = "homenetwork";
-const char* password = "utah3863ski2458bin";
+const char* ssid = "ssid";
+const char* password = "password";
 
-//const char* ssid = "inHouse Workshop";
-//const char* password = "nasturtium";
 
 void startCameraServer();
+
+IPAddress ip;
 
 void setup() {
   Serial.begin(115200);
@@ -56,12 +44,15 @@ void setup() {
   config.pixel_format = PIXFORMAT_JPEG;
   //config.pixel_format = PIXFORMAT_RAW;
   //init with high specs to pre-allocate larger buffers
+  Serial.printf("psramFound(): ",psramFound());
   if(psramFound()){
     config.frame_size = FRAMESIZE_UXGA;
+    Serial.printf("framesize UXGA");
     config.jpeg_quality = 10;
     config.fb_count = 2;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
+    Serial.printf("framesize SVGA");
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
@@ -156,6 +147,11 @@ void loop() {
       delay(2000);
     }
     Serial.println("reconnected!");
+  }
+  if (ip != WiFi.localIP()){
+    ip = WiFi.localIP();
+    Serial.println("new ip address");
+    Serial.print(ip);
   }
   delay(5000);
 }
