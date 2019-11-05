@@ -6,10 +6,17 @@
 #include <Wire.h>
 #include <DallasTemperature.h>
 #include "Adafruit_SHT31.h"
-
+#include <NTPClient.h>
 
 const char* ssid = "***";
 const char* password = "***";
+
+// Enables ntp server for time and date
+WiFiUDP ntpUDP;
+
+NTPClient timeClient(ntpUDP);
+
+int currentTime = 0;
  
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
@@ -29,6 +36,14 @@ DallasTemperature sensors(&oneWire);
 // the temperature (Cecius) and humidity (%) threshholds to trigger relay
 float tempLimit = 22.78;
 float humidLimit = 97.0;
+
+// variables to influence clock controll behavior
+// records time of last change in pin voltage
+int humLastTime = 0;
+int temLastTime = 0;
+// {timeOn, timeOff} in seconds
+int humTimeDuration[2] = {10, 20};
+int temTimeDuration[2] = {5, 15};
  
 void setup() {
   Serial.begin(115200);
@@ -39,6 +54,9 @@ void setup() {
   pinMode(humidPin, OUTPUT);
   pinMode(tempPin, OUTPUT);
 
+  // Initializes current epoch time.
+  timeClient.begin();
+  currentTime = timeClient.getEpochTime();
   OTAinit();
 }
 
@@ -111,11 +129,16 @@ void printShtMeasurments(float temp, float hum) {
 }
 
 // Sets relay pins to high or low depending on measurements
-void relayPower(int pin, float current, float limit) {
+void relayPower(int pin, float current, float limit, int *lastTime) {
+  int oldPinPow = digitalRead(pin);
   if(current < limit) {
     digitalWrite(pin, LOW);
   } else {
     digitalWrite(pin, HIGH);
+  }
+  
+  if(oldPinPow != digitalRead(pin)) {
+    *lastTime = currentTime;
   }
 }
 
@@ -127,28 +150,37 @@ void shtAlgorithm() {
   printShtMeasurments(t, h);
 
   // Sets relay relevent pins to appropriate voltage levels
-  relayPower(humidPin, h, humidLimit);
-  relayPower(tempPin, t, tempLimit);
+  relayPower(humidPin, h, humidLimit, &humLastTime);
+  relayPower(tempPin, t, tempLimit, &temLastTime);
 
-  // Checks for FOTA update
-  ArduinoOTA.handle();
-  
-  // Sets relay relevent pins to appropriate voltage levels
-  relayPower(humidPin, h, humidLimit);
-  relayPower(tempPin, t, tempLimit);
 }
 
 void DS18B20Algorithm() {
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
 
-  relayPower(tempPin, temperatureC, tempLimit);
-  
-  Serial.print(temperatureC);
-  Serial.println("ºC");
+  if(10 < temperatureC && temperatureC < 35) {
+    relayPower(tempPin, temperatureC, tempLimit, &temLastTime);
+    Serial.print(temperatureC);
+    Serial.println("ºC");
+  }else {
+    clockManager(tempPin, temTimeDuration, &temLastTime);
+  }
+  clockManager(humidPin, humTimeDuration, &humLastTime);
+}
+
+void clockManager(int pin, int times[], int *lastTime) {
+  if((!digitalRead(pin) && (*lastTime + times[0] <= currentTime)) || (digitalRead(pin) && (*lastTime + times[1] <= currentTime))) {
+    digitalWrite(pin, !digitalRead(pin));
+    *lastTime = currentTime;
+  }
 }
  
 void loop() {
+  // Updates and records time to current.
+  timeClient.update();
+  currentTime = timeClient.getEpochTime();
+  
   if(sht31.begin(0x44)) {
     shtAlgorithm();
   } else {
@@ -157,6 +189,15 @@ void loop() {
 
   // Checks for FOTA update
   ArduinoOTA.handle();
+
+  Serial.println();
+
+//  Commented code for testing purposes.
+//  Serial.println(currentTime);
+//  Serial.print("Humidity: ");
+//  Serial.println(digitalRead(humidPin));
+//  Serial.print("Temperature: ");
+//  Serial.println(digitalRead(tempPin));
   
   Serial.println();
   
