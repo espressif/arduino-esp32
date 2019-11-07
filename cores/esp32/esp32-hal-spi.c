@@ -630,7 +630,7 @@ uint32_t spiTransferLong(spi_t * spi, uint32_t data)
     return data;
 }
 
-void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t bytes)
+void __spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out, uint32_t bytes)
 {
     if(!spi) {
         return;
