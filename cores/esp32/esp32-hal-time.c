@@ -45,6 +45,11 @@ static void setTimeZone(long offset, int daylight)
  * */
 void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
 {
+#ifndef _TCPIP_ADAPTER_H_
+    log_e("TCPIP is not initialized.");
+    return;
+#endif
+
     if(sntp_enabled()){
         sntp_stop();
     }
@@ -62,6 +67,11 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
  * */
 void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3)
 {
+#ifndef _TCPIP_ADAPTER_H_
+    log_e("TCPIP is not initialized.");
+    return;
+#endif
+
     if(sntp_enabled()){
         sntp_stop();
     }
