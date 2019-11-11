@@ -532,16 +532,6 @@ uint8_t spiTransferByte(spi_t * spi, uint8_t data)
     return data;
 }
 
-static uint32_t __spiTranslate24(uint32_t data)
-{
-    union {
-        uint32_t l;
-        uint8_t b[4];
-    } out;
-    out.l = data;
-    return out.b[2] | (out.b[1] << 8) | (out.b[0] << 16);
-}
-
 static uint32_t __spiTranslate32(uint32_t data)
 {
     union {
