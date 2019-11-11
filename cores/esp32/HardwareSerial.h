@@ -63,6 +63,7 @@ public:
     int peek(void);
     int read(void);
     void flush(void);
+    void flush( bool txOnly);
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
 
