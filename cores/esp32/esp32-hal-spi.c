@@ -459,7 +459,7 @@ void spiWaitReady(spi_t * spi)
     while(spi->dev->cmd.usr);
 }
 
-void spiWrite(spi_t * spi, uint32_t *data, uint8_t len)
+void spiWrite(spi_t * spi, const uint32_t *data, uint8_t len)
 {
     if(!spi) {
         return;
@@ -671,7 +671,7 @@ void __spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t byt
     }
 }
 
-void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size)
+void spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out, uint32_t size)
 {
     if(!spi) {
         return;
@@ -861,7 +861,7 @@ uint32_t spiTransferLongNL(spi_t * spi, uint32_t data)
     return data;
 }
 
-void spiWriteNL(spi_t * spi, const void * data_in, size_t len){
+void spiWriteNL(spi_t * spi, const void * data_in, uint32_t len){
     size_t longs = len >> 2;
     if(len & 3){
         longs++;
@@ -887,7 +887,7 @@ void spiWriteNL(spi_t * spi, const void * data_in, size_t len){
     }
 }
 
-void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, size_t len){
+void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, uint32_t len){
     if(!spi) {
         return;
     }
@@ -974,7 +974,7 @@ void spiTransferBitsNL(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
     }
 }
 
-void IRAM_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, size_t len){
+void IRAM_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32_t len){
     size_t longs = len >> 2;
     if(len & 3){
         longs++;
