@@ -154,7 +154,7 @@ static uint8_t _spp_tx_buffer[SPP_TX_MAX];
 static uint16_t _spp_tx_buffer_len = 0;
 
 static bool _spp_send_buffer(){
-    if((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED)){
+    if((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED) != 0){
         esp_err_t err = esp_spp_write(_spp_client, _spp_tx_buffer_len, _spp_tx_buffer);
         if(err != ESP_OK){
             log_e("SPP Write Failed! [0x%X]", err);
@@ -365,11 +365,11 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                         break;
 
                     case ESP_BT_GAP_DEV_PROP_COD:
-                        //log_i("ESP_BT_GAP_DEV_PROP_COD");
+                        log_d("ESP_BT_GAP_DEV_PROP_COD");
                         break;
 
                     case ESP_BT_GAP_DEV_PROP_RSSI:
-                        //log_i("ESP_BT_GAP_DEV_PROP_RSSI");
+                        log_d("ESP_BT_GAP_DEV_PROP_RSSI");
                         break;
                         
                     default:
@@ -578,7 +578,7 @@ static bool _stop_bt()
 
 static bool waitForConnect(int timeout) {
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED) != 0;
 }
 
 /*
@@ -761,7 +761,7 @@ bool BluetoothSerial::disconnect() {
         log_i("disconnecting");
         if (esp_spp_disconnect(_spp_client) == ESP_OK) {
             TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
+            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED) != 0;
         }
     }
     return false;
@@ -789,6 +789,6 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
         return false;
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) != 0);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
 }
 #endif
