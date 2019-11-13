@@ -12,7 +12,7 @@
 const char* ssid = "***";
 const char* password = "***";
 
-const String postAddress = "http://***ip****:***port***/post";
+const String postAddress = "http://IP:PORT/germination";
 
 // Enables ntp server for time and date
 WiFiUDP ntpUDP;
@@ -121,17 +121,18 @@ void OTAinit() {
 void printShtMeasurments(float temp, float hum) {
    if (! isnan(temp)) {
     Serial.print("Temp *C = "); Serial.println(temp);
-    postProtocol("T: " + (String) temp);
+    //postProtocol("T: " + (String) temp);
   } else { 
     Serial.println("Failed to read temperature");
   }
  
   if (! isnan(hum)) {
     Serial.print("Hum. % = "); Serial.println(hum);
-    postProtocol("H: " + (String) hum);
+    //postProtocol("H: " + (String) hum);
   } else { 
     Serial.println("Failed to read humidity");
   }
+  postProtocol(temp, hum);
 }
 
 // Sets relay pins to high or low depending on measurements
@@ -165,11 +166,13 @@ void DS18B20Algorithm() {
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
 
-  if(-127 < temperatureC && temperatureC < 85) {
+  Serial.print(temperatureC);
+
+  if(10 < temperatureC && temperatureC < 35) {
     relayPower(tempPin, temperatureC, tempLimit, &temLastTime);
     Serial.print(temperatureC);
     Serial.println("ºC");
-    postProtocol("T: " + (String) temperatureC);
+    postProtocol(temperatureC, -1);
   }else {
     clockManager(tempPin, temTimeDuration, &temLastTime);
   }
@@ -183,7 +186,8 @@ void clockManager(int pin, int times[], int *lastTime) {
   }
 }
 
-void postProtocol(String message) {
+//void postProtocol(String message) {
+void postProtocol(float tem, float hum) {
   if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
  
    HTTPClient http;    //Declare object of class HTTPClient
@@ -191,7 +195,7 @@ void postProtocol(String message) {
    http.begin(postAddress);      //Specify request destination
    http.addHeader("Content-Type", "application/json");  //Specify content-type header
    
-   int httpCode = http.POST(message);   //Send the request
+   int httpCode = http.POST("{\"temperature\": " + (String)tem + ", \"humidity\": " + (String)hum +"}");   //Send the request
    String payload = http.getString();                  //Get the response payload
 
    //Serial.println(httpCode);   //Print HTTP return code
