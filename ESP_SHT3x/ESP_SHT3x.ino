@@ -60,7 +60,7 @@ void setup() {
   // Initializes current epoch time.
   timeClient.begin();
   currentTime = timeClient.getEpochTime();
-
+  
   OTAinit();
 }
 
@@ -144,7 +144,7 @@ void relayPower(int pin, float current, float limit, int *lastTime) {
   } else {
     digitalWrite(pin, HIGH);
   }
-
+  
   if(oldPinPow != digitalRead(pin)) {
     *lastTime = currentTime;
   }
@@ -154,6 +154,7 @@ void shtAlgorithm() {
   // Reads temperature and humidity from sht31 and stores it to appropriate variables
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
+  
   // Displays current readings
   printShtMeasurments(t, h);
 
@@ -223,7 +224,7 @@ void loop() {
 
   Serial.println();
 
-// Commented code for testing purposes.
+//  Commented code for testing purposes.
 //  Serial.println(currentTime);
 //  Serial.print("Humidity: ");
 //  Serial.println(digitalRead(humidPin));
