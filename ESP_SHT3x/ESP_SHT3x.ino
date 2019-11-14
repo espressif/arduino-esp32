@@ -7,9 +7,12 @@
 #include <DallasTemperature.h>
 #include "Adafruit_SHT31.h"
 #include <NTPClient.h>
+#include <ESP8266HTTPClient.h>
 
 const char* ssid = "***";
 const char* password = "***";
+
+const String postAddress = "http://IP:PORT/germination";
 
 // Enables ntp server for time and date
 WiFiUDP ntpUDP;
@@ -57,6 +60,7 @@ void setup() {
   // Initializes current epoch time.
   timeClient.begin();
   currentTime = timeClient.getEpochTime();
+  
   OTAinit();
 }
 
@@ -117,20 +121,24 @@ void OTAinit() {
 void printShtMeasurments(float temp, float hum) {
    if (! isnan(temp)) {
     Serial.print("Temp *C = "); Serial.println(temp);
+    //postProtocol("T: " + (String) temp);
   } else { 
     Serial.println("Failed to read temperature");
   }
  
   if (! isnan(hum)) {
     Serial.print("Hum. % = "); Serial.println(hum);
+    //postProtocol("H: " + (String) hum);
   } else { 
     Serial.println("Failed to read humidity");
   }
+  postProtocol(temp, hum);
 }
 
 // Sets relay pins to high or low depending on measurements
 void relayPower(int pin, float current, float limit, int *lastTime) {
   int oldPinPow = digitalRead(pin);
+  
   if(current < limit) {
     digitalWrite(pin, LOW);
   } else {
@@ -146,23 +154,26 @@ void shtAlgorithm() {
   // Reads temperature and humidity from sht31 and stores it to appropriate variables
   float t = sht31.readTemperature();
   float h = sht31.readHumidity();
+  
   // Displays current readings
   printShtMeasurments(t, h);
 
   // Sets relay relevent pins to appropriate voltage levels
   relayPower(humidPin, h, humidLimit, &humLastTime);
   relayPower(tempPin, t, tempLimit, &temLastTime);
-
 }
 
 void DS18B20Algorithm() {
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
 
+  Serial.print(temperatureC);
+
   if(10 < temperatureC && temperatureC < 35) {
     relayPower(tempPin, temperatureC, tempLimit, &temLastTime);
     Serial.print(temperatureC);
     Serial.println("ºC");
+    postProtocol(temperatureC, -1);
   }else {
     clockManager(tempPin, temTimeDuration, &temLastTime);
   }
@@ -174,6 +185,27 @@ void clockManager(int pin, int times[], int *lastTime) {
     digitalWrite(pin, !digitalRead(pin));
     *lastTime = currentTime;
   }
+}
+
+//void postProtocol(String message) {
+void postProtocol(float tem, float hum) {
+  if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
+ 
+   HTTPClient http;    //Declare object of class HTTPClient
+ 
+   http.begin(postAddress);      //Specify request destination
+   http.addHeader("Content-Type", "application/json");  //Specify content-type header
+   
+   int httpCode = http.POST("{\"temperature\": " + (String)tem + ", \"humidity\": " + (String)hum +"}");   //Send the request
+   String payload = http.getString();                  //Get the response payload
+
+   //Serial.println(httpCode);   //Print HTTP return code
+   //Serial.println(payload);    //Print request response payload
+ 
+   http.end();  //Close connection
+ }else{
+    Serial.println("Error in WiFi connection"); 
+ }
 }
  
 void loop() {
