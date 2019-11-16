@@ -63,6 +63,7 @@ void uartWrite(uart_t* uart, uint8_t c);
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len);
 
 void uartFlush(uart_t* uart);
+void uartFlushTxOnly(uart_t* uart, bool txOnly );
 
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);

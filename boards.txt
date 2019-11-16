@@ -1391,6 +1391,15 @@ node32s.build.boot=dio
 node32s.build.partitions=default
 node32s.build.defines=
 
+node32s.menu.PartitionScheme.default=Default
+node32s.menu.PartitionScheme.default.build.partitions=default
+node32s.menu.PartitionScheme.no_ota=No OTA (Large APP)
+node32s.menu.PartitionScheme.no_ota.build.partitions=no_ota
+node32s.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+node32s.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+node32s.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+node32s.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
 node32s.menu.FlashFreq.80=80MHz
 node32s.menu.FlashFreq.80.build.flash_freq=80m
 node32s.menu.FlashFreq.40=40MHz
@@ -1410,6 +1419,19 @@ node32s.menu.UploadSpeed.460800.macosx=460800
 node32s.menu.UploadSpeed.460800.upload.speed=460800
 node32s.menu.UploadSpeed.512000.windows=512000
 node32s.menu.UploadSpeed.512000.upload.speed=512000
+
+node32s.menu.DebugLevel.none=None
+node32s.menu.DebugLevel.none.build.code_debug=0
+node32s.menu.DebugLevel.error=Error
+node32s.menu.DebugLevel.error.build.code_debug=1
+node32s.menu.DebugLevel.warn=Warn
+node32s.menu.DebugLevel.warn.build.code_debug=2
+node32s.menu.DebugLevel.info=Info
+node32s.menu.DebugLevel.info.build.code_debug=3
+node32s.menu.DebugLevel.debug=Debug
+node32s.menu.DebugLevel.debug.build.code_debug=4
+node32s.menu.DebugLevel.verbose=Verbose
+node32s.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
