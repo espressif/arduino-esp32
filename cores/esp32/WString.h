@@ -204,19 +204,19 @@ class String {
         unsigned char equalsConstantTime(const String &s) const;
         unsigned char startsWith(const String &prefix) const;
         unsigned char startsWith(const char *prefix) const {
-￼            return this->startsWith(String(prefix));
-￼        }
-￼        unsigned char startsWith(const __FlashStringHelper *prefix) const {
-            ￼return this->startsWith(String(prefix));
-￼        }
+            return this->startsWith(String(prefix));
+        }
+        unsigned char startsWith(const __FlashStringHelper *prefix) const {
+            return this->startsWith(String(prefix));
+        }
         unsigned char startsWith(const String &prefix, unsigned int offset) const;
         unsigned char endsWith(const String &suffix) const;
         unsigned char endsWith(const char *suffix) const {
-￼            return this->endsWith(String(suffix));
-￼        }
-￼        unsigned char endsWith(const __FlashStringHelper *suffix) const {
-￼            return this->endsWith(String(suffix));
-￼        }
+            return this->endsWith(String(suffix));
+        }
+        unsigned char endsWith(const __FlashStringHelper * suffix) const {
+            return this->endsWith(String(suffix));
+        }
 
         // character access
         char charAt(unsigned int index) const;
@@ -252,20 +252,20 @@ class String {
         void replace(char find, char replace);
         void replace(const String &find, const String &replace);
         void replace(const char *find, const String &replace) {
-￼            this->replace(String(find), replace);
-￼        }
-￼        void replace(const __FlashStringHelper *find, const String &replace) {
-        ￼    this->replace(String(find), replace);
-￼        }
-￼        void replace(const char *find, const char *replace) {
-￼            this->replace(String(find), String(replace));
-￼        }
-￼        void replace(const __FlashStringHelper *find, const char *replace) {
-￼            this->replace(String(find), String(replace));
-￼        }
-￼        void replace(const __FlashStringHelper *find, const __FlashStringHelper *replace) {
-￼            this->replace(String(find), String(replace));
-￼        }
+            this->replace(String(find), replace);
+        }
+        void replace(const __FlashStringHelper *find, const String &replace) {
+            this->replace(String(find), replace);
+        }
+        void replace(const char *find, const char *replace) {
+            this->replace(String(find), String(replace));
+        }
+        void replace(const __FlashStringHelper *find, const char *replace) {
+            this->replace(String(find), String(replace));
+        }
+        void replace(const __FlashStringHelper *find, const __FlashStringHelper *replace) {
+            this->replace(String(find), String(replace));
+        }
         void remove(unsigned int index);
         void remove(unsigned int index, unsigned int count);
         void toLowerCase(void);
