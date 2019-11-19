@@ -1,6 +1,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
@@ -8,18 +9,60 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "ssid";
-const char* password = "password";
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  5        /* Time ESP32 will go to sleep (in seconds) */
+
+int awake = 60;
+
+const char* ssid = "inHouseTest1";
+const char* password = "nasturtium";
+
+WiFiUDP ntpUDP;
+
+NTPClient timeClient(ntpUDP);
+
+int currentTime = 0;
+int wokeUpAt = 0;
+
+int sleepPin = 13;
+gpio_num_t sleepGpioPin = GPIO_NUM_13;
 
 
 void startCameraServer();
 
 IPAddress ip;
 
+void OTA() {
+  ArduinoOTA.handle();
+  if (WiFi.status() == WL_CONNECTED) {
+    //Serial.println("connection strong");
+  } else {
+    Serial.println("connection lost");
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.println(WiFi.status());
+      WiFi.disconnect();
+      delay(1000);
+      WiFi.begin(ssid, password);
+      delay(2000);
+    }
+    Serial.println("reconnected!");
+  }
+  if (ip != WiFi.localIP()){
+    ip = WiFi.localIP();
+    Serial.println("new ip address");
+    Serial.print(ip);
+  }
+  delay(500);
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
+
+  pinMode(sleepPin, INPUT);
+  esp_sleep_enable_ext0_wakeup(sleepGpioPin, 1);
+  Serial.println("Morning!");
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -131,27 +174,27 @@ void setup() {
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+
+  timeClient.begin();
+  timeClient.update();
+  wokeUpAt = timeClient.getEpochTime();
 }
 
 void loop() {
-  ArduinoOTA.handle();
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("connection strong");
-  } else {
-    Serial.println("connection lost");
-    while (WiFi.status() != WL_CONNECTED) {
-      Serial.println(WiFi.status());
-      WiFi.disconnect();
-      delay(1000);
-      WiFi.begin(ssid, password);
-      delay(2000);
-    }
-    Serial.println("reconnected!");
+  OTA();
+  timeClient.update();
+  currentTime = timeClient.getEpochTime();
+  Serial.println(currentTime);
+  if(currentTime > wokeUpAt + awake) {
+    Serial.println("Good Night!");
+    esp_deep_sleep_start();
   }
-  if (ip != WiFi.localIP()){
-    ip = WiFi.localIP();
-    Serial.println("new ip address");
-    Serial.print(ip);
-  }
-  delay(5000);
+  /*Serial.println(digitalRead(sleepPin));
+  if(!digitalRead(sleepPin)) {
+    Serial.println("Good Night!");
+    esp_deep_sleep_start();
+  }*/
+  delay(500);
 }
