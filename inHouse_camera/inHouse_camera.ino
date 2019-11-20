@@ -4,29 +4,39 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-
 #define CAMERA_MODEL_AI_THINKER
-
 #include "camera_pins.h"
+#define uS_TO_S_FACTOR 1000000  // Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  5        // Time ESP32 will go to sleep (in seconds) */
 
-#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  5        /* Time ESP32 will go to sleep (in seconds) */
+// esp32 number denoting position
+const int number = 1;
 
-int awake = 60;
+// The length of the complete cycle.
+const int cycleLength = 60;
+// How long the camera remains on in each cycle
+const int intervalOn = 30;
 
-const char* ssid = "inHouseTest1";
-const char* password = "nasturtium";
+// How long the camera sleeps for each cycle
+int intervalOff = cycleLength - intervalOn;
+// how long after the start of the next cycle it will take to turn on given id Number
+int stagger = (number - 1) * intervalOn;
+// When the next cycle starts
+int start;
+// Time device turned on epoch time
+int awoke;
+// When the 32 will turn on next
+int sleepAlarm;
+
+const char* ssid = "***";
+const char* password = "***";
 
 WiFiUDP ntpUDP;
 
 NTPClient timeClient(ntpUDP);
 
-int currentTime = 0;
-int wokeUpAt = 0;
-
-int sleepPin = 13;
-gpio_num_t sleepGpioPin = GPIO_NUM_13;
-
+int currentTime = 0; // What the current time is
+int wokeUpAt = 0; // When the 32 last woke up
 
 void startCameraServer();
 
@@ -60,8 +70,8 @@ void setup() {
   Serial.setDebugOutput(true);
   Serial.println();
 
-  pinMode(sleepPin, INPUT);
-  esp_sleep_enable_ext0_wakeup(sleepGpioPin, 1);
+  //pinMode(sleepPin, INPUT);
+  //esp_sleep_enable_ext0_wakeup(sleepGpioPin, 1);
   Serial.println("Morning!");
 
   camera_config_t config;
@@ -179,7 +189,16 @@ void setup() {
 
   timeClient.begin();
   timeClient.update();
-  wokeUpAt = timeClient.getEpochTime();
+  awoke = timeClient.getEpochTime();
+  // Gets start of next cycle
+  if(awoke % cycleLength != 0) {
+    // start of next cycle equals time awoken + length of cycle minus time elapsed since start of last cycle
+    start = awoke + cycleLength - (awoke % cycleLength);
+  } else {
+    // In case the system woke up exactly on it's previous starting time (Should only be possible for camera 1)
+    start = awoke + cycleLength;
+  }
+  sleepAlarm = start + stagger;
 }
 
 void loop() {
@@ -187,14 +206,10 @@ void loop() {
   timeClient.update();
   currentTime = timeClient.getEpochTime();
   Serial.println(currentTime);
-  if(currentTime > wokeUpAt + awake) {
+  if(currentTime > awoke + intervalOn) {
     Serial.println("Good Night!");
+    esp_sleep_enable_timer_wakeup((sleepAlarm - currentTime) * uS_TO_S_FACTOR);
     esp_deep_sleep_start();
   }
-  /*Serial.println(digitalRead(sleepPin));
-  if(!digitalRead(sleepPin)) {
-    Serial.println("Good Night!");
-    esp_deep_sleep_start();
-  }*/
   delay(500);
 }
