@@ -36,8 +36,12 @@ public:
 	int         getRSSI();
 	BLEScan*    getScan();
 	std::string getServiceData();
+	std::string getServiceData(int i);
 	BLEUUID     getServiceDataUUID();
+	BLEUUID     getServiceDataUUID(int i);
 	BLEUUID     getServiceUUID();
+	BLEUUID     getServiceUUID(int i);
+	int         getServiceDataCount();
 	int8_t      getTXPower();
 	uint8_t* 	getPayload();
 	size_t		getPayloadLength();
@@ -93,8 +97,8 @@ private:
 	int         m_rssi;
 	std::vector<BLEUUID> m_serviceUUIDs;
 	int8_t      m_txPower;
-	std::string m_serviceData;
-	BLEUUID     m_serviceDataUUID;
+	std::vector<std::string> m_serviceData;
+	std::vector<BLEUUID> m_serviceDataUUIDs;
 	uint8_t*	m_payload;
 	size_t		m_payloadLength = 0;
 	esp_ble_addr_type_t m_addressType;
