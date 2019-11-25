@@ -25,20 +25,12 @@
 #include <memory>
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
-
-/* Main header of binary image */
-typedef struct {
-    uint8_t magic;
-    uint8_t segment_count;
-    uint8_t spi_mode;      /* flash read mode (esp_image_spi_mode_t as uint8_t) */
-    uint8_t spi_speed: 4;  /* flash frequency (esp_image_spi_freq_t as uint8_t) */
-    uint8_t spi_size: 4;   /* flash chip size (esp_image_flash_size_t as uint8_t) */
-    uint32_t entry_addr;
-    uint8_t encrypt_flag;    /* encrypt flag */
-    uint8_t extra_header[15]; /* ESP32 additional header, unused by second bootloader */
-} esp_image_header_t;
-
-#define ESP_IMAGE_HEADER_MAGIC 0xE9
+#include <esp_partition.h>
+extern "C" {
+#include "esp_ota_ops.h"
+#include "esp_image_format.h"
+}
+#include <MD5Builder.h>
 
 /**
  * User-defined Literals
@@ -100,21 +92,123 @@ void EspClass::deepSleep(uint32_t time_us)
     esp_deep_sleep(time_us);
 }
 
-uint32_t EspClass::getCycleCount()
-{
-    uint32_t ccount;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
-    return ccount;
-}
-
 void EspClass::restart(void)
 {
     esp_restart();
 }
 
+uint32_t EspClass::getHeapSize(void)
+{
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
+    return info.total_free_bytes + info.total_allocated_bytes;
+}
+
 uint32_t EspClass::getFreeHeap(void)
 {
-    return esp_get_free_heap_size();
+    return heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getMinFreeHeap(void)
+{
+    return heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getMaxAllocHeap(void)
+{
+    return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+}
+
+uint32_t EspClass::getPsramSize(void)
+{
+    multi_heap_info_t info;
+    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+    return info.total_free_bytes + info.total_allocated_bytes;
+}
+
+uint32_t EspClass::getFreePsram(void)
+{
+    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+}
+
+uint32_t EspClass::getMinFreePsram(void)
+{
+    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+}
+
+uint32_t EspClass::getMaxAllocPsram(void)
+{
+    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+}
+
+static uint32_t sketchSize(sketchSize_t response) {
+    esp_image_metadata_t data;
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    if (!running) return 0;
+    const esp_partition_pos_t running_pos  = {
+        .offset = running->address,
+        .size = running->size,
+    };
+    data.start_addr = running_pos.offset;
+    esp_image_verify(ESP_IMAGE_VERIFY, &running_pos, &data);
+    if (response) {
+        return running_pos.size - data.image_len;
+    } else {
+        return data.image_len;
+    }
+}
+    
+uint32_t EspClass::getSketchSize () {
+    return sketchSize(SKETCH_SIZE_TOTAL);
+}
+
+String EspClass::getSketchMD5()
+{
+    static String result;
+    if (result.length()) {
+        return result;
+    }
+    uint32_t lengthLeft = getSketchSize();
+
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    if (!running) {
+        log_e("Partition could not be found");
+
+        return String();
+    }
+    const size_t bufSize = SPI_FLASH_SEC_SIZE;
+    std::unique_ptr<uint8_t[]> buf(new uint8_t[bufSize]);
+    uint32_t offset = 0;
+    if(!buf.get()) {
+        log_e("Not enough memory to allocate buffer");
+
+        return String();
+    }
+    MD5Builder md5;
+    md5.begin();
+    while( lengthLeft > 0) {
+        size_t readBytes = (lengthLeft < bufSize) ? lengthLeft : bufSize;
+        if (!ESP.flashRead(running->address + offset, reinterpret_cast<uint32_t*>(buf.get()), (readBytes + 3) & ~3)) {
+            log_e("Could not read buffer from flash");
+
+            return String();
+        }
+        md5.add(buf.get(), readBytes);
+        lengthLeft -= readBytes;
+        offset += readBytes;
+    }
+    md5.calculate();
+    result = md5.toString();
+    return result;
+}
+
+uint32_t EspClass::getFreeSketchSpace () {
+    const esp_partition_t* _partition = esp_ota_get_next_update_partition(NULL);
+    if(!_partition){
+        return 0;
+    }
+
+    return _partition->size;
 }
 
 uint8_t EspClass::getChipRevision(void)

@@ -82,6 +82,9 @@ void Stream::setTimeout(unsigned long timeout)  // sets the maximum number of mi
 {
     _timeout = timeout;
 }
+unsigned long Stream::getTimeout(void) {
+  return _timeout;
+}
 
 // find returns true if the target string is found
 bool Stream::find(const char *target)

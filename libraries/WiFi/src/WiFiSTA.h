@@ -43,7 +43,7 @@ public:
     bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
 
     bool reconnect();
-    bool disconnect(bool wifioff = false);
+    bool disconnect(bool wifioff = false, bool eraseap = false);
 
     bool isConnected();
 
@@ -64,6 +64,10 @@ public:
     IPAddress subnetMask();
     IPAddress gatewayIP();
     IPAddress dnsIP(uint8_t dns_no = 0);
+
+    IPAddress broadcastIP();
+    IPAddress networkID();
+    uint8_t subnetCIDR();
     
     bool enableIpV6();
     IPv6Address localIPv6();
@@ -83,7 +87,6 @@ public:
 
     static void _setStatus(wl_status_t status);
 protected:
-    static wl_status_t _status;
     static bool _useStaticIp;
     static bool _autoReconnect;
 

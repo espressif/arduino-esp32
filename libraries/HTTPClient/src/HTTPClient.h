@@ -27,6 +27,8 @@
 #ifndef HTTPClient_H_
 #define HTTPClient_H_
 
+#define HTTPCLIENT_1_1_COMPATIBLE
+
 #include <memory>
 #include <Arduino.h>
 #include <WiFiClient.h>
@@ -117,8 +119,10 @@ typedef enum {
     HTTPC_TE_CHUNKED
 } transferEncoding_t;
 
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
 class TransportTraits;
 typedef std::unique_ptr<TransportTraits> TransportTraitsPtr;
+#endif
 
 class HTTPClient
 {
@@ -126,11 +130,20 @@ public:
     HTTPClient();
     ~HTTPClient();
 
+/*
+ * Since both begin() functions take a reference to client as a parameter, you need to 
+ * ensure the client object lives the entire time of the HTTPClient
+ */
+    bool begin(WiFiClient &client, String url);
+    bool begin(WiFiClient &client, String host, uint16_t port, String uri = "/", bool https = false);
+
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
     bool begin(String url);
     bool begin(String url, const char* CAcert);
     bool begin(String host, uint16_t port, String uri = "/");
     bool begin(String host, uint16_t port, String uri, const char* CAcert);
     bool begin(String host, uint16_t port, String uri, const char* CAcert, const char* cli_cert, const char* cli_key);
+#endif
 
     void end(void);
 
@@ -140,12 +153,15 @@ public:
     void setUserAgent(const String& userAgent);
     void setAuthorization(const char * user, const char * password);
     void setAuthorization(const char * auth);
+    void setConnectTimeout(int32_t connectTimeout);
     void setTimeout(uint16_t timeout);
 
     void useHTTP10(bool usehttp10 = true);
 
     /// request handling
     int GET();
+    int PATCH(uint8_t * payload, size_t size);
+    int PATCH(String payload);
     int POST(uint8_t * payload, size_t size);
     int POST(String payload);
     int PUT(uint8_t * payload, size_t size);
@@ -181,6 +197,7 @@ protected:
     };
 
     bool beginInternal(String url, const char* expectedProtocol);
+    void disconnect(bool preserveClient = false);
     void clear();
     int returnError(int error);
     bool connect(void);
@@ -189,13 +206,18 @@ protected:
     int writeToStreamDataBlock(Stream * stream, int len);
 
 
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
     TransportTraitsPtr _transportTraits;
-    std::unique_ptr<WiFiClient> _tcp;
+    std::unique_ptr<WiFiClient> _tcpDeprecated;
+#endif
+
+    WiFiClient* _client = nullptr;
 
     /// request handling
     String _host;
     uint16_t _port = 0;
-    bool _reuse = false;
+    int32_t _connectTimeout = -1;
+    bool _reuse = true;
     uint16_t _tcpTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _useHTTP10 = false;
     bool _secure = false;

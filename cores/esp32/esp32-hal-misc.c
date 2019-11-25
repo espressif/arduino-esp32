@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal.h"
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -21,8 +20,20 @@
 #include "nvs.h"
 #include "esp_partition.h"
 #include "esp_log.h"
-#include "pthread.h"
+#include "esp_timer.h"
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
+#include "esp_ota_ops.h"
+#endif //CONFIG_APP_ROLLBACK_ENABLE
+#ifdef CONFIG_BT_ENABLED
+#include "esp_bt.h"
+#endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
+#include "soc/rtc.h"
+#include "soc/rtc_cntl_reg.h"
+#include "soc/apb_ctrl_reg.h"
+#include "rom/rtc.h"
+#include "esp_task_wdt.h"
+#include "esp32-hal.h"
 
 //Undocumented!!! Get chip temperature in Farenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
@@ -33,56 +44,101 @@ float temperatureRead()
     return (temprature_sens_read() - 32) / 1.8;
 }
 
-void yield()
+void __yield()
 {
     vPortYield();
 }
 
-portMUX_TYPE microsMux = portMUX_INITIALIZER_UNLOCKED;
-static pthread_key_t microsStore=NULL; // Thread Local Storage Handle
+void yield() __attribute__ ((weak, alias("__yield")));
 
-void microsStoreDelete(void * storage) {  // release thread local data when task is delete.
-    if(storage) free(storage);
+#if CONFIG_AUTOSTART_ARDUINO
+
+extern TaskHandle_t loopTaskHandle;
+extern bool loopTaskWDTEnabled;
+
+void enableLoopWDT(){
+    if(loopTaskHandle != NULL){
+        if(esp_task_wdt_add(loopTaskHandle) != ESP_OK){
+            log_e("Failed to add loop task to WDT");
+        } else {
+            loopTaskWDTEnabled = true;
+        }
+    }
+}
+
+void disableLoopWDT(){
+    if(loopTaskHandle != NULL && loopTaskWDTEnabled){
+        loopTaskWDTEnabled = false;
+        if(esp_task_wdt_delete(loopTaskHandle) != ESP_OK){
+            log_e("Failed to remove loop task from WDT");
+        }
+    }
+}
+
+void feedLoopWDT(){
+    esp_err_t err = esp_task_wdt_reset();
+    if(err != ESP_OK){
+        log_e("Failed to feed WDT! Error: %d", err);
+    }
+}
+#endif
+
+void enableCore0WDT(){
+    TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+    if(idle_0 == NULL || esp_task_wdt_add(idle_0) != ESP_OK){
+        log_e("Failed to add Core 0 IDLE task to WDT");
+    }
+}
+
+void disableCore0WDT(){
+    TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+    if(idle_0 == NULL || esp_task_wdt_delete(idle_0) != ESP_OK){
+        log_e("Failed to remove Core 0 IDLE task from WDT");
+    }
+}
+
+#ifndef CONFIG_FREERTOS_UNICORE
+void enableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_add(idle_1) != ESP_OK){
+        log_e("Failed to add Core 1 IDLE task to WDT");
+    }
+}
+
+void disableCore1WDT(){
+    TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+    if(idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK){
+        log_e("Failed to remove Core 1 IDLE task from WDT");
+    }
+}
+#endif
+
+BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
+                        const char * const pcName,
+                        const uint32_t usStackDepth,
+                        void * const pvParameters,
+                        UBaseType_t uxPriority,
+                        TaskHandle_t * const pxCreatedTask,
+                        const BaseType_t xCoreID ){
+#ifndef CONFIG_FREERTOS_UNICORE
+    if(xCoreID >= 0 && xCoreID < 2) {
+        return xTaskCreatePinnedToCore(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask, xCoreID);
+    } else {
+#endif
+    return xTaskCreate(pxTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pxCreatedTask);
+#ifndef CONFIG_FREERTOS_UNICORE
+    }
+#endif
 }
 
 unsigned long IRAM_ATTR micros()
 {
-    if (!microsStore) { // first Time Ever thread local not init'd
-        portENTER_CRITICAL_ISR(&microsMux);
-        pthread_key_create(&microsStore,microsStoreDelete); // create initial holder
-        portEXIT_CRITICAL_ISR(&microsMux);
-    }
-  
-    uint32_t *ptr;// [0] is lastCount, [1] is overFlow
-
-    ptr = pthread_getspecific(microsStore); // get address of storage
- 
-    if(ptr == NULL) { // first time in this thread, allocate mem, init it.  
-        portENTER_CRITICAL_ISR(&microsMux);
-        ptr = (uint32_t*)malloc(sizeof(uint32_t)*2);
-        pthread_setspecific(microsStore,ptr); // store the pointer to this thread's values
-        ptr[0] = 0; // lastCount value
-        ptr[1] = 0; // overFlow
-        portEXIT_CRITICAL_ISR(&microsMux);
-    }  
-
-    unsigned long ccount;
-    
-    portENTER_CRITICAL_ISR(&microsMux);
-    __asm__ __volatile__ ( "rsr     %0, ccount" : "=a" (ccount) ); //get cycle count
-    if(ccount < ptr[0]) { // overflow occurred
-        ptr[1] += UINT32_MAX / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ;
-    }
-    
-    ptr[0] = ccount;
-    portEXIT_CRITICAL_ISR(&microsMux);
-
-    return ptr[1] + (ccount / CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ);
+    return (unsigned long) (esp_timer_get_time());
 }
 
 unsigned long IRAM_ATTR millis()
 {
-    return xTaskGetTickCount() * portTICK_PERIOD_MS;
+    return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
 
 void delay(uint32_t ms)
@@ -112,8 +168,39 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+bool verifyOta() __attribute__((weak));
+bool verifyOta() { return true; }
+
+#ifdef CONFIG_BT_ENABLED
+//overwritten in esp32-hal-bt.c
+bool btInUse() __attribute__((weak));
+bool btInUse(){ return false; }
+#endif
+
 void initArduino()
 {
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_ota_img_states_t ota_state;
+    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+            if (verifyOta()) {
+                esp_ota_mark_app_valid_cancel_rollback();
+            } else {
+                log_e("OTA verification failed! Start rollback to the previous version ...");
+                esp_ota_mark_app_invalid_rollback_and_reboot();
+            }
+        }
+    }
+#endif
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#ifdef F_CPU
+    setCpuFrequencyMhz(F_CPU/1000000);
+#endif
+#if CONFIG_SPIRAM_SUPPORT
+    psramInit();
+#endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
     if(err == ESP_ERR_NVS_NO_FREE_PAGES){
@@ -130,6 +217,11 @@ void initArduino()
     if(err) {
         log_e("Failed to initialize NVS! Error: %u", err);
     }
+#ifdef CONFIG_BT_ENABLED
+    if(!btInUse()){
+        esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    }
+#endif
     init();
     initVariant();
 }

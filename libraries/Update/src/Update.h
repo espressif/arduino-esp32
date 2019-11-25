@@ -41,7 +41,7 @@ class UpdateClass {
       Call this to check the space needed for the update
       Will return false if there is not enough space
     */
-    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH);
+    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, int ledPin = -1, uint8_t ledOn = LOW);
 
     /*
       Writes a buffer to the flash and increments the address
@@ -62,7 +62,7 @@ class UpdateClass {
       If all bytes are written
       this call will write the config to eboot
       and return true
-      If there is already an update running but is not finished and !evenIfRemainanig
+      If there is already an update running but is not finished and !evenIfRemaining
       or there is an error
       this will clear everything and return false
       the last error is available through getError()
@@ -79,6 +79,8 @@ class UpdateClass {
       Prints the last error to an output stream
     */
     void printError(Stream &out);
+
+    const char * errorString();
 
     /*
       sets the expected MD5 for the firmware (hexString)
@@ -174,6 +176,9 @@ class UpdateClass {
 
     String _target_md5;
     MD5Builder _md5;
+
+    int _ledPin;
+    uint8_t _ledOn;
 };
 
 extern UpdateClass Update;

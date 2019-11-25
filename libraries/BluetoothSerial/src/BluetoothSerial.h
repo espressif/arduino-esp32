@@ -21,6 +21,7 @@
 
 #include "Arduino.h"
 #include "Stream.h"
+#include <esp_spp_api.h>
 
 class BluetoothSerial: public Stream
 {
@@ -29,7 +30,7 @@ class BluetoothSerial: public Stream
         BluetoothSerial(void);
         ~BluetoothSerial(void);
 
-        bool begin(String localName=String());
+        bool begin(String localName=String(), bool isMaster=false);
         int available(void);
         int peek(void);
         bool hasClient(void);
@@ -38,6 +39,17 @@ class BluetoothSerial: public Stream
         size_t write(const uint8_t *buffer, size_t size);
         void flush();
         void end(void);
+        esp_err_t register_callback(esp_spp_cb_t * callback);
+
+        void enableSSP();
+        bool setPin(const char *pin);
+        bool connect(String remoteName);
+        bool connect(uint8_t remoteAddress[]);
+        bool connect();
+        bool connected(int timeout=0);
+        bool isReady(bool checkMaster=false, int timeout=0);
+        bool disconnect();
+        bool unpairDevice(uint8_t remoteAddress[]);
 
     private:
         String local_name;

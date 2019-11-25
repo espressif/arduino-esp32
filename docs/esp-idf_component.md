@@ -1,6 +1,10 @@
 To use as a component of ESP-IDF
 =================================================
 
+## esp32-arduino-lib-builder
+
+For a simplified method, see [lib-builder](lib_builder.md)
+
 ## Installation
 
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
@@ -68,3 +72,6 @@ If you are writing code that does not require Arduino to compile and you want yo
 #endif
 ```
 
+## Compilation Errors
+
+As commits are made to esp-idf and submodules, the codebases can develop incompatibilities which cause compilation errors.  If you have problems compiling, follow the instructions in [Issue #1142](https://github.com/espressif/arduino-esp32/issues/1142) to roll esp-idf back to a known good version.

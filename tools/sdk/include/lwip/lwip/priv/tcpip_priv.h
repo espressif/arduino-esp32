@@ -1,3 +1,8 @@
+/**
+ * @file
+ * TCPIP API internal implementations (do not use in application code)
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -38,91 +43,79 @@
 
 #include "lwip/tcpip.h"
 #include "lwip/sys.h"
-#include "lwip/timers.h"
+#include "lwip/timeouts.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
 struct pbuf;
 struct netif;
-
-/** Define this to something that triggers a watchdog. This is called from
- * tcpip_thread after processing a message. */
-#ifndef LWIP_TCPIP_THREAD_ALIVE
-#define LWIP_TCPIP_THREAD_ALIVE()
-#endif
-
-#if LWIP_TCPIP_CORE_LOCKING
-/** The global semaphore to lock the stack. */
-extern sys_mutex_t lock_tcpip_core;
-#define LOCK_TCPIP_CORE()     sys_mutex_lock(&lock_tcpip_core)
-#define UNLOCK_TCPIP_CORE()   sys_mutex_unlock(&lock_tcpip_core)
-#else /* LWIP_TCPIP_CORE_LOCKING */
-#define LOCK_TCPIP_CORE()
-#define UNLOCK_TCPIP_CORE()
-#endif /* LWIP_TCPIP_CORE_LOCKING */
 
 #if LWIP_MPU_COMPATIBLE
 #define API_VAR_REF(name)               (*(name))
 #define API_VAR_DECLARE(type, name)     type * name
-#define API_VAR_ALLOC(type, pool, name) do { \
+#define API_VAR_ALLOC(type, pool, name, errorval) do { \
                                           name = (type *)memp_malloc(pool); \
                                           if (name == NULL) { \
-                                            return ERR_MEM; \
+                                            return errorval; \
                                           } \
                                         } while(0)
-#define API_VAR_ALLOC_DONTFAIL(type, pool, name) do { \
-                                          name = (type *)memp_malloc(pool); \
-                                          LWIP_ASSERT("pool empty", name != NULL); \
+#define API_VAR_ALLOC_POOL(type, pool, name, errorval) do { \
+                                          name = (type *)LWIP_MEMPOOL_ALLOC(pool); \
+                                          if (name == NULL) { \
+                                            return errorval; \
+                                          } \
                                         } while(0)
 #define API_VAR_FREE(pool, name)        memp_free(pool, name)
-#define API_EXPR_REF(expr)              &(expr)
+#define API_VAR_FREE_POOL(pool, name)   LWIP_MEMPOOL_FREE(pool, name)
+#define API_EXPR_REF(expr)              (&(expr))
 #if LWIP_NETCONN_SEM_PER_THREAD
 #define API_EXPR_REF_SEM(expr)          (expr)
 #else
 #define API_EXPR_REF_SEM(expr)          API_EXPR_REF(expr)
 #endif
 #define API_EXPR_DEREF(expr)            expr
+#define API_MSG_M_DEF(m)                m
+#define API_MSG_M_DEF_C(t, m)           t m
 #else /* LWIP_MPU_COMPATIBLE */
 #define API_VAR_REF(name)               name
 #define API_VAR_DECLARE(type, name)     type name
-#define API_VAR_ALLOC(type, pool, name)
-#define API_VAR_ALLOC_DONTFAIL(type, pool, name)
+#define API_VAR_ALLOC(type, pool, name, errorval)
+#define API_VAR_ALLOC_POOL(type, pool, name, errorval)
 #define API_VAR_FREE(pool, name)
+#define API_VAR_FREE_POOL(pool, name)
 #define API_EXPR_REF(expr)              expr
 #define API_EXPR_REF_SEM(expr)          API_EXPR_REF(expr)
-#define API_EXPR_DEREF(expr)            *(expr)
+#define API_EXPR_DEREF(expr)            (*(expr))
+#define API_MSG_M_DEF(m)                *m
+#define API_MSG_M_DEF_C(t, m)           const t * m
 #endif /* LWIP_MPU_COMPATIBLE */
 
-#if !LWIP_TCPIP_CORE_LOCKING
-err_t tcpip_send_api_msg(tcpip_callback_fn fn, void *apimsg, sys_sem_t* sem);
-#endif /* !LWIP_TCPIP_CORE_LOCKING */
+err_t tcpip_send_msg_wait_sem(tcpip_callback_fn fn, void *apimsg, sys_sem_t* sem);
 
-struct tcpip_api_call;
-typedef err_t (*tcpip_api_call_fn)(struct tcpip_api_call* call);
-struct tcpip_api_call
+struct tcpip_api_call_data
 {
-  tcpip_api_call_fn function;
 #if !LWIP_TCPIP_CORE_LOCKING
-#if LWIP_NETCONN_SEM_PER_THREAD
-  sys_sem_t *sem;
-#else /* LWIP_NETCONN_SEM_PER_THREAD */
+  err_t err;
+#if !LWIP_NETCONN_SEM_PER_THREAD
   sys_sem_t sem;
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
-  err_t err;
+#else /* !LWIP_TCPIP_CORE_LOCKING */
+  u8_t dummy; /* avoid empty struct :-( */
 #endif /* !LWIP_TCPIP_CORE_LOCKING */
 };
-err_t tcpip_api_call(tcpip_api_call_fn fn, struct tcpip_api_call *call);
+typedef err_t (*tcpip_api_call_fn)(struct tcpip_api_call_data* call);
+err_t tcpip_api_call(tcpip_api_call_fn fn, struct tcpip_api_call_data *call);
 
 enum tcpip_msg_type {
   TCPIP_MSG_API,
   TCPIP_MSG_API_CALL,
   TCPIP_MSG_INPKT,
-#if LWIP_TCPIP_TIMEOUT
+#if LWIP_TCPIP_TIMEOUT && LWIP_TIMERS
   TCPIP_MSG_TIMEOUT,
   TCPIP_MSG_UNTIMEOUT,
-#endif /* LWIP_TCPIP_TIMEOUT */
+#endif /* LWIP_TCPIP_TIMEOUT && LWIP_TIMERS */
   TCPIP_MSG_CALLBACK,
   TCPIP_MSG_CALLBACK_STATIC
 };
@@ -133,8 +126,12 @@ struct tcpip_msg {
     struct {
       tcpip_callback_fn function;
       void* msg;
-    } api;
-    struct tcpip_api_call *api_call;
+    } api_msg;
+    struct {
+      tcpip_api_call_fn function;
+      struct tcpip_api_call_data *arg;
+      sys_sem_t *sem;
+    } api_call;
     struct {
       struct pbuf *p;
       struct netif *netif;
@@ -144,13 +141,13 @@ struct tcpip_msg {
       tcpip_callback_fn function;
       void *ctx;
     } cb;
-#if LWIP_TCPIP_TIMEOUT
+#if LWIP_TCPIP_TIMEOUT && LWIP_TIMERS
     struct {
       u32_t msecs;
       sys_timeout_handler h;
       void *arg;
     } tmo;
-#endif /* LWIP_TCPIP_TIMEOUT */
+#endif /* LWIP_TCPIP_TIMEOUT && LWIP_TIMERS */
   } msg;
 };
 

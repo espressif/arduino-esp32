@@ -2,7 +2,8 @@
  * \file version.h
  *
  * \brief Run-time version information
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -38,17 +39,17 @@
  * Major, Minor, Patchlevel
  */
 #define MBEDTLS_VERSION_MAJOR  2
-#define MBEDTLS_VERSION_MINOR  6
-#define MBEDTLS_VERSION_PATCH  0
+#define MBEDTLS_VERSION_MINOR  13
+#define MBEDTLS_VERSION_PATCH  1
 
 /**
  * The single version number has the following structure:
  *    MMNNPP00
  *    Major version | Minor version | Patch version
  */
-#define MBEDTLS_VERSION_NUMBER         0x02060000
-#define MBEDTLS_VERSION_STRING         "2.6.0"
-#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.6.0"
+#define MBEDTLS_VERSION_NUMBER         0x020D0100
+#define MBEDTLS_VERSION_STRING         "2.13.1"
+#define MBEDTLS_VERSION_STRING_FULL    "mbed TLS 2.13.1"
 
 #if defined(MBEDTLS_VERSION_C)
 

@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include "esp32-hal.h"
+#include "driver/gpio.h"
 
 void dacWrite(uint8_t pin, uint8_t value);
 

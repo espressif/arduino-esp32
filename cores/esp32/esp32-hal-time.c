@@ -13,13 +13,14 @@
 // limitations under the License.
 
 #include "esp32-hal.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
+#include "tcpip_adapter.h"
 
 static void setTimeZone(long offset, int daylight)
 {
-    char cst[16] = {0};
-    char cdt[16] = "DST";
-    char tz[32] = {0};
+    char cst[17] = {0};
+    char cdt[17] = "DST";
+    char tz[33] = {0};
 
     if(offset % 3600){
         sprintf(cst, "UTC%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));
@@ -45,6 +46,7 @@ static void setTimeZone(long offset, int daylight)
  * */
 void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
 {
+    tcpip_adapter_init();  // Should not hurt anything if already inited
     if(sntp_enabled()){
         sntp_stop();
     }
@@ -62,6 +64,7 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
  * */
 void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3)
 {
+    tcpip_adapter_init();  // Should not hurt anything if already inited
     if(sntp_enabled()){
         sntp_stop();
     }
@@ -76,23 +79,15 @@ void configTzTime(const char* tz, const char* server1, const char* server2, cons
 
 bool getLocalTime(struct tm * info, uint32_t ms)
 {
-    uint32_t count = ms / 10;
+    uint32_t start = millis();
     time_t now;
-
-    time(&now);
-    localtime_r(&now, info);
-
-    if(info->tm_year > (2016 - 1900)){
-        return true;
-    }
-
-    while(count--) {
-        delay(10);
+    while((millis()-start) <= ms) {
         time(&now);
         localtime_r(&now, info);
         if(info->tm_year > (2016 - 1900)){
             return true;
         }
+        delay(10);
     }
     return false;
 }

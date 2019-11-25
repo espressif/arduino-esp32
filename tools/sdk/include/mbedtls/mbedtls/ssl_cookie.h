@@ -2,7 +2,8 @@
  * \file ssl_cookie.h
  *
  * \brief DTLS cookie callbacks implementation
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -49,7 +50,7 @@ extern "C" {
 /**
  * \brief          Context for the default cookie functions.
  */
-typedef struct
+typedef struct mbedtls_ssl_cookie_ctx
 {
     mbedtls_md_context_t    hmac_ctx;   /*!< context for the HMAC portion   */
 #if !defined(MBEDTLS_HAVE_TIME)

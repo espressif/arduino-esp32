@@ -61,7 +61,7 @@ extern "C" {
 #define IPV6_FRAG_COPYHEADER   0
 #endif
 
-/* The IPv6 reassembly timer interval in milliseconds. */
+/** The IPv6 reassembly timer interval in milliseconds. */
 #define IP6_REASS_TMR_INTERVAL 1000
 
 /* Copy the complete header of the first fragment to struct ip6_reassdata
@@ -74,7 +74,7 @@ extern "C" {
 #define IPV6_FRAG_HDRREF(hdr) (hdr)
 #endif /* IPV6_FRAG_COPYHEADER */
 
-/* IPv6 reassembly helper struct.
+/** IPv6 reassembly helper struct.
  * This is exported because memp needs to know the size.
  */
 struct ip6_reassdata {
@@ -89,17 +89,17 @@ struct ip6_reassdata {
 
 #define ip6_reass_init() /* Compatibility define */
 void ip6_reass_tmr(void);
-struct pbuf * ip6_reass(struct pbuf *p);
+struct pbuf *ip6_reass(struct pbuf *p);
 
 #endif /* LWIP_IPV6 && LWIP_IPV6_REASS */
 
 #if LWIP_IPV6 && LWIP_IPV6_FRAG  /* don't build if not configured for use in lwipopts.h */
 
+#ifndef LWIP_PBUF_CUSTOM_REF_DEFINED
+#define LWIP_PBUF_CUSTOM_REF_DEFINED
 /** A custom pbuf that holds a reference to another pbuf, which is freed
  * when this custom pbuf is freed. This is used to create a custom PBUF_REF
  * that points into the original pbuf. */
-#ifndef LWIP_PBUF_CUSTOM_REF_DEFINED
-#define LWIP_PBUF_CUSTOM_REF_DEFINED
 struct pbuf_custom_ref {
   /** 'base class' */
   struct pbuf_custom pc;

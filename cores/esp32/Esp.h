@@ -50,16 +50,33 @@ typedef enum {
     FM_UNKNOWN = 0xff
 } FlashMode_t;
 
+typedef enum {
+    SKETCH_SIZE_TOTAL = 0,
+    SKETCH_SIZE_FREE = 1
+} sketchSize_t;
+
 class EspClass
 {
 public:
     EspClass() {}
     ~EspClass() {}
     void restart();
-    uint32_t getFreeHeap();
+
+    //Internal RAM
+    uint32_t getHeapSize(); //total heap size
+    uint32_t getFreeHeap(); //available heap
+    uint32_t getMinFreeHeap(); //lowest level of free heap since boot
+    uint32_t getMaxAllocHeap(); //largest block of heap that can be allocated at once
+
+    //SPI RAM
+    uint32_t getPsramSize();
+    uint32_t getFreePsram();
+    uint32_t getMinFreePsram();
+    uint32_t getMaxAllocPsram();
+
     uint8_t getChipRevision();
-    uint8_t getCpuFreqMHz(){ return CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ; }
-    uint32_t getCycleCount();
+    uint32_t getCpuFreqMHz(){ return getCpuFrequencyMhz(); }
+    inline uint32_t getCycleCount() __attribute__((always_inline));
     const char * getSdkVersion();
 
     void deepSleep(uint32_t time_us);
@@ -72,6 +89,10 @@ public:
     uint32_t magicFlashChipSpeed(uint8_t byte);
     FlashMode_t magicFlashChipMode(uint8_t byte);
 
+    uint32_t getSketchSize();
+    String getSketchMD5();
+    uint32_t getFreeSketchSpace();
+
     bool flashEraseSector(uint32_t sector);
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
     bool flashRead(uint32_t offset, uint32_t *data, size_t size);
@@ -79,6 +100,13 @@ public:
     uint64_t getEfuseMac();
 
 };
+
+uint32_t IRAM_ATTR EspClass::getCycleCount()
+{
+    uint32_t ccount;
+    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+    return ccount;
+}
 
 extern EspClass ESP;
 

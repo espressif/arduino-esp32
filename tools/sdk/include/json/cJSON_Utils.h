@@ -20,6 +20,14 @@
   THE SOFTWARE.
 */
 
+#ifndef cJSON_Utils__h
+#define cJSON_Utils__h
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "cJSON.h"
 
 /* Implement RFC6901 (https://tools.ietf.org/html/rfc6901) JSON Pointer spec. */
@@ -72,3 +80,9 @@ CJSON_PUBLIC(char *) cJSONUtils_FindPointerFromObjectTo(const cJSON * const obje
 /* Sorts the members of the object into alphabetical order. */
 CJSON_PUBLIC(void) cJSONUtils_SortObject(cJSON * const object);
 CJSON_PUBLIC(void) cJSONUtils_SortObjectCaseSensitive(cJSON * const object);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

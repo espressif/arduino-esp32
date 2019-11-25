@@ -53,6 +53,33 @@ xSemaphoreHandle _ledc_sys_lock;
 #define LEDC_CHAN(g,c) LEDC.channel_group[(g)].channel[(c)]
 #define LEDC_TIMER(g,t) LEDC.timer_group[(g)].timer[(t)]
 
+static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+    if(ev_type == APB_AFTER_CHANGE && old_apb != new_apb){
+        uint32_t iarg = (uint32_t)arg;
+        uint8_t chan = iarg;
+        uint8_t group=(chan/8), timer=((chan/2)%4);
+        old_apb /= 1000000;
+        new_apb /= 1000000;
+        if(LEDC_TIMER(group, timer).conf.tick_sel){
+            LEDC_MUTEX_LOCK();
+            uint32_t old_div = LEDC_TIMER(group, timer).conf.clock_divider;
+            uint32_t div_num = (new_apb * old_div) / old_apb;
+            if(div_num > LEDC_DIV_NUM_HSTIMER0_V){
+                new_apb = REF_CLK_FREQ / 1000000;
+                div_num = (new_apb * old_div) / old_apb;
+                if(div_num > LEDC_DIV_NUM_HSTIMER0_V) {
+                    div_num = LEDC_DIV_NUM_HSTIMER0_V;//lowest clock possible
+                }
+                LEDC_TIMER(group, timer).conf.tick_sel = 0;
+            } else if(div_num < 256) {
+                div_num = 256;//highest clock possible
+            }
+            LEDC_TIMER(group, timer).conf.clock_divider = div_num;
+            LEDC_MUTEX_UNLOCK();
+        }
+    }
+}
+
 //uint32_t frequency = (80MHz or 1MHz)/((div_num / 256.0)*(1 << bit_num));
 static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, bool apb_clk)
 {
@@ -78,13 +105,15 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     LEDC_TIMER(group, timer).conf.rst = 1;//This bit is used to reset timer the counter will be 0 after reset.
     LEDC_TIMER(group, timer).conf.rst = 0;
     LEDC_MUTEX_UNLOCK();
+    uint32_t iarg = chan;
+    addApbChangeCallback((void*)iarg, _on_apb_change);
 }
 
 //max div_num 0x3FFFF (262143)
 //max bit_num 0x1F (31)
 static double _ledcSetupTimerFreq(uint8_t chan, double freq, uint8_t bit_num)
 {
-    uint64_t clk_freq = APB_CLK_FREQ;
+    uint64_t clk_freq = getApbFrequency();
     clk_freq <<= 8;//div_num is 8 bit decimal
     uint32_t div_num = (clk_freq >> bit_num) / freq;
     bool apb_clk = true;
@@ -117,7 +146,7 @@ static double _ledcTimerRead(uint8_t chan)
     LEDC_MUTEX_UNLOCK();
     uint64_t clk_freq = 1000000;
     if(apb_clk) {
-        clk_freq *= 80;
+        clk_freq = getApbFrequency();
     }
     clk_freq <<= 8;//div_num is 8 bit decimal
     return (clk_freq >> bit_num) / (double)div_num;
@@ -138,7 +167,7 @@ static void _ledcSetupChannel(uint8_t chan, uint8_t idle_level)
     LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
     LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
     if(group) {
-        LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
+        LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
     } else {
         LEDC_CHAN(group, channel).conf0.clk_en = 0;
     }
@@ -167,7 +196,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         LEDC_CHAN(group, channel).conf0.sig_out_en = 1;//This is the output enable control bit for channel
         LEDC_CHAN(group, channel).conf1.duty_start = 1;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            LEDC_CHAN(group, channel).conf0.val |= BIT(4);
+            LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
         } else {
             LEDC_CHAN(group, channel).conf0.clk_en = 1;
         }
@@ -175,7 +204,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         LEDC_CHAN(group, channel).conf0.sig_out_en = 0;//This is the output enable control bit for channel
         LEDC_CHAN(group, channel).conf1.duty_start = 0;//When duty_num duty_cycle and duty_scale has been configured. these register won't take effect until set duty_start. this bit is automatically cleared by hardware.
         if(group) {
-            LEDC_CHAN(group, channel).conf0.val &= ~BIT(4);
+            LEDC_CHAN(group, channel).conf0.low_speed_update = 1;
         } else {
             LEDC_CHAN(group, channel).conf0.clk_en = 0;
         }

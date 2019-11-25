@@ -35,14 +35,14 @@
  * $Id: eui64.h,v 1.6 2002/12/04 23:03:32 paulus Exp $
 */
 
-#include "lwip/opt.h"
+#include "netif/ppp/ppp_opts.h"
 #if PPP_SUPPORT && PPP_IPV6_SUPPORT  /* don't build if not configured for use in lwipopts.h */
 
-#ifndef __EUI64_H__
-#define __EUI64_H__
+#ifndef EUI64_H
+#define EUI64_H
 
 /*
- * TODO:
+ * @todo:
  *
  * Maybe this should be done by processing struct in6_addr directly...
  */
@@ -84,11 +84,11 @@ typedef union
 
 #define eui64_set32(e, l)	do {			\
 				(e).e32[0] = 0;		\
-				(e).e32[1] = htonl(l);	\
+				(e).e32[1] = lwip_htonl(l);	\
 				} while (0)
 #define eui64_setlo32(e, l)	eui64_set32(e, l)
 
 char *eui64_ntoa(eui64_t);	/* Returns ascii representation of id */
 
-#endif /* __EUI64_H__ */
+#endif /* EUI64_H */
 #endif /* PPP_SUPPORT && PPP_IPV6_SUPPORT */
