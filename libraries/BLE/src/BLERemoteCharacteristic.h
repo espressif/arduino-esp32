@@ -41,15 +41,15 @@ public:
 	std::map<std::string, BLERemoteDescriptor*>* getDescriptors();
 	uint16_t    getHandle();
 	BLEUUID     getUUID();
-	std::string readValue();
-	uint8_t     readUInt8();
-	uint16_t    readUInt16();
-	uint32_t    readUInt32();
-	float       readFloat();
+	std::string readValue(esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	uint8_t     readUInt8(esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	uint16_t    readUInt16(esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	uint32_t    readUInt32(esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	float       readFloat(esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
 	void        registerForNotify(notify_callback _callback, bool notifications = true);
-	void        writeValue(uint8_t* data, size_t length, bool response = false);
-	void        writeValue(std::string newValue, bool response = false);
-	void        writeValue(uint8_t newValue, bool response = false);
+	void        writeValue(uint8_t* data, size_t length, bool response = false, esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	void        writeValue(std::string newValue, bool response = false, esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
+	void        writeValue(uint8_t newValue, bool response = false, esp_gatt_auth_req_t auth = ESP_GATT_AUTH_REQ_NONE);
 	std::string toString();
 	uint8_t*	readRawData();
 

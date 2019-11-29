@@ -355,8 +355,8 @@ BLEUUID BLERemoteCharacteristic::getUUID() {
  * @brief Read an unsigned 16 bit value
  * @return The unsigned 16 bit value.
  */
-uint16_t BLERemoteCharacteristic::readUInt16() {
-	std::string value = readValue();
+uint16_t BLERemoteCharacteristic::readUInt16(esp_gatt_auth_req_t auth) {
+	std::string value = readValue(auth);
 	if (value.length() >= 2) {
 		return *(uint16_t*)(value.data());
 	}
@@ -368,8 +368,8 @@ uint16_t BLERemoteCharacteristic::readUInt16() {
  * @brief Read an unsigned 32 bit value.
  * @return the unsigned 32 bit value.
  */
-uint32_t BLERemoteCharacteristic::readUInt32() {
-	std::string value = readValue();
+uint32_t BLERemoteCharacteristic::readUInt32(esp_gatt_auth_req_t auth) {
+	std::string value = readValue(auth);
 	if (value.length() >= 4) {
 		return *(uint32_t*)(value.data());
 	}
@@ -381,8 +381,8 @@ uint32_t BLERemoteCharacteristic::readUInt32() {
  * @brief Read a byte value
  * @return The value as a byte
  */
-uint8_t BLERemoteCharacteristic::readUInt8() {
-	std::string value = readValue();
+uint8_t BLERemoteCharacteristic::readUInt8(esp_gatt_auth_req_t auth) {
+	std::string value = readValue(auth);
 	if (value.length() >= 1) {
 		return (uint8_t)value[0];
 	}
@@ -393,8 +393,8 @@ uint8_t BLERemoteCharacteristic::readUInt8() {
  * @brief Read a float value.
  * @return the float value.
  */
-float BLERemoteCharacteristic::readFloat() {
-	std::string value = readValue();
+float BLERemoteCharacteristic::readFloat(esp_gatt_auth_req_t auth) {
+	std::string value = readValue(auth);
 	if (value.length() >= 4) {
 		return *(float*)(value.data());
 	}
@@ -405,7 +405,7 @@ float BLERemoteCharacteristic::readFloat() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string BLERemoteCharacteristic::readValue() {
+std::string BLERemoteCharacteristic::readValue(esp_gatt_auth_req_t auth) {
 	log_v(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
 	// Check to see that we are connected.
@@ -423,7 +423,7 @@ std::string BLERemoteCharacteristic::readValue() {
 		m_pRemoteService->getClient()->getGattcIf(),
 		m_pRemoteService->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		ESP_GATT_AUTH_REQ_NONE);                       // Security
+		auth);                                         // Security
 
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -531,8 +531,8 @@ std::string BLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return N/A.
  */
-void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+void BLERemoteCharacteristic::writeValue(std::string newValue, bool response, esp_gatt_auth_req_t auth) {
+	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response, auth);
 } // writeValue
 
 
@@ -544,8 +544,8 @@ void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
  * @param [in] response Whether we require a response from the write.
  * @return N/A.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
-	writeValue(&newValue, 1, response);
+void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response, esp_gatt_auth_req_t auth) {
+	writeValue(&newValue, 1, response, auth);
 } // writeValue
 
 
@@ -555,7 +555,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @param [in] length The length of the data in the data buffer.
  * @param [in] response Whether we require a response from the write.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
+void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response, esp_gatt_auth_req_t auth) {
 	// writeValue(std::string((char*)data, length), response);
 	log_v(">> writeValue(), length: %d", length);
 
@@ -574,7 +574,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 		length,
 		data,
 		response?ESP_GATT_WRITE_TYPE_RSP:ESP_GATT_WRITE_TYPE_NO_RSP,
-		ESP_GATT_AUTH_REQ_NONE
+        auth
 	);
 
 	if (errRc != ESP_OK) {
