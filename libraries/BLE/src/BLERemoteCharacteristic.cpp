@@ -40,6 +40,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
 	m_pRemoteService = pRemoteService;
 	m_notifyCallback = nullptr;
 	m_rawData = nullptr;
+    m_auth           = ESP_GATT_AUTH_REQ_NONE;
 
 	retrieveDescriptors(); // Get the descriptors for this characteristic
 	log_v("<< BLERemoteCharacteristic");
@@ -355,8 +356,8 @@ BLEUUID BLERemoteCharacteristic::getUUID() {
  * @brief Read an unsigned 16 bit value
  * @return The unsigned 16 bit value.
  */
-uint16_t BLERemoteCharacteristic::readUInt16(esp_gatt_auth_req_t auth) {
-	std::string value = readValue(auth);
+uint16_t BLERemoteCharacteristic::readUInt16() {
+	std::string value = readValue();
 	if (value.length() >= 2) {
 		return *(uint16_t*)(value.data());
 	}
@@ -368,8 +369,8 @@ uint16_t BLERemoteCharacteristic::readUInt16(esp_gatt_auth_req_t auth) {
  * @brief Read an unsigned 32 bit value.
  * @return the unsigned 32 bit value.
  */
-uint32_t BLERemoteCharacteristic::readUInt32(esp_gatt_auth_req_t auth) {
-	std::string value = readValue(auth);
+uint32_t BLERemoteCharacteristic::readUInt32() {
+	std::string value = readValue();
 	if (value.length() >= 4) {
 		return *(uint32_t*)(value.data());
 	}
@@ -381,8 +382,8 @@ uint32_t BLERemoteCharacteristic::readUInt32(esp_gatt_auth_req_t auth) {
  * @brief Read a byte value
  * @return The value as a byte
  */
-uint8_t BLERemoteCharacteristic::readUInt8(esp_gatt_auth_req_t auth) {
-	std::string value = readValue(auth);
+uint8_t BLERemoteCharacteristic::readUInt8() {
+	std::string value = readValue();
 	if (value.length() >= 1) {
 		return (uint8_t)value[0];
 	}
@@ -393,8 +394,8 @@ uint8_t BLERemoteCharacteristic::readUInt8(esp_gatt_auth_req_t auth) {
  * @brief Read a float value.
  * @return the float value.
  */
-float BLERemoteCharacteristic::readFloat(esp_gatt_auth_req_t auth) {
-	std::string value = readValue(auth);
+float BLERemoteCharacteristic::readFloat() {
+	std::string value = readValue();
 	if (value.length() >= 4) {
 		return *(float*)(value.data());
 	}
@@ -405,7 +406,7 @@ float BLERemoteCharacteristic::readFloat(esp_gatt_auth_req_t auth) {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string BLERemoteCharacteristic::readValue(esp_gatt_auth_req_t auth) {
+std::string BLERemoteCharacteristic::readValue() {
 	log_v(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
 	// Check to see that we are connected.
@@ -423,7 +424,7 @@ std::string BLERemoteCharacteristic::readValue(esp_gatt_auth_req_t auth) {
 		m_pRemoteService->getClient()->getGattcIf(),
 		m_pRemoteService->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		auth);                                         // Security
+		m_auth);                                         // Security
 
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -531,8 +532,8 @@ std::string BLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return N/A.
  */
-void BLERemoteCharacteristic::writeValue(std::string newValue, bool response, esp_gatt_auth_req_t auth) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response, auth);
+void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
+	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
 } // writeValue
 
 
@@ -544,8 +545,8 @@ void BLERemoteCharacteristic::writeValue(std::string newValue, bool response, es
  * @param [in] response Whether we require a response from the write.
  * @return N/A.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response, esp_gatt_auth_req_t auth) {
-	writeValue(&newValue, 1, response, auth);
+void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
+	writeValue(&newValue, 1, response);
 } // writeValue
 
 
@@ -555,7 +556,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response, esp_ga
  * @param [in] length The length of the data in the data buffer.
  * @param [in] response Whether we require a response from the write.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response, esp_gatt_auth_req_t auth) {
+void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
 	// writeValue(std::string((char*)data, length), response);
 	log_v(">> writeValue(), length: %d", length);
 
@@ -574,7 +575,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 		length,
 		data,
 		response?ESP_GATT_WRITE_TYPE_RSP:ESP_GATT_WRITE_TYPE_NO_RSP,
-        auth
+        m_auth
 	);
 
 	if (errRc != ESP_OK) {
@@ -593,6 +594,14 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
  */
 uint8_t* BLERemoteCharacteristic::readRawData() {
 	return m_rawData;
+}
+
+/**
+ * @brief Set authentication request type for characteristic
+ * @param [in] auth Authentication request type.
+ */
+void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
+    m_auth = auth;
 }
 
 #endif /* CONFIG_BT_ENABLED */

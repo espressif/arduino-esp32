@@ -34,6 +34,7 @@ public:
 	void        writeValue(uint8_t* data, size_t length, bool response = false);
 	void        writeValue(std::string newValue, bool response = false);
 	void        writeValue(uint8_t newValue, bool response = false);
+    void        setAuth(esp_gatt_auth_req_t auth);
 
 
 private:
@@ -48,6 +49,7 @@ private:
 	std::string              m_value;                   // Last received value of the descriptor.
 	BLERemoteCharacteristic* m_pRemoteCharacteristic;   // Reference to the Remote characteristic of which this descriptor is associated.
 	FreeRTOS::Semaphore      m_semaphoreReadDescrEvt      = FreeRTOS::Semaphore("ReadDescrEvt");
+    esp_gatt_auth_req_t      m_auth;
 
 
 };
