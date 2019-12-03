@@ -9,10 +9,10 @@
 #include <NTPClient.h>
 #include <ESP8266HTTPClient.h>
 
-const char* ssid = "***";
-const char* password = "***";
+const char* ssid = "inHouse Workshop";
+const char* password = "nasturtium";
 
-const String postAddress = "http://IP:PORT/germination";
+const String postAddress = "http://10.119.210.58:3000/germination";
 
 // Enables ntp server for time and date
 WiFiUDP ntpUDP;
@@ -68,6 +68,9 @@ void setup() {
 void OTAinit() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
+
+  WiFi.setHostname(“MyArduino”);
+  
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
     delay(5000);
@@ -210,7 +213,7 @@ void postProtocol(float tem, float hum) {
  
 void loop() {
   // Updates and records time to current.
-  timeClient.update();
+  /*timeClient.update();
   currentTime = timeClient.getEpochTime();
   
   if(sht31.begin(0x44)) {
@@ -231,7 +234,9 @@ void loop() {
 //  Serial.print("Temperature: ");
 //  Serial.println(digitalRead(tempPin));
   
-  Serial.println();
-  
+  Serial.println(); 
+  // */
+  //WiFi.setHostname(“MyArduino”);
+  Serial.println(wifi_station_get_hostname());
   delay(1000);
 }

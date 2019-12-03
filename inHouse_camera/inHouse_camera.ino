@@ -1,25 +1,78 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-
 #define CAMERA_MODEL_AI_THINKER
-
 #include "camera_pins.h"
+#define uS_TO_S_FACTOR 1000000  // Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  5        // Time ESP32 will go to sleep (in seconds) */
 
-const char* ssid = "ssid";
-const char* password = "password";
+// esp32 number denoting position
+const int number = 1;
 
+// The length of the complete cycle.
+const int cycleLength = 60;
+// How long the camera remains on in each cycle
+const int intervalOn = 30;
+
+// How long the camera sleeps for each cycle
+int intervalOff = cycleLength - intervalOn;
+// how long after the start of the next cycle it will take to turn on given id Number
+int stagger = (number - 1) * intervalOn;
+// When the next cycle starts
+int start;
+// Time device turned on epoch time
+int awoke;
+// When the 32 will turn on next
+int sleepAlarm;
+
+const char* ssid = "***";
+const char* password = "***";
+
+WiFiUDP ntpUDP;
+
+NTPClient timeClient(ntpUDP);
+
+int currentTime = 0; // What the current time is
+int wokeUpAt = 0; // When the 32 last woke up
 
 void startCameraServer();
 
 IPAddress ip;
 
+void OTA() {
+  ArduinoOTA.handle();
+  if (WiFi.status() == WL_CONNECTED) {
+    //Serial.println("connection strong");
+  } else {
+    Serial.println("connection lost");
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.println(WiFi.status());
+      WiFi.disconnect();
+      delay(1000);
+      WiFi.begin(ssid, password);
+      delay(2000);
+    }
+    Serial.println("reconnected!");
+  }
+  if (ip != WiFi.localIP()){
+    ip = WiFi.localIP();
+    Serial.println("new ip address");
+    Serial.print(ip);
+  }
+  delay(500);
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
+
+  //pinMode(sleepPin, INPUT);
+  //esp_sleep_enable_ext0_wakeup(sleepGpioPin, 1);
+  Serial.println("Morning!");
 
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -131,27 +184,32 @@ void setup() {
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+
+  timeClient.begin();
+  timeClient.update();
+  awoke = timeClient.getEpochTime();
+  // Gets start of next cycle
+  if(awoke % cycleLength != 0) {
+    // start of next cycle equals time awoken + length of cycle minus time elapsed since start of last cycle
+    start = awoke + cycleLength - (awoke % cycleLength);
+  } else {
+    // In case the system woke up exactly on it's previous starting time (Should only be possible for camera 1)
+    start = awoke + cycleLength;
+  }
+  sleepAlarm = start + stagger;
 }
 
 void loop() {
-  ArduinoOTA.handle();
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("connection strong");
-  } else {
-    Serial.println("connection lost");
-    while (WiFi.status() != WL_CONNECTED) {
-      Serial.println(WiFi.status());
-      WiFi.disconnect();
-      delay(1000);
-      WiFi.begin(ssid, password);
-      delay(2000);
-    }
-    Serial.println("reconnected!");
+  OTA();
+  timeClient.update();
+  currentTime = timeClient.getEpochTime();
+  Serial.println(currentTime);
+  if(currentTime > awoke + intervalOn) {
+    Serial.println("Good Night!");
+    esp_sleep_enable_timer_wakeup((sleepAlarm - currentTime) * uS_TO_S_FACTOR);
+    esp_deep_sleep_start();
   }
-  if (ip != WiFi.localIP()){
-    ip = WiFi.localIP();
-    Serial.println("new ip address");
-    Serial.print(ip);
-  }
-  delay(5000);
+  delay(500);
 }
