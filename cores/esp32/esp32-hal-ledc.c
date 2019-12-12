@@ -55,7 +55,7 @@ xSemaphoreHandle _ledc_sys_lock = NULL;
 
 static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     if(ev_type == APB_AFTER_CHANGE && old_apb != new_apb){
-        uint16_t iarg = (uint16_t*)arg;
+        uint16_t iarg = *(uint16_t*)arg;
         uint8_t chan = 0;
         old_apb /= 1000000;
         new_apb /= 1000000;
@@ -77,6 +77,9 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
                     }
                     LEDC_TIMER(group, timer).conf.clock_divider = div_num;
                     LEDC_MUTEX_UNLOCK();
+                }
+                else {
+                    log_e("timer not active chan=%d",chan);
                 }
             }
             iarg = iarg >> 1;
