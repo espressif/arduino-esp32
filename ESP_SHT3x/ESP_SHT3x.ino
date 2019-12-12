@@ -9,7 +9,7 @@
 #include <NTPClient.h>
 #include <ESP8266HTTPClient.h>
 
-const char* ssid = "inHouse Workshop";
+const char* ssid = "inHouse";
 const char* password = "nasturtium";
 
 const String postAddress = "http://10.119.210.58:3000/germination";
@@ -69,7 +69,7 @@ void OTAinit() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  WiFi.setHostname(“MyArduino”);
+  //WiFi.setHostname(“MyArduino”);
   
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Connection Failed! Rebooting...");
@@ -213,7 +213,7 @@ void postProtocol(float tem, float hum) {
  
 void loop() {
   // Updates and records time to current.
-  /*timeClient.update();
+  timeClient.update();
   currentTime = timeClient.getEpochTime();
   
   if(sht31.begin(0x44)) {
@@ -228,15 +228,13 @@ void loop() {
   Serial.println();
 
 //  Commented code for testing purposes.
-//  Serial.println(currentTime);
-//  Serial.print("Humidity: ");
-//  Serial.println(digitalRead(humidPin));
-//  Serial.print("Temperature: ");
-//  Serial.println(digitalRead(tempPin));
+  Serial.println(currentTime);
+  Serial.print("Humidity: ");
+  Serial.println(digitalRead(humidPin));
+  Serial.print("Temperature: ");
+  Serial.println(digitalRead(tempPin));
   
   Serial.println(); 
-  // */
-  //WiFi.setHostname(“MyArduino”);
-  Serial.println(wifi_station_get_hostname());
+  //
   delay(1000);
 }

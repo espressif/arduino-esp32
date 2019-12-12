@@ -10,12 +10,12 @@
 #define TIME_TO_SLEEP  5        // Time ESP32 will go to sleep (in seconds) */
 
 // esp32 number denoting position
-const int number = 1;
+const int number = 6;
 
 // The length of the complete cycle.
-const int cycleLength = 60;
+const int cycleLength = 1800;
 // How long the camera remains on in each cycle
-const int intervalOn = 30;
+const int intervalOn = 60;
 
 // How long the camera sleeps for each cycle
 int intervalOff = cycleLength - intervalOn;
@@ -28,8 +28,8 @@ int awoke;
 // When the 32 will turn on next
 int sleepAlarm;
 
-const char* ssid = "***";
-const char* password = "***";
+const char* ssid = "inHouse";
+const char* password = "nasturtium";
 
 WiFiUDP ntpUDP;
 
@@ -206,10 +206,10 @@ void loop() {
   timeClient.update();
   currentTime = timeClient.getEpochTime();
   Serial.println(currentTime);
-  if(currentTime > awoke + intervalOn) {
-    Serial.println("Good Night!");
-    esp_sleep_enable_timer_wakeup((sleepAlarm - currentTime) * uS_TO_S_FACTOR);
-    esp_deep_sleep_start();
-  }
+//  if(currentTime > awoke + intervalOn) {
+//    Serial.println("Good Night!");
+//    esp_sleep_enable_timer_wakeup((sleepAlarm - currentTime) * uS_TO_S_FACTOR);
+//    esp_deep_sleep_start();
+//  }
   delay(500);
 }
