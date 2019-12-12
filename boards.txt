@@ -324,7 +324,7 @@ tinypico.serial.disableRTS=true
 tinypico.build.mcu=esp32
 tinypico.build.core=esp32
 tinypico.build.variant=pico32
-tinypico.build.board=ESP32_PICO
+tinypico.build.board=TINYPICO
 
 tinypico.build.f_cpu=240000000L
 tinypico.build.flash_size=4MB
