@@ -79,7 +79,7 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
                     LEDC_MUTEX_UNLOCK();
                 }
                 else {
-                    log_e("timer not active chan=%d",chan);
+                    log_d("using REF_CLK chan=%d",chan);
                 }
             }
             iarg = iarg >> 1;
