@@ -533,7 +533,7 @@ std::string BLEAdvertisedDevice::toString() {
 		free(pHex);
 	}
 	if (haveServiceUUID()) {
-		for (int i; i < m_serviceUUIDs.size(); i++) {
+		for (int i=0; i < m_serviceUUIDs.size(); i++) {
 		    res += ", serviceUUID: " + getServiceUUID(i).toString();
 		}
 	}
