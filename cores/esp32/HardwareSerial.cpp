@@ -137,13 +137,13 @@ int HardwareSerial::read(void)
 // the buffer is NOT null terminated.
 size_t HardwareSerial::read(uint8_t *buffer, size_t size)
 {
+    size_t avail = available();
+    if (size < avail) {
+        avail = size;
+    }
     size_t count = 0;
-    while(count < size) {
-        int c = read();
-        if(c < 0) {
-            break;
-        }
-        *buffer++ = (char) c;
+    while(count < avail) {
+        *buffer++ = uartRead(_uart);
         count++;
     }
     return count;
