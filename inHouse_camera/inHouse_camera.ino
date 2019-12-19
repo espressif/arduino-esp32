@@ -28,8 +28,8 @@ int awoke;
 // When the 32 will turn on next
 int sleepAlarm;
 
-const char* ssid = "inHouse";
-const char* password = "nasturtium";
+const char* ssid = "***";
+const char* password = "***";
 
 WiFiUDP ntpUDP;
 
@@ -152,7 +152,6 @@ void setup() {
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
 
-  ///////////////////////////////////////////////
   ArduinoOTA
     .onStart([]() {
       String type;
@@ -204,8 +203,8 @@ void setup() {
 void loop() {
   OTA();
   timeClient.update();
-  currentTime = timeClient.getEpochTime();
-  Serial.println(currentTime);
+//  currentTime = timeClient.getEpochTime();
+//  Serial.println(currentTime);
 //  if(currentTime > awoke + intervalOn) {
 //    Serial.println("Good Night!");
 //    esp_sleep_enable_timer_wakeup((sleepAlarm - currentTime) * uS_TO_S_FACTOR);
