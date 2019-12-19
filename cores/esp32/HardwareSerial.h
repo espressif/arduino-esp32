@@ -66,6 +66,10 @@ public:
     void flush( bool txOnly);
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
+    inline size_t write(const char * buffer, size_t size)
+    {
+        return write((uint8_t*) buffer, size);
+    }
 
     inline size_t write(const char * s)
     {
