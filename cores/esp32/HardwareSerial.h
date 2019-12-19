@@ -62,6 +62,11 @@ public:
     int availableForWrite(void);
     int peek(void);
     int read(void);
+    size_t read(uint8_t *buffer, size_t size);
+    inline size_t read(char * buffer, size_t size)
+    {
+        return read((uint8_t*) buffer, size);
+    }
     void flush(void);
     void flush( bool txOnly);
     size_t write(uint8_t);
@@ -70,7 +75,6 @@ public:
     {
         return write((uint8_t*) buffer, size);
     }
-
     inline size_t write(const char * s)
     {
         return write((uint8_t*) s, strlen(s));
