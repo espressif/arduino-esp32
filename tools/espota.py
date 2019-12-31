@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Original espota.py by Ivan Grokhotkov:
 # https://gist.github.com/igrr/d35ab8446922179dc58c
@@ -8,7 +8,7 @@
 # Modified since 2016-01-03 from Matthew O'Gorman (https://githumb.com/mogorman)
 #
 # This script will push an OTA update to the ESP
-# use it like: python espota.py -i <ESP_IP_address> -I <Host_IP_address> -p <ESP_port> -P <Host_port> [-a password] -f <sketch.bin>
+# use it like: python3 espota.py -i <ESP_IP_address> -I <Host_IP_address> -p <ESP_port> -P <Host_port> [-a password] -f <sketch.bin>
 # Or to upload SPIFFS image:
 # python espota.py -i <ESP_IP_address> -I <Host_IP_address> -p <ESP_port> -P <HOST_port> [-a password] -s -f <spiffs.bin>
 #
