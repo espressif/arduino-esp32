@@ -138,7 +138,7 @@ function merge_package_json(){
 
     echo "Creating new JSON ..."
     set +e
-    stdbuf -oL python "$PACKAGE_JSON_MERGE" "$jsonOut" "$old_json" > "$merged_json"
+    stdbuf -oL python3 "$PACKAGE_JSON_MERGE" "$jsonOut" "$old_json" > "$merged_json"
     set -e
     
     set -v
@@ -354,7 +354,7 @@ releaseNotes="$RELEASE_BODY$releaseNotes"
 
 # Update release page
 echo "Updating release notes ..."
-releaseNotes=$(printf '%s' "$releaseNotes" | python -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+releaseNotes=$(printf '%s' "$releaseNotes" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
 releaseNotes=${releaseNotes:1:-1}
 curlData="{\"body\": \"$releaseNotes\"}"
 releaseData=`curl --data "$curlData" "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID?access_token=$GITHUB_TOKEN" 2>/dev/null`

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This script merges two Arduino Board Manager package json files.
 # Usage:
 #   python merge_packages.py package_esp8266com_index.json version/new/package_esp8266com_index.json

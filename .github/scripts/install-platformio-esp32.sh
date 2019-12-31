@@ -3,13 +3,13 @@
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
 
 echo "Installing Python Wheel ..."
-pip install wheel > /dev/null 2>&1
+pip3 install wheel > /dev/null 2>&1
 
 echo "Installing PlatformIO ..."
-pip install -U https://github.com/platformio/platformio/archive/develop.zip > /dev/null 2>&1
+pip3 install -U https://github.com/platformio/platformio/archive/develop.zip > /dev/null 2>&1
 
 echo "Installing Platform ESP32 ..."
-python -m platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage > /dev/null 2>&1
+python3 -m platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage > /dev/null 2>&1
 
 echo "Replacing the framework version ..."
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -42,7 +42,7 @@ function build_pio_sketch(){ # build_pio_sketch <board> <path-to-ino>
     local sketch_dir=$(dirname "$sketch")
     echo ""
     echo "Compiling '"$(basename "$sketch")"' ..."
-    python -m platformio ci --board "$board" "$sketch_dir" --project-option="board_build.partitions = huge_app.csv"
+    python3 -m platformio ci --board "$board" "$sketch_dir" --project-option="board_build.partitions = huge_app.csv"
 }
 
 function count_sketches() # count_sketches <examples-path>
