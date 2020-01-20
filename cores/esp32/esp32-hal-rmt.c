@@ -483,7 +483,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
             break;
         }
     }
-    if (i == MAX_CHANNELS || i+j >= MAX_CHANNELS || j != buffers)  {
+    if (i == MAX_CHANNELS || i+j > MAX_CHANNELS || j != buffers)  {
         xSemaphoreGive(g_rmt_block_lock);
         return NULL;
     }
