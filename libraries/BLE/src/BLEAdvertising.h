@@ -52,6 +52,7 @@ public:
 	void start();
 	void stop();
 	void setAppearance(uint16_t appearance);
+	void setAdvertisementType(esp_ble_adv_type_t adv_type);
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(BLEAdvertisementData& advertisementData);
