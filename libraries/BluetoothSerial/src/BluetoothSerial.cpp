@@ -40,6 +40,7 @@
 
 const char * _spp_server_name = "ESP32SPP";
 
+#define TX_ACK_TO 100
 #define RX_QUEUE_SIZE 512
 #define TX_QUEUE_SIZE 32
 static uint32_t _spp_client = 0;
@@ -153,6 +154,7 @@ static uint8_t _spp_tx_buffer[SPP_TX_MAX];
 static uint16_t _spp_tx_buffer_len = 0;
 
 static bool _spp_send_buffer(){
+    TickType_t xTicksToWait = TX_ACK_TO / portTICK_PERIOD_MS;
     if((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED) != 0){
         esp_err_t err = esp_spp_write(_spp_client, _spp_tx_buffer_len, _spp_tx_buffer);
         if(err != ESP_OK){
@@ -160,7 +162,7 @@ static bool _spp_send_buffer(){
             return false;
         }
         _spp_tx_buffer_len = 0;
-        if(xSemaphoreTake(_spp_tx_done, portMAX_DELAY) != pdTRUE){
+        if(xSemaphoreTake(_spp_tx_done, xTicksToWait) != pdTRUE){
             log_e("SPP Ack Failed!");
             return false;
         }
