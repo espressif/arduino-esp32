@@ -28,6 +28,7 @@
 #include <memory>
 #include <WiFi.h>
 #include "HTTP_Method.h"
+#include "Uri.h"
 
 enum HTTPUploadStatus { UPLOAD_FILE_START, UPLOAD_FILE_WRITE, UPLOAD_FILE_END,
                         UPLOAD_FILE_ABORTED };
@@ -84,9 +85,9 @@ public:
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String("") );
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const String &uri, THandlerFunction handler);
-  void on(const String &uri, HTTPMethod method, THandlerFunction fn);
-  void on(const String &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);
+  void on(const Uri &uri, THandlerFunction handler);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);
   void addHandler(RequestHandler* handler);
   void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL );
   void onNotFound(THandlerFunction fn);  //called when handler is not assigned
