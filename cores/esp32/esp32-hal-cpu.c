@@ -23,10 +23,12 @@
 #include "soc/rtc_cntl_reg.h"
 #include "rom/rtc.h"
 #include "soc/apb_ctrl_reg.h"
+#include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
 
 typedef struct apb_change_cb_s {
+        struct apb_change_cb_s * prev;
         struct apb_change_cb_s * next;
         void * arg;
         apb_change_cb_t cb;
@@ -52,9 +54,19 @@ static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
     initApbChangeCallback();
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
     apb_change_t * r = apb_change_callbacks;
-    while(r != NULL){
-        r->cb(r->arg, ev_type, old_apb, new_apb);
-        r=r->next;
+    if( r != NULL ){
+        if(ev_type == APB_BEFORE_CHANGE )
+            while(r != NULL){
+                r->cb(r->arg, ev_type, old_apb, new_apb);
+                r=r->next;
+            }
+        else { // run backwards through chain
+            while(r->next != NULL) r = r->next; // find first added
+            while( r != NULL){
+                r->cb(r->arg, ev_type, old_apb, new_apb);
+                r=r->prev;
+            }
+        }
     }
     xSemaphoreGive(apb_change_lock);
 }
@@ -67,6 +79,7 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
         return false;
     }
     c->next = NULL;
+    c->prev = NULL;
     c->arg = arg;
     c->cb = cb;
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
@@ -74,18 +87,20 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
         apb_change_callbacks = c;
     } else {
         apb_change_t * r = apb_change_callbacks;
-        if(r->cb != cb || r->arg != arg){
-            while(r->next){
-                r = r->next;
-                if(r->cb == cb && r->arg == arg){
-                    free(c);
-                    goto unlock_and_exit;
-                }
-            }
-            r->next = c;
+        // look for duplicate callbacks
+        while( (r != NULL ) && !((r->cb == cb) && ( r->arg == arg))) r = r->next;
+        if (r) {
+            log_e("duplicate func=%08X arg=%08X",c->cb,c->arg);
+            free(c);
+            xSemaphoreGive(apb_change_lock);
+            return false;
+        }
+        else {
+            c->next = apb_change_callbacks;
+            apb_change_callbacks-> prev = c;
+            apb_change_callbacks = c;
         }
     }
-unlock_and_exit:
     xSemaphoreGive(apb_change_lock);
     return true;
 }
@@ -94,24 +109,21 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     initApbChangeCallback();
     xSemaphoreTake(apb_change_lock, portMAX_DELAY);
     apb_change_t * r = apb_change_callbacks;
-    if(r == NULL){
+    // look for matching callback
+    while( (r != NULL ) && !((r->cb == cb) && ( r->arg == arg))) r = r->next;
+    if ( r == NULL ) {
+        log_e("not found func=%08X arg=%08X",cb,arg);
         xSemaphoreGive(apb_change_lock);
         return false;
-    }
-    if(r->cb == cb && r->arg == arg){
-        apb_change_callbacks = r->next;
+        }
+    else {
+        // patch links
+        if(r->prev) r->prev->next = r->next;
+        else { // this is first link
+           apb_change_callbacks = r->next;
+        }
+        if(r->next) r->next->prev = r->prev;
         free(r);
-    } else {
-        while(r->next && (r->next->cb != cb || r->next->arg != arg)){
-            r = r->next;
-        }
-        if(r->next == NULL || r->next->cb != cb || r->next->arg != arg){
-            xSemaphoreGive(apb_change_lock);
-            return false;
-        }
-        apb_change_t * c = r->next;
-        r->next = c->next;
-        free(c);
     }
     xSemaphoreGive(apb_change_lock);
     return true;
@@ -150,6 +162,15 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         }
         return false;
     }
+    //check if cpu supports the frequency
+    if(cpu_freq_mhz == 240){
+        //Check if ESP32 is rated for a CPU frequency of 160MHz only
+        if (REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) &&
+            REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW)) {
+            log_e("Can not switch to 240 MHz! Chip CPU frequency rated for 160MHz.");
+            cpu_freq_mhz = 160;
+        }
+    }
     //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
     //return if frequency has not changed
@@ -176,7 +197,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         //Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
         //if(conf.freq_mhz < 80){
         //    ESP_REG(APB_CTRL_XTAL_TICK_CONF_REG) = conf.freq_mhz / (REF_CLK_FREQ / MHZ) - 1;
-        //}
+        // }
         //Update APB Freq REG
         rtc_clk_apb_freq_update(apb);
         //Update esp_timer divisor

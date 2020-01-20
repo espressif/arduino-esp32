@@ -412,4 +412,9 @@ void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval,
 	conn_params.timeout = timeout;    // timeout = 400*10ms = 4000ms
 	esp_ble_gap_update_conn_params(&conn_params); 
 }
+
+void BLEServer::disconnect(uint16_t connId) {
+	esp_ble_gatts_close(m_gatts_if, connId);
+}
+
 #endif // CONFIG_BT_ENABLED

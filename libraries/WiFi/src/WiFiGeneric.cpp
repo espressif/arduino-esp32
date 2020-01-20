@@ -47,7 +47,6 @@ extern "C" {
 
 #include "esp32-hal-log.h"
 #include <vector>
-
 #include "sdkconfig.h"
 
 static xQueueHandle _network_event_queue;
@@ -55,10 +54,10 @@ static TaskHandle_t _network_event_task_handle = NULL;
 static EventGroupHandle_t _network_event_group = NULL;
 
 static void _network_event_task(void * arg){
-    system_event_t *event = NULL;
+    system_event_t event;
     for (;;) {
         if(xQueueReceive(_network_event_queue, &event, portMAX_DELAY) == pdTRUE){
-            WiFiGenericClass::_eventCallback(arg, event);
+            WiFiGenericClass::_eventCallback(arg, &event);
         }
     }
     vTaskDelete(NULL);
@@ -66,7 +65,7 @@ static void _network_event_task(void * arg){
 }
 
 static esp_err_t _network_event_cb(void *arg, system_event_t *event){
-    if (xQueueSend(_network_event_queue, &event, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(_network_event_queue, event, portMAX_DELAY) != pdPASS) {
         log_w("Network Event Queue Send Failed!");
         return ESP_FAIL;
     }
@@ -83,7 +82,7 @@ static bool _start_network_event_task(){
         xEventGroupSetBits(_network_event_group, WIFI_DNS_IDLE_BIT);
     }
     if(!_network_event_queue){
-        _network_event_queue = xQueueCreate(32, sizeof(system_event_t *));
+        _network_event_queue = xQueueCreate(32, sizeof(system_event_t));
         if(!_network_event_queue){
             log_e("Network Event Queue Create Failed!");
             return false;
@@ -133,24 +132,19 @@ static bool wifiLowLevelDeinit(){
 
 static bool _esp_wifi_started = false;
 
-static bool espWiFiStart(bool persistent){
+static bool espWiFiStart(){
     if(_esp_wifi_started){
         return true;
-    }
-    if(!wifiLowLevelInit(persistent)){
-        return false;
     }
     esp_err_t err = esp_wifi_start();
     if (err != ESP_OK) {
         log_e("esp_wifi_start %d", err);
-        wifiLowLevelDeinit();
         return false;
     }
     _esp_wifi_started = true;
     system_event_t event;
     event.event_id = SYSTEM_EVENT_WIFI_READY;
     WiFiGenericClass::_eventCallback(nullptr, &event);
-
     return true;
 }
 
@@ -190,6 +184,7 @@ wifi_event_id_t WiFiEventCbList::current_id = 1;
 static std::vector<WiFiEventCbList_t> cbEventList;
 
 bool WiFiGenericClass::_persistent = true;
+bool WiFiGenericClass::_long_range = false;
 wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
 
 WiFiGenericClass::WiFiGenericClass()
@@ -325,15 +320,17 @@ void WiFiGenericClass::removeEvent(wifi_event_id_t id)
  * @param arg
  */
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
+const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "STA_WPS_ER_PBC_OVERLAP", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
 #endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
-const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "UNSPECIFIED", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT" };
+const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "UNSPECIFIED", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT", "CONNECTION_FAIL" };
 #define reason2str(r) ((r>176)?system_event_reasons[r-176]:system_event_reasons[r-1])
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
-    if(event->event_id < 26) log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
+    if(event->event_id < 26) {
+        log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
+    }
     if(event->event_id == SYSTEM_EVENT_SCAN_DONE) {
         WiFiScanClass::_scanDone();
 
@@ -365,7 +362,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
             (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL)) &&
             WiFi.getAutoReconnect())
         {
-            WiFi.disconnect(true);
+            WiFi.disconnect();
             WiFi.begin();
         }
     } else if(event->event_id == SYSTEM_EVENT_STA_GOT_IP) {
@@ -470,6 +467,16 @@ void WiFiGenericClass::persistent(bool persistent)
 
 
 /**
+ * enable WiFi long range mode
+ * @param enable
+ */
+void WiFiGenericClass::enableLongRange(bool enable)
+{
+    _long_range = enable;
+}
+
+
+/**
  * set new mode
  * @param m WiFiMode_t
  */
@@ -480,7 +487,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
         return true;
     }
     if(!cm && m){
-        if(!espWiFiStart(_persistent)){
+        if(!wifiLowLevelInit(_persistent)){
             return false;
         }
     } else if(cm && !m){
@@ -493,6 +500,25 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
         log_e("Could not set mode! %d", err);
         return false;
     }
+    if(_long_range){
+        if(m & WIFI_MODE_STA){
+            err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR);
+            if(err != ESP_OK){
+                log_e("Could not enable long range on STA! %d", err);
+                return false;
+            }
+        }
+        if(m & WIFI_MODE_AP){
+            err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_LR);
+            if(err != ESP_OK){
+                log_e("Could not enable long range on AP! %d", err);
+                return false;
+            }
+        }
+    }
+    if(!espWiFiStart()){
+        return false;
+    }
     return true;
 }
 
@@ -502,7 +528,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
  */
 wifi_mode_t WiFiGenericClass::getMode()
 {
-    if(!_esp_wifi_started){
+    if(!lowLevelInitDone){
         return WIFI_MODE_NULL;
     }
     wifi_mode_t mode;
@@ -654,3 +680,45 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
     return (uint32_t)aResult != 0;
 }
 
+IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
+	IPAddress networkID;
+
+	for (size_t i = 0; i < 4; i++)
+		networkID[i] = subnet[i] & ip[i];
+
+	return networkID;
+}
+
+IPAddress WiFiGenericClass::calculateBroadcast(IPAddress ip, IPAddress subnet) {
+    IPAddress broadcastIp;
+    
+    for (int i = 0; i < 4; i++)
+        broadcastIp[i] = ~subnet[i] | ip[i];
+
+    return broadcastIp;
+}
+
+uint8_t WiFiGenericClass::calculateSubnetCIDR(IPAddress subnetMask) {
+	uint8_t CIDR = 0;
+
+	for (uint8_t i = 0; i < 4; i++) {
+		if (subnetMask[i] == 0x80)  // 128
+			CIDR += 1;
+		else if (subnetMask[i] == 0xC0)  // 192
+			CIDR += 2;
+		else if (subnetMask[i] == 0xE0)  // 224
+			CIDR += 3;
+		else if (subnetMask[i] == 0xF0)  // 242
+			CIDR += 4;
+		else if (subnetMask[i] == 0xF8)  // 248
+			CIDR += 5;
+		else if (subnetMask[i] == 0xFC)  // 252
+			CIDR += 6;
+		else if (subnetMask[i] == 0xFE)  // 254
+			CIDR += 7;
+		else if (subnetMask[i] == 0xFF)  // 255
+			CIDR += 8;
+	}
+
+	return CIDR;
+}

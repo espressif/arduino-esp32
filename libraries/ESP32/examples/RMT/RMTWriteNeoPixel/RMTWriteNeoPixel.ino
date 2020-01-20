@@ -62,7 +62,7 @@ void loop()
     for (led=0; led<NR_OF_LEDS; led++) {
         for (col=0; col<3; col++ ) {
             for (bit=0; bit<8; bit++){
-                if ( (color[col] & (1<<(8-bit))) && (led == led_index) ) {
+                if ( (color[col] & (1<<(7-bit))) && (led == led_index) ) {
                     led_data[i].level0 = 1;
                     led_data[i].duration0 = 8;
                     led_data[i].level1 = 0;

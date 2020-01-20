@@ -604,26 +604,32 @@ static const gattService_t g_gattServices[] = {
  * @return A string representation of characteristic properties.
  */
 std::string BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop) {
-	std::stringstream stream;
-	stream <<
-			"broadcast: "  << ((prop & ESP_GATT_CHAR_PROP_BIT_BROADCAST)?"1":"0") <<
-			", read: "     << ((prop & ESP_GATT_CHAR_PROP_BIT_READ)?"1":"0") <<
-			", write_nr: " << ((prop & ESP_GATT_CHAR_PROP_BIT_WRITE_NR)?"1":"0") <<
-			", write: "    << ((prop & ESP_GATT_CHAR_PROP_BIT_WRITE)?"1":"0") <<
-			", notify: "   << ((prop & ESP_GATT_CHAR_PROP_BIT_NOTIFY)?"1":"0") <<
-			", indicate: " << ((prop & ESP_GATT_CHAR_PROP_BIT_INDICATE)?"1":"0") <<
-			", auth: "     << ((prop & ESP_GATT_CHAR_PROP_BIT_AUTH)?"1":"0");
-	return stream.str();
+	std::string res = "broadcast: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_BROADCAST)?"1":"0");
+	res += ", read: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_READ)?"1":"0");
+	res += ", write_nr: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_WRITE_NR)?"1":"0");
+	res += ", write: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_WRITE)?"1":"0");
+	res += ", notify: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_NOTIFY)?"1":"0");
+	res += ", indicate: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_INDICATE)?"1":"0");
+	res += ", auth: ";
+	res += ((prop & ESP_GATT_CHAR_PROP_BIT_AUTH)?"1":"0");
+	return res;
 } // characteristicPropertiesToString
 
 /**
  * @brief Convert an esp_gatt_id_t to a string.
  */
 static std::string gattIdToString(esp_gatt_id_t gattId) {
-	std::stringstream stream;
-	stream << "uuid: " << BLEUUID(gattId.uuid).toString() << ", inst_id: " << (int)gattId.inst_id;
-	//sprintf(buffer, "uuid: %s, inst_id: %d", uuidToString(gattId.uuid).c_str(), gattId.inst_id);
-	return stream.str();
+	std::string res = "uuid: " + BLEUUID(gattId.uuid).toString() + ", inst_id: ";
+	char val[8];
+	snprintf(val, sizeof(val), "%d", (int)gattId.inst_id);
+	res += val;
+	return res;
 } // gattIdToString
 
 
@@ -654,23 +660,23 @@ const char* BLEUtils::addressTypeToString(esp_ble_addr_type_t type) {
  * @return std::string A string representation of the advertising flags.
  */
 std::string BLEUtils::adFlagsToString(uint8_t adFlags) {
-	std::stringstream ss;
+	std::string res;
 	if (adFlags & (1 << 0)) {
-		ss << "[LE Limited Discoverable Mode] ";
+		res += "[LE Limited Discoverable Mode] ";
 	}
 	if (adFlags & (1 << 1)) {
-		ss << "[LE General Discoverable Mode] ";
+		res += "[LE General Discoverable Mode] ";
 	}
 	if (adFlags & (1 << 2)) {
-		ss << "[BR/EDR Not Supported] ";
+		res += "[BR/EDR Not Supported] ";
 	}
 	if (adFlags & (1 << 3)) {
-		ss << "[Simultaneous LE and BR/EDR to Same Device Capable (Controller)] ";
+		res += "[Simultaneous LE and BR/EDR to Same Device Capable (Controller)] ";
 	}
 	if (adFlags & (1 << 4)) {
-		ss << "[Simultaneous LE and BR/EDR to Same Device Capable (Host)] ";
+		res += "[Simultaneous LE and BR/EDR to Same Device Capable (Host)] ";
 	}
-	return ss.str();
+	return res;
 } // adFlagsToString
 
 
@@ -802,13 +808,13 @@ char* BLEUtils::buildHexData(uint8_t* target, uint8_t* source, uint8_t length) {
  * @return A string representation of a piece of memory.
  */
 std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
-	std::ostringstream ss;
+	std::string res;
 	for (int i = 0; i < length; i++) {
 		char c = *source;
-		ss << (isprint(c) ? c : '.');
+		res += (isprint(c) ? c : '.');
 		source++;
 	}
-	return ss.str();
+	return res;
 } // buildPrintData
 
 
@@ -1848,14 +1854,22 @@ std::string BLEUtils::gattDescriptorUUIDToString(uint32_t descriptorUUID) {
  * @return A string representation of an esp_gattc_service_elem_t.
  */
 std::string BLEUtils::gattcServiceElementToString(esp_gattc_service_elem_t* pGATTCServiceElement) {
-	std::stringstream ss;
-
-	ss << "[uuid: " << BLEUUID(pGATTCServiceElement->uuid).toString() <<
-		", start_handle: " << pGATTCServiceElement->start_handle <<
-			" 0x" << std::hex << pGATTCServiceElement->start_handle <<
-		", end_handle: " << std::dec << pGATTCServiceElement->end_handle <<
-		  " 0x" << std::hex << pGATTCServiceElement->end_handle << "]";
-	return ss.str();
+	std::string res;
+	char val[6];
+	res += "[uuid: " + BLEUUID(pGATTCServiceElement->uuid).toString() + ", start_handle: ";
+	snprintf(val, sizeof(val), "%d", pGATTCServiceElement->start_handle);
+	res += val;
+	res += " 0x";
+	snprintf(val, sizeof(val), "%04x", pGATTCServiceElement->start_handle);
+	res += val;
+	res += ", end_handle: ";
+	snprintf(val, sizeof(val), "%d", pGATTCServiceElement->end_handle);
+	res += val;
+	res += " 0x";
+	snprintf(val, sizeof(val), "%04x", pGATTCServiceElement->end_handle);
+	res += val;
+	res += "]";
+	return res;
 } // gattcServiceElementToString
 
 

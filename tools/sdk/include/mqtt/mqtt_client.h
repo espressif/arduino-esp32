@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-typedef struct esp_mqtt_client* esp_mqtt_client_handle_t;
+typedef struct esp_mqtt_client *esp_mqtt_client_handle_t;
 
 /**
  * @brief MQTT event types.
@@ -44,6 +44,10 @@ typedef enum {
                                         - data_len             length of the data for this event
                                         - current_data_offset  offset of the current data for this event
                                         - total_data_len       total length of the data received
+                                        Note: Multiple MQTT_EVENT_DATA could be fired for one message, if it is
+                                        longer than internal buffer. In that case only first event contains topic
+                                        pointer and length, other contain data only with current data length
+                                        and current data offset updating.
                                          */
     MQTT_EVENT_BEFORE_CONNECT,     /*!< The event occurs before connecting */
 } esp_mqtt_event_id_t;
@@ -73,7 +77,7 @@ typedef struct {
     int session_present;                /*!< MQTT session_present flag for connection event */
 } esp_mqtt_event_t;
 
-typedef esp_mqtt_event_t* esp_mqtt_event_handle_t;
+typedef esp_mqtt_event_t *esp_mqtt_event_handle_t;
 
 typedef esp_err_t (* mqtt_event_callback_t)(esp_mqtt_event_handle_t event);
 
@@ -107,14 +111,130 @@ typedef struct {
     int refresh_connection_after_ms;        /*!< Refresh connection after this value (in milliseconds) */
 } esp_mqtt_client_config_t;
 
+/**
+ * @brief Creates mqtt client handle based on the configuration
+ *
+ * @param config    mqtt configuration structure
+ *
+ * @return mqtt_client_handle if successfully created, NULL on error
+ */
 esp_mqtt_client_handle_t esp_mqtt_client_init(const esp_mqtt_client_config_t *config);
+
+/**
+ * @brief Sets mqtt connection URI. This API is usually used to overrides the URI
+ * configured in esp_mqtt_client_init
+ *
+ * @param client    mqtt client hanlde
+ * @param uri
+ *
+ * @return ESP_FAIL if URI parse error, ESP_OK on success
+ */
 esp_err_t esp_mqtt_client_set_uri(esp_mqtt_client_handle_t client, const char *uri);
+
+/**
+ * @brief Starts mqtt client with already created client handle
+ *
+ * @param client    mqtt client handle
+ *
+ * @return ESP_OK on success
+ *         ESP_ERR_INVALID_ARG on wrong initialization
+ *         ESP_FAIL on other error
+ */
 esp_err_t esp_mqtt_client_start(esp_mqtt_client_handle_t client);
+
+/**
+ * @brief This api is typically used to force reconnection upon a specific event
+ *
+ * @param client    mqtt client handle
+ *
+ * @return ESP_OK on success
+ *         ESP_FAIL if client is in invalid state
+ */
+esp_err_t esp_mqtt_client_reconnect(esp_mqtt_client_handle_t client);
+
+/**
+ * @brief Stops mqtt client tasks
+ *
+ * @param client    mqtt client handle
+ *
+ * @return ESP_OK on success
+ *         ESP_FAIL if client is in invalid state
+ */
 esp_err_t esp_mqtt_client_stop(esp_mqtt_client_handle_t client);
-esp_err_t esp_mqtt_client_subscribe(esp_mqtt_client_handle_t client, const char *topic, int qos);
-esp_err_t esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *topic);
+
+/**
+ * @brief Subscribe the client to defined topic with defined qos
+ *
+ * Notes:
+ * - Client must be connected to send subscribe message
+ * - This API is could be executed from a user task or
+ * from a mqtt event callback i.e. internal mqtt task
+ * (API is protected by internal mutex, so it might block
+ * if a longer data receive operation is in progress.
+ *
+ * @param client    mqtt client handle
+ * @param topic
+ * @param qos
+ *
+ * @return message_id of the subscribe message on success
+ *         -1 on failure
+ */
+int esp_mqtt_client_subscribe(esp_mqtt_client_handle_t client, const char *topic, int qos);
+
+/**
+ * @brief Unsubscribe the client from defined topic
+ *
+ * Notes:
+ * - Client must be connected to send unsubscribe message
+ * - It is thread safe, please refer to `esp_mqtt_client_subscribe` for details
+ *
+ * @param client    mqtt client handle
+ * @param topic
+ *
+ * @return message_id of the subscribe message on success
+ *         -1 on failure
+ */
+int esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *topic);
+
+/**
+ * @brief Client to send a publish message to the broker
+ *
+ * Notes:
+ * - Client doesn't have to be connected to send publish message
+ *   (although it would drop all qos=0 messages, qos>1 messages would be enqueued)
+ * - It is thread safe, please refer to `esp_mqtt_client_subscribe` for details
+ *
+ * @param client    mqtt client handle
+ * @param topic     topic string
+ * @param data      payload string (set to NULL, sending empty payload message)
+ * @param len       data length, if set to 0, length is calculated from payload string
+ * @param qos       qos of publish message
+ * @param retain    ratain flag
+ *
+ * @return message_id of the subscribe message on success
+ *         0 if cannot publish
+ */
 int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, int qos, int retain);
+
+/**
+ * @brief Destroys the client handle
+ *
+ * @param client    mqtt client handle
+ *
+ * @return ESP_OK
+ */
 esp_err_t esp_mqtt_client_destroy(esp_mqtt_client_handle_t client);
+
+/**
+ * @brief Set configuration structure, typically used when updating the config (i.e. on "before_connect" event
+ *
+ * @param client    mqtt client handle
+ *
+ * @param config    mqtt configuration structure
+ *
+ * @return ESP_ERR_NO_MEM if failed to allocate
+ *         ESP_OK on success
+ */
 esp_err_t esp_mqtt_set_config(esp_mqtt_client_handle_t client, const esp_mqtt_client_config_t *config);
 
 #ifdef __cplusplus

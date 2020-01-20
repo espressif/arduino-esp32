@@ -78,6 +78,38 @@ uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
 	return m_value;
 } // wait
 
+/**
+ * @brief Wait for a semaphore to be released in a given period of time by trying to take it and
+ * then releasing it again. The value associated with the semaphore can be taken by value() call after return
+ * @param [in] owner A debug tag.
+ * @param [in] timeoutMs timeout to wait in ms.
+ * @return True if we took the semaphore within timeframe.
+ */
+bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
+	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
+
+	if (m_usePthreads && timeoutMs != portMAX_DELAY) {
+		assert(false);  // We apparently don't have a timed wait for pthreads.
+	}
+
+	auto ret = pdTRUE;
+
+	if (m_usePthreads) {
+		pthread_mutex_lock(&m_pthread_mutex);
+	} else {
+		ret = xSemaphoreTake(m_semaphore, timeoutMs);
+	}
+
+	if (m_usePthreads) {
+		pthread_mutex_unlock(&m_pthread_mutex);
+	} else {
+		xSemaphoreGive(m_semaphore);
+	}
+
+	log_v("<< wait: Semaphore %s released: %d", toString().c_str(), ret);
+	return ret;
+} // wait
+
 
 FreeRTOS::Semaphore::Semaphore(std::string name) {
 	m_usePthreads = false;   	// Are we using pThreads or FreeRTOS?
@@ -154,7 +186,7 @@ void FreeRTOS::Semaphore::giveFromISR() {
  * @return True if we took the semaphore.
  */
 bool FreeRTOS::Semaphore::take(std::string owner) {
-	log_d("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
+	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
@@ -163,7 +195,7 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
 	}
 	m_owner = owner;
 	if (rc) {
-		log_d("Semaphore taken:  %s", toString().c_str());
+		log_v("Semaphore taken:  %s", toString().c_str());
 	} else {
 		log_e("Semaphore NOT taken:  %s", toString().c_str());
 	}
@@ -202,9 +234,12 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
  * @return A string representation of the semaphore.
  */
 std::string FreeRTOS::Semaphore::toString() {
-	std::stringstream stringStream;
-	stringStream << "name: "<< m_name << " (0x" << std::hex << std::setfill('0') << (uint32_t)m_semaphore << "), owner: " << m_owner;
-	return stringStream.str();
+	char hex[9];
+	std::string res = "name: " + m_name + " (0x";
+	snprintf(hex, sizeof(hex), "%08x", (uint32_t)m_semaphore);
+	res += hex;
+	res += "), owner: " + m_owner;
+	return res;
 } // toString
 
 

@@ -14,7 +14,7 @@
 #include <esp_err.h>
 
 #include <sstream>
-#include "BLEExceptions.h"
+//#include "BLEExceptions.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include "BLERemoteDescriptor.h"
@@ -40,6 +40,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
 	m_pRemoteService = pRemoteService;
 	m_notifyCallback = nullptr;
 	m_rawData = nullptr;
+    m_auth           = ESP_GATT_AUTH_REQ_NONE;
 
 	retrieveDescriptors(); // Get the descriptors for this characteristic
 	log_v("<< BLERemoteCharacteristic");
@@ -389,6 +390,17 @@ uint8_t BLERemoteCharacteristic::readUInt8() {
 	return 0;
 } // readUInt8
 
+/**
+ * @brief Read a float value.
+ * @return the float value.
+ */
+float BLERemoteCharacteristic::readFloat() {
+	std::string value = readValue();
+	if (value.length() >= 4) {
+		return *(float*)(value.data());
+	}
+	return 0.0;
+} // readFloat
 
 /**
  * @brief Read the value of the remote characteristic.
@@ -400,7 +412,7 @@ std::string BLERemoteCharacteristic::readValue() {
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-		throw BLEDisconnectedException();
+		return std::string();
 	}
 
 	m_semaphoreReadCharEvt.take("readValue");
@@ -412,7 +424,7 @@ std::string BLERemoteCharacteristic::readValue() {
 		m_pRemoteService->getClient()->getGattcIf(),
 		m_pRemoteService->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		ESP_GATT_AUTH_REQ_NONE);                       // Security
+		m_auth);                                         // Security
 
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -501,11 +513,16 @@ void BLERemoteCharacteristic::removeDescriptors() {
  * @return a String representation.
  */
 std::string BLERemoteCharacteristic::toString() {
-	std::ostringstream ss;
-	ss << "Characteristic: uuid: " << m_uuid.toString() <<
-		", handle: " << getHandle() << " 0x" << std::hex << getHandle() <<
-		", props: " << BLEUtils::characteristicPropertiesToString(m_charProp);
-	return ss.str();
+	std::string res = "Characteristic: uuid: " + m_uuid.toString();
+	char val[6];
+	res += ", handle: ";
+	snprintf(val, sizeof(val), "%d", getHandle());
+	res += val;
+	res += " 0x";
+	snprintf(val, sizeof(val), "%04x", getHandle());
+	res += val;
+	res += ", props: " + BLEUtils::characteristicPropertiesToString(m_charProp);
+	return res;
 } // toString
 
 
@@ -546,7 +563,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-		throw BLEDisconnectedException();
+		return;
 	}
 
 	m_semaphoreWriteCharEvt.take("writeValue");
@@ -558,7 +575,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 		length,
 		data,
 		response?ESP_GATT_WRITE_TYPE_RSP:ESP_GATT_WRITE_TYPE_NO_RSP,
-		ESP_GATT_AUTH_REQ_NONE
+        m_auth
 	);
 
 	if (errRc != ESP_OK) {
@@ -577,6 +594,14 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
  */
 uint8_t* BLERemoteCharacteristic::readRawData() {
 	return m_rawData;
+}
+
+/**
+ * @brief Set authentication request type for characteristic
+ * @param [in] auth Authentication request type.
+ */
+void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
+    m_auth = auth;
 }
 
 #endif /* CONFIG_BT_ENABLED */

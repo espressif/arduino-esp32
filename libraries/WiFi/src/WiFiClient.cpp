@@ -226,14 +226,41 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     FD_SET(sockfd, &fdset);
     tv.tv_sec = 0;
     tv.tv_usec = timeout * 1000;
-    lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
-    int res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
-    if (res != 1)
-    {
-        log_e("select: %d",errno);
+
+    int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    if (res < 0 && errno != EINPROGRESS) {
+        log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
         return 0;
     }
+
+    res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
+    if (res < 0) {
+        log_e("select on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
+        close(sockfd);
+        return 0;
+    } else if (res == 0) {
+        log_i("select returned due to timeout %d ms for fd %d", timeout, sockfd);
+        close(sockfd);
+        return 0;
+    } else {
+        int sockerr;
+        socklen_t len = (socklen_t)sizeof(int);
+        res = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &sockerr, &len);
+
+        if (res < 0) {
+            log_e("getsockopt on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
+            close(sockfd);
+            return 0;
+        }
+
+        if (sockerr != 0) {
+            log_e("socket error on fd %d, errno: %d, \"%s\"", sockfd, sockerr, strerror(sockerr));
+            close(sockfd);
+            return 0;
+        }
+    }
+
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) & (~O_NONBLOCK) );
     clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
     _rxBuffer.reset(new WiFiClientRxBuffer(sockfd));
@@ -468,23 +495,28 @@ uint8_t WiFiClient::connected()
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
         // avoid unused var warning by gcc
         (void)res;
-        switch (errno) {
-            case EWOULDBLOCK:
-            case ENOENT: //caused by vfs
-                _connected = true;
-                break;
-            case ENOTCONN:
-            case EPIPE:
-            case ECONNRESET:
-            case ECONNREFUSED:
-            case ECONNABORTED:
-                _connected = false;
-                log_d("Disconnected: RES: %d, ERR: %d", res, errno);
-                break;
-            default:
-                log_i("Unexpected: RES: %d, ERR: %d", res, errno);
-                _connected = true;
-                break;
+        // recv only sets errno if res is -1
+        if (res < 0){
+          switch (errno) {
+              case EWOULDBLOCK:
+              case ENOENT: //caused by vfs
+                  _connected = true;
+                  break;
+              case ENOTCONN:
+              case EPIPE:
+              case ECONNRESET:
+              case ECONNREFUSED:
+              case ECONNABORTED:
+                  _connected = false;
+                  log_d("Disconnected: RES: %d, ERR: %d", res, errno);
+                  break;
+              default:
+                  log_i("Unexpected: RES: %d, ERR: %d", res, errno);
+                  _connected = true;
+                  break;
+          }
+        } else {
+          _connected = true;
         }
     }
     return _connected;

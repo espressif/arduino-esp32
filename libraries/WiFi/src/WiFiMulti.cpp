@@ -34,22 +34,64 @@ WiFiMulti::WiFiMulti()
 
 WiFiMulti::~WiFiMulti()
 {
-    APlistClean();
+    for(uint32_t i = 0; i < APlist.size(); i++) {
+        WifiAPlist_t entry = APlist[i];
+        if(entry.ssid) {
+            free(entry.ssid);
+        }
+        if(entry.passphrase) {
+            free(entry.passphrase);
+        }
+    }
+    APlist.clear();
 }
 
 bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
 {
-    return APlistAdd(ssid, passphrase);
+    WifiAPlist_t newAP;
+
+    if(!ssid || *ssid == 0x00 || strlen(ssid) > 31) {
+        // fail SSID too long or missing!
+        log_e("[WIFI][APlistAdd] no ssid or ssid too long");
+        return false;
+    }
+
+    if(passphrase && strlen(passphrase) > 63) {
+        // fail passphrase too long!
+        log_e("[WIFI][APlistAdd] passphrase too long");
+        return false;
+    }
+
+    newAP.ssid = strdup(ssid);
+
+    if(!newAP.ssid) {
+        log_e("[WIFI][APlistAdd] fail newAP.ssid == 0");
+        return false;
+    }
+
+    if(passphrase && *passphrase != 0x00) {
+        newAP.passphrase = strdup(passphrase);
+        if(!newAP.passphrase) {
+            log_e("[WIFI][APlistAdd] fail newAP.passphrase == 0");
+            free(newAP.ssid);
+            return false;
+        }
+    } else {
+        newAP.passphrase = NULL;
+    }
+
+    APlist.push_back(newAP);
+    log_i("[WIFI][APlistAdd] add SSID: %s", newAP.ssid);
+    return true;
 }
 
 uint8_t WiFiMulti::run(uint32_t connectTimeout)
 {
-
     int8_t scanResult;
     uint8_t status = WiFi.status();
     if(status == WL_CONNECTED) {
         for(uint32_t x = 0; x < APlist.size(); x++) {
-            if(WiFi.SSID()==APlist[x].ssid){
+            if(WiFi.SSID()==APlist[x].ssid) {
                 return status;
             }
         }
@@ -119,7 +161,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
             WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
             status = WiFi.status();
-            
+
             auto startTime = millis();
             // wait for connection, fail, or timeout
             while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
@@ -128,17 +170,17 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
             }
 
             switch(status) {
-            case 3:
+            case WL_CONNECTED:
                 log_i("[WIFI] Connecting done.");
                 log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
                 log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
                 log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
                 log_d("[WIFI] Channel: %d", WiFi.channel());
                 break;
-            case 1:
+            case WL_NO_SSID_AVAIL:
                 log_e("[WIFI] Connecting Failed AP not found.");
                 break;
-            case 4:
+            case WL_CONNECT_FAILED:
                 log_e("[WIFI] Connecting Failed.");
                 break;
             default:
@@ -160,60 +202,3 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
     return status;
 }
-
-// ##################################################################################
-
-bool WiFiMulti::APlistAdd(const char* ssid, const char *passphrase)
-{
-
-    WifiAPlist_t newAP;
-
-    if(!ssid || *ssid == 0x00 || strlen(ssid) > 31) {
-        // fail SSID to long or missing!
-        log_e("[WIFI][APlistAdd] no ssid or ssid to long");
-        return false;
-    }
-
-    if(passphrase && strlen(passphrase) > 63) {
-        // fail passphrase to long!
-        log_e("[WIFI][APlistAdd] passphrase to long");
-        return false;
-    }
-
-    newAP.ssid = strdup(ssid);
-
-    if(!newAP.ssid) {
-        log_e("[WIFI][APlistAdd] fail newAP.ssid == 0");
-        return false;
-    }
-
-    if(passphrase && *passphrase != 0x00) {
-        newAP.passphrase = strdup(passphrase);
-        if(!newAP.passphrase) {
-            log_e("[WIFI][APlistAdd] fail newAP.passphrase == 0");
-            free(newAP.ssid);
-            return false;
-        }
-    } else {
-        newAP.passphrase = NULL;
-    }
-
-    APlist.push_back(newAP);
-    log_i("[WIFI][APlistAdd] add SSID: %s", newAP.ssid);
-    return true;
-}
-
-void WiFiMulti::APlistClean(void)
-{
-    for(uint32_t i = 0; i < APlist.size(); i++) {
-        WifiAPlist_t entry = APlist[i];
-        if(entry.ssid) {
-            free(entry.ssid);
-        }
-        if(entry.passphrase) {
-            free(entry.passphrase);
-        }
-    }
-    APlist.clear();
-}
-

@@ -32,7 +32,6 @@ typedef unsigned long prog_uint32_t;
 #define PROGMEM
 #define PGM_P         const char *
 #define PGM_VOID_P    const void *
-#define FPSTR(p)      ((const char *)(p))
 #define PSTR(s)       (s)
 #define _SFR_BYTE(n)  (n)
 

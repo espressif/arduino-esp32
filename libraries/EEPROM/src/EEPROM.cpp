@@ -25,10 +25,11 @@
 
 #include "EEPROM.h"
 #include <nvs.h>
+#include <esp_partition.h>
 #include <esp_log.h>
 
 EEPROMClass::EEPROMClass(void)
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -39,7 +40,7 @@ EEPROMClass::EEPROMClass(void)
 
 EEPROMClass::EEPROMClass(uint32_t sector)
 // Only for compatiility, no sectors in nvs!
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -49,7 +50,7 @@ EEPROMClass::EEPROMClass(uint32_t sector)
 }
 
 EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
-  : _handle(NULL)
+  : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
@@ -59,7 +60,7 @@ EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
 }
 
 EEPROMClass::~EEPROMClass() {
-  // end();
+  end();
 }
 
 bool EEPROMClass::begin(size_t size) {
@@ -111,7 +112,7 @@ bool EEPROMClass::begin(size_t size) {
          log_e("Not enough memory to expand EEPROM!");
          return false;
       }
-      memset(key_data, 0, size);
+      memset(key_data, 0xFF, size);
       if(key_size) {
         log_i("Expanding EEPROM from %d to %d", key_size, size);
 	// hold data while key is deleted
@@ -151,6 +152,9 @@ void EEPROMClass::end() {
   }
   _data = 0;
   _size = 0;
+
+  nvs_close(_handle);
+  _handle = 0;
 }
 
 uint8_t EEPROMClass::read(int address) {
@@ -212,6 +216,67 @@ uint8_t * EEPROMClass::getDataPtr() {
 uint16_t EEPROMClass::length ()
 {
   return _user_defined_size;
+}
+
+/* 
+   Convert EEPROM partition into nvs blob
+   Call convert before you call begin
+*/
+uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* nvsname)
+{
+  uint16_t result = 0;
+  const esp_partition_t* mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, EEPROMname);
+  if (mypart == NULL) {
+    log_i("EEPROM partition not found for conversion");
+    return result;
+  }
+
+  size_t size = mypart->size;
+  uint8_t* data = (uint8_t*) malloc(size);
+  if (!data) {
+    log_e("Not enough memory to convert EEPROM!");
+    goto exit;
+  }
+
+  if (esp_partition_read (mypart, 0, (void *) data, size) != ESP_OK) {
+    log_e("Unable to read EEPROM partition");
+    goto exit;
+  }
+
+  bool empty;
+  empty = true;
+  for (int x=0; x<size; x++) {
+    if (data[x] != 0xFF) {
+      empty = false;
+      break;
+    }
+  }
+  if (empty) {
+    log_i("EEPROM partition is empty, will not convert");
+    goto exit;
+  }
+
+  nvs_handle handle;
+  if (nvs_open(nvsname, NVS_READWRITE, &handle) != ESP_OK) {
+    log_e("Unable to open NVS");
+    goto exit;
+  }
+  esp_err_t err;
+  err = nvs_set_blob(handle, nvsname, data, size);
+  if (err != ESP_OK) {
+    log_e("Unable to add EEPROM data to NVS: %s", esp_err_to_name(err));
+    goto exit;
+  }
+  result = size;
+ 
+  if (clear) {
+    if (esp_partition_erase_range (mypart, 0, size) != ESP_OK) {
+      log_w("Unable to clear EEPROM partition");
+    }
+  } 
+exit:
+  free(data);
+  return result;
 }
 
 /*

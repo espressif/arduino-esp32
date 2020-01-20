@@ -79,6 +79,10 @@ class ETHClass {
         IPAddress gatewayIP();
         IPAddress dnsIP(uint8_t dns_no = 0);
 
+        IPAddress broadcastIP();
+        IPAddress networkID();
+        uint8_t subnetCIDR();
+
         uint8_t * macAddress(uint8_t* mac);
         String macAddress();
 

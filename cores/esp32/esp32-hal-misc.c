@@ -44,10 +44,12 @@ float temperatureRead()
     return (temprature_sens_read() - 32) / 1.8;
 }
 
-void yield()
+void __yield()
 {
     vPortYield();
 }
+
+void yield() __attribute__ ((weak, alias("__yield")));
 
 #if CONFIG_AUTOSTART_ARDUINO
 

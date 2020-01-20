@@ -11,7 +11,9 @@ String responseHTML = ""
   "<h1>Hello World!</h1><p>This is a captive portal example. All requests will "
   "be redirected here.</p></body></html>";
 
-void setup() {
+void setup() { 
+  WiFi.disconnect();   //added to start with the wifi off, avoid crashing
+  WiFi.mode(WIFI_OFF); //added to start with the wifi off, avoid crashing
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP("DNSServer CaptivePortal example");
