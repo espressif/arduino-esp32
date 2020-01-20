@@ -40,6 +40,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
 	m_pRemoteService = pRemoteService;
 	m_notifyCallback = nullptr;
 	m_rawData = nullptr;
+    m_auth           = ESP_GATT_AUTH_REQ_NONE;
 
 	retrieveDescriptors(); // Get the descriptors for this characteristic
 	log_v("<< BLERemoteCharacteristic");
@@ -423,7 +424,7 @@ std::string BLERemoteCharacteristic::readValue() {
 		m_pRemoteService->getClient()->getGattcIf(),
 		m_pRemoteService->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		ESP_GATT_AUTH_REQ_NONE);                       // Security
+		m_auth);                                         // Security
 
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -574,7 +575,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 		length,
 		data,
 		response?ESP_GATT_WRITE_TYPE_RSP:ESP_GATT_WRITE_TYPE_NO_RSP,
-		ESP_GATT_AUTH_REQ_NONE
+        m_auth
 	);
 
 	if (errRc != ESP_OK) {
@@ -593,6 +594,14 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
  */
 uint8_t* BLERemoteCharacteristic::readRawData() {
 	return m_rawData;
+}
+
+/**
+ * @brief Set authentication request type for characteristic
+ * @param [in] auth Authentication request type.
+ */
+void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
+    m_auth = auth;
 }
 
 #endif /* CONFIG_BT_ENABLED */
