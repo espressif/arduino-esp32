@@ -32,6 +32,14 @@ typedef enum {
 typedef void (* coex_func_cb_t)(uint32_t event, int sched_cnt);
 
 /**
+ * @brief Pre-Init software coexist
+ *        extern function for internal use.
+ *
+ * @return Init ok or failed.
+ */
+esp_err_t coex_pre_init(void);
+
+/**
  * @brief Init software coexist
  *        extern function for internal use.
  *
@@ -78,6 +86,12 @@ esp_err_t coex_preference_set(coex_prefer_t prefer);
  * @return : software coexist status
  */
 uint32_t coex_status_get(void);
+
+/**
+ * @brief Set software coexist condition.
+ * @return : software coexist condition
+ */
+void coex_condition_set(uint32_t type, bool dissatisfy);
 
 /**
  * @brief WiFi requests coexistence.

@@ -74,6 +74,12 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
+*    Loop data up to the reserved memsize continuously
+*
+*/
+bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+
+/**
 *    Initiates async receive, event flag indicates data received
 *
 */

@@ -35,9 +35,6 @@ extern "C"
 #define DL_IMAGE_MIN(A, B) ((A) < (B) ? (A) : (B))
 #define DL_IMAGE_MAX(A, B) ((A) < (B) ? (B) : (A))
 
-#define IMAGE_WIDTH 320
-#define IMAGE_HEIGHT 240
-
 #define RGB565_MASK_RED 0xF800
 #define RGB565_MASK_GREEN 0x07E0
 #define RGB565_MASK_BLUE 0x001F
@@ -93,7 +90,7 @@ extern "C"
         *area = w * h;
     }
 
-    static inline void image_calibrate_by_offset(image_list_t *image_list)
+    static inline void image_calibrate_by_offset(image_list_t *image_list, int image_height, int image_width)
     {
         for (image_box_t *head = image_list->head; head; head = head->next)
         {
@@ -102,16 +99,16 @@ extern "C"
             head->box.box_p[0] = DL_IMAGE_MAX(0, head->box.box_p[0] + head->offset.box_p[0] * w);
             head->box.box_p[1] = DL_IMAGE_MAX(0, head->box.box_p[1] + head->offset.box_p[1] * w);
             head->box.box_p[2] += head->offset.box_p[2] * w;
-            if (head->box.box_p[2] > IMAGE_WIDTH)
+            if (head->box.box_p[2] > image_width)
             {
-                head->box.box_p[2] = IMAGE_WIDTH - 1;
-                head->box.box_p[0] = IMAGE_WIDTH - w;
+                head->box.box_p[2] = image_width - 1;
+                head->box.box_p[0] = image_width - w;
             }
             head->box.box_p[3] += head->offset.box_p[3] * h;
-            if (head->box.box_p[3] > IMAGE_HEIGHT)
+            if (head->box.box_p[3] > image_height)
             {
-                head->box.box_p[3] = IMAGE_HEIGHT - 1;
-                head->box.box_p[1] = IMAGE_HEIGHT - h;
+                head->box.box_p[3] = image_height - 1;
+                head->box.box_p[1] = image_height - h;
             }
         }
     }
@@ -154,8 +151,8 @@ extern "C"
             int h = y2 - y1 + 1;
             int l = DL_IMAGE_MAX(w, h);
 
-            box->box_p[0] = round(DL_IMAGE_MAX(0, x1) + 0.5 * (w - l));
-            box->box_p[1] = round(DL_IMAGE_MAX(0, y1) + 0.5 * (h - l));
+            box->box_p[0] = DL_IMAGE_MAX(round(DL_IMAGE_MAX(0, x1) + 0.5 * (w - l)), 0);
+            box->box_p[1] = DL_IMAGE_MAX(round(DL_IMAGE_MAX(0, y1) + 0.5 * (h - l)), 0);
 
             box->box_p[2] = box->box_p[0] + l - 1;
             if (box->box_p[2] > width)
@@ -193,20 +190,30 @@ extern "C"
      * 
      * @param score 
      * @param offset 
+     * @param landmark 
      * @param width 
      * @param height 
-     * @param p_net_size
+     * @param anchor_number 
+     * @param anchors_size 
      * @param score_threshold 
-     * @param scale 
+     * @param stride 
+     * @param resized_height_scale 
+     * @param resized_width_scale 
+     * @param do_regression 
      * @return image_list_t* 
      */
     image_list_t *image_get_valid_boxes(fptp_t *score,
                                         fptp_t *offset,
+                                        fptp_t *landmark,
                                         int width,
                                         int height,
-                                        int p_net_size,
+                                        int anchor_number,
+                                        int *anchors_size,
                                         fptp_t score_threshold,
-                                        fptp_t scale);
+                                        int stride,
+                                        fptp_t resized_height_scale,
+                                        fptp_t resized_width_scale,
+                                        bool do_regression);
     /**
      * @brief 
      * 
@@ -284,6 +291,7 @@ extern "C"
      * @param count 
      */
     void transform_output_image(uint16_t *bmp, uint8_t *m, int count);
+    void transform_output_image_adjustable(uint16_t *bmp, uint8_t *m, int src_w, int src_h, int dst_w, int dst_h);
 
     /**
      * @brief 
@@ -305,6 +313,20 @@ extern "C"
     void image_abs_diff(uint8_t *dst, uint8_t *src1, uint8_t *src2, int count);
     void image_threshold(uint8_t *dst, uint8_t *src, int threshold, int value, int count, en_threshold_mode mode);
     void image_erode(uint8_t *dst, uint8_t *src, int src_w, int src_h, int src_c);
+
+    typedef float matrixType;
+    typedef struct
+    {
+        int w;
+        int h;
+        matrixType **array;
+    } Matrix;
+
+    Matrix *matrix_alloc(int h, int w);
+    void matrix_free(Matrix *m);
+    Matrix *get_similarity_matrix(float *srcx, float *srcy, float *dstx, float *dsty, int num);
+    void warp_affine(dl_matrix3du_t *img, dl_matrix3du_t *crop, Matrix *M);
+
 #ifdef __cplusplus
 }
 #endif

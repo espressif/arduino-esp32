@@ -24,6 +24,12 @@
 #ifndef MBEDTLS_SSL_INTERNAL_H
 #define MBEDTLS_SSL_INTERNAL_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "ssl.h"
 #include "cipher.h"
 
@@ -92,6 +98,14 @@
 #endif /* MBEDTLS_SSL_PROTO_TLS1   */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 */
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
+
+/* Shorthand for restartable ECC */
+#if defined(MBEDTLS_ECP_RESTARTABLE) && \
+    defined(MBEDTLS_SSL_CLI_C) && \
+    defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
+#define MBEDTLS_SSL__ECP_RESTARTABLE
+#endif
 
 #define MBEDTLS_SSL_INITIAL_HANDSHAKE           0
 #define MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS   1   /* In progress */
@@ -287,7 +301,18 @@ struct mbedtls_ssl_handshake_params
     mbedtls_x509_crl *sni_ca_crl;       /*!< trusted CAs CRLs from SNI      */
 #endif /* MBEDTLS_SSL_SERVER_NAME_INDICATION */
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
-
+#if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
+    int ecrs_enabled;                   /*!< Handshake supports EC restart? */
+    mbedtls_x509_crt_restart_ctx ecrs_ctx;  /*!< restart context            */
+    enum { /* this complements ssl->state with info on intra-state operations */
+        ssl_ecrs_none = 0,              /*!< nothing going on (yet)         */
+        ssl_ecrs_crt_verify,            /*!< Certificate: crt_verify()      */
+        ssl_ecrs_ske_start_processing,  /*!< ServerKeyExchange: pk_verify() */
+        ssl_ecrs_cke_ecdh_calc_secret,  /*!< ClientKeyExchange: ECDH step 2 */
+        ssl_ecrs_crt_vrfy_sign,         /*!< CertificateVerify: pk_sign()   */
+    } ecrs_state;                       /*!< current (or last) operation    */
+    size_t ecrs_n;                      /*!< place for saving a length      */
+#endif
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     unsigned int out_msg_seq;           /*!<  Outgoing handshake sequence number */
     unsigned int in_msg_seq;            /*!<  Incoming handshake sequence number */
