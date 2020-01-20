@@ -52,6 +52,7 @@ public:
 	void        writeValue(uint8_t newValue, bool response = false);
 	std::string toString();
 	uint8_t*	readRawData();
+    void        setAuth(esp_gatt_auth_req_t auth);
 
 private:
 	BLERemoteCharacteristic(uint16_t handle, BLEUUID uuid, esp_gatt_char_prop_t charProp, BLERemoteService* pRemoteService);
@@ -69,6 +70,7 @@ private:
 	// Private properties
 	BLEUUID              m_uuid;
 	esp_gatt_char_prop_t m_charProp;
+    esp_gatt_auth_req_t  m_auth;
 	uint16_t             m_handle;
 	BLERemoteService*    m_pRemoteService;
 	FreeRTOS::Semaphore  m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
