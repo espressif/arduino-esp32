@@ -3,6 +3,9 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#include <uri/UriBraces.h>
+#include <uri/UriRegex.h>
+
 const char *ssid = "........";
 const char *password = "........";
 
@@ -33,12 +36,12 @@ void setup(void) {
     server.send(200, "text/plain", "hello from esp32!");
   });
 
-  server.on("/users/{}", []() {
+  server.on(UriBraces("/users/{}"), []() {
     String user = server.pathArg(0);
     server.send(200, "text/plain", "User: '" + user + "'");
   });
   
-  server.on("/users/{}/devices/{}", []() {
+  server.on(UriRegex("^\\/users\\/([0-9]+)\\/devices\\/([0-9]+)$"), []() {
     String user = server.pathArg(0);
     String device = server.pathArg(1);
     server.send(200, "text/plain", "User: '" + user + "' and Device: '" + device + "'");

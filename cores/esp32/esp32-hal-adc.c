@@ -22,14 +22,16 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
+
+#define DEFAULT_VREF    1100
+static esp_adc_cal_characteristics_t *__analogCharacteristics[2] = {NULL, NULL};
 static uint8_t __analogAttenuation = 3;//11db
 static uint8_t __analogWidth = 3;//12 bits
-static uint8_t __analogCycles = 8;
-static uint8_t __analogSamples = 0;//1 sample
 static uint8_t __analogClockDiv = 1;
-
-// Width of returned answer ()
-static uint8_t __analogReturnedWidth = 12;
+static uint16_t __analogVRef = 0;
+static uint8_t __analogVRefPin = 0;
 
 void __analogSetWidth(uint8_t bits){
     if(bits < 9){
@@ -37,81 +39,31 @@ void __analogSetWidth(uint8_t bits){
     } else if(bits > 12){
         bits = 12;
     }
-    __analogReturnedWidth = bits;
     __analogWidth = bits - 9;
-    SET_PERI_REG_BITS(SENS_SAR_START_FORCE_REG, SENS_SAR1_BIT_WIDTH, __analogWidth, SENS_SAR1_BIT_WIDTH_S);
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL_REG, SENS_SAR1_SAMPLE_BIT, __analogWidth, SENS_SAR1_SAMPLE_BIT_S);
-
-    SET_PERI_REG_BITS(SENS_SAR_START_FORCE_REG, SENS_SAR2_BIT_WIDTH, __analogWidth, SENS_SAR2_BIT_WIDTH_S);
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_SAMPLE_BIT, __analogWidth, SENS_SAR2_SAMPLE_BIT_S);
-}
-
-void __analogSetCycles(uint8_t cycles){
-    __analogCycles = cycles;
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL_REG, SENS_SAR1_SAMPLE_CYCLE, __analogCycles, SENS_SAR1_SAMPLE_CYCLE_S);
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_SAMPLE_CYCLE, __analogCycles, SENS_SAR2_SAMPLE_CYCLE_S);
-}
-
-void __analogSetSamples(uint8_t samples){
-    if(!samples){
-        return;
-    }
-    __analogSamples = samples - 1;
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL_REG, SENS_SAR1_SAMPLE_NUM, __analogSamples, SENS_SAR1_SAMPLE_NUM_S);
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_SAMPLE_NUM, __analogSamples, SENS_SAR2_SAMPLE_NUM_S);
+    adc1_config_width(__analogWidth);
 }
 
 void __analogSetClockDiv(uint8_t clockDiv){
     if(!clockDiv){
-        return;
+        clockDiv = 1;
     }
     __analogClockDiv = clockDiv;
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL_REG, SENS_SAR1_CLK_DIV, __analogClockDiv, SENS_SAR1_CLK_DIV_S);
-    SET_PERI_REG_BITS(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_CLK_DIV, __analogClockDiv, SENS_SAR2_CLK_DIV_S);
+    adc_set_clk_div(__analogClockDiv);
 }
 
 void __analogSetAttenuation(adc_attenuation_t attenuation)
 {
     __analogAttenuation = attenuation & 3;
-    uint32_t att_data = 0;
-    int i = 10;
-    while(i--){
-        att_data |= __analogAttenuation << (i * 2);
-    }
-    WRITE_PERI_REG(SENS_SAR_ATTEN1_REG, att_data & 0xFFFF);//ADC1 has 8 channels
-    WRITE_PERI_REG(SENS_SAR_ATTEN2_REG, att_data);
 }
 
-void IRAM_ATTR __analogInit(){
+void __analogInit(){
     static bool initialized = false;
     if(initialized){
         return;
     }
-
-    __analogSetAttenuation(__analogAttenuation);
-    __analogSetCycles(__analogCycles);
-    __analogSetSamples(__analogSamples + 1);//in samples
+    initialized = true;
     __analogSetClockDiv(__analogClockDiv);
     __analogSetWidth(__analogWidth + 9);//in bits
-
-    SET_PERI_REG_MASK(SENS_SAR_READ_CTRL_REG, SENS_SAR1_DATA_INV);
-    SET_PERI_REG_MASK(SENS_SAR_READ_CTRL2_REG, SENS_SAR2_DATA_INV);
-
-    SET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_FORCE_M); //SAR ADC1 controller (in RTC) is started by SW
-    SET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_SAR1_EN_PAD_FORCE_M); //SAR ADC1 pad enable bitmap is controlled by SW
-    SET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_FORCE_M); //SAR ADC2 controller (in RTC) is started by SW
-    SET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_SAR2_EN_PAD_FORCE_M); //SAR ADC2 pad enable bitmap is controlled by SW
-
-    CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR_M); //force XPD_SAR=0, use XPD_FSM
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_AMP, 0x2, SENS_FORCE_XPD_AMP_S); //force XPD_AMP=0
-
-    CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_CTRL_REG, 0xfff << SENS_AMP_RST_FB_FSM_S);  //clear FSM
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT1_REG, SENS_SAR_AMP_WAIT1, 0x1, SENS_SAR_AMP_WAIT1_S);
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT1_REG, SENS_SAR_AMP_WAIT2, 0x1, SENS_SAR_AMP_WAIT2_S);
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_SAR_AMP_WAIT3, 0x1, SENS_SAR_AMP_WAIT3_S);
-    while (GET_PERI_REG_BITS2(SENS_SAR_SLAVE_ADDR1_REG, 0x7, SENS_MEAS_STATUS_S) != 0); //wait det_fsm==
-
-    initialized = true;
 }
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
@@ -120,21 +72,20 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
     if(channel < 0 || attenuation > 3){
         return ;
     }
-    __analogInit();
-    if(channel > 7){
-        SET_PERI_REG_BITS(SENS_SAR_ATTEN2_REG, 3, attenuation, ((channel - 10) * 2));
+    if(channel > 9){
+        adc2_config_channel_atten(channel - 10, attenuation);
     } else {
-        SET_PERI_REG_BITS(SENS_SAR_ATTEN1_REG, 3, attenuation, (channel * 2));
+        adc1_config_channel_atten(channel, attenuation);
     }
+    __analogInit();
 }
 
-bool IRAM_ATTR __adcAttachPin(uint8_t pin){
-
+bool __adcAttachPin(uint8_t pin){
     int8_t channel = digitalPinToAnalogChannel(pin);
     if(channel < 0){
-        return false;//not adc pin
+        log_e("Pin %u is not ADC pin!", pin);
+        return false;
     }
-
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
         uint32_t touch = READ_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG);
@@ -151,77 +102,8 @@ bool IRAM_ATTR __adcAttachPin(uint8_t pin){
     }
 
     pinMode(pin, ANALOG);
-
-    __analogInit();
+    __analogSetPinAttenuation(pin, __analogAttenuation);
     return true;
-}
-
-bool IRAM_ATTR __adcStart(uint8_t pin){
-
-    int8_t channel = digitalPinToAnalogChannel(pin);
-    if(channel < 0){
-        return false;//not adc pin
-    }
-
-    if(channel > 9){
-        channel -= 10;
-        CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
-        SET_PERI_REG_BITS(SENS_SAR_MEAS_START2_REG, SENS_SAR2_EN_PAD, (1 << channel), SENS_SAR2_EN_PAD_S);
-        SET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_START_SAR_M);
-    } else {
-        CLEAR_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
-        SET_PERI_REG_BITS(SENS_SAR_MEAS_START1_REG, SENS_SAR1_EN_PAD, (1 << channel), SENS_SAR1_EN_PAD_S);
-        SET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_START_SAR_M);
-    }
-    return true;
-}
-
-bool IRAM_ATTR __adcBusy(uint8_t pin){
-
-    int8_t channel = digitalPinToAnalogChannel(pin);
-    if(channel < 0){
-        return false;//not adc pin
-    }
-
-    if(channel > 7){
-        return (GET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DONE_SAR) == 0);
-    }
-    return (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0);
-}
-
-uint16_t IRAM_ATTR __adcEnd(uint8_t pin)
-{
-
-    uint16_t value = 0;
-    int8_t channel = digitalPinToAnalogChannel(pin);
-    if(channel < 0){
-        return 0;//not adc pin
-    }
-    if(channel > 7){
-        while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DONE_SAR) == 0); //wait for conversion
-        value = GET_PERI_REG_BITS2(SENS_SAR_MEAS_START2_REG, SENS_MEAS2_DATA_SAR, SENS_MEAS2_DATA_SAR_S);
-    } else {
-        while (GET_PERI_REG_MASK(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DONE_SAR) == 0); //wait for conversion
-        value = GET_PERI_REG_BITS2(SENS_SAR_MEAS_START1_REG, SENS_MEAS1_DATA_SAR, SENS_MEAS1_DATA_SAR_S);
-    }
-
-    // Shift result if necessary
-    uint8_t from = __analogWidth + 9;
-    if (from == __analogReturnedWidth) {
-        return value;
-    }
-    if (from > __analogReturnedWidth) {
-        return value >> (from - __analogReturnedWidth);
-    }
-    return value << (__analogReturnedWidth - from);
-}
-
-uint16_t IRAM_ATTR __analogRead(uint8_t pin)
-{
-    if(!__adcAttachPin(pin) || !__adcStart(pin)){
-        return 0;
-    }
-    return __adcEnd(pin);
 }
 
 void __analogReadResolution(uint8_t bits)
@@ -230,7 +112,93 @@ void __analogReadResolution(uint8_t bits)
         return;
     }
     __analogSetWidth(bits);         // hadware from 9 to 12
-    __analogReturnedWidth = bits;   // software from 1 to 16
+}
+
+uint16_t __analogRead(uint8_t pin)
+{
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    int value = 0;
+    esp_err_t r = ESP_OK;
+    if(channel < 0){
+        log_e("Pin %u is not ADC pin!", pin);
+        return value;
+    }
+    __adcAttachPin(pin);
+    if(channel > 9){
+        channel -= 10;
+        r = adc2_get_raw( channel, __analogWidth, &value);
+        if ( r == ESP_OK ) {
+            return value;
+        } else if ( r == ESP_ERR_INVALID_STATE ) {
+            log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
+        } else if ( r == ESP_ERR_TIMEOUT ) {
+            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi.", pin, esp_err_to_name(r));
+        } else {
+            log_e("GPIO%u: %s", pin, esp_err_to_name(r));
+        }
+    } else {
+        return adc1_get_raw(channel);
+    }
+    return value;
+}
+
+void __analogSetVRefPin(uint8_t pin){
+    if(pin <25 || pin > 27){
+        pin = 0;
+    }
+    __analogVRefPin = pin;
+}
+
+uint32_t __analogReadMilliVolts(uint8_t pin){
+    int8_t channel = digitalPinToAnalogChannel(pin);
+    if(channel < 0){
+        log_e("Pin %u is not ADC pin!", pin);
+        return 0;
+    }
+    if(!__analogVRef){
+        if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+            log_d("eFuse Two Point: Supported");
+            __analogVRef = DEFAULT_VREF;
+        }
+        if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
+            log_d("eFuse Vref: Supported");
+            __analogVRef = DEFAULT_VREF;
+        }
+        if(!__analogVRef){
+            __analogVRef = DEFAULT_VREF;
+            if(__analogVRefPin){
+                esp_adc_cal_characteristics_t chars;
+                if(adc2_vref_to_gpio(__analogVRefPin) == ESP_OK){
+                    __analogVRef = __analogRead(__analogVRefPin);
+                    esp_adc_cal_characterize(1, __analogAttenuation, __analogWidth, DEFAULT_VREF, &chars);
+                    __analogVRef = esp_adc_cal_raw_to_voltage(__analogVRef, &chars);
+                    log_d("Vref to GPIO%u: %u", __analogVRefPin, __analogVRef);
+                }
+            }
+        }
+    }
+    uint8_t unit = 1;
+    if(channel > 9){
+        unit = 2;
+    }
+    uint16_t adc_reading = __analogRead(pin);
+    if(__analogCharacteristics[unit - 1] == NULL){
+        __analogCharacteristics[unit - 1] = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+        if(__analogCharacteristics[unit - 1] == NULL){
+            return 0;
+        }
+        esp_adc_cal_value_t val_type = esp_adc_cal_characterize(unit, __analogAttenuation, __analogWidth, __analogVRef, __analogCharacteristics[unit - 1]);
+        if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
+            log_i("ADC%u: Characterized using Two Point Value: %u\n", unit, __analogCharacteristics[unit - 1]->vref);
+        } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
+            log_i("ADC%u: Characterized using eFuse Vref: %u\n", unit, __analogCharacteristics[unit - 1]->vref);
+        } else if(__analogVRef != DEFAULT_VREF){
+            log_i("ADC%u: Characterized using Vref to GPIO%u: %u\n", unit, __analogVRefPin, __analogCharacteristics[unit - 1]->vref);
+        } else {
+            log_i("ADC%u: Characterized using Default Vref: %u\n", unit, __analogCharacteristics[unit - 1]->vref);
+        }
+    }
+    return esp_adc_cal_raw_to_voltage(adc_reading, __analogCharacteristics[unit - 1]);
 }
 
 int __hallRead()    //hall sensor without LNA
@@ -260,14 +228,12 @@ int __hallRead()    //hall sensor without LNA
 extern uint16_t analogRead(uint8_t pin) __attribute__ ((weak, alias("__analogRead")));
 extern void analogReadResolution(uint8_t bits) __attribute__ ((weak, alias("__analogReadResolution")));
 extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSetWidth")));
-extern void analogSetCycles(uint8_t cycles) __attribute__ ((weak, alias("__analogSetCycles")));
-extern void analogSetSamples(uint8_t samples) __attribute__ ((weak, alias("__analogSetSamples")));
 extern void analogSetClockDiv(uint8_t clockDiv) __attribute__ ((weak, alias("__analogSetClockDiv")));
 extern void analogSetAttenuation(adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetAttenuation")));
 extern void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetPinAttenuation")));
 extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
 
 extern bool adcAttachPin(uint8_t pin) __attribute__ ((weak, alias("__adcAttachPin")));
-extern bool adcStart(uint8_t pin) __attribute__ ((weak, alias("__adcStart")));
-extern bool adcBusy(uint8_t pin) __attribute__ ((weak, alias("__adcBusy")));
-extern uint16_t adcEnd(uint8_t pin) __attribute__ ((weak, alias("__adcEnd")));
+
+extern void analogSetVRefPin(uint8_t pin) __attribute__ ((weak, alias("__analogSetVRefPin")));
+extern uint32_t analogReadMilliVolts(uint8_t pin) __attribute__ ((weak, alias("__analogReadMilliVolts")));

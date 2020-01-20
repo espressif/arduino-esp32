@@ -441,11 +441,26 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
  * * ESP_PWR_LVL_P1
  * * ESP_PWR_LVL_P4
  * * ESP_PWR_LVL_P7
+ *
+ * The power types can be one of:
+ * * ESP_BLE_PWR_TYPE_CONN_HDL0
+ * * ESP_BLE_PWR_TYPE_CONN_HDL1
+ * * ESP_BLE_PWR_TYPE_CONN_HDL2
+ * * ESP_BLE_PWR_TYPE_CONN_HDL3
+ * * ESP_BLE_PWR_TYPE_CONN_HDL4
+ * * ESP_BLE_PWR_TYPE_CONN_HDL5
+ * * ESP_BLE_PWR_TYPE_CONN_HDL6
+ * * ESP_BLE_PWR_TYPE_CONN_HDL7
+ * * ESP_BLE_PWR_TYPE_CONN_HDL8
+ * * ESP_BLE_PWR_TYPE_ADV
+ * * ESP_BLE_PWR_TYPE_SCAN
+ * * ESP_BLE_PWR_TYPE_DEFAULT
+ * @param [in] powerType.
  * @param [in] powerLevel.
  */
-/* STATIC */ void BLEDevice::setPower(esp_power_level_t powerLevel) {
-	log_v(">> setPower: %d", powerLevel);
-	esp_err_t errRc = ::esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, powerLevel);
+/* STATIC */ void BLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
+	log_v(">> setPower: %d (type: %d)", powerLevel, powerType);
+	esp_err_t errRc = ::esp_ble_tx_power_set(powerType, powerLevel);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_tx_power_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 	};
@@ -562,6 +577,12 @@ void BLEDevice::startAdvertising() {
 	getAdvertising()->start();
 	log_v("<< startAdvertising");
 } // startAdvertising
+
+void BLEDevice::stopAdvertising() {
+    log_v(">> stopAdvertising");
+    getAdvertising()->stop();
+    log_v("<< stopAdvertising");
+} // stopAdvertising
 
 /* multi connect support */
 /* requires a little more work */
