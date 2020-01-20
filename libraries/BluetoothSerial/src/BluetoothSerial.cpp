@@ -654,7 +654,7 @@ void BluetoothSerial::flush()
 {
     if (_spp_tx_queue != NULL){
         while(uxQueueMessagesWaiting(_spp_tx_queue) > 0){
-	    delay(50);
+	    delay(5);
         }
     }
 }
