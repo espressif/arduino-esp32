@@ -4324,6 +4324,50 @@ vintlabs-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 ##############################################################
 
+honeylemon.name=HONEYLemon
+
+honeylemon.upload.tool=esptool_py
+honeylemon.upload.maximum_size=1310720
+honeylemon.upload.maximum_data_size=327680
+honeylemon.upload.wait_for_upload_port=true
+
+honeylemon.serial.disableDTR=true
+honeylemon.serial.disableRTS=true
+
+honeylemon.build.mcu=esp32
+honeylemon.build.core=esp32
+honeylemon.build.variant=honeylemon
+honeylemon.build.board=HONEYLEMON
+
+honeylemon.build.f_cpu=240000000L
+honeylemon.build.flash_mode=dio
+honeylemon.build.flash_size=4MB
+honeylemon.build.boot=dio
+honeylemon.build.partitions=default
+honeylemon.build.defines=
+
+honeylemon.menu.FlashFreq.80=80MHz
+honeylemon.menu.FlashFreq.80.build.flash_freq=80m
+honeylemon.menu.FlashFreq.40=40MHz
+honeylemon.menu.FlashFreq.40.build.flash_freq=40m
+
+honeylemon.menu.UploadSpeed.921600=921600
+honeylemon.menu.UploadSpeed.921600.upload.speed=921600
+honeylemon.menu.UploadSpeed.115200=115200
+honeylemon.menu.UploadSpeed.115200.upload.speed=115200
+honeylemon.menu.UploadSpeed.256000.windows=256000
+honeylemon.menu.UploadSpeed.256000.upload.speed=256000
+honeylemon.menu.UploadSpeed.230400.windows.upload.speed=256000
+honeylemon.menu.UploadSpeed.230400=230400
+honeylemon.menu.UploadSpeed.230400.upload.speed=230400
+honeylemon.menu.UploadSpeed.460800.linux=460800
+honeylemon.menu.UploadSpeed.460800.macosx=460800
+honeylemon.menu.UploadSpeed.460800.upload.speed=460800
+honeylemon.menu.UploadSpeed.512000.windows=512000
+honeylemon.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
 mgbot-iotik32a.name=MGBOT IOTIK 32A
 
 mgbot-iotik32a.upload.tool=esptool_py
