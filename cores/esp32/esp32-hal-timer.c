@@ -68,6 +68,7 @@ typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
 void IRAM_ATTR __timerISR(void * arg){
+    (void)arg; // unused
     uint32_t s0 = TIMERG0.int_st_timers.val;
     uint32_t s1 = TIMERG1.int_st_timers.val;
     TIMERG0.int_clr_timers.val = s0;

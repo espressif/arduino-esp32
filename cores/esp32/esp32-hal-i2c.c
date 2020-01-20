@@ -243,6 +243,8 @@ static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
               c.byte_num);
         i++;
     }
+#else
+    (void)i2c; // unused
 #endif
 }
 
@@ -441,7 +443,11 @@ static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char l
       if(trigger & 8) i2cDumpStatus(i2c);
       if(trigger & 16) i2cDumpFifo(i2c);
     }
-#endif    
+#else
+    (void)i2c;     //unused
+    (void)trigger; // unused
+    (void)locus;   // unused
+#endif
 }
  // end of debug support routines
  
@@ -768,7 +774,7 @@ static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
         }
         
         if(tdq->ctrl.mode == 1){ // read command
-            if(moveCnt > (tdq->length - tdq->position)) { //make sure they go in this dq
+            if(moveCnt > (uint32_t)(tdq->length - tdq->position)) { //make sure they go in this dq
         // part of these reads go into the next dq
                 moveCnt = (tdq->length - tdq->position);
             }

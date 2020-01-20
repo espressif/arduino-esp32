@@ -84,14 +84,19 @@ bool IRAM_ATTR psramFound(){
 }
 
 void IRAM_ATTR *ps_malloc(size_t size){
+    (void)size; // unused
     return NULL;
 }
 
 void IRAM_ATTR *ps_calloc(size_t n, size_t size){
+    (void)n;    // unused
+    (void)size; // unused
     return NULL;
 }
 
 void IRAM_ATTR *ps_realloc(void *ptr, size_t size){
+    (void)ptr;  // unused
+    (void)size; // unused
     return NULL;
 }
 

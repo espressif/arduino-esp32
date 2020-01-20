@@ -71,6 +71,7 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
 
 static void IRAM_ATTR _uart_isr(void *arg)
 {
+    (void)arg; // unused
     uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
     uart_t* uart;
@@ -488,7 +489,11 @@ int log_printf(const char *format, ...)
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, arg);
     va_end(copy);
-    if(len >= sizeof(loc_buf)){
+    if(len < 0) {
+        // vsnprintf failed
+        return 0;
+    };
+    if((size_t)len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
             return 0;
@@ -507,7 +512,7 @@ int log_printf(const char *format, ...)
     ets_printf("%s", temp);
 #endif
     va_end(arg);
-    if(len >= sizeof(loc_buf)){
+    if((size_t)len >= sizeof(loc_buf)){
         free(temp);
     }
     return len;

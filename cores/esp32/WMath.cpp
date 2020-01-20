@@ -40,11 +40,11 @@ long random(long howbig)
     uint32_t x = esp_random();
     uint64_t m = uint64_t(x) * uint64_t(howbig);
     uint32_t l = uint32_t(m);
-    if (l < howbig) {
+    if (l < (unsigned long)howbig) {
         uint32_t t = -howbig;
-        if (t >= howbig) {
+        if (t >= (unsigned long)howbig) {
             t -= howbig;
-            if (t >= howbig) 
+            if (t >= (unsigned long)howbig) 
                 t %= howbig;
         }
         while (l < t) {

@@ -87,8 +87,8 @@ struct rmt_obj_s
     int pin;
     int channel;
     bool tx_not_rx;
-    int buffers;
-    int data_size;
+    size_t buffers;
+    size_t data_size;
     uint32_t* data_ptr;
     intr_mode_t intr_mode;
     transaction_state_t tx_state;
@@ -132,7 +132,7 @@ static bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 static void IRAM_ATTR _rmt_isr(void* arg);
 
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size);
+static rmt_obj_t* _rmtAllocate(int pin, int from, size_t size);
 
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
@@ -241,7 +241,7 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     }
     
     int channel = rmt->channel;
-    int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
+    size_t allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
 
     if (size > allocated_size) {
 
@@ -458,7 +458,7 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
 
 rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
-    int buffers = memsize;
+    size_t buffers = memsize;
     rmt_obj_t* rmt;
     size_t i;
     size_t j;
@@ -579,8 +579,9 @@ bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 }
 
 
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
+static rmt_obj_t* _rmtAllocate(int pin, int from, size_t size)
 {
+    (void)pin; // unused
     size_t i;
     // setup how many buffers shall we use
     g_rmt_objects[from].buffers = size;
@@ -612,6 +613,7 @@ static void _initPin(int pin, int channel, bool tx_not_rx)
 
 static void IRAM_ATTR _rmt_isr(void* arg)
 {
+    (void)arg; // unused
     int intr_val = RMT.int_st.val;
     size_t ch;
     for (ch = 0; ch < MAX_CHANNELS; ch++) {

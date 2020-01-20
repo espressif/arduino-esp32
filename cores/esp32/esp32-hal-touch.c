@@ -31,6 +31,7 @@ static intr_handle_t touch_intr_handle = NULL;
 
 void IRAM_ATTR __touchISR(void * arg)
 {
+    (void)arg; // unused
     uint32_t pad_intr = READ_PERI_REG(SENS_SAR_TOUCH_CTRL2_REG) & 0x3ff;
     uint32_t rtc_intr = READ_PERI_REG(RTC_CNTL_INT_ST_REG);
     uint8_t i = 0;

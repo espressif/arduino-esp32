@@ -374,6 +374,7 @@ void spiSetBitOrder(spi_t * spi, uint8_t bitOrder)
 
 static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb)
 {
+    (void)new_apb; // unused
     spi_t * spi = (spi_t *)arg;
     if(ev_type == APB_BEFORE_CHANGE){
         SPI_MUTEX_LOCK();
@@ -625,7 +626,7 @@ static void __spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out,
     if(!spi) {
         return;
     }
-    int i;
+    size_t i;
 
     if(bytes > 64) {
         bytes = 64;
@@ -865,7 +866,7 @@ void spiWriteNL(spi_t * spi, const void * data_in, uint32_t len){
 
         spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
         spi->dev->miso_dlen.usr_miso_dbitlen = 0;
-        for (int i=0; i<c_longs; i++) {
+        for (size_t i=0; i<c_longs; i++) {
             spi->dev->data_buf[i] = data[i];
         }
         spi->dev->cmd.usr = 1;
@@ -896,18 +897,18 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
         spi->dev->miso_dlen.usr_miso_dbitlen = (c_len*8)-1;
         if(data){
-            for (int i=0; i<c_longs; i++) {
+            for (size_t i=0; i<c_longs; i++) {
                 spi->dev->data_buf[i] = data[i];
             }
         } else {
-            for (int i=0; i<c_longs; i++) {
+            for (size_t i=0; i<c_longs; i++) {
                 spi->dev->data_buf[i] = 0xFFFFFFFF;
             }
         }
         spi->dev->cmd.usr = 1;
         while(spi->dev->cmd.usr);
         if(result){
-            for (int i=0; i<c_longs; i++) {
+            for (size_t i=0; i<c_longs; i++) {
                 result[i] = spi->dev->data_buf[i];
             }
         }
@@ -980,7 +981,7 @@ void IRAM_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32_t len)
 
         spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
         spi->dev->miso_dlen.usr_miso_dbitlen = 0;
-        for (int i=0; i<c_longs; i++) {
+        for (size_t i=0; i<c_longs; i++) {
             if(msb){
                 if(l_bytes && i == (c_longs - 1)){
                     if(l_bytes == 2){

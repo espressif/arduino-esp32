@@ -11,6 +11,7 @@ bool loopTaskWDTEnabled;
 
 void loopTask(void *pvParameters)
 {
+    (void)pvParameters; // unused
     setup();
     for(;;) {
         if(loopTaskWDTEnabled){
