@@ -578,6 +578,12 @@ void BLEDevice::startAdvertising() {
 	log_v("<< startAdvertising");
 } // startAdvertising
 
+void BLEDevice::stopAdvertising() {
+    log_v(">> stopAdvertising");
+    getAdvertising()->stop();
+    log_v("<< stopAdvertising");
+} // stopAdvertising
+
 /* multi connect support */
 /* requires a little more work */
 std::map<uint16_t, conn_status_t> BLEDevice::getPeerDevices(bool _client) {
