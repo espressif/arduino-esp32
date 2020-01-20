@@ -4,7 +4,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
+
+#if CONFIG_SPIRAM_SUPPORT
+#include "freertos/FreeRTOS.h"
+#endif
+
+#ifndef max
+#define max(x, y) (((x) < (y)) ? (y) : (x))
+#endif
+
+#ifndef min
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#endif
 
 typedef float fptp_t;
 typedef uint8_t uc_t;
@@ -19,30 +32,37 @@ typedef enum
 {
     PADDING_VALID = 0,
     PADDING_SAME = 1,
+    PADDING_SAME_DONT_FREE_INPUT = 2,
+    PADDING_SAME_MXNET = 3,
 } dl_padding_type;
 
+typedef enum
+{
+    DL_POOLING_MAX = 0,
+    DL_POOLING_AVG = 1,
+} dl_pooling_type;
 /*
  * Matrix for 3d
  * @Warning: the sequence of variables is fixed, cannot be modified, otherwise there will be errors in esp_dsp_dot_float
  */
 typedef struct
 {
-    int w;          /*!< Width */
-    int h;          /*!< Height */
-    int c;          /*!< Channel */
-    int n;          /*!< Number of filter, input and output must be 1 */
-    int stride;     /*!< Step between lines */
-    fptp_t *item;   /*!< Data */
+    int w;        /*!< Width */
+    int h;        /*!< Height */
+    int c;        /*!< Channel */
+    int n;        /*!< Number of filter, input and output must be 1 */
+    int stride;   /*!< Step between lines */
+    fptp_t *item; /*!< Data */
 } dl_matrix3d_t;
 
 typedef struct
 {
-    int w;          /*!< Width */
-    int h;          /*!< Height */
-    int c;          /*!< Channel */
-    int n;          /*!< Number of filter, input and output must be 1 */
-    int stride;     /*!< Step between lines */
-    uc_t *item;     /*!< Data */
+    int w;      /*!< Width */
+    int h;      /*!< Height */
+    int c;      /*!< Channel */
+    int n;      /*!< Number of filter, input and output must be 1 */
+    int stride; /*!< Step between lines */
+    uc_t *item; /*!< Data */
 } dl_matrix3du_t;
 
 typedef struct
@@ -53,6 +73,51 @@ typedef struct
 } dl_matrix3d_mobilenet_config_t;
 
 /*
+ * @brief Allocate a zero-initialized space. Must use 'dl_lib_free' to free the memory.
+ *
+ * @param cnt  Count of units.
+ * @param size Size of unit.
+ * @param align Align of memory. If not required, set 0.
+ * @return Pointer of allocated memory. Null for failed.
+ */
+static inline void *dl_lib_calloc(int cnt, int size, int align)
+{
+    int total_size = cnt * size + align + sizeof(void *);
+    void *res = malloc(total_size);
+    if (NULL == res)
+    {
+#if CONFIG_SPIRAM_SUPPORT
+        res = heap_caps_malloc(total_size, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
+    }
+    if (NULL == res)
+    {
+        printf("Item psram alloc failed. Size: %d x %d\n", cnt, size);
+#else
+        printf("Item alloc failed. Size: %d x %d\n", cnt, size);
+#endif
+        return NULL;
+    }
+    bzero(res, total_size);
+    void **data = (void **)res + 1;
+    void **aligned;
+    if (align)
+        aligned = (void **)(((size_t)data + (align - 1)) & -align);
+    else
+        aligned = data;
+
+    aligned[-1] = res;
+    return (void *)aligned;
+}
+
+static inline void dl_lib_free(void *d)
+{
+    if (NULL == d)
+        return;
+
+    free(((void **)d)[-1]);
+}
+
+/*
  * @brief Allocate a 3D matrix with float items, the access sequence is NHWC
  *
  * @param n     Number of matrix3d, for filters it is out channels, for others it is 1
@@ -61,7 +126,31 @@ typedef struct
  * @param c     Channel of matrix3d
  * @return      3d matrix
  */
-dl_matrix3d_t *dl_matrix3d_alloc(int n, int w, int h, int c);
+static inline dl_matrix3d_t *dl_matrix3d_alloc(int n, int w, int h, int c)
+{
+    dl_matrix3d_t *r = (dl_matrix3d_t *)dl_lib_calloc(1, sizeof(dl_matrix3d_t), 0);
+    if (NULL == r)
+    {
+        printf("internal r failed.\n");
+        return NULL;
+    }
+    fptp_t *items = (fptp_t *)dl_lib_calloc(n * w * h * c, sizeof(fptp_t), 0);
+    if (NULL == items)
+    {
+        printf("matrix3d item alloc failed.\n");
+        dl_lib_free(r);
+        return NULL;
+    }
+
+    r->w = w;
+    r->h = h;
+    r->c = c;
+    r->n = n;
+    r->stride = w * c;
+    r->item = items;
+
+    return r;
+}
 
 /*
  * @brief Allocate a 3D matrix with 8-bits items, the access sequence is NHWC
@@ -72,21 +161,68 @@ dl_matrix3d_t *dl_matrix3d_alloc(int n, int w, int h, int c);
  * @param c     Channel of matrix3d
  * @return      3d matrix
  */
-dl_matrix3du_t *dl_matrix3du_alloc(int n, int w, int h, int c);
+static inline dl_matrix3du_t *dl_matrix3du_alloc(int n, int w, int h, int c)
+{
+    dl_matrix3du_t *r = (dl_matrix3du_t *)dl_lib_calloc(1, sizeof(dl_matrix3du_t), 0);
+    if (NULL == r)
+    {
+        printf("internal r failed.\n");
+        return NULL;
+    }
+    uc_t *items = (uc_t *)dl_lib_calloc(n * w * h * c, sizeof(uc_t), 0);
+    if (NULL == items)
+    {
+        printf("matrix3du item alloc failed.\n");
+        dl_lib_free(r);
+        return NULL;
+    }
+
+    r->w = w;
+    r->h = h;
+    r->c = c;
+    r->n = n;
+    r->stride = w * c;
+    r->item = items;
+
+    return r;
+}
 
 /*
  * @brief Free a matrix3d
  *
  * @param m matrix3d with float items
  */
-void dl_matrix3d_free(dl_matrix3d_t *m);
+static inline void dl_matrix3d_free(dl_matrix3d_t *m)
+{
+    if (NULL == m)
+        return;
+    if (NULL == m->item)
+    {
+        dl_lib_free(m);
+        return;
+    }
+    dl_lib_free(m->item);
+    dl_lib_free(m);
+}
 
 /*
  * @brief Free a matrix3d
  *
  * @param m matrix3d with 8-bits items
  */
-void dl_matrix3du_free(dl_matrix3du_t *m);
+static inline void dl_matrix3du_free(dl_matrix3du_t *m)
+{
+    if (NULL == m)
+        return;
+    if (NULL == m->item)
+    {
+        dl_lib_free(m);
+        return;
+    }
+    dl_lib_free(m->item);
+    dl_lib_free(m);
+}
+
 
 /*
  * @brief Dot product with a vector and matrix
@@ -139,6 +275,15 @@ void dl_matrix3du_slice_copy(dl_matrix3du_t *dst,
                              int h);
 
 /**
+ * @brief Transform a sliced matrix block from nhwc to nchw, the block needs to be memory continous.
+ *
+ * @param out  The destination sliced matrix in nchw
+ * @param in   The source sliced matrix in nhwc
+ */
+void dl_matrix3d_sliced_transform_nchw(dl_matrix3d_t *out,
+                                       dl_matrix3d_t *in);
+
+/**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
  * @param in             Input matrix3d
@@ -160,20 +305,6 @@ dl_matrix3d_t *dl_matrix3d_conv(dl_matrix3d_t *in,
                                 int mode);
 
 /**
- * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
- *
- * @param in             Input matrix3d
- * @param filter         Weights of the neurons
- * @param bias           Bias for the CNN layer
- * @param stride_x       The step length of the convolution window in x(width) direction
- * @param stride_y       The step length of the convolution window in y(height) direction
- * @param padding        One of VALID or SAME
- * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
- *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
- * @return               The result of CNN layer
- */
-
-/**
  * @brief Do a global average pooling layer pass, dimension is (number, width, height, channel)
  *
  * @param in             Input matrix3d
@@ -182,6 +313,25 @@ dl_matrix3d_t *dl_matrix3d_conv(dl_matrix3d_t *in,
  */
 dl_matrix3d_t *dl_matrix3d_global_pool(dl_matrix3d_t *in);
 
+/**
+ * @brief Calculate pooling layer of a feature map
+ *
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param f_w       Window width
+ * @param f_h       Window height 
+ * @param stride_x  Stride in horizontal direction
+ * @param stride_y  Stride in vertical direction
+ * @param padding   Padding type: PADDING_VALID and PADDING_SAME
+ * @param pooling_type   Pooling type: DL_POOLING_MAX and POOLING_AVG
+ * @return          Resulting matrix, size (1, w', h', c)
+ */
+dl_matrix3d_t *dl_matrix3d_pooling(dl_matrix3d_t *in,
+                                   int f_w,
+                                   int f_h,
+                                   int stride_x,
+                                   int stride_y,
+                                   dl_padding_type padding,
+                                   dl_pooling_type pooling_type);
 /**
  * @brief Do a batch normalization operation, update the input matrix3d: input = input * scale + offset
  *
@@ -408,6 +558,13 @@ dl_matrix3d_t *dl_matrix3dff_conv_3x3(dl_matrix3d_t *in,
 //
 
 dl_matrix3d_t *dl_matrix3duf_conv_common(dl_matrix3du_t *in,
+                                         dl_matrix3d_t *filter,
+                                         dl_matrix3d_t *bias,
+                                         int stride_x,
+                                         int stride_y,
+                                         dl_padding_type padding);
+
+dl_matrix3d_t *dl_matrix3dff_conv_common(dl_matrix3d_t *in,
                                          dl_matrix3d_t *filter,
                                          dl_matrix3d_t *bias,
                                          int stride_x,
