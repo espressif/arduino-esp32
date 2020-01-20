@@ -217,7 +217,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     if(txPin != -1) {
         uartAttachTx(uart, txPin, inverted);
     }
-
     addApbChangeCallback(uart, uart_on_apb_change);
     return uart;
 }
@@ -377,18 +376,21 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
         uart->dev->int_clr.val = 0xffffffff;
         // read RX fifo
         uint8_t c;
-        BaseType_t xHigherPriorityTaskWoken;
+   //     BaseType_t xHigherPriorityTaskWoken;
         while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
-                xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
+            if(uart->queue != NULL ) {
+                xQueueSend(uart->queue, &c, 1); //&xHigherPriorityTaskWoken);
             }
         }
+        UART_MUTEX_UNLOCK();
+ 
         // wait TX empty
         while(uart->dev->status.txfifo_cnt || uart->dev->status.st_utx_out);
     } else {
         //todo:
         // set baudrate
+        UART_MUTEX_LOCK();
         uint32_t clk_div = (uart->dev->clk_div.div_int << 4) | (uart->dev->clk_div.div_frag & 0x0F);
         uint32_t baud_rate = ((old_apb<<4)/clk_div);
         clk_div = ((new_apb<<4)/baud_rate);

@@ -4,66 +4,30 @@
 #include "RequestHandler.h"
 #include "mimetable.h"
 #include "WString.h"
+#include "Uri.h"
 
 using namespace mime;
 
 class FunctionRequestHandler : public RequestHandler {
 public:
-    FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const String &uri, HTTPMethod method)
+    FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const Uri &uri, HTTPMethod method)
     : _fn(fn)
     , _ufn(ufn)
-    , _uri(uri)
+    , _uri(uri.clone())
     , _method(method)
     {
-        int numParams = 0, start = 0;
-        do {
-            start = _uri.indexOf("{}", start);
-            if (start > 0) {
-                numParams++;
-                start += 2;
-            }
-        } while (start > 0);
-        pathArgs.resize(numParams);
+        _uri->initPathArgs(pathArgs);
+    }
+
+    ~FunctionRequestHandler() {
+        delete _uri;
     }
 
     bool canHandle(HTTPMethod requestMethod, String requestUri) override  {
         if (_method != HTTP_ANY && _method != requestMethod)
             return false;
 
-        if (_uri == requestUri)
-            return true;
-
-        size_t uriLength = _uri.length();
-        unsigned int pathArgIndex = 0;
-        unsigned int requestUriIndex = 0;
-        for (unsigned int i = 0; i < uriLength; i++, requestUriIndex++) {
-            char uriChar = _uri[i];
-            char requestUriChar = requestUri[requestUriIndex];
-
-            if (uriChar == requestUriChar)
-                continue;
-            if (uriChar != '{')
-                return false;
-
-            i += 2; // index of char after '}'
-            if (i >= uriLength) {
-                // there is no char after '}'
-                pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex);
-                return pathArgs[pathArgIndex].indexOf("/") == -1; // path argument may not contain a '/'
-            }
-            else
-            {
-                char charEnd = _uri[i];
-                int uriIndex = requestUri.indexOf(charEnd, requestUriIndex);
-                if (uriIndex < 0)
-                    return false;
-                pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex, uriIndex);
-                requestUriIndex = (unsigned int) uriIndex;
-            }
-            pathArgIndex++;
-        }
-
-        return requestUriIndex >= requestUri.length();
+        return _uri->canHandle(requestUri, pathArgs);
     }
 
     bool canUpload(String requestUri) override  {
@@ -92,7 +56,7 @@ public:
 protected:
     WebServer::THandlerFunction _fn;
     WebServer::THandlerFunction _ufn;
-    String _uri;
+    Uri *_uri;
     HTTPMethod _method;
 };
 
