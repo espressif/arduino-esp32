@@ -36,7 +36,10 @@
 extern "C" {
 #endif
 
+/* MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE is deprecated and should not be
+ * used. */
 #define MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE         -0x001A  /**< The selected feature is not available. */
+
 #define MBEDTLS_ERR_THREADING_BAD_INPUT_DATA              -0x001C  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E  /**< Locking / unlocking / free failed with error code. */
 

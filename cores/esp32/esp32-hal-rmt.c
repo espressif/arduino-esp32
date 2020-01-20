@@ -128,7 +128,7 @@ static xSemaphoreHandle g_rmt_block_lock = NULL;
  */
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
-static bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+static bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool continuous);
 
 static void IRAM_ATTR _rmt_isr(void* arg);
 
@@ -234,6 +234,21 @@ bool rmtDeinit(rmt_obj_t *rmt)
     return true;
 }
 
+bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
+{
+    if (!rmt) {
+        return false;
+    }
+
+    int channel = rmt->channel;
+    int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
+
+    if (size > allocated_size) {
+        return false;
+    }
+    return _rmtSendOnce(rmt, data, size, true);
+}
+
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
     if (!rmt) {
@@ -282,10 +297,10 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
         RMT_MUTEX_UNLOCK(channel);
 
         // start the transation
-        return _rmtSendOnce(rmt, data, MAX_DATA_PER_ITTERATION);
+        return _rmtSendOnce(rmt, data, MAX_DATA_PER_ITTERATION, false);
     } else {
         // use one-go mode if data fits one buffer 
-        return _rmtSendOnce(rmt, data, size);
+        return _rmtSendOnce(rmt, data, size, false);
     }
 }
 
@@ -483,7 +498,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
             break;
         }
     }
-    if (i == MAX_CHANNELS || i+j >= MAX_CHANNELS || j != buffers)  {
+    if (i == MAX_CHANNELS || i+j > MAX_CHANNELS || j != buffers)  {
         xSemaphoreGive(g_rmt_block_lock);
         return NULL;
     }
@@ -553,7 +568,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 /**
  * Private methods definitions
  */
-bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
+bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool continuous)
 {
     if (!rmt) {
         return false;
@@ -571,6 +586,7 @@ bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     }
 
     RMT_MUTEX_LOCK(channel);
+    RMT.conf_ch[channel].conf1.tx_conti_mode = continuous;
     RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
     RMT.conf_ch[channel].conf1.tx_start = 1;
     RMT_MUTEX_UNLOCK(channel);

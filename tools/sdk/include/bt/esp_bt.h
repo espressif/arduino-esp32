@@ -117,7 +117,7 @@ the adv packet will be discarded until the memory is restored. */
     .mode = BTDM_CONTROLLER_MODE_EFF,                                      \
     .ble_max_conn = CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN_EFF,               \
     .bt_max_acl_conn = CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_ACL_CONN_EFF,     \
-    .bt_sco_datapath = CONFIG_BTDM_CONTROLLER_BR_EDR_SCO_DATA_PATH_EFF,    \
+    .bt_sco_datapath = CONFIG_BTDM_CTRL_BR_EDR_SCO_DATA_PATH_EFF,          \
     .bt_max_sync_conn = CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_SYNC_CONN_EFF,   \
     .magic = ESP_BT_CONTROLLER_CONFIG_MAGIC_VAL,                           \
 };

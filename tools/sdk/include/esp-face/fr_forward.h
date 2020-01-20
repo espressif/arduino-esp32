@@ -12,7 +12,7 @@ extern "C"
 #define FACE_WIDTH 56
 #define FACE_HEIGHT 56
 #define FACE_ID_SIZE 512
-#define FACE_REC_THRESHOLD 0.5
+#define FACE_REC_THRESHOLD 0.55
 
 #define LEFT_EYE_X 0
 #define LEFT_EYE_Y 1
@@ -20,6 +20,10 @@ extern "C"
 #define RIGHT_EYE_Y 7
 #define NOSE_X 4
 #define NOSE_Y 5
+#define LEFT_MOUTH_X 2
+#define LEFT_MOUTH_Y 3
+#define RIGHT_MOUTH_X 8
+#define RIGHT_MOUTH_Y 9
 
 #define EYE_DIST_SET 16.5f
 #define NOSE_EYE_RATIO_THRES_MIN 0.49f
@@ -81,13 +85,24 @@ extern "C"
      * @return ESP_OK           Input face is good for recognition
      * @return ESP_FAIL         Input face is not good for recognition
      */
-    int8_t align_face(box_array_t *onet_boxes,
+    int8_t align_face_rot(box_array_t *onet_boxes,
                       dl_matrix3du_t *src,
                       dl_matrix3du_t *dest);
 
     int8_t align_face2(fptp_t *landmark,
                        dl_matrix3du_t *src,
                        dl_matrix3du_t *dest);
+    
+    int8_t align_face_sim(box_array_t *onet_boxes,
+                   dl_matrix3du_t *src,
+                   dl_matrix3du_t *dest);
+    
+    inline int8_t align_face(box_array_t *onet_boxes,
+                       dl_matrix3du_t *src,
+                       dl_matrix3du_t *dest)
+    {
+        return align_face_sim(onet_boxes, src, dest);              
+    }
 
     /**
      * @brief Run the face recognition model to get the face feature

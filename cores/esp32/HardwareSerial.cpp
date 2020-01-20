@@ -131,6 +131,24 @@ int HardwareSerial::read(void)
     return -1;
 }
 
+// read characters into buffer
+// terminates if size characters have been read, or no further are pending
+// returns the number of characters placed in the buffer
+// the buffer is NOT null terminated.
+size_t HardwareSerial::read(uint8_t *buffer, size_t size)
+{
+    size_t avail = available();
+    if (size < avail) {
+        avail = size;
+    }
+    size_t count = 0;
+    while(count < avail) {
+        *buffer++ = uartRead(_uart);
+        count++;
+    }
+    return count;
+}
+
 void HardwareSerial::flush(void)
 {
     uartFlush(_uart);

@@ -324,7 +324,7 @@ tinypico.serial.disableRTS=true
 tinypico.build.mcu=esp32
 tinypico.build.core=esp32
 tinypico.build.variant=pico32
-tinypico.build.board=ESP32_PICO
+tinypico.build.board=TINYPICO
 
 tinypico.build.f_cpu=240000000L
 tinypico.build.flash_size=4MB
@@ -3116,8 +3116,8 @@ CoreESP32.upload.maximum_size=1310720
 CoreESP32.upload.maximum_data_size=327680
 CoreESP32.upload.wait_for_upload_port=true
 
-CoreESP32.serial.disableDTR=true
-CoreESP32.serial.disableRTS=true
+CoreESP32.serial.disableDTR=false
+CoreESP32.serial.disableRTS=false
 
 CoreESP32.build.mcu=esp32
 CoreESP32.build.core=esp32
@@ -3130,6 +3130,24 @@ CoreESP32.build.flash_size=4MB
 CoreESP32.build.boot=dio
 CoreESP32.build.partitions=default
 CoreESP32.build.defines=
+
+CoreESP32.menu.PSRAM.disabled=Disabled
+CoreESP32.menu.PSRAM.disabled.build.defines=
+CoreESP32.menu.PSRAM.enabled=Enabled
+CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+CoreESP32.menu.PartitionScheme.default=Default
+CoreESP32.menu.PartitionScheme.default.build.partitions=default
+CoreESP32.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+CoreESP32.menu.PartitionScheme.minimal.build.partitions=minimal
+CoreESP32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+CoreESP32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+CoreESP32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+CoreESP32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+CoreESP32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+CoreESP32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+CoreESP32.menu.PartitionScheme.fatflash=16M Fat
+CoreESP32.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 CoreESP32.menu.FlashFreq.80=80MHz
 CoreESP32.menu.FlashFreq.80.build.flash_freq=80m
@@ -3150,6 +3168,19 @@ CoreESP32.menu.UploadSpeed.460800.macosx=460800
 CoreESP32.menu.UploadSpeed.460800.upload.speed=460800
 CoreESP32.menu.UploadSpeed.512000.windows=512000
 CoreESP32.menu.UploadSpeed.512000.upload.speed=512000
+
+CoreESP32.menu.DebugLevel.none=None
+CoreESP32.menu.DebugLevel.none.build.code_debug=0
+CoreESP32.menu.DebugLevel.error=Error
+CoreESP32.menu.DebugLevel.error.build.code_debug=1
+CoreESP32.menu.DebugLevel.warn=Warn
+CoreESP32.menu.DebugLevel.warn.build.code_debug=2
+CoreESP32.menu.DebugLevel.info=Info
+CoreESP32.menu.DebugLevel.info.build.code_debug=3
+CoreESP32.menu.DebugLevel.debug=Debug
+CoreESP32.menu.DebugLevel.debug.build.code_debug=4
+CoreESP32.menu.DebugLevel.verbose=Verbose
+CoreESP32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4235,6 +4266,51 @@ vintlabs-devkit-v1.menu.UploadSpeed.460800.upload.speed=460800
 vintlabs-devkit-v1.menu.UploadSpeed.512000.windows=512000
 vintlabs-devkit-v1.menu.UploadSpeed.512000.upload.speed=512000
 
+vintlabs-devkit-v1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.default.build.partitions=default
+vintlabs-devkit-v1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+vintlabs-devkit-v1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+vintlabs-devkit-v1.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+vintlabs-devkit-v1.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+vintlabs-devkit-v1.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+vintlabs-devkit-v1.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.minimal.build.partitions=minimal
+vintlabs-devkit-v1.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+vintlabs-devkit-v1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+vintlabs-devkit-v1.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+vintlabs-devkit-v1.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+vintlabs-devkit-v1.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+vintlabs-devkit-v1.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+vintlabs-devkit-v1.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.huge_app.build.partitions=huge_app
+vintlabs-devkit-v1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+vintlabs-devkit-v1.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+vintlabs-devkit-v1.menu.PartitionScheme.fatflash.build.partitions=ffat
+vintlabs-devkit-v1.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+vintlabs-devkit-v1.menu.FlashSize.4M=4MB (32Mb)
+vintlabs-devkit-v1.menu.FlashSize.4M.build.flash_size=4MB
+vintlabs-devkit-v1.menu.FlashSize.8M=8MB (64Mb)
+vintlabs-devkit-v1.menu.FlashSize.8M.build.flash_size=8MB
+vintlabs-devkit-v1.menu.FlashSize.8M.build.partitions=default_8MB
+vintlabs-devkit-v1.menu.FlashSize.2M=2MB (16Mb)
+vintlabs-devkit-v1.menu.FlashSize.2M.build.flash_size=2MB
+vintlabs-devkit-v1.menu.FlashSize.2M.build.partitions=minimal
+vintlabs-devkit-v1.menu.FlashSize.16M=16MB (128Mb)
+vintlabs-devkit-v1.menu.FlashSize.16M.build.flash_size=16MB
+
 vintlabs-devkit-v1.menu.DebugLevel.none=None
 vintlabs-devkit-v1.menu.DebugLevel.none.build.code_debug=0
 vintlabs-devkit-v1.menu.DebugLevel.error=Error
@@ -4248,3 +4324,453 @@ vintlabs-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 ##############################################################
 
+honeylemon.name=HONEYLemon
+
+honeylemon.upload.tool=esptool_py
+honeylemon.upload.maximum_size=1310720
+honeylemon.upload.maximum_data_size=327680
+honeylemon.upload.wait_for_upload_port=true
+
+honeylemon.serial.disableDTR=true
+honeylemon.serial.disableRTS=true
+
+honeylemon.build.mcu=esp32
+honeylemon.build.core=esp32
+honeylemon.build.variant=honeylemon
+honeylemon.build.board=HONEYLEMON
+
+honeylemon.build.f_cpu=240000000L
+honeylemon.build.flash_mode=dio
+honeylemon.build.flash_size=4MB
+honeylemon.build.boot=dio
+honeylemon.build.partitions=default
+honeylemon.build.defines=
+
+honeylemon.menu.FlashFreq.80=80MHz
+honeylemon.menu.FlashFreq.80.build.flash_freq=80m
+honeylemon.menu.FlashFreq.40=40MHz
+honeylemon.menu.FlashFreq.40.build.flash_freq=40m
+
+honeylemon.menu.UploadSpeed.921600=921600
+honeylemon.menu.UploadSpeed.921600.upload.speed=921600
+honeylemon.menu.UploadSpeed.115200=115200
+honeylemon.menu.UploadSpeed.115200.upload.speed=115200
+honeylemon.menu.UploadSpeed.256000.windows=256000
+honeylemon.menu.UploadSpeed.256000.upload.speed=256000
+honeylemon.menu.UploadSpeed.230400.windows.upload.speed=256000
+honeylemon.menu.UploadSpeed.230400=230400
+honeylemon.menu.UploadSpeed.230400.upload.speed=230400
+honeylemon.menu.UploadSpeed.460800.linux=460800
+honeylemon.menu.UploadSpeed.460800.macosx=460800
+honeylemon.menu.UploadSpeed.460800.upload.speed=460800
+honeylemon.menu.UploadSpeed.512000.windows=512000
+honeylemon.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+mgbot-iotik32a.name=MGBOT IOTIK 32A
+
+mgbot-iotik32a.upload.tool=esptool_py
+mgbot-iotik32a.upload.maximum_size=1310720
+mgbot-iotik32a.upload.maximum_data_size=327680
+mgbot-iotik32a.upload.wait_for_upload_port=true
+
+mgbot-iotik32a.serial.disableDTR=true
+mgbot-iotik32a.serial.disableRTS=true
+
+mgbot-iotik32a.build.mcu=esp32
+mgbot-iotik32a.build.core=esp32
+mgbot-iotik32a.build.variant=mgbot-iotik32a
+mgbot-iotik32a.build.board=MGBOT_IOTIK32A
+
+mgbot-iotik32a.build.f_cpu=240000000L
+mgbot-iotik32a.build.flash_size=4MB
+mgbot-iotik32a.build.flash_freq=40m
+mgbot-iotik32a.build.flash_mode=dio
+mgbot-iotik32a.build.boot=dio
+mgbot-iotik32a.build.partitions=default
+mgbot-iotik32a.build.defines=
+
+mgbot-iotik32a.menu.PSRAM.disabled=Disabled
+mgbot-iotik32a.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32a.menu.PSRAM.enabled=Enabled
+mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+mgbot-iotik32a.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.default.build.partitions=default
+mgbot-iotik32a.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+mgbot-iotik32a.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+mgbot-iotik32a.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+mgbot-iotik32a.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+mgbot-iotik32a.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+mgbot-iotik32a.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.minimal.build.partitions=minimal
+mgbot-iotik32a.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mgbot-iotik32a.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mgbot-iotik32a.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+mgbot-iotik32a.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+mgbot-iotik32a.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+mgbot-iotik32a.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+mgbot-iotik32a.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+mgbot-iotik32a.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+mgbot-iotik32a.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+mgbot-iotik32a.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+mgbot-iotik32a.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.huge_app.build.partitions=huge_app
+mgbot-iotik32a.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+mgbot-iotik32a.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+mgbot-iotik32a.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mgbot-iotik32a.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+mgbot-iotik32a.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mgbot-iotik32a.menu.PartitionScheme.fatflash.build.partitions=ffat
+mgbot-iotik32a.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+mgbot-iotik32a.menu.CPUFreq.240=240MHz (WiFi/BT)
+mgbot-iotik32a.menu.CPUFreq.240.build.f_cpu=240000000L
+mgbot-iotik32a.menu.CPUFreq.160=160MHz (WiFi/BT)
+mgbot-iotik32a.menu.CPUFreq.160.build.f_cpu=160000000L
+mgbot-iotik32a.menu.CPUFreq.80=80MHz (WiFi/BT)
+mgbot-iotik32a.menu.CPUFreq.80.build.f_cpu=80000000L
+mgbot-iotik32a.menu.CPUFreq.40=40MHz (40MHz XTAL)
+mgbot-iotik32a.menu.CPUFreq.40.build.f_cpu=40000000L
+mgbot-iotik32a.menu.CPUFreq.26=26MHz (26MHz XTAL)
+mgbot-iotik32a.menu.CPUFreq.26.build.f_cpu=26000000L
+mgbot-iotik32a.menu.CPUFreq.20=20MHz (40MHz XTAL)
+mgbot-iotik32a.menu.CPUFreq.20.build.f_cpu=20000000L
+mgbot-iotik32a.menu.CPUFreq.13=13MHz (26MHz XTAL)
+mgbot-iotik32a.menu.CPUFreq.13.build.f_cpu=13000000L
+mgbot-iotik32a.menu.CPUFreq.10=10MHz (40MHz XTAL)
+mgbot-iotik32a.menu.CPUFreq.10.build.f_cpu=10000000L
+
+mgbot-iotik32a.menu.FlashMode.qio=QIO
+mgbot-iotik32a.menu.FlashMode.qio.build.flash_mode=dio
+mgbot-iotik32a.menu.FlashMode.qio.build.boot=qio
+mgbot-iotik32a.menu.FlashMode.dio=DIO
+mgbot-iotik32a.menu.FlashMode.dio.build.flash_mode=dio
+mgbot-iotik32a.menu.FlashMode.dio.build.boot=dio
+mgbot-iotik32a.menu.FlashMode.qout=QOUT
+mgbot-iotik32a.menu.FlashMode.qout.build.flash_mode=dout
+mgbot-iotik32a.menu.FlashMode.qout.build.boot=qout
+mgbot-iotik32a.menu.FlashMode.dout=DOUT
+mgbot-iotik32a.menu.FlashMode.dout.build.flash_mode=dout
+mgbot-iotik32a.menu.FlashMode.dout.build.boot=dout
+
+mgbot-iotik32a.menu.FlashFreq.80=80MHz
+mgbot-iotik32a.menu.FlashFreq.80.build.flash_freq=80m
+mgbot-iotik32a.menu.FlashFreq.40=40MHz
+mgbot-iotik32a.menu.FlashFreq.40.build.flash_freq=40m
+
+mgbot-iotik32a.menu.FlashSize.4M=4MB (32Mb)
+mgbot-iotik32a.menu.FlashSize.4M.build.flash_size=4MB
+mgbot-iotik32a.menu.FlashSize.8M=8MB (64Mb)
+mgbot-iotik32a.menu.FlashSize.8M.build.flash_size=8MB
+mgbot-iotik32a.menu.FlashSize.8M.build.partitions=default_8MB
+mgbot-iotik32a.menu.FlashSize.2M=2MB (16Mb)
+mgbot-iotik32a.menu.FlashSize.2M.build.flash_size=2MB
+mgbot-iotik32a.menu.FlashSize.2M.build.partitions=minimal
+mgbot-iotik32a.menu.FlashSize.16M=16MB (128Mb)
+mgbot-iotik32a.menu.FlashSize.16M.build.flash_size=16MB
+
+mgbot-iotik32a.menu.UploadSpeed.921600=921600
+mgbot-iotik32a.menu.UploadSpeed.921600.upload.speed=921600
+mgbot-iotik32a.menu.UploadSpeed.115200=115200
+mgbot-iotik32a.menu.UploadSpeed.115200.upload.speed=115200
+mgbot-iotik32a.menu.UploadSpeed.256000.windows=256000
+mgbot-iotik32a.menu.UploadSpeed.256000.upload.speed=256000
+mgbot-iotik32a.menu.UploadSpeed.230400.windows.upload.speed=256000
+mgbot-iotik32a.menu.UploadSpeed.230400=230400
+mgbot-iotik32a.menu.UploadSpeed.230400.upload.speed=230400
+mgbot-iotik32a.menu.UploadSpeed.460800.linux=460800
+mgbot-iotik32a.menu.UploadSpeed.460800.macosx=460800
+mgbot-iotik32a.menu.UploadSpeed.460800.upload.speed=460800
+mgbot-iotik32a.menu.UploadSpeed.512000.windows=512000
+mgbot-iotik32a.menu.UploadSpeed.512000.upload.speed=512000
+
+mgbot-iotik32a.menu.DebugLevel.none=None
+mgbot-iotik32a.menu.DebugLevel.none.build.code_debug=0
+mgbot-iotik32a.menu.DebugLevel.error=Error
+mgbot-iotik32a.menu.DebugLevel.error.build.code_debug=1
+mgbot-iotik32a.menu.DebugLevel.warn=Warn
+mgbot-iotik32a.menu.DebugLevel.warn.build.code_debug=2
+mgbot-iotik32a.menu.DebugLevel.info=Info
+mgbot-iotik32a.menu.DebugLevel.info.build.code_debug=3
+mgbot-iotik32a.menu.DebugLevel.debug=Debug
+mgbot-iotik32a.menu.DebugLevel.debug.build.code_debug=4
+mgbot-iotik32a.menu.DebugLevel.verbose=Verbose
+mgbot-iotik32a.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+mgbot-iotik32b.name=MGBOT IOTIK 32B
+
+mgbot-iotik32b.upload.tool=esptool_py
+mgbot-iotik32b.upload.maximum_size=1310720
+mgbot-iotik32b.upload.maximum_data_size=327680
+mgbot-iotik32b.upload.wait_for_upload_port=true
+
+mgbot-iotik32b.serial.disableDTR=true
+mgbot-iotik32b.serial.disableRTS=true
+
+mgbot-iotik32b.build.mcu=esp32
+mgbot-iotik32b.build.core=esp32
+mgbot-iotik32b.build.variant=mgbot-iotik32b
+mgbot-iotik32b.build.board=MGBOT_IOTIK32B
+
+mgbot-iotik32b.build.f_cpu=240000000L
+mgbot-iotik32b.build.flash_size=4MB
+mgbot-iotik32b.build.flash_freq=40m
+mgbot-iotik32b.build.flash_mode=dio
+mgbot-iotik32b.build.boot=dio
+mgbot-iotik32b.build.partitions=default
+mgbot-iotik32b.build.defines=
+
+mgbot-iotik32b.menu.PSRAM.disabled=Disabled
+mgbot-iotik32b.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32b.menu.PSRAM.enabled=Enabled
+mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+mgbot-iotik32b.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.default.build.partitions=default
+mgbot-iotik32b.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+mgbot-iotik32b.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+mgbot-iotik32b.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+mgbot-iotik32b.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+mgbot-iotik32b.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+mgbot-iotik32b.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.minimal.build.partitions=minimal
+mgbot-iotik32b.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mgbot-iotik32b.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mgbot-iotik32b.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+mgbot-iotik32b.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+mgbot-iotik32b.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+mgbot-iotik32b.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+mgbot-iotik32b.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+mgbot-iotik32b.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+mgbot-iotik32b.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+mgbot-iotik32b.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+mgbot-iotik32b.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.huge_app.build.partitions=huge_app
+mgbot-iotik32b.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+mgbot-iotik32b.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+mgbot-iotik32b.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mgbot-iotik32b.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+mgbot-iotik32b.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mgbot-iotik32b.menu.PartitionScheme.fatflash.build.partitions=ffat
+mgbot-iotik32b.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+mgbot-iotik32b.menu.CPUFreq.240=240MHz (WiFi/BT)
+mgbot-iotik32b.menu.CPUFreq.240.build.f_cpu=240000000L
+mgbot-iotik32b.menu.CPUFreq.160=160MHz (WiFi/BT)
+mgbot-iotik32b.menu.CPUFreq.160.build.f_cpu=160000000L
+mgbot-iotik32b.menu.CPUFreq.80=80MHz (WiFi/BT)
+mgbot-iotik32b.menu.CPUFreq.80.build.f_cpu=80000000L
+mgbot-iotik32b.menu.CPUFreq.40=40MHz (40MHz XTAL)
+mgbot-iotik32b.menu.CPUFreq.40.build.f_cpu=40000000L
+mgbot-iotik32b.menu.CPUFreq.26=26MHz (26MHz XTAL)
+mgbot-iotik32b.menu.CPUFreq.26.build.f_cpu=26000000L
+mgbot-iotik32b.menu.CPUFreq.20=20MHz (40MHz XTAL)
+mgbot-iotik32b.menu.CPUFreq.20.build.f_cpu=20000000L
+mgbot-iotik32b.menu.CPUFreq.13=13MHz (26MHz XTAL)
+mgbot-iotik32b.menu.CPUFreq.13.build.f_cpu=13000000L
+mgbot-iotik32b.menu.CPUFreq.10=10MHz (40MHz XTAL)
+mgbot-iotik32b.menu.CPUFreq.10.build.f_cpu=10000000L
+
+mgbot-iotik32b.menu.FlashMode.qio=QIO
+mgbot-iotik32b.menu.FlashMode.qio.build.flash_mode=dio
+mgbot-iotik32b.menu.FlashMode.qio.build.boot=qio
+mgbot-iotik32b.menu.FlashMode.dio=DIO
+mgbot-iotik32b.menu.FlashMode.dio.build.flash_mode=dio
+mgbot-iotik32b.menu.FlashMode.dio.build.boot=dio
+mgbot-iotik32b.menu.FlashMode.qout=QOUT
+mgbot-iotik32b.menu.FlashMode.qout.build.flash_mode=dout
+mgbot-iotik32b.menu.FlashMode.qout.build.boot=qout
+mgbot-iotik32b.menu.FlashMode.dout=DOUT
+mgbot-iotik32b.menu.FlashMode.dout.build.flash_mode=dout
+mgbot-iotik32b.menu.FlashMode.dout.build.boot=dout
+
+mgbot-iotik32b.menu.FlashFreq.80=80MHz
+mgbot-iotik32b.menu.FlashFreq.80.build.flash_freq=80m
+mgbot-iotik32b.menu.FlashFreq.40=40MHz
+mgbot-iotik32b.menu.FlashFreq.40.build.flash_freq=40m
+
+mgbot-iotik32b.menu.FlashSize.4M=4MB (32Mb)
+mgbot-iotik32b.menu.FlashSize.4M.build.flash_size=4MB
+mgbot-iotik32b.menu.FlashSize.8M=8MB (64Mb)
+mgbot-iotik32b.menu.FlashSize.8M.build.flash_size=8MB
+mgbot-iotik32b.menu.FlashSize.8M.build.partitions=default_8MB
+mgbot-iotik32b.menu.FlashSize.2M=2MB (16Mb)
+mgbot-iotik32b.menu.FlashSize.2M.build.flash_size=2MB
+mgbot-iotik32b.menu.FlashSize.2M.build.partitions=minimal
+mgbot-iotik32b.menu.FlashSize.16M=16MB (128Mb)
+mgbot-iotik32b.menu.FlashSize.16M.build.flash_size=16MB
+
+mgbot-iotik32b.menu.UploadSpeed.921600=921600
+mgbot-iotik32b.menu.UploadSpeed.921600.upload.speed=921600
+mgbot-iotik32b.menu.UploadSpeed.115200=115200
+mgbot-iotik32b.menu.UploadSpeed.115200.upload.speed=115200
+mgbot-iotik32b.menu.UploadSpeed.256000.windows=256000
+mgbot-iotik32b.menu.UploadSpeed.256000.upload.speed=256000
+mgbot-iotik32b.menu.UploadSpeed.230400.windows.upload.speed=256000
+mgbot-iotik32b.menu.UploadSpeed.230400=230400
+mgbot-iotik32b.menu.UploadSpeed.230400.upload.speed=230400
+mgbot-iotik32b.menu.UploadSpeed.460800.linux=460800
+mgbot-iotik32b.menu.UploadSpeed.460800.macosx=460800
+mgbot-iotik32b.menu.UploadSpeed.460800.upload.speed=460800
+mgbot-iotik32b.menu.UploadSpeed.512000.windows=512000
+mgbot-iotik32b.menu.UploadSpeed.512000.upload.speed=512000
+
+mgbot-iotik32b.menu.DebugLevel.none=None
+mgbot-iotik32b.menu.DebugLevel.none.build.code_debug=0
+mgbot-iotik32b.menu.DebugLevel.error=Error
+mgbot-iotik32b.menu.DebugLevel.error.build.code_debug=1
+mgbot-iotik32b.menu.DebugLevel.warn=Warn
+mgbot-iotik32b.menu.DebugLevel.warn.build.code_debug=2
+mgbot-iotik32b.menu.DebugLevel.info=Info
+mgbot-iotik32b.menu.DebugLevel.info.build.code_debug=3
+mgbot-iotik32b.menu.DebugLevel.debug=Debug
+mgbot-iotik32b.menu.DebugLevel.debug.build.code_debug=4
+mgbot-iotik32b.menu.DebugLevel.verbose=Verbose
+mgbot-iotik32b.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+piranha_esp-32.name=Piranha ESP-32
+
+piranha_esp-32.upload.tool=esptool_py
+piranha_esp-32.upload.maximum_size=1310720
+piranha_esp-32.upload.maximum_data_size=327680
+piranha_esp-32.upload.wait_for_upload_port=true
+
+piranha_esp-32.serial.disableDTR=true
+piranha_esp-32.serial.disableRTS=true
+
+piranha_esp-32.build.mcu=esp32
+piranha_esp-32.build.core=esp32
+piranha_esp-32.build.variant=piranha_esp-32
+piranha_esp-32.build.board=Piranha
+
+piranha_esp-32.build.f_cpu=240000000L
+piranha_esp-32.build.flash_mode=dio
+piranha_esp-32.build.flash_size=4MB
+piranha_esp-32.build.boot=dio
+piranha_esp-32.build.partitions=default
+piranha_esp-32.build.defines=
+
+piranha_esp-32.menu.PartitionScheme.default=Default
+piranha_esp-32.menu.PartitionScheme.default.build.partitions=default
+piranha_esp-32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+piranha_esp-32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+piranha_esp-32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+piranha_esp-32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+piranha_esp-32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+piranha_esp-32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+piranha_esp-32.menu.FlashFreq.80=80MHz
+piranha_esp-32.menu.FlashFreq.80.build.flash_freq=80m
+piranha_esp-32.menu.FlashFreq.40=40MHz
+piranha_esp-32.menu.FlashFreq.40.build.flash_freq=40m
+
+piranha_esp-32.menu.UploadSpeed.921600=921600
+piranha_esp-32.menu.UploadSpeed.921600.upload.speed=921600
+piranha_esp-32.menu.UploadSpeed.115200=115200
+piranha_esp-32.menu.UploadSpeed.115200.upload.speed=115200
+piranha_esp-32.menu.UploadSpeed.256000.windows=256000
+piranha_esp-32.menu.UploadSpeed.256000.upload.speed=256000
+piranha_esp-32.menu.UploadSpeed.230400.windows.upload.speed=256000
+piranha_esp-32.menu.UploadSpeed.230400=230400
+piranha_esp-32.menu.UploadSpeed.230400.upload.speed=230400
+piranha_esp-32.menu.UploadSpeed.460800.linux=460800
+piranha_esp-32.menu.UploadSpeed.460800.macosx=460800
+piranha_esp-32.menu.UploadSpeed.460800.upload.speed=460800
+piranha_esp-32.menu.UploadSpeed.512000.windows=512000
+piranha_esp-32.menu.UploadSpeed.512000.upload.speed=512000
+
+piranha_esp-32.menu.DebugLevel.none=None
+piranha_esp-32.menu.DebugLevel.none.build.code_debug=0
+piranha_esp-32.menu.DebugLevel.error=Error
+piranha_esp-32.menu.DebugLevel.error.build.code_debug=1
+piranha_esp-32.menu.DebugLevel.warn=Warn
+piranha_esp-32.menu.DebugLevel.warn.build.code_debug=2
+piranha_esp-32.menu.DebugLevel.info=Info
+piranha_esp-32.menu.DebugLevel.info.build.code_debug=3
+piranha_esp-32.menu.DebugLevel.debug=Debug
+piranha_esp-32.menu.DebugLevel.debug.build.code_debug=4
+piranha_esp-32.menu.DebugLevel.verbose=Verbose
+piranha_esp-32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+metro_esp-32.name=Metro ESP-32
+
+metro_esp-32.upload.tool=esptool_py
+metro_esp-32.upload.maximum_size=1310720
+metro_esp-32.upload.maximum_data_size=327680
+metro_esp-32.upload.wait_for_upload_port=true
+
+metro_esp-32.serial.disableDTR=true
+metro_esp-32.serial.disableRTS=true
+
+metro_esp-32.build.mcu=esp32
+metro_esp-32.build.core=esp32
+metro_esp-32.build.variant=metro_esp-32
+metro_esp-32.build.board=Metro
+
+metro_esp-32.build.f_cpu=240000000L
+metro_esp-32.build.flash_mode=dio
+metro_esp-32.build.flash_size=4MB
+metro_esp-32.build.boot=dio
+metro_esp-32.build.partitions=default
+metro_esp-32.build.defines=
+
+metro_esp-32.menu.PartitionScheme.default=Default
+metro_esp-32.menu.PartitionScheme.default.build.partitions=default
+metro_esp-32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+metro_esp-32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+metro_esp-32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+metro_esp-32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+metro_esp-32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+metro_esp-32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+metro_esp-32.menu.FlashFreq.80=80MHz
+metro_esp-32.menu.FlashFreq.80.build.flash_freq=80m
+metro_esp-32.menu.FlashFreq.40=40MHz
+metro_esp-32.menu.FlashFreq.40.build.flash_freq=40m
+
+metro_esp-32.menu.UploadSpeed.921600=921600
+metro_esp-32.menu.UploadSpeed.921600.upload.speed=921600
+metro_esp-32.menu.UploadSpeed.115200=115200
+metro_esp-32.menu.UploadSpeed.115200.upload.speed=115200
+metro_esp-32.menu.UploadSpeed.256000.windows=256000
+metro_esp-32.menu.UploadSpeed.256000.upload.speed=256000
+metro_esp-32.menu.UploadSpeed.230400.windows.upload.speed=256000
+metro_esp-32.menu.UploadSpeed.230400=230400
+metro_esp-32.menu.UploadSpeed.230400.upload.speed=230400
+metro_esp-32.menu.UploadSpeed.460800.linux=460800
+metro_esp-32.menu.UploadSpeed.460800.macosx=460800
+metro_esp-32.menu.UploadSpeed.460800.upload.speed=460800
+metro_esp-32.menu.UploadSpeed.512000.windows=512000
+metro_esp-32.menu.UploadSpeed.512000.upload.speed=512000
+
+metro_esp-32.menu.DebugLevel.none=None
+metro_esp-32.menu.DebugLevel.none.build.code_debug=0
+metro_esp-32.menu.DebugLevel.error=Error
+metro_esp-32.menu.DebugLevel.error.build.code_debug=1
+metro_esp-32.menu.DebugLevel.warn=Warn
+metro_esp-32.menu.DebugLevel.warn.build.code_debug=2
+metro_esp-32.menu.DebugLevel.info=Info
+metro_esp-32.menu.DebugLevel.info.build.code_debug=3
+metro_esp-32.menu.DebugLevel.debug=Debug
+metro_esp-32.menu.DebugLevel.debug.build.code_debug=4
+metro_esp-32.menu.DebugLevel.verbose=Verbose
+metro_esp-32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
