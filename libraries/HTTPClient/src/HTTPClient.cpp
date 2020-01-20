@@ -910,7 +910,7 @@ void HTTPClient::addHeader(const String& name, const String& value, bool first, 
 
         if (replace) {
             int headerStart = _headers.indexOf(headerLine);
-            if (headerStart != -1) {
+            if (headerStart != -1 && (headerStart == 0 || _headers[headerStart - 1] == '\n')) {
                 int headerEnd = _headers.indexOf('\n', headerStart);
                 _headers = _headers.substring(0, headerStart) + _headers.substring(headerEnd + 1);
             }
@@ -924,7 +924,6 @@ void HTTPClient::addHeader(const String& name, const String& value, bool first, 
             _headers += headerLine;
         }
     }
-
 }
 
 void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKeysCount)
