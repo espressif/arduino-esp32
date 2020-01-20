@@ -1,6 +1,10 @@
 To use as a component of ESP-IDF
 =================================================
 
+## esp32-arduino-lib-builder
+
+For a simplified method, see [lib-builder](lib_builder.md)
+
 ## Installation
 
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)

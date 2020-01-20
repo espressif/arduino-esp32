@@ -54,10 +54,10 @@ static TaskHandle_t _network_event_task_handle = NULL;
 static EventGroupHandle_t _network_event_group = NULL;
 
 static void _network_event_task(void * arg){
-    system_event_t *event = NULL;
+    system_event_t event;
     for (;;) {
         if(xQueueReceive(_network_event_queue, &event, portMAX_DELAY) == pdTRUE){
-            WiFiGenericClass::_eventCallback(arg, event);
+            WiFiGenericClass::_eventCallback(arg, &event);
         }
     }
     vTaskDelete(NULL);
@@ -65,7 +65,7 @@ static void _network_event_task(void * arg){
 }
 
 static esp_err_t _network_event_cb(void *arg, system_event_t *event){
-    if (xQueueSend(_network_event_queue, &event, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(_network_event_queue, event, portMAX_DELAY) != pdPASS) {
         log_w("Network Event Queue Send Failed!");
         return ESP_FAIL;
     }
@@ -82,7 +82,7 @@ static bool _start_network_event_task(){
         xEventGroupSetBits(_network_event_group, WIFI_DNS_IDLE_BIT);
     }
     if(!_network_event_queue){
-        _network_event_queue = xQueueCreate(32, sizeof(system_event_t *));
+        _network_event_queue = xQueueCreate(32, sizeof(system_event_t));
         if(!_network_event_queue){
             log_e("Network Event Queue Create Failed!");
             return false;
@@ -320,7 +320,7 @@ void WiFiGenericClass::removeEvent(wifi_event_id_t id)
  * @param arg
  */
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
+const char * system_event_names[] = { "WIFI_READY", "SCAN_DONE", "STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_LOST_IP", "STA_WPS_ER_SUCCESS", "STA_WPS_ER_FAILED", "STA_WPS_ER_TIMEOUT", "STA_WPS_ER_PIN", "STA_WPS_ER_PBC_OVERLAP", "AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "GOT_IP6", "ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "MAX"};
 #endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
 const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAVE", "ASSOC_EXPIRE", "ASSOC_TOOMANY", "NOT_AUTHED", "NOT_ASSOCED", "ASSOC_LEAVE", "ASSOC_NOT_AUTHED", "DISASSOC_PWRCAP_BAD", "DISASSOC_SUPCHAN_BAD", "UNSPECIFIED", "IE_INVALID", "MIC_FAILURE", "4WAY_HANDSHAKE_TIMEOUT", "GROUP_KEY_UPDATE_TIMEOUT", "IE_IN_4WAY_DIFFERS", "GROUP_CIPHER_INVALID", "PAIRWISE_CIPHER_INVALID", "AKMP_INVALID", "UNSUPP_RSN_IE_VERSION", "INVALID_RSN_IE_CAP", "802_1X_AUTH_FAILED", "CIPHER_SUITE_REJECTED", "BEACON_TIMEOUT", "NO_AP_FOUND", "AUTH_FAIL", "ASSOC_FAIL", "HANDSHAKE_TIMEOUT" };
