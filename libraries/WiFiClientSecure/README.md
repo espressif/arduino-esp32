@@ -15,6 +15,7 @@ It is the same functionality as implemented in your web browser when you connect
 If you are accessing your own server:
 - Generate a root certificate for your own certificate authority
 - Generate a cert & private key using your root certificate ("self-signed cert") for your server
+
 If you are accessing a public server:
 - Obtain the cert of the public CA that signed that server's cert
 Then:
