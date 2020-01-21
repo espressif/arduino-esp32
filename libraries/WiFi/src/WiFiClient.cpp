@@ -496,7 +496,7 @@ uint8_t WiFiClient::connected()
         // avoid unused var warning by gcc
         (void)res;
         // recv only sets errno if res is -1
-        if (res < 0){
+        if (res <= 0){
           switch (errno) {
               case EWOULDBLOCK:
               case ENOENT: //caused by vfs
