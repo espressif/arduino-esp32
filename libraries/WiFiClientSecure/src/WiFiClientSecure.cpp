@@ -138,11 +138,13 @@ int WiFiClientSecure::connect(const char *host, uint16_t port, const char *_CA_c
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent, const char *psKey) {
-    return connect(ip.toString().c_str(), port,_pskIdent, _psKey);
+    return connect(ip.toString().c_str(), port, pskIdent, psKey);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
     log_v("start_ssl_client with PSK");
+    _pskIdent = pskIdent;
+    _psKey = psKey;
     if(_timeout > 0){
         sslclient->handshake_timeout = _timeout;
     }

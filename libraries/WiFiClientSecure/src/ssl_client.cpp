@@ -133,7 +133,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
         unsigned char psk[MBEDTLS_PSK_MAX_LEN];
         size_t psk_len = strlen(psKey)/2;
-        for (int j=0; j<strlen(psKey); j+= 2) {
+        for (size_t j=0; j<strlen(psKey); j+= 2) {
             char c = psKey[j];
             if (c >= '0' && c <= '9') c -= '0';
             else if (c >= 'A' && c <= 'F') c -= 'A' - 10;
@@ -248,6 +248,9 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
 void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
+    (void)rootCABuff; // unused
+    (void)cli_cert;   // unused
+    (void)cli_key;    // unused
     log_v("Cleaning SSL connection.");
 
     if (ssl_client->socket >= 0) {
