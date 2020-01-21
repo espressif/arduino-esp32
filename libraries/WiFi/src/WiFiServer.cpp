@@ -33,6 +33,8 @@ int WiFiServer::setTimeout(uint32_t seconds){
 }
 
 size_t WiFiServer::write(const uint8_t *data, size_t len){
+  (void)data; // unused
+  (void)len;  // unused
   return 0;
 }
 

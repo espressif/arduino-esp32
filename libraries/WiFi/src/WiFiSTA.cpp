@@ -353,6 +353,7 @@ bool WiFiSTAClass::isConnected()
  */
 bool WiFiSTAClass::setAutoConnect(bool autoConnect)
 {
+    (void)autoConnect; // unused
     /*bool ret;
     ret = esp_wifi_set_auto_connect(autoConnect);
     return ret;*/

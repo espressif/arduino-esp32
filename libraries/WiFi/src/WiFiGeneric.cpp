@@ -65,6 +65,7 @@ static void _network_event_task(void * arg){
 }
 
 static esp_err_t _network_event_cb(void *arg, system_event_t *event){
+    (void)arg; // unused
     if (xQueueSend(_network_event_queue, event, portMAX_DELAY) != pdPASS) {
         log_w("Network Event Queue Send Failed!");
         return ESP_FAIL;
@@ -328,6 +329,7 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event)
 {
+    (void)arg; // unused
     if(event->event_id < 26) {
         log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
     }
@@ -647,6 +649,7 @@ wifi_power_t WiFiGenericClass::getTxPower(){
  */
 static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
 {
+    (void)name; // unused
     if(ipaddr) {
         (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
     }
