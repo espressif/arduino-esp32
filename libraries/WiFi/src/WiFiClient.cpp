@@ -495,7 +495,7 @@ uint8_t WiFiClient::connected()
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
         // avoid unused var warning by gcc
         (void)res;
-        // recv only sets errno if res is -1
+        // recv only sets errno if res is <= 0
         if (res <= 0){
           switch (errno) {
               case EWOULDBLOCK:
