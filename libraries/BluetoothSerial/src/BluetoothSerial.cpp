@@ -240,7 +240,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_disconnect(param->open.handle);
         }
         xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
+        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED | SPP_CONGESTED);
         break;
 
     case ESP_SPP_CLOSE_EVT://Client connection closed
@@ -305,7 +305,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
             esp_spp_disconnect(param->open.handle);
         }
         xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
+        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED | SPP_CONGESTED);
         break;
 
     case ESP_SPP_START_EVT://server started
@@ -446,7 +446,6 @@ static bool _init_bt(const char *deviceName)
             return false;
         }
         xEventGroupClearBits(_spp_event_group, 0xFFFFFF);
-        xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
         xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
     }
     if (_spp_rx_queue == NULL){
