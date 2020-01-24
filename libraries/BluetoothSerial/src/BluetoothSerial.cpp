@@ -17,7 +17,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/task.h"
 
 

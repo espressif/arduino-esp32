@@ -1,4 +1,7 @@
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "Arduino.h"
