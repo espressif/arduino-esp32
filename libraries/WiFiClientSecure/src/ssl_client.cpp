@@ -27,6 +27,8 @@ const char *pers = "esp32-tls";
 
 static int _handle_error(int err, const char * file, int line)
 {
+    (void)file; // actually may be used sometimes depending on how 'log_e' is defined
+    (void)line; // actually may be used sometimes depending on how 'log_e' is defined
     if(err == -30848){
         return err;
     }
