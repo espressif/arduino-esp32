@@ -157,7 +157,7 @@ void execOTA() {
       // So be patient. This may take 2 - 5mins to complete
       size_t written = Update.writeStream(client);
 
-      if (written == contentLength) {
+      if (written == (unsigned long)contentLength) {
         Serial.println("Written : " + String(written) + " successfully");
       } else {
         Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?" );

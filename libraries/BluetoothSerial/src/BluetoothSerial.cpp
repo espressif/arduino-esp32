@@ -173,12 +173,13 @@ static bool _spp_send_buffer(){
 }
 
 static void _spp_tx_task(void * arg){
+    (void)arg; // unused
     spp_packet_t *packet = NULL;
     size_t len = 0, to_send = 0;
     uint8_t * data = NULL;
     for (;;) {
         if(_spp_tx_queue && xQueueReceive(_spp_tx_queue, &packet, portMAX_DELAY) == pdTRUE && packet){
-            if(packet->len <= (SPP_TX_MAX - _spp_tx_buffer_len)){
+            if(packet->len <= (size_t)(SPP_TX_MAX - _spp_tx_buffer_len)){
                 memcpy(_spp_tx_buffer+_spp_tx_buffer_len, packet->data, packet->len);
                 _spp_tx_buffer_len+=packet->len;
                 free(packet);
