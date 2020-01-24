@@ -12,7 +12,10 @@
 #include "BLEUUID.h"
 #include "GeneralUtils.h"
 
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <freertos/FreeRTOS.h>
+#pragma GCC diagnostic pop
 #include <freertos/event_groups.h>
 #include <esp_bt.h>              // ESP32 BLE
 #include <esp_bt_main.h>     // ESP32 BLE

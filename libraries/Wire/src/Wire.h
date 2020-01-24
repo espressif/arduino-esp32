@@ -26,7 +26,10 @@
 #define TwoWire_h
 
 #include <esp32-hal.h>
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/queue.h"
 #include "Stream.h"
 

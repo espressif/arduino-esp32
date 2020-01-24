@@ -11,7 +11,10 @@
 #include <string>
 #include <pthread.h>
 
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <freertos/FreeRTOS.h>   // Include the base FreeRTOS definitions.
+#pragma GCC diagnostic pop
 #include <freertos/task.h>       // Include the task definitions.
 #include <freertos/semphr.h>     // Include the semaphore definitions.
 #include <freertos/ringbuf.h>    // Include the ringbuffer definitions.
