@@ -22,7 +22,10 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/event_groups.h"
 
 // External Wire.h equivalent error Codes

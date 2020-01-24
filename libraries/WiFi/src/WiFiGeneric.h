@@ -24,7 +24,10 @@
 #define ESP32WIFIGENERIC_H_
 
 #include <esp_err.h>
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <esp_event_loop.h>
+#pragma GCC diagnostic pop
 #include <functional>
 #include "WiFiType.h"
 

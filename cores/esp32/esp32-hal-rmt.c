@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
 
@@ -240,8 +243,7 @@ bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
         return false;
     }
 
-    int channel = rmt->channel;
-    int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
+    size_t allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
 
     if (size > allocated_size) {
         return false;

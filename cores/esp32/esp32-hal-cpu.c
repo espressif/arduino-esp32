@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include "sdkconfig.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "freertos/FreeRTOS.h"
+#pragma GCC diagnostic pop
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "freertos/xtensa_timer.h"
