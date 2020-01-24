@@ -53,6 +53,7 @@ static esp_ble_adv_params_t _adv_params = {
 };
 
 static void _on_gap(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param){
+    (void)param; // unused
     if(event == ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT){
         esp_ble_gap_start_advertising(&_adv_params);
     }
