@@ -509,7 +509,7 @@ void BLECharacteristic::notify(bool is_notification) {
 	}
 	for (auto &myPair : getService()->getServer()->getPeerDevices(false)) {
 		uint16_t _mtu = (myPair.second.mtu);
-		if (m_value.getValue().length() > _mtu - 3) {
+		if (m_value.getValue().length() > (std::size_t)(_mtu - 3)) {
 			log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
 		}
 
@@ -759,6 +759,7 @@ BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
+	(void)pCharacteristic; // unused
 	log_d("BLECharacteristicCallbacks", ">> onRead: default");
 	log_d("BLECharacteristicCallbacks", "<< onRead");
 } // onRead
@@ -769,6 +770,7 @@ void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
+	(void)pCharacteristic; // unused
 	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
 	log_d("BLECharacteristicCallbacks", "<< onWrite");
 } // onWrite
@@ -779,6 +781,7 @@ void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void BLECharacteristicCallbacks::onNotify(BLECharacteristic* pCharacteristic) {
+	(void)pCharacteristic; // unused
 	log_d("BLECharacteristicCallbacks", ">> onNotify: default");
 	log_d("BLECharacteristicCallbacks", "<< onNotify");
 } // onNotify
@@ -791,6 +794,9 @@ void BLECharacteristicCallbacks::onNotify(BLECharacteristic* pCharacteristic) {
  * @param [in] code Additional code of underlying errors
  */
 void BLECharacteristicCallbacks::onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code) {
+	(void)pCharacteristic; // unused
+	(void)s;               // unused
+	(void)code;            // unused
 	log_d("BLECharacteristicCallbacks", ">> onStatus: default");
 	log_d("BLECharacteristicCallbacks", "<< onStatus");
 } // onStatus

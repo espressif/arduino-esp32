@@ -347,12 +347,15 @@ bool BLEServer::connect(BLEAddress address) {
 
 
 void BLEServerCallbacks::onConnect(BLEServer* pServer) {
+	(void)pServer; // unused
 	log_d("BLEServerCallbacks", ">> onConnect(): Default");
 	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
 	log_d("BLEServerCallbacks", "<< onConnect()");
 } // onConnect
 
 void BLEServerCallbacks::onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+	(void)pServer; // unused
+	(void)param;   // unused
 	log_d("BLEServerCallbacks", ">> onConnect(): Default");
 	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
 	log_d("BLEServerCallbacks", "<< onConnect()");
@@ -360,6 +363,7 @@ void BLEServerCallbacks::onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t*
 
 
 void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
+	(void)pServer; // unused
 	log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
 	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
 	log_d("BLEServerCallbacks", "<< onDisconnect()");
@@ -377,6 +381,7 @@ void BLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {
 }
 
 std::map<uint16_t, conn_status_t> BLEServer::getPeerDevices(bool _client) {
+	(void)_client; // unused
 	return m_connectedServersMap;
 }
 
@@ -386,6 +391,7 @@ uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
 }
 
 void BLEServer::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
+	(void)_client; // unused
 	conn_status_t status = {
 		.peer_device = peer,
 		.connected = true,
@@ -396,6 +402,7 @@ void BLEServer::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
 }
 
 void BLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
+	(void)_client; // unused
 	m_connectedServersMap.erase(conn_id);
 }
 /* multi connect support */

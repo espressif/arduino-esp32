@@ -144,6 +144,7 @@ static bool compareGattId(esp_gatt_id_t id1, esp_gatt_id_t id2) {
  * @returns N/A
  */
 void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam) {
+	(void)gattc_if;
 	switch(event) {
 		// ESP_GATTC_NOTIFY_EVT
 		//

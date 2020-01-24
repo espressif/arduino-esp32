@@ -812,7 +812,7 @@ char* BLEUtils::buildHexData(uint8_t* target, uint8_t* source, uint8_t length) {
  */
 std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
 	std::string res;
-	for (int i = 0; i < length; i++) {
+	for (size_t i = 0; i < length; i++) {
 		char c = *source;
 		res += (isprint(c) ? c : '.');
 		source++;
@@ -1262,6 +1262,8 @@ void BLEUtils::dumpGapEvent(
 			log_v("[bd_addr: %s]", BLEAddress(param->ble_security.ble_req.bd_addr).toString().c_str());
 			break;
 		} // ESP_GAP_BLE_SEC_REQ_EVT
+#else
+	(void)param; // unused
 #endif
 		default: {
 			log_v("*** dumpGapEvent: Logger not coded ***");
@@ -1281,7 +1283,7 @@ void BLEUtils::dumpGattClientEvent(
 	esp_gattc_cb_event_t      event,
 	esp_gatt_if_t             gattc_if,
 	esp_ble_gattc_cb_param_t* evtParam) {
-
+	(void)gattc_if; // unused
 	//esp_ble_gattc_cb_param_t* evtParam = (esp_ble_gattc_cb_param_t*) param;
 	log_v("GATT Event: %s", BLEUtils::gattClientEventTypeToString(event).c_str());
 	switch (event) {
@@ -1509,6 +1511,8 @@ void BLEUtils::dumpGattClientEvent(
 			);
 			break;
 		} // ESP_GATTC_WRITE_CHAR_EVT
+#else
+	(void)evtParam; // unused
 #endif
 		default:
 			break;
@@ -1530,6 +1534,7 @@ void BLEUtils::dumpGattServerEvent(
 		esp_gatts_cb_event_t      event,
 		esp_gatt_if_t             gatts_if,
 		esp_ble_gatts_cb_param_t* evtParam) {
+	(void)gatts_if; // unused
 	log_v("GATT ServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
 	switch (event) {
 #if CONFIG_LOG_DEFAULT_LEVEL > 4
@@ -1718,6 +1723,8 @@ void BLEUtils::dumpGattServerEvent(
 			free(pHex);
 			break;
 		} // ESP_GATTS_WRITE_EVT
+#else
+	(void)evtParam; // unused
 #endif
 		default:
 			log_v("dumpGattServerEvent: *** NOT CODED ***");

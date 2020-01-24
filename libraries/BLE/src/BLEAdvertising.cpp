@@ -491,7 +491,7 @@ std::string BLEAdvertisementData::getPayload() {
 void BLEAdvertising::handleGAPEvent(
 		esp_gap_ble_cb_event_t  event,
 		esp_ble_gap_cb_param_t* param)  {
-
+	(void)param; // unused
 	log_d("handleGAPEvent [event no: %d]", (int)event);
 
 	switch(event) {

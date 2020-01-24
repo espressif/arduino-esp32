@@ -167,7 +167,7 @@ BLEUUID BLEAdvertisedDevice::getServiceUUID(int i) {
  * @return Return true if service is advertised
  */
 bool BLEAdvertisedDevice::isAdvertisingService(BLEUUID uuid){
-	for (int i = 0; i < m_serviceUUIDs.size(); i++) {
+	for (std::size_t i = 0; i < m_serviceUUIDs.size(); i++) {
 		if (m_serviceUUIDs[i].equals(uuid)) return true;
 	}
 	return false;
@@ -533,7 +533,7 @@ std::string BLEAdvertisedDevice::toString() {
 		free(pHex);
 	}
 	if (haveServiceUUID()) {
-		for (int i=0; i < m_serviceUUIDs.size(); i++) {
+		for (std::size_t i=0; i < m_serviceUUIDs.size(); i++) {
 		    res += ", serviceUUID: " + getServiceUUID(i).toString();
 		}
 	}

@@ -128,6 +128,7 @@ void BLEDescriptor::handleGATTServerEvent(
 		esp_gatts_cb_event_t      event,
 		esp_gatt_if_t             gatts_if,
 		esp_ble_gatts_cb_param_t* param) {
+	(void)gatts_if; // unused
 	switch (event) {
 		// ESP_GATTS_ADD_CHAR_DESCR_EVT
 		//
@@ -269,6 +270,7 @@ BLEDescriptorCallbacks::~BLEDescriptorCallbacks() {}
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void BLEDescriptorCallbacks::onRead(BLEDescriptor* pDescriptor) {
+	(void)pDescriptor; // unused
 	log_d("BLEDescriptorCallbacks", ">> onRead: default");
 	log_d("BLEDescriptorCallbacks", "<< onRead");
 } // onRead
@@ -279,6 +281,7 @@ void BLEDescriptorCallbacks::onRead(BLEDescriptor* pDescriptor) {
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void BLEDescriptorCallbacks::onWrite(BLEDescriptor* pDescriptor) {
+	(void)pDescriptor; // unused
 	log_d("BLEDescriptorCallbacks", ">> onWrite: default");
 	log_d("BLEDescriptorCallbacks", "<< onWrite");
 } // onWrite

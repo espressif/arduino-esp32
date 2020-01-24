@@ -249,7 +249,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     return HTTP_UPDATE_FAILED;
                 }
 
-                if(len > _partition->size) {
+                if((uint32_t)len > _partition->size) {
                     log_e("spiffsSize to low (%d) needed: %d\n", _partition->size, len);
                     startUpdate = false;
                 }

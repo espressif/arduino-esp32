@@ -243,9 +243,12 @@ std::map<uint16_t, BLERemoteCharacteristic*>* BLERemoteService::getCharacteristi
 /**
  * @brief This function is designed to get characteristics map when we have multiple characteristics with the same UUID
  */
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
 void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap) {
 	pCharacteristicMap = &m_characteristicMapByHandle;
 }  // Get the characteristics map.
+#pragma GCC diagnostic pop
 
 /**
  * @brief Get the client associated with this service.

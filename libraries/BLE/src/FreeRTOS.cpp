@@ -4,7 +4,10 @@
  *  Created on: Feb 24, 2017
  *      Author: kolban
  */
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <freertos/FreeRTOS.h>   // Include the base FreeRTOS definitions
+#pragma GCC diagnostic pop
 #include <freertos/task.h>       // Include the task definitions
 #include <freertos/semphr.h>     // Include the semaphore definitions
 #include <string>
@@ -60,6 +63,7 @@ uint32_t FreeRTOS::getTimeSinceStart() {
  * @return The value associated with the semaphore.
  */
 uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
+	(void)owner; // maybe unused depending on defination of 'log_v'
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 	
 	if (m_usePthreads) {
@@ -86,6 +90,7 @@ uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
  * @return True if we took the semaphore within timeframe.
  */
 bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
+	(void)owner; // maybe unused depending on defination of 'log_v'
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 
 	if (m_usePthreads && timeoutMs != portMAX_DELAY) {

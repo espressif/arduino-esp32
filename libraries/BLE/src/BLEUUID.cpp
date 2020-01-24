@@ -68,7 +68,7 @@ BLEUUID::BLEUUID(std::string value) {
 	if (value.length() == 4) {
 		m_uuid.len         = ESP_UUID_LEN_16;
 		m_uuid.uuid.uuid16 = 0;
-		for(int i=0;i<value.length();){
+		for(std::size_t i=0;i<value.length();){
 			uint8_t MSB = value.c_str()[i];
 			uint8_t LSB = value.c_str()[i+1];
 			
@@ -81,7 +81,7 @@ BLEUUID::BLEUUID(std::string value) {
 	else if (value.length() == 8) {
 		m_uuid.len         = ESP_UUID_LEN_32;
 		m_uuid.uuid.uuid32 = 0;
-		for(int i=0;i<value.length();){
+		for(std::size_t i=0;i<value.length();){
 			uint8_t MSB = value.c_str()[i];
 			uint8_t LSB = value.c_str()[i+1];
 			
@@ -100,7 +100,7 @@ BLEUUID::BLEUUID(std::string value) {
 		// UUID format.
 		m_uuid.len = ESP_UUID_LEN_128;
 		int n = 0;
-		for(int i=0;i<value.length();){
+		for(std::size_t i=0;i<value.length();){
 			if(value.c_str()[i] == '-')
 				i++;
 			uint8_t MSB = value.c_str()[i];

@@ -54,6 +54,8 @@ public:
 
     virtual bool verify(WiFiClient& client, const char* host)
     {
+        (void)client; // unused
+        (void)host;   // unused
         return true;
     }
 };
@@ -73,6 +75,7 @@ public:
 
     bool verify(WiFiClient& client, const char* host) override
     {
+        (void)host; // unused
          WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
          wcs.setCACert(_cacert);
          wcs.setCertificate(_clicert);

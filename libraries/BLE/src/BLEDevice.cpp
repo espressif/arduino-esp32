@@ -6,7 +6,10 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include <freertos/FreeRTOS.h>
+#pragma GCC diagnostic pop
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
 #include <esp_err.h>
@@ -587,6 +590,7 @@ void BLEDevice::stopAdvertising() {
 /* multi connect support */
 /* requires a little more work */
 std::map<uint16_t, conn_status_t> BLEDevice::getPeerDevices(bool _client) {
+	(void)_client; // unused
 	return m_connectedClientsMap;
 }
 
@@ -595,6 +599,7 @@ BLEClient* BLEDevice::getClientByGattIf(uint16_t conn_id) {
 }
 
 void BLEDevice::updatePeerDevice(void* peer, bool _client, uint16_t conn_id) {
+	(void)_client; // may be used depending on definition of 'log_d'
 	log_d("update conn_id: %d, GATT role: %s", conn_id, _client? "client":"server");
 	std::map<uint16_t, conn_status_t>::iterator it = m_connectedClientsMap.find(ESP_GATT_IF_NONE);
 	if (it != m_connectedClientsMap.end()) {
@@ -611,6 +616,7 @@ void BLEDevice::updatePeerDevice(void* peer, bool _client, uint16_t conn_id) {
 }
 
 void BLEDevice::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
+	(void)_client; // may be used depending on definition of 'log_i'
 	log_i("add conn_id: %d, GATT role: %s", conn_id, _client? "client":"server");
 	conn_status_t status = {
 		.peer_device = peer,
@@ -622,6 +628,7 @@ void BLEDevice::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
 }
 
 void BLEDevice::removePeerDevice(uint16_t conn_id, bool _client) {
+	(void)_client; // may be used depending on definition of 'log_i'
 	log_i("remove: %d, GATT role %s", conn_id, _client?"client":"server");
 	if(m_connectedClientsMap.find(conn_id) != m_connectedClientsMap.end())
 		m_connectedClientsMap.erase(conn_id);
