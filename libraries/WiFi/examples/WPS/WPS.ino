@@ -31,7 +31,6 @@ WPS
 static esp_wps_config_t config;
 
 void wpsInitConfig(){
-  config.crypto_funcs = &g_wifi_default_wps_crypto_funcs;
   config.wps_type = ESP_WPS_MODE;
   strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
   strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
