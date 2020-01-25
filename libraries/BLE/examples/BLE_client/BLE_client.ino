@@ -24,6 +24,7 @@ static void notifyCallback(
   uint8_t* pData,
   size_t length,
   bool isNotify) {
+    (void)isNotify;
     Serial.print("Notify callback for characteristic ");
     Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
     Serial.print(" of data length ");
@@ -34,9 +35,11 @@ static void notifyCallback(
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient* pclient) {
+    (void)pclient; // unused
   }
 
   void onDisconnect(BLEClient* pclient) {
+    (void)pclient; // unused
     connected = false;
     Serial.println("onDisconnect");
   }
