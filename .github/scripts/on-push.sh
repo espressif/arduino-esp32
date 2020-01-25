@@ -41,6 +41,8 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 	if [ "$OS_IS_WINDOWS" == "1" ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
+		# with warnings enabled this example fail sto compile, since it is from a seperate repo
+		# and can't be fixed here, we skip them.
 		#build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/AzureIoT/examples/GetStarted/GetStarted.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 	elif [ "$OS_IS_MACOS" == "1" ]; then
@@ -48,6 +50,8 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
+		# with warnings enabled this example fail sto compile, since it is from a seperate repo
+		# and can't be fixed here, we skip them.
 		#build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/AzureIoT/examples/GetStarted/GetStarted.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 	else
@@ -55,6 +59,10 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		if [ "$CHUNK_INDEX" -eq 0 ]; then
 			bash "$ARDUINO_ESP32_PATH/.github/scripts/check-cmakelists.sh"
 		fi
+		# with warnings enabled these two examples fail to compile, since they are from a seperate repo
+		# and can't be fixed here, we skip them.
+		touch "$ARDUINO_ESP32_PATH/libraries/AzureIoT/examples/GetStarted/.test.skip"
+		touch "$ARDUINO_ESP32_PATH/libraries/AzureIoT/examples/SimpleMQTT/.test.skip"
 		build_sketches "$FQBN" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
 	fi
 else
