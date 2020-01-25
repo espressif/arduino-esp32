@@ -39,10 +39,12 @@ uint32_t value = 0;
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
+      (void)pServer; // unused
       deviceConnected = true;
     };
 
     void onDisconnect(BLEServer* pServer) {
+      (void)pServer; // unused
       deviceConnected = false;
     }
 };
