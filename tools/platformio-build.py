@@ -39,7 +39,8 @@ env.Append(
 
     CFLAGS=[
         "-std=gnu99",
-        "-Wno-old-style-declaration"
+        "-Wno-old-style-declaration",
+        "-Wno-implicit-fallthrough"
     ],
 
     CCFLAGS=[
@@ -58,9 +59,13 @@ env.Append(
         "-Wno-error=unused-function",
         "-Wno-unused-parameter",
         "-Wno-sign-compare",
+        "-Wno-frame-address",
+        "-Wwrite-strings",
+        "-mfix-esp32-psram-cache-issue",
         "-fstack-protector",
         "-fexceptions",
-        "-Werror=reorder"
+        "-Werror=reorder",
+        "-MMD"
     ],
 
     CXXFLAGS=[
@@ -76,6 +81,7 @@ env.Append(
         "-Wl,--undefined=uxTopUsedPriority",
         "-Wl,--gc-sections",
         "-Wl,-EL",
+        "-T", "esp32_out.ld",
         "-T", "esp32.project.ld",
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.ld",
@@ -84,14 +90,21 @@ env.Append(
         "-T", "esp32.rom.newlib-data.ld",
         "-u", "ld_include_panic_highint_hdl",
         "-u", "__cxa_guard_dummy",
-        "-u", "__cxx_fatal_exception"
+        "-u", "newlib_include_locks_impl",
+        "-u", "newlib_include_heap_impl",
+        "-u", "newlib_include_syscalls_impl",
+        "-u", "pthread_include_pthread_impl",
+        "-u", "pthread_include_pthread_cond_impl",
+        "-u", "pthread_include_pthread_local_storage_impl"
     ],
 
-    CPPDEFINES=[
+    CPPDEFINES=[#_GNU_SOURCE GCC_NOT_5_2_0=1
         "ESP32",
         "ESP_PLATFORM",
         ("F_CPU", "$BOARD_F_CPU"),
         "HAVE_CONFIG_H",
+        "_GNU_SOURCE",
+        ("GCC_NOT_5_2_0", 1),
         ("MBEDTLS_CONFIG_FILE", '\\"mbedtls/esp_config.h\\"'),
         ("ARDUINO", 10805),
         "ARDUINO_ARCH_ESP32",
