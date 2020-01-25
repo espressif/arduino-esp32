@@ -248,11 +248,6 @@ PACK_STRUCT_END
 #endif
 
 /** Recursive DNS Server Option. */
-#if LWIP_ND6_RDNSS_MAX_DNS_SERVERS
-#define LWIP_RDNSS_OPTION_MAX_SERVERS LWIP_ND6_RDNSS_MAX_DNS_SERVERS
-#else
-#define LWIP_RDNSS_OPTION_MAX_SERVERS 1
-#endif
 #define ND6_OPTION_TYPE_RDNSS (25)
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
@@ -263,12 +258,14 @@ struct rdnss_option {
   PACK_STRUCT_FLD_8(u8_t length);
   PACK_STRUCT_FIELD(u16_t reserved);
   PACK_STRUCT_FIELD(u32_t lifetime);
-  PACK_STRUCT_FLD_S(ip6_addr_p_t rdnss_address[LWIP_RDNSS_OPTION_MAX_SERVERS]);
+  PACK_STRUCT_FLD_S(ip6_addr_p_t rdnss_address[1]);
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/epstruct.h"
 #endif
+
+#define SIZEOF_RDNSS_OPTION_BASE 8 /* size without addresses */
 
 #ifdef __cplusplus
 }

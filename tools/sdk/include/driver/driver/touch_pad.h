@@ -17,10 +17,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "esp_intr.h"
 #include "esp_err.h"
 #include "esp_intr_alloc.h"
-#include "soc/touch_channel.h"
+#include "soc/touch_periph.h"
 
 typedef enum {
     TOUCH_PAD_NUM0 = 0, /*!< Touch pad channel 0 is GPIO4 */
@@ -221,21 +220,6 @@ typedef void (* filter_cb_t)(uint16_t *raw_value, uint16_t *filtered_value);
  *      - ESP_ERR_INVALID_ARG set error
  */
 esp_err_t touch_pad_set_filter_read_cb(filter_cb_t read_cb);
-
-/**
- * @brief   Register touch-pad ISR,
- * @note Deprecated function, users should replace this with touch_pad_isr_register,
- *       because RTC modules share a same interrupt index.
- * @param fn  Pointer to ISR handler
- * @param arg  Parameter for ISR
- * @param unused Reserved, not used
- * @param handle_unused Reserved, not used
- * @return
- *     - ESP_OK Success ;
- *     - ESP_ERR_INVALID_ARG GPIO error
- *     - ESP_ERR_NO_MEM No memory
- */
-esp_err_t touch_pad_isr_handler_register(void(*fn)(void *), void *arg, int unused, intr_handle_t *handle_unused) __attribute__ ((deprecated));
 
 /**
  * @brief   Register touch-pad ISR.

@@ -50,6 +50,10 @@
 
 #include "ppp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Packet header = Code, id, length.
  */
@@ -170,6 +174,9 @@ void fsm_input(fsm *f, u_char *inpacket, int l);
 void fsm_protreject(fsm *f);
 void fsm_sdata(fsm *f, u_char code, u_char id, const u_char *data, int datalen);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FSM_H */
 #endif /* PPP_SUPPORT */

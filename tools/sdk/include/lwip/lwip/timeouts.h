@@ -56,6 +56,11 @@ extern "C" {
 #endif /* LWIP_DEBUG*/
 #endif
 
+/** Returned by sys_timeouts_sleeptime() to indicate there is no timer, so we
+ * can sleep forever.
+ */
+#define SYS_TIMEOUTS_SLEEPTIME_INFINITE 0xFFFFFFFF
+
 /** Function prototype for a stack-internal timer function that has to be
  * called at a defined interval */
 typedef void (* lwip_cyclic_timer_handler)(void);
@@ -71,8 +76,10 @@ struct lwip_cyclic_timer {
 };
 
 /** This array contains all stack-internal cyclic timers. To get the number of
- * timers, use LWIP_ARRAYSIZE() */
+ * timers, use lwip_num_cyclic_timers */
 extern const struct lwip_cyclic_timer lwip_cyclic_timers[];
+/** Array size of lwip_cyclic_timers[] */
+extern const int lwip_num_cyclic_timers;
 
 #if LWIP_TIMERS
 
@@ -104,13 +111,13 @@ void sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg);
 
 void sys_untimeout(sys_timeout_handler handler, void *arg);
 void sys_restart_timeouts(void);
-#if NO_SYS
 void sys_check_timeouts(void);
 u32_t sys_timeouts_sleeptime(void);
-#else /* NO_SYS */
-void sys_timeouts_mbox_fetch(sys_mbox_t *mbox, void **msg);
-#endif /* NO_SYS */
 
+#if LWIP_TESTMODE
+struct sys_timeo** sys_timeouts_get_next_timeout(void);
+void lwip_cyclic_timer(void *arg);
+#endif
 
 #endif /* LWIP_TIMERS */
 

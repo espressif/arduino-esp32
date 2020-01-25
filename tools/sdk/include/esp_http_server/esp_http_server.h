@@ -34,6 +34,7 @@ initializer that should be kept in sync
 #define HTTPD_DEFAULT_CONFIG() {                        \
         .task_priority      = tskIDLE_PRIORITY+5,       \
         .stack_size         = 4096,                     \
+        .core_id            = tskNO_AFFINITY,           \
         .server_port        = 80,                       \
         .ctrl_port          = 32768,                    \
         .max_open_sockets   = 7,                        \
@@ -52,7 +53,7 @@ initializer that should be kept in sync
         .uri_match_fn = NULL                            \
 }
 
-#define ESP_ERR_HTTPD_BASE              (0x8000)                    /*!< Starting number of HTTPD error codes */
+#define ESP_ERR_HTTPD_BASE              (0xb000)                    /*!< Starting number of HTTPD error codes */
 #define ESP_ERR_HTTPD_HANDLERS_FULL     (ESP_ERR_HTTPD_BASE +  1)   /*!< All slots for registering URI handlers have been consumed */
 #define ESP_ERR_HTTPD_HANDLER_EXISTS    (ESP_ERR_HTTPD_BASE +  2)   /*!< URI handler with same method and target URI already registered */
 #define ESP_ERR_HTTPD_INVALID_REQ       (ESP_ERR_HTTPD_BASE +  3)   /*!< Invalid request pointer */
@@ -141,6 +142,7 @@ typedef bool (*httpd_uri_match_func_t)(const char *reference_uri,
 typedef struct httpd_config {
     unsigned    task_priority;      /*!< Priority of FreeRTOS task which runs the server */
     size_t      stack_size;         /*!< The maximum stack size allowed for the server task */
+    BaseType_t  core_id;            /*!< The core the HTTP server task will run on */
 
     /**
      * TCP Port number for receiving and transmitting HTTP traffic

@@ -63,6 +63,17 @@ enum lwiperf_report_type
   LWIPERF_TCP_ABORTED_REMOTE
 };
 
+/** Control */
+enum lwiperf_client_type
+{
+  /** Unidirectional tx only test */
+  LWIPERF_CLIENT,
+  /** Do a bidirectional test simultaneously */
+  LWIPERF_DUAL,
+  /** Do a bidirectional test individually */
+  LWIPERF_TRADEOFF
+};
+
 /** Prototype of a report function that is called when a session is finished.
     This report function can show the test results.
     @param report_type contains the test result */
@@ -70,10 +81,15 @@ typedef void (*lwiperf_report_fn)(void *arg, enum lwiperf_report_type report_typ
   const ip_addr_t* local_addr, u16_t local_port, const ip_addr_t* remote_addr, u16_t remote_port,
   u32_t bytes_transferred, u32_t ms_duration, u32_t bandwidth_kbitpsec);
 
-
 void* lwiperf_start_tcp_server(const ip_addr_t* local_addr, u16_t local_port,
                                lwiperf_report_fn report_fn, void* report_arg);
 void* lwiperf_start_tcp_server_default(lwiperf_report_fn report_fn, void* report_arg);
+void* lwiperf_start_tcp_client(const ip_addr_t* remote_addr, u16_t remote_port,
+                               enum lwiperf_client_type type,
+                               lwiperf_report_fn report_fn, void* report_arg);
+void* lwiperf_start_tcp_client_default(const ip_addr_t* remote_addr,
+                               lwiperf_report_fn report_fn, void* report_arg);
+
 void  lwiperf_abort(void* lwiperf_session);
 
 

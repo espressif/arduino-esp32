@@ -80,6 +80,10 @@
 #ifndef MAGIC_H
 #define MAGIC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /***********************
 *** PUBLIC FUNCTIONS ***
 ***********************/
@@ -116,6 +120,10 @@ void magic_random_bytes(unsigned char *buf, u32_t buf_len);
  * Return a new random number between 0 and (2^pow)-1 included.
  */
 u32_t magic_pow(u8_t pow);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MAGIC_H */
 

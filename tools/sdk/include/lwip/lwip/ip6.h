@@ -66,10 +66,10 @@ err_t         ip6_output_if(struct pbuf *p, const ip6_addr_t *src, const ip6_add
                             u8_t hl, u8_t tc, u8_t nexth, struct netif *netif);
 err_t         ip6_output_if_src(struct pbuf *p, const ip6_addr_t *src, const ip6_addr_t *dest,
                             u8_t hl, u8_t tc, u8_t nexth, struct netif *netif);
-#if LWIP_NETIF_HWADDRHINT
+#if LWIP_NETIF_USE_HINTS
 err_t         ip6_output_hinted(struct pbuf *p, const ip6_addr_t *src, const ip6_addr_t *dest,
-                                u8_t hl, u8_t tc, u8_t nexth, u8_t *addr_hint);
-#endif /* LWIP_NETIF_HWADDRHINT */
+                                u8_t hl, u8_t tc, u8_t nexth, struct netif_hint *netif_hint);
+#endif /* LWIP_NETIF_USE_HINTS */
 #if LWIP_IPV6_MLD
 err_t         ip6_options_add_hbh_ra(struct pbuf * p, u8_t nexth, u8_t value);
 #endif /* LWIP_IPV6_MLD */

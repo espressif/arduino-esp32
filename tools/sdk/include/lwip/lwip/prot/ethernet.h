@@ -38,6 +38,7 @@
 #define LWIP_HDR_PROT_ETHERNET_H
 
 #include "lwip/arch.h"
+#include "lwip/prot/ieee.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,6 +56,7 @@ extern "C" {
 #  include "arch/bpstruct.h"
 #endif
 PACK_STRUCT_BEGIN
+/** An Ethernet MAC address */
 struct eth_addr {
   PACK_STRUCT_FLD_8(u8_t addr[ETH_HWADDR_LEN]);
 } PACK_STRUCT_STRUCT;
@@ -62,6 +64,9 @@ PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/epstruct.h"
 #endif
+
+/** Initialize a struct eth_addr with its 6 bytes (takes care of correct braces) */
+#define ETH_ADDR(b0, b1, b2, b3, b4, b5) {{b0, b1, b2, b3, b4, b5}}
 
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
@@ -102,44 +107,6 @@ PACK_STRUCT_END
 #define SIZEOF_VLAN_HDR 4
 #define VLAN_ID(vlan_hdr) (lwip_htons((vlan_hdr)->prio_vid) & 0xFFF)
 
-/**
- * @ingroup ethernet
- * A list of often ethtypes (although lwIP does not use all of them): */
-enum eth_type {
-  /** Internet protocol v4 */
-  ETHTYPE_IP        = 0x0800U,
-  /** Address resolution protocol */
-  ETHTYPE_ARP       = 0x0806U, 
-  /** Wake on lan */
-  ETHTYPE_WOL       = 0x0842U,
-  /** RARP */
-  ETHTYPE_RARP      = 0x8035U,
-  /** Virtual local area network */
-  ETHTYPE_VLAN      = 0x8100U,
-  /** Internet protocol v6 */
-  ETHTYPE_IPV6      = 0x86DDU,
-  /** PPP Over Ethernet Discovery Stage */
-  ETHTYPE_PPPOEDISC = 0x8863U,
-  /** PPP Over Ethernet Session Stage */
-  ETHTYPE_PPPOE     = 0x8864U,
-  /** Jumbo Frames */
-  ETHTYPE_JUMBO     = 0x8870U,
-  /** Process field network */
-  ETHTYPE_PROFINET  = 0x8892U,
-  /** Ethernet for control automation technology */
-  ETHTYPE_ETHERCAT  = 0x88A4U,
-  /** Link layer discovery protocol */
-  ETHTYPE_LLDP      = 0x88CCU,
-  /** Serial real-time communication system */
-  ETHTYPE_SERCOS    = 0x88CDU,
-  /** Media redundancy protocol */
-  ETHTYPE_MRP       = 0x88E3U,
-  /** Precision time protocol */
-  ETHTYPE_PTP       = 0x88F7U,
-  /** Q-in-Q, 802.1ad */
-  ETHTYPE_QINQ      = 0x9100U
-};
-
 /** The 24-bit IANA IPv4-multicast OUI is 01-00-5e: */
 #define LL_IP4_MULTICAST_ADDR_0 0x01
 #define LL_IP4_MULTICAST_ADDR_1 0x00
@@ -148,18 +115,6 @@ enum eth_type {
 /** IPv6 multicast uses this prefix */
 #define LL_IP6_MULTICAST_ADDR_0 0x33
 #define LL_IP6_MULTICAST_ADDR_1 0x33
-
-/** MEMCPY-like macro to copy to/from struct eth_addr's that are local variables
- * or known to be 32-bit aligned within the protocol header. */
-#ifndef ETHADDR32_COPY
-#define ETHADDR32_COPY(dst, src)  SMEMCPY(dst, src, ETH_HWADDR_LEN)
-#endif
-
-/** MEMCPY-like macro to copy to/from struct eth_addr's that are no local
- * variables and known to be 16-bit aligned within the protocol header. */
-#ifndef ETHADDR16_COPY
-#define ETHADDR16_COPY(dst, src)  SMEMCPY(dst, src, ETH_HWADDR_LEN)
-#endif
 
 #define eth_addr_cmp(addr1, addr2) (memcmp((addr1)->addr, (addr2)->addr, ETH_HWADDR_LEN) == 0)
 

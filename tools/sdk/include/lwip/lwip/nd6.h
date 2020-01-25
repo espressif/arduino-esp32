@@ -58,6 +58,11 @@ extern "C" {
 /** 1 second period */
 #define ND6_TMR_INTERVAL 1000
 
+/** Router solicitations are sent in 4 second intervals (see RFC 4861, ch. 6.3.7) */
+#ifndef ND6_RTR_SOLICITATION_INTERVAL
+#define ND6_RTR_SOLICITATION_INTERVAL  4000
+#endif
+
 struct pbuf;
 struct netif;
 
@@ -74,8 +79,9 @@ void nd6_cleanup_netif(struct netif *netif);
 #if LWIP_IPV6_MLD
 void nd6_adjust_mld_membership(struct netif *netif, s8_t addr_idx, u8_t new_state);
 #endif /* LWIP_IPV6_MLD */
+void nd6_restart_netif(struct netif *netif);
 
-#if ESP_LWIP
+#if ESP_IPV6
 /** set nd6 callback when ipv6 addr state pref*/
 void nd6_set_cb(struct netif *netif, void (*cb)(struct netif *netif, u8_t ip_index));
 #endif

@@ -53,6 +53,10 @@
 #include "ppp.h"
 #include "pppdebug.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Memory used for control packets.
  *
@@ -406,9 +410,6 @@ void ppp_link_end(ppp_pcb *pcb);
 /* function called to process input packet */
 void ppp_input(ppp_pcb *pcb, struct pbuf *pb);
 
-/* helper function, merge a pbuf chain into one pbuf */
-struct pbuf *ppp_singlebuf(struct pbuf *p);
-
 
 /*
  * Functions called by PPP protocols.
@@ -624,6 +625,98 @@ void ppp_dump_packet(ppp_pcb *pcb, const char *tag, unsigned char *p, int len);
                                 /* dump packet to debug log if interesting */
 #endif /* PRINTPKT_SUPPORT */
 
+/*
+ * Number of necessary timers analysis.
+ *
+ * PPP use at least one timer per each of its protocol, but not all protocols are
+ * active at the same time, thus the number of necessary timeouts is actually
+ * lower than enabled protocols. Here is the actual necessary timeouts based
+ * on code analysis.
+ *
+ * Note that many features analysed here are not working at all and are only
+ * there for a comprehensive analysis of necessary timers in order to prevent
+ * having to redo that each time we add a feature.
+ *
+ * Timer list
+ *
+ * | holdoff timeout
+ *  | low level protocol timeout (PPPoE or PPPoL2P)
+ *   | LCP delayed UP
+ *    | LCP retransmit (FSM)
+ *     | LCP Echo timer
+ *     .| PAP or CHAP or EAP authentication
+ *     . | ECP retransmit (FSM)
+ *     .  | CCP retransmit (FSM) when MPPE is enabled
+ *     .   | CCP retransmit (FSM) when MPPE is NOT enabled
+ *     .    | IPCP retransmit (FSM)
+ *     .    .| IP6CP retransmit (FSM)
+ *     .    . | Idle time limit
+ *     .    .  | Max connect time
+ *     .    .   | Max octets
+ *     .    .    | CCP RACK timeout
+ *     .    .    .
+ * PPP_PHASE_DEAD
+ * PPP_PHASE_HOLDOFF
+ * |   .    .    .
+ * PPP_PHASE_INITIALIZE
+ *  |  .    .    .
+ * PPP_PHASE_ESTABLISH
+ *   | .    .    .
+ *    |.    .    .
+ *     |    .    .
+ * PPP_PHASE_AUTHENTICATE
+ *     |    .    .
+ *     ||   .    .
+ * PPP_PHASE_NETWORK
+ *     | || .    .
+ *     |   |||   .
+ * PPP_PHASE_RUNNING
+ *     |    .|||||
+ *     |    . ||||
+ * PPP_PHASE_TERMINATE
+ *     |    . ||||
+ * PPP_PHASE_NETWORK
+ *    |.         .
+ * PPP_PHASE_ESTABLISH
+ * PPP_PHASE_DISCONNECT
+ * PPP_PHASE_DEAD
+ *
+ * Alright, PPP basic retransmission and LCP Echo consume one timer.
+ *  1
+ *
+ * If authentication is enabled one timer is necessary during authentication.
+ *  1 + PPP_AUTH_SUPPORT
+ *
+ * If ECP is enabled one timer is necessary before IPCP and/or IP6CP, one more
+ * is necessary if CCP is enabled (only with MPPE support but we don't care much
+ * up to this detail level).
+ *  1 + ECP_SUPPORT + CCP_SUPPORT
+ *
+ * If CCP is enabled it might consume a timer during IPCP or IP6CP, thus
+ * we might use IPCP, IP6CP and CCP timers simultaneously.
+ *  1 + PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT + CCP_SUPPORT
+ *
+ * When entering running phase, IPCP or IP6CP is still running. If idle time limit
+ * is enabled one more timer is necessary. Same for max connect time and max
+ * octets features. Furthermore CCP RACK might be used past this point.
+ *  1 + PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT -1 + PPP_IDLETIMELIMIT + PPP_MAXCONNECT + MAXOCTETS + CCP_SUPPORT
+ *
+ * IPv4 or IPv6 must be enabled, therefore we don't need to take care the authentication
+ * and the CCP + ECP case, thus reducing overall complexity.
+ * 1 + LWIP_MAX(PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT + CCP_SUPPORT, PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT -1 + PPP_IDLETIMELIMIT + PPP_MAXCONNECT + MAXOCTETS + CCP_SUPPORT)
+ *
+ * We don't support PPP_IDLETIMELIMIT + PPP_MAXCONNECT + MAXOCTETS features
+ * and adding those defines to ppp_opts.h just for having the value always
+ * defined to 0 isn't worth it.
+ * 1 + LWIP_MAX(PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT + CCP_SUPPORT, PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT -1 + CCP_SUPPORT)
+ *
+ * Thus, the following is enough for now.
+ * 1 + PPP_IPV4_SUPPORT + PPP_IPV6_SUPPORT + CCP_SUPPORT
+ */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PPP_SUPPORT */
 #endif /* LWIP_HDR_PPP_IMPL_H */

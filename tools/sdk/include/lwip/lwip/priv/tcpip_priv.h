@@ -55,12 +55,13 @@ struct netif;
 #if LWIP_MPU_COMPATIBLE
 #define API_VAR_REF(name)               (*(name))
 #define API_VAR_DECLARE(type, name)     type * name
-#define API_VAR_ALLOC(type, pool, name, errorval) do { \
+#define API_VAR_ALLOC_EXT(type, pool, name, errorblock) do { \
                                           name = (type *)memp_malloc(pool); \
                                           if (name == NULL) { \
-                                            return errorval; \
+                                            errorblock; \
                                           } \
                                         } while(0)
+#define API_VAR_ALLOC(type, pool, name, errorval) API_VAR_ALLOC_EXT(type, pool, name, return errorval)
 #define API_VAR_ALLOC_POOL(type, pool, name, errorval) do { \
                                           name = (type *)LWIP_MEMPOOL_ALLOC(pool); \
                                           if (name == NULL) { \
@@ -81,6 +82,7 @@ struct netif;
 #else /* LWIP_MPU_COMPATIBLE */
 #define API_VAR_REF(name)               name
 #define API_VAR_DECLARE(type, name)     type name
+#define API_VAR_ALLOC_EXT(type, pool, name, errorblock)
 #define API_VAR_ALLOC(type, pool, name, errorval)
 #define API_VAR_ALLOC_POOL(type, pool, name, errorval)
 #define API_VAR_FREE(pool, name)
@@ -109,9 +111,13 @@ typedef err_t (*tcpip_api_call_fn)(struct tcpip_api_call_data* call);
 err_t tcpip_api_call(tcpip_api_call_fn fn, struct tcpip_api_call_data *call);
 
 enum tcpip_msg_type {
+#if !LWIP_TCPIP_CORE_LOCKING
   TCPIP_MSG_API,
   TCPIP_MSG_API_CALL,
+#endif /* !LWIP_TCPIP_CORE_LOCKING */
+#if !LWIP_TCPIP_CORE_LOCKING_INPUT
   TCPIP_MSG_INPKT,
+#endif /* !LWIP_TCPIP_CORE_LOCKING_INPUT */
 #if LWIP_TCPIP_TIMEOUT && LWIP_TIMERS
   TCPIP_MSG_TIMEOUT,
   TCPIP_MSG_UNTIMEOUT,
@@ -123,6 +129,7 @@ enum tcpip_msg_type {
 struct tcpip_msg {
   enum tcpip_msg_type type;
   union {
+#if !LWIP_TCPIP_CORE_LOCKING
     struct {
       tcpip_callback_fn function;
       void* msg;
@@ -132,11 +139,14 @@ struct tcpip_msg {
       struct tcpip_api_call_data *arg;
       sys_sem_t *sem;
     } api_call;
+#endif /* LWIP_TCPIP_CORE_LOCKING */
+#if !LWIP_TCPIP_CORE_LOCKING_INPUT
     struct {
       struct pbuf *p;
       struct netif *netif;
       netif_input_fn input_fn;
     } inp;
+#endif /* !LWIP_TCPIP_CORE_LOCKING_INPUT */
     struct {
       tcpip_callback_fn function;
       void *ctx;
