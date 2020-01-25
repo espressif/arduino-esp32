@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "soc/soc.h"
+#include "soc/rtc_periph.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -88,7 +89,7 @@ typedef enum {
 /**
  * @brief CPU clock configuration structure
  */
-typedef struct {
+typedef struct rtc_cpu_freq_config_s {
     rtc_cpu_freq_src_t source;      //!< The clock from which CPU clock is derived
     uint32_t source_freq_mhz;       //!< Source clock frequency
     uint32_t div;                   //!< Divider, freq_mhz = source_freq_mhz / div
@@ -127,7 +128,7 @@ typedef enum {
 /**
  * Initialization parameters for rtc_clk_init
  */
-typedef struct {
+typedef struct rtc_clk_config_s {
     rtc_xtal_freq_t xtal_freq : 8;      //!< Main XTAL frequency
     rtc_cpu_freq_t cpu_freq_mhz : 10;   //!< CPU frequency to set, in MHz
     rtc_fast_freq_t fast_freq : 1;      //!< RTC_FAST_CLK frequency to set
@@ -304,82 +305,7 @@ void rtc_clk_fast_freq_set(rtc_fast_freq_t fast_freq);
 rtc_fast_freq_t rtc_clk_fast_freq_get();
 
 /**
- * @brief Switch CPU frequency
  *
- * @note This function is deprecated and will be removed.
- *       See rtc_clk_cpu_freq_config_set instead.
- *
- * If a PLL-derived frequency is requested (80, 160, 240 MHz), this function
- * will enable the PLL. Otherwise, PLL will be disabled.
- * Note: this function is not optimized for switching speed. It may take several
- * hundred microseconds to perform frequency switch.
- *
- * @param cpu_freq  new CPU frequency
- */
-void rtc_clk_cpu_freq_set(rtc_cpu_freq_t cpu_freq) __attribute__((deprecated));
-
-/**
- * @brief Switch CPU frequency
- *
- * @note This function is deprecated and will be removed.
- *       See rtc_clk_cpu_freq_set_config_fast instead.
- *
- * This is a faster version of rtc_clk_cpu_freq_set, which can handle some of
- * the frequency switch paths (XTAL -> PLL, PLL -> XTAL).
- * When switching from PLL to XTAL, PLL is not disabled (unlike rtc_clk_cpu_freq_set).
- * When switching back from XTAL to PLL, only the same PLL can be used.
- * Therefore it is not possible to switch 240 -> XTAL -> (80 or 160) using this
- * function.
- *
- * For unsupported cases, this function falls back to rtc_clk_cpu_freq_set.
- *
- * Unlike rtc_clk_cpu_freq_set, this function relies on static data, so it is
- * less safe to use it e.g. from a panic handler (when memory might be corrupted).
- *
- * @param cpu_freq  new CPU frequency
- */
-void rtc_clk_cpu_freq_set_fast(rtc_cpu_freq_t cpu_freq) __attribute__((deprecated));
-
-/**
- * @brief Get the currently selected CPU frequency
- *
- * @note This function is deprecated and will be removed.
- *       See rtc_clk_cpu_freq_get_config instead.
- *
- * Although CPU can be clocked by APLL and RTC 8M sources, such support is not
- * exposed through this library. As such, this function will not return
- * meaningful values when these clock sources are configured (e.g. using direct
- * access to clock selection registers). In debug builds, it will assert; in
- * release builds, it will return RTC_CPU_FREQ_XTAL.
- *
- * @return CPU frequency (one of rtc_cpu_freq_t values)
- */
-rtc_cpu_freq_t rtc_clk_cpu_freq_get()  __attribute__((deprecated));
-
-/**
- * @brief Get corresponding frequency value for rtc_cpu_freq_t enum value
- *
- * @note This function is deprecated and will be removed.
- *       See rtc_clk_cpu_freq_get/set_config instead.
- *
- * @param cpu_freq  CPU frequency, on of rtc_cpu_freq_t values
- * @return CPU frequency, in HZ
- */
-uint32_t rtc_clk_cpu_freq_value(rtc_cpu_freq_t cpu_freq)  __attribute__((deprecated));
-
-/**
- * @brief Get rtc_cpu_freq_t enum value for given CPU frequency
- *
- * @note This function is deprecated and will be removed.
- *       See rtc_clk_cpu_freq_mhz_to_config instead.
- *
- * @param cpu_freq_mhz  CPU frequency, one of 80, 160, 240, 2, and XTAL frequency
- * @param[out] out_val output, rtc_cpu_freq_t value corresponding to the frequency
- * @return true if the given frequency value matches one of enum values
- */
- bool rtc_clk_cpu_freq_from_mhz(int cpu_freq_mhz, rtc_cpu_freq_t* out_val) __attribute__((deprecated));
-
-/**
  * @brief Get CPU frequency config corresponding to a rtc_cpu_freq_t value
  * @param cpu_freq CPU frequency enumeration value
  * @param[out] out_config  Output, CPU frequency configuration structure
@@ -535,7 +461,7 @@ void rtc_clk_wait_for_slow_cycle();
 /**
  * @brief sleep configuration for rtc_sleep_init function
  */
-typedef struct {
+typedef struct rtc_sleep_config_s {
     uint32_t lslp_mem_inf_fpu : 1;      //!< force normal voltage in sleep mode (digital domain memory)
     uint32_t rtc_mem_inf_fpu : 1;       //!< force normal voltage in sleep mode (RTC memory)
     uint32_t rtc_mem_inf_follow_cpu : 1;//!< keep low voltage in sleep mode (even if ULP/touch is used)
@@ -657,7 +583,7 @@ uint32_t rtc_sleep_start(uint32_t wakeup_opt, uint32_t reject_opt);
 /**
  * RTC power and clock control initialization settings
  */
-typedef struct {
+typedef struct rtc_config_s {
     uint32_t ck8m_wait : 8;         //!< Number of rtc_fast_clk cycles to wait for 8M clock to be ready
     uint32_t xtal_wait : 8;         //!< Number of rtc_fast_clk cycles to wait for XTAL clock to be ready
     uint32_t pll_wait : 8;          //!< Number of rtc_fast_clk cycles to wait for PLL to be ready
@@ -693,7 +619,7 @@ void rtc_init(rtc_config_t cfg);
 /**
  * Structure describing vddsdio configuration
  */
-typedef struct {
+typedef struct rtc_vddsdio_config_s {
     uint32_t force : 1;     //!< If 1, use configuration from RTC registers; if 0, use EFUSE/bootstrapping pins.
     uint32_t enable : 1;    //!< Enable VDDSDIO regulator
     uint32_t tieh  : 1;     //!< Select VDDSDIO voltage. One of RTC_VDDSDIO_TIEH_1_8V, RTC_VDDSDIO_TIEH_3_3V

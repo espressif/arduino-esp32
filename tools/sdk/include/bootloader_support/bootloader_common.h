@@ -13,9 +13,13 @@
 // limitations under the License.
 
 #pragma once
-#include "esp_flash_data_types.h"
+#include "esp_flash_partitions.h"
 #include "esp_image_format.h"
-#include "esp_image_format.h"
+#include "esp_app_format.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /// Type of hold a GPIO in low state
 typedef enum {
@@ -165,3 +169,7 @@ esp_err_t bootloader_common_check_chip_validity(const esp_image_header_t* img_hd
  * @brief Configure VDDSDIO, call this API to rise VDDSDIO to 1.9V when VDDSDIO regulator is enabled as 1.8V mode.
  */
 void bootloader_common_vddsdio_configure();
+
+#ifdef __cplusplus
+}
+#endif

@@ -115,17 +115,12 @@
 #ifndef LWIP_NOASSERT
 #define LWIP_ASSERT(message, assertion) do { if (!(assertion)) { \
   LWIP_PLATFORM_ASSERT(message); }} while(0)
-#ifndef LWIP_PLATFORM_ASSERT
-#error "If you want to use LWIP_ASSERT, LWIP_PLATFORM_ASSERT(message) needs to be defined in your arch/cc.h"
-#endif
 #else  /* LWIP_NOASSERT */
 #define LWIP_ASSERT(message, assertion)
 #endif /* LWIP_NOASSERT */
 
 #ifndef LWIP_ERROR
-#ifndef LWIP_NOASSERT
-#define LWIP_PLATFORM_ERROR(message) LWIP_PLATFORM_ASSERT(message)
-#elif defined LWIP_DEBUG
+#ifdef LWIP_DEBUG
 #define LWIP_PLATFORM_ERROR(message) LWIP_PLATFORM_DIAG((message))
 #else
 #define LWIP_PLATFORM_ERROR(message)
@@ -145,9 +140,6 @@
 #endif
 
 #ifdef LWIP_DEBUG
-#ifndef LWIP_PLATFORM_DIAG
-#error "If you want to use LWIP_DEBUG, LWIP_PLATFORM_DIAG(message) needs to be defined in your arch/cc.h"
-#endif
 #define LWIP_DEBUGF(debug, message) do { \
                                if ( \
                                    ((debug) & LWIP_DBG_ON) && \

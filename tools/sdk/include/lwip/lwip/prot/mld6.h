@@ -44,6 +44,7 @@
 extern "C" {
 #endif
 
+#define MLD6_HBH_HLEN 8
 /** Multicast listener report/query/done message header. */
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"

@@ -15,11 +15,11 @@
    to simple macros with numeric values, and/or #if/#endif blocks.
 */
 /*
- *
- * Automatically generated file; DO NOT EDIT.
- * Espressif IoT Development Framework Configuration
- *
+ * Automatically generated file. DO NOT EDIT.
+ * Espressif IoT Development Framework (ESP-IDF) Configuration Header
  */
+       
+/* List of deprecated options */
 /* If BT is not built at all */
 MEMORY
 {
@@ -65,10 +65,11 @@ MEMORY
   extern_ram_seg(RWX) : org = 0x3F800000,
                                      len = 0x400000
 }
+_static_data_end = _bss_end;
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000 - 0x0;
 _data_seg_org = ORIGIN(rtc_data_seg);
-/* The lines below define location alias for .rtc.data section based on Kconfig option. 
-   When the option is not defined then use slow memory segment 
+/* The lines below define location alias for .rtc.data section based on Kconfig option.
+   When the option is not defined then use slow memory segment
    else the data will be placed in fast memory segment */
 REGION_ALIAS("rtc_data_location", rtc_slow_seg );

@@ -41,6 +41,10 @@
 #ifndef EUI64_H
 #define EUI64_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * @todo:
  *
@@ -89,6 +93,10 @@ typedef union
 #define eui64_setlo32(e, l)	eui64_set32(e, l)
 
 char *eui64_ntoa(eui64_t);	/* Returns ascii representation of id */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EUI64_H */
 #endif /* PPP_SUPPORT && PPP_IPV6_SUPPORT */

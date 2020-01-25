@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 #include <esp_err.h>
-#include "soc/efuse_reg.h"
+#include "soc/efuse_periph.h"
 
 #include "sdkconfig.h"
 
@@ -130,7 +130,6 @@ typedef struct {
     uint8_t iv[128];
     uint8_t digest[64];
 } esp_secure_boot_iv_digest_t;
-
 
 #ifdef __cplusplus
 }

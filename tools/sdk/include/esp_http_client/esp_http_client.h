@@ -35,7 +35,9 @@ typedef struct esp_http_client_event *esp_http_client_event_handle_t;
 typedef enum {
     HTTP_EVENT_ERROR = 0,       /*!< This event occurs when there are any errors during execution */
     HTTP_EVENT_ON_CONNECTED,    /*!< Once the HTTP has been connected to the server, no data exchange has been performed */
-    HTTP_EVENT_HEADER_SENT,     /*!< After sending all the headers to the server */
+    HTTP_EVENT_HEADERS_SENT,     /*!< After sending all the headers to the server */
+    HTTP_EVENT_HEADER_SENT = HTTP_EVENT_HEADERS_SENT, /*!< This header has been kept for backward compatability
+                                                           and will be deprecated in future versions esp-idf */
     HTTP_EVENT_ON_HEADER,       /*!< Occurs when receiving each header sent from the server */
     HTTP_EVENT_ON_DATA,         /*!< Occurs when receiving data from the server, possibly multiple portions of the packet */
     HTTP_EVENT_ON_FINISH,       /*!< Occurs when finish a HTTP session */
@@ -114,7 +116,8 @@ typedef struct {
     int                         max_redirection_count;    /*!< Max redirection number, using default value if zero*/
     http_event_handle_cb        event_handler;             /*!< HTTP Event Handle */
     esp_http_client_transport_t transport_type;           /*!< HTTP transport type, see `esp_http_client_transport_t` */
-    int                         buffer_size;              /*!< HTTP buffer size (both send and receive) */
+    int                         buffer_size;              /*!< HTTP receive buffer size */
+    int                         buffer_size_tx;           /*!< HTTP transmit buffer size */
     void                        *user_data;               /*!< HTTP user_data context */
     bool                        is_async;                 /*!< Set asynchronous mode, only supported with HTTPS for now */
     bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
@@ -453,7 +456,7 @@ esp_http_client_transport_t esp_http_client_get_transport_type(esp_http_client_h
  *
  * @param[in]  client  The esp_http_client handle
  *
- * @return      
+ * @return
  *     - ESP_OK
  *     - ESP_FAIL
  */

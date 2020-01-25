@@ -48,6 +48,10 @@
 #ifndef IPCP_H
 #define	IPCP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Options.
  */
@@ -121,6 +125,10 @@ char *ip_ntoa (u32_t);
 #endif /* UNUSED, already defined by lwIP */
 
 extern const struct protent ipcp_protent;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* IPCP_H */
 #endif /* PPP_SUPPORT && PPP_IPV4_SUPPORT */

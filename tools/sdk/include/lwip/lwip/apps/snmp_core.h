@@ -91,7 +91,9 @@ extern "C" {
 #define SNMP_ASN1_TYPE_UNSIGNED32     SNMP_ASN1_TYPE_GAUGE
 #define SNMP_ASN1_TYPE_TIMETICKS      (SNMP_ASN1_CLASS_APPLICATION | SNMP_ASN1_CONTENTTYPE_PRIMITIVE | SNMP_ASN1_APPLICATION_TIMETICKS)
 #define SNMP_ASN1_TYPE_OPAQUE         (SNMP_ASN1_CLASS_APPLICATION | SNMP_ASN1_CONTENTTYPE_PRIMITIVE | SNMP_ASN1_APPLICATION_OPAQUE)
+#if LWIP_HAVE_INT64
 #define SNMP_ASN1_TYPE_COUNTER64      (SNMP_ASN1_CLASS_APPLICATION | SNMP_ASN1_CONTENTTYPE_PRIMITIVE | SNMP_ASN1_APPLICATION_COUNTER64)
+#endif
 
 #define SNMP_VARBIND_EXCEPTION_OFFSET 0xF0
 #define SNMP_VARBIND_EXCEPTION_MASK   0x0F
@@ -144,6 +146,9 @@ union snmp_variant_value
   const void* const_ptr;
   u32_t u32;
   s32_t s32;
+#if LWIP_HAVE_INT64
+  u64_t u64;
+#endif
 };
 
 
@@ -186,7 +191,7 @@ typedef snmp_err_t (*node_instance_set_test_method)(struct snmp_node_instance*, 
 typedef snmp_err_t (*node_instance_set_value_method)(struct snmp_node_instance*, u16_t, void*);
 typedef void (*node_instance_release_method)(struct snmp_node_instance*);
 
-#define SNMP_GET_VALUE_RAW_DATA 0x8000
+#define SNMP_GET_VALUE_RAW_DATA 0x4000  /* do not use 0x8000 because return value of node_instance_get_value_method is signed16 and 0x8000 would be the signed bit */
 
 /** SNMP node instance */
 struct snmp_node_instance
@@ -286,8 +291,8 @@ struct snmp_next_oid_state
 void snmp_next_oid_init(struct snmp_next_oid_state *state,
   const u32_t *start_oid, u8_t start_oid_len,
   u32_t *next_oid_buf, u8_t next_oid_max_len);
-u8_t snmp_next_oid_precheck(struct snmp_next_oid_state *state, const u32_t *oid, const u8_t oid_len);
-u8_t snmp_next_oid_check(struct snmp_next_oid_state *state, const u32_t *oid, const u8_t oid_len, void* reference);
+u8_t snmp_next_oid_precheck(struct snmp_next_oid_state *state, const u32_t *oid, u8_t oid_len);
+u8_t snmp_next_oid_check(struct snmp_next_oid_state *state, const u32_t *oid, u8_t oid_len, void* reference);
 
 void snmp_oid_assign(struct snmp_obj_id* target, const u32_t *oid, u8_t oid_len);
 void snmp_oid_combine(struct snmp_obj_id* target, const u32_t *oid1, u8_t oid1_len, const u32_t *oid2, u8_t oid2_len);
@@ -351,6 +356,14 @@ struct snmp_statistics
   u32_t outsetrequests;
   u32_t outgetresponses;
   u32_t outtraps;
+#if LWIP_SNMP_V3
+  u32_t unsupportedseclevels;
+  u32_t notintimewindows;
+  u32_t unknownusernames;
+  u32_t unknownengineids;
+  u32_t wrongdigests;
+  u32_t decryptionerrors;
+#endif
 };
 
 extern struct snmp_statistics snmp_stats;

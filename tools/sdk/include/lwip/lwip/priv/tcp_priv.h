@@ -77,9 +77,12 @@ void             tcp_txnow   (void);
 void             tcp_input   (struct pbuf *p, struct netif *inp);
 /* Used within the TCP code only: */
 struct tcp_pcb * tcp_alloc   (u8_t prio);
+void             tcp_free    (struct tcp_pcb *pcb);
 void             tcp_abandon (struct tcp_pcb *pcb, int reset);
 err_t            tcp_send_empty_ack(struct tcp_pcb *pcb);
-void             tcp_rexmit  (struct tcp_pcb *pcb);
+err_t            tcp_rexmit  (struct tcp_pcb *pcb);
+err_t            tcp_rexmit_rto_prepare(struct tcp_pcb *pcb);
+void             tcp_rexmit_rto_commit(struct tcp_pcb *pcb);
 void             tcp_rexmit_rto  (struct tcp_pcb *pcb);
 void             tcp_rexmit_fast (struct tcp_pcb *pcb);
 u32_t            tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb);
@@ -174,6 +177,8 @@ err_t            tcp_process_refused_data(struct tcp_pcb *pcb);
                 ret = lwip_tcp_event((pcb)->callback_arg, (pcb), LWIP_EVENT_POLL, NULL, 0, ERR_OK); \
                 } else {                                                                            \
                 ret = ERR_ARG; } } while(0)
+/* For event API, last state SYN_RCVD must be excluded here: the application
+   has not seen this pcb, yet! */
 #define TCP_EVENT_ERR(last_state,errf,arg,err)  do { if (last_state != SYN_RCVD) {                \
                 lwip_tcp_event((arg), NULL, LWIP_EVENT_ERR, NULL, 0, (err)); } } while(0)
 
@@ -259,11 +264,12 @@ struct tcp_seg {
   u8_t  chksum_swapped;
 #endif /* TCP_CHECKSUM_ON_COPY */
   u8_t  flags;
-#define TF_SEG_OPTS_MSS         (u8_t)0x01U /* Include MSS option. */
+#define TF_SEG_OPTS_MSS         (u8_t)0x01U /* Include MSS option (only used in SYN segments) */
 #define TF_SEG_OPTS_TS          (u8_t)0x02U /* Include timestamp option. */
 #define TF_SEG_DATA_CHECKSUMMED (u8_t)0x04U /* ALL data (not the header) is
                                                checksummed into 'chksum' */
-#define TF_SEG_OPTS_WND_SCALE   (u8_t)0x08U /* Include WND SCALE option */
+#define TF_SEG_OPTS_WND_SCALE   (u8_t)0x08U /* Include WND SCALE option (only used in SYN segments) */
+#define TF_SEG_OPTS_SACK_PERM   (u8_t)0x10U /* Include SACK Permitted option (only used in SYN segments) */
   struct tcp_hdr *tcphdr;  /* the TCP header */
 };
 
@@ -271,6 +277,7 @@ struct tcp_seg {
 #define LWIP_TCP_OPT_NOP        1
 #define LWIP_TCP_OPT_MSS        2
 #define LWIP_TCP_OPT_WS         3
+#define LWIP_TCP_OPT_SACK_PERM  4
 #define LWIP_TCP_OPT_TS         8
 
 #define LWIP_TCP_OPT_LEN_MSS    4
@@ -287,10 +294,18 @@ struct tcp_seg {
 #define LWIP_TCP_OPT_LEN_WS_OUT 0
 #endif
 
+#if LWIP_TCP_SACK_OUT
+#define LWIP_TCP_OPT_LEN_SACK_PERM     2
+#define LWIP_TCP_OPT_LEN_SACK_PERM_OUT 4 /* aligned for output (includes NOP padding) */
+#else
+#define LWIP_TCP_OPT_LEN_SACK_PERM_OUT 0
+#endif
+
 #define LWIP_TCP_OPT_LENGTH(flags) \
-  (flags & TF_SEG_OPTS_MSS       ? LWIP_TCP_OPT_LEN_MSS    : 0) + \
-  (flags & TF_SEG_OPTS_TS        ? LWIP_TCP_OPT_LEN_TS_OUT : 0) + \
-  (flags & TF_SEG_OPTS_WND_SCALE ? LWIP_TCP_OPT_LEN_WS_OUT : 0)
+  ((flags) & TF_SEG_OPTS_MSS       ? LWIP_TCP_OPT_LEN_MSS           : 0) + \
+  ((flags) & TF_SEG_OPTS_TS        ? LWIP_TCP_OPT_LEN_TS_OUT        : 0) + \
+  ((flags) & TF_SEG_OPTS_WND_SCALE ? LWIP_TCP_OPT_LEN_WS_OUT        : 0) + \
+  ((flags) & TF_SEG_OPTS_SACK_PERM ? LWIP_TCP_OPT_LEN_SACK_PERM_OUT : 0)
 
 /** This returns a TCP header option for MSS in an u32_t */
 #define TCP_BUILD_MSS_OPTION(mss) lwip_htonl(0x02040000 | ((mss) & 0xFFFF))
@@ -342,7 +357,7 @@ extern struct tcp_pcb ** const tcp_pcb_lists[NUM_TCP_PCB_LISTS];
 #if TCP_DEBUG_PCB_LISTS
 #define TCP_REG(pcbs, npcb) do {\
                             struct tcp_pcb *tcp_tmp_pcb; \
-                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_REG %p local port %d\n", (npcb), (npcb)->local_port)); \
+                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_REG %p local port %"U16_F"\n", (void *)(npcb), (npcb)->local_port)); \
                             for (tcp_tmp_pcb = *(pcbs); \
           tcp_tmp_pcb != NULL; \
         tcp_tmp_pcb = tcp_tmp_pcb->next) { \
@@ -352,13 +367,13 @@ extern struct tcp_pcb ** const tcp_pcb_lists[NUM_TCP_PCB_LISTS];
                             (npcb)->next = *(pcbs); \
                             LWIP_ASSERT("TCP_REG: npcb->next != npcb", (npcb)->next != (npcb)); \
                             *(pcbs) = (npcb); \
-                            LWIP_ASSERT("TCP_RMV: tcp_pcbs sane", tcp_pcbs_sane()); \
+                            LWIP_ASSERT("TCP_REG: tcp_pcbs sane", tcp_pcbs_sane()); \
               tcp_timer_needed(); \
                             } while(0)
 #define TCP_RMV(pcbs, npcb) do { \
                             struct tcp_pcb *tcp_tmp_pcb; \
                             LWIP_ASSERT("TCP_RMV: pcbs != NULL", *(pcbs) != NULL); \
-                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_RMV: removing %p from %p\n", (npcb), *(pcbs))); \
+                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_RMV: removing %p from %p\n", (void *)(npcb), (void *)(*(pcbs)))); \
                             if(*(pcbs) == (npcb)) { \
                                *(pcbs) = (*pcbs)->next; \
                             } else for (tcp_tmp_pcb = *(pcbs); tcp_tmp_pcb != NULL; tcp_tmp_pcb = tcp_tmp_pcb->next) { \
@@ -369,7 +384,7 @@ extern struct tcp_pcb ** const tcp_pcb_lists[NUM_TCP_PCB_LISTS];
                             } \
                             (npcb)->next = NULL; \
                             LWIP_ASSERT("TCP_RMV: tcp_pcbs sane", tcp_pcbs_sane()); \
-                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_RMV: removed %p from %p\n", (npcb), *(pcbs))); \
+                            LWIP_DEBUGF(TCP_DEBUG, ("TCP_RMV: removed %p from %p\n", (void *)(npcb), (void *)(*(pcbs)))); \
                             } while(0)
 
 #else /* LWIP_DEBUG */
@@ -433,45 +448,38 @@ struct tcp_seg *tcp_seg_copy(struct tcp_seg *seg);
 #define tcp_ack(pcb)                               \
   do {                                             \
     if((pcb)->flags & TF_ACK_DELAY) {              \
-      (pcb)->flags &= ~TF_ACK_DELAY;               \
-      (pcb)->flags |= TF_ACK_NOW;                  \
+      tcp_clear_flags(pcb, TF_ACK_DELAY);          \
+      tcp_ack_now(pcb);                            \
     }                                              \
     else {                                         \
-      (pcb)->flags |= TF_ACK_DELAY;                \
+      tcp_set_flags(pcb, TF_ACK_DELAY);            \
     }                                              \
   } while (0)
 
 #define tcp_ack_now(pcb)                           \
-  do {                                             \
-    (pcb)->flags |= TF_ACK_NOW;                    \
-  } while (0)
+  tcp_set_flags(pcb, TF_ACK_NOW)
 
 err_t tcp_send_fin(struct tcp_pcb *pcb);
 err_t tcp_enqueue_flags(struct tcp_pcb *pcb, u8_t flags);
 
 void tcp_rexmit_seg(struct tcp_pcb *pcb, struct tcp_seg *seg);
 
-void tcp_rst(u32_t seqno, u32_t ackno,
+void tcp_rst(const struct tcp_pcb* pcb, u32_t seqno, u32_t ackno,
        const ip_addr_t *local_ip, const ip_addr_t *remote_ip,
        u16_t local_port, u16_t remote_port);
 
 u32_t tcp_next_iss(struct tcp_pcb *pcb);
 
 err_t tcp_keepalive(struct tcp_pcb *pcb);
+err_t tcp_split_unsent_seg(struct tcp_pcb *pcb, u16_t split);
 err_t tcp_zero_window_probe(struct tcp_pcb *pcb);
 void  tcp_trigger_input_pcb_close(void);
 
 #if TCP_CALCULATE_EFF_SEND_MSS
-u16_t tcp_eff_send_mss_impl(u16_t sendmss, const ip_addr_t *dest
-#if LWIP_IPV6 || LWIP_IPV4_SRC_ROUTING
-                           , const ip_addr_t *src
-#endif /* LWIP_IPV6 || LWIP_IPV4_SRC_ROUTING */
-                           );
-#if LWIP_IPV6 || LWIP_IPV4_SRC_ROUTING
-#define tcp_eff_send_mss(sendmss, src, dest) tcp_eff_send_mss_impl(sendmss, dest, src)
-#else /* LWIP_IPV6 || LWIP_IPV4_SRC_ROUTING */
-#define tcp_eff_send_mss(sendmss, src, dest) tcp_eff_send_mss_impl(sendmss, dest)
-#endif /* LWIP_IPV6 || LWIP_IPV4_SRC_ROUTING */
+u16_t tcp_eff_send_mss_netif(u16_t sendmss, struct netif *outif,
+                             const ip_addr_t *dest);
+#define tcp_eff_send_mss(sendmss, src, dest) \
+    tcp_eff_send_mss_netif(sendmss, ip_route(src, dest), dest)
 #endif /* TCP_CALCULATE_EFF_SEND_MSS */
 
 #if LWIP_CALLBACK_API
@@ -497,6 +505,14 @@ s16_t tcp_pcbs_sane(void);
 void tcp_timer_needed(void);
 
 void tcp_netif_ip_addr_changed(const ip_addr_t* old_addr, const ip_addr_t* new_addr);
+
+#if TCP_QUEUE_OOSEQ
+void tcp_free_ooseq(struct tcp_pcb *pcb);
+#endif
+
+#if LWIP_TCP_PCB_NUM_EXT_ARGS
+err_t tcp_ext_arg_invoke_callbacks_passive_open(struct tcp_pcb_listen *lpcb, struct tcp_pcb *cpcb);
+#endif
 
 #ifdef __cplusplus
 }

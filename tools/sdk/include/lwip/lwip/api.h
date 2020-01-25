@@ -58,22 +58,25 @@ extern "C" {
  */
 
 /* Flags for netconn_write (u8_t) */
-#define NETCONN_NOFLAG    0x00
-#define NETCONN_NOCOPY    0x00 /* Only for source code compatibility */
-#define NETCONN_COPY      0x01
-#define NETCONN_MORE      0x02
-#define NETCONN_DONTBLOCK 0x04
+#define NETCONN_NOFLAG      0x00
+#define NETCONN_NOCOPY      0x00 /* Only for source code compatibility */
+#define NETCONN_COPY        0x01
+#define NETCONN_MORE        0x02
+#define NETCONN_DONTBLOCK   0x04
+#define NETCONN_NOAUTORCVD  0x08 /* prevent netconn_recv_data_tcp() from updating the tcp window - must be done manually via netconn_tcp_recvd() */
+#define NETCONN_NOFIN       0x10 /* upper layer already received data, leave FIN in queue until called again */
 
 /* Flags for struct netconn.flags (u8_t) */
+/** This netconn had an error, don't block on recvmbox/acceptmbox any more */
+#define NETCONN_FLAG_MBOXCLOSED               0x01
 /** Should this netconn avoid blocking? */
 #define NETCONN_FLAG_NON_BLOCKING             0x02
 /** Was the last connect action a non-blocking one? */
 #define NETCONN_FLAG_IN_NONBLOCKING_CONNECT   0x04
-#if ESP_AUTO_RECV
-/** If this is set, a TCP netconn must call netconn_recved() to update
-    the TCP receive window (done automatically if not set). */
-#define NETCONN_FLAG_NO_AUTO_RECVED           0x08
-#endif
+#if LWIP_NETCONN_FULLDUPLEX
+  /** The mbox of this netconn is being deallocated, don't use it anymore */
+#define NETCONN_FLAG_MBOXINVALID              0x08
+#endif /* LWIP_NETCONN_FULLDUPLEX */
 /** If a nonblocking write has been rejected before, poll_tcp needs to
     check if the netconn is writable again */
 #define NETCONN_FLAG_CHECK_WRITESPACE         0x10
@@ -83,7 +86,12 @@ extern "C" {
     dual-stack usage by default. */
 #define NETCONN_FLAG_IPV6_V6ONLY              0x20
 #endif /* LWIP_IPV6 */
-
+#if LWIP_NETBUF_RECVINFO
+/** Received packet info will be recorded for this netconn */
+#define NETCONN_FLAG_PKTINFO                  0x40
+#endif /* LWIP_NETBUF_RECVINFO */
+/** A FIN has been received but not passed to the application yet */
+#define NETCONN_FIN_RX_PENDING                0x80
 
 /* Helpers to process several netconn_types by the same code */
 #define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
@@ -219,8 +227,8 @@ struct netconn {
     struct udp_pcb *udp;
     struct raw_pcb *raw;
   } pcb;
-  /** the last error this netconn had */
-  err_t last_err;
+  /** the last asynchronous unreported error this netconn had */
+  err_t pending_err;
 #if !LWIP_NETCONN_SEM_PER_THREAD
   /** sem that is used to synchronously execute functions in the core context */
   sys_sem_t op_completed;
@@ -233,6 +241,11 @@ struct netconn {
       by the application thread */
   sys_mbox_t acceptmbox;
 #endif /* LWIP_TCP */
+#if LWIP_NETCONN_FULLDUPLEX
+  /** number of threads waiting on an mbox. This is required to unblock
+      all threads when closing while threads are waiting. */
+  int mbox_threads_waiting;
+#endif
   /** only used for socket layer */
 #if LWIP_SOCKET
   int socket;
@@ -245,7 +258,7 @@ struct netconn {
 #if LWIP_SO_RCVTIMEO
   /** timeout in milliseconds to wait for new data to be received
       (or connections to arrive for listening netconns) */
-  int recv_timeout;
+  u32_t recv_timeout;
 #endif /* LWIP_SO_RCVTIMEO */
 #if LWIP_SO_RCVBUF
   /** maximum amount of bytes queued in recvmbox
@@ -264,9 +277,6 @@ struct netconn {
   u8_t flags;
 #if LWIP_TCP
   /** TCP: when data passed to netconn_write doesn't fit into the send buffer,
-      this temporarily stores how much is already sent. */
-  size_t write_offset;
-  /** TCP: when data passed to netconn_write doesn't fit into the send buffer,
       this temporarily stores the message.
       Also used during connect and close. */
   struct api_msg *current_msg;
@@ -275,20 +285,22 @@ struct netconn {
   netconn_callback callback;
 };
 
+/** This vector type is passed to @ref netconn_write_vectors_partly to send
+ * multiple buffers at once.
+ * ATTENTION: This type has to directly map struct iovec since one is casted
+ *            into the other!
+ */
+struct netvector {
+  /** pointer to the application buffer that contains the data to send */
+  const void *ptr;
+  /** size of the application data to send */
+  size_t len;
+};
+
 /** Register an Network connection event */
 #define API_EVENT(c,e,l) if (c->callback) {         \
                            (*c->callback)(c, e, l); \
                          }
-
-/** Set conn->last_err to err but don't overwrite fatal errors */
-#define NETCONN_SET_SAFE_ERR(conn, err) do { if ((conn) != NULL) { \
-  SYS_ARCH_DECL_PROTECT(netconn_set_safe_err_lev); \
-  SYS_ARCH_PROTECT(netconn_set_safe_err_lev); \
-  if (!ERR_IS_FATAL((conn)->last_err)) { \
-    (conn)->last_err = err; \
-  } \
-  SYS_ARCH_UNPROTECT(netconn_set_safe_err_lev); \
-}} while(0);
 
 /* Network connection functions: */
 
@@ -299,6 +311,7 @@ struct netconn {
 #define netconn_new_with_callback(t, c) netconn_new_with_proto_and_callback(t, 0, c)
 struct netconn *netconn_new_with_proto_and_callback(enum netconn_type t, u8_t proto,
                                              netconn_callback callback);
+err_t   netconn_prepare_delete(struct netconn *conn);
 err_t   netconn_delete(struct netconn *conn);
 /** Get the type of a netconn (as enum netconn_type). */
 #define netconn_type(conn) (conn->type)
@@ -311,6 +324,7 @@ err_t   netconn_getaddr(struct netconn *conn, ip_addr_t *addr,
 #define netconn_addr(c,i,p) netconn_getaddr(c,i,p,1)
 
 err_t   netconn_bind(struct netconn *conn, const ip_addr_t *addr, u16_t port);
+err_t   netconn_bind_if(struct netconn *conn, u8_t if_idx);
 err_t   netconn_connect(struct netconn *conn, const ip_addr_t *addr, u16_t port);
 err_t   netconn_disconnect (struct netconn *conn);
 err_t   netconn_listen_with_backlog(struct netconn *conn, u8_t backlog);
@@ -318,15 +332,18 @@ err_t   netconn_listen_with_backlog(struct netconn *conn, u8_t backlog);
 #define netconn_listen(conn) netconn_listen_with_backlog(conn, TCP_DEFAULT_LISTEN_BACKLOG)
 err_t   netconn_accept(struct netconn *conn, struct netconn **new_conn);
 err_t   netconn_recv(struct netconn *conn, struct netbuf **new_buf);
+err_t   netconn_recv_udp_raw_netbuf(struct netconn *conn, struct netbuf **new_buf);
+err_t   netconn_recv_udp_raw_netbuf_flags(struct netconn *conn, struct netbuf **new_buf, u8_t apiflags);
 err_t   netconn_recv_tcp_pbuf(struct netconn *conn, struct pbuf **new_buf);
-#if ESP_AUTO_RECV
-void    netconn_recved(struct netconn *conn, u32_t length);
-#endif
+err_t   netconn_recv_tcp_pbuf_flags(struct netconn *conn, struct pbuf **new_buf, u8_t apiflags);
+err_t   netconn_tcp_recvd(struct netconn *conn, size_t len);
 err_t   netconn_sendto(struct netconn *conn, struct netbuf *buf,
                              const ip_addr_t *addr, u16_t port);
 err_t   netconn_send(struct netconn *conn, struct netbuf *buf);
 err_t   netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
                              u8_t apiflags, size_t *bytes_written);
+err_t   netconn_write_vectors_partly(struct netconn *conn, struct netvector *vectors, u16_t vectorcnt,
+                                     u8_t apiflags, size_t *bytes_written);
 /** @ingroup netconn_tcp */
 #define netconn_write(conn, dataptr, size, apiflags) \
           netconn_write_partly(conn, dataptr, size, apiflags, NULL)
@@ -336,6 +353,8 @@ err_t   netconn_shutdown(struct netconn *conn, u8_t shut_rx, u8_t shut_tx);
 #if LWIP_IGMP || (LWIP_IPV6 && LWIP_IPV6_MLD)
 err_t   netconn_join_leave_group(struct netconn *conn, const ip_addr_t *multiaddr,
                              const ip_addr_t *netif_addr, enum netconn_igmp join_or_leave);
+err_t   netconn_join_leave_group_netif(struct netconn *conn, const ip_addr_t *multiaddr,
+                             u8_t if_idx, enum netconn_igmp join_or_leave);
 #endif /* LWIP_IGMP || (LWIP_IPV6 && LWIP_IPV6_MLD) */
 #if LWIP_DNS
 #if LWIP_IPV4 && LWIP_IPV6
@@ -347,35 +366,29 @@ err_t   netconn_gethostbyname(const char *name, ip_addr_t *addr);
 #endif /* LWIP_IPV4 && LWIP_IPV6 */
 #endif /* LWIP_DNS */
 
-#define netconn_err(conn)               ((conn)->last_err)
+err_t   netconn_err(struct netconn *conn);
 #define netconn_recv_bufsize(conn)      ((conn)->recv_bufsize)
+
+#define netconn_set_flags(conn, set_flags)     do { (conn)->flags = (u8_t)((conn)->flags |  (set_flags)); } while(0)
+#define netconn_clear_flags(conn, clr_flags)   do { (conn)->flags = (u8_t)((conn)->flags & (u8_t)(~(clr_flags) & 0xff)); } while(0)
+#define netconn_is_flag_set(conn, flag)        (((conn)->flags & (flag)) != 0)
 
 /** Set the blocking status of netconn calls (@todo: write/send is missing) */
 #define netconn_set_nonblocking(conn, val)  do { if(val) { \
-  (conn)->flags |= NETCONN_FLAG_NON_BLOCKING; \
+  netconn_set_flags(conn, NETCONN_FLAG_NON_BLOCKING); \
 } else { \
-  (conn)->flags &= ~ NETCONN_FLAG_NON_BLOCKING; }} while(0)
+  netconn_clear_flags(conn, NETCONN_FLAG_NON_BLOCKING); }} while(0)
 /** Get the blocking status of netconn calls (@todo: write/send is missing) */
 #define netconn_is_nonblocking(conn)        (((conn)->flags & NETCONN_FLAG_NON_BLOCKING) != 0)
-
-#if ESP_AUTO_RECV
-/** TCP: Set the no-auto-recved status of netconn calls (see NETCONN_FLAG_NO_AUTO_RECVED) */
-#define netconn_set_noautorecved(conn, val)  do { if(val) { \
-  (conn)->flags |= NETCONN_FLAG_NO_AUTO_RECVED; \
-} else { \
-  (conn)->flags &= ~ NETCONN_FLAG_NO_AUTO_RECVED; }} while(0)
-/** TCP: Get the no-auto-recved status of netconn calls (see NETCONN_FLAG_NO_AUTO_RECVED) */
-#define netconn_get_noautorecved(conn)        (((conn)->flags & NETCONN_FLAG_NO_AUTO_RECVED) != 0)
-#endif
 
 #if LWIP_IPV6
 /** @ingroup netconn_common
  * TCP: Set the IPv6 ONLY status of netconn calls (see NETCONN_FLAG_IPV6_V6ONLY)
  */
 #define netconn_set_ipv6only(conn, val)  do { if(val) { \
-  (conn)->flags |= NETCONN_FLAG_IPV6_V6ONLY; \
+  netconn_set_flags(conn, NETCONN_FLAG_IPV6_V6ONLY); \
 } else { \
-  (conn)->flags &= ~ NETCONN_FLAG_IPV6_V6ONLY; }} while(0)
+  netconn_clear_flags(conn, NETCONN_FLAG_IPV6_V6ONLY); }} while(0)
 /** @ingroup netconn_common
  * TCP: Get the IPv6 ONLY status of netconn calls (see NETCONN_FLAG_IPV6_V6ONLY)
  */

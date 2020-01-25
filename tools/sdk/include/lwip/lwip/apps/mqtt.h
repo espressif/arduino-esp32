@@ -40,16 +40,24 @@
 #include "lwip/apps/mqtt_opts.h"
 #include "lwip/err.h"
 #include "lwip/ip_addr.h"
+#include "lwip/prot/iana.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct mqtt_client_t mqtt_client_t;
+typedef struct mqtt_client_s mqtt_client_t;
+
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+struct altcp_tls_config;
+#endif
 
 /** @ingroup mqtt
- * Default MQTT port */
-#define MQTT_PORT 1883
+ * Default MQTT port (non-TLS) */
+#define MQTT_PORT     LWIP_IANA_PORT_MQTT
+/** @ingroup mqtt
+ * Default MQTT TLS port */
+#define MQTT_TLS_PORT LWIP_IANA_PORT_SECURE_MQTT
 
 /*---------------------------------------------------------------------------------------------- */
 /* Connection with server */
@@ -60,17 +68,25 @@ typedef struct mqtt_client_t mqtt_client_t;
 struct mqtt_connect_client_info_t {
   /** Client identifier, must be set by caller */
   const char *client_id;
-  /** User name and password, set to NULL if not used */
+  /** User name, set to NULL if not used */
   const char* client_user;
+  /** Password, set to NULL if not used */
   const char* client_pass;
   /** keep alive time in seconds, 0 to disable keep alive functionality*/
   u16_t keep_alive;
   /** will topic, set to NULL if will is not to be used,
       will_msg, will_qos and will retain are then ignored */
   const char* will_topic;
+  /** will_msg, see will_topic */
   const char* will_msg;
+  /** will_qos, see will_topic */
   u8_t will_qos;
+  /** will_retain, see will_topic */
   u8_t will_retain;
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+  /** TLS configuration for secure connections */
+  struct altcp_tls_config *tls_config;
+#endif
 };
 
 /**
@@ -78,13 +94,21 @@ struct mqtt_connect_client_info_t {
  * Connection status codes */
 typedef enum
 {
+  /** Accepted */
   MQTT_CONNECT_ACCEPTED                 = 0,
+  /** Refused protocol version */
   MQTT_CONNECT_REFUSED_PROTOCOL_VERSION = 1,
+  /** Refused identifier */
   MQTT_CONNECT_REFUSED_IDENTIFIER       = 2,
+  /** Refused server */
   MQTT_CONNECT_REFUSED_SERVER           = 3,
+  /** Refused user credentials */
   MQTT_CONNECT_REFUSED_USERNAME_PASS    = 4,
+  /** Refused not authorized */
   MQTT_CONNECT_REFUSED_NOT_AUTHORIZED_  = 5,
+  /** Disconnected */
   MQTT_CONNECT_DISCONNECTED             = 256,
+  /** Timeout */
   MQTT_CONNECT_TIMEOUT                  = 257
 } mqtt_connection_status_t;
 
@@ -92,7 +116,7 @@ typedef enum
  * @ingroup mqtt
  * Function prototype for mqtt connection status callback. Called when
  * client has connected to the server after initiating a mqtt connection attempt by
- * calling mqtt_connect() or when connection is closed by server or an error
+ * calling mqtt_client_connect() or when connection is closed by server or an error
  *
  * @param client MQTT client itself
  * @param arg Additional argument to pass to the callback function
@@ -149,80 +173,19 @@ typedef void (*mqtt_incoming_publish_cb_t)(void *arg, const char *topic, u32_t t
 typedef void (*mqtt_request_cb_t)(void *arg, err_t err);
 
 
-/**
- * Pending request item, binds application callback to pending server requests
- */
-struct mqtt_request_t
-{
-  /** Next item in list, NULL means this is the last in chain,
-      next pointing at itself means request is unallocated */
-  struct mqtt_request_t *next;
-  /** Callback to upper layer */
-  mqtt_request_cb_t cb;
-  void *arg;
-  /** MQTT packet identifier */
-  u16_t pkt_id;
-  /** Expire time relative to element before this  */
-  u16_t timeout_diff;
-};
-
-/** Ring buffer */
-struct mqtt_ringbuf_t {
-  u16_t put;
-  u16_t get;
-  u8_t buf[MQTT_OUTPUT_RINGBUF_SIZE];
-};
-
-/** MQTT client */
-struct mqtt_client_t
-{
-  /** Timers and timeouts */
-  u16_t cyclic_tick;
-  u16_t keep_alive;
-  u16_t server_watchdog;
-  /** Packet identifier generator*/
-  u16_t pkt_id_seq;
-  /** Packet identifier of pending incoming publish */
-  u16_t inpub_pkt_id;
-  /** Connection state */
-  u8_t conn_state;
-  struct tcp_pcb *conn;
-  /** Connection callback */
-  void *connect_arg;
-  mqtt_connection_cb_t connect_cb;
-  /** Pending requests to server */
-  struct mqtt_request_t *pend_req_queue;
-  struct mqtt_request_t req_list[MQTT_REQ_MAX_IN_FLIGHT];
-  void *inpub_arg;
-  /** Incoming data callback */
-  mqtt_incoming_data_cb_t data_cb;
-  mqtt_incoming_publish_cb_t pub_cb;
-  /** Input */
-  u32_t msg_idx;
-  u8_t rx_buffer[MQTT_VAR_HEADER_BUFFER_LEN];
-  /** Output ring-buffer */
-  struct mqtt_ringbuf_t output;
-};
-
-
-/** Connect to server */
 err_t mqtt_client_connect(mqtt_client_t *client, const ip_addr_t *ipaddr, u16_t port, mqtt_connection_cb_t cb, void *arg,
                    const struct mqtt_connect_client_info_t *client_info);
 
-/** Disconnect from server */
 void mqtt_disconnect(mqtt_client_t *client);
 
-/** Create new client */
 mqtt_client_t *mqtt_client_new(void);
+void mqtt_client_free(mqtt_client_t* client);
 
-/** Check connection status */
 u8_t mqtt_client_is_connected(mqtt_client_t *client);
 
-/** Set callback to call for incoming publish */
 void mqtt_set_inpub_callback(mqtt_client_t *client, mqtt_incoming_publish_cb_t,
                              mqtt_incoming_data_cb_t data_cb, void *arg);
 
-/** Common function for subscribe and unsubscribe */
 err_t mqtt_sub_unsub(mqtt_client_t *client, const char *topic, u8_t qos, mqtt_request_cb_t cb, void *arg, u8_t sub);
 
 /** @ingroup mqtt
@@ -232,8 +195,6 @@ err_t mqtt_sub_unsub(mqtt_client_t *client, const char *topic, u8_t qos, mqtt_re
  *  Unsubscribe to topic */
 #define mqtt_unsubscribe(client, topic, cb, arg) mqtt_sub_unsub(client, topic, 0, cb, arg, 0)
 
-
-/** Publish data to topic */
 err_t mqtt_publish(mqtt_client_t *client, const char *topic, const void *payload, u16_t payload_length, u8_t qos, u8_t retain,
                                     mqtt_request_cb_t cb, void *arg);
 

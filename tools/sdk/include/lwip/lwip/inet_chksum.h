@@ -49,7 +49,7 @@
 
 /** Split an u32_t in two u16_ts and add them up */
 #ifndef FOLD_U32T
-#define FOLD_U32T(u)          (((u) >> 16) + ((u) & 0x0000ffffUL))
+#define FOLD_U32T(u)          ((u32_t)(((u) >> 16) + ((u) & 0x0000ffffUL)))
 #endif
 
 #if LWIP_CHECKSUM_ON_COPY

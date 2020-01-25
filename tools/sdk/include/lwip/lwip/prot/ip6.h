@@ -43,7 +43,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-   
+
 /** This is the packed version of ip6_addr_t,
     used in network headers that are itself packed */
 #ifdef PACK_STRUCT_USE_INCLUDES
@@ -94,13 +94,50 @@ PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/epstruct.h"
 #endif
+#define IP6H_V(hdr)  ((lwip_ntohl((hdr)->_v_tc_fl) >> 28) & 0x0f)
+#define IP6H_TC(hdr) ((lwip_ntohl((hdr)->_v_tc_fl) >> 20) & 0xff)
+#define IP6H_FL(hdr) (lwip_ntohl((hdr)->_v_tc_fl) & 0x000fffff)
+#define IP6H_PLEN(hdr) (lwip_ntohs((hdr)->_plen))
+#define IP6H_NEXTH(hdr) ((hdr)->_nexth)
+#define IP6H_NEXTH_P(hdr) ((u8_t *)(hdr) + 6)
+#define IP6H_HOPLIM(hdr) ((hdr)->_hoplim)
+#define IP6H_VTCFL_SET(hdr, v, tc, fl) (hdr)->_v_tc_fl = (lwip_htonl((((u32_t)(v)) << 28) | (((u32_t)(tc)) << 20) | (fl)))
+#define IP6H_PLEN_SET(hdr, plen) (hdr)->_plen = lwip_htons(plen)
+#define IP6H_NEXTH_SET(hdr, nexth) (hdr)->_nexth = (nexth)
+#define IP6H_HOPLIM_SET(hdr, hl) (hdr)->_hoplim = (u8_t)(hl)
 
-/* Hop-by-hop router alert option. */
-#define IP6_HBH_HLEN    8
-#define IP6_PAD1_OPTION         0
-#define IP6_PADN_ALERT_OPTION   1
-#define IP6_ROUTER_ALERT_OPTION 5
-#define IP6_ROUTER_ALERT_VALUE_MLD 0
+/* ipv6 extended options header */
+#define IP6_PAD1_OPTION             0
+#define IP6_PADN_OPTION             1
+#define IP6_ROUTER_ALERT_OPTION     5
+#define IP6_JUMBO_OPTION            194
+#define IP6_HOME_ADDRESS_OPTION     201
+#define IP6_ROUTER_ALERT_DLEN       2
+#define IP6_ROUTER_ALERT_VALUE_MLD  0
+
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/bpstruct.h"
+#endif
+PACK_STRUCT_BEGIN
+struct ip6_opt_hdr {
+  /* router alert option type */
+  PACK_STRUCT_FLD_8(u8_t _opt_type);
+  /* router alert option data len */
+  PACK_STRUCT_FLD_8(u8_t _opt_dlen);
+} PACK_STRUCT_STRUCT;
+PACK_STRUCT_END
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/epstruct.h"
+#endif
+#define IP6_OPT_HLEN 2
+#define IP6_OPT_TYPE_ACTION(hdr) ((((hdr)->_opt_type) >> 6) & 0x3)
+#define IP6_OPT_TYPE_CHANGE(hdr) ((((hdr)->_opt_type) >> 5) & 0x1)
+#define IP6_OPT_TYPE(hdr) ((hdr)->_opt_type)
+#define IP6_OPT_DLEN(hdr) ((hdr)->_opt_dlen)
+
+/* Hop-by-Hop header. */
+#define IP6_HBH_HLEN    2
+
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
 #endif
@@ -108,28 +145,65 @@ PACK_STRUCT_BEGIN
 struct ip6_hbh_hdr {
   /* next header */
   PACK_STRUCT_FLD_8(u8_t _nexth);
-  /* header length */
+  /* header length in 8-octet units */
   PACK_STRUCT_FLD_8(u8_t _hlen);
-  /* router alert option type */
-  PACK_STRUCT_FLD_8(u8_t _ra_opt_type);
-  /* router alert option data len */
-  PACK_STRUCT_FLD_8(u8_t _ra_opt_dlen);
-  /* router alert option data */
-  PACK_STRUCT_FIELD(u16_t _ra_opt_data);
-  /* PadN option type */
-  PACK_STRUCT_FLD_8(u8_t _padn_opt_type);
-  /* PadN option data len */
-  PACK_STRUCT_FLD_8(u8_t _padn_opt_dlen);
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/epstruct.h"
 #endif
+#define IP6_HBH_NEXTH(hdr) ((hdr)->_nexth)
+
+/* Destination header. */
+#define IP6_DEST_HLEN   2
+
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/bpstruct.h"
+#endif
+PACK_STRUCT_BEGIN
+struct ip6_dest_hdr {
+  /* next header */
+  PACK_STRUCT_FLD_8(u8_t _nexth);
+  /* header length in 8-octet units */
+  PACK_STRUCT_FLD_8(u8_t _hlen);
+} PACK_STRUCT_STRUCT;
+PACK_STRUCT_END
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/epstruct.h"
+#endif
+#define IP6_DEST_NEXTH(hdr) ((hdr)->_nexth)
+
+/* Routing header */
+#define IP6_ROUT_TYPE2  2
+#define IP6_ROUT_RPL    3
+
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/bpstruct.h"
+#endif
+PACK_STRUCT_BEGIN
+struct ip6_rout_hdr {
+  /* next header */
+  PACK_STRUCT_FLD_8(u8_t _nexth);
+  /* reserved */
+  PACK_STRUCT_FLD_8(u8_t _hlen);
+  /* fragment offset */
+  PACK_STRUCT_FIELD(u8_t _routing_type);
+  /* fragmented packet identification */
+  PACK_STRUCT_FIELD(u8_t _segments_left);
+} PACK_STRUCT_STRUCT;
+PACK_STRUCT_END
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/epstruct.h"
+#endif
+#define IP6_ROUT_NEXTH(hdr) ((hdr)->_nexth)
+#define IP6_ROUT_TYPE(hdr) ((hdr)->_routing_type)
+#define IP6_ROUT_SEG_LEFT(hdr) ((hdr)->_segments_left)
 
 /* Fragment header. */
 #define IP6_FRAG_HLEN    8
 #define IP6_FRAG_OFFSET_MASK    0xfff8
 #define IP6_FRAG_MORE_FLAG      0x0001
+
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
 #endif
@@ -148,19 +222,9 @@ PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/epstruct.h"
 #endif
-
-#define IP6H_V(hdr)  ((lwip_ntohl((hdr)->_v_tc_fl) >> 28) & 0x0f)
-#define IP6H_TC(hdr) ((lwip_ntohl((hdr)->_v_tc_fl) >> 20) & 0xff)
-#define IP6H_FL(hdr) (lwip_ntohl((hdr)->_v_tc_fl) & 0x000fffff)
-#define IP6H_PLEN(hdr) (lwip_ntohs((hdr)->_plen))
-#define IP6H_NEXTH(hdr) ((hdr)->_nexth)
-#define IP6H_NEXTH_P(hdr) ((u8_t *)(hdr) + 6)
-#define IP6H_HOPLIM(hdr) ((hdr)->_hoplim)
-
-#define IP6H_VTCFL_SET(hdr, v, tc, fl) (hdr)->_v_tc_fl = (lwip_htonl((((u32_t)(v)) << 28) | (((u32_t)(tc)) << 20) | (fl)))
-#define IP6H_PLEN_SET(hdr, plen) (hdr)->_plen = lwip_htons(plen)
-#define IP6H_NEXTH_SET(hdr, nexth) (hdr)->_nexth = (nexth)
-#define IP6H_HOPLIM_SET(hdr, hl) (hdr)->_hoplim = (u8_t)(hl)
+#define IP6_FRAG_NEXTH(hdr) ((hdr)->_nexth)
+#define IP6_FRAG_MBIT(hdr) (lwip_ntohs((hdr)->_fragment_offset) & 0x1)
+#define IP6_FRAG_ID(hdr) (lwip_ntohl((hdr)->_identification))
 
 #ifdef __cplusplus
 }

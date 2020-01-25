@@ -52,6 +52,13 @@
 #define NETBIOS_LWIP_NAME "NETBIOSLWIPDEV"
 #endif
 
+/** Respond to NetBIOS name queries
+ * Default is disabled
+ */
+#if !defined LWIP_NETBIOS_RESPOND_NAME_QUERY || defined __DOXYGEN__
+#define LWIP_NETBIOS_RESPOND_NAME_QUERY   0
+#endif
+
 /**
  * @}
  */

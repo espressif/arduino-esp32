@@ -36,6 +36,10 @@
 #ifndef CCP_H
 #define CCP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * CCP codes.
  */
@@ -151,6 +155,10 @@ typedef struct ccp_options {
 extern const struct protent ccp_protent;
 
 void ccp_resetrequest(ppp_pcb *pcb);  /* Issue a reset-request. */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CCP_H */
 #endif /* PPP_SUPPORT && CCP_SUPPORT */
