@@ -313,7 +313,7 @@ uint8_t * macAddress(uint8_t* mac)
 
 String ETHClass::macAddress(void)
 {
-    uint8_t mac[6] = {0,0,0,0,0,0};
+    uint8_t mac[6] = {0,0,0,0,0,0};//ToDo
     char macStr[18] = { 0 };
 #ifdef ESP_IDF_VERSION_MAJOR
     //ToDo

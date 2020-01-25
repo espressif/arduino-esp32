@@ -54,42 +54,42 @@
       "tools": [
         {
           "name": "xtensa-esp32-elf-gcc",
-          "version": "1.22.0-80-g6c4433a-5.2.0",
+          "version": "gcc8_2_0-esp-2019r2",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
-              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
-              "checksum": "SHA-256:f217fccbeaaa8c92db239036e0d6202458de4488b954a3a38f35ac2ec48058a4",
-              "size": "125719261"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-win32.zip",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-win32.zip",
+              "checksum": "SHA-256:c9d5776a22516f0825a7c68d835ffacc2392f913136893b7646e1288937cc65e",
+              "size": "103850448"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:a4307a97945d2f2f2745f415fbe80d727750e19f91f9a1e7e2f8a6065652f9da",
-              "size": "46517409"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz",
+              "checksum": "SHA-256:dc62be8dd16c6d9d28d64e2b3f831fa208f3548c2ca73cdbcbdf68f474d59521",
+              "size": "92150978"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:3fe96c151d46c1d4e5edc6ed690851b8e53634041114bad04729bc16b0445156",
-              "size": "44219107"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz",
+              "checksum": "SHA-256:e6d47c1dbd8c8cbfe37271e5e2aac53ee88c9e347ae937e22bf0c73f530efbdf",
+              "size": "85459985"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:b4055695ffc2dfc0bcb6dafdc2572a6e01151c4179ef5fa972b3fcb2183eb155",
-              "size": "45566336"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-i686.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-i686.tar.gz",
+              "checksum": "SHA-256:36a9648c414dbd1c518c687ce5587d9f8eaa94324f45d92e9ec31a1433a04df8",
+              "size": "87438500"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
-              "checksum": "SHA-256:9c68c87bb23b1256dc0a1859b515946763e5292dcab4a4159a52fae5618ce861",
-              "size": "50655584"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-armel.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-armel.tar.gz",
+              "checksum": "SHA-256:54a199c28f591da2466b21741911bc2ba77ddf82d3d2b66c6ce03c1a0c6835f0",
+              "size": "83647538"
             }
           ]
         },
