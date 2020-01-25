@@ -40,10 +40,12 @@ uint8_t txValue = 0;
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
+      (void)pServer; // unused
       deviceConnected = true;
     };
 
     void onDisconnect(BLEServer* pServer) {
+      (void)pServer; // unused
       deviceConnected = false;
     }
 };
@@ -55,7 +57,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       if (rxValue.length() > 0) {
         Serial.println("*********");
         Serial.print("Received Value: ");
-        for (int i = 0; i < rxValue.length(); i++)
+        for (std::size_t i = 0; i < rxValue.length(); i++)
           Serial.print(rxValue[i]);
 
         Serial.println();
