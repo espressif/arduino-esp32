@@ -488,8 +488,13 @@ IPAddress WiFiSTAClass::dnsIP(uint8_t dns_no)
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return IPAddress();
     }
+#ifdef ESP_IDF_VERSION_MAJOR
+    const ip_addr_t * dns_ip = dns_getserver(dns_no);
+    return IPAddress(dns_ip->u_addr.ip4.addr);
+#else
     ip_addr_t dns_ip = dns_getserver(dns_no);
     return IPAddress(dns_ip.u_addr.ip4.addr);
+#endif
 }
 
 /**
@@ -687,7 +692,12 @@ bool WiFiSTAClass::beginSmartConfig() {
     esp_wifi_disconnect();
 
     esp_err_t err;
+#ifdef ESP_IDF_VERSION_MAJOR
+    smartconfig_start_config_t conf = SMARTCONFIG_START_CONFIG_DEFAULT();
+    err = esp_smartconfig_start(&conf);
+#else
     err = esp_smartconfig_start(reinterpret_cast<sc_callback_t>(&WiFiSTAClass::_smartConfigCallback), 1);
+#endif
     if (err == ESP_OK) {
         _smartConfigStarted = true;
         _smartConfigDone = false;
@@ -734,6 +744,7 @@ const char * sc_type_strings[] = {
 #endif
 
 void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
+#ifndef ESP_IDF_VERSION_MAJOR //todo
     smartconfig_status_t status = (smartconfig_status_t) st;
     log_d("Status: %s", sc_status_strings[st % 5]);
     if (status == SC_STATUS_GETTING_SSID_PSWD) {
@@ -757,4 +768,5 @@ void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
         }
         WiFi.stopSmartConfig();
     }
+#endif
 }

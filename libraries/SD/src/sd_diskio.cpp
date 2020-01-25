@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "sd_diskio.h"
+#include "esp_system.h"
 extern "C" {
-    #include "diskio.h"
     #include "ffconf.h"
     #include "ff.h"
+    #include "diskio.h"
+#ifdef ESP_IDF_VERSION_MAJOR
+    #include "diskio_impl.h"
+#endif
     //#include "esp_vfs.h"
     #include "esp_vfs_fat.h"
     char CRC7(const char* data, int length);

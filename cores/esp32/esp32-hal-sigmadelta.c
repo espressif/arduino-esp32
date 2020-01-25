@@ -16,10 +16,20 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "rom/ets_sys.h"
 #include "esp32-hal-matrix.h"
 #include "soc/gpio_sd_reg.h"
 #include "soc/gpio_sd_struct.h"
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/ets_sys.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/ets_sys.h"
+#endif
 
 
 #if CONFIG_DISABLE_HAL_LOCKS

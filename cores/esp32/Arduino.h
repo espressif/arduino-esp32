@@ -118,7 +118,9 @@ typedef unsigned int word;
 void setup(void);
 void loop(void);
 
+#ifdef __cplusplus
 long random(long, long);
+#endif
 void randomSeed(unsigned long);
 long map(long, long, long, long, long);
 
