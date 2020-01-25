@@ -314,7 +314,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       // loosely modeled after blinkWithoutDelay pattern
       while(!timedOut && !client.available() && client.connected()){
         delay(2);
-        timedOut = millis() - startMillis >= timeoutIntervalMillis;
+        timedOut = millis() - startMillis >= (unsigned long)timeoutIntervalMillis;
       }
 
       res = client.read();
@@ -333,7 +333,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
       //       is elusive, and possibly indicative of a more subtle underlying
       //       issue
 
-      timedOut = millis() - startMillis >= timeoutIntervalMillis;
+      timedOut = millis() - startMillis >= (unsigned long)timeoutIntervalMillis;
       if(timedOut) {
         return res; // exit on a timeout
       }
