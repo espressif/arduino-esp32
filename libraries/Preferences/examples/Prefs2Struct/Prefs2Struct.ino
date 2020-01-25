@@ -36,7 +36,7 @@ void setup() {
   schLen = prefs.getBytesLength("schedule");
   char buffer2[schLen];
   prefs.getBytes("schedule", buffer2, schLen);
-  for (int x=0; x<schLen; x++) Serial.printf("%02X ", buffer[x]);
+  for (size_t x=0; x<schLen; x++) Serial.printf("%02X ", buffer[x]);
   Serial.println(); 
 }
 
