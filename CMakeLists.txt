@@ -78,66 +78,6 @@ set(LIBRARY_SRCS
   libraries/Wire/src/Wire.cpp
   )
 
-set(AZURE_SRCS
-  libraries/AzureIoT/src/az_iot/azureiotcerts.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/agenttime.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/dns_async.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/lock.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/threadapi.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/tickcounter.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/lwip/sntp_lwip.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/socket_async.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/src/platform_openssl_compact.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/src/tlsio_openssl_compact.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/tlsio_options.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/base64.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/buffer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/connection_string_parser.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/consolelogger.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/constbuffer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/constmap.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/crt_abstractions.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/doublylinkedlist.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gballoc.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gb_stdio.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gb_time.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/hmac.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/hmacsha256.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpapiex.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpapiexsas.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpheaders.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/http_proxy_io.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/map.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/optionhandler.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sastoken.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha1.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha224.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha384-512.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/singlylinkedlist.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/strings.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/string_tokenizer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/urlencode.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/usha.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/vector.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/xio.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/xlogging.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/blob.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_authorization.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_ll.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_retry_control.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_message.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransportmqtt.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/version.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_client.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_codec.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_message.c
-  libraries/AzureIoT/src/AzureIotHub.cpp
-  libraries/AzureIoT/src/Esp32MQTTClient.cpp
-  )
-
 set(BLE_SRCS
   libraries/BLE/src/BLE2902.cpp
   libraries/BLE/src/BLE2904.cpp
@@ -170,7 +110,7 @@ set(BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS} ${AZURE_SRCS} ${BLE_SRCS})
+set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 
 set(COMPONENT_ADD_INCLUDEDIRS
   variants/esp32/
