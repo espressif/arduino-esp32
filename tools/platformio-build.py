@@ -77,10 +77,12 @@ env.Append(
         "-Wl,--gc-sections",
         "-Wl,-EL",
         "-T", "esp32.project.ld",
+        "-T", "esp32_out.ld",
         "-T", "esp32.rom.ld",
         "-T", "esp32.peripherals.ld",
         "-T", "esp32.rom.libgcc.ld",
-        "-T", "esp32.rom.spiram_incompatible_fns.ld",
+        "-T", "esp32.rom.newlib-data.ld",
+        "-T", "esp32.rom.syscalls.ld",
         "-u", "ld_include_panic_highint_hdl",
         "-u", "__cxa_guard_dummy",
         "-u", "__cxx_fatal_exception"
