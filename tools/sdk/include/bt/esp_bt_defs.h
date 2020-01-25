@@ -51,7 +51,8 @@ typedef enum {
     ESP_BT_STATUS_PEER_LE_DATA_LEN_UNSUPPORTED, /* relate to BTM_PEER_LE_DATA_LEN_UNSUPPORTED in stack/btm_api.h */
     ESP_BT_STATUS_CONTROL_LE_DATA_LEN_UNSUPPORTED,/* relate to BTM_CONTROL_LE_DATA_LEN_UNSUPPORTED in stack/btm_api.h */
     ESP_BT_STATUS_ERR_ILLEGAL_PARAMETER_FMT,    /* relate to HCI_ERR_ILLEGAL_PARAMETER_FMT in stack/hcidefs.h */
-    ESP_BT_STATUS_MEMORY_FULL,                  /* relate to BT_STATUS_MEMORY_FULL in bt_def.h */
+    ESP_BT_STATUS_MEMORY_FULL   = 20,           /* relate to BT_STATUS_MEMORY_FULL in bt_def.h */
+    ESP_BT_STATUS_EIR_TOO_LARGE,                /* relate to BT_STATUS_EIR_TOO_LARGE in bt_def.h */
 } esp_bt_status_t;
 
 
@@ -111,6 +112,12 @@ typedef enum {
     BLE_ADDR_TYPE_RPA_PUBLIC    = 0x02,
     BLE_ADDR_TYPE_RPA_RANDOM    = 0x03,
 } esp_ble_addr_type_t;
+
+/// white list address type
+typedef enum {
+    BLE_WL_ADDR_TYPE_PUBLIC        = 0x00,
+    BLE_WL_ADDR_TYPE_RANDOM        = 0x01,
+} esp_ble_wl_addr_type_t;
 
 /// Used to exchange the encryption key in the init key & response key
 #define ESP_BLE_ENC_KEY_MASK    (1 << 0)            /* relate to BTM_BLE_ENC_KEY_MASK in stack/btm_api.h */

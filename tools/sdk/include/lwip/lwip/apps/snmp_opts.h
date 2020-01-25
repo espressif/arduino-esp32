@@ -133,11 +133,11 @@
 
 #if !defined SNMP_MAX_VALUE_SIZE || defined __DOXYGEN__
 /**
- * The maximum size of a value.
+ * The minimum size of a value.
  */
 #define SNMP_MIN_VALUE_SIZE             (2 * sizeof(u32_t*)) /* size required to store the basic types (8 bytes for counter64) */
 /**
- * The minimum size of a value.
+ * The maximum size of a value.
  */
 #define SNMP_MAX_VALUE_SIZE             LWIP_MAX(LWIP_MAX((SNMP_MAX_OCTET_STRING_LEN), sizeof(u32_t)*(SNMP_MAX_OBJ_ID_LEN)), SNMP_MIN_VALUE_SIZE)
 #endif
@@ -282,12 +282,16 @@
 #define LWIP_SNMP_V3               0
 #endif
 
-#ifndef LWIP_SNMP_V3_CRYPTO
-#define LWIP_SNMP_V3_CRYPTO        LWIP_SNMP_V3
-#endif
-
 #ifndef LWIP_SNMP_V3_MBEDTLS
 #define LWIP_SNMP_V3_MBEDTLS       LWIP_SNMP_V3
+#endif
+
+#ifndef LWIP_SNMP_V3_CRYPTO
+#define LWIP_SNMP_V3_CRYPTO        LWIP_SNMP_V3_MBEDTLS
+#endif
+
+#ifndef LWIP_SNMP_CONFIGURE_VERSIONS
+#define LWIP_SNMP_CONFIGURE_VERSIONS 0
 #endif
 
 #endif /* LWIP_HDR_SNMP_OPTS_H */

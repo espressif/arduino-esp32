@@ -83,7 +83,7 @@ struct nd6_neighbor_cache_entry {
   u8_t state;
   u8_t isrouter;
   union {
-    u32_t reachable_time; /* in ms since value may originate from network packet */
+    u32_t reachable_time; /* in seconds */
     u32_t delay_time;     /* ticks (ND6_TMR_INTERVAL) */
     u32_t probes_sent;
     u32_t stale_time;     /* ticks (ND6_TMR_INTERVAL) */
@@ -100,18 +100,12 @@ struct nd6_destination_cache_entry {
 struct nd6_prefix_list_entry {
   ip6_addr_t prefix;
   struct netif *netif;
-  u32_t invalidation_timer; /* in ms since value may originate from network packet */
-#if LWIP_IPV6_AUTOCONFIG
-  u8_t flags;
-#define ND6_PREFIX_AUTOCONFIG_AUTONOMOUS 0x01
-#define ND6_PREFIX_AUTOCONFIG_ADDRESS_GENERATED 0x02
-#define ND6_PREFIX_AUTOCONFIG_ADDRESS_DUPLICATE 0x04
-#endif /* LWIP_IPV6_AUTOCONFIG */
+  u32_t invalidation_timer; /* in seconds */
 };
 
 struct nd6_router_list_entry {
   struct nd6_neighbor_cache_entry *neighbor_entry;
-  u32_t invalidation_timer; /* in ms since value may originate from network packet */
+  u32_t invalidation_timer; /* in seconds */
   u8_t flags;
 };
 
@@ -123,6 +117,10 @@ enum nd6_neighbor_cache_entry_state {
   ND6_DELAY,
   ND6_PROBE
 };
+
+#define ND6_HOPLIM 255 /* maximum hop limit, required in all ND packets */
+
+#define ND6_2HRS 7200 /* two hours, expressed in number of seconds */
 
 /* Router tables. */
 /* @todo make these static? and entries accessible through API? */

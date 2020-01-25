@@ -51,13 +51,14 @@ extern "C" {
 
 #if LWIP_HTTPD_CGI
 
-/*
+/**
+ * @ingroup httpd
  * Function pointer for a CGI script handler.
  *
  * This function is called each time the HTTPD server is asked for a file
  * whose name was previously registered as a CGI function using a call to
- * http_set_cgi_handler. The iIndex parameter provides the index of the
- * CGI within the ppcURLs array passed to http_set_cgi_handler. Parameters
+ * http_set_cgi_handlers. The iIndex parameter provides the index of the
+ * CGI within the cgis array passed to http_set_cgi_handlers. Parameters
  * pcParam and pcValue provide access to the parameters provided along with
  * the URI. iNumParams provides a count of the entries in the pcParam and
  * pcValue arrays. Each entry in the pcParam array contains the name of a
@@ -71,8 +72,8 @@ extern "C" {
  * browser, for example "/thanks.htm" or "/response/error.ssi".
  *
  * The maximum number of parameters that will be passed to this function via
- * iNumParams is defined by LWIP_HTTPD_MAX_CGI_PARAMETERS. Any parameters in the incoming
- * HTTP request above this number will be discarded.
+ * iNumParams is defined by LWIP_HTTPD_MAX_CGI_PARAMETERS. Any parameters in
+ * the incoming HTTP request above this number will be discarded.
  *
  * Requests intended for use by this CGI mechanism must be sent using the GET
  * method (which encodes all parameters within the URI rather than in a block
@@ -83,7 +84,8 @@ extern "C" {
 typedef const char *(*tCGIHandler)(int iIndex, int iNumParams, char *pcParam[],
                              char *pcValue[]);
 
-/*
+/**
+ * @ingroup httpd
  * Structure defining the base filename (URL) of a CGI and the associated
  * function which is to be called when that URL is requested.
  */
@@ -100,11 +102,17 @@ void http_set_cgi_handlers(const tCGI *pCGIs, int iNumHandlers);
 #if LWIP_HTTPD_CGI || LWIP_HTTPD_CGI_SSI
 
 #if LWIP_HTTPD_CGI_SSI
+/* we have to prototype this struct here to make it available for the handler */
+struct fs_file;
+
 /** Define this generic CGI handler in your application.
  * It is called once for every URI with parameters.
- * The parameters can be stored to 
+ * The parameters can be stored to the object passed as connection_state, which
+ * is allocated to file->state via fs_state_init() from fs_open() or fs_open_custom().
+ * Content creation via SSI or complete dynamic files can retrieve the CGI params from there.
  */
-extern void httpd_cgi_handler(const char* uri, int iNumParams, char **pcParam, char **pcValue
+extern void httpd_cgi_handler(struct fs_file *file, const char* uri, int iNumParams,
+                              char **pcParam, char **pcValue
 #if defined(LWIP_HTTPD_FILE_STATE) && LWIP_HTTPD_FILE_STATE
                                      , void *connection_state
 #endif /* LWIP_HTTPD_FILE_STATE */
@@ -115,34 +123,35 @@ extern void httpd_cgi_handler(const char* uri, int iNumParams, char **pcParam, c
 
 #if LWIP_HTTPD_SSI
 
-/*
+/**
+ * @ingroup httpd
  * Function pointer for the SSI tag handler callback.
  *
  * This function will be called each time the HTTPD server detects a tag of the
- * form <!--#name--> in a .shtml, .ssi or .shtm file where "name" appears as
- * one of the tags supplied to http_set_ssi_handler in the ppcTags array.  The
+ * form <!--#name--> in files with extensions mentioned in the g_pcSSIExtensions
+ * array (currently .shtml, .shtm, .ssi, .xml, .json) where "name" appears as
+ * one of the tags supplied to http_set_ssi_handler in the tags array.  The
  * returned insert string, which will be appended after the the string
- * "<!--#name-->" in file sent back to the client,should be written to pointer
- * pcInsert.  iInsertLen contains the size of the buffer pointed to by
- * pcInsert.  The iIndex parameter provides the zero-based index of the tag as
- * found in the ppcTags array and identifies the tag that is to be processed.
+ * "<!--#name-->" in file sent back to the client, should be written to pointer
+ * pcInsert. iInsertLen contains the size of the buffer pointed to by
+ * pcInsert. The iIndex parameter provides the zero-based index of the tag as
+ * found in the tags array and identifies the tag that is to be processed.
  *
  * The handler returns the number of characters written to pcInsert excluding
- * any terminating NULL or a negative number to indicate a failure (tag not
- * recognized, for example).
+ * any terminating NULL or HTTPD_SSI_TAG_UNKNOWN when tag is not recognized.
  *
  * Note that the behavior of this SSI mechanism is somewhat different from the
  * "normal" SSI processing as found in, for example, the Apache web server.  In
  * this case, the inserted text is appended following the SSI tag rather than
  * replacing the tag entirely.  This allows for an implementation that does not
  * require significant additional buffering of output data yet which will still
- * offer usable SSI functionality.  One downside to this approach is when
+ * offer usable SSI functionality. One downside to this approach is when
  * attempting to use SSI within JavaScript.  The SSI tag is structured to
  * resemble an HTML comment but this syntax does not constitute a comment
  * within JavaScript and, hence, leaving the tag in place will result in
- * problems in these cases.  To work around this, any SSI tag which needs to
- * output JavaScript code must do so in an encapsulated way, sending the whole
- * HTML <script>...</script> section as a single include.
+ * problems in these cases. In order to avoid these problems, define
+ * LWIP_HTTPD_SSI_INCLUDE_TAG as zero in your lwip options file, or use JavaScript
+ * style block comments in the form / * # name * / (without the spaces).
  */
 typedef u16_t (*tSSIHandler)(
 #if LWIP_HTTPD_SSI_RAW
@@ -177,7 +186,9 @@ void http_set_ssi_handler(tSSIHandler pfnSSIHandler,
 
 /* These functions must be implemented by the application */
 
-/** Called when a POST request has been received. The application can decide
+/**
+ * @ingroup httpd
+ * Called when a POST request has been received. The application can decide
  * whether to accept it or not.
  *
  * @param connection Unique connection identifier, valid until httpd_post_end
@@ -199,7 +210,9 @@ err_t httpd_post_begin(void *connection, const char *uri, const char *http_reque
                        u16_t http_request_len, int content_len, char *response_uri,
                        u16_t response_uri_len, u8_t *post_auto_wnd);
 
-/** Called for each pbuf of data that has been received for a POST.
+/**
+ * @ingroup httpd
+ * Called for each pbuf of data that has been received for a POST.
  * ATTENTION: The application is responsible for freeing the pbufs passed in!
  *
  * @param connection Unique connection identifier.
@@ -209,7 +222,9 @@ err_t httpd_post_begin(void *connection, const char *uri, const char *http_reque
  */
 err_t httpd_post_receive_data(void *connection, struct pbuf *p);
 
-/** Called when all data is received or when the connection is closed.
+/**
+ * @ingroup httpd
+ * Called when all data is received or when the connection is closed.
  * The application must return the filename/URI of a file to send in response
  * to this POST request. If the response_uri buffer is untouched, a 404
  * response is returned.
@@ -228,9 +243,13 @@ void httpd_post_data_recved(void *connection, u16_t recved_len);
 
 void httpd_init(void);
 
+#if HTTPD_ENABLE_HTTPS
+struct altcp_tls_config;
+void httpd_inits(struct altcp_tls_config *conf);
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* LWIP_HTTPD_H */
+#endif /* LWIP_HDR_APPS_HTTPD_H */

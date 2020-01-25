@@ -50,6 +50,10 @@
 
 #include "ppp.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Packet header = Code, id, length.
  */
@@ -118,6 +122,10 @@ void upap_authpeer(ppp_pcb *pcb);
 #endif /* PPP_SERVER */
 
 extern const struct protent pap_protent;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* UPAP_H */
 #endif /* PPP_SUPPORT && PAP_SUPPORT */

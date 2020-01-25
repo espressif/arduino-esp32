@@ -47,10 +47,15 @@ typedef enum {
 
 /// Discoverability and Connectability mode
 typedef enum {
-    ESP_BT_SCAN_MODE_NONE = 0,                      /*!< Neither discoverable nor connectable */
-    ESP_BT_SCAN_MODE_CONNECTABLE,                   /*!< Connectable but not discoverable */
-    ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE       /*!< both discoverable and connectable */
-} esp_bt_scan_mode_t;
+    ESP_BT_NON_CONNECTABLE,             /*!< Non-connectable */
+    ESP_BT_CONNECTABLE,                 /*!< Connectable */
+} esp_bt_connection_mode_t;
+
+typedef enum {
+    ESP_BT_NON_DISCOVERABLE,            /*!< Non-discoverable */
+    ESP_BT_LIMITED_DISCOVERABLE,        /*!< Limited Discoverable */
+    ESP_BT_GENERAL_DISCOVERABLE,        /*!< General Discoverable */
+} esp_bt_discovery_mode_t;
 
 /// Bluetooth Device Property type
 typedef enum {
@@ -85,8 +90,30 @@ typedef enum {
     ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME         = 0x08,     /*!< Shortened Local Name */
     ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME          = 0x09,     /*!< Complete Local Name */
     ESP_BT_EIR_TYPE_TX_POWER_LEVEL           = 0x0a,     /*!< Tx power level, value is 1 octet ranging from  -127 to 127, unit is dBm*/
+    ESP_BT_EIR_TYPE_URL                      = 0x24,     /*!< Uniform resource identifier */
     ESP_BT_EIR_TYPE_MANU_SPECIFIC            = 0xff,     /*!< Manufacturer specific data */
 } esp_bt_eir_type_t;
+#define  ESP_BT_EIR_TYPE_MAX_NUM             12          /*!< MAX number of EIR type */
+
+/* ESP_BT_EIR_FLAG bit definition */
+#define ESP_BT_EIR_FLAG_LIMIT_DISC         (0x01 << 0)
+#define ESP_BT_EIR_FLAG_GEN_DISC           (0x01 << 1)
+#define ESP_BT_EIR_FLAG_BREDR_NOT_SPT      (0x01 << 2)
+#define ESP_BT_EIR_FLAG_DMT_CONTROLLER_SPT (0x01 << 3)
+#define ESP_BT_EIR_FLAG_DMT_HOST_SPT       (0x01 << 4)
+
+#define ESP_BT_EIR_MAX_LEN                  240
+/// EIR data content, according to "Supplement to the Bluetooth Core Specification"
+typedef struct {
+    bool                    fec_required;           /*!< FEC is required or not, true by default */
+    bool                    include_txpower;        /*!< EIR data include TX power, false by default */
+    bool                    include_uuid;           /*!< EIR data include UUID, false by default */
+    uint8_t                 flag;                   /*!< EIR flags, see ESP_BT_EIR_FLAG for details, EIR will not include flag if it is 0, 0 by default */
+    uint16_t                manufacturer_len;       /*!< Manufacturer data length, 0 by default */
+    uint8_t                 *p_manufacturer_data;   /*!< Manufacturer data point */
+    uint16_t                url_len;                /*!< URL length, 0 by default */
+    uint8_t                 *p_url;                 /*!< URL point */
+} esp_bt_eir_data_t;
 
 /// Major service class field of Class of Device, mutiple bits can be set
 typedef enum {
@@ -174,6 +201,7 @@ typedef enum {
     ESP_BT_GAP_KEY_NOTIF_EVT,                       /*!< Simple Pairing Passkey Notification */
     ESP_BT_GAP_KEY_REQ_EVT,                         /*!< Simple Pairing Passkey request */
     ESP_BT_GAP_READ_RSSI_DELTA_EVT,                 /*!< read rssi event */
+    ESP_BT_GAP_CONFIG_EIR_DATA_EVT,                 /*!< config EIR data event */
     ESP_BT_GAP_EVT_MAX,
 } esp_bt_gap_cb_event_t;
 
@@ -233,6 +261,19 @@ typedef union {
     } read_rssi_delta;                         /*!< read rssi parameter struct */
 
     /**
+     * @brief ESP_BT_GAP_CONFIG_EIR_DATA_EVT *
+     */
+    struct config_eir_data_param {
+        esp_bt_status_t stat;                                   /*!< config EIR status:
+                                                                    ESP_BT_STATUS_SUCCESS: config success
+                                                                    ESP_BT_STATUS_EIR_TOO_LARGE: the EIR data is more than 240B. The EIR may not contain the whole data.
+                                                                    others: failed
+                                                                */
+        uint8_t eir_type_num;                                   /*!< the number of EIR types in EIR type */
+        esp_bt_eir_type_t eir_type[ESP_BT_EIR_TYPE_MAX_NUM];    /*!< EIR types in EIR type */
+    } config_eir_data;                                          /*!< config EIR data */
+
+    /**
      * @brief ESP_BT_GAP_AUTH_CMPL_EVT
      */
     struct auth_cmpl_param {
@@ -285,7 +326,7 @@ typedef void (* esp_bt_gap_cb_t)(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_para
  * @param[in]       cod: Class of Device
  * @return          major service bits
  */
-inline uint32_t esp_bt_gap_get_cod_srvc(uint32_t cod)
+static inline uint32_t esp_bt_gap_get_cod_srvc(uint32_t cod)
 {
     return (cod & ESP_BT_COD_SRVC_BIT_MASK) >> ESP_BT_COD_SRVC_BIT_OFFSET;
 }
@@ -295,7 +336,7 @@ inline uint32_t esp_bt_gap_get_cod_srvc(uint32_t cod)
  * @param[in]       cod: Class of Device
  * @return          major device bits
  */
-inline uint32_t esp_bt_gap_get_cod_major_dev(uint32_t cod)
+static inline uint32_t esp_bt_gap_get_cod_major_dev(uint32_t cod)
 {
     return (cod & ESP_BT_COD_MAJOR_DEV_BIT_MASK) >> ESP_BT_COD_MAJOR_DEV_BIT_OFFSET;
 }
@@ -305,7 +346,7 @@ inline uint32_t esp_bt_gap_get_cod_major_dev(uint32_t cod)
  * @param[in]       cod: Class of Device
  * @return          minor service bits
  */
-inline uint32_t esp_bt_gap_get_cod_minor_dev(uint32_t cod)
+static inline uint32_t esp_bt_gap_get_cod_minor_dev(uint32_t cod)
 {
     return (cod & ESP_BT_COD_MINOR_DEV_BIT_MASK) >> ESP_BT_COD_MINOR_DEV_BIT_OFFSET;
 }
@@ -315,7 +356,7 @@ inline uint32_t esp_bt_gap_get_cod_minor_dev(uint32_t cod)
  * @param[in]       cod: Class of Device
  * @return          format type
  */
-inline uint32_t esp_bt_gap_get_cod_format_type(uint32_t cod)
+static inline uint32_t esp_bt_gap_get_cod_format_type(uint32_t cod)
 {
     return (cod & ESP_BT_COD_FORMAT_TYPE_BIT_MASK);
 }
@@ -327,7 +368,7 @@ inline uint32_t esp_bt_gap_get_cod_format_type(uint32_t cod)
  *                  - true if cod is valid
  *                  - false otherise
  */
-inline bool esp_bt_gap_is_valid_cod(uint32_t cod)
+static inline bool esp_bt_gap_is_valid_cod(uint32_t cod)
 {
     if (esp_bt_gap_get_cod_format_type(cod) == ESP_BT_COD_FORMAT_TYPE_1 &&
             esp_bt_gap_get_cod_srvc(cod) != ESP_BT_COD_SRVC_NONE) {
@@ -350,7 +391,8 @@ esp_err_t esp_bt_gap_register_callback(esp_bt_gap_cb_t callback);
  * @brief           Set discoverability and connectability mode for legacy bluetooth. This function should
  *                  be called after esp_bluedroid_enable() completes successfully
  *
- * @param[in]       mode : one of the enums of bt_scan_mode_t
+ * @param[in]       c_mode : one of the enums of esp_bt_connection_mode_t
+ * @param[in]       d_mode : one of the enums of esp_bt_discovery_mode_t
  *
  * @return
  *                  - ESP_OK : Succeed
@@ -358,12 +400,12 @@ esp_err_t esp_bt_gap_register_callback(esp_bt_gap_cb_t callback);
  *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  */
-esp_err_t esp_bt_gap_set_scan_mode(esp_bt_scan_mode_t mode);
+esp_err_t esp_bt_gap_set_scan_mode(esp_bt_connection_mode_t c_mode, esp_bt_discovery_mode_t d_mode);
 
 /**
  * @brief           Start device discovery. This function should be called after esp_bluedroid_enable() completes successfully.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is started or halted.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_RES_EVT if discovery result is got.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is started or halted.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_RES_EVT if discovery result is got.
  *
  * @param[in]       mode - inquiry mode
  * @param[in]       inq_len - inquiry duration in 1.28 sec units, ranging from 0x01 to 0x30
@@ -379,7 +421,7 @@ esp_err_t esp_bt_gap_start_discovery(esp_bt_inq_mode_t mode, uint8_t inq_len, ui
 
 /**
  * @brief           Cancel device discovery. This function should be called after esp_bluedroid_enable() completes successfully
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is stopped.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is stopped.
  *
  * @return
  *                  - ESP_OK : Succeed
@@ -390,7 +432,7 @@ esp_err_t esp_bt_gap_cancel_discovery(void);
 
 /**
  * @brief           Start SDP to get remote services. This function should be called after esp_bluedroid_enable() completes successfully.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_RMT_SRVCS_EVT after service discovery ends
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_RMT_SRVCS_EVT after service discovery ends
  *
  * @return
  *                  - ESP_OK : Succeed
@@ -403,7 +445,7 @@ esp_err_t esp_bt_gap_get_remote_services(esp_bd_addr_t remote_bda);
  * @brief           Start SDP to look up the service matching uuid on the remote device. This function should be called after
  *                  esp_bluedroid_enable() completes successfully
  *
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_RMT_SRVC_REC_EVT after service discovery ends
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_RMT_SRVC_REC_EVT after service discovery ends
  * @return
  *                  - ESP_OK : Succeed
  *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
@@ -424,8 +466,22 @@ esp_err_t esp_bt_gap_get_remote_service_record(esp_bd_addr_t remote_bda, esp_bt_
 uint8_t *esp_bt_gap_resolve_eir_data(uint8_t *eir, esp_bt_eir_type_t type, uint8_t *length);
 
 /**
+ * @brief           This function is called to config EIR data.
+ *
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_CONFIG_EIR_DATA_EVT after config EIR ends.
+ *
+ * @param[in]       eir_data - pointer of EIR data content
+ * @return
+ *                  - ESP_OK : Succeed
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_ARG: if param is invalid
+ *                  - ESP_FAIL: others
+ */
+esp_err_t esp_bt_gap_config_eir_data(esp_bt_eir_data_t *eir_data);
+
+/**
  * @brief           This function is called to set class of device.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_SET_COD_EVT after set COD ends
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_SET_COD_EVT after set COD ends
  *                  Some profile have special restrictions on class of device,
  *                  changes may cause these profile do not work
  *

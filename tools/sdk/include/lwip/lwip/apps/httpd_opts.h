@@ -42,6 +42,7 @@
 #define LWIP_HDR_APPS_HTTPD_OPTS_H
 
 #include "lwip/opt.h"
+#include "lwip/prot/iana.h"
 
 /**
  * @defgroup httpd_opts Options
@@ -49,25 +50,75 @@
  * @{
  */
 
-/** Set this to 1 to support CGI (old style) */
+/** Set this to 1 to support CGI (old style).
+ *
+ * This old style CGI support works by registering an array of URLs and
+ * associated CGI handler functions (@ref http_set_cgi_handlers).
+ * This list is scanned just before fs_open is called from request handling.
+ * The handler can return a new URL that is used internally by the httpd to
+ * load the returned page (passed to fs_open).
+ *
+ * Use this CGI type e.g. to execute specific actions and return a page that
+ * does not depend on the CGI parameters.
+ */
 #if !defined LWIP_HTTPD_CGI || defined __DOXYGEN__
 #define LWIP_HTTPD_CGI            0
 #endif
 
-/** Set this to 1 to support CGI (new style) */
+/** Set this to 1 to support CGI (new style).
+ *
+ * This new style CGI support works by calling a global function
+ * (@ref tCGIHandler) for all URLs that are found. fs_open is called first
+ * and the URL can not be written by the CGI handler. Instead, this handler gets
+ * passed the http file state, an object where it can store information derived
+ * from the CGI URL or parameters. This file state is later passed to SSI, so
+ * the SSI code can return data depending on CGI input.
+ *
+ * Use this CGI handler if you want CGI information passed on to SSI.
+ */
 #if !defined LWIP_HTTPD_CGI_SSI || defined __DOXYGEN__
 #define LWIP_HTTPD_CGI_SSI        0
 #endif
 
-/** Set this to 1 to support SSI (Server-Side-Includes) */
+/** Set this to 1 to support SSI (Server-Side-Includes)
+ *
+ * In contrast to other http servers, this only calls a preregistered callback
+ * function (@see http_set_ssi_handler) for each tag (in the format of
+ * <!--#tag-->) encountered in SSI-enabled pages.
+ * SSI-enabled pages must have one of the predefined SSI-enabled file extensions.
+ * All files with one of these extensions are parsed when sent.
+ *
+ * A downside of the current SSI implementation is that persistent connections
+ * don't work, as the file length is not known in advance (and httpd currently
+ * relies on the Content-Length header for persistent connections).
+ *
+ * To save memory, the maximum tag length is limited (@see LWIP_HTTPD_MAX_TAG_NAME_LEN).
+ * To save memory, the maximum insertion string length is limited (@see
+ * LWIP_HTTPD_MAX_TAG_INSERT_LEN). If this is not enought, @ref LWIP_HTTPD_SSI_MULTIPART
+ * can be used.
+ */
 #if !defined LWIP_HTTPD_SSI || defined __DOXYGEN__
 #define LWIP_HTTPD_SSI            0
 #endif
 
 /** Set this to 1 to implement an SSI tag handler callback that gets a const char*
- * to the tag (instead of an index into a pre-registered array of known tags) */
+ * to the tag (instead of an index into a pre-registered array of known tags)
+ * If this is 0, the SSI handler callback function is only called pre-registered tags.
+ */
 #if !defined LWIP_HTTPD_SSI_RAW || defined __DOXYGEN__
 #define LWIP_HTTPD_SSI_RAW        0
+#endif
+
+/** Set this to 0 to prevent parsing the file extension at runtime to decide
+ * if a file should be scanned for SSI tags or not.
+ * Default is 1 (file extensions are checked using the g_pcSSIExtensions array)
+ * Set to 2 to override this runtime test function.
+ *
+ * This is enabled by default, but if you only use a newer version of makefsdata
+ * supporting the "-ssi" option, this info is already present in
+ */
+#if !defined LWIP_HTTPD_SSI_BY_FILE_EXTENSION || defined __DOXYGEN__
+#define LWIP_HTTPD_SSI_BY_FILE_EXTENSION  1
 #endif
 
 /** Set this to 1 to support HTTP POST */
@@ -88,12 +139,16 @@
 #define LWIP_HTTPD_SSI_MULTIPART    0
 #endif
 
-/* The maximum length of the string comprising the tag name */
+/* The maximum length of the string comprising the SSI tag name
+ * ATTENTION: tags longer than this are ignored, not truncated!
+ */
 #if !defined LWIP_HTTPD_MAX_TAG_NAME_LEN || defined __DOXYGEN__
 #define LWIP_HTTPD_MAX_TAG_NAME_LEN 8
 #endif
 
-/* The maximum length of string that can be returned to replace any given tag */
+/* The maximum length of string that can be returned to replace any given tag
+ * If this buffer is not long enough, use LWIP_HTTPD_SSI_MULTIPART.
+ */
 #if !defined LWIP_HTTPD_MAX_TAG_INSERT_LEN || defined __DOXYGEN__
 #define LWIP_HTTPD_MAX_TAG_INSERT_LEN 192
 #endif
@@ -122,6 +177,9 @@
 
 /** Set this to 1 to use a memp pool for allocating 
  * struct http_state instead of the heap.
+ * If enabled, you'll need to define MEMP_NUM_PARALLEL_HTTPD_CONNS
+ * (and MEMP_NUM_PARALLEL_HTTPD_SSI_CONNS for SSI) to set the size of
+ * the pool(s).
  */
 #if !defined HTTPD_USE_MEM_POOL || defined __DOXYGEN__
 #define HTTPD_USE_MEM_POOL  0
@@ -129,7 +187,17 @@
 
 /** The server port for HTTPD to use */
 #if !defined HTTPD_SERVER_PORT || defined __DOXYGEN__
-#define HTTPD_SERVER_PORT                   80
+#define HTTPD_SERVER_PORT                   LWIP_IANA_PORT_HTTP
+#endif
+
+/** The https server port for HTTPD to use */
+#if !defined HTTPD_SERVER_PORT_HTTPS || defined __DOXYGEN__
+#define HTTPD_SERVER_PORT_HTTPS             LWIP_IANA_PORT_HTTPS
+#endif
+
+/** Enable https support? */
+#if !defined HTTPD_ENABLE_HTTPS || defined __DOXYGEN__
+#define HTTPD_ENABLE_HTTPS                  0
 #endif
 
 /** Maximum retries before the connection is aborted/closed.
@@ -261,10 +329,11 @@
 #endif
 
 /* Define this to a function that returns the maximum amount of data to enqueue.
-   The function have this signature: u16_t fn(struct tcp_pcb* pcb); */
+   The function have this signature: u16_t fn(struct altcp_pcb* pcb);
+   The best place to define this is the hooks file (@see LWIP_HOOK_FILENAME) */
 #if !defined HTTPD_MAX_WRITE_LEN || defined __DOXYGEN__
 #if HTTPD_LIMIT_SENDING_TO_2MSS
-#define HTTPD_MAX_WRITE_LEN(pcb)    (2 * tcp_mss(pcb))
+#define HTTPD_MAX_WRITE_LEN(pcb)    ((u16_t)(2 * altcp_mss(pcb)))
 #endif
 #endif
 
@@ -310,10 +379,14 @@
 #define LWIP_HTTPD_FS_ASYNC_READ      0
 #endif
 
-/** Set this to 1 to include "fsdata_custom.c" instead of "fsdata.c" for the
- * file system (to prevent changing the file included in CVS) */
-#if !defined HTTPD_USE_CUSTOM_FSDATA || defined __DOXYGEN__
-#define HTTPD_USE_CUSTOM_FSDATA 0
+/** Filename (including path) to use as FS data file */
+#if !defined HTTPD_FSDATA_FILE || defined __DOXYGEN__
+/* HTTPD_USE_CUSTOM_FSDATA: Compatibility with deprecated lwIP option */
+#if defined(HTTPD_USE_CUSTOM_FSDATA) && (HTTPD_USE_CUSTOM_FSDATA != 0)
+#define HTTPD_FSDATA_FILE "fsdata_custom.c"
+#else
+#define HTTPD_FSDATA_FILE "fsdata.c"
+#endif
 #endif
 
 /**

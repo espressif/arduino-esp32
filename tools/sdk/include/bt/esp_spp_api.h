@@ -260,7 +260,7 @@ esp_err_t esp_spp_disconnect(uint32_t handle);
  *              When the connection is established, the callback is called
  *              with ESP_SPP_SRV_OPEN_EVT.
  *
- * @param[in]   sec_mask:     Security Setting Mask. Security Setting Mask. Suggest to use ESP_SPP_SEC_NONE, ESP_SPP_SEC_AUTHORIZE or ESP_SPP_SEC_AUTHENTICATE only.
+ * @param[in]   sec_mask:     Security Setting Mask. Suggest to use ESP_SPP_SEC_NONE, ESP_SPP_SEC_AUTHORIZE or ESP_SPP_SEC_AUTHENTICATE only.
  * @param[in]   role:         Master or slave.
  * @param[in]   local_scn:    The specific channel you want to get.
  *                            If channel is 0, means get any channel.

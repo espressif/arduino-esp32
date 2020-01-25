@@ -64,9 +64,9 @@ extern "C" {
 #define ip_init() /* Compatibility define, no init needed. */
 struct netif *ip4_route(const ip4_addr_t *dest);
 #if LWIP_IPV4_SRC_ROUTING
-struct netif *ip4_route_src(const ip4_addr_t *dest, const ip4_addr_t *src);
+struct netif *ip4_route_src(const ip4_addr_t *src, const ip4_addr_t *dest);
 #else /* LWIP_IPV4_SRC_ROUTING */
-#define ip4_route_src(dest, src) ip4_route(dest)
+#define ip4_route_src(src, dest) ip4_route(dest)
 #endif /* LWIP_IPV4_SRC_ROUTING */
 err_t ip4_input(struct pbuf *p, struct netif *inp);
 err_t ip4_output(struct pbuf *p, const ip4_addr_t *src, const ip4_addr_t *dest,
@@ -75,10 +75,10 @@ err_t ip4_output_if(struct pbuf *p, const ip4_addr_t *src, const ip4_addr_t *des
        u8_t ttl, u8_t tos, u8_t proto, struct netif *netif);
 err_t ip4_output_if_src(struct pbuf *p, const ip4_addr_t *src, const ip4_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, struct netif *netif);
-#if LWIP_NETIF_HWADDRHINT
+#if LWIP_NETIF_USE_HINTS
 err_t ip4_output_hinted(struct pbuf *p, const ip4_addr_t *src, const ip4_addr_t *dest,
-       u8_t ttl, u8_t tos, u8_t proto, u8_t *addr_hint);
-#endif /* LWIP_NETIF_HWADDRHINT */
+       u8_t ttl, u8_t tos, u8_t proto, struct netif_hint *netif_hint);
+#endif /* LWIP_NETIF_USE_HINTS */
 #if IP_OPTIONS_SEND
 err_t ip4_output_if_opt(struct pbuf *p, const ip4_addr_t *src, const ip4_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, struct netif *netif, void *ip_options,

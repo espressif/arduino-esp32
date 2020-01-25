@@ -25,7 +25,6 @@
 extern "C" {
 #endif
 
-#define ESP_ERR_FLASH_BASE       0x10010
 #define ESP_ERR_FLASH_OP_FAIL    (ESP_ERR_FLASH_BASE + 1)
 #define ESP_ERR_FLASH_OP_TIMEOUT (ESP_ERR_FLASH_BASE + 2)
 
@@ -36,7 +35,7 @@ extern "C" {
 /**
  * @brief  Initialize SPI flash access driver
  *
- *  This function must be called exactly once, before any other 
+ *  This function must be called exactly once, before any other
  *  spi_flash_* functions are called.
  *  Currently this function is called from startup code. There is
  *  no need to call it from application code.
@@ -336,7 +335,7 @@ typedef bool (*spi_flash_is_safe_write_address_t)(size_t addr, size_t size);
  *   - 'op_unlock' unlocks access to flash API internal data.
  *   These two functions are recursive and can be used around the outside of multiple calls to
  *   'start' & 'end', in order to create atomic multi-part flash operations.
- * 3) When CONFIG_SPI_FLASH_WRITING_DANGEROUS_REGIONS_ALLOWED is disabled, flash writing/erasing
+ * 3) When CONFIG_SPI_FLASH_DANGEROUS_WRITE_ALLOWED is disabled, flash writing/erasing
  *    API checks for addresses provided by user to avoid corruption of critical flash regions
  *    (bootloader, partition table, running application etc.).
  *
@@ -354,7 +353,7 @@ typedef struct {
     spi_flash_guard_end_func_t          end;        /**< critical section end function. */
     spi_flash_op_lock_func_t            op_lock;    /**< flash access API lock function.*/
     spi_flash_op_unlock_func_t          op_unlock;  /**< flash access API unlock function.*/
-#if !CONFIG_SPI_FLASH_WRITING_DANGEROUS_REGIONS_ALLOWED
+#if !CONFIG_SPI_FLASH_DANGEROUS_WRITE_ALLOWED
     spi_flash_is_safe_write_address_t   is_safe_write_address; /**< checks flash write addresses.*/
 #endif
 } spi_flash_guard_funcs_t;

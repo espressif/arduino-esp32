@@ -49,14 +49,6 @@ extern "C" {
  * @{
  */
 
-/** Define LWIP_ERR_T in cc.h if you want to use
- *  a different type for your platform (must be signed). */
-#ifdef LWIP_ERR_T
-typedef LWIP_ERR_T err_t;
-#else /* LWIP_ERR_T */
-typedef s8_t err_t;
-#endif /* LWIP_ERR_T*/
-
 /** Definitions for error constants. */
 typedef enum {
 /** No error, everything OK. */
@@ -96,7 +88,13 @@ typedef enum {
   ERR_ARG        = -16
 } err_enum_t;
 
-#define ERR_IS_FATAL(e) ((e) <= ERR_ABRT)
+/** Define LWIP_ERR_T in cc.h if you want to use
+ *  a different type for your platform (must be signed). */
+#ifdef LWIP_ERR_T
+typedef LWIP_ERR_T err_t;
+#else /* LWIP_ERR_T */
+typedef s8_t err_t;
+#endif /* LWIP_ERR_T*/
 
 /**
  * @}
