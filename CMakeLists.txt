@@ -37,47 +37,6 @@ set(CORE_SRCS
   cores/esp32/WString.cpp
   )
 
-set(LIBRARY_SRCS
-  libraries/ArduinoOTA/src/ArduinoOTA.cpp
-  libraries/AsyncUDP/src/AsyncUDP.cpp
-  libraries/BluetoothSerial/src/BluetoothSerial.cpp
-  libraries/DNSServer/src/DNSServer.cpp
-  libraries/EEPROM/src/EEPROM.cpp
-  libraries/ESPmDNS/src/ESPmDNS.cpp
-  libraries/FFat/src/FFat.cpp
-  libraries/FS/src/FS.cpp
-  libraries/FS/src/vfs_api.cpp
-  libraries/HTTPClient/src/HTTPClient.cpp
-  libraries/HTTPUpdate/src/HTTPUpdate.cpp
-  libraries/NetBIOS/src/NetBIOS.cpp
-  libraries/Preferences/src/Preferences.cpp
-  libraries/SD_MMC/src/SD_MMC.cpp
-  libraries/SD/src/SD.cpp
-  libraries/SD/src/sd_diskio.cpp
-  libraries/SD/src/sd_diskio_crc.c
-  libraries/SimpleBLE/src/SimpleBLE.cpp
-  libraries/SPIFFS/src/SPIFFS.cpp
-  libraries/SPI/src/SPI.cpp
-  libraries/Ticker/src/Ticker.cpp
-  libraries/Update/src/Updater.cpp
-  libraries/WebServer/src/WebServer.cpp
-  libraries/WebServer/src/Parsing.cpp
-  libraries/WebServer/src/detail/mimetable.cpp
-  libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
-  libraries/WiFi/src/ETH.cpp
-  libraries/WiFi/src/WiFiAP.cpp
-  libraries/WiFi/src/WiFiClient.cpp
-  libraries/WiFi/src/WiFi.cpp
-  libraries/WiFi/src/WiFiGeneric.cpp
-  libraries/WiFi/src/WiFiMulti.cpp
-  libraries/WiFi/src/WiFiScan.cpp
-  libraries/WiFi/src/WiFiServer.cpp
-  libraries/WiFi/src/WiFiSTA.cpp
-  libraries/WiFi/src/WiFiUdp.cpp
-  libraries/Wire/src/Wire.cpp
-  )
-
 set(AZURE_SRCS
   libraries/AzureIoT/src/az_iot/azureiotcerts.c
   libraries/AzureIoT/src/az_iot/c-utility/pal/agenttime.c
@@ -170,37 +129,167 @@ set(BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS} ${AZURE_SRCS} ${BLE_SRCS})
+set(LIBRARY_SRCS)
+set(LIBRARY_INCLUDEDIRS)
+
+# Honor sdkconfig selections
+if(CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
+    list(APPEND LIBRARY_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/ArduinoOTA/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_AsyncUDP)
+    list(APPEND LIBRARY_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/AsyncUDP/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_AzureIoT)
+    list(APPEND LIBRARY_SRCS ${AZURE_SRCS})
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/AzureIoT/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_BLE)
+    list(APPEND LIBRARY_SRCS ${BLE_SRCS})
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/BLE/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_BluetoothSerial)
+    list(APPEND LIBRARY_SRCS libraries/BluetoothSerial/src/BluetoothSerial.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/BluetoothSerial/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_DNSServer)
+    list(APPEND LIBRARY_SRCS libraries/DNSServer/src/DNSServer.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/DNSServer/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_EEPROM)
+    list(APPEND LIBRARY_SRCS libraries/EEPROM/src/EEPROM.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/EEPROM/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_ESP32)
+    #list(APPEND LIBRARY_SRCS )
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/ESP32/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_ESPmDNS)
+    list(APPEND LIBRARY_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/ESPmDNS/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_FFat)
+    list(APPEND LIBRARY_SRCS libraries/FFat/src/FFat.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/FFat/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_FS)
+    list(APPEND LIBRARY_SRCS
+            libraries/FS/src/FS.cpp
+            libraries/FS/src/vfs_api.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/FS/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_HTTPClient)
+    list(APPEND LIBRARY_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/HTTPClient/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_HTTPUpdate)
+    list(APPEND LIBRARY_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/HTTPUpdate/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_NetBIOS)
+    list(APPEND LIBRARY_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/NetBIOS/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_Preferences)
+    list(APPEND LIBRARY_SRCS libraries/Preferences/src/Preferences.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/Preferences/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_SD_MMC)
+    list(APPEND LIBRARY_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/SD_MMC/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_SD)
+    list(APPEND LIBRARY_SRCS
+            libraries/SD/src/SD.cpp
+            libraries/SD/src/sd_diskio.cpp
+            libraries/SD/src/sd_diskio_crc.c)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/SD/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_SimpleBLE)
+    list(APPEND LIBRARY_SRCS libraries/SimpleBLE/src/SimpleBLE.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/SimpleBLE/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_SPIFFS)
+    list(APPEND LIBRARY_SRCS libraries/SPIFFS/src/SPIFFS.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/SPIFFS/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_SPI)
+    list(APPEND LIBRARY_SRCS libraries/SPI/src/SPI.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/SPI/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_Ticker)
+    list(APPEND LIBRARY_SRCS libraries/Ticker/src/Ticker.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/Ticker/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_Update)
+    list(APPEND LIBRARY_SRCS libraries/Update/src/Updater.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/Update/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_WebServer)
+    list(APPEND LIBRARY_SRCS
+            libraries/WebServer/src/WebServer.cpp
+            libraries/WebServer/src/Parsing.cpp
+            libraries/WebServer/src/detail/mimetable.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/WebServer/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_WiFiClientSecure)
+    list(APPEND LIBRARY_SRCS
+            libraries/WiFiClientSecure/src/ssl_client.cpp
+            libraries/WiFiClientSecure/src/WiFiClientSecure.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/WiFiClientSecure/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_WiFi)
+    list(APPEND LIBRARY_SRCS
+            libraries/WiFi/src/ETH.cpp
+            libraries/WiFi/src/WiFiAP.cpp
+            libraries/WiFi/src/WiFiClient.cpp
+            libraries/WiFi/src/WiFi.cpp
+            libraries/WiFi/src/WiFiGeneric.cpp
+            libraries/WiFi/src/WiFiMulti.cpp
+            libraries/WiFi/src/WiFiScan.cpp
+            libraries/WiFi/src/WiFiServer.cpp
+            libraries/WiFi/src/WiFiSTA.cpp
+            libraries/WiFi/src/WiFiUdp.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/WiFi/src)
+endif()
+
+if(CONFIG_ARDUINO_SELECTIVE_Wire)
+    list(APPEND LIBRARY_SRCS libraries/Wire/src/Wire.cpp)
+    list(APPEND LIBRARY_INCLUDEDIRS libraries/Wire/src)
+endif()
+
+
+set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS})
 
 set(COMPONENT_ADD_INCLUDEDIRS
   variants/esp32/
   cores/esp32/
-  libraries/ArduinoOTA/src
-  libraries/AsyncUDP/src
-  libraries/AzureIoT/src
-  libraries/BLE/src
-  libraries/BluetoothSerial/src
-  libraries/DNSServer/src
-  libraries/EEPROM/src
-  libraries/ESP32/src
-  libraries/ESPmDNS/src
-  libraries/FFat/src
-  libraries/FS/src
-  libraries/HTTPClient/src
-  libraries/HTTPUpdate/src
-  libraries/NetBIOS/src
-  libraries/Preferences/src
-  libraries/SD_MMC/src
-  libraries/SD/src
-  libraries/SimpleBLE/src
-  libraries/SPIFFS/src
-  libraries/SPI/src
-  libraries/Ticker/src
-  libraries/Update/src
-  libraries/WebServer/src
-  libraries/WiFiClientSecure/src
-  libraries/WiFi/src
-  libraries/Wire/src
+  ${LIBRARY_INCLUDEDIRS}
   )
 
 set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
@@ -210,7 +299,10 @@ set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support
 
 register_component()
 
-set_source_files_properties(libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
-    PROPERTIES COMPILE_FLAGS
-    -Wno-maybe-uninitialized
-)
+# Honor sdkconfig selections
+if(CONFIG_ARDUINO_SELECTIVE_AzureIoT)
+    set_source_files_properties(libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
+        PROPERTIES COMPILE_FLAGS
+        -Wno-maybe-uninitialized
+    )
+endif()
