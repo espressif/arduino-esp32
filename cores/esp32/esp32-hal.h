@@ -34,6 +34,7 @@ extern "C" {
 #include <math.h>
 #include "sdkconfig.h"
 #include "esp_system.h"
+#include "esp_sleep.h"
 
 #ifndef F_CPU
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)

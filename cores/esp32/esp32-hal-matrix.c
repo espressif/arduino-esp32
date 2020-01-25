@@ -14,7 +14,17 @@
 
 #include "esp32-hal-matrix.h"
 #include "esp_attr.h"
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/gpio.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
 #include "rom/gpio.h"
+#endif
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 #define MATRIX_DETACH_IN_LOW_PIN 0x30
