@@ -19,14 +19,21 @@
  */
 
 #include "ETH.h"
-#include "eth_phy/phy.h"
-#include "eth_phy/phy_tlk110.h"
-#include "eth_phy/phy_lan8720.h"
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR
+    #include "esp_eth.h"
+    #include "esp_eth_phy.h"
+#else
+    #include "eth_phy/phy.h"
+    #include "eth_phy/phy_tlk110.h"
+    #include "eth_phy/phy_lan8720.h"
+#endif
 #include "lwip/err.h"
 #include "lwip/dns.h"
 
 extern void tcpipInit();
 
+#ifndef ESP_IDF_VERSION_MAJOR
 static int _eth_phy_mdc_pin = -1;
 static int _eth_phy_mdio_pin = -1;
 static int _eth_phy_power_pin = -1;
@@ -48,6 +55,7 @@ static void _eth_phy_power_enable(bool enable)
     digitalWrite(_eth_phy_power_pin, enable);
     delay(1);
 }
+#endif
 
 ETHClass::ETHClass():initialized(false),started(false),staticIP(false)
 {
@@ -56,6 +64,11 @@ ETHClass::ETHClass():initialized(false),started(false),staticIP(false)
 ETHClass::~ETHClass()
 {}
 
+#ifdef ESP_IDF_VERSION_MAJOR
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type){
+    return false;
+}
+#else
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
 {
     esp_err_t err;
@@ -108,6 +121,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
     return false;
 }
+#endif
 
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
@@ -193,8 +207,13 @@ IPAddress ETHClass::gatewayIP()
 
 IPAddress ETHClass::dnsIP(uint8_t dns_no)
 {
+#ifdef ESP_IDF_VERSION_MAJOR
+    const ip_addr_t * dns_ip = dns_getserver(dns_no);
+    return IPAddress(dns_ip->u_addr.ip4.addr);
+#else
     ip_addr_t dns_ip = dns_getserver(dns_no);
     return IPAddress(dns_ip.u_addr.ip4.addr);
+#endif
 }
 
 IPAddress ETHClass::broadcastIP()
@@ -240,17 +259,29 @@ bool ETHClass::setHostname(const char * hostname)
 
 bool ETHClass::fullDuplex()
 {
+#ifdef ESP_IDF_VERSION_MAJOR
+    return true;//todo
+#else
     return eth_config.phy_get_duplex_mode();
+#endif
 }
 
 bool ETHClass::linkUp()
 {
+#ifdef ESP_IDF_VERSION_MAJOR
+    return true;//todo
+#else
     return eth_config.phy_check_link();
+#endif
 }
 
 uint8_t ETHClass::linkSpeed()
 {
+#ifdef ESP_IDF_VERSION_MAJOR
+    return 100;//ToDo
+#else
     return eth_config.phy_get_speed_mode()?100:10;
+#endif
 }
 
 bool ETHClass::enableIpV6()
@@ -272,15 +303,23 @@ uint8_t * macAddress(uint8_t* mac)
     if(!mac){
         return NULL;
     }
+#ifdef ESP_IDF_VERSION_MAJOR
+    //ToDo
+#else
     esp_eth_get_mac(mac);
+#endif
     return mac;
 }
 
 String ETHClass::macAddress(void)
 {
-    uint8_t mac[6];
+    uint8_t mac[6] = {0,0,0,0,0,0};//ToDo
     char macStr[18] = { 0 };
+#ifdef ESP_IDF_VERSION_MAJOR
+    //ToDo
+#else
     esp_eth_get_mac(mac);
+#endif
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
 }

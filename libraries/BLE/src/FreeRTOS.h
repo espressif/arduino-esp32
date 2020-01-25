@@ -60,7 +60,11 @@ public:
  */
 class Ringbuffer {
 public:
-	Ringbuffer(size_t length, ringbuf_type_t type = RINGBUF_TYPE_NOSPLIT);
+#ifdef ESP_IDF_VERSION_MAJOR
+  Ringbuffer(size_t length, RingbufferType_t type = RINGBUF_TYPE_NOSPLIT);
+#else
+  Ringbuffer(size_t length, ringbuf_type_t type = RINGBUF_TYPE_NOSPLIT);
+#endif
 	~Ringbuffer();
 
 	void*    receive(size_t* size, TickType_t wait = portMAX_DELAY);

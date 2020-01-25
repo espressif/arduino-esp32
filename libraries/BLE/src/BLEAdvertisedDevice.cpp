@@ -538,7 +538,7 @@ std::string BLEAdvertisedDevice::toString() {
 		}
 	}
 	if (haveTXPower()) {
-		char val[4];
+		char val[6];
 		snprintf(val, sizeof(val), "%d", getTXPower());
 		res += ", txPower: ";
 		res += val;
