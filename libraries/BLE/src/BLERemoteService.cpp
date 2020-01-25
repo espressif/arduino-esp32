@@ -243,8 +243,8 @@ std::map<uint16_t, BLERemoteCharacteristic*>* BLERemoteService::getCharacteristi
 /**
  * @brief This function is designed to get characteristics map when we have multiple characteristics with the same UUID
  */
-void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap) {
-	pCharacteristicMap = &m_characteristicMapByHandle;
+void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>** pCharacteristicMap) {
+	*pCharacteristicMap = &m_characteristicMapByHandle;
 }  // Get the characteristics map.
 
 /**
