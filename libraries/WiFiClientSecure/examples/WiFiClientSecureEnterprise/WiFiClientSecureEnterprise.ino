@@ -61,8 +61,7 @@ void setup() {
   esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EAP_ANONYMOUS_IDENTITY, strlen(EAP_ANONYMOUS_IDENTITY)); //provide identity
   esp_wifi_sta_wpa2_ent_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
   esp_wifi_sta_wpa2_ent_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
-  esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT();
-  esp_wifi_sta_wpa2_ent_enable(&config);
+  esp_wifi_sta_wpa2_ent_enable();
   WiFi.begin(ssid); //connect to wifi
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
