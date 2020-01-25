@@ -34,6 +34,7 @@ void i2sInit()
 }
 
 void reader(void *pvParameters) {
+  (void)pvParameters; // unused
   uint32_t read_counter = 0;
   uint64_t read_sum = 0;
 // The 4 high bits are the channel, and the data is inverted
