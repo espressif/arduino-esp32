@@ -127,6 +127,7 @@ static xQueueHandle _udp_queue;
 static volatile TaskHandle_t _udp_task_handle = NULL;
 
 static void _udp_task(void *pvParameters){
+    (void)pvParameters; // unused
     lwip_event_packet_t * e = NULL;
     for (;;) {
         if(xQueueReceive(_udp_queue, &e, portMAX_DELAY) == pdTRUE){
@@ -280,6 +281,7 @@ void AsyncUDPMessage::flush()
 
 AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, uint16_t rport, struct netif * ntif)
 {
+    (void)rport; // unused
     _udp = udp;
     _pb = pb;
     _if = TCPIP_ADAPTER_IF_MAX;
@@ -675,6 +677,7 @@ size_t AsyncUDP::writeTo(const uint8_t * data, size_t len, const ip_addr_t * add
 
 void AsyncUDP::_recv(udp_pcb *upcb, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif * netif)
 {
+    (void)upcb; // unused
     while(pb != NULL) {
         pbuf * this_pb = pb;
         pb = pb->next;
