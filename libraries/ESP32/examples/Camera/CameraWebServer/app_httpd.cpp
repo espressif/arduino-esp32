@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #include "esp_http_server.h"
+#pragma GCC diagnostic pop
 #include "esp_timer.h"
 #include "esp_camera.h"
 #include "img_converters.h"
@@ -56,11 +59,11 @@ static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
-static mtmn_config_t mtmn_config = {0};
+static mtmn_config_t mtmn_config = {};
 static int8_t detection_enabled = 0;
 static int8_t recognition_enabled = 0;
 static int8_t is_enrolling = 0;
-static face_id_list id_list = {0};
+static face_id_list id_list = {};
 
 static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
     memset(filter, 0, sizeof(ra_filter_t));
@@ -110,7 +113,7 @@ static int rgb_printf(dl_matrix3du_t *image_matrix, uint32_t color, const char *
     va_copy(copy, arg);
     len = vsnprintf(loc_buf, sizeof(loc_buf), format, arg);
     va_end(copy);
-    if(len >= sizeof(loc_buf)){
+    if((unsigned long)len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
             return 0;
