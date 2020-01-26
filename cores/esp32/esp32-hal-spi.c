@@ -406,7 +406,7 @@ void spiStopBus(spi_t * spi)
     removeApbChangeCallback(spi, _on_apb_change);
     
     SPI_MUTEX_LOCK();
-    spiInitbus(spi);
+    spiInitBus(spi);
     SPI_MUTEX_UNLOCK();
 }
 
