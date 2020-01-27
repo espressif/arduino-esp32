@@ -26,6 +26,9 @@
 
 #include "WiFiType.h"
 #include "WiFiGeneric.h"
+#ifdef ESP_IDF_VERSION_MAJOR
+#include "esp_event.h"
+#endif
 
 
 class WiFiSTAClass
@@ -98,7 +101,11 @@ public:
 protected:
     static bool _smartConfigStarted;
     static bool _smartConfigDone;
+#ifdef ESP_IDF_VERSION_MAJOR //todo
+    static void _smartConfigCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+#else
     static void _smartConfigCallback(uint32_t status, void* result);
+#endif
 
 };
 
