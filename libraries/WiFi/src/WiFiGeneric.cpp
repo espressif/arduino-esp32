@@ -128,6 +128,7 @@ void tcpipInit(){
         if(esp_efuse_mac_get_default(mac) == ESP_OK){
             esp_base_mac_addr_set(mac);
         }
+        esp_event_loop_create_default();
 #endif
         tcpip_adapter_init();
     }

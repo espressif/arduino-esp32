@@ -688,6 +688,7 @@ bool WiFiSTAClass::beginSmartConfig() {
 
     esp_err_t err;
 #ifdef ESP_IDF_VERSION_MAJOR
+    esp_event_handler_register(SC_EVENT, ESP_EVENT_ANY_ID, _smartConfigCallback, this);
     smartconfig_start_config_t conf = SMARTCONFIG_START_CONFIG_DEFAULT();
     err = esp_smartconfig_start(&conf);
 #else
@@ -723,14 +724,6 @@ bool WiFiSTAClass::smartConfigDone() {
 }
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-const char * sc_status_strings[] = {
-    "WAIT",
-    "FIND_CHANNEL",
-    "GETTING_SSID_PSWD",
-    "LINK",
-    "LINK_OVER"
-};
-
 const char * sc_type_strings[] = {
     "ESPTOUCH",
     "AIRKISS",
@@ -738,8 +731,48 @@ const char * sc_type_strings[] = {
 };
 #endif
 
+
+#ifdef ESP_IDF_VERSION_MAJOR //todo
+void WiFiSTAClass::_smartConfigCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
+    smartconfig_event_t event = (smartconfig_event_t)event_id;
+    switch(event){
+        case SC_EVENT_SCAN_DONE:
+            log_d("smartconfig has finished to scan for APs");
+            break;
+        case SC_EVENT_FOUND_CHANNEL:
+            log_d("smartconfig has found the channel of the target AP");
+            break;
+        case SC_EVENT_GOT_SSID_PSWD:
+        {
+            log_d("smartconfig got the SSID and password");
+            smartconfig_event_got_ssid_pswd_t * data = (smartconfig_event_got_ssid_pswd_t*)event_data;
+            log_d("Type: %s", sc_type_strings[data->type]);
+            log_d("SSID: %s", (const char *)data->ssid);
+            log_d("Password: %s", (const char *)data->password);
+            log_d("Sender IP: " IPSTR, data->cellphone_ip[3], data->cellphone_ip[2], data->cellphone_ip[1], data->cellphone_ip[0]);
+            WiFi.begin((const char *)data->ssid, (const char *)data->password);
+        }
+            break;
+        case SC_EVENT_SEND_ACK_DONE:
+            log_d("smartconfig has sent ACK to the sender");
+            WiFi.stopSmartConfig();
+            break;
+        default: break;
+    }
+}
+#else
+
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+const char * sc_status_strings[] = {
+    "WAIT",
+    "FIND_CHANNEL",
+    "GETTING_SSID_PSWD",
+    "LINK",
+    "LINK_OVER"
+};
+#endif
+
 void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
-#ifndef ESP_IDF_VERSION_MAJOR //todo
     smartconfig_status_t status = (smartconfig_status_t) st;
     log_d("Status: %s", sc_status_strings[st % 5]);
     if (status == SC_STATUS_GETTING_SSID_PSWD) {
@@ -763,5 +796,5 @@ void WiFiSTAClass::_smartConfigCallback(uint32_t st, void* result) {
         }
         WiFi.stopSmartConfig();
     }
-#endif
 }
+#endif
