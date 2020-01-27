@@ -58,35 +58,35 @@
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-win32.zip",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2019r2/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-win32.zip",
               "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-win32.zip",
               "checksum": "SHA-256:c9d5776a22516f0825a7c68d835ffacc2392f913136893b7646e1288937cc65e",
               "size": "103850448"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2019r2/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz",
               "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz",
               "checksum": "SHA-256:dc62be8dd16c6d9d28d64e2b3f831fa208f3548c2ca73cdbcbdf68f474d59521",
               "size": "92150978"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2019r2/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz",
               "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz",
               "checksum": "SHA-256:e6d47c1dbd8c8cbfe37271e5e2aac53ee88c9e347ae937e22bf0c73f530efbdf",
               "size": "85459985"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-i686.tar.gz",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2019r2/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-i686.tar.gz",
               "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-i686.tar.gz",
               "checksum": "SHA-256:36a9648c414dbd1c518c687ce5587d9f8eaa94324f45d92e9ec31a1433a04df8",
               "size": "87438500"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-armel.tar.gz",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2019r2/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-armel.tar.gz",
               "archiveFileName": "xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-armel.tar.gz",
               "checksum": "SHA-256:54a199c28f591da2466b21741911bc2ba77ddf82d3d2b66c6ce03c1a0c6835f0",
               "size": "83647538"
