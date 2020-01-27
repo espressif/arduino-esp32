@@ -123,6 +123,12 @@ void tcpipInit(){
     static bool initialized = false;
     if(!initialized && _start_network_event_task()){
         initialized = true;
+#ifdef ESP_IDF_VERSION_MAJOR
+        uint8_t mac[8];
+        if(esp_efuse_mac_get_default(mac) == ESP_OK){
+            esp_base_mac_addr_set(mac);
+        }
+#endif
         tcpip_adapter_init();
     }
 }

@@ -45,24 +45,27 @@
 #define ETH_PHY_MDIO 18
 #endif
 
+#ifndef ESP_IDF_VERSION_MAJOR
 #ifndef ETH_CLK_MODE
-#ifdef ESP_IDF_VERSION_MAJOR
-#define ETH_CLK_MODE ESP_ETH_CLOCK_GPIO0_IN
-#else
 #define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 #endif
 #endif
 
-typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_MAX } eth_phy_type_t;
+typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_RTL8201, ETH_PHY_DP83848, ETH_PHY_DM9051, ETH_PHY_MAX } eth_phy_type_t;
 
 class ETHClass {
     private:
         bool initialized;
-        bool started;
         bool staticIP;
 #ifdef ESP_IDF_VERSION_MAJOR
-        esp_eth_config_t eth_config;
+        esp_eth_handle_t eth_handle;
+
+    protected:
+        bool started;
+        eth_link_t eth_link;
+        static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 #else
+        bool started;
         eth_config_t eth_config;
 #endif
     public:

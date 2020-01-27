@@ -21,8 +21,11 @@
 #include "ETH.h"
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR
+    #include "esp_event.h"
     #include "esp_eth.h"
     #include "esp_eth_phy.h"
+    #include "esp_eth_mac.h"
+    #include "esp_eth_com.h"
 #else
     #include "eth_phy/phy.h"
     #include "eth_phy/phy_tlk110.h"
@@ -33,7 +36,62 @@
 
 extern void tcpipInit();
 
-#ifndef ESP_IDF_VERSION_MAJOR
+#ifdef ESP_IDF_VERSION_MAJOR
+
+/**
+* @brief Callback function invoked when lowlevel initialization is finished
+*
+* @param[in] eth_handle: handle of Ethernet driver
+*
+* @return
+*       - ESP_OK: process extra lowlevel initialization successfully
+*       - ESP_FAIL: error occurred when processing extra lowlevel initialization
+*/
+//static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
+//#define PIN_PHY_POWER 2
+//    pinMode(PIN_PHY_POWER, OUTPUT);
+//    digitalWrite(PIN_PHY_POWER, HIGH);
+//    delay(100);
+//    return ESP_OK;
+//}
+
+/**
+* @brief Callback function invoked when lowlevel deinitialization is finished
+*
+* @param[in] eth_handle: handle of Ethernet driver
+*
+* @return
+*       - ESP_OK: process extra lowlevel deinitialization successfully
+*       - ESP_FAIL: error occurred when processing extra lowlevel deinitialization
+*/
+//static esp_err_t on_lowlevel_deinit_done(esp_eth_handle_t eth_handle){
+//    return ESP_OK;
+//}
+
+
+// Event handler for Ethernet
+void ETHClass::eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    switch (event_id) {
+    case ETHERNET_EVENT_CONNECTED:
+        ((ETHClass*)(arg))->eth_link = ETH_LINK_UP;
+        break;
+    case ETHERNET_EVENT_DISCONNECTED:
+        ((ETHClass*)(arg))->eth_link = ETH_LINK_DOWN;
+        break;
+    case ETHERNET_EVENT_START:
+        ((ETHClass*)(arg))->started = true;
+        break;
+    case ETHERNET_EVENT_STOP:
+        ((ETHClass*)(arg))->started = false;
+        break;
+    default:
+        break;
+    }
+}
+
+
+#else
 static int _eth_phy_mdc_pin = -1;
 static int _eth_phy_mdio_pin = -1;
 static int _eth_phy_power_pin = -1;
@@ -57,7 +115,11 @@ static void _eth_phy_power_enable(bool enable)
 }
 #endif
 
-ETHClass::ETHClass():initialized(false),started(false),staticIP(false)
+ETHClass::ETHClass()
+    :initialized(false)
+    ,staticIP(false)
+    ,started(false)
+    ,eth_link(ETH_LINK_DOWN)
 {
 }
 
@@ -66,7 +128,79 @@ ETHClass::~ETHClass()
 
 #ifdef ESP_IDF_VERSION_MAJOR
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type){
-    return false;
+
+    tcpipInit();
+
+    esp_event_loop_create_default();
+    tcpip_adapter_set_default_eth_handlers();
+    esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, eth_event_handler, this);
+    //ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
+
+    eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+    mac_config.smi_mdc_gpio_num = mdc;
+    mac_config.smi_mdio_gpio_num = mdio;
+    //mac_config.sw_reset_timeout_ms = 1000;
+    esp_eth_mac_t *eth_mac = NULL;
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+    if(type == ETH_PHY_DM9051){
+        return false;//todo
+    } else {
+#endif
+        eth_mac = esp_eth_mac_new_esp32(&mac_config);
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+    }
+#endif
+
+    if(eth_mac == NULL){
+        log_e("esp_eth_mac_new_esp32 failed");
+        return false;
+    }
+
+    eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+    phy_config.phy_addr = phy_addr;
+    phy_config.reset_gpio_num = power;
+    esp_eth_phy_t *eth_phy = NULL;
+    switch(type){
+        case ETH_PHY_LAN8720:
+            eth_phy = esp_eth_phy_new_lan8720(&phy_config);
+            break;
+        case ETH_PHY_TLK110:
+            eth_phy = esp_eth_phy_new_ip101(&phy_config);
+            break;
+        case ETH_PHY_RTL8201:
+            eth_phy = esp_eth_phy_new_rtl8201(&phy_config);
+            break;
+        case ETH_PHY_DP83848:
+            eth_phy = esp_eth_phy_new_dp83848(&phy_config);
+            break;
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+        case ETH_PHY_DM9051:
+            eth_phy = esp_eth_phy_new_dm9051(&phy_config);
+            break;
+#endif
+        default:
+            break;
+    }
+    if(eth_phy == NULL){
+        log_e("esp_eth_phy_new failed");
+        return false;
+    }
+
+    eth_handle = NULL;
+    esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(eth_mac, eth_phy);
+    //eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
+    //eth_config.on_lowlevel_deinit_done = on_lowlevel_deinit_done;
+    if(esp_eth_driver_install(&eth_config, &eth_handle) != ESP_OK || eth_handle == NULL){
+        log_e("esp_eth_driver_install failed");
+        return false;
+    }
+
+    if(esp_eth_start(eth_handle) != ESP_OK){
+        log_e("esp_eth_start failed");
+        return false;
+    }
+
+    return true;
 }
 #else
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
@@ -255,7 +389,7 @@ bool ETHClass::setHostname(const char * hostname)
 bool ETHClass::fullDuplex()
 {
 #ifdef ESP_IDF_VERSION_MAJOR
-    return true;//todo
+    return true;//todo: do not see an API for this
 #else
     return eth_config.phy_get_duplex_mode();
 #endif
@@ -264,7 +398,7 @@ bool ETHClass::fullDuplex()
 bool ETHClass::linkUp()
 {
 #ifdef ESP_IDF_VERSION_MAJOR
-    return true;//todo
+    return eth_link == ETH_LINK_UP;
 #else
     return eth_config.phy_check_link();
 #endif
@@ -273,7 +407,9 @@ bool ETHClass::linkUp()
 uint8_t ETHClass::linkSpeed()
 {
 #ifdef ESP_IDF_VERSION_MAJOR
-    return 100;//ToDo
+    eth_speed_t link_speed;
+    esp_eth_ioctl(eth_handle, ETH_CMD_G_SPEED, &link_speed);
+    return (link_speed == ETH_SPEED_10M)?10:100;
 #else
     return eth_config.phy_get_speed_mode()?100:10;
 #endif
@@ -293,13 +429,13 @@ IPv6Address ETHClass::localIPv6()
     return IPv6Address(addr.addr);
 }
 
-uint8_t * macAddress(uint8_t* mac)
+uint8_t * ETHClass::macAddress(uint8_t* mac)
 {
     if(!mac){
         return NULL;
     }
 #ifdef ESP_IDF_VERSION_MAJOR
-    //ToDo
+    esp_eth_ioctl(eth_handle, ETH_CMD_G_MAC_ADDR, mac);
 #else
     esp_eth_get_mac(mac);
 #endif
@@ -308,13 +444,9 @@ uint8_t * macAddress(uint8_t* mac)
 
 String ETHClass::macAddress(void)
 {
-    uint8_t mac[6] = {0,0,0,0,0,0};//ToDo
+    uint8_t mac[6] = {0,0,0,0,0,0};
     char macStr[18] = { 0 };
-#ifdef ESP_IDF_VERSION_MAJOR
-    //ToDo
-#else
-    esp_eth_get_mac(mac);
-#endif
+    macAddress(mac);
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
 }
