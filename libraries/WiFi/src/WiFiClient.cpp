@@ -188,9 +188,7 @@ WiFiClient::~WiFiClient()
 WiFiClient & WiFiClient::operator=(const WiFiClient &other)
 {
     stop();
-    clientSocketHandle.reset();
     clientSocketHandle = other.clientSocketHandle;
-    _rxBuffer.reset();
     _rxBuffer = other._rxBuffer;
     _connected = other._connected;
     return *this;
