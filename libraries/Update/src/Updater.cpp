@@ -331,6 +331,7 @@ size_t UpdateClass::writeStream(Stream &data) {
     }
 
     while(remaining()) {
+        int fail = 0;
         if(_ledPin != -1) {
             digitalWrite(_ledPin, _ledOn); // Switch LED on
         }
@@ -339,15 +340,21 @@ size_t UpdateClass::writeStream(Stream &data) {
             bytesToRead = remaining();
         }
 
-        toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
-        if(toRead == 0) { //Timeout
-            delay(100);
-            toRead = data.readBytes(_buffer + _bufferLen, bytesToRead);
-            if(toRead == 0) { //Timeout
-                _abort(UPDATE_ERROR_STREAM);
-                return written;
-            }
+        // Keep trying 20times (with delay 1sec)
+        while (!toRead) {
+            toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
+            // toRead timeout
+            if(toRead == 0) {
+                fail++;
+                if (fail > 20) {
+                    log_d("timeout %d", fail);
+                    _abort(UPDATE_ERROR_STREAM);
+                    return written;
+                }
+                delay(1000);
+             }
         }
+
         if(_ledPin != -1) {
             digitalWrite(_ledPin, !_ledOn); // Switch LED off
         }
@@ -355,6 +362,7 @@ size_t UpdateClass::writeStream(Stream &data) {
         if((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer())
             return written;
         written += toRead;
+	    toRead = 0;
     }
     return written;
 }
