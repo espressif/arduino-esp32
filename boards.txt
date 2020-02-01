@@ -4838,12 +4838,12 @@ ttgo-t-display.build.flash_freq=40m
 ttgo-t-display.build.flash_mode=dio
 ttgo-t-display.build.boot=dio
 ttgo-t-display.build.partitions=default
-ttgo-t-display.build.defines=
+ttgo-t-display.build.commondefs=-DARDUINO_TTGO_Display -DUSER_SETUP_LOADED=1 -DST7789_DRIVER=1 -DTFT_WIDTH=135 -DTFT_HEIGHT=240 -DCGRAM_OFFSET=1 -DTFT_MOSI=19 -DTFT_SCLK=18 -DTFT_CS=5 -DTFT_DC=16 -DTFT_RST=23 -DTFT_BL=4 -DTFT_BACKLIGHT_ON=HIGH -DLOAD_GLCD=1 -DLOAD_FONT2=1 -DLOAD_FONT4=1 -DLOAD_FONT6=1 -DLOAD_FONT7=1 -DLOAD_FONT8=1 -DLOAD_GFXFF=1 -DSMOOTH_FONT=1 -DSPI_FREQUENCY=40000000 -DSPI_READ_FREQUENCY=6000000
 
 ttgo-t-display.menu.PSRAM.disabled=Disabled
-ttgo-t-display.menu.PSRAM.disabled.build.defines=
+ttgo-t-display.menu.PSRAM.disabled.build.defines={build.commondefs}
 ttgo-t-display.menu.PSRAM.enabled=Enabled
-ttgo-t-display.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+ttgo-t-display.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue {build.commondefs}
 
 ttgo-t-display.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 ttgo-t-display.menu.PartitionScheme.default.build.partitions=default
