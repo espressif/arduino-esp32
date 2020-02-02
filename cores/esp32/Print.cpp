@@ -278,7 +278,7 @@ size_t Print::println(struct tm * timeinfo, const char * format)
 
 size_t Print::printNumber(unsigned long n, uint8_t base)
 {
-    char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+    char buf[8 * sizeof(n) + 1]; // Assumes 8-bit chars plus zero byte.
     char *str = &buf[sizeof(buf) - 1];
 
     *str = '\0';
@@ -291,16 +291,16 @@ size_t Print::printNumber(unsigned long n, uint8_t base)
     do {
         char c = n % base;
         n /= base;
-    	
-    	*--str = c < 10 ? c + '0' : c + 'A' - 10;
-    } while(n);
+
+        *--str = c < 10 ? c + '0' : c + 'A' - 10;
+    } while (n);
 
     return write(str);
 }
 
 size_t Print::printNumber(unsigned long long n, uint8_t base)
 {
-    char buf[8 * sizeof(long long) + 1]; // Assumes 8-bit chars plus zero byte.
+    char buf[8 * sizeof(n) + 1]; // Assumes 8-bit chars plus zero byte.
     char* str = &buf[sizeof(buf) - 1];
 
     *str = '\0';
@@ -311,7 +311,7 @@ size_t Print::printNumber(unsigned long long n, uint8_t base)
     }
 
     do {
-        unsigned long m = n;
+        auto m = n;
         n /= base;
         char c = m - base * n;
 
