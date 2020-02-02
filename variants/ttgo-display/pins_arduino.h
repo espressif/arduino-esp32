@@ -58,5 +58,4 @@ static const uint8_t VBAT = 34;
 static const uint8_t RIGHT_BUTTON = 35;
 static const uint8_t LEFT_BUTTON = 0;
 
-
 #endif /* Pins_Arduino_h */
