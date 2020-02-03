@@ -36,9 +36,7 @@
 #include "esp_spp_api.h"
 #include <esp_log.h>
 
-#ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
-#endif
 
 const char * _spp_server_name = "ESP32SPP";
 
@@ -52,6 +50,7 @@ static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
+static BluetoothSerialDataCb custom_data_callback = NULL;
 
 #define INQ_LEN 0x10
 #define INQ_NUM_RSPS 20
@@ -218,7 +217,6 @@ static void _spp_tx_task(void * arg){
     _spp_task_handle = NULL;
 }
 
-
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
     switch (event)
@@ -278,7 +276,9 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
         //ets_printf("r:%u\n", param->data_ind.len);
 
-        if (_spp_rx_queue != NULL){
+        if(custom_data_callback){
+            custom_data_callback(param->data_ind.data, param->data_ind.len);
+        } else if (_spp_rx_queue != NULL){
             for (int i = 0; i < param->data_ind.len; i++){
                 if(xQueueSend(_spp_rx_queue, param->data_ind.data + i, (TickType_t)0) != pdTRUE){
                     log_e("RX Full! Discarding %u bytes", param->data_ind.len - i);
@@ -320,6 +320,10 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
     }
     if(custom_spp_callback)(*custom_spp_callback)(event, param);
+}
+
+void BluetoothSerial::onData(BluetoothSerialDataCb cb){
+    custom_data_callback = cb;
 }
 
 static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
@@ -469,7 +473,7 @@ static bool _init_bt(const char *deviceName)
     }
 
     if(!_spp_task_handle){
-        xTaskCreate(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
@@ -509,6 +513,10 @@ static bool _init_bt(const char *deviceName)
     if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
         log_e("spp init failed");
         return false;
+    }
+
+    if (esp_bt_sleep_disable() != ESP_OK){
+        log_e("esp_bt_sleep_disable failed");
     }
 
     log_i("device name set");
@@ -652,7 +660,11 @@ size_t BluetoothSerial::write(const uint8_t *buffer, size_t size)
 
 void BluetoothSerial::flush()
 {
-    while(read() >= 0){}
+    if (_spp_tx_queue != NULL){
+        while(uxQueueMessagesWaiting(_spp_tx_queue) > 0){
+	    delay(5);
+        }
+    }
 }
 
 void BluetoothSerial::end()
