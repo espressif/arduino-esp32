@@ -104,7 +104,10 @@ void tcpipInit(){
         initialized = true;
 #ifdef ESP_IDF_VERSION_MAJOR
         uint8_t mac[8];
-        if(esp_efuse_mac_get_default(mac) == ESP_OK){
+        if(esp_base_mac_addr_get(mac) == ESP_OK){
+            esp_base_mac_addr_set(mac);
+        }
+        else if(esp_efuse_mac_get_default(mac) == ESP_OK){
             esp_base_mac_addr_set(mac);
         }
         esp_event_loop_create_default();
