@@ -50,7 +50,7 @@ build.flash_mode=dio
 build.boot=bootloader
 build.code_debug=0
 build.defines=
-build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
+build.extra_flags=-DSPI_HAS_TRANSACTION -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
 
 # These can be overridden in platform.local.txt
 compiler.c.extra_flags=
