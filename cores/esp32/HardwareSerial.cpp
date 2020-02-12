@@ -158,6 +158,13 @@ void HardwareSerial::flush(bool txOnly)
 {
     uartFlushTxOnly(_uart, txOnly);
 }
+void serialEventRun(void)
+{
+  if (Serial1.available()) serialEvent1();
+  if (Serial2.available()) serialEvent2();
+}
+void serialEvent1() { }
+void serialEvent2() { }
 
 size_t HardwareSerial::write(uint8_t c)
 {
