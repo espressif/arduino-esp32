@@ -44,7 +44,7 @@ long random(long howbig)
         uint32_t t = -howbig;
         if (t >= howbig) {
             t -= howbig;
-            if (t >= howbig) 
+            if (t >= howbig)
                 t %= howbig;
         }
         while (l < t) {

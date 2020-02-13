@@ -1,0 +1,10 @@
+FILES="tools/sdk/include/lwip/netif/ppp/eui64.h tools/sdk/include/lwip/netif/ppp/ipv6cp.h tools/sdk/include/lwip/netif/ppp/vj.h tools/sdk/include/lwip/netif/ppp/eap.h tools/sdk/include/lwip/netif/ppp/upap.h tools/sdk/include/lwip/netif/ppp/ipcp.h tools/sdk/include/lwip/netif/ppp/lcp.h\
+ tools/sdk/include/lwip/netif/ppp/chap_ms.h tools/sdk/include/lwip/netif/ppp/fsm.h tools/sdk/include/esp32/xtensa/corebits.h tools/sdk/include/esp32/xtensa/specreg.h tools/sdk/include/esp32/xtensa/coreasm.h tools/sdk/include/esp32/xtensa/hal.h tools/sdk/include/esp32/xtensa/config/specreg.h\
+ tools/sdk/include/esp32/xtensa/xtensa-versions.h tools/sdk/include/esp32/xtensa/xtruntime-frames.h tools/sdk/include/esp32/xtensa/xtruntime-core-state.h tools/sdk/include/esp32/xtensa/xtensa-libdb-macros.h tools/sdk/include/esp32/xtensa/cacheasm.h tools/sdk/include/esp32/xtensa/xt_perf_consts.h tools/sdk/include/esp32/rom/queue.h\
+ tools/sdk/include/mbedtls/mbedtls/bn_mul.h tools/sdk/include/newlib/glob.h tools/sdk/include/newlib/langinfo.h tools/sdk/include/newlib/search.h tools/sdk/include/newlib/grp.h tools/sdk/include/newlib/stdatomic.h tools/sdk/include/newlib/tgmath.h\
+ tools/sdk/include/newlib/complex.h tools/sdk/include/newlib/sys/queue.h tools/sdk/include/newlib/sys/features.h tools/sdk/include/newlib/sys/syslimits.h tools/sdk/include/newlib/sys/cdefs.h tools/sdk/include/newlib/sys/sched.h\
+ tools/sdk/include/newlib/ar.h tools/sdk/include/newlib/regex.h tools/sdk/include/newlib/pthread.h tools/sdk/include/newlib/sched.h tools/sdk/include/newlib/machine/setjmp.h tools/sdk/include/newlib/machine/_types.h\
+ tools/sdk/include/newlib/fnmatch.h tools/sdk/include/wpa_supplicant/wpa/ieee80211_crypto.h tools/sdk/include/wpa_supplicant/endian.h tools/sdk/include/expat/expat.h tools/sdk/include/freemodbus/mbconfig.h tools/sdk/include/freemodbus/mbport.h\
+ tools/sdk/include/freemodbus/mbutils.h tools/sdk/include/freemodbus/mbproto.h tools/sdk/include/freemodbus/mbframe.h tools/sdk/include/freemodbus/mbfunc.h tools/sdk/include/freemodbus/mb.h tools/platformio-build.py"
+
+vi $FILES

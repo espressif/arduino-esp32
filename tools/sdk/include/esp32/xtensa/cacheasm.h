@@ -148,7 +148,7 @@
  *                  if all sets affected by cainst,
  *                  or 1 if only one set (or not all sets) of the cache
  *                  is affected by cainst (eg. DIWB or DIWBI [not yet ISA defined]).
- *	aa, ab      unique address registers (temporaries). 
+ *	aa, ab      unique address registers (temporaries).
  *	awb         set to other than a0 if wb type of instruction
  *	loopokay    1 allows use of zero-overhead loops, 0 does not
  *	immrange    range (max value) of cainst's immediate offset parameter, in bytes
@@ -904,7 +904,7 @@
 	movi	\aa, XCHAL_DCACHE_WAYS
 .Ldcgw:
 #else
-	// All ways are always enabled  
+	// All ways are always enabled
 	movi	\aa, XCHAL_DCACHE_WAYS
 #endif
 #else

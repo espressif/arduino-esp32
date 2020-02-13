@@ -14,7 +14,7 @@ WebServer server(80);
  * Login page
  */
 
-const char* loginIndex = 
+const char* loginIndex =
  "<form name='loginForm'>"
     "<table width='20%' bgcolor='A09F9F' align='center'>"
         "<tr>"
@@ -54,12 +54,12 @@ const char* loginIndex =
     "}"
     "}"
 "</script>";
- 
+
 /*
  * Server Index Page
  */
- 
-const char* serverIndex = 
+
+const char* serverIndex =
 "<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>"
 "<form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>"
    "<input type='file' name='update'>"
@@ -88,7 +88,7 @@ const char* serverIndex =
   "return xhr;"
   "},"
   "success:function(d, s) {"
-  "console.log('success!')" 
+  "console.log('success!')"
  "},"
  "error: function (a, b, c) {"
  "}"

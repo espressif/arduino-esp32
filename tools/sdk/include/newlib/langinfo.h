@@ -179,7 +179,7 @@ enum __nl_item
 #ifdef __HAVE_LOCALE_INFO_EXTENDED__
 
   /* NOTE:
-  
+
      Always maintain the order and position of existing entries!
      Always append new entry to the list, prior to the definition
      of _NL_LOCALE_EXTENDED_LAST_ENTRY. */
