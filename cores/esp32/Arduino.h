@@ -35,6 +35,7 @@
 #include "esp32-hal.h"
 #include "esp8266-compat.h"
 #include "soc/gpio_reg.h"
+#include "soc/dport_reg.h"
 
 #include "stdlib_noniso.h"
 #include "binary.h"
