@@ -352,6 +352,8 @@ size_t UpdateClass::writeStream(Stream &data) {
                     return written;
                 }
                 delay(1000);
+             } else {
+             	fail = 0; // reset timeout
              }
         }
 
