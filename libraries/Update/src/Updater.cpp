@@ -346,7 +346,7 @@ size_t UpdateClass::writeStream(Stream &data) {
             // toRead timeout
             if(toRead == 0) {
                 fail++;
-                if (fail > 20) {
+                if (fail > 30) {
                     log_d("timeout %d", fail);
                     _abort(UPDATE_ERROR_STREAM);
                     return written;
