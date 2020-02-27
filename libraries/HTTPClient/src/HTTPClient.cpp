@@ -1012,7 +1012,13 @@ bool HTTPClient::connect(void)
         log_d("HTTPClient::begin was not called or returned error");
         return false;
     }
-
+#ifdef HTTPCLIENT_1_1_COMPATIBLE
+    if (_tcpDeprecated && !_transportTraits->verify(*_client, _host.c_str())) {
+        log_d("transport level verify failed");
+        _client->stop();
+        return false;
+    }	
+#endif
     if(!_client->connect(_host.c_str(), _port, _connectTimeout)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
         return false;
@@ -1022,14 +1028,6 @@ bool HTTPClient::connect(void)
     _client->setTimeout((_tcpTimeout + 500) / 1000);	
 
     log_d(" connected to %s:%u", _host.c_str(), _port);
-
-#ifdef HTTPCLIENT_1_1_COMPATIBLE
-    if (_tcpDeprecated && !_transportTraits->verify(*_client, _host.c_str())) {
-        log_d("transport level verify failed");
-        _client->stop();
-        return false;
-    }	
-#endif
 
 
 /*
