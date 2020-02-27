@@ -45,8 +45,8 @@ static const uint8_t IO16 = 16;
 static const uint8_t IO17 = 17;
 static const uint8_t IO25 = 25;
 static const uint8_t IO26 = 26;
-static const uint8_t TX = 1;
-static const uint8_t RX = 3;
+static const uint8_t TX0 = 1;
+static const uint8_t RX0 = 3;
 //TFlash(uSD)
 static const uint8_t SD2 = 9;
 static const uint8_t SD3 = 10;
