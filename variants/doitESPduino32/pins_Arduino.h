@@ -56,6 +56,6 @@ static const uint8_t SD0 = 7;
 static const uint8_t SD1 = 8;
 
 // ESP-WROOM-32 does not have GPIO 14, 20(NC), 24, 28, 29, 30, 31, 36, 37, 38, 40+
-// All pins should be PWM capable
+// All pins should be PWM capable. The board is a clone of WeMos D1 R32.
 
 #endif /* Pins_Arduino_h */
