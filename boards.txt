@@ -4816,3 +4816,112 @@ sensesiot_weizen.menu.UploadSpeed.460800.upload.speed=460800
 sensesiot_weizen.menu.UploadSpeed.512000.windows=512000
 sensesiot_weizen.menu.UploadSpeed.512000.upload.speed=512000
 ##############################################################
+mPython.name=mPython
+
+mPython.upload.tool=esptool_py
+mPython.upload.maximum_size=1310720
+mPython.upload.maximum_data_size=327680
+mPython.upload.wait_for_upload_port=true
+
+mPython.serial.disableDTR=true
+mPython.serial.disableRTS=true
+
+mPython.build.mcu=esp32
+mPython.build.core=esp32
+mPython.build.variant=mpython
+mPython.build.board=ESP32_DEV
+
+mPython.build.f_cpu=240000000L
+mPython.build.flash_size=8MB
+mPython.build.flash_freq=40m
+mPython.build.flash_mode=dio
+mPython.build.boot=dio
+mPython.build.partitions=huge_app
+mPython.build.defines=
+
+mPython.menu.PSRAM.disabled=Disabled
+mPython.menu.PSRAM.disabled.build.defines=
+mPython.menu.PSRAM.enabled=Enabled
+mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+
+mPython.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+mPython.menu.PartitionScheme.huge_app.build.partitions=huge_app
+mPython.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+mPython.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+mPython.menu.PartitionScheme.default.build.partitions=default
+mPython.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+mPython.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+mPython.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+mPython.menu.PartitionScheme.minimal.build.partitions=minimal
+mPython.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+mPython.menu.PartitionScheme.no_ota.build.partitions=no_ota
+mPython.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+mPython.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+mPython.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+mPython.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+mPython.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+mPython.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+mPython.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+mPython.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+mPython.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+mPython.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+mPython.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+mPython.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+mPython.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+mPython.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mPython.menu.PartitionScheme.fatflash.build.partitions=ffat
+
+mPython.menu.CPUFreq.240=240MHz (WiFi/BT)
+mPython.menu.CPUFreq.240.build.f_cpu=240000000L
+
+
+mPython.menu.FlashMode.qio=QIO
+mPython.menu.FlashMode.qio.build.flash_mode=dio
+mPython.menu.FlashMode.qio.build.boot=qio
+mPython.menu.FlashMode.dio=DIO
+mPython.menu.FlashMode.dio.build.flash_mode=dio
+mPython.menu.FlashMode.dio.build.boot=dio
+mPython.menu.FlashMode.qout=QOUT
+mPython.menu.FlashMode.qout.build.flash_mode=dout
+mPython.menu.FlashMode.qout.build.boot=qout
+mPython.menu.FlashMode.dout=DOUT
+mPython.menu.FlashMode.dout.build.flash_mode=dout
+mPython.menu.FlashMode.dout.build.boot=dout
+
+mPython.menu.FlashFreq.80=80MHz
+mPython.menu.FlashFreq.80.build.flash_freq=80m
+mPython.menu.FlashFreq.40=40MHz
+mPython.menu.FlashFreq.40.build.flash_freq=40m
+
+mPython.menu.FlashSize.8M=8MB (64Mb)
+mPython.menu.FlashSize.8M.build.flash_size=8MB
+
+
+mPython.menu.UploadSpeed.921600=921600
+mPython.menu.UploadSpeed.921600.upload.speed=921600
+mPython.menu.UploadSpeed.115200=115200
+mPython.menu.UploadSpeed.115200.upload.speed=115200
+mPython.menu.UploadSpeed.256000.windows=256000
+mPython.menu.UploadSpeed.256000.upload.speed=256000
+mPython.menu.UploadSpeed.230400.windows.upload.speed=256000
+mPython.menu.UploadSpeed.230400=230400
+mPython.menu.UploadSpeed.230400.upload.speed=230400
+mPython.menu.UploadSpeed.460800.linux=460800
+mPython.menu.UploadSpeed.460800.macosx=460800
+mPython.menu.UploadSpeed.460800.upload.speed=460800
+mPython.menu.UploadSpeed.512000.windows=512000
+mPython.menu.UploadSpeed.512000.upload.speed=512000
+
+mPython.menu.DebugLevel.none=None
+mPython.menu.DebugLevel.none.build.code_debug=0
+mPython.menu.DebugLevel.error=Error
+mPython.menu.DebugLevel.error.build.code_debug=1
+mPython.menu.DebugLevel.warn=Warn
+mPython.menu.DebugLevel.warn.build.code_debug=2
+mPython.menu.DebugLevel.info=Info
+mPython.menu.DebugLevel.info.build.code_debug=3
+mPython.menu.DebugLevel.debug=Debug
+mPython.menu.DebugLevel.debug.build.code_debug=4
+mPython.menu.DebugLevel.verbose=Verbose
+mPython.menu.DebugLevel.verbose.build.code_debug=5
+##############################################################
