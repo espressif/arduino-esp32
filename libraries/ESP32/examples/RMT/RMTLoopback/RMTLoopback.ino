@@ -11,7 +11,7 @@ rmt_data_t data[256];
 rmt_obj_t* rmt_send = NULL;
 rmt_obj_t* rmt_recv = NULL;
 
-static EventGroupHandle_t events;
+static EventGroupHandle_t events = xEventGroupCreate();
 
 void setup() 
 {
