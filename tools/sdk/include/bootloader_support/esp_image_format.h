@@ -66,7 +66,7 @@ typedef enum {
 
 /** @cond */
 _Static_assert(sizeof(esp_chip_id_t) == 2, "esp_chip_id_t should be 16 bit");
-
+/** @endcond */
 
 /* Main header of binary image */
 typedef struct {
@@ -84,12 +84,9 @@ typedef struct {
     uint8_t wp_pin;
     /* Drive settings for the SPI flash pins (read by ROM bootloader) */
     uint8_t spi_pin_drv[3];
-    /*!< Chip identification number */
-    esp_chip_id_t chip_id;
-    /*!< Minimum chip revision supported by image */
-    uint8_t min_chip_rev;
-    /*!< Reserved bytes in additional header space, currently unused */
-    uint8_t reserved[8];
+    esp_chip_id_t chip_id; /*!< Chip identification number */
+    uint8_t min_chip_rev;  /*!< Minimum chip revision supported by image */
+    uint8_t reserved[8];   /*!< Reserved bytes in additional header space, currently unused */
     /* If 1, a SHA256 digest "simple hash" (of the entire image) is appended after the checksum. Included in image length. This digest
      * is separate to secure boot and only used for detecting corruption. For secure boot signed images, the signature
      * is appended after this (and the simple hash is included in the signed data). */
@@ -105,6 +102,25 @@ typedef struct {
     uint32_t load_addr;
     uint32_t data_len;
 } esp_image_segment_header_t;
+
+#define ESP_APP_DESC_MAGIC_WORD 0xABCD5432 /*!< The magic word for the esp_app_desc structure that is in DROM. */
+
+/**
+ * @brief Description about application.
+ */
+typedef struct {
+    uint32_t magic_word;        /*!< Magic word ESP_APP_DESC_MAGIC_WORD */
+    uint32_t secure_version;    /*!< Secure version */
+    uint32_t reserv1[2];        /*!< --- */
+    char version[32];           /*!< Application version */
+    char project_name[32];      /*!< Project name */
+    char time[16];              /*!< Compile time */
+    char date[16];              /*!< Compile date*/
+    char idf_ver[32];           /*!< Version IDF */
+    uint8_t app_elf_sha256[32]; /*!< sha256 of elf file */
+    uint32_t reserv2[20];       /*!< --- */
+} esp_app_desc_t;
+_Static_assert(sizeof(esp_app_desc_t) == 256, "esp_app_desc_t should be 256 bytes");
 
 #define ESP_IMAGE_MAX_SEGMENTS 16
 

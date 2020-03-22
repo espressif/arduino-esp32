@@ -495,23 +495,28 @@ uint8_t WiFiClient::connected()
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
         // avoid unused var warning by gcc
         (void)res;
-        switch (errno) {
-            case EWOULDBLOCK:
-            case ENOENT: //caused by vfs
-                _connected = true;
-                break;
-            case ENOTCONN:
-            case EPIPE:
-            case ECONNRESET:
-            case ECONNREFUSED:
-            case ECONNABORTED:
-                _connected = false;
-                log_d("Disconnected: RES: %d, ERR: %d", res, errno);
-                break;
-            default:
-                log_i("Unexpected: RES: %d, ERR: %d", res, errno);
-                _connected = true;
-                break;
+        // recv only sets errno if res is <= 0
+        if (res <= 0){
+          switch (errno) {
+              case EWOULDBLOCK:
+              case ENOENT: //caused by vfs
+                  _connected = true;
+                  break;
+              case ENOTCONN:
+              case EPIPE:
+              case ECONNRESET:
+              case ECONNREFUSED:
+              case ECONNABORTED:
+                  _connected = false;
+                  log_d("Disconnected: RES: %d, ERR: %d", res, errno);
+                  break;
+              default:
+                  log_i("Unexpected: RES: %d, ERR: %d", res, errno);
+                  _connected = true;
+                  break;
+          }
+        } else {
+          _connected = true;
         }
     }
     return _connected;
