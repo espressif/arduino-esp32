@@ -218,6 +218,26 @@ uint8_t EspClass::getChipRevision(void)
     return chip_info.revision;
 }
 
+const char * EspClass::getChipModel(void)
+{
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    switch (chip_info.model) {
+        case 0:
+            return "ESP32D0WDQ6";
+        case 1:
+            return "ESP32D0WDQ5";
+        case 2:
+            return "ESP32D2WDQ5";
+        case 4:
+            return "ESP32-PICO-D2";
+        case 5:
+            return "ESP32-PICO-D4";
+        default:
+            return "Unknown";
+    }
+}
+
 const char * EspClass::getSdkVersion(void)
 {
     return esp_get_idf_version();
