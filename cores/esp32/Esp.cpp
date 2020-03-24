@@ -238,6 +238,13 @@ const char * EspClass::getChipModel(void)
     }
 }
 
+uint8_t EspClass::getChipCores(void)
+{
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    return chip_info.cores;
+}
+
 const char * EspClass::getSdkVersion(void)
 {
     return esp_get_idf_version();
