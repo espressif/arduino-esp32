@@ -13,6 +13,9 @@
  * This example is in the public domain
  */
 
+// BECAUSE ArduinoJson IS NO PART OF THE STANDARD ESP LIBRARIES the #include <ArduinoJson.h> is COMMENTED OUT
+// Remove the comment to use this example!
+
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #endif
@@ -21,7 +24,7 @@
 #endif
 
 #include <WiFiClientSecure.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 
 #include <ClientHTTP.h>
 
@@ -70,6 +73,11 @@ VsyuLAOQ1xk4meTKCRlb/weWsKh/NEnfVqn3sF/tM+2MR7cwA130A4w=
 void setup() {
   Serial.begin(115200);
   Serial.println();
+
+#if !defined(ARDUINOJSON_VERSION_MAJOR)
+  Serial.println("Remove comment from #include <ArduinoJson.h> to test this example! ");
+  return;
+#endif
 
   Serial.printf("Connecting to %s", ssid);
   WiFi.mode(WIFI_STA);
@@ -125,8 +133,9 @@ void setup() {
 
   // If the Content-Type: application/json is used, like in this example, data should be a serialized json!
   const char json[] = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
-  const size_t requestCapacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
+  size_t payloadLength = 0;
 #if ARDUINOJSON_VERSION_MAJOR == 6
+  const size_t requestCapacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
   DynamicJsonDocument requestDocument(requestCapacity);
   DeserializationError error = deserializeJson(requestDocument, json);
   // Test if parsing succeeds.
@@ -135,9 +144,10 @@ void setup() {
     Serial.println(error.c_str());
     return;
   }
-  size_t payloadLength = measureJson(requestDocument);
+  payloadLength = measureJson(requestDocument);
 #endif
 #if ARDUINOJSON_VERSION_MAJOR == 5
+  const size_t requestCapacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
   DynamicJsonBuffer jsonBuffer(requestCapacity);
   JsonObject& root = jsonBuffer.parseObject(json);
   // Test if parsing succeeds.
@@ -145,7 +155,7 @@ void setup() {
     Serial.println("parseObject() failed");
     return;
   }  
-  size_t payloadLength = root.measureLength();
+  payloadLength = root.measureLength();
 #endif  
 
   if(!http.POST("/post", payloadLength)) {
@@ -170,8 +180,8 @@ void setup() {
 
     Serial.printf("Response header \"Content-Type: %s\"\n", http.responseHeaders["Content-Type"].c_str());
 
-    const size_t responseCapacity = 2*JSON_ARRAY_SIZE(2) + 3*JSON_OBJECT_SIZE(0) + 2*JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(7) + 618;
 #if ARDUINOJSON_VERSION_MAJOR == 6
+    const size_t responseCapacity = 2*JSON_ARRAY_SIZE(2) + 3*JSON_OBJECT_SIZE(0) + 2*JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(7) + 618;
     DynamicJsonDocument responseDocument(responseCapacity);
     DeserializationError error = deserializeJson(responseDocument, http);
     // Test if parsing succeeds.
@@ -184,6 +194,7 @@ void setup() {
     serializeJsonPretty(responseDocument, Serial);
 #endif
 #if ARDUINOJSON_VERSION_MAJOR == 5
+    const size_t responseCapacity = 2*JSON_ARRAY_SIZE(2) + 3*JSON_OBJECT_SIZE(0) + 2*JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(7) + 618;
     DynamicJsonBuffer jsonBuffer(responseCapacity);
     JsonObject& rootReceived = jsonBuffer.parseObject(http);
     // Test if parsing succeeds.
