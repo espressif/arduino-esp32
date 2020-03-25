@@ -48,6 +48,7 @@ set(LIBRARY_SRCS
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
+  libraries/ClientHTTP/src/ClientHTTP.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
@@ -187,6 +188,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/FFat/src
   libraries/FS/src
   libraries/HTTPClient/src
+  libraries/ClientHTTP/src
   libraries/HTTPUpdate/src
   libraries/NetBIOS/src
   libraries/Preferences/src
