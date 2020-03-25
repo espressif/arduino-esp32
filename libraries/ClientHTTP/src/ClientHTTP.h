@@ -21,7 +21,6 @@
  */
 
 // TO DO
-// map char * allocation and free. responseHeaders are not collected yet
 // redirect to a different host
 // Possibly add gzip stream
 
@@ -218,15 +217,20 @@ public:
 
   void                      printTo(Print &printer);
 
-  std::map<char *, char *>  requestHeaders;
+//  std::map<char *, char *>  requestHeaders;
+  std::map<std::string, std::string>  requestHeaders;
 
   // Helper struct for case insensitive comparison of keys in the response headers map
   struct cmp_str {
-    bool operator()(char const *a, char const *b) const {
-      return strcasecmp(a, b) < 0;
+//    bool operator()(char const *a, char const *b) const {
+//      return strcasecmp(a, b) < 0;
+//    }
+    bool operator()(const std::string & a, const std::string & b) const {
+      return strcasecmp(a.c_str(), b.c_str()) < 0;
     }
   };
-  std::map<char *, char *, cmp_str>  responseHeaders;
+//  std::map<char *, char *, cmp_str>  responseHeaders;
+  std::map<std::string, std::string, cmp_str>  responseHeaders;
 
   typedef enum {
     HTTP_10,

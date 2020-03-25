@@ -121,7 +121,7 @@ void setup() {
 
   String credentials = base64::encode((const uint8_t *)"guest:guest", sizeof "guest:guest" - 1);
   String auth = String("Basic ") + credentials;
-  http.requestHeaders["Authorization"] = (char *)auth.c_str();
+  http.requestHeaders["Authorization"] = auth.c_str();
   http.requestHeaders["Connection"] = "close";
 
   if (!http.connect("jigsaw.w3.org", 443)) {

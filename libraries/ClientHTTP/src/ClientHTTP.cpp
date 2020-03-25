@@ -400,9 +400,11 @@ bool                ClientHTTP::writeRequestHeaders(const char * method, const c
   }
 
   for(auto requestHeader: requestHeaders) { // std::pair<char *, char *>
-    _client.printf("%s: %s\r\n", requestHeader.first, requestHeader.second);
+//    _client.printf("%s: %s\r\n", requestHeader.first, requestHeader.second);
+    _client.printf("%s: %s\r\n", requestHeader.first.c_str(), requestHeader.second.c_str());
 #if defined(ESP32)
-    log_v("Request header '%s: %s'", requestHeader.first, requestHeader.second);
+//    log_v("Request header '%s: %s'", requestHeader.first, requestHeader.second);
+    log_v("Request header '%s: %s'", requestHeader.first.c_str(), requestHeader.second.c_str());
 #endif
   }
 
@@ -605,8 +607,8 @@ ClientHTTP::http_code_t ClientHTTP::status() {
 
 
 ClientHTTP::http_code_t ClientHTTP::readResponseHeaders() {
-
   char headerLine[RESPONSE_HEADER_LINE_SIZE];
+
   size_t bytesRead = _client.readBytesUntil('\n', headerLine, sizeof headerLine - 1);
   headerLine[bytesRead] = '\0';
   char * statusPtr = strchr(headerLine, ' ');
@@ -651,11 +653,12 @@ ClientHTTP::http_code_t ClientHTTP::readResponseHeaders() {
         log_v("Read response header '%s: %s'", headerLine, valuePtr);
 #endif
 
-        // Set response header TO DO
+        // Set response header
         auto search = responseHeaders.find(headerLine);
         if(search != responseHeaders.end()) {
 #if defined(ESP32)
           log_v("Set response header '%s: %s'", search->first, valuePtr);
+          search->second = valuePtr;
 #endif
 //        free(responseHeader.second); // !!!!!! NOT SURE IF THESE POINTERS MUST BE FREE-ED
 //        responseHeader.second = strdup(valuePtr);

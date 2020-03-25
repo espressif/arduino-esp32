@@ -168,6 +168,8 @@ void setup() {
       Serial.println("Payload succesfully send!");
     }
 
+    Serial.printf("Response header \"Content-Type: %s\"\n", http.responseHeaders["Content-Type"].c_str());
+
     const size_t responseCapacity = 2*JSON_ARRAY_SIZE(2) + 3*JSON_OBJECT_SIZE(0) + 2*JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(7) + 618;
 #if ARDUINOJSON_VERSION_MAJOR == 6
     DynamicJsonDocument responseDocument(responseCapacity);

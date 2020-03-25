@@ -162,7 +162,8 @@ void loop() {
     Serial.printf("Request failed with error code %d\n", status);
   }
 
-  if(http.responseHeaders["Connection"] != NULL && strcasecmp(http.responseHeaders["Connection"], "close") == 0) {
+  Serial.printf("Response header \"Connection: %s\"\n", http.responseHeaders["Connection"].c_str());
+  if(strcasecmp(http.responseHeaders["Connection"].c_str(), "close") == 0) {
     Serial.println("Closing connection because the server requested to do so");
     http.stop();
   } else {
