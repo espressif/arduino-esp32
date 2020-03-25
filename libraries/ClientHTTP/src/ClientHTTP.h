@@ -59,10 +59,14 @@ public:
 
   virtual size_t            write(uint8_t) {
     _size++;
+
+    return 1;
   }
 
   virtual size_t            write(const uint8_t *buf, size_t size) {
     _size += size;
+
+    return size;
   }
 
   void                      reset() {
@@ -224,10 +228,10 @@ public:
   };
   std::map<char *, char *, cmp_str>  responseHeaders;
 
-  typedef enum http_version_t {
+  typedef enum {
     HTTP_10,
     HTTP_11
-  };
+  } http_version_t;
   http_version_t            httpVersion = HTTP_11;
 
 protected:
@@ -249,12 +253,12 @@ protected:
 
   // for GET and HEAD status changes from CLIENT_READY -> CLIENT_RESPONSE_HEADER -> CLIENT_RESPONSE_PAYLOAD -> CLIENT_READY
   // for POST, PUT and PATCH status changes from CLIENT_READY -> CLIENT_REQUEST_HEADER_SENT -> CLIENT_RESPONSE_HEADER -> CLIENT_RESPONSE_PAYLOAD -> CLIENT_READY
-  typedef enum client_state_t {
+  typedef enum {
     CLIENT_READY,                 // No pending HTTP communication
     CLIENT_REQUEST_HEADER_SENT,   // Request header sent, ready to write payload that is to be send to the server via stream
     CLIENT_RESPONSE_HEADER,       // Ready to receive response header from server
     CLIENT_RESPONSE_PAYLOAD,      // Ready to read payload sent by server from stream
-  };
+  } client_state_t;
   client_state_t            _state;
 
   bool                      _chunked;
