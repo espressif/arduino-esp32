@@ -167,6 +167,11 @@ public:
 
   virtual int               connect(const char * host, uint16_t port);
 
+  // setTimeout() should be called after connect(), because some Clients update this value during connection
+  // The value is in microseconds and is passed directly into the _timeout value of class Stream because some
+  // Client implementations use seconds, which is IMHO incorrect!
+  virtual void              setTimeout(unsigned long timeout_ms = 1000); 
+
   virtual size_t            write(uint8_t);
 
   virtual size_t            write(const uint8_t *buf, size_t size);

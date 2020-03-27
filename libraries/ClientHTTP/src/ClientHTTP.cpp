@@ -91,6 +91,12 @@ int                 ClientHTTP::connect(const char * host, uint16_t port) {
   return _client.connect(host, port);
 }
 
+
+void                ClientHTTP::setTimeout(unsigned long timeout_ms) {
+  _timeout = timeout_ms;
+}
+
+
 size_t              ClientHTTP::write(uint8_t c) {
   if(_state != CLIENT_REQUEST_HEADER_SENT) {
 #if defined(ESP32)
