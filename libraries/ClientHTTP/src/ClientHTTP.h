@@ -218,7 +218,7 @@ public:
 
   size_t                    leftToWrite();
 
-  void                      printTo(Print &printer);
+  size_t                    printTo(Print &printer);
 
 //  std::map<char *, char *>  requestHeaders;
   std::map<std::string, std::string>  requestHeaders;

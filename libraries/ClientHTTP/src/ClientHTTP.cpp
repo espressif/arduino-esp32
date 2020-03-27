@@ -791,7 +791,10 @@ size_t              ClientHTTP::leftToWrite() {
 }
 
 
-void                ClientHTTP::printTo(Print &printer) {
+size_t              ClientHTTP::printTo(Print &printer) {
+  size_t bytesWritten = 0;
+  size_t bytesToWrite = leftToRead();
+
   while(leftToRead()) {
     uint8_t printBuffer[PRINT_BUFFER_SIZE];
 
@@ -799,6 +802,16 @@ void                ClientHTTP::printTo(Print &printer) {
     if(bytesToRead > PRINT_BUFFER_SIZE) bytesToRead = PRINT_BUFFER_SIZE;
 
     size_t bytesRead = read(printBuffer, bytesToRead);
-    printer.write(printBuffer, bytesRead);
+
+    if(bytesRead == 0) { // timeout
+#if defined(ESP32)
+      log_v("Timeout, %u bytes of %u bytes written", bytesWritten, bytesToWrite);
+#endif
+      break;
+    }
+
+    bytesWritten += printer.write(printBuffer, bytesRead);
   }
+
+  return bytesWritten;
 }
