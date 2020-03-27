@@ -606,6 +606,19 @@ ClientHTTP::http_code_t ClientHTTP::status() {
 }
 
 
+ClientHTTP::http_code_t ClientHTTP::statusAsync() {
+  if(_state != CLIENT_RESPONSE_HEADER) {
+    return HTTP_ERROR;
+  }
+
+  if(!available()) {
+    return ASYNC_RESPONSE_HEADERS;
+  }
+
+  return status();
+}
+
+
 ClientHTTP::http_code_t ClientHTTP::readResponseHeaders() {
   char headerLine[RESPONSE_HEADER_LINE_SIZE];
 

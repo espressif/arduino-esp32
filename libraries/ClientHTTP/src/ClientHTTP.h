@@ -93,6 +93,7 @@ public:
 
   // HTTP codes see RFC7231
   typedef enum {
+    ASYNC_RESPONSE_HEADERS = 0,
     HTTP_ERROR = -1,
     REDIRECT_LIMIT_REACHED = -2,
     REDIRECT_CONNECTION_FAILED = -3,
@@ -210,6 +211,8 @@ public:
   bool                      DELETE(const char * uri, size_t contentLength = 0);
 
   http_code_t               status();
+
+  http_code_t               statusAsync();
 
   size_t                    leftToRead();
 
