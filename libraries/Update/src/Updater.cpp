@@ -40,7 +40,7 @@ static bool _partitionIsBootable(const esp_partition_t* partition){
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
+    if (esp_partition_read(partition, 0, (uint32_t*)buf, 4) != 0) {
         return false;
     }
 
@@ -51,16 +51,22 @@ static bool _partitionIsBootable(const esp_partition_t* partition){
 }
 
 static bool _enablePartition(const esp_partition_t* partition){
-    uint8_t buf[4];
+    uint8_t buf[SPI_FLASH_SEC_SIZE];
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
-        return false;
+    if (esp_partition_read(partition, 0, (uint32_t*)buf, SPI_FLASH_SEC_SIZE) != 0) {
+      return false;
     }
+	if (buf[0] == ESP_IMAGE_HEADER_MAGIC) {
+		return true;
+	}
     buf[0] = ESP_IMAGE_HEADER_MAGIC;
 
-    return ESP.flashWrite(partition->address, (uint32_t*)buf, 4);
+	if(esp_partition_erase_range(partition, 0, SPI_FLASH_SEC_SIZE) != 0){
+		return false;
+	}
+    return esp_partition_write(partition, 0, (uint32_t*)buf, SPI_FLASH_SEC_SIZE) == 0;
 }
 
 UpdateClass::UpdateClass()
@@ -192,11 +198,11 @@ bool UpdateClass::_writeBuffer(){
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
+    if(esp_partition_erase_range(_partition, _progress, SPI_FLASH_SEC_SIZE) != 0){
         _abort(UPDATE_ERROR_ERASE);
         return false;
     }
-    if (!ESP.flashWrite(_partition->address + _progress, (uint32_t*)_buffer, _bufferLen)) {
+	if (esp_partition_write(_partition, _progress, (uint32_t*)_buffer, SPI_FLASH_SEC_SIZE) != 0) {
         _abort(UPDATE_ERROR_WRITE);
         return false;
     }
