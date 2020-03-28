@@ -6,10 +6,10 @@ echo "Installing Python Wheel ..."
 pip install wheel > /dev/null 2>&1
 
 echo "Installing PlatformIO ..."
-pip install -U https://github.com/platformio/platformio/archive/develop.zip > /dev/null 2>&1
+pip install -U https://github.com/platformio/platformio/archive/develop.zip
 
 echo "Installing Platform ESP32 ..."
-python -m platformio platform install https://github.com/platformio/platform-espressif32.git#feature/stage > /dev/null 2>&1
+python -m platformio platform install espressif32
 
 echo "Replacing the framework version ..."
 if [[ "$OSTYPE" == "darwin"* ]]; then
