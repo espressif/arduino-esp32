@@ -314,6 +314,8 @@ void                ClientHTTP::stop() {
 #endif
 
   _client.stop();
+
+  _state = CLIENT_READY;
 }
 
 

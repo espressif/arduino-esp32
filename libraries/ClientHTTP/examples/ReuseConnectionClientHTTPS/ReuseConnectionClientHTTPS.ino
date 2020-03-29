@@ -160,6 +160,7 @@ void loop() {
     Serial.println();
   } else {
     Serial.printf("Request failed with error code %d\n", status);
+    http.stop();
   }
 
   Serial.printf("Response header \"Connection: %s\"\n", http.responseHeaders["Connection"].c_str());
