@@ -35,12 +35,6 @@
 
                     ClientHTTP::~ClientHTTP() {
   free(_location);
-
-// TO DO RESPONSE HEADERS
-//  for(auto responseHeader: responseHeaders) { 
-//    free(responseHeader.second); // !!!!!! NOT SURE IF THESE POINTERS MUST BE FREE-ED
-//  }
-
   free(_host);
 }
 
