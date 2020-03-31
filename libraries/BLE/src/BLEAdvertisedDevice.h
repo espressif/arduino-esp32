@@ -12,6 +12,7 @@
 #include <esp_gattc_api.h>
 
 #include <map>
+#include <vector>
 
 #include "BLEAddress.h"
 #include "BLEScan.h"
