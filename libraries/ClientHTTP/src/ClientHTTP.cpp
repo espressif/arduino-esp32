@@ -403,10 +403,10 @@ bool                ClientHTTP::writeRequestHeaders(const char * method, const c
 
   for(auto requestHeader: requestHeaders) { // std::pair<char *, char *>
 //    _client.printf("%s: %s\r\n", requestHeader.first, requestHeader.second);
-    _client.printf("%s: %s\r\n", requestHeader.first.c_str(), requestHeader.second.c_str());
+    _client.printf("'%s': '%s'\r\n", requestHeader.first.c_str(), requestHeader.second.c_str());
 #if defined(ESP32)
 //    log_v("Request header '%s: %s'", requestHeader.first, requestHeader.second);
-    log_v("Request header '%s: %s'", requestHeader.first.c_str(), requestHeader.second.c_str());
+    log_v("Request header '%s': '%s'", requestHeader.first.c_str(), requestHeader.second.c_str());
 #endif
   }
 
