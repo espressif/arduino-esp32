@@ -45,7 +45,7 @@
 #define ETH_PHY_MDIO 18
 #endif
 
-#ifndef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR < 4
 #ifndef ETH_CLK_MODE
 #define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 #endif
@@ -57,7 +57,7 @@ class ETHClass {
     private:
         bool initialized;
         bool staticIP;
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
         esp_eth_handle_t eth_handle;
 
     protected:
@@ -72,7 +72,7 @@ class ETHClass {
         ETHClass();
         ~ETHClass();
 
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
         bool begin(uint8_t phy_addr=ETH_PHY_ADDR, int power=ETH_PHY_POWER, int mdc=ETH_PHY_MDC, int mdio=ETH_PHY_MDIO, eth_phy_type_t type=ETH_PHY_TYPE);
 #else
         bool begin(uint8_t phy_addr=ETH_PHY_ADDR, int power=ETH_PHY_POWER, int mdc=ETH_PHY_MDC, int mdio=ETH_PHY_MDIO, eth_phy_type_t type=ETH_PHY_TYPE, eth_clock_mode_t clk_mode=ETH_CLK_MODE);
