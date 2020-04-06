@@ -660,6 +660,13 @@
  */
 #define LWIP_IPV6                       1
 
+/**
+ * LWIP_ND6_RDNSS_MAX_DNS_SERVERS: Allow IPv6 DNS servers to be retrieved from
+ * NDP, up to the maximum number of allowed DNS servers (minus fallback slot)
+ */
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  DNS_MAX_SERVERS
+
+
 /*
    ---------------------------------------
    ---------- Hook options ---------------
@@ -738,6 +745,17 @@
  */
 #define ETHARP_TRUST_IP_MAC             CONFIG_LWIP_ETHARP_TRUST_IP_MAC
 
+/**
+ * ETHARP_SUPPORT_VLAN==1: support receiving and sending ethernet packets with
+ * VLAN header. See the description of LWIP_HOOK_VLAN_CHECK and
+ * LWIP_HOOK_VLAN_SET hooks to check/set VLAN headers.
+ * Additionally, you can define ETHARP_VLAN_CHECK to an u16_t VLAN ID to check.
+ * If ETHARP_VLAN_CHECK is defined, only VLAN-traffic for this VLAN is accepted.
+ * If ETHARP_VLAN_CHECK is not defined, all traffic is accepted.
+ * Alternatively, define a function/define ETHARP_VLAN_CHECK_FN(eth_hdr, vlan)
+ * that returns 1 to accept a packet or 0 to drop a packet.
+ */
+#define ETHARP_SUPPORT_VLAN             CONFIG_ETHARP_SUPPORT_VLAN
 
 /**
  * POSIX I/O functions are mapped to LWIP via the VFS layer
@@ -764,7 +782,6 @@
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #define ESP_DHCP                        1
 #define ESP_DNS                         1
-#define ESP_IPV6_AUTOCONFIG             1
 #define ESP_PERF                        0
 #define ESP_IP4_ATON                    1
 #define ESP_LIGHT_SLEEP                 1
@@ -779,6 +796,10 @@
 #define ESP_HAS_SELECT                  1
 #define ESP_AUTO_RECV                   1
 #define ESP_GRATUITOUS_ARP              CONFIG_ESP_GRATUITOUS_ARP
+
+#ifdef CONFIG_LWIP_IPV6_AUTOCONFIG
+#define ESP_IPV6_AUTOCONFIG             CONFIG_LWIP_IPV6_AUTOCONFIG
+#endif
 
 #ifdef ESP_IRAM_ATTR
 #undef ESP_IRAM_ATTR
