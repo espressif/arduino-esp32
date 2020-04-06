@@ -14,10 +14,9 @@
 #include "sd_diskio.h"
 #include "esp_system.h"
 extern "C" {
-    #include "ffconf.h"
     #include "ff.h"
     #include "diskio.h"
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
     #include "diskio_impl.h"
 #endif
     //#include "esp_vfs.h"
