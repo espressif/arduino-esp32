@@ -178,6 +178,8 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		// - esp_bd_addr_t     remote_bda
 		case ESP_GATTC_DISCONNECT_EVT: {
+				if (evtParam->disconnect.conn_id != m_conn_id)
+					break;
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
 				m_isConnected = false;
