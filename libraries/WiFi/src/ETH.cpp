@@ -125,9 +125,13 @@ static void _eth_phy_power_enable(bool enable)
 ETHClass::ETHClass()
     :initialized(false)
     ,staticIP(false)
+#if ESP_IDF_VERSION_MAJOR > 3
     ,eth_handle(NULL)
+#endif
     ,started(false)
+#if ESP_IDF_VERSION_MAJOR > 3
     ,eth_link(ETH_LINK_DOWN)
+#endif
 {
 }
 
@@ -348,13 +352,8 @@ IPAddress ETHClass::gatewayIP()
 
 IPAddress ETHClass::dnsIP(uint8_t dns_no)
 {
-#ifdef ESP_IDF_VERSION_MAJOR
     const ip_addr_t * dns_ip = dns_getserver(dns_no);
     return IPAddress(dns_ip->u_addr.ip4.addr);
-#else
-    ip_addr_t dns_ip = dns_getserver(dns_no);
-    return IPAddress(dns_ip.u_addr.ip4.addr);
-#endif
 }
 
 IPAddress ETHClass::broadcastIP()
