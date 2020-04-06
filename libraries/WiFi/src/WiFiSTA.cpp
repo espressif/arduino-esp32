@@ -488,13 +488,8 @@ IPAddress WiFiSTAClass::dnsIP(uint8_t dns_no)
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return IPAddress();
     }
-#ifdef ESP_IDF_VERSION_MAJOR
     const ip_addr_t * dns_ip = dns_getserver(dns_no);
     return IPAddress(dns_ip->u_addr.ip4.addr);
-#else
-    ip_addr_t dns_ip = dns_getserver(dns_no);
-    return IPAddress(dns_ip.u_addr.ip4.addr);
-#endif
 }
 
 /**
