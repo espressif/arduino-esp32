@@ -47,7 +47,7 @@ extern "C" {
 struct pppapi_msg_msg {
   ppp_pcb *ppp;
   union {
-#if ESP_PPP
+#if ESP_PPP && PPP_AUTH_SUPPORT
     struct {
       u8_t authtype;
       const char *user;
@@ -111,7 +111,7 @@ struct pppapi_msg {
 
 /* API for application */
 err_t pppapi_set_default(ppp_pcb *pcb);
-#if ESP_PPP
+#if ESP_PPP && PPP_AUTH_SUPPORT
 void pppapi_set_auth(ppp_pcb *pcb, u8_t authtype, const char *user, const char *passwd);
 #endif
 #if PPP_NOTIFY_PHASE

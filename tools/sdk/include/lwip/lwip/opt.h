@@ -1011,6 +1011,13 @@
 #endif
 
 /**
+ * ESP_IPV6_AUTOCONFIG==1: Enable stateless address autoconfiguration as per RFC 4862.
+ */
+#if !defined ESP_IPV6_AUTOCONFIG
+#define ESP_IPV6_AUTOCONFIG 0
+#endif
+
+/**
  * LWIP_DHCP_AUTOIP_COOP_TRIES: Set to the number of DHCP DISCOVER probes
  * that should be sent before falling back on AUTOIP (the DHCP client keeps
  * running in this case). This can be set as low as 1 to get an AutoIP address
