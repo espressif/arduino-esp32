@@ -27,7 +27,7 @@ The following examples are available. All but one are HTTPS / TLS 1.2 examples:
 - POSTClientHTTPS: how to `POST` a payload to a HTTPS server and print the response to `Serial`
 - POSTJsonClientHTTPS: how to `POST` an ArduinoJson to a HTTPS server and deserialize the response into another ArduinJson without buffers. All data is buffered into the ArduinoJson only
 - POSTSizerClientHTTPS: how to determine the size of a payload by printing to a utility `class Sizer` first. Next the resulting length is used to set the Content-Length request header by calling `POST`
-- ReuseConnectionHTTPS: how to reuse a connection, including correct handling of the Connection: close response header. This example DOES NOT WORK on the ESP8266 YET!
+- ReuseConnectionHTTPS: how to reuse a connection, including correct handling of the Connection: close response header.
 
 Still to be done:
 - Support for redirection to a different host

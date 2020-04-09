@@ -111,7 +111,7 @@ void setup() {
   Serial.println(asctime(localtime(&epoch)));
   
 #if defined(ESP8266)
-  BearSSL::X509List cert(rootCACert);
+  static BearSSL::X509List cert(rootCACert); // Used static to make sure 'cert' is alive during the full running of the sketch
   client.setTrustAnchors(&cert);
 #endif
 #if defined(ESP32)
