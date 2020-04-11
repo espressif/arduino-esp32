@@ -72,8 +72,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
-            _tx_pin = 0;
-            _rx_pin = 0;
+            _tx_pin = -1;
+            _rx_pin = -1;
         }
     }
 }
