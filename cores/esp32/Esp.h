@@ -21,6 +21,7 @@
 #define ESP_H
 
 #include <Arduino.h>
+#include <esp_partition.h>
 
 /**
  * AVR macros for WDT managment
@@ -96,6 +97,10 @@ public:
     bool flashEraseSector(uint32_t sector);
     bool flashWrite(uint32_t offset, uint32_t *data, size_t size);
     bool flashRead(uint32_t offset, uint32_t *data, size_t size);
+
+    bool partitionEraseRange(const esp_partition_t *partition, uint32_t offset, size_t size);
+    bool partitionWrite(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size);
+    bool partitionRead(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size);
 
     uint64_t getEfuseMac();
 

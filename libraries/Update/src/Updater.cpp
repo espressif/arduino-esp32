@@ -36,11 +36,11 @@ static const char * _err2str(uint8_t _error){
 }
 
 static bool _partitionIsBootable(const esp_partition_t* partition){
-    uint8_t buf[4];
+    uint8_t buf[ENCRYPTED_BLOCK_SIZE];
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
+    if(!ESP.partitionRead(partition, 0, (uint32_t*)buf, ENCRYPTED_BLOCK_SIZE)) {
         return false;
     }
 
@@ -50,17 +50,11 @@ static bool _partitionIsBootable(const esp_partition_t* partition){
     return true;
 }
 
-static bool _enablePartition(const esp_partition_t* partition){
-    uint8_t buf[4];
+bool UpdateClass::_enablePartition(const esp_partition_t* partition){
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
-        return false;
-    }
-    buf[0] = ESP_IMAGE_HEADER_MAGIC;
-
-    return ESP.flashWrite(partition->address, (uint32_t*)buf, 4);
+    return ESP.partitionWrite(partition, 0, (uint32_t*) _skipBuffer, ENCRYPTED_BLOCK_SIZE);
 }
 
 UpdateClass::UpdateClass()
@@ -179,24 +173,33 @@ void UpdateClass::abort(){
 
 bool UpdateClass::_writeBuffer(){
     //first bytes of new firmware
+    uint8_t skip = 0;
     if(!_progress && _command == U_FLASH){
         //check magic
         if(_buffer[0] != ESP_IMAGE_HEADER_MAGIC){
             _abort(UPDATE_ERROR_MAGIC_BYTE);
             return false;
         }
-        //remove magic byte from the firmware now and write it upon success
-        //this ensures that partially written firmware will not be bootable
-        _buffer[0] = 0xFF;
+
+        //Stash the first 16 bytes of data and set the offset so they are
+        //not written at this point so that partially written firmware
+        //will not be bootable
+        skip = ENCRYPTED_BLOCK_SIZE;
+        _skipBuffer = (uint8_t*)malloc(skip);
+        if(!_skipBuffer){
+            log_e("malloc failed");
+        return false;
+        }
+        memcpy(_skipBuffer, _buffer, skip);
     }
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
+    if(!ESP.partitionEraseRange(_partition, _progress, SPI_FLASH_SEC_SIZE)){
         _abort(UPDATE_ERROR_ERASE);
         return false;
     }
-    if (!ESP.flashWrite(_partition->address + _progress, (uint32_t*)_buffer, _bufferLen)) {
+    if (!ESP.partitionWrite(_partition, _progress + skip, (uint32_t*)_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) {
         _abort(UPDATE_ERROR_WRITE);
         return false;
     }

@@ -309,6 +309,20 @@ bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
     return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
 }
 
+bool EspClass::partitionEraseRange(const esp_partition_t *partition, uint32_t offset, size_t size) 
+{
+    return esp_partition_erase_range(partition, offset, size) == ESP_OK;
+}
+
+bool EspClass::partitionWrite(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size) 
+{
+    return esp_partition_write(partition, offset, data, size) == ESP_OK;
+}
+
+bool EspClass::partitionRead(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size) 
+{
+    return esp_partition_read(partition, offset, data, size) == ESP_OK;
+}
 
 uint64_t EspClass::getEfuseMac(void)
 {
