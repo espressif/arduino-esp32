@@ -7,8 +7,11 @@
 #include <math.h>
 #include <assert.h>
 
-#if CONFIG_ESP32_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_ESP32_SPIRAM_SUPPORT
 #include "freertos/FreeRTOS.h"
+#define DL_SPIRAM_SUPPORT 1
+#else
+#define DL_SPIRAM_SUPPORT 0
 #endif
 
 #ifndef max
@@ -86,14 +89,14 @@ static void *dl_lib_calloc(int cnt, int size, int align)
     void *res = malloc(total_size);
     if (NULL == res)
     {
-#if CONFIG_ESP32_SPIRAM_SUPPORT
+#if DL_SPIRAM_SUPPORT
         res = heap_caps_malloc(total_size, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
     }
     if (NULL == res)
     {
         printf("Item psram alloc failed. Size: %d x %d\n", cnt, size);
 #else
-        printf("Item alloc failed. Size: %d x %d, SPIRAM_FLAG: %d\n", cnt, size, CONFIG_ESP32_SPIRAM_SUPPORT);
+        printf("Item alloc failed. Size: %d x %d, SPIRAM_FLAG: %d\n", cnt, size, DL_SPIRAM_SUPPORT);
 #endif
         return NULL;
     }
