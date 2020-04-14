@@ -18,6 +18,7 @@
 */
 
 #include "wifi_provisioning/manager.h"
+#include "wifi_provisioning/scheme_ble.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "SimpleBLE.h"
@@ -31,8 +32,17 @@ enum scheme
 //Provisioning class 
 class WiFiProvClass
 {
+    protected:
+        static bool prov_enable;
+  
     public:
-        void beginProvision(scheme prov_scheme = WIFI_PROV_SCHEME_SOFTAP, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
+        WiFiProvClass() {
+            prov_enable = false;
+        }
+
+        bool isProvEnabled();
+    
+        void beginProvision(scheme prov_scheme = WIFI_PROV_SCHEME_SOFTAP, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
 };
 
 /*

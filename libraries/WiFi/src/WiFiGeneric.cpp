@@ -42,46 +42,52 @@ extern "C" {
 #include "lwip/dns.h"
 #include "esp_ipc.h"
 
-
 } //extern "C"
 
 #include "esp32-hal-log.h"
 #include <vector>
 #include "sdkconfig.h"
 
-extern bool isProvEnabled();
 static xQueueHandle _network_event_queue;
 static TaskHandle_t _network_event_task_handle = NULL;
 static EventGroupHandle_t _network_event_group = NULL;
 
-system_prov_event_t *sys_prov_data=(system_prov_event_t *)malloc(sizeof(system_prov_event_t));
-
 esp_err_t postToSysQueue(system_prov_event_t *data)
-{ 
-    if (xQueueSend(_network_event_queue, data, portMAX_DELAY) != pdPASS) {
+{
+    if (xQueueSend(_network_event_queue, &data, portMAX_DELAY) != pdPASS) {
         log_w("Network Event Queue Send Failed!");
             return ESP_FAIL;
     }
     return ESP_OK;
 }
+
 static void _network_event_task(void * arg){
-    system_prov_event_t data;
+    system_prov_event_t *data;
     for (;;) {
         if(xQueueReceive(_network_event_queue, &data, portMAX_DELAY) == pdTRUE){
-           if(data.prov_event != NULL)
-                WiFiGenericClass::_eventCallback(arg, data.sys_event, data.prov_event);
-            else
-                WiFiGenericClass::_eventCallback(arg, data.sys_event, NULL);
+            if(data->prov_event != NULL){
+                WiFiGenericClass::_eventCallback(arg, data->sys_event, data->prov_event);
+                free(data->sys_event);
+                free(data->prov_event);
+            } else {
+                WiFiGenericClass::_eventCallback(arg, data->sys_event, NULL);
+            }
+            free(data);
         }        
     }
     vTaskDelete(NULL);
     _network_event_task_handle = NULL;
 }
 
-static esp_err_t _network_event_cb(void *arg, system_event_t *event){
+static esp_err_t _network_event_cb(void *arg, system_event_t *event){ 
+    system_prov_event_t *sys_prov_data = (system_prov_event_t *)malloc(sizeof(system_prov_event_t));
+    if(sys_prov_data == NULL) {
+        return ESP_FAIL;
+    }
     sys_prov_data->sys_event = event;
     sys_prov_data->prov_event = NULL;
     if (postToSysQueue(sys_prov_data) != ESP_OK){
+        free(sys_prov_data);
         return ESP_FAIL;
     }
     return ESP_OK;
@@ -361,8 +367,9 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event, wifi_prov_event_t *prov_event)
 {
-    if(isProvEnabled())
+    if(WiFi.isProvEnabled()) {
         wifi_prov_mgr_event_handler(arg,event);        
+    }
     if(event->event_id < 26) {
         log_d("Event: %d - %s", event->event_id, system_event_names[event->event_id]);
     }
@@ -457,7 +464,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event, wif
             setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP6_BIT);
         }
     }
-
+ 
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         WiFiEventCbList_t entry = cbEventList[i];
         if(entry.cb || entry.fcb || entry.scb) {
@@ -471,7 +478,8 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event, wif
                 }
             }
         }
-        if(entry.provcb){
+
+        if(entry.provcb) {
             entry.provcb(event,prov_event);
         }
     }
