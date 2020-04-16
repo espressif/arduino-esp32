@@ -320,6 +320,7 @@ void ArduinoOTAClass::_runUpdate() {
         } else {
             log_e("Write ERROR: %s", Update.errorString());
         }
+        delay(1); 
     }
 
     if (Update.end()) {
@@ -358,7 +359,7 @@ void ArduinoOTAClass::end() {
 
 void ArduinoOTAClass::handle() {
     if (!_initialized) {
-        return; 
+        return;
     }
     if (_state == OTA_RUNUPDATE) {
         _runUpdate();
