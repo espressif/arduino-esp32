@@ -1,0 +1,135 @@
+# Provisioning for Arduino
+
+This sketch implements provisioning using various IDF components
+
+# Description
+
+This example allows Arduino user to choose either BLE or SOFTAP as a mode of transport, over which the provisioning related communication is to take place, between the device (to be provisioned) and the client (owner of the device).
+
+## API's introduced for provisioning
+
+## WiFi.onEvent()
+
+Using this API user can register to recieve WIFI Events and Provisioning Events
+
+#### Parameters passed
+
+A function with following signature
+* void SysProvEvent(system_event_t * , wifi_prov_event_t * );
+ 
+#### structure [ wifi_prov_event_t ]
+
+* wifi_prov_cb_event_t event;
+* void * event_data;
+
+### WiFi.beginProvision()
+
+WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
+
+#### Parameters
+
+* prov_scheme : choose the mode of transfer
+    * WIFI_PROV_SCHEME_BLE - Using BLE
+    * WIFI_PROV_SCHEME_SOFTAP - Using SoftAP
+        
+* security : choose security type
+    * WIFI_PROV_SECURITY_1 - It allows secure communication which consists of secure handshake using key exchange and proof of possession (pop) and encryption/decryption of messages.
+
+    * WIFI_PROV_SECURITY_0 - It do not provide application level security, it involve simply plain text communication.
+
+* scheme_event_handler : specify the handlers according to the mode chosen
+    * BLE :
+        - WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM - This scheme event handler is used when application doesn't need BT and BLE after provisioning is finised
+        - WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE - This scheme event handler is used when application doesn't need BLE to be active after provisioning is finised
+        - WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT - This scheme event handler is used when application doesn't need BT to be active after provisioning is finised
+
+    * SoftAp :
+        - WIFI_PROV_EVENT_HANDLER_NONE
+
+* pop : It is the string that is used to provide the authentication while provisioning
+
+* service_name : Specify service name for the device while provisioning, if it is not specified then default chosen name via SoftAP is WIFI_XXX and for BLE service it is BLE_XXX where XXX is the last 3 bytes of the MAC address. 
+
+* service_key : Specify service key while provisioning, if chosen mode of provisioning is BLE then service_key is always NULL
+
+* uuid : user can specify there own 128 bit UUID while provisioning using BLE, if not specified then default value taken is
+        - {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
+             0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02, }
+
+# NOTE
+
+* If none of the parameters are specified in beginProvision then default provisioning takes place using SoftAP with
+    * scheme = WIFI_PROV_SCHEME_SOFTAP
+    * scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
+    * security = WIFI_PROV_SECURITY_1
+    * pop = "abcd1234"
+    * service_name = "WiFi_XXX" 
+    * service_key = NULL
+    * uuid = NULL
+
+# Log Output
+* Enable debuger : [ Tools -> Core Debug Level -> Info ] 
+
+# App required for provisioning
+
+##Gihub link
+
+* Android : (https://github.com/espressif/esp-idf-provisioning-android)
+* iOS : (https://github.com/espressif/esp-idf-provisioning-ios)
+
+## These apps are available on playstore
+
+* For SoftAP : ESP SoftAP Prov
+* For BLE : ESP BLE Prov
+
+# Example output
+
+## Provisioning using SoftAP
+
+```
+[I][WiFiProv.cpp:117] beginProvision(): Starting AP using SOFTAP
+ service_name : WIFI_XXX
+ password : 123456789
+ pop : abcd1234
+
+Provisioning started
+Give Credentials of your access point using " Android app "
+
+Received Wi-Fi credentials
+	SSID : GIONEE M2
+	Password : 123456789
+
+Connected IP address : 192.168.43.120
+Provisioning Successful
+Provisioning Ends
+
+```
+
+## Provisioning using BLE
+
+```
+[I][WiFiProv.cpp:115] beginProvision(): Starting AP using BLE
+ service_name : BLE_XXX
+ pop : abcd1234
+
+Provisioning started
+Give Credentials of your access point using " Android app "
+
+Received Wi-Fi credentials
+	SSID : GIONEE M2
+	Password : 123456789
+
+Connected IP address : 192.168.43.120
+Provisioning Successful
+Provisioning Ends
+
+```
+
+## Credentials are available on device
+
+```
+[I][WiFiProv.cpp:125] beginProvision(): Aleardy Provisioned, starting Wi-Fi STA
+[I][WiFiProv.cpp:126] beginProvision(): CONNECTING ACCESS POINT CREDENTIALS : 
+[I][WiFiProv.cpp:126] beginProvision(): SSID : GIONEE M2
+
+```
