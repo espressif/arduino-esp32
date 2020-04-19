@@ -159,3 +159,141 @@ in an HSM are common choises), have important keys, such as those
 for production, well contained in a time-server. Yet easily accessible
 for those who need regular access.
 
+
+## Example output (Method A)
+
+With logging set to 'verbose
+
+1) normal boot
+
+     rst:0xc (SW_CPU_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
+     configsip: 0, SPIWP:0xee
+     clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+     mode:DIO, clock div:1
+     load:0x3fff0018,len:4
+     load:0x3fff001c,len:1044
+     load:0x40078000,len:8896
+     load:0x40080400,len:5816
+     entry 0x400806ac
+     Booting Apr 19 2020 21:55:30
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 0 - WIFI_READY
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 2 - STA_START
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 4 - STA_CONNECTED
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 7 - STA_GOT_IP
+     [D][WiFiGeneric.cpp:381] _eventCallback(): STA IP: 10.11.0.193, MASK: 255.255.255.0, GW: 10.11.0.1
+     [I][SecureArduinoOTA.cpp:153] begin(): OTA server at: ota-test.local:3232
+     Ready
+     IP address: 10.11.0.193
+     
+2) ESP32 up - inbound oTA rquest
+
+     [I][SecureArduinoOTA.cpp:292] _onRxHeaderPhase(): OTA Outer Digest: MD5: D28374F44E8B358E189FAF4FB6AFB8FF
+     [D][SecureUpdater.cpp:169] begin(): OTA Partition: app1
+     Updating sketch
+     
+3) Start of signature validation
+
+     [D][SecureUpdateProcessors.cpp:202] process_header(): RFC 3161 signed payload
+     [D][SecureUpdateProcessors.cpp:231] process_header(): Processing RFC 3161 signed payload
+     
+     PKIStatus: 0
+     idSig:   9 1.2.840.113549.1.7.2
+     SignedData Version 3
+     SignedData DigestAlgorithmIdentifier:algoritm OID: 2.16.840.1.101.3.4.2.1
+        MD algoritm internal num: 6 SHA256
+     SignedData DigestAlgorithmIdentifier: 6eContentType:  11 1.2.840.113549.1.9.16.1.4
+     TSTInfo Version 1
+     algoritm OID: 2.16.840.1.101.3.4.2.1
+        MD algoritm internal num: 6 SHA256
+     The main hash of the payload: len=32: f8baadde2339ebbed...6c31e743496043d33f1f.
+     Serial 16883855617417564721
+     Signature timestap: 2020-04-19 19:57:58 UTC
+     Accuracy 1.0.0 (ignored 0 bytes)
+     Extracted 1 certs
+     No CRLs
+     SID name CN=Redwax Interop Testing Root Certificate Authority 2040, O=Redwax Project
+     DigestAlgorithmIdentifier:algoritm OID: 2.16.840.1.101.3.4.2.1
+        MD algoritm internal num: 6 SHA256
+     Signed attributes:
+       1.2.840.113549.1.9.3:
+        Not decoded -- skipped
+       1.2.840.113549.1.9.5:
+        Not decoded -- skipped
+       1.2.840.113549.1.9.16.2.12:
+         Signing cert hash V1 (4): ff4237eaedc05da815c24db853f0d2bfda34da5c.
+       1.2.840.113549.1.9.4:
+        Digest (signed section): len=32: 7bc441fcc129d9a4a90e5ed....784fb4c59f4d2216af.
+     SignatureAlgorithmIdentifier:algoritm OID: 1.2.840.113549.1.1.1
+        PK algoritm internal num: 1
+     Signature (512 bytes): 075fc499f569997fbea2d66e7d8c6cdae8....a8912bb3f54ee91f01df8b.
+        0 hash: ff4237eaedc05da815c24db853f0d2bfda34da5c.
+     Found one that matched
+     Indirected signing.
+     Attribute Signed Data (s=1629, l=155) -- calculated digest: len=32: 69ef99b2713c41e6...099aeded0c45b6bedb.
+     Signature on the Reply OK
+ 
+ 
+   
+
+ 4) Processing of the signature  
+     [D][SecureUpdateProcessors.cpp:246] process_header(): Processed RFC 3161 signed payload
+     [I][SecureUpdateProcessors.cpp:254] process_header(): Processing plaintext with SHA256 specified RFC3161 digest.
+     [D][SecureUpdateProcessors.cpp:265] process_header(): RFC3161 signature verified.     
+     [D][SecureUpdateProcessors.cpp:274] process_header(): Signatures in the trust chain:
+     [D][SecureUpdateProcessors.cpp:278] process_header():    - cert. version     : 3
+      - serial number     : 6F:11:B7:D8:55:D2:7D:9A:14:F3:B6:E9:15:2B:60:CA:8C:4B:E2:AA
+      - issuer name       : CN=Redwax Interop Testing Root Certificate Authority 2040, O=Redwax Project
+      - subject name      : CN=Redwax Interop Testing Root Certificate Authority 2040, O=Redwax Project
+      - issued  on        : 2020-02-11 16:38:56
+      - expires on        : 2040-02-06 16:38:56
+      - signed using      : RSA with SHA1
+      - RSA key size      : 2048 bits
+      - basic constraints : CA=true
+     
+     [D][SecureUpdateProcessors.cpp:281] process_header(): Signatures in the RFC3161 wrapper:
+     [D][SecureUpdateProcessors.cpp:285] process_header():    - cert. version     : 3
+      - serial number     : 05
+      - issuer name       : CN=Redwax Interop Testing Root Certificate Authority 2040, O=Redwax Project
+      - subject name      : C=NL, ST=Zuid-Holland, L=Leiden, O=TimeServices, CN=Redwax Interop Test
+      - issued  on        : 2020-02-15 20:51:52
+      - expires on        : 2040-02-10 20:51:52
+      - signed using      : RSA with SHA-256
+      - RSA key size      : 4096 bits
+      - basic constraints : CA=false
+      - key usage         : Digital Signature
+      - ext key usage     : Time Stamping
+     
+     [I][SecureUpdateProcessors.cpp:293] process_header(): RFC3161 signature on timestamp and payload digest verified.
+     [D][SecureUpdateProcessors.cpp:303] process_header(): RFC3161: processing payload.
+     [D][SecureUpdateProcessors.cpp:51] process_header(): Valid magic at start of flash header
+     [D][SecureUpdateProcessors.cpp:362] process_end(): RFC3161 Finalizing payload digest
+     [D][SecureUpdateProcessors.cpp:382] process_end(): Payload calculated SHA256 Digest 32:f8baadde2339ebbed1b3afad3d6a9ad3cee69555f6c31e743496043d33f1f
+     [D][SecureUpdateProcessors.cpp:387] process_end(): RFC3161 Receveived SHA256 Digest 32:f8baadde2339ebbed1b3afad3d6a9ad3cee69555f6c31e743496043d33f1f
+     [I][SecureUpdateProcessors.cpp:402] process_end():  RFC3161 Payload digest matches signed digest.
+     [D][SecureUpdater.cpp:400] end(): Reporting an OK back up the chain
+     [D][SecureArduinoOTA.cpp:561] _runUpdate(): OTA Outer Digest matched.
+     [D][SecureUpdateProcessors.cpp:131] reset(): RESET
+     [D][SecureUpdater.cpp:359] activate(): RAW SHA256 Digest 361ab6322fa9e7a7bb23818d839e1bddafdf4735426edd297aedb9f6202bae
+
+5) Final phase - ESP 32 partition activated and rebooted.
+
+     [D][SecureUpdater.cpp:211] abort(): Aborted.
+     [D][SecureUpdateProcessors.cpp:131] reset(): RESET
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 3 - STA_STOP
+     [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 3 - STA_STOP
+     ets Jun  8 2016 00:22:57
+     
+     rst:0xc (SW_CPU_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
+     configsip: 0, SPIWP:0xee
+     clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+     mode:DIO, clock div:1
+     load:0x3fff0018,len:4
+     load:0x3fff001c,len:1044
+     load:0x40078000,len:8896
+     load:0x40080400,len:5816
+     entry 0x400806ac
+     Booting Apr 19 2020 21:55:30
+     Ready
+     IP address: 10.11.0.193
+
+
