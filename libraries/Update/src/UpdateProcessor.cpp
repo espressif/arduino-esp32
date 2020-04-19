@@ -6,7 +6,7 @@
 #include "esp_partition.h"
 #include "esp_spi_flash.h"
 
-#include "Updateprocessor.h"
+#include "UpdateProcessor.h"
 
 /* We have four formats; this handler deals with the original format:
 
