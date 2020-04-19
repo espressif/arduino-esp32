@@ -1,4 +1,4 @@
-Digital Signing of Over The Air (OTA) updates.
+# Digital Signing of Over The Air (OTA) updates.
 
 The espota.py tools contains support for signed, over the air, 
 firmware updates. This works by
@@ -38,8 +38,7 @@ it allows you to manage signatures over long periods
 of time, even staff comes and leaves, keys need to be
 recycled or are lost.
 
-
-A) I just want to play. How do I do that ?
+## A) I just want to play. How do I do that ?
 
 Take the example 'SecureOTA'. 
 
@@ -60,19 +59,19 @@ role of that interop.redwax.eu server would be a service
 in your own environment (we'll get to why that is a good idea
 later). So to install you run:
 
-   ./espota.py -i <IP> -f .../SecureOTA.bin \
+     ./espota.py -i <IP> -f .../SecureOTA.bin \
         --sign=https://interop.redwax.eu/test/timestamp
 
 while you watch the serial output.
 
-B) OK - so how do I this secure, without any server noncense ?
+## B) OK - so how do I this secure, without any server noncense ?
 
 So above example is just that; with no real security. Again
 takethe example 'SecureOTA' and open it.
 
 The next step would be to generate a public/private key; by doing
 
-   ./espota.py --signing-key=secret-signing-key.pem --generate-signing-key
+      ./espota.py --signing-key=secret-signing-key.pem --generate-signing-key
 
 this will write out the secret file to disk; but also show you 
 the public (i.e. the non secret key) in an easy to include in
@@ -81,7 +80,7 @@ paste it into the SecureOTA.ino example.
 
 Now change or add a line that says:
 
-    signatureChecker.addTrustedCertAsDER(signing_cert, sizeof(signing_cert));
+     signatureChecker.addTrustedCertAsDER(signing_cert, sizeof(signing_cert));
 
 If you leave in the existing line - then the Uploader will accept both your
 key and RedWax signed (insecure ones). Now tranfer this by serial or
@@ -95,10 +94,10 @@ Once it is in - you can use your own key (in the file
 
 ) to sign and upload:
 
-   ./espota.py -i <IP> -f .../SecureOTA.bin \
-        --signing-key=secret-signing-key.pem
+     ./espota.py -i <IP> -f .../SecureOTA.bin \
+          --signing-key=secret-signing-key.pem
 
-C) So what happens if I loose that private key.
+## C) So what happens if I loose that private key.
 
 Well then, if the firmware which is in the ESP32 only has the signing_cert
 sent to signatureChecker.addTrustedCertAsDER, then it will only accept
@@ -115,7 +114,7 @@ them or that someone else gets access to it.
 And the latter is always a bit of an issue; as you need this key
 everytime you do a test, a compile, etc.
 
-D) That sounds a bit messy in an enterprise / serious setting.
+## D) That sounds a bit messy in an enterprise / serious setting.
 
 That is indeed the case. So this is what PKI has been invented for. What
 you do here is that you use a hierarchy of signatures. So suppose 
