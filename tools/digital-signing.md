@@ -233,9 +233,9 @@ With logging set to 'verbose
          Signature on the Reply OK
      
      
-       
 
-     4) Processing of the signature  
+4) Processing of the signature  
+
          [D][SecureUpdateProcessors.cpp:246] process_header(): Processed RFC 3161 signed payload
          [I][SecureUpdateProcessors.cpp:254] process_header(): Processing plaintext with SHA256 specified RFC3161 digest.
          [D][SecureUpdateProcessors.cpp:265] process_header(): RFC3161 signature verified.     
