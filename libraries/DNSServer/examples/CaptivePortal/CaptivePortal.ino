@@ -27,7 +27,7 @@ void setup() {
 
 void loop() {
   dnsServer.processNextRequest();
-  WiFiClient client = server.available();   // listen for incoming clients
+  WiFiClient client = client.available();   // listen for incoming clients
 
   if (client) {
     String currentLine = "";
