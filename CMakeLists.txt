@@ -60,6 +60,11 @@ set(LIBRARY_SRCS
   libraries/SPI/src/SPI.cpp
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
+  libraries/Update/src/UpdateProcessor.cpp
+  libraries/Update/src/UpdateProcessorRFC3161.cpp
+  libraries/Update/src/mbedtls-ts-addons/signer_info.cpp
+  libraries/Update/src/mbedtls-ts-addons/x509_ts_utils.cpp
+  libraries/Update/src/mbedtls-ts-addons/ts.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
@@ -198,6 +203,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/SPI/src
   libraries/Ticker/src
   libraries/Update/src
+  libraries/Update/src/mbedtls-ts-addons
   libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src
