@@ -528,11 +528,17 @@ def main(args):
     cmd = "openssl x509 -in '{}' -outform DER -out '{}'".format(options.tskey, tmpn)
     os.system(cmd)
 
-    print("const unsigned char signing_cert[] = { ")
     with open(tmpn,'rb') as f:
       keybytes = f.read()
 
-    print(','.join('0x{:02x}'.format(ord(b)) for b in keybytes))
+    print("/* DER encoded signing certificate with (just the) public key */")
+    print("#define             signing_cert_len ((size_t){})".format(len(keybytes)))
+    print("const unsigned char signing_cert[{}] = {{ ".format(len(keybytes)))
+    for chunk in [keybytes[i:i+16] for i in range(0, len(keybytes), 16)]:
+       l = ','
+       if len(chunk) != 16:
+         l = ''
+       print('\t{}{}'.format(','.join('0x{:02x}'.format(ord(b)) for b in chunk),l))
     print("}; // end of signing cert")
 
     os.unlink(tmpn)
