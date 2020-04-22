@@ -30,12 +30,13 @@ BLEDescriptor::BLEDescriptor(const char* uuid, uint16_t len) : BLEDescriptor(BLE
  * @brief BLEDescriptor constructor.
  */
 BLEDescriptor::BLEDescriptor(BLEUUID uuid, uint16_t max_len) {
-	m_bleUUID            = uuid;
-	m_value.attr_len     = 0;                                         // Initial length is 0.
-	m_value.attr_max_len = max_len;                     // Maximum length of the data.
-	m_handle             = NULL_HANDLE;                               // Handle is initially unknown.
-	m_pCharacteristic    = nullptr;                                   // No initial characteristic.
-	m_pCallback          = nullptr;                                   // No initial callback.
+	m_resetValuesOnDisconnect = false;
+	m_bleUUID            	  = uuid;
+	m_value.attr_len          = 0;                 // Initial length is 0.
+	m_value.attr_max_len      = max_len;          // Maximum length of the data.
+	m_handle                  = NULL_HANDLE;     // Handle is initially unknown.
+	m_pCharacteristic         = nullptr;        // No initial characteristic.
+	m_pCallback               = nullptr;       // No initial callback.
 
 	m_value.attr_value   = (uint8_t*) malloc(max_len);  // Allocate storage for the value.
 } // BLEDescriptor
@@ -117,6 +118,13 @@ uint8_t* BLEDescriptor::getValue() {
 	return m_value.attr_value;
 } // getValue
 
+/**
+ * @brief Gets the value of the resetOnDisconnect flag
+ * @return flag
+ */
+bool BLEDescriptor::resetsOnDisconnect(){
+	return m_resetValuesOnDisconnect;
+}
 
 /**
  * @brief Handle GATT server events for the descripttor.
@@ -193,6 +201,14 @@ void BLEDescriptor::handleGATTServerEvent(
 			break;
 		} // ESP_GATTS_READ_EVT
 
+		// Resets the values to its default
+		case ESP_GATTS_DISCONNECT_EVT: {
+			if(this->m_resetValuesOnDisconnect){
+				this->resetValue();
+			}
+			break;
+		}
+
 		default:
 			break;
 	} // switch event
@@ -245,6 +261,22 @@ void BLEDescriptor::setValue(uint8_t* data, size_t length) {
 void BLEDescriptor::setValue(std::string value) {
 	setValue((uint8_t*) value.data(), value.length());
 } // setValue
+
+/**
+ * @brief Sets the reset on discconect flag
+ * @param [in] flag The value of the flag
+ */
+void BLEDescriptor::setResetsOnDisconnect(bool flag){
+	m_resetValuesOnDisconnect = flag;
+}
+
+/**
+ * @brief Resets the value to its default content
+ */
+void BLEDescriptor::resetValue(){
+	memset(m_value.attr_value,0,m_value.attr_max_len);
+	m_value.attr_len = 0;
+}
 
 void BLEDescriptor::setAccessPermissions(esp_gatt_perm_t perm) {
 	m_permissions = perm;

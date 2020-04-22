@@ -28,10 +28,13 @@ public:
 	BLEDescriptor(BLEUUID uuid, uint16_t max_len = 100);
 	virtual ~BLEDescriptor();
 
+
+
 	uint16_t getHandle();                                   // Get the handle of the descriptor.
 	size_t   getLength();                                   // Get the length of the value of the descriptor.
 	BLEUUID  getUUID();                                     // Get the UUID of the descriptor.
 	uint8_t* getValue();                                    // Get a pointer to the value of the descriptor.
+	bool resetsOnDisconnect();
 	void handleGATTServerEvent(
 			esp_gatts_cb_event_t      event,
 			esp_gatt_if_t             gatts_if,
@@ -41,12 +44,17 @@ public:
 	void setCallbacks(BLEDescriptorCallbacks* pCallbacks);  // Set callbacks to be invoked for the descriptor.
 	void setValue(uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
 	void setValue(std::string value);                       // Set the value of the descriptor as a data buffer.
+	void setResetsOnDisconnect(bool flag);
 
 	std::string toString();                                 // Convert the descriptor to a string representation.
+
+protected:
+	void resetValue();										// Resets the values to its default
 
 private:
 	friend class BLEDescriptorMap;
 	friend class BLECharacteristic;
+	bool					m_resetValuesOnDisconnect;
 	BLEUUID                 m_bleUUID;
 	uint16_t                m_handle;
 	BLEDescriptorCallbacks* m_pCallback;
