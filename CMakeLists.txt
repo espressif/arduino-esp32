@@ -71,6 +71,7 @@ set(LIBRARY_SRCS
   libraries/WiFi/src/WiFi.cpp
   libraries/WiFi/src/WiFiGeneric.cpp
   libraries/WiFi/src/WiFiMulti.cpp
+  libraries/WiFi/src/WiFiProv.cpp
   libraries/WiFi/src/WiFiScan.cpp
   libraries/WiFi/src/WiFiServer.cpp
   libraries/WiFi/src/WiFiSTA.cpp

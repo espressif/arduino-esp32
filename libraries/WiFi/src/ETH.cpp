@@ -94,7 +94,7 @@ void ETHClass::eth_event_handler(void *arg, esp_event_base_t event_base, int32_t
     default:
         break;
     }
-    WiFi._eventCallback(arg, &event);
+    WiFi._eventCallback(arg, &event,NULL);
 }
 
 
