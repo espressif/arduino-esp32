@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2020 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INET_H_
-#define INET_H_
+#ifndef TCP_H_
+#define TCP_H_
 
-#include "../lwip/inet.h"
+#include "lwip/inet.h"
 
-#endif /* INET_H_ */
+#endif /* TCP_H_ */
