@@ -2491,6 +2491,67 @@ m5stick-c.menu.DebugLevel.debug.build.code_debug=4
 m5stick-c.menu.DebugLevel.verbose=Verbose
 m5stick-c.menu.DebugLevel.verbose.build.code_debug=5
 
+##############################################################
+
+m5stack-atom.name=M5Stack-ATOM
+
+m5stack-atom.upload.tool=esptool_py
+m5stack-atom.upload.maximum_size=1310720
+m5stack-atom.upload.maximum_data_size=327680
+m5stack-atom.upload.wait_for_upload_port=true
+
+m5stack-atom.serial.disableDTR=true
+m5stack-atom.serial.disableRTS=true
+
+m5stack-atom.build.mcu=esp32
+m5stack-atom.build.core=esp32
+m5stack-atom.build.variant=m5stack_atom
+m5stack-atom.build.board=M5Stack_ATOM
+
+m5stack-atom.build.f_cpu=240000000L
+m5stack-atom.build.flash_size=4MB
+m5stack-atom.build.flash_freq=80m
+m5stack-atom.build.flash_mode=dio
+m5stack-atom.build.boot=dio
+m5stack-atom.build.partitions=default
+m5stack-atom.build.defines=
+
+m5stack-atom.menu.PartitionScheme.default=Default
+m5stack-atom.menu.PartitionScheme.default.build.partitions=default
+m5stack-atom.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stack-atom.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack-atom.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack-atom.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stack-atom.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack-atom.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+
+m5stack-atom.menu.UploadSpeed.1500000=1500000
+m5stack-atom.menu.UploadSpeed.1500000.upload.speed=1500000
+m5stack-atom.menu.UploadSpeed.750000=750000
+m5stack-atom.menu.UploadSpeed.750000.upload.speed=750000
+m5stack-atom.menu.UploadSpeed.500000=500000
+m5stack-atom.menu.UploadSpeed.500000.upload.speed=500000
+m5stack-atom.menu.UploadSpeed.250000=250000
+m5stack-atom.menu.UploadSpeed.250000.upload.speed=250000
+m5stack-atom.menu.UploadSpeed.115200=115200
+m5stack-atom.menu.UploadSpeed.115200.upload.speed=115200
+
+
+
+m5stack-atom.menu.DebugLevel.none=None
+m5stack-atom.menu.DebugLevel.none.build.code_debug=0
+m5stack-atom.menu.DebugLevel.error=Error
+m5stack-atom.menu.DebugLevel.error.build.code_debug=1
+m5stack-atom.menu.DebugLevel.warn=Warn
+m5stack-atom.menu.DebugLevel.warn.build.code_debug=2
+m5stack-atom.menu.DebugLevel.info=Info
+m5stack-atom.menu.DebugLevel.info.build.code_debug=3
+m5stack-atom.menu.DebugLevel.debug=Debug
+m5stack-atom.menu.DebugLevel.debug.build.code_debug=4
+m5stack-atom.menu.DebugLevel.verbose=Verbose
+m5stack-atom.menu.DebugLevel.verbose.build.code_debug=5
+
 
 ##############################################################
 
