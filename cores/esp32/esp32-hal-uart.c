@@ -85,7 +85,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_tout = 1;
         while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+            if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
         }
@@ -285,10 +285,18 @@ void uartRxFifoToQueue(uart_t* uart)
 {
 	uint8_t c;
     UART_MUTEX_LOCK();
-    while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
-        c = uart->dev->fifo.rw_byte;
-        xQueueSend(uart->queue, &c, 0);
-    }
+	//disable interrupts
+	uart->dev->int_ena.val = 0;
+	uart->dev->int_clr.val = 0xffffffff;
+	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+		c = uart->dev->fifo.rw_byte;
+		xQueueSend(uart->queue, &c, 0);
+	}
+	//enable interrupts
+	uart->dev->int_ena.rxfifo_full = 1;
+	uart->dev->int_ena.frm_err = 1;
+	uart->dev->int_ena.rxfifo_tout = 1;
+	uart->dev->int_clr.val = 0xffffffff;
     UART_MUTEX_UNLOCK();
 }
 
