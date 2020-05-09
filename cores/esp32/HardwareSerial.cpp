@@ -6,6 +6,8 @@
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #ifndef RX1
 #define RX1 9
 #endif
@@ -22,10 +24,24 @@
 #define TX2 17
 #endif
 
+#else
+
+#ifndef RX1
+#define RX1 18
+#endif
+
+#ifndef TX1
+#define TX1 17
+#endif
+
+#endif
+
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 HardwareSerial Serial(0);
 HardwareSerial Serial1(1);
+#if CONFIG_IDF_TARGET_ESP32
 HardwareSerial Serial2(2);
+#endif
 #endif
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
@@ -47,11 +63,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         rxPin = RX1;
         txPin = TX1;
     }
+#if CONFIG_IDF_TARGET_ESP32
     if(_uart_nr == 2 && rxPin < 0 && txPin < 0) {
         rxPin = RX2;
         txPin = TX2;
     }
-
+#endif
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
 
     if(!baud) {

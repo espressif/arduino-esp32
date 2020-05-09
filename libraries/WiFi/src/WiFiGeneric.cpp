@@ -35,7 +35,7 @@ extern "C" {
 
 #include <esp_err.h>
 #include <esp_wifi.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
@@ -64,13 +64,19 @@ static void _network_event_task(void * arg){
     _network_event_task_handle = NULL;
 }
 
-static esp_err_t _network_event_cb(void *arg, system_event_t *event){
-    if (xQueueSend(_network_event_queue, event, portMAX_DELAY) != pdPASS) {
+static void _network_event_cb(void* arg, esp_event_base_t base, int32_t id, void* data) {
+    if (xQueueSend(_network_event_queue, (system_event_t *)data, portMAX_DELAY) != pdPASS) {
         log_w("Network Event Queue Send Failed!");
-        return ESP_FAIL;
     }
-    return ESP_OK;
 }
+// static esp_err_t _network_event_cb(void *arg, system_event_t *event){
+//     if (xQueueSend(_network_event_queue, event, portMAX_DELAY) != pdPASS) {
+//         log_w("Network Event Queue Send Failed!");
+//         return ESP_FAIL;
+//     }
+//     return ESP_OK;
+// }
+ESP_EVENT_DEFINE_BASE(SYSTEM_EVENT);
 
 static bool _start_network_event_task(){
     if(!_network_event_group){
@@ -95,7 +101,14 @@ static bool _start_network_event_task(){
             return false;
         }
     }
-    return esp_event_loop_init(&_network_event_cb, NULL) == ESP_OK;
+
+    esp_err_t err = esp_event_loop_create_default();
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+        return err;
+    }
+
+    return esp_event_handler_register(SYSTEM_EVENT, ESP_EVENT_ANY_ID, _network_event_cb, NULL) == ESP_OK;
+    //return esp_event_loop_init(&_network_event_cb, NULL) == ESP_OK;
 }
 
 void tcpipInit(){
@@ -109,7 +122,7 @@ void tcpipInit(){
         }
         esp_event_loop_create_default();
 #endif
-        tcpip_adapter_init();
+        esp_netif_init();
     }
 }
 

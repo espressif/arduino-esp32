@@ -24,7 +24,7 @@
 #define ESP32WIFIGENERIC_H_
 
 #include <esp_err.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include <functional>
 #include "WiFiType.h"
 

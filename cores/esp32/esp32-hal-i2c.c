@@ -29,6 +29,8 @@
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -37,6 +39,7 @@
 #endif
 
 
+#if CONFIG_IDF_TARGET_ESP32
 //#define I2C_DEV(i)   (volatile i2c_dev_t *)((i)?DR_REG_I2C1_EXT_BASE:DR_REG_I2C_EXT_BASE)
 //#define I2C_DEV(i)   ((i2c_dev_t *)(REG_I2C_BASE(i)))
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
@@ -1769,7 +1772,7 @@ uint32_t i2cGetStatus(i2c_t * i2c){
     }
     else return 0;
 }
-
+#endif /* CONFIG_IDF_TARGET_ESP32 */
 
 /* todo
   22JUL18

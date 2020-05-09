@@ -27,6 +27,13 @@
 #include "esp32/rom/ets_sys.h"
 #include "esp32/rom/gpio.h"
 #include "esp_intr_alloc.h"
+#define NUM_OUPUT_PINS 34
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "esp32s2/rom/gpio.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
+#define NUM_OUPUT_PINS 45
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -36,9 +43,14 @@
 #include "esp_intr.h"
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32
 const int8_t esp32_adc2gpio[20] = {36, 37, 38, 39, 32, 33, 34, 35, -1, -1, 4, 0, 2, 15, 13, 12, 14, 27, 25, 26};
+#elif CONFIG_IDF_TARGET_ESP32S2
+const int8_t esp32_adc2gpio[20] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+#endif
 
 const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
+#if CONFIG_IDF_TARGET_ESP32
     {0x44, 11, 11, 1},
     {0x88, -1, -1, -1},
     {0x40, 12, 12, 2},
@@ -79,6 +91,56 @@ const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT]={
     {0x08, 1, 1, -1},
     {0x0c, 2, 2, -1},
     {0x10, 3, 3, -1}
+#elif CONFIG_IDF_TARGET_ESP32S2
+    {0x04,  0, -1, -1},
+    {0x08,  1,  0,  1},
+    {0x0c,  2,  1,  2},
+    {0x10,  3,  2,  3},
+    {0x14,  4,  3,  4},
+    {0x18,  5,  4,  5},
+    {0x1c,  6,  5,  6},
+    {0x20,  7,  6,  7},
+    {0x24,  8,  7,  8},
+    {0x28,  9,  8,  9},//FSPI_HD
+    {0x2c, 10,  9, 10},//FSPI_CS0 / FSPI_D4
+    {0x30, 11, 10, 11},//FSPI_D / FSPI_D5
+    {0x34, 12, 11, 12},//FSPI_CLK / FSPI_D6
+    {0x38, 13, 12, 13},//FSPI_Q / FSPI_D7
+    {0x3c, 14, 13, 14},//FSPI_WP / FSPI_DQS
+    {0x40, 15, 14, -1},//32K+ / RTS0
+    {0x44, 16, 15, -1},//32K- / CTS0
+    {0x48, 17, 16, -1},//DAC1 / TXD1
+    {0x4c, 18, 17, -1},//DAC2 / RXD1
+    {0x50, 19, 18, -1},//USB D- / RTS1
+    {0x54, 20, 19, -1},//USB D+ / CTS1
+    {0x58, 21, -1, -1},//SDA?
+    {   0, -1, -1, -1},//UNAVAILABLE
+    {   0, -1, -1, -1},//UNAVAILABLE
+    {   0, -1, -1, -1},//UNAVAILABLE
+    {   0, -1, -1, -1},//UNAVAILABLE
+    {0x6c, -1, -1, -1},//RESERVED SPI_CS1
+    {0x70, -1, -1, -1},//RESERVED SPI_HD
+    {0x74, -1, -1, -1},//RESERVED SPI_WP
+    {0x78, -1, -1, -1},//RESERVED SPI_CS0
+    {0x7c, -1, -1, -1},//RESERVED SPI_CLK
+    {0x80, -1, -1, -1},//RESERVED SPI_Q
+    {0x84, -1, -1, -1},//RESERVED SPI_D
+    {0x88, -1, -1, -1},//FSPI_HD
+    {0x8c, -1, -1, -1},//FSPI_CS0
+    {0x90, -1, -1, -1},//FSPI_D
+    {0x94, -1, -1, -1},//FSPI_CLK
+    {0x98, -1, -1, -1},//FSPI_Q
+    {0x9c, -1, -1, -1},//FSPI_WP
+    {0xa0, -1, -1, -1},//MTCK
+    {0xa4, -1, -1, -1},//MTDO
+    {0xa8, -1, -1, -1},//MTDI
+    {0xac, -1, -1, -1},//MTMS
+    {0xb0, -1, -1, -1},//TXD0
+    {0xb4, -1, -1, -1},//RXD0
+    {0xb8, -1, -1, -1},//SCL?
+    {0xbc, -1, -1, -1},//INPUT ONLY
+    {0, -1, -1, -1}
+#endif
 };
 
 typedef void (*voidFuncPtr)(void);
@@ -99,23 +161,23 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         return;
     }
 
-    uint32_t rtc_reg = rtc_gpio_desc[pin].reg;
+    uint32_t rtc_reg = rtc_io_desc[pin].reg;
     if(mode == ANALOG) {
         if(!rtc_reg) {
             return;//not rtc pin
         }
         //lock rtc
         uint32_t reg_val = ESP_REG(rtc_reg);
-        if(reg_val & rtc_gpio_desc[pin].mux){
+        if(reg_val & rtc_io_desc[pin].mux){
             return;//already in adc mode
         }
         reg_val &= ~(
-                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_gpio_desc[pin].func)
-                |rtc_gpio_desc[pin].ie
-                |rtc_gpio_desc[pin].pullup
-                |rtc_gpio_desc[pin].pulldown);
-        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_gpio_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
-        ESP_REG(rtc_reg) = reg_val | rtc_gpio_desc[pin].mux;
+                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_io_desc[pin].func)
+                |rtc_io_desc[pin].ie
+                |rtc_io_desc[pin].pullup
+                |rtc_io_desc[pin].pulldown);
+        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_io_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
+        ESP_REG(rtc_reg) = reg_val | rtc_io_desc[pin].mux;
         //unlock rtc
         ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)2 << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
         return;
@@ -124,13 +186,13 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
     //RTC pins PULL settings
     if(rtc_reg) {
         //lock rtc
-        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
+        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].mux);
         if(mode & PULLUP) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pullup) & ~(rtc_gpio_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pullup) & ~(rtc_io_desc[pin].pulldown);
         } else if(mode & PULLDOWN) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_gpio_desc[pin].pulldown) & ~(rtc_gpio_desc[pin].pullup);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pulldown) & ~(rtc_io_desc[pin].pullup);
         } else {
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].pullup | rtc_io_desc[pin].pulldown);
         }
         //unlock rtc
     }
@@ -145,7 +207,7 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
             GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
     } else if(mode & OUTPUT) {
-        if(pin > 33){
+        if(pin >= NUM_OUPUT_PINS){
             //unlock gpio
             return;//pins above 33 can be only inputs
         } else if(pin < 32) {
@@ -187,13 +249,13 @@ extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
     if(val) {
         if(pin < 32) {
             GPIO.out_w1ts = ((uint32_t)1 << pin);
-        } else if(pin < 34) {
+        } else if(pin < NUM_OUPUT_PINS) {
             GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
         }
     } else {
         if(pin < 32) {
             GPIO.out_w1tc = ((uint32_t)1 << pin);
-        } else if(pin < 34) {
+        } else if(pin < NUM_OUPUT_PINS) {
             GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
     }
@@ -203,7 +265,7 @@ extern int IRAM_ATTR __digitalRead(uint8_t pin)
 {
     if(pin < 32) {
         return (GPIO.in >> pin) & 0x1;
-    } else if(pin < 40) {
+    } else if(pin < GPIO_PIN_COUNT) {
         return (GPIO.in1.val >> (pin - 32)) & 0x1;
     }
     return 0;

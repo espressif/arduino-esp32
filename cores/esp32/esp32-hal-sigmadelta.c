@@ -24,6 +24,8 @@
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif

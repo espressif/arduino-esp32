@@ -19,18 +19,20 @@
 #include "esp32-hal.h"
 #include "esp8266-compat.h"
 #include "soc/gpio_reg.h"
-#include "soc/gpio_reg.h"
-
-#include "esp32-hal-rmt.h"
-#include "driver/periph_ctrl.h"
-
 #include "soc/rmt_struct.h"
+#include "driver/periph_ctrl.h"
 #include "esp_intr_alloc.h"
 
 /**
  * Internal macros
  */
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #define MAX_CHANNELS 8
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define MAX_CHANNELS 4
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
 #define MAX_DATA_PER_CHANNEL 64
 #define MAX_DATA_PER_ITTERATION 62
 #define _ABS(a) (a>0?a:-a)
@@ -100,7 +102,10 @@ struct rmt_obj_s
  * Internal variables for channel descriptors
  */
 static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, 
+#if CONFIG_IDF_TARGET_ESP32
+    NULL, NULL, NULL, NULL
+#endif
 };
 
 static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
@@ -108,10 +113,12 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
+#if CONFIG_IDF_TARGET_ESP32
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
     { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false},
+#endif
 };
 
 /**
@@ -532,12 +539,17 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     RMT.conf_ch[channel].conf0.mem_size = buffers;
     RMT.conf_ch[channel].conf0.carrier_en = 0;
     RMT.conf_ch[channel].conf0.carrier_out_lv = 0;
+#if CONFIG_IDF_TARGET_ESP32
     RMT.conf_ch[channel].conf0.mem_pd = 0;
-
+#endif
     RMT.conf_ch[channel].conf0.idle_thres = 0x80;
     RMT.conf_ch[channel].conf1.rx_en = 0;
     RMT.conf_ch[channel].conf1.tx_conti_mode = 0;
+#if CONFIG_IDF_TARGET_ESP32
     RMT.conf_ch[channel].conf1.ref_cnt_rst = 0;
+#else
+    RMT.conf_ch[channel].conf1.chk_rx_carrier_en = 0;
+#endif
     RMT.conf_ch[channel].conf1.rx_filter_en = 0;
     RMT.conf_ch[channel].conf1.rx_filter_thres = 0;
     RMT.conf_ch[channel].conf1.idle_out_lv = 0;     // signal level for idle

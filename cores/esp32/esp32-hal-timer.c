@@ -25,6 +25,10 @@
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -79,10 +83,17 @@ typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
 void IRAM_ATTR __timerISR(void * arg){
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t s0 = TIMERG0.int_st_timers.val;
     uint32_t s1 = TIMERG1.int_st_timers.val;
     TIMERG0.int_clr_timers.val = s0;
     TIMERG1.int_clr_timers.val = s1;
+#else
+    uint32_t s0 = TIMERG0.int_st.val;
+    uint32_t s1 = TIMERG1.int_st.val;
+    TIMERG0.int_clr.val = s0;
+    TIMERG1.int_clr.val = s1;
+#endif
     uint8_t status = (s1 & 3) << 2 | (s0 & 3);
     uint8_t i = 4;
     //restart the timers that should autoreload

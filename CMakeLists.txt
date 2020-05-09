@@ -110,9 +110,8 @@ set(BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 
-set(COMPONENT_ADD_INCLUDEDIRS
+set(includedirs
   variants/esp32/
   cores/esp32/
   libraries/ArduinoOTA/src
@@ -142,9 +141,10 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/Wire/src
   )
 
-set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
+set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
+set(priv_includes cores/esp32/libb64)
+set(requires spi_flash mbedtls mdns esp_adc_cal)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
 
-set(COMPONENT_REQUIRES spi_flash mbedtls mdns esp_adc_cal)
-set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt)
+idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
-register_component()

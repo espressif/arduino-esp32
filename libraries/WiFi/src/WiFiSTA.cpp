@@ -35,13 +35,13 @@ extern "C" {
 #include <string.h>
 #include <esp_err.h>
 #include <esp_wifi.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include <esp32-hal.h>
 #include <lwip/ip_addr.h>
 #include "lwip/err.h"
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
-#include <tcpip_adapter.h>
+#include <esp_netif.h>
 }
 
 // -----------------------------------------------------------------------------------------------------------------------

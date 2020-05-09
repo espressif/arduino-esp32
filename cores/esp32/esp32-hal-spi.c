@@ -31,6 +31,10 @@
 #include "esp32/rom/ets_sys.h"
 #include "esp32/rom/gpio.h"
 #include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "esp32s2/rom/gpio.h"
+#include "esp_intr_alloc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -40,18 +44,6 @@
 #include "esp_intr.h"
 #endif
 
-#define SPI_CLK_IDX(p)  ((p==0)?SPICLK_OUT_IDX:((p==1)?SPICLK_OUT_IDX:((p==2)?HSPICLK_OUT_IDX:((p==3)?VSPICLK_OUT_IDX:0))))
-#define SPI_MISO_IDX(p) ((p==0)?SPIQ_OUT_IDX:((p==1)?SPIQ_OUT_IDX:((p==2)?HSPIQ_OUT_IDX:((p==3)?VSPIQ_OUT_IDX:0))))
-#define SPI_MOSI_IDX(p) ((p==0)?SPID_IN_IDX:((p==1)?SPID_IN_IDX:((p==2)?HSPID_IN_IDX:((p==3)?VSPID_IN_IDX:0))))
-
-#define SPI_SPI_SS_IDX(n)   ((n==0)?SPICS0_OUT_IDX:((n==1)?SPICS1_OUT_IDX:((n==2)?SPICS2_OUT_IDX:SPICS0_OUT_IDX)))
-#define SPI_HSPI_SS_IDX(n)   ((n==0)?HSPICS0_OUT_IDX:((n==1)?HSPICS1_OUT_IDX:((n==2)?HSPICS2_OUT_IDX:HSPICS0_OUT_IDX)))
-#define SPI_VSPI_SS_IDX(n)   ((n==0)?VSPICS0_OUT_IDX:((n==1)?VSPICS1_OUT_IDX:((n==2)?VSPICS2_OUT_IDX:VSPICS0_OUT_IDX)))
-#define SPI_SS_IDX(p, n)   ((p==0)?SPI_SPI_SS_IDX(n):((p==1)?SPI_SPI_SS_IDX(n):((p==2)?SPI_HSPI_SS_IDX(n):((p==3)?SPI_VSPI_SS_IDX(n):0))))
-
-#define SPI_INUM(u)        (2)
-#define SPI_INTR_SOURCE(u) ((u==0)?ETS_SPI0_INTR_SOURCE:((u==1)?ETS_SPI1_INTR_SOURCE:((u==2)?ETS_SPI2_INTR_SOURCE:((p==3)?ETS_SPI3_INTR_SOURCE:0))))
-
 struct spi_struct_t {
     spi_dev_t * dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -60,25 +52,69 @@ struct spi_struct_t {
     uint8_t num;
 };
 
+#if CONFIG_IDF_TARGET_ESP32S2
+// ESP32S2
+#define SPI_COUNT           (3)
+
+#define SPI_CLK_IDX(p)      ((p==0)?SPICLK_OUT_MUX_IDX:((p==1)?FSPICLK_OUT_MUX_IDX:((p==2)?SPI3_CLK_OUT_MUX_IDX:0)))
+#define SPI_MISO_IDX(p)     ((p==0)?SPIQ_OUT_IDX:((p==1)?FSPIQ_OUT_IDX:((p==2)?SPI3_Q_OUT_IDX:0)))
+#define SPI_MOSI_IDX(p)     ((p==0)?SPID_IN_IDX:((p==1)?FSPID_IN_IDX:((p==2)?SPI3_D_IN_IDX:0)))
+
+#define SPI_SPI_SS_IDX(n)   ((n==0)?SPICS0_OUT_IDX:((n==1)?SPICS1_OUT_IDX:0))
+#define SPI_HSPI_SS_IDX(n)  ((n==0)?SPI3_CS0_OUT_IDX:((n==1)?SPI3_CS1_OUT_IDX:((n==2)?SPI3_CS2_OUT_IDX:SPI3_CS0_OUT_IDX)))
+#define SPI_FSPI_SS_IDX(n)  ((n==0)?FSPICS0_OUT_IDX:((n==1)?FSPICS1_OUT_IDX:((n==2)?FSPICS2_OUT_IDX:VSPICS0_OUT_IDX)))
+#define SPI_SS_IDX(p, n)    ((p==0)?SPI_SPI_SS_IDX(n):((p==1)?SPI_SPI_SS_IDX(n):((p==2)?SPI_HSPI_SS_IDX(n):0)))
+
+#define SPI_INTR_SOURCE(u)  ((u==0)?ETS_SPI1_INTR_SOURCE:((u==1)?ETS_SPI2_INTR_SOURCE:((u==2)?ETS_SPI3_INTR_SOURCE:0)))
+
+#else
+// ESP32
+#define SPI_COUNT           (4)
+
+#define SPI_CLK_IDX(p)      ((p==0)?SPICLK_OUT_IDX:((p==1)?SPICLK_OUT_IDX:((p==2)?HSPICLK_OUT_IDX:((p==3)?VSPICLK_OUT_IDX:0))))
+#define SPI_MISO_IDX(p)     ((p==0)?SPIQ_OUT_IDX:((p==1)?SPIQ_OUT_IDX:((p==2)?HSPIQ_OUT_IDX:((p==3)?VSPIQ_OUT_IDX:0))))
+#define SPI_MOSI_IDX(p)     ((p==0)?SPID_IN_IDX:((p==1)?SPID_IN_IDX:((p==2)?HSPID_IN_IDX:((p==3)?VSPID_IN_IDX:0))))
+
+#define SPI_SPI_SS_IDX(n)   ((n==0)?SPICS0_OUT_IDX:((n==1)?SPICS1_OUT_IDX:((n==2)?SPICS2_OUT_IDX:SPICS0_OUT_IDX)))
+#define SPI_HSPI_SS_IDX(n)  ((n==0)?HSPICS0_OUT_IDX:((n==1)?HSPICS1_OUT_IDX:((n==2)?HSPICS2_OUT_IDX:HSPICS0_OUT_IDX)))
+#define SPI_VSPI_SS_IDX(n)  ((n==0)?VSPICS0_OUT_IDX:((n==1)?VSPICS1_OUT_IDX:((n==2)?VSPICS2_OUT_IDX:VSPICS0_OUT_IDX)))
+#define SPI_SS_IDX(p, n)    ((p==0)?SPI_SPI_SS_IDX(n):((p==1)?SPI_SPI_SS_IDX(n):((p==2)?SPI_HSPI_SS_IDX(n):((p==3)?SPI_VSPI_SS_IDX(n):0))))
+
+#define SPI_INTR_SOURCE(u)  ((u==0)?ETS_SPI0_INTR_SOURCE:((u==1)?ETS_SPI1_INTR_SOURCE:((u==2)?ETS_SPI2_INTR_SOURCE:((p==3)?ETS_SPI3_INTR_SOURCE:0))))
+
+#endif
+
 #if CONFIG_DISABLE_HAL_LOCKS
 #define SPI_MUTEX_LOCK()
 #define SPI_MUTEX_UNLOCK()
 
-static spi_t _spi_bus_array[4] = {
+static spi_t _spi_bus_array[] = {
+#if CONFIG_IDF_TARGET_ESP32S2
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 1},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 2}
+#else
     {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), 0},
     {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 1},
     {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 2},
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 3}
+#endif
 };
 #else
 #define SPI_MUTEX_LOCK()    do {} while (xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS)
 #define SPI_MUTEX_UNLOCK()  xSemaphoreGive(spi->lock)
 
-static spi_t _spi_bus_array[4] = {
+static spi_t _spi_bus_array[] = {
+#if CONFIG_IDF_TARGET_ESP32S2
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 1},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 2}
+#else
     {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), NULL, 0},
     {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 1},
     {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 2},
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 3}
+#endif
 };
 #endif
 
@@ -88,6 +124,14 @@ void spiAttachSCK(spi_t * spi, int8_t sck)
         return;
     }
     if(sck < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            sck = 36;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             sck = 14;
         } else if(spi->num == VSPI) {
@@ -95,6 +139,7 @@ void spiAttachSCK(spi_t * spi, int8_t sck)
         } else {
             sck = 6;
         }
+#endif
     }
     pinMode(sck, OUTPUT);
     pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
@@ -106,6 +151,14 @@ void spiAttachMISO(spi_t * spi, int8_t miso)
         return;
     }
     if(miso < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            miso = 37;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             miso = 12;
         } else if(spi->num == VSPI) {
@@ -113,6 +166,7 @@ void spiAttachMISO(spi_t * spi, int8_t miso)
         } else {
             miso = 7;
         }
+#endif
     }
     SPI_MUTEX_LOCK();
     pinMode(miso, INPUT);
@@ -126,6 +180,14 @@ void spiAttachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            mosi = 35;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             mosi = 13;
         } else if(spi->num == VSPI) {
@@ -133,6 +195,7 @@ void spiAttachMOSI(spi_t * spi, int8_t mosi)
         } else {
             mosi = 8;
         }
+#endif
     }
     pinMode(mosi, OUTPUT);
     pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
@@ -144,6 +207,14 @@ void spiDetachSCK(spi_t * spi, int8_t sck)
         return;
     }
     if(sck < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            sck = 36;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             sck = 14;
         } else if(spi->num == VSPI) {
@@ -151,6 +222,7 @@ void spiDetachSCK(spi_t * spi, int8_t sck)
         } else {
             sck = 6;
         }
+#endif
     }
     pinMatrixOutDetach(sck, false, false);
     pinMode(sck, INPUT);
@@ -162,6 +234,14 @@ void spiDetachMISO(spi_t * spi, int8_t miso)
         return;
     }
     if(miso < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            miso = 37;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             miso = 12;
         } else if(spi->num == VSPI) {
@@ -169,6 +249,7 @@ void spiDetachMISO(spi_t * spi, int8_t miso)
         } else {
             miso = 7;
         }
+#endif
     }
     pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
     pinMode(miso, INPUT);
@@ -180,6 +261,14 @@ void spiDetachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            mosi = 35;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             mosi = 13;
         } else if(spi->num == VSPI) {
@@ -187,6 +276,7 @@ void spiDetachMOSI(spi_t * spi, int8_t mosi)
         } else {
             mosi = 8;
         }
+#endif
     }
     pinMatrixOutDetach(mosi, false, false);
     pinMode(mosi, INPUT);
@@ -202,6 +292,14 @@ void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
     }
     if(ss < 0) {
         cs_num = 0;
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            ss = 34;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             ss = 15;
         } else if(spi->num == VSPI) {
@@ -209,6 +307,7 @@ void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
         } else {
             ss = 11;
         }
+#endif
     }
     pinMode(ss, OUTPUT);
     pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
@@ -221,6 +320,14 @@ void spiDetachSS(spi_t * spi, int8_t ss)
         return;
     }
     if(ss < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        if(spi->num == FSPI) {
+            ss = 34;
+        } else {
+            log_e("HSPI Does not have default pins on ESP32S2!");
+            return;
+        }
+#else
         if(spi->num == HSPI) {
             ss = 15;
         } else if(spi->num == VSPI) {
@@ -228,6 +335,7 @@ void spiDetachSS(spi_t * spi, int8_t ss)
         } else {
             ss = 11;
         }
+#endif
     }
     pinMatrixOutDetach(ss, false, false);
     pinMode(ss, INPUT);
@@ -239,7 +347,11 @@ void spiEnableSSPins(spi_t * spi, uint8_t cs_mask)
         return;
     }
     SPI_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32S2
+    spi->dev->misc.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+#else
     spi->dev->pin.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+#endif
     SPI_MUTEX_UNLOCK();
 }
 
@@ -249,7 +361,11 @@ void spiDisableSSPins(spi_t * spi, uint8_t cs_mask)
         return;
     }
     SPI_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32S2
+    spi->dev->misc.val |= (cs_mask & SPI_CS_MASK_ALL);
+#else
     spi->dev->pin.val |= (cs_mask & SPI_CS_MASK_ALL);
+#endif
     SPI_MUTEX_UNLOCK();
 }
 
@@ -281,7 +397,11 @@ void spiSSSet(spi_t * spi)
         return;
     }
     SPI_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32S2
+    spi->dev->misc.cs_keep_active = 1;
+#else
     spi->dev->pin.cs_keep_active = 1;
+#endif
     SPI_MUTEX_UNLOCK();
 }
 
@@ -291,7 +411,11 @@ void spiSSClear(spi_t * spi)
         return;
     }
     SPI_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32S2
+    spi->dev->misc.cs_keep_active = 0;
+#else
     spi->dev->pin.cs_keep_active = 0;
+#endif
     SPI_MUTEX_UNLOCK();
 }
 
@@ -318,7 +442,11 @@ uint8_t spiGetDataMode(spi_t * spi)
     if(!spi) {
         return 0;
     }
+#if CONFIG_IDF_TARGET_ESP32S2
+    bool idleEdge = spi->dev->misc.ck_idle_edge;
+#else
     bool idleEdge = spi->dev->pin.ck_idle_edge;
+#endif
     bool outEdge = spi->dev->user.ck_out_edge;
     if(idleEdge) {
         if(outEdge) {
@@ -340,20 +468,36 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
     SPI_MUTEX_LOCK();
     switch (dataMode) {
     case SPI_MODE1:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 0;
+#else
         spi->dev->pin.ck_idle_edge = 0;
+#endif
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE2:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 1;
+#else
         spi->dev->pin.ck_idle_edge = 1;
+#endif
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE3:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 1;
+#else
         spi->dev->pin.ck_idle_edge = 1;
+#endif
         spi->dev->user.ck_out_edge = 0;
         break;
     case SPI_MODE0:
     default:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 0;
+#else
         spi->dev->pin.ck_idle_edge = 0;
+#endif
         spi->dev->user.ck_out_edge = 0;
         break;
     }
@@ -404,7 +548,11 @@ void spiStopBus(spi_t * spi)
     SPI_MUTEX_LOCK();
     spi->dev->slave.trans_done = 0;
     spi->dev->slave.slave_mode = 0;
+#if CONFIG_IDF_TARGET_ESP32S2
+    spi->dev->misc.val = 0;
+#else
     spi->dev->pin.val = 0;
+#endif
     spi->dev->user.val = 0;
     spi->dev->user1.val = 0;
     spi->dev->ctrl.val = 0;
@@ -417,7 +565,7 @@ void spiStopBus(spi_t * spi)
 
 spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
 {
-    if(spi_num > 3){
+    if(spi_num >= SPI_COUNT){
         return NULL;
     }
 
@@ -432,6 +580,18 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     }
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32S2
+    if(spi_num == FSPI) {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
+    } else if(spi_num == HSPI) {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI3_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI3_RST);
+    } else {
+        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI01_CLK_EN);
+        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
+    }
+#else
     if(spi_num == HSPI) {
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
@@ -442,6 +602,7 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI01_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
     }
+#endif
 
     spiStopBus(spi);
     spiSetDataMode(spi, dataMode);
@@ -470,6 +631,11 @@ void spiWaitReady(spi_t * spi)
     }
     while(spi->dev->cmd.usr);
 }
+
+#if CONFIG_IDF_TARGET_ESP32S2
+#define usr_mosi_dbitlen usr_mosi_bit_len
+#define usr_miso_dbitlen usr_miso_bit_len
+#endif
 
 void spiWrite(spi_t * spi, const uint32_t *data, uint8_t len)
 {
@@ -724,23 +890,39 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
     SPI_MUTEX_LOCK();
     spi->dev->clock.val = clockDiv;
     switch (dataMode) {
-        case SPI_MODE1:
-            spi->dev->pin.ck_idle_edge = 0;
-            spi->dev->user.ck_out_edge = 1;
-            break;
-        case SPI_MODE2:
-            spi->dev->pin.ck_idle_edge = 1;
-            spi->dev->user.ck_out_edge = 1;
-            break;
-        case SPI_MODE3:
-            spi->dev->pin.ck_idle_edge = 1;
-            spi->dev->user.ck_out_edge = 0;
-            break;
-        case SPI_MODE0:
-        default:
-            spi->dev->pin.ck_idle_edge = 0;
-            spi->dev->user.ck_out_edge = 0;
-            break;
+    case SPI_MODE1:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 0;
+#else
+        spi->dev->pin.ck_idle_edge = 0;
+#endif
+        spi->dev->user.ck_out_edge = 1;
+        break;
+    case SPI_MODE2:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 1;
+#else
+        spi->dev->pin.ck_idle_edge = 1;
+#endif
+        spi->dev->user.ck_out_edge = 1;
+        break;
+    case SPI_MODE3:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 1;
+#else
+        spi->dev->pin.ck_idle_edge = 1;
+#endif
+        spi->dev->user.ck_out_edge = 0;
+        break;
+    case SPI_MODE0:
+    default:
+#if CONFIG_IDF_TARGET_ESP32S2
+        spi->dev->misc.ck_idle_edge = 0;
+#else
+        spi->dev->pin.ck_idle_edge = 0;
+#endif
+        spi->dev->user.ck_out_edge = 0;
+        break;
     }
     if (SPI_MSBFIRST == bitOrder) {
         spi->dev->ctrl.wr_bit_order = 0;

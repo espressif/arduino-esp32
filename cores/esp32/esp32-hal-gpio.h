@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include "esp32-hal.h"
+#include "soc/gpio_caps.h"
 
 #define LOW               0x0
 #define HIGH              0x1
@@ -64,7 +65,7 @@ typedef struct {
     int8_t touch;     /*!< Touch Channel number (-1 if not Touch pin) */
 } esp32_gpioMux_t;
 
-extern const esp32_gpioMux_t esp32_gpioMux[40];
+extern const esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT];
 extern const int8_t esp32_adc2gpio[20];
 
 #define digitalPinIsValid(pin)          ((pin) < 40 && esp32_gpioMux[(pin)].reg)

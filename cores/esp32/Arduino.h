@@ -115,10 +115,10 @@ typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
 
+#ifdef __cplusplus
 void setup(void);
 void loop(void);
 
-#ifdef __cplusplus
 long random(long, long);
 #endif
 void randomSeed(unsigned long);
