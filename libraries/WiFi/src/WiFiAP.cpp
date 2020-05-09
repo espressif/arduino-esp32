@@ -35,7 +35,7 @@ extern "C" {
 #include <string.h>
 #include <esp_err.h>
 #include <esp_wifi.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include <lwip/ip_addr.h>
 #include "dhcpserver/dhcpserver_options.h"
 }
@@ -166,8 +166,8 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
         lease.end_ip.addr = static_cast<uint32_t>(local_ip) + (11 << 24);
 
         tcpip_adapter_dhcps_option(
-            (tcpip_adapter_option_mode_t)TCPIP_ADAPTER_OP_SET,
-            (tcpip_adapter_option_id_t)REQUESTED_IP_ADDRESS,
+            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
+            (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
             (void*)&lease, sizeof(dhcps_lease_t)
         );
 

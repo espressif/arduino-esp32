@@ -30,6 +30,9 @@
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
+const uint32_t MHZ = 1000000;
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -44,7 +47,6 @@ typedef struct apb_change_cb_s {
         apb_change_cb_t cb;
 } apb_change_t;
 
-const uint32_t MHZ = 1000000;
 
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
@@ -153,6 +155,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     uint32_t capb, apb;
     //Get XTAL Frequency and calculate min CPU MHz
     rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
+#if CONFIG_IDF_TARGET_ESP32
     if(xtal > RTC_XTAL_FREQ_AUTO){
         if(xtal < RTC_XTAL_FREQ_40M) {
             if(cpu_freq_mhz <= xtal && cpu_freq_mhz != xtal && cpu_freq_mhz != (xtal/2)){
@@ -164,6 +167,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
             return false;
         }
     }
+#endif
     if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 80){
         if(xtal >= RTC_XTAL_FREQ_40M){
             log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
@@ -172,6 +176,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         }
         return false;
     }
+#if CONFIG_IDF_TARGET_ESP32
     //check if cpu supports the frequency
     if(cpu_freq_mhz == 240){
         //Check if ESP32 is rated for a CPU frequency of 160MHz only
@@ -181,6 +186,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
             cpu_freq_mhz = 160;
         }
     }
+#endif
     //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
     //return if frequency has not changed

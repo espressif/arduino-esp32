@@ -25,6 +25,10 @@
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -42,6 +46,7 @@ static intr_handle_t touch_intr_handle = NULL;
 
 void IRAM_ATTR __touchISR(void * arg)
 {
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t pad_intr = READ_PERI_REG(SENS_SAR_TOUCH_CTRL2_REG) & 0x3ff;
     uint32_t rtc_intr = READ_PERI_REG(RTC_CNTL_INT_ST_REG);
     uint8_t i = 0;
@@ -58,16 +63,19 @@ void IRAM_ATTR __touchISR(void * arg)
             }
         }
     }
+#endif
 }
 
 void __touchSetCycles(uint16_t measure, uint16_t sleep)
 {
     __touchSleepCycles = sleep;
     __touchMeasureCycles = measure;
+#if CONFIG_IDF_TARGET_ESP32
     //Touch pad SleepCycle Time
     SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_SLEEP_CYCLES, __touchSleepCycles, SENS_TOUCH_SLEEP_CYCLES_S);
     //Touch Pad Measure Time
     SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_MEAS_DELAY, __touchMeasureCycles, SENS_TOUCH_MEAS_DELAY_S);
+#endif
 }
 
 void __touchInit()
@@ -77,15 +85,19 @@ void __touchInit()
         return;
     }
     initialized = true;
+#if CONFIG_IDF_TARGET_ESP32
     SET_PERI_REG_BITS(RTC_IO_TOUCH_CFG_REG, RTC_IO_TOUCH_XPD_BIAS, 1, RTC_IO_TOUCH_XPD_BIAS_S);
     SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
     //clear touch enable
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, 0x0);
     SET_PERI_REG_MASK(RTC_CNTL_STATE0_REG, RTC_CNTL_TOUCH_SLP_TIMER_EN);
+#endif
 
     __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
 
+#if CONFIG_IDF_TARGET_ESP32
     esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __touchISR, NULL, &touch_intr_handle);
+#endif
 }
 
 uint16_t __touchRead(uint8_t pin)
@@ -99,6 +111,7 @@ uint16_t __touchRead(uint8_t pin)
 
     __touchInit();
 
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t v0 = READ_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG);
     //Disable Intr & enable touch pad
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG,
@@ -130,6 +143,9 @@ uint16_t __touchRead(uint8_t pin)
     //restore previous value
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, v0);
     return touch_value;
+#else
+    return 0;
+#endif
 }
 
 void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t threshold)
@@ -145,6 +161,7 @@ void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t thresh
 
     __touchInterruptHandlers[pad] = userFunc;
 
+#if CONFIG_IDF_TARGET_ESP32
     //clear touch force ,select the Touch mode is Timer
     CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_START_EN_M|SENS_TOUCH_START_FORCE_M);
 
@@ -172,6 +189,7 @@ void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t thresh
                       (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)) | \
                       (1 << (pad + SENS_TOUCH_PAD_OUTEN2_S)) | \
                       (1 << (pad + SENS_TOUCH_PAD_OUTEN1_S)));
+#endif
 }
 
 extern uint16_t touchRead(uint8_t pin) __attribute__ ((weak, alias("__touchRead")));

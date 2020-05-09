@@ -6,6 +6,16 @@
 TaskHandle_t loopTaskHandle = NULL;
 
 #if CONFIG_AUTOSTART_ARDUINO
+#if CONFIG_FREERTOS_UNICORE
+void yieldIfNecessary(void){
+    static uint64_t lastYield = 0;
+    uint64_t now = millis();
+    if((now - lastYield) > 4000) {
+        lastYield = now;
+        vTaskDelay(1); //delay 1 RTOS tick
+    }
+}
+#endif
 
 bool loopTaskWDTEnabled;
 
@@ -13,6 +23,9 @@ void loopTask(void *pvParameters)
 {
     setup();
     for(;;) {
+#if CONFIG_FREERTOS_UNICORE
+        yieldIfNecessary();
+#endif
         if(loopTaskWDTEnabled){
             esp_task_wdt_reset();
         }

@@ -147,17 +147,19 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, eth_event_handler, this);
     //ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
 
-    eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
-    mac_config.smi_mdc_gpio_num = mdc;
-    mac_config.smi_mdio_gpio_num = mdio;
-    //mac_config.sw_reset_timeout_ms = 1000;
     esp_eth_mac_t *eth_mac = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     if(type == ETH_PHY_DM9051){
         return false;//todo
     } else {
 #endif
+#if CONFIG_ETH_USE_ESP32_EMAC
+        eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+        mac_config.smi_mdc_gpio_num = mdc;
+        mac_config.smi_mdio_gpio_num = mdio;
+        //mac_config.sw_reset_timeout_ms = 1000;
         eth_mac = esp_eth_mac_new_esp32(&mac_config);
+#endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     }
 #endif
