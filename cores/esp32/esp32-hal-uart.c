@@ -118,7 +118,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         while(uart->dev->status.rxfifo_cnt) {
             c = uart->dev->ahb_fifo.rw_byte;
 #endif
-            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+            if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
         }
@@ -247,6 +247,11 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         uart->dev->conf0.stop_bit_num = ONE_STOP_BITS_CONF;
         uart->dev->rs485_conf.dl1_en = 1;
     }
+
+    // tx_idle_num : idle interval after tx FIFO is empty(unit: the time it takes to send one bit under current baudrate)
+    // Setting it to 0 prevents line idle time/delays when sending messages with small intervals
+    uart->dev->idle_conf.tx_idle_num = 0;  //
+
     UART_MUTEX_UNLOCK();
 
     if(rxPin != -1) {
@@ -304,7 +309,7 @@ uint32_t uartAvailable(uart_t* uart)
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
-    return uxQueueMessagesWaiting(uart->queue);
+    return (uxQueueMessagesWaiting(uart->queue) + uart->dev->status.rxfifo_cnt) ;
 }
 
 uint32_t uartAvailableForWrite(uart_t* uart)
@@ -315,12 +320,35 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
+void uartRxFifoToQueue(uart_t* uart)
+{
+	uint8_t c;
+    UART_MUTEX_LOCK();
+	//disable interrupts
+	uart->dev->int_ena.val = 0;
+	uart->dev->int_clr.val = 0xffffffff;
+	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+		c = uart->dev->fifo.rw_byte;
+		xQueueSend(uart->queue, &c, 0);
+	}
+	//enable interrupts
+	uart->dev->int_ena.rxfifo_full = 1;
+	uart->dev->int_ena.frm_err = 1;
+	uart->dev->int_ena.rxfifo_tout = 1;
+	uart->dev->int_clr.val = 0xffffffff;
+    UART_MUTEX_UNLOCK();
+}
+
 uint8_t uartRead(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
     uint8_t c;
+    if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
+    {
+    	uartRxFifoToQueue(uart);
+    }
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
     }
@@ -333,6 +361,10 @@ uint8_t uartPeek(uart_t* uart)
         return 0;
     }
     uint8_t c;
+    if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
+    {
+    	uartRxFifoToQueue(uart);
+    }
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
     }

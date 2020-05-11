@@ -540,12 +540,8 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
     }
 }
 
-void spiStopBus(spi_t * spi)
+static void spiInitBus(spi_t * spi)
 {
-    if(!spi) {
-        return;
-    }
-    SPI_MUTEX_LOCK();
     spi->dev->slave.trans_done = 0;
     spi->dev->slave.slave_mode = 0;
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -559,8 +555,19 @@ void spiStopBus(spi_t * spi)
     spi->dev->ctrl1.val = 0;
     spi->dev->ctrl2.val = 0;
     spi->dev->clock.val = 0;
-    SPI_MUTEX_UNLOCK();
+}
+
+void spiStopBus(spi_t * spi)
+{
+    if(!spi) {
+        return;
+    }
+    
     removeApbChangeCallback(spi, _on_apb_change);
+    
+    SPI_MUTEX_LOCK();
+    spiInitBus(spi);
+    SPI_MUTEX_UNLOCK();
 }
 
 spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
@@ -604,12 +611,8 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     }
 #endif
 
-    spiStopBus(spi);
-    spiSetDataMode(spi, dataMode);
-    spiSetBitOrder(spi, bitOrder);
-    spiSetClockDiv(spi, clockDiv);
-
     SPI_MUTEX_LOCK();
+    spiInitBus(spi);
     spi->dev->user.usr_mosi = 1;
     spi->dev->user.usr_miso = 1;
     spi->dev->user.doutdin = 1;
@@ -619,6 +622,10 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
         spi->dev->data_buf[i] = 0x00000000;
     }
     SPI_MUTEX_UNLOCK();
+
+    spiSetDataMode(spi, dataMode);
+    spiSetBitOrder(spi, bitOrder);
+    spiSetClockDiv(spi, clockDiv);
 
     addApbChangeCallback(spi, _on_apb_change);
     return spi;
