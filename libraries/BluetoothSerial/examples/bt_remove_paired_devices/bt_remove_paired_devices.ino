@@ -10,6 +10,7 @@
 //The only remedy is to delete this saved bound device from your device flash memory
 //and pair with the other device again.
 //
+#if CONFIG_IDF_TARGET_ESP32
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include"esp_gap_bt_api.h"
@@ -85,3 +86,7 @@ void setup() {
 }
  
 void loop() {}
+#else
+void setup() {}
+void loop() {}
+#endif

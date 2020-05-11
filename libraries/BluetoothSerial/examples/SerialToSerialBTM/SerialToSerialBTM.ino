@@ -5,6 +5,7 @@
 //it creates a bridge between Serial and Classical Bluetooth (SPP)
 //this is an extention of the SerialToSerialBT example by Evandro Copercini - 2018
 //
+#if CONFIG_IDF_TARGET_ESP32
 
 #include "BluetoothSerial.h"
 
@@ -54,3 +55,8 @@ void loop() {
   }
   delay(20);
 }
+#else
+void setup() {}
+void loop() {}
+#endif
+
