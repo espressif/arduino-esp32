@@ -24,7 +24,7 @@ esp32s2.serial.disableRTS=true
 
 esp32s2.build.mcu=esp32s2
 esp32s2.build.core=esp32
-esp32s2.build.variant=esp32
+esp32s2.build.variant=esp32s2
 esp32s2.build.board=ESP32S2_DEV
 
 esp32s2.build.f_cpu=240000000L
