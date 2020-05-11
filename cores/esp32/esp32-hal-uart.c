@@ -327,8 +327,13 @@ void uartRxFifoToQueue(uart_t* uart)
 	//disable interrupts
 	uart->dev->int_ena.val = 0;
 	uart->dev->int_clr.val = 0xffffffff;
+#if CONFIG_IDF_TARGET_ESP32
 	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
 		c = uart->dev->fifo.rw_byte;
+#else
+	while (uart->dev->status.rxfifo_cnt) {
+		c = uart->dev->ahb_fifo.rw_byte;
+#endif
 		xQueueSend(uart->queue, &c, 0);
 	}
 	//enable interrupts

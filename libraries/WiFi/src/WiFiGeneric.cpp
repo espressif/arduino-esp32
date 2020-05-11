@@ -79,17 +79,24 @@ static void _network_event_task(void * arg){
     _network_event_task_handle = NULL;
 }
 
-static void _network_event_cb(void* arg, esp_event_base_t base, int32_t id, void* data) {
-    system_event_t *event = (system_event_t *)data;
+static esp_err_t _network_event_cb(void* arg, system_event_t *event) {
     system_prov_event_t *sys_prov_data = (system_prov_event_t *)malloc(sizeof(system_prov_event_t));
     if(sys_prov_data == NULL) {
-        return;
+        return ESP_FAIL;
     }
     sys_prov_data->sys_event = event;
     sys_prov_data->prov_event = NULL;
     if (postToSysQueue(sys_prov_data) != ESP_OK){
         free(sys_prov_data);
-        return;
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
+static void _network_event_cb(void* arg, esp_event_base_t base, int32_t id, void* data) {
+    system_event_t *event = (system_event_t *)data;
+    if(_network_event_cb(arg, event) != ESP_OK){
+        log_e("event dispatch failed");
     }
 }
 
