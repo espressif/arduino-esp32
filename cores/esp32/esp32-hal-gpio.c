@@ -154,12 +154,38 @@ static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
+//
+//static void idf_pinMode(uint8_t pin, uint8_t mode)
+//{
+//	gpio_mode_t m = 0;
+//	if(mode & INPUT) {
+//		m |= GPIO_MODE_DEF_INPUT;
+//	}
+//	if(mode & OUTPUT) {
+//		m |= GPIO_MODE_DEF_OUTPUT;
+//	}
+//	if(mode & OPEN_DRAIN) {
+//		m |= GPIO_MODE_DEF_OD;
+//	}
+//    gpio_config_t conf = {
+//        .pin_bit_mask = 1LL << pin,
+//        .mode = (gpio_mode_t)m,
+//        .pull_up_en = (gpio_pullup_t)((mode & PULLUP) != 0),
+//        .pull_down_en = (gpio_pulldown_t)((mode & PULLDOWN) != 0),
+//        .intr_type = (gpio_int_type_t)GPIO_INTR_DISABLE
+//    };
+//    gpio_config(&conf);
+//}
+
+
 extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
 
     if(!digitalPinIsValid(pin)) {
         return;
     }
+
+    //return idf_pinMode(pin, mode);
 
     uint32_t rtc_reg = rtc_io_desc[pin].reg;
     if(mode == ANALOG) {
@@ -227,9 +253,17 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
     pinFunction |= FUN_IE;//input enable but required for output as well?
 
     if(mode & (INPUT | OUTPUT)) {
+#if CONFIG_IDF_TARGET_ESP32
         pinFunction |= ((uint32_t)2 << MCU_SEL_S);
+#elif CONFIG_IDF_TARGET_ESP32S2
+        pinFunction |= ((uint32_t)1 << MCU_SEL_S);
+#endif
     } else if(mode == SPECIAL) {
-        pinFunction |= ((uint32_t)(((pin)==1||(pin)==3)?0:1) << MCU_SEL_S);
+#if CONFIG_IDF_TARGET_ESP32
+        pinFunction |= ((uint32_t)(((pin)==RX||(pin)==TX)?0:1) << MCU_SEL_S);
+#elif CONFIG_IDF_TARGET_ESP32S2
+        pinFunction |= ((uint32_t)(((pin)==RX||(pin)==TX)?0:2) << MCU_SEL_S);
+#endif
     } else {
         pinFunction |= ((uint32_t)(mode >> 5) << MCU_SEL_S);
     }
