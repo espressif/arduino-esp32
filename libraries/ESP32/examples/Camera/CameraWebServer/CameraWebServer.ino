@@ -112,4 +112,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   delay(10000);
 }
+#else
+void setup(){}
+void loop(){}
 #endif
