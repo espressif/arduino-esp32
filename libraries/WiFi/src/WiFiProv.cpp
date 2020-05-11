@@ -103,7 +103,15 @@ static void get_device_service_name(char *service_name, size_t max)
 {
     uint8_t eth_mac[6];
     WiFi.macAddress(eth_mac);
-    snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
+#if CONFIG_IDF_TARGET_ESP32
+    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
+        snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_BLE, eth_mac[3], eth_mac[4], eth_mac[5]);
+    } else {
+#endif
+         snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_WIFI, eth_mac[3], eth_mac[4], eth_mac[5]);  
+#if CONFIG_IDF_TARGET_ESP32
+    }
+#endif
 }
 
 void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
@@ -116,11 +124,22 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             .event_cb = prov_event_handler,
             .user_data = NULL
             };
+
+#if CONFIG_IDF_TARGET_ESP32
+    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
+        config.scheme = wifi_prov_scheme_ble;        
+    } else {
+#endif
+    	config.scheme = wifi_prov_scheme_softap;
+#if CONFIG_IDF_TARGET_ESP32
+    }
+#endif
  
     wifi_prov_mgr_init(config);
     WiFi.mode(WIFI_MODE_AP);
     wifi_prov_mgr_is_provisioned(&provisioned);
     if(provisioned == false) {
+#if CONFIG_IDF_TARGET_ESP32
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             service_key = NULL;
             if(uuid == NULL) {
@@ -128,6 +147,7 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             }
             wifi_prov_scheme_ble_set_service_uuid(uuid);
         }
+#endif
 
         if(service_name == NULL) {
             char service_name_temp[12];
@@ -135,16 +155,19 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             service_name = (const char *)service_name_temp;
         }
 
+#if CONFIG_IDF_TARGET_ESP32
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             log_i("Starting AP using BLE\n service_name : %s\n pop : %s",service_name,pop);
-
         } else {
+#endif
             if(service_key == NULL) {
                log_i("Starting AP using SOFTAP\n service_name : %s\n pop : %s",service_name,pop); 
             } else { 
                log_i("Starting AP using SOFTAP\n service_name : %s\n password : %s\n pop : %s",service_name,service_key,pop); 
             }
+#if CONFIG_IDF_TARGET_ESP32
         }
+#endif
            
         wifi_prov_mgr_start_provisioning(security,pop,service_name,service_key);
 
