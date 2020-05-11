@@ -25,19 +25,20 @@ fi
 echo "PlatformIO for ESP32 has been installed"
 echo ""
 
-function build_pio_sketch(){ # build_pio_sketch <board> <path-to-ino>
-    if [ "$#" -lt 2 ]; then
+function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
+    if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
-        echo "USAGE: build_pio_sketch <board> <path-to-ino>"
+        echo "USAGE: build_pio_sketch <board> <options> <path-to-ino>"
         return 1
     fi
 
     local board="$1"
-    local sketch="$2"
+    local options="$2"
+    local sketch="$3"
     local sketch_dir=$(dirname "$sketch")
     echo ""
     echo "Compiling '"$(basename "$sketch")"' ..."
-    python -m platformio ci --board "$board" "$sketch_dir" --project-option="board_build.partitions = huge_app.csv"
+    python -m platformio ci --board "$board" "$sketch_dir" --project-option="$options"
 }
 
 function count_sketches() # count_sketches <examples-path>
@@ -66,20 +67,21 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_pio_sketches() # build_pio_sketches <board> <examples-path> <chunk> <total-chunks>
+function build_pio_sketches() # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
 {
-    if [ "$#" -lt 2 ]; then
+    if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
-        echo "USAGE: build_pio_sketches <board> <examples-path> [<chunk> <total-chunks>]"
+        echo "USAGE: build_pio_sketches <board> <options> <examples-path> [<chunk> <total-chunks>]"
         return 1
     fi
 
     local board=$1
-    local examples=$2
-    local chunk_idex=$3
-    local chunks_num=$4
+    local options="$2"
+    local examples=$3
+    local chunk_idex=$4
+    local chunks_num=$5
 
-    if [ "$#" -lt 4 ]; then
+    if [ "$#" -lt 5 ]; then
         chunk_idex="0"
         chunks_num="1"
     fi
@@ -138,7 +140,7 @@ function build_pio_sketches() # build_pio_sketches <board> <examples-path> <chun
         || [ "$sketchnum" -gt "$end_index" ]; then
             continue
         fi
-        build_pio_sketch "$board" "$sketch"
+        build_pio_sketch "$board" "$options" "$sketch"
         local result=$?
         if [ $result -ne 0 ]; then
             return $result

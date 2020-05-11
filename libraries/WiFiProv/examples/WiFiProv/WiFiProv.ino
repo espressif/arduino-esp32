@@ -5,7 +5,7 @@ void SysProvEvent(system_event_t *sys_event,wifi_prov_event_t *prov_event)
       switch (sys_event->event_id) {
       case SYSTEM_EVENT_STA_GOT_IP:
           Serial.print("\nConnected IP address : ");
-          Serial.println(ip4addr_ntoa(&sys_event->event_info.got_ip.ip_info.ip));
+          Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
           break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
           Serial.println("\nDisconnected. Connecting to the AP again... ");
@@ -56,8 +56,8 @@ void setup() {
   /* uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
                    0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02 };*/
   WiFi.onEvent(SysProvEvent);
-  //WiFiProv.beginProvision(provSchemeBLE, WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, "abcd1234", "PROV_XXX", NULL, NULL);
-  WiFiProv.beginProvision(provSchemeSoftAP, WIFI_PROV_EVENT_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234", NULL, NULL, NULL);
+  //WiFi.beginProvision(provSchemeBLE, WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, "abcd1234", "PROV_XXX", NULL, NULL);
+  WiFi.beginProvision(provSchemeSoftAP, WIFI_PROV_EVENT_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234", "SOFTAP_XXX", NULL, NULL);
 }
 
 void loop() {
