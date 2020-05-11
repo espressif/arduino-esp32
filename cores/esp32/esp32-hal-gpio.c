@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "esp32-hal-gpio.h"
+#include "pins_arduino.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"

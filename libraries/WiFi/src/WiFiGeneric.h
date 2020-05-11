@@ -114,7 +114,7 @@ class WiFiGenericClass
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
 
-    static esp_err_t _eventCallback(void *arg, system_event_t *event, wifi_prov_event_t *prov_event);
+    static esp_err_t _eventCallback(void *arg, system_event_t *event, wifi_prov_event_t *prov_event=NULL);
 
   protected:
     static bool _persistent;
