@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join
+from os.path import abspath, isdir, isfile, join, basename
 
 from SCons.Script import DefaultEnvironment
 
@@ -99,7 +99,8 @@ env.Append(
         "-u", "newlib_include_heap_impl",
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
-        "-u", "__cxa_guard_dummy"
+        "-u", "__cxa_guard_dummy",
+        "-Wl,-Map=" + join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
     ],
 
     CPPPATH=[
@@ -225,83 +226,11 @@ env.Append(
         ("IDF_VER", '\\"v4.2-dev-1415-ga2263571b\\"'),
         "ESP_PLATFORM",
         "ARDUINO_ARCH_ESP32",
+        "ESP32",
+        ("F_CPU", "$BOARD_F_CPU"),
+        ("ARDUINO", 10805),
         ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
-    ],
-
-    CPPPATH=[
-       join(FRAMEWORK_DIR, "tools", "sdk", "include", "config"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_trace"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "app_update"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "asio"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bootloader_support"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "bt"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "coap"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "console"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "driver"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "efuse"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-tls"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_adc_cal"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_event"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_http_client"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_http_server"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_ota"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_https_server"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp_ringbuf"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "espcoredump"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ethernet"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "expat"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "fatfs"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "freemodbus"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "freertos"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "heap"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "idf_test"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "jsmn"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "json"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "libsodium"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "log"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "lwip"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mbedtls"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mdns"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "micro-ecc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "mqtt"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nimble"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nvs_flash"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "protobuf-c"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "protocomm"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "pthread"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "sdmmc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "smartconfig_ack"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "soc"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "spi_flash"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "spiffs"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcp_transport"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "tcpip_adapter"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "ulp"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "unity"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "vfs"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wear_levelling"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wifi_provisioning"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "wpa_supplicant"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "xtensa-debug-module"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-face"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp32-camera"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "esp-face"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "fb_gfx"),
-        join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
-    ],
-
-    LIBPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "lib"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "ld")
-    ],
-
-    LIBS=[
-        "-lgcc", "-lfreertos", "-lmesh", "-lod", "-lwear_levelling", "-lfb_gfx", "-lesp_adc_cal", "-lc_nano", "-lesp32", "-ldriver", "-lhal", "-ljsmn", "-lsmartconfig", "-lesp_http_server", "-lprotocomm", "-lface_recognition", "-lespnow", "-ltcpip_adapter", "-lface_detection", "-lunity", "-lc", "-llibsodium", "-lesp_http_client", "-lapp_update", "-lnewlib", "-lcxx", "-ltcp_transport", "-lm", "-lefuse", "-lopenssl", "-lwifi_provisioning", "-lespcoredump", "-llog", "-lmbedtls", "-lesp_ringbuf", "-lwps", "-lnet80211", "-lmqtt", "-lesp_https_server", "-lapp_trace", "-lesp_event", "-lesp32-camera", "-lsoc", "-lheap", "-llwip", "-lwpa", "-lrtc", "-lxtensa-debug-module", "-lspi_flash", "-lphy", "-lfr", "-lconsole", "-lcoap", "-lbtdm_app", "-lsdmmc", "-lfd", "-lmicro-ecc", "-ljson", "-lcore", "-lprotobuf-c", "-lethernet", "-lspiffs", "-lnvs_flash", "-lwpa_supplicant", "-lvfs", "-lasio", "-lwpa2", "-lpp", "-lbootloader_support", "-limage_util", "-ldl_lib", "-lulp", "-lnghttp", "-lpthread", "-lfreemodbus", "-lexpat", "-lfatfs", "-lsmartconfig_ack", "-lmdns", "-lcoexist", "-lesp-tls", "-lesp_https_ota", "-lbt", "-lstdc++"
     ],
 
     LIBSOURCE_DIRS=[

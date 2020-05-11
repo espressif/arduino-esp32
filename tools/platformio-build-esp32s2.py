@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join
+from os.path import abspath, isdir, isfile, join, basename
 
 from SCons.Script import DefaultEnvironment
 
@@ -94,7 +94,8 @@ env.Append(
         "-u", "newlib_include_heap_impl",
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
-        "-u", "__cxa_guard_dummy"
+        "-u", "__cxa_guard_dummy",
+        "-Wl,-Map=" + join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
     ],
 
     CPPPATH=[
