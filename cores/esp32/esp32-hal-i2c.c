@@ -1772,6 +1772,48 @@ uint32_t i2cGetStatus(i2c_t * i2c){
     }
     else return 0;
 }
+#else
+
+i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
+    return NULL;
+}
+void i2cRelease(i2c_t *i2c){
+    return;
+}
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+    return ESP_FAIL;
+}
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+    return ESP_FAIL;
+}
+i2c_err_t i2cFlush(i2c_t *i2c){
+    return ESP_FAIL;
+}
+i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed){
+    return ESP_FAIL;
+}
+uint32_t i2cGetFrequency(i2c_t * i2c){
+    return 0;
+}
+uint32_t i2cGetStatus(i2c_t * i2c){
+    return 0;
+}
+
+//Functions below should be used only if well understood
+//Might be deprecated and removed in future
+i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl){
+    return ESP_FAIL;
+}
+i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl){
+    return ESP_FAIL;
+}
+i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda){
+    return ESP_FAIL;
+}
+i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda){
+    return ESP_FAIL;
+}
+
 #endif /* CONFIG_IDF_TARGET_ESP32 */
 
 /* todo
