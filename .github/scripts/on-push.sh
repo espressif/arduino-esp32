@@ -66,7 +66,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
 	else
 		build_sketches "$FQBN" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-	else
+    fi
 else
 	source ./.github/scripts/install-platformio-esp32.sh
 	# PlatformIO ESP32 Test
