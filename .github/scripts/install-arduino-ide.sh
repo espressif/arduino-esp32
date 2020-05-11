@@ -116,9 +116,10 @@ function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
 		$win_opts $xtra_opts "$sketch"
 }
 
-function count_sketches() # count_sketches <examples-path>
+function count_sketches() # count_sketches <examples-path> <target-mcu>
 {
 	local examples="$1"
+	local target="$2"
     rm -rf sketches.txt
 	if [ ! -d "$examples" ]; then
 		touch sketches.txt
@@ -133,7 +134,7 @@ function count_sketches() # count_sketches <examples-path>
         if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
             continue
         fi;
-        if [[ -f "$sketchdir/.test.skip" ]]; then
+        if [[ -f "$sketchdir/.skip.$target" ]]; then
             continue
         fi
         echo $sketch >> sketches.txt
@@ -142,24 +143,25 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total-chunks> [extra-options]
+function build_sketches() # build_sketches <fqbn> <target-mcu> <examples-path> <chunk> <total-chunks> [extra-options]
 {
     local fqbn=$1
-    local examples=$2
-    local chunk_idex=$3
-    local chunks_num=$4
-    local xtra_opts=$5
+	local target="$2"
+    local examples=$3
+    local chunk_idex=$4
+    local chunks_num=$5
+    local xtra_opts=$6
 
-    if [ "$#" -lt 2 ]; then
+    if [ "$#" -lt 3 ]; then
 		echo "ERROR: Illegal number of parameters"
-		echo "USAGE: build_sketches <fqbn> <examples-path> [<chunk> <total-chunks>] [extra-options]"
+		echo "USAGE: build_sketches <fqbn> <target-mcu <examples-path> [<chunk> <total-chunks>] [extra-options]"
 		return 1
 	fi
 
-    if [ "$#" -lt 4 ]; then
+    if [ "$#" -lt 5 ]; then
 		chunk_idex="0"
 		chunks_num="1"
-		xtra_opts=$3
+		xtra_opts=$4
 	fi
 
 	if [ "$chunks_num" -le 0 ]; then
@@ -208,7 +210,7 @@ function build_sketches() # build_sketches <fqbn> <examples-path> <chunk> <total
         local sketchdirname=$(basename $sketchdir)
         local sketchname=$(basename $sketch)
         if [ "${sketchdirname}.ino" != "$sketchname" ] \
-        || [ -f "$sketchdir/.test.skip" ]; then
+        || [ -f "$sketchdir/.skip.$target" ]; then
             continue
         fi
         sketchnum=$(($sketchnum + 1))
