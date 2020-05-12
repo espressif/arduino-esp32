@@ -225,6 +225,9 @@ env.Append(
         ("IDF_VER", '\\"v4.2-dev-1415-ga2263571b\\"'),
         "ESP_PLATFORM",
         "ARDUINO_ARCH_ESP32",
+        "ESP32",
+        ("F_CPU", "$BOARD_F_CPU"),
+        ("ARDUINO", 10805),
         ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
     ],
