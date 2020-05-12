@@ -247,11 +247,6 @@ if "build.variant" in env.BoardConfig():
                  env.BoardConfig().get("build.variant"))
         ]
     )
-    env.Append(
-        LINKFLAGS=[
-            "-Wl,--Map=$BUILD_DIR/$PROGNAME.map"
-        ]
-    )
     libs.append(env.BuildLibrary(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
         join(FRAMEWORK_DIR, "variants", env.BoardConfig().get("build.variant"))
