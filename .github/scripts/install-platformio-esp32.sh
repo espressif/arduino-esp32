@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
+PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git#feature/idf-v4.0"
 
 echo "Installing Python Wheel ..."
 pip install wheel > /dev/null 2>&1
@@ -9,16 +10,10 @@ echo "Installing PlatformIO ..."
 pip install -U https://github.com/platformio/platformio/archive/develop.zip > /dev/null 2>&1
 
 echo "Installing Platform ESP32 ..."
-python -m platformio platform install https://github.com/platformio/platform-espressif32.git > /dev/null 2>&1
+python -m platformio platform install $PLATFORMIO_ESP32_URL > /dev/null 2>&1
 
 echo "Replacing the framework version ..."
 python -c "import json; import os; fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+'); data=json.load(fp); data['packages']['framework-arduinoespressif32']['version'] = '*'; fp.seek(0); fp.truncate(); json.dump(data, fp); fp.close()"
-# if [[ "$OSTYPE" == "darwin"* ]]; then
-# 	sed 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json" > "platform.json"
-# 	mv -f "platform.json" "$HOME/.platformio/platforms/espressif32/platform.json"
-# else
-# 	sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json"
-# fi
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..."
