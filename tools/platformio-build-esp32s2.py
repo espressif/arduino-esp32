@@ -94,7 +94,8 @@ env.Append(
         "-u", "newlib_include_heap_impl",
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
-        "-u", "__cxa_guard_dummy"
+        "-u", "__cxa_guard_dummy",
+        "-Wl,--Map=$BUILD_DIR/$PROGNAME.map"
     ],
 
     CPPPATH=[
