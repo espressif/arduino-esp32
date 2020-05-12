@@ -94,8 +94,7 @@ env.Append(
         "-u", "newlib_include_heap_impl",
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
-        "-u", "__cxa_guard_dummy",
-        "-Wl,--Map=$BUILD_DIR/$PROGNAME.map"
+        "-u", "__cxa_guard_dummy"
     ],
 
     CPPPATH=[
@@ -246,6 +245,11 @@ if "build.variant" in env.BoardConfig():
         CPPPATH=[
             join(FRAMEWORK_DIR, "variants",
                  env.BoardConfig().get("build.variant"))
+        ]
+    )
+    env.Append(
+        LINKFLAGS=[
+            "-Wl,--Map=$BUILD_DIR/$PROGNAME.map"
         ]
     )
     libs.append(env.BuildLibrary(
