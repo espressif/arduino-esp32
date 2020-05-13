@@ -119,13 +119,11 @@ void BLEScan::handleGAPEvent(
 					advertisedDevice->setScan(this);
 					advertisedDevice->setAddressType(param->scan_rst.ble_addr_type);
 
-					if (!m_wantDuplicates && !found) {   // If we have previously seen this device, don't record it again.
+					if (m_pAdvertisedDeviceCallbacks) { // if has callback, no need to record to vector
+						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
+					} else if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
 						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
 						shouldDelete = false;
-					}
-
-					if (m_pAdvertisedDeviceCallbacks) {
-						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
 					}
 					if (shouldDelete) {
 						delete advertisedDevice;
