@@ -1781,29 +1781,99 @@ uint32_t i2cGetStatus(i2c_t * i2c){
     else return 0;
 }
 #else
+#include "driver/i2c.h"
+
+#define ACK_CHECK_EN                1                   /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_DIS               0                   /*!< I2C master will not check ack from slave */
+#define ACK_VAL                     0x0                 /*!< I2C ack value */
+#define NACK_VAL                    0x1                 /*!< I2C nack value */
+
+struct i2c_struct_t {
+	i2c_port_t num;
+};
 
 i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
-    return NULL;
+    i2c_t * out = (i2c_t*)malloc(sizeof(i2c_t));
+    if(out == NULL){
+        log_e("malloc failed");
+        return NULL;
+    }
+    out->num = (i2c_port_t)i2c_num;
+
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.scl_io_num = (gpio_num_t)scl;
+    conf.sda_io_num = (gpio_num_t)sda;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = clk_speed;
+    esp_err_t ret = i2c_param_config(out->num, &conf);
+    if (ret != ESP_OK) {
+        log_e("i2c_param_config failed");
+        free(out);
+        return NULL;
+    }
+    ret = i2c_driver_install(out->num, conf.mode, 0, 0, 0);
+    if (ret != ESP_OK) {
+        log_e("i2c_driver_install failed");
+        free(out);
+        return NULL;
+    }
+    return out;
 }
+
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+	esp_err_t ret = ESP_OK;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+    i2c_master_write(cmd, buff, size, ACK_CHECK_EN);
+    //if send stop?
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(i2c->num, cmd, timeOutMillis / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+	esp_err_t ret = ESP_OK;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, ACK_CHECK_EN);
+    if (size > 1) {
+        i2c_master_read(cmd, buff, size - 1, ACK_VAL);
+    }
+    i2c_master_read_byte(cmd, buff + size - 1, NACK_VAL);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(i2c->num, cmd, timeOutMillis / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    if(ret == ESP_OK){
+    	*readCount = size;
+    }
+    return ret;
+}
+
 void i2cRelease(i2c_t *i2c){
+	log_w("");
     return;
 }
-i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
-    return ESP_FAIL;
-}
-i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
-    return ESP_FAIL;
-}
 i2c_err_t i2cFlush(i2c_t *i2c){
-    return ESP_FAIL;
+	esp_err_t ret = i2c_reset_tx_fifo(i2c->num);
+    if(ret != ESP_OK){
+    	return ret;
+    }
+    return i2c_reset_rx_fifo(i2c->num);
 }
 i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed){
-    return ESP_FAIL;
+	log_w("");
+    return ESP_OK;
 }
 uint32_t i2cGetFrequency(i2c_t * i2c){
+	log_w("");
     return 0;
 }
 uint32_t i2cGetStatus(i2c_t * i2c){
+	log_w("");
     return 0;
 }
 
