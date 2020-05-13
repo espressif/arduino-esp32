@@ -6,11 +6,11 @@ This sketch implements provisioning using various IDF components
 
 This example allows Arduino user to choose either BLE or SOFTAP as a mode of transport, over which the provisioning related communication is to take place, between the device (to be provisioned) and the client (owner of the device).
 
-## API's introduced for provisioning
+# APIs introduced for provisioning
 
 ## WiFi.onEvent()
 
-Using this API user can register to recieve WIFI Events and Provisioning Events
+Using this API user can register to receive WiFi Events and Provisioning Events
 
 #### Parameters passed
 
@@ -22,11 +22,11 @@ A function with following signature
 * wifi_prov_cb_event_t event;
 * void * event_data;
 
-### WiFi.beginProvision()
+## WiFi.beginProvision()
 
 WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
 
-#### Parameters
+#### Parameters passed
 
 * prov_scheme : choose the mode of transfer
     * WIFI_PROV_SCHEME_BLE - Using BLE
@@ -46,11 +46,11 @@ WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_
     * SoftAp :
         - WIFI_PROV_EVENT_HANDLER_NONE
 
-* pop : It is the string that is used to provide the authentication while provisioning
+* pop : It is the string that is used to provide the authentication.
 
-* service_name : Specify service name for the device while provisioning, if it is not specified then default chosen name via SoftAP is WIFI_XXX and for BLE service it is BLE_XXX where XXX is the last 3 bytes of the MAC address. 
+* service_name : Specify service name for the device, if it is not specified then default chosen name via SoftAP is WIFI_XXX and via BLE is BLE_XXX where XXX are the last 3 bytes of the MAC address. 
 
-* service_key : Specify service key while provisioning, if chosen mode of provisioning is BLE then service_key is always NULL
+* service_key : Specify service key, if chosen mode of provisioning is BLE then service_key is always NULL
 
 * uuid : user can specify there own 128 bit UUID while provisioning using BLE, if not specified then default value taken is
         - {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
@@ -63,24 +63,15 @@ WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_
     * scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
     * security = WIFI_PROV_SECURITY_1
     * pop = "abcd1234"
-    * service_name = "WiFi_XXX" 
+    * service_name = "WiFi_XXX"
     * service_key = NULL
     * uuid = NULL
 
 # Log Output
 * Enable debuger : [ Tools -> Core Debug Level -> Info ] 
 
-# App required for provisioning
-
-##Gihub link
-
-* Android : (https://github.com/espressif/esp-idf-provisioning-android)
-* iOS : (https://github.com/espressif/esp-idf-provisioning-ios)
-
-## These apps are available on playstore
-
-* For SoftAP : ESP SoftAP Prov
-* For BLE : ESP BLE Prov
+# Provisioning Tools
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/provisioning/wifi_provisioning.html#provisioning-tools
 
 # Example output
 
