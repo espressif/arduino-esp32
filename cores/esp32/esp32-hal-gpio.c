@@ -169,7 +169,9 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         if(!rtc_reg) {
             return;//not rtc pin
         }
+#if CONFIG_IDF_TARGET_ESP32S2
         SENS.sar_io_mux_conf.iomux_clk_gate_en = 1;
+#endif
         SET_PERI_REG_MASK(rtc_io_desc[pin].reg, (rtc_io_desc[pin].mux));
         SET_PERI_REG_BITS(rtc_io_desc[pin].reg, RTC_IO_TOUCH_PAD1_FUN_SEL_V, SOC_PIN_FUNC_RTC_IO, rtc_io_desc[pin].func);
 

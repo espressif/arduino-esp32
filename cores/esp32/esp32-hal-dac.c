@@ -38,7 +38,11 @@ void IRAM_ATTR __dacWrite(uint8_t pin, uint8_t value)
     }
     pinMode(pin, ANALOG);
     uint8_t channel = pin - DAC1;
+#if CONFIG_IDF_TARGET_ESP32
+    CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL1_REG, SENS_SW_TONE_EN);
+#elif CONFIG_IDF_TARGET_ESP32S2
     SENS.sar_dac_ctrl1.dac_clkgate_en = 1;
+#endif
     RTCIO.pad_dac[channel].dac_xpd_force = 1;
     RTCIO.pad_dac[channel].xpd_dac = 1;
     if (channel == 0) {
