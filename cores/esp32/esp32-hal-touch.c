@@ -19,6 +19,8 @@
 #include "soc/rtc_io_reg.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
+#include "soc/sens_struct.h"
+#include "driver/touch_sensor.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
@@ -75,6 +77,8 @@ void __touchSetCycles(uint16_t measure, uint16_t sleep)
     SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_SLEEP_CYCLES, __touchSleepCycles, SENS_TOUCH_SLEEP_CYCLES_S);
     //Touch Pad Measure Time
     SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_MEAS_DELAY, __touchMeasureCycles, SENS_TOUCH_MEAS_DELAY_S);
+#else
+    touch_pad_set_meas_time(sleep, measure);
 #endif
 }
 
@@ -90,13 +94,21 @@ void __touchInit()
     SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
     //clear touch enable
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, 0x0);
-    SET_PERI_REG_MASK(RTC_CNTL_STATE0_REG, RTC_CNTL_TOUCH_SLP_TIMER_EN);
-#endif
-
     __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
-
-#if CONFIG_IDF_TARGET_ESP32
     esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __touchISR, NULL, &touch_intr_handle);
+#else
+    touch_pad_init();
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5);
+    touch_pad_set_idle_channel_connect(TOUCH_PAD_CONN_GND);
+    __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
+    touch_pad_denoise_t denoise = {
+        .grade = TOUCH_PAD_DENOISE_BIT4,
+        .cap_level = TOUCH_PAD_DENOISE_CAP_L4,
+    };
+    touch_pad_denoise_set_config(&denoise);
+    touch_pad_denoise_enable();
+    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);
+    touch_pad_fsm_start();
 #endif
 }
 
@@ -144,7 +156,23 @@ uint16_t __touchRead(uint8_t pin)
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, v0);
     return touch_value;
 #else
-    return 0;
+    static uint32_t chan_mask = 0;
+    uint32_t value = 0;
+    if((chan_mask & (1 << pad)) == 0){
+        if(touch_pad_set_thresh((touch_pad_t)pad, TOUCH_PAD_THRESHOLD_MAX) != ESP_OK){
+        	log_e("touch_pad_set_thresh failed");
+        } else if(touch_pad_config((touch_pad_t)pad) != ESP_OK){
+        	log_e("touch_pad_config failed");
+        } else {
+        	chan_mask |= (1 << pad);
+        }
+    }
+    if((chan_mask & (1 << pad)) != 0) {
+        if(touch_pad_read_raw_data((touch_pad_t)pad, &value) != ESP_OK){
+        	log_e("touch_pad_read_raw_data failed");
+        }
+    }
+    return value;
 #endif
 }
 
@@ -189,6 +217,8 @@ void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t thresh
                       (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)) | \
                       (1 << (pad + SENS_TOUCH_PAD_OUTEN2_S)) | \
                       (1 << (pad + SENS_TOUCH_PAD_OUTEN1_S)));
+#else
+
 #endif
 }
 

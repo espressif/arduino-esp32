@@ -19,6 +19,7 @@
 #include "soc/timer_group_struct.h"
 #include "soc/dport_reg.h"
 #include "esp_attr.h"
+#include "driver/periph_ctrl.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
@@ -225,15 +226,29 @@ hw_timer_t * IRAM_ATTR timerBegin(uint8_t num, uint16_t divider, bool countUp){
     }
     hw_timer_t * timer = &hw_timer[num];
     if(timer->group) {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP1_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP1_RST);
-        TIMERG1.int_ena.val &= ~BIT(timer->timer);
+    	periph_module_enable(PERIPH_TIMG1_MODULE);
     } else {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP_RST);
-        TIMERG0.int_ena.val &= ~BIT(timer->timer);
+    	periph_module_enable(PERIPH_TIMG0_MODULE);
     }
     timer->dev->config.enable = 0;
+    if(timer->group) {
+        TIMERG1.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG1.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG1.int_clr.val = BIT(timer->timer);
+#endif
+    } else {
+        TIMERG0.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG0.int_clr.val = BIT(timer->timer);
+#endif
+    }
+#ifdef TIMER_GROUP_SUPPORTS_XTAL_CLOCK
+    timer->dev->config.use_xtal = 0;
+#endif
     timerSetDivider(timer, divider);
     timerSetCountUp(timer, countUp);
     timerSetAutoReload(timer, false);
@@ -262,8 +277,18 @@ void IRAM_ATTR timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool ed
         timer->dev->config.alarm_en = 0;
         if(timer->num & 2){
             TIMERG1.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG1.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG1.int_clr.val = BIT(timer->timer);
+#endif
         } else {
             TIMERG0.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG0.int_clr.val = BIT(timer->timer);
+#endif
         }
         __timerInterruptHandlers[timer->num] = NULL;
     } else {
@@ -286,7 +311,7 @@ void IRAM_ATTR timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool ed
         }
         if(!initialized){
             initialized = true;
-            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_EDGE), __timerISR, NULL, &intr_handle);
+            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED), __timerISR, NULL, &intr_handle);
         } else {
             intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
         }

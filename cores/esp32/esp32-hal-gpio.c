@@ -29,12 +29,14 @@
 #include "esp32/rom/gpio.h"
 #include "esp_intr_alloc.h"
 #define NUM_OUPUT_PINS 34
+#define GPIO_FUNC 2
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
 #include "esp32s2/rom/gpio.h"
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #define NUM_OUPUT_PINS 45
+#define GPIO_FUNC 1
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -155,30 +157,6 @@ static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
-//
-//static void idf_pinMode(uint8_t pin, uint8_t mode)
-//{
-//	gpio_mode_t m = 0;
-//	if(mode & INPUT) {
-//		m |= GPIO_MODE_DEF_INPUT;
-//	}
-//	if(mode & OUTPUT) {
-//		m |= GPIO_MODE_DEF_OUTPUT;
-//	}
-//	if(mode & OPEN_DRAIN) {
-//		m |= GPIO_MODE_DEF_OD;
-//	}
-//    gpio_config_t conf = {
-//        .pin_bit_mask = 1LL << pin,
-//        .mode = (gpio_mode_t)m,
-//        .pull_up_en = (gpio_pullup_t)((mode & PULLUP) != 0),
-//        .pull_down_en = (gpio_pulldown_t)((mode & PULLDOWN) != 0),
-//        .intr_type = (gpio_int_type_t)GPIO_INTR_DISABLE
-//    };
-//    gpio_config(&conf);
-//}
-
-
 extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
 
@@ -186,33 +164,31 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         return;
     }
 
-    //return idf_pinMode(pin, mode);
-
     uint32_t rtc_reg = rtc_io_desc[pin].reg;
     if(mode == ANALOG) {
         if(!rtc_reg) {
             return;//not rtc pin
         }
-        //lock rtc
-        uint32_t reg_val = ESP_REG(rtc_reg);
-        if(reg_val & rtc_io_desc[pin].mux){
-            return;//already in adc mode
+        SENS.sar_io_mux_conf.iomux_clk_gate_en = 1;
+        SET_PERI_REG_MASK(rtc_io_desc[pin].reg, (rtc_io_desc[pin].mux));
+        SET_PERI_REG_BITS(rtc_io_desc[pin].reg, RTC_IO_TOUCH_PAD1_FUN_SEL_V, SOC_PIN_FUNC_RTC_IO, rtc_io_desc[pin].func);
+
+        RTCIO.pin[pin].pad_driver = 0;//OD = 1
+        RTCIO.enable_w1tc.w1tc = (1U << pin);
+        CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].ie);
+
+        if (rtc_io_desc[pin].pullup) {
+            CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].pullup);
         }
-        reg_val &= ~(
-                (RTC_IO_TOUCH_PAD1_FUN_SEL_V << rtc_io_desc[pin].func)
-                |rtc_io_desc[pin].ie
-                |rtc_io_desc[pin].pullup
-                |rtc_io_desc[pin].pulldown);
-        ESP_REG(RTC_GPIO_ENABLE_W1TC_REG) = (1 << (rtc_io_desc[pin].rtc_num + RTC_GPIO_ENABLE_W1TC_S));
-        ESP_REG(rtc_reg) = reg_val | rtc_io_desc[pin].mux;
-        //unlock rtc
-        ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)2 << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
+        if (rtc_io_desc[pin].pulldown) {
+            CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].pulldown);
+        }
+        ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)GPIO_FUNC << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
         return;
     }
 
     //RTC pins PULL settings
     if(rtc_reg) {
-        //lock rtc
         ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].mux);
         if(mode & PULLUP) {
             ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pullup) & ~(rtc_io_desc[pin].pulldown);
@@ -221,12 +197,10 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         } else {
             ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].pullup | rtc_io_desc[pin].pulldown);
         }
-        //unlock rtc
     }
 
     uint32_t pinFunction = 0, pinControl = 0;
 
-    //lock gpio
     if(mode & INPUT) {
         if(pin < 32) {
             GPIO.enable_w1tc = ((uint32_t)1 << pin);
@@ -235,8 +209,7 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         }
     } else if(mode & OUTPUT) {
         if(pin >= NUM_OUPUT_PINS){
-            //unlock gpio
-            return;//pins above 33 can be only inputs
+            return;
         } else if(pin < 32) {
             GPIO.enable_w1ts = ((uint32_t)1 << pin);
         } else {
@@ -276,7 +249,6 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 
     GPIO.pin[pin].val = pinControl;
-    //unlock gpio
 }
 
 extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
