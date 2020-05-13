@@ -56,8 +56,13 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         end();
     }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        rxPin = 44;
+        txPin = 43;
+#else
         rxPin = 3;
         txPin = 1;
+#endif
     }
     if(_uart_nr == 1 && rxPin < 0 && txPin < 0) {
         rxPin = RX1;
