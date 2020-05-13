@@ -76,10 +76,10 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), 1, NULL, NULL},
+    {&UART0, 0, NULL, NULL},
+    {&UART1, 1, NULL, NULL},
 #if CONFIG_IDF_TARGET_ESP32
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL, NULL}
+    {&UART2, 2, NULL, NULL}
 #endif
 };
 #else
@@ -87,10 +87,10 @@ static uart_t _uart_bus_array[] = {
 #define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-    {(volatile uart_dev_t *)(DR_REG_UART_BASE), NULL, 0, NULL, NULL},
-    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), NULL, 1, NULL, NULL},
+    {&UART0, NULL, 0, NULL, NULL},
+    {&UART1, NULL, 1, NULL, NULL},
 #if CONFIG_IDF_TARGET_ESP32
-    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), NULL, 2, NULL, NULL}
+    {&UART2, NULL, 2, NULL, NULL}
 #endif
 };
 #endif
@@ -116,7 +116,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
             c = uart->dev->fifo.rw_byte;
 #else
         while(uart->dev->status.rxfifo_cnt) {
-            c = uart->dev->ahb_fifo.rw_byte;
+        	c = READ_PERI_REG(UART_FIFO_AHB_REG(i));
 #endif
             if(uart->queue != NULL) {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
