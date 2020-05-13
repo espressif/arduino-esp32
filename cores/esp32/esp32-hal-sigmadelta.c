@@ -81,6 +81,9 @@ uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-31
         prescale = 0xFF;
     }
     SD_MUTEX_LOCK();
+#ifndef CONFIG_IDF_TARGET_ESP32
+    SIGMADELTA.misc.function_clk_en = 1;
+#endif
     SIGMADELTA.channel[channel].prescale = prescale;
     SIGMADELTA.cg.clk_en = 0;
     SIGMADELTA.cg.clk_en = 1;
