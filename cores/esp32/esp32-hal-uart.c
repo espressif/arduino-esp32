@@ -115,8 +115,9 @@ static void IRAM_ATTR _uart_isr(void *arg)
         while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
 #else
+        uint32_t fifo_reg = UART_FIFO_AHB_REG(i);
         while(uart->dev->status.rxfifo_cnt) {
-        	c = READ_PERI_REG(UART_FIFO_AHB_REG(i));
+        	c = ESP_REG(fifo_reg);
 #endif
             if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
@@ -331,8 +332,9 @@ void uartRxFifoToQueue(uart_t* uart)
 	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
 		c = uart->dev->fifo.rw_byte;
 #else
+	uint32_t fifo_reg = UART_FIFO_AHB_REG(uart->num);
 	while (uart->dev->status.rxfifo_cnt) {
-		c = READ_PERI_REG(UART_FIFO_AHB_REG(uart->num));
+		c = ESP_REG(fifo_reg);
 #endif
 		xQueueSend(uart->queue, &c, 0);
 	}
@@ -386,7 +388,7 @@ void uartWrite(uart_t* uart, uint8_t c)
 #if CONFIG_IDF_TARGET_ESP32
     uart->dev->fifo.rw_byte = c;
 #else
-    uart->dev->ahb_fifo.rw_byte = c;
+    ESP_REG(UART_FIFO_AHB_REG(uart->num)) = c;
 #endif
     UART_MUTEX_UNLOCK();
 }
@@ -397,12 +399,15 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
         return;
     }
     UART_MUTEX_LOCK();
+#ifndef CONFIG_IDF_TARGET_ESP32
+    uint32_t fifo_reg = UART_FIFO_AHB_REG(uart->num);
+#endif
     while(len) {
         while(uart->dev->status.txfifo_cnt == 0x7F);
 #if CONFIG_IDF_TARGET_ESP32
         uart->dev->fifo.rw_byte = *data++;
 #else
-        uart->dev->ahb_fifo.rw_byte = *data++;
+        ESP_REG(fifo_reg) = *data++;
 #endif
         len--;
     }
@@ -471,8 +476,9 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
         while(uart->dev->status.rxfifo_cnt != 0 || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
 #else
+        uint32_t fifo_reg = UART_FIFO_AHB_REG(uart->num);
         while(uart->dev->status.rxfifo_cnt != 0) {
-            c = READ_PERI_REG(UART_FIFO_AHB_REG(uart->num));
+            c = ESP_REG(fifo_reg);
 #endif
             if(uart->queue != NULL ) {
                 xQueueSend(uart->queue, &c, 1); //&xHigherPriorityTaskWoken);
@@ -525,7 +531,7 @@ static void IRAM_ATTR uart0_write_char(char c)
     ESP_REG(DR_REG_UART_BASE) = c;
 #else
     while(UART0.status.txfifo_cnt == 0x7F);
-    UART0.ahb_fifo.rw_byte = c;
+    WRITE_PERI_REG(UART_FIFO_AHB_REG(0), c);
 #endif
 }
 
@@ -536,7 +542,7 @@ static void IRAM_ATTR uart1_write_char(char c)
     ESP_REG(DR_REG_UART1_BASE) = c;
 #else
     while(UART1.status.txfifo_cnt == 0x7F);
-    UART1.ahb_fifo.rw_byte = c;
+    WRITE_PERI_REG(UART_FIFO_AHB_REG(1), c);
 #endif
 }
 
