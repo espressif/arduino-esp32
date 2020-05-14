@@ -133,24 +133,36 @@ uint32_t EspClass::getMaxAllocHeap(void)
 
 uint32_t EspClass::getPsramSize(void)
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
-    return info.total_free_bytes + info.total_allocated_bytes;
+	if(psramFound()){
+	    multi_heap_info_t info;
+	    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+	    return info.total_free_bytes + info.total_allocated_bytes;
+	}
+	return 0;
 }
 
 uint32_t EspClass::getFreePsram(void)
 {
-    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMinFreePsram(void)
 {
-    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMaxAllocPsram(void)
 {
-    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 static uint32_t sketchSize(sketchSize_t response) {
