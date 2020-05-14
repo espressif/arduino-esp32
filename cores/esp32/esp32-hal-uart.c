@@ -344,7 +344,7 @@ void uartRxFifoToQueue(uart_t* uart)
 		c = uart->dev->fifo.rw_byte;
 #else
 	while (uart->dev->status.rxfifo_cnt) {
-		c = uart->dev->ahb_fifo.rw_byte;
+		c = READ_PERI_REG(UART_FIFO_AHB_REG(uart->num));
 #endif
 		xQueueSend(uart->queue, &c, 0);
 	}
@@ -484,7 +484,7 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
             c = uart->dev->fifo.rw_byte;
 #else
         while(uart->dev->status.rxfifo_cnt != 0) {
-            c = uart->dev->ahb_fifo.rw_byte;
+            c = READ_PERI_REG(UART_FIFO_AHB_REG(uart->num));
 #endif
             if(uart->queue != NULL ) {
                 xQueueSend(uart->queue, &c, 1); //&xHigherPriorityTaskWoken);
