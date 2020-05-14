@@ -210,7 +210,7 @@ void initArduino()
 #ifdef F_CPU
     setCpuFrequencyMhz(F_CPU/1000000);
 #endif
-#if CONFIG_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
     psramInit();
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
