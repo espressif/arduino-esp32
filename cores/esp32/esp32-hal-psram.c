@@ -14,7 +14,7 @@
 
 #include "esp32-hal.h"
 
-#if CONFIG_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
 #include "soc/efuse_reg.h"
 #include "esp_heap_caps.h"
 
@@ -22,6 +22,9 @@
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/spiram.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/spiram.h"
+#include "esp32s2/rom/cache.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -40,6 +43,7 @@ bool psramInit(){
     if (spiramFailed) {
         return false;
     }
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
     uint32_t pkg_ver = chip_ver & 0x7;
     if (pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 || pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2) {
@@ -48,13 +52,21 @@ bool psramInit(){
         return false;
     }
     esp_spiram_init_cache();
+#elif CONFIG_IDF_TARGET_ESP32S2
+    extern void esp_config_data_cache_mode(void);
+    esp_config_data_cache_mode();
+    Cache_Enable_DCache(0);
+#endif
     if (esp_spiram_init() != ESP_OK) {
         spiramFailed = true;
         log_w("PSRAM init failed!");
+#if CONFIG_IDF_TARGET_ESP32
         pinMatrixOutDetach(16, false, false);
         pinMatrixOutDetach(17, false, false);
+#endif
         return false;
     }
+    esp_spiram_init_cache();
     if (!esp_spiram_test()) {
         spiramFailed = true;
         log_e("PSRAM test failed!");
