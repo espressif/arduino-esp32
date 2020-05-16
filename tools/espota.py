@@ -27,6 +27,11 @@
 # 2016-01-03:
 # - Added more options to parser.
 #
+# Changes
+# 2020-05-16:
+# - Added 'utf-8' for password-encoding.
+#
+
 
 from __future__ import print_function
 import socket
@@ -123,10 +128,10 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
     if(data.startswith('AUTH')):
       nonce = data.split()[1]
       cnonce_text = '%s%u%s%s' % (filename, content_size, file_md5, remoteAddr)
-      cnonce = hashlib.md5(cnonce_text.encode()).hexdigest()
-      passmd5 = hashlib.md5(password.encode()).hexdigest()
+      cnonce = hashlib.md5(cnonce_text.encode('utf-8')).hexdigest()
+      passmd5 = hashlib.md5(password.encode('utf-8')).hexdigest()
       result_text = '%s:%s:%s' % (passmd5 ,nonce, cnonce)
-      result = hashlib.md5(result_text.encode()).hexdigest()
+      result = hashlib.md5(result_text.encode('utf-8')).hexdigest()
       sys.stderr.write('Authenticating...')
       sys.stderr.flush()
       message = '%d %s %s\n' % (AUTH, cnonce, result)
