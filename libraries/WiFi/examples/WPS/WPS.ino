@@ -38,6 +38,20 @@ void wpsInitConfig(){
   strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
 }
 
+void wpsStart(){
+    if(esp_wifi_wps_enable(&config)){
+    	Serial.println("WPS Enable Failed");
+    } else if(esp_wifi_wps_start(0)){
+    	Serial.println("WPS Start Failed");
+    }
+}
+
+void wpsStop(){
+    if(esp_wifi_wps_disable()){
+    	Serial.println("WPS Disable Failed");
+    }
+}
+
 String wpspin2string(uint8_t a[]){
   char wps_pin[9];
   for(int i=0;i<8;i++){
@@ -63,24 +77,22 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
       Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
-      esp_wifi_wps_disable();
+      wpsStop();
       delay(10);
       WiFi.begin();
       break;
     case ARDUINO_EVENT_WPS_ER_FAILED:
       Serial.println("WPS Failed, retrying");
-      esp_wifi_wps_disable();
-      esp_wifi_wps_enable(&config);
-      esp_wifi_wps_start(0);
+      wpsStop();
+      wpsStart();
       break;
     case ARDUINO_EVENT_WPS_ER_TIMEOUT:
       Serial.println("WPS Timedout, retrying");
-      esp_wifi_wps_disable();
-      esp_wifi_wps_enable(&config);
-      esp_wifi_wps_start(0);
+      wpsStop();
+      wpsStart();
       break;
     case ARDUINO_EVENT_WPS_ER_PIN:
-      Serial.println("WPS_PIN = " + wpspin2string(info.sta_er_pin.pin_code));
+      Serial.println("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code));
       break;
     default:
       break;
@@ -90,17 +102,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
 void setup(){
   Serial.begin(115200);
   delay(10);
-
   Serial.println();
-
   WiFi.onEvent(WiFiEvent);
   WiFi.mode(WIFI_MODE_STA);
-
   Serial.println("Starting WPS");
-
   wpsInitConfig();
-  esp_wifi_wps_enable(&config);
-  esp_wifi_wps_start(0);
+  wpsStart();
 }
 
 void loop(){

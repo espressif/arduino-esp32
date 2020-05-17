@@ -51,7 +51,7 @@ License (MIT license):
 #define STR(tok) tok
 #endif
 
-// static void _on_sys_event(system_event_t *event){
+// static void _on_sys_event(arduino_event_t *event){
 //     mdns_handle_system_event(NULL, event);
 // }
 

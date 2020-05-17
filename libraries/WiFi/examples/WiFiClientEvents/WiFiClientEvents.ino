@@ -153,7 +153,7 @@ void setup()
     WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
     WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
         Serial.print("WiFi lost connection. Reason: ");
-        Serial.println(info.disconnected.reason);
+        Serial.println(info.wifi_sta_disconnected.reason);
     }, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
     // Remove WiFi event
