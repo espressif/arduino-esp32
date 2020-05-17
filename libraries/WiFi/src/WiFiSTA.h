@@ -75,9 +75,6 @@ public:
     bool enableIpV6();
     IPv6Address localIPv6();
 
-    const char * getHostname();
-    bool setHostname(const char * hostname);
-
     // STA WiFi info
     static wl_status_t status();
     String SSID() const;
@@ -98,14 +95,9 @@ public:
     bool stopSmartConfig();
     bool smartConfigDone();
 
+    static bool _smartConfigDone;
 protected:
     static bool _smartConfigStarted;
-    static bool _smartConfigDone;
-#ifdef ESP_IDF_VERSION_MAJOR //todo
-    static void _smartConfigCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-#else
-    static void _smartConfigCallback(uint32_t status, void* result);
-#endif
 
 };
 

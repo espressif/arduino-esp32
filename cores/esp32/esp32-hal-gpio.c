@@ -190,7 +190,7 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 
     //RTC pins PULL settings
-    if(rtc_reg) {
+    if(esp32_gpioMux[pin].rtc != -1) {
         ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].mux);
         if(mode & PULLUP) {
             ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pullup) & ~(rtc_io_desc[pin].pulldown);
