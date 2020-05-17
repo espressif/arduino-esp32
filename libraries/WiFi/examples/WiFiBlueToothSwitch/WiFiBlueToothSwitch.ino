@@ -90,7 +90,7 @@ void WiFiEvent(WiFiEvent_t event){
             Serial.println("STA Connected");
             WiFi.enableIpV6();
             break;
-        case ARDUINO_EVENT_WIFI_AP_STA_GOT_IP6:
+        case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
             Serial.println(WiFi.localIPv6());
             break;
