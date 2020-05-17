@@ -28,8 +28,8 @@
 # - Added more options to parser.
 #
 # Changes
-# 2020-05-16:
-# - Added 'utf-8' for password-encoding.
+# 2020-05-17:
+# - Added 'utf-8-sig' for password-encoding.
 #
 
 
