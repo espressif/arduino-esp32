@@ -128,10 +128,10 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
     if(data.startswith('AUTH')):
       nonce = data.split()[1]
       cnonce_text = '%s%u%s%s' % (filename, content_size, file_md5, remoteAddr)
-      cnonce = hashlib.md5(cnonce_text.encode('utf-8')).hexdigest()
-      passmd5 = hashlib.md5(password.encode('utf-8')).hexdigest()
+      cnonce = hashlib.md5(cnonce_text.encode('utf-8-sig')).hexdigest()
+      passmd5 = hashlib.md5(password.encode('utf-8-sig')).hexdigest()
       result_text = '%s:%s:%s' % (passmd5 ,nonce, cnonce)
-      result = hashlib.md5(result_text.encode('utf-8')).hexdigest()
+      result = hashlib.md5(result_text.encode()).hexdigest()
       sys.stderr.write('Authenticating...')
       sys.stderr.flush()
       message = '%d %s %s\n' % (AUTH, cnonce, result)
