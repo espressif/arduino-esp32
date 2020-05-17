@@ -164,7 +164,8 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
         return;
     }
 
-    uint32_t rtc_reg = rtc_io_desc[pin].reg;
+    int8_t rtc_io = esp32_gpioMux[pin].rtc;
+    uint32_t rtc_reg = (rtc_io != -1)?rtc_io_desc[rtc_io].reg:0;
     if(mode == ANALOG) {
         if(!rtc_reg) {
             return;//not rtc pin
@@ -172,32 +173,32 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
 #if CONFIG_IDF_TARGET_ESP32S2
         SENS.sar_io_mux_conf.iomux_clk_gate_en = 1;
 #endif
-        SET_PERI_REG_MASK(rtc_io_desc[pin].reg, (rtc_io_desc[pin].mux));
-        SET_PERI_REG_BITS(rtc_io_desc[pin].reg, RTC_IO_TOUCH_PAD1_FUN_SEL_V, SOC_PIN_FUNC_RTC_IO, rtc_io_desc[pin].func);
+        SET_PERI_REG_MASK(rtc_io_desc[rtc_io].reg, (rtc_io_desc[rtc_io].mux));
+        SET_PERI_REG_BITS(rtc_io_desc[rtc_io].reg, RTC_IO_TOUCH_PAD1_FUN_SEL_V, SOC_PIN_FUNC_RTC_IO, rtc_io_desc[rtc_io].func);
 
-        RTCIO.pin[pin].pad_driver = 0;//OD = 1
-        RTCIO.enable_w1tc.w1tc = (1U << pin);
-        CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].ie);
+        RTCIO.pin[rtc_io].pad_driver = 0;//OD = 1
+        RTCIO.enable_w1tc.w1tc = (1U << rtc_io);
+        CLEAR_PERI_REG_MASK(rtc_io_desc[rtc_io].reg, rtc_io_desc[rtc_io].ie);
 
-        if (rtc_io_desc[pin].pullup) {
-            CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].pullup);
+        if (rtc_io_desc[rtc_io].pullup) {
+            CLEAR_PERI_REG_MASK(rtc_io_desc[rtc_io].reg, rtc_io_desc[rtc_io].pullup);
         }
-        if (rtc_io_desc[pin].pulldown) {
-            CLEAR_PERI_REG_MASK(rtc_io_desc[pin].reg, rtc_io_desc[pin].pulldown);
+        if (rtc_io_desc[rtc_io].pulldown) {
+            CLEAR_PERI_REG_MASK(rtc_io_desc[rtc_io].reg, rtc_io_desc[rtc_io].pulldown);
         }
         ESP_REG(DR_REG_IO_MUX_BASE + esp32_gpioMux[pin].reg) = ((uint32_t)GPIO_FUNC << MCU_SEL_S) | ((uint32_t)2 << FUN_DRV_S) | FUN_IE;
         return;
     }
 
     //RTC pins PULL settings
-    if(esp32_gpioMux[pin].rtc != -1) {
-        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].mux);
+    if(rtc_reg) {
+        ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[rtc_io].mux);
         if(mode & PULLUP) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pullup) & ~(rtc_io_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[rtc_io].pullup) & ~(rtc_io_desc[rtc_io].pulldown);
         } else if(mode & PULLDOWN) {
-            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[pin].pulldown) & ~(rtc_io_desc[pin].pullup);
+            ESP_REG(rtc_reg) = (ESP_REG(rtc_reg) | rtc_io_desc[rtc_io].pulldown) & ~(rtc_io_desc[rtc_io].pullup);
         } else {
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[pin].pullup | rtc_io_desc[pin].pulldown);
+            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_io_desc[rtc_io].pullup | rtc_io_desc[rtc_io].pulldown);
         }
     }
 
