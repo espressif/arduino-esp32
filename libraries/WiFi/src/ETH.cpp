@@ -70,34 +70,6 @@ extern void tcpipInit();
 
 
 
-// Event handler for Ethernet
-void ETHClass::eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
-{
-    system_event_t event;
-    switch (event_id) {
-    case ETHERNET_EVENT_CONNECTED:
-        event.event_id = SYSTEM_EVENT_ETH_CONNECTED;
-        ((ETHClass*)(arg))->eth_link = ETH_LINK_UP;
-        break;
-    case ETHERNET_EVENT_DISCONNECTED:
-        event.event_id = SYSTEM_EVENT_ETH_DISCONNECTED;
-        ((ETHClass*)(arg))->eth_link = ETH_LINK_DOWN;
-        break;
-    case ETHERNET_EVENT_START:
-        event.event_id = SYSTEM_EVENT_ETH_START;
-        ((ETHClass*)(arg))->started = true;
-        break;
-    case ETHERNET_EVENT_STOP:
-        event.event_id = SYSTEM_EVENT_ETH_STOP;
-        ((ETHClass*)(arg))->started = false;
-        break;
-    default:
-        break;
-    }
-    WiFi._eventCallback(arg, &event);
-}
-
-
 #else
 static int _eth_phy_mdc_pin = -1;
 static int _eth_phy_mdio_pin = -1;
@@ -144,9 +116,6 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     tcpipInit();
 
     tcpip_adapter_set_default_eth_handlers();
-    esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, eth_event_handler, this);
-    //ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
-
     esp_eth_mac_t *eth_mac = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     if(type == ETH_PHY_DM9051){
