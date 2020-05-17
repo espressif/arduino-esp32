@@ -47,39 +47,39 @@ String wpspin2string(uint8_t a[]){
   return (String)wps_pin;
 }
 
-void WiFiEvent(WiFiEvent_t event, system_event_info_t info){
+void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
   switch(event){
-    case SYSTEM_EVENT_STA_START:
+    case ARDUINO_EVENT_WIFI_STA_START:
       Serial.println("Station Mode Started");
       break;
-    case SYSTEM_EVENT_STA_GOT_IP:
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.println("Connected to :" + String(WiFi.SSID()));
       Serial.print("Got IP: ");
       Serial.println(WiFi.localIP());
       break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Serial.println("Disconnected from station, attempting reconnection");
       WiFi.reconnect();
       break;
-    case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
+    case ARDUINO_EVENT_WPS_ER_SUCCESS:
       Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
       esp_wifi_wps_disable();
       delay(10);
       WiFi.begin();
       break;
-    case SYSTEM_EVENT_STA_WPS_ER_FAILED:
+    case ARDUINO_EVENT_WPS_ER_FAILED:
       Serial.println("WPS Failed, retrying");
       esp_wifi_wps_disable();
       esp_wifi_wps_enable(&config);
       esp_wifi_wps_start(0);
       break;
-    case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
+    case ARDUINO_EVENT_WPS_ER_TIMEOUT:
       Serial.println("WPS Timedout, retrying");
       esp_wifi_wps_disable();
       esp_wifi_wps_enable(&config);
       esp_wifi_wps_start(0);
       break;
-    case SYSTEM_EVENT_STA_WPS_ER_PIN:
+    case ARDUINO_EVENT_WPS_ER_PIN:
       Serial.println("WPS_PIN = " + wpspin2string(info.sta_er_pin.pin_code));
       break;
     default:
