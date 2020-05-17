@@ -1784,13 +1784,25 @@ struct i2c_struct_t {
 	i2c_port_t num;
 };
 
+static i2c_t * i2c_ports[2] = {NULL, NULL};
+
 i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
-    i2c_t * out = (i2c_t*)malloc(sizeof(i2c_t));
-    if(out == NULL){
-        log_e("malloc failed");
-        return NULL;
-    }
-    out->num = (i2c_port_t)i2c_num;
+	if(i2c_num >= 2){
+		return NULL;
+	}
+	i2c_t * out = NULL;
+	if(i2c_ports[i2c_num] == NULL){
+		out = (i2c_t*)malloc(sizeof(i2c_t));
+		if(out == NULL){
+			log_e("malloc failed");
+			return NULL;
+		}
+		out->num = (i2c_port_t)i2c_num;
+		i2c_ports[i2c_num] = out;
+	} else {
+		out = i2c_ports[i2c_num];
+		i2c_driver_delete((i2c_port_t)i2c_num);
+	}
 
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
@@ -1803,12 +1815,14 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
     if (ret != ESP_OK) {
         log_e("i2c_param_config failed");
         free(out);
+        i2c_ports[i2c_num] = NULL;
         return NULL;
     }
     ret = i2c_driver_install(out->num, conf.mode, 0, 0, 0);
     if (ret != ESP_OK) {
         log_e("i2c_driver_install failed");
         free(out);
+        i2c_ports[i2c_num] = NULL;
         return NULL;
     }
     return out;
