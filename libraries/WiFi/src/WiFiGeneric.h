@@ -163,8 +163,9 @@ class WiFiGenericClass
     bool enableSTA(bool enable);
     bool enableAP(bool enable);
 
-    bool setSleep(bool enable);
-    bool getSleep();
+    bool setSleep(bool enabled);
+    bool setSleep(wifi_ps_type_t sleepType);
+    wifi_ps_type_t getSleep();
 
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
@@ -178,10 +179,11 @@ class WiFiGenericClass
     static bool _persistent;
     static bool _long_range;
     static wifi_mode_t _forceSleepLastMode;
+    static wifi_ps_type_t _sleepEnabled;
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);
-
+    
   public:
     static int hostByName(const char *aHostname, IPAddress &aResult);
 
