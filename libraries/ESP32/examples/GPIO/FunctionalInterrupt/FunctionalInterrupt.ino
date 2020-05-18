@@ -15,7 +15,7 @@ public:
 		detachInterrupt(PIN);
 	}
 
-	void IRAM_ATTR isr() {
+	void ARDUINO_ISR_ATTR isr() {
 		numberKeyPresses += 1;
 		pressed = true;
 	}

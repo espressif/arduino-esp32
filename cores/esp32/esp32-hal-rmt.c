@@ -137,17 +137,17 @@ static void _initPin(int pin, int channel, bool tx_not_rx);
 
 static bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool continuous);
 
-static void IRAM_ATTR _rmt_isr(void* arg);
+static void ARDUINO_ISR_ATTR _rmt_isr(void* arg);
 
 static rmt_obj_t* _rmtAllocate(int pin, int from, int size);
 
 static void _initPin(int pin, int channel, bool tx_not_rx);
 
-static int IRAM_ATTR _rmt_get_mem_len(uint8_t channel);
+static int ARDUINO_ISR_ATTR _rmt_get_mem_len(uint8_t channel);
 
-static void IRAM_ATTR _rmt_tx_mem_first(uint8_t ch);
+static void ARDUINO_ISR_ATTR _rmt_tx_mem_first(uint8_t ch);
 
-static void IRAM_ATTR _rmt_tx_mem_second(uint8_t ch);
+static void ARDUINO_ISR_ATTR _rmt_tx_mem_second(uint8_t ch);
 
 
 /**
@@ -270,7 +270,7 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
         RMT_MUTEX_LOCK(channel);
         // setup interrupt handler if not yet installed for half and full tx
         if (!intr_handle) {
-            esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, _rmt_isr, NULL, &intr_handle);
+            esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, _rmt_isr, NULL, &intr_handle);
         }
 
         rmt->data_size = size - MAX_DATA_PER_ITTERATION;
@@ -569,7 +569,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 
     // install interrupt if at least one channel is active
     if (!intr_handle) {
-        esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, _rmt_isr, NULL, &intr_handle);
+        esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, _rmt_isr, NULL, &intr_handle);
     }
     RMT_MUTEX_UNLOCK(channel);
 
@@ -637,7 +637,7 @@ static void _initPin(int pin, int channel, bool tx_not_rx)
 }
 
 
-static void IRAM_ATTR _rmt_isr(void* arg)
+static void ARDUINO_ISR_ATTR _rmt_isr(void* arg)
 {
     int intr_val = RMT.int_st.val;
     size_t ch;
@@ -727,7 +727,7 @@ static void IRAM_ATTR _rmt_isr(void* arg)
     }
 }
 
-static void IRAM_ATTR _rmt_tx_mem_second(uint8_t ch)
+static void ARDUINO_ISR_ATTR _rmt_tx_mem_second(uint8_t ch)
 {
     DEBUG_INTERRUPT_START(4)
     uint32_t* data = g_rmt_objects[ch].data_ptr;
@@ -779,7 +779,7 @@ static void IRAM_ATTR _rmt_tx_mem_second(uint8_t ch)
     DEBUG_INTERRUPT_END(4);
 }
 
-static void IRAM_ATTR _rmt_tx_mem_first(uint8_t ch)
+static void ARDUINO_ISR_ATTR _rmt_tx_mem_first(uint8_t ch)
 {
     DEBUG_INTERRUPT_START(2);
     uint32_t* data = g_rmt_objects[ch].data_ptr;
@@ -830,7 +830,7 @@ static void IRAM_ATTR _rmt_tx_mem_first(uint8_t ch)
     DEBUG_INTERRUPT_END(2);
 }
 
-static int IRAM_ATTR _rmt_get_mem_len(uint8_t channel)
+static int ARDUINO_ISR_ATTR _rmt_get_mem_len(uint8_t channel)
 {
     int block_num = RMT.conf_ch[channel].conf0.mem_size;
     int item_block_len = block_num * 64;

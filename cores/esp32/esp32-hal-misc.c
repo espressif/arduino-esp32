@@ -143,12 +143,12 @@ BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
 #endif
 }
 
-unsigned long IRAM_ATTR micros()
+unsigned long ARDUINO_ISR_ATTR micros()
 {
     return (unsigned long) (esp_timer_get_time());
 }
 
-unsigned long IRAM_ATTR millis()
+unsigned long ARDUINO_ISR_ATTR millis()
 {
     return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
@@ -158,7 +158,7 @@ void delay(uint32_t ms)
     vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
-void IRAM_ATTR delayMicroseconds(uint32_t us)
+void ARDUINO_ISR_ATTR delayMicroseconds(uint32_t us)
 {
     uint32_t m = micros();
     if(us){
@@ -239,7 +239,7 @@ void initArduino()
 }
 
 //used by hal log
-const char * IRAM_ATTR pathToFileName(const char * path)
+const char * ARDUINO_ISR_ATTR pathToFileName(const char * path)
 {
     size_t i = 0;
     size_t pos = 0;

@@ -242,7 +242,7 @@ static i2c_t _i2c_bus_array[2] = {
 
 /* Stickbreaker ISR mode debug support
  */
-static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
+static void ARDUINO_ISR_ATTR i2cDumpCmdQueue(i2c_t *i2c)
 {
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR)&&(defined ENABLE_I2C_DEBUG_BUFFER)
     static const char * const cmdName[] ={"RSTART","WRITE","READ","STOP","END"};
@@ -372,7 +372,7 @@ static void i2cDumpInts(uint8_t num)
 #endif
 
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
-static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
+static void ARDUINO_ISR_ATTR i2cDumpStatus(i2c_t * i2c){
     typedef union {
         struct {
             uint32_t ack_rec:             1;        /*This register stores the value of ACK bit.*/
@@ -446,7 +446,7 @@ if(i != fifoPos){// actual data
 }
 #endif
 
-static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
+static void ARDUINO_ISR_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
     if( trigger ){
       log_i("%s",locus);      
@@ -493,7 +493,7 @@ static void i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t o
 }
 /* End of CPU Clock change Support
 */ 
-static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
+static void ARDUINO_ISR_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
     I2C_COMMAND_t cmd;
     cmd.val=0;
@@ -506,7 +506,7 @@ static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uin
 }
  
 
-static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
+static void ARDUINO_ISR_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
 {
     /* this function is called on initial i2cProcQueue() or when a I2C_END_DETECT_INT occurs
      */
@@ -664,7 +664,7 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
     }
 }
 
-static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR fillTxFifo(i2c_t * i2c)
 {
     /*
     12/01/2017 The Fifo's are independent, 32 bytes of tx and 32 bytes of Rx.
@@ -756,7 +756,7 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
 }
 
 
-static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR emptyRxFifo(i2c_t * i2c)
 {
     uint32_t d, cnt=0, moveCnt;
     
@@ -815,7 +815,7 @@ static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
 #endif
 }
 
-static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal)
+static void ARDUINO_ISR_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal)
 {
 
     switch(eventCode) {
@@ -860,7 +860,7 @@ static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal
 
 }
 
-static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
 {
 /* i2c_update_error_byte_cnt 07/18/2018
   Only called after an error has occurred, so, most of the time this function is never used.
@@ -907,7 +907,7 @@ static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
     i2c->errorByteCnt = bc;
  }
 
-static void IRAM_ATTR i2c_isr_handler_default(void* arg)
+static void ARDUINO_ISR_ATTR i2c_isr_handler_default(void* arg)
 {
     i2c_t* p_i2c = (i2c_t*) arg; // recover data
     uint32_t activeInt = p_i2c->dev->int_status.val&0x7FF;
@@ -1254,7 +1254,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     if(!i2c->intr_handle) { // create ISR for either peripheral
         // log_i("create ISR %d",i2c->num);
         uint32_t ret = 0;
-        uint32_t flags = ESP_INTR_FLAG_IRAM |  //< ISR can be called if cache is disabled
+        uint32_t flags = ARDUINO_ISR_FLAG |  //< ISR can be called if cache is disabled
           ESP_INTR_FLAG_LOWMED |   //< Low and medium prio interrupts. These can be handled in C.
           ESP_INTR_FLAG_SHARED; //< Reduce resource requirements, Share interrupts
       
