@@ -619,8 +619,13 @@ static std::vector<WiFiEventCbList_t> cbEventList;
 bool WiFiGenericClass::_persistent = true;
 bool WiFiGenericClass::_long_range = false;
 wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
+#if CONFIG_IDF_TARGET_ESP32S2
+wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
+#else
+wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
+#endif
 
-WiFiGenericClass::WiFiGenericClass()
+WiFiGenericClass::WiFiGenericClass() 
 {
 
 }
@@ -790,6 +795,9 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         setStatusBits(STA_STARTED_BIT);
         tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, WiFiSTAClass::_hostname.c_str());
+        if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
+            log_e("esp_wifi_set_ps failed");
+        }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_STOP) {
         WiFiSTAClass::_setStatus(WL_NO_SHIELD);
         clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
@@ -1054,13 +1062,22 @@ bool WiFiGenericClass::enableAP(bool enable)
  * @param enable bool
  * @return ok
  */
-bool WiFiGenericClass::setSleep(bool enable)
+bool WiFiGenericClass::setSleep(bool enabled){
+    return setSleep(enabled?WIFI_PS_MIN_MODEM:WIFI_PS_NONE);
+}
+
+bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType)
 {
-    if((getMode() & WIFI_MODE_STA) == 0){
-        log_w("STA has not been started");
-        return false;
+    if(sleepType != _sleepEnabled){
+        _sleepEnabled = sleepType;
+        if((getMode() & WIFI_MODE_STA) != 0){
+            if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
+                log_e("esp_wifi_set_ps failed!");
+            }
+        }
+        return true;
     }
-    return esp_wifi_set_ps(enable?WIFI_PS_MIN_MODEM:WIFI_PS_NONE) == ESP_OK;
+    return false;
 }
 
 /**
@@ -1081,17 +1098,9 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t mode)
  * get modem sleep enabled
  * @return true if modem sleep is enabled
  */
-bool WiFiGenericClass::getSleep()
+wifi_ps_type_t WiFiGenericClass::getSleep()
 {
-    wifi_ps_type_t ps;
-    if((getMode() & WIFI_MODE_STA) == 0){
-        log_w("STA has not been started");
-        return false;
-    }
-    if(esp_wifi_get_ps(&ps) == ESP_OK){
-        return ps == WIFI_PS_MIN_MODEM;
-    }
-    return false;
+    return _sleepEnabled;
 }
 
 /**
