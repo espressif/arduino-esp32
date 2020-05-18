@@ -77,12 +77,6 @@ void yield(void);
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
 
-#ifndef BOARD_HAS_PSRAM
-#ifdef CONFIG_SPIRAM_SUPPORT
-#undef CONFIG_SPIRAM_SUPPORT
-#endif
-#endif
-
 //returns chip temperature in Celsius
 float temperatureRead();
 
