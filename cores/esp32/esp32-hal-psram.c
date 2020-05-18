@@ -78,30 +78,33 @@ bool psramInit(){
         return false;
     }
 #endif
+#if CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL
+        heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
+#endif
     spiramDetected = true;
     log_d("PSRAM enabled");
     return true;
 }
 
-bool IRAM_ATTR psramFound(){
+bool ARDUINO_ISR_ATTR psramFound(){
     return spiramDetected;
 }
 
-void IRAM_ATTR *ps_malloc(size_t size){
+void ARDUINO_ISR_ATTR *ps_malloc(size_t size){
     if(!spiramDetected){
         return NULL;
     }
     return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 }
 
-void IRAM_ATTR *ps_calloc(size_t n, size_t size){
+void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size){
     if(!spiramDetected){
         return NULL;
     }
     return heap_caps_calloc(n, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 }
 
-void IRAM_ATTR *ps_realloc(void *ptr, size_t size){
+void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size){
     if(!spiramDetected){
         return NULL;
     }
@@ -114,19 +117,19 @@ bool psramInit(){
     return false;
 }
 
-bool IRAM_ATTR psramFound(){
+bool ARDUINO_ISR_ATTR psramFound(){
     return false;
 }
 
-void IRAM_ATTR *ps_malloc(size_t size){
+void ARDUINO_ISR_ATTR *ps_malloc(size_t size){
     return NULL;
 }
 
-void IRAM_ATTR *ps_calloc(size_t n, size_t size){
+void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size){
     return NULL;
 }
 
-void IRAM_ATTR *ps_realloc(void *ptr, size_t size){
+void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size){
     return NULL;
 }
 

@@ -956,7 +956,7 @@ void spiEndTransaction(spi_t * spi)
     SPI_MUTEX_UNLOCK();
 }
 
-void IRAM_ATTR spiWriteByteNL(spi_t * spi, uint8_t data)
+void ARDUINO_ISR_ATTR spiWriteByteNL(spi_t * spi, uint8_t data)
 {
     if(!spi) {
         return;
@@ -982,7 +982,7 @@ uint8_t spiTransferByteNL(spi_t * spi, uint8_t data)
     return data;
 }
 
-void IRAM_ATTR spiWriteShortNL(spi_t * spi, uint16_t data)
+void ARDUINO_ISR_ATTR spiWriteShortNL(spi_t * spi, uint16_t data)
 {
     if(!spi) {
         return;
@@ -1017,7 +1017,7 @@ uint16_t spiTransferShortNL(spi_t * spi, uint16_t data)
     return data;
 }
 
-void IRAM_ATTR spiWriteLongNL(spi_t * spi, uint32_t data)
+void ARDUINO_ISR_ATTR spiWriteLongNL(spi_t * spi, uint32_t data)
 {
     if(!spi) {
         return;
@@ -1165,7 +1165,7 @@ void spiTransferBitsNL(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
     }
 }
 
-void IRAM_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32_t len){
+void ARDUINO_ISR_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32_t len){
     size_t longs = len >> 2;
     if(len & 3){
         longs++;

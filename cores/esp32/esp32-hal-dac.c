@@ -31,7 +31,7 @@
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 
-void IRAM_ATTR __dacWrite(uint8_t pin, uint8_t value)
+void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 {
     if(pin < DAC1 || pin > DAC2){
         return;//not dac pin

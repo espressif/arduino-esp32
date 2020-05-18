@@ -83,7 +83,7 @@ static hw_timer_t hw_timer[4] = {
 typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
-void IRAM_ATTR __timerISR(void * arg){
+void ARDUINO_ISR_ATTR __timerISR(void * arg){
 #if CONFIG_IDF_TARGET_ESP32
     uint32_t s0 = TIMERG0.int_st_timers.val;
     uint32_t s1 = TIMERG1.int_st_timers.val;
@@ -314,7 +314,7 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         }
         if(!initialized){
             initialized = true;
-            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED), __timerISR, NULL, &intr_handle);
+            esp_intr_alloc(intr_source, (int)(ARDUINO_ISR_FLAG|ESP_INTR_FLAG_LOWMED), __timerISR, NULL, &intr_handle);
         } else {
             intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
         }

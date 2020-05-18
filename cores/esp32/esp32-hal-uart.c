@@ -97,7 +97,7 @@ static uart_t _uart_bus_array[] = {
 
 static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
-static void IRAM_ATTR _uart_isr(void *arg)
+static void ARDUINO_ISR_ATTR _uart_isr(void *arg)
 {
     uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
@@ -145,7 +145,7 @@ void uartEnableInterrupt(uart_t* uart)
     uart->dev->int_ena.rxfifo_tout = 1;
     uart->dev->int_clr.val = 0xffffffff;
 
-    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
+    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ARDUINO_ISR_FLAG, _uart_isr, NULL, &uart->intr_handle);
     UART_MUTEX_UNLOCK();
 }
 
@@ -536,7 +536,7 @@ uint32_t uartGetBaudRate(uart_t* uart)
     return ((getApbFrequency()<<4)/clk_div);
 }
 
-static void IRAM_ATTR uart0_write_char(char c)
+static void ARDUINO_ISR_ATTR uart0_write_char(char c)
 {
 #if CONFIG_IDF_TARGET_ESP32
     while(((ESP_REG(0x01C+DR_REG_UART_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
@@ -547,7 +547,7 @@ static void IRAM_ATTR uart0_write_char(char c)
 #endif
 }
 
-static void IRAM_ATTR uart1_write_char(char c)
+static void ARDUINO_ISR_ATTR uart1_write_char(char c)
 {
 #if CONFIG_IDF_TARGET_ESP32
     while(((ESP_REG(0x01C+DR_REG_UART1_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
@@ -559,7 +559,7 @@ static void IRAM_ATTR uart1_write_char(char c)
 }
 
 #if CONFIG_IDF_TARGET_ESP32
-static void IRAM_ATTR uart2_write_char(char c)
+static void ARDUINO_ISR_ATTR uart2_write_char(char c)
 {
     while(((ESP_REG(0x01C+DR_REG_UART2_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
     ESP_REG(DR_REG_UART2_BASE) = c;

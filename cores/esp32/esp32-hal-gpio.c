@@ -157,7 +157,7 @@ static InterruptHandle_t __pinInterruptHandlers[GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
-extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
+extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
 
     if(!digitalPinIsValid(pin)) {
@@ -254,7 +254,7 @@ extern void IRAM_ATTR __pinMode(uint8_t pin, uint8_t mode)
     GPIO.pin[pin].val = pinControl;
 }
 
-extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
+extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
     if(val) {
         if(pin < 32) {
@@ -271,7 +271,7 @@ extern void IRAM_ATTR __digitalWrite(uint8_t pin, uint8_t val)
     }
 }
 
-extern int IRAM_ATTR __digitalRead(uint8_t pin)
+extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
 {
     if(pin < 32) {
         return (GPIO.in >> pin) & 0x1;
@@ -283,7 +283,7 @@ extern int IRAM_ATTR __digitalRead(uint8_t pin)
 
 static intr_handle_t gpio_intr_handle = NULL;
 
-static void IRAM_ATTR __onPinInterrupt()
+static void ARDUINO_ISR_ATTR __onPinInterrupt()
 {
     uint32_t gpio_intr_status_l=0;
     uint32_t gpio_intr_status_h=0;
@@ -331,7 +331,7 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
 
     if(!interrupt_initialized) {
         interrupt_initialized = true;
-        esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __onPinInterrupt, NULL, &gpio_intr_handle);
+        esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, __onPinInterrupt, NULL, &gpio_intr_handle);
     }
 
     // if new attach without detach remove old info
