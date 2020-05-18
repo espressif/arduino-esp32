@@ -44,6 +44,14 @@ extern "C" {
 #endif
 #endif
 
+#if CONFIG_ARDUINO_ISR_IRAM
+#define ARDUINO_ISR_ATTR IRAM_ATTR
+#define ARDUINO_ISR_FLAG ESP_INTR_FLAG_IRAM
+#else
+#define ARDUINO_ISR_ATTR
+#define ARDUINO_ISR_FLAG (0)
+#endif
+
 //forward declaration from freertos/portmacro.h
 void vPortYield(void);
 void yield(void);

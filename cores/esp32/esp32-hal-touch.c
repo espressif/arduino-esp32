@@ -46,7 +46,7 @@ typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __touchInterruptHandlers[10] = {0,};
 static intr_handle_t touch_intr_handle = NULL;
 
-void IRAM_ATTR __touchISR(void * arg)
+void ARDUINO_ISR_ATTR __touchISR(void * arg)
 {
 #if CONFIG_IDF_TARGET_ESP32
     uint32_t pad_intr = READ_PERI_REG(SENS_SAR_TOUCH_CTRL2_REG) & 0x3ff;
@@ -95,7 +95,7 @@ void __touchInit()
     //clear touch enable
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, 0x0);
     __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
-    esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ESP_INTR_FLAG_IRAM, __touchISR, NULL, &touch_intr_handle);
+    esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, __touchISR, NULL, &touch_intr_handle);
 #else
     touch_pad_init();
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5);
