@@ -16,7 +16,7 @@
 #include "lwip/apps/sntp.h"
 #include "tcpip_adapter.h"
 
-static void setTimeZone(long offset, int daylight)
+void setTimeZone(long offset, int daylight)
 {
     char cst[17] = {0};
     char cdt[17] = "DST";

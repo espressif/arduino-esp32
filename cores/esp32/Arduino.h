@@ -169,6 +169,7 @@ uint16_t makeWord(byte h, byte l);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 
+extern "C" void setTimeZone(long offset, int daylight);
 extern "C" bool getLocalTime(struct tm * info, uint32_t ms = 5000);
 extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
