@@ -5,6 +5,7 @@
  *      Author: kolban
  */
 
+#ifdef __cplusplus
 #ifndef MAIN_FREERTOS_H_
 #define MAIN_FREERTOS_H_
 #include <stdint.h>
@@ -75,3 +76,6 @@ private:
 };
 
 #endif /* MAIN_FREERTOS_H_ */
+#else
+#include "freertos/FreeRTOS.h"
+#endif
