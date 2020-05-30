@@ -54,8 +54,8 @@
     #include "class/cdc/cdc_host.h"
   #endif
 
-  #if CFG_TUSB_HOST_CUSTOM_CLASS
-    #include "class/custom_host.h"
+  #if CFG_TUH_VENDOR
+    #include "class/vendor/vendor_host.h"
   #endif
 
 #endif
@@ -80,8 +80,20 @@
     #include "class/midi/midi_device.h"
   #endif
 
-  #if CFG_TUD_CUSTOM_CLASS
-    #include "class/custom/custom_device.h"
+  #if CFG_TUD_VENDOR
+    #include "class/vendor/vendor_device.h"
+  #endif
+
+  #if CFG_TUD_USBTMC
+    #include "class/usbtmc/usbtmc_device.h"
+  #endif
+
+  #if CFG_TUD_DFU_RT
+    #include "class/dfu/dfu_rt_device.h"
+  #endif
+
+  #if CFG_TUD_NET
+    #include "class/net/net_device.h"
   #endif
 #endif
 

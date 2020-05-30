@@ -93,17 +93,17 @@ TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t idle_rate);
  * HID Report Descriptor Template
  *
  * Convenient for declaring popular HID device (keyboard, mouse, consumer,
- * gamepad etc...). Templates take "HID_REPORT_ID(n)," as input, leave
+ * gamepad etc...). Templates take "HID_REPORT_ID(n)" as input, leave
  * empty if multiple reports is not used
  *
  * - Only 1 report: no parameter
  *      uint8_t const report_desc[] = { TUD_HID_REPORT_DESC_KEYBOARD() };
  *
- * - Multiple Reports: "HID_REPORT_ID(ID)," must be passed to template
+ * - Multiple Reports: "HID_REPORT_ID(ID)" must be passed to template
  *      uint8_t const report_desc[] =
  *      {
- *          TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(1), ) ,
- *          TUD_HID_REPORT_DESC_MOUSE   ( HID_REPORT_ID(2), )
+ *          TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(1) ) ,
+ *          TUD_HID_REPORT_DESC_MOUSE   ( HID_REPORT_ID(2) )
  *      };
  *--------------------------------------------------------------------*/
 
@@ -300,12 +300,12 @@ TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t idle_rate);
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void hidd_init(void);
-bool hidd_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool hidd_control_request(uint8_t rhport, tusb_control_request_t const * p_request);
-bool hidd_control_request_complete (uint8_t rhport, tusb_control_request_t const * p_request);
-bool hidd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-void hidd_reset(uint8_t rhport);
+void hidd_init             (void);
+void hidd_reset            (uint8_t rhport);
+bool hidd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
+bool hidd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
+bool hidd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
+bool hidd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

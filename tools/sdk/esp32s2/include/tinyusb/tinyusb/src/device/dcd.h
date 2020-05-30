@@ -39,17 +39,20 @@
 
 typedef enum
 {
-  DCD_EVENT_BUS_RESET = 1,
+  DCD_EVENT_INVALID = 0,
+  DCD_EVENT_BUS_RESET,
   DCD_EVENT_UNPLUGGED,
   DCD_EVENT_SOF,
-  DCD_EVENT_SUSPEND,
+  DCD_EVENT_SUSPEND, // TODO LPM Sleep L1 support
   DCD_EVENT_RESUME,
 
   DCD_EVENT_SETUP_RECEIVED,
   DCD_EVENT_XFER_COMPLETE,
 
   // Not an DCD event, just a convenient way to defer ISR function
-  USBD_EVENT_FUNC_CALL
+  USBD_EVENT_FUNC_CALL,
+
+  DCD_EVENT_COUNT
 } dcd_eventid_t;
 
 typedef struct TU_ATTR_ALIGNED(4)
@@ -76,7 +79,7 @@ typedef struct TU_ATTR_ALIGNED(4)
   };
 } dcd_event_t;
 
-TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
+//TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
 
 /*------------------------------------------------------------------*/
 /* Device API
@@ -84,6 +87,9 @@ TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
 
 // Initialize controller to device mode
 void dcd_init       (uint8_t rhport);
+
+// Interrupt Handler
+void dcd_int_handler(uint8_t rhport);
 
 // Enable device interrupt
 void dcd_int_enable (uint8_t rhport);
@@ -94,18 +100,29 @@ void dcd_int_disable(uint8_t rhport);
 // Receive Set Address request, mcu port must also include status IN response
 void dcd_set_address(uint8_t rhport, uint8_t dev_addr);
 
-// Receive Set Configure request
-void dcd_set_config (uint8_t rhport, uint8_t config_num);
-
 // Wake up host
 void dcd_remote_wakeup(uint8_t rhport);
+
+// Connect by enabling internal pull-up resistor on D+/D-
+void dcd_connect(uint8_t rhport) TU_ATTR_WEAK;
+
+// Disconnect by disabling internal pull-up resistor on D+/D-
+void dcd_disconnect(uint8_t rhport) TU_ATTR_WEAK;
 
 //--------------------------------------------------------------------+
 // Endpoint API
 //--------------------------------------------------------------------+
 
+// Invoked when a control transfer's status stage is complete.
+// May help DCD to prepare for next control transfer, this API is optional.
+void dcd_edpt0_status_complete(uint8_t rhport, tusb_control_request_t const * request) TU_ATTR_WEAK;
+
 // Configure endpoint's registers according to descriptor
 bool dcd_edpt_open        (uint8_t rhport, tusb_desc_endpoint_t const * p_endpoint_desc);
+
+// Close an endpoint.
+// Since it is weak, caller must TU_ASSERT this function's existence before calling it.
+void dcd_edpt_close        (uint8_t rhport, uint8_t ep_addr) TU_ATTR_WEAK;
 
 // Submit a transfer, When complete dcd_event_xfer_complete() is invoked to notify the stack
 bool dcd_edpt_xfer        (uint8_t rhport, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes);
@@ -116,20 +133,21 @@ void dcd_edpt_stall       (uint8_t rhport, uint8_t ep_addr);
 // clear stall, data toggle is also reset to DATA0
 void dcd_edpt_clear_stall (uint8_t rhport, uint8_t ep_addr);
 
-/*------------------------------------------------------------------*/
-/* Event Function
- * Called by DCD to notify device stack
- *------------------------------------------------------------------*/
-void dcd_event_handler(dcd_event_t const * event, bool in_isr);
+//--------------------------------------------------------------------+
+// Event API (Implemented by device stack)
+//--------------------------------------------------------------------+
+
+// Called by DCD to notify device stack
+extern void dcd_event_handler(dcd_event_t const * event, bool in_isr);
 
 // helper to send bus signal event
-void dcd_event_bus_signal (uint8_t rhport, dcd_eventid_t eid, bool in_isr);
+extern void dcd_event_bus_signal (uint8_t rhport, dcd_eventid_t eid, bool in_isr);
 
 // helper to send setup received
-void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr);
+extern void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr);
 
 // helper to send transfer complete event
-void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t xferred_bytes, uint8_t result, bool in_isr);
+extern void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t xferred_bytes, uint8_t result, bool in_isr);
 
 #ifdef __cplusplus
  }

@@ -28,8 +28,8 @@
  *  \defgroup Group_Custom Custom Class (not supported yet)
  *  @{ */
 
-#ifndef _TUSB_CUSTOM_HOST_H_
-#define _TUSB_CUSTOM_HOST_H_
+#ifndef _TUSB_VENDOR_HOST_H_
+#define _TUSB_VENDOR_HOST_H_
 
 #include "common/tusb_common.h"
 #include "host/usbh.h"
@@ -69,6 +69,6 @@ void         cush_close(uint8_t dev_addr);
  }
 #endif
 
-#endif /* _TUSB_CUSTOM_HOST_H_ */
+#endif /* _TUSB_VENDOR_HOST_H_ */
 
 /** @} */

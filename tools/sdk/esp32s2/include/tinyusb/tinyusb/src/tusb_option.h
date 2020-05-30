@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -27,39 +27,80 @@
 #ifndef _TUSB_OPTION_H_
 #define _TUSB_OPTION_H_
 
-#define TUSB_VERSION_YEAR   00
-#define TUSB_VERSION_MONTH  00
-#define TUSB_VERSION_WEEK   0
-#define TUSB_VERSION_NAME   "alpha"
-#define TUSB_VERSION        XSTRING_(TUSB_VERSION_YEAR) "." XSTRING_(TUSB_VERSION_MONTH)
+#define TUSB_VERSION_MAJOR     0
+#define TUSB_VERSION_MINOR     5
+#define TUSB_VERSION_REVISION  0
+#define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
 /** \defgroup group_mcu Supported MCU
  * \ref CFG_TUSB_MCU must be defined to one of these
  *  @{ */
-#define OPT_MCU_LPC11UXX        1 ///< NXP LPC11Uxx
-#define OPT_MCU_LPC13XX         3 ///< NXP LPC13xx
-#define OPT_MCU_LPC175X_6X      4 ///< NXP LPC175x, LPC176x
-#define OPT_MCU_LPC177X_8X      5 ///< NXP LPC177x, LPC178x
-#define OPT_MCU_LPC18XX         6 ///< NXP LPC18xx
-#define OPT_MCU_LPC40XX         7 ///< NXP LPC40xx
-#define OPT_MCU_LPC43XX         8 ///< NXP LPC43xx
 
-#define OPT_MCU_NRF5X         100 ///< Nordic nRF5x series
+#define OPT_MCU_NONE                0
 
-#define OPT_MCU_SAMD21        200 ///< MicroChip SAMD21
-#define OPT_MCU_SAMD51        201 ///< MicroChip SAMD51
+// LPC
+#define OPT_MCU_LPC11UXX            1 ///< NXP LPC11Uxx
+#define OPT_MCU_LPC13XX             2 ///< NXP LPC13xx
+#define OPT_MCU_LPC15XX             3 ///< NXP LPC15xx
+#define OPT_MCU_LPC175X_6X          4 ///< NXP LPC175x, LPC176x
+#define OPT_MCU_LPC177X_8X          5 ///< NXP LPC177x, LPC178x
+#define OPT_MCU_LPC18XX             6 ///< NXP LPC18xx
+#define OPT_MCU_LPC40XX             7 ///< NXP LPC40xx
+#define OPT_MCU_LPC43XX             8 ///< NXP LPC43xx
+#define OPT_MCU_LPC51UXX            9 ///< NXP LPC51U6x
+#define OPT_MCU_LPC54XXX           10 ///< NXP LPC54xxx
+#define OPT_MCU_LPC55XX            11 ///< NXP LPC55xx
 
-#define OPT_MCU_STM32F4       300 ///< ST STM32F4
-#define OPT_MCU_STM32F3       301 ///< ST STM32F3
+// NRF
+#define OPT_MCU_NRF5X             100 ///< Nordic nRF5x series
+
+// SAM
+#define OPT_MCU_SAMD21            200 ///< MicroChip SAMD21
+#define OPT_MCU_SAMD51            201 ///< MicroChip SAMD51
+#define OPT_MCU_SAMG              202 ///< MicroChip SAMDG series
+
+// STM32
+#define OPT_MCU_STM32F0           300 ///< ST STM32F0
+#define OPT_MCU_STM32F1           301 ///< ST STM32F1
+#define OPT_MCU_STM32F2           302 ///< ST STM32F2
+#define OPT_MCU_STM32F3           303 ///< ST STM32F3
+#define OPT_MCU_STM32F4           304 ///< ST STM32F4
+#define OPT_MCU_STM32F7           305 ///< ST STM32F7
+#define OPT_MCU_STM32H7           306 ///< ST STM32H7
+#define OPT_MCU_STM32L0           307 ///< ST STM32L0
+#define OPT_MCU_STM32L1           308 ///< ST STM32L1
+#define OPT_MCU_STM32L4           309 ///< ST STM32L4
+
+// Sony
+#define OPT_MCU_CXD56             400 ///< SONY CXD56
+
+// TI MSP430
+#define OPT_MCU_MSP430x5xx        500 ///< TI MSP430x5xx
+
+// ValentyUSB eptri
+#define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
+
+// NXP iMX RT
+#define OPT_MCU_MIMXRT10XX        700 ///< NXP iMX RT10xx
+
+// Nuvoton
+#define OPT_MCU_NUC121            800
+#define OPT_MCU_NUC126            801
+#define OPT_MCU_NUC120            802
+#define OPT_MCU_NUC505            803
+
+// Espressif
+#define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
 
 /** @} */
 
 /** \defgroup group_supported_os Supported RTOS
  *  \ref CFG_TUSB_OS must be defined to one of these
  *  @{ */
-#define OPT_OS_NONE       1 ///< No RTOS
-#define OPT_OS_FREERTOS   2 ///< FreeRTOS
-#define OPT_OS_MYNEWT     3 ///< Mynewt OS
+#define OPT_OS_NONE       1  ///< No RTOS
+#define OPT_OS_FREERTOS   2  ///< FreeRTOS
+#define OPT_OS_MYNEWT     3  ///< Mynewt OS
+#define OPT_OS_CUSTOM     4  ///< Custom OS is implemented by application
 /** @} */
 
 
@@ -142,8 +183,8 @@
 // DEVICE OPTIONS
 //--------------------------------------------------------------------
 
-#ifndef CFG_TUD_ENDOINT0_SIZE
-  #define CFG_TUD_ENDOINT0_SIZE   64
+#ifndef CFG_TUD_ENDPOINT0_SIZE
+  #define CFG_TUD_ENDPOINT0_SIZE   64
 #endif
 
 #ifndef CFG_TUD_CDC
@@ -162,10 +203,21 @@
   #define CFG_TUD_MIDI            0
 #endif
 
-#ifndef CFG_TUD_CUSTOM_CLASS
-  #define CFG_TUD_CUSTOM_CLASS    0
+#ifndef CFG_TUD_VENDOR
+  #define CFG_TUD_VENDOR          0
 #endif
 
+#ifndef CFG_TUD_USBTMC
+  #define CFG_TUD_USBTMC          0
+#endif
+
+#ifndef CFG_TUD_DFU_RT
+  #define CFG_TUD_DFU_RT          0
+#endif
+
+#ifndef CFG_TUD_NET
+  #define CFG_TUD_NET             0
+#endif
 
 //--------------------------------------------------------------------
 // HOST OPTIONS
@@ -195,7 +247,7 @@
 //------------------------------------------------------------------
 // Configuration Validation
 //------------------------------------------------------------------
-#if CFG_TUD_ENDOINT0_SIZE > 64
+#if CFG_TUD_ENDPOINT0_SIZE > 64
   #error Control Endpoint Max Packet Size cannot be larger than 64
 #endif
 

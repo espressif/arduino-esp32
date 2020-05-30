@@ -33,29 +33,36 @@
  extern "C" {
 #endif
 
-bool usbd_init (void);
-
 //--------------------------------------------------------------------+
 // USBD Endpoint API
 //--------------------------------------------------------------------+
 
-// Carry out Data and Status stage of control transfer
-// - If len = 0, it is equivalent to sending status only
-// - If len > wLength : it will be truncated
-bool usbd_control_xfer(uint8_t rhport, tusb_control_request_t const * request, void* buffer, uint16_t len);
+// Open an endpoint
+bool usbd_edpt_open(uint8_t rhport, tusb_desc_endpoint_t const * desc_ep);
 
-// Send STATUS (zero length) packet
-bool usbd_control_status(uint8_t rhport, tusb_control_request_t const * request);
+// Close an endpoint
+void usbd_edpt_close(uint8_t rhport, uint8_t ep_addr);
 
 // Submit a usb transfer
-bool usbd_edpt_xfer        (uint8_t rhport, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes);
+bool usbd_edpt_xfer(uint8_t rhport, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes);
 
 // Check if endpoint transferring is complete
-bool usbd_edpt_busy        (uint8_t rhport, uint8_t ep_addr);
+bool usbd_edpt_busy(uint8_t rhport, uint8_t ep_addr);
 
+// Stall endpoint
 void usbd_edpt_stall(uint8_t rhport, uint8_t ep_addr);
+
+// Clear stalled endpoint
 void usbd_edpt_clear_stall(uint8_t rhport, uint8_t ep_addr);
+
+// Check if endpoint is stalled
 bool usbd_edpt_stalled(uint8_t rhport, uint8_t ep_addr);
+
+static inline
+bool usbd_edpt_ready(uint8_t rhport, uint8_t ep_addr)
+{
+  return !usbd_edpt_busy(rhport, ep_addr) && !usbd_edpt_stalled(rhport, ep_addr);
+}
 
 /*------------------------------------------------------------------*/
 /* Helper

@@ -1,7 +1,7 @@
-/* 
+/*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
+ * Copyright (c) 2019 Sylvain Munaut <tnt@246tNt.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,35 +24,54 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_CUSTOM_DEVICE_H_
-#define _TUSB_CUSTOM_DEVICE_H_
+#ifndef _TUSB_DFU_RT_DEVICE_H_
+#define _TUSB_DFU_RT_DEVICE_H_
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
 
-//--------------------------------------------------------------------+
-// APPLICATION API (Multiple Root Ports)
-// Should be used only with MCU that support more than 1 ports
-//--------------------------------------------------------------------+
-
-//--------------------------------------------------------------------+
-// APPLICATION API (Single Port)
-// Should be used with MCU supporting only 1 USB port for code simplicity
-//--------------------------------------------------------------------+
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 
 //--------------------------------------------------------------------+
-// APPLICATION CALLBACK API (WEAK is optional)
+// Common Definitions
 //--------------------------------------------------------------------+
+
+// DFU Protocol
+typedef enum
+{
+  DFU_PROTOCOL_RT  = 1,
+  DFU_PROTOCOL_DFU = 2,
+} dfu_protocol_type_t;
+
+// DFU Descriptor Type
+typedef enum
+{
+  DFU_DESC_FUNCTIONAL = 0x21,
+} dfu_descriptor_type_t;
+
+
+//--------------------------------------------------------------------+
+// Application Callback API (weak is optional)
+//--------------------------------------------------------------------+
+
+// Invoked when received new data
+TU_ATTR_WEAK void tud_dfu_rt_reboot_to_dfu(void); // TODO rename to _cb convention
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void cusd_init(void);
-bool cusd_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool cusd_control_request_st(uint8_t rhport, tusb_control_request_t const * p_request);
-bool cusd_control_request_complete (uint8_t rhport, tusb_control_request_t const * p_request);
-bool cusd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-void cusd_reset(uint8_t rhport);
+void dfu_rtd_init(void);
+void dfu_rtd_reset(uint8_t rhport);
+bool dfu_rtd_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
+bool dfu_rtd_control_request(uint8_t rhport, tusb_control_request_t const * request);
+bool dfu_rtd_control_complete(uint8_t rhport, tusb_control_request_t const * request);
+bool dfu_rtd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
-#endif /* _TUSB_CUSTOM_DEVICE_H_ */
+#ifdef __cplusplus
+ }
+#endif
+
+#endif /* _TUSB_DFU_RT_DEVICE_H_ */
