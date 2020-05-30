@@ -53,6 +53,9 @@
 // for declaration of reserved field, make use of _TU_COUNTER_
 #define TU_RESERVED           TU_XSTRCAT(reserved, _TU_COUNTER_)
 
+#define TU_LITTLE_ENDIAN (0x12u)
+#define TU_BIG_ENDIAN (0x21u)
+
 //--------------------------------------------------------------------+
 // Compiler porting with Attribute and Endian
 //--------------------------------------------------------------------+
@@ -64,23 +67,91 @@
   #define TU_ATTR_WEAK                  __attribute__ ((weak))
   #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
+  #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
 
   // Endian conversion use well-known host to network (big endian) naming
   #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    #define tu_htonl(u32)  __builtin_bswap32(u32)
-    #define tu_ntohl(u32)  __builtin_bswap32(u32)
-
-    #define tu_htons(u16)  __builtin_bswap16(u16)
-    #define tu_ntohs(u16)  __builtin_bswap16(u16)
+    #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
   #else
-    #define tu_htonl(u32)  (u32)
-    #define tu_ntohl(u32)  (u32)
-
-    #define tu_htons(u16)  (u16)
-    #define tu_ntohs(u16)  (u16)
+    #define TU_BYTE_ORDER TU_BIG_ENDIAN
   #endif
+
+  #define TU_BSWAP16(u16) (__builtin_bswap16(u16))
+  #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
+
+#elif defined(__TI_COMPILER_VERSION__)
+  #define TU_ATTR_ALIGNED(Bytes)        __attribute__ ((aligned(Bytes)))
+  #define TU_ATTR_SECTION(sec_name)     __attribute__ ((section(#sec_name)))
+  #define TU_ATTR_PACKED                __attribute__ ((packed))
+  #define TU_ATTR_PREPACKED
+  #define TU_ATTR_WEAK                  __attribute__ ((weak))
+  #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
+  #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
+  #define TU_ATTR_USED                  __attribute__ ((used))
+
+  // __BYTE_ORDER is defined in the TI ARM compiler, but not MSP430 (which is little endian)
+  #if ((__BYTE_ORDER__) == (__ORDER_LITTLE_ENDIAN__)) || defined(__MSP430__)
+    #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
+  #else
+    #define TU_BYTE_ORDER TU_BIG_ENDIAN
+  #endif
+
+  #define TU_BSWAP16(u16) (__builtin_bswap16(u16))
+  #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
+
+#elif defined(__ICCARM__)
+  #define TU_ATTR_ALIGNED(Bytes)        __attribute__ ((aligned(Bytes)))
+  #define TU_ATTR_SECTION(sec_name)     __attribute__ ((section(#sec_name)))
+  #define TU_ATTR_PACKED                __attribute__ ((packed))
+  #define TU_ATTR_PREPACKED
+  #define TU_ATTR_WEAK                  __attribute__ ((weak))
+  #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
+  #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
+  #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
+
+  // Endian conversion use well-known host to network (big endian) naming
+  #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
+  #else
+    #define TU_BYTE_ORDER TU_BIG_ENDIAN
+  #endif
+
+  #define TU_BSWAP16(u16) (__iar_builtin_REV16(u16))
+  #define TU_BSWAP32(u32) (__iar_builtin_REV(u32))
+#else 
+  #error "Compiler attribute porting is required"
+#endif
+
+#if (TU_BYTE_ORDER == TU_LITTLE_ENDIAN)
+
+  #define tu_htons(u16)  (TU_BSWAP16(u16))
+  #define tu_ntohs(u16)  (TU_BSWAP16(u16))
+
+  #define tu_htonl(u32)  (TU_BSWAP32(u32))
+  #define tu_ntohl(u32)  (TU_BSWAP32(u32))
+
+  #define tu_htole16(u16) (u16)
+  #define tu_le16toh(u16) (u16)
+
+  #define tu_htole32(u32) (u32)
+  #define tu_le32toh(u32) (u32)
+
+#elif (TU_BYTE_ORDER == TU_BIG_ENDIAN)
+
+  #define tu_htons(u16)  (u16)
+  #define tu_ntohs(u16)  (u16)
+
+  #define tu_htonl(u32)  (u32)
+  #define tu_ntohl(u32)  (u32)
+
+  #define tu_htole16(u16) (tu_bswap16(u16))
+  #define tu_le16toh(u16) (tu_bswap16(u16))
+
+  #define tu_htole32(u32) (tu_bswap32(u32))
+  #define tu_le32toh(u32) (tu_bswap32(u32))
+
 #else
-  #error "Compiler attribute porting are required"
+  #error Byte order is undefined
 #endif
 
 #endif /* _TUSB_COMPILER_H_ */

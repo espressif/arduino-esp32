@@ -35,12 +35,12 @@
  extern "C" {
 #endif
 
- //--------------------------------------------------------------------+
+//--------------------------------------------------------------------+
 // Macros Helper
 //--------------------------------------------------------------------+
-#define TU_ARRAY_SZIE(_arr)   ( sizeof(_arr) / sizeof(_arr[0]) )
-#define TU_MIN(_x, _y)        ( (_x) < (_y) ) ? (_x) : (_y) )
-#define TU_MAX(_x, _y)        ( (_x) > (_y) ) ? (_x) : (_y) )
+#define TU_ARRAY_SIZE(_arr)   ( sizeof(_arr) / sizeof(_arr[0]) )
+#define TU_MIN(_x, _y)        ( ( (_x) < (_y) ) ? (_x) : (_y) )
+#define TU_MAX(_x, _y)        ( ( (_x) > (_y) ) ? (_x) : (_y) )
 
 #define TU_U16_HIGH(u16)      ((uint8_t) (((u16) >> 8) & 0x00ff))
 #define TU_U16_LOW(u16)       ((uint8_t) ((u16)       & 0x00ff))
@@ -58,7 +58,7 @@
 #define TU_BIT(n)             (1U << (n))
 
 //--------------------------------------------------------------------+
-// INCLUDES
+// Includes
 //--------------------------------------------------------------------+
 
 // Standard Headers
@@ -77,7 +77,7 @@
 #include "tusb_types.h"
 
 //--------------------------------------------------------------------+
-// INLINE FUNCTION
+// Inline Functions
 //--------------------------------------------------------------------+
 #define tu_memclr(buffer, size)  memset((buffer), 0, (size))
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
@@ -89,7 +89,7 @@ static inline uint32_t tu_u32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
 
 static inline uint16_t tu_u16(uint8_t high, uint8_t low)
 {
-  return (((uint16_t) high) << 8) + low;
+  return (uint16_t)((((uint16_t) high) << 8) + low);
 }
 
 static inline uint8_t tu_u16_high(uint16_t u16) { return (uint8_t) (((uint16_t) (u16 >> 8)) & 0x00ff); }
@@ -106,13 +106,18 @@ static inline uint16_t tu_max16 (uint16_t x, uint16_t y) { return (x > y) ? x : 
 static inline uint32_t tu_max32 (uint32_t x, uint32_t y) { return (x > y) ? x : y; }
 
 // Align
+static inline uint32_t tu_align(uint32_t value, uint32_t alignment)
+{
+  return value & ((uint32_t) ~(alignment-1));
+}
+
 static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
 static inline uint32_t tu_align16 (uint32_t value) { return (value & 0xFFFFFFF0UL); }
 static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
 static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
 
 //------------- Mathematics -------------//
-static inline uint32_t tu_abs(int32_t value) { return (value < 0) ? (-value) : value; }
+static inline uint32_t tu_abs(int32_t value) { return (uint32_t)((value < 0) ? (-value) : value); }
 
 /// inclusive range checking
 static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
@@ -134,9 +139,9 @@ static inline uint8_t tu_log2(uint32_t value)
 }
 
 // Bit
-static inline uint32_t tu_bit_set  (uint32_t value, uint8_t n) { return value | TU_BIT(n); }
-static inline uint32_t tu_bit_clear(uint32_t value, uint8_t n) { return value & (~TU_BIT(n)); }
-static inline bool     tu_bit_test (uint32_t value, uint8_t n) { return (value & TU_BIT(n)) ? true : false; }
+static inline uint32_t tu_bit_set  (uint32_t value, uint8_t pos) { return value | TU_BIT(pos);                  }
+static inline uint32_t tu_bit_clear(uint32_t value, uint8_t pos) { return value & (~TU_BIT(pos));               }
+static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value & TU_BIT(pos)) ? true : false; }
 
 /*------------------------------------------------------------------*/
 /* Count number of arguments of __VA_ARGS__
@@ -146,9 +151,10 @@ static inline bool     tu_bit_test (uint32_t value, uint8_t n) { return (value &
  * Nth position is the same as the number of arguments
  * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
  *------------------------------------------------------------------*/
-#ifndef VA_ARGS_NUM_
+#ifndef TU_ARGS_NUM
 
-#define VA_ARGS_NUM_(...) 	 NARG_(_0, ##__VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...) 	 NARG_(_0, ##__VA_ARGS__,_RSEQ_N())
+
 #define NARG_(...)        _GET_NTH_ARG(__VA_ARGS__)
 #define _GET_NTH_ARG( \
           _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
@@ -195,6 +201,90 @@ static inline bool     tu_bit_test (uint32_t value, uint8_t n) { return (value &
             + ((uint32_t)TU_BIN8(db2)<<16) \
             + ((uint32_t)TU_BIN8(db3)<<8) \
             + TU_BIN8(dlsb))
+#endif
+
+//--------------------------------------------------------------------+
+// Debug Function
+//--------------------------------------------------------------------+
+
+// CFG_TUSB_DEBUG for debugging
+// 0 : no debug
+// 1 : print when there is error
+// 2 : print out log
+#if CFG_TUSB_DEBUG
+
+void tu_print_mem(void const *buf, uint16_t count, uint8_t indent);
+
+#ifdef CFG_TUSB_DEBUG_PRINTF
+  extern int CFG_TUSB_DEBUG_PRINTF(const char *format, ...);
+  #define tu_printf    CFG_TUSB_DEBUG_PRINTF
+#else
+  #define tu_printf    printf
+#endif
+
+static inline
+void tu_print_var(uint8_t const* buf, uint32_t bufsize)
+{
+  for(uint32_t i=0; i<bufsize; i++) tu_printf("%02X ", buf[i]);
+}
+
+// Log with debug level 1
+#define TU_LOG1               tu_printf
+#define TU_LOG1_MEM           tu_print_mem
+#define TU_LOG1_VAR(_x)       tu_print_var((uint8_t const*)(_x), sizeof(*(_x)))
+#define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\n", (uint32_t) (_x) )
+#define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\n", (uint32_t) (_x) )
+#define TU_LOG1_LOCATION()    tu_printf("%s: %d:\r\n", __PRETTY_FUNCTION__, __LINE__)
+
+// Log with debug level 2
+#if CFG_TUSB_DEBUG > 1
+  #define TU_LOG2             TU_LOG1
+  #define TU_LOG2_MEM         TU_LOG1_MEM
+  #define TU_LOG2_VAR         TU_LOG1_VAR
+  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
+  #define TU_LOG2_INT         TU_LOG1_INT
+  #define TU_LOG2_HEX         TU_LOG1_HEX
+#endif
+
+
+typedef struct
+{
+  uint32_t key;
+  char const * data;
+}lookup_entry_t;
+
+typedef struct
+{
+  uint16_t count;
+  lookup_entry_t const* items;
+} lookup_table_t;
+
+static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t key)
+{
+  for(uint16_t i=0; i<p_table->count; i++)
+  {
+    if (p_table->items[i].key == key) return p_table->items[i].data;
+  }
+
+  return NULL;
+}
+
+#endif // CFG_TUSB_DEBUG
+
+#ifndef TU_LOG1
+  #define TU_LOG1(...)
+  #define TU_LOG1_MEM(...)
+  #define TU_LOG1_VAR(...)
+  #define TU_LOG1_INT(...)
+  #define TU_LOG1_HEX(...)
+#endif
+
+#ifndef TU_LOG2
+  #define TU_LOG2(...)
+  #define TU_LOG2_MEM(...)
+  #define TU_LOG2_VAR(...)
+  #define TU_LOG2_INT(...)
+  #define TU_LOG2_HEX(...)
 #endif
 
 #ifdef __cplusplus

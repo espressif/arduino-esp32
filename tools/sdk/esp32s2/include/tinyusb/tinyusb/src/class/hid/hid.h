@@ -180,7 +180,7 @@ typedef enum
 /// Standard HID Boot Protocol Keyboard Report.
 typedef struct TU_ATTR_PACKED
 {
-  uint8_t modifier;   /**< Keyboard modifier (KEYBOARD_MODIFER_* masks). */
+  uint8_t modifier;   /**< Keyboard modifier (KEYBOARD_MODIFIER_* masks). */
   uint8_t reserved;   /**< Reserved for OEM use, always set to 0. */
   uint8_t keycode[6]; /**< Key codes of the currently pressed keys. */
 } hid_keyboard_report_t;
@@ -413,8 +413,8 @@ enum {
 #define HID_REPORT_SIZE(x)        HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, 1)
 #define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, 1)
-#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, n)
+#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, 1),
+#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, n),
 
 #define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, 1)
 #define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, n)
@@ -812,7 +812,7 @@ enum
     {'#'   , '~'    }, /* 0x32 */ \
     {';'   , ':'    }, /* 0x33 */ \
     {'\''  , '\"'   }, /* 0x34 */ \
-    {0     , 0      }, /* 0x35 */ \
+    {'`'   , '~'    }, /* 0x35 */ \
     {','   , '<'    }, /* 0x36 */ \
     {'.'   , '>'    }, /* 0x37 */ \
     {'/'   , '?'    }, /* 0x38 */ \

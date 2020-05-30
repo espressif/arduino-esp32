@@ -98,7 +98,7 @@ static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 // role device/host is used by OS NONE for mutex (disable usb isr) only
 #define OSAL_QUEUE_DEF(_role, _name, _depth, _type) \
   static _type _name##_##buf[_depth];\
-  static struct os_event* _name##_##evbuf[_depth];\
+  static struct os_event _name##_##evbuf[_depth];\
   osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf, .evbuf =  _name##_##evbuf};\
 
 typedef struct
@@ -125,7 +125,7 @@ static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
   return (osal_queue_t) qdef;
 }
 
-static inline bool osal_queue_receive(osal_queue_t const qhdl, void* data)
+static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
 {
   struct os_event* ev;
   ev = os_eventq_get(&qhdl->evq);
@@ -137,7 +137,7 @@ static inline bool osal_queue_receive(osal_queue_t const qhdl, void* data)
   return true;
 }
 
-static inline bool osal_queue_send(osal_queue_t const qhdl, void const * data, bool in_isr)
+static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   (void) in_isr;
 
@@ -160,6 +160,12 @@ static inline bool osal_queue_send(osal_queue_t const qhdl, void const * data, b
 
   return true;
 }
+
+static inline bool osal_queue_empty(osal_queue_t qhdl)
+{
+  return STAILQ_EMPTY(&qhdl->evq.evq_list);
+}
+
 
 #ifdef __cplusplus
  }

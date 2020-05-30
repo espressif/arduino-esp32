@@ -87,6 +87,7 @@ enum {
 // HCD API
 //--------------------------------------------------------------------+
 bool hcd_init(void);
+void hcd_isr(uint8_t hostid);
 void hcd_int_enable (uint8_t rhport);
 void hcd_int_disable(uint8_t rhport);
 

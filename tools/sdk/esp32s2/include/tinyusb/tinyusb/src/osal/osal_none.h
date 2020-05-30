@@ -142,9 +142,11 @@ typedef osal_queue_def_t* osal_queue_t;
     }\
   }
 
-// lock queue by disable usb isr
+// lock queue by disable USB interrupt
 static inline void _osal_q_lock(osal_queue_t qhdl)
 {
+  (void) qhdl;
+
 #if TUSB_OPT_DEVICE_ENABLED
   if (qhdl->role == OPT_MODE_DEVICE) dcd_int_disable(TUD_OPT_RHPORT);
 #endif
@@ -157,6 +159,8 @@ static inline void _osal_q_lock(osal_queue_t qhdl)
 // unlock queue
 static inline void _osal_q_unlock(osal_queue_t qhdl)
 {
+  (void) qhdl;
+
 #if TUSB_OPT_DEVICE_ENABLED
   if (qhdl->role == OPT_MODE_DEVICE) dcd_int_enable(TUD_OPT_RHPORT);
 #endif
@@ -172,8 +176,7 @@ static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
   return (osal_queue_t) qdef;
 }
 
-// non blocking
-static inline bool osal_queue_receive(osal_queue_t const qhdl, void* data)
+static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
 {
   _osal_q_lock(qhdl);
   bool success = tu_fifo_read(&qhdl->ff, data);
@@ -182,7 +185,7 @@ static inline bool osal_queue_receive(osal_queue_t const qhdl, void* data)
   return success;
 }
 
-static inline bool osal_queue_send(osal_queue_t const qhdl, void const * data, bool in_isr)
+static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   if (!in_isr) {
     _osal_q_lock(qhdl);
@@ -194,7 +197,16 @@ static inline bool osal_queue_send(osal_queue_t const qhdl, void const * data, b
     _osal_q_unlock(qhdl);
   }
 
+  TU_ASSERT(success);
+
   return success;
+}
+
+static inline bool osal_queue_empty(osal_queue_t qhdl)
+{
+  // Skip queue lock/unlock since this function is primarily called
+  // with interrupt disabled before going into low power mode
+  return tu_fifo_empty(&qhdl->ff);
 }
 
 #ifdef __cplusplus

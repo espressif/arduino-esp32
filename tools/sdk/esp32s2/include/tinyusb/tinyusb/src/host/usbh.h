@@ -68,6 +68,9 @@ typedef struct {
 //--------------------------------------------------------------------+
 void tuh_task(void);
 
+// Interrupt handler, name alias to HCD
+#define tuh_isr   hcd_isr
+
 tusb_device_state_t tuh_device_get_state (uint8_t dev_addr);
 static inline bool tuh_device_is_configured(uint8_t dev_addr)
 {

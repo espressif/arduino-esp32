@@ -55,7 +55,7 @@ extern uint8_t const hid_keycode_to_ascii_tbl[2][128]; // TODO used weak attr if
  * \retval      true if device supports Keyboard interface
  * \retval      false if device does not support Keyboard interface or is not mounted
  */
-bool          tuh_hid_keyboard_is_mounted(uint8_t dev_addr);
+bool tuh_hid_keyboard_is_mounted(uint8_t dev_addr);
 
 /** \brief      Check if the interface is currently busy or not
  * \param[in]   dev_addr device address
@@ -64,7 +64,7 @@ bool          tuh_hid_keyboard_is_mounted(uint8_t dev_addr);
  * \note        This function is primarily used for polling/waiting result after \ref tuh_hid_keyboard_get_report.
  *              Alternatively, asynchronous event API can be used
  */
-bool          tuh_hid_keyboard_is_busy(uint8_t dev_addr);
+bool tuh_hid_keyboard_is_busy(uint8_t dev_addr);
 
 /** \brief        Perform a get report from Keyboard interface
  * \param[in]		  dev_addr device address
