@@ -15,7 +15,6 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-spi.c
   cores/esp32/esp32-hal-time.c
   cores/esp32/esp32-hal-timer.c
-  cores/esp32/esp32-hal-tinyusb.c
   cores/esp32/esp32-hal-touch.c
   cores/esp32/esp32-hal-uart.c
   cores/esp32/esp32-hal-rmt.c
