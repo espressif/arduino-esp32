@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #pragma once
 
 #include "tusb.h"
@@ -23,8 +27,12 @@
 #define USB_STRING_DESCRIPTOR_ARRAY_SIZE 9
 typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
 
-tusb_desc_device_t descriptor_tinyusb;
-tusb_desc_strarray_device_t descriptor_str_tinyusb;
+extern tusb_desc_device_t descriptor_tinyusb;
+extern tusb_desc_strarray_device_t descriptor_str_tinyusb;
 
-tusb_desc_device_t descriptor_kconfig;
-tusb_desc_strarray_device_t descriptor_str_kconfig;
+extern tusb_desc_device_t descriptor_kconfig;
+extern tusb_desc_strarray_device_t descriptor_str_kconfig;
+
+#ifdef __cplusplus
+}
+#endif
