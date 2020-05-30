@@ -1,4 +1,5 @@
 menu.UploadSpeed=Upload Speed
+menu.UploadMode=Upload Mode
 menu.CPUFreq=CPU Frequency
 menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
@@ -17,7 +18,7 @@ esp32s2.name=ESP32S2 Dev Module
 esp32s2.upload.tool=esptool_py
 esp32s2.upload.maximum_size=1310720
 esp32s2.upload.maximum_data_size=327680
-esp32s2.upload.wait_for_upload_port=true
+esp32s2.upload.flags=
 
 esp32s2.serial.disableDTR=true
 esp32s2.serial.disableRTS=true
@@ -34,6 +35,16 @@ esp32s2.build.flash_mode=qio
 esp32s2.build.boot=qio
 esp32s2.build.partitions=default
 esp32s2.build.defines=
+
+esp32s2.menu.UploadMode.default=Default Uart
+esp32s2.menu.UploadMode.default.upload.flags=
+esp32s2.menu.UploadMode.default.upload.tool=esptool_py
+esp32s2.menu.UploadMode.cdc=USB CDC
+esp32s2.menu.UploadMode.cdc.upload.flags=--no-stub
+esp32s2.menu.UploadMode.cdc.upload.tool=esptool_py
+#esp32s2.menu.UploadMode.dfu=USB DFU
+#esp32s2.menu.UploadMode.dfu.upload.flags=
+#esp32s2.menu.UploadMode.dfu.upload.tool=dfu_util
 
 esp32s2.menu.PSRAM.disabled=Disabled
 esp32s2.menu.PSRAM.disabled.build.defines=
@@ -151,7 +162,7 @@ esp32.name=ESP32 Dev Module
 esp32.upload.tool=esptool_py
 esp32.upload.maximum_size=1310720
 esp32.upload.maximum_data_size=327680
-esp32.upload.wait_for_upload_port=true
+esp32.upload.flags=
 
 esp32.serial.disableDTR=true
 esp32.serial.disableRTS=true
@@ -289,7 +300,7 @@ esp32wrover.name=ESP32 Wrover Module
 esp32wrover.upload.tool=esptool_py
 esp32wrover.upload.maximum_size=1310720
 esp32wrover.upload.maximum_data_size=327680
-esp32wrover.upload.wait_for_upload_port=true
+esp32wrover.upload.flags=
 
 esp32wrover.serial.disableDTR=true
 esp32wrover.serial.disableRTS=true
@@ -388,7 +399,7 @@ pico32.name=ESP32 Pico Kit
 pico32.upload.tool=esptool_py
 pico32.upload.maximum_size=1310720
 pico32.upload.maximum_data_size=327680
-pico32.upload.wait_for_upload_port=true
+pico32.upload.flags=
 
 pico32.serial.disableDTR=true
 pico32.serial.disableRTS=true
@@ -449,7 +460,7 @@ tinypico.name=TinyPICO
 tinypico.upload.tool=esptool_py
 tinypico.upload.maximum_size=1310720
 tinypico.upload.maximum_data_size=327680
-tinypico.upload.wait_for_upload_port=true
+tinypico.upload.flags=
 
 tinypico.serial.disableDTR=true
 tinypico.serial.disableRTS=true
@@ -581,7 +592,7 @@ magicbit.name=MagicBit
 magicbit.upload.tool=esptool_py
 magicbit.upload.maximum_size=1310720
 magicbit.upload.maximum_data_size=327680
-magicbit.upload.wait_for_upload_port=true
+magicbit.upload.flags=
 
 magicbit.serial.disableDTR=true
 magicbit.serial.disableRTS=true
@@ -616,7 +627,7 @@ turta_iot_node.name=Turta IoT Node
 turta_iot_node.upload.tool=esptool_py
 turta_iot_node.upload.maximum_size=1310720
 turta_iot_node.upload.maximum_data_size=327680
-turta_iot_node.upload.wait_for_upload_port=true
+turta_iot_node.upload.flags=
 
 turta_iot_node.serial.disableDTR=true
 turta_iot_node.serial.disableRTS=true
@@ -659,7 +670,7 @@ ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
 ttgo-lora32-v1.upload.tool=esptool_py
 ttgo-lora32-v1.upload.maximum_size=1310720
 ttgo-lora32-v1.upload.maximum_data_size=294912
-ttgo-lora32-v1.upload.wait_for_upload_port=true
+ttgo-lora32-v1.upload.flags=
 
 ttgo-lora32-v1.serial.disableDTR=true
 ttgo-lora32-v1.serial.disableRTS=true
@@ -715,7 +726,7 @@ ttgo-t1.name=TTGO T1
 ttgo-t1.upload.tool=esptool_py
 ttgo-t1.upload.maximum_size=1310720
 ttgo-t1.upload.maximum_data_size=327680
-ttgo-t1.upload.wait_for_upload_port=true
+ttgo-t1.upload.flags=
 
 ttgo-t1.serial.disableDTR=true
 ttgo-t1.serial.disableRTS=true
@@ -837,7 +848,7 @@ cw02.name=XinaBox CW02
 cw02.upload.tool=esptool_py
 cw02.upload.maximum_size=1310720
 cw02.upload.maximum_data_size=294912
-cw02.upload.wait_for_upload_port=true
+cw02.upload.flags=
 
 cw02.serial.disableDTR=true
 cw02.serial.disableRTS=true
@@ -913,7 +924,7 @@ esp32thing.name=SparkFun ESP32 Thing
 esp32thing.upload.tool=esptool_py
 esp32thing.upload.maximum_size=1310720
 esp32thing.upload.maximum_data_size=327680
-esp32thing.upload.wait_for_upload_port=true
+esp32thing.upload.flags=
 
 esp32thing.serial.disableDTR=true
 esp32thing.serial.disableRTS=true
@@ -1044,7 +1055,7 @@ nina_w10.name=u-blox NINA-W10 series (ESP32)
 nina_w10.upload.tool=esptool_py
 nina_w10.upload.maximum_size=1310720
 nina_w10.upload.maximum_data_size=327680
-nina_w10.upload.wait_for_upload_port=true
+nina_w10.upload.flags=
 
 nina_w10.serial.disableDTR=true
 nina_w10.serial.disableRTS=true
@@ -1083,7 +1094,7 @@ widora-air.name=Widora AIR
 widora-air.upload.tool=esptool_py
 widora-air.upload.maximum_size=1310720
 widora-air.upload.maximum_data_size=327680
-widora-air.upload.wait_for_upload_port=true
+widora-air.upload.flags=
 
 widora-air.serial.disableDTR=true
 widora-air.serial.disableRTS=true
@@ -1127,7 +1138,7 @@ esp320.name=Electronic SweetPeas - ESP320
 esp320.upload.tool=esptool_py
 esp320.upload.maximum_size=1310720
 esp320.upload.maximum_data_size=327680
-esp320.upload.wait_for_upload_port=true
+esp320.upload.flags=
 
 esp320.serial.disableDTR=true
 esp320.serial.disableRTS=true
@@ -1171,7 +1182,7 @@ nano32.name=Nano32
 nano32.upload.tool=esptool_py
 nano32.upload.maximum_size=1310720
 nano32.upload.maximum_data_size=327680
-nano32.upload.wait_for_upload_port=true
+nano32.upload.flags=
 
 nano32.serial.disableDTR=true
 nano32.serial.disableRTS=true
@@ -1215,7 +1226,7 @@ d32.name=LOLIN D32
 d32.upload.tool=esptool_py
 d32.upload.maximum_size=1310720
 d32.upload.maximum_data_size=327680
-d32.upload.wait_for_upload_port=true
+d32.upload.flags=
 
 d32.serial.disableDTR=true
 d32.serial.disableRTS=true
@@ -1288,7 +1299,7 @@ d32_pro.name=LOLIN D32 PRO
 d32_pro.upload.tool=esptool_py
 d32_pro.upload.maximum_size=1310720
 d32_pro.upload.maximum_data_size=327680
-d32_pro.upload.wait_for_upload_port=true
+d32_pro.upload.flags=
 
 d32_pro.serial.disableDTR=true
 d32_pro.serial.disableRTS=true
@@ -1366,7 +1377,7 @@ lolin32.name=WEMOS LOLIN32
 lolin32.upload.tool=esptool_py
 lolin32.upload.maximum_size=1310720
 lolin32.upload.maximum_data_size=327680
-lolin32.upload.wait_for_upload_port=true
+lolin32.upload.flags=
 
 lolin32.serial.disableDTR=true
 lolin32.serial.disableRTS=true
@@ -1436,7 +1447,7 @@ pocket_32.name=Dongsen Tech Pocket 32
 pocket_32.upload.tool=esptool_py
 pocket_32.upload.maximum_size=1310720
 pocket_32.upload.maximum_data_size=327680
-pocket_32.upload.wait_for_upload_port=true
+pocket_32.upload.flags=
 
 pocket_32.serial.disableDTR=true
 pocket_32.serial.disableRTS=true
@@ -1480,7 +1491,7 @@ WeMosBat.name=WeMos WiFi&Bluetooth Battery
 WeMosBat.upload.tool=esptool_py
 WeMosBat.upload.maximum_size=1310720
 WeMosBat.upload.maximum_data_size=327680
-WeMosBat.upload.wait_for_upload_port=true
+WeMosBat.upload.flags=
 
 WeMosBat.serial.disableDTR=true
 WeMosBat.serial.disableRTS=true
@@ -1537,7 +1548,7 @@ espea32.name=ESPea32
 espea32.upload.tool=esptool_py
 espea32.upload.maximum_size=1310720
 espea32.upload.maximum_data_size=327680
-espea32.upload.wait_for_upload_port=true
+espea32.upload.flags=
 
 espea32.serial.disableDTR=true
 espea32.serial.disableRTS=true
@@ -1581,7 +1592,7 @@ quantum.name=Noduino Quantum
 quantum.upload.tool=esptool_py
 quantum.upload.maximum_size=1310720
 quantum.upload.maximum_data_size=327680
-quantum.upload.wait_for_upload_port=true
+quantum.upload.flags=
 
 quantum.serial.disableDTR=true
 quantum.serial.disableRTS=true
@@ -1625,7 +1636,7 @@ node32s.name=Node32s
 node32s.upload.tool=esptool_py
 node32s.upload.maximum_size=1310720
 node32s.upload.maximum_data_size=327680
-node32s.upload.wait_for_upload_port=true
+node32s.upload.flags=
 
 node32s.serial.disableDTR=true
 node32s.serial.disableRTS=true
@@ -1691,7 +1702,7 @@ hornbill32dev.name=Hornbill ESP32 Dev
 hornbill32dev.upload.tool=esptool_py
 hornbill32dev.upload.maximum_size=1310720
 hornbill32dev.upload.maximum_data_size=327680
-hornbill32dev.upload.wait_for_upload_port=true
+hornbill32dev.upload.flags=
 
 hornbill32dev.serial.disableDTR=true
 hornbill32dev.serial.disableRTS=true
@@ -1735,7 +1746,7 @@ hornbill32minima.name=Hornbill ESP32 Minima
 hornbill32minima.upload.tool=esptool_py
 hornbill32minima.upload.maximum_size=1310720
 hornbill32minima.upload.maximum_data_size=327680
-hornbill32minima.upload.wait_for_upload_port=true
+hornbill32minima.upload.flags=
 
 hornbill32minima.serial.disableDTR=true
 hornbill32minima.serial.disableRTS=true
@@ -1778,7 +1789,7 @@ firebeetle32.name=FireBeetle-ESP32
 firebeetle32.upload.tool=esptool_py
 firebeetle32.upload.maximum_size=1310720
 firebeetle32.upload.maximum_data_size=327680
-firebeetle32.upload.wait_for_upload_port=true
+firebeetle32.upload.flags=
 
 firebeetle32.serial.disableDTR=true
 firebeetle32.serial.disableRTS=true
@@ -1822,7 +1833,7 @@ intorobot-fig.name=IntoRobot Fig
 intorobot-fig.upload.tool=esptool_py
 intorobot-fig.upload.maximum_size=1310720
 intorobot-fig.upload.maximum_data_size=327680
-intorobot-fig.upload.wait_for_upload_port=true
+intorobot-fig.upload.flags=
 
 intorobot-fig.serial.disableDTR=true
 intorobot-fig.serial.disableRTS=true
@@ -1866,7 +1877,7 @@ onehorse32dev.name=Onehorse ESP32 Dev Module
 onehorse32dev.upload.tool=esptool_py
 onehorse32dev.upload.maximum_size=1310720
 onehorse32dev.upload.maximum_data_size=327680
-onehorse32dev.upload.wait_for_upload_port=true
+onehorse32dev.upload.flags=
 
 onehorse32dev.serial.disableDTR=true
 onehorse32dev.serial.disableRTS=true
@@ -1910,7 +1921,7 @@ featheresp32.name=Adafruit ESP32 Feather
 featheresp32.upload.tool=esptool_py
 featheresp32.upload.maximum_size=1310720
 featheresp32.upload.maximum_data_size=327680
-featheresp32.upload.wait_for_upload_port=true
+featheresp32.upload.flags=
 
 featheresp32.serial.disableDTR=true
 featheresp32.serial.disableRTS=true
@@ -1976,7 +1987,7 @@ nodemcu-32s.name=NodeMCU-32S
 nodemcu-32s.upload.tool=esptool_py
 nodemcu-32s.upload.maximum_size=1310720
 nodemcu-32s.upload.maximum_data_size=327680
-nodemcu-32s.upload.wait_for_upload_port=true
+nodemcu-32s.upload.flags=
 
 nodemcu-32s.serial.disableDTR=true
 nodemcu-32s.serial.disableRTS=true
@@ -2020,7 +2031,7 @@ mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
 mhetesp32devkit.upload.tool=esptool_py
 mhetesp32devkit.upload.maximum_size=1310720
 mhetesp32devkit.upload.maximum_data_size=327680
-mhetesp32devkit.upload.wait_for_upload_port=true
+mhetesp32devkit.upload.flags=
 
 mhetesp32devkit.serial.disableDTR=true
 mhetesp32devkit.serial.disableRTS=true
@@ -2086,7 +2097,7 @@ mhetesp32minikit.name=MH ET LIVE ESP32MiniKit
 mhetesp32minikit.upload.tool=esptool_py
 mhetesp32minikit.upload.maximum_size=1310720
 mhetesp32minikit.upload.maximum_data_size=327680
-mhetesp32minikit.upload.wait_for_upload_port=true
+mhetesp32minikit.upload.flags=
 
 mhetesp32minikit.serial.disableDTR=true
 mhetesp32minikit.serial.disableRTS=true
@@ -2154,7 +2165,7 @@ esp32vn-iot-uno.name=ESP32vn IoT Uno
 esp32vn-iot-uno.upload.tool=esptool_py
 esp32vn-iot-uno.upload.maximum_size=1310720
 esp32vn-iot-uno.upload.maximum_data_size=327680
-esp32vn-iot-uno.upload.wait_for_upload_port=true
+esp32vn-iot-uno.upload.flags=
 
 esp32vn-iot-uno.serial.disableDTR=true
 esp32vn-iot-uno.serial.disableRTS=true
@@ -2198,7 +2209,7 @@ esp32doit-devkit-v1.name=DOIT ESP32 DEVKIT V1
 esp32doit-devkit-v1.upload.tool=esptool_py
 esp32doit-devkit-v1.upload.maximum_size=1310720
 esp32doit-devkit-v1.upload.maximum_data_size=327680
-esp32doit-devkit-v1.upload.wait_for_upload_port=true
+esp32doit-devkit-v1.upload.flags=
 
 esp32doit-devkit-v1.serial.disableDTR=true
 esp32doit-devkit-v1.serial.disableRTS=true
@@ -2308,7 +2319,7 @@ esp32-evb.name=OLIMEX ESP32-EVB
 esp32-evb.upload.tool=esptool_py
 esp32-evb.upload.maximum_size=1310720
 esp32-evb.upload.maximum_data_size=327680
-esp32-evb.upload.wait_for_upload_port=true
+esp32-evb.upload.flags=
 
 esp32-evb.serial.disableDTR=true
 esp32-evb.serial.disableRTS=true
@@ -2350,7 +2361,7 @@ esp32-gateway.name=OLIMEX ESP32-GATEWAY
 esp32-gateway.upload.tool=esptool_py
 esp32-gateway.upload.maximum_size=1310720
 esp32-gateway.upload.maximum_data_size=327680
-esp32-gateway.upload.wait_for_upload_port=true
+esp32-gateway.upload.flags=
 
 esp32-gateway.serial.disableDTR=true
 esp32-gateway.serial.disableRTS=true
@@ -2398,7 +2409,7 @@ esp32-poe.name=OLIMEX ESP32-PoE
 esp32-poe.upload.tool=esptool_py
 esp32-poe.upload.maximum_size=1310720
 esp32-poe.upload.maximum_data_size=327680
-esp32-poe.upload.wait_for_upload_port=true
+esp32-poe.upload.flags=
 
 esp32-poe.serial.disableDTR=true
 esp32-poe.serial.disableRTS=true
@@ -2440,7 +2451,7 @@ esp32-poe-iso.name=OLIMEX ESP32-PoE-ISO
 esp32-poe-iso.upload.tool=esptool_py
 esp32-poe-iso.upload.maximum_size=1310720
 esp32-poe-iso.upload.maximum_data_size=327680
-esp32-poe-iso.upload.wait_for_upload_port=true
+esp32-poe-iso.upload.flags=
 
 esp32-poe-iso.serial.disableDTR=true
 esp32-poe-iso.serial.disableRTS=true
@@ -2482,7 +2493,7 @@ esp32-DevKitLipo.name=OLIMEX ESP32-DevKit-LiPo
 esp32-DevKitLipo.upload.tool=esptool_py
 esp32-DevKitLipo.upload.maximum_size=1310720
 esp32-DevKitLipo.upload.maximum_data_size=327680
-esp32-DevKitLipo.upload.wait_for_upload_port=true
+esp32-DevKitLipo.upload.flags=
 
 esp32-DevKitLipo.serial.disableDTR=true
 esp32-DevKitLipo.serial.disableRTS=true
@@ -2555,7 +2566,7 @@ espino32.name=ThaiEasyElec's ESPino32
 espino32.upload.tool=esptool_py
 espino32.upload.maximum_size=1310720
 espino32.upload.maximum_data_size=327680
-espino32.upload.wait_for_upload_port=true
+espino32.upload.flags=
 
 espino32.serial.disableDTR=true
 espino32.serial.disableRTS=true
@@ -2599,7 +2610,7 @@ m5stack-core-esp32.name=M5Stack-Core-ESP32
 m5stack-core-esp32.upload.tool=esptool_py
 m5stack-core-esp32.upload.maximum_size=1310720
 m5stack-core-esp32.upload.maximum_data_size=327680
-m5stack-core-esp32.upload.wait_for_upload_port=true
+m5stack-core-esp32.upload.flags=
 
 m5stack-core-esp32.serial.disableDTR=true
 m5stack-core-esp32.serial.disableRTS=true
@@ -2678,7 +2689,7 @@ m5stack-fire.name=M5Stack-FIRE
 m5stack-fire.upload.tool=esptool_py
 m5stack-fire.upload.maximum_size=6553600
 m5stack-fire.upload.maximum_data_size=4521984
-m5stack-fire.upload.wait_for_upload_port=true
+m5stack-fire.upload.flags=
 
 m5stack-fire.serial.disableDTR=true
 m5stack-fire.serial.disableRTS=true
@@ -2743,7 +2754,7 @@ m5stick-c.name=M5Stick-C
 m5stick-c.upload.tool=esptool_py
 m5stick-c.upload.maximum_size=1310720
 m5stick-c.upload.maximum_data_size=327680
-m5stick-c.upload.wait_for_upload_port=true
+m5stick-c.upload.flags=
 
 m5stick-c.serial.disableDTR=true
 m5stick-c.serial.disableRTS=true
@@ -2804,7 +2815,7 @@ m5stack-atom.name=M5Stack-ATOM
 m5stack-atom.upload.tool=esptool_py
 m5stack-atom.upload.maximum_size=1310720
 m5stack-atom.upload.maximum_data_size=327680
-m5stack-atom.upload.wait_for_upload_port=true
+m5stack-atom.upload.flags=
 
 m5stack-atom.serial.disableDTR=true
 m5stack-atom.serial.disableRTS=true
@@ -2965,7 +2976,7 @@ odroid_esp32.name=ODROID ESP32
 odroid_esp32.upload.tool=esptool_py
 odroid_esp32.upload.maximum_size=1310720
 odroid_esp32.upload.maximum_data_size=327680
-odroid_esp32.upload.wait_for_upload_port=true
+odroid_esp32.upload.flags=
 
 odroid_esp32.serial.disableDTR=true
 odroid_esp32.serial.disableRTS=true
@@ -3044,7 +3055,7 @@ heltec_wifi_kit_32.name=Heltec WiFi Kit 32
 heltec_wifi_kit_32.upload.tool=esptool_py
 heltec_wifi_kit_32.upload.maximum_size=1310720
 heltec_wifi_kit_32.upload.maximum_data_size=327680
-heltec_wifi_kit_32.upload.wait_for_upload_port=true
+heltec_wifi_kit_32.upload.flags=
 
 heltec_wifi_kit_32.serial.disableDTR=true
 heltec_wifi_kit_32.serial.disableRTS=true
@@ -3156,7 +3167,7 @@ heltec_wifi_lora_32.name=Heltec WiFi LoRa 32
 heltec_wifi_lora_32.upload.tool=esptool_py
 heltec_wifi_lora_32.upload.maximum_size=1310720
 heltec_wifi_lora_32.upload.maximum_data_size=327680
-heltec_wifi_lora_32.upload.wait_for_upload_port=true
+heltec_wifi_lora_32.upload.flags=
 
 heltec_wifi_lora_32.serial.disableDTR=true
 heltec_wifi_lora_32.serial.disableRTS=true
@@ -3268,7 +3279,7 @@ heltec_wifi_lora_32_V2.name=Heltec WiFi LoRa 32(V2)
 heltec_wifi_lora_32_V2.upload.tool=esptool_py
 heltec_wifi_lora_32_V2.upload.maximum_size=1310720
 heltec_wifi_lora_32_V2.upload.maximum_data_size=327680
-heltec_wifi_lora_32_V2.upload.wait_for_upload_port=true
+heltec_wifi_lora_32_V2.upload.flags=
 
 heltec_wifi_lora_32_V2.serial.disableDTR=true
 heltec_wifi_lora_32_V2.serial.disableRTS=true
@@ -3386,7 +3397,7 @@ heltec_wireless_stick.name=Heltec Wireless Stick
 heltec_wireless_stick.upload.tool=esptool_py
 heltec_wireless_stick.upload.maximum_size=1310720
 heltec_wireless_stick.upload.maximum_data_size=327680
-heltec_wireless_stick.upload.wait_for_upload_port=true
+heltec_wireless_stick.upload.flags=
 
 heltec_wireless_stick.serial.disableDTR=true
 heltec_wireless_stick.serial.disableRTS=true
@@ -3504,7 +3515,7 @@ espectro32.name=ESPectro32
 espectro32.upload.tool=esptool_py
 espectro32.upload.maximum_size=1310720
 espectro32.upload.maximum_data_size=327680
-espectro32.upload.wait_for_upload_port=true
+espectro32.upload.flags=
 
 espectro32.serial.disableDTR=true
 espectro32.serial.disableRTS=true
@@ -3580,7 +3591,7 @@ CoreESP32.name=Microduino-CoreESP32
 CoreESP32.upload.tool=esptool_py
 CoreESP32.upload.maximum_size=1310720
 CoreESP32.upload.maximum_data_size=327680
-CoreESP32.upload.wait_for_upload_port=true
+CoreESP32.upload.flags=
 
 CoreESP32.serial.disableDTR=false
 CoreESP32.serial.disableRTS=false
@@ -3656,7 +3667,7 @@ alksesp32.name=ALKS ESP32
 alksesp32.upload.tool=esptool_py
 alksesp32.upload.maximum_size=1310720
 alksesp32.upload.maximum_data_size=327680
-alksesp32.upload.wait_for_upload_port=true
+alksesp32.upload.flags=
 
 alksesp32.serial.disableDTR=true
 alksesp32.serial.disableRTS=true
@@ -3786,7 +3797,7 @@ wipy3.name=WiPy 3.0
 wipy3.upload.tool=esptool_py
 wipy3.upload.maximum_size=1310720
 wipy3.upload.maximum_data_size=294912
-wipy3.upload.wait_for_upload_port=true
+wipy3.upload.flags=
 
 wipy3.serial.disableDTR=true
 wipy3.serial.disableRTS=true
@@ -3843,7 +3854,7 @@ bpi-bit.name=BPI-BIT
 bpi-bit.upload.tool=esptool_py
 bpi-bit.upload.maximum_size=1310720
 bpi-bit.upload.maximum_data_size=294912
-bpi-bit.upload.wait_for_upload_port=true
+bpi-bit.upload.flags=
 
 bpi-bit.serial.disableDTR=true
 bpi-bit.serial.disableRTS=true
@@ -3886,7 +3897,7 @@ wesp32.name=Silicognition wESP32
 wesp32.upload.tool=esptool_py
 wesp32.upload.maximum_size=1310720
 wesp32.upload.maximum_data_size=327680
-wesp32.upload.wait_for_upload_port=true
+wesp32.upload.flags=
 
 wesp32.serial.disableDTR=true
 wesp32.serial.disableRTS=true
@@ -3943,7 +3954,7 @@ t-beam.name=T-Beam
 t-beam.upload.tool=esptool_py
 t-beam.upload.maximum_size=1310720
 t-beam.upload.maximum_data_size=327680
-t-beam.upload.wait_for_upload_port=true
+t-beam.upload.flags=
 
 t-beam.serial.disableDTR=true
 t-beam.serial.disableRTS=true
@@ -4004,7 +4015,7 @@ d-duino-32.name=D-duino-32
 d-duino-32.upload.tool=esptool_py
 d-duino-32.upload.maximum_size=1310720
 d-duino-32.upload.maximum_data_size=327680
-d-duino-32.upload.wait_for_upload_port=true
+d-duino-32.upload.flags=
 
 d-duino-32.serial.disableDTR=true
 d-duino-32.serial.disableRTS=true
@@ -4075,7 +4086,7 @@ lopy.name=LoPy
 lopy.upload.tool=esptool_py
 lopy.upload.maximum_size=1310720
 lopy.upload.maximum_data_size=327680
-lopy.upload.wait_for_upload_port=true
+lopy.upload.flags=
 
 lopy.serial.disableDTR=true
 lopy.serial.disableRTS=true
@@ -4131,7 +4142,7 @@ lopy4.name=LoPy4
 lopy4.upload.tool=esptool_py
 lopy4.upload.maximum_size=1310720
 lopy4.upload.maximum_data_size=327680
-lopy4.upload.wait_for_upload_port=true
+lopy4.upload.flags=
 
 lopy4.serial.disableDTR=true
 lopy4.serial.disableRTS=true
@@ -4192,7 +4203,7 @@ oroca_edubot.name=OROCA EduBot
 oroca_edubot.upload.tool=esptool_py
 oroca_edubot.upload.maximum_size=3145728
 oroca_edubot.upload.maximum_data_size=327680
-oroca_edubot.upload.wait_for_upload_port=true
+oroca_edubot.upload.flags=
 
 oroca_edubot.serial.disableDTR=true
 oroca_edubot.serial.disableRTS=true
@@ -4258,7 +4269,7 @@ fm-devkit.name=ESP32 FM DevKit
 fm-devkit.upload.tool=esptool
 fm-devkit.upload.maximum_size=1310720
 fm-devkit.upload.maximum_data_size=327680
-fm-devkit.upload.wait_for_upload_port=true
+fm-devkit.upload.flags=
 
 fm-devkit.serial.disableDTR=true
 fm-devkit.serial.disableRTS=true
@@ -4311,7 +4322,7 @@ frogboard.name=Frog Board ESP32
 frogboard.upload.tool=esptool_py
 frogboard.upload.maximum_size=1310720
 frogboard.upload.maximum_data_size=327680
-frogboard.upload.wait_for_upload_port=true
+frogboard.upload.flags=
 
 frogboard.serial.disableDTR=true
 frogboard.serial.disableRTS=true
@@ -4401,7 +4412,7 @@ esp32cam.name=AI Thinker ESP32-CAM
 esp32cam.upload.tool=esptool_py
 esp32cam.upload.maximum_size=3145728
 esp32cam.upload.maximum_data_size=327680
-esp32cam.upload.wait_for_upload_port=true
+esp32cam.upload.flags=
 esp32cam.upload.speed=460800
 
 esp32cam.serial.disableDTR=true
@@ -4458,7 +4469,7 @@ sparkfun_lora_gateway_1-channel.name=SparkFun LoRa Gateway 1-Channel
 sparkfun_lora_gateway_1-channel.upload.tool=esptool_py
 sparkfun_lora_gateway_1-channel.upload.maximum_size=1310720
 sparkfun_lora_gateway_1-channel.upload.maximum_data_size=294912
-sparkfun_lora_gateway_1-channel.upload.wait_for_upload_port=true
+sparkfun_lora_gateway_1-channel.upload.flags=
 
 sparkfun_lora_gateway_1-channel.serial.disableDTR=true
 sparkfun_lora_gateway_1-channel.serial.disableRTS=true
@@ -4605,7 +4616,7 @@ d1_mini32.name=WEMOS D1 MINI ESP32
 d1_mini32.upload.tool=esptool_py
 d1_mini32.upload.maximum_size=1310720
 d1_mini32.upload.maximum_data_size=327680
-d1_mini32.upload.wait_for_upload_port=true
+d1_mini32.upload.flags=
 
 d1_mini32.serial.disableDTR=true
 d1_mini32.serial.disableRTS=true
@@ -4675,7 +4686,7 @@ gpy.name=Pycom GPy
 gpy.upload.tool=esptool_py
 gpy.upload.maximum_size=1310720
 gpy.upload.maximum_data_size=327680
-gpy.upload.wait_for_upload_port=true
+gpy.upload.flags=
 
 gpy.serial.disableDTR=true
 gpy.serial.disableRTS=true
@@ -4731,7 +4742,7 @@ vintlabs-devkit-v1.name=VintLabs ESP32 Devkit
 vintlabs-devkit-v1.upload.tool=esptool_py
 vintlabs-devkit-v1.upload.maximum_size=1310720
 vintlabs-devkit-v1.upload.maximum_data_size=327680
-vintlabs-devkit-v1.upload.wait_for_upload_port=true
+vintlabs-devkit-v1.upload.flags=
 
 vintlabs-devkit-v1.serial.disableDTR=true
 vintlabs-devkit-v1.serial.disableRTS=true
@@ -4833,7 +4844,7 @@ honeylemon.name=HONEYLemon
 honeylemon.upload.tool=esptool_py
 honeylemon.upload.maximum_size=1310720
 honeylemon.upload.maximum_data_size=327680
-honeylemon.upload.wait_for_upload_port=true
+honeylemon.upload.flags=
 
 honeylemon.serial.disableDTR=true
 honeylemon.serial.disableRTS=true
@@ -4877,7 +4888,7 @@ mgbot-iotik32a.name=MGBOT IOTIK 32A
 mgbot-iotik32a.upload.tool=esptool_py
 mgbot-iotik32a.upload.maximum_size=1310720
 mgbot-iotik32a.upload.maximum_data_size=327680
-mgbot-iotik32a.upload.wait_for_upload_port=true
+mgbot-iotik32a.upload.flags=
 
 mgbot-iotik32a.serial.disableDTR=true
 mgbot-iotik32a.serial.disableRTS=true
@@ -5015,7 +5026,7 @@ mgbot-iotik32b.name=MGBOT IOTIK 32B
 mgbot-iotik32b.upload.tool=esptool_py
 mgbot-iotik32b.upload.maximum_size=1310720
 mgbot-iotik32b.upload.maximum_data_size=327680
-mgbot-iotik32b.upload.wait_for_upload_port=true
+mgbot-iotik32b.upload.flags=
 
 mgbot-iotik32b.serial.disableDTR=true
 mgbot-iotik32b.serial.disableRTS=true
@@ -5152,7 +5163,7 @@ piranha_esp-32.name=Piranha ESP-32
 piranha_esp-32.upload.tool=esptool_py
 piranha_esp-32.upload.maximum_size=1310720
 piranha_esp-32.upload.maximum_data_size=327680
-piranha_esp-32.upload.wait_for_upload_port=true
+piranha_esp-32.upload.flags=
 
 piranha_esp-32.serial.disableDTR=true
 piranha_esp-32.serial.disableRTS=true
@@ -5218,7 +5229,7 @@ metro_esp-32.name=Metro ESP-32
 metro_esp-32.upload.tool=esptool_py
 metro_esp-32.upload.maximum_size=1310720
 metro_esp-32.upload.maximum_data_size=327680
-metro_esp-32.upload.wait_for_upload_port=true
+metro_esp-32.upload.flags=
 
 metro_esp-32.serial.disableDTR=true
 metro_esp-32.serial.disableRTS=true
@@ -5283,7 +5294,7 @@ sensesiot_weizen.name=Senses's WEIZEN
 sensesiot_weizen.upload.tool=esptool_py
 sensesiot_weizen.upload.maximum_size=1310720
 sensesiot_weizen.upload.maximum_data_size=327680
-sensesiot_weizen.upload.wait_for_upload_port=true
+sensesiot_weizen.upload.flags=
 
 sensesiot_weizen.serial.disableDTR=true
 sensesiot_weizen.serial.disableRTS=true
@@ -5387,7 +5398,7 @@ mPython.name=Labplus mPython
 mPython.upload.tool=esptool_py
 mPython.upload.maximum_size=1310720
 mPython.upload.maximum_data_size=327680
-mPython.upload.wait_for_upload_port=true
+mPython.upload.flags=
 
 mPython.serial.disableDTR=true
 mPython.serial.disableRTS=true
