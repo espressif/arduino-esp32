@@ -79,7 +79,7 @@ public:
 	/* multi connection support */
 	std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
 	void addPeerDevice(void* peer, bool is_client, uint16_t conn_id);
-	void removePeerDevice(uint16_t conn_id, bool client);
+	bool removePeerDevice(uint16_t conn_id, bool client);
 	BLEServer* getServerByConnId(uint16_t conn_id);
 	void updatePeerMTU(uint16_t connId, uint16_t mtu);
 	uint16_t getPeerMTU(uint16_t conn_id);
