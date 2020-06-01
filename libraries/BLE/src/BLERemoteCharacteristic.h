@@ -45,14 +45,13 @@ public:
 	uint8_t     readUInt8();
 	uint16_t    readUInt16();
 	uint32_t    readUInt32();
-	float       readFloat();
 	void        registerForNotify(notify_callback _callback, bool notifications = true);
-	void        writeValue(uint8_t* data, size_t length, bool response = false);
-	void        writeValue(std::string newValue, bool response = false);
-	void        writeValue(uint8_t newValue, bool response = false);
+	bool        writeValue(uint8_t* data, size_t length, bool response = false);
+	bool        writeValue(std::string newValue, bool response = false);
+	bool        writeValue(uint8_t newValue, bool response = false);
 	std::string toString();
 	uint8_t*	readRawData();
-    void        setAuth(esp_gatt_auth_req_t auth);
+	BLERemoteService* getRemoteService();
 
 private:
 	BLERemoteCharacteristic(uint16_t handle, BLEUUID uuid, esp_gatt_char_prop_t charProp, BLERemoteService* pRemoteService);
@@ -63,22 +62,20 @@ private:
 	// Private member functions
 	void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam);
 
-	BLERemoteService* getRemoteService();
 	void              removeDescriptors();
 	void              retrieveDescriptors();
 
 	// Private properties
 	BLEUUID              m_uuid;
 	esp_gatt_char_prop_t m_charProp;
-    esp_gatt_auth_req_t  m_auth;
 	uint16_t             m_handle;
 	BLERemoteService*    m_pRemoteService;
 	FreeRTOS::Semaphore  m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
 	FreeRTOS::Semaphore  m_semaphoreRegForNotifyEvt  = FreeRTOS::Semaphore("RegForNotifyEvt");
 	FreeRTOS::Semaphore  m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
 	std::string          m_value;
-	uint8_t 			 *m_rawData;
-	notify_callback		 m_notifyCallback;
+	uint8_t 			 *m_rawData = nullptr;
+	notify_callback		 m_notifyCallback = nullptr;
 
 	// We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
 	std::map<std::string, BLERemoteDescriptor*> m_descriptorMap;

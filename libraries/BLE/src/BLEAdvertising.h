@@ -52,14 +52,12 @@ public:
 	void start();
 	void stop();
 	void setAppearance(uint16_t appearance);
-	void setAdvertisementType(esp_ble_adv_type_t adv_type);
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(BLEAdvertisementData& advertisementData);
 	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
 	void setScanResponseData(BLEAdvertisementData& advertisementData);
 	void setPrivateAddress(esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
-	void setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
 
 	void handleGAPEvent(esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param_t* param);
 	void setMinPreferred(uint16_t);

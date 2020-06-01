@@ -14,11 +14,18 @@
 #include <esp_err.h>
 
 #include <sstream>
-//#include "BLEExceptions.h"
+#include "BLEExceptions.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include "BLERemoteDescriptor.h"
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
+#define LOG_TAG ""
+#else
+#include "esp_log.h"
+static const char* LOG_TAG = "BLERemoteCharacteristic";   // The logging tag for this class.
+#endif
+
 
 
 /**
@@ -33,17 +40,15 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
 		BLEUUID              uuid,
 		esp_gatt_char_prop_t charProp,
 		BLERemoteService*    pRemoteService) {
-	log_v(">> BLERemoteCharacteristic: handle: %d 0x%d, uuid: %s", handle, handle, uuid.toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> BLERemoteCharacteristic: handle: %d 0x%d, uuid: %s", handle, handle, uuid.toString().c_str());
 	m_handle         = handle;
 	m_uuid           = uuid;
 	m_charProp       = charProp;
 	m_pRemoteService = pRemoteService;
 	m_notifyCallback = nullptr;
-	m_rawData = nullptr;
-    m_auth           = ESP_GATT_AUTH_REQ_NONE;
 
 	retrieveDescriptors(); // Get the descriptors for this characteristic
-	log_v("<< BLERemoteCharacteristic");
+	ESP_LOGD(LOG_TAG, "<< BLERemoteCharacteristic");
 } // BLERemoteCharacteristic
 
 
@@ -52,6 +57,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
  */
 BLERemoteCharacteristic::~BLERemoteCharacteristic() {
 	removeDescriptors();   // Release resources for any descriptor information we may have allocated.
+	if(m_rawData != nullptr) free(m_rawData);	
 } // ~BLERemoteCharacteristic
 
 
@@ -161,7 +167,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 		case ESP_GATTC_NOTIFY_EVT: {
 			if (evtParam->notify.handle != getHandle()) break;
 			if (m_notifyCallback != nullptr) {
-				log_d("Invoking callback for notification on characteristic %s", toString().c_str());
+				ESP_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", toString().c_str());
 				m_notifyCallback(this, evtParam->notify.value, evtParam->notify.value_len, evtParam->notify.is_notify);
 			} // End we have a callback function ...
 			break;
@@ -248,7 +254,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
  * @brief Populate the descriptors (if any) for this characteristic.
  */
 void BLERemoteCharacteristic::retrieveDescriptors() {
-	log_v(">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
 	removeDescriptors();   // Remove any existing descriptors.
 
@@ -257,7 +263,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
 	uint16_t offset = 0;
 	esp_gattc_descr_elem_t result;
 	while(true) {
-		uint16_t count = 10;
+		uint16_t count = 1;
 		esp_gatt_status_t status = ::esp_ble_gattc_get_all_descr(
 			getRemoteService()->getClient()->getGattcIf(),
 			getRemoteService()->getClient()->getConnId(),
@@ -267,18 +273,18 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
 			offset
 		);
 
-		if (status == ESP_GATT_INVALID_OFFSET) {   // We have reached the end of the entries.
+		if (status == ESP_GATT_INVALID_OFFSET || status == ESP_GATT_NOT_FOUND) {   // We have reached the end of the entries.
 			break;
 		}
 
 		if (status != ESP_GATT_OK) {
-			log_e("esp_ble_gattc_get_all_descr: %s", BLEUtils::gattStatusToString(status).c_str());
+			ESP_LOGE(LOG_TAG, "esp_ble_gattc_get_all_descr: %s", BLEUtils::gattStatusToString(status).c_str());
 			break;
 		}
 
 		if (count == 0) break;
 
-		log_d("Found a descriptor: Handle: %d, UUID: %s", result.handle, BLEUUID(result.uuid).toString().c_str());
+		ESP_LOGD(LOG_TAG, "Found a descriptor: Handle: %d, UUID: %s", result.handle, BLEUUID(result.uuid).toString().c_str());
 
 		// We now have a new characteristic ... let us add that to our set of known characteristics
 		BLERemoteDescriptor* pNewRemoteDescriptor = new BLERemoteDescriptor(
@@ -292,7 +298,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
 		offset++;
 	} // while true
 	//m_haveCharacteristics = true; // Remember that we have received the characteristics.
-	log_v("<< retrieveDescriptors(): Found %d descriptors.", offset);
+	ESP_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", offset);
 } // getDescriptors
 
 
@@ -309,8 +315,8 @@ std::map<std::string, BLERemoteDescriptor*>* BLERemoteCharacteristic::getDescrip
  * @return The handle for this characteristic.
  */
 uint16_t BLERemoteCharacteristic::getHandle() {
-	//log_v(">> getHandle: Characteristic: %s", getUUID().toString().c_str());
-	//log_v("<< getHandle: %d 0x%.2x", m_handle, m_handle);
+	//ESP_LOGD(LOG_TAG, ">> getHandle: Characteristic: %s", getUUID().toString().c_str());
+	//ESP_LOGD(LOG_TAG, "<< getHandle: %d 0x%.2x", m_handle, m_handle);
 	return m_handle;
 } // getHandle
 
@@ -321,15 +327,15 @@ uint16_t BLERemoteCharacteristic::getHandle() {
  * @return The Remote descriptor (if present) or null if not present.
  */
 BLERemoteDescriptor* BLERemoteCharacteristic::getDescriptor(BLEUUID uuid) {
-	log_v(">> getDescriptor: uuid: %s", uuid.toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
 	std::string v = uuid.toString();
 	for (auto &myPair : m_descriptorMap) {
 		if (myPair.first == v) {
-			log_v("<< getDescriptor: found");
+			ESP_LOGD(LOG_TAG, "<< getDescriptor: found");
 			return myPair.second;
 		}
 	}
-	log_v("<< getDescriptor: Not found");
+	ESP_LOGD(LOG_TAG, "<< getDescriptor: Not found");
 	return nullptr;
 } // getDescriptor
 
@@ -390,29 +396,18 @@ uint8_t BLERemoteCharacteristic::readUInt8() {
 	return 0;
 } // readUInt8
 
-/**
- * @brief Read a float value.
- * @return the float value.
- */
-float BLERemoteCharacteristic::readFloat() {
-	std::string value = readValue();
-	if (value.length() >= 4) {
-		return *(float*)(value.data());
-	}
-	return 0.0;
-} // readFloat
 
 /**
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
 std::string BLERemoteCharacteristic::readValue() {
-	log_v(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
+	ESP_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
-		log_e("Disconnected");
-		return std::string();
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		throw BLEDisconnectedException();
 	}
 
 	m_semaphoreReadCharEvt.take("readValue");
@@ -424,10 +419,10 @@ std::string BLERemoteCharacteristic::readValue() {
 		m_pRemoteService->getClient()->getGattcIf(),
 		m_pRemoteService->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		m_auth);                                         // Security
+		ESP_GATT_AUTH_REQ_NONE);                       // Security
 
 	if (errRc != ESP_OK) {
-		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		ESP_LOGE(LOG_TAG, "esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return "";
 	}
 
@@ -435,7 +430,7 @@ std::string BLERemoteCharacteristic::readValue() {
 	// in m_value will contain our data.
 	m_semaphoreReadCharEvt.wait("readValue");
 
-	log_v("<< readValue(): length: %d", m_value.length());
+	ESP_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
 	return m_value;
 } // readValue
 
@@ -447,7 +442,7 @@ std::string BLERemoteCharacteristic::readValue() {
  * @return N/A.
  */
 void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications) {
-	log_v(">> registerForNotify(): %s", toString().c_str());
+	ESP_LOGD(LOG_TAG, ">> registerForNotify(): %s", toString().c_str());
 
 	m_notifyCallback = notifyCallback;   // Save the notification callback.
 
@@ -461,13 +456,14 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		);
 
 		if (errRc != ESP_OK) {
-			log_e("esp_ble_gattc_register_for_notify: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+			ESP_LOGE(LOG_TAG, "esp_ble_gattc_register_for_notify: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		}
 
 		uint8_t val[] = {0x01, 0x00};
 		if(!notifications) val[0] = 0x02;
 		BLERemoteDescriptor* desc = getDescriptor(BLEUUID((uint16_t)0x2902));
-		desc->writeValue(val, 2);
+		if(desc != nullptr)
+			desc->writeValue(val, 2);
 	} // End Register
 	else {   // If we weren't passed a callback function, then this is an unregistration.
 		esp_err_t errRc = ::esp_ble_gattc_unregister_for_notify(
@@ -477,17 +473,18 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		);
 
 		if (errRc != ESP_OK) {
-			log_e("esp_ble_gattc_unregister_for_notify: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+			ESP_LOGE(LOG_TAG, "esp_ble_gattc_unregister_for_notify: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		}
 
 		uint8_t val[] = {0x00, 0x00};
 		BLERemoteDescriptor* desc = getDescriptor((uint16_t)0x2902);
-		desc->writeValue(val, 2);
+		if(desc != nullptr)
+			desc->writeValue(val, 2);
 	} // End Unregister
 
 	m_semaphoreRegForNotifyEvt.wait("registerForNotify");
 
-	log_v("<< registerForNotify()");
+	ESP_LOGD(LOG_TAG, "<< registerForNotify()");
 } // registerForNotify
 
 
@@ -513,16 +510,11 @@ void BLERemoteCharacteristic::removeDescriptors() {
  * @return a String representation.
  */
 std::string BLERemoteCharacteristic::toString() {
-	std::string res = "Characteristic: uuid: " + m_uuid.toString();
-	char val[6];
-	res += ", handle: ";
-	snprintf(val, sizeof(val), "%d", getHandle());
-	res += val;
-	res += " 0x";
-	snprintf(val, sizeof(val), "%04x", getHandle());
-	res += val;
-	res += ", props: " + BLEUtils::characteristicPropertiesToString(m_charProp);
-	return res;
+	std::ostringstream ss;
+	ss << "Characteristic: uuid: " << m_uuid.toString() <<
+		", handle: " << getHandle() << " 0x" << std::hex << getHandle() <<
+		", props: " << BLEUtils::characteristicPropertiesToString(m_charProp);
+	return ss.str();
 } // toString
 
 
@@ -530,10 +522,10 @@ std::string BLERemoteCharacteristic::toString() {
  * @brief Write the new value for the characteristic.
  * @param [in] newValue The new value to write.
  * @param [in] response Do we expect a response?
- * @return N/A.
+ * @return false if not connected or cant perform write for some reason.
  */
-void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+bool BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
+	return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
 } // writeValue
 
 
@@ -543,10 +535,10 @@ void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
  * This is a convenience function.  Many BLE characteristics are a single byte of data.
  * @param [in] newValue The new byte value to write.
  * @param [in] response Whether we require a response from the write.
- * @return N/A.
+ * @return false if not connected or cant perform write for some reason.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
-	writeValue(&newValue, 1, response);
+bool BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
+	return writeValue(&newValue, 1, response);
 } // writeValue
 
 
@@ -555,15 +547,16 @@ void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @param [in] data A pointer to a data buffer.
  * @param [in] length The length of the data in the data buffer.
  * @param [in] response Whether we require a response from the write.
+ * @return false if not connected or cant perform write for some reason.
  */
-void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
+bool BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
 	// writeValue(std::string((char*)data, length), response);
-	log_v(">> writeValue(), length: %d", length);
+	ESP_LOGD(LOG_TAG, ">> writeValue(), length: %d", length);
 
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
-		log_e("Disconnected");
-		return;
+		ESP_LOGE(LOG_TAG, "Disconnected");
+		return false;
 	}
 
 	m_semaphoreWriteCharEvt.take("writeValue");
@@ -575,17 +568,18 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
 		length,
 		data,
 		response?ESP_GATT_WRITE_TYPE_RSP:ESP_GATT_WRITE_TYPE_NO_RSP,
-        m_auth
+		ESP_GATT_AUTH_REQ_NONE
 	);
 
 	if (errRc != ESP_OK) {
-		log_e("esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-		return;
+		ESP_LOGE(LOG_TAG, "esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		return false;
 	}
 
 	m_semaphoreWriteCharEvt.wait("writeValue");
 
-	log_v("<< writeValue");
+	ESP_LOGD(LOG_TAG, "<< writeValue");
+	return true;
 } // writeValue
 
 /**
@@ -594,14 +588,6 @@ void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool resp
  */
 uint8_t* BLERemoteCharacteristic::readRawData() {
 	return m_rawData;
-}
-
-/**
- * @brief Set authentication request type for characteristic
- * @param [in] auth Authentication request type.
- */
-void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
-    m_auth = auth;
 }
 
 #endif /* CONFIG_BT_ENABLED */

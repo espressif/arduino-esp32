@@ -12,7 +12,13 @@
 #include <iomanip>
 #include "FreeRTOS.h"
 #include "sdkconfig.h"
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
+#define LOG_TAG ""
+#else
+#include "esp_log.h"
+static const char* LOG_TAG = "FreeRTOS";
+#endif
 
 /**
  * Sleep for the specified number of milliseconds.
@@ -60,8 +66,10 @@ uint32_t FreeRTOS::getTimeSinceStart() {
  * @return The value associated with the semaphore.
  */
 uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
-	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
+	ESP_LOGV(LOG_TAG, ">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 	
+	m_owner = owner;
+
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
 	} else {
@@ -74,40 +82,8 @@ uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
 		xSemaphoreGive(m_semaphore);
 	}
 
-	log_v("<< wait: Semaphore released: %s", toString().c_str());
+	ESP_LOGV(LOG_TAG, "<< wait: Semaphore released: %s", toString().c_str());
 	return m_value;
-} // wait
-
-/**
- * @brief Wait for a semaphore to be released in a given period of time by trying to take it and
- * then releasing it again. The value associated with the semaphore can be taken by value() call after return
- * @param [in] owner A debug tag.
- * @param [in] timeoutMs timeout to wait in ms.
- * @return True if we took the semaphore within timeframe.
- */
-bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
-	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
-
-	if (m_usePthreads && timeoutMs != portMAX_DELAY) {
-		assert(false);  // We apparently don't have a timed wait for pthreads.
-	}
-
-	auto ret = pdTRUE;
-
-	if (m_usePthreads) {
-		pthread_mutex_lock(&m_pthread_mutex);
-	} else {
-		ret = xSemaphoreTake(m_semaphore, timeoutMs);
-	}
-
-	if (m_usePthreads) {
-		pthread_mutex_unlock(&m_pthread_mutex);
-	} else {
-		xSemaphoreGive(m_semaphore);
-	}
-
-	log_v("<< wait: Semaphore %s released: %d", toString().c_str(), ret);
-	return ret;
 } // wait
 
 
@@ -140,9 +116,7 @@ FreeRTOS::Semaphore::~Semaphore() {
  * The Semaphore is given.
  */
 void FreeRTOS::Semaphore::give() {
-	log_v("Semaphore giving: %s", toString().c_str());
-	m_owner = std::string("<N/A>");
-	
+	ESP_LOGV(LOG_TAG, "Semaphore giving: %s", toString().c_str());
 	if (m_usePthreads) {
 		pthread_mutex_unlock(&m_pthread_mutex);
 	} else {
@@ -152,6 +126,7 @@ void FreeRTOS::Semaphore::give() {
 // 	FreeRTOS::sleep(10);
 // #endif
 
+	m_owner = std::string("<N/A>");
 } // Semaphore::give
 
 
@@ -186,7 +161,7 @@ void FreeRTOS::Semaphore::giveFromISR() {
  * @return True if we took the semaphore.
  */
 bool FreeRTOS::Semaphore::take(std::string owner) {
-	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
+	ESP_LOGD(LOG_TAG, "Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
@@ -195,9 +170,9 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
 	}
 	m_owner = owner;
 	if (rc) {
-		log_v("Semaphore taken:  %s", toString().c_str());
+		ESP_LOGD(LOG_TAG, "Semaphore taken:  %s", toString().c_str());
 	} else {
-		log_e("Semaphore NOT taken:  %s", toString().c_str());
+		ESP_LOGE(LOG_TAG, "Semaphore NOT taken:  %s", toString().c_str());
 	}
 	return rc;
 } // Semaphore::take
@@ -211,7 +186,7 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
  * @return True if we took the semaphore.
  */
 bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
-	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
+	ESP_LOGV(LOG_TAG, "Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
 		assert(false);  // We apparently don't have a timed wait for pthreads.
@@ -220,9 +195,9 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
 	}
 	m_owner = owner;
 	if (rc) {
-		log_v("Semaphore taken:  %s", toString().c_str());
+		ESP_LOGV(LOG_TAG, "Semaphore taken:  %s", toString().c_str());
 	} else {
-		log_e("Semaphore NOT taken:  %s", toString().c_str());
+		ESP_LOGE(LOG_TAG, "Semaphore NOT taken:  %s", toString().c_str());
 	}
 	return rc;
 } // Semaphore::take
@@ -234,12 +209,9 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
  * @return A string representation of the semaphore.
  */
 std::string FreeRTOS::Semaphore::toString() {
-	char hex[9];
-	std::string res = "name: " + m_name + " (0x";
-	snprintf(hex, sizeof(hex), "%08x", (uint32_t)m_semaphore);
-	res += hex;
-	res += "), owner: " + m_owner;
-	return res;
+	std::stringstream stringStream;
+	stringStream << "name: "<< m_name << " (0x" << std::hex << std::setfill('0') << (uint32_t)m_semaphore << "), owner: " << m_owner;
+	return stringStream.str();
 } // toString
 
 
