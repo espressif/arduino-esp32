@@ -26,8 +26,8 @@
  */
 #define EPNUM_MSC       0x01
 #define EPNUM_HID       0x02
-#define EPNUM_MIDI      0x06
-#define EPNUM_VENDOR    0x07
+#define EPNUM_MIDI      0x04
+#define EPNUM_VENDOR    0x06
 
 #ifdef __cplusplus
 extern "C" {
