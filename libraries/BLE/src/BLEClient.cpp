@@ -165,7 +165,6 @@ void BLEClient::gattClientEventHandler(
 			break;
 
 		case ESP_GATTC_CLOSE_EVT: {
-				if (evtParam->close.conn_id != getConnId()) break;
 				// esp_ble_gattc_app_unregister(m_appId);
 				// BLEDevice::removePeerDevice(m_gattc_if, true);
 			break;
@@ -179,7 +178,6 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		// - esp_bd_addr_t     remote_bda
 		case ESP_GATTC_DISCONNECT_EVT: {
-				if (evtParam->disconnect.conn_id != getConnId()) break;
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
 				m_isConnected = false;
@@ -223,13 +221,13 @@ void BLEClient::gattClientEventHandler(
 		// uint16_t          app_id
 		//
 		case ESP_GATTC_REG_EVT: {
+			if (evtParam->reg.app_id != m_appId) break;  // Ignore registrations for other clients/apps.
 			m_gattc_if = gattc_if;
 			m_semaphoreRegEvt.give();
 			break;
 		} // ESP_GATTC_REG_EVT
 
 		case ESP_GATTC_CFG_MTU_EVT:
-			if (evtParam->cfg_mtu.conn_id != getConnId()) break;
 			if(evtParam->cfg_mtu.status != ESP_GATT_OK) {
 				log_e("Config mtu failed");
 			}
@@ -258,7 +256,6 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		//
 		case ESP_GATTC_SEARCH_CMPL_EVT: {
-			if (evtParam->search_cmpl.conn_id != getConnId()) break;
 			esp_ble_gattc_cb_param_t* p_data = (esp_ble_gattc_cb_param_t*)evtParam;
 			if (p_data->search_cmpl.status != ESP_GATT_OK){
 				log_e("search service failed, error status = %x", p_data->search_cmpl.status);
@@ -289,7 +286,6 @@ void BLEClient::gattClientEventHandler(
 		// - esp_gatt_id_t srvc_id
 		//
 		case ESP_GATTC_SEARCH_RES_EVT: {
-			if (evtParam->search_res.conn_id != getConnId()) break;
 			BLEUUID uuid = BLEUUID(evtParam->search_res.srvc_id);
 			BLERemoteService* pRemoteService = new BLERemoteService(
 				evtParam->search_res.srvc_id,
