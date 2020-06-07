@@ -310,7 +310,6 @@ pico32.menu.DebugLevel.verbose=Verbose
 pico32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 tinypico.name=TinyPICO
 
 tinypico.upload.tool=esptool_py
@@ -4876,6 +4875,68 @@ sensesiot_weizen.menu.UploadSpeed.460800.macosx=460800
 sensesiot_weizen.menu.UploadSpeed.460800.upload.speed=460800
 sensesiot_weizen.menu.UploadSpeed.512000.windows=512000
 sensesiot_weizen.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+kits-edu.name=KITS ESP32 EDU
+
+kits-edu.upload.tool=esptool_py
+kits-edu.upload.maximum_size=1310720
+kits-edu.upload.maximum_data_size=327680
+kits-edu.upload.wait_for_upload_port=true
+
+kits-edu.serial.disableDTR=true
+kits-edu.serial.disableRTS=true
+
+kits-edu.build.mcu=esp32
+kits-edu.build.core=esp32
+kits-edu.build.variant=pico32
+kits-edu.build.board=ESP32_PICO
+
+kits-edu.build.f_cpu=240000000L
+kits-edu.build.flash_size=4MB
+kits-edu.build.flash_freq=80m
+kits-edu.build.flash_mode=dio
+kits-edu.build.boot=dio
+kits-edu.build.partitions=default
+kits-edu.build.defines=
+
+kits-edu.menu.PartitionScheme.default=Default
+kits-edu.menu.PartitionScheme.default.build.partitions=default
+kits-edu.menu.PartitionScheme.no_ota=No OTA (Large APP)
+kits-edu.menu.PartitionScheme.no_ota.build.partitions=no_ota
+kits-edu.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+kits-edu.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+kits-edu.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+kits-edu.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+kits-edu.menu.UploadSpeed.921600=921600
+kits-edu.menu.UploadSpeed.921600.upload.speed=921600
+kits-edu.menu.UploadSpeed.115200=115200
+kits-edu.menu.UploadSpeed.115200.upload.speed=115200
+kits-edu.menu.UploadSpeed.256000.windows=256000
+kits-edu.menu.UploadSpeed.256000.upload.speed=256000
+kits-edu.menu.UploadSpeed.230400.windows.upload.speed=256000
+kits-edu.menu.UploadSpeed.230400=230400
+kits-edu.menu.UploadSpeed.230400.upload.speed=230400
+kits-edu.menu.UploadSpeed.460800.linux=460800
+kits-edu.menu.UploadSpeed.460800.macosx=460800
+kits-edu.menu.UploadSpeed.460800.upload.speed=460800
+kits-edu.menu.UploadSpeed.512000.windows=512000
+kits-edu.menu.UploadSpeed.512000.upload.speed=512000
+
+kits-edu.menu.DebugLevel.none=None
+kits-edu.menu.DebugLevel.none.build.code_debug=0
+kits-edu.menu.DebugLevel.error=Error
+kits-edu.menu.DebugLevel.error.build.code_debug=1
+kits-edu.menu.DebugLevel.warn=Warn
+kits-edu.menu.DebugLevel.warn.build.code_debug=2
+kits-edu.menu.DebugLevel.info=Info
+kits-edu.menu.DebugLevel.info.build.code_debug=3
+kits-edu.menu.DebugLevel.debug=Debug
+kits-edu.menu.DebugLevel.debug.build.code_debug=4
+kits-edu.menu.DebugLevel.verbose=Verbose
+kits-edu.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 mPython.name=mPython
 
