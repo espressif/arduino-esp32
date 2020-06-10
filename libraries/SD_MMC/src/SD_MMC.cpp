@@ -64,6 +64,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
 #endif
     if(mode1bit) {
         host.flags = SDMMC_HOST_FLAG_1BIT; //use 1-line SD mode
+	slot_config.width = 1;
     }
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {

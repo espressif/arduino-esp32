@@ -151,7 +151,11 @@ void WiFiProvClass :: beginProvision(scheme prov_scheme, wifi_prov_event_handler
         WiFi.mode(WIFI_MODE_STA);
         log_i("Aleardy Provisioned, starting Wi-Fi STA");
         log_i("CONNECTING ACCESS POINT CREDENTIALS : "); 
-        log_i("SSID : %s\n",WiFi.SSID().c_str());
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+        wifi_config_t conf;
+        esp_wifi_get_config(WIFI_IF_STA,&conf);
+        log_i("SSID : %s\n",conf.sta.ssid);
+#endif
     }
 }
 
