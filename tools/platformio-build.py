@@ -88,6 +88,7 @@ env.Append(
 
     CPPDEFINES=[
         "ESP32",
+        "SPI_HAS_TRANSACTION",
         "ESP_PLATFORM",
         ("F_CPU", "$BOARD_F_CPU"),
         "HAVE_CONFIG_H",
