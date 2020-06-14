@@ -167,6 +167,10 @@ bool WebServer::_parseRequest(WiFiClient& client) {
 
     if (!isForm){
       size_t plainLength;
+      if (contentLength > HTTP_MAX_CONTENT_SIZE) {
+        log_e("'Content-Length' was larger than max content size (%d bytes)", HTTP_MAX_CONTENT_SIZE);
+        return false;
+      }
       char* plainBuf = readBytesWithTimeout(client, contentLength, plainLength, HTTP_MAX_POST_WAIT);
       if (plainLength < contentLength) {
       	free(plainBuf);
