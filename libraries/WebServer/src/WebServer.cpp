@@ -93,6 +93,7 @@ WebServer::~WebServer() {
 }
 
 void WebServer::begin() {
+  log_e("This Webserver is only for educational purposes, and should NEVER be used in production of any sort!\n");
   close();
   _server.begin();
   _server.setNoDelay(true);
