@@ -8,7 +8,10 @@
 
 #include "sdkconfig.h"
 
-#define MQTT_PROTOCOL_311           CONFIG_MQTT_PROTOCOL_311
+#ifdef CONFIG_MQTT_PROTOCOL_311
+#define MQTT_PROTOCOL_311
+#endif
+
 #define MQTT_RECON_DEFAULT_MS       (10*1000)
 #define MQTT_POLL_READ_TIMEOUT_MS   (1000)
 
@@ -24,7 +27,12 @@
 #define MQTT_MAX_PASSWORD_LEN       65
 #define MQTT_MAX_LWT_TOPIC          32
 #define MQTT_MAX_LWT_MSG            128
+
+#if CONFIG_MQTT_TASK_PRIORITY
+#define MQTT_TASK_PRIORITY          CONFIG_MQTT_TASK_PRIORITY
+#else
 #define MQTT_TASK_PRIORITY          5
+#endif
 
 #if CONFIG_MQTT_TASK_STACK_SIZE
 #define MQTT_TASK_STACK             CONFIG_MQTT_TASK_STACK_SIZE
