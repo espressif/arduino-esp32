@@ -134,6 +134,17 @@
             }
           ]
         },
+		{
+          "name": "mklittlefs",
+          "version": "2.5.1-2",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+			  "url": "https://github.com/earlephilhower/mklittlefs/releases/download/2.5.1-2/i686-w64-mingw32-mklittlefs-1c43629.zip",
+              "archiveFileName": "i686-w64-mingw32-mklittlefs-1c43629.zip"
+            }
+          ]
+        },
         {
           "name": "mkspiffs",
           "version": "0.2.3",

@@ -1,0 +1,22 @@
+{
+  "name":"LITTLEFS",
+  "description":"LITTLEFS File System Library for ESP32",
+  "keywords":"littlefs, spiffs",
+  "authors":
+  {
+    "name": "LL",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/lorol/LITTLEFS.git"
+  },
+  "version": "1.0",
+  "license": "LGPL-2.0",
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "build": {
+    "libCompatMode": 2
+  }  
+}
