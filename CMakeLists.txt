@@ -47,6 +47,7 @@ set(LIBRARY_SRCS
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
+  libraries/LITTLEFS/src/LITTLEFS.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
@@ -187,6 +188,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/ESPmDNS/src
   libraries/FFat/src
   libraries/FS/src
+  libraries/LITTLEFS/src
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
   libraries/NetBIOS/src
