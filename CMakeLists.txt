@@ -47,11 +47,11 @@ set(LIBRARY_SRCS
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
-libraries/LITTLEFS/src/LITTLEFS.cpp
-libraries/LITTLEFS/src/esp_littlefs.c
-libraries/LITTLEFS/src/lfs.c
-libraries/LITTLEFS/src/lfs_util.c
-libraries/LITTLEFS/src/littlefs_api.c
+  libraries/LITTLEFS/src/LITTLEFS.cpp
+  libraries/LITTLEFS/src/esp_littlefs.c
+  libraries/LITTLEFS/src/lfs.c
+  libraries/LITTLEFS/src/lfs_util.c
+  libraries/LITTLEFS/src/littlefs_api.c
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
