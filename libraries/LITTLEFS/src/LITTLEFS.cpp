@@ -12,13 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//esp_err_t esp_vfs_littlefs_register(const esp_vfs_littlefs_conf_t * conf);
-
-//esp_err_t esp_vfs_littlefs_unregister(const char* partition_label);
-//esp_err_t esp_littlefs_format(const char* partition_label);
-//esp_err_t esp_littlefs_info(const char* partition_label, size_t *total_bytes, size_t *used_bytes);
-
-//#define LFS_NAME "spiffs"
 static constexpr const char LFS_NAME[] = "spiffs";
 
 #include "vfs_api.h"
@@ -34,25 +27,7 @@ extern "C" {
 
 using namespace fs;
 
-class LITTLEFSImpl : public VFSImpl
-{
-public:
-    LITTLEFSImpl();
-    virtual ~LITTLEFSImpl() { }
-    virtual bool exists(const char* path);
-};
-
-LITTLEFSImpl::LITTLEFSImpl()
-{
-}
-
-bool LITTLEFSImpl::exists(const char* path)
-{
-    File f = open(path, "r");
-    return (f == true) && !f.isDirectory();
-}
-
-LITTLEFSFS::LITTLEFSFS() : FS(FSImplPtr(new LITTLEFSImpl()))
+LITTLEFSFS::LITTLEFSFS() : FS(FSImplPtr(new VFSImpl()))
 {
 
 }
