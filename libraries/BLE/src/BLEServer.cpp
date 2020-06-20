@@ -214,6 +214,8 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 			if(removePeerDevice(param->disconnect.conn_id, false)) {
                 m_connectedCount--;                          // Decrement the number of connected devices count.
             }
+
+			startAdvertising();
             break;
 		} // ESP_GATTS_DISCONNECT_EVT
 
