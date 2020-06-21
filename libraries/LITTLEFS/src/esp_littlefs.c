@@ -5,6 +5,7 @@
  */
 
 //#define LOG_LOCAL_LEVEL 4
+//#define CONFIG_LITTLEFS_FOR_IDF_3_2   /* For old IDF - like in release 1.0.4 */
 
 #include "esp_log.h"
 #include "esp_spi_flash.h"
@@ -23,7 +24,6 @@
 #include "esp_littlefs.h"
 #include "littlefs_api.h"
 
-
 static const char TAG[] = "esp_littlefs";
 
 #define CONFIG_LITTLEFS_BLOCK_SIZE 4096 /* ESP32 can only operate at 4kb */
@@ -41,9 +41,13 @@ static const char TAG[] = "esp_littlefs";
 #define CONFIG_LITTLEFS_LOOKAHEAD_SIZE 128
 #define CONFIG_LITTLEFS_CACHE_SIZE 128
 #define CONFIG_LITTLEFS_BLOCK_CYCLES 512
+
+#ifdef CONFIG_LITTLEFS_FOR_IDF_3_2
+#define CONFIG_LITTLEFS_USE_MTIME 0
+#else
 #define CONFIG_LITTLEFS_USE_MTIME 1
 #define CONFIG_LITTLEFS_MTIME_USE_SECONDS 1
-
+#endif
 
 
 /**
@@ -174,11 +178,13 @@ esp_err_t esp_vfs_littlefs_register(const esp_vfs_littlefs_conf_t * conf)
         .mkdir_p     = &vfs_littlefs_mkdir,
         .rmdir_p     = &vfs_littlefs_rmdir,
         .fsync_p     = &vfs_littlefs_fsync,
+#ifndef CONFIG_LITTLEFS_FOR_IDF_3_2
 #if CONFIG_LITTLEFS_USE_MTIME
         .utime_p     = &vfs_littlefs_utime,
 #else
         .utime_p     = NULL,
 #endif // CONFIG_LITTLEFS_USE_MTIME
+#endif //CONFIG_LITTLEFS_FOR_IDF_3_2
     };
 
     esp_err_t err = esp_littlefs_init(conf);
