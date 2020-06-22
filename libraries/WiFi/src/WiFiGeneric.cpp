@@ -91,6 +91,11 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
     info.gw.addr = static_cast<uint32_t>(gateway);
     info.netmask.addr = static_cast<uint32_t>(subnet);
 
+    log_v("Configuring %s static IP: " IPSTR ", MASK: " IPSTR ", GW: " IPSTR,
+          interface == ESP_IF_WIFI_STA ? "Station" :
+          interface == ESP_IF_WIFI_AP ? "SoftAP" : "Ethernet",
+          IP2STR(&info.ip), IP2STR(&info.netmask), IP2STR(&info.gw));
+
     esp_err_t err = ESP_OK;
     if(interface != ESP_IF_WIFI_AP){
     	err = esp_netif_dhcpc_get_status(esp_netif, &status);
@@ -99,7 +104,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         	return err;
         }
 		err = esp_netif_dhcpc_stop(esp_netif);
-		if(err){
+		if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
 			log_e("DHCPC Stop Failed! 0x%04x", err);
 			return err;
 		}
@@ -122,7 +127,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         	return err;
         }
 		err = esp_netif_dhcps_stop(esp_netif);
-		if(err){
+		if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
 			log_e("DHCPS Stop Failed! 0x%04x", err);
 			return err;
 		}

@@ -308,6 +308,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     if(err == ESP_OK){
     	err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     }
+    _useStaticIp = err == ESP_OK;
     return err == ESP_OK;
 }
 
