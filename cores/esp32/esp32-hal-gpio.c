@@ -344,11 +344,15 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
     __pinInterruptHandlers[pin].functional = functional;
 
     esp_intr_disable(gpio_intr_handle);
+#if CONFIG_IDF_TARGET_ESP32
     if(esp_intr_get_cpu(gpio_intr_handle)) { //APP_CPU
+#endif
         GPIO.pin[pin].int_ena = 1;
+#if CONFIG_IDF_TARGET_ESP32
     } else { //PRO_CPU
         GPIO.pin[pin].int_ena = 4;
     }
+#endif
     GPIO.pin[pin].int_type = intr_type;
     esp_intr_enable(gpio_intr_handle);
 }
