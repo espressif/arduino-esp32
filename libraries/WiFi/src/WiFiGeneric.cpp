@@ -574,7 +574,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
  */
 wifi_mode_t WiFiGenericClass::getMode()
 {
-    if(!lowLevelInitDone){
+    if(!lowLevelInitDone || !_esp_wifi_started){
         return WIFI_MODE_NULL;
     }
     wifi_mode_t mode;
