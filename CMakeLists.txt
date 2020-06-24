@@ -71,6 +71,7 @@ set(LIBRARY_SRCS
   libraries/WiFi/src/WiFi.cpp
   libraries/WiFi/src/WiFiGeneric.cpp
   libraries/WiFi/src/WiFiMulti.cpp
+  libraries/WiFi/src/WiFiProv.cpp
   libraries/WiFi/src/WiFiScan.cpp
   libraries/WiFi/src/WiFiServer.cpp
   libraries/WiFi/src/WiFiSTA.cpp
@@ -205,7 +206,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
 
 set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
 
-set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet esp_adc_cal)
+set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet esp_adc_cal wifi_provisioning)
 set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt)
 
 register_component()
