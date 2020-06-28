@@ -257,6 +257,8 @@ class ESPLoader(object):
         with ones which throw NotImplementedInROMError().
 
         """
+        self.secure_download_mode = False  # flag is set to True if esptool detects the ROM is in Secure Download Mode
+
         if isinstance(port, basestring):
             self._port = serial.serial_for_url(port)
         else:
@@ -309,6 +311,9 @@ class ESPLoader(object):
                     inst = cls(detect_port._port, baud, trace_enabled=trace_enabled)
                     print(' %s' % inst.CHIP_NAME, end='')
                     return inst
+        except UnsupportedCommandError:
+            raise FatalError("Unsupported Command Error received. Probably this means Secure Download Mode is enabled, " +
+                             "autodetection will not work. Need to manually specify the chip.")
         finally:
             print('')  # end line
         raise FatalError("Unexpected UART datecode value 0x%08x. Failed to autodetect chip type." % (date_reg))
@@ -381,7 +386,8 @@ class ESPLoader(object):
                 if op is None or op_ret == op:
                     return val, data
                 if byte(data, 0) != 0 and byte(data, 1) == self.ROM_INVALID_RECV_MSG:
-                    raise UnsupportedCommandError()
+                    self.flush_input()  # Unsupported read_reg can result in more than one error response for some reason
+                    raise UnsupportedCommandError(self)
 
         finally:
             if new_timeout != saved_timeout:
@@ -515,20 +521,23 @@ class ESPLoader(object):
             raise FatalError('Failed to connect to %s: %s' % (self.CHIP_NAME, last_error))
 
         if not detecting:
-            # check the date code registers match what we expect to see
-            date_reg = self.read_reg(self.UART_DATE_REG_ADDR)
-            date_reg2 = self.read_reg(self.UART_DATE_REG2_ADDR)
-            if date_reg != self.DATE_REG_VALUE or (self.DATE_REG2_VALUE is not None and date_reg2 != self.DATE_REG2_VALUE):
-                actually = None
-                for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM]:
-                    if date_reg == cls.DATE_REG_VALUE and (cls.DATE_REG2_VALUE is None or date_reg2 == cls.DATE_REG2_VALUE):
-                        actually = cls
-                        break
-                if actually is None:
-                    print(("WARNING: This chip doesn't appear to be a %s (date codes 0x%08x:0x%08x). " +
-                          "Probably it is unsupported by this version of esptool.") % (self.CHIP_NAME, date_reg, date_reg2))
-                else:
-                    raise FatalError("This chip is %s not %s. Wrong --chip argument?" % (actually.CHIP_NAME, self.CHIP_NAME))
+            try:
+                # check the date code registers match what we expect to see
+                date_reg = self.read_reg(self.UART_DATE_REG_ADDR)
+                date_reg2 = self.read_reg(self.UART_DATE_REG2_ADDR)
+                if date_reg != self.DATE_REG_VALUE or (self.DATE_REG2_VALUE is not None and date_reg2 != self.DATE_REG2_VALUE):
+                    actually = None
+                    for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM]:
+                        if date_reg == cls.DATE_REG_VALUE and (cls.DATE_REG2_VALUE is None or date_reg2 == cls.DATE_REG2_VALUE):
+                            actually = cls
+                            break
+                    if actually is None:
+                        print(("WARNING: This chip doesn't appear to be a %s (date codes 0x%08x:0x%08x). " +
+                               "Probably it is unsupported by this version of esptool.") % (self.CHIP_NAME, date_reg, date_reg2))
+                    else:
+                        raise FatalError("This chip is %s not %s. Wrong --chip argument?" % (actually.CHIP_NAME, self.CHIP_NAME))
+            except UnsupportedCommandError:
+                self.secure_download_mode = True
 
     def read_reg(self, addr):
         """ Read memory address in target """
@@ -1497,7 +1506,12 @@ class ESP32S2ROM(ESP32ROM):
         return "ESP32-S2"
 
     def get_chip_features(self):
-        return ["WiFi"]
+        result = ["WiFi"]
+
+        if self.secure_download_mode:
+            result.append("Secure Download Mode Enabled")
+
+        return result
 
     def get_crystal_freq(self):
         # ESP32-S2 XTAL is fixed to 40MHz
@@ -1549,6 +1563,7 @@ class ESP32StubLoader(ESP32ROM):
     IS_STUB = True
 
     def __init__(self, rom_loader):
+        self.secure_download_mode = rom_loader.secure_download_mode
         self._port = rom_loader._port
         self._trace_enabled = rom_loader._trace_enabled
         self.flush_input()  # resets _slip_reader
@@ -1568,6 +1583,7 @@ class ESP32S2StubLoader(ESP32S2ROM):
     IS_STUB = True
 
     def __init__(self, rom_loader):
+        self.secure_download_mode = rom_loader.secure_download_mode
         self._port = rom_loader._port
         self._trace_enabled = rom_loader._trace_enabled
         self.flush_input()  # resets _slip_reader
@@ -2433,10 +2449,14 @@ class UnsupportedCommandError(FatalError):
     """
     Wrapper class for when ROM loader returns an invalid command response.
 
-Usually this indicates the loader is running in a reduced mode.
+    Usually this indicates the loader is running in Secure Download Mode.
     """
-    def __init__(self):
-        FatalError.__init__(self, "Invalid (unsupported) command")
+    def __init__(self, esp):
+        if esp.secure_download_mode:
+            msg = "This command is not supported in Secure Download Mode"
+        else:
+            msg = "Invalid (unsupported) command"
+        FatalError.__init__(self, msg)
 
 
 def load_ram(esp, args):
@@ -2484,6 +2504,8 @@ def dump_mem(esp, args):
 
 def detect_flash_size(esp, args):
     if args.flash_size == 'detect':
+        if esp.secure_download_mode:
+            raise FatalError("Detecting flash size is not supported in secure download mode. Need to manually specify flash size.")
         flash_id = esp.flash_id()
         size_id = flash_id >> 16
         args.flash_size = DETECTED_FLASH_SIZES.get(size_id)
@@ -2644,7 +2666,7 @@ def write_flash(esp, args):
                 speed_msg = " (%.1f kbit/s)" % (written / t * 8 / 1000)
             print_overwrite('Wrote %d bytes at 0x%08x in %.1f seconds%s...' % (written, address, t, speed_msg), last_line=True)
 
-        if not args.encrypt:
+        if not args.encrypt and not esp.secure_download_mode:
             try:
                 res = esp.flash_md5sum(address, uncsize)
                 if res != calcmd5:
@@ -3186,10 +3208,17 @@ def main(custom_commandline=None):
 
         print("Crystal is %dMHz" % esp.get_crystal_freq())
 
-        read_mac(esp, args)
+        try:
+            read_mac(esp, args)
+        except UnsupportedCommandError:
+            pass  # can't get this data in Secure Download Mode
 
         if not args.no_stub:
-            esp = esp.run_stub()
+            if esp.secure_download_mode:
+                print("WARNING: Stub loader is not supported in Secure Download Mode, setting --no-stub")
+                args.no_stub = True
+            else:
+                esp = esp.run_stub()
 
         if args.override_vddsdio:
             esp.override_vddsdio(args.override_vddsdio)
