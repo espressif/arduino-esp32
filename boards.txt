@@ -2317,11 +2317,11 @@ esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
 esp32-gateway.build.board=ESP32_GATEWAY
 esp32-gateway.menu.Revision.RevC=Revision C or older
-esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY='C'
+esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY_C
 esp32-gateway.menu.Revision.RevE=Revision E
-esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY='E'
+esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY_E
 esp32-gateway.menu.Revision.RevF=Revision F
-esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY='F'
+esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY_F
 
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio
@@ -3709,7 +3709,7 @@ bpi-bit.serial.disableRTS=true
 bpi-bit.build.mcu=esp32
 bpi-bit.build.core=esp32
 bpi-bit.build.variant=bpi-bit
-bpi-bit.build.board=BPI-BIT
+bpi-bit.build.board=BPI_BIT
 
 bpi-bit.build.f_cpu=160000000L
 bpi-bit.build.flash_mode=dio
@@ -3809,7 +3809,7 @@ t-beam.serial.disableRTS=true
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
 t-beam.build.variant=t-beam
-t-beam.build.board=T-Beam
+t-beam.build.board=T_Beam
 
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
@@ -3870,7 +3870,7 @@ d-duino-32.serial.disableRTS=true
 d-duino-32.build.mcu=esp32
 d-duino-32.build.core=esp32
 d-duino-32.build.variant=d-duino-32
-d-duino-32.build.board=D-duino-32
+d-duino-32.build.board=D_Duino_32
 
 d-duino-32.build.f_cpu=240000000L
 d-duino-32.build.flash_size=4MB
@@ -4124,7 +4124,7 @@ fm-devkit.serial.disableRTS=true
 fm-devkit.build.mcu=esp32
 fm-devkit.build.core=esp32
 fm-devkit.build.variant=fm-devkit
-fm-devkit.build.board=fm-devkit
+fm-devkit.build.board=fm_devkit
 
 fm-devkit.build.f_cpu=240000000L
 fm-devkit.build.flash_size=4MB
@@ -4364,7 +4364,7 @@ ttgo-t-watch.serial.disableRTS=true
 ttgo-t-watch.build.mcu=esp32
 ttgo-t-watch.build.core=esp32
 ttgo-t-watch.build.variant=twatch
-ttgo-t-watch.build.board=T-Watch
+ttgo-t-watch.build.board=T_Watch
 
 ttgo-t-watch.build.f_cpu=240000000L
 ttgo-t-watch.build.flash_size=16MB
