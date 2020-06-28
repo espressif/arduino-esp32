@@ -645,6 +645,7 @@ PROVIDE ( lmp_dhkey_chk_handler = 0x4002ab48 );
 PROVIDE ( lmp_pause_enc_aes_req_handler = 0x400279a4 );
 PROVIDE ( lmp_io_cap_res_handler = 0x4002c670 );
 PROVIDE ( lmp_io_cap_req_handler = 0x4002c7a4 );
+PROVIDE ( lc_cmd_cmp_bd_addr_send = 0x4002cec4 );
 PROVIDE ( ld_acl_tx_packet_type_select = 0x4002fb40 );
 PROVIDE ( ld_acl_sched = 0x40033268 );
 PROVIDE ( ld_acl_sniff_sched = 0x4003340c );
@@ -654,6 +655,7 @@ PROVIDE ( ld_acl_rx_sync = 0x4002fbec );
 PROVIDE ( ld_acl_rx_sync2 = 0x4002fd8c );
 PROVIDE ( ld_acl_rx_no_sync = 0x4002fe78 );
 PROVIDE ( ld_acl_clk_isr = 0x40030cf8 );
+PROVIDE ( ld_acl_rsw_frm_cbk = 0x40033bb0 );
 PROVIDE ( ld_sco_modify = 0x40031778 );
 PROVIDE ( lm_cmd_cmp_send = 0x40051838 );
 PROVIDE ( ld_sco_frm_cbk = 0x400349dc );
@@ -1353,6 +1355,10 @@ PROVIDE ( esp_rom_spiflash_select_qio_pins = 0x40061ddc );
 PROVIDE ( esp_rom_spiflash_attach = 0x40062a6c );
 PROVIDE ( esp_rom_spiflash_config_clk = 0x40062bc8 );
 PROVIDE ( g_rom_spiflash_chip = 0x3ffae270 );
+
+PROVIDE ( hci_le_rd_rem_used_feats_cmd_handler = 0x400417b4 );
+PROVIDE ( llcp_length_req_handler = 0x40043808 );
+PROVIDE ( llcp_unknown_rsp_handler = 0x40043ba8 );
 
 /*
 These functions are xtos-related (or call xtos-related functions) and do not play well

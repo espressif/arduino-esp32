@@ -37,6 +37,7 @@ typedef struct esp_mqtt_client *esp_mqtt_client_handle_t;
  *
  */
 typedef enum {
+    MQTT_EVENT_ANY = -1,
     MQTT_EVENT_ERROR = 0,          /*!< on error event, additional context: connection return code, error handle from esp_tls (if supported) */
     MQTT_EVENT_CONNECTED,          /*!< connected event, additional context: session_present flag */
     MQTT_EVENT_DISCONNECTED,       /*!< disconnected event */
@@ -87,6 +88,15 @@ typedef enum {
     MQTT_TRANSPORT_OVER_WS,       /*!< MQTT over Websocket, using scheme:: ``ws`` */
     MQTT_TRANSPORT_OVER_WSS       /*!< MQTT over Websocket Secure, using scheme: ``wss`` */
 } esp_mqtt_transport_t;
+
+/**
+ *  MQTT protocol version used for connection
+ */
+typedef enum {
+    MQTT_PROTOCOL_UNDEFINED = 0,
+    MQTT_PROTOCOL_V_3_1,
+    MQTT_PROTOCOL_V_3_1_1
+} esp_mqtt_protocol_ver_t;
 
 /**
  * @brief MQTT error code structure to be passed as a contextual information into ERROR event
@@ -155,7 +165,7 @@ typedef struct {
     void *user_context;                     /*!< pass user context to this option, then can receive that context in ``event->user_context`` */
     int task_prio;                          /*!< MQTT task priority, default is 5, can be changed in ``make menuconfig`` */
     int task_stack;                         /*!< MQTT task stack size, default is 6144 bytes, can be changed in ``make menuconfig`` */
-    int buffer_size;                        /*!< size of MQTT send/receive buffer, default is 1024 */
+    int buffer_size;                        /*!< size of MQTT send/receive buffer, default is 1024 (only receive buffer size if ``out_buffer_size`` defined) */
     const char *cert_pem;                   /*!< Pointer to certificate data in PEM or DER format for server verify (with SSL), default is NULL, not required to verify the server. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in cert_len. */
     size_t cert_len;                        /*!< Length of the buffer pointed to by cert_pem. May be 0 for null-terminated pem */
     const char *client_cert_pem;            /*!< Pointer to certificate data in PEM or DER format for SSL mutual authentication, default is NULL, not required if mutual authentication is not needed. If it is not NULL, also `client_key_pem` has to be provided. PEM-format must have a terminating NULL-character. DER-format requires the length to be passed in client_cert_len. */
@@ -170,6 +180,8 @@ typedef struct {
     const char **alpn_protos;               /*!< NULL-terminated list of supported application protocols to be used for ALPN */
     const char *clientkey_password;         /*!< Client key decryption password string */
     int clientkey_password_len;             /*!< String length of the password pointed to by clientkey_password */
+    esp_mqtt_protocol_ver_t protocol_ver;   /*!< MQTT protocol version used for connection, defaults to value from menuconfig*/
+    int out_buffer_size;                    /*!< size of MQTT output buffer. If not defined, both output and input buffers have the same size defined as ``buffer_size`` */
 } esp_mqtt_client_config_t;
 
 /**
@@ -212,6 +224,15 @@ esp_err_t esp_mqtt_client_start(esp_mqtt_client_handle_t client);
  *         ESP_FAIL if client is in invalid state
  */
 esp_err_t esp_mqtt_client_reconnect(esp_mqtt_client_handle_t client);
+
+/**
+ * @brief This api is typically used to force disconnection from the broker
+ *
+ * @param client    mqtt client handle
+ *
+ * @return ESP_OK on success
+ */
+esp_err_t esp_mqtt_client_disconnect(esp_mqtt_client_handle_t client);
 
 /**
  * @brief Stops mqtt client tasks
@@ -261,6 +282,9 @@ int esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *top
  * @brief Client to send a publish message to the broker
  *
  * Notes:
+ * - This API might block for several seconds, either due to network timeout (10s)
+ *   or if publishing payloads longer than internal buffer (due to message
+ *   fragmentation)
  * - Client doesn't have to be connected to send publish message
  *   (although it would drop all qos=0 messages, qos>1 messages would be enqueued)
  * - It is thread safe, please refer to `esp_mqtt_client_subscribe` for details

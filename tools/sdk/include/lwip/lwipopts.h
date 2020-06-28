@@ -539,6 +539,11 @@
 #define LWIP_TCP_KEEPALIVE              1
 
 /**
+ * LWIP_SO_LINGER==1: Enable SO_LINGER processing.
+ */
+#define LWIP_SO_LINGER                  CONFIG_LWIP_SO_LINGER
+
+/**
  * LWIP_SO_RCVBUF==1: Enable SO_RCVBUF processing.
  */
 #define LWIP_SO_RCVBUF                  CONFIG_LWIP_SO_RCVBUF
@@ -757,7 +762,6 @@
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #define ESP_DHCP                        1
 #define ESP_DNS                         1
-#define ESP_IPV6_AUTOCONFIG             1
 #define ESP_PERF                        0
 #define ESP_RANDOM_TCP_PORT             1
 #define ESP_IP4_ATON                    1
@@ -780,6 +784,10 @@
 #define ESP_SOCKET                      1
 #define ESP_LWIP_SELECT                 1
 #define ESP_LWIP_LOCK                   1
+
+#ifdef CONFIG_LWIP_IPV6_AUTOCONFIG
+#define ESP_IPV6_AUTOCONFIG             CONFIG_LWIP_IPV6_AUTOCONFIG
+#endif
 
 #ifdef ESP_IRAM_ATTR
 #undef ESP_IRAM_ATTR

@@ -768,6 +768,14 @@
 #endif /* !LWIP_IPV4 */
 
 /**
+ * IP_NAPT==1: Enables IPv4 Network Address and Port Translation
+ * Note that IP_FORWARD needs to be enabled for NAPT to work
+ */
+#if !defined IP_NAPT || defined __DOXYGEN__
+#define IP_NAPT                      0
+#endif
+
+/**
  * IP_OPTIONS_ALLOWED: Defines the behavior for IP options.
  *      IP_OPTIONS_ALLOWED==0: All packets with IP options are dropped.
  *      IP_OPTIONS_ALLOWED==1: IP options are allowed (but not parsed).
@@ -1008,6 +1016,13 @@
  */
 #if !defined LWIP_DHCP_AUTOIP_COOP || defined __DOXYGEN__
 #define LWIP_DHCP_AUTOIP_COOP           0
+#endif
+
+/**
+ * ESP_IPV6_AUTOCONFIG==1: Enable stateless address autoconfiguration as per RFC 4862.
+ */
+#if !defined ESP_IPV6_AUTOCONFIG
+#define ESP_IPV6_AUTOCONFIG 0
 #endif
 
 /**
@@ -3516,6 +3531,13 @@
  */
 #if !defined LWIP_TESTMODE
 #define LWIP_TESTMODE                   0
+#endif
+
+/**
+ * NAPT_DEBUG: Enable debugging for NAPT.
+ */
+#ifndef NAPT_DEBUG
+#define NAPT_DEBUG                       LWIP_DBG_OFF
 #endif
 
 /*

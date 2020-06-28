@@ -46,17 +46,21 @@ typedef enum {
     LEDC_DUTY_DIR_MAX,
 } ledc_duty_direction_t;
 
-typedef enum  {
-    LEDC_REF_TICK = 0, /*!< LEDC timer clock divided from reference tick (1Mhz) */
-    LEDC_APB_CLK,      /*!< LEDC timer clock divided from APB clock (80Mhz) */
-} ledc_clk_src_t;
-
 typedef enum {
-    LEDC_AUTO_CLK,        /*!< The driver will automatically select the source clock(REF_TICK or APB) based on the giving resolution and duty parameter when init the timer*/  
+    LEDC_AUTO_CLK,        /*!< The driver will automatically select the source clock(REF_TICK or APB) based on the giving resolution and duty parameter when init the timer*/
     LEDC_USE_REF_TICK,    /*!< LEDC timer select REF_TICK clock as source clock*/
     LEDC_USE_APB_CLK,     /*!< LEDC timer select APB clock as source clock*/
     LEDC_USE_RTC8M_CLK,   /*!< LEDC timer select RTC8M_CLK as source clock. Only for low speed channels and this parameter must be the same for all low speed channels*/
 } ledc_clk_cfg_t;
+
+/* Note: Setting numeric values to match ledc_clk_cfg_t values are a hack to avoid collision with
+   LEDC_AUTO_CLK in the driver, as these enums have very similar names and user may pass
+   one of these by mistake. */
+typedef enum  {
+    LEDC_REF_TICK = LEDC_USE_REF_TICK, /*!< LEDC timer clock divided from reference tick (1Mhz) */
+    LEDC_APB_CLK = LEDC_USE_APB_CLK,  /*!< LEDC timer clock divided from APB clock (80Mhz) */
+} ledc_clk_src_t;
+
 
 typedef enum {
     LEDC_TIMER_0 = 0, /*!< LEDC timer 0 */
@@ -177,6 +181,19 @@ esp_err_t ledc_timer_config(const ledc_timer_config_t* timer_conf);
  *
  */
 esp_err_t ledc_update_duty(ledc_mode_t speed_mode, ledc_channel_t channel);
+
+/**
+ * @brief Set LEDC output gpio.
+ *
+ * @param  gpio_num The LEDC output gpio
+ * @param speed_mode Select the LEDC speed_mode, high-speed mode and low-speed mode
+ * @param  ledc_channel LEDC channel (0-7), select from ledc_channel_t
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t ledc_set_pin(int gpio_num, ledc_mode_t speed_mode, ledc_channel_t ledc_channel);
 
 /**
  * @brief LEDC stop.

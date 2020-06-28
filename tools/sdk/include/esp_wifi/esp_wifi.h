@@ -110,6 +110,7 @@ typedef struct {
     int                    wifi_task_core_id;      /**< WiFi Task Core ID */
     int                    beacon_max_len;         /**< WiFi softAP maximum length of the beacon */
     int                    mgmt_sbuf_num;          /**< WiFi management short buffer number, the minimum value is 6, the maximum value is 32 */
+    uint64_t               feature_caps;           /**< Enables additional WiFi features and capabilities */
     int                    magic;                  /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
 
@@ -156,6 +157,7 @@ typedef struct {
 #endif
 
 extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
+extern uint64_t g_wifi_feature_caps;
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
@@ -189,6 +191,8 @@ extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
 #define WIFI_MGMT_SBUF_NUM 32
 #endif
 
+#define CONFIG_FEATURE_WPA3_SAE_BIT     (1<<0)
+
 #define WIFI_INIT_CONFIG_DEFAULT() { \
     .event_handler = &esp_event_send, \
     .osi_funcs = &g_wifi_osi_funcs, \
@@ -208,6 +212,7 @@ extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
     .wifi_task_core_id = WIFI_TASK_CORE_ID,\
     .beacon_max_len = WIFI_SOFTAP_BEACON_MAX_LEN, \
     .mgmt_sbuf_num = WIFI_MGMT_SBUF_NUM, \
+    .feature_caps = g_wifi_feature_caps, \
     .magic = WIFI_INIT_CONFIG_MAGIC\
 };
 
@@ -542,8 +547,10 @@ esp_err_t esp_wifi_get_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t *bw);
 /**
   * @brief     Set primary/secondary channel of ESP32
   *
-  * @attention 1. This is a special API for sniffer
-  * @attention 2. This API should be called after esp_wifi_start() and esp_wifi_set_promiscuous()
+  * @attention 1. This API should be called after esp_wifi_start()
+  * @attention 2. When ESP32 is in STA mode, this API should not be called when STA is scanning or connecting to an external AP
+  * @attention 3. When ESP32 is in softAP mode, this API should not be called when softAP has connected to external STAs
+  * @attention 4. When ESP32 is in STA+softAP mode, this API should not be called when in the scenarios described above  
   *
   * @param     primary  for HT20, primary is the channel number, for HT40, primary is the primary channel
   * @param     second   for HT20, second is ignored, for HT40, second is the second channel
@@ -798,6 +805,21 @@ esp_err_t esp_wifi_get_config(wifi_interface_t interface, wifi_config_t *conf);
   */
 esp_err_t esp_wifi_ap_get_sta_list(wifi_sta_list_t *sta);
 
+/**
+  * @brief     Get AID of STA connected with soft-AP
+  *
+  * @param     mac  STA's mac address
+  * @param[out]  aid  Store the AID corresponding to STA mac
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_NOT_FOUND: Requested resource not found
+  *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
+  *    - ESP_ERR_WIFI_CONN: WiFi internal error, the station/soft-AP control block is invalid
+  */
+esp_err_t esp_wifi_ap_get_sta_aid(const uint8_t mac[6], uint16_t *aid);
 
 /**
   * @brief     Set the WiFi API configuration storage type
@@ -854,28 +876,59 @@ esp_err_t esp_wifi_set_vendor_ie(bool enable, wifi_vendor_ie_type_t type, wifi_v
 esp_err_t esp_wifi_set_vendor_ie_cb(esp_vendor_ie_cb_t cb, void *ctx);
 
 /**
-  * @brief     Set maximum WiFi transmitting power
+  * @brief     Set maximum transmitting power after WiFi start.
   *
-  * @param     power  Maximum WiFi transmitting power, unit is 0.25dBm, range is [40, 82] corresponding to 10dBm - 20.5dBm here.
+  * @attention 1. Maximum power before wifi startup is limited by PHY init data bin.
+  * @attention 2. The value set by this API will be mapped to the max_tx_power of the structure wifi_country_t variable.
+  * @attention 3. Mapping Table {Power, max_tx_power} = {{8,   2}, {20,  5}, {28,  7}, {34,  8}, {44, 11},
+  *                                                      {52, 13}, {56, 14}, {60, 15}, {66, 16}, {72, 18}, {78, 20}}.
+  * @attention 4. Param power unit is 0.25dBm, range is [8, 78] corresponding to 2dBm - 20dBm.
+  * @attention 5. Relationship between set value and actual value. As follows:
+  *              +------------+--------------+
+  *              | set value  | actual value |
+  *              +============+==============+
+  *              |  [8,  19]  |      8       |
+  *              +------------+--------------+
+  *              |  [20, 27]  |      20      |
+  *              +------------+--------------+
+  *              |  [28, 33]  |      28      |
+  *              +------------+--------------+
+  *              |  [34, 43]  |      34      |
+  *              +------------+--------------+
+  *              |  [44, 51]  |      44      |
+  *              +------------+--------------+
+  *              |  [52, 55]  |      52      |
+  *              +------------+--------------+
+  *              |  [56, 59]  |      56      |
+  *              +------------+--------------+
+  *              |  [60, 65]  |      60      |
+  *              +------------+--------------+
+  *              |  [66, 71]  |      66      |
+  *              +------------+--------------+
+  *              |  [72, 77]  |      72      |
+  *              +------------+--------------+
+  *              |     78     |      78      |
+  *              +------------+--------------+
+  * @param     power  Maximum WiFi transmitting power.
   *
   * @return
   *    - ESP_OK: succeed
   *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   *    - ESP_ERR_WIFI_NOT_START: WiFi is not started by esp_wifi_start
-  *    - ESP_ERR_WIFI_NOT_ARG: invalid argument
+  *    - ESP_ERR_WIFI_ARG: invalid argument, e.g. parameter is out of range
   */
 esp_err_t esp_wifi_set_max_tx_power(int8_t power);
 
 /**
-  * @brief     Get maximum WiFi transmiting power
+  * @brief     Get maximum transmiting power after WiFi start
   *
-  * @param     power  Maximum WiFi transmitting power, unit is 0.25dBm.
+  * @param     power Maximum WiFi transmitting power, unit is 0.25dBm.
   *
   * @return
   *    - ESP_OK: succeed
   *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   *    - ESP_ERR_WIFI_NOT_START: WiFi is not started by esp_wifi_start
-  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_ARG: invalid argument
   */
 esp_err_t esp_wifi_get_max_tx_power(int8_t *power);
 
