@@ -45,7 +45,7 @@ MEMORY
   rtc_slow_seg(RW) : org = 0x50000000 + 0,
                                      len = 0x2000 - 0
   /* RTC fast memory (same block as above), viewed from data bus */
-  rtc_data_seg(RW) : org = 0x3ff9e000, len = 0x2000
+  rtc_data_seg(RW) : org = 0x3ff9e000, len = 0x2000 - (0x10)
 }
 _static_data_end = _bss_end;
 _heap_end = 0x40000000;
