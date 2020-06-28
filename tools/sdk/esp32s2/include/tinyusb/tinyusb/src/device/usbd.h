@@ -68,6 +68,8 @@ static inline bool tud_ready(void)
 // Remote wake up host, only if suspended and enabled by host
 bool tud_remote_wakeup(void);
 
+// Enable pull-up resistor on D+ D-
+// Return false on unsupported MCUs
 static inline bool tud_disconnect(void)
 {
   TU_VERIFY(dcd_disconnect);
@@ -75,6 +77,8 @@ static inline bool tud_disconnect(void)
   return true;
 }
 
+// Disable pull-up resistor on D+ D-
+// Return false on unsupported MCUs
 static inline bool tud_connect(void)
 {
   TU_VERIFY(dcd_connect);
@@ -110,6 +114,10 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index);
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid);
 
+// Invoked when received GET DEVICE QUALIFIER DESCRIPTOR request
+// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
+TU_ATTR_WEAK uint8_t const* tud_descriptor_device_qualifier_cb(void);
+
 // Invoked when device is mounted (configured)
 TU_ATTR_WEAK void tud_mount_cb(void);
 
@@ -125,6 +133,8 @@ TU_ATTR_WEAK void tud_resume_cb(void);
 
 // Invoked when received control request with VENDOR TYPE
 TU_ATTR_WEAK bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request);
+
+// Invoked when vendor control request is complete
 TU_ATTR_WEAK bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request);
 
 
@@ -438,6 +448,60 @@ TU_ATTR_WEAK bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_re
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_BULK, U16_TO_U8S_LE(_epsize), 0
 
+//------------- BT Radio -------------//
+#define TUD_BT_APP_CLASS                    (TUSB_CLASS_WIRELESS_CONTROLLER)
+#define TUD_BT_APP_SUBCLASS                 0x01
+#define TUD_BT_PROTOCOL_PRIMARY_CONTROLLER  0x01
+#define TUD_BT_PROTOCOL_AMP_CONTROLLER      0x02
+
+#ifndef CFG_TUD_BTH_ISO_ALT_COUNT
+#define CFG_TUD_BTH_ISO_ALT_COUNT 0
+#endif
+
+// Length of template descriptor: 30 bytes + number of ISO alternatives * 23
+#define TUD_BTH_DESC_LEN (9 + 7 + 7 + 7 + (CFG_TUD_BTH_ISO_ALT_COUNT) * (9 + 7 + 7))
+
+/* Primary Interface */
+#define TUD_BTH_PRI_ITF(_itfnum, _stridx, _ep_evt, _ep_evt_size, _ep_evt_interval, _ep_in, _ep_out, _ep_size) \
+  9, TUSB_DESC_INTERFACE, _itfnum, _stridx, 3, TUD_BT_APP_CLASS, TUD_BT_APP_SUBCLASS, TUD_BT_PROTOCOL_PRIMARY_CONTROLLER, 0, \
+  /* Endpoint In for events */ \
+  7, TUSB_DESC_ENDPOINT, _ep_evt, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(_ep_evt_size), _ep_evt_interval, \
+  /* Endpoint In for ACL data */ \
+  7, TUSB_DESC_ENDPOINT, _ep_in, TUSB_XFER_BULK, U16_TO_U8S_LE(_ep_size), 1, \
+  /* Endpoint Out for ACL data */ \
+  7, TUSB_DESC_ENDPOINT, _ep_out, TUSB_XFER_BULK, U16_TO_U8S_LE(_ep_size), 1
+
+#define TUD_BTH_ISO_ITF(_itfnum, _alt, _ep_in, _ep_out, _n) ,\
+  /* Interface with 2 endpoints */ \
+  9, TUSB_DESC_INTERFACE, _itfnum, _alt, 2, TUD_BT_APP_CLASS, TUD_BT_APP_SUBCLASS, TUD_BT_PROTOCOL_PRIMARY_CONTROLLER, 0, \
+  /* Isochronous endpoints */ \
+  7, TUSB_DESC_ENDPOINT, _ep_in, TUSB_XFER_ISOCHRONOUS, U16_TO_U8S_LE(_n), 1, \
+  7, TUSB_DESC_ENDPOINT, _ep_out, TUSB_XFER_ISOCHRONOUS, U16_TO_U8S_LE(_n), 1
+
+#define _FIRST(a, ...) a
+#define _REST(a, ...) __VA_ARGS__
+
+#define TUD_BTH_ISO_ITF_0(_itfnum, ...)
+#define TUD_BTH_ISO_ITF_1(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 1, _ep_in, _ep_out, _FIRST(__VA_ARGS__))
+#define TUD_BTH_ISO_ITF_2(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 2, _ep_in, _ep_out, _FIRST(__VA_ARGS__)) \
+	TUD_BTH_ISO_ITF_1(_itfnum, _ep_in, _ep_out, _REST(__VA_ARGS__))
+#define TUD_BTH_ISO_ITF_3(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 3, _ep_in, _ep_out, _FIRST(__VA_ARGS__)) \
+	TUD_BTH_ISO_ITF_2(_itfnum, _ep_in, _ep_out, _REST(__VA_ARGS__))
+#define TUD_BTH_ISO_ITF_4(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 4, _ep_in, _ep_out, _FIRST(__VA_ARGS__)) \
+	TUD_BTH_ISO_ITF_3(_itfnum, _ep_in, _ep_out, _REST(__VA_ARGS__))
+#define TUD_BTH_ISO_ITF_5(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 5, _ep_in, _ep_out, _FIRST(__VA_ARGS__)) \
+	TUD_BTH_ISO_ITF_4(_itfnum, _ep_in, _ep_out, _REST(__VA_ARGS__))
+#define TUD_BTH_ISO_ITF_6(_itfnum, _ep_in, _ep_out, ...) TUD_BTH_ISO_ITF(_itfnum, (CFG_TUD_BTH_ISO_ALT_COUNT) - 6, _ep_in, _ep_out, _FIRST(__VA_ARGS__)) \
+	TUD_BTH_ISO_ITF_5(_itfnum, _ep_in, _ep_out, _REST(__VA_ARGS__))
+
+#define TUD_BTH_ISO_ITFS(_itfnum, _ep_in, _ep_out, ...) \
+	TU_XSTRCAT(TUD_BTH_ISO_ITF_, CFG_TUD_BTH_ISO_ALT_COUNT)(_itfnum, _ep_in, _ep_out, __VA_ARGS__)
+
+// BT Primary controller descriptor
+// Interface number, string index, attributes, event endpoint, event endpoint size, interval, data in, data out, data endpoint size, iso endpoint sizes
+#define TUD_BTH_DESCRIPTOR(_itfnum, _stridx, _ep_evt, _ep_evt_size, _ep_evt_interval, _ep_in, _ep_out, _ep_size,...) \
+  TUD_BTH_PRI_ITF(_itfnum, _stridx, _ep_evt, _ep_evt_size, _ep_evt_interval, _ep_in, _ep_out, _ep_size) \
+  TUD_BTH_ISO_ITFS(_itfnum + 1, _ep_in + 1, _ep_out + 1, __VA_ARGS__)
 
 #ifdef __cplusplus
  }
