@@ -229,12 +229,12 @@ static inline uint32_t tud_cdc_write_available(void)
 //--------------------------------------------------------------------+
 // INTERNAL USBD-CLASS DRIVER API
 //--------------------------------------------------------------------+
-void cdcd_init             (void);
-void cdcd_reset            (uint8_t rhport);
-bool cdcd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool cdcd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
-bool cdcd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
-bool cdcd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     cdcd_init             (void);
+void     cdcd_reset            (uint8_t rhport);
+uint16_t cdcd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     cdcd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
+bool     cdcd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
+bool     cdcd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

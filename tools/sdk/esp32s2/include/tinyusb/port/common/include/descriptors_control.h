@@ -18,16 +18,17 @@
 #include "usb_descriptors.h"
 
 
+#if CONFIG_USB_USE_BUILTIN_DESCRIPTORS
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
  *
  * Auto ProductID layout's Bitmap:
  *   [MSB]         HID | MSC | CDC          [LSB]
  */
-#define EPNUM_MSC       0x01
-#define EPNUM_HID       0x02
-#define EPNUM_MIDI      0x04
-#define EPNUM_VENDOR    0x06
+#define EPNUM_MSC       0x02
+#define EPNUM_HID       0x03
+#define EPNUM_MIDI      0x06
+#define EPNUM_VENDOR    0x01
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +46,10 @@ enum {
 #   if CFG_TUD_CDC
     ITF_NUM_CDC = 0,
     ITF_NUM_CDC_DATA,
+#   endif
+
+#   if CFG_TUD_DFU_RT
+    ITF_NUM_DFU_RT,
 #   endif
 
 #   if CFG_TUD_MSC
@@ -68,7 +73,7 @@ enum {
 };
 
 enum {
-    CONFIG_TOTAL_LEN = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN + CFG_TUD_MSC * TUD_MSC_DESC_LEN +
+    CONFIG_TOTAL_LEN = TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN + CFG_TUD_DFU_RT * TUD_DFU_RT_DESC_LEN + CFG_TUD_MSC * TUD_MSC_DESC_LEN +
                        CFG_TUD_HID * TUD_HID_DESC_LEN + CFG_TUD_VENDOR * TUD_VENDOR_DESC_LEN + CFG_TUD_MIDI * TUD_MIDI_DESC_LEN
 };
 
@@ -81,3 +86,5 @@ void tusb_clear_descriptor(void);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* CONFIG_USB_USE_BUILTIN_DESCRIPTORS */
