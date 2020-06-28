@@ -60,6 +60,10 @@ extern "C" {
 #   define CFG_TUSB_MEM_ALIGN          TU_ATTR_ALIGNED(4)
 #endif
 
+//Allow loading additional drivers
+#define CFG_TUSB_DYNAMIC_DRIVER_LOAD 	CONFIG_USB_DYNAMIC_DRIVER_LOADING
+#define CFG_TUSB_DYNAMIC_DRIVER_MAX 	CONFIG_USB_DYNAMIC_DRIVER_MAX
+
 
 
 //--------------------------------------------------------------------
@@ -93,10 +97,6 @@ extern "C" {
 #   define CONFIG_USB_DFU_RT_ENABLED 0
 #endif
 
-#ifndef CONFIG_USB_NET_ENABLED
-#   define CONFIG_USB_NET_ENABLED 0
-#endif
-
 #ifndef CONFIG_USB_VENDOR_ENABLED
 #   define CONFIG_USB_VENDOR_ENABLED 0
 #endif
@@ -106,10 +106,10 @@ extern "C" {
 #define CFG_TUD_MSC CONFIG_USB_MSC_ENABLED
 #define CFG_TUD_HID CONFIG_USB_HID_ENABLED
 #define CFG_TUD_DFU_RT CONFIG_USB_DFU_RT_ENABLED
-#define CFG_TUD_NET CONFIG_USB_NET_ENABLED
 
 #define CFG_TUD_MIDI CONFIG_USB_MIDI_ENABLED
 #define CFG_TUD_CUSTOM_CLASS CONFIG_USB_CUSTOM_CLASS_ENABLED
+
 
 #define CFG_TUD_VENDOR CONFIG_USB_VENDOR_ENABLED
 
