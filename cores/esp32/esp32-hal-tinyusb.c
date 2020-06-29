@@ -265,7 +265,7 @@ bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const 
             // match vendor request in BOS descriptor
             // Get landing page url
             tinyusb_url_descriptor.bLength = 3 + strlen(WEBUSB_URL);
-            snprintf(tinyusb_url_descriptor.url, 126, "%s", WEBUSB_URL);
+            snprintf(tinyusb_url_descriptor.url, 127, "%s", WEBUSB_URL);
             return tud_control_xfer(rhport, request, (void*) &tinyusb_url_descriptor, tinyusb_url_descriptor.bLength);
         }
         // Get Microsoft OS 2.0 compatible descriptor
@@ -419,7 +419,7 @@ static void set_usb_serial_num(void)
     memcpy(mac_bytes + 4, &mac1, 2);
 
     /* Convert to UTF16 string */
-    uint8_t* srl = USB_DEVICE_SERIAL;
+    uint8_t* srl = (uint8_t*)USB_DEVICE_SERIAL;
     for (int i = 0; i < 6; ++i) {
         uint8_t b = mac_bytes[5 - i]; /* printing from the MSB */
         if (i) {
