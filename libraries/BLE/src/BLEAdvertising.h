@@ -12,7 +12,7 @@
 #include <esp_gap_ble_api.h>
 #include "BLEUUID.h"
 #include <vector>
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 /**
  * @brief Advertisement data set by the programmer to be published by the %BLE server.

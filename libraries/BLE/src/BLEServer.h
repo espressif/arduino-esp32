@@ -20,7 +20,7 @@
 #include "BLECharacteristic.h"
 #include "BLEService.h"
 #include "BLESecurity.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 #include "BLEAddress.h"
 
 class BLEServerCallbacks;
