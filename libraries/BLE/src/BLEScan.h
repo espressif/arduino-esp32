@@ -15,7 +15,7 @@
 #include <string>
 #include "BLEAdvertisedDevice.h"
 #include "BLEClient.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEAdvertisedDevice;
 class BLEAdvertisedDeviceCallbacks;
