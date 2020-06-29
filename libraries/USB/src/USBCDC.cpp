@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
+#include "USB.h"
 #include "USBCDC.h"
 #if CONFIG_USB_ENABLED
 
@@ -99,11 +100,16 @@ void tud_cdc_rx_cb(uint8_t itf)
 
 //void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char);
 
+static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
+    ((USBCDC*)arg)->_onUnplugged();
+}
+
 USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
     tinyusb_enable_interface(USB_INTERFACE_CDC);
     tinyusb_enable_interface(USB_INTERFACE_DFU);
     if(itf < MAX_USB_CDC_DEVICES){
         devices[itf] = this;
+        arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
     }
 }
 
@@ -129,6 +135,16 @@ void USBCDC::begin(size_t rx_queue_len)
 void USBCDC::end()
 {
     tinyusb_persist_set_mode(REBOOT_NO_PERSIST);
+}
+
+void USBCDC::_onUnplugged(void){
+    if(connected){
+        connected = false;
+        dtr = false;
+        rts = false;
+        arduino_usb_cdc_event_data_t p = {0};
+        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+    }
 }
 
 void USBCDC::_onDFU(void){

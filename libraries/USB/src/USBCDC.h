@@ -108,6 +108,7 @@ public:
     void _onLineState(bool _dtr, bool _rts);
     void _onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits);
     void _onRX(void);
+    void _onUnplugged(void);
     
 protected:
     uint8_t  itf;
