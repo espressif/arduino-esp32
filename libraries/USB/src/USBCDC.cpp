@@ -28,7 +28,9 @@ extern "C" {
 uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
+#if CFG_TUSB_DYNAMIC_DRIVER_LOAD
     LOAD_DEFAULT_TUSB_DRIVER(dfu_rt);
+#endif
     
 #define DFU_ATTR_CAN_DOWNLOAD              1
 #define DFU_ATTR_CAN_UPLOAD                2
@@ -50,7 +52,9 @@ uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf)
 uint16_t tusb_cdc_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
+#if CFG_TUSB_DYNAMIC_DRIVER_LOAD
     LOAD_DEFAULT_TUSB_DRIVER(cdc);
+#endif
     // Interface number, string index, attributes, detach timeout, transfer size */
     uint8_t descriptor[TUD_CDC_DESC_LEN] = {
             // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
