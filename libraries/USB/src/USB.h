@@ -88,6 +88,7 @@ class ESPUSB {
         bool webUSBURL(const char * name);
         const char * webUSBURL(void);
 
+        bool enableDFU();
         bool begin();
         operator bool() const;
         
