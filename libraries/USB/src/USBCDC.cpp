@@ -24,29 +24,13 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 
 extern "C" {
 #include "tinyusb.h"
-
-#if CFG_TUD_DFU_RT
-uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf)
-{
-#define DFU_ATTR_CAN_DOWNLOAD              1
-#define DFU_ATTR_CAN_UPLOAD                2
-#define DFU_ATTR_MANIFESTATION_TOLERANT    4
-#define DFU_ATTR_WILL_DETACH               8
-#define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
-
-    uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
-    uint8_t descriptor[TUD_DFU_RT_DESC_LEN] = {
-            // Interface number, string index, attributes, detach timeout, transfer size */
-            TUD_DFU_RT_DESCRIPTOR(*itf, str_index, DFU_ATTRS, 700, 64)
-    };
-    *itf+=1;
-    memcpy(dst, descriptor, TUD_DFU_RT_DESC_LEN);
-    return TUD_DFU_RT_DESC_LEN;
 }
-#endif /* CFG_TUD_DFU_RT */
 
 #if CFG_TUD_CDC
-uint16_t tusb_cdc_load_descriptor(uint8_t * dst, uint8_t * itf)
+#define MAX_USB_CDC_DEVICES 2
+USBCDC * devices[MAX_USB_CDC_DEVICES] = {NULL, NULL};
+
+static uint16_t load_cdc_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
     // Interface number, string index, attributes, detach timeout, transfer size */
@@ -58,22 +42,6 @@ uint16_t tusb_cdc_load_descriptor(uint8_t * dst, uint8_t * itf)
     memcpy(dst, descriptor, TUD_CDC_DESC_LEN);
     return TUD_CDC_DESC_LEN;
 }
-#endif /* CFG_TUD_CDC */
-}
-
-#if CFG_TUD_CDC
-#define MAX_USB_CDC_DEVICES 2
-USBCDC * devices[MAX_USB_CDC_DEVICES] = {NULL, NULL};
-
-#if CFG_TUD_DFU_RT
-// Invoked on DFU_DETACH request to reboot to the bootloader
-void tud_dfu_rt_reboot_to_dfu(void)
-{
-    if(devices[0] != NULL){
-        devices[0]->_onDFU();
-    }
-}
-#endif /* CFG_TUD_DFU_RT */
 
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
@@ -103,8 +71,7 @@ static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t eve
 }
 
 USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
-    tinyusb_enable_interface(USB_INTERFACE_CDC);
-    tinyusb_enable_interface(USB_INTERFACE_DFU);
+    tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         devices[itf] = this;
         arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
@@ -127,12 +94,10 @@ void USBCDC::begin(size_t rx_queue_len)
     if(!rx_queue){
         return;
     }
-    tinyusb_persist_set_mode(REBOOT_PERSIST);
 }
 
 void USBCDC::end()
 {
-    tinyusb_persist_set_mode(REBOOT_NO_PERSIST);
 }
 
 void USBCDC::_onUnplugged(void){
@@ -142,13 +107,6 @@ void USBCDC::_onUnplugged(void){
         rts = false;
         arduino_usb_cdc_event_data_t p = {0};
         arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
-    }
-}
-
-void USBCDC::_onDFU(void){
-    if(reboot_enable){
-        tinyusb_persist_set_mode(REBOOT_BOOTLOADER_DFU);
-        esp_restart();
     }
 }
 
@@ -202,10 +160,6 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
         l.line_state.rts = rts;
         arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_STATE_EVENT, &l, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
     } else {
-        //[I][USBSerial.cpp:76] _onLineState(): dtr: 0, rts: 1
-        //[I][USBSerial.cpp:76] _onLineState(): dtr: 1, rts: 1
-        //[I][USBSerial.cpp:76] _onLineState(): dtr: 1, rts: 0
-        //[I][USBSerial.cpp:76] _onLineState(): dtr: 0, rts: 0
         log_d("CDC RESET: itf: %u, dtr: %u, rts: %u, state: %u", itf, dtr, rts, lineState);
     }
 

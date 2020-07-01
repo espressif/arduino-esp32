@@ -168,6 +168,8 @@ static tinyusb_desc_webusb_url_t tinyusb_url_descriptor = {
 /*
  * Configuration Descriptor
  * */
+
+static tinyusb_descriptor_cb_t tinyusb_loaded_interfaces_callbacks[USB_INTERFACE_MAX];
 static uint32_t tinyusb_loaded_interfaces_mask = 0;
 static uint8_t tinyusb_loaded_interfaces_num = 0;
 static uint16_t tinyusb_config_descriptor_len = 0;
@@ -308,47 +310,6 @@ __attribute__ ((weak)) int32_t tud_msc_scsi_cb (uint8_t lun, uint8_t const scsi_
  * Private API
  * */
 
-__attribute__ ((weak)) uint16_t tusb_cdc_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-__attribute__ ((weak)) uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-__attribute__ ((weak)) uint16_t tusb_hid_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-__attribute__ ((weak)) uint16_t tusb_msc_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-__attribute__ ((weak)) uint16_t tusb_midi_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-__attribute__ ((weak)) uint16_t tusb_vendor_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-
-__attribute__ ((weak)) uint16_t tusb_custom_get_descriptor_len() { return 0; }
-__attribute__ ((weak)) uint16_t tusb_custom_load_descriptor(uint8_t * dst, uint8_t * itf) { return 0; }
-
-static uint16_t tinyusb_load_descriptor(tinyusb_interface_t interface, uint8_t * dst, uint8_t * itf)
-{
-    switch (interface) {
-        case USB_INTERFACE_CDC:
-            return tusb_cdc_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_DFU:
-            return tusb_dfu_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_HID:
-            return tusb_hid_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_VENDOR:
-            return tusb_vendor_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_MSC:
-            return tusb_msc_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_MIDI:
-            return tusb_midi_load_descriptor(dst, itf);
-            break;
-        case USB_INTERFACE_CUSTOM:
-            return tusb_custom_load_descriptor(dst, itf);
-            break;
-        default:
-
-            break;
-    }
-    return 0;
-}
-
 static bool tinyusb_reserve_in_endpoint(uint8_t endpoint){
     if(endpoint > 6 || (tinyusb_endpoints.in & BIT(endpoint)) != 0){
         return false;
@@ -377,6 +338,14 @@ static bool tinyusb_has_available_fifos(void){
     }
 
     return active_endpoints < max_endpoints;
+}
+
+static uint16_t tinyusb_load_descriptor(tinyusb_interface_t interface, uint8_t * dst, uint8_t * itf)
+{
+    if(tinyusb_loaded_interfaces_callbacks[interface]){
+        return tinyusb_loaded_interfaces_callbacks[interface](dst, itf);
+    }
+    return 0;
 }
 
 static bool tinyusb_load_enabled_interfaces(){
@@ -411,7 +380,7 @@ static bool tinyusb_load_enabled_interfaces(){
             TUD_CONFIG_DESCRIPTOR(1, tinyusb_loaded_interfaces_num, str_index, tinyusb_config_descriptor_len, USB_DEVICE_ATTRIBUTES, USB_DEVICE_POWER)
     };
     memcpy(tinyusb_config_descriptor, descriptor, TUD_CONFIG_DESC_LEN);
-    if ((tinyusb_loaded_interfaces_mask & ~(BIT(USB_INTERFACE_CDC) | BIT(USB_INTERFACE_DFU))) == 0) {
+    if ((tinyusb_loaded_interfaces_mask == (BIT(USB_INTERFACE_CDC) | BIT(USB_INTERFACE_DFU))) || (tinyusb_loaded_interfaces_mask == BIT(USB_INTERFACE_CDC))) {
         tinyusb_persist_set_enable(true);
         log_d("USB Persist enabled");
     }
@@ -493,6 +462,19 @@ static void usb_device_task(void *param) {
  * PUBLIC API
  * */
 
+esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
+{
+    if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
+        log_e("Interface %u not enabled", interface);
+        return ESP_FAIL;
+    }
+    tinyusb_loaded_interfaces_mask |= (1U << interface);
+    tinyusb_config_descriptor_len += descriptor_len;
+    tinyusb_loaded_interfaces_callbacks[interface] = cb;
+    log_d("Interface %u enabled", interface);
+    return ESP_OK;
+}
+
 esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     static bool initialized = false;
     if(initialized){
@@ -516,45 +498,6 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     }
     xTaskCreate(usb_device_task, "usbd", 4096, NULL, 24, NULL);
     return err;
-}
-
-esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface)
-{
-    uint16_t descriptor_len = 0;
-    switch (interface) {
-        case USB_INTERFACE_CDC:
-            descriptor_len = CFG_TUD_CDC * TUD_CDC_DESC_LEN;
-            break;
-        case USB_INTERFACE_DFU:
-            descriptor_len = CFG_TUD_DFU_RT * TUD_DFU_RT_DESC_LEN;
-            break;
-        case USB_INTERFACE_HID:
-            descriptor_len = CFG_TUD_HID * TUD_HID_INOUT_DESC_LEN;
-            break;
-        case USB_INTERFACE_MSC:
-            descriptor_len = CFG_TUD_MSC * TUD_MSC_DESC_LEN;
-            break;
-        case USB_INTERFACE_MIDI:
-            descriptor_len = CFG_TUD_MIDI * TUD_MIDI_DESC_LEN;
-            break;
-        case USB_INTERFACE_VENDOR:
-            descriptor_len = CFG_TUD_VENDOR * TUD_VENDOR_DESC_LEN;
-            break;
-        case USB_INTERFACE_CUSTOM:
-            descriptor_len = tusb_custom_get_descriptor_len();
-            break;
-        default:
-
-            break;
-    }
-    if (descriptor_len) {
-        tinyusb_config_descriptor_len += descriptor_len;
-        tinyusb_loaded_interfaces_mask |= (1U << interface);
-        log_d("Driver %u enabled", interface);
-        return ESP_OK;
-    }
-    log_e("Driver %u not enabled", interface);
-    return ESP_FAIL;
 }
 
 uint8_t tinyusb_add_string_descriptor(const char * str){
