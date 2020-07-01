@@ -60,11 +60,6 @@ extern "C" {
 #   define CFG_TUSB_MEM_ALIGN          TU_ATTR_ALIGNED(4)
 #endif
 
-//Allow loading additional drivers
-#define CFG_TUSB_DYNAMIC_DRIVER_LOAD 	CONFIG_USB_DYNAMIC_DRIVER_LOADING
-#define CFG_TUSB_DYNAMIC_DRIVER_MAX 	CONFIG_USB_DYNAMIC_DRIVER_MAX
-
-
 
 //--------------------------------------------------------------------
 // DEVICE CONFIGURATION
