@@ -11,29 +11,42 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #pragma once
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "tusb.h"
+/*
+ * USB Persistence API
+ * */
+typedef enum {
+    REBOOT_NO_PERSIST,
+    REBOOT_PERSIST,
+    REBOOT_BOOTLOADER,
+    REBOOT_BOOTLOADER_DFU,
+    REBOOT_TYPE_MAX
+} reboot_type_t;
 
-#define USB_ESPRESSIF_VID 0x303A
+/*
+ * Init Persistence reboot system
+ * */
+void tinyusb_persist_init(void);
 
-#if CONFIG_USB_USE_BUILTIN_DESCRIPTORS
+/*
+ * Enable Persistence reboot
+ * 
+ * Note: Persistence should be enabled when ONLY CDC and DFU are being used
+ * */
+void tinyusb_persist_set_enable(bool enable);
 
-#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-
-#define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
-typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
-
-extern tusb_desc_device_t descriptor_tinyusb;
-extern tusb_desc_strarray_device_t descriptor_str_tinyusb;
-
-extern tusb_desc_device_t descriptor_kconfig;
-extern tusb_desc_strarray_device_t descriptor_str_kconfig;
-#endif /* CONFIG_USB_USE_BUILTIN_DESCRIPTORS */
+/*
+ * Set Reboot mode. Call before esp_reboot();
+ * */
+void tinyusb_persist_set_mode(reboot_type_t mode);
 
 #ifdef __cplusplus
 }

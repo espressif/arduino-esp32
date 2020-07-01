@@ -74,78 +74,15 @@ extern "C" {
 #endif
 
 typedef struct {
+#if CONFIG_USB_USE_BUILTIN_DESCRIPTORS
+    tusb_desc_device_t *descriptor;
+    char **string_descriptor;
+#endif /* CONFIG_USB_USE_BUILTIN_DESCRIPTORS */
     bool external_phy;
 } tinyusb_config_t;
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config);
 // TODO esp_err_t tinyusb_driver_uninstall(void); (IDF-1474)
-
-/*
- * USB Persistence API
- * */
-typedef enum {
-    REBOOT_NO_PERSIST,
-    REBOOT_PERSIST,
-    REBOOT_BOOTLOADER,
-    REBOOT_BOOTLOADER_DFU
-} reboot_type_t;
-
-/*
- * Enable Persist reboot
- * 
- * Note: Persistence should be enabled when ONLY CDC and DFU are being used
- * */
-void tinyusb_persist_set_enable(bool enable);
-
-/*
- * Set Persist reboot mode, if available, before calling esp_reboot();
- * */
-void tinyusb_persist_set_mode(reboot_type_t mode);
-
-/*
- * TinyUSB Dynamic Driver Loading
- * 
- * When enabled, usb drivers can be loaded at runtime, before calling tinyusb_driver_install()
- * */
-#if CFG_TUSB_DYNAMIC_DRIVER_LOAD
-#if CFG_TUSB_DEBUG >= 2
-  #define DRIVER_NAME(_name)    .name = _name,
-#else
-  #define DRIVER_NAME(_name)
-#endif
-
-typedef struct
-{
-  #if CFG_TUSB_DEBUG >= 2
-  char const* name;
-  #endif
-
-  void     (* init             ) (void);
-  void     (* reset            ) (uint8_t rhport);
-  uint16_t (* open             ) (uint8_t rhport, tusb_desc_interface_t const * desc_intf, uint16_t max_len);
-  bool     (* control_request  ) (uint8_t rhport, tusb_control_request_t const * request);
-  bool     (* control_complete ) (uint8_t rhport, tusb_control_request_t const * request);
-  bool     (* xfer_cb          ) (uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-  void     (* sof              ) (uint8_t rhport); /* optional */
-} usbd_class_driver_t;
-
-bool usbd_device_driver_load(const usbd_class_driver_t * driver);
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define LOAD_DEFAULT_TUSB_DRIVER(name) \
-    static usbd_class_driver_t name ## d_driver = { \
-        DRIVER_NAME(TOSTRING(name)) \
-        .init             = name ## d_init, \
-        .reset            = name ## d_reset, \
-        .open             = name ## d_open, \
-        .control_request  = name ## d_control_request, \
-        .control_complete = name ## d_control_complete, \
-        .xfer_cb          = name ## d_xfer_cb, \
-        .sof              = NULL \
-    }; \
-    TU_VERIFY (usbd_device_driver_load(&name ## d_driver));
-#endif /* CFG_TUSB_DYNAMIC_DRIVER_LOAD */
 
 #ifdef __cplusplus
 }

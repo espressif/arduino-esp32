@@ -29,6 +29,7 @@
 #include "esp32-hal.h"
 
 #include "esp32-hal-tinyusb.h"
+#include "usb_persist.h"
 
 typedef char tusb_str_t[127];
 
@@ -286,6 +287,24 @@ bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const
 }
 
 /*
+ * Required Callbacks
+ * */
+#if CFG_TUD_HID
+__attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(void){return NULL;}
+__attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
+__attribute__ ((weak)) void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type, const uint8_t * buffer, uint16_t bufsize){}
+#endif
+#if CFG_TUD_MSC
+__attribute__ ((weak)) bool tud_msc_test_unit_ready_cb(uint8_t lun){return false;}
+__attribute__ ((weak)) void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4]){}
+__attribute__ ((weak)) void tud_msc_capacity_cb(uint8_t lun, uint32_t* block_count, uint16_t* block_size){}
+__attribute__ ((weak)) int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize){return -1;}
+__attribute__ ((weak)) int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize){return -1;}
+__attribute__ ((weak)) int32_t tud_msc_scsi_cb (uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, uint16_t bufsize){return -1;}
+#endif
+
+
+/*
  * Private API
  * */
 
@@ -510,7 +529,7 @@ esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface)
             descriptor_len = CFG_TUD_DFU_RT * TUD_DFU_RT_DESC_LEN;
             break;
         case USB_INTERFACE_HID:
-            descriptor_len = CFG_TUD_HID * TUD_HID_DESC_LEN;
+            descriptor_len = CFG_TUD_HID * TUD_HID_INOUT_DESC_LEN;
             break;
         case USB_INTERFACE_MSC:
             descriptor_len = CFG_TUD_MSC * TUD_MSC_DESC_LEN;
