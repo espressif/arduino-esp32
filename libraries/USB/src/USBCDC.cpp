@@ -16,6 +16,7 @@
 #include "USB.h"
 #include "USBCDC.h"
 #if CONFIG_USB_ENABLED
+#include "usb_persist.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_CDC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
@@ -27,17 +28,13 @@ extern "C" {
 #if CFG_TUD_DFU_RT
 uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
-    uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
-#if CFG_TUSB_DYNAMIC_DRIVER_LOAD
-    LOAD_DEFAULT_TUSB_DRIVER(dfu_rt);
-#endif
-    
 #define DFU_ATTR_CAN_DOWNLOAD              1
 #define DFU_ATTR_CAN_UPLOAD                2
 #define DFU_ATTR_MANIFESTATION_TOLERANT    4
 #define DFU_ATTR_WILL_DETACH               8
 #define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
-    
+
+    uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
     uint8_t descriptor[TUD_DFU_RT_DESC_LEN] = {
             // Interface number, string index, attributes, detach timeout, transfer size */
             TUD_DFU_RT_DESCRIPTOR(*itf, str_index, DFU_ATTRS, 700, 64)
@@ -52,9 +49,6 @@ uint16_t tusb_dfu_load_descriptor(uint8_t * dst, uint8_t * itf)
 uint16_t tusb_cdc_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
-#if CFG_TUSB_DYNAMIC_DRIVER_LOAD
-    LOAD_DEFAULT_TUSB_DRIVER(cdc);
-#endif
     // Interface number, string index, attributes, detach timeout, transfer size */
     uint8_t descriptor[TUD_CDC_DESC_LEN] = {
             // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
