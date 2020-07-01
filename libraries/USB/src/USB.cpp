@@ -15,10 +15,37 @@
 #include "esp32-hal-tinyusb.h"
 #include "USB.h"
 #if CONFIG_USB_ENABLED
+#include "usb_persist.h"
 
 extern "C" {
 #include "tinyusb.h"
 }
+
+#if CFG_TUD_DFU_RT
+static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
+{
+#define DFU_ATTR_CAN_DOWNLOAD              1
+#define DFU_ATTR_CAN_UPLOAD                2
+#define DFU_ATTR_MANIFESTATION_TOLERANT    4
+#define DFU_ATTR_WILL_DETACH               8
+#define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
+
+    uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
+    uint8_t descriptor[TUD_DFU_RT_DESC_LEN] = {
+            // Interface number, string index, attributes, detach timeout, transfer size */
+            TUD_DFU_RT_DESCRIPTOR(*itf, str_index, DFU_ATTRS, 700, 64)
+    };
+    *itf+=1;
+    memcpy(dst, descriptor, TUD_DFU_RT_DESC_LEN);
+    return TUD_DFU_RT_DESC_LEN;
+}
+// Invoked on DFU_DETACH request to reboot to the bootloader
+void tud_dfu_rt_reboot_to_dfu(void)
+{
+    tinyusb_persist_set_mode(REBOOT_BOOTLOADER_DFU);
+    esp_restart();
+}
+#endif /* CFG_TUD_DFU_RT */
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_EVENTS);
 
@@ -141,6 +168,12 @@ ESPUSB::operator bool() const
     return _started && tinyusb_device_mounted;
 }
 
+bool ESPUSB::enableDFU(){
+#if CFG_TUD_DFU_RT
+    return tinyusb_enable_interface(USB_INTERFACE_DFU, TUD_DFU_RT_DESC_LEN, load_dfu_descriptor) == ESP_OK;
+#endif /* CFG_TUD_DFU_RT */
+    return false;
+}
 
 bool ESPUSB::VID(uint16_t v){
     if(!_started){
