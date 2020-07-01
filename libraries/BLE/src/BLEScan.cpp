@@ -25,6 +25,7 @@ BLEScan::BLEScan() {
 	m_scan_params.scan_type          = BLE_SCAN_TYPE_PASSIVE; // Default is a passive scan.
 	m_scan_params.own_addr_type      = BLE_ADDR_TYPE_PUBLIC;
 	m_scan_params.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
+  m_scan_params.scan_duplicate     = BLE_SCAN_DUPLICATE_DISABLE;
 	m_pAdvertisedDeviceCallbacks     = nullptr;
 	m_stopped                        = true;
 	m_wantDuplicates                 = false;
