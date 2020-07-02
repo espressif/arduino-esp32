@@ -234,7 +234,7 @@ void BLEClient::gattClientEventHandler(
 			break;
 
 		case ESP_GATTC_CONNECT_EVT: {
-			BLEDevice::updatePeerDevice(this, true, m_gattc_if);
+			BLEDevice::updatePeerDevice(this, true, m_appId);
 			esp_err_t errRc = esp_ble_gattc_send_mtu_req(gattc_if, evtParam->connect.conn_id);
 			if (errRc != ESP_OK) {
 				log_e("esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
