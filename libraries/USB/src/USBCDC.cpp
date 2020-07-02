@@ -70,7 +70,7 @@ static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t eve
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
+USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(usb_persist_this_boot()), reboot_enable(true), rx_queue(NULL) {
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         devices[itf] = this;
@@ -93,6 +93,15 @@ void USBCDC::begin(size_t rx_queue_len)
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
         return;
+    }
+    if(connected){
+        arduino_usb_cdc_event_data_t p = {0};
+        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_CONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+
+        arduino_usb_cdc_event_data_t l = {0};
+        l.line_state.dtr = true;
+        l.line_state.rts = true;
+        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_STATE_EVENT, &l, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
     }
 }
 
@@ -137,8 +146,7 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
             }
         } else if(!dtr && !rts){
             if(lineState == CDC_LINE_3){
-                tinyusb_persist_set_mode(REBOOT_BOOTLOADER);
-                esp_restart();
+                usb_persist_restart(RESTART_BOOTLOADER);
             } else {
                 lineState = CDC_LINE_IDLE;
             }
@@ -195,13 +203,6 @@ void USBCDC::_onRX(){
 }
 
 void  USBCDC::enableReboot(bool enable){
-    if(enable != reboot_enable){
-        if(enable){
-            tinyusb_persist_set_mode(REBOOT_PERSIST);
-        } else {
-            tinyusb_persist_set_mode(REBOOT_NO_PERSIST);
-        }
-    }
     reboot_enable = enable;
 }
 bool  USBCDC::rebootEnabled(void){

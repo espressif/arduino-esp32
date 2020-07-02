@@ -58,6 +58,7 @@
 #define OPT_MCU_SAMD21            200 ///< MicroChip SAMD21
 #define OPT_MCU_SAMD51            201 ///< MicroChip SAMD51
 #define OPT_MCU_SAMG              202 ///< MicroChip SAMDG series
+#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 
 // STM32
 #define OPT_MCU_STM32F0           300 ///< ST STM32F0
@@ -91,6 +92,9 @@
 
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
+
+// Dialog
+#define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
 
 /** @} */
 

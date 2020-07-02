@@ -381,7 +381,7 @@ static bool tinyusb_load_enabled_interfaces(){
     };
     memcpy(tinyusb_config_descriptor, descriptor, TUD_CONFIG_DESC_LEN);
     if ((tinyusb_loaded_interfaces_mask == (BIT(USB_INTERFACE_CDC) | BIT(USB_INTERFACE_DFU))) || (tinyusb_loaded_interfaces_mask == BIT(USB_INTERFACE_CDC))) {
-        tinyusb_persist_set_enable(true);
+        usb_persist_set_enable(true);
         log_d("USB Persist enabled");
     }
     log_d("Load Done: if_num: %u, descr_len: %u, if_mask: 0x%x", tinyusb_loaded_interfaces_num, tinyusb_config_descriptor_len, tinyusb_loaded_interfaces_mask);
