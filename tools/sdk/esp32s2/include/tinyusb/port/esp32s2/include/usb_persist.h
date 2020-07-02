@@ -24,29 +24,34 @@ extern "C" {
  * USB Persistence API
  * */
 typedef enum {
-    REBOOT_NO_PERSIST,
-    REBOOT_PERSIST,
-    REBOOT_BOOTLOADER,
-    REBOOT_BOOTLOADER_DFU,
-    REBOOT_TYPE_MAX
-} reboot_type_t;
+    RESTART_NO_PERSIST,
+    RESTART_PERSIST,
+    RESTART_BOOTLOADER,
+    RESTART_BOOTLOADER_DFU,
+    RESTART_TYPE_MAX
+} restart_type_t;
 
 /*
  * Init Persistence reboot system
  * */
-void tinyusb_persist_init(void);
+void usb_persist_init(void);
 
 /*
  * Enable Persistence reboot
  * 
  * Note: Persistence should be enabled when ONLY CDC and DFU are being used
  * */
-void tinyusb_persist_set_enable(bool enable);
+void usb_persist_set_enable(bool enable);
 
 /*
  * Set Reboot mode. Call before esp_reboot();
  * */
-void tinyusb_persist_set_mode(reboot_type_t mode);
+void usb_persist_restart(restart_type_t mode);
+
+/*
+ * Check if last boot was persistent
+ * */
+bool usb_persist_this_boot(void);
 
 #ifdef __cplusplus
 }

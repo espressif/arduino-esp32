@@ -42,8 +42,7 @@ static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
 // Invoked on DFU_DETACH request to reboot to the bootloader
 void tud_dfu_rt_reboot_to_dfu(void)
 {
-    tinyusb_persist_set_mode(REBOOT_BOOTLOADER_DFU);
-    esp_restart();
+    usb_persist_restart(RESTART_BOOTLOADER_DFU);
 }
 #endif /* CFG_TUD_DFU_RT */
 
