@@ -98,6 +98,7 @@ public:
         return write((uint8_t) n);
     }
     uint32_t baudRate();
+    void setDebugOutput(bool);
     operator bool() const;
 
     void enableReboot(bool enable);
