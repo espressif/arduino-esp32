@@ -64,13 +64,47 @@ void tud_cdc_rx_cb(uint8_t itf)
     }
 }
 
+
+static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size){
+    if(itf >= MAX_USB_CDC_DEVICES){
+        return 0;
+    }
+    if(!tud_cdc_n_connected(itf)){
+        return 0;
+    }
+    size_t tosend = size, sofar = 0;
+    while(tosend){
+        uint32_t space = tud_cdc_n_write_available(itf);
+        if(!space){
+            delay(1);
+            continue;
+        }
+        if(tosend < space){
+            space = tosend;
+        }
+        uint32_t sent = tud_cdc_n_write(itf, buffer + sofar, space);
+        if(!sent){
+            return sofar;
+        }
+        sofar += sent;
+        tosend -= sent;
+        tud_cdc_n_write_flush(itf);
+    }
+    return sofar;
+}
+
+static void ARDUINO_ISR_ATTR cdc0_write_char(char c)
+{
+    tinyusb_cdc_write(0, (const uint8_t *)&c, 1);
+}
+
 //void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char);
 
 static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(usb_persist_this_boot()), reboot_enable(true), rx_queue(NULL) {
+USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         devices[itf] = this;
@@ -93,15 +127,6 @@ void USBCDC::begin(size_t rx_queue_len)
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
         return;
-    }
-    if(connected){
-        arduino_usb_cdc_event_data_t p = {0};
-        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_CONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
-
-        arduino_usb_cdc_event_data_t l = {0};
-        l.line_state.dtr = true;
-        l.line_state.rts = true;
-        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_STATE_EVENT, &l, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
     }
 }
 
@@ -167,8 +192,6 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
         l.line_state.dtr = dtr;
         l.line_state.rts = rts;
         arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_STATE_EVENT, &l, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
-    } else {
-        log_d("CDC RESET: itf: %u, dtr: %u, rts: %u, state: %u", itf, dtr, rts, lineState);
     }
 
 }
@@ -193,7 +216,6 @@ void USBCDC::_onRX(){
     uint32_t count = tud_cdc_n_read(itf, buf, CONFIG_USB_CDC_RX_BUFSIZE);
     for(uint32_t i=0; i<count; i++){
         if(rx_queue == NULL || !xQueueSend(rx_queue, buf+i, 0)){
-            log_e("read failed");
             return;
         }
     }
@@ -271,29 +293,7 @@ int USBCDC::availableForWrite(void)
 }
 
 size_t USBCDC::write(const uint8_t *buffer, size_t size){
-    if(itf >= MAX_USB_CDC_DEVICES){
-        return 0;
-    }
-    size_t tosend = size, sofar = 0;
-    while(tosend){
-        uint32_t space = tud_cdc_n_write_available(itf);
-        if(!space){
-            delay(1);
-            continue;
-        }
-        if(tosend < space){
-            space = tosend;
-        }
-        uint32_t sent = tud_cdc_n_write(itf, buffer + sofar, space);
-        if(!sent){
-            log_e("tud_cdc_n_write failed!");
-            return sofar;
-        }
-        sofar += sent;
-        tosend -= sent;
-        tud_cdc_n_write_flush(itf);
-    }
-    return sofar;
+    return tinyusb_cdc_write(itf, buffer, size);
 }
 
 size_t USBCDC::write(uint8_t c)
@@ -307,6 +307,15 @@ size_t USBCDC::write(uint8_t c)
 uint32_t  USBCDC::baudRate()
 {
     return bit_rate;
+}
+
+void USBCDC::setDebugOutput(bool en)
+{
+    if(en) {
+        ets_install_putc1((void (*)(char)) &cdc0_write_char);
+    } else {
+        ets_install_putc1(NULL);
+    }
 }
 
 USBCDC::operator bool() const

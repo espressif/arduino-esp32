@@ -595,9 +595,6 @@ int uartGetDebug()
 
 int log_printf(const char *format, ...)
 {
-    if(s_uart_debug_nr < 0){
-        return 0;
-    }
     static char loc_buf[64];
     char * temp = loc_buf;
     int len;
@@ -615,7 +612,7 @@ int log_printf(const char *format, ...)
     }
     vsnprintf(temp, len+1, format, arg);
 #if !CONFIG_DISABLE_HAL_LOCKS
-    if(_uart_bus_array[s_uart_debug_nr].lock){
+    if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
         ets_printf("%s", temp);
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
