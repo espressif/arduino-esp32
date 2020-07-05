@@ -180,10 +180,10 @@ void BLEClient::gattClientEventHandler(
 		case ESP_GATTC_DISCONNECT_EVT: {
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
-				m_isConnected = false;
-				if (m_pClientCallbacks != nullptr) {
+				if (m_isConnected && m_pClientCallbacks != nullptr) {
 					m_pClientCallbacks->onDisconnect(this);
 				}
+				m_isConnected = false;
 				esp_ble_gattc_app_unregister(m_gattc_if);
 				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
@@ -202,11 +202,13 @@ void BLEClient::gattClientEventHandler(
 		//
 		case ESP_GATTC_OPEN_EVT: {
 			m_conn_id = evtParam->open.conn_id;
-			if (m_pClientCallbacks != nullptr) {
-				m_pClientCallbacks->onConnect(this);
-			}
 			if (evtParam->open.status == ESP_GATT_OK) {
 				m_isConnected = true;   // Flag us as connected.
+				if (m_pClientCallbacks != nullptr) {
+					m_pClientCallbacks->onConnect(this);
+				}
+			} else {
+				log_e("Failed to connect, status=%s", GeneralUtils::errorToString(evtParam->open.status));
 			}
 			m_semaphoreOpenEvt.give(evtParam->open.status);
 			break;
