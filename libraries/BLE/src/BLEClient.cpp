@@ -105,6 +105,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
@@ -122,6 +123,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
