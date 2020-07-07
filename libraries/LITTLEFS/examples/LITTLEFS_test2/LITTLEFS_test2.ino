@@ -2,9 +2,10 @@
 #include "FS.h"
 #include <LITTLEFS.h>
 
-/* You only need to format SPIFFS the first time you run a
+/* You only need to format LITTLEFS the first time you run a
    test or else use the LITTLEFS plugin to create a partition
-   https://github.com/me-no-dev/arduino-esp32fs-plugin */
+   https://github.com/lorol/arduino-esp32littlefs-plugin */
+   
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -35,6 +36,24 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
             Serial.println(file.size());
         }
         file = root.openNextFile();
+    }
+}
+
+void createDir(fs::FS &fs, const char * path){
+    Serial.printf("Creating Dir: %s\n", path);
+    if(fs.mkdir(path)){
+        Serial.println("Dir created");
+    } else {
+        Serial.println("mkdir failed");
+    }
+}
+
+void removeDir(fs::FS &fs, const char * path){
+    Serial.printf("Removing Dir: %s\n", path);
+    if(fs.rmdir(path)){
+        Serial.println("Dir removed");
+    } else {
+        Serial.println("rmdir failed");
     }
 }
 
@@ -166,6 +185,12 @@ void setup(){
     }
     
     listDir(LITTLEFS, "/", 0);
+	createDir(LITTLEFS, "/mydir");
+	writeFile(LITTLEFS, "/mydir/hello2.txt", "Hello2");
+	listDir(LITTLEFS, "/", 1);
+	deleteFile(LITTLEFS, "/mydir/hello2.txt");
+	removeDir(LITTLEFS, "/mydir");
+	listDir(LITTLEFS, "/", 1);
     writeFile(LITTLEFS, "/hello.txt", "Hello ");
     appendFile(LITTLEFS, "/hello.txt", "World!\r\n");
     readFile(LITTLEFS, "/hello.txt");
@@ -174,6 +199,7 @@ void setup(){
     deleteFile(LITTLEFS, "/foo.txt");
     testFileIO(LITTLEFS, "/test.txt");
     deleteFile(LITTLEFS, "/test.txt");
+	
     Serial.println( "Test complete" );
 }
 
