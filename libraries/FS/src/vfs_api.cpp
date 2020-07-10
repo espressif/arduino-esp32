@@ -204,7 +204,7 @@ bool VFSImpl::rmdir(const char *path)
         return false;
     }
     sprintf(temp,"%s%s", _mountpoint, path);
-    auto rc = rmdir(temp);
+    auto rc = ::rmdir(temp);
     free(temp);
     return rc == 0;
 }
