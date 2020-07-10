@@ -183,13 +183,16 @@ bool VFSImpl::rmdir(const char *path)
         log_e("File system is not mounted");
         return false;
     }
-
     VFSFileImpl f(this, path, "r");
-    if(!f || !f.isDirectory()) {
+    if(!f || !f.isDirectory() || _mountpoint == "/spiffs") {
+        if (_mountpoint == "/spiffs") {
+           log_e("rmdir is unnecessary in SPIFFS");
+        } else {
+           log_e("%s does not exists or is a file", path);
+        }
         if(f) {
             f.close();
         }
-        log_e("%s does not exists or is a file", path);
         return false;
     }
     f.close();
@@ -200,7 +203,7 @@ bool VFSImpl::rmdir(const char *path)
         return false;
     }
     sprintf(temp,"%s%s", _mountpoint, path);
-    auto rc = unlink(temp);
+    auto rc = rmdir(temp);
     free(temp);
     return rc == 0;
 }
