@@ -184,8 +184,8 @@ bool VFSImpl::rmdir(const char *path)
         return false;
     }
     VFSFileImpl f(this, path, "r");
-    if(!f || !f.isDirectory() || _mountpoint == "/spiffs") {
-        if (_mountpoint == "/spiffs") {
+    if(!f || !f.isDirectory() || strcmp(_mountpoint, "/spiffs") == 0) {
+        if (strcmp(_mountpoint, "/spiffs") == 0) {
            log_e("rmdir is unnecessary in SPIFFS");
         } else {
            log_e("%s does not exists or is a file", path);
