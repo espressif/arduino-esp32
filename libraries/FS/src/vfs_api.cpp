@@ -190,7 +190,7 @@ bool VFSImpl::rmdir(const char *path)
     }
 
     VFSFileImpl f(this, path, "r");
-    if(!f || !f.isDirectory()) == 0) {
+    if(!f || !f.isDirectory()) {
         log_e("%s does not exists or is a file", path);
         if(f) {
             f.close();
