@@ -183,6 +183,7 @@ bool VFSImpl::rmdir(const char *path)
         log_e("File system is not mounted");
         return false;
     }
+
     VFSFileImpl f(this, path, "r");
     if(!f || !f.isDirectory() || strcmp(_mountpoint, "/spiffs") == 0) {
         if (strcmp(_mountpoint, "/spiffs") == 0) {
