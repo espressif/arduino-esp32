@@ -142,10 +142,10 @@ set(includedirs
   libraries/Wire/src
   )
 
-set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
-set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt tinyusb main)
+set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
+
+set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet esp_adc_cal wifi_provisioning)
+set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
