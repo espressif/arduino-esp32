@@ -26,8 +26,16 @@
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#define VAL(str) #str
+#define TOSTRING(str) VAL(str)
+//@author  Kevin Harrington
+#if defined(__IN_ECLIPSE__)
+#include TOSTRING(MBEDTLS_CONFIG_FILE) //sloeber style
+#else
+#include MBEDTLS_CONFIG_FILE // legacy arduino style
 #endif
+#endif
+
 
 #include <stddef.h>
 #include <stdint.h>
