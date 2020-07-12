@@ -17,11 +17,11 @@
 
 #include "soc.h"
 #define EFUSE_BLK0_RDATA0_REG          (DR_REG_EFUSE_BASE + 0x000)
-/* EFUSE_RD_FLASH_CRYPT_CNT : RO ;bitpos:[27:20] ;default: 8'b0 ; */
+/* EFUSE_RD_FLASH_CRYPT_CNT : RO ;bitpos:[26:20] ;default: 7'b0 ; */
 /*description: read for flash_crypt_cnt*/
-#define EFUSE_RD_FLASH_CRYPT_CNT  0x000000FF
+#define EFUSE_RD_FLASH_CRYPT_CNT  0x0000007F
 #define EFUSE_RD_FLASH_CRYPT_CNT_M  ((EFUSE_RD_FLASH_CRYPT_CNT_V)<<(EFUSE_RD_FLASH_CRYPT_CNT_S))
-#define EFUSE_RD_FLASH_CRYPT_CNT_V  0xFF
+#define EFUSE_RD_FLASH_CRYPT_CNT_V  0x7F
 #define EFUSE_RD_FLASH_CRYPT_CNT_S  20
 /* EFUSE_RD_EFUSE_RD_DIS : RO ;bitpos:[19:16] ;default: 4'b0 ; */
 /*description: read for efuse_rd_disable*/
@@ -79,21 +79,33 @@
 #define EFUSE_RD_WIFI_MAC_CRC_HIGH_S  0
 
 #define EFUSE_BLK0_RDATA3_REG          (DR_REG_EFUSE_BASE + 0x00c)
-/* EFUSE_RD_CHIP_VER_REV1 : R/W ;bitpos:[16] ;default: 1'b0 ; */
+/* EFUSE_RD_CHIP_VER_REV1 : R/W ;bitpos:[15] ;default: 1'b0 ; */
 /*description: bit is set to 1 for rev1 silicon*/
 #define EFUSE_RD_CHIP_VER_REV1  (BIT(15))
 #define EFUSE_RD_CHIP_VER_REV1_M  ((EFUSE_RD_CHIP_VER_REV1_V)<<(EFUSE_RD_CHIP_VER_REV1_S))
 #define EFUSE_RD_CHIP_VER_REV1_V  0x1
 #define EFUSE_RD_CHIP_VER_REV1_S  15
-/* EFUSE_RD_CHIP_VER_RESERVE : R/W ;bitpos:[15:12] ;default: 3'b0 ; */
-/*description: */
-#define EFUSE_RD_CHIP_VER_RESERVE  0x00000007
-#define EFUSE_RD_CHIP_VER_RESERVE_M  ((EFUSE_RD_CHIP_VER_RESERVE_V)<<(EFUSE_RD_CHIP_VER_RESERVE_S))
-#define EFUSE_RD_CHIP_VER_RESERVE_V  0x7
-#define EFUSE_RD_CHIP_VER_RESERVE_S  12
-/* EFUSE_RD_CHIP_VER : R/W ;bitpos:[11:9] ;default: 3'b0 ; */
+/* EFUSE_RD_BLK3_PART_RESERVE : R/W ; bitpos:[14] ; default: 1'b0; */
+/*description: If set, this bit indicates that BLOCK3[143:96] is reserved for internal use*/
+#define EFUSE_RD_BLK3_PART_RESERVE  (BIT(14))
+#define EFUSE_RD_BLK3_PART_RESERVE_M  ((EFUSE_RD_BLK3_PART_RESERVE_V)<<(EFUSE_RD_BLK3_PART_RESERVE_S))
+#define EFUSE_RD_BLK3_PART_RESERVE_V  0x1
+#define EFUSE_RD_BLK3_PART_RESERVE_S  14
+/* EFUSE_RD_CHIP_CPU_FREQ_RATED : R/W ;bitpos:[13] ;default: 1'b0 ; */
+/*description: If set, the ESP32's maximum CPU frequency has been rated*/
+#define EFUSE_RD_CHIP_CPU_FREQ_RATED  (BIT(13))
+#define EFUSE_RD_CHIP_CPU_FREQ_RATED_M  ((EFUSE_RD_CHIP_CPU_FREQ_RATED_V)<<(EFUSE_RD_CHIP_CPU_FREQ_RATED_S))
+#define EFUSE_RD_CHIP_CPU_FREQ_RATED_V  0x1
+#define EFUSE_RD_CHIP_CPU_FREQ_RATED_S  13
+/* EFUSE_RD_CHIP_CPU_FREQ_LOW : R/W ;bitpos:[12] ;default: 1'b0 ; */
+/*description: If set alongside EFUSE_RD_CHIP_CPU_FREQ_RATED, the ESP32's max CPU frequency is rated for 160MHz. 240MHz otherwise*/
+#define EFUSE_RD_CHIP_CPU_FREQ_LOW  (BIT(12))
+#define EFUSE_RD_CHIP_CPU_FREQ_LOW_M  ((EFUSE_RD_CHIP_CPU_FREQ_LOW_V)<<(EFUSE_RD_CHIP_CPU_FREQ_LOW_S))
+#define EFUSE_RD_CHIP_CPU_FREQ_LOW_V  0x1
+#define EFUSE_RD_CHIP_CPU_FREQ_LOW_S  12
+/* EFUSE_RD_CHIP_VER_PKG : R/W ;bitpos:[11:9] ;default: 3'b0 ; */
 /*description: chip package */
-#define EFUSE_RD_CHIP_VER  0x00000007
+#define EFUSE_RD_CHIP_VER_PKG  0x00000007
 #define EFUSE_RD_CHIP_VER_PKG_M  ((EFUSE_RD_CHIP_VER_PKG_V)<<(EFUSE_RD_CHIP_VER_PKG_S))
 #define EFUSE_RD_CHIP_VER_PKG_V  0x7
 #define EFUSE_RD_CHIP_VER_PKG_S  9
@@ -152,6 +164,15 @@
 #define EFUSE_RD_XPD_SDIO_REG_M  (BIT(14))
 #define EFUSE_RD_XPD_SDIO_REG_V  0x1
 #define EFUSE_RD_XPD_SDIO_REG_S  14
+/* EFUSE_RD_ADC_VREF : R/W ;bitpos:[12:8] ;default: 5'b0 ; */
+/*description: True ADC reference voltage */
+#define EFUSE_RD_ADC_VREF  0x0000001F
+#define EFUSE_RD_ADC_VREF_M  ((EFUSE_RD_ADC_VREF_V)<<(EFUSE_RD_ADC_VREF_S))
+#define EFUSE_RD_ADC_VREF_V  0x1F
+#define EFUSE_RD_ADC_VREF_S  8
+/* Note: EFUSE_ADC_VREF and SDIO_DREFH/M/L share the same address space. Newer
+ * versions of ESP32 come with EFUSE_ADC_VREF already burned, therefore
+ * SDIO_DREFH/M/L is only available in older versions of ESP32 */
 /* EFUSE_RD_SDIO_DREFL : RO ;bitpos:[13:12] ;default: 2'b0 ; */
 /*description: */
 #define EFUSE_RD_SDIO_DREFL  0x00000003
@@ -184,12 +205,28 @@
 #define EFUSE_RD_FLASH_CRYPT_CONFIG_M  ((EFUSE_RD_FLASH_CRYPT_CONFIG_V)<<(EFUSE_RD_FLASH_CRYPT_CONFIG_S))
 #define EFUSE_RD_FLASH_CRYPT_CONFIG_V  0xF
 #define EFUSE_RD_FLASH_CRYPT_CONFIG_S  28
+/* EFUSE_RD_DIG_VOL_L6: RO; bitpos:[27:24]; */
+/*descritpion: This field stores the difference between the digital regulator voltage at level6 and 1.2 V. (RO) 
+  BIT[27] is the sign bit, 0: + , 1: -
+  BIT[26:24] is the difference value, unit: 0.017V 
+  volt_lv6 = BIT[27] ? 1.2 - BIT[26:24] * 0.017 : 1.2 + BIT[26:24] * 0.017     */
+#define EFUSE_RD_DIG_VOL_L6          0x0F
+#define EFUSE_RD_DIG_VOL_L6_M        ((EFUSE_RD_DIG_VOL_L6_V)<<(EFUSE_RD_DIG_VOL_L6_S))
+#define EFUSE_RD_DIG_VOL_L6_V        0x0F
+#define EFUSE_RD_DIG_VOL_L6_S        24
+/* EFUSE_RD_VOL_LEVEL_HP_INV: RO; bitpos:[23:22] */
+/*description: This field stores the voltage level for CPU to run at 240 MHz, or for flash/PSRAM to run at 80 MHz. 
+0x0: level 7; 0x1: level 6; 0x2: level 5; 0x3: level 4. (RO)*/
+#define EFUSE_RD_VOL_LEVEL_HP_INV    0x03
+#define EFUSE_RD_VOL_LEVEL_HP_INV_M  ((EFUSE_RD_VOL_LEVEL_HP_INV_V)<<(EFUSE_RD_VOL_LEVEL_HP_INV_S))
+#define EFUSE_RD_VOL_LEVEL_HP_INV_V  0x03
+#define EFUSE_RD_VOL_LEVEL_HP_INV_S  22
 /* EFUSE_RD_INST_CONFIG : RO ;bitpos:[27:20] ;default: 8'b0 ; */
-/*description: */
-#define EFUSE_RD_INST_CONFIG  0x000000FF
-#define EFUSE_RD_INST_CONFIG_M  ((EFUSE_RD_INST_CONFIG_V)<<(EFUSE_RD_INST_CONFIG_S))
-#define EFUSE_RD_INST_CONFIG_V  0xFF
-#define EFUSE_RD_INST_CONFIG_S  20
+/* Deprecated */
+#define EFUSE_RD_INST_CONFIG  0x000000FF                                              /** Deprecated **/
+#define EFUSE_RD_INST_CONFIG_M  ((EFUSE_RD_INST_CONFIG_V)<<(EFUSE_RD_INST_CONFIG_S))  /** Deprecated **/
+#define EFUSE_RD_INST_CONFIG_V  0xFF                                                  /** Deprecated **/
+#define EFUSE_RD_INST_CONFIG_S  20                                                    /** Deprecated **/
 /* EFUSE_RD_SPI_PAD_CONFIG_CS0 : RO ;bitpos:[19:15] ;default: 5'b0 ; */
 /*description: read for SPI_pad_config_cs0*/
 #define EFUSE_RD_SPI_PAD_CONFIG_CS0  0x0000001F
@@ -277,12 +314,16 @@
 #define EFUSE_RD_CODING_SCHEME_V  0x3
 #define EFUSE_RD_CODING_SCHEME_S  0
 
+#define EFUSE_CODING_SCHEME_VAL_NONE 0x0
+#define EFUSE_CODING_SCHEME_VAL_34   0x1
+#define EFUSE_CODING_SCHEME_VAL_REPEAT   0x2
+
 #define EFUSE_BLK0_WDATA0_REG          (DR_REG_EFUSE_BASE + 0x01c)
-/* EFUSE_FLASH_CRYPT_CNT : R/W ;bitpos:[27:20] ;default: 8'b0 ; */
+/* EFUSE_FLASH_CRYPT_CNT : R/W ;bitpos:[26:20] ;default: 7'b0 ; */
 /*description: program for flash_crypt_cnt*/
-#define EFUSE_FLASH_CRYPT_CNT  0x000000FF
+#define EFUSE_FLASH_CRYPT_CNT  0x0000007F
 #define EFUSE_FLASH_CRYPT_CNT_M  ((EFUSE_FLASH_CRYPT_CNT_V)<<(EFUSE_FLASH_CRYPT_CNT_S))
-#define EFUSE_FLASH_CRYPT_CNT_V  0xFF
+#define EFUSE_FLASH_CRYPT_CNT_V  0x7F
 #define EFUSE_FLASH_CRYPT_CNT_S  20
 /* EFUSE_RD_DIS : R/W ;bitpos:[19:16] ;default: 4'b0 ; */
 /*description: program for efuse_rd_disable*/
@@ -314,24 +355,41 @@
 #define EFUSE_WIFI_MAC_CRC_HIGH_S  0
 
 #define EFUSE_BLK0_WDATA3_REG          (DR_REG_EFUSE_BASE + 0x028)
-/* EFUSE_CHIP_VER_REV1 : R/W ;bitpos:[16] ;default: 1'b0 ; */
+/* EFUSE_CHIP_VER_REV1 : R/W ;bitpos:[15] ;default: 1'b0 ; */
 /*description: */
 #define EFUSE_CHIP_VER_REV1  (BIT(15))
 #define EFUSE_CHIP_VER_REV1_M  ((EFUSE_CHIP_VER_REV1_V)<<(EFUSE_CHIP_VER_REV1_S))
 #define EFUSE_CHIP_VER_REV1_V  0x1
 #define EFUSE_CHIP_VER_REV1_S  15
-/* EFUSE_CHIP_VER_RESERVE : R/W ;bitpos:[15:12] ;default: 3'b0 ; */
-/*description: */
-#define EFUSE_CHIP_VER_RESERVE  0x00000007
-#define EFUSE_CHIP_VER_RESERVE_M  ((EFUSE_CHIP_VER_RESERVE_V)<<(EFUSE_CHIP_VER_RESERVE_S))
-#define EFUSE_CHIP_VER_RESERVE_V  0x7
-#define EFUSE_CHIP_VER_RESERVE_S  12
-/* EFUSE_CHIP_VER : R/W ;bitpos:[11:9] ;default: 3'b0 ; */
+/* EFUSE_BLK3_PART_RESERVE : R/W ; bitpos:[14] ; default: 1'b0; */
+/*description: If set, this bit indicates that BLOCK3[143:96] is reserved for internal use*/
+#define EFUSE_BLK3_PART_RESERVE  (BIT(14))
+#define EFUSE_BLK3_PART_RESERVE_M  ((EFUSE_BLK3_PART_RESERVE_V)<<(EFUSE_BLK3_PART_RESERVE_S))
+#define EFUSE_BLK3_PART_RESERVE_V  0x1
+#define EFUSE_BLK3_PART_RESERVE_S  14
+/* EFUSE_CHIP_CPU_FREQ_RATED : R/W ;bitpos:[13] ;default: 1'b0 ; */
+/*description: If set, the ESP32's maximum CPU frequency has been rated*/
+#define EFUSE_CHIP_CPU_FREQ_RATED  (BIT(13))
+#define EFUSE_CHIP_CPU_FREQ_RATED_M  ((EFUSE_CHIP_CPU_FREQ_RATED_V)<<(EFUSE_CHIP_CPU_FREQ_RATED_S))
+#define EFUSE_CHIP_CPU_FREQ_RATED_V  0x1
+#define EFUSE_CHIP_CPU_FREQ_RATED_S  13
+/* EFUSE_CHIP_CPU_FREQ_LOW : R/W ;bitpos:[12] ;default: 1'b0 ; */
+/*description: If set alongside EFUSE_CHIP_CPU_FREQ_RATED, the ESP32's max CPU frequency is rated for 160MHz. 240MHz otherwise*/
+#define EFUSE_CHIP_CPU_FREQ_LOW  (BIT(12))
+#define EFUSE_CHIP_CPU_FREQ_LOW_M  ((EFUSE_CHIP_CPU_FREQ_LOW_V)<<(EFUSE_CHIP_CPU_FREQ_LOW_S))
+#define EFUSE_CHIP_CPU_FREQ_LOW_V  0x1
+#define EFUSE_CHIP_CPU_FREQ_LOW_S  12
+/* EFUSE_CHIP_VER_PKG : R/W ;bitpos:[11:9] ;default: 3'b0 ; */
 /*description: */
 #define EFUSE_CHIP_VER_PKG  0x00000007
 #define EFUSE_CHIP_VER_PKG_M  ((EFUSE_CHIP_VER_PKG_V)<<(EFUSE_CHIP_VER_PKG_S))
 #define EFUSE_CHIP_VER_PKG_V  0x7
 #define EFUSE_CHIP_VER_PKG_S  9
+#define EFUSE_CHIP_VER_PKG_ESP32D0WDQ6  0
+#define EFUSE_CHIP_VER_PKG_ESP32D0WDQ5  1
+#define EFUSE_CHIP_VER_PKG_ESP32D2WDQ5  2
+#define EFUSE_CHIP_VER_PKG_ESP32PICOD2  4
+#define EFUSE_CHIP_VER_PKG_ESP32PICOD4  5
 /* EFUSE_SPI_PAD_CONFIG_HD : R/W ;bitpos:[8:4] ;default: 5'b0 ; */
 /*description: program for SPI_pad_config_hd*/
 #define EFUSE_SPI_PAD_CONFIG_HD  0x0000001F
@@ -382,6 +440,15 @@
 #define EFUSE_XPD_SDIO_REG_M  (BIT(14))
 #define EFUSE_XPD_SDIO_REG_V  0x1
 #define EFUSE_XPD_SDIO_REG_S  14
+/* EFUSE_ADC_VREF : R/W ;bitpos:[12:8] ;default: 5'b0 ; */
+/*description: True ADC reference voltage */
+#define EFUSE_ADC_VREF  0x0000001F
+#define EFUSE_ADC_VREF_M  ((EFUSE_ADC_VREF_V)<<(EFUSE_ADC_VREF_S))
+#define EFUSE_ADC_VREF_V  0x1F
+#define EFUSE_ADC_VREF_S  8
+/* Note: EFUSE_ADC_VREF and SDIO_DREFH/M/L share the same address space. Newer
+ * versions of ESP32 come with EFUSE_ADC_VREF already burned, therefore
+ * SDIO_DREFH/M/L is only available in older versions of ESP32 */
 /* EFUSE_SDIO_DREFL : R/W ;bitpos:[13:12] ;default: 2'b0 ; */
 /*description: */
 #define EFUSE_SDIO_DREFL  0x00000003
@@ -414,12 +481,28 @@
 #define EFUSE_FLASH_CRYPT_CONFIG_M  ((EFUSE_FLASH_CRYPT_CONFIG_V)<<(EFUSE_FLASH_CRYPT_CONFIG_S))
 #define EFUSE_FLASH_CRYPT_CONFIG_V  0xF
 #define EFUSE_FLASH_CRYPT_CONFIG_S  28
+/* EFUSE_DIG_VOL_L6: R/W; bitpos:[27:24]; */
+/*descritpion: This field stores the difference between the digital regulator voltage at level6 and 1.2 V. (R/W) 
+  BIT[27] is the sign bit, 0: + , 1: -
+  BIT[26:24] is the difference value, unit: 0.017V 
+  volt_lv6 = BIT[27] ? 1.2 - BIT[26:24] * 0.017 : 1.2 + BIT[26:24] * 0.017     */
+#define EFUSE_DIG_VOL_L6            0x0F
+#define EFUSE_DIG_VOL_L6_M          ((EFUSE_RD_DIG_VOL_L6_V)<<(EFUSE_RD_DIG_VOL_L6_S))
+#define EFUSE_DIG_VOL_L6_V          0x0F
+#define EFUSE_DIG_VOL_L6_S          24
+/* EFUSE_VOL_LEVEL_HP_INV: R/W; bitpos:[23:22] */
+/*description: This field stores the voltage level for CPU to run at 240 MHz, or for flash/PSRAM to run at 80 MHz. 
+0x0: level 7; 0x1: level 6; 0x2: level 5; 0x3: level 4. (R/W)*/
+#define EFUSE_VOL_LEVEL_HP_INV      0x03
+#define EFUSE_VOL_LEVEL_HP_INV_M    ((EFUSE_RD_VOL_LEVEL_HP_INV_V)<<(EFUSE_RD_VOL_LEVEL_HP_INV_S))
+#define EFUSE_VOL_LEVEL_HP_INV_V    0x03
+#define EFUSE_VOL_LEVEL_HP_INV_S    22
 /* EFUSE_INST_CONFIG : R/W ;bitpos:[27:20] ;default: 8'b0 ; */
-/*description: */
-#define EFUSE_INST_CONFIG  0x000000FF
-#define EFUSE_INST_CONFIG_M  ((EFUSE_INST_CONFIG_V)<<(EFUSE_INST_CONFIG_S))
-#define EFUSE_INST_CONFIG_V  0xFF
-#define EFUSE_INST_CONFIG_S  20
+/* Deprecated */
+#define EFUSE_INST_CONFIG  0x000000FF                                        /** Deprecated **/
+#define EFUSE_INST_CONFIG_M  ((EFUSE_INST_CONFIG_V)<<(EFUSE_INST_CONFIG_S))  /** Deprecated **/
+#define EFUSE_INST_CONFIG_V  0xFF                                            /** Deprecated **/
+#define EFUSE_INST_CONFIG_S  20                                              /** Deprecated **/
 /* EFUSE_SPI_PAD_CONFIG_CS0 : R/W ;bitpos:[19:15] ;default: 5'b0 ; */
 /*description: program for SPI_pad_config_cs0*/
 #define EFUSE_SPI_PAD_CONFIG_CS0  0x0000001F
@@ -659,6 +742,8 @@
 #define EFUSE_BLK3_DOUT2_V  0xFFFFFFFF
 #define EFUSE_BLK3_DOUT2_S  0
 
+/* Note: Newer ESP32s utilize BLK3_DATA3 and parts of BLK3_DATA4 for calibration
+ * purposes. This usage is indicated by the EFUSE_RD_BLK3_PART_RESERVE bit.*/
 #define EFUSE_BLK3_RDATA3_REG          (DR_REG_EFUSE_BASE + 0x084)
 /* EFUSE_BLK3_DOUT3 : RO ;bitpos:[31:0] ;default: 32'h0 ; */
 /*description: read for BLOCK3*/
@@ -666,6 +751,30 @@
 #define EFUSE_BLK3_DOUT3_M  ((EFUSE_BLK3_DOUT3_V)<<(EFUSE_BLK3_DOUT3_S))
 #define EFUSE_BLK3_DOUT3_V  0xFFFFFFFF
 #define EFUSE_BLK3_DOUT3_S  0
+/* EFUSE_RD_ADC2_TP_HIGH : R/W ;bitpos:[31:23] ;default: 9'b0 ; */
+/*description: ADC2 Two Point calibration high point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_RD_ADC2_TP_HIGH  0x1FF
+#define EFUSE_RD_ADC2_TP_HIGH_M  ((EFUSE_RD_ADC2_TP_HIGH_V)<<(EFUSE_RD_ADC2_TP_HIGH_S))
+#define EFUSE_RD_ADC2_TP_HIGH_V  0x1FF
+#define EFUSE_RD_ADC2_TP_HIGH_S  23
+/* EFUSE_RD_ADC2_TP_LOW : R/W ;bitpos:[22:16] ;default: 7'b0 ; */
+/*description: ADC2 Two Point calibration low point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_RD_ADC2_TP_LOW  0x7F
+#define EFUSE_RD_ADC2_TP_LOW_M  ((EFUSE_RD_ADC2_TP_LOW_V)<<(EFUSE_RD_ADC2_TP_LOW_S))
+#define EFUSE_RD_ADC2_TP_LOW_V  0x7F
+#define EFUSE_RD_ADC2_TP_LOW_S  16
+/* EFUSE_RD_ADC1_TP_HIGH : R/W ;bitpos:[15:7] ;default: 9'b0 ; */
+/*description: ADC1 Two Point calibration high point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_RD_ADC1_TP_HIGH  0x1FF
+#define EFUSE_RD_ADC1_TP_HIGH_M  ((EFUSE_RD_ADC1_TP_HIGH_V)<<(EFUSE_RD_ADC1_TP_HIGH_S))
+#define EFUSE_RD_ADC1_TP_HIGH_V  0x1FF
+#define EFUSE_RD_ADC1_TP_HIGH_S  7
+/* EFUSE_RD_ADC1_TP_LOW : R/W ;bitpos:[6:0] ;default: 7'b0 ; */
+/*description: ADC1 Two Point calibration low point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_RD_ADC1_TP_LOW  0x7F
+#define EFUSE_RD_ADC1_TP_LOW_M  ((EFUSE_RD_ADC1_TP_LOW_V)<<(EFUSE_RD_ADC1_TP_LOW_S))
+#define EFUSE_RD_ADC1_TP_LOW_V  0x7F
+#define EFUSE_RD_ADC1_TP_LOW_S  0
 
 #define EFUSE_BLK3_RDATA4_REG          (DR_REG_EFUSE_BASE + 0x088)
 /* EFUSE_BLK3_DOUT4 : RO ;bitpos:[31:0] ;default: 32'h0 ; */
@@ -674,6 +783,12 @@
 #define EFUSE_BLK3_DOUT4_M  ((EFUSE_BLK3_DOUT4_V)<<(EFUSE_BLK3_DOUT4_S))
 #define EFUSE_BLK3_DOUT4_V  0xFFFFFFFF
 #define EFUSE_BLK3_DOUT4_S  0
+/* EFUSE_RD_CAL_RESERVED: R/W ; bitpos:[0:15] ; default : 16'h0 ; */
+/*description: Reserved for future calibration use. Indicated by EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_RD_CAL_RESERVED  0x0000FFFF
+#define EFUSE_RD_CAL_RESERVED_M  ((EFUSE_RD_CAL_RESERVED_V)<<(EFUSE_RD_CAL_RESERVED_S))
+#define EFUSE_RD_CAL_RESERVED_V  0xFFFF
+#define EFUSE_RD_CAL_RESERVED_S  0
 
 #define EFUSE_BLK3_RDATA5_REG          (DR_REG_EFUSE_BASE + 0x08c)
 /* EFUSE_BLK3_DOUT5 : RO ;bitpos:[31:0] ;default: 32'h0 ; */
@@ -851,6 +966,8 @@
 #define EFUSE_BLK3_DIN2_V  0xFFFFFFFF
 #define EFUSE_BLK3_DIN2_S  0
 
+/* Note: Newer ESP32s utilize BLK3_DATA3 and parts of BLK3_DATA4 for calibration
+ * purposes. This usage is indicated by the EFUSE_RD_BLK3_PART_RESERVE bit.*/
 #define EFUSE_BLK3_WDATA3_REG          (DR_REG_EFUSE_BASE + 0x0e4)
 /* EFUSE_BLK3_DIN3 : R/W ;bitpos:[31:0] ;default: 32'h0 ; */
 /*description: program for BLOCK3*/
@@ -858,6 +975,30 @@
 #define EFUSE_BLK3_DIN3_M  ((EFUSE_BLK3_DIN3_V)<<(EFUSE_BLK3_DIN3_S))
 #define EFUSE_BLK3_DIN3_V  0xFFFFFFFF
 #define EFUSE_BLK3_DIN3_S  0
+/* EFUSE_ADC2_TP_HIGH : R/W ;bitpos:[31:23] ;default: 9'b0 ; */
+/*description: ADC2 Two Point calibration high point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_ADC2_TP_HIGH  0x1FF
+#define EFUSE_ADC2_TP_HIGH_M  ((EFUSE_ADC2_TP_HIGH_V)<<(EFUSE_ADC2_TP_HIGH_S))
+#define EFUSE_ADC2_TP_HIGH_V  0x1FF
+#define EFUSE_ADC2_TP_HIGH_S  23
+/* EFUSE_ADC2_TP_LOW : R/W ;bitpos:[22:16] ;default: 7'b0 ; */
+/*description: ADC2 Two Point calibration low point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_ADC2_TP_LOW  0x7F
+#define EFUSE_ADC2_TP_LOW_M  ((EFUSE_ADC2_TP_LOW_V)<<(EFUSE_ADC2_TP_LOW_S))
+#define EFUSE_ADC2_TP_LOW_V  0x7F
+#define EFUSE_ADC2_TP_LOW_S  16
+/* EFUSE_ADC1_TP_HIGH : R/W ;bitpos:[15:7] ;default: 9'b0 ; */
+/*description: ADC1 Two Point calibration high point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_ADC1_TP_HIGH  0x1FF
+#define EFUSE_ADC1_TP_HIGH_M  ((EFUSE_ADC1_TP_HIGH_V)<<(EFUSE_ADC1_TP_HIGH_S))
+#define EFUSE_ADC1_TP_HIGH_V  0x1FF
+#define EFUSE_ADC1_TP_HIGH_S  7
+/* EFUSE_ADC1_TP_LOW : R/W ;bitpos:[6:0] ;default: 7'b0 ; */
+/*description: ADC1 Two Point calibration low point. Only valid if EFUSE_RD_BLK3_PART_RESERVE */
+#define EFUSE_ADC1_TP_LOW  0x7F
+#define EFUSE_ADC1_TP_LOW_M  ((EFUSE_ADC1_TP_LOW_V)<<(EFUSE_ADC1_TP_LOW_S))
+#define EFUSE_ADC1_TP_LOW_V  0x7F
+#define EFUSE_ADC1_TP_LOW_S  0
 
 #define EFUSE_BLK3_WDATA4_REG          (DR_REG_EFUSE_BASE + 0x0e8)
 /* EFUSE_BLK3_DIN4 : R/W ;bitpos:[31:0] ;default: 32'h0 ; */
@@ -866,6 +1007,12 @@
 #define EFUSE_BLK3_DIN4_M  ((EFUSE_BLK3_DIN4_V)<<(EFUSE_BLK3_DIN4_S))
 #define EFUSE_BLK3_DIN4_V  0xFFFFFFFF
 #define EFUSE_BLK3_DIN4_S  0
+/* EFUSE_CAL_RESERVED: R/W ; bitpos:[0:15] ; default : 16'h0 ; */
+/*description: Reserved for future calibration use. Indicated by EFUSE_BLK3_PART_RESERVE */
+#define EFUSE_CAL_RESERVED  0x0000FFFF
+#define EFUSE_CAL_RESERVED_M  ((EFUSE_CAL_RESERVED_V)<<(EFUSE_CAL_RESERVED_S))
+#define EFUSE_CAL_RESERVED_V  0xFFFF
+#define EFUSE_CAL_RESERVED_S  0
 
 #define EFUSE_BLK3_WDATA5_REG          (DR_REG_EFUSE_BASE + 0x0ec)
 /* EFUSE_BLK3_DIN5 : R/W ;bitpos:[31:0] ;default: 32'h0 ; */

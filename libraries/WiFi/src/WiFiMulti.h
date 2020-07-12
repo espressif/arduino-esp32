@@ -27,19 +27,7 @@
 #define WIFICLIENTMULTI_H_
 
 #include "WiFi.h"
-#undef min
-#undef max
 #include <vector>
-
-#ifdef DEBUG_ESP_WIFI
-#ifdef DEBUG_ESP_PORT
-#define DEBUG_WIFI_MULTI(...) DEBUG_ESP_PORT.printf( __VA_ARGS__ )
-#endif
-#endif
-
-#ifndef DEBUG_WIFI_MULTI
-#define DEBUG_WIFI_MULTI(...)
-#endif
 
 typedef struct {
     char * ssid;
@@ -54,13 +42,10 @@ public:
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
 
-    uint8_t run(void);
+    uint8_t run(uint32_t connectTimeout=5000);
 
 private:
     std::vector<WifiAPlist_t> APlist;
-    bool APlistAdd(const char* ssid, const char *passphrase = NULL);
-    void APlistClean(void);
-
 };
 
 #endif /* WIFICLIENTMULTI_H_ */

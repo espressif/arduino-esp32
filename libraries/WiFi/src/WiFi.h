@@ -1,5 +1,5 @@
 /*
- ESP8266WiFi.h - esp8266 Wifi support.
+ WiFi.h - esp32 Wifi support.
  Based on WiFi.h from Arduino WiFi shield library.
  Copyright (c) 2011-2014 Arduino.  All right reserved.
  Modified by Ivan Grokhotkov, December 2014

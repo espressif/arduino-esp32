@@ -55,6 +55,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 void uartEnd(uart_t* uart);
 
 uint32_t uartAvailable(uart_t* uart);
+uint32_t uartAvailableForWrite(uart_t* uart);
 uint8_t uartRead(uart_t* uart);
 uint8_t uartPeek(uart_t* uart);
 
@@ -62,12 +63,20 @@ void uartWrite(uart_t* uart, uint8_t c);
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len);
 
 void uartFlush(uart_t* uart);
+void uartFlushTxOnly(uart_t* uart, bool txOnly );
 
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
+size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
+
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
+
+void uartStartDetectBaudrate(uart_t *uart);
+unsigned long uartDetectBaudrate(uart_t *uart);
+
+bool uartRxActive(uart_t* uart);
 
 #ifdef __cplusplus
 }

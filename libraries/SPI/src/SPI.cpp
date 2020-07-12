@@ -31,7 +31,7 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_ss(-1)
     ,_div(0)
     ,_freq(1000000)
-    , _inTransaction(false)
+    ,_inTransaction(false)
 {}
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -107,6 +107,11 @@ void SPIClass::setClockDivider(uint32_t clockDiv)
 {
     _div = clockDiv;
     spiSetClockDiv(_spi, _div);
+}
+
+uint32_t SPIClass::getClockDivider()
+{
+    return spiGetClockDiv(_spi);
 }
 
 void SPIClass::setDataMode(uint8_t dataMode)
@@ -199,7 +204,7 @@ void SPIClass::transferBits(uint32_t data, uint32_t * out, uint8_t bits)
  * @param data uint8_t *
  * @param size uint32_t
  */
-void SPIClass::writeBytes(uint8_t * data, uint32_t size)
+void SPIClass::writeBytes(const uint8_t * data, uint32_t size)
 {
     if(_inTransaction){
         return spiWriteNL(_spi, data, size);
@@ -207,6 +212,11 @@ void SPIClass::writeBytes(uint8_t * data, uint32_t size)
     spiSimpleTransaction(_spi);
     spiWriteNL(_spi, data, size);
     spiEndTransaction(_spi);
+}
+
+void SPIClass::transfer(uint8_t * data, uint32_t size) 
+{ 
+	transferBytes(data, data, size); 
 }
 
 /**
@@ -228,7 +238,7 @@ void SPIClass::writePixels(const void * data, uint32_t size)
  * @param out  uint8_t * output buffer. can be NULL for Write Only operation
  * @param size uint32_t
  */
-void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
+void SPIClass::transferBytes(const uint8_t * data, uint8_t * out, uint32_t size)
 {
     if(_inTransaction){
         return spiTransferBytesNL(_spi, data, out, size);
@@ -241,7 +251,7 @@ void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
  * @param size uint8_t  max for size is 64Byte
  * @param repeat uint32_t
  */
-void SPIClass::writePattern(uint8_t * data, uint8_t size, uint32_t repeat)
+void SPIClass::writePattern(const uint8_t * data, uint8_t size, uint32_t repeat)
 {
     if(size > 64) {
         return;    //max Hardware FIFO
@@ -262,12 +272,12 @@ void SPIClass::writePattern(uint8_t * data, uint8_t size, uint32_t repeat)
     }
 }
 
-void SPIClass::writePattern_(uint8_t * data, uint8_t size, uint8_t repeat)
+void SPIClass::writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat)
 {
     uint8_t bytes = (size * repeat);
     uint8_t buffer[64];
     uint8_t * bufferPtr = &buffer[0];
-    uint8_t * dataPtr;
+    const uint8_t * dataPtr;
     uint8_t dataSize = bytes;
     for(uint8_t i = 0; i < repeat; i++) {
         dataSize = size;

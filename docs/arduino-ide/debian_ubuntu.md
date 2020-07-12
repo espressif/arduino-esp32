@@ -16,20 +16,21 @@ Installation instructions for Debian / Ubuntu OS
   cd esp32 && \
   git submodule update --init --recursive && \
   cd tools && \
-  python2 get.py
+  python3 get.py
   ```
 - Restart Arduino IDE
 
 
 
-- If you have Arduino.app installed to /Applications/, modify the installation as follows, beginning at `mkdir -p ~/Arduino...`:
+- If you have Arduino installed to ~/, modify the installation as follows, beginning at `mkdir -p ~/Arduino/hardware`:
 
-```bash
-  cd /Applications/Arduino_*/Contents/java/hardware/
+  ```bash
+  cd ~/Arduino/hardware
   mkdir -p espressif && \
   cd espressif && \
   git clone https://github.com/espressif/arduino-esp32.git esp32 && \
   cd esp32 && \
   git submodule update --init --recursive && \
   cd tools && \
-  python2 get.py```
+  python3 get.py
+  ```

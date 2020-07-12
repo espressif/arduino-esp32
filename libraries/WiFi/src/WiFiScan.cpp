@@ -22,6 +22,7 @@
 
  */
 
+
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiScan.h"
@@ -42,9 +43,8 @@ extern "C" {
 }
 
 bool WiFiScanClass::_scanAsync = false;
-bool WiFiScanClass::_scanStarted = false;
-bool WiFiScanClass::_scanComplete = false;
-
+uint32_t WiFiScanClass::_scanStarted = 0;
+uint32_t WiFiScanClass::_scanTimeout = 10000;
 uint16_t WiFiScanClass::_scanCount = 0;
 void* WiFiScanClass::_scanResult = 0;
 
@@ -54,12 +54,13 @@ void* WiFiScanClass::_scanResult = 0;
  * @param show_hidden   show hidden networks
  * @return Number of discovered networks
  */
-int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan)
+int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan, uint8_t channel)
 {
-    if(WiFiScanClass::_scanStarted) {
+    if(WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
         return WIFI_SCAN_RUNNING;
     }
 
+    WiFiScanClass::_scanTimeout = max_ms_per_chan * 20;
     WiFiScanClass::_scanAsync = async;
 
     WiFi.enableSTA(true);
@@ -69,7 +70,7 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, u
     wifi_scan_config_t config;
     config.ssid = 0;
     config.bssid = 0;
-    config.channel = 0;
+    config.channel = channel;
     config.show_hidden = show_hidden;
     if(passive){
         config.scan_type = WIFI_SCAN_TYPE_PASSIVE;
@@ -80,20 +81,22 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, u
         config.scan_time.active.max = max_ms_per_chan;
     }
     if(esp_wifi_scan_start(&config, false) == ESP_OK) {
-        WiFiScanClass::_scanComplete = false;
-        WiFiScanClass::_scanStarted = true;
+        _scanStarted = millis();
+        if (!_scanStarted) { //Prevent 0 from millis overflow
+	    ++_scanStarted;
+	}
+
+        WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
+        WiFiGenericClass::setStatusBits(WIFI_SCANNING_BIT);
 
         if(WiFiScanClass::_scanAsync) {
             return WIFI_SCAN_RUNNING;
         }
-        while(!(WiFiScanClass::_scanComplete)) {
-            delay(10);
+        if(WiFiGenericClass::waitStatusBits(WIFI_SCAN_DONE_BIT, 10000)){
+            return (int16_t) WiFiScanClass::_scanCount;
         }
-        return WiFiScanClass::_scanCount;
-    } else {
-        return WIFI_SCAN_FAILED;
     }
-
+    return WIFI_SCAN_FAILED;
 }
 
 
@@ -105,18 +108,16 @@ int8_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, u
  */
 void WiFiScanClass::_scanDone()
 {
-    WiFiScanClass::_scanComplete = true;
-    WiFiScanClass::_scanStarted = false;
     esp_wifi_scan_get_ap_num(&(WiFiScanClass::_scanCount));
     if(WiFiScanClass::_scanCount) {
         WiFiScanClass::_scanResult = new wifi_ap_record_t[WiFiScanClass::_scanCount];
-        if(WiFiScanClass::_scanResult) {
-            esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t*)_scanResult);
-        } else {
-            //no memory
+        if(!WiFiScanClass::_scanResult || esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t*)_scanResult) != ESP_OK) {
             WiFiScanClass::_scanCount = 0;
         }
     }
+    WiFiScanClass::_scanStarted=0; //Reset after a scan is completed for normal behavior
+    WiFiGenericClass::setStatusBits(WIFI_SCAN_DONE_BIT);
+    WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
 }
 
 /**
@@ -126,7 +127,7 @@ void WiFiScanClass::_scanDone()
  */
 void * WiFiScanClass::_getScanInfoByIndex(int i)
 {
-    if(!WiFiScanClass::_scanResult || (size_t) i > WiFiScanClass::_scanCount) {
+    if(!WiFiScanClass::_scanResult || (size_t) i >= WiFiScanClass::_scanCount) {
         return 0;
     }
     return reinterpret_cast<wifi_ap_record_t*>(WiFiScanClass::_scanResult) + i;
@@ -138,15 +139,19 @@ void * WiFiScanClass::_getScanInfoByIndex(int i)
  *          -1 if scan not fin
  *          -2 if scan not triggered
  */
-int8_t WiFiScanClass::scanComplete()
+int16_t WiFiScanClass::scanComplete()
 {
-
-    if(_scanStarted) {
-        return WIFI_SCAN_RUNNING;
+    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
+    	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
+	return WIFI_SCAN_FAILED;
     }
 
-    if(_scanComplete) {
+    if(WiFiGenericClass::getStatusBits() & WIFI_SCAN_DONE_BIT) {
         return WiFiScanClass::_scanCount;
+    }
+
+    if(WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
+        return WIFI_SCAN_RUNNING;
     }
 
     return WIFI_SCAN_FAILED;
@@ -157,12 +162,12 @@ int8_t WiFiScanClass::scanComplete()
  */
 void WiFiScanClass::scanDelete()
 {
+    WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
     if(WiFiScanClass::_scanResult) {
         delete[] reinterpret_cast<wifi_ap_record_t*>(WiFiScanClass::_scanResult);
         WiFiScanClass::_scanResult = 0;
         WiFiScanClass::_scanCount = 0;
     }
-    _scanComplete = false;
 }
 
 

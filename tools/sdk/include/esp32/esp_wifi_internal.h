@@ -35,10 +35,50 @@
 #include "esp_err.h"
 #include "esp_wifi_types.h"
 #include "esp_event.h"
+#include "esp_wifi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct {
+    QueueHandle_t handle; /**< FreeRTOS queue handler */
+    void *storage;        /**< storage for FreeRTOS queue */
+} wifi_static_queue_t;
+
+/**
+  * @brief WiFi log level
+  *
+  */
+typedef enum {
+    WIFI_LOG_ERROR = 0,   /*enabled by default*/
+    WIFI_LOG_WARNING,     /*enabled by default*/
+    WIFI_LOG_INFO,        /*enabled by default*/
+    WIFI_LOG_DEBUG,       /*can be set in menuconfig*/
+    WIFI_LOG_VERBOSE,     /*can be set in menuconfig*/
+} wifi_log_level_t;
+  
+/**
+  * @brief WiFi log module definition
+  *
+  */
+typedef enum {
+    WIFI_LOG_MODULE_ALL  = 0, /*all log modules */
+    WIFI_LOG_MODULE_WIFI, /*logs related to WiFi*/
+    WIFI_LOG_MODULE_COEX, /*logs related to WiFi and BT(or BLE) coexist*/
+    WIFI_LOG_MODULE_MESH, /*logs related to Mesh*/
+} wifi_log_module_t;
+
+/**
+  * @brief WiFi log submodule definition
+  *
+  */
+#define WIFI_LOG_SUBMODULE_ALL   (0)    /*all log submodules*/
+#define WIFI_LOG_SUBMODULE_INIT  (1)    /*logs related to initialization*/
+#define WIFI_LOG_SUBMODULE_IOCTL (1<<1) /*logs related to API calling*/
+#define WIFI_LOG_SUBMODULE_CONN  (1<<2) /*logs related to connecting*/
+#define WIFI_LOG_SUBMODULE_SCAN  (1<<3) /*logs related to scaning*/
+
 
 /**
  * @brief Initialize Wi-Fi Driver
@@ -55,7 +95,7 @@ extern "C" {
  *
  * @return
  *    - ESP_OK: succeed
- *    - ESP_ERR_WIFI_NO_MEM: out of memory
+ *    - ESP_ERR_NO_MEM: out of memory
  *    - others: refer to error code esp_err.h
  */
 esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
@@ -81,7 +121,7 @@ void esp_wifi_internal_free_rx_buffer(void* buffer);
   *
   * @param  wifi_interface_t wifi_if : wifi interface id
   * @param  void *buffer : the buffer to be tansmit
-  * @param  u16_t len : the length of buffer
+  * @param  uint16_t len : the length of buffer
   *
   * @return
   *    - ERR_OK  : Successfully transmit the buffer to wifi driver
@@ -89,7 +129,7 @@ void esp_wifi_internal_free_rx_buffer(void* buffer);
   *    - ERR_IF : WiFi driver error
   *    - ERR_ARG : Invalid argument
   */
-int esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, u16_t len);
+int esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, uint16_t len);
 
 /**
   * @brief     The WiFi RX callback function
@@ -120,6 +160,70 @@ esp_err_t esp_wifi_internal_reg_rxcb(wifi_interface_t ifx, wifi_rxcb_t fn);
   *     - others : fail
   */
 esp_err_t esp_wifi_internal_set_sta_ip(void);
+
+/**
+  * @brief  enable or disable transmitting WiFi MAC frame with fixed rate
+  *
+  * @attention 1. If fixed rate is enabled, both management and data frame are transmitted with fixed rate
+  * @attention 2. Make sure that the receiver is able to receive the frame with the fixed rate if you want the frame to be received
+  *
+  * @param  ifx : wifi interface
+  * @param  en : false - disable, true - enable
+  * @param  rate : PHY rate
+  *
+  * @return
+  *    - ERR_OK  : succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi was not started by esp_wifi_start
+  *    - ESP_ERR_WIFI_IF : invalid WiFi interface
+  *    - ESP_ERR_INVALID_ARG : invalid rate
+  *    - ESP_ERR_NOT_SUPPORTED : do not support to set fixed rate if TX AMPDU is enabled
+  */
+esp_err_t esp_wifi_internal_set_fix_rate(wifi_interface_t ifx, bool en, wifi_phy_rate_t rate);
+
+/**
+  * @brief     Check the MD5 values of the OS adapter header files in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_osi_funcs_md5_check(const char *md5);
+
+/**
+  * @brief     Check the MD5 values of the crypto types header files in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_crypto_funcs_md5_check(const char *md5);
+
+/**
+  * @brief     Check the MD5 values of the esp_wifi_types.h in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_wifi_type_md5_check(const char *md5);
+
+/**
+  * @brief     Check the MD5 values of the esp_wifi.h in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_esp_wifi_md5_check(const char *md5);
 
 /**
   * @brief     Allocate a chunk of memory for WiFi driver
@@ -155,6 +259,101 @@ void *wifi_realloc( void *ptr, size_t size );
   * @return    A pointer to the memory allocated on success, NULL on failure
   */
 void *wifi_calloc( size_t n, size_t size );
+
+/**
+  * @brief     Update WiFi MAC time
+  *
+  * @param     uint32_t time_delta : time duration since the WiFi/BT common clock is disabled
+  *
+  * @return    Always returns ESP_OK
+  */
+typedef esp_err_t (* wifi_mac_time_update_cb_t)( uint32_t time_delta );
+
+/**
+  * @brief     Update WiFi MAC time
+  *
+  * @param     uint32_t time_delta : time duration since the WiFi/BT common clock is disabled
+  *
+  * @return    Always returns ESP_OK
+  */
+esp_err_t esp_wifi_internal_update_mac_time( uint32_t time_delta );
+
+/**
+  * @brief     Set current WiFi log level     
+  *
+  * @param     level   Log level.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_FAIL: level is invalid
+  */
+esp_err_t esp_wifi_internal_set_log_level(wifi_log_level_t level);
+
+/**
+  * @brief     Set current log module and submodule
+  *
+  * @param     module      Log module
+  * @param     submodule   Log submodule
+  * @param     enable      enable or disable
+  *            If module == 0 && enable == 0, all log modules are disabled.
+  *            If module == 0 && enable == 1, all log modules are enabled.
+  *            If submodule == 0 && enable == 0, all log submodules are disabled.
+  *            If submodule == 0 && enable == 1, all log submodules are enabled.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_ARG: invalid argument
+  */
+esp_err_t esp_wifi_internal_set_log_mod(wifi_log_module_t module, uint32_t submodule, bool enable);
+
+/**
+  * @brief     Get current WiFi log info     
+  *
+  * @param     log_level  the return log level.
+  * @param     log_mod    the return log module and submodule
+  *
+  * @return
+  *    - ESP_OK: succeed
+  */
+esp_err_t esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
+
+/**
+  * @brief     Get the user-configured channel info 
+  *
+  * @param     ifx : WiFi interface 
+  * @param     primary : store the configured primary channel 
+  * @param     second : store the configured second channel
+  *
+  * @return    
+  *    - ESP_OK: succeed
+  */
+esp_err_t esp_wifi_internal_get_config_channel(wifi_interface_t ifx, uint8_t *primary, uint8_t *second);
+
+/**
+  * @brief     Get the negotiated channel info after WiFi connection established 
+  *
+  * @param     ifx : WiFi interface 
+  * @param     aid : the connection number when a STA connects to the softAP    
+  * @param     primary : store the negotiated primary channel 
+  * @param     second : store the negotiated second channel
+  * @attention the aid param is only works when the ESP32 in softAP/softAP+STA mode 
+  *
+  * @return    
+  *    - ESP_OK: succeed
+  */
+esp_err_t esp_wifi_internal_get_negotiated_channel(wifi_interface_t ifx, uint8_t aid, uint8_t *primary, uint8_t *second);
+
+/**
+  * @brief     Get the negotiated bandwidth info after WiFi connection established 
+  *
+  * @param     ifx : WiFi interface 
+  * @param     bw : store the negotiated bandwidth 
+  *
+  * @return    
+  *    - ESP_OK: succeed
+  */
+esp_err_t esp_wifi_internal_get_negotiated_bandwidth(wifi_interface_t ifx, uint8_t aid, uint8_t *bw);
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,8 @@
  * \file pkcs12.h
  *
  * \brief PKCS#12 Personal Information Exchange Syntax
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -22,6 +23,12 @@
  */
 #ifndef MBEDTLS_PKCS12_H
 #define MBEDTLS_PKCS12_H
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
 
 #include "md.h"
 #include "cipher.h"
@@ -44,6 +51,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if defined(MBEDTLS_ASN1_PARSE_C)
 
 /**
  * \brief            PKCS12 Password Based function (encryption / decryption)
@@ -85,6 +94,8 @@ int mbedtls_pkcs12_pbe( mbedtls_asn1_buf *pbe_params, int mode,
                 const unsigned char *pwd,  size_t pwdlen,
                 const unsigned char *input, size_t len,
                 unsigned char *output );
+
+#endif /* MBEDTLS_ASN1_PARSE_C */
 
 /**
  * \brief            The PKCS#12 derivation function uses a password and a salt

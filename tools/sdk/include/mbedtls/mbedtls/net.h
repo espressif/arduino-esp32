@@ -1,8 +1,11 @@
 /**
  * \file net.h
  *
- * \brief Deprecated header file that includes mbedtls/net_sockets.h
+ * \brief Deprecated header file that includes net_sockets.h
  *
+ * \deprecated Superseded by mbedtls/net_sockets.h
+ */
+/*
  *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -19,12 +22,15 @@
  *  limitations under the License.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
- *
- * \deprecated Superseded by mbedtls/net_sockets.h
  */
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
-#include "mbedtls/net_sockets.h"
+#include "net_sockets.h"
 #if defined(MBEDTLS_DEPRECATED_WARNING)
 #warning "Deprecated header file: Superseded by mbedtls/net_sockets.h"
 #endif /* MBEDTLS_DEPRECATED_WARNING */

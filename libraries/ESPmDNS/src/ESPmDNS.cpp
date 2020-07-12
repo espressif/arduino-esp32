@@ -43,6 +43,14 @@ License (MIT license):
 #include <functional>
 #include "esp_wifi.h"
 
+// Add quotes around defined value
+#ifdef __IN_ECLIPSE__
+#define STR_EXPAND(tok) #tok
+#define STR(tok) STR_EXPAND(tok)
+#else
+#define STR(tok) tok
+#endif
+
 static void _on_sys_event(system_event_t *event){
     mdns_handle_system_event(NULL, event);
 }
@@ -82,7 +90,7 @@ void MDNSResponder::setInstanceName(String name) {
 
 void MDNSResponder::enableArduino(uint16_t port, bool auth){
     mdns_txt_item_t arduTxtData[4] = {
-        {(char*)"board"         ,(char*)ARDUINO_VARIANT},
+        {(char*)"board"         ,(char*)STR(ARDUINO_VARIANT)},
         {(char*)"tcp_check"     ,(char*)"no"},
         {(char*)"ssh_upload"    ,(char*)"no"},
         {(char*)"auth_upload"   ,(char*)"no"}
@@ -283,6 +291,53 @@ uint16_t MDNSResponder::port(int idx) {
         return 0;
     }
     return result->port;
+}
+
+int MDNSResponder::numTxt(int idx) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return 0;
+    }
+    return result->txt_count;
+}
+
+bool MDNSResponder::hasTxt(int idx, const char * key) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return false;
+    }
+    int i = 0;
+    while(i < result->txt_count) {
+        if (strcmp(result->txt[i].key, key) == 0) return true;
+        i++;
+    }
+    return false;
+}
+
+String MDNSResponder::txt(int idx, const char * key) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return "";
+    }
+    int i = 0;
+    while(i < result->txt_count) {
+        if (strcmp(result->txt[i].key, key) == 0) return result->txt[i].value;
+        i++;
+    }
+    return "";
+}
+
+String MDNSResponder::txt(int idx, int txtIdx) {
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return "";
+    }
+    if (txtIdx >= result->txt_count) return "";
+    return result->txt[txtIdx].value;
 }
 
 MDNSResponder MDNS;
