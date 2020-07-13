@@ -3,6 +3,13 @@
 
 ### Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
+## In this fork:
+- Added **LITTLEFS** library wrapper
+- Added **mklittlefs** and **mkfatfs** tools to *package_esp32_index.template.json*
+- Modified the **Update** library for OTA support of ffat partition
+- Added **ide-fs-plugins** sub-folder in **/tools** with handy IDE plugin tools for uploading **data** as partition
+
+
 ## Contents
 - [Development Status](#development-status)
 - [Installation Instructions](#installation-instructions)

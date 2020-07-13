@@ -135,64 +135,77 @@
           ]
         },
         {
-           "version": "2.5.0-4-fe5bb56",
+           "version": "0.3.6",
+           "name": "mkfatfs",
+           "systems": [
+              {
+                 "host": "i686-pc-linux-gnu",
+                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.tar.gz",
+                 "archiveFileName": "mkfatfs.tar.gz",
+                 "checksum": "SHA-256:641322f1107796d7d77eacfdca0377a942e20fc7c228c6b2aa807dda5117e0af",
+                 "size": "112148"
+              },
+              {
+                 "host": "i686-mingw32",
+                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.zip",
+                 "archiveFileName": "mkfatfs.zip",
+                 "checksum": "SHA-256:966f378da8bba524197d7d8a919e93b21b4680ead03ae69cac8bb56f8ec864a6",
+                 "size": "612169"
+              }
+           ]
+        },
+        {
+           "version": "3.0.0-gnu12-dc7f933",
            "name": "mklittlefs",
            "systems": [
               {
                  "host": "aarch64-linux-gnu",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/aarch64-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "archiveFileName": "aarch64-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "checksum": "SHA-256:ac50bae3b580053ba98a181ae3700fafd2b2f8a37ed9c16bc22a5d7c1659388e",
-                 "size": "44433"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/aarch64-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "archiveFileName": "aarch64-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "checksum": "SHA-256:fc56e389383749e4cf4fab0fcf75cc0ebc41e59383caf6c2eff1c3d9794af200",
+                 "size": "44651"
               },
               {
                  "host": "arm-linux-gnueabihf",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/arm-linux-gnueabihf.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "archiveFileName": "arm-linux-gnueabihf.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "checksum": "SHA-256:092555612e7e229fbe622df75db70560896c3aea8d0ac2e5fa16d92dc16857cf",
-                 "size": "36917"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/arm-linux-gnueabihf.mklittlefs-c41e51a.200706.tar.gz",
+                 "archiveFileName": "arm-linux-gnueabihf.mklittlefs-c41e51a.200706.tar.gz",
+                 "checksum": "SHA-256:52b642dd0545eb3bd8dfb75dde6601df21700e4867763fd2696274be279294c5",
+                 "size": "37211"
               },
               {
                  "host": "i686-pc-linux-gnu",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/i686-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "archiveFileName": "i686-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "checksum": "SHA-256:060e2525223269d2a5d01055542ff36837f0b19598d78cb02d58563aeda441cd",
-                 "size": "47833"
-              },
-              {
-                 "host": "i686-pc-linux-gnu",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/i686-linux-gnu.mklittlefs-7f77f2b.1563313032.tar.gz",
-                 "archiveFileName": "i686-linux-gnu.mklittlefs-7f77f2b.1563313032.tar.gz",
-                 "checksum": "SHA-256:022c96df4d110f957d43f6d23e9c5e8b699a66d8ab041056dd5da7411a8ade42",
-                 "size": "47544"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/i686-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "archiveFileName": "i686-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "checksum": "SHA-256:7886051d8ccc54aed0af2e7cdf6ff992bb51638df86f3b545955697720b6d062",
+                 "size": "48033"
               },
               {
                  "host": "i686-mingw32",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/i686-w64-mingw32.mklittlefs-fe5bb56.1578453304.zip",
-                 "archiveFileName": "i686-w64-mingw32.mklittlefs-fe5bb56.1578453304.zip",
-                 "checksum": "SHA-256:2e570bed4ec59a9ecc73290e16c31ed53ee15e3abd8c82cb038b2148596d112e",
-                 "size": "332329"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/i686-w64-mingw32.mklittlefs-c41e51a.200706.zip",
+                 "archiveFileName": "i686-w64-mingw32.mklittlefs-c41e51a.200706.zip",
+                 "checksum": "SHA-256:43740db30ce451454f2337331f10ab4ed41bd83dbf0fa0cb4387107388b59f42",
+                 "size": "332655"
               },
               {
                  "host": "x86_64-apple-darwin",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/x86_64-apple-darwin14.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "archiveFileName": "x86_64-apple-darwin14.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "checksum": "SHA-256:fcb57ff58eceac79e988cc26a9e009a11ebda68d4ae97e44fed8e7c6d98a35b5",
-                 "size": "362389"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/x86_64-apple-darwin14.mklittlefs-c41e51a.200706.tar.gz",
+                 "archiveFileName": "x86_64-apple-darwin14.mklittlefs-c41e51a.200706.tar.gz",
+                 "checksum": "SHA-256:e3edd5e05b70db3c7df6b9d626558348ad04804022fe955c799aeb51808c7dc3",
+                 "size": "362608"
               },
               {
                  "host": "x86_64-pc-linux-gnu",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/x86_64-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "archiveFileName": "x86_64-linux-gnu.mklittlefs-fe5bb56.1578453304.tar.gz",
-                 "checksum": "SHA-256:5ef79d76e8e76f8287dc70d10c33f020d4cf5320354571adf666665eeef2e2de",
-                 "size": "46580"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/x86_64-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "archiveFileName": "x86_64-linux-gnu.mklittlefs-c41e51a.200706.tar.gz",
+                 "checksum": "SHA-256:66e84dda0aad747517da3785125e05738a540948aab2b7eaa02855167a1eea53",
+                 "size": "46778"
               },
               {
                  "host": "x86_64-mingw32",
-                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/2.5.0-4/x86_64-w64-mingw32.mklittlefs-fe5bb56.1578453304.zip",
-                 "archiveFileName": "x86_64-w64-mingw32.mklittlefs-fe5bb56.1578453304.zip",
-                 "checksum": "SHA-256:a460f410a22a59e23d7f862b8d08d6b7dfbc93aa558f8161a3d640d4df2ab86f",
-                 "size": "344792"
+                 "url": "https://github.com/earlephilhower/esp-quick-toolchain/releases/download/3.0.0-gnu12/x86_64-w64-mingw32.mklittlefs-c41e51a.200706.zip",
+                 "archiveFileName": "x86_64-w64-mingw32.mklittlefs-c41e51a.200706.zip",
+                 "checksum": "SHA-256:2e319077491f8e832e96eb4f2f7a70dd919333cee4b388c394e0e848d031d542",
+                 "size": "345132"
               }
            ]
         },
