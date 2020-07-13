@@ -64,6 +64,7 @@ WiFi.beginProvision(void (*schemecb)(), wifi_prov_scheme_event_handler_t scheme_
     * security = WIFI_PROV_SECURITY_1
     * pop = "abcd1234"
     * service_name = "PROV_XXX"
+    * service_name = "WiFi_XXX"
     * service_key = NULL
     * uuid = NULL
 
