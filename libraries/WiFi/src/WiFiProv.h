@@ -1,4 +1,4 @@
-*
+/*
     WiFiProv.h - Base class for provisioning support
     All right reserved.
  
