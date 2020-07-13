@@ -24,7 +24,7 @@ A function with following signature
 
 ## WiFi.beginProvision()
 
-WiFi.beginProvision(void (*schemecb)(), wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
+WiFi.beginProvision(void (*scheme_cb)(), wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
 
 #### Parameters passed
 

@@ -106,11 +106,11 @@ static void get_device_service_name(char *service_name, size_t max)
     snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
 }
 
-void WiFiProvClass :: beginProvision(void (*schemecb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
+void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
 {
     prov_enable = true;
     bool provisioned = false;
-    schemecb();
+    scheme_cb();
     config.scheme_event_handler = scheme_event_handler;
     config.app_event_handler = {
             .event_cb = prov_event_handler,
@@ -160,3 +160,4 @@ void WiFiProvClass :: beginProvision(void (*schemecb)(), wifi_prov_event_handler
         WiFi.begin(); 
    }
 }
+

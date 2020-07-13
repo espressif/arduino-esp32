@@ -20,13 +20,12 @@
 #include <wifi_provisioning/manager.h>
 #include <nvs_flash.h>
 #include "SimpleBLE.h"
-
 //Select the scheme using which you want to provision
-enum scheme_t
+typedef enum
 {
     WIFI_PROV_SCHEME_BLE,
     WIFI_PROV_SCHEME_SOFTAP
-};
+}scheme_t;
 
 extern void provSchemeSoftAP();
 extern void provSchemeBLE();
@@ -44,7 +43,7 @@ class WiFiProvClass
 
         bool isProvEnabled();
     
-        void beginProvision(void (*schemecb)() = provSchemeSoftAP, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
+        void beginProvision(void (*scheme_cb)() = provSchemeSoftAP, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
 };
 
 /*
