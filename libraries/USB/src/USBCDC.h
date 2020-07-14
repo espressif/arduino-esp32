@@ -56,8 +56,9 @@ public:
 
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);
-    
-    void begin(size_t rx_queue_len=256);
+
+    size_t setRxBufferSize(size_t);
+    void begin(unsigned long baud=0);
     void end();
     
     int available(void);

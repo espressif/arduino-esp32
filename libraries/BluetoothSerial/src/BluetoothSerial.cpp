@@ -477,7 +477,7 @@ static bool _init_bt(const char *deviceName)
     }
 
     if(!_spp_task_handle){
-        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle, 0);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 10, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
@@ -814,5 +814,10 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
     return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
+}
+
+BluetoothSerial::operator bool() const
+{
+    return true;
 }
 #endif
