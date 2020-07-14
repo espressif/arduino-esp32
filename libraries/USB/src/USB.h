@@ -109,6 +109,8 @@ class ESPUSB {
         String webusb_url;
         
         bool _started;
+        size_t _task_stack_size;
+        uint8_t _event_task_priority;
 };
 
 extern ESPUSB USB;
