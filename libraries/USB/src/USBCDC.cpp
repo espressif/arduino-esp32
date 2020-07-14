@@ -119,15 +119,20 @@ void USBCDC::onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback
     arduino_usb_event_handler_register_with(ARDUINO_USB_CDC_EVENTS, event, callback, this);
 }
 
-void USBCDC::begin(size_t rx_queue_len)
-{
+size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
     if(rx_queue){
-        return;
+        return 0;
     }
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
-        return;
+        return 0;
     }
+    return rx_queue_len;
+}
+
+void USBCDC::begin(unsigned long baud)
+{
+    setRxBufferSize(256);//default if not preset
 }
 
 void USBCDC::end()
@@ -292,15 +297,13 @@ int USBCDC::availableForWrite(void)
     return tud_cdc_n_write_available(itf);
 }
 
-size_t USBCDC::write(const uint8_t *buffer, size_t size){
+size_t USBCDC::write(const uint8_t *buffer, size_t size)
+{
     return tinyusb_cdc_write(itf, buffer, size);
 }
 
 size_t USBCDC::write(uint8_t c)
 {
-    if(itf >= MAX_USB_CDC_DEVICES){
-        return 0;
-    }
     return write(&c, 1);
 }
 

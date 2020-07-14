@@ -112,17 +112,9 @@ ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
 ,webusb_enabled(false)
 ,webusb_url("espressif.github.io/arduino-esp32/webusb.html")
 ,_started(false)
+,_task_stack_size(task_stack_size)
+,_event_task_priority(event_task_priority)
 {
-    esp_event_loop_args_t event_task_args = {
-        .queue_size = 5,
-        .task_name = "arduino_usb_events",
-        .task_priority = event_task_priority,
-        .task_stack_size = task_stack_size,
-        .task_core_id = tskNO_AFFINITY
-    };
-    if (esp_event_loop_create(&event_task_args, &arduino_usb_event_loop_handle) != ESP_OK) {
-        log_e("esp_event_loop_create failed");
-    }
 }
 
 ESPUSB::~ESPUSB(){
@@ -133,6 +125,18 @@ ESPUSB::~ESPUSB(){
 }
 
 bool ESPUSB::begin(){
+    if (!arduino_usb_event_loop_handle) {
+        esp_event_loop_args_t event_task_args = {
+            .queue_size = 5,
+            .task_name = "arduino_usb_events",
+            .task_priority = _event_task_priority,
+            .task_stack_size = _task_stack_size,
+            .task_core_id = tskNO_AFFINITY
+        };
+        if (esp_event_loop_create(&event_task_args, &arduino_usb_event_loop_handle) != ESP_OK) {
+            log_e("esp_event_loop_create failed");
+        }
+    }
     if(!_started){
         tinyusb_device_config_t tinyusb_device_config = {
                 .vid = vid,
