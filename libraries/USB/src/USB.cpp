@@ -115,16 +115,6 @@ ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
 ,_task_stack_size(task_stack_size)
 ,_event_task_priority(event_task_priority)
 {
-}
-
-ESPUSB::~ESPUSB(){
-    if (arduino_usb_event_loop_handle) {
-        esp_event_loop_delete(arduino_usb_event_loop_handle);
-        arduino_usb_event_loop_handle = NULL;
-    }
-}
-
-bool ESPUSB::begin(){
     if (!arduino_usb_event_loop_handle) {
         esp_event_loop_args_t event_task_args = {
             .queue_size = 5,
@@ -137,6 +127,16 @@ bool ESPUSB::begin(){
             log_e("esp_event_loop_create failed");
         }
     }
+}
+
+ESPUSB::~ESPUSB(){
+    if (arduino_usb_event_loop_handle) {
+        esp_event_loop_delete(arduino_usb_event_loop_handle);
+        arduino_usb_event_loop_handle = NULL;
+    }
+}
+
+bool ESPUSB::begin(){
     if(!_started){
         tinyusb_device_config_t tinyusb_device_config = {
                 .vid = vid,
