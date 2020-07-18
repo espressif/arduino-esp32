@@ -1534,6 +1534,11 @@
 #define LWIP_ALTCP_TLS                  0
 #endif
 
+#if ESP_LWIP
+#if !defined LWIP_TCP_RTO_TIME || defined __DOXYGEN__
+#define LWIP_TCP_RTO_TIME             3000
+#endif
+#endif
 /**
  * @}
  */
