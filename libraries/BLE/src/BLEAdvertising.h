@@ -68,6 +68,7 @@ public:
 
 private:
 	esp_ble_adv_data_t   m_advData;
+	esp_ble_adv_data_t	 m_scanRespData; // Used for configuration of scan response data when m_scanResp is true
 	esp_ble_adv_params_t m_advParams;
 	std::vector<BLEUUID> m_serviceUUIDs;
 	bool                 m_customAdvData = false;  // Are we using custom advertising data?
