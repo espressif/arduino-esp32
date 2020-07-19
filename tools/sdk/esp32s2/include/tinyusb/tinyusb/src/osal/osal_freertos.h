@@ -32,6 +32,7 @@
 #include "semphr.h"
 #include "queue.h"
 #include "task.h"
+#include "tusb_option.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,7 +59,19 @@ static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semde
 
 static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
-  return in_isr ?  xSemaphoreGiveFromISR(sem_hdl, NULL) : xSemaphoreGive(sem_hdl);
+  if(!in_isr){
+    return xSemaphoreGive(sem_hdl) != 0;
+  }
+  BaseType_t xHigherPriorityTaskWoken;
+  BaseType_t res = xSemaphoreGiveFromISR(sem_hdl, &xHigherPriorityTaskWoken);
+#if CFG_TUSB_MCU == OPT_MCU_ESP32S2
+  if (xHigherPriorityTaskWoken) {
+    portYIELD_FROM_ISR();
+  }
+#else
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+#endif
+  return res != 0;
 }
 
 static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
@@ -125,7 +138,19 @@ static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
 
 static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
-  return in_isr ? xQueueSendToBackFromISR(qhdl, data, NULL) : xQueueSendToBack(qhdl, data, OSAL_TIMEOUT_WAIT_FOREVER);
+  if(!in_isr){
+    return xQueueSendToBack(qhdl, data, OSAL_TIMEOUT_WAIT_FOREVER) != 0;
+  }
+  BaseType_t xHigherPriorityTaskWoken;
+  BaseType_t res = xQueueSendToBackFromISR(qhdl, data, &xHigherPriorityTaskWoken);
+#if CFG_TUSB_MCU == OPT_MCU_ESP32S2
+  if (xHigherPriorityTaskWoken) {
+    portYIELD_FROM_ISR();
+  }
+#else
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+#endif
+  return res != 0;
 }
 
 static inline bool osal_queue_empty(osal_queue_t qhdl)
