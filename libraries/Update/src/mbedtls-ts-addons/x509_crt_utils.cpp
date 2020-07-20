@@ -1,22 +1,33 @@
+#include <string.h>
 #include <assert.h>
+
+#include "mbedtls/platform.h"
+
 #include "x509_crt_utils.h"
+
+#ifndef MIN
+#define MIN(a,b) ( ((a) <(b)) ? (a) : (b))
+#endif
 
 int mbedtls_x509_crt_fprint(char * buff, size_t len, char * prefix, mbedtls_x509_crt * cert, mbedtls_md_type_t tpe) 
 {
     const mbedtls_md_info_t * mdt = mbedtls_md_info_from_type(tpe ? tpe : MBEDTLS_MD_SHA256);
+    const char * nme = mbedtls_md_get_name(mdt);
+    const char * txt = " fingerprint: ";
+
     unsigned char *output = NULL;
     char *p = buff, * ep = buff + len-4;
-    mbedtls_md_context_t *ctx;
+    mbedtls_md_context_t ctx;
     int i, ret = -1;
     size_t l;
     
     mbedtls_md_init(&ctx);
     if ( 
-        ((output = mbedtls_malloc(mbedtls_md_get_size(mdt))) != NULL) ||
+        ((output = (unsigned char *)mbedtls_calloc(mbedtls_md_get_size(mdt),1)) != NULL) ||
         ((ret = mbedtls_md_setup(&ctx, mdt, 9)) != 0) ||
         ((ret = mbedtls_md_starts (&ctx)) != 0) ||
-        ((ret = mbedtls_md_update (&ctxm, cert->raw.p, cert->raw.len)) != 0) ||
-        ((ret = mbedtls_md_finish (&ctxm, output)) != 0)
+        ((ret = mbedtls_md_update (&ctx, cert->raw.p, cert->raw.len)) != 0) ||
+        ((ret = mbedtls_md_finish (&ctx, output)) != 0)
         ) goto erx;
 
     p = buff;
@@ -26,12 +37,10 @@ int mbedtls_x509_crt_fprint(char * buff, size_t len, char * prefix, mbedtls_x509
         p += l;
     };
 
-    const char * nme = mbedtls_md_get_name(mdt);
     l = MIN(strlen(nme), ep-p);
     memcpy(p, nme, l);
     p += l;
     
-    const char * txt = " fingerprint: ";
     l = MIN(strlen(txt), ep-p);
     memcpy(p, txt, l);
     p += l;
