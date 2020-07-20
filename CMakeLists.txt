@@ -64,6 +64,7 @@ set(LIBRARY_SRCS
   libraries/Update/src/UpdateProcessorRFC3161.cpp
   libraries/Update/src/mbedtls-ts-addons/signer_info.cpp
   libraries/Update/src/mbedtls-ts-addons/x509_ts_utils.cpp
+  libraries/Update/src/mbedtls-ts-addons/x509_crt_utils.cpp
   libraries/Update/src/mbedtls-ts-addons/ts.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
