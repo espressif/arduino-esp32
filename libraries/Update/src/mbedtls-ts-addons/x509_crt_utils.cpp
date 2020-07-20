@@ -13,7 +13,8 @@ int mbedtls_x509_crt_fprint(char * buff, size_t len, char * prefix, mbedtls_x509
 {
     const mbedtls_md_info_t * mdt = mbedtls_md_info_from_type(tpe ? tpe : MBEDTLS_MD_SHA256);
     const char * nme = mbedtls_md_get_name(mdt);
-    const char * txt = " fingerprint: ";
+    const size_t dl = mbedtls_md_get_size(mdt);
+    const char * txt = " Fingerprint=";
 
     unsigned char *output = NULL;
     char *p = buff, * ep = buff + len-4;
@@ -23,7 +24,7 @@ int mbedtls_x509_crt_fprint(char * buff, size_t len, char * prefix, mbedtls_x509
     
     mbedtls_md_init(&ctx);
     if ( 
-        ((output = (unsigned char *)mbedtls_calloc(mbedtls_md_get_size(mdt),1)) != NULL) ||
+        ((output = (unsigned char *)mbedtls_calloc(dl,1)) != NULL) ||
         ((ret = mbedtls_md_setup(&ctx, mdt, 9)) != 0) ||
         ((ret = mbedtls_md_starts (&ctx)) != 0) ||
         ((ret = mbedtls_md_update (&ctx, cert->raw.p, cert->raw.len)) != 0) ||
@@ -45,21 +46,26 @@ int mbedtls_x509_crt_fprint(char * buff, size_t len, char * prefix, mbedtls_x509
     memcpy(p, txt, l);
     p += l;
 
-    for(i = 0; (i < 32); i++) {
+    for(i = 0; i < dl; i++) {
         int c1 = output[i] >> 4;
         int c2 = output[i] & 0xF;
         if (p < ep)
             *(p++) = (c1 < 10) ? '0' + c1 : 'A' + (c1 - 10);
         if (p < ep)
             *(p++) = (c2 < 10) ? '0' + c2 : 'A' + (c2 - 10);
+        if (p < ep && i != dl-1)
+            *(p++) = ':';
     };
 
     // Add 3 ominous dots, like ellipses, if our buffer falls short.
+    //
     if (p == ep) {
         *(p++)='.';*(p++)='.';*(p++)='.';
     };
     *(p++)= '\0';
-    ret = 0;
+
+    // return the bytes written into buff.
+    ret = p - buff; 
 
 erx:
     mbedtls_md_free(&ctx);
