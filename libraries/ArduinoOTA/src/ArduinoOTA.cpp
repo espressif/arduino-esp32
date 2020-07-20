@@ -496,6 +496,8 @@ char * ArduinoOTAClass::_handleUpdate(WiFiClient & client) {
 
     if (!client.printf("%u\n", written))
       return (char *)"failed to return bytes written";
+
+    delay(0); // see PR#3910 and issue i#3528, #3775, etc
   } // while we're connected and there is data available.
   return NULL;
 }

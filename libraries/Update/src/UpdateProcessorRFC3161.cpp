@@ -6,6 +6,8 @@
 #include "esp_partition.h"
 #include "esp_spi_flash.h"
 
+#include "mbedtls-ts-addons/x509_crt_utils.h"
+
 #include "UpdateProcessorRFC3161.h"
 
 /* We have three formats;
@@ -124,6 +126,7 @@ void UpdateProcessorRFC3161::reset() {
   _payload_len = 0;
   _state = INIT;
 };
+
 
 UpdateProcessor::secure_update_processor_err_t UpdateProcessorRFC3161::process_header(uint32_t *command, uint8_t * buffer, size_t *len) {
   unsigned char * p;
@@ -255,6 +258,8 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorRFC3161::process_h
           char buf[1024 * 2];
           mbedtls_x509_crt_info(buf, sizeof(buf), " - ", c);
           log_d("  %s", buf);
+          mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
+          log_d("  %s", buf);
         };
 
         log_d("Signatures in the RFC3161 wrapper:");
@@ -262,11 +267,15 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorRFC3161::process_h
           char buf[1024 * 2];
           mbedtls_x509_crt_info(buf, sizeof(buf), " - ", c);
           log_d("  %s", buf);
+          mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
+          log_d("  %s", buf);
         };
       }
 #endif
       if (mbedtls_x509_crt_verify(_reply.chain, _trustChain, NULL /* no CRL */, NULL /* any name fine */, &results, NULL, NULL) != 0) {
-        log_e("RFC3161 signature could not be validated against the chain. Aborting.");
+        char err_mess[128];
+        mbedtls_x509_crt_verify_info(err_mess, sizeof(err_mess),"",results);
+        log_e("RFC3161 signature could not be validated against the chain: %s. Aborting.", err_mess);
         return secure_update_processor_ERROR;
       }
       log_i("RFC3161 signature on timestamp and payload digest verified.");

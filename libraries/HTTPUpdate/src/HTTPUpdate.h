@@ -33,6 +33,8 @@
 #include <HTTPClient.h>
 #include <Update.h>
 
+#include <mbedtls/md.h>
+
 /// note we use HTTP client errors too so we start at 100
 #define HTTP_UE_TOO_LESS_SPACE              (-100)
 #define HTTP_UE_SERVER_NOT_REPORT_SIZE      (-101)
@@ -92,6 +94,9 @@ private:
 
     int _ledPin;
     uint8_t _ledOn;
+
+    const mbedtls_md_info_t *_md_info;
+    mbedtls_md_context_t * _md_ctx;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)
