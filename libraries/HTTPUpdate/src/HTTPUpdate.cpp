@@ -1,6 +1,6 @@
 /**
  *
- * @file HTTPUpdate.cpp based om ESP8266HTTPUpdate.cpp
+ * @file HTTP_updater->cpp based om ESP8266HTTP_updater->cpp
  * @date 16.10.2018
  * @author Markus Sattler
  *
@@ -35,11 +35,15 @@
 HTTPUpdate::HTTPUpdate(void)
         : _httpClientTimeout(8000), _ledPin(-1)
 {
+	_processor = new UpdateProcessorWithChecksum();
+	_updater = new UpdateClass(_processor);
 }
 
 HTTPUpdate::HTTPUpdate(int httpClientTimeout)
         : _httpClientTimeout(httpClientTimeout), _ledPin(-1)
 {
+	delete _updater;
+	delete _processor;
 }
 
 HTTPUpdate::~HTTPUpdate(void)
@@ -100,7 +104,7 @@ String HTTPUpdate::getLastErrorString(void)
     // error from Update class
     if(_lastError > 0) {
         StreamString error;
-        Update.printError(error);
+        _updater->printError(error);
         error.trim(); // remove line ending
         return String("Update error: ") + error;
     }
@@ -122,7 +126,7 @@ String HTTPUpdate::getLastErrorString(void)
     case HTTP_UE_SERVER_WRONG_HTTP_CODE:
         return "Wrong HTTP Code";
     case HTTP_UE_SERVER_FAULTY_MD5:
-        return "Wrong MD5";
+        return "Wrong checksum";
     case HTTP_UE_BIN_VERIFY_HEADER_FAILED:
         return "Verify Bin Header Failed";
     case HTTP_UE_BIN_FOR_WRONG_FLASH:
@@ -370,42 +374,48 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
  * @param md5 String
  * @return true if Update ok
  */
-bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
+bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String crc, int command)
 {
-
+    mbedtls_md_type_t md_type = MBEDTLS_MD_NONE;
     StreamString error;
 
-    if(!Update.begin(size, command, _ledPin, _ledOn)) {
-        _lastError = Update.getError();
-        Update.printError(error);
+    if(!_updater->begin(size, command, _ledPin, _ledOn)) {
+        _lastError = _updater->getError();
+        _updater->printError(error);
         error.trim(); // remove line ending
-        log_e("Update.begin failed! (%s)\n", error.c_str());
+        log_e("_updater->begin failed! (%s)\n", error.c_str());
         return false;
     }
 
-    if(md5.length()) {
-        if(!Update.setMD5(md5.c_str())) {
-            _lastError = HTTP_UE_SERVER_FAULTY_MD5;
-            log_e("Update.setMD5 failed! (%s)\n", md5.c_str());
-            return false;
-        }
-    }
+    // Bit of a heuristic
+    switch(crc.length()) {
+    case  32: md_type = MBEDTLS_MD_MD5; break;
+    case  40: md_type = MBEDTLS_MD_SHA1; break;
+    case  56: md_type = MBEDTLS_MD_SHA224; break;
+    case  64: md_type = MBEDTLS_MD_SHA256; break;
+    case 128: md_type = MBEDTLS_MD_SHA512; break;
+    default: break;
+    };
 
-// To do: the SHA256 could be checked if the server sends it
+    if(md_type == MBEDTLS_MD_NONE || _processor->setChecksum(crc.c_str(), md_type)) {
+        _lastError = HTTP_UE_SERVER_FAULTY_MD5;
+        log_e("Updater::runUpdate failed - cannot handle this checksum (%s, only MD5, SHA1,224,256 and 512 supported as hex string)\n", md5.c_str());
+        return false;
+    };
 
-    if(Update.writeStream(in) != size) {
-        _lastError = Update.getError();
-        Update.printError(error);
+    if(_updater->writeStream(in) != size) {
+        _lastError = _updater->getError();
+        _updater->printError(error);
         error.trim(); // remove line ending
-        log_e("Update.writeStream failed! (%s)\n", error.c_str());
+        log_e("_updater->writeStream failed! (%s)\n", error.c_str());
         return false;
     }
 
-    if(!Update.end()) {
-        _lastError = Update.getError();
-        Update.printError(error);
+    if(!_updater->end()) {
+        _lastError = _updater->getError();
+        _updater->printError(error);
         error.trim(); // remove line ending
-        log_e("Update.end failed! (%s)\n", error.c_str());
+        log_e("_updater->end failed! (%s)\n", error.c_str());
         return false;
     }
 
