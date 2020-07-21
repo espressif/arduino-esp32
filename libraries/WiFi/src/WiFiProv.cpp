@@ -115,7 +115,8 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     	return;
     }
 #endif
-
+    config.app_event_handler.event_cb = NULL;
+    config.app_event_handler.user_data = NULL;
     wifiLowLevelInit(true);
     if(wifi_prov_mgr_init(config) != ESP_OK){
     	log_e("wifi_prov_mgr_init failed!");
@@ -155,22 +156,27 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
 #if CONFIG_IDF_TARGET_ESP32
         }
 #endif
-
         if(wifi_prov_mgr_endpoint_create("custom-data") != ESP_OK){
         	log_e("wifi_prov_mgr_endpoint_create failed!");
         	return;
+        } else {
+            log_d("custom-data endpoint create");
         }
+      
         if(wifi_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK){
         	log_e("wifi_prov_mgr_start_provisioning failed!");
         	return;
         }
+        
         if(wifi_prov_mgr_endpoint_register("custom-data", custom_prov_data_handler, NULL) != ESP_OK){
         	log_e("wifi_prov_mgr_endpoint_register failed!");
         	return;
+        } else {
+            log_d("custom-data endpoint register");
         }
+        
     } else {
-        wifi_prov_mgr_deinit();
-        log_i("Aleardy Provisioned");
+        log_i("Already Provisioned");
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         static wifi_config_t conf;
         esp_wifi_get_config(WIFI_IF_STA,&conf);
@@ -178,6 +184,6 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
 #endif
         esp_wifi_start();
         WiFi.begin();
+        wifi_prov_mgr_deinit();
     }
 }
-
