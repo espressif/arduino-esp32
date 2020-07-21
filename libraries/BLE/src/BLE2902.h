@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLE2902_H_
 #define COMPONENTS_CPP_UTILS_BLE2902_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLEDescriptor.h"
 
@@ -30,5 +30,5 @@ public:
 
 }; // BLE2902
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLE2902_H_ */
