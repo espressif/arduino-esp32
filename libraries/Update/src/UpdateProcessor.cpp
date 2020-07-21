@@ -103,6 +103,7 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorWithChecksum::setC
         log_e("Checksum - setup problem");
         return secure_update_processor_ERROR;
       };
+   return secure_update_processor_OK;
 }
 
 void UpdateProcessorWithChecksum::reset() {
