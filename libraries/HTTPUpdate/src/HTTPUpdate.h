@@ -95,6 +95,9 @@ private:
     int _ledPin;
     uint8_t _ledOn;
 
+    UpdateProcessorWithChecksum * _processor ;
+    UpdateClass * _updater;
+
     const mbedtls_md_info_t *_md_info;
     mbedtls_md_context_t * _md_ctx;
 };

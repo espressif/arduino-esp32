@@ -300,6 +300,7 @@ bool UpdateClass::activate() {
     }
     _reset();
 
+#if 0
     if (1) {
       unsigned char buff[MBEDTLS_MD_MAX_SIZE];
       mbedtls_md_context_t ctx;
@@ -328,6 +329,7 @@ bool UpdateClass::activate() {
       log_d("RAW %s Digest %s", mbedtls_md_get_name(t), out.c_str());
       mbedtls_md_free(&ctx);
     }
+#endif
 
     return true;
   } else if (_command == U_SPIFFS) {
