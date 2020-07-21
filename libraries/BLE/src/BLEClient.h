@@ -9,7 +9,7 @@
 #define MAIN_BLEDEVICE_H_
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_gattc_api.h>
 #include <string.h>
@@ -99,5 +99,5 @@ public:
 	virtual void onDisconnect(BLEClient *pClient) = 0;
 };
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif /* MAIN_BLEDEVICE_H_ */

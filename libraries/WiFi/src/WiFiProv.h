@@ -18,7 +18,12 @@
 */
 
 #include "wifi_provisioning/manager.h"
+
+#ifdef CONFIG_BLUEDROID_ENABLED
 #include "wifi_provisioning/scheme_ble.h"
+#endif
+
+#include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "SimpleBLE.h"
 //Select the scheme using which you want to provision

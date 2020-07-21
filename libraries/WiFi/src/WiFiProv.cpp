@@ -26,8 +26,12 @@
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
 #include <esp32-hal.h>
+#include <nvs_flash.h>
 
+#ifdef CONFIG_BLUEDROID_ENABLED
 #include <wifi_provisioning/scheme_ble.h>
+#endif
+
 #include <wifi_provisioning/scheme_softap.h>
 #include <wifi_provisioning/manager.h>
 #undef IPADDR_NONE
@@ -116,11 +120,19 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             .event_cb = prov_event_handler,
             .user_data = NULL
             };
+
+    config.scheme = wifi_prov_scheme_softap;
+    #ifdef CONFIG_BLUEDROID_ENABLED
+    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
+        config.scheme = wifi_prov_scheme_ble;        
+    }
+    #endif
  
     wifi_prov_mgr_init(config);
     WiFi.mode(WIFI_MODE_AP);
     wifi_prov_mgr_is_provisioned(&provisioned);
     if(provisioned == false) {
+        #ifdef CONFIG_BLUEDROID_ENABLED
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             service_key = NULL;
             if(uuid == NULL) {
@@ -128,6 +140,7 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             }
             wifi_prov_scheme_ble_set_service_uuid(uuid);
         }
+        #endif
 
         if(service_name == NULL) {
             char service_name_temp[12];
