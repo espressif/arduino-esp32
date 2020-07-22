@@ -29,6 +29,7 @@ compiler.cpp.flags.esp32=-mlongcalls -Wno-frame-address -ffunction-sections -fda
 compiler.S.flags.esp32=-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -ggdb -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw -Og -fstack-protector  -x assembler-with-cpp -MMD -c
 compiler.c.elf.flags.esp32=-mlongcalls -T esp32.rom.ld -T esp32.rom.libgcc.ld -T esp32.rom.newlib-data.ld -T esp32.rom.syscalls.ld -T esp32_out.ld -T esp32.project.ld -T esp32.peripherals.ld  -Wl,--cref -fno-rtti -fno-lto -u esp_app_desc -u vfs_include_syscalls_impl -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u app_main -u call_user_start_cpu0 -u ld_include_panic_highint_hdl -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -u newlib_include_locks_impl -u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u __cxa_guard_dummy 
 compiler.ar.flags.esp32=cru
+build.extra_flags.esp32=-DARDUINO_SERIAL_PORT=0
 #
 # ESP32 Support End
 #
@@ -43,6 +44,7 @@ compiler.cpp.flags.esp32s2=-mlongcalls -ffunction-sections -fdata-sections -fstr
 compiler.S.flags.esp32s2=-ffunction-sections -fdata-sections -fstrict-volatile-bitfields -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -ggdb -Og -fstack-protector  -x assembler-with-cpp -MMD -c
 compiler.c.elf.flags.esp32s2=-mlongcalls -T esp32s2.rom.ld -T esp32s2.rom.libgcc.ld -T esp32s2.rom.newlib-data.ld -T esp32s2.rom.newlib-funcs.ld -T esp32s2.rom.spiflash.ld -T esp32s2_out.ld -T esp32s2.project.ld -T esp32s2.peripherals.ld  -Wl,--cref -fno-rtti -fno-lto -u esp_app_desc -u vfs_include_syscalls_impl -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u app_main -u call_user_start_cpu0 -u ld_include_panic_highint_hdl -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -u newlib_include_locks_impl -u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u __cxa_guard_dummy 
 compiler.ar.flags.esp32s2=cru
+build.extra_flags.esp32s2=-DARDUINO_SERIAL_PORT={build.serial}
 #
 # ESP32S2 Support End
 #
@@ -87,7 +89,7 @@ build.flash_mode=dio
 build.boot=bootloader
 build.code_debug=0
 build.defines=
-build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
+build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines} {build.extra_flags.{build.mcu}}
 
 # Check if custom partitions exist
 recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
