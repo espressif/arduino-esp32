@@ -573,6 +573,11 @@ feathers2.build.boot=qio
 feathers2.build.partitions=fatflash
 feathers2.build.defines=
 
+feathers2.menu.SerialMode.cdc=USB CDC
+feathers2.menu.SerialMode.cdc.build.serial=1
+feathers2.menu.SerialMode.default=UART0
+feathers2.menu.SerialMode.default.build.serial=0
+
 feathers2.menu.PSRAM.enabled=Enabled
 feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 feathers2.menu.PSRAM.disabled=Disabled
@@ -698,6 +703,11 @@ pros2.build.flash_mode=dio
 pros2.build.boot=qio
 pros2.build.partitions=fatflash
 pros2.build.defines=
+
+pros2.menu.SerialMode.cdc=USB CDC
+pros2.menu.SerialMode.cdc.build.serial=1
+pros2.menu.SerialMode.default=UART0
+pros2.menu.SerialMode.default.build.serial=0
 
 pros2.menu.PSRAM.enabled=Enabled
 pros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
