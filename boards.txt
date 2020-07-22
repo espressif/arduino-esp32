@@ -568,7 +568,7 @@ feathers2.build.board=FEATHERS2
 feathers2.build.f_cpu=240000000L
 feathers2.build.flash_size=16MB
 feathers2.build.flash_freq=80m
-feathers2.build.flash_mode=qio
+feathers2.build.flash_mode=dio
 feathers2.build.boot=qio
 feathers2.build.partitions=fatflash
 feathers2.build.defines=
@@ -636,24 +636,6 @@ feathers2.menu.CPUFreq.20.build.f_cpu=20000000L
 feathers2.menu.CPUFreq.10=10MHz
 feathers2.menu.CPUFreq.10.build.f_cpu=10000000L
 
-feathers2.menu.FlashMode.qio=QIO
-feathers2.menu.FlashMode.qio.build.flash_mode=dio
-feathers2.menu.FlashMode.qio.build.boot=qio
-feathers2.menu.FlashMode.dio=DIO
-feathers2.menu.FlashMode.dio.build.flash_mode=dio
-feathers2.menu.FlashMode.dio.build.boot=dio
-feathers2.menu.FlashMode.qout=QOUT
-feathers2.menu.FlashMode.qout.build.flash_mode=dout
-feathers2.menu.FlashMode.qout.build.boot=qout
-feathers2.menu.FlashMode.dout=DOUT
-feathers2.menu.FlashMode.dout.build.flash_mode=dout
-feathers2.menu.FlashMode.dout.build.boot=dout
-
-feathers2.menu.FlashFreq.80=80MHz
-feathers2.menu.FlashFreq.80.build.flash_freq=80m
-feathers2.menu.FlashFreq.40=40MHz
-feathers2.menu.FlashFreq.40.build.flash_freq=40m
-
 feathers2.menu.FlashSize.16M=16MB (128Mb)
 feathers2.menu.FlashSize.16M.build.flash_size=16MB
 feathers2.menu.FlashSize.4M=4MB (32Mb)
@@ -677,8 +659,6 @@ feathers2.menu.UploadSpeed.230400.upload.speed=230400
 feathers2.menu.UploadSpeed.460800.linux=460800
 feathers2.menu.UploadSpeed.460800.macosx=460800
 feathers2.menu.UploadSpeed.460800.upload.speed=460800
-feathers2.menu.UploadSpeed.512000.windows=512000
-feathers2.menu.UploadSpeed.512000.upload.speed=512000
 
 feathers2.menu.DebugLevel.none=None
 feathers2.menu.DebugLevel.none.build.code_debug=0
@@ -714,7 +694,7 @@ pros2.build.board=PROS2
 pros2.build.f_cpu=240000000L
 pros2.build.flash_size=16MB
 pros2.build.flash_freq=80m
-pros2.build.flash_mode=qio
+pros2.build.flash_mode=dio
 pros2.build.boot=qio
 pros2.build.partitions=fatflash
 pros2.build.defines=
@@ -782,24 +762,6 @@ pros2.menu.CPUFreq.20.build.f_cpu=20000000L
 pros2.menu.CPUFreq.10=10MHz
 pros2.menu.CPUFreq.10.build.f_cpu=10000000L
 
-pros2.menu.FlashMode.qio=QIO
-pros2.menu.FlashMode.qio.build.flash_mode=dio
-pros2.menu.FlashMode.qio.build.boot=qio
-pros2.menu.FlashMode.dio=DIO
-pros2.menu.FlashMode.dio.build.flash_mode=dio
-pros2.menu.FlashMode.dio.build.boot=dio
-pros2.menu.FlashMode.qout=QOUT
-pros2.menu.FlashMode.qout.build.flash_mode=dout
-pros2.menu.FlashMode.qout.build.boot=qout
-pros2.menu.FlashMode.dout=DOUT
-pros2.menu.FlashMode.dout.build.flash_mode=dout
-pros2.menu.FlashMode.dout.build.boot=dout
-
-pros2.menu.FlashFreq.80=80MHz
-pros2.menu.FlashFreq.80.build.flash_freq=80m
-pros2.menu.FlashFreq.40=40MHz
-pros2.menu.FlashFreq.40.build.flash_freq=40m
-
 pros2.menu.FlashSize.16M=16MB (128Mb)
 pros2.menu.FlashSize.16M.build.flash_size=16MB
 pros2.menu.FlashSize.4M=4MB (32Mb)
@@ -823,8 +785,7 @@ pros2.menu.UploadSpeed.230400.upload.speed=230400
 pros2.menu.UploadSpeed.460800.linux=460800
 pros2.menu.UploadSpeed.460800.macosx=460800
 pros2.menu.UploadSpeed.460800.upload.speed=460800
-pros2.menu.UploadSpeed.512000.windows=512000
-pros2.menu.UploadSpeed.512000.upload.speed=512000
+
 
 pros2.menu.DebugLevel.none=None
 pros2.menu.DebugLevel.none.build.code_debug=0
