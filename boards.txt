@@ -1,5 +1,6 @@
 menu.UploadSpeed=Upload Speed
 menu.UploadMode=Upload Mode
+menu.SerialMode=Serial Connected To
 menu.CPUFreq=CPU Frequency
 menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
@@ -30,6 +31,7 @@ esp32s2.build.core=esp32
 esp32s2.build.variant=esp32s2
 esp32s2.build.board=ESP32S2_DEV
 
+esp32s2.build.serial=0
 esp32s2.build.f_cpu=240000000L
 esp32s2.build.flash_size=4MB
 esp32s2.build.flash_freq=80m
@@ -37,6 +39,11 @@ esp32s2.build.flash_mode=qio
 esp32s2.build.boot=qio
 esp32s2.build.partitions=default
 esp32s2.build.defines=
+
+esp32s2.menu.SerialMode.default=UART0
+esp32s2.menu.SerialMode.default.build.serial=0
+esp32s2.menu.SerialMode.cdc=USB CDC
+esp32s2.menu.SerialMode.cdc.build.serial=1
 
 esp32s2.menu.UploadMode.default=Default Uart
 esp32s2.menu.UploadMode.default.upload.flags=
