@@ -482,7 +482,7 @@ tinypico.serial.disableRTS=true
 
 tinypico.build.mcu=esp32
 tinypico.build.core=esp32
-tinypico.build.variant=pico32
+tinypico.build.variant=um_tinypico
 tinypico.build.board=TINYPICO
 
 tinypico.build.f_cpu=240000000L
@@ -549,6 +549,8 @@ tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 feathers2.name=UM FeatherS2
+feathers2.vid.0=0x239A
+feathers2.pid.0=0x80AB
 
 feathers2.upload.tool=esptool_py
 feathers2.upload.maximum_size=1310720
@@ -560,7 +562,7 @@ feathers2.serial.disableRTS=true
 
 feathers2.build.mcu=esp32s2
 feathers2.build.core=esp32
-feathers2.build.variant=esp32s2
+feathers2.build.variant=um_feathers2
 feathers2.build.board=FEATHERS2
 
 feathers2.build.f_cpu=240000000L
@@ -693,6 +695,8 @@ feathers2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 pros2.name=UM ProS2
+pros2.vid.0=0x239A
+pros2.pid.0=0x80A9
 
 pros2.upload.tool=esptool_py
 pros2.upload.maximum_size=1310720
@@ -704,7 +708,7 @@ pros2.serial.disableRTS=true
 
 pros2.build.mcu=esp32s2
 pros2.build.core=esp32
-pros2.build.variant=esp32s2
+pros2.build.variant=um_pros2
 pros2.build.board=PROS2
 
 pros2.build.f_cpu=240000000L
