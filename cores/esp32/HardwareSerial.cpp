@@ -132,7 +132,7 @@ void HardwareSerial::setDebugOutput(bool en)
         uartSetDebug(_uart);
     } else {
         if(uartGetDebug() == _uart_nr) {
-            uartSetDebug(0);
+            uartSetDebug(NULL);
         }
     }
 }
