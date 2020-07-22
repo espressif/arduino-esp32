@@ -17,6 +17,22 @@
 #if CONFIG_USB_ENABLED
 #include "usb_persist.h"
 
+#ifndef USB_VID
+#define USB_VID USB_ESPRESSIF_VID
+#endif
+#ifndef USB_PID
+#define USB_PID 0x0002
+#endif
+#ifndef USB_MANUFACTURER
+#define USB_MANUFACTURER "Espressif Systems"
+#endif
+#ifndef USB_PRODUCT
+#define USB_PRODUCT ARDUINO_BOARD
+#endif
+#ifndef USB_SERIAL
+#define USB_SERIAL ""
+#endif
+
 extern "C" {
 #include "tinyusb.h"
 }
@@ -97,11 +113,11 @@ void tud_resume_cb(void){
 }
 
 ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
-:vid(USB_ESPRESSIF_VID)
-,pid(0x0002)
-,product_name(ARDUINO_BOARD)
-,manufacturer_name("Espressif Systems")
-,serial_number("")
+:vid(USB_VID)
+,pid(USB_PID)
+,product_name(USB_PRODUCT)
+,manufacturer_name(USB_MANUFACTURER)
+,serial_number(USB_SERIAL)
 ,fw_version(0x0100)
 ,usb_version(0x0200)// at least 2.1 or 3.x for BOS & webUSB
 ,usb_class(TUSB_CLASS_MISC)
