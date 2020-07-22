@@ -126,6 +126,8 @@ protected:
     
 };
 
-extern void serialEventRun(void) __attribute__((weak));
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+extern USBCDC Serial;
+#endif
 
 #endif /* CONFIG_USB_CDC_ENABLED */
