@@ -65,8 +65,6 @@ set(LIBRARY_SRCS
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
-  libraries/USB/src/USB.cpp
-  libraries/USB/src/USBCDC.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
