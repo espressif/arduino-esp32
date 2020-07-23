@@ -116,6 +116,7 @@ extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
 #endif
+extern HardwareSerial Serial1;
 #if CONFIG_IDF_TARGET_ESP32
 extern HardwareSerial Serial2;
 #endif
