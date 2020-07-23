@@ -63,8 +63,6 @@ set(LIBRARY_SRCS
   libraries/SPI/src/SPI.cpp
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
-  libraries/USB/src/USB.cpp
-  libraries/USB/src/USBCDC.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
