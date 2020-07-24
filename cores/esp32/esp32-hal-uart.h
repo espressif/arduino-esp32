@@ -70,6 +70,8 @@ uint32_t uartGetBaudRate(uart_t* uart);
 
 size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
 
+void uartSetRxInvert(uart_t* uart, bool invert);
+
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
