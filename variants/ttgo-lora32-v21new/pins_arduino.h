@@ -1,6 +1,12 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
+/*************************
+* Definitions for TTGO-Lora32-V2.1.6 Boards
+* Labeled with T3 v1.6 20180606
+* or sold as TTGO-LoRa32 2.1 Revision 1.6
+************************/
+
 #include <stdint.h>
 
 #define EXTERNAL_NUM_INTERRUPTS 16
@@ -54,9 +60,7 @@ static const uint8_t A4 =   32;
 static const uint8_t A5 =   33;
 static const uint8_t A6 =   34;
 static const uint8_t A7 =   35;
-static const uint8_t A10 =  4; //SD_DATA1
-static const uint8_t A11 =  0; //SD_DATA0
-static const uint8_t A12 =  2; //SD_
+static const uint8_t A10 =  4; 
 static const uint8_t A13 =  15;
 static const uint8_t A14 =  13;
 static const uint8_t A15 =  12;
