@@ -255,20 +255,20 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorRFC3161::process_h
       {
         log_d("Signatures in the trust chain:");
         for (mbedtls_x509_crt * c = _trustChain; c; c = c->next) {
-          char buf[1024 * 2];
-          mbedtls_x509_crt_info(buf, sizeof(buf), " - ", c);
-          log_d("  %s", buf);
+          char buff[1024 * 2];
+          mbedtls_x509_crt_info(buf, sizeof(buff), " - ", c);
+          log_d("  %s", buff);
           mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
-          log_d("  %s", buf);
+          log_d("  %s", buff);
         };
 
         log_d("Signatures in the RFC3161 wrapper:");
         for (mbedtls_x509_crt * c = _reply.chain; c; c = c->next) {
-          char buf[1024 * 2];
-          mbedtls_x509_crt_info(buf, sizeof(buf), " - ", c);
-          log_d("  %s", buf);
+          char buff[1024 * 2];
+          mbedtls_x509_crt_info(buf, sizeof(buff), " - ", c);
+          log_d("  %s", buff);
           mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
-          log_d("  %s", buf);
+          log_d("  %s", buff);
         };
       }
 #endif
