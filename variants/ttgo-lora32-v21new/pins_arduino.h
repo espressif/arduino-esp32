@@ -29,6 +29,8 @@
 #define LORA_CS     18  // GPIO18 - SX1276 CS
 #define LORA_RST    12  // GPIO14 - SX1276 RST
 #define LORA_IRQ    26  // GPIO26 - SX1276 IRQ (interrupt request)
+#define LORA_D1     33  // GPIO33 - SX1276 IO1 (for LMIC Arduino library)
+#define LORA_D2     32 // GPIO32 - SX1276 IO2
 
 // SD card
 #define SD_SCK  14
@@ -61,6 +63,8 @@ static const uint8_t A5 =   33;
 static const uint8_t A6 =   34;
 static const uint8_t A7 =   35;
 static const uint8_t A10 =  4; 
+static const uint8_t A11 =  0;
+static const uint8_t A12 =  2;
 static const uint8_t A13 =  15;
 static const uint8_t A14 =  13;
 static const uint8_t A15 =  12;
