@@ -61,6 +61,7 @@ set(LIBRARY_SRCS
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/UpdateProcessor.cpp
+  libraries/Update/src/UpdateProcessorLegacy.cpp
   libraries/Update/src/UpdateProcessorRFC3161.cpp
   libraries/Update/src/mbedtls-ts-addons/signer_info.cpp
   libraries/Update/src/mbedtls-ts-addons/x509_ts_utils.cpp
