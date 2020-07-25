@@ -62,6 +62,7 @@ set(LIBRARY_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/UpdateProcessorLegacy.cpp
   libraries/Update/src/UpdateProcessorRFC3161.cpp
+  libraries/Update/src/UpdateProcessorWithChecksum.cpp
   libraries/Update/src/mbedtls-ts-addons/signer_info.cpp
   libraries/Update/src/mbedtls-ts-addons/x509_ts_utils.cpp
   libraries/Update/src/mbedtls-ts-addons/x509_crt_utils.cpp
