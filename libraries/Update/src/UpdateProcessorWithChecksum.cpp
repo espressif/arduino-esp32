@@ -6,40 +6,22 @@
 #include "esp_partition.h"
 #include "esp_spi_flash.h"
 
-#include "UpdateProcessor.h"
+#include "UpdateProcessorWithChecksum.h"
 
-/* We have four formats; this handler deals with the original format:
-
-  1) original 'raw' package.
-
-   Starts with 0xE7 / ESP_IMAGE_HEADER_MAGIC.
-
-   Which has no checksum or other protection (beyond the size check and the check of the first byte).
-
- The EC, S/MIME and RFC3161 versons have thier own processors.
-
-*/
-
-
-UpdateProcessor::secure_update_processor_err_t UpdateProcessorLegacy::process_header(uint32_t *command, uint8_t* buffer, size_t *len) {
-  if ((*command) == U_SPIFFS)
-    return UpdateProcessor::secure_update_processor_OK;
-
-  if ((*command) == U_FLASH) {
-    if (buffer[0] == ESP_IMAGE_HEADER_MAGIC) {
-      log_d("Valid magic at start of flash header");
-      return UpdateProcessor::secure_update_processor_OK;
-    };
-    log_e("Missing ESP_IMAGE_HEADER_MAGIC");
-  };
-  log_e("Invalid command 0x%04x ", *command);
-
-  return UpdateProcessor::secure_update_processor_ERROR;
-};
+UpdateProcessorWithChecksum:: UpdateProcessorWithChecksum(UpdateProcessor * nxt) 
+   : _next(nxt)
+   , _md_info(NULL)
+   , _md_ctx(NULL)
+{
+  if (_next == NULL)
+    _next = new UpdateProcessorLegacy();
+}
 
 UpdateProcessorWithChecksum:: ~UpdateProcessorWithChecksum() {
   if (_md_ctx)
 	mbedtls_md_free(_md_ctx);
+  if (_next)
+        delete _next;
 };
 
 UpdateProcessor::secure_update_processor_err_t UpdateProcessorWithChecksum::setChecksum(const char * crc, mbedtls_md_type_t md_type) {
@@ -116,11 +98,11 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorWithChecksum::proc
     log_e("Failed to update digest.");
     return secure_update_processor_ERROR;
   }
-  return secure_update_processor_OK;
+  return _next->process_payload(buffer, len);
 };
 
 UpdateProcessor::secure_update_processor_err_t UpdateProcessorWithChecksum::process_end() {
-  unsigned char buff[MBEDTLS_MD_MAX_SIZE], digest[MBEDTLS_MD_MAX_SIZE];
+  unsigned char buff[MBEDTLS_MD_MAX_SIZE];
 
   if (mbedtls_md_finish(_md_ctx, buff)) {
     log_e("Failed to finalize digest.");
@@ -146,7 +128,7 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorWithChecksum::proc
     return UpdateProcessor::secure_update_processor_ERROR;
   }
   log_d("Payload digest matches.");
-  return secure_update_processor_OK;
+  return _next->process_end();
 }
 
 

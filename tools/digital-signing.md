@@ -67,7 +67,7 @@ while you watch the serial output.
 ## B) OK - so how do I this secure, without any server noncense ?
 
 So above example is just that; with no real security. Again
-takethe example 'SecureOTA' and open it.
+take the example 'SecureOTA' and open it.
 
 The next step would be to generate a public/private key; by doing
 
@@ -124,7 +124,7 @@ you have a hierarchy of:
            |
            +---- production 
            |         |
-           |         +--- product 1
+           |         +--- plant 1
            |
            +---- engineering
                      |
@@ -159,6 +159,10 @@ in an HSM are common choises), have important keys, such as those
 for production, well contained in a time-server. Yet easily accessible
 for those who need regular access.
 
+## Note
+
+If you use RSA keys - they need to be at least 2048 bits long. MBED TLS
+sensibly will reject anything shorter.
 
 ## Example output (Method A)
 

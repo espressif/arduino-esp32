@@ -36,33 +36,4 @@ class UpdateProcessor {
     virtual secure_update_processor_err_t process_payload(uint8_t * buff, size_t *len);
     virtual secure_update_processor_err_t process_end();
 };
-
-class UpdateProcessorLegacy : public UpdateProcessor {
-  public:
-    void reset() {};
-    secure_update_processor_err_t process_header(uint32_t *command, uint8_t * buffer, size_t *len);
-    secure_update_processor_err_t process_payload(uint8_t * buff, size_t *len) {
-      return secure_update_processor_OK;
-    }
-    secure_update_processor_err_t process_end() {
-      return secure_update_processor_OK;
-    };
-};
-
-class UpdateProcessorWithChecksum : public UpdateProcessor {
-  public:
-    UpdateProcessorWithChecksum() : _md_info(NULL), _md_ctx(NULL) {};
-    ~UpdateProcessorWithChecksum();
-    void reset();
-    secure_update_processor_err_t setChecksum(const char * crc, mbedtls_md_type_t md_type = MBEDTLS_MD_NONE);
-    secure_update_processor_err_t process_header(uint32_t *command, uint8_t * buffer, size_t *len) { 
-	return secure_update_processor_OK; 
-	};
-    secure_update_processor_err_t process_payload(uint8_t * buff, size_t *len);
-    secure_update_processor_err_t process_end();
-  private:
-    const mbedtls_md_info_t *_md_info;
-    mbedtls_md_context_t * _md_ctx;
-    unsigned char _md[MBEDTLS_MD_MAX_SIZE];
-};
 #endif

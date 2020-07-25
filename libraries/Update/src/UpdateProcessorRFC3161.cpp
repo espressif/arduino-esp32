@@ -9,6 +9,8 @@
 #include "mbedtls-ts-addons/x509_crt_utils.h"
 
 #include "UpdateProcessorRFC3161.h"
+#include "UpdateProcessorLegacy.h"
+
 
 /* We have three formats;
 
@@ -58,9 +60,6 @@ UpdateProcessorRFC3161::UpdateProcessorRFC3161(UpdateProcessor  * nxt)
   , _trustChain(NULL)
   , _legacyAllowed(false)
 {
-  // we need to hook this in - as the legacy processor does the actual
-  // burning of the firmware.
-  //
   if (_next == NULL)
     _next = new UpdateProcessorLegacy();
 };
@@ -252,25 +251,28 @@ UpdateProcessor::secure_update_processor_err_t UpdateProcessorRFC3161::process_h
       };
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-      {
-        log_d("Signatures in the trust chain:");
-        for (mbedtls_x509_crt * c = _trustChain; c; c = c->next) {
-          char buff[1024 * 2];
-          mbedtls_x509_crt_info(buf, sizeof(buff), " - ", c);
-          log_d("  %s", buff);
-          mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
-          log_d("  %s", buff);
-        };
-
-        log_d("Signatures in the RFC3161 wrapper:");
-        for (mbedtls_x509_crt * c = _reply.chain; c; c = c->next) {
-          char buff[1024 * 2];
-          mbedtls_x509_crt_info(buf, sizeof(buff), " - ", c);
-          log_d("  %s", buff);
-          mbedtls_x509_crt_fprint(buff, sizeof(buff)," - ", c, MBEDTLS_MD_SHA256);
-          log_d("  %s", buff);
-        };
-      }
+  {
+    char buf[1024 * 2];
+    int i;
+    log_d("Signatures in the trust chain:");
+    i = 0;
+    for (const mbedtls_x509_crt * c = _trustChain; c; c = c->next) {
+      if ((mbedtls_x509_crt_info( buf, sizeof(buf), " - ", c) > 0) &&
+          (mbedtls_x509_crt_fprint(buf + strlen(buf), sizeof(buf) - strlen(buf), " - ", c, MBEDTLS_MD_SHA256) > 0))
+        log_d("* Certificate %d:\n%s", ++i, buf);
+      else
+        log_e("Malformed cert in trust chain at postion %d",++i);
+    };
+    log_d("Signatures in the uploaded/untrusted chain:");
+    i = 0;
+    for (const mbedtls_x509_crt * c = _reply.chain; c; c = c->next) {
+      if ((mbedtls_x509_crt_info( buf, sizeof(buf), " - ", c) > 0) &&
+          (mbedtls_x509_crt_fprint(buf + strlen(buf), sizeof(buf) - strlen(buf), " - ", c, MBEDTLS_MD_SHA256) > 0))
+        log_d("* Certificate %d:\n%s", ++i, buf);
+      else
+        log_e("Malformed cert in uploaded/untrusted chain at position %d",++i);
+    };
+  }
 #endif
       if (mbedtls_x509_crt_verify(_reply.chain, _trustChain, NULL /* no CRL */, NULL /* any name fine */, &results, NULL, NULL) != 0) {
         char err_mess[128];

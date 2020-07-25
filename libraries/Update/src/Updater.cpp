@@ -1,8 +1,10 @@
-#include "Update.h"
 #include "Arduino.h"
 #include "esp_spi_flash.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
+
+#include "Update.h"
+#include "UpdateProcessorLegacy.h"
 
 static const char * _err2str(uint8_t _error) {
   if (_error == UPDATE_ERROR_OK) {
@@ -69,7 +71,6 @@ static bool _enablePartition(const esp_partition_t* partition) {
   }
   return true;
 }
-
 
 
 UpdateClass::UpdateClass(UpdateProcessor  * processor)
