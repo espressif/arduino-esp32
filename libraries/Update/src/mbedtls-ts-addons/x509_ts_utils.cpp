@@ -8,7 +8,6 @@
 #define mbedtls_free      free
 #define mbedtls_calloc    calloc
 #define mbedtls_printf    _TS_DEBUG_PRINTF
-#define mbedtls_snprintf  _TS_DEBUG_SNPRINTF
 
 #ifdef _TS_DEBUG
 char * _oid2str(mbedtls_x509_buf *oid) {
@@ -259,7 +258,7 @@ int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
   };
 
   if ( 0 != len ) {
-    _TS_DEBUG_PRINTF("At the end with %d left %c %c %c\n", len, (*p)[0], (*p)[1], (*p)[2]);
+    _TS_DEBUG_PRINTF("At the end with %d left %c %c %c", len, (*p)[0], (*p)[1], (*p)[2]);
     return ( MBEDTLS_ERR_X509_INVALID_DATE );
   };
   // CHECK( x509_date_is_valid( tm ) );
@@ -282,16 +281,16 @@ int mbedtls_asn1_get_algorithm_itentifier(unsigned char **p, unsigned char * end
   mbedtls_x509_buf oid;
   oid.p = *p;
   oid.len = len;
-  _TS_DEBUG_PRINTF("algoritm OID: %s\n", _oid2str(&oid));
+  _TS_DEBUG_PRINTF("algoritm OID: %s", _oid2str(&oid));
 
   mbedtls_md_type_t md_alg;
   mbedtls_pk_type_t pk_alg;
 
   if ( ( ret = mbedtls_oid_get_md_alg(&oid, &md_alg)) == 0) {
-    _TS_DEBUG_PRINTF("   MD algoritm internal num: %d %s\n", md_alg, mbedtls_md_get_name(mbedtls_md_info_from_type(md_alg)));
+    _TS_DEBUG_PRINTF("   MD algoritm internal num: %d %s", md_alg, mbedtls_md_get_name(mbedtls_md_info_from_type(md_alg)));
     *alg = (int) md_alg;
   } else if ( ( ret = mbedtls_oid_get_pk_alg(&oid, &pk_alg)) == 0) {
-    _TS_DEBUG_PRINTF("   PK algoritm internal num: %d\n", pk_alg); //, mbedtls_pk_get_name(mbedtls_pk_info_from_type(pk_alg)));
+    _TS_DEBUG_PRINTF("   PK algoritm internal num: %d", pk_alg); //, mbedtls_pk_get_name(mbedtls_pk_info_from_type(pk_alg)));
     *alg = (int) pk_alg;
   } else {
     _TS_DEBUG_PRINTF("Unkn OID");
@@ -363,7 +362,7 @@ int mbedtls_asn1_get_certificate_set(unsigned char **p, unsigned char * end, mbe
 #ifdef _TS_DEBUG
   int i = 0;
   for (mbedtls_x509_crt * crt = *chain; crt; crt = crt->next) i++;
-  _TS_DEBUG_PRINTF("Extracted %d certs\n", i);
+  _TS_DEBUG_PRINTF("Extracted %d certs", i);
 #endif
 
   assert(end == *p);

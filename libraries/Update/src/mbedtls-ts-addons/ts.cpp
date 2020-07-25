@@ -18,8 +18,8 @@
 #ifdef _TS_DEBUG
 #define CHKR(r) { if ( ( ret = (r) ) != 0 )  { assert(0); return ret; };  }
 #define CHKRE(r,e) { if ( (r)  != 0 )  { assert(0); return e; };  }
-#define CHK(r) { if ( ( ret = (r) ) != 0 )  { _TS_DEBUG_PRINTF("At @%d in rfc\n", p-from); assert(0); goto ts_reply_free_and_exit; };  }
-#define CHKE(r,e) { if ( ( (r) ) != 0 )  { _TS_DEBUG_PRINTF("At @%d in rfc\n", p-from); assert(0); ret = (e); goto ts_reply_free_and_exit; };  }
+#define CHK(r) { if ( ( ret = (r) ) != 0 )  { _TS_DEBUG_PRINTF("At @%d in rfc", p-from); assert(0); goto ts_reply_free_and_exit; };  }
+#define CHKE(r,e) { if ( ( (r) ) != 0 )  { _TS_DEBUG_PRINTF("At @%d in rfc", p-from); assert(0); ret = (e); goto ts_reply_free_and_exit; };  }
 #else
 #define CHKR(r) { if ( ( ret = (r) ) != 0 )  { return ret; };  }
 #define CHKRE(r,e) { if ( (r)  != 0 )  { return (e); };  }
@@ -73,7 +73,7 @@ int mbedtls_asn1_get_ts_pkistatusinfo(unsigned char **p, unsigned char * end, mb
 
   CHKR(mbedtls_asn1_get_int( p, end, &(out.pki_status)));
 
-  _TS_DEBUG_PRINTF("PKIStatus: %d\n", out.pki_status);
+  _TS_DEBUG_PRINTF("PKIStatus: %d", out.pki_status);
 
   if (*p < endp)  {
     if (mbedtls_asn1_get_tag(p, *p + len, &len,
@@ -102,12 +102,12 @@ int mbedtls_asn1_get_ts_pkistatusinfo(unsigned char **p, unsigned char * end, mb
         };
         *p += len;
       };
-      _TS_DEBUG_PRINTF("PKIFreeText: %s\n", statusBuff);
+      _TS_DEBUG_PRINTF("PKIFreeText: %s", statusBuff);
     }
 
     mbedtls_x509_bitstring bs;
     if ( mbedtls_asn1_get_bitstring(p, *p + len,  &bs )  == 0 ) {
-      _TS_DEBUG_PRINTF("PKIFailureInfo: %s\n", _bitstr(&bs));
+      _TS_DEBUG_PRINTF("PKIFailureInfo: %s", _bitstr(&bs));
     };
 
     CHKRE((bs.len > 1), MBEDTLS_ERR_X509_INVALID_FORMAT);
@@ -172,7 +172,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
 
   CHKRE((v != 1), MBEDTLS_ERR_X509_INVALID_FORMAT);
 
-  _TS_DEBUG_PRINTF("TSTInfo Version %d\n", v);
+  _TS_DEBUG_PRINTF("TSTInfo Version %d", v);
 
   //       policy                       TSAPolicyId,
   CHKR(mbedtls_asn1_get_tag(p, end_tsinfo, &len, MBEDTLS_ASN1_OID) );
@@ -192,18 +192,12 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
   out.payload_digest_len = len;
   *p += len;
 
-#ifdef _TS_DEBUG
-  _TS_DEBUG_PRINTF("The main hash of the payload: len=%d: ", out.payload_digest_len);
-  for (int i = 0; i < out.payload_digest_len; i++) _TS_DEBUG_PRINTF("%0x", out.payload_digest[i]);
-  _TS_DEBUG_PRINTF(".\n");
-#endif
-
   //      serialNumber                 INTEGER,
   {
     uint64_t serial = 0;
     CHKR(mbedtls_asn1_get_uint64(p, end_tsinfo, &serial));
 
-    _TS_DEBUG_PRINTF("Serial %llu\n", serial);
+    _TS_DEBUG_PRINTF("Serial %llu", serial);
   };
   /*
         genTime                      GeneralizedTime,
@@ -215,7 +209,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
 
   CHKR(x509_parse_time( p, len, 4, &(out.signed_time)));
 
-  _TS_DEBUG_PRINTF("Signature timestap: %04d-%02d-%02d %02d:%02d:%02d UTC\n",
+  _TS_DEBUG_PRINTF("Signature timestap: %04d-%02d-%02d %02d:%02d:%02d UTC",
                    out.signed_time.year, out.signed_time.mon, out.signed_time.day, out.signed_time.hour, out.signed_time.min, out.signed_time.sec);
 
   if (mbedtls_asn1_get_tag( p, end_tsinfo, &len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0) {
@@ -227,7 +221,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
     if (tryit == 0) tryit = mbedtls_asn1_get_int( p, ep, &milli);
     if (tryit == 0) tryit = mbedtls_asn1_get_int( p, ep, &micro);
 
-    _TS_DEBUG_PRINTF("Accuracy %d.%d.%d (ignored %d bytes)\n", sec, milli, micro, ep - *p);
+    _TS_DEBUG_PRINTF("Accuracy %d.%d.%d (ignored %d bytes)", sec, milli, micro, ep - *p);
 
     // skip over any extra cruft (Observed at the BSI.de)
     *p = ep;
@@ -237,7 +231,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
     // ordering                     BOOLEAN             DEFAULT FALSE,
     int ordering = 0;
     if (mbedtls_asn1_get_bool( p, end_tsinfo, &ordering) == 0) {
-      _TS_DEBUG_PRINTF("Ordering: %d\n", ordering);
+      _TS_DEBUG_PRINTF("Ordering: %d", ordering);
     }
   }
   //  nonce                        INTEGER                  OPTIONAL,
@@ -274,7 +268,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
             return ret;
           char s[1024];
           mbedtls_x509_dn_gets(s, sizeof(s), &directoryName);
-          _TS_DEBUG_PRINTF("directoryName: %s\n", s);
+          _TS_DEBUG_PRINTF("directoryName: %s", s);
           break;
         default:
           assert(0);
@@ -287,7 +281,7 @@ int mbedtls_ts_get_tsinfo(unsigned char **p, unsigned char * end, mbedtls_asn1_t
   if ((((*p)[0]) & 0xF) == 1)
     if (mbedtls_asn1_get_tag(p, end_tsinfo, &len,
                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0) {
-      _TS_DEBUG_PRINTF("Has extensions -- len %d (Unparsed %d)\n", len, end_tsinfo - *p);
+      _TS_DEBUG_PRINTF("Has extensions -- len %d (Unparsed %d)", len, end_tsinfo - *p);
       p += len;
     };
 
@@ -331,7 +325,7 @@ int mbedtls_ts_reply_free(struct mbedtls_ts_reply * reply) {
 int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp, mbedtls_ts_reply * reply)
 {
   mbedtls_x509_crt ** chain = &(reply->chain), * crt = NULL;
-  unsigned char *p = NULL, *end = NULL, * from;
+  unsigned char *p = NULL, *end = NULL;
   int ret = MBEDTLS_ERR_TS_CORRUPTION_DETECTED;
   size_t len;
 
@@ -350,8 +344,10 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
     return ( MBEDTLS_ERR_TS_BAD_INPUT_DATA ); // reuse
   };
   p = (unsigned char *)*buf;
-  from = p;
   end = p + *buflenp;
+#ifdef _TS_DEBUG
+  unsigned char *from = p;
+#endif
 
   /*    TimeStampResp ::= SEQUENCE
     status                  PKIStatusInfo,
@@ -390,7 +386,7 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   idSig.len = len;
   p += len;
 
-  _TS_DEBUG_PRINTF("idSig: %3d %s\n", len, _oid2str(&idSig));
+  _TS_DEBUG_PRINTF("idSig: %3d %s", len, _oid2str(&idSig));
 
   if ( MBEDTLS_OID_CMP( MBEDTLS_OID_PKCS7_ID_SIGNED, &idSig ) != 0 ) {
     ret = ( MBEDTLS_ERR_X509_INVALID_FORMAT );
@@ -420,7 +416,7 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   {
     int v;
     CHK(mbedtls_asn1_get_int( &p, end, &v));
-    _TS_DEBUG_PRINTF("SignedData Version %d\n", v);
+    _TS_DEBUG_PRINTF("SignedData Version %d", v);
   };
 
   CHK(mbedtls_asn1_get_tag( &p, end, &len,
@@ -442,7 +438,7 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   eContentType.p = p;
   eContentType.len = len;
   p += len;
-  _TS_DEBUG_PRINTF("eContentType: %3d %s\n", len, _oid2str(&eContentType));
+  _TS_DEBUG_PRINTF("eContentType: %3d %s", len, _oid2str(&eContentType));
 
   CHKE((MBEDTLS_OID_CMP( MBEDTLS_OID_STINFO, &eContentType ) != 0 ), MBEDTLS_ERR_X509_INVALID_FORMAT);
 
@@ -472,15 +468,15 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   if (mbedtls_asn1_get_tag( &p, end, &len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0) {
     CHK(mbedtls_asn1_get_certificate_set(&p, p + len, chain));
   } else {
-    _TS_DEBUG_PRINTF("No Certs\n");
+    _TS_DEBUG_PRINTF("No Certs");
   };
 
   if ( mbedtls_asn1_get_tag( &p, end, &len,
                              MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_CONTEXT_SPECIFIC) == 0) {
-    _TS_DEBUG_PRINTF("Has CRLs(ignored)\n");
+    _TS_DEBUG_PRINTF("Has CRLs(ignored)");
     p += len;
   } else {
-    _TS_DEBUG_PRINTF("No CRLs\n");
+    _TS_DEBUG_PRINTF("No CRLs");
   };
 
   //  signerInfos SignerInfos <--
@@ -490,21 +486,12 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   CHK(mbedtls_ts_get_signer_info(&p, end, &(reply->signer_info)));
 
   if (reply->signer_info.signing_cert_hash) {
-#if _TS_DEBUG
-    _TS_DEBUG_PRINTF("Scanning for certs..\n");
-    _TS_DEBUG_PRINTF("     hash (%d): ", reply->signer_info.signing_cert_hash_type);
-    for (int i = 0; i < reply->signer_info.signing_cert_hash_len; i++) {
-      _TS_DEBUG_PRINTF("%02x", reply->signer_info.signing_cert_hash[i]);
-    }
-    _TS_DEBUG_PRINTF(".\n");
-#endif
-
     // XXX set minimal level ? > SHA1 ?
     const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type( reply->signer_info.signing_cert_hash_type );
     assert(md_info);
 
     if (reply->signer_info.signing_cert_hash_len != mbedtls_md_get_size(md_info)) {
-      _TS_DEBUG_PRINTF("Hash of cert / mismatch %d != %d\n", reply->signer_info.signing_cert_hash_len, mbedtls_md_get_size(md_info));
+      _TS_DEBUG_PRINTF("Hash of cert / mismatch %d != %d", reply->signer_info.signing_cert_hash_len, mbedtls_md_get_size(md_info));
       ret = MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
       goto ts_reply_free_and_exit;
     }
@@ -521,20 +508,8 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
       CHK(mbedtls_md_update(&md, crt->raw.p, crt->raw.len));
       CHK(mbedtls_md_finish(&md, digest));
 
-#ifdef  _TS_DEBUG
-      _TS_DEBUG_PRINTF("  %2d hash: ", d);
-      for (int i = 0; i < mbedtls_md_get_size(md_info); i++) {
-        _TS_DEBUG_PRINTF("%02x", digest[i]);
-      }
-      _TS_DEBUG_PRINTF(".\n           ");
-      for (int i = 0; i < mbedtls_md_get_size(md_info); i++) {
-        _TS_DEBUG_PRINTF("%02x", reply->signer_info.signing_cert_hash[i]);
-      }
-      _TS_DEBUG_PRINTF(".\n");
-#endif
-
       if (bcmp(digest, reply->signer_info.signing_cert_hash, mbedtls_md_get_size(md_info)) == 0) {
-        _TS_DEBUG_PRINTF("Found one that matched\n");
+        _TS_DEBUG_PRINTF("Found one that matched");
         if (*chain != crt) {
           // not at the head of the chain; now make it so.
           mbedtls_x509_crt * parent;
@@ -549,7 +524,7 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
         }
         break;
       };
-      _TS_DEBUG_PRINTF("Nope # %d did not match\n", d);
+      _TS_DEBUG_PRINTF("Nope # %d did not match", d);
     };
   };
 
@@ -621,20 +596,11 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   CHK(mbedtls_md_update(&md, signed_data, signed_data_len));
   CHK(mbedtls_md_finish(&md, signed_data_digest));
 
-
-#if _TS_DEBUG
-  _TS_DEBUG_PRINTF("Calculated signedData area hash: ");
-  for (int i = 0; i < mbedtls_md_get_size(md_info); i++) {
-    _TS_DEBUG_PRINTF("%02x", signed_data_digest[i]);
-  }
-  _TS_DEBUG_PRINTF(".\n");
-#endif
-
   if (reply->signer_info.signed_attribute_raw && reply->signer_info.sig_digest) {
-    _TS_DEBUG_PRINTF("Indirected signing.\n");
+    _TS_DEBUG_PRINTF("Indirected signing.");
 
     if (reply->signer_info.sig_digest_len != signed_data_digest_len) {
-      _TS_DEBUG_PRINTF("Digest in signedAttrs has the wrong length %d != %d\n", reply->signer_info.sig_digest_len, signed_data_digest_len);
+      _TS_DEBUG_PRINTF("Digest in signedAttrs has the wrong length %d != %d", reply->signer_info.sig_digest_len, signed_data_digest_len);
       ret = MBEDTLS_ERR_PK_SIG_LEN_MISMATCH;
       goto ts_reply_free_and_exit;
     };
@@ -685,44 +651,27 @@ int mbedtls_x509_ts_reply_parse_der(const unsigned char **buf, size_t * buflenp,
   assert(reply->signer_info.sig);
   assert(reply->signer_info.sig_len);
 
-#ifdef _TS_DEBUG
-  _TS_DEBUG_PRINTF("Attribute Signed Data (s=%d, l=%d) -- calculated digest: len=%d: ",
-                   reply->signer_info.signed_attribute_raw - from,
-                   reply->signer_info.signed_attribute_len,
-                   signed_data_digest_len);
-  for (int i = 0; i < signed_data_digest_len; i++) {
-    _TS_DEBUG_PRINTF("%02x", signed_data_digest[i]);
-  }
-  _TS_DEBUG_PRINTF(".\n");
-
-  _TS_DEBUG_PRINTF("Signed info (%d bytes): ", reply->signer_info.sig_len);
-  for (int i = 0; i < reply->signer_info.sig_len; i++) {
-    _TS_DEBUG_PRINTF("%02x", reply->signer_info.sig[i]);
-  }
-  _TS_DEBUG_PRINTF(".\n");
-#endif
-
   ret = mbedtls_pk_verify(&(crt->pk),
                           signed_data_digest_type, signed_data_digest, signed_data_digest_len,
                           reply->signer_info.sig, reply->signer_info.sig_len);
   switch (ret) {
     case 0:
-      _TS_DEBUG_PRINTF("Signature on the Reply OK\n");
+      _TS_DEBUG_PRINTF("Signature on the Reply OK");
       break;
     case MBEDTLS_ERR_RSA_VERIFY_FAILED: {
         char buff[128]; mbedtls_strerror(ret, buff, sizeof(buff));
-        _TS_DEBUG_PRINTF("Signature FAIL %x: %s\n", -ret, buff);
+        _TS_DEBUG_PRINTF("Signature FAIL %x: %s", -ret, buff);
         goto ts_reply_free_and_exit;
       };
       break;
     case MBEDTLS_ERR_PK_SIG_LEN_MISMATCH: {
         char buff[128]; mbedtls_strerror(ret, buff, sizeof(buff));
-        _TS_DEBUG_PRINTF("Signature config fail %x: %s\n", -ret, buff);
+        _TS_DEBUG_PRINTF("Signature config fail %x: %s", -ret, buff);
         goto ts_reply_free_and_exit;
       };
       break;
     default:
-      printf("Other error %x %x\n", ret, -ret);
+      printf("Other error %x %x", ret, -ret);
       goto ts_reply_free_and_exit;
       break;
   };

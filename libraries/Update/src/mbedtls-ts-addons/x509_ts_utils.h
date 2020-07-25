@@ -36,10 +36,11 @@ int x509_parse_time( unsigned char **p, size_t len, size_t yearlen,
 #endif
 
 #ifdef _TS_DEBUG
+#include <esp32-hal-log.h>
 char * _oid2str(mbedtls_x509_buf *oid);
 char * _oidbuff2str(unsigned char *buf, size_t len);
 char * _bitstr(mbedtls_asn1_bitstring *bs);
-#define _TS_DEBUG_PRINTF(...) printf( __VA_ARGS__ )
+#define _TS_DEBUG_PRINTF(...) log_d( __VA_ARGS__ )
 #else
 #define _TS_DEBUG_PRINTF(...) /* no debugging compiled in */
 #endif

@@ -24,6 +24,6 @@
  * \return         The length of the string written (not including the
  *                 terminated nul byte), or a negative error code.
  */
-int mbedtls_x509_crt_fprint(char * buf, size_t size, char * prefix, mbedtls_x509_crt * crt, mbedtls_md_type_t mdtype);
+int mbedtls_x509_crt_fprint(char * buf, size_t size, const char * prefix, const mbedtls_x509_crt * crt, mbedtls_md_type_t mdtype);
 #endif
 

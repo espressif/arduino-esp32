@@ -70,7 +70,7 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
       {
         char s[1024];
         mbedtls_x509_dn_gets(s, sizeof(s), &(out.sid_name));
-        _TS_DEBUG_PRINTF("SID name %s\n", s);
+        _TS_DEBUG_PRINTF("SID name %s", s);
       };
 #endif
 
@@ -100,7 +100,7 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
     out.signed_attribute_raw = sap;
 
     unsigned char *ep = *p + len;
-    _TS_DEBUG_PRINTF("Signed attributes:\n");
+    _TS_DEBUG_PRINTF("Signed attributes:");
     while (*p < ep) {
       /* Attribute ::= SEQUENCE {
           attrType OBJECT IDENTIFIER,
@@ -115,7 +115,7 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
 
       CHKR(mbedtls_asn1_get_tag(p, ep, &len, MBEDTLS_ASN1_OID) );
 
-      _TS_DEBUG_PRINTF("  %s:\n", _oidbuff2str(*p, len));
+      _TS_DEBUG_PRINTF("  %s:", _oidbuff2str(*p, len));
 
       mbedtls_x509_buf oid;
       oid.p = *p;
@@ -132,11 +132,6 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
         CHKR(out.sig_digest != NULL);
         CHKR(mbedtls_asn1_get_tag(p, evap, &len, MBEDTLS_ASN1_OCTET_STRING) );
 
-#ifdef _TS_DEBUG
-        _TS_DEBUG_PRINTF("   Digest (signed section): len=%d: ", len);
-        for (int i = 0; i < len; i++) _TS_DEBUG_PRINTF("%02x", (*p)[i]);
-        _TS_DEBUG_PRINTF(".\n");
-#endif
         // Only pick it if it is longer.
         if (len > out.sig_digest_len) {
           out.sig_digest = *p;
@@ -154,11 +149,6 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
           out.signing_cert_hash = *p;
           out.signing_cert_hash_len = len;
         };
-#ifdef _TS_DEBUG
-        _TS_DEBUG_PRINTF("    Signing cert hash V1 (%d): ", out.signing_cert_hash_type);
-        for (int i = 0; i < len; i++) _TS_DEBUG_PRINTF("%02x", out.signing_cert_hash[i]);
-        _TS_DEBUG_PRINTF(".\n");
-#endif
       }
       else if ( MBEDTLS_OID_CMP( MBEDTLS_OID_PKCS9_SMIME_AA_SIGNING_CERT_V2, &oid ) == 0 ) {
         /*    SigningCertificateV2 ::=  SEQUENCE
@@ -187,12 +177,9 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
 
         out.signing_cert_hash = *p;
         out.signing_cert_hash_len = len;
-        _TS_DEBUG_PRINTF("    Signing cert hash (%d) V2: ", out.signing_cert_hash_type);
-        for (int i = 0; i < len; i++) _TS_DEBUG_PRINTF("%02x", out.signing_cert_hash[i]);
-        _TS_DEBUG_PRINTF(".\n");
       }
       else {
-        _TS_DEBUG_PRINTF("   Not decoded -- skipped\n");
+        _TS_DEBUG_PRINTF("   Not decoded -- skipped");
       }
       // skip over all else.
       *p = evap;
@@ -211,15 +198,6 @@ int mbedtls_ts_get_signer_info(unsigned char **p, unsigned char * end, mbedtls_a
 
   out.sig = *p;
   out.sig_len = len;
-
-#ifdef _TS_DEBUG
-  _TS_DEBUG_PRINTF("Signature (%d bytes): ", out.sig_len);
-  for (int i = 0; i < out.sig_len; i++) {
-    _TS_DEBUG_PRINTF("%02x", out.sig[i]);
-  }
-  _TS_DEBUG_PRINTF(".\n");
-#endif
-
 
   /* unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL
   */
