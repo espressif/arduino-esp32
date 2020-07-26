@@ -32,6 +32,7 @@
 #include <WiFiUdp.h>
 #include <HTTPClient.h>
 #include <Update.h>
+#include <UpdateProcessorWithChecksum.h>
 
 #include <mbedtls/md.h>
 

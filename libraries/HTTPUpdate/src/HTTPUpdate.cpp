@@ -399,7 +399,7 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String crc, int command)
 
     if(md_type == MBEDTLS_MD_NONE || _processor->setChecksum(crc.c_str(), md_type)) {
         _lastError = HTTP_UE_SERVER_FAULTY_MD5;
-        log_e("Updater::runUpdate failed - cannot handle this checksum (%s, only MD5, SHA1,224,256 and 512 supported as hex string)\n", md5.c_str());
+        log_e("Updater::runUpdate failed - cannot handle %s (only MD5, SHA1,224,256 and 512 supported as hex string)", crc.c_str());
         return false;
     };
 
