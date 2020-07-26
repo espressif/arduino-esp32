@@ -32,6 +32,9 @@
 #include <WiFiUdp.h>
 #include <HTTPClient.h>
 #include <Update.h>
+#include <UpdateProcessorWithChecksum.h>
+
+#include <mbedtls/md.h>
 
 /// note we use HTTP client errors too so we start at 100
 #define HTTP_UE_TOO_LESS_SPACE              (-100)
@@ -92,6 +95,12 @@ private:
 
     int _ledPin;
     uint8_t _ledOn;
+
+    UpdateProcessorWithChecksum * _processor ;
+    UpdateClass * _updater;
+
+    const mbedtls_md_info_t *_md_info;
+    mbedtls_md_context_t * _md_ctx;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)
