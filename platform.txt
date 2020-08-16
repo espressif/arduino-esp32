@@ -89,7 +89,9 @@ build.flash_mode=dio
 build.boot=bootloader
 build.code_debug=0
 build.defines=
-build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines} {build.extra_flags.{build.mcu}}
+build.loop_core=
+build.event_core=
+build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
 
 # Check if custom partitions exist
 recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
