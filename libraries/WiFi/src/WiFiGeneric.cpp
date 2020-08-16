@@ -45,7 +45,7 @@ extern "C" {
 
 } //extern "C"
 
-#include "esp32-hal-log.h"
+#include "esp32-hal.h"
 #include <vector>
 #include "sdkconfig.h"
 
@@ -475,7 +475,7 @@ static bool _start_network_event_task(){
     }
 
     if(!_arduino_event_task_handle){
-        xTaskCreateUniversal(_arduino_event_task, "arduino_events", 4096, NULL, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, CONFIG_ARDUINO_EVENT_RUNNING_CORE);
+        xTaskCreateUniversal(_arduino_event_task, "arduino_events", 4096, NULL, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, ARDUINO_EVENT_RUNNING_CORE);
         if(!_arduino_event_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
