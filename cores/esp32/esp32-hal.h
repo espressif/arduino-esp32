@@ -52,6 +52,14 @@ extern "C" {
 #define ARDUINO_ISR_FLAG (0)
 #endif
 
+#ifndef ARDUINO_RUNNING_CORE
+#define ARDUINO_RUNNING_CORE CONFIG_ARDUINO_RUNNING_CORE
+#endif
+
+#ifndef ARDUINO_EVENT_RUNNING_CORE
+#define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
+#endif
+
 //forward declaration from freertos/portmacro.h
 void vPortYield(void);
 void yield(void);
