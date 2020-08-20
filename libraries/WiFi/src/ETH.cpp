@@ -113,7 +113,7 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
 {
     esp_err_t err = ESP_OK;
     tcpip_adapter_ip_info_t info;
-	
+
     if(local_ip != (uint32_t)0x00000000){
         info.ip.addr = static_cast<uint32_t>(local_ip);
         info.gw.addr = static_cast<uint32_t>(gateway);
@@ -193,8 +193,8 @@ IPAddress ETHClass::gatewayIP()
 
 IPAddress ETHClass::dnsIP(uint8_t dns_no)
 {
-    ip_addr_t dns_ip = dns_getserver(dns_no);
-    return IPAddress(dns_ip.u_addr.ip4.addr);
+    const ip_addr_t *dns_ip = dns_getserver(dns_no);
+    return IPAddress(dns_ip->u_addr.ip4.addr);
 }
 
 IPAddress ETHClass::broadcastIP()
