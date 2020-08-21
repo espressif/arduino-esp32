@@ -20,7 +20,7 @@ static const uint8_t SCL = 32;
 
 static const uint8_t G12 = 12;
 static const uint8_t G19 = 19;
-static const uint8_t G22 = 21;
+static const uint8_t G21 = 21;
 static const uint8_t G22 = 22;
 static const uint8_t G23 = 23;
 static const uint8_t G25 = 25;
