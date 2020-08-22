@@ -20,10 +20,6 @@
 #ifndef HAL_ESP32_HAL_H_
 #define HAL_ESP32_HAL_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,6 +31,10 @@ extern "C" {
 #include "sdkconfig.h"
 #include "esp_system.h"
 #include "esp_sleep.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef F_CPU
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
