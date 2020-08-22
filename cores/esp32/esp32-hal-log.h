@@ -20,6 +20,7 @@ extern "C"
 #endif
 
 #include "sdkconfig.h"
+#include "esp_timer.h"
 
 #define ARDUHAL_LOG_LEVEL_NONE       (0)
 #define ARDUHAL_LOG_LEVEL_ERROR      (1)
