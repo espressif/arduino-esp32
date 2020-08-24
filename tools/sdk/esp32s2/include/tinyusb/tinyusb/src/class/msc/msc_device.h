@@ -38,11 +38,18 @@
 //--------------------------------------------------------------------+
 // Class Driver Configuration
 //--------------------------------------------------------------------+
-TU_VERIFY_STATIC(CFG_TUD_MSC_BUFSIZE < UINT16_MAX, "Size is not correct");
 
-#ifndef CFG_TUD_MSC_BUFSIZE
-  #error CFG_TUD_MSC_BUFSIZE must be defined, value of a block size should work well, the more the better
+#if !defined(CFG_TUD_MSC_EP_BUFSIZE) & defined(CFG_TUD_MSC_BUFSIZE)
+  // TODO warn user to use new name later on
+  // #warning CFG_TUD_MSC_BUFSIZE is renamed to CFG_TUD_MSC_EP_BUFSIZE, please update to use the new name
+  #define CFG_TUD_MSC_EP_BUFSIZE  CFG_TUD_MSC_BUFSIZE
 #endif
+
+#ifndef CFG_TUD_MSC_EP_BUFSIZE
+  #error CFG_TUD_MSC_EP_BUFSIZE must be defined, value of a block size should work well, the more the better
+#endif
+
+TU_VERIFY_STATIC(CFG_TUD_MSC_EP_BUFSIZE < UINT16_MAX, "Size is not correct");
 
 /** \addtogroup ClassDriver_MSC
  *  @{

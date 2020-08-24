@@ -39,8 +39,14 @@
 // Class Driver Default Configure & Validation
 //--------------------------------------------------------------------+
 
-#ifndef CFG_TUD_HID_BUFSIZE
-#define CFG_TUD_HID_BUFSIZE     16
+#if !defined(CFG_TUD_HID_EP_BUFSIZE) & defined(CFG_TUD_HID_BUFSIZE)
+  // TODO warn user to use new name later on
+  // #warning CFG_TUD_HID_BUFSIZE is renamed to CFG_TUD_HID_EP_BUFSIZE, please update to use the new name
+  #define CFG_TUD_HID_EP_BUFSIZE  CFG_TUD_HID_BUFSIZE
+#endif
+
+#ifndef CFG_TUD_HID_EP_BUFSIZE
+  #define CFG_TUD_HID_EP_BUFSIZE     16
 #endif
 
 //--------------------------------------------------------------------+

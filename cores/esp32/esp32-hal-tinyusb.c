@@ -544,7 +544,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         initialized = false;
         return err;
     }
-    xTaskCreate(usb_device_task, "usbd", 4096, NULL, 24, NULL);
+    xTaskCreate(usb_device_task, "usbd", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
     return err;
 }
 

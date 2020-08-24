@@ -1,5 +1,4 @@
 menu.UploadSpeed=Upload Speed
-menu.UploadMode=Upload Mode
 menu.SerialMode=Serial Connected To
 menu.CPUFreq=CPU Frequency
 menu.FlashFreq=Flash Frequency
@@ -27,8 +26,8 @@ esp32s2.upload.maximum_size=1310720
 esp32s2.upload.maximum_data_size=327680
 esp32s2.upload.flags=
 
-esp32s2.serial.disableDTR=true
-esp32s2.serial.disableRTS=true
+esp32s2.serial.disableDTR=false
+esp32s2.serial.disableRTS=false
 
 esp32s2.build.mcu=esp32s2
 esp32s2.build.core=esp32
@@ -48,22 +47,6 @@ esp32s2.menu.SerialMode.default=UART0
 esp32s2.menu.SerialMode.default.build.serial=0
 esp32s2.menu.SerialMode.cdc=USB CDC
 esp32s2.menu.SerialMode.cdc.build.serial=1
-
-esp32s2.menu.UploadMode.default=Default Uart
-esp32s2.menu.UploadMode.default.upload.flags=
-esp32s2.menu.UploadMode.default.upload.tool=esptool_py
-esp32s2.menu.UploadMode.default.serial.disableDTR=true
-esp32s2.menu.UploadMode.default.serial.disableRTS=true
-esp32s2.menu.UploadMode.cdc=USB CDC
-esp32s2.menu.UploadMode.cdc.upload.flags=--no-stub
-esp32s2.menu.UploadMode.cdc.upload.tool=esptool_py
-esp32s2.menu.UploadMode.cdc.serial.disableDTR=false
-esp32s2.menu.UploadMode.cdc.serial.disableRTS=false
-#esp32s2.menu.UploadMode.dfu=USB DFU
-#esp32s2.menu.UploadMode.dfu.upload.flags=
-#esp32s2.menu.UploadMode.dfu.upload.tool=dfu_util
-#esp32s2.menu.UploadMode.dfu.serial.disableDTR=false
-#esp32s2.menu.UploadMode.dfu.serial.disableRTS=false
 
 esp32s2.menu.PSRAM.disabled=Disabled
 esp32s2.menu.PSRAM.disabled.build.defines=
@@ -578,8 +561,8 @@ feathers2.upload.maximum_size=1310720
 feathers2.upload.maximum_data_size=327680
 feathers2.upload.flags=
 
-feathers2.serial.disableDTR=true
-feathers2.serial.disableRTS=true
+feathers2.serial.disableDTR=false
+feathers2.serial.disableRTS=false
 
 feathers2.build.mcu=esp32s2
 feathers2.build.core=esp32
@@ -604,17 +587,6 @@ feathers2.menu.PSRAM.enabled=Enabled
 feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 feathers2.menu.PSRAM.disabled=Disabled
 feathers2.menu.PSRAM.disabled.build.defines=
-
-feathers2.menu.UploadMode.cdc=USB CDC
-feathers2.menu.UploadMode.cdc.upload.flags=--no-stub
-feathers2.menu.UploadMode.cdc.upload.tool=esptool_py
-feathers2.menu.UploadMode.cdc.serial.disableDTR=false
-feathers2.menu.UploadMode.cdc.serial.disableRTS=false
-feathers2.menu.UploadMode.default=Default Uart - External
-feathers2.menu.UploadMode.default.upload.flags=
-feathers2.menu.UploadMode.default.upload.tool=esptool_py
-feathers2.menu.UploadMode.default.serial.disableDTR=true
-feathers2.menu.UploadMode.default.serial.disableRTS=true
 
 feathers2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
 feathers2.menu.PartitionScheme.fatflash.build.partitions=ffat
@@ -710,8 +682,8 @@ pros2.upload.maximum_size=1310720
 pros2.upload.maximum_data_size=327680
 pros2.upload.flags=
 
-pros2.serial.disableDTR=true
-pros2.serial.disableRTS=true
+pros2.serial.disableDTR=false
+pros2.serial.disableRTS=false
 
 pros2.build.mcu=esp32s2
 pros2.build.core=esp32
@@ -736,17 +708,6 @@ pros2.menu.PSRAM.enabled=Enabled
 pros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 pros2.menu.PSRAM.disabled=Disabled
 pros2.menu.PSRAM.disabled.build.defines=
-
-pros2.menu.UploadMode.cdc=USB CDC
-pros2.menu.UploadMode.cdc.upload.flags=--no-stub
-pros2.menu.UploadMode.cdc.upload.tool=esptool_py
-pros2.menu.UploadMode.cdc.serial.disableDTR=false
-pros2.menu.UploadMode.cdc.serial.disableRTS=false
-pros2.menu.UploadMode.default=Default Uart - External
-pros2.menu.UploadMode.default.upload.flags=
-pros2.menu.UploadMode.default.upload.tool=esptool_py
-pros2.menu.UploadMode.default.serial.disableDTR=true
-pros2.menu.UploadMode.default.serial.disableRTS=true
 
 pros2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
 pros2.menu.PartitionScheme.fatflash.build.partitions=ffat
