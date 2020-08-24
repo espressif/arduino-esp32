@@ -75,8 +75,8 @@ static inline uint32_t periph_ll_get_clk_en_mask(periph_module_t periph)
         return DPORT_WIFI_CLK_SDIO_HOST_EN;
     case PERIPH_SDIO_SLAVE_MODULE:
         return DPORT_WIFI_CLK_SDIOSLAVE_EN;
-    case PERIPH_CAN_MODULE:
-        return DPORT_CAN_CLK_EN;
+    case PERIPH_TWAI_MODULE:
+        return DPORT_TWAI_CLK_EN;
     case PERIPH_EMAC_MODULE:
         return DPORT_WIFI_CLK_EMAC_EN;
     case PERIPH_RNG_MODULE:
@@ -153,8 +153,8 @@ static inline uint32_t periph_ll_get_rst_en_mask(periph_module_t periph, bool en
         return DPORT_SDIO_HOST_RST;
     case PERIPH_SDIO_SLAVE_MODULE:
         return DPORT_SDIO_RST;
-    case PERIPH_CAN_MODULE:
-        return DPORT_CAN_RST;
+    case PERIPH_TWAI_MODULE:
+        return DPORT_TWAI_RST;
     case PERIPH_EMAC_MODULE:
         return DPORT_EMAC_RST;
     case PERIPH_AES_MODULE:
@@ -242,10 +242,28 @@ static inline void periph_ll_disable_clk_set_rst(periph_module_t periph)
     DPORT_SET_PERI_REG_MASK(periph_ll_get_rst_en_reg(periph), periph_ll_get_rst_en_mask(periph, false));
 }
 
+static inline void IRAM_ATTR periph_ll_wifi_bt_module_enable_clk_clear_rst(void)
+{
+    DPORT_SET_PERI_REG_MASK(DPORT_WIFI_CLK_EN_REG, DPORT_WIFI_CLK_WIFI_BT_COMMON_M);
+    DPORT_CLEAR_PERI_REG_MASK(DPORT_CORE_RST_EN_REG, 0);
+}
+
+static inline void IRAM_ATTR periph_ll_wifi_bt_module_disable_clk_set_rst(void)
+{
+    DPORT_CLEAR_PERI_REG_MASK(DPORT_WIFI_CLK_EN_REG, DPORT_WIFI_CLK_WIFI_BT_COMMON_M);
+    DPORT_SET_PERI_REG_MASK(DPORT_CORE_RST_EN_REG, 0);
+}
+
 static inline void periph_ll_reset(periph_module_t periph)
 {
     DPORT_SET_PERI_REG_MASK(periph_ll_get_rst_en_reg(periph), periph_ll_get_rst_en_mask(periph, false));
     DPORT_CLEAR_PERI_REG_MASK(periph_ll_get_rst_en_reg(periph), periph_ll_get_rst_en_mask(periph, false));
+}
+
+static inline bool IRAM_ATTR periph_ll_periph_enabled(periph_module_t periph)
+{
+    return DPORT_REG_GET_BIT(periph_ll_get_rst_en_reg(periph), periph_ll_get_rst_en_mask(periph, false)) == 0 &&
+        DPORT_REG_GET_BIT(periph_ll_get_clk_en_reg(periph), periph_ll_get_clk_en_mask(periph)) != 0;
 }
 
 #ifdef __cplusplus

@@ -19,7 +19,7 @@ MEMORY
   of the various regions. The 'data access port' dram/drom regions map to the same iram/irom regions but
   are connected to the data port of the CPU and eg allow bytewise access. */
   /* IRAM for CPU.*/
-  iram0_0_seg (RX) : org = (0x40020000 + 0x2000 + 0x2000), len = 0x3FFE4000 - (0x3FFB0000 + 0x2000 + 0x2000)
+  iram0_0_seg (RX) : org = (0x40020000 + 0x2000 + 0x2000), len = 0x3FFE0000 - (0x3FFB0000 + 0x2000 + 0x2000)
   /* Even though the segment name is iram, it is actually mapped to flash
   */
   iram0_2_seg (RX) : org = 0x40080020, len = 0x780000-0x20
@@ -31,7 +31,7 @@ MEMORY
     constraint that (paddr % 64KB == vaddr % 64KB).)
   */
   /* Shared data RAM, excluding memory reserved for bootloader and ROM bss/data/stack. */
-  dram0_0_seg (RW) : org = (0x3FFB0000 + 0x2000 + 0x2000), len = 0x3FFE4000 - (0x3FFB0000 + 0x2000 + 0x2000)
+  dram0_0_seg (RW) : org = (0x3FFB0000 + 0x2000 + 0x2000), len = 0x3FFE0000 - (0x3FFB0000 + 0x2000 + 0x2000) - 0
   /* Flash mapped constant data */
   drom0_0_seg (R) : org = 0x3F000020, len = 0x3f0000-0x20
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */
