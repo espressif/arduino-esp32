@@ -35,13 +35,14 @@
 #endif
 
 #include "common/tusb_common.h"
-#include "dcd.h"
 
 //--------------------------------------------------------------------+
 // Application API
 //--------------------------------------------------------------------+
 
 // Init device stack
+// Note: when using with RTOS, this should be called after scheduler/kernel is started.
+// Otherwise it could cause kernel issue since USB IRQ handler does use RTOS queue API.
 bool tud_init (void);
 
 // Task function should be called in main/rtos loop
@@ -51,7 +52,11 @@ void tud_task (void);
 bool tud_task_event_ready(void);
 
 // Interrupt handler, name alias to DCD
+extern void dcd_int_handler(uint8_t rhport);
 #define tud_int_handler   dcd_int_handler
+
+// Get current bus speed
+tusb_speed_t tud_speed_get(void);
 
 // Check if device is connected and configured
 bool tud_mounted(void);
@@ -70,21 +75,11 @@ bool tud_remote_wakeup(void);
 
 // Enable pull-up resistor on D+ D-
 // Return false on unsupported MCUs
-static inline bool tud_disconnect(void)
-{
-  TU_VERIFY(dcd_disconnect);
-  dcd_disconnect(TUD_OPT_RHPORT);
-  return true;
-}
+bool tud_disconnect(void);
 
 // Disable pull-up resistor on D+ D-
 // Return false on unsupported MCUs
-static inline bool tud_connect(void)
-{
-  TU_VERIFY(dcd_connect);
-  dcd_connect(TUD_OPT_RHPORT);
-  return true;
-}
+bool tud_connect(void);
 
 // Carry out Data and Status stage of control transfer
 // - If len = 0, it is equivalent to sending status only

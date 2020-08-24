@@ -34,7 +34,7 @@
 #define RAM_IRAM_START    0x40020000
 #define RAM_DRAM_START    0x3FFB0000
 
-#define DATA_RAM_END      0x3FFE4000  /* 2nd stage bootloader iram_loader_seg starts at block 15 */
+#define DATA_RAM_END      0x3FFE0000  /* 2nd stage bootloader iram_loader_seg starts at SRAM block 14 (reclaimed after app boots) */
 
 #define IRAM_ORG    (RAM_IRAM_START + CONFIG_ESP32S2_INSTRUCTION_CACHE_SIZE \
                                     + CONFIG_ESP32S2_DATA_CACHE_SIZE)
@@ -43,6 +43,17 @@
                                     + CONFIG_ESP32S2_DATA_CACHE_SIZE)
 
 #define I_D_RAM_SIZE   DATA_RAM_END - DRAM_ORG
+
+#if defined(CONFIG_ESP32S2_USE_FIXED_STATIC_RAM_SIZE)
+
+ASSERT((CONFIG_ESP32S2_FIXED_STATIC_RAM_SIZE <= I_D_RAM_SIZE),
+          "Fixed static ram data does not fit.")
+
+#define STATIC_RAM_SIZE CONFIG_ESP32S2_FIXED_STATIC_RAM_SIZE
+
+#else
+#define STATIC_RAM_SIZE 0
+#endif
 
 MEMORY
 {
@@ -69,7 +80,7 @@ MEMORY
 
 
   /* Shared data RAM, excluding memory reserved for bootloader and ROM bss/data/stack. */
-  dram0_0_seg (RW) :                 org = DRAM_ORG, len = I_D_RAM_SIZE
+  dram0_0_seg (RW) :                 org = DRAM_ORG, len = I_D_RAM_SIZE - STATIC_RAM_SIZE
 
 #ifdef CONFIG_APP_BUILD_USE_FLASH_SECTIONS
   /* Flash mapped constant data */
@@ -93,7 +104,12 @@ MEMORY
   rtc_data_seg(RW) :                 org = 0x3ff9e000, len = 0x2000 - ESP_BOOTLOADER_RESERVE_RTC
 }
 
+#if defined(CONFIG_ESP32S2_USE_FIXED_STATIC_RAM_SIZE)
+/* static data ends at defined address */
+_static_data_end = DRAM_ORG + STATIC_RAM_SIZE;
+#else
 _static_data_end = _bss_end;
+#endif
 
 _heap_end = 0x40000000;
 

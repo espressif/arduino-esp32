@@ -37,7 +37,7 @@
 #include "netif/ethernet.h"
 
 /* declared here, NOT in usb_descriptors.c, so that the driver can intelligently ZLP as needed */
-#define CFG_TUD_NET_ENDPOINT_SIZE ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 512 : 64)
+#define CFG_TUD_NET_ENDPOINT_SIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
 /* Maximum Tranmission Unit (in bytes) of the network, including Ethernet header */
 #define CFG_TUD_NET_MTU           (1500 + SIZEOF_ETH_HDR)
