@@ -1,7 +1,11 @@
 #ifndef __ARDUINO_OTA_H
 #define __ARDUINO_OTA_H
 
+#ifdef ARDUINOOTE
+#include <Ethernet.h>
+#else
 #include <WiFi.h>
+#endif
 #include <functional>
 #include "Update.h"
 
@@ -81,7 +85,11 @@ class ArduinoOTAClass
     String _password;
     String _hostname;
     String _nonce;
+#ifdef ARDUINOOTE
+    EthernetUDP _udp_ota;
+#else
     WiFiUDP _udp_ota;
+#endif
     bool _initialized;
     bool _rebootOnSuccess;
     bool _mdnsEnabled;
