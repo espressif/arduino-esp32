@@ -16,7 +16,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	sed 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json" > "platform.json"
 	mv -f "platform.json" "$HOME/.platformio/platforms/espressif32/platform.json"
 else
-	sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json"
+	sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32*/platform.json"
 fi
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
