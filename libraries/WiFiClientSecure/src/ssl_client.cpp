@@ -276,23 +276,17 @@ int data_to_read(sslclient_context *ssl_client)
     return res;
 }
 
-
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t len)
 {
-    log_v("Writing HTTP request...");  //for low level debug
+    log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
-    while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-            return handle_error(ret);
-        }
-    }
+    if ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0)
+        return handle_error(ret);
 
-    len = ret;
-    //log_v("%d bytes written", len);  //for low level debug
+    log_v("Returning with %d bytes written", ret); //for low level debug
     return ret;
 }
-
 
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length)
 {
