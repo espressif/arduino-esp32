@@ -97,8 +97,8 @@ build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core
 # Check if custom partitions exist
 recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
 recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.1.pattern.windows=@cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
-recipe.hooks.prebuild.2.pattern.windows=@cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\\{build.partitions}.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\\{build.partitions}.csv" "{build.path}\partitions.csv"
 
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.c.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
