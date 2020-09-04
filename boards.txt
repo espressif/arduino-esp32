@@ -24,8 +24,8 @@ esp32s2.upload.maximum_size=1310720
 esp32s2.upload.maximum_data_size=327680
 esp32s2.upload.flags=
 
-esp32s2.serial.disableDTR=true
-esp32s2.serial.disableRTS=true
+esp32s2.serial.disableDTR=false
+esp32s2.serial.disableRTS=false
 
 esp32s2.build.mcu=esp32s2
 esp32s2.build.core=esp32
@@ -554,8 +554,8 @@ feathers2.upload.maximum_size=1310720
 feathers2.upload.maximum_data_size=327680
 feathers2.upload.flags=
 
-feathers2.serial.disableDTR=true
-feathers2.serial.disableRTS=true
+feathers2.serial.disableDTR=false
+feathers2.serial.disableRTS=false
 
 feathers2.build.mcu=esp32s2
 feathers2.build.core=esp32
@@ -675,8 +675,8 @@ pros2.upload.maximum_size=1310720
 pros2.upload.maximum_data_size=327680
 pros2.upload.flags=
 
-pros2.serial.disableDTR=true
-pros2.serial.disableRTS=true
+pros2.serial.disableDTR=false
+pros2.serial.disableRTS=false
 
 pros2.build.mcu=esp32s2
 pros2.build.core=esp32
