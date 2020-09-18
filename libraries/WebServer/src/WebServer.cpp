@@ -278,6 +278,7 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
+    delay(1);
     WiFiClient client = _server.available();
     if (!client) {
       return;
