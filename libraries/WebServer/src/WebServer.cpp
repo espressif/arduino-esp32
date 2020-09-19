@@ -45,6 +45,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
 , _statusChange(0)
+, _nullDelay(true)
 , _currentHandler(nullptr)
 , _firstHandler(nullptr)
 , _lastHandler(nullptr)
@@ -66,6 +67,7 @@ WebServer::WebServer(int port)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
 , _statusChange(0)
+, _nullDelay(true)
 , _currentHandler(nullptr)
 , _firstHandler(nullptr)
 , _lastHandler(nullptr)
@@ -278,9 +280,11 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
-    delay(1);
     WiFiClient client = _server.available();
     if (!client) {
+      if (_nullDelay) {
+        delay(1);
+      }
       return;
     }
 
@@ -369,6 +373,10 @@ void WebServer::sendHeader(const String& name, const String& value, bool first) 
 
 void WebServer::setContentLength(const size_t contentLength) {
     _contentLength = contentLength;
+}
+
+void WebServer::enableDelay(boolean value) {
+  _nullDelay = value;
 }
 
 void WebServer::enableCORS(boolean value) {
