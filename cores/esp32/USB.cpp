@@ -29,7 +29,7 @@
 #define USB_PRODUCT ARDUINO_BOARD
 #endif
 #ifndef USB_SERIAL
-#define USB_SERIAL ""
+#define USB_SERIAL "0"
 #endif
 
 extern "C" {
