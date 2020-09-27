@@ -65,11 +65,11 @@ public:
     setInstanceName(String(name));
   }
 
-  void addService(char *service, char *proto, uint16_t port);
-  void addService(const char *service, const char *proto, uint16_t port){
+  bool addService(char *service, char *proto, uint16_t port);
+  bool addService(const char *service, const char *proto, uint16_t port){
     addService((char *)service, (char *)proto, port);
   }
-  void addService(String service, String proto, uint16_t port){
+  bool addService(String service, String proto, uint16_t port){
     addService(service.c_str(), proto.c_str(), port);
   }
   
