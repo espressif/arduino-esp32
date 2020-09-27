@@ -67,10 +67,10 @@ public:
 
   bool addService(char *service, char *proto, uint16_t port);
   bool addService(const char *service, const char *proto, uint16_t port){
-    addService((char *)service, (char *)proto, port);
+    return addService((char *)service, (char *)proto, port);
   }
   bool addService(String service, String proto, uint16_t port){
-    addService(service.c_str(), proto.c_str(), port);
+    return addService(service.c_str(), proto.c_str(), port);
   }
   
   bool addServiceTxt(char *name, char *proto, char * key, char * value);
