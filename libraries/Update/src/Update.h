@@ -78,7 +78,7 @@ class UpdateClass {
     /*
       Prints the last error to an output stream
     */
-    void printError(Stream &out);
+    void printError(Print &out);
 
     const char * errorString();
 
