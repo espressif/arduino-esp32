@@ -75,6 +75,8 @@ public:
     uint32_t getMaxAllocPsram();
 
     uint8_t getChipRevision();
+    const char * getChipModel();
+    uint8_t getChipCores();
     uint32_t getCpuFreqMHz(){ return getCpuFrequencyMhz(); }
     inline uint32_t getCycleCount() __attribute__((always_inline));
     const char * getSdkVersion();
