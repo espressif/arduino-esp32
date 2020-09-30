@@ -25,6 +25,8 @@
 #include "pins_arduino.h"
 #include "esp32-hal-spi.h"
 
+#define SPI_HAS_TRANSACTION
+
 class SPISettings
 {
 public:

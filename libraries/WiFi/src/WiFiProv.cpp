@@ -27,25 +27,37 @@
 #include <esp_event_loop.h>
 #include <esp32-hal.h>
 
-#include <nvs_flash.h>
 #include <wifi_provisioning/scheme_ble.h>
 #include <wifi_provisioning/scheme_softap.h>
 #include <wifi_provisioning/manager.h>
 #undef IPADDR_NONE
 #include "WiFi.h"
 
+wifi_prov_mgr_config_t config;
+scheme_t prov_scheme;
 extern esp_err_t postToSysQueue(system_prov_event_t *);
 static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
                                                   0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02, };
 
-#define SERV_NAME_PREFIX_BLE "BLE_"
-#define SERV_NAME_PREFIX_WIFI "WIFI_"
+#define SERV_NAME_PREFIX_PROV "PROV_"
 
 bool WiFiProvClass::prov_enable = true;
 
 bool WiFiProvClass::isProvEnabled()
 {
     return prov_enable;
+}
+
+void provSchemeBLE()
+{
+    prov_scheme = WIFI_PROV_SCHEME_BLE;
+    config.scheme = wifi_prov_scheme_ble;    
+}
+
+void provSchemeSoftAP()
+{
+    prov_scheme = WIFI_PROV_SCHEME_SOFTAP;
+    config.scheme = wifi_prov_scheme_softap;
 }
 
 static void prov_event_handler(void *user_data, wifi_prov_cb_event_t event, void *event_data)
@@ -87,33 +99,23 @@ static void prov_event_handler(void *user_data, wifi_prov_cb_event_t event, void
      }
 }
 
-static void get_device_service_name(scheme prov_scheme, char *service_name, size_t max)
+static void get_device_service_name(char *service_name, size_t max)
 {
     uint8_t eth_mac[6];
     WiFi.macAddress(eth_mac);
-    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
-        snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_BLE, eth_mac[3], eth_mac[4], eth_mac[5]);
-    } else {
-         snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_WIFI, eth_mac[3], eth_mac[4], eth_mac[5]);  
-    }
+    snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
 }
 
-void WiFiProvClass :: beginProvision(scheme prov_scheme, wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
+void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
 {
     prov_enable = true;
     bool provisioned = false;
-    wifi_prov_mgr_config_t config;
+    scheme_cb();
     config.scheme_event_handler = scheme_event_handler;
     config.app_event_handler = {
             .event_cb = prov_event_handler,
             .user_data = NULL
             };
-
-    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
-        config.scheme = wifi_prov_scheme_ble;        
-    } else {
-    	config.scheme = wifi_prov_scheme_softap;
-    }
  
     wifi_prov_mgr_init(config);
     WiFi.mode(WIFI_MODE_AP);
@@ -129,7 +131,7 @@ void WiFiProvClass :: beginProvision(scheme prov_scheme, wifi_prov_event_handler
 
         if(service_name == NULL) {
             char service_name_temp[12];
-            get_device_service_name(prov_scheme,service_name_temp,sizeof(service_name_temp));
+            get_device_service_name(service_name_temp,sizeof(service_name_temp));
             service_name = (const char *)service_name_temp;
         }
 
@@ -150,12 +152,13 @@ void WiFiProvClass :: beginProvision(scheme prov_scheme, wifi_prov_event_handler
         wifi_prov_mgr_deinit();
         WiFi.mode(WIFI_MODE_STA);
         log_i("Aleardy Provisioned, starting Wi-Fi STA");
-        log_i("CONNECTING ACCESS POINT CREDENTIALS : "); 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         wifi_config_t conf;
         esp_wifi_get_config(WIFI_IF_STA,&conf);
         log_i("SSID : %s\n",conf.sta.ssid);
 #endif
+        log_i("CONNECTING TO THE ACCESS POINT : ");
+        WiFi.begin(); 
     }
 }
 
