@@ -85,31 +85,33 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
     return true;
 }
 
-uint8_t WiFiMulti::run(uint32_t connectTimeout)
+uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden)
 {
     int8_t scanResult;
     uint8_t status = WiFi.status();
+    int8_t ci = 0;
+
     if(status == WL_CONNECTED) {
         for(uint32_t x = 0; x < APlist.size(); x++) {
             if(WiFi.SSID()==APlist[x].ssid) {
                 return status;
             }
         }
-        WiFi.disconnect(false,false);
-        delay(10);
+	
+	WiFi.persistent(false);
+	WiFi.disconnect(false,false);
+	WiFi.mode(WIFI_OFF);
+	WiFi.mode(WIFI_STA);
+        delay(200);
         status = WiFi.status();
     }
 
-    scanResult = WiFi.scanNetworks();
+    scanResult = WiFi.scanNetworks(false, scanHidden);
     if(scanResult == WIFI_SCAN_RUNNING) {
         // scan is running
         return WL_NO_SSID_AVAIL;
     } else if(scanResult >= 0) {
         // scan done analyze
-        WifiAPlist_t bestNetwork { NULL, NULL };
-        int bestNetworkDb = INT_MIN;
-        uint8_t bestBSSID[6];
-        int32_t bestChannel = 0;
 
         log_i("[WIFI] scan done");
 
@@ -117,6 +119,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
             log_e("[WIFI] no networks found");
         } else {
             log_i("[WIFI] %d networks found", scanResult);
+
+
             for(int8_t i = 0; i < scanResult; ++i) {
 
                 String ssid_scan;
@@ -131,74 +135,79 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 for(uint32_t x = 0; x < APlist.size(); x++) {
                     WifiAPlist_t entry = APlist[x];
 
-                    if(ssid_scan == entry.ssid) { // SSID match
+		    // SSID match or hidden SSID
+                    if(ssid_scan == entry.ssid || (scanHidden && ssid_scan.length() == 0) ) { 
                         known = true;
-                        if(rssi_scan > bestNetworkDb) { // best network
-                            if(sec_scan == WIFI_AUTH_OPEN || entry.passphrase) { // check for passphrase if not open wlan
-                                bestNetworkDb = rssi_scan;
-                                bestChannel = chan_scan;
-                                memcpy((void*) &bestNetwork, (void*) &entry, sizeof(bestNetwork));
-                                memcpy((void*) &bestBSSID, (void*) BSSID_scan, sizeof(bestBSSID));
-                            }
-                        }
-                        break;
-                    }
-                }
 
-                if(known) {
-                    log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
-                } else {
-                    log_d("       %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
-                }
+
+			log_i("[WIFI] Candidate: %d  scan index: %d  APlist: %d  BSSID:[%02X:%02X:%02X:%02X:%02X:%02X] ssid_scan: %s  entry.ssid: %s\n",
+			       ci, i, x,
+			       BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], 
+			       ssid_scan, entry.ssid, rssi_scan);
+
+			ci++;
+
+			WiFi.begin(entry.ssid, entry.passphrase, chan_scan, BSSID_scan); 
+
+			// If the ssid returned from the scan is empty, it is a hidden SSID
+			// it appears that the WiFi.begin() function is asynchronous and takes
+			// additional time to connect to a hidden SSID. Therefore a delay of 1000ms
+			// is added for hidden SSIDs before calling WiFi.status()
+			if( scanHidden && ssid_scan.length() == 0) {
+			  log_i("[WIFI] Hidden SSID, adding a delay.");
+			  delay(1000); 
+			}
+
+			status = WiFi.status();
+
+			auto startTime = millis();
+			// wait for connection, fail, or timeout
+			while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
+			  delay(10);
+			  status = WiFi.status();
+			}
+
+			switch(status) {
+			case WL_CONNECTED:
+			  log_i("[WIFI] Connecting done.");
+			  log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
+			  log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
+			  log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
+			  log_d("[WIFI] Channel: %d", WiFi.channel());
+			  break;
+			case WL_NO_SSID_AVAIL:
+			  log_e("[WIFI] Connecting Failed AP not found.");
+			  break;
+			case WL_CONNECT_FAILED:
+			  log_e("[WIFI] Connecting Failed.");
+			  break;
+			default:
+			  log_e("[WIFI] Connecting Failed (%d).", status);
+			  break;
+			}
+			// Connection was not successful
+			// Disconnect and try the next AP
+			if( status != WL_CONNECTED ) {
+			  log_d("[WIFI] Disconnecting....\n");
+			  WiFi.persistent(false);
+			  WiFi.disconnect();
+			  WiFi.mode(WIFI_OFF);
+			  WiFi.mode(WIFI_STA);
+			  delay(200);
+			} else {
+			  // connection was successful
+			  // exit both loops w/return status
+			  WiFi.scanDelete();
+			  return status;
+			}
+		    }
+		}
             }
         }
-
-        // clean up ram
-        WiFi.scanDelete();
-
-        if(bestNetwork.ssid) {
-            log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channal: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
-
-            WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
-            status = WiFi.status();
-
-            auto startTime = millis();
-            // wait for connection, fail, or timeout
-            while(status != WL_CONNECTED && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED && (millis() - startTime) <= connectTimeout) {
-                delay(10);
-                status = WiFi.status();
-            }
-
-            switch(status) {
-            case WL_CONNECTED:
-                log_i("[WIFI] Connecting done.");
-                log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
-                log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
-                log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
-                log_d("[WIFI] Channel: %d", WiFi.channel());
-                break;
-            case WL_NO_SSID_AVAIL:
-                log_e("[WIFI] Connecting Failed AP not found.");
-                break;
-            case WL_CONNECT_FAILED:
-                log_e("[WIFI] Connecting Failed.");
-                break;
-            default:
-                log_e("[WIFI] Connecting Failed (%d).", status);
-                break;
-            }
-        } else {
-            log_e("[WIFI] no matching wifi found!");
-        }
-    } else {
-        // start scan
-        log_d("[WIFI] delete old wifi config...");
-        WiFi.disconnect();
-
-        log_d("[WIFI] start scan");
-        // scan wifi async mode
-        WiFi.scanNetworks(true);
     }
+    // clean up ram
+    WiFi.scanDelete();
 
     return status;
 }
+
