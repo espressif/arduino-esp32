@@ -26,6 +26,8 @@
 #define U_SPIFFS  100
 #define U_AUTH    200
 
+#define ENCRYPTED_BLOCK_SIZE 16
+
 class UpdateClass {
   public:
     typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
@@ -163,10 +165,12 @@ class UpdateClass {
     bool _writeBuffer();
     bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
+    bool _enablePartition(const esp_partition_t* partition);
 
 
     uint8_t _error;
     uint8_t *_buffer;
+    uint8_t *_skipBuffer;
     size_t _bufferLen;
     size_t _size;
     THandlerFunction_Progress _progress_callback;
