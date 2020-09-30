@@ -257,6 +257,7 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
         vQueueDelete(uart->queue);
         uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
         if(uart->queue == NULL) {
+            UART_MUTEX_UNLOCK();
             return NULL;
         }
     }
