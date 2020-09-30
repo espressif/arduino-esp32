@@ -640,6 +640,20 @@ bool WiFiGenericClass::setSleep(bool enable)
 }
 
 /**
+ * control modem sleep when only in STA mode
+ * @param mode wifi_ps_type_t
+ * @return ok
+ */
+bool WiFiGenericClass::setSleep(wifi_ps_type_t mode)
+{
+    if((getMode() & WIFI_MODE_STA) == 0){
+        log_w("STA has not been started");
+        return false;
+    }
+    return esp_wifi_set_ps(mode) == ESP_OK;
+}
+
+/**
  * get modem sleep enabled
  * @return true if modem sleep is enabled
  */
