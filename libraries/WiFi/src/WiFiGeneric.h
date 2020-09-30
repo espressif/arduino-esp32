@@ -108,6 +108,7 @@ class WiFiGenericClass
     bool enableAP(bool enable);
 
     bool setSleep(bool enable);
+    bool setSleep(wifi_ps_type_t mode);
     bool getSleep();
 
     bool setTxPower(wifi_power_t power);

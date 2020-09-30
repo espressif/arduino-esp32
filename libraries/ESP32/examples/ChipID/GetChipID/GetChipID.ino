@@ -21,10 +21,10 @@ void loop() {
 	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
 	}
 
-	Serial.print("ESP8266-Style Chip ID: ");
-	Serial.println(chipId);
-	Serial.println();
-	
-	delay(5000);
+	Serial.printf("ESP32 Chip model = %s Rev %d\n", ESP.getChipModel(), ESP.getChipRevision());
+	Serial.printf("This chip has %d cores\n", ESP.getChipCores());
+  Serial.print("Chip ID: "); Serial.println(chipId);
+  
+	delay(3000);
 
 }
