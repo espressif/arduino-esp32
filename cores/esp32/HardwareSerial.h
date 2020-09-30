@@ -104,6 +104,8 @@ public:
 protected:
     int _uart_nr;
     uart_t* _uart;
+    uint8_t _tx_pin;
+    uint8_t _rx_pin;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
