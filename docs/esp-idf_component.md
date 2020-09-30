@@ -72,6 +72,11 @@ If you are writing code that does not require Arduino to compile and you want yo
 #endif
 ```
 
+## FreeRTOS Tick Rate (Hz)
+
+You might notice that Arduino-esp32's `delay()` function will only work in multiples of 10ms. That is because, by default, esp-idf handles task events 100 times per second.
+To fix that behavior you need to set FreeRTOS tick rate to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
+
 ## Compilation Errors
 
 As commits are made to esp-idf and submodules, the codebases can develop incompatibilities which cause compilation errors.  If you have problems compiling, follow the instructions in [Issue #1142](https://github.com/espressif/arduino-esp32/issues/1142) to roll esp-idf back to a known good version.

@@ -359,7 +359,7 @@ size_t UpdateClass::writeStream(Stream &data) {
     return written;
 }
 
-void UpdateClass::printError(Stream &out){
+void UpdateClass::printError(Print &out){
     out.println(_err2str(_error));
 }
 

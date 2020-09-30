@@ -16,6 +16,7 @@ static EventGroupHandle_t events;
 void setup() 
 {
     Serial.begin(115200);
+    events = xEventGroupCreate();
     
     if ((rmt_send = rmtInit(18, true, RMT_MEM_64)) == NULL)
     {
