@@ -115,6 +115,8 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
 
     _reset();
     _error = 0;
+    _target_md5 = emptyString;
+    _md5 = MD5Builder();
 
     if(size == 0) {
         _error = UPDATE_ERROR_SIZE;
