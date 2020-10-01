@@ -921,12 +921,15 @@ String HTTPClient::getString(void)
 {
     StreamString sstring;
 
-    if(_size) {
+    if(_size > 0) {
         // try to reserve needed memmory
         if(!sstring.reserve((_size + 1))) {
             log_d("not enough memory to reserve a string! need: %d", (_size + 1));
             return "";
         }
+    }
+    else {
+        return "";
     }
 
     writeToStream(&sstring);
