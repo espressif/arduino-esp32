@@ -4,17 +4,17 @@
 #include <stdint.h>
 
 #define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        38
+#define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-static const uint8_t LED_BUILTIN = 2;
+static const uint8_t LED_BUILTIN = 15;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
-static const uint8_t BUILTIN_KEY = 0;
+static const uint8_t KEY_BUILTIN = 17;
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -22,7 +22,7 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 5;
+static const uint8_t SS    = 2;
 static const uint8_t MOSI  = 23;
 static const uint8_t MISO  = 19;
 static const uint8_t SCK   = 18;
@@ -57,5 +57,16 @@ static const uint8_t T9 = 32;
 
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
+
+static const uint8_t ADS1292_DRDY_PIN   = 26;
+static const uint8_t ADS1292_CS_PIN     = 13;
+static const uint8_t ADS1292_START_PIN  = 14;
+static const uint8_t ADS1292_PWDN_PIN   = 27;
+static const uint8_t AFE4490_CS_PIN     = 21;
+static const uint8_t AFE4490_DRDY_PIN   = 39;
+static const uint8_t AFE4490_PWDN_PIN   = 4;
+
+static const uint8_t PUSH_BUTTON        = 17;
+static const uint8_t SLIDE_SWITCH       = 16;
 
 #endif /* Pins_Arduino_h */
