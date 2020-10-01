@@ -3544,8 +3544,8 @@ t-beam.serial.disableRTS=true
 
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
-t-beam.build.variant=t-beam
-t-beam.build.board=T-Beam
+t-beam.build.variant=tbeam
+t-beam.build.board=TBeam
 
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
@@ -4100,6 +4100,7 @@ twatch.serial.disableRTS=true
 twatch.build.mcu=esp32
 twatch.build.core=esp32
 twatch.build.variant=twatch
+twatch.build.board=TWatch
 
 twatch.menu.Revision.TWATCH_BASE=T-Watch Base
 twatch.menu.Revision.TWATCH_BASE.build.board=TWATCH_BASE
