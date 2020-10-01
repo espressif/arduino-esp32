@@ -302,13 +302,10 @@ std::string BLERemoteService::getValue(BLEUUID characteristicUuid) {
  * @return N/A.
  */
 void BLERemoteService::removeCharacteristics() {
-	for (auto &myPair : m_characteristicMap) {
-	   delete myPair.second;
-	   //m_characteristicMap.erase(myPair.first);  // Should be no need to delete as it will be deleted by the clear
-	}
 	m_characteristicMap.clear();   // Clear the map
 	for (auto &myPair : m_characteristicMapByHandle) {
 	   delete myPair.second;
+	   // delete the characteristics only once
 	}
 	m_characteristicMapByHandle.clear();   // Clear the map
 } // removeCharacteristics

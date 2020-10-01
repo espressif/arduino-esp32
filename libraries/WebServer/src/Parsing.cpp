@@ -356,9 +356,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
   client.readStringUntil('\n');
   //start reading the form
   if (line == ("--"+boundary)){
-	 if(_postArgs) delete[] _postArgs;
-	 _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
-     _postArgsLen = 0;
+   if(_postArgs) delete[] _postArgs;
+    _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
+    _postArgsLen = 0;
     while(1){
       String argName;
       String argValue;
@@ -413,6 +413,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if (line == ("--"+boundary+"--")){
               log_v("Done Parsing POST");
               break;
+            } else if (_postArgsLen >= WEBSERVER_MAX_POST_ARGS) {
+              log_e("Too many PostArgs (max: %d) in request.", WEBSERVER_MAX_POST_ARGS);
+              return false;
             }
           } else {
             _currentUpload.reset(new HTTPUpload());
