@@ -461,7 +461,23 @@ readfile:
               }
 
               uint8_t endBuf[boundary.length()];
-              client.readBytes(endBuf, boundary.length());
+              uint32_t i = 0;
+              while(i < boundary.length()){
+                argByte = _uploadReadByte(client);
+                if(argByte < 0) return _parseFormUploadAborted();
+                if ((char)argByte == 0x0D){
+                  _uploadWriteByte(0x0D);
+                  _uploadWriteByte(0x0A);
+                  _uploadWriteByte((uint8_t)('-'));
+                  _uploadWriteByte((uint8_t)('-'));
+                  uint32_t j = 0;
+                  while(j < i){
+                    _uploadWriteByte(endBuf[j++]);
+                  }
+                  goto readfile;
+                }
+                endBuf[i++] = (uint8_t)argByte;
+              }
 
               if (strstr((const char*)endBuf, boundary.c_str()) != NULL){
                 if(_currentHandler && _currentHandler->canUpload(_currentUri))
