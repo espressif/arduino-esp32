@@ -548,29 +548,106 @@ int HTTPClient::sendRequest(const char * type, String payload)
  */
 int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 {
-    // connect to server
-    if(!connect()) {
-        return returnError(HTTPC_ERROR_CONNECTION_REFUSED);
-    }
-
-    if(payload && size > 0) {
-        addHeader(F("Content-Length"), String(size));
-    }
-
-    // send Header
-    if(!sendHeader(type)) {
-        return returnError(HTTPC_ERROR_SEND_HEADER_FAILED);
-    }
-
-    // send Payload if needed
-    if(payload && size > 0) {
-        if(_client->write(&payload[0], size) != size) {
-            return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+    int code;
+    bool redirect = false;
+    uint16_t redirectCount = 0;
+    do {
+        // wipe out any existing headers from previous request
+        for(size_t i = 0; i < _headerKeysCount; i++) {
+            if (_currentHeaders[i].value.length() > 0) {
+                _currentHeaders[i].value.clear();
+            }
         }
-    }
 
+        log_d("request type: '%s' redirCount: %d\n", type, redirectCount);
+        
+        // connect to server
+        if(!connect()) {
+            return returnError(HTTPC_ERROR_CONNECTION_REFUSED);
+        }
+
+        if(payload && size > 0) {
+            addHeader(F("Content-Length"), String(size));
+        }
+
+        // send Header
+        if(!sendHeader(type)) {
+            return returnError(HTTPC_ERROR_SEND_HEADER_FAILED);
+        }
+
+        // send Payload if needed
+        if(payload && size > 0) {
+            if(_client->write(&payload[0], size) != size) {
+                return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+            }
+        }
+
+        code = handleHeaderResponse();
+        Serial.printf("sendRequest code=%d\n", code);
+
+        // Handle redirections as stated in RFC document:
+        // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+        //
+        // Implementing HTTP_CODE_FOUND as redirection with GET method,
+        // to follow most of existing user agent implementations.
+        //
+        redirect = false;
+        if (
+            _followRedirects != HTTPC_DISABLE_FOLLOW_REDIRECTS && 
+            redirectCount < _redirectLimit &&
+            _location.length() > 0
+        ) {
+            switch (code) {
+                // redirecting using the same method
+                case HTTP_CODE_MOVED_PERMANENTLY:
+                case HTTP_CODE_TEMPORARY_REDIRECT: {
+                    if (
+                        // allow to force redirections on other methods
+                        // (the RFC require user to accept the redirection)
+                        _followRedirects == HTTPC_FORCE_FOLLOW_REDIRECTS ||
+                        // allow GET and HEAD methods without force
+                        !strcmp(type, "GET") || 
+                        !strcmp(type, "HEAD")
+                    ) {
+                        redirectCount += 1;
+                        log_d("following redirect (the same method): '%s' redirCount: %d\n", _location.c_str(), redirectCount);
+                        if (!setURL(_location)) {
+                            log_d("failed setting URL for redirection\n");
+                            // no redirection
+                            break;
+                        }
+                        // redirect using the same request method and payload, diffrent URL
+                        redirect = true;
+                    }
+                    break;
+                }
+                // redirecting with method dropped to GET or HEAD
+                // note: it does not need `HTTPC_FORCE_FOLLOW_REDIRECTS` for any method
+                case HTTP_CODE_FOUND:
+                case HTTP_CODE_SEE_OTHER: {
+                    redirectCount += 1;
+                    log_d("following redirect (dropped to GET/HEAD): '%s' redirCount: %d\n", _location.c_str(), redirectCount);
+                    if (!setURL(_location)) {
+                        log_d("failed setting URL for redirection\n");
+                        // no redirection
+                        break;
+                    }
+                    // redirect after changing method to GET/HEAD and dropping payload
+                    type = "GET";
+                    payload = nullptr;
+                    size = 0;
+                    redirect = true;
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+    } while (redirect);
     // handle Server Response (Header)
-    return returnError(handleHeaderResponse());
+    return returnError(code);
 }
 
 /**
@@ -1143,6 +1220,10 @@ int HTTPClient::handleHeaderResponse()
                     transferEncoding = headerValue;
                 }
 
+                if (headerName.equalsIgnoreCase("Location")) {
+                    _location = headerValue;
+                }
+
                 for(size_t i = 0; i < _headerKeysCount; i++) {
                     if(_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
                         _currentHeaders[i].value = headerValue;
@@ -1319,4 +1400,51 @@ int HTTPClient::returnError(int error)
         }
     }
     return error;
+}
+
+void HTTPClient::setFollowRedirects(followRedirects_t follow)
+{
+    _followRedirects = follow;
+}
+
+void HTTPClient::setRedirectLimit(uint16_t limit)
+{
+    _redirectLimit = limit;
+}
+
+/**
+ * set the URL to a new value. Handy for following redirects.
+ * @param url
+ */
+bool HTTPClient::setURL(const String& url)
+{
+    // if the new location is only a path then only update the URI
+    if (url && url[0] == '/') {
+        _uri = url;
+        clear();
+        return true;
+    }
+
+    if (!url.startsWith(_protocol + ':')) {
+        log_d("new URL not the same protocol, expected '%s', URL: '%s'\n", _protocol.c_str(), url.c_str());
+        return false;
+    }
+
+    // check if the port is specified
+    int indexPort = url.indexOf(':', 6); // find the first ':' excluding the one from the protocol
+    int indexURI = url.indexOf('/', 7); // find where the URI starts to make sure the ':' is not part of it
+    if (indexPort == -1 || indexPort > indexURI) {
+        // the port is not specified
+        _port = (_protocol == "https" ? 443 : 80);
+    }
+
+    // disconnect but preserve _client (clear _canReuse so disconnect will close the connection)
+    _canReuse = false;
+    disconnect(true);
+    return beginInternal(url, _protocol.c_str());
+}
+
+const String &HTTPClient::getLocation(void)
+{
+    return _location;
 }
