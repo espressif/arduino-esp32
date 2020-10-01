@@ -371,7 +371,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
 
 void uartFlush(uart_t* uart)
 {
-    uartFlushTxOnly(uart,false);
+    uartFlushTxOnly(uart,true);
 }
 
 void uartFlushTxOnly(uart_t* uart, bool txOnly)
