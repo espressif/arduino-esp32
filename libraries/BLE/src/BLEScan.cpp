@@ -22,6 +22,7 @@
  * Constructor
  */
 BLEScan::BLEScan() {
+	memset(&m_scan_params, 0, sizeof(m_scan_params)); // Initialize all params
 	m_scan_params.scan_type          = BLE_SCAN_TYPE_PASSIVE; // Default is a passive scan.
 	m_scan_params.own_addr_type      = BLE_ADDR_TYPE_PUBLIC;
 	m_scan_params.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
