@@ -266,6 +266,17 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
     return new_size;
 }
 
+void uartSetRxInvert(uart_t* uart, bool invert)
+{
+    if (uart == NULL)
+        return;
+    
+    if (invert)
+        uart->dev->conf0.rxd_inv = 1;
+    else
+        uart->dev->conf0.rxd_inv = 0;
+}
+
 uint32_t uartAvailable(uart_t* uart)
 {
     if(uart == NULL || uart->queue == NULL) {

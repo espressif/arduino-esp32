@@ -100,6 +100,8 @@ public:
 
     size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
+    
+    void setRxInvert(bool);
 
 protected:
     int _uart_nr;

@@ -184,3 +184,8 @@ HardwareSerial::operator bool() const
 {
     return true;
 }
+
+void HardwareSerial::setRxInvert(bool invert)
+{
+    uartSetRxInvert(_uart, invert);
+}
