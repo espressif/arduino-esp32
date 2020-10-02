@@ -12,7 +12,7 @@ const int led = 13;
 
 void handleRoot() {
   digitalWrite(led, 1);
-  server.send(200, "text/plain", "hello from esp8266!");
+  server.send(200, "text/plain", "hello from esp32!");
   digitalWrite(led, 0);
 }
 
