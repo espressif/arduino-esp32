@@ -5273,6 +5273,72 @@ mPython.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+wifiduino32.name=WiFiduino32
+
+wifiduino32.upload.tool=esptool_py
+wifiduino32.upload.maximum_size=1310720
+wifiduino32.upload.maximum_data_size=327680
+wifiduino32.upload.wait_for_upload_port=true
+
+wifiduino32.serial.disableDTR=true
+wifiduino32.serial.disableRTS=true
+
+wifiduino32.build.mcu=esp32
+wifiduino32.build.core=esp32
+wifiduino32.build.variant=wifiduino32
+wifiduino32.build.board=Wifiduino32
+
+wifiduino32.build.f_cpu=240000000L
+wifiduino32.build.flash_mode=dio
+wifiduino32.build.flash_size=4MB
+wifiduino32.build.boot=dio
+wifiduino32.build.partitions=default
+wifiduino32.build.defines=
+
+wifiduino32.menu.PartitionScheme.default=Default
+wifiduino32.menu.PartitionScheme.default.build.partitions=default
+wifiduino32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+wifiduino32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+wifiduino32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+wifiduino32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+wifiduino32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+wifiduino32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+wifiduino32.menu.FlashFreq.80=80MHz
+wifiduino32.menu.FlashFreq.80.build.flash_freq=80m
+wifiduino32.menu.FlashFreq.40=40MHz
+wifiduino32.menu.FlashFreq.40.build.flash_freq=40m
+
+wifiduino32.menu.UploadSpeed.921600=921600
+wifiduino32.menu.UploadSpeed.921600.upload.speed=921600
+wifiduino32.menu.UploadSpeed.115200=115200
+wifiduino32.menu.UploadSpeed.115200.upload.speed=115200
+wifiduino32.menu.UploadSpeed.256000.windows=256000
+wifiduino32.menu.UploadSpeed.256000.upload.speed=256000
+wifiduino32.menu.UploadSpeed.230400.windows.upload.speed=256000
+wifiduino32.menu.UploadSpeed.230400=230400
+wifiduino32.menu.UploadSpeed.230400.upload.speed=230400
+wifiduino32.menu.UploadSpeed.460800.linux=460800
+wifiduino32.menu.UploadSpeed.460800.macosx=460800
+wifiduino32.menu.UploadSpeed.460800.upload.speed=460800
+wifiduino32.menu.UploadSpeed.512000.windows=512000
+wifiduino32.menu.UploadSpeed.512000.upload.speed=512000
+
+wifiduino32.menu.DebugLevel.none=None
+wifiduino32.menu.DebugLevel.none.build.code_debug=0
+wifiduino32.menu.DebugLevel.error=Error
+wifiduino32.menu.DebugLevel.error.build.code_debug=1
+wifiduino32.menu.DebugLevel.warn=Warn
+wifiduino32.menu.DebugLevel.warn.build.code_debug=2
+wifiduino32.menu.DebugLevel.info=Info
+wifiduino32.menu.DebugLevel.info.build.code_debug=3
+wifiduino32.menu.DebugLevel.debug=Debug
+wifiduino32.menu.DebugLevel.debug.build.code_debug=4
+wifiduino32.menu.DebugLevel.verbose=Verbose
+wifiduino32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 imbrios-logsens-v1p1.name=IMBRIOS LOGSENS_V1P1
 
 imbrios-logsens-v1p1.upload.tool=esptool_py
@@ -5340,8 +5406,6 @@ imbrios-logsens-v1p1.menu.UploadSpeed.460800.macosx=460800
 imbrios-logsens-v1p1.menu.UploadSpeed.460800.upload.speed=460800
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.windows=512000
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.upload.speed=512000
-##############################################################
-
 ##############################################################
 
 healthypi4.name=ProtoCentral HealthyPi 4
