@@ -16,7 +16,7 @@
 #include <esp_gap_ble_api.h>
 #include "BLEDescriptor.h"
 #include "BLEValue.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEService;
 class BLEDescriptor;

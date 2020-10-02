@@ -36,8 +36,14 @@
 //--------------------------------------------------------------------+
 // Class Driver Configuration
 //--------------------------------------------------------------------+
-#ifndef CFG_TUD_MIDI_EPSIZE
-#define CFG_TUD_MIDI_EPSIZE 64
+
+#if !defined(CFG_TUD_MIDI_EP_BUFSIZE) && defined(CFG_TUD_MIDI_EPSIZE)
+  #warning CFG_TUD_MIDI_EPSIZE is renamed to CFG_TUD_MIDI_EP_BUFSIZE, please update to use the new name
+  #define CFG_TUD_MIDI_EP_BUFSIZE    CFG_TUD_MIDI_EPSIZE
+#endif
+
+#ifndef CFG_TUD_MIDI_EP_BUFSIZE
+  #define CFG_TUD_MIDI_EP_BUFSIZE     (TUD_OPT_HIGH_SPEED ? 512 : 64)
 #endif
 
 #ifdef __cplusplus
@@ -136,12 +142,12 @@ static inline bool tud_midi_send (uint8_t const packet[4])
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void midid_init             (void);
-void midid_reset            (uint8_t rhport);
-bool midid_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool midid_control_request  (uint8_t rhport, tusb_control_request_t const * request);
-bool midid_control_complete (uint8_t rhport, tusb_control_request_t const * request);
-bool midid_xfer_cb          (uint8_t rhport, uint8_t edpt_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     midid_init             (void);
+void     midid_reset            (uint8_t rhport);
+uint16_t midid_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     midid_control_request  (uint8_t rhport, tusb_control_request_t const * request);
+bool     midid_control_complete (uint8_t rhport, tusb_control_request_t const * request);
+bool     midid_xfer_cb          (uint8_t rhport, uint8_t edpt_addr, xfer_result_t result, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

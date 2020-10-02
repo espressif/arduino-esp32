@@ -2,6 +2,9 @@
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
 #include "Arduino.h"
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#include "USB.h"
+#endif
 
 TaskHandle_t loopTaskHandle = NULL;
 
@@ -36,9 +39,12 @@ void loopTask(void *pvParameters)
 
 extern "C" void app_main()
 {
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+    USB.begin();
+#endif
     loopTaskWDTEnabled = false;
     initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", 8192, NULL, 1, &loopTaskHandle, CONFIG_ARDUINO_RUNNING_CORE);
+    xTaskCreateUniversal(loopTask, "loopTask", 8192, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
 }
 
 #endif

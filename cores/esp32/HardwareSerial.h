@@ -109,7 +109,16 @@ protected:
 extern void serialEventRun(void) __attribute__((weak));
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+#ifndef ARDUINO_SERIAL_PORT
+#define ARDUINO_SERIAL_PORT 0
+#endif
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#include "USB.h"
+#include "USBCDC.h"
+extern HardwareSerial Serial0;
+#else
 extern HardwareSerial Serial;
+#endif
 extern HardwareSerial Serial1;
 #if CONFIG_IDF_TARGET_ESP32
 extern HardwareSerial Serial2;

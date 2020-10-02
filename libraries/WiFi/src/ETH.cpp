@@ -116,6 +116,16 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     tcpipInit();
 
     tcpip_adapter_set_default_eth_handlers();
+    
+    esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
+    esp_netif_t *eth_netif = esp_netif_new(&cfg);
+
+    if(esp_eth_set_default_handlers(eth_netif) != ESP_OK){
+        log_e("esp_eth_set_default_handlers failed");
+        return false;
+    }
+    
+    
     esp_eth_mac_t *eth_mac = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     if(type == ETH_PHY_DM9051){
@@ -174,6 +184,12 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     //eth_config.on_lowlevel_deinit_done = on_lowlevel_deinit_done;
     if(esp_eth_driver_install(&eth_config, &eth_handle) != ESP_OK || eth_handle == NULL){
         log_e("esp_eth_driver_install failed");
+        return false;
+    }
+    
+    /* attach Ethernet driver to TCP/IP stack */
+    if(esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle)) != ESP_OK){
+        log_e("esp_netif_attach failed");
         return false;
     }
 

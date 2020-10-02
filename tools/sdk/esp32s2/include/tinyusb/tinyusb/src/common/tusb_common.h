@@ -235,31 +235,32 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
 #define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\n", (uint32_t) (_x) )
 #define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\n", (uint32_t) (_x) )
 #define TU_LOG1_LOCATION()    tu_printf("%s: %d:\r\n", __PRETTY_FUNCTION__, __LINE__)
+#define TU_LOG1_FAILED()      tu_printf("%s: %d: Failed\r\n", __PRETTY_FUNCTION__, __LINE__)
 
 // Log with debug level 2
 #if CFG_TUSB_DEBUG > 1
   #define TU_LOG2             TU_LOG1
   #define TU_LOG2_MEM         TU_LOG1_MEM
   #define TU_LOG2_VAR         TU_LOG1_VAR
-  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
   #define TU_LOG2_INT         TU_LOG1_INT
   #define TU_LOG2_HEX         TU_LOG1_HEX
+  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
 #endif
 
 
 typedef struct
 {
   uint32_t key;
-  char const * data;
-}lookup_entry_t;
+  const char* data;
+} tu_lookup_entry_t;
 
 typedef struct
 {
   uint16_t count;
-  lookup_entry_t const* items;
-} lookup_table_t;
+  tu_lookup_entry_t const* items;
+} tu_lookup_table_t;
 
-static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t key)
+static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint32_t key)
 {
   for(uint16_t i=0; i<p_table->count; i++)
   {
@@ -277,6 +278,8 @@ static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t ke
   #define TU_LOG1_VAR(...)
   #define TU_LOG1_INT(...)
   #define TU_LOG1_HEX(...)
+  #define TU_LOG1_LOCATION()
+  #define TU_LOG1_FAILED()
 #endif
 
 #ifndef TU_LOG2
@@ -285,6 +288,7 @@ static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t ke
   #define TU_LOG2_VAR(...)
   #define TU_LOG2_INT(...)
   #define TU_LOG2_HEX(...)
+  #define TU_LOG2_LOCATION()
 #endif
 
 #ifdef __cplusplus

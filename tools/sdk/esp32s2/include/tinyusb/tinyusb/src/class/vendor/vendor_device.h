@@ -118,10 +118,10 @@ static inline uint32_t tud_vendor_write_available (void)
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void vendord_init(void);
-void vendord_reset(uint8_t rhport);
-bool vendord_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool vendord_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+void     vendord_init(void);
+void     vendord_reset(uint8_t rhport);
+uint16_t vendord_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     vendord_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

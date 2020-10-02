@@ -37,7 +37,7 @@
 #include "netif/ethernet.h"
 
 /* declared here, NOT in usb_descriptors.c, so that the driver can intelligently ZLP as needed */
-#define CFG_TUD_NET_ENDPOINT_SIZE ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 512 : 64)
+#define CFG_TUD_NET_ENDPOINT_SIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
 /* Maximum Tranmission Unit (in bytes) of the network, including Ethernet header */
 #define CFG_TUD_NET_MTU           (1500 + SIZEOF_ETH_HDR)
@@ -72,13 +72,13 @@ void tud_network_xmit(struct pbuf *p);
 //--------------------------------------------------------------------+
 // INTERNAL USBD-CLASS DRIVER API
 //--------------------------------------------------------------------+
-void netd_init             (void);
-void netd_reset            (uint8_t rhport);
-bool netd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t *p_length);
-bool netd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
-bool netd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
-bool netd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-void netd_report           (uint8_t *buf, uint16_t len);
+void     netd_init             (void);
+void     netd_reset            (uint8_t rhport);
+uint16_t netd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     netd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
+bool     netd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
+bool     netd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     netd_report           (uint8_t *buf, uint16_t len);
 
 #ifdef __cplusplus
  }

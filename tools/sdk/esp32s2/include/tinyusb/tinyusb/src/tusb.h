@@ -95,6 +95,10 @@
   #if CFG_TUD_NET
     #include "class/net/net_device.h"
   #endif
+
+  #if CFG_TUD_BTH
+    #include "class/bth/bth_device.h"
+  #endif
 #endif
 
 
@@ -105,6 +109,8 @@
  *  @{ */
 
 // Initialize device/host stack
+// Note: when using with RTOS, this should be called after scheduler/kernel is started.
+// Otherwise it could cause kernel issue since USB IRQ handler does use RTOS queue API.
 bool tusb_init(void);
 
 // Check if stack is initialized

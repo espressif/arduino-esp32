@@ -58,6 +58,7 @@
 #define OPT_MCU_SAMD21            200 ///< MicroChip SAMD21
 #define OPT_MCU_SAMD51            201 ///< MicroChip SAMD51
 #define OPT_MCU_SAMG              202 ///< MicroChip SAMDG series
+#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 
 // STM32
 #define OPT_MCU_STM32F0           300 ///< ST STM32F0
@@ -92,6 +93,9 @@
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
 
+// Dialog
+#define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
+
 /** @} */
 
 /** \defgroup group_supported_os Supported RTOS
@@ -114,31 +118,35 @@
 /** \addtogroup group_configuration
  *  @{ */
 
+
 //--------------------------------------------------------------------
-// CONTROLLER
-// Only 1 roothub port can be configured to be device and/or host.
-// tinyusb does not support dual devices or dual host configuration
+// RootHub Mode Configuration
+// CFG_TUSB_RHPORTx_MODE contains operation mode and speed for that port
 //--------------------------------------------------------------------
-/** \defgroup group_mode Controller Mode Selection
- * \brief CFG_TUSB_CONTROLLER_N_MODE must be defined with these
- *  @{ */
+
+// Lower 4-bit is operational mode
 #define OPT_MODE_NONE         0x00 ///< Disabled
 #define OPT_MODE_DEVICE       0x01 ///< Device Mode
 #define OPT_MODE_HOST         0x02 ///< Host Mode
-#define OPT_MODE_HIGH_SPEED   0x10 ///< High speed
-/** @} */
+
+// Higher 4-bit is max operational speed (corresponding to tusb_speed_t)
+#define OPT_MODE_FULL_SPEED   0x00 ///< Max Full Speed
+#define OPT_MODE_LOW_SPEED    0x10 ///< Max Low Speed
+#define OPT_MODE_HIGH_SPEED   0x20 ///< Max High Speed
+
 
 #ifndef CFG_TUSB_RHPORT0_MODE
   #define CFG_TUSB_RHPORT0_MODE OPT_MODE_NONE
 #endif
 
+
 #ifndef CFG_TUSB_RHPORT1_MODE
   #define CFG_TUSB_RHPORT1_MODE OPT_MODE_NONE
 #endif
 
-#if ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HOST) && (CFG_TUSB_RHPORT1_MODE & OPT_MODE_HOST)) || \
+#if ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HOST  ) && (CFG_TUSB_RHPORT1_MODE & OPT_MODE_HOST  )) || \
     ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_DEVICE) && (CFG_TUSB_RHPORT1_MODE & OPT_MODE_DEVICE))
-  #error "tinyusb does not support same modes on more than 1 roothub port"
+  #error "TinyUSB currently does not support same modes on more than 1 roothub port"
 #endif
 
 // Which roothub port is configured as host
@@ -156,7 +164,6 @@
 
 #define TUSB_OPT_DEVICE_ENABLED ( TUD_OPT_RHPORT >= 0 )
 
-
 //--------------------------------------------------------------------+
 // COMMON OPTIONS
 //--------------------------------------------------------------------+
@@ -168,15 +175,15 @@
 
 // place data in accessible RAM for usb controller
 #ifndef CFG_TUSB_MEM_SECTION
-#define CFG_TUSB_MEM_SECTION
+  #define CFG_TUSB_MEM_SECTION
 #endif
 
 #ifndef CFG_TUSB_MEM_ALIGN
-#define CFG_TUSB_MEM_ALIGN        TU_ATTR_ALIGNED(4)
+  #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
 
 #ifndef CFG_TUSB_OS
-#define CFG_TUSB_OS               OPT_OS_NONE
+  #define CFG_TUSB_OS             OPT_OS_NONE
 #endif
 
 //--------------------------------------------------------------------
@@ -184,7 +191,7 @@
 //--------------------------------------------------------------------
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE
-  #define CFG_TUD_ENDPOINT0_SIZE   64
+  #define CFG_TUD_ENDPOINT0_SIZE  64
 #endif
 
 #ifndef CFG_TUD_CDC
@@ -217,6 +224,10 @@
 
 #ifndef CFG_TUD_NET
   #define CFG_TUD_NET             0
+#endif
+
+#ifndef CFG_TUD_BTH
+  #define CFG_TUD_BTH             0
 #endif
 
 //--------------------------------------------------------------------
