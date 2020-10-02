@@ -2,7 +2,8 @@
  * \file x509.h
  *
  * \brief X.509 generic defines and structures
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -268,12 +269,16 @@ int mbedtls_x509_time_is_past( const mbedtls_x509_time *to );
  */
 int mbedtls_x509_time_is_future( const mbedtls_x509_time *from );
 
+#if defined(MBEDTLS_SELF_TEST)
+
 /**
  * \brief          Checkup routine
  *
  * \return         0 if successful, or 1 if the test failed
  */
 int mbedtls_x509_self_test( int verbose );
+
+#endif /* MBEDTLS_SELF_TEST */
 
 /*
  * Internal module functions. You probably do not want to use these unless you

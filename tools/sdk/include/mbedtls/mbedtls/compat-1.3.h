@@ -5,7 +5,8 @@
  *  for the PolarSSL naming conventions.
  *
  * \deprecated Use the new names directly instead
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -23,6 +24,12 @@
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
 
 #if ! defined(MBEDTLS_DEPRECATED_REMOVED)
 
@@ -1377,7 +1384,8 @@
 #define SSL_ANTI_REPLAY_ENABLED MBEDTLS_SSL_ANTI_REPLAY_ENABLED
 #define SSL_ARC4_DISABLED MBEDTLS_SSL_ARC4_DISABLED
 #define SSL_ARC4_ENABLED MBEDTLS_SSL_ARC4_ENABLED
-#define SSL_BUFFER_LEN MBEDTLS_SSL_BUFFER_LEN
+#define SSL_BUFFER_LEN ( ( ( MBEDTLS_SSL_IN_BUFFER_LEN ) < ( MBEDTLS_SSL_OUT_BUFFER_LEN ) ) \
+                         ? ( MBEDTLS_SSL_IN_BUFFER_LEN ) : ( MBEDTLS_SSL_OUT_BUFFER_LEN ) )
 #define SSL_CACHE_DEFAULT_MAX_ENTRIES MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES
 #define SSL_CACHE_DEFAULT_TIMEOUT MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT
 #define SSL_CBC_RECORD_SPLITTING_DISABLED MBEDTLS_SSL_CBC_RECORD_SPLITTING_DISABLED

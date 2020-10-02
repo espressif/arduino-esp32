@@ -2,7 +2,8 @@
  * \file hmac_drbg.h
  *
  * \brief HMAC_DRBG (NIST SP 800-90A)
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -23,10 +24,16 @@
 #ifndef MBEDTLS_HMAC_DRBG_H
 #define MBEDTLS_HMAC_DRBG_H
 
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "md.h"
 
 #if defined(MBEDTLS_THREADING_C)
-#include "mbedtls/threading.h"
+#include "threading.h"
 #endif
 
 /*
@@ -73,7 +80,7 @@ extern "C" {
 /**
  * HMAC_DRBG context.
  */
-typedef struct
+typedef struct mbedtls_hmac_drbg_context
 {
     /* Working state: the key K is not stored explicitely,
      * but is implied by the HMAC context */
@@ -194,10 +201,13 @@ void mbedtls_hmac_drbg_set_reseed_interval( mbedtls_hmac_drbg_context *ctx,
  * \param additional    Additional data to update state with, or NULL
  * \param add_len       Length of additional data, or 0
  *
+ * \return              \c 0 on success, or an error from the underlying
+ *                      hash calculation.
+ *
  * \note                Additional data is optional, pass NULL and 0 as second
  *                      third argument if no additional data is being used.
  */
-void mbedtls_hmac_drbg_update( mbedtls_hmac_drbg_context *ctx,
+int mbedtls_hmac_drbg_update_ret( mbedtls_hmac_drbg_context *ctx,
                        const unsigned char *additional, size_t add_len );
 
 /**
@@ -255,6 +265,31 @@ int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len
  * \param ctx           HMAC_DRBG context to free.
  */
 void mbedtls_hmac_drbg_free( mbedtls_hmac_drbg_context *ctx );
+
+#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
+#if defined(MBEDTLS_DEPRECATED_WARNING)
+#define MBEDTLS_DEPRECATED    __attribute__((deprecated))
+#else
+#define MBEDTLS_DEPRECATED
+#endif
+/**
+ * \brief               HMAC_DRBG update state
+ *
+ * \deprecated          Superseded by mbedtls_hmac_drbg_update_ret()
+ *                      in 2.16.0.
+ *
+ * \param ctx           HMAC_DRBG context
+ * \param additional    Additional data to update state with, or NULL
+ * \param add_len       Length of additional data, or 0
+ *
+ * \note                Additional data is optional, pass NULL and 0 as second
+ *                      third argument if no additional data is being used.
+ */
+MBEDTLS_DEPRECATED void mbedtls_hmac_drbg_update(
+    mbedtls_hmac_drbg_context *ctx,
+    const unsigned char *additional, size_t add_len );
+#undef MBEDTLS_DEPRECATED
+#endif /* !MBEDTLS_DEPRECATED_REMOVED */
 
 #if defined(MBEDTLS_FS_IO)
 /**

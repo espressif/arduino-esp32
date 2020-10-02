@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Functions to sync with TCPIP thread
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -37,12 +42,24 @@
 #if !NO_SYS /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/err.h"
-#include "lwip/timers.h"
+#include "lwip/timeouts.h"
 #include "lwip/netif.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if LWIP_TCPIP_CORE_LOCKING
+/** The global semaphore to lock the stack. */
+extern sys_mutex_t lock_tcpip_core;
+/** Lock lwIP core mutex (needs @ref LWIP_TCPIP_CORE_LOCKING 1) */
+#define LOCK_TCPIP_CORE()     sys_mutex_lock(&lock_tcpip_core)
+/** Unlock lwIP core mutex (needs @ref LWIP_TCPIP_CORE_LOCKING 1) */
+#define UNLOCK_TCPIP_CORE()   sys_mutex_unlock(&lock_tcpip_core)
+#else /* LWIP_TCPIP_CORE_LOCKING */
+#define LOCK_TCPIP_CORE()
+#define UNLOCK_TCPIP_CORE()
+#endif /* LWIP_TCPIP_CORE_LOCKING */
 
 struct pbuf;
 struct netif;
@@ -61,6 +78,10 @@ err_t  tcpip_inpkt(struct pbuf *p, struct netif *inp, netif_input_fn input_fn);
 err_t  tcpip_input(struct pbuf *p, struct netif *inp);
 
 err_t  tcpip_callback_with_block(tcpip_callback_fn function, void *ctx, u8_t block);
+/**
+ * @ingroup lwip_os
+ * @see tcpip_callback_with_block
+ */
 #define tcpip_callback(f, ctx)  tcpip_callback_with_block(f, ctx, 1)
 
 struct tcpip_callback_msg* tcpip_callbackmsg_new(tcpip_callback_fn function, void *ctx);
@@ -71,10 +92,10 @@ err_t  tcpip_trycallback(struct tcpip_callback_msg* msg);
 err_t  pbuf_free_callback(struct pbuf *p);
 err_t  mem_free_callback(void *m);
 
-#if LWIP_TCPIP_TIMEOUT
+#if LWIP_TCPIP_TIMEOUT && LWIP_TIMERS
 err_t  tcpip_timeout(u32_t msecs, sys_timeout_handler h, void *arg);
 err_t  tcpip_untimeout(sys_timeout_handler h, void *arg);
-#endif /* LWIP_TCPIP_TIMEOUT */
+#endif /* LWIP_TCPIP_TIMEOUT && LWIP_TIMERS */
 
 #ifdef __cplusplus
 }

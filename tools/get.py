@@ -25,10 +25,12 @@ import re
 
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
+    from urllib.request import urlopen
     unicode = lambda s: str(s)
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
+    from urllib import urlopen
 
 if 'Windows' in platform.system():
     import requests
@@ -58,7 +60,7 @@ def report_progress(count, blockSize, totalSize):
 
 def unpack(filename, destination):
     dirname = ''
-    print('Extracting {0}'.format(os.path.basename(filename)))
+    print('Extracting {0} ...'.format(os.path.basename(filename)))
     sys.stdout.flush()
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
@@ -74,19 +76,38 @@ def unpack(filename, destination):
     # a little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
     if rename_to != dirname:
-        print('Renaming {0} to {1}'.format(dirname, rename_to))
+        print('Renaming {0} to {1} ...'.format(dirname, rename_to))
         if os.path.isdir(rename_to):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
+
+def download_file(url,filename):
+    import ssl
+    import contextlib
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    with contextlib.closing(urlopen(url,context=ctx)) as fp:
+        block_size = 1024 * 8
+        block = fp.read(block_size)
+        if block:
+            with open(filename,'wb') as out_file:
+                out_file.write(block)
+                while True:
+                    block = fp.read(block_size)
+                    if not block:
+                        break
+                    out_file.write(block)
+        else:
+            raise Exception ('nonexisting file or connection error')
 
 def get_tool(tool):
     sys_name = platform.system()
     archive_name = tool['archiveFileName']
     local_path = dist_dir + archive_name
     url = tool['url']
-    #real_hash = tool['checksum'].split(':')[1]
     if not os.path.isfile(local_path):
-        print('Downloading ' + archive_name)
+        print('Downloading ' + archive_name + ' ...')
         sys.stdout.flush()
         if 'CYGWIN_NT' in sys_name:
             import ssl
@@ -100,16 +121,16 @@ def get_tool(tool):
             f.write(r.content)
             f.close()
         else:
-            urlretrieve(url, local_path, report_progress)
-        sys.stdout.write("\rDone\n")
-        sys.stdout.flush()
+            is_ci = os.environ.get('GITHUB_WORKSPACE');
+            if is_ci:
+                download_file(url, local_path)
+            else:
+                urlretrieve(url, local_path, report_progress)
+                sys.stdout.write("\rDone\n")
+                sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))
         sys.stdout.flush()
-    #local_hash = sha256sum(local_path)
-    #if local_hash != real_hash:
-    #    print('Hash mismatch for {0}, delete the file and try again'.format(local_path))
-    #    raise RuntimeError()
     unpack(local_path, '.')
 
 def load_tools_list(filename, platform):
@@ -132,11 +153,11 @@ def identify_platform():
         bits = 64
     sys_name = platform.system()
     sys_platform = platform.platform()
-    print('System: %s, Info: %s' % (sys_name, sys_platform))
-    if 'Linux' in sys_name and sys_platform.find('arm') > 0:
+    if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64') > 0):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'
+    print('System: %s, Bits: %d, Info: %s' % (sys_name, bits, sys_platform))
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
@@ -146,4 +167,4 @@ if __name__ == '__main__':
     mkdir_p(dist_dir)
     for tool in tools_to_download:
         get_tool(tool)
-    print('Done')
+    print('Platform Tools Installed')

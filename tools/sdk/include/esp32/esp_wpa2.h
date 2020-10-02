@@ -15,6 +15,8 @@
 #ifndef ESP_WPA2_H
 #define ESP_WPA2_H
 
+#include <stdbool.h>
+
 #include "esp_err.h"
 #include "esp_wifi_crypto_types.h"
 
@@ -39,8 +41,8 @@ typedef struct {
   * @attention 2. wpa2 enterprise authentication can only support TLS, PEAP-MSCHAPv2 and TTLS-MSCHAPv2 method.
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed.
-  *    - ESP_ERR_WIFI_NO_MEM: fail(internal memory malloc fail)
+  *    - ESP_OK: succeed.
+  *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
 esp_err_t esp_wifi_sta_wpa2_ent_enable(const esp_wpa2_config_t *config);
 
@@ -51,7 +53,7 @@ esp_err_t esp_wifi_sta_wpa2_ent_enable(const esp_wpa2_config_t *config);
   * @attention 2. wpa2 enterprise authentication can only support TLS, PEAP-MSCHAPv2 and TTLS-MSCHAPv2 method.
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed.
+  *    - ESP_OK: succeed.
   */
 esp_err_t esp_wifi_sta_wpa2_ent_disable(void);
 
@@ -64,9 +66,9 @@ esp_err_t esp_wifi_sta_wpa2_ent_disable(void);
   * @param  len: length of identity, limited to 1~127
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
-  *    - ESP_ERR_WIFI_ARG: fail(len <= 0 or len >= 128)
-  *    - ESP_ERR_WIFI_NO_MEM: fail(internal memory malloc fail)
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_INVALID_ARG: fail(len <= 0 or len >= 128)
+  *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
 esp_err_t esp_wifi_sta_wpa2_ent_set_identity(const unsigned char *identity, int len);
 
@@ -84,9 +86,9 @@ void esp_wifi_sta_wpa2_ent_clear_identity(void);
   * @param  len: length of username, limited to 1~127
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
-  *    - ESP_ERR_WIFI_ARG: fail(len <= 0 or len >= 128)
-  *    - ESP_ERR_WIFI_NO_MEM: fail(internal memory malloc fail)
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_INVALID_ARG: fail(len <= 0 or len >= 128)
+  *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
 esp_err_t esp_wifi_sta_wpa2_ent_set_username(const unsigned char *username, int len);
 
@@ -104,9 +106,9 @@ void esp_wifi_sta_wpa2_ent_clear_username(void);
   * @param  len: length of password(len > 0)
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
-  *    - ESP_ERR_WIFI_ARG: fail(len <= 0)
-  *    - ESP_ERR_WIFI_NO_MEM: fail(internal memory malloc fail)
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_INVALID_ARG: fail(len <= 0)
+  *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
 esp_err_t esp_wifi_sta_wpa2_ent_set_password(const unsigned char *password, int len);
 
@@ -121,16 +123,16 @@ void esp_wifi_sta_wpa2_ent_clear_password(void);
   * @attention 1. The API only passes the parameter password to the global pointer variable in wpa2 enterprise module.
   * @attention 2. The new password is used to substitute the old password when eap-mschapv2 failure request message with error code ERROR_PASSWD_EXPIRED is received.
   *
-  * @param  password: point to address where stores the password;
+  * @param  new_password: point to address where stores the password;
   * @param  len: length of password
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
-  *    - ESP_ERR_WIFI_ARG: fail(len <= 0)
-  *    - ESP_ERR_WIFI_NO_MEM: fail(internal memory malloc fail)
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_INVALID_ARG: fail(len <= 0)
+  *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
 
-esp_err_t esp_wifi_sta_wpa2_ent_set_new_password(const unsigned char *password, int len);
+esp_err_t esp_wifi_sta_wpa2_ent_set_new_password(const unsigned char *new_password, int len);
 
 /**
   * @brief  Clear new password for MSCHAPv2 method..
@@ -144,12 +146,12 @@ void esp_wifi_sta_wpa2_ent_clear_new_password(void);
   * @attention 2. The ca_cert should be zero terminated.
   *
   * @param  ca_cert: point to address where stores the CA certificate;
-  * @param  len: length of ca_cert
+  * @param  ca_cert_len: length of ca_cert
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
+  *    - ESP_OK: succeed
   */
-esp_err_t esp_wifi_sta_wpa2_ent_set_ca_cert(const unsigned char *ca_cert, int len);
+esp_err_t esp_wifi_sta_wpa2_ent_set_ca_cert(const unsigned char *ca_cert, int ca_cert_len);
 
 /**
   * @brief  Clear CA certificate for PEAP/TTLS method.
@@ -170,7 +172,7 @@ void esp_wifi_sta_wpa2_ent_clear_ca_cert(void);
   * @param  private_key_password_len: length of private key password;
   *
   * @return
-  *    - ESP_ERR_WIFI_OK: succeed
+  *    - ESP_OK: succeed
   */
 esp_err_t esp_wifi_sta_wpa2_ent_set_cert_key(const unsigned char *client_cert, int client_cert_len, const unsigned char *private_key, int private_key_len, const unsigned char *private_key_passwd, int private_key_passwd_len);
 

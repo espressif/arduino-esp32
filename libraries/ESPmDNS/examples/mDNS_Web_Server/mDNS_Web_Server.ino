@@ -47,7 +47,7 @@ void setup(void)
 
     // Set up mDNS responder:
     // - first argument is the domain name, in this example
-    //   the fully-qualified domain name is "esp8266.local"
+    //   the fully-qualified domain name is "esp32.local"
     // - second argument is the IP address to advertise
     //   we send our IP address on the WiFi network
     if (!MDNS.begin("esp32")) {
@@ -96,7 +96,6 @@ void loop(void)
     req = req.substring(addr_start + 1, addr_end);
     Serial.print("Request: ");
     Serial.println(req);
-    client.flush();
 
     String s;
     if (req == "/")
@@ -115,6 +114,7 @@ void loop(void)
     }
     client.print(s);
 
+    client.stop();
     Serial.println("Done with client");
 }
 

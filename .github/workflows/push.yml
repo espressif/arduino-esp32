@@ -1,0 +1,58 @@
+name: ESP32 Arduino CI
+
+on:
+  push:
+    branches:
+    - master
+    - release/*
+  pull_request:
+
+jobs:
+  
+  # Ubuntu
+  build-arduino-linux:
+    name: Arduino ${{ matrix.chunk }} on ubuntu-latest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
+
+  # Windows and MacOS
+  build-arduino-win-mac:
+    name: Arduino on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macOS-latest]
+    
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh
+
+  # PlatformIO on Windows, Ubuntu and Mac
+  build-platformio:
+    name: PlatformIO on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO

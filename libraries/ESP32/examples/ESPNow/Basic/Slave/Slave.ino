@@ -36,6 +36,7 @@
 
 // Init ESP Now with fallback
 void InitESPNow() {
+  WiFi.disconnect();
   if (esp_now_init() == ESP_OK) {
     Serial.println("ESPNow Init Success");
   }
@@ -50,7 +51,7 @@ void InitESPNow() {
 
 // config AP SSID
 void configDeviceAP() {
-  char* SSID = "Slave_1";
+  const char *SSID = "Slave_1";
   bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
   if (!result) {
     Serial.println("AP Config failed.");

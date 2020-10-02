@@ -1,3 +1,8 @@
+/**
+ * @file
+ * IP checksum calculation functions
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -37,15 +42,9 @@
 #include "lwip/pbuf.h"
 #include "lwip/ip_addr.h"
 
-/** Swap the bytes in an u16_t: much like htons() for little-endian */
+/** Swap the bytes in an u16_t: much like lwip_htons() for little-endian */
 #ifndef SWAP_BYTES_IN_WORD
-#if LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN)
-/* little endian and PLATFORM_BYTESWAP defined */
-#define SWAP_BYTES_IN_WORD(w) LWIP_PLATFORM_HTONS(w)
-#else /* LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN) */
-/* can't use htons on big endian (or PLATFORM_BYTESWAP not defined)... */
 #define SWAP_BYTES_IN_WORD(w) (((w) & 0xff) << 8) | (((w) & 0xff00) >> 8)
-#endif /* LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN)*/
 #endif /* SWAP_BYTES_IN_WORD */
 
 /** Split an u32_t in two u16_ts and add them up */

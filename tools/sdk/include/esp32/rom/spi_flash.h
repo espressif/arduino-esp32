@@ -86,7 +86,8 @@ extern "C" {
 #define SPI0_R_QIO_DUMMY_CYCLELEN             3
 #define SPI0_R_QIO_ADDR_BITSLEN               31
 #define SPI0_R_FAST_DUMMY_CYCLELEN            7
-#define SPI0_R_DIO_DUMMY_CYCLELEN             3
+#define SPI0_R_DIO_DUMMY_CYCLELEN             1
+#define SPI0_R_DIO_ADDR_BITSLEN               27
 #define SPI0_R_FAST_ADDR_BITSLEN              23
 #define SPI0_R_SIO_ADDR_BITSLEN               23
 
@@ -116,6 +117,13 @@ extern "C" {
 #define  ESP_ROM_SPIFLASH_BP2                 BIT4
 #define  ESP_ROM_SPIFLASH_WR_PROTECT          (ESP_ROM_SPIFLASH_BP0|ESP_ROM_SPIFLASH_BP1|ESP_ROM_SPIFLASH_BP2)
 #define  ESP_ROM_SPIFLASH_QE                  BIT9
+
+//Extra dummy for flash read
+#define ESP_ROM_SPIFLASH_DUMMY_LEN_PLUS_20M   0
+#define ESP_ROM_SPIFLASH_DUMMY_LEN_PLUS_40M   1
+#define ESP_ROM_SPIFLASH_DUMMY_LEN_PLUS_80M   2
+
+#define FLASH_ID_GD25LQ32C  0xC86016
 
 typedef enum {
     ESP_ROM_SPIFLASH_QIO_MODE = 0,

@@ -36,7 +36,7 @@ extern "C" {
 #define RX_BUFF_SIZE                     0x100
 #define TX_BUFF_SIZE                     100
 
-//uart int enalbe register ctrl bits
+//uart int enable register ctrl bits
 #define UART_RCV_INTEN                   BIT0
 #define UART_TRX_INTEN                   BIT1
 #define UART_LINE_STATUS_INTEN           BIT2
@@ -128,7 +128,6 @@ typedef enum {
 } RcvMsgBuffState;
 
 typedef struct {
-//    uint32_t     RcvBuffSize;
     uint8_t *pRcvMsgBuff;
     uint8_t *pWritePos;
     uint8_t *pReadPos;
@@ -248,7 +247,7 @@ STATUS uart_tx_one_char(uint8_t TxChar);
   *
   * @return OK.
   */
-STATUS uart_tx_one_char2(uint8_t TxChar);//for send message
+STATUS uart_tx_one_char2(uint8_t TxChar);
 
 /**
   * @brief Wait until uart tx full empty.
@@ -268,9 +267,11 @@ void uart_tx_flush(uint8_t uart_no);
   * here for compatibility.
   */
 static inline void IRAM_ATTR uart_tx_wait_idle(uint8_t uart_no) {
-    while(REG_GET_FIELD(UART_STATUS_REG(uart_no), UART_ST_UTX_OUT)) {
-        ;
-    }
+    uint32_t status;
+    do {
+        status = READ_PERI_REG(UART_STATUS_REG(uart_no));
+        /* either tx count or state is non-zero */
+    } while ((status & (UART_ST_UTX_OUT_M | UART_TXFIFO_CNT_M)) != 0);
 }
 
 /**
@@ -285,7 +286,7 @@ static inline void IRAM_ATTR uart_tx_wait_idle(uint8_t uart_no) {
 STATUS uart_rx_one_char(uint8_t *pRxChar);
 
 /**
-  * @brief Get an input char to message channel, wait until successful.
+  * @brief Get an input char from message channel, wait until successful.
   *        Please do not call this function in SDK.
   *
   * @param  None
@@ -300,14 +301,14 @@ char uart_rx_one_char_block(void);
   *
   * @param  uint8_t *pString : the pointer to store the string.
   *
-  * @param  uint8_t MaxStrlen : the max string length, incude '\0'.
+  * @param  uint8_t MaxStrlen : the max string length, include '\0'.
   *
   * @return OK.
   */
 STATUS UartRxString(uint8_t *pString, uint8_t MaxStrlen);
 
 /**
-  * @brief Process uart recevied information in the interrupt handler.
+  * @brief Process uart received information in the interrupt handler.
   *        Please do not call this function in SDK.
   *
   * @param  void *para : the message receive buffer.

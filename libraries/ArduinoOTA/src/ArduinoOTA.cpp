@@ -9,7 +9,7 @@
 #include "Update.h"
 
 
-//#define OTA_DEBUG Serial
+// #define OTA_DEBUG Serial
 
 ArduinoOTAClass::ArduinoOTAClass()
 : _port(0)
@@ -20,6 +20,7 @@ ArduinoOTAClass::ArduinoOTAClass()
 , _size(0)
 , _cmd(0)
 , _ota_port(0)
+, _ota_timeout(1000)
 , _start_callback(NULL)
 , _end_callback(NULL)
 , _error_callback(NULL)
@@ -126,9 +127,7 @@ void ArduinoOTAClass::begin() {
     }
     _initialized = true;
     _state = OTA_IDLE;
-#ifdef OTA_DEBUG
-    OTA_DEBUG.printf("OTA server at: %s.local:%u\n", _hostname.c_str(), _port);
-#endif
+    log_i("OTA server at: %s.local:%u", _hostname.c_str(), _port);
 }
 
 int ArduinoOTAClass::parseInt(){
@@ -149,13 +148,13 @@ int ArduinoOTAClass::parseInt(){
 
 String ArduinoOTAClass::readStringUntil(char end){
     String res = "";
-    char value;
+    int value;
     while(true){
         value = _udp_ota.read();
-        if(value == '\0' || value == end){
+        if(value <= 0 || value == end){
             return res;
         }
-        res += value;
+        res += (char)value;
     }
     return res;
 }
@@ -172,6 +171,7 @@ void ArduinoOTAClass::_onRx(){
         _md5 = readStringUntil('\n');
         _md5.trim();
         if(_md5.length() != 32){
+            log_e("bad md5 length");
             return;
         }
 
@@ -197,6 +197,7 @@ void ArduinoOTAClass::_onRx(){
     } else if (_state == OTA_WAITAUTH) {
         int cmd = parseInt();
         if (cmd != U_AUTH) {
+            log_e("%d was expected. got %d instead", U_AUTH, cmd);
             _state = OTA_IDLE;
             return;
         }
@@ -204,6 +205,7 @@ void ArduinoOTAClass::_onRx(){
         String cnonce = readStringUntil(' ');
         String response = readStringUntil('\n');
         if (cnonce.length() != 32 || response.length() != 32) {
+            log_e("auth param fail");
             _state = OTA_IDLE;
             return;
         }
@@ -224,6 +226,7 @@ void ArduinoOTAClass::_onRx(){
         } else {
             _udp_ota.beginPacket(_udp_ota.remoteIP(), _udp_ota.remotePort());
             _udp_ota.print("Authentication Failed");
+            log_w("Authentication Failed");
             _udp_ota.endPacket();
             if (_error_callback) _error_callback(OTA_AUTH_ERROR);
             _state = OTA_IDLE;
@@ -233,9 +236,9 @@ void ArduinoOTAClass::_onRx(){
 
 void ArduinoOTAClass::_runUpdate() {
     if (!Update.begin(_size, _cmd)) {
-#ifdef OTA_DEBUG
-        Update.printError(OTA_DEBUG);
-#endif
+
+        log_e("Begin ERROR: %s", Update.errorString());
+
         if (_error_callback) {
             _error_callback(OTA_BEGIN_ERROR);
         }
@@ -260,8 +263,9 @@ void ArduinoOTAClass::_runUpdate() {
     }
 
     uint32_t written = 0, total = 0, tried = 0;
+
     while (!Update.isFinished() && client.connected()) {
-        size_t waited = 1000;
+        size_t waited = _ota_timeout;
         size_t available = client.available();
         while (!available && waited){
             delay(1);
@@ -270,21 +274,15 @@ void ArduinoOTAClass::_runUpdate() {
         }
         if (!waited){
             if(written && tried++ < 3){
-#ifdef OTA_DEBUG
-                OTA_DEBUG.printf("Try[%u]: %u\n", tried, written);
-#endif
+                log_i("Try[%u]: %u", tried, written);
                 if(!client.printf("%u", written)){
-#ifdef OTA_DEBUG
-                    OTA_DEBUG.printf("failed to respond\n");
-#endif
+                    log_e("failed to respond");
                     _state = OTA_IDLE;
                     break;
                 }
                 continue;
             }
-#ifdef OTA_DEBUG
-            OTA_DEBUG.printf("Receive Failed\n");
-#endif
+            log_e("Receive Failed");
             if (_error_callback) {
                 _error_callback(OTA_RECEIVE_ERROR);
             }
@@ -293,9 +291,7 @@ void ArduinoOTAClass::_runUpdate() {
             return;
         }
         if(!available){
-#ifdef OTA_DEBUG
-            OTA_DEBUG.printf("No Data: %u\n", waited);
-#endif
+            log_e("No Data: %u", waited);
             _state = OTA_IDLE;
             break;
         }
@@ -315,18 +311,14 @@ void ArduinoOTAClass::_runUpdate() {
                 log_w("didn't write enough! %u != %u", written, r);
             }
             if(!client.printf("%u", written)){
-#ifdef OTA_DEBUG
-                OTA_DEBUG.printf("failed to respond\n");
-#endif
+                log_w("failed to respond");
             }
             total += written;
             if(_progress_callback) {
                 _progress_callback(total, _size);
             }
         } else {
-#ifdef OTA_DEBUG
-            Update.printError(OTA_DEBUG);
-#endif
+            log_e("Write ERROR: %s", Update.errorString());
         }
     }
 
@@ -349,10 +341,7 @@ void ArduinoOTAClass::_runUpdate() {
         Update.printError(client);
         client.stop();
         delay(10);
-#ifdef OTA_DEBUG
-        OTA_DEBUG.print("Update ERROR: ");
-        Update.printError(OTA_DEBUG);
-#endif
+        log_e("Update ERROR: %s", Update.errorString());
         _state = OTA_IDLE;
     }
 }
@@ -364,12 +353,13 @@ void ArduinoOTAClass::end() {
         MDNS.end();
     }
     _state = OTA_IDLE;
-#ifdef OTA_DEBUG
-    OTA_DEBUG.println("OTA server stopped.");
-#endif
+    log_i("OTA server stopped.");
 }
 
 void ArduinoOTAClass::handle() {
+    if (!_initialized) {
+        return; 
+    }
     if (_state == OTA_RUNUPDATE) {
         _runUpdate();
         _state = OTA_IDLE;
@@ -382,6 +372,10 @@ void ArduinoOTAClass::handle() {
 
 int ArduinoOTAClass::getCommand() {
     return _cmd;
+}
+
+void ArduinoOTAClass::setTimeout(int timeoutInMillis) {
+    _ota_timeout = timeoutInMillis;
 }
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ARDUINOOTA)

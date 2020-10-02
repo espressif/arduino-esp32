@@ -52,7 +52,7 @@
 /* This option switches f_expand function. (0:Disable or 1:Enable) */
 
 
-#define FF_USE_CHMOD	0
+#define FF_USE_CHMOD	1
 /* This option switches attribute manipulation functions, f_chmod() and f_utime().
 /  (0:Disable or 1:Enable) Also FF_FS_READONLY needs to be 0 to enable this option. */
 
@@ -129,7 +129,13 @@
 /  ff_memfree() in ffsystem.c, need to be added to the project. */
 
 
-#define FF_LFN_UNICODE	0
+#ifdef CONFIG_FATFS_API_ENCODING_UTF_8
+#define FF_LFN_UNICODE      2
+#elif defined(CONFIG_FATFS_API_ENCODING_UTF_16)
+#define FF_LFN_UNICODE      1
+#else /* CONFIG_FATFS_API_ENCODING_ANSI_OEM */
+#define FF_LFN_UNICODE      0
+#endif
 /* This option switches the character encoding on the API when LFN is enabled.
 /
 /   0: ANSI/OEM in current CP (TCHAR = char)
@@ -148,7 +154,7 @@
 /  on character encoding. When LFN is not enabled, these options have no effect. */
 
 
-#define FF_STRF_ENCODE	3
+#define FF_STRF_ENCODE      3
 /* When FF_LFN_UNICODE >= 1 with LFN enabled, string I/O functions, f_gets(),
 /  f_putc(), f_puts and f_printf() convert the character encoding in it.
 /  This option selects assumption of character encoding ON THE FILE to be
@@ -294,5 +300,12 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+
+/* Some memory allocation functions are declared here in addition to ff.h, so that
+   they can be used also by external code when LFN feature is disabled.
+ */
+void* ff_memalloc (UINT msize);
+void* ff_memcalloc (UINT num, UINT size);
+
 
 /*--- End of configuration options ---*/

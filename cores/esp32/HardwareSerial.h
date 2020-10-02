@@ -22,6 +22,24 @@
  Modified 18 December 2014 by Ivan Grokhotkov (esp8266 platform support)
  Modified 31 March 2015 by Markus Sattler (rewrite the code for UART0 + UART1 support in ESP8266)
  Modified 25 April 2015 by Thomas Flayols (add configuration different from 8N1 in ESP8266)
+ Modified 13 October 2018 by Jeroen Döll (add baudrate detection)
+ Baudrate detection example usage (detection on Serial1):
+   void setup() {
+     Serial.begin(115200);
+     delay(100);
+     Serial.println();
+
+     Serial1.begin(0, SERIAL_8N1, -1, -1, true, 11000UL);  // Passing 0 for baudrate to detect it, the last parameter is a timeout in ms
+
+     unsigned long detectedBaudRate = Serial1.baudRate();
+     if(detectedBaudRate) {
+       Serial.printf("Detected baudrate is %lu\n", detectedBaudRate);
+     } else {
+       Serial.println("No baudrate detected, Serial1 will not work!");
+     }
+   }
+
+ Pay attention: the baudrate returned by baudRate() may be rounded, eg 115200 returns 115201
  */
 
 #ifndef HardwareSerial_h
@@ -37,15 +55,26 @@ class HardwareSerial: public Stream
 public:
     HardwareSerial(int uart_nr);
 
-    void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false);
+    void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
     void end();
+    void updateBaudRate(unsigned long baud);
     int available(void);
+    int availableForWrite(void);
     int peek(void);
     int read(void);
+    size_t read(uint8_t *buffer, size_t size);
+    inline size_t read(char * buffer, size_t size)
+    {
+        return read((uint8_t*) buffer, size);
+    }
     void flush(void);
+    void flush( bool txOnly);
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
-
+    inline size_t write(const char * buffer, size_t size)
+    {
+        return write((uint8_t*) buffer, size);
+    }
     inline size_t write(const char * s)
     {
         return write((uint8_t*) s, strlen(s));
@@ -69,13 +98,24 @@ public:
     uint32_t baudRate();
     operator bool() const;
 
+    size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
+    
+    void setRxInvert(bool);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
+    uint8_t _tx_pin;
+    uint8_t _rx_pin;
 };
 
-extern HardwareSerial Serial;
+extern void serialEventRun(void) __attribute__((weak));
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+extern HardwareSerial Serial;
+extern HardwareSerial Serial1;
+extern HardwareSerial Serial2;
 #endif
+
+#endif // HardwareSerial_h

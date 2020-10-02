@@ -56,14 +56,33 @@ typedef enum wps_type {
 
 extern const wps_crypto_funcs_t g_wifi_default_wps_crypto_funcs;
 
+#define WPS_MAX_MANUFACTURER_LEN 65
+#define WPS_MAX_MODEL_NUMBER_LEN 33
+#define WPS_MAX_MODEL_NAME_LEN   33
+#define WPS_MAX_DEVICE_NAME_LEN  33
+
+typedef struct {
+    char manufacturer[WPS_MAX_MANUFACTURER_LEN]; /*!< Manufacturer, null-terminated string. The default manufcturer is used if the string is empty */
+    char model_number[WPS_MAX_MODEL_NUMBER_LEN]; /*!< Model number, null-terminated string. The default model number is used if the string is empty */
+    char model_name[WPS_MAX_MODEL_NAME_LEN];     /*!< Model name, null-terminated string. The default model name is used if the string is empty */
+    char device_name[WPS_MAX_DEVICE_NAME_LEN];   /*!< Device name, null-terminated string. The default device name is used if the string is empty */
+} wps_factory_information_t;
+
 typedef struct {
     wps_type_t wps_type;
     const wps_crypto_funcs_t *crypto_funcs;
-}esp_wps_config_t;
+    wps_factory_information_t factory_info;
+} esp_wps_config_t;
 
 #define WPS_CONFIG_INIT_DEFAULT(type) { \
     .wps_type = type, \
     .crypto_funcs = &g_wifi_default_wps_crypto_funcs, \
+    .factory_info = {   \
+        .manufacturer = "ESPRESSIF",  \
+        .model_number = "ESP32",  \
+        .model_name = "ESPRESSIF IOT",  \
+        .device_name = "ESP STATION",  \
+    }  \
 }
 
 /**
@@ -77,7 +96,7 @@ typedef struct {
   *          - ESP_OK : succeed
   *          - ESP_ERR_WIFI_WPS_TYPE : wps type is invalid
   *          - ESP_ERR_WIFI_WPS_MODE : wifi is not in station mode or sniffer mode is on
-  *          - ESP_ERR_WIFI_FAIL : wps initialization fails
+  *          - ESP_FAIL : wps initialization fails
   */
 esp_err_t esp_wifi_wps_enable(const esp_wps_config_t *config);
 
@@ -106,7 +125,7 @@ esp_err_t esp_wifi_wps_disable(void);
   *          - ESP_ERR_WIFI_WPS_TYPE : wps type is invalid
   *          - ESP_ERR_WIFI_WPS_MODE : wifi is not in station mode or sniffer mode is on
   *          - ESP_ERR_WIFI_WPS_SM : wps state machine is not initialized
-  *          - ESP_ERR_WIFI_FAIL : wps initialization fails
+  *          - ESP_FAIL : wps initialization fails
   */
 esp_err_t esp_wifi_wps_start(int timeout_ms);
 

@@ -1,0 +1,325 @@
+menu "Arduino Configuration"
+
+config ENABLE_ARDUINO_DEPENDS
+    bool
+    select LWIP_SO_RCVBUF
+    select ETHERNET
+    select WIFI_ENABLED
+    select ESP32_PHY_CALIBRATION_AND_DATA_STORAGE
+    select MEMMAP_SMP
+    default "y"
+
+config AUTOSTART_ARDUINO
+    bool "Autostart Arduino setup and loop on boot"
+    default "n"
+    help
+        Enabling this option will implement app_main and start Arduino.
+        All you need to implement in your main.cpp is setup() and loop()
+        and include Arduino.h
+        If disabled, you can call initArduino() to run any preparations
+        required by the framework
+
+choice ARDUINO_RUNNING_CORE
+    bool "Core on which Arduino's setup() and loop() are running"
+    default ARDUINO_RUN_CORE1
+    help
+        Select on which core Arduino's setup() and loop() functions run
+
+    config ARDUINO_RUN_CORE0
+        bool "CORE 0"
+    config ARDUINO_RUN_CORE1
+        bool "CORE 1"
+    config ARDUINO_RUN_NO_AFFINITY
+        bool "BOTH"
+
+endchoice
+
+config ARDUINO_RUNNING_CORE
+    int
+    default 0 if ARDUINO_RUN_CORE0
+    default 1 if ARDUINO_RUN_CORE1
+    default -1 if ARDUINO_RUN_NO_AFFINITY
+
+choice ARDUINO_EVENT_RUNNING_CORE
+    bool "Core on which Arduino's event handler is running"
+    default ARDUINO_EVENT_RUN_CORE1
+    help
+        Select on which core Arduino's WiFi.onEvent() run
+
+    config ARDUINO_EVENT_RUN_CORE0
+        bool "CORE 0"
+    config ARDUINO_EVENT_RUN_CORE1
+        bool "CORE 1"
+    config ARDUINO_EVENT_RUN_NO_AFFINITY
+        bool "BOTH"
+
+endchoice
+
+config ARDUINO_EVENT_RUNNING_CORE
+    int
+    default 0 if ARDUINO_EVENT_RUN_CORE0
+    default 1 if ARDUINO_EVENT_RUN_CORE1
+    default -1 if ARDUINO_EVENT_RUN_NO_AFFINITY
+
+choice ARDUINO_UDP_RUNNING_CORE
+    bool "Core on which Arduino's UDP is running"
+    default ARDUINO_UDP_RUN_CORE1
+    help
+        Select on which core Arduino's UDP run
+
+    config ARDUINO_UDP_RUN_CORE0
+        bool "CORE 0"
+    config ARDUINO_UDP_RUN_CORE1
+        bool "CORE 1"
+    config ARDUINO_UDP_RUN_NO_AFFINITY
+        bool "BOTH"
+
+endchoice
+
+config ARDUINO_UDP_RUNNING_CORE
+    int
+    default 0 if ARDUINO_UDP_RUN_CORE0
+    default 1 if ARDUINO_UDP_RUN_CORE1
+    default -1 if ARDUINO_UDP_RUN_NO_AFFINITY
+
+
+config DISABLE_HAL_LOCKS
+    bool "Disable mutex locks for HAL"
+    default "n"
+    help
+        Enabling this option will run all hardware abstraction without locks.
+        While communication with external hardware will be faster, you need to
+        make sure that there is no option to use the same bus from another thread
+        or interrupt at the same time. Option is best used with Arduino enabled
+        and code implemented only in setup/loop and Arduino callbacks
+
+menu "Debug Log Configuration"
+choice ARDUHAL_LOG_DEFAULT_LEVEL
+    bool "Default log level"
+    default ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    help
+        Specify how much output to see in logs by default.
+
+config ARDUHAL_LOG_DEFAULT_LEVEL_NONE
+    bool "No output"
+config ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    bool "Error"
+config ARDUHAL_LOG_DEFAULT_LEVEL_WARN
+    bool "Warning"
+config ARDUHAL_LOG_DEFAULT_LEVEL_INFO
+    bool "Info"
+config ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG
+    bool "Debug"
+config ARDUHAL_LOG_DEFAULT_LEVEL_VERBOSE
+    bool "Verbose"
+endchoice
+
+config ARDUHAL_LOG_DEFAULT_LEVEL
+    int
+    default 0 if ARDUHAL_LOG_DEFAULT_LEVEL_NONE
+    default 1 if ARDUHAL_LOG_DEFAULT_LEVEL_ERROR
+    default 2 if ARDUHAL_LOG_DEFAULT_LEVEL_WARN
+    default 3 if ARDUHAL_LOG_DEFAULT_LEVEL_INFO
+    default 4 if ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG
+    default 5 if ARDUHAL_LOG_DEFAULT_LEVEL_VERBOSE
+
+config ARDUHAL_LOG_COLORS
+    bool "Use ANSI terminal colors in log output"
+    default "n"
+    help
+        Enable ANSI terminal color codes in bootloader output.
+        In order to view these, your terminal program must support ANSI color codes.
+
+config ARDUHAL_ESP_LOG
+    bool "Forward ESP_LOGx to Arduino log output"
+    default "n"
+    help
+        This option will redefine the ESP_LOGx macros to Arduino's log_x macros.
+        To enable for your application, add the follwing after your includes:
+        #ifdef ARDUINO_ARCH_ESP32
+        #include "esp32-hal-log.h"
+        #endif
+
+endmenu
+
+choice ARDUHAL_PARTITION_SCHEME
+    bool "Used partition scheme"
+    default ARDUHAL_PARTITION_SCHEME_DEFAULT
+    help
+        Specify which partition scheme to be used.
+
+config ARDUHAL_PARTITION_SCHEME_DEFAULT
+    bool "Default"
+config ARDUHAL_PARTITION_SCHEME_MINIMAL
+    bool "Minimal (for 2MB FLASH)"
+config ARDUHAL_PARTITION_SCHEME_NO_OTA
+    bool "No OTA (for large apps)"
+config ARDUHAL_PARTITION_SCHEME_HUGE_APP
+    bool "Huge App (for very large apps)"
+config ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
+    bool "Minimal SPIFFS (for large apps with OTA)"
+endchoice
+
+config ARDUHAL_PARTITION_SCHEME
+    string
+    default "default" if ARDUHAL_PARTITION_SCHEME_DEFAULT
+    default "minimal" if ARDUHAL_PARTITION_SCHEME_MINIMAL
+    default "no_ota" if ARDUHAL_PARTITION_SCHEME_NO_OTA
+    default "huge_app" if ARDUHAL_PARTITION_SCHEME_HUGE_APP
+    default "min_spiffs" if ARDUHAL_PARTITION_SCHEME_MIN_SPIFFS
+
+
+config AUTOCONNECT_WIFI
+    bool "Autoconnect WiFi on boot"
+    default "n"
+    depends on AUTOSTART_ARDUINO
+    select ARDUINO_SELECTIVE_WiFi
+    help
+        If enabled, WiFi will connect to the last used SSID (if station was enabled),
+        else connection will be started only after calling WiFi.begin(ssid, password)
+
+config ARDUINO_SELECTIVE_COMPILATION
+    bool "Include only specific Arduino libraries"
+    default n
+
+config ARDUINO_SELECTIVE_ArduinoOTA
+    bool "Enable ArduinoOTA"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    select ARDUINO_SELECTIVE_ESPmDNS
+    default y
+
+config ARDUINO_SELECTIVE_AsyncUDP
+    bool "Enable AsyncUDP"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_AzureIoT
+    bool "Enable AzureIoT"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_HTTPClient
+    default y
+
+config ARDUINO_SELECTIVE_BLE
+    bool "Enable BLE"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_BluetoothSerial
+    bool "Enable BluetoothSerial"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_DNSServer
+    bool "Enable DNSServer"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_EEPROM
+    bool "Enable EEPROM"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_ESP32
+    bool "Enable ESP32"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_ESPmDNS
+    bool "Enable ESPmDNS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_FFat
+    bool "Enable FFat"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_FS
+    bool "Enable FS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_HTTPClient
+    bool "Enable HTTPClient"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    select ARDUINO_SELECTIVE_WiFiClientSecure
+    default y
+
+config ARDUINO_SELECTIVE_NetBIOS
+    bool "Enable NetBIOS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_Preferences
+    bool "Enable Preferences"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SD
+    bool "Enable SD"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_SD_MMC
+    bool "Enable SD_MMC"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_SimpleBLE
+    bool "Enable SimpleBLE"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SPI
+    bool "Enable SPI"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_SPIFFS
+    bool "Enable SPIFFS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
+config ARDUINO_SELECTIVE_Ticker
+    bool "Enable Ticker"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_Update
+    bool "Enable Update"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_WebServer
+    bool "Enable WebServer"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+    select ARDUINO_SELECTIVE_FS
+
+config ARDUINO_SELECTIVE_WiFi
+    bool "Enable WiFi"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_WiFiClientSecure
+    bool "Enable WiFiClientSecure"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_Wire
+    bool "Enable Wire"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+
+endmenu

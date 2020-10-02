@@ -4,7 +4,8 @@
  * \brief Wrapper for PKCS#11 library libpkcs11-helper
  *
  * \author Adriaan de Jong <dejong@fox-it.com>
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
@@ -49,7 +50,8 @@ extern "C" {
 /**
  * Context for PKCS #11 private keys.
  */
-typedef struct {
+typedef struct mbedtls_pkcs11_context
+{
         pkcs11h_certificate_t pkcs11h_cert;
         int len;
 } mbedtls_pkcs11_context;

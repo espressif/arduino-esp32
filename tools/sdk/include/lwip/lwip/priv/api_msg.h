@@ -1,3 +1,8 @@
+/**
+ * @file
+ * netconn API lwIP internal implementations (do not use in application code)
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -38,29 +43,25 @@
 /* Note: Netconn API is always available when sockets are enabled -
  * sockets are implemented on top of them */
 
-#include <stddef.h> /* for size_t */
-
+#include "lwip/arch.h"
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/igmp.h"
 #include "lwip/api.h"
+#include "lwip/priv/tcpip_priv.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #if LWIP_MPU_COMPATIBLE
-#define API_MSG_M_DEF(m)      m
-#define API_MSG_M_DEF_C(t, m) t m
 #if LWIP_NETCONN_SEM_PER_THREAD
 #define API_MSG_M_DEF_SEM(m)  *m
 #else
 #define API_MSG_M_DEF_SEM(m)  API_MSG_M_DEF(m)
 #endif
 #else /* LWIP_MPU_COMPATIBLE */
-#define API_MSG_M_DEF(m)      *m
-#define API_MSG_M_DEF_C(t, m) const t * m
 #define API_MSG_M_DEF_SEM(m)  API_MSG_M_DEF(m)
 #endif /* LWIP_MPU_COMPATIBLE */
 
@@ -75,7 +76,7 @@ extern "C" {
 /** This struct includes everything that is necessary to execute a function
     for a netconn in another thread context (mainly used to process netconns
     in the tcpip_thread context to be thread safe). */
-struct api_msg_msg {
+struct api_msg {
   /** The netconn which to process - always needed: it includes the semaphore
       which is used to block the application thread until the function finished. */
   struct netconn *conn;
@@ -150,16 +151,6 @@ struct api_msg_msg {
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
 
 
-/** This struct contains a function to execute in another thread context and
-    a struct api_msg_msg that serves as an argument for this function.
-    This is passed to tcpip_apimsg to execute functions in tcpip_thread context. */
-struct api_msg {
-  /** function to execute in tcpip_thread context */
-  void (* function)(void *msg);
-  /** arguments for this function */
-  struct api_msg_msg msg;
-};
-
 #if LWIP_DNS
 /** As lwip_netconn_do_gethostbyname requires more arguments but doesn't require a netconn,
     it has its own struct (to avoid struct api_msg getting bigger than necessary).
@@ -194,35 +185,9 @@ struct dns_api_msg {
 #endif
 #endif
 
-#if LWIP_TCPIP_CORE_LOCKING
-#ifdef LWIP_DEBUG
-#define TCIP_APIMSG_SET_ERR(m, e) (m)->msg.err = e  /* catch functions that don't set err */
-#else
-#define TCIP_APIMSG_SET_ERR(m, e)
-#endif
-#if LWIP_NETCONN_SEM_PER_THREAD
-#define TCPIP_APIMSG_SET_SEM(m) ((m)->msg.op_completed_sem = LWIP_NETCONN_THREAD_SEM_GET())
-#else
-#define TCPIP_APIMSG_SET_SEM(m)
-#endif
-#define TCPIP_APIMSG_NOERR(m,f) do { \
-  TCIP_APIMSG_SET_ERR(m, ERR_VAL); \
-  TCPIP_APIMSG_SET_SEM(m); \
-  LOCK_TCPIP_CORE(); \
-  f(&((m)->msg)); \
-  UNLOCK_TCPIP_CORE(); \
-} while(0)
-#define TCPIP_APIMSG(m,f,e)   do { \
-  TCPIP_APIMSG_NOERR(m,f); \
-  (e) = (m)->msg.err; \
-} while(0)
-#define TCPIP_APIMSG_ACK(m)   NETCONN_SET_SAFE_ERR((m)->conn, (m)->err)
-#else /* LWIP_TCPIP_CORE_LOCKING */
-#define TCPIP_APIMSG_NOERR(m,f) do { (m)->function = f; tcpip_apimsg(m); } while(0)
-#define TCPIP_APIMSG(m,f,e)   do { (m)->function = f; (e) = tcpip_apimsg(m); } while(0)
-#define TCPIP_APIMSG_ACK(m)   do { NETCONN_SET_SAFE_ERR((m)->conn, (m)->err); sys_sem_signal(LWIP_API_MSG_SEM(m)); } while(0)
-
-#endif /* LWIP_TCPIP_CORE_LOCKING */
+#if LWIP_TCP
+extern u8_t netconn_aborted;
+#endif /* LWIP_TCP */
 
 void lwip_netconn_do_newconn         (void *m);
 void lwip_netconn_do_delconn         (void *m);
@@ -232,6 +197,9 @@ void lwip_netconn_do_disconnect      (void *m);
 void lwip_netconn_do_listen          (void *m);
 void lwip_netconn_do_send            (void *m);
 void lwip_netconn_do_recv            (void *m);
+#if TCP_LISTEN_BACKLOG
+void lwip_netconn_do_accepted        (void *m);
+#endif /* TCP_LISTEN_BACKLOG */
 void lwip_netconn_do_write           (void *m);
 void lwip_netconn_do_getaddr         (void *m);
 void lwip_netconn_do_close           (void *m);

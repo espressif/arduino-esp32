@@ -18,8 +18,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "esp_err.h"
 #include "rom/ets_sys.h"
-#include "lwip/mem.h"
+
 typedef long os_time_t;
 
 /**
@@ -201,6 +202,10 @@ char * os_readfile(const char *name, size_t *len);
 #define os_free(p) free((p))
 #endif
 
+#ifndef os_bzero
+#define os_bzero(s, n) bzero(s, n)
+#endif 
+
 
 #ifndef os_strdup
 #ifdef _MSC_VER
@@ -265,7 +270,7 @@ char * ets_strdup(const char *s);
 #ifdef _MSC_VER
 #define os_snprintf _snprintf
 #else
-#define os_snprintf vsnprintf
+#define os_snprintf snprintf
 #endif
 #endif
 

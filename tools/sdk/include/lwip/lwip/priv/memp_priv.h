@@ -1,3 +1,8 @@
+/**
+ * @file
+ * memory pools lwIP internal implementations (do not use in application code)
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -38,7 +43,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 #include "lwip/mem.h"
 
 #if MEMP_OVERFLOW_CHECK
@@ -82,6 +87,7 @@ extern "C" {
 
 #endif /* MEMP_OVERFLOW_CHECK */
 
+#if !MEMP_MEM_MALLOC || MEMP_OVERFLOW_CHECK
 struct memp {
   struct memp *next;
 #if MEMP_OVERFLOW_CHECK
@@ -89,8 +95,9 @@ struct memp {
   int line;
 #endif /* MEMP_OVERFLOW_CHECK */
 };
+#endif /* !MEMP_MEM_MALLOC || MEMP_OVERFLOW_CHECK */
 
-#if MEM_USE_POOLS
+#if MEM_USE_POOLS && MEMP_USE_CUSTOM_POOLS
 /* Use a helper type to get the start and end of the user "memory pools" for mem_malloc */
 typedef enum {
     /* Get the first (via:
@@ -117,9 +124,19 @@ typedef enum {
    We use this helper type and these defines so we can avoid using const memp_t values */
 #define MEMP_POOL_FIRST ((memp_t) MEMP_POOL_HELPER_FIRST)
 #define MEMP_POOL_LAST   ((memp_t) MEMP_POOL_HELPER_LAST)
-#endif /* MEM_USE_POOLS */
+#endif /* MEM_USE_POOLS && MEMP_USE_CUSTOM_POOLS */
 
+/** Memory pool descriptor */
 struct memp_desc {
+#if defined(LWIP_DEBUG) || MEMP_OVERFLOW_CHECK || LWIP_STATS_DISPLAY
+  /** Textual description */
+  const char *desc;
+#endif /* LWIP_DEBUG || MEMP_OVERFLOW_CHECK || LWIP_STATS_DISPLAY */
+#if MEMP_STATS
+  /** Statistics */
+  struct stats_mem *stats;
+#endif
+
   /** Element size */
   u16_t size;
 
@@ -127,33 +144,26 @@ struct memp_desc {
   /** Number of elements */
   u16_t num;
 
-#if defined(LWIP_DEBUG) || MEMP_OVERFLOW_CHECK
-  /** Textual description */
-  const char *desc;
-#endif /* LWIP_DEBUG || MEMP_OVERFLOW_CHECK */
-
-  /** Base */
-  u8_t *base;  
+  /** Base address */
+  u8_t *base;
 
   /** First free element of each pool. Elements form a linked list. */
   struct memp **tab;
 #endif /* MEMP_MEM_MALLOC */
 };
 
-#if (ESP_STATS_MEM == 1)
-extern uint32_t g_lwip_mem_cnt[MEMP_MAX][2];
-#define ESP_CNT_MEM_MALLOC_INC(type)  g_lwip_mem_cnt[type][0]++
-#define ESP_CNT_MEM_FREE_INC(type)    g_lwip_mem_cnt[type][1]++
-#else
-#define ESP_CNT_MEM_MALLOC_INC(type)
-#define ESP_CNT_MEM_FREE_INC(type)
-#endif
-
-
-#ifdef LWIP_DEBUG
+#if defined(LWIP_DEBUG) || MEMP_OVERFLOW_CHECK || LWIP_STATS_DISPLAY
 #define DECLARE_LWIP_MEMPOOL_DESC(desc) (desc),
 #else
 #define DECLARE_LWIP_MEMPOOL_DESC(desc)
+#endif
+
+#if MEMP_STATS
+#define LWIP_MEMPOOL_DECLARE_STATS_INSTANCE(name) static struct stats_mem name;
+#define LWIP_MEMPOOL_DECLARE_STATS_REFERENCE(name) &name,
+#else
+#define LWIP_MEMPOOL_DECLARE_STATS_INSTANCE(name)
+#define LWIP_MEMPOOL_DECLARE_STATS_REFERENCE(name)
 #endif
 
 void memp_init_pool(const struct memp_desc *desc);

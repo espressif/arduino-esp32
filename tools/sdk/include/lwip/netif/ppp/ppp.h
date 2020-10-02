@@ -31,7 +31,7 @@
 *   Original derived from BSD codes.
 *****************************************************************************/
 
-#include "lwip/opt.h"
+#include "netif/ppp/ppp_opts.h"
 #if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
 #ifndef PPP_H
@@ -42,13 +42,12 @@
 #include "lwip/mem.h"
 #include "lwip/netif.h"
 #include "lwip/sys.h"
-#include "lwip/sio.h"
-#include "lwip/timers.h"
+#include "lwip/timeouts.h"
 #if PPP_IPV6_SUPPORT
 #include "lwip/ip6_addr.h"
 #endif /* PPP_IPV6_SUPPORT */
 
-/* Disable non-working or rarely used PPP feature, so rarely that we don't want to bloat opt.h with them */
+/* Disable non-working or rarely used PPP feature, so rarely that we don't want to bloat ppp_opts.h with them */
 #ifndef PPP_OPTIONS
 #define PPP_OPTIONS         0
 #endif
@@ -111,18 +110,18 @@
  * Values for phase.
  */
 #define PPP_PHASE_DEAD          0
-#define PPP_PHASE_INITIALIZE    1
-#define PPP_PHASE_SERIALCONN    2
-#define PPP_PHASE_DORMANT       3
-#define PPP_PHASE_ESTABLISH     4
-#define PPP_PHASE_AUTHENTICATE  5
-#define PPP_PHASE_CALLBACK      6
-#define PPP_PHASE_NETWORK       7
-#define PPP_PHASE_RUNNING       8
-#define PPP_PHASE_TERMINATE     9
-#define PPP_PHASE_DISCONNECT    10
-#define PPP_PHASE_HOLDOFF       11
-#define PPP_PHASE_MASTER        12
+#define PPP_PHASE_MASTER        1
+#define PPP_PHASE_HOLDOFF       2
+#define PPP_PHASE_INITIALIZE    3
+#define PPP_PHASE_SERIALCONN    4
+#define PPP_PHASE_DORMANT       5
+#define PPP_PHASE_ESTABLISH     6
+#define PPP_PHASE_AUTHENTICATE  7
+#define PPP_PHASE_CALLBACK      8
+#define PPP_PHASE_NETWORK       9
+#define PPP_PHASE_RUNNING       10
+#define PPP_PHASE_TERMINATE     11
+#define PPP_PHASE_DISCONNECT    12
 
 /* Error codes. */
 #define PPPERR_NONE         0  /* No error. */
@@ -311,7 +310,6 @@ struct ppp_addrs {
  * PPP interface control block.
  */
 struct ppp_pcb_s {
-  /* -- below are data that will NOT be cleared between two sessions */
   ppp_settings settings;
   const struct link_callbacks *link_cb;
   void *link_ctx_cb;
@@ -321,18 +319,12 @@ struct ppp_pcb_s {
 #endif /* PPP_NOTIFY_PHASE */
   void *ctx_cb;                  /* Callbacks optional pointer */
   struct netif *netif;           /* PPP interface */
-
-  /* -- below are data that will be cleared between two sessions */
-
-  /*
-   * phase must be the first member of cleared members, because it is used to know
-   * which part must not be cleared.
-   */
   u8_t phase;                    /* where the link is at */
   u8_t err_code;                 /* Code indicating why interface is down. */
 
   /* flags */
 #if PPP_IPV4_SUPPORT
+  unsigned int ask_for_local           :1; /* request our address from peer */
   unsigned int ipcp_is_open            :1; /* haven't called np_finished() */
   unsigned int ipcp_is_up              :1; /* have called ipcp_up() */
   unsigned int if4_up                  :1; /* True when the IPv4 interface is up. */
@@ -432,7 +424,13 @@ struct ppp_pcb_s {
  ************************/
 
 /*
- * Set auth helper, optional, you can either fill ppp_pcb->settings.
+ * WARNING: For multi-threads environment, all ppp_set_* functions most
+ * only be called while the PPP is in the dead phase (i.e. disconnected).
+ */
+
+#if PPP_AUTH_SUPPORT
+/*
+ * Set PPP authentication.
  *
  * Warning: Using PPPAUTHTYPE_ANY might have security consequences.
  * RFC 1994 says:
@@ -452,6 +450,7 @@ struct ppp_pcb_s {
  * circumstances, then distinct user names SHOULD be employed, each of
  * which identifies exactly one authentication method.
  *
+ * Default is none auth type, unset (NULL) user and passwd.
  */
 #define PPPAUTHTYPE_NONE      0x00
 #define PPPAUTHTYPE_PAP       0x01
@@ -461,6 +460,127 @@ struct ppp_pcb_s {
 #define PPPAUTHTYPE_EAP       0x10
 #define PPPAUTHTYPE_ANY       0xff
 void ppp_set_auth(ppp_pcb *pcb, u8_t authtype, const char *user, const char *passwd);
+
+/*
+ * If set, peer is required to authenticate. This is mostly necessary for PPP server support.
+ *
+ * Default is false.
+ */
+#define ppp_set_auth_required(ppp, boolval) (ppp->settings.auth_required = boolval)
+#endif /* PPP_AUTH_SUPPORT */
+
+#if PPP_IPV4_SUPPORT
+/*
+ * Set PPP interface "our" and "his" IPv4 addresses. This is mostly necessary for PPP server
+ * support but it can also be used on a PPP link where each side choose its own IP address.
+ *
+ * Default is unset (0.0.0.0).
+ */
+#define ppp_set_ipcp_ouraddr(ppp, addr) do { ppp->ipcp_wantoptions.ouraddr = ip4_addr_get_u32(addr); \
+                                             ppp->ask_for_local = ppp->ipcp_wantoptions.ouraddr != 0; } while(0)
+#define ppp_set_ipcp_hisaddr(ppp, addr) (ppp->ipcp_wantoptions.hisaddr = ip4_addr_get_u32(addr))
+#if LWIP_DNS
+/*
+ * Set DNS server addresses that are sent if the peer asks for them. This is mostly necessary
+ * for PPP server support.
+ *
+ * Default is unset (0.0.0.0).
+ */
+#define ppp_set_ipcp_dnsaddr(ppp, index, addr) (ppp->ipcp_allowoptions.dnsaddr[index] = ip4_addr_get_u32(addr))
+
+/*
+ * If set, we ask the peer for up to 2 DNS server addresses. Received DNS server addresses are
+ * registered using the dns_setserver() function.
+ *
+ * Default is false.
+ */
+#define ppp_set_usepeerdns(ppp, boolval) (ppp->settings.usepeerdns = boolval)
+#endif /* LWIP_DNS */
+#endif /* PPP_IPV4_SUPPORT */
+
+#if MPPE_SUPPORT
+/* Disable MPPE (Microsoft Point to Point Encryption). This parameter is exclusive. */
+#define PPP_MPPE_DISABLE           0x00
+/* Require the use of MPPE (Microsoft Point to Point Encryption). */
+#define PPP_MPPE_ENABLE            0x01
+/* Allow MPPE to use stateful mode. Stateless mode is still attempted first. */
+#define PPP_MPPE_ALLOW_STATEFUL    0x02
+/* Refuse the use of MPPE with 40-bit encryption. Conflict with PPP_MPPE_REFUSE_128. */
+#define PPP_MPPE_REFUSE_40         0x04
+/* Refuse the use of MPPE with 128-bit encryption. Conflict with PPP_MPPE_REFUSE_40. */
+#define PPP_MPPE_REFUSE_128        0x08
+/*
+ * Set MPPE configuration
+ *
+ * Default is disabled.
+ */
+void ppp_set_mppe(ppp_pcb *pcb, u8_t flags);
+#endif /* MPPE_SUPPORT */
+
+/*
+ * Wait for up to intval milliseconds for a valid PPP packet from the peer.
+ * At the end of this  time, or when a valid PPP packet is received from the
+ * peer, we commence negotiation by sending our first LCP packet.
+ *
+ * Default is 0.
+ */
+#define ppp_set_listen_time(ppp, intval) (ppp->settings.listen_time = intval)
+
+/*
+ * If set, we will attempt to initiate a connection but if no reply is received from
+ * the peer, we will then just wait passively for a valid LCP packet from the peer.
+ *
+ * Default is false.
+ */
+#define ppp_set_passive(ppp, boolval) (ppp->lcp_wantoptions.passive = boolval)
+
+/*
+ * If set, we will not transmit LCP packets to initiate a connection until a valid
+ * LCP packet is received from the peer. This is what we usually call the server mode.
+ *
+ * Default is false.
+ */
+#define ppp_set_silent(ppp, boolval) (ppp->lcp_wantoptions.silent = boolval)
+
+/*
+ * If set, enable protocol field compression negotiation in both the receive and
+ * the transmit direction.
+ *
+ * Default is true.
+ */
+#define ppp_set_neg_pcomp(ppp, boolval) (ppp->lcp_wantoptions.neg_pcompression = \
+                                         ppp->lcp_allowoptions.neg_pcompression = boolval)
+
+/*
+ * If set, enable Address/Control compression in both the receive and the transmit
+ * direction.
+ *
+ * Default is true.
+ */
+#define ppp_set_neg_accomp(ppp, boolval) (ppp->lcp_wantoptions.neg_accompression = \
+                                          ppp->lcp_allowoptions.neg_accompression = boolval)
+
+/*
+ * If set, enable asyncmap negotiation. Otherwise forcing all control characters to
+ * be escaped for both the transmit and the receive direction.
+ *
+ * Default is true.
+ */
+#define ppp_set_neg_asyncmap(ppp, boolval) (ppp->lcp_wantoptions.neg_asyncmap = \
+                                            ppp->lcp_allowoptions.neg_asyncmap = boolval)
+
+/*
+ * This option sets the Async-Control-Character-Map (ACCM) for this end of the link.
+ * The ACCM is a set of 32 bits, one for each of the ASCII control characters with
+ * values from 0 to 31, where a 1 bit  indicates that the corresponding control
+ * character should not be used in PPP packets sent to this system. The map is
+ * an unsigned 32 bits integer where the least significant bit (00000001) represents
+ * character 0 and the most significant bit (80000000) represents character 31.
+ * We will then ask the peer to send these characters as a 2-byte escape sequence.
+ *
+ * Default is 0.
+ */
+#define ppp_set_asyncmap(ppp, intval) (ppp->lcp_wantoptions.asyncmap = intval)
 
 /*
  * Set a PPP interface as the default network interface
@@ -498,13 +618,10 @@ err_t ppp_connect(ppp_pcb *pcb, u16_t holdoff);
  *
  * This can only be called if PPP is in the dead phase.
  *
- * Local and remote interface IP addresses, as well as DNS are
- * provided through a previously filled struct ppp_addrs.
- *
  * If this port connects to a modem, the modem connection must be
  * established before calling this.
  */
-err_t ppp_listen(ppp_pcb *pcb, struct ppp_addrs *addrs);
+err_t ppp_listen(ppp_pcb *pcb);
 #endif /* PPP_SERVER */
 
 /*
