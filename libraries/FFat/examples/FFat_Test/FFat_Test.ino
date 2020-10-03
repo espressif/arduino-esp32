@@ -52,6 +52,7 @@ void readFile(fs::FS &fs, const char * path){
     while(file.available()){
         Serial.write(file.read());
     }
+    file.close();
 }
 
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -65,8 +66,9 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
     if(file.print(message)){
         Serial.println("- file written");
     } else {
-        Serial.println("- frite failed");
+        Serial.println("- write failed");
     }
+    file.close();
 }
 
 void appendFile(fs::FS &fs, const char * path, const char * message){
@@ -82,6 +84,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     } else {
         Serial.println("- append failed");
     }
+    file.close();
 }
 
 void renameFile(fs::FS &fs, const char * path1, const char * path2){
@@ -165,8 +168,8 @@ void setup(){
         return;
     }
 
-    Serial.printf("Total space: %10lu\n", FFat.totalBytes());
-    Serial.printf("Free space: %10lu\n", FFat.freeBytes());
+    Serial.printf("Total space: %10u\n", FFat.totalBytes());
+    Serial.printf("Free space: %10u\n", FFat.freeBytes());
     listDir(FFat, "/", 0);
     writeFile(FFat, "/hello.txt", "Hello ");
     appendFile(FFat, "/hello.txt", "World!\r\n");
@@ -175,7 +178,7 @@ void setup(){
     readFile(FFat, "/foo.txt");
     deleteFile(FFat, "/foo.txt");
     testFileIO(FFat, "/test.txt");
-    Serial.printf("Free space: %10lu\n", FFat.freeBytes());
+    Serial.printf("Free space: %10u\n", FFat.freeBytes());
     deleteFile(FFat, "/test.txt");
     Serial.println( "Test complete" );
 }

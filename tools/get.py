@@ -60,7 +60,7 @@ def report_progress(count, blockSize, totalSize):
 
 def unpack(filename, destination):
     dirname = ''
-    print('Extracting {0}'.format(os.path.basename(filename)))
+    print('Extracting {0} ...'.format(os.path.basename(filename)))
     sys.stdout.flush()
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
@@ -76,7 +76,7 @@ def unpack(filename, destination):
     # a little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
     if rename_to != dirname:
-        print('Renaming {0} to {1}'.format(dirname, rename_to))
+        print('Renaming {0} to {1} ...'.format(dirname, rename_to))
         if os.path.isdir(rename_to):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
@@ -106,9 +106,8 @@ def get_tool(tool):
     archive_name = tool['archiveFileName']
     local_path = dist_dir + archive_name
     url = tool['url']
-    #real_hash = tool['checksum'].split(':')[1]
     if not os.path.isfile(local_path):
-        print('Downloading ' + archive_name)
+        print('Downloading ' + archive_name + ' ...')
         sys.stdout.flush()
         if 'CYGWIN_NT' in sys_name:
             import ssl
@@ -122,20 +121,16 @@ def get_tool(tool):
             f.write(r.content)
             f.close()
         else:
-            is_ci = os.environ.get('TRAVIS_BUILD_DIR');
+            is_ci = os.environ.get('GITHUB_WORKSPACE');
             if is_ci:
                 download_file(url, local_path)
             else:
                 urlretrieve(url, local_path, report_progress)
-        sys.stdout.write("\rDone\n")
-        sys.stdout.flush()
+                sys.stdout.write("\rDone\n")
+                sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))
         sys.stdout.flush()
-    #local_hash = sha256sum(local_path)
-    #if local_hash != real_hash:
-    #    print('Hash mismatch for {0}, delete the file and try again'.format(local_path))
-    #    raise RuntimeError()
     unpack(local_path, '.')
 
 def load_tools_list(filename, platform):
@@ -158,11 +153,11 @@ def identify_platform():
         bits = 64
     sys_name = platform.system()
     sys_platform = platform.platform()
-    print('System: %s, Info: %s' % (sys_name, sys_platform))
-    if 'Linux' in sys_name and sys_platform.find('arm') > 0:
+    if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64') > 0):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
         sys_name = 'Windows'
+    print('System: %s, Bits: %d, Info: %s' % (sys_name, bits, sys_platform))
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
@@ -172,4 +167,4 @@ if __name__ == '__main__':
     mkdir_p(dist_dir)
     for tool in tools_to_download:
         get_tool(tool)
-    print('Done')
+    print('Platform Tools Installed')

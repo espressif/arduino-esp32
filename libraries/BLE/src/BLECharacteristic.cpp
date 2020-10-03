@@ -219,19 +219,22 @@ void BLECharacteristic::handleGATTServerEvent(
 		// - uint8_t exec_write_flag - Either ESP_GATT_PREP_WRITE_EXEC or ESP_GATT_PREP_WRITE_CANCEL
 		//
 		case ESP_GATTS_EXEC_WRITE_EVT: {
-			if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
-				m_value.commit();
-				m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
-			} else {
-				m_value.cancel();
-			}
-// ???
-			esp_err_t errRc = ::esp_ble_gatts_send_response(
-					gatts_if,
-					param->write.conn_id,
-					param->write.trans_id, ESP_GATT_OK, nullptr);
-			if (errRc != ESP_OK) {
-				log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+			if(m_writeEvt){
+				m_writeEvt = false;
+				if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
+					m_value.commit();
+					m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
+				} else {
+					m_value.cancel();
+				}
+	// ???
+				esp_err_t errRc = ::esp_ble_gatts_send_response(
+						gatts_if,
+						param->write.conn_id,
+						param->write.trans_id, ESP_GATT_OK, nullptr);
+				if (errRc != ESP_OK) {
+					log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				}
 			}
 			break;
 		} // ESP_GATTS_EXEC_WRITE_EVT
@@ -277,6 +280,7 @@ void BLECharacteristic::handleGATTServerEvent(
 			if (param->write.handle == m_handle) {
 				if (param->write.is_prep) {
 					m_value.addPart(param->write.value, param->write.len);
+					m_writeEvt = true;
 				} else {
 					setValue(param->write.value, param->write.len);
 				}
@@ -693,15 +697,13 @@ void BLECharacteristic::setValue(int& data32) {
 } // setValue
 
 void BLECharacteristic::setValue(float& data32) {
-	uint8_t temp[4];
-	*((float*)temp) = data32;
-	setValue(temp, 4);
+	float temp = data32;
+	setValue((uint8_t*)&temp, 4);
 } // setValue
 
 void BLECharacteristic::setValue(double& data64) {
-	uint8_t temp[8];
-	*((double*)temp) = data64;
-	setValue(temp, 8);
+	double temp = data64;
+	setValue((uint8_t*)&temp, 8);
 } // setValue
 
 

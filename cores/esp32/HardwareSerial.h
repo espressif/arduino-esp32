@@ -62,10 +62,19 @@ public:
     int availableForWrite(void);
     int peek(void);
     int read(void);
+    size_t read(uint8_t *buffer, size_t size);
+    inline size_t read(char * buffer, size_t size)
+    {
+        return read((uint8_t*) buffer, size);
+    }
     void flush(void);
+    void flush( bool txOnly);
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
-
+    inline size_t write(const char * buffer, size_t size)
+    {
+        return write((uint8_t*) buffer, size);
+    }
     inline size_t write(const char * s)
     {
         return write((uint8_t*) s, strlen(s));
@@ -91,11 +100,17 @@ public:
 
     size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
+    
+    void setRxInvert(bool);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
+    uint8_t _tx_pin;
+    uint8_t _rx_pin;
 };
+
+extern void serialEventRun(void) __attribute__((weak));
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern HardwareSerial Serial;
@@ -103,4 +118,4 @@ extern HardwareSerial Serial1;
 extern HardwareSerial Serial2;
 #endif
 
-#endif
+#endif // HardwareSerial_h

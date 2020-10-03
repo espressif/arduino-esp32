@@ -19,6 +19,9 @@
 #include "ssl_client.h"
 #include "WiFi.h"
 
+#ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
+#  error "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
+#endif
 
 const char *pers = "esp32-tls";
 

@@ -16,6 +16,7 @@ static EventGroupHandle_t events;
 void setup() 
 {
     Serial.begin(115200);
+    events = xEventGroupCreate();
     
     if ((rmt_send = rmtInit(18, true, RMT_MEM_64)) == NULL)
     {
@@ -52,7 +53,7 @@ void loop()
     // Printout the received data plus the original values
     for (i=0; i<60; i++)
     {
-        Serial.printf("%08x=%08x ", my_data[i], data[i] );
+        Serial.printf("%08x=%08x ", my_data[i].val, data[i].val );
         if (!((i+1)%4)) Serial.println("\n");
     }
     Serial.println("\n");

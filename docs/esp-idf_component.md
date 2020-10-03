@@ -1,6 +1,10 @@
 To use as a component of ESP-IDF
 =================================================
 
+## esp32-arduino-lib-builder
+
+For a simplified method, see [lib-builder](lib_builder.md)
+
 ## Installation
 
 - Download and install [esp-idf](https://github.com/espressif/esp-idf)
@@ -67,6 +71,11 @@ If you are writing code that does not require Arduino to compile and you want yo
 #include "esp32-hal-log.h"
 #endif
 ```
+
+## FreeRTOS Tick Rate (Hz)
+
+You might notice that Arduino-esp32's `delay()` function will only work in multiples of 10ms. That is because, by default, esp-idf handles task events 100 times per second.
+To fix that behavior you need to set FreeRTOS tick rate to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
 
 ## Compilation Errors
 
