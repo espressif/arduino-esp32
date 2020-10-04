@@ -54,7 +54,7 @@ class HardwareSerial: public Stream
 {
 public:
     HardwareSerial(int uart_nr);
-
+    void setInterrupt(void (*arg)() );
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
     void end();
     void updateBaudRate(unsigned long baud);
@@ -104,13 +104,12 @@ public:
     void setRxInvert(bool);
 
 protected:
+    void (*intr)() ;
     int _uart_nr;
     uart_t* _uart;
     uint8_t _tx_pin;
     uint8_t _rx_pin;
 };
-
-extern void serialEventRun(void) __attribute__((weak));
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 extern HardwareSerial Serial;
@@ -118,4 +117,4 @@ extern HardwareSerial Serial1;
 extern HardwareSerial Serial2;
 #endif
 
-#endif // HardwareSerial_h
+#endif
