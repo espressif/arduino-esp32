@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+  /* Prototyping */
+#include <stddef.h>
+#include <stdbool.h>
+
 bool psramInit();
 bool psramFound();
 
