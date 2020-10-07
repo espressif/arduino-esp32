@@ -224,7 +224,7 @@ wl_status_t WiFiSTAClass::begin()
 }
 
 /**
- * will force a disconnect an then start reconnecting to AP
+ * will force a disconnect and then start reconnecting to AP
  * @return ok
  */
 bool WiFiSTAClass::reconnect()
@@ -337,7 +337,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 
 /**
  * is STA interface connected?
- * @return true if STA is connected to an AD
+ * @return true if STA is connected to an AP
  */
 bool WiFiSTAClass::isConnected()
 {
