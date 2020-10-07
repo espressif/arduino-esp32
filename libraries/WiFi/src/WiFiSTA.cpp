@@ -225,7 +225,7 @@ wl_status_t WiFiSTAClass::begin()
 
 /**
  * will force a disconnect and then start reconnecting to AP
- * @return ok
+ * @return true when successful
  */
 bool WiFiSTAClass::reconnect()
 {
