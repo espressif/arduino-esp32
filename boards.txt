@@ -388,6 +388,60 @@ tinypico.menu.DebugLevel.verbose=Verbose
 tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+S_ODI_Ultra.name=S.ODI Ultra v1
+
+S_ODI_Ultra.upload.tool=esptool_py
+S_ODI_Ultra.upload.maximum_size=1310720
+S_ODI_Ultra.upload.maximum_data_size=327680
+S_ODI_Ultra.upload.wait_for_upload_port=true
+
+S_ODI_Ultra.serial.disableDTR=true
+S_ODI_Ultra.serial.disableRTS=true
+
+S_ODI_Ultra.build.mcu=esp32
+S_ODI_Ultra.build.core=esp32
+S_ODI_Ultra.build.variant=S_ODI_Ultra_v1
+S_ODI_Ultra.build.board=ESP32_DEV
+
+S_ODI_Ultra.build.f_cpu=240000000L
+S_ODI_Ultra.build.flash_mode=dio
+S_ODI_Ultra.build.flash_size=4MB
+S_ODI_Ultra.build.boot=dio
+S_ODI_Ultra.build.partitions=default
+S_ODI_Ultra.build.defines=
+
+S_ODI_Ultra.menu.FlashFreq.80=80MHz
+S_ODI_Ultra.menu.FlashFreq.80.build.flash_freq=80m
+S_ODI_Ultra.menu.FlashFreq.40=40MHz
+S_ODI_Ultra.menu.FlashFreq.40.build.flash_freq=40m
+
+S_ODI_Ultra.menu.UploadSpeed.921600=921600
+S_ODI_Ultra.menu.UploadSpeed.921600.upload.speed=921600
+S_ODI_Ultra.menu.UploadSpeed.115200=115200
+S_ODI_Ultra.menu.UploadSpeed.115200.upload.speed=115200
+S_ODI_Ultra.menu.UploadSpeed.256000.windows=256000
+S_ODI_Ultra.menu.UploadSpeed.256000.upload.speed=256000
+S_ODI_Ultra.menu.UploadSpeed.230400.windows.upload.speed=256000
+S_ODI_Ultra.menu.UploadSpeed.230400=230400
+S_ODI_Ultra.menu.UploadSpeed.230400.upload.speed=230400
+S_ODI_Ultra.menu.UploadSpeed.460800.linux=460800
+S_ODI_Ultra.menu.UploadSpeed.460800.macosx=460800
+S_ODI_Ultra.menu.UploadSpeed.460800.upload.speed=460800
+S_ODI_Ultra.menu.UploadSpeed.512000.windows=512000
+S_ODI_Ultra.menu.UploadSpeed.512000.upload.speed=512000
+
+S_ODI_Ultra.menu.DebugLevel.none=None
+S_ODI_Ultra.menu.DebugLevel.none.build.code_debug=0
+S_ODI_Ultra.menu.DebugLevel.error=Error
+S_ODI_Ultra.menu.DebugLevel.error.build.code_debug=1
+S_ODI_Ultra.menu.DebugLevel.warn=Warn
+S_ODI_Ultra.menu.DebugLevel.warn.build.code_debug=2
+S_ODI_Ultra.menu.DebugLevel.info=Info
+S_ODI_Ultra.menu.DebugLevel.info.build.code_debug=3
+S_ODI_Ultra.menu.DebugLevel.debug=Debug
+S_ODI_Ultra.menu.DebugLevel.debug.build.code_debug=4
+
+##############################################################
 magicbit.name=MagicBit
 
 magicbit.upload.tool=esptool_py
@@ -783,6 +837,70 @@ esp32thing.menu.DebugLevel.debug=Debug
 esp32thing.menu.DebugLevel.debug.build.code_debug=4
 esp32thing.menu.DebugLevel.verbose=Verbose
 esp32thing.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+esp32thing_plus.name=SparkFun ESP32 Thing Plus
+
+esp32thing_plus.upload.tool=esptool_py
+esp32thing_plus.upload.maximum_size=1310720
+esp32thing_plus.upload.maximum_data_size=327680
+esp32thing_plus.upload.wait_for_upload_port=true
+
+esp32thing_plus.serial.disableDTR=true
+esp32thing_plus.serial.disableRTS=true
+
+esp32thing_plus.build.mcu=esp32
+esp32thing_plus.build.core=esp32
+esp32thing_plus.build.variant=esp32thing_plus
+esp32thing_plus.build.board=ESP32_THING_PLUS
+
+esp32thing_plus.build.f_cpu=240000000L
+esp32thing_plus.build.flash_mode=dio
+esp32thing_plus.build.flash_size=16MB
+esp32thing_plus.build.boot=dio
+esp32thing_plus.build.partitions=default
+esp32thing_plus.build.defines=
+
+esp32thing_plus.menu.FlashFreq.80=80MHz
+esp32thing_plus.menu.FlashFreq.80.build.flash_freq=80m
+esp32thing_plus.menu.FlashFreq.40=40MHz
+esp32thing_plus.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32thing_plus.menu.PartitionScheme.default=Default (6.25MB APP/OTA/3.43MB SPIFFS)
+esp32thing_plus.menu.PartitionScheme.default.build.partitions=default_16MB
+esp32thing_plus.menu.PartitionScheme.default.upload.maximum_size=6553600
+esp32thing_plus.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/OTA/6.93MB SPIFFS)
+esp32thing_plus.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+esp32thing_plus.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+
+esp32thing_plus.menu.UploadSpeed.921600=921600
+esp32thing_plus.menu.UploadSpeed.921600.upload.speed=921600
+esp32thing_plus.menu.UploadSpeed.115200=115200
+esp32thing_plus.menu.UploadSpeed.115200.upload.speed=115200
+esp32thing_plus.menu.UploadSpeed.256000.windows=256000
+esp32thing_plus.menu.UploadSpeed.256000.upload.speed=256000
+esp32thing_plus.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32thing_plus.menu.UploadSpeed.230400=230400
+esp32thing_plus.menu.UploadSpeed.230400.upload.speed=230400
+esp32thing_plus.menu.UploadSpeed.460800.linux=460800
+esp32thing_plus.menu.UploadSpeed.460800.macosx=460800
+esp32thing_plus.menu.UploadSpeed.460800.upload.speed=460800
+esp32thing_plus.menu.UploadSpeed.512000.windows=512000
+esp32thing_plus.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32thing_plus.menu.DebugLevel.none=None
+esp32thing_plus.menu.DebugLevel.none.build.code_debug=0
+esp32thing_plus.menu.DebugLevel.error=Error
+esp32thing_plus.menu.DebugLevel.error.build.code_debug=1
+esp32thing_plus.menu.DebugLevel.warn=Warn
+esp32thing_plus.menu.DebugLevel.warn.build.code_debug=2
+esp32thing_plus.menu.DebugLevel.info=Info
+esp32thing_plus.menu.DebugLevel.info.build.code_debug=3
+esp32thing_plus.menu.DebugLevel.debug=Debug
+esp32thing_plus.menu.DebugLevel.debug.build.code_debug=4
+esp32thing_plus.menu.DebugLevel.verbose=Verbose
+esp32thing_plus.menu.DebugLevel.verbose.build.code_debug=5
 
 
 ##############################################################
@@ -1996,6 +2114,61 @@ esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 ##############################################################
 
+esp32doit-espduino.name=DOIT ESPduino32
+
+esp32doit-espduino.upload.tool=esptool
+esp32doit-espduino.upload.maximum_size=1310720
+esp32doit-espduino.upload.maximum_data_size=327680
+esp32doit-espduino.upload.wait_for_upload_port=true
+
+esp32doit-espduino.serial.disableDTR=true
+esp32doit-espduino.serial.disableRTS=true
+
+esp32doit-espduino.build.mcu=esp32
+esp32doit-espduino.build.core=esp32
+esp32doit-espduino.build.variant=doitESPduino32
+esp32doit-espduino.build.board=ESP32_DEV
+
+esp32doit-espduino.build.f_cpu=240000000L
+esp32doit-espduino.build.flash_mode=dio
+esp32doit-espduino.build.flash_size=4MB
+esp32doit-espduino.build.boot=dio
+esp32doit-espduino.build.partitions=default
+esp32doit-espduino.build.defines=
+
+esp32doit-espduino.menu.FlashFreq.80=80MHz
+esp32doit-espduino.menu.FlashFreq.80.build.flash_freq=80m
+esp32doit-espduino.menu.FlashFreq.40=40MHz
+esp32doit-espduino.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32doit-espduino.menu.UploadSpeed.921600=921600
+esp32doit-espduino.menu.UploadSpeed.921600.upload.speed=921600
+esp32doit-espduino.menu.UploadSpeed.115200=115200
+esp32doit-espduino.menu.UploadSpeed.115200.upload.speed=115200
+esp32doit-espduino.menu.UploadSpeed.256000.windows=256000
+esp32doit-espduino.menu.UploadSpeed.256000.upload.speed=256000
+esp32doit-espduino.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32doit-espduino.menu.UploadSpeed.230400=230400
+esp32doit-espduino.menu.UploadSpeed.230400.upload.speed=230400
+esp32doit-espduino.menu.UploadSpeed.460800.linux=460800
+esp32doit-espduino.menu.UploadSpeed.460800.macosx=460800
+esp32doit-espduino.menu.UploadSpeed.460800.upload.speed=460800
+esp32doit-espduino.menu.UploadSpeed.512000.windows=512000
+esp32doit-espduino.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32doit-espduino.menu.DebugLevel.none=None
+esp32doit-espduino.menu.DebugLevel.none.build.code_debug=0
+esp32doit-espduino.menu.DebugLevel.error=Error
+esp32doit-espduino.menu.DebugLevel.error.build.code_debug=1
+esp32doit-espduino.menu.DebugLevel.warn=Warn
+esp32doit-espduino.menu.DebugLevel.warn.build.code_debug=2
+esp32doit-espduino.menu.DebugLevel.info=Info
+esp32doit-espduino.menu.DebugLevel.info.build.code_debug=3
+esp32doit-espduino.menu.DebugLevel.debug=Debug
+esp32doit-espduino.menu.DebugLevel.debug.build.code_debug=4
+
+##############################################################
+
 esp32-evb.name=OLIMEX ESP32-EVB
 
 esp32-evb.upload.tool=esptool_py
@@ -2551,6 +2724,105 @@ m5stack-atom.menu.DebugLevel.debug.build.code_debug=4
 m5stack-atom.menu.DebugLevel.verbose=Verbose
 m5stack-atom.menu.DebugLevel.verbose.build.code_debug=5
 
+
+##############################################################
+
+m5stack-core2.name=M5Stack-Core2
+
+m5stack-core2.upload.tool=esptool_py
+m5stack-core2.upload.maximum_size=6553600
+m5stack-core2.upload.maximum_data_size=4521984
+m5stack-core2.upload.wait_for_upload_port=true
+
+m5stack-core2.serial.disableDTR=true
+m5stack-core2.serial.disableRTS=true
+
+m5stack-core2.build.mcu=esp32
+m5stack-core2.build.core=esp32
+m5stack-core2.build.variant=m5stack_core2
+m5stack-core2.build.board=M5STACK_Core2
+
+m5stack-core2.build.f_cpu=240000000L
+m5stack-core2.build.flash_size=16MB
+m5stack-core2.build.flash_freq=80m
+m5stack-core2.build.flash_mode=dio
+m5stack-core2.build.boot=dio
+m5stack-core2.build.partitions=default_16MB
+m5stack-core2.build.defines=
+
+m5stack-core2.menu.PSRAM.enabled=Enabled
+m5stack-core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-core2.menu.PSRAM.disabled=Disabled
+m5stack-core2.menu.PSRAM.disabled.build.defines=
+
+m5stack-core2.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
+m5stack-core2.menu.PartitionScheme.default.build.partitions=default_16MB
+m5stack-core2.menu.PartitionScheme.default.upload.maximum_size=6553600
+m5stack-core2.menu.PartitionScheme.large_spiffs=Large SPIFFS (7 MB)
+m5stack-core2.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+m5stack-core2.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
+
+m5stack-core2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+m5stack-core2.menu.PartitionScheme.minimal.build.partitions=minimal
+m5stack-core2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+m5stack-core2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack-core2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack-core2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+m5stack-core2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+m5stack-core2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+m5stack-core2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+m5stack-core2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+m5stack-core2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+m5stack-core2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+m5stack-core2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack-core2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+m5stack-core2.menu.CPUFreq.240=240MHz (WiFi/BT)
+m5stack-core2.menu.CPUFreq.240.build.f_cpu=240000000L
+m5stack-core2.menu.CPUFreq.160=160MHz (WiFi/BT)
+m5stack-core2.menu.CPUFreq.160.build.f_cpu=160000000L
+m5stack-core2.menu.CPUFreq.80=80MHz (WiFi/BT)
+m5stack-core2.menu.CPUFreq.80.build.f_cpu=80000000L
+m5stack-core2.menu.CPUFreq.40=40MHz (40MHz XTAL)
+m5stack-core2.menu.CPUFreq.40.build.f_cpu=40000000L
+m5stack-core2.menu.CPUFreq.26=26MHz (26MHz XTAL)
+m5stack-core2.menu.CPUFreq.26.build.f_cpu=26000000L
+m5stack-core2.menu.CPUFreq.20=20MHz (40MHz XTAL)
+m5stack-core2.menu.CPUFreq.20.build.f_cpu=20000000L
+m5stack-core2.menu.CPUFreq.13=13MHz (26MHz XTAL)
+m5stack-core2.menu.CPUFreq.13.build.f_cpu=13000000L
+m5stack-core2.menu.CPUFreq.10=10MHz (40MHz XTAL)
+m5stack-core2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+m5stack-core2.menu.UploadSpeed.921600=921600
+m5stack-core2.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-core2.menu.UploadSpeed.115200=115200
+m5stack-core2.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-core2.menu.UploadSpeed.256000.windows=256000
+m5stack-core2.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-core2.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-core2.menu.UploadSpeed.230400=230400
+m5stack-core2.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-core2.menu.UploadSpeed.460800.linux=460800
+m5stack-core2.menu.UploadSpeed.460800.macosx=460800
+m5stack-core2.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-core2.menu.UploadSpeed.512000.windows=512000
+m5stack-core2.menu.UploadSpeed.512000.upload.speed=512000
+m5stack-core2.menu.UploadSpeed.1500000=1500000
+m5stack-core2.menu.UploadSpeed.1500000.upload.speed=1500000
+
+m5stack-core2.menu.DebugLevel.none=None
+m5stack-core2.menu.DebugLevel.none.build.code_debug=0
+m5stack-core2.menu.DebugLevel.error=Error
+m5stack-core2.menu.DebugLevel.error.build.code_debug=1
+m5stack-core2.menu.DebugLevel.warn=Warn
+m5stack-core2.menu.DebugLevel.warn.build.code_debug=2
+m5stack-core2.menu.DebugLevel.info=Info
+m5stack-core2.menu.DebugLevel.info.build.code_debug=3
+m5stack-core2.menu.DebugLevel.debug=Debug
+m5stack-core2.menu.DebugLevel.debug.build.code_debug=4
+m5stack-core2.menu.DebugLevel.verbose=Verbose
+m5stack-core2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3544,8 +3816,8 @@ t-beam.serial.disableRTS=true
 
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
-t-beam.build.variant=t-beam
-t-beam.build.board=T-Beam
+t-beam.build.variant=tbeam
+t-beam.build.board=TBeam
 
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
@@ -4087,72 +4359,79 @@ sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
-ttgo-t-watch.name=TTGO T-Watch
+twatch.name=TTGO T-Watch
 
-ttgo-t-watch.upload.tool=esptool_py
-ttgo-t-watch.upload.maximum_size=6553600
-ttgo-t-watch.upload.maximum_data_size=4521984
-ttgo-t-watch.upload.wait_for_upload_port=true
+twatch.upload.tool=esptool_py
+twatch.upload.maximum_size=6553600
+twatch.upload.maximum_data_size=4521984
+twatch.upload.wait_for_upload_port=true
 
-ttgo-t-watch.serial.disableDTR=true
-ttgo-t-watch.serial.disableRTS=true
+twatch.serial.disableDTR=true
+twatch.serial.disableRTS=true
 
-ttgo-t-watch.build.mcu=esp32
-ttgo-t-watch.build.core=esp32
-ttgo-t-watch.build.variant=twatch
-ttgo-t-watch.build.board=T-Watch
+twatch.build.mcu=esp32
+twatch.build.core=esp32
+twatch.build.variant=twatch
+twatch.build.board=TWatch
 
-ttgo-t-watch.build.f_cpu=240000000L
-ttgo-t-watch.build.flash_size=16MB
-ttgo-t-watch.build.flash_freq=80m
-ttgo-t-watch.build.flash_mode=dio
-ttgo-t-watch.build.boot=dio
-ttgo-t-watch.build.partitions=default_16MB
-ttgo-t-watch.build.defines=
+twatch.menu.Revision.TWATCH_BASE=T-Watch Base
+twatch.menu.Revision.TWATCH_BASE.build.board=TWATCH_BASE
+twatch.menu.Revision.TWATCH_2020_V1=T-Watch-2020-V1
+twatch.menu.Revision.TWATCH_2020_V1.build.board=TWATCH_2020_V1
+twatch.menu.Revision.TWATCH_2020_V2=T-Watch-2020-V2
+twatch.menu.Revision.TWATCH_2020_V2.build.board=TWATCH_2020_V2
 
-ttgo-t-watch.menu.PSRAM.enabled=Enabled
-ttgo-t-watch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-ttgo-t-watch.menu.PSRAM.disabled=Disabled
-ttgo-t-watch.menu.PSRAM.disabled.build.defines=
+twatch.build.f_cpu=240000000L
+twatch.build.flash_size=16MB
+twatch.build.flash_freq=80m
+twatch.build.flash_mode=dio
+twatch.build.boot=dio
+twatch.build.partitions=default_16MB
+twatch.build.defines=
 
-ttgo-t-watch.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
-ttgo-t-watch.menu.PartitionScheme.default.build.partitions=default_16MB
-ttgo-t-watch.menu.PartitionScheme.default.upload.maximum_size=6553600
-ttgo-t-watch.menu.PartitionScheme.large_spiffs=Large SPIFFS (7 MB)
-ttgo-t-watch.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
-ttgo-t-watch.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
+twatch.menu.PSRAM.enabled=Enabled
+twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+twatch.menu.PSRAM.disabled=Disabled
+twatch.menu.PSRAM.disabled.build.defines=
 
-ttgo-t-watch.menu.UploadSpeed.2000000=2000000
-ttgo-t-watch.menu.UploadSpeed.2000000.upload.speed=2000000
-ttgo-t-watch.menu.UploadSpeed.1152000=1152000
-ttgo-t-watch.menu.UploadSpeed.1152000.upload.speed=1152000
-ttgo-t-watch.menu.UploadSpeed.921600=921600
-ttgo-t-watch.menu.UploadSpeed.921600.upload.speed=921600
-ttgo-t-watch.menu.UploadSpeed.115200=115200
-ttgo-t-watch.menu.UploadSpeed.115200.upload.speed=115200
-ttgo-t-watch.menu.UploadSpeed.256000.windows=256000
-ttgo-t-watch.menu.UploadSpeed.256000.upload.speed=256000
-ttgo-t-watch.menu.UploadSpeed.230400.windows.upload.speed=256000
-ttgo-t-watch.menu.UploadSpeed.230400=230400
-ttgo-t-watch.menu.UploadSpeed.230400.upload.speed=230400
-ttgo-t-watch.menu.UploadSpeed.460800.linux=460800
-ttgo-t-watch.menu.UploadSpeed.460800.macosx=460800
-ttgo-t-watch.menu.UploadSpeed.460800.upload.speed=460800
-ttgo-t-watch.menu.UploadSpeed.512000.windows=512000
-ttgo-t-watch.menu.UploadSpeed.512000.upload.speed=512000
+twatch.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
+twatch.menu.PartitionScheme.default.build.partitions=default_16MB
+twatch.menu.PartitionScheme.default.upload.maximum_size=6553600
+twatch.menu.PartitionScheme.large_spiffs=Large SPIFFS (7 MB)
+twatch.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+twatch.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
 
-ttgo-t-watch.menu.DebugLevel.none=None
-ttgo-t-watch.menu.DebugLevel.none.build.code_debug=0
-ttgo-t-watch.menu.DebugLevel.error=Error
-ttgo-t-watch.menu.DebugLevel.error.build.code_debug=1
-ttgo-t-watch.menu.DebugLevel.warn=Warn
-ttgo-t-watch.menu.DebugLevel.warn.build.code_debug=2
-ttgo-t-watch.menu.DebugLevel.info=Info
-ttgo-t-watch.menu.DebugLevel.info.build.code_debug=3
-ttgo-t-watch.menu.DebugLevel.debug=Debug
-ttgo-t-watch.menu.DebugLevel.debug.build.code_debug=4
-ttgo-t-watch.menu.DebugLevel.verbose=Verbose
-ttgo-t-watch.menu.DebugLevel.verbose.build.code_debug=5
+twatch.menu.UploadSpeed.2000000=2000000
+twatch.menu.UploadSpeed.2000000.upload.speed=2000000
+twatch.menu.UploadSpeed.1152000=1152000
+twatch.menu.UploadSpeed.1152000.upload.speed=1152000
+twatch.menu.UploadSpeed.921600=921600
+twatch.menu.UploadSpeed.921600.upload.speed=921600
+twatch.menu.UploadSpeed.115200=115200
+twatch.menu.UploadSpeed.115200.upload.speed=115200
+twatch.menu.UploadSpeed.256000.windows=256000
+twatch.menu.UploadSpeed.256000.upload.speed=256000
+twatch.menu.UploadSpeed.230400.windows.upload.speed=256000
+twatch.menu.UploadSpeed.230400=230400
+twatch.menu.UploadSpeed.230400.upload.speed=230400
+twatch.menu.UploadSpeed.460800.linux=460800
+twatch.menu.UploadSpeed.460800.macosx=460800
+twatch.menu.UploadSpeed.460800.upload.speed=460800
+twatch.menu.UploadSpeed.512000.windows=512000
+twatch.menu.UploadSpeed.512000.upload.speed=512000
+
+twatch.menu.DebugLevel.none=None
+twatch.menu.DebugLevel.none.build.code_debug=0
+twatch.menu.DebugLevel.error=Error
+twatch.menu.DebugLevel.error.build.code_debug=1
+twatch.menu.DebugLevel.warn=Warn
+twatch.menu.DebugLevel.warn.build.code_debug=2
+twatch.menu.DebugLevel.info=Info
+twatch.menu.DebugLevel.info.build.code_debug=3
+twatch.menu.DebugLevel.debug=Debug
+twatch.menu.DebugLevel.debug.build.code_debug=4
+twatch.menu.DebugLevel.verbose=Verbose
+twatch.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4938,8 +5217,8 @@ kits-edu.menu.DebugLevel.verbose=Verbose
 kits-edu.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-mPython.name=mPython
 
+mPython.name=Labplus mPython
 mPython.upload.tool=esptool_py
 mPython.upload.maximum_size=1310720
 mPython.upload.maximum_data_size=327680
@@ -5046,4 +5325,357 @@ mPython.menu.DebugLevel.debug=Debug
 mPython.menu.DebugLevel.debug.build.code_debug=4
 mPython.menu.DebugLevel.verbose=Verbose
 mPython.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
+OpenKB.name=INEX OpenKB
+
+OpenKB.upload.tool=esptool_py
+OpenKB.upload.maximum_size=1310720
+OpenKB.upload.maximum_data_size=327680
+OpenKB.upload.wait_for_upload_port=true
+
+OpenKB.serial.disableDTR=true
+OpenKB.serial.disableRTS=true
+
+OpenKB.build.mcu=esp32
+OpenKB.build.core=esp32
+OpenKB.build.variant=openkb
+OpenKB.build.board=openkb
+
+OpenKB.build.f_cpu=240000000L
+OpenKB.build.flash_mode=dio
+OpenKB.build.flash_size=4MB
+OpenKB.build.boot=dio
+OpenKB.build.partitions=default
+OpenKB.build.defines=
+
+OpenKB.menu.FlashFreq.80=80MHz
+OpenKB.menu.FlashFreq.80.build.flash_freq=80m
+OpenKB.menu.FlashFreq.40=40MHz
+OpenKB.menu.FlashFreq.40.build.flash_freq=40m
+
+OpenKB.menu.UploadSpeed.921600=921600
+OpenKB.menu.UploadSpeed.921600.upload.speed=921600
+OpenKB.menu.UploadSpeed.115200=115200
+OpenKB.menu.UploadSpeed.115200.upload.speed=115200
+OpenKB.menu.UploadSpeed.256000.windows=256000
+OpenKB.menu.UploadSpeed.256000.upload.speed=256000
+OpenKB.menu.UploadSpeed.230400.windows.upload.speed=256000
+OpenKB.menu.UploadSpeed.230400=230400
+OpenKB.menu.UploadSpeed.230400.upload.speed=230400
+OpenKB.menu.UploadSpeed.460800.linux=460800
+OpenKB.menu.UploadSpeed.460800.macosx=460800
+OpenKB.menu.UploadSpeed.460800.upload.speed=460800
+OpenKB.menu.UploadSpeed.512000.windows=512000
+OpenKB.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+wifiduino32.name=WiFiduino32
+
+wifiduino32.upload.tool=esptool_py
+wifiduino32.upload.maximum_size=1310720
+wifiduino32.upload.maximum_data_size=327680
+wifiduino32.upload.wait_for_upload_port=true
+
+wifiduino32.serial.disableDTR=true
+wifiduino32.serial.disableRTS=true
+
+wifiduino32.build.mcu=esp32
+wifiduino32.build.core=esp32
+wifiduino32.build.variant=wifiduino32
+wifiduino32.build.board=Wifiduino32
+
+wifiduino32.build.f_cpu=240000000L
+wifiduino32.build.flash_mode=dio
+wifiduino32.build.flash_size=4MB
+wifiduino32.build.boot=dio
+wifiduino32.build.partitions=default
+wifiduino32.build.defines=
+
+wifiduino32.menu.PartitionScheme.default=Default
+wifiduino32.menu.PartitionScheme.default.build.partitions=default
+wifiduino32.menu.PartitionScheme.no_ota=No OTA (Large APP)
+wifiduino32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+wifiduino32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+wifiduino32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+wifiduino32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+wifiduino32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+wifiduino32.menu.FlashFreq.80=80MHz
+wifiduino32.menu.FlashFreq.80.build.flash_freq=80m
+wifiduino32.menu.FlashFreq.40=40MHz
+wifiduino32.menu.FlashFreq.40.build.flash_freq=40m
+
+wifiduino32.menu.UploadSpeed.921600=921600
+wifiduino32.menu.UploadSpeed.921600.upload.speed=921600
+wifiduino32.menu.UploadSpeed.115200=115200
+wifiduino32.menu.UploadSpeed.115200.upload.speed=115200
+wifiduino32.menu.UploadSpeed.256000.windows=256000
+wifiduino32.menu.UploadSpeed.256000.upload.speed=256000
+wifiduino32.menu.UploadSpeed.230400.windows.upload.speed=256000
+wifiduino32.menu.UploadSpeed.230400=230400
+wifiduino32.menu.UploadSpeed.230400.upload.speed=230400
+wifiduino32.menu.UploadSpeed.460800.linux=460800
+wifiduino32.menu.UploadSpeed.460800.macosx=460800
+wifiduino32.menu.UploadSpeed.460800.upload.speed=460800
+wifiduino32.menu.UploadSpeed.512000.windows=512000
+wifiduino32.menu.UploadSpeed.512000.upload.speed=512000
+
+wifiduino32.menu.DebugLevel.none=None
+wifiduino32.menu.DebugLevel.none.build.code_debug=0
+wifiduino32.menu.DebugLevel.error=Error
+wifiduino32.menu.DebugLevel.error.build.code_debug=1
+wifiduino32.menu.DebugLevel.warn=Warn
+wifiduino32.menu.DebugLevel.warn.build.code_debug=2
+wifiduino32.menu.DebugLevel.info=Info
+wifiduino32.menu.DebugLevel.info.build.code_debug=3
+wifiduino32.menu.DebugLevel.debug=Debug
+wifiduino32.menu.DebugLevel.debug.build.code_debug=4
+wifiduino32.menu.DebugLevel.verbose=Verbose
+wifiduino32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+ttgo-lora32-v21new.name=TTGO LoRa32-OLED v2.1.6
+
+ttgo-lora32-v21new.upload.tool=esptool_py
+ttgo-lora32-v21new.upload.maximum_size=1310720
+ttgo-lora32-v21new.upload.maximum_data_size=294912
+ttgo-lora32-v21new.upload.wait_for_upload_port=true
+
+ttgo-lora32-v21new.serial.disableDTR=true
+ttgo-lora32-v21new.serial.disableRTS=true
+
+ttgo-lora32-v21new.build.mcu=esp32
+ttgo-lora32-v21new.build.core=esp32
+ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
+ttgo-lora32-v21new.build.board=TTGO_LoRa32_v21new
+
+ttgo-lora32-v21new.build.f_cpu=240000000L
+ttgo-lora32-v21new.build.flash_mode=dio
+ttgo-lora32-v21new.build.flash_size=4MB
+ttgo-lora32-v21new.build.boot=dio
+ttgo-lora32-v21new.build.partitions=default
+
+ttgo-lora32-v21new.menu.FlashFreq.80=80MHz
+ttgo-lora32-v21new.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-lora32-v21new.menu.FlashFreq.40=40MHz
+ttgo-lora32-v21new.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-lora32-v21new.menu.UploadSpeed.921600=921600
+ttgo-lora32-v21new.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-lora32-v21new.menu.UploadSpeed.115200=115200
+ttgo-lora32-v21nettgo-lora32-v21new.name=TTGO LoRa32-OLED v2.1.6
+
+ttgo-lora32-v21new.upload.tool=esptool_py
+ttgo-lora32-v21new.upload.maximum_size=1310720
+ttgo-lora32-v21new.upload.maximum_data_size=294912
+ttgo-lora32-v21new.upload.wait_for_upload_port=true
+
+ttgo-lora32-v21new.serial.disableDTR=true
+ttgo-lora32-v21new.serial.disableRTS=true
+
+ttgo-lora32-v21new.build.mcu=esp32
+ttgo-lora32-v21new.build.core=esp32
+ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
+ttgo-lora32-v21new.build.board=TTGO_LoRa32_v21new
+
+ttgo-lora32-v21new.build.f_cpu=240000000L
+ttgo-lora32-v21new.build.flash_mode=dio
+ttgo-lora32-v21new.build.flash_size=4MB
+ttgo-lora32-v21new.build.boot=dio
+ttgo-lora32-v21new.build.partitions=default
+
+ttgo-lora32-v21new.menu.FlashFreq.80=80MHz
+ttgo-lora32-v21new.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-lora32-v21new.menu.FlashFreq.40=40MHz
+ttgo-lora32-v21new.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-lora32-v21new.menu.UploadSpeed.921600=921600
+ttgo-lora32-v21new.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-lora32-v21new.menu.UploadSpeed.115200=115200
+ttgo-lora32-v21new.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-lora32-v21new.menu.UploadSpeed.256000.windows=256000
+ttgo-lora32-v21new.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-lora32-v21new.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-lora32-v21new.menu.UploadSpeed.230400=230400
+ttgo-lora32-v21new.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-lora32-v21new.menu.UploadSpeed.460800.linux=460800
+ttgo-lora32-v21new.menu.UploadSpeed.460800.macosx=460800
+ttgo-lora32-v21new.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-lora32-v21new.menu.UploadSpeed.512000.windows=512000
+ttgo-lora32-v21new.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-lora32-v21new.menu.DebugLevel.none=None
+ttgo-lora32-v21new.menu.DebugLevel.none.build.code_debug=0
+ttgo-lora32-v21new.menu.DebugLevel.error=Error
+ttgo-lora32-v21new.menu.DebugLevel.error.build.code_debug=1
+ttgo-lora32-v21new.menu.DebugLevel.warn=Warn
+ttgo-lora32-v21new.menu.DebugLevel.warn.build.code_debug=2
+ttgo-lora32-v21new.menu.DebugLevel.info=Info
+ttgo-lora32-v21new.menu.DebugLevel.info.build.code_debug=3
+ttgo-lora32-v21new.menu.DebugLevel.debug=Debug
+ttgo-lora32-v21new.menu.DebugLevel.debug.build.code_debug=4
+ttgo-lora32-v21new.menu.DebugLevel.verbose=Verbose
+ttgo-lora32-v21new.menu.DebugLevel.verbose.build.code_debug=5w.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-lora32-v21new.menu.UploadSpeed.256000.windows=256000
+ttgo-lora32-v21new.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-lora32-v21new.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-lora32-v21new.menu.UploadSpeed.230400=230400
+ttgo-lora32-v21new.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-lora32-v21new.menu.UploadSpeed.460800.linux=460800
+ttgo-lora32-v21new.menu.UploadSpeed.460800.macosx=460800
+ttgo-lora32-v21new.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-lora32-v21new.menu.UploadSpeed.512000.windows=512000
+ttgo-lora32-v21new.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-lora32-v21new.menu.DebugLevel.none=None
+ttgo-lora32-v21new.menu.DebugLevel.none.build.code_debug=0
+ttgo-lora32-v21new.menu.DebugLevel.error=Error
+ttgo-lora32-v21new.menu.DebugLevel.error.build.code_debug=1
+ttgo-lora32-v21new.menu.DebugLevel.warn=Warn
+ttgo-lora32-v21new.menu.DebugLevel.warn.build.code_debug=2
+ttgo-lora32-v21new.menu.DebugLevel.info=Info
+ttgo-lora32-v21new.menu.DebugLevel.info.build.code_debug=3
+ttgo-lora32-v21new.menu.DebugLevel.debug=Debug
+ttgo-lora32-v21new.menu.DebugLevel.debug.build.code_debug=4
+ttgo-lora32-v21new.menu.DebugLevel.verbose=Verbose
+ttgo-lora32-v21new.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+imbrios-logsens-v1p1.name=IMBRIOS LOGSENS_V1P1
+
+imbrios-logsens-v1p1.upload.tool=esptool_py
+imbrios-logsens-v1p1.upload.maximum_size=1310720
+imbrios-logsens-v1p1.upload.maximum_data_size=327680
+imbrios-logsens-v1p1.upload.wait_for_upload_port=true
+
+imbrios-logsens-v1p1.serial.disableDTR=true
+imbrios-logsens-v1p1.serial.disableRTS=true
+
+imbrios-logsens-v1p1.build.mcu=esp32
+imbrios-logsens-v1p1.build.core=esp32
+imbrios-logsens-v1p1.build.variant=imbrios-logsens-v1p1
+imbrios-logsens-v1p1.build.board=IMBRIOS_LOGSENS_V1P1
+
+imbrios-logsens-v1p1.build.f_cpu=240000000L
+imbrios-logsens-v1p1.build.flash_mode=dio
+imbrios-logsens-v1p1.build.flash_size=4MB
+imbrios-logsens-v1p1.build.boot=dio
+imbrios-logsens-v1p1.build.partitions=default
+imbrios-logsens-v1p1.build.defines=
+
+imbrios-logsens-v1p1.menu.FlashFreq.80=80MHz
+imbrios-logsens-v1p1.menu.FlashFreq.80.build.flash_freq=80m
+imbrios-logsens-v1p1.menu.FlashFreq.40=40MHz
+imbrios-logsens-v1p1.menu.FlashFreq.40.build.flash_freq=40m
+
+imbrios-logsens-v1p1.menu.PartitionScheme.default=Default
+imbrios-logsens-v1p1.menu.PartitionScheme.default.build.partitions=default
+imbrios-logsens-v1p1.menu.PartitionScheme.no_ota=No OTA (Large APP)
+imbrios-logsens-v1p1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+imbrios-logsens-v1p1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+imbrios-logsens-v1p1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+imbrios-logsens-v1p1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+imbrios-logsens-v1p1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+imbrios-logsens-v1p1.menu.CPUFreq.240=240MHz (WiFi/BT)
+imbrios-logsens-v1p1.menu.CPUFreq.240.build.f_cpu=240000000L
+imbrios-logsens-v1p1.menu.CPUFreq.160=160MHz (WiFi/BT)
+imbrios-logsens-v1p1.menu.CPUFreq.160.build.f_cpu=160000000L
+imbrios-logsens-v1p1.menu.CPUFreq.80=80MHz (WiFi/BT)
+imbrios-logsens-v1p1.menu.CPUFreq.80.build.f_cpu=80000000L
+imbrios-logsens-v1p1.menu.CPUFreq.40=40MHz (40MHz XTAL)
+imbrios-logsens-v1p1.menu.CPUFreq.40.build.f_cpu=40000000L
+imbrios-logsens-v1p1.menu.CPUFreq.26=26MHz (26MHz XTAL)
+imbrios-logsens-v1p1.menu.CPUFreq.26.build.f_cpu=26000000L
+imbrios-logsens-v1p1.menu.CPUFreq.20=20MHz (40MHz XTAL)
+imbrios-logsens-v1p1.menu.CPUFreq.20.build.f_cpu=20000000L
+imbrios-logsens-v1p1.menu.CPUFreq.13=13MHz (26MHz XTAL)
+imbrios-logsens-v1p1.menu.CPUFreq.13.build.f_cpu=13000000L
+imbrios-logsens-v1p1.menu.CPUFreq.10=10MHz (40MHz XTAL)
+imbrios-logsens-v1p1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+imbrios-logsens-v1p1.menu.UploadSpeed.921600=921600
+imbrios-logsens-v1p1.menu.UploadSpeed.921600.upload.speed=921600
+imbrios-logsens-v1p1.menu.UploadSpeed.115200=115200
+imbrios-logsens-v1p1.menu.UploadSpeed.115200.upload.speed=115200
+imbrios-logsens-v1p1.menu.UploadSpeed.256000.windows=256000
+imbrios-logsens-v1p1.menu.UploadSpeed.256000.upload.speed=256000
+imbrios-logsens-v1p1.menu.UploadSpeed.230400.windows.upload.speed=256000
+imbrios-logsens-v1p1.menu.UploadSpeed.230400=230400
+imbrios-logsens-v1p1.menu.UploadSpeed.230400.upload.speed=230400
+imbrios-logsens-v1p1.menu.UploadSpeed.460800.linux=460800
+imbrios-logsens-v1p1.menu.UploadSpeed.460800.macosx=460800
+imbrios-logsens-v1p1.menu.UploadSpeed.460800.upload.speed=460800
+imbrios-logsens-v1p1.menu.UploadSpeed.512000.windows=512000
+imbrios-logsens-v1p1.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+healthypi4.name=ProtoCentral HealthyPi 4
+
+healthypi4.upload.tool=esptool_py
+healthypi4.upload.maximum_size=1310720
+healthypi4.upload.maximum_data_size=327680
+healthypi4.upload.wait_for_upload_port=true
+
+healthypi4.serial.disableDTR=true
+healthypi4.serial.disableRTS=true
+
+healthypi4.build.mcu=esp32
+healthypi4.build.core=esp32
+healthypi4.build.variant=healthypi4
+healthypi4.build.board=HEALTHYPI_4
+
+healthypi4.build.f_cpu=240000000L
+healthypi4.build.flash_mode=dio
+healthypi4.build.flash_size=4MB
+healthypi4.build.boot=dio
+healthypi4.build.partitions=min_spiffs
+healthypi4.build.defines=
+
+healthypi4.menu.FlashFreq.80=80MHz
+healthypi4.menu.FlashFreq.80.build.flash_freq=80m
+healthypi4.menu.FlashFreq.40=40MHz
+healthypi4.menu.FlashFreq.40.build.flash_freq=40m
+
+healthypi4.menu.PartitionScheme.default=Default
+healthypi4.menu.PartitionScheme.default.build.partitions=default
+healthypi4.menu.PartitionScheme.no_ota=No OTA (Large APP)
+healthypi4.menu.PartitionScheme.no_ota.build.partitions=no_ota
+healthypi4.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+healthypi4.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+healthypi4.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+healthypi4.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+healthypi4.menu.UploadSpeed.921600=921600
+healthypi4.menu.UploadSpeed.921600.upload.speed=921600
+healthypi4.menu.UploadSpeed.115200=115200
+healthypi4.menu.UploadSpeed.115200.upload.speed=115200
+healthypi4.menu.UploadSpeed.256000.windows=256000
+healthypi4.menu.UploadSpeed.256000.upload.speed=256000
+healthypi4.menu.UploadSpeed.230400.windows.upload.speed=256000
+healthypi4.menu.UploadSpeed.230400=230400
+healthypi4.menu.UploadSpeed.230400.upload.speed=230400
+healthypi4.menu.UploadSpeed.460800.linux=460800
+healthypi4.menu.UploadSpeed.460800.macosx=460800
+healthypi4.menu.UploadSpeed.460800.upload.speed=460800
+healthypi4.menu.UploadSpeed.512000.windows=512000
+healthypi4.menu.UploadSpeed.512000.upload.speed=512000
+
+healthypi4.menu.DebugLevel.none=None
+healthypi4.menu.DebugLevel.none.build.code_debug=0
+healthypi4.menu.DebugLevel.error=Error
+healthypi4.menu.DebugLevel.error.build.code_debug=1
+healthypi4.menu.DebugLevel.warn=Warn
+healthypi4.menu.DebugLevel.warn.build.code_debug=2
+healthypi4.menu.DebugLevel.info=Info
+healthypi4.menu.DebugLevel.info.build.code_debug=3
+healthypi4.menu.DebugLevel.debug=Debug
+healthypi4.menu.DebugLevel.debug.build.code_debug=4
+healthypi4.menu.DebugLevel.verbose=Verbose
+healthypi4.menu.DebugLevel.verbose.build.code_debug=5

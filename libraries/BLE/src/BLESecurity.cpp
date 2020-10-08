@@ -61,6 +61,17 @@ void BLESecurity::setKeySize(uint8_t key_size) {
 	esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &m_keySize, sizeof(uint8_t));
 } //setKeySize
 
+/**
+ * Setup for static PIN connection, call it first and then call setAuthenticationMode eventually to change it
+ */
+void BLESecurity::setStaticPIN(uint32_t pin){
+    uint32_t passkey = pin;
+    esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &passkey, sizeof(uint32_t));
+	setCapability(ESP_IO_CAP_OUT);
+	setKeySize();
+	setAuthenticationMode(ESP_LE_AUTH_REQ_SC_ONLY);
+	setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
+}
 
 /**
  * @brief Debug function to display what keys are exchanged by peers

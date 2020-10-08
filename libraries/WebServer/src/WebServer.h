@@ -123,6 +123,7 @@ public:
   void send_P(int code, PGM_P content_type, PGM_P content);
   void send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength);
 
+  void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
 
@@ -176,6 +177,7 @@ protected:
   uint8_t     _currentVersion;
   HTTPClientStatus _currentStatus;
   unsigned long _statusChange;
+  boolean     _nullDelay;
 
   RequestHandler*  _currentHandler;
   RequestHandler*  _firstHandler;
