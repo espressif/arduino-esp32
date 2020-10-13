@@ -180,6 +180,8 @@ typedef struct TU_ATTR_ALIGNED(256)
   ohci_ed_t ed_pool[HCD_MAX_ENDPOINT];
   ohci_gtd_t gtd_pool[HCD_MAX_XFER];
 
+  volatile uint16_t frame_number_hi;
+
 } ohci_data_t;
 
 //--------------------------------------------------------------------+
