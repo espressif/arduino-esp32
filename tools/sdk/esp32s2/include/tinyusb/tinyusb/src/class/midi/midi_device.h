@@ -72,7 +72,7 @@ bool tud_midi_n_receive        (uint8_t itf, uint8_t packet[4]);
 bool tud_midi_n_send           (uint8_t itf, uint8_t const packet[4]);
 
 //--------------------------------------------------------------------+
-// Application API (Interface0)
+// Application API (Single Interface)
 //--------------------------------------------------------------------+
 static inline bool     tud_midi_mounted    (void);
 static inline uint32_t tud_midi_available  (void);

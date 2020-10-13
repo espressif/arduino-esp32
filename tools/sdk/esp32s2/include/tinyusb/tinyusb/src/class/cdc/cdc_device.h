@@ -57,7 +57,6 @@
 // CFG_TUD_CDC > 1
 //--------------------------------------------------------------------+
 
-
 // Check if terminal is connected to this port
 bool     tud_cdc_n_connected       (uint8_t itf);
 
@@ -93,7 +92,7 @@ uint32_t tud_cdc_n_write           (uint8_t itf, void const* buffer, uint32_t bu
 static inline
 uint32_t tud_cdc_n_write_char      (uint8_t itf, char ch);
 
-// Write a nul-terminated string
+// Write a null-terminated string
 static inline
 uint32_t tud_cdc_n_write_str       (uint8_t itf, char const* str);
 

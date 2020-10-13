@@ -87,9 +87,9 @@ typedef struct TU_ATTR_ALIGNED(4)
 
 //TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
 
-/*------------------------------------------------------------------*/
-/* Device API
- *------------------------------------------------------------------*/
+//--------------------------------------------------------------------+
+// Controller API
+//--------------------------------------------------------------------+
 
 // Initialize controller to device mode
 void dcd_init       (uint8_t rhport);

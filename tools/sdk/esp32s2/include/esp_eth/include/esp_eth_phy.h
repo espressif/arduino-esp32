@@ -13,13 +13,13 @@
 // limitations under the License.
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include "esp_eth_com.h"
 #include "sdkconfig.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ESP_ETH_PHY_ADDR_AUTO (-1)
 
@@ -159,6 +159,19 @@ struct esp_eth_phy_s {
     *
     */
     esp_err_t (*get_addr)(esp_eth_phy_t *phy, uint32_t *addr);
+
+    /**
+    * @brief Advertise pause function supported by MAC layer
+    *
+    * @param[in] phy: Ethernet PHY instance
+    * @param[out] addr: Pause ability
+    *
+    * @return
+    *      - ESP_OK: Advertise pause ability successfully
+    *      - ESP_ERR_INVALID_ARG: Advertise pause ability failed because of invalid argument
+    *
+    */
+    esp_err_t (*advertise_pause_ability)(esp_eth_phy_t *phy, uint32_t ability);
 
     /**
     * @brief Free memory of Ethernet PHY instance
