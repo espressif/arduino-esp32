@@ -175,7 +175,7 @@ void tuh_msc_isr(uint8_t dev_addr, xfer_result_t event, uint32_t xferred_bytes);
 //--------------------------------------------------------------------+
 typedef struct
 {
-  uint8_t itf_numr;
+  uint8_t  itf_num;
   uint8_t  ep_in;
   uint8_t  ep_out;
 

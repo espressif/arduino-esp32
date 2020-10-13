@@ -34,14 +34,14 @@
 //--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
-{
-  (void) msec;
-  // TODO only used by Host stack, will implement using SOF
-
-//  uint32_t start = tusb_hal_millis();
-//  while ( ( tusb_hal_millis() - start ) < msec ) {}
-}
+//static inline void osal_task_delay(uint32_t msec)
+//{
+//  (void) msec;
+//  // TODO only used by Host stack, will implement using SOF
+//
+////  uint32_t start = tusb_hal_millis();
+////  while ( ( tusb_hal_millis() - start ) < msec ) {}
+//}
 
 //--------------------------------------------------------------------+
 // Binary Semaphore API

@@ -76,8 +76,8 @@
 
 #if CFG_TUSB_DEBUG
   #include <stdio.h>
-  #define _MESS_ERR(_err)   printf("%s %d: failed, error = %s\r\n", __func__, __LINE__, tusb_strerr[_err])
-  #define _MESS_FAILED()    printf("%s %d: assert failed\r\n", __func__, __LINE__)
+  #define _MESS_ERR(_err)   tu_printf("%s %d: failed, error = %s\r\n", __func__, __LINE__, tusb_strerr[_err])
+  #define _MESS_FAILED()    tu_printf("%s %d: assert failed\r\n", __func__, __LINE__)
 #else
   #define _MESS_ERR(_err) do {} while (0)
   #define _MESS_FAILED() do {} while (0)
@@ -142,7 +142,9 @@
 #define ASSERT_1ARGS(_cond)            TU_VERIFY_DEFINE(_cond, _MESS_FAILED(); TU_BREAKPOINT(), false)
 #define ASSERT_2ARGS(_cond, _ret)      TU_VERIFY_DEFINE(_cond, _MESS_FAILED(); TU_BREAKPOINT(), _ret)
 
+#ifndef TU_ASSERT
 #define TU_ASSERT(...)             GET_3RD_ARG(__VA_ARGS__, ASSERT_2ARGS, ASSERT_1ARGS,UNUSED)(__VA_ARGS__)
+#endif
 
 // TODO remove TU_ASSERT_ERR() later
 
@@ -163,10 +165,12 @@
 /* ASSERT Error
  * basically TU_VERIFY Error with TU_BREAKPOINT() as handler
  *------------------------------------------------------------------*/
-#define ASERT_ERR_1ARGS(_error)         TU_VERIFY_ERR_DEF2(_error, TU_BREAKPOINT())
-#define ASERT_ERR_2ARGS(_error, _ret)   TU_VERIFY_ERR_DEF3(_error, TU_BREAKPOINT(), _ret)
+#define ASSERT_ERR_1ARGS(_error)         TU_VERIFY_ERR_DEF2(_error, TU_BREAKPOINT())
+#define ASSERT_ERR_2ARGS(_error, _ret)   TU_VERIFY_ERR_DEF3(_error, TU_BREAKPOINT(), _ret)
 
-#define TU_ASSERT_ERR(...)         GET_3RD_ARG(__VA_ARGS__, ASERT_ERR_2ARGS, ASERT_ERR_1ARGS,UNUSED)(__VA_ARGS__)
+#ifndef TU_ASSERT_ERR
+#define TU_ASSERT_ERR(...)         GET_3RD_ARG(__VA_ARGS__, ASSERT_ERR_2ARGS, ASSERT_ERR_1ARGS,UNUSED)(__VA_ARGS__)
+#endif
 
 /*------------------------------------------------------------------*/
 /* ASSERT HDLR
