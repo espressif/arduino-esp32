@@ -122,6 +122,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
         //mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
         if (ret < 0) {
+		// free the ca_cert in the case parse failed, otherwise, the old ca_cert still in the heap memory, that lead to "out of memory" crash.
+		mbedtls_x509_crt_free(&ssl_client->ca_cert);
             return handle_error(ret);
         }
     } else if (pskIdent != NULL && psKey != NULL) {
@@ -167,6 +169,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
         if (ret < 0) {
+		// free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
+		mbedtls_x509_crt_free(&ssl_client->client_cert);
             return handle_error(ret);
         }
 
