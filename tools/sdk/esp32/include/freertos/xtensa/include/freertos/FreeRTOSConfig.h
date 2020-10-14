@@ -125,6 +125,8 @@ int xt_clock_freq(void) __attribute__((deprecated));
 #include "esp32/rom/ets_sys.h"  // will be removed in idf v5.0
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/ets_sys.h"
 #endif
 
 #if defined(CONFIG_FREERTOS_ASSERT_DISABLE)
@@ -317,7 +319,7 @@ extern void vPortCleanUpTCB ( void *pxTCB );
 #define configXT_BOARD                      1   /* Board mode */
 #define configXT_SIMULATOR					0
 
-#if CONFIG_ESP32_ENABLE_COREDUMP
+#if CONFIG_ESP_COREDUMP_ENABLE
 #define configENABLE_TASK_SNAPSHOT          1
 #endif
 #ifndef configENABLE_TASK_SNAPSHOT

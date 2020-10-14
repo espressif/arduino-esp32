@@ -12,14 +12,27 @@ SECTIONS
   */
   .rtc.text :
   {
+    _rtc_text_start = ABSOLUTE(.);
     . = ALIGN(4);
 
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.literal EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.text EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .rtc.text.*)
+    _rtc_code_start = .;
+
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.literal EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.text EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .rtc.text.*)
+    *libfreertos.a:port.*( .rtc.text.*)
     *libfreertos.a:queue.*( .rtc.text.*)
+    *libfreertos.a:port.*(.rtc.text.esp_startup_start_app)
+    *libfreertos.a:port.*(.rtc.text.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.rtc.text.main_task)
     *libfreertos.a:queue.*(.rtc.text.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .rtc.literal  .rtc.text  .rtc.text.*)
     *libhal.a:uart_hal_iram.*( .rtc.literal  .rtc.text  .rtc.text.*)
 
     *rtc_wake_stub*.*(.literal .text .literal.* .text.*)
+    _rtc_code_end = .;
+
+    /* possibly align + add 16B for CPU dummy speculative instr. fetch */
+    . = ((_rtc_code_end - _rtc_code_start) == 0) ? ALIGN(0) : ALIGN(4) + 16;
+
     _rtc_text_end = ABSOLUTE(.);
   } > rtc_iram_seg
 
@@ -45,9 +58,14 @@ SECTIONS
     _rtc_force_fast_start = ABSOLUTE(.);
     
     _coredump_rtc_fast_start = ABSOLUTE(.);
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.fast.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .rtc.fast.coredump.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.fast.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .rtc.fast.coredump.*)
+    *libfreertos.a:port.*( .rtc.fast.coredump.*)
     *libfreertos.a:queue.*( .rtc.fast.coredump.*)
+    *libfreertos.a:port.*(.rtc.fast.coredump.esp_startup_start_app)
+    *libfreertos.a:port.*(.rtc.fast.coredump.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.rtc.fast.coredump.main_task)
     *libfreertos.a:queue.*(.rtc.fast.coredump.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .rtc.fast.coredump  .rtc.fast.coredump.*)
     *libhal.a:uart_hal_iram.*( .rtc.fast.coredump  .rtc.fast.coredump.*)
     _coredump_rtc_fast_end = ABSOLUTE(.);
 
@@ -69,16 +87,26 @@ SECTIONS
 
     /* coredump mapping */
     _coredump_rtc_start = ABSOLUTE(.);
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .rtc.coredump.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:port.* *libfreertos.a:queue.*) .rtc.coredump.*)
+    *libfreertos.a:port.*( .rtc.coredump.*)
     *libfreertos.a:queue.*( .rtc.coredump.*)
+    *libfreertos.a:port.*(.rtc.coredump.esp_startup_start_app)
+    *libfreertos.a:port.*(.rtc.coredump.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.rtc.coredump.main_task)
     *libfreertos.a:queue.*(.rtc.coredump.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .rtc.coredump  .rtc.coredump.*)
     *libhal.a:uart_hal_iram.*( .rtc.coredump  .rtc.coredump.*)
     _coredump_rtc_end = ABSOLUTE(.);
     
     /* should be placed after coredump mapping */
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.data EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .rtc.data.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.rodata EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .rtc.rodata.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.data EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .rtc.data.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.rodata EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .rtc.rodata.*)
+    *libfreertos.a:port.*( .rtc.data.*  .rtc.rodata.*)
     *libfreertos.a:queue.*( .rtc.data.*  .rtc.rodata.*)
+    *libfreertos.a:port.*(.rtc.data.esp_startup_start_app .rtc.rodata.esp_startup_start_app)
+    *libfreertos.a:port.*(.rtc.data.esp_startup_start_app_other_cores .rtc.rodata.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.rtc.data.main_task .rtc.rodata.main_task)
     *libfreertos.a:queue.*(.rtc.data.xQueueGenericCreateStatic .rtc.rodata.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .rtc.data  .rtc.data.*  .rtc.rodata  .rtc.rodata.*)
     *libhal.a:uart_hal_iram.*( .rtc.data  .rtc.data.*  .rtc.rodata  .rtc.rodata.*)
 
     *rtc_wake_stub*.*(.data .rodata .data.* .rodata.* .bss .bss.*)
@@ -92,7 +120,8 @@ SECTIONS
     *rtc_wake_stub*.*(.bss .bss.*)
     *rtc_wake_stub*.*(COMMON)
 
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .rtc.bss)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .rtc.bss)
+    *libhal.a:twai_hal_iram.*( .rtc.bss)
     *libhal.a:uart_hal_iram.*( .rtc.bss)
 
     _rtc_bss_end = ABSOLUTE(.);
@@ -187,7 +216,7 @@ SECTIONS
     /* Code marked as runnning out of IRAM */
     _iram_text_start = ABSOLUTE(.);
 
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .iram1 EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .iram1.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .iram1 EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:port.* *libfreertos.a:queue.*) .iram1.*)
     *libapp_trace.a:SEGGER_RTT_esp32.*( .literal  .literal.*  .text  .text.*)
     *libapp_trace.a:SEGGER_SYSVIEW.*( .literal  .literal.*  .text  .text.*)
     *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.*( .literal  .literal.*  .text  .text.*)
@@ -202,8 +231,12 @@ SECTIONS
     *libesp_system.a:panic_handler.*( .literal  .literal.*  .text  .text.*)
     *libesp_system.a:reset_reason.*( .literal  .literal.*  .text  .text.*)
     *libesp_system.a:system_api.*(.literal.esp_system_abort .text.esp_system_abort)
-    *libfreertos.a:( .literal EXCLUDE_FILE(*libfreertos.a:queue.*) .literal.*  .text EXCLUDE_FILE(*libfreertos.a:queue.*) .text.*)
+    *libfreertos.a:( .literal EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:queue.*) .literal.*  .text EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:queue.*) .text.*)
+    *libfreertos.a:port.*(.iram1.24.literal .iram1.25.literal .iram1.24 .iram1.25 .literal.pxPortInitialiseStack .literal.xPortStartScheduler .literal.vPortYieldOtherCore .literal.xPortInIsrContext .literal.xPortSysTickHandler .literal.vPortAssertIfInISR .literal.vPortSetStackWatchpoint .literal.vPortEnterCritical .literal.vPortExitCritical .literal.vApplicationStackOverflowHook .text.pxPortInitialiseStack .text.vPortEndScheduler .text.xPortStartScheduler .text.vPortYieldOtherCore .text.xPortInIsrContext .text.xPortSysTickHandler .text.vPortAssertIfInISR .text.vPortSetStackWatchpoint .text.xPortGetTickRateHz .text.vPortEnterCritical .text.vPortExitCritical .text.vApplicationStackOverflowHook)
     *libfreertos.a:queue.*( .iram1.* .literal.prvCopyDataToQueue .literal.prvCopyDataFromQueue .literal.prvNotifyQueueSetContainer .literal.xQueueGenericReset .literal.xQueueGenericCreate .literal.xQueueGetMutexHolder .literal.xQueueCreateCountingSemaphoreStatic .literal.xQueueCreateCountingSemaphore .literal.xQueueGenericSend .literal.xQueueCreateMutexStatic .literal.xQueueGiveMutexRecursive .literal.xQueueCreateMutex .literal.xQueueGenericSendFromISR .literal.xQueueGiveFromISR .literal.xQueueGenericReceive .literal.xQueueTakeMutexRecursive .literal.xQueueReceiveFromISR .literal.xQueuePeekFromISR .literal.uxQueueMessagesWaiting .literal.uxQueueSpacesAvailable .literal.uxQueueMessagesWaitingFromISR .literal.vQueueDelete .literal.xQueueIsQueueEmptyFromISR .literal.xQueueIsQueueFullFromISR .literal.vQueueWaitForMessageRestricted .literal.xQueueCreateSet .literal.xQueueAddToSet .literal.xQueueRemoveFromSet .literal.xQueueSelectFromSet .literal.xQueueSelectFromSetFromISR .text.prvCopyDataToQueue .text.prvCopyDataFromQueue .text.prvNotifyQueueSetContainer .text.xQueueGenericReset .text.xQueueGenericCreate .text.xQueueGetMutexHolder .text.xQueueCreateCountingSemaphoreStatic .text.xQueueCreateCountingSemaphore .text.xQueueGenericSend .text.xQueueCreateMutexStatic .text.xQueueGiveMutexRecursive .text.xQueueCreateMutex .text.xQueueGenericSendFromISR .text.xQueueGiveFromISR .text.xQueueGenericReceive .text.xQueueTakeMutexRecursive .text.xQueueReceiveFromISR .text.xQueuePeekFromISR .text.uxQueueMessagesWaiting .text.uxQueueSpacesAvailable .text.uxQueueMessagesWaitingFromISR .text.vQueueDelete .text.xQueueIsQueueEmptyFromISR .text.xQueueIsQueueFullFromISR .text.vQueueWaitForMessageRestricted .text.xQueueCreateSet .text.xQueueAddToSet .text.xQueueRemoveFromSet .text.xQueueSelectFromSet .text.xQueueSelectFromSetFromISR)
+    *libfreertos.a:port.*(.iram1.esp_startup_start_app)
+    *libfreertos.a:port.*(.iram1.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.iram1.main_task)
     *libfreertos.a:queue.*(.iram1.xQueueGenericCreateStatic)
     *libgcc.a:lib2funcs.*( .literal  .literal.*  .text  .text.*)
     *libgcov.a:( .literal  .literal.*  .text  .text.*)
@@ -216,6 +249,7 @@ SECTIONS
     *libhal.a:spi_hal_iram.*( .literal  .literal.*  .text  .text.*)
     *libhal.a:spi_slave_hal_iram.*( .literal  .literal.*  .text  .text.*)
     *libhal.a:systimer_hal.*( .literal  .literal.*  .text  .text.*)
+    *libhal.a:twai_hal_iram.*( .iram1  .iram1.*)
     *libhal.a:uart_hal_iram.*( .iram1  .iram1.*)
     *libhal.a:wdt_hal_iram.*( .literal  .literal.*  .text  .text.*)
     *libheap.a:multi_heap.*( .literal  .literal.*  .text  .text.*)
@@ -254,7 +288,7 @@ SECTIONS
     _coredump_iram_start = 0;
     _coredump_iram_end = 0;
 
-    /* align + add 16B for the possibly overlapping instructions */
+    /* align + add 16B for CPU dummy speculative instr. fetch */
     . = ALIGN(4) + 16;
     _iram_text_end = ABSOLUTE(.);
     _iram_end = ABSOLUTE(.);
@@ -280,9 +314,14 @@ SECTIONS
 
     /* coredump mapping */
     _coredump_dram_start = ABSOLUTE(.);
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .dram1.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .dram1.coredump.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .dram1.coredump EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:port.* *libfreertos.a:queue.*) .dram1.coredump.*)
+    *libfreertos.a:port.*( .dram1.coredump.*)
     *libfreertos.a:queue.*( .dram1.coredump.*)
+    *libfreertos.a:port.*(.dram1.coredump.esp_startup_start_app)
+    *libfreertos.a:port.*(.dram1.coredump.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.dram1.coredump.main_task)
     *libfreertos.a:queue.*(.dram1.coredump.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .dram1.coredump  .dram1.coredump.*)
     *libhal.a:uart_hal_iram.*( .dram1.coredump  .dram1.coredump.*)
     _coredump_dram_end = ABSOLUTE(.);
     
@@ -291,7 +330,7 @@ SECTIONS
     KEEP (*(SORT(.esp_system_init_fn) SORT(.esp_system_init_fn.*)))
     _esp_system_init_fn_array_end = ABSOLUTE(.);
 
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .data EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .data.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .dram1 EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .dram1.*)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .data EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .data.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .dram1 EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .dram1.*)
     *libapp_trace.a:SEGGER_RTT_esp32.*( .rodata  .rodata.*)
     *libapp_trace.a:SEGGER_SYSVIEW.*( .rodata  .rodata.*)
     *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.*( .rodata  .rodata.*)
@@ -305,7 +344,11 @@ SECTIONS
     *libesp_system.a:panic_handler.*( .rodata  .rodata.*)
     *libesp_system.a:reset_reason.*( .rodata  .rodata.*)
     *libesp_system.a:system_api.*(.rodata.esp_system_abort)
+    *libfreertos.a:port.*( .data.*  .dram1.*)
     *libfreertos.a:queue.*( .data.*  .dram1.*)
+    *libfreertos.a:port.*(.data.esp_startup_start_app .dram1.esp_startup_start_app)
+    *libfreertos.a:port.*(.data.esp_startup_start_app_other_cores .dram1.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.data.main_task .dram1.main_task)
     *libfreertos.a:queue.*(.data.xQueueGenericCreateStatic .dram1.xQueueGenericCreateStatic)
     *libgcov.a:( .rodata  .rodata.*)
     *libhal.a:cpu_hal.*( .rodata  .rodata.*)
@@ -317,6 +360,7 @@ SECTIONS
     *libhal.a:spi_hal_iram.*( .rodata  .rodata.*)
     *libhal.a:spi_slave_hal_iram.*( .rodata  .rodata.*)
     *libhal.a:systimer_hal.*( .rodata  .rodata.*)
+    *libhal.a:twai_hal_iram.*( .data  .data.*  .dram1  .dram1.*)
     *libhal.a:uart_hal_iram.*( .data  .data.*  .dram1  .dram1.*)
     *libhal.a:wdt_hal_iram.*( .rodata  .rodata.*)
     *libheap.a:multi_heap.*( .rodata  .rodata.*)
@@ -366,9 +410,14 @@ SECTIONS
     _bss_start = ABSOLUTE(.);
     *(.ext_ram.bss*)
 
-    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .bss EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .bss.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) COMMON)
+    *(EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .bss EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.*) .bss.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) COMMON)
+    *libfreertos.a:port.*(.bss.port_uxOldInterruptState .bss.port_uxCriticalNesting .bss.port_interruptNesting .bss.port_xSchedulerRunning)
     *libfreertos.a:queue.*( .bss.*)
+    *libfreertos.a:port.*(.bss.esp_startup_start_app)
+    *libfreertos.a:port.*(.bss.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.bss.main_task)
     *libfreertos.a:queue.*(.bss.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .bss  .bss.*  COMMON)
     *libhal.a:uart_hal_iram.*( .bss  .bss.*  COMMON)
 
     *(.dynsbss)
@@ -396,12 +445,17 @@ SECTIONS
     *(.rodata_desc .rodata_desc.*)               /* Should be the first.  App version info.        DO NOT PUT ANYTHING BEFORE IT! */
     *(.rodata_custom_desc .rodata_custom_desc.*) /* Should be the second. Custom app version info. DO NOT PUT ANYTHING BEFORE IT! */
 
-    *(EXCLUDE_FILE(*libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libxtensa.a:stdatomic.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libphy.a) .rodata EXCLUDE_FILE(*libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log_freertos.* *liblog.a:log.* *libesp_event.a:esp_event.* *libesp_event.a:default_event_loop.* *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libxtensa.a:stdatomic.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a:queue.* *libphy.a) .rodata.*)
+    *(EXCLUDE_FILE(*libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libxtensa.a:stdatomic.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libphy.a) .rodata EXCLUDE_FILE(*libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log_freertos.* *liblog.a:log.* *libesp_event.a:esp_event.* *libesp_event.a:default_event_loop.* *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libxtensa.a:stdatomic.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a:queue.* *libfreertos.a:port.* *libphy.a) .rodata.*)
     *libesp_event.a:default_event_loop.*(.rodata.esp_event_loop_create_default.str1.4 .rodata.esp_event_send_to_default_loop)
-    *libesp_event.a:esp_event.*(.rodata.base_node_add_handler.str1.4 .rodata.loop_node_add_handler.str1.4 .rodata.esp_event_loop_create.str1.4 .rodata.esp_event_loop_run.str1.4 .rodata.esp_event_loop_run_task.str1.4 .rodata.esp_event_handler_register_with_internal.str1.4 .rodata.esp_event_handler_unregister_with_internal.str1.4 .rodata.__func__$9843 .rodata.__func__$9830 .rodata.__func__$9797 .rodata.__func__$9765 .rodata.__func__$9740 .rodata.__func__$9699 .rodata.__func__$9690)
+    *libesp_event.a:esp_event.*(.rodata.base_node_add_handler.str1.4 .rodata.loop_node_add_handler.str1.4 .rodata.esp_event_loop_create.str1.4 .rodata.esp_event_loop_run.str1.4 .rodata.esp_event_loop_run_task.str1.4 .rodata.esp_event_handler_register_with_internal.str1.4 .rodata.esp_event_handler_unregister_with_internal.str1.4 .rodata.__func__$9877 .rodata.__func__$9864 .rodata.__func__$9831 .rodata.__func__$9799 .rodata.__func__$9774 .rodata.__func__$9733 .rodata.__func__$9724)
     *libesp_system.a:system_api.*(.rodata.esp_get_idf_version.str1.4)
-    *libfreertos.a:queue.*(.rodata.prvNotifyQueueSetContainer.str1.4 .rodata.__FUNCTION__$5272 .rodata.__FUNCTION__$5262 .rodata.__FUNCTION__$5242 .rodata.__FUNCTION__$5237 .rodata.__FUNCTION__$5231 .rodata.__FUNCTION__$5225 .rodata.__FUNCTION__$5219 .rodata.__FUNCTION__$5210 .rodata.__FUNCTION__$5200 .rodata.__FUNCTION__$5189 .rodata.__FUNCTION__$5181 .rodata.__FUNCTION__$5308 .rodata.__FUNCTION__$5170 .rodata.__FUNCTION__$5159 .rodata.__FUNCTION__$5153 .rodata.__FUNCTION__$5146 .rodata.__FUNCTION__$5139 .rodata.__FUNCTION__$5105 .rodata.__FUNCTION__$5095 .rodata.__FUNCTION__$5086)
+    *libfreertos.a:port.*(.rodata.main_task.str1.4 .rodata.vPortAssertIfInISR.str1.4 .rodata.vApplicationStackOverflowHook.str1.4 .rodata.esp_startup_start_app.str1.4 .rodata.__func__$5361 .rodata.__func__$5366 .rodata.__FUNCTION__$5326)
+    *libfreertos.a:queue.*(.rodata.prvNotifyQueueSetContainer.str1.4 .rodata.__FUNCTION__$5305 .rodata.__FUNCTION__$5295 .rodata.__FUNCTION__$5275 .rodata.__FUNCTION__$5270 .rodata.__FUNCTION__$5264 .rodata.__FUNCTION__$5258 .rodata.__FUNCTION__$5252 .rodata.__FUNCTION__$5243 .rodata.__FUNCTION__$5233 .rodata.__FUNCTION__$5222 .rodata.__FUNCTION__$5214 .rodata.__FUNCTION__$5341 .rodata.__FUNCTION__$5203 .rodata.__FUNCTION__$5192 .rodata.__FUNCTION__$5186 .rodata.__FUNCTION__$5179 .rodata.__FUNCTION__$5172 .rodata.__FUNCTION__$5138 .rodata.__FUNCTION__$5128 .rodata.__FUNCTION__$5119)
+    *libfreertos.a:port.*(.rodata.esp_startup_start_app)
+    *libfreertos.a:port.*(.rodata.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.rodata.main_task)
     *libfreertos.a:queue.*(.rodata.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .rodata  .rodata.*)
     *libhal.a:uart_hal_iram.*( .rodata  .rodata.*)
     *liblog.a:log.*(.rodata.esp_log_level_set.str1.4 .rodata.__func__$3542 .rodata.__func__$3513)
     *liblog.a:log_freertos.*(.rodata.esp_log_system_timestamp.str1.4)
@@ -467,12 +521,17 @@ SECTIONS
     _instruction_reserved_start = ABSOLUTE(.);
     _text_start = ABSOLUTE(.);
 
-    *(EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libgcc.a:lib2funcs.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .literal EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log.* *liblog.a:log_freertos.* *libgcc.a:lib2funcs.* *libesp_event.a:default_event_loop.* *libesp_event.a:esp_event.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .literal.* EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libgcc.a:lib2funcs.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .text EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log.* *liblog.a:log_freertos.* *libgcc.a:lib2funcs.* *libesp_event.a:default_event_loop.* *libesp_event.a:esp_event.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .text.* EXCLUDE_FILE(*libpp.a *libnet80211.a *libhal.a:uart_hal_iram.*) .wifi0iram EXCLUDE_FILE(*libpp.a *libnet80211.a *libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .wifi0iram.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.*) .wifirxiram EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libfreertos.a:queue.*) .wifirxiram.*)
+    *(EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libgcc.a:lib2funcs.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .literal EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log.* *liblog.a:log_freertos.* *libgcc.a:lib2funcs.* *libesp_event.a:default_event_loop.* *libesp_event.a:esp_event.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .literal.* EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *libgcc.a:lib2funcs.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .text EXCLUDE_FILE(*libesp_ringbuf.a *libgcov.a *libapp_trace.a:SEGGER_RTT_esp32.* *libapp_trace.a:SEGGER_SYSVIEW_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW_Config_FreeRTOS.* *libapp_trace.a:SEGGER_SYSVIEW.* *libapp_trace.a:app_trace.* *libapp_trace.a:app_trace_util.* *liblog.a:log.* *liblog.a:log_freertos.* *libgcc.a:lib2funcs.* *libesp_event.a:default_event_loop.* *libesp_event.a:esp_event.* *librtc.a *libheap.a:multi_heap.* *libheap.a:multi_heap_poisoning.* *libxt_hal.a *libesp_system.a:system_api.* *libesp_system.a:panic_handler.* *libesp_system.a:reset_reason.* *libesp_system.a:panic.* *libesp_common.a:esp_err.* *libspi_flash.a:spi_flash_chip_mxic.* *libspi_flash.a:spi_flash_chip_issi.* *libspi_flash.a:spi_flash_rom_patch.* *libspi_flash.a:spi_flash_chip_gd.* *libspi_flash.a:memspi_host_driver.* *libspi_flash.a:spi_flash_chip_generic.* *libsoc.a:rtc_init.* *libsoc.a:cpu_util.* *libsoc.a:rtc_sleep.* *libsoc.a:rtc_pm.* *libsoc.a:rtc_clk.* *libsoc.a:lldesc.* *libsoc.a:rtc_wdt.* *libsoc.a:rtc_time.* *libsoc.a:rtc_periph.* *libxtensa.a:stdatomic.* *libxtensa.a:eri.* *libnewlib.a:heap.* *libnewlib.a:abort.* *libhal.a:spi_flash_hal_iram.* *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libhal.a:i2c_hal_iram.* *libhal.a:soc_hal.* *libhal.a:spi_flash_hal_gpspi.* *libhal.a:cpu_hal.* *libhal.a:ledc_hal_iram.* *libhal.a:spi_slave_hal_iram.* *libhal.a:systimer_hal.* *libhal.a:wdt_hal_iram.* *libhal.a:spi_hal_iram.* *libfreertos.a) .text.* EXCLUDE_FILE(*libpp.a *libnet80211.a *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .wifi0iram EXCLUDE_FILE(*libpp.a *libnet80211.a *libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:port.* *libfreertos.a:queue.*) .wifi0iram.* EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.*) .wifirxiram EXCLUDE_FILE(*libhal.a:uart_hal_iram.* *libhal.a:twai_hal_iram.* *libfreertos.a:port.* *libfreertos.a:queue.*) .wifirxiram.*)
     *libesp_event.a:default_event_loop.*(.literal.esp_event_handler_register .literal.esp_event_handler_instance_register .literal.esp_event_handler_unregister .literal.esp_event_handler_instance_unregister .literal.esp_event_post .literal.esp_event_loop_create_default .literal.esp_event_loop_delete_default .literal.esp_event_send_to_default_loop .text.esp_event_handler_register .text.esp_event_handler_instance_register .text.esp_event_handler_unregister .text.esp_event_handler_instance_unregister .text.esp_event_post .text.esp_event_loop_create_default .text.esp_event_loop_delete_default .text.esp_event_send_to_default_loop)
     *libesp_event.a:esp_event.*(.literal.handler_instances_add .literal.base_node_add_handler .literal.loop_node_add_handler .literal.handler_instances_remove .literal.handler_instances_remove_all$isra$1 .literal.esp_event_loop_create .literal.esp_event_loop_run .literal.esp_event_loop_run_task .literal.esp_event_loop_delete .literal.esp_event_handler_register_with_internal .literal.esp_event_handler_register_with .literal.esp_event_handler_instance_register_with .literal.esp_event_handler_unregister_with_internal .literal.esp_event_handler_unregister_with .literal.esp_event_handler_instance_unregister_with .literal.esp_event_post_to .text.handler_instances_add .text.base_node_add_handler .text.loop_node_add_handler .text.handler_instances_remove .text.handler_instances_remove_all$isra$1 .text.esp_event_loop_create .text.esp_event_loop_run .text.esp_event_loop_run_task .text.esp_event_loop_delete .text.esp_event_handler_register_with_internal .text.esp_event_handler_register_with .text.esp_event_handler_instance_register_with .text.esp_event_handler_unregister_with_internal .text.esp_event_handler_unregister_with .text.esp_event_handler_instance_unregister_with .text.esp_event_post_to .text.esp_event_dump)
     *libesp_system.a:system_api.*(.literal.esp_register_shutdown_handler .literal.esp_unregister_shutdown_handler .literal.esp_get_free_heap_size .literal.esp_get_free_internal_heap_size .literal.esp_get_minimum_free_heap_size .literal.esp_get_idf_version .text.esp_register_shutdown_handler .text.esp_unregister_shutdown_handler .text.esp_get_free_heap_size .text.esp_get_free_internal_heap_size .text.esp_get_minimum_free_heap_size .text.esp_get_idf_version)
+    *libfreertos.a:port.*( .wifi0iram.*  .wifirxiram.*)
     *libfreertos.a:queue.*( .wifi0iram.*  .wifirxiram.*)
+    *libfreertos.a:port.*(.literal.esp_startup_start_app .text.esp_startup_start_app .wifi0iram.esp_startup_start_app .wifirxiram.esp_startup_start_app)
+    *libfreertos.a:port.*(.literal.esp_startup_start_app_other_cores .text.esp_startup_start_app_other_cores .wifi0iram.esp_startup_start_app_other_cores .wifirxiram.esp_startup_start_app_other_cores)
+    *libfreertos.a:port.*(.literal.main_task .text.main_task .wifi0iram.main_task .wifirxiram.main_task)
     *libfreertos.a:queue.*(.literal.xQueueGenericCreateStatic .text.xQueueGenericCreateStatic .wifi0iram.xQueueGenericCreateStatic .wifirxiram.xQueueGenericCreateStatic)
+    *libhal.a:twai_hal_iram.*( .literal  .literal.*  .text  .text.*  .wifi0iram  .wifi0iram.*  .wifirxiram  .wifirxiram.*)
     *libhal.a:uart_hal_iram.*( .literal  .literal.*  .text  .text.*  .wifi0iram  .wifi0iram.*  .wifirxiram  .wifirxiram.*)
     *liblog.a:log.*(.literal.heap_bubble_down .literal.esp_log_set_vprintf .literal.esp_log_level_set .literal.esp_log_writev .text.heap_bubble_down .text.esp_log_set_vprintf .text.esp_log_level_set .text.esp_log_writev)
     *liblog.a:log_freertos.*(.literal.esp_log_system_timestamp .text.esp_log_system_timestamp)

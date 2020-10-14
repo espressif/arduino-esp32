@@ -21,6 +21,8 @@
 #include "esp32/pm.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/pm.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/pm.h"
 #endif
 
 #ifdef __cplusplus
@@ -174,8 +176,6 @@ esp_err_t esp_pm_lock_delete(esp_pm_lock_handle_t handle);
  *      - ESP_ERR_NOT_SUPPORTED if CONFIG_PM_ENABLE is not enabled in sdkconfig
  */
 esp_err_t esp_pm_dump_locks(FILE* stream);
-
-
 
 #ifdef __cplusplus
 }
