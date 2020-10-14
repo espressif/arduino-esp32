@@ -65,6 +65,7 @@ void setBeacon() {
   
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->setScanResponseData(oScanResponseData);
+  pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
 
 }
 

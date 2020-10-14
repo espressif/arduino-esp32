@@ -40,7 +40,7 @@ typedef enum {
 
 typedef struct rmt_obj_s rmt_obj_t;
 
-typedef void (*rmt_rx_data_cb_t)(uint32_t *data, size_t len);
+typedef void (*rmt_rx_data_cb_t)(uint32_t *data, size_t len, void *arg);
 
 typedef struct {
     union {
@@ -74,6 +74,12 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
+*    Loop data up to the reserved memsize continuously
+*
+*/
+bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+
+/**
 *    Initiates async receive, event flag indicates data received
 *
 */
@@ -84,8 +90,13 @@ bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag
 *    and callback with data from ISR
 *
 */
-bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb);
+bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg);
 
+/***
+ * Ends async receive started with rmtRead(); but does not
+ * rmtDeInit().
+ */
+bool rmtEnd(rmt_obj_t* rmt);
 
 /*  Additional interface */
 

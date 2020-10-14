@@ -26,6 +26,8 @@
 #define U_SPIFFS  100
 #define U_AUTH    200
 
+#define ENCRYPTED_BLOCK_SIZE 16
+
 class UpdateClass {
   public:
     typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
@@ -78,7 +80,7 @@ class UpdateClass {
     /*
       Prints the last error to an output stream
     */
-    void printError(Stream &out);
+    void printError(Print &out);
 
     const char * errorString();
 
@@ -88,12 +90,12 @@ class UpdateClass {
     bool setMD5(const char * expected_md5);
 
     /*
-      returns the MD5 String of the sucessfully ended firmware
+      returns the MD5 String of the successfully ended firmware
     */
     String md5String(void){ return _md5.toString(); }
 
     /*
-      populated the result with the md5 bytes of the sucessfully ended firmware
+      populated the result with the md5 bytes of the successfully ended firmware
     */
     void md5(uint8_t * result){ return _md5.getBytes(result); }
 
@@ -163,10 +165,12 @@ class UpdateClass {
     bool _writeBuffer();
     bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
+    bool _enablePartition(const esp_partition_t* partition);
 
 
     uint8_t _error;
     uint8_t *_buffer;
+    uint8_t *_skipBuffer;
     size_t _bufferLen;
     size_t _size;
     THandlerFunction_Progress _progress_callback;

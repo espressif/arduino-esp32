@@ -42,11 +42,11 @@ extern "C"
  *
  * Then points tx_buffer to ``&data``.
  *
- * @param data Data to be sent, can be uint8_t, uint16_t or uint32_t. @param
- *  len Length of data to be sent, since the SPI peripheral sends from the MSB,
- *  this helps to shift the data to the MSB.
+ * @param DATA Data to be sent, can be uint8_t, uint16_t or uint32_t.
+ * @param LEN Length of data to be sent, since the SPI peripheral sends from
+ *      the MSB, this helps to shift the data to the MSB.
  */
-#define SPI_SWAP_DATA_TX(data, len) __builtin_bswap32((uint32_t)data<<(32-len))
+#define SPI_SWAP_DATA_TX(DATA, LEN) __builtin_bswap32((uint32_t)(DATA)<<(32-(LEN)))
 
 /**
  * Transform received data of length <= 32 bits to the format of an unsigned integer.
@@ -55,11 +55,11 @@ extern "C"
  *
  *      uint16_t data = SPI_SWAP_DATA_RX(*(uint32_t*)t->rx_data, 15);
  *
- * @param data Data to be rearranged, can be uint8_t, uint16_t or uint32_t.
- * @param len Length of data received, since the SPI peripheral writes from
+ * @param DATA Data to be rearranged, can be uint8_t, uint16_t or uint32_t.
+ * @param LEN Length of data received, since the SPI peripheral writes from
  *      the MSB, this helps to shift the data to the LSB.
  */
-#define SPI_SWAP_DATA_RX(data, len) (__builtin_bswap32(data)>>(32-len))
+#define SPI_SWAP_DATA_RX(DATA, LEN) (__builtin_bswap32(DATA)>>(32-(LEN)))
 
 /**
  * @brief Enum with the three SPI peripherals that are software-accessible in it
@@ -101,9 +101,32 @@ typedef struct {
  * Call this if your driver wants to manage a SPI peripheral.
  *
  * @param host Peripheral to claim
+ * @param source The caller indentification string.
+ *
  * @return True if peripheral is claimed successfully; false if peripheral already is claimed.
  */
-bool spicommon_periph_claim(spi_host_device_t host);
+bool spicommon_periph_claim(spi_host_device_t host, const char* source);
+
+// The macro is to keep the back-compatibility of IDF v3.2 and before
+// In this way we can call spicommon_periph_claim with two arguments, or the host with the source set to the calling function name
+// When two arguments (host, func) are given, __spicommon_periph_claim2 is called
+// or if only one arguments (host) is given, __spicommon_periph_claim1 is called
+#define spicommon_periph_claim(host...) __spicommon_periph_claim(host, 2, 1)
+#define __spicommon_periph_claim(host, source, n, ...) __spicommon_periph_claim ## n(host, source)
+#define __spicommon_periph_claim1(host, _)    ({ \
+    char* warning_str = "calling spicommon_periph_claim without source string is deprecated.";\
+    spicommon_periph_claim(host, __FUNCTION__); })
+
+#define __spicommon_periph_claim2(host, func) spicommon_periph_claim(host, func)
+
+/**
+ * @brief Check whether the spi periph is in use.
+ *
+ * @param host Peripheral to check.
+ *
+ * @return True if in use, otherwise false.
+ */
+bool spicommon_periph_in_use(spi_host_device_t host);
 
 /**
  * @brief Return the SPI peripheral so another driver can claim it.
@@ -123,6 +146,15 @@ bool spicommon_periph_free(spi_host_device_t host);
  * @return True if success; false otherwise.
  */
 bool spicommon_dma_chan_claim(int dma_chan);
+
+/**
+ * @brief Check whether the spi DMA channel is in use.
+ *
+ * @param dma_chan DMA channel to check.
+ *
+ * @return True if in use, otherwise false.
+ */
+bool spicommon_dma_chan_in_use(int dma_chan);
 
 /**
  * @brief Return the SPI DMA channel so other driver can claim it, or just to power down DMA.

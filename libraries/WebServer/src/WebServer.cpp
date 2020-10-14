@@ -45,6 +45,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
 , _statusChange(0)
+, _nullDelay(true)
 , _currentHandler(nullptr)
 , _firstHandler(nullptr)
 , _lastHandler(nullptr)
@@ -66,6 +67,7 @@ WebServer::WebServer(int port)
 , _currentVersion(0)
 , _currentStatus(HC_NONE)
 , _statusChange(0)
+, _nullDelay(true)
 , _currentHandler(nullptr)
 , _firstHandler(nullptr)
 , _lastHandler(nullptr)
@@ -245,15 +247,15 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char* realm, co
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-void WebServer::on(const String &uri, WebServer::THandlerFunction handler) {
+void WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
   on(uri, HTTP_ANY, handler);
 }
 
-void WebServer::on(const String &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
   on(uri, method, fn, _fileUploadHandler);
 }
 
-void WebServer::on(const String &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
   _addRequestHandler(new FunctionRequestHandler(fn, ufn, uri, method));
 }
 
@@ -280,6 +282,9 @@ void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
     WiFiClient client = _server.available();
     if (!client) {
+      if (_nullDelay) {
+        delay(1);
+      }
       return;
     }
 
@@ -368,6 +373,10 @@ void WebServer::sendHeader(const String& name, const String& value, bool first) 
 
 void WebServer::setContentLength(const size_t contentLength) {
     _contentLength = contentLength;
+}
+
+void WebServer::enableDelay(boolean value) {
+  _nullDelay = value;
 }
 
 void WebServer::enableCORS(boolean value) {
