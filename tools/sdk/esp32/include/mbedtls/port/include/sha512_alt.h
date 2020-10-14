@@ -23,15 +23,36 @@
 #ifndef _SHA512_ALT_H_
 #define _SHA512_ALT_H_
 
+#if defined(MBEDTLS_SHA512_ALT)
+
+#include "hal/sha_types.h"
+#include "soc/sha_caps.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(MBEDTLS_SHA512_ALT)
 
-#if CONFIG_IDF_TARGET_ESP32S2
-#include "esp32s2/sha.h"
+#if SOC_SHA_SUPPORT_PARALLEL_ENG
+
+typedef enum {
+    ESP_MBEDTLS_SHA512_UNUSED, /* first block hasn't been processed yet */
+    ESP_MBEDTLS_SHA512_HARDWARE, /* using hardware SHA engine */
+    ESP_MBEDTLS_SHA512_SOFTWARE, /* using software SHA */
+} esp_mbedtls_sha512_mode;
+
+/**
+ * \brief          SHA-512 context structure
+ */
+typedef struct {
+    uint64_t total[2];          /*!< number of bytes processed  */
+    uint64_t state[8];          /*!< intermediate digest state  */
+    unsigned char buffer[128];  /*!< data block being processed */
+    int is384;                  /*!< 0 => SHA-512, else SHA-384 */
+    esp_mbedtls_sha512_mode mode;
+} mbedtls_sha512_context;
+
+#elif SOC_SHA_SUPPORT_DMA
 
 typedef enum {
     ESP_SHA512_STATE_INIT,
@@ -64,29 +85,8 @@ void esp_sha512_set_mode(mbedtls_sha512_context *ctx, esp_sha_type type);
 /* For SHA512/t mode the intial hash value will depend on t */
 void esp_sha512_set_t( mbedtls_sha512_context *ctx, uint16_t t_val);
 
-#endif //CONFIG_IDF_TARGET_ESP32S2
 
-#if CONFIG_IDF_TARGET_ESP32
-
-typedef enum {
-    ESP_MBEDTLS_SHA512_UNUSED, /* first block hasn't been processed yet */
-    ESP_MBEDTLS_SHA512_HARDWARE, /* using hardware SHA engine */
-    ESP_MBEDTLS_SHA512_SOFTWARE, /* using software SHA */
-} esp_mbedtls_sha512_mode;
-
-/**
- * \brief          SHA-512 context structure
- */
-typedef struct {
-    uint64_t total[2];          /*!< number of bytes processed  */
-    uint64_t state[8];          /*!< intermediate digest state  */
-    unsigned char buffer[128];  /*!< data block being processed */
-    int is384;                  /*!< 0 => SHA-512, else SHA-384 */
-    esp_mbedtls_sha512_mode mode;
-}
-mbedtls_sha512_context;
-
-#endif //CONFIG_IDF_TARGET_ESP32
+#endif
 
 #endif
 
