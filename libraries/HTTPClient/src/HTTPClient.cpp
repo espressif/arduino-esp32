@@ -919,21 +919,19 @@ int HTTPClient::writeToStream(Stream * stream)
  */
 String HTTPClient::getString(void)
 {
-    StreamString sstring;
-
-    if(_size > 0) {
-        // try to reserve needed memmory
-        if(!sstring.reserve((_size + 1))) {
+    // _size can be -1 when Server sends no Content-Length header
+    if(_size > 0 || _size == -1) {
+        StreamString sstring;
+        // try to reserve needed memory (noop if _size == -1)
+        if(sstring.reserve((_size + 1))) {
+            writeToStream(&sstring);
+            return sstring;            
+        } else {
             log_d("not enough memory to reserve a string! need: %d", (_size + 1));
-            return "";
         }
     }
-    else {
-        return "";
-    }
 
-    writeToStream(&sstring);
-    return sstring;
+    return "";
 }
 
 /**
@@ -1441,8 +1439,10 @@ bool HTTPClient::setURL(const String& url)
         _port = (_protocol == "https" ? 443 : 80);
     }
 
-    // disconnect but preserve _client (clear _canReuse so disconnect will close the connection)
-    _canReuse = false;
+    // disconnect but preserve _client. 
+    // Also have to keep the connection otherwise it will free some of the memory used by _client 
+    // and will blow up later when trying to do _client->available() or similar
+    _canReuse = true;
     disconnect(true);
     return beginInternal(url, _protocol.c_str());
 }
