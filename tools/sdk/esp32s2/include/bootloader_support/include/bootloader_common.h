@@ -21,6 +21,8 @@
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/rtc.h"
 #endif
 
 #ifdef __cplusplus
@@ -166,6 +168,13 @@ esp_err_t bootloader_common_get_partition_description(const esp_partition_pos_t 
  * @return Chip revision number
  */
 uint8_t bootloader_common_get_chip_revision(void);
+
+/**
+ * @brief Get chip package
+ *
+ * @return Chip package number
+ */
+uint32_t bootloader_common_get_chip_ver_pkg(void);
 
 /**
  * @brief Query reset reason
