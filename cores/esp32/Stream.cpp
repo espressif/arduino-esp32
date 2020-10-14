@@ -85,81 +85,22 @@ void Stream::setTimeout(unsigned long timeout)  // sets the maximum number of mi
 unsigned long Stream::getTimeout(void) {
   return _timeout;
 }
-/*
+
 // find returns true if the target string is found
-bool Stream::find(const char *target)
-{
-    return findUntil(target, (char*) "");
-}
-
-// reads data from the stream until the target string of given length is found
-// returns true if target string is found, false if timed out
-bool Stream::find(const char *target, size_t length)
-{
-    return findUntil(target, length, NULL, 0);
-}
-
-// as find but search ends if the terminator string is found
-bool Stream::findUntil(const char *target, const char *terminator)
-{
-    return findUntil(target, strlen(target), terminator, strlen(terminator));
-}
-
-// reads data from the stream until the target string of the given length is found
-// search terminated if the terminator string is found
-// returns true if target string is found, false if terminated or timed out
-bool Stream::findUntil(const char *target, size_t targetLen, const char *terminator, size_t termLen)
-{
-    size_t index = 0;  // maximum target string length is 64k bytes!
-    size_t termIndex = 0;
-    int c;
-
-    if(*target == 0) {
-        return true;    // return true if target is a null string
-    }
-    while((c = timedRead()) > 0) {
-
-        if(c != target[index]) {
-            index = 0;    // reset index if any char does not match
-        }
-
-        if(c == target[index]) {
-            //////Serial.print("found "); Serial.write(c); Serial.print("index now"); Serial.println(index+1);
-            if(++index >= targetLen) { // return true if all chars in the target match
-                return true;
-            }
-        }
-
-        if(termLen > 0 && c == terminator[termIndex]) {
-            if(++termIndex >= termLen) {
-                return false;    // return false if terminate string found before target string
-            }
-        } else {
-            termIndex = 0;
-        }
-    }
-    return false;
-}
-
-*/
-
-// ******************** ALEXANDRE
-
- // find returns true if the target string is found
-bool  Stream::find(char *target)
+bool  Stream::find(const char *target)
 {
   return findUntil(target, strlen(target), NULL, 0);
 }
 
 // reads data from the stream until the target string of given length is found
 // returns true if target string is found, false if timed out
-bool Stream::find(char *target, size_t length)
+bool Stream::find(const char *target, size_t length)
 {
   return findUntil(target, length, NULL, 0);
 }
 
 // as find but search ends if the terminator string is found
-bool  Stream::findUntil(char *target, char *terminator)
+bool  Stream::findUntil(const char *target, const char *terminator)
 {
   return findUntil(target, strlen(target), terminator, strlen(terminator));
 }
@@ -167,7 +108,7 @@ bool  Stream::findUntil(char *target, char *terminator)
 // reads data from the stream until the target string of the given length is found
 // search terminated if the terminator string is found
 // returns true if target string is found, false if terminated or timed out
-bool Stream::findUntil(char *target, size_t targetLen, char *terminator, size_t termLen)
+bool Stream::findUntil(const char *target, size_t targetLen, const char *terminator, size_t termLen)
 {
   if (terminator == NULL) {
     MultiTarget t[1] = {{target, targetLen, 0}};
@@ -242,12 +183,6 @@ int Stream::findMulti( struct Stream::MultiTarget *targets, int tCount) {
   // unreachable
   return -1;
 }
-
-
-
-// **********************************
-
-
 
 // returns the first valid (long) integer value from the current position.
 // initial characters that are not digits (or the minus sign) are skipped
