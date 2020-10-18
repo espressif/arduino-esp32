@@ -356,9 +356,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
   client.readStringUntil('\n');
   //start reading the form
   if (line == ("--"+boundary)){
-	 if(_postArgs) delete[] _postArgs;
-	 _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
-     _postArgsLen = 0;
+   if(_postArgs) delete[] _postArgs;
+    _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
+    _postArgsLen = 0;
     while(1){
       String argName;
       String argValue;
@@ -413,6 +413,9 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if (line == ("--"+boundary+"--")){
               log_v("Done Parsing POST");
               break;
+            } else if (_postArgsLen >= WEBSERVER_MAX_POST_ARGS) {
+              log_e("Too many PostArgs (max: %d) in request.", WEBSERVER_MAX_POST_ARGS);
+              return false;
             }
           } else {
             _currentUpload.reset(new HTTPUpload());
@@ -458,7 +461,23 @@ readfile:
               }
 
               uint8_t endBuf[boundary.length()];
-              client.readBytes(endBuf, boundary.length());
+              uint32_t i = 0;
+              while(i < boundary.length()){
+                argByte = _uploadReadByte(client);
+                if(argByte < 0) return _parseFormUploadAborted();
+                if ((char)argByte == 0x0D){
+                  _uploadWriteByte(0x0D);
+                  _uploadWriteByte(0x0A);
+                  _uploadWriteByte((uint8_t)('-'));
+                  _uploadWriteByte((uint8_t)('-'));
+                  uint32_t j = 0;
+                  while(j < i){
+                    _uploadWriteByte(endBuf[j++]);
+                  }
+                  goto readfile;
+                }
+                endBuf[i++] = (uint8_t)argByte;
+              }
 
               if (strstr((const char*)endBuf, boundary.c_str()) != NULL){
                 if(_currentHandler && _currentHandler->canUpload(_currentUri))
