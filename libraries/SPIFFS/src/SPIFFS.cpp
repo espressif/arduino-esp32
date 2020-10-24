@@ -48,16 +48,18 @@ SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl()))
 
 }
 
-bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles)
+bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
-    if(esp_spiffs_mounted(NULL)){
+    partitionLabel_ = partitionLabel;
+
+    if(esp_spiffs_mounted(partitionLabel)){
         log_w("SPIFFS Already Mounted!");
         return true;
     }
 
     esp_vfs_spiffs_conf_t conf = {
       .base_path = basePath,
-      .partition_label = NULL,
+      .partition_label = partitionLabel,
       .max_files = maxOpenFiles,
       .format_if_mount_failed = false
     };
@@ -78,8 +80,9 @@ bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFi
 
 void SPIFFSFS::end()
 {
-    if(esp_spiffs_mounted(NULL)){
-        esp_err_t err = esp_vfs_spiffs_unregister(NULL);
+    const char * partitionLabel = partitionLabel_.length() ? partitionLabel_.c_str() : NULL;
+    if(esp_spiffs_mounted(partitionLabel)){
+        esp_err_t err = esp_vfs_spiffs_unregister(partitionLabel);
         if(err){
             log_e("Unmounting SPIFFS failed! Error: %d", err);
             return;
@@ -91,7 +94,8 @@ void SPIFFSFS::end()
 bool SPIFFSFS::format()
 {
     disableCore0WDT();
-    esp_err_t err = esp_spiffs_format(NULL);
+    const char * partitionLabel = partitionLabel_.length() ? partitionLabel_.c_str() : NULL;
+    esp_err_t err = esp_spiffs_format(partitionLabel);
     enableCore0WDT();
     if(err){
         log_e("Formatting SPIFFS failed! Error: %d", err);
@@ -103,7 +107,8 @@ bool SPIFFSFS::format()
 size_t SPIFFSFS::totalBytes()
 {
     size_t total,used;
-    if(esp_spiffs_info(NULL, &total, &used)){
+    const char * partitionLabel = partitionLabel_.length() ? partitionLabel_.c_str() : NULL;
+    if(esp_spiffs_info(partitionLabel, &total, &used)){
         return 0;
     }
     return total;
@@ -112,7 +117,8 @@ size_t SPIFFSFS::totalBytes()
 size_t SPIFFSFS::usedBytes()
 {
     size_t total,used;
-    if(esp_spiffs_info(NULL, &total, &used)){
+    const char * partitionLabel = partitionLabel_.length() ? partitionLabel_.c_str() : NULL;
+    if(esp_spiffs_info(partitionLabel, &total, &used)){
         return 0;
     }
     return used;
