@@ -50,7 +50,10 @@ SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl())), partitionLabel_(NULL)
 
 SPIFFSFS::~SPIFFSFS()
 {
-    delete partitionLabel_;
+    if (partitionLabel_){
+        delete partitionLabel_;
+    }
+
     partitionLabel_ = NULL;
 }
 
