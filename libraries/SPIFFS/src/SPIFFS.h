@@ -23,6 +23,7 @@ class SPIFFSFS : public FS
 {
 public:
     SPIFFSFS();
+    ~SPIFFSFS();
     bool begin(bool formatOnFail=false, const char * basePath="/spiffs", uint8_t maxOpenFiles=10, const char * partitionLabel=NULL);
     bool format();
     size_t totalBytes();
@@ -30,7 +31,7 @@ public:
     void end();
 
 private:
-    String partitionLabel_;
+    char * partitionLabel_;
 };
 
 }
