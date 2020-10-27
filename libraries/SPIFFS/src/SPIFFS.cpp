@@ -52,9 +52,8 @@ SPIFFSFS::~SPIFFSFS()
 {
     if (partitionLabel_){
         delete partitionLabel_;
+        partitionLabel_ = NULL;
     }
-
-    partitionLabel_ = NULL;
 }
 
 bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
