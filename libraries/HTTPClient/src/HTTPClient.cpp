@@ -1186,23 +1186,33 @@ int HTTPClient::handleHeaderResponse()
 
     _transferEncoding = HTTPC_TE_IDENTITY;
     unsigned long lastDataTime = millis();
+	
+    String headerLine = _client->readStringUntil('\n');
+    headerLine.trim(); // remove \r
 
+    lastDataTime = millis();
+
+    log_v("RX: '%s'", headerLine.c_str());
+
+    if(headerLine.startsWith("HTTP/1.")) {
+                if(_canReuse) {
+                    _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
+                }
+    }
+    headerLine.substring(headerLine.indexOf(' '));
+    _returnCode = headerLine.substring(headerLine.indexOf(' ')).toInt();
+	
     while(connected()) {
         size_t len = _client->available();
         if(len > 0) {
-            String headerLine = _client->readStringUntil('\n');
+            headerLine = _client->readStringUntil('\n');
             headerLine.trim(); // remove \r
 
             lastDataTime = millis();
 
             log_v("RX: '%s'", headerLine.c_str());
 
-            if(headerLine.startsWith("HTTP/1.")) {
-                if(_canReuse) {
-                    _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
-                }
-                _returnCode = headerLine.substring(9, headerLine.indexOf(' ', 9)).toInt();
-            } else if(headerLine.indexOf(':')) {
+	    if(headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
                 headerValue.trim();
