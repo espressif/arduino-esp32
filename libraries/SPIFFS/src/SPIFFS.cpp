@@ -58,7 +58,14 @@ SPIFFSFS::~SPIFFSFS()
 
 bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
-    partitionLabel_ = partitionLabel ? strdup(partitionLabel) : NULL;
+    if (partitionLabel_){
+        free(partitionLabel_);
+        partitionLabel_ = NULL;
+    }
+
+    if (partitionLabel){
+        partitionLabel_ = strdup(partitionLabel);
+    }
 
     if(esp_spiffs_mounted(partitionLabel_)){
         log_w("SPIFFS Already Mounted!");
