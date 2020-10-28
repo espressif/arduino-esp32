@@ -1199,7 +1199,6 @@ int HTTPClient::handleHeaderResponse()
                     _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
                 }
     }
-    headerLine.substring(headerLine.indexOf(' '));
     _returnCode = headerLine.substring(headerLine.indexOf(' ')).toInt();
 	
     while(connected()) {
