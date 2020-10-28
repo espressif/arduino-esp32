@@ -54,8 +54,8 @@
 //--------------------------------------------------------------------+
 // EHCI CONFIGURATION & CONSTANTS
 //--------------------------------------------------------------------+
-#define	EHCI_CFG_FRAMELIST_SIZE_BITS			7			/// Framelist Size (NXP specific) (0:1024) - (1:512) - (2:256) - (3:128) - (4:64) - (5:32) - (6:16) - (7:8)
-#define EHCI_FRAMELIST_SIZE  (1024 >> EHCI_CFG_FRAMELIST_SIZE_BITS)
+#define	EHCI_CFG_FRAMELIST_SIZE_BITS		7			/// Framelist Size (NXP specific) (0:1024) - (1:512) - (2:256) - (3:128) - (4:64) - (5:32) - (6:16) - (7:8)
+#define EHCI_FRAMELIST_SIZE             (1024 >> EHCI_CFG_FRAMELIST_SIZE_BITS)
 
 // TODO merge OHCI with EHCI
 enum {
@@ -311,9 +311,13 @@ enum ehci_usbcmd_pos_ {
 };
 
 enum ehci_portsc_change_mask_{
+  EHCI_PORTSC_MASK_CURRENT_CONNECT_STATUS = TU_BIT(0),
   EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE = TU_BIT(1),
+  EHCI_PORTSC_MASK_PORT_EANBLED = TU_BIT(2),
   EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE = TU_BIT(3),
   EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE = TU_BIT(5),
+
+  EHCI_PORTSC_MASK_PORT_RESET = TU_BIT(8),
 
   EHCI_PORTSC_MASK_ALL =
       EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
@@ -445,6 +449,8 @@ typedef struct
   ehci_qtd_t qtd_pool[HCD_MAX_XFER] TU_ATTR_ALIGNED(32);
 
   ehci_registers_t* regs;
+
+  volatile uint32_t uframe_number;
 }ehci_data_t;
 
 #ifdef __cplusplus

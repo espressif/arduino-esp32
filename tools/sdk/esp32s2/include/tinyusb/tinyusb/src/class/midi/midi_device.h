@@ -36,8 +36,14 @@
 //--------------------------------------------------------------------+
 // Class Driver Configuration
 //--------------------------------------------------------------------+
-#ifndef CFG_TUD_MIDI_EPSIZE
-#define CFG_TUD_MIDI_EPSIZE 64
+
+#if !defined(CFG_TUD_MIDI_EP_BUFSIZE) && defined(CFG_TUD_MIDI_EPSIZE)
+  #warning CFG_TUD_MIDI_EPSIZE is renamed to CFG_TUD_MIDI_EP_BUFSIZE, please update to use the new name
+  #define CFG_TUD_MIDI_EP_BUFSIZE    CFG_TUD_MIDI_EPSIZE
+#endif
+
+#ifndef CFG_TUD_MIDI_EP_BUFSIZE
+  #define CFG_TUD_MIDI_EP_BUFSIZE     (TUD_OPT_HIGH_SPEED ? 512 : 64)
 #endif
 
 #ifdef __cplusplus
@@ -66,7 +72,7 @@ bool tud_midi_n_receive        (uint8_t itf, uint8_t packet[4]);
 bool tud_midi_n_send           (uint8_t itf, uint8_t const packet[4]);
 
 //--------------------------------------------------------------------+
-// Application API (Interface0)
+// Application API (Single Interface)
 //--------------------------------------------------------------------+
 static inline bool     tud_midi_mounted    (void);
 static inline uint32_t tud_midi_available  (void);

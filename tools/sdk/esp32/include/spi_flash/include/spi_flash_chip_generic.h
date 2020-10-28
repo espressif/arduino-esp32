@@ -188,6 +188,7 @@ esp_err_t spi_flash_chip_generic_set_write_protect(esp_flash_t *chip, bool write
  */
 esp_err_t spi_flash_chip_generic_get_write_protect(esp_flash_t *chip, bool *out_write_protect);
 
+#define ESP_FLASH_CHIP_GENERIC_NO_TIMEOUT -1
 /**
  * @brief Read flash status via the RDSR command and wait for bit 0 (write in
  * progress bit) to be cleared.
@@ -368,3 +369,6 @@ esp_err_t spi_flash_common_set_io_mode(esp_flash_t *chip, esp_flash_wrsr_func_t 
  *      - or other error passed from the ``configure_host_mode`` function of host driver
  */
 esp_err_t spi_flash_chip_generic_config_host_io_mode(esp_flash_t *chip);
+
+/// Default timeout configuration used by most chips
+const flash_chip_op_timeout_t spi_flash_chip_generic_timeout;

@@ -47,10 +47,10 @@
 #define U16_TO_U8S_BE(u16)    TU_U16_HIGH(u16), TU_U16_LOW(u16)
 #define U16_TO_U8S_LE(u16)    TU_U16_LOW(u16), TU_U16_HIGH(u16)
 
-#define U32_B1_U8(u32)        ((uint8_t) (((u32) >> 24) & 0x000000ff)) // MSB
-#define U32_B2_U8(u32)        ((uint8_t) (((u32) >> 16) & 0x000000ff))
-#define U32_B3_U8(u32)        ((uint8_t) (((u32) >>  8) & 0x000000ff))
-#define U32_B4_U8(u32)        ((uint8_t) ((u32)         & 0x000000ff)) // LSB
+#define U32_B1_U8(u32)        ((uint8_t) ((((uint32_t) u32) >> 24) & 0x000000ff)) // MSB
+#define U32_B2_U8(u32)        ((uint8_t) ((((uint32_t) u32) >> 16) & 0x000000ff))
+#define U32_B3_U8(u32)        ((uint8_t) ((((uint32_t) u32) >>  8) & 0x000000ff))
+#define U32_B4_U8(u32)        ((uint8_t) (((uint32_t)  u32)        & 0x000000ff)) // LSB
 
 #define U32_TO_U8S_BE(u32)    U32_B1_U8(u32), U32_B2_U8(u32), U32_B3_U8(u32), U32_B4_U8(u32)
 #define U32_TO_U8S_LE(u32)    U32_B4_U8(u32), U32_B3_U8(u32), U32_B2_U8(u32), U32_B1_U8(u32)
@@ -228,7 +228,6 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
   for(uint32_t i=0; i<bufsize; i++) tu_printf("%02X ", buf[i]);
 }
 
-
 // Log with debug level 1
 #define TU_LOG1               tu_printf
 #define TU_LOG1_MEM           tu_print_mem
@@ -243,25 +242,25 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
   #define TU_LOG2             TU_LOG1
   #define TU_LOG2_MEM         TU_LOG1_MEM
   #define TU_LOG2_VAR         TU_LOG1_VAR
-  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
   #define TU_LOG2_INT         TU_LOG1_INT
   #define TU_LOG2_HEX         TU_LOG1_HEX
+  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
 #endif
 
 
 typedef struct
 {
   uint32_t key;
-  char const * data;
-}lookup_entry_t;
+  const char* data;
+} tu_lookup_entry_t;
 
 typedef struct
 {
   uint16_t count;
-  lookup_entry_t const* items;
-} lookup_table_t;
+  tu_lookup_entry_t const* items;
+} tu_lookup_table_t;
 
-static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t key)
+static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint32_t key)
 {
   for(uint16_t i=0; i<p_table->count; i++)
   {
@@ -279,6 +278,7 @@ static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t ke
   #define TU_LOG1_VAR(...)
   #define TU_LOG1_INT(...)
   #define TU_LOG1_HEX(...)
+  #define TU_LOG1_LOCATION()
   #define TU_LOG1_FAILED()
 #endif
 
@@ -288,6 +288,7 @@ static inline char const* lookup_find(lookup_table_t const* p_table, uint32_t ke
   #define TU_LOG2_VAR(...)
   #define TU_LOG2_INT(...)
   #define TU_LOG2_HEX(...)
+  #define TU_LOG2_LOCATION()
 #endif
 
 #ifdef __cplusplus

@@ -14,6 +14,9 @@
 
 #include "mqtt_config.h"
 #include "esp_event.h"
+#if CONFIG_ESP_TLS_USE_DS_PERIPHERAL
+#include "rsa_sign_alt.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -182,6 +185,9 @@ typedef struct {
     int clientkey_password_len;             /*!< String length of the password pointed to by clientkey_password */
     esp_mqtt_protocol_ver_t protocol_ver;   /*!< MQTT protocol version used for connection, defaults to value from menuconfig*/
     int out_buffer_size;                    /*!< size of MQTT output buffer. If not defined, both output and input buffers have the same size defined as ``buffer_size`` */
+    bool skip_cert_common_name_check;       /*!< Skip any validation of server certificate CN field, this reduces the security of TLS and makes the mqtt client susceptible to MITM attacks  */
+    bool use_secure_element;                /*!< enable secure element for enabling SSL connection */
+    void *ds_data;                          /*!< carrier of handle for digital signature parameters */
 } esp_mqtt_client_config_t;
 
 /**
@@ -236,6 +242,9 @@ esp_err_t esp_mqtt_client_disconnect(esp_mqtt_client_handle_t client);
 
 /**
  * @brief Stops mqtt client tasks
+ *
+ *  * Notes:
+ *  - Cannot be called from the mqtt event handler
  *
  * @param client    mqtt client handle
  *
@@ -303,6 +312,9 @@ int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, 
 
 /**
  * @brief Destroys the client handle
+ *
+ * Notes:
+ *  - Cannot be called from the mqtt event handler
  *
  * @param client    mqtt client handle
  *

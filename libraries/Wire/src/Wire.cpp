@@ -58,6 +58,17 @@ TwoWire::~TwoWire()
     }
 }
 
+bool TwoWire::setPins(int sdaPin, int sclPin)
+{
+    if(i2c) {
+        log_e("can not set pins if begin was already called");
+        return false;
+    }
+    sda = sdaPin;
+    scl = sclPin;
+    return true;
+}
+
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     if(sdaPin < 0) { // default param passed

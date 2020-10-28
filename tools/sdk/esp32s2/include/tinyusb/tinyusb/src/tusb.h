@@ -76,6 +76,10 @@
     #include "class/msc/msc_device.h"
   #endif
 
+#if CFG_TUD_AUDIO
+  #include "class/audio/audio_device.h"
+#endif
+
   #if CFG_TUD_MIDI
     #include "class/midi/midi_device.h"
   #endif
@@ -109,6 +113,8 @@
  *  @{ */
 
 // Initialize device/host stack
+// Note: when using with RTOS, this should be called after scheduler/kernel is started.
+// Otherwise it could cause kernel issue since USB IRQ handler does use RTOS queue API.
 bool tusb_init(void);
 
 // Check if stack is initialized

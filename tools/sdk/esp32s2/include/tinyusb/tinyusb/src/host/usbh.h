@@ -52,6 +52,10 @@ typedef enum tusb_interface_status_{
 } tusb_interface_status_t;
 
 typedef struct {
+  #if CFG_TUSB_DEBUG >= 2
+  char const* name;
+  #endif
+
   uint8_t class_code;
 
   void (* const init) (void);
@@ -69,7 +73,8 @@ typedef struct {
 void tuh_task(void);
 
 // Interrupt handler, name alias to HCD
-#define tuh_isr   hcd_isr
+extern void hcd_int_handler(uint8_t rhport);
+#define tuh_int_handler   hcd_int_handler
 
 tusb_device_state_t tuh_device_get_state (uint8_t dev_addr);
 static inline bool tuh_device_is_configured(uint8_t dev_addr)
@@ -91,8 +96,13 @@ TU_ATTR_WEAK void tuh_umount_cb(uint8_t dev_addr);
 //--------------------------------------------------------------------+
 // CLASS-USBH & INTERNAL API
 //--------------------------------------------------------------------+
+
+// Note: when using with RTOS, this should be called after scheduler/kernel is started.
+// Otherwise it could cause kernel issue since USB IRQ handler does use RTOS queue API.
 bool usbh_init(void);
 bool usbh_control_xfer (uint8_t dev_addr, tusb_control_request_t* request, uint8_t* data);
+
+bool usbh_edpt_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_endpoint_t const * ep_desc);
 
 #ifdef __cplusplus
  }

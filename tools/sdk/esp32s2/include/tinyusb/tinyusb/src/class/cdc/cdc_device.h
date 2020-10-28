@@ -34,8 +34,13 @@
 //--------------------------------------------------------------------+
 // Class Driver Configuration
 //--------------------------------------------------------------------+
-#ifndef CFG_TUD_CDC_EPSIZE
-#define CFG_TUD_CDC_EPSIZE 64
+#if !defined(CFG_TUD_CDC_EP_BUFSIZE) && defined(CFG_TUD_CDC_EPSIZE)
+  #warning CFG_TUD_CDC_EPSIZE is renamed to CFG_TUD_CDC_EP_BUFSIZE, please update to use the new name
+  #define CFG_TUD_CDC_EP_BUFSIZE    CFG_TUD_CDC_EPSIZE
+#endif
+
+#ifndef CFG_TUD_CDC_EP_BUFSIZE
+  #define CFG_TUD_CDC_EP_BUFSIZE    (TUD_OPT_HIGH_SPEED ? 512 : 64)
 #endif
 
 #ifdef __cplusplus
@@ -51,7 +56,6 @@
 // Application API (Multiple Ports)
 // CFG_TUD_CDC > 1
 //--------------------------------------------------------------------+
-
 
 // Check if terminal is connected to this port
 bool     tud_cdc_n_connected       (uint8_t itf);
@@ -88,14 +92,14 @@ uint32_t tud_cdc_n_write           (uint8_t itf, void const* buffer, uint32_t bu
 static inline
 uint32_t tud_cdc_n_write_char      (uint8_t itf, char ch);
 
-// Write a nul-terminated string
+// Write a null-terminated string
 static inline
 uint32_t tud_cdc_n_write_str       (uint8_t itf, char const* str);
 
 // Force sending data if possible, return number of forced bytes
 uint32_t tud_cdc_n_write_flush     (uint8_t itf);
 
-// Return number of characters available for writing
+// Return the number of bytes (characters) available for writing to TX FIFO buffer in a single n_write operation.
 uint32_t tud_cdc_n_write_available (uint8_t itf);
 
 //--------------------------------------------------------------------+
@@ -127,6 +131,9 @@ TU_ATTR_WEAK void tud_cdc_rx_cb(uint8_t itf);
 
 // Invoked when received `wanted_char`
 TU_ATTR_WEAK void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char);
+
+// Invoked when space becomes available in TX buffer
+TU_ATTR_WEAK void tud_cdc_tx_complete_cb(uint8_t itf);
 
 // Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
 TU_ATTR_WEAK void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts);

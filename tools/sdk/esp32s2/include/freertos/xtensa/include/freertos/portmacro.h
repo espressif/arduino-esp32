@@ -75,7 +75,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
+#include <stdarg.h>
 #include <xtensa/hal.h>
 #include <xtensa/config/core.h>
 #include <xtensa/config/system.h>	/* required for XSHAL_CLIB */
@@ -84,14 +84,13 @@ extern "C" {
 #include "esp_timer.h"              /* required for FreeRTOS run time stats */
 #include "soc/spinlock.h"
 #include <esp_heap_caps.h>
-
+#include "esp_rom_sys.h"
 #include "sdkconfig.h"
+#include "freertos/xtensa_api.h"
 
 #ifdef CONFIG_LEGACY_INCLUDE_COMMON_HEADERS
 #include "soc/soc_memory_layout.h"
 #endif
-
-//#include "xtensa_context.h"
 
 /*-----------------------------------------------------------
  * Port specific definitions.
@@ -225,22 +224,22 @@ static inline void __attribute__((always_inline)) vPortEnterCriticalCompliance(p
 {
     if(!xPortInIsrContext()) {                                                                  
         vPortEnterCritical(mux);                                                                
-    } else {                                                                                    
-        ets_printf("%s:%d (%s)- port*_CRITICAL called from ISR context!\n", __FILE__, __LINE__, 
-                    __FUNCTION__);                                                              
-        abort();                                                                                
-    }                                                                                           
+    } else {
+        esp_rom_printf("%s:%d (%s)- port*_CRITICAL called from ISR context!\n",
+                       __FILE__, __LINE__, __FUNCTION__);
+        abort();
+    }
 }
 
 static inline void __attribute__((always_inline)) vPortExitCriticalCompliance(portMUX_TYPE *mux)
 {
     if(!xPortInIsrContext()) {                                                                  
         vPortExitCritical(mux);                                                                 
-    } else {                                                                                    
-        ets_printf("%s:%d (%s)- port*_CRITICAL called from ISR context!\n", __FILE__, __LINE__, 
-                    __FUNCTION__);                                                               
-        abort();                                                                                
-    }                                                                                               
+    } else {
+        esp_rom_printf("%s:%d (%s)- port*_CRITICAL called from ISR context!\n",
+                       __FILE__, __LINE__, __FUNCTION__);
+        abort();
+    }
 }
 
 #ifdef CONFIG_FREERTOS_CHECK_PORT_CRITICAL_COMPLIANCE
@@ -321,13 +320,27 @@ static inline void __attribute__((always_inline)) uxPortCompareSet(volatile uint
 #define portALT_GET_RUN_TIME_COUNTER_VALUE(x)    x = (uint32_t)esp_timer_get_time()
 #endif
 
-
-/* Kernel utilities. */
 void vPortYield( void );
+void vPortEvaluateYieldFromISR(int argc, ...);
 void _frxt_setup_switch( void );
-#define portYIELD()					vPortYield()
-#define portYIELD_FROM_ISR()        {traceISR_EXIT_TO_SCHEDULER(); _frxt_setup_switch();}
+/**
+ * Macro to count number of arguments of a __VA_ARGS__ used to support portYIELD_FROM_ISR with, 
+ * or without arguments.
+ */ 
+#define portGET_ARGUMENT_COUNT(...) portGET_ARGUMENT_COUNT_INNER(0, ##__VA_ARGS__,1,0)
+#define portGET_ARGUMENT_COUNT_INNER(zero, one, count, ...) count
 
+_Static_assert(portGET_ARGUMENT_COUNT() == 0, "portGET_ARGUMENT_COUNT() result does not match for 0 arguments");
+_Static_assert(portGET_ARGUMENT_COUNT(1) == 1, "portGET_ARGUMENT_COUNT() result does not match for 1 argument");
+
+#define portYIELD()	vPortYield()
+
+/**
+ * @note    The macro below could be used when passing a single argument, or without any argument, 
+ *          it was developed to support both usages of portYIELD inside of an ISR. Any other usage form
+ *          might result in undesired behaviour
+ */
+#define portYIELD_FROM_ISR(...) vPortEvaluateYieldFromISR(portGET_ARGUMENT_COUNT(__VA_ARGS__), ##__VA_ARGS__)
 
 /* Yielding within an API call (when interrupts are off), means the yield should be delayed
    until interrupts are re-enabled.

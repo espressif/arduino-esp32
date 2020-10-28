@@ -143,13 +143,17 @@ static inline uint32_t pcd_get_eptype(USB_TypeDef * USBx, uint32_t bEpNum)
 static inline void pcd_clear_rx_ep_ctr(USB_TypeDef * USBx, uint32_t bEpNum)
 {
   uint32_t regVal = pcd_get_endpoint(USBx, bEpNum);
-  regVal &= 0x7FFFu & USB_EPREG_MASK;
+  regVal &= USB_EPREG_MASK;
+  regVal &= ~USB_EP_CTR_RX;
+  regVal |= USB_EP_CTR_TX; // preserve CTR_TX (clears on writing 0)
   pcd_set_endpoint(USBx, bEpNum, regVal);
 }
 static inline void pcd_clear_tx_ep_ctr(USB_TypeDef * USBx, uint32_t bEpNum)
 {
   uint32_t regVal = pcd_get_endpoint(USBx, bEpNum);
-  regVal &= regVal & 0xFF7FU & USB_EPREG_MASK;
+  regVal &= USB_EPREG_MASK;
+  regVal &= ~USB_EP_CTR_TX;
+  regVal |= USB_EP_CTR_RX; // preserve CTR_RX (clears on writing 0)
   pcd_set_endpoint(USBx, bEpNum,regVal);
 }
 /**

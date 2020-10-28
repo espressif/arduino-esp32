@@ -19,6 +19,8 @@
 #include "soc/soc.h"
 #include "soc/rtc_periph.h"
 
+#define MHZ (1000000)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -644,6 +646,8 @@ rtc_vddsdio_config_t rtc_vddsdio_get_config(void);
  * @param config new VDDSDIO configuration
  */
 void rtc_vddsdio_set_config(rtc_vddsdio_config_t config);
+
+
 
 #ifdef __cplusplus
 }

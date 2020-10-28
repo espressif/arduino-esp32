@@ -37,7 +37,11 @@
 #endif
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+HardwareSerial Serial0(0);
+#else
 HardwareSerial Serial(0);
+#endif
 HardwareSerial Serial1(1);
 #if CONFIG_IDF_TARGET_ESP32
 HardwareSerial Serial2(2);
@@ -123,7 +127,7 @@ void HardwareSerial::setDebugOutput(bool en)
         uartSetDebug(_uart);
     } else {
         if(uartGetDebug() == _uart_nr) {
-            uartSetDebug(0);
+            uartSetDebug(NULL);
         }
     }
 }

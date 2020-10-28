@@ -256,6 +256,8 @@
 #define SOC_EXTRAM_DATA_LOW     0x3F800000
 #define SOC_EXTRAM_DATA_HIGH    0x3FC00000
 
+#define SOC_EXTRAM_DATA_SIZE (SOC_EXTRAM_DATA_HIGH - SOC_EXTRAM_DATA_LOW)
+
 //First and last words of the D/IRAM region, for both the DRAM address as well as the IRAM alias.
 #define SOC_DIRAM_IRAM_LOW    0x400A0000
 #define SOC_DIRAM_IRAM_HIGH   0x400C0000
@@ -327,7 +329,8 @@
 #define ETS_PWM3_INTR_SOURCE                    42/**< interruot of PWM3, level*/
 #define ETS_LEDC_INTR_SOURCE                    43/**< interrupt of LED PWM, level*/
 #define ETS_EFUSE_INTR_SOURCE                   44/**< interrupt of efuse, level, not likely to use*/
-#define ETS_CAN_INTR_SOURCE                     45/**< interrupt of can, level*/
+#define ETS_TWAI_INTR_SOURCE                    45/**< interrupt of twai, level*/
+#define ETS_CAN_INTR_SOURCE                     ETS_TWAI_INTR_SOURCE
 #define ETS_RTC_CORE_INTR_SOURCE                46/**< interrupt of rtc core, level, include rtc watchdog*/
 #define ETS_RMT_INTR_SOURCE                     47/**< interrupt of remote controller, level*/
 #define ETS_PCNT_INTR_SOURCE                    48/**< interrupt of pluse count, level*/

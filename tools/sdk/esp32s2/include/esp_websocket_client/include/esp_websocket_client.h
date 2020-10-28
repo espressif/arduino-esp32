@@ -40,6 +40,7 @@ typedef enum {
     WEBSOCKET_EVENT_CONNECTED,      /*!< Once the Websocket has been connected to the server, no data exchange has been performed */
     WEBSOCKET_EVENT_DISCONNECTED,   /*!< The connection has been disconnected */
     WEBSOCKET_EVENT_DATA,           /*!< When receiving data from the server, possibly multiple portions of the packet */
+    WEBSOCKET_EVENT_CLOSED,         /*!< The connection has been closed cleanly */
     WEBSOCKET_EVENT_MAX
 } esp_websocket_event_id_t;
 
@@ -85,6 +86,9 @@ typedef struct {
     char                        *subprotocol;               /*!< Websocket subprotocol */
     char                        *user_agent;                /*!< Websocket user-agent */
     char                        *headers;                   /*!< Websocket additional headers */
+    int                         pingpong_timeout_sec;       /*!< Period before connection is aborted due to no PONGs received */
+    bool                        disable_pingpong_discon;    /*!< Disable auto-disconnect due to no PONG received within pingpong_timeout_sec */
+
 } esp_websocket_client_config_t;
 
 /**
@@ -122,7 +126,14 @@ esp_err_t esp_websocket_client_set_uri(esp_websocket_client_handle_t client, con
 esp_err_t esp_websocket_client_start(esp_websocket_client_handle_t client);
 
 /**
- * @brief      Close the WebSocket connection
+ * @brief      Stops the WebSocket connection without websocket closing handshake
+ *
+ * This API stops ws client and closes TCP connection directly without sending
+ * close frames. It is a good practice to close the connection in a clean way
+ * using esp_websocket_client_close().
+ *
+ *  Notes:
+ *  - Cannot be called from the websocket event handler 
  *
  * @param[in]  client  The client
  *
@@ -136,6 +147,9 @@ esp_err_t esp_websocket_client_stop(esp_websocket_client_handle_t client);
  *             It is the opposite of the esp_websocket_client_init function and must be called with the same handle as input that a esp_websocket_client_init call returned.
  *             This might close all connections this handle has used.
  *
+ *  Notes:
+ *  - Cannot be called from the websocket event handler
+ * 
  * @param[in]  client  The client
  *
  * @return     esp_err_t
@@ -185,7 +199,43 @@ int esp_websocket_client_send_bin(esp_websocket_client_handle_t client, const ch
 int esp_websocket_client_send_text(esp_websocket_client_handle_t client, const char *data, int len, TickType_t timeout);
 
 /**
- * @brief      Check the WebSocket connection status
+ * @brief      Close the WebSocket connection in a clean way
+ *
+ * Sequence of clean close initiated by client:
+ * * Client sends CLOSE frame
+ * * Client waits until server echos the CLOSE frame
+ * * Client waits until server closes the connection
+ * * Client is stopped the same way as by the `esp_websocket_client_stop()`
+ *
+ *  Notes:
+ *  - Cannot be called from the websocket event handler 
+ *
+ * @param[in]  client  The client
+ * @param[in]  timeout Timeout in RTOS ticks for waiting
+ *
+ * @return     esp_err_t
+ */
+esp_err_t esp_websocket_client_close(esp_websocket_client_handle_t client, TickType_t timeout);
+
+/**
+ * @brief      Close the WebSocket connection in a clean way with custom code/data
+ *             Closing sequence is the same as for esp_websocket_client_close()
+ *
+ *  Notes:
+ *  - Cannot be called from the websocket event handler 
+ *
+ * @param[in]  client  The client
+ * @param[in]  code    Close status code as defined in RFC6455 section-7.4
+ * @param[in]  data    Additional data to closing message
+ * @param[in]  len     The length of the additional data
+ * @param[in]  timeout Timeout in RTOS ticks for waiting
+ *
+ * @return     esp_err_t
+ */
+esp_err_t esp_websocket_client_close_with_code(esp_websocket_client_handle_t client, int code, const char *data, int len, TickType_t timeout);
+
+/**
+ * @brief      Check the WebSocket client connection state
  *
  * @param[in]  client  The client handle
  *

@@ -16,6 +16,7 @@
 #include "esp32-hal.h"
 
 #if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_USB_ENABLED
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +62,19 @@ typedef struct {
 
 esp_err_t tinyusb_init(tinyusb_device_config_t *config);
 
+/*
+ * USB Persistence API
+ * */
+typedef enum {
+    RESTART_NO_PERSIST,
+    RESTART_PERSIST,
+    RESTART_BOOTLOADER,
+    RESTART_BOOTLOADER_DFU,
+    RESTART_TYPE_MAX
+} restart_type_t;
+
+void usb_persist_restart(restart_type_t mode);
+
 // The following definitions and functions are to be used only by the drivers
 typedef enum {
     USB_INTERFACE_CDC,
@@ -85,4 +99,5 @@ uint8_t tinyusb_get_free_out_endpoint(void);
 }
 #endif
 
+#endif /* CONFIG_USB_ENABLED */
 #endif /* CONFIG_IDF_TARGET_ESP32S2 */

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sdkconfig.h"
 #include "esp_image_format.h"
 
 #ifdef __cplusplus
@@ -26,6 +27,14 @@ extern "C" {
  * @return None
  */
 void bootloader_flash_update_id(void);
+
+/**
+ * @brief Update the flash size in g_rom_flashchip (global esp_rom_spiflash_chip_t structure).
+ *
+ * @param size The size to store, in bytes.
+ * @return None
+ */
+void bootloader_flash_update_size(uint32_t size);
 
 /**
  * @brief Set the flash CS setup and hold time.
@@ -65,6 +74,22 @@ void bootloader_flash_gpio_config(const esp_image_header_t* pfhdr);
  * @return None
  */
 void bootloader_flash_dummy_config(const esp_image_header_t* pfhdr);
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+/**
+ * @brief Return the pin number used for custom SPI flash and/or SPIRAM WP pin
+ *
+ * Can be determined by eFuse values in most cases, or overriden in configuration
+ *
+ * This value is only meaningful if the other SPI flash pins are overriden via eFuse.
+ *
+ * This value is only meaningful if flash is set to QIO or QOUT mode, or if
+ * SPIRAM is enabled.
+ *
+ * @return Pin number to use, or -1 if the default should be kept
+ */
+int bootloader_flash_get_wp_pin(void);
+#endif
 
 #ifdef __cplusplus
 }

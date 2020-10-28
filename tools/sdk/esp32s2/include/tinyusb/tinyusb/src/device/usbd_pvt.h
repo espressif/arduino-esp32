@@ -34,6 +34,30 @@
 #endif
 
 //--------------------------------------------------------------------+
+// Class Drivers
+//--------------------------------------------------------------------+
+
+typedef struct
+{
+  #if CFG_TUSB_DEBUG >= 2
+  char const* name;
+  #endif
+
+  void     (* init             ) (void);
+  void     (* reset            ) (uint8_t rhport);
+  uint16_t (* open             ) (uint8_t rhport, tusb_desc_interface_t const * desc_intf, uint16_t max_len);
+  bool     (* control_request  ) (uint8_t rhport, tusb_control_request_t const * request);
+  bool     (* control_complete ) (uint8_t rhport, tusb_control_request_t const * request);
+  bool     (* xfer_cb          ) (uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+  void     (* sof              ) (uint8_t rhport); /* optional */
+} usbd_class_driver_t;
+
+// Invoked when initializing device stack to get additional class drivers.
+// Can optionally implemented by application to extend/overwrite class driver support.
+// Note: The drivers array must be accessible at all time when stack is active
+usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count) TU_ATTR_WEAK;
+
+//--------------------------------------------------------------------+
 // USBD Endpoint API
 //--------------------------------------------------------------------+
 
@@ -45,6 +69,13 @@ void usbd_edpt_close(uint8_t rhport, uint8_t ep_addr);
 
 // Submit a usb transfer
 bool usbd_edpt_xfer(uint8_t rhport, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes);
+
+// Claim an endpoint before submitting a transfer.
+// If caller does not make any transfer, it must release endpoint for others.
+bool usbd_edpt_claim(uint8_t rhport, uint8_t ep_addr);
+
+// Release an endpoint without submitting a transfer
+bool usbd_edpt_release(uint8_t rhport, uint8_t ep_addr);
 
 // Check if endpoint transferring is complete
 bool usbd_edpt_busy(uint8_t rhport, uint8_t ep_addr);

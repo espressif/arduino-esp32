@@ -76,13 +76,42 @@ typedef enum {
 /**
  * @brief ADC digital controller encode option.
  *
- * @deprecated The ESP32S2 don't use I2S DMA. Call ``adc_digi_output_format_t`` instead.
+ * @deprecated The ESP32-S2 doesn't use I2S DMA. Call ``adc_digi_output_format_t`` instead.
  */
 typedef enum {
     ADC_ENCODE_12BIT,        /*!< ADC to DMA data format,          , [15:12]-channel [11:0]-12 bits ADC data */
     ADC_ENCODE_11BIT,        /*!< ADC to DMA data format, [15]-unit, [14:11]-channel [10:0]-11 bits ADC data */
     ADC_ENCODE_MAX,
 } adc_i2s_encode_t;
+
+/*---------------------------------------------------------------
+                    Common setting
+---------------------------------------------------------------*/
+
+/**
+ * @brief Enable ADC power
+ */
+void adc_power_on(void);
+
+/**
+ * @brief Power off SAR ADC
+ * This function will force power down for ADC
+ */
+void adc_power_off(void);
+
+/**
+ * @brief Initialize ADC pad
+ * @param adc_unit ADC unit index
+ * @param channel ADC channel index
+ * @return
+ *     - ESP_OK success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t adc_gpio_init(adc_unit_t adc_unit, adc_channel_t channel);
+
+/*---------------------------------------------------------------
+                    RTC controller setting
+---------------------------------------------------------------*/
 
 /**
  * @brief Get the GPIO number of a specific ADC1 channel.
@@ -97,45 +126,58 @@ typedef enum {
 esp_err_t adc1_pad_get_io_num(adc1_channel_t channel, gpio_num_t *gpio_num);
 
 /**
- * @brief Set the attenuation of a particular channel on ADC1, and configure its associated GPIO pin mux.
- *
- *        The default ADC full-scale voltage is 1.1 V. To read higher voltages (up to the pin maximum voltage,
- *        usually 3.3 V) requires setting >0 dB signal attenuation for that ADC channel.
- *
- *        When VDD_A is 3.3 V:
- *
- *        - 0 dB attenuation (ADC_ATTEN_DB_0) gives full-scale voltage 1.1 V
- *        - 2.5 dB attenuation (ADC_ATTEN_DB_2_5) gives full-scale voltage 1.5 V
- *        - 6 dB attenuation (ADC_ATTEN_DB_6) gives full-scale voltage 2.2 V
- *        - 11 dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9 V (see note below)
- *
- * @note The full-scale voltage is the voltage corresponding to a maximum reading (depending on ADC1 configured bit width,
- *       this value in ESP32 is: 4095 for 12-bits, 2047 for 11-bits, 1023 for 10-bits, 511 for 9 bits.
- *       this value in ESP32S2 is: 8191 for 13-bits.)
- *
- * @note At 11 dB attenuation the maximum voltage is limited by VDD_A, not the full scale voltage.
- *
- * @note For ESP32:
- *       Due to ADC characteristics, most accurate results are obtained within the following approximate voltage ranges:
- *
- *       - 0 dB attenuation (ADC_ATTEN_DB_0) between 100 and 950 mV
- *       - 2.5 dB attenuation (ADC_ATTEN_DB_2_5) between 100 and 1250 mV
- *       - 6 dB attenuation (ADC_ATTEN_DB_6) between 150 to 1750 mV
- *       - 11 dB attenuation (ADC_ATTEN_DB_11) between 150 to 2450 mV
- *
- *       For maximum accuracy, use the ADC calibration APIs and measure voltages within these recommended ranges.
- *
- * @note For any given channel, this function must be called before the first time ``adc1_get_raw()`` is called for that channel.
- *
- * @note This function can be called multiple times to configure multiple
- *       ADC channels simultaneously. ``adc1_get_raw()`` can then be called for any configured channel.
- *
- * @param channel ADC1 channel to configure
- * @param atten  Attenuation level
- *
- * @return
- *     - ESP_OK success
- *     - ESP_ERR_INVALID_ARG Parameter error
+  * @brief Set the attenuation of a particular channel on ADC1, and configure its associated GPIO pin mux.
+  *
+  *        The default ADC full-scale voltage is 1.1 V. To read higher voltages (up to the pin maximum voltage,
+  *        usually 3.3 V) requires setting >0 dB signal attenuation for that ADC channel.
+  *
+  *        When the analog voltage supply (VDDA) is 3.3 V:
+  *
+  *        - 0 dB attenuation (ADC_ATTEN_DB_0) gives full-scale voltage 1.1 V
+  *        - 2.5 dB attenuation (ADC_ATTEN_DB_2_5) gives full-scale voltage 1.5 V
+  *        - 6 dB attenuation (ADC_ATTEN_DB_6) gives full-scale voltage 2.2 V
+  *        - 11 dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9 V (see note below)
+  * 
+  * Due to ADC characteristics, most accurate results are obtained within the following approximate voltage ranges:
+  *
+  *         +----------+------------+--------------------------+
+  *         |   SoC    | attenuation|   suggested range (mV)   |
+  *         +==========+============+==========================+
+  *         |          |  0         |     100 ~ 950            |
+  *         |          +------------+--------------------------+
+  *         |          |  2.5       |     100 ~ 1250           |
+  *         |   ESP32  +------------+--------------------------+
+  *         |          |  6         |     150 ~ 1750           |
+  *         |          +------------+--------------------------+
+  *         |          |  11        |     150 ~ 2450           |
+  *         +----------+------------+--------------------------+
+  *         |          |  0         |     100 ~ 800            |
+  *         |          +------------+--------------------------+
+  *         |          |  2.5       |     100 ~ 1100           |
+  *         | ESP32-S2 +------------+--------------------------+
+  *         |          |  6         |     150 ~ 1350           |
+  *         |          +------------+--------------------------+
+  *         |          |  11        |     150 ~ 2600           |
+  *         +----------+------------+--------------------------+
+  * 
+  * For maximum accuracy, use the ADC calibration APIs and measure voltages within these recommended ranges.
+  * @note The full-scale voltage is the voltage corresponding to a maximum reading (depending on ADC1 configured bit width,
+  *       this value in ESP32 is 4095 for 12-bits, 2047 for 11-bits, 1023 for 10-bits, 511 for 9 bits.
+  *       this value in ESP32-S2 is 8191 for 13-bits.)
+  *
+  * @note At 11 dB attenuation the maximum voltage is limited by VDDA, not the full scale voltage.
+  *
+  * @note For any given channel, this function must be called before the first time ``adc1_get_raw()`` is called for that channel.
+  *
+  * @note This function can be called multiple times to configure multiple
+  *       ADC channels simultaneously. You may call ``adc1_get_raw()`` only after configuring a channel.
+  *
+  * @param channel ADC1 channel to configure
+  * @param atten  Attenuation level
+  *
+  * @return
+  *     - ESP_OK success
+  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t adc1_config_channel_atten(adc1_channel_t channel, adc_atten_t atten);
 
@@ -174,27 +216,6 @@ esp_err_t adc1_config_width(adc_bits_width_t width_bit);
 int adc1_get_raw(adc1_channel_t channel);
 
 /**
- * @brief Enable ADC power
- */
-void adc_power_on(void);
-
-/**
- * @brief Power off SAR ADC
- * This function will force power down for ADC
- */
-void adc_power_off(void);
-
-/**
- * @brief Initialize ADC pad
- * @param adc_unit ADC unit index
- * @param channel ADC channel index
- * @return
- *     - ESP_OK success
- *     - ESP_ERR_INVALID_ARG Parameter error
- */
-esp_err_t adc_gpio_init(adc_unit_t adc_unit, adc_channel_t channel);
-
-/**
  * @brief Set ADC data invert
  * @param adc_unit ADC unit index
  * @param inv_en whether enable data invert
@@ -215,10 +236,10 @@ esp_err_t adc_set_clk_div(uint8_t clk_div);
 /**
  * @brief Configure ADC capture width.
  *
- * @note  For ESP32S2, only support ``ADC_WIDTH_BIT_13``.
+ * @note  ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
  *
  * @param adc_unit ADC unit index
- * @param width_bit Bit capture width for ADC unit. For ESP32S2, only support ``ADC_WIDTH_BIT_13``.
+ * @param width_bit Bit capture width for ADC unit. ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
  *
  * @return
  *     - ESP_OK success
@@ -256,7 +277,7 @@ esp_err_t adc2_pad_get_io_num(adc2_channel_t channel, gpio_num_t *gpio_num);
  *        The default ADC full-scale voltage is 1.1 V. To read higher voltages (up to the pin maximum voltage,
  *        usually 3.3 V) requires setting >0 dB signal attenuation for that ADC channel.
  *
- *        When VDD_A is 3.3 V:
+ *        When the analog voltage supply (VDDA) is 3.3 V:
  *
  *        - 0 dB attenuation (ADC_ATTEN_0db) gives full-scale voltage 1.1 V
  *        - 2.5 dB attenuation (ADC_ATTEN_2_5db) gives full-scale voltage 1.5 V
@@ -269,10 +290,10 @@ esp_err_t adc2_pad_get_io_num(adc2_channel_t channel, gpio_num_t *gpio_num);
  *
  * @note The full-scale voltage is the voltage corresponding to a maximum reading
  *       (depending on ADC2 configured bit width,
- *       this value of ESP32 is: 4095 for 12-bits, 2047 for 11-bits, 1023 for 10-bits, 511 for 9 bits.
- *       this value of ESP32S2 is: 8191 for 13-bits.)
+ *       this value for ESP32 is: 4095 for 12-bits, 2047 for 11-bits, 1023 for 10-bits, 511 for 9 bits.
+ *       this value for ESP32-S2 is: 8191 for 13-bits.)
  *
- * @note At 11 dB attenuation the maximum voltage is limited by VDD_A, not the full scale voltage.
+ * @note At 11 dB attenuation the maximum voltage is limited by VDDA, not the full scale voltage.
  *
  * @param channel ADC2 channel to configure
  * @param atten  Attenuation level
@@ -297,12 +318,12 @@ esp_err_t adc2_config_channel_atten(adc2_channel_t channel, adc_atten_t atten);
  *       must be called before the first time this function is called. If Wi-Fi is started via ``esp_wifi_start()``, this
  *       function will always fail with ``ESP_ERR_TIMEOUT``.
  *
- * @note ESP32S2:
+ * @note ESP32-S2:
  *       ADC2 support hardware arbiter. The arbiter is to improve the use efficiency of ADC2. After the control right is robbed by the high priority,
  *       the low priority controller will read the invalid ADC2 data. Default priority: Wi-Fi > RTC > Digital;
  *
  * @param channel ADC2 channel to read
- * @param width_bit Bit capture width for ADC2. For ESP32S2, only support ``ADC_WIDTH_BIT_13``.
+ * @param width_bit Bit capture width for ADC2. ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
  * @param raw_out the variable to hold the output data.
  *
  * @return
@@ -311,6 +332,67 @@ esp_err_t adc2_config_channel_atten(adc2_channel_t channel, adc_atten_t atten);
  *     - ESP_ERR_INVALID_STATE The controller status is invalid. Please try again.
  */
 esp_err_t adc2_get_raw(adc2_channel_t channel, adc_bits_width_t width_bit, int *raw_out);
+
+/**
+ *  @brief Output ADC1 or ADC2's reference voltage to ``adc2_channe_t``'s IO.
+ *
+ *  This function routes the internal reference voltage of ADCn to one of
+ *  ADC2's channels. This reference voltage can then be manually measured
+ *  for calibration purposes.
+ *
+ *  @note  ESP32 only supports output of ADC2's internal reference voltage.
+ *  @param[in]  adc_unit ADC unit index
+ *  @param[in]  gpio     GPIO number (Only ADC2's channels IO are supported)
+ *
+ *  @return
+ *                  - ESP_OK: v_ref successfully routed to selected GPIO
+ *                  - ESP_ERR_INVALID_ARG: Unsupported GPIO
+ */
+esp_err_t adc_vref_to_gpio(adc_unit_t adc_unit, gpio_num_t gpio);
+
+/**
+ *  @brief Output ADC2 reference voltage to ``adc2_channe_t``'s IO.
+ *
+ *  This function routes the internal reference voltage of ADCn to one of
+ *  ADC2's channels. This reference voltage can then be manually measured
+ *  for calibration purposes.
+ *
+ *  @deprecated Use ``adc_vref_to_gpio`` instead.
+ *
+ *  @param[in]  gpio    GPIO number (ADC2's channels are supported)
+ *
+ *  @return
+ *                  - ESP_OK: v_ref successfully routed to selected GPIO
+ *                  - ESP_ERR_INVALID_ARG: Unsupported GPIO
+ */
+esp_err_t adc2_vref_to_gpio(gpio_num_t gpio) __attribute__((deprecated));
+/*---------------------------------------------------------------
+                    Digital controller setting
+---------------------------------------------------------------*/
+
+/**
+ * @brief ADC digital controller initialization.
+ * @return
+ *      - ESP_OK Success
+ */
+esp_err_t adc_digi_init(void);
+
+/**
+ * @brief ADC digital controller deinitialization.
+ * @return
+ *      - ESP_OK Success
+ */
+esp_err_t adc_digi_deinit(void);
+
+/**
+ * @brief Setting the digital controller.
+ *
+ * @param config Pointer to digital controller paramter. Refer to `adc_digi_config_t`.
+ *
+ * @return
+ *      - ESP_OK Success
+ */
+esp_err_t adc_digi_controller_config(const adc_digi_config_t *config);
 
 #ifdef __cplusplus
 }

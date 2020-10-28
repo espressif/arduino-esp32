@@ -93,6 +93,10 @@
 #define REG_SPI_MEM_BASE(i)     (DR_REG_SPI0_BASE - (i) * 0x1000)
 #define REG_I2C_BASE(i)    (DR_REG_I2C_EXT_BASE + (i) * 0x14000 )
 
+//Convenient way to replace the register ops when ulp riscv projects
+//consume this file
+#ifndef ULP_RISCV_REGISTER_OPS
+
 //Registers Operation {{
 #define ETS_UNCACHED_ADDR(addr) (addr)
 #define ETS_CACHED_ADDR(addr) (addr)
@@ -229,6 +233,7 @@
 
 #endif /* !__ASSEMBLER__ */
 //}}
+#endif /* !ULP_RISCV_REGISTER_OPS */
 
 //Periheral Clock {{
 #define  APB_CLK_FREQ_ROM                            ( 40*1000000 )
@@ -264,6 +269,8 @@
 #define SOC_RTC_DATA_HIGH 0x50002000
 #define SOC_EXTRAM_DATA_LOW 0x3F500000
 #define SOC_EXTRAM_DATA_HIGH 0x3FF80000
+
+#define SOC_EXTRAM_DATA_SIZE (SOC_EXTRAM_DATA_HIGH - SOC_EXTRAM_DATA_LOW)
 
 //First and last words of the D/IRAM region, for both the DRAM address as well as the IRAM alias.
 #define SOC_DIRAM_IRAM_LOW    0x40020000

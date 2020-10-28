@@ -29,7 +29,7 @@
 #include "esp32-hal.h"
 
 #include "esp32-hal-tinyusb.h"
-#include "usb_persist.h"
+#include "esp32s2/rom/usb/usb_persist.h"
 
 typedef char tusb_str_t[127];
 
@@ -309,6 +309,8 @@ __attribute__ ((weak)) int32_t tud_msc_scsi_cb (uint8_t lun, uint8_t const scsi_
 /*
  * Private API
  * */
+static bool usb_persist_enabled = false;
+static restart_type_t usb_persist_mode = RESTART_NO_PERSIST;
 
 static bool tinyusb_reserve_in_endpoint(uint8_t endpoint){
     if(endpoint > 6 || (tinyusb_endpoints.in & BIT(endpoint)) != 0){
@@ -381,7 +383,7 @@ static bool tinyusb_load_enabled_interfaces(){
     };
     memcpy(tinyusb_config_descriptor, descriptor, TUD_CONFIG_DESC_LEN);
     if ((tinyusb_loaded_interfaces_mask == (BIT(USB_INTERFACE_CDC) | BIT(USB_INTERFACE_DFU))) || (tinyusb_loaded_interfaces_mask == BIT(USB_INTERFACE_CDC))) {
-        usb_persist_set_enable(true);
+        usb_persist_enabled = true;
         log_d("USB Persist enabled");
     }
     log_d("Load Done: if_num: %u, descr_len: %u, if_mask: 0x%x", tinyusb_loaded_interfaces_num, tinyusb_config_descriptor_len, tinyusb_loaded_interfaces_mask);
@@ -451,6 +453,34 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
     tinyusb_device_descriptor.bDeviceProtocol = config->usb_protocol;
 }
 
+static void IRAM_ATTR usb_persist_shutdown_handler(void)
+{
+    if(usb_persist_mode != RESTART_NO_PERSIST){
+        if (usb_persist_enabled) {
+            REG_SET_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
+            REG_SET_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
+        }
+        if (usb_persist_mode == RESTART_BOOTLOADER) {
+            //USB CDC Download
+            if (usb_persist_enabled) {
+                USB_WRAP.date.val = USBDC_PERSIST_ENA;
+            }
+            REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+            periph_module_disable(PERIPH_TIMG1_MODULE);
+        } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
+            //DFU Download
+            USB_WRAP.date.val = USBDC_BOOT_DFU;
+            REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+            periph_module_disable(PERIPH_TIMG0_MODULE);
+            periph_module_disable(PERIPH_TIMG1_MODULE);
+        } else if (usb_persist_enabled) {
+            //USB Persist reboot
+            USB_WRAP.date.val = USBDC_PERSIST_ENA;
+        }
+        SET_PERI_REG_MASK(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_SW_PROCPU_RST);
+    }
+}
+
 // USB Device Driver task
 // This top level thread processes all usb events and invokes callbacks
 static void usb_device_task(void *param) {
@@ -488,6 +518,24 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         initialized = false;
         return ESP_FAIL;
     }
+
+    bool usb_did_persist = (USB_WRAP.date.val == USBDC_PERSIST_ENA);
+
+    if(usb_did_persist && usb_persist_enabled){
+        // Enable USB/IO_MUX peripheral reset, if coming from persistent reboot
+        REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
+        REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
+    } else {
+        // Reset USB module
+        periph_module_reset(PERIPH_USB_MODULE);
+        periph_module_enable(PERIPH_USB_MODULE);
+    }
+
+    if (usb_persist_enabled && esp_register_shutdown_handler(usb_persist_shutdown_handler) != ESP_OK) {
+        initialized = false;
+        return ESP_FAIL;
+    }
+
     tinyusb_config_t tusb_cfg = {
             .external_phy = false // In the most cases you need to use a `false` value
     };
@@ -496,8 +544,18 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         initialized = false;
         return err;
     }
-    xTaskCreate(usb_device_task, "usbd", 4096, NULL, 24, NULL);
+    xTaskCreate(usb_device_task, "usbd", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
     return err;
+}
+
+void usb_persist_restart(restart_type_t mode)
+{
+    if (usb_persist_enabled && mode < RESTART_TYPE_MAX) {
+        usb_persist_mode = mode;
+        esp_restart();
+    } else {
+        log_e("Persistence is not enabled");
+    }
 }
 
 uint8_t tinyusb_add_string_descriptor(const char * str){

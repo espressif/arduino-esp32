@@ -111,6 +111,8 @@ PROVIDE ( hci_fc_env = 0x3ffb9340 );
 PROVIDE ( jd_decomp = 0x400613e8 );
 PROVIDE ( jd_prepare = 0x40060fa8 );
 PROVIDE ( ke_env = 0x3ffb93cc );
+PROVIDE ( ke_handler_search = 0x4001a430 );
+PROVIDE ( ke_task_env = 0x3ffb81d4 );
 PROVIDE ( lb_default_handler = 0x3ff982b8 );
 PROVIDE ( lb_default_state_tab_p_get = 0x4001c198 );
 PROVIDE ( lb_env = 0x3ffb9424 );
@@ -663,6 +665,7 @@ PROVIDE ( ld_acl_sniff_frm_cbk = 0x4003482c );
 PROVIDE ( ld_inq_end = 0x4003ab48 );
 PROVIDE ( ld_inq_sched = 0x4003aba4 );
 PROVIDE ( ld_inq_frm_cbk = 0x4003ae4c );
+PROVIDE ( ld_pscan_frm_cbk = 0x4003ebe4 );
 PROVIDE ( r_ld_acl_active_hop_types_get = 0x40036e10 );
 PROVIDE ( r_ld_acl_afh_confirm = 0x40036d40 );
 PROVIDE ( r_ld_acl_afh_prepare = 0x40036c84 );
@@ -1363,6 +1366,8 @@ PROVIDE ( g_rom_spiflash_chip = 0x3ffae270 );
 PROVIDE ( hci_le_rd_rem_used_feats_cmd_handler = 0x400417b4 );
 PROVIDE ( llcp_length_req_handler = 0x40043808 );
 PROVIDE ( llcp_unknown_rsp_handler = 0x40043ba8 );
+PROVIDE ( llcp_channel_map_req_handler = 0x4004291c );
+PROVIDE ( llcp_con_up_req_handler = 0x400426f0 );
 /*
 These functions are xtos-related (or call xtos-related functions) and do not play well
 with multicore FreeRTOS. Where needed, we provide alternatives that are multicore
