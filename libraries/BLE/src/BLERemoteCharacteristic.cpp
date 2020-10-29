@@ -468,7 +468,7 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		if(!notifications) val[0] = 0x02;
 		BLERemoteDescriptor* desc = getDescriptor(BLEUUID((uint16_t)0x2902));
 		if (desc != nullptr)
-			desc->writeValue(val, 2);
+			desc->writeValue(val, 2, true);
 	} // End Register
 	else {   // If we weren't passed a callback function, then this is an unregistration.
 		esp_err_t errRc = ::esp_ble_gattc_unregister_for_notify(
@@ -484,7 +484,7 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		uint8_t val[] = {0x00, 0x00};
 		BLERemoteDescriptor* desc = getDescriptor((uint16_t)0x2902);
 		if (desc != nullptr)
-			desc->writeValue(val, 2);
+			desc->writeValue(val, 2, true);
 	} // End Unregister
 
 	m_semaphoreRegForNotifyEvt.wait("registerForNotify");
