@@ -237,6 +237,13 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 			break;
 		} // ESP_GATTC_WRITE_CHAR_EVT
 
+		case ESP_GATTC_READ_DESCR_EVT:
+		case ESP_GATTC_WRITE_DESCR_EVT:
+			for (auto &myPair : m_descriptorMap) {
+				myPair.second->gattClientEventHandler(
+					event, gattc_if, evtParam);
+			}
+			break;
 
 		default:
 			break;

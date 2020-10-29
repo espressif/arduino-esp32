@@ -49,6 +49,22 @@ BLEUUID BLERemoteDescriptor::getUUID() {
 	return m_uuid;
 } // getUUID
 
+void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam) {
+	switch(event) {
+		case ESP_GATTC_READ_DESCR_EVT:
+			if (evtParam->read.handle != getHandle())
+				break;
+			m_semaphoreReadDescrEvt.give();
+			break;
+
+		case ESP_GATTC_WRITE_DESCR_EVT:
+			if (evtParam->write.handle != getHandle())
+				break;
+			break;
+		default:
+			break;
+	}
+}
 
 std::string BLERemoteDescriptor::readValue() {
 	log_v(">> readValue: %s", toString().c_str());
