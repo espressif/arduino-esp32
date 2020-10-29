@@ -60,6 +60,7 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
 		case ESP_GATTC_WRITE_DESCR_EVT:
 			if (evtParam->write.handle != getHandle())
 				break;
+			m_semaphoreWriteDescrEvt.give();
 			break;
 		default:
 			break;
@@ -153,6 +154,8 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 		return;
 	}
 
+	m_semaphoreWriteDescrEvt.take("writeValue");
+
 	esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),
@@ -165,6 +168,8 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_write_char_descr: %d", errRc);
 	}
+
+	m_semaphoreWriteDescrEvt.wait("writeValue");
 	log_v("<< writeValue");
 } // writeValue
 

@@ -49,6 +49,7 @@ private:
 	std::string              m_value;                   // Last received value of the descriptor.
 	BLERemoteCharacteristic* m_pRemoteCharacteristic;   // Reference to the Remote characteristic of which this descriptor is associated.
 	FreeRTOS::Semaphore      m_semaphoreReadDescrEvt      = FreeRTOS::Semaphore("ReadDescrEvt");
+	FreeRTOS::Semaphore      m_semaphoreWriteDescrEvt      = FreeRTOS::Semaphore("WriteDescrEvt");
     esp_gatt_auth_req_t      m_auth;
 
 
