@@ -90,6 +90,13 @@
               "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
               "checksum": "SHA-256:9c68c87bb23b1256dc0a1859b515946763e5292dcab4a4159a52fae5618ce861",
               "size": "50655584"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
+              "checksum": "SHA-256:9c68c87bb23b1256dc0a1859b515946763e5292dcab4a4159a52fae5618ce861",
+              "size": "50655584"
             }
           ]
         },
@@ -127,6 +134,13 @@
             },
             {
               "host": "arm-linux-gnueabihf",
+              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
+              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
+              "size": "44762"
+            },
+            {
+              "host": "aarch64-linux-gnu",
               "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
               "archiveFileName": "esptool-2.6.1-linux.tar.gz",
               "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",

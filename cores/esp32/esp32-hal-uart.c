@@ -85,7 +85,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_tout = 1;
         while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL && !xQueueIsQueueFullFromISR(uart->queue)) {
+            if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
         }
@@ -124,21 +124,21 @@ void uartDisableInterrupt(uart_t* uart)
     UART_MUTEX_UNLOCK();
 }
 
-void uartDetachRx(uart_t* uart)
+void uartDetachRx(uart_t* uart, uint8_t rxPin)
 {
     if(uart == NULL) {
         return;
     }
-    pinMatrixInDetach(UART_RXD_IDX(uart->num), false, false);
+    pinMatrixInDetach(rxPin, false, false);
     uartDisableInterrupt(uart);
 }
 
-void uartDetachTx(uart_t* uart)
+void uartDetachTx(uart_t* uart, uint8_t txPin)
 {
     if(uart == NULL) {
         return;
     }
-    pinMatrixOutDetach(UART_TXD_IDX(uart->num), false, false);
+    pinMatrixOutDetach(txPin, false, false);
 }
 
 void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
@@ -226,7 +226,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     return uart;
 }
 
-void uartEnd(uart_t* uart)
+void uartEnd(uart_t* uart, uint8_t txPin, uint8_t rxPin)
 {
     if(uart == NULL) {
         return;
@@ -243,8 +243,8 @@ void uartEnd(uart_t* uart)
 
     UART_MUTEX_UNLOCK();
 
-    uartDetachRx(uart);
-    uartDetachTx(uart);
+    uartDetachRx(uart, rxPin);
+    uartDetachTx(uart, txPin);
 }
 
 size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
@@ -257,12 +257,24 @@ size_t uartResizeRxBuffer(uart_t * uart, size_t new_size) {
         vQueueDelete(uart->queue);
         uart->queue = xQueueCreate(new_size, sizeof(uint8_t));
         if(uart->queue == NULL) {
+            UART_MUTEX_UNLOCK();
             return NULL;
         }
     }
     UART_MUTEX_UNLOCK();
 
     return new_size;
+}
+
+void uartSetRxInvert(uart_t* uart, bool invert)
+{
+    if (uart == NULL)
+        return;
+    
+    if (invert)
+        uart->dev->conf0.rxd_inv = 1;
+    else
+        uart->dev->conf0.rxd_inv = 0;
 }
 
 uint32_t uartAvailable(uart_t* uart)
@@ -285,10 +297,18 @@ void uartRxFifoToQueue(uart_t* uart)
 {
 	uint8_t c;
     UART_MUTEX_LOCK();
-    while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
-        c = uart->dev->fifo.rw_byte;
-        xQueueSend(uart->queue, &c, 0);
-    }
+	//disable interrupts
+	uart->dev->int_ena.val = 0;
+	uart->dev->int_clr.val = 0xffffffff;
+	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+		c = uart->dev->fifo.rw_byte;
+		xQueueSend(uart->queue, &c, 0);
+	}
+	//enable interrupts
+	uart->dev->int_ena.rxfifo_full = 1;
+	uart->dev->int_ena.frm_err = 1;
+	uart->dev->int_ena.rxfifo_tout = 1;
+	uart->dev->int_clr.val = 0xffffffff;
     UART_MUTEX_UNLOCK();
 }
 
@@ -351,7 +371,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
 
 void uartFlush(uart_t* uart)
 {
-    uartFlushTxOnly(uart,false);
+    uartFlushTxOnly(uart,true);
 }
 
 void uartFlushTxOnly(uart_t* uart, bool txOnly)

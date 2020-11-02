@@ -1,5 +1,5 @@
 /* 
-  SPI.h - SPI library for esp8266
+  SPI.h - SPI library for esp32
 
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include "pins_arduino.h"
 #include "esp32-hal-spi.h"
+
+#define SPI_HAS_TRANSACTION
 
 class SPISettings
 {
