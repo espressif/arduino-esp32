@@ -535,7 +535,7 @@ std::string BLERemoteCharacteristic::toString() {
  * @return N/A.
  */
 void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+	writeValue((uint8_t*)newValue.data(), newValue.length(), response);
 } // writeValue
 
 
