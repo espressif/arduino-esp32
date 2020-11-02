@@ -4001,6 +4001,15 @@ esp32cam.upload.speed=460800
 esp32cam.serial.disableDTR=true
 esp32cam.serial.disableRTS=true
 
+esp32cam.build.mcu=esp32
+esp32cam.build.core=esp32
+esp32cam.build.variant=esp32
+esp32cam.build.board=ESP32_DEV
+esp32cam.build.flash_size=4MB
+esp32cam.build.partitions=huge_app
+esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32cam.build.code_debug=0
+
 esp32cam.menu.CPUFreq.240=240MHz (WiFi/BT)
 esp32cam.menu.CPUFreq.240.build.f_cpu=240000000L
 esp32cam.menu.CPUFreq.160=160MHz (WiFi/BT)
@@ -4035,15 +4044,6 @@ esp32cam.menu.FlashFreq.80=80MHz
 esp32cam.menu.FlashFreq.80.build.flash_freq=80m
 esp32cam.menu.FlashFreq.40=40MHz
 esp32cam.menu.FlashFreq.40.build.flash_freq=40m
-
-esp32cam.build.mcu=esp32
-esp32cam.build.core=esp32
-esp32cam.build.variant=esp32
-esp32cam.build.board=ESP32_DEV
-esp32cam.build.flash_size=4MB
-esp32cam.build.partitions=huge_app
-esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-esp32cam.build.code_debug=0
 
 ##############################################################
 
