@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include "esp32-hal.h"
-#include "soc/gpio_caps.h"
+#include "soc/soc_caps.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define NUM_OUPUT_PINS  45
@@ -75,14 +75,14 @@ typedef struct {
     int8_t touch;     /*!< Touch Channel number (-1 if not Touch pin) */
 } esp32_gpioMux_t;
 
-extern const esp32_gpioMux_t esp32_gpioMux[GPIO_PIN_COUNT];
+extern const esp32_gpioMux_t esp32_gpioMux[SOC_GPIO_PIN_COUNT];
 extern const int8_t esp32_adc2gpio[20];
 
-#define digitalPinIsValid(pin)          ((pin) < GPIO_PIN_COUNT && esp32_gpioMux[(pin)].reg)
+#define digitalPinIsValid(pin)          ((pin) < SOC_GPIO_PIN_COUNT && esp32_gpioMux[(pin)].reg)
 #define digitalPinCanOutput(pin)        ((pin) < NUM_OUPUT_PINS && esp32_gpioMux[(pin)].reg)
-#define digitalPinToRtcPin(pin)         (((pin) < GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].rtc:-1)
-#define digitalPinToAnalogChannel(pin)  (((pin) < GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].adc:-1)
-#define digitalPinToTouchChannel(pin)   (((pin) < GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].touch:-1)
+#define digitalPinToRtcPin(pin)         (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].rtc:-1)
+#define digitalPinToAnalogChannel(pin)  (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].adc:-1)
+#define digitalPinToTouchChannel(pin)   (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].touch:-1)
 #define digitalPinToDacChannel(pin)     (((pin) == PIN_DAC1)?0:((pin) == PIN_DAC2)?1:-1)
 
 void pinMode(uint8_t pin, uint8_t mode);
