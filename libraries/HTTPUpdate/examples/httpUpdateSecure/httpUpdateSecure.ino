@@ -108,7 +108,7 @@ void loop() {
 
     t_httpUpdate_return ret = httpUpdate.update(client, "https://server/file.bin");
     // Or:
-    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 443, "file.bin");
+    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 443, "/file.bin");
 
 
     switch (ret) {
