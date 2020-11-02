@@ -35,7 +35,7 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
-    ASFLAGS=["-x", "assembler-with-cpp"],
+    ASFLAGS=["-x", "assembler-with-cpp", "-mlongcalls"],
 
     CFLAGS=[
         "-std=gnu99",

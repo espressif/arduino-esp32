@@ -43,21 +43,38 @@ bool SPIFFSImpl::exists(const char* path)
     return (f == true) && !f.isDirectory();
 }
 
-SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl()))
+SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl())), partitionLabel_(NULL)
 {
 
 }
 
-bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles)
+SPIFFSFS::~SPIFFSFS()
 {
-    if(esp_spiffs_mounted(NULL)){
+    if (partitionLabel_){
+        free(partitionLabel_);
+        partitionLabel_ = NULL;
+    }
+}
+
+bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
+{
+    if (partitionLabel_){
+        free(partitionLabel_);
+        partitionLabel_ = NULL;
+    }
+
+    if (partitionLabel){
+        partitionLabel_ = strdup(partitionLabel);
+    }
+
+    if(esp_spiffs_mounted(partitionLabel_)){
         log_w("SPIFFS Already Mounted!");
         return true;
     }
 
     esp_vfs_spiffs_conf_t conf = {
       .base_path = basePath,
-      .partition_label = NULL,
+      .partition_label = partitionLabel_,
       .max_files = maxOpenFiles,
       .format_if_mount_failed = false
     };
@@ -78,8 +95,8 @@ bool SPIFFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFi
 
 void SPIFFSFS::end()
 {
-    if(esp_spiffs_mounted(NULL)){
-        esp_err_t err = esp_vfs_spiffs_unregister(NULL);
+    if(esp_spiffs_mounted(partitionLabel_)){
+        esp_err_t err = esp_vfs_spiffs_unregister(partitionLabel_);
         if(err){
             log_e("Unmounting SPIFFS failed! Error: %d", err);
             return;
@@ -91,7 +108,7 @@ void SPIFFSFS::end()
 bool SPIFFSFS::format()
 {
     disableCore0WDT();
-    esp_err_t err = esp_spiffs_format(NULL);
+    esp_err_t err = esp_spiffs_format(partitionLabel_);
     enableCore0WDT();
     if(err){
         log_e("Formatting SPIFFS failed! Error: %d", err);
@@ -103,7 +120,7 @@ bool SPIFFSFS::format()
 size_t SPIFFSFS::totalBytes()
 {
     size_t total,used;
-    if(esp_spiffs_info(NULL, &total, &used)){
+    if(esp_spiffs_info(partitionLabel_, &total, &used)){
         return 0;
     }
     return total;
@@ -112,7 +129,7 @@ size_t SPIFFSFS::totalBytes()
 size_t SPIFFSFS::usedBytes()
 {
     size_t total,used;
-    if(esp_spiffs_info(NULL, &total, &used)){
+    if(esp_spiffs_info(partitionLabel_, &total, &used)){
         return 0;
     }
     return used;

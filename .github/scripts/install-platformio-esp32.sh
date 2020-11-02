@@ -12,19 +12,14 @@ echo "Installing Platform ESP32 ..."
 python -m platformio platform install https://github.com/platformio/platform-espressif32.git > /dev/null 2>&1
 
 echo "Replacing the framework version ..."
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	sed 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json" > "platform.json"
-	mv -f "platform.json" "$HOME/.platformio/platforms/espressif32/platform.json"
-else
-	sed -i 's/https:\/\/github\.com\/espressif\/arduino-esp32\.git/*/' "$HOME/.platformio/platforms/espressif32/platform.json"
-fi
+python -c "import json; import os; fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+'); data=json.load(fp); data['packages']['framework-arduinoespressif32']['version'] = '*'; del data['packages']['framework-arduinoespressif32']['owner']; fp.seek(0); fp.truncate(); json.dump(data, fp); fp.close()"
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..."
 	ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
 else
 	echo "Cloning Core Repository ..."
-	git clone https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
+	git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
 fi
 
 echo "PlatformIO for ESP32 has been installed"

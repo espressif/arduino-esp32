@@ -105,7 +105,7 @@ public:
 
     int read(uint8_t * dst, size_t len){
         if(!dst || !len || (_pos == _fill && !fillBuffer())){
-            return -1;
+            return _failed ? -1 : 0;
         }
         size_t a = _fill - _pos;
         if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
@@ -345,6 +345,9 @@ int WiFiClient::read()
     int res = read(&data, 1);
     if(res < 0) {
         return res;
+    }
+    if (res == 0) {  //  No data available.
+        return -1;
     }
     return data;
 }
