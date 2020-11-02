@@ -64,6 +64,7 @@ private:
 	friend class BLEScan;
 
 	void parseAdvertisement(uint8_t* payload, size_t total_len=62);
+	void setPayload(uint8_t* payload, size_t total_len=62);
 	void setAddress(BLEAddress address);
 	void setAdFlag(uint8_t adFlag);
 	void setAdvertizementResult(uint8_t* payload);
