@@ -945,6 +945,14 @@ static void IRAM_ATTR i2c_isr_handler_default(void* arg)
             activeInt &=~I2C_RXFIFO_FULL_INT_ST;
         }
 
+        if(activeInt & I2C_RXFIFO_OVF_INT_ST) {
+            emptyRxFifo(p_i2c);
+            p_i2c->dev->int_clr.rx_fifo_full=1;
+            p_i2c->dev->int_ena.rx_fifo_full=1; //why?
+
+            activeInt &=~I2C_RXFIFO_OVF_INT_ST;
+        }
+
         if (activeInt & I2C_ACK_ERR_INT_ST_M) {//fatal error, abort i2c service
             if (p_i2c->mode == I2C_MASTER) {
                 i2c_update_error_byte_cnt(p_i2c); // calc which byte caused ack Error, check if address or data

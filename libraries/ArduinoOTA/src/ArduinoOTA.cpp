@@ -88,6 +88,17 @@ ArduinoOTAClass& ArduinoOTAClass::setPasswordHash(const char * password) {
     return *this;
 }
 
+ArduinoOTAClass& ArduinoOTAClass::setPartitionLabel(const char * partition_label) {
+    if (!_initialized && !_partition_label.length() && partition_label) {
+        _partition_label = partition_label;
+    }
+    return *this;
+}
+
+String ArduinoOTAClass::getPartitionLabel() {
+    return _partition_label;
+}
+
 ArduinoOTAClass& ArduinoOTAClass::setRebootOnSuccess(bool reboot){
     _rebootOnSuccess = reboot;
     return *this;
@@ -235,7 +246,8 @@ void ArduinoOTAClass::_onRx(){
 }
 
 void ArduinoOTAClass::_runUpdate() {
-    if (!Update.begin(_size, _cmd)) {
+    const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
+    if (!Update.begin(_size, _cmd, -1, LOW, partition_label)) {
 
         log_e("Begin ERROR: %s", Update.errorString());
 
@@ -358,7 +370,7 @@ void ArduinoOTAClass::end() {
 
 void ArduinoOTAClass::handle() {
     if (!_initialized) {
-        return; 
+        return;
     }
     if (_state == OTA_RUNUPDATE) {
         _runUpdate();
