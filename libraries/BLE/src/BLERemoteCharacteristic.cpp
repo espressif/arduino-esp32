@@ -237,6 +237,13 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 			break;
 		} // ESP_GATTC_WRITE_CHAR_EVT
 
+		case ESP_GATTC_READ_DESCR_EVT:
+		case ESP_GATTC_WRITE_DESCR_EVT:
+			for (auto &myPair : m_descriptorMap) {
+				myPair.second->gattClientEventHandler(
+					event, gattc_if, evtParam);
+			}
+			break;
 
 		default:
 			break;
@@ -467,7 +474,8 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		uint8_t val[] = {0x01, 0x00};
 		if(!notifications) val[0] = 0x02;
 		BLERemoteDescriptor* desc = getDescriptor(BLEUUID((uint16_t)0x2902));
-		desc->writeValue(val, 2);
+		if (desc != nullptr)
+			desc->writeValue(val, 2, true);
 	} // End Register
 	else {   // If we weren't passed a callback function, then this is an unregistration.
 		esp_err_t errRc = ::esp_ble_gattc_unregister_for_notify(
@@ -482,7 +490,8 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 
 		uint8_t val[] = {0x00, 0x00};
 		BLERemoteDescriptor* desc = getDescriptor((uint16_t)0x2902);
-		desc->writeValue(val, 2);
+		if (desc != nullptr)
+			desc->writeValue(val, 2, true);
 	} // End Unregister
 
 	m_semaphoreRegForNotifyEvt.wait("registerForNotify");
@@ -533,7 +542,7 @@ std::string BLERemoteCharacteristic::toString() {
  * @return N/A.
  */
 void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+	writeValue((uint8_t*)newValue.data(), newValue.length(), response);
 } // writeValue
 
 

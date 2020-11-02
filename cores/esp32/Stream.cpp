@@ -87,22 +87,22 @@ unsigned long Stream::getTimeout(void) {
 }
 
 // find returns true if the target string is found
-bool Stream::find(const char *target)
+bool  Stream::find(const char *target)
 {
-    return findUntil(target, (char*) "");
+  return findUntil(target, strlen(target), NULL, 0);
 }
 
 // reads data from the stream until the target string of given length is found
 // returns true if target string is found, false if timed out
 bool Stream::find(const char *target, size_t length)
 {
-    return findUntil(target, length, NULL, 0);
+  return findUntil(target, length, NULL, 0);
 }
 
 // as find but search ends if the terminator string is found
-bool Stream::findUntil(const char *target, const char *terminator)
+bool  Stream::findUntil(const char *target, const char *terminator)
 {
-    return findUntil(target, strlen(target), terminator, strlen(terminator));
+  return findUntil(target, strlen(target), terminator, strlen(terminator));
 }
 
 // reads data from the stream until the target string of the given length is found
@@ -110,35 +110,78 @@ bool Stream::findUntil(const char *target, const char *terminator)
 // returns true if target string is found, false if terminated or timed out
 bool Stream::findUntil(const char *target, size_t targetLen, const char *terminator, size_t termLen)
 {
-    size_t index = 0;  // maximum target string length is 64k bytes!
-    size_t termIndex = 0;
-    int c;
+  if (terminator == NULL) {
+    MultiTarget t[1] = {{target, targetLen, 0}};
+    return findMulti(t, 1) == 0 ? true : false;
+  } else {
+    MultiTarget t[2] = {{target, targetLen, 0}, {terminator, termLen, 0}};
+    return findMulti(t, 2) == 0 ? true : false;
+  }
+}
 
-    if(*target == 0) {
-        return true;    // return true if target is a null string
+int Stream::findMulti( struct Stream::MultiTarget *targets, int tCount) {
+  // any zero length target string automatically matches and would make
+  // a mess of the rest of the algorithm.
+  for (struct MultiTarget *t = targets; t < targets+tCount; ++t) {
+    if (t->len <= 0)
+      return t - targets;
+  }
+
+  while (1) {
+    int c = timedRead();
+    if (c < 0)
+      return -1;
+
+    for (struct MultiTarget *t = targets; t < targets+tCount; ++t) {
+      // the simple case is if we match, deal with that first.
+      if (c == t->str[t->index]) {
+        if (++t->index == t->len)
+          return t - targets;
+        else
+          continue;
+      }
+
+      // if not we need to walk back and see if we could have matched further
+      // down the stream (ie '1112' doesn't match the first position in '11112'
+      // but it will match the second position so we can't just reset the current
+      // index to 0 when we find a mismatch.
+      if (t->index == 0)
+        continue;
+
+      int origIndex = t->index;
+      do {
+        --t->index;
+        // first check if current char works against the new current index
+        if (c != t->str[t->index])
+          continue;
+
+        // if it's the only char then we're good, nothing more to check
+        if (t->index == 0) {
+          t->index++;
+          break;
+        }
+
+        // otherwise we need to check the rest of the found string
+        int diff = origIndex - t->index;
+        size_t i;
+        for (i = 0; i < t->index; ++i) {
+          if (t->str[i] != t->str[i + diff])
+            break;
+        }
+
+        // if we successfully got through the previous loop then our current
+        // index is good.
+        if (i == t->index) {
+          t->index++;
+          break;
+        }
+
+        // otherwise we just try the next index
+      } while (t->index);
     }
-    while((c = timedRead()) > 0) {
-
-        if(c != target[index]) {
-            index = 0;    // reset index if any char does not match
-        }
-
-        if(c == target[index]) {
-            //////Serial.print("found "); Serial.write(c); Serial.print("index now"); Serial.println(index+1);
-            if(++index >= targetLen) { // return true if all chars in the target match
-                return true;
-            }
-        }
-
-        if(termLen > 0 && c == terminator[termIndex]) {
-            if(++termIndex >= termLen) {
-                return false;    // return false if terminate string found before target string
-            }
-        } else {
-            termIndex = 0;
-        }
-    }
-    return false;
+  }
+  // unreachable
+  return -1;
 }
 
 // returns the first valid (long) integer value from the current position.
