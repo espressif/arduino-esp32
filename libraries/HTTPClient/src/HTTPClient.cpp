@@ -1186,6 +1186,7 @@ int HTTPClient::handleHeaderResponse()
 
     _transferEncoding = HTTPC_TE_IDENTITY;
     unsigned long lastDataTime = millis();
+    bool firstLine = true;
 
     while(connected()) {
         size_t len = _client->available();
@@ -1197,11 +1198,12 @@ int HTTPClient::handleHeaderResponse()
 
             log_v("RX: '%s'", headerLine.c_str());
 
-            if(headerLine.startsWith("HTTP/1.")) {
-                if(_canReuse) {
+            if(firstLine) {
+                if(_canReuse && headerLine.startsWith("HTTP/1.")) {
                     _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
                 }
-                _returnCode = headerLine.substring(9, headerLine.indexOf(' ', 9)).toInt();
+                int codePos = headerLine.indexOf(' ') + 1;
+                _returnCode = headerLine.substring(codePos, headerLine.indexOf(' ', codePos)).toInt();
             } else if(headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
