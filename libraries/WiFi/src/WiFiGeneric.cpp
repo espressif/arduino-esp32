@@ -574,7 +574,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
  */
 wifi_mode_t WiFiGenericClass::getMode()
 {
-    if(!lowLevelInitDone){
+    if(!lowLevelInitDone || !_esp_wifi_started){
         return WIFI_MODE_NULL;
     }
     wifi_mode_t mode;
@@ -637,6 +637,20 @@ bool WiFiGenericClass::setSleep(bool enable)
         return false;
     }
     return esp_wifi_set_ps(enable?WIFI_PS_MIN_MODEM:WIFI_PS_NONE) == ESP_OK;
+}
+
+/**
+ * control modem sleep when only in STA mode
+ * @param mode wifi_ps_type_t
+ * @return ok
+ */
+bool WiFiGenericClass::setSleep(wifi_ps_type_t mode)
+{
+    if((getMode() & WIFI_MODE_STA) == 0){
+        log_w("STA has not been started");
+        return false;
+    }
+    return esp_wifi_set_ps(mode) == ESP_OK;
 }
 
 /**
@@ -710,13 +724,13 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 {
     ip_addr_t addr;
     aResult = static_cast<uint32_t>(0);
-    waitStatusBits(WIFI_DNS_IDLE_BIT, 5000);
-    clearStatusBits(WIFI_DNS_IDLE_BIT);
+    waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
+    clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
     err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
     if(err == ERR_OK && addr.u_addr.ip4.addr) {
         aResult = addr.u_addr.ip4.addr;
     } else if(err == ERR_INPROGRESS) {
-        waitStatusBits(WIFI_DNS_DONE_BIT, 4000);
+        waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
         clearStatusBits(WIFI_DNS_DONE_BIT);
     }
     setStatusBits(WIFI_DNS_IDLE_BIT);

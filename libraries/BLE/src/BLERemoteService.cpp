@@ -244,7 +244,15 @@ std::map<uint16_t, BLERemoteCharacteristic*>* BLERemoteService::getCharacteristi
  * @brief This function is designed to get characteristics map when we have multiple characteristics with the same UUID
  */
 void BLERemoteService::getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap) {
-	pCharacteristicMap = &m_characteristicMapByHandle;
+	log_v(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
+	// If is possible that we have not read the characteristics associated with the service so do that
+	// now.  The request to retrieve the characteristics by calling "retrieveCharacteristics" is a blocking
+	// call and does not return until all the characteristics are available.
+	if (!m_haveCharacteristics) {
+		retrieveCharacteristics();
+	}
+	log_v("<< getCharacteristics() for service: %s", getUUID().toString().c_str());
+	*pCharacteristicMap = m_characteristicMapByHandle;
 }  // Get the characteristics map.
 
 /**
@@ -302,13 +310,10 @@ std::string BLERemoteService::getValue(BLEUUID characteristicUuid) {
  * @return N/A.
  */
 void BLERemoteService::removeCharacteristics() {
-	for (auto &myPair : m_characteristicMap) {
-	   delete myPair.second;
-	   //m_characteristicMap.erase(myPair.first);  // Should be no need to delete as it will be deleted by the clear
-	}
 	m_characteristicMap.clear();   // Clear the map
 	for (auto &myPair : m_characteristicMapByHandle) {
 	   delete myPair.second;
+	   // delete the characteristics only once
 	}
 	m_characteristicMapByHandle.clear();   // Clear the map
 } // removeCharacteristics
