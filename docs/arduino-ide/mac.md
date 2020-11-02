@@ -7,9 +7,9 @@ Installation instructions for Mac OS
   ```bash
   mkdir -p ~/Documents/Arduino/hardware/espressif && \
   cd ~/Documents/Arduino/hardware/espressif && \
-  git clone https://github.com/espressif/arduino-esp32.git esp32 && \
+  git clone https://github.com/espressif/arduino-esp32.git esp32 --depth 1 && \
   cd esp32 && \
-  git submodule update --init --recursive && \
+  git submodule update --init --recursive --depth 1 && \
   cd tools && \
   python get.py 
   ```
