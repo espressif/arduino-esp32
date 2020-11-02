@@ -80,12 +80,16 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
         if(timeout <= 0){
-            timeout = 30000;
+            timeout = 30000; // Milli seconds.
         }
-        lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-        lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-        lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable));
-        lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable));
+        timeval so_timeout = { .tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000 };
+
+#define ROE(x,msg) { if (((x)<0)) { log_e("LWIP Socket config of " msg " failed."); return -1; }}
+        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &so_timeout, sizeof(so_timeout)),"SO_RCVTIMEO");
+        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &so_timeout, sizeof(so_timeout)),"SO_SNDTIMEO");
+
+        ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY");
+        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
     } else {
         log_e("Connect to Server failed!");
         return -1;
@@ -122,6 +126,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
         //mbedtls_ssl_conf_verify(&ssl_client->ssl_ctx, my_verify, NULL );
         if (ret < 0) {
+		// free the ca_cert in the case parse failed, otherwise, the old ca_cert still in the heap memory, that lead to "out of memory" crash.
+		mbedtls_x509_crt_free(&ssl_client->ca_cert);
             return handle_error(ret);
         }
     } else if (pskIdent != NULL && psKey != NULL) {
@@ -167,6 +173,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
         if (ret < 0) {
+		// free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
+		mbedtls_x509_crt_free(&ssl_client->client_cert);
             return handle_error(ret);
         }
 
@@ -276,23 +284,20 @@ int data_to_read(sslclient_context *ssl_client)
     return res;
 }
 
-
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t len)
 {
-    log_v("Writing HTTP request...");  //for low level debug
+    log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
-    while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-            return handle_error(ret);
-        }
+    if ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0){
+        log_v("Handling error %d", ret); //for low level debug
+        return handle_error(ret);
+    } else{
+        log_v("Returning with %d bytes written", ret); //for low level debug
     }
 
-    len = ret;
-    //log_v("%d bytes written", len);  //for low level debug
     return ret;
 }
-
 
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length)
 {

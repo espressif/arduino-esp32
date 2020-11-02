@@ -30,7 +30,7 @@ public:
 	void setPartialServices(BLEUUID uuid);
 	void setServiceData(BLEUUID uuid, std::string data);
 	void setShortName(std::string name);
-	void        addData(std::string data);  // Add data to the payload.
+	void addData(std::string data);         // Add data to the payload.
 	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
@@ -68,12 +68,13 @@ public:
 
 private:
 	esp_ble_adv_data_t   m_advData;
+	esp_ble_adv_data_t   m_scanRespData; // Used for configuration of scan response data when m_scanResp is true
 	esp_ble_adv_params_t m_advParams;
 	std::vector<BLEUUID> m_serviceUUIDs;
 	bool                 m_customAdvData = false;  // Are we using custom advertising data?
 	bool                 m_customScanResponseData = false;  // Are we using custom scan response data?
 	FreeRTOS::Semaphore  m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
-	bool				m_scanResp = true;
+	bool                 m_scanResp = true;
 
 };
 #endif /* CONFIG_BT_ENABLED */

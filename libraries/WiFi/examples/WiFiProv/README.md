@@ -24,13 +24,13 @@ A function with following signature
 
 ## WiFi.beginProvision()
 
-WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
+WiFi.beginProvision(void ( * scheme_cb)(), wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);
 
 #### Parameters passed
 
-* prov_scheme : choose the mode of transfer
-    * WIFI_PROV_SCHEME_BLE - Using BLE
-    * WIFI_PROV_SCHEME_SOFTAP - Using SoftAP
+*  function pointer : choose the mode of transfer
+    * provSchemeBLE - Using BLE
+    * provSchemeSoftAP - Using SoftAP
         
 * security : choose security type
     * WIFI_PROV_SECURITY_1 - It allows secure communication which consists of secure handshake using key exchange and proof of possession (pop) and encryption/decryption of messages.
@@ -48,7 +48,7 @@ WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_
 
 * pop : It is the string that is used to provide the authentication.
 
-* service_name : Specify service name for the device, if it is not specified then default chosen name via SoftAP is WIFI_XXX and via BLE is BLE_XXX where XXX are the last 3 bytes of the MAC address. 
+* service_name : Specify service name for the device, if it is not specified then default chosen name is PROV_XXX where XXX are the last 3 bytes of the MAC address.  
 
 * service_key : Specify service key, if chosen mode of provisioning is BLE then service_key is always NULL
 
@@ -63,7 +63,7 @@ WiFi.beginProvision(scheme prov_scheme, wifi_prov_scheme_event_handler_t scheme_
     * scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
     * security = WIFI_PROV_SECURITY_1
     * pop = "abcd1234"
-    * service_name = "WiFi_XXX"
+    * service_name = "PROV_XXX"
     * service_key = NULL
     * uuid = NULL
 
@@ -79,7 +79,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/provis
 
 ```
 [I][WiFiProv.cpp:117] beginProvision(): Starting AP using SOFTAP
- service_name : WIFI_XXX
+ service_name : PROV_XXX
  password : 123456789
  pop : abcd1234
 
@@ -100,7 +100,7 @@ Provisioning Ends
 
 ```
 [I][WiFiProv.cpp:115] beginProvision(): Starting AP using BLE
- service_name : BLE_XXX
+ service_name : PROV_XXX
  pop : abcd1234
 
 Provisioning started
@@ -119,8 +119,8 @@ Provisioning Ends
 ## Credentials are available on device
 
 ```
-[I][WiFiProv.cpp:125] beginProvision(): Aleardy Provisioned, starting Wi-Fi STA
-[I][WiFiProv.cpp:126] beginProvision(): CONNECTING ACCESS POINT CREDENTIALS : 
-[I][WiFiProv.cpp:126] beginProvision(): SSID : GIONEE M2
-
+[I][WiFiProv.cpp:146] beginProvision(): Aleardy Provisioned, starting Wi-Fi STA
+[I][WiFiProv.cpp:150] beginProvision(): SSID : Wce*****
+[I][WiFiProv.cpp:152] beginProvision(): CONNECTING TO THE ACCESS POINT : 
+Connected IP address : 192.168.43.120
 ```
