@@ -48,16 +48,22 @@ else
 	export ARDUINO_USR_PATH="$HOME/Arduino"
 fi
 
+# Updated as of Nov 3rd 2020
+ARDUINO_IDE_URL="https://github.com/espressif/arduino-esp32/releases/download/1.0.4/arduino-nightly-"
+
+# Currently not working
+#ARDUINO_IDE_URL="https://www.arduino.cc/download.php?f=/arduino-nightly-"
+
 if [ ! -d "$ARDUINO_IDE_PATH" ]; then
 	echo "Installing Arduino IDE on $OS_NAME ..."
-	echo "Downloading 'arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT' ..."
+	echo "Downloading '$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT' ..."
 	if [ "$OS_IS_LINUX" == "1" ]; then
-		wget -O "arduino.$ARCHIVE_FORMAT" "https://www.arduino.cc/download.php?f=/arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
+		wget -O "arduino.$ARCHIVE_FORMAT" "$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
 		echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
 		tar xf "arduino.$ARCHIVE_FORMAT" > /dev/null
 		mv arduino-nightly "$ARDUINO_IDE_PATH"
 	else
-		curl -o "arduino.$ARCHIVE_FORMAT" -L "https://www.arduino.cc/download.php?f=/arduino-nightly-$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
+		curl -o "arduino.$ARCHIVE_FORMAT" -L "$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
 		echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
 		unzip "arduino.$ARCHIVE_FORMAT" > /dev/null
 		if [ "$OS_IS_MACOS" == "1" ]; then
