@@ -43,7 +43,7 @@ class UpdateClass {
       Call this to check the space needed for the update
       Will return false if there is not enough space
     */
-    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, int ledPin = -1, uint8_t ledOn = LOW);
+    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, int ledPin = -1, uint8_t ledOn = LOW, const char *label = NULL);
 
     /*
       Writes a buffer to the flash and increments the address

@@ -73,7 +73,7 @@
     between BULL S.A. and INRIA).
 
     This software is available with usual "research" terms
-    with the aim of retain credits of the software. 
+    with the aim of retain credits of the software.
     Permission to use, copy, modify and distribute this software for any
     purpose and without fee is hereby granted, provided that the above
     copyright notice and this permission notice appear in all copies,

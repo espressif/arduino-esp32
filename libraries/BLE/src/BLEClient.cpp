@@ -105,6 +105,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
@@ -122,6 +123,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
@@ -181,10 +183,10 @@ void BLEClient::gattClientEventHandler(
 				if (evtParam->disconnect.conn_id != getConnId()) break;
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
-				m_isConnected = false;
-				if (m_pClientCallbacks != nullptr) {
+				if (m_isConnected && m_pClientCallbacks != nullptr) {
 					m_pClientCallbacks->onDisconnect(this);
 				}
+				m_isConnected = false;
 				esp_ble_gattc_app_unregister(m_gattc_if);
 				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
@@ -203,11 +205,13 @@ void BLEClient::gattClientEventHandler(
 		//
 		case ESP_GATTC_OPEN_EVT: {
 			m_conn_id = evtParam->open.conn_id;
-			if (m_pClientCallbacks != nullptr) {
-				m_pClientCallbacks->onConnect(this);
-			}
 			if (evtParam->open.status == ESP_GATT_OK) {
 				m_isConnected = true;   // Flag us as connected.
+				if (m_pClientCallbacks != nullptr) {
+					m_pClientCallbacks->onConnect(this);
+				}
+			} else {
+				log_e("Failed to connect, status=%s", GeneralUtils::errorToString(evtParam->open.status));
 			}
 			m_semaphoreOpenEvt.give(evtParam->open.status);
 			break;
@@ -237,7 +241,7 @@ void BLEClient::gattClientEventHandler(
 
 		case ESP_GATTC_CONNECT_EVT: {
 			if (evtParam->connect.conn_id != getConnId()) break;
-			BLEDevice::updatePeerDevice(this, true, m_gattc_if);
+			BLEDevice::updatePeerDevice(this, true, m_appId);
 			esp_err_t errRc = esp_ble_gattc_send_mtu_req(gattc_if, evtParam->connect.conn_id);
 			if (errRc != ESP_OK) {
 				log_e("esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));

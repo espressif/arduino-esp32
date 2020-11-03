@@ -104,7 +104,7 @@ bool UpdateClass::rollBack(){
     return _partitionIsBootable(partition) && !esp_ota_set_boot_partition(partition);
 }
 
-bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
+bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
     if(_size > 0){
         log_w("already running");
         return false;
@@ -132,7 +132,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
         log_d("OTA Partition: %s", _partition->label);
     }
     else if (command == U_SPIFFS) {
-        _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+        _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, label);
         if(!_partition){
             _error = UPDATE_ERROR_NO_PARTITION;
             return false;
@@ -323,6 +323,8 @@ size_t UpdateClass::write(uint8_t *data, size_t len) {
 size_t UpdateClass::writeStream(Stream &data) {
     size_t written = 0;
     size_t toRead = 0;
+    int timeout_failures = 0;
+
     if(hasError() || !isRunning())
         return 0;
 
@@ -344,15 +346,24 @@ size_t UpdateClass::writeStream(Stream &data) {
             bytesToRead = remaining();
         }
 
-        toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
-        if(toRead == 0) { //Timeout
-            delay(100);
-            toRead = data.readBytes(_buffer + _bufferLen, bytesToRead);
-            if(toRead == 0) { //Timeout
-                _abort(UPDATE_ERROR_STREAM);
-                return written;
+        /* 
+        Init read&timeout counters and try to read, if read failed, increase counter,
+        wait 100ms and try to read again. If counter > 300 (30 sec), give up/abort
+        */
+        toRead = 0;
+        timeout_failures = 0;
+        while(!toRead) {
+            toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
+            if(toRead == 0) {
+                timeout_failures++;
+                if (timeout_failures >= 300) {
+                    _abort(UPDATE_ERROR_STREAM);
+                    return written;
+                }
+                delay(100);
             }
         }
+
         if(_ledPin != -1) {
             digitalWrite(_ledPin, !_ledOn); // Switch LED off
         }

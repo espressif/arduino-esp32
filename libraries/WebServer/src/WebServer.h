@@ -130,6 +130,7 @@ public:
   void setContentLength(const size_t contentLength);
   void sendHeader(const String& name, const String& value, bool first = false);
   void sendContent(const String& content);
+  void sendContent(const char* content, size_t contentLength);
   void sendContent_P(PGM_P content);
   void sendContent_P(PGM_P content, size_t size);
 
