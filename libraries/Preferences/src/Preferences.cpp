@@ -280,24 +280,28 @@ size_t Preferences::putBytes(const char* key, const void* value, size_t len){
     return len;
 }
 
-bool Preferences::isKey(const char* key) {
+PreferenceType Preferences::getType(const char* key) {
     if(!_started || !key){
-        return false;
+        return PT_INVALID;
     }
     int8_t mt1; uint8_t mt2; int16_t mt3; uint16_t mt4;
     int32_t mt5; uint32_t mt6; int64_t mt7; uint64_t mt8;
     size_t len = 0;
-    if(nvs_get_i8(_handle, key, &mt1) == ESP_OK) return true;
-    if(nvs_get_u8(_handle, key, &mt2) == ESP_OK) return true;
-    if(nvs_get_i16(_handle, key, &mt3) == ESP_OK) return true;
-    if(nvs_get_u16(_handle, key, &mt4) == ESP_OK) return true;
-    if(nvs_get_i32(_handle, key, &mt5) == ESP_OK) return true;
-    if(nvs_get_u32(_handle, key, &mt6) == ESP_OK) return true;
-    if(nvs_get_i64(_handle, key, &mt7) == ESP_OK) return true;
-    if(nvs_get_u64(_handle, key, &mt8) == ESP_OK) return true;
-    if(nvs_get_str(_handle, key, NULL, &len) == ESP_OK) return true;
-    if(nvs_get_blob(_handle, key, NULL, &len) == ESP_OK) return true;
-    return false;
+    if(nvs_get_i8(_handle, key, &mt1) == ESP_OK) return PT_I8;
+    if(nvs_get_u8(_handle, key, &mt2) == ESP_OK) return PT_U8;
+    if(nvs_get_i16(_handle, key, &mt3) == ESP_OK) return PT_I16;
+    if(nvs_get_u16(_handle, key, &mt4) == ESP_OK) return PT_U16;
+    if(nvs_get_i32(_handle, key, &mt5) == ESP_OK) return PT_I32;
+    if(nvs_get_u32(_handle, key, &mt6) == ESP_OK) return PT_U32;
+    if(nvs_get_i64(_handle, key, &mt7) == ESP_OK) return PT_I64;
+    if(nvs_get_u64(_handle, key, &mt8) == ESP_OK) return PT_U64;
+    if(nvs_get_str(_handle, key, NULL, &len) == ESP_OK) return PT_STR;
+    if(nvs_get_blob(_handle, key, NULL, &len) == ESP_OK) return PT_BLOB;
+    return PT_INVALID;
+}
+
+bool Preferences::isKey(const char* key) {
+    return getType(key) != PT_INVALID;
 }
 
 /*
