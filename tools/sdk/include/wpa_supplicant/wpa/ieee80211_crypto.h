@@ -199,12 +199,12 @@ ieee80211_crypto_enmic(struct ieee80211vap *vap,
 }
 #endif //0000
 
-/*
+/* 
  * Setup crypto support for a device/shared instance.
  */
 void ieee80211_crypto_attach(struct ieee80211com *ic);
 
-/*
+/* 
  * Reset key state to an unused state.  The crypto
  * key allocation mechanism insures other state (e.g.
  * key data) is properly setup before a key is used.

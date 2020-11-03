@@ -76,7 +76,7 @@
 
 #define IPCP_VJ_COMP 0x002d	/* current value for VJ compression option*/
 #define IPCP_VJ_COMP_OLD 0x0037	/* "old" (i.e, broken) value for VJ */
-				/* compression option*/
+				/* compression option*/ 
 #endif /* VJ_SUPPORT */
 
 typedef struct ipcp_options {

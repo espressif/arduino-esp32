@@ -34,7 +34,7 @@
 #define XTPERF_CNT_DCACHE_MISSES         0x8006  /* DCache misses penalty in cycles */
 
 #define XTPERF_CNT_CYCLES         0  /* Count cycles */
-#define XTPERF_CNT_OVERFLOW       1  /* Overflow of counter n-1 (assuming this is counter n) */
+#define XTPERF_CNT_OVERFLOW       1  /* Overflow of counter n-1 (assuming this is counter n) */  
 #define XTPERF_CNT_INSN           2  /* Successfully completed instructions */
 #define XTPERF_CNT_D_STALL        3  /* Data-related GlobalStall cycles */
 #define XTPERF_CNT_I_STALL        4  /* Instruction-related and other GlobalStall cycles */
@@ -67,18 +67,18 @@
 #define XTPERF_MASK_COMMITTED_INSN               0x0001
 
 /* XTPERF_CNT_BRANCH_PENALTY selector mask */
-
+ 
 #define XTPERF_MASK_BRANCH_PENALTY               0x0001
 
 /* XTPERF_CNT_PIPELINE_INTERLOCKS selector mask */
 
 #define XTPERF_MASK_PIPELINE_INTERLOCKS          0x0001
 
-/* XTPERF_CNT_ICACHE_MISSES selector mask */
+/* XTPERF_CNT_ICACHE_MISSES selector mask */ 
 
 #define XTPERF_MASK_ICACHE_MISSES                0x0001
 
-/* XTPERF_CNT_DCACHE_MISSES selector mask */
+/* XTPERF_CNT_DCACHE_MISSES selector mask */ 
 
 #define XTPERF_MASK_DCACHE_MISSES                0x0001
 

@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-/* Macros to determine that newlib is being used.  Put in this header to
+/* Macros to determine that newlib is being used.  Put in this header to 
  * be similar to where glibc stores its version of these macros.
  */
 #define __NEWLIB__  		2
@@ -140,7 +140,7 @@ extern "C" {
 #define _POSIX_REGEXP				     1
 #define _POSIX_SAVED_IDS			     1
 #define _POSIX_SEMAPHORES			200112L
-#define _POSIX_SHARED_MEMORY_OBJECTS		200112L
+#define _POSIX_SHARED_MEMORY_OBJECTS		200112L 
 #define _POSIX_SHELL				     1
 /* #define _POSIX_SPAWN				    -1 */
 #define _POSIX_SPIN_LOCKS			    200112L
@@ -223,7 +223,7 @@ extern "C" {
  * Allow for _XOPEN_SOURCE to be empty (from the earliest form of it, before it
  * was required to have specific values).
  */
-#if !defined(_POSIX_C_SOURCE)  &&  defined(_XOPEN_SOURCE)
+#if !defined(_POSIX_C_SOURCE)  &&  defined(_XOPEN_SOURCE) 
   #if (_XOPEN_SOURCE - 0) == 700	/* POSIX.1-2008 */
     #define _POSIX_C_SOURCE       200809L
    #elif (_XOPEN_SOURCE - 0) == 600	/* POSIX.1-2001 or 2004 */

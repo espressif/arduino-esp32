@@ -95,7 +95,7 @@ double complex csqrt(double complex);
 float complex csqrtf(float complex);
 
 /* 7.3.9 Manipulation functions */
-/* 7.3.9.1 The carg functions */
+/* 7.3.9.1 The carg functions */ 
 double carg(double complex);
 float cargf(float complex);
 
