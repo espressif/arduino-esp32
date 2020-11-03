@@ -54,6 +54,11 @@ set(LIBRARY_SRCS
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
+  libraries/RainMaker/src/RMaker.cpp
+  libraries/RainMaker/src/RMakerNode.cpp
+  libraries/RainMaker/src/RMakerParam.cpp
+  libraries/RainMaker/src/RMakerDevice.cpp
+  libraries/RainMaker/src/RMakerType.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -132,6 +137,7 @@ set(includedirs
   libraries/HTTPUpdate/src
   libraries/NetBIOS/src
   libraries/Preferences/src
+  libraries/RainMaker/src
   libraries/SD_MMC/src
   libraries/SD/src
   libraries/SimpleBLE/src

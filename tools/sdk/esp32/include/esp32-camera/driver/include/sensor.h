@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define NT99141_PID     (0x14)
 #define OV9650_PID     (0x96)
 #define OV7725_PID     (0x77)
 #define OV2640_PID     (0x26)
