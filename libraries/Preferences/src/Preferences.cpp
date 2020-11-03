@@ -281,7 +281,7 @@ size_t Preferences::putBytes(const char* key, const void* value, size_t len){
 }
 
 PreferenceType Preferences::getType(const char* key) {
-    if(!_started || !key){
+    if(!_started || !key || strlen(key)>15){
         return PT_INVALID;
     }
     int8_t mt1; uint8_t mt2; int16_t mt3; uint16_t mt4;
