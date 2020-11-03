@@ -16,6 +16,10 @@
 
 #include "Arduino.h"
 
+typedef enum {
+    PT_I8, PT_U8, PT_I16, PT_U16, PT_I32, PT_U32, PT_I64, PT_U64, PT_STR, PT_BLOB, PT_INVALID
+} PreferenceType;
+
 class Preferences {
     protected:
         uint32_t _handle;
@@ -49,6 +53,7 @@ class Preferences {
         size_t putBytes(const char* key, const void* value, size_t len);
 
         bool isKey(const char* key);
+        PreferenceType getType(const char* key);
         int8_t getChar(const char* key, int8_t defaultValue = 0);
         uint8_t getUChar(const char* key, uint8_t defaultValue = 0);
         int16_t getShort(const char* key, int16_t defaultValue = 0);
