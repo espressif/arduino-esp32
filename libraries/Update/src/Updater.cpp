@@ -70,6 +70,7 @@ UpdateClass::UpdateClass()
 , _size(0)
 , _progress_callback(NULL)
 , _progress(0)
+, _paroffset(0)
 , _command(U_FLASH)
 , _partition(NULL)
 {
@@ -137,9 +138,14 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
     }
     else if (command == U_SPIFFS) {
         _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+        _paroffset = 0;
         if(!_partition){
-            _error = UPDATE_ERROR_NO_PARTITION;
-            return false;
+            _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, NULL);
+            _paroffset = 0x1000;  //Offset for ffat, assuming size is already corrected
+            if(!_partition){
+               _error = UPDATE_ERROR_NO_PARTITION;
+               return false;
+            }
         }
     }
     else {
@@ -192,11 +198,14 @@ bool UpdateClass::_writeBuffer(){
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
+
+    if(_command == U_FLASH) _paroffset = 0; //ffat correction
+
+    if(!ESP.flashEraseSector((_partition->address + _paroffset + _progress)/SPI_FLASH_SEC_SIZE)){  //ffat correction
         _abort(UPDATE_ERROR_ERASE);
         return false;
     }
-    if (!ESP.flashWrite(_partition->address + _progress, (uint32_t*)_buffer, _bufferLen)) {
+    if (!ESP.flashWrite(_partition->address + _paroffset + _progress, (uint32_t*)_buffer, _bufferLen)) {  //ffat correction
         _abort(UPDATE_ERROR_WRITE);
         return false;
     }
