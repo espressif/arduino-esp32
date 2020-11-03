@@ -34,35 +34,40 @@ extern "C"
 
     typedef enum
     {
-        FAST = 0,
-        NORMAL = 1,
+        FAST = 0,            /*!< fast resize type */         
+        NORMAL = 1,          /*!< normal resize type */ 
     } mtmn_resize_type;
 
     typedef struct
     {
-        float score;          /// score threshold for filter candidates by score
-        float nms;            /// nms threshold for nms process
-        int candidate_number; /// candidate number limitation for each net
+        float score;          /*!< score threshold for filter candidates by score */
+        float nms;            /*!< nms threshold for nms process */
+        int candidate_number; /*!< candidate number limitation for each net */
     } threshold_config_t;
 
     typedef struct
     {
-        int w;                        /// net width
-        int h;                        /// net height
-        threshold_config_t threshold; /// threshold of net
+        int w;                        /*!< net width */
+        int h;                        /*!< net height */
+        threshold_config_t threshold; /*!< threshold of net */
     } net_config_t;
 
     typedef struct
     {
-        float min_face;                 /// The minimum size of a detectable face
-        float pyramid;                  /// The scale of the gradient scaling for the input images
-        int pyramid_times;              /// The pyramid resizing times
-        threshold_config_t p_threshold; /// The thresholds for P-Net. For details, see the definition of threshold_config_t
-        threshold_config_t r_threshold; /// The thresholds for R-Net. For details, see the definition of threshold_config_t
-        threshold_config_t o_threshold; /// The thresholds for O-Net. For details, see the definition of threshold_config_t
-        mtmn_resize_type type;          /// The image resize type. 'pyramid' will lose efficacy, when 'type'==FAST.
+        float min_face;                 /*!< The minimum size of a detectable face */
+        float pyramid;                  /*!< The scale of the gradient scaling for the input images */
+        int pyramid_times;              /*!< The pyramid resizing times */
+        threshold_config_t p_threshold; /*!< The thresholds for P-Net. For details, see the definition of threshold_config_t */
+        threshold_config_t r_threshold; /*!< The thresholds for R-Net. For details, see the definition of threshold_config_t */
+        threshold_config_t o_threshold; /*!< The thresholds for O-Net. For details, see the definition of threshold_config_t */
+        mtmn_resize_type type;          /*!< The image resize type. 'pyramid' will lose efficacy, when 'type'==FAST. */
     } mtmn_config_t;
 
+    /**
+     * @brief Get the initial MTMN model configuration
+     * 
+     * @return mtmn_config_t      MTMN configuration
+     */
     static inline mtmn_config_t mtmn_init_config()
     {
         mtmn_config_t mtmn_config;

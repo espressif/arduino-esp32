@@ -174,6 +174,7 @@ typedef enum {
     ESP_BT_GAP_KEY_NOTIF_EVT,                       /*!< Simple Pairing Passkey Notification */
     ESP_BT_GAP_KEY_REQ_EVT,                         /*!< Simple Pairing Passkey request */
     ESP_BT_GAP_READ_RSSI_DELTA_EVT,                 /*!< read rssi event */
+    ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT,        /*!< remove bond device complete event */
     ESP_BT_GAP_EVT_MAX,
 } esp_bt_gap_cb_event_t;
 
@@ -271,6 +272,14 @@ typedef union {
     struct key_req_param {
         esp_bd_addr_t bda;                     /*!< remote bluetooth device address*/
     } key_req;                                 /*!< passkey request parameter struct */
+
+    /**
+     * @brief ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT
+     */
+    struct bt_remove_bond_dev_cmpl_evt_param {
+        esp_bd_addr_t bda;                          /*!< remote bluetooth device address*/
+        esp_bt_status_t status;                     /*!< Indicate the remove bond device operation success status */
+    }remove_bond_dev_cmpl;                           /*!< Event parameter of ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT */
 } esp_bt_gap_cb_param_t;
 
 /**
@@ -361,13 +370,15 @@ esp_err_t esp_bt_gap_register_callback(esp_bt_gap_cb_t callback);
 esp_err_t esp_bt_gap_set_scan_mode(esp_bt_scan_mode_t mode);
 
 /**
- * @brief           Start device discovery. This function should be called after esp_bluedroid_enable() completes successfully.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is started or halted.
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_RES_EVT if discovery result is got.
+ * @brief           This function starts Inquiry and Name Discovery. It should be called after esp_bluedroid_enable() completes successfully.
+ *                  When Inquiry is halted and cached results do not contain device name, then Name Discovery will connect to the peer target to get the device name.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT when Inquriry is started or Name Discovery is completed.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_RES_EVT each time the two types of discovery results are got.
  *
- * @param[in]       mode - inquiry mode
- * @param[in]       inq_len - inquiry duration in 1.28 sec units, ranging from 0x01 to 0x30
- * @param[in]       num_rsps - number of inquiry responses that can be received, value 0 indicates an unlimited number of responses
+ * @param[in]       mode - Inquiry mode
+ * @param[in]       inq_len - Inquiry duration in 1.28 sec units, ranging from 0x01 to 0x30. This parameter only specifies the total duration of the Inquiry process,
+ *                          - when this time expires, Inquiry will be halted.
+ * @param[in]       num_rsps - Number of responses that can be received before the Inquiry is halted, value 0 indicates an unlimited number of responses.
  *
  * @return
  *                  - ESP_OK : Succeed
@@ -378,8 +389,9 @@ esp_err_t esp_bt_gap_set_scan_mode(esp_bt_scan_mode_t mode);
 esp_err_t esp_bt_gap_start_discovery(esp_bt_inq_mode_t mode, uint8_t inq_len, uint8_t num_rsps);
 
 /**
- * @brief           Cancel device discovery. This function should be called after esp_bluedroid_enable() completes successfully
- *                  esp_bt_gap_cb_t will is called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if discovery is stopped.
+ * @brief           Cancel Inquiry and Name Discovery. This function should be called after esp_bluedroid_enable() completes successfully.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT if Inquiry or Name Discovery is cancelled by
+ *                  calling this function.
  *
  * @return
  *                  - ESP_OK : Succeed

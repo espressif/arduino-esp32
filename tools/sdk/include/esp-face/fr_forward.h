@@ -29,15 +29,13 @@ extern "C"
 #define NOSE_EYE_RATIO_THRES_MIN 0.49f
 #define NOSE_EYE_RATIO_THRES_MAX 2.04f
 
-/**
- * @brief      HTTP Client events data
- */
+
 #define ENROLL_NAME_LEN 16
     typedef struct tag_face_id_node
     {
-        struct tag_face_id_node *next;
-        char id_name[ENROLL_NAME_LEN];
-        dl_matrix3d_t *id_vec;
+        struct tag_face_id_node *next;           /*!< next face id node */
+        char id_name[ENROLL_NAME_LEN];           /*!< name corresponding to the face id  */
+        dl_matrix3d_t *id_vec;                   /*!< face id */
     } face_id_node;
 
     typedef struct
@@ -59,14 +57,21 @@ extern "C"
     } face_id_list;
 
     /**
-     * @brief Initialize face id list
+     * @brief Initialize face id list.
      * 
-     * @param l                 Face id list
-     * @param size              Size of list, one list contains one vector
-     * @param confirm_times     Enroll times for one id
-     * @return dl_matrix3du_t*          Size: 1xFACE_WIDTHxFACE_HEIGHTx3
+     * @param l                    Face id list
+     * @param size                 Size of list, one list contains one vector
+     * @param confirm_times        Enroll times for one id
      */
     void face_id_init(face_id_list *l, uint8_t size, uint8_t confirm_times);
+
+    /**
+     * @brief Initialize face id list with name.
+     * 
+     * @param l                    Face id list
+     * @param size                 Size of list, one list contains one vector
+     * @param confirm_times        Enroll times for one id
+     */
     void face_id_name_init(face_id_name_list *l, uint8_t size, uint8_t confirm_times);
 
     /**
@@ -76,8 +81,9 @@ extern "C"
      */
     dl_matrix3du_t *aligned_face_alloc();
 
+    /**@{*/
     /**
-     * @brief Align detected face to average face according to landmark
+     * @brief Align detected face to average face according to landmark.
      * 
      * @param onet_boxes        Output of MTMN with box and landmark
      * @param src               Image matrix, rgb888 format
@@ -88,10 +94,6 @@ extern "C"
     int8_t align_face_rot(box_array_t *onet_boxes,
                       dl_matrix3du_t *src,
                       dl_matrix3du_t *dest);
-
-    int8_t align_face2(fptp_t *landmark,
-                       dl_matrix3du_t *src,
-                       dl_matrix3du_t *dest);
     
     int8_t align_face_sim(box_array_t *onet_boxes,
                    dl_matrix3du_t *src,
@@ -103,6 +105,7 @@ extern "C"
     {
         return align_face_sim(onet_boxes, src, dest);              
     }
+    /**@}*/
 
     /**
      * @brief Run the face recognition model to get the face feature
@@ -115,26 +118,34 @@ extern "C"
     /**
      * @brief Add src_id to dest_id
      * 
-     * @param dest_id 
-     * @param src_id 
+     * @param dest_id       Face id after accumulation
+     * @param src_id        Face id to be added
      */
     void add_face_id(dl_matrix3d_t *dest_id,
                      dl_matrix3d_t *src_id);
 
     /**
      * @brief Match face with the id_list, and return matched_id.
-     * 
+     *
+     * @param l                     An ID list 
      * @param algined_face          An aligned face
-     * @param id_list               An ID list
      * @return int8_t               Matched face id
      */
     int8_t recognize_face(face_id_list *l, dl_matrix3du_t *algined_face);
 
+    /**
+     * @brief Match face id with the id_list, and return matched face id node.
+     * 
+     * @param l 
+     * @param face_id 
+     * @return face_id_node* 
+     */
     face_id_node *recognize_face_with_name(face_id_name_list *l, dl_matrix3d_t *face_id);
+    
     /**
      * @brief Produce face id according to the input aligned face, and save it to dest_id.
      * 
-     * @param l                     face id list
+     * @param l                     Face id list
      * @param aligned_face          An aligned face
      * @param enroll_confirm_times  Confirm times for each face id enrollment
      * @return -1                   Wrong input enroll_confirm_times
@@ -143,18 +154,40 @@ extern "C"
      */
     int8_t enroll_face(face_id_list *l, dl_matrix3du_t *aligned_face);
 
+    /**
+     * @brief Produce face id according to the input aligned face, and save the id-name pairs to dest_id
+     * 
+     * @param l                      Face id list with name 
+     * @param new_id                 A face id that need to be enrolled
+     * @param name                   name corresponding to the face id  
+     * @return int8_t                The left piece of aligned faces should be input
+     */
     int8_t enroll_face_with_name(face_id_name_list *l,
                                  dl_matrix3d_t *new_id,
                                  char *name);
 
     /**
-     * @brief Alloc memory for aligned face.
+     * @brief Delete the enrolled face IDs
      * 
-     * @param l                     face id list
-     * @return uint8_t              left count
+     * @param l            Face id list
+     * @return uint8_t     The number of IDs remaining in face id list
      */
     uint8_t delete_face(face_id_list *l);
+
+    /**
+     * @brief Delete the enrolled face IDs and associated names
+     * 
+     * @param l             Face id list
+     * @param name          The name that needs to be deleted
+     * @return int8_t       The number of IDs remaining in face id list
+     */
     int8_t delete_face_with_name(face_id_name_list *l, char *name);
+    
+    /**
+     * @brief               Delete all the enrolled face IDs and names paris
+     * 
+     * @param l             Face id list with names
+     */
     void delete_face_all_with_name(face_id_name_list *l);
 #if __cplusplus
 }

@@ -156,6 +156,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
+      
 #endif /* __H_LIBDB_MACROS */
 

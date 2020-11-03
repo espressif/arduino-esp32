@@ -7,9 +7,13 @@
 #include <math.h>
 #include <assert.h>
 
-#if CONFIG_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_ESP32_SPIRAM_SUPPORT
 #include "freertos/FreeRTOS.h"
+#define DL_SPIRAM_SUPPORT 1
+#else
+#define DL_SPIRAM_SUPPORT 0
 #endif
+
 
 #ifndef max
 #define max(x, y) (((x) < (y)) ? (y) : (x))
@@ -30,17 +34,17 @@ typedef enum
 
 typedef enum
 {
-    PADDING_VALID = 0,
-    PADDING_SAME = 1,
-    PADDING_SAME_DONT_FREE_INPUT = 2,
-    PADDING_SAME_MXNET = 3,
+    PADDING_VALID = 0,                   /*!< Valid padding */
+    PADDING_SAME = 1,                    /*!< Same padding, from right to left, free input */
+    PADDING_SAME_DONT_FREE_INPUT = 2,    /*!< Same padding, from right to left, do not free input */
+    PADDING_SAME_MXNET = 3,              /*!< Same padding, from left to right */
 } dl_padding_type;
 
 typedef enum
 {
-    DL_POOLING_MAX = 0,
-    DL_POOLING_AVG = 1,
-} dl_pooling_type;
+    DL_POOLING_MAX = 0,        /*!< Max pooling */
+    DL_POOLING_AVG = 1,        /*!< Average pooling */
+} dl_pooling_type; 
 /*
  * Matrix for 3d
  * @Warning: the sequence of variables is fixed, cannot be modified, otherwise there will be errors in esp_dsp_dot_float
@@ -65,11 +69,17 @@ typedef struct
     uc_t *item; /*!< Data */
 } dl_matrix3du_t;
 
+typedef enum
+{
+    UPSAMPLE_NEAREST_NEIGHBOR = 0, /*!< Use nearest neighbor interpolation as the upsample method*/
+    UPSAMPLE_BILINEAR = 1,        /*!< Use nearest bilinear interpolation as the upsample method*/
+} dl_upsample_type;
+
 typedef struct
 {
-    int stride_x;
-    int stride_y;
-    dl_padding_type padding;
+    int stride_x;                    /*!< Strides of width */
+    int stride_y;                    /*!< Strides of height */
+    dl_padding_type padding;         /*!< Padding type */
 } dl_matrix3d_mobilenet_config_t;
 
 /*
@@ -80,20 +90,20 @@ typedef struct
  * @param align Align of memory. If not required, set 0.
  * @return Pointer of allocated memory. Null for failed.
  */
-static inline void *dl_lib_calloc(int cnt, int size, int align)
+static void *dl_lib_calloc(int cnt, int size, int align)
 {
     int total_size = cnt * size + align + sizeof(void *);
     void *res = malloc(total_size);
     if (NULL == res)
     {
-#if CONFIG_SPIRAM_SUPPORT
+#if DL_SPIRAM_SUPPORT
         res = heap_caps_malloc(total_size, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
     }
     if (NULL == res)
     {
         printf("Item psram alloc failed. Size: %d x %d\n", cnt, size);
 #else
-        printf("Item alloc failed. Size: %d x %d\n", cnt, size);
+        printf("Item alloc failed. Size: %d x %d, SPIRAM_FLAG: %d\n", cnt, size, DL_SPIRAM_SUPPORT);
 #endif
         return NULL;
     }
@@ -109,6 +119,10 @@ static inline void *dl_lib_calloc(int cnt, int size, int align)
     return (void *)aligned;
 }
 
+/**
+ * @brief Free the memory space allocated by 'dl_lib_calloc'
+ * 
+ */
 static inline void dl_lib_free(void *d)
 {
     if (NULL == d)
@@ -286,15 +300,15 @@ void dl_matrix3d_sliced_transform_nchw(dl_matrix3d_t *out,
 /**
  * @brief Do a general CNN layer pass, dimension is (number, width, height, channel)
  *
- * @param in             Input matrix3d
- * @param filter         Weights of the neurons
- * @param bias           Bias for the CNN layer
- * @param stride_x       The step length of the convolution window in x(width) direction
- * @param stride_y       The step length of the convolution window in y(height) direction
- * @param padding        One of VALID or SAME
- * @param mode           Do convolution using C implement or xtensa implement, 0 or 1, with respect
- *                       If ESP_PLATFORM is not defined, this value is not used. Default is 0
- * @return               The result of CNN layer
+ * @param in               Input matrix3d
+ * @param filter           Weights of the neurons
+ * @param bias             Bias for the CNN layer
+ * @param stride_x         The step length of the convolution window in x(width) direction
+ * @param stride_y         The step length of the convolution window in y(height) direction
+ * @param padding          One of VALID or SAME
+ * @param mode             Do convolution using C implement or xtensa implement, 0 or 1, with respect
+ *                         If ESP_PLATFORM is not defined, this value is not used. Default is 0
+ * @return dl_matrix3d_t*  The result of CNN layer
  */
 dl_matrix3d_t *dl_matrix3d_conv(dl_matrix3d_t *in,
                                 dl_matrix3d_t *filter,
@@ -316,14 +330,14 @@ dl_matrix3d_t *dl_matrix3d_global_pool(dl_matrix3d_t *in);
 /**
  * @brief Calculate pooling layer of a feature map
  *
- * @param in        Input matrix, size (1, w, h, c)
- * @param f_w       Window width
- * @param f_h       Window height 
- * @param stride_x  Stride in horizontal direction
- * @param stride_y  Stride in vertical direction
- * @param padding   Padding type: PADDING_VALID and PADDING_SAME
- * @param pooling_type   Pooling type: DL_POOLING_MAX and POOLING_AVG
- * @return          Resulting matrix, size (1, w', h', c)
+ * @param in               Input matrix, size (1, w, h, c)
+ * @param f_w              Window width
+ * @param f_h              Window height 
+ * @param stride_x         Stride in horizontal direction
+ * @param stride_y         Stride in vertical direction
+ * @param padding          Padding type: PADDING_VALID and PADDING_SAME
+ * @param pooling_type     Pooling type: DL_POOLING_MAX and POOLING_AVG
+ * @return dl_matrix3d_t*  Resulting matrix, size (1, w', h', c)
  */
 dl_matrix3d_t *dl_matrix3d_pooling(dl_matrix3d_t *in,
                                    int f_w,
@@ -346,20 +360,20 @@ void dl_matrix3d_batch_normalize(dl_matrix3d_t *m,
 /**
  * @brief Add a pair of matrix3d item-by-item: res=in_1+in_2
  *
- * @param in_1           First Floating point input matrix3d
- * @param in_2           Second Floating point input matrix3d
+ * @param in_1             First Floating point input matrix3d
+ * @param in_2             Second Floating point input matrix3d
  *
- * @return               Added data
+ * @return dl_matrix3d_t*  Added data
  */
 dl_matrix3d_t *dl_matrix3d_add(dl_matrix3d_t *in_1, dl_matrix3d_t *in_2);
 
 /**
  * @brief Concatenate the channels of two matrix3ds into a new matrix3d
  *
- * @param in_1           First Floating point input matrix3d
- * @param in_2           Second Floating point input matrix3d
+ * @param in_1             First Floating point input matrix3d
+ * @param in_2             Second Floating point input matrix3d
  *
- * @return               A newly allocated matrix3d with as avlues in_1|in_2
+ * @return dl_matrix3d_t*  A newly allocated matrix3d with as avlues in_1|in_2
  */
 dl_matrix3d_t *dl_matrix3d_concat(dl_matrix3d_t *in_1, dl_matrix3d_t *in_2);
 
@@ -477,8 +491,21 @@ dl_matrix3d_t *dl_matrix3d_mobilefaceblock_split(dl_matrix3d_t *in,
                                                  int mode,
                                                  int shortcut);
 
+/**
+ * @brief           Initialize the matrix3d feature map to bias
+ * 
+ * @param out       The matrix3d feature map needs to be initialized
+ * @param bias      The bias of a convlotion operation
+ */
 void dl_matrix3d_init_bias(dl_matrix3d_t *out, dl_matrix3d_t *bias);
 
+/**
+ * @brief  Do a elementwise multiplication of two matrix3ds
+ * 
+ * @param out  Preallocated matrix3d, size (n, w, h, c)
+ * @param in1  Input matrix 1, size (n, w, h, c)
+ * @param in2  Input matrix 2, size (n, w, h, c)
+ */
 void dl_matrix3d_multiply(dl_matrix3d_t *out, dl_matrix3d_t *in1, dl_matrix3d_t *in2);
 
 //
@@ -519,19 +546,49 @@ void dl_matrix3d_leaky_relu(dl_matrix3d_t *m, fptp_t alpha);
 //
 // Conv 1x1
 //
+/**
+ * @brief Do 1x1 convolution with a matrix3d
+ * 
+ * @param out        Preallocated matrix3d, size (1, w, h, n)
+ * @param in         Input matrix, size (1, w, h, c)
+ * @param filter     1x1 filter, size (n, 1, 1, c)
+ */
 void dl_matrix3dff_conv_1x1(dl_matrix3d_t *out,
                             dl_matrix3d_t *in,
                             dl_matrix3d_t *filter);
 
+/**
+ * @brief Do 1x1 convolution with a matrix3d, with bias adding
+ * 
+ * @param out        Preallocated matrix3d, size (1, w, h, n)
+ * @param in         Input matrix, size (1, w, h, c)
+ * @param filter     1x1 filter, size (n, 1, 1, c)
+ * @param bias       Bias, size (1, 1, 1, n)
+ */
 void dl_matrix3dff_conv_1x1_with_bias(dl_matrix3d_t *out,
                                       dl_matrix3d_t *in,
                                       dl_matrix3d_t *filter,
                                       dl_matrix3d_t *bias);
 
+/**
+ * @brief Do 1x1 convolution with an 8-bit fixed point matrix
+ * 
+ * @param out        Preallocated matrix3d, size (1, w, h, n)
+ * @param in         Input matrix, size (1, w, h, c)
+ * @param filter     1x1 filter, size (n, 1, 1, c)
+ */
 void dl_matrix3duf_conv_1x1(dl_matrix3d_t *out,
                             dl_matrix3du_t *in,
                             dl_matrix3d_t *filter);
 
+/**
+ * @brief Do 1x1 convolution with an 8-bit fixed point matrix, with bias adding
+ * 
+ * @param out        Preallocated matrix3d, size (1, w, h, n)  
+ * @param in         Input matrix, size (1, w, h, c)
+ * @param filter     1x1 filter, size (n, 1, 1, c)
+ * @param bias       Bias, size (1, 1, 1, n)
+ */
 void dl_matrix3duf_conv_1x1_with_bias(dl_matrix3d_t *out,
                                       dl_matrix3du_t *in,
                                       dl_matrix3d_t *filter,
@@ -540,12 +597,33 @@ void dl_matrix3duf_conv_1x1_with_bias(dl_matrix3d_t *out,
 //
 // Conv 3x3
 //
+
+/**
+ * @brief Do 3x3 convolution with a matrix3d, without padding
+ * 
+ * @param out        Preallocated matrix3d, size (1, w, h, n)
+ * @param in         Input matrix, size (1, w, h, c)
+ * @param f          3x3 filter, size (n, 3, 3, c)
+ * @param step_x     Stride of width
+ * @param step_y     Stride of height
+ */
 void dl_matrix3dff_conv_3x3_op(dl_matrix3d_t *out,
                                dl_matrix3d_t *in,
                                dl_matrix3d_t *f,
                                int step_x,
                                int step_y);
 
+/**
+ * @brief Do 3x3 convolution with a matrix3d, with bias adding
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @return dl_matrix3d_t*   Resulting matrix3d
+ */
 dl_matrix3d_t *dl_matrix3dff_conv_3x3(dl_matrix3d_t *in,
                                       dl_matrix3d_t *filter,
                                       dl_matrix3d_t *bias,
@@ -557,6 +635,17 @@ dl_matrix3d_t *dl_matrix3dff_conv_3x3(dl_matrix3d_t *in,
 // Conv Common
 //
 
+/**
+ * @brief Do a general convolution layer pass with an 8-bit fixed point matrix, size is (number, width, height, channel)
+ * 
+ * @param in                Input image
+ * @param filter            Weights of the neurons
+ * @param bias              Bias for the CNN layer
+ * @param stride_x          The step length of the convolution window in x(width) direction
+ * @param stride_y          The step length of the convolution window in y(height) direction
+ * @param padding           Padding type
+ * @return dl_matrix3d_t*   Resulting matrix3d
+ */
 dl_matrix3d_t *dl_matrix3duf_conv_common(dl_matrix3du_t *in,
                                          dl_matrix3d_t *filter,
                                          dl_matrix3d_t *bias,
@@ -564,6 +653,17 @@ dl_matrix3d_t *dl_matrix3duf_conv_common(dl_matrix3du_t *in,
                                          int stride_y,
                                          dl_padding_type padding);
 
+/**
+ * @brief Do a general convolution layer pass, size is (number, width, height, channel)
+ * 
+ * @param in                Input image
+ * @param filter            Weights of the neurons
+ * @param bias              Bias for the CNN layer
+ * @param stride_x          The step length of the convolution window in x(width) direction
+ * @param stride_y          The step length of the convolution window in y(height) direction
+ * @param padding           Padding type
+ * @return dl_matrix3d_t*   Resulting matrix3d
+ */
 dl_matrix3d_t *dl_matrix3dff_conv_common(dl_matrix3d_t *in,
                                          dl_matrix3d_t *filter,
                                          dl_matrix3d_t *bias,
@@ -575,18 +675,47 @@ dl_matrix3d_t *dl_matrix3dff_conv_common(dl_matrix3d_t *in,
 // Depthwise 3x3
 //
 
+/**
+ * @brief Do 3x3 depthwise convolution with a float matrix3d
+ * 
+ * @param in                  Input matrix, size (1, w, h, c)
+ * @param filter              3x3 filter, size (1, 3, 3, c)
+ * @param stride_x            Stride of width
+ * @param stride_y            Stride of height
+ * @param padding             Padding type, 0: valid, 1: same
+ * @return dl_matrix3d_t*     Resulting float matrix3d
+ */
 dl_matrix3d_t *dl_matrix3dff_depthwise_conv_3x3(dl_matrix3d_t *in,
                                                 dl_matrix3d_t *filter,
                                                 int stride_x,
                                                 int stride_y,
                                                 int padding);
 
+/**
+ * @brief Do 3x3 depthwise convolution with a 8-bit fixed point matrix
+ * 
+ * @param in                  Input matrix, size (1, w, h, c)
+ * @param filter              3x3 filter, size (1, 3, 3, c)
+ * @param stride_x            Stride of width
+ * @param stride_y            Stride of height
+ * @param padding             Padding type, 0: valid, 1: same
+ * @return dl_matrix3d_t*     Resulting float matrix3d
+ */
 dl_matrix3d_t *dl_matrix3duf_depthwise_conv_3x3(dl_matrix3du_t *in,
                                                 dl_matrix3d_t *filter,
                                                 int stride_x,
                                                 int stride_y,
                                                 int padding);
 
+/**
+ * @brief Do 3x3 depthwise convolution with a float matrix3d, without padding
+ * 
+ * @param out                 Preallocated matrix3d, size (1, w, h, n)
+ * @param in                  Input matrix, size (1, w, h, c)
+ * @param f                   3x3 filter, size (1, 3, 3, c)
+ * @param step_x              Stride of width
+ * @param step_y              Stride of height
+ */
 void dl_matrix3dff_depthwise_conv_3x3_op(dl_matrix3d_t *out,
                                          dl_matrix3d_t *in,
                                          dl_matrix3d_t *f,
@@ -630,6 +759,14 @@ void dl_matrix3dff_fc(dl_matrix3d_t *out,
                       dl_matrix3d_t *in,
                       dl_matrix3d_t *filter);
 
+/**
+ * @brief Do fully connected layer forward, with bias adding
+ *
+ * @param out       Preallocated resulting matrix, size (1, 1, 1, h)
+ * @param in        Input matrix, size (1, 1, 1, w)
+ * @param filter    Filter matrix, size (1, w, h, 1)
+ * @param bias      Bias matrix, size (1, 1, 1, h)
+ */
 void dl_matrix3dff_fc_with_bias(dl_matrix3d_t *out,
                                 dl_matrix3d_t *in,
                                 dl_matrix3d_t *filter,
