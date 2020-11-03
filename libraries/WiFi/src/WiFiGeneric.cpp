@@ -1070,6 +1070,11 @@ bool WiFiGenericClass::setSleep(bool enabled){
     return setSleep(enabled?WIFI_PS_MIN_MODEM:WIFI_PS_NONE);
 }
 
+/**
+ * control modem sleep when only in STA mode
+ * @param mode wifi_ps_type_t
+ * @return ok
+ */
 bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType)
 {
     if(sleepType != _sleepEnabled){
@@ -1077,25 +1082,12 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType)
         if((getMode() & WIFI_MODE_STA) != 0){
             if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
                 log_e("esp_wifi_set_ps failed!");
+                return false;
             }
         }
         return true;
     }
     return false;
-}
-
-/**
- * control modem sleep when only in STA mode
- * @param mode wifi_ps_type_t
- * @return ok
- */
-bool WiFiGenericClass::setSleep(wifi_ps_type_t mode)
-{
-    if((getMode() & WIFI_MODE_STA) == 0){
-        log_w("STA has not been started");
-        return false;
-    }
-    return esp_wifi_set_ps(mode) == ESP_OK;
 }
 
 /**
