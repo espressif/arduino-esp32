@@ -21,6 +21,8 @@ extern "C" {
 #include <sys/stat.h>
 #include <dirent.h>
 #include "esp_littlefs.h"
+#undef B110
+#undef B1000000
 }
 
 #include "LITTLEFS.h"
