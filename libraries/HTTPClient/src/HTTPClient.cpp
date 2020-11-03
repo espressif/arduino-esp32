@@ -1199,6 +1199,7 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(firstLine) {
+		firstLine = false;
                 if(_canReuse && headerLine.startsWith("HTTP/1.")) {
                     _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
                 }
