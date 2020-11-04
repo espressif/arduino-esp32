@@ -8,9 +8,9 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEUUID_H_
 #define COMPONENTS_CPP_UTILS_BLEUUID_H_
 #include "sdkconfig.h"
+#include <string>
 #if defined(CONFIG_BT_ENABLED)
 #include <esp_gatt_defs.h>
-#include <string>
 
 /**
  * @brief A model of a %BLE UUID.
