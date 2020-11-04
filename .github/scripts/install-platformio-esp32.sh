@@ -13,7 +13,7 @@ echo "Installing Platform ESP32 ..."
 python -m platformio platform install $PLATFORMIO_ESP32_URL > /dev/null 2>&1
 
 echo "Replacing the framework version ..."
-python -c "import json; import os; fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+'); data=json.load(fp); data['packages']['framework-arduinoespressif32']['version'] = '*'; del data['packages']['framework-arduinoespressif32']['owner']; fp.seek(0); fp.truncate(); json.dump(data, fp); fp.close()"
+python -c "import json; import os; fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+'); data=json.load(fp); data['packages']['framework-arduinoespressif32']['version'] = '*'; fp.seek(0); fp.truncate(); json.dump(data, fp); fp.close()"
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..."
