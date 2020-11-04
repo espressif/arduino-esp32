@@ -583,7 +583,7 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
         }
 
         code = handleHeaderResponse();
-        Serial.printf("sendRequest code=%d\n", code);
+        log_d("sendRequest code=%d\n", code);
 
         // Handle redirections as stated in RFC document:
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
