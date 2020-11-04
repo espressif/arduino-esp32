@@ -37,6 +37,7 @@
 #include "WiFi.h"
 
 bool wifiLowLevelInit(bool persistent);
+wifi_prov_mgr_config_t config;
 
 #if CONFIG_IDF_TARGET_ESP32
 static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
@@ -85,7 +86,6 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     bool provisioned = false;
     static char service_name_temp[32];
 
-    wifi_prov_mgr_config_t config;
 #if CONFIG_IDF_TARGET_ESP32
     if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
         config.scheme = wifi_prov_scheme_ble;
@@ -114,7 +114,8 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     	return;
     }
 #endif
-
+    config.app_event_handler.event_cb = NULL;
+    config.app_event_handler.user_data = NULL;
     wifiLowLevelInit(true);
     if(wifi_prov_mgr_init(config) != ESP_OK){
     	log_e("wifi_prov_mgr_init failed!");
@@ -168,14 +169,14 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
         	return;
         }
     } else {
-        wifi_prov_mgr_deinit();
-        log_i("Aleardy Provisioned");
+        log_i("Already Provisioned");
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         static wifi_config_t conf;
         esp_wifi_get_config(WIFI_IF_STA,&conf);
         log_i("Attempting connect to AP: %s\n",conf.sta.ssid);
 #endif
         esp_wifi_start();
+        wifi_prov_mgr_deinit();
         WiFi.begin();
     }
 }
