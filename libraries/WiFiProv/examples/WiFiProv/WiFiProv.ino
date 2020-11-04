@@ -46,7 +46,7 @@ void setup() {
                    0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02 };*/
   WiFi.onEvent(SysProvEvent);
   //WiFi.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, "abcd1234");
-  WiFi.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_EVENT_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234");
+  WiFi.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234");
 }
 
 void loop() {
