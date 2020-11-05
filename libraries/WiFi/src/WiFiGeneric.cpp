@@ -640,9 +640,10 @@ const char * WiFiGenericClass::getHostname()
     return get_esp_netif_hostname();
 }
 
-void WiFiGenericClass::setHostname(const char * hostname)
+bool WiFiGenericClass::setHostname(const char * hostname)
 {
-    return set_esp_netif_hostname(hostname);
+    set_esp_netif_hostname(hostname);
+    return true;
 }
 
 int WiFiGenericClass::setStatusBits(int bits){
