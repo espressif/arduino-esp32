@@ -171,7 +171,7 @@ class WiFiGenericClass
     wifi_power_t getTxPower();
 
     static const char * getHostname();
-    static void setHostname(const char * hostname);
+    static bool setHostname(const char * hostname);
 
     static esp_err_t _eventCallback(arduino_event_t *event);
 
