@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_
 #define COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <map>
 
@@ -81,5 +81,5 @@ private:
 	uint16_t            m_endHandle;        // The ending handle of this service.
 }; // BLERemoteService
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_ */

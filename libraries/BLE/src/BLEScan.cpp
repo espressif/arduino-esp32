@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 
 #include <esp_err.h>
@@ -330,4 +330,4 @@ void BLEScan::clearResults() {
 	m_scanResults.m_vectorAdvertisedDevices.clear();
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

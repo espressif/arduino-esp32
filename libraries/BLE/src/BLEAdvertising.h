@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h>
 #include "BLEUUID.h"
 #include <vector>
@@ -78,5 +78,5 @@ private:
 	bool                 m_scanResp = true;
 
 };
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISING_H_ */

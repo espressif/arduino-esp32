@@ -8,7 +8,7 @@
 #include "BLERemoteCharacteristic.h"
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_gattc_api.h>
 #include <esp_err.h>
@@ -618,4 +618,4 @@ void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
     m_auth = auth;
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

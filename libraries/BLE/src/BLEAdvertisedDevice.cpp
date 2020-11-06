@@ -12,7 +12,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include "BLEAdvertisedDevice.h"
 #include "BLEUtils.h"
@@ -579,5 +579,5 @@ size_t BLEAdvertisedDevice::getPayloadLength() {
 	return m_payloadLength;
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 
