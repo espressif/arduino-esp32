@@ -36,7 +36,7 @@
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "1.22.0-80-g6c4433a-5.2.0"
+              "version": "1.22.0-96-g2852398-5.2.0"
             },
             {
               "packager": "esp32",
@@ -54,42 +54,49 @@
       "tools": [
         {
           "name": "xtensa-esp32-elf-gcc",
-          "version": "1.22.0-80-g6c4433a-5.2.0",
+          "version": "1.22.0-96-g2852398-5.2.0",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
-              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-80-g6c4433a-5.2.0.zip",
-              "checksum": "SHA-256:f217fccbeaaa8c92db239036e0d6202458de4488b954a3a38f35ac2ec48058a4",
-              "size": "125719261"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-win32-1.22.0-96-g2852398-5.2.0.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-96-g2852398-5.2.0.zip",
+              "checksum": "SHA-256:8e2a2e25d4714ae6e4b992be1b1c261caed5b523b0cc0887b6749229c9febbb0",
+              "size": "125810912"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:a4307a97945d2f2f2745f415fbe80d727750e19f91f9a1e7e2f8a6065652f9da",
-              "size": "46517409"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-macos-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-macos-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "checksum": "SHA-256:6aeae9547f0cd7e442d1df21821cea8b15d0a6ce349bbd86466e2997b738a99c",
+              "size": "50520203"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:3fe96c151d46c1d4e5edc6ed690851b8e53634041114bad04729bc16b0445156",
-              "size": "44219107"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "checksum": "SHA-256:798a8638f11ad37f41b9640582f869c61ffb4da6d932279fde94a2b636ad2dac",
+              "size": "44211883"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-80-g6c4433a-5.2.0.tar.gz",
-              "checksum": "SHA-256:b4055695ffc2dfc0bcb6dafdc2572a6e01151c4179ef5fa972b3fcb2183eb155",
-              "size": "45566336"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "checksum": "SHA-256:4eea601188aa8f3c3d45d7936ab4c0fabb75b4970dccf7a061de47dba49e377f",
+              "size": "45563578"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-87-gb57bad3-5.2.0.tar.gz",
-              "checksum": "SHA-256:9c68c87bb23b1256dc0a1859b515946763e5292dcab4a4159a52fae5618ce861",
-              "size": "50655584"
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux-armel-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "checksum": "SHA-256:abfe06522f7c3479f6c7434c4bf926c50fa2039362b96abe95fa1f05ec519a9b",
+              "size": "50670980"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-linux-armel-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-96-g2852398-5.2.0.tar.gz",
+              "checksum": "SHA-256:abfe06522f7c3479f6c7434c4bf926c50fa2039362b96abe95fa1f05ec519a9b",
+              "size": "50670980"
             }
           ]
         },
@@ -127,6 +134,13 @@
             },
             {
               "host": "arm-linux-gnueabihf",
+              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
+              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
+              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
+              "size": "44762"
+            },
+            {
+              "host": "aarch64-linux-gnu",
               "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
               "archiveFileName": "esptool-2.6.1-linux.tar.gz",
               "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",

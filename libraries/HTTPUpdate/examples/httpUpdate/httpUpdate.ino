@@ -52,7 +52,7 @@ void loop() {
 
     t_httpUpdate_return ret = httpUpdate.update(client, "http://server/file.bin");
     // Or:
-    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 80, "file.bin");
+    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 80, "/file.bin");
 
     switch (ret) {
       case HTTP_UPDATE_FAILED:

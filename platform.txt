@@ -22,7 +22,7 @@ compiler.warning_flags.all=-Wall -Werror=all -Wextra
 
 compiler.path={runtime.tools.xtensa-esp32-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk
-compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DHAVE_CONFIG_H -DGCC_NOT_5_2_0=0 -DWITH_POSIX "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/app_trace" "-I{compiler.sdk.path}/include/app_update" "-I{compiler.sdk.path}/include/asio" "-I{compiler.sdk.path}/include/bootloader_support" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/coap" "-I{compiler.sdk.path}/include/console" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/efuse" "-I{compiler.sdk.path}/include/esp-tls" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/esp_adc_cal" "-I{compiler.sdk.path}/include/esp_event" "-I{compiler.sdk.path}/include/esp_http_client" "-I{compiler.sdk.path}/include/esp_http_server" "-I{compiler.sdk.path}/include/esp_https_ota" "-I{compiler.sdk.path}/include/esp_https_server" "-I{compiler.sdk.path}/include/esp_ringbuf" "-I{compiler.sdk.path}/include/espcoredump" "-I{compiler.sdk.path}/include/ethernet" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/fatfs" "-I{compiler.sdk.path}/include/freemodbus" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/heap" "-I{compiler.sdk.path}/include/idf_test" "-I{compiler.sdk.path}/include/jsmn" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/libsodium" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/lwip" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/mdns" "-I{compiler.sdk.path}/include/micro-ecc" "-I{compiler.sdk.path}/include/mqtt" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/nimble" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/openssl" "-I{compiler.sdk.path}/include/protobuf-c" "-I{compiler.sdk.path}/include/protocomm" "-I{compiler.sdk.path}/include/pthread" "-I{compiler.sdk.path}/include/sdmmc" "-I{compiler.sdk.path}/include/smartconfig_ack" "-I{compiler.sdk.path}/include/soc" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/spiffs" "-I{compiler.sdk.path}/include/tcp_transport" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/ulp" "-I{compiler.sdk.path}/include/unity" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/wear_levelling" "-I{compiler.sdk.path}/include/wifi_provisioning" "-I{compiler.sdk.path}/include/wpa_supplicant" "-I{compiler.sdk.path}/include/xtensa-debug-module" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/esp32-camera" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/fb_gfx"
+compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DHAVE_CONFIG_H -DGCC_NOT_5_2_0=0 -DWITH_POSIX "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/app_trace" "-I{compiler.sdk.path}/include/app_update" "-I{compiler.sdk.path}/include/asio" "-I{compiler.sdk.path}/include/bootloader_support" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/coap" "-I{compiler.sdk.path}/include/console" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/efuse" "-I{compiler.sdk.path}/include/esp-tls" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/esp_adc_cal" "-I{compiler.sdk.path}/include/esp_event" "-I{compiler.sdk.path}/include/esp_http_client" "-I{compiler.sdk.path}/include/esp_http_server" "-I{compiler.sdk.path}/include/esp_https_ota" "-I{compiler.sdk.path}/include/esp_https_server" "-I{compiler.sdk.path}/include/esp_ringbuf" "-I{compiler.sdk.path}/include/esp_websocket_client" "-I{compiler.sdk.path}/include/espcoredump" "-I{compiler.sdk.path}/include/ethernet" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/fatfs" "-I{compiler.sdk.path}/include/freemodbus" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/heap" "-I{compiler.sdk.path}/include/idf_test" "-I{compiler.sdk.path}/include/jsmn" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/libsodium" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/lwip" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/mdns" "-I{compiler.sdk.path}/include/micro-ecc" "-I{compiler.sdk.path}/include/mqtt" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/nimble" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/openssl" "-I{compiler.sdk.path}/include/protobuf-c" "-I{compiler.sdk.path}/include/protocomm" "-I{compiler.sdk.path}/include/pthread" "-I{compiler.sdk.path}/include/sdmmc" "-I{compiler.sdk.path}/include/smartconfig_ack" "-I{compiler.sdk.path}/include/soc" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/spiffs" "-I{compiler.sdk.path}/include/tcp_transport" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/ulp" "-I{compiler.sdk.path}/include/unity" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/wear_levelling" "-I{compiler.sdk.path}/include/wifi_provisioning" "-I{compiler.sdk.path}/include/wpa_supplicant" "-I{compiler.sdk.path}/include/xtensa-debug-module" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/esp32-camera" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/fb_gfx"
 
 compiler.c.cmd=xtensa-esp32-elf-gcc
 compiler.c.flags=-std=gnu99 -Os -g3 -fstack-protector -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wpointer-arith {compiler.warning_flags} -Wno-maybe-uninitialized -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-variable -Wno-deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-old-style-declaration -MMD -c
@@ -35,7 +35,7 @@ compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
 
 compiler.c.elf.cmd=xtensa-esp32-elf-gcc
 compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.project.ld -T esp32.rom.ld -T esp32.peripherals.ld -T esp32.rom.libgcc.ld -T esp32.rom.spiram_incompatible_fns.ld -u ld_include_panic_highint_hdl -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority  -u __cxa_guard_dummy -u __cxx_fatal_exception
-compiler.c.elf.libs=-lgcc -lfreertos -lmesh -lod -lwear_levelling -lfb_gfx -lesp_adc_cal -lc_nano -lesp32 -ldriver -lhal -ljsmn -lsmartconfig -lesp_http_server -lprotocomm -lface_recognition -lespnow -ltcpip_adapter -lface_detection -lunity -lc -llibsodium -lesp_http_client -lapp_update -lnewlib -lcxx -ltcp_transport -lm -lefuse -lopenssl -lwifi_provisioning -lespcoredump -llog -lmbedtls -lesp_ringbuf -lwps -lnet80211 -lmqtt -lesp_https_server -lapp_trace -lesp_event -lesp32-camera -lsoc -lheap -llwip -lwpa -lrtc -lxtensa-debug-module -lspi_flash -lphy -lfr -lconsole -lcoap -lbtdm_app -lsdmmc -lfd -lmicro-ecc -ljson -lcore -lprotobuf-c -lethernet -lspiffs -lnvs_flash -lwpa_supplicant -lvfs -lasio -lwpa2 -lpp -lbootloader_support -limage_util -ldl_lib -lulp -lnghttp -lpthread -lfreemodbus -lexpat -lfatfs -lsmartconfig_ack -lmdns -lcoexist -lesp-tls -lesp_https_ota -lbt  -lstdc++
+compiler.c.elf.libs=-lgcc -lopenssl -lbtdm_app -lfatfs -lwps -lcoexist -lwear_levelling -lesp_http_client -lprotobuf-c -lhal -lnewlib -ldriver -lbootloader_support -lpp -lfreemodbus -lmesh -lsmartconfig -ljsmn -lwpa -lethernet -lphy -lapp_trace -lconsole -lulp -lwpa_supplicant -lfreertos -lbt -lmicro-ecc -lesp32-camera -lcxx -lxtensa-debug-module -ltcp_transport -lod -lmdns -ldetection -lvfs -lpe -lesp_websocket_client -lespcoredump -lesp_ringbuf -lsoc -lcore -lfb_gfx -lsdmmc -llibsodium -lcoap -ltcpip_adapter -lprotocomm -lesp_event -limage_util -lc_nano -lesp-tls -lasio -lrtc -lspi_flash -lwpa2 -lwifi_provisioning -lesp32 -lface_recognition -lapp_update -lnghttp -ldl -lspiffs -lface_detection -lefuse -lunity -lesp_https_server -lespnow -lnvs_flash -lesp_adc_cal -llog -ldetection_cat_face -lsmartconfig_ack -lexpat -lm -lfr -lmqtt -lc -lheap -lmbedtls -llwip -lnet80211 -lesp_http_server -lpthread -ljson -lesp_https_ota -lfd  -lstdc++
 
 compiler.as.cmd=xtensa-esp32-elf-as
 
@@ -43,6 +43,8 @@ compiler.ar.cmd=xtensa-esp32-elf-ar
 compiler.ar.flags=cru
 
 compiler.size.cmd=xtensa-esp32-elf-size
+
+compiler.libraries.ldflags=
 
 # This can be overriden in boards.txt
 build.flash_size=4MB
@@ -60,6 +62,7 @@ compiler.cpp.extra_flags=
 compiler.ar.extra_flags=
 compiler.objcopy.eep.extra_flags=
 compiler.elf2hex.extra_flags=
+compiler.libraries.ldflags=
 
 # Build Dir: {build.path}
 # Sketch Dir: {build.source.path}
@@ -81,16 +84,16 @@ recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.fla
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {compiler.libraries.ldflags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
-## Create eeprom
-recipe.objcopy.eep.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
+## Create partitions.bin
+recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
 
-## Create hex
-recipe.objcopy.hex.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
-recipe.objcopy.hex.pattern.linux=python "{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+## Create bin
+recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+recipe.objcopy.bin.pattern.linux=python "{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
 
-## Save hex
+## Save bin
 recipe.output.tmp_file={build.project_name}.bin
 recipe.output.save_file={build.project_name}.{build.variant}.bin
 
