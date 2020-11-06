@@ -15,7 +15,7 @@
 #include "BLEClient.h"
 #include "BLERemoteCharacteristic.h"
 #include "BLEUUID.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEClient;
 class BLERemoteCharacteristic;
@@ -34,7 +34,7 @@ public:
 	BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
 	std::map<std::string, BLERemoteCharacteristic*>* getCharacteristics();
 	std::map<uint16_t, BLERemoteCharacteristic*>* getCharacteristicsByHandle();  // Get the characteristics map.
-	void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
+	void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>** pCharacteristicMap);
 
 	BLEClient*               getClient(void);                                           // Get a reference to the client associated with this service.
 	uint16_t                 getHandle();                                               // Get the handle of this service.

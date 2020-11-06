@@ -53,10 +53,10 @@ void setup() {
   Serial.println("------------------------------------\n");
 
   // Clear variables
-  name = '\0';
+  rname[0] = '\0';
   height = 0;
   age = 0;
-  Serial.print("name: ");   Serial.println(name);
+  Serial.print("name: ");   Serial.println(rname);
   Serial.print("height: "); Serial.println(height);
   Serial.print("age: ");    Serial.println(age);
   Serial.println("------------------------------------\n");

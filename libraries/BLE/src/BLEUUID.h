@@ -8,9 +8,8 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEUUID_H_
 #define COMPONENTS_CPP_UTILS_BLEUUID_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gatt_defs.h>
 #include <string>
+#include <esp_gatt_defs.h>
 
 /**
  * @brief A model of a %BLE UUID.

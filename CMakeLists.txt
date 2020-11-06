@@ -15,6 +15,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-spi.c
   cores/esp32/esp32-hal-time.c
   cores/esp32/esp32-hal-timer.c
+  cores/esp32/esp32-hal-tinyusb.c
   cores/esp32/esp32-hal-touch.c
   cores/esp32/esp32-hal-uart.c
   cores/esp32/esp32-hal-rmt.c
@@ -31,6 +32,8 @@ set(CORE_SRCS
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/USB.cpp
+  cores/esp32/USBCDC.cpp
   cores/esp32/wiring_pulse.c
   cores/esp32/wiring_shift.c
   cores/esp32/WMath.cpp
@@ -49,6 +52,7 @@ set(LIBRARY_SRCS
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
+  libraries/LITTLEFS/src/LITTLEFS.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
@@ -78,66 +82,6 @@ set(LIBRARY_SRCS
   libraries/WiFi/src/WiFiSTA.cpp
   libraries/WiFi/src/WiFiUdp.cpp
   libraries/Wire/src/Wire.cpp
-  )
-
-set(AZURE_SRCS
-  libraries/AzureIoT/src/az_iot/azureiotcerts.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/agenttime.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/dns_async.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/lock.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/threadapi.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/freertos/tickcounter.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/lwip/sntp_lwip.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/socket_async.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/src/platform_openssl_compact.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/src/tlsio_openssl_compact.c
-  libraries/AzureIoT/src/az_iot/c-utility/pal/tlsio_options.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/base64.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/buffer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/connection_string_parser.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/consolelogger.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/constbuffer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/constmap.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/crt_abstractions.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/doublylinkedlist.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gballoc.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gb_stdio.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/gb_time.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/hmac.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/hmacsha256.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpapiex.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpapiexsas.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/httpheaders.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/http_proxy_io.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/map.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/optionhandler.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sastoken.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha1.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha224.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/sha384-512.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/singlylinkedlist.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/strings.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/string_tokenizer.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/urlencode.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/usha.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/vector.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/xio.c
-  libraries/AzureIoT/src/az_iot/c-utility/src/xlogging.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/blob.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_authorization.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_ll.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_client_retry_control.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothub_message.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransportmqtt.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
-  libraries/AzureIoT/src/az_iot/iothub_client/src/version.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_client.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_codec.c
-  libraries/AzureIoT/src/az_iot/umqtt/src/mqtt_message.c
-  libraries/AzureIoT/src/AzureIotHub.cpp
-  libraries/AzureIoT/src/Esp32MQTTClient.cpp
   )
 
 set(BLE_SRCS
@@ -172,14 +116,12 @@ set(BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-set(COMPONENT_SRCS ${CORE_SRCS} ${LIBRARY_SRCS} ${AZURE_SRCS} ${BLE_SRCS})
 
-set(COMPONENT_ADD_INCLUDEDIRS
+set(includedirs
   variants/esp32/
   cores/esp32/
   libraries/ArduinoOTA/src
   libraries/AsyncUDP/src
-  libraries/AzureIoT/src
   libraries/BLE/src
   libraries/BluetoothSerial/src
   libraries/DNSServer/src
@@ -190,6 +132,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/FS/src
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
+  libraries/LITTLEFS/src
   libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/SD_MMC/src
@@ -205,14 +148,16 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/Wire/src
   )
 
-set(COMPONENT_PRIV_INCLUDEDIRS cores/esp32/libb64)
+set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
+set(priv_includes cores/esp32/libb64)
+set(requires spi_flash mbedtls mdns esp_adc_cal)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt tinyusb main)
 
-set(COMPONENT_REQUIRES spi_flash mbedtls mdns ethernet esp_adc_cal wifi_provisioning)
-set(COMPONENT_PRIV_REQUIRES fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_http_client esp_https_ota)
+idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
-register_component()
-
-set_source_files_properties(libraries/AzureIoT/src/az_iot/iothub_client/src/iothubtransport_mqtt_common.c
-    PROPERTIES COMPILE_FLAGS
-    -Wno-maybe-uninitialized
-)
+if(IDF_TARGET STREQUAL "esp32")
+target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32_DEV" -DARDUINO_VARIANT="esp32" -DESP32)
+endif()
+if(IDF_TARGET STREQUAL "esp32s2")
+target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32S2_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32S2_DEV" -DARDUINO_VARIANT="esp32s2" -DESP32)
+endif()
