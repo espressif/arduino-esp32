@@ -26,7 +26,6 @@
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
 #include <esp32-hal.h>
-#include <nvs_flash.h>
 
 #ifdef CONFIG_BLUEDROID_ENABLED
 #include <wifi_provisioning/scheme_ble.h>
