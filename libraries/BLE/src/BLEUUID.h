@@ -9,6 +9,7 @@
 #define COMPONENTS_CPP_UTILS_BLEUUID_H_
 #include "sdkconfig.h"
 #include <string>
+#if CONFIG_BLUEDROID_ENABLED
 #include <esp_gatt_defs.h>
 
 /**
