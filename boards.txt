@@ -3689,6 +3689,7 @@ m5stack-core2.upload.tool=esptool_py
 m5stack-core2.upload.maximum_size=6553600
 m5stack-core2.upload.maximum_data_size=4521984
 m5stack-core2.upload.wait_for_upload_port=true
+m5stack-core2.upload.flags=
 
 m5stack-core2.serial.disableDTR=true
 m5stack-core2.serial.disableRTS=true

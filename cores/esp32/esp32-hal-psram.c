@@ -51,12 +51,6 @@ bool psramInit(){
         log_w("PSRAM not supported!");
         return false;
     }
-    esp_spiram_init_cache();
-#elif CONFIG_IDF_TARGET_ESP32S2
-    extern void esp_config_data_cache_mode(void);
-    esp_config_data_cache_mode();
-    Cache_Enable_DCache(0);
-#endif
     if (esp_spiram_init() != ESP_OK) {
         spiramFailed = true;
         log_w("PSRAM init failed!");
@@ -67,6 +61,11 @@ bool psramInit(){
         return false;
     }
     esp_spiram_init_cache();
+#elif CONFIG_IDF_TARGET_ESP32S2
+    extern void esp_config_data_cache_mode(void);
+    esp_config_data_cache_mode();
+    Cache_Enable_DCache(0);
+#endif
     if (!esp_spiram_test()) {
         spiramFailed = true;
         log_e("PSRAM test failed!");
