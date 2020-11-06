@@ -5,7 +5,7 @@
  *      Author: chegewara
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLEHIDDevice.h"
 #include "BLE2904.h"
@@ -239,5 +239,5 @@ BLEService* BLEHIDDevice::batteryService() {
 	return m_batteryService;
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 

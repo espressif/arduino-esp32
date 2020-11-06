@@ -28,7 +28,7 @@
 #include <esp32-hal.h>
 
 #include <nvs_flash.h>
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
 #include "wifi_provisioning/scheme_ble.h"
 #endif
 #include <wifi_provisioning/scheme_softap.h>
@@ -86,20 +86,21 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     bool provisioned = false;
     static char service_name_temp[32];
 
-#if CONFIG_IDF_TARGET_ESP32
+    wifi_prov_mgr_config_t config;
+#if CONFIG_BLUEDROID_ENABLED
     if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
         config.scheme = wifi_prov_scheme_ble;
     } else {
 #endif
     	config.scheme = wifi_prov_scheme_softap;
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
     }
 
     if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_NONE){
 #endif
     	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
     	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
     } else if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BTDM){
     	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
     	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
@@ -127,7 +128,7 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     	return;
     }
     if(provisioned == false) {
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             service_key = NULL;
             if(uuid == NULL) {
@@ -142,7 +143,7 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
             service_name = (const char *)service_name_temp;
         }
 
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             log_i("Starting AP using BLE. service_name : %s, pop : %s",service_name,pop);
         } else {
@@ -152,7 +153,7 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
             } else {
                log_i("Starting provisioning AP using SOFTAP. service_name : %s, password : %s, pop : %s",service_name,service_key,pop);
             }
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
         }
 #endif
 

@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>
 
 #include <map>
@@ -124,5 +124,5 @@ public:
 	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_ */

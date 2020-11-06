@@ -19,12 +19,10 @@
 
 #include "WiFi.h"
 #include "wifi_provisioning/manager.h"
-#include "SimpleBLE.h"
-
 //Select the scheme using which you want to provision
 typedef enum {
     WIFI_PROV_SCHEME_SOFTAP,
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
     WIFI_PROV_SCHEME_BLE,
 #endif
     WIFI_PROV_SCHEME_MAX
@@ -32,7 +30,7 @@ typedef enum {
 
 typedef enum {
     WIFI_PROV_SCHEME_HANDLER_NONE,
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
     WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
     WIFI_PROV_SCHEME_HANDLER_FREE_BLE,
     WIFI_PROV_SCHEME_HANDLER_FREE_BT,

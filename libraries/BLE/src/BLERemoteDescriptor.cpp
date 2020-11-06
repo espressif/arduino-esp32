@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include "BLERemoteDescriptor.h"
 #include "GeneralUtils.h"
@@ -201,4 +201,4 @@ void BLERemoteDescriptor::setAuth(esp_gatt_auth_req_t auth) {
     m_auth = auth;
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
