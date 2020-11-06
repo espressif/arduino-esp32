@@ -150,7 +150,7 @@ static bool _udp_task_start(){
         }
     }
     if(!_udp_task_handle){
-        xTaskCreateUniversal(_udp_task, "async_udp", 4096, NULL, 3, (TaskHandle_t*)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE);
+        xTaskCreateUniversal(_udp_task, "async_udp", 4096, NULL, CONFIG_ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t*)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE);
         if(!_udp_task_handle){
             return false;
         }

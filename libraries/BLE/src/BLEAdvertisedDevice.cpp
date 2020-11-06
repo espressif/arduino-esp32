@@ -388,6 +388,15 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 	} // !finished
 } // parseAdvertisement
 
+/**
+ * @brief Parse the advertising payload.
+ * @param [in] payload The payload of the advertised device.
+ * @param [in] total_len The length of payload
+ */
+void BLEAdvertisedDevice::setPayload(uint8_t* payload, size_t total_len) {
+	m_payload = payload;
+	m_payloadLength = total_len;
+} // setPayload
 
 /**
  * @brief Set the address of the advertised device.

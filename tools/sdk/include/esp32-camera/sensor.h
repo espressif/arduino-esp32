@@ -9,11 +9,15 @@
 #ifndef __SENSOR_H__
 #define __SENSOR_H__
 #include <stdint.h>
+#include <stdbool.h>
 
+#define NT99141_PID     (0x14)
 #define OV9650_PID     (0x96)
-#define OV2640_PID     (0x26)
 #define OV7725_PID     (0x77)
+#define OV2640_PID     (0x26)
 #define OV3660_PID     (0x36)
+#define OV5640_PID     (0x56)
+#define OV7670_PID     (0x76)
 
 typedef enum {
     PIXFORMAT_RGB565,    // 2BPP/RGB565
@@ -27,22 +31,44 @@ typedef enum {
 } pixformat_t;
 
 typedef enum {
-    FRAMESIZE_96x96,    // 96x96
+    FRAMESIZE_96X96,    // 96x96
     FRAMESIZE_QQVGA,    // 160x120
-    FRAMESIZE_QQVGA2,   // 128x160
     FRAMESIZE_QCIF,     // 176x144
     FRAMESIZE_HQVGA,    // 240x176
-    FRAMESIZE_240x240,  // 240x240
+    FRAMESIZE_240X240,  // 240x240
     FRAMESIZE_QVGA,     // 320x240
     FRAMESIZE_CIF,      // 400x296
+    FRAMESIZE_HVGA,     // 480x320
     FRAMESIZE_VGA,      // 640x480
     FRAMESIZE_SVGA,     // 800x600
     FRAMESIZE_XGA,      // 1024x768
+    FRAMESIZE_HD,       // 1280x720
     FRAMESIZE_SXGA,     // 1280x1024
     FRAMESIZE_UXGA,     // 1600x1200
-    FRAMESIZE_QXGA,     // 2048*1536
+    // 3MP Sensors
+    FRAMESIZE_FHD,      // 1920x1080
+    FRAMESIZE_P_HD,     //  720x1280
+    FRAMESIZE_P_3MP,    //  864x1536
+    FRAMESIZE_QXGA,     // 2048x1536
+    // 5MP Sensors
+    FRAMESIZE_QHD,      // 2560x1440
+    FRAMESIZE_WQXGA,    // 2560x1600
+    FRAMESIZE_P_FHD,    // 1080x1920
+    FRAMESIZE_QSXGA,    // 2560x1920
     FRAMESIZE_INVALID
 } framesize_t;
+
+typedef enum {
+    ASPECT_RATIO_4X3,
+    ASPECT_RATIO_3X2,
+    ASPECT_RATIO_16X10,
+    ASPECT_RATIO_5X3,
+    ASPECT_RATIO_16X9,
+    ASPECT_RATIO_21X9,
+    ASPECT_RATIO_5X4,
+    ASPECT_RATIO_1X1,
+    ASPECT_RATIO_9X16
+} aspect_ratio_t;
 
 typedef enum {
     GAINCEILING_2X,
@@ -55,6 +81,28 @@ typedef enum {
 } gainceiling_t;
 
 typedef struct {
+        uint16_t max_width;
+        uint16_t max_height;
+        uint16_t start_x;
+        uint16_t start_y;
+        uint16_t end_x;
+        uint16_t end_y;
+        uint16_t offset_x;
+        uint16_t offset_y;
+        uint16_t total_x;
+        uint16_t total_y;
+} ratio_settings_t;
+
+typedef struct {
+        const uint16_t width;
+        const uint16_t height;
+        const aspect_ratio_t aspect_ratio;
+} resolution_info_t;
+
+// Resolution table (in sensor.c)
+extern const resolution_info_t resolution[];
+
+typedef struct {
     uint8_t MIDH;
     uint8_t MIDL;
     uint8_t PID;
@@ -63,6 +111,8 @@ typedef struct {
 
 typedef struct {
     framesize_t framesize;//0 - 10
+    bool scale;
+    bool binning;
     uint8_t quality;//0 - 63
     int8_t brightness;//-2 - 2
     int8_t contrast;//-2 - 2
@@ -132,9 +182,12 @@ typedef struct _sensor {
 
     int  (*set_raw_gma)         (sensor_t *sensor, int enable);
     int  (*set_lenc)            (sensor_t *sensor, int enable);
-} sensor_t;
 
-// Resolution table (in camera.c)
-extern const int resolution[][2];
+    int  (*get_reg)             (sensor_t *sensor, int reg, int mask);
+    int  (*set_reg)             (sensor_t *sensor, int reg, int mask, int value);
+    int  (*set_res_raw)         (sensor_t *sensor, int startX, int startY, int endX, int endY, int offsetX, int offsetY, int totalX, int totalY, int outputX, int outputY, bool scale, bool binning);
+    int  (*set_pll)             (sensor_t *sensor, int bypass, int mul, int sys, int root, int pre, int seld5, int pclken, int pclk);
+    int  (*set_xclk)            (sensor_t *sensor, int timer, int xclk);
+} sensor_t;
 
 #endif /* __SENSOR_H__ */

@@ -68,6 +68,7 @@
 #include "esp_err.h"
 #include "driver/ledc.h"
 #include "sensor.h"
+#include "sys/time.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -115,6 +116,7 @@ typedef struct {
     size_t width;               /*!< Width of the buffer in pixels */
     size_t height;              /*!< Height of the buffer in pixels */
     pixformat_t format;         /*!< Format of the pixel data */
+    struct timeval timestamp;   /*!< Timestamp since boot of the first DMA buffer of the frame */
 } camera_fb_t;
 
 #define ESP_ERR_CAMERA_BASE 0x20000
@@ -171,6 +173,19 @@ void esp_camera_fb_return(camera_fb_t * fb);
  */
 sensor_t * esp_camera_sensor_get();
 
+/**
+ * @brief Save camera settings to non-volatile-storage (NVS)
+ * 
+ * @param key   A unique nvs key name for the camera settings 
+ */
+esp_err_t esp_camera_save_to_nvs(const char *key);
+
+/**
+ * @brief Load camera settings from non-volatile-storage (NVS)
+ * 
+ * @param key   A unique nvs key name for the camera settings 
+ */
+esp_err_t esp_camera_load_from_nvs(const char *key);
 
 #ifdef __cplusplus
 }
