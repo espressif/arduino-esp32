@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include <string.h>
 #include <iomanip>
@@ -800,4 +800,4 @@ void BLECharacteristicCallbacks::onStatus(BLECharacteristic* pCharacteristic, St
 } // onStatus
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

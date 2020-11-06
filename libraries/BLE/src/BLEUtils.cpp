@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include "BLEAddress.h"
 #include "BLEClient.h"
 #include "BLEUtils.h"
@@ -2037,4 +2037,4 @@ const char* BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
 	}
 } // searchEventTypeToString
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
