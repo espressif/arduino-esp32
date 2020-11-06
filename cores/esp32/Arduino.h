@@ -29,6 +29,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include "esp_arduino_version.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
