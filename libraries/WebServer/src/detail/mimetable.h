@@ -8,10 +8,14 @@ namespace mime
 enum type
 {
   html,
+  htmlgz,
   htm,
+  htmgz,
   css,
+  cssgz,
   txt,
   js,
+  jsgz,
   json,
   png,
   gif,
