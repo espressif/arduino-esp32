@@ -19,6 +19,7 @@
 
 #include "WiFi.h"
 #include "wifi_provisioning/manager.h"
+#include "SimpleBLE.h"
 //Select the scheme using which you want to provision
 typedef enum {
     WIFI_PROV_SCHEME_SOFTAP,

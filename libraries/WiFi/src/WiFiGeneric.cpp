@@ -429,7 +429,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	arduino_event.event_id = ARDUINO_EVENT_PROV_START;
 	} else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_END) {
 		log_v("Provisioning End!");
-		wifi_prov_mgr_deinit();
     	arduino_event.event_id = ARDUINO_EVENT_PROV_END;
 	} else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_RECV) {
         wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;

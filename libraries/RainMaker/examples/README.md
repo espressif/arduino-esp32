@@ -247,7 +247,7 @@ esp_err_t addDeviceAttr(const char *attr_name, const char *val);
 2. Error in case  of failure
 
 ### my_device.deleteDevice()
-It deletes the device created using `RMaker.createDevice()`. This device should be first removed from the node using `my_node.removeDevice(my_device)`.
+It deletes the device created using parameterized constructor. This device should be first removed from the node using `my_node.removeDevice(my_device)`.
 ```
 esp_err_t deleteDevice();
 ```
@@ -258,10 +258,14 @@ esp_err_t deleteDevice();
 ### my_device.addXParam()
 It adds standard parameter to the device.
 > NOTE : X is the default name by which parameter is referred, you can specify your own name to each parameter.
+
 > Default
-> Eg. `my_device.addPowerParam()` here power parameter is referred with name Power.
-> Eg. `my_device.addHueParam()` here hue parameter is referred with name Hue.
+
+> Eg. `my_device.addPowerParam(true)` here power parameter is referred with name Power.
+> Eg. `my_device.addHueParam(12)` here hue parameter is referred with name Hue.
+
 > You can specify your own name to each parameter
+
 > Eg. `my_device.addNameParam("NickName")` here name parameter is referred with name NickName.
 > Eg. `my_device.addPowerParam(true, "FanPower")` here power parameter is referred with name FanPower.
  
@@ -348,13 +352,11 @@ Value can be accessed as below
 4. `char *` : val.val.s
 
 ## ESP RainMaker PARAM API's
-`Param` class expose API's for creating custom parameters for the devices and report and update values associated with parameter to the ESP RainMaker cloud.
+`Param` class expose API's for creating custom parameters for the devices and report and update values associated with parameter to the ESP RainMaker cloud. Parameterized constructor is defined which creates custom parameter.
 > NOTE : my_param is the object of Param class.
 
-### createParam()
-It creates custom parameter.
 ```
-Param createParam(const char *param_name, const char *param_type, param_val_t val, uint8_t properties);
+Param my_param(const char *param_name, const char *param_type, param_val_t val, uint8_t properties);
 ``` 
 * **Parameters**
 1. `param_name` : Name of the parameter
@@ -367,12 +369,11 @@ Param createParam(const char *param_name, const char *param_type, param_val_t va
         * PROP_FLAG_TIME_SERIES
         * PROP_FLAG_PERSIST
 
-`Sample example : my_param = createParam("bright", NULL, value(30), PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);`
+`Sample example : Param my_param("bright", NULL, value(30), PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);`
 > NOTE : Parameter created using Param class should be added to the device using `my_device.addParam(my_param);`
 
 ### my_param.addUIType()
-Add a UI type to the parameter
-This will be used by the Phone apps (or other clients) to render appropriate UI for the given parameter. Please refer the RainMaker documetation for supported UI Types.
+Add a UI type to the parameter. This will be used by the Phone apps (or other clients) to render appropriate UI for the given parameter. Please refer the RainMaker documentation [here](https://rainmaker.espressif.com/docs/standard-types.html#ui-elements) for supported UI Types.
 ```
 esp_err_t addUIType(const char *ui_type);
 ```
@@ -389,7 +390,7 @@ esp_err_t addUIType(const char *ui_type);
 2. Error in case of failure.
 
 ### my_param.addBounds()
-Add bounds for an integer/float parameter. This can be used to add bounds (min/max values) for a given integer parameter. Eg. brightness will have bounds as 0 and 100 if it is a percentage.
+Add bounds for an integer/float parameter. This can be used to add bounds (min/max values) for a given integer/float parameter. Eg. brightness will have bounds as 0 and 100 if it is a percentage.
 ```
 esp_err_t addBounds(param_val_t min, param_val_t max, param_val_t step);
 ```
@@ -421,7 +422,7 @@ esp_err_t updateAndReport(param_val_t val);
 > - If not called then paramter values will not be updated to the ESP RainMaker cloud.
 
 ### printQR()
-This API displays QR code using which you can carry out provisioning.
+This API displays QR code, which is used in provisioning.
 ```
 printQR(const char *serv_name, const char *pop, const char *transport);
 ```
