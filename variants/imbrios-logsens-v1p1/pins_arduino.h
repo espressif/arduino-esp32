@@ -23,6 +23,7 @@
 /* LED_BUILTIN is kept for compatibility reason; mapped to LED2 on the LogSens V1.1 Board */
 static const uint8_t LED_BUILTIN = 33;
 #define BUILTIN_LED  LED_BUILTIN 	// backward compatibility
+#define LED_BUILTIN LED_BUILTIN
 
 /* UART0: Serial Port for Programming and Debugging on the LogSens V1.1 Board */
 static const uint8_t TX = 1;
