@@ -20,9 +20,9 @@ extern "C" {
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "esp_littlefs.h"
 #undef B110
 #undef B1000000
+#include "esp_littlefs.h"    
 }
 
 #include "LITTLEFS.h"
