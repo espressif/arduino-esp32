@@ -16,6 +16,8 @@ static const uint8_t RX = 3;
 
 // IO
 static const uint8_t LED_BUILTIN = 5;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN
 static const uint8_t SW1 = 4;
 static const uint8_t SW2 = 18;
 static const uint8_t SW3 = 19;
