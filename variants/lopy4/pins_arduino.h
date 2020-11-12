@@ -24,6 +24,7 @@
 
 static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
 
 #define ANT_SELECT 21   // GPIO21 - External Antenna Switch
 

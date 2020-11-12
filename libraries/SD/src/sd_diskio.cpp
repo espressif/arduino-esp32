@@ -607,8 +607,9 @@ DRESULT ff_sd_write(uint8_t pdrv, const uint8_t* buffer, DWORD sector, UINT coun
 
     if (count > 1) {
         res = sdWriteSectors(pdrv, (const char*)buffer, sector, count) ? RES_OK : RES_ERROR;
+    } else {
+        res = sdWriteSector(pdrv, (const char*)buffer, sector) ? RES_OK : RES_ERROR;
     }
-    res = sdWriteSector(pdrv, (const char*)buffer, sector) ? RES_OK : RES_ERROR;
     return res;
 }
 
