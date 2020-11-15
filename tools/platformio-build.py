@@ -194,16 +194,20 @@ if not env.BoardConfig().get("build.ldscript", ""):
 
 libs = []
 
+variants_dir = join(FRAMEWORK_DIR, "variants")
+
+if "build.variants_dir" in env.BoardConfig():
+    variants_dir = join("$PROJECT_DIR", env.BoardConfig().get("build.variants_dir"))
+
 if "build.variant" in env.BoardConfig():
     env.Append(
         CPPPATH=[
-            join(FRAMEWORK_DIR, "variants",
-                 env.BoardConfig().get("build.variant"))
+            join(variants_dir, env.BoardConfig().get("build.variant"))
         ]
     )
     libs.append(env.BuildLibrary(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        join(FRAMEWORK_DIR, "variants", env.BoardConfig().get("build.variant"))
+        join(variants_dir, env.BoardConfig().get("build.variant"))
     ))
 
 envsafe = env.Clone()
