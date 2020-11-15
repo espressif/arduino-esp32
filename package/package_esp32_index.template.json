@@ -41,7 +41,7 @@
             {
               "packager": "esp32",
               "name": "esptool_py",
-              "version": "2.6.1"
+              "version": "3.0.0"
             },
             {
               "packager": "esp32",
@@ -102,49 +102,49 @@
         },
         {
           "name": "esptool_py",
-          "version": "2.6.1",
+          "version": "3.0.0",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-windows.zip",
-              "archiveFileName": "esptool-2.6.1-windows.zip",
-              "checksum": "SHA-256:84cf0b369a7707fe566434faba148852fc464992111d5baa95b658b374802f96",
-              "size": "3422445"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-windows.zip",
+              "archiveFileName": "esptool-3.0.0.2-windows.zip",
+              "checksum": "SHA-256:b192bfc1545a3c92658ce586b4edcc2aca3f0ad4b3fa8417d658bc8a48f1387e",
+              "size": "3434736"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-macos.tar.gz",
-              "archiveFileName": "esptool-2.6.1-macos.tar.gz",
-              "checksum": "SHA-256:f4eb758a301d6902cc9dfcd49d36345d2f075ad123da7cf8132d15cfb7533457",
-              "size": "3837085"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-macos.tar.gz",
+              "archiveFileName": "esptool-3.0.0.2-macos.tar.gz",
+              "checksum": "SHA-256:9213f46d5aa865558da4a2ef4218e87eef4782779128083c15ce2b3e4d07a1ea",
+              "size": "3849615"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
-              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
-              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
-              "size": "44762"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
+              "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
+              "size": "57526"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
-              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
-              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
-              "size": "44762"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
+              "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
+              "size": "57526"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
-              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
-              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
-              "size": "44762"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
+              "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
+              "size": "57526"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-2.6.1-linux.tar.gz",
-              "archiveFileName": "esptool-2.6.1-linux.tar.gz",
-              "checksum": "SHA-256:eaf82ff4070d9792f6a42ae1e485375de5a87bec59ef01dfb95de901519ec7fb",
-              "size": "44762"
+              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
+              "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
+              "size": "57526"
             }
           ]
         },
