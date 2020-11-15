@@ -183,7 +183,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
             __analogVRef = DEFAULT_VREF;
             if(__analogVRefPin){
                 esp_adc_cal_characteristics_t chars;
-                if(adc2_vref_to_gpio(__analogVRefPin) == ESP_OK){
+                if(adc_vref_to_gpio(ADC_UNIT_2, __analogVRefPin) == ESP_OK){
                     __analogVRef = __analogRead(__analogVRefPin);
                     esp_adc_cal_characterize(1, __analogAttenuation, __analogWidth, DEFAULT_VREF, &chars);
                     __analogVRef = esp_adc_cal_raw_to_voltage(__analogVRef, &chars);
