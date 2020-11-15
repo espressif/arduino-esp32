@@ -36,7 +36,7 @@
 #ifndef _TUSB_HUB_H_
 #define _TUSB_HUB_H_
 
-#include <common/tusb_common.h>
+#include "common/tusb_common.h"
 #include "usbh.h"
 
 #ifdef __cplusplus
@@ -142,7 +142,7 @@ typedef struct {
     };
 
     uint16_t value;
-  } status, status_change;
+  } status, change;
 } hub_status_response_t;
 
 TU_VERIFY_STATIC( sizeof(hub_status_response_t) == 4, "size is not correct");
@@ -151,30 +151,30 @@ TU_VERIFY_STATIC( sizeof(hub_status_response_t) == 4, "size is not correct");
 typedef struct {
   union {
     struct TU_ATTR_PACKED {
-      uint16_t connect_status             : 1;
-      uint16_t port_enable                : 1;
-      uint16_t suspend                    : 1;
-      uint16_t over_current               : 1;
-      uint16_t reset                      : 1;
+      uint16_t connection             : 1;
+      uint16_t port_enable            : 1;
+      uint16_t suspend                : 1;
+      uint16_t over_current           : 1;
+      uint16_t reset                  : 1;
 
-      uint16_t                            : 3;
-      uint16_t port_power                 : 1;
-      uint16_t low_speed_device_attached  : 1;
-      uint16_t high_speed_device_attached : 1;
-      uint16_t port_test_mode             : 1;
-      uint16_t port_indicator_control     : 1;
+      uint16_t                        : 3;
+      uint16_t port_power             : 1;
+      uint16_t low_speed              : 1;
+      uint16_t high_speed             : 1;
+      uint16_t port_test_mode         : 1;
+      uint16_t port_indicator_control : 1;
       uint16_t : 0;
     };
 
     uint16_t value;
-  } status_current, status_change;
+  } status, change;
 } hub_port_status_response_t;
 
 TU_VERIFY_STATIC( sizeof(hub_port_status_response_t) == 4, "size is not correct");
 
-bool hub_port_reset_subtask(uint8_t hub_addr, uint8_t hub_port);
-bool hub_port_clear_feature_subtask(uint8_t hub_addr, uint8_t hub_port, uint8_t feature);
-tusb_speed_t hub_port_get_speed(void);
+bool hub_port_reset(uint8_t hub_addr, uint8_t hub_port, tuh_control_complete_cb_t complete_cb);
+bool hub_port_get_status(uint8_t hub_addr, uint8_t hub_port, void* resp, tuh_control_complete_cb_t complete_cb);
+bool hub_port_clear_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature, tuh_control_complete_cb_t complete_cb);
 bool hub_status_pipe_queue(uint8_t dev_addr);
 
 //--------------------------------------------------------------------+
@@ -182,7 +182,8 @@ bool hub_status_pipe_queue(uint8_t dev_addr);
 //--------------------------------------------------------------------+
 void hub_init(void);
 bool hub_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *itf_desc, uint16_t *p_length);
-void hub_isr(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+bool hub_set_config(uint8_t dev_addr, uint8_t itf_num);
+bool hub_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 void hub_close(uint8_t dev_addr);
 
 #ifdef __cplusplus

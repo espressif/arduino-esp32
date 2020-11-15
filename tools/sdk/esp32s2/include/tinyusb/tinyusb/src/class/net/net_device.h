@@ -32,15 +32,13 @@
 #include "device/usbd.h"
 #include "class/cdc/cdc.h"
 
-// TODO should not include external files
-#include "lwip/pbuf.h"
-#include "netif/ethernet.h"
-
 /* declared here, NOT in usb_descriptors.c, so that the driver can intelligently ZLP as needed */
 #define CFG_TUD_NET_ENDPOINT_SIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
 /* Maximum Tranmission Unit (in bytes) of the network, including Ethernet header */
-#define CFG_TUD_NET_MTU           (1500 + SIZEOF_ETH_HDR)
+#ifndef CFG_TUD_NET_MTU
+#define CFG_TUD_NET_MTU           1514
+#endif
 
 #ifdef __cplusplus
  extern "C" {
@@ -54,7 +52,10 @@
 void tud_network_init_cb(void);
 
 // client must provide this: return false if the packet buffer was not accepted
-bool tud_network_recv_cb(struct pbuf *p);
+bool tud_network_recv_cb(const uint8_t *src, uint16_t size);
+
+// client must provide this: copy from network stack packet pointer to dst
+uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg);
 
 // client must provide this: 48-bit MAC address
 // TODO removed later since it is not part of tinyusb stack
@@ -67,7 +68,7 @@ void tud_network_recv_renew(void);
 bool tud_network_can_xmit(void);
 
 // if network_can_xmit() returns true, network_xmit() can be called once
-void tud_network_xmit(struct pbuf *p);
+void tud_network_xmit(void *ref, uint16_t arg);
 
 //--------------------------------------------------------------------+
 // INTERNAL USBD-CLASS DRIVER API

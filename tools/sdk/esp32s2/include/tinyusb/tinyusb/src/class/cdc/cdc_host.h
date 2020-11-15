@@ -44,6 +44,18 @@
  * \defgroup   CDC_Serial_Host Host
  * @{ */
 
+bool tuh_cdc_set_control_line_state(uint8_t dev_addr, bool dtr, bool rts, tuh_control_complete_cb_t complete_cb);
+
+static inline bool tuh_cdc_connect(uint8_t dev_addr, tuh_control_complete_cb_t complete_cb)
+{
+  return tuh_cdc_set_control_line_state(dev_addr, true, true, complete_cb);
+}
+
+static inline bool tuh_cdc_disconnect(uint8_t dev_addr, tuh_control_complete_cb_t complete_cb)
+{
+  return tuh_cdc_set_control_line_state(dev_addr, false, false, complete_cb);
+}
+
 /** \brief 			Check if device support CDC Serial interface or not
  * \param[in]		dev_addr	device address
  * \retval      true if device supports
@@ -113,7 +125,8 @@ void tuh_cdc_xfer_isr(uint8_t dev_addr, xfer_result_t event, cdc_pipeid_t pipe_i
 //--------------------------------------------------------------------+
 void cdch_init(void);
 bool cdch_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *itf_desc, uint16_t *p_length);
-void cdch_isr(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+bool cdch_set_config(uint8_t dev_addr, uint8_t itf_num);
+bool cdch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 void cdch_close(uint8_t dev_addr);
 
 #ifdef __cplusplus
