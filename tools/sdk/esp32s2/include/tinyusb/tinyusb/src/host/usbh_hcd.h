@@ -40,9 +40,15 @@
 #include "common/tusb_common.h"
 #include "osal/osal.h"
 
+#ifndef CFG_TUH_EP_MAX
+#define CFG_TUH_EP_MAX          9
+#endif
+
 //--------------------------------------------------------------------+
 // USBH-HCD common data structure
 //--------------------------------------------------------------------+
+
+// TODO move to usbh.c
 typedef struct {
   //------------- port -------------//
   uint8_t rhport;
@@ -53,29 +59,40 @@ typedef struct {
   //------------- device descriptor -------------//
   uint16_t vendor_id;
   uint16_t product_id;
-  uint8_t  configure_count; // bNumConfigurations alias
+  uint8_t  ep0_packet_size;
 
   //------------- configuration descriptor -------------//
-  uint8_t interface_count; // bNumInterfaces alias
+  // uint8_t interface_count; // bNumInterfaces alias
 
   //------------- device -------------//
+  struct TU_ATTR_PACKED
+  {
+    uint8_t connected    : 1;
+    uint8_t addressed    : 1;
+    uint8_t configured   : 1;
+    uint8_t suspended    : 1;
+  };
+
   volatile uint8_t state;             // device state, value from enum tusbh_device_state_t
 
-  //------------- control pipe -------------//
-  struct {
-    volatile uint8_t pipe_status;
-//    uint8_t xferred_bytes; TODO not yet necessary
-    tusb_control_request_t request;
-
-    osal_semaphore_def_t sem_def;
-    osal_semaphore_t sem_hdl;  // used to synchronize with HCD when control xfer complete
-
-    osal_mutex_def_t mutex_def;
-    osal_mutex_t mutex_hdl;    // used to exclusively occupy control pipe
-  } control;
-
   uint8_t itf2drv[16];  // map interface number to driver (0xff is invalid)
-  uint8_t ep2drv[8][2]; // map endpoint to driver ( 0xff is invalid )
+  uint8_t ep2drv[CFG_TUH_EP_MAX][2]; // map endpoint to driver ( 0xff is invalid )
+
+  struct TU_ATTR_PACKED
+  {
+    volatile bool busy    : 1;
+    volatile bool stalled : 1;
+    volatile bool claimed : 1;
+
+    // TODO merge ep2drv here, 4-bit should be sufficient
+  }ep_status[CFG_TUH_EP_MAX][2];
+
+  // Mutex for claiming endpoint, only needed when using with preempted RTOS
+#if CFG_TUSB_OS != OPT_OS_NONE
+  osal_mutex_def_t mutexdef;
+  osal_mutex_t mutex;
+#endif
+
 } usbh_device_t;
 
 extern usbh_device_t _usbh_devices[CFG_TUSB_HOST_DEVICE_MAX+1]; // including zero-address

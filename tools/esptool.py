@@ -24,15 +24,15 @@ import binascii
 import copy
 import hashlib
 import inspect
-import itertools
 import io
+import itertools
 import os
 import shlex
+import string
 import struct
 import sys
 import time
 import zlib
-import string
 
 try:
     import serial
@@ -103,7 +103,7 @@ def check_supported_function(func, check_func):
     bootloader function to check if it's supported.
 
     This is used to capture the multidimensional differences in
-    functionality between the ESP8266 & ESP32/32S2/32S3 ROM loaders, and the
+    functionality between the ESP8266 & ESP32/32S2/32S3/32C3 ROM loaders, and the
     software stub that runs on both. Not possible to do this cleanly
     via inheritance alone.
     """
@@ -122,7 +122,7 @@ def stub_function_only(func):
 
 
 def stub_and_esp32_function_only(func):
-    """ Attribute for a function only supported by software stubs or ESP32/32S2/32S3 ROM """
+    """ Attribute for a function only supported by software stubs or ESP32/32S2/32S3/32C3 ROM """
     return check_supported_function(func, lambda o: o.IS_STUB or isinstance(o, ESP32ROM))
 
 
@@ -208,7 +208,7 @@ class ESPLoader(object):
     ESP_FLASH_DEFL_END   = 0x12
     ESP_SPI_FLASH_MD5    = 0x13
 
-    # Commands supported by ESP32-S2/S3 ROM bootloader only
+    # Commands supported by ESP32-S2/S3/C3 ROM bootloader only
     ESP_GET_SECURITY_INFO = 0x14
 
     # Some commands supported by stub only
@@ -312,7 +312,7 @@ class ESPLoader(object):
             sys.stdout.flush()
             chip_magic_value = detect_port.read_reg(ESPLoader.CHIP_DETECT_MAGIC_REG_ADDR)
 
-            for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM]:
+            for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM]:
                 if chip_magic_value == cls.CHIP_DETECT_MAGIC_VALUE:
                     # don't connect a second time
                     inst = cls(detect_port._port, baud, trace_enabled=trace_enabled)
@@ -320,7 +320,7 @@ class ESPLoader(object):
                     print(' %s' % inst.CHIP_NAME, end='')
                     return inst
         except UnsupportedCommandError:
-            raise FatalError("Unsupported Command Error received. Probably this means Secure Download Mode is enabled, " +
+            raise FatalError("Unsupported Command Error received. Probably this means Secure Download Mode is enabled, "
                              "autodetection will not work. Need to manually specify the chip.")
         finally:
             print('')  # end line
@@ -333,7 +333,7 @@ class ESPLoader(object):
     """ Write bytes to the serial port while performing SLIP escaping """
     def write(self, packet):
         buf = b'\xc0' \
-              + (packet.replace(b'\xdb',b'\xdb\xdd').replace(b'\xc0',b'\xdb\xdc')) \
+              + (packet.replace(b'\xdb', b'\xdb\xdd').replace(b'\xc0', b'\xdb\xdc')) \
               + b'\xc0'
         self.trace("Write %d bytes: %s", len(buf), HexFormatter(buf))
         self._port.write(buf)
@@ -534,12 +534,12 @@ class ESPLoader(object):
                 chip_magic_value = self.read_reg(ESPLoader.CHIP_DETECT_MAGIC_REG_ADDR)
                 if chip_magic_value != self.CHIP_DETECT_MAGIC_VALUE:
                     actually = None
-                    for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM]:
+                    for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM]:
                         if chip_magic_value == cls.CHIP_DETECT_MAGIC_VALUE:
                             actually = cls
                             break
                     if actually is None:
-                        print(("WARNING: This chip doesn't appear to be a %s (chip magic value 0x%08x). " +
+                        print(("WARNING: This chip doesn't appear to be a %s (chip magic value 0x%08x). "
                                "Probably it is unsupported by this version of esptool.") % (self.CHIP_NAME, chip_magic_value))
                     else:
                         raise FatalError("This chip is %s not %s. Wrong --chip argument?" % (actually.CHIP_NAME, self.CHIP_NAME))
@@ -596,9 +596,9 @@ class ESPLoader(object):
             for (start, end) in [(stub["data_start"], stub["data_start"] + len(stub["data"])),
                                  (stub["text_start"], stub["text_start"] + len(stub["text"]))]:
                 if load_start < end and load_end > start:
-                    raise FatalError(("Software loader is resident at 0x%08x-0x%08x. " +
-                                      "Can't load binary at overlapping address range 0x%08x-0x%08x. " +
-                                      "Either change binary loading address, or use the --no-stub " +
+                    raise FatalError(("Software loader is resident at 0x%08x-0x%08x. "
+                                      "Can't load binary at overlapping address range 0x%08x-0x%08x. "
+                                      "Either change binary loading address, or use the --no-stub "
                                       "option to disable the software loader.") % (start, end, load_start, load_end))
 
         return self.check_command("enter RAM download mode", self.ESP_MEM_BEGIN,
@@ -641,7 +641,7 @@ class ESPLoader(object):
             timeout = timeout_per_mb(ERASE_REGION_TIMEOUT_PER_MB, size)  # ROM performs the erase up front
 
         params = struct.pack('<IIII', erase_size, num_blocks, self.FLASH_WRITE_SIZE, offset)
-        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM)) and not self.IS_STUB:
+        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM)) and not self.IS_STUB:
             params += struct.pack('<I', 1 if begin_rom_encrypted else 0)
         self.check_command("enter Flash download mode", self.ESP_FLASH_BEGIN,
                            params, timeout=timeout)
@@ -659,7 +659,7 @@ class ESPLoader(object):
 
     """ Encrypt before writing to flash """
     def flash_encrypt_block(self, data, seq, timeout=DEFAULT_TIMEOUT):
-        if isinstance(self, ESP32S2ROM) and not self.IS_STUB:
+        if isinstance(self, (ESP32S2ROM, ESP32C3ROM)) and not self.IS_STUB:
             # ROM support performs the encrypted writes via the normal write command,
             # triggered by flash_begin(begin_rom_encrypted=True)
             return self.flash_block(data, seq, timeout)
@@ -747,7 +747,7 @@ class ESPLoader(object):
             timeout = timeout_per_mb(ERASE_REGION_TIMEOUT_PER_MB, write_size)  # ROM performs the erase up front
         print("Compressed %d bytes to %d..." % (size, compsize))
         params = struct.pack('<IIII', write_size, num_blocks, self.FLASH_WRITE_SIZE, offset)
-        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM)) and not self.IS_STUB:
+        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM)) and not self.IS_STUB:
             params += struct.pack('<I', 0)  # extra param is to enter encrypted flash mode via ROM (not supported currently)
         self.check_command("enter compressed flash mode", self.ESP_FLASH_DEFL_BEGIN, params, timeout=timeout)
         if size != 0 and not self.IS_STUB:
@@ -911,9 +911,9 @@ class ESPLoader(object):
         SPI_USR2_REG      = base + self.SPI_USR2_OFFS
         SPI_W0_REG        = base + self.SPI_W0_OFFS
 
-        # following two registers are ESP32 & 32S2 only
+        # following two registers are ESP32 & 32S2/32C3 only
         if self.SPI_MOSI_DLEN_OFFS is not None:
-            # ESP32/32S2 has a more sophisticated way to set up "user" commands
+            # ESP32/32S2/32C3 has a more sophisticated way to set up "user" commands
             def set_data_lengths(mosi_bits, miso_bits):
                 SPI_MOSI_DLEN_REG = base + self.SPI_MOSI_DLEN_OFFS
                 SPI_MISO_DLEN_REG = base + self.SPI_MISO_DLEN_OFFS
@@ -1104,15 +1104,15 @@ class ESP8266ROM(ESPLoader):
     XTAL_CLK_DIVIDER = 2
 
     FLASH_SIZES = {
-        '512KB':0x00,
-        '256KB':0x10,
-        '1MB':0x20,
-        '2MB':0x30,
-        '4MB':0x40,
+        '512KB': 0x00,
+        '256KB': 0x10,
+        '1MB': 0x20,
+        '2MB': 0x30,
+        '4MB': 0x40,
         '2MB-c1': 0x50,
-        '4MB-c1':0x60,
-        '8MB':0x80,
-        '16MB':0x90,
+        '4MB-c1': 0x60,
+        '8MB': 0x80,
+        '16MB': 0x90,
     }
 
     BOOTLOADER_FLASH_OFFSET = 0
@@ -1124,10 +1124,11 @@ class ESP8266ROM(ESPLoader):
 
     def get_efuses(self):
         # Return the 128 bits of ESP8266 efuse as a single Python integer
-        return (self.read_reg(0x3ff0005c) << 96 |
-                self.read_reg(0x3ff00058) << 64 |
-                self.read_reg(0x3ff00054) << 32 |
-                self.read_reg(0x3ff00050))
+        result = self.read_reg(0x3ff0005c) << 96
+        result |= self.read_reg(0x3ff00058) << 64
+        result |= self.read_reg(0x3ff00054) << 32
+        result |= self.read_reg(0x3ff00050)
+        return result
 
     def get_chip_description(self):
         efuses = self.get_efuses()
@@ -1255,11 +1256,11 @@ class ESP32ROM(ESPLoader):
     XTAL_CLK_DIVIDER = 1
 
     FLASH_SIZES = {
-        '1MB':0x00,
-        '2MB':0x10,
-        '4MB':0x20,
-        '8MB':0x30,
-        '16MB':0x40
+        '1MB': 0x00,
+        '2MB': 0x10,
+        '4MB': 0x20,
+        '8MB': 0x30,
+        '16MB': 0x40
     }
 
     BOOTLOADER_FLASH_OFFSET = 0x1000
@@ -1753,6 +1754,82 @@ class ESP32S3BETA2ROM(ESP32ROM):
             return tuple(bitstring)
 
 
+class ESP32C3ROM(ESP32ROM):
+    CHIP_NAME = "ESP32-C3"
+    IMAGE_CHIP_ID = 5
+
+    IROM_MAP_START = 0x42000000
+    IROM_MAP_END   = 0x42800000
+    DROM_MAP_START = 0x3c000000
+    DROM_MAP_END   = 0x3c800000
+
+    SPI_REG_BASE = 0x3f402000
+    SPI_USR_OFFS    = 0x18
+    SPI_USR1_OFFS   = 0x1c
+    SPI_USR2_OFFS   = 0x20
+    SPI_MOSI_DLEN_OFFS = 0x24
+    SPI_MISO_DLEN_OFFS = 0x28
+    SPI_W0_OFFS = 0xA8
+
+    BOOTLOADER_FLASH_OFFSET = 0x0
+
+    CHIP_DETECT_MAGIC_VALUE = 0x6921506f
+
+    UART_DATE_REG_ADDR = 0x60000000 + 0x7c
+
+    EFUSE_BASE = 0x60008800
+    MAC_EFUSE_REG  = EFUSE_BASE + 0x044
+
+    GPIO_STRAP_REG = 0x3f404038
+
+    FLASH_ENCRYPTED_WRITE_ALIGN = 16
+
+    MEMORY_MAP = [[0x00000000, 0x00010000, "PADDING"],
+                  [0x3C000000, 0x3C800000, "DROM"],
+                  [0x3FC80000, 0x3FCE0000, "DRAM"],
+                  [0x3FC88000, 0x3FD00000, "BYTE_ACCESSIBLE"],
+                  [0x3FF00000, 0x3FF20000, "DROM_MASK"],
+                  [0x40000000, 0x40060000, "IROM_MASK"],
+                  [0x42000000, 0x42800000, "IROM"],
+                  [0x4037C000, 0x403E0000, "IRAM"],
+                  [0x50000000, 0x50002000, "RTC_IRAM"],
+                  [0x50000000, 0x50002000, "RTC_DRAM"],
+                  [0x600FE000, 0x60100000, "MEM_INTERNAL2"]]
+
+    def get_pkg_version(self):
+        num_word = 3
+        block1_addr = self.EFUSE_BASE + 0x044
+        word3 = self.read_reg(block1_addr + (4 * num_word))
+        pkg_version = (word3 >> 21) & 0x0F
+        return pkg_version
+
+    def get_chip_description(self):
+        chip_name = {
+            0: "ESP32-C3",
+        }.get(self.get_pkg_version(), "unknown ESP32-C3")
+
+        return "%s" % (chip_name)
+
+    def get_chip_features(self):
+        return ["Wi-Fi"]
+
+    def get_crystal_freq(self):
+        # ESP32C3 XTAL is fixed to 40MHz
+        return 40
+
+    def override_vddsdio(self, new_voltage):
+        raise NotImplementedInROMError("VDD_SDIO overrides are not supported for ESP32-C3")
+
+    def read_mac(self):
+        mac0 = self.read_reg(self.MAC_EFUSE_REG)
+        mac1 = self.read_reg(self.MAC_EFUSE_REG + 4)  # only bottom 16 bits are MAC
+        bitstring = struct.pack(">II", mac1, mac0)[2:]
+        try:
+            return tuple(ord(b) for b in bitstring)
+        except TypeError:  # Python 3, bitstring elements are already bytes
+            return tuple(bitstring)
+
+
 class ESP32StubLoader(ESP32ROM):
     """ Access class for ESP32 stub loader, runs on top of ROM.
     """
@@ -1814,6 +1891,26 @@ class ESP32S3BETA2StubLoader(ESP32S3BETA2ROM):
 ESP32S3BETA2ROM.STUB_CLASS = ESP32S3BETA2StubLoader
 
 
+class ESP32C3StubLoader(ESP32C3ROM):
+    """ Access class for ESP32C3 stub loader, runs on top of ROM.
+
+    (Basically the same as ESP32StubLoader, but different base class.
+    Can possibly be made into a mixin.)
+    """
+    FLASH_WRITE_SIZE = 0x4000  # matches MAX_WRITE_BLOCK in stub_loader.c
+    STATUS_BYTES_LENGTH = 2  # same as ESP8266, different to ESP32 ROM
+    IS_STUB = True
+
+    def __init__(self, rom_loader):
+        self.secure_download_mode = rom_loader.secure_download_mode
+        self._port = rom_loader._port
+        self._trace_enabled = rom_loader._trace_enabled
+        self.flush_input()  # resets _slip_reader
+
+
+ESP32C3ROM.STUB_CLASS = ESP32C3StubLoader
+
+
 class ESPBOOTLOADER(object):
     """ These are constants related to software ESP bootloader, working with 'v2' image files """
 
@@ -1840,6 +1937,8 @@ def LoadFirmwareImage(chip, filename):
             return ESP32S2FirmwareImage(f)
         elif chip == "esp32s3beta2":
             return ESP32S3BETA2FirmwareImage(f)
+        elif chip == 'esp32c3':
+            return ESP32C3FirmwareImage(f)
         else:  # Otherwise, ESP8266 so look at magic to determine the image type
             magic = ord(f.read(1))
             f.seek(0)
@@ -1949,7 +2048,7 @@ class BaseFirmwareImage(object):
             patch_offset = self.elf_sha256_offset - file_pos
             # Sanity checks
             if patch_offset < self.SEG_HEADER_LEN or patch_offset + self.SHA256_DIGEST_LEN > segment_len:
-                raise FatalError('Cannot place SHA256 digest on segment boundary' +
+                raise FatalError('Cannot place SHA256 digest on segment boundary'
                                  '(elf_sha256_offset=%d, file_pos=%d, segment_size=%d)' %
                                  (self.elf_sha256_offset, file_pos, segment_len))
             if segment_data[patch_offset:patch_offset + self.SHA256_DIGEST_LEN] != b'\x00' * self.SHA256_DIGEST_LEN:
@@ -2254,7 +2353,7 @@ class ESP32FirmwareImage(BaseFirmwareImage):
                 last_addr = flash_segments[0].addr
                 for segment in flash_segments[1:]:
                     if segment.addr // self.IROM_ALIGN == last_addr // self.IROM_ALIGN:
-                        raise FatalError(("Segment loaded at 0x%08x lands in same 64KB flash mapping as segment loaded at 0x%08x. " +
+                        raise FatalError(("Segment loaded at 0x%08x lands in same 64KB flash mapping as segment loaded at 0x%08x. "
                                           "Can't generate binary. Suggest changing linker script or ELF to merge sections.") %
                                          (segment.addr, last_addr))
                     last_addr = segment.addr
@@ -2372,7 +2471,7 @@ class ESP32FirmwareImage(BaseFirmwareImage):
 
         chip_id = fields[4]
         if chip_id != self.ROM_LOADER.IMAGE_CHIP_ID:
-            print(("Unexpected chip id in image. Expected %d but value was %d. " +
+            print(("Unexpected chip id in image. Expected %d but value was %d. "
                    "Is this image for a different chip model?") % (self.ROM_LOADER.IMAGE_CHIP_ID, chip_id))
 
         # reserved fields in the middle should all be zero
@@ -2386,7 +2485,7 @@ class ESP32FirmwareImage(BaseFirmwareImage):
             raise RuntimeError("Invalid value for append_digest field (0x%02x). Should be 0 or 1.", append_digest)
 
     def save_extended_header(self, save_file):
-        def join_byte(ln,hn):
+        def join_byte(ln, hn):
             return (ln & 0x0F) + ((hn & 0x0F) << 4)
 
         append_digest = 1 if self.append_digest else 0
@@ -2423,6 +2522,14 @@ class ESP32S3BETA2FirmwareImage(ESP32FirmwareImage):
 ESP32S3BETA2ROM.BOOTLOADER_IMAGE = ESP32S3BETA2FirmwareImage
 
 
+class ESP32C3FirmwareImage(ESP32FirmwareImage):
+    """ ESP32C3 Firmware Image almost exactly the same as ESP32FirmwareImage """
+    ROM_LOADER = ESP32C3ROM
+
+
+ESP32C3ROM.BOOTLOADER_IMAGE = ESP32C3FirmwareImage
+
+
 class ELFFile(object):
     SEC_TYPE_PROGBITS = 0x01
     SEC_TYPE_STRTAB = 0x03
@@ -2445,17 +2552,17 @@ class ELFFile(object):
         # read the ELF file header
         LEN_FILE_HEADER = 0x34
         try:
-            (ident,_type,machine,_version,
-             self.entrypoint,_phoff,shoff,_flags,
-             _ehsize, _phentsize,_phnum, shentsize,
-             shnum,shstrndx) = struct.unpack("<16sHHLLLLLHHHHHH", f.read(LEN_FILE_HEADER))
+            (ident, _type, machine, _version,
+             self.entrypoint, _phoff, shoff, _flags,
+             _ehsize, _phentsize, _phnum, shentsize,
+             shnum, shstrndx) = struct.unpack("<16sHHLLLLLHHHHHH", f.read(LEN_FILE_HEADER))
         except struct.error as e:
             raise FatalError("Failed to read a valid ELF header from %s: %s" % (self.name, e))
 
         if byte(ident, 0) != 0x7f or ident[1:4] != b'ELF':
             raise FatalError("%s has invalid ELF magic header" % self.name)
-        if machine != 0x5e:
-            raise FatalError("%s does not appear to be an Xtensa ELF file. e_machine=%04x" % (self.name, machine))
+        if machine not in [0x5e, 0xf3]:
+            raise FatalError("%s does not appear to be an Xtensa or an RISCV ELF file. e_machine=%04x" % (self.name, machine))
         if shentsize != self.LEN_SEC_HEADER:
             raise FatalError("%s has unexpected section header entry size 0x%x (not 0x%x)" % (self.name, shentsize, self.LEN_SEC_HEADER))
         if shnum == 0:
@@ -2475,7 +2582,7 @@ class ELFFile(object):
         section_header_offsets = range(0, len(section_header), self.LEN_SEC_HEADER)
 
         def read_section_header(offs):
-            name_offs,sec_type,_flags,lma,sec_offs,size = struct.unpack_from("<LLLLLL", section_header[offs:])
+            name_offs, sec_type, _flags, lma, sec_offs, size = struct.unpack_from("<LLLLLL", section_header[offs:])
             return (name_offs, sec_type, lma, size, sec_offs)
         all_sections = [read_section_header(offs) for offs in section_header_offsets]
         prog_sections = [s for s in all_sections if s[1] == ELFFile.SEC_TYPE_PROGBITS]
@@ -2483,7 +2590,7 @@ class ELFFile(object):
         # search for the string table section
         if not (shstrndx * self.LEN_SEC_HEADER) in section_header_offsets:
             raise FatalError("ELF file has no STRTAB section at shstrndx %d" % shstrndx)
-        _,sec_type,_,sec_size,sec_offs = read_section_header(shstrndx * self.LEN_SEC_HEADER)
+        _, sec_type, _, sec_size, sec_offs = read_section_header(shstrndx * self.LEN_SEC_HEADER)
         if sec_type != ELFFile.SEC_TYPE_STRTAB:
             print('WARNING: ELF file has incorrect STRTAB section type 0x%02x' % sec_type)
         f.seek(sec_offs)
@@ -2495,7 +2602,7 @@ class ELFFile(object):
             raw = string_table[offs:]
             return raw[:raw.index(b'\x00')]
 
-        def read_data(offs,size):
+        def read_data(offs, size):
             f.seek(offs)
             return f.read(size)
 
@@ -2773,15 +2880,15 @@ def _update_image_flash_params(esp, address, args, image):
         test_image = esp.BOOTLOADER_IMAGE(io.BytesIO(image))
         test_image.verify()
     except Exception:
-        print("Warning: Image file at 0x%x is not a valid %s image, so not changing any flash settings." % (address,esp.CHIP_NAME))
+        print("Warning: Image file at 0x%x is not a valid %s image, so not changing any flash settings." % (address, esp.CHIP_NAME))
         return image
 
     if args.flash_mode != 'keep':
-        flash_mode = {'qio':0, 'qout':1, 'dio':2, 'dout': 3}[args.flash_mode]
+        flash_mode = {'qio': 0, 'qout': 1, 'dio': 2, 'dout': 3}[args.flash_mode]
 
     flash_freq = flash_size_freq & 0x0F
     if args.flash_freq != 'keep':
-        flash_freq = {'40m':0, '26m':1, '20m':2, '80m': 0xf}[args.flash_freq]
+        flash_freq = {'40m': 0, '26m': 1, '20m': 2, '80m': 0xf}[args.flash_freq]
 
     flash_size = flash_size_freq & 0xF0
     if args.flash_size != 'keep':
@@ -2808,7 +2915,7 @@ def write_flash(esp, args):
         if not esp.secure_download_mode:
             if esp.get_encrypted_download_disabled():
                 raise FatalError("This chip has encrypt functionality in UART download mode disabled. "
-                                 + "This is the Flash Encryption configuration for Production mode instead of Development mode.")
+                                 "This is the Flash Encryption configuration for Production mode instead of Development mode.")
 
             crypt_cfg_efuse = esp.get_flash_crypt_config()
 
@@ -2835,9 +2942,9 @@ def write_flash(esp, args):
     if args.flash_size != 'keep':  # TODO: check this even with 'keep'
         flash_end = flash_size_bytes(args.flash_size)
         for address, argfile in args.addr_filename:
-            argfile.seek(0,2)  # seek to end
+            argfile.seek(0, 2)  # seek to end
             if address + argfile.tell() > flash_end:
-                raise FatalError(("File %s (length %d) at offset %d will not fit in %d bytes of flash. " +
+                raise FatalError(("File %s (length %d) at offset %d will not fit in %d bytes of flash. "
                                   "Use --flash-size argument, or change flashing address.")
                                  % (argfile.name, argfile.tell(), address, flash_end))
             argfile.seek(0)
@@ -2991,15 +3098,20 @@ def elf2image(args):
         if args.secure_pad_v2:
             image.secure_pad = '2'
         image.min_rev = 0
+    elif args.chip == 'esp32c3':
+        image = ESP32C3FirmwareImage()
+        if args.secure_pad_v2:
+            image.secure_pad = '2'
+        image.min_rev = 0
     elif args.version == '1':  # ESP8266
         image = ESP8266ROMFirmwareImage()
     else:
         image = ESP8266V2FirmwareImage()
     image.entrypoint = e.entrypoint
     image.segments = e.sections  # ELFSection is a subclass of ImageSegment
-    image.flash_mode = {'qio':0, 'qout':1, 'dio':2, 'dout': 3}[args.flash_mode]
+    image.flash_mode = {'qio': 0, 'qout': 1, 'dio': 2, 'dout': 3}[args.flash_mode]
     image.flash_size_freq = image.ROM_LOADER.FLASH_SIZES[args.flash_size]
-    image.flash_size_freq += {'40m':0, '26m':1, '20m':2, '80m': 0xf}[args.flash_freq]
+    image.flash_size_freq += {'40m': 0, '26m': 1, '20m': 2, '80m': 0xf}[args.flash_freq]
 
     if args.elf_sha256_offset:
         image.elf_sha256 = e.sha256()
@@ -3155,7 +3267,7 @@ def main(custom_commandline=None):
     parser.add_argument('--chip', '-c',
                         help='Target chip type',
                         type=lambda c: c.lower().replace('-', ''),  # support ESP32-S2, etc.
-                        choices=['auto', 'esp8266', 'esp32', 'esp32s2', 'esp32s3beta2'],
+                        choices=['auto', 'esp8266', 'esp32', 'esp32s2', 'esp32s3beta2', 'esp32c3'],
                         default=os.environ.get('ESPTOOL_CHIP', 'auto'))
 
     parser.add_argument(
@@ -3209,7 +3321,7 @@ def main(custom_commandline=None):
         help='Run esptool {command} -h for additional help')
 
     def add_spi_connection_arg(parent):
-        parent.add_argument('--spi-connection', '-sc', help='ESP32-only argument. Override default SPI Flash connection. ' +
+        parent.add_argument('--spi-connection', '-sc', help='ESP32-only argument. Override default SPI Flash connection. '
                             'Value can be SPI, HSPI or a comma-separated list of 5 I/O numbers to use for SPI flash (CLK,Q,D,HD,CS).',
                             action=SpiConnectionAction)
 
@@ -3271,7 +3383,7 @@ def main(custom_commandline=None):
 
     add_spi_flash_subparsers(parser_write_flash, is_elf2image=False)
     parser_write_flash.add_argument('--no-progress', '-p', help='Suppress progress output', action="store_true")
-    parser_write_flash.add_argument('--verify', help='Verify just-written data on flash ' +
+    parser_write_flash.add_argument('--verify', help='Verify just-written data on flash '
                                     '(mostly superfluous, data is read back during flashing)', action='store_true')
     parser_write_flash.add_argument('--encrypt', help='Apply flash encryption when writing data (required correct efuse settings)',
                                     action='store_true')
@@ -3279,8 +3391,10 @@ def main(custom_commandline=None):
                                     action='store_true')
 
     compress_args = parser_write_flash.add_mutually_exclusive_group(required=False)
-    compress_args.add_argument('--compress', '-z', help='Compress data in transfer (default unless --no-stub is specified)',action="store_true", default=None)
-    compress_args.add_argument('--no-compress', '-u', help='Disable data compression during transfer (default if --no-stub is specified)',action="store_true")
+    compress_args.add_argument('--compress', '-z', help='Compress data in transfer (default unless --no-stub is specified)',
+                               action="store_true", default=None)
+    compress_args.add_argument('--no-compress', '-u', help='Disable data compression during transfer (default if --no-stub is specified)',
+                               action="store_true")
 
     subparsers.add_parser(
         'run',
@@ -3304,8 +3418,8 @@ def main(custom_commandline=None):
         help='Create an application image from ELF file')
     parser_elf2image.add_argument('input', help='Input ELF file')
     parser_elf2image.add_argument('--output', '-o', help='Output filename prefix (for version 1 image), or filename (for version 2 single image)', type=str)
-    parser_elf2image.add_argument('--version', '-e', help='Output image version', choices=['1','2'], default='1')
-    parser_elf2image.add_argument('--min-rev', '-r', help='Minimum chip revision', choices=['0','1','2','3'], default='0')
+    parser_elf2image.add_argument('--version', '-e', help='Output image version', choices=['1', '2'], default='1')
+    parser_elf2image.add_argument('--min-rev', '-r', help='Minimum chip revision', choices=['0', '1', '2', '3'], default='0')
     parser_elf2image.add_argument('--secure-pad', action='store_true',
                                   help='Pad image so once signed it will end on a 64KB boundary. For Secure Boot v1 images only.')
     parser_elf2image.add_argument('--secure-pad-v2', action='store_true',
@@ -3334,7 +3448,7 @@ def main(custom_commandline=None):
         help='Read SPI flash status register')
 
     add_spi_connection_arg(parser_read_status)
-    parser_read_status.add_argument('--bytes', help='Number of bytes to read (1-3)', type=int, choices=[1,2,3], default=2)
+    parser_read_status.add_argument('--bytes', help='Number of bytes to read (1-3)', type=int, choices=[1, 2, 3], default=2)
 
     parser_write_status = subparsers.add_parser(
         'write_flash_status',
@@ -3342,7 +3456,7 @@ def main(custom_commandline=None):
 
     add_spi_connection_arg(parser_write_status)
     parser_write_status.add_argument('--non-volatile', help='Write non-volatile bits (use with caution)', action='store_true')
-    parser_write_status.add_argument('--bytes', help='Number of status bytes to write (1-3)', type=int, choices=[1,2,3], default=2)
+    parser_write_status.add_argument('--bytes', help='Number of status bytes to write (1-3)', type=int, choices=[1, 2, 3], default=2)
     parser_write_status.add_argument('value', help='New value', type=arg_auto_int)
 
     parser_read_flash = subparsers.add_parser(
@@ -3432,6 +3546,7 @@ def main(custom_commandline=None):
                         'esp32': ESP32ROM,
                         'esp32s2': ESP32S2ROM,
                         'esp32s3beta2': ESP32S3BETA2ROM,
+                        'esp32c3': ESP32C3ROM,
                     }[args.chip]
                     esp = chip_class(each_port, initial_baud, args.trace)
                     esp.connect(args.before, args.connect_attempts)
@@ -3526,7 +3641,7 @@ def expand_file_arguments():
     for arg in sys.argv:
         if arg.startswith("@"):
             expanded = True
-            with open(arg[1:],"r") as f:
+            with open(arg[1:], "r") as f:
                 for line in f.readlines():
                     new_args += shlex.split(line)
         else:
@@ -3585,17 +3700,17 @@ class SpiConnectionAction(argparse.Action):
             if len(values) != 5:
                 raise argparse.ArgumentError(self, '%s is not a valid list of comma-separate pin numbers. Must be 5 numbers - CLK,Q,D,HD,CS.' % value)
             try:
-                values = tuple(int(v,0) for v in values)
+                values = tuple(int(v, 0) for v in values)
             except ValueError:
                 raise argparse.ArgumentError(self, '%s is not a valid argument. All pins must be numeric values' % values)
             if any([v for v in values if v > 33 or v < 0]):
                 raise argparse.ArgumentError(self, 'Pin numbers must be in the range 0-33.')
             # encode the pin numbers as a 32-bit integer with packed 6-bit values, the same way ESP32 ROM takes them
             # TODO: make this less ESP32 ROM specific somehow...
-            clk,q,d,hd,cs = values
+            clk, q, d, hd, cs = values
             value = (hd << 24) | (cs << 18) | (d << 12) | (q << 6) | clk
         else:
-            raise argparse.ArgumentError(self, '%s is not a valid spi-connection value. ' +
+            raise argparse.ArgumentError(self, '%s is not a valid spi-connection value. '
                                          'Values are SPI, HSPI, or a sequence of 5 pin numbers CLK,Q,D,HD,CS).' % value)
         setattr(namespace, self.dest, value)
 
@@ -3608,23 +3723,23 @@ class AddrFilenamePairAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         # validate pair arguments
         pairs = []
-        for i in range(0,len(values),2):
+        for i in range(0, len(values), 2):
             try:
-                address = int(values[i],0)
+                address = int(values[i], 0)
             except ValueError:
-                raise argparse.ArgumentError(self,'Address "%s" must be a number' % values[i])
+                raise argparse.ArgumentError(self, 'Address "%s" must be a number' % values[i])
             try:
                 argfile = open(values[i + 1], 'rb')
             except IOError as e:
                 raise argparse.ArgumentError(self, e)
             except IndexError:
-                raise argparse.ArgumentError(self,'Must be pairs of an address and the binary filename to write there')
+                raise argparse.ArgumentError(self, 'Must be pairs of an address and the binary filename to write there')
             pairs.append((address, argfile))
 
         # Sort the addresses and check for overlapping
         end = 0
         for address, argfile in sorted(pairs):
-            argfile.seek(0,2)  # seek to end
+            argfile.seek(0, 2)  # seek to end
             size = argfile.tell()
             argfile.seek(0)
             sector_start = address & ~(ESPLoader.FLASH_SECTOR_SIZE - 1)
@@ -3806,6 +3921,39 @@ y2Z87xsGNarp80UVd682sO8eDp7rEBPwmCI+xdO8UzrfA1tV3ETDn47IgY0OOtkSyRd8zKOpH+O43uf+
 ScsrOmg0cMqruQMKMwFzwL0oHR/R8TU/grDGI08RejxgC1Dm4RGaiLahms40fAopv00IjvBEbJbFZsamb5kWxXaIPwnCaqQ+0ITRpuAksFV8wxlinR9K/zqhYwtoWBkrDayUnQktr7i4mQW/ybDPuUYT7GYjU1Bl\
 m2T6N/hWrFYfXs8Y0Bsh/jScUB4CcZ3KhINozqBsulznagvOqb9zfMAyapgGqe82vOGPboWEm1MAIn6Ri78C0+nmBLzvOhBsbf1Wd/eLLzHKLjfnhhj9IoPSNgsmLafniEmFj/wx/uok/Ug6w7cNl2YKc+i9iAxI\
 D+rFjfPb+PALWRe9NRLCLWR5tGbUnQPv+19OEWs4+0s+Wdl2RlzLL7pka3nv08iz0pfV/rMR/qDwp99XZgk/K1RxUaRFGReJe9PcrpYfZFDHY5W7wdqszOD3h9Z8tc9vQkJxUpTjMvn0P3ZbiIQ=\
+""")))
+ESP32C3ROM.STUB_CODE = eval(zlib.decompress(base64.b64decode(b"""
+eNrFWmt727YV/iuOndhttvUBxCu8xJFaybLsOE37dPXch1lDgqSXrtMWR2mcrf7vw3suIiVbSr7tg2wJAIFzfc8F/O/BorlZHBzuVAfFjbHFjQ2fKgvf8TGvT4sbn4dvUXFTuuImp9H9MFi+CH/S78OfOAyl4X+z\
+G/54eTqmp4ubtr7MaI9n4Y95HvaPFmEU021xXdw0JvwaDKvxXjggf8g0VINZcVMPxl/PdsOzJinDwYPwCWvzfBj+RMVBMccJ2O992CGh/WiVy27DaDigCTRbF760YcYH4qs2Kw6Irt/Pwro6rK/42bbNsg0TevSI\
+RUOchk9dZ8Qp7wfiU5HZYCm88Amic+HjI/z/5lZoyS/A4xDET7pzTPifuxGL4P5D3bNbOZpPGPZo0JO639Z/AwXw7uG8la1V26S0bAwJBRW5iLcOSg1qcv5MdUsqJ0W+YFqq8LTPzrMH4V8gvLYZ2GHN89M2PwnL\
+6mkwiTqsaMQsrB9jmGUMm2qi0Yz4WAhdRhaBGOjPizTLhGV+02YiMdMx20B6bVFABHs7mbDXl4D1oCciIz6AZD3bdjjrKBzk9h6K+ZE9igGKMa7YoEmW9BqRoxevsVFP+R4SHIW/tmL6MJpbFkWeTDGNRx/A9GFC\
+ho0Ay1p3cYRF/VMhSThgIwfk7hgjgb1aRtr6gvkFLRAftEJb2o62ysDxQDFtFrGNgb62waZT9ZaeOYRHwEcqrmbE2Gy3RDlubXc6TKem04gwOmrA1tD6u1uAsH/ywVU2IYsUB8CKPJmQxMkXvnvmp8IZbDGb9uwX\
+XKnJ5FHPMwXHaqzGjx50fI0lI15vhXKSncFMiplB0JAbyNZ5CqDZE7tU9vubO3vVkUPHx2C5EfUNhEgCRtXM0tDxbFXiCIHeHgsEr6nwu5lz+i24QUfbINYGP4ygFTMidlfrD7DIRz3gmWCJrDoj2ofq1tFEtqz7\
+WzZCcC32+Cm8IYjB16mCTh9v+tgCMwM2iCmWMNuYwcSTHr4cywy81u3Du7HDJVs2A8yJ/0vYpsMb/wq8QjUIG08JaE+G+yLFhp3RiXSBG8AU8mSzE77UAgSJMjUkfyhobTFk+YTHC6KxGAsUxRgcjjmMfgp4bJ28\
+Z//QSL0SeL2NBGN98+xXDY/YY8zU3k89jzVeMMkmDAbVYMqstGTAO0esh9b+uR9hpmqQw3vOqxmTGWnh4IPJZiLIZIA7YKIUqkgiAoQ9UYw0T1HrN4kaTRqsL2866+v5xYLJg5H6PooRRl7dsseTICMmDzMwibw+\
+ZGuDPeE/gh+APMfiao8nGAVHGdOGE1gYLxkY7wvAExF1uxboV8MInNdIBBnororjm8QJR6ijbrWn1R0RVqCFn7uSTSCewXqoINzOuxCx9UjbHcnQD0FU2Uh9P4abD5TVx+wClTh3RWrxTJ2L+ZhA8y6ygcF4XX7I\
+noysolgQTzJ2xSp7/xboYW/fYeoNTk72RbOBhbphRmskJwCuUijKbmElUHMXmBYsjFwAWZEIhLflERPKSLPLlqqAtNnU99c3N8kv3QmEDOU0sFs5TpGDffZCLX1AqBNJMykbSHRC4urjvdOg0mR3G8CBiD1Z4WG1\
+efJM7NckvhNYVQ4fQ1XluJgH8GrTy/YnCPin2dJ1AajOv8MiVdybUwZZKCJPXnyKEDYyGEJTrzy5lYXXHAERYZxT8H04+tjL2xJQkzZ9hCVkFSNVs9ZMh7H3K/bYjYEBth5wj2h7kAHeW8781zYDuN3rkyUGzNu3\
+t+9+BNj8BMT7Gyy1EhijuLsLtN2Hy59CPgiaLYqzGjxHv3Ci1Yjll2IqqrYVYgZfcWpeQV1VyiAH3PGDTWwOmfQ8uQpLG/uBd8yTWm0015Jwuxt9wgYpvqS3/9m8J5m4P2TUJrv2dxeHg6/5EcJ2TbPs7Ehqv2Q9\
+c8vWXJMyFCvZZQ2V4pzWhOTVVOFb1rLnGgi4zDV92JeE3mUv2GzLT5sth0IKKGAHVbdzfvGGDaVSnHYjz8lMnvVn/jBihedEX/RBymsaWaHhx+00MLq/Yc/7XPkgLHoWe5sjXs4QSc/ZonOnM+22o1HgDm4lMYMj\
+JDH/aEp+rLGp/7azXoSqZvBUCvfNhNIgaf17TuTnnMYToQlAWeuYZfqLloKmv9ZOeRC7IWmhhsb/F6Nf44kOoy+Tdb/eImNatArkLx//AHv7oZhfgu7ZL8CV8vT0DJNnj59j8nkxPwfKvzrvJalVdjGaXb7tJI/8\
+EUyGcHEkriCQXSICx1I6DBica8NrvERoLxGa5kqmHSYN0G0GnDejrAE6wSi8mfOCjYhcVpo55s+yD2vlk2ZdmgFhrIIZN7IFClhnJ39HdkmpYL+QWy3CHlwdkXHtSA6txVuSD7XHhm/80JRzLGOPtdxV3S37ZzaZ\
+0F4SOLelYW3ZtfCKYnrXFCraVTknxjJKMwumfhsSwP+2YPRcxMs9Kf+z8FOyDkW482X/TnoPIBDuRaKDGVoaTPgLd04mW0y4pALoKjsTttAFsWsdGWTRedKOWlVE18ChXCbQuUCMpU5U/Y/suap1i6RLqQ5dpeGH\
+bXbZfciE75z5Q0Cm8bgbD3UXF9BzKZ8JGS1rCoshFMuJ7gJLqUaT+TJaXY9PnX5JzaJU6qD0nH72ivL1/GNbukWVj518wQJ0VKgQUXHHps8eilXadhcSf8Wl39Kv0HmwEqQaGficSua1NLJWyphtsdL1SiRKnZtP\
+cGc/Vxo7vLikik37ddpugVCy99LZ7EvH9KVTSneldlIZayBBIdpIAHLU/PTfHEGRlwIxTvWuesZBVbtuHwm1BKk3+9hfAZxZAtZ1E2Y5kRfXNCxtrRBLS5lJiwXNUOW+S+lRF7Koa9JqAy2W3nuS6ojjkRJR7XMN\
+jQyplFDbO2eVvadkx1iWPfG/Ale/IiF6DjENXNY6+kkt5xfFtQpYYA45cK6ZxB3rtYK8HK9EXwn3sNBoRRZNeGSfSJKJeGyP5cA6gwu75FjOlMYaENtbalhOPLdDKCB40XWdn+w9VGBHndUIUKKjhWS9TLpO746X\
+W5NUgnqtp0kjGBN59OiUuhEAQek7mmTHaxa8qtHXTEsp4axkW6FWCeLl8gAvB0DSJHNqCGfMUe2RE+TPEdJPwPsJgHCMK5vxFtzOqbxyAHpu+lC19Qi2fU5kONU/UJWYjkfHvouzwWh/lQlkH3ekQf1UEGsqIbZc\
+M+dlDWbZozxLu5F+ZjybdupsMjXLqUYK2ERd9dDeSRODk7mdPfZAHK8t6DJGa88+EsSi5uoOtdhzMRlrPEP8Us3SgTXciodYaoFRnbLLbo2TXiyaeqvM0xbJ5LGa+Eya/dq2TGV7UvWRDg6XG2eycbkiAhJ2S9Y8\
+6spY4XLpm73Mqif13E47FghZQLWv5YlGEfSHvruONXLP+sGG52qxtMGdGbmwadZAuJF6BKJueq1mKxSWtXSmkvG5dJ7FCny2nhD8HsVqyN9JIyHiHXLh2Rvq/V6xP6tEHGVMdoT9HxwC5usRulauRl8SxNW3WkjU\
+Qx5qcslbKnJc6Uluoq0xH2mbOVcajTh7FX14JNdeODUbvemO8XMp1Mztx270IwBr62Gv0QHArZs75cNa7QFufmbnN3mGpf9wJJdqrUBnI1YqODqWSFHLbaDpwObjocboO6uTbrXzJ17cOdWs7UTAqkYnKNdri+XT\
+4kJNs3y6pqfnolTdQPr6lPagKnGGS+GFXr7E0mGR68Aqk7uadpkyHPMANRkSqfGtNLZrjv3ku8GVudXAcWgqI0RuI+SWwtUyf75HYddP+6KOuhjVxMsYNe7usvlsO2bqUPPT2bkQQvfzFKYJB5u0S/lc9CHrSnVE\
+FPBGHhl9oc9IGRSQQayupYpJpaRN4iZXVEFnokTgrDmEPpSOvGEMvSNga15oysawTmCBsN2KzZWrsnSdNPrMdelNrumNlcsyOwlUzCWg0/8uxLHdLpXIFr/DG+DOhHtHvQilu7dy97Ay6UzvSTvrMiRo0SvuxxON\
+YjJXNdsSVatG3E+EephJeX3NY/zywuyeCBis41ryY4TxyI93kK75v/L7AVqd/RsMyC1K43rmIQl25bvOCHNbMkX8uETOSqzB63gXteT1A1ypEpfx3dwPcSR+xZFvM7y/6l6FYSZHlJm8ozcHdtkDSP1USVYr4d4Q\
+GFqpo1lUCwqQP3YXkSpChl3/kmx2zu0HSmXgpO17zkhp70T3ztOuc6Bqu5+T4SXlLatXlSL/1vUJmUnMKuW6G0JfXaGC4Bh6MKJC9sttp+Nz8acgnVBjNL0CIXnbE64qyIw3YtZs5UUlINRZdzvefzHDkmAupGlr\
+B1KpwYz1PRQ1a309hCnh4BrJRWbWNdHuEelpHwuONvNuzLFUDv7+TJk1/bPcO1teyIPfsiZyqy9J/KbXn2o1KRv5lqYUu2LeHnF7bWlvFI/w6lTYcM5tOG6Uh0xMu/hxd4JJTuQWvuUs5vrkazTlDqUjJ+bqYa7p\
+7nRwIi90sAkFEy2kmyCJn7ZMrH4igV8krptkWRqAzuCCBHAgIRtW4zVcIEBTulQLz9RkHVwgQlAgpXJDLwsSKXhN78UEoYsuBmq8MqAQTi9pELo4BuYmlVY2M/8vWKR0CZy6Y8IBUuLzQmJjJJcsGUtHz2bUX/FL\
+PK8RuZHXo/Qxszm+g6cnd71tc6qYb/S6J3L1HkvSQ2hnOBKVZisVw8PP9JHcaNETS1hDvyN9uY+WdIpCAG2RNp21aEqnp8dw/PRsHwVo+pz6Xbhme9X0X9qiz8Efd+iFx5/fLcprvPZoTZbF1uaxCTPNfHH9cTkY\
+RXEaButyUer7kbCr4FMHMtzfxdg0dia+/R/imbus\
 """)))
 
 

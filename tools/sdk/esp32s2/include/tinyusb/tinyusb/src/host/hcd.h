@@ -45,27 +45,39 @@ typedef enum
   HCD_EVENT_DEVICE_ATTACH,
   HCD_EVENT_DEVICE_REMOVE,
   HCD_EVENT_XFER_COMPLETE,
+
+  // Not an HCD event, just a convenient way to defer ISR function
+  USBH_EVENT_FUNC_CALL,
+
+  HCD_EVENT_COUNT
 } hcd_eventid_t;
 
 typedef struct
 {
   uint8_t rhport;
   uint8_t event_id;
+  uint8_t dev_addr;
 
   union
   {
-    struct
-    {
+    // Attach, Remove
+    struct {
       uint8_t hub_addr;
       uint8_t hub_port;
-    } attach, remove;
+    } connection;
 
-    struct
-    {
+    // XFER_COMPLETE
+    struct {
       uint8_t ep_addr;
       uint8_t result;
       uint32_t len;
     } xfer_complete;
+
+    // FUNC_CALL
+    struct {
+      void (*func) (void*);
+      void* param;
+    }func_call;
   };
 
 } hcd_event_t;
@@ -110,20 +122,6 @@ tusb_speed_t hcd_port_speed_get(uint8_t hostid);
 void hcd_device_close(uint8_t rhport, uint8_t dev_addr);
 
 //--------------------------------------------------------------------+
-// Event function
-//--------------------------------------------------------------------+
-void hcd_event_handler(hcd_event_t const* event, bool in_isr);
-
-// Helper to send device attach event
-void hcd_event_device_attach(uint8_t rhport);
-
-// Helper to send device removal event
-void hcd_event_device_remove(uint8_t rhport);
-
-// Helper to send USB transfer event
-void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-
-//--------------------------------------------------------------------+
 // Endpoints API
 //--------------------------------------------------------------------+
 bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);
@@ -144,6 +142,22 @@ bool hcd_pipe_queue_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t buffer[], ui
 bool hcd_pipe_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t buffer[], uint16_t total_bytes, bool int_on_complete);
 
 // tusb_error_t hcd_pipe_cancel();
+
+//--------------------------------------------------------------------+
+// Event API (implemented by stack)
+//--------------------------------------------------------------------+
+
+// Called by HCD to notify stack
+extern void hcd_event_handler(hcd_event_t const* event, bool in_isr);
+
+// Helper to send device attach event
+extern void hcd_event_device_attach(uint8_t rhport, bool in_isr);
+
+// Helper to send device removal event
+extern void hcd_event_device_remove(uint8_t rhport, bool in_isr);
+
+// Helper to send USB transfer event
+extern void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t xferred_bytes, xfer_result_t result, bool in_isr);
 
 #ifdef __cplusplus
  }

@@ -63,7 +63,7 @@ typedef enum
   CDC_COMM_SUBCLASS_TELEPHONE_CONTROL_MODEL           , ///< Telephone Control Model  [USBPSTN1.2]
   CDC_COMM_SUBCLASS_MULTICHANNEL_CONTROL_MODEL        , ///< Multi-Channel Control Model  [USBISDN1.2]
   CDC_COMM_SUBCLASS_CAPI_CONTROL_MODEL                , ///< CAPI Control Model  [USBISDN1.2]
-  CDC_COMM_SUBCLASS_ETHERNET_NETWORKING_CONTROL_MODEL , ///< Ethernet Networking Control Model  [USBECM1.2]
+  CDC_COMM_SUBCLASS_ETHERNET_CONTROL_MODEL            , ///< Ethernet Networking Control Model  [USBECM1.2]
   CDC_COMM_SUBCLASS_ATM_NETWORKING_CONTROL_MODEL      , ///< ATM Networking Control Model  [USBATM1.2]
   CDC_COMM_SUBCLASS_WIRELESS_HANDSET_CONTROL_MODEL    , ///< Wireless Handset Control Model  [USBWMC1.1]
   CDC_COMM_SUBCLASS_DEVICE_MANAGEMENT                 , ///< Device Management  [USBWMC1.1]

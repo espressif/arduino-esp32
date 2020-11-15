@@ -77,7 +77,7 @@ typedef struct TU_ATTR_ALIGNED(4)
       uint32_t len;
     }xfer_complete;
 
-    // USBD_EVENT_FUNC_CALL
+    // FUNC_CALL
     struct {
       void (*func) (void*);
       void* param;
@@ -140,7 +140,7 @@ void dcd_edpt_stall       (uint8_t rhport, uint8_t ep_addr);
 void dcd_edpt_clear_stall (uint8_t rhport, uint8_t ep_addr);
 
 //--------------------------------------------------------------------+
-// Event API (Implemented by device stack)
+// Event API (implemented by stack)
 //--------------------------------------------------------------------+
 
 // Called by DCD to notify device stack

@@ -197,7 +197,8 @@ void tuh_hid_generic_isr(uint8_t dev_addr, xfer_result_t event);
 //--------------------------------------------------------------------+
 void hidh_init(void);
 bool hidh_open_subtask(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *p_interface_desc, uint16_t *p_length);
-void hidh_isr(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+bool hidh_set_config(uint8_t dev_addr, uint8_t itf_num);
+bool hidh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 void hidh_close(uint8_t dev_addr);
 
 #ifdef __cplusplus
