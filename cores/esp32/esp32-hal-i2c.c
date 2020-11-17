@@ -1798,6 +1798,10 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
 	if(i2c_num >= 2){
 		return NULL;
 	}
+	if(!clk_speed){
+	    //originally does not change the speed, but getFrequency and setFrequency need to be implemented first.
+	    clk_speed = 100000;
+	}
 	i2c_t * out = NULL;
 	if(i2c_ports[i2c_num] == NULL){
 		out = (i2c_t*)malloc(sizeof(i2c_t));
