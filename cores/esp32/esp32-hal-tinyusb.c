@@ -30,6 +30,8 @@
 
 #include "esp32-hal-tinyusb.h"
 #include "esp32s2/rom/usb/usb_persist.h"
+#include "esp32s2/rom/usb/usb_dc.h"
+#include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
 
 typedef char tusb_str_t[127];
 
@@ -457,27 +459,22 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
 {
     if(usb_persist_mode != RESTART_NO_PERSIST){
         if (usb_persist_enabled) {
-            REG_SET_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
-            REG_SET_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
+            usb_dc_prepare_persist();
         }
         if (usb_persist_mode == RESTART_BOOTLOADER) {
             //USB CDC Download
             if (usb_persist_enabled) {
-                USB_WRAP.date.val = USBDC_PERSIST_ENA;
+                chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
             }
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
-            periph_module_disable(PERIPH_TIMG1_MODULE);
         } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
             //DFU Download
-            USB_WRAP.date.val = USBDC_BOOT_DFU;
+            chip_usb_set_persist_flags(USBDC_BOOT_DFU);
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
-            periph_module_disable(PERIPH_TIMG0_MODULE);
-            periph_module_disable(PERIPH_TIMG1_MODULE);
         } else if (usb_persist_enabled) {
             //USB Persist reboot
-            USB_WRAP.date.val = USBDC_PERSIST_ENA;
+            chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
         }
-        SET_PERI_REG_MASK(RTC_CNTL_OPTIONS0_REG, RTC_CNTL_SW_PROCPU_RST);
     }
 }
 
@@ -531,7 +528,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         periph_module_enable(PERIPH_USB_MODULE);
     }
 
-    if (usb_persist_enabled && esp_register_shutdown_handler(usb_persist_shutdown_handler) != ESP_OK) {
+    if (esp_register_shutdown_handler(usb_persist_shutdown_handler) != ESP_OK) {
         initialized = false;
         return ESP_FAIL;
     }
@@ -550,11 +547,9 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
 
 void usb_persist_restart(restart_type_t mode)
 {
-    if (usb_persist_enabled && mode < RESTART_TYPE_MAX) {
+    if (mode < RESTART_TYPE_MAX) {
         usb_persist_mode = mode;
         esp_restart();
-    } else {
-        log_e("Persistence is not enabled");
     }
 }
 
