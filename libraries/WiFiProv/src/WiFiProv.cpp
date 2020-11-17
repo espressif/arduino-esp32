@@ -31,7 +31,8 @@
 #include <wifi_provisioning/scheme_softap.h>
 #include <wifi_provisioning/manager.h>
 #undef IPADDR_NONE
-#include "WiFi.h"
+#include "WiFiProv.h"
+#include "SimpleBLE.h"
 
 extern esp_err_t postToSysQueue(system_prov_event_t *);
 
@@ -41,13 +42,6 @@ static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 
                                                   0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02, };
 
 #define SERV_NAME_PREFIX_PROV "PROV_"
-
-bool WiFiProvClass::prov_enable = true;
-
-bool WiFiProvClass::isProvEnabled()
-{
-    return prov_enable;
-}
 
 void provSchemeBLE()
 {
@@ -109,7 +103,7 @@ static void get_device_service_name(char *service_name, size_t max)
 
 void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
 {
-    prov_enable = true;
+    WiFi.enableProv(true);
     bool provisioned = false;
     scheme_cb();
     config.scheme_event_handler = scheme_event_handler;
@@ -152,7 +146,7 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
     } else {
         wifi_prov_mgr_deinit();
         WiFi.mode(WIFI_MODE_STA);
-        log_i("Aleardy Provisioned, starting Wi-Fi STA");
+        log_i("Already Provisioned, starting Wi-Fi STA");
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         wifi_config_t conf;
         esp_wifi_get_config(WIFI_IF_STA,&conf);
@@ -162,4 +156,4 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
         WiFi.begin(); 
     }
 }
-
+WiFiProvClass WiFiProv;

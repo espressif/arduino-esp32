@@ -17,10 +17,9 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include "WiFi.h"
 #include "wifi_provisioning/manager.h"
 #include "wifi_provisioning/scheme_ble.h"
-#include "nvs_flash.h"
-#include "SimpleBLE.h"
 //Select the scheme using which you want to provision
 typedef enum 
 {
@@ -34,19 +33,11 @@ extern void provSchemeBLE();
 //Provisioning class 
 class WiFiProvClass
 {
-    protected:
-        static bool prov_enable;
-  
     public:
-        WiFiProvClass() {
-            prov_enable = false;
-        }
 
-        bool isProvEnabled();
-    
-        void beginProvision(void (*scheme_cb)() = provSchemeSoftAP, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
+    void beginProvision(void (*scheme_cb)() = provSchemeSoftAP, wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE, wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
 };
-
+extern WiFiProvClass WiFiProv;
 /*
  Event Handler for BLE
       - WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM
