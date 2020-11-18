@@ -34,7 +34,7 @@
 #include <wifi_provisioning/scheme_softap.h>
 #include <wifi_provisioning/manager.h>
 #undef IPADDR_NONE
-#include "WiFi.h"
+#include "WiFiProv.h"
 #if CONFIG_IDF_TARGET_ESP32
 #include "SimpleBLE.h"
 #endif
@@ -47,13 +47,6 @@ static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 
 #endif
 
 #define SERV_NAME_PREFIX_PROV "PROV_"
-
-bool WiFiProvClass::prov_enable = true;
-
-bool WiFiProvClass::isProvEnabled()
-{
-    return prov_enable;
-}
 
 static void get_device_service_name(prov_scheme_t prov_scheme, char *service_name, size_t max)
 {
@@ -84,7 +77,6 @@ static esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *in
 
 void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
 {
-    prov_enable = true;
     bool provisioned = false;
     static char service_name_temp[32];
 
@@ -175,3 +167,4 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     }
 }
 
+WiFiProvClass WiFiProv;
