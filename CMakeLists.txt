@@ -72,11 +72,11 @@ set(LIBRARY_SRCS
   libraries/WiFi/src/WiFi.cpp
   libraries/WiFi/src/WiFiGeneric.cpp
   libraries/WiFi/src/WiFiMulti.cpp
-  libraries/WiFi/src/WiFiProv.cpp
   libraries/WiFi/src/WiFiScan.cpp
   libraries/WiFi/src/WiFiServer.cpp
   libraries/WiFi/src/WiFiSTA.cpp
   libraries/WiFi/src/WiFiUdp.cpp
+  libraries/WiFiProv/src/WiFiProv.cpp
   libraries/Wire/src/Wire.cpp
   )
 
@@ -202,6 +202,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
   libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src
+  libraries/WiFiProv/src
   libraries/Wire/src
   )
 
