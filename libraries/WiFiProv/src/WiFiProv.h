@@ -40,16 +40,11 @@ typedef enum {
 
 //Provisioning class 
 class WiFiProvClass
-{
-    protected:
-        static bool prov_enable;
-  
+{  
     public:
-        WiFiProvClass() {
-            prov_enable = false;
-        }
 
-        bool isProvEnabled();
         void beginProvision(prov_scheme_t prov_scheme = WIFI_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = WIFI_PROV_SCHEME_HANDLER_NONE,
         		wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL, const char * service_key = NULL, uint8_t *uuid = NULL);
 };
+
+extern WiFiProvClass WiFiProv;

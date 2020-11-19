@@ -1,3 +1,4 @@
+#include "WiFiProv.h"
 #include "WiFi.h"
 void SysProvEvent(arduino_event_t *sys_event)
 {
@@ -46,9 +47,9 @@ void setup() {
                    0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02 };*/
   WiFi.onEvent(SysProvEvent);
 #if CONFIG_IDF_TARGET_ESP32 && CONFIG_BLUEDROID_ENABLED
-    WiFi.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, "abcd1234", "Prov_123");
+    WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, "abcd1234", "Prov_123");
 #else
-    WiFi.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234", "Prov_123");
+    WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, "abcd1234", "Prov_123");
 #endif
 }
 

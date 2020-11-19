@@ -37,9 +37,8 @@
 #include "WiFiClient.h"
 #include "WiFiServer.h"
 #include "WiFiUdp.h"
-#include "WiFiProv.h"
 
-class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass, public WiFiProvClass
+class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass
 {
 public:
     using WiFiGenericClass::channel;
