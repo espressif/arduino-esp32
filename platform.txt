@@ -3,7 +3,7 @@ version=0.0.1
 
 runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 
-tools.esptool_py.path={runtime.platform.path}/tools/esptool
+tools.esptool_py.path={runtime.platform.path}/tools
 tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
