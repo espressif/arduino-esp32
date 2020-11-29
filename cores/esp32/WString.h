@@ -281,8 +281,8 @@ class String {
         // Contains the string info when we're not in SSO mode
         struct _ptr { 
             char *   buff;
-            uint16_t cap;
-            uint16_t len;
+            uint32_t cap;
+            uint32_t len;
         };
         // This allows strings up up to 11 (10 + \0 termination) without any extra space.
         enum { SSOSIZE = sizeof(struct _ptr) + 4 - 1 }; // Characters to allocate space for SSO, must be 12 or more
@@ -291,7 +291,11 @@ class String {
             unsigned char len   : 7; // Ensure only one byte is allocated by GCC for the bitfields
             unsigned char isSSO : 1;
         } __attribute__((packed)); // Ensure that GCC doesn't expand the flag byte to a 32-bit word for alignment issues
-        enum { CAPACITY_MAX = 65535 }; // If typeof(cap) changed from uint16_t, be sure to update this enum to the max value storable in the type
+#ifdef BOARD_HAS_PSRAM
+        enum { CAPACITY_MAX = 3145728 }; 
+#else
+        enum { CAPACITY_MAX = 65535 }; 
+#endif
         union {
             struct _ptr ptr;
             struct _sso sso;
