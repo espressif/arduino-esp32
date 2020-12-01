@@ -227,7 +227,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     log_v("Verifying peer X.509 certificate...");
 
     if ((flags = mbedtls_ssl_get_verify_result(&ssl_client->ssl_ctx)) != 0) {
-        bzero(buf, sizeof(buf));
+        memset(buf, 0, sizeof(buf));
         mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
         log_e("Failed to verify peer certificate! verification info: %s", buf);
         stop_ssl_socket(ssl_client, rootCABuff, cli_cert, cli_key);  //It's not safe continue.
