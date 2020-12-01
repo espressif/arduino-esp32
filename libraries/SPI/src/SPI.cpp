@@ -85,7 +85,7 @@ void SPIClass::setHwCs(bool use)
     if(use && !_use_hw_ss) {
         spiAttachSS(_spi, 0, _ss);
         spiSSEnable(_spi);
-    } else if(_use_hw_ss) {
+    } else if(!use && _use_hw_ss) {
         spiSSDisable(_spi);
         spiDetachSS(_spi, _ss);
     }
