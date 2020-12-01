@@ -4177,6 +4177,7 @@ m5stack-coreink.upload.tool=esptool_py
 m5stack-coreink.upload.maximum_size=1310720
 m5stack-coreink.upload.maximum_data_size=327680
 m5stack-coreink.upload.wait_for_upload_port=true
+m5stack-coreink.upload.flags=
 
 m5stack-coreink.serial.disableDTR=true
 m5stack-coreink.serial.disableRTS=true
