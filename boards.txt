@@ -3150,12 +3150,12 @@ heltec_wifi_lora_32.build.flash_freq=80m
 heltec_wifi_lora_32.build.flash_mode=dio
 heltec_wifi_lora_32.build.boot=dio
 heltec_wifi_lora_32.build.partitions=default
-heltec_wifi_lora_32.build.defines=
+heltec_wifi_lora_32.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wifi_lora_32.menu.PSRAM.disabled=Disabled
-heltec_wifi_lora_32.menu.PSRAM.disabled.build.defines=
+heltec_wifi_lora_32.menu.PSRAM.disabled.build.psram=
 heltec_wifi_lora_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 heltec_wifi_lora_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3245,12 +3245,12 @@ heltec_wifi_lora_32_V2.build.flash_freq=80m
 heltec_wifi_lora_32_V2.build.flash_mode=dio
 heltec_wifi_lora_32_V2.build.boot=qio
 heltec_wifi_lora_32_V2.build.partitions=default_8MB
-heltec_wifi_lora_32_V2.build.defines=
+heltec_wifi_lora_32_V2.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wifi_lora_32_V2.menu.PSRAM.disabled=Disabled
-heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.defines=
+heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.psram=
 heltec_wifi_lora_32_V2.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 heltec_wifi_lora_32_V2.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32_V2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3340,12 +3340,12 @@ heltec_wireless_stick.build.flash_freq=80m
 heltec_wireless_stick.build.flash_mode=dio
 heltec_wireless_stick.build.boot=dio
 heltec_wireless_stick.build.partitions=default_8MB
-heltec_wireless_stick.build.defines=
+heltec_wireless_stick.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wireless_stick.menu.PSRAM.disabled=Disabled
-heltec_wireless_stick.menu.PSRAM.disabled.build.defines=
+heltec_wireless_stick.menu.PSRAM.disabled.build.psram=
 heltec_wireless_stick.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 heltec_wireless_stick.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3435,12 +3435,12 @@ heltec_wireless_stick_lite.build.flash_freq=80m
 heltec_wireless_stick_lite.build.flash_mode=dio
 heltec_wireless_stick_lite.build.boot=dio
 heltec_wireless_stick_lite.build.partitions=default
-heltec_wireless_stick_lite.build.defines=
+heltec_wireless_stick_lite.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wireless_stick_lite.menu.PSRAM.disabled=Disabled
-heltec_wireless_stick_lite.menu.PSRAM.disabled.build.defines=
+heltec_wireless_stick_lite.menu.PSRAM.disabled.build.psram=
 heltec_wireless_stick_lite.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick_lite.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick_lite.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
 
 heltec_wireless_stick_lite.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick_lite.menu.CPUFreq.240.build.f_cpu=240000000L
