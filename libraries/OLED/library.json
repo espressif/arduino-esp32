@@ -1,0 +1,28 @@
+{
+  "name": "ESP8266_SSD1306",
+  "version": "3.2.7",
+  "keywords": "ssd1306, oled, display, i2c",
+  "description": "A I2C display driver for SSD1306 oled displays connected to an ESP8266 or ESP32",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/squix78/esp8266-oled-ssd1306.git"
+  },
+  "authors":
+  [
+    {
+        "name": "Daniel Eichhorn",
+        "email": "squix78@gmail.com",
+        "url": "http://blog.squix.ch"
+    },
+    {
+        "name": "Fabrice Weinberg",
+        "email": "fabrice@weinberg.me"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif8266",
+    "espressif32"
+  ]
+}

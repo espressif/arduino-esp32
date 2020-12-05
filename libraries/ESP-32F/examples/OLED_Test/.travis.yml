@@ -1,0 +1,24 @@
+language: python
+python:
+    - "2.7"
+
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+env:
+    - PLATFORMIO_CI_SRC=examples/SSD1306UiDemo
+    - PLATFORMIO_CI_SRC=examples/SSD1306SimpleDemo
+    - PLATFORMIO_CI_SRC=examples/SSD1306DrawingDemo
+    - PLATFORMIO_CI_SRC=examples/SSD1306OTADemo
+    - PLATFORMIO_CI_SRC=examples/SSD1306ClockDemo
+
+
+install:
+    - pip install -U platformio
+    - platformio lib install 44
+
+script:
+    - platformio ci --lib="." --board=nodemcuv2
