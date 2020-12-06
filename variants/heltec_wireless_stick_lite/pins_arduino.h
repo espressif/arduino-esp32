@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#define WIFI_LoRa_32_V2 true
-#define DISPLAY_HEIGHT 64
-#define DISPLAY_WIDTH  128
+#define Wireless_Stick_Lite true
+#define DISPLAY_HEIGHT 0
+#define DISPLAY_WIDTH  0
 
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
@@ -65,13 +65,9 @@ static const uint8_t DAC2 = 26;
 
 static const uint8_t Vext = 21;
 static const uint8_t LED  = 25;
-static const uint8_t RST_OLED = 16;
-static const uint8_t SCL_OLED = 15;
-static const uint8_t SDA_OLED = 4;
 static const uint8_t RST_LoRa = 14;
 static const uint8_t DIO0 = 26;
 static const uint8_t DIO1 = 35;
 static const uint8_t DIO2 = 34;
-
 
 #endif /* Pins_Arduino_h */

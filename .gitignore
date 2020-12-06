@@ -1,9 +1,10 @@
 tools/xtensa-esp32-elf
+tools/xtensa-esp32s2-elf
 tools/dist
 tools/esptool
 tools/esptool.exe
-tools/mkspiffs/mkspiffs
-tools/mkspiffs/mkspiffs.exe
+tools/mkspiffs
+tools/mklittlefs
 .DS_Store
  
 #Ignore files built by Visual Studio/Visual Micro
