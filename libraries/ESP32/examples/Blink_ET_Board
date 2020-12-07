@@ -1,0 +1,20 @@
+#include "pinmap.h"
+
+void setup() {
+  
+  pinMode(D2, OUTPUT); // LED 출력모드 설정
+}
+
+void loop() {
+  digitalWrite(D2, HIGH);   // LED를 켬
+  delay(1000);                       // 1초 기다림
+  digitalWrite(D2, LOW);    // LED를 끔
+  delay(1000);                       // 1초 기다림
+}
+
+
+//┌────────────────────────────────┐
+//│                                                      │
+//│     (주)한국공학기술연구원 http://et.ketri.re.kr         │
+//│                                                      │ 
+//└────────────────────────────────┘
