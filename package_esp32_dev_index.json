@@ -12,6 +12,47 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "1.0.5-rc4",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc4/esp32-1.0.5-rc4.zip",
+          "archiveFileName": "esp32-1.0.5-rc4.zip",
+          "checksum": "SHA-256:007a6639a8d77e682575fb55c89f9600cbe0efe69b0b865c67004761c3754fe3",
+          "size": "47454089",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            },
+            {
+              "name": "WEMOS LoLin32"
+            },
+            {
+              "name": "WEMOS D1 MINI ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-96-g2852398-5.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "3.0.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "1.0.5-rc3",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc3/esp32-1.0.5-rc3.zip",
@@ -978,8 +1019,8 @@
               "host": "x86_64-apple-darwin",
               "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-macos.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-macos.tar.gz",
-              "checksum": "SHA-256:9213f46d5aa865558da4a2ef4218e87eef4782779128083c15ce2b3e4d07a1ea",
-              "size": "3849615"
+              "checksum": "SHA-256:2cafab7f1ebce89475b84c115548eaace40b6366d7b3f9862cdb2fc64f806643",
+              "size": "3859642"
             },
             {
               "host": "x86_64-pc-linux-gnu",
