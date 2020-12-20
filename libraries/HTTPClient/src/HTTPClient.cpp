@@ -73,11 +73,15 @@ public:
 
     bool verify(WiFiClient& client, const char* host) override
     {
-         WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
-         wcs.setCACert(_cacert);
-         wcs.setCertificate(_clicert);
-         wcs.setPrivateKey(_clikey);
-         return true;
+        WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
+        if (_cacert == nullptr) {
+            wcs.setInsecure();
+        } else {
+            wcs.setCACert(_cacert);
+            wcs.setCertificate(_clicert);
+            wcs.setPrivateKey(_clikey);
+        }
+        return true;
     }
 
 protected:
