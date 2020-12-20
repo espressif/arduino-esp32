@@ -29,7 +29,7 @@ typedef struct sslclient_context {
 
 
 void ssl_init(sslclient_context *ssl_client);
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey);
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure);
 void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key);
 int data_to_read(sslclient_context *ssl_client);
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t len);
