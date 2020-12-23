@@ -83,6 +83,12 @@ void HardwareSerial::updateBaudRate(unsigned long baud)
 	uartSetBaudRate(_uart, baud);
 }
 
+// Make sure that the function that the function pointer is pointing to is inside IRAM
+void HardwareSerial::setRXInterrupt(void (*arg)()){
+    uartDisableInterrupt(_uart);
+    uartEnableInterrupt(_uart, &arg);
+}
+
 void HardwareSerial::end()
 {
     if(uartGetDebug() == _uart_nr) {
