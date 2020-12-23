@@ -85,7 +85,10 @@ static void IRAM_ATTR _uart_isr(void *arg)
         uart->dev->int_clr.rxfifo_tout = 1;
         while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL)  {
+            if(arg != NULL){ // Check if an interrupt handler function has been specified
+                // Fully optimized code would not create the queue anymore if an function has been specified as an argument.
+                (*((void(**)())arg))(c); // There is, call it with c as an parameter. Don't pass it to the queue anymore
+            }else if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
         }
@@ -96,7 +99,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
     }
 }
 
-void uartEnableInterrupt(uart_t* uart)
+void uartEnableInterrupt(uart_t* uart, void * func)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.rxfifo_full_thrhd = 112;
@@ -107,7 +110,7 @@ void uartEnableInterrupt(uart_t* uart)
     uart->dev->int_ena.rxfifo_tout = 1;
     uart->dev->int_clr.val = 0xffffffff;
 
-    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
+    esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, func, &uart->intr_handle);
     UART_MUTEX_UNLOCK();
 }
 
@@ -148,7 +151,7 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     }
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
-    uartEnableInterrupt(uart);
+    uartEnableInterrupt(uart, NULL); // No interrupt handler function by default
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
