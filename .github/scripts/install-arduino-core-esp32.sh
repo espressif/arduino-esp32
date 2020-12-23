@@ -18,7 +18,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 # I don't get the code below, you'd want to test the source code in the current repository (forked or not), not in the espressif repo right?
 #if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..."
-	ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
+	ln -s $GITHUB_WORKSPACE "$ARDUINO_ESP32_PATH"
 #else
 #	echo "Cloning Core Repository ..."
 #	git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
