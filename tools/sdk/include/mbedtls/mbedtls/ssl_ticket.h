@@ -2,9 +2,16 @@
  * \file ssl_ticket.h
  *
  * \brief TLS server ticket callbacks implementation
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ *
+ *  This file is provided under the Apache License 2.0, or the
+ *  GNU General Public License v2.0 or later.
+ *
+ *  **********
+ *  Apache License 2.0:
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use this file except in compliance with the License.
@@ -18,10 +25,37 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
+ *  **********
+ *
+ *  **********
+ *  GNU General Public License v2.0 or later:
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  **********
+ *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_SSL_TICKET_H
 #define MBEDTLS_SSL_TICKET_H
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
 
 /*
  * This implementation of the session ticket callbacks includes key
@@ -43,7 +77,7 @@ extern "C" {
 /**
  * \brief   Information for session ticket protection
  */
-typedef struct
+typedef struct mbedtls_ssl_ticket_key
 {
     unsigned char name[4];          /*!< random key identifier              */
     uint32_t generation_time;       /*!< key generation timestamp (seconds) */
@@ -54,7 +88,7 @@ mbedtls_ssl_ticket_key;
 /**
  * \brief   Context for session ticket handling functions
  */
-typedef struct
+typedef struct mbedtls_ssl_ticket_context
 {
     mbedtls_ssl_ticket_key keys[2]; /*!< ticket protection keys             */
     unsigned char active;           /*!< index of the currently active key  */
@@ -110,14 +144,14 @@ int mbedtls_ssl_ticket_setup( mbedtls_ssl_ticket_context *ctx,
 /**
  * \brief           Implementation of the ticket write callback
  *
- * \note            See \c mbedlts_ssl_ticket_write_t for description
+ * \note            See \c mbedtls_ssl_ticket_write_t for description
  */
 mbedtls_ssl_ticket_write_t mbedtls_ssl_ticket_write;
 
 /**
  * \brief           Implementation of the ticket parse callback
  *
- * \note            See \c mbedlts_ssl_ticket_parse_t for description
+ * \note            See \c mbedtls_ssl_ticket_parse_t for description
  */
 mbedtls_ssl_ticket_parse_t mbedtls_ssl_ticket_parse;
 

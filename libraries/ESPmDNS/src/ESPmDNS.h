@@ -65,12 +65,12 @@ public:
     setInstanceName(String(name));
   }
 
-  void addService(char *service, char *proto, uint16_t port);
-  void addService(const char *service, const char *proto, uint16_t port){
-    addService((char *)service, (char *)proto, port);
+  bool addService(char *service, char *proto, uint16_t port);
+  bool addService(const char *service, const char *proto, uint16_t port){
+    return addService((char *)service, (char *)proto, port);
   }
-  void addService(String service, String proto, uint16_t port){
-    addService(service.c_str(), proto.c_str(), port);
+  bool addService(String service, String proto, uint16_t port){
+    return addService(service.c_str(), proto.c_str(), port);
   }
   
   bool addServiceTxt(char *name, char *proto, char * key, char * value);
@@ -107,6 +107,10 @@ public:
   IPAddress IP(int idx);
   IPv6Address IPv6(int idx);
   uint16_t port(int idx);
+  int numTxt(int idx);
+  bool hasTxt(int idx, const char * key);
+  String txt(int idx, const char * key);
+  String txt(int idx, int txtIdx);
   
 private:
   String _hostname;

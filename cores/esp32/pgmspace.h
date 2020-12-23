@@ -32,7 +32,6 @@ typedef unsigned long prog_uint32_t;
 #define PROGMEM
 #define PGM_P         const char *
 #define PGM_VOID_P    const void *
-#define FPSTR(p)      ((const char *)(p))
 #define PSTR(s)       (s)
 #define _SFR_BYTE(n)  (n)
 
@@ -53,6 +52,8 @@ typedef unsigned long prog_uint32_t;
   typeof(addr) _addr = (addr); \
   *(void * const *)(_addr); \
 })
+
+#define pgm_get_far_address(x) ((uint32_t)(&(x)))
 
 #define pgm_read_byte_near(addr)  pgm_read_byte(addr)
 #define pgm_read_word_near(addr)  pgm_read_word(addr)

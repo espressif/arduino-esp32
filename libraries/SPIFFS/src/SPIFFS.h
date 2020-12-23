@@ -22,18 +22,21 @@ namespace fs
 class SPIFFSFS : public FS
 {
 public:
-    SPIFFSFS(FSImplPtr impl);
-    bool begin(bool formatOnFail=false, const char * basePath="/spiffs", uint8_t maxOpenFiles=10);
+    SPIFFSFS();
+    ~SPIFFSFS();
+    bool begin(bool formatOnFail=false, const char * basePath="/spiffs", uint8_t maxOpenFiles=10, const char * partitionLabel=NULL);
     bool format();
     size_t totalBytes();
     size_t usedBytes();
     void end();
-    bool exists(const char* path);
-    bool exists(const String& path);
+
+private:
+    char * partitionLabel_;
 };
 
 }
 
 extern fs::SPIFFSFS SPIFFS;
 
-#endif /* _SPIFFS_H_ */
+
+#endif

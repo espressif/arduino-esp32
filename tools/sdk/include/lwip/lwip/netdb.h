@@ -1,3 +1,8 @@
+/**
+ * @file
+ * NETDB API (sockets)
+ */
+
 /*
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -33,8 +38,7 @@
 
 #if LWIP_DNS && LWIP_SOCKET
 
-#include <stddef.h> /* for size_t */
-
+#include "lwip/arch.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 
@@ -125,12 +129,47 @@ int lwip_getaddrinfo(const char *nodename,
        struct addrinfo **res);
 
 #if LWIP_COMPAT_SOCKETS
+#if ESP_LWIP
+#if LWIP_COMPAT_SOCKET_ADDR == 1
+/* Some libraries have problems with inet_... being macros, so please use this define 
+   to declare normal functions */
+static inline int gethostbyname_r(const char *name, struct hostent *ret, char *buf, size_t buflen, struct hostent **result, int *h_errnop)
+{ return lwip_gethostbyname_r(name, ret, buf, buflen, result, h_errnop); }
+static inline struct hostent *gethostbyname(const char *name)
+{ return lwip_gethostbyname(name); }
+static inline void freeaddrinfo(struct addrinfo *ai)
+{ lwip_freeaddrinfo(ai); }
+static inline int getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res)
+{ return lwip_getaddrinfo(nodename, servname, hints, res); }
+#else
+/* By default fall back to original inet_... macros */
+
+/** @ingroup netdbapi */
 #define gethostbyname(name) lwip_gethostbyname(name)
+/** @ingroup netdbapi */
 #define gethostbyname_r(name, ret, buf, buflen, result, h_errnop) \
        lwip_gethostbyname_r(name, ret, buf, buflen, result, h_errnop)
+/** @ingroup netdbapi */
 #define freeaddrinfo(addrinfo) lwip_freeaddrinfo(addrinfo)
+/** @ingroup netdbapi */
 #define getaddrinfo(nodname, servname, hints, res) \
        lwip_getaddrinfo(nodname, servname, hints, res)
+#endif /* LWIP_COMPAT_SOCKET_ADDR == 1 */
+
+#else /* ESP_LWIP */
+
+/** @ingroup netdbapi */
+#define gethostbyname(name) lwip_gethostbyname(name)
+/** @ingroup netdbapi */
+#define gethostbyname_r(name, ret, buf, buflen, result, h_errnop) \
+       lwip_gethostbyname_r(name, ret, buf, buflen, result, h_errnop)
+/** @ingroup netdbapi */
+#define freeaddrinfo(addrinfo) lwip_freeaddrinfo(addrinfo)
+/** @ingroup netdbapi */
+#define getaddrinfo(nodname, servname, hints, res) \
+       lwip_getaddrinfo(nodname, servname, hints, res)
+
+#endif /* ESP_LWIP */
 #endif /* LWIP_COMPAT_SOCKETS */
 
 #ifdef __cplusplus

@@ -16,7 +16,7 @@ extern "C" {
     #include "diskio.h"
     #include "ffconf.h"
     #include "ff.h"
-    #include "esp_vfs.h"
+    //#include "esp_vfs.h"
     #include "esp_vfs_fat.h"
     char CRC7(const char* data, int length);
     unsigned short CRC16(const char* data, int length);
@@ -607,8 +607,9 @@ DRESULT ff_sd_write(uint8_t pdrv, const uint8_t* buffer, DWORD sector, UINT coun
 
     if (count > 1) {
         res = sdWriteSectors(pdrv, (const char*)buffer, sector, count) ? RES_OK : RES_ERROR;
+    } else {
+        res = sdWriteSector(pdrv, (const char*)buffer, sector) ? RES_OK : RES_ERROR;
     }
-    res = sdWriteSector(pdrv, (const char*)buffer, sector) ? RES_OK : RES_ERROR;
     return res;
 }
 
@@ -648,6 +649,7 @@ uint8_t sdcard_uninit(uint8_t pdrv)
     if (pdrv >= FF_VOLUMES || card == NULL) {
         return 1;
     }
+    sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
     ff_diskio_register(pdrv, NULL);
     s_cards[pdrv] = NULL;
     esp_err_t err = ESP_OK;
@@ -711,7 +713,7 @@ uint8_t sdcard_unmount(uint8_t pdrv)
     return 0;
 }
 
-bool sdcard_mount(uint8_t pdrv, const char* path)
+bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     if(pdrv >= FF_VOLUMES || card == NULL){
@@ -725,7 +727,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path)
 
     FATFS* fs;
     char drv[3] = {(char)('0' + pdrv), ':', 0};
-    esp_err_t err = esp_vfs_fat_register(path, drv, 5, &fs);
+    esp_err_t err = esp_vfs_fat_register(path, drv, max_files, &fs);
     if (err == ESP_ERR_INVALID_STATE) {
         log_e("esp_vfs_fat_register failed 0x(%x): SD is registered.", err);
         return false;

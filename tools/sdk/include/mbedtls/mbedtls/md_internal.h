@@ -6,9 +6,16 @@
  * \warning This in an internal header. Do not include directly.
  *
  * \author Adriaan de Jong <dejong@fox-it.com>
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ *
+ *  This file is provided under the Apache License 2.0, or the
+ *  GNU General Public License v2.0 or later.
+ *
+ *  **********
+ *  Apache License 2.0:
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use this file except in compliance with the License.
@@ -21,6 +28,27 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
+ *
+ *  **********
+ *
+ *  **********
+ *  GNU General Public License v2.0 or later:
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  **********
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -58,17 +86,17 @@ struct mbedtls_md_info_t
     int block_size;
 
     /** Digest initialisation function */
-    void (*starts_func)( void *ctx );
+    int (*starts_func)( void *ctx );
 
     /** Digest update function */
-    void (*update_func)( void *ctx, const unsigned char *input, size_t ilen );
+    int (*update_func)( void *ctx, const unsigned char *input, size_t ilen );
 
     /** Digest finalisation function */
-    void (*finish_func)( void *ctx, unsigned char *output );
+    int (*finish_func)( void *ctx, unsigned char *output );
 
     /** Generic digest function */
-    void (*digest_func)( const unsigned char *input, size_t ilen,
-                         unsigned char *output );
+    int (*digest_func)( const unsigned char *input, size_t ilen,
+                        unsigned char *output );
 
     /** Allocate a new context */
     void * (*ctx_alloc_func)( void );
@@ -80,7 +108,7 @@ struct mbedtls_md_info_t
     void (*clone_func)( void *dst, const void *src );
 
     /** Internal use only */
-    void (*process_func)( void *ctx, const unsigned char *input );
+    int (*process_func)( void *ctx, const unsigned char *input );
 };
 
 #if defined(MBEDTLS_MD2_C)

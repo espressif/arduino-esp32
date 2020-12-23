@@ -73,7 +73,9 @@ err_t lowpan6_if_init(struct netif *netif);
 /* pan_id in network byte order. */
 err_t lowpan6_set_pan_id(u16_t pan_id);
 
+#if !NO_SYS
 err_t tcpip_6lowpan_input(struct pbuf *p, struct netif *inp);
+#endif /* !NO_SYS */
 
 #ifdef __cplusplus
 }

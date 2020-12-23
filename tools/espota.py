@@ -106,7 +106,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
       sock2.close()
       logging.error('Host %s Not Found', remoteAddr)
       return 1
-    sock2.settimeout(1)
+    sock2.settimeout(TIMEOUT)
     try:
       data = sock2.recv(37).decode()
       break;
@@ -162,7 +162,6 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
     logging.error('No response from device')
     sock.close()
     return 1
-
   try:
     f = open(filename, "rb")
     if (PROGRESS):
@@ -180,6 +179,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
       try:
         connection.sendall(chunk)
         res = connection.recv(10)
+        lastResponseContainedOK = 'OK' in res.decode()
       except:
         sys.stderr.write('\n')
         logging.error('Error Uploading')
@@ -188,21 +188,36 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
         sock.close()
         return 1
 
-    sys.stderr.write('\n')
-    logging.info('Waiting for result...')
-    try:
-      connection.settimeout(60)
-      data = connection.recv(32).decode()
-      logging.info('Result: %s' ,data)
+    if lastResponseContainedOK:
+      logging.info('Success')
       connection.close()
       f.close()
       sock.close()
-      if (data != "OK"):
-        sys.stderr.write('\n')
-        logging.error('%s', data)
-        return 1;
       return 0
-    except:
+
+    sys.stderr.write('\n')
+    logging.info('Waiting for result...')
+    try:
+      count = 0
+      while True:
+        count=count+1
+        connection.settimeout(60)
+        data = connection.recv(32).decode()
+        logging.info('Result: %s' ,data)
+
+        if "OK" in data:
+          logging.info('Success')
+          connection.close()
+          f.close()
+          sock.close()
+          return 0;
+        if count == 5:
+          logging.error('Error response from device')
+          connection.close()
+          f.close()
+          sock.close()
+          return 1
+    except e:
       logging.error('No Result!')
       connection.close()
       f.close()
@@ -221,7 +236,7 @@ def serve(remoteAddr, localAddr, remotePort, localPort, password, filename, comm
 def parser(unparsed_args):
   parser = optparse.OptionParser(
     usage = "%prog [options]",
-    description = "Transmit image over the air to the esp8266 module with OTA support."
+    description = "Transmit image over the air to the esp32 module with OTA support."
   )
 
   # destination ip and port
@@ -229,7 +244,7 @@ def parser(unparsed_args):
   group.add_option("-i", "--ip",
     dest = "esp_ip",
     action = "store",
-    help = "ESP8266 IP Address.",
+    help = "ESP32 IP Address.",
     default = False
   )
   group.add_option("-I", "--host_ip",
@@ -241,8 +256,8 @@ def parser(unparsed_args):
   group.add_option("-p", "--port",
     dest = "esp_port",
     type = "int",
-    help = "ESP8266 ota Port. Default 8266",
-    default = 8266
+    help = "ESP32 ota Port. Default 3232",
+    default = 3232
   )
   group.add_option("-P", "--host_port",
     dest = "host_port",
@@ -292,6 +307,12 @@ def parser(unparsed_args):
     action = "store_true",
     default = False
   )
+  group.add_option("-t", "--timeout",
+    dest = "timeout",
+    type = "int",
+    help = "Timeout to wait for the ESP32 to accept invitation",
+    default = 10
+  )
   parser.add_option_group(group)
 
   (options, args) = parser.parse_args(unparsed_args)
@@ -312,6 +333,10 @@ def main(args):
   # check options
   global PROGRESS
   PROGRESS = options.progress
+
+  global TIMEOUT
+  TIMEOUT = options.timeout
+  
   if (not options.esp_ip or not options.image):
     logging.critical("Not enough arguments.")
     return 1

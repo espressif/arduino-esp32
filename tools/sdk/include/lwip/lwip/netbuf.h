@@ -1,3 +1,8 @@
+/**
+ * @file
+ * netbuf API (for netconn API)
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
  * All rights reserved.
@@ -51,6 +56,7 @@ extern "C" {
 /** This netbuf includes a checksum */
 #define NETBUF_FLAG_CHKSUM      0x02
 
+/** "Network buffer" - contains data and addressing info */
 struct netbuf {
   struct pbuf *p, *ptr;
   ip_addr_t addr;

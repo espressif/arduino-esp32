@@ -42,7 +42,7 @@
  * $Id: lcp.h,v 1.20 2004/11/14 22:53:42 carlsonj Exp $
  */
 
-#include "lwip/opt.h"
+#include "netif/ppp/ppp_opts.h"
 #if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
 #ifndef LCP_H
@@ -90,11 +90,11 @@
 /* Value used as data for CI_CALLBACK option */
 #define CBCP_OPT	6	/* Use callback control protocol */
 
-#if 0 /* moved to opt.h */
+#if 0 /* moved to ppp_opts.h */
 #define DEFMRU	1500		/* Try for this */
 #define MINMRU	128		/* No MRUs below this */
 #define MAXMRU	16384		/* Normally limit MRU to this */
-#endif /* moved to opt.h */
+#endif /* moved to ppp_opts.h */
 
 /* An endpoint discriminator, used with multilink. */
 #define MAX_ENDP_LEN	20	/* maximum length of discriminator value */
@@ -110,7 +110,9 @@ struct epdisc {
 typedef struct lcp_options {
     unsigned int passive           :1; /* Don't die if we don't get a response */
     unsigned int silent            :1; /* Wait for the other end to start first */
+#if 0 /* UNUSED */
     unsigned int restart           :1; /* Restart vs. exit after close */
+#endif /* UNUSED */
     unsigned int neg_mru           :1; /* Negotiate the MRU? */
     unsigned int neg_asyncmap      :1; /* Negotiate the async map? */
 #if PAP_SUPPORT
@@ -159,11 +161,11 @@ void lcp_sprotrej(ppp_pcb *pcb, u_char *p, int len);    /* send protocol reject 
 
 extern const struct protent lcp_protent;
 
-#if 0 /* moved to opt.h */
+#if 0 /* moved to ppp_opts.h */
 /* Default number of times we receive our magic number from the peer
    before deciding the link is looped-back. */
 #define DEFLOOPBACKFAIL	10
-#endif /* moved to opt.h */
+#endif /* moved to ppp_opts.h */
 
 #endif /* LCP_H */
 #endif /* PPP_SUPPORT */

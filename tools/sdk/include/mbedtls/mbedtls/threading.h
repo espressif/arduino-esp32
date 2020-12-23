@@ -2,9 +2,16 @@
  * \file threading.h
  *
  * \brief Threading abstraction layer
- *
+ */
+/*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ *
+ *  This file is provided under the Apache License 2.0, or the
+ *  GNU General Public License v2.0 or later.
+ *
+ *  **********
+ *  Apache License 2.0:
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use this file except in compliance with the License.
@@ -17,6 +24,27 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
+ *
+ *  **********
+ *
+ *  **********
+ *  GNU General Public License v2.0 or later:
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  **********
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -35,13 +63,16 @@
 extern "C" {
 #endif
 
+/* MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE is deprecated and should not be
+ * used. */
 #define MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE         -0x001A  /**< The selected feature is not available. */
+
 #define MBEDTLS_ERR_THREADING_BAD_INPUT_DATA              -0x001C  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E  /**< Locking / unlocking / free failed with error code. */
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <pthread.h>
-typedef struct
+typedef struct mbedtls_threading_mutex_t
 {
     pthread_mutex_t mutex;
     char is_valid;
@@ -95,8 +126,20 @@ extern int (*mbedtls_mutex_unlock)( mbedtls_threading_mutex_t *mutex );
 /*
  * Global mutexes
  */
+#if defined(MBEDTLS_FS_IO)
 extern mbedtls_threading_mutex_t mbedtls_threading_readdir_mutex;
+#endif
+
+#if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_PLATFORM_GMTIME_R_ALT)
+/* This mutex may or may not be used in the default definition of
+ * mbedtls_platform_gmtime_r(), but in order to determine that,
+ * we need to check POSIX features, hence modify _POSIX_C_SOURCE.
+ * With the current approach, this declaration is orphaned, lacking
+ * an accompanying definition, in case mbedtls_platform_gmtime_r()
+ * doesn't need it, but that's not a problem. */
 extern mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex;
+#endif /* MBEDTLS_HAVE_TIME_DATE && !MBEDTLS_PLATFORM_GMTIME_R_ALT */
+
 #endif /* MBEDTLS_THREADING_C */
 
 #ifdef __cplusplus

@@ -59,7 +59,8 @@ public:
 // parsing methods
 
     void setTimeout(unsigned long timeout);  // sets maximum milliseconds to wait for stream data, default is 1 second
-
+    unsigned long getTimeout(void);
+      
     bool find(const char *target);   // reads data from the stream until the target string is found
     bool find(uint8_t *target)
     {
@@ -97,8 +98,8 @@ public:
 
     float parseFloat();               // float version of parseInt
 
-    size_t readBytes(char *buffer, size_t length); // read chars from stream into buffer
-    size_t readBytes(uint8_t *buffer, size_t length)
+    virtual size_t readBytes(char *buffer, size_t length); // read chars from stream into buffer
+    virtual size_t readBytes(uint8_t *buffer, size_t length)
     {
         return readBytes((char *) buffer, length);
     }
@@ -114,7 +115,7 @@ public:
     // returns the number of characters placed in the buffer (0 means no valid data found)
 
     // Arduino String functions to be added here
-    String readString();
+    virtual String readString();
     String readStringUntil(char terminator);
 
 protected:
@@ -123,6 +124,17 @@ protected:
     // this allows format characters (typically commas) in values to be ignored
 
     float parseFloat(char skipChar);  // as above but the given skipChar is ignored
+  
+    struct MultiTarget {
+      const char *str;  // string you're searching for
+      size_t len;       // length of string you're searching for
+      size_t index;     // index used by the search routine.
+    };
+
+  // This allows you to search for an arbitrary number of strings.
+  // Returns index of the target that is found first or -1 if timeout occurs.
+  int findMulti(struct MultiTarget *targets, int tCount);
+
 };
 
 #endif

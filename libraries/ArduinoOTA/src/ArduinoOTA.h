@@ -7,7 +7,6 @@
 
 #define INT_BUFFER_SIZE 16
 
-
 typedef enum {
   OTA_IDLE,
   OTA_WAITAUTH,
@@ -25,9 +24,9 @@ typedef enum {
 class ArduinoOTAClass
 {
   public:
-	typedef std::function<void(void)> THandlerFunction;
-	typedef std::function<void(ota_error_t)> THandlerFunction_Error;
-	typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
+    typedef std::function<void(void)> THandlerFunction;
+    typedef std::function<void(ota_error_t)> THandlerFunction_Error;
+    typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
 
     ArduinoOTAClass();
     ~ArduinoOTAClass();
@@ -44,6 +43,10 @@ class ArduinoOTAClass
 
     //Sets the password as above but in the form MD5(password). Default NULL
     ArduinoOTAClass& setPasswordHash(const char *password);
+
+    //Sets the partition label to write to when updating SPIFFS. Default NULL
+    ArduinoOTAClass &setPartitionLabel(const char *partition_label);
+    String getPartitionLabel();
 
     //Sets if the device should be rebooted after successful update. Default true
     ArduinoOTAClass& setRebootOnSuccess(bool reboot);
@@ -75,10 +78,13 @@ class ArduinoOTAClass
     //Gets update command type after OTA has started. Either U_FLASH or U_SPIFFS
     int getCommand();
 
+    void setTimeout(int timeoutInMillis);
+
   private:
     int _port;
     String _password;
     String _hostname;
+    String _partition_label;
     String _nonce;
     WiFiUDP _udp_ota;
     bool _initialized;
@@ -88,6 +94,7 @@ class ArduinoOTAClass
     int _size;
     int _cmd;
     int _ota_port;
+    int _ota_timeout;
     IPAddress _ota_ip;
     String _md5;
 

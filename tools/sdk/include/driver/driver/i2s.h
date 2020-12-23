@@ -139,6 +139,7 @@ typedef struct {
     int                     dma_buf_count;          /*!< I2S DMA Buffer Count */
     int                     dma_buf_len;            /*!< I2S DMA Buffer Length */
     bool                    use_apll;              /*!< I2S using APLL as main I2S clock, enable it to get accurate clock */
+    bool                    tx_desc_auto_clear;     /*!< I2S auto clear tx descriptor if there is underflow condition (helps in avoiding noise in case of data unavailability) */
     int                     fixed_mclk;             /*!< I2S using fixed MCLK output. If use_apll = true and fixed_mclk > 0, then the clock output for i2s is fixed and equal to the fixed_mclk value.*/
 } i2s_config_t;
 
@@ -188,6 +189,14 @@ typedef struct {
     int data_in_num;    /*!< DATA in pin*/
 } i2s_pin_config_t;
 
+/**
+ * @brief I2S PDM RX downsample mode
+ */
+typedef enum {
+    I2S_PDM_DSR_8S = 0,  /*!< downsampling number is 8 for PDM RX mode*/
+    I2S_PDM_DSR_16S,     /*!< downsampling number is 16 for PDM RX mode*/
+    I2S_PDM_DSR_MAX,
+} i2s_pdm_dsr_t;
 
 typedef intr_handle_t i2s_isr_handle_t;
 /**
@@ -213,6 +222,25 @@ typedef intr_handle_t i2s_isr_handle_t;
  *     - ESP_FAIL            IO error
  */
 esp_err_t i2s_set_pin(i2s_port_t i2s_num, const i2s_pin_config_t *pin);
+
+/**
+ * @brief Set PDM mode down-sample rate
+ *        In PDM RX mode, there would be 2 rounds of downsample process in hardware.
+ *        In the first downsample process, the sampling number can be 16 or 8.
+ *        In the second downsample process, the sampling number is fixed as 8.
+ *        So the clock frequency in PDM RX mode would be (fpcm * 64) or (fpcm * 128) accordingly.
+ * @param i2s_num I2S_NUM_0, I2S_NUM_1
+ * @param dsr i2s RX down sample rate for PDM mode.
+ *
+ * @note After calling this function, it would call i2s_set_clk inside to update the clock frequency.
+ *       Please call this function after I2S driver has been initialized.
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ *     - ESP_ERR_NO_MEM      Out of memory
+ */
+esp_err_t i2s_set_pdm_rx_down_sample(i2s_port_t i2s_num, i2s_pdm_dsr_t dsr);
 
 /**
  * @brief Set I2S dac mode, I2S built-in DAC is disabled by default
@@ -263,42 +291,55 @@ esp_err_t i2s_driver_uninstall(i2s_port_t i2s_num);
 /**
  * @brief Write data to I2S DMA transmit buffer.
  *
- * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ * This function is deprecated. Use 'i2s_write' instead.
+ * This definition will be removed in a future release.
  *
- * @param src      Source address to write from
+ * @return
+ *     - The amount of bytes written, if timeout, the result will be less than the size passed in.
+ *     - ESP_FAIL  Parameter error
+ */
+int i2s_write_bytes(i2s_port_t i2s_num, const void *src, size_t size, TickType_t ticks_to_wait) __attribute__ ((deprecated));
+
+/**
+ * @brief Write data to I2S DMA transmit buffer.
  *
- * @param size     Size of data in bytes
+ * @param i2s_num             I2S_NUM_0, I2S_NUM_1
  *
- * @param ticks_to_wait TX buffer wait timeout in RTOS ticks. If this
+ * @param src                 Source address to write from
+ *
+ * @param size                Size of data in bytes
+ *
+ * @param[out] bytes_written  Number of bytes written, if timeout, the result will be less than the size passed in.
+ *
+ * @param ticks_to_wait       TX buffer wait timeout in RTOS ticks. If this
  * many ticks pass without space becoming available in the DMA
  * transmit buffer, then the function will return (note that if the
  * data is written to the DMA buffer in pieces, the overall operation
  * may still take longer than this timeout.) Pass portMAX_DELAY for no
  * timeout.
  *
- * Format of the data in source buffer is determined by the I2S
- * configuration (see i2s_config_t).
- *
  * @return
- *     - Number of bytes written, if timeout occurred, bytes written will be less than the size passed.
- *     - ESP_FAIL  Parameter error.
+ *     - ESP_OK               Success
+ *     - ESP_ERR_INVALID_ARG  Parameter error
  */
-int i2s_write_bytes(i2s_port_t i2s_num, const char *src, size_t size, TickType_t ticks_to_wait);
+esp_err_t i2s_write(i2s_port_t i2s_num, const void *src, size_t size, size_t *bytes_written, TickType_t ticks_to_wait);
 
 /**
  * @brief Write data to I2S DMA transmit buffer while expanding the number of bits per sample. For example, expanding 16-bit PCM to 32-bit PCM.
  *
- * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ * @param i2s_num             I2S_NUM_0, I2S_NUM_1
  *
- * @param src      Source address to write from
+ * @param src                 Source address to write from
  *
- * @param size     Size of data in bytes
+ * @param size                Size of data in bytes
  *
- * @param src_bits Source audio bit
+ * @param src_bits            Source audio bit
  *
- * @param aim_bits Bit wanted, no more than 32, and must be greater than src_bits
+ * @param aim_bits            Bit wanted, no more than 32, and must be greater than src_bits
  *
- * @param ticks_to_wait TX buffer wait timeout in RTOS ticks. If this
+ * @param[out] bytes_written  Number of bytes written, if timeout, the result will be less than the size passed in.
+ *
+ * @param ticks_to_wait       TX buffer wait timeout in RTOS ticks. If this
  * many ticks pass without space becoming available in the DMA
  * transmit buffer, then the function will return (note that if the
  * data is written to the DMA buffer in pieces, the overall operation
@@ -309,67 +350,80 @@ int i2s_write_bytes(i2s_port_t i2s_num, const char *src, size_t size, TickType_t
  * configuration (see i2s_config_t).
  *
  * @return
- *     - Number of bytes written, if timeout occurred, bytes written will be less than the size passed.
- *     - ESP_FAIL  Parameter error.
+ *     - ESP_OK              Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
  */
-int i2s_write_expand(i2s_port_t i2s_num, const char *src, int size, int src_bits, int aim_bits, TickType_t ticks_to_wait);
+esp_err_t i2s_write_expand(i2s_port_t i2s_num, const void *src, size_t size, size_t src_bits, size_t aim_bits, size_t *bytes_written, TickType_t ticks_to_wait);
 
 /**
  * @brief Read data from I2S DMA receive buffer
  *
- * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ * This function is deprecated. Use 'i2s_read' instead.
+ * This definition will be removed in a future release.
  *
- * @param dest     Destination address to read into
+ * @return
+ *     - The amount of bytes read, if timeout, bytes read will be less than the size passed in
+ *     - ESP_FAIL  Parameter error
+ */
+int i2s_read_bytes(i2s_port_t i2s_num, void *dest, size_t size, TickType_t ticks_to_wait) __attribute__ ((deprecated));
+
+/**
+ * @brief Read data from I2S DMA receive buffer
  *
- * @param size     Size of data in bytes
+ * @param i2s_num         I2S_NUM_0, I2S_NUM_1
  *
- * @param ticks_to_wait RX buffer wait timeout in RTOS ticks. If this many ticks pass without bytes becoming available in the DMA receive buffer, then the function will return (note that if data is read from the DMA buffer in pieces, the overall operation may still take longer than this timeout.) Pass portMAX_DELAY for no timeout.
+ * @param dest            Destination address to read into
  *
- * Format of the data in source buffer is determined by the I2S
- * configuration (see i2s_config_t).
+ * @param size            Size of data in bytes
+ *
+ * @param[out] bytes_read Number of bytes read, if timeout, bytes read will be less than the size passed in.
+ *
+ * @param ticks_to_wait   RX buffer wait timeout in RTOS ticks. If this many ticks pass without bytes becoming available in the DMA receive buffer, then the function will return (note that if data is read from the DMA buffer in pieces, the overall operation may still take longer than this timeout.) Pass portMAX_DELAY for no timeout.
+ *
  * @note If the built-in ADC mode is enabled, we should call i2s_adc_start and i2s_adc_stop around the whole reading process,
  *       to prevent the data getting corrupted.
  *
  * @return
- *     - Number of bytes read, if timeout occurred, bytes written will be less than the size passed.
- *     - ESP_FAIL  Parameter error.
+ *     - ESP_OK               Success
+ *     - ESP_ERR_INVALID_ARG  Parameter error
  */
-int i2s_read_bytes(i2s_port_t i2s_num, char* dest, size_t size, TickType_t ticks_to_wait);
+esp_err_t i2s_read(i2s_port_t i2s_num, void *dest, size_t size, size_t *bytes_read, TickType_t ticks_to_wait);
 
 /**
- * @brief Push (write) a single sample to the I2S DMA TX buffer.
+ * @brief Write a single sample to the I2S DMA TX buffer.
  *
- * Size of the sample is determined by the channel_format (mono or stereo)) & bits_per_sample configuration (see i2s_config_t).
+ * This function is deprecated. Use 'i2s_write' instead.
+ * This definition will be removed in a future release.
  *
- * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ * @param i2s_num         I2S_NUM_0, I2S_NUM_1
  *
- * @param sample Pointer to buffer containing sample to write. Size of buffer (in bytes) = (number of channels) * bits_per_sample / 8.
+ * @param sample          Buffer to read data. Size of buffer (in bytes) = bits_per_sample / 8.
  *
- * @param ticks_to_wait Push timeout in RTOS ticks. If space is not available in the DMA TX buffer within this period, no data is written and function returns 0.
+ * @param ticks_to_wait   Timeout in RTOS ticks. If a sample is not available in the DMA buffer within this period, no data is read and function returns zero.
  *
  * @return
- *     - Number of bytes successfully pushed to DMA buffer, will be either zero or the size of configured sample buffer.
- *     - ESP_FAIL Parameter error.
+ *     - Number of bytes successfully pushed to DMA buffer, will be either zero or the size of configured sample buffer (in bytes).
+ *     - ESP_FAIL Parameter error
  */
-int i2s_push_sample(i2s_port_t i2s_num, const char *sample, TickType_t ticks_to_wait);
+int i2s_push_sample(i2s_port_t i2s_num, const void *sample, TickType_t ticks_to_wait) __attribute__ ((deprecated));
 
 /**
- * @brief Pop (read) a single sample from the I2S DMA RX buffer.
+ * @brief Read a single sample from the I2S DMA RX buffer.
  *
- * Size of the sample is determined by the channel_format (mono or stereo)) & bits_per_sample configuration (see i2s_config_t).
+ * This function is deprecated. Use 'i2s_read' instead.
+ * This definition will be removed in a future release.
  *
- * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ * @param i2s_num         I2S_NUM_0, I2S_NUM_1
  *
- * @param sample Buffer sample data will be read into. Size of buffer (in bytes) = (number of channels) * bits_per_sample / 8.
+ * @param sample          Buffer to write data. Size of buffer (in bytes) = bits_per_sample / 8.
  *
- * @param ticks_to_wait Pop timeout in RTOS ticks. If a sample is not available in the DMA buffer within this period, no data is read and function returns zero.
+ * @param ticks_to_wait   Timeout in RTOS ticks. If a sample is not available in the DMA buffer within this period, no data is read and function returns zero.
  *
  * @return
- *     - Number of bytes successfully read from DMA buffer, will be either zero or the size of configured sample buffer.
- *     - ESP_FAIL Parameter error.
+ *     - Number of bytes successfully read from DMA buffer, will be either zero or the size of configured sample buffer (in bytes).
+ *     - ESP_FAIL Parameter error
  */
-int i2s_pop_sample(i2s_port_t i2s_num, char *sample, TickType_t ticks_to_wait);
-
+int i2s_pop_sample(i2s_port_t i2s_num, void *sample, TickType_t ticks_to_wait) __attribute__ ((deprecated));
 
 /**
  * @brief Set sample rate used for I2S RX and TX.
@@ -385,7 +439,6 @@ int i2s_pop_sample(i2s_port_t i2s_num, char *sample, TickType_t ticks_to_wait);
  * @return
  *     - ESP_OK              Success
  *     - ESP_ERR_INVALID_ARG Parameter error
- *     - ESP_FAIL            I2s is not initialized
  *     - ESP_ERR_NO_MEM      Out of memory
  */
 esp_err_t i2s_set_sample_rates(i2s_port_t i2s_num, uint32_t rate);
@@ -445,16 +498,25 @@ esp_err_t i2s_zero_dma_buffer(i2s_port_t i2s_num);
  *
  * @return
  *     - ESP_OK              Success
- *     - ESP_FAIL            Not initialized
  *     - ESP_ERR_INVALID_ARG Parameter error
  *     - ESP_ERR_NO_MEM      Out of memory
  */
 esp_err_t i2s_set_clk(i2s_port_t i2s_num, uint32_t rate, i2s_bits_per_sample_t bits, i2s_channel_t ch);
 
 /**
+ * @brief get clock set on particular port number.
+ *
+ * @param i2s_num  I2S_NUM_0, I2S_NUM_1
+ *
+ * @return
+ *     - actual clock set by i2s driver
+ */
+float i2s_get_clk(i2s_port_t i2s_num);
+
+/**
  * @brief Set built-in ADC mode for I2S DMA, this function will initialize ADC pad,
  *        and set ADC parameters.
- * @param adc_unit  SAR ADC unit index
+ * @param adc_unit    SAR ADC unit index
  * @param adc_channel ADC channel index
  * @return
  *     - ESP_OK              Success
@@ -469,10 +531,9 @@ esp_err_t i2s_set_adc_mode(adc_unit_t adc_unit, adc1_channel_t adc_channel);
  *
  * @param i2s_num i2s port index
  * @return
- *     - ESP_OK Success
- *     - ESP_ERR_INVALID_ARG Parameter error
- *     - ESP_ERR_INVALID_STATE driver state error
- *     - ESP_FAIL Internal driver error
+ *     - ESP_OK                Success
+ *     - ESP_ERR_INVALID_ARG   Parameter error
+ *     - ESP_ERR_INVALID_STATE Driver state error
  */
 esp_err_t i2s_adc_enable(i2s_port_t i2s_num);
 
@@ -481,9 +542,9 @@ esp_err_t i2s_adc_enable(i2s_port_t i2s_num);
  * @param i2s_num i2s port index
  * @note This function would release the lock of ADC so that other tasks can use ADC.
  * @return
- *     - ESP_OK Success
- *     - ESP_ERR_INVALID_ARG Parameter error
- *     - ESP_ERR_INVALID_STATE driver state error
+ *     - ESP_OK                 Success
+ *     - ESP_ERR_INVALID_ARG    Parameter error
+ *     - ESP_ERR_INVALID_STATE  Driver state error
  */
 esp_err_t i2s_adc_disable(i2s_port_t i2s_num);
 
