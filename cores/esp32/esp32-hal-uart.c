@@ -69,7 +69,7 @@ static uart_t _uart_bus_array[3] = {
 
 static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
-static void IRAM_ATTR _uart_isr(void *arg)
+static void IRAM_ATTR _uart_isr(void (*arg)(char))
 {
     uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
@@ -87,7 +87,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
             c = uart->dev->fifo.rw_byte;
             if(arg != NULL){ // Check if an interrupt handler function has been specified
                 // Fully optimized code would not create the queue anymore if an function has been specified as an argument.
-                (*((void(**)())arg))(c); // There is, call it with c as an parameter. Don't pass it to the queue anymore
+                (*arg)((char*)&c); // There is, call it with c as an parameter. Don't pass it to the queue anymore
             }else if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
@@ -99,7 +99,7 @@ static void IRAM_ATTR _uart_isr(void *arg)
     }
 }
 
-void uartEnableInterrupt(uart_t* uart, void * func)
+void uartEnableInterrupt(uart_t* uart, void (*func)(char))
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.rxfifo_full_thrhd = 112;

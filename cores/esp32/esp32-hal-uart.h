@@ -81,7 +81,7 @@ unsigned long uartDetectBaudrate(uart_t *uart);
 bool uartRxActive(uart_t* uart);
 
 void uartDisableInterrupt(uart_t* uart);
-void uartEnableInterrupt(uart_t* uart,void * func );
+void uartEnableInterrupt(uart_t* uart, void (*func)(char));
 
 #ifdef __cplusplus
 }
