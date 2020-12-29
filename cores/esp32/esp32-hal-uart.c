@@ -87,7 +87,7 @@ static void IRAM_ATTR _uart_isr(void (*arg)(char))
             c = uart->dev->fifo.rw_byte;
             if(arg != NULL){ // Check if an interrupt handler function has been specified
                 // Fully optimized code would not create the queue anymore if an function has been specified as an argument.
-                (*arg)((char*)&c); // There is, call it with c as an parameter. Don't pass it to the queue anymore
+                (*arg)((char)c);
             }else if(uart->queue != NULL)  {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
