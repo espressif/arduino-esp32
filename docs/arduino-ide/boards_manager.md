@@ -10,3 +10,5 @@ Starting with 1.6.4, Arduino allows installation of third-party platform package
 - Start Arduino and open Preferences window.
 - Enter one of the release links above into *Additional Board Manager URLs* field. You can add multiple URLs, separating them with commas.
 - Open Boards Manager from Tools > Board menu and install *esp32* platform (and don't forget to select your ESP32 board from Tools > Board menu after installation).
+
+**Note:** The default configuration does not work for using both BLE and WiFi in the same sketch. If you need both or even more modules at the same time other Partition Schemes _(Tools -> Partition Scheme)_ may work (for example "Minimal SPIFFS (1.9MB APP with OTA/190K SPIFFS)")
