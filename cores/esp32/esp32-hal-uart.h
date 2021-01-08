@@ -51,6 +51,9 @@ extern "C" {
 struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
+struct uart_interrupt_struct_t;
+typedef struct uart_interrupt_struct_t uart_interrupt_t;
+
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted);
 void uartEnd(uart_t* uart, uint8_t rxPin, uint8_t txPin);
 
@@ -81,7 +84,7 @@ unsigned long uartDetectBaudrate(uart_t *uart);
 bool uartRxActive(uart_t* uart);
 
 void uartDisableInterrupt(uart_t* uart);
-void uartEnableInterrupt(uart_t* uart, void (*func)(char));
+void uartEnableInterrupt(uart_t *uart, uart_interrupt_t** arg, void (*func)(uint8_t, void*), void* user_arg);
 
 #ifdef __cplusplus
 }

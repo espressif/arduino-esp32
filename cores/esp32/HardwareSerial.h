@@ -23,6 +23,7 @@
  Modified 31 March 2015 by Markus Sattler (rewrite the code for UART0 + UART1 support in ESP8266)
  Modified 25 April 2015 by Thomas Flayols (add configuration different from 8N1 in ESP8266)
  Modified 13 October 2018 by Jeroen Döll (add baudrate detection)
+ Modified 08 januari 2012 by Tim Koers (added RX IRQ handling)
  Baudrate detection example usage (detection on Serial1):
    void setup() {
      Serial.begin(115200);
@@ -58,7 +59,7 @@ public:
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
     void end();
     void updateBaudRate(unsigned long baud);
-    void setRXInterrupt(void (*arg)(char));
+    void setRXInterrupt(void (*arg)(uint8_t, void*), void* user_arg);
     int available(void);
     int availableForWrite(void);
     int peek(void);
@@ -109,6 +110,7 @@ protected:
     uart_t* _uart;
     uint8_t _tx_pin;
     uint8_t _rx_pin;
+    uart_interrupt_struct_t* interrupt_info;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
