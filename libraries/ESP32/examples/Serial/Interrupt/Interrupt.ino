@@ -3,16 +3,16 @@ HardwareSerial hwSerial2(2);
 
 bool ok = true;
 
-static void IRAM_ATTR onSerialRX(char c, void* user_arg){
-  if(*((bool*)user_arg))
+static void IRAM_ATTR onSerialRX(uint8_t c, void* user_arg){  
 	hwSerial.print(c);
+	((HardwareSerial*)user_arg)->print(c);
 }
 
 void setup()
 {
   hwSerial.begin(115200);
   hwSerial2.begin(115200);
-  hwSerial2.setRXInterrupt(onSerialRX, (void*)&ok);
+  hwSerial2.setRXInterrupt(onSerialRX, (void*)&hwSerial2);
   
 }
 
