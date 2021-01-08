@@ -104,8 +104,7 @@ static void IRAM_ATTR _uart_isr()
             {
                 // Fully optimized code would not create the queue anymore if an function has been specified as an argument.
                 (*uart_interrupt->func)(c, uart_interrupt->user_arg);
-            }
-            if (uart->queue != NULL)
+            }else if (uart->queue != NULL)
             {
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
