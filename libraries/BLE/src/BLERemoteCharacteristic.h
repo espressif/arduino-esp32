@@ -46,7 +46,7 @@ public:
 	uint16_t    readUInt16();
 	uint32_t    readUInt32();
 	float       readFloat();
-	void        registerForNotify(notify_callback _callback, bool notifications = true);
+	void        registerForNotify(notify_callback _callback, bool notifications = true, bool descriptorRequiresRegistration = true);
 	void        writeValue(uint8_t* data, size_t length, bool response = false);
 	void        writeValue(std::string newValue, bool response = false);
 	void        writeValue(uint8_t newValue, bool response = false);

@@ -90,56 +90,56 @@ void IRAM_ATTR __timerISR(void * arg){
     }
 }
 
-uint64_t timerRead(hw_timer_t *timer){
+uint64_t IRAM_ATTR timerRead(hw_timer_t *timer){
     timer->dev->update = 1;
     uint64_t h = timer->dev->cnt_high;
     uint64_t l = timer->dev->cnt_low;
     return (h << 32) | l;
 }
 
-uint64_t timerAlarmRead(hw_timer_t *timer){
+uint64_t IRAM_ATTR timerAlarmRead(hw_timer_t *timer){
     uint64_t h = timer->dev->alarm_high;
     uint64_t l = timer->dev->alarm_low;
     return (h << 32) | l;
 }
 
-void timerWrite(hw_timer_t *timer, uint64_t val){
+void IRAM_ATTR timerWrite(hw_timer_t *timer, uint64_t val){
     timer->dev->load_high = (uint32_t) (val >> 32);
     timer->dev->load_low = (uint32_t) (val);
     timer->dev->reload = 1;
 }
 
-void timerAlarmWrite(hw_timer_t *timer, uint64_t alarm_value, bool autoreload){
+void IRAM_ATTR timerAlarmWrite(hw_timer_t *timer, uint64_t alarm_value, bool autoreload){
     timer->dev->alarm_high = (uint32_t) (alarm_value >> 32);
     timer->dev->alarm_low = (uint32_t) alarm_value;
     timer->dev->config.autoreload = autoreload;
 }
 
-void timerSetConfig(hw_timer_t *timer, uint32_t config){
+void IRAM_ATTR timerSetConfig(hw_timer_t *timer, uint32_t config){
     timer->dev->config.val = config;
 }
 
-uint32_t timerGetConfig(hw_timer_t *timer){
+uint32_t IRAM_ATTR timerGetConfig(hw_timer_t *timer){
     return timer->dev->config.val;
 }
 
-void timerSetCountUp(hw_timer_t *timer, bool countUp){
+void IRAM_ATTR timerSetCountUp(hw_timer_t *timer, bool countUp){
     timer->dev->config.increase = countUp;
 }
 
-bool timerGetCountUp(hw_timer_t *timer){
+bool IRAM_ATTR timerGetCountUp(hw_timer_t *timer){
     return timer->dev->config.increase;
 }
 
-void timerSetAutoReload(hw_timer_t *timer, bool autoreload){
+void IRAM_ATTR timerSetAutoReload(hw_timer_t *timer, bool autoreload){
     timer->dev->config.autoreload = autoreload;
 }
 
-bool timerGetAutoReload(hw_timer_t *timer){
+bool IRAM_ATTR timerGetAutoReload(hw_timer_t *timer){
     return timer->dev->config.autoreload;
 }
 
-void timerSetDivider(hw_timer_t *timer, uint16_t divider){//2 to 65536
+void IRAM_ATTR timerSetDivider(hw_timer_t *timer, uint16_t divider){//2 to 65536
     if(!divider){
         divider = 0xFFFF;
     } else if(divider == 1){
@@ -151,41 +151,41 @@ void timerSetDivider(hw_timer_t *timer, uint16_t divider){//2 to 65536
     timer->dev->config.enable = timer_en;
 }
 
-uint16_t timerGetDivider(hw_timer_t *timer){
+uint16_t IRAM_ATTR timerGetDivider(hw_timer_t *timer){
     return timer->dev->config.divider;
 }
 
-void timerStart(hw_timer_t *timer){
+void IRAM_ATTR timerStart(hw_timer_t *timer){
     timer->dev->config.enable = 1;
 }
 
-void timerStop(hw_timer_t *timer){
+void IRAM_ATTR timerStop(hw_timer_t *timer){
     timer->dev->config.enable = 0;
 }
 
-void timerRestart(hw_timer_t *timer){
+void IRAM_ATTR timerRestart(hw_timer_t *timer){
     timer->dev->config.enable = 0;
     timer->dev->reload = 1;
     timer->dev->config.enable = 1;
 }
 
-bool timerStarted(hw_timer_t *timer){
+bool IRAM_ATTR timerStarted(hw_timer_t *timer){
     return timer->dev->config.enable;
 }
 
-void timerAlarmEnable(hw_timer_t *timer){
+void IRAM_ATTR timerAlarmEnable(hw_timer_t *timer){
     timer->dev->config.alarm_en = 1;
 }
 
-void timerAlarmDisable(hw_timer_t *timer){
+void IRAM_ATTR timerAlarmDisable(hw_timer_t *timer){
     timer->dev->config.alarm_en = 0;
 }
 
-bool timerAlarmEnabled(hw_timer_t *timer){
+bool IRAM_ATTR timerAlarmEnabled(hw_timer_t *timer){
     return timer->dev->config.alarm_en;
 }
 
-static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
+static void IRAM_ATTR _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     hw_timer_t * timer = (hw_timer_t *)arg;
     if(ev_type == APB_BEFORE_CHANGE){
         timer->dev->config.enable = 0;
@@ -197,7 +197,7 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
     }
 }
 
-hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
+hw_timer_t * IRAM_ATTR timerBegin(uint8_t num, uint16_t divider, bool countUp){
     if(num > 3){
         return NULL;
     }
@@ -222,13 +222,13 @@ hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     return timer;
 }
 
-void timerEnd(hw_timer_t *timer){
+void IRAM_ATTR timerEnd(hw_timer_t *timer){
     timer->dev->config.enable = 0;
     timerAttachInterrupt(timer, NULL, false);
     removeApbChangeCallback(timer, _on_apb_change);
 }
 
-void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
+void IRAM_ATTR timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     static bool initialized = false;
     static intr_handle_t intr_handle = NULL;
     if(intr_handle){
@@ -279,29 +279,29 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     }
 }
 
-void timerDetachInterrupt(hw_timer_t *timer){
+void IRAM_ATTR timerDetachInterrupt(hw_timer_t *timer){
     timerAttachInterrupt(timer, NULL, false);
 }
 
-uint64_t timerReadMicros(hw_timer_t *timer){
+uint64_t IRAM_ATTR timerReadMicros(hw_timer_t *timer){
     uint64_t timer_val = timerRead(timer);
     uint16_t div = timerGetDivider(timer);
     return timer_val * div / (getApbFrequency() / 1000000);
 }
 
-double timerReadSeconds(hw_timer_t *timer){
+double IRAM_ATTR timerReadSeconds(hw_timer_t *timer){
     uint64_t timer_val = timerRead(timer);
     uint16_t div = timerGetDivider(timer);
     return (double)timer_val * div / getApbFrequency();
 }
 
-uint64_t timerAlarmReadMicros(hw_timer_t *timer){
+uint64_t IRAM_ATTR timerAlarmReadMicros(hw_timer_t *timer){
     uint64_t timer_val = timerAlarmRead(timer);
     uint16_t div = timerGetDivider(timer);
     return timer_val * div / (getApbFrequency() / 1000000);
 }
 
-double timerAlarmReadSeconds(hw_timer_t *timer){
+double IRAM_ATTR timerAlarmReadSeconds(hw_timer_t *timer){
     uint64_t timer_val = timerAlarmRead(timer);
     uint16_t div = timerGetDivider(timer);
     return (double)timer_val * div / getApbFrequency();
