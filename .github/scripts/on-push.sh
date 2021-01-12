@@ -61,7 +61,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 else
 	# PlatformIO Test
 	source ./.github/scripts/install-platformio-esp32.sh
-	BOARD="esp32dev"	
+	BOARD="esp32dev"
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
