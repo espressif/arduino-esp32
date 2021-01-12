@@ -85,28 +85,42 @@ static void IRAM_ATTR _uart_isr()
 	uart_t* uart;
 	uart_interrupt_t *uart_interrupt;
 
+	// Loop through all the uart devices
 	for(i=0;i<3;i++){
+		
+		// Get the current uart device
 		uart = &_uart_bus_array[i];
+		
+		// Get the interrupt description for this uart device
 		uart_interrupt = _uart_interrupt_array[i];
 
+		// If there is no interrupt handle, skip the rest of the for loop's body
 		if (uart->intr_handle == NULL) {
 			continue;
 		}
+		
+		// There are cases where bytes might come in between the time you check and handle the bytes and the time you clear the interrupt. 
+		// In that case you will not get an ISR for those bytes. 
+		// We had that happen and scratched heads for quite some time. 
+		// There was another case that I do not recall at this time as well.
+		// https://github.com/espressif/arduino-esp32/pull/4656#discussion_r555780523
+		uart->dev->int_clr.rxfifo_full = 1;
+		uart->dev->int_clr.frm_err = 1;
+		uart->dev->int_clr.rxfifo_tout = 1;
 
+		// Read until fifo is empty
 		while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
 			c = uart->dev->fifo.rw_byte;
+			
+			// Check if an user defined interrupt handling function is present
 			if (uart_interrupt != NULL && uart_interrupt->dev->num == uart->num && uart_interrupt->func != NULL) {
 				// Fully optimized code would not create the queue anymore if an function has been specified as an argument.
 				(*uart_interrupt->func)(c, uart_interrupt->user_arg);
 			}else if (uart->queue != NULL) {
+				// No user function is present, handle as you normally would
 				xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
 			}
-		}
-
-		// Clear the interrupts after everything was read
-		uart->dev->int_clr.rxfifo_full = 1;
-		uart->dev->int_clr.frm_err = 1;
-		uart->dev->int_clr.rxfifo_tout = 1;
+		}		
 	}
 
 	if (xHigherPriorityTaskWoken) {
