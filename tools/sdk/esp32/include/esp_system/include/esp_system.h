@@ -42,6 +42,8 @@ typedef enum {
 #define UNIVERSAL_MAC_ADDR_NUM CONFIG_ESP32_UNIVERSAL_MAC_ADDRESSES
 #elif CONFIG_IDF_TARGET_ESP32S2
 #define UNIVERSAL_MAC_ADDR_NUM CONFIG_ESP32S2_UNIVERSAL_MAC_ADDRESSES
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define UNIVERSAL_MAC_ADDR_NUM CONFIG_ESP32C3_UNIVERSAL_MAC_ADDRESSES
 #endif
 /** @endcond */
 
@@ -250,7 +252,7 @@ esp_err_t esp_derive_local_mac(uint8_t* local_mac, const uint8_t* universal_mac)
 
 /**
  * @brief Trigger a software abort
- * 
+ *
  * @param details Details that will be displayed during panic handling.
  */
 void  __attribute__((noreturn)) esp_system_abort(const char* details);
@@ -262,6 +264,7 @@ typedef enum {
     CHIP_ESP32  = 1, //!< ESP32
     CHIP_ESP32S2 = 2, //!< ESP32-S2
     CHIP_ESP32S3 = 4, //!< ESP32-S3
+    CHIP_ESP32C3 = 5, //!< ESP32-C3
 } esp_chip_model_t;
 
 /* Chip feature flags, used in esp_chip_info_t */

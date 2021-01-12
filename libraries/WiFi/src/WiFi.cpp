@@ -70,7 +70,7 @@ void WiFiClass::printDiag(Print& p)
     */
 
     wifi_config_t conf;
-    esp_wifi_get_config(WIFI_IF_STA, &conf);
+    esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA, &conf);
 
     const char* ssid = reinterpret_cast<const char*>(conf.sta.ssid);
     p.print("SSID (");

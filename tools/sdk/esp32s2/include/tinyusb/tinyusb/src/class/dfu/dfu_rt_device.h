@@ -66,8 +66,7 @@ TU_ATTR_WEAK void tud_dfu_rt_reboot_to_dfu(void); // TODO rename to _cb conventi
 void     dfu_rtd_init(void);
 void     dfu_rtd_reset(uint8_t rhport);
 uint16_t dfu_rtd_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
-bool     dfu_rtd_control_request(uint8_t rhport, tusb_control_request_t const * request);
-bool     dfu_rtd_control_complete(uint8_t rhport, tusb_control_request_t const * request);
+bool     dfu_rtd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
 bool     dfu_rtd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
 #ifdef __cplusplus

@@ -412,6 +412,11 @@ typedef struct httpd_uri {
      * This is used if a custom processing of the control frames is needed
      */
     bool handle_ws_control_frames;
+
+    /**
+     * Pointer to subprotocol supported by URI
+     */
+    const char *supported_subprotocol;
 #endif
 } httpd_uri_t;
 
@@ -534,6 +539,17 @@ typedef enum {
      * due to chunked encoding / upgrade field present in headers
      */
     HTTPD_400_BAD_REQUEST,
+
+    /* This response means the client must authenticate itself
+     * to get the requested response.
+     */
+    HTTPD_401_UNAUTHORIZED,
+
+    /* The client does not have access rights to the content,
+     * so the server is refusing to give the requested resource.
+     * Unlike 401, the client's identity is known to the server.
+     */
+    HTTPD_403_FORBIDDEN,
 
     /* When requested URI is not found */
     HTTPD_404_NOT_FOUND,

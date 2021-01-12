@@ -37,16 +37,19 @@
 #pragma once
 
 /*-------------------------- COMMON CAPS ---------------------------------------*/
-#define SOC_TWAI_SUPPORTED 1
-#define SOC_CP_DMA_SUPPORTED 1
-#define SOC_CPU_CORES_NUM 1
-#define SOC_DEDICATED_GPIO_SUPPORTED 1
-#define SOC_SUPPORTS_SECURE_DL_MODE 1
-#define SOC_RISCV_COPROC_SUPPORTED 1
-#define SOC_USB_SUPPORTED 1
-#define SOC_PCNT_SUPPORTED 1
+#define SOC_TWAI_SUPPORTED              1
+#define SOC_CP_DMA_SUPPORTED            1
+#define SOC_CPU_CORES_NUM               1
+#define SOC_DEDICATED_GPIO_SUPPORTED    1
+#define SOC_SUPPORTS_SECURE_DL_MODE     1
+#define SOC_RISCV_COPROC_SUPPORTED      1
+#define SOC_USB_SUPPORTED               1
+#define SOC_PCNT_SUPPORTED              1
+#define SOC_ULP_SUPPORTED               1
+#define SOC_RTC_SLOW_MEM_SUPPORTED      1
+#define SOC_CCOMP_TIMER_SUPPORTED       1
 
-#define SOC_CACHE_SUPPORT_WRAP    1
+#define SOC_CACHE_SUPPORT_WRAP          1
 
 /*-------------------------- ADC CAPS ----------------------------------------*/
 #define SOC_ADC_PERIPH_NUM              (2)
@@ -113,6 +116,9 @@
 //ESP32-S2 support hardware clear bus
 #define SOC_I2C_SUPPORT_HW_CLR_BUS  (1)
 
+#define SOC_I2C_SUPPORT_REF_TICK   (1)
+#define SOC_I2C_SUPPORT_APB        (1)
+
 /*-------------------------- I2S CAPS ----------------------------------------*/
 // ESP32-S2 have 2 I2S
 #define SOC_I2S_NUM            (1)
@@ -127,6 +133,8 @@
 
 /*-------------------------- LEDC CAPS ---------------------------------------*/
 #define SOC_LEDC_SUPPORT_XTAL_CLOCK  (1)
+#define SOC_LEDC_CHANNEL_NUM         (8)
+#define SOC_LEDC_TIMER_BIT_WIDE_NUM  (14)
 
 /*-------------------------- MPU CAPS ----------------------------------------*/
 //TODO: correct the caller and remove unsupported lines
@@ -143,18 +151,26 @@
 #define SOC_PCNT_UNIT_CHANNEL_NUM (2)
 
 /*-------------------------- RMT CAPS ----------------------------------------*/
-#define SOC_RMT_CHANNEL_MEM_WORDS (64)       /*!< Each channel owns 64 words memory (1 word = 4 Bytes) */
-#define SOC_RMT_CHANNELS_NUM (4)             /*!< Total 4 channels */
-#define SOC_RMT_SUPPORT_RX_PINGPONG (1)      /*!< Support Ping-Pong mode on RX path */
-#define SOC_RMT_SUPPORT_RX_DEMODULATION  (1) /*!< Support signal demodulation on RX path (i.e. remove carrier) */
-#define SOC_RMT_SUPPORT_TX_LOOP_COUNT (1)    /*!< Support transmit specified number of cycles in loop mode */
-#define SOC_RMT_SUPPORT_TX_GROUP (1)         /*!< Support a group of TX channels to transmit simultaneously */
+#define SOC_RMT_CHANNEL_MEM_WORDS       (64) /*!< Each channel owns 64 words memory (1 word = 4 Bytes) */
+#define SOC_RMT_TX_CHANNELS_NUM         (4)  /*!< Number of channels that capable of Transmit */
+#define SOC_RMT_RX_CHANNELS_NUM         (4)  /*!< Number of channels that capable of Receive */
+#define SOC_RMT_CHANNELS_NUM            (4)  /*!< Total 4 channels (each channel can be configured to either TX or RX) */
+#define SOC_RMT_SUPPORT_RX_PINGPONG     (1)  /*!< Support Ping-Pong mode on RX path */
+#define SOC_RMT_SUPPORT_RX_DEMODULATION (1)  /*!< Support signal demodulation on RX path (i.e. remove carrier) */
+#define SOC_RMT_SUPPORT_TX_LOOP_COUNT   (1)  /*!< Support transmit specified number of cycles in loop mode */
+#define SOC_RMT_SUPPORT_TX_GROUP        (1)  /*!< Support a group of TX channels to transmit simultaneously */
+#define SOC_RMT_SUPPORT_REF_TICK        (1)  /*!< Support set REF_TICK as the RMT clock source */
+#define SOC_RMT_SOURCE_CLK_INDEPENDENT  (1)  /*!< Can select different source clock for channels */
 
 /*-------------------------- RTCIO CAPS --------------------------------------*/
 #define SOC_RTCIO_PIN_COUNT   22
+#define SOC_RTCIO_INPUT_OUTPUT_SUPPORTED 1
+#define SOC_RTCIO_HOLD_SUPPORTED 1
+#define SOC_RTCIO_WAKE_SUPPORTED 1
+
 
 /*-------------------------- SIGMA DELTA CAPS --------------------------------*/
-#define SOC_SIGMADELTA_NUM         (1) // 1 sigma-delta peripheral
+#define SOC_SIGMADELTA_NUM            1
 #define SOC_SIGMADELTA_CHANNEL_NUM (8) // 8 channels
 
 /*-------------------------- SPI CAPS ----------------------------------------*/
@@ -163,6 +179,7 @@
 #define SOC_SPI_PERIPH_CS_NUM(i)    (((i)==0)? 2: (((i)==1)? 6: 3))
 
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE     72
+#define SOC_SPI_MAX_PRE_DIVIDER         8192
 
 //#define SOC_SPI_SUPPORT_AS_CS         //don't support to toggle the CS while the clock toggles
 #define SOC_SPI_SUPPORT_DDRCLK              1
@@ -190,7 +207,14 @@
 #define SOC_SYSTIMER_BIT_WIDTH_HI (32) // Bit width of systimer high part
 
 /*-------------------------- TIMER GROUP CAPS --------------------------------*/
-#define SOC_TIMER_GROUP_SUPPORT_XTAL        1
+#define SOC_TIMER_GROUP_SUPPORT_XTAL (1)
+#define SOC_TIMER_GROUP_XTAL_MHZ (40)
+#define SOC_TIMER_GROUP_COUNTER_BIT_WIDTH  (64)
+#define SOC_TIMER_GROUP_PRESCALE_BIT_WIDTH (16)
+#define SOC_TIMER_GROUPS (2)
+#define SOC_TIMER_GROUP_TIMERS_PER_GROUP (2)
+#define SOC_TIMER_GROUP_TOTAL_TIMERS (SOC_TIMER_GROUPS * SOC_TIMER_GROUP_TIMERS_PER_GROUP)
+#define SOC_TIMER_GROUP_LAYOUT {2,2}
 
 /*-------------------------- TOUCH SENSOR CAPS -------------------------------*/
 #define SOC_TOUCH_SENSOR_NUM                (15)    /*! 15 Touch channels */
@@ -198,6 +222,7 @@
 
 #define SOC_TOUCH_PAD_THRESHOLD_MAX         (0x1FFFFF)  /*!<If set touch threshold max value, The touch sensor can't be in touched status */
 #define SOC_TOUCH_PAD_MEASURE_WAIT_MAX      (0xFF)  /*!<The timer frequency is 8Mhz, the max value is 0xff */
+#define SOC_TOUCH_PAD_WAKE_SUPPORTED        (1)     /*!<Supports waking up from touch pad trigger */
 
 /*-------------------------- TWAI CAPS ---------------------------------------*/
 #define SOC_TWAI_BRP_MIN                2
@@ -205,13 +230,66 @@
 
 /*-------------------------- UART CAPS ---------------------------------------*/
 // ESP32-S2 have 2 UART.
-#define SOC_UART_NUM           (2)
+#define SOC_UART_NUM                (2)
+#define SOC_UART_SUPPORT_REF_TICK   (1)         /*!< Support REF_TICK as the clock source */
+#define SOC_UART_FIFO_LEN           (128)       /*!< The UART hardware FIFO length */
+#define SOC_UART_BITRATE_MAX        (5000000)   /*!< Max bit rate supported by UART */
 
-#define SOC_UART_FIFO_LEN          (128)      /*!< The UART hardware FIFO length */
-#define SOC_UART_BITRATE_MAX       (5000000)  /*!< Max bit rate supported by UART */
+/*-------------------------- SPIRAM CAPS -------------------------------------*/
+#define SOC_SPIRAM_SUPPORTED    1
 
 /*-------------------------- USB CAPS ----------------------------------------*/
 #define SOC_USB_PERIPH_NUM 1
+
+
+/*--------------------------- SHA CAPS ---------------------------------------*/
+/* Max amount of bytes in a single DMA operation is 4095,
+   for SHA this means that the biggest safe amount of bytes is
+   31 blocks of 128 bytes = 3968
+*/
+#define SOC_SHA_DMA_MAX_BUFFER_SIZE     (3968)
+#define SOC_SHA_SUPPORT_DMA             (1)
+
+/* The SHA engine is able to resume hashing from a user supplied context */
+#define SOC_SHA_SUPPORT_RESUME          (1)
+
+/* Has "crypto DMA", which is shared with AES */
+#define SOC_SHA_CRYPTO_DMA              (1)
+
+/* Supported HW algorithms */
+#define SOC_SHA_SUPPORT_SHA1            (1)
+#define SOC_SHA_SUPPORT_SHA224          (1)
+#define SOC_SHA_SUPPORT_SHA256          (1)
+#define SOC_SHA_SUPPORT_SHA384          (1)
+#define SOC_SHA_SUPPORT_SHA256          (1)
+#define SOC_SHA_SUPPORT_SHA512          (1)
+#define SOC_SHA_SUPPORT_SHA512_224      (1)
+#define SOC_SHA_SUPPORT_SHA512_256      (1)
+#define SOC_SHA_SUPPORT_SHA512_T        (1)
+
+/* Supported HW algorithms */
+#define SOC_SHA_SUPPORT_SHA1            (1)
+#define SOC_SHA_SUPPORT_SHA256          (1)
+#define SOC_SHA_SUPPORT_SHA384          (1)
+#define SOC_SHA_SUPPORT_SHA512          (1)
+
+
+/*--------------------------- RSA CAPS ---------------------------------------*/
+#define SOC_RSA_MAX_BIT_LEN    (4096)
+
+
+/*-------------------------- AES CAPS -----------------------------------------*/
+#define SOC_AES_SUPPORT_DMA     (1)
+#define SOC_AES_SUPPORT_GCM     (1)
+
+/* Has "crypto DMA", which is shared with SHA */
+#define SOC_AES_CRYPTO_DMA      (1)
+
+#define SOC_AES_SUPPORT_AES_128 (1)
+#define SOC_AES_SUPPORT_AES_192 (1)
+#define SOC_AES_SUPPORT_AES_256 (1)
+
+
 
 /* ---------------------------- Compatibility ------------------------------- */
 // No contents

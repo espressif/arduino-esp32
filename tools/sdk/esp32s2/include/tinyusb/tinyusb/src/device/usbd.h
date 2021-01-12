@@ -56,6 +56,9 @@ extern void dcd_int_handler(uint8_t rhport);
 // Get current bus speed
 tusb_speed_t tud_speed_get(void);
 
+// Check if device is connected (may not mounted/configured yet)
+bool tud_connected(void);
+
 // Check if device is connected and configured
 bool tud_mounted(void);
 
@@ -125,11 +128,7 @@ TU_ATTR_WEAK void tud_suspend_cb(bool remote_wakeup_en);
 TU_ATTR_WEAK void tud_resume_cb(void);
 
 // Invoked when received control request with VENDOR TYPE
-TU_ATTR_WEAK bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request);
-
-// Invoked when vendor control request is complete
-TU_ATTR_WEAK bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request);
-
+TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
 
 //--------------------------------------------------------------------+
 // Binary Device Object Store (BOS) Descriptor Templates

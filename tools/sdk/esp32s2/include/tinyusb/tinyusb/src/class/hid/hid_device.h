@@ -46,7 +46,7 @@
 #endif
 
 #ifndef CFG_TUD_HID_EP_BUFSIZE
-  #define CFG_TUD_HID_EP_BUFSIZE     16
+  #define CFG_TUD_HID_EP_BUFSIZE     64
 #endif
 
 //--------------------------------------------------------------------+
@@ -359,12 +359,11 @@ static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void     hidd_init             (void);
-void     hidd_reset            (uint8_t rhport);
-uint16_t hidd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
-bool     hidd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
-bool     hidd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
-bool     hidd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+void     hidd_init            (void);
+void     hidd_reset           (uint8_t rhport);
+uint16_t hidd_open            (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     hidd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
+bool     hidd_xfer_cb         (uint8_t rhport, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

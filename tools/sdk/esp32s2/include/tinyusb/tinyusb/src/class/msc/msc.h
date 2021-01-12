@@ -255,7 +255,7 @@ typedef struct TU_ATTR_PACKED
 
   uint8_t : 3;
   uint8_t disable_block_descriptor : 1;
-  uint8_t : 0;
+  uint8_t : 4;
 
   uint8_t page_code : 6;
   uint8_t page_control : 2;

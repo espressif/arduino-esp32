@@ -80,9 +80,16 @@ typedef enum {
  */
 typedef enum {
     MQTT_ERROR_TYPE_NONE = 0,
-    MQTT_ERROR_TYPE_ESP_TLS,
+    MQTT_ERROR_TYPE_TCP_TRANSPORT,
     MQTT_ERROR_TYPE_CONNECTION_REFUSED,
 } esp_mqtt_error_type_t;
+
+/**
+ * MQTT_ERROR_TYPE_TCP_TRANSPORT error type hold all sorts of transport layer errors,
+ * including ESP-TLS error, but in the past only the errors from MQTT_ERROR_TYPE_ESP_TLS layer
+ * were reported, so the ESP-TLS error type is re-defined here for backward compatibility
+ */
+#define MQTT_ERROR_TYPE_ESP_TLS MQTT_ERROR_TYPE_TCP_TRANSPORT
 
 typedef enum {
     MQTT_TRANSPORT_UNKNOWN = 0x0,
@@ -110,7 +117,7 @@ typedef enum {
  * Use this structure directly checking error_type first and then appropriate error code depending on the source of the error:
  *
  * | error_type | related member variables | note |
- * | MQTT_ERROR_TYPE_ESP_TLS | esp_tls_last_esp_err, esp_tls_stack_err, esp_tls_cert_verify_flags | Error reported from esp-tls |
+ * | MQTT_ERROR_TYPE_TCP_TRANSPORT | esp_tls_last_esp_err, esp_tls_stack_err, esp_tls_cert_verify_flags, sock_errno | Error reported from tcp_transport/esp-tls |
  * | MQTT_ERROR_TYPE_CONNECTION_REFUSED | connect_return_code | Internal error reported from MQTT broker on connection |
  */
 typedef struct esp_mqtt_error_codes {
@@ -121,6 +128,9 @@ typedef struct esp_mqtt_error_codes {
     /* esp-mqtt specific structure extension */
     esp_mqtt_error_type_t error_type;            /*!< error type referring to the source of the error */
     esp_mqtt_connect_return_code_t connect_return_code; /*!< connection refused error code reported from MQTT broker on connection */
+    /* tcp_transport extension */
+    int       esp_transport_sock_errno;         /*!< errno from the underlying socket */
+
 } esp_mqtt_error_codes_t;
 
 /**
@@ -179,7 +189,7 @@ typedef struct {
     int refresh_connection_after_ms;        /*!< Refresh connection after this value (in milliseconds) */
     const struct psk_key_hint* psk_hint_key;     /*!< Pointer to PSK struct defined in esp_tls.h to enable PSK authentication (as alternative to certificate verification). If not NULL and server/client certificates are NULL, PSK is enabled */
     bool          use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
-    int reconnect_timeout_ms;               /*!< Reconnect to the broker after this value in miliseconds if auto reconnect is not disabled */
+    int reconnect_timeout_ms;               /*!< Reconnect to the broker after this value in miliseconds if auto reconnect is not disabled (defaults to 10s) */
     const char **alpn_protos;               /*!< NULL-terminated list of supported application protocols to be used for ALPN */
     const char *clientkey_password;         /*!< Client key decryption password string */
     int clientkey_password_len;             /*!< String length of the password pointed to by clientkey_password */
@@ -188,6 +198,8 @@ typedef struct {
     bool skip_cert_common_name_check;       /*!< Skip any validation of server certificate CN field, this reduces the security of TLS and makes the mqtt client susceptible to MITM attacks  */
     bool use_secure_element;                /*!< enable secure element for enabling SSL connection */
     void *ds_data;                          /*!< carrier of handle for digital signature parameters */
+    int network_timeout_ms;                 /*!< Abort network operation if it is not completed after this value, in milliseconds (defaults to 10s) */
+    bool disable_keepalive;                 /*!< Set disable_keepalive=true to turn off keep-alive mechanism, false by default (keepalive is active by default). Note: setting the config value `keepalive` to `0` doesn't disable keepalive feature, but uses a default keepalive period */
 } esp_mqtt_client_config_t;
 
 /**
@@ -346,6 +358,14 @@ esp_err_t esp_mqtt_set_config(esp_mqtt_client_handle_t client, const esp_mqtt_cl
  *         ESP_OK on success
  */
 esp_err_t esp_mqtt_client_register_event(esp_mqtt_client_handle_t client, esp_mqtt_event_id_t event, esp_event_handler_t event_handler, void* event_handler_arg);
+
+/**
+ * @brief Get outbox size
+ *
+ * @param client            mqtt client handle
+ * @return outbox size
+ */
+int esp_mqtt_client_get_outbox_size(esp_mqtt_client_handle_t client);
 
 #ifdef __cplusplus
 }

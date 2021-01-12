@@ -68,7 +68,7 @@ except Exception:
         raise
 
 
-__version__ = "3.0-dev"
+__version__ = "3.1-dev"
 
 MAX_UINT32 = 0xffffffff
 MAX_UINT24 = 0xffffff
@@ -2051,12 +2051,12 @@ class BaseFirmwareImage(object):
                 raise FatalError('Cannot place SHA256 digest on segment boundary'
                                  '(elf_sha256_offset=%d, file_pos=%d, segment_size=%d)' %
                                  (self.elf_sha256_offset, file_pos, segment_len))
+            # offset relative to the data part
+            patch_offset -= self.SEG_HEADER_LEN
             if segment_data[patch_offset:patch_offset + self.SHA256_DIGEST_LEN] != b'\x00' * self.SHA256_DIGEST_LEN:
                 raise FatalError('Contents of segment at SHA256 digest offset 0x%x are not all zero. Refusing to overwrite.' %
                                  self.elf_sha256_offset)
             assert(len(self.elf_sha256) == self.SHA256_DIGEST_LEN)
-            # offset relative to the data part
-            patch_offset -= self.SEG_HEADER_LEN
             segment_data = segment_data[0:patch_offset] + self.elf_sha256 + \
                 segment_data[patch_offset + self.SHA256_DIGEST_LEN:]
         return segment_data
@@ -2908,8 +2908,8 @@ def write_flash(esp, args):
     if args.compress is None and not args.no_compress:
         args.compress = not args.no_stub
 
-    # For encrypt option we do few sanity checks before actual flash write
-    if args.encrypt:
+    # In case we have encrypted files to write, we first do few sanity checks before actual flash
+    if args.encrypt or args.encrypt_files is not None:
         do_write = True
 
         if not esp.secure_download_mode:
@@ -2929,7 +2929,10 @@ def write_flash(esp, args):
                 print('Flash encryption key is not programmed')
                 do_write = False
 
-        for address, argfile in args.addr_filename:
+        # Determine which files list contain the ones to encrypt
+        files_to_encrypt = args.addr_filename if args.encrypt else args.encrypt_files
+
+        for address, argfile in files_to_encrypt:
             if address % esp.FLASH_ENCRYPTED_WRITE_ALIGN:
                 print("File %s address 0x%x is not %d byte aligned, can't flash encrypted" %
                       (argfile.name, address, esp.FLASH_ENCRYPTED_WRITE_ALIGN))
@@ -2952,29 +2955,54 @@ def write_flash(esp, args):
     if args.erase_all:
         erase_flash(esp, args)
 
-    if args.encrypt and args.compress:
-        print('\nWARNING: - compress and encrypt options are mutually exclusive ')
-        print('Will flash uncompressed')
-        args.compress = False
+    """ Create a list describing all the files we have to flash. Each entry holds an "encrypt" flag
+    marking whether the file needs encryption or not. This list needs to be sorted.
 
-    for address, argfile in args.addr_filename:
+    First, append to each entry of our addr_filename list the flag args.encrypt
+    For example, if addr_filename is [(0x1000, "partition.bin"), (0x8000, "bootloader")],
+    all_files will be [(0x1000, "partition.bin", args.encrypt), (0x8000, "bootloader", args.encrypt)],
+    where, of course, args.encrypt is either True or False
+    """
+    all_files = [(offs, filename, args.encrypt) for (offs, filename) in args.addr_filename]
+
+    """Now do the same with encrypt_files list, if defined.
+    In this case, the flag is True
+    """
+    if args.encrypt_files is not None:
+        encrypted_files_flag = [(offs, filename, True) for (offs, filename) in args.encrypt_files]
+
+        # Concatenate both lists and sort them.
+        # As both list are already sorted, we could simply do a merge instead,
+        # but for the sake of simplicity and because the lists are very small,
+        # let's use sorted.
+        all_files = sorted(all_files + encrypted_files_flag, key=lambda x: x[0])
+
+    for address, argfile, encrypted in all_files:
+        compress = args.compress
+
+        # Check whether we can compress the current file before flashing
+        if compress and encrypted:
+            print('\nWARNING: - compress and encrypt options are mutually exclusive ')
+            print('Will flash %s uncompressed' % argfile.name)
+            compress = False
+
         if args.no_stub:
             print('Erasing flash...')
-        image = pad_to(argfile.read(), esp.FLASH_ENCRYPTED_WRITE_ALIGN if args.encrypt else 4)
+        image = pad_to(argfile.read(), esp.FLASH_ENCRYPTED_WRITE_ALIGN if encrypted else 4)
         if len(image) == 0:
             print('WARNING: File %s is empty' % argfile.name)
             continue
         image = _update_image_flash_params(esp, address, args, image)
         calcmd5 = hashlib.md5(image).hexdigest()
         uncsize = len(image)
-        if args.compress:
+        if compress:
             uncimage = image
             image = zlib.compress(uncimage, 9)
             ratio = uncsize / len(image)
             blocks = esp.flash_defl_begin(uncsize, len(image), address)
         else:
             ratio = 1.0
-            blocks = esp.flash_begin(uncsize, address, begin_rom_encrypted=args.encrypt)
+            blocks = esp.flash_begin(uncsize, address, begin_rom_encrypted=encrypted)
         argfile.seek(0)  # in case we need it again
         seq = 0
         written = 0
@@ -2983,12 +3011,12 @@ def write_flash(esp, args):
             print_overwrite('Writing at 0x%08x... (%d %%)' % (address + seq * esp.FLASH_WRITE_SIZE, 100 * (seq + 1) // blocks))
             sys.stdout.flush()
             block = image[0:esp.FLASH_WRITE_SIZE]
-            if args.compress:
+            if compress:
                 esp.flash_defl_block(block, seq, timeout=DEFAULT_TIMEOUT * ratio * 2)
             else:
                 # Pad the last block
                 block = block + b'\xff' * (esp.FLASH_WRITE_SIZE - len(block))
-                if args.encrypt:
+                if encrypted:
                     esp.flash_encrypt_block(block, seq)
                 else:
                     esp.flash_block(block, seq)
@@ -2997,7 +3025,7 @@ def write_flash(esp, args):
             written += len(block)
         t = time.time() - t
         speed_msg = ""
-        if args.compress:
+        if compress:
             if t > 0.0:
                 speed_msg = " (effective %.1f kbit/s)" % (uncsize / t * 8 / 1000)
             print_overwrite('Wrote %d bytes (%d compressed) at 0x%08x in %.1f seconds%s...' % (uncsize, written, address, t, speed_msg), last_line=True)
@@ -3006,7 +3034,7 @@ def write_flash(esp, args):
                 speed_msg = " (%.1f kbit/s)" % (written / t * 8 / 1000)
             print_overwrite('Wrote %d bytes at 0x%08x in %.1f seconds%s...' % (written, address, t, speed_msg), last_line=True)
 
-        if not args.encrypt and not esp.secure_download_mode:
+        if not encrypted and not esp.secure_download_mode:
             try:
                 res = esp.flash_md5sum(address, uncsize)
                 if res != calcmd5:
@@ -3025,7 +3053,14 @@ def write_flash(esp, args):
         # skip sending flash_finish to ROM loader here,
         # as it causes the loader to exit and run user code
         esp.flash_begin(0, 0)
-        if args.compress:
+
+        # Get the "encrypted" flag for the last file flashed
+        # Note: all_files list contains triplets like:
+        # (address: Integer, filename: String, encrypted: Boolean)
+        last_file_encrypted = all_files[-1][2]
+
+        # Check whether the last file flashed was compressed or not
+        if args.compress and not last_file_encrypted:
             esp.flash_defl_finish(False)
         else:
             esp.flash_finish(False)
@@ -3033,7 +3068,12 @@ def write_flash(esp, args):
     if args.verify:
         print('Verifying just-written flash...')
         print('(This option is deprecated, flash contents are now always read back after flashing.)')
-        verify_flash(esp, args)
+        # If some encrypted files have been flashed print a warning saying that we won't check them
+        if args.encrypt or args.encrypt_files is not None:
+            print('WARNING: - cannot verify encrypted files, they will be ignored')
+        # Call verify_flash function only if there at least one non-encrypted file flashed
+        if not args.encrypt:
+            verify_flash(esp, args)
 
 
 def image_info(args):
@@ -3368,7 +3408,7 @@ def main(custom_commandline=None):
         parent.add_argument('--flash_size', '-fs', help='SPI Flash size in MegaBytes (1MB, 2MB, 4MB, 8MB, 16M)'
                             ' plus ESP8266-only (256KB, 512KB, 2MB-c1, 4MB-c1)' + extra_fs_message,
                             action=FlashSizeAction, auto_detect=auto_detect,
-                            default=os.environ.get('ESPTOOL_FS', 'detect' if auto_detect else '1MB'))
+                            default=os.environ.get('ESPTOOL_FS', '1MB' if is_elf2image else 'keep'))
         add_spi_connection_arg(parent)
 
     parser_write_flash = subparsers.add_parser(
@@ -3387,6 +3427,10 @@ def main(custom_commandline=None):
                                     '(mostly superfluous, data is read back during flashing)', action='store_true')
     parser_write_flash.add_argument('--encrypt', help='Apply flash encryption when writing data (required correct efuse settings)',
                                     action='store_true')
+    # In order to not break backward compatibility, our list of encrypted files to flash is a new parameter
+    parser_write_flash.add_argument('--encrypt-files', metavar='<address> <filename>',
+                                    help='Files to be encrypted on the flash. Address followed by binary filename, separated by space.',
+                                    action=AddrFilenamePairAction)
     parser_write_flash.add_argument('--ignore-flash-encryption-efuse-setting', help='Ignore flash encryption efuse settings ',
                                     action='store_true')
 
@@ -3501,7 +3545,6 @@ def main(custom_commandline=None):
     expand_file_arguments()
 
     args = parser.parse_args(custom_commandline)
-
     print('esptool.py v%s' % __version__)
 
     # operation function can take 1 arg (args), 2 args (esp, arg)
@@ -3510,6 +3553,13 @@ def main(custom_commandline=None):
     if args.operation is None:
         parser.print_help()
         sys.exit(1)
+
+    # Forbid the usage of both --encrypt, which means encrypt all the given files,
+    # and --encrypt-files, which represents the list of files to encrypt.
+    # The reason is that allowing both at the same time increases the chances of
+    # having contradictory lists (e.g. one file not available in one of list).
+    if args.operation == "write_flash" and args.encrypt and args.encrypt_files is not None:
+        raise FatalError("Options --encrypt and --encrypt-files must not be specified at the same time.")
 
     operation_func = globals()[args.operation]
 
@@ -3738,7 +3788,7 @@ class AddrFilenamePairAction(argparse.Action):
 
         # Sort the addresses and check for overlapping
         end = 0
-        for address, argfile in sorted(pairs):
+        for address, argfile in sorted(pairs, key=lambda x: x[0]):
             argfile.seek(0, 2)  # seek to end
             size = argfile.tell()
             argfile.seek(0)

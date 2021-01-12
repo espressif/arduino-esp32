@@ -30,10 +30,10 @@ typedef enum {
     WIFI_MODE_MAX
 } wifi_mode_t;
 
-typedef esp_interface_t wifi_interface_t;
-
-#define WIFI_IF_STA ESP_IF_WIFI_STA
-#define WIFI_IF_AP  ESP_IF_WIFI_AP
+typedef enum {
+    WIFI_IF_STA = ESP_IF_WIFI_STA,
+    WIFI_IF_AP  = ESP_IF_WIFI_AP,
+} wifi_interface_t;
 
 typedef enum {
     WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
@@ -95,6 +95,7 @@ typedef enum {
     WIFI_REASON_HANDSHAKE_TIMEOUT        = 204,
     WIFI_REASON_CONNECTION_FAIL          = 205,
     WIFI_REASON_AP_TSF_RESET             = 206,
+    WIFI_REASON_ROAMING                  = 207,
 } wifi_err_reason_t;
 
 typedef enum {
@@ -214,19 +215,19 @@ typedef struct {
 /** @brief Soft-AP configuration settings for the ESP32 */
 typedef struct {
     uint8_t ssid[32];           /**< SSID of ESP32 soft-AP. If ssid_len field is 0, this must be a Null terminated string. Otherwise, length is set according to ssid_len. */
-    uint8_t password[64];       /**< Password of ESP32 soft-AP. Null terminated string. */
+    uint8_t password[64];       /**< Password of ESP32 soft-AP. */
     uint8_t ssid_len;           /**< Optional length of SSID field. */
     uint8_t channel;            /**< Channel of ESP32 soft-AP */
     wifi_auth_mode_t authmode;  /**< Auth mode of ESP32 soft-AP. Do not support AUTH_WEP in soft-AP mode */
     uint8_t ssid_hidden;        /**< Broadcast SSID or not, default 0, broadcast the SSID */
     uint8_t max_connection;     /**< Max number of stations allowed to connect in, default 4, max 10 */
-    uint16_t beacon_interval;   /**< Beacon interval, 100 ~ 60000 ms, default 100 ms */
+    uint16_t beacon_interval;   /**< Beacon interval which should be multiples of 100. Unit: TU(time unit, 1 TU = 1024 us). Range: 100 ~ 60000. Default value: 100 */
 } wifi_ap_config_t;
 
 /** @brief STA configuration settings for the ESP32 */
 typedef struct {
-    uint8_t ssid[32];      /**< SSID of target AP. Null terminated string. */
-    uint8_t password[64];  /**< Password of target AP. Null terminated string.*/
+    uint8_t ssid[32];      /**< SSID of target AP. */
+    uint8_t password[64];  /**< Password of target AP. */
     wifi_scan_method_t scan_method;    /**< do all channel scan or fast scan */
     bool bssid_set;        /**< whether set MAC address of target AP or not. Generally, station_config.bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.*/
     uint8_t bssid[6];     /**< MAC address of target AP*/
@@ -235,6 +236,9 @@ typedef struct {
     wifi_sort_method_t sort_method;    /**< sort the connect AP in the list by rssi or security mode */
     wifi_scan_threshold_t  threshold;     /**< When sort_method is set, only APs which have an auth mode that is more secure than the selected auth mode and a signal stronger than the minimum RSSI will be used. */
     wifi_pmf_config_t pmf_cfg;    /**< Configuration for Protected Management Frame. Will be advertized in RSN Capabilities in RSN IE. */
+    uint32_t rm_enabled:1;        /**< Whether Radio Measurements are enabled for the connection */
+    uint32_t btm_enabled:1;       /**< Whether BSS Transition Management is enabled for the connection */
+    uint32_t reserved:30;         /**< Reserved for future feature set */
 } wifi_sta_config_t;
 
 /** @brief Configuration data for ESP32 AP or STA.
@@ -388,6 +392,7 @@ typedef enum {
 #define WIFI_PROMIS_FILTER_MASK_MISC        (1<<3)        /**< filter the packets with type of WIFI_PKT_MISC */
 #define WIFI_PROMIS_FILTER_MASK_DATA_MPDU   (1<<4)        /**< filter the MPDU which is a kind of WIFI_PKT_DATA */
 #define WIFI_PROMIS_FILTER_MASK_DATA_AMPDU  (1<<5)        /**< filter the AMPDU which is a kind of WIFI_PKT_DATA */
+#define WIFI_PROMIS_FILTER_MASK_FCSFAIL     (1<<6)        /**< filter the FCS failed packets, do not open it in general */
 
 #define WIFI_PROMIS_CTRL_FILTER_MASK_ALL         (0xFF800000)  /**< filter all control packets */
 #define WIFI_PROMIS_CTRL_FILTER_MASK_WRAPPER     (1<<23)       /**< filter the control packets with subtype of Control Wrapper */
@@ -541,6 +546,9 @@ typedef enum {
 
     WIFI_EVENT_FTM_REPORT,               /**< Receive report of FTM procedure */
 
+    /* Add next events after this only */
+    WIFI_EVENT_STA_BSS_RSSI_LOW,         /**< AP's RSSI crossed configured threshold */
+
     WIFI_EVENT_MAX,                      /**< Invalid WiFi event ID */
 } wifi_event_t;
 
@@ -621,6 +629,11 @@ typedef struct {
     int rssi;                 /**< Received probe request signal strength */
     uint8_t mac[6];           /**< MAC address of the station which send probe request */
 } wifi_event_ap_probe_req_rx_t;
+
+/** Argument structure for WIFI_EVENT_STA_BSS_RSSI_LOW event */
+typedef struct {
+    int32_t rssi;                 /**< RSSI value of bss */
+} wifi_event_bss_rssi_low_t;
 
 #define WIFI_STATIS_BUFFER    (1<<0)
 #define WIFI_STATIS_RXTX      (1<<1)

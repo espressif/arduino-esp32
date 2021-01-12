@@ -84,7 +84,7 @@ public:
   void enableArduino(uint16_t port=3232, bool auth=false);
   void disableArduino();
 
-  void enableWorkstation(wifi_interface_t interface=WIFI_IF_STA);
+  void enableWorkstation(esp_interface_t interface=ESP_IF_WIFI_STA);
   void disableWorkstation();
 
   IPAddress queryHost(char *host, uint32_t timeout=2000);

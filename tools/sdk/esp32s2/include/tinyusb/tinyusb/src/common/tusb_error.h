@@ -54,6 +54,7 @@
     ENTRY(TUSB_ERROR_FAILED                          )\
 
 /// \brief Error Code returned
+/// TODO obsolete and to be remove
 typedef enum
 {
   ERROR_TABLE(ERROR_ENUM)
