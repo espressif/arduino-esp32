@@ -155,7 +155,7 @@ void uartDisableInterrupt(uart_t* uart)
 
 void uartDetachRx(uart_t* uart, uint8_t rxPin)
 {
-    if(uart == NULL){
+    if(uart == NULL) {
         return;
     }
     pinMatrixInDetach(rxPin, false, false);
@@ -164,10 +164,20 @@ void uartDetachRx(uart_t* uart, uint8_t rxPin)
 
 void uartDetachTx(uart_t* uart, uint8_t txPin)
 {
-    if(uart == NULL){
+    if(uart == NULL) {
         return;
     }
     pinMatrixOutDetach(txPin, false, false);
+}
+
+void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
+{
+    if(uart == NULL || rxPin > 39) {
+        return;
+    }
+    pinMode(rxPin, INPUT);
+    pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
+    uartEnableInterrupt(uart);
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
