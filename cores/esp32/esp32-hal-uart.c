@@ -127,7 +127,7 @@ static void IRAM_ATTR _uart_isr()
   * @param[in] user_arg The user argument that will be passed to the user interrupt handler.
   *
   */
-void uartEnableInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint8_t, void*), void* user_arg)
+void uartEnableRxInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint8_t, void*), void* user_arg)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.rxfifo_full_thrhd = 112;
@@ -158,14 +158,14 @@ void uartEnableInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint
   * @brief Disables the UART RX interrupt on the specified UART device.
   * 
   * This function disables the RX interrupt for the specified UART device.
-  * This function will delete the uart_interrupt_t* that uartEnableInterrupt() creates.
+  * This function will delete the uart_interrupt_t* that uartEnableRxInterrupt() creates.
   * The pointer to the uart_interrupt_t will be deleted when the interrupt is disabled, or another interrupt function is being registered.
   * Please check for NULL on the uart_interrupt_t pointer before using it.
   
   * @param[in] uart The uart device to register the function for.
   *
   */
-void uartDisableInterrupt(uart_t* uart)
+void uartDisableRxInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.val = 0;
@@ -189,7 +189,7 @@ void uartDetachRx(uart_t* uart, uint8_t rxPin)
         return;
     }
     pinMatrixInDetach(rxPin, false, false);
-    uartDisableInterrupt(uart);
+    uartDisableRxInterrupt(uart);
 }
 
 void uartDetachTx(uart_t* uart, uint8_t txPin)
@@ -207,7 +207,7 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     }
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
-    uartEnableInterrupt(uart, NULL, NULL, NULL);
+    uartEnableRxInterrupt(uart, NULL, NULL, NULL);
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)

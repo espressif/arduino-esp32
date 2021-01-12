@@ -12,7 +12,7 @@ void setup()
 {
   hwSerial.begin(115200);
   hwSerial2.begin(115200);
-  hwSerial2.setRXInterrupt(onSerialRX, (void*)&hwSerial2);  
+  hwSerial2.setRxInterrupt(onSerialRX, (void*)&hwSerial2);  
 }
 
 void loop()

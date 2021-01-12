@@ -59,7 +59,7 @@ public:
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL);
     void end();
     void updateBaudRate(unsigned long baud);
-    void setRXInterrupt(void (*arg)(uint8_t, void*), void* user_arg);
+    void setRxInterrupt(void (*arg)(uint8_t, void*), void* user_arg);
     int available(void);
     int availableForWrite(void);
     int peek(void);
