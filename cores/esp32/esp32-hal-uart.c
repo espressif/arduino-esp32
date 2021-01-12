@@ -177,7 +177,7 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     }
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
-    uartEnableInterrupt(uart);
+    uartEnableInterrupt(uart, NULL, NULL, NULL);
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
