@@ -22,6 +22,10 @@
 
 #if CONFIG_IDF_TARGET_ESP32
 #include "esp32/rom/secure_boot.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/efuse.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/efuse.h"
 #endif
 
 typedef struct ets_secure_boot_signature ets_secure_boot_signature_t;
@@ -67,7 +71,7 @@ static inline bool esp_secure_boot_enabled(void)
  * @important This function is intended to be called from bootloader code only.
  *
  * This function is only used in the context of the Secure Boot V1 scheme.
- * 
+ *
  * If secure boot is not yet enabled for bootloader, this will:
  *     1) generate the secure boot key and burn it on EFUSE
  *        (without enabling R/W protection)
@@ -91,9 +95,9 @@ esp_err_t esp_secure_boot_generate_digest(void);
  *
  * @important This function is intended to be called from bootloader code only.
  *
- * @important In case of Secure Boot V1, this will enable r/w protection 
- * of secure boot key on EFUSE, therefore it is to be ensured that 
- * esp_secure_boot_generate_digest() is called before this .If secure boot is not 
+ * @important In case of Secure Boot V1, this will enable r/w protection
+ * of secure boot key on EFUSE, therefore it is to be ensured that
+ * esp_secure_boot_generate_digest() is called before this .If secure boot is not
  * yet enabled for bootloader, this will
  *     1) enable R/W protection of secure boot key on EFUSE
  *     2) enable secure boot by blowing the EFUSE_RD_ABS_DONE_0 efuse.
@@ -116,9 +120,9 @@ esp_err_t esp_secure_boot_permanently_enable(void);
  * enabled on the chip via efuse.
  *
  * @important This function is intended to be called from bootloader code only.
- * 
- * @important In case of Secure Boot V2, this will enable write protection 
- * of secure boot key on EFUSE in BLK2. .If secure boot is not 
+ *
+ * @important In case of Secure Boot V2, this will enable write protection
+ * of secure boot key on EFUSE in BLK2. .If secure boot is not
  * yet enabled for bootloader, this will
  *     1) enable W protection of secure boot key on EFUSE
  *     2) enable secure boot by blowing the EFUSE_RD_ABS_DONE_1 efuse.
@@ -127,7 +131,7 @@ esp_err_t esp_secure_boot_permanently_enable(void);
  * ROM bootloader does this.)
  *
  * @param image_data Image metadata of the application to be loaded.
- * 
+ *
  * Will fail if efuses have been part-burned in a way that indicates
  * secure boot should not or could not be correctly enabled.
  *
@@ -141,7 +145,7 @@ esp_err_t esp_secure_boot_v2_permanently_enable(const esp_image_metadata_t *imag
  *
  * For ECDSA Scheme (Secure Boot V1) - deterministic ECDSA w/ SHA256 image
  * For RSA Scheme (Secure Boot V2) - RSA-PSS Verification of the SHA-256 image
- * 
+ *
  * Public key is compiled into the calling program in the ECDSA Scheme.
  * See the apt docs/security/secure-boot-v1.rst or docs/security/secure-boot-v2.rst for details.
  *

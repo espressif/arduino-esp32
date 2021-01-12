@@ -420,17 +420,6 @@
  */
 #define LWIP_TCP_RTO_TIME             CONFIG_LWIP_TCP_RTO_TIME
 
-/**
- * Set TCP hook for Initial Sequence Number (ISN)
- */
-#ifdef CONFIG_LWIP_TCP_ISN_HOOK
-#include <lwip/arch.h>
-struct ip_addr;
-u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
-                        const struct ip_addr *remote_ip, u16_t remote_port);
-#define LWIP_HOOK_TCP_ISN               lwip_hook_tcp_isn
-#endif
-
 /*
    ----------------------------------
    ---------- Pbuf options ----------
@@ -778,7 +767,9 @@ u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
    ---------- Hook options ---------------
    ---------------------------------------
 */
+#define LWIP_HOOK_FILENAME              "lwip_default_hooks.h"
 #define LWIP_HOOK_IP4_ROUTE_SRC         ip4_route_src_hook
+
 /*
    ---------------------------------------
    ---------- Debugging options ----------
@@ -847,6 +838,15 @@ u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
 #endif
 
 /**
+ * DHCP_DEBUG: Enable debugging in dhcp.c.
+ */
+#ifdef CONFIG_LWIP_DHCP_DEBUG
+#define DHCP_DEBUG                      LWIP_DBG_ON
+#else
+#define DHCP_DEBUG                      LWIP_DBG_OFF
+#endif
+
+/**
  * IP_DEBUG: Enable debugging for IP.
  */
 #ifdef CONFIG_LWIP_IP_DEBUG
@@ -856,12 +856,21 @@ u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
 #endif
 
 /**
- * IP_DEBUG: Enable debugging for IP.
+ * IP6_DEBUG: Enable debugging for IP6.
  */
 #ifdef CONFIG_LWIP_IP6_DEBUG
 #define IP6_DEBUG                        LWIP_DBG_ON
 #else
 #define IP6_DEBUG                        LWIP_DBG_OFF
+#endif
+
+/**
+ * TCP_DEBUG: Enable debugging for TCP.
+ */
+#ifdef CONFIG_LWIP_TCP_DEBUG
+#define TCP_DEBUG                        LWIP_DBG_ON
+#else
+#define TCP_DEBUG                        LWIP_DBG_OFF
 #endif
 
 /**
@@ -883,6 +892,11 @@ u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
  * TCPIP_DEBUG: Enable debugging in tcpip.c.
  */
 #define TCPIP_DEBUG                     LWIP_DBG_OFF
+
+/**
+ * TCP_OOSEQ_DEBUG: Enable debugging in tcpin.c for OOSEQ.
+ */
+#define TCP_OOSEQ_DEBUG                 LWIP_DBG_OFF
 
 /**
  * ETHARP_TRUST_IP_MAC==1: Incoming IP packets cause the ARP table to be
@@ -966,14 +980,13 @@ u32_t lwip_hook_tcp_isn(const struct ip_addr *local_ip, u16_t local_port,
 #define TCP_WND                         CONFIG_LWIP_TCP_WND_DEFAULT
 
 /**
- * DHCP_DEBUG: Enable debugging in dhcp.c.
+ * LWIP_DEBUG: Enable lwip debugging in other modules.
  */
-#define DHCP_DEBUG                      LWIP_DBG_OFF
 #define LWIP_DEBUG                      LWIP_DBG_OFF
-#define TCP_DEBUG                       LWIP_DBG_OFF
 
-#define CHECKSUM_CHECK_UDP              0
-#define CHECKSUM_CHECK_IP               0
+#define CHECKSUM_CHECK_UDP              CONFIG_LWIP_CHECKSUM_CHECK_UDP
+#define CHECKSUM_CHECK_IP               CONFIG_LWIP_CHECKSUM_CHECK_IP
+#define CHECKSUM_CHECK_ICMP             CONFIG_LWIP_CHECKSUM_CHECK_ICMP
 
 #define LWIP_NETCONN_FULLDUPLEX         1
 #define LWIP_NETCONN_SEM_PER_THREAD     1

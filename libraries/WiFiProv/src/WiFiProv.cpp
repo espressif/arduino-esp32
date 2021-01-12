@@ -51,7 +51,7 @@ static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 
 static void get_device_service_name(prov_scheme_t prov_scheme, char *service_name, size_t max)
 {
     uint8_t eth_mac[6] = {0,0,0,0,0,0};
-    if(esp_wifi_get_mac(WIFI_IF_STA, eth_mac) != ESP_OK){
+    if(esp_wifi_get_mac((wifi_interface_t)WIFI_IF_STA, eth_mac) != ESP_OK){
     	log_e("esp_wifi_get_mac failed!");
     	return;
     }
@@ -158,7 +158,7 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
         log_i("Already Provisioned");
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         static wifi_config_t conf;
-        esp_wifi_get_config(WIFI_IF_STA,&conf);
+        esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA,&conf);
         log_i("Attempting connect to AP: %s\n",conf.sta.ssid);
 #endif
         esp_wifi_start();        

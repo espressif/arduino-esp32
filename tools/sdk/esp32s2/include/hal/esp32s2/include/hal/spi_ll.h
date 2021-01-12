@@ -40,7 +40,8 @@ extern "C" {
 #define SPI_LL_UNUSED_INT_MASK  (SPI_INT_TRANS_DONE_EN | SPI_INT_WR_DMA_DONE_EN | SPI_INT_RD_DMA_DONE_EN | SPI_INT_WR_BUF_DONE_EN | SPI_INT_RD_BUF_DONE_EN)
 /// Swap the bit order to its correct place to send
 #define HAL_SPI_SWAP_DATA_TX(data, len) HAL_SWAP32((uint32_t)data<<(32-len))
-
+/// This is the expected clock frequency
+#define SPI_LL_PERIPH_CLK_FREQ (80 * 1000000)
 #define SPI_LL_GET_HW(ID) ((ID)==0? ({abort();NULL;}):((ID)==1? &GPSPI2 : &GPSPI3))
 
 /**
@@ -198,21 +199,46 @@ static inline uint32_t spi_ll_get_running_cmd(spi_dev_t *hw)
 }
 
 /**
- * Reset SPI CPU FIFO
+ * Reset SPI CPU TX FIFO
  *
  * @param hw Beginning address of the peripheral registers.
  */
-static inline void spi_ll_cpu_fifo_reset(spi_dev_t *hw)
+static inline void spi_ll_cpu_tx_fifo_reset(spi_dev_t *hw)
 {
     //This is not used in esp32s2
 }
 
 /**
- * Reset SPI DMA FIFO
+ * Reset SPI CPU RX FIFO
  *
  * @param hw Beginning address of the peripheral registers.
  */
-static inline void spi_ll_dma_fifo_reset(spi_dev_t *hw)
+static inline void spi_ll_cpu_rx_fifo_reset(spi_dev_t *hw)
+{
+    //This is not used in esp32s2
+}
+
+/**
+ * Reset SPI DMA TX FIFO
+ *
+ * On ESP32S2, this function is not seperated
+ *
+ * @param hw Beginning address of the peripheral registers.
+ */
+static inline void spi_ll_dma_tx_fifo_reset(spi_dev_t *hw)
+{
+    hw->dma_conf.val |= SPI_LL_DMA_FIFO_RST_MASK;
+    hw->dma_conf.val &= ~SPI_LL_DMA_FIFO_RST_MASK;
+}
+
+/**
+ * Reset SPI DMA RX FIFO
+ *
+ * On ESP32S2, this function is not seperated
+ *
+ * @param hw Beginning address of the peripheral registers.
+ */
+static inline void spi_ll_dma_rx_fifo_reset(spi_dev_t *hw)
 {
     hw->dma_conf.val |= SPI_LL_DMA_FIFO_RST_MASK;
     hw->dma_conf.val &= ~SPI_LL_DMA_FIFO_RST_MASK;
@@ -220,7 +246,7 @@ static inline void spi_ll_dma_fifo_reset(spi_dev_t *hw)
 
 /**
  * Clear in fifo full error
- * 
+ *
  * @param hw Beginning address of the peripheral registers.
  */
 static inline void spi_ll_infifo_full_clr(spi_dev_t *hw)
@@ -231,7 +257,7 @@ static inline void spi_ll_infifo_full_clr(spi_dev_t *hw)
 
 /**
  * Clear out fifo empty error
- * 
+ *
  * @param hw Beginning address of the peripheral registers.
  */
 static inline void spi_ll_outfifo_empty_clr(spi_dev_t *hw)
@@ -266,14 +292,14 @@ static inline void spi_ll_dma_tx_enable(spi_dev_t *hw, bool enable)
 }
 
 /**
- * Configuration of OUT EOF flag generation way
+ * Configuration of RX DMA EOF interrupt generation way
  *
- * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
- * @param enable  1: when dma pop all data from fifo  0:when ahb push all data to fifo.
+ * @param hw     Beginning address of the peripheral registers.
+ * @param enable 1: spi_dma_inlink_eof is set when the number of dma pushed data bytes is equal to the value of spi_slv/mst_dma_rd_bytelen[19:0] in spi dma transition.  0: spi_dma_inlink_eof is set by spi_trans_done in non-seg-trans or spi_dma_seg_trans_done in seg-trans.
  */
-static inline void spi_ll_dma_set_out_eof_generation(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_ll_dma_set_rx_eof_generation(spi_dev_t *hw, bool enable)
 {
-    dma_out->dma_conf.out_eof_mode = enable;
+    hw->dma_conf.rx_eof_en = enable;
 }
 
 /*------------------------------------------------------------------------------
@@ -1085,7 +1111,7 @@ static inline void spi_dma_ll_rx_start(spi_dma_dev_t *dma_in, lldesc_t *addr)
  * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_rx_enable_burst_data(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_dma_ll_rx_enable_burst_data(spi_dma_dev_t *dma_in, bool enable)
 {
     //This is not supported in esp32s2
 }
@@ -1099,17 +1125,6 @@ static inline void spi_dma_ll_rx_enable_burst_data(spi_dma_dev_t *dma_out, bool 
 static inline void spi_dma_ll_rx_enable_burst_desc(spi_dma_dev_t *dma_in, bool enable)
 {
     dma_in->dma_conf.indscr_burst_en = enable;
-}
-
-/**
- * Configuration of RX DMA EOF interrupt generation way
- *
- * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
- * @param enable 1: spi_dma_inlink_eof is set when the number of dma pushed data bytes is equal to the value of spi_slv/mst_dma_rd_bytelen[19:0] in spi dma transition.  0: spi_dma_inlink_eof is set by spi_trans_done in non-seg-trans or spi_dma_seg_trans_done in seg-trans. 
- */
-static inline void spi_dma_ll_set_rx_eof_generation(spi_dma_dev_t *dma_in, bool enable)
-{
-    dma_in->dma_conf.rx_eof_en = enable;
 }
 
 /**
@@ -1157,6 +1172,17 @@ static inline void spi_dma_ll_tx_enable_burst_data(spi_dma_dev_t *dma_out, bool 
 static inline void spi_dma_ll_tx_enable_burst_desc(spi_dma_dev_t *dma_out, bool enable)
 {
     dma_out->dma_conf.outdscr_burst_en = enable;
+}
+
+/**
+ * Configuration of OUT EOF flag generation way
+ *
+ * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param enable  1: when dma pop all data from fifo  0:when ahb push all data to fifo.
+ */
+static inline void spi_dma_ll_set_out_eof_generation(spi_dma_dev_t *dma_out, bool enable)
+{
+    dma_out->dma_conf.out_eof_mode = enable;
 }
 
 /**

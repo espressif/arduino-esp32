@@ -290,6 +290,17 @@ static inline void touch_ll_stop_fsm(void)
 }
 
 /**
+ * Get touch sensor FSM timer state.
+ * @return
+ *     - true: FSM enabled
+ *     - false: FSM disabled
+ */
+static inline bool touch_ll_get_fsm_state(void)
+{
+    return (bool)RTCCNTL.touch_ctrl2.touch_slp_timer_en;
+}
+
+/**
  * Trigger a touch sensor measurement, only support in SW mode of FSM.
  */
 static inline void touch_ll_start_sw_meas(void)
@@ -299,17 +310,11 @@ static inline void touch_ll_start_sw_meas(void)
 }
 
 /**
- * Set touch sensor interrupt threshold.
- *
- * @param touch_num touch pad index.
- * @param threshold threshold of touchpad count.
- */
-/**
  * Set the trigger threshold of touch sensor.
  * The threshold determines the sensitivity of the touch sensor.
  * The threshold is the original value of the trigger state minus the benchmark value.
  *
- * @note  If set "TOUCH_PAD_THRESHOLD_MAX", the touch is never be trigered.
+ * @note  If set "TOUCH_PAD_THRESHOLD_MAX", the touch is never be triggered.
  * @param touch_num touch pad index
  * @param threshold threshold of touch sensor.
  */
@@ -691,7 +696,7 @@ static inline void touch_ll_filter_get_filter_mode(touch_filter_mode_t *mode)
  * Set filter mode. The input to the filter is raw data and the output is the smooth data.
  * The smooth data is used to determine the touch status.
  *
- * @param mode Filter mode type. Refer to ``touch_smooth_mode_t``.
+ * @param mode Filter mode type. Refer to `touch_smooth_mode_t`.
  */
 static inline void touch_ll_filter_set_smooth_mode(touch_smooth_mode_t mode)
 {

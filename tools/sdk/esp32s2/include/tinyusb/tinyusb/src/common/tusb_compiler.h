@@ -102,6 +102,7 @@
   #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
 
 #elif defined(__ICCARM__)
+  #include <intrinsics.h>
   #define TU_ATTR_ALIGNED(Bytes)        __attribute__ ((aligned(Bytes)))
   #define TU_ATTR_SECTION(sec_name)     __attribute__ ((section(#sec_name)))
   #define TU_ATTR_PACKED                __attribute__ ((packed))

@@ -216,7 +216,7 @@ static char default_hostname[32] = {0,};
 static const char * get_esp_netif_hostname(){
 	if(default_hostname[0] == 0){
 	    uint8_t eth_mac[6];
-	    esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
+	    esp_wifi_get_mac((wifi_interface_t)WIFI_IF_STA, eth_mac);
 	    snprintf(default_hostname, 32, "%s%02X%02X%02X", CONFIG_IDF_TARGET "-", eth_mac[3], eth_mac[4], eth_mac[5]);
 	}
 	return (const char *)default_hostname;

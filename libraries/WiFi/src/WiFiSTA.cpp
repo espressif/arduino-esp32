@@ -168,7 +168,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_sta_config(&conf, ssid, passphrase, bssid, channel);
 
-    if(esp_wifi_get_config(ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
+    if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
         log_e("get current config failed!");
         return WL_CONNECT_FAILED;
     }
@@ -178,14 +178,14 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
             return WL_CONNECT_FAILED;
         }
 
-        if(esp_wifi_set_config(ESP_IF_WIFI_STA, &conf) != ESP_OK){
+        if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf) != ESP_OK){
             log_e("set config failed!");
             return WL_CONNECT_FAILED;
         }
     } else if(status() == WL_CONNECTED){
         return WL_CONNECTED;
     } else {
-        if(esp_wifi_set_config(ESP_IF_WIFI_STA, &conf) != ESP_OK){
+        if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf) != ESP_OK){
             log_e("set config failed!");
             return WL_CONNECT_FAILED;
         }
@@ -225,7 +225,7 @@ wl_status_t WiFiSTAClass::begin()
     }
 
     wifi_config_t current_conf;
-    if(esp_wifi_get_config(ESP_IF_WIFI_STA, &current_conf) != ESP_OK || esp_wifi_set_config(ESP_IF_WIFI_STA, &current_conf) != ESP_OK) {
+    if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK || esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK) {
         log_e("config failed");
         return WL_CONNECT_FAILED;
     }
@@ -272,7 +272,7 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
 
     if(WiFi.getMode() & WIFI_MODE_STA){
         if(eraseap){
-            if(esp_wifi_set_config(ESP_IF_WIFI_STA, &conf)){
+            if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf)){
                 log_e("clear config failed!");
             }
         }
@@ -398,7 +398,7 @@ IPAddress WiFiSTAClass::localIP()
 uint8_t* WiFiSTAClass::macAddress(uint8_t* mac)
 {
     if(WiFiGenericClass::getMode() != WIFI_MODE_NULL){
-        esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
+        esp_wifi_get_mac((wifi_interface_t)ESP_IF_WIFI_STA, mac);
     }
     else{
         esp_read_mac(mac, ESP_MAC_WIFI_STA);
@@ -418,7 +418,7 @@ String WiFiSTAClass::macAddress(void)
         esp_read_mac(mac, ESP_MAC_WIFI_STA);
     }
     else{
-        esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);
+        esp_wifi_get_mac((wifi_interface_t)ESP_IF_WIFI_STA, mac);
     }
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
@@ -549,7 +549,7 @@ String WiFiSTAClass::psk() const
         return String();
     }
     wifi_config_t conf;
-    esp_wifi_get_config(ESP_IF_WIFI_STA, &conf);
+    esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf);
     return String(reinterpret_cast<char*>(conf.sta.password));
 }
 

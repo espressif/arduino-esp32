@@ -24,25 +24,47 @@
 extern "C" {
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32
 /**** `adc1_channel_t` will be deprecated functions, combine into `adc_channel_t` ********/
 typedef enum {
-    ADC1_CHANNEL_0 = 0, /*!< ADC1 channel 0 is GPIO36 (ESP32), GPIO1 (ESP32-S2) */
-    ADC1_CHANNEL_1,     /*!< ADC1 channel 1 is GPIO37 (ESP32), GPIO2 (ESP32-S2) */
-    ADC1_CHANNEL_2,     /*!< ADC1 channel 2 is GPIO38 (ESP32), GPIO3 (ESP32-S2) */
-    ADC1_CHANNEL_3,     /*!< ADC1 channel 3 is GPIO39 (ESP32), GPIO4 (ESP32-S2) */
-    ADC1_CHANNEL_4,     /*!< ADC1 channel 4 is GPIO32 (ESP32), GPIO5 (ESP32-S2) */
-    ADC1_CHANNEL_5,     /*!< ADC1 channel 5 is GPIO33 (ESP32), GPIO6 (ESP32-S2) */
-    ADC1_CHANNEL_6,     /*!< ADC1 channel 6 is GPIO34 (ESP32), GPIO7 (ESP32-S2) */
-    ADC1_CHANNEL_7,     /*!< ADC1 channel 7 is GPIO35 (ESP32), GPIO8 (ESP32-S2) */
-#if CONFIG_IDF_TARGET_ESP32
+    ADC1_CHANNEL_0 = 0, /*!< ADC1 channel 0 is GPIO36 */
+    ADC1_CHANNEL_1,     /*!< ADC1 channel 1 is GPIO37 */
+    ADC1_CHANNEL_2,     /*!< ADC1 channel 2 is GPIO38 */
+    ADC1_CHANNEL_3,     /*!< ADC1 channel 3 is GPIO39 */
+    ADC1_CHANNEL_4,     /*!< ADC1 channel 4 is GPIO32 */
+    ADC1_CHANNEL_5,     /*!< ADC1 channel 5 is GPIO33 */
+    ADC1_CHANNEL_6,     /*!< ADC1 channel 6 is GPIO34 */
+    ADC1_CHANNEL_7,     /*!< ADC1 channel 7 is GPIO35 */
     ADC1_CHANNEL_MAX,
-#elif CONFIG_IDF_TARGET_ESP32S2
-    ADC1_CHANNEL_8,     /*!< ADC1 channel 6 is GPIO9  (ESP32-S2)*/
-    ADC1_CHANNEL_9,     /*!< ADC1 channel 7 is GPIO10 (ESP32-S2) */
-    ADC1_CHANNEL_MAX,
-#endif
 } adc1_channel_t;
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 // TODO ESP32-S3 channels are wrong IDF-1776
+/**** `adc1_channel_t` will be deprecated functions, combine into `adc_channel_t` ********/
+typedef enum {
+    ADC1_CHANNEL_0 = 0, /*!< ADC1 channel 0 is GPIO1  */
+    ADC1_CHANNEL_1,     /*!< ADC1 channel 1 is GPIO2  */
+    ADC1_CHANNEL_2,     /*!< ADC1 channel 2 is GPIO3  */
+    ADC1_CHANNEL_3,     /*!< ADC1 channel 3 is GPIO4  */
+    ADC1_CHANNEL_4,     /*!< ADC1 channel 4 is GPIO5  */
+    ADC1_CHANNEL_5,     /*!< ADC1 channel 5 is GPIO6  */
+    ADC1_CHANNEL_6,     /*!< ADC1 channel 6 is GPIO7  */
+    ADC1_CHANNEL_7,     /*!< ADC1 channel 7 is GPIO8  */
+    ADC1_CHANNEL_8,     /*!< ADC1 channel 6 is GPIO9  */
+    ADC1_CHANNEL_9,     /*!< ADC1 channel 7 is GPIO10 */
+    ADC1_CHANNEL_MAX,
+} adc1_channel_t;
+#elif CONFIG_IDF_TARGET_ESP32C3
+/**** `adc1_channel_t` will be deprecated functions, combine into `adc_channel_t` ********/
+typedef enum {
+    ADC1_CHANNEL_0 = 0, /*!< ADC1 channel 0 is GPIO0 */
+    ADC1_CHANNEL_1,     /*!< ADC1 channel 1 is GPIO1 */
+    ADC1_CHANNEL_2,     /*!< ADC1 channel 2 is GPIO2 */
+    ADC1_CHANNEL_3,     /*!< ADC1 channel 3 is GPIO3 */
+    ADC1_CHANNEL_4,     /*!< ADC1 channel 4 is GPIO34 */
+    ADC1_CHANNEL_MAX,
+} adc1_channel_t;
+#endif // CONFIG_IDF_TARGET_*
 
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 // TODO ESP32-S3 channels are wrong IDF-1776
 /**** `adc2_channel_t` will be deprecated functions, combine into `adc_channel_t` ********/
 typedef enum {
     ADC2_CHANNEL_0 = 0, /*!< ADC2 channel 0 is GPIO4  (ESP32), GPIO11 (ESP32-S2) */
@@ -57,6 +79,14 @@ typedef enum {
     ADC2_CHANNEL_9,     /*!< ADC2 channel 9 is GPIO26 (ESP32), GPIO20 (ESP32-S2) */
     ADC2_CHANNEL_MAX,
 } adc2_channel_t;
+#elif CONFIG_IDF_TARGET_ESP32C3
+/**** `adc2_channel_t` will be deprecated functions, combine into `adc_channel_t` ********/
+typedef enum {
+    ADC2_CHANNEL_0 = 0, /*!< ADC2 channel 0 is GPIO5 */
+    ADC2_CHANNEL_MAX,
+} adc2_channel_t;
+#endif
+
 
 /**
  * @brief ADC rtc controller attenuation option.
@@ -73,6 +103,13 @@ typedef enum {
 #define ADC_WIDTH_11Bit ADC_WIDTH_BIT_11
 #define ADC_WIDTH_12Bit ADC_WIDTH_BIT_12
 
+#if CONFIG_IDF_TARGET_ESP32C3
+/**
+ * @brief Digital ADC DMA read max timeout value, it may make the ``adc_digi_read_bytes`` block forever if the OS supports
+ */
+#define ADC_MAX_DELAY UINT32_MAX
+#endif
+
 /**
  * @brief ADC digital controller encode option.
  *
@@ -84,20 +121,52 @@ typedef enum {
     ADC_ENCODE_MAX,
 } adc_i2s_encode_t;
 
+#if CONFIG_IDF_TARGET_ESP32C3
+//This feature is currently supported on ESP32C3, will be supported on other chips soon
+/**
+ * @brief Digital ADC DMA configuration
+ */
+typedef struct adc_digi_init_config_s {
+    uint32_t max_store_buf_size;    ///< Max length of the converted data that driver can store before they are processed. When this length is reached, driver will dump out all the old data and start to store them again.
+    uint32_t conv_num_each_intr;    ///< Bytes of data that can be converted in 1 interrupt.
+    uint32_t dma_chan;              ///< DMA channel.
+    uint16_t adc1_chan_mask;        ///< Channel list of ADC1 to be initialized.
+    uint16_t adc2_chan_mask;        ///< Channel list of ADC2 to be initialized.
+} adc_digi_init_config_t;
+#endif
+
 /*---------------------------------------------------------------
                     Common setting
 ---------------------------------------------------------------*/
 
 /**
  * @brief Enable ADC power
+ * @deprecated Use adc_power_acquire and adc_power_release instead.
  */
-void adc_power_on(void);
+void adc_power_on(void) __attribute__((deprecated));
 
 /**
  * @brief Power off SAR ADC
- * This function will force power down for ADC
+ * @deprecated Use adc_power_acquire and adc_power_release instead.
+ * This function will force power down for ADC.
+ * This function is deprecated because forcing power ADC power off may
+ * disrupt operation of other components which may be using the ADC.
  */
-void adc_power_off(void);
+void adc_power_off(void) __attribute__((deprecated));
+
+/**
+ * @brief Increment the usage counter for ADC module.
+ * ADC will stay powered on while the counter is greater than 0.
+ * Call adc_power_release when done using the ADC.
+ */
+void adc_power_acquire(void);
+
+/**
+ * @brief Decrement the usage counter for ADC module.
+ * ADC will stay powered on while the counter is greater than 0.
+ * Call this function when done using the ADC.
+ */
+void adc_power_release(void);
 
 /**
  * @brief Initialize ADC pad
@@ -137,7 +206,7 @@ esp_err_t adc1_pad_get_io_num(adc1_channel_t channel, gpio_num_t *gpio_num);
   *        - 2.5 dB attenuation (ADC_ATTEN_DB_2_5) gives full-scale voltage 1.5 V
   *        - 6 dB attenuation (ADC_ATTEN_DB_6) gives full-scale voltage 2.2 V
   *        - 11 dB attenuation (ADC_ATTEN_DB_11) gives full-scale voltage 3.9 V (see note below)
-  * 
+  *
   * Due to ADC characteristics, most accurate results are obtained within the following approximate voltage ranges:
   *
   *         +----------+------------+--------------------------+
@@ -159,7 +228,7 @@ esp_err_t adc1_pad_get_io_num(adc1_channel_t channel, gpio_num_t *gpio_num);
   *         |          +------------+--------------------------+
   *         |          |  11        |     150 ~ 2600           |
   *         +----------+------------+--------------------------+
-  * 
+  *
   * For maximum accuracy, use the ADC calibration APIs and measure voltages within these recommended ranges.
   * @note The full-scale voltage is the voltage corresponding to a maximum reading (depending on ADC1 configured bit width,
   *       this value in ESP32 is 4095 for 12-bits, 2047 for 11-bits, 1023 for 10-bits, 511 for 9 bits.
@@ -199,6 +268,8 @@ esp_err_t adc1_config_width(adc_bits_width_t width_bit);
  *       the input of GPIO36 and GPIO39 will be pulled down for about 80ns.
  *       When enabling power for any of these peripherals, ignore input from GPIO36 and GPIO39.
  *       Please refer to section 3.11 of 'ECO_and_Workarounds_for_Bugs_in_ESP32' for the description of this issue.
+ *       As a workaround, call adc_power_acquire() in the app. This will result in higher power consumption (by ~1mA),
+ *       but will remove the glitches on GPIO36 and GPIO39.
  *
  * @note Call ``adc1_config_width()`` before the first time this
  *       function is called.
@@ -236,10 +307,8 @@ esp_err_t adc_set_clk_div(uint8_t clk_div);
 /**
  * @brief Configure ADC capture width.
  *
- * @note  ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
- *
  * @param adc_unit ADC unit index
- * @param width_bit Bit capture width for ADC unit. ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
+ * @param width_bit Bit capture width for ADC unit.
  *
  * @return
  *     - ESP_OK success
@@ -312,6 +381,9 @@ esp_err_t adc2_config_channel_atten(adc2_channel_t channel, adc_atten_t atten);
  *       the input of GPIO36 and GPIO39 will be pulled down for about 80ns.
  *       When enabling power for any of these peripherals, ignore input from GPIO36 and GPIO39.
  *       Please refer to section 3.11 of 'ECO_and_Workarounds_for_Bugs_in_ESP32' for the description of this issue.
+ *       As a workaround, call adc_power_acquire() in the app. This will result in higher power consumption (by ~1mA),
+ *       but will remove the glitches on GPIO36 and GPIO39.
+ *
  *
  * @note ESP32:
  *       For a given channel, ``adc2_config_channel_atten()``
@@ -323,7 +395,7 @@ esp_err_t adc2_config_channel_atten(adc2_channel_t channel, adc_atten_t atten);
  *       the low priority controller will read the invalid ADC2 data. Default priority: Wi-Fi > RTC > Digital;
  *
  * @param channel ADC2 channel to read
- * @param width_bit Bit capture width for ADC2. ESP32-S2 only supports ``ADC_WIDTH_BIT_13``.
+ * @param width_bit Bit capture width for ADC2
  * @param raw_out the variable to hold the output data.
  *
  * @return
@@ -369,7 +441,8 @@ esp_err_t adc2_vref_to_gpio(gpio_num_t gpio) __attribute__((deprecated));
 /*---------------------------------------------------------------
                     Digital controller setting
 ---------------------------------------------------------------*/
-
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+//These APIs are only supported on ESP32 and ESP32-S2. On ESP32-C3 and later chips, please use ``adc_digi_initialize`` and ``adc_digi_deinitialize``
 /**
  * @brief ADC digital controller initialization.
  * @return
@@ -383,16 +456,80 @@ esp_err_t adc_digi_init(void);
  *      - ESP_OK Success
  */
 esp_err_t adc_digi_deinit(void);
+#endif
 
 /**
  * @brief Setting the digital controller.
  *
- * @param config Pointer to digital controller paramter. Refer to `adc_digi_config_t`.
+ * @param config Pointer to digital controller paramter. Refer to ``adc_digi_config_t``.
  *
  * @return
- *      - ESP_OK Success
+ *      - ESP_ERR_INVALID_STATE Driver state is invalid.
+ *      - ESP_OK                On success
  */
 esp_err_t adc_digi_controller_config(const adc_digi_config_t *config);
+
+#if CONFIG_IDF_TARGET_ESP32C3
+//This feature is currently supported on ESP32C3, will be supported on other chips soon
+/*---------------------------------------------------------------
+                    DMA setting
+---------------------------------------------------------------*/
+/**
+ * @brief Initialize the Digital ADC.
+ *
+ * @param init_config Pointer to Digital ADC initilisation config. Refer to ``adc_digi_init_config_t``.
+ *
+ * @return
+ *         - ESP_ERR_INVALID_ARG   If the combination of arguments is invalid.
+ *         - ESP_ERR_NOT_FOUND     No free interrupt found with the specified flags
+ *         - ESP_ERR_NO_MEM        If out of memory
+ *         - ESP_OK                On success
+ */
+esp_err_t adc_digi_initialize(const adc_digi_init_config_t *init_config);
+
+/**
+ * @brief Start the Digital ADC and DMA peripherals. After this, the hardware starts working.
+ *
+ * @return
+ *         - ESP_ERR_INVALID_STATE Driver state is invalid.
+ *         - ESP_OK                On success
+ */
+esp_err_t adc_digi_start(void);
+
+/**
+ * @brief Stop the Digital ADC and DMA peripherals. After this, the hardware stops working.
+ *
+ * @return
+ *         - ESP_ERR_INVALID_STATE Driver state is invalid.
+ *         - ESP_OK                On success
+ */
+esp_err_t adc_digi_stop(void);
+
+/**
+ * @brief Read bytes from Digital ADC through DMA.
+ *
+ * @param[out] buf                 Buffer to read from ADC.
+ * @param[in]  length_max          Expected length of data read from the ADC.
+ * @param[out] out_length          Real length of data read from the ADC via this API.
+ * @param[in]  timeout_ms          Time to wait for data via this API, in millisecond.
+ *
+ * @return
+ *         - ESP_ERR_INVALID_STATE Driver state is invalid. Usually it means the ADC sampling rate is faster than the task processing rate.
+ *         - ESP_ERR_TIMEOUT       Operation timed out
+ *         - ESP_OK                On success
+ */
+esp_err_t adc_digi_read_bytes(uint8_t *buf, uint32_t length_max, uint32_t *out_length, uint32_t timeout_ms);
+
+/**
+ * @brief Deinitialize the Digital ADC.
+ *
+ * @return
+ *         - ESP_ERR_INVALID_STATE Driver state is invalid.
+ *         - ESP_OK                On success
+ */
+esp_err_t adc_digi_deinitialize(void);
+
+#endif //#if CONFIG_IDF_TARGET_ESP32C3
 
 #ifdef __cplusplus
 }

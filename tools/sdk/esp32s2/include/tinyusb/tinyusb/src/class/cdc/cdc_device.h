@@ -102,6 +102,9 @@ uint32_t tud_cdc_n_write_flush     (uint8_t itf);
 // Return the number of bytes (characters) available for writing to TX FIFO buffer in a single n_write operation.
 uint32_t tud_cdc_n_write_available (uint8_t itf);
 
+// Clear the transmit FIFO
+bool tud_cdc_n_write_clear (uint8_t itf);
+
 //--------------------------------------------------------------------+
 // Application API (Single Port)
 //--------------------------------------------------------------------+
@@ -121,6 +124,7 @@ static inline uint32_t tud_cdc_write           (void const* buffer, uint32_t buf
 static inline uint32_t tud_cdc_write_str       (char const* str);
 static inline uint32_t tud_cdc_write_flush     (void);
 static inline uint32_t tud_cdc_write_available (void);
+static inline bool     tud_cdc_write_clear     (void);
 
 //--------------------------------------------------------------------+
 // Application Callback API (weak is optional)
@@ -230,18 +234,22 @@ static inline uint32_t tud_cdc_write_available(void)
   return tud_cdc_n_write_available(0);
 }
 
+static inline bool tud_cdc_write_clear(void)
+{
+  return tud_cdc_n_write_clear(0);
+}
+
 /** @} */
 /** @} */
 
 //--------------------------------------------------------------------+
 // INTERNAL USBD-CLASS DRIVER API
 //--------------------------------------------------------------------+
-void     cdcd_init             (void);
-void     cdcd_reset            (uint8_t rhport);
-uint16_t cdcd_open             (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
-bool     cdcd_control_request  (uint8_t rhport, tusb_control_request_t const * request);
-bool     cdcd_control_complete (uint8_t rhport, tusb_control_request_t const * request);
-bool     cdcd_xfer_cb          (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     cdcd_init            (void);
+void     cdcd_reset           (uint8_t rhport);
+uint16_t cdcd_open            (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+bool     cdcd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
+bool     cdcd_xfer_cb         (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

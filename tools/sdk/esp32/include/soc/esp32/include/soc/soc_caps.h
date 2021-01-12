@@ -69,7 +69,9 @@
 #define SOC_EMAC_SUPPORTED          1
 #define SOC_RISCV_COPROC_SUPPORTED  0   //TODO: correct the caller and remove this line
 #define SOC_CPU_CORES_NUM           2
-
+#define SOC_ULP_SUPPORTED           1
+#define SOC_RTC_SLOW_MEM_SUPPORTED  1
+#define SOC_CCOMP_TIMER_SUPPORTED   1
 
 /*-------------------------- ADC CAPS ----------------------------------------*/
 #define SOC_ADC_PERIPH_NUM              (2)
@@ -120,6 +122,8 @@
 
 #define SOC_I2C_FIFO_LEN        (32) /*!< I2C hardware FIFO depth */
 
+#define SOC_I2C_SUPPORT_APB     (1)
+
 /*-------------------------- I2S CAPS ----------------------------------------*/
 // ESP32 have 2 I2S
 #define SOC_I2S_NUM                 (2)
@@ -135,6 +139,9 @@
 
 /*-------------------------- LEDC CAPS ---------------------------------------*/
 #define SOC_LEDC_SUPPORT_HS_MODE  (1)
+#define SOC_LEDC_SUPPORT_HS_MODE     (1)
+#define SOC_LEDC_CHANNEL_NUM         (8)
+#define SOC_LEDC_TIMER_BIT_WIDE_NUM  (20)
 
 /*-------------------------- MCPWM CAPS --------------------------------------*/
 #define SOC_MCPWM_PERIPH_NUM        2   ///< MCPWM peripheral number
@@ -159,14 +166,21 @@
 #define SOC_PCNT_UNIT_CHANNEL_NUM (2)
 
 /*-------------------------- RMT CAPS ----------------------------------------*/
-#define SOC_RMT_CHANNEL_MEM_WORDS   (64) /*!< Each channel owns 64 words memory */
-#define SOC_RMT_CHANNELS_NUM        (8)  /*!< Total 8 channels */
+#define SOC_RMT_CHANNEL_MEM_WORDS      (64) /*!< Each channel owns 64 words memory */
+#define SOC_RMT_TX_CHANNELS_NUM        (8)  /*!< Number of channels that capable of Transmit */
+#define SOC_RMT_RX_CHANNELS_NUM        (8)  /*!< Number of channels that capable of Receive */
+#define SOC_RMT_CHANNELS_NUM           (8)  /*!< Total 8 channels (each channel can be configured to either TX or RX) */
+#define SOC_RMT_SUPPORT_REF_TICK       (1)  /*!< Support set REF_TICK as the RMT clock source */
+#define SOC_RMT_SOURCE_CLK_INDEPENDENT (1)  /*!< Can select different source clock for channels */
 
 /*-------------------------- RTCIO CAPS --------------------------------------*/
 #define SOC_RTCIO_PIN_COUNT 18
+#define SOC_RTCIO_INPUT_OUTPUT_SUPPORTED 1
+#define SOC_RTCIO_HOLD_SUPPORTED 1
+#define SOC_RTCIO_WAKE_SUPPORTED 1
 
 /*-------------------------- SIGMA DELTA CAPS --------------------------------*/
-#define SOC_SIGMADELTA_NUM         (1) // 1 sigma-delta peripheral
+#define SOC_SIGMADELTA_NUM            1
 #define SOC_SIGMADELTA_CHANNEL_NUM (8) // 8 channels
 
 /*-------------------------- SPI CAPS ----------------------------------------*/
@@ -176,23 +190,27 @@
 #define SOC_SPI_PERIPH_CS_NUM(i)    3
 
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE 64
+#define SOC_SPI_MAX_PRE_DIVIDER     8192
 
 #define SOC_SPI_SUPPORT_AS_CS       1 //Support to toggle the CS while the clock toggles
 
 // Peripheral supports DIO, DOUT, QIO, or QOUT
 #define SOC_SPI_PERIPH_SUPPORT_MULTILINE_MODE(spi_host)         ({(void)spi_host; 1;})
 
-// Peripheral doesn't support output given level during its "dummy phase"
-#define SOC_SPI_PERIPH_SUPPORT_CONTROL_DUMMY_OUTPUT             0
-
 /*-------------------------- TIMER GROUP CAPS --------------------------------*/
-// No contents here
+#define SOC_TIMER_GROUP_COUNTER_BIT_WIDTH  (64)
+#define SOC_TIMER_GROUP_PRESCALE_BIT_WIDTH (16)
+#define SOC_TIMER_GROUPS (2)
+#define SOC_TIMER_GROUP_TIMERS_PER_GROUP (2)
+#define SOC_TIMER_GROUP_TOTAL_TIMERS (SOC_TIMER_GROUPS * SOC_TIMER_GROUP_TIMERS_PER_GROUP)
+#define SOC_TIMER_GROUP_LAYOUT {2,2}
 
 /*-------------------------- TOUCH SENSOR CAPS -------------------------------*/
 #define SOC_TOUCH_SENSOR_NUM                (10)
 
 #define SOC_TOUCH_PAD_MEASURE_WAIT_MAX      (0xFF)  /*!<The timer frequency is 8Mhz, the max value is 0xff */
 #define SOC_TOUCH_PAD_THRESHOLD_MAX         (0)     /*!<If set touch threshold max value, The touch sensor can't be in touched status */
+#define SOC_TOUCH_PAD_WAKE_SUPPORTED        (1)     /*!<Supports waking up from touch pad trigger */
 
 /*-------------------------- TWAI CAPS ---------------------------------------*/
 #define SOC_TWAI_BRP_MIN                        2
@@ -218,10 +236,34 @@
 
 /*-------------------------- UART CAPS ---------------------------------------*/
 // ESP32 have 3 UART.
-#define SOC_UART_NUM            (3)
+#define SOC_UART_NUM                (3)
+#define SOC_UART_SUPPORT_REF_TICK   (1)         /*!< Support REF_TICK as the clock source */
+#define SOC_UART_FIFO_LEN           (128)       /*!< The UART hardware FIFO length */
+#define SOC_UART_BITRATE_MAX        (5000000)   /*!< Max bit rate supported by UART */
 
-#define SOC_UART_FIFO_LEN       (128)      /*!< The UART hardware FIFO length */
-#define SOC_UART_BITRATE_MAX    (5000000)  /*!< Max bit rate supported by UART */
+
+/*-------------------------- SPIRAM CAPS -------------------------------------*/
+#define SOC_SPIRAM_SUPPORTED    1
+
+/*--------------------------- SHA CAPS ---------------------------------------*/
+/* ESP32 style SHA engine, where multiple states can be stored in parallel */
+#define SOC_SHA_SUPPORT_PARALLEL_ENG    (1)
+
+/* Supported HW algorithms */
+#define SOC_SHA_SUPPORT_SHA1            (1)
+#define SOC_SHA_SUPPORT_SHA256          (1)
+#define SOC_SHA_SUPPORT_SHA384          (1)
+#define SOC_SHA_SUPPORT_SHA512          (1)
+
+
+/*--------------------------- RSA CAPS ---------------------------------------*/
+#define SOC_RSA_MAX_BIT_LEN    (4096)
+
+
+/*-------------------------- AES CAPS -----------------------------------------*/
+#define SOC_AES_SUPPORT_AES_128 (1)
+#define SOC_AES_SUPPORT_AES_192 (1)
+#define SOC_AES_SUPPORT_AES_256 (1)
 
 /* ---------------------------- Compatibility ------------------------------- */
 #define SOC_CAN_SUPPORTED                   SOC_TWAI_SUPPORTED

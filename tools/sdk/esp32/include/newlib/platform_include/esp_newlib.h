@@ -30,18 +30,22 @@ void esp_newlib_time_init(void);
  */
 void esp_reent_init(struct _reent* r);
 
-/** 
+/**
  * Clean up some of lazily allocated buffers in REENT structures.
  */
 void esp_reent_cleanup(void);
 
 /**
- * Function which sets up syscall table used by newlib functions in ROM.
+ * Function which sets up newlib in ROM for use with ESP-IDF
+ *
+ * Includes defining the syscall table, setting up any common locks, etc.
  *
  * Called from the startup code, not intended to be called from application
  * code.
  */
-void esp_setup_syscall_table(void);
+void esp_newlib_init(void);
+
+void esp_setup_syscall_table(void) __attribute__((deprecated("Please call esp_newlib_init() in newer code")));
 
 /**
  * Update current microsecond time from RTC
@@ -52,5 +56,10 @@ void esp_set_time_from_rtc(void);
  * Sync counters RTC and FRC. Update boot_time.
  */
 void esp_sync_counters_rtc_and_frc(void);
+
+/**
+ * Initialize newlib static locks
+ */
+void esp_newlib_locks_init(void);
 
 #endif //__ESP_NEWLIB_H__

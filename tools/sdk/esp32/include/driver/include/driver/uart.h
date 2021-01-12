@@ -23,7 +23,6 @@ extern "C" {
 #include "soc/soc_caps.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "freertos/xtensa_api.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/ringbuf.h"
@@ -867,4 +866,3 @@ void uart_set_always_rx_timeout(uart_port_t uart_num, bool always_rx_timeout_en)
 #ifdef __cplusplus
 }
 #endif
-

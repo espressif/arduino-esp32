@@ -89,6 +89,7 @@ typedef struct
         .non_used_index_space   = 0xFFFF - 2*_depth-1,                  \
     }
 
+bool tu_fifo_set_overwritable(tu_fifo_t *f, bool overwritable);
 bool tu_fifo_clear(tu_fifo_t *f);
 bool tu_fifo_config(tu_fifo_t *f, void* buffer, uint16_t depth, uint16_t item_size, bool overwritable);
 

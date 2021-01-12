@@ -250,6 +250,13 @@ typedef enum
   MS_OS_20_FEATURE_VENDOR_REVISION     = 0x08
 } microsoft_os_20_type_t;
 
+enum
+{
+  CONTROL_STAGE_SETUP,
+  CONTROL_STAGE_DATA,
+  CONTROL_STAGE_ACK
+};
+
 //--------------------------------------------------------------------+
 // USB Descriptors
 //--------------------------------------------------------------------+

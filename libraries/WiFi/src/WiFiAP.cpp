@@ -134,13 +134,13 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     wifi_config_t conf;
     wifi_config_t conf_current;
     wifi_softap_config(&conf, ssid, passphrase, channel, WIFI_AUTH_WPA_WPA2_PSK, ssid_hidden, max_connection);
-    esp_err_t err = esp_wifi_get_config(WIFI_IF_AP, &conf_current);
+    esp_err_t err = esp_wifi_get_config((wifi_interface_t)WIFI_IF_AP, &conf_current);
     if(err){
     	log_e("get AP config failed");
         return false;
     }
     if(!softap_config_equal(conf, conf_current)) {
-    	err = esp_wifi_set_config(WIFI_IF_AP, &conf);
+    	err = esp_wifi_set_config((wifi_interface_t)WIFI_IF_AP, &conf);
         if(err){
         	log_e("set AP config failed");
             return false;
@@ -187,7 +187,7 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
         return false;
     }
 
-    ret = esp_wifi_set_config(WIFI_IF_AP, &conf) == ESP_OK;
+    ret = esp_wifi_set_config((wifi_interface_t)WIFI_IF_AP, &conf) == ESP_OK;
 
     if(ret && wifioff) {
         ret = WiFi.enableAP(false) == ESP_OK;
@@ -289,7 +289,7 @@ uint8_t WiFiAPClass::softAPSubnetCIDR()
 uint8_t* WiFiAPClass::softAPmacAddress(uint8_t* mac)
 {
     if(WiFiGenericClass::getMode() != WIFI_MODE_NULL){
-        esp_wifi_get_mac(WIFI_IF_AP, mac);
+        esp_wifi_get_mac((wifi_interface_t)WIFI_IF_AP, mac);
     }
     return mac;
 }
@@ -305,7 +305,7 @@ String WiFiAPClass::softAPmacAddress(void)
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return String();
     }
-    esp_wifi_get_mac(WIFI_IF_AP, mac);
+    esp_wifi_get_mac((wifi_interface_t)WIFI_IF_AP, mac);
 
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);

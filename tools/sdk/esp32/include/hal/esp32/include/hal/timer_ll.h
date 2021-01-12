@@ -103,6 +103,7 @@ static inline void timer_ll_set_counter_value(timg_dev_t *hw, timer_idx_t timer_
 FORCE_INLINE_ATTR void timer_ll_get_counter_value(timg_dev_t *hw, timer_idx_t timer_num, uint64_t *timer_val)
 {
     hw->hw_timer[timer_num].update = 1;
+    while (hw->hw_timer[timer_num].update) {}
     *timer_val = ((uint64_t) hw->hw_timer[timer_num].cnt_high << 32) | (hw->hw_timer[timer_num].cnt_low);
 }
 
@@ -302,7 +303,7 @@ FORCE_INLINE_ATTR void timer_ll_clear_intr_status(timg_dev_t *hw, timer_idx_t ti
  */
 FORCE_INLINE_ATTR void timer_ll_get_intr_status(timg_dev_t *hw, uint32_t *intr_status)
 {
-    *intr_status = hw->int_st_timers.val;
+    *intr_status = hw->int_st_timers.val & 0x03;
 }
 
 /**
@@ -316,7 +317,7 @@ FORCE_INLINE_ATTR void timer_ll_get_intr_status(timg_dev_t *hw, uint32_t *intr_s
 FORCE_INLINE_ATTR void timer_ll_get_intr_raw_status(timer_group_t group_num, uint32_t *intr_raw_status)
 {
     timg_dev_t *hw = TIMER_LL_GET_HW(group_num);
-    *intr_raw_status = hw->int_raw.val;
+    *intr_raw_status = hw->int_raw.val & 0x03;
 }
 
 /**

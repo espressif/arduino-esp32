@@ -68,6 +68,7 @@ typedef enum {
     ESP_SLEEP_WAKEUP_WIFI,              //!< Wakeup caused by WIFI (light sleep only)
     ESP_SLEEP_WAKEUP_COCPU,             //!< Wakeup caused by COCPU int
     ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG,   //!< Wakeup caused by COCPU crash
+    ESP_SLEEP_WAKEUP_BT,           //!< Wakeup caused by BT (light sleep only)
 } esp_sleep_source_t;
 
 /* Leave this type define for compatibility */
@@ -93,9 +94,9 @@ esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source);
 
 /**
  * @brief Enable wakeup by ULP coprocessor
- * @note In revisions 0 and 1 of the ESP32, ULP wakeup source 
+ * @note In revisions 0 and 1 of the ESP32, ULP wakeup source
  *       cannot be used when RTC_PERIPH power domain is forced
- *       to be powered on (ESP_PD_OPTION_ON) or when 
+ *       to be powered on (ESP_PD_OPTION_ON) or when
  *       ext0 wakeup source is used.
  * @return
  *      - ESP_OK on success
@@ -139,6 +140,17 @@ esp_err_t esp_sleep_enable_touchpad_wakeup(void);
  * @return touch pad which caused wakeup
  */
 touch_pad_t esp_sleep_get_touchpad_wakeup_status(void);
+
+/**
+ * @brief Returns true if a GPIO number is valid for use as wakeup source.
+ *
+ * @note For SoCs with RTC IO capability, this can be any valid RTC IO input pin.
+ *
+ * @param gpio_num Number of the GPIO to test for wakeup source capability
+ *
+ * @return True if this GPIO number will be accepted as a sleep wakeup source.
+ */
+bool esp_sleep_is_valid_wakeup_gpio(gpio_num_t gpio_num);
 
 /**
  * @brief Enable wakeup using a pin
