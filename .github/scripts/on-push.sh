@@ -43,7 +43,6 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/AzureIoT/examples/GetStarted/GetStarted.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
-
 	elif [ "$OS_IS_MACOS" == "1" ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
