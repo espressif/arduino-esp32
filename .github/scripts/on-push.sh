@@ -61,14 +61,12 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 else
 	# PlatformIO Test
 	source ./.github/scripts/install-platformio-esp32.sh
-	BOARD="esp32dev"
-	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Serial/Interrupt/Interrupt.ino" && \
+	BOARD="esp32dev"	
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
 	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/AzureIoT/examples/GetStarted/GetStarted.ino" && \
-	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino" && \
-	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Serial/NoInterrupt/NoInterrupt.ino"
+	build_pio_sketch "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 	#build_pio_sketches esp32dev "$PLATFORMIO_ESP32_PATH/libraries"
 fi
