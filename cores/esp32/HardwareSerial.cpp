@@ -87,11 +87,7 @@ void HardwareSerial::updateBaudRate(unsigned long baud)
 void HardwareSerial::setRxInterrupt(void (*arg)(uint8_t, void*), void* user_arg){
     
     // Make sure that the previous interrupt_info is not used anymore
-    uartDisableInterrupt(_uart);
-
-    if(interrupt_info)
-        delete(interrupt_info);
-
+    uartDisableRxInterrupt(_uart);
     uartEnableRxInterrupt(_uart, &interrupt_info, arg, user_arg);
 }
 
