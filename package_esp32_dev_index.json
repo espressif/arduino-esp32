@@ -12,6 +12,47 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "1.0.5-rc6",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc6/esp32-1.0.5-rc6.zip",
+          "archiveFileName": "esp32-1.0.5-rc6.zip",
+          "checksum": "SHA-256:0fbeebd94fa3fce480398e6023c1e2f1228527ce628927c37bf32395d3ef5201",
+          "size": "47493370",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            },
+            {
+              "name": "WEMOS LoLin32"
+            },
+            {
+              "name": "WEMOS D1 MINI ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-97-gc752ad5-5.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "3.0.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "1.0.5-rc5",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esp32-1.0.5-rc5.zip",
@@ -958,6 +999,54 @@
       "tools": [
         {
           "name": "xtensa-esp32-elf-gcc",
+          "version": "1.22.0-97-gc752ad5-5.2.0",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-win32-1.22.0-97-gc752ad5-5.2.0.zip",
+              "archiveFileName": "xtensa-esp32-elf-win32-1.22.0-97-gc752ad5-5.2.0.zip",
+              "checksum": "SHA-256:80571e5d5a63494f4fa758bb9d8fb882ba4059853a8c412a84d232dc1c1400e6",
+              "size": "125747216"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-macos-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-macos-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "checksum": "SHA-256:b1ce39a563ae359cf363fb7d8ee80cb1e5226fda83188203cff60f16f55e33ef",
+              "size": "50525386"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux64-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "checksum": "SHA-256:96f5f6e7611a0ed1dc47048c54c3113fc5cebffbf0ba90d8bfcd497afc7ef9f3",
+              "size": "44225380"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-linux32-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux32-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "checksum": "SHA-256:8094a2c30b474e99ce64dd0ba8f310c4614eb3b3cac884a3aea0fd5f565af119",
+              "size": "45575521"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-linux-armel-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "checksum": "SHA-256:d70d550f88448fa476b29fa50ef5502ab497a16ac7fa9ca24c6d0a39bb1e681e",
+              "size": "50657803"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/xtensa-esp32-elf-linux-armel-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-linux-armel-1.22.0-97-gc752ad5-5.2.0.tar.gz",
+              "checksum": "SHA-256:d70d550f88448fa476b29fa50ef5502ab497a16ac7fa9ca24c6d0a39bb1e681e",
+              "size": "50657803"
+            }
+          ]
+        },
+        {
+          "name": "xtensa-esp32-elf-gcc",
           "version": "1.22.0-96-g2852398-5.2.0",
           "systems": [
             {
@@ -1051,42 +1140,42 @@
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-windows.zip",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-windows.zip",
               "archiveFileName": "esptool-3.0.0.2-windows.zip",
               "checksum": "SHA-256:b192bfc1545a3c92658ce586b4edcc2aca3f0ad4b3fa8417d658bc8a48f1387e",
               "size": "3434736"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-macos.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-macos.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-macos.tar.gz",
               "checksum": "SHA-256:2cafab7f1ebce89475b84c115548eaace40b6366d7b3f9862cdb2fc64f806643",
               "size": "3859642"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
