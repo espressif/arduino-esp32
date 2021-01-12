@@ -15,8 +15,13 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 		pip install requests > /dev/null
 	fi
 
-	echo "Linking Core..."
-	ln -s $GITHUB_WORKSPACE "$ARDUINO_ESP32_PATH"
+	if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
+		echo "Linking Core..."
+		ln -s $GITHUB_WORKSPACE esp32
+	else
+		echo "Cloning Core Repository..."
+		git clone https://github.com/espressif/arduino-esp32.git esp32 > /dev/null 2>&1
+	fi
 
 	echo "Updating Submodules ..."
 	cd esp32
