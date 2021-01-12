@@ -8,7 +8,7 @@ static volatile size_t inputBufferLength = 0;
 static void IRAM_ATTR onSerialRX(uint8_t character, void* user_arg){
 	
 	// Cast the user_arg back to a array
-	char[] buffer = (char*)user_arg;
+	char buffer[] = (char*)user_arg;
 	
 	if(inputBufferLength < BUFFER_SIZE){
 		buffer[inputBufferLength++] = (char)character;
