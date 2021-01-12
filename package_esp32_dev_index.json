@@ -12,6 +12,47 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "1.0.5-rc5",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esp32-1.0.5-rc5.zip",
+          "archiveFileName": "esp32-1.0.5-rc5.zip",
+          "checksum": "SHA-256:0921837f2b2a6a2b230ba0f1fd3cb9ae0833976e62cc5f41a0e8b6c4202b0b76",
+          "size": "47493370",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            },
+            {
+              "name": "WEMOS LoLin32"
+            },
+            {
+              "name": "WEMOS D1 MINI ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-96-g2852398-5.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "3.0.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "1.0.5-rc4",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc4/esp32-1.0.5-rc4.zip",
