@@ -114,6 +114,19 @@ static void IRAM_ATTR _uart_isr()
     }
 }
 
+/**
+  * @brief Enables the UART RX interrupt on the specified UART device.
+  * 
+  * This function will register the interrupt user function with arguments, to be called when an RX interupt occurs.
+  * The pointer to the uart_interrupt_t will be deleted when the interrupt is disabled, or another interrupt function is being registered.
+  * Please check for NULL on the uart_interrupt_t pointer before using it.
+  
+  * @param[in] uart The uart device to register the function for.
+  * @param[out] arg The uart_interrupt description data that is returned when this function succeeds.
+  * @param[in] func The function to be called when the RX interrupt is fired. (void rx_int(uint8_t c, void* user_arg))
+  * @param[in] user_arg The user argument that will be passed to the user interrupt handler.
+  *
+  */
 void uartEnableInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint8_t, void*), void* user_arg)
 {
     UART_MUTEX_LOCK();
@@ -130,6 +143,10 @@ void uartEnableInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint
         (*arg)->func = func;
         (*arg)->dev = uart;
         (*arg)->user_arg = user_arg;
+		
+		if(_uart_interrupt_array[uart->num])
+			free(_uart_interrupt_array[uart->num]);
+			
         _uart_interrupt_array[uart->num] = (*arg);
     }
 
@@ -137,6 +154,17 @@ void uartEnableInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint
     UART_MUTEX_UNLOCK();
 }
 
+/**
+  * @brief Disables the UART RX interrupt on the specified UART device.
+  * 
+  * This function disables the RX interrupt for the specified UART device.
+  * This function will delete the uart_interrupt_t* that uartEnableInterrupt() creates.
+  * The pointer to the uart_interrupt_t will be deleted when the interrupt is disabled, or another interrupt function is being registered.
+  * Please check for NULL on the uart_interrupt_t pointer before using it.
+  
+  * @param[in] uart The uart device to register the function for.
+  *
+  */
 void uartDisableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
@@ -145,6 +173,8 @@ void uartDisableInterrupt(uart_t* uart)
     uart->dev->int_clr.val = 0xffffffff;
 
     // Free uart rx interrupt
+	if(_uart_interrupt_array[uart->num])
+		free(_uart_interrupt_array[uart->num]);
     _uart_interrupt_array[uart->num] = NULL;
 
     esp_intr_free(uart->intr_handle);
