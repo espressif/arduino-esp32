@@ -369,22 +369,21 @@ uint32_t uartAvailableForWrite(uart_t* uart)
 }
 
 void uartRxFifoToQueue(uart_t* uart)
-{
-    uint8_t c;
-    UART_MUTEX_LOCK();
-    //disable interrupts
-    uart->dev->int_ena.val = 0;
-    uart->dev->int_clr.val = 0xffffffff;
-    while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
-        c = uart->dev->fifo.rw_byte;
-        xQueueSend(uart->queue, &c, 0);
-    }
-    //enable interrupts
-    uart->dev->int_ena.rxfifo_full = 1;
-    uart->dev->int_ena.frm_err = 1;
-    uart->dev->int_ena.rxfifo_tout = 1;
-    uart->dev->int_clr.val = 0xffffffff;
-    UART_MUTEX_UNLOCK();
+{    
+	uint8_t c;
+    UART_MUTEX_LOCK();    
+	//disable interrupts
+	uart->dev->int_ena.val = 0;
+	uart->dev->int_clr.val = 0xffffffff;
+	while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+		c = uart->dev->fifo.rw_byte;
+		xQueueSend(uart->queue, &c, 0);
+	}
+	//enable interrupts
+	uart->dev->int_ena.rxfifo_full = 1;
+	uart->dev->int_ena.frm_err = 1;
+	uart->dev->int_ena.rxfifo_tout = 1;
+	uart->dev->int_clr.val = 0xffffffff;
 }
 
 uint8_t uartRead(uart_t* uart)
@@ -395,7 +394,7 @@ uint8_t uartRead(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-        uartRxFifoToQueue(uart);
+      uartRxFifoToQueue(uart);
     }
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
@@ -411,7 +410,7 @@ uint8_t uartPeek(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-        uartRxFifoToQueue(uart);
+      uartRxFifoToQueue(uart);
     }
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
@@ -688,7 +687,7 @@ uartDetectBaudrate(uart_t *uart)
     static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
     size_t i;
-    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)  // find the nearest real baudrate
+    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)	// find the nearest real baudrate
     {
         if (baudrate <= default_rates[i])
         {
