@@ -33,11 +33,12 @@
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
 #define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:(         (u==2)?U2RXD_IN_IDX:0)))
 #define UART_TXD_IDX(u)     ((u==0)?U0TXD_OUT_IDX:(         (u==1)?U1TXD_OUT_IDX:(        (u==2)?U2TXD_OUT_IDX:0)))
+#define UART_INTR_SOURCE(u) ((u==0)?ETS_UART0_INTR_SOURCE:( (u==1)?ETS_UART1_INTR_SOURCE:((u==2)?ETS_UART2_INTR_SOURCE:0)))
 
 static int s_uart_debug_nr = 0;
 
 struct uart_struct_t {
-    uart_dev_t* dev;
+    uart_dev_t *dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
     xSemaphoreHandle lock;
 #endif
@@ -119,7 +120,7 @@ static void IRAM_ATTR _uart_isr()
                 // No user function is present, handle as you normally would
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
-        }       
+        }
     }
 
     if (xHigherPriorityTaskWoken) {
@@ -369,9 +370,9 @@ uint32_t uartAvailableForWrite(uart_t* uart)
 }
 
 void uartRxFifoToQueue(uart_t* uart)
-{    
+{
 	uint8_t c;
-    UART_MUTEX_LOCK();    
+    UART_MUTEX_LOCK();
 	//disable interrupts
 	uart->dev->int_ena.val = 0;
 	uart->dev->int_clr.val = 0xffffffff;
@@ -384,6 +385,7 @@ void uartRxFifoToQueue(uart_t* uart)
 	uart->dev->int_ena.frm_err = 1;
 	uart->dev->int_ena.rxfifo_tout = 1;
 	uart->dev->int_clr.val = 0xffffffff;
+	UART_MUTEX_UNLOCK();
 }
 
 uint8_t uartRead(uart_t* uart)
@@ -394,7 +396,7 @@ uint8_t uartRead(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-      uartRxFifoToQueue(uart);
+       uartRxFifoToQueue(uart);
     }
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
@@ -410,7 +412,7 @@ uint8_t uartPeek(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-      uartRxFifoToQueue(uart);
+       uartRxFifoToQueue(uart);
     }
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
