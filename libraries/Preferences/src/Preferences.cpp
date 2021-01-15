@@ -29,32 +29,23 @@ Preferences::~Preferences(){
     end();
 }
 
-bool Preferences::begin(const char * name, bool readOnly){
+bool Preferences::begin(const char * name, bool readOnly, const char* partition_label){
     if(_started){
         return false;
     }
     _readOnly = readOnly;
-    esp_err_t err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
+    esp_err_t err = ESP_OK;
+    if (partition_label != NULL) {
+        err = nvs_flash_init_partition(partition_label);
+        if (err) {
+            log_e("nvs_flash_init_partition failed: %s", nvs_error(err));
+            return false;
+        }
+        err = nvs_open_from_partition(partition_label, name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
+    } else {
+        err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
+    }
     if(err){
-        log_e("nvs_open failed: %s", nvs_error(err));
-        return false;
-    }
-    _started = true;
-    return true;
-}
-
-bool Preferences::begin(const char* partition_label, const char* name, bool readOnly) {
-    if (_started) {
-        return false;
-    }
-    _readOnly = readOnly;
-    esp_err_t err = nvs_flash_init_partition(partition_label);
-    if (err) {
-        log_e("nvs_flash_init_partition failed: %s", nvs_error(err));
-        return false;
-    }
-    err = nvs_open_from_partition(partition_label, name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
-    if (err) {
         log_e("nvs_open failed: %s", nvs_error(err));
         return false;
     }
