@@ -6,11 +6,10 @@
   * 
   */
 
-#include <freertos/queue.h>
 #define BUFFER_SIZE 8
 
 // This queue is here to handle the interruption of the loop when the interrupt is running.
-Queue_t bufferQueue;
+QueueHandle_t bufferQueue;
 
 bool messageSent = false;
 
