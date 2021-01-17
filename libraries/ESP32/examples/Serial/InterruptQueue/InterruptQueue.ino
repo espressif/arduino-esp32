@@ -19,7 +19,7 @@ static void IRAM_ATTR onSerialRX(uint8_t character, void* user_arg){
 	
 	BaseType_t xHighPriorityTaskWoken;
 	
-	if(!xQueueSendFromISR(bufferQueue, &character, &xHighPriorityTaskWoken) == pdTRUE){
+	if(xQueueSendFromISR(bufferQueue, &character, &xHighPriorityTaskWoken) != pdTRUE){
 	  log_e("IRQ", "Failed to put character onto the queue\n");
 	}
 }
