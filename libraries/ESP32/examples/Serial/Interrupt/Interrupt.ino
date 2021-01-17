@@ -1,3 +1,12 @@
+/** Tim Koers - 2021
+  *
+  * This sketch shows the usage of a semaphore to receive Serial data.
+  * You can safely use this in a FreeRTOS environment and use the semaphore from different tasks on different CPU cores.
+  * However, the InterruptQueue example is much more efficient, since it uses less code.
+  * This sketch assumes that when Hi is sent, the device returns an 8 byte message.
+  *
+  */
+
 #define BUFFER_SIZE 8
 
 // This semaphore is here to handle the interruption of the loop when the interrupt is running.
@@ -5,6 +14,8 @@ SemaphoreHandle_t bufferSemaphore;
 
 static volatile char inputBuffer[BUFFER_SIZE];
 static volatile size_t inputBufferLength = 0;
+
+bool messageSent = false;
 
 // Please keep in mind, since the ESP32 is dual core, 
 // the interrupt will be running on the same core as the setRxInterrupt function was called on.
@@ -37,6 +48,14 @@ void setup()
 
 void loop()
 { 
+  if(!messageSent){
+	  Serial.println("Hi");
+	  messageSent = true;
+  }
+
+  // Check if the semaphore can be taken and if the inputBuffer length is long enough.
+  // Please keep in mind, since the variable inputBufferLength is also accessed inside the IRQ handler,
+  // the semaphore needs to be taken BEFORE you can access that variable.
   if(xSemaphoreTake(bufferSemaphore, portMAX_DELAY) == pdTRUE && inputBufferLength == (BUFFER_SIZE - 1)){
 	for(size_t i = 0; i < inputBufferLength; i++){
 	  Serial.write(inputBuffer[i]);
@@ -47,8 +66,12 @@ void loop()
 	// Clear the bufferLength
 	inputBufferLength = 0;
 	
+	// Give back the semaphore
 	xSemaphoreGive(bufferSemaphore);
+	
+	// Allow the system to request another data set
+	messageSent = false;
   }
   
-  delay(1000); // Wait for one second
+  delay(10); // Wait for 10ms to allow some data to come in
 }

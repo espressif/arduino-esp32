@@ -78,7 +78,7 @@ static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old
 
 static uart_interrupt_t *_uart_interrupt_array[3] = {NULL, NULL, NULL};
 
-static void IRAM_ATTR _uart_isr()
+static void IRAM_ATTR _uart_isr(void *arg)
 {
     uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
