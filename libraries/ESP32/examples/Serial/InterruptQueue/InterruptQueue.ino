@@ -44,7 +44,7 @@ void loop()
   }
 
   // Check if data in the queue and check if there is a complete message (8-bytes) in the queue
-  if(!(uxQueueMessagesWaiting(bufferQueue) % RESPONSE_SIZE)){
+  if(!(uxQueueMessagesWaiting(bufferQueue) % BUFFER_SIZE)){
     char c;
 	// Check if the queue is not empty, 0 % 8 returns 0 instead, so does 24 % 8
 	while(uxQueueMessagesWaiting(bufferQueue) > 0){
