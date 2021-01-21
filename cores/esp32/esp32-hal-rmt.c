@@ -241,7 +241,6 @@ bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
         return false;
     }
 
-    int channel = rmt->channel;
     int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
 
     if (size > allocated_size) {
