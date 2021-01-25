@@ -117,6 +117,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 		BLEDevice::removePeerDevice(m_appId, true);
 		// not sure if this is needed here
 		// esp_ble_gattc_app_unregister(m_gattc_if);
+		// m_gattc_if = ESP_GATT_IF_NONE;
 		return false;
 	}
 
@@ -141,6 +142,7 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	if (rc != ESP_GATT_OK) {
 		BLEDevice::removePeerDevice(m_appId, true);
 		esp_ble_gattc_app_unregister(m_gattc_if);
+		m_gattc_if = ESP_GATT_IF_NONE;
 	}
 	log_v("<< connect(), rc=%d", rc==ESP_GATT_OK);
 	return rc == ESP_GATT_OK;
@@ -205,6 +207,7 @@ void BLEClient::gattClientEventHandler(
 				bool m_wasConnected = m_isConnected;
 				m_isConnected = false;
 				esp_ble_gattc_app_unregister(m_gattc_if);
+				m_gattc_if = ESP_GATT_IF_NONE;
 				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
 				m_semaphoreSearchCmplEvt.give(1);
