@@ -224,7 +224,9 @@ env.Prepend(LIBS=libs)
 #
 
 fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
-partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
+partitions_csv = env.BoardConfig().get("build.arduino.partitions", "default.csv")
+if "build.partitions" in env.BoardConfig():
+    partitions_csv = env.BoardConfig().get("build.partitions")
 env.Replace(
     PARTITIONS_TABLE_CSV=abspath(
         join(fwpartitions_dir, partitions_csv) if isfile(
