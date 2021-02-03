@@ -71,6 +71,7 @@ static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
 
 bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
+String WiFiSTAClass::_hostname = "esp32-arduino";
 
 static wl_status_t _sta_status = WL_NO_SHIELD;
 static EventGroupHandle_t _sta_status_group = NULL;
@@ -283,7 +284,6 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     }
 
     tcpip_adapter_ip_info_t info;
-    log_d("STA IP uint32_t: %u.%u.%u.%u\n", local_ip[0], local_ip[1], local_ip[2], local_ip[3]);
 
     if(local_ip != (uint32_t)0x00000000 && local_ip != INADDR_NONE){
         info.ip.addr = static_cast<uint32_t>(local_ip);
@@ -637,6 +637,7 @@ const char * WiFiSTAClass::getHostname()
  */
 bool WiFiSTAClass::setHostname(const char * hostname)
 {
+    _hostname = hostname;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return false;
     }
