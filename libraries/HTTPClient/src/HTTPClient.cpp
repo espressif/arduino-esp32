@@ -269,13 +269,20 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     // get port
     index = host.indexOf(':');
+    String the_host;
     if(index >= 0) {
-        _host = host.substring(0, index); // hostname
+        the_host = host.substring(0, index); // hostname
         host.remove(0, (index + 1)); // remove hostname + :
         _port = host.toInt(); // get port
     } else {
-        _host = host;
+        the_host = host;
     }
+    if(_host != the_host && connected()){
+        log_d("switching host from '%s' to '%s'. disconnecting first", _host.c_str(), the_host.c_str());
+        _canReuse = false;
+        disconnect(true);
+    }
+    _host = the_host;
     _uri = url;
     log_d("host: %s port: %d url: %s", _host.c_str(), _port, _uri.c_str());
     return true;
@@ -1318,9 +1325,9 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                     readBytes = buff_size;
                 }
 		    
-		// stop if no more reading    
-		if (readBytes == 0)
-			break;
+        		// stop if no more reading    
+        		if (readBytes == 0)
+        			break;
 
                 // read data
                 int bytesRead = _client->readBytes(buff, readBytes);
