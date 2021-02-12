@@ -310,6 +310,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
     long timeoutIntervalMillis = client.getTimeout();
     boolean timedOut = false;
     for(;;) {
+      if (!client.connected()) return -1;
       // loosely modeled after blinkWithoutDelay pattern
       while(!timedOut && !client.available() && client.connected()){
         delay(2);
