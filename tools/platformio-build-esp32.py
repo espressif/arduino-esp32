@@ -102,7 +102,7 @@ env.Append(
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
         "-u", "__cxa_guard_dummy",
-        "-Wl,-Map=" + join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
+        '-Wl,-Map="%s"' % join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
     ],
 
     CPPPATH=[
