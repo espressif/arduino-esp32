@@ -60,6 +60,7 @@ BLEClient::~BLEClient() {
 	   delete myPair.second;
 	}
 	m_servicesMap.clear();
+	m_servicesMapByInstID.clear();
 } // ~BLEClient
 
 
