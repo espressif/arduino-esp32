@@ -277,6 +277,16 @@ void AsyncUDPMessage::flush()
     _index = 0;
 }
 
+AsyncUDPPacket::AsyncUDPPacket(AsyncUDPPacket &packet){
+    _udp = packet._udp;
+    _pb = packet._pb;
+    _if = packet._if;
+    _data = packet._data;
+    _len = packet._len;
+    _index = 0;
+
+    pbuf_ref(_pb);
+}
 
 AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, uint16_t rport, struct netif * ntif)
 {
@@ -683,9 +693,8 @@ void AsyncUDP::_recv(udp_pcb *upcb, pbuf *pb, const ip_addr_t *addr, uint16_t po
         if(_handler) {
             AsyncUDPPacket packet(this, this_pb, addr, port, netif);
             _handler(packet);
-        } else {
-            pbuf_free(this_pb);
         }
+        pbuf_free(this_pb);
     }
 }
 
