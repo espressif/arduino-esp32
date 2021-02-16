@@ -12,6 +12,47 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "1.0.5-rc7",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc7/esp32-1.0.5-rc7.zip",
+          "archiveFileName": "esp32-1.0.5-rc7.zip",
+          "checksum": "SHA-256:f9866d188d6523dd24ca20edd41b6ebfc10e2e8670833d8f7fa793a3445a8bec",
+          "size": "47542392",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            },
+            {
+              "name": "WEMOS LoLin32"
+            },
+            {
+              "name": "WEMOS D1 MINI ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "1.22.0-97-gc752ad5-5.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "3.0.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "1.0.5-rc6",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc6/esp32-1.0.5-rc6.zip",
@@ -1312,6 +1353,13 @@
             },
             {
               "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",
+              "size": "40665"
+            },
+            {
+              "host": "aarch64-linux-gnu",
               "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
               "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
               "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",
