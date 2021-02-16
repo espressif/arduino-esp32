@@ -86,6 +86,7 @@ public:
     int8_t RSSI();
 
     static void _setStatus(wl_status_t status);
+    static String _hostname;
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;
