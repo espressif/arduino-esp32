@@ -641,6 +641,15 @@ DRESULT ff_sd_ioctl(uint8_t pdrv, uint8_t cmd, void* buff)
     return RES_PARERR;
 }
 
+bool sd_read_raw(uint8_t pdrv, uint8_t* buffer, DWORD sector)
+{
+    return ff_sd_read(pdrv, buffer, sector, 1) == ESP_OK;
+}
+
+bool sd_write_raw(uint8_t pdrv, uint8_t* buffer, DWORD sector)
+{
+    return ff_sd_write(pdrv, buffer, sector, 1) == ESP_OK;
+}
 
 /*
  * Public methods
