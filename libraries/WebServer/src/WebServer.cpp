@@ -412,6 +412,8 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
     }
     if (_corsEnabled) {
         sendHeader(String(FPSTR("Access-Control-Allow-Origin")), String("*"));
+	sendHeader(String(FPSTR("Access-Control-Allow-Methods")), String("*"));
+	sendHeader(String(FPSTR("Access-Control-Allow-Headers")), String("*"));
     }
     sendHeader(String(F("Connection")), String(F("close")));
 
