@@ -11,6 +11,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include <string>
+#include <functional>
 
 #include <esp_gattc_api.h>
 
@@ -21,8 +22,7 @@
 
 class BLERemoteService;
 class BLERemoteDescriptor;
-typedef void (*notify_callback)(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
-
+typedef std::function<void(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify)> notify_callback;
 /**
  * @brief A model of a remote %BLE characteristic.
  */
