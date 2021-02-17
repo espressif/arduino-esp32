@@ -333,9 +333,7 @@ int WiFiClientSecure::lastError(char *buf, const size_t size)
     if (!_lastError) {
         return 0;
     }
-    char error_buf[100];
-    mbedtls_strerror(_lastError, error_buf, 100);
-    snprintf(buf, size, "%s", error_buf);
+    mbedtls_strerror(_lastError, buf, size);
     return _lastError;
 }
 
