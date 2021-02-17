@@ -349,7 +349,7 @@ if [ ! -z "$COMMITS_SINCE_RELEASE" ] && [ "$COMMITS_SINCE_RELEASE" != "null" ]; 
     git -C "$GITHUB_WORKSPACE" log --oneline "$COMMITS_SINCE_RELEASE..HEAD" > "$commitFile"
 elif [ "$RELEASE_BRANCH" != "master" ]; then
     echo "Getting all commits on branch '$RELEASE_BRANCH' ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline --cherry-pick --left-only HEAD...master > "$commitFile"
+    git -C "$GITHUB_WORKSPACE" log --oneline --cherry-pick --left-only --no-merges HEAD...origin/master > "$commitFile"
 else
     echo "Getting all commits on master ..."
     git -C "$GITHUB_WORKSPACE" log --oneline --cherry-pick --right-only --no-merges > "$commitFile"
