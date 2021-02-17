@@ -183,6 +183,7 @@ cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"  "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe" "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/partitions"        "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/sdk"               "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/platformio-build*.py" "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
@@ -194,6 +195,7 @@ echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$ver$extent/g" | \
 sed 's/runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf//g' | \
+sed 's/runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf//g' | \
 sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' \
  > "$PKG_DIR/platform.txt"
 
@@ -346,13 +348,13 @@ if [ "$RELEASE_PRE" == "false" ]; then
 fi
 if [ ! -z "$COMMITS_SINCE_RELEASE" ] && [ "$COMMITS_SINCE_RELEASE" != "null" ]; then
     echo "Getting commits since $COMMITS_SINCE_RELEASE ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline "$COMMITS_SINCE_RELEASE..HEAD" > "$commitFile"
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 "$COMMITS_SINCE_RELEASE..HEAD" > "$commitFile"
 elif [ "$RELEASE_BRANCH" != "master" ]; then
     echo "Getting all commits on branch '$RELEASE_BRANCH' ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline --cherry-pick --left-only --no-merges HEAD...origin/master > "$commitFile"
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --cherry-pick --left-only --no-merges HEAD...origin/master > "$commitFile"
 else
     echo "Getting all commits on master ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline --cherry-pick --right-only --no-merges > "$commitFile"
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --no-merges > "$commitFile"
 fi
 releaseNotes+=$'\r\n##### Commits\r\n'
 IFS=$'\n'
