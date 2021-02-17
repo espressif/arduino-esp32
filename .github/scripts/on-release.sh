@@ -183,7 +183,7 @@ cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"  "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe" "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/partitions"        "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/sdk"               "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/platformio-build*.py" "$PKG_DIR/tools/"
+cp -f  $GITHUB_WORKSPACE/tools/platformio-build*.py "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
