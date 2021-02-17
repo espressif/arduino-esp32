@@ -254,12 +254,12 @@ releasesJson=`curl -sH "Authorization: token $GITHUB_TOKEN" "https://api.github.
 if [ $? -ne 0 ]; then echo "ERROR: Get Releases Failed! ($?)"; exit 1; fi
 
 set +e
-prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false)) | sort_by(.created_at | - fromdateiso8601) | .[0].tag_name')
-prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false)) | sort_by(.created_at | - fromdateiso8601)  | .[0].tag_name')
+prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false and .target_commitish == "$RELEASE_TAG")) | sort_by(.created_at | - fromdateiso8601) | .[0].tag_name')
+prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false) and .target_commitish == "$RELEASE_TAG") | sort_by(.created_at | - fromdateiso8601)  | .[0].tag_name')
 shopt -s nocasematch
 if [ "$prev_any_release" == "$RELEASE_TAG" ]; then
-    prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false)) | sort_by(.created_at | - fromdateiso8601) | .[1].tag_name')
-    prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false)) | sort_by(.created_at | - fromdateiso8601)  | .[1].tag_name')
+    prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false and .target_commitish == "$RELEASE_TAG")) | sort_by(.created_at | - fromdateiso8601) | .[1].tag_name')
+    prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .target_commitish == "$RELEASE_TAG")) | sort_by(.created_at | - fromdateiso8601)  | .[1].tag_name')
 fi
 COMMITS_SINCE_RELEASE="$prev_any_release"
 shopt -u nocasematch
