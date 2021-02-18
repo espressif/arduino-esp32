@@ -149,17 +149,25 @@ public:
 	/**
 	 * @brief Callback function to support a read request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
-	 * @param [in] param The BLE GATTS param. Use param->read.
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic);
+	/**
+	 * @brief Callback function to support a read request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] param The BLE GATTS param. Use param->read.
+	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 
 	/**
 	 * @brief Callback function to support a write request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
-	 * @param [in] param The BLE GATTS param. Use param->write.
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic);
+	/**
+	 * @brief Callback function to support a write request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] param The BLE GATTS param. Use param->write.
+	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 
 	/**
