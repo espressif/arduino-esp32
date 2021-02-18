@@ -145,36 +145,37 @@ public:
 	}Status;
 
 	virtual ~BLECharacteristicCallbacks();
-	
+
 	/**
-     * @brief Callback function to support a read request.
-     * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @brief Callback function to support a read request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->read.
-     */
+	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic);
 	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 
 	/**
-     * @brief Callback function to support a write request.
-     * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @brief Callback function to support a write request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->write.
-     */
+	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic);
 	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 
-    /**
-     * @brief Callback function to support a Notify request.
-     * @param [in] pCharacteristic The characteristic that is the source of the event.
-     */
+	/**
+	 * @brief Callback function to support a Notify request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 */
 	virtual void onNotify(BLECharacteristic* pCharacteristic);
 
-    /**
-     * @brief Callback function to support a Notify/Indicate Status report.
-     * @param [in] pCharacteristic The characteristic that is the source of the event.
-     * @param [in] s Status of the notification/indication
-     * @param [in] code Additional code of underlying errors
-     */
+	/**
+	 * @brief Callback function to support a Notify/Indicate Status report.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] s Status of the notification/indication
+	 * @param [in] code Additional code of underlying errors
+	 */
 	virtual void onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code);
-};
+}; //BLECharacteristicCallbacks
+
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_ */
