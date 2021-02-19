@@ -59,7 +59,7 @@ BLEAddress::BLEAddress(std::string stringAddress) {
  * @return True if the addresses are equal.
  */
 bool BLEAddress::equals(BLEAddress otherAddress) {
-	return memcmp(otherAddress.getNative(), m_address, 6) == 0;
+	return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) == 0;
 } // equals
 
 bool BLEAddress::operator==(BLEAddress otherAddress) {
