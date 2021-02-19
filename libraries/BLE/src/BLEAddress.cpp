@@ -67,7 +67,23 @@ bool BLEAddress::operator==(BLEAddress otherAddress) {
 }
 
 bool BLEAddress::operator!=(BLEAddress otherAddress) {
-  return !equals(otherAddress);
+  return ! this == otherAddress;
+}
+
+bool BLEAddress::operator<(BLEAddress otherAddress) {
+  return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) < 0;
+}
+
+bool BLEAddress::operator<=(BLEAddress otherAddress) {
+  return !this > otherAddress;
+}
+
+bool BLEAddress::operator>=(BLEAddress otherAddress) {
+  return !this < otherAddress;
+}
+
+bool BLEAddress::operator>(BLEAddress otherAddress) {
+  return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) > 0;
 }
 
 /**

@@ -25,6 +25,10 @@ public:
 	bool           equals(BLEAddress otherAddress);
   bool           operator==(BLEAddress otherAddress);
   bool           operator!=(BLEAddress otherAddress);
+  bool           operator<(BLEAddress otherAddress);
+  bool           operator<=(BLEAddress otherAddress);
+  bool           operator>(BLEAddress otherAddress);
+  bool           operator>=(BLEAddress otherAddress);
 	esp_bd_addr_t* getNative();
 	std::string    toString();
 
