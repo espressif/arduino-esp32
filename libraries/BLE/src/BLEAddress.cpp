@@ -62,6 +62,13 @@ bool BLEAddress::equals(BLEAddress otherAddress) {
 	return memcmp(otherAddress.getNative(), m_address, 6) == 0;
 } // equals
 
+bool BLEAddress::operator==(BLEAddress otherAddress) {
+  return equals(otherAddress);
+}
+
+bool BLEAddress::operator!=(BLEAddress otherAddress) {
+  return !equals(otherAddress);
+}
 
 /**
  * @brief Return the native representation of the address.
