@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef __ARDUHAL_LOG_H__
 #define __ARDUHAL_LOG_H__
 
@@ -37,6 +36,9 @@ extern "C"
 #define ARDUHAL_LOG_LEVEL CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL
 #else
 #define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
+#ifdef USE_ESP32_LOG
+#define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
+#endif
 #endif
 
 #ifndef CONFIG_ARDUHAL_LOG_COLORS
@@ -72,12 +74,15 @@ extern "C"
 #define ARDUHAL_LOG_RESET_COLOR
 #endif
 
+
+
 const char * pathToFileName(const char * path);
 int log_printf(const char *fmt, ...);
 
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
+#ifndef USE_ESP32_LOG
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 #define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
 #define isr_log_v(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
@@ -125,9 +130,24 @@ int log_printf(const char *fmt, ...);
 #define log_n(format, ...)
 #define isr_log_n(format, ...)
 #endif
+#endif
 
 #include "esp_log.h"
 
+#ifdef USE_ESP32_LOG
+
+#ifndef TAG
+#define TAG "ESP32"
+#endif
+void log_to_esp(esp_log_level_t level, const char* format, ...);
+
+#define log_e(format, ...) do {log_to_esp(ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
+#define log_w(format, ...) do {log_to_esp(ESP_LOG_WARN, format, ##__VA_ARGS__);}while(0)
+#define log_d(format, ...) do {log_to_esp(ESP_LOG_DEBUG, format, ##__VA_ARGS__);}while(0)
+#define log_i(format, ...) do {log_to_esp(ESP_LOG_INFO, format, ##__VA_ARGS__);}while(0)
+#define log_v(format, ...) do {log_to_esp(ESP_LOG_VERBOSE, format, ##__VA_ARGS__);}while(0)
+//#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
+#else
 #ifdef CONFIG_ARDUHAL_ESP_LOG
 #undef ESP_LOGE
 #undef ESP_LOGW
@@ -150,6 +170,7 @@ int log_printf(const char *fmt, ...);
 #define ESP_EARLY_LOGI(tag, ...)  isr_log_i(__VA_ARGS__)
 #define ESP_EARLY_LOGD(tag, ...)  isr_log_d(__VA_ARGS__)
 #define ESP_EARLY_LOGV(tag, ...)  isr_log_v(__VA_ARGS__)
+#endif
 #endif
 
 #ifdef __cplusplus
