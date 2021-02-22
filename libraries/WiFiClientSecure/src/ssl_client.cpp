@@ -300,7 +300,8 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
             log_v("Handling error %d", ret); //for low level debug
             return handle_error(ret);
         }
-	vTaskDelay(2);
+        //wait for space to become available
+        vTaskDelay(2);
     }
 
     return ret;
