@@ -36,7 +36,7 @@ extern "C"
 #define ARDUHAL_LOG_LEVEL CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL
 #else
 #define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
-#ifdef USE_ESP32_LOG
+#ifdef USE_ESP_IDF_LOG
 #define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
 #endif
 #endif
@@ -82,70 +82,91 @@ int log_printf(const char *fmt, ...);
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
-#ifndef USE_ESP32_LOG
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+#ifndef USE_ESP_IDF_LOG
 #define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
 #define isr_log_v(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
+#else
+#define log_v(format, ...) do {log_to_esp(TAG, ESP_LOG_VERBOSE, format, ##__VA_ARGS__);}while(0)
+#define isr_log_v(format, ...) do {ets_printf(LOG_FORMAT(V, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_v(format, ...)
 #define isr_log_v(format, ...)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#ifndef USE_ESP_IDF_LOG
 #define log_d(format, ...) log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
 #define isr_log_d(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
+#else
+#define log_d(format, ...) do {log_to_esp(TAG, ESP_LOG_DEBUG, format, ##__VA_ARGS__);}while(0)
+#define isr_log_d(format, ...) do {ets_printf(LOG_FORMAT(D, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_d(format, ...)
 #define isr_log_d(format, ...)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+#ifndef USE_ESP_IDF_LOG
 #define log_i(format, ...) log_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
 #define isr_log_i(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(I, format), ##__VA_ARGS__)
+#else
+#define log_i(format, ...) do {log_to_esp(TAG, ESP_LOG_INFO, format, ##__VA_ARGS__);}while(0)
+#define isr_log_i(format, ...) do {ets_printf(LOG_FORMAT(I, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_i(format, ...)
 #define isr_log_i(format, ...)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
+#ifndef USE_ESP_IDF_LOG
 #define log_w(format, ...) log_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
 #define isr_log_w(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(W, format), ##__VA_ARGS__)
+#else
+#define log_w(format, ...) do {log_to_esp(TAG, ESP_LOG_WARN, format, ##__VA_ARGS__);}while(0)
+#define isr_log_w(format, ...) do {ets_printf(LOG_FORMAT(W, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_w(format, ...)
 #define isr_log_w(format, ...)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#ifndef USE_ESP_IDF_LOG
 #define log_e(format, ...) log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #define isr_log_e(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
+#else
+#define log_e(format, ...) do {log_to_esp(TAG, ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
+#define isr_log_e(format, ...) do {ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_e(format, ...)
 #define isr_log_e(format, ...)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_NONE
+#ifndef USE_ESP_IDF_LOG
 #define log_n(format, ...) log_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #define isr_log_n(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
+#else
+#define log_n(format, ...) do {log_to_esp(TAG, ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
+#define isr_log_n(format, ...) do {ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
+#endif
 #else
 #define log_n(format, ...)
 #define isr_log_n(format, ...)
 #endif
-#endif
 
 #include "esp_log.h"
 
-#ifdef USE_ESP32_LOG
-
+#ifdef USE_ESP_IDF_LOG
 #ifndef TAG
-#define TAG "ESP32"
+#define TAG "ARDUINO"
 #endif
-void log_to_esp(esp_log_level_t level, const char* format, ...);
-
-#define log_e(format, ...) do {log_to_esp(ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
-#define log_w(format, ...) do {log_to_esp(ESP_LOG_WARN, format, ##__VA_ARGS__);}while(0)
-#define log_d(format, ...) do {log_to_esp(ESP_LOG_DEBUG, format, ##__VA_ARGS__);}while(0)
-#define log_i(format, ...) do {log_to_esp(ESP_LOG_INFO, format, ##__VA_ARGS__);}while(0)
-#define log_v(format, ...) do {log_to_esp(ESP_LOG_VERBOSE, format, ##__VA_ARGS__);}while(0)
+void log_to_esp(char* tag, esp_log_level_t level, const char* format, ...);
 //#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
 #else
 #ifdef CONFIG_ARDUHAL_ESP_LOG
