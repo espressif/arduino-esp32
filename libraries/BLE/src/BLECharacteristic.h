@@ -156,7 +156,7 @@ public:
 	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overrided. 
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-	virtual void onRead(BLECharacteristic* pCharacteristic) __attribute__ ((deprecated));
+	virtual void onRead(BLECharacteristic* pCharacteristic);
 
 	/**
 	 * @brief Callback function to support a write request.
@@ -168,7 +168,7 @@ public:
 	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overrided. 
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-	virtual void onWrite(BLECharacteristic* pCharacteristic) __attribute__ ((deprecated));
+	virtual void onWrite(BLECharacteristic* pCharacteristic);
 
 	/**
 	 * @brief Callback function to support a Notify request.
