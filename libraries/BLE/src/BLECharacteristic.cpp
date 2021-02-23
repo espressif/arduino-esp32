@@ -764,8 +764,8 @@ void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic, esp_
 } // onRead
 
 void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onRead: default");
-	log_d("BLECharacteristicCallbacks", "<< onRead");
+	log_d(">> onRead: default");
+	log_d("<< onRead");
 } // onRead
 
 
@@ -774,20 +774,20 @@ void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic, esp
 } // onWrite
 
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
-	log_d("BLECharacteristicCallbacks", "<< onWrite");
+	log_d(">> onWrite: default");
+	log_d("<< onWrite");
 } // onWrite
 
 
 void BLECharacteristicCallbacks::onNotify(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onNotify: default");
-	log_d("BLECharacteristicCallbacks", "<< onNotify");
+	log_d(">> onNotify: default");
+	log_d("<< onNotify");
 } // onNotify
 
 
 void BLECharacteristicCallbacks::onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code) {
-	log_d("BLECharacteristicCallbacks", ">> onStatus: default");
-	log_d("BLECharacteristicCallbacks", "<< onStatus");
+	log_d(">> onStatus: default");
+	log_d("<< onStatus");
 } // onStatus
 
 
