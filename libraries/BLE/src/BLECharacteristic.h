@@ -149,26 +149,26 @@ public:
 	/**
 	 * @brief Callback function to support a read request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
-	 */
-	virtual void onRead(BLECharacteristic* pCharacteristic);
-	/**
-	 * @brief Callback function to support a read request.
-	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->read.
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
-
 	/**
-	 * @brief Callback function to support a write request.
+	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overrided. 
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-	virtual void onWrite(BLECharacteristic* pCharacteristic);
+	virtual void onRead(BLECharacteristic* pCharacteristic) __attribute__ ((deprecated));
+
 	/**
 	 * @brief Callback function to support a write request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->write.
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
+	/**
+	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overrided. 
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 */
+	virtual void onWrite(BLECharacteristic* pCharacteristic) __attribute__ ((deprecated));
 
 	/**
 	 * @brief Callback function to support a Notify request.

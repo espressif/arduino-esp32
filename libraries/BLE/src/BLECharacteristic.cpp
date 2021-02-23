@@ -224,7 +224,6 @@ void BLECharacteristic::handleGATTServerEvent(
 				if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
 					m_value.commit();
 					// Invoke the onWrite callback handler.
-					m_pCallbacks->onWrite(this);
 					m_pCallbacks->onWrite(this, param);
 				} else {
 					m_value.cancel();
@@ -314,7 +313,6 @@ void BLECharacteristic::handleGATTServerEvent(
 
 				if (param->write.is_prep != true) {
 					// Invoke the onWrite callback handler.
-					m_pCallbacks->onWrite(this);
 					m_pCallbacks->onWrite(this, param);
 				}
 			} // Match on handles.
@@ -387,7 +385,6 @@ void BLECharacteristic::handleGATTServerEvent(
 
 						// If is.long is false then this is the first (or only) request to read data, so invoke the callback
 						// Invoke the read callback.
-						m_pCallbacks->onRead(this);
 						m_pCallbacks->onRead(this, param);
 
 						std::string value = m_value.getValue();
@@ -762,24 +759,21 @@ std::string BLECharacteristic::toString() {
 
 BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
 
+void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param) {
+	onRead(pCharacteristic);
+} // onRead
 
 void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
 	log_d("BLECharacteristicCallbacks", ">> onRead: default");
 	log_d("BLECharacteristicCallbacks", "<< onRead");
 } // onRead
 
-void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param) {
-	log_d("BLECharacteristicCallbacks", ">> onRead: default");
-	log_d("BLECharacteristicCallbacks", "<< onRead");
-} // onRead
-
-
-void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
-	log_d("BLECharacteristicCallbacks", "<< onWrite");
-} // onWrite
 
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param) {
+	onWrite(pCharacteristic);
+} // onWrite
+
+void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
 	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
 	log_d("BLECharacteristicCallbacks", "<< onWrite");
 } // onWrite
