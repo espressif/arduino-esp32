@@ -27,6 +27,7 @@ extern "C" {
 #include <stdlib.h>
 #include "esp_system.h"
 }
+#include "esp32-hal-log.h"
 
 void randomSeed(unsigned long seed)
 {
@@ -69,7 +70,10 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
     const long dividend = out_max - out_min;
     const long divisor = in_max - in_min;
     const long delta = x - in_min;
-
+    if(divisor == 0){
+        log_e("Invalid map input range, min == max");
+        return -1; //AVR returns -1, SAM returns 0
+    }
     return (delta * dividend + (divisor / 2)) / divisor + out_min;
 }
 
