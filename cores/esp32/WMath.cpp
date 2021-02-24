@@ -27,6 +27,7 @@ extern "C" {
 #include <stdlib.h>
 #include "esp_system.h"
 }
+#include "esp32-hal-log.h"
 
 void randomSeed(unsigned long seed)
 {
