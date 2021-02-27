@@ -59,16 +59,16 @@ static const uint8_t A14 = 26;
 
 
 
-static const uint8_t D0 = 3;
-static const uint8_t D1 = 1;
-static const uint8_t D2 = 25;
-static const uint8_t D3 = 26;
-static const uint8_t D4 = 27;
-static const uint8_t D5 = 9;
-static const uint8_t D6 = 10;
-static const uint8_t D7 = 13;
-static const uint8_t D8 = 5;
-static const uint8_t D9 = 2;
+// static const uint8_t D0 = 3;
+// static const uint8_t D1 = 1;
+// static const uint8_t D2 = 25;
+// static const uint8_t D3 = 26;
+// static const uint8_t D4 = 27;
+// static const uint8_t D5 = 9;
+// static const uint8_t D6 = 10;
+// static const uint8_t D7 = 13;
+// static const uint8_t D8 = 5;
+// static const uint8_t D9 = 2;
 static const uint8_t D10 = 0;
 
 static const uint8_t T0 = 4;
