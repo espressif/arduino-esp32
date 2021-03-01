@@ -55,13 +55,13 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
     	log_e("esp_wifi_get_mac failed!");
     	return;
     }
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
     if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
         snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
     } else {
 #endif
          snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
     }
 #endif
 }
