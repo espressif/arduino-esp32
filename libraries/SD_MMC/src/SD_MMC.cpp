@@ -35,7 +35,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl)
     : FS(impl), _card(NULL)
 {}
 
-bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
+bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed)
 {
     if(_card) {
         return true;
@@ -68,7 +68,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit)
     }
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
+        .format_if_mount_failed = format_if_mount_failed,
         .max_files = 5,
         .allocation_unit_size = 0
     };
