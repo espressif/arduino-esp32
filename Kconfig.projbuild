@@ -265,6 +265,12 @@ config ARDUINO_SELECTIVE_HTTPClient
     select ARDUINO_SELECTIVE_WiFiClientSecure
     default y
 
+config ARDUINO_SELECTIVE_LITTLEFS
+    bool "Enable LITTLEFS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
 config ARDUINO_SELECTIVE_NetBIOS
     bool "Enable NetBIOS"
     depends on ARDUINO_SELECTIVE_COMPILATION
@@ -327,6 +333,12 @@ config ARDUINO_SELECTIVE_WiFi
 
 config ARDUINO_SELECTIVE_WiFiClientSecure
     bool "Enable WiFiClientSecure"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_WiFiProv
+    bool "Enable WiFiProv"
     depends on ARDUINO_SELECTIVE_COMPILATION
     select ARDUINO_SELECTIVE_WiFi
     default y
