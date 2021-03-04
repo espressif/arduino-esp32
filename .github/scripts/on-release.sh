@@ -171,18 +171,19 @@ mkdir -p "$PKG_DIR/tools"
 
 # Copy all core files to the package folder
 echo "Copying files for packaging ..."
-cp -f  "$GITHUB_WORKSPACE/boards.txt"              "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/programmers.txt"         "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/cores"                   "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/libraries"               "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/variants"                "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"        "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.py"         "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/esptool.py"        "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"  "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe" "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/partitions"        "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/sdk"               "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/boards.txt"                "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/programmers.txt"           "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/cores"                     "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/libraries"                 "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/variants"                  "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"          "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/espota.py"           "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/esptool.py"          "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"    "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe"   "$PKG_DIR/tools/"
+cp -Rf "$GITHUB_WORKSPACE/tools/partitions"          "$PKG_DIR/tools/"
+cp -Rf "$GITHUB_WORKSPACE/tools/sdk"                 "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/platformio-build.py" "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
@@ -254,16 +255,29 @@ releasesJson=`curl -sH "Authorization: token $GITHUB_TOKEN" "https://api.github.
 if [ $? -ne 0 ]; then echo "ERROR: Get Releases Failed! ($?)"; exit 1; fi
 
 set +e
-prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false)) | sort_by(.created_at | - fromdateiso8601) | .[0].tag_name')
-prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false)) | sort_by(.created_at | - fromdateiso8601)  | .[0].tag_name')
+prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[0].tag_name")
+prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
+prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
+prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
 shopt -s nocasematch
-if [ "$prev_any_release" == "$RELEASE_TAG" ]; then
-    prev_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false and .prerelease == false)) | sort_by(.created_at | - fromdateiso8601) | .[1].tag_name')
-    prev_any_release=$(echo "$releasesJson" | jq -e -r '. | map(select(.draft == false)) | sort_by(.created_at | - fromdateiso8601)  | .[1].tag_name')
+if [ "$prev_release" == "$RELEASE_TAG" ]; then
+    prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[1].tag_name")
 fi
-COMMITS_SINCE_RELEASE="$prev_any_release"
+if [ "$prev_any_release" == "$RELEASE_TAG" ]; then
+    prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
+fi
+if [ "$prev_branch_release" == "$RELEASE_TAG" ]; then
+    prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
+fi
+if [ "$prev_branch_any_release" == "$RELEASE_TAG" ]; then
+    prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
+fi
 shopt -u nocasematch
 set -e
+
+echo "Previous Release: $prev_release"
+echo "Previous (any)release: $prev_any_release"
+echo
 
 # Merge package JSONs with previous releases
 if [ ! -z "$prev_any_release" ] && [ "$prev_any_release" != "null" ]; then
@@ -272,16 +286,11 @@ if [ ! -z "$prev_any_release" ] && [ "$prev_any_release" != "null" ]; then
 fi
 
 if [ "$RELEASE_PRE" == "false" ]; then
-    COMMITS_SINCE_RELEASE="$prev_release"
     if [ ! -z "$prev_release" ] && [ "$prev_release" != "null" ]; then
         echo "Merging with JSON from $prev_release ..."
         merge_package_json "$prev_release/$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"
     fi
 fi
-
-echo "Previous Release: $prev_release"
-echo "Previous (any)release: $prev_any_release"
-echo
 
 # Upload package JSONs
 echo "Uploading $PACKAGE_JSON_DEV ..."
@@ -327,21 +336,35 @@ if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then
 fi
 
 # Append Commit Messages
+echo
+echo "Previous Branch Release: $prev_branch_release"
+echo "Previous Branch (any)release: $prev_branch_any_release"
+echo
+commitFile="$OUTPUT_DIR/commits.txt"
+COMMITS_SINCE_RELEASE="$prev_branch_any_release"
+if [ "$RELEASE_PRE" == "false" ]; then
+    COMMITS_SINCE_RELEASE="$prev_branch_release"
+fi
 if [ ! -z "$COMMITS_SINCE_RELEASE" ] && [ "$COMMITS_SINCE_RELEASE" != "null" ]; then
     echo "Getting commits since $COMMITS_SINCE_RELEASE ..."
-    commitFile=$OUTPUT_DIR/commits.txt
-    git -C "$GITHUB_WORKSPACE" log --oneline "$COMMITS_SINCE_RELEASE..HEAD" > "$OUTPUT_DIR/commits.txt"
-    releaseNotes+=$'\r\n##### Commits\r\n'
-    IFS=$'\n'
-    for next in `cat $commitFile`
-    do
-        IFS=' ' read -r commitId commitMsg <<< "$next"
-        commitLine="- [$commitId](https://github.com/$GITHUB_REPOSITORY/commit/$commitId) $commitMsg"
-        releaseNotes+="$commitLine"
-        releaseNotes+=$'\r\n'
-    done
-    rm -f $commitFile
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 "$COMMITS_SINCE_RELEASE..HEAD" > "$commitFile"
+elif [ "$RELEASE_BRANCH" != "master" ]; then
+    echo "Getting all commits on branch '$RELEASE_BRANCH' ..."
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --cherry-pick --left-only --no-merges HEAD...origin/master > "$commitFile"
+else
+    echo "Getting all commits on master ..."
+    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --no-merges > "$commitFile"
 fi
+releaseNotes+=$'\r\n##### Commits\r\n'
+IFS=$'\n'
+for next in `cat $commitFile`
+do
+    IFS=' ' read -r commitId commitMsg <<< "$next"
+    commitLine="- [$commitId](https://github.com/$GITHUB_REPOSITORY/commit/$commitId) $commitMsg"
+    releaseNotes+="$commitLine"
+    releaseNotes+=$'\r\n'
+done
+rm -f $commitFile
 
 # Prepend the original release body
 if [ "${RELEASE_BODY: -1}" == $'\r' ]; then         

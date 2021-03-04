@@ -382,6 +382,9 @@ size_t EEPROMClass::readString (int address, char* value, size_t maxLen)
   if (address + len > _size)
     return 0;
 
+  if (len > maxLen)
+    return 0; //Maybe return part of the string instead?
+
   memcpy((uint8_t*) value, _data + address, len);
   value[len] = 0;
   return len;
@@ -400,7 +403,7 @@ String EEPROMClass::readString (int address)
   if (address + len > _size)
     return String();
 
-  char value[len];
+  char value[len+1];
   memcpy((uint8_t*) value, _data + address, len);
   value[len] = 0;
   return String(value);

@@ -33,10 +33,10 @@ typedef enum {
     WIFI_MODE_MAX
 } wifi_mode_t;
 
-typedef esp_interface_t wifi_interface_t;
-
-#define WIFI_IF_STA ESP_IF_WIFI_STA
-#define WIFI_IF_AP  ESP_IF_WIFI_AP
+typedef enum {
+    WIFI_IF_STA = ESP_IF_WIFI_STA,
+    WIFI_IF_AP  = ESP_IF_WIFI_AP,
+} wifi_interface_t;
 
 typedef enum {
     WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
@@ -216,7 +216,7 @@ typedef struct {
     wifi_auth_mode_t authmode;  /**< Auth mode of ESP32 soft-AP. Do not support AUTH_WEP in soft-AP mode */
     uint8_t ssid_hidden;        /**< Broadcast SSID or not, default 0, broadcast the SSID */
     uint8_t max_connection;     /**< Max number of stations allowed to connect in, default 4, max 10 */
-    uint16_t beacon_interval;   /**< Beacon interval, 100 ~ 60000 ms, default 100 ms */
+    uint16_t beacon_interval;   /**< Beacon interval which should be multiples of 100. Unit: TU(time unit, 1 TU = 1024 us). Range: 100 ~ 60000. Default value: 100 */
 } wifi_ap_config_t;
 
 /** @brief STA configuration settings for the ESP32 */
@@ -364,6 +364,7 @@ typedef enum {
 #define WIFI_PROMIS_FILTER_MASK_MISC        (1<<3)        /**< filter the packets with type of WIFI_PKT_MISC */
 #define WIFI_PROMIS_FILTER_MASK_DATA_MPDU   (1<<4)        /**< filter the MPDU which is a kind of WIFI_PKT_DATA */
 #define WIFI_PROMIS_FILTER_MASK_DATA_AMPDU  (1<<5)        /**< filter the AMPDU which is a kind of WIFI_PKT_DATA */
+#define WIFI_PROMIS_FILTER_MASK_FCSFAIL     (1<<6)        /**< filter the FCS failed packets, do not open it in general */
 
 #define WIFI_PROMIS_CTRL_FILTER_MASK_ALL         (0xFF800000)  /**< filter all control packets */
 #define WIFI_PROMIS_CTRL_FILTER_MASK_WRAPPER     (1<<23)       /**< filter the control packets with subtype of Control Wrapper */
@@ -519,6 +520,12 @@ typedef struct {
         wifi_ht2040_coex_t ht2040_coex; /**< Configuration of STA's HT2040 coexist management */
     } data;                             /**< Configuration of ioctl command */
 } wifi_ioctl_config_t;
+
+#define WIFI_STATIS_BUFFER    (1<<0)
+#define WIFI_STATIS_RXTX      (1<<1)
+#define WIFI_STATIS_HW        (1<<2)
+#define WIFI_STATIS_DIAG      (1<<3)
+#define WIFI_STATIS_ALL       (-1)
 
 #ifdef __cplusplus
 }

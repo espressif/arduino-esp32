@@ -379,6 +379,7 @@ esp_err_t WiFiGenericClass::_eventCallback(void *arg, system_event_t *event, wif
     } else if(event->event_id == SYSTEM_EVENT_STA_START) {
         WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         setStatusBits(STA_STARTED_BIT);
+        tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, WiFiSTAClass::_hostname.c_str());
     } else if(event->event_id == SYSTEM_EVENT_STA_STOP) {
         WiFiSTAClass::_setStatus(WL_NO_SHIELD);
         clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);

@@ -85,7 +85,7 @@ extern "C" {
 #define ESP_ERR_WIFI_NOT_CONNECT (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
 
 #define ESP_ERR_WIFI_POST        (ESP_ERR_WIFI_BASE + 18)  /*!< Failed to post the event to WiFi task */
-#define ESP_ERR_WIFI_INIT_STATE  (ESP_ERR_WIFI_BASE + 19)  /*!< Invalod WiFi state when init/deinit is called */
+#define ESP_ERR_WIFI_INIT_STATE  (ESP_ERR_WIFI_BASE + 19)  /*!< Invalid WiFi state when init/deinit is called */
 #define ESP_ERR_WIFI_STOP_STATE  (ESP_ERR_WIFI_BASE + 20)  /*!< Returned when WiFi is stopping */
 
 /**
@@ -110,6 +110,7 @@ typedef struct {
     int                    wifi_task_core_id;      /**< WiFi Task Core ID */
     int                    beacon_max_len;         /**< WiFi softAP maximum length of the beacon */
     int                    mgmt_sbuf_num;          /**< WiFi management short buffer number, the minimum value is 6, the maximum value is 32 */
+    uint64_t               feature_caps;           /**< Enables additional WiFi features and capabilities */
     int                    magic;                  /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
 
@@ -156,6 +157,7 @@ typedef struct {
 #endif
 
 extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
+extern uint64_t g_wifi_feature_caps;
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
@@ -208,6 +210,7 @@ extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
     .wifi_task_core_id = WIFI_TASK_CORE_ID,\
     .beacon_max_len = WIFI_SOFTAP_BEACON_MAX_LEN, \
     .mgmt_sbuf_num = WIFI_MGMT_SBUF_NUM, \
+    .feature_caps = g_wifi_feature_caps, \
     .magic = WIFI_INIT_CONFIG_MAGIC\
 };
 
@@ -304,7 +307,7 @@ esp_err_t esp_wifi_stop(void);
  * @brief  Restore WiFi stack persistent settings to default values
  *
  * This function will reset settings made using the following APIs:
- * - esp_wifi_get_auto_connect,
+ * - esp_wifi_set_bandwidth,
  * - esp_wifi_set_protocol,
  * - esp_wifi_set_config related
  * - esp_wifi_set_mode
@@ -438,6 +441,8 @@ esp_err_t esp_wifi_scan_get_ap_records(uint16_t *number, wifi_ap_record_t *ap_re
 
 /**
   * @brief     Get information of AP which the ESP32 station is associated with
+  *
+  * @attention When the obtained country information is empty, it means that the AP does not carry country information
   *
   * @param     ap_info  the wifi_ap_record_t to hold AP information
   *            sta can get the connected ap's phy mode info through the struct member
@@ -902,34 +907,10 @@ esp_err_t esp_wifi_set_vendor_ie_cb(esp_vendor_ie_cb_t cb, void *ctx);
   * @attention 1. Maximum power before wifi startup is limited by PHY init data bin.
   * @attention 2. The value set by this API will be mapped to the max_tx_power of the structure wifi_country_t variable.
   * @attention 3. Mapping Table {Power, max_tx_power} = {{8,   2}, {20,  5}, {28,  7}, {34,  8}, {44, 11},
-  *                                                      {52, 13}, {56, 14}, {60, 15}, {66, 16}, {72, 18}, {78, 20}}.
-  * @attention 4. Param power unit is 0.25dBm, range is [8, 78] corresponding to 2dBm - 20dBm.
-  * @attention 5. Relationship between set value and actual value. As follows:
-  *              +------------+--------------+
-  *              | set value  | actual value |
-  *              +============+==============+
-  *              |  [8,  19]  |      8       |
-  *              +------------+--------------+
-  *              |  [20, 27]  |      20      |
-  *              +------------+--------------+
-  *              |  [28, 33]  |      28      |
-  *              +------------+--------------+
-  *              |  [34, 43]  |      34      |
-  *              +------------+--------------+
-  *              |  [44, 51]  |      44      |
-  *              +------------+--------------+
-  *              |  [52, 55]  |      52      |
-  *              +------------+--------------+
-  *              |  [56, 59]  |      56      |
-  *              +------------+--------------+
-  *              |  [60, 65]  |      60      |
-  *              +------------+--------------+
-  *              |  [66, 71]  |      66      |
-  *              +------------+--------------+
-  *              |  [72, 77]  |      72      |
-  *              +------------+--------------+
-  *              |     78     |      78      |
-  *              +------------+--------------+
+  *                                                      {52, 13}, {56, 14}, {60, 15}, {66, 16}, {72, 18}, {80, 20}}.
+  * @attention 4. Param power unit is 0.25dBm, range is [8, 84] corresponding to 2dBm - 20dBm.
+  * @attention 5. Relationship between set value and actual value. As follows: {set value range, actual value} = {{[8,  19],8}, {[20, 27],20}, {[28, 33],28}, {[34, 43],34}, {[44, 51],44}, {[52, 55],52}, {[56, 59],56}, {[60, 65],60}, {[66, 71],66}, {[72, 79],72}, {[80, 84],80}}.
+  *
   * @param     power  Maximum WiFi transmitting power.
   *
   * @return
@@ -1143,6 +1124,17 @@ esp_err_t esp_wifi_set_inactive_time(wifi_interface_t ifx, uint16_t sec);
   *    - ESP_ERR_WIFI_ARG: invalid argument
   */
 esp_err_t esp_wifi_get_inactive_time(wifi_interface_t ifx, uint16_t *sec);
+
+/**
+  * @brief     Dump WiFi statistics
+  *
+  * @param     modules statistic modules to be dumped
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_statis_dump(uint32_t modules);
 
 #ifdef __cplusplus
 }

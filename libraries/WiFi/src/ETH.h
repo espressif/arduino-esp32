@@ -48,7 +48,7 @@
 #define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 #endif
 
-typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_MAX } eth_phy_type_t;
+typedef enum { ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_IP101, ETH_PHY_MAX } eth_phy_type_t;
 
 class ETHClass {
     private:

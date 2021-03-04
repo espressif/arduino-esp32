@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@
 
 bool btInUse(){ return true; }
 
-#ifdef CONFIG_BLUEDROID_ENABLED
 #include "esp_bt.h"
 
-#ifdef CONFIG_CLASSIC_BT_ENABLED
+#ifdef CONFIG_BT_CLASSIC_ENABLED
 #define BT_MODE ESP_BT_MODE_BTDM
 #else
 #define BT_MODE ESP_BT_MODE_BLE
@@ -79,7 +78,7 @@ bool btStop(){
     return false;
 }
 
-#else
+#else // CONFIG_BT_ENABLED
 bool btStarted()
 {
     return false;
@@ -94,6 +93,6 @@ bool btStop()
 {
     return false;
 }
-#endif
-#endif
+
+#endif // CONFIG_BT_ENABLED
 

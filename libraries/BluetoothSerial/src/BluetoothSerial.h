@@ -25,6 +25,8 @@
 #include <functional>
 
 typedef std::function<void(const uint8_t *buffer, size_t size)> BluetoothSerialDataCb;
+typedef std::function<void(uint32_t num_val)> ConfirmRequestCb;
+typedef std::function<void(boolean success)> AuthCompleteCb;
 
 class BluetoothSerial: public Stream
 {
@@ -44,6 +46,10 @@ class BluetoothSerial: public Stream
         void end(void);
         void onData(BluetoothSerialDataCb cb);
         esp_err_t register_callback(esp_spp_cb_t * callback);
+        
+        void onConfirmRequest(ConfirmRequestCb cb);
+        void onAuthComplete(AuthCompleteCb cb);
+        void confirmReply(boolean confirm);
 
         void enableSSP();
         bool setPin(const char *pin);
