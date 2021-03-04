@@ -301,9 +301,19 @@ class String {
         inline unsigned int len() const { return isSSO() ? sso.len : ptr.len; }
         inline unsigned int capacity() const { return isSSO() ? (unsigned int)SSOSIZE - 1 : ptr.cap; } // Size of max string not including terminal NUL
         inline void setSSO(bool set) { sso.isSSO = set; }
-        inline void setLen(int len) { if (isSSO()) sso.len = len; else ptr.len = len; }
+        inline void setLen(int len) {
+            if (isSSO()) {
+                sso.len = len;
+                sso.buff[len] = 0;
+            } else {
+                ptr.len = len;
+                if (ptr.buff) {
+                    ptr.buff[len] = 0;
+                }
+            }
+        }
         inline void setCapacity(int cap) { if (!isSSO()) ptr.cap = cap; }
-	inline void setBuffer(char *buff) { if (!isSSO()) ptr.buff = buff; }
+        inline void setBuffer(char *buff) { if (!isSSO()) ptr.buff = buff; }
         // Buffer accessor functions
         inline const char *buffer() const { return (const char *)(isSSO() ? sso.buff : ptr.buff); }
         inline char *wbuffer() const { return isSSO() ? const_cast<char *>(sso.buff) : ptr.buff; } // Writable version of buffer
