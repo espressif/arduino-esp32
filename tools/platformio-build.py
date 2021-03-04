@@ -138,7 +138,6 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mqtt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nimble"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nvs_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "protobuf-c"),
