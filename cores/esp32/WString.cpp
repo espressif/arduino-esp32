@@ -796,8 +796,8 @@ void String::remove(unsigned int index, unsigned int count) {
     }
     char *writeTo = wbuffer() + index;
     unsigned int newlen = len() - count;
-    setLen(newlen);
     memmove(writeTo, wbuffer() + index + count, newlen - index);
+    setLen(newlen);
     wbuffer()[newlen] = 0;
 }
 
