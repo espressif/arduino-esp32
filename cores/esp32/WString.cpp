@@ -159,7 +159,7 @@ unsigned char String::changeBuffer(unsigned int maxStrLen) {
             // Already using SSO, nothing to do
 	    uint16_t oldLen = len();
             setSSO(true);
-	    setLen(oldLen);
+            setLen(oldLen);
             return 1;
         } else { // if bufptr && !isSSO()
             // Using bufptr, need to shrink into sso.buff
@@ -168,8 +168,8 @@ unsigned char String::changeBuffer(unsigned int maxStrLen) {
             free(wbuffer());
             uint16_t oldLen = len();
             setSSO(true);
-	    setLen(oldLen);
             memcpy(wbuffer(), temp, maxStrLen);
+            setLen(oldLen);
             return 1;
         }
     }
@@ -193,8 +193,8 @@ unsigned char String::changeBuffer(unsigned int maxStrLen) {
         }
         setSSO(false);
         setCapacity(newSize - 1);
-        setLen(oldLen); // Needed in case of SSO where len() never existed
         setBuffer(newbuffer);
+        setLen(oldLen); // Needed in case of SSO where len() never existed
         return 1;
     }
     return 0;
@@ -209,8 +209,8 @@ String & String::copy(const char *cstr, unsigned int length) {
         invalidate();
         return *this;
     }
-    setLen(length);
     memmove(wbuffer(), cstr, length + 1);
+    setLen(length);
     return *this;
 }
 
@@ -219,8 +219,8 @@ String & String::copy(const __FlashStringHelper *pstr, unsigned int length) {
         invalidate();
         return *this;
     }
-    setLen(length);
     memcpy_P(wbuffer(), (PGM_P)pstr, length + 1); // We know wbuffer() cannot ever be in PROGMEM, so memcpy safe here
+    setLen(length);
     return *this;
 }
 
@@ -250,8 +250,8 @@ void String::move(String &rhs) {
     setLen(rhs.len());
     rhs.setSSO(false);
     rhs.setCapacity(0);
-    rhs.setLen(0);
     rhs.setBuffer(nullptr);
+    rhs.setLen(0);
 }
 #endif
 
@@ -827,9 +827,9 @@ void String::trim(void) {
     while(isspace(*end) && end >= begin)
         end--;
     unsigned int newlen = end + 1 - begin;
-    setLen(newlen);
     if(begin > buffer())
         memmove(wbuffer(), begin, newlen);
+    setLen(newlen);
     wbuffer()[newlen] = 0;
 }
 
