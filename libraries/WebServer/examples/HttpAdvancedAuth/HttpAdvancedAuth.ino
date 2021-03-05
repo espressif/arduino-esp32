@@ -56,4 +56,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
 }
