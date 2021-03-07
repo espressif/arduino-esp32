@@ -7,7 +7,7 @@ Installation instructions for Debian / Ubuntu OS
   ```bash
   sudo usermod -a -G dialout $USER && \
   sudo apt-get install git && \
-  wget https://bootstrap.pypa.io/get-pip.py && \
+  wget https://bootstrap.pypa.io/2.7/get-pip.py && \
   sudo python get-pip.py && \
   sudo pip install pyserial && \
   mkdir -p ~/Arduino/hardware/espressif && \
