@@ -188,6 +188,14 @@ if not env.BoardConfig().get("build.ldscript", ""):
     env.Replace(LDSCRIPT_PATH=env.BoardConfig().get("build.arduino.ldscript", ""))
 
 #
+# Add PSRAM-specific libraries
+#
+
+flatten_cppdefines = env.Flatten(env["CPPDEFINES"])
+if "BOARD_HAS_PSRAM" in flatten_cppdefines:
+    env.Append(LIBS=["c-psram-workaround", "m-psram-workaround"])
+
+#
 # Target: Build Core Library
 #
 
