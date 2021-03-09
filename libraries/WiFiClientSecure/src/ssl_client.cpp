@@ -295,11 +295,13 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, uint16_t l
     log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
-    if ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0){
-        log_v("Handling error %d", ret); //for low level debug
-        return handle_error(ret);
-    } else{
-        log_v("Returning with %d bytes written", ret); //for low level debug
+    while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
+            log_v("Handling error %d", ret); //for low level debug
+            return handle_error(ret);
+        }
+        //wait for space to become available
+        vTaskDelay(2);
     }
 
     return ret;

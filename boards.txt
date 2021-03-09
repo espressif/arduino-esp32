@@ -39,8 +39,10 @@ esp32.build.defines=
 
 esp32.menu.PSRAM.disabled=Disabled
 esp32.menu.PSRAM.disabled.build.defines=
+esp32.menu.PSRAM.disabled.build.extra_libs=
 esp32.menu.PSRAM.enabled=Enabled
 esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32.menu.PartitionScheme.default.build.partitions=default
@@ -174,6 +176,7 @@ esp32wrover.build.flash_mode=dio
 esp32wrover.build.boot=dio
 esp32wrover.build.partitions=default
 esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32wrover.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 esp32wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32wrover.menu.PartitionScheme.default.build.partitions=default
@@ -373,8 +376,10 @@ tinypico.menu.FlashFreq.40.build.flash_freq=40m
 
 tinypico.menu.PSRAM.enabled=Enabled
 tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+tinypico.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 tinypico.menu.PSRAM.disabled=Disabled
 tinypico.menu.PSRAM.disabled.build.defines=
+tinypico.menu.PSRAM.disabled.build.extra_libs=
 
 tinypico.menu.DebugLevel.none=None
 tinypico.menu.DebugLevel.none.build.code_debug=0
@@ -697,6 +702,238 @@ ttgo-t1.menu.DebugLevel.debug=Debug
 ttgo-t1.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t1.menu.DebugLevel.verbose=Verbose
 ttgo-t1.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+ttgo-t7-v13-mini32.name=TTGO T7 V1.3 Mini32
+
+ttgo-t7-v13-mini32.upload.tool=esptool_py
+ttgo-t7-v13-mini32.upload.maximum_size=1310720
+ttgo-t7-v13-mini32.upload.maximum_data_size=327680
+ttgo-t7-v13-mini32.upload.wait_for_upload_port=true
+
+ttgo-t7-v13-mini32.serial.disableDTR=true
+ttgo-t7-v13-mini32.serial.disableRTS=true
+
+ttgo-t7-v13-mini32.build.mcu=esp32
+ttgo-t7-v13-mini32.build.core=esp32
+ttgo-t7-v13-mini32.build.variant=ttgo-t7-v13-mini32
+ttgo-t7-v13-mini32.build.board=TTGO_T7_V13_Mini32
+
+ttgo-t7-v13-mini32.build.f_cpu=240000000L
+ttgo-t7-v13-mini32.build.flash_size=4MB
+ttgo-t7-v13-mini32.build.flash_freq=40m
+ttgo-t7-v13-mini32.build.flash_mode=dio
+ttgo-t7-v13-mini32.build.boot=dio
+ttgo-t7-v13-mini32.build.partitions=default
+ttgo-t7-v13-mini32.build.defines=
+
+ttgo-t7-v13-mini32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.default.build.partitions=default
+ttgo-t7-v13-mini32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ttgo-t7-v13-mini32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.minimal.build.partitions=minimal
+ttgo-t7-v13-mini32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ttgo-t7-v13-mini32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ttgo-t7-v13-mini32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ttgo-t7-v13-mini32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ttgo-t7-v13-mini32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ttgo-t7-v13-mini32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+ttgo-t7-v13-mini32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ttgo-t7-v13-mini32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+ttgo-t7-v13-mini32.menu.CPUFreq.240=240MHz (WiFi/BT)
+ttgo-t7-v13-mini32.menu.CPUFreq.240.build.f_cpu=240000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.160=160MHz (WiFi/BT)
+ttgo-t7-v13-mini32.menu.CPUFreq.160.build.f_cpu=160000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.80=80MHz (WiFi/BT)
+ttgo-t7-v13-mini32.menu.CPUFreq.80.build.f_cpu=80000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.40=40MHz (40MHz XTAL)
+ttgo-t7-v13-mini32.menu.CPUFreq.40.build.f_cpu=40000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.26=26MHz (26MHz XTAL)
+ttgo-t7-v13-mini32.menu.CPUFreq.26.build.f_cpu=26000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.20=20MHz (40MHz XTAL)
+ttgo-t7-v13-mini32.menu.CPUFreq.20.build.f_cpu=20000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.13=13MHz (26MHz XTAL)
+ttgo-t7-v13-mini32.menu.CPUFreq.13.build.f_cpu=13000000L
+ttgo-t7-v13-mini32.menu.CPUFreq.10=10MHz (40MHz XTAL)
+ttgo-t7-v13-mini32.menu.CPUFreq.10.build.f_cpu=10000000L
+
+ttgo-t7-v13-mini32.menu.FlashMode.qio=QIO
+ttgo-t7-v13-mini32.menu.FlashMode.qio.build.flash_mode=dio
+ttgo-t7-v13-mini32.menu.FlashMode.qio.build.boot=qio
+ttgo-t7-v13-mini32.menu.FlashMode.dio=DIO
+ttgo-t7-v13-mini32.menu.FlashMode.dio.build.flash_mode=dio
+ttgo-t7-v13-mini32.menu.FlashMode.dio.build.boot=dio
+ttgo-t7-v13-mini32.menu.FlashMode.qout=QOUT
+ttgo-t7-v13-mini32.menu.FlashMode.qout.build.flash_mode=dout
+ttgo-t7-v13-mini32.menu.FlashMode.qout.build.boot=qout
+ttgo-t7-v13-mini32.menu.FlashMode.dout=DOUT
+ttgo-t7-v13-mini32.menu.FlashMode.dout.build.flash_mode=dout
+ttgo-t7-v13-mini32.menu.FlashMode.dout.build.boot=dout
+
+ttgo-t7-v13-mini32.menu.FlashFreq.80=80MHz
+ttgo-t7-v13-mini32.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-t7-v13-mini32.menu.FlashFreq.40=40MHz
+ttgo-t7-v13-mini32.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-t7-v13-mini32.menu.FlashSize.4M=4MB (32Mb)
+ttgo-t7-v13-mini32.menu.FlashSize.4M.build.flash_size=4MB
+
+ttgo-t7-v13-mini32.menu.UploadSpeed.921600=921600
+ttgo-t7-v13-mini32.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-t7-v13-mini32.menu.UploadSpeed.115200=115200
+ttgo-t7-v13-mini32.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-t7-v13-mini32.menu.UploadSpeed.256000.windows=256000
+ttgo-t7-v13-mini32.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-t7-v13-mini32.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-t7-v13-mini32.menu.UploadSpeed.230400=230400
+ttgo-t7-v13-mini32.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-t7-v13-mini32.menu.UploadSpeed.460800.linux=460800
+ttgo-t7-v13-mini32.menu.UploadSpeed.460800.macosx=460800
+ttgo-t7-v13-mini32.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-t7-v13-mini32.menu.UploadSpeed.512000.windows=512000
+ttgo-t7-v13-mini32.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-t7-v13-mini32.menu.DebugLevel.none=None
+ttgo-t7-v13-mini32.menu.DebugLevel.none.build.code_debug=0
+ttgo-t7-v13-mini32.menu.DebugLevel.error=Error
+ttgo-t7-v13-mini32.menu.DebugLevel.error.build.code_debug=1
+ttgo-t7-v13-mini32.menu.DebugLevel.warn=Warn
+ttgo-t7-v13-mini32.menu.DebugLevel.warn.build.code_debug=2
+ttgo-t7-v13-mini32.menu.DebugLevel.info=Info
+ttgo-t7-v13-mini32.menu.DebugLevel.info.build.code_debug=3
+ttgo-t7-v13-mini32.menu.DebugLevel.debug=Debug
+ttgo-t7-v13-mini32.menu.DebugLevel.debug.build.code_debug=4
+ttgo-t7-v13-mini32.menu.DebugLevel.verbose=Verbose
+ttgo-t7-v13-mini32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+ttgo-t7-v14-mini32.name=TTGO T7 V1.4 Mini32
+
+ttgo-t7-v14-mini32.upload.tool=esptool_py
+ttgo-t7-v14-mini32.upload.maximum_size=1310720
+ttgo-t7-v14-mini32.upload.maximum_data_size=327680
+ttgo-t7-v14-mini32.upload.wait_for_upload_port=true
+
+ttgo-t7-v14-mini32.serial.disableDTR=true
+ttgo-t7-v14-mini32.serial.disableRTS=true
+
+ttgo-t7-v14-mini32.build.mcu=esp32
+ttgo-t7-v14-mini32.build.core=esp32
+ttgo-t7-v14-mini32.build.variant=ttgo-t7-v14-mini32
+ttgo-t7-v14-mini32.build.board=TTGO_T7_V14_Mini32
+
+ttgo-t7-v14-mini32.build.f_cpu=240000000L
+ttgo-t7-v14-mini32.build.flash_size=4MB
+ttgo-t7-v14-mini32.build.flash_freq=40m
+ttgo-t7-v14-mini32.build.flash_mode=dio
+ttgo-t7-v14-mini32.build.boot=dio
+ttgo-t7-v14-mini32.build.partitions=default
+ttgo-t7-v14-mini32.build.defines=
+
+ttgo-t7-v14-mini32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.default.build.partitions=default
+ttgo-t7-v14-mini32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ttgo-t7-v14-mini32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.minimal.build.partitions=minimal
+ttgo-t7-v14-mini32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ttgo-t7-v14-mini32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ttgo-t7-v14-mini32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ttgo-t7-v14-mini32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ttgo-t7-v14-mini32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ttgo-t7-v14-mini32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+ttgo-t7-v14-mini32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ttgo-t7-v14-mini32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+ttgo-t7-v14-mini32.menu.CPUFreq.240=240MHz (WiFi/BT)
+ttgo-t7-v14-mini32.menu.CPUFreq.240.build.f_cpu=240000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.160=160MHz (WiFi/BT)
+ttgo-t7-v14-mini32.menu.CPUFreq.160.build.f_cpu=160000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.80=80MHz (WiFi/BT)
+ttgo-t7-v14-mini32.menu.CPUFreq.80.build.f_cpu=80000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.40=40MHz (40MHz XTAL)
+ttgo-t7-v14-mini32.menu.CPUFreq.40.build.f_cpu=40000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.26=26MHz (26MHz XTAL)
+ttgo-t7-v14-mini32.menu.CPUFreq.26.build.f_cpu=26000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.20=20MHz (40MHz XTAL)
+ttgo-t7-v14-mini32.menu.CPUFreq.20.build.f_cpu=20000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.13=13MHz (26MHz XTAL)
+ttgo-t7-v14-mini32.menu.CPUFreq.13.build.f_cpu=13000000L
+ttgo-t7-v14-mini32.menu.CPUFreq.10=10MHz (40MHz XTAL)
+ttgo-t7-v14-mini32.menu.CPUFreq.10.build.f_cpu=10000000L
+
+ttgo-t7-v14-mini32.menu.FlashMode.qio=QIO
+ttgo-t7-v14-mini32.menu.FlashMode.qio.build.flash_mode=dio
+ttgo-t7-v14-mini32.menu.FlashMode.qio.build.boot=qio
+ttgo-t7-v14-mini32.menu.FlashMode.dio=DIO
+ttgo-t7-v14-mini32.menu.FlashMode.dio.build.flash_mode=dio
+ttgo-t7-v14-mini32.menu.FlashMode.dio.build.boot=dio
+ttgo-t7-v14-mini32.menu.FlashMode.qout=QOUT
+ttgo-t7-v14-mini32.menu.FlashMode.qout.build.flash_mode=dout
+ttgo-t7-v14-mini32.menu.FlashMode.qout.build.boot=qout
+ttgo-t7-v14-mini32.menu.FlashMode.dout=DOUT
+ttgo-t7-v14-mini32.menu.FlashMode.dout.build.flash_mode=dout
+ttgo-t7-v14-mini32.menu.FlashMode.dout.build.boot=dout
+
+ttgo-t7-v14-mini32.menu.FlashFreq.80=80MHz
+ttgo-t7-v14-mini32.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-t7-v14-mini32.menu.FlashFreq.40=40MHz
+ttgo-t7-v14-mini32.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-t7-v14-mini32.menu.FlashSize.4M=4MB (32Mb)
+ttgo-t7-v14-mini32.menu.FlashSize.4M.build.flash_size=4MB
+
+ttgo-t7-v14-mini32.menu.UploadSpeed.921600=921600
+ttgo-t7-v14-mini32.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-t7-v14-mini32.menu.UploadSpeed.115200=115200
+ttgo-t7-v14-mini32.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-t7-v14-mini32.menu.UploadSpeed.256000.windows=256000
+ttgo-t7-v14-mini32.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-t7-v14-mini32.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-t7-v14-mini32.menu.UploadSpeed.230400=230400
+ttgo-t7-v14-mini32.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-t7-v14-mini32.menu.UploadSpeed.460800.linux=460800
+ttgo-t7-v14-mini32.menu.UploadSpeed.460800.macosx=460800
+ttgo-t7-v14-mini32.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-t7-v14-mini32.menu.UploadSpeed.512000.windows=512000
+ttgo-t7-v14-mini32.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-t7-v14-mini32.menu.DebugLevel.none=None
+ttgo-t7-v14-mini32.menu.DebugLevel.none.build.code_debug=0
+ttgo-t7-v14-mini32.menu.DebugLevel.error=Error
+ttgo-t7-v14-mini32.menu.DebugLevel.error.build.code_debug=1
+ttgo-t7-v14-mini32.menu.DebugLevel.warn=Warn
+ttgo-t7-v14-mini32.menu.DebugLevel.warn.build.code_debug=2
+ttgo-t7-v14-mini32.menu.DebugLevel.info=Info
+ttgo-t7-v14-mini32.menu.DebugLevel.info.build.code_debug=3
+ttgo-t7-v14-mini32.menu.DebugLevel.debug=Debug
+ttgo-t7-v14-mini32.menu.DebugLevel.debug.build.code_debug=4
+ttgo-t7-v14-mini32.menu.DebugLevel.verbose=Verbose
+ttgo-t7-v14-mini32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -1176,8 +1413,10 @@ d32_pro.build.defines=
 
 d32_pro.menu.PSRAM.disabled=Disabled
 d32_pro.menu.PSRAM.disabled.build.defines=
+d32_pro.menu.PSRAM.disabled.build.extra_libs=
 d32_pro.menu.PSRAM.enabled=Enabled
 d32_pro.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+d32_pro.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 d32_pro.menu.PartitionScheme.default=Default
 d32_pro.menu.PartitionScheme.default.build.partitions=default
@@ -1296,6 +1535,76 @@ lolin32.menu.UploadSpeed.460800.macosx=460800
 lolin32.menu.UploadSpeed.460800.upload.speed=460800
 lolin32.menu.UploadSpeed.512000.windows=512000
 lolin32.menu.UploadSpeed.512000.upload.speed=512000
+
+##############################################################
+
+lolin32-lite.name=WEMOS LOLIN32 Lite
+
+lolin32-lite.upload.tool=esptool_py
+lolin32-lite.upload.maximum_size=1310720
+lolin32-lite.upload.maximum_data_size=327680
+lolin32-lite.upload.wait_for_upload_port=true
+
+lolin32-lite.serial.disableDTR=true
+lolin32-lite.serial.disableRTS=true
+
+lolin32-lite.build.mcu=esp32
+lolin32-lite.build.core=esp32
+lolin32-lite.build.variant=lolin32-lite
+lolin32-lite.build.board=LOLIN32_LITE
+
+lolin32-lite.build.f_cpu=240000000L
+lolin32-lite.build.flash_mode=dio
+lolin32-lite.build.flash_size=4MB
+lolin32-lite.build.boot=dio
+lolin32-lite.build.partitions=default
+lolin32-lite.build.defines=
+
+lolin32-lite.menu.FlashFreq.80=80MHz
+lolin32-lite.menu.FlashFreq.80.build.flash_freq=80m
+lolin32-lite.menu.FlashFreq.40=40MHz
+lolin32-lite.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin32-lite.menu.PartitionScheme.default=Default
+lolin32-lite.menu.PartitionScheme.default.build.partitions=default
+lolin32-lite.menu.PartitionScheme.no_ota=No OTA (Large APP)
+lolin32-lite.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin32-lite.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin32-lite.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+lolin32-lite.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lolin32-lite.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+lolin32-lite.menu.CPUFreq.240=240MHz (WiFi/BT)
+lolin32-lite.menu.CPUFreq.240.build.f_cpu=240000000L
+lolin32-lite.menu.CPUFreq.160=160MHz (WiFi/BT)
+lolin32-lite.menu.CPUFreq.160.build.f_cpu=160000000L
+lolin32-lite.menu.CPUFreq.80=80MHz (WiFi/BT)
+lolin32-lite.menu.CPUFreq.80.build.f_cpu=80000000L
+lolin32-lite.menu.CPUFreq.40=40MHz (40MHz XTAL)
+lolin32-lite.menu.CPUFreq.40.build.f_cpu=40000000L
+lolin32-lite.menu.CPUFreq.26=26MHz (26MHz XTAL)
+lolin32-lite.menu.CPUFreq.26.build.f_cpu=26000000L
+lolin32-lite.menu.CPUFreq.20=20MHz (40MHz XTAL)
+lolin32-lite.menu.CPUFreq.20.build.f_cpu=20000000L
+lolin32-lite.menu.CPUFreq.13=13MHz (26MHz XTAL)
+lolin32-lite.menu.CPUFreq.13.build.f_cpu=13000000L
+lolin32-lite.menu.CPUFreq.10=10MHz (40MHz XTAL)
+lolin32-lite.menu.CPUFreq.10.build.f_cpu=10000000L
+
+lolin32-lite.menu.UploadSpeed.921600=921600
+lolin32-lite.menu.UploadSpeed.921600.upload.speed=921600
+lolin32-lite.menu.UploadSpeed.115200=115200
+lolin32-lite.menu.UploadSpeed.115200.upload.speed=115200
+lolin32-lite.menu.UploadSpeed.256000.windows=256000
+lolin32-lite.menu.UploadSpeed.256000.upload.speed=256000
+lolin32-lite.menu.UploadSpeed.230400.windows.upload.speed=256000
+lolin32-lite.menu.UploadSpeed.230400=230400
+lolin32-lite.menu.UploadSpeed.230400.upload.speed=230400
+lolin32-lite.menu.UploadSpeed.460800.linux=460800
+lolin32-lite.menu.UploadSpeed.460800.macosx=460800
+lolin32-lite.menu.UploadSpeed.460800.upload.speed=460800
+lolin32-lite.menu.UploadSpeed.512000.windows=512000
+lolin32-lite.menu.UploadSpeed.512000.upload.speed=512000
 
 ##############################################################
 
@@ -2566,8 +2875,10 @@ m5stack-fire.build.defines=
 
 m5stack-fire.menu.PSRAM.enabled=Enabled
 m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-fire.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 m5stack-fire.menu.PSRAM.disabled=Disabled
 m5stack-fire.menu.PSRAM.disabled.build.defines=
+m5stack-fire.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack-fire.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
 m5stack-fire.menu.PartitionScheme.default.build.partitions=default_16MB
@@ -2754,8 +3065,10 @@ m5stack-core2.build.defines=
 
 m5stack-core2.menu.PSRAM.enabled=Enabled
 m5stack-core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-core2.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 m5stack-core2.menu.PSRAM.disabled=Disabled
 m5stack-core2.menu.PSRAM.disabled.build.defines=
+m5stack-core2.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack-core2.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
 m5stack-core2.menu.PartitionScheme.default.build.partitions=default_16MB
@@ -2853,8 +3166,10 @@ m5stack-timer-cam.build.defines=
 
 m5stack-timer-cam.menu.PSRAM.enabled=Enabled
 m5stack-timer-cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+m5stack-timer-cam.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 m5stack-timer-cam.menu.PSRAM.disabled=Disabled
 m5stack-timer-cam.menu.PSRAM.disabled.build.defines=
+m5stack-timer-cam.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack-timer-cam.menu.PartitionScheme.default=Default(3MB No OTA/1MB SPIFFS)
 m5stack-timer-cam.menu.PartitionScheme.default.build.partitions=huge_app
@@ -3004,6 +3319,7 @@ odroid_esp32.build.flash_mode=dio
 odroid_esp32.build.boot=dio
 odroid_esp32.build.partitions=default
 odroid_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+odroid_esp32.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 odroid_esp32.menu.FlashMode.qio=QIO
 odroid_esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -3089,8 +3405,10 @@ heltec_wifi_kit_32.build.LoRaWanDebugLevel=0
 
 heltec_wifi_kit_32.menu.PSRAM.disabled=Disabled
 heltec_wifi_kit_32.menu.PSRAM.disabled.build.defines=
+heltec_wifi_kit_32.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_kit_32.menu.PSRAM.enabled=Enabled
 heltec_wifi_kit_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_kit_32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 heltec_wifi_kit_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_kit_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3153,9 +3471,11 @@ heltec_wifi_lora_32.build.partitions=default
 heltec_wifi_lora_32.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wifi_lora_32.menu.PSRAM.disabled=Disabled
-heltec_wifi_lora_32.menu.PSRAM.disabled.build.psram=
+heltec_wifi_lora_32.menu.PSRAM.disabled.build.defines=
+heltec_wifi_lora_32.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_lora_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 heltec_wifi_lora_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3248,9 +3568,11 @@ heltec_wifi_lora_32_V2.build.partitions=default_8MB
 heltec_wifi_lora_32_V2.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wifi_lora_32_V2.menu.PSRAM.disabled=Disabled
-heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.psram=
+heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.defines=
+heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_lora_32_V2.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 heltec_wifi_lora_32_V2.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32_V2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3343,9 +3665,11 @@ heltec_wireless_stick.build.partitions=default_8MB
 heltec_wireless_stick.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wireless_stick.menu.PSRAM.disabled=Disabled
-heltec_wireless_stick.menu.PSRAM.disabled.build.psram=
+heltec_wireless_stick.menu.PSRAM.disabled.build.defines=
+heltec_wireless_stick.menu.PSRAM.disabled.build.extra_libs=
 heltec_wireless_stick.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 heltec_wireless_stick.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3438,9 +3762,11 @@ heltec_wireless_stick_lite.build.partitions=default
 heltec_wireless_stick_lite.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wireless_stick_lite.menu.PSRAM.disabled=Disabled
-heltec_wireless_stick_lite.menu.PSRAM.disabled.build.psram=
+heltec_wireless_stick_lite.menu.PSRAM.disabled.build.defines=
+heltec_wireless_stick_lite.menu.PSRAM.disabled.build.extra_libs=
 heltec_wireless_stick_lite.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick_lite.menu.PSRAM.enabled.build.psram=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick_lite.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+heltec_wireless_stick_lite.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 heltec_wireless_stick_lite.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick_lite.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -3609,8 +3935,10 @@ CoreESP32.build.defines=
 
 CoreESP32.menu.PSRAM.disabled=Disabled
 CoreESP32.menu.PSRAM.disabled.build.defines=
+CoreESP32.menu.PSRAM.disabled.build.extra_libs=
 CoreESP32.menu.PSRAM.enabled=Enabled
 CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+CoreESP32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 CoreESP32.menu.PartitionScheme.default=Default
 CoreESP32.menu.PartitionScheme.default.build.partitions=default
@@ -3686,8 +4014,10 @@ alksesp32.build.defines=
 
 alksesp32.menu.PSRAM.disabled=Disabled
 alksesp32.menu.PSRAM.disabled.build.defines=
+alksesp32.menu.PSRAM.disabled.build.extra_libs=
 alksesp32.menu.PSRAM.enabled=Enabled
 alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+alksesp32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 alksesp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 alksesp32.menu.PartitionScheme.default.build.partitions=default
@@ -3971,8 +4301,10 @@ t-beam.build.partitions=default
 
 t-beam.menu.PSRAM.disabled=Disabled
 t-beam.menu.PSRAM.disabled.build.defines=
+t-beam.menu.PSRAM.disabled.build.extra_libs=
 t-beam.menu.PSRAM.enabled=Enabled
 t-beam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+t-beam.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 t-beam.menu.FlashFreq.80=80MHz
 t-beam.menu.FlashFreq.80.build.flash_freq=80m
@@ -4159,8 +4491,10 @@ lopy4.build.partitions=default
 
 lopy4.menu.PSRAM.disabled=Disabled
 lopy4.menu.PSRAM.disabled.build.defines=
+lopy4.menu.PSRAM.disabled.build.extra_libs=
 lopy4.menu.PSRAM.enabled=Enabled
 lopy4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+lopy4.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 lopy4.menu.FlashFreq.80=80MHz
 lopy4.menu.FlashFreq.80.build.flash_freq=80m
@@ -4340,8 +4674,10 @@ frogboard.build.defines=
 
 frogboard.menu.PSRAM.disabled=Disabled
 frogboard.menu.PSRAM.disabled.build.defines=
+frogboard.menu.PSRAM.disabled.build.extra_libs=
 frogboard.menu.PSRAM.enabled=Enabled
 frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+frogboard.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 frogboard.menu.PartitionScheme.default=Default
 frogboard.menu.PartitionScheme.default.build.partitions=default
@@ -4424,6 +4760,7 @@ esp32cam.build.board=ESP32_DEV
 esp32cam.build.flash_size=4MB
 esp32cam.build.partitions=huge_app
 esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32cam.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 esp32cam.build.code_debug=0
 
 esp32cam.menu.CPUFreq.240=240MHz (WiFi/BT)
@@ -4566,8 +4903,10 @@ twatch.build.defines=
 
 twatch.menu.PSRAM.enabled=Enabled
 twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+twatch.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 twatch.menu.PSRAM.disabled=Disabled
 twatch.menu.PSRAM.disabled.build.defines=
+twatch.menu.PSRAM.disabled.build.extra_libs=
 
 twatch.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
 twatch.menu.PartitionScheme.default.build.partitions=default_16MB
@@ -4907,8 +5246,10 @@ mgbot-iotik32a.build.defines=
 
 mgbot-iotik32a.menu.PSRAM.disabled=Disabled
 mgbot-iotik32a.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32a.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32a.menu.PSRAM.enabled=Enabled
 mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+mgbot-iotik32a.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 mgbot-iotik32a.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 mgbot-iotik32a.menu.PartitionScheme.default.build.partitions=default
@@ -5045,8 +5386,10 @@ mgbot-iotik32b.build.defines=
 
 mgbot-iotik32b.menu.PSRAM.disabled=Disabled
 mgbot-iotik32b.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32b.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32b.menu.PSRAM.enabled=Enabled
 mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+mgbot-iotik32b.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 mgbot-iotik32b.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 mgbot-iotik32b.menu.PartitionScheme.default.build.partitions=default
@@ -5417,8 +5760,10 @@ mPython.build.defines=
 
 mPython.menu.PSRAM.disabled=Disabled
 mPython.menu.PSRAM.disabled.build.defines=
+mPython.menu.PSRAM.disabled.build.extra_libs=
 mPython.menu.PSRAM.enabled=Enabled
 mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+mPython.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
 
 mPython.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 mPython.menu.PartitionScheme.huge_app.build.partitions=huge_app
@@ -5854,3 +6199,69 @@ healthypi4.menu.DebugLevel.debug=Debug
 healthypi4.menu.DebugLevel.debug.build.code_debug=4
 healthypi4.menu.DebugLevel.verbose=Verbose
 healthypi4.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+
+ET-Board.name=ET-Board
+
+ET-Board.upload.tool=esptool_py
+ET-Board.upload.maximum_size=1310720
+ET-Board.upload.maximum_data_size=327680
+ET-Board.upload.wait_for_upload_port=true
+
+ET-Board.serial.disableDTR=true
+ET-Board.serial.disableRTS=true
+
+ET-Board.build.mcu=esp32
+ET-Board.build.core=esp32
+ET-Board.build.variant=ET-Board
+ET-Board.build.board=ET-Board
+ET-Board.build.f_cpu=240000000L
+ET-Board.build.flash_mode=dio
+ET-Board.build.flash_size=4MB
+ET-Board.build.boot=dio
+ET-Board.build.partitions=default
+ET-Board.build.defines=
+
+ET-Board.menu.PartitionScheme.default=Default
+ET-Board.menu.PartitionScheme.default.build.partitions=default
+ET-Board.menu.PartitionScheme.no_ota=No OTA (Large APP)
+ET-Board.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ET-Board.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ET-Board.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+ET-Board.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ET-Board.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+ET-Board.menu.FlashFreq.80=80MHz
+ET-Board.menu.FlashFreq.80.build.flash_freq=80m
+ET-Board.menu.FlashFreq.40=40MHz
+ET-Board.menu.FlashFreq.40.build.flash_freq=40m
+
+ET-Board.menu.UploadSpeed.921600=921600
+ET-Board.menu.UploadSpeed.921600.upload.speed=921600
+ET-Board.menu.UploadSpeed.115200=115200
+ET-Board.menu.UploadSpeed.115200.upload.speed=115200
+ET-Board.menu.UploadSpeed.256000.windows=256000
+ET-Board.menu.UploadSpeed.256000.upload.speed=256000
+ET-Board.menu.UploadSpeed.230400.windows.upload.speed=256000
+ET-Board.menu.UploadSpeed.230400=230400
+ET-Board.menu.UploadSpeed.230400.upload.speed=230400
+ET-Board.menu.UploadSpeed.460800.linux=460800
+ET-Board.menu.UploadSpeed.460800.macosx=460800
+ET-Board.menu.UploadSpeed.460800.upload.speed=460800
+ET-Board.menu.UploadSpeed.512000.windows=512000
+ET-Board.menu.UploadSpeed.512000.upload.speed=512000
+
+ET-Board.menu.DebugLevel.none=None
+ET-Board.menu.DebugLevel.none.build.code_debug=0
+ET-Board.menu.DebugLevel.error=Error
+ET-Board.menu.DebugLevel.error.build.code_debug=1
+ET-Board.menu.DebugLevel.warn=Warn
+ET-Board.menu.DebugLevel.warn.build.code_debug=2
+ET-Board.menu.DebugLevel.info=Info
+ET-Board.menu.DebugLevel.info.build.code_debug=3
+ET-Board.menu.DebugLevel.debug=Debug
+ET-Board.menu.DebugLevel.debug.build.code_debug=4
+ET-Board.menu.DebugLevel.verbose=Verbose
+ET-Board.menu.DebugLevel.verbose.build.code_debug=5

@@ -34,8 +34,8 @@ compiler.S.cmd=xtensa-esp32-elf-gcc
 compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
 
 compiler.c.elf.cmd=xtensa-esp32-elf-gcc
-compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.project.ld -T esp32.rom.ld -T esp32.peripherals.ld -T esp32.rom.libgcc.ld -T esp32.rom.spiram_incompatible_fns.ld -u ld_include_panic_highint_hdl -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority  -u __cxa_guard_dummy -u __cxx_fatal_exception
-compiler.c.elf.libs=-lgcc -lesp32-camera -lpe -lfatfs -lesp-tls -lnet80211 -lsoc -lwpa_supplicant -lapp_update -ldetection -lmicro-ecc -lesp_adc_cal -ltcpip_adapter -lapp_trace -lwear_levelling -lcoap -lesp32 -lcore -lesp_ringbuf -llibsodium -lsmartconfig -lprotobuf-c -lxtensa-debug-module -limage_util -lnewlib -lunity -lm -lcoexist -lface_detection -ljson -lcxx -lesp_websocket_client -lwpa2 -ltcp_transport -lulp -lesp_event -lesp_http_server -lmqtt -lhal -lmbedtls -lfreertos -lwps -lnghttp -lface_recognition -lethernet -lbootloader_support -ldetection_cat_face -lespcoredump -lnvs_flash -lfr -lphy -lopenssl -ljsmn -lpp -llwip -lwifi_provisioning -llog -lespnow -lc_nano -lvfs -lesp_https_server -lmdns -lbtdm_app -lfreemodbus -lsmartconfig_ack -lfd -lasio -lfb_gfx -lsdmmc -lrtc -lpthread -lconsole -lmesh -lc -lesp_http_client -lspiffs -lprotocomm -lesp_https_ota -lwpa -ldriver -lbt -lspi_flash -lexpat -lheap -ldl -lefuse -lod  -lstdc++
+compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.project.ld -T esp32.rom.ld -T esp32.peripherals.ld -T esp32.rom.libgcc.ld -T esp32.rom.spiram_incompatible_fns.ld -u esp_app_desc -u ld_include_panic_highint_hdl -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority  -u __cxa_guard_dummy -u __cxx_fatal_exception
+compiler.c.elf.libs=-lgcc -lapp_trace -llibsodium -lbt -lesp-tls -lmdns -lconsole -ljsmn -lesp_ringbuf -lpthread -ldriver -ldetection -lsoc -lc -lmesh -lwpa2 -ljson -ldl -lwear_levelling -lmicro-ecc -lcoexist -lface_detection -lnvs_flash -lwifi_provisioning -lfr -lnghttp -lesp32 -lnet80211 -lesp_http_server -ltcp_transport -llog -lespnow -lhal -lmqtt -lesp_websocket_client -lesp_http_client -lvfs -lbtdm_app -lapp_update -lpe -lprotocomm -lwps -lsdmmc -lesp_adc_cal -lwpa -lefuse -lcoap -lsmartconfig -limage_util -lspiffs -lulp -lunity -lface_recognition -lesp_https_server -lethernet -lspi_flash -lpp -lexpat -lfatfs -ltcpip_adapter -llwip -lcxx -lfreertos -lesp32-camera -lmbedtls -ldetection_cat_face -lm -lc_nano -lesp_event -lnewlib -lcore -lopenssl -lsmartconfig_ack -lwpa_supplicant -lbootloader_support -lasio -lesp_https_ota -lod -lespcoredump -lheap -lrtc -lprotobuf-c -lfb_gfx -lfreemodbus -lfd -lphy -lxtensa-debug-module  -lstdc++
 
 compiler.as.cmd=xtensa-esp32-elf-as
 
@@ -53,6 +53,7 @@ build.boot=bootloader
 build.code_debug=0
 build.defines=
 build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
+build.extra_libs=
 
 # These can be overridden in platform.local.txt
 compiler.c.extra_flags=
@@ -84,7 +85,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.fla
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {compiler.libraries.ldflags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {compiler.libraries.ldflags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} {build.extra_libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create partitions.bin
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
