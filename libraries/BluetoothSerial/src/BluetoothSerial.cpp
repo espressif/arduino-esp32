@@ -235,26 +235,34 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
 
     case ESP_SPP_SRV_OPEN_EVT://Server connection open
-        log_i("ESP_SPP_SRV_OPEN_EVT");
-        if (!_spp_client){
-            _spp_client = param->open.handle;
+        if (param->srv_open.status == ESP_SPP_SUCCESS) {
+            log_i("ESP_SPP_SRV_OPEN_EVT");
+            if (!_spp_client){
+                _spp_client = param->srv_open.handle;
+            } else {
+                secondConnectionAttempt = true;
+                esp_spp_disconnect(param->srv_open.handle);
+            }
+            xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
+            xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         } else {
-            secondConnectionAttempt = true;
-            esp_spp_disconnect(param->open.handle);
+            log_e("ESP_SPP_SRV_OPEN_EVT Failed!, status:%d", param->srv_open.status);
         }
-        xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
         break;
 
     case ESP_SPP_CLOSE_EVT://Client connection closed
-        log_i("ESP_SPP_CLOSE_EVT");
-        if(secondConnectionAttempt) {
-            secondConnectionAttempt = false;
+        if ((param->close.async == false && param->close.status == ESP_SPP_SUCCESS) || param->close.async) {
+            log_i("ESP_SPP_CLOSE_EVT");
+            if(secondConnectionAttempt) {
+                secondConnectionAttempt = false;
+            } else {
+                _spp_client = 0;
+                xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
+            }        
+            xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
         } else {
-            _spp_client = 0;
-            xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
-        }        
-        xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
+            log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
+        }
         break;
 
     case ESP_SPP_CONG_EVT://connection congestion status changed
@@ -267,11 +275,15 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
 
     case ESP_SPP_WRITE_EVT://write operation completed
-        if(param->write.cong){
-            xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
+        if (param->write.status == ESP_SPP_SUCCESS) {
+            if(param->write.cong){
+                xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
+            }
+            xSemaphoreGive(_spp_tx_done);//we can try to send another packet
+            log_v("ESP_SPP_WRITE_EVT: %u %s", param->write.len, param->write.cong?"CONGESTED":"");
+        } else {
+            log_e("ESP_SPP_WRITE_EVT failed!, status:%d", param->write.status);
         }
-        xSemaphoreGive(_spp_tx_done);//we can try to send another packet
-        log_v("ESP_SPP_WRITE_EVT: %u %s", param->write.len, param->write.cong?"CONGESTED":"FREE");
         break;
 
     case ESP_SPP_DATA_IND_EVT://connection received data
@@ -296,6 +308,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         if (param->disc_comp.status == ESP_SPP_SUCCESS) {
             log_i("ESP_SPP_DISCOVERY_COMP_EVT: spp connect to remote");
             esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], _peer_bd_addr);
+        } else {
+            log_e("ESP_SPP_DISCOVERY_COMP_EVT failed!, status:%d", param->disc_comp.status);
         }
         break;
 
@@ -532,9 +546,9 @@ static bool _init_bt(const char *deviceName)
         return false;
     }
 
-    if (esp_bt_sleep_disable() != ESP_OK){
-        log_e("esp_bt_sleep_disable failed");
-    }
+    // if (esp_bt_sleep_disable() != ESP_OK){
+    //     log_e("esp_bt_sleep_disable failed");
+    // }
 
     log_i("device name set");
     esp_bt_dev_set_device_name(deviceName);
