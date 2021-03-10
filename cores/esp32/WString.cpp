@@ -744,6 +744,7 @@ void String::replace(const String& find, const String& replace) {
         }
     } else if(diff < 0) {
         char *writeTo = wbuffer();
+        unsigned int l = len();
         while((foundAt = strstr(readFrom, find.buffer())) != NULL) {
             unsigned int n = foundAt - readFrom;
             memmove(writeTo, readFrom, n);
@@ -751,9 +752,10 @@ void String::replace(const String& find, const String& replace) {
             memmove(writeTo, replace.buffer(), replace.len());
             writeTo += replace.len();
             readFrom = foundAt + find.len();
-            setLen(len() + diff);
+            l += diff;
         }
         memmove(writeTo, readFrom, strlen(readFrom)+1);
+        setLen(l);
     } else {
         unsigned int size = len(); // compute size needed for result
         while((foundAt = strstr(readFrom, find.buffer())) != NULL) {
@@ -768,7 +770,7 @@ void String::replace(const String& find, const String& replace) {
         while(index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
             readFrom = wbuffer() + index + find.len();
             memmove(readFrom + diff, readFrom, len() - (readFrom - buffer()));
-	    int newLen = len() + diff;
+            int newLen = len() + diff;
             memmove(wbuffer() + index, replace.buffer(), replace.len());
             setLen(newLen);
             wbuffer()[newLen] = 0;
