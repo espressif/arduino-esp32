@@ -74,6 +74,7 @@ public:
 
     const char * getHostname();
     bool setHostname(const char * hostname);
+    bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     // STA WiFi info
     static wl_status_t status();
