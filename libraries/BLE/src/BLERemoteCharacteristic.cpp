@@ -246,6 +246,10 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 			}
 			break;
 
+		case ESP_GATTC_DISCONNECT_EVT:
+			m_semaphoreWriteCharEvt.give(1);
+			break;
+			
 		default:
 			break;
 	} // End switch
