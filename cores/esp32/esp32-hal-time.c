@@ -84,7 +84,7 @@ bool getLocalTime(struct tm * info, uint32_t ms)
     while((millis()-start) <= ms) {
         time(&now);
         localtime_r(&now, info);
-        if(info->tm_year > (2016 - 1900)){
+        if(info->tm_year > (2030 - 1900)){
             return true;
         }
         delay(10);
