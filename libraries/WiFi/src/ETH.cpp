@@ -118,7 +118,7 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     esp_err_t err = ESP_OK;
     tcpip_adapter_ip_info_t info;
 	
-    if(local_ip != (uint32_t)0x00000000){
+    if(local_ip != (uint32_t)0x00000000 && local_ip != INADDR_NONE){
         info.ip.addr = static_cast<uint32_t>(local_ip);
         info.gw.addr = static_cast<uint32_t>(gateway);
         info.netmask.addr = static_cast<uint32_t>(subnet);
@@ -153,13 +153,13 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     ip_addr_t d;
     d.type = IPADDR_TYPE_V4;
 
-    if(dns1 != (uint32_t)0x00000000) {
+    if(dns1 != (uint32_t)0x00000000 && dns1 != INADDR_NONE) {
         // Set DNS1-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
         dns_setserver(0, &d);
     }
 
-    if(dns2 != (uint32_t)0x00000000) {
+    if(dns2 != (uint32_t)0x00000000 && dns2 != INADDR_NONE) {
         // Set DNS2-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
         dns_setserver(1, &d);
