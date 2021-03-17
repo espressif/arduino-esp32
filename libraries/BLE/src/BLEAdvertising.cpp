@@ -91,6 +91,10 @@ void BLEAdvertising::setAdvertisementType(esp_ble_adv_type_t adv_type){
 	m_advParams.adv_type = adv_type;
 } // setAdvertisementType
 
+void BLEAdvertising::setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map) {
+	m_advParams.channel_map = channel_map;
+} // setAdvertisementChannelMap
+
 void BLEAdvertising::setMinInterval(uint16_t mininterval) {
 	m_advParams.adv_int_min = mininterval;
 } // setMinInterval

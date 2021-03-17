@@ -914,8 +914,20 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         spi->dev->cmd.usr = 1;
         while(spi->dev->cmd.usr);
         if(result){
-            for (int i=0; i<c_longs; i++) {
-                result[i] = spi->dev->data_buf[i];
+            if(c_len & 3){
+                for (int i=0; i<(c_longs-1); i++) {
+                    result[i] = spi->dev->data_buf[i];
+                }
+                uint32_t last_data = spi->dev->data_buf[c_longs-1];
+                uint8_t * last_out8 = &result[c_longs-1];
+                uint8_t * last_data8 = &last_data;
+                for (int i=0; i<(c_len & 3); i++) {
+                    last_out8[i] = last_data8[i];
+                }
+            } else {
+                for (int i=0; i<c_longs; i++) {
+                    result[i] = spi->dev->data_buf[i];
+                }
             }
         }
         if(data){

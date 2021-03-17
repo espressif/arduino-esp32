@@ -134,6 +134,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
     strcpy(reinterpret_cast<char*>(conf.sta.ssid), ssid);
+    conf.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;       //force full scan to be able to choose the nearest / strongest AP
 
     if(passphrase) {
         if (strlen(passphrase) == 64){ // it's not a passphrase, is the PSK
