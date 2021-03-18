@@ -58,7 +58,7 @@ HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const
     return handleUpdate(http, currentVersion, false);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion)
 {
     return handleUpdate(httpClient, currentVersion, true);
 }
@@ -73,7 +73,7 @@ HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url,
     return handleUpdate(http, currentVersion, true);
 }
 
-HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient, const String& host, uint16_t port, const String& uri,
+HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
         const String& currentVersion)
 {
     return handleUpdate(httpClient, currentVersion, false);
