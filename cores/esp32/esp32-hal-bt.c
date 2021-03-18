@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ bool btInUse(){ return true; }
 
 #include "esp_bt.h"
 
-#ifdef CONFIG_BT_CLASSIC_ENABLED
+#ifdef CONFIG_BTDM_CONTROLLER_MODE_BTDM
 #define BT_MODE ESP_BT_MODE_BTDM
+#elif defined(CONFIG_BTDM_CONTROLLER_MODE_BR_EDR_ONLY)
+#define BT_MODE ESP_BT_MODE_CLASSIC_BT
 #else
 #define BT_MODE ESP_BT_MODE_BLE
 #endif

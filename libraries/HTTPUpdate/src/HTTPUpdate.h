@@ -63,6 +63,15 @@ public:
     {
         _rebootOnUpdate = reboot;
     }
+    
+    /**
+      * set redirect follow mode. See `followRedirects_t` enum for avaliable modes.
+      * @param follow
+      */
+    void setFollowRedirects(followRedirects_t follow)
+    {
+        _followRedirects = follow;
+    }
 
     void setLedPin(int ledPin = -1, uint8_t ledOn = HIGH)
     {
@@ -93,6 +102,7 @@ protected:
     bool _rebootOnUpdate = true;
 private:
     int _httpClientTimeout;
+    followRedirects_t _followRedirects;
 
     int _ledPin;
     uint8_t _ledOn;

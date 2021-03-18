@@ -137,6 +137,21 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     return true;
 }
 
+/**
+ * Return the current SSID associated with the network
+ * @return SSID
+ */
+String WiFiAPClass::softAPSSID() const
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return String();
+    }
+    wifi_config_t info;
+    if(!esp_wifi_get_config(WIFI_IF_AP, &info)) {
+        return String(reinterpret_cast<char*>(info.ap.ssid));
+    }
+    return String();
+}
 
 /**
  * Configure access point
@@ -189,7 +204,7 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
     wifi_config_t conf;
 
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return ESP_ERR_INVALID_STATE;
+        return false;
     }
 
     *conf.ap.ssid     = 0;
