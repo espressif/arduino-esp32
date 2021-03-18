@@ -77,6 +77,10 @@ public:
 
     t_httpUpdate_return updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion = "");
 
+    t_httpUpdate_return update(WiFiClient& client, HTTPClient& httpClient, const String& host, uint16_t port, const String& uri = "/",
+                               const String& currentVersion = "");
+
+    t_httpUpdate_return updateSpiffs(WiFiClient &client, HTTPClient &httpClient, const String &url, const String &currentVersion = "");
 
     int getLastError(void);
     String getLastErrorString(void);
