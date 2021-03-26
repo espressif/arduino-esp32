@@ -67,8 +67,8 @@ compiler.libraries.ldflags=
 
 # Build Dir: {build.path}
 # Sketch Dir: {build.source.path}
-recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
+recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
 recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" copy /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
 recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" copy "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
 
