@@ -38,13 +38,20 @@
 static int s_uart_debug_nr = 0;
 
 struct uart_struct_t {
-    uart_dev_t * dev;
+    uart_dev_t *dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
     xSemaphoreHandle lock;
 #endif
     uint8_t num;
     xQueueHandle queue;
     intr_handle_t intr_handle;
+};
+
+struct uart_interrupt_struct_t
+{
+    void (*func)(uint8_t, void*);
+    void *user_arg;
+    uart_t *dev;
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -69,23 +76,48 @@ static uart_t _uart_bus_array[3] = {
 
 static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
+static uart_interrupt_t *_uart_interrupt_array[3] = {NULL, NULL, NULL};
+
 static void IRAM_ATTR _uart_isr(void *arg)
 {
     uint8_t i, c;
     BaseType_t xHigherPriorityTaskWoken;
     uart_t* uart;
+    uart_interrupt_t *uart_interrupt;
 
+    // Loop through all the uart devices
     for(i=0;i<3;i++){
+        
+        // Get the current uart device
         uart = &_uart_bus_array[i];
-        if(uart->intr_handle == NULL){
+        
+        // Get the interrupt description for this uart device
+        uart_interrupt = _uart_interrupt_array[i];
+
+        // If there is no interrupt handle, skip the rest of the for loop's body
+        if (uart->intr_handle == NULL) {
             continue;
         }
+        
+        // There are cases where bytes might come in between the time you check and handle the bytes and the time you clear the interrupt. 
+        // In that case you will not get an ISR for those bytes. 
+        // We had that happen and scratched heads for quite some time. 
+        // There was another case that I do not recall at this time as well.
+        // https://github.com/espressif/arduino-esp32/pull/4656#discussion_r555780523
         uart->dev->int_clr.rxfifo_full = 1;
         uart->dev->int_clr.frm_err = 1;
         uart->dev->int_clr.rxfifo_tout = 1;
-        while(uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
+
+        // Read until fifo is empty
+        while (uart->dev->status.rxfifo_cnt || (uart->dev->mem_rx_status.wr_addr != uart->dev->mem_rx_status.rd_addr)) {
             c = uart->dev->fifo.rw_byte;
-            if(uart->queue != NULL)  {
+            
+            // Check if an user defined interrupt handling function is present
+            if (uart_interrupt != NULL && uart_interrupt->dev->num == uart->num && uart_interrupt->func != NULL) {
+                // Fully optimized code would not create the queue anymore if an function has been specified as an argument.
+                (*uart_interrupt->func)(c, uart_interrupt->user_arg);
+            }else if (uart->queue != NULL) {
+                // No user function is present, handle as you normally would
                 xQueueSendFromISR(uart->queue, &c, &xHigherPriorityTaskWoken);
             }
         }
@@ -96,7 +128,20 @@ static void IRAM_ATTR _uart_isr(void *arg)
     }
 }
 
-void uartEnableInterrupt(uart_t* uart)
+/**
+  * @brief Enables the UART RX interrupt on the specified UART device.
+  * 
+  * This function will register the interrupt user function with arguments, to be called when an RX interupt occurs.
+  * The pointer to the uart_interrupt_t will be deleted when the interrupt is disabled, or another interrupt function is being registered.
+  * Please check for NULL on the uart_interrupt_t pointer before using it.
+  
+  * @param[in] uart The uart device to register the function for.
+  * @param[out] arg The uart_interrupt description data that is returned when this function succeeds.
+  * @param[in] func The function to be called when the RX interrupt is fired. (void rx_int(uint8_t c, void* user_arg))
+  * @param[in] user_arg The user argument that will be passed to the user interrupt handler.
+  *
+  */
+void uartEnableRxInterrupt(uart_t* uart, uart_interrupt_t **arg, void (*func)(uint8_t, void*), void* user_arg)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.rxfifo_full_thrhd = 112;
@@ -107,16 +152,47 @@ void uartEnableInterrupt(uart_t* uart)
     uart->dev->int_ena.rxfifo_tout = 1;
     uart->dev->int_clr.val = 0xffffffff;
 
+    if(arg != NULL){
+        (*arg) = malloc(sizeof(uart_interrupt_t));
+        (*arg)->func = func;
+        (*arg)->dev = uart;
+        (*arg)->user_arg = user_arg;
+        
+        if(_uart_interrupt_array[uart->num]){
+            free(_uart_interrupt_array[uart->num]);
+        }
+
+        _uart_interrupt_array[uart->num] = (*arg);
+    }
+
     esp_intr_alloc(UART_INTR_SOURCE(uart->num), (int)ESP_INTR_FLAG_IRAM, _uart_isr, NULL, &uart->intr_handle);
     UART_MUTEX_UNLOCK();
 }
 
-void uartDisableInterrupt(uart_t* uart)
+/**
+  * @brief Disables the UART RX interrupt on the specified UART device.
+  * 
+  * This function disables the RX interrupt for the specified UART device.
+  * This function will delete the uart_interrupt_t* that uartEnableRxInterrupt() creates.
+  * The pointer to the uart_interrupt_t will be deleted when the interrupt is disabled, or another interrupt function is being registered.
+  * Please check for NULL on the uart_interrupt_t pointer before using it.
+  
+  * @param[in] uart The uart device to register the function for.
+  *
+  */
+void uartDisableRxInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.val = 0;
     uart->dev->int_ena.val = 0;
     uart->dev->int_clr.val = 0xffffffff;
+
+    // Free uart rx interrupt
+    if(_uart_interrupt_array[uart->num]){
+        free(_uart_interrupt_array[uart->num]);
+    }
+
+    _uart_interrupt_array[uart->num] = NULL;
 
     esp_intr_free(uart->intr_handle);
     uart->intr_handle = NULL;
@@ -130,7 +206,7 @@ void uartDetachRx(uart_t* uart, uint8_t rxPin)
         return;
     }
     pinMatrixInDetach(rxPin, false, false);
-    uartDisableInterrupt(uart);
+    uartDisableRxInterrupt(uart);
 }
 
 void uartDetachTx(uart_t* uart, uint8_t txPin)
@@ -148,7 +224,7 @@ void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
     }
     pinMode(rxPin, INPUT);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
-    uartEnableInterrupt(uart);
+    uartEnableRxInterrupt(uart, NULL, NULL, NULL);
 }
 
 void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
@@ -309,7 +385,7 @@ void uartRxFifoToQueue(uart_t* uart)
 	uart->dev->int_ena.frm_err = 1;
 	uart->dev->int_ena.rxfifo_tout = 1;
 	uart->dev->int_clr.val = 0xffffffff;
-    UART_MUTEX_UNLOCK();
+	UART_MUTEX_UNLOCK();
 }
 
 uint8_t uartRead(uart_t* uart)
@@ -320,7 +396,7 @@ uint8_t uartRead(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-    	uartRxFifoToQueue(uart);
+       uartRxFifoToQueue(uart);
     }
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
@@ -336,7 +412,7 @@ uint8_t uartPeek(uart_t* uart)
     uint8_t c;
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
-    	uartRxFifoToQueue(uart);
+       uartRxFifoToQueue(uart);
     }
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
