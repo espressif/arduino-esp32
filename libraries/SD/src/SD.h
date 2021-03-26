@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef _SD_H_
 #define _SD_H_
 
@@ -29,7 +28,7 @@ protected:
 
 public:
     SDFS(FSImplPtr impl);
-    bool begin(uint8_t ssPin=SS, SPIClass &spi=SPI, uint32_t frequency=4000000, const char * mountpoint="/sd", uint8_t max_files=5);
+    bool begin(uint8_t ssPin=SS, SPIClass &spi=SPI, uint32_t frequency=4000000, const char * mountpoint="/sd", uint8_t max_files=5, bool format_if_empty=false);
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();

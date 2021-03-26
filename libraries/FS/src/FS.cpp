@@ -25,7 +25,7 @@ using namespace fs;
 
 size_t File::write(uint8_t c)
 {
-    if (!_p) {
+    if (!*this) {
         return 0;
     }
 
@@ -34,7 +34,7 @@ size_t File::write(uint8_t c)
 
 time_t File::getLastWrite()
 {
-    if (!_p) {
+    if (!*this) {
         return 0;
     }
 
@@ -43,7 +43,7 @@ time_t File::getLastWrite()
 
 size_t File::write(const uint8_t *buf, size_t size)
 {
-    if (!_p) {
+    if (!*this) {
         return 0;
     }
 
@@ -52,7 +52,7 @@ size_t File::write(const uint8_t *buf, size_t size)
 
 int File::available()
 {
-    if (!_p) {
+    if (!*this) {
         return false;
     }
 
@@ -61,7 +61,7 @@ int File::available()
 
 int File::read()
 {
-    if (!_p) {
+    if (!*this) {
         return -1;
     }
 
@@ -75,7 +75,7 @@ int File::read()
 
 size_t File::read(uint8_t* buf, size_t size)
 {
-    if (!_p) {
+    if (!*this) {
         return -1;
     }
 
@@ -84,7 +84,7 @@ size_t File::read(uint8_t* buf, size_t size)
 
 int File::peek()
 {
-    if (!_p) {
+    if (!*this) {
         return -1;
     }
 
@@ -96,7 +96,7 @@ int File::peek()
 
 void File::flush()
 {
-    if (!_p) {
+    if (!*this) {
         return;
     }
 
@@ -105,7 +105,7 @@ void File::flush()
 
 bool File::seek(uint32_t pos, SeekMode mode)
 {
-    if (!_p) {
+    if (!*this) {
         return false;
     }
 
@@ -114,7 +114,7 @@ bool File::seek(uint32_t pos, SeekMode mode)
 
 size_t File::position() const
 {
-    if (!_p) {
+    if (!*this) {
         return 0;
     }
 
@@ -123,7 +123,7 @@ size_t File::position() const
 
 size_t File::size() const
 {
-    if (!_p) {
+    if (!*this) {
         return 0;
     }
 
@@ -140,12 +140,12 @@ void File::close()
 
 File::operator bool() const
 {
-    return !!_p;
+    return _p != nullptr && *_p != false;
 }
 
 const char* File::name() const
 {
-    if (!_p) {
+    if (!*this) {
         return nullptr;
     }
 
@@ -155,7 +155,7 @@ const char* File::name() const
 //to implement
 boolean File::isDirectory(void)
 {
-    if (!_p) {
+    if (!*this) {
         return false;
     }
     return _p->isDirectory();
@@ -163,7 +163,7 @@ boolean File::isDirectory(void)
 
 File File::openNextFile(const char* mode)
 {
-    if (!_p) {
+    if (!*this) {
         return File();
     }
     return _p->openNextFile(mode);
@@ -171,7 +171,7 @@ File File::openNextFile(const char* mode)
 
 void File::rewindDirectory(void)
 {
-    if (!_p) {
+    if (!*this) {
         return;
     }
     _p->rewindDirectory();

@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ using namespace fs;
 
 SDFS::SDFS(FSImplPtr impl): FS(impl), _pdrv(0xFF) {}
 
-bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint, uint8_t max_files)
+bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * mountpoint, uint8_t max_files, bool format_if_empty)
 {
     if(_pdrv != 0xFF) {
         return true;
@@ -35,7 +35,7 @@ bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char * 
         return false;
     }
 
-    if(!sdcard_mount(_pdrv, mountpoint, max_files)){
+    if(!sdcard_mount(_pdrv, mountpoint, max_files, format_if_empty)){
         sdcard_unmount(_pdrv);
         sdcard_uninit(_pdrv);
         _pdrv = 0xFF;

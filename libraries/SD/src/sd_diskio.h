@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #ifndef _SD_DISKIO_H_
 #define _SD_DISKIO_H_
 
@@ -22,7 +21,7 @@
 uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz);
 uint8_t sdcard_uninit(uint8_t pdrv);
 
-bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files);
+bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format_if_empty);
 uint8_t sdcard_unmount(uint8_t pdrv);
 
 sdcard_type_t sdcard_type(uint8_t pdrv);

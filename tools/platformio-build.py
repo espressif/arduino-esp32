@@ -138,7 +138,6 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "mqtt"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "newlib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nghttp"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "include", "nimble"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "nvs_flash"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "openssl"),
         join(FRAMEWORK_DIR, "tools", "sdk", "include", "protobuf-c"),
@@ -171,7 +170,7 @@ env.Append(
     ],
 
     LIBS=[
-        "-lgcc", "-lapp_trace", "-llibsodium", "-lbt", "-lesp-tls", "-lmdns", "-lconsole", "-ljsmn", "-lesp_ringbuf", "-lpthread", "-ldriver", "-ldetection", "-lsoc", "-lc", "-lmesh", "-lwpa2", "-ljson", "-ldl", "-lwear_levelling", "-lmicro-ecc", "-lcoexist", "-lface_detection", "-lnvs_flash", "-lwifi_provisioning", "-lfr", "-lnghttp", "-lesp32", "-lnet80211", "-lesp_http_server", "-ltcp_transport", "-llog", "-lespnow", "-lhal", "-lmqtt", "-lesp_websocket_client", "-lesp_http_client", "-lvfs", "-lbtdm_app", "-lapp_update", "-lpe", "-lprotocomm", "-lwps", "-lsdmmc", "-lesp_adc_cal", "-lwpa", "-lefuse", "-lcoap", "-lsmartconfig", "-limage_util", "-lspiffs", "-lulp", "-lunity", "-lface_recognition", "-lesp_https_server", "-lethernet", "-lspi_flash", "-lpp", "-lexpat", "-lfatfs", "-ltcpip_adapter", "-llwip", "-lcxx", "-lfreertos", "-lesp32-camera", "-lmbedtls", "-ldetection_cat_face", "-lm", "-lc_nano", "-lesp_event", "-lnewlib", "-lcore", "-lopenssl", "-lsmartconfig_ack", "-lwpa_supplicant", "-lbootloader_support", "-lasio", "-lesp_https_ota", "-lod", "-lespcoredump", "-lheap", "-lrtc", "-lprotobuf-c", "-lfb_gfx", "-lfreemodbus", "-lfd", "-lphy", "-lxtensa-debug-module", "-lstdc++"
+        "-lgcc", "-lesp_websocket_client", "-lwpa2", "-ldetection", "-lesp_https_server", "-lwps", "-lhal", "-lconsole", "-lpe", "-lsoc", "-lsdmmc", "-lpthread", "-llog", "-lesp_http_client", "-ljson", "-lmesh", "-lesp32-camera", "-lnet80211", "-lwpa_supplicant", "-lc", "-lmqtt", "-lcxx", "-lesp_https_ota", "-lulp", "-lefuse", "-lpp", "-lmdns", "-lbt", "-lwpa", "-lspiffs", "-lheap", "-limage_util", "-lunity", "-lrtc", "-lmbedtls", "-lface_recognition", "-lnghttp", "-ljsmn", "-lopenssl", "-lcore", "-lfatfs", "-lm", "-lprotocomm", "-lsmartconfig", "-lxtensa-debug-module", "-ldl", "-lesp_event", "-lesp-tls", "-lfd", "-lespcoredump", "-lesp_http_server", "-lfr", "-lsmartconfig_ack", "-lwear_levelling", "-ltcp_transport", "-llwip", "-lphy", "-lvfs", "-lcoap", "-lesp32", "-llibsodium", "-lbootloader_support", "-ldriver", "-lcoexist", "-lasio", "-lod", "-lmicro-ecc", "-lesp_ringbuf", "-ldetection_cat_face", "-lapp_update", "-lespnow", "-lface_detection", "-lapp_trace", "-lnewlib", "-lbtdm_app", "-lwifi_provisioning", "-lfreertos", "-lfreemodbus", "-lethernet", "-lnvs_flash", "-lspi_flash", "-lc_nano", "-lexpat", "-lfb_gfx", "-lprotobuf-c", "-lesp_adc_cal", "-ltcpip_adapter", "-lstdc++"
     ],
 
     LIBSOURCE_DIRS=[
@@ -187,6 +186,14 @@ env.Append(
 
 if not env.BoardConfig().get("build.ldscript", ""):
     env.Replace(LDSCRIPT_PATH=env.BoardConfig().get("build.arduino.ldscript", ""))
+
+#
+# Add PSRAM-specific libraries
+#
+
+flatten_cppdefines = env.Flatten(env["CPPDEFINES"])
+if "BOARD_HAS_PSRAM" in flatten_cppdefines:
+    env.Append(LIBS=["c-psram-workaround", "m-psram-workaround"])
 
 #
 # Target: Build Core Library
