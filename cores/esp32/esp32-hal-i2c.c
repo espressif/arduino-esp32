@@ -1816,7 +1816,7 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
 		i2c_driver_delete((i2c_port_t)i2c_num);
 	}
 
-    i2c_config_t conf;
+    i2c_config_t conf = { };
     conf.mode = I2C_MODE_MASTER;
     conf.scl_io_num = (gpio_num_t)scl;
     conf.sda_io_num = (gpio_num_t)sda;
