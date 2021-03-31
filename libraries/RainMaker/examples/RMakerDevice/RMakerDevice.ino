@@ -1,6 +1,7 @@
 //This example demonstrates the ESP RainMaker with the custom device and standard Switch device.
 #include "RMaker.h"
 #include "WiFi.h"
+#include "WiFiProv.h"
 
 #define DEFAULT_FAN_SPEED 4
 #define DEFAULT_POWER_MODE true
@@ -91,9 +92,9 @@ void setup()
 
     WiFi.onEvent(sysProvEvent);
 #if CONFIG_IDF_TARGET_ESP32
-    WiFi.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
+    WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
 #else
-    WiFi.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, pop, service_name);
+    WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, pop, service_name);
 #endif
 
 }
