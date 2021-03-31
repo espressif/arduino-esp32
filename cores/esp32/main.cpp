@@ -6,6 +6,10 @@
 #include "USB.h"
 #endif
 
+#ifndef CONFIG_ARDUINO_LOOP_STACK_SIZE
+#define CONFIG_ARDUINO_LOOP_STACK_SIZE 8192
+#endif
+
 TaskHandle_t loopTaskHandle = NULL;
 
 #if CONFIG_AUTOSTART_ARDUINO
@@ -44,7 +48,7 @@ extern "C" void app_main()
 #endif
     loopTaskWDTEnabled = false;
     initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", 8192, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
+    xTaskCreateUniversal(loopTask, "loopTask", CONFIG_ARDUINO_LOOP_STACK_SIZE, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
 }
 
 #endif

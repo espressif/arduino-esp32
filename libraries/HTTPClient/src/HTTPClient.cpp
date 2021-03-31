@@ -73,11 +73,15 @@ public:
 
     bool verify(WiFiClient& client, const char* host) override
     {
-         WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
-         wcs.setCACert(_cacert);
-         wcs.setCertificate(_clicert);
-         wcs.setPrivateKey(_clikey);
-         return true;
+        WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
+        if (_cacert == nullptr) {
+            wcs.setInsecure();
+        } else {
+            wcs.setCACert(_cacert);
+            wcs.setCertificate(_clicert);
+            wcs.setPrivateKey(_clikey);
+        }
+        return true;
     }
 
 protected:
@@ -104,6 +108,12 @@ HTTPClient::~HTTPClient()
     }
     if(_currentHeaders) {
         delete[] _currentHeaders;
+    }
+    if(_tcpDeprecated) {
+        _tcpDeprecated.reset(nullptr);
+    }
+    if(_transportTraits) {
+        _transportTraits.reset(nullptr);
     }
 }
 
@@ -265,15 +275,22 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     // get port
     index = host.indexOf(':');
+    String the_host;
     if(index >= 0) {
-        _host = host.substring(0, index); // hostname
+        the_host = host.substring(0, index); // hostname
         host.remove(0, (index + 1)); // remove hostname + :
         _port = host.toInt(); // get port
     } else {
-        _host = host;
+        the_host = host;
     }
+    if(_host != the_host && connected()){
+        log_d("switching host from '%s' to '%s'. disconnecting first", _host.c_str(), the_host.c_str());
+        _canReuse = false;
+        disconnect(true);
+    }
+    _host = the_host;
     _uri = url;
-    log_d("host: %s port: %d url: %s", _host.c_str(), _port, _uri.c_str());
+    log_d("protocol: %s, host: %s port: %d url: %s", _protocol.c_str(), _host.c_str(), _port, _uri.c_str());
     return true;
 }
 
@@ -365,19 +382,19 @@ void HTTPClient::disconnect(bool preserveClient)
         }
 
         if(_reuse && _canReuse) {
-            log_d("tcp keep open for reuse\n");
+            log_d("tcp keep open for reuse");
         } else {
-            log_d("tcp stop\n");
+            log_d("tcp stop");
             _client->stop();
             if(!preserveClient) {
                 _client = nullptr;
-            }
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-            if(_tcpDeprecated) {
-                _transportTraits.reset(nullptr);
-                _tcpDeprecated.reset(nullptr);
-            }
+                if(_tcpDeprecated) {
+                    _transportTraits.reset(nullptr);
+                    _tcpDeprecated.reset(nullptr);
+                }
 #endif
+            }
         }
     } else {
         log_d("tcp is closed\n");
@@ -1314,9 +1331,9 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                     readBytes = buff_size;
                 }
 		    
-		// stop if no more reading    
-		if (readBytes == 0)
-			break;
+        		// stop if no more reading    
+        		if (readBytes == 0)
+        			break;
 
                 // read data
                 int bytesRead = _client->readBytes(buff, readBytes);

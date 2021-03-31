@@ -21,7 +21,7 @@
 uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz);
 uint8_t sdcard_uninit(uint8_t pdrv);
 
-bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files);
+bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format_if_empty);
 uint8_t sdcard_unmount(uint8_t pdrv);
 
 sdcard_type_t sdcard_type(uint8_t pdrv);

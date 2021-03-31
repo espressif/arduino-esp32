@@ -59,14 +59,37 @@ BLEAddress::BLEAddress(std::string stringAddress) {
  * @return True if the addresses are equal.
  */
 bool BLEAddress::equals(BLEAddress otherAddress) {
-	return memcmp(otherAddress.getNative(), m_address, 6) == 0;
+	return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) == 0;
 } // equals
 
+bool BLEAddress::operator==(const BLEAddress& otherAddress) const {
+	return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) == 0;
+}
+
+bool BLEAddress::operator!=(const BLEAddress& otherAddress) const {
+  return !(*this == otherAddress);
+}
+
+bool BLEAddress::operator<(const BLEAddress& otherAddress) const {
+  return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) < 0;
+}
+
+bool BLEAddress::operator<=(const BLEAddress& otherAddress) const {
+  return !(*this > otherAddress);
+}
+
+bool BLEAddress::operator>=(const BLEAddress& otherAddress) const {
+  return !(*this < otherAddress);
+}
+
+bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
+  return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) > 0;
+}
 
 /**
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
- */
+ */   
 esp_bd_addr_t *BLEAddress::getNative() {
 	return &m_address;
 } // getNative

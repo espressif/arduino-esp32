@@ -31,7 +31,7 @@ protected:
 
 public:
     SDMMCFS(FSImplPtr impl);
-    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false);
+    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false);
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();

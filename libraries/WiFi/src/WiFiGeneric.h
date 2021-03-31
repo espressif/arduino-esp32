@@ -172,6 +172,7 @@ class WiFiGenericClass
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);
+    static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     static esp_err_t _eventCallback(arduino_event_t *event);
 

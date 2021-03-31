@@ -36,7 +36,7 @@
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "1.22.0-96-g2852398-5.2.0"
+              "version": "gcc8_2_0-esp-2019r2"
             },
             {
               "packager": "esp32",
@@ -140,42 +140,42 @@
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-windows.zip",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-windows.zip",
               "archiveFileName": "esptool-3.0.0.2-windows.zip",
               "checksum": "SHA-256:b192bfc1545a3c92658ce586b4edcc2aca3f0ad4b3fa8417d658bc8a48f1387e",
               "size": "3434736"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-macos.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-macos.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-macos.tar.gz",
               "checksum": "SHA-256:2cafab7f1ebce89475b84c115548eaace40b6366d7b3f9862cdb2fc64f806643",
               "size": "3859642"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://dl.espressif.com/dl/esptool-3.0.0.2-linux.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.5-rc5/esptool-3.0.0.2-linux.tar.gz",
               "archiveFileName": "esptool-3.0.0.2-linux.tar.gz",
               "checksum": "SHA-256:d5cb51da1c74ff69f81b820470d2ecccb5c7c3a2dec7776483d4c89588b00020",
               "size": "57526"
@@ -298,6 +298,13 @@
             },
             {
               "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
+              "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",
+              "size": "40665"
+            },
+            {
+              "host": "aarch64-linux-gnu",
               "url": "https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
               "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
               "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",

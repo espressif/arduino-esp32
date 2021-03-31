@@ -40,7 +40,14 @@
 
 class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass
 {
+private:
+    bool prov_enable;
 public:
+    WiFiClass()
+    {
+        prov_enable = false;
+    }
+
     using WiFiGenericClass::channel;
 
     using WiFiSTAClass::SSID;
@@ -59,6 +66,8 @@ public:
     friend class WiFiClient;
     friend class WiFiServer;
     friend class WiFiUDP;
+    void enableProv(bool status);
+    bool isProvEnabled();
 };
 
 extern WiFiClass WiFi;

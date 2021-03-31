@@ -88,4 +88,14 @@ void WiFiClass::printDiag(Print& p)
     p.println(conf.sta.bssid_set);
 }
 
+void WiFiClass::enableProv(bool status)
+{
+    prov_enable = status;
+}
+
+bool WiFiClass::isProvEnabled()
+{
+    return prov_enable;
+}
+
 WiFiClass WiFi;

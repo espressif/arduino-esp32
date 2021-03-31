@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define WIFI_LoRa_32_V2
+#define WIFI_LoRa_32_V2 true
 #define DISPLAY_HEIGHT 64
 #define DISPLAY_WIDTH  128
 
