@@ -36,7 +36,12 @@
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "gcc8_2_0-esp-2019r2"
+              "version": "gcc8_4_0-esp-2020r3"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32s2-elf-gcc",
+              "version": "gcc8_4_0-esp-2020r3"
             },
             {
               "packager": "esp32",
@@ -47,6 +52,16 @@
               "packager": "esp32",
               "name": "mkspiffs",
               "version": "0.2.3"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkfatfs",
+              "version": "0.3.6"
+            },
+            {
+              "packager": "esp32",
+              "name": "mklittlefs",
+              "version": "3.0.0-gnu12-dc7f933"
             }
           ]
         }
