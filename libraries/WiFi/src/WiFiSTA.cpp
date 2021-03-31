@@ -104,7 +104,6 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
 
 bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
-String WiFiSTAClass::_hostname = "esp32-arduino";
 
 static wl_status_t _sta_status = WL_NO_SHIELD;
 static EventGroupHandle_t _sta_status_group = NULL;
@@ -612,36 +611,6 @@ int8_t WiFiSTAClass::RSSI(void)
         return info.rssi;
     }
     return 0;
-}
-
-/**
- * Get the station interface Host name.
- * @return char array hostname
- */
-const char * WiFiSTAClass::getHostname()
-{
-    const char * hostname = NULL;
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return hostname;
-    }
-    if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_STA, &hostname)){
-        return NULL;
-    }
-    return hostname;
-}
-
-/**
- * Set the station interface Host name.
- * @param  hostname  pointer to const string
- * @return true on   success
- */
-bool WiFiSTAClass::setHostname(const char * hostname)
-{
-    _hostname = hostname;
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return false;
-    }
-    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname) == 0;
 }
 
 /**

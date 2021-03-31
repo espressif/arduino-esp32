@@ -75,10 +75,6 @@ public:
     bool enableIpV6();
     IPv6Address localIPv6();
 
-    const char * getHostname();
-    bool setHostname(const char * hostname);
-    bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
-
     // STA WiFi info
     static wl_status_t status();
     String SSID() const;
@@ -90,7 +86,7 @@ public:
     int8_t RSSI();
 
     static void _setStatus(wl_status_t status);
-    static String _hostname;
+    
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;

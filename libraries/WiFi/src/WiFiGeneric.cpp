@@ -800,7 +800,6 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_START) {
         WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         setStatusBits(STA_STARTED_BIT);
-        tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, WiFiSTAClass::_hostname.c_str());
         if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
             log_e("esp_wifi_set_ps failed");
         }
