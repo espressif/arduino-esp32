@@ -266,9 +266,6 @@ void timerEnd(hw_timer_t *timer){
 }
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
-	// EDGE DOES NOT WORK CURRENTLY
-	edge = false;
-
     static bool initialized = false;
     static intr_handle_t intr_handle = NULL;
     if(intr_handle){
