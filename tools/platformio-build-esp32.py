@@ -77,7 +77,6 @@ env.Append(
     LINKFLAGS=[
         "-mlongcalls",
         "-Wno-frame-address",
-        "-o",
         "-Wl,--cref",
         "-Wl,--gc-sections",
         "-fno-rtti",
