@@ -1,4 +1,5 @@
 #include "RMaker.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 bool wifiLowLevelInit(bool persistent);
@@ -103,3 +104,4 @@ esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 }
 
 RMakerClass RMaker;
+#endif

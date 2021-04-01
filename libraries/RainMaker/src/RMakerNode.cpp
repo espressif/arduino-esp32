@@ -1,4 +1,5 @@
 #include "RMakerNode.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
 static esp_err_t err;
 
 esp_err_t Node::addDevice(Device device)
@@ -37,3 +38,4 @@ esp_err_t Node::addNodeAttr(const char *attr_name, const char *val)
     }   
     return err;
 }
+#endif

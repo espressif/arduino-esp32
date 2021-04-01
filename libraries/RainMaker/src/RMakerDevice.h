@@ -1,3 +1,6 @@
+#include "esp_system.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+
 #include "RMakerParam.h"
 #include <esp_rmaker_standard_devices.h>
 #include <esp_rmaker_standard_params.h>
@@ -147,3 +150,5 @@ class TemperatureSensor : public Device
             }
         }
 };
+
+#endif

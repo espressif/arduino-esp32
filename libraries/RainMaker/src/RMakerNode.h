@@ -1,3 +1,6 @@
+#include "esp_system.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+
 #include "RMakerDevice.h"
 
 class Node
@@ -26,3 +29,5 @@ class Node
         node_info_t *getNodeInfo();
         esp_err_t addNodeAttr(const char *attr_name, const char *val);
 };
+
+#endif

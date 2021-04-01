@@ -1,3 +1,6 @@
+#include "esp_system.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+
 #include "Arduino.h"
 #include "RMakerNode.h"
 #include "RMakerQR.h"
@@ -21,3 +24,5 @@ class RMakerClass
 };
 
 extern RMakerClass RMaker;
+
+#endif

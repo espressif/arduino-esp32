@@ -1,3 +1,6 @@
+#include "esp_system.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+
 #include "RMakerType.h"
 
 class Param
@@ -31,3 +34,5 @@ class Param
         esp_err_t addBounds(param_val_t min, param_val_t max, param_val_t step);
         esp_err_t updateAndReport(param_val_t val);
 };
+
+#endif

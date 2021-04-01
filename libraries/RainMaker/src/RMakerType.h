@@ -1,3 +1,6 @@
+#include "esp_system.h"
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+
 #include <esp_rmaker_core.h>
 #include <esp_rmaker_ota.h>
 #include <esp_err.h>
@@ -16,3 +19,5 @@ param_val_t value(int);
 param_val_t value(bool);
 param_val_t value(char *);
 param_val_t value(float);
+
+#endif
