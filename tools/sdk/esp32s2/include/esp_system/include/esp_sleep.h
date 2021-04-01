@@ -20,6 +20,8 @@
 #include "hal/touch_sensor_types.h"
 #include "hal/gpio_types.h"
 
+#include "soc/soc_caps.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,6 +34,13 @@ typedef enum {
     ESP_EXT1_WAKEUP_ANY_HIGH = 1    //!< Wake the chip when any of the selected GPIOs go high
 } esp_sleep_ext1_wakeup_mode_t;
 
+#if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
+typedef enum {
+    ESP_GPIO_WAKEUP_GPIO_LOW = 0,
+    ESP_GPIO_WAKEUP_GPIO_HIGH = 1
+} esp_deepsleep_gpio_wake_up_mode_t;
+#endif
+
 /**
  * @brief Power domains which can be powered down in sleep mode
  */
@@ -40,6 +49,7 @@ typedef enum {
     ESP_PD_DOMAIN_RTC_SLOW_MEM,    //!< RTC slow memory
     ESP_PD_DOMAIN_RTC_FAST_MEM,    //!< RTC fast memory
     ESP_PD_DOMAIN_XTAL,            //!< XTAL oscillator
+    ESP_PD_DOMAIN_CPU,             //!< CPU core
     ESP_PD_DOMAIN_MAX              //!< Number of domains
 } esp_sleep_pd_domain_t;
 
@@ -92,6 +102,7 @@ typedef esp_sleep_source_t esp_sleep_wakeup_cause_t;
  */
 esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source);
 
+#if SOC_ULP_SUPPORTED
 /**
  * @brief Enable wakeup by ULP coprocessor
  * @note In revisions 0 and 1 of the ESP32, ULP wakeup source
@@ -105,6 +116,8 @@ esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source);
  */
 esp_err_t esp_sleep_enable_ulp_wakeup(void);
 
+#endif // SOC_ULP_SUPPORTED
+
 /**
  * @brief Enable wakeup by timer
  * @param time_in_us  time before wakeup, in microseconds
@@ -113,6 +126,8 @@ esp_err_t esp_sleep_enable_ulp_wakeup(void);
  *      - ESP_ERR_INVALID_ARG if value is out of range (TBD)
  */
 esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us);
+
+#if SOC_TOUCH_SENSOR_NUM > 0
 
 /**
  * @brief Enable wakeup by touch sensor
@@ -141,6 +156,8 @@ esp_err_t esp_sleep_enable_touchpad_wakeup(void);
  */
 touch_pad_t esp_sleep_get_touchpad_wakeup_status(void);
 
+#endif // SOC_TOUCH_SENSOR_NUM > 0
+
 /**
  * @brief Returns true if a GPIO number is valid for use as wakeup source.
  *
@@ -151,6 +168,8 @@ touch_pad_t esp_sleep_get_touchpad_wakeup_status(void);
  * @return True if this GPIO number will be accepted as a sleep wakeup source.
  */
 bool esp_sleep_is_valid_wakeup_gpio(gpio_num_t gpio_num);
+
+#if SOC_PM_SUPPORT_EXT_WAKEUP
 
 /**
  * @brief Enable wakeup using a pin
@@ -210,6 +229,34 @@ esp_err_t esp_sleep_enable_ext0_wakeup(gpio_num_t gpio_num, int level);
  */
 esp_err_t esp_sleep_enable_ext1_wakeup(uint64_t mask, esp_sleep_ext1_wakeup_mode_t mode);
 
+#endif // SOC_PM_SUPPORT_EXT_WAKEUP
+
+#if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
+/**
+ * @brief Enable wakeup using specific gpio pins
+ *
+ * This function enables an IO pin to wake the chip from deep sleep
+ *
+ * @note This function does not modify pin configuration. The pins are
+ *       configured in esp_sleep_start, immediately before
+ *       entering sleep mode.
+ *
+ * @note You don't need to care to pull-up or pull-down before using this
+ *       function, because this will be done in esp_sleep_start based on
+ *       param mask you give. BTW, when you use low level to wake up the
+ *       chip, we strongly recommand you to add external registors(pull-up).
+ *
+ * @param gpio_pin_mask  Bit mask of GPIO numbers which will cause wakeup. Only GPIOs
+ *              which are have RTC functionality can be used in this bit map.
+ * @param mode Select logic function used to determine wakeup condition:
+ *            - ESP_GPIO_WAKEUP_GPIO_LOW: wake up when the gpio turn to low.
+ *            - ESP_GPIO_WAKEUP_GPIO_HIGH: wake up when the gpio turn to high.
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_ARG if gpio num is more than 5 or mode is invalid,
+ */
+esp_err_t esp_deep_sleep_enable_gpio_wakeup(uint64_t gpio_pin_mask, esp_deepsleep_gpio_wake_up_mode_t mode);
+#endif
 /**
  * @brief Enable wakeup from light sleep using GPIOs
  *
@@ -264,6 +311,17 @@ esp_err_t esp_sleep_enable_wifi_wakeup(void);
  * @return bit mask, if GPIOn caused wakeup, BIT(n) will be set
  */
 uint64_t esp_sleep_get_ext1_wakeup_status(void);
+
+#if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
+/**
+ * @brief Get the bit mask of GPIOs which caused wakeup (gpio)
+ *
+ * If wakeup was caused by another source, this function will return 0.
+ *
+ * @return bit mask, if GPIOn caused wakeup, BIT(n) will be set
+ */
+uint64_t esp_sleep_get_gpio_wakeup_status(void);
+#endif //SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
 
 /**
  * @brief Set power down mode for an RTC power domain in sleep mode
@@ -381,6 +439,64 @@ void esp_default_wake_deep_sleep(void);
  *  Using LSB of RTC_STORE4.
  */
 void esp_deep_sleep_disable_rom_logging(void);
+
+#if SOC_GPIO_SUPPORT_SLP_SWITCH
+/**
+ *  @brief Disable all GPIO pins at slept status.
+ *
+ */
+void esp_sleep_gpio_status_init(void);
+
+/**
+ *  @brief Configure GPIO pins status switching between slept status and waked status.
+ *  @param enable decide whether to switch status or not
+ */
+void esp_sleep_gpio_status_switch_configure(bool enable);
+#endif
+
+#if CONFIG_MAC_BB_PD
+/**
+ * @brief Function type for stub to run mac bb power down.
+ */
+typedef void (* mac_bb_power_down_cb_t)(void);
+
+/**
+ * @brief Function type for stub to run mac bb power up.
+ */
+typedef void (* mac_bb_power_up_cb_t)(void);
+
+/**
+ * @brief  Registet mac bb power down callback.
+ * @param  cb mac bb power down callback.
+ * @return
+ *  - ESP_OK on success
+ */
+esp_err_t esp_register_mac_bb_pd_callback(mac_bb_power_down_cb_t cb);
+
+/**
+ * @brief  Unregistet mac bb power down callback.
+ * @param  cb mac bb power down callback.
+ * @return
+ *  - ESP_OK on success
+ */
+esp_err_t esp_unregister_mac_bb_pd_callback(mac_bb_power_down_cb_t cb);
+
+/**
+ * @brief  Registet mac bb power up callback.
+ * @param  cb mac bb power up callback.
+ * @return
+ *  - ESP_OK on success
+ */
+esp_err_t esp_register_mac_bb_pu_callback(mac_bb_power_up_cb_t cb);
+
+/**
+ * @brief  Unregistet mac bb power up callback.
+ * @param  cb mac bb power up callback.
+ * @return
+ *  - ESP_OK on success
+ */
+esp_err_t esp_unregister_mac_bb_pu_callback(mac_bb_power_up_cb_t cb);
+#endif
 
 #ifdef __cplusplus
 }

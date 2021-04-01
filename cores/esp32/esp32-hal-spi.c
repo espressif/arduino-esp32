@@ -1113,8 +1113,8 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
                     result[i] = spi->dev->data_buf[i];
                 }
                 uint32_t last_data = spi->dev->data_buf[c_longs-1];
-                uint8_t * last_out8 = &result[c_longs-1];
-                uint8_t * last_data8 = &last_data;
+                uint8_t * last_out8 = (uint8_t *)&result[c_longs-1];
+                uint8_t * last_data8 = (uint8_t *)&last_data;
                 for (int i=0; i<(c_len & 3); i++) {
                     last_out8[i] = last_data8[i];
                 }

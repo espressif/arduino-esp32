@@ -178,6 +178,23 @@ void esp_phy_disable(void);
  */
 void esp_phy_load_cal_and_init(void);
 
+#if CONFIG_MAC_BB_PD
+/**
+ * @brief Initialize backup memory for MAC and Baseband power up/down
+ */
+void esp_mac_bb_pd_mem_init(void);
+
+/**
+ * @brief Power up MAC and Baseband
+ */
+void esp_mac_bb_power_up(void);
+
+/**
+ * @brief Power down MAC and Baseband
+ */
+void esp_mac_bb_power_down(void);
+#endif
+
 /**
  * @brief Enable WiFi/BT common clock
  *
@@ -201,6 +218,7 @@ int64_t esp_phy_rf_get_on_ts(void);
  * @brief Update the corresponding PHY init type according to the country code of Wi-Fi.
  */
 esp_err_t esp_phy_update_country_info(const char *country);
+
 
 #if CONFIG_ESP32_SUPPORT_MULTIPLE_PHY_INIT_DATA_BIN
 /**

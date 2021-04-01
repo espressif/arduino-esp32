@@ -52,10 +52,6 @@ static inline uint32_t periph_ll_get_clk_en_mask(periph_module_t periph)
         return DPORT_PWM0_CLK_EN;
     case PERIPH_PWM1_MODULE:
         return DPORT_PWM1_CLK_EN;
-    case PERIPH_PWM2_MODULE:
-        return DPORT_PWM2_CLK_EN;
-    case PERIPH_PWM3_MODULE:
-        return DPORT_PWM3_CLK_EN;
     case PERIPH_UHCI0_MODULE:
         return DPORT_UHCI0_CLK_EN;
     case PERIPH_UHCI1_MODULE:
@@ -130,10 +126,6 @@ static inline uint32_t periph_ll_get_rst_en_mask(periph_module_t periph, bool en
         return DPORT_PWM0_RST;
     case PERIPH_PWM1_MODULE:
         return DPORT_PWM1_RST;
-    case PERIPH_PWM2_MODULE:
-        return DPORT_PWM2_RST;
-    case PERIPH_PWM3_MODULE:
-        return DPORT_PWM3_RST;
     case PERIPH_UHCI0_MODULE:
         return DPORT_UHCI0_RST;
     case PERIPH_UHCI1_MODULE:
@@ -265,6 +257,18 @@ static inline bool IRAM_ATTR periph_ll_periph_enabled(periph_module_t periph)
 {
     return DPORT_REG_GET_BIT(periph_ll_get_rst_en_reg(periph), periph_ll_get_rst_en_mask(periph, false)) == 0 &&
         DPORT_REG_GET_BIT(periph_ll_get_clk_en_reg(periph), periph_ll_get_clk_en_mask(periph)) != 0;
+}
+
+static inline void periph_ll_wifi_module_enable_clk_clear_rst(void)
+{
+    DPORT_SET_PERI_REG_MASK(DPORT_WIFI_CLK_EN_REG, DPORT_WIFI_CLK_WIFI_EN_M);
+    DPORT_CLEAR_PERI_REG_MASK(DPORT_CORE_RST_EN_REG, 0);
+}
+
+static inline void periph_ll_wifi_module_disable_clk_set_rst(void)
+{
+    DPORT_CLEAR_PERI_REG_MASK(DPORT_WIFI_CLK_EN_REG, DPORT_WIFI_CLK_WIFI_EN_M);
+    DPORT_SET_PERI_REG_MASK(DPORT_CORE_RST_EN_REG, 0);
 }
 
 #ifdef __cplusplus

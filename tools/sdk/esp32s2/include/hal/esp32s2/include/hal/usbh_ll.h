@@ -156,7 +156,7 @@ typedef struct {
         } out_iso;
         uint32_t buffer_status_val;
     };
-    void *buffer;
+    uint8_t *buffer;
 } usbh_ll_dma_qtd_t;
 
 /*
@@ -268,13 +268,23 @@ static inline void usb_ll_reset_frame_counter(usbh_dev_t *hw)
     hw->grstctl_reg.frmcntrrst = 1;
 }
 
+static inline void usb_ll_core_soft_reset(usbh_dev_t *hw)
+{
+    hw->grstctl_reg.csftrst = 1;
+}
+
+static inline bool usb_ll_check_core_soft_reset(usbh_dev_t *hw)
+{
+    return hw->grstctl_reg.csftrst;
+}
+
 // --------------------------- GINTSTS Register --------------------------------
 
 /**
  * @brief Reads and clears the global interrupt register
  *
- * @param hw
- * @return uint32_t
+ * @param hw Start address of the DWC_OTG registers
+ * @return uint32_t Mask of interrupts
  */
 static inline uint32_t usb_ll_intr_read_and_clear(usbh_dev_t *hw)
 {
@@ -282,6 +292,18 @@ static inline uint32_t usb_ll_intr_read_and_clear(usbh_dev_t *hw)
     gintsts.val = hw->gintsts_reg.val;
     hw->gintsts_reg.val = gintsts.val;  //Write back to clear
     return gintsts.val;
+}
+
+/**
+ * @brief Clear specific interrupts
+ *
+ * @param hw Start address of the DWC_OTG registers
+ * @param intr_msk Mask of interrupts to clear
+ */
+static inline void usb_ll_intr_clear(usbh_dev_t *hw, uint32_t intr_msk)
+{
+    //All GINTSTS fields are either W1C or read only. So safe to write directly
+    hw->gintsts_reg.val = intr_msk;
 }
 
 // --------------------------- GINTMSK Register --------------------------------
@@ -393,26 +415,36 @@ static inline void usbh_ll_hcfg_set_fsls_pclk_sel(usbh_dev_t *hw)
 }
 
 /**
- * @brief Sets some default values to HCFG to operate in Host mode wiht scatter/gather DMA
+ * @brief Sets some default values to HCFG to operate in Host mode with scatter/gather DMA
  *
  * @param hw
  */
-static inline void usbh_ll_hcfg_set_defaults(usbh_dev_t *hw)
+static inline void usbh_ll_hcfg_set_defaults(usbh_dev_t *hw, usb_speed_t speed)
 {
     hw->hcfg_reg.descdma = 1;   //Enable scatt/gatt
     hw->hcfg_reg.fslssupp = 1;  //FS/LS supp only
-    hw->hcfg_reg.fslspclksel = 1;   //48MHz PHY clock
+    /*
+    Indicate to the OTG core what speed the PHY clock is at
+    Note: It seems like our PHY has an implicit 8 divider applied when in LS mode,
+          so the values of FSLSPclkSel and FrInt have to be adjusted accordingly.
+    */
+    hw->hcfg_reg.fslspclksel = (speed == USB_SPEED_FULL) ? 1 : 2;
     hw->hcfg_reg.perschedena = 0;   //Disable perio sched
 }
 
 // ----------------------------- HFIR Register ---------------------------------
 
-static inline void usbh_ll_hfir_set_defaults(usbh_dev_t *hw)
+static inline void usbh_ll_hfir_set_defaults(usbh_dev_t *hw, usb_speed_t speed)
 {
     usb_hfir_reg_t hfir;
     hfir.val = hw->hfir_reg.val;
     hfir.hfirrldctrl = 0;       //Disable dynamic loading
-    hfir.frint = 48000;         //Set frame interval to 48000 cycles of 48KHz clock (1ms)
+    /*
+    Set frame interval to be equal to 1ms
+    Note: It seems like our PHY has an implicit 8 divider applied when in LS mode,
+          so the values of FSLSPclkSel and FrInt have to be adjusted accordingly.
+    */
+    hfir.frint = (speed == USB_SPEED_FULL) ? 48000 : 6000;
     hw->hfir_reg.val = hfir.val;
 }
 
@@ -601,6 +633,13 @@ static inline uint32_t usbh_ll_hprt_intr_read_and_clear(usbh_dev_t *hw)
     return (hprt.val & (USBH_LL_HPRT_W1C_MSK & ~(USBH_LL_HPRT_ENA_MSK)));
 }
 
+static inline void usbh_ll_hprt_intr_clear(usbh_dev_t *hw, uint32_t intr_mask)
+{
+    usb_hprt_reg_t hprt;
+    hprt.val = hw->hprt_reg.val;
+    hw->hprt_reg.val = ((hprt.val & ~USBH_LL_HPRT_ENA_MSK) & ~USBH_LL_HPRT_W1C_MSK) | intr_mask;
+}
+
 //Per Channel registers
 
 // --------------------------- HCCHARi Register --------------------------------
@@ -655,9 +694,11 @@ static inline void usbh_ll_chan_set_ep_type(volatile usb_host_chan_regs_t *chan,
     }
 }
 
-static inline void usbh_ll_chan_set_ls(volatile usb_host_chan_regs_t *chan)
+//Indicates whether channel is commuunicating with a LS device connected via a FS hub. Setting this bit to 1 will cause
+//each packet to be preceded by a PREamble packet
+static inline void usbh_ll_chan_set_lspddev(volatile usb_host_chan_regs_t *chan, bool is_ls)
 {
-    chan->hcchar_reg.lspddev = 1;
+    chan->hcchar_reg.lspddev = is_ls;
 }
 
 static inline void usbh_ll_chan_set_dir(volatile usb_host_chan_regs_t *chan, bool is_in)
@@ -675,11 +716,12 @@ static inline void usbh_ll_chan_set_mps(volatile usb_host_chan_regs_t *chan, uin
     chan->hcchar_reg.mps = mps;
 }
 
-static inline void usbh_ll_chan_hcchar_init(volatile usb_host_chan_regs_t *chan, int dev_addr, int ep_num, int mps, usb_xfer_type_t type, bool is_in)
+static inline void usbh_ll_chan_hcchar_init(volatile usb_host_chan_regs_t *chan, int dev_addr, int ep_num, int mps, usb_xfer_type_t type, bool is_in, bool is_ls)
 {
     //Sets all persistent fields of the channel over its lifetime
     usbh_ll_chan_set_dev_addr(chan, dev_addr);
     usbh_ll_chan_set_ep_type(chan, type);
+    usbh_ll_chan_set_lspddev(chan, is_ls);
     usbh_ll_chan_set_dir(chan, is_in);
     usbh_ll_chan_set_ep_num(chan, ep_num);
     usbh_ll_chan_set_mps(chan, mps);
@@ -710,6 +752,14 @@ static inline void usbh_ll_chan_set_pid(volatile usb_host_chan_regs_t *chan, uin
         chan->hctsiz_reg.pid = 0;
     } else {
         chan->hctsiz_reg.pid = 2;
+    }
+}
+
+static inline uint32_t usbh_ll_chan_get_pid(volatile usb_host_chan_regs_t *chan) {
+    if (chan->hctsiz_reg.pid == 0) {
+        return 0;   //DATA0
+    } else {
+        return 1;   //DATA1
     }
 }
 
@@ -755,13 +805,15 @@ static inline int usbh_ll_chan_get_ctd(usb_host_chan_regs_t *chan)
     return chan->hcdma_reg.non_iso.ctd;
 }
 
-static inline void usbh_ll_chan_hctsiz_init(volatile usb_host_chan_regs_t *chan, int qtd_list_len)
+static inline void usbh_ll_chan_hctsiz_init(volatile usb_host_chan_regs_t *chan)
 {
-    //HCTSIZi
-    chan->hctsiz_reg.dopng = 0;     //Don't do ping
-    chan->hctsiz_reg.pid = 0;       //Reset PID to Data0
-    chan->hctsiz_reg.ntd = qtd_list_len - 1;    //Set the length of the descriptor list
+    chan->hctsiz_reg.dopng = 0;         //Don't do ping
     chan->hctsiz_reg.sched_info = 0xFF; //Schedinfo is always 0xFF for fullspeed. Not used in Bulk/Ctrl channels
+}
+
+static inline void usbh_ll_chan_set_qtd_list_len(volatile usb_host_chan_regs_t *chan, int qtd_list_len)
+{
+    chan->hctsiz_reg.ntd = qtd_list_len - 1;    //Set the length of the descriptor list
 }
 
 // ---------------------------- HCDMABi Register -------------------------------
@@ -806,7 +858,7 @@ static inline usb_host_chan_regs_t *usbh_ll_get_chan_regs(usbh_dev_t *dev, int c
  *                 Non zero length must be mulitple of the endpoint's MPS.
  * @param halt_on_cplt Generate a channel halted interrupt on completion of QTD
  */
-static inline void usbh_ll_set_qtd_in(usbh_ll_dma_qtd_t *qtd, void *data_buff, int xfer_len, bool halt_on_cplt)
+static inline void usbh_ll_set_qtd_in(usbh_ll_dma_qtd_t *qtd, uint8_t *data_buff, int xfer_len, bool halt_on_cplt)
 {
     qtd->buffer = data_buff;        //Set pointer to data buffer
     qtd->buffer_status_val = 0;     //Reset all flags to zero
@@ -829,7 +881,7 @@ static inline void usbh_ll_set_qtd_in(usbh_ll_dma_qtd_t *qtd, void *data_buff, i
  * @param is_setup Indicates whether this is a control transfer setup packet or a normal OUT Data transfer.
  *                 (As per the USB protocol, setup packets cannot be STALLd or NAKd by the device)
  */
-static inline void usbh_ll_set_qtd_out(usbh_ll_dma_qtd_t *qtd, void *data_buff, int xfer_len, bool halt_on_cplt, bool is_setup)
+static inline void usbh_ll_set_qtd_out(usbh_ll_dma_qtd_t *qtd, uint8_t *data_buff, int xfer_len, bool halt_on_cplt, bool is_setup)
 {
     qtd->buffer = data_buff;        //Set pointer to data buffer
     qtd->buffer_status_val = 0;     //Reset all flags to zero

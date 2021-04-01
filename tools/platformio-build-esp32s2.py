@@ -55,9 +55,7 @@ env.Append(
     CCFLAGS=[
         "-ffunction-sections",
         "-fdata-sections",
-        "-fstrict-volatile-bitfields",
         "-Wno-error=unused-function",
-        "-Wno-error=unused-but-set-variable",
         "-Wno-error=unused-variable",
         "-Wno-error=deprecated-declarations",
         "-Wno-unused-parameter",
@@ -65,14 +63,20 @@ env.Append(
         "-ggdb",
         "-O2",
         "-fstack-protector",
+        "-fmacro-prefix-map=/Users/ficeto/Desktop/ESP32/ESP32S2/esp32-arduino-lib-builder=.",
+        "-fmacro-prefix-map=/Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public=IDF",
+        "-fstrict-volatile-bitfields",
+        "-Wno-error=unused-but-set-variable",
         "-MMD"
     ],
 
     LINKFLAGS=[
+        "-mlongcalls",
+        "-o",
         "-Wl,--cref",
+        "-Wl,--gc-sections",
         "-fno-rtti",
         "-fno-lto",
-        "-Wl,--gc-sections",
         "-Wl,--undefined=uxTopUsedPriority",
         "-T", "esp32s2.rom.ld",
         "-T", "esp32s2.rom.api.ld",
@@ -96,7 +100,7 @@ env.Append(
         "-u", "newlib_include_syscalls_impl",
         "-u", "newlib_include_pthread_impl",
         "-u", "__cxa_guard_dummy",
-        '-Wl,-Map="%s"' % join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
+        "-Wl,-Map=" + join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
     ],
 
     CPPPATH=[
@@ -126,15 +130,12 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp32s2", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "driver", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "driver", "esp32s2", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_pm", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_ringbuf", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "efuse", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "efuse", "esp32s2", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "xtensa", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "xtensa", "esp32s2", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "espcoredump", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_timer", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_ipc", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_pm", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "vfs", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_wifi", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_wifi", "esp32s2", "include"),
@@ -143,17 +144,20 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_eth", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "tcpip_adapter", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "app_trace", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_timer", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "mbedtls", "port", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "mbedtls", "mbedtls", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "mbedtls", "esp_crt_bundle", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "bootloader_support", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "app_update", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "spi_flash", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_ipc", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "nvs_flash", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "pthread", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_gdbstub", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_gdbstub", "xtensa"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_gdbstub", "esp32s2"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "espcoredump", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "wpa_supplicant", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "wpa_supplicant", "port", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "wpa_supplicant", "include", "esp_supplicant"),
@@ -208,8 +212,11 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "freertos"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "tinyusb", "tinyusb", "src"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "tinyusb", "additions", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "touch_element", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "ulp", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "wifi_provisioning", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "src"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "dotprod", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "support", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "windows", "include"),
@@ -239,8 +246,6 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "image_util", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "pose_estimation", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "lib", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "src"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "fb_gfx", "include"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
@@ -251,7 +256,7 @@ env.Append(
     ],
 
     LIBS=[
-        "-lesp_pm", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lespcoredump", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lasio", "-lcbor", "-lunity", "-lcmock", "-lcoap", "-lconsole", "-lnghttp", "-lesp-tls", "-lesp_adc_cal", "-lesp_hid", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lesp_https_server", "-lprotobuf-c", "-lprotocomm", "-lmdns", "-lesp_local_ctrl", "-lsdmmc", "-lesp_serial_slave_link", "-lesp_websocket_client", "-lexpat", "-lwear_levelling", "-lfatfs", "-lfreemodbus", "-ljsmn", "-ljson", "-llibsodium", "-lmqtt", "-lopenssl", "-lperfmon", "-lspiffs", "-lulp", "-lwifi_provisioning", "-lesp-dsp", "-lesp-face", "-lesp_littlefs", "-lfb_gfx", "-lasio", "-lcbor", "-lcmock", "-lunity", "-lcoap", "-lesp_hid", "-lesp_local_ctrl", "-lesp_https_server", "-lesp_websocket_client", "-lexpat", "-lfreemodbus", "-ljsmn", "-llibsodium", "-lmqtt", "-lperfmon", "-lwifi_provisioning", "-lprotocomm", "-lprotobuf-c", "-ljson", "-lesp-dsp", "-lesp-face", "-lpe", "-lfd", "-lfr", "-ldetection_cat_face", "-ldetection", "-ldl", "-lesp_littlefs", "-lfb_gfx", "-lesp_adc_cal", "-lmdns", "-lconsole", "-lfatfs", "-lwear_levelling", "-lopenssl", "-lspiffs", "-ltinyusb", "-lesp_pm", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lespcoredump", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lrtc", "-lsmartconfig", "-lphy", "-lesp_pm", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lespcoredump", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lrtc", "-lsmartconfig", "-lphy", "-lesp_pm", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lespcoredump", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lrtc", "-lsmartconfig", "-lphy", "-lesp_pm", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lespcoredump", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lrtc", "-lsmartconfig", "-lphy", "-lesp32s2", "-lxt_hal", "-lm", "-lnewlib", "-lgcc", "-lstdc++", "-lpthread", "-lapp_trace", "-lgcov", "-lapp_trace", "-lgcov", "-lc"
+        "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lasio", "-lcbor", "-lunity", "-lcmock", "-lcoap", "-lconsole", "-lnghttp", "-lesp-tls", "-lesp_adc_cal", "-lesp_hid", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lesp_https_server", "-lprotobuf-c", "-lprotocomm", "-lmdns", "-lesp_local_ctrl", "-lsdmmc", "-lesp_serial_slave_link", "-lesp_websocket_client", "-lexpat", "-lwear_levelling", "-lfatfs", "-lfreemodbus", "-ljsmn", "-ljson", "-llibsodium", "-lmqtt", "-lopenssl", "-lperfmon", "-lspiffs", "-ltouch_element", "-lulp", "-lusb", "-lwifi_provisioning", "-lesp_littlefs", "-lesp-dsp", "-lesp-face", "-lfb_gfx", "-lasio", "-lcbor", "-lcmock", "-lunity", "-lcoap", "-lesp_hid", "-lesp_local_ctrl", "-lesp_https_server", "-lesp_websocket_client", "-lexpat", "-lfreemodbus", "-ljsmn", "-llibsodium", "-lmqtt", "-lperfmon", "-ltouch_element", "-lusb", "-lwifi_provisioning", "-lprotocomm", "-lprotobuf-c", "-ljson", "-lesp-dsp", "-lesp-face", "-lpe", "-lfd", "-lfr", "-ldetection_cat_face", "-ldetection", "-ldl", "-lfb_gfx", "-lesp_adc_cal", "-lmdns", "-lconsole", "-lfatfs", "-lwear_levelling", "-lopenssl", "-lspiffs", "-ltinyusb", "-lesp_littlefs", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lmbedtls", "-lefuse", "-lbootloader_support", "-lapp_update", "-lesp_ipc", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lesp_pm", "-lesp_ringbuf", "-ldriver", "-lxtensa", "-lesp32s2", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lxt_hal", "-lm", "-lnewlib", "-lgcc", "-lstdc++", "-lpthread", "-lapp_trace", "-lgcov", "-lapp_trace", "-lgcov", "-lc"
     ],
 
     CPPDEFINES=[
@@ -260,7 +265,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.3-dev-2398-g2bfdd036b-dirty\\"'),
+        ("IDF_VER", '\\"v4.4-dev-479-g1067b2870-dirty\\"'),
         "ESP_PLATFORM",
         "ARDUINO_ARCH_ESP32",
         "ESP32",

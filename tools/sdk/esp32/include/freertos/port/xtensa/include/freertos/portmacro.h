@@ -134,7 +134,7 @@ do not disable the interrupts (because they already are).
 This all assumes that interrupts are either entirely disabled or enabled. Interrupt priority levels
 will break this scheme.
 
-Remark: For the ESP32, portENTER_CRITICAL and portENTER_CRITICAL_ISR both alias vTaskEnterCritical, meaning
+Remark: For the ESP32, portENTER_CRITICAL and portENTER_CRITICAL_ISR both alias vPortEnterCritical, meaning
 that either function can be called both from ISR as well as task context. This is not standard FreeRTOS
 behaviour; please keep this in mind if you need any compatibility with other FreeRTOS implementations.
 */
@@ -302,7 +302,7 @@ static inline void uxPortCompareSetExtram(volatile uint32_t *addr, uint32_t comp
 
 #ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER
 /* Coarse resolution time (us) */
-#define portALT_GET_RUN_TIME_COUNTER_VALUE(x)    x = (uint32_t)esp_timer_get_time()
+#define portALT_GET_RUN_TIME_COUNTER_VALUE(x)     do {x = (uint32_t)esp_timer_get_time();} while(0)
 #endif
 
 void vPortYield( void );
@@ -445,7 +445,7 @@ BaseType_t xPortInterruptedFromISRContext(void);
 #endif
 
 /* Multi-core: get current core ID */
-static inline uint32_t IRAM_ATTR xPortGetCoreID(void) {
+static inline BaseType_t IRAM_ATTR xPortGetCoreID(void) {
     return cpu_hal_get_core_id();
 }
 

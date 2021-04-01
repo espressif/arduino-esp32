@@ -167,7 +167,7 @@ esp_err_t dsps_gen_bitrev4r_table(int N, int step, char *name_ext);
 #else
 #define dsps_fft4r_fc32 dsps_fft4r_fc32_ansi
 #define dsps_fft4r_sc16 dsps_fft4r_sc16_ansi
-#define dsps_bit_rev4r_fc32 dsps_bit_rev4r_fc32_ansi
+#define dsps_bit_rev4r_fc32 dsps_bit_rev4r_fc32
 #define dsps_cplx2real_fc32 dsps_cplx2real_fc32_ansi
 #endif
 

@@ -48,15 +48,20 @@
 #define SOC_ULP_SUPPORTED               1
 #define SOC_RTC_SLOW_MEM_SUPPORTED      1
 #define SOC_CCOMP_TIMER_SUPPORTED       1
+#define SOC_DIG_SIGN_SUPPORTED          1
+#define SOC_HMAC_SUPPORTED              1
+#define SOC_EFUSE_SECURE_BOOT_KEY_DIGESTS 3
 
 #define SOC_CACHE_SUPPORT_WRAP          1
 
 /*-------------------------- ADC CAPS ----------------------------------------*/
 #define SOC_ADC_PERIPH_NUM              (2)
 #define SOC_ADC_PATT_LEN_MAX            (16)
-
 #define SOC_ADC_CHANNEL_NUM(PERIPH_NUM) (10)
 #define SOC_ADC_MAX_CHANNEL_NUM         (10)
+#define SOC_ADC_MAX_BITWIDTH            (13)
+#define SOC_ADC_HW_CALIBRATION_V1       (1) /*!< support HW offset calibration */
+
 
 /**
  * Check if adc support digital controller (DMA) mode.
@@ -65,6 +70,7 @@
  *      - 0 : not support;
  */
 #define SOC_ADC_SUPPORT_DMA_MODE(PERIPH_NUM) ((PERIPH_NUM==0)? 1: 1)
+#define SOC_ADC_SUPPORT_RTC_CTRL        1
 
 /*-------------------------- BROWNOUT CAPS -----------------------------------*/
 #define SOC_BROWNOUT_RESET_SUPPORTED 1
@@ -98,6 +104,9 @@
 #define SOC_GPIO_VALID_GPIO_MASK             (0xFFFFFFFFFFFFULL & ~(0ULL | BIT22 | BIT23 | BIT24 | BIT25 | BIT47))
 // GPIO 46, 47 are input only
 #define SOC_GPIO_VALID_OUTPUT_GPIO_MASK     (SOC_GPIO_VALID_GPIO_MASK & ~(0ULL | BIT46 | BIT47))
+
+// Support to configure slept status
+#define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
 
 /*-------------------------- Dedicated GPIO CAPS ---------------------------------------*/
 #define SOC_DEDIC_GPIO_OUT_CHANNELS_NUM (8) /*!< 8 outward channels on each CPU core */
@@ -151,16 +160,17 @@
 #define SOC_PCNT_UNIT_CHANNEL_NUM (2)
 
 /*-------------------------- RMT CAPS ----------------------------------------*/
-#define SOC_RMT_CHANNEL_MEM_WORDS       (64) /*!< Each channel owns 64 words memory (1 word = 4 Bytes) */
-#define SOC_RMT_TX_CHANNELS_NUM         (4)  /*!< Number of channels that capable of Transmit */
-#define SOC_RMT_RX_CHANNELS_NUM         (4)  /*!< Number of channels that capable of Receive */
-#define SOC_RMT_CHANNELS_NUM            (4)  /*!< Total 4 channels (each channel can be configured to either TX or RX) */
+#define SOC_RMT_GROUPS                  (1)  /*!< One RMT group */
+#define SOC_RMT_TX_CANDIDATES_PER_GROUP (4)  /*!< Number of channels that capable of Transmit in each group */
+#define SOC_RMT_RX_CANDIDATES_PER_GROUP (4)  /*!< Number of channels that capable of Receive in each group */
+#define SOC_RMT_CHANNELS_PER_GROUP      (4)  /*!< Total 4 channels */
+#define SOC_RMT_MEM_WORDS_PER_CHANNEL   (64) /*!< Each channel owns 64 words memory (1 word = 4 Bytes) */
 #define SOC_RMT_SUPPORT_RX_PINGPONG     (1)  /*!< Support Ping-Pong mode on RX path */
 #define SOC_RMT_SUPPORT_RX_DEMODULATION (1)  /*!< Support signal demodulation on RX path (i.e. remove carrier) */
-#define SOC_RMT_SUPPORT_TX_LOOP_COUNT   (1)  /*!< Support transmit specified number of cycles in loop mode */
-#define SOC_RMT_SUPPORT_TX_GROUP        (1)  /*!< Support a group of TX channels to transmit simultaneously */
+#define SOC_RMT_SUPPORT_TX_LOOP_COUNT   (1)  /*!< Support transmiting specified number of cycles in loop mode */
+#define SOC_RMT_SUPPORT_TX_SYNCHRO      (1)  /*!< Support coordinate a group of TX channels to start simultaneously */
 #define SOC_RMT_SUPPORT_REF_TICK        (1)  /*!< Support set REF_TICK as the RMT clock source */
-#define SOC_RMT_SOURCE_CLK_INDEPENDENT  (1)  /*!< Can select different source clock for channels */
+#define SOC_RMT_CHANNEL_CLK_INDEPENDENT (1)  /*!< Can select different source clock for each channel */
 
 /*-------------------------- RTCIO CAPS --------------------------------------*/
 #define SOC_RTCIO_PIN_COUNT   22
@@ -289,7 +299,25 @@
 #define SOC_AES_SUPPORT_AES_192 (1)
 #define SOC_AES_SUPPORT_AES_256 (1)
 
+/*-------------------------- WI-FI HARDWARE TSF CAPS -------------------------------*/
+#define SOC_WIFI_HW_TSF                 (1)
 
+/*--------------- PHY REGISTER AND MEMORY SIZE CAPS --------------------------*/
+#define SOC_PHY_DIG_REGS_MEM_SIZE       (21*4)
+
+/*--------------- WIFI LIGHT SLEEP CLOCK WIDTH CAPS --------------------------*/
+#define SOC_WIFI_LIGHT_SLEEP_CLK_WIDTH  (12)
+
+/*-------------------------- SPI MEM CAPS ---------------------------------------*/
+#define SOC_SPI_MEM_SUPPORT_AUTO_WAIT_IDLE                (1)
+#define SOC_SPI_MEM_SUPPORT_AUTO_SUSPEND                  (1)
+#define SOC_SPI_MEM_SUPPORT_SW_SUSPEND                    (1)
+/*-------------------------- Power Management CAPS ---------------------------*/
+#define SOC_PM_SUPPORT_EXT_WAKEUP       (1)
+
+#define SOC_PM_SUPPORT_WIFI_WAKEUP      (1)
+
+#define SOC_PM_SUPPORT_WIFI_PD          (1)
 
 /* ---------------------------- Compatibility ------------------------------- */
 // No contents

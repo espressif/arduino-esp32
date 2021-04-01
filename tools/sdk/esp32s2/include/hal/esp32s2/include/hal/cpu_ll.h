@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-static inline int IRAM_ATTR cpu_ll_get_core_id(void)
+static inline uint32_t IRAM_ATTR cpu_ll_get_core_id(void)
 {
     return 0;
 }
@@ -38,6 +38,11 @@ static inline uint32_t cpu_ll_get_cycle_count(void)
     uint32_t result;
     RSR(CCOUNT, result);
     return result;
+}
+
+static inline void IRAM_ATTR cpu_ll_set_cycle_count(uint32_t val)
+{
+    WSR(CCOUNT, val);
 }
 
 static inline void* cpu_ll_get_sp(void)
@@ -110,7 +115,7 @@ static inline void cpu_ll_set_watchpoint(int id,
 
     //We support watching 2^n byte values, from 1 to 64. Calculate the mask for that.
     for (int x = 0; x < 7; x++) {
-        if (size == (size_t)(1 << x)) {
+        if (size == (size_t)(1U << x)) {
             break;
         }
         dbreakc <<= 1;
@@ -190,6 +195,11 @@ static inline void cpu_ll_write_dedic_gpio_all(uint32_t value)
 static inline void cpu_ll_write_dedic_gpio_mask(uint32_t mask, uint32_t value)
 {
     asm volatile("wr_mask_gpio_out %0, %1" : : "r"(value), "r"(mask):);
+}
+
+static inline void cpu_ll_waiti(void)
+{
+    asm volatile ("waiti 0\n");
 }
 
 #ifdef __cplusplus

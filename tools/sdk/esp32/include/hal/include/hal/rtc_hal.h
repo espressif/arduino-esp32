@@ -15,8 +15,14 @@
 #pragma once
 
 #include "hal/gpio_types.h"
-#include "hal/rtc_io_ll.h"
 #include "hal/rtc_cntl_ll.h"
+#if !CONFIG_IDF_TARGET_ESP32C3
+#include "hal/rtc_io_ll.h"
+#endif
+
+#define RTC_HAL_DMA_LINK_NODE_SIZE      (16)
+
+#if SOC_PM_SUPPORT_EXT_WAKEUP
 
 #define rtc_hal_ext1_get_wakeup_pins()                    rtc_cntl_ll_ext1_get_wakeup_pins()
 
@@ -24,7 +30,25 @@
 
 #define rtc_hal_ext1_clear_wakeup_pins()                  rtc_cntl_ll_ext1_clear_wakeup_pins()
 
+#endif
+
+#if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
+
+#define rtc_hal_gpio_get_wakeup_pins()                    rtc_cntl_ll_gpio_get_wakeup_pins()
+
+#define rtc_hal_gpio_clear_wakeup_pins()                  rtc_cntl_ll_gpio_clear_wakeup_pins()
+
+#define rtc_hal_gpio_set_wakeup_pins()                    rtc_cntl_ll_gpio_set_wakeup_pins()
+
+#endif
+
 #define rtc_hal_set_wakeup_timer(ticks)                   rtc_cntl_ll_set_wakeup_timer(ticks)
+
+void * rtc_cntl_hal_dma_link_init(void *elem, void *buff, int size, void *next);
+
+void rtc_cntl_hal_enable_cpu_retention(void *addr);
+
+#define rtc_cntl_hal_disable_cpu_retention()              rtc_cntl_ll_disable_cpu_retention()
 
 /*
  * Enable wakeup from ULP coprocessor.

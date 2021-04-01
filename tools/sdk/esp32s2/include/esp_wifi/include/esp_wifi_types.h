@@ -35,6 +35,12 @@ typedef enum {
     WIFI_IF_AP  = ESP_IF_WIFI_AP,
 } wifi_interface_t;
 
+#define WIFI_OFFCHAN_TX_REQ      1
+#define WIFI_OFFCHAN_TX_CANCEL   0
+
+#define WIFI_ROC_REQ     1
+#define WIFI_ROC_CANCEL  0
+
 typedef enum {
     WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
     WIFI_COUNTRY_POLICY_MANUAL, /**< Country policy is manual, always use the configured country info */
@@ -58,6 +64,7 @@ typedef enum {
     WIFI_AUTH_WPA2_ENTERPRISE,  /**< authenticate mode : WPA2_ENTERPRISE */
     WIFI_AUTH_WPA3_PSK,         /**< authenticate mode : WPA3_PSK */
     WIFI_AUTH_WPA2_WPA3_PSK,    /**< authenticate mode : WPA2_WPA3_PSK */
+    WIFI_AUTH_WAPI_PSK,         /**< authenticate mode : WAPI_PSK */
     WIFI_AUTH_MAX
 } wifi_auth_mode_t;
 
@@ -141,6 +148,7 @@ typedef enum {
     WIFI_CIPHER_TYPE_CCMP,       /**< the cipher type is CCMP */
     WIFI_CIPHER_TYPE_TKIP_CCMP,  /**< the cipher type is TKIP and CCMP */
     WIFI_CIPHER_TYPE_AES_CMAC128,/**< the cipher type is AES-CMAC-128 */
+    WIFI_CIPHER_TYPE_SMS4,       /**< the cipher type is SMS4 */
     WIFI_CIPHER_TYPE_UNKNOWN,    /**< the cipher type is unknown */
 } wifi_cipher_type_t;
 
@@ -170,7 +178,9 @@ typedef struct {
     uint32_t phy_11n:1;                   /**< bit: 2 flag to identify if 11n mode is enabled or not */
     uint32_t phy_lr:1;                    /**< bit: 3 flag to identify if low rate is enabled or not */
     uint32_t wps:1;                       /**< bit: 4 flag to identify if WPS is supported or not */
-    uint32_t reserved:27;                 /**< bit: 5..31 reserved */
+    uint32_t ftm_responder:1;             /**< bit: 5 flag to identify if FTM is supported in responder mode */
+    uint32_t ftm_initiator:1;             /**< bit: 6 flag to identify if FTM is supported in initiator mode */
+    uint32_t reserved:25;                 /**< bit: 7..31 reserved */
     wifi_country_t country;               /**< country information of AP */
 } wifi_ap_record_t;
 
@@ -222,6 +232,7 @@ typedef struct {
     uint8_t ssid_hidden;        /**< Broadcast SSID or not, default 0, broadcast the SSID */
     uint8_t max_connection;     /**< Max number of stations allowed to connect in, default 4, max 10 */
     uint16_t beacon_interval;   /**< Beacon interval which should be multiples of 100. Unit: TU(time unit, 1 TU = 1024 us). Range: 100 ~ 60000. Default value: 100 */
+    wifi_cipher_type_t pairwise_cipher;   /**< pairwise cipher of SoftAP, group cipher will be derived using this. cipher values are valid starting from WIFI_CIPHER_TYPE_TKIP, enum values before that will be considered as invalid and default cipher suites(TKIP+CCMP) will be used. Valid cipher suites in softAP mode are WIFI_CIPHER_TYPE_TKIP, WIFI_CIPHER_TYPE_CCMP and WIFI_CIPHER_TYPE_TKIP_CCMP. */
 } wifi_ap_config_t;
 
 /** @brief STA configuration settings for the ESP32 */
@@ -481,6 +492,43 @@ typedef struct {
 } wifi_ant_config_t;
 
 /**
+  * @brief     The Rx callback function of Action Tx operations
+  *
+  * @param     hdr pointer to the IEEE 802.11 Header structure
+  * @param     payload pointer to the Payload following 802.11 Header
+  * @param     len length of the Payload
+  * @param     channel channel number the frame is received on
+  *
+  */
+typedef int (* wifi_action_rx_cb_t)(uint8_t *hdr, uint8_t *payload,
+                                    size_t len, uint8_t channel);
+
+/**
+ * @brief Action Frame Tx Request
+ *
+ *
+ */
+typedef struct {
+    wifi_interface_t ifx;       /**< WiFi interface to send request to */
+    uint8_t dest_mac[6];        /**< Destination MAC address */
+    bool no_ack;                /**< Indicates no ack required */
+    wifi_action_rx_cb_t rx_cb;  /**< Rx Callback to receive any response */
+    uint32_t data_len;          /**< Length of the appended Data */
+    uint8_t data[0];            /**< Appended Data payload */
+} wifi_action_tx_req_t;
+
+/**
+  * @brief FTM Initiator configuration
+  *
+  */
+typedef struct {
+    uint8_t resp_mac[6];        /**< MAC address of the FTM Responder */
+    uint8_t channel;            /**< Primary channel of the FTM Responder */
+    uint8_t frm_count;          /**< No. of FTM frames requested in terms of 4 or 8 bursts (allowed values - 0(No pref), 16, 24, 32, 64) */
+    uint16_t burst_period;      /**< Requested time period between consecutive FTM bursts in 100's of milliseconds (0 - No pref) */
+} wifi_ftm_initiator_cfg_t;
+
+/**
   * @brief WiFi PHY rate encodings
   *
   */
@@ -548,6 +596,8 @@ typedef enum {
 
     /* Add next events after this only */
     WIFI_EVENT_STA_BSS_RSSI_LOW,         /**< AP's RSSI crossed configured threshold */
+    WIFI_EVENT_ACTION_TX_STATUS,         /**< Status indication of Action Tx operation */
+    WIFI_EVENT_ROC_DONE,                 /**< Remain-on-Channel operation complete */
 
     WIFI_EVENT_MAX,                      /**< Invalid WiFi event ID */
 } wifi_event_t;
@@ -635,12 +685,59 @@ typedef struct {
     int32_t rssi;                 /**< RSSI value of bss */
 } wifi_event_bss_rssi_low_t;
 
+/**
+  * @brief FTM operation status types
+  *
+  */
+typedef enum {
+    FTM_STATUS_SUCCESS = 0,     /**< FTM exchange is successful */
+    FTM_STATUS_UNSUPPORTED,     /**< Peer does not support FTM */
+    FTM_STATUS_CONF_REJECTED,   /**< Peer rejected FTM configuration in FTM Request */
+    FTM_STATUS_NO_RESPONSE,     /**< Peer did not respond to FTM Requests */
+    FTM_STATUS_FAIL,            /**< Unknown error during FTM exchange */
+} wifi_ftm_status_t;
+
+/** Argument structure for */
+typedef struct {
+    uint8_t dlog_token;     /**< Dialog Token of the FTM frame */
+    int8_t rssi;            /**< RSSI of the FTM frame received */
+    uint32_t rtt;           /**< Round Trip Time in pSec with a peer */
+    uint64_t t1;            /**< Time of departure of FTM frame from FTM Responder in pSec */
+    uint64_t t2;            /**< Time of arrival of FTM frame at FTM Initiator in pSec */
+    uint64_t t3;            /**< Time of departure of ACK from FTM Initiator in pSec */
+    uint64_t t4;            /**< Time of arrival of ACK at FTM Responder in pSec */
+} wifi_ftm_report_entry_t;
+
+/** Argument structure for WIFI_EVENT_FTM_REPORT event */
+typedef struct {
+    uint8_t peer_mac[6];                        /**< MAC address of the FTM Peer */
+    wifi_ftm_status_t status;                   /**< Status of the FTM operation */
+    uint32_t rtt_raw;                           /**< Raw average Round-Trip-Time with peer in Nano-Seconds */
+    uint32_t rtt_est;                           /**< Estimated Round-Trip-Time with peer in Nano-Seconds */
+    uint32_t dist_est;                          /**< Estimated one-way distance in Centi-Meters */
+    wifi_ftm_report_entry_t *ftm_report_data;   /**< Pointer to FTM Report with multiple entries, should be freed after use */
+    uint8_t ftm_report_num_entries;             /**< Number of entries in the FTM Report data */
+} wifi_event_ftm_report_t;
+
 #define WIFI_STATIS_BUFFER    (1<<0)
 #define WIFI_STATIS_RXTX      (1<<1)
 #define WIFI_STATIS_HW        (1<<2)
 #define WIFI_STATIS_DIAG      (1<<3)
 #define WIFI_STATIS_PS        (1<<4)
 #define WIFI_STATIS_ALL       (-1)
+
+/** Argument structure for WIFI_EVENT_ACTION_TX_STATUS event */
+typedef struct {
+    wifi_interface_t ifx;     /**< WiFi interface to send request to */
+    uint32_t context;         /**< Context to identify the request */
+    uint8_t da[6];            /**< Destination MAC address */
+    uint8_t status;           /**< Status of the operation */
+} wifi_event_action_tx_status_t;
+
+/** Argument structure for WIFI_EVENT_ROC_DONE event */
+typedef struct {
+    uint32_t context;         /**< Context to identify the request */
+} wifi_event_roc_done_t;
 
 #ifdef __cplusplus
 }

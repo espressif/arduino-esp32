@@ -43,7 +43,6 @@
 #include "esp_task.h"
 #include "esp_system.h"
 #include "sdkconfig.h"
-#include "sntp.h"
 #include "netif/dhcp_state.h"
 
 /* Enable all Espressif-only options */
@@ -750,7 +749,7 @@
 /**
  * LWIP_IPV6==1: Enable IPv6
  */
-#define LWIP_IPV6                       1
+#define LWIP_IPV6                       CONFIG_LWIP_IPV6
 
 /**
  * MEMP_NUM_ND6_QUEUE: Max number of IPv6 packets to queue during MAC resolution.
@@ -767,6 +766,9 @@
    ---------- Hook options ---------------
    ---------------------------------------
 */
+#ifdef LWIP_HOOK_FILENAME
+#warning LWIP_HOOK_FILENAME is used for IDF default hooks. Please use ESP_IDF_LWIP_HOOK_FILENAME to insert additional hook
+#endif
 #define LWIP_HOOK_FILENAME              "lwip_default_hooks.h"
 #define LWIP_HOOK_IP4_ROUTE_SRC         ip4_route_src_hook
 
@@ -844,6 +846,12 @@
 #define DHCP_DEBUG                      LWIP_DBG_ON
 #else
 #define DHCP_DEBUG                      LWIP_DBG_OFF
+#endif
+
+#ifdef CONFIG_LWIP_DHCP_STATE_DEBUG
+#define ESP_DHCP_DEBUG                  LWIP_DBG_ON
+#else
+#define ESP_DHCP_DEBUG                  LWIP_DBG_OFF
 #endif
 
 /**
@@ -954,7 +962,7 @@
 #define ESP_AUTO_IP                     1
 #define ESP_PBUF                        1
 #define ESP_PPP                         1
-#define ESP_IPV6                        1
+#define ESP_IPV6                        LWIP_IPV6
 #define ESP_SOCKET                      1
 #define ESP_LWIP_SELECT                 1
 #define ESP_LWIP_LOCK                   1
@@ -1002,6 +1010,23 @@
 /*
  * SNTP update delay - in milliseconds
  */
+
+/*
+ * Forward declarations of weak definitions from lwip's sntp.c which could
+ * be redefined by user application. This is needed to provide custom definition
+ * of the below macros in lwip's sntp.c.
+ * Full declaration is provided in IDF's port layer in esp_sntp.h
+ */
+#ifdef __cplusplus
+#define LWIP_FORWARD_DECLARE_C_CXX extern "C"
+#else
+#define LWIP_FORWARD_DECLARE_C_CXX
+#endif
+
+LWIP_FORWARD_DECLARE_C_CXX void sntp_sync_time(struct timeval *tv);
+
+LWIP_FORWARD_DECLARE_C_CXX uint32_t sntp_get_sync_interval(void);
+
 /** Set this to 1 to support DNS names (or IP address strings) to set sntp servers
  * One server address/name can be defined as default if SNTP_SERVER_DNS == 1:
  * \#define SNTP_SERVER_ADDRESS "pool.ntp.org"

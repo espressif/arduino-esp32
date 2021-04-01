@@ -59,17 +59,39 @@ void phy_set_wifi_mode_only(bool wifi_only);
  */
 void coex_bt_high_prio(void);
 
-#if CONFIG_IDF_TARGET_ESP32S2
 /**
  * @brief Open PHY and RF.
  */
 void phy_wakeup_init(void);
-#endif
 
 /**
  * @brief Shutdown PHY and RF.
  */
 void phy_close_rf(void);
+
+#if CONFIG_IDF_TARGET_ESP32C3
+/**
+ * @brief Disable PHY temperature sensor.
+ */
+void phy_xpd_tsens(void);
+#endif
+
+/**
+ * @brief Store and load PHY digital registers.
+ *
+ * @param     backup_en  if backup_en is true, store PHY digital registers to memory. Otherwise load PHY digital registers from memory
+ * @param     mem_addr   Memory address to store and load PHY digital registers
+ *
+ * @return    memory size
+ */
+uint8_t phy_dig_reg_backup(bool backup_en, uint32_t *mem_addr);
+
+#if CONFIG_MAC_BB_PD
+/**
+ * @brief Store and load baseband registers.
+ */
+void phy_freq_mem_backup(bool backup_en, uint32_t *mem);
+#endif
 
 #ifdef __cplusplus
 }

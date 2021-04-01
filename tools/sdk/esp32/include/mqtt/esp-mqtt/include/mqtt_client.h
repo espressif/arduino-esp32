@@ -12,11 +12,7 @@
 #include <string.h>
 #include "esp_err.h"
 
-#include "mqtt_config.h"
 #include "esp_event.h"
-#if CONFIG_ESP_TLS_USE_DS_PERIPHERAL
-#include "rsa_sign_alt.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +57,13 @@ typedef enum {
                                         and current data offset updating.
                                          */
     MQTT_EVENT_BEFORE_CONNECT,     /*!< The event occurs before connecting */
+    MQTT_EVENT_DELETED,            /*!< Notification on delete of one message from the internal outbox,
+                                        if the message couldn't have been sent and acknowledged before expiring
+                                        defined in OUTBOX_EXPIRED_TIMEOUT_MS.
+                                        (events are not posted upon deletion of successfully acknowledged messages)
+                                        - This event id is posted only if MQTT_REPORT_DELETED_MESSAGES==1
+                                        - Additional context: msg_id (id of the deleted message).
+                                        */
 } esp_mqtt_event_id_t;
 
 /**
@@ -306,8 +309,10 @@ int esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *top
  * - This API might block for several seconds, either due to network timeout (10s)
  *   or if publishing payloads longer than internal buffer (due to message
  *   fragmentation)
- * - Client doesn't have to be connected to send publish message
- *   (although it would drop all qos=0 messages, qos>1 messages would be enqueued)
+ * - Client doesn't have to be connected for this API to work, enqueueing the messages
+ *   with qos>1 (returning -1 for all the qos=0 messages if disconnected).
+ *   If MQTT_SKIP_PUBLISH_IF_DISCONNECTED is enabled, this API will not attempt to publish
+ *   when the client is not connected and will always return -1.
  * - It is thread safe, please refer to `esp_mqtt_client_subscribe` for details
  *
  * @param client    mqtt client handle
@@ -321,6 +326,27 @@ int esp_mqtt_client_unsubscribe(esp_mqtt_client_handle_t client, const char *top
  *         -1 on failure.
  */
 int esp_mqtt_client_publish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, int qos, int retain);
+
+/**
+ * @brief Enqueue a message to the outbox, to be sent later. Typically used for messages with qos>0, but could
+ * be also used for qos=0 messages if store=true.
+ *
+ * This API generates and stores the publish message into the internal outbox and the actual sending
+ * to the network is performed in the mqtt-task context (in contrast to the esp_mqtt_client_publish()
+ * which sends the publish message immediately in the user task's context).
+ * Thus, it could be used as a non blocking version of esp_mqtt_client_publish().
+ *
+ * @param client    mqtt client handle
+ * @param topic     topic string
+ * @param data      payload string (set to NULL, sending empty payload message)
+ * @param len       data length, if set to 0, length is calculated from payload string
+ * @param qos       qos of publish message
+ * @param retain    retain flag
+ * @param store     if true, all messages are enqueued; otherwise only qos1 and qos 2 are enqueued
+ *
+ * @return message_id if queued successfully, -1 otherwise
+ */
+int esp_mqtt_client_enqueue(esp_mqtt_client_handle_t client, const char *topic, const char *data, int len, int qos, int retain, bool store);
 
 /**
  * @brief Destroys the client handle

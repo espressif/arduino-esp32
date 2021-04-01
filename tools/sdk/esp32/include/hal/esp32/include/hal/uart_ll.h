@@ -207,7 +207,7 @@ static inline void uart_ll_read_rxfifo(uart_dev_t *hw, uint8_t *buf, uint32_t rd
 {
     //Get the UART APB fifo addr. Read fifo, we use APB address
     uint32_t fifo_addr = (hw == &UART0) ? UART_FIFO_REG(0) : (hw == &UART1) ? UART_FIFO_REG(1) : UART_FIFO_REG(2);
-    for(int i = 0; i < rd_len; i++) {
+    for(uint32_t i = 0; i < rd_len; i++) {
         buf[i] = READ_PERI_REG(fifo_addr);
 #ifdef CONFIG_COMPILER_OPTIMIZATION_PERF
         __asm__ __volatile__("nop");
@@ -228,7 +228,7 @@ static inline void uart_ll_write_txfifo(uart_dev_t *hw, const uint8_t *buf, uint
 {
     //Get the UART AHB fifo addr, Write fifo, we use AHB address
     uint32_t fifo_addr = (hw == &UART0) ? UART_FIFO_AHB_REG(0) : (hw == &UART1) ? UART_FIFO_AHB_REG(1) : UART_FIFO_AHB_REG(2);
-    for(int i = 0; i < wr_len; i++) {
+    for(uint32_t i = 0; i < wr_len; i++) {
         WRITE_PERI_REG(fifo_addr, buf[i]);
     }
 }
@@ -892,6 +892,45 @@ static inline uint16_t uart_ll_max_tout_thrd(uart_dev_t *hw)
         tout_thrd = (uint16_t)(UART_RX_TOUT_THRHD_V  << 3);
     }
     return tout_thrd;
+}
+
+/**
+ * @brief  Force UART xoff.
+ *
+ * @param  uart_num UART port number, the max port number is (UART_NUM_MAX -1).
+ *
+ * @return None.
+ */
+static inline void uart_ll_force_xoff(uart_port_t uart_num)
+{
+    /* Note: Set `UART_FORCE_XOFF` can't stop new Tx request. */
+    REG_SET_BIT(UART_FLOW_CONF_REG(uart_num), UART_FORCE_XOFF);
+}
+
+/**
+ * @brief  Force UART xon.
+ *
+ * @param  uart_num UART port number, the max port number is (UART_NUM_MAX -1).
+ *
+ * @return None.
+ */
+static inline void uart_ll_force_xon(uart_port_t uart_num)
+{
+    REG_CLR_BIT(UART_FLOW_CONF_REG(uart_num), UART_FORCE_XOFF);
+    REG_SET_BIT(UART_FLOW_CONF_REG(uart_num), UART_FORCE_XON);
+    REG_CLR_BIT(UART_FLOW_CONF_REG(uart_num), UART_FORCE_XON);
+}
+
+/**
+ * @brief  Get UART final state machine status.
+ *
+ * @param  uart_num UART port number, the max port number is (UART_NUM_MAX -1).
+ *
+ * @return UART module FSM status.
+ */
+static inline uint32_t uart_ll_get_fsm_status(uart_port_t uart_num)
+{
+    return REG_GET_FIELD(UART_STATUS_REG(uart_num), UART_ST_UTX_OUT);
 }
 
 #undef UART_LL_TOUT_REF_FACTOR_DEFAULT

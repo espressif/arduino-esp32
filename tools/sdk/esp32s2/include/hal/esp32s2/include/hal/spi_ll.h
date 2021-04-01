@@ -75,7 +75,7 @@ typedef enum {
     SPI_LL_INTR_WRBUF =         BIT(7),     ///< Has received WRBUF command. Only available in slave HD.
     SPI_LL_INTR_RDDMA =         BIT(8),     ///< Has received RDDMA command. Only available in slave HD.
     SPI_LL_INTR_WRDMA =         BIT(9),     ///< Has received WRDMA command. Only available in slave HD.
-    SPI_LL_INTR_WR_DONE =       BIT(10),    ///< Has received WR_DONE command. Only available in slave HD.
+    SPI_LL_INTR_CMD7 =          BIT(10),    ///< Has received CMD7 command. Only available in slave HD.
     SPI_LL_INTR_CMD8 =          BIT(11),    ///< Has received CMD8 command. Only available in slave HD.
     SPI_LL_INTR_CMD9 =          BIT(12),    ///< Has received CMD9 command. Only available in slave HD.
     SPI_LL_INTR_CMDA =          BIT(13),    ///< Has received CMDA command. Only available in slave HD.
@@ -150,7 +150,7 @@ static inline void spi_ll_slave_hd_init(spi_dev_t *hw)
     hw->slave.soft_reset = 1;
     hw->slave.soft_reset = 0;
 
-    hw->user.doutdin = 0; //we only support full duplex
+    hw->user.doutdin = 0; //we only support half duplex
     hw->slave.slave_mode = 1;
 }
 
@@ -314,7 +314,7 @@ static inline void spi_ll_dma_set_rx_eof_generation(spi_dev_t *hw, bool enable)
  */
 static inline void spi_ll_write_buffer(spi_dev_t *hw, const uint8_t *buffer_to_send, size_t bitlen)
 {
-    for (int x = 0; x < bitlen; x += 32) {
+    for (size_t x = 0; x < bitlen; x += 32) {
         //Use memcpy to get around alignment issues for txdata
         uint32_t word;
         memcpy(&word, &buffer_to_send[x / 8], 4);
@@ -331,7 +331,7 @@ static inline void spi_ll_write_buffer(spi_dev_t *hw, const uint8_t *buffer_to_s
  */
 static inline void spi_ll_read_buffer(spi_dev_t *hw, uint8_t *buffer_to_rcv, size_t bitlen)
 {
-    for (int x = 0; x < bitlen; x += 32) {
+    for (size_t x = 0; x < bitlen; x += 32) {
         //Do a memcpy to get around possible alignment issues in rx_buffer
         uint32_t word = hw->data_buf[x / 32];
         int len = bitlen - x;
@@ -955,21 +955,21 @@ static inline uint32_t spi_ll_slave_get_rcv_bitlen(spi_dev_t *hw)
 //helper macros to generate code for each interrupts
 #define FOR_EACH_ITEM(op, list) do { list(op) } while(0)
 #define INTR_LIST(item)    \
-    item(SPI_LL_INTR_TRANS_DONE,    slave.int_trans_done_en,    slave.trans_done,           slave.trans_done=0) \
-    item(SPI_LL_INTR_RDBUF,         slave.int_rd_buf_done_en,   slv_rdbuf_dlen.rd_buf_done, slv_rdbuf_dlen.rd_buf_done=0) \
-    item(SPI_LL_INTR_WRBUF,         slave.int_wr_buf_done_en,   slv_wrbuf_dlen.wr_buf_done, slv_wrbuf_dlen.wr_buf_done=0) \
-    item(SPI_LL_INTR_RDDMA,         slave.int_rd_dma_done_en,   slv_rd_byte.rd_dma_done,    slv_rd_byte.rd_dma_done=0) \
-    item(SPI_LL_INTR_WRDMA,         slave.int_wr_dma_done_en,   slave1.wr_dma_done,         slave1.wr_dma_done=0) \
-    item(SPI_LL_INTR_IN_SUC_EOF,    dma_int_ena.in_suc_eof,     dma_int_raw.in_suc_eof,     dma_int_clr.in_suc_eof=1) \
-    item(SPI_LL_INTR_OUT_EOF,       dma_int_ena.out_eof,        dma_int_raw.out_eof,        dma_int_clr.out_eof=1) \
-    item(SPI_LL_INTR_OUT_TOTAL_EOF, dma_int_ena.out_total_eof,  dma_int_raw.out_total_eof,  dma_int_clr.out_total_eof=1) \
-    item(SPI_LL_INTR_SEG_DONE,      slave.int_dma_seg_trans_en, hold.dma_seg_trans_done,    hold.dma_seg_trans_done=0) \
-    item(SPI_LL_INTR_IN_FULL,       dma_int_ena.infifo_full_err, dma_int_raw.infifo_full_err, dma_int_clr.infifo_full_err=1) \
-    item(SPI_LL_INTR_OUT_EMPTY,     dma_int_ena.outfifo_empty_err, dma_int_raw.outfifo_empty_err,  dma_int_clr.outfifo_empty_err=1) \
-    item(SPI_LL_INTR_WR_DONE,       dma_int_ena.cmd7, dma_int_raw.cmd7,  dma_int_clr.cmd7=1) \
-    item(SPI_LL_INTR_CMD8,          dma_int_ena.cmd8, dma_int_raw.cmd8,  dma_int_clr.cmd8=1) \
-    item(SPI_LL_INTR_CMD9,          dma_int_ena.cmd9, dma_int_raw.cmd9,  dma_int_clr.cmd9=1) \
-    item(SPI_LL_INTR_CMDA,          dma_int_ena.cmda, dma_int_raw.cmda,  dma_int_clr.cmda=1)
+    item(SPI_LL_INTR_TRANS_DONE,    slave.int_trans_done_en,        slave.trans_done,               slave.trans_done=0) \
+    item(SPI_LL_INTR_RDBUF,         slave.int_rd_buf_done_en,       slv_rdbuf_dlen.rd_buf_done,     slv_rdbuf_dlen.rd_buf_done=0) \
+    item(SPI_LL_INTR_WRBUF,         slave.int_wr_buf_done_en,       slv_wrbuf_dlen.wr_buf_done,     slv_wrbuf_dlen.wr_buf_done=0) \
+    item(SPI_LL_INTR_RDDMA,         slave.int_rd_dma_done_en,       slv_rd_byte.rd_dma_done,        slv_rd_byte.rd_dma_done=0) \
+    item(SPI_LL_INTR_WRDMA,         slave.int_wr_dma_done_en,       slave1.wr_dma_done,             slave1.wr_dma_done=0) \
+    item(SPI_LL_INTR_IN_SUC_EOF,    dma_int_ena.in_suc_eof,         dma_int_raw.in_suc_eof,         dma_int_clr.in_suc_eof=1) \
+    item(SPI_LL_INTR_OUT_EOF,       dma_int_ena.out_eof,            dma_int_raw.out_eof,            dma_int_clr.out_eof=1) \
+    item(SPI_LL_INTR_OUT_TOTAL_EOF, dma_int_ena.out_total_eof,      dma_int_raw.out_total_eof,      dma_int_clr.out_total_eof=1) \
+    item(SPI_LL_INTR_SEG_DONE,      slave.int_dma_seg_trans_en,     hold.dma_seg_trans_done,        hold.dma_seg_trans_done=0) \
+    item(SPI_LL_INTR_IN_FULL,       dma_int_ena.infifo_full_err,    dma_int_raw.infifo_full_err,    dma_int_clr.infifo_full_err=1) \
+    item(SPI_LL_INTR_OUT_EMPTY,     dma_int_ena.outfifo_empty_err,  dma_int_raw.outfifo_empty_err,  dma_int_clr.outfifo_empty_err=1) \
+    item(SPI_LL_INTR_CMD7,          dma_int_ena.cmd7,               dma_int_raw.cmd7,               dma_int_clr.cmd7=1) \
+    item(SPI_LL_INTR_CMD8,          dma_int_ena.cmd8,               dma_int_raw.cmd8,               dma_int_clr.cmd8=1) \
+    item(SPI_LL_INTR_CMD9,          dma_int_ena.cmd9,               dma_int_raw.cmd9,               dma_int_clr.cmd9=1) \
+    item(SPI_LL_INTR_CMDA,          dma_int_ena.cmda,               dma_int_raw.cmda,               dma_int_clr.cmda=1)
 
 
 static inline void spi_ll_enable_intr(spi_dev_t* hw, spi_ll_intr_t intr_mask)
@@ -1077,13 +1077,14 @@ static inline uint32_t spi_ll_slave_hd_get_last_addr(spi_dev_t* hw)
  *      RX DMA (Peripherals->DMA->RAM)
  *      TX DMA (RAM->DMA->Peripherals)
  *----------------------------------------------------------------------------*/
+//---------------------------------------------------RX-------------------------------------------------//
 /**
  * Reset RX DMA which stores the data received from a peripheral into RAM.
  *
- * @param hw     Beginning address of the peripheral registers.
- * @param dma_in Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param channel DMA channel, for chip version compatibility, not used.
  */
-static inline void spi_dma_ll_rx_reset(spi_dma_dev_t *dma_in)
+static inline void spi_dma_ll_rx_reset(spi_dma_dev_t *dma_in, uint32_t channel)
 {
     //Reset RX DMA peripheral
     dma_in->dma_in_link.dma_rx_ena = 0;
@@ -1096,10 +1097,11 @@ static inline void spi_dma_ll_rx_reset(spi_dma_dev_t *dma_in)
 /**
  * Start RX DMA.
  *
- * @param dma_in Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
- * @param addr Address of the beginning DMA descriptor.
+ * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param channel DMA channel, for chip version compatibility, not used.
+ * @param addr    Address of the beginning DMA descriptor.
  */
-static inline void spi_dma_ll_rx_start(spi_dma_dev_t *dma_in, lldesc_t *addr)
+static inline void spi_dma_ll_rx_start(spi_dma_dev_t *dma_in, uint32_t channel, lldesc_t *addr)
 {
     dma_in->dma_in_link.addr = (int) addr & 0xFFFFF;
     dma_in->dma_in_link.start = 1;
@@ -1109,31 +1111,46 @@ static inline void spi_dma_ll_rx_start(spi_dma_dev_t *dma_in, lldesc_t *addr)
  * Enable DMA RX channel burst for data
  *
  * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_rx_enable_burst_data(spi_dma_dev_t *dma_in, bool enable)
+static inline void spi_dma_ll_rx_enable_burst_data(spi_dma_dev_t *dma_in, uint32_t channel, bool enable)
 {
     //This is not supported in esp32s2
 }
 
 /**
- * Enable DMA TX channel burst for descriptor
+ * Enable DMA RX channel burst for descriptor
  *
- * @param dma_in Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_rx_enable_burst_desc(spi_dma_dev_t *dma_in, bool enable)
+static inline void spi_dma_ll_rx_enable_burst_desc(spi_dma_dev_t *dma_in, uint32_t channel, bool enable)
 {
     dma_in->dma_conf.indscr_burst_en = enable;
 }
 
 /**
+ * Get the last inlink descriptor address when DMA produces in_suc_eof interrupt
+ *
+ * @param dma_in  Beginning address of the DMA peripheral registers which stores the data received from a peripheral into RAM.
+ * @param channel DMA channel, for chip version compatibility, not used.
+ * @return        The address
+ */
+static inline uint32_t spi_dma_ll_get_in_suc_eof_desc_addr(spi_dma_dev_t *dma_in, uint32_t channel)
+{
+    return dma_in->dma_in_suc_eof_des_addr;
+}
+
+//---------------------------------------------------TX-------------------------------------------------//
+/**
  * Reset TX DMA which transmits the data from RAM to a peripheral.
  *
- * @param hw      Beginning address of the peripheral registers.
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
  */
-static inline void spi_dma_ll_tx_reset(spi_dma_dev_t *dma_out)
+static inline void spi_dma_ll_tx_reset(spi_dma_dev_t *dma_out, uint32_t channel)
 {
     //Reset TX DMA peripheral
     dma_out->dma_conf.out_rst = 1;
@@ -1144,9 +1161,10 @@ static inline void spi_dma_ll_tx_reset(spi_dma_dev_t *dma_out)
  * Start TX DMA.
  *
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
- * @param addr Address of the beginning DMA descriptor.
+ * @param channel DMA channel, for chip version compatibility, not used.
+ * @param addr    Address of the beginning DMA descriptor.
  */
-static inline void spi_dma_ll_tx_start(spi_dma_dev_t *dma_out, lldesc_t *addr)
+static inline void spi_dma_ll_tx_start(spi_dma_dev_t *dma_out, uint32_t channel, lldesc_t *addr)
 {
     dma_out->dma_out_link.addr = (int) addr & 0xFFFFF;
     dma_out->dma_out_link.start = 1;
@@ -1156,9 +1174,10 @@ static inline void spi_dma_ll_tx_start(spi_dma_dev_t *dma_out, lldesc_t *addr)
  * Enable DMA TX channel burst for data
  *
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_tx_enable_burst_data(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_dma_ll_tx_enable_burst_data(spi_dma_dev_t *dma_out, uint32_t channel, bool enable)
 {
     dma_out->dma_conf.out_data_burst_en = enable;
 }
@@ -1167,9 +1186,10 @@ static inline void spi_dma_ll_tx_enable_burst_data(spi_dma_dev_t *dma_out, bool 
  * Enable DMA TX channel burst for descriptor
  *
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_tx_enable_burst_desc(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_dma_ll_tx_enable_burst_desc(spi_dma_dev_t *dma_out, uint32_t channel, bool enable)
 {
     dma_out->dma_conf.outdscr_burst_en = enable;
 }
@@ -1178,9 +1198,10 @@ static inline void spi_dma_ll_tx_enable_burst_desc(spi_dma_dev_t *dma_out, bool 
  * Configuration of OUT EOF flag generation way
  *
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  1: when dma pop all data from fifo  0:when ahb push all data to fifo.
  */
-static inline void spi_dma_ll_set_out_eof_generation(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_dma_ll_set_out_eof_generation(spi_dma_dev_t *dma_out, uint32_t channel, bool enable)
 {
     dma_out->dma_conf.out_eof_mode = enable;
 }
@@ -1189,19 +1210,32 @@ static inline void spi_dma_ll_set_out_eof_generation(spi_dma_dev_t *dma_out, boo
  * Enable automatic outlink-writeback
  *
  * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
  * @param enable  True to enable, false to disable
  */
-static inline void spi_dma_ll_enable_out_auto_wrback(spi_dma_dev_t *dma_out, bool enable)
+static inline void spi_dma_ll_enable_out_auto_wrback(spi_dma_dev_t *dma_out, uint32_t channel, bool enable)
 {
     dma_out->dma_conf.out_auto_wrback = enable;
 }
 
-static inline void spi_dma_ll_rx_restart(spi_dma_dev_t *dma_in)
+/**
+ * Get the last outlink descriptor address when DMA produces out_eof intrrupt
+ *
+ * @param dma_out Beginning address of the DMA peripheral registers which transmits the data from RAM to a peripheral.
+ * @param channel DMA channel, for chip version compatibility, not used.
+ * @return        The address
+ */
+static inline uint32_t spi_dma_ll_get_out_eof_desc_addr(spi_dma_dev_t *dma_out, uint32_t channel)
+{
+    return dma_out->dma_out_eof_des_addr;
+}
+
+static inline void spi_dma_ll_rx_restart(spi_dma_dev_t *dma_in, uint32_t channel)
 {
     dma_in->dma_in_link.restart = 1;
 }
 
-static inline void spi_dma_ll_tx_restart(spi_dma_dev_t *dma_out)
+static inline void spi_dma_ll_tx_restart(spi_dma_dev_t *dma_out, uint32_t channel)
 {
     dma_out->dma_out_link.restart = 1;
 }

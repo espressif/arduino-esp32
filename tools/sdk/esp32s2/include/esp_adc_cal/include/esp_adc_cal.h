@@ -15,13 +15,13 @@
 #ifndef __ESP_ADC_CAL_H__
 #define __ESP_ADC_CAL_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include "esp_err.h"
 #include "driver/adc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Type of calibration value used in characterization
@@ -30,7 +30,8 @@ typedef enum {
     ESP_ADC_CAL_VAL_EFUSE_VREF = 0,         /**< Characterization based on reference voltage stored in eFuse*/
     ESP_ADC_CAL_VAL_EFUSE_TP = 1,           /**< Characterization based on Two Point values stored in eFuse*/
     ESP_ADC_CAL_VAL_DEFAULT_VREF = 2,       /**< Characterization based on default reference voltage*/
-    ESP_ADC_CAL_VAL_MAX
+    ESP_ADC_CAL_VAL_MAX,
+    ESP_ADC_CAL_VAL_NOT_SUPPORTED = ESP_ADC_CAL_VAL_MAX,
 } esp_adc_cal_value_t;
 
 /**

@@ -17,8 +17,12 @@
 #include "soc/soc.h"
 #include "soc/soc_caps.h"
 #include "soc/syscon_struct.h"
+
+#if SOC_ADC_SUPPORT_RTC_CTRL
 #include "soc/sens_reg.h"
 #include "soc/sens_struct.h"
+#endif
+
 #if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 #include "soc/rtc_io_struct.h"
 #endif

@@ -72,12 +72,14 @@
 #define SOC_ULP_SUPPORTED           1
 #define SOC_RTC_SLOW_MEM_SUPPORTED  1
 #define SOC_CCOMP_TIMER_SUPPORTED   1
+#define SOC_EFUSE_SECURE_BOOT_KEY_DIGESTS 1
 
 /*-------------------------- ADC CAPS ----------------------------------------*/
 #define SOC_ADC_PERIPH_NUM              (2)
 #define SOC_ADC_PATT_LEN_MAX            (16)
 #define SOC_ADC_CHANNEL_NUM(PERIPH_NUM) ((PERIPH_NUM==0)? 8: 10)
 #define SOC_ADC_MAX_CHANNEL_NUM         (10)
+#define SOC_ADC_MAX_BITWIDTH            (12)
 
 /**
  * Check if adc support digital controller (DMA) mode.
@@ -86,6 +88,7 @@
  *      - 0 : not support;
  */
 #define SOC_ADC_SUPPORT_DMA_MODE(PERIPH_NUM) ((PERIPH_NUM==0)? 1: 0)
+#define SOC_ADC_SUPPORT_RTC_CTRL        1
 
 /*-------------------------- BROWNOUT CAPS -----------------------------------*/
 #if SOC_CAPS_ECO_VER >= 1
@@ -115,6 +118,9 @@
 #define SOC_GPIO_VALID_GPIO_MASK        (0xFFFFFFFFFFULL & ~(0ULL | BIT20 | BIT24 | BIT28 | BIT29 | BIT30 | BIT31))
 // GPIO >= 34 are input only
 #define SOC_GPIO_VALID_OUTPUT_GPIO_MASK (SOC_GPIO_VALID_GPIO_MASK & ~(0ULL | BIT34 | BIT35 | BIT36 | BIT37 | BIT38 | BIT39))
+
+// Support to configure slept status
+#define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
 
 /*-------------------------- I2C CAPS ----------------------------------------*/
 // ESP32 have 2 I2C.
@@ -166,12 +172,13 @@
 #define SOC_PCNT_UNIT_CHANNEL_NUM (2)
 
 /*-------------------------- RMT CAPS ----------------------------------------*/
-#define SOC_RMT_CHANNEL_MEM_WORDS      (64) /*!< Each channel owns 64 words memory */
-#define SOC_RMT_TX_CHANNELS_NUM        (8)  /*!< Number of channels that capable of Transmit */
-#define SOC_RMT_RX_CHANNELS_NUM        (8)  /*!< Number of channels that capable of Receive */
-#define SOC_RMT_CHANNELS_NUM           (8)  /*!< Total 8 channels (each channel can be configured to either TX or RX) */
-#define SOC_RMT_SUPPORT_REF_TICK       (1)  /*!< Support set REF_TICK as the RMT clock source */
-#define SOC_RMT_SOURCE_CLK_INDEPENDENT (1)  /*!< Can select different source clock for channels */
+#define SOC_RMT_GROUPS                  (1)  /*!< One RMT group */
+#define SOC_RMT_TX_CANDIDATES_PER_GROUP (8)  /*!< Number of channels that capable of Transmit in each group */
+#define SOC_RMT_RX_CANDIDATES_PER_GROUP (8)  /*!< Number of channels that capable of Receive in each group */
+#define SOC_RMT_CHANNELS_PER_GROUP      (8)  /*!< Total 8 channels */
+#define SOC_RMT_MEM_WORDS_PER_CHANNEL   (64) /*!< Each channel owns 64 words memory */
+#define SOC_RMT_SUPPORT_REF_TICK        (1)  /*!< Support set REF_TICK as the RMT clock source */
+#define SOC_RMT_CHANNEL_CLK_INDEPENDENT (1)  /*!< Can select different source clock for each channel */
 
 /*-------------------------- RTCIO CAPS --------------------------------------*/
 #define SOC_RTCIO_PIN_COUNT 18
@@ -264,6 +271,12 @@
 #define SOC_AES_SUPPORT_AES_128 (1)
 #define SOC_AES_SUPPORT_AES_192 (1)
 #define SOC_AES_SUPPORT_AES_256 (1)
+
+/*--------------- PHY REGISTER AND MEMORY SIZE CAPS --------------------------*/
+#define SOC_PHY_DIG_REGS_MEM_SIZE       (21*4)
+
+/*-------------------------- Power Management CAPS ---------------------------*/
+#define SOC_PM_SUPPORT_EXT_WAKEUP       (1)
 
 /* ---------------------------- Compatibility ------------------------------- */
 #define SOC_CAN_SUPPORTED                   SOC_TWAI_SUPPORTED

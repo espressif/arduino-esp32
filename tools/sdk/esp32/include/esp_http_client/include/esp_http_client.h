@@ -19,6 +19,7 @@
 #include "http_parser.h"
 #include "sdkconfig.h"
 #include "esp_err.h"
+#include <sys/socket.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -131,6 +132,11 @@ typedef struct {
     bool                        is_async;                 /*!< Set asynchronous mode, only supported with HTTPS for now */
     bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
     bool                        skip_cert_common_name_check;    /*!< Skip any validation of server certificate CN field */
+    bool                        keep_alive_enable;   /*!< Enable keep-alive timeout */
+    int                         keep_alive_idle;     /*!< Keep-alive idle time. Default is 5 (second) */
+    int                         keep_alive_interval; /*!< Keep-alive interval time. Default is 5 (second) */
+    int                         keep_alive_count;    /*!< Keep-alive packet retry send count. Default is 3 counts */
+    struct ifreq                *if_name;            /*!< The name of interface for data to go through. Use the default interface without setting */
 } esp_http_client_config_t;
 
 /**
