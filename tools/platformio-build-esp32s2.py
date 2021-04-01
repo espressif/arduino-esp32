@@ -63,8 +63,6 @@ env.Append(
         "-ggdb",
         "-O2",
         "-fstack-protector",
-        "-fmacro-prefix-map=/Users/ficeto/Desktop/ESP32/ESP32S2/esp32-arduino-lib-builder=.",
-        "-fmacro-prefix-map=/Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public=IDF",
         "-fstrict-volatile-bitfields",
         "-Wno-error=unused-but-set-variable",
         "-MMD"
