@@ -188,8 +188,8 @@ esp32.menu.PSRAM.disabled=Disabled
 esp32.menu.PSRAM.disabled.build.defines=
 esp32.menu.PSRAM.disabled.build.extra_libs=
 esp32.menu.PSRAM.enabled=Enabled
-esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-esp32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32.menu.PSRAM.enabled.build.extra_libs=
 
 esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32.menu.PartitionScheme.default.build.partitions=default
@@ -335,8 +335,8 @@ esp32wrover.build.flash_freq=40m
 esp32wrover.build.flash_mode=dio
 esp32wrover.build.boot=dio
 esp32wrover.build.partitions=default
-esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-esp32wrover.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32wrover.build.extra_libs=
 
 esp32wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32wrover.menu.PartitionScheme.default.build.partitions=default
@@ -521,7 +521,7 @@ esp32wroverkit.build.flash_mode=dio
 esp32wroverkit.build.boot=dio
 esp32wroverkit.build.partitions=default
 esp32wroverkit.menu.PSRAM.enabled=Enabled
-esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32wroverkit.menu.PSRAM.disabled=Disabled
 esp32wroverkit.menu.PSRAM.disabled.build.defines=
 esp32wroverkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -656,8 +656,8 @@ tinypico.menu.FlashFreq.40=40MHz
 tinypico.menu.FlashFreq.40.build.flash_freq=40m
 
 tinypico.menu.PSRAM.enabled=Enabled
-tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-tinypico.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+tinypico.menu.PSRAM.enabled.build.extra_libs=
 tinypico.menu.PSRAM.disabled=Disabled
 tinypico.menu.PSRAM.disabled.build.defines=
 tinypico.menu.PSRAM.disabled.build.extra_libs=
@@ -2273,8 +2273,8 @@ d32_pro.menu.PSRAM.disabled=Disabled
 d32_pro.menu.PSRAM.disabled.build.defines=
 d32_pro.menu.PSRAM.disabled.build.extra_libs=
 d32_pro.menu.PSRAM.enabled=Enabled
-d32_pro.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-d32_pro.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+d32_pro.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+d32_pro.menu.PSRAM.enabled.build.extra_libs=
 
 d32_pro.menu.PartitionScheme.default=Default
 d32_pro.menu.PartitionScheme.default.build.partitions=default
@@ -4027,8 +4027,8 @@ m5stack-fire.build.partitions=default_16MB
 m5stack-fire.build.defines=
 
 m5stack-fire.menu.PSRAM.enabled=Enabled
-m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-m5stack-fire.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+m5stack-fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack-fire.menu.PSRAM.enabled.build.extra_libs=
 m5stack-fire.menu.PSRAM.disabled=Disabled
 m5stack-fire.menu.PSRAM.disabled.build.defines=
 m5stack-fire.menu.PSRAM.disabled.build.extra_libs=
@@ -4218,8 +4218,8 @@ m5stack-core2.build.partitions=default_16MB
 m5stack-core2.build.defines=
 
 m5stack-core2.menu.PSRAM.enabled=Enabled
-m5stack-core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-m5stack-core2.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+m5stack-core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack-core2.menu.PSRAM.enabled.build.extra_libs=
 m5stack-core2.menu.PSRAM.disabled=Disabled
 m5stack-core2.menu.PSRAM.disabled.build.defines=
 m5stack-core2.menu.PSRAM.disabled.build.extra_libs=
@@ -4319,8 +4319,8 @@ m5stack-timer-cam.build.partitions=default
 m5stack-timer-cam.build.defines=
 
 m5stack-timer-cam.menu.PSRAM.enabled=Enabled
-m5stack-timer-cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-m5stack-timer-cam.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+m5stack-timer-cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack-timer-cam.menu.PSRAM.enabled.build.extra_libs=
 m5stack-timer-cam.menu.PSRAM.disabled=Disabled
 m5stack-timer-cam.menu.PSRAM.disabled.build.defines=
 m5stack-timer-cam.menu.PSRAM.disabled.build.extra_libs=
@@ -4473,8 +4473,8 @@ odroid_esp32.build.flash_size=16MB
 odroid_esp32.build.flash_mode=dio
 odroid_esp32.build.boot=dio
 odroid_esp32.build.partitions=default
-odroid_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-odroid_esp32.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+odroid_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+odroid_esp32.build.extra_libs=
 
 odroid_esp32.menu.FlashMode.qio=QIO
 odroid_esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -4562,8 +4562,8 @@ heltec_wifi_kit_32.menu.PSRAM.disabled=Disabled
 heltec_wifi_kit_32.menu.PSRAM.disabled.build.defines=
 heltec_wifi_kit_32.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_kit_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+heltec_wifi_kit_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+heltec_wifi_kit_32.menu.PSRAM.enabled.build.extra_libs=
 
 heltec_wifi_kit_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_kit_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -4629,8 +4629,8 @@ heltec_wifi_lora_32.menu.PSRAM.disabled=Disabled
 heltec_wifi_lora_32.menu.PSRAM.disabled.build.defines=
 heltec_wifi_lora_32.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_lora_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-heltec_wifi_lora_32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+heltec_wifi_lora_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+heltec_wifi_lora_32.menu.PSRAM.enabled.build.extra_libs=
 
 heltec_wifi_lora_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -4726,8 +4726,8 @@ heltec_wifi_lora_32_V2.menu.PSRAM.disabled=Disabled
 heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.defines=
 heltec_wifi_lora_32_V2.menu.PSRAM.disabled.build.extra_libs=
 heltec_wifi_lora_32_V2.menu.PSRAM.enabled=Enabled
-heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+heltec_wifi_lora_32_V2.menu.PSRAM.enabled.build.extra_libs=
 
 heltec_wifi_lora_32_V2.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32_V2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -4823,8 +4823,8 @@ heltec_wireless_stick.menu.PSRAM.disabled=Disabled
 heltec_wireless_stick.menu.PSRAM.disabled.build.defines=
 heltec_wireless_stick.menu.PSRAM.disabled.build.extra_libs=
 heltec_wireless_stick.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-heltec_wireless_stick.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+heltec_wireless_stick.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+heltec_wireless_stick.menu.PSRAM.enabled.build.extra_libs=
 
 heltec_wireless_stick.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -4920,8 +4920,8 @@ heltec_wireless_stick_lite.menu.PSRAM.disabled=Disabled
 heltec_wireless_stick_lite.menu.PSRAM.disabled.build.defines=
 heltec_wireless_stick_lite.menu.PSRAM.disabled.build.extra_libs=
 heltec_wireless_stick_lite.menu.PSRAM.enabled=Enabled
-heltec_wireless_stick_lite.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-heltec_wireless_stick_lite.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+heltec_wireless_stick_lite.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+heltec_wireless_stick_lite.menu.PSRAM.enabled.build.extra_libs=
 
 heltec_wireless_stick_lite.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wireless_stick_lite.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -5092,8 +5092,8 @@ CoreESP32.menu.PSRAM.disabled=Disabled
 CoreESP32.menu.PSRAM.disabled.build.defines=
 CoreESP32.menu.PSRAM.disabled.build.extra_libs=
 CoreESP32.menu.PSRAM.enabled=Enabled
-CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-CoreESP32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+CoreESP32.menu.PSRAM.enabled.build.extra_libs=
 
 CoreESP32.menu.PartitionScheme.default=Default
 CoreESP32.menu.PartitionScheme.default.build.partitions=default
@@ -5171,8 +5171,8 @@ alksesp32.menu.PSRAM.disabled=Disabled
 alksesp32.menu.PSRAM.disabled.build.defines=
 alksesp32.menu.PSRAM.disabled.build.extra_libs=
 alksesp32.menu.PSRAM.enabled=Enabled
-alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-alksesp32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+alksesp32.menu.PSRAM.enabled.build.extra_libs=
 
 alksesp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 alksesp32.menu.PartitionScheme.default.build.partitions=default
@@ -5458,8 +5458,8 @@ t-beam.menu.PSRAM.disabled=Disabled
 t-beam.menu.PSRAM.disabled.build.defines=
 t-beam.menu.PSRAM.disabled.build.extra_libs=
 t-beam.menu.PSRAM.enabled=Enabled
-t-beam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-t-beam.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+t-beam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+t-beam.menu.PSRAM.enabled.build.extra_libs=
 
 t-beam.menu.FlashFreq.80=80MHz
 t-beam.menu.FlashFreq.80.build.flash_freq=80m
@@ -5648,8 +5648,8 @@ lopy4.menu.PSRAM.disabled=Disabled
 lopy4.menu.PSRAM.disabled.build.defines=
 lopy4.menu.PSRAM.disabled.build.extra_libs=
 lopy4.menu.PSRAM.enabled=Enabled
-lopy4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-lopy4.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+lopy4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+lopy4.menu.PSRAM.enabled.build.extra_libs=
 
 lopy4.menu.FlashFreq.80=80MHz
 lopy4.menu.FlashFreq.80.build.flash_freq=80m
@@ -5831,8 +5831,8 @@ frogboard.menu.PSRAM.disabled=Disabled
 frogboard.menu.PSRAM.disabled.build.defines=
 frogboard.menu.PSRAM.disabled.build.extra_libs=
 frogboard.menu.PSRAM.enabled=Enabled
-frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-frogboard.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+frogboard.menu.PSRAM.enabled.build.extra_libs=
 
 frogboard.menu.PartitionScheme.default=Default
 frogboard.menu.PartitionScheme.default.build.partitions=default
@@ -5914,8 +5914,8 @@ esp32cam.build.variant=esp32
 esp32cam.build.board=ESP32_DEV
 esp32cam.build.flash_size=4MB
 esp32cam.build.partitions=huge_app
-esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-esp32cam.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32cam.build.extra_libs=
 esp32cam.build.code_debug=0
 
 esp32cam.menu.CPUFreq.240=240MHz (WiFi/BT)
@@ -5986,8 +5986,8 @@ twatch.build.partitions=default_16MB
 twatch.build.defines=
 
 twatch.menu.PSRAM.enabled=Enabled
-twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-twatch.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+twatch.menu.PSRAM.enabled.build.extra_libs=
 twatch.menu.PSRAM.disabled=Disabled
 twatch.menu.PSRAM.disabled.build.defines=
 twatch.menu.PSRAM.disabled.build.extra_libs=
@@ -6332,8 +6332,8 @@ mgbot-iotik32a.menu.PSRAM.disabled=Disabled
 mgbot-iotik32a.menu.PSRAM.disabled.build.defines=
 mgbot-iotik32a.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32a.menu.PSRAM.enabled=Enabled
-mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-mgbot-iotik32a.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mgbot-iotik32a.menu.PSRAM.enabled.build.extra_libs=
 
 mgbot-iotik32a.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 mgbot-iotik32a.menu.PartitionScheme.default.build.partitions=default
@@ -6472,8 +6472,8 @@ mgbot-iotik32b.menu.PSRAM.disabled=Disabled
 mgbot-iotik32b.menu.PSRAM.disabled.build.defines=
 mgbot-iotik32b.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32b.menu.PSRAM.enabled=Enabled
-mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-mgbot-iotik32b.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mgbot-iotik32b.menu.PSRAM.enabled.build.extra_libs=
 
 mgbot-iotik32b.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 mgbot-iotik32b.menu.PartitionScheme.default.build.partitions=default
@@ -6846,8 +6846,8 @@ mPython.menu.PSRAM.disabled=Disabled
 mPython.menu.PSRAM.disabled.build.defines=
 mPython.menu.PSRAM.disabled.build.extra_libs=
 mPython.menu.PSRAM.enabled=Enabled
-mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-mPython.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mPython.menu.PSRAM.enabled.build.extra_libs=
 
 mPython.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 mPython.menu.PartitionScheme.huge_app.build.partitions=huge_app
