@@ -17,7 +17,7 @@
 
 #include "Stream.h"
 #include "esp32-hal.h"
-#if CONFIG_USB_CDC_ENABLED
+#if CONFIG_TINYUSB_CDC_ENABLED
 
 #include "esp_event.h"
 
@@ -130,4 +130,4 @@ protected:
 extern USBCDC Serial;
 #endif
 
-#endif /* CONFIG_USB_CDC_ENABLED */
+#endif /* CONFIG_TINYUSB_CDC_ENABLED */

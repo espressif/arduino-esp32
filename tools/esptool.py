@@ -100,6 +100,7 @@ def _chip_to_rom_loader(chip):
         'esp32': ESP32ROM,
         'esp32s2': ESP32S2ROM,
         'esp32s3beta2': ESP32S3BETA2ROM,
+        'esp32s3beta3': ESP32S3BETA3ROM,
         'esp32c3': ESP32C3ROM,
     }[chip]
 
@@ -349,8 +350,8 @@ class ESPLoader(object):
             sys.stdout.flush()
             chip_magic_value = detect_port.read_reg(ESPLoader.CHIP_DETECT_MAGIC_REG_ADDR)
 
-            for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM]:
-                if chip_magic_value == cls.CHIP_DETECT_MAGIC_VALUE:
+            for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32S3BETA3ROM, ESP32C3ROM]:
+                if chip_magic_value in cls.CHIP_DETECT_MAGIC_VALUE:
                     # don't connect a second time
                     inst = cls(detect_port._port, baud, trace_enabled=trace_enabled)
                     inst._post_connect()
@@ -579,10 +580,10 @@ class ESPLoader(object):
             try:
                 # check the date code registers match what we expect to see
                 chip_magic_value = self.read_reg(ESPLoader.CHIP_DETECT_MAGIC_REG_ADDR)
-                if chip_magic_value != self.CHIP_DETECT_MAGIC_VALUE:
+                if chip_magic_value not in self.CHIP_DETECT_MAGIC_VALUE:
                     actually = None
-                    for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM]:
-                        if chip_magic_value == cls.CHIP_DETECT_MAGIC_VALUE:
+                    for cls in [ESP8266ROM, ESP32ROM, ESP32S2ROM, ESP32S3BETA2ROM, ESP32S3BETA3ROM, ESP32C3ROM]:
+                        if chip_magic_value in cls.CHIP_DETECT_MAGIC_VALUE:
                             actually = cls
                             break
                     if actually is None:
@@ -688,7 +689,7 @@ class ESPLoader(object):
             timeout = timeout_per_mb(ERASE_REGION_TIMEOUT_PER_MB, size)  # ROM performs the erase up front
 
         params = struct.pack('<IIII', erase_size, num_blocks, self.FLASH_WRITE_SIZE, offset)
-        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM)) and not self.IS_STUB:
+        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32S3BETA3ROM, ESP32C3ROM)) and not self.IS_STUB:
             params += struct.pack('<I', 1 if begin_rom_encrypted else 0)
         self.check_command("enter Flash download mode", self.ESP_FLASH_BEGIN,
                            params, timeout=timeout)
@@ -795,7 +796,7 @@ class ESPLoader(object):
             timeout = timeout_per_mb(ERASE_REGION_TIMEOUT_PER_MB, write_size)  # ROM performs the erase up front
         print("Compressed %d bytes to %d..." % (size, compsize))
         params = struct.pack('<IIII', write_size, num_blocks, self.FLASH_WRITE_SIZE, offset)
-        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32C3ROM)) and not self.IS_STUB:
+        if isinstance(self, (ESP32S2ROM, ESP32S3BETA2ROM, ESP32S3BETA3ROM, ESP32C3ROM)) and not self.IS_STUB:
             params += struct.pack('<I', 0)  # extra param is to enter encrypted flash mode via ROM (not supported currently)
         self.check_command("enter compressed flash mode", self.ESP_FLASH_DEFL_BEGIN, params, timeout=timeout)
         if size != 0 and not self.IS_STUB:
@@ -1132,7 +1133,7 @@ class ESP8266ROM(ESPLoader):
     CHIP_NAME = "ESP8266"
     IS_STUB = False
 
-    CHIP_DETECT_MAGIC_VALUE = 0xfff0c101
+    CHIP_DETECT_MAGIC_VALUE = [0xfff0c101]
 
     # OTP ROM addresses
     ESP_OTP_MAC0    = 0x3ff00050
@@ -1300,7 +1301,7 @@ class ESP32ROM(ESPLoader):
     IMAGE_CHIP_ID = 0
     IS_STUB = False
 
-    CHIP_DETECT_MAGIC_VALUE = 0x00f01d83
+    CHIP_DETECT_MAGIC_VALUE = [0x00f01d83]
 
     IROM_MAP_START = 0x400d0000
     IROM_MAP_END   = 0x40400000
@@ -1577,7 +1578,7 @@ class ESP32S2ROM(ESP32ROM):
     DROM_MAP_START = 0x3F000000
     DROM_MAP_END   = 0x3F3F0000
 
-    CHIP_DETECT_MAGIC_VALUE = 0x000007c6
+    CHIP_DETECT_MAGIC_VALUE = [0x000007c6]
 
     SPI_REG_BASE = 0x3f402000
     SPI_USR_OFFS    = 0x18
@@ -1775,7 +1776,7 @@ class ESP32S3BETA2ROM(ESP32ROM):
 
     UART_DATE_REG_ADDR = 0x60000080
 
-    CHIP_DETECT_MAGIC_VALUE = 0xeb004136
+    CHIP_DETECT_MAGIC_VALUE = [0xeb004136]
 
     SPI_REG_BASE = 0x60002000
     SPI_USR_OFFS    = 0x18
@@ -1829,6 +1830,71 @@ class ESP32S3BETA2ROM(ESP32ROM):
             return tuple(bitstring)
 
 
+class ESP32S3BETA3ROM(ESP32ROM):
+    CHIP_NAME = "ESP32-S3(beta3)"
+    IMAGE_CHIP_ID = 6
+
+    IROM_MAP_START = 0x42000000
+    IROM_MAP_END   = 0x44000000
+    DROM_MAP_START = 0x3c000000
+    DROM_MAP_END   = 0x3e000000
+
+    UART_DATE_REG_ADDR = 0x60000080
+
+    CHIP_DETECT_MAGIC_VALUE = [0x9]
+
+    SPI_REG_BASE = 0x60002000
+    SPI_USR_OFFS    = 0x18
+    SPI_USR1_OFFS   = 0x1c
+    SPI_USR2_OFFS   = 0x20
+    SPI_MOSI_DLEN_OFFS = 0x24
+    SPI_MISO_DLEN_OFFS = 0x28
+    SPI_W0_OFFS = 0x58
+
+    EFUSE_BASE = 0x6001A000  # BLOCK0 read base address
+
+    MAC_EFUSE_REG  = EFUSE_BASE + 0x044  # ESP32S3 has special block for MAC efuses
+
+    UART_CLKDIV_REG = 0x60000014
+
+    GPIO_STRAP_REG = 0x60004038
+
+    MEMORY_MAP = [[0x00000000, 0x00010000, "PADDING"],
+                  [0x3C000000, 0x3D000000, "DROM"],
+                  [0x3D000000, 0x3E000000, "EXTRAM_DATA"],
+                  [0x600FE000, 0x60100000, "RTC_DRAM"],
+                  [0x3FC88000, 0x3FD00000, "BYTE_ACCESSIBLE"],
+                  [0x3FC88000, 0x403E2000, "MEM_INTERNAL"],
+                  [0x3FC88000, 0x3FD00000, "DRAM"],
+                  [0x40000000, 0x4001A100, "IROM_MASK"],
+                  [0x40370000, 0x403E0000, "IRAM"],
+                  [0x600FE000, 0x60100000, "RTC_IRAM"],
+                  [0x42000000, 0x42800000, "IROM"],
+                  [0x50000000, 0x50002000, "RTC_DATA"]]
+
+    def get_chip_description(self):
+        return "ESP32-S3(beta3)"
+
+    def get_chip_features(self):
+        return ["WiFi", "BLE"]
+
+    def get_crystal_freq(self):
+        # ESP32S3 XTAL is fixed to 40MHz
+        return 40
+
+    def override_vddsdio(self, new_voltage):
+        raise NotImplementedInROMError("VDD_SDIO overrides are not supported for ESP32-S3")
+
+    def read_mac(self):
+        mac0 = self.read_reg(self.MAC_EFUSE_REG)
+        mac1 = self.read_reg(self.MAC_EFUSE_REG + 4)  # only bottom 16 bits are MAC
+        bitstring = struct.pack(">II", mac1, mac0)[2:]
+        try:
+            return tuple(ord(b) for b in bitstring)
+        except TypeError:  # Python 3, bitstring elements are already bytes
+            return tuple(bitstring)
+
+
 class ESP32C3ROM(ESP32ROM):
     CHIP_NAME = "ESP32-C3"
     IMAGE_CHIP_ID = 5
@@ -1848,7 +1914,8 @@ class ESP32C3ROM(ESP32ROM):
 
     BOOTLOADER_FLASH_OFFSET = 0x0
 
-    CHIP_DETECT_MAGIC_VALUE = 0x6921506f
+    # Magic value for ESP32C3 eco 1+2 and ESP32C3 eco3 respectivly
+    CHIP_DETECT_MAGIC_VALUE = [0x6921506f, 0x1b31506f]
 
     UART_DATE_REG_ADDR = 0x60000000 + 0x7c
 
@@ -2015,6 +2082,26 @@ class ESP32S3BETA2StubLoader(ESP32S3BETA2ROM):
 ESP32S3BETA2ROM.STUB_CLASS = ESP32S3BETA2StubLoader
 
 
+class ESP32S3BETA3StubLoader(ESP32S3BETA3ROM):
+    """ Access class for ESP32S3 stub loader, runs on top of ROM.
+
+    (Basically the same as ESP32StubLoader, but different base class.
+    Can possibly be made into a mixin.)
+    """
+    FLASH_WRITE_SIZE = 0x4000  # matches MAX_WRITE_BLOCK in stub_loader.c
+    STATUS_BYTES_LENGTH = 2  # same as ESP8266, different to ESP32 ROM
+    IS_STUB = True
+
+    def __init__(self, rom_loader):
+        self.secure_download_mode = rom_loader.secure_download_mode
+        self._port = rom_loader._port
+        self._trace_enabled = rom_loader._trace_enabled
+        self.flush_input()  # resets _slip_reader
+
+
+ESP32S3BETA3ROM.STUB_CLASS = ESP32S3BETA3StubLoader
+
+
 class ESP32C3StubLoader(ESP32C3ROM):
     """ Access class for ESP32C3 stub loader, runs on top of ROM.
 
@@ -2061,6 +2148,8 @@ def LoadFirmwareImage(chip, filename):
             return ESP32S2FirmwareImage(f)
         elif chip == "esp32s3beta2":
             return ESP32S3BETA2FirmwareImage(f)
+        elif chip == "esp32s3beta3":
+            return ESP32S3BETA3FirmwareImage(f)
         elif chip == 'esp32c3':
             return ESP32C3FirmwareImage(f)
         else:  # Otherwise, ESP8266 so look at magic to determine the image type
@@ -2685,6 +2774,14 @@ class ESP32S3BETA2FirmwareImage(ESP32FirmwareImage):
 
 
 ESP32S3BETA2ROM.BOOTLOADER_IMAGE = ESP32S3BETA2FirmwareImage
+
+
+class ESP32S3BETA3FirmwareImage(ESP32FirmwareImage):
+    """ ESP32S3 Firmware Image almost exactly the same as ESP32FirmwareImage """
+    ROM_LOADER = ESP32S3BETA3ROM
+
+
+ESP32S3BETA3ROM.BOOTLOADER_IMAGE = ESP32S3BETA3FirmwareImage
 
 
 class ESP32C3FirmwareImage(ESP32FirmwareImage):
@@ -3345,28 +3442,31 @@ def elf2image(args):
             image.secure_pad = '1'
         elif args.secure_pad_v2:
             image.secure_pad = '2'
-        image.min_rev = int(args.min_rev)
     elif args.chip == 'esp32s2':
         image = ESP32S2FirmwareImage()
         if args.secure_pad_v2:
             image.secure_pad = '2'
-        image.min_rev = 0
     elif args.chip == 'esp32s3beta2':
         image = ESP32S3BETA2FirmwareImage()
         if args.secure_pad_v2:
             image.secure_pad = '2'
-        image.min_rev = 0
+    elif args.chip == 'esp32s3beta3':
+        image = ESP32S3BETA3FirmwareImage()
+        if args.secure_pad_v2:
+            image.secure_pad = '2'
     elif args.chip == 'esp32c3':
         image = ESP32C3FirmwareImage()
         if args.secure_pad_v2:
             image.secure_pad = '2'
-        image.min_rev = 0
     elif args.version == '1':  # ESP8266
         image = ESP8266ROMFirmwareImage()
     else:
         image = ESP8266V2FirmwareImage()
     image.entrypoint = e.entrypoint
     image.flash_mode = {'qio': 0, 'qout': 1, 'dio': 2, 'dout': 3}[args.flash_mode]
+
+    if args.chip != 'esp8266':
+        image.min_rev = int(args.min_rev)
 
     # ELFSection is a subclass of ImageSegment, so can use interchangeably
     image.segments = e.segments if args.use_segments else e.sections
@@ -3567,7 +3667,7 @@ def main(argv=None, esp=None):
     parser.add_argument('--chip', '-c',
                         help='Target chip type',
                         type=lambda c: c.lower().replace('-', ''),  # support ESP32-S2, etc.
-                        choices=['auto', 'esp8266', 'esp32', 'esp32s2', 'esp32s3beta2', 'esp32c3'],
+                        choices=['auto', 'esp8266', 'esp32', 'esp32s2', 'esp32s3beta2', 'esp32s3beta3', 'esp32c3'],
                         default=os.environ.get('ESPTOOL_CHIP', 'auto'))
 
     parser.add_argument(
@@ -4242,6 +4342,39 @@ QFitrvCXN/nNBabr98X2UPDozp06BuaEtoB1mcge4+Po0p39GnXzI/Fe8AlooT5yn5ePfxDI+BgZmw+a
 iIJHgaVAXYvHhiLnmgJeUfPJq/weQ84+sj2yS37q2i3t5p5+CPAMFLPNKVwUGvqbjbpweW+VjrlbbzI6pIHeXIH9hsun7GZoi9n5u7n38xMwlbytfO5Jwgq6IzljIIq9/VyfX81/dzgCp79oO+2E/PzD/LNMWIyW\
 G6LvTgSne+BPfSWYuyeb0upvOz7xa7tCwk040INbJP8rjFW7E/BemgopI3C3pd/+uE0WasuNZ3wIn3FWBC1BE7ofCiBUZS7BCvAHNtEjxS2XdR7S9CA7HDII9orinaPqYPxU1kVHHQrhBlpHtOawPfI+cj8SI9Zw\
 9td8iLTvOLySH6/J1tLOp0PHSldWR88H+NvJnz9vilv4BaUKsizK8iAL7Zv6enN7L4M6SFRqB6tiU/R+ammKF0f8xicUhFme5OGX/wGbX9rc\
+""")))
+ESP32S3BETA3ROM.STUB_CODE = eval(zlib.decompress(base64.b64decode(b"""
+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\
 """)))
 ESP32C3ROM.STUB_CODE = eval(zlib.decompress(base64.b64decode(b"""
 eNrFWmt328YR/SuypEix29PugngqtUw6lChKlmvnpFGcA6UGdgHVSatTyVQtt+V/7955ECAl0vnWD3wBi93ZmTt3Hsv/7M+a+9n+wVa9X94bW97b8Kqz8B0v8/60vHd5+DYo76uivM/p6l64WL0Ob+l34S0Ol9Lw\

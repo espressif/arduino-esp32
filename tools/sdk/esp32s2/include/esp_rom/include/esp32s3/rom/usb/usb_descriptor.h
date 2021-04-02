@@ -1,4 +1,4 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2019-2020 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,30 +14,20 @@
 
 #pragma once
 
-#include "esp_err.h"
-
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief This API starts a task with a wrapper function of tud_task and default task parameters.
- *
- * The wrapper function basically wraps tud_task and some log. Default parameters: stack size and priority as configured, argument = NULL,
- * not pinned to any core.
- * If you have more requirements for this task, you can create your own task which calls tud_task as the last step.
- *
- * @return ESP_OK or ESP_FAIL
- */
-esp_err_t tusb_run_task(void);
+#define USB_DESCRIPTOR_TYPE_ACM 0
+#define USB_DESCRIPTOR_TYPE_DFU 1
 
-/**
- * @brief Stops a FreeRTOS task
- *
- * @return ESP_OK or ESP_FAIL
- */
-esp_err_t tusb_stop_task(void);
+void usb_set_current_descriptor(int descriptor_type);
+
+bool usb_get_descriptor(uint16_t type_index, uint16_t lang_id,
+                        int32_t *len, uint8_t **data);
 
 #ifdef __cplusplus
 }

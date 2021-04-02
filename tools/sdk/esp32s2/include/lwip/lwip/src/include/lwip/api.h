@@ -240,6 +240,9 @@ struct netconn {
   /** mbox where new connections are stored until processed
       by the application thread */
   sys_mbox_t acceptmbox;
+#if ESP_THREAD_PROTECTION
+  bool write_protection;
+#endif /* ESP_THREAD_PROTECTION */
 #endif /* LWIP_TCP */
 #if LWIP_NETCONN_FULLDUPLEX
   /** number of threads waiting on an mbox. This is required to unblock
@@ -421,6 +424,13 @@ void netconn_thread_cleanup(void);
 #define netconn_thread_init()
 #define netconn_thread_cleanup()
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
+
+#if ESP_THREAD_PROTECTION
+
+#define TCP_WRITE_LOCK(conn)    ((conn)->write_protection = (true))
+#define TCP_WRITE_UNLOCK(conn)  ((conn)->write_protection = (false))
+
+#endif /* ESP_THREAD_PROTECTION */
 
 #ifdef __cplusplus
 }

@@ -14,7 +14,7 @@
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "USB.h"
-#if CONFIG_USB_ENABLED
+#if CONFIG_TINYUSB_ENABLED
 
 #ifndef USB_VID
 #define USB_VID USB_ESPRESSIF_VID
@@ -31,10 +31,6 @@
 #ifndef USB_SERIAL
 #define USB_SERIAL "0"
 #endif
-
-extern "C" {
-#include "tinyusb.h"
-}
 
 #if CFG_TUD_DFU_RUNTIME
 static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
@@ -335,4 +331,4 @@ const char * ESPUSB::webUSBURL(void){
 
 ESPUSB USB;
 
-#endif /* CONFIG_USB_ENABLED */
+#endif /* CONFIG_TINYUSB_ENABLED */

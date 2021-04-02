@@ -16,13 +16,18 @@
 #include "esp32-hal.h"
 
 #if CONFIG_IDF_TARGET_ESP32S2
-#if CONFIG_USB_ENABLED
+#if CONFIG_TINYUSB_ENABLED
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "tinyusb.h"
+#include "tusb.h"
+#include "tusb_option.h"
+#include "tusb_config.h"
+
+#define USB_ESPRESSIF_VID 0x303A
+#define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
 typedef struct {
         uint16_t vid;
@@ -46,10 +51,10 @@ typedef struct {
 #define TINYUSB_CONFIG_DEFAULT() {                                      \
         .vid = USB_ESPRESSIF_VID,                                       \
         .pid = 0x0002,                                                  \
-        .product_name = CONFIG_USB_DESC_PRODUCT_STRING,                 \
-        .manufacturer_name = CONFIG_USB_DESC_MANUFACTURER_STRING,       \
-        .serial_number = CONFIG_USB_DESC_SERIAL_STRING,                 \
-        .fw_version = CONFIG_USB_DESC_BCDDEVICE,                        \
+        .product_name = CONFIG_TINYUSB_DESC_PRODUCT_STRING,                 \
+        .manufacturer_name = CONFIG_TINYUSB_DESC_MANUFACTURER_STRING,       \
+        .serial_number = CONFIG_TINYUSB_DESC_SERIAL_STRING,                 \
+        .fw_version = CONFIG_TINYUSB_DESC_BCDDEVICE,                        \
         .usb_version = 0x0200,                                          \
         .usb_class = TUSB_CLASS_MISC,                                   \
         .usb_subclass = MISC_SUBCLASS_COMMON,                           \
@@ -99,5 +104,5 @@ uint8_t tinyusb_get_free_out_endpoint(void);
 }
 #endif
 
-#endif /* CONFIG_USB_ENABLED */
+#endif /* CONFIG_TINYUSB_ENABLED */
 #endif /* CONFIG_IDF_TARGET_ESP32S2 */

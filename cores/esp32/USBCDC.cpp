@@ -15,15 +15,11 @@
 #include "esp32-hal-tinyusb.h"
 #include "USB.h"
 #include "USBCDC.h"
-#if CONFIG_USB_ENABLED
+#if CONFIG_TINYUSB_ENABLED
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_CDC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
-
-extern "C" {
-#include "tinyusb.h"
-}
 
 #if CFG_TUD_CDC
 #define MAX_USB_CDC_DEVICES 2
@@ -216,8 +212,8 @@ void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _pari
 }
 
 void USBCDC::_onRX(){
-    uint8_t buf[CONFIG_USB_CDC_RX_BUFSIZE+1];
-    uint32_t count = tud_cdc_n_read(itf, buf, CONFIG_USB_CDC_RX_BUFSIZE);
+    uint8_t buf[CONFIG_TINYUSB_CDC_RX_BUFSIZE+1];
+    uint32_t count = tud_cdc_n_read(itf, buf, CONFIG_TINYUSB_CDC_RX_BUFSIZE);
     for(uint32_t i=0; i<count; i++){
         if(rx_queue == NULL || !xQueueSend(rx_queue, buf+i, 0)){
             return;
@@ -333,6 +329,6 @@ USBCDC::operator bool() const
 USBCDC Serial(0);
 #endif
 
-#endif /* CONFIG_USB_CDC_ENABLED */
+#endif /* CONFIG_TINYUSB_CDC_ENABLED */
 
-#endif /* CONFIG_USB_ENABLED */
+#endif /* CONFIG_TINYUSB_ENABLED */

@@ -1,4 +1,4 @@
-// Copyright 2020 Espressif Systems (Shanghai) Co. Ltd.
+// Copyright 2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/*******************************************************************************
+ * NOTICE
+ * The HAL is not public api, don't use in application code.
+ * See readme.md in soc/README.md
+ ******************************************************************************/
+
 #pragma once
 
-#include "esp_err.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/**
- * @brief Redirect output to the USB serial
- * @param cdc_intf - interface number of TinyUSB's CDC
- *
- * @return esp_err_t - ESP_OK, ESP_FAIL or an error code
- */
-esp_err_t esp_tusb_init_console(int cdc_intf);
+#include "soc/lcd_cam_struct.h"
 
-/**
- * @brief Switch log to the default output
- * @param cdc_intf - interface number of TinyUSB's CDC
- *
- * @return esp_err_t
- */
-esp_err_t esp_tusb_deinit_console(int cdc_intf);
+typedef struct {
+    lcd_cam_dev_t *dev;
+} lcd_hal_context_t;
+
+void lcd_hal_init(lcd_hal_context_t *hal, int id);
+
+#ifdef __cplusplus
+}
+#endif

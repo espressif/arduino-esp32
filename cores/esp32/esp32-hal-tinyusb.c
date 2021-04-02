@@ -1,7 +1,8 @@
 
 #include "sdkconfig.h"
-#if CONFIG_USB_ENABLED
+#if CONFIG_TINYUSB_ENABLED
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "esp_log.h"
 
@@ -12,9 +13,13 @@
 #include "soc/usb_reg.h"
 #include "soc/usb_wrap_reg.h"
 #include "soc/usb_wrap_struct.h"
+#include "soc/usb_periph.h"
 #include "soc/periph_defs.h"
 #include "soc/timer_group_struct.h"
 #include "soc/system_reg.h"
+
+#include "hal/usb_hal.h"
+#include "hal/gpio_ll.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -24,14 +29,77 @@
 
 #include "esp_efuse.h"
 #include "esp_efuse_table.h"
+#include "esp_rom_gpio.h"
 
-#include "tinyusb.h"
 #include "esp32-hal.h"
 
 #include "esp32-hal-tinyusb.h"
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
+
+typedef enum{
+    TINYUSB_USBDEV_0,
+} tinyusb_usbdev_t;
+
+typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
+
+typedef struct {
+    bool external_phy;
+} tinyusb_config_t;
+
+static TaskHandle_t s_tusb_tskh;
+
+static void configure_pins(usb_hal_context_t *usb)
+{
+    for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
+        if ((usb->use_external_phy) || (iopin->ext_phy_only == 0)) {
+            esp_rom_gpio_pad_select_gpio(iopin->pin);
+            if (iopin->is_output) {
+                esp_rom_gpio_connect_out_signal(iopin->pin, iopin->func, false, false);
+            } else {
+                esp_rom_gpio_connect_in_signal(iopin->pin, iopin->func, false);
+                if ((iopin->pin != GPIO_FUNC_IN_LOW) && (iopin->pin != GPIO_FUNC_IN_HIGH)) {
+                    gpio_ll_input_enable(&GPIO, iopin->pin);
+                }
+            }
+            esp_rom_gpio_pad_unhold(iopin->pin);
+        }
+    }
+    if (!usb->use_external_phy) {
+        gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
+        gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
+    }
+}
+
+esp_err_t tinyusb_driver_install(const tinyusb_config_t *config)
+{
+    int res;
+    log_i("Driver installation...");
+
+    // Hal init
+    usb_hal_context_t hal = {
+        .use_external_phy = config->external_phy
+    };
+    usb_hal_init(&hal);
+    configure_pins(&hal);
+
+    if (!tusb_init()) {
+        log_e("Can't initialize the TinyUSB stack.");
+        return ESP_FAIL;
+    }
+    log_i("Driver installed");
+    return ESP_OK;
+}
+
+
+
+
+
+
+
+
+
 
 typedef char tusb_str_t[127];
 
@@ -694,4 +762,4 @@ void usb_dw_reg_dump(void)
     }
 }
  */
-#endif /* CONFIG_USB_ENABLED */
+#endif /* CONFIG_TINYUSB_ENABLED */

@@ -14,7 +14,7 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_USB_ENABLED
+#if CONFIG_TINYUSB_ENABLED
 
 #include "Arduino.h"
 #include "USBCDC.h"
@@ -115,4 +115,4 @@ class ESPUSB {
 
 extern ESPUSB USB;
 
-#endif /* CONFIG_USB_ENABLED */
+#endif /* CONFIG_TINYUSB_ENABLED */

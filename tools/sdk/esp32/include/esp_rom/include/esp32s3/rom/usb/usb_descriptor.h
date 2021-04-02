@@ -1,4 +1,4 @@
-// Copyright 2020 Espressif Systems (Shanghai) Co. Ltd.
+// Copyright 2019-2020 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,28 +14,20 @@
 
 #pragma once
 
-#include "esp_err.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief Register TinyUSB CDC at VFS with path
- * @param cdc_intf - interface number of TinyUSB's CDC
- * @param path - path where the CDC will be registered, `/dev/tusb_cdc` will be used if left NULL.
- *
- * @return esp_err_t ESP_OK or ESP_FAIL
- */
-esp_err_t esp_vfs_tusb_cdc_register(int cdc_intf, char const *path);
+#define USB_DESCRIPTOR_TYPE_ACM 0
+#define USB_DESCRIPTOR_TYPE_DFU 1
 
-/**
- * @brief Unregister TinyUSB CDC from VFS
- * @param path - path where the CDC will be unregistered if NULL will be used `/dev/tusb_cdc`
- *
- * @return esp_err_t ESP_OK or ESP_FAIL
- */
-esp_err_t esp_vfs_tusb_cdc_unregister(char const *path);
+void usb_set_current_descriptor(int descriptor_type);
+
+bool usb_get_descriptor(uint16_t type_index, uint16_t lang_id,
+                        int32_t *len, uint8_t **data);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Espressif Systems (Shanghai) Co. Ltd.
+// Copyright 2019-2020 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,26 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define USB_ESPRESSIF_VID 0x303A
-#define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
-typedef enum{
-    TINYUSB_USBDEV_0,
-} tinyusb_usbdev_t;
+typedef void(*usb_osglue_intdisena_routine_t)(void);
+typedef int(*usb_osglue_wait_routine_t)(int delay_us);
 
-typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
+typedef struct {
+    /* Disable USB interrupt */
+    usb_osglue_intdisena_routine_t int_dis_proc;
+    /* Enable USB interrupt */
+    usb_osglue_intdisena_routine_t int_ena_proc;
+    /* Wait for a set amount of uS. Return the amount actually waited. If delay_us is 0, just yield.*/
+    usb_osglue_wait_routine_t wait_proc;
+} usb_osglue_data_t;
+
+extern usb_osglue_data_t s_usb_osglue;
 
 #ifdef __cplusplus
 }
