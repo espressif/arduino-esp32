@@ -279,7 +279,7 @@ void ledcDetachPin(uint8_t pin)
     pinMatrixOutDetach(pin, false, false);
 }
 
-void ledcChangeFrequence(uint8_t chan, double freq, uint8_t bit_num)
+void ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num)
 {
     if (chan > 15) {
         return 0;
