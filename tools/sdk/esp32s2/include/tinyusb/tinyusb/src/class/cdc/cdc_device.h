@@ -145,6 +145,9 @@ TU_ATTR_WEAK void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts);
 // Invoked when line coding is change via SET_LINE_CODING
 TU_ATTR_WEAK void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* p_line_coding);
 
+// Invoked when received send break
+TU_ATTR_WEAK void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms);
+
 //--------------------------------------------------------------------+
 // Inline Functions
 //--------------------------------------------------------------------+

@@ -58,7 +58,7 @@ typedef enum
 //--------------------------------------------------------------------+
 
 // Invoked when received new data
-TU_ATTR_WEAK void tud_dfu_rt_reboot_to_dfu(void); // TODO rename to _cb convention
+TU_ATTR_WEAK void tud_dfu_runtime_reboot_to_dfu_cb(void);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

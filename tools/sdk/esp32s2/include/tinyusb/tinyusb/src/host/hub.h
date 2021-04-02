@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -163,7 +163,7 @@ typedef struct {
       uint16_t high_speed             : 1;
       uint16_t port_test_mode         : 1;
       uint16_t port_indicator_control : 1;
-      uint16_t : 0;
+      uint16_t TU_RESERVED            : 3;
     };
 
     uint16_t value;

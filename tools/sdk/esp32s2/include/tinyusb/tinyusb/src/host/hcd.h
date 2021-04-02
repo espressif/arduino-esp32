@@ -98,7 +98,7 @@ enum {
 //--------------------------------------------------------------------+
 // Controller & Port API
 //--------------------------------------------------------------------+
-bool hcd_init(void);
+bool hcd_init(uint8_t rhport);
 void hcd_int_handler(uint8_t rhport);
 void hcd_int_enable (uint8_t rhport);
 void hcd_int_disable(uint8_t rhport);

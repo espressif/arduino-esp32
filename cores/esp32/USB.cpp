@@ -36,7 +36,7 @@ extern "C" {
 #include "tinyusb.h"
 }
 
-#if CFG_TUD_DFU_RT
+#if CFG_TUD_DFU_RUNTIME
 static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
 {
 #define DFU_ATTR_CAN_DOWNLOAD              1
@@ -59,7 +59,7 @@ void tud_dfu_rt_reboot_to_dfu(void)
 {
     usb_persist_restart(RESTART_BOOTLOADER_DFU);
 }
-#endif /* CFG_TUD_DFU_RT */
+#endif /* CFG_TUD_DFU_RUNTIME */
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_EVENTS);
 
@@ -187,9 +187,9 @@ ESPUSB::operator bool() const
 }
 
 bool ESPUSB::enableDFU(){
-#if CFG_TUD_DFU_RT
+#if CFG_TUD_DFU_RUNTIME
     return tinyusb_enable_interface(USB_INTERFACE_DFU, TUD_DFU_RT_DESC_LEN, load_dfu_descriptor) == ESP_OK;
-#endif /* CFG_TUD_DFU_RT */
+#endif /* CFG_TUD_DFU_RUNTIME */
     return false;
 }
 

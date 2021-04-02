@@ -294,9 +294,9 @@ bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const
  * Required Callbacks
  * */
 #if CFG_TUD_HID
-__attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(void){return NULL;}
-__attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
-__attribute__ ((weak)) void tud_hid_set_report_cb(uint8_t report_id, hid_report_type_t report_type, const uint8_t * buffer, uint16_t bufsize){}
+__attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(uint8_t itf){return NULL;}
+__attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
+__attribute__ ((weak)) void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, const uint8_t * buffer, uint16_t bufsize){}
 #endif
 #if CFG_TUD_MSC
 __attribute__ ((weak)) bool tud_msc_test_unit_ready_cb(uint8_t lun){return false;}

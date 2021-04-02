@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -36,8 +36,6 @@
 #ifdef __cplusplus
  extern "C" {
 #endif
-
-#include "common/tusb_common.h"
 
 //--------------------------------------------------------------------+
 // OHCI CONFIGURATION & CONSTANTS
@@ -208,7 +206,7 @@ typedef volatile struct
       uint32_t interrupt_routing          : 1;
       uint32_t remote_wakeup_connected    : 1;
       uint32_t remote_wakeup_enale        : 1;
-      uint32_t : 0;
+      uint32_t TU_RESERVED                : 21;
     }control_bit;
   };
 
@@ -276,7 +274,7 @@ typedef volatile struct
       uint32_t port_suspend_status_change         : 1;
       uint32_t port_over_current_indicator_change : 1;
       uint32_t port_reset_status_change           : 1;
-      uint32_t                                    : 0;
+      uint32_t TU_RESERVED                        : 11;
     }rhport_status_bit[2];
   };
 }ohci_registers_t;

@@ -35,6 +35,15 @@
  extern "C" {
 #endif
 
+//--------------------------------------------------------------------+
+// Class Driver Configuration
+//--------------------------------------------------------------------+
+
+#ifndef CFG_TUH_MSC_MAXLUN
+#define CFG_TUH_MSC_MAXLUN  4
+#endif
+
+
 /** \addtogroup ClassDriver_MSC
  *  @{
  * \defgroup MSC_Host Host
@@ -51,73 +60,56 @@ typedef bool (*tuh_msc_complete_cb_t)(uint8_t dev_addr, msc_cbw_t const* cbw, ms
 // This function true after tuh_msc_mounted_cb() and false after tuh_msc_unmounted_cb()
 bool tuh_msc_mounted(uint8_t dev_addr);
 
-/** \brief      Check if the interface is currently busy or not
- * \param[in]   dev_addr device address
- * \retval      true if the interface is busy meaning the stack is still transferring/waiting data from/to device
- * \retval      false if the interface is not busy meaning the stack successfully transferred data from/to device
- * \note        This function is used to check if previous transfer is complete (success or error), so that the next transfer
- *              can be scheduled. User needs to make sure the corresponding interface is mounted (by \ref tuh_msc_is_mounted)
- *              before calling this function
- */
-bool          tuh_msc_is_busy(uint8_t dev_addr);
+// Check if the interface is currently ready or busy transferring data
+bool tuh_msc_ready(uint8_t dev_addr);
 
 // Get Max Lun
 uint8_t tuh_msc_get_maxlun(uint8_t dev_addr);
 
-// Carry out a full SCSI command (cbw, data, csw) in non-blocking manner.
-// `complete_cb` callback is invoked when SCSI op is complete.
+// Get number of block
+uint32_t tuh_msc_get_block_count(uint8_t dev_addr, uint8_t lun);
+
+// Get block size in bytes
+uint32_t tuh_msc_get_block_size(uint8_t dev_addr, uint8_t lun);
+
+// Perform a full SCSI command (cbw, data, csw) in non-blocking manner.
+// Complete callback is invoked when SCSI op is complete.
 // return true if success, false if there is already pending operation.
 bool tuh_msc_scsi_command(uint8_t dev_addr, msc_cbw_t const* cbw, void* data, tuh_msc_complete_cb_t complete_cb);
 
-// Carry out SCSI INQUIRY command in non-blocking manner.
-bool tuh_msc_scsi_inquiry(uint8_t dev_addr, uint8_t lun, scsi_inquiry_resp_t* response, tuh_msc_complete_cb_t complete_cb);
+// Perform SCSI Inquiry command
+// Complete callback is invoked when SCSI op is complete.
+bool tuh_msc_inquiry(uint8_t dev_addr, uint8_t lun, scsi_inquiry_resp_t* response, tuh_msc_complete_cb_t complete_cb);
 
-// Carry out SCSI REQUEST SENSE (10) command in non-blocking manner.
+// Perform SCSI Test Unit Ready command
+// Complete callback is invoked when SCSI op is complete.
 bool tuh_msc_test_unit_ready(uint8_t dev_addr, uint8_t lun, tuh_msc_complete_cb_t complete_cb);
 
-// Carry out SCSI REQUEST SENSE (10) command in non-blocking manner.
+// Perform SCSI Request Sense 10 command
+// Complete callback is invoked when SCSI op is complete.
 bool tuh_msc_request_sense(uint8_t dev_addr, uint8_t lun, void *resposne, tuh_msc_complete_cb_t complete_cb);
 
-// Carry out SCSI READ CAPACITY (10) command in non-blocking manner.
+// Perform SCSI Read 10 command. Read n blocks starting from LBA to buffer
+// Complete callback is invoked when SCSI op is complete.
+bool  tuh_msc_read10(uint8_t dev_addr, uint8_t lun, void * buffer, uint32_t lba, uint16_t block_count, tuh_msc_complete_cb_t complete_cb);
+
+// Perform SCSI Write 10 command. Write n blocks starting from LBA to device
+// Complete callback is invoked when SCSI op is complete.
+bool tuh_msc_write10(uint8_t dev_addr, uint8_t lun, void const * buffer, uint32_t lba, uint16_t block_count, tuh_msc_complete_cb_t complete_cb);
+
+// Perform SCSI Read Capacity 10 command
+// Complete callback is invoked when SCSI op is complete.
+// Note: during enumeration, host stack already carried out this request. Application can retrieve capacity by
+// simply call tuh_msc_get_block_count() and tuh_msc_get_block_size()
 bool tuh_msc_read_capacity(uint8_t dev_addr, uint8_t lun, scsi_read_capacity10_resp_t* response, tuh_msc_complete_cb_t complete_cb);
-
-#if 0
-/** \brief 			Perform SCSI READ 10 command to read data from MassStorage device
- * \param[in]		dev_addr	device address
- * \param[in]		lun       Targeted Logical Unit
- * \param[out]	p_buffer  Buffer used to store data read from device. Must be accessible by USB controller (see \ref CFG_TUSB_MEM_SECTION)
- * \param[in]		lba       Starting Logical Block Address to be read
- * \param[in]		block_count Number of Block to be read
- * \retval      TUSB_ERROR_NONE on success
- * \retval      TUSB_ERROR_INTERFACE_IS_BUSY if the interface is already transferring data with device
- * \retval      TUSB_ERROR_DEVICE_NOT_READY if device is not yet configured (by SET CONFIGURED request)
- * \retval      TUSB_ERROR_INVALID_PARA if input parameters are not correct
- * \note        This function is non-blocking and returns immediately. The result of USB transfer will be reported by the interface's callback function
- */
-tusb_error_t tuh_msc_read10 (uint8_t dev_addr, uint8_t lun, void * p_buffer, uint32_t lba, uint16_t block_count);
-
-/** \brief 			Perform SCSI WRITE 10 command to write data to MassStorage device
- * \param[in]		dev_addr	device address
- * \param[in]		lun       Targeted Logical Unit
- * \param[in]	  p_buffer  Buffer containing data. Must be accessible by USB controller (see \ref CFG_TUSB_MEM_SECTION)
- * \param[in]		lba       Starting Logical Block Address to be written
- * \param[in]		block_count Number of Block to be written
- * \retval      TUSB_ERROR_NONE on success
- * \retval      TUSB_ERROR_INTERFACE_IS_BUSY if the interface is already transferring data with device
- * \retval      TUSB_ERROR_DEVICE_NOT_READY if device is not yet configured (by SET CONFIGURED request)
- * \retval      TUSB_ERROR_INVALID_PARA if input parameters are not correct
- * \note        This function is non-blocking and returns immediately. The result of USB transfer will be reported by the interface's callback function
- */
-tusb_error_t tuh_msc_write10(uint8_t dev_addr, uint8_t lun, void const * p_buffer, uint32_t lba, uint16_t block_count);
-#endif
 
 //------------- Application Callback -------------//
 
 // Invoked when a device with MassStorage interface is mounted
-void tuh_msc_mounted_cb(uint8_t dev_addr);
+void tuh_msc_mount_cb(uint8_t dev_addr);
 
 // Invoked when a device with MassStorage interface is unmounted
-void tuh_msc_unmounted_cb(uint8_t dev_addr);
+void tuh_msc_unmount_cb(uint8_t dev_addr);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

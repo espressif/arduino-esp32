@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -33,8 +33,6 @@
 #ifndef _TUSB_EHCI_H_
 #define _TUSB_EHCI_H_
 
-#include "common/tusb_common.h"
-#include "../hcd.h"
 
 /* Abbreviation
  * HC: Host Controller
@@ -231,7 +229,6 @@ typedef struct TU_ATTR_ALIGNED(32)
 	uint32_t             : 1; ///< reserved
 	uint32_t port_number : 7; ///< This field is the port number of the recipient transaction translator.
 	uint32_t direction   : 1; ///<  0 = OUT; 1 = IN. This field encodes whether the full-speed transaction should be an IN or OUT.
-	uint32_t             : 0; // padding to the end of current storage unit
 
 	// Word 2: Micro-frame Schedule Control
 	uint8_t int_smask   ; ///< This field (along with the Activeand SplitX-statefields in the Statusbyte) are used to determine during which micro-frames the host controller should execute complete-split transactions
@@ -423,7 +420,7 @@ typedef volatile struct
       uint32_t nxp_port_force_fullspeed    : 1; ///< NXP customized: Writing this bit to a 1 will force the port to only connect at Full Speed. It disables the chirp sequence that allowsthe port to identify itself as High Speed. This is useful for testing FS configurations with a HS host, hub or device.
       uint32_t                             : 1;
       uint32_t nxp_port_speed              : 2; ///< NXP customized: This register field indicates the speed atwhich the port is operating. For HS mode operation in the host controllerand HS/FS operation in the device controller the port routing steers data to the Protocol engine. For FS and LS mode operation in the host controller, the port routing steers data to the Protocol Engine w/ Embedded Transaction Translator. 0x0: Fullspeed, 0x1: Lowspeed, 0x2: Highspeed
-      uint32_t                             : 0; // padding to the boundary of storage unit
+      uint32_t TU_RESERVED                 : 4;
     }portsc_bm;
   };
 }ehci_registers_t;
@@ -461,4 +458,3 @@ typedef struct
 
 /** @} */
 /** @} */
-

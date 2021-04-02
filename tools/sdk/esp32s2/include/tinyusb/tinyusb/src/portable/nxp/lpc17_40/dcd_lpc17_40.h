@@ -24,8 +24,8 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_DCD_LPC175X_6X_H_
-#define _TUSB_DCD_LPC175X_6X_H_
+#ifndef _TUSB_DCD_LPC17_40_H_
+#define _TUSB_DCD_LPC17_40_H_
 
 #include "common/tusb_common.h"
 
@@ -149,4 +149,4 @@ enum {
  }
 #endif
 
-#endif /* _TUSB_DCD_LPC175X_6X_H_ */
+#endif
