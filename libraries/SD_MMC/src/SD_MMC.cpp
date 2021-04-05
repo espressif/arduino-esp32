@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "SD_MMC.h"
+#ifndef CONFIG_IDF_TARGET_ESP32S2 //SDMMC does not work on ESP32S2
 #include "vfs_api.h"
 
 extern "C" {
@@ -24,7 +26,6 @@ extern "C" {
 #include "sdmmc_cmd.h"
 }
 #include "ff.h"
-#include "SD_MMC.h"
 
 using namespace fs;
 /*
@@ -42,22 +43,21 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     }
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-    sdmmc_host_t host = {
-        .flags = SDMMC_HOST_FLAG_4BIT,
-        .slot = SDMMC_HOST_SLOT_1,
-        .max_freq_khz = SDMMC_FREQ_DEFAULT,
-        .io_voltage = 3.3f,
-        .init = &sdmmc_host_init,
-        .set_bus_width = &sdmmc_host_set_bus_width,
-        .get_bus_width = &sdmmc_host_get_slot_width,
-        .set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode,
-        .set_card_clk = &sdmmc_host_set_card_clk,
-        .do_transaction = &sdmmc_host_do_transaction,
-        .deinit = &sdmmc_host_deinit,
-        .io_int_enable = &sdmmc_host_io_int_enable,
-        .io_int_wait = &sdmmc_host_io_int_wait,
-        .command_timeout_ms = 0
-    };
+    sdmmc_host_t host;
+    host.flags = SDMMC_HOST_FLAG_4BIT;
+    host.slot = SDMMC_HOST_SLOT_1;
+    host.max_freq_khz = SDMMC_FREQ_DEFAULT;
+    host.io_voltage = 3.3f;
+    host.init = &sdmmc_host_init;
+    host.set_bus_width = &sdmmc_host_set_bus_width;
+    host.get_bus_width = &sdmmc_host_get_slot_width;
+    host.set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode;
+    host.set_card_clk = &sdmmc_host_set_card_clk;
+    host.do_transaction = &sdmmc_host_do_transaction;
+    host.deinit_p = &sdspi_host_remove_device;
+    host.io_int_enable = &sdmmc_host_io_int_enable;
+    host.io_int_wait = &sdmmc_host_io_int_wait;
+    host.command_timeout_ms = 0;
     host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
@@ -145,3 +145,4 @@ uint64_t SDMMCFS::usedBytes()
 }
 
 SDMMCFS SD_MMC = SDMMCFS(FSImplPtr(new VFSImpl()));
+#endif /* CONFIG_IDF_TARGET_ESP32 */

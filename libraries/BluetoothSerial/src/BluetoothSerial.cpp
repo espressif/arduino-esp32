@@ -241,7 +241,11 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     {
     case ESP_SPP_INIT_EVT:
         log_i("ESP_SPP_INIT_EVT");
+#ifdef ESP_IDF_VERSION_MAJOR
+        esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+#else
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+#endif
         if (!_isMaster) {
             log_i("ESP_SPP_INIT_EVT: slave: start");
             esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
@@ -520,7 +524,7 @@ static bool _init_bt(const char *deviceName)
     }
 
     if(!_spp_task_handle){
-        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle, 0);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 10, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
@@ -782,7 +786,11 @@ bool BluetoothSerial::connect(String remoteName)
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
     // will first resolve name to address
-    esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+#ifdef ESP_IDF_VERSION_MAJOR
+        esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+#else
+        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+#endif
     if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
         return waitForConnect(SCAN_TIMEOUT);
     }
@@ -822,7 +830,11 @@ bool BluetoothSerial::connect()
         disconnect();
         log_i("master : remoteName");
         // will resolve name to address first - it may take a while
+#ifdef ESP_IDF_VERSION_MAJOR
+        esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+#else
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+#endif
         if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
             return waitForConnect(SCAN_TIMEOUT);
         }
@@ -867,5 +879,10 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
     return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
+}
+
+BluetoothSerial::operator bool() const
+{
+    return true;
 }
 #endif

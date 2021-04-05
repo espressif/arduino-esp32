@@ -26,6 +26,9 @@
 
 #include "WiFiType.h"
 #include "WiFiGeneric.h"
+#ifdef ESP_IDF_VERSION_MAJOR
+#include "esp_event.h"
+#endif
 
 
 class WiFiSTAClass
@@ -72,10 +75,6 @@ public:
     bool enableIpV6();
     IPv6Address localIPv6();
 
-    const char * getHostname();
-    bool setHostname(const char * hostname);
-    bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
-
     // STA WiFi info
     static wl_status_t status();
     String SSID() const;
@@ -87,7 +86,7 @@ public:
     int8_t RSSI();
 
     static void _setStatus(wl_status_t status);
-    static String _hostname;
+    
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;
@@ -97,10 +96,9 @@ public:
     bool stopSmartConfig();
     bool smartConfigDone();
 
+    static bool _smartConfigDone;
 protected:
     static bool _smartConfigStarted;
-    static bool _smartConfigDone;
-    static void _smartConfigCallback(uint32_t status, void* result);
 
 };
 

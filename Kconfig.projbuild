@@ -5,7 +5,7 @@ config ENABLE_ARDUINO_DEPENDS
     select LWIP_SO_RCVBUF
     select ETHERNET
     select WIFI_ENABLED
-    select ESP32_PHY_CALIBRATION_AND_DATA_STORAGE
+    select ESP32_PHY_CALIBRATION_AND_DATA_STORAGE if IDF_TARGET_ESP32
     select MEMMAP_SMP
     default "y"
 
@@ -93,6 +93,16 @@ config ARDUINO_UDP_RUNNING_CORE
     default 0 if ARDUINO_UDP_RUN_CORE0
     default 1 if ARDUINO_UDP_RUN_CORE1
     default -1 if ARDUINO_UDP_RUN_NO_AFFINITY
+
+config ARDUINO_ISR_IRAM
+    bool "Run interrupts in IRAM"
+    default "n"
+    help
+        Enabling this option will Attach all interrupts with the IRAm flag.
+        It will also make some HAL function, like, digitalRead/Write and more
+				be loaded into IRAM for access inside ISRs.
+				Beware that this is a very dangerous setting. Enable it only if you
+				are fully aware of the consequences.
 
 config DISABLE_HAL_LOCKS
     bool "Disable mutex locks for HAL"
@@ -261,6 +271,12 @@ config ARDUINO_SELECTIVE_HTTPClient
     select ARDUINO_SELECTIVE_WiFiClientSecure
     default y
 
+config ARDUINO_SELECTIVE_LITTLEFS
+    bool "Enable LITTLEFS"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_FS
+    default y
+
 config ARDUINO_SELECTIVE_NetBIOS
     bool "Enable NetBIOS"
     depends on ARDUINO_SELECTIVE_COMPILATION
@@ -323,6 +339,12 @@ config ARDUINO_SELECTIVE_WiFi
 
 config ARDUINO_SELECTIVE_WiFiClientSecure
     bool "Enable WiFiClientSecure"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    select ARDUINO_SELECTIVE_WiFi
+    default y
+
+config ARDUINO_SELECTIVE_WiFiProv
+    bool "Enable WiFiProv"
     depends on ARDUINO_SELECTIVE_COMPILATION
     select ARDUINO_SELECTIVE_WiFi
     default y
