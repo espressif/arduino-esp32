@@ -25,6 +25,8 @@ esp32s2.upload.tool=esptool_py
 esp32s2.upload.maximum_size=1310720
 esp32s2.upload.maximum_data_size=327680
 esp32s2.upload.flags=
+esp32s2.upload.use_1200bps_touch=true
+esp32s2.upload.wait_for_upload_port=true
 
 esp32s2.serial.disableDTR=false
 esp32s2.serial.disableRTS=false
@@ -684,6 +686,8 @@ feathers2.upload.tool=esptool_py
 feathers2.upload.maximum_size=1310720
 feathers2.upload.maximum_data_size=327680
 feathers2.upload.flags=
+feathers2.upload.use_1200bps_touch=true
+feathers2.upload.wait_for_upload_port=true
 
 feathers2.serial.disableDTR=false
 feathers2.serial.disableRTS=false
@@ -805,6 +809,8 @@ pros2.upload.tool=esptool_py
 pros2.upload.maximum_size=1310720
 pros2.upload.maximum_data_size=327680
 pros2.upload.flags=
+pros2.upload.use_1200bps_touch=true
+pros2.upload.wait_for_upload_port=true
 
 pros2.serial.disableDTR=false
 pros2.serial.disableRTS=false
@@ -982,6 +988,8 @@ micros2.upload.tool=esptool_py
 micros2.upload.maximum_size=1310720
 micros2.upload.maximum_data_size=327680
 micros2.upload.flags=
+micros2.upload.use_1200bps_touch=true
+micros2.upload.wait_for_upload_port=true
 
 micros2.serial.disableDTR=false
 micros2.serial.disableRTS=false
@@ -1797,6 +1805,8 @@ sparkfun_esp32s2_thing_plus.upload.tool=esptool_py
 sparkfun_esp32s2_thing_plus.upload.maximum_size=1310720
 sparkfun_esp32s2_thing_plus.upload.maximum_data_size=327680
 sparkfun_esp32s2_thing_plus.upload.flags=
+sparkfun_esp32s2_thing_plus.upload.use_1200bps_touch=true
+sparkfun_esp32s2_thing_plus.upload.wait_for_upload_port=true
 
 sparkfun_esp32s2_thing_plus.serial.disableDTR=false
 sparkfun_esp32s2_thing_plus.serial.disableRTS=false
@@ -3020,6 +3030,8 @@ adafruit_metro_esp32s2.upload.tool=esptool_py
 adafruit_metro_esp32s2.upload.maximum_size=1310720
 adafruit_metro_esp32s2.upload.maximum_data_size=327680
 adafruit_metro_esp32s2.upload.flags=
+adafruit_metro_esp32s2.upload.use_1200bps_touch=true
+adafruit_metro_esp32s2.upload.wait_for_upload_port=true
 
 adafruit_metro_esp32s2.serial.disableDTR=false
 adafruit_metro_esp32s2.serial.disableRTS=false
@@ -3167,6 +3179,8 @@ adafruit_magtag29_esp32s2.upload.tool=esptool_py
 adafruit_magtag29_esp32s2.upload.maximum_size=1310720
 adafruit_magtag29_esp32s2.upload.maximum_data_size=327680
 adafruit_magtag29_esp32s2.upload.flags=
+adafruit_magtag29_esp32s2.upload.use_1200bps_touch=true
+adafruit_magtag29_esp32s2.upload.wait_for_upload_port=true
 
 adafruit_magtag29_esp32s2.serial.disableDTR=false
 adafruit_magtag29_esp32s2.serial.disableRTS=false
