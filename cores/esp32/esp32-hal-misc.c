@@ -160,15 +160,15 @@ void delay(uint32_t ms)
 
 void ARDUINO_ISR_ATTR delayMicroseconds(uint32_t us)
 {
-    uint32_t m = micros();
+    uint64_t m = (uint64_t)esp_timer_get_time();
     if(us){
-        uint32_t e = (m + us);
+        uint64_t e = (m + us);
         if(m > e){ //overflow
-            while(micros() > e){
+            while((uint64_t)esp_timer_get_time() > e){
                 NOP();
             }
         }
-        while(micros() < e){
+        while((uint64_t)esp_timer_get_time() < e){
             NOP();
         }
     }
