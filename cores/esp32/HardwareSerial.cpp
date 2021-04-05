@@ -6,6 +6,8 @@
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #ifndef RX1
 #define RX1 9
 #endif
@@ -22,10 +24,28 @@
 #define TX2 17
 #endif
 
+#else
+
+#ifndef RX1
+#define RX1 18
+#endif
+
+#ifndef TX1
+#define TX1 17
+#endif
+
+#endif
+
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+HardwareSerial Serial0(0);
+#else
 HardwareSerial Serial(0);
+#endif
 HardwareSerial Serial1(1);
+#if CONFIG_IDF_TARGET_ESP32
 HardwareSerial Serial2(2);
+#endif
 #endif
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
@@ -40,18 +60,24 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         end();
     }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
+#if CONFIG_IDF_TARGET_ESP32
         rxPin = 3;
         txPin = 1;
+#elif CONFIG_IDF_TARGET_ESP32S2
+        rxPin = 44;
+        txPin = 43;
+#endif
     }
     if(_uart_nr == 1 && rxPin < 0 && txPin < 0) {
         rxPin = RX1;
         txPin = TX1;
     }
+#if CONFIG_IDF_TARGET_ESP32
     if(_uart_nr == 2 && rxPin < 0 && txPin < 0) {
         rxPin = RX2;
         txPin = TX2;
     }
-
+#endif
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
     _tx_pin = txPin;
     _rx_pin = rxPin;
@@ -106,7 +132,7 @@ void HardwareSerial::setDebugOutput(bool en)
         uartSetDebug(_uart);
     } else {
         if(uartGetDebug() == _uart_nr) {
-            uartSetDebug(0);
+            uartSetDebug(NULL);
         }
     }
 }

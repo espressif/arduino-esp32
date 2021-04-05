@@ -108,7 +108,7 @@ public:
 
 };
 
-uint32_t IRAM_ATTR EspClass::getCycleCount()
+uint32_t ARDUINO_ISR_ATTR EspClass::getCycleCount()
 {
     uint32_t ccount;
     __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));

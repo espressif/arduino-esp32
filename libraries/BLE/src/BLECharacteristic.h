@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string>
 #include <map>
 #include "BLEUUID.h"
@@ -16,7 +16,7 @@
 #include <esp_gap_ble_api.h>
 #include "BLEDescriptor.h"
 #include "BLEValue.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEService;
 class BLEDescriptor;
@@ -150,5 +150,5 @@ public:
 	virtual void onNotify(BLECharacteristic* pCharacteristic);
 	virtual void onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code);
 };
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_ */

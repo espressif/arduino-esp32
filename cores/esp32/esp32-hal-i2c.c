@@ -18,13 +18,28 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
-#include "rom/ets_sys.h"
 #include "driver/periph_ctrl.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
 #include "soc/dport_reg.h"
 #include "esp_attr.h"
 #include "esp32-hal-cpu.h" // cpu clock change support 31DEC2018
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/ets_sys.h"
+#endif
+
+
+#if CONFIG_IDF_TARGET_ESP32
 //#define I2C_DEV(i)   (volatile i2c_dev_t *)((i)?DR_REG_I2C1_EXT_BASE:DR_REG_I2C_EXT_BASE)
 //#define I2C_DEV(i)   ((i2c_dev_t *)(REG_I2C_BASE(i)))
 #define I2C_SCL_IDX(p)  ((p==0)?I2CEXT0_SCL_OUT_IDX:((p==1)?I2CEXT1_SCL_OUT_IDX:0))
@@ -227,7 +242,7 @@ static i2c_t _i2c_bus_array[2] = {
 
 /* Stickbreaker ISR mode debug support
  */
-static void IRAM_ATTR i2cDumpCmdQueue(i2c_t *i2c)
+static void ARDUINO_ISR_ATTR i2cDumpCmdQueue(i2c_t *i2c)
 {
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR)&&(defined ENABLE_I2C_DEBUG_BUFFER)
     static const char * const cmdName[] ={"RSTART","WRITE","READ","STOP","END"};
@@ -357,7 +372,7 @@ static void i2cDumpInts(uint8_t num)
 #endif
 
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
-static void IRAM_ATTR i2cDumpStatus(i2c_t * i2c){
+static void ARDUINO_ISR_ATTR i2cDumpStatus(i2c_t * i2c){
     typedef union {
         struct {
             uint32_t ack_rec:             1;        /*This register stores the value of ACK bit.*/
@@ -431,7 +446,7 @@ if(i != fifoPos){// actual data
 }
 #endif
 
-static void IRAM_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
+static void ARDUINO_ISR_ATTR i2cTriggerDumps(i2c_t * i2c, uint8_t trigger, const char locus[]){
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)&&(defined ENABLE_I2C_DEBUG_BUFFER)
     if( trigger ){
       log_i("%s",locus);      
@@ -478,7 +493,7 @@ static void i2cApbChangeCallback(void * arg, apb_change_ev_t ev_type, uint32_t o
 }
 /* End of CPU Clock change Support
 */ 
-static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
+static void ARDUINO_ISR_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bool ack_val, bool ack_exp, bool ack_check)
 {
     I2C_COMMAND_t cmd;
     cmd.val=0;
@@ -491,7 +506,7 @@ static void IRAM_ATTR i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uin
 }
  
 
-static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
+static void ARDUINO_ISR_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
 {
     /* this function is called on initial i2cProcQueue() or when a I2C_END_DETECT_INT occurs
      */
@@ -649,7 +664,7 @@ static void IRAM_ATTR fillCmdQueue(i2c_t * i2c, bool INTS)
     }
 }
 
-static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR fillTxFifo(i2c_t * i2c)
 {
     /*
     12/01/2017 The Fifo's are independent, 32 bytes of tx and 32 bytes of Rx.
@@ -741,7 +756,7 @@ static void IRAM_ATTR fillTxFifo(i2c_t * i2c)
 }
 
 
-static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR emptyRxFifo(i2c_t * i2c)
 {
     uint32_t d, cnt=0, moveCnt;
     
@@ -800,7 +815,7 @@ static void IRAM_ATTR emptyRxFifo(i2c_t * i2c)
 #endif
 }
 
-static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal)
+static void ARDUINO_ISR_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal)
 {
 
     switch(eventCode) {
@@ -845,7 +860,7 @@ static void IRAM_ATTR i2cIsrExit(i2c_t * i2c,const uint32_t eventCode,bool Fatal
 
 }
 
-static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
+static void ARDUINO_ISR_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
 {
 /* i2c_update_error_byte_cnt 07/18/2018
   Only called after an error has occurred, so, most of the time this function is never used.
@@ -892,7 +907,7 @@ static void IRAM_ATTR i2c_update_error_byte_cnt(i2c_t * i2c)
     i2c->errorByteCnt = bc;
  }
 
-static void IRAM_ATTR i2c_isr_handler_default(void* arg)
+static void ARDUINO_ISR_ATTR i2c_isr_handler_default(void* arg)
 {
     i2c_t* p_i2c = (i2c_t*) arg; // recover data
     uint32_t activeInt = p_i2c->dev->int_status.val&0x7FF;
@@ -1247,7 +1262,7 @@ i2c_err_t i2cProcQueue(i2c_t * i2c, uint32_t *readCount, uint16_t timeOutMillis)
     if(!i2c->intr_handle) { // create ISR for either peripheral
         // log_i("create ISR %d",i2c->num);
         uint32_t ret = 0;
-        uint32_t flags = ESP_INTR_FLAG_IRAM |  //< ISR can be called if cache is disabled
+        uint32_t flags = ARDUINO_ISR_FLAG |  //< ISR can be called if cache is disabled
           ESP_INTR_FLAG_LOWMED |   //< Low and medium prio interrupts. These can be handled in C.
           ESP_INTR_FLAG_SHARED; //< Reduce resource requirements, Share interrupts
       
@@ -1765,7 +1780,137 @@ uint32_t i2cGetStatus(i2c_t * i2c){
     }
     else return 0;
 }
+#else
+#include "driver/i2c.h"
 
+#define ACK_CHECK_EN                1                   /*!< I2C master will check ack from slave*/
+#define ACK_CHECK_DIS               0                   /*!< I2C master will not check ack from slave */
+#define ACK_VAL                     0x0                 /*!< I2C ack value */
+#define NACK_VAL                    0x1                 /*!< I2C nack value */
+
+struct i2c_struct_t {
+	i2c_port_t num;
+};
+
+static i2c_t * i2c_ports[2] = {NULL, NULL};
+
+i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
+	if(i2c_num >= 2){
+		return NULL;
+	}
+	if(!clk_speed){
+	    //originally does not change the speed, but getFrequency and setFrequency need to be implemented first.
+	    clk_speed = 100000;
+	}
+	i2c_t * out = NULL;
+	if(i2c_ports[i2c_num] == NULL){
+		out = (i2c_t*)malloc(sizeof(i2c_t));
+		if(out == NULL){
+			log_e("malloc failed");
+			return NULL;
+		}
+		out->num = (i2c_port_t)i2c_num;
+		i2c_ports[i2c_num] = out;
+	} else {
+		out = i2c_ports[i2c_num];
+		i2c_driver_delete((i2c_port_t)i2c_num);
+	}
+
+    i2c_config_t conf = { };
+    conf.mode = I2C_MODE_MASTER;
+    conf.scl_io_num = (gpio_num_t)scl;
+    conf.sda_io_num = (gpio_num_t)sda;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = clk_speed;
+    esp_err_t ret = i2c_param_config(out->num, &conf);
+    if (ret != ESP_OK) {
+        log_e("i2c_param_config failed");
+        free(out);
+        i2c_ports[i2c_num] = NULL;
+        return NULL;
+    }
+    ret = i2c_driver_install(out->num, conf.mode, 0, 0, 0);
+    if (ret != ESP_OK) {
+        log_e("i2c_driver_install failed");
+        free(out);
+        i2c_ports[i2c_num] = NULL;
+        return NULL;
+    }
+    return out;
+}
+
+i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
+	esp_err_t ret = ESP_OK;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+    i2c_master_write(cmd, buff, size, ACK_CHECK_EN);
+    //if send stop?
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(i2c->num, cmd, timeOutMillis / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+i2c_err_t i2cRead(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis, uint32_t *readCount){
+	esp_err_t ret = ESP_OK;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, ACK_CHECK_EN);
+    if (size > 1) {
+        i2c_master_read(cmd, buff, size - 1, ACK_VAL);
+    }
+    i2c_master_read_byte(cmd, buff + size - 1, NACK_VAL);
+    i2c_master_stop(cmd);
+    ret = i2c_master_cmd_begin(i2c->num, cmd, timeOutMillis / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    if(ret == ESP_OK){
+    	*readCount = size;
+    }
+    return ret;
+}
+
+void i2cRelease(i2c_t *i2c){
+	log_w("");
+    return;
+}
+i2c_err_t i2cFlush(i2c_t *i2c){
+	esp_err_t ret = i2c_reset_tx_fifo(i2c->num);
+    if(ret != ESP_OK){
+    	return ret;
+    }
+    return i2c_reset_rx_fifo(i2c->num);
+}
+i2c_err_t i2cSetFrequency(i2c_t * i2c, uint32_t clk_speed){
+	log_w("");
+    return ESP_OK;
+}
+uint32_t i2cGetFrequency(i2c_t * i2c){
+	log_w("");
+    return 0;
+}
+uint32_t i2cGetStatus(i2c_t * i2c){
+	log_w("");
+    return 0;
+}
+
+//Functions below should be used only if well understood
+//Might be deprecated and removed in future
+i2c_err_t i2cAttachSCL(i2c_t * i2c, int8_t scl){
+    return ESP_FAIL;
+}
+i2c_err_t i2cDetachSCL(i2c_t * i2c, int8_t scl){
+    return ESP_FAIL;
+}
+i2c_err_t i2cAttachSDA(i2c_t * i2c, int8_t sda){
+    return ESP_FAIL;
+}
+i2c_err_t i2cDetachSDA(i2c_t * i2c, int8_t sda){
+    return ESP_FAIL;
+}
+
+#endif /* CONFIG_IDF_TARGET_ESP32 */
 
 /* todo
   22JUL18
