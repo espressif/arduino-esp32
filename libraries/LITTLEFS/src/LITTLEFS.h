@@ -23,11 +23,15 @@ class LITTLEFSFS : public FS
 {
 public:
     LITTLEFSFS();
-    bool begin(bool formatOnFail=false, const char * basePath="/littlefs", uint8_t maxOpenFiles=5);
+    ~LITTLEFSFS();
+    bool begin(bool formatOnFail=false, const char * basePath="/littlefs", uint8_t maxOpenFiles=10, const char * partitionLabel="spiffs");
     bool format();
     size_t totalBytes();
     size_t usedBytes();
     void end();
+
+private:
+    char * partitionLabel_;
 };
 
 }
