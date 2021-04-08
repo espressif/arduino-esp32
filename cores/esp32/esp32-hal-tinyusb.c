@@ -48,8 +48,6 @@ typedef struct {
     bool external_phy;
 } tinyusb_config_t;
 
-static TaskHandle_t s_tusb_tskh;
-
 static void configure_pins(usb_hal_context_t *usb)
 {
     for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
@@ -74,7 +72,6 @@ static void configure_pins(usb_hal_context_t *usb)
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config)
 {
-    int res;
     log_i("Driver installation...");
 
     // Hal init
