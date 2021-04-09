@@ -130,10 +130,10 @@ static void ARDUINO_ISR_ATTR _uart_isr(void *arg)
     }
 }
 
-void uartEnableInterrupt(uart_t* uart)
+static void uartEnableInterrupt(uart_t* uart, uint8_t rxfifo_full_thrhd)
 {
     UART_MUTEX_LOCK();
-    uart->dev->conf1.rxfifo_full_thrhd = 112;
+    uart->dev->conf1.rxfifo_full_thrhd = rxfifo_full_thrhd;
 #if CONFIG_IDF_TARGET_ESP32
     uart->dev->conf1.rx_tout_thrhd = 2;
 #else
@@ -149,7 +149,7 @@ void uartEnableInterrupt(uart_t* uart)
     UART_MUTEX_UNLOCK();
 }
 
-void uartDisableInterrupt(uart_t* uart)
+static void uartDisableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
     uart->dev->conf1.val = 0;
@@ -162,7 +162,7 @@ void uartDisableInterrupt(uart_t* uart)
     UART_MUTEX_UNLOCK();
 }
 
-void uartDetachRx(uart_t* uart, uint8_t rxPin)
+static void uartDetachRx(uart_t* uart, uint8_t rxPin)
 {
     if(uart == NULL) {
         return;
@@ -171,7 +171,7 @@ void uartDetachRx(uart_t* uart, uint8_t rxPin)
     uartDisableInterrupt(uart);
 }
 
-void uartDetachTx(uart_t* uart, uint8_t txPin)
+static void uartDetachTx(uart_t* uart, uint8_t txPin)
 {
     if(uart == NULL) {
         return;
@@ -179,17 +179,17 @@ void uartDetachTx(uart_t* uart, uint8_t txPin)
     pinMatrixOutDetach(txPin, false, false);
 }
 
-void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted)
+static void uartAttachRx(uart_t* uart, uint8_t rxPin, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart == NULL || rxPin >= GPIO_PIN_COUNT) {
         return;
     }
     pinMode(rxPin, INPUT);
-    uartEnableInterrupt(uart);
+    uartEnableInterrupt(uart, rxfifo_full_thrhd);
     pinMatrixInAttach(rxPin, UART_RXD_IDX(uart->num), inverted);
 }
 
-void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
+static void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
 {
     if(uart == NULL || txPin >= GPIO_PIN_COUNT) {
         return;
@@ -198,7 +198,7 @@ void uartAttachTx(uart_t* uart, uint8_t txPin, bool inverted)
     pinMatrixOutAttach(txPin, UART_TXD_IDX(uart->num), inverted, false);
 }
 
-uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted)
+uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart_nr >= UART_PORTS_NUM) {
         return NULL;
@@ -256,7 +256,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_UNLOCK();
 
     if(rxPin != -1) {
-        uartAttachRx(uart, rxPin, inverted);
+        uartAttachRx(uart, rxPin, inverted, rxfifo_full_thrhd);
     }
 
     if(txPin != -1) {
@@ -322,7 +322,11 @@ uint32_t uartAvailable(uart_t* uart)
     if(uart == NULL || uart->queue == NULL) {
         return 0;
     }
+#ifdef UART_READ_RX_FIFO
     return (uxQueueMessagesWaiting(uart->queue) + uart->dev->status.rxfifo_cnt) ;
+#else
+    return uxQueueMessagesWaiting(uart->queue);
+#endif
 }
 
 uint32_t uartAvailableForWrite(uart_t* uart)
@@ -333,6 +337,7 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return 0x7f - uart->dev->status.txfifo_cnt;
 }
 
+#ifdef UART_READ_RX_FIFO
 void uartRxFifoToQueue(uart_t* uart)
 {
 	uint8_t c;
@@ -357,6 +362,7 @@ void uartRxFifoToQueue(uart_t* uart)
 	uart->dev->int_clr.val = 0xffffffff;
     UART_MUTEX_UNLOCK();
 }
+#endif
 
 uint8_t uartRead(uart_t* uart)
 {
@@ -364,10 +370,12 @@ uint8_t uartRead(uart_t* uart)
         return 0;
     }
     uint8_t c;
+#ifdef UART_READ_RX_FIFO
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
     	uartRxFifoToQueue(uart);
     }
+#endif
     if(xQueueReceive(uart->queue, &c, 0)) {
         return c;
     }
@@ -380,10 +388,12 @@ uint8_t uartPeek(uart_t* uart)
         return 0;
     }
     uint8_t c;
+#ifdef UART_READ_RX_FIFO
     if ((uxQueueMessagesWaiting(uart->queue) == 0) && (uart->dev->status.rxfifo_cnt > 0))
     {
     	uartRxFifoToQueue(uart);
     }
+#endif
     if(xQueuePeek(uart->queue, &c, 0)) {
         return c;
     }

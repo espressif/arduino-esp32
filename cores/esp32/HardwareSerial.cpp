@@ -50,7 +50,7 @@ HardwareSerial Serial2(2);
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
-void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms)
+void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
     if(0 > _uart_nr || _uart_nr > 2) {
         log_e("Serial number is invalid, please use 0, 1 or 2");
@@ -78,7 +78,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         txPin = TX2;
     }
 #endif
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
     _tx_pin = txPin;
     _rx_pin = rxPin;
 
@@ -94,7 +94,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
