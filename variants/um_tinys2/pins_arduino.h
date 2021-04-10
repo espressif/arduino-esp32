@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x239A
-#define USB_PID 0x80A9
+#define USB_VID 0x303A
+#define USB_PID 0x8001
 #define USB_MANUFACTURER "Unexpected Maker"
-#define USB_PRODUCT "ProS2"
+#define USB_PRODUCT "TinyS2"
 #define USB_SERIAL ""
 
 #define EXTERNAL_NUM_INTERRUPTS 46
@@ -23,12 +23,12 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 34;
+static const uint8_t SS    = 14;
 static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
+static const uint8_t MISO  = 36;
 static const uint8_t SDO  = 35;
-static const uint8_t SDI  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SDI  = 36;
+static const uint8_t SCK   = 37;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -69,9 +69,10 @@ static const uint8_t T14 = 14;
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
-static const uint8_t LDO_2_POWER = 21;
+static const uint8_t VBAT_SENSE = 3;
+static const uint8_t VBUS_SENSE = 21;
 
-static const uint8_t APA_DATA = 40;
-static const uint8_t APA_CLK = 45;
+static const uint8_t RGB_DATA = 1;
+static const uint8_t RGB_PWR = 2;
 
 #endif /* Pins_Arduino_h */
