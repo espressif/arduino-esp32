@@ -25,7 +25,7 @@
   corresponding const char CA_cert[], const char ESP_CA_cert[] and const char ESP_RSA_key[] with escape characters.
 
   (1-2.) Alternatively you can use the libraries/WiFiClientSecure/examples/WiFiClientSecureClientAuthentication/certificates/certificate_generator.sh script 
-  for generating and formatting the certificates.
+  for generating and formatting the certificates. Befor you run it, please modify the CN value for your adress.
 
   3. step - Install and setup you Mosquitto broker
   Follow the instructions from https://mosquitto.org/ and check the manual for the coniguration.
