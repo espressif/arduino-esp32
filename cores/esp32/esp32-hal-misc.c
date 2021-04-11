@@ -60,7 +60,7 @@ float temperatureRead()
 #else
 float temperatureRead()
 {
-    float hold_temp = 32768; // a number obviously out of range
+    float hold_temp = NAN;
     temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
     temp_sensor_set_config(tsens);
     temp_sensor_start();
