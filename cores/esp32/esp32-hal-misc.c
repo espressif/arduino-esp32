@@ -60,13 +60,13 @@ float temperatureRead()
 #else
 float temperatureRead()
 {
-    float hold_temp = NAN;
+    float result = NAN;
     temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
     temp_sensor_set_config(tsens);
     temp_sensor_start();
-    temp_sensor_read_celsius(&hold_temp); 
+    temp_sensor_read_celsius(&result); 
     temp_sensor_stop();
-    return hold_temp;
+    return result;
 }
 #endif
 
