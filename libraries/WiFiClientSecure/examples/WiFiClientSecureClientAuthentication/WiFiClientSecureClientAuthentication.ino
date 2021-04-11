@@ -7,10 +7,10 @@
   OpenSSL - https://www.openssl.org/
   Mosquitto broker - https://mosquitto.org/
   
-  1. step - Generating the certificates
+  1. step - Generate the certificates
   For generating self-signed certificates please run the following commands:
       
-  openssl req -new -x509 -days 365 -extensions v3_ca -keyout ca.key -out ca.crt -subj '/CN=TrustedCA.net'  #If you generating self-signed certificates the CN can be anything
+  openssl req -new -x509 -days 365 -extensions v3_ca -keyout ca.key -out ca.crt -subj '/CN=TrustedCA.net'  #If you generate self-signed certificates the CN can be anything
 
   openssl genrsa -out mosquitto.key 2048
   openssl req -out mosquitto.csr -key mosquitto.key -new -subj '/CN=Mosquitto_borker_adress'    #Its necessary to set the CN to the adress of which the client calls your Mosquitto server (eg. yourserver.com)!!!
