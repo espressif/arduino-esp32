@@ -114,6 +114,7 @@ void HardwareSerial::end()
     if(uartGetDebug() == _uart_nr) {
         uartSetDebug(0);
     }
+    delay(10);
     log_v("pins %d %d",_tx_pin, _rx_pin);
     uartEnd(_uart, _tx_pin, _rx_pin);
     _uart = 0;
