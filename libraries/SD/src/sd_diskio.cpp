@@ -124,6 +124,8 @@ bool sdSelectCard(uint8_t pdrv)
     bool s = sdWait(pdrv, 300);
     if (!s) {
         log_e("Select Failed");
+        digitalWrite(card->ssPin, HIGH);
+        return false;
     }
     return true;
 }

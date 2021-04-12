@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "SD_MMC.h"
-#ifndef CONFIG_IDF_TARGET_ESP32S2 //SDMMC does not work on ESP32S2
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) //SDMMC does not work on ESP32S2
 #include "vfs_api.h"
 
 extern "C" {
