@@ -25,10 +25,10 @@
   corresponding const char CA_cert[], const char ESP_CA_cert[] and const char ESP_RSA_key[] with escape characters.
 
   (1-2.) Alternatively you can use the libraries/WiFiClientSecure/examples/WiFiClientSecureClientAuthentication/certificates/certificate_generator.sh script 
-  for generating and formatting the certificates. Befor you run it, please modify the CN value for your adress.
+  for generating and formatting the certificates. Befor you run it, please modify the CN value for your adress, or modify any other settings based on yout requierments.
 
-  3. step - Install and setup you Mosquitto broker
-  Follow the instructions from https://mosquitto.org/ and check the manual for the coniguration.
+  3. step - Install and setup your   Mosquitto broker
+  Follow the instructions from https://mosquitto.org/ and check the manual for the configuration.
   For the Mosquito broker you need ca.crt, mosquitto.key and mosquitto.crt files generated in previous step.
   Recommended to put they in /etc/mosquitto/ca_certificates/ and /etc/mosquitto/certs/
   You need to config Mosquitto broker to use these files (usually /etc/mosquitto/conf.d/default.conf):
@@ -73,12 +73,13 @@ const char* ESP_RSA_key= \
 "-----END RSA PRIVATE KEY-----";
 
 
-const char* ssid     = "wifi";        // your network SSID (name of wifi network)
-const char* password = "wifi_pass";   // your network password
+const char* ssid        = "wifi";        // your network SSID (name of wifi network)
+const char* password    = "wifi_pass";   // your network password
 
-const char* server = "Mosquitto_borker_adress";
-const char* mqtt_user = "user";           //If it is configured, see Mosquitto config
-const char* mqtt_pass = "user_password";  //If it is configured, see Mosquitto config
+const char* mqtt_server = "Mosquitto_borker_adress";  //Adress for your Mosquitto broker server, it must be the same adress that you set in Mosquitto.csr CN field
+int port                = 8883;             //Port to your Mosquitto broker server. Dont forget to forward it in your router for remote access
+const char* mqtt_user   = "user";           //Depends on Mosquitto configuration, if it is not set, you do not need it
+const char* mqtt_pass   = "user_password";  //Depends on Mosquitto configuration, if it is not set, you do not need it
 
 WiFiClientSecure client;
 PubSubClient mqtt_client(client); 
@@ -101,15 +102,15 @@ void setup() {
   Serial.print("Connected to ");
   Serial.println(ssid);
 
-  client.setCACert(CA_cert);
-  client.setCertificate(ESP_CA_cert); // for client verification if the require_certificate is set to true  in the mosquitto broker config
-  client.setPrivateKey(ESP_RSA_key);  // for client verification if the require_certificate is set to true  in the mosquitto broker config
-  mqtt_client.setServer(server, 8883);
+  //Set up the certificates and keys
+  client.setCACert(CA_cert);          //Root CA certificate
+  client.setCertificate(ESP_CA_cert); //for client verification if the require_certificate is set to true in the mosquitto broker config
+  client.setPrivateKey(ESP_RSA_key);  //for client verification if the require_certificate is set to true in the mosquitto broker config
   
+  mqtt_client.setServer(mqtt_server, port);
 }
 
-void loop() {
-  
+void loop() {  
   Serial.println("\nStarting connection to server...");
   //if you use password for Mosquitto broker
   //if (mqtt_client.connect("ESP32", mqtt_user , mqtt_pass)) {
@@ -117,7 +118,8 @@ void loop() {
   if (mqtt_client.connect("ESP32")) {                       
     Serial.print("Connected, mqtt_client state: ");
     Serial.println(mqtt_client.state());
-    mqtt_client.publish("LIvingRoom/TEMPERATURE", "25");
+    //Publsih a demo message to topic LivingRoom/TEMPERATURE with a value of 25
+    mqtt_client.publish("LivingRoom/TEMPERATURE", "25");
   }
   else {
     Serial.println("Connected failed!  mqtt_client state:");
