@@ -16,9 +16,9 @@ tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe"
 tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
-compiler.path={runtime.tools.{build.arch}-{build.target}-elf-gcc.path}/bin/
+compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
-compiler.prefix={build.arch}-{build.target}-elf-
+compiler.prefix={build.tarch}-{build.target}-elf-
 
 #
 # ESP32 Support Start
@@ -58,7 +58,7 @@ compiler.c.elf.libs.esp32c3=-lmbedtls -lefuse -lapp_update -lbootloader_support 
 compiler.c.flags.esp32c3=-march=rv32imc -ffunction-sections -fdata-sections -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -ggdb -Wno-error=format= -nostartfiles -Wno-format -Og -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -std=gnu99 -Wno-old-style-declaration  -MMD -c
 compiler.cpp.flags.esp32c3=-march=rv32imc -ffunction-sections -fdata-sections -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -ggdb -Wno-error=format= -nostartfiles -Wno-format -Og -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable -std=gnu++11 -fno-exceptions -fno-rtti  -MMD -c
 compiler.S.flags.esp32c3=-ffunction-sections -fdata-sections -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -ggdb -Wno-error=format= -nostartfiles -Wno-format -Og -fstrict-volatile-bitfields -Wno-error=unused-but-set-variable  -x assembler-with-cpp -MMD -c
-compiler.c.elf.flags.esp32c3=-T esp32c3.rom.ld -T esp32c3.rom.api.ld -T esp32c3.rom.libgcc.ld -T esp32c3.rom.newlib.ld -T esp32c3.rom.version.ld -T esp32c3_out.ld -T esp32c3.project.ld -T esp32c3.peripherals.ld  -mlongcalls -nostartfiles -march=rv32imc --specs=nosys.specs -Wl,--cref -Wl,--gc-sections -fno-rtti -fno-lto -Wl,--wrap=mbedtls_mpi_exp_mod -u esp_app_desc -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u start_app -u vfs_include_syscalls_impl -u call_user_start_cpu0 -Wl,--undefined=uxTopUsedPriority -u app_main -u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u __cxa_guard_dummy -u __cxx_fatal_exception 
+compiler.c.elf.flags.esp32c3=-T esp32c3.rom.ld -T esp32c3.rom.api.ld -T esp32c3.rom.libgcc.ld -T esp32c3.rom.newlib.ld -T esp32c3.rom.version.ld -T esp32c3_out.ld -T esp32c3.project.ld -T esp32c3.peripherals.ld -nostartfiles -march=rv32imc --specs=nosys.specs -Wl,--cref -Wl,--gc-sections -fno-rtti -fno-lto -Wl,--wrap=mbedtls_mpi_exp_mod -u esp_app_desc -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u start_app -u vfs_include_syscalls_impl -u call_user_start_cpu0 -Wl,--undefined=uxTopUsedPriority -u app_main -u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u __cxa_guard_dummy -u __cxx_fatal_exception 
 compiler.ar.flags.esp32c3=cru
 build.extra_flags.esp32c3=-DARDUINO_SERIAL_PORT=0
 #
@@ -104,6 +104,7 @@ compiler.libraries.ldflags=
 build.flash_size=4MB
 build.flash_mode=dio
 build.boot=bootloader
+build.bootloader_addr=0x1000
 build.code_debug=0
 build.defines=
 build.loop_core=
@@ -152,6 +153,6 @@ recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.noinit)\s+([0-9]+).*
 tools.esptool_py.upload.protocol=esp32
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
-tools.esptool_py.upload.pattern="{path}/{cmd}" --chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x1000 "{runtime.platform.path}/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
-tools.esptool_py.upload.pattern.linux=python "{path}/{cmd}" --chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x1000 "{runtime.platform.path}/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
+tools.esptool_py.upload.pattern="{path}/{cmd}" --chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" {build.bootloader_addr} "{runtime.platform.path}/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
+tools.esptool_py.upload.pattern.linux=python "{path}/{cmd}" --chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" {build.bootloader_addr} "{runtime.platform.path}/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
 tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{network.port}" "--auth={network.password}" -f "{build.path}/{build.project_name}.bin"
