@@ -69,6 +69,19 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 	else
 		build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
     fi
+
+	# ArduinoIDE ESP32C3 Test
+    TARGET="esp32c3"
+	FQBN="espressif:esp32:esp32c3:PSRAM=enabled,PartitionScheme=huge_app"
+	if [ "$OS_IS_WINDOWS" == "1" ]; then
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
+	elif [ "$OS_IS_MACOS" == "1" ]; then
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
+	else
+		build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
+    fi
 else
 	source ./.github/scripts/install-platformio-esp32.sh
 	# PlatformIO ESP32 Test
