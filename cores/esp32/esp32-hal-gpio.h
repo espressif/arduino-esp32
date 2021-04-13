@@ -28,7 +28,7 @@ extern "C" {
 #include "soc/soc_caps.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
-#define NUM_OUPUT_PINS  45
+#define NUM_OUPUT_PINS  47
 #define PIN_DAC1        17
 #define PIN_DAC2        18
 #else
