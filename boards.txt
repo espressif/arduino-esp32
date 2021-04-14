@@ -17,6 +17,137 @@ menu.EventsCore=Events Run On
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
 ##############################################################
 
+esp32c3.name=ESP32C3 Dev Module
+
+esp32c3.upload.tool=esptool_py
+esp32c3.upload.maximum_size=1310720
+esp32c3.upload.maximum_data_size=327680
+esp32c3.upload.flags=
+
+esp32c3.serial.disableDTR=false
+esp32c3.serial.disableRTS=false
+
+esp32c3.build.tarch=riscv32
+esp32c3.build.target=esp
+esp32c3.build.mcu=esp32c3
+esp32c3.build.core=esp32
+esp32c3.build.variant=esp32c3
+esp32c3.build.board=ESP32C3_DEV
+esp32c3.build.bootloader_addr=0x0
+
+esp32c3.build.serial=0
+esp32c3.build.f_cpu=160000000L
+esp32c3.build.flash_size=4MB
+esp32c3.build.flash_freq=80m
+esp32c3.build.flash_mode=qio
+esp32c3.build.boot=qio
+esp32c3.build.partitions=default
+esp32c3.build.defines=
+
+esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32c3.menu.PartitionScheme.default.build.partitions=default
+esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32c3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32c3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32c3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32c3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32c3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32c3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32c3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32c3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32c3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32c3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32c3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32c3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32c3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32c3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32c3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32c3.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32c3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+esp32c3.menu.CPUFreq.160=160MHz (WiFi)
+esp32c3.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32c3.menu.CPUFreq.80=80MHz (WiFi)
+esp32c3.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32c3.menu.CPUFreq.40=40MHz
+esp32c3.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32c3.menu.CPUFreq.20=20MHz
+esp32c3.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32c3.menu.CPUFreq.10=10MHz
+esp32c3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32c3.menu.FlashMode.qio=QIO
+esp32c3.menu.FlashMode.qio.build.flash_mode=dio
+esp32c3.menu.FlashMode.qio.build.boot=qio
+esp32c3.menu.FlashMode.dio=DIO
+esp32c3.menu.FlashMode.dio.build.flash_mode=dio
+esp32c3.menu.FlashMode.dio.build.boot=dio
+esp32c3.menu.FlashMode.qout=QOUT
+esp32c3.menu.FlashMode.qout.build.flash_mode=dout
+esp32c3.menu.FlashMode.qout.build.boot=qout
+esp32c3.menu.FlashMode.dout=DOUT
+esp32c3.menu.FlashMode.dout.build.flash_mode=dout
+esp32c3.menu.FlashMode.dout.build.boot=dout
+
+esp32c3.menu.FlashFreq.80=80MHz
+esp32c3.menu.FlashFreq.80.build.flash_freq=80m
+esp32c3.menu.FlashFreq.40=40MHz
+esp32c3.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32c3.menu.FlashSize.4M=4MB (32Mb)
+esp32c3.menu.FlashSize.4M.build.flash_size=4MB
+esp32c3.menu.FlashSize.8M=8MB (64Mb)
+esp32c3.menu.FlashSize.8M.build.flash_size=8MB
+esp32c3.menu.FlashSize.8M.build.partitions=default_8MB
+esp32c3.menu.FlashSize.2M=2MB (16Mb)
+esp32c3.menu.FlashSize.2M.build.flash_size=2MB
+esp32c3.menu.FlashSize.2M.build.partitions=minimal
+esp32c3.menu.FlashSize.16M=16MB (128Mb)
+esp32c3.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32c3.menu.UploadSpeed.921600=921600
+esp32c3.menu.UploadSpeed.921600.upload.speed=921600
+esp32c3.menu.UploadSpeed.115200=115200
+esp32c3.menu.UploadSpeed.115200.upload.speed=115200
+esp32c3.menu.UploadSpeed.256000.windows=256000
+esp32c3.menu.UploadSpeed.256000.upload.speed=256000
+esp32c3.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32c3.menu.UploadSpeed.230400=230400
+esp32c3.menu.UploadSpeed.230400.upload.speed=230400
+esp32c3.menu.UploadSpeed.460800.linux=460800
+esp32c3.menu.UploadSpeed.460800.macosx=460800
+esp32c3.menu.UploadSpeed.460800.upload.speed=460800
+esp32c3.menu.UploadSpeed.512000.windows=512000
+esp32c3.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32c3.menu.DebugLevel.none=None
+esp32c3.menu.DebugLevel.none.build.code_debug=0
+esp32c3.menu.DebugLevel.error=Error
+esp32c3.menu.DebugLevel.error.build.code_debug=1
+esp32c3.menu.DebugLevel.warn=Warn
+esp32c3.menu.DebugLevel.warn.build.code_debug=2
+esp32c3.menu.DebugLevel.info=Info
+esp32c3.menu.DebugLevel.info.build.code_debug=3
+esp32c3.menu.DebugLevel.debug=Debug
+esp32c3.menu.DebugLevel.debug.build.code_debug=4
+esp32c3.menu.DebugLevel.verbose=Verbose
+esp32c3.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 esp32s2.name=ESP32S2 Dev Module
 esp32s2.vid.0=0x303a
 esp32s2.pid.0=0x0002
@@ -32,6 +163,9 @@ esp32s2.upload.wait_for_upload_port=true
 esp32s2.serial.disableDTR=false
 esp32s2.serial.disableRTS=false
 
+esp32s2.build.tarch=xtensa
+esp32s2.build.bootloader_addr=0x1000
+esp32s2.build.target=esp32s2
 esp32s2.build.mcu=esp32s2
 esp32s2.build.core=esp32
 esp32s2.build.variant=esp32s2
@@ -173,6 +307,9 @@ esp32.upload.extra_flags=
 esp32.serial.disableDTR=true
 esp32.serial.disableRTS=true
 
+esp32.build.tarch=xtensa
+esp32.build.bootloader_addr=0x1000
+esp32.build.target=esp32
 esp32.build.mcu=esp32
 esp32.build.core=esp32
 esp32.build.variant=esp32
@@ -329,6 +466,9 @@ esp32wrover.upload.extra_flags=
 esp32wrover.serial.disableDTR=true
 esp32wrover.serial.disableRTS=true
 
+esp32wrover.build.tarch=xtensa
+esp32wrover.build.bootloader_addr=0x1000
+esp32wrover.build.target=esp32
 esp32wrover.build.mcu=esp32
 esp32wrover.build.core=esp32
 esp32wrover.build.variant=esp32
@@ -431,6 +571,9 @@ pico32.upload.extra_flags=
 pico32.serial.disableDTR=true
 pico32.serial.disableRTS=true
 
+pico32.build.tarch=xtensa
+pico32.build.bootloader_addr=0x1000
+pico32.build.target=esp32
 pico32.build.mcu=esp32
 pico32.build.core=esp32
 pico32.build.variant=pico32
@@ -491,6 +634,9 @@ esp32wroverkit.upload.flags=
 esp32wroverkit.upload.extra_flags=
 esp32wroverkit.serial.disableDTR=true
 esp32wroverkit.serial.disableRTS=true
+esp32wroverkit.build.tarch=xtensa
+esp32wroverkit.build.bootloader_addr=0x1000
+esp32wroverkit.build.target=esp32
 esp32wroverkit.build.mcu=esp32
 esp32wroverkit.build.core=esp32
 esp32wroverkit.build.variant=esp32
@@ -614,6 +760,9 @@ tinypico.upload.extra_flags=
 tinypico.serial.disableDTR=true
 tinypico.serial.disableRTS=true
 
+tinypico.build.tarch=xtensa
+tinypico.build.bootloader_addr=0x1000
+tinypico.build.target=esp32
 tinypico.build.mcu=esp32
 tinypico.build.core=esp32
 tinypico.build.variant=um_tinypico
@@ -699,6 +848,9 @@ feathers2.upload.wait_for_upload_port=true
 feathers2.serial.disableDTR=false
 feathers2.serial.disableRTS=false
 
+feathers2.build.tarch=xtensa
+feathers2.build.bootloader_addr=0x1000
+feathers2.build.target=esp32s2
 feathers2.build.mcu=esp32s2
 feathers2.build.core=esp32
 feathers2.build.variant=um_feathers2
@@ -823,6 +975,9 @@ pros2.upload.wait_for_upload_port=true
 pros2.serial.disableDTR=false
 pros2.serial.disableRTS=false
 
+pros2.build.tarch=xtensa
+pros2.build.bootloader_addr=0x1000
+pros2.build.target=esp32s2
 pros2.build.mcu=esp32s2
 pros2.build.core=esp32
 pros2.build.variant=um_pros2
@@ -944,6 +1099,9 @@ S_ODI_Ultra.upload.extra_flags=
 S_ODI_Ultra.serial.disableDTR=true
 S_ODI_Ultra.serial.disableRTS=true
 
+S_ODI_Ultra.build.tarch=xtensa
+S_ODI_Ultra.build.bootloader_addr=0x1000
+S_ODI_Ultra.build.target=esp32
 S_ODI_Ultra.build.mcu=esp32
 S_ODI_Ultra.build.core=esp32
 S_ODI_Ultra.build.variant=S_ODI_Ultra_v1
@@ -1004,6 +1162,9 @@ micros2.upload.wait_for_upload_port=true
 micros2.serial.disableDTR=false
 micros2.serial.disableRTS=false
 
+micros2.build.tarch=xtensa
+micros2.build.bootloader_addr=0x1000
+micros2.build.target=esp32s2
 micros2.build.mcu=esp32s2
 micros2.build.core=esp32
 micros2.build.variant=micro_s2
@@ -1124,6 +1285,9 @@ magicbit.upload.extra_flags=
 magicbit.serial.disableDTR=true
 magicbit.serial.disableRTS=true
 
+magicbit.build.tarch=xtensa
+magicbit.build.bootloader_addr=0x1000
+magicbit.build.target=esp32
 magicbit.build.mcu=esp32
 magicbit.build.core=esp32
 magicbit.build.variant=magicbit
@@ -1160,6 +1324,9 @@ turta_iot_node.upload.extra_flags=
 turta_iot_node.serial.disableDTR=true
 turta_iot_node.serial.disableRTS=true
 
+turta_iot_node.build.tarch=xtensa
+turta_iot_node.build.bootloader_addr=0x1000
+turta_iot_node.build.target=esp32
 turta_iot_node.build.mcu=esp32
 turta_iot_node.build.core=esp32
 turta_iot_node.build.variant=pico32
@@ -1204,6 +1371,9 @@ ttgo-lora32-v1.upload.extra_flags=
 ttgo-lora32-v1.serial.disableDTR=true
 ttgo-lora32-v1.serial.disableRTS=true
 
+ttgo-lora32-v1.build.tarch=xtensa
+ttgo-lora32-v1.build.bootloader_addr=0x1000
+ttgo-lora32-v1.build.target=esp32
 ttgo-lora32-v1.build.mcu=esp32
 ttgo-lora32-v1.build.core=esp32
 ttgo-lora32-v1.build.variant=ttgo-lora32-v1
@@ -1261,6 +1431,9 @@ ttgo-t1.upload.extra_flags=
 ttgo-t1.serial.disableDTR=true
 ttgo-t1.serial.disableRTS=true
 
+ttgo-t1.build.tarch=xtensa
+ttgo-t1.build.bootloader_addr=0x1000
+ttgo-t1.build.target=esp32
 ttgo-t1.build.mcu=esp32
 ttgo-t1.build.core=esp32
 ttgo-t1.build.variant=ttgo-t1
@@ -1384,6 +1557,9 @@ ttgo-t7-v13-mini32.upload.extra_flags=
 ttgo-t7-v13-mini32.serial.disableDTR=true
 ttgo-t7-v13-mini32.serial.disableRTS=true
 
+ttgo-t7-v13-mini32.build.tarch=xtensa
+ttgo-t7-v13-mini32.build.bootloader_addr=0x1000
+ttgo-t7-v13-mini32.build.target=esp32
 ttgo-t7-v13-mini32.build.mcu=esp32
 ttgo-t7-v13-mini32.build.core=esp32
 ttgo-t7-v13-mini32.build.variant=ttgo-t7-v13-mini32
@@ -1501,6 +1677,9 @@ ttgo-t7-v14-mini32.upload.extra_flags=
 ttgo-t7-v14-mini32.serial.disableDTR=true
 ttgo-t7-v14-mini32.serial.disableRTS=true
 
+ttgo-t7-v14-mini32.build.tarch=xtensa
+ttgo-t7-v14-mini32.build.bootloader_addr=0x1000
+ttgo-t7-v14-mini32.build.target=esp32
 ttgo-t7-v14-mini32.build.mcu=esp32
 ttgo-t7-v14-mini32.build.core=esp32
 ttgo-t7-v14-mini32.build.variant=ttgo-t7-v14-mini32
@@ -1618,6 +1797,9 @@ cw02.upload.extra_flags=
 cw02.serial.disableDTR=true
 cw02.serial.disableRTS=true
 
+cw02.build.tarch=xtensa
+cw02.build.bootloader_addr=0x1000
+cw02.build.target=esp32
 cw02.build.mcu=esp32
 cw02.build.core=esp32
 cw02.build.variant=xinabox
@@ -1695,6 +1877,9 @@ esp32thing.upload.extra_flags=
 esp32thing.serial.disableDTR=true
 esp32thing.serial.disableRTS=true
 
+esp32thing.build.tarch=xtensa
+esp32thing.build.bootloader_addr=0x1000
+esp32thing.build.target=esp32
 esp32thing.build.mcu=esp32
 esp32thing.build.core=esp32
 esp32thing.build.variant=esp32thing
@@ -1762,6 +1947,9 @@ esp32thing_plus.upload.extra_flags=
 esp32thing_plus.serial.disableDTR=true
 esp32thing_plus.serial.disableRTS=true
 
+esp32thing_plus.build.tarch=xtensa
+esp32thing_plus.build.bootloader_addr=0x1000
+esp32thing_plus.build.target=esp32
 esp32thing_plus.build.mcu=esp32
 esp32thing_plus.build.core=esp32
 esp32thing_plus.build.variant=esp32thing_plus
@@ -1831,6 +2019,9 @@ sparkfun_esp32s2_thing_plus.upload.wait_for_upload_port=true
 sparkfun_esp32s2_thing_plus.serial.disableDTR=false
 sparkfun_esp32s2_thing_plus.serial.disableRTS=false
 
+sparkfun_esp32s2_thing_plus.build.tarch=xtensa
+sparkfun_esp32s2_thing_plus.build.bootloader_addr=0x1000
+sparkfun_esp32s2_thing_plus.build.target=esp32s2
 sparkfun_esp32s2_thing_plus.build.mcu=esp32s2
 sparkfun_esp32s2_thing_plus.build.core=esp32
 sparkfun_esp32s2_thing_plus.build.variant=esp32s2thing_plus
@@ -1972,6 +2163,9 @@ sparkfun_lora_gateway_1-channel.upload.extra_flags=
 sparkfun_lora_gateway_1-channel.serial.disableDTR=true
 sparkfun_lora_gateway_1-channel.serial.disableRTS=true
 
+sparkfun_lora_gateway_1-channel.build.tarch=xtensa
+sparkfun_lora_gateway_1-channel.build.bootloader_addr=0x1000
+sparkfun_lora_gateway_1-channel.build.target=esp32
 sparkfun_lora_gateway_1-channel.build.mcu=esp32
 sparkfun_lora_gateway_1-channel.build.core=esp32
 sparkfun_lora_gateway_1-channel.build.variant=sparkfun_lora_gateway_1-channel
@@ -2044,6 +2238,9 @@ nina_w10.upload.extra_flags=
 nina_w10.serial.disableDTR=true
 nina_w10.serial.disableRTS=true
 
+nina_w10.build.tarch=xtensa
+nina_w10.build.bootloader_addr=0x1000
+nina_w10.build.target=esp32
 nina_w10.build.mcu=esp32
 nina_w10.build.core=esp32
 nina_w10.build.variant=nina_w10
@@ -2084,6 +2281,9 @@ widora-air.upload.extra_flags=
 widora-air.serial.disableDTR=true
 widora-air.serial.disableRTS=true
 
+widora-air.build.tarch=xtensa
+widora-air.build.bootloader_addr=0x1000
+widora-air.build.target=esp32
 widora-air.build.mcu=esp32
 widora-air.build.core=esp32
 widora-air.build.variant=widora-air
@@ -2129,6 +2329,9 @@ esp320.upload.extra_flags=
 esp320.serial.disableDTR=true
 esp320.serial.disableRTS=true
 
+esp320.build.tarch=xtensa
+esp320.build.bootloader_addr=0x1000
+esp320.build.target=esp32
 esp320.build.mcu=esp32
 esp320.build.core=esp32
 esp320.build.variant=esp320
@@ -2174,6 +2377,9 @@ nano32.upload.extra_flags=
 nano32.serial.disableDTR=true
 nano32.serial.disableRTS=true
 
+nano32.build.tarch=xtensa
+nano32.build.bootloader_addr=0x1000
+nano32.build.target=esp32
 nano32.build.mcu=esp32
 nano32.build.core=esp32
 nano32.build.variant=nano32
@@ -2219,6 +2425,9 @@ d32.upload.extra_flags=
 d32.serial.disableDTR=true
 d32.serial.disableRTS=true
 
+d32.build.tarch=xtensa
+d32.build.bootloader_addr=0x1000
+d32.build.target=esp32
 d32.build.mcu=esp32
 d32.build.core=esp32
 d32.build.variant=d32
@@ -2293,6 +2502,9 @@ d32_pro.upload.extra_flags=
 d32_pro.serial.disableDTR=true
 d32_pro.serial.disableRTS=true
 
+d32_pro.build.tarch=xtensa
+d32_pro.build.bootloader_addr=0x1000
+d32_pro.build.target=esp32
 d32_pro.build.mcu=esp32
 d32_pro.build.core=esp32
 d32_pro.build.variant=d32_pro
@@ -2376,6 +2588,9 @@ lolin32.upload.extra_flags=
 lolin32.serial.disableDTR=true
 lolin32.serial.disableRTS=true
 
+lolin32.build.tarch=xtensa
+lolin32.build.bootloader_addr=0x1000
+lolin32.build.target=esp32
 lolin32.build.mcu=esp32
 lolin32.build.core=esp32
 lolin32.build.variant=lolin32
@@ -2447,6 +2662,9 @@ lolin32-lite.upload.extra_flags=
 lolin32-lite.serial.disableDTR=true
 lolin32-lite.serial.disableRTS=true
 
+lolin32-lite.build.tarch=xtensa
+lolin32-lite.build.bootloader_addr=0x1000
+lolin32-lite.build.target=esp32
 lolin32-lite.build.mcu=esp32
 lolin32-lite.build.core=esp32
 lolin32-lite.build.variant=lolin32-lite
@@ -2518,6 +2736,9 @@ pocket_32.upload.extra_flags=
 pocket_32.serial.disableDTR=true
 pocket_32.serial.disableRTS=true
 
+pocket_32.build.tarch=xtensa
+pocket_32.build.bootloader_addr=0x1000
+pocket_32.build.target=esp32
 pocket_32.build.mcu=esp32
 pocket_32.build.core=esp32
 pocket_32.build.variant=pocket_32
@@ -2563,6 +2784,9 @@ WeMosBat.upload.extra_flags=
 WeMosBat.serial.disableDTR=true
 WeMosBat.serial.disableRTS=true
 
+WeMosBat.build.tarch=xtensa
+WeMosBat.build.bootloader_addr=0x1000
+WeMosBat.build.target=esp32
 WeMosBat.build.mcu=esp32
 WeMosBat.build.core=esp32
 WeMosBat.build.variant=pocket_32
@@ -2621,6 +2845,9 @@ espea32.upload.extra_flags=
 espea32.serial.disableDTR=true
 espea32.serial.disableRTS=true
 
+espea32.build.tarch=xtensa
+espea32.build.bootloader_addr=0x1000
+espea32.build.target=esp32
 espea32.build.mcu=esp32
 espea32.build.core=esp32
 espea32.build.variant=espea32
@@ -2666,6 +2893,9 @@ quantum.upload.extra_flags=
 quantum.serial.disableDTR=true
 quantum.serial.disableRTS=true
 
+quantum.build.tarch=xtensa
+quantum.build.bootloader_addr=0x1000
+quantum.build.target=esp32
 quantum.build.mcu=esp32
 quantum.build.core=esp32
 quantum.build.variant=quantum
@@ -2711,6 +2941,9 @@ node32s.upload.extra_flags=
 node32s.serial.disableDTR=true
 node32s.serial.disableRTS=true
 
+node32s.build.tarch=xtensa
+node32s.build.bootloader_addr=0x1000
+node32s.build.target=esp32
 node32s.build.mcu=esp32
 node32s.build.core=esp32
 node32s.build.variant=node32s
@@ -2778,6 +3011,9 @@ hornbill32dev.upload.extra_flags=
 hornbill32dev.serial.disableDTR=true
 hornbill32dev.serial.disableRTS=true
 
+hornbill32dev.build.tarch=xtensa
+hornbill32dev.build.bootloader_addr=0x1000
+hornbill32dev.build.target=esp32
 hornbill32dev.build.mcu=esp32
 hornbill32dev.build.core=esp32
 hornbill32dev.build.variant=hornbill32dev
@@ -2823,6 +3059,9 @@ hornbill32minima.upload.extra_flags=
 hornbill32minima.serial.disableDTR=true
 hornbill32minima.serial.disableRTS=true
 
+hornbill32minima.build.tarch=xtensa
+hornbill32minima.build.bootloader_addr=0x1000
+hornbill32minima.build.target=esp32
 hornbill32minima.build.mcu=esp32
 hornbill32minima.build.core=esp32
 hornbill32minima.build.variant=hornbill32minima
@@ -2867,6 +3106,9 @@ firebeetle32.upload.extra_flags=
 firebeetle32.serial.disableDTR=true
 firebeetle32.serial.disableRTS=true
 
+firebeetle32.build.tarch=xtensa
+firebeetle32.build.bootloader_addr=0x1000
+firebeetle32.build.target=esp32
 firebeetle32.build.mcu=esp32
 firebeetle32.build.core=esp32
 firebeetle32.build.variant=firebeetle32
@@ -2912,6 +3154,9 @@ intorobot-fig.upload.extra_flags=
 intorobot-fig.serial.disableDTR=true
 intorobot-fig.serial.disableRTS=true
 
+intorobot-fig.build.tarch=xtensa
+intorobot-fig.build.bootloader_addr=0x1000
+intorobot-fig.build.target=esp32
 intorobot-fig.build.mcu=esp32
 intorobot-fig.build.core=esp32
 intorobot-fig.build.variant=intorobot-fig
@@ -2957,6 +3202,9 @@ onehorse32dev.upload.extra_flags=
 onehorse32dev.serial.disableDTR=true
 onehorse32dev.serial.disableRTS=true
 
+onehorse32dev.build.tarch=xtensa
+onehorse32dev.build.bootloader_addr=0x1000
+onehorse32dev.build.target=esp32
 onehorse32dev.build.mcu=esp32
 onehorse32dev.build.core=esp32
 onehorse32dev.build.variant=onehorse32dev
@@ -3002,6 +3250,9 @@ featheresp32.upload.extra_flags=
 featheresp32.serial.disableDTR=true
 featheresp32.serial.disableRTS=true
 
+featheresp32.build.tarch=xtensa
+featheresp32.build.bootloader_addr=0x1000
+featheresp32.build.target=esp32
 featheresp32.build.mcu=esp32
 featheresp32.build.core=esp32
 featheresp32.build.variant=feather_esp32
@@ -3077,6 +3328,9 @@ adafruit_metro_esp32s2.upload.wait_for_upload_port=true
 adafruit_metro_esp32s2.serial.disableDTR=false
 adafruit_metro_esp32s2.serial.disableRTS=false
 
+adafruit_metro_esp32s2.build.tarch=xtensa
+adafruit_metro_esp32s2.build.bootloader_addr=0x1000
+adafruit_metro_esp32s2.build.target=esp32s2
 adafruit_metro_esp32s2.build.mcu=esp32s2
 adafruit_metro_esp32s2.build.core=esp32
 adafruit_metro_esp32s2.build.variant=adafruit_metro_esp32s2
@@ -3227,6 +3481,9 @@ adafruit_magtag29_esp32s2.upload.wait_for_upload_port=true
 adafruit_magtag29_esp32s2.serial.disableDTR=false
 adafruit_magtag29_esp32s2.serial.disableRTS=false
 
+adafruit_magtag29_esp32s2.build.tarch=xtensa
+adafruit_magtag29_esp32s2.build.bootloader_addr=0x1000
+adafruit_magtag29_esp32s2.build.target=esp32s2
 adafruit_magtag29_esp32s2.build.mcu=esp32s2
 adafruit_magtag29_esp32s2.build.core=esp32
 adafruit_magtag29_esp32s2.build.variant=adafruit_magtag29_esp32s2
@@ -3669,6 +3926,9 @@ nodemcu-32s.upload.extra_flags=
 nodemcu-32s.serial.disableDTR=true
 nodemcu-32s.serial.disableRTS=true
 
+nodemcu-32s.build.tarch=xtensa
+nodemcu-32s.build.bootloader_addr=0x1000
+nodemcu-32s.build.target=esp32
 nodemcu-32s.build.mcu=esp32
 nodemcu-32s.build.core=esp32
 nodemcu-32s.build.variant=nodemcu-32s
@@ -3714,6 +3974,9 @@ mhetesp32devkit.upload.extra_flags=
 mhetesp32devkit.serial.disableDTR=true
 mhetesp32devkit.serial.disableRTS=true
 
+mhetesp32devkit.build.tarch=xtensa
+mhetesp32devkit.build.bootloader_addr=0x1000
+mhetesp32devkit.build.target=esp32
 mhetesp32devkit.build.mcu=esp32
 mhetesp32devkit.build.core=esp32
 mhetesp32devkit.build.variant=mhetesp32devkit
@@ -3781,6 +4044,9 @@ mhetesp32minikit.upload.extra_flags=
 mhetesp32minikit.serial.disableDTR=true
 mhetesp32minikit.serial.disableRTS=true
 
+mhetesp32minikit.build.tarch=xtensa
+mhetesp32minikit.build.bootloader_addr=0x1000
+mhetesp32minikit.build.target=esp32
 mhetesp32minikit.build.mcu=esp32
 mhetesp32minikit.build.core=esp32
 mhetesp32minikit.build.variant=mhetesp32minikit
@@ -3850,6 +4116,9 @@ esp32vn-iot-uno.upload.extra_flags=
 esp32vn-iot-uno.serial.disableDTR=true
 esp32vn-iot-uno.serial.disableRTS=true
 
+esp32vn-iot-uno.build.tarch=xtensa
+esp32vn-iot-uno.build.bootloader_addr=0x1000
+esp32vn-iot-uno.build.target=esp32
 esp32vn-iot-uno.build.mcu=esp32
 esp32vn-iot-uno.build.core=esp32
 esp32vn-iot-uno.build.variant=esp32vn-iot-uno
@@ -3895,6 +4164,9 @@ esp32doit-devkit-v1.upload.extra_flags=
 esp32doit-devkit-v1.serial.disableDTR=true
 esp32doit-devkit-v1.serial.disableRTS=true
 
+esp32doit-devkit-v1.build.tarch=xtensa
+esp32doit-devkit-v1.build.bootloader_addr=0x1000
+esp32doit-devkit-v1.build.target=esp32
 esp32doit-devkit-v1.build.mcu=esp32
 esp32doit-devkit-v1.build.core=esp32
 esp32doit-devkit-v1.build.variant=doitESP32devkitV1
@@ -3951,6 +4223,9 @@ esp32doit-espduino.upload.extra_flags=
 esp32doit-espduino.serial.disableDTR=true
 esp32doit-espduino.serial.disableRTS=true
 
+esp32doit-espduino.build.tarch=xtensa
+esp32doit-espduino.build.bootloader_addr=0x1000
+esp32doit-espduino.build.target=esp32
 esp32doit-espduino.build.mcu=esp32
 esp32doit-espduino.build.core=esp32
 esp32doit-espduino.build.variant=doitESPduino32
@@ -4007,6 +4282,9 @@ esp32-evb.upload.extra_flags=
 esp32-evb.serial.disableDTR=true
 esp32-evb.serial.disableRTS=true
 
+esp32-evb.build.tarch=xtensa
+esp32-evb.build.bootloader_addr=0x1000
+esp32-evb.build.target=esp32
 esp32-evb.build.mcu=esp32
 esp32-evb.build.core=esp32
 esp32-evb.build.variant=esp32-evb
@@ -4050,6 +4328,9 @@ esp32-gateway.upload.extra_flags=
 esp32-gateway.serial.disableDTR=true
 esp32-gateway.serial.disableRTS=true
 
+esp32-gateway.build.tarch=xtensa
+esp32-gateway.build.bootloader_addr=0x1000
+esp32-gateway.build.target=esp32
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
@@ -4099,6 +4380,9 @@ esp32-poe.upload.extra_flags=
 esp32-poe.serial.disableDTR=true
 esp32-poe.serial.disableRTS=true
 
+esp32-poe.build.tarch=xtensa
+esp32-poe.build.bootloader_addr=0x1000
+esp32-poe.build.target=esp32
 esp32-poe.build.mcu=esp32
 esp32-poe.build.core=esp32
 esp32-poe.build.variant=esp32-poe
@@ -4142,6 +4426,9 @@ esp32-poe-iso.upload.extra_flags=
 esp32-poe-iso.serial.disableDTR=true
 esp32-poe-iso.serial.disableRTS=true
 
+esp32-poe-iso.build.tarch=xtensa
+esp32-poe-iso.build.bootloader_addr=0x1000
+esp32-poe-iso.build.target=esp32
 esp32-poe-iso.build.mcu=esp32
 esp32-poe-iso.build.core=esp32
 esp32-poe-iso.build.variant=esp32-poe-iso
@@ -4185,6 +4472,9 @@ esp32-DevKitLipo.upload.extra_flags=
 esp32-DevKitLipo.serial.disableDTR=true
 esp32-DevKitLipo.serial.disableRTS=true
 
+esp32-DevKitLipo.build.tarch=xtensa
+esp32-DevKitLipo.build.bootloader_addr=0x1000
+esp32-DevKitLipo.build.target=esp32
 esp32-DevKitLipo.build.mcu=esp32
 esp32-DevKitLipo.build.core=esp32
 esp32-DevKitLipo.build.variant=esp32-devkit-lipo
@@ -4259,6 +4549,9 @@ espino32.upload.extra_flags=
 espino32.serial.disableDTR=true
 espino32.serial.disableRTS=true
 
+espino32.build.tarch=xtensa
+espino32.build.bootloader_addr=0x1000
+espino32.build.target=esp32
 espino32.build.mcu=esp32
 espino32.build.core=esp32
 espino32.build.variant=espino32
@@ -4304,6 +4597,9 @@ m5stack-core-esp32.upload.extra_flags=
 m5stack-core-esp32.serial.disableDTR=true
 m5stack-core-esp32.serial.disableRTS=true
 
+m5stack-core-esp32.build.tarch=xtensa
+m5stack-core-esp32.build.bootloader_addr=0x1000
+m5stack-core-esp32.build.target=esp32
 m5stack-core-esp32.build.mcu=esp32
 m5stack-core-esp32.build.core=esp32
 m5stack-core-esp32.build.variant=m5stack_core_esp32
@@ -4384,6 +4680,9 @@ m5stack-fire.upload.extra_flags=
 m5stack-fire.serial.disableDTR=true
 m5stack-fire.serial.disableRTS=true
 
+m5stack-fire.build.tarch=xtensa
+m5stack-fire.build.bootloader_addr=0x1000
+m5stack-fire.build.target=esp32
 m5stack-fire.build.mcu=esp32
 m5stack-fire.build.core=esp32
 m5stack-fire.build.variant=m5stack_fire
@@ -4452,6 +4751,9 @@ m5stick-c.upload.extra_flags=
 m5stick-c.serial.disableDTR=true
 m5stick-c.serial.disableRTS=true
 
+m5stick-c.build.tarch=xtensa
+m5stick-c.build.bootloader_addr=0x1000
+m5stick-c.build.target=esp32
 m5stick-c.build.mcu=esp32
 m5stick-c.build.core=esp32
 m5stick-c.build.variant=m5stick_c
@@ -4514,6 +4816,9 @@ m5stack-atom.upload.extra_flags=
 m5stack-atom.serial.disableDTR=true
 m5stack-atom.serial.disableRTS=true
 
+m5stack-atom.build.tarch=xtensa
+m5stack-atom.build.bootloader_addr=0x1000
+m5stack-atom.build.target=esp32
 m5stack-atom.build.mcu=esp32
 m5stack-atom.build.core=esp32
 m5stack-atom.build.variant=m5stack_atom
@@ -4578,6 +4883,9 @@ m5stack-core2.upload.extra_flags=
 m5stack-core2.serial.disableDTR=true
 m5stack-core2.serial.disableRTS=true
 
+m5stack-core2.build.tarch=xtensa
+m5stack-core2.build.bootloader_addr=0x1000
+m5stack-core2.build.target=esp32
 m5stack-core2.build.mcu=esp32
 m5stack-core2.build.core=esp32
 m5stack-core2.build.variant=m5stack_core2
@@ -4680,6 +4988,9 @@ m5stack-timer-cam.upload.extra_flags=
 m5stack-timer-cam.serial.disableDTR=true
 m5stack-timer-cam.serial.disableRTS=true
 
+m5stack-timer-cam.build.tarch=xtensa
+m5stack-timer-cam.build.bootloader_addr=0x1000
+m5stack-timer-cam.build.target=esp32
 m5stack-timer-cam.build.mcu=esp32
 m5stack-timer-cam.build.core=esp32
 m5stack-timer-cam.build.variant=m5stack_timer_cam
@@ -4775,6 +5086,9 @@ m5stack-coreink.upload.extra_flags=
 m5stack-coreink.serial.disableDTR=true
 m5stack-coreink.serial.disableRTS=true
 
+m5stack-coreink.build.tarch=xtensa
+m5stack-coreink.build.bootloader_addr=0x1000
+m5stack-coreink.build.target=esp32
 m5stack-coreink.build.mcu=esp32
 m5stack-coreink.build.core=esp32
 m5stack-coreink.build.variant=m5stack_coreink
@@ -4840,6 +5154,9 @@ odroid_esp32.upload.extra_flags=
 odroid_esp32.serial.disableDTR=true
 odroid_esp32.serial.disableRTS=true
 
+odroid_esp32.build.tarch=xtensa
+odroid_esp32.build.bootloader_addr=0x1000
+odroid_esp32.build.target=esp32
 odroid_esp32.build.mcu=esp32
 odroid_esp32.build.core=esp32
 odroid_esp32.build.variant=odroid_esp32
@@ -4921,6 +5238,9 @@ heltec_wifi_kit_32.upload.extra_flags=
 heltec_wifi_kit_32.serial.disableDTR=true
 heltec_wifi_kit_32.serial.disableRTS=true
 
+heltec_wifi_kit_32.build.tarch=xtensa
+heltec_wifi_kit_32.build.bootloader_addr=0x1000
+heltec_wifi_kit_32.build.target=esp32
 heltec_wifi_kit_32.build.mcu=esp32
 heltec_wifi_kit_32.build.core=esp32
 heltec_wifi_kit_32.build.variant=heltec_wifi_kit_32
@@ -4991,6 +5311,9 @@ heltec_wifi_lora_32.upload.extra_flags=
 heltec_wifi_lora_32.serial.disableDTR=true
 heltec_wifi_lora_32.serial.disableRTS=true
 
+heltec_wifi_lora_32.build.tarch=xtensa
+heltec_wifi_lora_32.build.bootloader_addr=0x1000
+heltec_wifi_lora_32.build.target=esp32
 heltec_wifi_lora_32.build.mcu=esp32
 heltec_wifi_lora_32.build.core=esp32
 heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
@@ -5089,6 +5412,9 @@ heltec_wifi_lora_32_V2.upload.extra_flags=
 heltec_wifi_lora_32_V2.serial.disableDTR=true
 heltec_wifi_lora_32_V2.serial.disableRTS=true
 
+heltec_wifi_lora_32_V2.build.tarch=xtensa
+heltec_wifi_lora_32_V2.build.bootloader_addr=0x1000
+heltec_wifi_lora_32_V2.build.target=esp32
 heltec_wifi_lora_32_V2.build.mcu=esp32
 heltec_wifi_lora_32_V2.build.core=esp32
 heltec_wifi_lora_32_V2.build.variant=heltec_wifi_lora_32_V2
@@ -5187,6 +5513,9 @@ heltec_wireless_stick.upload.extra_flags=
 heltec_wireless_stick.serial.disableDTR=true
 heltec_wireless_stick.serial.disableRTS=true
 
+heltec_wireless_stick.build.tarch=xtensa
+heltec_wireless_stick.build.bootloader_addr=0x1000
+heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
 heltec_wireless_stick.build.variant=heltec_wireless_stick
@@ -5285,6 +5614,9 @@ heltec_wireless_stick_lite.upload.extra_flags=
 heltec_wireless_stick_lite.serial.disableDTR=true
 heltec_wireless_stick_lite.serial.disableRTS=true
 
+heltec_wireless_stick_lite.build.tarch=xtensa
+heltec_wireless_stick_lite.build.bootloader_addr=0x1000
+heltec_wireless_stick_lite.build.target=esp32
 heltec_wireless_stick_lite.build.mcu=esp32
 heltec_wireless_stick_lite.build.core=esp32
 heltec_wireless_stick_lite.build.variant=heltec_wireless_stick_lite
@@ -5383,6 +5715,9 @@ espectro32.upload.extra_flags=
 espectro32.serial.disableDTR=true
 espectro32.serial.disableRTS=true
 
+espectro32.build.tarch=xtensa
+espectro32.build.bootloader_addr=0x1000
+espectro32.build.target=esp32
 espectro32.build.mcu=esp32
 espectro32.build.core=esp32
 espectro32.build.variant=espectro32
@@ -5460,6 +5795,9 @@ CoreESP32.upload.extra_flags=
 CoreESP32.serial.disableDTR=false
 CoreESP32.serial.disableRTS=false
 
+CoreESP32.build.tarch=xtensa
+CoreESP32.build.bootloader_addr=0x1000
+CoreESP32.build.target=esp32
 CoreESP32.build.mcu=esp32
 CoreESP32.build.core=esp32
 CoreESP32.build.variant=Microduino-esp32
@@ -5539,6 +5877,9 @@ alksesp32.upload.extra_flags=
 alksesp32.serial.disableDTR=true
 alksesp32.serial.disableRTS=true
 
+alksesp32.build.tarch=xtensa
+alksesp32.build.bootloader_addr=0x1000
+alksesp32.build.target=esp32
 alksesp32.build.mcu=esp32
 alksesp32.build.core=esp32
 alksesp32.build.variant=alksesp32
@@ -5672,6 +6013,9 @@ wipy3.upload.extra_flags=
 wipy3.serial.disableDTR=true
 wipy3.serial.disableRTS=true
 
+wipy3.build.tarch=xtensa
+wipy3.build.bootloader_addr=0x1000
+wipy3.build.target=esp32
 wipy3.build.mcu=esp32
 wipy3.build.core=esp32
 wipy3.build.variant=wipy3
@@ -5730,6 +6074,9 @@ bpi-bit.upload.extra_flags=
 bpi-bit.serial.disableDTR=true
 bpi-bit.serial.disableRTS=true
 
+bpi-bit.build.tarch=xtensa
+bpi-bit.build.bootloader_addr=0x1000
+bpi-bit.build.target=esp32
 bpi-bit.build.mcu=esp32
 bpi-bit.build.core=esp32
 bpi-bit.build.variant=bpi-bit
@@ -5774,6 +6121,9 @@ wesp32.upload.extra_flags=
 wesp32.serial.disableDTR=true
 wesp32.serial.disableRTS=true
 
+wesp32.build.tarch=xtensa
+wesp32.build.bootloader_addr=0x1000
+wesp32.build.target=esp32
 wesp32.build.mcu=esp32
 wesp32.build.core=esp32
 wesp32.build.variant=wesp32
@@ -5832,6 +6182,9 @@ t-beam.upload.extra_flags=
 t-beam.serial.disableDTR=true
 t-beam.serial.disableRTS=true
 
+t-beam.build.tarch=xtensa
+t-beam.build.bootloader_addr=0x1000
+t-beam.build.target=esp32
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
 t-beam.build.variant=tbeam
@@ -5896,6 +6249,9 @@ d-duino-32.upload.extra_flags=
 d-duino-32.serial.disableDTR=true
 d-duino-32.serial.disableRTS=true
 
+d-duino-32.build.tarch=xtensa
+d-duino-32.build.bootloader_addr=0x1000
+d-duino-32.build.target=esp32
 d-duino-32.build.mcu=esp32
 d-duino-32.build.core=esp32
 d-duino-32.build.variant=d-duino-32
@@ -5968,6 +6324,9 @@ lopy.upload.extra_flags=
 lopy.serial.disableDTR=true
 lopy.serial.disableRTS=true
 
+lopy.build.tarch=xtensa
+lopy.build.bootloader_addr=0x1000
+lopy.build.target=esp32
 lopy.build.mcu=esp32
 lopy.build.core=esp32
 lopy.build.variant=lopy
@@ -6025,6 +6384,9 @@ lopy4.upload.extra_flags=
 lopy4.serial.disableDTR=true
 lopy4.serial.disableRTS=true
 
+lopy4.build.tarch=xtensa
+lopy4.build.bootloader_addr=0x1000
+lopy4.build.target=esp32
 lopy4.build.mcu=esp32
 lopy4.build.core=esp32
 lopy4.build.variant=lopy4
@@ -6089,6 +6451,9 @@ oroca_edubot.upload.extra_flags=
 oroca_edubot.serial.disableDTR=true
 oroca_edubot.serial.disableRTS=true
 
+oroca_edubot.build.tarch=xtensa
+oroca_edubot.build.bootloader_addr=0x1000
+oroca_edubot.build.target=esp32
 oroca_edubot.build.mcu=esp32
 oroca_edubot.build.core=esp32
 oroca_edubot.build.variant=oroca_edubot
@@ -6156,6 +6521,9 @@ fm-devkit.upload.extra_flags=
 fm-devkit.serial.disableDTR=true
 fm-devkit.serial.disableRTS=true
 
+fm-devkit.build.tarch=xtensa
+fm-devkit.build.bootloader_addr=0x1000
+fm-devkit.build.target=esp32
 fm-devkit.build.mcu=esp32
 fm-devkit.build.core=esp32
 fm-devkit.build.variant=fm-devkit
@@ -6210,6 +6578,9 @@ frogboard.upload.extra_flags=
 frogboard.serial.disableDTR=true
 frogboard.serial.disableRTS=true
 
+frogboard.build.tarch=xtensa
+frogboard.build.bootloader_addr=0x1000
+frogboard.build.target=esp32
 frogboard.build.mcu=esp32
 frogboard.build.core=esp32
 frogboard.build.variant=frog32
@@ -6304,6 +6675,9 @@ esp32cam.upload.speed=460800
 esp32cam.serial.disableDTR=true
 esp32cam.serial.disableRTS=true
 
+esp32cam.build.tarch=xtensa
+esp32cam.build.bootloader_addr=0x1000
+esp32cam.build.target=esp32
 esp32cam.build.mcu=esp32
 esp32cam.build.core=esp32
 esp32cam.build.variant=esp32
@@ -6362,6 +6736,9 @@ twatch.upload.extra_flags=
 twatch.serial.disableDTR=true
 twatch.serial.disableRTS=true
 
+twatch.build.tarch=xtensa
+twatch.build.bootloader_addr=0x1000
+twatch.build.target=esp32
 twatch.build.mcu=esp32
 twatch.build.core=esp32
 twatch.build.variant=twatch
@@ -6441,6 +6818,9 @@ d1_mini32.upload.extra_flags=
 d1_mini32.serial.disableDTR=true
 d1_mini32.serial.disableRTS=true
 
+d1_mini32.build.tarch=xtensa
+d1_mini32.build.bootloader_addr=0x1000
+d1_mini32.build.target=esp32
 d1_mini32.build.mcu=esp32
 d1_mini32.build.core=esp32
 d1_mini32.build.variant=d1_mini32
@@ -6512,6 +6892,9 @@ gpy.upload.extra_flags=
 gpy.serial.disableDTR=true
 gpy.serial.disableRTS=true
 
+gpy.build.tarch=xtensa
+gpy.build.bootloader_addr=0x1000
+gpy.build.target=esp32
 gpy.build.mcu=esp32
 gpy.build.core=esp32
 gpy.build.variant=gpy
@@ -6569,6 +6952,9 @@ vintlabs-devkit-v1.upload.extra_flags=
 vintlabs-devkit-v1.serial.disableDTR=true
 vintlabs-devkit-v1.serial.disableRTS=true
 
+vintlabs-devkit-v1.build.tarch=xtensa
+vintlabs-devkit-v1.build.bootloader_addr=0x1000
+vintlabs-devkit-v1.build.target=esp32
 vintlabs-devkit-v1.build.mcu=esp32
 vintlabs-devkit-v1.build.core=esp32
 vintlabs-devkit-v1.build.variant=vintlabsdevkitv1
@@ -6672,6 +7058,9 @@ honeylemon.upload.extra_flags=
 honeylemon.serial.disableDTR=true
 honeylemon.serial.disableRTS=true
 
+honeylemon.build.tarch=xtensa
+honeylemon.build.bootloader_addr=0x1000
+honeylemon.build.target=esp32
 honeylemon.build.mcu=esp32
 honeylemon.build.core=esp32
 honeylemon.build.variant=honeylemon
@@ -6717,6 +7106,9 @@ mgbot-iotik32a.upload.extra_flags=
 mgbot-iotik32a.serial.disableDTR=true
 mgbot-iotik32a.serial.disableRTS=true
 
+mgbot-iotik32a.build.tarch=xtensa
+mgbot-iotik32a.build.bootloader_addr=0x1000
+mgbot-iotik32a.build.target=esp32
 mgbot-iotik32a.build.mcu=esp32
 mgbot-iotik32a.build.core=esp32
 mgbot-iotik32a.build.variant=mgbot-iotik32a
@@ -6858,6 +7250,9 @@ mgbot-iotik32b.upload.extra_flags=
 mgbot-iotik32b.serial.disableDTR=true
 mgbot-iotik32b.serial.disableRTS=true
 
+mgbot-iotik32b.build.tarch=xtensa
+mgbot-iotik32b.build.bootloader_addr=0x1000
+mgbot-iotik32b.build.target=esp32
 mgbot-iotik32b.build.mcu=esp32
 mgbot-iotik32b.build.core=esp32
 mgbot-iotik32b.build.variant=mgbot-iotik32b
@@ -6998,6 +7393,9 @@ piranha_esp-32.upload.extra_flags=
 piranha_esp-32.serial.disableDTR=true
 piranha_esp-32.serial.disableRTS=true
 
+piranha_esp-32.build.tarch=xtensa
+piranha_esp-32.build.bootloader_addr=0x1000
+piranha_esp-32.build.target=esp32
 piranha_esp-32.build.mcu=esp32
 piranha_esp-32.build.core=esp32
 piranha_esp-32.build.variant=piranha_esp-32
@@ -7065,6 +7463,9 @@ metro_esp-32.upload.extra_flags=
 metro_esp-32.serial.disableDTR=true
 metro_esp-32.serial.disableRTS=true
 
+metro_esp-32.build.tarch=xtensa
+metro_esp-32.build.bootloader_addr=0x1000
+metro_esp-32.build.target=esp32
 metro_esp-32.build.mcu=esp32
 metro_esp-32.build.core=esp32
 metro_esp-32.build.variant=metro_esp-32
@@ -7131,6 +7532,9 @@ sensesiot_weizen.upload.extra_flags=
 sensesiot_weizen.serial.disableDTR=true
 sensesiot_weizen.serial.disableRTS=true
 
+sensesiot_weizen.build.tarch=xtensa
+sensesiot_weizen.build.bootloader_addr=0x1000
+sensesiot_weizen.build.target=esp32
 sensesiot_weizen.build.mcu=esp32
 sensesiot_weizen.build.core=esp32
 sensesiot_weizen.build.variant=esp32
@@ -7175,6 +7579,9 @@ kits-edu.upload.extra_flags=
 kits-edu.serial.disableDTR=true
 kits-edu.serial.disableRTS=true
 
+kits-edu.build.tarch=xtensa
+kits-edu.build.bootloader_addr=0x1000
+kits-edu.build.target=esp32
 kits-edu.build.mcu=esp32
 kits-edu.build.core=esp32
 kits-edu.build.variant=pico32
@@ -7237,6 +7644,9 @@ mPython.upload.extra_flags=
 mPython.serial.disableDTR=true
 mPython.serial.disableRTS=true
 
+mPython.build.tarch=xtensa
+mPython.build.bootloader_addr=0x1000
+mPython.build.target=esp32
 mPython.build.mcu=esp32
 mPython.build.core=esp32
 mPython.build.variant=mpython
@@ -7351,6 +7761,9 @@ OpenKB.upload.extra_flags=
 OpenKB.serial.disableDTR=true
 OpenKB.serial.disableRTS=true
 
+OpenKB.build.tarch=xtensa
+OpenKB.build.bootloader_addr=0x1000
+OpenKB.build.target=esp32
 OpenKB.build.mcu=esp32
 OpenKB.build.core=esp32
 OpenKB.build.variant=openkb
@@ -7396,6 +7809,9 @@ wifiduino32.upload.extra_flags=
 wifiduino32.serial.disableDTR=true
 wifiduino32.serial.disableRTS=true
 
+wifiduino32.build.tarch=xtensa
+wifiduino32.build.bootloader_addr=0x1000
+wifiduino32.build.target=esp32
 wifiduino32.build.mcu=esp32
 wifiduino32.build.core=esp32
 wifiduino32.build.variant=wifiduino32
@@ -7463,6 +7879,9 @@ ttgo-lora32-v21new.upload.extra_flags=
 ttgo-lora32-v21new.serial.disableDTR=true
 ttgo-lora32-v21new.serial.disableRTS=true
 
+ttgo-lora32-v21new.build.tarch=xtensa
+ttgo-lora32-v21new.build.bootloader_addr=0x1000
+ttgo-lora32-v21new.build.target=esp32
 ttgo-lora32-v21new.build.mcu=esp32
 ttgo-lora32-v21new.build.core=esp32
 ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
@@ -7492,6 +7911,9 @@ ttgo-lora32-v21new.upload.wait_for_upload_port=true
 ttgo-lora32-v21new.serial.disableDTR=true
 ttgo-lora32-v21new.serial.disableRTS=true
 
+ttgo-lora32-v21new.build.tarch=xtensa
+ttgo-lora32-v21new.build.bootloader_addr=0x1000
+ttgo-lora32-v21new.build.target=esp32
 ttgo-lora32-v21new.build.mcu=esp32
 ttgo-lora32-v21new.build.core=esp32
 ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
@@ -7572,6 +7994,9 @@ imbrios-logsens-v1p1.upload.extra_flags=
 imbrios-logsens-v1p1.serial.disableDTR=true
 imbrios-logsens-v1p1.serial.disableRTS=true
 
+imbrios-logsens-v1p1.build.tarch=xtensa
+imbrios-logsens-v1p1.build.bootloader_addr=0x1000
+imbrios-logsens-v1p1.build.target=esp32
 imbrios-logsens-v1p1.build.mcu=esp32
 imbrios-logsens-v1p1.build.core=esp32
 imbrios-logsens-v1p1.build.variant=imbrios-logsens-v1p1
@@ -7643,6 +8068,9 @@ healthypi4.upload.extra_flags=
 healthypi4.serial.disableDTR=true
 healthypi4.serial.disableRTS=true
 
+healthypi4.build.tarch=xtensa
+healthypi4.build.bootloader_addr=0x1000
+healthypi4.build.target=esp32
 healthypi4.build.mcu=esp32
 healthypi4.build.core=esp32
 healthypi4.build.variant=healthypi4
@@ -7711,6 +8139,9 @@ ET-Board.upload.extra_flags=
 ET-Board.serial.disableDTR=true
 ET-Board.serial.disableRTS=true
 
+ET-Board.build.tarch=xtensa
+ET-Board.build.bootloader_addr=0x1000
+ET-Board.build.target=esp32
 ET-Board.build.mcu=esp32
 ET-Board.build.core=esp32
 ET-Board.build.variant=ET-Board

@@ -17,17 +17,23 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp32-hal-matrix.h"
-#include "soc/dport_reg.h"
 #include "soc/ledc_reg.h"
 #include "soc/ledc_struct.h"
+#include "driver/periph_ctrl.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "soc/dport_reg.h"
 #include "esp32/rom/ets_sys.h"
 #define LAST_CHAN (15)
 #elif CONFIG_IDF_TARGET_ESP32S2
+#include "soc/dport_reg.h"
 #include "esp32s2/rom/ets_sys.h"
+#define LAST_CHAN (7)
+#define LEDC_DIV_NUM_HSTIMER0_V LEDC_CLK_DIV_LSTIMER0_V
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
 #define LAST_CHAN (7)
 #define LEDC_DIV_NUM_HSTIMER0_V LEDC_CLK_DIV_LSTIMER0_V
 #else 
@@ -111,8 +117,7 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     static uint16_t _activeChannels = 0;
     if(!tHasStarted) {
         tHasStarted = true;
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
+        periph_module_enable(PERIPH_LEDC_MODULE);
         LEDC.conf.apb_clk_sel = 1;//LS use apb clock
         addApbChangeCallback((void*)&_activeChannels, _on_apb_change);
 
@@ -302,7 +307,7 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         return;
     }
     pinMode(pin, OUTPUT);
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
     pinMatrixOutAttach(pin, LEDC_LS_SIG_OUT0_IDX + chan, false, false);
 #else
     pinMatrixOutAttach(pin, ((chan/8)?LEDC_LS_SIG_OUT0_IDX:LEDC_HS_SIG_OUT0_IDX) + (chan%8), false, false);

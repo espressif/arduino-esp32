@@ -24,7 +24,7 @@ BUILD_PIO=0
 if [ "$#" -lt 2 ] || [ "$CHUNKS_CNT" -le 0 ]; then
 	CHUNK_INDEX=0
 	CHUNKS_CNT=1
-elif [ "$CHUNK_INDEX" -gt "$CHUNKS_CNT" ]; then
+elif [ "$CHUNK_INDEX" -gt "$CHUNKS_CNT" ] &&  [ "$CHUNKS_CNT" -ge 2 ]; then
 	CHUNK_INDEX=$CHUNKS_CNT
 elif [ "$CHUNK_INDEX" -eq "$CHUNKS_CNT" ]; then
 	BUILD_PIO=1
@@ -60,6 +60,19 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 	# ArduinoIDE ESP32S2 Test
     TARGET="esp32s2"
 	FQBN="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
+	if [ "$OS_IS_WINDOWS" == "1" ]; then
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
+	elif [ "$OS_IS_MACOS" == "1" ]; then
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
+		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
+	else
+		build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
+    fi
+
+	# ArduinoIDE ESP32C3 Test
+    TARGET="esp32c3"
+	FQBN="espressif:esp32:esp32c3:PartitionScheme=huge_app"
 	if [ "$OS_IS_WINDOWS" == "1" ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"

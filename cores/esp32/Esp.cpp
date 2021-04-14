@@ -37,6 +37,8 @@ extern "C" {
 #include "soc/efuse_reg.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/spi_flash.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/spi_flash.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -265,6 +267,10 @@ const char * EspClass::getChipModel(void)
     }
 #elif CONFIG_IDF_TARGET_ESP32S2
     return "ESP32-S2";
+#elif CONFIG_IDF_TARGET_ESP32S3
+    return "ESP32-S3";
+#elif CONFIG_IDF_TARGET_ESP32C3
+    return "ESP32-C3";
 #endif
 }
 

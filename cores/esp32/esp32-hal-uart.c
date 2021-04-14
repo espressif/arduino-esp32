@@ -23,18 +23,24 @@
 #include "soc/uart_struct.h"
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_sig_map.h"
-#include "soc/dport_reg.h"
 #include "soc/rtc.h"
+#include "hal/uart_ll.h"
 #include "esp_intr_alloc.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "soc/dport_reg.h"
 #include "esp32/rom/ets_sys.h"
 #include "esp32/rom/uart.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
+#include "soc/dport_reg.h"
 #include "esp32s2/rom/ets_sys.h"
 #include "esp32s2/rom/uart.h"
+#include "soc/periph_defs.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
+#include "esp32c3/rom/uart.h"
 #include "soc/periph_defs.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
@@ -45,18 +51,24 @@
 #include "esp_intr.h"
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32
+#define UART_PORTS_NUM 3
+#define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
+#define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:(         (u==2)?U2RXD_IN_IDX:0)))
+#define UART_TXD_IDX(u)     ((u==0)?U0TXD_OUT_IDX:(         (u==1)?U1TXD_OUT_IDX:(        (u==2)?U2TXD_OUT_IDX:0)))
+#define UART_INTR_SOURCE(u) ((u==0)?ETS_UART0_INTR_SOURCE:( (u==1)?ETS_UART1_INTR_SOURCE:((u==2)?ETS_UART2_INTR_SOURCE:0)))
+#elif CONFIG_IDF_TARGET_ESP32S2
 #define UART_PORTS_NUM 2
 #define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:0))
 #define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:0))
 #define UART_TXD_IDX(u)     ((u==0)?U0TXD_OUT_IDX:(         (u==1)?U1TXD_OUT_IDX:0))
 #define UART_INTR_SOURCE(u) ((u==0)?ETS_UART0_INTR_SOURCE:( (u==1)?ETS_UART1_INTR_SOURCE:0))
 #else
-#define UART_PORTS_NUM 3
-#define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:(    (u==2)?DR_REG_UART2_BASE:0)))
-#define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:(         (u==2)?U2RXD_IN_IDX:0)))
-#define UART_TXD_IDX(u)     ((u==0)?U0TXD_OUT_IDX:(         (u==1)?U1TXD_OUT_IDX:(        (u==2)?U2TXD_OUT_IDX:0)))
-#define UART_INTR_SOURCE(u) ((u==0)?ETS_UART0_INTR_SOURCE:( (u==1)?ETS_UART1_INTR_SOURCE:((u==2)?ETS_UART2_INTR_SOURCE:0)))
+#define UART_PORTS_NUM 2
+#define UART_REG_BASE(u)    ((u==0)?DR_REG_UART_BASE:(      (u==1)?DR_REG_UART1_BASE:0))
+#define UART_RXD_IDX(u)     ((u==0)?U0RXD_IN_IDX:(          (u==1)?U1RXD_IN_IDX:0))
+#define UART_TXD_IDX(u)     ((u==0)?U0TXD_OUT_IDX:(         (u==1)?U1TXD_OUT_IDX:0))
+#define UART_INTR_SOURCE(u) ((u==0)?ETS_UART0_INTR_SOURCE:( (u==1)?ETS_UART1_INTR_SOURCE:0))
 #endif
 
 static int s_uart_debug_nr = 0;
@@ -225,6 +237,9 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
             return NULL;
         }
     }
+#if CONFIG_IDF_TARGET_ESP32C3
+
+#else
     if(uart_nr == 1){
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART1_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART1_RST);
@@ -237,6 +252,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART_RST);
     }
+#endif
     uartFlush(uart);
     uartSetBaudRate(uart, baudrate);
     UART_MUTEX_LOCK();
@@ -477,9 +493,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uint32_t clk_div = ((getApbFrequency()<<4)/baud_rate);
-    uart->dev->clk_div.div_int = clk_div>>4 ;
-    uart->dev->clk_div.div_frag = clk_div & 0xf;
+    uart_ll_set_baudrate(uart->dev, baud_rate);
     UART_MUTEX_UNLOCK();
 }
 
@@ -676,15 +690,17 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 */
 void uartStartDetectBaudrate(uart_t *uart) {
   if(!uart) return;
-
+#ifndef CONFIG_IDF_TARGET_ESP32C3
   uart->dev->auto_baud.glitch_filt = 0x08;
   uart->dev->auto_baud.en = 0;
   uart->dev->auto_baud.en = 1;
+#endif
 }
 
 unsigned long
 uartDetectBaudrate(uart_t *uart)
 {
+#ifndef CONFIG_IDF_TARGET_ESP32C3
     static bool uartStateDetectingBaudrate = false;
 
     if(!uartStateDetectingBaudrate) {
@@ -719,6 +735,9 @@ uartDetectBaudrate(uart_t *uart)
     }
 
     return default_rates[i];
+#else
+    return 0;
+#endif
 }
 
 /*
