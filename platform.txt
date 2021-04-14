@@ -95,16 +95,16 @@ build.event_core=
 build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
 
 # Check if custom partitions exist: source > variant > build.partitions
-recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || [ ! -f {build.variant.path}/partitions.csv ] || cp {build.variant.path}/partitions.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.3.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
+recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/partitions.csv ] || cp "{build.variant.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.3.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
 
 recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
 recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\partitions.csv" COPY "{build.variant.path}\partitions.csv" "{build.path}\partitions.csv"
 recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
 
 # Check if custom bootloader exist: source > variant > build.boot
-recipe.hooks.prebuild.4.pattern=bash -c "[ -f {build.source.path}/bootloader.bin ] && cp -f {build.source.path}/bootloader.bin {build.path}/{build.project_name}.bootloader.bin || ( [ -f {build.variant.path}/bootloader.bin ] && cp {build.variant.path}/bootloader.bin {build.path}/{build.project_name}.bootloader.bin || cp -f {runtime.platform.path}/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin {build.path}/{build.project_name}.bootloader.bin )"
+recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/bootloader.bin ] && cp "{build.variant.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || cp -f "{runtime.platform.path}"/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.flash_freq}.bin "{build.path}"/{build.project_name}.bootloader.bin )"
 recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\bootloader.bin" ( COPY "{build.variant.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( COPY /y "{runtime.platform.path}\tools\sdk\{build.mcu}\bin\bootloader_{build.boot}_{build.flash_freq}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) )
 
 ## Compile c files
