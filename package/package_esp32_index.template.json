@@ -160,28 +160,28 @@
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://dl.espressif.com/dl/toolchains/preview/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-win32.zip",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-win32.zip",
               "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-win32.zip",
               "checksum": "SHA-256:4f576b08620f57c270ac677cc94dce2767fff72d27a539e348d448f63b480d1f",
               "size": "190014086"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://dl.espressif.com/dl/toolchains/preview/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-macos.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-macos.tar.gz",
               "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-macos.tar.gz",
               "checksum": "SHA-256:35b1aef85b7e6b4268774f627e8e835d087bcf8b9972cfb6436614aa2e40d4a9",
               "size": "158594401"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://dl.espressif.com/dl/toolchains/preview/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-amd64.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-amd64.tar.gz",
               "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-amd64.tar.gz",
               "checksum": "SHA-256:425454c5c4e2cde5dd2dd3a1d398befc70addf71547840fb6d0ec4b307b08894",
               "size": "152042971"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://dl.espressif.com/dl/toolchains/preview/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-armel.tar.gz",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-armel.tar.gz",
               "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-armel.tar.gz",
               "checksum": "SHA-256:8ae098751b5196ca8a80d832cc9930bc4d639762a6cb22be3cfe0a8d71b2f230",
               "size": "150801079"
