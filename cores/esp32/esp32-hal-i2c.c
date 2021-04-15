@@ -21,16 +21,19 @@
 #include "driver/periph_ctrl.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
-#include "soc/dport_reg.h"
 #include "esp_attr.h"
 #include "esp32-hal-cpu.h" // cpu clock change support 31DEC2018
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "soc/dport_reg.h"
 #include "esp32/rom/ets_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
+#include "soc/dport_reg.h"
 #include "esp32s2/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -1795,7 +1798,7 @@ struct i2c_struct_t {
 static i2c_t * i2c_ports[2] = {NULL, NULL};
 
 i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
-	if(i2c_num >= 2){
+	if(i2c_num >= SOC_I2C_NUM){
 		return NULL;
 	}
 	if(!clk_speed){

@@ -14,10 +14,12 @@
 
 #include "esp32-hal-timer.h"
 #include "freertos/FreeRTOS.h"
+#ifndef CONFIG_IDF_TARGET_ESP32C3
 #include "freertos/xtensa_api.h"
+#include "soc/dport_reg.h"
+#endif
 #include "freertos/task.h"
 #include "soc/timer_group_struct.h"
-#include "soc/dport_reg.h"
 #include "esp_attr.h"
 #include "driver/periph_ctrl.h"
 
@@ -28,6 +30,10 @@
 #include "esp_intr_alloc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #else 
@@ -296,12 +302,15 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         timer->dev->config.level_int_en = edge?0:1;//When set, an alarm will generate a level type interrupt.
         timer->dev->config.edge_int_en = edge?1:0;//When set, an alarm will generate an edge type interrupt.
         int intr_source = 0;
+#ifndef CONFIG_IDF_TARGET_ESP32C3
         if(!edge){
+#endif
             if(timer->group){
                 intr_source = ETS_TG1_T0_LEVEL_INTR_SOURCE + timer->timer;
             } else {
                 intr_source = ETS_TG0_T0_LEVEL_INTR_SOURCE + timer->timer;
             }
+#ifndef CONFIG_IDF_TARGET_ESP32C3
         } else {
             if(timer->group){
                 intr_source = ETS_TG1_T0_EDGE_INTR_SOURCE + timer->timer;
@@ -309,6 +318,7 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
                 intr_source = ETS_TG0_T0_EDGE_INTR_SOURCE + timer->timer;
             }
         }
+#endif
         if(!initialized){
             initialized = true;
             esp_intr_alloc(intr_source, (int)(ARDUINO_ISR_FLAG|ESP_INTR_FLAG_LOWMED), __timerISR, NULL, &intr_handle);

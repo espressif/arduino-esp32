@@ -170,6 +170,8 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
             eth_phy = esp_eth_phy_new_dm9051(&phy_config);
             break;
 #endif
+        case ETH_PHY_KSZ8081:
+            eth_phy = esp_eth_phy_new_ksz8081(&phy_config);
         default:
             break;
     }
