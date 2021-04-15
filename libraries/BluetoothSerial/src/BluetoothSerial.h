@@ -39,6 +39,9 @@ class BluetoothSerial: public Stream
         ~BluetoothSerial(void);
 
         bool begin(String localName=String(), bool isMaster=false);
+        bool begin(unsigned long baud){//compatibility
+            return begin();
+        }
         int available(void);
         int peek(void);
         bool hasClient(void);
@@ -74,7 +77,7 @@ class BluetoothSerial: public Stream
         const int MIN_INQ_TIME = (ESP_BT_GAP_MIN_INQ_LEN * INQ_TIME);
         const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
         
-
+        operator bool() const;
     private:
         String local_name;
 

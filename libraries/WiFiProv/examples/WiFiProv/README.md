@@ -12,16 +12,6 @@ This example allows Arduino user to choose either BLE or SOFTAP as a mode of tra
 
 Using this API user can register to receive WiFi Events and Provisioning Events
 
-#### Parameters passed
-
-A function with following signature
-* void SysProvEvent(system_event_t * , wifi_prov_event_t * );
- 
-#### structure [ wifi_prov_event_t ]
-
-* wifi_prov_cb_event_t event;
-* void * event_data;
-
 ## WiFi.beginProvision()
 
 WiFi.beginProvision(void ( * scheme_cb)(), wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char * pop, char * service_name, char * service_key, uint8_t * uuid);

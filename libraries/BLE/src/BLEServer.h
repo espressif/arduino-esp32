@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLESERVER_H_
 #define COMPONENTS_CPP_UTILS_BLESERVER_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gatts_api.h>
 
 #include <string>
@@ -20,7 +20,7 @@
 #include "BLECharacteristic.h"
 #include "BLEService.h"
 #include "BLESecurity.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 #include "BLEAddress.h"
 
 class BLEServerCallbacks;
@@ -137,5 +137,5 @@ public:
 }; // BLEServerCallbacks
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLESERVER_H_ */

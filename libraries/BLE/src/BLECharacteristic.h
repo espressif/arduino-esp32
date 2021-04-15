@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string>
 #include <map>
 #include "BLEUUID.h"
@@ -16,7 +16,7 @@
 #include <esp_gap_ble_api.h>
 #include "BLEDescriptor.h"
 #include "BLEValue.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEService;
 class BLEDescriptor;
@@ -145,10 +145,44 @@ public:
 	}Status;
 
 	virtual ~BLECharacteristicCallbacks();
+
+	/**
+	 * @brief Callback function to support a read request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] param The BLE GATTS param. Use param->read.
+	 */
+	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
+	/**
+	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overrided. 
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic);
+
+	/**
+	 * @brief Callback function to support a write request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] param The BLE GATTS param. Use param->write.
+	 */
+	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
+	/**
+	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overrided. 
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic);
+
+	/**
+	 * @brief Callback function to support a Notify request.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 */
 	virtual void onNotify(BLECharacteristic* pCharacteristic);
+
+	/**
+	 * @brief Callback function to support a Notify/Indicate Status report.
+	 * @param [in] pCharacteristic The characteristic that is the source of the event.
+	 * @param [in] s Status of the notification/indication
+	 * @param [in] code Additional code of underlying errors
+	 */
 	virtual void onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code);
 };
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_ */

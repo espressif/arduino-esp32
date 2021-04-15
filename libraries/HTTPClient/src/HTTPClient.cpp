@@ -109,6 +109,12 @@ HTTPClient::~HTTPClient()
     if(_currentHeaders) {
         delete[] _currentHeaders;
     }
+    if(_tcpDeprecated) {
+        _tcpDeprecated.reset(nullptr);
+    }
+    if(_transportTraits) {
+        _transportTraits.reset(nullptr);
+    }
 }
 
 void HTTPClient::clear()
@@ -284,7 +290,7 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
     }
     _host = the_host;
     _uri = url;
-    log_d("host: %s port: %d url: %s", _host.c_str(), _port, _uri.c_str());
+    log_d("protocol: %s, host: %s port: %d url: %s", _protocol.c_str(), _host.c_str(), _port, _uri.c_str());
     return true;
 }
 
@@ -376,19 +382,19 @@ void HTTPClient::disconnect(bool preserveClient)
         }
 
         if(_reuse && _canReuse) {
-            log_d("tcp keep open for reuse\n");
+            log_d("tcp keep open for reuse");
         } else {
-            log_d("tcp stop\n");
+            log_d("tcp stop");
             _client->stop();
             if(!preserveClient) {
                 _client = nullptr;
-            }
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-            if(_tcpDeprecated) {
-                _transportTraits.reset(nullptr);
-                _tcpDeprecated.reset(nullptr);
-            }
+                if(_tcpDeprecated) {
+                    _transportTraits.reset(nullptr);
+                    _tcpDeprecated.reset(nullptr);
+                }
 #endif
+            }
         }
     } else {
         log_d("tcp is closed\n");

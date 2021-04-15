@@ -5,11 +5,12 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include <esp_gap_ble_api.h>
 #include <esp_gattc_api.h>
+#include <esp_gatt_common_api.h>// ESP32 BLE
 #include "BLEClient.h"
 #include "BLEUtils.h"
 #include "BLEService.h"
@@ -545,6 +546,39 @@ uint16_t BLEClient::getMTU() {
 	return m_mtu;
 }
 
+
+/**
+	@brief Set the local and remote MTU size.
+ 				Should be called once after client connects if MTU size needs to be changed.
+	@return bool indicating if MTU was successfully set locally and on remote.
+*/
+bool BLEClient::setMTU(uint16_t mtu)
+{
+	esp_err_t err = esp_ble_gatt_set_local_mtu(mtu);  //First must set local MTU value.
+	if (err == ESP_OK) 
+	{
+		err = esp_ble_gattc_send_mtu_req(m_gattc_if,m_conn_id);  //Once local is set successfully set remote size
+		if (err!=ESP_OK)
+		{
+			log_e("Error setting send MTU request MTU: %d err=%d", mtu,err);
+			return false;
+		}
+	}
+	else 
+	{
+		log_e("can't set local mtu value: %d", mtu);
+		return false;
+	}
+	log_v("<< setLocalMTU");
+
+	m_mtu = mtu; //successfully changed
+
+	return true;
+}
+
+
+
+
 /**
  * @brief Return a string representation of this client.
  * @return A string representation of this client.
@@ -560,4 +594,4 @@ std::string BLEClient::toString() {
 } // toString
 
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED

@@ -4,7 +4,7 @@ const int button = 0;         //gpio to use to trigger delay
 const int wdtTimeout = 3000;  //time in ms to trigger the watchdog
 hw_timer_t *timer = NULL;
 
-void IRAM_ATTR resetModule() {
+void ARDUINO_ISR_ATTR resetModule() {
   ets_printf("reboot\n");
   esp_restart();
 }

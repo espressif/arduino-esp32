@@ -107,7 +107,7 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 
     sda = sdaPin;
     scl = sclPin;
-    i2c = i2cInit(num, sdaPin, sclPin, frequency);
+    i2c = i2cInit(num, sda, scl, frequency);
     if(!i2c) {
         return false;
     }
@@ -129,6 +129,12 @@ uint16_t TwoWire::getTimeOut()
 
 void TwoWire::setClock(uint32_t frequency)
 {
+#if CONFIG_IDF_TARGET_ESP32S2
+    i2c = i2cInit(num, sda, scl, frequency);
+    if(!i2c) {
+        return;
+    }
+#endif
     i2cSetFrequency(i2c, frequency);
 }
 

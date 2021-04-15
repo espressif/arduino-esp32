@@ -29,6 +29,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include "esp_arduino_version.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -115,10 +116,12 @@ typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
 
+#ifdef __cplusplus
 void setup(void);
 void loop(void);
 
 long random(long, long);
+#endif
 void randomSeed(unsigned long);
 long map(long, long, long, long, long);
 

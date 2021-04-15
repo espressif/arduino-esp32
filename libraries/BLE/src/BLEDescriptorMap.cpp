@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include <iomanip>
 #include "BLECharacteristic.h"
@@ -145,4 +145,4 @@ BLEDescriptor* BLEDescriptorMap::getNext() {
 	m_iterator++;
 	return pRet;
 } // getNext
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
