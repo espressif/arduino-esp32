@@ -4,8 +4,13 @@
 
 /* You only need to format LITTLEFS the first time you run a
    test or else use the LITTLEFS plugin to create a partition
-   https://github.com/lorol/arduino-esp32littlefs-plugin */
+   https://github.com/lorol/arduino-esp32littlefs-plugin
    
+   If you test two partitions, you need to use a custom
+   partition.csv file, see in the sketch folder */
+
+//#define TWOPART
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -123,9 +128,8 @@ void deleteFile(fs::FS &fs, const char * path){
     }
 }
 
-// SPIFFS-like write and delete file
+// SPIFFS-like write and delete file, better use #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
 
-// See: https://github.com/esp8266/Arduino/blob/master/libraries/LittleFS/src/LittleFS.cpp#L60
 void writeFile2(fs::FS &fs, const char * path, const char * message){
     if(!fs.exists(path)){
 		if (strchr(path, '/')) {
@@ -158,7 +162,6 @@ void writeFile2(fs::FS &fs, const char * path, const char * message){
     file.close();
 }
 
-// See:  https://github.com/esp8266/Arduino/blob/master/libraries/LittleFS/src/LittleFS.h#L149
 void deleteFile2(fs::FS &fs, const char * path){
     Serial.printf("Deleting file and empty folders on path: %s\r\n", path);
 
@@ -239,6 +242,19 @@ void testFileIO(fs::FS &fs, const char * path){
 
 void setup(){
     Serial.begin(115200);
+
+#ifdef TWOPART
+    if(!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED, "/lfs2", 5, "part2")){
+    Serial.println("part2 Mount Failed");
+    return;
+    }
+    appendFile(LITTLEFS, "/hello0.txt", "World0!\r\n");
+    readFile(LITTLEFS, "/hello0.txt");
+    LITTLEFS.end();
+
+    Serial.println( "Done with part2, work with the first lfs partition..." );
+#endif
+
     if(!LITTLEFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
         Serial.println("LITTLEFS Mount Failed");
         return;
@@ -264,7 +280,7 @@ void setup(){
     testFileIO(LITTLEFS, "/test.txt");
     deleteFile(LITTLEFS, "/test.txt");
 	
-    Serial.println( "Test complete" );
+    Serial.println( "Test complete" ); 
 }
 
 void loop(){

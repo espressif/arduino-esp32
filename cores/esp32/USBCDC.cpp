@@ -198,16 +198,20 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
 
 void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits){
     if(bit_rate != _bit_rate || data_bits != _data_bits || stop_bits != _stop_bits || parity != _parity){
-        bit_rate = _bit_rate;
-        data_bits = _data_bits;
-        stop_bits = _stop_bits;
-        parity = _parity;
-        arduino_usb_cdc_event_data_t p = {0};
-        p.line_coding.bit_rate = bit_rate;
-        p.line_coding.data_bits = data_bits;
-        p.line_coding.stop_bits = stop_bits;
-        p.line_coding.parity = parity;
-        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_CODING_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+        if(bit_rate == 9600 && _bit_rate == 1200){
+            usb_persist_restart(RESTART_BOOTLOADER);
+        } else {
+            bit_rate = _bit_rate;
+            data_bits = _data_bits;
+            stop_bits = _stop_bits;
+            parity = _parity;
+            arduino_usb_cdc_event_data_t p = {0};
+            p.line_coding.bit_rate = bit_rate;
+            p.line_coding.data_bits = data_bits;
+            p.line_coding.stop_bits = stop_bits;
+            p.line_coding.parity = parity;
+            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_CODING_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+        }
     }
 }
 

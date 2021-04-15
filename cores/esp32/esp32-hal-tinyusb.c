@@ -48,8 +48,6 @@ typedef struct {
     bool external_phy;
 } tinyusb_config_t;
 
-static TaskHandle_t s_tusb_tskh;
-
 static void configure_pins(usb_hal_context_t *usb)
 {
     for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
@@ -74,7 +72,6 @@ static void configure_pins(usb_hal_context_t *usb)
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config)
 {
-    int res;
     log_i("Driver installation...");
 
     // Hal init
@@ -533,6 +530,9 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
             //USB CDC Download
             if (usb_persist_enabled) {
                 chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+            } else {
+                periph_module_reset(PERIPH_USB_MODULE);
+                periph_module_enable(PERIPH_USB_MODULE);
             }
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
@@ -586,11 +586,12 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
 
     bool usb_did_persist = (USB_WRAP.date.val == USBDC_PERSIST_ENA);
 
-    if(usb_did_persist && usb_persist_enabled){
+    //if(usb_did_persist && usb_persist_enabled){
         // Enable USB/IO_MUX peripheral reset, if coming from persistent reboot
         REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
         REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
-    } else {
+    //} else 
+    if(!usb_did_persist || !usb_persist_enabled){
         // Reset USB module
         periph_module_reset(PERIPH_USB_MODULE);
         periph_module_enable(PERIPH_USB_MODULE);

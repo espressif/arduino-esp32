@@ -16,7 +16,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "freertos/xtensa_timer.h"
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "soc/rtc.h"
@@ -29,9 +28,13 @@
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "freertos/xtensa_timer.h"
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
+#include "freertos/xtensa_timer.h"
 #include "esp32s2/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -141,10 +144,14 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
+#if CONFIG_IDF_TARGET_ESP32C3
+	return APB_CLK_FREQ;
+#else
     if(conf->freq_mhz >= 80){
         return 80 * MHZ;
     }
     return (conf->source_freq_mhz * MHZ) / conf->div;
+#endif
 }
 
 void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us); //private in IDF
@@ -219,8 +226,12 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
     //Update FreeRTOS Tick Divisor
+#if CONFIG_IDF_TARGET_ESP32C3
+
+#else
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
+#endif
     //Call peripheral functions after the APB change
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
