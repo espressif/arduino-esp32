@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,17 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#include "sdkconfig.h"
+
+#ifndef BOARD_HAS_PSRAM
+#ifdef CONFIG_SPIRAM_SUPPORT
+#undef CONFIG_SPIRAM_SUPPORT
+#endif
+#ifdef CONFIG_SPIRAM
+#undef CONFIG_SPIRAM
+#endif
 #endif
 
 bool psramInit();

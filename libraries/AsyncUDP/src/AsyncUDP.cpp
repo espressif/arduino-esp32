@@ -285,6 +285,12 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDPPacket &packet){
     _len = packet._len;
     _index = 0;
 
+    memcpy(&_remoteIp, &packet._remoteIp, sizeof(ip_addr_t));
+    memcpy(&_localIp, &packet._localIp, sizeof(ip_addr_t));
+    _localPort = packet._localPort;
+    _remotePort = packet._remotePort;
+    memcpy(_remoteMac, packet._remoteMac, 6);
+
     pbuf_ref(_pb);
 }
 
@@ -304,18 +310,18 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, 
     _localIp.type = _remoteIp.type;
 
     eth_hdr* eth = NULL;
-    udp_hdr* udphdr = reinterpret_cast<udp_hdr*>(_data - UDP_HLEN);
+    udp_hdr* udphdr = (udp_hdr *)(_data - UDP_HLEN);
     _localPort = ntohs(udphdr->dest);
     _remotePort = ntohs(udphdr->src);
 
     if (_remoteIp.type == IPADDR_TYPE_V4) {
-        eth = (eth_hdr *)(((uint8_t *)(pb->payload)) - UDP_HLEN - IP_HLEN - SIZEOF_ETH_HDR);
-        struct ip_hdr * iphdr = (struct ip_hdr *)(((uint8_t *)(pb->payload)) - UDP_HLEN - IP_HLEN);
+        eth = (eth_hdr *)(_data - UDP_HLEN - IP_HLEN - SIZEOF_ETH_HDR);
+        struct ip_hdr * iphdr = (struct ip_hdr *)(_data - UDP_HLEN - IP_HLEN);
         _localIp.u_addr.ip4.addr = iphdr->dest.addr;
         _remoteIp.u_addr.ip4.addr = iphdr->src.addr;
     } else {
-        eth = (eth_hdr *)(((uint8_t *)(pb->payload)) - UDP_HLEN - IP6_HLEN - SIZEOF_ETH_HDR);
-        struct ip6_hdr * ip6hdr = (struct ip6_hdr *)(((uint8_t *)(pb->payload)) - UDP_HLEN - IP6_HLEN);
+        eth = (eth_hdr *)(_data - UDP_HLEN - IP6_HLEN - SIZEOF_ETH_HDR);
+        struct ip6_hdr * ip6hdr = (struct ip6_hdr *)(_data - UDP_HLEN - IP6_HLEN);
         memcpy(&_localIp.u_addr.ip6.addr, (uint8_t *)ip6hdr->dest.addr, 16);
         memcpy(&_remoteIp.u_addr.ip6.addr, (uint8_t *)ip6hdr->src.addr, 16);
     }

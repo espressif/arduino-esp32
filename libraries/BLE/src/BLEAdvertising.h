@@ -8,11 +8,11 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h>
 #include "BLEUUID.h"
 #include <vector>
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 /**
  * @brief Advertisement data set by the programmer to be published by the %BLE server.
@@ -53,6 +53,7 @@ public:
 	void stop();
 	void setAppearance(uint16_t appearance);
 	void setAdvertisementType(esp_ble_adv_type_t adv_type);
+	void setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map);
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(BLEAdvertisementData& advertisementData);
@@ -77,5 +78,5 @@ private:
 	bool                 m_scanResp = true;
 
 };
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISING_H_ */

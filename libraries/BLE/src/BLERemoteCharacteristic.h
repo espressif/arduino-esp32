@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <string>
 #include <functional>
@@ -18,7 +18,7 @@
 #include "BLERemoteService.h"
 #include "BLERemoteDescriptor.h"
 #include "BLEUUID.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLERemoteService;
 class BLERemoteDescriptor;
@@ -83,5 +83,5 @@ private:
 	// We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
 	std::map<std::string, BLERemoteDescriptor*> m_descriptorMap;
 }; // BLERemoteCharacteristic
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_ */

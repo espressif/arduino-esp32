@@ -8,7 +8,7 @@
 #ifndef MAIN_BLEDevice_H_
 #define MAIN_BLEDevice_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h> // ESP32 BLE
 #include <esp_gattc_api.h>   // ESP32 BLE
 #include <map>               // Part of C++ STL
@@ -96,5 +96,5 @@ public:
 
 }; // class BLE
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif /* MAIN_BLEDevice_H_ */

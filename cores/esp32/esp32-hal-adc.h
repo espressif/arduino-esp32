@@ -1,16 +1,21 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ Arduino.h - Main include file for the Arduino SDK
+ Copyright (c) 2005-2013 Arduino Team.  All right reserved.
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef MAIN_ESP32_HAL_ADC_H_
 #define MAIN_ESP32_HAL_ADC_H_
@@ -34,6 +39,11 @@ typedef enum {
 uint16_t analogRead(uint8_t pin);
 
 /*
+ * Get MilliVolts value for pin
+ * */
+uint32_t analogReadMilliVolts(uint8_t pin);
+
+/*
  * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
  * If between 9 and 12, it will equal the set hardware resolution, else value will be shifted.
  * Range is 1 - 16
@@ -41,13 +51,6 @@ uint16_t analogRead(uint8_t pin);
  * Note: compatibility with Arduino SAM
  */
 void analogReadResolution(uint8_t bits);
-
-/*
- * Sets the sample bits and read resolution
- * Default is 12bit (0 - 4095)
- * Range is 9 - 12
- * */
-void analogSetWidth(uint8_t bits);
 
 /*
  * Set the divider for the ADC clock.
@@ -69,15 +72,17 @@ void analogSetAttenuation(adc_attenuation_t attenuation);
 void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
 /*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
- * */
-int hallRead();
-
-/*
  * Attach pin to ADC (will also clear any other analog mode that could be on)
  * */
 bool adcAttachPin(uint8_t pin);
+
+#if CONFIG_IDF_TARGET_ESP32
+/*
+ * Sets the sample bits and read resolution
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
+ * */
+void analogSetWidth(uint8_t bits);
 
 /*
  * Set pin to use for ADC calibration if the esp is not already calibrated (25, 26 or 27)
@@ -85,9 +90,11 @@ bool adcAttachPin(uint8_t pin);
 void analogSetVRefPin(uint8_t pin);
 
 /*
- * Get MilliVolts value for pin
+ * Get value for HALL sensor (without LNA)
+ * connected to pins 36(SVP) and 39(SVN)
  * */
-uint32_t analogReadMilliVolts(uint8_t pin);
+int hallRead();
+#endif
 
 #ifdef __cplusplus
 }

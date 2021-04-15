@@ -46,7 +46,11 @@ private:
                 return 0;
             }
             int count;
+#ifdef ESP_IDF_VERSION_MAJOR
+            int res = lwip_ioctl(_fd, FIONREAD, &count);
+#else
             int res = lwip_ioctl_r(_fd, FIONREAD, &count);
+#endif
             if(res < 0) {
                 _failed = true;
                 return 0;
@@ -227,7 +231,11 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     tv.tv_sec = 0;
     tv.tv_usec = timeout * 1000;
 
+#ifdef ESP_IDF_VERSION_MAJOR
+    int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#else
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#endif
     if (res < 0 && errno != EINPROGRESS) {
         log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
@@ -313,7 +321,7 @@ int WiFiClient::setOption(int option, int *value)
 
 int WiFiClient::getOption(int option, int *value)
 {
-    size_t size = sizeof(int);
+	socklen_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));

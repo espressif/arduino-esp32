@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLESECURITY_H_
 #define COMPONENTS_CPP_UTILS_BLESECURITY_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_gap_ble_api.h>
 
@@ -69,5 +69,5 @@ public:
 	virtual bool onConfirmPIN(uint32_t pin) = 0;
 }; // BLESecurityCallbacks
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif // COMPONENTS_CPP_UTILS_BLESECURITY_H_
