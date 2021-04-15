@@ -20,23 +20,25 @@
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
 #include "soc/gpio_struct.h"
-#include "soc/rtc_io_reg.h"
-
+#include "driver/gpio.h"
 #include "esp_system.h"
+
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/ets_sys.h"
 #include "esp32/rom/gpio.h"
 #include "esp_intr_alloc.h"
+#include "soc/rtc_io_reg.h"
 #define GPIO_FUNC 2
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
 #include "esp32s2/rom/gpio.h"
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
+#include "soc/rtc_io_reg.h"
 #define GPIO_FUNC 1
 #else 
-#error Target CONFIG_IDF_TARGET is not supported
+#define USE_ESP_IDF_GPIO 1
 #endif
 #else // ESP32 Before IDF 4.0
 #include "rom/ets_sys.h"
@@ -157,7 +159,45 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
+#if USE_ESP_IDF_GPIO
+	if (!GPIO_IS_VALID_GPIO(pin)) {
+		return;
+	}
+	gpio_config_t conf = {
+		    .pin_bit_mask = (1ULL<<pin),			/*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+		    .mode = GPIO_MODE_DISABLE,              /*!< GPIO mode: set input/output mode                     */
+		    .pull_up_en = GPIO_PULLUP_DISABLE,      /*!< GPIO pull-up                                         */
+		    .pull_down_en = GPIO_PULLDOWN_DISABLE,  /*!< GPIO pull-down                                       */
+		    .intr_type = GPIO_INTR_DISABLE      	/*!< GPIO interrupt type                                  */
+	};
+	if (mode < 0x20) {//io
+		conf.mode = mode & (INPUT | OUTPUT);
+		if (mode & OPEN_DRAIN) {
+			conf.mode |= GPIO_MODE_DEF_OD;
+		}
+		if (mode & PULLUP) {
+			conf.pull_up_en = GPIO_PULLUP_ENABLE;
+		}
+		if (mode & PULLDOWN) {
+			conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
+		}
+	}
+	gpio_config(&conf);
 
+	if(mode == SPECIAL){
+#if CONFIG_IDF_TARGET_ESP32
+		PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], (uint32_t)(((pin)==RX||(pin)==TX)?0:1));
+#elif CONFIG_IDF_TARGET_ESP32S2
+		PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], (uint32_t)(((pin)==RX||(pin)==TX)?0:2));
+#endif
+	} else if(mode == ANALOG){
+#if !CONFIG_IDF_TARGET_ESP32C3
+		//adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0);
+#endif
+	} else if(mode >= 0x20 && mode < ANALOG) {//function
+		PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], mode >> 5);
+	}
+#else
     if(!digitalPinIsValid(pin)) {
         return;
     }
@@ -228,11 +268,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     pinFunction |= FUN_IE;//input enable but required for output as well?
 
     if(mode & (INPUT | OUTPUT)) {
-#if CONFIG_IDF_TARGET_ESP32
-        pinFunction |= ((uint32_t)2 << MCU_SEL_S);
-#elif CONFIG_IDF_TARGET_ESP32S2
-        pinFunction |= ((uint32_t)1 << MCU_SEL_S);
-#endif
+        pinFunction |= ((uint32_t)PIN_FUNC_GPIO << MCU_SEL_S);
     } else if(mode == SPECIAL) {
 #if CONFIG_IDF_TARGET_ESP32
         pinFunction |= ((uint32_t)(((pin)==RX||(pin)==TX)?0:1) << MCU_SEL_S);
@@ -250,10 +286,20 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 
     GPIO.pin[pin].val = pinControl;
+#endif
 }
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
+#if USE_ESP_IDF_GPIO
+	gpio_set_level((gpio_num_t)pin, val);
+#elif CONFIG_IDF_TARGET_ESP32C3
+    if (val) {
+    	GPIO.out_w1ts.out_w1ts = (1 << pin);
+    } else {
+    	GPIO.out_w1tc.out_w1tc = (1 << pin);
+    }
+#else
     if(val) {
         if(pin < 32) {
             GPIO.out_w1ts = ((uint32_t)1 << pin);
@@ -267,18 +313,37 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
             GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
         }
     }
+#endif
 }
 
 extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
 {
+#if USE_ESP_IDF_GPIO
+	return gpio_get_level((gpio_num_t)pin);
+#elif CONFIG_IDF_TARGET_ESP32C3
+	return (GPIO.in.data >> pin) & 0x1;
+#else
     if(pin < 32) {
         return (GPIO.in >> pin) & 0x1;
     } else if(pin < GPIO_PIN_COUNT) {
         return (GPIO.in1.val >> (pin - 32)) & 0x1;
     }
     return 0;
+#endif
 }
 
+#if USE_ESP_IDF_GPIO
+static void ARDUINO_ISR_ATTR __onPinInterrupt(void * arg) {
+	InterruptHandle_t * isr = (InterruptHandle_t*)arg;
+    if(isr->fn) {
+        if(isr->arg){
+            ((voidFuncPtrArg)isr->fn)(isr->arg);
+        } else {
+        	isr->fn();
+        }
+    }
+}
+#else
 static intr_handle_t gpio_intr_handle = NULL;
 
 static void ARDUINO_ISR_ATTR __onPinInterrupt()
@@ -320,6 +385,7 @@ static void ARDUINO_ISR_ATTR __onPinInterrupt()
         } while(++pin<GPIO_PIN_COUNT);
     }
 }
+#endif
 
 extern void cleanupFunctional(void* arg);
 
@@ -328,8 +394,17 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
     static bool interrupt_initialized = false;
 
     if(!interrupt_initialized) {
+#if USE_ESP_IDF_GPIO
+    	esp_err_t err = gpio_install_isr_service((int)ARDUINO_ISR_FLAG);
+    	interrupt_initialized = (err == ESP_OK) || (err == ESP_ERR_INVALID_STATE);
+#else
         interrupt_initialized = true;
         esp_intr_alloc(ETS_GPIO_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, __onPinInterrupt, NULL, &gpio_intr_handle);
+#endif
+    }
+    if(!interrupt_initialized) {
+    	log_e("GPIO ISR Service Failed To Start");
+    	return;
     }
 
     // if new attach without detach remove old info
@@ -341,6 +416,14 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
     __pinInterruptHandlers[pin].arg = arg;
     __pinInterruptHandlers[pin].functional = functional;
 
+#if USE_ESP_IDF_GPIO
+    gpio_set_intr_type((gpio_num_t)pin, (gpio_int_type_t)(intr_type & 0x7));
+    if(intr_type & 0x8){
+    	gpio_wakeup_enable((gpio_num_t)pin, (gpio_int_type_t)(intr_type & 0x7));
+    }
+    gpio_isr_handler_add((gpio_num_t)pin, __onPinInterrupt, &__pinInterruptHandlers[pin]);
+    gpio_intr_enable((gpio_num_t)pin);
+#else
     esp_intr_disable(gpio_intr_handle);
 #if CONFIG_IDF_TARGET_ESP32
     if(esp_intr_get_cpu(gpio_intr_handle)) { //APP_CPU
@@ -353,6 +436,7 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
 #endif
     GPIO.pin[pin].int_type = intr_type;
     esp_intr_enable(gpio_intr_handle);
+#endif
 }
 
 extern void __attachInterruptArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type)
@@ -366,7 +450,13 @@ extern void __attachInterrupt(uint8_t pin, voidFuncPtr userFunc, int intr_type) 
 
 extern void __detachInterrupt(uint8_t pin)
 {
+#if USE_ESP_IDF_GPIO
+	gpio_intr_disable((gpio_num_t)pin);
+	gpio_isr_handler_remove((gpio_num_t)pin);
+	gpio_wakeup_disable((gpio_num_t)pin);
+#else
     esp_intr_disable(gpio_intr_handle);
+#endif
     if (__pinInterruptHandlers[pin].functional && __pinInterruptHandlers[pin].arg)
     {
     	cleanupFunctional(__pinInterruptHandlers[pin].arg);
@@ -375,9 +465,13 @@ extern void __detachInterrupt(uint8_t pin)
     __pinInterruptHandlers[pin].arg = NULL;
     __pinInterruptHandlers[pin].functional = false;
 
+#if USE_ESP_IDF_GPIO
+    gpio_set_intr_type((gpio_num_t)pin, GPIO_INTR_DISABLE);
+#else
     GPIO.pin[pin].int_ena = 0;
     GPIO.pin[pin].int_type = 0;
     esp_intr_enable(gpio_intr_handle);
+#endif
 }
 
 
