@@ -73,6 +73,7 @@ public:
     void close();
     operator bool() const;
     time_t getLastWrite();
+    const char* path() const;
     const char* name() const;
 
     boolean isDirectory(void);
