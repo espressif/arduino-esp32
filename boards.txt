@@ -1538,7 +1538,7 @@ ttgo-t7-v13-mini32.upload.tool=esptool_py
 ttgo-t7-v13-mini32.upload.maximum_size=1310720
 ttgo-t7-v13-mini32.upload.maximum_data_size=327680
 ttgo-t7-v13-mini32.upload.wait_for_upload_port=true
-
+ttgo-t7-v13-mini32.upload.flags=
 ttgo-t7-v13-mini32.serial.disableDTR=true
 ttgo-t7-v13-mini32.serial.disableRTS=true
 
@@ -1657,6 +1657,7 @@ ttgo-t7-v14-mini32.upload.tool=esptool_py
 ttgo-t7-v14-mini32.upload.maximum_size=1310720
 ttgo-t7-v14-mini32.upload.maximum_data_size=327680
 ttgo-t7-v14-mini32.upload.wait_for_upload_port=true
+ttgo-t7-v14-mini32.upload.flags=
 
 ttgo-t7-v14-mini32.serial.disableDTR=true
 ttgo-t7-v14-mini32.serial.disableRTS=true
@@ -6368,6 +6369,8 @@ twatch.menu.Revision.TWATCH_2020_V1=T-Watch-2020-V1
 twatch.menu.Revision.TWATCH_2020_V1.build.board=TWATCH_2020_V1
 twatch.menu.Revision.TWATCH_2020_V2=T-Watch-2020-V2
 twatch.menu.Revision.TWATCH_2020_V2.build.board=TWATCH_2020_V2
+twatch.menu.Revision.TWATCH_2020_V3=T-Watch-2020-V3
+twatch.menu.Revision.TWATCH_2020_V3.build.board=TWATCH_2020_V3
 
 twatch.build.f_cpu=240000000L
 twatch.build.flash_size=16MB
@@ -7479,6 +7482,7 @@ ttgo-lora32-v21new.upload.tool=esptool_py
 ttgo-lora32-v21new.upload.maximum_size=1310720
 ttgo-lora32-v21new.upload.maximum_data_size=294912
 ttgo-lora32-v21new.upload.wait_for_upload_port=true
+ttgo-lora32-v21new.upload.flags=
 
 ttgo-lora32-v21new.serial.disableDTR=true
 ttgo-lora32-v21new.serial.disableRTS=true
