@@ -229,7 +229,7 @@ void printDirectory() {
     output += "{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
-    output += entry.name();
+    output += entry.path();
     output += "\"";
     output += "}";
     server.sendContent(output);
