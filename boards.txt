@@ -6349,6 +6349,7 @@ twatch.upload.tool=esptool_py
 twatch.upload.maximum_size=6553600
 twatch.upload.maximum_data_size=4521984
 twatch.upload.wait_for_upload_port=true
+twatch.upload.flags=
 
 twatch.serial.disableDTR=true
 twatch.serial.disableRTS=true
