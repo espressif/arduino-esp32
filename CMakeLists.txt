@@ -7,7 +7,6 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-dac.c
   cores/esp32/esp32-hal-gpio.c
   cores/esp32/esp32-hal-i2c.c
-  cores/esp32/esp32-hal-log.c
   cores/esp32/esp32-hal-ledc.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
@@ -45,6 +44,9 @@ set(LIBRARY_SRCS
   libraries/ArduinoOTA/src/ArduinoOTA.cpp
   libraries/AsyncUDP/src/AsyncUDP.cpp
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
+  libraries/BluetoothSerial/src/BTAddress.cpp
+  libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
+  libraries/BluetoothSerial/src/BTScanResultsSet.cpp
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
@@ -124,7 +126,7 @@ set(BLE_SRCS
 
 
 set(includedirs
-  variants/esp32/
+  variants/${IDF_TARGET}/
   cores/esp32/
   libraries/ArduinoOTA/src
   libraries/AsyncUDP/src

@@ -13,23 +13,28 @@
 // limitations under the License.
 
 #include "esp32-hal.h"
-#include "esp_attr.h"
+
+#if CONFIG_IDF_TARGET_ESP32
 #include "soc/rtc_io_reg.h"
+#define DAC1 25
+#define DAC2 26
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "soc/rtc_io_reg.h"
+#define DAC1 17
+#define DAC2 18
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define NODAC
+#else
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+
+#ifndef NODAC
+#include "esp_attr.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/rtc_io_periph.h"
 #include "soc/sens_reg.h"
 #include "soc/sens_struct.h"
 #include "driver/dac.h"
-
-#if CONFIG_IDF_TARGET_ESP32
-#define DAC1 25
-#define DAC2 26
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define DAC1 17
-#define DAC2 18
-#else
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
 
 void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 {
@@ -54,3 +59,5 @@ void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 }
 
 extern void dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
+
+#endif

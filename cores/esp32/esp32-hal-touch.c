@@ -13,13 +13,14 @@
 // limitations under the License.
 
 #include "esp32-hal-touch.h"
+#ifndef CONFIG_IDF_TARGET_ESP32C3
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
 #include "soc/rtc_io_reg.h"
-#include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 #include "soc/sens_struct.h"
+#include "soc/rtc_cntl_reg.h"
 #include "driver/touch_sensor.h"
 
 #include "esp_system.h"
@@ -225,3 +226,4 @@ void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t thresh
 extern uint16_t touchRead(uint8_t pin) __attribute__ ((weak, alias("__touchRead")));
 extern void touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t threshold) __attribute__ ((weak, alias("__touchAttachInterrupt")));
 extern void touchSetCycles(uint16_t measure, uint16_t sleep) __attribute__ ((weak, alias("__touchSetCycles")));
+#endif

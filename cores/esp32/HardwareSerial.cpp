@@ -66,6 +66,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #elif CONFIG_IDF_TARGET_ESP32S2
         rxPin = 44;
         txPin = 43;
+#elif CONFIG_IDF_TARGET_ESP32C3
+        rxPin = 20;
+        txPin = 21;
 #endif
     }
     if(_uart_nr == 1 && rxPin < 0 && txPin < 0) {
@@ -114,6 +117,7 @@ void HardwareSerial::end()
     if(uartGetDebug() == _uart_nr) {
         uartSetDebug(0);
     }
+    delay(10);
     log_v("pins %d %d",_tx_pin, _rx_pin);
     uartEnd(_uart, _tx_pin, _rx_pin);
     _uart = 0;

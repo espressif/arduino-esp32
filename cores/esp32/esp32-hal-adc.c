@@ -16,16 +16,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
-#include "soc/rtc_io_reg.h"
 #include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
-
 #include "driver/adc.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp_adc_cal.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
 #define DEFAULT_VREF    1100
@@ -34,6 +33,10 @@ static uint16_t __analogVRef = 0;
 static uint8_t __analogVRefPin = 0;
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -51,7 +54,9 @@ void __analogSetClockDiv(uint8_t clockDiv){
         clockDiv = 1;
     }
     __analogClockDiv = clockDiv;
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     adc_set_clk_div(__analogClockDiv);
+#endif
 }
 
 void __analogSetAttenuation(adc_attenuation_t attenuation)
@@ -114,11 +119,14 @@ bool __adcAttachPin(uint8_t pin){
             WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, touch);
         }
 #endif
-    } else if(pin == 25){
+    }
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    else if(pin == 25){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
     } else if(pin == 26){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);//stop dac2
     }
+#endif
 
     pinMode(pin, ANALOG);
     __analogSetPinAttenuation(pin, __analogAttenuation);
