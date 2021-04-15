@@ -17,7 +17,7 @@
  *
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include "BLEAdvertising.h"
 #include <esp_err.h>
 #include "BLEUtils.h"
@@ -90,6 +90,10 @@ void BLEAdvertising::setAppearance(uint16_t appearance) {
 void BLEAdvertising::setAdvertisementType(esp_ble_adv_type_t adv_type){
 	m_advParams.adv_type = adv_type;
 } // setAdvertisementType
+
+void BLEAdvertising::setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map) {
+	m_advParams.channel_map = channel_map;
+} // setAdvertisementChannelMap
 
 void BLEAdvertising::setMinInterval(uint16_t mininterval) {
 	m_advParams.adv_int_min = mininterval;
@@ -525,4 +529,4 @@ void BLEAdvertising::handleGAPEvent(
 }
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

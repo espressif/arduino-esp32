@@ -56,7 +56,7 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
         return false;
     }
 
-    if(passphrase && strlen(passphrase) > 63) {
+    if(passphrase && strlen(passphrase) > 64) {
         // fail passphrase too long!
         log_e("[WIFI][APlistAdd] passphrase too long");
         return false;

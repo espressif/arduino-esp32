@@ -1,23 +1,24 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ Arduino.h - Main include file for the Arduino SDK
+ Copyright (c) 2005-2013 Arduino Team.  All right reserved.
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #ifndef HAL_ESP32_HAL_H_
 #define HAL_ESP32_HAL_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -29,9 +30,34 @@ extern "C" {
 #include <math.h>
 #include "sdkconfig.h"
 #include "esp_system.h"
+#include "esp_sleep.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef F_CPU
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define F_CPU (CONFIG_ESP32S2_DEFAULT_CPU_FREQ_MHZ * 1000000U)
+#endif
+#endif
+
+#if CONFIG_ARDUINO_ISR_IRAM
+#define ARDUINO_ISR_ATTR IRAM_ATTR
+#define ARDUINO_ISR_FLAG ESP_INTR_FLAG_IRAM
+#else
+#define ARDUINO_ISR_ATTR
+#define ARDUINO_ISR_FLAG (0)
+#endif
+
+#ifndef ARDUINO_RUNNING_CORE
+#define ARDUINO_RUNNING_CORE CONFIG_ARDUINO_RUNNING_CORE
+#endif
+
+#ifndef ARDUINO_EVENT_RUNNING_CORE
+#define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
 #endif
 
 //forward declaration from freertos/portmacro.h
@@ -58,12 +84,6 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
-
-#ifndef BOARD_HAS_PSRAM
-#ifdef CONFIG_SPIRAM_SUPPORT
-#undef CONFIG_SPIRAM_SUPPORT
-#endif
-#endif
 
 //returns chip temperature in Celsius
 float temperatureRead();

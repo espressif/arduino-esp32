@@ -1,16 +1,33 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+ESP8266 Multicast DNS (port of CC3000 Multicast DNS library)
+Version 1.1
+Copyright (c) 2013 Tony DiCola (tony@tonydicola.com)
+ESP8266 port (c) 2015 Ivan Grokhotkov (ivan@esp8266.com)
+MDNS-SD Suport 2015 Hristo Gochkov (hristo@espressif.com)
+Extended MDNS-SD support 2016 Lars Englund (lars.englund@gmail.com)
+
+
+License (MIT license):
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+ */
 
 // Important RFC's for reference:
 // - DNS request and response: http://www.ietf.org/rfc/rfc1035.txt
@@ -34,9 +51,9 @@
 #define STR(tok) tok
 #endif
 
-static void _on_sys_event(system_event_t *event){
-    mdns_handle_system_event(NULL, event);
-}
+// static void _on_sys_event(arduino_event_t *event){
+//     mdns_handle_system_event(NULL, event);
+// }
 
 MDNSResponder::MDNSResponder() :results(NULL) {}
 MDNSResponder::~MDNSResponder() {
@@ -48,7 +65,7 @@ bool MDNSResponder::begin(const char* hostName){
         log_e("Failed starting MDNS");
         return false;
     }
-    WiFi.onEvent(_on_sys_event);
+    //WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
 	_hostname.toLowerCase();
     if(mdns_hostname_set(hostName)) {
@@ -94,10 +111,10 @@ void MDNSResponder::disableArduino(){
     }
 }
 
-void MDNSResponder::enableWorkstation(wifi_interface_t interface){
+void MDNSResponder::enableWorkstation(esp_interface_t interface){
     char winstance[21+_hostname.length()];
     uint8_t mac[6];
-    esp_wifi_get_mac(interface, mac);
+    esp_wifi_get_mac((wifi_interface_t)interface, mac);
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
@@ -156,7 +173,7 @@ bool MDNSResponder::addServiceTxt(char *name, char *proto, char *key, char *valu
 }
 
 IPAddress MDNSResponder::queryHost(char *host, uint32_t timeout){
-    struct ip4_addr addr;
+    esp_ip4_addr_t addr;
     addr.addr = 0;
 
     esp_err_t err = mdns_query_a(host, timeout,  &addr);

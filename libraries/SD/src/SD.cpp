@@ -1,4 +1,4 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,5 +102,16 @@ uint64_t SDFS::usedBytes()
 #endif
 	return size;
 }
+
+bool SDFS::readRAW(uint8_t* buffer, uint32_t sector)
+{
+    return sd_read_raw(_pdrv, buffer, sector);
+}
+
+bool SDFS::writeRAW(uint8_t* buffer, uint32_t sector)
+{
+    return sd_write_raw(_pdrv, buffer, sector);
+}
+
 
 SDFS SD = SDFS(FSImplPtr(new VFSImpl()));

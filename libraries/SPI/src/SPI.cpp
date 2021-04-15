@@ -1,16 +1,23 @@
-// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/* 
+ SPI.cpp - SPI library for esp8266
+
+ Copyright (c) 2015 Hristo Gochkov. All rights reserved.
+ This file is part of the esp8266 core for Arduino environment.
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include "SPI.h"
 
@@ -43,10 +50,22 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     }
 
     if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
+#if CONFIG_IDF_TARGET_ESP32S2
+        _sck = (_spi_num == FSPI) ? SCK : -1;
+        _miso = (_spi_num == FSPI) ? MISO : -1;
+        _mosi = (_spi_num == FSPI) ? MOSI : -1;
+        _ss = (_spi_num == FSPI) ? SS : -1;
+#elif CONFIG_IDF_TARGET_ESP32C3
+        _sck = SCK;
+        _miso = MISO;
+        _mosi = MOSI;
+        _ss = SS;
+#else
         _sck = (_spi_num == VSPI) ? SCK : 14;
         _miso = (_spi_num == VSPI) ? MISO : 12;
         _mosi = (_spi_num == VSPI) ? MOSI : 13;
         _ss = (_spi_num == VSPI) ? SS : 15;
+#endif
     } else {
         _sck = sck;
         _miso = miso;
@@ -285,4 +304,9 @@ void SPIClass::writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat)
     writeBytes(&buffer[0], bytes);
 }
 
+#if CONFIG_IDF_TARGET_ESP32
 SPIClass SPI(VSPI);
+#else
+SPIClass SPI(FSPI);
+#endif
+
