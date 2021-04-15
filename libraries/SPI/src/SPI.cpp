@@ -55,6 +55,11 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
         _miso = (_spi_num == FSPI) ? MISO : -1;
         _mosi = (_spi_num == FSPI) ? MOSI : -1;
         _ss = (_spi_num == FSPI) ? SS : -1;
+#elif CONFIG_IDF_TARGET_ESP32C3
+        _sck = SCK;
+        _miso = MISO;
+        _mosi = MOSI;
+        _ss = SS;
 #else
         _sck = (_spi_num == VSPI) ? SCK : 14;
         _miso = (_spi_num == VSPI) ? MISO : 12;
