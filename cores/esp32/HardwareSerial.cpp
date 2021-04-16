@@ -6,6 +6,8 @@
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #ifndef RX1
 #define RX1 9
 #endif
@@ -22,15 +24,33 @@
 #define TX2 17
 #endif
 
+#else
+
+#ifndef RX1
+#define RX1 18
+#endif
+
+#ifndef TX1
+#define TX1 17
+#endif
+
+#endif
+
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+HardwareSerial Serial0(0);
+#else
 HardwareSerial Serial(0);
+#endif
 HardwareSerial Serial1(1);
+#if CONFIG_IDF_TARGET_ESP32
 HardwareSerial Serial2(2);
+#endif
 #endif
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
-void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms)
+void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
     if(0 > _uart_nr || _uart_nr > 2) {
         log_e("Serial number is invalid, please use 0, 1 or 2");
@@ -40,19 +60,30 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         end();
     }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
+#if CONFIG_IDF_TARGET_ESP32
         rxPin = 3;
         txPin = 1;
+#elif CONFIG_IDF_TARGET_ESP32S2
+        rxPin = 44;
+        txPin = 43;
+#elif CONFIG_IDF_TARGET_ESP32C3
+        rxPin = 20;
+        txPin = 21;
+#endif
     }
     if(_uart_nr == 1 && rxPin < 0 && txPin < 0) {
         rxPin = RX1;
         txPin = TX1;
     }
+#if CONFIG_IDF_TARGET_ESP32
     if(_uart_nr == 2 && rxPin < 0 && txPin < 0) {
         rxPin = RX2;
         txPin = TX2;
     }
-
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
+#endif
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
+    _tx_pin = txPin;
+    _rx_pin = rxPin;
 
     if(!baud) {
         uartStartDetectBaudrate(_uart);
@@ -66,10 +97,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
+            _tx_pin = 255;
+            _rx_pin = 255;
         }
     }
 }
@@ -84,7 +117,9 @@ void HardwareSerial::end()
     if(uartGetDebug() == _uart_nr) {
         uartSetDebug(0);
     }
-    uartEnd(_uart);
+    delay(10);
+    log_v("pins %d %d",_tx_pin, _rx_pin);
+    uartEnd(_uart, _tx_pin, _rx_pin);
     _uart = 0;
 }
 
@@ -101,7 +136,7 @@ void HardwareSerial::setDebugOutput(bool en)
         uartSetDebug(_uart);
     } else {
         if(uartGetDebug() == _uart_nr) {
-            uartSetDebug(0);
+            uartSetDebug(NULL);
         }
     }
 }
@@ -178,4 +213,9 @@ uint32_t  HardwareSerial::baudRate()
 HardwareSerial::operator bool() const
 {
     return true;
+}
+
+void HardwareSerial::setRxInvert(bool invert)
+{
+    uartSetRxInvert(_uart, invert);
 }

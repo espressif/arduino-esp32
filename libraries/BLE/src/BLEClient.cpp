@@ -5,11 +5,12 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include <esp_gap_ble_api.h>
 #include <esp_gattc_api.h>
+#include <esp_gatt_common_api.h>// ESP32 BLE
 #include "BLEClient.h"
 #include "BLEUtils.h"
 #include "BLEService.h"
@@ -60,6 +61,7 @@ BLEClient::~BLEClient() {
 	   delete myPair.second;
 	}
 	m_servicesMap.clear();
+	m_servicesMapByInstID.clear();
 } // ~BLEClient
 
 
@@ -105,10 +107,21 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
-	m_semaphoreRegEvt.wait("connect");
+	uint32_t rc = m_semaphoreRegEvt.wait("connect");
+
+	if (rc != ESP_GATT_OK) {
+		// fixes ESP_GATT_NO_RESOURCES error mostly
+		log_e("esp_ble_gattc_app_register_error: rc=%d", rc);
+		BLEDevice::removePeerDevice(m_appId, true);
+		// not sure if this is needed here
+		// esp_ble_gattc_app_unregister(m_gattc_if);
+		// m_gattc_if = ESP_GATT_IF_NONE;
+		return false;
+	}
 
 	m_peerAddress = address;
 
@@ -122,10 +135,17 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
 	);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+		BLEDevice::removePeerDevice(m_appId, true);
 		return false;
 	}
 
-	uint32_t rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
+	rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
+	// check the status of the connection and cleanup in case of failure
+	if (rc != ESP_GATT_OK) {
+		BLEDevice::removePeerDevice(m_appId, true);
+		esp_ble_gattc_app_unregister(m_gattc_if);
+		m_gattc_if = ESP_GATT_IF_NONE;
+	}
 	log_v("<< connect(), rc=%d", rc==ESP_GATT_OK);
 	return rc == ESP_GATT_OK;
 } // connect
@@ -157,6 +177,11 @@ void BLEClient::gattClientEventHandler(
 	log_d("gattClientEventHandler [esp_gatt_if: %d] ... %s",
 		gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
 
+	// it is possible to receive events from other connections while waiting for registration
+	if (m_gattc_if == ESP_GATT_IF_NONE && event != ESP_GATTC_REG_EVT) {
+		return;
+	}
+
 	// Execute handler code based on the type of event received.
 	switch(event) {
 
@@ -178,17 +203,20 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		// - esp_bd_addr_t     remote_bda
 		case ESP_GATTC_DISCONNECT_EVT: {
+				if (evtParam->disconnect.conn_id != getConnId()) break;
 				// If we receive a disconnect event, set the class flag that indicates that we are
 				// no longer connected.
+				bool m_wasConnected = m_isConnected;
 				m_isConnected = false;
-				if (m_pClientCallbacks != nullptr) {
-					m_pClientCallbacks->onDisconnect(this);
-				}
 				esp_ble_gattc_app_unregister(m_gattc_if);
+				m_gattc_if = ESP_GATT_IF_NONE;
 				m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
 				m_semaphoreRssiCmplEvt.give();
 				m_semaphoreSearchCmplEvt.give(1);
 				BLEDevice::removePeerDevice(m_appId, true);
+				if (m_wasConnected && m_pClientCallbacks != nullptr) {
+					m_pClientCallbacks->onDisconnect(this);
+				}
 				break;
 		} // ESP_GATTC_DISCONNECT_EVT
 
@@ -202,11 +230,13 @@ void BLEClient::gattClientEventHandler(
 		//
 		case ESP_GATTC_OPEN_EVT: {
 			m_conn_id = evtParam->open.conn_id;
-			if (m_pClientCallbacks != nullptr) {
-				m_pClientCallbacks->onConnect(this);
-			}
 			if (evtParam->open.status == ESP_GATT_OK) {
 				m_isConnected = true;   // Flag us as connected.
+				if (m_pClientCallbacks != nullptr) {
+					m_pClientCallbacks->onConnect(this);
+				}
+			} else {
+				log_e("Failed to connect, status=%s", GeneralUtils::errorToString(evtParam->open.status));
 			}
 			m_semaphoreOpenEvt.give(evtParam->open.status);
 			break;
@@ -222,11 +252,13 @@ void BLEClient::gattClientEventHandler(
 		//
 		case ESP_GATTC_REG_EVT: {
 			m_gattc_if = gattc_if;
-			m_semaphoreRegEvt.give();
+			// pass on the registration status result, in case of failure
+			m_semaphoreRegEvt.give(evtParam->reg.status);
 			break;
 		} // ESP_GATTC_REG_EVT
 
 		case ESP_GATTC_CFG_MTU_EVT:
+			if (evtParam->cfg_mtu.conn_id != getConnId()) break;
 			if(evtParam->cfg_mtu.status != ESP_GATT_OK) {
 				log_e("Config mtu failed");
 			}
@@ -234,7 +266,8 @@ void BLEClient::gattClientEventHandler(
 			break;
 
 		case ESP_GATTC_CONNECT_EVT: {
-			BLEDevice::updatePeerDevice(this, true, m_gattc_if);
+			if (evtParam->connect.conn_id != getConnId()) break;
+			BLEDevice::updatePeerDevice(this, true, m_appId);
 			esp_err_t errRc = esp_ble_gattc_send_mtu_req(gattc_if, evtParam->connect.conn_id);
 			if (errRc != ESP_OK) {
 				log_e("esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -255,6 +288,7 @@ void BLEClient::gattClientEventHandler(
 		// - uint16_t          conn_id
 		//
 		case ESP_GATTC_SEARCH_CMPL_EVT: {
+			if (evtParam->search_cmpl.conn_id != getConnId()) break;
 			esp_ble_gattc_cb_param_t* p_data = (esp_ble_gattc_cb_param_t*)evtParam;
 			if (p_data->search_cmpl.status != ESP_GATT_OK){
 				log_e("search service failed, error status = %x", p_data->search_cmpl.status);
@@ -285,6 +319,7 @@ void BLEClient::gattClientEventHandler(
 		// - esp_gatt_id_t srvc_id
 		//
 		case ESP_GATTC_SEARCH_RES_EVT: {
+			if (evtParam->search_res.conn_id != getConnId()) break;
 			BLEUUID uuid = BLEUUID(evtParam->search_res.srvc_id);
 			BLERemoteService* pRemoteService = new BLERemoteService(
 				evtParam->search_res.srvc_id,
@@ -511,6 +546,39 @@ uint16_t BLEClient::getMTU() {
 	return m_mtu;
 }
 
+
+/**
+	@brief Set the local and remote MTU size.
+ 				Should be called once after client connects if MTU size needs to be changed.
+	@return bool indicating if MTU was successfully set locally and on remote.
+*/
+bool BLEClient::setMTU(uint16_t mtu)
+{
+	esp_err_t err = esp_ble_gatt_set_local_mtu(mtu);  //First must set local MTU value.
+	if (err == ESP_OK) 
+	{
+		err = esp_ble_gattc_send_mtu_req(m_gattc_if,m_conn_id);  //Once local is set successfully set remote size
+		if (err!=ESP_OK)
+		{
+			log_e("Error setting send MTU request MTU: %d err=%d", mtu,err);
+			return false;
+		}
+	}
+	else 
+	{
+		log_e("can't set local mtu value: %d", mtu);
+		return false;
+	}
+	log_v("<< setLocalMTU");
+
+	m_mtu = mtu; //successfully changed
+
+	return true;
+}
+
+
+
+
 /**
  * @brief Return a string representation of this client.
  * @return A string representation of this client.
@@ -526,4 +594,4 @@ std::string BLEClient::toString() {
 } // toString
 
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED

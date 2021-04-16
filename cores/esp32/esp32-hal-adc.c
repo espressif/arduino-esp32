@@ -15,24 +15,56 @@
 #include "esp32-hal-adc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "rom/ets_sys.h"
 #include "esp_attr.h"
-#include "esp_intr.h"
-#include "soc/rtc_io_reg.h"
 #include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
-
 #include "driver/adc.h"
-#include "esp_adc_cal.h"
 
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp_adc_cal.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
+#include "esp32/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
 #define DEFAULT_VREF    1100
 static esp_adc_cal_characteristics_t *__analogCharacteristics[2] = {NULL, NULL};
+static uint16_t __analogVRef = 0;
+static uint8_t __analogVRefPin = 0;
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/ets_sys.h"
+#include "esp_intr.h"
+#endif
+
 static uint8_t __analogAttenuation = 3;//11db
 static uint8_t __analogWidth = 3;//12 bits
 static uint8_t __analogClockDiv = 1;
-static uint16_t __analogVRef = 0;
-static uint8_t __analogVRefPin = 0;
 
+void __analogSetClockDiv(uint8_t clockDiv){
+    if(!clockDiv){
+        clockDiv = 1;
+    }
+    __analogClockDiv = clockDiv;
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    adc_set_clk_div(__analogClockDiv);
+#endif
+}
+
+void __analogSetAttenuation(adc_attenuation_t attenuation)
+{
+    __analogAttenuation = attenuation & 3;
+}
+
+#if CONFIG_IDF_TARGET_ESP32
 void __analogSetWidth(uint8_t bits){
     if(bits < 9){
         bits = 9;
@@ -42,19 +74,7 @@ void __analogSetWidth(uint8_t bits){
     __analogWidth = bits - 9;
     adc1_config_width(__analogWidth);
 }
-
-void __analogSetClockDiv(uint8_t clockDiv){
-    if(!clockDiv){
-        clockDiv = 1;
-    }
-    __analogClockDiv = clockDiv;
-    adc_set_clk_div(__analogClockDiv);
-}
-
-void __analogSetAttenuation(adc_attenuation_t attenuation)
-{
-    __analogAttenuation = attenuation & 3;
-}
+#endif
 
 void __analogInit(){
     static bool initialized = false;
@@ -63,7 +83,9 @@ void __analogInit(){
     }
     initialized = true;
     __analogSetClockDiv(__analogClockDiv);
+#if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(__analogWidth + 9);//in bits
+#endif
 }
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
@@ -88,6 +110,7 @@ bool __adcAttachPin(uint8_t pin){
     }
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
+#if CONFIG_IDF_TARGET_ESP32
         uint32_t touch = READ_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG);
         if(touch & (1 << pad)){
             touch &= ~((1 << (pad + SENS_TOUCH_PAD_OUTEN2_S))
@@ -95,11 +118,15 @@ bool __adcAttachPin(uint8_t pin){
                     | (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)));
             WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, touch);
         }
-    } else if(pin == 25){
+#endif
+    }
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    else if(pin == 25){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
     } else if(pin == 26){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);//stop dac2
     }
+#endif
 
     pinMode(pin, ANALOG);
     __analogSetPinAttenuation(pin, __analogAttenuation);
@@ -111,7 +138,9 @@ void __analogReadResolution(uint8_t bits)
     if(!bits || bits > 16){
         return;
     }
+#if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(bits);         // hadware from 9 to 12
+#endif
 }
 
 uint16_t __analogRead(uint8_t pin)
@@ -142,19 +171,13 @@ uint16_t __analogRead(uint8_t pin)
     return value;
 }
 
-void __analogSetVRefPin(uint8_t pin){
-    if(pin <25 || pin > 27){
-        pin = 0;
-    }
-    __analogVRefPin = pin;
-}
-
 uint32_t __analogReadMilliVolts(uint8_t pin){
     int8_t channel = digitalPinToAnalogChannel(pin);
     if(channel < 0){
         log_e("Pin %u is not ADC pin!", pin);
         return 0;
     }
+#if CONFIG_IDF_TARGET_ESP32
     if(!__analogVRef){
         if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
             log_d("eFuse Two Point: Supported");
@@ -168,7 +191,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
             __analogVRef = DEFAULT_VREF;
             if(__analogVRefPin){
                 esp_adc_cal_characteristics_t chars;
-                if(adc2_vref_to_gpio(__analogVRefPin) == ESP_OK){
+                if(adc_vref_to_gpio(ADC_UNIT_2, __analogVRefPin) == ESP_OK){
                     __analogVRef = __analogRead(__analogVRefPin);
                     esp_adc_cal_characterize(1, __analogAttenuation, __analogWidth, DEFAULT_VREF, &chars);
                     __analogVRef = esp_adc_cal_raw_to_voltage(__analogVRef, &chars);
@@ -199,6 +222,27 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         }
     }
     return esp_adc_cal_raw_to_voltage(adc_reading, __analogCharacteristics[unit - 1]);
+#else
+    uint16_t adc_reading = __analogRead(pin);
+    uint16_t max_reading = 8191;
+    uint16_t max_mv = 1100;
+    switch(__analogAttenuation){
+        case 3: max_mv = 3900; break;
+        case 2: max_mv = 2200; break;
+        case 1: max_mv = 1500; break;
+        default: break;
+    }
+    return (adc_reading * max_mv) / max_reading;
+#endif
+}
+
+#if CONFIG_IDF_TARGET_ESP32
+
+void __analogSetVRefPin(uint8_t pin){
+    if(pin <25 || pin > 27){
+        pin = 0;
+    }
+    __analogVRefPin = pin;
 }
 
 int __hallRead()    //hall sensor without LNA
@@ -224,16 +268,20 @@ int __hallRead()    //hall sensor without LNA
     CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_HALL_PHASE_FORCE);
     return (Sens_Vp1 - Sens_Vp0) - (Sens_Vn1 - Sens_Vn0);
 }
+#endif
 
 extern uint16_t analogRead(uint8_t pin) __attribute__ ((weak, alias("__analogRead")));
+extern uint32_t analogReadMilliVolts(uint8_t pin) __attribute__ ((weak, alias("__analogReadMilliVolts")));
 extern void analogReadResolution(uint8_t bits) __attribute__ ((weak, alias("__analogReadResolution")));
-extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSetWidth")));
 extern void analogSetClockDiv(uint8_t clockDiv) __attribute__ ((weak, alias("__analogSetClockDiv")));
 extern void analogSetAttenuation(adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetAttenuation")));
 extern void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation) __attribute__ ((weak, alias("__analogSetPinAttenuation")));
-extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
 
 extern bool adcAttachPin(uint8_t pin) __attribute__ ((weak, alias("__adcAttachPin")));
 
+#if CONFIG_IDF_TARGET_ESP32
 extern void analogSetVRefPin(uint8_t pin) __attribute__ ((weak, alias("__analogSetVRefPin")));
-extern uint32_t analogReadMilliVolts(uint8_t pin) __attribute__ ((weak, alias("__analogReadMilliVolts")));
+extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSetWidth")));
+extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
+#endif
+

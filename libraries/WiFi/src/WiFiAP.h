@@ -58,6 +58,8 @@ public:
     uint8_t* softAPmacAddress(uint8_t* mac);
     String softAPmacAddress(void);
 
+    String softAPSSID(void) const;
+
 protected:
 
 };

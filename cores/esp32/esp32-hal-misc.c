@@ -31,18 +31,47 @@
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/apb_ctrl_reg.h"
-#include "rom/rtc.h"
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/rtc.h"
+#include "driver/temp_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/rtc.h"
+#include "driver/temp_sensor.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/rtc.h"
+#endif
+
 //Undocumented!!! Get chip temperature in Farenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
+#ifdef CONFIG_IDF_TARGET_ESP32
 uint8_t temprature_sens_read();
 
 float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;
 }
+#else
+float temperatureRead()
+{
+    float result = NAN;
+    temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
+    temp_sensor_set_config(tsens);
+    temp_sensor_start();
+    temp_sensor_read_celsius(&result); 
+    temp_sensor_stop();
+    return result;
+}
+#endif
 
 void __yield()
 {
@@ -131,12 +160,12 @@ BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
 #endif
 }
 
-unsigned long IRAM_ATTR micros()
+unsigned long ARDUINO_ISR_ATTR micros()
 {
     return (unsigned long) (esp_timer_get_time());
 }
 
-unsigned long IRAM_ATTR millis()
+unsigned long ARDUINO_ISR_ATTR millis()
 {
     return (unsigned long) (esp_timer_get_time() / 1000ULL);
 }
@@ -146,17 +175,17 @@ void delay(uint32_t ms)
     vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
-void IRAM_ATTR delayMicroseconds(uint32_t us)
+void ARDUINO_ISR_ATTR delayMicroseconds(uint32_t us)
 {
-    uint32_t m = micros();
+    uint64_t m = (uint64_t)esp_timer_get_time();
     if(us){
-        uint32_t e = (m + us);
+        uint64_t e = (m + us);
         if(m > e){ //overflow
-            while(micros() > e){
+            while((uint64_t)esp_timer_get_time() > e){
                 NOP();
             }
         }
-        while(micros() < e){
+        while((uint64_t)esp_timer_get_time() < e){
             NOP();
         }
     }
@@ -198,7 +227,7 @@ void initArduino()
 #ifdef F_CPU
     setCpuFrequencyMhz(F_CPU/1000000);
 #endif
-#if CONFIG_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
     psramInit();
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
@@ -227,7 +256,7 @@ void initArduino()
 }
 
 //used by hal log
-const char * IRAM_ATTR pathToFileName(const char * path)
+const char * ARDUINO_ISR_ATTR pathToFileName(const char * path)
 {
     size_t i = 0;
     size_t pos = 0;

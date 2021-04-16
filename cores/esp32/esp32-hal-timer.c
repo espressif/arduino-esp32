@@ -14,13 +14,35 @@
 
 #include "esp32-hal-timer.h"
 #include "freertos/FreeRTOS.h"
+#ifndef CONFIG_IDF_TARGET_ESP32C3
 #include "freertos/xtensa_api.h"
-#include "freertos/task.h"
-#include "rom/ets_sys.h"
-#include "soc/timer_group_struct.h"
 #include "soc/dport_reg.h"
+#endif
+#include "freertos/task.h"
+#include "soc/timer_group_struct.h"
 #include "esp_attr.h"
+#include "driver/periph_ctrl.h"
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/ets_sys.h"
 #include "esp_intr.h"
+#endif
 
 #define HWTIMER_LOCK()      portENTER_CRITICAL(timer->lock)
 #define HWTIMER_UNLOCK()    portEXIT_CRITICAL(timer->lock)
@@ -67,11 +89,18 @@ static hw_timer_t hw_timer[4] = {
 typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
-void IRAM_ATTR __timerISR(void * arg){
+void ARDUINO_ISR_ATTR __timerISR(void * arg){
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t s0 = TIMERG0.int_st_timers.val;
     uint32_t s1 = TIMERG1.int_st_timers.val;
     TIMERG0.int_clr_timers.val = s0;
     TIMERG1.int_clr_timers.val = s1;
+#else
+    uint32_t s0 = TIMERG0.int_st.val;
+    uint32_t s1 = TIMERG1.int_st.val;
+    TIMERG0.int_clr.val = s0;
+    TIMERG1.int_clr.val = s1;
+#endif
     uint8_t status = (s1 & 3) << 2 | (s0 & 3);
     uint8_t i = 4;
     //restart the timers that should autoreload
@@ -203,15 +232,29 @@ hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     }
     hw_timer_t * timer = &hw_timer[num];
     if(timer->group) {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP1_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP1_RST);
-        TIMERG1.int_ena.val &= ~BIT(timer->timer);
+    	periph_module_enable(PERIPH_TIMG1_MODULE);
     } else {
-        DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_TIMERGROUP_CLK_EN);
-        DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_TIMERGROUP_RST);
-        TIMERG0.int_ena.val &= ~BIT(timer->timer);
+    	periph_module_enable(PERIPH_TIMG0_MODULE);
     }
     timer->dev->config.enable = 0;
+    if(timer->group) {
+        TIMERG1.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG1.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG1.int_clr.val = BIT(timer->timer);
+#endif
+    } else {
+        TIMERG0.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG0.int_clr.val = BIT(timer->timer);
+#endif
+    }
+#ifdef TIMER_GROUP_SUPPORTS_XTAL_CLOCK
+    timer->dev->config.use_xtal = 0;
+#endif
     timerSetDivider(timer, divider);
     timerSetCountUp(timer, countUp);
     timerSetAutoReload(timer, false);
@@ -240,8 +283,18 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         timer->dev->config.alarm_en = 0;
         if(timer->num & 2){
             TIMERG1.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG1.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG1.int_clr.val = BIT(timer->timer);
+#endif
         } else {
             TIMERG0.int_ena.val &= ~BIT(timer->timer);
+#if CONFIG_IDF_TARGET_ESP32
+            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+#else
+            TIMERG0.int_clr.val = BIT(timer->timer);
+#endif
         }
         __timerInterruptHandlers[timer->num] = NULL;
     } else {
@@ -249,12 +302,15 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         timer->dev->config.level_int_en = edge?0:1;//When set, an alarm will generate a level type interrupt.
         timer->dev->config.edge_int_en = edge?1:0;//When set, an alarm will generate an edge type interrupt.
         int intr_source = 0;
+#ifndef CONFIG_IDF_TARGET_ESP32C3
         if(!edge){
+#endif
             if(timer->group){
                 intr_source = ETS_TG1_T0_LEVEL_INTR_SOURCE + timer->timer;
             } else {
                 intr_source = ETS_TG0_T0_LEVEL_INTR_SOURCE + timer->timer;
             }
+#ifndef CONFIG_IDF_TARGET_ESP32C3
         } else {
             if(timer->group){
                 intr_source = ETS_TG1_T0_EDGE_INTR_SOURCE + timer->timer;
@@ -262,9 +318,10 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
                 intr_source = ETS_TG0_T0_EDGE_INTR_SOURCE + timer->timer;
             }
         }
+#endif
         if(!initialized){
             initialized = true;
-            esp_intr_alloc(intr_source, (int)(ESP_INTR_FLAG_IRAM|ESP_INTR_FLAG_LOWMED|ESP_INTR_FLAG_EDGE), __timerISR, NULL, &intr_handle);
+            esp_intr_alloc(intr_source, (int)(ARDUINO_ISR_FLAG|ESP_INTR_FLAG_LOWMED), __timerISR, NULL, &intr_handle);
         } else {
             intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
         }

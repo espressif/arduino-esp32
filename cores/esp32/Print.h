@@ -36,6 +36,7 @@ class Print
 private:
     int write_error;
     size_t printNumber(unsigned long, uint8_t);
+    size_t printNumber(unsigned long long, uint8_t);
     size_t printFloat(double, uint8_t);
 protected:
     void setWriteError(int err = 1)
@@ -72,6 +73,11 @@ public:
     }
 
     size_t printf(const char * format, ...)  __attribute__ ((format (printf, 2, 3)));
+
+    // add availableForWrite to make compatible with Arduino Print.h
+    // default to zero, meaning "a single write may block"
+    // should be overriden by subclasses with buffering
+    virtual int availableForWrite() { return 0; }
     size_t print(const __FlashStringHelper *);
     size_t print(const String &);
     size_t print(const char[]);
@@ -81,6 +87,8 @@ public:
     size_t print(unsigned int, int = DEC);
     size_t print(long, int = DEC);
     size_t print(unsigned long, int = DEC);
+    size_t print(long long, int = DEC);
+    size_t print(unsigned long long, int = DEC);
     size_t print(double, int = 2);
     size_t print(const Printable&);
     size_t print(struct tm * timeinfo, const char * format = NULL);
@@ -94,6 +102,8 @@ public:
     size_t println(unsigned int, int = DEC);
     size_t println(long, int = DEC);
     size_t println(unsigned long, int = DEC);
+    size_t println(long long, int = DEC);
+    size_t println(unsigned long long, int = DEC);
     size_t println(double, int = 2);
     size_t println(const Printable&);
     size_t println(struct tm * timeinfo, const char * format = NULL);

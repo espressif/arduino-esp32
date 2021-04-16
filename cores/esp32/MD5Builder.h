@@ -21,7 +21,21 @@
 
 #include <WString.h>
 #include <Stream.h>
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/md5_hash.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/md5_hash.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/md5_hash.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
 #include "rom/md5_hash.h"
+#endif
 
 class MD5Builder
 {

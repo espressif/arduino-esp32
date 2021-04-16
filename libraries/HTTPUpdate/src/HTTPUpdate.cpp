@@ -35,11 +35,13 @@
 HTTPUpdate::HTTPUpdate(void)
         : _httpClientTimeout(8000), _ledPin(-1)
 {
+    _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
 }
 
 HTTPUpdate::HTTPUpdate(int httpClientTimeout)
         : _httpClientTimeout(httpClientTimeout), _ledPin(-1)
 {
+    _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
 }
 
 HTTPUpdate::~HTTPUpdate(void)
@@ -56,6 +58,11 @@ HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const
     return handleUpdate(http, currentVersion, false);
 }
 
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion)
+{
+    return handleUpdate(httpClient, currentVersion, true);
+}
+
 HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion)
 {
     HTTPClient http;
@@ -64,6 +71,12 @@ HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url,
         return HTTP_UPDATE_FAILED;
     }
     return handleUpdate(http, currentVersion, true);
+}
+
+HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
+        const String& currentVersion)
+{
+    return handleUpdate(httpClient, currentVersion, false);
 }
 
 HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
@@ -175,6 +188,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     // use HTTP/1.0 for update since the update handler not support any transfer Encoding
     http.useHTTP10(true);
     http.setTimeout(_httpClientTimeout);
+    http.setFollowRedirects(_followRedirects);
     http.setUserAgent("ESP32-http-Update");
     http.addHeader("Cache-Control", "no-cache");
     http.addHeader("x-ESP32-STA-MAC", WiFi.macAddress());

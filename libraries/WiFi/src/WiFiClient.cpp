@@ -46,7 +46,11 @@ private:
                 return 0;
             }
             int count;
+#ifdef ESP_IDF_VERSION_MAJOR
+            int res = lwip_ioctl(_fd, FIONREAD, &count);
+#else
             int res = lwip_ioctl_r(_fd, FIONREAD, &count);
+#endif
             if(res < 0) {
                 _failed = true;
                 return 0;
@@ -105,7 +109,7 @@ public:
 
     int read(uint8_t * dst, size_t len){
         if(!dst || !len || (_pos == _fill && !fillBuffer())){
-            return -1;
+            return _failed ? -1 : 0;
         }
         size_t a = _fill - _pos;
         if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
@@ -216,9 +220,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 
     uint32_t ip_addr = ip;
     struct sockaddr_in serveraddr;
-    bzero((char *) &serveraddr, sizeof(serveraddr));
+    memset((char *) &serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    bcopy((const void *)(&ip_addr), (void *)&serveraddr.sin_addr.s_addr, 4);
+    memcpy((void *)&serveraddr.sin_addr.s_addr, (const void *)(&ip_addr), 4);
     serveraddr.sin_port = htons(port);
     fd_set fdset;
     struct timeval tv;
@@ -227,7 +231,11 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     tv.tv_sec = 0;
     tv.tv_usec = timeout * 1000;
 
+#ifdef ESP_IDF_VERSION_MAJOR
+    int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#else
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#endif
     if (res < 0 && errno != EINPROGRESS) {
         log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
@@ -313,7 +321,7 @@ int WiFiClient::setOption(int option, int *value)
 
 int WiFiClient::getOption(int option, int *value)
 {
-    size_t size = sizeof(int);
+	socklen_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
@@ -345,6 +353,9 @@ int WiFiClient::read()
     int res = read(&data, 1);
     if(res < 0) {
         return res;
+    }
+    if (res == 0) {  //  No data available.
+        return -1;
     }
     return data;
 }

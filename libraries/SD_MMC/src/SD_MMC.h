@@ -14,6 +14,9 @@
 #ifndef _SDMMC_H_
 #define _SDMMC_H_
 
+#include "sdkconfig.h"
+#ifndef CONFIG_IDF_TARGET_ESP32S2
+
 #include "FS.h"
 #include "driver/sdmmc_types.h"
 #include "sd_defines.h"
@@ -28,7 +31,7 @@ protected:
 
 public:
     SDMMCFS(FSImplPtr impl);
-    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false);
+    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false);
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
@@ -40,4 +43,5 @@ public:
 
 extern fs::SDMMCFS SD_MMC;
 
+#endif /* CONFIG_IDF_TARGET_ESP32S2 */
 #endif /* _SDMMC_H_ */

@@ -8,7 +8,7 @@
 #include "BLERemoteCharacteristic.h"
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_gattc_api.h>
 #include <esp_err.h>
@@ -52,6 +52,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(
  */
 BLERemoteCharacteristic::~BLERemoteCharacteristic() {
 	removeDescriptors();   // Release resources for any descriptor information we may have allocated.
+	free(m_rawData);
 } // ~BLERemoteCharacteristic
 
 
@@ -237,7 +238,18 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 			break;
 		} // ESP_GATTC_WRITE_CHAR_EVT
 
+		case ESP_GATTC_READ_DESCR_EVT:
+		case ESP_GATTC_WRITE_DESCR_EVT:
+			for (auto &myPair : m_descriptorMap) {
+				myPair.second->gattClientEventHandler(
+					event, gattc_if, evtParam);
+			}
+			break;
 
+		case ESP_GATTC_DISCONNECT_EVT:
+			m_semaphoreWriteCharEvt.give(1);
+			break;
+			
 		default:
 			break;
 	} // End switch
@@ -446,7 +458,7 @@ std::string BLERemoteCharacteristic::readValue() {
  * unregistering a notification.
  * @return N/A.
  */
-void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications) {
+void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications, bool descriptorRequiresRegistration) {
 	log_v(">> registerForNotify(): %s", toString().c_str());
 
 	m_notifyCallback = notifyCallback;   // Save the notification callback.
@@ -467,7 +479,8 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 		uint8_t val[] = {0x01, 0x00};
 		if(!notifications) val[0] = 0x02;
 		BLERemoteDescriptor* desc = getDescriptor(BLEUUID((uint16_t)0x2902));
-		desc->writeValue(val, 2);
+		if (desc != nullptr && descriptorRequiresRegistration)
+			desc->writeValue(val, 2, true);
 	} // End Register
 	else {   // If we weren't passed a callback function, then this is an unregistration.
 		esp_err_t errRc = ::esp_ble_gattc_unregister_for_notify(
@@ -482,7 +495,8 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 
 		uint8_t val[] = {0x00, 0x00};
 		BLERemoteDescriptor* desc = getDescriptor((uint16_t)0x2902);
-		desc->writeValue(val, 2);
+		if (desc != nullptr && descriptorRequiresRegistration)
+			desc->writeValue(val, 2, true);
 	} // End Unregister
 
 	m_semaphoreRegForNotifyEvt.wait("registerForNotify");
@@ -533,7 +547,7 @@ std::string BLERemoteCharacteristic::toString() {
  * @return N/A.
  */
 void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+	writeValue((uint8_t*)newValue.data(), newValue.length(), response);
 } // writeValue
 
 
@@ -604,4 +618,4 @@ void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
     m_auth = auth;
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

@@ -19,18 +19,32 @@
 
 #include "Arduino.h"
 #include "Esp.h"
-#include "rom/spi_flash.h"
 #include "esp_sleep.h"
 #include "esp_spi_flash.h"
 #include <memory>
 #include <soc/soc.h>
-#include <soc/efuse_reg.h>
 #include <esp_partition.h>
 extern "C" {
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 }
 #include <MD5Builder.h>
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/spi_flash.h"
+#include "soc/efuse_reg.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/spi_flash.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/spi_flash.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/spi_flash.h"
+#endif
 
 /**
  * User-defined Literals
@@ -121,24 +135,36 @@ uint32_t EspClass::getMaxAllocHeap(void)
 
 uint32_t EspClass::getPsramSize(void)
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
-    return info.total_free_bytes + info.total_allocated_bytes;
+	if(psramFound()){
+	    multi_heap_info_t info;
+	    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+	    return info.total_free_bytes + info.total_allocated_bytes;
+	}
+	return 0;
 }
 
 uint32_t EspClass::getFreePsram(void)
 {
-    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMinFreePsram(void)
 {
-    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMaxAllocPsram(void)
 {
-    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 static uint32_t sketchSize(sketchSize_t response) {
@@ -216,6 +242,43 @@ uint8_t EspClass::getChipRevision(void)
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
     return chip_info.revision;
+}
+
+const char * EspClass::getChipModel(void)
+{
+#if CONFIG_IDF_TARGET_ESP32
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_ver = chip_ver & 0x7;
+    switch (pkg_ver) {
+        case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
+            return "ESP32-D0WDQ6";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5 :
+            return "ESP32-D0WDQ5";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 :
+            return "ESP32-D2WDQ5";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2 :
+            return "ESP32-PICO-D2";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4 :
+            return "ESP32-PICO-D4";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302 :
+            return "ESP32-PICO-V3-02";
+        default:
+            return "Unknown";
+    }
+#elif CONFIG_IDF_TARGET_ESP32S2
+    return "ESP32-S2";
+#elif CONFIG_IDF_TARGET_ESP32S3
+    return "ESP32-S3";
+#elif CONFIG_IDF_TARGET_ESP32C3
+    return "ESP32-C3";
+#endif
+}
+
+uint8_t EspClass::getChipCores(void)
+{
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    return chip_info.cores;
 }
 
 const char * EspClass::getSdkVersion(void)
@@ -309,6 +372,20 @@ bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
     return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
 }
 
+bool EspClass::partitionEraseRange(const esp_partition_t *partition, uint32_t offset, size_t size) 
+{
+    return esp_partition_erase_range(partition, offset, size) == ESP_OK;
+}
+
+bool EspClass::partitionWrite(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size) 
+{
+    return esp_partition_write(partition, offset, data, size) == ESP_OK;
+}
+
+bool EspClass::partitionRead(const esp_partition_t *partition, uint32_t offset, uint32_t *data, size_t size) 
+{
+    return esp_partition_read(partition, offset, data, size) == ESP_OK;
+}
 
 uint64_t EspClass::getEfuseMac(void)
 {
