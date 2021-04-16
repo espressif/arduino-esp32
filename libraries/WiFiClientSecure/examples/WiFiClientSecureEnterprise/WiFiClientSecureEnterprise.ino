@@ -72,8 +72,8 @@ void setup() {
     }
   }
   client.setCACert(test_root_ca);
-  //client.setCertificate(test_client_key); // for client verification - certificate
-  //client.setPrivateKey(test_client_cert);  // for client verification - private key
+  //client.setCertificate(test_client_cert); // for client verification - certificate
+  //client.setPrivateKey(test_client_key);  // for client verification - private key
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address set: ");
