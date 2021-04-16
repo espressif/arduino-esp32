@@ -47,8 +47,8 @@ std::string BTAdvertisedDeviceSet::toString() {
 		res += val;
 	}
 	if (haveRSSI()) {
-		char val[4];
-		snprintf(val, sizeof(val), "%d", getRSSI());
+		char val[6];
+		snprintf(val, sizeof(val), "%d", (int8_t)getRSSI());
 		res += ", rssi: ";
 		res += val;
 	}
