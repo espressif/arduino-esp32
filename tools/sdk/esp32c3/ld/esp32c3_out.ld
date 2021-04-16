@@ -40,7 +40,7 @@ MEMORY
   /**
    * RTC fast memory (executable). Persists over deep sleep.
    */
-  rtc_iram_seg(RWX) : org = 0x50000000, len = 0x2000
+  rtc_iram_seg(RWX) : org = 0x50000000, len = 0x2000 - 0
 }
 _static_data_end = _bss_end;
 /* Heap ends at top of dram0_0_seg */
