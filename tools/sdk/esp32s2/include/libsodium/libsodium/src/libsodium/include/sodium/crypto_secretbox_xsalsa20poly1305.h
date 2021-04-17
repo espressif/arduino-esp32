@@ -2,6 +2,7 @@
 #define crypto_secretbox_xsalsa20poly1305_H
 
 #include <stddef.h>
+#include "crypto_stream_xsalsa20.h"
 #include "export.h"
 
 #ifdef __cplusplus
@@ -23,6 +24,34 @@ size_t crypto_secretbox_xsalsa20poly1305_noncebytes(void);
 SODIUM_EXPORT
 size_t crypto_secretbox_xsalsa20poly1305_macbytes(void);
 
+/* Only for the libsodium API - The NaCl compatibility API would require BOXZEROBYTES extra bytes */
+#define crypto_secretbox_xsalsa20poly1305_MESSAGEBYTES_MAX \
+    (crypto_stream_xsalsa20_MESSAGEBYTES_MAX - crypto_secretbox_xsalsa20poly1305_MACBYTES)
+SODIUM_EXPORT
+size_t crypto_secretbox_xsalsa20poly1305_messagebytes_max(void);
+
+SODIUM_EXPORT
+int crypto_secretbox_xsalsa20poly1305(unsigned char *c,
+                                      const unsigned char *m,
+                                      unsigned long long mlen,
+                                      const unsigned char *n,
+                                      const unsigned char *k)
+            __attribute__ ((nonnull(1, 4, 5)));
+
+SODIUM_EXPORT
+int crypto_secretbox_xsalsa20poly1305_open(unsigned char *m,
+                                           const unsigned char *c,
+                                           unsigned long long clen,
+                                           const unsigned char *n,
+                                           const unsigned char *k)
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(2, 4, 5)));
+
+SODIUM_EXPORT
+void crypto_secretbox_xsalsa20poly1305_keygen(unsigned char k[crypto_secretbox_xsalsa20poly1305_KEYBYTES])
+            __attribute__ ((nonnull));
+
+/* -- NaCl compatibility interface ; Requires padding -- */
+
 #define crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES 16U
 SODIUM_EXPORT
 size_t crypto_secretbox_xsalsa20poly1305_boxzerobytes(void);
@@ -32,24 +61,6 @@ size_t crypto_secretbox_xsalsa20poly1305_boxzerobytes(void);
      crypto_secretbox_xsalsa20poly1305_MACBYTES)
 SODIUM_EXPORT
 size_t crypto_secretbox_xsalsa20poly1305_zerobytes(void);
-
-SODIUM_EXPORT
-int crypto_secretbox_xsalsa20poly1305(unsigned char *c,
-                                      const unsigned char *m,
-                                      unsigned long long mlen,
-                                      const unsigned char *n,
-                                      const unsigned char *k);
-
-SODIUM_EXPORT
-int crypto_secretbox_xsalsa20poly1305_open(unsigned char *m,
-                                           const unsigned char *c,
-                                           unsigned long long clen,
-                                           const unsigned char *n,
-                                           const unsigned char *k)
-            __attribute__ ((warn_unused_result));
-
-SODIUM_EXPORT
-void crypto_secretbox_xsalsa20poly1305_keygen(unsigned char k[crypto_secretbox_xsalsa20poly1305_KEYBYTES]);
 
 #ifdef __cplusplus
 }

@@ -26,7 +26,7 @@ size_t crypto_hash_bytes(void);
 
 SODIUM_EXPORT
 int crypto_hash(unsigned char *out, const unsigned char *in,
-                unsigned long long inlen);
+                unsigned long long inlen) __attribute__ ((nonnull(1)));
 
 #define crypto_hash_PRIMITIVE "sha512"
 SODIUM_EXPORT

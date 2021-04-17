@@ -14,7 +14,7 @@ size_t crypto_verify_16_bytes(void);
 
 SODIUM_EXPORT
 int crypto_verify_16(const unsigned char *x, const unsigned char *y)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

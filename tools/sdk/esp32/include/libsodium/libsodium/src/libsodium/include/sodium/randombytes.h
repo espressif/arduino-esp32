@@ -25,16 +25,20 @@ typedef struct randombytes_implementation {
     int         (*close)(void);               /* optional */
 } randombytes_implementation;
 
+#define randombytes_BYTES_MAX SODIUM_MIN(SODIUM_SIZE_MAX, 0xffffffffUL)
+
 #define randombytes_SEEDBYTES 32U
 SODIUM_EXPORT
 size_t randombytes_seedbytes(void);
 
 SODIUM_EXPORT
-void randombytes_buf(void * const buf, const size_t size);
+void randombytes_buf(void * const buf, const size_t size)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 void randombytes_buf_deterministic(void * const buf, const size_t size,
-                                   const unsigned char seed[randombytes_SEEDBYTES]);
+                                   const unsigned char seed[randombytes_SEEDBYTES])
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 uint32_t randombytes_random(void);
@@ -49,7 +53,8 @@ SODIUM_EXPORT
 int randombytes_close(void);
 
 SODIUM_EXPORT
-int randombytes_set_implementation(randombytes_implementation *impl);
+int randombytes_set_implementation(randombytes_implementation *impl)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 const char *randombytes_implementation_name(void);
@@ -57,7 +62,8 @@ const char *randombytes_implementation_name(void);
 /* -- NaCl compatibility interface -- */
 
 SODIUM_EXPORT
-void randombytes(unsigned char * const buf, const unsigned long long buf_len);
+void randombytes(unsigned char * const buf, const unsigned long long buf_len)
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

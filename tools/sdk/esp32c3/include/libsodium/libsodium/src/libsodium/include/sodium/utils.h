@@ -21,6 +21,9 @@ extern "C" {
 SODIUM_EXPORT
 void sodium_memzero(void * const pnt, const size_t len);
 
+SODIUM_EXPORT
+void sodium_stackzero(const size_t len);
+
 /*
  * WARNING: sodium_memcmp() must be used to verify if two secret keys
  * are equal, in constant time.
@@ -39,8 +42,7 @@ int sodium_memcmp(const void * const b1_, const void * const b2_, size_t len)
  */
 SODIUM_EXPORT
 int sodium_compare(const unsigned char *b1_, const unsigned char *b2_,
-                   size_t len)
-            __attribute__ ((warn_unused_result));
+                   size_t len) __attribute__ ((warn_unused_result));
 
 SODIUM_EXPORT
 int sodium_is_zero(const unsigned char *n, const size_t nlen);
@@ -52,20 +54,56 @@ SODIUM_EXPORT
 void sodium_add(unsigned char *a, const unsigned char *b, const size_t len);
 
 SODIUM_EXPORT
+void sodium_sub(unsigned char *a, const unsigned char *b, const size_t len);
+
+SODIUM_EXPORT
 char *sodium_bin2hex(char * const hex, const size_t hex_maxlen,
-                     const unsigned char * const bin, const size_t bin_len);
+                     const unsigned char * const bin, const size_t bin_len)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int sodium_hex2bin(unsigned char * const bin, const size_t bin_maxlen,
                    const char * const hex, const size_t hex_len,
                    const char * const ignore, size_t * const bin_len,
-                   const char ** const hex_end);
+                   const char ** const hex_end)
+            __attribute__ ((nonnull(1)));
+
+#define sodium_base64_VARIANT_ORIGINAL            1
+#define sodium_base64_VARIANT_ORIGINAL_NO_PADDING 3
+#define sodium_base64_VARIANT_URLSAFE             5
+#define sodium_base64_VARIANT_URLSAFE_NO_PADDING  7
+
+/*
+ * Computes the required length to encode BIN_LEN bytes as a base64 string
+ * using the given variant. The computed length includes a trailing \0.
+ */
+#define sodium_base64_ENCODED_LEN(BIN_LEN, VARIANT) \
+    (((BIN_LEN) / 3U) * 4U + \
+    ((((BIN_LEN) - ((BIN_LEN) / 3U) * 3U) | (((BIN_LEN) - ((BIN_LEN) / 3U) * 3U) >> 1)) & 1U) * \
+     (4U - (~((((VARIANT) & 2U) >> 1) - 1U) & (3U - ((BIN_LEN) - ((BIN_LEN) / 3U) * 3U)))) + 1U)
 
 SODIUM_EXPORT
-int sodium_mlock(void * const addr, const size_t len);
+size_t sodium_base64_encoded_len(const size_t bin_len, const int variant);
 
 SODIUM_EXPORT
-int sodium_munlock(void * const addr, const size_t len);
+char *sodium_bin2base64(char * const b64, const size_t b64_maxlen,
+                        const unsigned char * const bin, const size_t bin_len,
+                        const int variant) __attribute__ ((nonnull(1)));
+
+SODIUM_EXPORT
+int sodium_base642bin(unsigned char * const bin, const size_t bin_maxlen,
+                      const char * const b64, const size_t b64_len,
+                      const char * const ignore, size_t * const bin_len,
+                      const char ** const b64_end, const int variant)
+            __attribute__ ((nonnull(1)));
+
+SODIUM_EXPORT
+int sodium_mlock(void * const addr, const size_t len)
+            __attribute__ ((nonnull));
+
+SODIUM_EXPORT
+int sodium_munlock(void * const addr, const size_t len)
+            __attribute__ ((nonnull));
 
 /* WARNING: sodium_malloc() and sodium_allocarray() are not general-purpose
  * allocation functions.
@@ -112,13 +150,23 @@ SODIUM_EXPORT
 void sodium_free(void *ptr);
 
 SODIUM_EXPORT
-int sodium_mprotect_noaccess(void *ptr);
+int sodium_mprotect_noaccess(void *ptr) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-int sodium_mprotect_readonly(void *ptr);
+int sodium_mprotect_readonly(void *ptr) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-int sodium_mprotect_readwrite(void *ptr);
+int sodium_mprotect_readwrite(void *ptr) __attribute__ ((nonnull));
+
+SODIUM_EXPORT
+int sodium_pad(size_t *padded_buflen_p, unsigned char *buf,
+               size_t unpadded_buflen, size_t blocksize, size_t max_buflen)
+            __attribute__ ((nonnull(2)));
+
+SODIUM_EXPORT
+int sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
+                 size_t padded_buflen, size_t blocksize)
+            __attribute__ ((nonnull(2)));
 
 /* -------- */
 

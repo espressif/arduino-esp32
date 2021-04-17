@@ -27,15 +27,17 @@ const char *crypto_auth_primitive(void);
 
 SODIUM_EXPORT
 int crypto_auth(unsigned char *out, const unsigned char *in,
-                unsigned long long inlen, const unsigned char *k);
+                unsigned long long inlen, const unsigned char *k)
+            __attribute__ ((nonnull(1, 4)));
 
 SODIUM_EXPORT
 int crypto_auth_verify(const unsigned char *h, const unsigned char *in,
                        unsigned long long inlen, const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(1, 4)));
 
 SODIUM_EXPORT
-void crypto_auth_keygen(unsigned char k[crypto_auth_KEYBYTES]);
+void crypto_auth_keygen(unsigned char k[crypto_auth_KEYBYTES])
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

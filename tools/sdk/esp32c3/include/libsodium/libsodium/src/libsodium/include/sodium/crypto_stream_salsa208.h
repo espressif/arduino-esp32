@@ -21,23 +21,33 @@ extern "C" {
 
 #define crypto_stream_salsa208_KEYBYTES 32U
 SODIUM_EXPORT
-size_t crypto_stream_salsa208_keybytes(void);
+size_t crypto_stream_salsa208_keybytes(void)
+            __attribute__ ((deprecated));
 
 #define crypto_stream_salsa208_NONCEBYTES 8U
 SODIUM_EXPORT
-size_t crypto_stream_salsa208_noncebytes(void);
+size_t crypto_stream_salsa208_noncebytes(void)
+            __attribute__ ((deprecated));
+
+#define crypto_stream_salsa208_MESSAGEBYTES_MAX SODIUM_SIZE_MAX
+    SODIUM_EXPORT
+size_t crypto_stream_salsa208_messagebytes_max(void)
+            __attribute__ ((deprecated));
 
 SODIUM_EXPORT
 int crypto_stream_salsa208(unsigned char *c, unsigned long long clen,
-                           const unsigned char *n, const unsigned char *k);
+                           const unsigned char *n, const unsigned char *k)
+            __attribute__ ((deprecated)) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_stream_salsa208_xor(unsigned char *c, const unsigned char *m,
                                unsigned long long mlen, const unsigned char *n,
-                               const unsigned char *k);
+                               const unsigned char *k)
+            __attribute__ ((deprecated)) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-void crypto_stream_salsa208_keygen(unsigned char k[crypto_stream_salsa208_KEYBYTES]);
+void crypto_stream_salsa208_keygen(unsigned char k[crypto_stream_salsa208_KEYBYTES])
+            __attribute__ ((deprecated)) __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

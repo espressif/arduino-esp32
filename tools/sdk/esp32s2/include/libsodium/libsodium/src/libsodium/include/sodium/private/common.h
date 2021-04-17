@@ -1,11 +1,34 @@
 #ifndef common_H
 #define common_H 1
 
+#if !defined(_MSC_VER) && !defined(DEV_MODE) && 0
+# warning *** This is unstable, untested, development code.
+# warning It might not compile. It might not work as expected.
+# warning It might be totally insecure.
+# warning Do not use this except if you are planning to contribute code.
+# warning Use releases available at https://download.libsodium.org/libsodium/releases/ instead.
+# warning Alternatively, use the "stable" branch in the git repository.
+#endif
+
+#if !defined(_MSC_VER) && (!defined(CONFIGURED) || CONFIGURED != 1)
+# warning *** The library is being compiled using an undocumented method.
+# warning This is not supported. It has not been tested, it might not
+# warning work as expected, and performance is likely to be suboptimal.
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define COMPILER_ASSERT(X) (void) sizeof(char[(X) ? 1 : -1])
+
+#ifdef HAVE_TI_MODE
+# if defined(__SIZEOF_INT128__)
+typedef unsigned __int128 uint128_t;
+# else
+typedef unsigned uint128_t __attribute__((mode(TI)));
+# endif
+#endif
 
 #define ROTL32(X, B) rotl32((X), (B))
 static inline uint32_t
@@ -177,7 +200,18 @@ store32_be(uint8_t dst[4], uint32_t w)
 #endif
 }
 
-#ifndef __GNUC__
+#define XOR_BUF(OUT, IN, N) xor_buf((OUT), (IN), (N))
+static inline void
+xor_buf(unsigned char *out, const unsigned char *in, size_t n)
+{
+    size_t i;
+
+    for (i = 0; i < n; i++) {
+        out[i] ^= in[i];
+    }
+}
+
+#if !defined(__clang__) && !defined(__GNUC__)
 # ifdef __attribute__
 #  undef __attribute__
 # endif
@@ -212,6 +246,16 @@ store32_be(uint8_t dst[4], uint32_t w)
 # endif
 #elif defined(HAVE_INTRIN_H)
 # include <intrin.h>
+#endif
+
+#ifdef HAVE_LIBCTGRIND
+extern void ct_poison  (const void *, size_t);
+extern void ct_unpoison(const void *, size_t);
+# define POISON(X, L)   ct_poison((X), (L))
+# define UNPOISON(X, L) ct_unpoison((X), (L))
+#else
+# define POISON(X, L)   (void) 0
+# define UNPOISON(X, L) (void) 0
 #endif
 
 #endif
