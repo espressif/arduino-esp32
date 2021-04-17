@@ -40,14 +40,12 @@ env.Append(
     ],
 
     CFLAGS=[
-        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-march=rv32imc",
         "-std=gnu99",
         "-Wno-old-style-declaration"
     ],
 
     CXXFLAGS=[
-        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-march=rv32imc",
         "-std=gnu++11",
         "-fno-exceptions",
@@ -73,7 +71,6 @@ env.Append(
     ],
 
     LINKFLAGS=[
-        "-mlongcalls",
         "-nostartfiles",
         "-march=rv32imc",
         "--specs=nosys.specs",
