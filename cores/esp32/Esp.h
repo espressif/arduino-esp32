@@ -22,6 +22,9 @@
 
 #include <Arduino.h>
 #include <esp_partition.h>
+#ifndef CONFIG_IDF_TARGET_ESP32 // Broken in IDF 20210417
+#include <hal/systimer_hal.h>
+#endif
 
 /**
  * AVR macros for WDT managment
@@ -111,7 +114,11 @@ public:
 uint32_t ARDUINO_ISR_ATTR EspClass::getCycleCount()
 {
     uint32_t ccount;
+#ifdef CONFIG_IDF_TARGET_ESP32
     __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
+#else // This should work on ESP32 once the hal is complete
+    ccount = systimer_hal_get_counter_value(SYSTIMER_COUNTER_0);
+#endif
     return ccount;
 }
 
