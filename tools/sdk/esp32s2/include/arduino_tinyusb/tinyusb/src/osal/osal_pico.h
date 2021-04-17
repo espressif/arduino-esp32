@@ -143,7 +143,7 @@ static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
   // TODO: revisit... docs say that mutexes are never used from IRQ context,
   //  however osal_queue_recieve may be. therefore my assumption is that
   //  the fifo mutex is not populated for queues used from an IRQ context
-  assert(!qhdl->ff.mutex);
+  //assert(!qhdl->ff.mutex);
 
   _osal_q_lock(qhdl);
   bool success = tu_fifo_read(&qhdl->ff, data);
@@ -157,7 +157,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   // TODO: revisit... docs say that mutexes are never used from IRQ context,
   //  however osal_queue_recieve may be. therefore my assumption is that
   //  the fifo mutex is not populated for queues used from an IRQ context
-  assert(!qhdl->ff.mutex);
+  //assert(!qhdl->ff.mutex);
 
   _osal_q_lock(qhdl);
   bool success = tu_fifo_write(&qhdl->ff, data);

@@ -318,3 +318,12 @@ void ledcDetachPin(uint8_t pin)
 {
     pinMatrixOutDetach(pin, false, false);
 }
+
+double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num)
+{
+    if (chan > 15) {
+        return 0;
+    }
+    double res_freq = _ledcSetupTimerFreq(chan, freq, bit_num);
+    return res_freq;
+}

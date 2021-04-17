@@ -16,41 +16,41 @@
 
 using namespace fs;
 
-FileImplPtr VFSImpl::open(const char* path, const char* mode)
+FileImplPtr VFSImpl::open(const char* fpath, const char* mode)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
         return FileImplPtr();
     }
 
-    if(!path || path[0] != '/') {
-        log_e("%s does not start with /", path);
+    if(!fpath || fpath[0] != '/') {
+        log_e("%s does not start with /", fpath);
         return FileImplPtr();
     }
 
-    char * temp = (char *)malloc(strlen(path)+strlen(_mountpoint)+2);
+    char * temp = (char *)malloc(strlen(fpath)+strlen(_mountpoint)+2);
     if(!temp) {
         log_e("malloc failed");
         return FileImplPtr();
     }
 
-    sprintf(temp,"%s%s", _mountpoint, path);
+    sprintf(temp,"%s%s", _mountpoint, fpath);
 
     struct stat st;
     //file lound
     if(!stat(temp, &st)) {
         free(temp);
         if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)) {
-            return std::make_shared<VFSFileImpl>(this, path, mode);
+            return std::make_shared<VFSFileImpl>(this, fpath, mode);
         }
-        log_e("%s has wrong mode 0x%08X", path, st.st_mode);
+        log_e("%s has wrong mode 0x%08X", fpath, st.st_mode);
         return FileImplPtr();
     }
 
     //file not found but mode permits creation
     if(mode && mode[0] != 'r') {
         free(temp);
-        return std::make_shared<VFSFileImpl>(this, path, mode);
+        return std::make_shared<VFSFileImpl>(this, fpath, mode);
     }
 
     //try to open this as directory (might be mount point)
@@ -58,7 +58,7 @@ FileImplPtr VFSImpl::open(const char* path, const char* mode)
     if(d) {
         closedir(d);
         free(temp);
-        return std::make_shared<VFSFileImpl>(this, path, mode);
+        return std::make_shared<VFSFileImpl>(this, fpath, mode);
     }
 
     log_e("%s does not exist", temp);
@@ -66,14 +66,14 @@ FileImplPtr VFSImpl::open(const char* path, const char* mode)
     return FileImplPtr();
 }
 
-bool VFSImpl::exists(const char* path)
+bool VFSImpl::exists(const char* fpath)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
         return false;
     }
 
-    VFSFileImpl f(this, path, "r");
+    VFSFileImpl f(this, fpath, "r");
     if(f) {
         f.close();
         return true;
@@ -115,69 +115,69 @@ bool VFSImpl::rename(const char* pathFrom, const char* pathTo)
     return rc == 0;
 }
 
-bool VFSImpl::remove(const char* path)
+bool VFSImpl::remove(const char* fpath)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
         return false;
     }
 
-    if(!path || path[0] != '/') {
+    if(!fpath || fpath[0] != '/') {
         log_e("bad arguments");
         return false;
     }
 
-    VFSFileImpl f(this, path, "r");
+    VFSFileImpl f(this, fpath, "r");
     if(!f || f.isDirectory()) {
         if(f) {
             f.close();
         }
-        log_e("%s does not exists or is directory", path);
+        log_e("%s does not exists or is directory", fpath);
         return false;
     }
     f.close();
 
-    char * temp = (char *)malloc(strlen(path)+strlen(_mountpoint)+1);
+    char * temp = (char *)malloc(strlen(fpath)+strlen(_mountpoint)+1);
     if(!temp) {
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, path);
+    sprintf(temp,"%s%s", _mountpoint, fpath);
     auto rc = unlink(temp);
     free(temp);
     return rc == 0;
 }
 
-bool VFSImpl::mkdir(const char *path)
+bool VFSImpl::mkdir(const char *fpath)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
         return false;
     }
 
-    VFSFileImpl f(this, path, "r");
+    VFSFileImpl f(this, fpath, "r");
     if(f && f.isDirectory()) {
         f.close();
-        //log_w("%s already exists", path);
+        //log_w("%s already exists", fpath);
         return true;
     } else if(f) {
         f.close();
-        log_e("%s is a file", path);
+        log_e("%s is a file", fpath);
         return false;
     }
 
-    char * temp = (char *)malloc(strlen(path)+strlen(_mountpoint)+1);
+    char * temp = (char *)malloc(strlen(fpath)+strlen(_mountpoint)+1);
     if(!temp) {
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, path);
+    sprintf(temp,"%s%s", _mountpoint, fpath);
     auto rc = ::mkdir(temp, ACCESSPERMS);
     free(temp);
     return rc == 0;
 }
 
-bool VFSImpl::rmdir(const char *path)
+bool VFSImpl::rmdir(const char *fpath)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
@@ -189,22 +189,22 @@ bool VFSImpl::rmdir(const char *path)
         return false;
     }
 
-    VFSFileImpl f(this, path, "r");
+    VFSFileImpl f(this, fpath, "r");
     if(!f || !f.isDirectory()) {
         if(f) {
             f.close();
         }
-        log_e("%s does not exists or is a file", path);
+        log_e("%s does not exists or is a file", fpath);
         return false;
     }
     f.close();
 
-    char * temp = (char *)malloc(strlen(path)+strlen(_mountpoint)+1);
+    char * temp = (char *)malloc(strlen(fpath)+strlen(_mountpoint)+1);
     if(!temp) {
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, path);
+    sprintf(temp,"%s%s", _mountpoint, fpath);
     auto rc = ::rmdir(temp);
     free(temp);
     return rc == 0;
@@ -213,7 +213,7 @@ bool VFSImpl::rmdir(const char *path)
 
 
 
-VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* path, const char* mode)
+VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
     : _fs(fs)
     , _f(NULL)
     , _d(NULL)
@@ -221,15 +221,15 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* path, const char* mode)
     , _isDirectory(false)
     , _written(false)
 {
-    char * temp = (char *)malloc(strlen(path)+strlen(_fs->_mountpoint)+1);
+    char * temp = (char *)malloc(strlen(fpath)+strlen(_fs->_mountpoint)+1);
     if(!temp) {
         return;
     }
-    sprintf(temp,"%s%s", _fs->_mountpoint, path);
+    sprintf(temp,"%s%s", _fs->_mountpoint, fpath);
 
-    _path = strdup(path);
+    _path = strdup(fpath);
     if(!_path) {
-        log_e("strdup(%s) failed", path);
+        log_e("strdup(%s) failed", fpath);
         free(temp);
         return;
     }
@@ -377,9 +377,14 @@ size_t VFSFileImpl::size() const
     return _stat.st_size;
 }
 
-const char* VFSFileImpl::name() const
+const char* VFSFileImpl::path() const
 {
     return (const char*) _path;
+}
+
+const char* VFSFileImpl::name() const
+{
+    return pathToFileName(path());
 }
 
 //to implement

@@ -36,19 +36,22 @@ size_t crypto_hash_sha512_bytes(void);
 
 SODIUM_EXPORT
 int crypto_hash_sha512(unsigned char *out, const unsigned char *in,
-                       unsigned long long inlen);
+                       unsigned long long inlen) __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
-int crypto_hash_sha512_init(crypto_hash_sha512_state *state);
+int crypto_hash_sha512_init(crypto_hash_sha512_state *state)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_hash_sha512_update(crypto_hash_sha512_state *state,
                               const unsigned char *in,
-                              unsigned long long inlen);
+                              unsigned long long inlen)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_hash_sha512_final(crypto_hash_sha512_state *state,
-                             unsigned char *out);
+                             unsigned char *out)
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

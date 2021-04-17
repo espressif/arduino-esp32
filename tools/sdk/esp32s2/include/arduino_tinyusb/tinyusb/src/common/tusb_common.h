@@ -76,51 +76,55 @@
 #include "tusb_timeout.h"
 #include "tusb_types.h"
 
-//--------------------------------------------------------------------+
-// Inline Functions
-//--------------------------------------------------------------------+
+//------------- Mem -------------//
 #define tu_memclr(buffer, size)  memset((buffer), 0, (size))
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
 
-static inline uint32_t tu_u32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
+//------------- Bytes -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_u32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
 {
-  return ( ((uint32_t) b1) << 24) + ( ((uint32_t) b2) << 16) + ( ((uint32_t) b3) << 8) + b4;
+  return ( ((uint32_t) b1) << 24) | ( ((uint32_t) b2) << 16) | ( ((uint32_t) b3) << 8) | b4;
 }
 
-static inline uint16_t tu_u16(uint8_t high, uint8_t low)
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u16(uint8_t high, uint8_t low)
 {
-  return (uint16_t)((((uint16_t) high) << 8) + low);
+  return (uint16_t) ((((uint16_t) high) << 8) | low);
 }
 
-static inline uint8_t tu_u16_high(uint16_t u16) { return (uint8_t) (((uint16_t) (u16 >> 8)) & 0x00ff); }
-static inline uint8_t tu_u16_low (uint16_t u16) { return (uint8_t) (u16 & 0x00ff); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_high(uint16_t u16) { return (uint8_t) (((uint16_t) (u16 >> 8)) & 0x00ff); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t u16) { return (uint8_t) (u16 & 0x00ff); }
 
-// Min
-static inline uint8_t  tu_min8  (uint8_t  x, uint8_t y ) { return (x < y) ? x : y; }
-static inline uint16_t tu_min16 (uint16_t x, uint16_t y) { return (x < y) ? x : y; }
-static inline uint32_t tu_min32 (uint32_t x, uint32_t y) { return (x < y) ? x : y; }
+//------------- Bits -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_bit_set  (uint32_t value, uint8_t pos) { return value | TU_BIT(pos);                  }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_bit_clear(uint32_t value, uint8_t pos) { return value & (~TU_BIT(pos));               }
+TU_ATTR_ALWAYS_INLINE static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value & TU_BIT(pos)) ? true : false; }
 
-// Max
-static inline uint8_t  tu_max8  (uint8_t  x, uint8_t y ) { return (x > y) ? x : y; }
-static inline uint16_t tu_max16 (uint16_t x, uint16_t y) { return (x > y) ? x : y; }
-static inline uint32_t tu_max32 (uint32_t x, uint32_t y) { return (x > y) ? x : y; }
+//------------- Min -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint8_t  tu_min8  (uint8_t  x, uint8_t y ) { return (x < y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_min16 (uint16_t x, uint16_t y) { return (x < y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_min32 (uint32_t x, uint32_t y) { return (x < y) ? x : y; }
 
-// Align
-static inline uint32_t tu_align(uint32_t value, uint32_t alignment)
+//------------- Max -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint8_t  tu_max8  (uint8_t  x, uint8_t y ) { return (x > y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_max16 (uint16_t x, uint16_t y) { return (x > y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_max32 (uint32_t x, uint32_t y) { return (x > y) ? x : y; }
+
+//------------- Align -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align(uint32_t value, uint32_t alignment)
 {
   return value & ((uint32_t) ~(alignment-1));
 }
 
-static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
-static inline uint32_t tu_align16 (uint32_t value) { return (value & 0xFFFFFFF0UL); }
-static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
-static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align16 (uint32_t value) { return (value & 0xFFFFFFF0UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
 
 //------------- Mathematics -------------//
-static inline uint32_t tu_abs(int32_t value) { return (uint32_t)((value < 0) ? (-value) : value); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_abs(int32_t value) { return (uint32_t)((value < 0) ? (-value) : value); }
 
-/// inclusive range checking
-static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
+/// inclusive range checking TODO remove
+TU_ATTR_ALWAYS_INLINE static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
 {
   return (lower <= value) && (value <= upper);
 }
@@ -130,18 +134,49 @@ static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
 static inline uint8_t tu_log2(uint32_t value)
 {
   uint8_t result = 0;
-
-  while (value >>= 1)
-  {
-    result++;
-  }
+  while (value >>= 1) { result++; }
   return result;
 }
 
-// Bit
-static inline uint32_t tu_bit_set  (uint32_t value, uint8_t pos) { return value | TU_BIT(pos);                  }
-static inline uint32_t tu_bit_clear(uint32_t value, uint8_t pos) { return value & (~TU_BIT(pos));               }
-static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value & TU_BIT(pos)) ? true : false; }
+//------------- Unaligned Access -------------//
+#if TUP_ARCH_STRICT_ALIGN
+
+typedef struct { uint16_t val; } TU_ATTR_PACKED tu_unaligned_uint16_t;
+typedef struct { uint32_t val; } TU_ATTR_PACKED tu_unaligned_uint32_t;
+
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_unaligned_read32(const void* mem)
+{
+  tu_unaligned_uint32_t const* ua32 = (tu_unaligned_uint32_t const*) mem;
+  return ua32->val;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write32(void* mem, uint32_t value)
+{
+  tu_unaligned_uint32_t* ua32 = (tu_unaligned_uint32_t*) mem;
+  ua32->val = value;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_unaligned_read16(const void* mem)
+{
+  tu_unaligned_uint16_t const* ua16 = (tu_unaligned_uint16_t const*) mem;
+  return ua16->val;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write16(void* mem, uint16_t value)
+{
+  tu_unaligned_uint16_t* ua16 = (tu_unaligned_uint16_t*) mem;
+  ua16->val = value;
+}
+
+#else
+
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_unaligned_read32  (const void* mem           ) { return *((uint32_t*) mem);  }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_unaligned_read16  (const void* mem           ) { return *((uint16_t*) mem);  }
+
+TU_ATTR_ALWAYS_INLINE static inline void     tu_unaligned_write32 (void* mem, uint32_t value ) { *((uint32_t*) mem) = value; }
+TU_ATTR_ALWAYS_INLINE static inline void     tu_unaligned_write16 (void* mem, uint16_t value ) { *((uint16_t*) mem) = value; }
+
+#endif
 
 /*------------------------------------------------------------------*/
 /* Count number of arguments of __VA_ARGS__
@@ -153,9 +188,9 @@ static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value
  *------------------------------------------------------------------*/
 #ifndef TU_ARGS_NUM
 
-#define TU_ARGS_NUM(...) 	 NARG_(_0, ##__VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...) 	 _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
 
-#define NARG_(...)        _GET_NTH_ARG(__VA_ARGS__)
+#define _TU_NARG(...)        _GET_NTH_ARG(__VA_ARGS__)
 #define _GET_NTH_ARG( \
           _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
          _11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
