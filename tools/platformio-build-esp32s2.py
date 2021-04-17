@@ -40,14 +40,12 @@ env.Append(
     ],
 
     CFLAGS=[
-        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-mlongcalls",
         "-std=gnu99",
         "-Wno-old-style-declaration"
     ],
 
     CXXFLAGS=[
-        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-mlongcalls",
         "-std=gnu++11",
         "-fexceptions",
