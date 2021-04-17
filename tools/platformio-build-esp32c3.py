@@ -40,12 +40,14 @@ env.Append(
     ],
 
     CFLAGS=[
+        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-march=rv32imc",
         "-std=gnu99",
         "-Wno-old-style-declaration"
     ],
 
     CXXFLAGS=[
+        "/home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/tools/prepare-libs.sh",
         "-march=rv32imc",
         "-std=gnu++11",
         "-fno-exceptions",
@@ -111,6 +113,7 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "freertos", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "freertos", "port", "riscv", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_hw_support", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_hw_support", "include", "soc"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_hw_support", "port", "esp32c3"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_hw_support", "port", "esp32c3", "private_include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "heap", "include"),
@@ -129,6 +132,8 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_rom", "esp32c3"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_common", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_system", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_system", "port", "soc"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_system", "port", "public_compat"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp32c3", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "driver", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "driver", "esp32c3", "include"),
@@ -158,6 +163,7 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_gdbstub", "riscv"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_gdbstub", "esp32c3"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "espcoredump", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "espcoredump", "include", "port", "riscv"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "wpa_supplicant", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "wpa_supplicant", "port", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "wpa_supplicant", "include", "esp_supplicant"),
@@ -234,7 +240,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4-dev-744-g1cb31e509\\"'),
+        ("IDF_VER", '\\"v4.4-dev-960-gcf457d412\\"'),
         "ESP_PLATFORM",
         "ARDUINO_ARCH_ESP32",
         "ESP32",
