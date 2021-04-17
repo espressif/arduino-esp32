@@ -41,6 +41,10 @@ size_t  crypto_generichash_keybytes(void);
 SODIUM_EXPORT
 const char *crypto_generichash_primitive(void);
 
+/*
+ * Important when writing bindings for other programming languages:
+ * the state address should be 64-bytes aligned.
+ */
 typedef crypto_generichash_blake2b_state crypto_generichash_state;
 
 SODIUM_EXPORT
@@ -49,24 +53,29 @@ size_t  crypto_generichash_statebytes(void);
 SODIUM_EXPORT
 int crypto_generichash(unsigned char *out, size_t outlen,
                        const unsigned char *in, unsigned long long inlen,
-                       const unsigned char *key, size_t keylen);
+                       const unsigned char *key, size_t keylen)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_generichash_init(crypto_generichash_state *state,
                             const unsigned char *key,
-                            const size_t keylen, const size_t outlen);
+                            const size_t keylen, const size_t outlen)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_generichash_update(crypto_generichash_state *state,
                               const unsigned char *in,
-                              unsigned long long inlen);
+                              unsigned long long inlen)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_generichash_final(crypto_generichash_state *state,
-                             unsigned char *out, const size_t outlen);
+                             unsigned char *out, const size_t outlen)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-void crypto_generichash_keygen(unsigned char k[crypto_generichash_KEYBYTES]);
+void crypto_generichash_keygen(unsigned char k[crypto_generichash_KEYBYTES])
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }
