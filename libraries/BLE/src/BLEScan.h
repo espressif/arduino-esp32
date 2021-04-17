@@ -19,6 +19,7 @@
 
 class BLEAdvertisedDevice;
 class BLEAdvertisedDeviceCallbacks;
+class BLEExtAdvertisingCallbacks;
 class BLEClient;
 class BLEScan;
 
@@ -61,6 +62,16 @@ public:
 	void 		   erase(BLEAddress address);
 	BLEScanResults getResults();
 	void			clearResults();
+
+#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+	void			setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb);
+
+	esp_err_t setExtScanParams();
+	esp_err_t setExtScanParams(esp_ble_ext_scan_params_t* ext_scan_params);
+	esp_err_t startExtScan(uint32_t duration, uint16_t period);
+private:
+	BLEExtAdvertisingCallbacks* m_pExtendedScanCb = nullptr;
+#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
 
 private:
 	BLEScan();   // One doesn't create a new instance instead one asks the BLEDevice for the singleton.
