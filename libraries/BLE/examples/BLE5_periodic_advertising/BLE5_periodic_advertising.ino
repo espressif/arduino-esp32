@@ -58,7 +58,7 @@ void setup() {
 
   advert.setAdvertisingParams(0, &ext_adv_params_2M);
   advert.setAdvertisingData(0, sizeof(raw_scan_rsp_data_2m), &raw_scan_rsp_data_2m[0]);
-  advert.setPrivateAddress(0, addr_2m);
+  advert.setInstanceAddress(0, addr_2m);
   advert.setDuration(0, 0, 0);
 
   delay(100);
