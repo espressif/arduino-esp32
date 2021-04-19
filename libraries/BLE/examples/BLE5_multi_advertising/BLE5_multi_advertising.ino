@@ -112,26 +112,26 @@ void setup() {
 
   BLEDevice::init("");
 
-  advert.setAdvParams(0, &ext_adv_params_1M);
+  advert.setAdvertisingParams(0, &ext_adv_params_1M);
   advert.setAdvertisingData(0, sizeof(raw_adv_data_1m), &raw_adv_data_1m[0]);
-  advert.setPrivateAddress(0, addr_1m);
+  advert.setInstanceAddress(0, addr_1m);
   advert.setDuration(0);
 
-  advert.setAdvParams(1, &ext_adv_params_2M);
+  advert.setAdvertisingParams(1, &ext_adv_params_2M);
   advert.setScanRspData(1, sizeof(raw_scan_rsp_data_2m), &raw_scan_rsp_data_2m[0]);
-  advert.setPrivateAddress(1, addr_2m);
+  advert.setInstanceAddress(1, addr_2m);
   advert.setDuration(1);
 
-  advert.setAdvParams(2, &legacy_adv_params);
+  advert.setAdvertisingParams(2, &legacy_adv_params);
   advert.setAdvertisingData(2, sizeof(legacy_adv_data), &legacy_adv_data[0]);
   advert.setScanRspData(2, sizeof(legacy_scan_rsp_data), &legacy_scan_rsp_data[0]);
-  advert.setPrivateAddress(2, addr_legacy);
+  advert.setInstanceAddress(2, addr_legacy);
   advert.setDuration(2);
 
-  advert.setAdvParams(3, &ext_adv_params_coded);
+  advert.setAdvertisingParams(3, &ext_adv_params_coded);
   advert.setDuration(3);
   advert.setScanRspData(3, sizeof(raw_scan_rsp_data_coded), &raw_scan_rsp_data_coded[0]);
-  advert.setPrivateAddress(3, addr_coded);
+  advert.setInstanceAddress(3, addr_coded);
 
   delay(1000);
   advert.start(4, 0);

@@ -3,6 +3,9 @@
  *
  *  Created on: Jul 1, 2017
  *      Author: kolban
+ * 
+ * 	Update: April, 2021
+ * 		add BLE5 support
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
@@ -177,11 +180,60 @@ void BLEScan::handleGAPEvent(
 			break;
 
 		case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onStop(param->ext_scan_stop.status);
+			}
+			
 			if (param->ext_scan_stop.status != ESP_BT_STATUS_SUCCESS){
 				log_e("extend Scan stop failed, error status = %x", param->ext_scan_stop.status);
 				break;
 			}
 			log_v("Stop extend scan successfully");
+			break;
+
+		case ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onCreateSync(param->period_adv_create_sync.status);
+			}
+
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT, status %d", param->period_adv_create_sync.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_CANCEL_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onCancelSync(param->period_adv_sync_cancel.status);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_CANCEL_COMPLETE_EVT, status %d", param->period_adv_sync_cancel.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_TERMINATE_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onTerminateSync(param->period_adv_sync_term.status);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_TERMINATE_COMPLETE_EVT, status %d", param->period_adv_sync_term.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onLostSync(param->periodic_adv_sync_lost.sync_handle);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT, sync handle %d", param->periodic_adv_sync_lost.sync_handle);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onSync(*(esp_ble_periodic_adv_sync_estab_param_t*)&param->periodic_adv_sync_estab);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT, status %d", param->periodic_adv_sync_estab.status);
+			break;
+
+		case ESP_GAP_BLE_PERIODIC_ADV_REPORT_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onReport(param->period_adv_report.params);
+			}
 			break;
 
 #endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
@@ -286,6 +338,20 @@ esp_err_t BLEScan::startExtScan(uint32_t duration, uint16_t period)
 	esp_err_t rc = esp_ble_gap_start_ext_scan(duration, period);
 	if(rc) log_e("extended scan start failed: %d", rc);
 	return rc;
+}
+
+
+esp_err_t BLEScan::stopExtScan()
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_stop_ext_scan();
+
+	return rc;
+}
+
+void BLEScan::setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb)
+{
+	m_pPeriodicScanCb = cb;
 }
 
 #endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED

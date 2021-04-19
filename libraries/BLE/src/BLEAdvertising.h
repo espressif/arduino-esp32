@@ -89,13 +89,12 @@ private:
 	uint8_t count;
 
 public:
-	BLEMultiAdvertising(uint8_t num = 1, int duration = 0, int max_events = 0);
+	BLEMultiAdvertising(uint8_t num = 1);
 	~BLEMultiAdvertising() {}
 
-	bool setAdvParams(uint8_t instance, const esp_ble_gap_ext_adv_params_t* params);
+	bool setAdvertisingParams(uint8_t instance, const esp_ble_gap_ext_adv_params_t* params);
 	bool setAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data);
 	bool setScanRspData(uint8_t instance, uint16_t length, const uint8_t* data);
-	bool setPrivateAddress(uint8_t instance, uint8_t* addr_legacy);
 	bool start();
 	bool start(uint8_t num, uint8_t from);
 	void setDuration(uint8_t instance, int duration = 0, int max_events = 0);
@@ -103,7 +102,9 @@ public:
 	bool stop(uint8_t num_adv, const uint8_t* ext_adv_inst);
 	bool remove(uint8_t instance);
 	bool clear();
-
+	bool setPeriodicAdvertisingParams(uint8_t instance, const esp_ble_gap_periodic_adv_params_t* params);
+	bool setPeriodicAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data);
+	bool startPeriodicAdvertising(uint8_t instance);
 };
 
 #endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED

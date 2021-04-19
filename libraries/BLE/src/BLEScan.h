@@ -22,7 +22,18 @@ class BLEAdvertisedDeviceCallbacks;
 class BLEExtAdvertisingCallbacks;
 class BLEClient;
 class BLEScan;
+class BLEPeriodicScanCallbacks;
 
+struct esp_ble_periodic_adv_sync_estab_param_t {
+	uint8_t status;                      /*!< periodic advertising sync status */
+	uint16_t sync_handle;                /*!< periodic advertising sync handle */
+	uint8_t sid;                         /*!< periodic advertising sid */
+	esp_ble_addr_type_t adv_addr_type;   /*!< periodic advertising address type */
+	esp_bd_addr_t adv_addr;              /*!< periodic advertising address */
+	esp_ble_gap_phy_t adv_phy;           /*!< periodic advertising phy type */
+	uint16_t period_adv_interval;        /*!< periodic advertising interval */
+	uint8_t adv_clk_accuracy;            /*!< periodic advertising clock accuracy */
+};
 
 /**
  * @brief The result of having performed a scan.
@@ -64,13 +75,16 @@ public:
 	void			clearResults();
 
 #ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
-	void			setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb);
+	void setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb);
+	void setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb);
 
+	esp_err_t stopExtScan();
 	esp_err_t setExtScanParams();
 	esp_err_t setExtScanParams(esp_ble_ext_scan_params_t* ext_scan_params);
 	esp_err_t startExtScan(uint32_t duration, uint16_t period);
 private:
 	BLEExtAdvertisingCallbacks* m_pExtendedScanCb = nullptr;
+	BLEPeriodicScanCallbacks* m_pPeriodicScanCb = nullptr;
 #endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
 
 private:
@@ -79,7 +93,6 @@ private:
 	void         handleGAPEvent(
 		esp_gap_ble_cb_event_t  event,
 		esp_ble_gap_cb_param_t* param);
-	void parseAdvertisement(BLEClient* pRemoteDevice, uint8_t *payload);
 
 
 	esp_ble_scan_params_t         m_scan_params;
@@ -91,6 +104,19 @@ private:
 	bool                          m_wantDuplicates;
 	void                        (*m_scanCompleteCB)(BLEScanResults scanResults);
 }; // BLEScan
+
+class BLEPeriodicScanCallbacks {
+public:
+	virtual ~BLEPeriodicScanCallbacks() {}
+
+	virtual void onCreateSync(esp_bt_status_t status) {}
+	virtual void onCancelSync(esp_bt_status_t status) {}
+	virtual void onTerminateSync(esp_bt_status_t status) {}
+	virtual void onLostSync(uint16_t sync_handle) {}
+	virtual void onSync(esp_ble_periodic_adv_sync_estab_param_t) {}
+	virtual void onReport(esp_ble_gap_periodic_adv_report_t params) {}
+	virtual void onStop(esp_bt_status_t status) {}
+};
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLESCAN_H_ */
