@@ -92,6 +92,15 @@ esp_err_t RMakerClass::enableSchedule()
     return err;
 }
 
+esp_err_t RMakerClass::enableTZService()
+{
+    err = esp_rmaker_timezone_service_enable();
+    if(err != ESP_OK) {
+        log_e("Timezone service enable failed");
+    }
+    return err;
+}
+
 esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 {
     esp_rmaker_ota_config_t ota_config;
