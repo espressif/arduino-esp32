@@ -4,15 +4,15 @@
 ### Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Contents
-- [EP32S2 and ESP32C3 Support](#esp32s2-and-esp32c3-support)
+- [ESP32-S2 and ESP32-C3 Support](#esp32-s2-and-esp32-c3-support)
 - [Development Status](#development-status)
 - [Installation Instructions](#installation-instructions)
 - [Decoding Exceptions](#decoding-exceptions)
 - [Issue/Bug report template](#issuebug-report-template)
 - [ESP32Dev Board PINMAP](#esp32dev-board-pinmap)
 
-### EP32S2 and ESP32C3 Support
-If you want to test ESP32S2 and/or ESP32C3 through the board manager, please use the development release link: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json` and install the latest 2.0.0 version.
+### ESP32-S2 and ESP32-C3 Support
+If you want to test ESP32-S2 and/or ESP32-C3 through the board manager, please use the development release link: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json` and install the latest 2.0.0 version.
 
 ### Development Status
 
