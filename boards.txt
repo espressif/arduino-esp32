@@ -970,6 +970,7 @@ tinys2.upload.tool=esptool_py
 tinys2.upload.maximum_size=1310720
 tinys2.upload.maximum_data_size=327680
 tinys2.upload.flags=
+tinys2.upload.extra_flags=
 tinys2.upload.use_1200bps_touch=true
 tinys2.upload.wait_for_upload_port=true
 
