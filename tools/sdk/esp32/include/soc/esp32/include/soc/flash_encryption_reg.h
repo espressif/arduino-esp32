@@ -1,4 +1,4 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#include "soc.h"
 
-#define SOC_SYSTIMER_COUNTER_NUM (2)   // Number of counter units
-#define SOC_SYSTIMER_ALARM_NUM (3)     // Number of alarm units
-
-#define SOC_SYSTIMER_BIT_WIDTH_LO (32) // Bit width of systimer low part
-#define SOC_SYSTIMER_BIT_WIDTH_HI (20) // Bit width of systimer high part
-
-#define SOC_SYSTIMER_FIXED_TICKS_US (16)  // If defined, number of ticks per microsecond is fixed
-#define SOC_SYSTIMER_INT_LEVEL      (1)   // Systimer peripheral uses level interrupt
+#define FLASH_ENCRYPTION_BUFFER_REG   (PERIPHS_SPI_ENCRYPT_BASEADDR)
+#define FLASH_ENCRYPTION_START_REG    (PERIPHS_SPI_ENCRYPT_BASEADDR + 0x20)
+#define FLASH_ENCRYPTION_ADDRESS_REG  (PERIPHS_SPI_ENCRYPT_BASEADDR + 0x24)
+#define FLASH_ENCRYPTION_DONE_REG     (PERIPHS_SPI_ENCRYPT_BASEADDR + 0x28)
