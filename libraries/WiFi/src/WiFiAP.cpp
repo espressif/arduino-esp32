@@ -92,6 +92,7 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
     	wifi_config->ap.ssid_len = strlen(ssid);
     	if(password != NULL && password[0] != 0){
     		wifi_config->ap.authmode = authmode;
+    		wifi_config->ap.pairwise_cipher = WIFI_CIPHER_TYPE_CCMP; // Disable by default enabled insecure TKIP and use just CCMP.
     	    snprintf((char*)wifi_config->ap.password, 64, password);
     	}
     }
