@@ -128,8 +128,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan);
 
                 bool known = false;
-                for(uint32_t x = 0; x < APlist.size(); x++) {
-                    WifiAPlist_t entry = APlist[x];
+                for(uint32_t x = APlist.size() ; x > 0; x--) {
+                    WifiAPlist_t entry = APlist[x-1];
 
                     if(ssid_scan == entry.ssid) { // SSID match
                         known = true;
