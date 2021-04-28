@@ -1,8 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
+
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -10,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Modified 2021-04-28 to add an nvs_commit() to the 
+// clear(), remove() and end() methods as required per
+// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
+
 
 #include "Preferences.h"
 
@@ -43,7 +49,7 @@ bool Preferences::begin(const char * name, bool readOnly, const char* partition_
         }
         err = nvs_open_from_partition(partition_label, name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
     } else {
-        err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
+        err = nvs_open(name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
     }
     if(err){
         log_e("nvs_open failed: %s", nvs_error(err));
@@ -53,10 +59,14 @@ bool Preferences::begin(const char * name, bool readOnly, const char* partition_
     return true;
 }
 
-void Preferences::end(){
+void Preferences::end(){                                         // modified to add an nvs_commit()
     if(!_started){
         return;
     }
+    esp_err_t err = nvs_commit(_handle);                         // to undo changes: delete the lines from here...
+    if(err){
+        log_e("nvs_commit fail: %s", nvs_error(err));
+    }                                                            // to here.
     nvs_close(_handle);
     _started = false;
 }
@@ -65,7 +75,7 @@ void Preferences::end(){
  * Clear all keys in opened preferences
  * */
 
-bool Preferences::clear(){
+bool Preferences::clear(){                                  // modified to add an nvs_commit()
     if(!_started || _readOnly){
         return false;
     }
@@ -74,14 +84,20 @@ bool Preferences::clear(){
         log_e("nvs_erase_all fail: %s", nvs_error(err));
         return false;
     }
-    return true;
+    // return true;                                         // to undo changes: uncomment this line and...
+    err = nvs_commit(_handle);                              // delete the lines from from here...
+    if(err){
+        log_e("nvs_commit fail: %s", nvs_error(err));
+        return false;
+    }
+    return true;                                            // to here.
 }
 
 /*
  * Remove a key
  * */
 
-bool Preferences::remove(const char * key){
+bool Preferences::remove(const char * key){                 // modified to add an nvs_commit()
     if(!_started || !key || _readOnly){
         return false;
     }
@@ -90,7 +106,13 @@ bool Preferences::remove(const char * key){
         log_e("nvs_erase_key fail: %s %s", key, nvs_error(err));
         return false;
     }
-    return true;
+    // return true;                                         // to undo changes: uncomment this line and...
+    err = nvs_commit(_handle);                              // delete the lines from from here...
+    if(err){
+        log_e("nvs_commit fail: %s %s", key, nvs_error(err));
+        return false;
+    }
+    return true;                                            // to here.
 }
 
 /*
