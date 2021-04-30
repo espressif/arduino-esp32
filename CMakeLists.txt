@@ -58,6 +58,7 @@ set(ARDUINO_ALL_LIBRARIES
   RainMaker
   SD_MMC
   SD
+  SimpleBLE
   SPIFFS
   SPI
   Ticker
