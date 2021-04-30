@@ -186,26 +186,28 @@ set(ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-
-set(includedirs variants/${IDF_TARGET}/ cores/esp32/)
-set(srcs ${CORE_SRCS})
-set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
-
+set(ARDUINO_LIBRARIES_SRCS)
+set(ARDUINO_LIBRARIES_REQUIRES)
+set(ARDUINO_LIBRARIES_INCLUDEDIRS)
 foreach(libname IN LISTS ARDUINO_ALL_LIBRARIES)
   if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_${libname})
     if(ARDUINO_LIBRARY_${libname}_SRCS)
-      list(APPEND srcs ${ARDUINO_LIBRARY_${libname}_SRCS})
+      list(APPEND ARDUINO_LIBRARIES_SRCS ${ARDUINO_LIBRARY_${libname}_SRCS})
     endif()
     if(ARDUINO_LIBRARY_${libname}_REQUIRES)
-      list(APPEND priv_requires ${ARDUINO_LIBRARY_${libname}_REQUIRES})
+      list(APPEND ARDUINO_LIBRARIES_REQUIRES ${ARDUINO_LIBRARY_${libname}_REQUIRES})
     endif()
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/libraries/${libname}/src)
-      list(APPEND includedirs libraries/${libname}/src)
+      list(APPEND ARDUINO_LIBRARIES_INCLUDEDIRS libraries/${libname}/src)
     endif()
   endif()
 endforeach()
+
+set(includedirs variants/${IDF_TARGET}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
+set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
+set(priv_includes cores/esp32/libb64)
+set(requires spi_flash mbedtls mdns esp_adc_cal)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main ${ARDUINO_LIBRARIES_REQUIRES})
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
