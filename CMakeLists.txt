@@ -40,44 +40,105 @@ set(CORE_SRCS
   cores/esp32/WString.cpp
   )
 
-set(LIBRARY_SRCS
-  libraries/ArduinoOTA/src/ArduinoOTA.cpp
-  libraries/AsyncUDP/src/AsyncUDP.cpp
+set(ARDUINO_ALL_LIBRARIES
+  ArduinoOTA
+  AsyncUDP
+  BLE
+  BluetoothSerial
+  DNSServer
+  EEPROM
+  ESPmDNS
+  FFat
+  FS
+  HTTPClient
+  HTTPUpdate
+  LITTLEFS
+  NetBIOS
+  Preferences
+  RainMaker
+  SD_MMC
+  SD
+  SPIFFS
+  SPI
+  Ticker
+  Update
+  WebServer
+  WiFiClientSecure
+  WiFi
+  WiFiProv
+  Wire
+  )
+
+set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
+set(ARDUINO_LIBRARY_ArduinoOTA_REQUIRES esp_https_ota)
+
+set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
+
+set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
   libraries/BluetoothSerial/src/BTAddress.cpp
   libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
-  libraries/BluetoothSerial/src/BTScanResultsSet.cpp
-  libraries/DNSServer/src/DNSServer.cpp
-  libraries/EEPROM/src/EEPROM.cpp
-  libraries/ESPmDNS/src/ESPmDNS.cpp
-  libraries/FFat/src/FFat.cpp
+  libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
+
+set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
+
+set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
+
+set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
+
+set(ARDUINO_LIBRARY_FFat_SRCS libraries/FFat/src/FFat.cpp)
+
+set(ARDUINO_LIBRARY_FS_SRCS
   libraries/FS/src/FS.cpp
-  libraries/FS/src/vfs_api.cpp
-  libraries/HTTPClient/src/HTTPClient.cpp
-  libraries/HTTPUpdate/src/HTTPUpdate.cpp
-  libraries/LITTLEFS/src/LITTLEFS.cpp
-  libraries/NetBIOS/src/NetBIOS.cpp
-  libraries/Preferences/src/Preferences.cpp
+  libraries/FS/src/vfs_api.cpp)
+
+set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
+
+set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
+
+set(ARDUINO_LIBRARY_LITTLEFS_SRCS libraries/LITTLEFS/src/LITTLEFS.cpp)
+set(ARDUINO_LIBRARY_LITTLEFS_REQUIRES esp_littlefs)
+
+set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
+
+set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
+
+set(ARDUINO_LIBRARY_RainMaker_SRCS
   libraries/RainMaker/src/RMaker.cpp
   libraries/RainMaker/src/RMakerNode.cpp
   libraries/RainMaker/src/RMakerParam.cpp
   libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
-  libraries/SD_MMC/src/SD_MMC.cpp
+  libraries/RainMaker/src/RMakerType.cpp)
+
+set(ARDUINO_LIBRARY_SD_MMC_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
+
+set(ARDUINO_LIBRARY_SD_SRCS
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
-  libraries/SD/src/sd_diskio_crc.c
-  libraries/SimpleBLE/src/SimpleBLE.cpp
-  libraries/SPIFFS/src/SPIFFS.cpp
-  libraries/SPI/src/SPI.cpp
-  libraries/Ticker/src/Ticker.cpp
+  libraries/SD/src/sd_diskio_crc.c)
+
+set(ARDUINO_LIBRARY_SimpleBLE_SRCS libraries/SimpleBLE/src/SimpleBLE.cpp)
+
+set(ARDUINO_LIBRARY_SPIFFS_SRCS libraries/SPIFFS/src/SPIFFS.cpp)
+
+set(ARDUINO_LIBRARY_SPI_SRCS libraries/SPI/src/SPI.cpp)
+
+set(ARDUINO_LIBRARY_Ticker_SRCS libraries/Ticker/src/Ticker.cpp)
+
+set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/Updater.cpp
-  libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/Update/src/HttpsOTAUpdate.cpp)
+
+set(ARDUINO_LIBRARY_WebServer_SRCS
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
-  libraries/WebServer/src/detail/mimetable.cpp
+  libraries/WebServer/src/detail/mimetable.cpp)
+
+set(ARDUINO_LIBRARY_WiFiClientSecure_SRCS
   libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
+  libraries/WiFiClientSecure/src/WiFiClientSecure.cpp)
+
+set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/ETH.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
@@ -87,12 +148,13 @@ set(LIBRARY_SRCS
   libraries/WiFi/src/WiFiScan.cpp
   libraries/WiFi/src/WiFiServer.cpp
   libraries/WiFi/src/WiFiSTA.cpp
-  libraries/WiFi/src/WiFiUdp.cpp
-  libraries/WiFiProv/src/WiFiProv.cpp
-  libraries/Wire/src/Wire.cpp
-  )
+  libraries/WiFi/src/WiFiUdp.cpp)
 
-set(BLE_SRCS
+set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
+
+set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
+
+set(ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/BLE2902.cpp
   libraries/BLE/src/BLE2904.cpp
   libraries/BLE/src/BLEAddress.cpp
@@ -125,50 +187,25 @@ set(BLE_SRCS
   )
 
 
-set(includedirs
-  variants/${IDF_TARGET}/
-  cores/esp32/
-  libraries/ArduinoOTA/src
-  libraries/AsyncUDP/src
-  libraries/BLE/src
-  libraries/BluetoothSerial/src
-  libraries/DNSServer/src
-  libraries/EEPROM/src
-  libraries/ESP32/src
-  libraries/ESPmDNS/src
-  libraries/FFat/src
-  libraries/FS/src
-  libraries/HTTPClient/src
-  libraries/HTTPUpdate/src
-  libraries/LITTLEFS/src
-  libraries/NetBIOS/src
-  libraries/Preferences/src
-  libraries/RainMaker/src
-  libraries/SD_MMC/src
-  libraries/SD/src
-  libraries/SimpleBLE/src
-  libraries/SPIFFS/src
-  libraries/SPI/src
-  libraries/Ticker/src
-  libraries/Update/src
-  libraries/WebServer/src
-  libraries/WiFiClientSecure/src
-  libraries/WiFi/src
-  libraries/WiFiProv/src
-  libraries/Wire/src
-  )
-
-set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
+set(includedirs variants/${IDF_TARGET}/ cores/esp32/)
+set(srcs ${CORE_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt arduino_tinyusb main)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
 
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
-  list(APPEND priv_requires esp_https_ota)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-  list(APPEND priv_requires esp_littlefs)
-endif()
+foreach(libname IN LISTS ARDUINO_ALL_LIBRARIES)
+  if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_${libname})
+    if(ARDUINO_LIBRARY_${libname}_SRCS)
+      list(APPEND srcs ${ARDUINO_LIBRARY_${libname}_SRCS})
+    endif()
+    if(ARDUINO_LIBRARY_${libname}_REQUIRES)
+      list(APPEND priv_requires ${ARDUINO_LIBRARY_${libname}_REQUIRES})
+    endif()
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/libraries/${libname}/src)
+      list(APPEND includedirs libraries/${libname}/src)
+    endif()
+  endif()
+endforeach()
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
