@@ -15,19 +15,13 @@ Before sending us a Pull Request, please consider this list of points:
 
 * Is the contribution entirely your own work, or already licensed under an LGPL 2.1 compatible Open Source License? If not then we unfortunately cannot accept it.
 
-* Does any new code conform to the esp-idf :doc:`Style Guide <style-guide>`?
-
-* Have you installed the :doc:`pre-commit hook <install-pre-commit-hook>` for esp-idf project?
-
-* Does the code documentation follow requirements in :doc:`documenting-code`?
-
 * Is the code adequately commented for people to understand how it is structured?
 
-* Is there documentation or examples that go with code contributions? There are additional suggestions for writing good examples in :idf:`examples` readme.
+* Is there documentation or examples that go with code contributions? 
 
 * Are comments and documentation written in clear English, with no spelling or grammar errors?
 
-* Example contributions are also welcome. Please check the :doc:`creating-examples` guide for these.
+* Example contributions are also welcome.
 
 * If the contribution contains multiple commits, are they grouped together into logical changes (one major change per pull request)? Are any commits with names like "fixed typo" `squashed into previous commits <https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit/>`_?
 
@@ -53,10 +47,4 @@ Related Documents
 .. toctree::
     :maxdepth: 1
 
-    style-guide
-    install-pre-commit-hook
-    documenting-code
-    add-ons-reference
-    creating-examples
-    ../api-reference/template
-    contributor-agreement
+        contributor-agreement
