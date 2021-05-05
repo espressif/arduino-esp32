@@ -364,23 +364,27 @@ bool     tud_audio_n_mounted    (uint8_t func_id);
 uint16_t tud_audio_n_available                    (uint8_t func_id);
 uint16_t tud_audio_n_read                         (uint8_t func_id, void* buffer, uint16_t bufsize);
 bool     tud_audio_n_clear_ep_out_ff              (uint8_t func_id);                          // Delete all content in the EP OUT FIFO
+tu_fifo_t*   tud_audio_n_get_ep_out_ff            (uint8_t func_id);
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_DECODING
 bool     tud_audio_n_clear_rx_support_ff          (uint8_t func_id, uint8_t ff_idx);       // Delete all content in the support RX FIFOs
 uint16_t tud_audio_n_available_support_ff         (uint8_t func_id, uint8_t ff_idx);
 uint16_t tud_audio_n_read_support_ff              (uint8_t func_id, uint8_t ff_idx, void* buffer, uint16_t bufsize);
+tu_fifo_t* tud_audio_n_get_rx_support_ff          (uint8_t func_id, uint8_t ff_idx);
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_IN && !CFG_TUD_AUDIO_ENABLE_ENCODING
 uint16_t tud_audio_n_write                        (uint8_t func_id, const void * data, uint16_t len);
 bool     tud_audio_n_clear_ep_in_ff               (uint8_t func_id);                          // Delete all content in the EP IN FIFO
+tu_fifo_t*   tud_audio_n_get_ep_in_ff             (uint8_t func_id);
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_IN && CFG_TUD_AUDIO_ENABLE_ENCODING
 uint16_t tud_audio_n_flush_tx_support_ff          (uint8_t func_id);      // Force all content in the support TX FIFOs to be written into EP SW FIFO
 bool     tud_audio_n_clear_tx_support_ff          (uint8_t func_id, uint8_t ff_idx);
 uint16_t tud_audio_n_write_support_ff             (uint8_t func_id, uint8_t ff_idx, const void * data, uint16_t len);
+tu_fifo_t* tud_audio_n_get_tx_support_ff          (uint8_t func_id, uint8_t ff_idx);
 #endif
 
 #if CFG_TUD_AUDIO_INT_CTR_EPSIZE_IN
@@ -399,12 +403,14 @@ static inline bool         tud_audio_mounted                (void);
 static inline uint16_t     tud_audio_available              (void);
 static inline bool         tud_audio_clear_ep_out_ff        (void);                       // Delete all content in the EP OUT FIFO
 static inline uint16_t     tud_audio_read                   (void* buffer, uint16_t bufsize);
+static inline tu_fifo_t*   tud_audio_get_ep_out_ff          (void);
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_DECODING
 static inline bool     tud_audio_clear_rx_support_ff        (uint8_t ff_idx);
 static inline uint16_t tud_audio_available_support_ff       (uint8_t ff_idx);
 static inline uint16_t tud_audio_read_support_ff            (uint8_t ff_idx, void* buffer, uint16_t bufsize);
+static inline tu_fifo_t* tud_audio_get_rx_support_ff        (uint8_t ff_idx);
 #endif
 
 // TX API
@@ -412,12 +418,14 @@ static inline uint16_t tud_audio_read_support_ff            (uint8_t ff_idx, voi
 #if CFG_TUD_AUDIO_ENABLE_EP_IN && !CFG_TUD_AUDIO_ENABLE_ENCODING
 static inline uint16_t tud_audio_write                      (const void * data, uint16_t len);
 static inline bool 	   tud_audio_clear_ep_in_ff             (void);
+static inline tu_fifo_t* tud_audio_get_ep_in_ff             (void);
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_IN && CFG_TUD_AUDIO_ENABLE_ENCODING
 static inline uint16_t tud_audio_flush_tx_support_ff        (void);
 static inline uint16_t tud_audio_clear_tx_support_ff        (uint8_t ff_idx);
 static inline uint16_t tud_audio_write_support_ff           (uint8_t ff_idx, const void * data, uint16_t len);
+static inline tu_fifo_t* tud_audio_get_tx_support_ff        (uint8_t ff_idx);
 #endif
 
 // INT CTR API
@@ -514,6 +522,11 @@ static inline bool tud_audio_clear_ep_out_ff(void)
   return tud_audio_n_clear_ep_out_ff(0);
 }
 
+static inline tu_fifo_t* tud_audio_get_ep_out_ff(void)
+{
+  return tud_audio_n_get_ep_out_ff(0);
+}
+
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_DECODING
@@ -533,6 +546,11 @@ static inline uint16_t tud_audio_read_support_ff(uint8_t ff_idx, void* buffer, u
   return tud_audio_n_read_support_ff(0, ff_idx, buffer, bufsize);
 }
 
+static inline tu_fifo_t* tud_audio_get_rx_support_ff(uint8_t ff_idx)
+{
+  return tud_audio_n_get_rx_support_ff(0, ff_idx);
+}
+
 #endif
 
 // TX API
@@ -547,6 +565,11 @@ static inline uint16_t tud_audio_write(const void * data, uint16_t len)
 static inline bool tud_audio_clear_ep_in_ff(void)
 {
   return tud_audio_n_clear_ep_in_ff(0);
+}
+
+static inline tu_fifo_t* tud_audio_get_ep_in_ff(void)
+{
+  return tud_audio_n_get_ep_in_ff(0);
 }
 
 #endif
@@ -566,6 +589,11 @@ static inline uint16_t tud_audio_clear_tx_support_ff(uint8_t ff_idx)
 static inline uint16_t tud_audio_write_support_ff(uint8_t ff_idx, const void * data, uint16_t len)
 {
   return tud_audio_n_write_support_ff(0, ff_idx, data, len);
+}
+
+static inline tu_fifo_t* tud_audio_get_tx_support_ff(uint8_t ff_idx)
+{
+  return tud_audio_n_get_tx_support_ff(0, ff_idx);
 }
 
 #endif
