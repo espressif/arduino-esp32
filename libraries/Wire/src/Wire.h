@@ -31,7 +31,9 @@
 #include "Stream.h"
 
 #define STICKBREAKER 'V1.1.0'
-#define I2C_BUFFER_LENGTH 128
+#ifndef I2C_BUFFER_LENGTH
+    #define I2C_BUFFER_LENGTH 128
+#endif
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
 
