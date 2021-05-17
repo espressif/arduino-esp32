@@ -334,7 +334,7 @@ esp_err_t esp_http_client_get_password(esp_http_client_handle_t client, char **v
  *     - ESP_OK
  *     - ESP_ERR_INVALID_ARG
  */
-esp_err_t esp_http_client_set_password(esp_http_client_handle_t client, char *password);
+esp_err_t esp_http_client_set_password(esp_http_client_handle_t client, const char *password);
 
 /**
  * @brief      Set http request auth_type.
@@ -359,6 +359,18 @@ esp_err_t esp_http_client_set_authtype(esp_http_client_handle_t client, esp_http
  *     - ESP_ERR_INVALID_ARG
  */
 esp_err_t esp_http_client_set_method(esp_http_client_handle_t client, esp_http_client_method_t method);
+
+/**
+ * @brief      Set http request timeout
+ *
+ * @param[in]  client      The esp_http_client handle
+ * @param[in]  timeout_ms  The timeout value
+ *
+ * @return
+ *     - ESP_OK
+ *     - ESP_ERR_INVALID_ARG
+ */
+esp_err_t esp_http_client_set_timeout_ms(esp_http_client_handle_t client, int timeout_ms);
 
 /**
  * @brief      Delete http request header

@@ -309,6 +309,8 @@ typedef struct TU_ATTR_PACKED
   uint8_t  bMaxPower           ; ///< Maximum power consumption of the USB device from the bus in this specific configuration when the device is fully operational. Expressed in 2 mA units (i.e., 50 = 100 mA).
 } tusb_desc_configuration_t;
 
+TU_VERIFY_STATIC( sizeof(tusb_desc_configuration_t) == 9, "size is not correct");
+
 /// USB Interface Descriptor
 typedef struct TU_ATTR_PACKED
 {

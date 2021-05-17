@@ -14,5 +14,24 @@
 
 #pragma once
 
-#define SOC_GDMA_GROUPS          (1)
-#define SOC_GDMA_PAIRS_PER_GROUP (3)
+#include <stdint.h>
+#include <stdbool.h>
+#include "soc/soc_pins.h"
+#include "soc/gpio_sig_map.h"
+#include "soc/usb_reg.h"
+#include "soc/usb_types.h"
+#include "soc/usb_struct.h"
+#include "soc/usb_wrap_reg.h"
+#include "soc/usb_wrap_struct.h"
+
+/**
+ * @brief A pin descriptor for init
+ */
+typedef struct {
+    const int pin;
+    const int func;
+    const bool is_output;
+    const int ext_phy_only;
+} usb_iopin_dsc_t;
+
+extern const usb_iopin_dsc_t usb_periph_iopins[];

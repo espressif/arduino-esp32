@@ -292,6 +292,9 @@ class ESPLoader(object):
     # Response to ESP_SYNC might indicate that flasher stub is running instead of the ROM bootloader
     sync_stub_detected = False
 
+    # Device PIDs
+    USB_JTAG_SERIAL_PID = 0x1001
+
     def __init__(self, port=DEFAULT_PORT, baud=ESP_ROM_BAUD, trace_enabled=False):
         """Base constructor for ESPLoader bootloader interaction
 
@@ -502,31 +505,51 @@ class ESPLoader(object):
         # request is sent with the updated RTS state and the same DTR state
         self._port.setDTR(self._port.dtr)
 
-    def _connect_attempt(self, mode='default_reset', esp32r0_delay=False):
-        """ A single connection attempt, with esp32r0 workaround options """
-        # esp32r0_delay is a workaround for bugs with the most common auto reset
-        # circuit and Windows, if the EN pin on the dev board does not have
-        # enough capacitance.
-        #
-        # Newer dev boards shouldn't have this problem (higher value capacitor
-        # on the EN pin), and ESP32 revision 1 can't use this workaround as it
-        # relies on a silicon bug.
-        #
-        # Details: https://github.com/espressif/esptool/issues/136
-        last_error = None
+    def _get_pid(self):
+        if list_ports is None:
+            print("\nListing all serial ports is currently not available. Can't get device PID.")
+            return
+        active_port = self._port.port
 
-        # If we're doing no_sync, we're likely communicating as a pass through
-        # with an intermediate device to the ESP32
-        if mode == "no_reset_no_sync":
-            return last_error
+        # Pyserial only identifies regular ports, URL handlers are not supported
+        if not active_port.startswith(("COM", "/dev/")):
+            print("\nDevice PID identification is only supported on COM and /dev/ serial ports.")
+            return
+        # Return the real path if the active port is a symlink
+        if active_port.startswith("/dev/") and os.path.islink(active_port):
+            active_port = os.path.realpath(active_port)
 
-        # issue reset-to-bootloader:
-        # RTS = either CH_PD/EN or nRESET (both active low = chip in reset
+        ports = list_ports.comports()
+        for p in ports:
+            if p.device == active_port:
+                return p.pid
+        print("\nFailed to get PID of a device on {}, using standard reset sequence.".format(active_port))
+
+    def bootloader_reset(self, esp32r0_delay=False, usb_jtag_serial=False):
+        """ Issue a reset-to-bootloader, with esp32r0 workaround options
+        and USB-JTAG-Serial custom reset sequence option
+        """
+        # RTS = either CH_PD/EN or nRESET (both active low = chip in reset)
         # DTR = GPIO0 (active low = boot to flasher)
         #
         # DTR & RTS are active low signals,
         # ie True = pin @ 0V, False = pin @ VCC.
-        if mode != 'no_reset':
+        if usb_jtag_serial:
+            # Custom reset sequence, which is required when the device
+            # is connecting via its USB-JTAG-Serial peripheral
+            self._setRTS(False)
+            self._setDTR(False)  # Idle
+            time.sleep(0.1)
+            self._setDTR(True)  # Set IO0
+            self._setRTS(False)
+            time.sleep(0.1)
+            self._setRTS(True)  # Reset. Note dtr/rts calls inverted so we go through (1,1) instead of (0,0)
+            self._setDTR(False)
+            self._setRTS(True)  # Extra RTS set for RTS as Windows only propagates DTR on RTS setting
+            time.sleep(0.1)
+            self._setDTR(False)
+            self._setRTS(False)
+        else:
             self._setDTR(False)  # IO0=HIGH
             self._setRTS(True)   # EN=LOW, chip in reset
             time.sleep(0.1)
@@ -544,6 +567,27 @@ class ESPLoader(object):
                 time.sleep(0.4)  # allow watchdog reset to occur
             time.sleep(0.05)
             self._setDTR(False)  # IO0=HIGH, done
+
+    def _connect_attempt(self, mode='default_reset', esp32r0_delay=False, usb_jtag_serial=False):
+        """ A single connection attempt, with esp32r0 workaround options """
+        # esp32r0_delay is a workaround for bugs with the most common auto reset
+        # circuit and Windows, if the EN pin on the dev board does not have
+        # enough capacitance.
+        #
+        # Newer dev boards shouldn't have this problem (higher value capacitor
+        # on the EN pin), and ESP32 revision 1 can't use this workaround as it
+        # relies on a silicon bug.
+        #
+        # Details: https://github.com/espressif/esptool/issues/136
+        last_error = None
+
+        # If we're doing no_sync, we're likely communicating as a pass through
+        # with an intermediate device to the ESP32
+        if mode == "no_reset_no_sync":
+            return last_error
+
+        if mode != 'no_reset':
+            self.bootloader_reset(esp32r0_delay, usb_jtag_serial)
 
         for _ in range(5):
             try:
@@ -578,12 +622,14 @@ class ESPLoader(object):
         sys.stdout.flush()
         last_error = None
 
+        usb_jtag_serial = (mode == 'usb_reset') or (self._get_pid() == self.USB_JTAG_SERIAL_PID)
+
         try:
             for _ in range(attempts) if attempts > 0 else itertools.count():
-                last_error = self._connect_attempt(mode=mode, esp32r0_delay=False)
+                last_error = self._connect_attempt(mode=mode, esp32r0_delay=False, usb_jtag_serial=usb_jtag_serial)
                 if last_error is None:
                     break
-                last_error = self._connect_attempt(mode=mode, esp32r0_delay=True)
+                last_error = self._connect_attempt(mode=mode, esp32r0_delay=True, usb_jtag_serial=usb_jtag_serial)
                 if last_error is None:
                     break
         finally:
@@ -1119,6 +1165,7 @@ class ESPLoader(object):
         return norm_xtal
 
     def hard_reset(self):
+        print('Hard resetting via RTS pin...')
         self._setRTS(True)  # EN->LOW
         time.sleep(0.1)
         self._setRTS(False)
@@ -3747,7 +3794,7 @@ def main(argv=None, esp=None):
     parser.add_argument(
         '--before',
         help='What to do before connecting to the chip',
-        choices=['default_reset', 'no_reset', 'no_reset_no_sync'],
+        choices=['default_reset', 'usb_reset', 'no_reset', 'no_reset_no_sync'],
         default=os.environ.get('ESPTOOL_BEFORE', 'default_reset'))
 
     parser.add_argument(
@@ -4085,7 +4132,6 @@ def main(argv=None, esp=None):
             # the ESP is now running the loaded image, so let it run
             print('Exiting immediately.')
         elif args.after == 'hard_reset':
-            print('Hard resetting via RTS pin...')
             esp.hard_reset()
         elif args.after == 'soft_reset':
             print('Soft resetting...')
@@ -4454,38 +4500,39 @@ RfkUkuyyOdUc3cA++yLd1jGVnPHEaykw4ib73wI9Z8EaDX57yka9LlPPb4oouPZG6wIRfioT93Lfo145
 sjMVGlu3dKP/wuHdgx3+kk8UwkM7t8Vv/wXDV5Qe\
 """)))
 ESP32C3ROM.STUB_CODE = eval(zlib.decompress(base64.b64decode(b"""
-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\
-rq/ZkQ==\
+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\
 """)))
 ESP32C6BETAROM.STUB_CODE = eval(zlib.decompress(base64.b64decode(b"""
 eNrFWmt700YW/itpEpKWvc3Iug0tiU3tOA6XZftAKTymRRpJWWjrXYKB0F3/9533XCQ5iQ3f9oMTezSaOXPOe95zkf5zuKwvl4d3dsrD+aWx80sbPmUWvuNjXp3NL30evg3ml4WbX+Y0ehAGi0fhT/pD+BOHoTT8\

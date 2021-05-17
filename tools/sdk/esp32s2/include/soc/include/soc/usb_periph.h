@@ -14,8 +14,24 @@
 
 #pragma once
 
-#define SOC_MPU_CONFIGURABLE_REGIONS_SUPPORTED    0
-#define SOC_MPU_MIN_REGION_SIZE                   0x20000000U
-#define SOC_MPU_REGIONS_MAX_NUM                   8
-#define SOC_MPU_REGION_RO_SUPPORTED               0
-#define SOC_MPU_REGION_WO_SUPPORTED               0
+#include <stdint.h>
+#include <stdbool.h>
+#include "soc/soc_pins.h"
+#include "soc/gpio_sig_map.h"
+#include "soc/usb_reg.h"
+#include "soc/usb_types.h"
+#include "soc/usb_struct.h"
+#include "soc/usb_wrap_reg.h"
+#include "soc/usb_wrap_struct.h"
+
+/**
+ * @brief A pin descriptor for init
+ */
+typedef struct {
+    const int pin;
+    const int func;
+    const bool is_output;
+    const int ext_phy_only;
+} usb_iopin_dsc_t;
+
+extern const usb_iopin_dsc_t usb_periph_iopins[];
