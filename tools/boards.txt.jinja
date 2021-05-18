@@ -1,0 +1,128 @@
+{# The comment on the next line is for the file
+   that will be generated from this template.
+   You CAN edit this file! #}
+### THIS IS A GENERATED FILE, DO NOT EDIT.
+### To add a board, see gen_boards.py.
+{% for board_id, board in boards.items() %}
+##############################################################
+
+{{ board_id }}.name={{ board.name }}
+
+{{ board_id }}.upload.tool=esptool_py
+{{ board_id }}.upload.maximum_size={{ board.maximum_size }}
+{{ board_id }}.upload.maximum_data_size={{ board.maximum_data_size }}
+{{ board_id }}.upload.flags={{ board.flags }}
+{{ board_id }}.upload.extra_flags={{ board.extra_flags }}
+
+{{ board_id }}.serial.disableDTR=true
+{{ board_id }}.serial.disableRTS=true
+
+{{ board_id }}.build.tarch={{ board.tarch }}
+{{ board_id }}.build.bootloader_addr={{ board.bootloader_addr }}
+{{ board_id }}.build.target={{ board.target }}
+{{ board_id }}.build.mcu={{ board.mcu }}
+{{ board_id }}.build.core={{ board.core }}
+{{ board_id }}.build.variant={{ board_id }}
+{{ board_id }}.build.board={{ board.board_macro }}
+
+{{ board_id }}.build.f_cpu={{ board.f_cpu }}
+{{ board_id }}.build.flash_size={{ board.flash_size }}
+{{ board_id }}.build.flash_freq={{ board.flash_freq }}
+{{ board_id }}.build.flash_mode={{ board.flash_mode }}
+{{ board_id }}.build.boot={{ board.boot_flash_mode }}
+{{ board_id }}.build.partitions={{ board.partitions }}
+{{ board_id }}.build.defines={{ board.defines }}
+
+{% for id, part_scheme in partition_schemes.items() %}
+{% if part_scheme.flash_size_required_mb <= board.max_partitions_size_mb %}
+{{ board_id }}.menu.PartitionScheme.{{ id }}={{ part_scheme.name }}
+{{ board_id }}.menu.PartitionScheme.{{ id }}.build.partitions={{ id }}
+{{ board_id }}.menu.PartitionScheme.no_ota.upload.maximum_size={{ part_scheme.maximum_size }}
+{% endif %}
+{% endfor %}
+
+{% if board.f_cpu == 240000000 -%}
+{{ board_id }}.menu.CPUFreq.240=240MHz (WiFi/BT)
+{{ board_id }}.menu.CPUFreq.240.build.f_cpu=240000000L
+{%- endif %}
+{{ board_id }}.menu.CPUFreq.160=160MHz (WiFi/BT)
+{{ board_id }}.menu.CPUFreq.160.build.f_cpu=160000000L
+{{ board_id }}.menu.CPUFreq.80=80MHz (WiFi/BT)
+{{ board_id }}.menu.CPUFreq.80.build.f_cpu=80000000L
+{{ board_id }}.menu.CPUFreq.40=40MHz (40MHz XTAL)
+{{ board_id }}.menu.CPUFreq.40.build.f_cpu=40000000L
+{{ board_id }}.menu.CPUFreq.26=26MHz (26MHz XTAL)
+{{ board_id }}.menu.CPUFreq.26.build.f_cpu=26000000L
+{{ board_id }}.menu.CPUFreq.20=20MHz (40MHz XTAL)
+{{ board_id }}.menu.CPUFreq.20.build.f_cpu=20000000L
+{{ board_id }}.menu.CPUFreq.13=13MHz (26MHz XTAL)
+{{ board_id }}.menu.CPUFreq.13.build.f_cpu=13000000L
+{{ board_id }}.menu.CPUFreq.10=10MHz (40MHz XTAL)
+{{ board_id }}.menu.CPUFreq.10.build.f_cpu=10000000L
+
+{% if board.FlashMode %}
+{{ board_id }}.menu.FlashMode.qio=QIO
+{{ board_id }}.menu.FlashMode.qio.build.flash_mode=dio
+{{ board_id }}.menu.FlashMode.qio.build.boot=qio
+{{ board_id }}.menu.FlashMode.dio=DIO
+{{ board_id }}.menu.FlashMode.dio.build.flash_mode=dio
+{{ board_id }}.menu.FlashMode.dio.build.boot=dio
+{{ board_id }}.menu.FlashMode.qout=QOUT
+{{ board_id }}.menu.FlashMode.qout.build.flash_mode=dout
+{{ board_id }}.menu.FlashMode.qout.build.boot=qout
+{{ board_id }}.menu.FlashMode.dout=DOUT
+{{ board_id }}.menu.FlashMode.dout.build.flash_mode=dout
+{{ board_id }}.menu.FlashMode.dout.build.boot=dout
+{% endif %}
+
+{% if board.FlashFreq %}
+{{ board_id }}.menu.FlashFreq.80=80MHz
+{{ board_id }}.menu.FlashFreq.80.build.flash_freq=80m
+{{ board_id }}.menu.FlashFreq.40=40MHz
+{{ board_id }}.menu.FlashFreq.40.build.flash_freq=40m
+{% endif %}
+
+{% if board.FlashSize %}
+{{ board_id }}.menu.FlashSize.4M=4MB (32Mb)
+{{ board_id }}.menu.FlashSize.4M.build.flash_size=4MB
+{{ board_id }}.menu.FlashSize.2M=2MB (16Mb)
+{{ board_id }}.menu.FlashSize.2M.build.flash_size=2MB
+{{ board_id }}.menu.FlashSize.2M.build.partitions=minimal
+{{ board_id }}.menu.FlashSize.16M=16MB (128Mb)
+{{ board_id }}.menu.FlashSize.16M.build.flash_size=16MB
+{{ board_id }}.menu.FlashSize.16M.build.partitions=ffat
+{% endif %}
+
+{# Assume for now that all boards are capable of all
+   upload speeds. If this isn't the case, it can be solved
+   similar to how partition schemes are handled. #}
+
+{{ board_id }}.menu.UploadSpeed.921600=921600
+{{ board_id }}.menu.UploadSpeed.921600.upload.speed=921600
+{{ board_id }}.menu.UploadSpeed.115200=115200
+{{ board_id }}.menu.UploadSpeed.115200.upload.speed=115200
+{{ board_id }}.menu.UploadSpeed.256000.windows=256000
+{{ board_id }}.menu.UploadSpeed.256000.upload.speed=256000
+{{ board_id }}.menu.UploadSpeed.230400.windows.upload.speed=256000
+{{ board_id }}.menu.UploadSpeed.230400=230400
+{{ board_id }}.menu.UploadSpeed.230400.upload.speed=230400
+{{ board_id }}.menu.UploadSpeed.460800.linux=460800
+{{ board_id }}.menu.UploadSpeed.460800.macosx=460800
+{{ board_id }}.menu.UploadSpeed.460800.upload.speed=460800
+{{ board_id }}.menu.UploadSpeed.512000.windows=512000
+{{ board_id }}.menu.UploadSpeed.512000.upload.speed=512000
+
+{{ board_id }}.menu.DebugLevel.none=None
+{{ board_id }}.menu.DebugLevel.none.build.code_debug=0
+{{ board_id }}.menu.DebugLevel.error=Error
+{{ board_id }}.menu.DebugLevel.error.build.code_debug=1
+{{ board_id }}.menu.DebugLevel.warn=Warn
+{{ board_id }}.menu.DebugLevel.warn.build.code_debug=2
+{{ board_id }}.menu.DebugLevel.info=Info
+{{ board_id }}.menu.DebugLevel.info.build.code_debug=3
+{{ board_id }}.menu.DebugLevel.debug=Debug
+{{ board_id }}.menu.DebugLevel.debug.build.code_debug=4
+{{ board_id }}.menu.DebugLevel.verbose=Verbose
+{{ board_id }}.menu.DebugLevel.verbose.build.code_debug=5
+
+{% endfor %}
