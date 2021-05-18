@@ -62,15 +62,15 @@ typedef enum
 {
   HID_SUBCLASS_NONE = 0, ///< No Subclass
   HID_SUBCLASS_BOOT = 1  ///< Boot Interface Subclass
-}hid_subclass_type_t;
+}hid_subclass_enum_t;
 
-/// HID Protocol
+/// HID Interface Protocol
 typedef enum
 {
-  HID_PROTOCOL_NONE     = 0, ///< None
-  HID_PROTOCOL_KEYBOARD = 1, ///< Keyboard
-  HID_PROTOCOL_MOUSE    = 2  ///< Mouse
-}hid_protocol_type_t;
+  HID_ITF_PROTOCOL_NONE     = 0, ///< None
+  HID_ITF_PROTOCOL_KEYBOARD = 1, ///< Keyboard
+  HID_ITF_PROTOCOL_MOUSE    = 2  ///< Mouse
+}hid_interface_protocol_enum_t;
 
 /// HID Descriptor Type
 typedef enum
@@ -78,7 +78,7 @@ typedef enum
   HID_DESC_TYPE_HID      = 0x21, ///< HID Descriptor
   HID_DESC_TYPE_REPORT   = 0x22, ///< Report Descriptor
   HID_DESC_TYPE_PHYSICAL = 0x23  ///< Physical Descriptor
-}hid_descriptor_type_t;
+}hid_descriptor_enum_t;
 
 /// HID Request Report Type
 typedef enum
@@ -98,9 +98,9 @@ typedef enum
   HID_REQ_CONTROL_SET_REPORT   = 0x09, ///< Set Report
   HID_REQ_CONTROL_SET_IDLE     = 0x0a, ///< Set Idle
   HID_REQ_CONTROL_SET_PROTOCOL = 0x0b  ///< Set Protocol
-}hid_request_type_t;
+}hid_request_enum_t;
 
-/// HID Country Code
+/// HID Local Code
 typedef enum
 {
   HID_LOCAL_NotSupported = 0   , ///< NotSupported
@@ -139,7 +139,14 @@ typedef enum
   HID_LOCAL_US                 , ///< US
   HID_LOCAL_Yugoslavia         , ///< Yugoslavia
   HID_LOCAL_Turkish_F            ///< Turkish-F
-} hid_country_code_t;
+} hid_local_enum_t;
+
+// HID protocol value used by GetProtocol / SetProtocol
+typedef enum
+{
+  HID_PROTOCOL_BOOT = 0,
+  HID_PROTOCOL_REPORT = 1
+} hid_protocol_mode_enum_t;
 
 /** @} */
 
