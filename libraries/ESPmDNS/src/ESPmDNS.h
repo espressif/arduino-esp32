@@ -111,11 +111,13 @@ public:
   bool hasTxt(int idx, const char * key);
   String txt(int idx, const char * key);
   String txt(int idx, int txtIdx);
+  String txtKey(int idx, int txtIdx);
   
 private:
   String _hostname;
   mdns_result_t * results;
   mdns_result_t * _getResult(int idx);
+  mdns_txt_item_t * _getResultTxt(int idx, int txtIdx);
 };
 
 extern MDNSResponder MDNS;
