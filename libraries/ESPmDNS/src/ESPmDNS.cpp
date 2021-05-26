@@ -245,6 +245,16 @@ mdns_result_t * MDNSResponder::_getResult(int idx){
     return result;
 }
 
+mdns_txt_item_t * MDNSResponder::_getResultTxt(int idx, int txtIdx){
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return NULL;
+    }
+    if (txtIdx >= result->txt_count) return NULL;
+    return &result->txt[txtIdx];
+}
+
 String MDNSResponder::hostname(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
@@ -333,13 +343,17 @@ String MDNSResponder::txt(int idx, const char * key) {
 }
 
 String MDNSResponder::txt(int idx, int txtIdx) {
-    mdns_result_t * result = _getResult(idx);
-    if(!result){
-        log_e("Result %d not found", idx);
-        return "";
-    }
-    if (txtIdx >= result->txt_count) return "";
-    return result->txt[txtIdx].value;
+    mdns_txt_item_t * resultTxt = _getResultTxt(idx, txtIdx);
+    return !resultTxt
+        ? ""
+        : resultTxt->value;
+}
+
+String MDNSResponder::txtKey(int idx, int txtIdx) {
+    mdns_txt_item_t * resultTxt = _getResultTxt(idx, txtIdx);
+    return !resultTxt
+        ? ""
+        : resultTxt->key;
 }
 
 MDNSResponder MDNS;

@@ -161,8 +161,11 @@ set(includedirs
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt arduino_tinyusb main)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
 
+if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
+  list(APPEND priv_requires arduino_tinyusb)
+endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
   list(APPEND priv_requires esp_https_ota)
 endif()

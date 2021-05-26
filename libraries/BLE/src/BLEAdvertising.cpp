@@ -593,7 +593,7 @@ bool BLEMultiAdvertising::setScanRspData(uint8_t instance, uint16_t length, cons
 }
 
 /**
-* @brief           This function is used to request the Controller to disable one or more
+* @brief           This function is used to request the Controller to enable one or more
 *                  advertising sets using the advertising sets identified by the instance parameter.
 *
 * @return            - true : success
@@ -606,7 +606,7 @@ bool BLEMultiAdvertising::start()
 }
 
 /**
-* @brief           This function is used to request the Controller to disable one or more
+* @brief           This function is used to request the Controller to enable one or more
 *                  advertising sets using the advertising sets identified by the instance parameter.
 *
 * @param[in]       num : Number of advertising sets to enable or disable
