@@ -11,13 +11,45 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NT99141_PID     (0x14)
-#define OV9650_PID     (0x96)
-#define OV7725_PID     (0x77)
-#define OV2640_PID     (0x26)
-#define OV3660_PID     (0x36)
-#define OV5640_PID     (0x56)
-#define OV7670_PID     (0x76)
+// Chip ID Registers
+#define REG_PID        0x0A
+#define REG_VER        0x0B
+#define REG_MIDH       0x1C
+#define REG_MIDL       0x1D
+
+#define REG16_CHIDH     0x300A
+#define REG16_CHIDL     0x300B
+
+typedef enum {
+    OV9650_PID = 0x96,
+    OV7725_PID = 0x77,
+    OV2640_PID = 0x26,
+    OV3660_PID = 0x36,
+    OV5640_PID = 0x56,
+    OV7670_PID = 0x76,
+    NT99141_PID = 0x14
+} camera_pid_t;
+
+typedef enum {
+    CAMERA_OV7725,
+    CAMERA_OV2640,
+    CAMERA_OV3660,
+    CAMERA_OV5640,
+    CAMERA_OV7670,
+    CAMERA_NT99141,
+    CAMERA_MODEL_MAX,
+    CAMERA_NONE,
+    CAMERA_UNKNOWN
+} camera_model_t;
+
+typedef enum {
+    OV2640_SCCB_ADDR   = 0x30,
+    OV5640_SCCB_ADDR   = 0x3C,
+    OV3660_SCCB_ADDR   = 0x3C,
+    OV7725_SCCB_ADDR   = 0x21,
+    OV7670_SCCB_ADDR   = 0x21,
+    NT99141_SCCB_ADDR  = 0x2A,
+} camera_sccb_addr_t;
 
 typedef enum {
     PIXFORMAT_RGB565,    // 2BPP/RGB565
@@ -57,6 +89,13 @@ typedef enum {
     FRAMESIZE_QSXGA,    // 2560x1920
     FRAMESIZE_INVALID
 } framesize_t;
+
+typedef struct {
+    const camera_model_t model;
+    const camera_sccb_addr_t sccb_addr;
+    const camera_pid_t pid;
+    const framesize_t max_size;
+} camera_sensor_info_t;
 
 typedef enum {
     ASPECT_RATIO_4X3,
@@ -101,6 +140,8 @@ typedef struct {
 
 // Resolution table (in sensor.c)
 extern const resolution_info_t resolution[];
+// camera sensor table (in sensor.c)
+extern const camera_sensor_info_t camera_sensor[];
 
 typedef struct {
     uint8_t MIDH;

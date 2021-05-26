@@ -22,6 +22,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include "esp_camera.h"
+#include "esp_jpg_decode.h"
 
 typedef size_t (* jpg_out_cb)(void * arg, size_t index, const void* data, size_t len);
 
@@ -119,6 +120,8 @@ bool frame2bmp(camera_fb_t * fb, uint8_t ** out, size_t * out_len);
  * @return true on success
  */
 bool fmt2rgb888(const uint8_t *src_buf, size_t src_len, pixformat_t format, uint8_t * rgb_buf);
+
+bool jpg2rgb565(const uint8_t *src, size_t src_len, uint8_t * out, jpg_scale_t scale);
 
 #ifdef __cplusplus
 }
