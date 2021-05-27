@@ -51,7 +51,7 @@ static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
     return TUD_DFU_RT_DESC_LEN;
 }
 // Invoked on DFU_DETACH request to reboot to the bootloader
-void tud_dfu_rt_reboot_to_dfu(void)
+void tud_dfu_runtime_reboot_to_dfu_cb(void)
 {
     usb_persist_restart(RESTART_BOOTLOADER_DFU);
 }
