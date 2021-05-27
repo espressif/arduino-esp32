@@ -25,7 +25,7 @@
 
 const char *pers = "esp32-tls";
 
-static int _handle_error(int err, const char * file, int line)
+static int _handle_error(int err, const char * function, int line)
 {
     if(err == -30848){
         return err;
@@ -33,9 +33,9 @@ static int _handle_error(int err, const char * file, int line)
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
     mbedtls_strerror(err, error_buf, 100);
-    log_e("[%s():%d]: (%d) %s", file, line, err, error_buf);
+    log_e("[%s():%d]: (%d) %s", function, line, err, error_buf);
 #else
-    log_e("[%s():%d]: code %d", file, line, err);
+    log_e("[%s():%d]: code %d", function, line, err);
 #endif
     return err;
 }
