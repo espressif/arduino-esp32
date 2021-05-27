@@ -309,6 +309,8 @@ typedef struct TU_ATTR_PACKED
   uint8_t  bMaxPower           ; ///< Maximum power consumption of the USB device from the bus in this specific configuration when the device is fully operational. Expressed in 2 mA units (i.e., 50 = 100 mA).
 } tusb_desc_configuration_t;
 
+TU_VERIFY_STATIC( sizeof(tusb_desc_configuration_t) == 9, "size is not correct");
+
 /// USB Interface Descriptor
 typedef struct TU_ATTR_PACKED
 {
@@ -420,6 +422,29 @@ typedef struct TU_ATTR_PACKED
   uint8_t bScheme;
   char    url[];
 } tusb_desc_webusb_url_t;
+
+// DFU Functional Descriptor
+typedef struct TU_ATTR_PACKED
+{
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+
+  union {
+    struct TU_ATTR_PACKED {
+      uint8_t bitCanDnload             : 1;
+      uint8_t bitCanUpload             : 1;
+      uint8_t bitManifestationTolerant : 1;
+      uint8_t bitWillDetach            : 1;
+      uint8_t reserved                 : 4;
+    } bmAttributes;
+
+    uint8_t bAttributes;
+  };
+
+  uint16_t wDetachTimeOut;
+  uint16_t wTransferSize;
+  uint16_t bcdDFUVersion;
+} tusb_desc_dfu_functional_t;
 
 /*------------------------------------------------------------------*/
 /* Types
