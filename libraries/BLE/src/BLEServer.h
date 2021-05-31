@@ -143,7 +143,7 @@ public:
 	 * @param [in] pServer A reference to the %BLE server that received the client connection.
 	 * @param [in] param A reference to esp_ble_gatts_cb_param_t.
 	 */
-	virtual void onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param)
+	virtual void onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param);
 }; // BLEServerCallbacks
 
 
