@@ -57,6 +57,7 @@ static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semde
 
 static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
+  (void) in_isr;
   sem_release(sem_hdl);
   return true;
 }
@@ -158,6 +159,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   //  however osal_queue_recieve may be. therefore my assumption is that
   //  the fifo mutex is not populated for queues used from an IRQ context
   //assert(!qhdl->ff.mutex);
+  (void) in_isr;
 
   _osal_q_lock(qhdl);
   bool success = tu_fifo_write(&qhdl->ff, data);

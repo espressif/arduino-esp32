@@ -94,6 +94,7 @@
 
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
+#define OPT_MCU_ESP32S3           901 ///< Espressif ESP32-S3
 
 // Dialog
 #define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
@@ -240,7 +241,15 @@
 #endif
 
 #ifndef CFG_TUD_DFU_RUNTIME
-  #define CFG_TUD_DFU_RUNTIME          0
+  #define CFG_TUD_DFU_RUNTIME     0
+#endif
+
+#ifndef CFG_TUD_DFU_MODE
+  #define CFG_TUD_DFU_MODE        0
+#endif
+
+#ifndef CFG_TUD_DFU_TRANSFER_BUFFER_SIZE
+  #define CFG_TUD_DFU_TRANSFER_BUFFER_SIZE  64
 #endif
 
 #ifndef CFG_TUD_NET
@@ -265,11 +274,8 @@
     #error there is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
   #endif
 
-  //------------- HID CLASS -------------//
-  #define HOST_CLASS_HID   ( CFG_TUH_HID_KEYBOARD + CFG_TUH_HID_MOUSE + CFG_TUSB_HOST_HID_GENERIC )
-
-  #ifndef CFG_TUSB_HOST_ENUM_BUFFER_SIZE
-    #define CFG_TUSB_HOST_ENUM_BUFFER_SIZE 256
+  #ifndef CFG_TUH_ENUMERATION_BUFSZIE
+    #define CFG_TUH_ENUMERATION_BUFSZIE 256
   #endif
 
   //------------- CLASS -------------//
@@ -282,11 +288,22 @@
 
 // TUP_ARCH_STRICT_ALIGN if arch cannot access unaligned memory
 
+
 // ARMv7+ (M3-M7, M23-M33) can access unaligned memory
 #if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7))
   #define TUP_ARCH_STRICT_ALIGN   0
 #else
   #define TUP_ARCH_STRICT_ALIGN   1
+#endif
+
+// TUP_MCU_STRICT_ALIGN will overwrite TUP_ARCH_STRICT_ALIGN.
+// In case TUP_MCU_STRICT_ALIGN = 1 and TUP_ARCH_STRICT_ALIGN =0, we will not reply on compiler
+// to generate unaligned access code.
+// LPC_IP3511 Highspeed cannot access unaligned memory on USB_RAM
+#if TUD_OPT_HIGH_SPEED && (CFG_TUSB_MCU == OPT_MCU_LPC54XXX || CFG_TUSB_MCU == OPT_MCU_LPC55XX)
+  #define TUP_MCU_STRICT_ALIGN   1
+#else
+  #define TUP_MCU_STRICT_ALIGN   0
 #endif
 
 //------------------------------------------------------------------
