@@ -8448,8 +8448,6 @@ esp32-trueverit-iot-driver.menu.FlashFreq.80.build.flash_freq=80m
 esp32-trueverit-iot-driver.menu.FlashFreq.40=40MHz
 esp32-trueverit-iot-driver.menu.FlashFreq.40.build.flash_freq=40m
 
-esp32-trueverit-iot-driver.menu.UploadSpeed.921600=921600
-esp32-trueverit-iot-driver.menu.UploadSpeed.921600.upload.speed=921600
 esp32-trueverit-iot-driver.menu.UploadSpeed.115200=115200
 esp32-trueverit-iot-driver.menu.UploadSpeed.115200.upload.speed=115200
 esp32-trueverit-iot-driver.menu.UploadSpeed.256000.windows=256000
@@ -8460,8 +8458,6 @@ esp32-trueverit-iot-driver.menu.UploadSpeed.230400.upload.speed=230400
 esp32-trueverit-iot-driver.menu.UploadSpeed.460800.linux=460800
 esp32-trueverit-iot-driver.menu.UploadSpeed.460800.macosx=460800
 esp32-trueverit-iot-driver.menu.UploadSpeed.460800.upload.speed=460800
-esp32-trueverit-iot-driver.menu.UploadSpeed.512000.windows=512000
-esp32-trueverit-iot-driver.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32-trueverit-iot-driver.menu.DebugLevel.none=None
 esp32-trueverit-iot-driver.menu.DebugLevel.none.build.code_debug=0
