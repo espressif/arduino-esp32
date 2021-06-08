@@ -28,6 +28,10 @@
 #ifndef _TUSB_FIFO_H_
 #define _TUSB_FIFO_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Due to the use of unmasked pointers, this FIFO does not suffer from loosing
 // one item slice. Furthermore, write and read operations are completely
 // decoupled as write and read functions do not modify a common state. Henceforth,
@@ -37,25 +41,17 @@
 // read pointers can be updated from within a DMA ISR. Overflows are detectable
 // within a certain number (see tu_fifo_overflow()).
 
+#include "common/tusb_common.h"
+
 // mutex is only needed for RTOS
 // for OS None, we don't get preempted
 #define CFG_FIFO_MUTEX      (CFG_TUSB_OS != OPT_OS_NONE)
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #if CFG_FIFO_MUTEX
 #include "osal/osal.h"
 #define tu_fifo_mutex_t  osal_mutex_t
 #endif
 
-/** \struct tu_fifo_t
- * \brief Simple Circular FIFO
- */
 typedef struct
 {
   uint8_t* buffer               ; ///< buffer pointer
@@ -104,7 +100,8 @@ bool tu_fifo_clear(tu_fifo_t *f);
 bool tu_fifo_config(tu_fifo_t *f, void* buffer, uint16_t depth, uint16_t item_size, bool overwritable);
 
 #if CFG_FIFO_MUTEX
-static inline void tu_fifo_config_mutex(tu_fifo_t *f, tu_fifo_mutex_t write_mutex_hdl, tu_fifo_mutex_t read_mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline
+void tu_fifo_config_mutex(tu_fifo_t *f, tu_fifo_mutex_t write_mutex_hdl, tu_fifo_mutex_t read_mutex_hdl)
 {
   f->mutex_wr = write_mutex_hdl;
   f->mutex_rd = read_mutex_hdl;
@@ -129,15 +126,16 @@ uint16_t tu_fifo_remaining              (tu_fifo_t* f);
 bool     tu_fifo_overflowed             (tu_fifo_t* f);
 void     tu_fifo_correct_read_pointer   (tu_fifo_t* f);
 
-static inline uint16_t tu_fifo_depth(tu_fifo_t* f)
+TU_ATTR_ALWAYS_INLINE static inline
+uint16_t tu_fifo_depth(tu_fifo_t* f)
 {
   return f->depth;
 }
 
 // Pointer modifications intended to be used in combinations with DMAs.
 // USE WITH CARE - NO SAFTY CHECKS CONDUCTED HERE! NOT MUTEX PROTECTED!
-void     tu_fifo_advance_write_pointer  (tu_fifo_t *f, uint16_t n);
-void     tu_fifo_advance_read_pointer   (tu_fifo_t *f, uint16_t n);
+void tu_fifo_advance_write_pointer(tu_fifo_t *f, uint16_t n);
+void tu_fifo_advance_read_pointer (tu_fifo_t *f, uint16_t n);
 
 // If you want to read/write from/to the FIFO by use of a DMA, you may need to conduct two copies
 // to handle a possible wrapping part. These functions deliver a pointer to start
