@@ -8,7 +8,7 @@
  * Deterministic Random Bit Generators</em>.
  */
 /*
- *  Copyright (C) 2006-2019, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  This file is provided under the Apache License 2.0, or the
@@ -49,8 +49,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  **********
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_HMAC_DRBG_H
 #define MBEDTLS_HMAC_DRBG_H
@@ -139,6 +137,10 @@ typedef struct mbedtls_hmac_drbg_context
  *
  * This function makes the context ready for mbedtls_hmac_drbg_seed(),
  * mbedtls_hmac_drbg_seed_buf() or mbedtls_hmac_drbg_free().
+ *
+ * \note                The reseed interval is #MBEDTLS_HMAC_DRBG_RESEED_INTERVAL
+ *                      by default. Override this value by calling
+ *                      mbedtls_hmac_drbg_set_reseed_interval().
  *
  * \param ctx           HMAC_DRBG context to be initialized.
  */
@@ -363,7 +365,8 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
 int mbedtls_hmac_drbg_random( void *p_rng, unsigned char *output, size_t out_len );
 
 /**
- * \brief               Free an HMAC_DRBG context
+ * \brief               This function resets HMAC_DRBG context to the state immediately
+ *                      after initial call of mbedtls_hmac_drbg_init().
  *
  * \param ctx           The HMAC_DRBG context to free.
  */

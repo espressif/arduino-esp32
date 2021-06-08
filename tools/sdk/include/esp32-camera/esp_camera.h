@@ -38,7 +38,8 @@
         .pixel_format   = PIXFORMAT_JPEG,
         .frame_size     = FRAMESIZE_SVGA,
         .jpeg_quality   = 10,
-        .fb_count       = 2
+        .fb_count       = 2,
+        .grab_mode      = CAMERA_GRAB_WHEN_EMPTY
     };
 
     esp_err_t camera_example_init(){
@@ -77,6 +78,14 @@ extern "C" {
 /**
  * @brief Configuration structure for camera initialization
  */
+typedef enum {
+    CAMERA_GRAB_WHEN_EMPTY,         /*!< Fills buffers when they are empty. Less resources but first 'fb_count' frames might be old */
+    CAMERA_GRAB_LATEST              /*!< Except when 1 frame buffer is used, queue will always contain the last 'fb_count' frames */
+} camera_grab_mode_t;
+
+/**
+ * @brief Configuration structure for camera initialization
+ */
 typedef struct {
     int pin_pwdn;                   /*!< GPIO pin for camera power down line */
     int pin_reset;                  /*!< GPIO pin for camera reset line */
@@ -95,7 +104,7 @@ typedef struct {
     int pin_href;                   /*!< GPIO pin for camera HREF line */
     int pin_pclk;                   /*!< GPIO pin for camera PCLK line */
 
-    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental) */
+    int xclk_freq_hz;               /*!< Frequency of XCLK signal, in Hz. EXPERIMENTAL: Set to 16MHz on ESP32-S2 or ESP32-S3 to enable EDMA mode */
 
     ledc_timer_t ledc_timer;        /*!< LEDC timer to be used for generating XCLK  */
     ledc_channel_t ledc_channel;    /*!< LEDC channel to be used for generating XCLK  */
@@ -105,6 +114,7 @@ typedef struct {
 
     int jpeg_quality;               /*!< Quality of JPEG output. 0-63 lower means higher quality  */
     size_t fb_count;                /*!< Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)  */
+    camera_grab_mode_t grab_mode;   /*!< When buffers should be filled */
 } camera_config_t;
 
 /**
