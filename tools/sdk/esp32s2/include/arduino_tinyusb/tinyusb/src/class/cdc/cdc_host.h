@@ -27,8 +27,6 @@
 #ifndef _TUSB_CDC_HOST_H_
 #define _TUSB_CDC_HOST_H_
 
-#include "common/tusb_common.h"
-#include "host/usbh.h"
 #include "cdc.h"
 
 #ifdef __cplusplus
