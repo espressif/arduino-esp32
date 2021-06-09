@@ -126,7 +126,8 @@ void BLEScan::handleGAPEvent(
 
 					if (m_pAdvertisedDeviceCallbacks) { // if has callback, no need to record to vector
 						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
-					} else if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
+					} 
+					if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
 						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
 						shouldDelete = false;
 					}
