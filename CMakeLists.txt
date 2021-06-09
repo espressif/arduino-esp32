@@ -170,7 +170,9 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoO
   list(APPEND priv_requires esp_https_ota)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-  list(APPEND priv_requires esp_littlefs)
+  if(CONFIG_LITTLEFS_PAGE_SIZE)
+    list(APPEND priv_requires esp_littlefs)
+  endif()
 endif()
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
