@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -49,8 +41,8 @@ typedef enum {
     ADC1_CHANNEL_5,     /*!< ADC1 channel 5 is GPIO6  */
     ADC1_CHANNEL_6,     /*!< ADC1 channel 6 is GPIO7  */
     ADC1_CHANNEL_7,     /*!< ADC1 channel 7 is GPIO8  */
-    ADC1_CHANNEL_8,     /*!< ADC1 channel 6 is GPIO9  */
-    ADC1_CHANNEL_9,     /*!< ADC1 channel 7 is GPIO10 */
+    ADC1_CHANNEL_8,     /*!< ADC1 channel 8 is GPIO9  */
+    ADC1_CHANNEL_9,     /*!< ADC1 channel 9 is GPIO10 */
     ADC1_CHANNEL_MAX,
 } adc1_channel_t;
 #elif CONFIG_IDF_TARGET_ESP32C3
@@ -135,7 +127,7 @@ typedef enum {
  * @brief Digital ADC DMA configuration
  */
 typedef struct adc_digi_init_config_s {
-    uint32_t max_store_buf_size;    ///< Max length of the converted data that driver can store before they are processed. When this length is reached, driver will dump out all the old data and start to store them again.
+    uint32_t max_store_buf_size;    ///< Max length of the converted data that driver can store before they are processed.
     uint32_t conv_num_each_intr;    ///< Bytes of data that can be converted in 1 interrupt.
     uint32_t adc1_chan_mask;        ///< Channel list of ADC1 to be initialized.
     uint32_t adc2_chan_mask;        ///< Channel list of ADC2 to be initialized.

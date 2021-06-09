@@ -62,15 +62,15 @@ typedef enum
 {
   HID_SUBCLASS_NONE = 0, ///< No Subclass
   HID_SUBCLASS_BOOT = 1  ///< Boot Interface Subclass
-}hid_subclass_type_t;
+}hid_subclass_enum_t;
 
-/// HID Protocol
+/// HID Interface Protocol
 typedef enum
 {
-  HID_PROTOCOL_NONE     = 0, ///< None
-  HID_PROTOCOL_KEYBOARD = 1, ///< Keyboard
-  HID_PROTOCOL_MOUSE    = 2  ///< Mouse
-}hid_protocol_type_t;
+  HID_ITF_PROTOCOL_NONE     = 0, ///< None
+  HID_ITF_PROTOCOL_KEYBOARD = 1, ///< Keyboard
+  HID_ITF_PROTOCOL_MOUSE    = 2  ///< Mouse
+}hid_interface_protocol_enum_t;
 
 /// HID Descriptor Type
 typedef enum
@@ -78,7 +78,7 @@ typedef enum
   HID_DESC_TYPE_HID      = 0x21, ///< HID Descriptor
   HID_DESC_TYPE_REPORT   = 0x22, ///< Report Descriptor
   HID_DESC_TYPE_PHYSICAL = 0x23  ///< Physical Descriptor
-}hid_descriptor_type_t;
+}hid_descriptor_enum_t;
 
 /// HID Request Report Type
 typedef enum
@@ -98,9 +98,9 @@ typedef enum
   HID_REQ_CONTROL_SET_REPORT   = 0x09, ///< Set Report
   HID_REQ_CONTROL_SET_IDLE     = 0x0a, ///< Set Idle
   HID_REQ_CONTROL_SET_PROTOCOL = 0x0b  ///< Set Protocol
-}hid_request_type_t;
+}hid_request_enum_t;
 
-/// HID Country Code
+/// HID Local Code
 typedef enum
 {
   HID_LOCAL_NotSupported = 0   , ///< NotSupported
@@ -139,7 +139,14 @@ typedef enum
   HID_LOCAL_US                 , ///< US
   HID_LOCAL_Yugoslavia         , ///< Yugoslavia
   HID_LOCAL_Turkish_F            ///< Turkish-F
-} hid_country_code_t;
+} hid_local_enum_t;
+
+// HID protocol value used by GetProtocol / SetProtocol
+typedef enum
+{
+  HID_PROTOCOL_BOOT = 0,
+  HID_PROTOCOL_REPORT = 1
+} hid_protocol_mode_enum_t;
 
 /** @} */
 
@@ -479,6 +486,7 @@ typedef enum
 //--------------------------------------------------------------------+
 // REPORT DESCRIPTOR
 //--------------------------------------------------------------------+
+
 //------------- ITEM & TAG -------------//
 #define HID_REPORT_DATA_0(data)
 #define HID_REPORT_DATA_1(data) , data
@@ -488,18 +496,31 @@ typedef enum
 #define HID_REPORT_ITEM(data, tag, type, size) \
   (((tag) << 4) | ((type) << 2) | (size)) HID_REPORT_DATA_##size(data)
 
-#define RI_TYPE_MAIN   0
-#define RI_TYPE_GLOBAL 1
-#define RI_TYPE_LOCAL  2
+// Report Item Types
+enum {
+  RI_TYPE_MAIN   = 0,
+  RI_TYPE_GLOBAL = 1,
+  RI_TYPE_LOCAL  = 2
+};
 
-//------------- MAIN ITEMS 6.2.2.4 -------------//
-#define HID_INPUT(x)           HID_REPORT_ITEM(x,  8, RI_TYPE_MAIN, 1)
-#define HID_OUTPUT(x)          HID_REPORT_ITEM(x,  9, RI_TYPE_MAIN, 1)
-#define HID_COLLECTION(x)      HID_REPORT_ITEM(x, 10, RI_TYPE_MAIN, 1)
-#define HID_FEATURE(x)         HID_REPORT_ITEM(x, 11, RI_TYPE_MAIN, 1)
-#define HID_COLLECTION_END     HID_REPORT_ITEM(x, 12, RI_TYPE_MAIN, 0)
+//------------- Main Items - HID 1.11 section 6.2.2.4 -------------//
 
-//------------- INPUT, OUTPUT, FEATURE 6.2.2.5 -------------//
+// Report Item Main group
+enum {
+  RI_MAIN_INPUT          = 8,
+  RI_MAIN_OUTPUT         = 9,
+  RI_MAIN_COLLECTION     = 10,
+  RI_MAIN_FEATURE        = 11,
+  RI_MAIN_COLLECTION_END = 12
+};
+
+#define HID_INPUT(x)           HID_REPORT_ITEM(x, RI_MAIN_INPUT         , RI_TYPE_MAIN, 1)
+#define HID_OUTPUT(x)          HID_REPORT_ITEM(x, RI_MAIN_OUTPUT        , RI_TYPE_MAIN, 1)
+#define HID_COLLECTION(x)      HID_REPORT_ITEM(x, RI_MAIN_COLLECTION    , RI_TYPE_MAIN, 1)
+#define HID_FEATURE(x)         HID_REPORT_ITEM(x, RI_MAIN_FEATURE       , RI_TYPE_MAIN, 1)
+#define HID_COLLECTION_END     HID_REPORT_ITEM(x, RI_MAIN_COLLECTION_END, RI_TYPE_MAIN, 0)
+
+//------------- Input, Output, Feature - HID 1.11 section 6.2.2.5 -------------//
 #define HID_DATA             (0<<0)
 #define HID_CONSTANT         (1<<0)
 
@@ -527,7 +548,7 @@ typedef enum
 #define HID_BITFIELD         (0<<8)
 #define HID_BUFFERED_BYTES   (1<<8)
 
-//------------- COLLECTION ITEM 6.2.2.6 -------------//
+//------------- Collection Item - HID 1.11 section 6.2.2.6 -------------//
 enum {
   HID_COLLECTION_PHYSICAL = 0,
   HID_COLLECTION_APPLICATION,
@@ -538,49 +559,81 @@ enum {
   HID_COLLECTION_USAGE_MODIFIER
 };
 
-//------------- GLOBAL ITEMS 6.2.2.7 -------------//
-#define HID_USAGE_PAGE(x)         HID_REPORT_ITEM(x, 0, RI_TYPE_GLOBAL, 1)
-#define HID_USAGE_PAGE_N(x, n)    HID_REPORT_ITEM(x, 0, RI_TYPE_GLOBAL, n)
+//------------- Global Items - HID 1.11 section 6.2.2.7 -------------//
 
-#define HID_LOGICAL_MIN(x)        HID_REPORT_ITEM(x, 1, RI_TYPE_GLOBAL, 1)
-#define HID_LOGICAL_MIN_N(x, n)   HID_REPORT_ITEM(x, 1, RI_TYPE_GLOBAL, n)
+// Report Item Global group
+enum {
+  RI_GLOBAL_USAGE_PAGE    = 0,
+  RI_GLOBAL_LOGICAL_MIN   = 1,
+  RI_GLOBAL_LOGICAL_MAX   = 2,
+  RI_GLOBAL_PHYSICAL_MIN  = 3,
+  RI_GLOBAL_PHYSICAL_MAX  = 4,
+  RI_GLOBAL_UNIT_EXPONENT = 5,
+  RI_GLOBAL_UNIT          = 6,
+  RI_GLOBAL_REPORT_SIZE   = 7,
+  RI_GLOBAL_REPORT_ID     = 8,
+  RI_GLOBAL_REPORT_COUNT  = 9,
+  RI_GLOBAL_PUSH          = 10,
+  RI_GLOBAL_POP           = 11
+};
 
-#define HID_LOGICAL_MAX(x)        HID_REPORT_ITEM(x, 2, RI_TYPE_GLOBAL, 1)
-#define HID_LOGICAL_MAX_N(x, n)   HID_REPORT_ITEM(x, 2, RI_TYPE_GLOBAL, n)
+#define HID_USAGE_PAGE(x)         HID_REPORT_ITEM(x, RI_GLOBAL_USAGE_PAGE, RI_TYPE_GLOBAL, 1)
+#define HID_USAGE_PAGE_N(x, n)    HID_REPORT_ITEM(x, RI_GLOBAL_USAGE_PAGE, RI_TYPE_GLOBAL, n)
 
-#define HID_PHYSICAL_MIN(x)       HID_REPORT_ITEM(x, 3, RI_TYPE_GLOBAL, 1)
-#define HID_PHYSICAL_MIN_N(x, n)  HID_REPORT_ITEM(x, 3, RI_TYPE_GLOBAL, n)
+#define HID_LOGICAL_MIN(x)        HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MIN, RI_TYPE_GLOBAL, 1)
+#define HID_LOGICAL_MIN_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MIN, RI_TYPE_GLOBAL, n)
 
-#define HID_PHYSICAL_MAX(x)       HID_REPORT_ITEM(x, 4, RI_TYPE_GLOBAL, 1)
-#define HID_PHYSICAL_MAX_N(x, n)  HID_REPORT_ITEM(x, 4, RI_TYPE_GLOBAL, n)
+#define HID_LOGICAL_MAX(x)        HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MAX, RI_TYPE_GLOBAL, 1)
+#define HID_LOGICAL_MAX_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MAX, RI_TYPE_GLOBAL, n)
 
-#define HID_UNIT_EXPONENT(x)      HID_REPORT_ITEM(x, 5, RI_TYPE_GLOBAL, 1)
-#define HID_UNIT_EXPONENT_N(x, n) HID_REPORT_ITEM(x, 5, RI_TYPE_GLOBAL, n)
+#define HID_PHYSICAL_MIN(x)       HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MIN, RI_TYPE_GLOBAL, 1)
+#define HID_PHYSICAL_MIN_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MIN, RI_TYPE_GLOBAL, n)
 
-#define HID_UNIT(x)               HID_REPORT_ITEM(x, 6, RI_TYPE_GLOBAL, 1)
-#define HID_UNIT_N(x, n)          HID_REPORT_ITEM(x, 6, RI_TYPE_GLOBAL, n)
+#define HID_PHYSICAL_MAX(x)       HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MAX, RI_TYPE_GLOBAL, 1)
+#define HID_PHYSICAL_MAX_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MAX, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_SIZE(x)        HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, 1)
-#define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, n)
+#define HID_UNIT_EXPONENT(x)      HID_REPORT_ITEM(x, RI_GLOBAL_UNIT_EXPONENT, RI_TYPE_GLOBAL, 1)
+#define HID_UNIT_EXPONENT_N(x, n) HID_REPORT_ITEM(x, RI_GLOBAL_UNIT_EXPONENT, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, 1),
-#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, n),
+#define HID_UNIT(x)               HID_REPORT_ITEM(x, RI_GLOBAL_UNIT, RI_TYPE_GLOBAL, 1)
+#define HID_UNIT_N(x, n)          HID_REPORT_ITEM(x, RI_GLOBAL_UNIT, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, 1)
-#define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, n)
+#define HID_REPORT_SIZE(x)        HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_SIZE, RI_TYPE_GLOBAL, 1)
+#define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_SIZE, RI_TYPE_GLOBAL, n)
 
-#define HID_PUSH                  HID_REPORT_ITEM(x, 10, RI_TYPE_GLOBAL, 0)
-#define HID_POP                   HID_REPORT_ITEM(x, 11, RI_TYPE_GLOBAL, 0)
+#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, 1),
+#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, n),
+
+#define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, 1)
+#define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, n)
+
+#define HID_PUSH                  HID_REPORT_ITEM(x, RI_GLOBAL_PUSH, RI_TYPE_GLOBAL, 0)
+#define HID_POP                   HID_REPORT_ITEM(x, RI_GLOBAL_POP, RI_TYPE_GLOBAL, 0)
 
 //------------- LOCAL ITEMS 6.2.2.8 -------------//
-#define HID_USAGE(x)              HID_REPORT_ITEM(x, 0, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_N(x, n)         HID_REPORT_ITEM(x, 0, RI_TYPE_LOCAL, n)
 
-#define HID_USAGE_MIN(x)          HID_REPORT_ITEM(x, 1, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_MIN_N(x, n)     HID_REPORT_ITEM(x, 1, RI_TYPE_LOCAL, n)
+enum {
+  RI_LOCAL_USAGE            = 0,
+  RI_LOCAL_USAGE_MIN        = 1,
+  RI_LOCAL_USAGE_MAX        = 2,
+  RI_LOCAL_DESIGNATOR_INDEX = 3,
+  RI_LOCAL_DESIGNATOR_MIN   = 4,
+  RI_LOCAL_DESIGNATOR_MAX   = 5,
+  // 6 is reserved
+  RI_LOCAL_STRING_INDEX     = 7,
+  RI_LOCAL_STRING_MIN       = 8,
+  RI_LOCAL_STRING_MAX       = 9,
+  RI_LOCAL_DELIMITER        = 10,
+};
 
-#define HID_USAGE_MAX(x)          HID_REPORT_ITEM(x, 2, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_MAX_N(x, n)     HID_REPORT_ITEM(x, 2, RI_TYPE_LOCAL, n)
+#define HID_USAGE(x)              HID_REPORT_ITEM(x, RI_LOCAL_USAGE, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_N(x, n)         HID_REPORT_ITEM(x, RI_LOCAL_USAGE, RI_TYPE_LOCAL, n)
+
+#define HID_USAGE_MIN(x)          HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MIN, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_MIN_N(x, n)     HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MIN, RI_TYPE_LOCAL, n)
+
+#define HID_USAGE_MAX(x)          HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MAX, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_MAX_N(x, n)     HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MAX, RI_TYPE_LOCAL, n)
 
 //--------------------------------------------------------------------+
 // Usage Table
