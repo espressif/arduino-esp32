@@ -24,15 +24,10 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_class
- *  \defgroup Group_Custom Custom Class (not supported yet)
- *  @{ */
-
 #ifndef _TUSB_VENDOR_HOST_H_
 #define _TUSB_VENDOR_HOST_H_
 
 #include "common/tusb_common.h"
-#include "host/usbh.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -70,5 +65,3 @@ void         cush_close(uint8_t dev_addr);
 #endif
 
 #endif /* _TUSB_VENDOR_HOST_H_ */
-
-/** @} */

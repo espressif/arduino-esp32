@@ -28,10 +28,6 @@
 #ifndef _TUSB_AUDIO_DEVICE_H_
 #define _TUSB_AUDIO_DEVICE_H_
 
-#include "assert.h"
-#include "common/tusb_common.h"
-#include "device/usbd.h"
-
 #include "audio.h"
 
 //--------------------------------------------------------------------+
