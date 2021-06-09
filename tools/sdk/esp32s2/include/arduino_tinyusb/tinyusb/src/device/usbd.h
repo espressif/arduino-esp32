@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -41,7 +41,10 @@ extern "C" {
 //--------------------------------------------------------------------+
 
 // Init device stack
-bool tud_init (void);
+bool tud_init (uint8_t rhport);
+
+// Check if device stack is already initialized
+bool tud_inited(void);
 
 // Task function should be called in main/rtos loop
 void tud_task (void);
@@ -67,7 +70,8 @@ bool tud_mounted(void);
 bool tud_suspended(void);
 
 // Check if device is ready to transfer
-static inline bool tud_ready(void)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tud_ready(void)
 {
   return tud_mounted() && !tud_suspended();
 }
@@ -583,7 +587,7 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 
 //------------- DFU Runtime -------------//
 #define TUD_DFU_APP_CLASS    (TUSB_CLASS_APPLICATION_SPECIFIC)
-#define TUD_DFU_APP_SUBCLASS 0x01u
+#define TUD_DFU_APP_SUBCLASS (APP_SUBCLASS_DFU_RUNTIME)
 
 // Length of template descriptr: 18 bytes
 #define TUD_DFU_RT_DESC_LEN (9 + 9)
@@ -593,6 +597,17 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 #define TUD_DFU_RT_DESCRIPTOR(_itfnum, _stridx, _attr, _timeout, _xfer_size) \
   /* Interface */ \
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUD_DFU_APP_CLASS, TUD_DFU_APP_SUBCLASS, DFU_PROTOCOL_RT, _stridx, \
+  /* Function */ \
+  9, DFU_DESC_FUNCTIONAL, _attr, U16_TO_U8S_LE(_timeout), U16_TO_U8S_LE(_xfer_size), U16_TO_U8S_LE(0x0101)
+
+// Length of template descriptr: 18 bytes
+#define TUD_DFU_MODE_DESC_LEN (9 + 9)
+
+// DFU runtime descriptor
+// Interface number, string index, attributes, detach timeout, transfer size
+#define TUD_DFU_MODE_DESCRIPTOR(_itfnum, _stridx, _attr, _timeout, _xfer_size) \
+  /* Interface */ \
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUD_DFU_APP_CLASS, TUD_DFU_APP_SUBCLASS, DFU_PROTOCOL_DFU, _stridx, \
   /* Function */ \
   9, DFU_DESC_FUNCTIONAL, _attr, U16_TO_U8S_LE(_timeout), U16_TO_U8S_LE(_xfer_size), U16_TO_U8S_LE(0x0101)
 

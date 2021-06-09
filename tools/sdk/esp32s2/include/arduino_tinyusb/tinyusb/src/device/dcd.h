@@ -24,14 +24,11 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_usbd
- * \defgroup group_dcd Device Controller Driver (DCD)
- *  @{ */
-
 #ifndef _TUSB_DCD_H_
 #define _TUSB_DCD_H_
 
 #include "common/tusb_common.h"
+#include "osal/osal.h"
 #include "common/tusb_fifo.h"
 
 #ifdef __cplusplus
@@ -168,5 +165,3 @@ extern void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t x
 #endif
 
 #endif /* _TUSB_DCD_H_ */
-
-/// @}

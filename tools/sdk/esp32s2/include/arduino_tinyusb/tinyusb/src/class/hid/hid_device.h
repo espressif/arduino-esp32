@@ -27,8 +27,6 @@
 #ifndef _TUSB_HID_DEVICE_H_
 #define _TUSB_HID_DEVICE_H_
 
-#include "common/tusb_common.h"
-#include "device/usbd.h"
 #include "hid.h"
 
 #ifdef __cplusplus
@@ -50,39 +48,44 @@
 #endif
 
 //--------------------------------------------------------------------+
-// Application API (Multiple Ports)
+// Application API (Multiple Instances)
 // CFG_TUD_HID > 1
 //--------------------------------------------------------------------+
 
 // Check if the interface is ready to use
-bool tud_hid_n_ready(uint8_t itf);
+bool tud_hid_n_ready(uint8_t instance);
 
-// Check if current mode is Boot (true) or Report (false)
-bool tud_hid_n_boot_mode(uint8_t itf);
+// Get interface supported protocol (bInterfaceProtocol) check out hid_interface_protocol_enum_t for possible values
+uint8_t tud_hid_n_interface_protocol(uint8_t instance);
+
+// Get current active protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
+uint8_t tud_hid_n_get_protocol(uint8_t instance);
 
 // Send report to host
-bool tud_hid_n_report(uint8_t itf, uint8_t report_id, void const* report, uint8_t len);
+bool tud_hid_n_report(uint8_t instance, uint8_t report_id, void const* report, uint8_t len);
 
 // KEYBOARD: convenient helper to send keyboard report if application
 // use template layout report as defined by hid_keyboard_report_t
-bool tud_hid_n_keyboard_report(uint8_t itf, uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
+bool tud_hid_n_keyboard_report(uint8_t instance, uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
 
 // MOUSE: convenient helper to send mouse report if application
 // use template layout report as defined by hid_mouse_report_t
-bool tud_hid_n_mouse_report(uint8_t itf, uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
+bool tud_hid_n_mouse_report(uint8_t instance, uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
 
 // Gamepad: convenient helper to send mouse report if application
 // use template layout report TUD_HID_REPORT_DESC_GAMEPAD
-bool tud_hid_n_gamepad_report(uint8_t itf, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
+bool tud_hid_n_gamepad_report(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
 
 //--------------------------------------------------------------------+
 // Application API (Single Port)
 //--------------------------------------------------------------------+
-static inline bool tud_hid_ready(void);
-static inline bool tud_hid_boot_mode(void);
-static inline bool tud_hid_report(uint8_t report_id, void const* report, uint8_t len);
-static inline bool tud_hid_keyboard_report(uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
-static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
+static inline bool    tud_hid_ready(void);
+static inline uint8_t tud_hid_interface_protocol(void);
+static inline uint8_t tud_hid_get_protocol(void);
+static inline bool    tud_hid_report(uint8_t report_id, void const* report, uint8_t len);
+static inline bool    tud_hid_keyboard_report(uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
+static inline bool    tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
+static inline bool    tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
 
 //--------------------------------------------------------------------+
 // Callbacks (Weak is optional)
@@ -90,29 +93,30 @@ static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8
 
 // Invoked when received GET HID REPORT DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
-uint8_t const * tud_hid_descriptor_report_cb(uint8_t itf);
+uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance);
 
 // Invoked when received GET_REPORT control request
 // Application must fill buffer report's content and return its length.
 // Return zero will cause the stack to STALL request
-uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen);
+uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen);
 
 // Invoked when received SET_REPORT control request or
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
-void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize);
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize);
 
-// Invoked when received SET_PROTOCOL request ( mode switch Boot <-> Report )
-TU_ATTR_WEAK void tud_hid_boot_mode_cb(uint8_t itf, uint8_t boot_mode);
+// Invoked when received SET_PROTOCOL request
+// protocol is either HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
+TU_ATTR_WEAK void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol);
 
 // Invoked when received SET_IDLE request. return false will stall the request
 // - Idle Rate = 0 : only send report if there is changes, i.e skip duplication
 // - Idle Rate > 0 : skip duplication, but send at least 1 report every idle rate (in unit of 4 ms).
-TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t itf, uint8_t idle_rate);
+TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate);
 
 // Invoked when sent REPORT successfully to host
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
-TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t itf, uint8_t const* report, uint8_t len);
+TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len);
 
 
 //--------------------------------------------------------------------+
@@ -123,9 +127,14 @@ static inline bool tud_hid_ready(void)
   return tud_hid_n_ready(0);
 }
 
-static inline bool tud_hid_boot_mode(void)
+static inline uint8_t tud_hid_interface_protocol(void)
 {
-  return tud_hid_n_boot_mode(0);
+  return tud_hid_n_interface_protocol(0);
+}
+
+static inline uint8_t tud_hid_get_protocol(void)
+{
+  return tud_hid_n_get_protocol(0);
 }
 
 static inline bool tud_hid_report(uint8_t report_id, void const* report, uint8_t len)
@@ -141,6 +150,11 @@ static inline bool tud_hid_keyboard_report(uint8_t report_id, uint8_t modifier, 
 static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal)
 {
   return tud_hid_n_mouse_report(0, report_id, buttons, x, y, vertical, horizontal);
+}
+
+static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons)
+{
+  return tud_hid_n_gamepad_report(0, report_id, x, y, z, rz, rx, ry, hat, buttons);
 }
 
 /* --------------------------------------------------------------------+
@@ -184,9 +198,9 @@ static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8
     /* 6-byte Keycodes */ \
     HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
       HID_USAGE_MIN    ( 0                                   )     ,\
-      HID_USAGE_MAX    ( 255                                 )     ,\
+      HID_USAGE_MAX_N  ( 255, 2                              )     ,\
       HID_LOGICAL_MIN  ( 0                                   )     ,\
-      HID_LOGICAL_MAX  ( 255                                 )     ,\
+      HID_LOGICAL_MAX_N( 255, 2                              )     ,\
       HID_REPORT_COUNT ( 6                                   )     ,\
       HID_REPORT_SIZE  ( 8                                   )     ,\
       HID_INPUT        ( HID_DATA | HID_ARRAY | HID_ABSOLUTE )     ,\
@@ -272,7 +286,7 @@ static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8
  * 0x00 - do nothing
  * 0x01 - Power Off
  * 0x02 - Standby
- * 0x04 - Wake Host
+ * 0x03 - Wake Host
  */
 #define TUD_HID_REPORT_DESC_SYSTEM_CONTROL(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP           )        ,\
@@ -285,8 +299,8 @@ static inline bool tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8
     HID_LOGICAL_MAX  ( 3                                   ) ,\
     HID_REPORT_COUNT ( 1                                   ) ,\
     HID_REPORT_SIZE  ( 2                                   ) ,\
-    HID_USAGE        ( HID_USAGE_DESKTOP_SYSTEM_SLEEP      ) ,\
     HID_USAGE        ( HID_USAGE_DESKTOP_SYSTEM_POWER_DOWN ) ,\
+    HID_USAGE        ( HID_USAGE_DESKTOP_SYSTEM_SLEEP      ) ,\
     HID_USAGE        ( HID_USAGE_DESKTOP_SYSTEM_WAKE_UP    ) ,\
     HID_INPUT        ( HID_DATA | HID_ARRAY | HID_ABSOLUTE ) ,\
     /* 6 bit padding */ \

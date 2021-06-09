@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -568,6 +560,7 @@ esp_err_t mcpwm_fault_deinit(mcpwm_unit_t mcpwm_num, mcpwm_fault_signal_t fault_
  * @param cap_edge set capture edge, BIT(0) - negative edge, BIT(1) - positive edge
  * @param cap_sig capture pin, which needs to be enabled
  * @param num_of_pulse count time between rising/falling edge between 2 *(pulses mentioned), counter uses APB_CLK
+ *                     [0~MCPWM_LL_MAX_PRESCALE] (MCPWM_LL_MAX_PRESCALE = 255 on ESP32);
  *
  * @return
  *     - ESP_OK Success

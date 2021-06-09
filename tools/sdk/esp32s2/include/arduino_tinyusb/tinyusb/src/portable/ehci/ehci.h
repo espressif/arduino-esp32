@@ -24,12 +24,6 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup Group_HCD
- * @{
- *  \defgroup EHCI
- *  \brief EHCI driver. All documents sources mentioned here (eg section 3.5) is referring to EHCI Specs unless state otherwise
- *  @{ */
-
 #ifndef _TUSB_EHCI_H_
 #define _TUSB_EHCI_H_
 
@@ -309,12 +303,11 @@ enum ehci_usbcmd_pos_ {
 
 enum ehci_portsc_change_mask_{
   EHCI_PORTSC_MASK_CURRENT_CONNECT_STATUS = TU_BIT(0),
-  EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE = TU_BIT(1),
-  EHCI_PORTSC_MASK_PORT_EANBLED = TU_BIT(2),
-  EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE = TU_BIT(3),
-  EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE = TU_BIT(5),
-
-  EHCI_PORTSC_MASK_PORT_RESET = TU_BIT(8),
+  EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE  = TU_BIT(1),
+  EHCI_PORTSC_MASK_PORT_EANBLED           = TU_BIT(2),
+  EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE     = TU_BIT(3),
+  EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE    = TU_BIT(5),
+  EHCI_PORTSC_MASK_PORT_RESET             = TU_BIT(8),
 
   EHCI_PORTSC_MASK_ALL =
       EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
@@ -425,36 +418,8 @@ typedef volatile struct
   };
 }ehci_registers_t;
 
-//--------------------------------------------------------------------+
-// EHCI Data Organization
-//--------------------------------------------------------------------+
-typedef struct
-{
-  ehci_link_t period_framelist[EHCI_FRAMELIST_SIZE];
-
-  // for NXP ECHI, only implement 1 ms & 2 ms & 4 ms, 8 ms (framelist)
-  // [0] : 1ms, [1] : 2ms, [2] : 4ms, [3] : 8 ms
-  ehci_qhd_t period_head_arr[4];
-
-  // Note control qhd of dev0 is used as head of async list
-  struct {
-    ehci_qhd_t qhd;
-    ehci_qtd_t qtd;
-  }control[CFG_TUSB_HOST_DEVICE_MAX+1];
-
-  ehci_qhd_t qhd_pool[HCD_MAX_ENDPOINT];
-  ehci_qtd_t qtd_pool[HCD_MAX_XFER] TU_ATTR_ALIGNED(32);
-
-  ehci_registers_t* regs;
-
-  volatile uint32_t uframe_number;
-}ehci_data_t;
-
 #ifdef __cplusplus
  }
 #endif
 
 #endif /* _TUSB_EHCI_H_ */
-
-/** @} */
-/** @} */

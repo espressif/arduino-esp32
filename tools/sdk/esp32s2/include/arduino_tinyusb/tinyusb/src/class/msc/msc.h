@@ -24,13 +24,6 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_class
- *  \defgroup ClassDriver_MSC MassStorage (MSC)
- *  @{ */
-
-/**  \defgroup ClassDriver_MSC_Common Common Definitions
- *  @{ */
-
 #ifndef _TUSB_MSC_H_
 #define _TUSB_MSC_H_
 
@@ -387,6 +380,3 @@ TU_VERIFY_STATIC(sizeof(scsi_write10_t) == 10, "size is not correct");
 #endif
 
 #endif /* _TUSB_MSC_H_ */
-
-/// @}
-/// @}

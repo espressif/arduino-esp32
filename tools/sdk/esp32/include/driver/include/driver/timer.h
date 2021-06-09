@@ -1,16 +1,8 @@
-// Copyright 2010-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2010-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -433,23 +425,27 @@ bool timer_group_get_auto_reload_in_isr(timer_group_t group_num, timer_idx_t tim
 
 /** @brief Take timer spinlock to enter critical protect
  *
+ *  @note Deprecated, the recommended way is to use ISR callbacks instead, see timer_group_example_main
+ *
  * @param group_num Timer group number, 0 for TIMERG0 or 1 for TIMERG1
  *
  * @return
  *     - ESP_OK Success
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
-esp_err_t timer_spinlock_take(timer_group_t group_num);
+esp_err_t timer_spinlock_take(timer_group_t group_num) __attribute__ ((deprecated));
 
 /** @brief Give timer spinlock to exit critical protect
  *
+ *  @note Deprecated, the recommended way is to use ISR callbacks instead, see timer_group_example_main
+ *
  * @param group_num Timer group number, 0 for TIMERG0 or 1 for TIMERG1
  *
  * @return
  *     - ESP_OK Success
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
-esp_err_t timer_spinlock_give(timer_group_t group_num);
+esp_err_t timer_spinlock_give(timer_group_t group_num) __attribute__ ((deprecated));
 
 #ifdef __cplusplus
 }
