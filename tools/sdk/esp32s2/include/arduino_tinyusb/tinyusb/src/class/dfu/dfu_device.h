@@ -27,8 +27,6 @@
 #ifndef _TUSB_DFU_DEVICE_H_
 #define _TUSB_DFU_DEVICE_H_
 
-#include "common/tusb_common.h"
-#include "device/usbd.h"
 #include "dfu.h"
 
 #ifdef __cplusplus

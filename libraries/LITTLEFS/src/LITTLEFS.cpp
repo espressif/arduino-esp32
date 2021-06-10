@@ -20,10 +20,14 @@ extern "C" {
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "esp_littlefs.h"
 }
-
+#include "sdkconfig.h"
 #include "LITTLEFS.h"
+
+#ifdef CONFIG_LITTLEFS_PAGE_SIZE
+extern "C" {
+    #include "esp_littlefs.h"
+}
 
 using namespace fs;
 
@@ -137,4 +141,4 @@ size_t LITTLEFSFS::usedBytes()
 }
 
 LITTLEFSFS LITTLEFS;
-
+#endif
