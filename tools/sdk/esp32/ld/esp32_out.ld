@@ -77,3 +77,9 @@ _data_seg_org = ORIGIN(rtc_data_seg);
 REGION_ALIAS("rtc_data_location", rtc_slow_seg );
   REGION_ALIAS("default_code_seg", iram0_2_seg);
   REGION_ALIAS("default_rodata_seg", drom0_0_seg);
+/**
+ *  If rodata default segment is placed in `drom0_0_seg`, then flash's first rodata section must
+ *  also be first in the segment.
+ */
+  ASSERT(_rodata_start == ORIGIN(default_rodata_seg),
+         ".flash.appdesc section must be placed at the beginning of the rodata segment.")

@@ -19,10 +19,15 @@ static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
 //SPI
-static const uint8_t IO5    = 5; //SS
-static const uint8_t IO23  = 23; //MOSI
-static const uint8_t IO19  = 19; //MISO
-static const uint8_t IO18   = 18; //SCK
+static const uint8_t IO5  = 5;  //SS
+static const uint8_t IO23 = 23; //MOSI
+static const uint8_t IO19 = 19; //MISO
+static const uint8_t IO18 = 18; //SCK
+
+static const uint8_t SS   = IO5;
+static const uint8_t MOSI = IO23;
+static const uint8_t MISO = IO19;
+static const uint8_t SCK  = IO18;
 
 //ANALOG
 static const uint8_t IO36 = 36;

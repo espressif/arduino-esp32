@@ -555,7 +555,7 @@ unsigned char String::equalsConstantTime(const String &s2) const {
     //at this point lengths are the same
     if(len() == 0)
         return 1;
-    //at this point lenghts are the same and non-zero
+    //at this point lengths are the same and non-zero
     const char *p1 = buffer();
     const char *p2 = s2.buffer();
     unsigned int equalchars = 0;
