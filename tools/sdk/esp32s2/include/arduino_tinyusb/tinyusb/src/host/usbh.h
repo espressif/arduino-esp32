@@ -34,10 +34,7 @@
  extern "C" {
 #endif
 
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
-#include "osal/osal.h" // TODO refractor move to common.h ?
+#include "common/tusb_common.h"
 #include "hcd.h"
 
 //--------------------------------------------------------------------+
@@ -68,15 +65,14 @@ typedef struct {
 typedef bool (*tuh_control_complete_cb_t)(uint8_t dev_addr, tusb_control_request_t const * request, xfer_result_t result);
 
 //--------------------------------------------------------------------+
-// INTERNAL OBJECT & FUNCTION DECLARATION
-//--------------------------------------------------------------------+
-
-//--------------------------------------------------------------------+
 // APPLICATION API
 //--------------------------------------------------------------------+
 
 // Init host stack
-bool tuh_init(void);
+bool tuh_init(uint8_t rhport);
+
+// Check if host stack is already initialized
+bool tuh_inited(void);
 
 // Task function should be called in main/rtos loop
 void tuh_task(void);
@@ -85,13 +81,19 @@ void tuh_task(void);
 extern void hcd_int_handler(uint8_t rhport);
 #define tuh_int_handler   hcd_int_handler
 
-tusb_device_state_t tuh_device_get_state (uint8_t dev_addr);
 tusb_speed_t tuh_device_get_speed (uint8_t dev_addr);
-static inline bool tuh_device_is_configured(uint8_t dev_addr)
+
+// Check if device is configured
+bool tuh_device_configured(uint8_t dev_addr);
+
+// Check if device is ready to communicate with
+TU_ATTR_ALWAYS_INLINE
+static inline bool tuh_device_ready(uint8_t dev_addr)
 {
-  return tuh_device_get_state(dev_addr) == TUSB_DEVICE_STATE_CONFIGURED;
+  return tuh_device_configured(dev_addr);
 }
 
+// Carry out control transfer
 bool tuh_control_xfer (uint8_t dev_addr, tusb_control_request_t const* request, void* buffer, tuh_control_complete_cb_t complete_cb);
 
 //--------------------------------------------------------------------+
@@ -120,6 +122,8 @@ bool usbh_edpt_claim(uint8_t dev_addr, uint8_t ep_addr);
 void usbh_driver_set_config_complete(uint8_t dev_addr, uint8_t itf_num);
 
 uint8_t usbh_get_rhport(uint8_t dev_addr);
+
+uint8_t* usbh_get_enum_buf(void);
 
 #ifdef __cplusplus
  }

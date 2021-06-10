@@ -28,7 +28,6 @@
 #define _TUSB_MSC_DEVICE_H_
 
 #include "common/tusb_common.h"
-#include "device/usbd.h"
 #include "msc.h"
 
 #ifdef __cplusplus
@@ -51,53 +50,45 @@
 
 TU_VERIFY_STATIC(CFG_TUD_MSC_EP_BUFSIZE < UINT16_MAX, "Size is not correct");
 
-/** \addtogroup ClassDriver_MSC
- *  @{
- * \defgroup MSC_Device Device
- *  @{ */
+//--------------------------------------------------------------------+
+// Application API
+//--------------------------------------------------------------------+
 
+// Set SCSI sense response
 bool tud_msc_set_sense(uint8_t lun, uint8_t sense_key, uint8_t add_sense_code, uint8_t add_sense_qualifier);
 
 //--------------------------------------------------------------------+
 // Application Callbacks (WEAK is optional)
 //--------------------------------------------------------------------+
 
-/**
- * Invoked when received \ref SCSI_CMD_READ_10 command
- * \param[in]   lun         Logical unit number
- * \param[in]   lba         Logical Block Address to be read
- * \param[in]   offset      Byte offset from LBA
- * \param[out]  buffer      Buffer which application need to update with the response data.
- * \param[in]   bufsize     Requested bytes
- *
- * \return      Number of byte read, if it is less than requested bytes by \a \b bufsize. Tinyusb will transfer
- *              this amount first and invoked this again for remaining data.
- *
- * \retval      zero        Indicate application is not ready yet to response e.g disk I/O is not complete.
- *                          tinyusb will invoke this callback with the same parameters again some time later.
- *
- * \retval      negative    Indicate error e.g reading disk I/O. tinyusb will \b STALL the corresponding
- *                          endpoint and return failed status in command status wrapper phase.
- */
+// Invoked when received SCSI READ10 command
+// - Address = lba * BLOCK_SIZE + offset
+//   - offset is only needed if CFG_TUD_MSC_EP_BUFSIZE is smaller than BLOCK_SIZE.
+//
+// - Application fill the buffer (up to bufsize) with address contents and return number of read byte. If
+//   - read < bufsize : These bytes are transferred first and callback invoked again for remaining data.
+//
+//   - read == 0      : Indicate application is not ready yet e.g disk I/O busy.
+//                      Callback invoked again with the same parameters later on.
+//
+//   - read < 0       : Indicate application error e.g invalid address. This request will be STALLed
+//                      and return failed status in command status wrapper phase.
 int32_t tud_msc_read10_cb (uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize);
 
-/**
- * Invoked when received \ref SCSI_CMD_WRITE_10 command
- * \param[in]   lun         Logical unit number
- * \param[in]   lba         Logical Block Address to be write
- * \param[in]   offset      Byte offset from LBA
- * \param[out]  buffer      Buffer which holds written data.
- * \param[in]   bufsize     Requested bytes
- *
- * \return      Number of byte written, if it is less than requested bytes by \a \b bufsize. Tinyusb will proceed with
- *              other work and invoked this again with adjusted parameters.
- *
- * \retval      zero        Indicate application is not ready yet e.g disk I/O is not complete.
- *                          Tinyusb will invoke this callback with the same parameters again some time later.
- *
- * \retval      negative    Indicate error writing disk I/O. Tinyusb will \b STALL the corresponding
- *                          endpoint and return failed status in command status wrapper phase.
- */
+// Invoked when received SCSI WRITE10 command
+// - Address = lba * BLOCK_SIZE + offset
+//   - offset is only needed if CFG_TUD_MSC_EP_BUFSIZE is smaller than BLOCK_SIZE.
+//
+// - Application write data from buffer to address contents (up to bufsize) and return number of written byte. If
+//   - write < bufsize : callback invoked again with remaining data later on.
+//
+//   - write == 0      : Indicate application is not ready yet e.g disk I/O busy.
+//                       Callback invoked again with the same parameters later on.
+//
+//   - write < 0       : Indicate application error e.g invalid address. This request will be STALLed
+//                       and return failed status in command status wrapper phase.
+//
+// TODO change buffer to const uint8_t*
 int32_t tud_msc_write10_cb (uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize);
 
 // Invoked when received SCSI_CMD_INQUIRY
@@ -151,9 +142,6 @@ TU_ATTR_WEAK void tud_msc_scsi_complete_cb(uint8_t lun, uint8_t const scsi_cmd[1
 
 // Hook to make a mass storage device read-only. TODO remove
 TU_ATTR_WEAK bool tud_msc_is_writable_cb(uint8_t lun);
-
-/** @} */
-/** @} */
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

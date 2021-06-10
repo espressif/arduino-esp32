@@ -50,6 +50,8 @@ Finally, if you are sure no one else had the issue, follow the [ISSUE_TEMPLATE](
 
 ![ESP32S2_Pinmap](docs/esp32s2_pinmap.png)
 
+![ESP32C3_Pinmap](docs/esp32c3_pinmap.png)
+
 ### Tip
 
 Sometimes to program ESP32 via serial you must keep GPIO0 LOW during the programming process

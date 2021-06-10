@@ -1,16 +1,8 @@
-// Copyright 2015-2018 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _ESP_HTTP_CLIENT_H
 #define _ESP_HTTP_CLIENT_H
@@ -158,6 +150,7 @@ typedef enum {
     HttpStatus_TemporaryRedirect = 307,
 
     /* 4xx - Client Error */
+    HttpStatus_BadRequest        = 400,
     HttpStatus_Unauthorized      = 401,
     HttpStatus_Forbidden         = 403,
     HttpStatus_NotFound          = 404,
@@ -334,7 +327,7 @@ esp_err_t esp_http_client_get_password(esp_http_client_handle_t client, char **v
  *     - ESP_OK
  *     - ESP_ERR_INVALID_ARG
  */
-esp_err_t esp_http_client_set_password(esp_http_client_handle_t client, char *password);
+esp_err_t esp_http_client_set_password(esp_http_client_handle_t client, const char *password);
 
 /**
  * @brief      Set http request auth_type.
@@ -359,6 +352,18 @@ esp_err_t esp_http_client_set_authtype(esp_http_client_handle_t client, esp_http
  *     - ESP_ERR_INVALID_ARG
  */
 esp_err_t esp_http_client_set_method(esp_http_client_handle_t client, esp_http_client_method_t method);
+
+/**
+ * @brief      Set http request timeout
+ *
+ * @param[in]  client      The esp_http_client handle
+ * @param[in]  timeout_ms  The timeout value
+ *
+ * @return
+ *     - ESP_OK
+ *     - ESP_ERR_INVALID_ARG
+ */
+esp_err_t esp_http_client_set_timeout_ms(esp_http_client_handle_t client, int timeout_ms);
 
 /**
  * @brief      Delete http request header

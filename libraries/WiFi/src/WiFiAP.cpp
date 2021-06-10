@@ -78,7 +78,7 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     return true;
 }
 
-void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, const char * password=NULL, uint8_t channel=6, wifi_auth_mode_t authmode=WIFI_AUTH_WPA_WPA2_PSK, uint8_t ssid_hidden=0, uint8_t max_connections=4, uint16_t beacon_interval=100){
+void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, const char * password=NULL, uint8_t channel=6, wifi_auth_mode_t authmode=WIFI_AUTH_WPA2_PSK, uint8_t ssid_hidden=0, uint8_t max_connections=4, uint16_t beacon_interval=100){
 	wifi_config->ap.channel = channel;
 	wifi_config->ap.max_connection = max_connections;
 	wifi_config->ap.beacon_interval = beacon_interval;
@@ -133,7 +133,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     wifi_config_t conf;
     wifi_config_t conf_current;
-    wifi_softap_config(&conf, ssid, passphrase, channel, WIFI_AUTH_WPA_WPA2_PSK, ssid_hidden, max_connection);
+    wifi_softap_config(&conf, ssid, passphrase, channel, WIFI_AUTH_WPA2_PSK, ssid_hidden, max_connection);
     esp_err_t err = esp_wifi_get_config((wifi_interface_t)WIFI_IF_AP, &conf_current);
     if(err){
     	log_e("get AP config failed");

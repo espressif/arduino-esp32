@@ -24,16 +24,13 @@ extern "C" {
 /**
  * @brief  Get one random 32-bit word from hardware RNG
  *
- * The hardware RNG is fully functional whenever an RF subsystem is running (ie Bluetooth or WiFi is enabled). For
- * random values, call this function after WiFi or Bluetooth are started.
+ * If Wi-Fi or Bluetooth are enabled, this function returns true random numbers. In other
+ * situations, if true random numbers are required then consult the ESP-IDF Programming
+ * Guide "Random Number Generation" section for necessary prerequisites.
  *
- * If the RF subsystem is not used by the program, the function bootloader_random_enable() can be called to enable an
- * entropy source. bootloader_random_disable() must be called before RF subsystem or I2S peripheral are used. See these functions'
- * documentation for more details.
- *
- * Any time the app is running without an RF subsystem (or bootloader_random) enabled, RNG hardware should be
- * considered a PRNG. A very small amount of entropy is available due to pre-seeding while the IDF
- * bootloader is running, but this should not be relied upon for any use.
+ * This function automatically busy-waits to ensure enough external entropy has been
+ * introduced into the hardware RNG state, before returning a new random number. This delay
+ * is very short (always less than 100 CPU cycles).
  *
  * @return Random value between 0 and UINT32_MAX
  */
@@ -42,7 +39,8 @@ uint32_t esp_random(void);
 /**
  * @brief Fill a buffer with random bytes from hardware RNG
  *
- * @note This function has the same restrictions regarding available entropy as esp_random()
+ * @note This function is implemented via calls to esp_random(), so the same
+ * constraints apply.
  *
  * @param buf Pointer to buffer to fill with random numbers.
  * @param len Length of buffer in bytes
