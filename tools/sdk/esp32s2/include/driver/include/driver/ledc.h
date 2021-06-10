@@ -1,16 +1,8 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -76,6 +68,7 @@ esp_err_t ledc_update_duty(ledc_mode_t speed_mode, ledc_channel_t channel);
 
 /**
  * @brief Set LEDC output gpio.
+ * @deprecated This function is redundant, please use ledc_channel_config to set gpio pins.
  *
  * @param  gpio_num The LEDC output gpio
  * @param  speed_mode Select the LEDC channel group with specified speed mode. Note that not all targets support high speed mode.
@@ -85,8 +78,8 @@ esp_err_t ledc_update_duty(ledc_mode_t speed_mode, ledc_channel_t channel);
  *     - ESP_OK Success
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
-esp_err_t ledc_set_pin(int gpio_num, ledc_mode_t speed_mode, ledc_channel_t ledc_channel);
-
+esp_err_t ledc_set_pin(int gpio_num, ledc_mode_t speed_mode, ledc_channel_t ledc_channel)
+    __attribute__((deprecated("use ledc_channel_config instead")));
 /**
  * @brief LEDC stop.
  *        Disable LEDC output, and set idle level

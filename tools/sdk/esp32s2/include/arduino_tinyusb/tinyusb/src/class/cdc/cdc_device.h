@@ -28,7 +28,6 @@
 #define _TUSB_CDC_DEVICE_H_
 
 #include "common/tusb_common.h"
-#include "device/usbd.h"
 #include "cdc.h"
 
 //--------------------------------------------------------------------+
@@ -83,7 +82,7 @@ int32_t  tud_cdc_n_read_char       (uint8_t itf);
 void     tud_cdc_n_read_flush      (uint8_t itf);
 
 // Get a byte from FIFO at the specified position without removing it
-bool     tud_cdc_n_peek            (uint8_t itf, int pos, uint8_t* u8);
+bool     tud_cdc_n_peek            (uint8_t itf, uint8_t* u8);
 
 // Write bytes to TX FIFO, data may remain in the FIFO for a while
 uint32_t tud_cdc_n_write           (uint8_t itf, void const* buffer, uint32_t bufsize);
@@ -117,7 +116,7 @@ static inline uint32_t tud_cdc_available       (void);
 static inline int32_t  tud_cdc_read_char       (void);
 static inline uint32_t tud_cdc_read            (void* buffer, uint32_t bufsize);
 static inline void     tud_cdc_read_flush      (void);
-static inline bool     tud_cdc_peek            (int pos, uint8_t* u8);
+static inline bool     tud_cdc_peek            (uint8_t* u8);
 
 static inline uint32_t tud_cdc_write_char      (char ch);
 static inline uint32_t tud_cdc_write           (void const* buffer, uint32_t bufsize);
@@ -207,9 +206,9 @@ static inline void tud_cdc_read_flush (void)
   tud_cdc_n_read_flush(0);
 }
 
-static inline bool tud_cdc_peek (int pos, uint8_t* u8)
+static inline bool tud_cdc_peek (uint8_t* u8)
 {
-  return tud_cdc_n_peek(0, pos, u8);
+  return tud_cdc_n_peek(0, u8);
 }
 
 static inline uint32_t tud_cdc_write_char (char ch)
