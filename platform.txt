@@ -113,8 +113,7 @@ build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core
 
 # Custom build options
 build.opt.name=build_opt.h
-build.opt.path="{build.path}"/{build.opt.name}
-build.opt.path.windows="{build.path}\{build.opt.name}"
+build.opt.path={build.path}/{build.opt.name}
 
 # Check if custom partitions exist: source > variant > build.partitions
 recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
