@@ -51,6 +51,7 @@ typedef enum {
 	ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED,
 	ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED,
 	ARDUINO_EVENT_WIFI_AP_GOT_IP6,
+	ARDUINO_EVENT_WIFI_FTM_REPORT,
 	ARDUINO_EVENT_ETH_START,
 	ARDUINO_EVENT_ETH_STOP,
 	ARDUINO_EVENT_ETH_CONNECTED,
@@ -86,6 +87,7 @@ typedef union {
 	wifi_event_ap_probe_req_rx_t wifi_ap_probereqrecved;
 	wifi_event_ap_staconnected_t wifi_ap_staconnected;
 	wifi_event_ap_stadisconnected_t wifi_ap_stadisconnected;
+	wifi_event_ftm_report_t wifi_ftm_report;
 	ip_event_ap_staipassigned_t wifi_ap_staipassigned;
 	ip_event_got_ip_t got_ip;
 	ip_event_got_ip6_t got_ip6;
@@ -169,6 +171,8 @@ class WiFiGenericClass
 
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
+
+    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=0, const uint8_t * mac=NULL);
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);
