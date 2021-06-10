@@ -245,28 +245,12 @@ void __analogSetVRefPin(uint8_t pin){
     __analogVRefPin = pin;
 }
 
-int __hallRead()    //hall sensor without LNA
+int __hallRead()    //hall sensor using idf read
 {
-    int Sens_Vp0;
-    int Sens_Vn0;
-    int Sens_Vp1;
-    int Sens_Vn1;
-
     pinMode(36, ANALOG);
     pinMode(39, ANALOG);
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_XPD_HALL_FORCE_M);     // hall sens force enable
-    SET_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_XPD_HALL);               // xpd hall
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_HALL_PHASE_FORCE_M);   // phase force
-    CLEAR_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_HALL_PHASE);           // hall phase
-    Sens_Vp0 = __analogRead(36);
-    Sens_Vn0 = __analogRead(39);
-    SET_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_HALL_PHASE);
-    Sens_Vp1 = __analogRead(36);
-    Sens_Vn1 = __analogRead(39);
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 0, SENS_FORCE_XPD_SAR_S);
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_XPD_HALL_FORCE);
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_HALL_PHASE_FORCE);
-    return (Sens_Vp1 - Sens_Vp0) - (Sens_Vn1 - Sens_Vn0);
+    __analogSetWidth(12);
+    return hall_sensor_read();
 }
 #endif
 
