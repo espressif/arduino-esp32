@@ -24,12 +24,6 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup Group_HCD
- * @{
- *  \defgroup OHCI
- *  \brief OHCI driver. All documents sources mentioned here (eg section 3.5) is referring to OHCI Specs unless state otherwise
- *  @{ */
-
 #ifndef _TUSB_OHCI_H_
 #define _TUSB_OHCI_H_
 
@@ -46,12 +40,6 @@
 // TODO merge OHCI with EHCI
 enum {
   OHCI_MAX_ITD = 4
-};
-
-enum {
-  OHCI_PID_SETUP = 0,
-  OHCI_PID_OUT,
-  OHCI_PID_IN,
 };
 
 //--------------------------------------------------------------------+
@@ -72,7 +60,6 @@ typedef struct {
   volatile uint32_t next;
   uint32_t reserved2;
 }ohci_td_item_t;
-
 
 typedef struct TU_ATTR_ALIGNED(16)
 {
@@ -105,7 +92,7 @@ typedef struct TU_ATTR_ALIGNED(16)
   // Word 0
 	uint32_t dev_addr          : 7;
 	uint32_t ep_number         : 4;
-	uint32_t pid               : 2; // 00b from TD, 01b Out, 10b In
+	uint32_t pid               : 2;
 	uint32_t speed             : 1;
 	uint32_t skip              : 1;
 	uint32_t is_iso            : 1;
@@ -286,6 +273,3 @@ TU_VERIFY_STATIC( sizeof(ohci_registers_t) == 0x5c, "size is not correct");
 #endif
 
 #endif /* _TUSB_OHCI_H_ */
-
-/** @} */
-/** @} */

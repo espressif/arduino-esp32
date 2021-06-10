@@ -27,8 +27,6 @@
 #ifndef _TUSB_MSC_HOST_H_
 #define _TUSB_MSC_HOST_H_
 
-#include "common/tusb_common.h"
-#include "host/usbh.h"
 #include "msc.h"
 
 #ifdef __cplusplus
@@ -106,17 +104,17 @@ bool tuh_msc_read_capacity(uint8_t dev_addr, uint8_t lun, scsi_read_capacity10_r
 //------------- Application Callback -------------//
 
 // Invoked when a device with MassStorage interface is mounted
-void tuh_msc_mount_cb(uint8_t dev_addr);
+TU_ATTR_WEAK void tuh_msc_mount_cb(uint8_t dev_addr);
 
 // Invoked when a device with MassStorage interface is unmounted
-void tuh_msc_unmount_cb(uint8_t dev_addr);
+TU_ATTR_WEAK void tuh_msc_umount_cb(uint8_t dev_addr);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
 
 void msch_init(void);
-bool msch_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *itf_desc, uint16_t *p_length);
+bool msch_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t *p_length);
 bool msch_set_config(uint8_t dev_addr, uint8_t itf_num);
 bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 void msch_close(uint8_t dev_addr);
