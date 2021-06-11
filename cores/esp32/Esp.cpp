@@ -47,6 +47,7 @@ extern "C" {
 #endif
 #else // ESP32 Before IDF 4.0
 #include "rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000
 #endif
 
 /**
