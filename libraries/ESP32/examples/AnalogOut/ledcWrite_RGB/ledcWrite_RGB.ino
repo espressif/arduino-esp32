@@ -9,9 +9,9 @@
  */
  
 // Set up the rgb led names
-uint8_t ledR = A4;
-uint8_t ledG = A5;
-uint8_t ledB = A18; 
+uint8_t ledR = 2;
+uint8_t ledG = 4;
+uint8_t ledB = 5; 
 
 uint8_t ledArray[3] = {1, 2, 3}; // three led channels
 

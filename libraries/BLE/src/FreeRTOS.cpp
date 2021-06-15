@@ -10,7 +10,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include "FreeRTOS.h"
+#include "RTOS.h"
 #include "sdkconfig.h"
 #include "esp32-hal-log.h"
 
@@ -193,8 +193,8 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
 	} else {
 		rc = ::xSemaphoreTake(m_semaphore, portMAX_DELAY) == pdTRUE;
 	}
-	m_owner = owner;
 	if (rc) {
+		m_owner = owner;
 		log_v("Semaphore taken:  %s", toString().c_str());
 	} else {
 		log_e("Semaphore NOT taken:  %s", toString().c_str());
@@ -218,8 +218,8 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
 	} else {
 		rc = ::xSemaphoreTake(m_semaphore, timeoutMs / portTICK_PERIOD_MS) == pdTRUE;
 	}
-	m_owner = owner;
 	if (rc) {
+		m_owner = owner;
 		log_v("Semaphore taken:  %s", toString().c_str());
 	} else {
 		log_e("Semaphore NOT taken:  %s", toString().c_str());
@@ -257,7 +257,12 @@ void FreeRTOS::Semaphore::setName(std::string name) {
  * @param [in] length The amount of storage to allocate for the ring buffer.
  * @param [in] type The type of buffer.  One of RINGBUF_TYPE_NOSPLIT, RINGBUF_TYPE_ALLOWSPLIT, RINGBUF_TYPE_BYTEBUF.
  */
-Ringbuffer::Ringbuffer(size_t length, ringbuf_type_t type) {
+#ifdef ESP_IDF_VERSION_MAJOR
+Ringbuffer::Ringbuffer(size_t length, RingbufferType_t type)
+#else
+Ringbuffer::Ringbuffer(size_t length, ringbuf_type_t type)
+#endif
+{
 	m_handle = ::xRingbufferCreate(length, type);
 } // Ringbuffer
 

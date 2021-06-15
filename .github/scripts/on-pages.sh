@@ -87,9 +87,15 @@ function git_safe_upload_to_pages(){
 
 EVENT_JSON=`cat $GITHUB_EVENT_PATH`
 
+echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
+echo "EVENT_JSON: $EVENT_JSON"
+
 pages_added=`echo "$EVENT_JSON" | jq -r '.commits[].added[]'`
+echo "added: $pages_added"
 pages_modified=`echo "$EVENT_JSON" | jq -r '.commits[].modified[]'`
+echo "modified: $pages_modified"
 pages_removed=`echo "$EVENT_JSON" | jq -r '.commits[].removed[]'`
+echo "removed: $pages_removed"
 
 for page in $pages_added; do
     if [[ $page != "README.md" && $page != "docs/"* ]]; then

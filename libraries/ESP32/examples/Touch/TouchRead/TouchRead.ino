@@ -10,6 +10,6 @@ void setup()
 
 void loop()
 {
-  Serial.println(touchRead(T0));  // get value using T0
+  Serial.println(touchRead(T1));  // get value using T0
   delay(1000);
 }

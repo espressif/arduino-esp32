@@ -13,6 +13,7 @@
 
 static const uint8_t LED_BUILTIN = -1;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
 
 #define MTDO 15
 #define MTDI 12

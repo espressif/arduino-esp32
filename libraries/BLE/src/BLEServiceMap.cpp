@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <stdio.h>
 #include <iomanip>
 #include "BLEService.h"
@@ -134,4 +134,4 @@ int BLEServiceMap::getRegisteredServiceCount(){
 	return m_handleMap.size();
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

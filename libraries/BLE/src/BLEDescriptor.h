@@ -8,12 +8,12 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_
 #define COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string>
 #include "BLEUUID.h"
 #include "BLECharacteristic.h"
 #include <esp_gatts_api.h>
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLEService;
 class BLECharacteristic;
@@ -73,5 +73,5 @@ public:
 	virtual void onRead(BLEDescriptor* pDescriptor);
 	virtual void onWrite(BLEDescriptor* pDescriptor);
 };
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_ */

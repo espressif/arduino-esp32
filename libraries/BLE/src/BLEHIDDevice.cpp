@@ -5,7 +5,7 @@
  *      Author: chegewara
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLEHIDDevice.h"
 #include "BLE2904.h"
@@ -194,6 +194,7 @@ BLECharacteristic* BLEHIDDevice::protocolMode() {
 
 void BLEHIDDevice::setBatteryLevel(uint8_t level) {
 	m_batteryLevelCharacteristic->setValue(&level, 1);
+	m_batteryLevelCharacteristic->notify();	
 }
 /*
  * @brief Returns battery level characteristic
@@ -239,5 +240,5 @@ BLEService* BLEHIDDevice::batteryService() {
 	return m_batteryService;
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 

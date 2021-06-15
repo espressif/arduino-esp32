@@ -56,7 +56,7 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
         return false;
     }
 
-    if(passphrase && strlen(passphrase) > 63) {
+    if(passphrase && strlen(passphrase) > 64) {
         // fail passphrase too long!
         log_e("[WIFI][APlistAdd] passphrase too long");
         return false;
@@ -128,8 +128,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan);
 
                 bool known = false;
-                for(uint32_t x = 0; x < APlist.size(); x++) {
-                    WifiAPlist_t entry = APlist[x];
+                for(uint32_t x = APlist.size() ; x > 0; x--) {
+                    WifiAPlist_t entry = APlist[x-1];
 
                     if(ssid_scan == entry.ssid) { // SSID match
                         known = true;
@@ -157,7 +157,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         WiFi.scanDelete();
 
         if(bestNetwork.ssid) {
-            log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channal: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
+            log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
 
             WiFi.begin(bestNetwork.ssid, bestNetwork.passphrase, bestChannel, bestBSSID);
             status = WiFi.status();

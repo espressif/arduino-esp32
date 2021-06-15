@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLESERVER_H_
 #define COMPONENTS_CPP_UTILS_BLESERVER_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gatts_api.h>
 
 #include <string>
@@ -20,7 +20,7 @@
 #include "BLECharacteristic.h"
 #include "BLEService.h"
 #include "BLESecurity.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 #include "BLEAddress.h"
 
 class BLEServerCallbacks;
@@ -79,7 +79,7 @@ public:
 	/* multi connection support */
 	std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
 	void addPeerDevice(void* peer, bool is_client, uint16_t conn_id);
-	void removePeerDevice(uint16_t conn_id, bool client);
+	bool removePeerDevice(uint16_t conn_id, bool client);
 	BLEServer* getServerByConnId(uint16_t conn_id);
 	void updatePeerMTU(uint16_t connId, uint16_t mtu);
 	uint16_t getPeerMTU(uint16_t conn_id);
@@ -134,8 +134,18 @@ public:
 	 * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
 	 */
 	virtual void onDisconnect(BLEServer* pServer);
+
+	/**
+	 * @brief Handle a new client connection.
+	 *
+	 * When the MTU changes this method is invoked.
+	 *
+	 * @param [in] pServer A reference to the %BLE server that received the client connection.
+	 * @param [in] param A reference to esp_ble_gatts_cb_param_t.
+	 */
+	virtual void onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param);
 }; // BLEServerCallbacks
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLESERVER_H_ */

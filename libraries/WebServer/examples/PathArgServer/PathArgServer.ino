@@ -32,7 +32,7 @@ void setup(void) {
     Serial.println("MDNS responder started");
   }
 
-  server.on("/", []() {
+  server.on(F("/"), []() {
     server.send(200, "text/plain", "hello from esp32!");
   });
 
@@ -53,4 +53,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
 }

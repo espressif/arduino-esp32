@@ -39,6 +39,10 @@
   #define HSPI_SS     15
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32S2
+#define VSPI FSPI
+#endif
+
 static const int spiClk = 1000000; // 1 MHz
 
 //uninitalised pointers to SPI objects

@@ -36,10 +36,37 @@ extern "C" {
 #include <string.h>
 #include <esp_err.h>
 #include <esp_wifi.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include <esp32-hal.h>
 #include <lwip/ip_addr.h>
 #include "lwip/err.h"
+}
+
+static const char * cipher_str(int cipher)
+{
+    switch (cipher) {
+    case WIFI_CIPHER_TYPE_NONE:
+        return ("NONE");
+        break;
+    case WIFI_CIPHER_TYPE_WEP40:
+    	return ("WEP40");
+        break;
+    case WIFI_CIPHER_TYPE_WEP104:
+    	return ("WEP104");
+        break;
+    case WIFI_CIPHER_TYPE_TKIP:
+    	return ("TKIP");
+        break;
+    case WIFI_CIPHER_TYPE_CCMP:
+    	return ("CCMP");
+        break;
+    case WIFI_CIPHER_TYPE_TKIP_CCMP:
+    	return ("TKIP_CCMP");
+        break;
+    default:
+        break;
+    }
+	return ("UNKNOWN");
 }
 
 bool WiFiScanClass::_scanAsync = false;

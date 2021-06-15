@@ -20,10 +20,6 @@
 #ifndef HAL_ESP32_HAL_H_
 #define HAL_ESP32_HAL_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -34,9 +30,34 @@ extern "C" {
 #include <math.h>
 #include "sdkconfig.h"
 #include "esp_system.h"
+#include "esp_sleep.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef F_CPU
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define F_CPU (CONFIG_ESP32S2_DEFAULT_CPU_FREQ_MHZ * 1000000U)
+#endif
+#endif
+
+#if CONFIG_ARDUINO_ISR_IRAM
+#define ARDUINO_ISR_ATTR IRAM_ATTR
+#define ARDUINO_ISR_FLAG ESP_INTR_FLAG_IRAM
+#else
+#define ARDUINO_ISR_ATTR
+#define ARDUINO_ISR_FLAG (0)
+#endif
+
+#ifndef ARDUINO_RUNNING_CORE
+#define ARDUINO_RUNNING_CORE CONFIG_ARDUINO_RUNNING_CORE
+#endif
+
+#ifndef ARDUINO_EVENT_RUNNING_CORE
+#define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
 #endif
 
 //forward declaration from freertos/portmacro.h
@@ -63,12 +84,6 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
-
-#ifndef BOARD_HAS_PSRAM
-#ifdef CONFIG_SPIRAM_SUPPORT
-#undef CONFIG_SPIRAM_SUPPORT
-#endif
-#endif
 
 //returns chip temperature in Celsius
 float temperatureRead();

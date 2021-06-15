@@ -9,14 +9,14 @@
    2. Copy update.bin to a SD-Card, you can basically
       compile this or any other example
       then copy and rename the app binary to the sd card root
-   3. Connect SD-Card as shown in SD_MMC example, 
+   3. Connect SD-Card as shown in SD example, 
       this can also be adapted for SPI
    3. After successfull update and reboot, ESP32 shall start the new app
 */
 
 #include <Update.h>
 #include <FS.h>
-#include <SD_MMC.h>
+#include <SD.h>
 
 // perform the actual update from a given stream
 void performUpdate(Stream &updateSource, size_t updateSize) {
@@ -87,16 +87,16 @@ void setup() {
    // Serial.println("Update successfull");
 
    //first init and check SD card
-   if (!SD_MMC.begin()) {
+   if (!SD.begin()) {
       rebootEspWithReason("Card Mount Failed");
    }
 
-   cardType = SD_MMC.cardType();
+   cardType = SD.cardType();
 
    if (cardType == CARD_NONE) {
       rebootEspWithReason("No SD_MMC card attached");
    }else{
-      updateFromFS(SD_MMC);
+      updateFromFS(SD);
   }
 }
 

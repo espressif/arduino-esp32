@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include <string.h>
 #include <iomanip>
@@ -219,19 +219,23 @@ void BLECharacteristic::handleGATTServerEvent(
 		// - uint8_t exec_write_flag - Either ESP_GATT_PREP_WRITE_EXEC or ESP_GATT_PREP_WRITE_CANCEL
 		//
 		case ESP_GATTS_EXEC_WRITE_EVT: {
-			if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
-				m_value.commit();
-				m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
-			} else {
-				m_value.cancel();
-			}
-// ???
-			esp_err_t errRc = ::esp_ble_gatts_send_response(
-					gatts_if,
-					param->write.conn_id,
-					param->write.trans_id, ESP_GATT_OK, nullptr);
-			if (errRc != ESP_OK) {
-				log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+			if(m_writeEvt){
+				m_writeEvt = false;
+				if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
+					m_value.commit();
+					// Invoke the onWrite callback handler.
+					m_pCallbacks->onWrite(this, param);
+				} else {
+					m_value.cancel();
+				}
+	// ???
+				esp_err_t errRc = ::esp_ble_gatts_send_response(
+						gatts_if,
+						param->write.conn_id,
+						param->write.trans_id, ESP_GATT_OK, nullptr);
+				if (errRc != ESP_OK) {
+					log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+				}
 			}
 			break;
 		} // ESP_GATTS_EXEC_WRITE_EVT
@@ -277,6 +281,7 @@ void BLECharacteristic::handleGATTServerEvent(
 			if (param->write.handle == m_handle) {
 				if (param->write.is_prep) {
 					m_value.addPart(param->write.value, param->write.len);
+					m_writeEvt = true;
 				} else {
 					setValue(param->write.value, param->write.len);
 				}
@@ -307,7 +312,8 @@ void BLECharacteristic::handleGATTServerEvent(
 				} // Response needed
 
 				if (param->write.is_prep != true) {
-					m_pCallbacks->onWrite(this); // Invoke the onWrite callback handler.
+					// Invoke the onWrite callback handler.
+					m_pCallbacks->onWrite(this, param);
 				}
 			} // Match on handles.
 			break;
@@ -379,7 +385,7 @@ void BLECharacteristic::handleGATTServerEvent(
 
 						// If is.long is false then this is the first (or only) request to read data, so invoke the callback
 						// Invoke the read callback.
-						m_pCallbacks->onRead(this);
+						m_pCallbacks->onRead(this, param);
 
 						std::string value = m_value.getValue();
 
@@ -753,47 +759,36 @@ std::string BLECharacteristic::toString() {
 
 BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
 
+void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param) {
+	onRead(pCharacteristic);
+} // onRead
 
-/**
- * @brief Callback function to support a read request.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- */
 void BLECharacteristicCallbacks::onRead(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onRead: default");
-	log_d("BLECharacteristicCallbacks", "<< onRead");
+	log_d(">> onRead: default");
+	log_d("<< onRead");
 } // onRead
 
 
-/**
- * @brief Callback function to support a write request.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- */
+void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param) {
+	onWrite(pCharacteristic);
+} // onWrite
+
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onWrite: default");
-	log_d("BLECharacteristicCallbacks", "<< onWrite");
+	log_d(">> onWrite: default");
+	log_d("<< onWrite");
 } // onWrite
 
 
-/**
- * @brief Callback function to support a Notify request.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- */
 void BLECharacteristicCallbacks::onNotify(BLECharacteristic* pCharacteristic) {
-	log_d("BLECharacteristicCallbacks", ">> onNotify: default");
-	log_d("BLECharacteristicCallbacks", "<< onNotify");
+	log_d(">> onNotify: default");
+	log_d("<< onNotify");
 } // onNotify
 
 
-/**
- * @brief Callback function to support a Notify/Indicate Status report.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] s Status of the notification/indication
- * @param [in] code Additional code of underlying errors
- */
 void BLECharacteristicCallbacks::onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code) {
-	log_d("BLECharacteristicCallbacks", ">> onStatus: default");
-	log_d("BLECharacteristicCallbacks", "<< onStatus");
+	log_d(">> onStatus: default");
+	log_d("<< onStatus");
 } // onStatus
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
 #include <string.h>
 #include <iomanip>
@@ -284,4 +284,4 @@ void BLEDescriptorCallbacks::onWrite(BLEDescriptor* pDescriptor) {
 } // onWrite
 
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */

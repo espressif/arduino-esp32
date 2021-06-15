@@ -17,7 +17,7 @@
  *
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include "BLEAdvertising.h"
 #include <esp_err.h>
 #include "BLEUtils.h"
@@ -28,7 +28,9 @@
  * @brief Construct a default advertising object.
  *
  */
-BLEAdvertising::BLEAdvertising() {
+BLEAdvertising::BLEAdvertising()
+: m_scanRespData{}
+{
 	m_advData.set_scan_rsp        = false;
 	m_advData.include_name        = true;
 	m_advData.include_txpower     = true;
@@ -88,6 +90,10 @@ void BLEAdvertising::setAppearance(uint16_t appearance) {
 void BLEAdvertising::setAdvertisementType(esp_ble_adv_type_t adv_type){
 	m_advParams.adv_type = adv_type;
 } // setAdvertisementType
+
+void BLEAdvertising::setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map) {
+	m_advParams.channel_map = channel_map;
+} // setAdvertisementChannelMap
 
 void BLEAdvertising::setMinInterval(uint16_t mininterval) {
 	m_advParams.adv_int_min = mininterval;
@@ -215,10 +221,15 @@ void BLEAdvertising::start() {
 	}
 
 	if (!m_customScanResponseData && m_scanResp) {
-		m_advData.set_scan_rsp = true;
-		m_advData.include_name = m_scanResp;
-		m_advData.include_txpower = m_scanResp;
-		errRc = ::esp_ble_gap_config_adv_data(&m_advData);
+		// Set the configuration for scan response.
+		memcpy(&m_scanRespData, &m_advData, sizeof(esp_ble_adv_data_t)); // Copy the content of m_advData.
+		m_scanRespData.set_scan_rsp = true; // Define this struct as scan response data
+		m_scanRespData.include_name = true; // Caution: This may lead to a crash if the device name has more than 29 characters
+		m_scanRespData.include_txpower = true;
+		m_scanRespData.appearance = 0; // If defined the 'Appearance' attribute is already included in the advertising data
+		m_scanRespData.flag = 0; // 'Flags' attribute should no be included in the scan response
+
+		errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
 		if (errRc != ESP_OK) {
 			log_e("<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			return;
@@ -517,5 +528,242 @@ void BLEAdvertising::handleGAPEvent(
 	}
 }
 
+#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
 
-#endif /* CONFIG_BT_ENABLED */
+/**
+* @brief           Creator
+*
+* @param[in]       instance : number of multi advertising instances
+*
+*
+*/
+BLEMultiAdvertising::BLEMultiAdvertising(uint8_t num)
+{
+	params_arrays = (esp_ble_gap_ext_adv_params_t*)calloc(num, sizeof(esp_ble_gap_ext_adv_params_t));
+	ext_adv = (esp_ble_gap_ext_adv_t*)calloc(num, sizeof(esp_ble_gap_ext_adv_t));
+	count = num;
+}
+
+/**
+* @brief           This function is used by the Host to set the advertising parameters.
+*
+* @param[in]       instance : identifies the advertising set whose parameters are being configured.
+* @param[in]       params   : advertising parameters
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::setAdvertisingParams(uint8_t instance, const esp_ble_gap_ext_adv_params_t* params)
+{
+	if (params->type == ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_IND && params->primary_phy == ESP_BLE_GAP_PHY_2M) return false;
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_set_params(instance, params);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to set the data used in advertising PDUs that have a data field
+*
+* @param[in]       instance : identifies the advertising set whose data are being configured
+* @param[in]       length   : data length
+* @param[in]       data     : data information
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::setAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_config_ext_adv_data_raw(instance, length, data);
+	if (rc) log_e("set advertising data err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+bool BLEMultiAdvertising::setScanRspData(uint8_t instance, uint16_t length, const uint8_t* data)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_config_ext_scan_rsp_data_raw(instance, length, data);
+	if (rc) log_e("set scan resp data err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to request the Controller to enable one or more
+*                  advertising sets using the advertising sets identified by the instance parameter.
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::start()
+{
+	return start(count, 0);
+}
+
+/**
+* @brief           This function is used to request the Controller to enable one or more
+*                  advertising sets using the advertising sets identified by the instance parameter.
+*
+* @param[in]       num : Number of advertising sets to enable or disable
+* @param[in]       from : first sxt adv set to use
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::start(uint8_t num, uint8_t from)
+{
+	if (num > count || from >= count) return false;
+
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_start(num, &ext_adv[from]);
+	if (rc) log_e("start extended advertising err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to request the Controller to disable one or more
+*                  advertising sets using the advertising sets identified by the instance parameter.
+*
+* @param[in]       num_adv : Number of advertising sets to enable or disable
+* @param[in]       ext_adv_inst : ext adv instance
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+bool BLEMultiAdvertising::stop(uint8_t num_adv, const uint8_t* ext_adv_inst)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_stop(num_adv, ext_adv_inst);
+	if (rc) log_e("stop extended advertising err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to remove an advertising set from the Controller.
+*
+* @param[in]       instance : Used to identify an advertising set
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+bool BLEMultiAdvertising::remove(uint8_t instance)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_set_remove(instance);
+	if (rc) log_e("remove extended advertising err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to remove all existing advertising sets from the Controller.
+*
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+bool BLEMultiAdvertising::clear()
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_set_clear();
+	if (rc) log_e("clear extended advertising err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used by the Host to set the random device address specified by the Random_Address parameter.
+*
+* @param[in]       instance  : Used to identify an advertising set
+* @param[in]       addr_legacy : Random Device Address
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::setInstanceAddress(uint8_t instance, uint8_t* addr_legacy)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_ext_adv_set_rand_addr(instance, addr_legacy);
+	if (rc) log_e("set random address err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used by the Host to set the parameters for periodic advertising.
+*
+* @param[in]       instance : identifies the advertising set whose periodic advertising parameters are being configured.
+* @param[in]       params : periodic adv parameters
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::setPeriodicAdvertisingParams(uint8_t instance, const esp_ble_gap_periodic_adv_params_t* params)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_periodic_adv_set_params(instance, params);
+	if (rc) log_e("set periodic advertising params err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to set the data used in periodic advertising PDUs.
+*
+* @param[in]       instance : identifies the advertising set whose periodic advertising parameters are being configured.
+* @param[in]       length : the length of periodic data
+* @param[in]       data : periodic data information
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::setPeriodicAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_config_periodic_adv_data_raw(instance, length, data);
+	if (rc) log_e("set periodic advertising raw data err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+/**
+* @brief           This function is used to request the Controller to enable the periodic advertising for the advertising set specified
+*
+* @param[in]       instance : Used to identify an advertising set
+*
+* @return            - true : success
+*                    - false  : failed
+*
+*/
+bool BLEMultiAdvertising::startPeriodicAdvertising(uint8_t instance)
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_periodic_adv_start(instance);
+	if (rc) log_e("start periodic advertising err: %d", rc);
+
+	return ESP_OK == rc;
+}
+
+void BLEMultiAdvertising::setDuration(uint8_t instance, int duration, int max_events)
+{
+	ext_adv[instance] = { instance, duration, max_events };
+}
+
+#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+
+
+#endif /* CONFIG_BLUEDROID_ENABLED */

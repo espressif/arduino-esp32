@@ -18,9 +18,9 @@ For a simplified method, see [lib-builder](lib_builder.md)
     cd arduino && \
     git submodule update --init --recursive && \
     cd ../.. && \
-    make menuconfig
+    idf.py menuconfig
   ```
-- ```make menuconfig``` has some Arduino options
+- ```idf.py menuconfig``` has some Arduino options
     - "Autostart Arduino setup and loop on boot"
         - If you enable this options, your main.cpp should be formated like any other sketch
 
@@ -60,7 +60,7 @@ For a simplified method, see [lib-builder](lib_builder.md)
     - "Autoconnect WiFi on boot"
         - If enabled, WiFi will start with the last known configuration
         - Else it will wait for WiFi.begin
-- ```make flash monitor``` will build, upload and open serial monitor to your board
+- ```idf.py -p <your-board-serial-port> flash monitor``` will build, upload and open serial monitor to your board
 
 ## Logging To Serial
 
@@ -71,6 +71,11 @@ If you are writing code that does not require Arduino to compile and you want yo
 #include "esp32-hal-log.h"
 #endif
 ```
+
+## FreeRTOS Tick Rate (Hz)
+
+You might notice that Arduino-esp32's `delay()` function will only work in multiples of 10ms. That is because, by default, esp-idf handles task events 100 times per second.
+To fix that behavior you need to set FreeRTOS tick rate to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
 
 ## Compilation Errors
 

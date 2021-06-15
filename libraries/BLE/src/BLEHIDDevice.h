@@ -9,7 +9,7 @@
 #define _BLEHIDDEVICE_H_
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLECharacteristic.h"
 #include "BLEService.h"
@@ -71,5 +71,5 @@ private:
 	BLECharacteristic* 	m_protocolModeCharacteristic;	//0x2a4e
 	BLECharacteristic*	m_batteryLevelCharacteristic;	//0x2a19
 };
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif /* _BLEHIDDEVICE_H_ */

@@ -229,7 +229,7 @@ void printDirectory() {
     output += "{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
-    output += entry.name();
+    output += entry.path();
     output += "\"";
     output += "}";
     server.sendContent(output);
@@ -310,4 +310,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
 }

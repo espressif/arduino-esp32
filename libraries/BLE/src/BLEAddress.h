@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADDRESS_H_
 #define COMPONENTS_CPP_UTILS_BLEADDRESS_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h> // ESP32 BLE
 #include <string>
 
@@ -23,6 +23,12 @@ public:
 	BLEAddress(esp_bd_addr_t address);
 	BLEAddress(std::string stringAddress);
 	bool           equals(BLEAddress otherAddress);
+  bool           operator==(const BLEAddress& otherAddress) const;
+  bool           operator!=(const BLEAddress& otherAddress) const;
+  bool           operator<(const BLEAddress& otherAddress) const;
+  bool           operator<=(const BLEAddress& otherAddress) const;
+  bool           operator>(const BLEAddress& otherAddress) const;
+  bool           operator>=(const BLEAddress& otherAddress) const;
 	esp_bd_addr_t* getNative();
 	std::string    toString();
 
@@ -30,5 +36,5 @@ private:
 	esp_bd_addr_t m_address;
 };
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADDRESS_H_ */

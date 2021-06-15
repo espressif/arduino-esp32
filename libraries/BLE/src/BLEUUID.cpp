@@ -5,7 +5,7 @@
  *      Author: kolban
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string.h>
 #include <sstream>
 #include <iomanip>
@@ -383,4 +383,4 @@ std::string BLEUUID::toString() {
 	return res;
 } // toString
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
