@@ -37,7 +37,7 @@ class WiFiAPClass
 
 public:
 
-    bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4);
+    bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
     bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet);
     bool softAPdisconnect(bool wifioff = false);
 
