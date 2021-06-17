@@ -81,11 +81,14 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     if(lhs.ap.pairwise_cipher != rhs.ap.pairwise_cipher) {
         return false;
     }
+    if(lhs.ap.ftm_responder != rhs.ap.ftm_responder) {
+        return false;
+    }
     return true;
 }
 
-void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, const char * password=NULL, uint8_t channel=6, wifi_auth_mode_t authmode=WIFI_AUTH_WPA2_PSK, uint8_t ssid_hidden=0, uint8_t max_connections=4, uint16_t beacon_interval=100){
-	wifi_config->ap.channel = channel;
+void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, const char * password=NULL, uint8_t channel=6, wifi_auth_mode_t authmode=WIFI_AUTH_WPA2_PSK, uint8_t ssid_hidden=0, uint8_t max_connections=4, bool ftm_responder=false, uint16_t beacon_interval=100){
+    wifi_config->ap.channel = channel;
 	wifi_config->ap.max_connection = max_connections;
 	wifi_config->ap.beacon_interval = beacon_interval;
 	wifi_config->ap.ssid_hidden = ssid_hidden;
@@ -93,6 +96,7 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
 	wifi_config->ap.ssid_len = 0;
     wifi_config->ap.ssid[0] = 0;
     wifi_config->ap.password[0] = 0;
+    wifi_config->ap.ftm_responder = ftm_responder;
     if(ssid != NULL && ssid[0] != 0){
     	snprintf((char*)wifi_config->ap.ssid, 32, ssid);
     	wifi_config->ap.ssid_len = strlen(ssid);
@@ -117,7 +121,7 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
  * @param ssid_hidden       Network cloaking (0 = broadcast SSID, 1 = hide SSID)
  * @param max_connection    Max simultaneous connected clients, 1 - 4.
 */
-bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection)
+bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder)
 {
 
     if(!WiFi.enableAP(true)) {
@@ -140,7 +144,7 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
 
     wifi_config_t conf;
     wifi_config_t conf_current;
-    wifi_softap_config(&conf, ssid, passphrase, channel, WIFI_AUTH_WPA2_PSK, ssid_hidden, max_connection);
+    wifi_softap_config(&conf, ssid, passphrase, channel, WIFI_AUTH_WPA2_PSK, ssid_hidden, max_connection, ftm_responder);
     esp_err_t err = esp_wifi_get_config((wifi_interface_t)WIFI_IF_AP, &conf_current);
     if(err){
     	log_e("get AP config failed");
