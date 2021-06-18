@@ -357,7 +357,6 @@ unsigned char String::concat(unsigned char num) {
 
 unsigned char String::concat(int num) {
     char buf[2 + 3 * sizeof(int)];
-    sprintf(buf, "%d", num);
     return concat(buf, sprintf(buf, "%d", num));
 }
 
