@@ -23,6 +23,7 @@
 namespace esp_i2s {
   #include "driver/i2s.h" // ESP specific i2s driver
 }
+#include "freertos/semphr.h"
 
 
 #define I2S_HAS_SET_BUFFER_SIZE 1
@@ -36,6 +37,7 @@ namespace esp_i2s {
 #endif
 
 #define INCLUDE_xTaskGetCurrentTaskHandle 1
+#define _I2S_EVENT_QUEUE_LENGTH 10
 
 typedef enum {
   I2S_PHILIPS_MODE,
@@ -115,15 +117,10 @@ private:
   long _sampleRate;
   int _mode;
 
-  volatile bool _dmaTransferInProgress;
-
   bool _initialized;
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
-
-  EventGroupHandle_t _xCallbackEventBits;
-  #define _I2S_CALLBACK_TASK_CMD_END_0       ( 1 << 0 )
-  #define _I2S_CALLBACK_TASK_END_CONFIRMED_1 ( 1 << 1 )
+  QueueHandle_t _task_kill_cmd_semaphore_handle;
 
   void (*_onTransmit)(void);
   void (*_onReceive)(void);

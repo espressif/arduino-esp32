@@ -28,8 +28,6 @@ short sample = amplitude; // current sample value
 int count = 0;
 
 void setup() {
-  disableCore0WDT();
-  disableCore1WDT();
   Serial.begin(115200);
   Serial.println("I2S simple tone");
 

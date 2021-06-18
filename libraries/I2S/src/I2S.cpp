@@ -37,10 +37,10 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _sampleRate(0),
   _mode(I2S_PHILIPS_MODE),
 
-  _dmaTransferInProgress(false),
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
+  _task_kill_cmd_semaphore_handle(NULL),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -62,10 +62,10 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
   _sampleRate(0),
   _mode(I2S_PHILIPS_MODE),
 
-  _dmaTransferInProgress(false),
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
+  _task_kill_cmd_semaphore_handle(NULL),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -75,9 +75,10 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
 void I2SClass::createCallbackTask()
 {
   int stack_size = 3000;
-      if(_callbackTaskHandle == NULL){
-    _xCallbackEventBits = xEventGroupCreate();
-    vTaskDelay(1);
+  if(_callbackTaskHandle == NULL){
+    if(_task_kill_cmd_semaphore_handle == NULL){
+      _task_kill_cmd_semaphore_handle = xSemaphoreCreateBinary();
+    }
     xTaskCreate(
       onDmaTransferComplete, // Function to implement the task
       "onDmaTransferComplete", // Name of the task
@@ -91,26 +92,8 @@ void I2SClass::createCallbackTask()
 
 void I2SClass::destroyCallbackTask()
 {
-  if(_callbackTaskHandle != NULL){
-    if(xTaskGetCurrentTaskHandle() == _callbackTaskHandle){
-      return;
-    }
-    EventBits_t uxReturn;
-    int ret = xEventGroupSetBits(_xCallbackEventBits, _I2S_CALLBACK_TASK_CMD_END_0); // Command callback task to finish and quit infinite loop
-
-    // wait on confirmation from callback task that it exited infinite loop
-    uxReturn = xEventGroupWaitBits(_xCallbackEventBits,
-                                 _I2S_CALLBACK_TASK_END_CONFIRMED_1,
-                                 pdFALSE, // Don't clear received bits
-                                 pdFALSE, // logical OR for waiting bits
-                                 portMAX_DELAY); // wait indefinitely
-    if((uxReturn & _I2S_CALLBACK_TASK_END_CONFIRMED_1) == _I2S_CALLBACK_TASK_END_CONFIRMED_1){
-      vTaskDelete(_callbackTaskHandle);
-      _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
-      vEventGroupDelete(_xCallbackEventBits);
-      _xCallbackEventBits = NULL;
-      vTaskDelay(1); // memory cleanup
-    } // group bits - check confirmation
+  if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
+    xSemaphoreGive(_task_kill_cmd_semaphore_handle);
   } // callback handle check
 }
 
@@ -185,8 +168,8 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
       .dma_buf_len = 512 // buffer length in Bytes
     };
 
-    if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, 10, &_i2sEventQueue)){ // Install and start i2s driver
-            return 0; // ERR
+    if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
+      return 0; // ERR
     }
 
     esp_i2s::adc_unit_t adc_unit = (esp_i2s::adc_unit_t) 1;
@@ -435,35 +418,35 @@ int I2SClass::enableReceiver()
 
 void I2SClass::onTransferComplete()
 {
-  EventBits_t uxReturn;
+  static QueueSetHandle_t xQueueSet;
+  QueueSetMemberHandle_t xActivatedMember;
   esp_i2s::i2s_event_type_t i2s_event;
-  UBaseType_t uxHighWaterMark; // debug
-  while(true){
-    if(_xCallbackEventBits != NULL){
-      uxReturn = xEventGroupGetBits(_xCallbackEventBits);
-      if((uxReturn & _I2S_CALLBACK_TASK_CMD_END_0) == _I2S_CALLBACK_TASK_CMD_END_0){
-        break; // from the infinite loop
-      }
-    }
+  EventBits_t uxReturn;
 
-    if(_i2sEventQueue != NULL){
-      if(pdPASS == xQueueReceive(_i2sEventQueue, &i2s_event, 10)){
-        if((i2s_event == esp_i2s::I2S_EVENT_TX_DONE) && (_state == I2S_STATE_DUPLEX || _state == I2S_STATE_TRANSMITTER)){
-          if(_onTransmit){
-            _onTransmit();
-          }
-        }else if(i2s_event == esp_i2s::I2S_EVENT_RX_DONE && (_state == I2S_STATE_RECEIVER || _state == I2S_STATE_DUPLEX)){
-          if (_onReceive) {
-            _onReceive();
-          }
-        } // if event TX or RX
-      } // event queue receive
-    } // queue not NULL
-  } // infinite loop
-  int ret = xEventGroupSetBits(_xCallbackEventBits, _I2S_CALLBACK_TASK_END_CONFIRMED_1); // Notify end() function this task has properly exited infinite loop and is killing itself
+  xQueueSet = xQueueCreateSet(sizeof(i2s_event)*_I2S_EVENT_QUEUE_LENGTH + 1);
+  configASSERT(xQueueSet);
+  xQueueAddToSet(_i2sEventQueue, xQueueSet);
+  xQueueAddToSet(_task_kill_cmd_semaphore_handle, xQueueSet);
+
   while(true){
-    // wait for death
-  }
+    xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY);
+    if(xActivatedMember == _task_kill_cmd_semaphore_handle){
+      xSemaphoreTake(_task_kill_cmd_semaphore_handle, 0);
+      break; // from the infinite loop
+    }else if(xActivatedMember == _i2sEventQueue){
+      xQueueReceive(_i2sEventQueue, &i2s_event, 0);
+      if((i2s_event == esp_i2s::I2S_EVENT_TX_DONE) && (_state == I2S_STATE_DUPLEX || _state == I2S_STATE_TRANSMITTER)){
+        if(_onTransmit){
+          _onTransmit();
+        }
+      }else if(i2s_event == esp_i2s::I2S_EVENT_RX_DONE && (_state == I2S_STATE_RECEIVER || _state == I2S_STATE_DUPLEX)){
+        if (_onReceive) {
+          _onReceive();
+        }
+      } // if event TX or RX
+    }
+  _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
+  vTaskDelete(NULL);
 }
 
 void I2SClass::onDmaTransferComplete(void*)
