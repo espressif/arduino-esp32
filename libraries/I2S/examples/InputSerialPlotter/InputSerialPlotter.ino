@@ -19,8 +19,6 @@
 #include <I2S.h>
 
 void setup() {
-  disableCore0WDT();
-  disableCore1WDT();
   // Open serial communications and wait for port to open:
   // A baud rate of 115200 is used instead of 9600 for a faster data rate
   // on non-native USB ports
