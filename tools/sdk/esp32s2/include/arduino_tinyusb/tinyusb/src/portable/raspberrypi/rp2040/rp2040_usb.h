@@ -16,8 +16,6 @@
 #define TUD_OPT_RP2040_USB_DEVICE_ENUMERATION_FIX PICO_RP2040_USB_DEVICE_ENUMERATION_FIX
 #endif
 
-// For memset
-#include <string.h>
 
 #if false && !defined(NDEBUG)
 #define pico_trace(format,args...) printf(format, ## args)
@@ -78,7 +76,7 @@ struct hw_endpoint
 #if TUSB_OPT_HOST_ENABLED
     // Only needed for host mode
     bool last_buf;
-    // HOST BUG. Host will incorrect write status to top half of buffer
+    // RP2040-E4: HOST BUG. Host will incorrect write status to top half of buffer
     // control register when doing transfers > 1 packet
     uint8_t buf_sel;
     // Only needed for host
@@ -118,5 +116,45 @@ static inline uintptr_t hw_data_offset(uint8_t *buf)
 }
 
 extern const char *ep_dir_string[];
+
+typedef union TU_ATTR_PACKED
+{
+  uint16_t u16;
+  struct TU_ATTR_PACKED
+  {
+    uint16_t xfer_len     : 10;
+    uint16_t available    : 1;
+    uint16_t stall        : 1;
+    uint16_t reset_bufsel : 1;
+    uint16_t data_toggle  : 1;
+    uint16_t last_buf     : 1;
+    uint16_t full         : 1;
+  };
+} rp2040_buffer_control_t;
+
+TU_VERIFY_STATIC(sizeof(rp2040_buffer_control_t) == 2, "size is not correct");
+
+static inline void print_bufctrl16(uint32_t __unused u16)
+{
+  rp2040_buffer_control_t __unused bufctrl = {
+      .u16 = u16
+  };
+
+  TU_LOG(2, "len = %u, available = %u, stall = %u, reset = %u, toggle = %u, last = %u, full = %u\r\n",
+         bufctrl.xfer_len, bufctrl.available, bufctrl.stall, bufctrl.reset_bufsel, bufctrl.data_toggle, bufctrl.last_buf, bufctrl.full);
+}
+
+static inline void print_bufctrl32(uint32_t u32)
+{
+  uint16_t u16;
+
+  u16 = u32 >> 16;
+  TU_LOG(2, "Buffer Control 1 0x%x: ", u16);
+  print_bufctrl16(u16);
+
+  u16 = u32 & 0x0000ffff;
+  TU_LOG(2, "Buffer Control 0 0x%x: ", u16);
+  print_bufctrl16(u16);
+}
 
 #endif

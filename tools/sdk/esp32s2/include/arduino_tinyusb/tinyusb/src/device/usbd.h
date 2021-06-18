@@ -70,8 +70,8 @@ bool tud_mounted(void);
 bool tud_suspended(void);
 
 // Check if device is ready to transfer
-TU_ATTR_ALWAYS_INLINE
-static inline bool tud_ready(void)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tud_ready(void)
 {
   return tud_mounted() && !tud_suspended();
 }

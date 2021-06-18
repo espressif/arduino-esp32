@@ -34,10 +34,7 @@
  extern "C" {
 #endif
 
-//--------------------------------------------------------------------+
-// INCLUDE
-//--------------------------------------------------------------------+
-#include "osal/osal.h" // TODO refractor move to common.h ?
+#include "common/tusb_common.h"
 #include "hcd.h"
 
 //--------------------------------------------------------------------+
@@ -66,10 +63,6 @@ typedef struct {
 } usbh_class_driver_t;
 
 typedef bool (*tuh_control_complete_cb_t)(uint8_t dev_addr, tusb_control_request_t const * request, xfer_result_t result);
-
-//--------------------------------------------------------------------+
-// INTERNAL OBJECT & FUNCTION DECLARATION
-//--------------------------------------------------------------------+
 
 //--------------------------------------------------------------------+
 // APPLICATION API

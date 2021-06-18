@@ -24,14 +24,9 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \addtogroup ClassDriver_HID
- *  @{ */
-
 #ifndef _TUSB_HID_HOST_H_
 #define _TUSB_HID_HOST_H_
 
-#include "common/tusb_common.h"
-#include "host/usbh.h"
 #include "hid.h"
 
 #ifdef __cplusplus
@@ -134,5 +129,3 @@ void hidh_close(uint8_t dev_addr);
 #endif
 
 #endif /* _TUSB_HID_HOST_H_ */
-
-/** @} */ // ClassDriver_HID

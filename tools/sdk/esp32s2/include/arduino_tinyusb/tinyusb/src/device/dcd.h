@@ -28,6 +28,7 @@
 #define _TUSB_DCD_H_
 
 #include "common/tusb_common.h"
+#include "osal/osal.h"
 #include "common/tusb_fifo.h"
 
 #ifdef __cplusplus

@@ -28,7 +28,6 @@
 #define _TUSB_VENDOR_DEVICE_H_
 
 #include "common/tusb_common.h"
-#include "device/usbd.h"
 
 #ifndef CFG_TUD_VENDOR_EPSIZE
 #define CFG_TUD_VENDOR_EPSIZE     64

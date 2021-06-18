@@ -28,8 +28,8 @@
 #define _TUSB_OPTION_H_
 
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     9
-#define TUSB_VERSION_REVISION  0
+#define TUSB_VERSION_MINOR     10
+#define TUSB_VERSION_REVISION  1
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
 /** \defgroup group_mcu Supported MCU
@@ -55,11 +55,11 @@
 #define OPT_MCU_NRF5X             100 ///< Nordic nRF5x series
 
 // SAM
-#define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
 #define OPT_MCU_SAMD21            200 ///< MicroChip SAMD21
 #define OPT_MCU_SAMD51            201 ///< MicroChip SAMD51
-#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 #define OPT_MCU_SAMG              202 ///< MicroChip SAMDG series
+#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
+#define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
 #define OPT_MCU_SAML22            205 ///< MicroChip SAML22
 
 // STM32
@@ -112,6 +112,9 @@
 
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
+
+// Mind Motion
+#define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
 
 /** @} */
 
