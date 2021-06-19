@@ -53,10 +53,14 @@ bool Preferences::begin(const char * name, bool readOnly, const char* partition_
     return true;
 }
 
-void Preferences::end(){
+void Preferences::end(){                                         // modified to add an nvs_commit()
     if(!_started){
         return;
     }
+    esp_err_t err = nvs_commit(_handle);                         // to undo changes: delete the lines from here...
+    if(err){
+        log_e("nvs_commit fail: %s %s", key, nvs_error(err));
+    }                                                            // ... to here.
     nvs_close(_handle);
     _started = false;
 }
@@ -65,7 +69,7 @@ void Preferences::end(){
  * Clear all keys in opened preferences
  * */
 
-bool Preferences::clear(){
+bool Preferences::clear(){                                  // modified to add an nvs_commit()
     if(!_started || _readOnly){
         return false;
     }
@@ -74,14 +78,20 @@ bool Preferences::clear(){
         log_e("nvs_erase_all fail: %s", nvs_error(err));
         return false;
     }
-    return true;
+    // return true;                                         // to undo changes: uncomment this line and...
+    err = nvs_commit(_handle);                              // ... delete the lines from from here...
+    if(err){
+        log_e("nvs_commit fail: %s", nvs_error(err));
+        return false;
+    }
+    return true;                                            // ... to here.
 }
 
 /*
  * Remove a key
  * */
 
-bool Preferences::remove(const char * key){
+bool Preferences::remove(const char * key){                 // modified to add an nvs_commit()
     if(!_started || !key || _readOnly){
         return false;
     }
@@ -90,7 +100,13 @@ bool Preferences::remove(const char * key){
         log_e("nvs_erase_key fail: %s %s", key, nvs_error(err));
         return false;
     }
-    return true;
+    // return true;                                         // to undo changes: uncomment this line and...
+    err = nvs_commit(_handle);                              // ... delete the lines from from here...
+    if(err){
+        log_e("nvs_commit fail: %s %s", key, nvs_error(err));
+        return false;
+    }
+    return true;                                            // ... to here.
 }
 
 /*
