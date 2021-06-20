@@ -271,7 +271,6 @@ env.Append(
         "HAVE_CONFIG_H",
         ("MBEDTLS_CONFIG_FILE", '\\"mbedtls/esp_config.h\\"'),
         "UNITY_INCLUDE_CONFIG_H",
-        "WITH_POSIX",
         ("_XOPEN_SOURCE", 700),
         "_DEFAULT_SOURCE",
         ("IDF_VER", '\\"v4.4-dev-1594-g1d7068e4b\\"'),
