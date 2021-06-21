@@ -26,8 +26,8 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _deviceIndex(0),
   _clockGenerator(clockGenerator),
   _sdPin(sdPin),    // shared data pin
-  _inSdPin(sdPin),  // input data pin
-  _outSdPin(sdPin), // output data pin
+  _inSdPin(-1),  // input data pin
+  _outSdPin(-1), // output data pin
   _sckPin(sckPin),  // clock pin
   _fsPin(fsPin),    // frame (word) select pin
 
@@ -208,14 +208,14 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     };
 
     esp_i2s::i2s_pin_config_t pin_config;
-    if (_state == I2S_STATE_DUPLEX){
+    if (_state == I2S_STATE_DUPLEX){ // duplex
       pin_config = {
         .bck_io_num = _sckPin,
         .ws_io_num = _fsPin,
         .data_out_num = _outSdPin,
         .data_in_num = _inSdPin
       };
-    }else{ // half-duplex
+    }else{ // simplex
       pin_config = {
           .bck_io_num = _sckPin,
           .ws_io_num = _fsPin,
@@ -237,6 +237,39 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
   } // ADC/DAC or normal I2S mode
   createCallbackTask();
   _initialized = true;
+  return 1; // OK
+}
+
+int I2SClass::setHalfDuplex(uint8_t inSdPin, uint8_t outSdPin){
+  _inSdPin = inSdPin;
+  _outSdPin = outSdPin;
+  if(_initialized){
+    esp_i2s::i2s_pin_config_t pin_config = {
+      .bck_io_num = _sckPin,
+      .ws_io_num = _fsPin,
+      .data_out_num = _outSdPin,
+      .data_in_num = _inSdPin
+    };
+    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
+      return 0; // ERR
+    }
+  }
+  return 1; // OK
+}
+
+int I2SClass::setSimplex(uint8_t sdPin){
+  _sdPin = sdPin;
+  if(_initialized){
+    esp_i2s::i2s_pin_config_t pin_config = {
+      .bck_io_num = _sckPin,
+      .ws_io_num = _fsPin,
+      .data_out_num = -1, // esp_i2s::I2S_PIN_NO_CHANGE,
+      .data_in_num = _sdPin
+    };
+    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
+      return 0; // ERR
+    }
+  }
   return 1; // OK
 }
 
@@ -385,8 +418,7 @@ int I2SClass::enableTransmitter()
         esp_i2s::i2s_pin_config_t pin_config = {
         .bck_io_num = _sckPin,
         .ws_io_num = _fsPin,
-        .data_out_num = _sdPin,
-        //.data_out_num = 26, // TODO
+        .data_out_num = _outSdPin != -1 ? _outSdPin : _sdPin,
         .data_in_num = -1 // esp_i2s::I2S_PIN_NO_CHANGE,
     };
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
@@ -405,7 +437,7 @@ int I2SClass::enableReceiver()
         .bck_io_num = _sckPin,
         .ws_io_num = _fsPin,
         .data_out_num = -1, // esp_i2s::I2S_PIN_NO_CHANGE,
-        .data_in_num = _sdPin
+        .data_in_num = _inSdPin != -1 ? _inSdPin : _sdPin
     };
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
       _state = I2S_STATE_IDLE;
@@ -446,6 +478,7 @@ void I2SClass::onTransferComplete()
       } // if event TX or RX
     }
   _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
+  }
   vTaskDelete(NULL);
 }
 
@@ -456,14 +489,14 @@ void I2SClass::onDmaTransferComplete(void*)
 
 #if I2S_INTERFACES_COUNT > 0
   #ifdef ESP_PLATFORM
-    // change pins?
     #define I2S_DEVICE 0
     #define I2S_CLOCK_GENERATOR 0 // does nothing for ESP
     #define PIN_I2S_SCK 5
     #define PIN_I2S_FS 25
-    #define PIN_I2S_SD 26
-    #define PIN_I2S_SD_OUT 35
+    #define PIN_I2S_SD 35 // ESP data in / codec data out (microphone)
+    #define PIN_I2S_SD_OUT 26 // ESP data out / codec data in (speakers)
   #endif
+
 I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
 //I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SCK, PIN_I2S_FS); // full duplex
 #endif
