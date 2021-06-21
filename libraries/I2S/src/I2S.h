@@ -56,6 +56,11 @@ public:
   int begin(int mode, long sampleRate, int bitsPerSample);
   // the SCK and FS pins are inputs, other side controls sample rate
   int begin(int mode, int bitsPerSample);
+
+  // change pin setup (default is Simplex)
+  int setHalfDuplex(uint8_t inSdPin, uint8_t outSdPin);
+  int setSimplex(uint8_t sdPin);
+
   void end();
 
   // from Stream
@@ -102,13 +107,13 @@ private:
 
   static int _beginCount;
 
-  uint8_t _deviceIndex;
-  uint8_t _clockGenerator;
-  uint8_t _sdPin;
-  uint8_t _inSdPin;
-  uint8_t _outSdPin;
-  uint8_t _sckPin;
-  uint8_t _fsPin;
+  int _deviceIndex;
+  int _clockGenerator;
+  int _sdPin;
+  int _inSdPin;
+  int _outSdPin;
+  int _sckPin;
+  int _fsPin;
 
 
   i2s_state_t _state;
