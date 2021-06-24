@@ -1,6 +1,6 @@
 
 #include "sdkconfig.h"
-#if CONFIG_TINYUSB_ENABLED
+#if CONFIG_TINYUSB_ENABLED && !defined(USE_TINYUSB)
 #include <stdlib.h>
 #include <stdbool.h>
 

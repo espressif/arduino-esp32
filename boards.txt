@@ -12,6 +12,7 @@ menu.LORAWAN_REGION=LoRaWan Region
 menu.LoRaWanDebugLevel=LoRaWan Debug Level
 menu.LoopCore=Arduino Runs On
 menu.EventsCore=Events Run On
+menu.USBStack=USB Stack
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -294,6 +295,11 @@ esp32s2.menu.DebugLevel.debug=Debug
 esp32s2.menu.DebugLevel.debug.build.code_debug=4
 esp32s2.menu.DebugLevel.verbose=Verbose
 esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s2.menu.USBStack.idf=ESP-IDF
+esp32s2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+esp32s2.menu.USBStack.tinyusb=Adafruit TinyUSB
+esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 ##############################################################
 
@@ -960,6 +966,11 @@ feathers2.menu.DebugLevel.debug.build.code_debug=4
 feathers2.menu.DebugLevel.verbose=Verbose
 feathers2.menu.DebugLevel.verbose.build.code_debug=5
 
+feathers2.menu.USBStack.idf=ESP-IDF
+feathers2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+feathers2.menu.USBStack.tinyusb=Adafruit TinyUSB
+feathers2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
+
 ##############################################################
 
 tinys2.name=UM TinyS2
@@ -1074,6 +1085,11 @@ tinys2.menu.DebugLevel.debug=Debug
 tinys2.menu.DebugLevel.debug.build.code_debug=4
 tinys2.menu.DebugLevel.verbose=Verbose
 tinys2.menu.DebugLevel.verbose.build.code_debug=5
+
+tinys2.menu.USBStack.idf=ESP-IDF
+tinys2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+tinys2.menu.USBStack.tinyusb=Adafruit TinyUSB
+tinys2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 ##############################################################
 S_ODI_Ultra.name=S.ODI Ultra v1
@@ -1260,6 +1276,11 @@ micros2.menu.DebugLevel.debug=Debug
 micros2.menu.DebugLevel.debug.build.code_debug=4
 micros2.menu.DebugLevel.verbose=Verbose
 micros2.menu.DebugLevel.verbose.build.code_debug=5
+
+micros2.menu.USBStack.idf=ESP-IDF
+micros2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+micros2.menu.USBStack.tinyusb=Adafruit TinyUSB
+micros2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 ##############################################################
 magicbit.name=MagicBit
@@ -2139,6 +2160,11 @@ sparkfun_esp32s2_thing_plus.menu.DebugLevel.debug=Debug
 sparkfun_esp32s2_thing_plus.menu.DebugLevel.debug.build.code_debug=4
 sparkfun_esp32s2_thing_plus.menu.DebugLevel.verbose=Verbose
 sparkfun_esp32s2_thing_plus.menu.DebugLevel.verbose.build.code_debug=5
+
+sparkfun_esp32s2_thing_plus.menu.USBStack.idf=ESP-IDF
+sparkfun_esp32s2_thing_plus.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+sparkfun_esp32s2_thing_plus.menu.USBStack.tinyusb=Adafruit TinyUSB
+sparkfun_esp32s2_thing_plus.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 ##############################################################
 
@@ -3449,6 +3475,11 @@ adafruit_metro_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_metro_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_metro_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_metro_esp32s2.menu.USBStack.idf=ESP-IDF
+adafruit_metro_esp32s2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+adafruit_metro_esp32s2.menu.USBStack.tinyusb=Adafruit TinyUSB
+adafruit_metro_esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
+
 
 ##############################################################
 
@@ -3601,6 +3632,11 @@ adafruit_magtag29_esp32s2.menu.DebugLevel.debug=Debug
 adafruit_magtag29_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_magtag29_esp32s2.menu.USBStack.idf=ESP-IDF
+adafruit_magtag29_esp32s2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+adafruit_magtag29_esp32s2.menu.USBStack.tinyusb=Adafruit TinyUSB
+adafruit_magtag29_esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 
 ##############################################################
@@ -3755,6 +3791,11 @@ adafruit_funhouse_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_funhouse_esp32s2.menu.USBStack.idf=ESP-IDF
+adafruit_funhouse_esp32s2.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+adafruit_funhouse_esp32s2.menu.USBStack.tinyusb=Adafruit TinyUSB
+adafruit_funhouse_esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
+
 
 ##############################################################
 
@@ -3907,6 +3948,11 @@ adafruit_feather_esp32s2_nopsram.menu.DebugLevel.debug=Debug
 adafruit_feather_esp32s2_nopsram.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s2_nopsram.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s2_nopsram.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_feather_esp32s2_nopsram.menu.USBStack.idf=ESP-IDF
+adafruit_feather_esp32s2_nopsram.menu.USBStack.idf.build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include"
+adafruit_feather_esp32s2_nopsram.menu.USBStack.tinyusb=Adafruit TinyUSB
+adafruit_feather_esp32s2_nopsram.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 
 ##############################################################

@@ -14,7 +14,7 @@
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "USB.h"
-#if CONFIG_TINYUSB_ENABLED
+#if CONFIG_TINYUSB_ENABLED && !defined(USE_TINYUSB)
 
 #ifndef USB_VID
 #define USB_VID USB_ESPRESSIF_VID

@@ -15,7 +15,7 @@
 #include "esp32-hal-tinyusb.h"
 #include "USB.h"
 #include "USBCDC.h"
-#if CONFIG_TINYUSB_ENABLED
+#if CONFIG_TINYUSB_ENABLED && !defined(USE_TINYUSB)
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_CDC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);

@@ -16,7 +16,7 @@
 #include "esp32-hal.h"
 
 #if CONFIG_IDF_TARGET_ESP32S2
-#if CONFIG_TINYUSB_ENABLED
+#if CONFIG_TINYUSB_ENABLED && !defined(USE_TINYUSB)
 
 #ifdef __cplusplus
 extern "C" {

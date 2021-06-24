@@ -14,7 +14,12 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_TINYUSB_ENABLED
+
+#ifdef USE_TINYUSB // Adafruit TinyUSB is selected in menu
+
+#include "Adafruit_TinyUSB_API.h"
+
+#elif CONFIG_TINYUSB_ENABLED
 
 #include "Arduino.h"
 #include "USBCDC.h"
