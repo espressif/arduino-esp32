@@ -31,8 +31,14 @@
 #include "Adafruit_USBD_CDC.h"
 #include "Adafruit_USBD_Device.h"
 
+// USB Information can be defined in variant file e.g pins_arduino.h
+#include "Arduino.h"
+
 #ifndef USB_VID
 #define USB_VID 0xcafe
+#endif
+
+#ifndef USB_PID
 #define USB_PID 0xcafe
 #endif
 
