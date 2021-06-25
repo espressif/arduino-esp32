@@ -7,7 +7,7 @@
 #define USB_VID 0x239A
 #define USB_PID 0x80EB
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Adafruit Feather ESP32-S2"
+#define USB_PRODUCT "Feather ESP32-S2"
 #define USB_SERIAL ""
 
 

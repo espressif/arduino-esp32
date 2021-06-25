@@ -8,7 +8,7 @@
 #define USB_PID 0x80F9
 
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Adafruit Funhouse ESP32-S2"
+#define USB_PRODUCT "FunHouse ESP32-S2"
 #define USB_SERIAL ""
 
 

@@ -106,10 +106,10 @@ build.flash_mode=dio
 build.boot=bootloader
 build.bootloader_addr=0x1000
 build.code_debug=0
-build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include" 
 build.defines=
 build.loop_core=
 build.event_core=
+build.usbstack_flags="-I{compiler.sdk.path}/include/arduino_tinyusb/tinyusb/src" "-I{compiler.sdk.path}/include/arduino_tinyusb/include" 
 build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
 
 # Custom build options

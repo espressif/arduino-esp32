@@ -3485,11 +3485,11 @@ adafruit_metro_esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB 
 
 adafruit_magtag29_esp32s2.name=Adafruit MagTag 2.9"
 adafruit_magtag29_esp32s2.vid.0=0x239A
-adafruit_magtag29_esp32s2.pid.0=0x80DF
+adafruit_magtag29_esp32s2.pid.0=0x80E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x00DF
+adafruit_magtag29_esp32s2.pid.1=0x00E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x80E0
+adafruit_magtag29_esp32s2.pid.1=0x80E6
 
 adafruit_magtag29_esp32s2.upload.tool=esptool_py
 adafruit_magtag29_esp32s2.upload.maximum_size=1310720
