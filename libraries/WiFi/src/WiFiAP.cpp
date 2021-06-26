@@ -67,6 +67,9 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
     if(lhs.ap.channel != rhs.ap.channel) {
         return false;
     }
+    if(lhs.ap.authmode != rhs.ap.authmode) {
+        return false;
+    }
     if(lhs.ap.ssid_hidden != rhs.ap.ssid_hidden) {
         return false;
     }
