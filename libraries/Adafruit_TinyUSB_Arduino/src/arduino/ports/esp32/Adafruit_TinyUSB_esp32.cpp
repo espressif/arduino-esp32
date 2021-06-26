@@ -71,45 +71,6 @@
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
 //--------------------------------------------------------------------+
 
-// Note: persist mode is mostly copied from esp32-hal-tinyusb.c from
-// arduino-esp32 core.
-
-typedef enum {
-  RESTART_NO_PERSIST,
-  RESTART_PERSIST,
-  RESTART_BOOTLOADER,
-  RESTART_BOOTLOADER_DFU,
-  RESTART_TYPE_MAX
-} restart_type_t;
-
-static bool usb_persist_enabled = false;
-static restart_type_t usb_persist_mode = RESTART_NO_PERSIST;
-
-static void IRAM_ATTR usb_persist_shutdown_handler(void) {
-  if (usb_persist_mode != RESTART_NO_PERSIST) {
-    if (usb_persist_enabled) {
-      usb_dc_prepare_persist();
-    }
-    if (usb_persist_mode == RESTART_BOOTLOADER) {
-      // USB CDC Download
-      if (usb_persist_enabled) {
-        chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
-      } else {
-        periph_module_reset(PERIPH_USB_MODULE);
-        periph_module_enable(PERIPH_USB_MODULE);
-      }
-      REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
-    } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
-      // DFU Download
-      chip_usb_set_persist_flags(USBDC_BOOT_DFU);
-      REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
-    } else if (usb_persist_enabled) {
-      // USB Persist reboot
-      chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
-    }
-  }
-}
-
 static void configure_pins(usb_hal_context_t *usb) {
   for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1;
        ++iopin) {
@@ -154,21 +115,12 @@ static void usb_device_task(void *param) {
 void TinyUSB_Port_InitDevice(uint8_t rhport) {
   (void)rhport;
 
-  // from esp32-hal_tinyusb
-  bool usb_did_persist = (USB_WRAP.date.val == USBDC_PERSIST_ENA);
-
-  // if(usb_did_persist && usb_persist_enabled){
-  // Enable USB/IO_MUX peripheral reset, if coming from persistent reboot
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
-  //} else
-  if (!usb_did_persist || !usb_persist_enabled) {
-    // Reset USB module
-    periph_module_reset(PERIPH_USB_MODULE);
-    periph_module_enable(PERIPH_USB_MODULE);
-  }
 
-  esp_register_shutdown_handler(usb_persist_shutdown_handler);
+  // Reset USB module
+  periph_module_reset(PERIPH_USB_MODULE);
+  periph_module_enable(PERIPH_USB_MODULE);
 
   usb_hal_context_t hal = {.use_external_phy = false};
   usb_hal_init(&hal);
@@ -183,13 +135,15 @@ void TinyUSB_Port_InitDevice(uint8_t rhport) {
 
 void TinyUSB_Port_EnterDFU(void) {
   // Reset to Bootloader
-  usb_persist_mode = RESTART_BOOTLOADER;
+
+  periph_module_reset(PERIPH_USB_MODULE);
+  periph_module_enable(PERIPH_USB_MODULE);
+
+  REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
   esp_restart();
 }
 
 uint8_t TinyUSB_Port_GetSerialNumber(uint8_t serial_id[16]) {
-  uint32_t *serial_32 = (uint32_t *)serial_id;
-
   /* Get the MAC address */
   const uint32_t mac0 =
       __builtin_bswap32(REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_0_REG, EFUSE_MAC_0));
