@@ -3352,7 +3352,7 @@ adafruit_metro_esp32s2.build.core=esp32
 adafruit_metro_esp32s2.build.variant=adafruit_metro_esp32s2
 adafruit_metro_esp32s2.build.board=METRO_ESP32S2
 
-adafruit_metro_esp32s2.build.serial=0
+adafruit_metro_esp32s2.build.serial=1
 adafruit_metro_esp32s2.build.f_cpu=240000000L
 adafruit_metro_esp32s2.build.flash_size=4MB
 adafruit_metro_esp32s2.build.flash_freq=80m
@@ -3510,7 +3510,7 @@ adafruit_magtag29_esp32s2.build.core=esp32
 adafruit_magtag29_esp32s2.build.variant=adafruit_magtag29_esp32s2
 adafruit_magtag29_esp32s2.build.board=MAGTAG29_ESP32S2
 
-adafruit_magtag29_esp32s2.build.serial=0
+adafruit_magtag29_esp32s2.build.serial=1
 adafruit_magtag29_esp32s2.build.f_cpu=240000000L
 adafruit_magtag29_esp32s2.build.flash_size=4MB
 adafruit_magtag29_esp32s2.build.flash_freq=80m
@@ -3668,7 +3668,7 @@ adafruit_funhouse_esp32s2.build.core=esp32
 adafruit_funhouse_esp32s2.build.variant=adafruit_funhouse_esp32s2
 adafruit_funhouse_esp32s2.build.board=FUNHOUSE_ESP32S2
 
-adafruit_funhouse_esp32s2.build.serial=0
+adafruit_funhouse_esp32s2.build.serial=1
 adafruit_funhouse_esp32s2.build.f_cpu=240000000L
 adafruit_funhouse_esp32s2.build.flash_size=4MB
 adafruit_funhouse_esp32s2.build.flash_freq=80m
@@ -3826,7 +3826,7 @@ adafruit_feather_esp32s2_nopsram.build.core=esp32
 adafruit_feather_esp32s2_nopsram.build.variant=adafruit_feather_esp32s2
 adafruit_feather_esp32s2_nopsram.build.board=ADAFRUIT_FEATHER_ESP32S2_NOPSRAM
 
-adafruit_feather_esp32s2_nopsram.build.serial=0
+adafruit_feather_esp32s2_nopsram.build.serial=1
 adafruit_feather_esp32s2_nopsram.build.f_cpu=240000000L
 adafruit_feather_esp32s2_nopsram.build.flash_size=4MB
 adafruit_feather_esp32s2_nopsram.build.flash_freq=80m
