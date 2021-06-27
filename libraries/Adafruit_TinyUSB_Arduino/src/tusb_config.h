@@ -31,18 +31,18 @@
 
 #if defined(ARDUINO_ARCH_SAMD)
   #include "arduino/ports/samd/tusb_config_samd.h"
-#endif
 
-#if defined(ARDUINO_ARCH_NRF52)
+#elif defined(ARDUINO_ARCH_NRF52)
   #include "arduino/ports/nrf/tusb_config_nrf.h"
-#endif
 
-#if defined(ARDUINO_ARCH_RP2040)
+#elif defined(ARDUINO_ARCH_RP2040)
   #include "arduino/ports/rp2040/tusb_config_rp2040.h"
-#endif
 
-#if defined(ARDUINO_ARCH_ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
   #include "arduino/ports/esp32/tusb_config_esp32.h"
+
+#else
+  #error TinyUSB Arduino Library does not support your core yet
 #endif
 
 #ifdef __cplusplus

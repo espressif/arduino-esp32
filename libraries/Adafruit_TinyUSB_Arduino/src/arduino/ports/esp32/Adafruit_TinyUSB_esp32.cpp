@@ -115,9 +115,6 @@ static void usb_device_task(void *param) {
 void TinyUSB_Port_InitDevice(uint8_t rhport) {
   (void)rhport;
 
-  REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
-  REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
-
   // Reset USB module
   periph_module_reset(PERIPH_USB_MODULE);
   periph_module_enable(PERIPH_USB_MODULE);
@@ -125,6 +122,10 @@ void TinyUSB_Port_InitDevice(uint8_t rhport) {
   usb_hal_context_t hal = {.use_external_phy = false};
   usb_hal_init(&hal);
   configure_pins(&hal);
+
+  // reset core, should be in dcd_esp32sx.c (do that later with more proper testing)
+  USB0.grstctl |= USB_CSFTRST;
+  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
 
   tusb_init();
 
@@ -136,8 +137,9 @@ void TinyUSB_Port_InitDevice(uint8_t rhport) {
 void TinyUSB_Port_EnterDFU(void) {
   // Reset to Bootloader
 
-  periph_module_reset(PERIPH_USB_MODULE);
-  periph_module_enable(PERIPH_USB_MODULE);
+  // Reset USB Core
+  USB0.grstctl |= USB_CSFTRST;
+  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
 
   REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
   esp_restart();
