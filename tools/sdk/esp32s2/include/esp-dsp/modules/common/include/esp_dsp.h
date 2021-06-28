@@ -49,6 +49,9 @@ extern "C"
 // Support functions
 #include "dsps_view.h"
 
+// Image processing functions:
+#include "dspi_dotprod.h"
+
 
 #ifdef __cplusplus
 }

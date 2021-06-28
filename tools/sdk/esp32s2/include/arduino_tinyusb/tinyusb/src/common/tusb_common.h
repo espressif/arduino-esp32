@@ -51,7 +51,7 @@
 #define U32_TO_U8S_BE(u32)    TU_U32_BYTE3(u32), TU_U32_BYTE2(u32), TU_U32_BYTE1(u32), TU_U32_BYTE0(u32)
 #define U32_TO_U8S_LE(u32)    TU_U32_BYTE0(u32), TU_U32_BYTE1(u32), TU_U32_BYTE2(u32), TU_U32_BYTE3(u32)
 
-#define TU_BIT(n)             (1U << (n))
+#define TU_BIT(n)             (1UL << (n))
 
 //--------------------------------------------------------------------+
 // Includes

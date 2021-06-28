@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include "esp_err.h"
-
 #include "esp_event.h"
 
 #ifdef __cplusplus
@@ -20,8 +19,8 @@ extern "C" {
 
 #ifndef ESP_EVENT_DECLARE_BASE
 // Define event loop types if macros not available
-typedef void * esp_event_loop_handle_t;
-typedef void * esp_event_handler_t;
+typedef void *esp_event_loop_handle_t;
+typedef void *esp_event_handler_t;
 #endif
 
 typedef struct esp_mqtt_client *esp_mqtt_client_handle_t;
@@ -51,6 +50,7 @@ typedef enum {
                                         - data_len             length of the data for this event
                                         - current_data_offset  offset of the current data for this event
                                         - total_data_len       total length of the data received
+                                        - retain               retain flag of the message
                                         Note: Multiple MQTT_EVENT_DATA could be fired for one message, if it is
                                         longer than internal buffer. In that case only first event contains topic
                                         pointer and length, other contain data only with current data length
@@ -152,6 +152,7 @@ typedef struct {
     int msg_id;                         /*!< MQTT messaged id of message */
     int session_present;                /*!< MQTT session_present flag for connection event */
     esp_mqtt_error_codes_t *error_handle; /*!< esp-mqtt error handle including esp-tls errors as well as internal mqtt errors */
+    bool retain;                        /*!< Retained flag of the message associated with this event */
 } esp_mqtt_event_t;
 
 typedef esp_mqtt_event_t *esp_mqtt_event_handle_t;
@@ -190,8 +191,9 @@ typedef struct {
     size_t client_key_len;                  /*!< Length of the buffer pointed to by client_key_pem. May be 0 for null-terminated pem */
     esp_mqtt_transport_t transport;         /*!< overrides URI transport */
     int refresh_connection_after_ms;        /*!< Refresh connection after this value (in milliseconds) */
-    const struct psk_key_hint* psk_hint_key;     /*!< Pointer to PSK struct defined in esp_tls.h to enable PSK authentication (as alternative to certificate verification). If not NULL and server/client certificates are NULL, PSK is enabled */
+    const struct psk_key_hint *psk_hint_key;     /*!< Pointer to PSK struct defined in esp_tls.h to enable PSK authentication (as alternative to certificate verification). If not NULL and server/client certificates are NULL, PSK is enabled */
     bool          use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
+    esp_err_t (*crt_bundle_attach)(void *conf); /*!< Pointer to ESP x509 Certificate Bundle attach function for the usage of certification bundles in mqtts */
     int reconnect_timeout_ms;               /*!< Reconnect to the broker after this value in miliseconds if auto reconnect is not disabled (defaults to 10s) */
     const char **alpn_protos;               /*!< NULL-terminated list of supported application protocols to be used for ALPN */
     const char *clientkey_password;         /*!< Client key decryption password string */
@@ -203,6 +205,7 @@ typedef struct {
     void *ds_data;                          /*!< carrier of handle for digital signature parameters */
     int network_timeout_ms;                 /*!< Abort network operation if it is not completed after this value, in milliseconds (defaults to 10s) */
     bool disable_keepalive;                 /*!< Set disable_keepalive=true to turn off keep-alive mechanism, false by default (keepalive is active by default). Note: setting the config value `keepalive` to `0` doesn't disable keepalive feature, but uses a default keepalive period */
+    const char *path;                       /*!< Path in the URI*/
 } esp_mqtt_client_config_t;
 
 /**
@@ -242,6 +245,7 @@ esp_err_t esp_mqtt_client_start(esp_mqtt_client_handle_t client);
  * @param client    mqtt client handle
  *
  * @return ESP_OK on success
+ *         ESP_ERR_INVALID_ARG on wrong initialization
  *         ESP_FAIL if client is in invalid state
  */
 esp_err_t esp_mqtt_client_reconnect(esp_mqtt_client_handle_t client);
@@ -252,6 +256,7 @@ esp_err_t esp_mqtt_client_reconnect(esp_mqtt_client_handle_t client);
  * @param client    mqtt client handle
  *
  * @return ESP_OK on success
+ *         ESP_ERR_INVALID_ARG on wrong initialization
  */
 esp_err_t esp_mqtt_client_disconnect(esp_mqtt_client_handle_t client);
 
@@ -264,6 +269,7 @@ esp_err_t esp_mqtt_client_disconnect(esp_mqtt_client_handle_t client);
  * @param client    mqtt client handle
  *
  * @return ESP_OK on success
+ *         ESP_ERR_INVALID_ARG on wrong initialization
  *         ESP_FAIL if client is in invalid state
  */
 esp_err_t esp_mqtt_client_stop(esp_mqtt_client_handle_t client);
@@ -357,6 +363,7 @@ int esp_mqtt_client_enqueue(esp_mqtt_client_handle_t client, const char *topic, 
  * @param client    mqtt client handle
  *
  * @return ESP_OK
+ *         ESP_ERR_INVALID_ARG on wrong initialization
  */
 esp_err_t esp_mqtt_client_destroy(esp_mqtt_client_handle_t client);
 
@@ -381,15 +388,17 @@ esp_err_t esp_mqtt_set_config(esp_mqtt_client_handle_t client, const esp_mqtt_cl
  * @param event_handler_arg handlers context
  *
  * @return ESP_ERR_NO_MEM if failed to allocate
+ *         ESP_ERR_INVALID_ARG on wrong initialization
  *         ESP_OK on success
  */
-esp_err_t esp_mqtt_client_register_event(esp_mqtt_client_handle_t client, esp_mqtt_event_id_t event, esp_event_handler_t event_handler, void* event_handler_arg);
+esp_err_t esp_mqtt_client_register_event(esp_mqtt_client_handle_t client, esp_mqtt_event_id_t event, esp_event_handler_t event_handler, void *event_handler_arg);
 
 /**
  * @brief Get outbox size
  *
  * @param client            mqtt client handle
  * @return outbox size
+ *         0 on wrong initialization
  */
 int esp_mqtt_client_get_outbox_size(esp_mqtt_client_handle_t client);
 
