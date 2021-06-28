@@ -20,24 +20,10 @@
 #define _I2S_H_INCLUDED
 
 #include <Arduino.h>
+
 namespace esp_i2s {
   #include "driver/i2s.h" // ESP specific i2s driver
 }
-#include "freertos/semphr.h"
-
-
-#define I2S_HAS_SET_BUFFER_SIZE 1
-
-#ifdef CONFIG_IDF_TARGET_ESP32
-  #define I2S_INTERFACES_COUNT 2
-#endif
-
-#ifdef CONFIG_IDF_TARGET_ESP32S2
-  #define I2S_INTERFACES_COUNT 1
-#endif
-
-#define INCLUDE_xTaskGetCurrentTaskHandle 1
-#define _I2S_EVENT_QUEUE_LENGTH 10
 
 typedef enum {
   I2S_PHILIPS_MODE,
@@ -57,7 +43,11 @@ public:
   // the SCK and FS pins are inputs, other side controls sample rate
   int begin(int mode, int bitsPerSample);
 
-  // change pin setup (default is Simplex)
+  // change pin setup and mode (default is Half Duplex)
+  // Can be called only on initialized object (after begin)
+  int setStateDuplex();
+  int setAllPins();
+  int setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin);
   int setHalfDuplex(uint8_t inSdPin, uint8_t outSdPin);
   int setSimplex(uint8_t sdPin);
 
@@ -105,19 +95,14 @@ private:
     I2S_STATE_DUPLEX
   } i2s_state_t;
 
-  static int _beginCount;
-
   int _deviceIndex;
-  int _clockGenerator;
   int _sdPin;
   int _inSdPin;
   int _outSdPin;
   int _sckPin;
   int _fsPin;
 
-
   i2s_state_t _state;
-  int _dmaChannel;
   int _bitsPerSample;
   long _sampleRate;
   int _mode;
@@ -130,10 +115,6 @@ private:
   void (*_onTransmit)(void);
   void (*_onReceive)(void);
 };
-
-// "I2S" is already defined by the CMSIS device, undefine it so the I2SClass
-// instance can be called I2S
-#undef I2S
 
 extern I2SClass I2S;
 
