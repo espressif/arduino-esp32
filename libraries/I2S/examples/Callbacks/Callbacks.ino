@@ -49,6 +49,13 @@ Created by Tomas Pilny
 on 23rd June 2021
 */
 
+// If you need to change any of the default pins, simply uncomment chosen line and change the pin number
+/*
+#define PIN_I2S_SCK      33
+#define PIN_I2S_FS       16
+#define PIN_I2S_SD       17
+#define PIN_I2S_SD_OUT   4
+*/
 
 #include <I2S.h>
 const int sampleRate = 16000; // sample rate in Hz
@@ -82,6 +89,8 @@ void inputCallback(){
   // read a sample
   int sample = I2S.read();
 
+  Serial.println(sample); // only for debug
+
   if (sample) {
     // if it's non-zero print value to serial
     Serial.println(sample);
@@ -100,9 +109,9 @@ void setup() {
   // start I2S at 8 kHz with 32-bits per sample
   if (!I2S.begin(I2S_PHILIPS_MODE, sampleRate, bitsPerSample)) {
     Serial.println("Failed to initialize I2S!");
-    while (1); // do nothing
+    while (1) delay(100); // do nothing
   }
-  I2S.setHalfDuplex(); // Use two data pins (default pins are input=35, output=26)
+  I2S.setAllPins();
 
   // Register our callback functions
   I2S.onTransmit(outputCallback); // Function outputCallback will be called each time I2S finishes transmit operation (audio output)
