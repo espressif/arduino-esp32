@@ -41,6 +41,8 @@ static inline void _hw_endpoint_lock_update(struct hw_endpoint *ep, int delta) {
     // todo add critsec as necessary to prevent issues between worker and IRQ...
     //  note that this is perhaps as simple as disabling IRQs because it would make
     //  sense to have worker and IRQ on same core, however I think using critsec is about equivalent.
+    (void) ep;
+    (void) delta;
 }
 
 #if TUSB_OPT_HOST_ENABLED

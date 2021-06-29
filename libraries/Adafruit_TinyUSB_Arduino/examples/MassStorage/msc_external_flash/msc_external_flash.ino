@@ -31,6 +31,11 @@
 #if defined(FRAM_CS) && defined(FRAM_SPI)
   Adafruit_FlashTransport_SPI flashTransport(FRAM_CS, FRAM_SPI);
 
+#elif defined(ARDUINO_ARCH_ESP32)
+  // ESP32 use same flash device that store code.
+  // Therefore there is no need to specify the SPI and SS
+  Adafruit_FlashTransport_ESP32 flashTransport;
+
 #else
   // On-board external flash (QSPI or SPI) macros should already
   // defined in your board variant if supported

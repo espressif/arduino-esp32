@@ -123,9 +123,11 @@ void TinyUSB_Port_InitDevice(uint8_t rhport) {
   usb_hal_init(&hal);
   configure_pins(&hal);
 
-  // reset core, should be in dcd_esp32sx.c (do that later with more proper testing)
+  // reset core, should be in dcd_esp32sx.c (do that later with more proper
+  // testing)
   USB0.grstctl |= USB_CSFTRST;
-  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
+  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {
+  }
 
   tusb_init();
 
@@ -139,7 +141,8 @@ void TinyUSB_Port_EnterDFU(void) {
 
   // Reset USB Core
   USB0.grstctl |= USB_CSFTRST;
-  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
+  while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {
+  }
 
   REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
   esp_restart();

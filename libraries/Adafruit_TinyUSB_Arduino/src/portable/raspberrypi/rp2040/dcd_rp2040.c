@@ -434,6 +434,7 @@ void dcd_int_disable(uint8_t rhport)
 
 void dcd_set_address (uint8_t rhport, uint8_t dev_addr)
 {
+    (void) dev_addr;
     pico_trace("dcd_set_address %d %d\n", rhport, dev_addr);
     assert(rhport == 0);
 
@@ -517,6 +518,9 @@ void dcd_edpt_clear_stall (uint8_t rhport, uint8_t ep_addr)
 
 void dcd_edpt_close (uint8_t rhport, uint8_t ep_addr)
 {
+    (void) rhport;
+    (void) ep_addr;
+
     // usbd.c says: In progress transfers on this EP may be delivered after this call
     pico_trace("dcd_edpt_close %d %02x\n", rhport, ep_addr);
 
