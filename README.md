@@ -6,7 +6,6 @@
 ## Contents
 - [ESP32-S2 and ESP32-C3 Support](#esp32-s2-and-esp32-c3-support)
 - [Development Status](#development-status)
-- [Installation Instructions](#installation-instructions)
 - [Decoding Exceptions](#decoding-exceptions)
 - [Issue/Bug report template](#issuebug-report-template)
 
