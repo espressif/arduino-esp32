@@ -107,6 +107,15 @@ private:
   long _sampleRate;
   int _mode;
 
+  uint16_t _buffer_byte_size;
+  uint16_t _output_buffer_pointer;
+  uint16_t _input_buffer_pointer;
+  uint16_t _read_available;
+  SemaphoreHandle_t _in_buf_semaphore;
+  SemaphoreHandle_t _out_buf_semaphore;
+  void *_inputBuffer;
+  void *_outputBuffer;
+
   bool _initialized;
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
