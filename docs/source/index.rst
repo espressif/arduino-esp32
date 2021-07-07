@@ -20,5 +20,6 @@ Here you will find all the relevant information about the project.
    ESP-IDF as Component <esp-idf_component>
    OTA Web Update <ota_web_update>
    makeEspArduino <make>
+   FAQ <faq>
    Troubleshooting <troubleshooting>
    Contributing <contributing>

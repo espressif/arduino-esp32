@@ -18,8 +18,10 @@ Building
 Flashing
 --------
 
+* The board is not flashing.
+
 Hardware
 --------
 
-- Power Source
-- Bad USB cable or charging only cables
+* Power Source
+* Bad USB cable or charging only cables

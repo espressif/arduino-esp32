@@ -77,6 +77,11 @@ Third Party
 
 Add here the third party boards, listed by vendors.
 
+.. note::
+    All the information must be provided by the vendor. If your favorite board is not here, consider
+    creating an `issue on GitHub <https://github.com/espressif/arduino-esp32/issues>`_ and directly
+    link/mention the vendor in the issue description.
+
 Generic Vendor
 **************
 
@@ -84,6 +89,9 @@ Generic Vendor
     :maxdepth: 1
 
     Generic Board Name <generic>
+
+.. note::
+    Create one file per board or one file with multiple boards. Do not add board information/description on this file.
 
 Resources
 ---------
