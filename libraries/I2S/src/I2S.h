@@ -110,7 +110,7 @@ private:
   uint16_t _buffer_byte_size;
   uint16_t _output_buffer_pointer;
   uint16_t _input_buffer_pointer;
-  uint16_t _read_available;
+  size_t _read_available;
   SemaphoreHandle_t _in_buf_semaphore;
   SemaphoreHandle_t _out_buf_semaphore;
   void *_inputBuffer;
