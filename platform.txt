@@ -84,9 +84,9 @@ compiler.ar.cmd={compiler.prefix}ar
 compiler.size.cmd={compiler.prefix}size
 
 # Arduino Compile Warning Levels
-compiler.warning_flags=-w
-compiler.warning_flags.none=-w
-compiler.warning_flags.default=
+compiler.warning_flags=-w -Werror=return-type
+compiler.warning_flags.none=-w -Werror=return-type
+compiler.warning_flags.default=-Werror=return-type
 compiler.warning_flags.more=-Wall -Werror=all
 compiler.warning_flags.all=-Wall -Werror=all -Wextra
 
