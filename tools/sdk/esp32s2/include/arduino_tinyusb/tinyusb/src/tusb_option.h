@@ -61,6 +61,7 @@
 #define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 #define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
 #define OPT_MCU_SAML22            205 ///< MicroChip SAML22
+#define OPT_MCU_SAML21            206 ///< MicroChip SAML21
 
 // STM32
 #define OPT_MCU_STM32F0           300 ///< ST STM32F0
@@ -277,8 +278,8 @@
     #error there is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
   #endif
 
-  #ifndef CFG_TUH_ENUMERATION_BUFSZIE
-    #define CFG_TUH_ENUMERATION_BUFSZIE 256
+  #ifndef CFG_TUH_ENUMERATION_BUFSIZE
+    #define CFG_TUH_ENUMERATION_BUFSIZE 256
   #endif
 
   //------------- CLASS -------------//

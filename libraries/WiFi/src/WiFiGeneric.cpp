@@ -41,7 +41,6 @@ extern "C" {
 #include "lwip/err.h"
 #include "lwip/dns.h"
 #include "dhcpserver/dhcpserver_options.h"
-#include "esp_ipc.h"
 
 } //extern "C"
 

@@ -1,10 +1,12 @@
 #ifndef _dspm_mult_platform_H_
 #define _dspm_mult_platform_H_
 
+#include "sdkconfig.h"
 
-
+#ifdef CONFIG_IDF_TARGET_ARCH_XTENSA
 #include <xtensa/config/core-isa.h>
 #include <xtensa/config/core-matmap.h>
+#endif
 
 
 #if ((XCHAL_HAVE_FP == 1) && (XCHAL_HAVE_LOOPS == 1))
