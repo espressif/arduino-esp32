@@ -161,7 +161,7 @@ uint16_t __analogRead(uint8_t pin)
         } else if ( r == ESP_ERR_INVALID_STATE ) {
             log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
         } else if ( r == ESP_ERR_TIMEOUT ) {
-            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi.", pin, esp_err_to_name(r));
+            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi. Please see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#adc-limitations for more info", pin, esp_err_to_name(r));
         } else {
             log_e("GPIO%u: %s", pin, esp_err_to_name(r));
         }
