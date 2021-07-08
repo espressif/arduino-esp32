@@ -22,9 +22,8 @@
 #include "freertos/semphr.h"
 
 #define _I2S_EVENT_QUEUE_LENGTH 100
-
 #define _I2S_DMA_BUFFER_SIZE 512 // BUFFER SIZE must be between 8 and 1024
-#define _I2S_DMA_BUFFER_COUNT 8 // BUFFER count must be between 2 and 128
+#define _I2S_DMA_BUFFER_COUNT 8 // BUFFER COUNT must be between 2 and 128
 
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
 
@@ -444,28 +443,27 @@ int I2SClass::read()
   return 0;
 }
 
-int I2SClass::read(void* buffer, size_t size)
-{
+int I2SClass::read(void* buffer, size_t size){
   if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
     if(!enableReceiver()){
       return 0; // There was an error switching to receiver
     }
   }
-  //int read;
+  size_t cpy_size = 0;
   //esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, buffer, size, (size_t*) &read, 0);
-  size_t cpy_size = size <= _read_available ? size : _read_available;
   //if(_in_buf_semaphore != NULL && xSemaphoreTake(_in_buf_semaphore, portMAX_DELAY) == pdTRUE){
   if(_in_buf_semaphore != NULL && xSemaphoreTake(_in_buf_semaphore, 10) == pdTRUE){
-    memcpy(buffer, _inputBuffer, cpy_size);
-    xSemaphoreGive(_in_buf_semaphore);
+    cpy_size = size <= _read_available ? size : _read_available;
+    memcpy(buffer, (void*)((uint)_inputBuffer+_input_buffer_pointer), cpy_size);
     _input_buffer_pointer = (_input_buffer_pointer + cpy_size) > _buffer_byte_size ? _buffer_byte_size : _input_buffer_pointer + cpy_size;
     _read_available -= cpy_size;
+    xSemaphoreGive(_in_buf_semaphore);
   }
-    if(_mode == I2S_ADC_DAC){
-    for(int i = 0; i < cpy_size / 2; ++i){
+  if(_mode == I2S_ADC_DAC){
+    for(size_t i = 0; i < cpy_size / 2; ++i){
       ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
     }
-  }
+  } // ADC/DAC mode
   return cpy_size;
 }
 
@@ -494,7 +492,6 @@ size_t I2SClass::write(const void *buffer, size_t size)
   if(_out_buf_semaphore != NULL && xSemaphoreTake(_out_buf_semaphore, portMAX_DELAY) == pdTRUE){
     memcpy((void*)((uint)_outputBuffer+_output_buffer_pointer), buffer, cpy_size);
     xSemaphoreGive(_out_buf_semaphore);
-  }else{
   }
   _output_buffer_pointer = (_output_buffer_pointer + cpy_size) > _buffer_byte_size ? _output_buffer_pointer : _output_buffer_pointer + cpy_size;
   return bytes_written;
@@ -616,7 +613,7 @@ void I2SClass::onTransferComplete()
         if(_in_buf_semaphore != NULL && xSemaphoreTake(_in_buf_semaphore, 10) == pdTRUE){
           esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, _buffer_byte_size, (size_t*) &_read_available, 0);
           _input_buffer_pointer = 0;
-          if(xSemaphoreGive(_in_buf_semaphore) != pdTRUE){ // CRASHING HERE on first call
+          if(xSemaphoreGive(_in_buf_semaphore) != pdTRUE){
             // We would not expect this call to fail because we must have
             // obtained the semaphore to get here.
           }
@@ -634,13 +631,7 @@ void I2SClass::onTransferComplete()
 void I2SClass::onDmaTransferComplete(void*)
 {
 
-#ifdef _USE_SYS_VIEW
-  SEGGER_SYSVIEW_Print("onTransferComplete start");
-#endif // _USE_SYS_VIEW
   I2S.onTransferComplete();
-#ifdef _USE_SYS_VIEW
-  SEGGER_SYSVIEW_Print("onTransferComplete stop");
-#endif // _USE_SYS_VIEW
 }
 
 #if I2S_INTERFACES_COUNT > 0
