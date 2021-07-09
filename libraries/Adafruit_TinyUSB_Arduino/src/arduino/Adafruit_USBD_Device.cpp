@@ -470,4 +470,11 @@ static int strcpy_utf16(const char *s, uint16_t *buf, int bufsize) {
   return buflen;
 }
 
+// TODO just for compiling, will move to DFU specific file
+#if CFG_TUD_DFU_RUNTIME
+void tud_dfu_runtime_reboot_to_dfu_cb(void) {
+  // TinyUSB_Port_EnterDFU();
+}
+#endif
+
 #endif // TUSB_OPT_DEVICE_ENABLED
