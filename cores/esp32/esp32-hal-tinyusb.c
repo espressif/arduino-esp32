@@ -140,7 +140,7 @@ static tusb_desc_device_t tinyusb_device_descriptor = {
 static uint32_t tinyusb_string_descriptor_len = 4;
 static char * tinyusb_string_descriptor[MAX_STRING_DESCRIPTORS] = {
         // array of pointer to string descriptors
-        "\x09\x04",   // 0: is supported language is English (0x0409)
+        (char*) "\x09\x04",   // 0: is supported language is English (0x0409)
         USB_DEVICE_MANUFACTURER,// 1: Manufacturer
         USB_DEVICE_PRODUCT,     // 2: Product
         USB_DEVICE_SERIAL,      // 3: Serials, should use chip ID
