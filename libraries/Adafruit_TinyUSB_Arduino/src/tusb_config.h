@@ -32,7 +32,7 @@
 #if defined(ARDUINO_ARCH_SAMD)
   #include "arduino/ports/samd/tusb_config_samd.h"
 
-#elif defined(ARDUINO_ARCH_NRF52)
+#elif defined(ARDUINO_NRF52_ADAFRUIT)
   #include "arduino/ports/nrf/tusb_config_nrf.h"
 
 #elif defined(ARDUINO_ARCH_RP2040)
