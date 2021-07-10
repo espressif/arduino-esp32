@@ -1,0 +1,54 @@
+#######################################
+# Syntax Coloring Map NVS
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Preferences	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+end	KEYWORD2
+
+clear	KEYWORD2
+remove	KEYWORD2
+
+putChar	KEYWORD2
+putUChar	KEYWORD2
+putShort	KEYWORD2
+putUShort	KEYWORD2
+putInt	KEYWORD2
+putUInt	KEYWORD2
+putLong	KEYWORD2
+putULong	KEYWORD2
+putLong64	KEYWORD2
+putULong64	KEYWORD2
+putFloat	KEYWORD2
+putDouble	KEYWORD2
+putBool	KEYWORD2
+putString	KEYWORD2
+putBytes	KEYWORD2
+
+getChar	KEYWORD2
+getUChar	KEYWORD2
+getShort	KEYWORD2
+getUShort	KEYWORD2
+getInt	KEYWORD2
+getUInt	KEYWORD2
+getLong	KEYWORD2
+getULong	KEYWORD2
+getLong64	KEYWORD2
+getULong64	KEYWORD2
+getFloat	KEYWORD2
+getDouble	KEYWORD2
+getBool	KEYWORD2
+getString	KEYWORD2
+getBytes	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
