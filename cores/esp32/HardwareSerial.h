@@ -110,7 +110,9 @@ protected:
     uint8_t _rx_pin;
 };
 
-extern void serialEventRun(void) __attribute__((weak));
+void serialEventRun(void) __attribute__((weak));
+extern void serialEvent1() __attribute__((weak));
+extern void serialEvent2() __attribute__((weak));
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #ifndef ARDUINO_SERIAL_PORT
