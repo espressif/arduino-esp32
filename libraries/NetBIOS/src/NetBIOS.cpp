@@ -92,7 +92,10 @@ void NetBIOS::_onPacket(AsyncUDPPacket& packet){
                 append_32((void *)&nbnsa.ttl, 300000);
                 append_16((void *)&nbnsa.data_len, 6);
                 append_16((void *)&nbnsa.flags, 0);
-                nbnsa.addr = WiFi.localIP();
+				if (WiFi.getMode()==WIFI_STA)
+					nbnsa.addr = WiFi.localIP();
+				else
+					nbnsa.addr = WiFi.softAPIP();
                 _udp.writeTo((uint8_t *)&nbnsa, sizeof(nbnsa), packet.remoteIP(), NBNS_PORT);
             }
         }
