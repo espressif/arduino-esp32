@@ -174,7 +174,7 @@ public:
     }
 };
 
-WiFiClient::WiFiClient():_connected(false),next(NULL)
+WiFiClient::WiFiClient():_connected(false),_sse(false),next(NULL)
 {
 }
 
@@ -321,7 +321,7 @@ int WiFiClient::setOption(int option, int *value)
 
 int WiFiClient::getOption(int option, int *value)
 {
-	socklen_t size = sizeof(int);
+    socklen_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
@@ -606,5 +606,15 @@ int WiFiClient::fd() const
     } else {
         return clientSocketHandle->fd();
     }
+}
+
+void WiFiClient::setSSE(bool sse)
+{
+    _sse = sse;
+}
+
+bool WiFiClient::isSSE()
+{
+    return _sse;
 }
 
