@@ -42,6 +42,7 @@ protected:
     std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
     std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
     bool _connected;
+    bool _sse;
 
 public:
     WiFiClient *next;
@@ -63,6 +64,8 @@ public:
     void flush();
     void stop();
     uint8_t connected();
+    void setSSE(bool sse);
+    bool isSSE();
 
     operator bool()
     {
