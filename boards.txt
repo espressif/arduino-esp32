@@ -299,7 +299,7 @@ esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 esp32s2.menu.USBStack.idf=ESP-IDF
 esp32s2.menu.USBStack.idf.build.usbstack_flags=
 esp32s2.menu.USBStack.tinyusb=Adafruit TinyUSB
-esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB  "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
+esp32s2.menu.USBStack.tinyusb.build.usbstack_flags=-DUSE_TINYUSB "-I{runtime.platform.path}/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 
 ##############################################################
 
