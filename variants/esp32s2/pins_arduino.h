@@ -3,6 +3,11 @@
 
 #include <stdint.h>
 
+#define USB_VID            0x303A
+#define USB_PID            0x0002
+#define USB_MANUFACTURER   "Espressif Systems"
+#define USB_PRODUCT        "ESP32S2_DEV"
+
 #define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        48
 #define NUM_ANALOG_INPUTS       20

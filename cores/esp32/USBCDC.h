@@ -17,7 +17,13 @@
 
 #include "Stream.h"
 #include "esp32-hal.h"
-#if CONFIG_TINYUSB_CDC_ENABLED
+
+#ifdef USE_TINYUSB
+
+// Adafruit TinyUSB is selected in menu
+#include "Adafruit_USBD_CDC.h"
+
+#elif CONFIG_TINYUSB_CDC_ENABLED
 
 #include "esp_event.h"
 

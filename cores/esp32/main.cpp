@@ -48,7 +48,12 @@ void loopTask(void *pvParameters)
 extern "C" void app_main()
 {
 #if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#ifdef USE_TINYUSB
+    // Adafruit TinyUSB is selected in menu
+    TinyUSB_Device_Init(0);
+#else
     USB.begin();
+#endif
 #endif
     loopTaskWDTEnabled = false;
     initArduino();

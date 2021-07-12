@@ -1,0 +1,14 @@
+{
+  "name": "hid_example",
+  "version": "1.0.0",
+  "description": "Test application for hid_generic_inout example sketch",
+  "main": "hid_test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Timon, Tod E. Kurt",
+  "license": "MIT",
+  "dependencies": {
+    "node-hid": "^0.7.9"
+  }
+}

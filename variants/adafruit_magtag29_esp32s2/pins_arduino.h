@@ -5,7 +5,7 @@
 
 
 #define USB_VID 0x239A
-#define USB_PID 0x80DF
+#define USB_PID 0x80E5
 #define USB_MANUFACTURER "Adafruit"
 #define USB_PRODUCT "EPD MagTag 2.9\" ESP32-S2"
 #define USB_SERIAL ""
