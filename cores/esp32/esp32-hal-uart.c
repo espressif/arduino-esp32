@@ -179,7 +179,7 @@ static void uartDetachRx(uart_t* uart, uint8_t rxPin)
     if(uart == NULL) {
         return;
     }
-    pinMatrixInDetach(rxPin, false, false);
+    pinMatrixInDetach(UART_RDX_IDX(uart->num), false, false);
     uartDisableInterrupt(uart);
 }
 
