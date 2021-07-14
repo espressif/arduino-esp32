@@ -15,9 +15,11 @@
 
 If you want to test ESP32-S2 and/or ESP32-C3 through the board manager, please use the development release link:
 
-```https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json```
+```
+https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
+```
 
-and install the latest 2.0.0 version.
+Now you can install the latest 2.0.0 version from the boards manager.
 
 ### Development Status
 
@@ -43,7 +45,7 @@ You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecod
 ### Issue/Bug report template
 Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labelled as [for reference](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue%20label%3A%22for%20reference%22%20).
 
-Finally, if you are sure no one else had the issue, follow the [ISSUE_TEMPLATE](docs/ISSUE_TEMPLATE.md) while reporting any issue.
+Finally, if you are sure no one else had the issue, follow the [issue template](docs/ISSUE_TEMPLATE.md) while reporting any issue.
 
 ### Contributing
 
