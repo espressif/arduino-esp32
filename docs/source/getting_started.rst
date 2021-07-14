@@ -2,13 +2,6 @@
 Getting Started
 ###############
 
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
-    Installing <installing>
-    Boards <boards/boards>
-
 About Arduino ESP32
 -------------------
 
@@ -95,6 +88,14 @@ Be sure to search for a similar reported issue. This avoids duplicating or creat
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
 
 For more details, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md>`_.
+
+
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    Installing <installing>
+    Boards <boards/boards>
 
 Installing
 ----------

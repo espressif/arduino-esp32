@@ -1,4 +1,5 @@
 # Arduino core for the ESP32
+
 [![Build Status](https://travis-ci.org/espressif/arduino-esp32.svg?branch=master)](https://travis-ci.org/espressif/arduino-esp32) ![](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![Documentation Status](https://readthedocs.com/projects/espressif-arduino-esp32/badge/?version=latest&token=b6c5d887f5e0bcbf37a92cf3bf9f93f9e77b9d805c0f708cf128ac04a2228299)](https://docs.espressif.com/projects/arduino-esp32/en/latest/?badge=latest)
 
 ### Need help or have a question? Join the chat at [![https://gitter.im/espressif/arduino-esp32](https://badges.gitter.im/espressif/arduino-esp32.svg)](https://gitter.im/espressif/arduino-esp32?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -11,14 +12,18 @@
 - [Issue/Bug report template](#issuebug-report-template)
 
 ### ESP32-S2 and ESP32-C3 Support
-If you want to test ESP32-S2 and/or ESP32-C3 through the board manager, please use the development release link: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json` and install the latest 2.0.0 version.
+
+If you want to test ESP32-S2 and/or ESP32-C3 through the board manager, please use the development release link:
+
+```https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json```
+
+and install the latest 2.0.0 version.
 
 ### Development Status
 
 Latest Stable Release  [![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) [![Release Date](https://img.shields.io/github/release-date/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) [![Downloads](https://img.shields.io/github/downloads/espressif/arduino-esp32/latest/total.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/)
 
 Latest Development Release  [![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) [![Release Date](https://img.shields.io/github/release-date-pre/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/) [![Downloads](https://img.shields.io/github/downloads-pre/espressif/arduino-esp32/latest/total.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/latest/)
-
 
 ### Documentation
 
