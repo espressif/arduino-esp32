@@ -40,6 +40,8 @@ ESP32-C3 No     Yes         `ESP32-C3 Datasheet`_
 ESP32-S3 No     No          Not Available Yet
 ======== ====== =========== ===================================
 
+See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
+
 Arduino Core Reference
 ----------------------
 
@@ -60,6 +62,8 @@ Supported Operating Systems
 .. |windows-logo| image:: _static/logo_windows.png
 .. |linux-logo| image:: _static/logo_linux.png
 .. |macos-logo| image:: _static/logo_macos.png
+
+See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
 
 Support
 -------
@@ -89,25 +93,18 @@ We also have the troubleshooting guide to save your time on the most common issu
 
 For more details, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md>`_.
 
+First Steps
+-----------
 
-.. toctree::
-    :maxdepth: 2
-    :hidden:
-
-    Installing <installing>
-    Boards <boards/boards>
-
-Installing
-----------
+Here are the first steps to get the Arduino ESP32 support running.
 
 To install Arduino-ESP32, please see the dedicated section on the Installation guide. We recommend you install it using the boards manager.
 
-See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
-
-Development Boards
-------------------
-
-See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
+.. toctree::
+    :maxdepth: 2
+    
+    How to Install <installing>
+    Development Boards <boards/boards>
 
 Examples
 --------
