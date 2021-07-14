@@ -2,6 +2,13 @@
 Getting Started
 ###############
 
+.. toctree::
+    :maxdepth: 2
+    :hidden:
+
+    Installing <installing>
+    Boards <boards/boards>
+
 About Arduino ESP32
 -------------------
 
@@ -62,12 +69,12 @@ Supported Operating Systems
 .. |macos-logo| image:: _static/logo_macos.png
 
 Support
-*******
+-------
 
 This is an open project and it's supported by the community. Fell free to ask for help in one of the community channels.
 
 Community
-*********
+---------
 
 The Arduino community is huge! You can find a lot of useful content on the Internet.
 Here are some community channels where you may find information and ask for some help, if needed.
@@ -80,7 +87,7 @@ Here are some community channels where you may find information and ask for some
 - `ESP32 on Reddit`_
 
 Issues Reporting
-****************
+----------------
 
 Before opening a new issue, please read this: 
 
@@ -89,18 +96,20 @@ We also have the troubleshooting guide to save your time on the most common issu
 
 For more details, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md>`_.
 
-How to Get Started
-------------------
-
 Installing
-**********
+----------
 
 To install Arduino-ESP32, please see the dedicated section on the Installation guide. We recommend you install it using the boards manager.
 
 See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
 
+Development Boards
+------------------
+
+See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
+
 Examples
-********
+--------
 
 After installing the toolchain into your environment, you will be able to see all the dedicated examples for the ESP32. These examples are located
 in the examples menu or inside each library folder.

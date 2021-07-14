@@ -10,8 +10,7 @@ There is a bunch of different types and models widely available on the Internet.
 
 To help you on this selection, we point out some facts about choosing the proper boardsto help you to save money and time.
 
-One ESP32 to rule them all!
-***************************
+**One ESP32 to rule them all!**
 
 One important information that usually bring about some confusion is regarding the different models of the ESP32 SoC and modules.
 

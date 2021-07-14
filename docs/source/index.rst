@@ -12,14 +12,9 @@ Here you will find all the relevant information about the project.
    :caption: Contents:
 
    Getting Started <getting_started>
-   Installing <installing>
-   Boards <boards/boards>
    Libraries <libraries>
-   Library Builder <lib_builder>
    Tutorials <tutorials/tutorials>
-   ESP-IDF as Component <esp-idf_component>
-   OTA Web Update <ota_web_update>
-   makeEspArduino <make>
+   Advanced Utilities <advanced_utils>
    FAQ <faq>
    Troubleshooting <troubleshooting>
    Contributing <contributing>
