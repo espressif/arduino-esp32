@@ -5,6 +5,7 @@ on:
     branches:
     - master
     - release/*
+    - platformio*
   pull_request:
 
 jobs:
