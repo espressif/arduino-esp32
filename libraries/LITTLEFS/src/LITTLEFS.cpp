@@ -22,7 +22,7 @@ extern "C" {
 #include <dirent.h>
 }
 #include "sdkconfig.h"
-#include "LITTLEFS.h"
+#include "LittleFS.h"
 
 #ifdef CONFIG_LITTLEFS_PAGE_SIZE
 extern "C" {
@@ -31,29 +31,29 @@ extern "C" {
 
 using namespace fs;
 
-class LITTLEFSImpl : public VFSImpl
+class LittleFSImpl : public VFSImpl
 {
 public:
-    LITTLEFSImpl();
-    virtual ~LITTLEFSImpl() { }
+    LittleFSImpl();
+    virtual ~LittleFSImpl() { }
     virtual bool exists(const char* path);
 };
 
-LITTLEFSImpl::LITTLEFSImpl()
+LittleFSImpl::LittleFSImpl()
 {
 }
 
-bool LITTLEFSImpl::exists(const char* path)
+bool LittleFSImpl::exists(const char* path)
 {
     File f = open(path, "r");
     return (f == true);
 }
 
-LITTLEFSFS::LITTLEFSFS() : FS(FSImplPtr(new LITTLEFSImpl())), partitionLabel_(NULL)
+LittleFSFS::LittleFSFS() : FS(FSImplPtr(new LittleFSImpl())), partitionLabel_(NULL)
 {
 }
 
-LITTLEFSFS::~LITTLEFSFS()
+LittleFSFS::~LittleFSFS()
 {
     if (partitionLabel_){
         free(partitionLabel_);
@@ -61,7 +61,7 @@ LITTLEFSFS::~LITTLEFSFS()
     }
 }
 
-bool LITTLEFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
+bool LittleFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
 
     if (partitionLabel_){
@@ -74,7 +74,7 @@ bool LITTLEFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpen
     }
 
     if(esp_littlefs_mounted(partitionLabel_)){
-        log_w("LITTLEFS Already Mounted!");
+        log_w("LittleFS Already Mounted!");
         return true;
     }
 
@@ -91,38 +91,38 @@ bool LITTLEFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpen
         }
     }
     if(err != ESP_OK){
-        log_e("Mounting LITTLEFS failed! Error: %d", err);
+        log_e("Mounting LittleFS failed! Error: %d", err);
         return false;
     }
     _impl->mountpoint(basePath);
     return true;
 }
 
-void LITTLEFSFS::end()
+void LittleFSFS::end()
 {
     if(esp_littlefs_mounted(partitionLabel_)){
         esp_err_t err = esp_vfs_littlefs_unregister(partitionLabel_);
         if(err){
-            log_e("Unmounting LITTLEFS failed! Error: %d", err);
+            log_e("Unmounting LittleFS failed! Error: %d", err);
             return;
         }
         _impl->mountpoint(NULL);
     }
 }
 
-bool LITTLEFSFS::format()
+bool LittleFSFS::format()
 {
     disableCore0WDT();
     esp_err_t err = esp_littlefs_format(partitionLabel_);
     enableCore0WDT();
     if(err){
-        log_e("Formatting LITTLEFS failed! Error: %d", err);
+        log_e("Formatting LittleFS failed! Error: %d", err);
         return false;
     }
     return true;
 }
 
-size_t LITTLEFSFS::totalBytes()
+size_t LittleFSFS::totalBytes()
 {
     size_t total,used;
     if(esp_littlefs_info(partitionLabel_, &total, &used)){
@@ -131,7 +131,7 @@ size_t LITTLEFSFS::totalBytes()
     return total;
 }
 
-size_t LITTLEFSFS::usedBytes()
+size_t LittleFSFS::usedBytes()
 {
     size_t total,used;
     if(esp_littlefs_info(partitionLabel_, &total, &used)){
@@ -140,5 +140,5 @@ size_t LITTLEFSFS::usedBytes()
     return used;
 }
 
-LITTLEFSFS LITTLEFS;
+LittleFSFS LittleFS;
 #endif
