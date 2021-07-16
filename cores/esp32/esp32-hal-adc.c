@@ -88,7 +88,7 @@ void __analogInit(){
     __analogSetWidth(__analogWidth + 9);//in bits
 #endif
     for(int i=0; i<SOC_GPIO_PIN_COUNT; i++){
-        __pin_attenuation[i] = ADC_ATTEN_MAX;
+        __pin_attenuation[i] = ADC_ATTENDB_MAX;
     }
 }
 
@@ -134,7 +134,7 @@ bool __adcAttachPin(uint8_t pin){
 #endif
 
     pinMode(pin, ANALOG);
-    __analogSetPinAttenuation(pin, (__pin_attenuation[pin] != ADC_ATTEN_MAX)?__pin_attenuation[pin]:__analogAttenuation);
+    __analogSetPinAttenuation(pin, (__pin_attenuation[pin] != ADC_ATTENDB_MAX)?__pin_attenuation[pin]:__analogAttenuation);
     return true;
 }
 

@@ -31,7 +31,7 @@ typedef enum {
     ADC_2_5db,
     ADC_6db,
     ADC_11db,
-    ADC_ATTEN_MAX
+    ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
 /*
