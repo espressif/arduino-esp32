@@ -53,6 +53,20 @@ esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IP
 esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress());
 static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs);
 
+static size_t _wifi_strncpy(char * dst, const char * src, size_t dst_len){
+    if(!dst || !src || !dst_len){
+        return 0;
+    }
+    size_t src_len = strlen(src);
+    if(src_len >= dst_len){
+        src_len = dst_len;
+    } else {
+        src_len += 1;
+    }
+    memcpy(dst, src, src_len);
+    return src_len;
+}
+
 
 /**
  * compare two STA configurations
@@ -82,10 +96,10 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     wifi_config->sta.ssid[0] = 0;
     wifi_config->sta.password[0] = 0;
     if(ssid != NULL && ssid[0] != 0){
-        strncpy((char*)wifi_config->sta.ssid, ssid, 32);
+        _wifi_strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
     		wifi_config->sta.threshold.authmode = WIFI_AUTH_WEP;
-    		strncpy((char*)wifi_config->sta.password, password, 64);
+    		_wifi_strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
             wifi_config->sta.bssid_set = 1;
@@ -161,11 +175,11 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
+    _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
     conf.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;       //force full scan to be able to choose the nearest / strongest AP
 
     if(passphrase) {
-        strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
+        _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
     }
 
     wifi_config_t current_conf;
