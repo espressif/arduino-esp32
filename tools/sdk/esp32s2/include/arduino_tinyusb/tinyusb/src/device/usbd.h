@@ -542,6 +542,11 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
   /* Standard AS Isochronous Feedback Endpoint Descriptor(4.10.2.1) */\
   TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(/*_ep*/ _epfb, /*_interval*/ 1)\
 
+//   Calculate wMaxPacketSize of Endpoints
+#define TUD_AUDIO_EP_SIZE(_maxFrequency, _nBytesPerSample, _nChannels) \
+    ((((_maxFrequency + ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 7999 : 999)) / ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 8000 : 1000)) + 1) * _nBytesPerSample * _nChannels)
+
+
 //------------- TUD_USBTMC/USB488 -------------//
 #define TUD_USBTMC_APP_CLASS    (TUSB_CLASS_APPLICATION_SPECIFIC)
 #define TUD_USBTMC_APP_SUBCLASS 0x03u

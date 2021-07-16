@@ -64,6 +64,7 @@ esp_err_t dsps_dotprod_s16_ae32(const int16_t *src1, const int16_t *src2, int16_
  */
 esp_err_t dsps_dotprod_f32_ansi(const float *src1, const float *src2, float *dest, int len);
 esp_err_t dsps_dotprod_f32_ae32(const float *src1, const float *src2, float *dest, int len);
+esp_err_t dsps_dotprod_f32_aes3(const float *src1, const float *src2, float *dest, int len);
 /**@}*/
 
 /**@{*/
@@ -92,21 +93,23 @@ esp_err_t dsps_dotprode_f32_ae32(const float *src1, const float *src2, float *de
 #endif
 
 #if CONFIG_DSP_OPTIMIZED
+
 #if (dsps_dotprod_s16_ae32_enabled == 1)
 #define dsps_dotprod_s16 dsps_dotprod_s16_ae32
 #else
 #define dsps_dotprod_s16 dsps_dotprod_s16_ansi
 #endif // dsps_dotprod_s16_ae32_enabled
-#if (dsps_dotprod_f32_ae32_enabled == 1)
+
+#if (dsps_dotprod_f32_aes3_enabled == 1)
+#define dsps_dotprod_f32 dsps_dotprod_f32_aes3
+#define dsps_dotprode_f32 dsps_dotprode_f32_ae32
+#elif (dotprod_f32_ae32_enabled == 1)
 #define dsps_dotprod_f32 dsps_dotprod_f32_ae32
-#else
-#define dsps_dotprod_f32 dsps_dotprod_f32_ansi
-#endif // dsps_dotprod_f32_ae32_enabled
-#if (dsps_dotprode_f32_ae32_enabled == 1)
 #define dsps_dotprode_f32 dsps_dotprode_f32_ae32
 #else
+#define dsps_dotprod_f32 dsps_dotprod_f32_ansi
 #define dsps_dotprode_f32 dsps_dotprode_f32_ansi
-#endif // dsps_dotprode_f32_ae32_enabled
+#endif // dsps_dotprod_f32_ae32_enabled
 
 #else // CONFIG_DSP_OPTIMIZED
 #define dsps_dotprod_s16 dsps_dotprod_s16_ansi

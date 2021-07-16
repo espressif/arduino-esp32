@@ -45,11 +45,11 @@ typedef struct {
 
   uint8_t class_code;
 
-  void (* const init       )(void);
-  bool (* const open       )(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const * itf_desc, uint16_t* outlen);
-  bool (* const set_config )(uint8_t dev_addr, uint8_t itf_num);
-  bool (* const xfer_cb    )(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-  void (* const close      )(uint8_t dev_addr);
+  void     (* const init       )(void);
+  uint16_t (* const open       )(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
+  bool     (* const set_config )(uint8_t dev_addr, uint8_t itf_num);
+  bool     (* const xfer_cb    )(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+  void     (* const close      )(uint8_t dev_addr);
 } usbh_class_driver_t;
 
 // Call by class driver to tell USBH that it has complete the enumeration

@@ -123,7 +123,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align4k (uint32_t value) { retur
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
 
 //------------- Mathematics -------------//
-TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_abs(int32_t value) { return (uint32_t)((value < 0) ? (-value) : value); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_div_ceil(uint32_t v, uint32_t d) { return (v + d -1)/d; }
 
 /// inclusive range checking TODO remove
 TU_ATTR_ALWAYS_INLINE static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
@@ -305,11 +305,11 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
 }
 
 // Log with Level
-#define TU_LOG(n, ...)        TU_LOG##n(__VA_ARGS__)
-#define TU_LOG_MEM(n, ...)    TU_LOG##n##_MEM(__VA_ARGS__)
-#define TU_LOG_VAR(n, ...)    TU_LOG##n##_VAR(__VA_ARGS__)
-#define TU_LOG_INT(n, ...)    TU_LOG##n##_INT(__VA_ARGS__)
-#define TU_LOG_HEX(n, ...)    TU_LOG##n##_HEX(__VA_ARGS__)
+#define TU_LOG(n, ...)        TU_XSTRCAT(TU_LOG, n)(__VA_ARGS__)
+#define TU_LOG_MEM(n, ...)    TU_XSTRCAT3(TU_LOG, n, _MEM)(__VA_ARGS__)
+#define TU_LOG_VAR(n, ...)    TU_XSTRCAT3(TU_LOG, n, _VAR)(__VA_ARGS__)
+#define TU_LOG_INT(n, ...)    TU_XSTRCAT3(TU_LOG, n, _INT)(__VA_ARGS__)
+#define TU_LOG_HEX(n, ...)    TU_XSTRCAT3(TU_LOG, n, _HEX)(__VA_ARGS__)
 #define TU_LOG_LOCATION()     tu_printf("%s: %d:\r\n", __PRETTY_FUNCTION__, __LINE__)
 #define TU_LOG_FAILED()       tu_printf("%s: %d: Failed\r\n", __PRETTY_FUNCTION__, __LINE__)
 
@@ -317,8 +317,8 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
 #define TU_LOG1               tu_printf
 #define TU_LOG1_MEM           tu_print_mem
 #define TU_LOG1_VAR(_x)       tu_print_var((uint8_t const*)(_x), sizeof(*(_x)))
-#define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\n", (uint32_t) (_x) )
-#define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\n", (uint32_t) (_x) )
+#define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\r\n", (uint32_t) (_x) )
+#define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\r\n", (uint32_t) (_x) )
 
 // Log Level 2: Warn
 #if CFG_TUSB_DEBUG >= 2
@@ -373,6 +373,14 @@ static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint3
 #endif
 
 // TODO replace all TU_LOGn with TU_LOG(n)
+
+#define TU_LOG0(...)
+#define TU_LOG0_MEM(...)
+#define TU_LOG0_VAR(...)
+#define TU_LOG0_INT(...)
+#define TU_LOG0_HEX(...)
+
+
 #ifndef TU_LOG1
   #define TU_LOG1(...)
   #define TU_LOG1_MEM(...)

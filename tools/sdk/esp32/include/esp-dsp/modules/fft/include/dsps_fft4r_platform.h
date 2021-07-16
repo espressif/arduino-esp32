@@ -3,10 +3,9 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_IDF_TARGET_ARCH_XTENSA
+#ifdef __XTENSA__
 #include <xtensa/config/core-isa.h>
 #include <xtensa/config/core-matmap.h>
-#endif
 
 
 #if ((XCHAL_HAVE_FP == 1) && (XCHAL_HAVE_LOOPS == 1))
@@ -28,6 +27,7 @@
 #define dsps_bit_rev_lookup_fc32_ae32_enabled 1
 
 #endif //
+#endif // __XTENSA__
 
 
 

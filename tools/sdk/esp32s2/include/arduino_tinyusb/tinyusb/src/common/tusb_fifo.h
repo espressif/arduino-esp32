@@ -120,9 +120,9 @@ bool     tu_fifo_peek                   (tu_fifo_t* f, void * p_buffer);
 uint16_t tu_fifo_peek_n                 (tu_fifo_t* f, void * p_buffer, uint16_t n);
 
 uint16_t tu_fifo_count                  (tu_fifo_t* f);
+uint16_t tu_fifo_remaining              (tu_fifo_t* f);
 bool     tu_fifo_empty                  (tu_fifo_t* f);
 bool     tu_fifo_full                   (tu_fifo_t* f);
-uint16_t tu_fifo_remaining              (tu_fifo_t* f);
 bool     tu_fifo_overflowed             (tu_fifo_t* f);
 void     tu_fifo_correct_read_pointer   (tu_fifo_t* f);
 

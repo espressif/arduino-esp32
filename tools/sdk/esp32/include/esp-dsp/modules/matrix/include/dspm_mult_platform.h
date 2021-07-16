@@ -3,10 +3,9 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_IDF_TARGET_ARCH_XTENSA
+#ifdef __XTENSA__
 #include <xtensa/config/core-isa.h>
 #include <xtensa/config/core-matmap.h>
-#endif
 
 
 #if ((XCHAL_HAVE_FP == 1) && (XCHAL_HAVE_LOOPS == 1))
@@ -24,5 +23,11 @@
 #define dspm_mult_s16_ae32_enabled 1
 
 #endif
+#endif // __XTENSA__
+
+#if CONFIG_IDF_TARGET_ESP32S3
+#define dspm_mult_f32_aes3_enabled 1
+#define dspm_mult_s16_aes3_enabled 1
+#endif 
 
 #endif // _dspm_mult_platform_H_
