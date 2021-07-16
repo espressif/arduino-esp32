@@ -163,26 +163,16 @@ set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc)
 
-if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
-  list(APPEND priv_requires arduino_tinyusb)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
-  list(APPEND priv_requires esp_https_ota)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-  if(CONFIG_LITTLEFS_PAGE_SIZE)
-    list(APPEND priv_requires esp_littlefs)
-  endif()
-endif()
-
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
-if(IDF_TARGET STREQUAL "esp32")
-target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32_DEV" -DARDUINO_VARIANT="esp32" -DESP32)
-endif()
-if(IDF_TARGET STREQUAL "esp32s2")
-target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32S2_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32S2_DEV" -DARDUINO_VARIANT="esp32s2" -DESP32)
-endif()
+string(TOUPPER ${CONFIG_IDF_TARGET} idf_target_caps)
+target_compile_options(${COMPONENT_TARGET} PUBLIC
+    -DARDUINO=10812
+    -DARDUINO_${idf_target_caps}_DEV
+    -DARDUINO_ARCH_ESP32
+    -DARDUINO_BOARD="${idf_target_caps}_DEV"
+    -DARDUINO_VARIANT="${CONFIG_IDF_TARGET}"
+    -DESP32)
 
 if(CONFIG_AUTOSTART_ARDUINO)
     # in autostart mode, arduino-esp32 contains app_main() function and needs to
@@ -194,4 +184,23 @@ if(CONFIG_AUTOSTART_ARDUINO)
     #
     # (As they are C++ symbol, we need to add the C++ mangled names.)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
+endif()
+
+# This function adds a dependency on the given component if the component is included into the build.
+function(maybe_add_component component_name)
+    idf_build_get_property(components BUILD_COMPONENTS)
+    if (${component_name} IN_LIST components)
+        idf_component_get_property(lib_name ${component_name} COMPONENT_LIB)
+        target_link_libraries(${COMPONENT_LIB} PUBLIC ${lib_name})
+    endif()
+endfunction()
+
+if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
+    maybe_add_component(arduino_tinyusb)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
+    maybe_add_component(esp_https_ota)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
+    maybe_add_component(esp_littlefs)
 endif()
