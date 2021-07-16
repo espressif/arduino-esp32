@@ -567,6 +567,11 @@ bool wifiLowLevelInit(bool persistent){
         if(!persistent){
         	lowLevelInitDone = esp_wifi_set_storage(WIFI_STORAGE_RAM) == ESP_OK;
         }
+        if(lowLevelInitDone){
+			arduino_event_t arduino_event;
+			arduino_event.event_id = ARDUINO_EVENT_WIFI_READY;
+			postArduinoEvent(&arduino_event);
+        }
     }
     return lowLevelInitDone;
 }

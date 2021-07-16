@@ -82,14 +82,10 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     wifi_config->sta.ssid[0] = 0;
     wifi_config->sta.password[0] = 0;
     if(ssid != NULL && ssid[0] != 0){
-    	snprintf((char*)wifi_config->sta.ssid, 32, ssid);
+        strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
     		wifi_config->sta.threshold.authmode = WIFI_AUTH_WEP;
-    		if(strlen(password) == 64){
-    			memcpy((char*)wifi_config->sta.password, password, 64);
-    		} else {
-    			snprintf((char*)wifi_config->sta.password, 64, password);
-    		}
+    		strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
             wifi_config->sta.bssid_set = 1;
@@ -165,15 +161,11 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    strcpy(reinterpret_cast<char*>(conf.sta.ssid), ssid);
+    strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
     conf.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;       //force full scan to be able to choose the nearest / strongest AP
 
     if(passphrase) {
-        if (strlen(passphrase) == 64){ // it's not a passphrase, is the PSK
-            memcpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
-        } else {
-            strcpy(reinterpret_cast<char*>(conf.sta.password), passphrase);
-        }
+        strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
     }
 
     wifi_config_t current_conf;
@@ -370,14 +362,14 @@ bool WiFiSTAClass::getAutoReconnect()
  * returns the status reached or disconnect if STA is off
  * @return wl_status_t
  */
-uint8_t WiFiSTAClass::waitForConnectResult()
+uint8_t WiFiSTAClass::waitForConnectResult(unsigned long timeoutLength)
 {
     //1 and 3 have STA enabled
     if((WiFiGenericClass::getMode() & WIFI_MODE_STA) == 0) {
         return WL_DISCONNECTED;
     }
-    int i = 0;
-    while((!status() || status() >= WL_DISCONNECTED) && i++ < 100) {
+    unsigned long start = millis();
+    while((!status() || status() >= WL_DISCONNECTED) && (millis() - start) < timeoutLength) {
         delay(100);
     }
     return status();
