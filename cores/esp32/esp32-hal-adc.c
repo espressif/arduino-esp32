@@ -48,6 +48,7 @@ static uint8_t __analogVRefPin = 0;
 static uint8_t __analogAttenuation = 3;//11db
 static uint8_t __analogWidth = 3;//12 bits
 static uint8_t __analogClockDiv = 1;
+static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
 
 void __analogSetClockDiv(uint8_t clockDiv){
     if(!clockDiv){
@@ -86,6 +87,9 @@ void __analogInit(){
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(__analogWidth + 9);//in bits
 #endif
+    for(int i=0; i<SOC_GPIO_PIN_COUNT; i++){
+        __pin_attenuation[i] = ADC_ATTEN_MAX;
+    }
 }
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
@@ -100,6 +104,7 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
         adc1_config_channel_atten(channel, attenuation);
     }
     __analogInit();
+    __pin_attenuation[pin] = attenuation;
 }
 
 bool __adcAttachPin(uint8_t pin){
@@ -129,7 +134,7 @@ bool __adcAttachPin(uint8_t pin){
 #endif
 
     pinMode(pin, ANALOG);
-    __analogSetPinAttenuation(pin, __analogAttenuation);
+    __analogSetPinAttenuation(pin, (__pin_attenuation[pin] != ADC_ATTEN_MAX)?__pin_attenuation[pin]:__analogAttenuation);
     return true;
 }
 
