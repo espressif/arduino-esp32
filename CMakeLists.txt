@@ -161,7 +161,7 @@ set(includedirs
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc)
 
 if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
   list(APPEND priv_requires arduino_tinyusb)
@@ -182,4 +182,16 @@ target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP3
 endif()
 if(IDF_TARGET STREQUAL "esp32s2")
 target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32S2_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32S2_DEV" -DARDUINO_VARIANT="esp32s2" -DESP32)
+endif()
+
+if(CONFIG_AUTOSTART_ARDUINO)
+    # in autostart mode, arduino-esp32 contains app_main() function and needs to
+    # reference setup() and loop() in the main component. If we add main
+    # component to priv_requires then we create a large circular dependency
+    # (arduino-esp32 -> main -> arduino-esp32) and can get linker errors, so
+    # instead we add setup() and loop() to the undefined symbols list so the
+    # linker will always include them.
+    #
+    # (As they are C++ symbol, we need to add the C++ mangled names.)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
 endif()
