@@ -362,14 +362,14 @@ bool WiFiSTAClass::getAutoReconnect()
  * returns the status reached or disconnect if STA is off
  * @return wl_status_t
  */
-uint8_t WiFiSTAClass::waitForConnectResult()
+uint8_t WiFiSTAClass::waitForConnectResult(unsigned long timeoutLength)
 {
     //1 and 3 have STA enabled
     if((WiFiGenericClass::getMode() & WIFI_MODE_STA) == 0) {
         return WL_DISCONNECTED;
     }
-    int i = 0;
-    while((!status() || status() >= WL_DISCONNECTED) && i++ < 100) {
+    unsigned long start = millis();
+    while((!status() || status() >= WL_DISCONNECTED) && (millis() - start) < timeoutLength) {
         delay(100);
     }
     return status();
