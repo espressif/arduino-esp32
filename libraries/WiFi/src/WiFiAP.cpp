@@ -60,10 +60,10 @@ static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& r
  */
 static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
 {
-    if(strcmp(reinterpret_cast<const char*>(lhs.ap.ssid), reinterpret_cast<const char*>(rhs.ap.ssid)) != 0) {
+    if(strncmp(reinterpret_cast<const char*>(lhs.ap.ssid), reinterpret_cast<const char*>(rhs.ap.ssid), 32) != 0) {
         return false;
     }
-    if(strcmp(reinterpret_cast<const char*>(lhs.ap.password), reinterpret_cast<const char*>(rhs.ap.password)) != 0) {
+    if(strncmp(reinterpret_cast<const char*>(lhs.ap.password), reinterpret_cast<const char*>(rhs.ap.password), 64) != 0) {
         return false;
     }
     if(lhs.ap.channel != rhs.ap.channel) {
@@ -98,12 +98,12 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
     wifi_config->ap.password[0] = 0;
     wifi_config->ap.ftm_responder = ftm_responder;
     if(ssid != NULL && ssid[0] != 0){
-    	snprintf((char*)wifi_config->ap.ssid, 32, ssid);
+        strncpy((char*)wifi_config->ap.ssid, ssid, 32);
     	wifi_config->ap.ssid_len = strlen(ssid);
     	if(password != NULL && password[0] != 0){
     		wifi_config->ap.authmode = authmode;
     		wifi_config->ap.pairwise_cipher = WIFI_CIPHER_TYPE_CCMP; // Disable by default enabled insecure TKIP and use just CCMP.
-    	    snprintf((char*)wifi_config->ap.password, 64, password);
+            strncpy((char*)wifi_config->ap.password, password, 64);
     	}
     }
 }
