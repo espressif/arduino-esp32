@@ -51,7 +51,7 @@ extern "C" {
   *     RTC_CNTL_STORE2_REG     Boot time, low word
   *     RTC_CNTL_STORE3_REG     Boot time, high word
   *     RTC_CNTL_STORE4_REG     External XTAL frequency
-  *     RTC_CNTL_STORE5_REG     APB bus frequency
+  *     RTC_CNTL_STORE5_REG     FAST_RTC_MEMORY_LENGTH
   *     RTC_CNTL_STORE6_REG     FAST_RTC_MEMORY_ENTRY
   *     RTC_CNTL_STORE7_REG     FAST_RTC_MEMORY_CRC
   *************************************************************************************
@@ -61,8 +61,8 @@ extern "C" {
 #define RTC_BOOT_TIME_LOW_REG   RTC_CNTL_STORE2_REG
 #define RTC_BOOT_TIME_HIGH_REG  RTC_CNTL_STORE3_REG
 #define RTC_XTAL_FREQ_REG       RTC_CNTL_STORE4_REG
-#define RTC_APB_FREQ_REG        RTC_CNTL_STORE5_REG
 #define RTC_ENTRY_ADDR_REG      RTC_CNTL_STORE6_REG
+#define RTC_RESET_CAUSE_REG     RTC_CNTL_STORE6_REG
 #define RTC_MEMORY_CRC_REG      RTC_CNTL_STORE7_REG
 
 #define RTC_DISABLE_ROM_LOG ((1 << 0) | (1 << 16)) //!< Disable logging from the ROM code.

@@ -217,6 +217,7 @@
    ---------- ICMP options ----------
    ----------------------------------
 */
+#define LWIP_ICMP  CONFIG_LWIP_ICMP
 
 #define LWIP_BROADCAST_PING CONFIG_LWIP_BROADCAST_PING
 
@@ -967,6 +968,8 @@
 
 #define LWIP_IPV6_NUM_ADDRESSES         CONFIG_LWIP_IPV6_NUM_ADDRESSES
 
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  CONFIG_LWIP_IPV6_RDNSS_MAX_DNS_SERVERS
+
 /* Enable all Espressif-only options */
 
 #define ESP_LWIP                        1
@@ -985,7 +988,13 @@
 #define ESP_STATS_MEM                   CONFIG_LWIP_STATS
 #define ESP_STATS_DROP                  CONFIG_LWIP_STATS
 #define ESP_STATS_TCP                   0
+#ifdef CONFIG_LWIP_DHCPS
+#define ESP_DHCPS                       1
 #define ESP_DHCPS_TIMER                 1
+#else
+#define ESP_DHCPS                       0
+#define ESP_DHCPS_TIMER                 0
+#endif /* CONFIG_LWIP_DHCPS */
 #define ESP_LWIP_LOGI(...)              ESP_LOGI("lwip", __VA_ARGS__)
 #define ESP_PING                        1
 #define ESP_HAS_SELECT                  1

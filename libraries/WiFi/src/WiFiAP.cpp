@@ -50,7 +50,19 @@ esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
 esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress());
 static bool softap_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs);
 
-
+static size_t _wifi_strncpy(char * dst, const char * src, size_t dst_len){
+    if(!dst || !src || !dst_len){
+        return 0;
+    }
+    size_t src_len = strlen(src);
+    if(src_len >= dst_len){
+        src_len = dst_len;
+    } else {
+        src_len += 1;
+    }
+    memcpy(dst, src, src_len);
+    return src_len;
+}
 
 /**
  * compare two AP configurations
@@ -98,12 +110,12 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
     wifi_config->ap.password[0] = 0;
     wifi_config->ap.ftm_responder = ftm_responder;
     if(ssid != NULL && ssid[0] != 0){
-        strncpy((char*)wifi_config->ap.ssid, ssid, 32);
+        _wifi_strncpy((char*)wifi_config->ap.ssid, ssid, 32);
     	wifi_config->ap.ssid_len = strlen(ssid);
     	if(password != NULL && password[0] != 0){
     		wifi_config->ap.authmode = authmode;
     		wifi_config->ap.pairwise_cipher = WIFI_CIPHER_TYPE_CCMP; // Disable by default enabled insecure TKIP and use just CCMP.
-            strncpy((char*)wifi_config->ap.password, password, 64);
+            _wifi_strncpy((char*)wifi_config->ap.password, password, 64);
     	}
     }
 }

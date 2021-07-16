@@ -65,6 +65,7 @@
 #define DR_REG_TWAI_BASE                        0x6002B000
 #define DR_REG_I2S0_BASE                        0x6002D000
 #define DR_REG_APB_SARADC_BASE                  0x60040000
+#define DR_REG_USB_SERIAL_JTAG_BASE             0x60043000
 #define DR_REG_AES_XTS_BASE                     0x600CC000
 
 #define REG_UHCI_BASE(i)                        (DR_REG_UHCI0_BASE - (i) * 0x8000)
@@ -315,9 +316,7 @@
 #define ETS_FRC1_INUM                           22
 #define ETS_T1_WDT_INUM                         24
 #define ETS_CACHEERR_INUM                       25
-#ifdef CONFIG_IDF_TARGET_ESP32C3
 #define ETS_MEMPROT_ERR_INUM                    26
-#endif
 #define ETS_DPORT_INUM                          28
 
 //CPU0 Max valid interrupt number

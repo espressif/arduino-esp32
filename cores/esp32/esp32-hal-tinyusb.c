@@ -327,7 +327,7 @@ __attribute__ ((weak)) bool tinyusb_vendor_control_complete_cb(uint8_t rhport, t
 /**
  * @brief Handle WebUSB and Vendor requests.
  */
-bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request)
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request)
 {
     if(WEBUSB_ENABLED && (request->bRequest == VENDOR_REQUEST_WEBUSB
             || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
@@ -346,14 +346,14 @@ bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const 
     return tinyusb_vendor_control_request_cb(rhport, request);
 }
 
-bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request)
-{
-    if(!WEBUSB_ENABLED || !(request->bRequest == VENDOR_REQUEST_WEBUSB
-            || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
-        return tinyusb_vendor_control_complete_cb(rhport, request);
-    }
-    return true;
-}
+// bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request)
+// {
+//     if(!WEBUSB_ENABLED || !(request->bRequest == VENDOR_REQUEST_WEBUSB
+//             || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
+//         return tinyusb_vendor_control_complete_cb(rhport, request);
+//     }
+//     return true;
+// }
 
 /*
  * Required Callbacks
