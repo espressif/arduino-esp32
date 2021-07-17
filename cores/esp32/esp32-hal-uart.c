@@ -179,7 +179,7 @@ static void uartDetachRx(uart_t* uart, uint8_t rxPin)
     if(uart == NULL) {
         return;
     }
-    pinMatrixInDetach(rxPin, false, false);
+    pinMatrixInDetach(UART_RXD_IDX(uart->num), false, false);
     uartDisableInterrupt(uart);
 }
 
@@ -422,7 +422,7 @@ void uartWrite(uart_t* uart, uint8_t c)
         return;
     }
     UART_MUTEX_LOCK();
-    while(uart->dev->status.txfifo_cnt == 0x7F);
+    while(uart->dev->status.txfifo_cnt >= 0x7E);
 #if CONFIG_IDF_TARGET_ESP32
     uart->dev->fifo.rw_byte = c;
 #else
@@ -441,7 +441,7 @@ void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
     uint32_t fifo_reg = UART_FIFO_AHB_REG(uart->num);
 #endif
     while(len) {
-        while(uart->dev->status.txfifo_cnt == 0x7F);
+        while(uart->dev->status.txfifo_cnt >= 0x7E);
 #if CONFIG_IDF_TARGET_ESP32
         uart->dev->fifo.rw_byte = *data++;
 #else
@@ -563,7 +563,7 @@ uint32_t uartGetBaudRate(uart_t* uart)
 static void ARDUINO_ISR_ATTR uart0_write_char(char c)
 {
 #if CONFIG_IDF_TARGET_ESP32
-    while(((ESP_REG(0x01C+DR_REG_UART_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
+    while(((ESP_REG(0x01C+DR_REG_UART_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) >= 0x7E);
     ESP_REG(DR_REG_UART_BASE) = c;
 #else
     while(UART0.status.txfifo_cnt == 0x7F);
@@ -574,7 +574,7 @@ static void ARDUINO_ISR_ATTR uart0_write_char(char c)
 static void ARDUINO_ISR_ATTR uart1_write_char(char c)
 {
 #if CONFIG_IDF_TARGET_ESP32
-    while(((ESP_REG(0x01C+DR_REG_UART1_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
+    while(((ESP_REG(0x01C+DR_REG_UART1_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) >= 0x7E);
     ESP_REG(DR_REG_UART1_BASE) = c;
 #else
     while(UART1.status.txfifo_cnt == 0x7F);
@@ -585,7 +585,7 @@ static void ARDUINO_ISR_ATTR uart1_write_char(char c)
 #if CONFIG_IDF_TARGET_ESP32
 static void ARDUINO_ISR_ATTR uart2_write_char(char c)
 {
-    while(((ESP_REG(0x01C+DR_REG_UART2_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) == 0x7F);
+    while(((ESP_REG(0x01C+DR_REG_UART2_BASE) >> UART_TXFIFO_CNT_S) & 0x7F) >= 0x7E);
     ESP_REG(DR_REG_UART2_BASE) = c;
 }
 #endif

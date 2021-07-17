@@ -41,13 +41,6 @@
 #define CFG_TUH_MSC_MAXLUN  4
 #endif
 
-
-/** \addtogroup ClassDriver_MSC
- *  @{
- * \defgroup MSC_Host Host
- *  The interface API includes status checking function, data transferring function and callback functions
- *  @{ */
-
 typedef bool (*tuh_msc_complete_cb_t)(uint8_t dev_addr, msc_cbw_t const* cbw, msc_csw_t const* csw);
 
 //--------------------------------------------------------------------+
@@ -113,17 +106,14 @@ TU_ATTR_WEAK void tuh_msc_umount_cb(uint8_t dev_addr);
 // Internal Class Driver API
 //--------------------------------------------------------------------+
 
-void msch_init(void);
-bool msch_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t *p_length);
-bool msch_set_config(uint8_t dev_addr, uint8_t itf_num);
-bool msch_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-void msch_close(uint8_t dev_addr);
+void     msch_init       (void);
+uint16_t msch_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
+bool     msch_set_config (uint8_t dev_addr, uint8_t itf_num);
+bool     msch_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
+void     msch_close      (uint8_t dev_addr);
 
 #ifdef __cplusplus
  }
 #endif
 
 #endif /* _TUSB_MSC_HOST_H_ */
-
-/// @}
-/// @}

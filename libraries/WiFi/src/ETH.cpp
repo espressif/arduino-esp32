@@ -20,12 +20,18 @@
 
 #include "ETH.h"
 #include "esp_system.h"
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
     #include "esp_event.h"
     #include "esp_eth.h"
     #include "esp_eth_phy.h"
     #include "esp_eth_mac.h"
     #include "esp_eth_com.h"
+#if CONFIG_IDF_TARGET_ESP32
+    #include "soc/emac_ext_struct.h"
+    #include "soc/rtc.h"
+    //#include "soc/io_mux_reg.h"
+    //#include "hal/gpio_hal.h"
+#endif
 #else
     #include "eth_phy/phy.h"
     #include "eth_phy/phy_tlk110.h"
@@ -36,7 +42,7 @@
 
 extern void tcpipInit();
 
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
 
 /**
 * @brief Callback function invoked when lowlevel initialization is finished
@@ -47,13 +53,123 @@ extern void tcpipInit();
 *       - ESP_OK: process extra lowlevel initialization successfully
 *       - ESP_FAIL: error occurred when processing extra lowlevel initialization
 */
-//static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
-//#define PIN_PHY_POWER 2
-//    pinMode(PIN_PHY_POWER, OUTPUT);
-//    digitalWrite(PIN_PHY_POWER, HIGH);
-//    delay(100);
-//    return ESP_OK;
-//}
+
+static eth_clock_mode_t eth_clock_mode = ETH_CLK_MODE;
+
+#if CONFIG_ETH_RMII_CLK_INPUT
+static void emac_config_apll_clock(void)
+{
+    /* apll_freq = xtal_freq * (4 + sdm2 + sdm1/256 + sdm0/65536)/((o_div + 2) * 2) */
+    rtc_xtal_freq_t rtc_xtal_freq = rtc_clk_xtal_freq_get();
+    switch (rtc_xtal_freq) {
+    case RTC_XTAL_FREQ_40M: // Recommended
+        /* 50 MHz = 40MHz * (4 + 6) / (2 * (2 + 2) = 50.000 */
+        /* sdm0 = 0, sdm1 = 0, sdm2 = 6, o_div = 2 */
+        rtc_clk_apll_enable(true, 0, 0, 6, 2);
+        break;
+    case RTC_XTAL_FREQ_26M:
+        /* 50 MHz = 26MHz * (4 + 15 + 118 / 256 + 39/65536) / ((3 + 2) * 2) = 49.999992 */
+        /* sdm0 = 39, sdm1 = 118, sdm2 = 15, o_div = 3 */
+        rtc_clk_apll_enable(true, 39, 118, 15, 3);
+        break;
+    case RTC_XTAL_FREQ_24M:
+        /* 50 MHz = 24MHz * (4 + 12 + 255 / 256 + 255/65536) / ((2 + 2) * 2) = 49.499977 */
+        /* sdm0 = 255, sdm1 = 255, sdm2 = 12, o_div = 2 */
+        rtc_clk_apll_enable(true, 255, 255, 12, 2);
+        break;
+    default: // Assume we have a 40M xtal
+        rtc_clk_apll_enable(true, 0, 0, 6, 2);
+        break;
+    }
+}
+#endif
+
+static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
+#if CONFIG_IDF_TARGET_ESP32
+    if(eth_clock_mode > ETH_CLOCK_GPIO17_OUT){
+        return ESP_FAIL;
+    }
+    // First deinit current config if different
+#if CONFIG_ETH_RMII_CLK_INPUT
+    if(eth_clock_mode != ETH_CLOCK_GPIO0_IN && eth_clock_mode != ETH_CLOCK_GPIO0_OUT){
+        pinMode(0, INPUT);
+    }
+#endif
+
+#if CONFIG_ETH_RMII_CLK_OUTPUT
+#if CONFIG_ETH_RMII_CLK_OUTPUT_GPIO0
+    if(eth_clock_mode > ETH_CLOCK_GPIO0_OUT){
+        pinMode(0, INPUT);
+    }
+#elif CONFIG_ETH_RMII_CLK_OUT_GPIO == 16
+    if(eth_clock_mode != ETH_CLOCK_GPIO16_OUT){
+        pinMode(16, INPUT);
+    }
+#elif CONFIG_ETH_RMII_CLK_OUT_GPIO == 17
+    if(eth_clock_mode != ETH_CLOCK_GPIO17_OUT){
+        pinMode(17, INPUT);
+    }
+#endif
+#endif
+
+    // Setup interface for the correct pin
+#if CONFIG_ETH_PHY_INTERFACE_MII
+    EMAC_EXT.ex_phyinf_conf.phy_intf_sel = 4;
+#endif
+
+    if(eth_clock_mode == ETH_CLOCK_GPIO0_IN){
+#ifndef CONFIG_ETH_RMII_CLK_INPUT
+        // RMII clock (50MHz) input to GPIO0
+        //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_EMAC_TX_CLK);
+        //PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[0]);
+        pinMode(0, INPUT);
+        pinMode(0, FUNCTION_6);
+        EMAC_EXT.ex_clk_ctrl.ext_en = 1;
+        EMAC_EXT.ex_clk_ctrl.int_en = 0;
+        EMAC_EXT.ex_oscclk_conf.clk_sel = 1;
+#endif
+    } else {
+        if(eth_clock_mode == ETH_CLOCK_GPIO0_OUT){
+#ifndef CONFIG_ETH_RMII_CLK_OUTPUT_GPIO0
+            // APLL clock output to GPIO0 (must be configured to 50MHz!)
+            //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_CLK_OUT1);
+            //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[0]);
+            pinMode(0, OUTPUT);
+            pinMode(0, FUNCTION_2);
+            // Choose the APLL clock to output on GPIO
+            REG_WRITE(PIN_CTRL, 6);
+#endif
+        } else if(eth_clock_mode == ETH_CLOCK_GPIO16_OUT){
+#if CONFIG_ETH_RMII_CLK_OUT_GPIO != 16
+            // RMII CLK (50MHz) output to GPIO16
+            //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO16_U, FUNC_GPIO16_EMAC_CLK_OUT);
+            //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[16]);
+            pinMode(16, OUTPUT);
+            pinMode(16, FUNCTION_6);
+#endif
+        } else if(eth_clock_mode == ETH_CLOCK_GPIO17_OUT){
+#if CONFIG_ETH_RMII_CLK_OUT_GPIO != 17
+            // RMII CLK (50MHz) output to GPIO17
+            //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO17_U, FUNC_GPIO17_EMAC_CLK_OUT_180);
+            //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[17]);
+            pinMode(17, OUTPUT);
+            pinMode(17, FUNCTION_6);
+#endif
+        }
+#if CONFIG_ETH_RMII_CLK_INPUT
+        EMAC_EXT.ex_clk_ctrl.ext_en = 0;
+        EMAC_EXT.ex_clk_ctrl.int_en = 1;
+        EMAC_EXT.ex_oscclk_conf.clk_sel = 0;
+        emac_config_apll_clock();
+        EMAC_EXT.ex_clkout_conf.div_num = 0;
+        EMAC_EXT.ex_clkout_conf.h_div_num = 0;
+#endif
+    }
+#endif
+    return ESP_OK;
+}
+
+
 
 /**
 * @brief Callback function invoked when lowlevel deinitialization is finished
@@ -110,9 +226,10 @@ ETHClass::ETHClass()
 ETHClass::~ETHClass()
 {}
 
-#ifdef ESP_IDF_VERSION_MAJOR
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type){
-
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
+{
+#if ESP_IDF_VERSION_MAJOR > 3
+    eth_clock_mode = clock_mode;
     tcpipInit();
 
     tcpip_adapter_set_default_eth_handlers();
@@ -136,7 +253,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
         mac_config.smi_mdc_gpio_num = mdc;
         mac_config.smi_mdio_gpio_num = mdio;
-        //mac_config.sw_reset_timeout_ms = 1000;
+        mac_config.sw_reset_timeout_ms = 1000;
         eth_mac = esp_eth_mac_new_esp32(&mac_config);
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -182,7 +299,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 
     eth_handle = NULL;
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(eth_mac, eth_phy);
-    //eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
+    eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
     //eth_config.on_lowlevel_deinit_done = on_lowlevel_deinit_done;
     if(esp_eth_driver_install(&eth_config, &eth_handle) != ESP_OK || eth_handle == NULL){
         log_e("esp_eth_driver_install failed");
@@ -199,12 +316,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         log_e("esp_eth_start failed");
         return false;
     }
-
-    return true;
-}
 #else
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
-{
     esp_err_t err;
     if(initialized){
         err = esp_eth_enable();
@@ -256,9 +368,9 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     } else {
         log_e("esp_eth_init error: %d", err);
     }
-    return false;
-}
 #endif
+    return true;
+}
 
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {

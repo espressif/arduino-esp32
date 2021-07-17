@@ -18,7 +18,7 @@
 
 #include "dsp_err.h"
 
-#include "dsps_add_platform.h"
+#include "dsps_biquad_platform.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -45,6 +45,7 @@ extern "C"
  */
 esp_err_t dsps_biquad_f32_ansi(const float *input, float *output, int len, float *coef, float *w);
 esp_err_t dsps_biquad_f32_ae32(const float *input, float *output, int len, float *coef, float *w);
+esp_err_t dsps_biquad_f32_aes3(const float *input, float *output, int len, float *coef, float *w);
 /**@}*/
 
 
