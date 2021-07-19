@@ -703,6 +703,7 @@ uint8_t sdcard_uninit(uint8_t pdrv)
     esp_err_t err = ESP_OK;
     if (card->base_path) {
         err = esp_vfs_fat_unregister_path(card->base_path);
+        free(card->base_path);
     }
     free(card);
     return err;
