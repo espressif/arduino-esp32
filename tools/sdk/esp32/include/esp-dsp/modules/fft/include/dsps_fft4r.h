@@ -81,6 +81,8 @@ void dsps_fft4r_deinit_fc32();
  * @param[inout] data: input/output complex array. An elements located: Re[0], Im[0], ... Re[N-1], Im[N-1]
  *               result of FFT will be stored to this array.
  * @param[in] N: Number of complex elements in input array
+ * @param[in] table: pointer to sin/cos table
+ * @param[in] table_size: size of the sin/cos table
  *
  * @return
  *      - ESP_OK on success
@@ -130,6 +132,8 @@ esp_err_t dsps_bit_rev4r_sc16_ansi(int16_t *data, int N);
  *               result will be stored to the same array.
  *               Input1: input[0..N-1], Input2: input[N..2*N-1]
  * @param[in] N: Number of complex elements in input array
+ * @param[in] table: pointer to sin/cos table
+ * @param[in] table_size: size of the sin/cos table
  *
  * @return
  *      - ESP_OK on success

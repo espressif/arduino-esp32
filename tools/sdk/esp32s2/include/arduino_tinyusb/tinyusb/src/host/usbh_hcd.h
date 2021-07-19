@@ -97,12 +97,6 @@ typedef struct {
 
 extern usbh_device_t _usbh_devices[CFG_TUSB_HOST_DEVICE_MAX+1]; // including zero-address
 
-//--------------------------------------------------------------------+
-// callback from HCD ISR
-//--------------------------------------------------------------------+
-
-
-
 #ifdef __cplusplus
  }
 #endif

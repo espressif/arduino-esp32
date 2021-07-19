@@ -66,9 +66,10 @@ bool tuh_hid_mounted(uint8_t dev_addr, uint8_t instance);
 // Get interface supported protocol (bInterfaceProtocol) check out hid_interface_protocol_enum_t for possible values
 uint8_t tuh_hid_interface_protocol(uint8_t dev_addr, uint8_t instance);
 
-// Get current active protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
-// Note: as HID spec, device will be initialized in Report mode
-bool tuh_hid_get_protocol(uint8_t dev_addr, uint8_t instance);
+// Get current protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
+// Note: Device will be initialized in Boot protocol for simplicity.
+//       Application can use set_protocol() to switch back to Report protocol.
+uint8_t tuh_hid_get_protocol(uint8_t dev_addr, uint8_t instance);
 
 // Set protocol to HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 // This function is only supported by Boot interface (tuh_n_hid_interface_protocol() != NONE)
@@ -118,11 +119,11 @@ TU_ATTR_WEAK void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t ins
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void hidh_init(void);
-bool hidh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t *p_length);
-bool hidh_set_config(uint8_t dev_addr, uint8_t itf_num);
-bool hidh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-void hidh_close(uint8_t dev_addr);
+void     hidh_init       (void);
+uint16_t hidh_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
+bool     hidh_set_config (uint8_t dev_addr, uint8_t itf_num);
+bool     hidh_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     hidh_close      (uint8_t dev_addr);
 
 #ifdef __cplusplus
 }
