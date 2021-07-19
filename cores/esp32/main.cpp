@@ -49,6 +49,7 @@ extern "C" void app_main()
 {
 #if ARDUINO_SERIAL_PORT //Serial used for USB CDC
     USB.begin();
+    Serial.begin();
 #endif
     loopTaskWDTEnabled = false;
     initArduino();
