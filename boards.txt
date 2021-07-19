@@ -1,5 +1,6 @@
 menu.UploadSpeed=Upload Speed
 menu.SerialMode=Serial Connected To
+menu.UploadMode=Upload Mode
 menu.CPUFreq=CPU Frequency
 menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
@@ -158,8 +159,8 @@ esp32s2.upload.maximum_size=1310720
 esp32s2.upload.maximum_data_size=327680
 esp32s2.upload.flags=
 esp32s2.upload.extra_flags=
-esp32s2.upload.use_1200bps_touch=true
-esp32s2.upload.wait_for_upload_port=true
+esp32s2.upload.use_1200bps_touch=false
+esp32s2.upload.wait_for_upload_port=false
 
 esp32s2.serial.disableDTR=false
 esp32s2.serial.disableRTS=false
@@ -185,6 +186,13 @@ esp32s2.menu.SerialMode.default=UART0
 esp32s2.menu.SerialMode.default.build.serial=0
 esp32s2.menu.SerialMode.cdc=USB CDC
 esp32s2.menu.SerialMode.cdc.build.serial=1
+
+esp32s2.menu.UploadMode.default=UART0
+esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32s2.menu.UploadMode.cdc=Internal USB
+esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s2.menu.PSRAM.disabled=Disabled
 esp32s2.menu.PSRAM.disabled.build.defines=
