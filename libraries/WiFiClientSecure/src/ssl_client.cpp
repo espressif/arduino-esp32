@@ -76,30 +76,67 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return -1;
     }
 
+    fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = srv;
     serv_addr.sin_port = htons(port);
 
-    if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
-        if(timeout <= 0){
-            timeout = 30000; // Milli seconds.
-        }
-        timeval so_timeout = { .tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000 };
+    if(timeout <= 0){
+        timeout = 30000; // Milli seconds.
+    }
 
-#define ROE(x,msg) { if (((x)<0)) { log_e("LWIP Socket config of " msg " failed."); return -1; }}
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &so_timeout, sizeof(so_timeout)),"SO_RCVTIMEO");
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &so_timeout, sizeof(so_timeout)),"SO_SNDTIMEO");
+    fd_set fdset;
+    struct timeval tv;
+    FD_ZERO(&fdset);
+    FD_SET(ssl_client->socket, &fdset);
+    tv.tv_sec = timeout / 1000;
+    tv.tv_usec = (timeout % 1000) * 1000;
 
-        ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY");
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
-    } else {
-        log_e("Connect to Server failed!");
+    int res = lwip_connect(ssl_client->socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (res < 0 && errno != EINPROGRESS) {
+        log_e("connect on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+        close(ssl_client->socket);
         return -1;
     }
 
-    fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
+    res = select(ssl_client->socket + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
+    if (res < 0) {
+        log_e("select on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+        close(ssl_client->socket);
+        return -1;
+    } else if (res == 0) {
+        log_i("select returned due to timeout %d ms for fd %d", timeout, ssl_client->socket);
+        close(ssl_client->socket);
+        return -1;
+    } else {
+        int sockerr;
+        socklen_t len = (socklen_t)sizeof(int);
+        res = getsockopt(ssl_client->socket, SOL_SOCKET, SO_ERROR, &sockerr, &len);
+
+        if (res < 0) {
+            log_e("getsockopt on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+            close(ssl_client->socket);
+            return -1;
+        }
+
+        if (sockerr != 0) {
+            log_e("socket error on fd %d, errno: %d, \"%s\"", ssl_client->socket, sockerr, strerror(sockerr));
+            close(ssl_client->socket);
+            return -1;
+        }
+    }
+
+
+#define ROE(x,msg) { if (((x)<0)) { log_e("LWIP Socket config of " msg " failed."); return -1; }}
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)),"SO_RCVTIMEO");
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)),"SO_SNDTIMEO");
+
+     ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY");
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
+
+
 
     log_v("Seeding the random number generator");
     mbedtls_entropy_init(&ssl_client->entropy_ctx);
