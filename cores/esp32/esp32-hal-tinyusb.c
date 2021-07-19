@@ -228,7 +228,7 @@ typedef struct TU_ATTR_PACKED {
 static tinyusb_desc_webusb_url_t tinyusb_url_descriptor = {
         .bLength         = 3,
         .bDescriptorType = 3, // WEBUSB URL type
-        .bScheme         = 1, // URL Scheme Prefix: 0: "http://", 1: "https://", 255: ""
+        .bScheme         = 255, // URL Scheme Prefix: 0: "http://", 1: "https://", 255: ""
         .url             = ""
 };
 
@@ -317,12 +317,11 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
  */
 uint8_t const * tud_descriptor_bos_cb(void)
 {
-    //log_d("");
+    //log_v("");
     return tinyusb_bos_descriptor;
 }
 
-__attribute__ ((weak)) bool tinyusb_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request){ return false; }
-__attribute__ ((weak)) bool tinyusb_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request){ return true; }
+__attribute__ ((weak)) bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request){ return false; }
 
 /**
  * @brief Handle WebUSB and Vendor requests.
@@ -331,29 +330,25 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 {
     if(WEBUSB_ENABLED && (request->bRequest == VENDOR_REQUEST_WEBUSB
             || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
-        if(request->bRequest == VENDOR_REQUEST_WEBUSB){
-            // match vendor request in BOS descriptor
-            // Get landing page url
-            tinyusb_url_descriptor.bLength = 3 + strlen(WEBUSB_URL);
-            snprintf(tinyusb_url_descriptor.url, 127, "%s", WEBUSB_URL);
-            return tud_control_xfer(rhport, request, (void*) &tinyusb_url_descriptor, tinyusb_url_descriptor.bLength);
+        // we only care for SETUP stage
+        if (stage == CONTROL_STAGE_SETUP) {
+            if(request->bRequest == VENDOR_REQUEST_WEBUSB){
+                // match vendor request in BOS descriptor
+                // Get landing page url
+                tinyusb_url_descriptor.bLength = 3 + strlen(WEBUSB_URL);
+                snprintf(tinyusb_url_descriptor.url, 127, "%s", WEBUSB_URL);
+                return tud_control_xfer(rhport, request, (void*) &tinyusb_url_descriptor, tinyusb_url_descriptor.bLength);
+            }
+            // Get Microsoft OS 2.0 compatible descriptor
+            uint16_t total_len;
+            memcpy(&total_len, tinyusb_ms_os_20_descriptor + 8, 2);
+            return tud_control_xfer(rhport, request, (void*) tinyusb_ms_os_20_descriptor, total_len);
         }
-        // Get Microsoft OS 2.0 compatible descriptor
-        uint16_t total_len;
-        memcpy(&total_len, tinyusb_ms_os_20_descriptor + 8, 2);
-        return tud_control_xfer(rhport, request, (void*) tinyusb_ms_os_20_descriptor, total_len);
+        return true;
     }
-    return tinyusb_vendor_control_request_cb(rhport, request);
+    log_v("rhport: %u, stage: %u, type: 0x%x, request: 0x%x", rhport, stage, request->bmRequestType_bit.type, request->bRequest);
+    return tinyusb_vendor_control_request_cb(rhport, stage, request);
 }
-
-// bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request)
-// {
-//     if(!WEBUSB_ENABLED || !(request->bRequest == VENDOR_REQUEST_WEBUSB
-//             || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
-//         return tinyusb_vendor_control_complete_cb(rhport, request);
-//     }
-//     return true;
-// }
 
 /*
  * Required Callbacks
@@ -537,6 +532,9 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
             //DFU Download
+            // Reset USB Core
+            USB0.grstctl |= USB_CSFTRST;
+            while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST){}
             chip_usb_set_persist_flags(USBDC_BOOT_DFU);
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_enabled) {
