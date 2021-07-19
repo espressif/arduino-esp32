@@ -60,11 +60,6 @@
             },
             {
               "packager": "esp32",
-              "name": "mkfatfs",
-              "version": "0.3.6"
-            },
-            {
-              "packager": "esp32",
               "name": "mklittlefs",
               "version": "3.0.0-gnu12-dc7f933"
             }
@@ -242,26 +237,6 @@
               "size": "80550"
             }
           ]
-        },
-        {
-           "version": "0.3.6",
-           "name": "mkfatfs",
-           "systems": [
-              {
-                 "host": "i686-pc-linux-gnu",
-                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.tar.gz",
-                 "archiveFileName": "mkfatfs.tar.gz",
-                 "checksum": "SHA-256:41dc0346a38d6aab5674d4301937868e69471b69d8317ed667d2eeb7c4a077ee",
-                 "size": "102575"
-              },
-              {
-                 "host": "i686-mingw32",
-                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.zip",
-                 "archiveFileName": "mkfatfs.zip",
-                 "checksum": "SHA-256:966f378da8bba524197d7d8a919e93b21b4680ead03ae69cac8bb56f8ec864a6",
-                 "size": "612169"
-              }
-           ]
         },
         {
            "version": "3.0.0-gnu12-dc7f933",
