@@ -199,9 +199,6 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     if(sketchMD5.length() != 0) {
         http.addHeader("x-ESP32-sketch-md5", sketchMD5);
     }
-
-    delay(1);  // Fix solo WDT
-
     // Add also a SHA256
     String sketchSHA256 = getSketchSHA256();
     if(sketchSHA256.length() != 0) {
