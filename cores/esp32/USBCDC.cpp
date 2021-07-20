@@ -227,7 +227,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
 
 void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits){
     if(bit_rate != _bit_rate || data_bits != _data_bits || stop_bits != _stop_bits || parity != _parity){
-        if(bit_rate == 9600 && _bit_rate == 1200){
+        // ArduinoIDE sends LineCoding with 1200bps baud to reset the device
+        if(_bit_rate == 1200){
             usb_persist_restart(RESTART_BOOTLOADER);
         } else {
             bit_rate = _bit_rate;

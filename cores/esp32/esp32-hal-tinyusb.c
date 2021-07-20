@@ -502,6 +502,15 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
         snprintf(WEBUSB_URL, 126, "%s", config->webusb_url);
     }
 
+    // Windows 10 will not recognize the CDC device if WebUSB is enabled and USB Class is not 2 (CDC)
+    if(
+        (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) 
+        && config->webusb_enabled 
+        && (config->usb_class != TUSB_CLASS_CDC)
+    ){
+        config->usb_class = TUSB_CLASS_CDC;
+    }
+
     WEBUSB_ENABLED            = config->webusb_enabled;
     USB_DEVICE_ATTRIBUTES     = config->usb_attributes;
     USB_DEVICE_POWER          = config->usb_power_ma;
