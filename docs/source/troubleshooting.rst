@@ -36,5 +36,5 @@ Hardware
 
 * Power Source.
 * Bad/damaged USB cable or charging only cables (without data wires).
-* USB drivers missing.
+* USB drivers missing. **Download link:** https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
 * Board with some defect.
