@@ -164,7 +164,9 @@ static void uartEnableInterrupt(uart_t* uart, uint8_t rxfifo_full_thrhd)
 static void uartDisableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32
     uart->dev->conf1.val = 0;
+#endif
     uart->dev->int_ena.val = 0;
     uart->dev->int_clr.val = 0xffffffff;
 
