@@ -284,6 +284,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                 _lastError = HTTP_UE_TOO_LESS_SPACE;
                 ret = HTTP_UPDATE_FAILED;
             } else {
+                // Warn main app we're starting up...
+                if (_cbStart) {
+                    _cbStart();
+                }
 
                 WiFiClient * tcp = http.getStreamPtr();
 
@@ -338,6 +342,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     ret = HTTP_UPDATE_OK;
                     log_d("Update ok\n");
                     http.end();
+                    // Warn main app we're all done
+                    if (_cbEnd) {
+                        _cbEnd();
+                    }
 
                     if(_rebootOnUpdate && !spiffs) {
                         ESP.restart();
@@ -389,12 +397,20 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
 
     StreamString error;
 
+    if (_cbProgress) {
+        Update.onProgress(_cbProgress);
+    }
+
     if(!Update.begin(size, command, _ledPin, _ledOn)) {
         _lastError = Update.getError();
         Update.printError(error);
         error.trim(); // remove line ending
         log_e("Update.begin failed! (%s)\n", error.c_str());
         return false;
+    }
+
+    if (_cbProgress) {
+        _cbProgress(0, size);
     }
 
     if(md5.length()) {
@@ -413,6 +429,10 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
         error.trim(); // remove line ending
         log_e("Update.writeStream failed! (%s)\n", error.c_str());
         return false;
+    }
+
+    if (_cbProgress) {
+        _cbProgress(size, size);
     }
 
     if(!Update.end()) {

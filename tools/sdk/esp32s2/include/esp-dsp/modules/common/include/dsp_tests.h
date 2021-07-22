@@ -15,6 +15,9 @@
 #ifndef _DSP_TESTS_H_
 #define _DSP_TESTS_H_
 
+#include <stdlib.h>
+#include "esp_idf_version.h"
+
 #define TEST_ASSERT_EXEC_IN_RANGE(min_exec, max_exec, actual) \
     if (actual >= max_exec) { \
         ESP_LOGE("", "Time error. Expected max: %i, reached: %i", (int)max_exec, (int)actual);\
@@ -25,5 +28,10 @@
         TEST_ASSERT_MESSAGE (false, "Exec time takes less then expected!");\
     }
 
+
+// memalign function is implemented in IDF 4.3 and later
+#if ESP_IDF_VERSION <= ESP_IDF_VERSION_VAL(4, 3, 0)
+#define memalign(align_, size_) malloc(size_)
+#endif
 
 #endif // _DSP_TESTS_H_

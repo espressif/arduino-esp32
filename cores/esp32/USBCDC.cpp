@@ -38,27 +38,46 @@ static uint16_t load_cdc_descriptor(uint8_t * dst, uint8_t * itf)
     return TUD_CDC_DESC_LEN;
 }
 
+// Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
 {
+    //isr_log_v("itf: %u, dtr: %u, rts: %u", itf, dtr, rts);
     if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
         devices[itf]->_onLineState(dtr, rts);
     }
 }
 
+// Invoked when line coding is change via SET_LINE_CODING
 void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* p_line_coding)
 {
+    //isr_log_v("itf: %u, bit_rate: %u, data_bits: %u, stop_bits: %u, parity: %u", itf, p_line_coding->bit_rate, p_line_coding->data_bits, p_line_coding->stop_bits, p_line_coding->parity);
     if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
         devices[itf]->_onLineCoding(p_line_coding->bit_rate, p_line_coding->stop_bits, p_line_coding->parity, p_line_coding->data_bits);
     }
 }
 
+// Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf)
 {
+    //isr_log_v("itf: %u", itf);
     if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
         devices[itf]->_onRX();
     }
 }
 
+// Invoked when received send break
+void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms){
+    //isr_log_v("itf: %u, duration_ms: %u", itf, duration_ms);
+}
+
+// Invoked when space becomes available in TX buffer
+void tud_cdc_tx_complete_cb(uint8_t itf){
+    //isr_log_v("itf: %u", itf);
+    if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
+        xSemaphoreGive(devices[itf]->tx_sem);
+        devices[itf]->_onTX();
+    }
+}
 
 static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size){
     if(itf >= MAX_USB_CDC_DEVICES){
@@ -84,6 +103,7 @@ static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size)
         sofar += sent;
         tosend -= sent;
         tud_cdc_n_write_flush(itf);
+        xSemaphoreTake(devices[itf]->tx_sem, portMAX_DELAY);
     }
     return sofar;
 }
@@ -103,6 +123,7 @@ USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), 
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         devices[itf] = this;
+        tx_sem = NULL;
         arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
     }
 }
@@ -128,10 +149,18 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
 void USBCDC::begin(unsigned long baud)
 {
     setRxBufferSize(256);//default if not preset
+    if(tx_sem == NULL){
+        tx_sem = xSemaphoreCreateBinary();
+        xSemaphoreTake(tx_sem, 0);
+    }
 }
 
 void USBCDC::end()
 {
+    if (tx_sem != NULL) {
+        vSemaphoreDelete(tx_sem);
+        tx_sem = NULL;
+    }
 }
 
 void USBCDC::_onUnplugged(void){
@@ -198,7 +227,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
 
 void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits){
     if(bit_rate != _bit_rate || data_bits != _data_bits || stop_bits != _stop_bits || parity != _parity){
-        if(bit_rate == 9600 && _bit_rate == 1200){
+        // ArduinoIDE sends LineCoding with 1200bps baud to reset the device
+        if(_bit_rate == 1200){
             usb_persist_restart(RESTART_BOOTLOADER);
         } else {
             bit_rate = _bit_rate;
@@ -226,6 +256,11 @@ void USBCDC::_onRX(){
     arduino_usb_cdc_event_data_t p = {0};
     p.rx.len = count;
     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+}
+
+void USBCDC::_onTX(){
+    arduino_usb_cdc_event_data_t p = {0};
+    arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_TX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
 }
 
 void  USBCDC::enableReboot(bool enable){

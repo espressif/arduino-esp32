@@ -1,5 +1,3 @@
-//Disable Example for now
-#if 0
 #include "esp_camera.h"
 #include <WiFi.h>
 
@@ -112,7 +110,3 @@ void loop() {
   // put your main code here, to run repeatedly:
   delay(10000);
 }
-#else
-void setup(){}
-void loop(){}
-#endif
