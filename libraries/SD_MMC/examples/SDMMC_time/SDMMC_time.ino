@@ -164,6 +164,10 @@ void setup(){
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
     Serial.println("Contacting Time Server");
+    /*
+        Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
+        see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
+     */
 	configTime(3600*timezone, daysavetime*3600, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
 	struct tm tmstruct ;
     delay(2000);
