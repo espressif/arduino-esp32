@@ -32,7 +32,6 @@ void setup() {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }
-  I2S.setAllPins(27,25,33,26);
 }
 
 void loop() {

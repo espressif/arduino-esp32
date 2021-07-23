@@ -1,5 +1,6 @@
 /*
- This example is only for ESP devices
+ This example is only for ESP devices.
+
  This example demonstrates usage of integrated Digital to Analog Converter (DAC)
  You can display sound wave from audio device, or just measure voltage.
 
@@ -41,20 +42,20 @@ Second option to measure voltage on trimmer / potentiometer has following connec
                       |
                       |
                       V GND
-Optional resistor will decrease read value.
+ Optional resistor will decrease read value.
 
-Steps to run:
-1. Select target board:
-  Tools -> Board -> ESP32 Arduino -> your board
-2. Upload sketch
-  Press upload button (arrow in top left corner)
-  When you see in console line like this: "Connecting........_____.....__"
-    On your board press and hold Boot button and press EN button shortly. Now you can release both buttons.
-    You should see lines like this: "Writing at 0x00010000... (12 %)" with rising percentage on each line.
-    If this fails, try the board buttons right after pressing upload button, or reconnect the USB cable.
-3. Open plotter
-  Tools -> Serial Plotter
-    Enjoy
+ Steps to run:
+ 1. Select target board:
+   Tools -> Board -> ESP32 Arduino -> your board
+ 2. Upload sketch
+   Press upload button (arrow in top left corner)
+   When you see in console line like this: "Connecting........_____.....__"
+     On your board press and hold Boot button and press EN button shortly. Now you can release both buttons.
+     You should see lines like this: "Writing at 0x00010000... (12 %)" with rising percentage on each line.
+     If this fails, try the board buttons right after pressing upload button, or reconnect the USB cable.
+ 3. Open plotter
+   Tools -> Serial Plotter
+     Enjoy
 
 Created by Tomas Pilny
 on 17th June 2021
@@ -82,5 +83,4 @@ void loop() {
   // read a sample
   int sample = I2S.read();
   Serial.println(sample);
-  delay(100);
-  }
+}

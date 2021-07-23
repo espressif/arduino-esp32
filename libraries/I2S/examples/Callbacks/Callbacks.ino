@@ -51,10 +51,10 @@ on 23rd June 2021
 
 // If you need to change any of the default pins, simply uncomment chosen line and change the pin number
 /*
-#define PIN_I2S_SCK      33
-#define PIN_I2S_FS       16
-#define PIN_I2S_SD       17
-#define PIN_I2S_SD_OUT   4
+#define PIN_I2S_SCK      5
+#define PIN_I2S_FS       25
+#define PIN_I2S_SD       35
+#define PIN_I2S_SD_OUT   26
 */
 
 #include <I2S.h>
@@ -67,18 +67,21 @@ const int amplitude = 32767; // amplitude of square wave
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 
-short sample = amplitude; // current sample value
+short out_sample = amplitude; // current sample value
 int count = 0;
 
 void outputCallback(){
+
   if (count % halfWavelength == 0) {
     // invert the sample every half wavelength count multiple to generate square wave
-    sample = -1 * sample;
+    out_sample = -1 * out_sample;
   }
 
+  Serial.printf("write %d\n", out_sample); // only for debug
+
   // write the same sample twice, once for left and once for the right channel
-  I2S.write(sample);
-  I2S.write(sample);
+  I2S.write(out_sample);
+  I2S.write(out_sample);
 
   // increment the counter for the next sample
   count++;
@@ -87,13 +90,11 @@ void outputCallback(){
 // code from InputSerialPlotter example
 void inputCallback(){
   // read a sample
-  int sample = I2S.read();
+  int in_sample = I2S.read();
 
-  Serial.println(sample); // only for debug
-
-  if (sample) {
+  if (in_sample) {
     // if it's non-zero print value to serial
-    Serial.println(sample);
+    Serial.println(in_sample);
   }
 }
 
@@ -111,7 +112,7 @@ void setup() {
     Serial.println("Failed to initialize I2S!");
     while (1) delay(100); // do nothing
   }
-  I2S.setAllPins();
+  I2S.setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT);
 
   // Register our callback functions
   I2S.onTransmit(outputCallback); // Function outputCallback will be called each time I2S finishes transmit operation (audio output)
@@ -121,5 +122,5 @@ void setup() {
 
 void loop() {
   // loop task remains free for other work
-  delay(100); // Let the FreeRTOS reset the watchDogTimer
+  delay(10); // Let the FreeRTOS reset the watchDogTimer
 }
