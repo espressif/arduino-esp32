@@ -26,10 +26,9 @@ Flashing
 **Solution:** 
 
 1. To automatically get into the flashing mode, you have to connect a **10 uF** capacitor between the **EN** and **GND** pins. This capacitor value could be lower (> 2.2 uF) if you don't have this part available. **EN <----||---- GND.** *(The capacitor can be electrolytic, ceramic, or tantalum. Using lower values like 2.2uF and 4.7 uF is also possible in most cases.)*
-2. The hardware guide recommends adding the RC delay circuit. For more details, see the **ESP32 Hardware Design Guidelines**
-  https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf 
-   
-  ``in the '2.2.1 Power-on Sequence' section.``
+2. For more details, see the `ESP32 Hardware Design Guidelines
+ <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in the *Power-on Sequence* section.
+
 
 Hardware
 --------
