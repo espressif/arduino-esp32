@@ -25,6 +25,23 @@ namespace esp_i2s {
   #include "driver/i2s.h" // ESP specific i2s driver
 }
 
+// Default pins
+#ifndef PIN_I2S_SCK
+  #define PIN_I2S_SCK 5
+#endif
+
+#ifndef PIN_I2S_FS
+  #define PIN_I2S_FS 25
+#endif
+
+#ifndef PIN_I2S_SD
+  #define PIN_I2S_SD 35 // Input if used in duplex
+#endif
+
+#ifndef PIN_I2S_SD_OUT
+  #define PIN_I2S_SD_OUT 26
+#endif
+
 typedef enum {
   I2S_PHILIPS_MODE,
   I2S_RIGHT_JUSTIFIED_MODE,

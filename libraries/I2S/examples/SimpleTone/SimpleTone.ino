@@ -17,10 +17,9 @@
  */
 
 #include <I2S.h>
-
-const int frequency = 1250; // frequency of square wave in Hz
-const int amplitude = 32767; // amplitude of square wave
-const int sampleRate = 16000; // sample rate in Hz
+const int frequency = 440; // frequency of square wave in Hz
+const int amplitude = 500; // amplitude of square wave
+const int sampleRate = 8000; // sample rate in Hz
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 
