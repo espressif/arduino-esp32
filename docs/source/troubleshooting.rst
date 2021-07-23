@@ -23,12 +23,12 @@ Flashing
 * In some instances, you must keep **GPIO0** LOW during the uploading process via serial interface.
 * Hold-down the **“BOOT”** button in your ESP32 board while uploading/flashing.
 * When trying to upload a new sketch in some ESP32 development boards, the Arduino IDE gives you a fatal error *(i.e A fatal error occurred: Failed to connect to ESP32: Timed out waiting for packet header)*. This means your ESP32 board is not automatically in the flashing/uploading mode.
-**Solution:** 
+**Solution:**
 
 1. To automatically get into the flashing mode, you have to connect a **10 uF** capacitor between the **EN** and **GND** pins. This capacitor value could be lower (> 2.2 uF) if you don't have this part available. **EN <----||---- GND.** *(The capacitor can be electrolytic, ceramic, or tantalum. Using lower values like 2.2uF and 4.7 uF is also possible in most cases.)*
-2. For more details, see the `ESP32 Hardware Design Guidelines
- <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in the *Power-on Sequence* section.
 
+For more details, see the `ESP32 Hardware Design Guidelines
+ <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in the *Power-on Sequence* section.
 
 Hardware
 --------
