@@ -27,13 +27,12 @@ Flashing
 
 1. To automatically get into the flashing mode, you have to connect a **10 uF** capacitor between the **EN** and **GND** pins. This capacitor value could be lower (> 2.2 uF) if you don't have this part available. **EN <----||---- GND.** *(The capacitor can be electrolytic, ceramic, or tantalum. Using lower values like 2.2uF and 4.7 uF is also possible in most cases.)*
 
-For more details, see the `ESP32 Hardware Design Guidelines
- <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in the *Power-on Sequence* section.
+For more details, see the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in the *Power-on Sequence* section.
 
 Hardware
 --------
 
 * Power Source.
 * Bad/damaged USB cable or charging only cables (without data wires).
-* USB drivers missing. **Download link:** https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
+* USB drivers missing. - `USB Driver Download Link  <https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers>`_
 * Board with some defect.
