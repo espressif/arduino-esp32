@@ -36,6 +36,7 @@
 //--------------------------------------------------------------------+
 // Common Definitions
 //--------------------------------------------------------------------+
+
 // DFU Protocol
 typedef enum
 {
@@ -77,28 +78,28 @@ typedef enum {
 
 // DFU Status
 typedef enum {
-  DFU_STATUS_OK              = 0x00,
-  DFU_STATUS_ERRTARGET       = 0x01,
-  DFU_STATUS_ERRFILE         = 0x02,
-  DFU_STATUS_ERRWRITE        = 0x03,
-  DFU_STATUS_ERRERASE        = 0x04,
-  DFU_STATUS_ERRCHECK_ERASED = 0x05,
-  DFU_STATUS_ERRPROG         = 0x06,
-  DFU_STATUS_ERRVERIFY       = 0x07,
-  DFU_STATUS_ERRADDRESS      = 0x08,
-  DFU_STATUS_ERRNOTDONE      = 0x09,
-  DFU_STATUS_ERRFIRMWARE     = 0x0A,
-  DFU_STATUS_ERRVENDOR       = 0x0B,
-  DFU_STATUS_ERRUSBR         = 0x0C,
-  DFU_STATUS_ERRPOR          = 0x0D,
-  DFU_STATUS_ERRUNKNOWN      = 0x0E,
-  DFU_STATUS_ERRSTALLEDPKT   = 0x0F,
-} dfu_device_status_t;
+  DFU_STATUS_OK               = 0x00,
+  DFU_STATUS_ERR_TARGET       = 0x01,
+  DFU_STATUS_ERR_FILE         = 0x02,
+  DFU_STATUS_ERR_WRITE        = 0x03,
+  DFU_STATUS_ERR_ERASE        = 0x04,
+  DFU_STATUS_ERR_CHECK_ERASED = 0x05,
+  DFU_STATUS_ERR_PROG         = 0x06,
+  DFU_STATUS_ERR_VERIFY       = 0x07,
+  DFU_STATUS_ERR_ADDRESS      = 0x08,
+  DFU_STATUS_ERR_NOTDONE      = 0x09,
+  DFU_STATUS_ERR_FIRMWARE     = 0x0A,
+  DFU_STATUS_ERR_VENDOR       = 0x0B,
+  DFU_STATUS_ERR_USBR         = 0x0C,
+  DFU_STATUS_ERR_POR          = 0x0D,
+  DFU_STATUS_ERR_UNKNOWN      = 0x0E,
+  DFU_STATUS_ERR_STALLEDPKT   = 0x0F,
+} dfu_status_t;
 
-#define DFU_FUNC_ATTR_CAN_DOWNLOAD_BITMASK              (1 << 0)
-#define DFU_FUNC_ATTR_CAN_UPLOAD_BITMASK                (1 << 1)
-#define DFU_FUNC_ATTR_MANIFESTATION_TOLERANT_BITMASK    (1 << 2)
-#define DFU_FUNC_ATTR_WILL_DETACH_BITMASK               (1 << 3)
+#define DFU_ATTR_CAN_DOWNLOAD              (1u << 0)
+#define DFU_ATTR_CAN_UPLOAD                (1u << 1)
+#define DFU_ATTR_MANIFESTATION_TOLERANT    (1u << 2)
+#define DFU_ATTR_WILL_DETACH               (1u << 3)
 
 // DFU Status Request Payload
 typedef struct TU_ATTR_PACKED
@@ -107,9 +108,9 @@ typedef struct TU_ATTR_PACKED
   uint8_t bwPollTimeout[3];
   uint8_t bState;
   uint8_t iString;
-} dfu_status_req_payload_t;
+} dfu_status_response_t;
 
-TU_VERIFY_STATIC( sizeof(dfu_status_req_payload_t) == 6, "size is not correct");
+TU_VERIFY_STATIC( sizeof(dfu_status_response_t) == 6, "size is not correct");
 
 #ifdef __cplusplus
  }

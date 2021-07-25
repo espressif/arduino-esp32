@@ -13,6 +13,8 @@
 #define SOC_HMAC_SUPPORTED              1
 #define SOC_ASYNC_MEMCPY_SUPPORTED      1
 #define SOC_USB_SERIAL_JTAG_SUPPORTED   1
+#define SOC_TEMP_SENSOR_SUPPORTED       1
+#define SOC_FLASH_ENCRYPTION_XTS_AES      1
 
 /*-------------------------- COMMON CAPS ---------------------------------------*/
 #define SOC_SUPPORTS_SECURE_DL_MODE     1
@@ -243,6 +245,7 @@
 
 #define SOC_UART_SUPPORT_RTC_CLK    (1)
 #define SOC_UART_SUPPORT_XTAL_CLK   (1)
+#define SOC_UART_REQUIRE_CORE_RESET (1)
 
 // UART has an extra TX_WAIT_SEND state when the FIFO is not empty and XOFF is enabled
 #define SOC_UART_SUPPORT_FSM_TX_WAIT_SEND   (1)

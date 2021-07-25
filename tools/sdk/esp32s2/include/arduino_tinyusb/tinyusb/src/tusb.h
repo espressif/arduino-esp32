@@ -96,7 +96,7 @@
     #include "class/dfu/dfu_rt_device.h"
   #endif
 
-  #if CFG_TUD_DFU_MODE
+  #if CFG_TUD_DFU
     #include "class/dfu/dfu_device.h"
   #endif
 
