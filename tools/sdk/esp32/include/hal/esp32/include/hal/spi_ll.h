@@ -496,6 +496,16 @@ static inline void spi_ll_master_select_cs(spi_dev_t *hw, int cs_id)
     hw->pin.cs2_dis = (cs_id == 2) ? 0 : 1;
 }
 
+/**
+ * Keep Chip Select activated after the current transaction.
+ *
+ * @param hw Beginning address of the peripheral registers.
+ * @param keep_active if 0 don't keep CS activated, else keep CS activated
+ */
+static inline void spi_ll_master_keep_cs(spi_dev_t *hw, int keep_active) {
+    hw->pin.cs_keep_active = (keep_active != 0) ? 1 : 0;
+}
+
 /*------------------------------------------------------------------------------
  * Configs: parameters
  *----------------------------------------------------------------------------*/
@@ -744,7 +754,7 @@ static inline void spi_ll_set_mosi_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    hw->slv_wrbuf_dlen.bit_len = bitlen - 1;
+    hw->slv_rdbuf_dlen.bit_len = bitlen - 1;
 }
 
 /**
@@ -755,7 +765,7 @@ static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_tx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    hw->slv_rdbuf_dlen.bit_len = bitlen - 1;
+    hw->slv_wrbuf_dlen.bit_len = bitlen - 1;
 }
 
 /**

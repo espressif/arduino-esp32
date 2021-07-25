@@ -30,10 +30,23 @@
 #include "common/tusb_common.h"
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
+#include "dcd_attr.h"
 
 #ifdef __cplusplus
  extern "C" {
 #endif
+
+//--------------------------------------------------------------------+
+// Configuration
+//--------------------------------------------------------------------+
+
+#ifndef CFG_TUD_ENDPPOINT_MAX
+  #define CFG_TUD_ENDPPOINT_MAX   DCD_ATTR_ENDPOINT_MAX
+#endif
+
+//--------------------------------------------------------------------+
+// MACRO CONSTANT TYPEDEF PROTYPES
+//--------------------------------------------------------------------+
 
 typedef enum
 {
