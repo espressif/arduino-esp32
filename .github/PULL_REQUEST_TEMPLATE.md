@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 This entire section can be deleted if all items are checked.
 
-*By completing this PR sufficiently, you help improve the quality of Release Notes*
+*By completing this PR sufficiently, you help us to improve the quality of Release Notes*
 
 ### Checklist
 
