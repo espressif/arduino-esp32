@@ -1,0 +1,24 @@
+name: ReadTheDocs CI
+
+on:
+  push:
+    branches:
+    - master
+    - release/*
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs.yml'
+
+jobs:
+
+  build-docs:
+    name: Build ReadTheDocs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: cd ./docs && make html
