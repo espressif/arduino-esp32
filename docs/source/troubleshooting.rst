@@ -51,4 +51,3 @@ If your board is not detected after connecting into the USB, you can try to:
 * Change the USB port.
 * Check your power supply.
 * Check if the board is damaged or defective.
-
