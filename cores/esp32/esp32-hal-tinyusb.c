@@ -72,20 +72,15 @@ static void configure_pins(usb_hal_context_t *usb)
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config)
 {
-    log_i("Driver installation...");
-
-    // Hal init
     usb_hal_context_t hal = {
         .use_external_phy = config->external_phy
     };
     usb_hal_init(&hal);
     configure_pins(&hal);
-
     if (!tusb_init()) {
         log_e("Can't initialize the TinyUSB stack.");
         return ESP_FAIL;
     }
-    log_i("Driver installed");
     return ESP_OK;
 }
 
@@ -106,6 +101,7 @@ static tusb_str_t WEBUSB_URL              = "";
 static tusb_str_t USB_DEVICE_PRODUCT      = "";
 static tusb_str_t USB_DEVICE_MANUFACTURER = "";
 static tusb_str_t USB_DEVICE_SERIAL       = "";
+static tusb_str_t USB_DEVICE_LANGUAGE     = "\x09\x04";//English (0x0409)
 
 static uint8_t USB_DEVICE_ATTRIBUTES     = 0;
 static uint16_t USB_DEVICE_POWER         = 0;
@@ -140,7 +136,7 @@ static tusb_desc_device_t tinyusb_device_descriptor = {
 static uint32_t tinyusb_string_descriptor_len = 4;
 static char * tinyusb_string_descriptor[MAX_STRING_DESCRIPTORS] = {
         // array of pointer to string descriptors
-        "\x09\x04",   // 0: is supported language is English (0x0409)
+        USB_DEVICE_LANGUAGE,    // 0: is supported language
         USB_DEVICE_MANUFACTURER,// 1: Manufacturer
         USB_DEVICE_PRODUCT,     // 2: Product
         USB_DEVICE_SERIAL,      // 3: Serials, should use chip ID
@@ -563,31 +559,37 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
+static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"CDC", "MSC", "DFU", "HID", "VENDOR", "MIDI", "CUSTOM"};
+
+static bool tinyusb_is_initialized = false;
 
 esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
 {
+    if(tinyusb_is_initialized){
+        log_e("TinyUSB has already started! Interface %s not enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
+        return ESP_FAIL;
+    }
     if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
-        log_e("Interface %u not enabled", interface);
+        log_e("Interface %s invalid or already enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
     }
     tinyusb_loaded_interfaces_mask |= (1U << interface);
     tinyusb_config_descriptor_len += descriptor_len;
     tinyusb_loaded_interfaces_callbacks[interface] = cb;
-    log_d("Interface %u enabled", interface);
+    log_d("Interface %s enabled", tinyusb_interface_names[interface]);
     return ESP_OK;
 }
 
 esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
-    static bool initialized = false;
-    if(initialized){
+    if(tinyusb_is_initialized){
         return ESP_OK;
     }
-    initialized = true;
+    tinyusb_is_initialized = true;
     
     tinyusb_endpoints.val = 0;
     tinyusb_apply_device_config(config);
     if (!tinyusb_load_enabled_interfaces()) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return ESP_FAIL;
     }
 
@@ -605,7 +607,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     }
 
     if (esp_register_shutdown_handler(usb_persist_shutdown_handler) != ESP_OK) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return ESP_FAIL;
     }
 
@@ -614,7 +616,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     };
     esp_err_t err = tinyusb_driver_install(&tusb_cfg);
     if (err != ESP_OK) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return err;
     }
     xTaskCreate(usb_device_task, "usbd", 4096, NULL, configMAX_PRIORITIES - 1, NULL);

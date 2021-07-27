@@ -18,7 +18,7 @@
 
 #include "Arduino.h"
 #include "USBCDC.h"
-
+#include "common/tusb_common.h"
 #include "esp_event.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_EVENTS);

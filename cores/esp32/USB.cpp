@@ -35,10 +35,6 @@
 #if CFG_TUD_DFU_RUNTIME
 static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
 {
-#define DFU_ATTR_CAN_DOWNLOAD              1
-#define DFU_ATTR_CAN_UPLOAD                2
-#define DFU_ATTR_MANIFESTATION_TOLERANT    4
-#define DFU_ATTR_WILL_DETACH               8
 #define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
 
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
