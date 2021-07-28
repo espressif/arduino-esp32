@@ -559,7 +559,7 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
-static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"CDC", "MSC", "DFU", "HID", "VENDOR", "MIDI", "CUSTOM"};
+static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
 
 static bool tinyusb_is_initialized = false;
 

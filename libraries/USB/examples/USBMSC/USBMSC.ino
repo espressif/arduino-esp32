@@ -6,7 +6,7 @@
 #define USBSerial Serial
 #else
 #define HWSerial Serial
-//USBCDC USBSerial; // Windows does not like it if both devices are on
+USBCDC USBSerial;
 #endif
 
 USBMSC MSC;
@@ -184,7 +184,7 @@ void setup() {
   MSC.mediaPresent(true);
   MSC.begin(DISK_SECTOR_COUNT, DISK_SECTOR_SIZE);
 #if !ARDUINO_SERIAL_PORT
-  //USBSerial.begin(); // Windows does not like it if both devices are on
+  USBSerial.begin();
   USB.begin();
 #endif
 }

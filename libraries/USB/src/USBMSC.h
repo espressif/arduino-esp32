@@ -15,6 +15,8 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include "esp32-hal.h"
+#if CONFIG_TINYUSB_MSC_ENABLED
 
 // Invoked when received Start Stop Unit command
 // - Start = 0 : stopped power mode, if load_eject = 1 : unload disk storage
@@ -42,3 +44,4 @@ public:
 private:
 	uint8_t _lun;
 };
+#endif
