@@ -56,7 +56,7 @@ set(LIBRARY_SRCS
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/I2S/src/I2S.cpp
-  libraries/LITTLEFS/src/LITTLEFS.cpp
+  libraries/LittleFS/src/LittleFS.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/RainMaker/src/RMaker.cpp
@@ -142,7 +142,7 @@ set(includedirs
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
   libraries/I2S/src
-  libraries/LITTLEFS/src
+  libraries/LittleFS/src/
   libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/RainMaker/src
