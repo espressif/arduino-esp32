@@ -121,7 +121,7 @@ ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
 ,usb_attributes(TUSB_DESC_CONFIG_ATT_SELF_POWERED)
 ,usb_power_ma(500)
 ,webusb_enabled(false)
-,webusb_url("espressif.github.io/arduino-esp32/webusb.html")
+,webusb_url("https://espressif.github.io/arduino-esp32/webusb.html")
 ,_started(false)
 ,_task_stack_size(task_stack_size)
 ,_event_task_priority(event_task_priority)
@@ -282,6 +282,9 @@ uint8_t ESPUSB::usbAttributes(void){
 bool ESPUSB::webUSB(bool enabled){
     if(!_started){
         webusb_enabled = enabled;
+        if(enabled && usb_version < 0x0210){
+            usb_version = 0x0210;
+        }
     }
     return !_started;
 }

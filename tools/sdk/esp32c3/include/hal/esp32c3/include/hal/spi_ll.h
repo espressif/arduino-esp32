@@ -24,11 +24,12 @@
 
 #include <stdlib.h> //for abs()
 #include <string.h>
-#include "hal/hal_defs.h"
+#include "esp_attr.h"
 #include "esp_types.h"
 #include "soc/spi_periph.h"
-#include "esp32c3/rom/lldesc.h"
-#include "esp_attr.h"
+#include "soc/lldesc.h"
+#include "hal/assert.h"
+#include "hal/misc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +38,7 @@ extern "C" {
 /// Interrupt not used. Don't use in app.
 #define SPI_LL_UNUSED_INT_MASK  (SPI_TRANS_DONE_INT_ENA | SPI_SLV_WR_DMA_DONE_INT_ENA | SPI_SLV_RD_DMA_DONE_INT_ENA | SPI_SLV_WR_BUF_DONE_INT_ENA | SPI_SLV_RD_BUF_DONE_INT_ENA)
 /// Swap the bit order to its correct place to send
-#define HAL_SPI_SWAP_DATA_TX(data, len) HAL_SWAP32((uint32_t)data<<(32-len))
+#define HAL_SPI_SWAP_DATA_TX(data, len) HAL_SWAP32((uint32_t)(data) << (32 - len))
 /// This is the expected clock frequency
 #define SPI_LL_PERIPH_CLK_FREQ (80 * 1000000)
 #define SPI_LL_GET_HW(ID) ((ID)==0? ({abort();NULL;}):&GPSPI2)
@@ -135,6 +136,8 @@ static inline void spi_ll_slave_init(spi_dev_t *hw)
     hw->user.usr_miso_highpart = 0;
     hw->user.usr_mosi_highpart = 0;
 
+    // Configure DMA In-Link to not be terminated when transaction bit counter exceeds
+    hw->dma_conf.rx_eof_en = 0;
     hw->dma_conf.dma_seg_trans_en = 0;
 
     //Disable unneeded ints
@@ -351,9 +354,9 @@ static inline void spi_ll_write_buffer(spi_dev_t *hw, const uint8_t *buffer_to_s
  */
 static inline void spi_ll_write_buffer_byte(spi_dev_t *hw, int byte_id, uint8_t *data, int len)
 {
-    assert(byte_id+len <= 64);
-    assert(len > 0);
-    assert(byte_id >= 0);
+    HAL_ASSERT(byte_id+len <= 64);
+    HAL_ASSERT(len > 0);
+    HAL_ASSERT(byte_id >= 0);
 
     while (len > 0) {
         uint32_t word;
@@ -583,7 +586,6 @@ static inline void spi_ll_master_set_io_mode(spi_dev_t *hw, spi_ll_io_mode_t io_
 static inline void spi_ll_slave_set_seg_mode(spi_dev_t *hw, bool seg_trans)
 {
     hw->dma_conf.dma_seg_trans_en = seg_trans;
-    hw->dma_conf.rx_eof_en = seg_trans;
 }
 
 /**
@@ -600,6 +602,16 @@ static inline void spi_ll_master_select_cs(spi_dev_t *hw, int cs_id)
     hw->misc.cs3_dis = (cs_id == 3) ? 0 : 1;
     hw->misc.cs4_dis = (cs_id == 4) ? 0 : 1;
     hw->misc.cs5_dis = (cs_id == 5) ? 0 : 1;
+}
+
+/**
+ * Keep Chip Select activated after the current transaction.
+ *
+ * @param hw Beginning address of the peripheral registers.
+ * @param keep_active if 0 don't keep CS activated, else keep CS activated
+ */
+static inline void spi_ll_master_keep_cs(spi_dev_t *hw, int keep_active) {
+    hw->misc.cs_keep_active = (keep_active != 0) ? 1 : 0;
 }
 
 /*------------------------------------------------------------------------------
@@ -818,7 +830,7 @@ static inline void spi_ll_set_miso_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    spi_ll_set_mosi_bitlen(hw, bitlen);
+    //This is not used in esp32c3
 }
 
 /**
@@ -829,7 +841,7 @@ static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_tx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    spi_ll_set_mosi_bitlen(hw, bitlen);
+    //This is not used in esp32c3
 }
 
 /**

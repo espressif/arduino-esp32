@@ -35,18 +35,18 @@
           "toolsDependencies": [
             {
               "packager": "esp32",
+              "name": "riscv32-esp-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r1"
+            },
+            {
+              "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "gcc8_4_0-esp-2020r3"
+              "version": "gcc8_4_0-esp-2021r1"
             },
             {
               "packager": "esp32",
               "name": "xtensa-esp32s2-elf-gcc",
-              "version": "gcc8_4_0-esp-2020r3"
-            },
-            {
-              "packager": "esp32",
-              "name": "riscv32-esp-elf-gcc",
-              "version": "gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff"
+              "version": "gcc8_4_0-esp-2021r1"
             },
             {
               "packager": "esp32",
@@ -60,11 +60,6 @@
             },
             {
               "packager": "esp32",
-              "name": "mkfatfs",
-              "version": "0.3.6"
-            },
-            {
-              "packager": "esp32",
               "name": "mklittlefs",
               "version": "3.0.0-gnu12-dc7f933"
             }
@@ -73,118 +68,125 @@
       ],
       "tools": [
         {
-          "name": "xtensa-esp32-elf-gcc",
-          "version": "gcc8_4_0-esp-2020r3",
+          "name": "riscv32-esp-elf-gcc",
+          "version": "gcc8_4_0-esp-2021r1",
           "systems": [
             {
-              "host": "i686-mingw32",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32-elf-gcc8_4_0-esp-2020r3-win32.zip",
-              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2020r3-win32.zip",
-              "checksum": "SHA-256:81cecd5493a3fcf2118977f3fd60bd0a13a4aeac8fe6760d912f96d2c34fab66",
-              "size": "104226379"
-            },
-            {
-              "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32-elf-gcc8_4_0-esp-2020r3-macos.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2020r3-macos.tar.gz",
-              "checksum": "SHA-256:6845f786303b26c4a55ede57487ba65bd25737232fe6104be03f25bb62f4631c",
-              "size": "92424226"
-            },
-            {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz",
-              "checksum": "SHA-256:674080a12f9c5ebe5a3a5ce51c6deaeffe6dfb06d6416233df86f25b574e9279",
-              "size": "85731226"
-            },
-            {
-              "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz",
-              "checksum": "SHA-256:076b7e05304e26aa6ec105c9e0dc74addca079bc2cae6e42ee7575c5ded29877",
-              "size": "87715092"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "checksum": "SHA-256:3459618f33bbd5f54d7d7783e807cb6eef6472a220f2f1eb3faced735b9d13bb",
+              "size": "152812483"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-armel.tar.gz",
-              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2020r3-linux-armel.tar.gz",
-              "checksum": "SHA-256:6771e011dffa2438ef84ff3474538b4a69df8f9d4cfae3b3707ca31c782ed7db",
-              "size": "83888892"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "checksum": "SHA-256:24b9e54b348bbd5fb816fc4c52abb47337c702beecdbba840750b7cfb9d38069",
+              "size": "151726623"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "checksum": "SHA-256:954d340ebffef12a2ce9be1ea004e6f45a8863f1e6f41f46fd3f04f58499627c",
+              "size": "155430963"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/riscv32-esp-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "checksum": "SHA-256:612fb3a3f84f703222327bd16581df8f80fda8cdf137637fe5d611587d1b664e",
+              "size": "159836199"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/riscv32-esp-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "checksum": "SHA-256:5711eb407ffe44adddbd1281b6b575a5645e7193ca78faefa27dc5bc5b662bec",
+              "size": "191266312"
+            }
+          ]
+        },
+        {
+          "name": "xtensa-esp32-elf-gcc",
+          "version": "gcc8_4_0-esp-2021r1",
+          "systems": [
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "checksum": "SHA-256:44a0b467b9d2b759ab48b2f27aed684581f33c96e2842992781c4e045992c5b0",
+              "size": "86361217"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "checksum": "SHA-256:fdacdb2a7bbf6293bcafda9b52463a4da8a2f3b7e1df9f83d35ff9d1efa22012",
+              "size": "84520407"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "checksum": "SHA-256:e2024096492dfaa50fc6ac336cd8faa2e395e8cebb617753eab0b5f16d3dd0dc",
+              "size": "88375391"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "checksum": "SHA-256:7bbc6a2b94f009cd8a3351b9c7acf7a5caa1c4d3700500ead60f84965386a61b",
+              "size": "93357296"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "archiveFileName": "xtensa-esp32-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "checksum": "SHA-256:e4f9fdda192abfc9807e3e7fcd6e9fea30c1a0cf3f3c5a5c961b5114fc8c9b7e",
+              "size": "105603626"
             }
           ]
         },
         {
           "name": "xtensa-esp32s2-elf-gcc",
-          "version": "gcc8_4_0-esp-2020r3",
+          "version": "gcc8_4_0-esp-2021r1",
           "systems": [
             {
-              "host": "i686-mingw32",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-win32.zip",
-              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-win32.zip",
-              "checksum": "SHA-256:d078d614ae864ae4a37fcb5b83323af0a5cfdbd8243607664becdd0f977a1e33",
-              "size": "104659541"
-            },
-            {
-              "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-macos.tar.gz",
-              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-macos.tar.gz",
-              "checksum": "SHA-256:fe19b0c873879d8d89ec040f4db04a3ab27d769d3fd5f55fe59a28b6b111d09c",
-              "size": "92817351"
-            },
-            {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz",
-              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz",
-              "checksum": "SHA-256:40fafa47045167feda0cd07827db5207ebfeb4a3b6b24475957a921bc92805ed",
-              "size": "86069526"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-amd64.tar.gz",
+              "checksum": "SHA-256:b127baccfe6949ee7eaf3d0782ea772750a9b8e2732b16ce6bcc9dcd91f7209a",
+              "size": "86687290"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-armel.tar.gz",
+              "checksum": "SHA-256:7ca0d240f11e1c53c01a56257b0c968f876ab405142d1068d8c9b456d939554c",
+              "size": "84916701"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz",
-              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz",
-              "checksum": "SHA-256:bd3a91166206a1a7ff7c572e15389e1938c3cdce588032a5e915be677a945638",
-              "size": "88053499"
-            },
-            {
-              "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2020r3/xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-armel.tar.gz",
-              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2020r3-linux-armel.tar.gz",
-              "checksum": "SHA-256:6c1efec4c7829202279388ccb388e8a17a34464bc351d677c4f04d95ea4b4ce0",
-              "size": "84254468"
-            }
-          ]
-        },
-        {
-          "name": "riscv32-esp-elf-gcc",
-          "version": "gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff",
-          "systems": [
-            {
-              "host": "i686-mingw32",
-              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-win32.zip",
-              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-win32.zip",
-              "checksum": "SHA-256:4f576b08620f57c270ac677cc94dce2767fff72d27a539e348d448f63b480d1f",
-              "size": "190014086"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-linux-i686.tar.gz",
+              "checksum": "SHA-256:9941f993ff84d1c606b45ffbeeb7bcdc5a72cf24e787bb9230390510fe3511c6",
+              "size": "88699953"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-macos.tar.gz",
-              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-macos.tar.gz",
-              "checksum": "SHA-256:35b1aef85b7e6b4268774f627e8e835d087bcf8b9972cfb6436614aa2e40d4a9",
-              "size": "158594401"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-macos.tar.gz",
+              "checksum": "SHA-256:4b55b1a9ca7fc945be6fc3513802b6cece9264bee4cbca76013569cec2695973",
+              "size": "93757895"
             },
             {
-              "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-amd64.tar.gz",
-              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-amd64.tar.gz",
-              "checksum": "SHA-256:425454c5c4e2cde5dd2dd3a1d398befc70addf71547840fb6d0ec4b307b08894",
-              "size": "152042971"
-            },
-            {
-              "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/arduino-esp32/releases/download/1.0.6/riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-armel.tar.gz",
-              "archiveFileName": "riscv32-esp-elf-gcc8_4_0-crosstool-ng-1.24.0-123-g64eb9ff-linux-armel.tar.gz",
-              "checksum": "SHA-256:8ae098751b5196ca8a80d832cc9930bc4d639762a6cb22be3cfe0a8d71b2f230",
-              "size": "150801079"
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2021r1/xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc8_4_0-esp-2021r1-win32.zip",
+              "checksum": "SHA-256:c94ec1e45c81b7e4944d216bab4aa41d46849768d7761fd691661dab1a3df828",
+              "size": "106013515"
             }
           ]
         },
@@ -235,26 +237,6 @@
               "size": "80550"
             }
           ]
-        },
-        {
-           "version": "0.3.6",
-           "name": "mkfatfs",
-           "systems": [
-              {
-                 "host": "i686-pc-linux-gnu",
-                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.tar.gz",
-                 "archiveFileName": "mkfatfs.tar.gz",
-                 "checksum": "SHA-256:41dc0346a38d6aab5674d4301937868e69471b69d8317ed667d2eeb7c4a077ee",
-                 "size": "102575"
-              },
-              {
-                 "host": "i686-mingw32",
-                 "url": "https://github.com/lorol/arduino-esp32fatfs-plugin/raw/master/extra/mkfatfs.zip",
-                 "archiveFileName": "mkfatfs.zip",
-                 "checksum": "SHA-256:966f378da8bba524197d7d8a919e93b21b4680ead03ae69cac8bb56f8ec864a6",
-                 "size": "612169"
-              }
-           ]
         },
         {
            "version": "3.0.0-gnu12-dc7f933",

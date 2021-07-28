@@ -32,9 +32,11 @@
 #define TUSB_VERSION_REVISION  1
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
-/** \defgroup group_mcu Supported MCU
- * \ref CFG_TUSB_MCU must be defined to one of these
- *  @{ */
+//--------------------------------------------------------------------+
+// Supported MCUs
+// CFG_TUSB_MCU must be defined to one of following value
+//--------------------------------------------------------------------+
+#define TU_CHECK_MCU(_m)            (CFG_TUSB_MCU == OPT_MCU_##_m)
 
 #define OPT_MCU_NONE                0
 
@@ -61,6 +63,8 @@
 #define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 #define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
 #define OPT_MCU_SAML22            205 ///< MicroChip SAML22
+#define OPT_MCU_SAML21            206 ///< MicroChip SAML21
+#define OPT_MCU_SAMX7X            207 ///< MicroChip SAME70, S70, V70, V71 family
 
 // STM32
 #define OPT_MCU_STM32F0           300 ///< ST STM32F0
@@ -112,22 +116,21 @@
 
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
+#define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
 
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
 
-/** @} */
+//--------------------------------------------------------------------+
+// Supported OS
+//--------------------------------------------------------------------+
 
-/** \defgroup group_supported_os Supported RTOS
- *  \ref CFG_TUSB_OS must be defined to one of these
- *  @{ */
 #define OPT_OS_NONE       1  ///< No RTOS
 #define OPT_OS_FREERTOS   2  ///< FreeRTOS
 #define OPT_OS_MYNEWT     3  ///< Mynewt OS
 #define OPT_OS_CUSTOM     4  ///< Custom OS is implemented by application
 #define OPT_OS_PICO       5  ///< Raspberry Pi Pico SDK
 #define OPT_OS_RTTHREAD   6  ///< RT-Thread
-/** @} */
 
 // Allow to use command line to change the config name/location
 #ifdef CFG_TUSB_CONFIG_FILE
@@ -135,10 +138,6 @@
 #else
   #include "tusb_config.h"
 #endif
-
-/** \addtogroup group_configuration
- *  @{ */
-
 
 //--------------------------------------------------------------------
 // RootHub Mode Configuration
@@ -247,12 +246,8 @@
   #define CFG_TUD_DFU_RUNTIME     0
 #endif
 
-#ifndef CFG_TUD_DFU_MODE
-  #define CFG_TUD_DFU_MODE        0
-#endif
-
-#ifndef CFG_TUD_DFU_TRANSFER_BUFFER_SIZE
-  #define CFG_TUD_DFU_TRANSFER_BUFFER_SIZE  64
+#ifndef CFG_TUD_DFU
+  #define CFG_TUD_DFU             0
 #endif
 
 #ifndef CFG_TUD_NET
@@ -274,23 +269,22 @@
 
   //------------- HUB CLASS -------------//
   #if CFG_TUH_HUB && (CFG_TUSB_HOST_DEVICE_MAX == 1)
-    #error there is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
+    #error There is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
   #endif
 
-  #ifndef CFG_TUH_ENUMERATION_BUFSZIE
-    #define CFG_TUH_ENUMERATION_BUFSZIE 256
+  #ifndef CFG_TUH_ENUMERATION_BUFSIZE
+    #define CFG_TUH_ENUMERATION_BUFSIZE 256
   #endif
 
   //------------- CLASS -------------//
 #endif // TUSB_OPT_HOST_ENABLED
 
 //--------------------------------------------------------------------+
-// Port Options
-// TUP for TinyUSB Port (can be renamed)
+// Port Specific
+// TUP stand for TinyUSB Port (can be renamed)
 //--------------------------------------------------------------------+
 
-// TUP_ARCH_STRICT_ALIGN if arch cannot access unaligned memory
-
+//------------- Unaligned Memory -------------//
 
 // ARMv7+ (M3-M7, M23-M33) can access unaligned memory
 #if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7))
@@ -308,6 +302,7 @@
 #else
   #define TUP_MCU_STRICT_ALIGN   0
 #endif
+
 
 //------------------------------------------------------------------
 // Configuration Validation
