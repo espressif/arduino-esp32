@@ -74,6 +74,8 @@ set(LIBRARY_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/USB/src/USBMSC.cpp
+  libraries/USB/src/FirmwareMSC.cpp
+  libraries/USB/src/firmware_msc_fat.c
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
