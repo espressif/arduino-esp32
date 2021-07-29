@@ -259,7 +259,7 @@ static tinyusb_endpoints_usage_t tinyusb_endpoints;
 /**
  * @brief Invoked when received GET CONFIGURATION DESCRIPTOR.
  */
-uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
+__attribute__ ((weak)) uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 {
     //log_d("%u", index);
     return tinyusb_config_descriptor;
@@ -268,7 +268,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 /**
  * @brief Invoked when received GET DEVICE DESCRIPTOR.
  */
-uint8_t const *tud_descriptor_device_cb(void)
+__attribute__ ((weak)) uint8_t const *tud_descriptor_device_cb(void)
 {
     //log_d("");
     return (uint8_t const *)&tinyusb_device_descriptor;
@@ -277,7 +277,7 @@ uint8_t const *tud_descriptor_device_cb(void)
 /**
  * @brief Invoked when received GET STRING DESCRIPTOR request.
  */
-uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
+__attribute__ ((weak)) uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
     //log_d("%u (0x%x)", index, langid);
     static uint16_t _desc_str[127];
