@@ -52,6 +52,8 @@
   #define TU_VERIFY_STATIC   _Static_assert
 #elif defined (__cplusplus) && __cplusplus >= 201103L
   #define TU_VERIFY_STATIC   static_assert
+#elif defined(__CCRX__)
+  #define TU_VERIFY_STATIC(const_expr, _mess) typedef char TU_XSTRCAT(Line, __LINE__)[(const_expr) ? 1 : 0];
 #else
   #define TU_VERIFY_STATIC(const_expr, _mess) enum { TU_XSTRCAT(_verify_static_, _TU_COUNTER_) = 1/(!!(const_expr)) }
 #endif
@@ -77,6 +79,11 @@
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
 
+  #define TU_ATTR_PACKED_BEGIN
+  #define TU_ATTR_PACKED_END
+  #define TU_ATTR_BIT_FIELD_ORDER_BEGIN
+  #define TU_ATTR_BIT_FIELD_ORDER_END
+
   // Endian conversion use well-known host to network (big endian) naming
   #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
@@ -101,6 +108,11 @@
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))
 
+  #define TU_ATTR_PACKED_BEGIN
+  #define TU_ATTR_PACKED_END
+  #define TU_ATTR_BIT_FIELD_ORDER_BEGIN
+  #define TU_ATTR_BIT_FIELD_ORDER_END
+
   // __BYTE_ORDER is defined in the TI ARM compiler, but not MSP430 (which is little endian)
   #if ((__BYTE_ORDER__) == (__ORDER_LITTLE_ENDIAN__)) || defined(__MSP430__)
     #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
@@ -122,6 +134,11 @@
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
 
+  #define TU_ATTR_PACKED_BEGIN
+  #define TU_ATTR_PACKED_END
+  #define TU_ATTR_BIT_FIELD_ORDER_BEGIN
+  #define TU_ATTR_BIT_FIELD_ORDER_END
+
   // Endian conversion use well-known host to network (big endian) naming
   #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
@@ -131,6 +148,32 @@
 
   #define TU_BSWAP16(u16) (__iar_builtin_REV16(u16))
   #define TU_BSWAP32(u32) (__iar_builtin_REV(u32))
+
+#elif defined(__CCRX__)
+  #define TU_ATTR_ALIGNED(Bytes)
+  #define TU_ATTR_SECTION(sec_name)
+  #define TU_ATTR_PACKED
+  #define TU_ATTR_WEAK
+  #define TU_ATTR_ALWAYS_INLINE
+  #define TU_ATTR_DEPRECATED(mess)
+  #define TU_ATTR_UNUSED
+  #define TU_ATTR_USED
+
+  #define TU_ATTR_PACKED_BEGIN          _Pragma("pack")
+  #define TU_ATTR_PACKED_END            _Pragma("packoption")
+  #define TU_ATTR_BIT_FIELD_ORDER_BEGIN _Pragma("bit_order right")
+  #define TU_ATTR_BIT_FIELD_ORDER_END   _Pragma("bit_order")
+
+  // Endian conversion use well-known host to network (big endian) naming
+  #if defined(__LIT)
+    #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
+  #else
+    #define TU_BYTE_ORDER TU_BIG_ENDIAN
+  #endif
+
+  #define TU_BSWAP16(u16) ((unsigned short)_builtin_revw((unsigned long)u16))
+  #define TU_BSWAP32(u32) (_builtin_revl(u32))
+
 #else 
   #error "Compiler attribute porting is required"
 #endif
@@ -157,11 +200,11 @@
   #define tu_htonl(u32)  (u32)
   #define tu_ntohl(u32)  (u32)
 
-  #define tu_htole16(u16) (tu_bswap16(u16))
-  #define tu_le16toh(u16) (tu_bswap16(u16))
+  #define tu_htole16(u16) (TU_BSWAP16(u16))
+  #define tu_le16toh(u16) (TU_BSWAP16(u16))
 
-  #define tu_htole32(u32) (tu_bswap32(u32))
-  #define tu_le32toh(u32) (tu_bswap32(u32))
+  #define tu_htole32(u32) (TU_BSWAP32(u32))
+  #define tu_le32toh(u32) (TU_BSWAP32(u32))
 
 #else
   #error Byte order is undefined

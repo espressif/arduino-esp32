@@ -141,11 +141,11 @@
   #define DCD_ATTR_ENDPOINT_MAX   7
 
 //------------- Renesas -------------//
-#elif TU_CHECK_MCU(RX63X) || TU_CHECK_MCU(RX65X)
+#elif TU_CHECK_MCU(RX63X) || TU_CHECK_MCU(RX65X) || TU_CHECK_MCU(RX72N)
   #define DCD_ATTR_ENDPOINT_MAX   10
 
 //#elif TU_CHECK_MCU(MM32F327X)
-//  #define DCD_ATTR_ENDPOINT_MAX not knwon yet
+//  #define DCD_ATTR_ENDPOINT_MAX not known yet
 
 #else
   #warning "DCD_ATTR_ENDPOINT_MAX is not defined for this MCU, default to 8"
