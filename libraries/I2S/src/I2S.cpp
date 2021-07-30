@@ -21,9 +21,11 @@
 #include "I2S.h"
 #include "freertos/semphr.h"
 
-#define _I2S_EVENT_QUEUE_LENGTH 100
-#define _I2S_DMA_BUFFER_SIZE 512 // BUFFER SIZE must be between 8 and 1024
-#define _I2S_DMA_BUFFER_COUNT 8 // BUFFER COUNT must be between 2 and 128
+#define _I2S_EVENT_QUEUE_LENGTH 64
+#define _I2S_DMA_BUFFER_SIZE 512 // BUFFER SIZE must be between 200 and 1024
+// (Theoretically it should be above 8, but for some reason sizes below 200 results in frozen callback task)
+
+#define _I2S_DMA_BUFFER_COUNT 4 // BUFFER COUNT must be between 2 and 128
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
 
 #ifndef I2S_DEVICE
@@ -36,11 +38,11 @@
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
-  _sdPin(sdPin),    // shared data pin
-  _inSdPin(-1),  // input data pin
-  _outSdPin(-1), // output data pin
-  _sckPin(sckPin),  // clock pin
-  _fsPin(fsPin),    // frame (word) select pin
+  _sdPin(sdPin),   // shared data pin
+  _inSdPin(-1),    // input data pin
+  _outSdPin(-1),   // output data pin
+  _sckPin(sckPin), // clock pin
+  _fsPin(fsPin),   // frame (word) select pin
 
   _state(I2S_STATE_IDLE),
   _bitsPerSample(0),
@@ -48,18 +50,16 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _mode(I2S_PHILIPS_MODE),
 
   _buffer_byte_size(0),
-  _output_buffer_pointer(0),
   _input_buffer_pointer(0),
   _read_available(0),
   _in_buf_semaphore(NULL),
-  _out_buf_semaphore(NULL),
   _inputBuffer(NULL),
-  _outputBuffer(NULL),
 
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
   _task_kill_cmd_semaphore_handle(NULL),
+  _output_ring_buffer(NULL),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -68,11 +68,11 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin, uint8_t outSdPin, uint8_t sckPin, uint8_t fsPin) : // set duplex
   _deviceIndex(deviceIndex),
-  _sdPin(inSdPin),    // shared data pin
-  _inSdPin(inSdPin),  // input data pin
+  _sdPin(inSdPin),     // shared data pin
+  _inSdPin(inSdPin),   // input data pin
   _outSdPin(outSdPin), // output data pin
-  _sckPin(sckPin), // clock pin
-  _fsPin(fsPin),   // frame (word) select pin
+  _sckPin(sckPin),     // clock pin
+  _fsPin(fsPin),       // frame (word) select pin
 
   _state(I2S_STATE_DUPLEX),
   _bitsPerSample(0),
@@ -80,18 +80,16 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
   _mode(I2S_PHILIPS_MODE),
 
   _buffer_byte_size(0),
-  _output_buffer_pointer(0),
   _input_buffer_pointer(0),
   _read_available(0),
   _in_buf_semaphore(NULL),
-  _out_buf_semaphore(NULL),
   _inputBuffer(NULL),
-  _outputBuffer(NULL),
 
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
   _task_kill_cmd_semaphore_handle(NULL),
+  _output_ring_buffer(NULL),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -131,9 +129,9 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample)
 
 int I2SClass::begin(int mode, int bitsPerSample)
 {
-  Serial.println("ERROR I2SClass::begin Audio in Slave mode is not implemented for ESP");
-  Serial.println("Note: If it is NOT your intention to initialize in slave mode, you are probably missing <sampleRate> parameter - see the declaration below");
-  Serial.println("\tint I2SClass::begin(int mode, long sampleRate, int bitsPerSample)");
+  log_e("ERROR I2SClass::begin Audio in Slave mode is not implemented for ESP\n\
+         Note: If it is NOT your intention to initialize in slave mode, you are probably missing <sampleRate> parameter - see the declaration below\
+         \tint I2SClass::begin(int mode, long sampleRate, int bitsPerSample)");
   return 0; // ERR
   // slave mode (not driving clock and frame select pin - input)
   //return begin(mode, 0, bitsPerSample, false);
@@ -184,7 +182,7 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
   }else{ // End of ADC/DAC mode; start of Normal mode
     if(_bitsPerSample != 16 && /*_bitsPerSample != 24 && */ _bitsPerSample != 32){
-      Serial.println("I2S.begin(): invalid bits per second for normal mode");
+      log_e("I2S.begin(): invalid bits per second for normal mode");
       // ESP does support 24 bps, however for the compatibility
       // with original Arduino implementation it is not allowed
       return 0; // ERR
@@ -216,24 +214,19 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
   };
 
 
-  _buffer_byte_size = _I2S_DMA_BUFFER_SIZE * (_bitsPerSample / 8);
+  _buffer_byte_size = _I2S_DMA_BUFFER_SIZE * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
   _inputBuffer = malloc(_buffer_byte_size);
-  _outputBuffer = malloc(_buffer_byte_size);
-  _output_buffer_pointer = 0;
+  //_output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_ALLOWSPLIT);
+  _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _input_buffer_pointer = 0;
-  if(_inputBuffer == NULL || _outputBuffer == NULL){
+  if(_inputBuffer == NULL){
     return 0; // ERR
   }
   _in_buf_semaphore = xSemaphoreCreateMutex();
-  _out_buf_semaphore = xSemaphoreCreateMutex();
-  //_in_buf_semaphore = xSemaphoreCreateBinary();
-  //_out_buf_semaphore = xSemaphoreCreateBinary();
 
-  if(_in_buf_semaphore == NULL || _out_buf_semaphore == NULL){
+  if(_in_buf_semaphore == NULL){
     return 0; // ERR
   }
-  //xSemaphoreGive(_in_buf_semaphore);
-  //xSemaphoreGive(_out_buf_semaphore);
 
   if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
     return 0; // ERR
@@ -245,7 +238,7 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
     esp_i2s::i2s_set_adc_mode(adc_unit, adc_channel);
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
-      Serial.println("i2s_set_pin err");
+      log_e("i2s_set_pin err");
       return 0; // ERR
     }
 
@@ -254,11 +247,12 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
   }else{ // End of ADC/DAC mode; start of Normal mode
     if (ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)) {
-      Serial.println("i2s_set_pin err");
+      log_e("i2s_set_pin err");
       end();
       return 0; // ERR
     }
   }
+
   createCallbackTask();
   _initialized = true;
 
@@ -370,19 +364,14 @@ void I2SClass::end()
     _onTransmit = NULL;
     _onReceive  = NULL;
     free(_inputBuffer);
-    free(_outputBuffer);
     _inputBuffer = NULL;
-    _outputBuffer = NULL;
     _buffer_byte_size = 0;
-    _output_buffer_pointer = 0;
     _input_buffer_pointer  = 0;
     vSemaphoreDelete(_in_buf_semaphore);
-    vSemaphoreDelete(_out_buf_semaphore);
     _in_buf_semaphore = NULL;
-    _out_buf_semaphore = NULL;
-
+    vRingbufferDelete(_output_ring_buffer);
   }else{
-    // TODO log_e with error - destroy task from inside not permitted
+    log_w("WARNING: ending I2SClass from callback task not permitted, but attempted!")
   }
 }
 
@@ -402,7 +391,6 @@ int I2SClass::read()
 {
   i2s_sample_t sample;
   sample.b32 = 0;
-  //int bytes_read = read(&sample, _bitsPerSample / 8);
   read(&sample, _bitsPerSample / 8);
 
   if (_bitsPerSample == 32) {
@@ -425,8 +413,6 @@ int I2SClass::read(void* buffer, size_t size){
   }
   size_t cpy_size = 0;
 
-  //esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, buffer, size, (size_t*) &read, 0);
-  //if(_in_buf_semaphore != NULL && xSemaphoreTake(_in_buf_semaphore, portMAX_DELAY) == pdTRUE){
   if(_in_buf_semaphore != NULL && xSemaphoreTake(_in_buf_semaphore, 10) == pdTRUE){
     cpy_size = size <= _read_available ? size : _read_available;
     memcpy(buffer, (void*)((uint)_inputBuffer+_input_buffer_pointer), cpy_size);
@@ -461,19 +447,11 @@ size_t I2SClass::write(const void *buffer, size_t size)
       return 0; // There was an error switching to transmitter
     }
   }
-  size_t bytes_written;
-  //esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buffer, size, &bytes_written, 0);
-  if(_out_buf_semaphore != NULL && xSemaphoreTake(_out_buf_semaphore, portMAX_DELAY) == pdTRUE){
-    size_t cpy_size = size <= _buffer_byte_size - _output_buffer_pointer ? size : _buffer_byte_size - _output_buffer_pointer;
-    memcpy((void*)((uint)_outputBuffer+_output_buffer_pointer), buffer, cpy_size);
-    _output_buffer_pointer = (_output_buffer_pointer + cpy_size) > _buffer_byte_size ? _output_buffer_pointer : _output_buffer_pointer + cpy_size;
-    if(_output_buffer_pointer == _buffer_byte_size){ // when full flush it
-      esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, _outputBuffer, _output_buffer_pointer, &bytes_written, 0);
-      _output_buffer_pointer = 0;
-    }
-    xSemaphoreGive(_out_buf_semaphore);
+  if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
+    return size;
+  }else{
+    return 0;
   }
-  return bytes_written;
 }
 
 int I2SClass::peek()
@@ -500,7 +478,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size)
 
 int I2SClass::availableForWrite()
 {
-  return _buffer_byte_size - _output_buffer_pointer;
+  return (int)xRingbufferGetCurFreeSize(_output_ring_buffer);
 }
 
 void I2SClass::onTransmit(void(*function)(void))
@@ -559,6 +537,13 @@ void I2SClass::onTransferComplete()
   static QueueSetHandle_t xQueueSet;
   QueueSetMemberHandle_t xActivatedMember;
   esp_i2s::i2s_event_type_t i2s_event;
+  size_t item_size = 0;
+  size_t prev_item_size = 0;
+  void *item = NULL;
+  bool prev_item_valid = false;
+  size_t bytes_written;
+  int prev_item_offset = 0;
+  uint8_t prev_item[_I2S_DMA_BUFFER_SIZE];
 
   xQueueSet = xQueueCreateSet(sizeof(i2s_event)*_I2S_EVENT_QUEUE_LENGTH + 1);
   configASSERT(xQueueSet);
@@ -573,15 +558,33 @@ void I2SClass::onTransferComplete()
     }else if(xActivatedMember == _i2sEventQueue){
       xQueueReceive(_i2sEventQueue, &i2s_event, 0);
       if(i2s_event == esp_i2s::I2S_EVENT_TX_DONE){
-        size_t bytes_written;
-        if(_out_buf_semaphore != NULL && xSemaphoreTake(_out_buf_semaphore, portMAX_DELAY) == pdTRUE){
-          esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, _outputBuffer, _output_buffer_pointer, &bytes_written, 0);
-          _output_buffer_pointer = 0;
-          if(xSemaphoreGive(_out_buf_semaphore) != pdTRUE){
-            // We would not expect this call to fail because we must have
-            // obtained the semaphore to get here.
-          } // semaphore give
-        } // output buffer semaphore
+        do{ // send to esp i2s driver loop
+          prev_item_valid = false;
+          if(prev_item && prev_item_valid){ // use item from previous round
+            esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, prev_item+prev_item_offset, prev_item_size, &bytes_written, 0);
+            if(prev_item_size != bytes_written){
+              prev_item_offset = bytes_written;
+              prev_item_valid = true;
+            }
+              prev_item_size -= bytes_written;
+          }else{ // load new item from ring buffer
+            item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), _I2S_DMA_BUFFER_SIZE);
+            if (item != NULL){
+              esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, item, item_size, &bytes_written, 0);
+              if(item_size != bytes_written){
+                memcpy(prev_item, item+bytes_written, item_size-bytes_written);
+                prev_item_size = item_size - bytes_written;
+                prev_item_offset = 0;
+                prev_item_valid = true;
+              }
+              vRingbufferReturnItem(_output_ring_buffer, item);
+              //Failed to receive item
+            } // Check received item
+          } // old or new item
+          if(item_size != bytes_written){
+            log_w("i2s_write could not write requested amount: requested=%d; written=%d\n", item_size, bytes_written);
+          }
+        }while((item_size == bytes_written && item_size ==  _I2S_DMA_BUFFER_SIZE) || prev_item_size == bytes_written);
         if(_onTransmit){
           _onTransmit();
         } // user callback
@@ -606,7 +609,6 @@ void I2SClass::onTransferComplete()
 
 void I2SClass::onDmaTransferComplete(void*)
 {
-
   I2S.onTransferComplete();
 }
 
