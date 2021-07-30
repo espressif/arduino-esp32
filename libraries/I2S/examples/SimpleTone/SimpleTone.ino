@@ -38,15 +38,17 @@ void setup() {
 }
 
 void loop() {
-  if (count % halfWavelength == 0) {
-    // invert the sample every half wavelength count multiple to generate square wave
-    sample = -1 * sample;
+  if(I2S.availableForWrite() >= 2){
+    if (count % halfWavelength == 0 ) {
+      // invert the sample every half wavelength count multiple to generate square wave
+      sample = -1 * sample;
+    }
+
+    // write the same sample twice, once for left and once for the right channel
+    I2S.write(sample);
+    I2S.write(sample);
+
+    // increment the counter for the next sample
+    count++;
   }
-
-  // write the same sample twice, once for left and once for the right channel
-  I2S.write(sample);
-  I2S.write(sample);
-
-  // increment the counter for the next sample
-  count++;
 }
