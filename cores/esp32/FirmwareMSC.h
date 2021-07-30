@@ -60,4 +60,9 @@ public:
   void onEvent(esp_event_handler_t callback);
   void onEvent(arduino_firmware_msc_event_t event, esp_event_handler_t callback);
 };
+
+#if ARDUINO_USB_MSC_ON_BOOT
+extern FirmwareMSC MSC_Update;
+#endif
+
 #endif /* CONFIG_TINYUSB_MSC_ENABLED */

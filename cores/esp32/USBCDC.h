@@ -129,7 +129,7 @@ protected:
     
 };
 
-#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 extern USBCDC Serial;
 #endif
 

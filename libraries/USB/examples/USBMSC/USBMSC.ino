@@ -1,7 +1,7 @@
 #include "USB.h"
 #include "USBMSC.h"
 
-#if ARDUINO_SERIAL_PORT
+#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
 #define USBSerial Serial
 #else
@@ -183,9 +183,11 @@ void setup() {
   MSC.onWrite(onWrite);
   MSC.mediaPresent(true);
   MSC.begin(DISK_SECTOR_COUNT, DISK_SECTOR_SIZE);
-#if !ARDUINO_SERIAL_PORT
-  USBSerial.begin();
-  USB.begin();
+#if !ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+    USBSerial.begin();
+#endif
+#if !ARDUINO_USB_ON_BOOT
+    USB.begin();
 #endif
 }
 

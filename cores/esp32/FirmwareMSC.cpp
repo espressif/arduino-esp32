@@ -350,4 +350,8 @@ void FirmwareMSC::onEvent(arduino_firmware_msc_event_t event, esp_event_handler_
     arduino_usb_event_handler_register_with(ARDUINO_FIRMWARE_MSC_EVENTS, event, callback, this);
 }
 
+#if ARDUINO_USB_MSC_ON_BOOT
+FirmwareMSC MSC_Update;
+#endif
+
 #endif /* CONFIG_USB_MSC_ENABLED */

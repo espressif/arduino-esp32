@@ -1,9 +1,11 @@
 #include "USB.h"
 #include "FirmwareMSC.h"
 
+#if !ARDUINO_USB_MSC_ON_BOOT
 FirmwareMSC MSC_Update;
+#endif
 
-#if ARDUINO_SERIAL_PORT
+#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
 #define USBSerial Serial
 #else
@@ -63,10 +65,14 @@ void setup() {
 
   USB.onEvent(usbEventCallback);
   MSC_Update.onEvent(usbEventCallback);
-  MSC_Update.begin();
-#if !ARDUINO_SERIAL_PORT
-  USBSerial.begin();
-  USB.begin();
+#if !ARDUINO_USB_MSC_ON_BOOT //Provide Firmware MSC
+    MSC_Update.begin();
+#endif
+#if !ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+    USBSerial.begin();
+#endif
+#if !ARDUINO_USB_ON_BOOT
+    USB.begin();
 #endif
 }
 

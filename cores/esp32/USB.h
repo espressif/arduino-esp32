@@ -21,6 +21,8 @@
 #include "common/tusb_common.h"
 #include "esp_event.h"
 
+#define ARDUINO_USB_ON_BOOT (ARDUINO_USB_CDC_ON_BOOT|ARDUINO_USB_MSC_ON_BOOT|ARDUINO_USB_DFU_ON_BOOT)
+
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_EVENTS);
 
 typedef enum {
