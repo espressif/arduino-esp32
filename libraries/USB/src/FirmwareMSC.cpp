@@ -107,7 +107,7 @@ static void msc_update_setup_disk(const char * volume_label, uint32_t serial_num
   msc_table = fat_add_table(msc_ram_disk, msc_boot, mcs_is_fat16);
   //fat_dir_entry_t * label = fat_add_label(msc_ram_disk, volume_label);
   if(msc_run_partition){
-    fw_entry = fat_add_root_file(msc_ram_disk, 0, "ACTIVEFW", "BIN", fw_size, 2, mcs_is_fat16);
+    fw_entry = fat_add_root_file(msc_ram_disk, 0, "FIRMWARE", "BIN", fw_size, 2, mcs_is_fat16);
     fw_end_sector = FAT_SIZE_TO_SECTORS(fw_size) + fw_start_sector;
   }
 }
@@ -117,10 +117,6 @@ static fat_dir_entry_t * msc_update_get_root_bin_entry(uint8_t index){
   fat_dir_entry_t * entry = (fat_dir_entry_t *)(msc_ram_disk + ((msc_boot->sectors_per_alloc_table+1) * DISK_SECTOR_SIZE) + (index * sizeof(fat_dir_entry_t)));
   fat_lfn_entry_t * lfn = (fat_lfn_entry_t*)entry;
 
-  //fw read entry
-  if(entry == fw_entry){
-    return NULL;
-  }
   //empty entry
   if(entry->file_magic == 0){
     return NULL;
@@ -146,9 +142,22 @@ static fat_dir_entry_t * msc_update_get_root_bin_entry(uint8_t index){
 
 //get an empty bin (the host will add an entry for file about to be written with size of zero)
 static fat_dir_entry_t * msc_update_find_new_bin(){
-  for(uint8_t i=15; i; i--){
+  for(uint8_t i=16; i;){
+    i--;
     fat_dir_entry_t * entry = msc_update_get_root_bin_entry(i);
     if(entry && entry->file_size == 0){
+      return entry;
+    }
+  }
+  return NULL;
+}
+
+//get a bin starting from particular sector
+static fat_dir_entry_t * msc_update_find_bin(uint16_t sector){
+  for(uint8_t i=16; i; ){
+    i--;
+    fat_dir_entry_t * entry = msc_update_get_root_bin_entry(i);
+    if(entry && entry->data_start_sector == (sector - msc_boot->sectors_per_alloc_table)){
       return entry;
     }
   }
@@ -222,13 +231,16 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_
           }
           msc_update_entry = update_entry;
         } else if(msc_update_state == MSC_UPDATE_RUNNING){
+          if(!msc_update_entry && msc_update_start_sector){
+            msc_update_entry = msc_update_find_bin(msc_update_start_sector);
+          }
           if(msc_update_entry && msc_update_bytes_written >= msc_update_entry->file_size){
             msc_update_end();
           }
         }
       }
     }
-  } else if(lba >= fw_end_sector && lba >= msc_update_start_sector){
+  } else if(lba >= msc_update_start_sector){
     //handle writes to the region where the new firmware will be uploaded
     arduino_firmware_msc_event_data_t p = {0};
     if(msc_update_state <= MSC_UPDATE_STARTING && buffer[0] == 0xE9){
@@ -312,7 +324,7 @@ FirmwareMSC::FirmwareMSC():msc(){}
 FirmwareMSC::~FirmwareMSC(){}
 
 bool FirmwareMSC::begin(){
-  msc_update_setup_disk("ESP32S2-FW", 0x0);
+  msc_update_setup_disk("ESP32-FWMSC", 0x0);
   msc.vendorID("ESP32S2");//max 8 chars
   msc.productID("Firmware MSC");//max 16 chars
   msc.productRevision("1.0");//max 4 chars
