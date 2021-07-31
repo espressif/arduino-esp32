@@ -73,11 +73,15 @@ static size_t msc_update_get_required_disk_sectors(){
   if(msc_run_partition){
     fw_size = get_firmware_size(msc_run_partition);
     data_sectors += FAT_SIZE_TO_SECTORS(fw_size);
-    log_d("running size: %u (%u:%u)", fw_size, fw_size / DISK_SECTOR_SIZE, fw_size % DISK_SECTOR_SIZE);
+    log_d("APP size: %u (%u sectors)", fw_size, FAT_SIZE_TO_SECTORS(fw_size));
+  } else {
+    log_w("APP partition not found. Reading disabled");
   }
   if(msc_ota_partition){
     data_sectors += FAT_SIZE_TO_SECTORS(msc_ota_partition->size);
-    log_d("ota size: %u (%u:%u)", msc_ota_partition->size, msc_ota_partition->size / DISK_SECTOR_SIZE, msc_ota_partition->size % DISK_SECTOR_SIZE);
+    log_d("OTA size: %u (%u sectors)", msc_ota_partition->size, FAT_SIZE_TO_SECTORS(msc_ota_partition->size));
+  } else {
+    log_w("OTA partition not found. Writing disabled");
   }
   msc_table_sectors = fat_sectors_per_alloc_table(data_sectors, false);
   total_sectors = data_sectors + msc_table_sectors + 2;
@@ -91,16 +95,21 @@ static size_t msc_update_get_required_disk_sectors(){
     log_d("USING FAT12");
     mcs_is_fat16 = false;
   }
-  log_d("data sectors: %u", data_sectors);
-  log_d("table sectors: %u", msc_table_sectors);
+  log_d("FAT data sectors: %u", data_sectors);
+  log_d("FAT table sectors: %u", msc_table_sectors);
+  log_d("FAT total sectors: %u (%uKB)", total_sectors, (total_sectors * DISK_SECTOR_SIZE) / 1024);
   return total_sectors;
 }
 
 //setup the ramdisk and add the firmware download file
-static void msc_update_setup_disk(const char * volume_label, uint32_t serial_number){
+static bool msc_update_setup_disk(const char * volume_label, uint32_t serial_number){
   msc_total_sectors = msc_update_get_required_disk_sectors();
   uint8_t ram_sectors = msc_table_sectors + 2;
   msc_ram_disk = (uint8_t*)calloc(ram_sectors, DISK_SECTOR_SIZE);
+  if(!msc_ram_disk){
+    log_e("Failed to allocate RAM Disk: %u bytes", ram_sectors * DISK_SECTOR_SIZE);
+    return false;
+  }
   fw_start_sector = ram_sectors;
   fw_end_sector = fw_start_sector;
   msc_boot = fat_add_boot_sector(msc_ram_disk, msc_total_sectors, msc_table_sectors, fat_file_system_type(mcs_is_fat16), volume_label, serial_number);
@@ -110,6 +119,7 @@ static void msc_update_setup_disk(const char * volume_label, uint32_t serial_num
     fw_entry = fat_add_root_file(msc_ram_disk, 0, "FIRMWARE", "BIN", fw_size, 2, mcs_is_fat16);
     fw_end_sector = FAT_SIZE_TO_SECTORS(fw_size) + fw_start_sector;
   }
+  return true;
 }
 
 //filter out entries to only include BINs in the root folder
@@ -169,7 +179,7 @@ static esp_err_t msc_update_write(const esp_partition_t *partition, uint32_t off
   esp_err_t err = ESP_OK;
   if((offset & (SPI_FLASH_SEC_SIZE-1)) == 0){
     err = esp_partition_erase_range(partition, offset, SPI_FLASH_SEC_SIZE);
-    //log_i("ERASE[0x%08X]: %s", offset, (err != ESP_OK)?"FAIL":"OK");
+    log_v("ERASE[0x%08X]: %s", offset, (err != ESP_OK)?"FAIL":"OK");
     if(err != ESP_OK){
       return err;
     }
@@ -179,7 +189,7 @@ static esp_err_t msc_update_write(const esp_partition_t *partition, uint32_t off
 
 //called when error was encountered while updating
 static void msc_update_error(){
-  //log_e("UPDATE_ERROR: %u", msc_update_bytes_written);
+  log_e("UPDATE_ERROR: %u", msc_update_bytes_written);
   arduino_firmware_msc_event_data_t p = {0};
   p.error.size = msc_update_bytes_written;
   arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_ERROR_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
@@ -191,7 +201,7 @@ static void msc_update_error(){
 
 //called when all firmware bytes have been received
 static void msc_update_end(){
-  log_v("UPDATE_END: %u (%u)", msc_update_entry->file_size, msc_update_bytes_written - msc_update_entry->file_size);
+  log_d("UPDATE_END: %u", msc_update_entry->file_size);
   msc_update_state = MSC_UPDATE_END;
   size_t ota_size = get_firmware_size(msc_ota_partition);
   if(ota_size != msc_update_entry->file_size){
@@ -214,7 +224,7 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_
   if(lba < fw_start_sector){
     //write to sectors that are in RAM
     memcpy(msc_ram_disk + (lba * DISK_SECTOR_SIZE) + offset, buffer, bufsize);
-    if(lba == (fw_start_sector - 1)){
+    if(msc_ota_partition && lba == (fw_start_sector - 1)){
       //monitor the root folder table
       if(msc_update_state <= MSC_UPDATE_RUNNING){
         fat_dir_entry_t * update_entry = msc_update_find_new_bin();
@@ -240,14 +250,14 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_
         }
       }
     }
-  } else if(lba >= msc_update_start_sector){
+  } else if(msc_ota_partition && lba >= msc_update_start_sector){
     //handle writes to the region where the new firmware will be uploaded
     arduino_firmware_msc_event_data_t p = {0};
     if(msc_update_state <= MSC_UPDATE_STARTING && buffer[0] == 0xE9){
       msc_update_state = MSC_UPDATE_RUNNING;
       msc_update_start_sector = lba;
       msc_update_bytes_written = 0;
-      log_v("UPDATE_START: %u (0x%02X)", lba, lba - msc_boot->sectors_per_alloc_table);
+      log_d("UPDATE_START: %u (0x%02X)", lba, lba - msc_boot->sectors_per_alloc_table);
       arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_START_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
       if(msc_update_write(msc_ota_partition, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) == ESP_OK){
         log_v("UPDATE_WRITE: %u %u", ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, bufsize);
@@ -285,9 +295,9 @@ static int32_t msc_read(uint32_t lba, uint32_t offset, void* buffer, uint32_t bu
   //log_d("lba: %u, offset: %u, bufsize: %u", lba, offset, bufsize);
   if(lba < fw_start_sector){
     memcpy(buffer, msc_ram_disk + (lba * DISK_SECTOR_SIZE) + offset, bufsize);
-  } else if(lba < fw_end_sector){
+  } else if(msc_run_partition && lba < fw_end_sector){
     //read the currently running firmware
-    if(!msc_run_partition || esp_partition_read(msc_run_partition, ((lba - fw_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) != ESP_OK){
+    if(esp_partition_read(msc_run_partition, ((lba - fw_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) != ESP_OK){
       return 0;
     }
   } else {
@@ -324,7 +334,17 @@ FirmwareMSC::FirmwareMSC():msc(){}
 FirmwareMSC::~FirmwareMSC(){}
 
 bool FirmwareMSC::begin(){
-  msc_update_setup_disk("ESP32-FWMSC", 0x0);
+  if(!msc_update_setup_disk("ESP32-FWMSC", 0x0)){
+    return false;
+  }
+
+  if(!msc_task_handle){
+      xTaskCreateUniversal(msc_task, "msc_disk", 1024, NULL, 2, (TaskHandle_t*)&msc_task_handle, 0);
+      if(!msc_task_handle){
+          return false;
+      }
+  }
+
   msc.vendorID("ESP32S2");//max 8 chars
   msc.productID("Firmware MSC");//max 16 chars
   msc.productRevision("1.0");//max 4 chars
@@ -333,13 +353,6 @@ bool FirmwareMSC::begin(){
   msc.onWrite(msc_write);
   msc.mediaPresent(true);
   msc.begin(msc_boot->fat12_sector_num, DISK_SECTOR_SIZE);
-
-  if(!msc_task_handle){
-      xTaskCreateUniversal(msc_task, "msc_disk", 1024, NULL, 2, (TaskHandle_t*)&msc_task_handle, 0);
-      if(!msc_task_handle){
-          return false;
-      }
-  }
   return true;
 }
 
