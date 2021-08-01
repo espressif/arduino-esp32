@@ -279,7 +279,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 
 int WiFiClient::connect(const char *host, uint16_t port)
 {
-    return connect(host,port,-1);
+    return connect(host,port,WIFI_CLIENT_DEF_CONN_TIMEOUT);
 }
 int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
 {
