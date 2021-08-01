@@ -61,7 +61,7 @@ static void cplstr(void *dst, const void * src, size_t max_len){
 // Invoked when received GET_MAX_LUN request, required for multiple LUNs implementation
 uint8_t tud_msc_get_maxlun_cb(void)
 {
-    log_v("");
+    log_v("%u", MSC_ACTIVE_LUN);
     return MSC_ACTIVE_LUN;
 }
 

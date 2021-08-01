@@ -31,6 +31,12 @@
 #ifndef USB_SERIAL
 #define USB_SERIAL "0"
 #endif
+#ifndef USB_WEBUSB_ENABLED
+#define USB_WEBUSB_ENABLED false
+#endif
+#ifndef USB_WEBUSB_URL
+#define USB_WEBUSB_URL "https://espressif.github.io/arduino-esp32/webusb.html"
+#endif
 
 #if CFG_TUD_DFU_RUNTIME
 static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
@@ -116,8 +122,8 @@ ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
 ,usb_protocol(MISC_PROTOCOL_IAD)
 ,usb_attributes(TUSB_DESC_CONFIG_ATT_SELF_POWERED)
 ,usb_power_ma(500)
-,webusb_enabled(false)
-,webusb_url("https://espressif.github.io/arduino-esp32/webusb.html")
+,webusb_enabled(USB_WEBUSB_ENABLED)
+,webusb_url(USB_WEBUSB_URL)
 ,_started(false)
 ,_task_stack_size(task_stack_size)
 ,_event_task_priority(event_task_priority)

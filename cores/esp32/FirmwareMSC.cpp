@@ -17,9 +17,27 @@
 #include "esp_partition.h"
 #include "esp_ota_ops.h"
 #include "esp32-hal.h"
+#include "pins_arduino.h"
 #include "firmware_msc_fat.h"
 
 #if CONFIG_TINYUSB_MSC_ENABLED
+
+#ifndef USB_FW_MSC_VENDOR_ID
+#define USB_FW_MSC_VENDOR_ID "ESP32" //max 8 chars
+#endif
+#ifndef USB_FW_MSC_PRODUCT_ID
+#define USB_FW_MSC_PRODUCT_ID "Firmware MSC"//max 16 chars
+#endif
+#ifndef USB_FW_MSC_PRODUCT_REVISION
+#define USB_FW_MSC_PRODUCT_REVISION "1.0" //max 4 chars
+#endif
+#ifndef USB_FW_MSC_VOLUME_NAME
+#define USB_FW_MSC_VOLUME_NAME "ESP32-FWMSC" //max 11 chars
+#endif
+#ifndef USB_FW_MSC_SERIAL_NUMBER
+#define USB_FW_MSC_SERIAL_NUMBER 0x00000000
+#endif
+
 ESP_EVENT_DEFINE_BASE(ARDUINO_FIRMWARE_MSC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
@@ -334,7 +352,7 @@ FirmwareMSC::FirmwareMSC():msc(){}
 FirmwareMSC::~FirmwareMSC(){}
 
 bool FirmwareMSC::begin(){
-  if(!msc_update_setup_disk("ESP32-FWMSC", 0x0)){
+  if(!msc_update_setup_disk(USB_FW_MSC_VOLUME_NAME, USB_FW_MSC_SERIAL_NUMBER)){
     return false;
   }
 
@@ -345,9 +363,9 @@ bool FirmwareMSC::begin(){
       }
   }
 
-  msc.vendorID("ESP32S2");//max 8 chars
-  msc.productID("Firmware MSC");//max 16 chars
-  msc.productRevision("1.0");//max 4 chars
+  msc.vendorID(USB_FW_MSC_VENDOR_ID);
+  msc.productID(USB_FW_MSC_PRODUCT_ID);
+  msc.productRevision(USB_FW_MSC_PRODUCT_REVISION);
   msc.onStartStop(msc_start_stop);
   msc.onRead(msc_read);
   msc.onWrite(msc_write);

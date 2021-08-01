@@ -13,27 +13,22 @@
 // limitations under the License.
 
 #include "firmware_msc_fat.h"
-
-static void cplstr(void *dst, const void * src, size_t max_len){
+//copy up to max_len chars from src to dst and do not terminate
+static size_t cplstr(void *dst, const void * src, size_t max_len){
     if(!src || !dst || !max_len){
-        return;
+        return 0;
     }
     size_t l = strlen((const char *)src);
     if(l > max_len){
         l = max_len;
     }
     memcpy(dst, src, l);
+    return l;
 }
 
+//copy up to max_len chars from src to dst, adding spaces up to max_len. do not terminate
 static void cplstrsp(void *dst, const void * src, size_t max_len){
-    if(!src || !dst || !max_len){
-        return;
-    }
-    size_t l = strlen((const char *)src);
-    if(l > max_len){
-        l = max_len;
-    }
-    memcpy(dst, src, l);
+    size_t l = cplstr(dst, src, max_len);
     for(l; l < max_len; l++){
       ((uint8_t*)dst)[l] = 0x20;
     }
@@ -89,6 +84,7 @@ static void fat16_set_table_index(uint8_t * table, uint16_t index, uint16_t valu
   *(uint16_t *)(table + offset) = value;
 }
 
+//Interface
 const char * fat_file_system_type(bool fat16) {
 	return ((fat16)?FAT16_FILE_SYSTEM_TYPE:FAT12_FILE_SYSTEM_TYPE);
 }
