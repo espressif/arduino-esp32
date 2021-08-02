@@ -85,8 +85,15 @@ static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size)
     while(tosend){
         uint32_t space = tud_cdc_n_write_available(itf);
         if(!space){
-            delay(1);
-            continue;
+            //make sure that we do not get previous semaphore
+            xSemaphoreTake(devices[itf]->tx_sem, 0);
+            //wait for tx_complete
+            if(xSemaphoreTake(devices[itf]->tx_sem, 200 / portTICK_PERIOD_MS) == pdTRUE){
+                space = tud_cdc_n_write_available(itf);
+            }
+            if(!space){
+                return sofar;
+            }
         }
         if(tosend < space){
             space = tosend;
@@ -98,7 +105,7 @@ static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size)
         sofar += sent;
         tosend -= sent;
         tud_cdc_n_write_flush(itf);
-        xSemaphoreTake(devices[itf]->tx_sem, portMAX_DELAY);
+        //xSemaphoreTake(devices[itf]->tx_sem, portMAX_DELAY);
     }
     return sofar;
 }
