@@ -179,6 +179,11 @@ void USBCDC::_onUnplugged(void){
 enum { CDC_LINE_IDLE, CDC_LINE_1, CDC_LINE_2, CDC_LINE_3 };
 void USBCDC::_onLineState(bool _dtr, bool _rts){
     static uint8_t lineState = CDC_LINE_IDLE;
+
+    if(dtr == _dtr && rts == _rts){
+        return; // Skip duplicate events
+    }
+
     dtr = _dtr;
     rts = _rts;
 
@@ -186,6 +191,11 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
         if(!dtr && rts){
             if(lineState == CDC_LINE_IDLE){
                 lineState++;
+                if(connected){
+                    connected = false;
+                    arduino_usb_cdc_event_data_t p = {0};
+                    arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+                }
             } else {
                 lineState = CDC_LINE_IDLE;
             }
@@ -215,7 +225,7 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
             connected = true;
             arduino_usb_cdc_event_data_t p = {0};
             arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_CONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
-        } else if(!dtr && !rts && connected){
+        } else if(!dtr && connected){
             connected = false;
             arduino_usb_cdc_event_data_t p = {0};
             arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
@@ -231,7 +241,7 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
 void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits){
     if(bit_rate != _bit_rate || data_bits != _data_bits || stop_bits != _stop_bits || parity != _parity){
         // ArduinoIDE sends LineCoding with 1200bps baud to reset the device
-        if(_bit_rate == 1200){
+        if(reboot_enable && _bit_rate == 1200){
             usb_persist_restart(RESTART_BOOTLOADER);
         } else {
             bit_rate = _bit_rate;
