@@ -977,6 +977,8 @@ feathers2.build.variant=um_feathers2
 feathers2.build.board=FEATHERS2
 
 feathers2.build.cdc_on_boot=1
+feathers2.build.msc_on_boot=1
+feathers2.build.dfu_on_boot=0
 feathers2.build.f_cpu=240000000L
 feathers2.build.flash_size=16MB
 feathers2.build.flash_freq=80m
@@ -989,6 +991,16 @@ feathers2.menu.CDCOnBoot.cdc=Enabled
 feathers2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 feathers2.menu.CDCOnBoot.default=Disabled
 feathers2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+feathers2.menu.MSCOnBoot.msc=Enabled
+feathers2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+feathers2.menu.MSCOnBoot.default=Disabled
+feathers2.menu.MSCOnBoot.default.build.msc_on_boot=0
+
+feathers2.menu.DFUOnBoot.default=Disabled
+feathers2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+feathers2.menu.DFUOnBoot.dfu=Enabled
+feathers2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 feathers2.menu.PSRAM.enabled=Enabled
 feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -1105,6 +1117,8 @@ tinys2.build.variant=um_tinys2
 tinys2.build.board=TINYS2
 
 tinys2.build.cdc_on_boot=1
+tinys2.build.msc_on_boot=1
+tinys2.build.dfu_on_boot=0
 tinys2.build.f_cpu=240000000L
 tinys2.build.flash_size=4MB
 tinys2.build.flash_freq=80m
@@ -1117,6 +1131,16 @@ tinys2.menu.CDCOnBoot.cdc=Enabled
 tinys2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 tinys2.menu.CDCOnBoot.default=Disabled
 tinys2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+tinys2.menu.MSCOnBoot.msc=Enabled
+tinys2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+tinys2.menu.MSCOnBoot.default=Disabled
+tinys2.menu.MSCOnBoot.default.build.msc_on_boot=0
+
+tinys2.menu.DFUOnBoot.default=Disabled
+tinys2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+tinys2.menu.DFUOnBoot.dfu=Enabled
+tinys2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 tinys2.menu.PSRAM.enabled=Enabled
 tinys2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -1278,6 +1302,8 @@ micros2.build.variant=micro_s2
 micros2.build.board=MICROS2
 
 micros2.build.cdc_on_boot=1
+micros2.build.msc_on_boot=1
+micros2.build.dfu_on_boot=0
 micros2.build.f_cpu=240000000L
 micros2.build.flash_size=16MB
 micros2.build.flash_freq=80m
@@ -1290,6 +1316,16 @@ micros2.menu.CDCOnBoot.cdc=Enabled
 micros2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 micros2.menu.CDCOnBoot.default=Disabled
 micros2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+micros2.menu.MSCOnBoot.msc=Enabled
+micros2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+micros2.menu.MSCOnBoot.default=Disabled
+micros2.menu.MSCOnBoot.default.build.msc_on_boot=0
+
+micros2.menu.DFUOnBoot.default=Disabled
+micros2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+micros2.menu.DFUOnBoot.dfu=Enabled
+micros2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 micros2.menu.PSRAM.enabled=Enabled
 micros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -2137,6 +2173,8 @@ sparkfun_esp32s2_thing_plus.build.variant=esp32s2thing_plus
 sparkfun_esp32s2_thing_plus.build.board=ESP32S2_THING_PLUS
 
 sparkfun_esp32s2_thing_plus.build.cdc_on_boot=0
+sparkfun_esp32s2_thing_plus.build.msc_on_boot=0
+sparkfun_esp32s2_thing_plus.build.dfu_on_boot=0
 sparkfun_esp32s2_thing_plus.build.f_cpu=240000000L
 sparkfun_esp32s2_thing_plus.build.flash_size=4MB
 sparkfun_esp32s2_thing_plus.build.flash_freq=80m
@@ -2149,6 +2187,16 @@ sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.default=Disabled
 sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.default.build.cdc_on_boot=0
 sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.cdc=Enabled
 sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+sparkfun_esp32s2_thing_plus.menu.MSCOnBoot.default=Disabled
+sparkfun_esp32s2_thing_plus.menu.MSCOnBoot.default.build.msc_on_boot=0
+sparkfun_esp32s2_thing_plus.menu.MSCOnBoot.msc=Enabled
+sparkfun_esp32s2_thing_plus.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.default=Disabled
+sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.dfu=Enabled
+sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 sparkfun_esp32s2_thing_plus.menu.PSRAM.disabled=Disabled
 sparkfun_esp32s2_thing_plus.menu.PSRAM.disabled.build.defines=
@@ -3445,7 +3493,9 @@ adafruit_metro_esp32s2.build.core=esp32
 adafruit_metro_esp32s2.build.variant=adafruit_metro_esp32s2
 adafruit_metro_esp32s2.build.board=METRO_ESP32S2
 
-adafruit_metro_esp32s2.build.cdc_on_boot=0
+adafruit_metro_esp32s2.build.cdc_on_boot=1
+adafruit_metro_esp32s2.build.msc_on_boot=0
+adafruit_metro_esp32s2.build.dfu_on_boot=0
 adafruit_metro_esp32s2.build.f_cpu=240000000L
 adafruit_metro_esp32s2.build.flash_size=4MB
 adafruit_metro_esp32s2.build.flash_freq=80m
@@ -3458,6 +3508,16 @@ adafruit_metro_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_metro_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 adafruit_metro_esp32s2.menu.CDCOnBoot.default=Disabled
 adafruit_metro_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_metro_esp32s2.menu.MSCOnBoot.default=Disabled
+adafruit_metro_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_metro_esp32s2.menu.MSCOnBoot.msc=Enabled
+adafruit_metro_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_metro_esp32s2.menu.DFUOnBoot.default=Disabled
+adafruit_metro_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_metro_esp32s2.menu.DFUOnBoot.dfu=Enabled
+adafruit_metro_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 adafruit_metro_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -3598,7 +3658,9 @@ adafruit_magtag29_esp32s2.build.core=esp32
 adafruit_magtag29_esp32s2.build.variant=adafruit_magtag29_esp32s2
 adafruit_magtag29_esp32s2.build.board=MAGTAG29_ESP32S2
 
-adafruit_magtag29_esp32s2.build.cdc_on_boot=0
+adafruit_magtag29_esp32s2.build.cdc_on_boot=1
+adafruit_magtag29_esp32s2.build.msc_on_boot=0
+adafruit_magtag29_esp32s2.build.dfu_on_boot=0
 adafruit_magtag29_esp32s2.build.f_cpu=240000000L
 adafruit_magtag29_esp32s2.build.flash_size=4MB
 adafruit_magtag29_esp32s2.build.flash_freq=80m
@@ -3611,6 +3673,16 @@ adafruit_magtag29_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_magtag29_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 adafruit_magtag29_esp32s2.menu.CDCOnBoot.default=Disabled
 adafruit_magtag29_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_magtag29_esp32s2.menu.MSCOnBoot.default=Disabled
+adafruit_magtag29_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_magtag29_esp32s2.menu.MSCOnBoot.msc=Enabled
+adafruit_magtag29_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_magtag29_esp32s2.menu.DFUOnBoot.default=Disabled
+adafruit_magtag29_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu=Enabled
+adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -3751,7 +3823,9 @@ adafruit_funhouse_esp32s2.build.core=esp32
 adafruit_funhouse_esp32s2.build.variant=adafruit_funhouse_esp32s2
 adafruit_funhouse_esp32s2.build.board=FUNHOUSE_ESP32S2
 
-adafruit_funhouse_esp32s2.build.cdc_on_boot=0
+adafruit_funhouse_esp32s2.build.cdc_on_boot=1
+adafruit_funhouse_esp32s2.build.msc_on_boot=0
+adafruit_funhouse_esp32s2.build.dfu_on_boot=0
 adafruit_funhouse_esp32s2.build.f_cpu=240000000L
 adafruit_funhouse_esp32s2.build.flash_size=4MB
 adafruit_funhouse_esp32s2.build.flash_freq=80m
@@ -3764,6 +3838,16 @@ adafruit_funhouse_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_funhouse_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 adafruit_funhouse_esp32s2.menu.CDCOnBoot.default=Disabled
 adafruit_funhouse_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_funhouse_esp32s2.menu.MSCOnBoot.default=Disabled
+adafruit_funhouse_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_funhouse_esp32s2.menu.MSCOnBoot.msc=Enabled
+adafruit_funhouse_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_funhouse_esp32s2.menu.DFUOnBoot.default=Disabled
+adafruit_funhouse_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu=Enabled
+adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -3905,6 +3989,8 @@ adafruit_feather_esp32s2_nopsram.build.variant=adafruit_feather_esp32s2
 adafruit_feather_esp32s2_nopsram.build.board=ADAFRUIT_FEATHER_ESP32S2_NOPSRAM
 
 adafruit_feather_esp32s2_nopsram.build.cdc_on_boot=0
+adafruit_feather_esp32s2_nopsram.build.msc_on_boot=0
+adafruit_feather_esp32s2_nopsram.build.dfu_on_boot=0
 adafruit_feather_esp32s2_nopsram.build.f_cpu=240000000L
 adafruit_feather_esp32s2_nopsram.build.flash_size=4MB
 adafruit_feather_esp32s2_nopsram.build.flash_freq=80m
@@ -3917,6 +4003,16 @@ adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.cdc=Enabled
 adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.default=Disabled
 adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.default=Disabled
+adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.msc=Enabled
+adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.default=Disabled
+adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu=Enabled
+adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled=Disabled
 adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled.build.defines=
