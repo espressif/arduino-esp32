@@ -66,15 +66,8 @@ void setup() {
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);
   
-#if !ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-    USBSerial.begin();
-#endif
-#if !ARDUINO_USB_ON_BOOT
-  USB.webUSB(true);
-  USB.webUSBURL("http://localhost/webusb");
-  USB.productName("ESP32S2-USB");
+  USBSerial.begin();
   USB.begin();
-#endif
 }
 
 void loop() {

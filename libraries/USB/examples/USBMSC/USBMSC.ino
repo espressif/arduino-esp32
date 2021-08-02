@@ -183,12 +183,8 @@ void setup() {
   MSC.onWrite(onWrite);
   MSC.mediaPresent(true);
   MSC.begin(DISK_SECTOR_COUNT, DISK_SECTOR_SIZE);
-#if !ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-    USBSerial.begin();
-#endif
-#if !ARDUINO_USB_ON_BOOT
-    USB.begin();
-#endif
+  USBSerial.begin();
+  USB.begin();
 }
 
 void loop() {

@@ -33,7 +33,9 @@ class USBMSC
 {
 public:
     USBMSC();
+    ~USBMSC();
     bool begin(uint32_t block_count, uint16_t block_size);
+    void end();
     void vendorID(const char * vid);//max 8 chars
     void productID(const char * pid);//max 16 chars
     void productRevision(const char * ver);//max 4 chars

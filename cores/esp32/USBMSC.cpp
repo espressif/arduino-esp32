@@ -204,6 +204,10 @@ USBMSC::USBMSC(){
     }
 }
 
+USBMSC::~USBMSC(){
+  end();
+}
+
 bool USBMSC::begin(uint32_t block_count, uint16_t block_size){
     msc_luns[_lun].block_size = block_size;
     msc_luns[_lun].block_count = block_count;
@@ -211,6 +215,18 @@ bool USBMSC::begin(uint32_t block_count, uint16_t block_size){
         return false;
     }
     return true;
+}
+
+void USBMSC::end(){
+    msc_luns[_lun].media_present = false;
+    msc_luns[_lun].vendor_id[0] = 0;
+    msc_luns[_lun].product_id[0] = 0;
+    msc_luns[_lun].product_rev[0] = 0;
+    msc_luns[_lun].block_size = 0;
+    msc_luns[_lun].block_count = 0;
+    msc_luns[_lun].start_stop = NULL;
+    msc_luns[_lun].read = NULL;
+    msc_luns[_lun].write = NULL;
 }
 
 void USBMSC::vendorID(const char * vid){

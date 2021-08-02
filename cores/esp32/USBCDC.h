@@ -54,6 +54,7 @@ class USBCDC: public Stream
 {
 public:
     USBCDC(uint8_t itf=0);
+    ~USBCDC();
 
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);

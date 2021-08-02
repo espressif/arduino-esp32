@@ -57,6 +57,7 @@ public:
   FirmwareMSC();
   ~FirmwareMSC();
   bool begin();
+  void end();
   void onEvent(esp_event_handler_t callback);
   void onEvent(arduino_firmware_msc_event_t event, esp_event_handler_t callback);
 };

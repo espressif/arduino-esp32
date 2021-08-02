@@ -140,6 +140,25 @@ static bool msc_update_setup_disk(const char * volume_label, uint32_t serial_num
   return true;
 }
 
+static void msc_update_delete_disk(){
+  fw_entry = NULL;
+  fw_size = 0;
+  fw_end_sector = 0;
+  fw_start_sector = 0;
+  msc_table = NULL;
+  msc_boot = NULL;
+  msc_table_sectors = 0;
+  msc_total_sectors = 0;
+  msc_run_partition = NULL;
+  msc_ota_partition = NULL;
+  msc_update_state = MSC_UPDATE_IDLE;
+  msc_update_start_sector = 0;
+  msc_update_bytes_written = 0;
+  msc_update_entry = NULL;
+  free(msc_ram_disk);
+  msc_ram_disk = NULL;
+}
+
 //filter out entries to only include BINs in the root folder
 static fat_dir_entry_t * msc_update_get_root_bin_entry(uint8_t index){
   fat_dir_entry_t * entry = (fat_dir_entry_t *)(msc_ram_disk + ((msc_boot->sectors_per_alloc_table+1) * DISK_SECTOR_SIZE) + (index * sizeof(fat_dir_entry_t)));
@@ -336,31 +355,38 @@ static bool msc_start_stop(uint8_t power_condition, bool start, bool load_eject)
 
 static volatile TaskHandle_t msc_task_handle = NULL;
 static void msc_task(void *pvParameters){
-    for (;;) {
-      if(msc_update_state == MSC_UPDATE_END){
-        delay(100);
-        esp_restart();
-      }
+  for (;;) {
+    if(msc_update_state == MSC_UPDATE_END){
       delay(100);
+      esp_restart();
     }
-    msc_task_handle = NULL;
-    vTaskDelete(NULL);
+    delay(100);
+  }
+  msc_task_handle = NULL;
+  vTaskDelete(NULL);
 }
 
 FirmwareMSC::FirmwareMSC():msc(){}
 
-FirmwareMSC::~FirmwareMSC(){}
+FirmwareMSC::~FirmwareMSC(){
+  end();
+}
 
 bool FirmwareMSC::begin(){
+  if(msc_ram_disk){
+    return true;
+  }
+
   if(!msc_update_setup_disk(USB_FW_MSC_VOLUME_NAME, USB_FW_MSC_SERIAL_NUMBER)){
     return false;
   }
 
   if(!msc_task_handle){
-      xTaskCreateUniversal(msc_task, "msc_disk", 1024, NULL, 2, (TaskHandle_t*)&msc_task_handle, 0);
-      if(!msc_task_handle){
-          return false;
-      }
+    xTaskCreateUniversal(msc_task, "msc_disk", 1024, NULL, 2, (TaskHandle_t*)&msc_task_handle, 0);
+    if(!msc_task_handle){
+      msc_update_delete_disk();
+      return false;
+    }
   }
 
   msc.vendorID(USB_FW_MSC_VENDOR_ID);
@@ -372,6 +398,15 @@ bool FirmwareMSC::begin(){
   msc.mediaPresent(true);
   msc.begin(msc_boot->fat12_sector_num, DISK_SECTOR_SIZE);
   return true;
+}
+
+void FirmwareMSC::end(){
+  msc.end();
+  if(msc_task_handle){
+    vTaskDelete(msc_task_handle);
+    msc_task_handle = NULL;
+  }
+  msc_update_delete_disk();
 }
 
 void FirmwareMSC::onEvent(esp_event_handler_t callback){
