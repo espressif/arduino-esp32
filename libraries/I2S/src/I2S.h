@@ -126,15 +126,12 @@ private:
   int _mode;
 
   uint16_t _buffer_byte_size;
-  uint16_t _input_buffer_pointer;
-  size_t _read_available;
-  SemaphoreHandle_t _in_buf_semaphore;
-  void *_inputBuffer;
 
   bool _initialized;
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
   QueueHandle_t _task_kill_cmd_semaphore_handle;
+  RingbufHandle_t _input_ring_buffer;
   RingbufHandle_t _output_ring_buffer;
 
   void (*_onTransmit)(void);
