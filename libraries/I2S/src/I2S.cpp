@@ -121,6 +121,7 @@ int I2SClass::createCallbackTask()
 void I2SClass::destroyCallbackTask()
 {
   if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
+    xSemaphoreGive(_task_kill_cmd_semaphore_handle);
     while(_callbackTaskHandle != NULL){
       ; // wait
     }
