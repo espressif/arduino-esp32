@@ -90,13 +90,18 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
 {
 }
 
-void I2SClass::createCallbackTask()
+int I2SClass::createCallbackTask()
 {
   int stack_size = 10000;
   if(_callbackTaskHandle == NULL){
     if(_task_kill_cmd_semaphore_handle == NULL){
       _task_kill_cmd_semaphore_handle = xSemaphoreCreateBinary();
+      if(_task_kill_cmd_semaphore_handle == NULL){
+        log_e("Could not create semaphore");
+        return 0; // ERR
+      }
     }
+
     xTaskCreate(
       onDmaTransferComplete, // Function to implement the task
       "onDmaTransferComplete", // Name of the task
@@ -105,13 +110,22 @@ void I2SClass::createCallbackTask()
       2,  // Priority of the task
       &_callbackTaskHandle  // Task handle.
       );
+    if(_callbackTaskHandle == NULL){
+      log_e("Could not create callback task");
+      return 0; // ERR
+    }
   }
+  return 1; // OK
 }
 
 void I2SClass::destroyCallbackTask()
 {
   if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
-    xSemaphoreGive(_task_kill_cmd_semaphore_handle);
+    while(_callbackTaskHandle != NULL){
+      ; // wait
+    }
+    vSemaphoreDelete(_task_kill_cmd_semaphore_handle); // delete semaphore after usage
+    _task_kill_cmd_semaphore_handle = NULL; // prevent usage of uninitialized (deleted) semaphore
   } // callback handle check
 }
 
@@ -210,7 +224,6 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     .dma_buf_len = _I2S_DMA_BUFFER_SIZE
   };
 
-
   _buffer_byte_size = _I2S_DMA_BUFFER_SIZE * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
@@ -245,41 +258,15 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     }
   }
 
-  createCallbackTask();
+  if(!createCallbackTask()){
+    return 0; // ERR
+  }
   _initialized = true;
 
   return 1; // OK
 }
 
-int I2SClass::setAllPins(){
-  return setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT);
-}
-
-int I2SClass::setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin){
-  if(sckPin >= 0){
-    _sckPin = sckPin;
-  }else{
-    _sckPin = PIN_I2S_SCK;
-  }
-
-  if(fsPin >= 0){
-    _fsPin = fsPin;
-  }else{
-    _fsPin = PIN_I2S_FS;
-  }
-
-  if(inSdPin >= 0){
-    _inSdPin = inSdPin;
-  }else{
-    _inSdPin = PIN_I2S_SD;
-  }
-
-  if(outSdPin >= 0){
-    _outSdPin = outSdPin;
-  }else{
-    _outSdPin = PIN_I2S_SD_OUT;
-  }
-
+int I2SClass::_applyPinSetting(){
   if(_initialized){
     esp_i2s::i2s_pin_config_t pin_config = {
       .bck_io_num = _sckPin,
@@ -293,6 +280,74 @@ int I2SClass::setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin){
     }
   }
   return 1; // OK
+}
+
+void I2SClass::_setSckPin(int sckPin){
+  if(sckPin >= 0){
+    _sckPin = sckPin;
+  }else{
+    _sckPin = PIN_I2S_SCK;
+  }
+}
+
+int I2SClass::setSckPin(int sckPin){
+  _setSckPin(sckPin);
+  return _applyPinSetting();
+}
+
+void I2SClass::_setFsPin(int fsPin){
+  if(fsPin >= 0){
+    _fsPin = fsPin;
+  }else{
+    _fsPin = PIN_I2S_FS;
+  }
+}
+
+int I2SClass::setFsPin(int fsPin){
+  _setFsPin(fsPin);
+  return _applyPinSetting();
+}
+
+void I2SClass::_setDataInPin(int inSdPin){
+  if(inSdPin >= 0){
+    _inSdPin = inSdPin;
+  }else{
+    _inSdPin = PIN_I2S_SD;
+  }
+}
+
+int I2SClass::setDataInPin(int inSdPin){
+  _setDataInPin(inSdPin);
+  pinMode(_inSdPin, INPUT_PULLDOWN);
+  // TODO if there is any default pinMode - set it to old input
+  return _applyPinSetting();
+}
+
+void I2SClass::_setDataOutPin(int outSdPin){
+  if(outSdPin >= 0){
+    _outSdPin = outSdPin;
+  }else{
+    _outSdPin = PIN_I2S_SD_OUT;
+  }
+}
+
+int I2SClass::setDataOutPin(int outSdPin){
+  _setDataOutPin(outSdPin);
+  return _applyPinSetting();
+}
+
+
+int I2SClass::setAllPins(){
+  return setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT);
+}
+
+int I2SClass::setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin){
+  setSckPin(sckPin);
+  setFsPin(fsPin);
+  setDataInPin(inSdPin);
+  setDataOutPin(outSdPin);
+
+  return _applyPinSetting();
 }
 
 int I2SClass::setStateDuplex(){
@@ -304,42 +359,24 @@ int I2SClass::setStateDuplex(){
   return 1;
 }
 
-//int I2SClass::setHalfDuplex(uint8_t inSdPin=PIN_I2S_SD, uint8_t outSdPin=PIN_I2S_SD_OUT){
-int I2SClass::setHalfDuplex(uint8_t inSdPin, uint8_t outSdPin){
-  _inSdPin = inSdPin;
-  _outSdPin = outSdPin;
-  if(_initialized){
-    esp_i2s::i2s_pin_config_t pin_config = {
-      .bck_io_num = _sckPin,
-      .ws_io_num = _fsPin,
-      .data_out_num = _outSdPin,
-      .data_in_num = _inSdPin
-    };
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed");
-      return 0; // ERR
-    }
-  }
-  return 1; // OK
+int I2SClass::getSckPin(){
+  return _sckPin;
 }
 
-//int I2SClass::setSimplex(uint8_t sdPin=PIN_I2S_SD){
-int I2SClass::setSimplex(uint8_t sdPin){
-  _sdPin = sdPin;
-  if(_initialized){
-    esp_i2s::i2s_pin_config_t pin_config = {
-      .bck_io_num = _sckPin,
-      .ws_io_num = _fsPin,
-      //.data_out_num = -1, // esp_i2s::I2S_PIN_NO_CHANGE,
-      .data_out_num = I2S_PIN_NO_CHANGE,
-      .data_in_num = _sdPin
-    };
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed");
-      return 0; // ERR
-    }
-  }
-  return 1; // OK
+int I2SClass::getFsPin(){
+  return _fsPin;
+}
+
+int I2SClass::getDataPin(){
+  return _sdPin;
+}
+
+int I2SClass::getDataInPin(){
+  return _inSdPin;
+}
+
+int I2SClass::getDataOutPin(){
+  return _outSdPin;
 }
 
 void I2SClass::end()
@@ -465,7 +502,18 @@ int I2SClass::peek()
 
 void I2SClass::flush()
 {
-  // do nothing, writes are DMA triggered
+  const size_t single_dma_buf = _I2S_DMA_BUFFER_SIZE*(_bitsPerSample/8);
+  size_t item_size = 0;
+  size_t bytes_written;
+  void *item = NULL;
+
+  item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
+  if (item != NULL){
+    esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, item, item_size, &bytes_written, 0);
+    if(item_size != bytes_written){
+    }
+    vRingbufferReturnItem(_output_ring_buffer, item);
+  }
 }
 
 // Bytes available to write
@@ -580,6 +628,7 @@ void I2SClass::onTransferComplete()
             } // Check received item
           }while(item_size == bytes_written && item_size == single_dma_buf);
         } // don't read from almost empty buffer
+
         if(_onTransmit){
           _onTransmit();
         } // user callback
@@ -595,16 +644,16 @@ void I2SClass::onTransferComplete()
           } // user callback
         } // xRingbufferSendComplete
       } // RX Done
-    } // I2S event
+    } // Queue set (I2S event or kill command)
   } // infinite loop
   _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
-  vTaskDelete(NULL);
 }
 
 void I2SClass::onDmaTransferComplete(void*)
 {
 
   I2S.onTransferComplete();
+  vTaskDelete(NULL);
 }
 
 #if I2S_INTERFACES_COUNT > 0
