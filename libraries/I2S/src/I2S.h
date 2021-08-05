@@ -64,10 +64,20 @@ public:
   // change pin setup and mode (default is Half Duplex)
   // Can be called only on initialized object (after begin)
   int setStateDuplex();
+
+  int setSckPin(int sckPin);
+  int setFsPin(int fsPin);
+  int setDataInPin(int inSdPin);
+  int setDataOutPin(int outSdPin);
+
   int setAllPins();
   int setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin);
-  int setHalfDuplex(uint8_t inSdPin, uint8_t outSdPin);
-  int setSimplex(uint8_t sdPin);
+
+  int getSckPin();
+  int getFsPin();
+  int getDataPin();
+  int getDataInPin();
+  int getDataOutPin();
 
   void end();
 
@@ -101,9 +111,14 @@ private:
   void onTransferComplete();
 
   void destroyCallbackTask();
-  void createCallbackTask();
+  int createCallbackTask();
 
   static void onDmaTransferComplete(void*);
+  void _setSckPin(int sckPin);
+  void _setFsPin(int fsPin);
+  void _setDataInPin(int inSdPin);
+  void _setDataOutPin(int outSdPin);
+  int  _applyPinSetting();
 
 private:
   typedef enum {
