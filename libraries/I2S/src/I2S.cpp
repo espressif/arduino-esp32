@@ -22,8 +22,9 @@
 #include "freertos/semphr.h"
 
 #define _I2S_EVENT_QUEUE_LENGTH 16
-#define _I2S_DMA_BUFFER_SIZE 256 // BUFFER SIZE must be between 200 and 1024
+#define _I2S_DMA_BUFFER_SIZE 512 // BUFFER SIZE must be between 200 and 1024
 // (Theoretically it could be above 8, but for some reason sizes below 200 results in frozen callback task)
+// And values bellow 500 may result in low quality audio
 
 #define _I2S_DMA_BUFFER_COUNT 4 // BUFFER COUNT must be between 2 and 128
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
@@ -123,11 +124,13 @@ void I2SClass::destroyCallbackTask()
   if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     xSemaphoreGive(_task_kill_cmd_semaphore_handle);
     while(_callbackTaskHandle != NULL){
-      ; // wait
+      ; // wait until task ends itself properly
     }
     vSemaphoreDelete(_task_kill_cmd_semaphore_handle); // delete semaphore after usage
     _task_kill_cmd_semaphore_handle = NULL; // prevent usage of uninitialized (deleted) semaphore
-  } // callback handle check
+  }else{ // callback handle check
+    log_e("Could not destroy callback");
+  }
 }
 
 int I2SClass::begin(int mode, long sampleRate, int bitsPerSample)
@@ -193,13 +196,17 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     }
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
   }else{ // End of ADC/DAC mode; start of Normal mode
-    if(_bitsPerSample != 16 && /*_bitsPerSample != 24 && */ _bitsPerSample != 32){
-      log_e("I2S.begin(): invalid bits per second for normal mode");
-      // ESP does support 24 bps, however for the compatibility
-      // with original Arduino implementation it is not allowed
+    if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
+      if(_bitsPerSample == 8){
+        log_e("ESP unfortunately does not support 8 bits per sample");
+      }else{
+        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 16 | 24 | 32", _bitsPerSample);
+      }
       return 0; // ERR
     }
-
+    if(_bitsPerSample == 24){
+      log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
+    }
 
     if (_state == I2S_STATE_DUPLEX){ // duplex
       pin_config = {
