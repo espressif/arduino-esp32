@@ -104,7 +104,9 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
         adc1_config_channel_atten(channel, attenuation);
     }
     __analogInit();
-    __pin_attenuation[pin] = attenuation;
+    if((__pin_attenuation[pin] != ADC_ATTENDB_MAX) || (attenuation != __analogAttenuation)){
+        __pin_attenuation[pin] = attenuation;
+    }
 }
 
 bool __adcAttachPin(uint8_t pin){
@@ -113,6 +115,7 @@ bool __adcAttachPin(uint8_t pin){
         log_e("Pin %u is not ADC pin!", pin);
         return false;
     }
+    __analogInit();
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
 #if CONFIG_IDF_TARGET_ESP32
