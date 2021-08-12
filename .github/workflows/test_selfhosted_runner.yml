@@ -2,7 +2,9 @@ name: Test Github action on self hosted RPI runnes
 
 on:
   push:
-    branches: [pull_request]
+    branches:
+    - master
+  pull_request:
 
 jobs:
   build:
