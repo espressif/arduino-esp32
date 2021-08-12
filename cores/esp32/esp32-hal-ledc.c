@@ -115,6 +115,10 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     uint8_t group=(chan/8), timer=((chan/2)%4);
     static bool tHasStarted = false;
     static uint16_t _activeChannels = 0;
+#if CONFIG_IDF_TARGET_ESP32S2
+// ESP32-S2 TRM v1.0 on Page 789 -> BIT LEDC_TICK_SEL_TIMERx is 0 for LEDC_PWM_CLK and 1 for REF_TICK
+    apb_clk = 0;        
+#endif
     if(!tHasStarted) {
         tHasStarted = true;
         periph_module_enable(PERIPH_LEDC_MODULE);

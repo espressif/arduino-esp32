@@ -30,8 +30,7 @@
 #include "stdlib_noniso.h"
 #include "esp_system.h"
 
-#if !CONFIG_DSP_ANSI && !CONFIG_DSP_OPTIMIZED
-void reverse(char* begin, char* end) {
+static void reverse(char* begin, char* end) {
     char *is = begin;
     char *ie = end - 1;
     while(is < ie) {
@@ -42,9 +41,6 @@ void reverse(char* begin, char* end) {
         --ie;
     }
 }
-#else
-void reverse(char* begin, char* end);
-#endif
 
 char* ltoa(long value, char* result, int base) {
     if(base < 2 || base > 16) {

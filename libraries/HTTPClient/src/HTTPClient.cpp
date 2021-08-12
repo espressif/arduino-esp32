@@ -1264,6 +1264,8 @@ int HTTPClient::handleHeaderResponse()
                     log_d("Transfer-Encoding: %s", transferEncoding.c_str());
                     if(transferEncoding.equalsIgnoreCase("chunked")) {
                         _transferEncoding = HTTPC_TE_CHUNKED;
+                    } else if(transferEncoding.equalsIgnoreCase("identity")) {
+                        _transferEncoding = HTTPC_TE_IDENTITY;
                     } else {
                         return HTTPC_ERROR_ENCODING;
                     }

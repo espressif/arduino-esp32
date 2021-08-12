@@ -164,7 +164,9 @@ static void uartEnableInterrupt(uart_t* uart, uint8_t rxfifo_full_thrhd)
 static void uartDisableInterrupt(uart_t* uart)
 {
     UART_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32
     uart->dev->conf1.val = 0;
+#endif
     uart->dev->int_ena.val = 0;
     uart->dev->int_clr.val = 0xffffffff;
 
@@ -646,17 +648,19 @@ int log_printf(const char *format, ...)
             return 0;
         }
     }
-    vsnprintf(temp, len+1, format, arg);
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
-        ets_printf("%s", temp);
-        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
-    } else {
-        ets_printf("%s", temp);
     }
-#else
+#endif
+    
+    vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
+        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
+    }
 #endif
     va_end(arg);
     if(len >= sizeof(loc_buf)){

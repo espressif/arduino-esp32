@@ -69,7 +69,7 @@ public:
     , _cache_header(cache_header)
     {
         _isFile = fs.exists(path);
-        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header);
+        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : ""); // issue 5506 - cache_header can be nullptr
         _baseUriLength = _uri.length();
     }
 
