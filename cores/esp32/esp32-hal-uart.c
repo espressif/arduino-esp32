@@ -648,17 +648,19 @@ int log_printf(const char *format, ...)
             return 0;
         }
     }
-    vsnprintf(temp, len+1, format, arg);
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
-        ets_printf("%s", temp);
-        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
-    } else {
-        ets_printf("%s", temp);
     }
-#else
+#endif
+    
+    vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
+        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
+    }
 #endif
     va_end(arg);
     if(len >= sizeof(loc_buf)){
