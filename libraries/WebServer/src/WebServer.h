@@ -70,6 +70,7 @@ class FS;
 class WebServer
 {
 public:
+  WebServer(IPAddress addr, int port = 80);
   WebServer(int port = 80);
   virtual ~WebServer();
 
