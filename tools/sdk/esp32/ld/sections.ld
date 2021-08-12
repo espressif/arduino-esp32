@@ -562,10 +562,10 @@ SECTIONS
    * This section holds data that won't be initialised when startup.
    * This section locates in External RAM region.
    */
-  .ext_ram.noinit (NOLOAD) :
+  .ext_ram_noinit (NOLOAD) :
   {
     _ext_ram_noinit_start = ABSOLUTE(.);
-    *(.ext_ram.noinit*)
+    *(.ext_ram_noinit*)
     . = ALIGN(4);
     _ext_ram_noinit_end = ABSOLUTE(.);
   } > extern_ram_seg
@@ -601,8 +601,8 @@ SECTIONS
     _bss_start = ABSOLUTE(.);
 
     *(.bss .bss.*)
-    *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
     *(.ext_ram.bss .ext_ram.bss.*)
+    *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
     *(COMMON)
     _bt_bss_start = ABSOLUTE(.);
     *libbt.a:(.bss .bss.* COMMON)

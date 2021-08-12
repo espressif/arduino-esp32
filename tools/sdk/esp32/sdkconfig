@@ -706,6 +706,7 @@ CONFIG_ESP32_UNIVERSAL_MAC_ADDRESSES=4
 #
 # Sleep Config
 #
+CONFIG_ESP_SLEEP_RTC_BUS_ISO_WORKAROUND=y
 # end of Sleep Config
 # end of Hardware Settings
 
