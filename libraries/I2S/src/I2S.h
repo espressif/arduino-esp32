@@ -63,8 +63,6 @@ public:
 
   // change pin setup and mode (default is Half Duplex)
   // Can be called only on initialized object (after begin)
-  int setStateDuplex();
-
   int setSckPin(int sckPin);
   int setFsPin(int fsPin);
   int setDataInPin(int inSdPin);
@@ -78,6 +76,10 @@ public:
   int getDataPin();
   int getDataInPin();
   int getDataOutPin();
+
+  int setDuplex();
+  int setSimplex();
+  int isDuplex();
 
   void end();
 
@@ -102,7 +104,8 @@ public:
   void onTransmit(void(*)(void));
   void onReceive(void(*)(void));
 
-  void setBufferSize(int bufferSize);
+  int setBufferSize(int bufferSize);
+  int getBufferSize();
 private:
   int begin(int mode, long sampleRate, int bitsPerSample, bool driveClock);
 
@@ -114,6 +117,8 @@ private:
   int createCallbackTask();
 
   static void onDmaTransferComplete(void*);
+  int _install_driver();
+  int _uninstall_driver();
   void _setSckPin(int sckPin);
   void _setFsPin(int fsPin);
   void _setDataInPin(int inSdPin);
@@ -148,6 +153,8 @@ private:
   QueueHandle_t _task_kill_cmd_semaphore_handle;
   RingbufHandle_t _input_ring_buffer;
   RingbufHandle_t _output_ring_buffer;
+  int _i2s_dma_buffer_size;
+  bool _driveClock;
 
   void (*_onTransmit)(void);
   void (*_onReceive)(void);

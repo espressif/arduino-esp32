@@ -20,6 +20,7 @@
 const int frequency = 440; // frequency of square wave in Hz
 const int amplitude = 500; // amplitude of square wave
 const int sampleRate = 8000; // sample rate in Hz
+const int bps = 16;
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 
@@ -31,14 +32,14 @@ void setup() {
   Serial.println("I2S simple tone");
 
   // start I2S at the sample rate with 16-bits per sample
-  if (!I2S.begin(I2S_PHILIPS_MODE, sampleRate, 16)) {
+  if (!I2S.begin(I2S_PHILIPS_MODE, sampleRate, bps)) {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }
+  I2S.setDataOutPin(26);
 }
 
 void loop() {
-  if(I2S.availableForWrite() >= 2){
     if (count % halfWavelength == 0 ) {
       // invert the sample every half wavelength count multiple to generate square wave
       sample = -1 * sample;
@@ -50,5 +51,4 @@ void loop() {
 
     // increment the counter for the next sample
     count++;
-  }
 }
