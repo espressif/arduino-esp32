@@ -76,6 +76,13 @@ set(LIBRARY_SRCS
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBHIDMouse.cpp
+  libraries/USB/src/USBHIDKeyboard.cpp
+  libraries/USB/src/USBHIDGamepad.cpp
+  libraries/USB/src/USBHIDConsumerControl.cpp
+  libraries/USB/src/USBHIDSystemControl.cpp
+  libraries/USB/src/USBHIDVendor.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
