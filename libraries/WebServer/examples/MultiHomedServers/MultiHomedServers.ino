@@ -30,7 +30,7 @@
  *  ----    ----------      ----
  *  server0 INADDR_ANY      8080
  *  server1 station address 8081
- *  server2 soft AP address 8082
+ *  server2 soft AP address 8081
  *  
  *  The expected responses to a brower's requests are as follows:
  *  
@@ -39,15 +39,13 @@
  *      -----------                 --------
  *      http://stationaddress:8080  "hello from server0"
  *      http://stationaddress:8081  "hello from server1"
- *      http://stationaddress:8082  browser reports failure to connect
  *      
  *  2. when client is connected to the soft AP:
  *  
  *      Request URL                 Response
  *      -----------                 --------
  *      http://softAPaddress:8080   "hello from server0"
- *      http://softAPaddress:8082   "hello from server2"
- *      http://softAPaddress:8081   browser reports failure to connect
+ *      http://softAPaddress:8081   "hello from server2"
  *
  *  3. Repeat 1 and 2 above with esp32.local in place of stationaddress and softAPaddress, respectively.
  *  
@@ -147,7 +145,7 @@ void setup(void) {
 
   server0 = new WebServer(8080);
   server1 = new WebServer(WiFi.localIP(), 8081);
-  server2 = new WebServer(WiFi.softAPIP(), 8082);
+  server2 = new WebServer(WiFi.softAPIP(), 8081);
 
   server0->on("/", handleRoot0);
   server1->on("/", handleRoot1);
