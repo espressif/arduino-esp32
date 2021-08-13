@@ -54,9 +54,8 @@
  * MultiHomedServers was originally based on HelloServer.
  */
 
-#include "secret.h"
-const char* ssid = MySSID;
-const char* password = MyPASSWORD;
+const char* ssid = "........";
+const char* password = "........";
 const char *apssid = "ESP32";
 
 WebServer *server0, *server1, *server2;
