@@ -21,11 +21,8 @@
 #include "I2S.h"
 #include "freertos/semphr.h"
 
-#define _I2S_EVENT_QUEUE_LENGTH 16
-#define _I2S_DMA_BUFFER_SIZE 512 // BUFFER SIZE must be between 200 and 1024
-// (Theoretically it could be above 8, but for some reason sizes below 200 results in frozen callback task)
-// And values bellow 500 may result in low quality audio
 
+#define _I2S_EVENT_QUEUE_LENGTH 16
 #define _I2S_DMA_BUFFER_COUNT 4 // BUFFER COUNT must be between 2 and 128
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
 
@@ -58,6 +55,8 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _task_kill_cmd_semaphore_handle(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
+  _i2s_dma_buffer_size(1024),
+  _driveClock(true),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -85,6 +84,8 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
   _task_kill_cmd_semaphore_handle(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
+  _i2s_dma_buffer_size(1024),
+  _driveClock(true),
 
   _onTransmit(NULL),
   _onReceive(NULL)
@@ -93,7 +94,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
 
 int I2SClass::createCallbackTask()
 {
-  int stack_size = 10000;
+  int stack_size = 15000;
   if(_callbackTaskHandle == NULL){
     if(_task_kill_cmd_semaphore_handle == NULL){
       _task_kill_cmd_semaphore_handle = xSemaphoreCreateBinary();
@@ -133,6 +134,76 @@ void I2SClass::destroyCallbackTask()
   }
 }
 
+int I2SClass::_install_driver(){
+  esp_i2s::i2s_mode_t i2s_mode = (esp_i2s::i2s_mode_t)(esp_i2s::I2S_MODE_RX | esp_i2s::I2S_MODE_TX);
+
+  if(_driveClock){
+    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_MASTER);
+  }else{
+    // TODO there will much more work with slave mode
+    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
+  }
+  if(_mode == I2S_ADC_DAC){
+    if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
+      log_e("ERROR I2SClass::begin invalid bps for ADC/DAC");
+      return 0; // ERR
+    }
+    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
+  }else{ // End of ADC/DAC mode; start of Normal mode
+    if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
+      if(_bitsPerSample == 8){
+        log_e("ESP unfortunately does not support 8 bits per sample");
+      }else{
+        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 16 | 24 | 32", _bitsPerSample);
+      }
+      return 0; // ERR
+    }
+    if(_bitsPerSample == 24){
+      log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
+    }
+
+  } // Normal mode
+  esp_i2s::i2s_config_t i2s_config = {
+    .mode = i2s_mode,
+    .sample_rate = _sampleRate,
+    .bits_per_sample = (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample,
+    .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT,
+    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S | esp_i2s::I2S_COMM_FORMAT_STAND_PCM_SHORT), // 0x01 | 0x04 // default
+    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
+    .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
+    .dma_buf_len = _i2s_dma_buffer_size
+  };
+
+  if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
+    log_e("ERROR could not install i2s driver");
+    return 0; // ERR
+  }
+
+  if(_mode == I2S_ADC_DAC){
+   esp_i2s::adc_unit_t adc_unit = (esp_i2s::adc_unit_t) 1;
+    esp_i2s::adc1_channel_t adc_channel = (esp_i2s::adc1_channel_t) 6; //
+    esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
+    esp_i2s::i2s_set_adc_mode(adc_unit, adc_channel);
+    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
+      log_e("i2s_set_pin failed");
+      return 0; // ERR
+    }
+
+    esp_i2s::adc1_config_width(esp_i2s::ADC_WIDTH_BIT_12);
+    esp_i2s::adc1_config_channel_atten(adc_channel, esp_i2s::ADC_ATTEN_DB_11);
+    esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
+    _initialized = true;
+  }else{ // End of ADC/DAC mode; start of Normal mode
+    _initialized = true;
+    if(!_applyPinSetting()){
+      end();
+      return 0; // ERR
+    }
+  }
+
+  return 1; // OK
+}
+
 int I2SClass::begin(int mode, long sampleRate, int bitsPerSample)
 {
   // master mode (driving clock and frame select pins - output)
@@ -154,6 +225,10 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
   if(_initialized){
     end();
   }
+  _driveClock = driveClock;
+  _mode = mode;
+  _sampleRate = sampleRate;
+  _bitsPerSample = bitsPerSample;
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
     log_e("I2S.begin: unexpected _state (%d)",_state);
@@ -174,65 +249,7 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
       return 0; // ERR
   }
 
-  _mode = mode;
-  _sampleRate = sampleRate;
-  _bitsPerSample = bitsPerSample;
-  esp_i2s::i2s_mode_t i2s_mode = (esp_i2s::i2s_mode_t)(esp_i2s::I2S_MODE_RX | esp_i2s::I2S_MODE_TX);
-
-  if(driveClock){
-    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_MASTER);
-  }else{
-    // TODO there will much more work with slave mode
-    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
-  }
-  esp_i2s::i2s_pin_config_t pin_config;
-  pin_config.bck_io_num = _sckPin;
-  pin_config.ws_io_num = _fsPin;
-
-  if(_mode == I2S_ADC_DAC){
-    if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
-      log_e("ERROR I2SClass::begin invalid bps for ADC/DAC");
-      return 0; // ERR
-    }
-    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
-  }else{ // End of ADC/DAC mode; start of Normal mode
-    if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
-      if(_bitsPerSample == 8){
-        log_e("ESP unfortunately does not support 8 bits per sample");
-      }else{
-        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 16 | 24 | 32", _bitsPerSample);
-      }
-      return 0; // ERR
-    }
-    if(_bitsPerSample == 24){
-      log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
-    }
-
-    if (_state == I2S_STATE_DUPLEX){ // duplex
-      pin_config = {
-        .data_out_num = _outSdPin,
-        .data_in_num = _inSdPin
-      };
-    }else{ // simplex
-      pin_config = {
-          .data_out_num = I2S_PIN_NO_CHANGE,
-          .data_in_num = _sdPin
-      };
-    }
-
-  } // Normal mode
-  esp_i2s::i2s_config_t i2s_config = {
-    .mode = i2s_mode,
-    .sample_rate = _sampleRate,
-    .bits_per_sample = (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample,
-    .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT,
-    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S | esp_i2s::I2S_COMM_FORMAT_STAND_PCM_SHORT), // 0x01 | 0x04 // default
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
-    .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
-    .dma_buf_len = _I2S_DMA_BUFFER_SIZE
-  };
-
-  _buffer_byte_size = _I2S_DMA_BUFFER_SIZE * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
+  _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
@@ -240,36 +257,13 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     return 0; // ERR
   }
 
-  if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
-    log_e("ERROR could not install i2s driver");
+  if(!_install_driver()){
     return 0; // ERR
-  }
-
-  if(_mode == I2S_ADC_DAC){
-   esp_i2s::adc_unit_t adc_unit = (esp_i2s::adc_unit_t) 1;
-    esp_i2s::adc1_channel_t adc_channel = (esp_i2s::adc1_channel_t) 6; //
-    esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
-    esp_i2s::i2s_set_adc_mode(adc_unit, adc_channel);
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
-      log_e("i2s_set_pin failed");
-      return 0; // ERR
-    }
-
-    esp_i2s::adc1_config_width(esp_i2s::ADC_WIDTH_BIT_12);
-    esp_i2s::adc1_config_channel_atten(adc_channel, esp_i2s::ADC_ATTEN_DB_11);
-    esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
-  }else{ // End of ADC/DAC mode; start of Normal mode
-    if (ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)) {
-      log_e("i2s_set_pin failed");
-      end();
-      return 0; // ERR
-    }
   }
 
   if(!createCallbackTask()){
     return 0; // ERR
   }
-  _initialized = true;
 
   return 1; // OK
 }
@@ -279,14 +273,31 @@ int I2SClass::_applyPinSetting(){
     esp_i2s::i2s_pin_config_t pin_config = {
       .bck_io_num = _sckPin,
       .ws_io_num = _fsPin,
-      .data_out_num = _outSdPin,
-      .data_in_num = _inSdPin
+      .data_out_num = I2S_PIN_NO_CHANGE,
+      .data_in_num = I2S_PIN_NO_CHANGE
     };
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed");
-      return 0; // ERR
+    if (_state == I2S_STATE_DUPLEX){ // duplex
+      pin_config.data_out_num = _outSdPin;
+      pin_config.data_in_num = _inSdPin;
+    }else{ // simplex
+      if(_state == I2S_STATE_RECEIVER){
+        pin_config.data_out_num = I2S_PIN_NO_CHANGE;
+        pin_config.data_in_num = _inSdPin>0 ? _inSdPin : _sdPin;
+      }else if(_state == I2S_STATE_TRANSMITTER){
+        pin_config.data_out_num = _outSdPin>0 ? _outSdPin : _sdPin;
+        pin_config.data_in_num = I2S_PIN_NO_CHANGE;
+      }else{
+      }
     }
-  }
+    // pinMode(_inSdPin, INPUT_PULLDOWN);
+    // TODO if there is any default pinMode - set it to old input
+    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
+      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d\n", _sckPin, _fsPin, pin_config.data_in_num, pin_config.data_out_num);
+      return 0; // ERR
+    }else{
+      return 1; // OK
+    }
+  } // Is driver _initialized ?
   return 1; // OK
 }
 
@@ -326,8 +337,6 @@ void I2SClass::_setDataInPin(int inSdPin){
 
 int I2SClass::setDataInPin(int inSdPin){
   _setDataInPin(inSdPin);
-  pinMode(_inSdPin, INPUT_PULLDOWN);
-  // TODO if there is any default pinMode - set it to old input
   return _applyPinSetting();
 }
 
@@ -350,21 +359,36 @@ int I2SClass::setAllPins(){
 }
 
 int I2SClass::setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin){
-  setSckPin(sckPin);
-  setFsPin(fsPin);
-  setDataInPin(inSdPin);
-  setDataOutPin(outSdPin);
-
-  return _applyPinSetting();
+  _setSckPin(sckPin);
+  _setFsPin(fsPin);
+  _setDataInPin(inSdPin);
+  _setDataOutPin(outSdPin);
+  //return _applyPinSetting();
+  return 1; // OK
 }
 
-int I2SClass::setStateDuplex(){
+int I2SClass::setDuplex(){
+  /*
   if(_inSdPin < 0 || _outSdPin < 0){
-    log_e("I2S cannot set Duplex-one or both pins not set\n input pin = %d\toutput pin = %d", _inSdPin, _outSdPin);
+    log_e("I2S cannot set Duplex - one or both pins not set\n input pin = %d\toutput pin = %d", _inSdPin, _outSdPin);
     return 0; // ERR
   }
+  */
   _state = I2S_STATE_DUPLEX;
   return 1;
+}
+
+int I2SClass::setSimplex(){
+  if(_sdPin < 0){
+    log_e("I2S cannot set Simplex - shared data pin is not set\n data pin = %d", _sdPin);
+    return 0; // ERR
+  }
+  _state = I2S_STATE_IDLE;
+  return 1;
+}
+
+int I2SClass::isDuplex(){
+  return (int)(_state == I2S_STATE_DUPLEX);
 }
 
 int I2SClass::getSckPin(){
@@ -387,12 +411,18 @@ int I2SClass::getDataOutPin(){
   return _outSdPin;
 }
 
+int I2SClass::_uninstall_driver(){
+  // TODO
+  return 1; // Ok
+}
+
 void I2SClass::end()
 {
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     destroyCallbackTask();
 
     if(_initialized){
+
       if(_mode == I2S_ADC_DAC){
         esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
       }
@@ -510,7 +540,7 @@ int I2SClass::peek()
 
 void I2SClass::flush()
 {
-  const size_t single_dma_buf = _I2S_DMA_BUFFER_SIZE*(_bitsPerSample/8);
+  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
   size_t item_size = 0;
   size_t bytes_written;
   void *item = NULL;
@@ -540,44 +570,39 @@ void I2SClass::onReceive(void(*function)(void))
   _onReceive = function;
 }
 
-void I2SClass::setBufferSize(int bufferSize)
+int I2SClass::setBufferSize(int bufferSize)
 {
-  // does nothing in ESP
+  if(bufferSize >= 8 && bufferSize <= 1024){
+    _i2s_dma_buffer_size = bufferSize;
+    if(_initialized){
+      end();
+      return begin(_mode, _sampleRate, _bitsPerSample, _driveClock);
+    }
+
+    return 1; // OK
+  }else{
+    return 0; // ERR
+  }
+}
+
+int I2SClass::getBufferSize(){
+  return _i2s_dma_buffer_size;
 }
 
 int I2SClass::enableTransmitter()
 {
-  if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX){
-    esp_i2s::i2s_pin_config_t pin_config = {
-      .bck_io_num = _sckPin,
-      .ws_io_num = _fsPin,
-      .data_out_num = _outSdPin != -1 ? _outSdPin : _sdPin,
-      .data_in_num = -1 // esp_i2s::I2S_PIN_NO_CHANGE,
-    };
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      _state = I2S_STATE_IDLE;
-      return 0; // ERR
-    }
+  if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_TRANSMITTER){
     _state = I2S_STATE_TRANSMITTER;
+    return _applyPinSetting();
   }
   return 1; // Ok
 }
 
 int I2SClass::enableReceiver()
 {
-  if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX){
-    esp_i2s::i2s_pin_config_t pin_config = {
-        .bck_io_num = _sckPin,
-        .ws_io_num = _fsPin,
-        .data_out_num = -1, // esp_i2s::I2S_PIN_NO_CHANGE,
-        .data_in_num = _inSdPin != -1 ? _inSdPin : _sdPin
-    };
-    if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      _state = I2S_STATE_IDLE;
-      log_e("i2s_set_pin failed");
-      return 0; // ERR
-    }
+  if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_RECEIVER){
     _state = I2S_STATE_RECEIVER;
+    return _applyPinSetting();
   }
   return 1; // Ok
 }
@@ -585,7 +610,7 @@ int I2SClass::enableReceiver()
 void I2SClass::onTransferComplete()
 {
   static QueueSetHandle_t xQueueSet;
-  const size_t single_dma_buf = _I2S_DMA_BUFFER_SIZE*(_bitsPerSample/8);
+  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
   QueueSetMemberHandle_t xActivatedMember;
   esp_i2s::i2s_event_type_t i2s_event;
   size_t item_size = 0;
@@ -594,8 +619,8 @@ void I2SClass::onTransferComplete()
   bool prev_item_valid = false;
   size_t bytes_written, bytes_read;
   int prev_item_offset = 0;
-  uint8_t prev_item[_I2S_DMA_BUFFER_SIZE*4];
-  uint8_t _inputBuffer[_I2S_DMA_BUFFER_SIZE*4];
+  uint8_t prev_item[_i2s_dma_buffer_size*4];
+  uint8_t _inputBuffer[_i2s_dma_buffer_size*4];
 
   xQueueSet = xQueueCreateSet(sizeof(i2s_event)*_I2S_EVENT_QUEUE_LENGTH + 1);
   configASSERT(xQueueSet);
@@ -620,7 +645,7 @@ void I2SClass::onTransferComplete()
         } // prev_item_valid
 
         if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf){ // fill up the I2S DMA buffer
-          do{ // "send to esp i2s driver" loop
+
             bytes_written = 0;
             item_size = 0;
             item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
@@ -634,7 +659,6 @@ void I2SClass::onTransferComplete()
               } // save item that was not written correctly for later
               vRingbufferReturnItem(_output_ring_buffer, item);
             } // Check received item
-          }while(item_size == bytes_written && item_size == single_dma_buf);
         } // don't read from almost empty buffer
 
         if(_onTransmit){
