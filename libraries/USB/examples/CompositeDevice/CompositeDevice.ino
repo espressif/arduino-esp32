@@ -94,7 +94,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
         HWSerial.printf("MSC Update ERROR! Progress: %u bytes\n", data->error.size);
         break;
       case ARDUINO_FIRMWARE_MSC_POWER_EVENT:
-        HWSerial.printf("MSC Update Power: power: %u, start: %u, eject: %u", data->power.power_condition, data->power.start, data->power.load_eject);
+        HWSerial.printf("MSC Update Power: power: %u, start: %u, eject: %u\n", data->power.power_condition, data->power.start, data->power.load_eject);
         break;
       
       default:
@@ -173,7 +173,6 @@ void setup() {
   Gamepad.begin();
   ConsumerControl.begin();
   SystemControl.begin();
-  HID.begin();
   USB.begin();
 }
 

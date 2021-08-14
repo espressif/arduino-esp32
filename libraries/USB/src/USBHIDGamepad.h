@@ -53,7 +53,6 @@
 class USBHIDGamepad: public USBHIDDevice {
 private:
     USBHID hid;
-    xSemaphoreHandle tx_sem;
     int8_t  _x;         ///< Delta x  movement of left analog-stick
     int8_t  _y;         ///< Delta y  movement of left analog-stick
     int8_t  _z;         ///< Delta z  movement of right analog-joystick
@@ -80,9 +79,6 @@ public:
     bool releaseButton(uint8_t button);
 
     bool send(int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint32_t buttons);
-
-    //internal use
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

@@ -70,7 +70,6 @@
 class USBHIDConsumerControl: public USBHIDDevice {
 private:
     USBHID hid;
-    xSemaphoreHandle tx_sem;
     bool send(uint16_t value);
 public:
     USBHIDConsumerControl(void);
@@ -78,9 +77,6 @@ public:
     void end(void);
     size_t press(uint16_t k);
     size_t release();
-
-    //internal use
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

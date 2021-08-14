@@ -113,7 +113,6 @@ class USBHIDKeyboard: public USBHIDDevice, public Print
 {
 private:
     USBHID hid;
-    xSemaphoreHandle tx_sem;
     KeyReport _keyReport;
     void sendReport(KeyReport* keys);
 public:
@@ -135,7 +134,6 @@ public:
 
     //internal use
     void _onOutput(const uint8_t* buffer, uint16_t len);
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

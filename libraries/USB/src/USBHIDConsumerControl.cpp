@@ -26,7 +26,7 @@ static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_i
     return sizeof(report_descriptor);
 }
 
-USBHIDConsumerControl::USBHIDConsumerControl(): hid(), tx_sem(NULL){
+USBHIDConsumerControl::USBHIDConsumerControl(): hid(){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
@@ -41,39 +41,14 @@ USBHIDConsumerControl::USBHIDConsumerControl(): hid(), tx_sem(NULL){
 }
 
 void USBHIDConsumerControl::begin(){
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
+    hid.begin();
 }
 
 void USBHIDConsumerControl::end(){
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
-}
-
-void USBHIDConsumerControl::_onInputDone(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
-    xSemaphoreGive(tx_sem);
 }
 
 bool USBHIDConsumerControl::send(uint16_t value){
-    uint32_t timeout_ms = 100;
-    if(!tud_hid_n_wait_ready(0, timeout_ms)){
-        log_e("not ready");
-        return false;
-    }
-    bool res = tud_hid_n_report(0, id, &value, 2);
-    if(!res){
-        log_e("report failed");
-        return false;
-    } else if(xSemaphoreTake(tx_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
-        log_e("report wait failed");
-        return false;
-    }
-    return true;
+    return hid.SendReport(id, &value, 2);
 }
 
 size_t USBHIDConsumerControl::press(uint16_t k){

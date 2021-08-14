@@ -26,7 +26,7 @@ static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_i
     return sizeof(report_descriptor);
 }
 
-USBHIDGamepad::USBHIDGamepad(): hid(), tx_sem(NULL), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0){
+USBHIDGamepad::USBHIDGamepad(): hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
@@ -41,39 +41,25 @@ USBHIDGamepad::USBHIDGamepad(): hid(), tx_sem(NULL), _x(0), _y(0), _z(0), _rz(0)
 }
 
 void USBHIDGamepad::begin(){
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
+    hid.begin();
 }
 
 void USBHIDGamepad::end(){
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
-}
 
-void USBHIDGamepad::_onInputDone(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
-    xSemaphoreGive(tx_sem);
 }
 
 bool USBHIDGamepad::write(){
-    uint32_t timeout_ms = 100;
-    if(!tud_hid_n_wait_ready(0, timeout_ms)){
-        log_e("not ready");
-        return false;
-    }
-    bool res = tud_hid_n_gamepad_report(0, id, _x, _y, _z, _rz, _rx, _ry, _hat, _buttons);
-    if(!res){
-        log_e("report failed");
-        return false;
-    } else if(xSemaphoreTake(tx_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
-        log_e("report wait failed");
-        return false;
-    }
-    return true;
+    hid_gamepad_report_t report = {
+        .x       = _x,
+        .y       = _y,
+        .z       = _z,
+        .rz      = _rz,
+        .rx      = _rx,
+        .ry      = _ry,
+        .hat     = _hat,
+        .buttons = _buttons
+    };
+    return hid.SendReport(id, &report, sizeof(report));
 }
 
 bool USBHIDGamepad::leftStick(int8_t x, int8_t y){

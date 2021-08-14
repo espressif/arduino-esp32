@@ -36,7 +36,6 @@ class USBHIDVendor: public USBHIDDevice, public Stream {
 private:
     USBHID hid;
     uint8_t feature[63];
-    xSemaphoreHandle tx_sem;
     xQueueHandle rx_queue;
 public:
     USBHIDVendor(void);
@@ -58,7 +57,6 @@ public:
     uint16_t _onGetFeature(uint8_t* buffer, uint16_t len);
     void _onSetFeature(const uint8_t* buffer, uint16_t len);
     void _onOutput(const uint8_t* buffer, uint16_t len);
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

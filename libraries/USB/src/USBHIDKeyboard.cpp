@@ -37,7 +37,7 @@ static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_i
     return sizeof(report_descriptor);
 }
 
-USBHIDKeyboard::USBHIDKeyboard(): hid(), tx_sem(NULL){
+USBHIDKeyboard::USBHIDKeyboard(): hid(){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
@@ -52,17 +52,10 @@ USBHIDKeyboard::USBHIDKeyboard(): hid(), tx_sem(NULL){
 }
 
 void USBHIDKeyboard::begin(){
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
+    hid.begin();
 }
 
 void USBHIDKeyboard::end(){
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
 }
 
 void USBHIDKeyboard::onEvent(esp_event_handler_t callback){
@@ -70,11 +63,6 @@ void USBHIDKeyboard::onEvent(esp_event_handler_t callback){
 }
 void USBHIDKeyboard::onEvent(arduino_usb_hid_keyboard_event_t event, esp_event_handler_t callback){
     arduino_usb_event_handler_register_with(ARDUINO_USB_HID_KEYBOARD_EVENTS, event, callback, this);
-}
-
-void USBHIDKeyboard::_onInputDone(const uint8_t* buffer, uint16_t len){
-    //log_d("len: %u", len);
-    xSemaphoreGive(tx_sem);
 }
 
 void USBHIDKeyboard::_onOutput(const uint8_t* buffer, uint16_t len){
@@ -86,17 +74,15 @@ void USBHIDKeyboard::_onOutput(const uint8_t* buffer, uint16_t len){
 
 void USBHIDKeyboard::sendReport(KeyReport* keys)
 {
-    uint32_t timeout_ms = 100;
-    if(!tud_hid_n_wait_ready(0, timeout_ms)){
-        log_e("not ready");
-        return;
+    hid_keyboard_report_t report;
+    report.reserved = 0;
+    report.modifier = keys->modifiers;
+    if (keys->keys) {
+        memcpy(report.keycode, keys->keys, 6);
+    } else {
+        memset(report.keycode, 0, 6);
     }
-    bool res = tud_hid_n_keyboard_report(0, id, keys->modifiers, keys->keys);
-    if(!res){
-        log_e("report failed");
-    } else if(xSemaphoreTake(tx_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
-        log_e("report wait failed");
-    }
+    hid.SendReport(id, &report, sizeof(report));
 }
 
 #define SHIFT 0x80

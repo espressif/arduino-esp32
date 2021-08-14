@@ -34,7 +34,6 @@ class USBHIDMouse: public USBHIDDevice {
 private:
     USBHID hid;
     uint8_t _buttons;
-    xSemaphoreHandle tx_sem;
     void buttons(uint8_t b);
     bool write(int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
 public:
@@ -47,9 +46,6 @@ public:
     void press(uint8_t b = MOUSE_LEFT);   // press LEFT by default
     void release(uint8_t b = MOUSE_LEFT); // release LEFT by default
     bool isPressed(uint8_t b = MOUSE_LEFT); // check LEFT by default
-
-    //internal use
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

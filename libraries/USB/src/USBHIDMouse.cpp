@@ -33,7 +33,7 @@ static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_i
     return sizeof(report_descriptor);
 }
 
-USBHIDMouse::USBHIDMouse(): hid(), _buttons(0), tx_sem(NULL){
+USBHIDMouse::USBHIDMouse(): hid(), _buttons(0){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
@@ -48,22 +48,10 @@ USBHIDMouse::USBHIDMouse(): hid(), _buttons(0), tx_sem(NULL){
 }
 
 void USBHIDMouse::begin(){
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
+    hid.begin();
 }
 
 void USBHIDMouse::end(){
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
-}
-
-void USBHIDMouse::_onInputDone(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
-    xSemaphoreGive(tx_sem);
 }
 
 void USBHIDMouse::click(uint8_t b){
@@ -74,17 +62,14 @@ void USBHIDMouse::click(uint8_t b){
 }
 
 void USBHIDMouse::move(int8_t x, int8_t y, int8_t wheel, int8_t pan){
-    uint32_t timeout_ms = 100;
-    if(!tud_hid_n_wait_ready(0, timeout_ms)){
-        log_e("not ready");
-        return;
-    }
-    bool res = tud_hid_n_mouse_report(0, id, _buttons, x, y, wheel, pan);
-    if(!res){
-        log_e("report failed");
-    } else if(xSemaphoreTake(tx_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
-        log_e("report wait failed");
-    }
+    hid_mouse_report_t report = {
+        .buttons = _buttons,
+        .x       = x,
+        .y       = y,
+        .wheel   = wheel,
+        .pan     = pan
+    };
+    hid.SendReport(id, &report, sizeof(report));
 }
 
 void USBHIDMouse::buttons(uint8_t b){

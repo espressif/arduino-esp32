@@ -128,12 +128,14 @@ extern "C" uint16_t tusb_hid_load_descriptor(uint8_t * dst, uint8_t * itf)
 static USBHIDDevice * tinyusb_hid_devices[USB_HID_DEVICES_MAX+1];
 static uint8_t tinyusb_hid_devices_num = 0;
 static bool tinyusb_hid_devices_is_initialized = false;
+static xSemaphoreHandle tinyusb_hid_device_input_sem = NULL;
+static xSemaphoreHandle tinyusb_hid_device_input_mutex = NULL;
 
 
 // Invoked when received GET HID REPORT DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance){
-    log_d("instance: %u", instance);
+    log_v("instance: %u", instance);
     return tinyusb_hid_device_descriptor;
 }
 
@@ -191,32 +193,6 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     }
 }
 
-// Invoked when sent REPORT successfully to host
-// Application can use this to send the next report
-// Note: For composite reports, report[0] is report ID
-void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len){
-    if(report[0] < USB_HID_DEVICES_MAX && tinyusb_hid_devices[report[0]]){
-        tinyusb_hid_devices[report[0]]->_onInputDone(report+1, len-1);
-    } else {
-        log_i("instance: %u, report_id: %u, report_type: %s, bufsize:%u", instance, report[0], tinyusb_hid_device_report_types[HID_REPORT_TYPE_INPUT], len-1);
-        log_print_buf(report+1, len-1);
-    }
-}
-
-bool tud_hid_n_wait_ready(uint8_t instance, uint32_t timeout_ms){
-    if(tud_hid_n_ready(instance)){
-        return true;
-    }
-    uint32_t start_ms = millis();
-    while(!tud_hid_n_ready(instance)){
-        if((millis() - start_ms) > timeout_ms){
-            return false;
-        }
-        delay(1);
-    }
-    return true;
-}
-
 USBHID::USBHID(){
     if(!tinyusb_hid_devices_is_initialized){
         tinyusb_hid_devices_is_initialized = true;
@@ -224,15 +200,63 @@ USBHID::USBHID(){
         tinyusb_hid_devices_num = 0;
         tinyusb_enable_interface(USB_INTERFACE_HID, TUD_HID_INOUT_DESC_LEN, tusb_hid_load_descriptor);
     }
-
 }
 
 void USBHID::begin(){
-
+    if(tinyusb_hid_device_input_sem == NULL){
+        tinyusb_hid_device_input_sem = xSemaphoreCreateBinary();
+    }
+    if(tinyusb_hid_device_input_mutex == NULL){
+        tinyusb_hid_device_input_mutex = xSemaphoreCreateMutex();
+    }
 }
 
 void USBHID::end(){
+    if (tinyusb_hid_device_input_sem != NULL) {
+        vSemaphoreDelete(tinyusb_hid_device_input_sem);
+        tinyusb_hid_device_input_sem = NULL;
+    }
+    if (tinyusb_hid_device_input_mutex != NULL) {
+        vSemaphoreDelete(tinyusb_hid_device_input_mutex);
+        tinyusb_hid_device_input_mutex = NULL;
+    }
+}
 
+void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len){
+    if (tinyusb_hid_device_input_sem) {
+        xSemaphoreGive(tinyusb_hid_device_input_sem);
+    }
+}
+
+bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeout_ms){
+    if(!tinyusb_hid_device_input_sem || !tinyusb_hid_device_input_mutex){
+        log_e("TX Semaphore is NULL. You must call USBHID::begin() before you can send reports");
+        return false;
+    }
+
+    if(xSemaphoreTake(tinyusb_hid_device_input_mutex, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
+        log_e("report %u mutex failed", id);
+        return false;
+    }
+
+    bool res = tud_hid_n_ready(0);
+    if(!res){
+        log_e("not ready");
+    } else {
+        res = tud_hid_n_report(0, id, data, len);
+        if(!res){
+            log_e("report %u failed", id);
+        } else {
+            xSemaphoreTake(tinyusb_hid_device_input_sem, 0);
+            if(xSemaphoreTake(tinyusb_hid_device_input_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
+                log_e("report %u wait failed", id);
+                res = false;
+            }
+        }
+    }
+
+    xSemaphoreGive(tinyusb_hid_device_input_mutex);
+    return res;
 }
 
 bool USBHID::addDevice(USBHIDDevice * device, uint16_t descriptor_len, tinyusb_hid_device_descriptor_cb_t cb){

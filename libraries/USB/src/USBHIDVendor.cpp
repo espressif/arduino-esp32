@@ -21,9 +21,6 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_VENDOR_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
-
-//GENERIC HID
-
 // HID Generic Input, Output & Feature
 // - 1st parameter is report size (mandatory)
 // - 2nd parameter is report id HID_REPORT_ID(n) (optional)
@@ -58,23 +55,26 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 
 #define TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE_LEN 46
 
+// max size is 64 and we need one byte for the report ID
+static const uint8_t HID_VENDOR_REPORT_SIZE = 63;
+
 static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_id){
     uint8_t report_descriptor[] = {
-        TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(63, HID_REPORT_ID(report_id))
+        TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(HID_VENDOR_REPORT_SIZE, HID_REPORT_ID(report_id))
     };
     memcpy(dst, report_descriptor, sizeof(report_descriptor));
     return sizeof(report_descriptor);
 }
 
-USBHIDVendor::USBHIDVendor(): hid(), tx_sem(NULL){
+USBHIDVendor::USBHIDVendor(): hid(){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
 		uint8_t report_descriptor[] = {
-		    TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(0, HID_REPORT_ID(0))
+		    TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(HID_VENDOR_REPORT_SIZE, HID_REPORT_ID(1))
 		};
 		hid.addDevice(this, sizeof(report_descriptor), tinyusb_hid_device_descriptor_cb);
-        memset(feature, 0, 63);
+        memset(feature, 0, HID_VENDOR_REPORT_SIZE);
 	} else {
 		isr_log_e("Only one instance of USBHIDVendor is allowed!");
 		abort();
@@ -97,30 +97,24 @@ size_t USBHIDVendor::setRxBufferSize(size_t rx_queue_len){
 }
 
 void USBHIDVendor::begin(){
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
+    hid.begin();
     setRxBufferSize(256);//default if not preset
 }
 
 void USBHIDVendor::end(){
     setRxBufferSize(0);
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
 }
 
 void USBHIDVendor::onEvent(esp_event_handler_t callback){
     onEvent(ARDUINO_USB_HID_VENDOR_ANY_EVENT, callback);
 }
+
 void USBHIDVendor::onEvent(arduino_usb_hid_vendor_event_t event, esp_event_handler_t callback){
     arduino_usb_event_handler_register_with(ARDUINO_USB_HID_VENDOR_EVENTS, event, callback, this);
 }
 
 uint16_t USBHIDVendor::_onGetFeature(uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
+    log_v("len: %u", len);
     memcpy(buffer, feature, len);
     arduino_usb_hid_vendor_event_data_t p = {0};
     p.buffer = feature;
@@ -128,16 +122,18 @@ uint16_t USBHIDVendor::_onGetFeature(uint8_t* buffer, uint16_t len){
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_GET_FEATURE_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
     return len;
 }
+
 void USBHIDVendor::_onSetFeature(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
+    log_v("len: %u", len);
     memcpy(feature, buffer, len);
     arduino_usb_hid_vendor_event_data_t p = {0};
     p.buffer = feature;
     p.len = len;
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_SET_FEATURE_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
 }
+
 void USBHIDVendor::_onOutput(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", len);
+    log_v("len: %u", len);
     for(uint32_t i=0; i<len; i++){
         if(rx_queue == NULL || !xQueueSend(rx_queue, buffer+i, 0)){
             len = i+1;
@@ -150,33 +146,22 @@ void USBHIDVendor::_onOutput(const uint8_t* buffer, uint16_t len){
     p.len = len;
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_OUTPUT_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
 }
-void USBHIDVendor::_onInputDone(const uint8_t* buffer, uint16_t len){
-    //log_i("len: %u", buffer[0]);
-    xSemaphoreGive(tx_sem);
-}
+
 size_t USBHIDVendor::write(const uint8_t* buffer, uint16_t len){
-	uint32_t timeout_ms = 100;
-    uint8_t hid_in[64] = {id, 0x00, };
     const uint8_t * data = (const uint8_t *)buffer;
-    size_t to_send = len, max_send=64-2, will_send=0;
+    size_t to_send = len, max_send=HID_VENDOR_REPORT_SIZE, will_send=0;
     while(to_send){
         will_send = to_send;
         if(will_send > max_send){
             will_send = max_send;
         }
-        if(!tud_hid_n_wait_ready(0, timeout_ms)){
-            log_e("not ready");
-            return len - to_send;
-        }
-        hid_in[1] = (uint8_t)will_send;
-        memcpy(hid_in+2, data, will_send);
-        memset(hid_in+2+will_send, 0, 64 - (will_send+2));
-        if(!tud_hid_n_report(0, 0, hid_in, 64)){
-            log_e("report failed");
-            return len - to_send;
-        }
-        if(xSemaphoreTake(tx_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
-            log_e("report wait failed");
+        // On Mac, I can get INPUT only when data length equals the input report size
+        // To be tested on other platforms
+        //uint8_t hid_in[HID_VENDOR_REPORT_SIZE];
+        //memcpy(hid_in, data, will_send);
+        //memset(hid_in + will_send, 0, HID_VENDOR_REPORT_SIZE - will_send);
+        //if(!hid.SendReport(id, hid_in, HID_VENDOR_REPORT_SIZE)){
+        if(!hid.SendReport(id, buffer + (len - to_send), will_send)){
             return len - to_send;
         }
         to_send -= will_send;

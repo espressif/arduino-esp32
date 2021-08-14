@@ -24,7 +24,6 @@
 class USBHIDSystemControl: public USBHIDDevice {
 private:
     USBHID hid;
-    xSemaphoreHandle tx_sem;
     bool send(uint8_t value);
 public:
     USBHIDSystemControl(void);
@@ -32,9 +31,6 @@ public:
     void end(void);
     size_t press(uint8_t k);
     size_t release();
-
-    //internal use
-    void _onInputDone(const uint8_t* buffer, uint16_t len);
 };
 
 #endif

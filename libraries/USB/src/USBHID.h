@@ -53,7 +53,6 @@ public:
     virtual uint16_t _onGetFeature(uint8_t* buffer, uint16_t len){return 0;}
     virtual void _onSetFeature(const uint8_t* buffer, uint16_t len){}
     virtual void _onOutput(const uint8_t* buffer, uint16_t len){}
-    virtual void _onInputDone(const uint8_t* buffer, uint16_t len){}
 };
 
 class USBHID
@@ -62,11 +61,10 @@ public:
     USBHID(void);
     void begin(void);
     void end(void);
+    bool SendReport(uint8_t id, const void* data, size_t len, uint32_t timeout_ms = 100);
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_hid_event_t event, esp_event_handler_t callback);
     static bool addDevice(USBHIDDevice * device, uint16_t descriptor_len, tinyusb_hid_device_descriptor_cb_t cb);
 };
-
-bool tud_hid_n_wait_ready(uint8_t instance, uint32_t timeout_ms);
 
 #endif
