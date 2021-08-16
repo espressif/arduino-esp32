@@ -7,6 +7,7 @@
 #include "HardwareSerial.h"
 
 #if CONFIG_IDF_TARGET_ESP32
+// ESP32 UART1 and UART2 suggested default pins - software configurable
 
 #ifndef RX1
 #define RX1 9
@@ -24,8 +25,16 @@
 #define TX2 17
 #endif
 
-#else
+void serialEvent(void) __attribute__((weak));
+void serialEvent1(void) __attribute__((weak));
+void serialEvent2(void) __attribute__((weak));
+void serialEvent(void) {}
+void serialEvent1(void) {}
+void serialEvent2(void) {}
 
+#elif CONFIG_IDF_TARGET_ESP32S2
+
+// ESP32-S2 UART1 suggested default pins - software configurable
 #ifndef RX1
 #define RX1 18
 #endif
@@ -34,8 +43,29 @@
 #define TX1 17
 #endif
 
+void serialEvent(void) __attribute__((weak));
+void serialEvent1(void) __attribute__((weak));
+void serialEvent(void) {}
+void serialEvent1(void) {}
+
+#elif CONFIG_IDF_TARGET_ESP32C3
+// ESP32-C3 UART1 suggested default pins - software configurable
+
+#ifndef RX1
+#define RX1 18
 #endif
 
+#ifndef TX1
+#define TX1 19
+
+void serialEvent(void) __attribute__((weak));
+void serialEvent1(void) __attribute__((weak));
+void serialEvent(void) {}
+void serialEvent1(void) {}
+
+#endif
+
+#endif
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 HardwareSerial Serial0(0);
@@ -48,6 +78,15 @@ HardwareSerial Serial2(2);
 #endif
 #endif
 
+void serialEventRun(void)
+{
+    if(Serial.available()) serialEvent();
+    if(Serial1.available()) serialEvent1();
+#if CONFIG_IDF_TARGET_ESP32
+    if(Serial2.available()) serialEvent2();
+#endif
+}
+
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
@@ -57,7 +96,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         return;
     }
     if(_uart) {
-        end();
+        // in this case it is a begin() over a previous begin() - maybe to change baud rate
+        // thus do not disable debug output
+        end(false);
     }
     if(_uart_nr == 0 && rxPin < 0 && txPin < 0) {
 #if CONFIG_IDF_TARGET_ESP32
@@ -82,29 +123,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 #endif
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
-    _tx_pin = txPin;
-    _rx_pin = rxPin;
-
-    if(!baud) {
-        uartStartDetectBaudrate(_uart);
-        time_t startMillis = millis();
-        unsigned long detectedBaudRate = 0;
-        while(millis() - startMillis < timeout_ms && !(detectedBaudRate = uartDetectBaudrate(_uart))) {
-            yield();
-        }
-
-        end();
-
-        if(detectedBaudRate) {
-            delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
-        } else {
-            log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
-            _uart = NULL;
-            _tx_pin = 255;
-            _rx_pin = 255;
-        }
-    }
 }
 
 void HardwareSerial::updateBaudRate(unsigned long baud)
@@ -112,19 +130,14 @@ void HardwareSerial::updateBaudRate(unsigned long baud)
 	uartSetBaudRate(_uart, baud);
 }
 
-void HardwareSerial::end()
+void HardwareSerial::end(bool turnOffDebug)
 {
-    if(uartGetDebug() == _uart_nr) {
+    if(turnOffDebug && uartGetDebug() == _uart_nr) {
         uartSetDebug(0);
     }
     delay(10);
-    log_v("pins %d %d",_tx_pin, _rx_pin);
-    uartEnd(_uart, _tx_pin, _rx_pin);
+    uartEnd(_uart);
     _uart = 0;
-}
-
-size_t HardwareSerial::setRxBufferSize(size_t new_size) {
-    return uartResizeRxBuffer(_uart, new_size);
 }
 
 void HardwareSerial::setDebugOutput(bool en)
@@ -212,7 +225,7 @@ uint32_t  HardwareSerial::baudRate()
 }
 HardwareSerial::operator bool() const
 {
-    return true;
+    return uartIsDriverInstalled(_uart);
 }
 
 void HardwareSerial::setRxInvert(bool invert)

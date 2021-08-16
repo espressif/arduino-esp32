@@ -56,7 +56,7 @@ public:
     HardwareSerial(int uart_nr);
 
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
-    void end();
+    void end(bool turnOffDebug = true);
     void updateBaudRate(unsigned long baud);
     int available(void);
     int availableForWrite(void);
@@ -98,7 +98,6 @@ public:
     uint32_t baudRate();
     operator bool() const;
 
-    size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
     
     void setRxInvert(bool);
@@ -106,8 +105,6 @@ public:
 protected:
     int _uart_nr;
     uart_t* _uart;
-    uint8_t _tx_pin;
-    uint8_t _rx_pin;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
