@@ -34,9 +34,6 @@ USBHIDMouse::USBHIDMouse(): hid(), _buttons(0){
 	if(!initialized){
 		initialized = true;
 		hid.addDevice(this, sizeof(report_descriptor));
-	} else {
-		isr_log_e("Only one instance of USBHIDMouse is allowed!");
-		abort();
 	}
 }
 

@@ -35,8 +35,6 @@ typedef struct {
 class USBHIDVendor: public USBHIDDevice, public Stream {
 private:
     USBHID hid;
-    uint8_t feature[63];
-    xQueueHandle rx_queue;
 public:
     USBHIDVendor(void);
     void begin(void);

@@ -58,6 +58,9 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 // max size is 64 and we need one byte for the report ID
 static const uint8_t HID_VENDOR_REPORT_SIZE = 63;
 
+static uint8_t feature[HID_VENDOR_REPORT_SIZE];
+static xQueueHandle rx_queue = NULL;
+
 static const uint8_t report_descriptor[] = {
     TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(HID_VENDOR_REPORT_SIZE, HID_REPORT_ID(HID_REPORT_ID_VENDOR))
 };
@@ -68,9 +71,6 @@ USBHIDVendor::USBHIDVendor(): hid(){
 		initialized = true;
 		hid.addDevice(this, sizeof(report_descriptor));
         memset(feature, 0, HID_VENDOR_REPORT_SIZE);
-	} else {
-		isr_log_e("Only one instance of USBHIDVendor is allowed!");
-		abort();
 	}
 }
 
@@ -112,7 +112,9 @@ void USBHIDVendor::onEvent(arduino_usb_hid_vendor_event_t event, esp_event_handl
 }
 
 uint16_t USBHIDVendor::_onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_t len){
-    log_v("len: %u", len);
+    if(report_id != HID_REPORT_ID_VENDOR){
+        return 0;
+    }
     memcpy(buffer, feature, len);
     arduino_usb_hid_vendor_event_data_t p = {0};
     p.buffer = feature;
@@ -122,7 +124,9 @@ uint16_t USBHIDVendor::_onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_
 }
 
 void USBHIDVendor::_onSetFeature(uint8_t report_id, const uint8_t* buffer, uint16_t len){
-    log_v("len: %u", len);
+    if(report_id != HID_REPORT_ID_VENDOR){
+        return;
+    }
     memcpy(feature, buffer, len);
     arduino_usb_hid_vendor_event_data_t p = {0};
     p.buffer = feature;
@@ -131,7 +135,9 @@ void USBHIDVendor::_onSetFeature(uint8_t report_id, const uint8_t* buffer, uint1
 }
 
 void USBHIDVendor::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len){
-    log_v("len: %u", len);
+    if(report_id != HID_REPORT_ID_VENDOR){
+        return;
+    }
     for(uint32_t i=0; i<len; i++){
         if(rx_queue == NULL || !xQueueSend(rx_queue, buffer+i, 0)){
             len = i+1;

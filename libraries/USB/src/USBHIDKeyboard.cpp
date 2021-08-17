@@ -38,9 +38,6 @@ USBHIDKeyboard::USBHIDKeyboard(): hid(){
     if(!initialized){
         initialized = true;
         hid.addDevice(this, sizeof(report_descriptor));
-    } else {
-        isr_log_e("Only one instance of USBHIDKeyboard is allowed!");
-        abort();
     }
 }
 
@@ -64,10 +61,11 @@ void USBHIDKeyboard::onEvent(arduino_usb_hid_keyboard_event_t event, esp_event_h
 }
 
 void USBHIDKeyboard::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len){
-    //log_d("LEDS: 0x%02x", buffer[0]);
-    arduino_usb_hid_keyboard_event_data_t p = {0};
-    p.leds = buffer[0];
-    arduino_usb_event_post(ARDUINO_USB_HID_KEYBOARD_EVENTS, ARDUINO_USB_HID_KEYBOARD_LED_EVENT, &p, sizeof(arduino_usb_hid_keyboard_event_data_t), portMAX_DELAY);
+    if(report_id == HID_REPORT_ID_KEYBOARD){
+        arduino_usb_hid_keyboard_event_data_t p = {0};
+        p.leds = buffer[0];
+        arduino_usb_event_post(ARDUINO_USB_HID_KEYBOARD_EVENTS, ARDUINO_USB_HID_KEYBOARD_LED_EVENT, &p, sizeof(arduino_usb_hid_keyboard_event_data_t), portMAX_DELAY);
+    }
 }
 
 void USBHIDKeyboard::sendReport(KeyReport* keys)

@@ -27,9 +27,6 @@ USBHIDGamepad::USBHIDGamepad(): hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(
 	if(!initialized){
 		initialized = true;
 		hid.addDevice(this, sizeof(report_descriptor));
-	} else {
-		isr_log_e("Only one instance of USBHIDGamepad is allowed!");
-		abort();
 	}
 }
 

@@ -27,9 +27,6 @@ USBHIDSystemControl::USBHIDSystemControl(): hid(){
 	if(!initialized){
 		initialized = true;
 		hid.addDevice(this, sizeof(report_descriptor));
-	} else {
-		isr_log_e("Only one instance of USBHIDSystemControl is allowed!");
-		abort();
 	}
 }
 
