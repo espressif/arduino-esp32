@@ -69,6 +69,7 @@ public:
     USBHID(void);
     void begin(void);
     void end(void);
+    bool ready(void);
     bool SendReport(uint8_t report_id, const void* data, size_t len, uint32_t timeout_ms = 100);
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_hid_event_t event, esp_event_handler_t callback);

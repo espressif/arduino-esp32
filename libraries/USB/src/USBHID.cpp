@@ -173,9 +173,6 @@ extern "C" uint16_t tusb_hid_load_descriptor(uint8_t * dst, uint8_t * itf)
         return 0;
     }
     tinyusb_hid_is_initialized = true;
-    if(!tinyusb_load_enabled_hid_devices()){
-        return 0;
-    }
 
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB HID");
     uint8_t ep_in = tinyusb_get_free_in_endpoint();
@@ -199,6 +196,9 @@ extern "C" uint16_t tusb_hid_load_descriptor(uint8_t * dst, uint8_t * itf)
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance){
     log_v("instance: %u", instance);
+    if(!tinyusb_load_enabled_hid_devices()){
+        return NULL;
+    }
     return tinyusb_hid_device_descriptor;
 }
 
@@ -281,6 +281,10 @@ void USBHID::end(){
     }
 }
 
+bool USBHID::ready(void){
+    return tud_hid_n_ready(0);
+}
+
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len){
     if (tinyusb_hid_device_input_sem) {
         xSemaphoreGive(tinyusb_hid_device_input_sem);
@@ -298,7 +302,7 @@ bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeo
         return false;
     }
 
-    bool res = tud_hid_n_ready(0);
+    bool res = ready();
     if(!res){
         log_e("not ready");
     } else {

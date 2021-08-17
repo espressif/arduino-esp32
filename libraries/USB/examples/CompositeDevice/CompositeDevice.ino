@@ -178,7 +178,7 @@ void setup() {
 
 void loop() {
   int buttonState = digitalRead(buttonPin);
-  if (buttonState != previousButtonState) {
+  if (HID.ready() && buttonState != previousButtonState) {
     previousButtonState = buttonState;
     if (buttonState == LOW) {
       HWSerial.println("Button Pressed");
@@ -206,6 +206,8 @@ void loop() {
     uint8_t b[l];
     l = HWSerial.read(b, l);
     USBSerial.write(b, l);
-    Vendor.write(b,l);
+    if(HID.ready()){
+      Vendor.write(b,l);
+    }
   }
 }
