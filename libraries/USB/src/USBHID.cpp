@@ -23,30 +23,6 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
-static void log_print_buf_line(const uint8_t *b, size_t len){
-    for(size_t i = 0; i<len; i++){
-        log_printf("%s0x%02x,",i?" ":"", b[i]);
-    }
-    for(size_t i = len; i<16; i++){
-        log_printf("      ");
-    }
-    log_printf("    // ");
-    for(size_t i = 0; i<len; i++){
-        log_printf("%c",((b[i] >= 0x20) && (b[i] < 0x80))?b[i]:'.');
-    }
-    log_printf("\n");
-}
-
-void log_print_buf(const uint8_t *b, size_t len){
-    if(!len || !b){
-        return;
-    }
-    for(size_t i = 0; i<len; i+=16){
-        log_printf("/* 0x%04X */ ", i);
-        log_print_buf_line(b+i, ((len-i)<16)?(len - i):16);
-    }
-}
-
 typedef struct {
     USBHIDDevice * device;
     uint8_t reports_num;
@@ -266,12 +242,10 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
         report_id = buffer[0];
         if(!tinyusb_on_set_output(report_id, buffer+1, bufsize-1)){
             log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, *buffer, tinyusb_hid_device_report_types[HID_REPORT_TYPE_OUTPUT], bufsize-1);
-            //log_print_buf(buffer+1, bufsize-1);
         }
     } else {
         if(!tinyusb_on_set_feature(report_id, buffer, bufsize)){
             log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, report_id, tinyusb_hid_device_report_types[report_type], bufsize);
-            //log_print_buf(buffer, bufsize);
         }
     }
 }
