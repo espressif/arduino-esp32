@@ -53,10 +53,11 @@ public:
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_hid_vendor_event_t event, esp_event_handler_t callback);
 
-    //internal use
-    uint16_t _onGetFeature(uint8_t* buffer, uint16_t len);
-    void _onSetFeature(const uint8_t* buffer, uint16_t len);
-    void _onOutput(const uint8_t* buffer, uint16_t len);
+    // internal use
+    uint16_t _onGetDescriptor(uint8_t* buffer);
+    uint16_t _onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_t len);
+    void _onSetFeature(uint8_t report_id, const uint8_t* buffer, uint16_t len);
+    void _onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len);
 };
 
 #endif

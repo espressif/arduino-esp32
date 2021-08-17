@@ -14,6 +14,7 @@
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "USBHID.h"
+#include "esp_hid_common.h"
 
 #if CFG_TUD_HID
 #define USB_HID_DEVICES_MAX 10
@@ -46,16 +47,26 @@ void log_print_buf(const uint8_t *b, size_t len){
     }
 }
 
+typedef struct {
+    USBHIDDevice * device;
+    uint8_t reports_num;
+    uint8_t * report_ids;
+} tinyusb_hid_device_t;
+
+static tinyusb_hid_device_t tinyusb_hid_devices[USB_HID_DEVICES_MAX];
+
+static uint8_t tinyusb_hid_devices_num = 0;
+static bool tinyusb_hid_devices_is_initialized = false;
+static xSemaphoreHandle tinyusb_hid_device_input_sem = NULL;
+static xSemaphoreHandle tinyusb_hid_device_input_mutex = NULL;
 
 static bool tinyusb_hid_is_initialized = false;
-static tinyusb_hid_device_descriptor_cb_t tinyusb_loaded_hid_devices_callbacks[USB_HID_DEVICES_MAX];
 static uint8_t tinyusb_loaded_hid_devices_num = 0;
-static uint8_t tinyusb_loaded_hid_devices_report_id = 1;
 static uint16_t tinyusb_hid_device_descriptor_len = 0;
 static uint8_t * tinyusb_hid_device_descriptor = NULL;
 static const char * tinyusb_hid_device_report_types[4] = {"INVALID", "INPUT", "OUTPUT", "FEATURE"};
 
-static bool tinyusb_enable_hid_device(uint16_t descriptor_len, tinyusb_hid_device_descriptor_cb_t cb){
+static bool tinyusb_enable_hid_device(uint16_t descriptor_len, USBHIDDevice * device){
     if(tinyusb_hid_is_initialized){
         log_e("TinyUSB HID has already started! Device not enabled");
         return false;
@@ -65,20 +76,102 @@ static bool tinyusb_enable_hid_device(uint16_t descriptor_len, tinyusb_hid_devic
         return false;
     }
     tinyusb_hid_device_descriptor_len += descriptor_len;
-    tinyusb_loaded_hid_devices_callbacks[tinyusb_loaded_hid_devices_num++] = cb;
-    log_d("Device enabled");
+    tinyusb_hid_devices[tinyusb_loaded_hid_devices_num++].device = device;
+
+    log_d("Device[%u] len: %u", tinyusb_loaded_hid_devices_num-1, descriptor_len);
     return true;
 }
 
-static uint16_t tinyusb_load_hid_descriptor(uint8_t interface, uint8_t * dst, uint8_t report_id)
-{
-    if(interface < USB_HID_DEVICES_MAX && tinyusb_loaded_hid_devices_callbacks[interface] != NULL){
-        return tinyusb_loaded_hid_devices_callbacks[interface](dst, report_id);
+USBHIDDevice * tinyusb_get_device_by_report_id(uint8_t report_id){
+    for(uint8_t i=0; i<tinyusb_loaded_hid_devices_num; i++){
+        tinyusb_hid_device_t * device = &tinyusb_hid_devices[i];
+        if(device->device && device->reports_num){
+            for(uint8_t r=0; r<device->reports_num; r++){
+                if(report_id == device->report_ids[r]){
+                    return device->device;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+static uint16_t tinyusb_on_get_feature(uint8_t report_id, uint8_t* buffer, uint16_t reqlen){
+    USBHIDDevice * device = tinyusb_get_device_by_report_id(report_id);
+    if(device){
+        return device->_onGetFeature(report_id, buffer, reqlen);
     }
     return 0;
 }
 
+static bool tinyusb_on_set_feature(uint8_t report_id, const uint8_t* buffer, uint16_t reqlen){
+    USBHIDDevice * device = tinyusb_get_device_by_report_id(report_id);
+    if(device){
+        device->_onSetFeature(report_id, buffer, reqlen);
+        return true;
+    }
+    return false;
+}
+
+static bool tinyusb_on_set_output(uint8_t report_id, const uint8_t* buffer, uint16_t reqlen){
+    USBHIDDevice * device = tinyusb_get_device_by_report_id(report_id);
+    if(device){
+        device->_onOutput(report_id, buffer, reqlen);
+        return true;
+    }
+    return false;
+}
+
+static uint16_t tinyusb_on_add_descriptor(uint8_t device_index, uint8_t * dst){
+    uint16_t res = 0;
+    uint8_t report_id = 0, reports_num = 0;
+    tinyusb_hid_device_t * device = &tinyusb_hid_devices[device_index];
+    if(device->device){
+        res = device->device->_onGetDescriptor(dst);
+        if(res){
+
+            esp_hid_report_map_t *hid_report_map = esp_hid_parse_report_map(dst, res);
+            if(hid_report_map){
+                if(device->report_ids){
+                    free(device->report_ids);
+                }
+                device->reports_num = hid_report_map->reports_len;
+                device->report_ids = (uint8_t*)malloc(device->reports_num);
+                memset(device->report_ids, 0, device->reports_num);
+                reports_num = device->reports_num;
+
+                for(uint8_t i=0; i<device->reports_num; i++){
+                    if(hid_report_map->reports[i].protocol_mode == ESP_HID_PROTOCOL_MODE_REPORT){
+                        report_id = hid_report_map->reports[i].report_id;
+                        for(uint8_t r=0; r<device->reports_num; r++){
+                            if(report_id == device->report_ids[r]){
+                                //already added
+                                reports_num--;
+                                break;
+                            } else if(!device->report_ids[r]){
+                                //empty slot
+                                device->report_ids[r] = report_id;
+                                break;
+                            }
+                        }
+                    } else {
+                        reports_num--;
+                    }
+                }
+                device->reports_num = reports_num;
+                esp_hid_free_report_map(hid_report_map);
+            }
+
+        }
+    }
+    return res;
+}
+
+
 static bool tinyusb_load_enabled_hid_devices(){
+    if(tinyusb_hid_device_descriptor != NULL){
+        return true;
+    }
     tinyusb_hid_device_descriptor = (uint8_t *)malloc(tinyusb_hid_device_descriptor_len);
     if (tinyusb_hid_device_descriptor == NULL) {
         log_e("HID Descriptor Malloc Failed");
@@ -86,15 +179,15 @@ static bool tinyusb_load_enabled_hid_devices(){
     }
     uint8_t * dst = tinyusb_hid_device_descriptor;
 
-    for(uint8_t i=0; i<USB_HID_DEVICES_MAX; i++){
-            uint16_t len = tinyusb_load_hid_descriptor(i, dst, i+1);
+    for(uint8_t i=0; i<tinyusb_loaded_hid_devices_num; i++){
+            uint16_t len = tinyusb_on_add_descriptor(i, dst);
             if (!len) {
                 break;
             } else {
                 dst += len;
             }
     }
-    log_d("Load Done: reports: %u, descr_len: %u", tinyusb_loaded_hid_devices_report_id - 1, tinyusb_hid_device_descriptor_len);
+
     return true;
 }
 
@@ -124,12 +217,6 @@ extern "C" uint16_t tusb_hid_load_descriptor(uint8_t * dst, uint8_t * itf)
 }
 
 
-
-static USBHIDDevice * tinyusb_hid_devices[USB_HID_DEVICES_MAX+1];
-static uint8_t tinyusb_hid_devices_num = 0;
-static bool tinyusb_hid_devices_is_initialized = false;
-static xSemaphoreHandle tinyusb_hid_device_input_sem = NULL;
-static xSemaphoreHandle tinyusb_hid_device_input_mutex = NULL;
 
 
 // Invoked when received GET HID REPORT DESCRIPTOR request
@@ -165,11 +252,11 @@ bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate){
 // Application must fill buffer report's content and return its length.
 // Return zero will cause the stack to STALL request
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){
-    if(report_id < USB_HID_DEVICES_MAX && tinyusb_hid_devices[report_id]){
-        return tinyusb_hid_devices[report_id]->_onGetFeature(buffer, reqlen);
+    uint16_t res = tinyusb_on_get_feature(report_id, buffer, reqlen);
+    if(!res){
+        log_d("instance: %u, report_id: %u, report_type: %s, reqlen: %u", instance, report_id, tinyusb_hid_device_report_types[report_type], reqlen);
     }
-    log_d("instance: %u, report_id: %u, report_type: %s, reqlen: %u", instance, report_id, tinyusb_hid_device_report_types[report_type], reqlen);
-    return 0;
+    return res;
 }
 
 // Invoked when received SET_REPORT control request or
@@ -177,18 +264,14 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize){
     if(!report_id && !report_type){
         report_id = buffer[0];
-        if(report_id < USB_HID_DEVICES_MAX && tinyusb_hid_devices[report_id]){
-            tinyusb_hid_devices[report_id]->_onOutput(buffer+1, bufsize-1);
-        } else {
+        if(!tinyusb_on_set_output(report_id, buffer+1, bufsize-1)){
             log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, *buffer, tinyusb_hid_device_report_types[HID_REPORT_TYPE_OUTPUT], bufsize-1);
-            log_print_buf(buffer+1, bufsize-1);
+            //log_print_buf(buffer+1, bufsize-1);
         }
     } else {
-        if(report_id < USB_HID_DEVICES_MAX && tinyusb_hid_devices[report_id]){
-            tinyusb_hid_devices[report_id]->_onSetFeature(buffer, bufsize);
-        } else {
+        if(!tinyusb_on_set_feature(report_id, buffer, bufsize)){
             log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, report_id, tinyusb_hid_device_report_types[report_type], bufsize);
-            log_print_buf(buffer, bufsize);
+            //log_print_buf(buffer, bufsize);
         }
     }
 }
@@ -196,7 +279,9 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 USBHID::USBHID(){
     if(!tinyusb_hid_devices_is_initialized){
         tinyusb_hid_devices_is_initialized = true;
-        memset(tinyusb_hid_devices, 0, sizeof(tinyusb_hid_devices));
+        for(uint8_t i=0; i<USB_HID_DEVICES_MAX; i++){
+            memset(&tinyusb_hid_devices[i], 0, sizeof(tinyusb_hid_device_t));
+        }
         tinyusb_hid_devices_num = 0;
         tinyusb_enable_interface(USB_INTERFACE_HID, TUD_HID_INOUT_DESC_LEN, tusb_hid_load_descriptor);
     }
@@ -259,13 +344,11 @@ bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeo
     return res;
 }
 
-bool USBHID::addDevice(USBHIDDevice * device, uint16_t descriptor_len, tinyusb_hid_device_descriptor_cb_t cb){
+bool USBHID::addDevice(USBHIDDevice * device, uint16_t descriptor_len){
     if(device && tinyusb_loaded_hid_devices_num < USB_HID_DEVICES_MAX){
-        if(!tinyusb_enable_hid_device(descriptor_len, cb)){
+        if(!tinyusb_enable_hid_device(descriptor_len, device)){
             return false;
         }
-        device->id = tinyusb_loaded_hid_devices_num;
-        tinyusb_hid_devices[tinyusb_loaded_hid_devices_num] = device;
         return true;
     }
     return false;

@@ -31,6 +31,9 @@ public:
     void end(void);
     size_t press(uint8_t k);
     size_t release();
+
+    // internal use
+    uint16_t _onGetDescriptor(uint8_t* buffer);
 };
 
 #endif

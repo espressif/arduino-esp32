@@ -25,26 +25,24 @@
 
 #if CFG_TUD_HID
 
-static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_id){
-    uint8_t report_descriptor[] = {
-        TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(report_id))
-    };
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
-}
+static const uint8_t report_descriptor[] = {
+    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))
+};
 
 USBHIDMouse::USBHIDMouse(): hid(), _buttons(0){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
-		uint8_t report_descriptor[] = {
-		    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(0))
-		};
-		hid.addDevice(this, sizeof(report_descriptor), tinyusb_hid_device_descriptor_cb);
+		hid.addDevice(this, sizeof(report_descriptor));
 	} else {
 		isr_log_e("Only one instance of USBHIDMouse is allowed!");
 		abort();
 	}
+}
+
+uint16_t USBHIDMouse::_onGetDescriptor(uint8_t* dst){
+    memcpy(dst, report_descriptor, sizeof(report_descriptor));
+    return sizeof(report_descriptor);
 }
 
 void USBHIDMouse::begin(){
@@ -52,13 +50,6 @@ void USBHIDMouse::begin(){
 }
 
 void USBHIDMouse::end(){
-}
-
-void USBHIDMouse::click(uint8_t b){
-    _buttons = b;
-    move(0,0);
-    _buttons = 0;
-    move(0,0);
 }
 
 void USBHIDMouse::move(int8_t x, int8_t y, int8_t wheel, int8_t pan){
@@ -69,7 +60,14 @@ void USBHIDMouse::move(int8_t x, int8_t y, int8_t wheel, int8_t pan){
         .wheel   = wheel,
         .pan     = pan
     };
-    hid.SendReport(id, &report, sizeof(report));
+    hid.SendReport(HID_REPORT_ID_MOUSE, &report, sizeof(report));
+}
+
+void USBHIDMouse::click(uint8_t b){
+    _buttons = b;
+    move(0,0);
+    _buttons = 0;
+    move(0,0);
 }
 
 void USBHIDMouse::buttons(uint8_t b){

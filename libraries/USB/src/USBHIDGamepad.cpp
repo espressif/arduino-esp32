@@ -18,26 +18,24 @@
 
 #if CFG_TUD_HID
 
-static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_id){
-    uint8_t report_descriptor[] = {
-        TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(report_id))
-    };
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
-}
+static const uint8_t report_descriptor[] = {
+    TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(HID_REPORT_ID_GAMEPAD))
+};
 
 USBHIDGamepad::USBHIDGamepad(): hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
-		uint8_t report_descriptor[] = {
-		    TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(0))
-		};
-		hid.addDevice(this, sizeof(report_descriptor), tinyusb_hid_device_descriptor_cb);
+		hid.addDevice(this, sizeof(report_descriptor));
 	} else {
 		isr_log_e("Only one instance of USBHIDGamepad is allowed!");
 		abort();
 	}
+}
+
+uint16_t USBHIDGamepad::_onGetDescriptor(uint8_t* dst){
+    memcpy(dst, report_descriptor, sizeof(report_descriptor));
+    return sizeof(report_descriptor);
 }
 
 void USBHIDGamepad::begin(){
@@ -59,7 +57,7 @@ bool USBHIDGamepad::write(){
         .hat     = _hat,
         .buttons = _buttons
     };
-    return hid.SendReport(id, &report, sizeof(report));
+    return hid.SendReport(HID_REPORT_ID_GAMEPAD, &report, sizeof(report));
 }
 
 bool USBHIDGamepad::leftStick(int8_t x, int8_t y){

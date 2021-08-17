@@ -18,26 +18,24 @@
 
 #if CFG_TUD_HID
 
-static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_id){
-    uint8_t report_descriptor[] = {
-        TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(report_id))
-    };
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
-}
+static const uint8_t report_descriptor[] = {
+    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER_CONTROL))
+};
 
 USBHIDConsumerControl::USBHIDConsumerControl(): hid(){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
-		uint8_t report_descriptor[] = {
-		    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(0))
-		};
-		hid.addDevice(this, sizeof(report_descriptor), tinyusb_hid_device_descriptor_cb);
+		hid.addDevice(this, sizeof(report_descriptor));
 	} else {
 		isr_log_e("Only one instance of USBHIDConsumerControl is allowed!");
 		abort();
 	}
+}
+
+uint16_t USBHIDConsumerControl::_onGetDescriptor(uint8_t* dst){
+    memcpy(dst, report_descriptor, sizeof(report_descriptor));
+    return sizeof(report_descriptor);
 }
 
 void USBHIDConsumerControl::begin(){
@@ -48,7 +46,7 @@ void USBHIDConsumerControl::end(){
 }
 
 bool USBHIDConsumerControl::send(uint16_t value){
-    return hid.SendReport(id, &value, 2);
+    return hid.SendReport(HID_REPORT_ID_CONSUMER_CONTROL, &value, 2);
 }
 
 size_t USBHIDConsumerControl::press(uint16_t k){

@@ -22,6 +22,17 @@
 #include "class/hid/hid.h"
 #include "esp_event.h"
 
+// Used by the included TinyUSB drivers
+enum {
+    HID_REPORT_ID_NONE,
+    HID_REPORT_ID_KEYBOARD,
+    HID_REPORT_ID_MOUSE,
+    HID_REPORT_ID_GAMEPAD,
+    HID_REPORT_ID_CONSUMER_CONTROL,
+    HID_REPORT_ID_SYSTEM_CONTROL,
+    HID_REPORT_ID_VENDOR
+};
+
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_HID_EVENTS);
 
 typedef enum {
@@ -43,16 +54,13 @@ typedef struct {
     };
 } arduino_usb_hid_event_data_t;
 
-typedef uint16_t (*tinyusb_hid_device_descriptor_cb_t)(uint8_t * dst, uint8_t report_id);
-
 class USBHIDDevice
 {
 public:
-    uint8_t id;
-    USBHIDDevice():id(0){}
-    virtual uint16_t _onGetFeature(uint8_t* buffer, uint16_t len){return 0;}
-    virtual void _onSetFeature(const uint8_t* buffer, uint16_t len){}
-    virtual void _onOutput(const uint8_t* buffer, uint16_t len){}
+    virtual uint16_t _onGetDescriptor(uint8_t* buffer){return 0;}
+    virtual uint16_t _onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_t len){return 0;}
+    virtual void _onSetFeature(uint8_t report_id, const uint8_t* buffer, uint16_t len){}
+    virtual void _onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len){}
 };
 
 class USBHID
@@ -61,10 +69,10 @@ public:
     USBHID(void);
     void begin(void);
     void end(void);
-    bool SendReport(uint8_t id, const void* data, size_t len, uint32_t timeout_ms = 100);
+    bool SendReport(uint8_t report_id, const void* data, size_t len, uint32_t timeout_ms = 100);
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_hid_event_t event, esp_event_handler_t callback);
-    static bool addDevice(USBHIDDevice * device, uint16_t descriptor_len, tinyusb_hid_device_descriptor_cb_t cb);
+    static bool addDevice(USBHIDDevice * device, uint16_t descriptor_len);
 };
 
 #endif

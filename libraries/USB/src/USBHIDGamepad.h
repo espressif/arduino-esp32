@@ -79,6 +79,9 @@ public:
     bool releaseButton(uint8_t button);
 
     bool send(int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint32_t buttons);
+
+    // internal use
+    uint16_t _onGetDescriptor(uint8_t* buffer);
 };
 
 #endif

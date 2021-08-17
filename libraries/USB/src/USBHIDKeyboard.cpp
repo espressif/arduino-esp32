@@ -29,26 +29,24 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_KEYBOARD_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
-static uint16_t tinyusb_hid_device_descriptor_cb(uint8_t * dst, uint8_t report_id){
-    uint8_t report_descriptor[] = {
-        TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(report_id))
-    };
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
-}
+static const uint8_t report_descriptor[] = {
+    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD))
+};
 
 USBHIDKeyboard::USBHIDKeyboard(): hid(){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
-        uint8_t report_descriptor[] = {
-            TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(0))
-        };
-        hid.addDevice(this, sizeof(report_descriptor), tinyusb_hid_device_descriptor_cb);
+        hid.addDevice(this, sizeof(report_descriptor));
     } else {
         isr_log_e("Only one instance of USBHIDKeyboard is allowed!");
         abort();
     }
+}
+
+uint16_t USBHIDKeyboard::_onGetDescriptor(uint8_t* dst){
+    memcpy(dst, report_descriptor, sizeof(report_descriptor));
+    return sizeof(report_descriptor);
 }
 
 void USBHIDKeyboard::begin(){
@@ -65,7 +63,7 @@ void USBHIDKeyboard::onEvent(arduino_usb_hid_keyboard_event_t event, esp_event_h
     arduino_usb_event_handler_register_with(ARDUINO_USB_HID_KEYBOARD_EVENTS, event, callback, this);
 }
 
-void USBHIDKeyboard::_onOutput(const uint8_t* buffer, uint16_t len){
+void USBHIDKeyboard::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len){
     //log_d("LEDS: 0x%02x", buffer[0]);
     arduino_usb_hid_keyboard_event_data_t p = {0};
     p.leds = buffer[0];
@@ -82,7 +80,7 @@ void USBHIDKeyboard::sendReport(KeyReport* keys)
     } else {
         memset(report.keycode, 0, 6);
     }
-    hid.SendReport(id, &report, sizeof(report));
+    hid.SendReport(HID_REPORT_ID_KEYBOARD, &report, sizeof(report));
 }
 
 #define SHIFT 0x80
