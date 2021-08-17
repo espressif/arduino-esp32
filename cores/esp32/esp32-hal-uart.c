@@ -427,3 +427,34 @@ int log_printf(const char *format, ...)
     }
     return len;
 }
+
+
+static void log_print_buf_line(const uint8_t *b, size_t len, size_t total_len){
+    for(size_t i = 0; i<len; i++){
+        log_printf("%s0x%02x,",i?" ":"", b[i]);
+    }
+    if(total_len > 16){
+        for(size_t i = len; i<16; i++){
+            log_printf("      ");
+        }
+        log_printf("    // ");
+    } else {
+        log_printf(" // ");
+    }
+    for(size_t i = 0; i<len; i++){
+        log_printf("%c",((b[i] >= 0x20) && (b[i] < 0x80))?b[i]:'.');
+    }
+    log_printf("\n");
+}
+
+void log_print_buf(const uint8_t *b, size_t len){
+    if(!len || !b){
+        return;
+    }
+    for(size_t i = 0; i<len; i+=16){
+        if(len > 16){
+            log_printf("/* 0x%04X */ ", i);
+        }
+        log_print_buf_line(b+i, ((len-i)<16)?(len - i):16, len);
+    }
+}
