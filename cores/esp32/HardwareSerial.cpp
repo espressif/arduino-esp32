@@ -37,7 +37,7 @@
 #endif
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
-#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 HardwareSerial Serial0(0);
 #else
 HardwareSerial Serial(0);

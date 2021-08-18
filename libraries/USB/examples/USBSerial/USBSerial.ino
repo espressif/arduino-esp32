@@ -1,6 +1,6 @@
 #include "USB.h"
 
-#if ARDUINO_SERIAL_PORT
+#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
 #define USBSerial Serial
 #else
@@ -66,14 +66,8 @@ void setup() {
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);
   
-#if !ARDUINO_SERIAL_PORT
-  USB.enableDFU();
-  USB.webUSB(true);
-  USB.webUSBURL("http://localhost/webusb");
-  USB.productName("ESP32S2-USB");
-  USB.begin();
   USBSerial.begin();
-#endif
+  USB.begin();
 }
 
 void loop() {

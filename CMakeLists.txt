@@ -34,6 +34,9 @@ set(CORE_SRCS
   cores/esp32/StreamString.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
+  cores/esp32/USBMSC.cpp
+  cores/esp32/FirmwareMSC.cpp
+  cores/esp32/firmware_msc_fat.c
   cores/esp32/wiring_pulse.c
   cores/esp32/wiring_shift.c
   cores/esp32/WMath.cpp
@@ -153,6 +156,7 @@ set(includedirs
   libraries/SPI/src
   libraries/Ticker/src
   libraries/Update/src
+  libraries/USB/src
   libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src

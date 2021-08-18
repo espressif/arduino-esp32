@@ -577,9 +577,9 @@ bool wifiLowLevelInit(bool persistent){
 
 static bool wifiLowLevelDeinit(){
     if(lowLevelInitDone){
-    	lowLevelInitDone = esp_wifi_deinit() == ESP_OK;
+    	lowLevelInitDone = !(esp_wifi_deinit() == ESP_OK);
     }
-    return true;
+    return !lowLevelInitDone;
 }
 
 static bool _esp_wifi_started = false;
