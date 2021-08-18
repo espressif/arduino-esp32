@@ -81,16 +81,22 @@ Add here the third party boards, listed by vendors.
     creating an `issue on GitHub <https://github.com/espressif/arduino-esp32/issues>`_ and directly
     link/mention the vendor in the issue description.
 
+LOLIN
+*****
+
+* `LOLIN D32 <https://www.wemos.cc/en/latest/d32/d32.html>`_
+* `LOLIN D32 Pro <https://www.wemos.cc/en/latest/d32/d32_pro.html>`_
+
 Generic Vendor
 **************
-
-.. toctree::
-    :maxdepth: 1
-
-    Generic Board Name <generic>
-
-.. note::
-    Create one file per board or one file with multiple boards. Do not add board information/description on this file.
+    
+    .. toctree::
+        :maxdepth: 1
+    
+        Generic Board Name <generic>
+    
+    .. note::
+        Create one file per board or one file with multiple boards. Do not add board information/description on this file.
 
 Resources
 ---------
