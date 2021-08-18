@@ -134,7 +134,7 @@ void I2SClass::destroyCallbackTask()
   }
 }
 
-int I2SClass::_install_driver(){
+int I2SClass::_installDriver(){
   esp_i2s::i2s_mode_t i2s_mode = (esp_i2s::i2s_mode_t)(esp_i2s::I2S_MODE_RX | esp_i2s::I2S_MODE_TX);
 
   if(_driveClock){
@@ -144,12 +144,19 @@ int I2SClass::_install_driver(){
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
   }
   if(_mode == I2S_ADC_DAC){
-    if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
-      log_e("ERROR I2SClass::begin invalid bps for ADC/DAC");
+    #if SOC_I2S_SUPPORTS_ADC_DAC
+      if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
+        log_e("ERROR I2SClass::begin invalid bps for ADC/DAC");
+        return 0; // ERR
+      }
+      i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
+    #else
+      log_e("This chip does not support DAC / ADC");
       return 0; // ERR
-    }
-    i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
-  }else{ // End of ADC/DAC mode; start of Normal mode
+    #endif
+  }else if(_mode == I2S_PHILIPS_MODE ||
+           _mode == I2S_RIGHT_JUSTIFIED_MODE ||
+           _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal mode
     if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
       if(_bitsPerSample == 8){
         log_e("ESP unfortunately does not support 8 bits per sample");
@@ -162,7 +169,14 @@ int I2SClass::_install_driver(){
       log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
     }
 
-  } // Normal mode
+  }else if(_mode == I2S_PDM){
+    #if SOC_I2S_SUPPORTS_PDM
+      i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
+    #else
+      log_e("This chip does not support PDM");
+      return 0; // ERR
+    #endif
+  } // Mode
   esp_i2s::i2s_config_t i2s_config = {
     .mode = i2s_mode,
     .sample_rate = _sampleRate,
@@ -174,9 +188,15 @@ int I2SClass::_install_driver(){
     .dma_buf_len = _i2s_dma_buffer_size
   };
 
-  if (ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
+  if(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){ // Install and start i2s driver
     log_e("ERROR could not install i2s driver");
     return 0; // ERR
+  }
+  if(_i2sEventQueue == NULL){
+    log_e("ERROR i2s driver did not create event queue");
+    //return 0; // ERR
+  }else{
+    log_d("DEBUG MSG i2s event queue exists");
   }
 
   if(_mode == I2S_ADC_DAC){
@@ -239,6 +259,7 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
   switch (mode) {
     case I2S_PHILIPS_MODE:
     case I2S_ADC_DAC:
+    case I2S_PDM:
       break;
 
     case I2S_RIGHT_JUSTIFIED_MODE: // normally this should work, but i don't how to set it up for ESP
@@ -257,7 +278,7 @@ int I2SClass::begin(int mode, long sampleRate, int bitsPerSample, bool driveCloc
     return 0; // ERR
   }
 
-  if(!_install_driver()){
+  if(!_installDriver()){
     return 0; // ERR
   }
 
@@ -411,7 +432,7 @@ int I2SClass::getDataOutPin(){
   return _outSdPin;
 }
 
-int I2SClass::_uninstall_driver(){
+int I2SClass::_uninstallDriver(){
   // TODO
   return 1; // Ok
 }
@@ -624,6 +645,7 @@ void I2SClass::onTransferComplete()
 
   xQueueSet = xQueueCreateSet(sizeof(i2s_event)*_I2S_EVENT_QUEUE_LENGTH + 1);
   configASSERT(xQueueSet);
+  configASSERT(_i2sEventQueue);
   xQueueAddToSet(_i2sEventQueue, xQueueSet);
   xQueueAddToSet(_task_kill_cmd_semaphore_handle, xQueueSet);
 
