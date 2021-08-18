@@ -47,7 +47,8 @@ typedef enum {
   I2S_PHILIPS_MODE,
   I2S_RIGHT_JUSTIFIED_MODE,
   I2S_LEFT_JUSTIFIED_MODE,
-  I2S_ADC_DAC
+  I2S_ADC_DAC,
+  I2S_PDM
 } i2s_mode_t;
 
 class I2SClass : public Stream
@@ -117,8 +118,8 @@ private:
   int createCallbackTask();
 
   static void onDmaTransferComplete(void*);
-  int _install_driver();
-  int _uninstall_driver();
+  int _installDriver();
+  int _uninstallDriver();
   void _setSckPin(int sckPin);
   void _setFsPin(int fsPin);
   void _setDataInPin(int inSdPin);
