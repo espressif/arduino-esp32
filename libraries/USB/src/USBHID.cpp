@@ -120,7 +120,10 @@ static uint16_t tinyusb_on_add_descriptor(uint8_t device_index, uint8_t * dst){
                     if(hid_report_map->reports[i].protocol_mode == ESP_HID_PROTOCOL_MODE_REPORT){
                         report_id = hid_report_map->reports[i].report_id;
                         for(uint8_t r=0; r<device->reports_num; r++){
-                            if(report_id == device->report_ids[r]){
+                            if(!report_id){
+                                //todo: handle better when device has no report ID set
+                                break;
+                            } else if(report_id == device->report_ids[r]){
                                 //already added
                                 reports_num--;
                                 break;
@@ -156,12 +159,31 @@ static bool tinyusb_load_enabled_hid_devices(){
     uint8_t * dst = tinyusb_hid_device_descriptor;
 
     for(uint8_t i=0; i<tinyusb_loaded_hid_devices_num; i++){
-            uint16_t len = tinyusb_on_add_descriptor(i, dst);
-            if (!len) {
-                break;
-            } else {
-                dst += len;
+        uint16_t len = tinyusb_on_add_descriptor(i, dst);
+        if (!len) {
+            break;
+        } else {
+            dst += len;
+        }
+    }
+
+    esp_hid_report_map_t *hid_report_map = esp_hid_parse_report_map(tinyusb_hid_device_descriptor, tinyusb_hid_device_descriptor_len);
+    if(hid_report_map){
+        log_d("Loaded HID Desriptor with the following reports:");
+        for(uint8_t i=0; i<hid_report_map->reports_len; i++){
+            if(hid_report_map->reports[i].protocol_mode == ESP_HID_PROTOCOL_MODE_REPORT){
+                log_d("  ID: %3u, Type: %7s, Size: %2u, Usage: %8s",
+                    hid_report_map->reports[i].report_id,
+                    esp_hid_report_type_str(hid_report_map->reports[i].report_type),
+                    hid_report_map->reports[i].value_len,
+                    esp_hid_usage_str(hid_report_map->reports[i].usage)
+                );
             }
+        }
+        esp_hid_free_report_map(hid_report_map);
+    } else {
+        log_e("Failed to parse the hid report descriptor!");
+        return false;
     }
 
     return true;
@@ -205,7 +227,7 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance){
 // Invoked when received SET_PROTOCOL request
 // protocol is either HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol){
-    log_d("instance: %u, protocol:%u", instance, protocol);
+    log_v("instance: %u, protocol:%u", instance, protocol);
     arduino_usb_hid_event_data_t p = {0};
     p.instance = instance;
     p.set_protocol.protocol = protocol;
@@ -216,7 +238,7 @@ void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol){
 // - Idle Rate = 0 : only send report if there is changes, i.e skip duplication
 // - Idle Rate > 0 : skip duplication, but send at least 1 report every idle rate (in unit of 4 ms).
 bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate){
-    log_d("instance: %u, idle_rate:%u", instance, idle_rate);
+    log_v("instance: %u, idle_rate:%u", instance, idle_rate);
     arduino_usb_hid_event_data_t p = {0};
     p.instance = instance;
     p.set_idle.idle_rate = idle_rate;
@@ -239,9 +261,8 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize){
     if(!report_id && !report_type){
-        report_id = buffer[0];
-        if(!tinyusb_on_set_output(report_id, buffer+1, bufsize-1)){
-            log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, *buffer, tinyusb_hid_device_report_types[HID_REPORT_TYPE_OUTPUT], bufsize-1);
+        if(!tinyusb_on_set_output(0, buffer, bufsize) && !tinyusb_on_set_output(buffer[0], buffer+1, bufsize-1)){
+            log_d("instance: %u, report_id: %u, report_type: %s, bufsize: %u", instance, buffer[0], tinyusb_hid_device_report_types[HID_REPORT_TYPE_OUTPUT], bufsize-1);
         }
     } else {
         if(!tinyusb_on_set_feature(report_id, buffer, bufsize)){
