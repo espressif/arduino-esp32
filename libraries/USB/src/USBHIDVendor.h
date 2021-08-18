@@ -36,11 +36,17 @@ class USBHIDVendor: public USBHIDDevice, public Stream {
 private:
     USBHID hid;
 public:
-    USBHIDVendor(void);
+    // Max report size is 64, but we need one byte for report ID, so in reality max is 63.
+    // Because input packets are always with length equal to the report size
+    // it will not be known how many bytes actually matter. Setting 'prepend_size' to 'true' will
+    // make the first byte of each packet to be the length of data in that packet.
+    // This comes with penalty of one byte, but is very useful when using Vendor for streaming
+    USBHIDVendor(uint8_t report_size=63, bool prepend_size=false);
     void begin(void);
     void end(void);
+    void prependInputPacketsWithSize(bool enable);
     size_t setRxBufferSize(size_t);
-    size_t write(const uint8_t* buffer, uint16_t len);
+    size_t write(const uint8_t* buffer, size_t len);
     size_t write(uint8_t);
     int available(void);
     int peek(void);

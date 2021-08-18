@@ -56,27 +56,34 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 #define TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE_LEN 46
 
 // max size is 64 and we need one byte for the report ID
-static const uint8_t HID_VENDOR_REPORT_SIZE = 63;
-
-static uint8_t feature[HID_VENDOR_REPORT_SIZE];
+static uint8_t HID_VENDOR_REPORT_SIZE = 63;
+static uint8_t feature[64];
 static xQueueHandle rx_queue = NULL;
+static bool prepend_size = false;
 
-static const uint8_t report_descriptor[] = {
-    TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(HID_VENDOR_REPORT_SIZE, HID_REPORT_ID(HID_REPORT_ID_VENDOR))
-};
-
-USBHIDVendor::USBHIDVendor(): hid(){
+USBHIDVendor::USBHIDVendor(uint8_t report_size, bool prepend): hid(){
 	static bool initialized = false;
 	if(!initialized){
 		initialized = true;
-		hid.addDevice(this, sizeof(report_descriptor));
-        memset(feature, 0, HID_VENDOR_REPORT_SIZE);
+		hid.addDevice(this, TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE_LEN);
+        memset(feature, 0, 64);
+        if(report_size < 64){
+            HID_VENDOR_REPORT_SIZE = report_size;
+        }
+        prepend_size = prepend;
 	}
 }
 
 uint16_t USBHIDVendor::_onGetDescriptor(uint8_t* dst){
+    uint8_t report_descriptor[] = {
+        TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE(HID_VENDOR_REPORT_SIZE, HID_REPORT_ID(HID_REPORT_ID_VENDOR))
+    };
     memcpy(dst, report_descriptor, sizeof(report_descriptor));
     return sizeof(report_descriptor);
+}
+
+void USBHIDVendor::prependInputPacketsWithSize(bool enable){
+    prepend_size = enable;
 }
 
 size_t USBHIDVendor::setRxBufferSize(size_t rx_queue_len){
@@ -151,21 +158,24 @@ void USBHIDVendor::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t 
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_OUTPUT_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
 }
 
-size_t USBHIDVendor::write(const uint8_t* buffer, uint16_t len){
+size_t USBHIDVendor::write(const uint8_t* buffer, size_t len){
+    uint8_t hid_in[HID_VENDOR_REPORT_SIZE];
     const uint8_t * data = (const uint8_t *)buffer;
-    size_t to_send = len, max_send=HID_VENDOR_REPORT_SIZE, will_send=0;
+    uint8_t size_offset = prepend_size?1:0;
+    size_t to_send = len, max_send=HID_VENDOR_REPORT_SIZE - size_offset, will_send=0;
     while(to_send){
         will_send = to_send;
         if(will_send > max_send){
             will_send = max_send;
         }
-        // On Mac, I can get INPUT only when data length equals the input report size
-        // To be tested on other platforms
-        uint8_t hid_in[HID_VENDOR_REPORT_SIZE];
-        memcpy(hid_in, data, will_send);
-        memset(hid_in + will_send, 0, HID_VENDOR_REPORT_SIZE - will_send);
+        if(prepend_size){
+            hid_in[0] = will_send;
+        }
+        // We can get INPUT only when data length equals the input report size
+        memcpy(hid_in + size_offset, data, will_send);
+        // pad with zeroes
+        memset(hid_in + size_offset + will_send, 0, max_send - will_send);
         if(!hid.SendReport(HID_REPORT_ID_VENDOR, hid_in, HID_VENDOR_REPORT_SIZE)){
-        //if(!hid.SendReport(HID_REPORT_ID_VENDOR, buffer + (len - to_send), will_send)){
             return len - to_send;
         }
         to_send -= will_send;
