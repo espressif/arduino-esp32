@@ -21,6 +21,10 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_USB_VENDOR_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
+static USBVendor * _Vendor = NULL;
+static xQueueHandle rx_queue = NULL;
+static uint8_t USB_VENDOR_ENDPOINT_SIZE = 64;
+
 uint16_t tusb_vendor_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB Vendor");
@@ -28,15 +32,12 @@ uint16_t tusb_vendor_load_descriptor(uint8_t * dst, uint8_t * itf)
     TU_VERIFY (ep_num != 0);
     uint8_t descriptor[TUD_VENDOR_DESC_LEN] = {
         // Interface number, string index, EP Out & IN address, EP size
-        TUD_VENDOR_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), 64)
+        TUD_VENDOR_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), USB_VENDOR_ENDPOINT_SIZE)
     };
     *itf+=1;
     memcpy(dst, descriptor, TUD_VENDOR_DESC_LEN);
     return TUD_VENDOR_DESC_LEN;
 }
-
-static USBVendor * _Vendor = NULL;
-static xQueueHandle rx_queue = NULL;
 
 void tud_vendor_rx_cb(uint8_t itf){
     log_v("%u", len);
@@ -62,15 +63,21 @@ extern "C" bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage,
         request->bRequest, request->wValue, request->wIndex, request->wLength);
 
     if(_Vendor) {
-        return _Vendor->_onRequest(rhport, stage, request);
+        return _Vendor->_onRequest(rhport, stage, (arduino_usb_control_request_t const *)request);
     }
     return false;
 }
 
-USBVendor::USBVendor():itf(0), cb(NULL){
+USBVendor::USBVendor(uint8_t endpoint_size):itf(0), cb(NULL){
     if(!_Vendor){
         _Vendor = this;
+        if(endpoint_size <= 64){
+            USB_VENDOR_ENDPOINT_SIZE = endpoint_size;
+        }
         tinyusb_enable_interface(USB_INTERFACE_VENDOR, TUD_VENDOR_DESC_LEN, tusb_vendor_load_descriptor);
+    } else {
+        itf = _Vendor->itf;
+        cb = _Vendor->cb;
     }
 }
 
@@ -109,14 +116,14 @@ bool USBVendor::mounted(){
     return tud_vendor_n_mounted(itf);
 }
 
-bool USBVendor::sendResponse(uint8_t rhport, tusb_control_request_t const * request, void * data, size_t len){
+bool USBVendor::sendResponse(uint8_t rhport, arduino_usb_control_request_t const * request, void * data, size_t len){
     if(!request){
         return false;
     }
     if(!data || !len){
-        return tud_control_status(rhport, request);
+        return tud_control_status(rhport, (tusb_control_request_t const *)request);
     } else {
-        return tud_control_xfer(rhport, request, data, len);
+        return tud_control_xfer(rhport, (tusb_control_request_t const *)request, data, len);
     }
 }
 
@@ -124,7 +131,7 @@ void USBVendor::onRequest(arduino_usb_vendor_control_request_handler_t handler){
     cb = handler;
 }
 
-bool USBVendor::_onRequest(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request){
+bool USBVendor::_onRequest(uint8_t rhport, uint8_t stage, arduino_usb_control_request_t const * request){
     if(cb){
         return cb(rhport, stage, request);
     }

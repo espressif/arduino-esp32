@@ -18,9 +18,37 @@
 
 #if CONFIG_TINYUSB_VENDOR_ENABLED
 #include "esp_event.h"
-#include "common/tusb_common.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_VENDOR_EVENTS);
+
+#define REQUEST_STAGE_SETUP         0
+#define REQUEST_STAGE_DATA          1
+#define REQUEST_STAGE_ACK           2
+
+#define REQUEST_TYPE_STANDARD       0
+#define REQUEST_TYPE_CLASS          1
+#define REQUEST_TYPE_VENDOR         2
+#define REQUEST_TYPE_INVALID        3
+
+#define REQUEST_RECIPIENT_DEVICE    0
+#define REQUEST_RECIPIENT_INTERFACE 1
+#define REQUEST_RECIPIENT_ENDPOINT  2
+#define REQUEST_RECIPIENT_OTHER     3
+
+#define REQUEST_DIRECTION_OUT       0
+#define REQUEST_DIRECTION_IN        1
+
+typedef struct __attribute__ ((packed)) {
+    struct __attribute__ ((packed)) {
+        uint8_t bmRequestRecipient :  5;
+        uint8_t bmRequestType      :  2;
+        uint8_t bmRequestDirection :  1;
+    };
+    uint8_t  bRequest;
+    uint16_t wValue;
+    uint16_t wIndex;
+    uint16_t wLength;
+} arduino_usb_control_request_t;
 
 typedef enum {
     ARDUINO_USB_VENDOR_ANY_EVENT = ESP_EVENT_ANY_ID,
@@ -34,14 +62,14 @@ typedef union {
     } data;
 } arduino_usb_vendor_event_data_t;
 
-typedef bool (*arduino_usb_vendor_control_request_handler_t)(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
+typedef bool (*arduino_usb_vendor_control_request_handler_t)(uint8_t rhport, uint8_t stage, arduino_usb_control_request_t const * request);
 
 class USBVendor: public Stream {
 private:
     uint8_t itf;
     arduino_usb_vendor_control_request_handler_t cb;
 public:
-    USBVendor();
+    USBVendor(uint8_t endpoint_size=64);
     void begin(void);
     void end(void);
     size_t setRxBufferSize(size_t);
@@ -57,9 +85,9 @@ public:
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_vendor_event_t event, esp_event_handler_t callback);
     void onRequest(arduino_usb_vendor_control_request_handler_t handler);
-    bool sendResponse(uint8_t rhport, tusb_control_request_t const * request, void * data=NULL, size_t len=0);
+    bool sendResponse(uint8_t rhport, arduino_usb_control_request_t const * request, void * data=NULL, size_t len=0);
 
-    bool _onRequest(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
+    bool _onRequest(uint8_t rhport, uint8_t stage, arduino_usb_control_request_t const * request);
     void _onRX(const uint8_t* buffer, size_t len);
 };
 
