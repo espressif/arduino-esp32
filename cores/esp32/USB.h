@@ -13,9 +13,10 @@
 // limitations under the License.
 #pragma once
 
-#include "Arduino.h"
+#include "sdkconfig.h"
 
 #if CONFIG_TINYUSB_ENABLED
+
 #include "esp_event.h"
 #include "USBCDC.h"
 

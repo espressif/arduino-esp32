@@ -17,6 +17,7 @@
   http://www.arduino.cc/en/Tutorial/KeyboardSerial
 */
 
+#include "USB.h"
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 

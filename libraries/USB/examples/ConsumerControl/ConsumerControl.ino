@@ -1,3 +1,4 @@
+#include "USB.h"
 #include "USBHIDConsumerControl.h"
 USBHIDConsumerControl ConsumerControl;
 

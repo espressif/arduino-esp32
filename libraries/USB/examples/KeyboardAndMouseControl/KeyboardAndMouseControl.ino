@@ -19,6 +19,7 @@
   http://www.arduino.cc/en/Tutorial/KeyboardAndMouseControl
 */
 
+#include "USB.h"
 #include "USBHIDMouse.h"
 #include "USBHIDKeyboard.h"
 USBHIDMouse Mouse;

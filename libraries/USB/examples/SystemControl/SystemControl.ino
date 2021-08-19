@@ -1,3 +1,4 @@
+#include "USB.h"
 #include "USBHIDSystemControl.h"
 USBHIDSystemControl SystemControl;
 

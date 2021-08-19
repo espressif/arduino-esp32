@@ -20,6 +20,7 @@
   http://www.arduino.cc/en/Tutorial/KeyboardMessage
 */
 
+#include "USB.h"
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 

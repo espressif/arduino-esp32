@@ -1,3 +1,4 @@
+#include "USB.h"
 #include "USBHIDVendor.h"
 USBHIDVendor Vendor;
 

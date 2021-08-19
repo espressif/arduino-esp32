@@ -25,6 +25,7 @@
   http://www.arduino.cc/en/Tutorial/KeyboardReprogram
 */
 
+#include "USB.h"
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 

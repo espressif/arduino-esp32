@@ -21,6 +21,7 @@
   http://www.arduino.cc/en/Tutorial/ButtonMouseControl
 */
 
+#include "USB.h"
 #include "USBHIDMouse.h"
 USBHIDMouse Mouse;
 

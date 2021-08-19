@@ -29,6 +29,7 @@
 #define WINDOWS 1
 #define UBUNTU 2
 
+#include "USB.h"
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 

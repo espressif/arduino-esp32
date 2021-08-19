@@ -1,3 +1,4 @@
+#include "USB.h"
 #include "USBHIDGamepad.h"
 USBHIDGamepad Gamepad;
 
