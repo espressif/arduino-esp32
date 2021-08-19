@@ -29,7 +29,7 @@ static size_t cplstr(void *dst, const void * src, size_t max_len){
 //copy up to max_len chars from src to dst, adding spaces up to max_len. do not terminate
 static void cplstrsp(void *dst, const void * src, size_t max_len){
     size_t l = cplstr(dst, src, max_len);
-    for(l; l < max_len; l++){
+    for(; l < max_len; l++){
       ((uint8_t*)dst)[l] = 0x20;
     }
 }
