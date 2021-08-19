@@ -11,12 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
 #include "USBHID.h"
+
+#if CONFIG_TINYUSB_HID_ENABLED
+
+#include "esp32-hal-tinyusb.h"
+#include "USB.h"
 #include "esp_hid_common.h"
 
-#if CFG_TUD_HID
 #define USB_HID_DEVICES_MAX 10
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_EVENTS);
@@ -360,4 +362,4 @@ void USBHID::onEvent(arduino_usb_hid_event_t event, esp_event_handler_t callback
     arduino_usb_event_handler_register_with(ARDUINO_USB_HID_EVENTS, event, callback, this);
 }
 
-#endif /* CONFIG_USB_HID_ENABLED */
+#endif /* CONFIG_TINYUSB_HID_ENABLED */

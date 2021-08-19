@@ -18,12 +18,11 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#include "USBHID.h"
 
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
+#if CONFIG_TINYUSB_HID_ENABLED
+
 #include "USBHIDMouse.h"
-
-#if CFG_TUD_HID
 
 static const uint8_t report_descriptor[] = {
     TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))
@@ -90,4 +89,4 @@ bool USBHIDMouse::isPressed(uint8_t b){
 }
 
 
-#endif /* CFG_TUD_HID */
+#endif /* CONFIG_TINYUSB_HID_ENABLED */

@@ -18,12 +18,11 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#include "USBHID.h"
 
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
+#if CONFIG_TINYUSB_HID_ENABLED
+
 #include "USBHIDKeyboard.h"
-
-#if CFG_TUD_HID
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_KEYBOARD_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
@@ -352,4 +351,4 @@ size_t USBHIDKeyboard::write(const uint8_t *buffer, size_t size) {
     return n;
 }
 
-#endif /* CFG_TUD_HID */
+#endif /* CONFIG_TINYUSB_HID_ENABLED */

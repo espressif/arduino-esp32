@@ -13,13 +13,11 @@
 // limitations under the License.
 #pragma once
 
-#include "sdkconfig.h"
-#if CONFIG_TINYUSB_ENABLED
-
 #include "Arduino.h"
-#include "USBCDC.h"
-#include "common/tusb_common.h"
+
+#if CONFIG_TINYUSB_ENABLED
 #include "esp_event.h"
+#include "USBCDC.h"
 
 #define ARDUINO_USB_ON_BOOT (ARDUINO_USB_CDC_ON_BOOT|ARDUINO_USB_MSC_ON_BOOT|ARDUINO_USB_DFU_ON_BOOT)
 

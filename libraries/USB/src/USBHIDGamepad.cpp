@@ -11,12 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "USBHID.h"
 
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
+#if CONFIG_TINYUSB_HID_ENABLED
+
 #include "USBHIDGamepad.h"
-
-#if CFG_TUD_HID
 
 static const uint8_t report_descriptor[] = {
     TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(HID_REPORT_ID_GAMEPAD))
@@ -119,4 +118,4 @@ bool USBHIDGamepad::send(int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int
 }
 
 
-#endif /* CFG_TUD_HID */
+#endif /* CONFIG_TINYUSB_HID_ENABLED */

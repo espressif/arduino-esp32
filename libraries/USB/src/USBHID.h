@@ -15,12 +15,12 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include "esp32-hal.h"
-#include "USB.h"
-#if CONFIG_TINYUSB_HID_ENABLED
+#include "sdkconfig.h"
 
-#include "class/hid/hid.h"
+#if CONFIG_TINYUSB_HID_ENABLED
 #include "esp_event.h"
+#include "class/hid/hid.h"
+#include "class/hid/hid_device.h"
 
 // Used by the included TinyUSB drivers
 enum {
@@ -76,4 +76,4 @@ public:
     static bool addDevice(USBHIDDevice * device, uint16_t descriptor_len);
 };
 
-#endif
+#endif /* CONFIG_TINYUSB_HID_ENABLED */

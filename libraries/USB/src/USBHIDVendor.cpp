@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
-#include "USBHIDVendor.h"
+#include "USBHID.h"
 
-#if CFG_TUD_HID
+#if CONFIG_TINYUSB_HID_ENABLED
+
+#include "esp32-hal-log.h"
+#include "USBHIDVendor.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_VENDOR_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
@@ -232,4 +233,4 @@ size_t USBHIDVendor::read(uint8_t *buffer, size_t size){
 void USBHIDVendor::flush(void){}
 
 
-#endif /* CFG_TUD_HID */
+#endif /* CONFIG_TINYUSB_HID_ENABLED */
