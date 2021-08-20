@@ -84,8 +84,8 @@ Add here the third party boards, listed by vendors.
 LOLIN
 *****
 
-* `LOLIN D32 <https://www.wemos.cc/en/latest/d32/d32.html>`_
-* `LOLIN D32 Pro <https://www.wemos.cc/en/latest/d32/d32_pro.html>`_
+* |board_lolin_d32|
+* |board_lolin_d32_pro|
 
 Generic Vendor
 **************
@@ -110,3 +110,11 @@ Resources
 .. _ESP32 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
 .. _ESP32-S2 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf
 .. _ESP32-C3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
+
+.. |board_lolin_d32| raw:: html
+
+  <a href="https://www.wemos.cc/en/latest/d32/d32.html" target="_blank">LOLIN D32</a>
+
+.. |board_lolin_d32_pro| raw:: html
+
+  <a href="https://www.wemos.cc/en/latest/d32/d32_pro.html" target="_blank">LOLIN D32 Pro</a>
