@@ -9070,7 +9070,7 @@ esp32-trueverit-iot-driver-mkii.menu.DebugLevel.verbose.build.code_debug=5
 
 franzininho_wifi_esp32s2.name=Franzininho WiFi
 franzininho_wifi_esp32s2.vid.0=0x303A
-franzininho_wifi_esp32s2.pid.0=0x800A
+franzininho_wifi_esp32s2.pid.0=0x80A9
 
 franzininho_wifi_esp32s2.upload.tool=esptool_py
 franzininho_wifi_esp32s2.upload.maximum_size=1310720
@@ -9167,7 +9167,7 @@ franzininho_wifi_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 franzininho_wifi_msc_esp32s2.name=Franzininho WiFi MSC
 franzininho_wifi_msc_esp32s2.vid.0=0x303A
-franzininho_wifi_msc_esp32s2.pid.0=0x800A
+franzininho_wifi_msc_esp32s2.pid.0=0x80A9
 
 franzininho_wifi_msc_esp32s2.upload.tool=esptool_py
 franzininho_wifi_msc_esp32s2.upload.maximum_size=1310720
