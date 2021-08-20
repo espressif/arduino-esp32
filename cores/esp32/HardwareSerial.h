@@ -49,6 +49,7 @@
 
 #include "Stream.h"
 #include "esp32-hal.h"
+#include "soc/soc_caps.h"
 
 class HardwareSerial: public Stream
 {
@@ -101,6 +102,7 @@ public:
     void setDebugOutput(bool);
     
     void setRxInvert(bool);
+    void setPins(uint8_t rxPin, uint8_t txPin);
 
 protected:
     int _uart_nr;
@@ -120,8 +122,10 @@ extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
 #endif
+#if SOC_UART_NUM > 1
 extern HardwareSerial Serial1;
-#if CONFIG_IDF_TARGET_ESP32
+#endif
+#if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
 #endif
 #endif

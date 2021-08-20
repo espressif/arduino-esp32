@@ -20,31 +20,8 @@
 
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
-
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#include "soc/dport_reg.h"
-#include "esp32/rom/ets_sys.h"
-#include "esp32/rom/uart.h"
-#elif CONFIG_IDF_TARGET_ESP32S2
-#include "soc/dport_reg.h"
-#include "esp32s2/rom/ets_sys.h"
-#include "esp32s2/rom/uart.h"
-#include "soc/periph_defs.h"
-#elif CONFIG_IDF_TARGET_ESP32C3
-#include "esp32c3/rom/ets_sys.h"
-#include "esp32c3/rom/uart.h"
-#include "soc/periph_defs.h"
-#else 
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-
-#if CONFIG_IDF_TARGET_ESP32
-#define UART_PORTS_NUM 3
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define UART_PORTS_NUM 2
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define UART_PORTS_NUM 2
-#endif
+#include "soc/soc_caps.h"
+#include "soc/uart_struct.h"
 
 static int s_uart_debug_nr = 0;
 
@@ -67,8 +44,10 @@ struct uart_struct_t {
 
 static uart_t _uart_bus_array[] = {
     {0, false, 0},
+#if SOC_UART_NUM > 1
     {1, false, 0},
-#if CONFIG_IDF_TARGET_ESP32
+#endif
+#if SOC_UART_NUM > 2
     {2, false, 0},
 #endif
 };
@@ -80,8 +59,10 @@ static uart_t _uart_bus_array[] = {
 
 static uart_t _uart_bus_array[] = {
     {NULL, 0, false, 0},
+#if SOC_UART_NUM > 1
     {NULL, 1, false, 0},
-#if CONFIG_IDF_TARGET_ESP32
+#endif
+#if SOC_UART_NUM > 2
     {NULL, 2, false, 0},
 #endif
 };
@@ -100,9 +81,21 @@ bool uartIsDriverInstalled(uart_t* uart)
     return false;
 }
 
+void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin)
+{
+    if(uart == NULL || rxPin >= SOC_GPIO_PIN_COUNT || txPin >= SOC_GPIO_PIN_COUNT) {
+        return;
+    }
+    UART_MUTEX_LOCK();
+    ESP_ERROR_CHECK(uart_set_pin(uart->num, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)); 
+    UART_MUTEX_UNLOCK();
+    
+}
+
+
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
 {
-    if(uart_nr >= UART_PORTS_NUM) {
+    if(uart_nr >= SOC_UART_NUM) {
         return NULL;
     }
 
@@ -135,11 +128,16 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
  
- #if CONFIG_IDF_TARGET_ESP32C3
- //   uart_config.source_clk = UART_SCLK_RTC;
-     uart_config.source_clk = UART_SCLK_APB;
-#else  
+#if 0
+#if SOC_UART_SUPPORT_REF_TICK
     uart_config.source_clk = UART_SCLK_REF_TICK;
+#else  
+ //   uart_config.source_clk = UART_SCLK_RTC;
+    // ESP32-C3
+     uart_config.source_clk = UART_SCLK_APB;
+#endif
+#else
+     uart_config.source_clk = UART_SCLK_APB;
 #endif
 
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 0, NULL, 0));
@@ -184,10 +182,11 @@ void uartSetRxInvert(uart_t* uart, bool invert)
     
 ///////////////////////////////////////
 #if 0
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     if (invert)
-        uart->dev->conf0.rxd_inv = 1;
+        hw->conf0.rxd_inv = 1;
     else
-        uart->dev->conf0.rxd_inv = 0;
+        hw->conf0.rxd_inv = 0;
 #endif 
 //////////////////////////////////////
 }
@@ -337,13 +336,15 @@ static void ARDUINO_ISR_ATTR uart0_write_char(char c)
     uart_ll_write_txfifo(&UART0, (const uint8_t *) &c, 1);
 }
 
+#if SOC_UART_NUM > 1
 static void ARDUINO_ISR_ATTR uart1_write_char(char c)
 {
     while (uart_ll_get_txfifo_len(&UART1) == 0);
     uart_ll_write_txfifo(&UART1, (const uint8_t *) &c, 1);
 }
+#endif
 
-#if CONFIG_IDF_TARGET_ESP32
+#if SOC_UART_NUM > 2
 static void ARDUINO_ISR_ATTR uart2_write_char(char c)
 {
     while (uart_ll_get_txfifo_len(&UART2) == 0);
@@ -357,10 +358,12 @@ void uart_install_putc()
     case 0:
         ets_install_putc1((void (*)(char)) &uart0_write_char);
         break;
+#if SOC_UART_NUM > 1
     case 1:
         ets_install_putc1((void (*)(char)) &uart1_write_char);
         break;
-#if CONFIG_IDF_TARGET_ESP32
+#endif
+#if SOC_UART_NUM > 2
     case 2:
         ets_install_putc1((void (*)(char)) &uart2_write_char);
         break;
@@ -373,7 +376,7 @@ void uart_install_putc()
 
 void uartSetDebug(uart_t* uart)
 {
-    if(uart == NULL || uart->num >= UART_PORTS_NUM) {
+    if(uart == NULL || uart->num >= SOC_UART_NUM) {
         s_uart_debug_nr = -1;
         //ets_install_putc1(NULL);
         //return;
@@ -457,4 +460,99 @@ void log_print_buf(const uint8_t *b, size_t len){
         }
         log_print_buf_line(b+i, ((len-i)<16)?(len - i):16, len);
     }
+}
+
+/*
+ * if enough pulses are detected return the minimum high pulse duration + minimum low pulse duration divided by two. 
+ * This equals one bit period. If flag is true the function return inmediately, otherwise it waits for enough pulses.
+ */
+unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
+{
+    if(uart == NULL) {
+        return 0;
+    }
+
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+    while(hw->rxd_cnt.edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
+        if(flg) return 0;
+        ets_delay_us(1000);
+    }
+
+    UART_MUTEX_LOCK();
+    unsigned long ret = ((hw->lowpulse.min_cnt + hw->highpulse.min_cnt) >> 1) + 12;
+    UART_MUTEX_UNLOCK();
+
+    return ret;
+}
+
+
+/*
+ * To start detection of baud rate with the uart the auto_baud.en bit needs to be cleared and set. The bit period is 
+ * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
+ * rounded to the closed real baudrate.
+*/
+void uartStartDetectBaudrate(uart_t *uart) {
+    if(uart == NULL) {
+        return;
+    }
+
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    hw->rx_filt.glitch_filt = 0x08;
+    hw->rx_filt.glitch_filt_en = 1;
+    hw->conf0.autobaud_en = 0;
+    hw->conf0.autobaud_en = 1;
+#else
+    hw->auto_baud.glitch_filt = 0x08;
+    hw->auto_baud.en = 0;
+    hw->auto_baud.en = 1;
+#endif
+}
+ 
+unsigned long
+uartDetectBaudrate(uart_t *uart)
+{
+    if(uart == NULL) {
+        return 0;
+    }
+
+    static bool uartStateDetectingBaudrate = false;
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+    if(!uartStateDetectingBaudrate) {
+        uartStartDetectBaudrate(uart);
+        uartStateDetectingBaudrate = true;
+    }
+
+    unsigned long divisor = uartBaudrateDetect(uart, true);
+    if (!divisor) {
+        return 0;
+    }
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    hw->conf0.autobaud_en = 0;
+#else
+    hw->auto_baud.en = 0;
+#endif
+    uartStateDetectingBaudrate = false; // Initialize for the next round
+
+    unsigned long baudrate = getApbFrequency() / divisor;
+
+    static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
+
+    size_t i;
+    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)	// find the nearest real baudrate
+    {
+        if (baudrate <= default_rates[i])
+        {
+            if (baudrate - default_rates[i - 1] < default_rates[i] - baudrate) {
+                i--;
+            }
+            break;
+        }
+    }
+
+    return default_rates[i];
 }

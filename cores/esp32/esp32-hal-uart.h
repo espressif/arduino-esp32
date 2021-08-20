@@ -74,6 +74,11 @@ void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
+void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin);
+
+void uartStartDetectBaudrate(uart_t *uart);
+unsigned long uartDetectBaudrate(uart_t *uart);
+
 
 #ifdef __cplusplus
 }
