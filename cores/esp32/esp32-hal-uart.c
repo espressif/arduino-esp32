@@ -127,18 +127,8 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.stop_bits = (config & 0x30) >> 4;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
- 
-#if 0
-#if SOC_UART_SUPPORT_REF_TICK
-    uart_config.source_clk = UART_SCLK_REF_TICK;
-#else  
- //   uart_config.source_clk = UART_SCLK_RTC;
-    // ESP32-C3
-     uart_config.source_clk = UART_SCLK_APB;
-#endif
-#else
-     uart_config.source_clk = UART_SCLK_APB;
-#endif
+    uart_config.source_clk = UART_SCLK_APB;
+
 
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
@@ -172,7 +162,7 @@ void uartSetRxInvert(uart_t* uart, bool invert)
 {
     if (uart == NULL)
         return;
-
+#if 0
     // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit 
     // IDF or LL set/reset the whole inv_mask!
     if (invert)
@@ -180,15 +170,15 @@ void uartSetRxInvert(uart_t* uart, bool invert)
     else
         ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
     
-///////////////////////////////////////
-#if 0
+#else
+    // this implementation is better over IDF API because it only affects RXD
+    // this is supported in ESP32, ESP32-S2 and ESP32-C3
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     if (invert)
         hw->conf0.rxd_inv = 1;
     else
         hw->conf0.rxd_inv = 0;
 #endif 
-//////////////////////////////////////
 }
 
 
@@ -480,7 +470,8 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
     }
 
     UART_MUTEX_LOCK();
-    unsigned long ret = ((hw->lowpulse.min_cnt + hw->highpulse.min_cnt) >> 1) + 12;
+    //log_i("lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->lowpulse.min_cnt, hw->highpulse.min_cnt);
+    unsigned long ret = ((hw->lowpulse.min_cnt + hw->highpulse.min_cnt) >> 1);
     UART_MUTEX_UNLOCK();
 
     return ret;
@@ -500,10 +491,12 @@ void uartStartDetectBaudrate(uart_t *uart) {
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
+#if 0   // ESP32-C3 requires further testing
     hw->rx_filt.glitch_filt = 0x08;
     hw->rx_filt.glitch_filt_en = 1;
     hw->conf0.autobaud_en = 0;
     hw->conf0.autobaud_en = 1;
+#endif
 #else
     hw->auto_baud.glitch_filt = 0x08;
     hw->auto_baud.en = 0;
@@ -518,6 +511,8 @@ uartDetectBaudrate(uart_t *uart)
         return 0;
     }
 
+#ifndef CONFIG_IDF_TARGET_ESP32C3    // ESP32-C3 requires further testing
+
     static bool uartStateDetectingBaudrate = false;
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
@@ -530,6 +525,8 @@ uartDetectBaudrate(uart_t *uart)
     if (!divisor) {
         return 0;
     }
+    //log_i("Divisor = %d\n", divisor);
+
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     hw->conf0.autobaud_en = 0;
@@ -539,6 +536,7 @@ uartDetectBaudrate(uart_t *uart)
     uartStateDetectingBaudrate = false; // Initialize for the next round
 
     unsigned long baudrate = getApbFrequency() / divisor;
+    //log_i("APB_FREQ = %d\nraw baudrate detected = %d", getApbFrequency(), baudrate);
 
     static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
@@ -555,4 +553,7 @@ uartDetectBaudrate(uart_t *uart)
     }
 
     return default_rates[i];
+#else
+    return 0;
+#endif
 }
