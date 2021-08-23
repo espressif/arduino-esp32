@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
 #include "USBMSC.h"
 
-#if CFG_TUD_MSC
+#if CONFIG_TINYUSB_MSC_ENABLED
+
+#include "esp32-hal-tinyusb.h"
+
 extern "C" uint16_t tusb_msc_load_descriptor(uint8_t * dst, uint8_t * itf)
 {
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB MSC");
@@ -257,4 +257,4 @@ void USBMSC::mediaPresent(bool media_present){
     msc_luns[_lun].media_present = media_present;
 }
 
-#endif /* CONFIG_USB_MSC_ENABLED */
+#endif /* CONFIG_TINYUSB_MSC_ENABLED */

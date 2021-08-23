@@ -119,8 +119,9 @@ void ARDUINO_ISR_ATTR __timerISR(void * arg){
     }
 }
 
-uint64_t timerRead(hw_timer_t *timer){
+uint64_t inline timerRead(hw_timer_t *timer){
     timer->dev->update = 1;
+    while (timer->dev->update) {};
     uint64_t h = timer->dev->cnt_high;
     uint64_t l = timer->dev->cnt_low;
     return (h << 32) | l;

@@ -11,17 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "esp32-hal.h"
-#include "esp32-hal-tinyusb.h"
 #include "USB.h"
+#if CONFIG_TINYUSB_CDC_ENABLED
+
 #include "USBCDC.h"
-#if CONFIG_TINYUSB_ENABLED
+#include "esp32-hal-tinyusb.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_CDC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
-#if CFG_TUD_CDC
 #define MAX_USB_CDC_DEVICES 2
 USBCDC * devices[MAX_USB_CDC_DEVICES] = {NULL, NULL};
 
@@ -389,5 +388,3 @@ USBCDC Serial(0);
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
-
-#endif /* CONFIG_TINYUSB_ENABLED */
