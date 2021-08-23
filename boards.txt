@@ -9205,3 +9205,197 @@ esp32-trueverit-iot-driver-mkii.menu.DebugLevel.verbose=Verbose
 esp32-trueverit-iot-driver-mkii.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
+franzininho_wifi_esp32s2.name=Franzininho WiFi
+franzininho_wifi_esp32s2.vid.0=0x303A
+franzininho_wifi_esp32s2.pid.0=0x80A9
+
+franzininho_wifi_esp32s2.upload.tool=esptool_py
+franzininho_wifi_esp32s2.upload.maximum_size=1310720
+franzininho_wifi_esp32s2.upload.maximum_data_size=327680
+franzininho_wifi_esp32s2.upload.flags=
+franzininho_wifi_esp32s2.upload.extra_flags=
+franzininho_wifi_esp32s2.upload.use_1200bps_touch=true
+franzininho_wifi_esp32s2.upload.wait_for_upload_port=true
+franzininho_wifi_esp32s2.upload.speed=921600
+
+franzininho_wifi_esp32s2.serial.disableDTR=false
+franzininho_wifi_esp32s2.serial.disableRTS=false
+
+franzininho_wifi_esp32s2.build.tarch=xtensa
+franzininho_wifi_esp32s2.build.bootloader_addr=0x1000
+franzininho_wifi_esp32s2.build.target=esp32s2
+franzininho_wifi_esp32s2.build.mcu=esp32s2
+franzininho_wifi_esp32s2.build.core=esp32
+franzininho_wifi_esp32s2.build.variant=franzininho_wifi_esp32s2
+franzininho_wifi_esp32s2.build.board=FRANZININHO_WIFI
+
+franzininho_wifi_esp32s2.build.cdc_on_boot=1
+franzininho_wifi_esp32s2.build.msc_on_boot=0
+franzininho_wifi_esp32s2.build.dfu_on_boot=0
+franzininho_wifi_esp32s2.build.f_cpu=240000000L
+franzininho_wifi_esp32s2.build.flash_size=4MB
+franzininho_wifi_esp32s2.build.flash_freq=80m
+franzininho_wifi_esp32s2.build.flash_mode=dio
+franzininho_wifi_esp32s2.build.boot=qio
+franzininho_wifi_esp32s2.build.partitions=default
+franzininho_wifi_esp32s2.build.defines=
+
+franzininho_wifi_esp32s2.menu.PSRAM.disabled=Disabled
+franzininho_wifi_esp32s2.menu.PSRAM.disabled.build.defines=
+franzininho_wifi_esp32s2.menu.PSRAM.enabled=Enabled
+franzininho_wifi_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+franzininho_wifi_esp32s2.menu.FlashSize.4M=4MB (32Mb)
+franzininho_wifi_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
+franzininho_wifi_esp32s2.menu.FlashSize.8M=8MB (64Mb)
+franzininho_wifi_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
+franzininho_wifi_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
+franzininho_wifi_esp32s2.menu.FlashSize.16M=16MB (128Mb)
+franzininho_wifi_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
+
+franzininho_wifi_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.default.build.partitions=default
+franzininho_wifi_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+franzininho_wifi_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+franzininho_wifi_esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+franzininho_wifi_esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+franzininho_wifi_esp32s2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+franzininho_wifi_esp32s2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+franzininho_wifi_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
+franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+franzininho_wifi_esp32s2.menu.DebugLevel.none=None
+franzininho_wifi_esp32s2.menu.DebugLevel.none.build.code_debug=0
+franzininho_wifi_esp32s2.menu.DebugLevel.error=Error
+franzininho_wifi_esp32s2.menu.DebugLevel.error.build.code_debug=1
+franzininho_wifi_esp32s2.menu.DebugLevel.warn=Warn
+franzininho_wifi_esp32s2.menu.DebugLevel.warn.build.code_debug=2
+franzininho_wifi_esp32s2.menu.DebugLevel.info=Info
+franzininho_wifi_esp32s2.menu.DebugLevel.info.build.code_debug=3
+franzininho_wifi_esp32s2.menu.DebugLevel.debug=Debug
+franzininho_wifi_esp32s2.menu.DebugLevel.debug.build.code_debug=4
+franzininho_wifi_esp32s2.menu.DebugLevel.verbose=Verbose
+franzininho_wifi_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+franzininho_wifi_msc_esp32s2.name=Franzininho WiFi MSC
+franzininho_wifi_msc_esp32s2.vid.0=0x303A
+franzininho_wifi_msc_esp32s2.pid.0=0x80A9
+
+franzininho_wifi_msc_esp32s2.upload.tool=esptool_py
+franzininho_wifi_msc_esp32s2.upload.maximum_size=1310720
+franzininho_wifi_msc_esp32s2.upload.maximum_data_size=327680
+franzininho_wifi_msc_esp32s2.upload.flags=
+franzininho_wifi_msc_esp32s2.upload.extra_flags=
+franzininho_wifi_msc_esp32s2.upload.use_1200bps_touch=true
+franzininho_wifi_msc_esp32s2.upload.wait_for_upload_port=true
+franzininho_wifi_msc_esp32s2.upload.speed=921600
+
+franzininho_wifi_msc_esp32s2.serial.disableDTR=false
+franzininho_wifi_msc_esp32s2.serial.disableRTS=false
+
+franzininho_wifi_msc_esp32s2.build.tarch=xtensa
+franzininho_wifi_msc_esp32s2.build.bootloader_addr=0x1000
+franzininho_wifi_msc_esp32s2.build.target=esp32s2
+franzininho_wifi_msc_esp32s2.build.mcu=esp32s2
+franzininho_wifi_msc_esp32s2.build.core=esp32
+franzininho_wifi_msc_esp32s2.build.variant=franzininho_wifi_msc_esp32s2
+franzininho_wifi_msc_esp32s2.build.board=FRANZININHO_WIFI_MSC
+
+franzininho_wifi_msc_esp32s2.build.cdc_on_boot=1
+franzininho_wifi_msc_esp32s2.build.msc_on_boot=1
+franzininho_wifi_msc_esp32s2.build.dfu_on_boot=1
+franzininho_wifi_msc_esp32s2.build.f_cpu=240000000L
+franzininho_wifi_msc_esp32s2.build.flash_size=4MB
+franzininho_wifi_msc_esp32s2.build.flash_freq=80m
+franzininho_wifi_msc_esp32s2.build.flash_mode=dio
+franzininho_wifi_msc_esp32s2.build.boot=qio
+franzininho_wifi_msc_esp32s2.build.partitions=default
+franzininho_wifi_msc_esp32s2.build.defines=
+
+franzininho_wifi_msc_esp32s2.menu.PSRAM.disabled=Disabled
+franzininho_wifi_msc_esp32s2.menu.PSRAM.disabled.build.defines=
+franzininho_wifi_msc_esp32s2.menu.PSRAM.enabled=Enabled
+franzininho_wifi_msc_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+franzininho_wifi_msc_esp32s2.menu.FlashSize.4M=4MB (32Mb)
+franzininho_wifi_msc_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
+franzininho_wifi_msc_esp32s2.menu.FlashSize.8M=8MB (64Mb)
+franzininho_wifi_msc_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
+franzininho_wifi_msc_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
+franzininho_wifi_msc_esp32s2.menu.FlashSize.16M=16MB (128Mb)
+franzininho_wifi_msc_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
+
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default.build.partitions=default
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.none=None
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.none.build.code_debug=0
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.error=Error
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.error.build.code_debug=1
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.warn=Warn
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.warn.build.code_debug=2
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.info=Info
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.info.build.code_debug=3
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug=Debug
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug.build.code_debug=4
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose=Verbose
+franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
