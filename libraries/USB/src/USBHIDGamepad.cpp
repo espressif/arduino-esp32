@@ -22,11 +22,11 @@ static const uint8_t report_descriptor[] = {
 };
 
 USBHIDGamepad::USBHIDGamepad(): hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0){
-	static bool initialized = false;
-	if(!initialized){
-		initialized = true;
-		hid.addDevice(this, sizeof(report_descriptor));
-	}
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        hid.addDevice(this, sizeof(report_descriptor));
+    }
 }
 
 uint16_t USBHIDGamepad::_onGetDescriptor(uint8_t* dst){

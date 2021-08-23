@@ -22,11 +22,11 @@ static const uint8_t report_descriptor[] = {
 };
 
 USBHIDSystemControl::USBHIDSystemControl(): hid(){
-	static bool initialized = false;
-	if(!initialized){
-		initialized = true;
-		hid.addDevice(this, sizeof(report_descriptor));
-	}
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        hid.addDevice(this, sizeof(report_descriptor));
+    }
 }
 
 uint16_t USBHIDSystemControl::_onGetDescriptor(uint8_t* dst){

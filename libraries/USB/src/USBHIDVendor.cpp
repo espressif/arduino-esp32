@@ -63,16 +63,16 @@ static xQueueHandle rx_queue = NULL;
 static bool prepend_size = false;
 
 USBHIDVendor::USBHIDVendor(uint8_t report_size, bool prepend): hid(){
-	static bool initialized = false;
-	if(!initialized){
-		initialized = true;
-		hid.addDevice(this, TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE_LEN);
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        hid.addDevice(this, TUD_HID_REPORT_DESC_GENERIC_INOUT_FEATURE_LEN);
         memset(feature, 0, 64);
         if(report_size < 64){
             HID_VENDOR_REPORT_SIZE = report_size;
         }
         prepend_size = prepend;
-	}
+    }
 }
 
 uint16_t USBHIDVendor::_onGetDescriptor(uint8_t* dst){

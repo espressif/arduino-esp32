@@ -29,11 +29,11 @@ static const uint8_t report_descriptor[] = {
 };
 
 USBHIDMouse::USBHIDMouse(): hid(), _buttons(0){
-	static bool initialized = false;
-	if(!initialized){
-		initialized = true;
-		hid.addDevice(this, sizeof(report_descriptor));
-	}
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        hid.addDevice(this, sizeof(report_descriptor));
+    }
 }
 
 uint16_t USBHIDMouse::_onGetDescriptor(uint8_t* dst){
