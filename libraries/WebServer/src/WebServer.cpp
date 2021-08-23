@@ -59,6 +59,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _contentLength(0)
 , _chunked(false)
 {
+  log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
 }
 
 WebServer::WebServer(int port)
@@ -81,6 +82,7 @@ WebServer::WebServer(int port)
 , _contentLength(0)
 , _chunked(false)
 {
+  log_v("WebServer::Webserver(port=%d)", port);
 }
 
 WebServer::~WebServer() {
@@ -289,7 +291,7 @@ void WebServer::handleClient() {
       return;
     }
 
-    log_v("New client");
+    log_v("New client: client.localIP()=%s", client.localIP().toString().c_str());
 
     _currentClient = client;
     _currentStatus = HC_WAIT_READ;
