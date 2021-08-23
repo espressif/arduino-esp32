@@ -15,7 +15,8 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
-#include "esp32-hal.h"
+#include "sdkconfig.h"
+
 #if CONFIG_TINYUSB_MSC_ENABLED
 
 // Invoked when received Start Stop Unit command
@@ -46,4 +47,5 @@ public:
 private:
 	uint8_t _lun;
 };
-#endif
+
+#endif /* CONFIG_TINYUSB_MSC_ENABLED */
