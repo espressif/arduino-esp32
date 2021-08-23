@@ -62,6 +62,7 @@ public:
 	BLEUUID        getUUID();
 	std::string    getValue();
 	uint8_t*       getData();
+	uint8_t        getLength();
 
 	void indicate();
 	void notify(bool is_notification = true);

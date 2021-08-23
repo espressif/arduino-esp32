@@ -2,8 +2,11 @@
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
 #include "Arduino.h"
-#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#if (ARDUINO_USB_CDC_ON_BOOT|ARDUINO_USB_MSC_ON_BOOT|ARDUINO_USB_DFU_ON_BOOT)
 #include "USB.h"
+#if ARDUINO_USB_MSC_ON_BOOT
+#include "FirmwareMSC.h"
+#endif
 #endif
 
 #ifndef ARDUINO_LOOP_STACK_SIZE
@@ -47,7 +50,16 @@ void loopTask(void *pvParameters)
 
 extern "C" void app_main()
 {
-#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT
+    Serial.begin();
+#endif
+#if ARDUINO_USB_MSC_ON_BOOT
+    MSC_Update.begin();
+#endif
+#if ARDUINO_USB_DFU_ON_BOOT
+    USB.enableDFU();
+#endif
+#if ARDUINO_USB_ON_BOOT
     USB.begin();
 #endif
     loopTaskWDTEnabled = false;

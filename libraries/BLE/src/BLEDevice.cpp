@@ -347,7 +347,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			return;
 		}
 
-#ifndef CLASSIC_BT_ENABLED
+#ifndef CONFIG_BT_CLASSIC_ENABLED
 		esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);  
 #endif
 		esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
@@ -357,7 +357,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			return;
 		}
 
-#ifndef CLASSIC_BT_ENABLED
+#ifndef CONFIG_BT_CLASSIC_ENABLED
 		errRc = esp_bt_controller_enable(ESP_BT_MODE_BLE);
 		if (errRc != ESP_OK) {
 			log_e("esp_bt_controller_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));

@@ -449,7 +449,7 @@ typedef struct TU_ATTR_PACKED
 /*------------------------------------------------------------------*/
 /* Types
  *------------------------------------------------------------------*/
-typedef struct TU_ATTR_PACKED{
+typedef struct TU_ATTR_PACKED {
   union {
     struct TU_ATTR_PACKED {
       uint8_t recipient :  5; ///< Recipient type tusb_request_recipient_t.

@@ -58,9 +58,8 @@ typedef enum {
     UART_INTR_CMD_CHAR_DET     = (0x1 << 18),
 } uart_intr_t;
 
-static inline void uart_ll_reset_core(uart_dev_t *hw) {
-    hw->clk_conf.rst_core = 1;
-    hw->clk_conf.rst_core = 0;
+static inline void uart_ll_set_reset_core(uart_dev_t *hw, bool core_rst_en) {
+    hw->clk_conf.rst_core = core_rst_en;
 }
 
 static inline void uart_ll_sclk_enable(uart_dev_t *hw) {
@@ -921,7 +920,7 @@ static inline void uart_ll_force_xon(uart_port_t uart_num)
 }
 
 /**
- * @brief  Get UART final state machine status.
+ * @brief  Get UART finite-state machine status.
  *
  * @param  uart_num UART port number, the max port number is (UART_NUM_MAX -1).
  *

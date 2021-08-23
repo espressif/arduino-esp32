@@ -95,6 +95,7 @@ void __touchInit()
     SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
     //clear touch enable
     WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, 0x0);
+    SET_PERI_REG_MASK(RTC_CNTL_STATE0_REG, RTC_CNTL_TOUCH_SLP_TIMER_EN);
     __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
     esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, __touchISR, NULL, &touch_intr_handle);
 #else

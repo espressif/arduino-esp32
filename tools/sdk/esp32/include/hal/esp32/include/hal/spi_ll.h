@@ -22,12 +22,12 @@
 
 #pragma once
 
-#include "hal/hal_defs.h"
-#include "soc/spi_periph.h"
-#include "esp32/rom/lldesc.h"
 #include <string.h>
-#include <esp_types.h>
 #include <stdlib.h> //for abs()
+#include "esp_types.h"
+#include "esp32/rom/lldesc.h"
+#include "soc/spi_periph.h"
+#include "hal/misc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +38,7 @@ extern "C" {
 /// Interrupt not used. Don't use in app.
 #define SPI_LL_UNUSED_INT_MASK  (SPI_INT_EN | SPI_SLV_WR_STA_DONE | SPI_SLV_RD_STA_DONE | SPI_SLV_WR_BUF_DONE | SPI_SLV_RD_BUF_DONE)
 /// Swap the bit order to its correct place to send
-#define HAL_SPI_SWAP_DATA_TX(data, len) HAL_SWAP32((uint32_t)data<<(32-len))
+#define HAL_SPI_SWAP_DATA_TX(data, len) HAL_SWAP32((uint32_t)(data) << (32 - len))
 /// This is the expected clock frequency
 #define SPI_LL_PERIPH_CLK_FREQ (80 * 1000000)
 #define SPI_LL_GET_HW(ID) ((ID)==0? &SPI1:((ID)==1? &SPI2 : &SPI3))
@@ -496,6 +496,16 @@ static inline void spi_ll_master_select_cs(spi_dev_t *hw, int cs_id)
     hw->pin.cs2_dis = (cs_id == 2) ? 0 : 1;
 }
 
+/**
+ * Keep Chip Select activated after the current transaction.
+ *
+ * @param hw Beginning address of the peripheral registers.
+ * @param keep_active if 0 don't keep CS activated, else keep CS activated
+ */
+static inline void spi_ll_master_keep_cs(spi_dev_t *hw, int keep_active) {
+    hw->pin.cs_keep_active = (keep_active != 0) ? 1 : 0;
+}
+
 /*------------------------------------------------------------------------------
  * Configs: parameters
  *----------------------------------------------------------------------------*/
@@ -744,7 +754,7 @@ static inline void spi_ll_set_mosi_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    hw->slv_wrbuf_dlen.bit_len = bitlen - 1;
+    hw->slv_rdbuf_dlen.bit_len = bitlen - 1;
 }
 
 /**
@@ -755,7 +765,7 @@ static inline void spi_ll_slave_set_rx_bitlen(spi_dev_t *hw, size_t bitlen)
  */
 static inline void spi_ll_slave_set_tx_bitlen(spi_dev_t *hw, size_t bitlen)
 {
-    hw->slv_rdbuf_dlen.bit_len = bitlen - 1;
+    hw->slv_wrbuf_dlen.bit_len = bitlen - 1;
 }
 
 /**
