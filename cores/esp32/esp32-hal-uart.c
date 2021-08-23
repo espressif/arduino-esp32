@@ -482,6 +482,22 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
  * To start detection of baud rate with the uart the auto_baud.en bit needs to be cleared and set. The bit period is 
  * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
  * rounded to the closed real baudrate.
+ * 
+ * ESP32-C3 reports wrong baud rate detection as shown below:
+ * 
+ * This will help in a future recall for the C3.
+ * Baud Sent:          Baud Read:
+ *  300        -->       19536
+ * 2400        -->       19536
+ * 4800        -->       19536 
+ * 9600        -->       28818 
+ * 19200       -->       57678
+ * 38400       -->       115440
+ * 57600       -->       173535
+ * 115200      -->       347826
+ * 230400      -->       701754
+ * 
+ * 
 */
 void uartStartDetectBaudrate(uart_t *uart) {
     if(uart == NULL) {
@@ -491,12 +507,19 @@ void uartStartDetectBaudrate(uart_t *uart) {
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
-#if 0   // ESP32-C3 requires further testing
-    hw->rx_filt.glitch_filt = 0x08;
-    hw->rx_filt.glitch_filt_en = 1;
-    hw->conf0.autobaud_en = 0;
-    hw->conf0.autobaud_en = 1;
-#endif
+    
+    // ESP32-C3 requires further testing
+    // Baud rate detection returns wrong values 
+   
+    log_e("ESP32-C3 baud rate detection is not supported.");
+    return;
+
+    // Code bellow for C3 kept for future recall
+    //hw->rx_filt.glitch_filt = 0x08;
+    //hw->rx_filt.glitch_filt_en = 1;
+    //hw->conf0.autobaud_en = 0;
+    //hw->conf0.autobaud_en = 1;
+
 #else
     hw->auto_baud.glitch_filt = 0x08;
     hw->auto_baud.en = 0;
@@ -511,7 +534,7 @@ uartDetectBaudrate(uart_t *uart)
         return 0;
     }
 
-#ifndef CONFIG_IDF_TARGET_ESP32C3    // ESP32-C3 requires further testing
+#ifndef CONFIG_IDF_TARGET_ESP32C3    // ESP32-C3 requires further testing - Baud rate detection returns wrong values 
 
     static bool uartStateDetectingBaudrate = false;
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
@@ -525,11 +548,14 @@ uartDetectBaudrate(uart_t *uart)
     if (!divisor) {
         return 0;
     }
+    //  log_i(...) below has been used to check C3 baud rate detection results
     //log_i("Divisor = %d\n", divisor);
+    //log_i("BAUD RATE based on Positive Pulse %d\n", getApbFrequency()/((hw->pospulse.min_cnt + 1)/2));
+    //log_i("BAUD RATE based on Negative Pulse %d\n", getApbFrequency()/((hw->negpulse.min_cnt + 1)/2));
 
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
-    hw->conf0.autobaud_en = 0;
+    //hw->conf0.autobaud_en = 0;
 #else
     hw->auto_baud.en = 0;
 #endif
@@ -554,6 +580,7 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
+    log_e("ESP32-C3 baud rate detection is not supported.");
     return 0;
 #endif
 }
