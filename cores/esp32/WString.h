@@ -110,6 +110,7 @@ class String {
         unsigned char concat(const String &str);
         unsigned char concat(const char *cstr);
         unsigned char concat(const char *cstr, unsigned int length);
+        unsigned char concat(const uint8_t *cstr, unsigned int length) {return concat((const char*)cstr, length);}
         unsigned char concat(char c);
         unsigned char concat(unsigned char c);
         unsigned char concat(int num);
