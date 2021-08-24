@@ -56,6 +56,9 @@ class String {
         // be false).
         String(const char *cstr = "");
         String(const char *cstr, unsigned int length);
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+        String(const uint8_t *cstr, unsigned int length) : String((const char*)cstr, length) {}
+#endif
         String(const String &str);
         String(const __FlashStringHelper *str);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
