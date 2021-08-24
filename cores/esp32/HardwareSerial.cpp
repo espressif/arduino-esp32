@@ -103,7 +103,7 @@ void serialEventRun(void)
 }
 
 
-HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL) {}
+HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256) {}
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
@@ -133,7 +133,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 #endif
 
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
         uartStartDetectBaudrate(_uart);
@@ -147,7 +147,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, 256, invert, rxfifo_full_thrhd);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
@@ -268,3 +268,18 @@ void HardwareSerial::setPins(uint8_t rxPin, uint8_t txPin)
     uartSetPins(_uart, rxPin, txPin);
 }
 
+size_t HardwareSerial::setRxBufferSize(size_t new_size) {
+
+    if (_uart) {
+        log_e("RX Buffer can't be resized when Serial is already running.\n");
+        return 0;
+    }
+
+    if (new_size <= SOC_UART_FIFO_LEN) {
+        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);
+        return 0;
+    }
+
+    _rxBufferSize = new_size;
+    return _rxBufferSize;
+}

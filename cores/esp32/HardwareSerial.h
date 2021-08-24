@@ -103,10 +103,12 @@ public:
     
     void setRxInvert(bool);
     void setPins(uint8_t rxPin, uint8_t txPin);
+    size_t setRxBufferSize(size_t new_size);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
+    size_t _rxBufferSize;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
