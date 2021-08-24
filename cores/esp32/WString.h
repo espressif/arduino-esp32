@@ -55,6 +55,7 @@ class String {
         // fails, the string will be marked as invalid (i.e. "if (s)" will
         // be false).
         String(const char *cstr = "");
+        String(const char *cstr, unsigned int length);
         String(const String &str);
         String(const __FlashStringHelper *str);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__

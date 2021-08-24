@@ -35,6 +35,12 @@ String::String(const char *cstr) {
         copy(cstr, strlen(cstr));
 }
 
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
+}
+
 String::String(const String &value) {
     init();
     *this = value;
