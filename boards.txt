@@ -1225,6 +1225,7 @@ S_ODI_Ultra.upload.tool=esptool_py
 S_ODI_Ultra.upload.maximum_size=1310720
 S_ODI_Ultra.upload.maximum_data_size=327680
 S_ODI_Ultra.upload.wait_for_upload_port=true
+S_ODI_Ultra.upload.flags=
 S_ODI_Ultra.upload.extra_flags=
 
 S_ODI_Ultra.serial.disableDTR=true
@@ -2087,6 +2088,7 @@ esp32thing_plus.upload.tool=esptool_py
 esp32thing_plus.upload.maximum_size=1310720
 esp32thing_plus.upload.maximum_data_size=327680
 esp32thing_plus.upload.wait_for_upload_port=true
+esp32thing_plus.upload.flags=
 esp32thing_plus.upload.extra_flags=
 
 esp32thing_plus.serial.disableDTR=true
@@ -2315,6 +2317,8 @@ esp32micromod.upload.tool=esptool_py
 esp32micromod.upload.maximum_size=1310720
 esp32micromod.upload.maximum_data_size=327680
 esp32micromod.upload.wait_for_upload_port=true
+esp32micromod.upload.flags=
+esp32micromod.upload.extra_flags=
 
 esp32micromod.serial.disableDTR=true
 esp32micromod.serial.disableRTS=true
@@ -2952,6 +2956,7 @@ lolin32-lite.upload.tool=esptool_py
 lolin32-lite.upload.maximum_size=1310720
 lolin32-lite.upload.maximum_data_size=327680
 lolin32-lite.upload.wait_for_upload_port=true
+lolin32-lite.upload.flags=
 lolin32-lite.upload.extra_flags=
 
 lolin32-lite.serial.disableDTR=true
@@ -4567,6 +4572,7 @@ esp32doit-espduino.upload.tool=esptool
 esp32doit-espduino.upload.maximum_size=1310720
 esp32doit-espduino.upload.maximum_data_size=327680
 esp32doit-espduino.upload.wait_for_upload_port=true
+esp32doit-espduino.upload.flags=
 esp32doit-espduino.upload.extra_flags=
 
 esp32doit-espduino.serial.disableDTR=true
@@ -5332,6 +5338,7 @@ m5stack-timer-cam.upload.tool=esptool_py
 m5stack-timer-cam.upload.maximum_size=1310720
 m5stack-timer-cam.upload.maximum_data_size=327680
 m5stack-timer-cam.upload.wait_for_upload_port=true
+m5stack-timer-cam.upload.flags=
 m5stack-timer-cam.upload.extra_flags=
 
 m5stack-timer-cam.serial.disableDTR=true
@@ -5958,6 +5965,7 @@ heltec_wireless_stick_lite.upload.tool=esptool_py
 heltec_wireless_stick_lite.upload.maximum_size=1310720
 heltec_wireless_stick_lite.upload.maximum_data_size=327680
 heltec_wireless_stick_lite.upload.wait_for_upload_port=true
+heltec_wireless_stick_lite.upload.flags=
 heltec_wireless_stick_lite.upload.extra_flags=
 
 heltec_wireless_stick_lite.serial.disableDTR=true
@@ -7926,6 +7934,7 @@ kits-edu.upload.tool=esptool_py
 kits-edu.upload.maximum_size=1310720
 kits-edu.upload.maximum_data_size=327680
 kits-edu.upload.wait_for_upload_port=true
+kits-edu.upload.flags=
 kits-edu.upload.extra_flags=
 
 kits-edu.serial.disableDTR=true
@@ -8108,6 +8117,7 @@ OpenKB.upload.tool=esptool_py
 OpenKB.upload.maximum_size=1310720
 OpenKB.upload.maximum_data_size=327680
 OpenKB.upload.wait_for_upload_port=true
+OpenKB.upload.flags=
 OpenKB.upload.extra_flags=
 
 OpenKB.serial.disableDTR=true
@@ -8156,6 +8166,7 @@ wifiduino32.upload.tool=esptool_py
 wifiduino32.upload.maximum_size=1310720
 wifiduino32.upload.maximum_data_size=327680
 wifiduino32.upload.wait_for_upload_port=true
+wifiduino32.upload.flags=
 wifiduino32.upload.extra_flags=
 
 wifiduino32.serial.disableDTR=true
@@ -8342,6 +8353,7 @@ imbrios-logsens-v1p1.upload.tool=esptool_py
 imbrios-logsens-v1p1.upload.maximum_size=1310720
 imbrios-logsens-v1p1.upload.maximum_data_size=327680
 imbrios-logsens-v1p1.upload.wait_for_upload_port=true
+imbrios-logsens-v1p1.upload.flags=
 imbrios-logsens-v1p1.upload.extra_flags=
 
 imbrios-logsens-v1p1.serial.disableDTR=true
@@ -8416,6 +8428,7 @@ healthypi4.upload.tool=esptool_py
 healthypi4.upload.maximum_size=1310720
 healthypi4.upload.maximum_data_size=327680
 healthypi4.upload.wait_for_upload_port=true
+healthypi4.upload.flags=
 healthypi4.upload.extra_flags=
 
 healthypi4.serial.disableDTR=true
@@ -8487,6 +8500,7 @@ ET-Board.upload.tool=esptool_py
 ET-Board.upload.maximum_size=1310720
 ET-Board.upload.maximum_data_size=327680
 ET-Board.upload.wait_for_upload_port=true
+ET-Board.upload.flags=
 ET-Board.upload.extra_flags=
 
 ET-Board.serial.disableDTR=true
@@ -8841,6 +8855,8 @@ kb32.upload.tool=esptool_py
 kb32.upload.maximum_size=1310720
 kb32.upload.maximum_data_size=327680
 kb32.upload.wait_for_upload_port=true
+kb32.upload.flags=
+kb32.upload.extra_flags=
 
 kb32.serial.disableDTR=true
 kb32.serial.disableRTS=true
@@ -8981,6 +8997,8 @@ deneyapkart.upload.tool=esptool_py
 deneyapkart.upload.maximum_size=1310720
 deneyapkart.upload.maximum_data_size=327680
 deneyapkart.upload.wait_for_upload_port=true
+deneyapkart.upload.flags=
+deneyapkart.upload.extra_flags=
 
 deneyapkart.serial.disableDTR=true
 deneyapkart.serial.disableRTS=true
