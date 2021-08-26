@@ -293,6 +293,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 #else
             log_e("unsupported ethernet type 'ETH_PHY_KSZ8081'");
 #endif
+            break;
         default:
             break;
     }
