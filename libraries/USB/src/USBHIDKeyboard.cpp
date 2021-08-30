@@ -61,7 +61,7 @@ void USBHIDKeyboard::onEvent(arduino_usb_hid_keyboard_event_t event, esp_event_h
 
 void USBHIDKeyboard::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len){
     if(report_id == HID_REPORT_ID_KEYBOARD){
-        arduino_usb_hid_keyboard_event_data_t p = {0};
+        arduino_usb_hid_keyboard_event_data_t p;
         p.leds = buffer[0];
         arduino_usb_event_post(ARDUINO_USB_HID_KEYBOARD_EVENTS, ARDUINO_USB_HID_KEYBOARD_LED_EVENT, &p, sizeof(arduino_usb_hid_keyboard_event_data_t), portMAX_DELAY);
     }

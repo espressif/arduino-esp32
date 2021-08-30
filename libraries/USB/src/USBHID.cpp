@@ -230,7 +230,7 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance){
 // protocol is either HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol){
     log_v("instance: %u, protocol:%u", instance, protocol);
-    arduino_usb_hid_event_data_t p = {0};
+    arduino_usb_hid_event_data_t p;
     p.instance = instance;
     p.set_protocol.protocol = protocol;
     arduino_usb_event_post(ARDUINO_USB_HID_EVENTS, ARDUINO_USB_HID_SET_PROTOCOL_EVENT, &p, sizeof(arduino_usb_hid_event_data_t), portMAX_DELAY);
@@ -241,7 +241,7 @@ void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol){
 // - Idle Rate > 0 : skip duplication, but send at least 1 report every idle rate (in unit of 4 ms).
 bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate){
     log_v("instance: %u, idle_rate:%u", instance, idle_rate);
-    arduino_usb_hid_event_data_t p = {0};
+    arduino_usb_hid_event_data_t p;
     p.instance = instance;
     p.set_idle.idle_rate = idle_rate;
     arduino_usb_event_post(ARDUINO_USB_HID_EVENTS, ARDUINO_USB_HID_SET_IDLE_EVENT, &p, sizeof(arduino_usb_hid_event_data_t), portMAX_DELAY);

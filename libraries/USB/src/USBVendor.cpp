@@ -146,7 +146,7 @@ void USBVendor::_onRX(const uint8_t* buffer, size_t len){
             break;
         }
     }
-    arduino_usb_vendor_event_data_t p = {0};
+    arduino_usb_vendor_event_data_t p;
     p.data.len = len;
     arduino_usb_event_post(ARDUINO_USB_VENDOR_EVENTS, ARDUINO_USB_VENDOR_DATA_EVENT, &p, sizeof(arduino_usb_vendor_event_data_t), portMAX_DELAY);
 }
