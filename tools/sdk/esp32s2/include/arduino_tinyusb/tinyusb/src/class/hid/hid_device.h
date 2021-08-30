@@ -195,16 +195,7 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
       HID_REPORT_COUNT ( 1                                      )  ,\
       HID_REPORT_SIZE  ( 8                                      )  ,\
       HID_INPUT        ( HID_CONSTANT                           )  ,\
-    /* 6-byte Keycodes */ \
-    HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
-      HID_USAGE_MIN    ( 0                                   )     ,\
-      HID_USAGE_MAX_N  ( 255, 2                              )     ,\
-      HID_LOGICAL_MIN  ( 0                                   )     ,\
-      HID_LOGICAL_MAX_N( 255, 2                              )     ,\
-      HID_REPORT_COUNT ( 6                                   )     ,\
-      HID_REPORT_SIZE  ( 8                                   )     ,\
-      HID_INPUT        ( HID_DATA | HID_ARRAY | HID_ABSOLUTE )     ,\
-    /* 5-bit LED Indicator Kana | Compose | ScrollLock | CapsLock | NumLock */ \
+    /* Output 5-bit LED Indicator Kana | Compose | ScrollLock | CapsLock | NumLock */ \
     HID_USAGE_PAGE  ( HID_USAGE_PAGE_LED                   )       ,\
       HID_USAGE_MIN    ( 1                                       ) ,\
       HID_USAGE_MAX    ( 5                                       ) ,\
@@ -215,6 +206,15 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
       HID_REPORT_COUNT ( 1                                       ) ,\
       HID_REPORT_SIZE  ( 3                                       ) ,\
       HID_OUTPUT       ( HID_CONSTANT                            ) ,\
+    /* 6-byte Keycodes */ \
+    HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
+      HID_USAGE_MIN    ( 0                                   )     ,\
+      HID_USAGE_MAX_N  ( 255, 2                              )     ,\
+      HID_LOGICAL_MIN  ( 0                                   )     ,\
+      HID_LOGICAL_MAX_N( 255, 2                              )     ,\
+      HID_REPORT_COUNT ( 6                                   )     ,\
+      HID_REPORT_SIZE  ( 8                                   )     ,\
+      HID_INPUT        ( HID_DATA | HID_ARRAY | HID_ABSOLUTE )     ,\
   HID_COLLECTION_END \
 
 // Mouse Report Descriptor Template

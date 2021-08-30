@@ -51,6 +51,9 @@ MEMORY
                                      len = 0x2000 - 0
   /* RTC fast memory (same block as above), viewed from data bus */
   rtc_data_seg(RW) : org = 0x3ff9e000, len = 0x2000 - (0x10)
+  /* external memory, covers the dport, dram0, dram1 cacheable address space */
+  extern_ram_seg(RWX) : org = 0x3F500000,
+                                     len = 0xA80000
 }
 _static_data_end = _bss_end;
 _heap_end = 0x40000000;

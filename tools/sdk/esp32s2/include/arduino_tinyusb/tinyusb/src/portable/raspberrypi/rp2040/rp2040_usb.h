@@ -42,7 +42,7 @@ struct hw_endpoint
     // Buffer pointer in usb dpram
     uint8_t *hw_data_buf;
 
-    // Have we been stalled
+    // Have we been stalled TODO remove later
     bool stalled;
 
     // Current transfer information

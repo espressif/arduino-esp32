@@ -197,7 +197,7 @@ SECTIONS
     *libesp_system.a:esp_err.*(.literal .literal.* .text .text.*)
     *libesp_system.a:esp_system.*(.literal.esp_system_abort .text.esp_system_abort)
     *libesp_system.a:ubsan.*(.literal .literal.* .text .text.*)
-    *libfreertos.a:(EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .literal EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .literal.* EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .text EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .text.*)
+    *libfreertos.a:(EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.* *libfreertos.a:task_snapshot.*) .literal EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.* *libfreertos.a:task_snapshot.*) .literal.* EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.* *libfreertos.a:task_snapshot.*) .text EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.* *libfreertos.a:task_snapshot.*) .text.*)
     *libfreertos.a:port.*(.literal.pxPortInitialiseStack .literal.unlikely.vPortEndScheduler .literal.vApplicationStackOverflowHook .literal.vPortAssertIfInISR .literal.vPortEnterCritical .literal.vPortExitCritical .literal.vPortSetStackWatchpoint .literal.vPortYieldOtherCore .literal.xPortInIsrContext .literal.xPortStartScheduler .text .text.pxPortInitialiseStack .text.unlikely.vPortEndScheduler .text.vApplicationStackOverflowHook .text.vPortAssertIfInISR .text.vPortEnterCritical .text.vPortExitCritical .text.vPortSetStackWatchpoint .text.vPortYieldOtherCore .text.xPortGetTickRateHz .text.xPortInIsrContext .text.xPortStartScheduler)
     *libfreertos.a:port_common.*(.literal.esp_startup_start_app_common .text .text.esp_startup_start_app_common)
     *libgcc.a:_divsf3.*(.literal .literal.* .text .text.*)
@@ -347,6 +347,16 @@ SECTIONS
     _noinit_end = ABSOLUTE(.);
   } > dram0_0_seg
 
+   /* external memory bss, from any global variable with EXT_RAM_ATTR attribute*/
+  .ext_ram.bss (NOLOAD) :
+  {
+    _ext_ram_bss_start = ABSOLUTE(.);
+
+
+    . = ALIGN(4);
+    _ext_ram_bss_end = ABSOLUTE(.);
+  } > extern_ram_seg
+
   /* Shared RAM */
   .dram0.bss (NOLOAD) :
   {
@@ -491,6 +501,7 @@ SECTIONS
     *libesp_system.a:esp_system.*(.literal.esp_get_free_heap_size .literal.esp_get_free_internal_heap_size .literal.esp_get_idf_version .literal.esp_get_minimum_free_heap_size .literal.esp_register_shutdown_handler .literal.esp_unregister_shutdown_handler .text .text.esp_get_free_heap_size .text.esp_get_free_internal_heap_size .text.esp_get_idf_version .text.esp_get_minimum_free_heap_size .text.esp_register_shutdown_handler .text.esp_unregister_shutdown_handler)
     *libfreertos.a:port.*(.literal.esp_startup_start_app .text.esp_startup_start_app)
     *libfreertos.a:port_common.*(.literal.main_task .text.main_task)
+    *libfreertos.a:task_snapshot.*(.literal .literal.* .text .text.*)
     *liblog.a:log.*(.literal.esp_log_level_get .literal.esp_log_level_set .literal.esp_log_set_vprintf .literal.esp_log_writev .literal.heap_bubble_down .literal.s_log_level_get_and_unlock .text .text.esp_log_level_get .text.esp_log_level_set .text.esp_log_set_vprintf .text.esp_log_writev .text.heap_bubble_down .text.s_log_level_get_and_unlock)
     *liblog.a:log_freertos.*(.literal.esp_log_system_timestamp .text .text.esp_log_system_timestamp)
 

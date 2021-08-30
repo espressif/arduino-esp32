@@ -60,7 +60,7 @@
 #elif TU_CHECK_MCU(MIMXRT10XX)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
-#elif TU_CHECK_MCU(MKL25ZXX)
+#elif TU_CHECK_MCU(MKL25ZXX) || TU_CHECK_MCU(K32L2BXX)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
 //------------- Nordic -------------//
@@ -146,6 +146,10 @@
 
 //#elif TU_CHECK_MCU(MM32F327X)
 //  #define DCD_ATTR_ENDPOINT_MAX not known yet
+
+//------------- GigaDevice -------------//
+#elif TU_CHECK_MCU(GD32VF103)
+  #define DCD_ATTR_ENDPOINT_MAX   4
 
 #else
   #warning "DCD_ATTR_ENDPOINT_MAX is not defined for this MCU, default to 8"
