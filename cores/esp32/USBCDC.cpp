@@ -118,7 +118,7 @@ static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t eve
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), tx_sem(NULL), rx_queue(NULL) {
+USBCDC::USBCDC(uint8_t itfn) : tx_sem(NULL), itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
