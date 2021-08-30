@@ -34,6 +34,9 @@ set(CORE_SRCS
   cores/esp32/StreamString.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
+  cores/esp32/USBMSC.cpp
+  cores/esp32/FirmwareMSC.cpp
+  cores/esp32/firmware_msc_fat.c
   cores/esp32/wiring_pulse.c
   cores/esp32/wiring_shift.c
   cores/esp32/WMath.cpp
@@ -73,6 +76,14 @@ set(LIBRARY_SRCS
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBHIDMouse.cpp
+  libraries/USB/src/USBHIDKeyboard.cpp
+  libraries/USB/src/USBHIDGamepad.cpp
+  libraries/USB/src/USBHIDConsumerControl.cpp
+  libraries/USB/src/USBHIDSystemControl.cpp
+  libraries/USB/src/USBHIDVendor.cpp
+  libraries/USB/src/USBVendor.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
@@ -151,6 +162,7 @@ set(includedirs
   libraries/SPI/src
   libraries/Ticker/src
   libraries/Update/src
+  libraries/USB/src
   libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src

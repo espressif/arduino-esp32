@@ -13,13 +13,12 @@
 // limitations under the License.
 #pragma once
 
-#include <inttypes.h>
-
-#include "Stream.h"
-#include "esp32-hal.h"
+#include "sdkconfig.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
+#include <inttypes.h>
 #include "esp_event.h"
+#include "Stream.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
 
@@ -54,6 +53,7 @@ class USBCDC: public Stream
 {
 public:
     USBCDC(uint8_t itf=0);
+    ~USBCDC();
 
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);
@@ -129,7 +129,7 @@ protected:
     
 };
 
-#if ARDUINO_SERIAL_PORT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 extern USBCDC Serial;
 #endif
 
