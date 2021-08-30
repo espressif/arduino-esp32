@@ -21,12 +21,16 @@ menu.EventsCore=Events Run On
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
+esp32c3.vid.0=0x303a
+esp32c3.pid.0=0x1001
 
 esp32c3.upload.tool=esptool_py
 esp32c3.upload.maximum_size=1310720
 esp32c3.upload.maximum_data_size=327680
 esp32c3.upload.flags=
 esp32c3.upload.extra_flags=
+esp32c3.upload.use_1200bps_touch=false
+esp32c3.upload.wait_for_upload_port=false
 
 esp32c3.serial.disableDTR=false
 esp32c3.serial.disableRTS=false
@@ -47,6 +51,18 @@ esp32c3.build.flash_mode=qio
 esp32c3.build.boot=qio
 esp32c3.build.partitions=default
 esp32c3.build.defines=
+
+esp32c3.menu.CDCOnBoot.default=Disabled
+esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32c3.menu.CDCOnBoot.cdc=Enabled
+esp32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32c3.menu.UploadMode.default=UART0
+esp32c3.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32c3.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32c3.menu.UploadMode.cdc=Internal USB
+esp32c3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32c3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32c3.menu.PartitionScheme.default.build.partitions=default
