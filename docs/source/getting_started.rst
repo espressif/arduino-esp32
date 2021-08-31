@@ -35,8 +35,8 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 SoC      Stable Development Datasheet
 ======== ====== =========== ===================================
 ESP32    Yes    Yes         `ESP32 Datasheet`_
-ESP32-S2 No     Yes         `ESP32-S2 Datasheet`_
-ESP32-C3 No     Yes         `ESP32-C3 Datasheet`_
+ESP32-S2 Yes    Yes         `ESP32-S2 Datasheet`_
+ESP32-C3 Yes    Yes         `ESP32-C3 Datasheet`_
 ESP32-S3 No     No          Not Available Yet
 ======== ====== =========== ===================================
 
