@@ -50,6 +50,7 @@
 #include "Stream.h"
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
+#include "HWCDC.h"
 
 class HardwareSerial: public Stream
 {
@@ -120,6 +121,8 @@ extern void serialEventRun(void) __attribute__((weak));
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 #include "USB.h"
 #include "USBCDC.h"
+extern HardwareSerial Serial0;
+#elif ARDUINO_HW_CDC_ON_BOOT
 extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
