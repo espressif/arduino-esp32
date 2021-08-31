@@ -71,7 +71,7 @@ Installing using PlatformIO
    :width: 200
    :figclass: align-center
 
-PlatformIO is one of most popular embedded development tool. Currently, it supports Arduino ESP32 and ESP-IDF from Espressif (other platforms is also supported).
+PlatformIO is one of most popular embedded development tool. Currently, it supports Arduino ESP32 and ESP-IDF from Espressif (other platforms are also supported).
 
 To install PIO, you can follow this Getting Started, provided by PIO at `docs.platformio.org`_.
 
