@@ -12,6 +12,62 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "2.0.0",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.0/esp32-2.0.0.zip",
+          "archiveFileName": "esp32-2.0.0.zip",
+          "checksum": "SHA-256:10e1c42dbf11d2359259a80008f13f37d2f9bb8f49a25d34d387cf4531052cbc",
+          "size": "139313137",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Module"
+            },
+            {
+              "name": "WEMOS LoLin32"
+            },
+            {
+              "name": "WEMOS D1 MINI ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "riscv32-esp-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r1"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r1"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32s2-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r1"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "3.1.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            },
+            {
+              "packager": "esp32",
+              "name": "mklittlefs",
+              "version": "3.0.0-gnu12-dc7f933"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "2.0.0-rc2",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.0-rc2/esp32-2.0.0-rc2.zip",
