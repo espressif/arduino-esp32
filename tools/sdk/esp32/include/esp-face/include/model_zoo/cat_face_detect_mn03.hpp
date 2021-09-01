@@ -12,6 +12,9 @@
 
 class CatFaceDetectMN03
 {
+private:
+    void *model;
+
 public:
     /**
      * @brief Construct a new Cat Face Detect MN03 object.

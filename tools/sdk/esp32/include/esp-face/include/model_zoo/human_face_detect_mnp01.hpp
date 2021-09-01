@@ -6,6 +6,9 @@
 
 class HumanFaceDetectMNP01
 {
+private:
+    void *model;
+
 public:
     /**
      * @brief Construct a new Human Face Detect MNP01 object.

@@ -6,6 +6,9 @@
 
 class HumanFaceDetectMSR01
 {
+private:
+    void *model;
+
 public:
     /**
      * @brief Construct a new Human Face Detect MSR01 object

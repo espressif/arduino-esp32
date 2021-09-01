@@ -33,7 +33,9 @@
 #endif
 
 #include "list.h"
+#ifdef ESP_PLATFORM // IDF-3793
 #include "freertos/portmacro.h"
+#endif // ESP_PLATFORM
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
@@ -72,8 +74,11 @@
  * \ingroup Tasks
  */
 struct tskTaskControlBlock;     /* The old naming convention is used to prevent breaking kernel aware debuggers. */
-//typedef struct tskTaskControlBlock* TaskHandle_t;
+#ifdef ESP_PLATFORM // IDF-3769
 typedef void* TaskHandle_t;
+#else
+typedef struct tskTaskControlBlock* TaskHandle_t;
+#endif // ESP_PLATFORM
 /**
  * Defines the prototype to which the application task hook function must
  * conform.
@@ -203,9 +208,18 @@ typedef enum
  * @endcond
  * \ingroup SchedulerControl
  */
-#define taskENTER_CRITICAL( x )     portENTER_CRITICAL( x )
+#ifdef ESP_PLATFORM
+#define taskENTER_CRITICAL( x )   portENTER_CRITICAL( x )
+#else
+#define taskENTER_CRITICAL( )     portENTER_CRITICAL( )
+#endif //  ESP_PLATFORM
 #define taskENTER_CRITICAL_FROM_ISR( ) portSET_INTERRUPT_MASK_FROM_ISR()
-#define taskENTER_CRITICAL_ISR(mux)     portENTER_CRITICAL_ISR(mux)
+
+#ifdef ESP_PLATFORM
+#define taskENTER_CRITICAL_ISR( x )   portENTER_CRITICAL_ISR( x )
+#else
+#define taskENTER_CRITICAL_ISR( )     portENTER_CRITICAL_ISR( )
+#endif //  ESP_PLATFORM
 
 /**
  * task. h
@@ -221,10 +235,19 @@ typedef enum
  * @endcond
  * \ingroup SchedulerControl
  */
-#define taskEXIT_CRITICAL( x )          portEXIT_CRITICAL( x )
-#define taskEXIT_CRITICAL_FROM_ISR( x ) portCLEAR_INTERRUPT_MASK_FROM_ISR( x )
-#define taskEXIT_CRITICAL_ISR(mux)      portEXIT_CRITICAL_ISR(mux)
 
+#ifdef ESP_PLATFORM
+#define taskEXIT_CRITICAL( x )          portEXIT_CRITICAL( x )
+#else
+#define taskEXIT_CRITICAL( )            portEXIT_CRITICAL( )
+#endif // ESP_PLATFORM
+#define taskEXIT_CRITICAL_FROM_ISR( x ) portCLEAR_INTERRUPT_MASK_FROM_ISR( x )
+
+#ifdef ESP_PLATFORM
+#define taskEXIT_CRITICAL_ISR( x )      portEXIT_CRITICAL_ISR( x )
+#else
+#define taskEXIT_CRITICAL_ISR( )        portEXIT_CRITICAL_ISR( )
+#endif // ESP_PLATFORM
 /**
  * task. h
  *
@@ -521,7 +544,7 @@ typedef enum
  *  // Dimensions the buffer that the task being created will use as its stack.
  *  // NOTE:  This is the number of bytes the stack will hold, not the number of
  *  // words as found in vanilla FreeRTOS.
- * \#define STACK_SIZE 200
+ * #define STACK_SIZE 200
  *
  *  // Structure that will hold the TCB of the task being created.
  *  StaticTask_t xTaskBuffer;
@@ -745,9 +768,9 @@ typedef enum
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * void vTaskAllocateMPURegions( TaskHandle_t xTask, const MemoryRegion_t * const pxRegions );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Memory regions are assigned to a restricted task when the task is created by
@@ -957,9 +980,9 @@ void vTaskDelayUntil( TickType_t * const pxPreviousWakeTime,
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * BaseType_t xTaskAbortDelay( TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * INCLUDE_xTaskAbortDelay must be defined as 1 in FreeRTOSConfig.h for this
@@ -993,9 +1016,9 @@ BaseType_t xTaskAbortDelay( TaskHandle_t xTask ) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * UBaseType_t uxTaskPriorityGet( const TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * INCLUDE_uxTaskPriorityGet must be defined as 1 for this function to be available.
@@ -1046,9 +1069,9 @@ UBaseType_t uxTaskPriorityGet( const TaskHandle_t xTask ) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * UBaseType_t uxTaskPriorityGetFromISR( const TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * A version of uxTaskPriorityGet() that can be used from an ISR.
@@ -1058,9 +1081,9 @@ UBaseType_t uxTaskPriorityGetFromISR( const TaskHandle_t xTask ) PRIVILEGED_FUNC
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * eTaskState eTaskGetState( TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * INCLUDE_eTaskGetState must be defined as 1 for this function to be available.
@@ -1080,9 +1103,9 @@ eTaskState eTaskGetState( TaskHandle_t xTask ) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * void vTaskGetInfo( TaskHandle_t xTask, TaskStatus_t *pxTaskStatus, BaseType_t xGetFreeStackSpace, eTaskState eState );
- * </pre>
+ * @endcode
  * @endcond
  *
  * configUSE_TRACE_FACILITY must be defined as 1 for this function to be
@@ -1145,9 +1168,9 @@ void vTaskGetInfo( TaskHandle_t xTask,
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * void vTaskPrioritySet( TaskHandle_t xTask, UBaseType_t uxNewPriority );
- * </pre>
+ * @endcode
  * @endcond
  *
  * INCLUDE_vTaskPrioritySet must be defined as 1 for this function to be available.
@@ -1246,9 +1269,9 @@ void vTaskSuspend( TaskHandle_t xTaskToSuspend ) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * void vTaskResume( TaskHandle_t xTaskToResume );
- * </pre>
+ * @endcode
  * @endcond
  *
  * INCLUDE_vTaskSuspend must be defined as 1 for this function to be available.
@@ -1343,7 +1366,7 @@ BaseType_t xTaskResumeFromISR( TaskHandle_t xTaskToResume ) PRIVILEGED_FUNCTION;
  * tasks and starting the kernel.
  *
  * Example usage:
- * <pre>
+ * @code{c}
  * void vAFunction( void )
  * {
  *   // Create at least one task before starting the kernel.
@@ -1354,7 +1377,7 @@ BaseType_t xTaskResumeFromISR( TaskHandle_t xTaskToResume ) PRIVILEGED_FUNCTION;
  *
  *   // Will not get here unless a task calls vTaskEndScheduler ()
  * }
- * </pre>
+ * @endcode
  *
  * @cond
  * \defgroup vTaskStartScheduler vTaskStartScheduler
@@ -1386,7 +1409,7 @@ void vTaskStartScheduler( void ) PRIVILEGED_FUNCTION;
  * tasks.
  *
  * Example usage:
- * <pre>
+ * @code{c}
  * void vTaskCode( void * pvParameters )
  * {
  *   for( ;; )
@@ -1411,7 +1434,7 @@ void vTaskStartScheduler( void ) PRIVILEGED_FUNCTION;
  *   // vTaskEndScheduler ().  When we get here we are back to single task
  *   // execution.
  * }
- * </pre>
+ * @endcode
  *
  * @cond
  * \defgroup vTaskEndScheduler vTaskEndScheduler
@@ -1476,9 +1499,9 @@ void vTaskSuspendAll( void ) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task. h
- * <pre>
+ * @code{c}
  * BaseType_t xTaskResumeAll( void );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Resumes scheduler activity after it was suspended by a call to
@@ -1688,9 +1711,9 @@ uint8_t* pxTaskGetStackStart( TaskHandle_t xTask) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task.h
- * <pre>
+ * @code{c}
  * void vTaskSetApplicationTaskTag( TaskHandle_t xTask, TaskHookFunction_t pxHookFunction );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Sets pxHookFunction to be the task hook function used by the task xTask.
@@ -1705,9 +1728,9 @@ uint8_t* pxTaskGetStackStart( TaskHandle_t xTask) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task.h
- * <pre>
+ * @code{c}
  * void xTaskGetApplicationTaskTag( TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Returns the pxHookFunction value assigned to the task xTask.  Do not
@@ -1719,9 +1742,9 @@ uint8_t* pxTaskGetStackStart( TaskHandle_t xTask) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task.h
- * <pre>
+ * @code{c}
  * void xTaskGetApplicationTaskTagFromISR( TaskHandle_t xTask );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Returns the pxHookFunction value assigned to the task xTask.  Can
@@ -1802,9 +1825,9 @@ uint8_t* pxTaskGetStackStart( TaskHandle_t xTask) PRIVILEGED_FUNCTION;
 /**
  * @cond
  * task.h
- * <pre>
+ * @code{c}
  * BaseType_t xTaskCallApplicationTaskHook( TaskHandle_t xTask, void *pvParameter );
- * </pre>
+ * @endcode
  * @endcond
  *
  * Calls the hook function associated with xTask.  Passing xTask as NULL has
@@ -2034,7 +2057,7 @@ void vTaskGetRunTimeStats( char * pcWriteBuffer ) PRIVILEGED_FUNCTION;     /*lin
 /**
  * @cond
  * task. h
- * <pre>uint32_t ulTaskGetIdleRunTimeCounter( void );</pre>
+ * @code{c}uint32_t ulTaskGetIdleRunTimeCounter( void );@endcode
  * @endcond
  *
  * configGENERATE_RUN_TIME_STATS and configUSE_STATS_FORMATTING_FUNCTIONS
@@ -2750,8 +2773,10 @@ TaskHandle_t pvTaskIncrementMutexHeldCount( void ) PRIVILEGED_FUNCTION;
  */
 void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNCTION;
 
+#ifdef ESP_PLATFORM
 /* TODO: IDF-3683 */
 #include "freertos/task_snapshot.h"
+#endif // ESP_PLATFORM
 
 /** @endcond */
 
