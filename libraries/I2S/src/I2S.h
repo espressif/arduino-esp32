@@ -58,7 +58,7 @@ public:
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin);
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin, uint8_t outSdPin, uint8_t sckPin, uint8_t fsPin); // set duplex
   // the SCK and FS pins are driven as outputs using the sample rate
-  int begin(int mode, long sampleRate, int bitsPerSample);
+  int begin(int mode, int sampleRate, int bitsPerSample);
   // the SCK and FS pins are inputs, other side controls sample rate
   int begin(int mode, int bitsPerSample);
 
@@ -101,14 +101,16 @@ public:
   //size_t write(int);
   size_t write(int32_t);
   size_t write(const void *buffer, size_t size);
+  size_t write_blocking(const void *buffer, size_t size);
+  size_t write_nonblocking(const void *buffer, size_t size);
 
   void onTransmit(void(*)(void));
   void onReceive(void(*)(void));
 
   int setBufferSize(int bufferSize);
-  int getBufferSize();
+  int  getBufferSize();
 private:
-  int begin(int mode, long sampleRate, int bitsPerSample, bool driveClock);
+  int begin(int mode, int sampleRate, int bitsPerSample, bool driveClock);
 
   int enableTransmitter();
   int enableReceiver();
@@ -119,7 +121,7 @@ private:
 
   static void onDmaTransferComplete(void*);
   int _installDriver();
-  int _uninstallDriver();
+  void _uninstallDriver();
   void _setSckPin(int sckPin);
   void _setFsPin(int fsPin);
   void _setDataInPin(int inSdPin);
@@ -143,7 +145,8 @@ private:
 
   i2s_state_t _state;
   int _bitsPerSample;
-  long _sampleRate;
+  uint32_t _sampleRate; //
+  //int _sampleRate;
   int _mode;
 
   uint16_t _buffer_byte_size;
@@ -156,6 +159,9 @@ private:
   RingbufHandle_t _output_ring_buffer;
   int _i2s_dma_buffer_size;
   bool _driveClock;
+
+  void _tx_done_routine(uint8_t* prev_item);
+  void _rx_done_routine();
 
   void (*_onTransmit)(void);
   void (*_onReceive)(void);
