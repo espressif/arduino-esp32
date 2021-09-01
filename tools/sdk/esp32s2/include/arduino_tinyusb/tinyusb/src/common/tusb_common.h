@@ -110,6 +110,9 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte2(uint32_t u32) { return 
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte1(uint32_t u32) { return TU_U32_BYTE1(u32); }
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte0(uint32_t u32) { return TU_U32_BYTE0(u32); }
 
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_high16(uint32_t u32) { return (uint16_t) (u32 >> 16); }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_low16 (uint32_t u32) { return (uint16_t) (u32 & 0x0000ffffu); }
+
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_high(uint16_t u16) { return TU_U16_HIGH(u16); }
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t u16) { return TU_U16_LOW(u16); }
 

@@ -81,7 +81,7 @@ bool usbd_edpt_claim(uint8_t rhport, uint8_t ep_addr);
 // Release an endpoint without submitting a transfer
 bool usbd_edpt_release(uint8_t rhport, uint8_t ep_addr);
 
-// Check if endpoint transferring is complete
+// Check if endpoint is busy transferring
 bool usbd_edpt_busy(uint8_t rhport, uint8_t ep_addr);
 
 // Stall endpoint
@@ -93,6 +93,7 @@ void usbd_edpt_clear_stall(uint8_t rhport, uint8_t ep_addr);
 // Check if endpoint is stalled
 bool usbd_edpt_stalled(uint8_t rhport, uint8_t ep_addr);
 
+// Check if endpoint is ready (not busy and not stalled)
 TU_ATTR_ALWAYS_INLINE static inline
 bool usbd_edpt_ready(uint8_t rhport, uint8_t ep_addr)
 {

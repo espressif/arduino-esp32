@@ -153,7 +153,7 @@ bool dcd_edpt_xfer            (uint8_t rhport, uint8_t ep_addr, uint8_t * buffer
 // This API is optional, may be useful for register-based for transferring data.
 bool dcd_edpt_xfer_fifo       (uint8_t rhport, uint8_t ep_addr, tu_fifo_t * ff, uint16_t total_bytes) TU_ATTR_WEAK;
 
-// Stall endpoint
+// Stall endpoint, any queuing transfer should be removed from endpoint
 void dcd_edpt_stall           (uint8_t rhport, uint8_t ep_addr);
 
 // clear stall, data toggle is also reset to DATA0
