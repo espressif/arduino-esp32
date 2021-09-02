@@ -32,7 +32,11 @@ namespace esp_i2s {
 #endif
 
 #ifndef PIN_I2S_FS
-  #define PIN_I2S_FS 25
+  #if CONFIG_IDF_TARGET_ESP32S2
+    #define PIN_I2S_FS 27
+  #else
+    #define PIN_I2S_FS 25
+  #endif
 #endif
 
 #ifndef PIN_I2S_SD

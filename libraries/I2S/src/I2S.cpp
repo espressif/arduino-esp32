@@ -140,6 +140,7 @@ int I2SClass::_installDriver(){
     // TODO there will much more work with slave mode
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
   }
+#if SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_ADC_DAC){
     #if SOC_I2S_SUPPORTS_ADC_DAC
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
@@ -151,7 +152,9 @@ int I2SClass::_installDriver(){
       log_e("This chip does not support DAC / ADC");
       return 0; // ERR
     #endif
-  }else if(_mode == I2S_PHILIPS_MODE ||
+  }else
+#endif
+   if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal mode
     if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
@@ -179,7 +182,7 @@ int I2SClass::_installDriver(){
     .sample_rate = _sampleRate,
     .bits_per_sample = (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample,
     .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT,
-    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S | esp_i2s::I2S_COMM_FORMAT_STAND_PCM_SHORT), // 0x01 | 0x04 // default
+    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S), // 0x01 // default
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
     .dma_buf_len = _i2s_dma_buffer_size
@@ -198,6 +201,7 @@ int I2SClass::_installDriver(){
     }
   } //try installing with increasing size
 
+#if SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_ADC_DAC){
    esp_i2s::adc_unit_t adc_unit = (esp_i2s::adc_unit_t) 1;
     esp_i2s::adc1_channel_t adc_channel = (esp_i2s::adc1_channel_t) 6; //
@@ -212,13 +216,15 @@ int I2SClass::_installDriver(){
     esp_i2s::adc1_config_channel_atten(adc_channel, esp_i2s::ADC_ATTEN_DB_11);
     esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
     _initialized = true;
-  }else{ // End of ADC/DAC mode; start of Normal mode
+  }else // End of ADC/DAC mode
+#endif
+  if(_mode == I2S_PHILIPS_MODE){ // if Normal mode
     _initialized = true;
     if(!_applyPinSetting()){
       end();
       return 0; // ERR
     }
-  }
+  } // if _mode == ?
 
   return 1; // OK
 }
@@ -257,7 +263,9 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   // TODO implement left / right justified modes
   switch (mode) {
     case I2S_PHILIPS_MODE:
+#if SOC_I2S_SUPPORTS_ADC_DAC
     case I2S_ADC_DAC:
+#endif
     case I2S_PDM:
       break;
 
@@ -309,10 +317,10 @@ int I2SClass::_applyPinSetting(){
         pin_config.data_out_num = _outSdPin>0 ? _outSdPin : _sdPin;
         pin_config.data_in_num = I2S_PIN_NO_CHANGE;
       }else{
+        pin_config.data_out_num = I2S_PIN_NO_CHANGE;
+        pin_config.data_in_num = _sdPin;
       }
     }
-    // pinMode(_inSdPin, INPUT_PULLDOWN);
-    // TODO if there is any default pinMode - set it to old input
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
       log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d\n", _sckPin, _fsPin, pin_config.data_in_num, pin_config.data_out_num);
       return 0; // ERR
@@ -424,9 +432,11 @@ int I2SClass::getDataOutPin(){
 }
 
 void I2SClass::_uninstallDriver(){
+#if SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_ADC_DAC){
     esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
   }
+#endif
   esp_i2s::i2s_driver_uninstall((esp_i2s::i2s_port_t) _deviceIndex);
 
   if(_state != I2S_STATE_DUPLEX){
@@ -494,11 +504,13 @@ int I2SClass::read(void* buffer, size_t size){
   tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), size);
   if(tmp_buffer != NULL){
     memcpy(buffer, tmp_buffer, item_size);
+#if SOC_I2S_SUPPORTS_ADC_DAC
     if(_mode == I2S_ADC_DAC){
       for(size_t i = 0; i < item_size / 2; ++i){
         ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
       }
     } // ADC/DAC mode
+#endif
     vRingbufferReturnItem(_input_ring_buffer, tmp_buffer);
     return item_size;
   }else{

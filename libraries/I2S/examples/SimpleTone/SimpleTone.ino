@@ -38,8 +38,8 @@ const int halfWavelength = (sampleRate / frequency); // half wavelength of squar
 short sample = amplitude; // current sample value
 int count = 0;
 
-//i2s_mode_t mode = I2S_PHILIPS_MODE;
-i2s_mode_t mode = I2S_ADC_DAC;
+i2s_mode_t mode = I2S_PHILIPS_MODE;
+//i2s_mode_t mode = I2S_ADC_DAC;
 
 
 void setup() {
