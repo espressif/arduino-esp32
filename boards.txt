@@ -9388,10 +9388,10 @@ atmegazero_esp32s2.build.boot=qio
 atmegazero_esp32s2.build.partitions=default
 atmegazero_esp32s2.build.defines=
 
-atmegazero_esp32s2.menu.SerialMode.cdc=USB CDC
-atmegazero_esp32s2.menu.SerialMode.cdc.build.serial=1
-atmegazero_esp32s2.menu.SerialMode.default=UART0
-atmegazero_esp32s2.menu.SerialMode.default.build.serial=0
+atmegazero_esp32s2.menu.CDCOnBoot.cdc=USB CDC
+atmegazero_esp32s2.menu.CDCOnBoot.cdc.build.serial=1
+atmegazero_esp32s2.menu.CDCOnBoot.default=UART0
+atmegazero_esp32s2.menu.CDCOnBoot.default.build.serial=0
 
 atmegazero_esp32s2.menu.PSRAM.disabled=Disabled
 atmegazero_esp32s2.menu.PSRAM.disabled.build.defines=
@@ -9537,10 +9537,10 @@ deneyapmini.build.boot=qio
 deneyapmini.build.partitions=default
 deneyapmini.build.defines=
 
-deneyapmini.menu.SerialMode.default=USB_CDC
-deneyapmini.menu.SerialMode.default.build.serial=1
-deneyapmini.menu.SerialMode.uart=UART0
-deneyapmini.menu.SerialMode.uart.build.serial=0
+deneyapmini.menu.CDCOnBoot.default=USB_CDC
+deneyapmini.menu.CDCOnBoot.default.build.serial=1
+deneyapmini.menu.CDCOnBoot.uart=UART0
+deneyapmini.menu.CDCOnBoot.uart.build.serial=0
 
 deneyapmini.menu.PSRAM.disabled=Disabled
 deneyapmini.menu.PSRAM.disabled.build.defines=
