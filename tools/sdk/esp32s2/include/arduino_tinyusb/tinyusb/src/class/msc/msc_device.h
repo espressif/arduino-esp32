@@ -140,7 +140,7 @@ TU_ATTR_WEAK void tud_msc_write10_complete_cb(uint8_t lun);
 // Invoked when command in tud_msc_scsi_cb is complete
 TU_ATTR_WEAK void tud_msc_scsi_complete_cb(uint8_t lun, uint8_t const scsi_cmd[16]);
 
-// Hook to make a mass storage device read-only. TODO remove
+// Invoked to check if device is writable as part of SCSI WRITE10
 TU_ATTR_WEAK bool tud_msc_is_writable_cb(uint8_t lun);
 
 //--------------------------------------------------------------------+

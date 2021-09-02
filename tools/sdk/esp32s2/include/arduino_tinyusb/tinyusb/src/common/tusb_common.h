@@ -73,6 +73,23 @@
 #include "tusb_error.h"   // TODO remove
 #include "tusb_timeout.h" // TODO remove
 
+//--------------------------------------------------------------------+
+// Internal Helper used by Host and Device Stack
+//--------------------------------------------------------------------+
+
+// Check if endpoint descriptor is valid per USB specs
+bool tu_edpt_validate(tusb_desc_endpoint_t const * desc_ep, tusb_speed_t speed);
+
+// Bind all endpoint of a interface descriptor to class driver
+void tu_edpt_bind_driver(uint8_t ep2drv[][2], tusb_desc_interface_t const* p_desc, uint16_t desc_len, uint8_t driver_id);
+
+// Calculate total length of n interfaces (depending on IAD)
+uint16_t tu_desc_get_interface_total_len(tusb_desc_interface_t const* desc_itf, uint8_t itf_count, uint16_t max_len);
+
+//--------------------------------------------------------------------+
+// Internal Inline Functions
+//--------------------------------------------------------------------+
+
 //------------- Mem -------------//
 #define tu_memclr(buffer, size)  memset((buffer), 0, (size))
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
@@ -92,6 +109,9 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte3(uint32_t u32) { return 
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte2(uint32_t u32) { return TU_U32_BYTE2(u32); }
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte1(uint32_t u32) { return TU_U32_BYTE1(u32); }
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte0(uint32_t u32) { return TU_U32_BYTE0(u32); }
+
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_high16(uint32_t u32) { return (uint16_t) (u32 >> 16); }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_low16 (uint32_t u32) { return (uint16_t) (u32 & 0x0000ffffu); }
 
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_high(uint16_t u16) { return TU_U16_HIGH(u16); }
 TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t u16) { return TU_U16_LOW(u16); }
@@ -352,12 +372,17 @@ typedef struct
 
 static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint32_t key)
 {
+  static char not_found[10];
+
   for(uint16_t i=0; i<p_table->count; i++)
   {
     if (p_table->items[i].key == key) return p_table->items[i].data;
   }
 
-  return NULL;
+  // not found return the key value in hex
+  sprintf(not_found, "0x%08lX", key);
+
+  return not_found;
 }
 
 #endif // CFG_TUSB_DEBUG

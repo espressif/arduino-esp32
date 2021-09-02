@@ -100,10 +100,6 @@ bool tud_control_status(uint8_t rhport, tusb_control_request_t const * request);
 // Application return pointer to descriptor
 uint8_t const * tud_descriptor_device_cb(void);
 
-// Invoked when received GET BOS DESCRIPTOR request
-// Application return pointer to descriptor
-TU_ATTR_WEAK uint8_t const * tud_descriptor_bos_cb(void);
-
 // Invoked when received GET CONFIGURATION DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint8_t const * tud_descriptor_configuration_cb(uint8_t index);
@@ -111,6 +107,10 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index);
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid);
+
+// Invoked when received GET BOS DESCRIPTOR request
+// Application return pointer to descriptor
+TU_ATTR_WEAK uint8_t const * tud_descriptor_bos_cb(void);
 
 // Invoked when received GET DEVICE QUALIFIER DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -734,7 +734,7 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 
 /* Primary Interface */
 #define TUD_BTH_PRI_ITF(_itfnum, _stridx, _ep_evt, _ep_evt_size, _ep_evt_interval, _ep_in, _ep_out, _ep_size) \
-  9, TUSB_DESC_INTERFACE, _itfnum, _stridx, 3, TUD_BT_APP_CLASS, TUD_BT_APP_SUBCLASS, TUD_BT_PROTOCOL_PRIMARY_CONTROLLER, 0, \
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 3, TUD_BT_APP_CLASS, TUD_BT_APP_SUBCLASS, TUD_BT_PROTOCOL_PRIMARY_CONTROLLER, _stridx, \
   /* Endpoint In for events */ \
   7, TUSB_DESC_ENDPOINT, _ep_evt, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(_ep_evt_size), _ep_evt_interval, \
   /* Endpoint In for ACL data */ \

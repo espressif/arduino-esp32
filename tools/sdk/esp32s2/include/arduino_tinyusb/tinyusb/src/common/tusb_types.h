@@ -262,6 +262,10 @@ enum
 // USB Descriptors
 //--------------------------------------------------------------------+
 
+// Start of all packed definitions for compiler without per-type packed
+TU_ATTR_PACKED_BEGIN
+TU_ATTR_BIT_FIELD_ORDER_BEGIN
+
 /// USB Device Descriptor
 typedef struct TU_ATTR_PACKED
 {
@@ -295,6 +299,8 @@ typedef struct TU_ATTR_PACKED
   uint8_t  bNumDeviceCaps  ; ///< Number of device capability descriptors in the BOS
 } tusb_desc_bos_t;
 
+TU_VERIFY_STATIC( sizeof(tusb_desc_bos_t) == 5, "size is not correct");
+
 /// USB Configuration Descriptor
 typedef struct TU_ATTR_PACKED
 {
@@ -326,6 +332,8 @@ typedef struct TU_ATTR_PACKED
   uint8_t  iInterface         ; ///< Index of string descriptor describing this interface
 } tusb_desc_interface_t;
 
+TU_VERIFY_STATIC( sizeof(tusb_desc_interface_t) == 9, "size is not correct");
+
 /// USB Endpoint Descriptor
 typedef struct TU_ATTR_PACKED
 {
@@ -342,9 +350,14 @@ typedef struct TU_ATTR_PACKED
   } bmAttributes     ; ///< This field describes the endpoint's attributes when it is configured using the bConfigurationValue. \n Bits 1..0: Transfer Type \n- 00 = Control \n- 01 = Isochronous \n- 10 = Bulk \n- 11 = Interrupt \n If not an isochronous endpoint, bits 5..2 are reserved and must be set to zero. If isochronous, they are defined as follows: \n Bits 3..2: Synchronization Type \n- 00 = No Synchronization \n- 01 = Asynchronous \n- 10 = Adaptive \n- 11 = Synchronous \n Bits 5..4: Usage Type \n- 00 = Data endpoint \n- 01 = Feedback endpoint \n- 10 = Implicit feedback Data endpoint \n- 11 = Reserved \n Refer to Chapter 5 of USB 2.0 specification for more information. \n All other bits are reserved and must be reset to zero. Reserved bits must be ignored by the host.
 
   struct TU_ATTR_PACKED {
+#if defined(__CCRX__)
+    //FIXME the original defined bit field has a problem with the CCRX toolchain, so only a size field is defined
+    uint16_t size;
+#else
     uint16_t size           : 11; ///< Maximum packet size this endpoint is capable of sending or receiving when this configuration is selected. \n For isochronous endpoints, this value is used to reserve the bus time in the schedule, required for the per-(micro)frame data payloads. The pipe may, on an ongoing basis, actually use less bandwidth than that reserved. The device reports, if necessary, the actual bandwidth used via its normal, non-USB defined mechanisms. \n For all endpoints, bits 10..0 specify the maximum packet size (in bytes). \n For high-speed isochronous and interrupt endpoints: \n Bits 12..11 specify the number of additional transaction opportunities per microframe: \n- 00 = None (1 transaction per microframe) \n- 01 = 1 additional (2 per microframe) \n- 10 = 2 additional (3 per microframe) \n- 11 = Reserved \n Bits 15..13 are reserved and must be set to zero.
     uint16_t hs_period_mult : 2;
     uint16_t TU_RESERVED    : 3;
+#endif
   }wMaxPacketSize;
 
   uint8_t  bInterval        ; ///< Interval for polling endpoint for data transfers. Expressed in frames or microframes depending on the device operating speed (i.e., either 1 millisecond or 125 us units). \n- For full-/high-speed isochronous endpoints, this value must be in the range from 1 to 16. The bInterval value is used as the exponent for a \f$ 2^(bInterval-1) \f$ value; e.g., a bInterval of 4 means a period of 8 (\f$ 2^(4-1) \f$). \n- For full-/low-speed interrupt endpoints, the value of this field may be from 1 to 255. \n- For high-speed interrupt endpoints, the bInterval value is used as the exponent for a \f$ 2^(bInterval-1) \f$ value; e.g., a bInterval of 4 means a period of 8 (\f$ 2^(4-1) \f$) . This value must be from 1 to 16. \n- For high-speed bulk/control OUT endpoints, the bInterval must specify the maximum NAK rate of the endpoint. A value of 0 indicates the endpoint never NAKs. Other values indicate at most 1 NAK each bInterval number of microframes. This value must be in the range from 0 to 255. \n Refer to Chapter 5 of USB 2.0 specification for more information.
@@ -449,7 +462,7 @@ typedef struct TU_ATTR_PACKED
 /*------------------------------------------------------------------*/
 /* Types
  *------------------------------------------------------------------*/
-typedef struct TU_ATTR_PACKED {
+typedef struct TU_ATTR_PACKED{
   union {
     struct TU_ATTR_PACKED {
       uint8_t recipient :  5; ///< Recipient type tusb_request_recipient_t.
@@ -468,11 +481,9 @@ typedef struct TU_ATTR_PACKED {
 
 TU_VERIFY_STATIC( sizeof(tusb_control_request_t) == 8, "size is not correct");
 
-// TODO move to somewhere suitable
-static inline uint8_t bm_request_type(uint8_t direction, uint8_t type, uint8_t recipient)
-{
-  return ((uint8_t) (direction << 7)) | ((uint8_t) (type << 5)) | (recipient);
-}
+
+TU_ATTR_PACKED_END  // End of all packed definitions
+TU_ATTR_BIT_FIELD_ORDER_END
 
 //--------------------------------------------------------------------+
 // Endpoint helper

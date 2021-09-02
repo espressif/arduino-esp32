@@ -120,7 +120,7 @@ void HWCDC::begin(unsigned long baud)
 
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
-    if(!intr_handle && esp_intr_alloc(ETS_USB_INTR_SOURCE/*ETS_USB_SERIAL_JTAG_INTR_SOURCE*/, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
+    if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
     }
