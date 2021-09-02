@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "FirmwareMSC.h"
+
+#if CONFIG_TINYUSB_MSC_ENABLED
 
 #include <cstring>
-#include "FirmwareMSC.h"
 #include "esp_partition.h"
 #include "esp_ota_ops.h"
 #include "esp32-hal.h"
 #include "pins_arduino.h"
 #include "firmware_msc_fat.h"
-
-#if CONFIG_TINYUSB_MSC_ENABLED
 
 #ifndef USB_FW_MSC_VENDOR_ID
 #define USB_FW_MSC_VENDOR_ID "ESP32" //max 8 chars

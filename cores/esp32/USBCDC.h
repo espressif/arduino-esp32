@@ -13,13 +13,12 @@
 // limitations under the License.
 #pragma once
 
-#include <inttypes.h>
-
-#include "Stream.h"
-#include "esp32-hal.h"
+#include "sdkconfig.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
+#include <inttypes.h>
 #include "esp_event.h"
+#include "Stream.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
 

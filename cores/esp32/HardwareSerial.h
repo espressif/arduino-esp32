@@ -49,6 +49,8 @@
 
 #include "Stream.h"
 #include "esp32-hal.h"
+#include "soc/soc_caps.h"
+#include "HWCDC.h"
 
 class HardwareSerial: public Stream
 {
@@ -56,7 +58,7 @@ public:
     HardwareSerial(int uart_nr);
 
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
-    void end();
+    void end(bool turnOffDebug = true);
     void updateBaudRate(unsigned long baud);
     int available(void);
     int availableForWrite(void);
@@ -98,16 +100,16 @@ public:
     uint32_t baudRate();
     operator bool() const;
 
-    size_t setRxBufferSize(size_t);
     void setDebugOutput(bool);
     
     void setRxInvert(bool);
+    void setPins(uint8_t rxPin, uint8_t txPin);
+    size_t setRxBufferSize(size_t new_size);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
-    uint8_t _tx_pin;
-    uint8_t _rx_pin;
+    size_t _rxBufferSize;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
@@ -120,11 +122,15 @@ extern void serialEventRun(void) __attribute__((weak));
 #include "USB.h"
 #include "USBCDC.h"
 extern HardwareSerial Serial0;
+#elif ARDUINO_HW_CDC_ON_BOOT
+extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
 #endif
+#if SOC_UART_NUM > 1
 extern HardwareSerial Serial1;
-#if CONFIG_IDF_TARGET_ESP32
+#endif
+#if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
 #endif
 #endif
