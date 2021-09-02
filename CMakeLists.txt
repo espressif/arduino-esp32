@@ -46,15 +46,6 @@ set(CORE_SRCS
 
 set(LIBRARY_SRCS
   libraries/ArduinoOTA/src/ArduinoOTA.cpp
-  libraries/ArduinoSound/src/AmplitudeAnalyzer.cpp
-  libraries/ArduinoSound/src/AudioAnalyzer.cpp
-  libraries/ArduinoSound/src/AudioIn.cpp
-  libraries/ArduinoSound/src/AudioInI2S.cpp
-  libraries/ArduinoSound/src/AudioOut.cpp
-  libraries/ArduinoSound/src/AudioOutI2S.cpp
-  libraries/ArduinoSound/src/es8388.cpp
-  libraries/ArduinoSound/src/FFTAnalyzer.cpp
-  libraries/ArduinoSound/src/SDWaveFile.cpp
   libraries/AsyncUDP/src/AsyncUDP.cpp
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
   libraries/BluetoothSerial/src/BTAddress.cpp
@@ -150,7 +141,6 @@ set(includedirs
   variants/${IDF_TARGET}/
   cores/esp32/
   libraries/ArduinoOTA/src
-  libraries/ArduinoSound/src/
   libraries/AsyncUDP/src
   libraries/BLE/src
   libraries/BluetoothSerial/src
