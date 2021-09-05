@@ -39,6 +39,7 @@ protected:
     const char *_private_key;
     const char *_pskIdent; // identity for PSK cipher suites
     const char *_psKey; // key in hex for PSK cipher suites
+    const char **_alpn_protos;
 
 public:
     WiFiClientSecure *next;
@@ -73,6 +74,7 @@ public:
     bool loadPrivateKey(Stream& stream, size_t size);
     bool verify(const char* fingerprint, const char* domain_name);
     void setHandshakeTimeout(unsigned long handshake_timeout);
+    void setAlpnProtocols(const char **alpn_protos);
 
     int setTimeout(uint32_t seconds){ return 0; }
 
