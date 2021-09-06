@@ -1844,11 +1844,13 @@ i2c_t * i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed){
 }
 
 i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, uint8_t* buff, uint16_t size, bool sendStop, uint16_t timeOutMillis){
-	esp_err_t ret = ESP_OK;
+    esp_err_t ret = ESP_OK;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-    i2c_master_write(cmd, buff, size, ACK_CHECK_EN);
+    if(size){
+        i2c_master_write(cmd, buff, size, ACK_CHECK_EN);
+    }
     //if send stop?
     i2c_master_stop(cmd);
     ret = i2c_master_cmd_begin(i2c->num, cmd, timeOutMillis / portTICK_RATE_MS);

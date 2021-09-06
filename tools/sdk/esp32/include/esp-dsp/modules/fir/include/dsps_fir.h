@@ -96,6 +96,7 @@ esp_err_t dsps_fird_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int N,
  */
 esp_err_t dsps_fir_f32_ansi(fir_f32_t *fir, const float *input, float *output, int len);
 esp_err_t dsps_fir_f32_ae32(fir_f32_t *fir, const float *input, float *output, int len);
+esp_err_t dsps_fir_f32_aes3(fir_f32_t *fir, const float *input, float *output, int len);
 /**@}*/
 
 /**@{*/

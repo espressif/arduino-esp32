@@ -24,17 +24,14 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_usbd
- *  @{ */
-
 #ifndef _TUSB_USBD_H_
 #define _TUSB_USBD_H_
+
+#include "common/tusb_common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "common/tusb_common.h"
 
 //--------------------------------------------------------------------+
 // Application API
@@ -236,7 +233,7 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
 #define TUD_HID_DESCRIPTOR(_itfnum, _stridx, _boot_protocol, _report_desc_len, _epin, _epsize, _ep_interval) \
   /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, TUSB_CLASS_HID, (uint8_t)((_boot_protocol) ? HID_SUBCLASS_BOOT : 0), _boot_protocol, _stridx,\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, TUSB_CLASS_HID, (uint8_t)((_boot_protocol) ? (uint8_t)HID_SUBCLASS_BOOT : 0), _boot_protocol, _stridx,\
   /* HID descriptor */\
   9, HID_DESC_TYPE_HID, U16_TO_U8S_LE(0x0111), 0, 1, HID_DESC_TYPE_REPORT, U16_TO_U8S_LE(_report_desc_len),\
   /* Endpoint In */\
@@ -249,7 +246,7 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 // Interface number, string index, protocol, report descriptor len, EP OUT & IN address, size & polling interval
 #define TUD_HID_INOUT_DESCRIPTOR(_itfnum, _stridx, _boot_protocol, _report_desc_len, _epout, _epin, _epsize, _ep_interval) \
   /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, TUSB_CLASS_HID, (uint8_t)((_boot_protocol) ? HID_SUBCLASS_BOOT : 0), _boot_protocol, _stridx,\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, TUSB_CLASS_HID, (uint8_t)((_boot_protocol) ? (uint8_t)HID_SUBCLASS_BOOT : 0), _boot_protocol, _stridx,\
   /* HID descriptor */\
   9, HID_DESC_TYPE_HID, U16_TO_U8S_LE(0x0111), 0, 1, HID_DESC_TYPE_REPORT, U16_TO_U8S_LE(_report_desc_len),\
   /* Endpoint Out */\
@@ -542,6 +539,11 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
   /* Standard AS Isochronous Feedback Endpoint Descriptor(4.10.2.1) */\
   TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(/*_ep*/ _epfb, /*_interval*/ 1)\
 
+//   Calculate wMaxPacketSize of Endpoints
+#define TUD_AUDIO_EP_SIZE(_maxFrequency, _nBytesPerSample, _nChannels) \
+    ((((_maxFrequency + ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 7999 : 999)) / ((CFG_TUSB_RHPORT0_MODE & OPT_MODE_HIGH_SPEED) ? 8000 : 1000)) + 1) * _nBytesPerSample * _nChannels)
+
+
 //------------- TUD_USBTMC/USB488 -------------//
 #define TUD_USBTMC_APP_CLASS    (TUSB_CLASS_APPLICATION_SPECIFIC)
 #define TUD_USBTMC_APP_SUBCLASS 0x03u
@@ -600,16 +602,50 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
   /* Function */ \
   9, DFU_DESC_FUNCTIONAL, _attr, U16_TO_U8S_LE(_timeout), U16_TO_U8S_LE(_xfer_size), U16_TO_U8S_LE(0x0101)
 
-// Length of template descriptr: 18 bytes
-#define TUD_DFU_MODE_DESC_LEN (9 + 9)
+// Length of template descriptor: 9 bytes + number of alternatives * 9
+#define TUD_DFU_DESC_LEN(_alt_count)    (9 + (_alt_count) * 9)
 
-// DFU runtime descriptor
-// Interface number, string index, attributes, detach timeout, transfer size
-#define TUD_DFU_MODE_DESCRIPTOR(_itfnum, _stridx, _attr, _timeout, _xfer_size) \
-  /* Interface */ \
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUD_DFU_APP_CLASS, TUD_DFU_APP_SUBCLASS, DFU_PROTOCOL_DFU, _stridx, \
+// Interface number, Alternate count, starting string index, attributes, detach timeout, transfer size
+// Note: Alternate count must be numberic or macro, string index is increased by one for each Alt interface
+#define TUD_DFU_DESCRIPTOR(_itfnum, _alt_count, _stridx, _attr, _timeout, _xfer_size) \
+  TU_XSTRCAT(_TUD_DFU_ALT_,_alt_count)(_itfnum, 0, _stridx), \
   /* Function */ \
   9, DFU_DESC_FUNCTIONAL, _attr, U16_TO_U8S_LE(_timeout), U16_TO_U8S_LE(_xfer_size), U16_TO_U8S_LE(0x0101)
+
+#define _TUD_DFU_ALT(_itfnum, _alt, _stridx) \
+  /* Interface */ \
+  9, TUSB_DESC_INTERFACE, _itfnum, _alt, 0, TUD_DFU_APP_CLASS, TUD_DFU_APP_SUBCLASS, DFU_PROTOCOL_DFU, _stridx
+
+#define _TUD_DFU_ALT_1(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx)
+
+#define _TUD_DFU_ALT_2(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_1(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_3(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_2(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_4(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_3(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_5(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_4(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_6(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_5(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_7(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_6(_itfnum, _alt_count+1, _stridx+1)
+
+#define _TUD_DFU_ALT_8(_itfnum, _alt_count, _stridx) \
+  _TUD_DFU_ALT(_itfnum, _alt_count, _stridx),      \
+  _TUD_DFU_ALT_7(_itfnum, _alt_count+1, _stridx+1)
 
 
 //------------- CDC-ECM -------------//

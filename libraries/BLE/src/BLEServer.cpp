@@ -157,7 +157,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 
 		case ESP_GATTS_MTU_EVT:
 			updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
-			m_pServerCallbacks->onMtuChanged(this, param);
+			if (m_pServerCallbacks != nullptr) {
+				m_pServerCallbacks->onMtuChanged(this, param);
+			}
 			break;
 
 		// ESP_GATTS_CONNECT_EVT

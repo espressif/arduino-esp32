@@ -35,6 +35,12 @@ String::String(const char *cstr) {
         copy(cstr, strlen(cstr));
 }
 
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
+}
+
 String::String(const String &value) {
     init();
     *this = value;
@@ -59,9 +65,7 @@ String::String(StringSumHelper &&rval) {
 
 String::String(char c) {
     init();
-    char buf[2];
-    buf[0] = c;
-    buf[1] = 0;
+    char buf[] = { c, '\0' };
     *this = buf;
 }
 
@@ -290,10 +294,11 @@ String & String::operator =(const char *cstr) {
     return *this;
 }
 
-String & String::operator = (const __FlashStringHelper *pstr)
-{
-    if (pstr) copy(pstr, strlen_P((PGM_P)pstr));
-    else invalidate();
+String & String::operator =(const __FlashStringHelper *pstr) {
+    if(pstr)
+        copy(pstr, strlen_P((PGM_P)pstr));
+    else
+        invalidate();
 
     return *this;
 }
@@ -347,22 +352,18 @@ unsigned char String::concat(const char *cstr) {
 }
 
 unsigned char String::concat(char c) {
-    char buf[2];
-    buf[0] = c;
-    buf[1] = 0;
+    char buf[] = { c, '\0' };
     return concat(buf, 1);
 }
 
 unsigned char String::concat(unsigned char num) {
     char buf[1 + 3 * sizeof(unsigned char)];
-    sprintf(buf, "%d", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%d", num));
 }
 
 unsigned char String::concat(int num) {
     char buf[2 + 3 * sizeof(int)];
-    sprintf(buf, "%d", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%d", num));
 }
 
 unsigned char String::concat(unsigned int num) {
@@ -373,8 +374,7 @@ unsigned char String::concat(unsigned int num) {
 
 unsigned char String::concat(long num) {
     char buf[2 + 3 * sizeof(long)];
-    sprintf(buf, "%ld", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%ld", num));
 }
 
 unsigned char String::concat(unsigned long num) {
@@ -711,10 +711,7 @@ String String::substring(unsigned int left, unsigned int right) const {
         return out;
     if(right > len())
         right = len();
-    char temp = buffer()[right];  // save the replaced character
-    wbuffer()[right] = '\0';
-    out = wbuffer() + left;  // pointer arithmetic
-    wbuffer()[right] = temp;  //restore character
+    out.copy(buffer() + left, right - left);
     return out;
 }
 

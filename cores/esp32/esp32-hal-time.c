@@ -44,6 +44,8 @@ static void setTimeZone(long offset, int daylight)
 /*
  * configTime
  * Source: https://github.com/esp8266/Arduino/blob/master/cores/esp8266/time.c
+ * Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
+ *       see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
  * */
 void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
 {
@@ -63,6 +65,8 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
 /*
  * configTzTime
  * sntp setup using TZ environment variable
+ * Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
+ *       see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
  * */
 void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3)
 {

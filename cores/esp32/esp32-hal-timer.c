@@ -47,7 +47,7 @@
 #define HWTIMER_LOCK()      portENTER_CRITICAL(timer->lock)
 #define HWTIMER_UNLOCK()    portEXIT_CRITICAL(timer->lock)
 
-typedef struct {
+typedef volatile struct {
     union {
         struct {
             uint32_t reserved0:   10;
@@ -119,8 +119,9 @@ void ARDUINO_ISR_ATTR __timerISR(void * arg){
     }
 }
 
-uint64_t timerRead(hw_timer_t *timer){
+uint64_t inline timerRead(hw_timer_t *timer){
     timer->dev->update = 1;
+    while (timer->dev->update) {};
     uint64_t h = timer->dev->cnt_high;
     uint64_t l = timer->dev->cnt_low;
     return (h << 32) | l;
@@ -272,6 +273,12 @@ void timerEnd(hw_timer_t *timer){
 }
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
+#if CONFIG_IDF_TARGET_ESP32
+    if(edge){
+        log_w("EDGE timer interrupt does not work properly on ESP32! Setting to LEVEL...");
+        edge = false;
+    }
+#endif
     static bool initialized = false;
     static intr_handle_t intr_handle = NULL;
     if(intr_handle){

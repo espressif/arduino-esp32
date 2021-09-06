@@ -53,8 +53,12 @@
 #define SOC_HMAC_SUPPORTED              1
 #define SOC_ASYNC_MEMCPY_SUPPORTED      1
 #define SOC_EFUSE_SECURE_BOOT_KEY_DIGESTS 3
-
+#define SOC_EFUSE_REVOKE_BOOT_KEY_DIGESTS 1
+#define SOC_TEMP_SENSOR_SUPPORTED       1
 #define SOC_CACHE_SUPPORT_WRAP          1
+#define SOC_FLASH_ENCRYPTION_XTS_AES      1
+#define SOC_FLASH_ENCRYPTION_XTS_AES_256 1
+#define SOC_PSRAM_DMA_CAPABLE           1
 
 /*-------------------------- ADC CAPS ----------------------------------------*/
 #define SOC_ADC_PERIPH_NUM              (2)

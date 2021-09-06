@@ -7,7 +7,6 @@ on:
     - pages
     paths:
     - 'README.md'
-    - 'docs/**'
     - '.github/scripts/on-pages.sh'
     - '.github/workflows/gh-pages.yml'
 

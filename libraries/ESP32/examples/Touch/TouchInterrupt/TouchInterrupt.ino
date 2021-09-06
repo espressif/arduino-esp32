@@ -1,5 +1,5 @@
 /*
-This is un example howto use Touch Intrrerupts
+This is an example how to use Touch Intrrerupts
 The bigger the threshold, the more sensible is the touch
 */
 

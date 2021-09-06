@@ -23,9 +23,10 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
-#define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
-#define WIFI_CLIENT_SELECT_TIMEOUT_US (1000000)
-#define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
+#define WIFI_CLIENT_DEF_CONN_TIMEOUT_MS  (3000)
+#define WIFI_CLIENT_MAX_WRITE_RETRY      (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US    (1000000)
+#define WIFI_CLIENT_FLUSH_BUFFER_SIZE    (1024)
 
 #undef connect
 #undef write
@@ -207,9 +208,9 @@ void WiFiClient::stop()
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
-    return connect(ip,port,-1);
-}
-int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
+    return connect(ip,port,WIFI_CLIENT_DEF_CONN_TIMEOUT_MS);
+   }
+   int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout   )
 {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -278,9 +279,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 
 int WiFiClient::connect(const char *host, uint16_t port)
 {
-    return connect(host,port,-1);
-}
-int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
+    return connect(host,port,WIFI_CLIENT_DEF_CONN_TIMEOUT_MS);
+   }
+   int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout   )
 {
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
