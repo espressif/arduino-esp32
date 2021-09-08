@@ -187,6 +187,10 @@ void HWCDC::flush(void)
     }
     UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+    if(uxItemsWaiting){
+        // Now trigger the ISR to read data from the ring buffer.
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    }
     while(uxItemsWaiting){
         delay(5);
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
