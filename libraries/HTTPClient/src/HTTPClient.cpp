@@ -262,8 +262,8 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     index = url.indexOf('/');
     if (index == -1) {
-        log_e("the path of url must not be empty");
-        return false;
+        index = url.length();
+        url += '/';
     }
     String host = url.substring(0, index);
     url.remove(0, index); // remove host part
