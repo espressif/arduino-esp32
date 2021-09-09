@@ -18,6 +18,8 @@
 
 #include <inttypes.h>
 #include "esp_event.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/ringbuf.h"
 #include "Stream.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
@@ -59,6 +61,7 @@ public:
     void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);
 
     size_t setRxBufferSize(size_t);
+    size_t setTxBufferSize(size_t);
     void begin(unsigned long baud=0);
     void end();
     
@@ -113,7 +116,6 @@ public:
     void _onRX(void);
     void _onTX(void);
     void _onUnplugged(void);
-    xSemaphoreHandle tx_sem;
     
 protected:
     uint8_t  itf;
@@ -126,6 +128,7 @@ protected:
     bool     connected;
     bool     reboot_enable;
     xQueueHandle rx_queue;
+    RingbufHandle_t tx_ring_buf;
     
 };
 

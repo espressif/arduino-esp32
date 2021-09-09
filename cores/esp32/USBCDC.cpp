@@ -67,58 +67,72 @@ void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms){
 
 // Invoked when space becomes available in TX buffer
 void tud_cdc_tx_complete_cb(uint8_t itf){
-    if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL && devices[itf]->tx_sem != NULL){
-        xSemaphoreGive(devices[itf]->tx_sem);
+    if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
         devices[itf]->_onTX();
     }
 }
 
-static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size){
-    if(itf >= MAX_USB_CDC_DEVICES || devices[itf] == NULL || devices[itf]->tx_sem == NULL){
-        return 0;
-    }
+static size_t ring_buf_flush(uint8_t itf, RingbufHandle_t ring_buf){
     if(!tud_cdc_n_connected(itf)){
         return 0;
     }
-    size_t tosend = size, sofar = 0;
-    while(tosend){
-        uint32_t space = tud_cdc_n_write_available(itf);
-        if(!space){
-            //make sure that we do not get previous semaphore
-            xSemaphoreTake(devices[itf]->tx_sem, 0);
-            //wait for tx_complete
-            if(xSemaphoreTake(devices[itf]->tx_sem, 200 / portTICK_PERIOD_MS) == pdTRUE){
-                space = tud_cdc_n_write_available(itf);
-            }
-            if(!space){
-                return sofar;
-            }
+    size_t max_size = tud_cdc_n_write_available(itf);
+    size_t queued_size = 0;
+    if(max_size == 0){
+        if(tud_cdc_n_write_flush(itf) > 0){
+            // no space but we were able to flush some out
+            max_size = tud_cdc_n_write_available(itf);
         }
-        if(tosend < space){
-            space = tosend;
+        if(max_size == 0){
+            // no space and could not flush
+            return 0;
         }
-        uint32_t sent = tud_cdc_n_write(itf, buffer + sofar, space);
-        if(!sent){
-            return sofar;
-        }
-        sofar += sent;
-        tosend -= sent;
-        tud_cdc_n_write_flush(itf);
-        //xSemaphoreTake(devices[itf]->tx_sem, portMAX_DELAY);
     }
-    return sofar;
+    uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(ring_buf, &queued_size, 0, max_size);
+    if (queued_buff == NULL) {
+        //log_d("nothing to send");
+        return 0;
+    }
+    size_t sent = tud_cdc_n_write(itf, queued_buff, queued_size);
+    if(sent && sent < max_size){
+        tud_cdc_n_write_flush(itf);
+    }
+    vRingbufferReturnItem(ring_buf, queued_buff);
+    return sent;
 }
 
-static void ARDUINO_ISR_ATTR cdc0_write_char(char c)
-{
-    tinyusb_cdc_write(0, (const uint8_t *)&c, 1);
+static size_t ring_buf_write_nb(uint8_t itf, RingbufHandle_t ring_buf, const uint8_t *buffer, size_t size){
+    if(buffer == NULL || ring_buf == NULL || size == 0){
+        return 0;
+    }
+    size_t space = xRingbufferGetCurFreeSize(ring_buf);
+    if(space == 0){
+        // ring buff is full, maybe we can flush some?
+        if(ring_buf_flush(itf, ring_buf)){
+            space = xRingbufferGetCurFreeSize(ring_buf);
+        }
+    }
+    if(size > space){
+        size = space;
+    }
+    if(size && xRingbufferSend(ring_buf, (void*) (buffer), size, 0) != pdTRUE){
+        return 0;
+    }
+    ring_buf_flush(itf, ring_buf);
+    return size;
+}
+
+static void ARDUINO_ISR_ATTR cdc0_write_char(char c){
+    if(devices[0] != NULL){
+        devices[0]->write(c);
+    }
 }
 
 static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL), tx_sem(NULL) {
+USBCDC::USBCDC(uint8_t itfn) : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL), tx_ring_buf(NULL) {
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
@@ -151,13 +165,25 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
     return rx_queue_len;
 }
 
+size_t USBCDC::setTxBufferSize(size_t tx_queue_len){
+    if(tx_ring_buf){
+        if(!tx_queue_len){
+            vRingbufferDelete(tx_ring_buf);
+            tx_ring_buf = NULL;
+        }
+        return 0;
+    }
+    tx_ring_buf = xRingbufferCreate(tx_queue_len, RINGBUF_TYPE_BYTEBUF);
+    if(!tx_ring_buf){
+        return 0;
+    }
+    return tx_queue_len;
+}
+
 void USBCDC::begin(unsigned long baud)
 {
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
-    }
     setRxBufferSize(256);//default if not preset
+    setTxBufferSize(256);//default if not preset
     devices[itf] = this;
 }
 
@@ -166,10 +192,7 @@ void USBCDC::end()
     connected = false;
     devices[itf] = NULL;
     setRxBufferSize(0);
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
-    }
+    setTxBufferSize(0);
 }
 
 void USBCDC::_onUnplugged(void){
@@ -278,6 +301,7 @@ void USBCDC::_onRX(){
 }
 
 void USBCDC::_onTX(){
+    ring_buf_flush(itf, tx_ring_buf);
     arduino_usb_cdc_event_data_t p = {0};
     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_TX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
 }
@@ -336,23 +360,38 @@ size_t USBCDC::read(uint8_t *buffer, size_t size)
 
 void USBCDC::flush(void)
 {
-    if(itf >= MAX_USB_CDC_DEVICES || tx_sem == NULL){
+    if(itf >= MAX_USB_CDC_DEVICES || tx_ring_buf == NULL){
         return;
     }
-    tud_cdc_n_write_flush(itf);
+    UBaseType_t uxItemsWaiting = 0;
+    vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+    while(uxItemsWaiting){
+        ring_buf_flush(itf, tx_ring_buf);
+        delay(5);
+        vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+    }
 }
 
 int USBCDC::availableForWrite(void)
 {
-    if(itf >= MAX_USB_CDC_DEVICES || tx_sem == NULL){
-        return -1;
+    if(itf >= MAX_USB_CDC_DEVICES || tx_ring_buf == NULL){
+        return 0;
     }
-    return tud_cdc_n_write_available(itf);
+    return xRingbufferGetCurFreeSize(tx_ring_buf);
 }
 
 size_t USBCDC::write(const uint8_t *buffer, size_t size)
 {
-    return tinyusb_cdc_write(itf, buffer, size);
+    if(itf >= MAX_USB_CDC_DEVICES || tx_ring_buf == NULL){
+        return 0;
+    }
+    size_t sent = ring_buf_write_nb(itf, tx_ring_buf, buffer, size);
+    if(sent < size){
+        //log_w("sent %u less bytes", size - sent);
+        //maybe wait to send the rest?
+        //xRingbufferSend(tx_ring_buf, (void*) (buffer+sent), size-sent, timeout_ms / portTICK_PERIOD_MS)
+    }
+    return sent;
 }
 
 size_t USBCDC::write(uint8_t c)
