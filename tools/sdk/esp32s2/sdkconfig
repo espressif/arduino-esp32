@@ -570,8 +570,6 @@ CONFIG_ESP_IPC_TASK_STACK_SIZE=1024
 #
 # LCD Peripheral Configuration
 #
-CONFIG_LCD_PERIPH_CLK_SRC_PLL160M=y
-# CONFIG_LCD_PERIPH_CLK_SRC_XTAL is not set
 CONFIG_LCD_PANEL_IO_FORMAT_BUF_SIZE=32
 # end of LCD Peripheral Configuration
 # end of LCD and Touch Panel

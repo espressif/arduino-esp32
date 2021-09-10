@@ -36,7 +36,7 @@ namespace dl
              * @param inplace              true: the output will store to input0
              *                             false: the output will store to a seperate memeory
              */
-            LeakyReLU(const int activation_alpha, const int activation_exponent, const char *name = NULL, bool inplace = false) : Layer(name)
+            LeakyReLU(const int activation_alpha, const int activation_exponent, const char *name = NULL, bool inplace = false) : Layer(name), output(NULL)
             {
                 this->activation_alpha = activation_alpha;
                 this->activation_exponent = activation_exponent;
