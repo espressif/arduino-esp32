@@ -10,7 +10,7 @@ tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
 
-tools.esptool_py.network_cmd=python "{runtime.platform.path}/tools/espota.py"
+tools.esptool_py.network_cmd=python "{runtime.platform.path}/tools/espota.py" -r
 tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe"
 
 tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
