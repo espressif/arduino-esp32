@@ -41,7 +41,7 @@ import random
 FLASH = 0
 SPIFFS = 100
 AUTH = 200
-PROGRESS = True
+PROGRESS = False
 # update_progress() : Displays or updates a console progress bar
 ## Accepts a float between 0 and 1. Any int will be converted to a float.
 ## A value under 0 represents a 'halt'.
@@ -305,7 +305,7 @@ def parser(unparsed_args):
     dest = "progress",
     help = "Show progress output. Does not work for ArduinoIDE",
     action = "store_true",
-    default = True
+    default = False
   )
   group.add_option("-t", "--timeout",
     dest = "timeout",
