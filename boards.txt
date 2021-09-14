@@ -9386,19 +9386,32 @@ atmegazero_esp32s2.build.core=esp32
 atmegazero_esp32s2.build.variant=atmegazero_esp32s2
 atmegazero_esp32s2.build.board=atmegazero_esp32s2
 
+atmegazero_esp32s2.build.cdc_on_boot=1
+atmegazero_esp32s2.build.msc_on_boot=0
+atmegazero_esp32s2.build.dfu_on_boot=0
 atmegazero_esp32s2.build.serial=0
 atmegazero_esp32s2.build.f_cpu=240000000L
-atmegazero_esp32s2.build.flash_size=4MB
-atmegazero_esp32s2.build.flash_freq=80m
+atmegazero_esp32s2.build.flash_size=16MB
+atmegazero_esp32s2.build.flash_freq=40m
 atmegazero_esp32s2.build.flash_mode=qio
 atmegazero_esp32s2.build.boot=qio
 atmegazero_esp32s2.build.partitions=default
 atmegazero_esp32s2.build.defines=
 
-atmegazero_esp32s2.menu.SerialMode.cdc=USB CDC
-atmegazero_esp32s2.menu.SerialMode.cdc.build.serial=1
-atmegazero_esp32s2.menu.SerialMode.default=UART0
-atmegazero_esp32s2.menu.SerialMode.default.build.serial=0
+atmegazero_esp32s2.menu.CDCOnBoot.cdc=Enabled
+atmegazero_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+atmegazero_esp32s2.menu.CDCOnBoot.default=Disabled
+atmegazero_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+atmegazero_esp32s2.menu.MSCOnBoot.default=Disabled
+atmegazero_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+atmegazero_esp32s2.menu.MSCOnBoot.msc=Enabled
+atmegazero_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+atmegazero_esp32s2.menu.DFUOnBoot.default=Disabled
+atmegazero_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+atmegazero_esp32s2.menu.DFUOnBoot.dfu=Enabled
+atmegazero_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 atmegazero_esp32s2.menu.PSRAM.disabled=Disabled
 atmegazero_esp32s2.menu.PSRAM.disabled.build.defines=
