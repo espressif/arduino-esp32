@@ -143,10 +143,6 @@ void i2cRelease(i2c_t *i2c)
 
     I2C_MUTEX_LOCK();
     ESP_ERROR_CHECK(i2c_driver_delete(i2c->num));
-    if (i2c->lock != NULL) {
-        vSemaphoreDelete(i2c->lock);
-        i2c->lock = NULL;
-    }
     if (i2c->i2c_cmd_buffer != NULL) {
         free(i2c->i2c_cmd_buffer);
         i2c->i2c_cmd_buffer = NULL;
