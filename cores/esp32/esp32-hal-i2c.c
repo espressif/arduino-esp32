@@ -35,7 +35,8 @@ struct i2c_struct_t {
 
 #define I2C_MASTER_TIMEOUT_MS           1000
 #define I2C_MASTER_TIMEOUT_TICKS        (I2C_MASTER_TIMEOUT_MS / portTICK_RATE_MS)
-#define I2C_MAXIMUM_TRANSACTION_SIZE    (I2C_LINK_RECOMMENDED_SIZE(5))
+// reserved buffer for I2C operations is about 4KB, necessary for long sequence of writes
+#define I2C_MAXIMUM_TRANSACTION_SIZE    (I2C_LINK_RECOMMENDED_SIZE(32))                 
 //I2C master doesn't need buffer
 #define I2C_MASTER_TX_BUF_DISABLE       0
 #define I2C_MASTER_RX_BUF_DISABLE       0
@@ -148,7 +149,6 @@ void i2cRelease(i2c_t *i2c)
         i2c->i2c_cmd_buffer = NULL;
     }
     I2C_MUTEX_UNLOCK();
-
 }
 
 void i2cFlush(i2c_t *i2c){
