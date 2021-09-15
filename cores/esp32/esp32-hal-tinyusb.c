@@ -424,12 +424,6 @@ static bool tinyusb_load_enabled_interfaces(){
                 log_e("Descriptor Load Failed");
                 return false;
             } else {
-                if(i == USB_INTERFACE_CDC){
-                    if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){
-                        log_e("CDC Reserve Endpoints Failed");
-                        return false;
-                    }
-                }
                 dst += len;
             }
         }
@@ -505,6 +499,7 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
         && (config->usb_class != TUSB_CLASS_CDC)
     ){
         config->usb_class = TUSB_CLASS_CDC;
+        config->usb_protocol = 0x00;
     }
 
     WEBUSB_ENABLED            = config->webusb_enabled;
@@ -573,6 +568,12 @@ esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descr
         log_e("Interface %s invalid or already enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
     }
+    if(interface == USB_INTERFACE_CDC){
+        if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){
+            log_e("CDC Reserve Endpoints Failed");
+            return ESP_FAIL;
+        }
+    }
     tinyusb_loaded_interfaces_mask |= (1U << interface);
     tinyusb_config_descriptor_len += descriptor_len;
     tinyusb_loaded_interfaces_callbacks[interface] = cb;
@@ -586,7 +587,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     }
     tinyusb_is_initialized = true;
     
-    tinyusb_endpoints.val = 0;
+    //tinyusb_endpoints.val = 0;
     tinyusb_apply_device_config(config);
     if (!tinyusb_load_enabled_interfaces()) {
         tinyusb_is_initialized = false;

@@ -35,6 +35,12 @@ String::String(const char *cstr) {
         copy(cstr, strlen(cstr));
 }
 
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
+}
+
 String::String(const String &value) {
     init();
     *this = value;
@@ -705,10 +711,7 @@ String String::substring(unsigned int left, unsigned int right) const {
         return out;
     if(right > len())
         right = len();
-    char temp = buffer()[right];  // save the replaced character
-    wbuffer()[right] = '\0';
-    out = wbuffer() + left;  // pointer arithmetic
-    wbuffer()[right] = temp;  //restore character
+    out.copy(buffer() + left, right - left);
     return out;
 }
 
