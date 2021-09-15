@@ -24,6 +24,8 @@
 #include "soc/periph_defs.h"
 #include "hal/usb_serial_jtag_ll.h"
 
+ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
+
 static RingbufHandle_t tx_ring_buf = NULL;
 static xQueueHandle rx_queue = NULL;
 static uint8_t rx_data_buf[64];
@@ -31,10 +33,26 @@ static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
 static xSemaphoreHandle tx_lock = NULL;
 static uint32_t tx_timeout_ms = 200;
+static esp_event_loop_handle_t arduino_hw_cdc_event_loop_handle = NULL;
+
+static esp_err_t arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked){
+    if(arduino_hw_cdc_event_loop_handle == NULL){
+        return ESP_FAIL;
+    }
+    return esp_event_isr_post_to(arduino_hw_cdc_event_loop_handle, event_base, event_id, event_data, event_data_size, task_unblocked);
+}
+
+static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg){
+    if(arduino_hw_cdc_event_loop_handle == NULL){
+        return ESP_FAIL;
+    }
+    return esp_event_handler_register_with(arduino_hw_cdc_event_loop_handle, event_base, event_id, event_handler, event_handler_arg);
+}
 
 static void hw_cdc_isr_handler(void *arg) {
     portBASE_TYPE xTaskWoken = 0;
     uint32_t usbjtag_intr_status = 0;
+    arduino_hw_cdc_event_data_t event = {0};
     usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
@@ -47,6 +65,7 @@ static void hw_cdc_isr_handler(void *arg) {
                 initial_empty = true;
                 //send event?
                 //ets_printf("CONNECTED\n");
+                arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_CONNECTED_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
             }
             size_t queued_size;
             uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
@@ -60,6 +79,8 @@ static void hw_cdc_isr_handler(void *arg) {
                 usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
                 //send event?
                 //ets_printf("TX:%u\n", queued_size);
+                event.tx.len = queued_size;
+                arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
             }
         } else {
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -79,6 +100,8 @@ static void hw_cdc_isr_handler(void *arg) {
         }
         //send event?
         //ets_printf("RX:%u/%u\n", i, rx_fifo_len);
+        event.rx.len = i;
+        arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_RX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
     }
 
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
@@ -86,6 +109,7 @@ static void hw_cdc_isr_handler(void *arg) {
         initial_empty = false;
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         //ets_printf("BUS_RESET\n");
+        arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -103,11 +127,26 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 }
 
 HWCDC::HWCDC() {
-    
+    if (!arduino_hw_cdc_event_loop_handle) {
+        esp_event_loop_args_t event_task_args = {
+            .queue_size = 5,
+            .task_name = "arduino_hw_cdc_events",
+            .task_priority = 5,
+            .task_stack_size = 2048,
+            .task_core_id = tskNO_AFFINITY
+        };
+        if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
+            log_e("esp_event_loop_create failed");
+        }
+    }
 }
 
 HWCDC::~HWCDC(){
     end();
+    if (arduino_hw_cdc_event_loop_handle) {
+        esp_event_loop_delete(arduino_hw_cdc_event_loop_handle);
+        arduino_hw_cdc_event_loop_handle = NULL;
+    }
 }
 
 HWCDC::operator bool() const
@@ -115,7 +154,13 @@ HWCDC::operator bool() const
     return initial_empty;
 }
 
-static void dummy_putc(char c){}
+void HWCDC::onEvent(esp_event_handler_t callback){
+    onEvent(ARDUINO_HW_CDC_ANY_EVENT, callback);
+}
+
+void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback){
+    arduino_hw_cdc_event_handler_register_with(ARDUINO_HW_CDC_EVENTS, event, callback, this);
+}
 
 void HWCDC::begin(unsigned long baud)
 {
