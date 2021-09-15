@@ -43,6 +43,18 @@ static esp_err_t arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t 
 }
 
 static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg){
+    if (!arduino_hw_cdc_event_loop_handle) {
+        esp_event_loop_args_t event_task_args = {
+            .queue_size = 5,
+            .task_name = "arduino_hw_cdc_events",
+            .task_priority = 5,
+            .task_stack_size = 2048,
+            .task_core_id = tskNO_AFFINITY
+        };
+        if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
+            log_e("esp_event_loop_create failed");
+        }
+    }
     if(arduino_hw_cdc_event_loop_handle == NULL){
         return ESP_FAIL;
     }
@@ -127,26 +139,11 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 }
 
 HWCDC::HWCDC() {
-    if (!arduino_hw_cdc_event_loop_handle) {
-        esp_event_loop_args_t event_task_args = {
-            .queue_size = 5,
-            .task_name = "arduino_hw_cdc_events",
-            .task_priority = 5,
-            .task_stack_size = 2048,
-            .task_core_id = tskNO_AFFINITY
-        };
-        if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
-            log_e("esp_event_loop_create failed");
-        }
-    }
+
 }
 
 HWCDC::~HWCDC(){
     end();
-    if (arduino_hw_cdc_event_loop_handle) {
-        esp_event_loop_delete(arduino_hw_cdc_event_loop_handle);
-        arduino_hw_cdc_event_loop_handle = NULL;
-    }
 }
 
 HWCDC::operator bool() const
@@ -190,6 +187,10 @@ void HWCDC::end()
     }
     setRxBufferSize(0);
     setTxBufferSize(0);
+    if (arduino_hw_cdc_event_loop_handle) {
+        esp_event_loop_delete(arduino_hw_cdc_event_loop_handle);
+        arduino_hw_cdc_event_loop_handle = NULL;
+    }
 }
 
 void HWCDC::setTxTimeoutMs(uint32_t timeout){
