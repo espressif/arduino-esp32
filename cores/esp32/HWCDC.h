@@ -27,6 +27,7 @@ public:
 
     size_t setRxBufferSize(size_t);
     size_t setTxBufferSize(size_t);
+    void setTxTimeoutMs(uint32_t timeout);
     void begin(unsigned long baud=0);
     void end();
     

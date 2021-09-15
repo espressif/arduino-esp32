@@ -29,6 +29,8 @@ static xQueueHandle rx_queue = NULL;
 static uint8_t rx_data_buf[64];
 static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
+static xSemaphoreHandle tx_lock = NULL;
+static uint32_t tx_timeout_ms = 200;
 
 static void hw_cdc_isr_handler(void *arg) {
     portBASE_TYPE xTaskWoken = 0;
@@ -95,7 +97,7 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     if(xPortInIsrContext()){
         xRingbufferSendFromISR(tx_ring_buf, (void*) (&c), 1, NULL);
     } else {
-        xRingbufferSend(tx_ring_buf, (void*) (&c), 1, 0);
+        xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
     }
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
@@ -113,8 +115,13 @@ HWCDC::operator bool() const
     return initial_empty;
 }
 
+static void dummy_putc(char c){}
+
 void HWCDC::begin(unsigned long baud)
 {
+    if(tx_lock == NULL) {
+        tx_lock = xSemaphoreCreateMutex();
+    }
     setRxBufferSize(256);//default if not preset
     setTxBufferSize(256);//default if not preset
 
@@ -123,6 +130,7 @@ void HWCDC::begin(unsigned long baud)
     if(!intr_handle && esp_intr_alloc(ETS_USB_INTR_SOURCE/*ETS_USB_SERIAL_JTAG_INTR_SOURCE*/, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
+        return;
     }
 }
 
@@ -132,8 +140,15 @@ void HWCDC::end()
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     esp_intr_free(intr_handle);
     intr_handle = NULL;
+    if(tx_lock != NULL) {
+        vSemaphoreDelete(tx_lock);
+    }
     setRxBufferSize(0);
     setTxBufferSize(0);
+}
+
+void HWCDC::setTxTimeoutMs(uint32_t timeout){
+    tx_timeout_ms = timeout;
 }
 
 /*
@@ -157,21 +172,57 @@ size_t HWCDC::setTxBufferSize(size_t tx_queue_len){
 
 int HWCDC::availableForWrite(void)
 {
-    if(tx_ring_buf == NULL){
-        return -1;
+    if(tx_ring_buf == NULL || tx_lock == NULL){
+        return 0;
     }
-    return xRingbufferGetCurFreeSize(tx_ring_buf);
+    if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
+        return 0;
+    }
+    size_t a = xRingbufferGetCurFreeSize(tx_ring_buf);
+    xSemaphoreGive(tx_lock);
+    return a;
 }
 
 size_t HWCDC::write(const uint8_t *buffer, size_t size)
 {
-    // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-    if(xRingbufferSend(tx_ring_buf, (void*) (buffer), size, 200 / portTICK_PERIOD_MS) != pdTRUE){
-        log_e("Write Failed");
+    if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
-    // Now trigger the ISR to read data from the ring buffer.
-    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
+        return 0;
+    }
+    size_t max_size = xRingbufferGetMaxItemSize(tx_ring_buf);
+    size_t space = xRingbufferGetCurFreeSize(tx_ring_buf);
+    size_t to_send = size, so_far = 0;
+
+    if(space > size){
+        space = size;
+    }
+    // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
+    if(xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
+        size = 0;
+    } else {
+        to_send -= space;
+        so_far += space;
+        // Now trigger the ISR to read data from the ring buffer.
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+
+        while(to_send){
+            if(max_size > to_send){
+                max_size = to_send;
+            }
+            // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
+            if(xRingbufferSend(tx_ring_buf, (void*) (buffer+so_far), max_size, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
+                size = so_far;
+                break;
+            }
+            so_far += max_size;
+            to_send -= max_size;
+            // Now trigger the ISR to read data from the ring buffer.
+            usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        }
+    }
+    xSemaphoreGive(tx_lock);
     return size;
 }
 
@@ -182,7 +233,10 @@ size_t HWCDC::write(uint8_t c)
 
 void HWCDC::flush(void)
 {
-    if(tx_ring_buf == NULL){
+    if(tx_ring_buf == NULL || tx_lock == NULL){
+        return;
+    }
+    if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
     }
     UBaseType_t uxItemsWaiting = 0;
@@ -195,6 +249,7 @@ void HWCDC::flush(void)
         delay(5);
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     }
+    xSemaphoreGive(tx_lock);
 }
 
 /*
