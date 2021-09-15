@@ -368,13 +368,9 @@ void uartSetDebug(uart_t* uart)
 {
     if(uart == NULL || uart->num >= SOC_UART_NUM) {
         s_uart_debug_nr = -1;
-        //ets_install_putc1(NULL);
-        //return;
-    } else
-    if(s_uart_debug_nr == uart->num) {
-        return;
-    } else
-    s_uart_debug_nr = uart->num;
+    } else {
+        s_uart_debug_nr = uart->num;
+    }
     uart_install_putc();
 }
 
