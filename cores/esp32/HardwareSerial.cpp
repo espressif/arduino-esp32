@@ -87,7 +87,6 @@ HardwareSerial Serial1(1);
 #if SOC_UART_NUM > 2
 HardwareSerial Serial2(2);
 #endif
-#endif
 
 void serialEventRun(void)
 {
@@ -105,6 +104,7 @@ void serialEventRun(void)
     if(Serial2.available()) serialEvent2();
 #endif
 }
+#endif
 
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256) {}
