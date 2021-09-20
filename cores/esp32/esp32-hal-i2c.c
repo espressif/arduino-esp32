@@ -114,7 +114,7 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
     return err;
 }
 
-esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, uint16_t size, uint16_t timeOutMillis){
+esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_t size, uint32_t timeOutMillis){
     esp_err_t ret = ESP_FAIL;
     i2c_cmd_handle_t cmd = NULL;
     if(i2c_num >= SOC_I2C_NUM){
@@ -165,7 +165,7 @@ end:
     return ret;
 }
 
-esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, uint16_t size, uint16_t timeOutMillis, uint32_t *readCount){
+esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size, uint32_t timeOutMillis, size_t *readCount){
     esp_err_t ret = ESP_FAIL;
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
@@ -190,7 +190,7 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, uint16_t siz
     return ret;
 }
 
-esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* wbuff, uint16_t wsize, uint8_t* rbuff, uint16_t rsize, uint16_t timeOutMillis, uint32_t *readCount){
+esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* wbuff, size_t wsize, uint8_t* rbuff, size_t rsize, uint32_t timeOutMillis, size_t *readCount){
     esp_err_t ret = ESP_FAIL;
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
