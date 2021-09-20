@@ -5,9 +5,9 @@ Blink Interactive Tutorial
 Introduction
 ------------
 
-This is the interactive blink tutorial using `Wokwi`_. For this tutorial you don't need the ESP32 board or the Arduino toolchain.
+This is the interactive blink tutorial using `Wokwi`_. For this tutorial, you don't need the ESP32 board or the Arduino toolchain.
 
-.. note:: If you don't want to use this tutorial with the simulation, you can copy and paste the code from `Wokwi`_ editor and use on the Arduino IDE or PlatformIO.
+.. note:: If you don't want to use this tutorial with the simulation, you can copy and paste the :ref:`blink_example_code` from `Wokwi`_ editor and use on the Arduino IDE or PlatformIO.
 
 About this Tutorial
 -------------------
@@ -79,8 +79,10 @@ This simulator is provided by `Wokwi`_ and you can test the blink code and play 
 
 Change the parameters, like the delay period, to test the code right on your browser. You can add more LEDs, change the GPIO and more.
 
-Code
-----
+.. _blink_example_code:
+
+Example Code
+------------
 
 Here is the full blink code.
 
