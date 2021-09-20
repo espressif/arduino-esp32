@@ -36,7 +36,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl)
     : FS(impl), _card(NULL)
 {}
 
-bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed)
+bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency)
 {
     if(_card) {
         return true;
@@ -46,7 +46,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     sdmmc_host_t host;
     host.flags = SDMMC_HOST_FLAG_4BIT;
     host.slot = SDMMC_HOST_SLOT_1;
-    host.max_freq_khz = SDMMC_FREQ_DEFAULT;
+    host.max_freq_khz = sdmmc_frequency;
     host.io_voltage = 3.3f;
     host.init = &sdmmc_host_init;
     host.set_bus_width = &sdmmc_host_set_bus_width;
@@ -58,7 +58,6 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     host.io_int_enable = &sdmmc_host_io_int_enable;
     host.io_int_wait = &sdmmc_host_io_int_wait;
     host.command_timeout_ms = 0;
-    host.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
 #endif

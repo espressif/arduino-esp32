@@ -31,7 +31,11 @@ protected:
 
 public:
     SDMMCFS(FSImplPtr impl);
-    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false);
+#ifdef ETH_CAN_INTERFERE_WITH_SDMMC
+    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false, int sdmmc_frequency=SDMMC_FREQ_DEFAULT);
+#else
+    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false, int sdmmc_frequency=SDMMC_FREQ_HIGHSPEED);
+#endif
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
