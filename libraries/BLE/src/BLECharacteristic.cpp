@@ -191,7 +191,7 @@ uint8_t* BLECharacteristic::getData() {
  * @brief Retrieve the current length of the data of the characteristic.
  * @return Amount of databytes of the characteristic.
  */
-uint8_t BLECharacteristic::getLength() {
+size_t BLECharacteristic::getLength() {
 	return m_value.getLength();
 } // getLength
 
