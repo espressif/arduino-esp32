@@ -112,7 +112,9 @@ public:
   void onReceive(void(*)(void));
 
   int setBufferSize(int bufferSize);
-  int  getBufferSize();
+  int getBufferSize();
+  int gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
+  int gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel);
 private:
   int begin(int mode, int sampleRate, int bitsPerSample, bool driveClock);
 

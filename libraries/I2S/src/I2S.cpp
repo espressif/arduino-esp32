@@ -203,17 +203,35 @@ int I2SClass::_installDriver(){
 
 #if SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_ADC_DAC){
-   esp_i2s::adc_unit_t adc_unit = (esp_i2s::adc_unit_t) 1;
-    esp_i2s::adc1_channel_t adc_channel = (esp_i2s::adc1_channel_t) 6; //
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
-    esp_i2s::i2s_set_adc_mode(adc_unit, adc_channel);
+    esp_i2s::adc_unit_t adc_unit;
+    if(!gpioToAdcUnit((gpio_num_t)_inSdPin, &adc_unit)){
+      log_e("pin to adc unit conversion failed");
+      return 0; // ERR
+    }
+    esp_i2s::adc_channel_t adc_channel;
+    if(!gpioToAdcChannel((gpio_num_t)_inSdPin, &adc_channel)){
+      log_e("pin to adc channel conversion failed");
+      return 0; // ERR
+    }
+    if(ESP_OK != esp_i2s::i2s_set_adc_mode(adc_unit, (esp_i2s::adc1_channel_t)adc_channel)){
+      log_e("i2s_set_adc_mode failed");
+      end();
+      return 0; // ERR
+    }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
       log_e("i2s_set_pin failed");
+      end();
       return 0; // ERR
     }
 
-    esp_i2s::adc1_config_width(esp_i2s::ADC_WIDTH_BIT_12);
-    esp_i2s::adc1_config_channel_atten(adc_channel, esp_i2s::ADC_ATTEN_DB_11);
+    if(adc_unit == esp_i2s::ADC_UNIT_1){
+      esp_i2s::adc1_config_width(esp_i2s::ADC_WIDTH_BIT_12);
+      esp_i2s::adc1_config_channel_atten((esp_i2s::adc1_channel_t)adc_channel, esp_i2s::ADC_ATTEN_DB_11);
+    }else if(adc_unit == esp_i2s::ADC_UNIT_2){
+      esp_i2s::adc2_config_channel_atten((esp_i2s::adc2_channel_t)adc_channel, esp_i2s::ADC_ATTEN_DB_11);
+    }
+
     esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
     _initialized = true;
   }else // End of ADC/DAC mode
@@ -252,7 +270,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   }
   _driveClock = driveClock;
   _mode = mode;
-  _sampleRate = sampleRate;
+  _sampleRate = (uint32_t)sampleRate;
   _bitsPerSample = bitsPerSample;
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
@@ -287,11 +305,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 
   if(!_installDriver()){
     _initialized = false;
+    end();
     return 0; // ERR
   }
 
   if(!createCallbackTask()){
     _initialized = false;
+    end();
     return 0; // ERR
   }
 
@@ -455,8 +475,14 @@ void I2SClass::end()
     }
     _onTransmit = NULL;
     _onReceive  = NULL;
-    vRingbufferDelete(_input_ring_buffer);
-    vRingbufferDelete(_output_ring_buffer);
+    if(_input_ring_buffer != NULL){
+      vRingbufferDelete(_input_ring_buffer);
+      _input_ring_buffer = NULL;
+    }
+    if(_output_ring_buffer != NULL){
+      vRingbufferDelete(_output_ring_buffer);
+      _output_ring_buffer = NULL;
+    }
   }else{
     log_w("WARNING: ending I2SClass from callback task not permitted, but attempted!");
   }
@@ -766,3 +792,152 @@ void I2SClass::onDmaTransferComplete(void*)
   // TODO set default pins for second module
   //I2SClass I2S1(I2S_DEVICE+1, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
 #endif
+
+int I2SClass::gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
+  switch(gpio_num){
+#ifdef CONFIG_IDF_TARGET_ESP32
+    // ADC 1
+    case GPIO_NUM_36:
+    case GPIO_NUM_37:
+    case GPIO_NUM_38:
+    case GPIO_NUM_39:
+    case GPIO_NUM_32:
+    case GPIO_NUM_33:
+    case GPIO_NUM_34:
+    case GPIO_NUM_35:
+      *adc_unit = esp_i2s::ADC_UNIT_1;
+      return 1; // OK
+
+    // ADC 2
+    case GPIO_NUM_0:
+      log_w("GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.");
+    case GPIO_NUM_4:
+    case GPIO_NUM_2:
+    case GPIO_NUM_15:
+    case GPIO_NUM_13:
+    case GPIO_NUM_12:
+    case GPIO_NUM_14:
+    case GPIO_NUM_27:
+    case GPIO_NUM_25:
+    case GPIO_NUM_26:
+      *adc_unit = esp_i2s::ADC_UNIT_2;
+      return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    case GPIO_NUM_1:
+    case GPIO_NUM_2:
+    case GPIO_NUM_3:
+    case GPIO_NUM_4:
+    case GPIO_NUM_5:
+    case GPIO_NUM_6:
+    case GPIO_NUM_7:
+    case GPIO_NUM_8:
+    case GPIO_NUM_9:
+    case GPIO_NUM_10:
+      *adc_unit = esp_i2s::ADC_UNIT_1;
+      return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32S2
+    case GPIO_NUM_11:
+    case GPIO_NUM_12:
+    case GPIO_NUM_13:
+    case GPIO_NUM_14:
+    case GPIO_NUM_15:
+    case GPIO_NUM_16:
+    case GPIO_NUM_17:
+    case GPIO_NUM_18:
+    case GPIO_NUM_19:
+    case GPIO_NUM_20:
+      *adc_unit = esp_i2s::ADC_UNIT_2;
+      return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32H2
+    case GPIO_NUM_0:
+    case GPIO_NUM_1:
+    case GPIO_NUM_2:
+    case GPIO_NUM_3:
+    case GPIO_NUM_4:
+      *adc_unit = esp_i2s::ADC_UNIT_1;
+      return 1; // OK
+    case GPIO_NUM_5:
+      *adc_unit = esp_i2s::ADC_UNIT_2;
+      return 1; // OK
+#endif
+    default:
+      log_e("GPIO %d not usable for ADC!", gpio_num);
+      log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
+      return 0; // ERR
+  }
+}
+
+int I2SClass::gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel){
+ switch(gpio_num){
+#ifdef CONFIG_IDF_TARGET_ESP32
+    // ADC 1
+    case GPIO_NUM_36: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+    case GPIO_NUM_37: *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
+    case GPIO_NUM_38: *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
+    case GPIO_NUM_39: *adc_channel =  esp_i2s::ADC_CHANNEL_3; return 1; // OK
+    case GPIO_NUM_32: *adc_channel =  esp_i2s::ADC_CHANNEL_4; return 1; // OK
+    case GPIO_NUM_33: *adc_channel =  esp_i2s::ADC_CHANNEL_5; return 1; // OK
+    case GPIO_NUM_34: *adc_channel =  esp_i2s::ADC_CHANNEL_6; return 1; // OK
+    case GPIO_NUM_35: *adc_channel =  esp_i2s::ADC_CHANNEL_7; return 1; // OK
+
+    // ADC 2
+    case GPIO_NUM_0:
+      log_w("GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.");
+      *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
+    case GPIO_NUM_4:  *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+    case GPIO_NUM_2:  *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
+    case GPIO_NUM_15: *adc_channel =  esp_i2s::ADC_CHANNEL_3; return 1; // OK
+    case GPIO_NUM_13: *adc_channel =  esp_i2s::ADC_CHANNEL_4; return 1; // OK
+    case GPIO_NUM_12: *adc_channel =  esp_i2s::ADC_CHANNEL_5; return 1; // OK
+    case GPIO_NUM_14: *adc_channel =  esp_i2s::ADC_CHANNEL_6; return 1; // OK
+    case GPIO_NUM_27: *adc_channel =  esp_i2s::ADC_CHANNEL_7; return 1; // OK
+    case GPIO_NUM_25: *adc_channel =  esp_i2s::ADC_CHANNEL_8; return 1; // OK
+    case GPIO_NUM_26: *adc_channel =  esp_i2s::ADC_CHANNEL_9; return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    case GPIO_NUM_1: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+    case GPIO_NUM_2: *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
+    case GPIO_NUM_3: *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
+    case GPIO_NUM_4: *adc_channel =  esp_i2s::ADC_CHANNEL_3; return 1; // OK
+    case GPIO_NUM_5: *adc_channel =  esp_i2s::ADC_CHANNEL_4; return 1; // OK
+    case GPIO_NUM_6: *adc_channel =  esp_i2s::ADC_CHANNEL_5; return 1; // OK
+    case GPIO_NUM_7: *adc_channel =  esp_i2s::ADC_CHANNEL_6; return 1; // OK
+    case GPIO_NUM_8: *adc_channel =  esp_i2s::ADC_CHANNEL_7; return 1; // OK
+    case GPIO_NUM_9: *adc_channel =  esp_i2s::ADC_CHANNEL_8; return 1; // OK
+    case GPIO_NUM_10: *adc_channel =  esp_i2s::ADC_CHANNEL_9; return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32S2
+    case GPIO_NUM_11: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+    case GPIO_NUM_12: *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
+    case GPIO_NUM_13: *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
+    case GPIO_NUM_14: *adc_channel =  esp_i2s::ADC_CHANNEL_3; return 1; // OK
+    case GPIO_NUM_15: *adc_channel =  esp_i2s::ADC_CHANNEL_4; return 1; // OK
+    case GPIO_NUM_16: *adc_channel =  esp_i2s::ADC_CHANNEL_5; return 1; // OK
+    case GPIO_NUM_17: *adc_channel =  esp_i2s::ADC_CHANNEL_6; return 1; // OK
+    case GPIO_NUM_18: *adc_channel =  esp_i2s::ADC_CHANNEL_7; return 1; // OK
+    case GPIO_NUM_19: *adc_channel =  esp_i2s::ADC_CHANNEL_8; return 1; // OK
+    case GPIO_NUM_20: *adc_channel =  esp_i2s::ADC_CHANNEL_9; return 1; // OK
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32H2
+    case GPIO_NUM_0: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+    case GPIO_NUM_1: *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
+    case GPIO_NUM_2: *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
+    case GPIO_NUM_3: *adc_channel =  esp_i2s::ADC_CHANNEL_3; return 1; // OK
+    case GPIO_NUM_4: *adc_channel =  esp_i2s::ADC_CHANNEL_4; return 1; // OK
+    case GPIO_NUM_5: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
+#endif
+    default:
+      log_e("GPIO %d not usable for ADC!", gpio_num);
+      log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
+      return 0; // ERR
+  }
+}
