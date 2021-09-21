@@ -14,9 +14,11 @@
 
 #include "esp32-hal-i2c.h"
 #include "esp32-hal.h"
+#if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#endif
 #include "esp_attr.h"
 #include "esp_system.h"
 #include "soc/soc_caps.h"
@@ -27,7 +29,9 @@
 typedef volatile struct {
     bool initialized;
     uint32_t frequency;
+#if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t lock;
+#endif
 } i2c_bus_t;
 
 static i2c_bus_t bus[SOC_I2C_NUM];
@@ -43,6 +47,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     if(bus[i2c_num].lock == NULL){
         bus[i2c_num].lock = xSemaphoreCreateMutex();
         if(bus[i2c_num].lock == NULL){
@@ -55,6 +60,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
         log_e("could not acquire lock");
         return ESP_FAIL;
     }
+#endif
     if(bus[i2c_num].initialized){
         log_e("bus is already initialized");
         return ESP_FAIL;
@@ -86,8 +92,10 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
             bus[i2c_num].frequency = frequency;
         }
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return ret;
 }
 
@@ -96,11 +104,13 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
         return err;
     }
+#endif
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
     } else {
@@ -109,8 +119,10 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
             bus[i2c_num].initialized = false;
         }
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return err;
 }
 
@@ -120,11 +132,13 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
         return ret;
     }
+#endif
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
         goto end;
@@ -160,8 +174,10 @@ end:
     if(cmd != NULL){
         i2c_cmd_link_delete_static(cmd);
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return ret;
 }
 
@@ -170,11 +186,13 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size,
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
         return ret;
     }
+#endif
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
     } else {
@@ -185,8 +203,10 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size,
             *readCount = 0;
         }
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return ret;
 }
 
@@ -195,11 +215,13 @@ esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* 
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
         return ret;
     }
+#endif
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
     } else {
@@ -210,8 +232,10 @@ esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* 
             *readCount = 0;
         }
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return ret;
 }
 
@@ -220,11 +244,13 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     if(i2c_num >= SOC_I2C_NUM){
         return ESP_ERR_INVALID_ARG;
     }
+#if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
         return ret;
     }
+#endif
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
         goto end;
@@ -285,8 +311,10 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     }
 
 end:
+#if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(bus[i2c_num].lock);
+#endif
     return ret;
 }
 

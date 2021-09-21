@@ -27,9 +27,11 @@
 #define TwoWire_h
 
 #include <esp32-hal.h>
+#if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#endif
 #include "Stream.h"
 
 #ifndef I2C_BUFFER_LENGTH
@@ -55,8 +57,10 @@ protected:
 
     uint32_t _timeOutMillis;
     bool nonStop;
+#if !CONFIG_DISABLE_HAL_LOCKS
     TaskHandle_t nonStopTask;
     SemaphoreHandle_t lock;
+#endif
 
 public:
     TwoWire(uint8_t bus_num);
