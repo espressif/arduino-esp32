@@ -67,8 +67,9 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     }
 
     if(!frequency){
-        //originally does not change the speed, but getFrequency and setFrequency need to be implemented first.
-        frequency = 100000;
+        frequency = 100000UL;
+    } else if(frequency > 1000000UL){
+        frequency = 1000000UL;
     }
 
     i2c_config_t conf = { };
@@ -258,6 +259,11 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     if(bus[i2c_num].frequency == frequency){
         ret = ESP_OK;
         goto end;
+    }
+    if(!frequency){
+        frequency = 100000UL;
+    } else if(frequency > 1000000UL){
+        frequency = 1000000UL;
     }
     // Freq limitation when using different clock sources
     #define I2C_CLK_LIMIT_REF_TICK            (1 * 1000 * 1000 / 20)    /*!< Limited by REF_TICK, no more than REF_TICK/20*/
