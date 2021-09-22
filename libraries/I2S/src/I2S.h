@@ -120,12 +120,12 @@ public:
 private:
   int begin(int mode, int sampleRate, int bitsPerSample, bool driveClock);
 
-  int enableTransmitter();
-  int enableReceiver();
-  void onTransferComplete();
+  int _enableTransmitter();
+  int _enableReceiver();
+  void _onTransferComplete();
 
-  void destroyCallbackTask();
-  int createCallbackTask();
+  void _destroyCallbackTask();
+  int _createCallbackTask();
 
   static void onDmaTransferComplete(void*);
   int _installDriver();

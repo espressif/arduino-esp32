@@ -91,7 +91,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
 {
 }
 
-int I2SClass::createCallbackTask()
+int I2SClass::_createCallbackTask()
 {
   int stack_size = 10000;
   if(_callbackTaskHandle == NULL){
@@ -119,7 +119,7 @@ int I2SClass::createCallbackTask()
   return 1; // OK
 }
 
-void I2SClass::destroyCallbackTask()
+void I2SClass::_destroyCallbackTask()
 {
   if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     xSemaphoreGive(_task_kill_cmd_semaphore_handle);
@@ -308,7 +308,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     return 0; // ERR
   }
 
-  if(!createCallbackTask()){
+  if(!_createCallbackTask()){
     _initialized = false;
     end();
     return 0; // ERR
@@ -466,7 +466,7 @@ void I2SClass::_uninstallDriver(){
 void I2SClass::end()
 {
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
-    destroyCallbackTask();
+    _destroyCallbackTask();
 
     if(_initialized){
       _uninstallDriver();
@@ -519,7 +519,7 @@ int I2SClass::read()
 
 int I2SClass::read(void* buffer, size_t size){
   if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
-    if(!enableReceiver()){
+    if(!_enableReceiver()){
       return 0; // There was an error switching to receiver
     }
   }
@@ -570,7 +570,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size)
 size_t I2SClass::write_blocking(const void *buffer, size_t size)
 {
   if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
-    if(!enableTransmitter()){
+    if(!_enableTransmitter()){
       return 0; // There was an error switching to transmitter
     }
   }
@@ -589,7 +589,7 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size)
 size_t I2SClass::write_nonblocking(const void *buffer, size_t size)
 {
   if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
-    if(!enableTransmitter()){
+    if(!_enableTransmitter()){
       return 0; // There was an error switching to transmitter
     }
   }
@@ -665,7 +665,7 @@ int I2SClass::getBufferSize(){
   return _i2s_dma_buffer_size;
 }
 
-int I2SClass::enableTransmitter()
+int I2SClass::_enableTransmitter()
 {
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_TRANSMITTER){
     _state = I2S_STATE_TRANSMITTER;
@@ -674,7 +674,7 @@ int I2SClass::enableTransmitter()
   return 1; // Ok
 }
 
-int I2SClass::enableReceiver()
+int I2SClass::_enableReceiver()
 {
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_RECEIVER){
     _state = I2S_STATE_RECEIVER;
@@ -741,7 +741,7 @@ void I2SClass::_rx_done_routine(){
 }
 
 
-void I2SClass::onTransferComplete()
+void I2SClass::_onTransferComplete()
 {
   uint8_t prev_item[_i2s_dma_buffer_size*4];
   static QueueSetHandle_t xQueueSet;
@@ -778,7 +778,7 @@ void I2SClass::onTransferComplete()
 
 void I2SClass::onDmaTransferComplete(void*)
 {
-  I2S.onTransferComplete();
+  I2S._onTransferComplete();
   vTaskDelete(NULL);
 }
 
