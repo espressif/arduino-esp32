@@ -163,6 +163,7 @@ private:
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
   QueueHandle_t _task_kill_cmd_semaphore_handle;
+  SemaphoreHandle_t _i2s_general_mutex;
   RingbufHandle_t _input_ring_buffer;
   RingbufHandle_t _output_ring_buffer;
   int _i2s_dma_buffer_size;
@@ -170,6 +171,10 @@ private:
 
   void _tx_done_routine(uint8_t* prev_item);
   void _rx_done_routine();
+
+  uint16_t _dive_counter;
+  void _take_if_not_holding();
+  void _give_if_top_call();
 
   void (*_onTransmit)(void);
   void (*_onReceive)(void);

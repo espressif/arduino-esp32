@@ -52,14 +52,20 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
   _task_kill_cmd_semaphore_handle(NULL),
+  _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
   _i2s_dma_buffer_size(1024),
   _driveClock(true),
+  _dive_counter(0),
 
   _onTransmit(NULL),
   _onReceive(NULL)
 {
+  _i2s_general_mutex = xSemaphoreCreateMutex();
+  if(_i2s_general_mutex == NULL){
+    log_e("I2S could not create internal mutex!");
+  }
 }
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin, uint8_t outSdPin, uint8_t sckPin, uint8_t fsPin) : // set duplex
@@ -81,14 +87,20 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
   _task_kill_cmd_semaphore_handle(NULL),
+  _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
   _i2s_dma_buffer_size(1024),
   _driveClock(true),
+  _dive_counter(0),
 
   _onTransmit(NULL),
   _onReceive(NULL)
 {
+  _i2s_general_mutex = xSemaphoreCreateMutex();
+  if(_i2s_general_mutex == NULL){
+    log_e("I2S could not create internal mutex!");
+  }
 }
 
 int I2SClass::_createCallbackTask()
@@ -780,6 +792,30 @@ void I2SClass::onDmaTransferComplete(void*)
 {
   I2S._onTransferComplete();
   vTaskDelete(NULL);
+}
+
+void I2SClass::_take_if_not_holding(){
+  TaskHandle_t mutex_holder = xSemaphoreGetMutexHolder(_i2s_general_mutex);
+  if(mutex_holder != NULL && mutex_holder == xTaskGetCurrentTaskHandle()){
+    ++_dive_counter;
+    return; // we are already holding this mutex - no need to take it
+  }
+
+  // we are not holding the mutex - wait for it and take it
+  if(xSemaphoreTake(_i2s_general_mutex, portMAX_DELAY) != pdTRUE ){
+    log_e("I2S internal mutex take returned with error")
+  }
+  //_give_if_top_call(); // call after this function
+}
+
+void _give_if_top_call(){
+  if(_dive_counter){
+    --_dive_counter;
+  }else{
+    if(xSemaphoreGive(_i2s_general_mutex) != pdTRUE){
+      log_e("I2S intternal mutex give error");
+    }
+  }
 }
 
 #if SOC_I2S_SUPPORTS_ADC_DAC
