@@ -140,7 +140,7 @@ int I2SClass::_installDriver(){
     // TODO there will much more work with slave mode
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
   }
-#if SOC_I2S_SUPPORTS_ADC_DAC
+
   if(_mode == I2S_ADC_DAC){
     #if SOC_I2S_SUPPORTS_ADC_DAC
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
@@ -152,9 +152,7 @@ int I2SClass::_installDriver(){
       log_e("This chip does not support DAC / ADC");
       return 0; // ERR
     #endif
-  }else
-#endif
-   if(_mode == I2S_PHILIPS_MODE ||
+  }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal mode
     if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
@@ -185,7 +183,8 @@ int I2SClass::_installDriver(){
     .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S), // 0x01 // default
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
-    .dma_buf_len = _i2s_dma_buffer_size
+    .dma_buf_len = _i2s_dma_buffer_size,
+    .use_apll = false
   };
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
@@ -235,7 +234,7 @@ int I2SClass::_installDriver(){
     esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
     _initialized = true;
   }else // End of ADC/DAC mode
-#endif
+#endif // SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_PHILIPS_MODE){ // if Normal mode
     _initialized = true;
     if(!_applyPinSetting()){
@@ -783,16 +782,7 @@ void I2SClass::onDmaTransferComplete(void*)
   vTaskDelete(NULL);
 }
 
-#if I2S_INTERFACES_COUNT > 0
-  I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
-  //I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SCK, PIN_I2S_FS); // full duplex
-#endif
-
-#if I2S_INTERFACES_COUNT > 1
-  // TODO set default pins for second module
-  //I2SClass I2S1(I2S_DEVICE+1, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
-#endif
-
+#if SOC_I2S_SUPPORTS_ADC_DAC
 int I2SClass::gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
   switch(gpio_num){
 #if CONFIG_IDF_TARGET_ESP32
@@ -941,3 +931,14 @@ int I2SClass::gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_
       return 0; // ERR
   }
 }
+#endif // SOC_I2S_SUPPORTS_ADC_DAC
+
+#if I2S_INTERFACES_COUNT > 0
+  I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
+  //I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SCK, PIN_I2S_FS); // full duplex
+#endif
+
+#if I2S_INTERFACES_COUNT > 1
+  // TODO set default pins for second module
+  //I2SClass I2S1(I2S_DEVICE+1, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
+#endif
