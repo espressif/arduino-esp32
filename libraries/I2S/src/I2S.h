@@ -172,7 +172,7 @@ private:
   void _tx_done_routine(uint8_t* prev_item);
   void _rx_done_routine();
 
-  uint16_t _dive_counter;
+  uint16_t _nesting_counter;
   void _take_if_not_holding();
   void _give_if_top_call();
 
