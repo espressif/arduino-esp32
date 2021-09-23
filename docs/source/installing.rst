@@ -166,9 +166,7 @@ Debian/Ubuntu
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python3 get.py
 
 - Restart Arduino IDE.
@@ -181,9 +179,7 @@ Debian/Ubuntu
    mkdir -p espressif && \
    cd espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python3 get.py
 
 Fedora
@@ -203,9 +199,7 @@ Fedora
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python get.py
 
 - Restart Arduino IDE.
@@ -228,9 +222,7 @@ openSUSE
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python get.py
 
 - Restart Arduino IDE.
@@ -246,10 +238,8 @@ macOS
 
    mkdir -p ~/Documents/Arduino/hardware/espressif && \
    cd ~/Documents/Arduino/hardware/espressif && \
-   git clone https://github.com/espressif/arduino-esp32.git esp32 --depth 1 && \
-   cd esp32 && \
-   git submodule update --init --recursive --depth 1 && \
-   cd tools && \
+   git clone https://github.com/espressif/arduino-esp32.git esp32 && \
+   cd esp32/tools && \
    python get.py 
 
 Where ``~/Documents/Arduino`` represents your sketch book location as per "Arduino" > "Preferences" > "Sketchbook location" (in the IDE once started). Adjust the command above accordingly.
