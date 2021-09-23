@@ -808,7 +808,7 @@ void I2SClass::_take_if_not_holding(){
   //_give_if_top_call(); // call after this function
 }
 
-void _give_if_top_call(){
+void I2SClass::_give_if_top_call(){
   if(_dive_counter){
     --_dive_counter;
   }else{
