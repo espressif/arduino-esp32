@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "lfs_util.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -21,7 +22,7 @@ extern "C"
 // Software library version
 // Major (top-nibble), incremented on backwards incompatible changes
 // Minor (bottom-nibble), incremented on feature additions
-#define LFS_VERSION 0x00020002
+#define LFS_VERSION 0x00020004
 #define LFS_VERSION_MAJOR (0xffff & (LFS_VERSION >> 16))
 #define LFS_VERSION_MINOR (0xffff & (LFS_VERSION >>  0))
 
@@ -123,20 +124,25 @@ enum lfs_type {
 enum lfs_open_flags {
     // open flags
     LFS_O_RDONLY = 1,         // Open a file as read only
+#ifndef LFS_READONLY
     LFS_O_WRONLY = 2,         // Open a file as write only
     LFS_O_RDWR   = 3,         // Open a file as read and write
     LFS_O_CREAT  = 0x0100,    // Create a file if it does not exist
     LFS_O_EXCL   = 0x0200,    // Fail if a file already exists
     LFS_O_TRUNC  = 0x0400,    // Truncate the existing file to zero size
     LFS_O_APPEND = 0x0800,    // Move to end of file on every write
+#endif
 
     // internally used flags
+#ifndef LFS_READONLY
     LFS_F_DIRTY   = 0x010000, // File does not match storage
     LFS_F_WRITING = 0x020000, // File has been written since last flush
+#endif
     LFS_F_READING = 0x040000, // File has been read since last flush
-    LFS_F_ERRED   = 0x080000, // An error occured during write
+#ifndef LFS_READONLY
+    LFS_F_ERRED   = 0x080000, // An error occurred during write
+#endif
     LFS_F_INLINE  = 0x100000, // Currently inlined in directory entry
-    LFS_F_OPENED  = 0x200000, // File has been opened
 };
 
 // File seek flags
@@ -174,6 +180,16 @@ struct lfs_config {
     // are propogated to the user.
     int (*sync)(const struct lfs_config *c);
 
+#ifdef LFS_THREADSAFE
+    // Lock the underlying block device. Negative error codes
+    // are propogated to the user.
+    int (*lock)(const struct lfs_config *c);
+
+    // Unlock the underlying block device. Negative error codes
+    // are propogated to the user.
+    int (*unlock)(const struct lfs_config *c);
+#endif
+
     // Minimum size of a block read. All read operations will be a
     // multiple of this value.
     lfs_size_t read_size;
@@ -191,7 +207,7 @@ struct lfs_config {
     // Number of erasable blocks on the device.
     lfs_size_t block_count;
 
-    // Number of erase cycles before littlefs evicts metadata logs and moves 
+    // Number of erase cycles before littlefs evicts metadata logs and moves
     // the metadata to another block. Suggested values are in the
     // range 100-1000, with large values having better performance at the cost
     // of less consistent wear distribution.
@@ -240,6 +256,12 @@ struct lfs_config {
     // larger attributes size but must be <= LFS_ATTR_MAX. Defaults to
     // LFS_ATTR_MAX when zero.
     lfs_size_t attr_max;
+
+    // Optional upper limit on total space given to metadata pairs in bytes. On
+    // devices with large blocks (e.g. 128kB) setting this to a low size (2-8kB)
+    // can help bound the metadata compaction time. Must be <= block_size.
+    // Defaults to block_size when zero.
+    lfs_size_t metadata_max;
 };
 
 // File info structure
@@ -399,6 +421,7 @@ typedef struct lfs {
 
 /// Filesystem functions ///
 
+#ifndef LFS_READONLY
 // Format a block device with the littlefs
 //
 // Requires a littlefs object and config struct. This clobbers the littlefs
@@ -407,6 +430,7 @@ typedef struct lfs {
 //
 // Returns a negative error code on failure.
 int lfs_format(lfs_t *lfs, const struct lfs_config *config);
+#endif
 
 // Mounts a littlefs
 //
@@ -426,12 +450,15 @@ int lfs_unmount(lfs_t *lfs);
 
 /// General operations ///
 
+#ifndef LFS_READONLY
 // Removes a file or directory
 //
 // If removing a directory, the directory must be empty.
 // Returns a negative error code on failure.
 int lfs_remove(lfs_t *lfs, const char *path);
+#endif
 
+#ifndef LFS_READONLY
 // Rename or move a file or directory
 //
 // If the destination exists, it must match the source in type.
@@ -439,6 +466,7 @@ int lfs_remove(lfs_t *lfs, const char *path);
 //
 // Returns a negative error code on failure.
 int lfs_rename(lfs_t *lfs, const char *oldpath, const char *newpath);
+#endif
 
 // Find info about a file or directory
 //
@@ -461,6 +489,7 @@ int lfs_stat(lfs_t *lfs, const char *path, struct lfs_info *info);
 lfs_ssize_t lfs_getattr(lfs_t *lfs, const char *path,
         uint8_t type, void *buffer, lfs_size_t size);
 
+#ifndef LFS_READONLY
 // Set custom attributes
 //
 // Custom attributes are uniquely identified by an 8-bit type and limited
@@ -470,13 +499,16 @@ lfs_ssize_t lfs_getattr(lfs_t *lfs, const char *path,
 // Returns a negative error code on failure.
 int lfs_setattr(lfs_t *lfs, const char *path,
         uint8_t type, const void *buffer, lfs_size_t size);
+#endif
 
+#ifndef LFS_READONLY
 // Removes a custom attribute
 //
 // If an attribute is not found, nothing happens.
 //
 // Returns a negative error code on failure.
 int lfs_removeattr(lfs_t *lfs, const char *path, uint8_t type);
+#endif
 
 
 /// File operations ///
@@ -525,6 +557,7 @@ int lfs_file_sync(lfs_t *lfs, lfs_file_t *file);
 lfs_ssize_t lfs_file_read(lfs_t *lfs, lfs_file_t *file,
         void *buffer, lfs_size_t size);
 
+#ifndef LFS_READONLY
 // Write data to file
 //
 // Takes a buffer and size indicating the data to write. The file will not
@@ -533,6 +566,7 @@ lfs_ssize_t lfs_file_read(lfs_t *lfs, lfs_file_t *file,
 // Returns the number of bytes written, or a negative error code on failure.
 lfs_ssize_t lfs_file_write(lfs_t *lfs, lfs_file_t *file,
         const void *buffer, lfs_size_t size);
+#endif
 
 // Change the position of the file
 //
@@ -541,10 +575,12 @@ lfs_ssize_t lfs_file_write(lfs_t *lfs, lfs_file_t *file,
 lfs_soff_t lfs_file_seek(lfs_t *lfs, lfs_file_t *file,
         lfs_soff_t off, int whence);
 
+#ifndef LFS_READONLY
 // Truncates the size of the file to the specified size
 //
 // Returns a negative error code on failure.
 int lfs_file_truncate(lfs_t *lfs, lfs_file_t *file, lfs_off_t size);
+#endif
 
 // Return the position of the file
 //
@@ -567,10 +603,12 @@ lfs_soff_t lfs_file_size(lfs_t *lfs, lfs_file_t *file);
 
 /// Directory operations ///
 
+#ifndef LFS_READONLY
 // Create a directory
 //
 // Returns a negative error code on failure.
 int lfs_mkdir(lfs_t *lfs, const char *path);
+#endif
 
 // Open a directory
 //
@@ -632,6 +670,7 @@ lfs_ssize_t lfs_fs_size(lfs_t *lfs);
 // Returns a negative error code on failure.
 int lfs_fs_traverse(lfs_t *lfs, int (*cb)(void*, lfs_block_t), void *data);
 
+#ifndef LFS_READONLY
 #ifdef LFS_MIGRATE
 // Attempts to migrate a previous version of littlefs
 //
@@ -645,6 +684,7 @@ int lfs_fs_traverse(lfs_t *lfs, int (*cb)(void*, lfs_block_t), void *data);
 //
 // Returns a negative error code on failure.
 int lfs_migrate(lfs_t *lfs, const struct lfs_config *cfg);
+#endif
 #endif
 
 

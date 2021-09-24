@@ -372,7 +372,7 @@ typedef struct TU_ATTR_PACKED
 
   uint8_t  bNumInterfaces      ; ///< Number of interfaces supported by this speed configuration
   uint8_t  bConfigurationValue ; ///< Value to use to select configuration
-  uint8_t  IConfiguration      ; ///< Index of string descriptor
+  uint8_t  iConfiguration      ; ///< Index of string descriptor
   uint8_t  bmAttributes        ; ///< Same as Configuration descriptor
   uint8_t  bMaxPower           ; ///< Same as Configuration descriptor
 } tusb_desc_other_speed_t;
@@ -387,10 +387,13 @@ typedef struct TU_ATTR_PACKED
   uint8_t  bDeviceClass       ; ///< Class Code
   uint8_t  bDeviceSubClass    ; ///< SubClass Code
   uint8_t  bDeviceProtocol    ; ///< Protocol Code
+
   uint8_t  bMaxPacketSize0    ; ///< Maximum packet size for other speed
   uint8_t  bNumConfigurations ; ///< Number of Other-speed Configurations
   uint8_t  bReserved          ; ///< Reserved for future use, must be zero
 } tusb_desc_device_qualifier_t;
+
+TU_VERIFY_STATIC( sizeof(tusb_desc_device_qualifier_t) == 10, "size is not correct");
 
 /// USB Interface Association Descriptor (IAD ECN)
 typedef struct TU_ATTR_PACKED
