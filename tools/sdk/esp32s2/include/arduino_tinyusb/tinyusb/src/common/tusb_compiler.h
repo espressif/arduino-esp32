@@ -32,6 +32,7 @@
 #ifndef _TUSB_COMPILER_H_
 #define _TUSB_COMPILER_H_
 
+#define TU_TOKEN(x)           x
 #define TU_STRING(x)          #x                  ///< stringify without expand
 #define TU_XSTRING(x)         TU_STRING(x)        ///< expand then stringify
 
@@ -40,6 +41,8 @@
 
 #define TU_XSTRCAT(a, b)      TU_STRCAT(a, b)     ///< expand then concat
 #define TU_XSTRCAT3(a, b, c)  TU_STRCAT3(a, b, c) ///< expand then concat 3 tokens
+
+#define TU_INCLUDE_PATH(_dir,_file) TU_XSTRING( TU_TOKEN(_dir)TU_TOKEN(_file) )
 
 #if defined __COUNTER__ && __COUNTER__ != __COUNTER__
   #define _TU_COUNTER_ __COUNTER__
