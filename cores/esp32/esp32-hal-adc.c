@@ -37,7 +37,7 @@ static uint8_t __analogVRefPin = 0;
 #include "soc/rtc_io_reg.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
@@ -46,10 +46,10 @@ static uint8_t __analogVRefPin = 0;
 #endif
 
 static uint8_t __analogAttenuation = 3;//11db
-#if CONFIG_IDF_TARGET_ESP32
-static uint8_t __analogWidth = 3;//12 bits
-#elif CONFIG_IDF_TARGET_ESP32S2
-static uint8_t __analogWidth = 4;   // 13 bits
+#if CONFIG_IDF_TARGET_ESP32S2
+static uint8_t __analogWidth = 4; // 13 bits
+#else
+static uint8_t __analogWidth = 3; // 12 bits
 #endif
 static uint8_t __analogClockDiv = 1;
 static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
