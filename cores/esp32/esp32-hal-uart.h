@@ -52,7 +52,7 @@ struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd);
-void uartEnd(uart_t* uart, uint8_t rxPin, uint8_t txPin);
+void uartEnd(uart_t* uart);
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);
@@ -68,17 +68,17 @@ void uartFlushTxOnly(uart_t* uart, bool txOnly );
 void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
-size_t uartResizeRxBuffer(uart_t* uart, size_t new_size);
-
 void uartSetRxInvert(uart_t* uart, bool invert);
 
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
+bool uartIsDriverInstalled(uart_t* uart);
+void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin);
+
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
 
-bool uartRxActive(uart_t* uart);
 
 #ifdef __cplusplus
 }
