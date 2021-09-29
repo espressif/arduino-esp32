@@ -340,37 +340,30 @@ uint8_t TwoWire::lastError()
     return (uint8_t)last_error;
 }
 
-const char ERRORTEXT[] =
-    "OK\0"
-    "DEVICE\0"
-    "ACK\0"
-    "TIMEOUT\0"
-    "BUS\0"
-    "BUSY\0"
-    "MEMORY\0"
-    "CONTINUE\0"
-    "NO_BEGIN\0"
-    "\0";
+const char *const ERROR_TEXT[] = {
+    "OK",
+    "DEVICE",
+    "ACK",
+    "TIMEOUT",
+    "BUS",
+    "BUSY",
+    "MEMORY",
+    "CONTINUE",
+    "NO_BEGIN"
+};
 
-
-char * TwoWire::getErrorText(uint8_t err)
+const char *TwoWire::getErrorText(uint8_t error_number)
 {
-    uint8_t t = 0;
-    bool found = false;
-    char * message = (char*)&ERRORTEXT;
+    const char *message = NULL;
+    const uint8_t ERROR_TEXT_SIZE = sizeof(ERROR_TEXT) / sizeof(*ERROR_TEXT);
 
-    while(!found && message[0]) {
-        found = t == err;
-        if(!found) {
-            message = message + strlen(message) + 1;
-            t++;
-        }
-    }
-    if(!found) {
+    if (error_number >= ERROR_TEXT_SIZE)
+    {
         return NULL;
-    } else {
-        return message;
     }
+
+    message = ERROR_TEXT[error_number];
+    return message;
 }
 
 /*stickbreaker Dump i2c Interrupt buffer, i2c isr Debugging

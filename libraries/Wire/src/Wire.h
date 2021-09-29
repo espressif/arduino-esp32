@@ -83,7 +83,7 @@ public:
     uint16_t getTimeOut();
 
     uint8_t lastError();
-    char * getErrorText(uint8_t err);
+    const char * getErrorText(uint8_t err);
 
     //@stickBreaker for big blocks and ISR model
     i2c_err_t writeTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
