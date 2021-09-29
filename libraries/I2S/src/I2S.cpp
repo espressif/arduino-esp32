@@ -103,8 +103,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin,
   }
 }
 
-int I2SClass::_createCallbackTask()
-{
+int I2SClass::_createCallbackTask(){
   int stack_size = 10000;
   if(_callbackTaskHandle == NULL){
     if(_task_kill_cmd_semaphore_handle == NULL){
@@ -131,9 +130,8 @@ int I2SClass::_createCallbackTask()
   return 1; // OK
 }
 
-void I2SClass::_destroyCallbackTask()
-{
-  if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
+void I2SClass::_destroyCallbackTask(){
+  if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle && _task_kill_cmd_semaphore_handle != NULL){
     xSemaphoreGive(_task_kill_cmd_semaphore_handle);
     while(_callbackTaskHandle != NULL){
       ; // wait until task ends itself properly
@@ -258,8 +256,7 @@ int I2SClass::_installDriver(){
   return 1; // OK
 }
 
-int I2SClass::begin(int mode, int sampleRate, int bitsPerSample)
-{
+int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
   _take_if_not_holding();
   // master mode (driving clock and frame select pins - output)
   int ret = begin(mode, sampleRate, bitsPerSample, true);
@@ -268,8 +265,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample)
 
 }
 
-int I2SClass::begin(int mode, int bitsPerSample)
-{
+int I2SClass::begin(int mode, int bitsPerSample){
   log_e("ERROR I2SClass::begin Audio in Slave mode is not implemented for ESP\n\
          Note: If it is NOT your intention to initialize in slave mode, you are probably missing <sampleRate> parameter - see the declaration below\n\
          \tint I2SClass::begin(int mode, long sampleRate, int bitsPerSample)");
@@ -278,8 +274,7 @@ int I2SClass::begin(int mode, int bitsPerSample)
   //return begin(mode, 0, bitsPerSample, false);
 }
 
-int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock)
-{
+int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
   _take_if_not_holding();
   if(_initialized){
     end();
@@ -524,12 +519,10 @@ void I2SClass::_uninstallDriver(){
   }
 }
 
-void I2SClass::end()
-{
+void I2SClass::end(){
   _take_if_not_holding();
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     _destroyCallbackTask();
-
     if(_initialized){
       _uninstallDriver();
       _initialized = false;
@@ -551,10 +544,12 @@ void I2SClass::end()
 }
 
 // Bytes available to read
-int I2SClass::available()
-{
+int I2SClass::available(){
   _take_if_not_holding();
-  int ret = _buffer_byte_size - (int)xRingbufferGetCurFreeSize(_input_ring_buffer);
+  int ret = 0;
+  if(_input_ring_buffer != NULL){
+    ret = _buffer_byte_size - (int)xRingbufferGetCurFreeSize(_input_ring_buffer);
+  }
   _give_if_top_call();
   return ret;
 }
@@ -565,57 +560,63 @@ union i2s_sample_t {
   int32_t b32;
 };
 
-int I2SClass::read()
-{
+int I2SClass::read(){
   _take_if_not_holding();
   i2s_sample_t sample;
   sample.b32 = 0;
-  read(&sample, _bitsPerSample / 8);
-
-  if (_bitsPerSample == 32) {
-    _give_if_top_call();
-    return sample.b32;
-  } else if (_bitsPerSample == 16) {
-    _give_if_top_call();
-    return sample.b16;
-  } else if (_bitsPerSample == 8) {
-    _give_if_top_call();
-    return sample.b8;
-  } else {
-    _give_if_top_call();
-    return 0;
-  }
+  if(_initialized){
+    read(&sample, _bitsPerSample / 8);
+    if (_bitsPerSample == 32) {
+      _give_if_top_call();
+      return sample.b32;
+    } else if (_bitsPerSample == 16) {
+      _give_if_top_call();
+      return sample.b16;
+    } else if (_bitsPerSample == 8) {
+      _give_if_top_call();
+      return sample.b8;
+    } else {
+      _give_if_top_call();
+      return 0;
+    }
+  } // if(_initialized)
   _give_if_top_call();
   return 0;
 }
 
 int I2SClass::read(void* buffer, size_t size){
   _take_if_not_holding();
-  if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
-    if(!_enableReceiver()){
-      _give_if_top_call();
-      return 0; // There was an error switching to receiver
-    }
-  }
+  if(_initialized){
+    if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
+      if(!_enableReceiver()){
+        _give_if_top_call();
+        return 0; // There was an error switching to receiver
+      } // _enableReceiver succeeded ?
+    } // _state ?
 
-  size_t item_size = 0;
-  void *tmp_buffer;
-  tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), size);
-  if(tmp_buffer != NULL){
-    memcpy(buffer, tmp_buffer, item_size);
-#if SOC_I2S_SUPPORTS_ADC_DAC
-    if(_mode == I2S_ADC_DAC){
-      for(size_t i = 0; i < item_size / 2; ++i){
-        ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
-      }
-    } // ADC/DAC mode
-#endif
-    vRingbufferReturnItem(_input_ring_buffer, tmp_buffer);
-    return item_size;
-  }else{
-    _give_if_top_call();
-    return 0;
-  }
+    size_t item_size = 0;
+    void *tmp_buffer;
+    if(_input_ring_buffer != NULL){
+      tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), size);
+      if(tmp_buffer != NULL){
+        memcpy(buffer, tmp_buffer, item_size);
+        #if SOC_I2S_SUPPORTS_ADC_DAC
+          if(_mode == I2S_ADC_DAC){
+            for(size_t i = 0; i < item_size / 2; ++i){
+              ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
+            }
+          } // ADC/DAC mode
+        #endif
+        vRingbufferReturnItem(_input_ring_buffer, tmp_buffer);
+        _give_if_top_call();
+        return item_size;
+      }else{
+        _give_if_top_call();
+        return 0;
+      } // tmp buffer not NULL ?
+    } // ring buffer not NULL ?
+  } // if(_initialized)
+  return 0;
   _give_if_top_call();
 }
 
@@ -626,154 +627,179 @@ size_t I2SClass::write(int sample)
 }
 */
 
-size_t I2SClass::write(uint8_t data)
-{
+size_t I2SClass::write(uint8_t data){
   _take_if_not_holding();
-  size_t ret = write((int32_t)data);
+  size_t ret = 0;
+  if(_initialized){
+    ret = write((int32_t)data);
+  }
   _give_if_top_call();
   return ret;
 }
 
-size_t I2SClass::write(int32_t sample)
-{
+size_t I2SClass::write(int32_t sample){
   _take_if_not_holding();
-  size_t ret = write(&sample, _bitsPerSample/8);
+  size_t ret = 0;
+  if(_initialized){
+    ret = write(&sample, _bitsPerSample/8);
+  }
   _give_if_top_call();
   return ret;
 }
 
-size_t I2SClass::write(const uint8_t *buffer, size_t size)
-{
+size_t I2SClass::write(const uint8_t *buffer, size_t size){
   _take_if_not_holding();
-  size_t ret = write((const void*)buffer, size);
+  size_t ret = 0;
+  if(_initialized){
+    ret = write((const void*)buffer, size);
+  }
   _give_if_top_call();
   return ret;
 }
 
 // blocking version of write
 // TODO add timeout
-size_t I2SClass::write_blocking(const void *buffer, size_t size)
-{
+size_t I2SClass::write_blocking(const void *buffer, size_t size){
   _take_if_not_holding();
-  if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
-    if(!_enableTransmitter()){
-      _give_if_top_call();
-      return 0; // There was an error switching to transmitter
+  if(_initialized){
+    if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
+      if(!_enableTransmitter()){
+        _give_if_top_call();
+        return 0; // There was an error switching to transmitter
+      } // _enableTransmitter succeeded ?
+    } // _state ?
+    // TODO add timeout
+    while(availableForWrite() < size){
+      yield();
     }
-  }
-  // TODO add timeout
-  while(availableForWrite() < size){
-    yield();
-  }
-  if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
-    _give_if_top_call();
-    return size;
-  }else{
-    _give_if_top_call();
-    return 0;
-  }
+    if(_output_ring_buffer != NULL){
+      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
+        _give_if_top_call();
+        return size;
+      }else{
+        _give_if_top_call();
+        return 0;
+      } // ring buffer send ok ?
+    } // ring buffer not NULL ?
+  } // if(_initialized)
+  return 0;
   _give_if_top_call();
 }
 
 // non-blocking version of write
-size_t I2SClass::write_nonblocking(const void *buffer, size_t size)
-{
+size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   _take_if_not_holding();
-  if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
-    if(!_enableTransmitter()){
-      _give_if_top_call();
-      return 0; // There was an error switching to transmitter
+  if(_initialized){
+    if(_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX){
+      if(!_enableTransmitter()){
+        _give_if_top_call();
+        return 0; // There was an error switching to transmitter
+      }
     }
-  }
-  if(availableForWrite() < size){
-    flush();
-  }
-  if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
-    _give_if_top_call();
-    return size;
-  }else{
-    _give_if_top_call();
-    return 0;
-  }
-  _give_if_top_call();
+    if(availableForWrite() < size){
+      flush();
+    }
+    if(_output_ring_buffer != NULL){
+      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
+        _give_if_top_call();
+        return size;
+      }else{
+        _give_if_top_call();
+        return 0;
+      }
+    }
+  } // if(_initialized)
+  return 0;
+  _give_if_top_call(); // this should not be needed
 }
 
 size_t I2SClass::write(const void *buffer, size_t size){
   _take_if_not_holding();
-  //size_t ret = write_blocking(buffer, size);
-  size_t ret = write_nonblocking(buffer, size);
+  size_t ret = 0;
+  if(_initialized){
+    //size_t ret = write_blocking(buffer, size);
+    ret = write_nonblocking(buffer, size);
+  } // if(_initialized)
   _give_if_top_call();
   return ret;
 }
 
-int I2SClass::peek()
-{
+int I2SClass::peek(){
   _take_if_not_holding();
-  // TODO
-  // peek() is not implemented for ESP yet
   int ret = 0;
+  if(_initialized){
+    // TODO
+    // peek() is not implemented for ESP yet
+    ret = 0;
+  } // if(_initialized)
   _give_if_top_call();
   return ret;
 }
 
-void I2SClass::flush()
-{
+void I2SClass::flush(){
   _take_if_not_holding();
-  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
-  size_t item_size = 0;
-  size_t bytes_written;
-  void *item = NULL;
-
-  item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
-  if (item != NULL){
-    esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, item, item_size, &bytes_written, 0);
-    if(item_size != bytes_written){
+  if(_initialized){
+    const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
+    size_t item_size = 0;
+    size_t bytes_written;
+    void *item = NULL;
+    if(_output_ring_buffer != NULL){
+      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
+      if (item != NULL){
+        esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, item, item_size, &bytes_written, 0);
+        if(item_size != bytes_written){
+        }
+        vRingbufferReturnItem(_output_ring_buffer, item);
+      }
     }
-    vRingbufferReturnItem(_output_ring_buffer, item);
-  }
+  } // if(_initialized)
   _give_if_top_call();
 }
 
 // Bytes available to write
-int I2SClass::availableForWrite()
-{
+int I2SClass::availableForWrite(){
   _take_if_not_holding();
-  int ret = (int)xRingbufferGetCurFreeSize(_output_ring_buffer);
+  int ret = 0;
+  if(_initialized){
+    if(_output_ring_buffer != NULL){
+      ret = (int)xRingbufferGetCurFreeSize(_output_ring_buffer);
+    }
+  } // if(_initialized)
   _give_if_top_call();
   return ret;
 }
 
-void I2SClass::onTransmit(void(*function)(void))
-{
+void I2SClass::onTransmit(void(*function)(void)){
   _take_if_not_holding();
   _onTransmit = function;
   _give_if_top_call();
 }
 
-void I2SClass::onReceive(void(*function)(void))
-{
+void I2SClass::onReceive(void(*function)(void)){
   _take_if_not_holding();
   _onReceive = function;
   _give_if_top_call();
 }
 
-int I2SClass::setBufferSize(int bufferSize)
-{
+int I2SClass::setBufferSize(int bufferSize){
   _take_if_not_holding();
-  if(bufferSize >= 8 && bufferSize <= 1024){
-    _i2s_dma_buffer_size = bufferSize;
-    if(_initialized){
+  int ret = 0;
+  if(_initialized){
+    if(bufferSize >= 8 && bufferSize <= 1024){
+      _i2s_dma_buffer_size = bufferSize;
       _uninstallDriver();
+      ret = _installDriver();
       _give_if_top_call();
-      return _installDriver();
-    }
+      return ret;
     _give_if_top_call();
     return 1; // OK
-  }else{
-    _give_if_top_call();
-    return 0; // ERR
-  }
+    }else{ // check requested buffer size
+      _give_if_top_call();
+      return 0; // ERR
+    } // check requested buffer size
+  } // if(_initialized)
   _give_if_top_call();
+  return 0; // ERR
 }
 
 int I2SClass::getBufferSize(){
@@ -783,8 +809,7 @@ int I2SClass::getBufferSize(){
   return ret;
 }
 
-int I2SClass::_enableTransmitter()
-{
+int I2SClass::_enableTransmitter(){
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_TRANSMITTER){
     _state = I2S_STATE_TRANSMITTER;
     return _applyPinSetting();
@@ -792,8 +817,7 @@ int I2SClass::_enableTransmitter()
   return 1; // Ok
 }
 
-int I2SClass::_enableReceiver()
-{
+int I2SClass::_enableReceiver(){
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_RECEIVER){
     _state = I2S_STATE_RECEIVER;
     return _applyPinSetting();
@@ -819,7 +843,7 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
     prev_item_size -= bytes_written;
   } // prev_item_valid
 
-  if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf){ // fill up the I2S DMA buffer
+  if(_output_ring_buffer != NULL && (_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf)){ // fill up the I2S DMA buffer
     bytes_written = 0;
     item_size = 0;
     //if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
@@ -844,22 +868,23 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
 void I2SClass::_rx_done_routine(){
   static size_t bytes_read;
   const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
-  uint8_t *_inputBuffer = (uint8_t*)malloc(_i2s_dma_buffer_size*4);
 
-  size_t avail = xRingbufferGetCurFreeSize(_input_ring_buffer);
-  esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
-  if(pdTRUE != xRingbufferSend(_input_ring_buffer, _inputBuffer, bytes_read, 0)){
-    log_w("I2S failed to send item from DMA to internal buffer\n");
-  }else{
-    if (_onReceive) {
-      _onReceive();
-    } // user callback
-  } // xRingbufferSendComplete
-  free(_inputBuffer);
+  if(_input_ring_buffer != NULL){
+    uint8_t *_inputBuffer = (uint8_t*)malloc(_i2s_dma_buffer_size*4);
+    size_t avail = xRingbufferGetCurFreeSize(_input_ring_buffer);
+    esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
+    if(pdTRUE != xRingbufferSend(_input_ring_buffer, _inputBuffer, bytes_read, 0)){
+      log_w("I2S failed to send item from DMA to internal buffer\n");
+    }else{
+      if (_onReceive) {
+        _onReceive();
+      } // user callback
+    } // xRingbufferSendComplete
+    free(_inputBuffer);
+  }
 }
 
-void I2SClass::_onTransferComplete()
-{
+void I2SClass::_onTransferComplete(){
   uint8_t prev_item[_i2s_dma_buffer_size*4];
   static QueueSetHandle_t xQueueSet;
   QueueSetMemberHandle_t xActivatedMember;
@@ -893,8 +918,7 @@ void I2SClass::_onTransferComplete()
   _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
 }
 
-void I2SClass::onDmaTransferComplete(void*)
-{
+void I2SClass::onDmaTransferComplete(void*){
   I2S._onTransferComplete();
   vTaskDelete(NULL);
 }
