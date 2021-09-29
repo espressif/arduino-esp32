@@ -3794,6 +3794,13 @@ adafruit_metro_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_metro_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_metro_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
+adafruit_metro_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_metro_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_metro_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_metro_esp32s2.menu.UploadMode.default=UART0
+adafruit_metro_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_metro_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
+
 adafruit_metro_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_metro_esp32s2.menu.PSRAM.disabled=Disabled
@@ -3908,11 +3915,11 @@ adafruit_metro_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 adafruit_magtag29_esp32s2.name=Adafruit MagTag 2.9"
 adafruit_magtag29_esp32s2.vid.0=0x239A
-adafruit_magtag29_esp32s2.pid.0=0x80DF
+adafruit_magtag29_esp32s2.pid.0=0x80E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x00DF
+adafruit_magtag29_esp32s2.pid.1=0x00E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x80E0
+adafruit_magtag29_esp32s2.pid.1=0x80E6
 
 adafruit_magtag29_esp32s2.upload.tool=esptool_py
 adafruit_magtag29_esp32s2.upload.maximum_size=1310720
@@ -3958,6 +3965,13 @@ adafruit_magtag29_esp32s2.menu.DFUOnBoot.default=Disabled
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_magtag29_esp32s2.menu.UploadMode.default=UART0
+adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -4123,6 +4137,13 @@ adafruit_funhouse_esp32s2.menu.DFUOnBoot.default=Disabled
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_funhouse_esp32s2.menu.UploadMode.default=UART0
+adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
