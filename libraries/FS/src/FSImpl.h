@@ -53,7 +53,7 @@ protected:
 public:
     FSImpl() : _mountpoint(NULL) { }
     virtual ~FSImpl() { }
-    virtual FileImplPtr open(const char* path, const char* mode) = 0;
+    virtual FileImplPtr open(const char* path, const char* mode, const bool create) = 0;
     virtual bool exists(const char* path) = 0;
     virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
     virtual bool remove(const char* path) = 0;
