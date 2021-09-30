@@ -32,14 +32,18 @@ const int bitsPerSample = 16;
 TaskHandle_t _Task1Handle;
 TaskHandle_t _Task2Handle;
 TaskHandle_t _Task3Handle;
+TaskHandle_t _Task4Handle;
+TaskHandle_t _Task5Handle;
 
 
 void task1(void*){
   while(true){
     I2S.setAllPins(); // apply default pins
-    int foo = I2S.read();
+    if(I2S.available()){
+      int foo = I2S.read();
+    }
     delay(1);
-  }
+  } // infinite loop
 }
 
 void task2(void*){
@@ -47,7 +51,7 @@ void task2(void*){
     I2S.setAllPins(5, 25, 26, 27);
     I2S.write(123);
     delay(1);
-  }
+  } // infinite loop
 }
 
 void task3(void*){
@@ -60,7 +64,34 @@ void task3(void*){
       while (1) {delay(100);} // halt
     }
     delay(100);
-  }
+  } // infinite loop
+}
+
+void task4(void*){
+  const int buf_size = 64;
+  uint8_t buffer [buf_size];
+  while(true){
+    if(I2S.available() >= buf_size){
+      int read = I2S.read(buffer, buf_size);
+      if(read != buf_size){
+        log_e("task4: did not read complete buffer");
+      }
+    }
+    delay(5);
+  } // infinite loop
+}
+
+void task5(void*){
+  int i2s_buffer_size;
+  while(true){
+    i2s_buffer_size = I2S.getBufferSize();
+    delay(1);
+    if(!I2S.setBufferSize(i2s_buffer_size + 1)){
+      // unsupported buffer size requested -> halve the size
+      i2s_buffer_size /= 2;
+    }
+    delay(25);
+  } // infinite loop
 }
 
 void setup() {
@@ -118,6 +149,35 @@ void setup() {
     log_e("Could not create callback task 3");
     while (1) {;} // halt
   }
+
+  _Task4Handle = NULL;
+  xTaskCreate(
+    task4, // Function to implement the task
+    "task4", // Name of the task
+    2000,  // Stack size in words
+    NULL,  // Task input parameter
+    1,  // Priority of the task
+    &_Task4Handle  // Task handle.
+    );
+  if(_Task4Handle == NULL){
+    log_e("Could not create callback task 4");
+    while (1) {;} // halt
+  }
+
+  _Task5Handle = NULL;
+  xTaskCreate(
+    task5, // Function to implement the task
+    "task5", // Name of the task
+    2000,  // Stack size in words
+    NULL,  // Task input parameter
+    1,  // Priority of the task
+    &_Task5Handle  // Task handle.
+    );
+  if(_Task5Handle == NULL){
+    log_e("Could not create callback task 5");
+    while (1) {;} // halt
+  }
+
 }
 
 void loop() {
