@@ -75,7 +75,7 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create
 
         while (token != NULL)
         {
-            memccpy(folder,fpath + start_index, NULL, end_index-start_index);
+            memcpy(folder,fpath + start_index, end_index-start_index);
             folder[end_index-start_index] = '\0';
             
             if(!VFSImpl::mkdir(folder))
