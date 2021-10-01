@@ -90,17 +90,10 @@ typedef void (*voidFuncPtr)(void);
 static voidFuncPtr __timerInterruptHandlers[4] = {0,0,0,0};
 
 void ARDUINO_ISR_ATTR __timerISR(void * arg){
-#if CONFIG_IDF_TARGET_ESP32
     uint32_t s0 = TIMERG0.int_st_timers.val;
     uint32_t s1 = TIMERG1.int_st_timers.val;
     TIMERG0.int_clr_timers.val = s0;
     TIMERG1.int_clr_timers.val = s1;
-#else
-    uint32_t s0 = TIMERG0.int_st.val;
-    uint32_t s1 = TIMERG1.int_st.val;
-    TIMERG0.int_clr.val = s0;
-    TIMERG1.int_clr.val = s1;
-#endif
     uint8_t status = (s1 & 3) << 2 | (s0 & 3);
     uint8_t i = 4;
     //restart the timers that should autoreload
@@ -239,19 +232,19 @@ hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     }
     timer->dev->config.enable = 0;
     if(timer->group) {
+#if CONFIG_IDF_TARGET_ESP32
         TIMERG1.int_ena.val &= ~BIT(timer->timer);
-#if CONFIG_IDF_TARGET_ESP32
-            TIMERG1.int_clr_timers.val |= BIT(timer->timer);
 #else
-            TIMERG1.int_clr.val = BIT(timer->timer);
+        TIMERG1.int_ena_timers.val &= ~BIT(timer->timer);
 #endif
+        TIMERG1.int_clr_timers.val |= BIT(timer->timer);
     } else {
-        TIMERG0.int_ena.val &= ~BIT(timer->timer);
 #if CONFIG_IDF_TARGET_ESP32
-            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+        TIMERG0.int_ena.val &= ~BIT(timer->timer);
 #else
-            TIMERG0.int_clr.val = BIT(timer->timer);
+        TIMERG0.int_ena_timers.val &= ~BIT(timer->timer);
 #endif
+        TIMERG0.int_clr_timers.val |= BIT(timer->timer);
     }
 #ifdef TIMER_GROUP_SUPPORTS_XTAL_CLOCK
     timer->dev->config.use_xtal = 0;
@@ -289,19 +282,19 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
         timer->dev->config.edge_int_en = 0;
         timer->dev->config.alarm_en = 0;
         if(timer->num & 2){
+#if CONFIG_IDF_TARGET_ESP32
             TIMERG1.int_ena.val &= ~BIT(timer->timer);
-#if CONFIG_IDF_TARGET_ESP32
+#else
+            TIMERG1.int_ena_timers.val &= ~BIT(timer->timer);
+#endif
             TIMERG1.int_clr_timers.val |= BIT(timer->timer);
-#else
-            TIMERG1.int_clr.val = BIT(timer->timer);
-#endif
         } else {
-            TIMERG0.int_ena.val &= ~BIT(timer->timer);
 #if CONFIG_IDF_TARGET_ESP32
-            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
+            TIMERG0.int_ena.val &= ~BIT(timer->timer);
 #else
-            TIMERG0.int_clr.val = BIT(timer->timer);
+            TIMERG0.int_ena_timers.val &= ~BIT(timer->timer);
 #endif
+            TIMERG0.int_clr_timers.val |= BIT(timer->timer);
         }
         __timerInterruptHandlers[timer->num] = NULL;
     } else {
@@ -333,9 +326,17 @@ void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
             intr_matrix_set(esp_intr_get_cpu(intr_handle), intr_source, esp_intr_get_intno(intr_handle));
         }
         if(timer->group){
+#if CONFIG_IDF_TARGET_ESP32
             TIMERG1.int_ena.val |= BIT(timer->timer);
+#else
+            TIMERG1.int_ena_timers.val |= BIT(timer->timer);
+#endif
         } else {
+#if CONFIG_IDF_TARGET_ESP32
             TIMERG0.int_ena.val |= BIT(timer->timer);
+#else
+            TIMERG0.int_ena_timers.val |= BIT(timer->timer);
+#endif
         }
     }
     if(intr_handle){

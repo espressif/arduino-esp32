@@ -46,17 +46,12 @@
 //--------------------------------------------------------------------+
 // EHCI CONFIGURATION & CONSTANTS
 //--------------------------------------------------------------------+
-#define	EHCI_CFG_FRAMELIST_SIZE_BITS		7			/// Framelist Size (NXP specific) (0:1024) - (1:512) - (2:256) - (3:128) - (4:64) - (5:32) - (6:16) - (7:8)
-#define EHCI_FRAMELIST_SIZE             (1024 >> EHCI_CFG_FRAMELIST_SIZE_BITS)
 
 // TODO merge OHCI with EHCI
 enum {
   EHCI_MAX_ITD  = 4,
   EHCI_MAX_SITD = 16
 };
-
-//------------- Validation -------------//
-TU_VERIFY_STATIC(EHCI_CFG_FRAMELIST_SIZE_BITS <= 7, "incorrect value");
 
 //--------------------------------------------------------------------+
 // EHCI Data Structure
@@ -294,7 +289,7 @@ enum ehci_interrupt_mask_{
 
 enum ehci_usbcmd_pos_ {
   EHCI_USBCMD_POS_RUN_STOP               = 0,
-  EHCI_USBCMD_POS_FRAMELIST_SZIE         = 2,
+  EHCI_USBCMD_POS_FRAMELIST_SIZE         = 2,
   EHCI_USBCMD_POS_PERIOD_ENABLE          = 4,
   EHCI_USBCMD_POS_ASYNC_ENABLE           = 5,
   EHCI_USBCMD_POS_NXP_FRAMELIST_SIZE_MSB = 15,
@@ -411,7 +406,7 @@ typedef volatile struct
       uint32_t wake_on_over_current_enable : 1; ///< Enables over-current conditions as wake-up events
       uint32_t nxp_phy_clock_disable       : 1; ///< NXP customized: the PHY can be put into Low Power Suspend – Clock Disable when the downstream device has been put into suspend mode or when no downstream device is connected. Low power suspend is completely under the control of software. 0: enable PHY clock, 1: disable PHY clock
       uint32_t nxp_port_force_fullspeed    : 1; ///< NXP customized: Writing this bit to a 1 will force the port to only connect at Full Speed. It disables the chirp sequence that allowsthe port to identify itself as High Speed. This is useful for testing FS configurations with a HS host, hub or device.
-      uint32_t                             : 1;
+      uint32_t TU_RESERVED                 : 1;
       uint32_t nxp_port_speed              : 2; ///< NXP customized: This register field indicates the speed atwhich the port is operating. For HS mode operation in the host controllerand HS/FS operation in the device controller the port routing steers data to the Protocol engine. For FS and LS mode operation in the host controller, the port routing steers data to the Protocol Engine w/ Embedded Transaction Translator. 0x0: Fullspeed, 0x1: Lowspeed, 0x2: Highspeed
       uint32_t TU_RESERVED                 : 4;
     }portsc_bm;
