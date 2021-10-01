@@ -15,6 +15,7 @@
 
 #if CONFIG_TINYUSB_ENABLED
 
+#include "pins_arduino.h"
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "common/tusb_common.h"
