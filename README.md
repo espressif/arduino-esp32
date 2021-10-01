@@ -43,7 +43,7 @@ You can use [Arduino-ESP32 Online Documentation](https://docs.espressif.com/proj
 You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder) to get meaningful call trace.
 
 ### Issue/Bug report template
-Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labelled as [for reference](https://github.com/espressif/arduino-esp32/issues?utf8=%E2%9C%93&q=is%3Aissue%20label%3A%22for%20reference%22%20).
+Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labelled as [Type: For reference](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue+label%3A%22Type%3A+For+reference%22+).
 
 Finally, if you are sure no one else had the issue, follow the [issue template](docs/ISSUE_TEMPLATE.md) while reporting any issue.
 

@@ -76,6 +76,8 @@ void serialEvent2(void) {}
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 HardwareSerial Serial0(0);
+#elif ARDUINO_HW_CDC_ON_BOOT
+HardwareSerial Serial0(0);
 #else
 HardwareSerial Serial(0);
 #endif
@@ -90,6 +92,8 @@ HardwareSerial Serial2(2);
 void serialEventRun(void)
 {
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+    if(Serial0.available()) serialEvent();
+#elif ARDUINO_HW_CDC_ON_BOOT
     if(Serial0.available()) serialEvent();
 #else
     if(Serial.available()) serialEvent();
