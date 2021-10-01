@@ -9,6 +9,7 @@
 #include "esp_err.h"
 #include "esp_lcd_types.h"
 #include "soc/soc_caps.h"
+#include "hal/lcd_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +42,7 @@ typedef struct {
  * @brief LCD RGB panel configuration structure
  */
 typedef struct {
+    lcd_clock_source_t clk_src;   /*!< Clock source for the RGB LCD peripheral */
     esp_lcd_rgb_timing_t timings; /*!< RGB timing parameters */
     size_t data_width;            /*!< Number of data lines */
     int hsync_gpio_num;           /*!< GPIO used for HSYNC signal */
@@ -54,6 +56,7 @@ typedef struct {
     struct {
         unsigned int disp_active_low: 1; /*!< If this flag is enabled, a low level of display control signal can turn the screen on; vice versa */
         unsigned int relax_on_idle: 1;   /*!< If this flag is enabled, the host won't refresh the LCD if nothing changed in host's frame buffer (this is usefull for LCD with built-in GRAM) */
+        unsigned int fb_in_psram: 1;     /*!< If this flag is enabled, the frame buffer will be allocated from PSRAM preferentially */
     } flags;
 } esp_lcd_rgb_panel_config_t;
 

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 /* ESP32S2 Linker Script Memory Layout
 
    This file describes the memory layout (memory blocks) by virtual memory addresses.
@@ -13,6 +18,17 @@
  */
        
 /* List of deprecated options */
+/*
+ * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/* CPU instruction prefetch padding size for flash mmap scenario */
+_esp_flash_mmap_prefetch_pad_size = 16;
+/* CPU instruction prefetch padding size for memory protection scenario */
+_esp_memprot_prefetch_pad_size = 16;
+/* Memory alignment size for PMS */
+_esp_memprot_align_size = 4;
 MEMORY
 {
   /* All these values assume the flash cache is on, and have the blocks this uses subtracted from the length
@@ -46,6 +62,9 @@ MEMORY
                                      len = 0x2000 - 0
   /* RTC fast memory (same block as above), viewed from data bus */
   rtc_data_seg(RW) : org = 0x3ff9e000, len = 0x2000 - (0x10)
+  /* external memory, covers the dport, dram0, dram1 cacheable address space */
+  extern_ram_seg(RWX) : org = 0x3F500000,
+                                     len = 0xA80000
 }
 _static_data_end = _bss_end;
 _heap_end = 0x40000000;

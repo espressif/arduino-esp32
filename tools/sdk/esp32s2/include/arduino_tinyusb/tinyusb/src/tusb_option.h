@@ -28,8 +28,8 @@
 #define _TUSB_OPTION_H_
 
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     10
-#define TUSB_VERSION_REVISION  1
+#define TUSB_VERSION_MINOR     11
+#define TUSB_VERSION_REVISION  0
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
 //--------------------------------------------------------------------+
@@ -108,6 +108,7 @@
 
 // NXP Kinetis
 #define OPT_MCU_MKL25ZXX         1200 ///< NXP MKL25Zxx
+#define OPT_MCU_K32L2BXX         1201 ///< NXP K32L2Bxx
 
 // Silabs
 #define OPT_MCU_EFM32GG          1300 ///< Silabs EFM32GG
@@ -117,9 +118,13 @@
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
 #define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
+#define OPT_MCU_RX72N            1402 ///< Renesas RX72N
 
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
+
+// GigaDevice
+#define OPT_MCU_GD32VF103        1600 ///< GigaDevice GD32VF103
 
 //--------------------------------------------------------------------+
 // Supported OS
@@ -198,12 +203,18 @@
   #define CFG_TUSB_MEM_SECTION
 #endif
 
+// alignment requirement of buffer used for endpoint transferring
 #ifndef CFG_TUSB_MEM_ALIGN
   #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
 
+// OS selection
 #ifndef CFG_TUSB_OS
   #define CFG_TUSB_OS             OPT_OS_NONE
+#endif
+
+#ifndef CFG_TUSB_OS_INC_PATH
+  #define CFG_TUSB_OS_INC_PATH
 #endif
 
 //--------------------------------------------------------------------
@@ -262,14 +273,8 @@
 // HOST OPTIONS
 //--------------------------------------------------------------------
 #if TUSB_OPT_HOST_ENABLED
-  #ifndef CFG_TUSB_HOST_DEVICE_MAX
-    #define CFG_TUSB_HOST_DEVICE_MAX 1
-    #warning CFG_TUSB_HOST_DEVICE_MAX is not defined, default value is 1
-  #endif
-
-  //------------- HUB CLASS -------------//
-  #if CFG_TUH_HUB && (CFG_TUSB_HOST_DEVICE_MAX == 1)
-    #error There is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
+  #ifndef CFG_TUH_DEVICE_MAX
+    #define CFG_TUH_DEVICE_MAX 1
   #endif
 
   #ifndef CFG_TUH_ENUMERATION_BUFSIZE
