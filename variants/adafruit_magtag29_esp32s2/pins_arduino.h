@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 
-#define USB_VID 0x239A
-#define USB_PID 0x80DF
-#define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "EPD MagTag 2.9\" ESP32-S2"
-#define USB_SERIAL ""
+#define USB_VID            0x239A
+#define USB_PID            0x80E5
+#define USB_MANUFACTURER   "Adafruit"
+#define USB_PRODUCT        "EPD MagTag 2.9\" ESP32-S2"
+#define USB_SERIAL         "" // Empty string for MAC adddress
 
 
 #define EXTERNAL_NUM_INTERRUPTS 46
@@ -19,22 +19,31 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-static const uint8_t PIN_NEOPIXEL = 1;  // D1
-static const uint8_t NEOPIXEL_POWER = 21;
+#define LED_BUILTIN         13
 
-static const uint8_t LED_BUILTIN = 13;
+#define PIN_NEOPIXEL        1    // D1
+#define NEOPIXEL_NUM        4    // number of neopixels
+#define NEOPIXEL_POWER      21   // power pin
+#define NEOPIXEL_POWER_ON   LOW  // power pin state when on
 
-static const uint8_t EPD_BUSY = 5;
+
+#define PIN_BUTTON1         15
+#define PIN_BUTTON2         14
+#define PIN_BUTTON3         12
+#define PIN_BUTTON4         11
+#define PIN_BUTTON5         0  // BOOT0 switch
+
+static const uint8_t EPD_BUSY  = 5;
 static const uint8_t EPD_RESET = 6;
-static const uint8_t EPD_DC = 7;
-static const uint8_t EPD_CS = 8;
+static const uint8_t EPD_DC    = 7;
+static const uint8_t EPD_CS    = 8;
 
 static const uint8_t ACCEL_IRQ = 9;
 
-static const uint8_t BUTTON_A = 15;
-static const uint8_t BUTTON_B = 14;
-static const uint8_t BUTTON_C = 12;
-static const uint8_t BUTTON_D = 11;
+static const uint8_t BUTTON_A = PIN_BUTTON1;
+static const uint8_t BUTTON_B = PIN_BUTTON2;
+static const uint8_t BUTTON_C = PIN_BUTTON3;
+static const uint8_t BUTTON_D = PIN_BUTTON4;
 
 static const uint8_t LIGHT_SENSOR = 3;
 static const uint8_t BATT_MONITOR = 4;
@@ -52,8 +61,8 @@ static const uint8_t MISO  = 37;
 
 
 
-static const uint8_t TX = 37;
-static const uint8_t RX = 38;
+static const uint8_t TX = 43;
+static const uint8_t RX = 44;
 
 
 static const uint8_t A0 = 17;
