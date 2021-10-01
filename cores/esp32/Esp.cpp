@@ -38,6 +38,7 @@ extern "C" {
 #define ESP_FLASH_IMAGE_BASE 0x1000     // Flash offset containing flash size and spi mode
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/spi_flash.h"
+#include "soc/efuse_reg.h"
 #define ESP_FLASH_IMAGE_BASE 0x1000
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/spi_flash.h"
@@ -270,7 +271,17 @@ const char * EspClass::getChipModel(void)
             return "Unknown";
     }
 #elif CONFIG_IDF_TARGET_ESP32S2
-    return "ESP32-S2";
+    uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    switch (pkg_ver) {
+    case 0:
+      return "ESP32-S2";
+    case 1:
+      return "ESP32-S2FH16";
+    case 2:
+      return "ESP32-S2FH32";
+    default:
+      return "ESP32-S2 (Unknown)";
+    }
 #elif CONFIG_IDF_TARGET_ESP32S3
     return "ESP32-S3";
 #elif CONFIG_IDF_TARGET_ESP32C3
