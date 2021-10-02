@@ -18,6 +18,17 @@
  */
        
 /* List of deprecated options */
+/*
+ * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/* CPU instruction prefetch padding size for flash mmap scenario */
+_esp_flash_mmap_prefetch_pad_size = 16;
+/* CPU instruction prefetch padding size for memory protection scenario */
+_esp_memprot_prefetch_pad_size = 16;
+/* Memory alignment size for PMS */
+_esp_memprot_align_size = 4;
 MEMORY
 {
   /* All these values assume the flash cache is on, and have the blocks this uses subtracted from the length

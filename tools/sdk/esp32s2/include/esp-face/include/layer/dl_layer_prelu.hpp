@@ -36,7 +36,7 @@ namespace dl
              * @param inplace              true: the output will store to input0
              *                             false: the output will store to a seperate memeory
              */
-            PReLU(const feature_t *activation_element, const int activation_exponent = 0, const char *name = NULL, bool inplace = false) : Layer(name)
+            PReLU(const feature_t *activation_element, const int activation_exponent = 0, const char *name = NULL, bool inplace = false) : Layer(name), output(NULL)
             {
                 this->activation_element = activation_element;
                 this->activation_exponent = activation_exponent;
