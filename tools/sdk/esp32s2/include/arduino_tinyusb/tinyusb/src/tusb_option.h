@@ -203,12 +203,18 @@
   #define CFG_TUSB_MEM_SECTION
 #endif
 
+// alignment requirement of buffer used for endpoint transferring
 #ifndef CFG_TUSB_MEM_ALIGN
   #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
 
+// OS selection
 #ifndef CFG_TUSB_OS
   #define CFG_TUSB_OS             OPT_OS_NONE
+#endif
+
+#ifndef CFG_TUSB_OS_INC_PATH
+  #define CFG_TUSB_OS_INC_PATH
 #endif
 
 //--------------------------------------------------------------------

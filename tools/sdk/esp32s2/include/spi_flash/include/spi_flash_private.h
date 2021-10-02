@@ -26,6 +26,8 @@
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/spi_flash.h"
 #endif
+#include "esp_flash.h"
+#include "hal/spi_flash_hal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,10 +84,21 @@ void esp_mspi_pin_init(void);
 void spi_flash_set_rom_required_regs(void);
 
 /**
- * @brief Get MSPI Flash necessary timing related config
- * @param config see `spi_timing_flash_config_t`
+ * @brief Initialize main flash
+ * @param chip Pointer to main SPI flash(SPI1 CS0) chip to use..
  */
-void spi_timing_get_flash_regs(spi_timing_flash_config_t *config);
+esp_err_t esp_flash_init_main(esp_flash_t *chip);
+
+/**
+ * @brief Should be only used by SPI1 Flash driver to know the necessary timing registers
+ * @param out_timing_config Pointer to timing_tuning parameters.
+ */
+void spi_timing_get_flash_timing_param(spi_flash_hal_timing_config_t *out_timing_config);
+
+/**
+ * @brief Judge if the flash in tuned
+ */
+bool spi_timine_config_flash_is_tuned(void);
 
 #ifdef __cplusplus
 }

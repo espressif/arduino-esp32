@@ -39,10 +39,9 @@ namespace dl
              *                        false: the output will store to a seperate memeory
              */
             Mul2D(const int output_exponent, const Activation<feature_t> *activation = NULL, const char *name = NULL, bool inplace = false) : Layer(name), 
-                                                                                            output_exponent(output_exponent),activation(activation)
+                                                                                            output_exponent(output_exponent),activation(activation), output(NULL)
             {
                 this->inplace = inplace;
-                this->output_exponent = output_exponent;
             }
 
             /**

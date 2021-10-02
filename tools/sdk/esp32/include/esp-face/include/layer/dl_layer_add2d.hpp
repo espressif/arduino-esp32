@@ -37,7 +37,7 @@ namespace dl
              * @param inplace         true: the output will store to input0
              *                        false: the output will store to a seperate memeory
              */
-            Add2D(const int output_exponent, const Activation<feature_t> *activation = NULL, const char *name = NULL, bool inplace = false) : Layer(name), activation(activation), output_exponent(output_exponent)
+            Add2D(const int output_exponent, const Activation<feature_t> *activation = NULL, const char *name = NULL, bool inplace = false) : Layer(name), activation(activation), output_exponent(output_exponent), output(NULL)
             {
                 this->inplace = inplace;
             }

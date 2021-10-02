@@ -62,63 +62,40 @@ void tud_cdc_rx_cb(uint8_t itf)
 
 // Invoked when received send break
 void tud_cdc_send_break_cb(uint8_t itf, uint16_t duration_ms){
-    //isr_log_v("itf: %u, duration_ms: %u", itf, duration_ms);
+    //log_v("itf: %u, duration_ms: %u", itf, duration_ms);
 }
 
 // Invoked when space becomes available in TX buffer
 void tud_cdc_tx_complete_cb(uint8_t itf){
-    if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL && devices[itf]->tx_sem != NULL){
-        xSemaphoreGive(devices[itf]->tx_sem);
+    if(itf < MAX_USB_CDC_DEVICES && devices[itf] != NULL){
         devices[itf]->_onTX();
     }
 }
 
-static size_t tinyusb_cdc_write(uint8_t itf, const uint8_t *buffer, size_t size){
-    if(itf >= MAX_USB_CDC_DEVICES || devices[itf] == NULL || devices[itf]->tx_sem == NULL){
-        return 0;
+static void ARDUINO_ISR_ATTR cdc0_write_char(char c){
+    if(devices[0] != NULL){
+        devices[0]->write(c);
     }
-    if(!tud_cdc_n_connected(itf)){
-        return 0;
-    }
-    size_t tosend = size, sofar = 0;
-    while(tosend){
-        uint32_t space = tud_cdc_n_write_available(itf);
-        if(!space){
-            //make sure that we do not get previous semaphore
-            xSemaphoreTake(devices[itf]->tx_sem, 0);
-            //wait for tx_complete
-            if(xSemaphoreTake(devices[itf]->tx_sem, 200 / portTICK_PERIOD_MS) == pdTRUE){
-                space = tud_cdc_n_write_available(itf);
-            }
-            if(!space){
-                return sofar;
-            }
-        }
-        if(tosend < space){
-            space = tosend;
-        }
-        uint32_t sent = tud_cdc_n_write(itf, buffer + sofar, space);
-        if(!sent){
-            return sofar;
-        }
-        sofar += sent;
-        tosend -= sent;
-        tud_cdc_n_write_flush(itf);
-        //xSemaphoreTake(devices[itf]->tx_sem, portMAX_DELAY);
-    }
-    return sofar;
-}
-
-static void ARDUINO_ISR_ATTR cdc0_write_char(char c)
-{
-    tinyusb_cdc_write(0, (const uint8_t *)&c, 1);
 }
 
 static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) : tx_sem(NULL), itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false),  rts(false), connected(false), reboot_enable(true), rx_queue(NULL) {
+USBCDC::USBCDC(uint8_t itfn) 
+: itf(itfn)
+, bit_rate(0)
+, stop_bits(0)
+, parity(0)
+, data_bits(0)
+, dtr(false)
+, rts(false)
+, connected(false)
+, reboot_enable(true)
+, rx_queue(NULL)
+, tx_lock(NULL)
+, tx_timeout_ms(250)
+{
     tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
     if(itf < MAX_USB_CDC_DEVICES){
         arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
@@ -153,9 +130,8 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
 
 void USBCDC::begin(unsigned long baud)
 {
-    if(tx_sem == NULL){
-        tx_sem = xSemaphoreCreateBinary();
-        xSemaphoreTake(tx_sem, 0);
+    if(tx_lock == NULL) {
+        tx_lock = xSemaphoreCreateMutex();
     }
     setRxBufferSize(256);//default if not preset
     devices[itf] = this;
@@ -166,10 +142,13 @@ void USBCDC::end()
     connected = false;
     devices[itf] = NULL;
     setRxBufferSize(0);
-    if (tx_sem != NULL) {
-        vSemaphoreDelete(tx_sem);
-        tx_sem = NULL;
+    if(tx_lock != NULL) {
+        vSemaphoreDelete(tx_lock);
     }
+}
+
+void USBCDC::setTxTimeoutMs(uint32_t timeout){
+    tx_timeout_ms = timeout;
 }
 
 void USBCDC::_onUnplugged(void){
@@ -336,23 +315,73 @@ size_t USBCDC::read(uint8_t *buffer, size_t size)
 
 void USBCDC::flush(void)
 {
-    if(itf >= MAX_USB_CDC_DEVICES || tx_sem == NULL){
+    if(itf >= MAX_USB_CDC_DEVICES || tx_lock == NULL || !tud_cdc_n_connected(itf)){
+        return;
+    }
+    if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
     }
     tud_cdc_n_write_flush(itf);
+    xSemaphoreGive(tx_lock);
 }
 
 int USBCDC::availableForWrite(void)
 {
-    if(itf >= MAX_USB_CDC_DEVICES || tx_sem == NULL){
-        return -1;
+    if(itf >= MAX_USB_CDC_DEVICES || tx_lock == NULL || !tud_cdc_n_connected(itf)){
+        return 0;
     }
-    return tud_cdc_n_write_available(itf);
+    if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
+        return 0;
+    }
+    size_t a = tud_cdc_n_write_available(itf);
+    xSemaphoreGive(tx_lock);
+    return a;
 }
 
 size_t USBCDC::write(const uint8_t *buffer, size_t size)
 {
-    return tinyusb_cdc_write(itf, buffer, size);
+    if(itf >= MAX_USB_CDC_DEVICES || tx_lock == NULL || buffer == NULL || size == 0 || !tud_cdc_n_connected(itf)){
+        return 0;
+    }
+    if(xPortInIsrContext()){
+        BaseType_t taskWoken = false;
+        if(xSemaphoreTakeFromISR(tx_lock, &taskWoken) != pdPASS){
+            return 0;
+        }
+    } else if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
+        return 0;
+    }
+    size_t to_send = size, so_far = 0;
+    while(to_send){
+        if(!tud_cdc_n_connected(itf)){
+            size = so_far;
+            break;
+        }
+        size_t space = tud_cdc_n_write_available(itf);
+        if(!space){
+            tud_cdc_n_write_flush(itf);
+            continue;
+        }
+        if(space > to_send){
+            space = to_send;
+        }
+        size_t sent = tud_cdc_n_write(itf, buffer+so_far, space);
+        if(sent){
+            so_far += sent;
+            to_send -= sent;
+            tud_cdc_n_write_flush(itf);
+        } else {
+            size = so_far;
+            break;
+        }
+    }
+    if(xPortInIsrContext()){
+        BaseType_t taskWoken = false;
+        xSemaphoreGiveFromISR(tx_lock, &taskWoken);
+    } else {
+        xSemaphoreGive(tx_lock);
+    }
+    return size;
 }
 
 size_t USBCDC::write(uint8_t c)

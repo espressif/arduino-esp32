@@ -34,7 +34,7 @@ namespace dl
              * @param inplace         true: the output will store to input0
              *                        false: the output will store to a seperate memeory
              */
-            Min2D(const char *name = NULL, bool inplace = false) : Layer(name)
+            Min2D(const char *name = NULL, bool inplace = false) : Layer(name), output(NULL)
             {
                 this->inplace = inplace;
             }
