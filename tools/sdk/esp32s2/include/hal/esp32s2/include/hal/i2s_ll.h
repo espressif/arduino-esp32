@@ -101,7 +101,6 @@ static inline void i2s_ll_enable_clock(i2s_dev_t *hw)
  * @brief I2S module disable clock.
  *
  * @param hw Peripheral I2S hardware instance address.
- * @param enable Set true to enable tx msb right
  */
 static inline void i2s_ll_disable_clock(i2s_dev_t *hw)
 {

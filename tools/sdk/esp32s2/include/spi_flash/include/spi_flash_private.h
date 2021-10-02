@@ -34,18 +34,6 @@ extern "C" {
 #endif
 
 /**
- * This struct provide MSPI Flash necessary timing related config
- */
-typedef struct {
-    uint8_t flash_clk_div;      /*!< clock divider of Flash module. */
-    uint8_t flash_extra_dummy;  /*!< timing required extra dummy length for Flash */
-    bool    flash_setup_en;     /*!< SPI0/1 Flash setup enable or not */
-    uint8_t flash_setup_time;   /*!< SPI0/1 Flash setup time. This value should be set to register directly */
-    bool    flash_hold_en;      /*!< SPI0/1 Flash hold enable or not */
-    uint8_t flash_hold_time;    /*!< SPI0/1 Flash hold time. This value should be set to register directly */
-} spi_timing_flash_config_t;
-
-/**
  * @brief Register ROM functions and init flash device registers to make use of octal flash
  */
 esp_err_t esp_opiflash_init(void);

@@ -106,7 +106,6 @@ typedef struct {
  * @brief Reset I2S RX channel
  *
  * @param hal Context of the HAL layer
- * @param i2s_num The uart port number, the max port number is (I2S_NUM_MAX -1)
  */
 #define i2s_hal_reset_rx(hal)                   i2s_ll_rx_reset((hal)->dev)
 
@@ -114,7 +113,6 @@ typedef struct {
  * @brief Reset I2S RX fifo
  *
  * @param hal Context of the HAL layer
- * @param sel The source clock index
  */
 #define i2s_hal_reset_rx_fifo(hal)              i2s_ll_rx_reset_fifo((hal)->dev)
 
@@ -227,7 +225,6 @@ void i2s_hal_enable_slave_fd_mode(i2s_hal_context_t *hal);
  */
 #define i2s_hal_set_rx_sample_bit(hal, chan_bit, data_bit)  i2s_ll_rx_set_sample_bit((hal)->dev, chan_bit, data_bit)
 
-#if SOC_I2S_SUPPORTS_PCM
 /**
  * @brief Configure I2S TX module clock devider
  *
@@ -268,7 +265,6 @@ void i2s_hal_rx_clock_config(i2s_hal_context_t *hal, i2s_hal_clock_cfg_t *clk_cf
  */
 #define i2s_hal_tx_enable_slave_mode(hal, enable)   i2s_ll_tx_set_slave_mod((hal)->dev, enable)
 
-#if SOC_I2S_SUPPORTS_PDM_TX
 /**
  * @brief Enable I2S rx slave mode
  *
@@ -281,8 +277,6 @@ void i2s_hal_rx_clock_config(i2s_hal_context_t *hal, i2s_hal_clock_cfg_t *clk_cf
  * @brief Enable loopback mode
  *
  * @param hal Context of the HAL layer
- * @return
- *        - fp configuration paramater
  */
 #define i2s_hal_enable_sig_loopback(hal)    i2s_ll_share_bck_ws((hal)->dev, true)
 
