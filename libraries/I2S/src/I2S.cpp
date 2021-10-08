@@ -164,7 +164,7 @@ int I2SClass::_installDriver(){
     #endif
   }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
-           _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal mode
+           _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal Philips mode
     if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
       if(_bitsPerSample == 8){
         log_e("ESP unfortunately does not support 8 bits per sample");
@@ -176,8 +176,7 @@ int I2SClass::_installDriver(){
     if(_bitsPerSample == 24){
       log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
     }
-
-  }else if(_mode == I2S_PDM){
+  }else if(_mode == I2S_PDM){ // end of Normal Philips mode; start of PDM mode
     #if SOC_I2S_SUPPORTS_PDM
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
     #else
@@ -197,18 +196,24 @@ int I2SClass::_installDriver(){
     .use_apll = false
   };
   // Install and start i2s driver
+  // TODO solve possible infinite loop
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
     // double buffer size
-    log_w("WARNING i2s driver install failed; Trying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
     if(2*_i2s_dma_buffer_size <= 1024){
+      log_w("WARNING i2s driver install failed; Trying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
       setBufferSize(2*_i2s_dma_buffer_size);
     }else if(_i2s_dma_buffer_size < 1024){
+      log_w("WARNING i2s driver install failed; Trying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
       setBufferSize(1024);
     }else{
         log_e("ERROR i2s driver install failed");
         return 0; // ERR
     }
   } //try installing with increasing size
+
+  if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE){ // end of Normal Philips mode; start of mono/single channel
+    esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO);
+  }
 
 #if SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_ADC_DAC){
@@ -245,14 +250,13 @@ int I2SClass::_installDriver(){
     _initialized = true;
   }else // End of ADC/DAC mode
 #endif // SOC_I2S_SUPPORTS_ADC_DAC
-  if(_mode == I2S_PHILIPS_MODE){ // if Normal mode
-    _initialized = true;
+  if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE){ // if I2S mode
+    _initialized = true; // must be _initialized before calling _applyPinSetting
     if(!_applyPinSetting()){
       end();
       return 0; // ERR
     }
-  } // if _mode == ?
-
+  } // if I2S _mode
   return 1; // OK
 }
 
@@ -293,16 +297,15 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   // TODO implement left / right justified modes
   switch (mode) {
     case I2S_PHILIPS_MODE:
+    case I2S_RIGHT_JUSTIFIED_MODE:
+    case I2S_LEFT_JUSTIFIED_MODE:
 #if SOC_I2S_SUPPORTS_ADC_DAC
     case I2S_ADC_DAC:
 #endif
     case I2S_PDM:
       break;
 
-    case I2S_RIGHT_JUSTIFIED_MODE: // normally this should work, but i don't how to set it up for ESP
-    case I2S_LEFT_JUSTIFIED_MODE: // normally this should work, but i don't how to set it up for ESP
-    default:
-      // invalid mode
+    default: // invalid mode
       log_e("ERROR I2SClass::begin() unknown mode");
       _give_if_top_call();
       return 0; // ERR
@@ -704,6 +707,7 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
         _give_if_top_call();
         return size;
       }else{
+        log_w("I2S could not write all data into ring buffer!");
         _give_if_top_call();
         return 0;
       }
@@ -896,8 +900,8 @@ void I2SClass::_onTransferComplete(){
   xQueueAddToSet(_task_kill_cmd_semaphore_handle, xQueueSet);
 
   while(true){
-    //xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY); // defaul
-    xActivatedMember = xQueueSelectFromSet(xQueueSet, 5); // hack
+    //xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY); // default
+    xActivatedMember = xQueueSelectFromSet(xQueueSet, 1); // hack
     // TODO try just queue receive at the timeout
     if(xActivatedMember == _task_kill_cmd_semaphore_handle){
       xSemaphoreTake(_task_kill_cmd_semaphore_handle, 0);
@@ -912,8 +916,7 @@ void I2SClass::_onTransferComplete(){
          _rx_done_routine();
         } // RX Done
       } // queue not empty
-    }else{
-    }
+    } // activated member of queue set
   } // infinite loop
   _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
 }
@@ -932,7 +935,7 @@ void I2SClass::_take_if_not_holding(){
 
   // we are not holding the mutex - wait for it and take it
   if(xSemaphoreTake(_i2s_general_mutex, portMAX_DELAY) != pdTRUE ){
-    log_e("I2S internal mutex take returned with error")
+    log_e("I2S internal mutex take returned with error");
   }
   //_give_if_top_call(); // call after this function
 }

@@ -38,9 +38,16 @@ const int halfWavelength = (sampleRate / frequency); // half wavelength of squar
 short sample = amplitude; // current sample value
 int count = 0;
 
-i2s_mode_t mode = I2S_PHILIPS_MODE;
-//i2s_mode_t mode = I2S_ADC_DAC;
+i2s_mode_t mode = I2S_PHILIPS_MODE; // I2S decoder is needed
+// i2s_mode_t mode = I2S_ADC_DAC; // Audio amplifier is needed
 
+// Mono channel input
+// This is ESP specific implementation -
+//   samples will be automatically copied to both channels inside I2S driver
+//   If you want to have true mono output use I2S_PHILIPS_MODE and interlay
+//   second channel with 0-value samples.
+//   The order of channels is RIGH followed by LEFT
+//i2s_mode_t mode = I2S_RIGHT_JUSTIFIED_MODE; // I2S decoder is needed
 
 void setup() {
   Serial.begin(115200);
@@ -60,9 +67,11 @@ void loop() {
       sample = -1 * sample;
     }
 
-    I2S.write(sample);
-    // write the same sample twice, once for left and once for the right channel
-    if(mode == I2S_PHILIPS_MODE){
+    if(mode == I2S_PHILIPS_MODE){ // write the same sample twice, once for Righ and once for Left channel
+      I2S.write(sample); // Right channel
+      I2S.write(sample); // Left channel
+    }else if(mode == I2S_RIGHT_JUSTIFIED_MODE || mode == I2S_LEFT_JUSTIFIED_MODE){
+      // write the same only once - it will be automatically copied to the other channel
       I2S.write(sample);
     }
 
