@@ -40,6 +40,7 @@ class Stream: public Print
 protected:
     unsigned long _timeout;      // number of milliseconds to wait for the next char before aborting timed read
     unsigned long _startMillis;  // used for timeout measurement
+    bool _readError;
     int timedRead();    // private method to read stream with timeout
     int timedPeek();    // private method to peek stream with timeout
     int peekNextDigit(); // returns the next numeric digit in the stream or -1 if timeout
@@ -118,6 +119,9 @@ public:
     virtual String readString();
     String readStringUntil(char terminator);
 
+    int getReadError() { return _readError; }
+	void clearReadError() { setReadError(0); }
+
 protected:
     long parseInt(char skipChar); // as above but the given skipChar is ignored
     // as above but the given skipChar is ignored
@@ -131,9 +135,11 @@ protected:
       size_t index;     // index used by the search routine.
     };
 
-  // This allows you to search for an arbitrary number of strings.
-  // Returns index of the target that is found first or -1 if timeout occurs.
-  int findMulti(struct MultiTarget *targets, int tCount);
+    // This allows you to search for an arbitrary number of strings.
+    // Returns index of the target that is found first or -1 if timeout occurs.
+    int findMulti(struct MultiTarget *targets, int tCount);
+
+    void setReadError(int err = 1) { _readError = err; }
 
 };
 

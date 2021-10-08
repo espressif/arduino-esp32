@@ -129,8 +129,9 @@ int Stream::findMulti( struct Stream::MultiTarget *targets, int tCount) {
 
   while (1) {
     int c = timedRead();
-    if (c < 0)
-      return -1;
+    if (c < 0){
+        return -1;
+    }
 
     for (struct MultiTarget *t = targets; t < targets+tCount; ++t) {
       // the simple case is if we match, deal with that first.
@@ -203,6 +204,7 @@ long Stream::parseInt(char skipChar)
     c = peekNextDigit();
     // ignore non numeric leading characters
     if(c < 0) {
+        setReadError();
         return 0;    // zero returned if timeout
     }
 
@@ -243,6 +245,7 @@ float Stream::parseFloat(char skipChar)
     c = peekNextDigit();
     // ignore non numeric leading characters
     if(c < 0) {
+        setReadError();
         return 0;    // zero returned if timeout
     }
 
@@ -304,7 +307,11 @@ size_t Stream::readBytesUntil(char terminator, char *buffer, size_t length)
     size_t index = 0;
     while(index < length) {
         int c = timedRead();
-        if(c < 0 || c == terminator) {
+        if(c == terminator) {
+            break;
+        }
+        else if(c < 0){
+            setReadError();
             break;
         }
         *buffer++ = (char) c;
@@ -331,6 +338,9 @@ String Stream::readStringUntil(char terminator)
     while(c >= 0 && c != terminator) {
         ret += (char) c;
         c = timedRead();
+    }
+    if(c < 0){
+        setReadError();
     }
     return ret;
 }
