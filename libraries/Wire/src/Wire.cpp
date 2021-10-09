@@ -30,6 +30,7 @@ extern "C" {
 }
 
 #include "esp32-hal-i2c.h"
+#include "esp32-hal-i2c-slave.h"
 #include "Wire.h"
 #include "Arduino.h"
 
@@ -47,6 +48,9 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,nonStopTask(NULL)
     ,lock(NULL)
 #endif
+    ,is_slave(false)
+    ,user_onRequest(NULL)
+    ,user_onReceive(NULL)
 {}
 
 TwoWire::~TwoWire()
@@ -401,6 +405,103 @@ uint8_t TwoWire::endTransmission(void)
 {
     return endTransmission(true);
 }
+
+bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
+{
+    if(!frequency){
+        frequency = 100000;
+    } else if(frequency > 1000000){
+        frequency = 1000000;
+    }
+
+    if(sdaPin < 0) { // default param passed
+        if(num == 0) {
+            if(sda==-1) {
+                sdaPin = SDA;    //use Default Pin
+            } else {
+                sdaPin = sda;    // reuse prior pin
+            }
+        } else {
+            if(sda==-1) {
+                log_e("no Default SDA Pin for Second Peripheral");
+                return false; //no Default pin for Second Peripheral
+            } else {
+                sdaPin = sda;    // reuse prior pin
+            }
+        }
+    }
+
+    if(sclPin < 0) { // default param passed
+        if(num == 0) {
+            if(scl == -1) {
+                sclPin = SCL;    // use Default pin
+            } else {
+                sclPin = scl;    // reuse prior pin
+            }
+        } else {
+            if(scl == -1) {
+                log_e("no Default SCL Pin for Second Peripheral");
+                return false; //no Default pin for Second Peripheral
+            } else {
+                sclPin = scl;    // reuse prior pin
+            }
+        }
+    }
+
+    sda = sdaPin;
+    scl = sclPin;
+    i2c_slave_attach_callbacks(num, onRequestService, onReceiveService, this);
+    if(i2c_slave_init(num, sda, scl, addr, frequency, I2C_BUFFER_LENGTH, I2C_BUFFER_LENGTH) != ESP_OK){
+        Serial.println("INIT ERROR");
+        return false;
+    }
+    is_slave = true;
+    return true;
+}
+
+size_t TwoWire::slaveWrite(const uint8_t * buffer, size_t len)
+{
+    return i2c_slave_write(num, buffer, len, _timeOutMillis);
+}
+
+void TwoWire::onReceiveService(uint8_t num, uint8_t* inBytes, size_t numBytes, bool stop, void * arg)
+{
+    TwoWire * wire = (TwoWire*)arg;
+    if(!wire->user_onReceive){
+        return;
+    }
+    for(uint8_t i = 0; i < numBytes; ++i){
+        wire->rxBuffer[i] = inBytes[i];    
+    }
+    wire->rxIndex = 0;
+    wire->rxLength = numBytes;
+    wire->user_onReceive(numBytes);
+}
+
+void TwoWire::onRequestService(uint8_t num, void * arg)
+{
+    TwoWire * wire = (TwoWire*)arg;
+    if(!wire->user_onRequest){
+        return;
+    }
+    wire->txLength = 0;
+    wire->user_onRequest();
+    if(wire->txLength){
+        wire->slaveWrite((uint8_t*)wire->txBuffer, wire->txLength);
+    }
+}
+
+void TwoWire::onReceive( void (*function)(int) )
+{
+  user_onReceive = function;
+}
+
+// sets function called on slave read
+void TwoWire::onRequest( void (*function)(void) )
+{
+  user_onRequest = function;
+}
+
 
 TwoWire Wire = TwoWire(0);
 TwoWire Wire1 = TwoWire(1);
