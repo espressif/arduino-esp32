@@ -68,41 +68,6 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   }
 }
 
-I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin, uint8_t outSdPin, uint8_t sckPin, uint8_t fsPin) : // set duplex
-  _deviceIndex(deviceIndex),
-  _sdPin(inSdPin),     // shared data pin
-  _inSdPin(inSdPin),   // input data pin
-  _outSdPin(outSdPin), // output data pin
-  _sckPin(sckPin),     // clock pin
-  _fsPin(fsPin),       // frame (word) select pin
-
-  _state(I2S_STATE_DUPLEX),
-  _bitsPerSample(0),
-  _sampleRate(0),
-  _mode(I2S_PHILIPS_MODE),
-
-  _buffer_byte_size(0),
-
-  _initialized(false),
-  _callbackTaskHandle(NULL),
-  _i2sEventQueue(NULL),
-  _task_kill_cmd_semaphore_handle(NULL),
-  _i2s_general_mutex(NULL),
-  _input_ring_buffer(NULL),
-  _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(1024),
-  _driveClock(true),
-  _nesting_counter(0),
-
-  _onTransmit(NULL),
-  _onReceive(NULL)
-{
-  _i2s_general_mutex = xSemaphoreCreateMutex();
-  if(_i2s_general_mutex == NULL){
-    log_e("I2S could not create internal mutex!");
-  }
-}
-
 int I2SClass::_createCallbackTask(){
   int stack_size = 10000;
   if(_callbackTaskHandle == NULL){
@@ -196,16 +161,15 @@ int I2SClass::_installDriver(){
     .use_apll = false
   };
   // Install and start i2s driver
-  // TODO solve possible infinite loop
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
-    // double buffer size
+    // increase buffer size
     if(2*_i2s_dma_buffer_size <= 1024){
       log_w("WARNING i2s driver install failed; Trying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
       setBufferSize(2*_i2s_dma_buffer_size);
     }else if(_i2s_dma_buffer_size < 1024){
       log_w("WARNING i2s driver install failed; Trying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
       setBufferSize(1024);
-    }else{
+    }else{ // install failed with max buffer size
         log_e("ERROR i2s driver install failed");
         return 0; // ERR
     }
@@ -661,19 +625,18 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size){
 }
 
 // blocking version of write
-// TODO add timeout
 size_t I2SClass::write_blocking(const void *buffer, size_t size){
   _take_if_not_holding();
   if(_initialized){
-    if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX) {
+    if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX){
       if(!_enableTransmitter()){
         _give_if_top_call();
         return 0; // There was an error switching to transmitter
       } // _enableTransmitter succeeded ?
     } // _state ?
-    // TODO add timeout
-    while(availableForWrite() < size){
-      yield();
+    uint8_t timeout = 10; // RTOS tics
+    while(availableForWrite() < size && timeout--){
+      vTaskDelay(1);
     }
     if(_output_ring_buffer != NULL){
       if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
@@ -900,9 +863,8 @@ void I2SClass::_onTransferComplete(){
   xQueueAddToSet(_task_kill_cmd_semaphore_handle, xQueueSet);
 
   while(true){
-    //xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY); // default
+    //xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY); // default - member was never selected even when present
     xActivatedMember = xQueueSelectFromSet(xQueueSet, 1); // hack
-    // TODO try just queue receive at the timeout
     if(xActivatedMember == _task_kill_cmd_semaphore_handle){
       xSemaphoreTake(_task_kill_cmd_semaphore_handle, 0);
       break; // from the infinite loop
@@ -1103,7 +1065,6 @@ int I2SClass::gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_
 
 #if I2S_INTERFACES_COUNT > 0
   I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
-  //I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SCK, PIN_I2S_FS); // full duplex
 #endif
 
 #if I2S_INTERFACES_COUNT > 1

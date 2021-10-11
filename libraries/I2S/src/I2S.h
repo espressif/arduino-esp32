@@ -40,7 +40,7 @@ namespace esp_i2s {
 #endif
 
 #ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 35 // Input if used in duplex
+  #define PIN_I2S_SD 35 // Pin 35 is only input!
 #endif
 
 #ifndef PIN_I2S_SD_OUT
@@ -60,7 +60,6 @@ class I2SClass : public Stream
 public:
   // the device index and pins must map to the "COM" pads in Table 6-1 of the datasheet
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin);
-  I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t inSdPin, uint8_t outSdPin, uint8_t sckPin, uint8_t fsPin); // set duplex
   // the SCK and FS pins are driven as outputs using the sample rate
   int begin(int mode, int sampleRate, int bitsPerSample);
   // the SCK and FS pins are inputs, other side controls sample rate
@@ -153,8 +152,7 @@ private:
 
   i2s_state_t _state;
   int _bitsPerSample;
-  uint32_t _sampleRate; //
-  //int _sampleRate;
+  uint32_t _sampleRate;
   int _mode;
 
   uint16_t _buffer_byte_size;
