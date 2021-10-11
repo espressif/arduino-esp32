@@ -181,6 +181,7 @@ static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)//not exposed by hal_ll
 }
 
 //-------------------------------------- PRIVATE (Function Prototypes) ------------------------------------------------
+static void i2c_slave_free_resources(i2c_slave_struct_t * i2c);
 static void i2c_slave_delay_us(uint64_t us);
 static void i2c_slave_gpio_mode(int8_t pin, gpio_mode_t mode);
 static bool i2c_slave_check_line_state(int8_t sda, int8_t scl);
@@ -199,7 +200,7 @@ static void i2c_slave_task(void *pv_args);
 //-------------------------------------- Public Functions -------------------------------------------------------------
 //=====================================================================================================================
 
-esp_err_t i2c_slave_attach_callbacks(uint8_t num, i2c_slave_request_cb_t request_callback, i2c_slave_receive_cb_t receive_callback, void * arg){
+esp_err_t i2cSlaveAttachCallbacks(uint8_t num, i2c_slave_request_cb_t request_callback, i2c_slave_receive_cb_t receive_callback, void * arg){
     if(num >= SOC_I2C_NUM){
         log_e("Invalid port num: %u", num);
         return ESP_ERR_INVALID_ARG;
@@ -213,57 +214,7 @@ esp_err_t i2c_slave_attach_callbacks(uint8_t num, i2c_slave_request_cb_t request
     return ESP_OK;
 }
 
-esp_err_t i2c_slave_deinit(uint8_t num){
-    if(num >= SOC_I2C_NUM){
-        log_e("Invalid port num: %u", num);
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
-    I2C_SLAVE_MUTEX_LOCK();
-    i2c_slave_detach_gpio(i2c);
-    i2c_ll_set_slave_addr(i2c->dev, 0, false);
-    i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-    i2c_ll_clr_intsts_mask(i2c->dev, I2C_LL_INTR_MASK);
-
-    if (i2c->intr_handle) {
-        esp_intr_free(i2c->intr_handle);
-        i2c->intr_handle = NULL;
-    }
-
-    if(i2c->task_handle){
-        vTaskDelete(i2c->task_handle);
-        i2c->task_handle = NULL;
-    }
-
-#if I2C_SLAVE_USE_RX_QUEUE
-    if (i2c->rx_queue) {
-        vQueueDelete(i2c->rx_queue);
-        i2c->rx_queue = NULL;
-    }
-#else
-    if (i2c->rx_ring_buf) {
-        vRingbufferDelete(i2c->rx_ring_buf);
-        i2c->rx_ring_buf = NULL;
-    }
-#endif
-
-    if (i2c->tx_queue) {
-        vQueueDelete(i2c->tx_queue);
-        i2c->tx_queue = NULL;
-    }
-
-    if (i2c->event_queue) {
-        vQueueDelete(i2c->event_queue);
-        i2c->event_queue = NULL;
-    }
-
-    i2c->rx_data_count = 0;
-    I2C_SLAVE_MUTEX_UNLOCK();
-    return ESP_OK;
-}
-
-esp_err_t i2c_slave_init(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t frequency, size_t rx_len, size_t tx_len) {
+esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t frequency, size_t rx_len, size_t tx_len) {
     if(num >= SOC_I2C_NUM){
         log_e("Invalid port num: %u", num);
         return ESP_ERR_INVALID_ARG;
@@ -272,6 +223,12 @@ esp_err_t i2c_slave_init(uint8_t num, int sda, int scl, uint16_t slaveID, uint32
     if (sda < 0 || scl < 0) {
         log_e("invalid pins sda=%d, scl=%d", sda, scl);
         return ESP_ERR_INVALID_ARG;
+    }
+
+    if(!frequency){
+        frequency = 100000;
+    } else if(frequency > 1000000){
+        frequency = 1000000;
     }
 
     log_i("Initialising I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
@@ -288,9 +245,9 @@ esp_err_t i2c_slave_init(uint8_t num, int sda, int scl, uint16_t slaveID, uint32
         }
     }
 #endif
-    i2c_slave_deinit(num);
 
     I2C_SLAVE_MUTEX_LOCK();
+    i2c_slave_free_resources(i2c);
 
 #if I2C_SLAVE_USE_RX_QUEUE
     i2c->rx_queue = xQueueCreate(rx_len, sizeof(uint8_t));
@@ -391,18 +348,39 @@ esp_err_t i2c_slave_init(uint8_t num, int sda, int scl, uint16_t slaveID, uint32
     return ret;
 
 fail:
+    i2c_slave_free_resources(i2c);
     I2C_SLAVE_MUTEX_UNLOCK();
-    i2c_slave_deinit(num);
     return ret;
 }
 
-size_t i2c_slave_write(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t timeout_ms) {
+esp_err_t i2cSlaveDeinit(uint8_t num){
+    if(num >= SOC_I2C_NUM){
+        log_e("Invalid port num: %u", num);
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+    if(!i2c->lock){
+        log_e("Lock is not initialized! Did you call i2c_slave_init()?");
+        return ESP_ERR_NO_MEM;
+    }
+    I2C_SLAVE_MUTEX_LOCK();
+    i2c_slave_free_resources(i2c);
+    I2C_SLAVE_MUTEX_UNLOCK();
+    return ESP_OK;
+}
+
+size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t timeout_ms) {
     if(num >= SOC_I2C_NUM){
         log_e("Invalid port num: %u", num);
         return 0;
     }
     size_t to_queue = 0, to_fifo = 0;
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+    if(!i2c->lock){
+        log_e("Lock is not initialized! Did you call i2c_slave_init()?");
+        return ESP_ERR_NO_MEM;
+    }
     if(!i2c->tx_queue){
         return 0;
     }
@@ -459,6 +437,47 @@ size_t i2c_slave_write(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t t
 //=====================================================================================================================
 //-------------------------------------- Private Functions ------------------------------------------------------------
 //=====================================================================================================================
+
+static void i2c_slave_free_resources(i2c_slave_struct_t * i2c){
+    i2c_slave_detach_gpio(i2c);
+    i2c_ll_set_slave_addr(i2c->dev, 0, false);
+    i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
+    i2c_ll_clr_intsts_mask(i2c->dev, I2C_LL_INTR_MASK);
+
+    if (i2c->intr_handle) {
+        esp_intr_free(i2c->intr_handle);
+        i2c->intr_handle = NULL;
+    }
+
+    if(i2c->task_handle){
+        vTaskDelete(i2c->task_handle);
+        i2c->task_handle = NULL;
+    }
+
+#if I2C_SLAVE_USE_RX_QUEUE
+    if (i2c->rx_queue) {
+        vQueueDelete(i2c->rx_queue);
+        i2c->rx_queue = NULL;
+    }
+#else
+    if (i2c->rx_ring_buf) {
+        vRingbufferDelete(i2c->rx_ring_buf);
+        i2c->rx_ring_buf = NULL;
+    }
+#endif
+
+    if (i2c->tx_queue) {
+        vQueueDelete(i2c->tx_queue);
+        i2c->tx_queue = NULL;
+    }
+
+    if (i2c->event_queue) {
+        vQueueDelete(i2c->event_queue);
+        i2c->event_queue = NULL;
+    }
+
+    i2c->rx_data_count = 0;
+}
 
 static bool i2c_slave_set_frequency(i2c_slave_struct_t * i2c, uint32_t clk_speed)
 {
@@ -610,7 +629,7 @@ static bool i2c_slave_send_event(i2c_slave_struct_t * i2c, i2c_slave_queue_event
     bool pxHigherPriorityTaskWoken = false;
     if(i2c->event_queue) {
         if(xQueueSendFromISR(i2c->event_queue, event, (BaseType_t * const)&pxHigherPriorityTaskWoken) != pdTRUE){
-            log_e("event_queue_full");
+            //log_e("event_queue_full");
         }
     }
     return pxHigherPriorityTaskWoken;
@@ -684,7 +703,7 @@ static void i2c_slave_isr_handler(void* arg)
         if(rx_fifo_len){ //READ RX FIFO
             pxHigherPriorityTaskWoken |= i2c_slave_handle_rx_fifo_full(i2c, rx_fifo_len);
         }
-        if(!slave_rw || i2c->rx_data_count){ //WRITE or RepeatedStart
+        if(i2c->rx_data_count){ //WRITE or RepeatedStart
             //SEND RX Event
             i2c_slave_queue_event_t event;
             event.event = I2C_SLAVE_EVT_RX;

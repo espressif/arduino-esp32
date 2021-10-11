@@ -63,6 +63,47 @@ TwoWire::~TwoWire()
 #endif
 }
 
+bool TwoWire::initPins(int sdaPin, int sclPin)
+{
+    if(sdaPin < 0) { // default param passed
+        if(num == 0) {
+            if(sda==-1) {
+                sdaPin = SDA;    //use Default Pin
+            } else {
+                sdaPin = sda;    // reuse prior pin
+            }
+        } else {
+            if(sda==-1) {
+                log_e("no Default SDA Pin for Second Peripheral");
+                return false; //no Default pin for Second Peripheral
+            } else {
+                sdaPin = sda;    // reuse prior pin
+            }
+        }
+    }
+
+    if(sclPin < 0) { // default param passed
+        if(num == 0) {
+            if(scl == -1) {
+                sclPin = SCL;    // use Default pin
+            } else {
+                sclPin = scl;    // reuse prior pin
+            }
+        } else {
+            if(scl == -1) {
+                log_e("no Default SCL Pin for Second Peripheral");
+                return false; //no Default pin for Second Peripheral
+            } else {
+                sclPin = scl;    // reuse prior pin
+            }
+        }
+    }
+
+    sda = sdaPin;
+    scl = sclPin;
+    return true;
+}
+
 bool TwoWire::setPins(int sdaPin, int sclPin)
 {
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -80,8 +121,7 @@ bool TwoWire::setPins(int sdaPin, int sclPin)
     }
 #endif
     if(!i2cIsInit(num)){
-        sda = sdaPin;
-        scl = sclPin;
+        initPins(sdaPin, sclPin);
     } else {
         log_e("bus already initialized. change pins only when not.");
     }
@@ -92,6 +132,52 @@ bool TwoWire::setPins(int sdaPin, int sclPin)
     return !i2cIsInit(num);
 }
 
+// Slave Begin
+bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
+{
+    bool started = false;
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(lock == NULL){
+        lock = xSemaphoreCreateMutex();
+        if(lock == NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return false;
+        }
+    }
+    //acquire lock
+    if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+        log_e("could not acquire lock");
+        return false;
+    }
+#endif
+    if(is_slave){
+        log_w("Bus already started in Slave Mode.");
+        started = true;
+        goto end;
+    }
+    if(i2cIsInit(num)){
+        log_e("Bus already started in Master Mode.");
+        goto end;
+    }
+    if(!initPins(sdaPin, sclPin)){
+        goto end;
+    }
+    i2cSlaveAttachCallbacks(num, onRequestService, onReceiveService, this);
+    if(i2cSlaveInit(num, sda, scl, addr, frequency, I2C_BUFFER_LENGTH, I2C_BUFFER_LENGTH) != ESP_OK){
+        log_e("Slave Init ERROR");
+        goto end;
+    }
+    is_slave = true;
+    started = true;
+end:
+#if !CONFIG_DISABLE_HAL_LOCKS
+    //release lock
+    xSemaphoreGive(lock);
+#endif
+    return started;
+}
+
+// Master Begin
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
 {
     bool started = false;
@@ -110,46 +196,18 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
         return false;
     }
 #endif
+    if(is_slave){
+        log_e("Bus already started in Slave Mode.");
+        goto end;
+    }
     if(i2cIsInit(num)){
+        log_w("Bus already started in Master Mode.");
         started = true;
         goto end;
     }
-    if(sdaPin < 0) { // default param passed
-        if(num == 0) {
-            if(sda==-1) {
-                sdaPin = SDA;    //use Default Pin
-            } else {
-                sdaPin = sda;    // reuse prior pin
-            }
-        } else {
-            if(sda==-1) {
-                log_e("no Default SDA Pin for Second Peripheral");
-                goto end; //no Default pin for Second Peripheral
-            } else {
-                sdaPin = sda;    // reuse prior pin
-            }
-        }
+    if(!initPins(sdaPin, sclPin)){
+        goto end;
     }
-
-    if(sclPin < 0) { // default param passed
-        if(num == 0) {
-            if(scl == -1) {
-                sclPin = SCL;    // use Default pin
-            } else {
-                sclPin = scl;    // reuse prior pin
-            }
-        } else {
-            if(scl == -1) {
-                log_e("no Default SCL Pin for Second Peripheral");
-                goto end; //no Default pin for Second Peripheral
-            } else {
-                sclPin = scl;    // reuse prior pin
-            }
-        }
-    }
-
-    sda = sdaPin;
-    scl = sclPin;
     err = i2cInit(num, sda, scl, frequency);
     started = (err == ESP_OK);
 
@@ -173,7 +231,12 @@ bool TwoWire::end()
             return false;
         }
 #endif
-        if(i2cIsInit(num)){
+        if(is_slave){
+            err = i2cSlaveDeinit(num);
+            if(err == ESP_OK){
+                is_slave = false;
+            }
+        } else if(i2cIsInit(num)){
             err = i2cDeinit(num);
         }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -193,7 +256,11 @@ uint32_t TwoWire::getClock()
         log_e("could not acquire lock");
     } else {
 #endif
-        i2cGetClock(num, &frequency);
+        if(is_slave){
+            log_e("Bus is in Slave Mode");
+        } else {
+            i2cGetClock(num, &frequency);
+        }
 #if !CONFIG_DISABLE_HAL_LOCKS
         //release lock
         xSemaphoreGive(lock);
@@ -212,7 +279,12 @@ bool TwoWire::setClock(uint32_t frequency)
         return false;
     }
 #endif
-    err = i2cSetClock(num, frequency);
+    if(is_slave){
+        log_e("Bus is in Slave Mode");
+        err = ESP_FAIL;
+    } else {
+        err = i2cSetClock(num, frequency);
+    }
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
@@ -232,6 +304,10 @@ uint16_t TwoWire::getTimeOut()
 
 void TwoWire::beginTransmission(uint16_t address)
 {
+    if(is_slave){
+        log_e("Bus is in Slave Mode");
+        return;
+    }
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(nonStop && nonStopTask == xTaskGetCurrentTaskHandle()){
         log_e("Unfinished Repeated Start transaction! Expected requestFrom, not beginTransmission! Clearing...");
@@ -251,6 +327,10 @@ void TwoWire::beginTransmission(uint16_t address)
 
 uint8_t TwoWire::endTransmission(bool sendStop)
 {
+    if(is_slave){
+        log_e("Bus is in Slave Mode");
+        return 4;
+    }
     esp_err_t err = ESP_OK;
     if(sendStop){
         err = i2cWrite(num, txAddress, txBuffer, txLength, _timeOutMillis);
@@ -276,6 +356,10 @@ uint8_t TwoWire::endTransmission(bool sendStop)
 
 uint8_t TwoWire::requestFrom(uint16_t address, uint8_t size, bool sendStop)
 {
+    if(is_slave){
+        log_e("Bus is in Slave Mode");
+        return 0;
+    }
     esp_err_t err = ESP_OK;
     if(nonStop
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -406,62 +490,9 @@ uint8_t TwoWire::endTransmission(void)
     return endTransmission(true);
 }
 
-bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
-{
-    if(!frequency){
-        frequency = 100000;
-    } else if(frequency > 1000000){
-        frequency = 1000000;
-    }
-
-    if(sdaPin < 0) { // default param passed
-        if(num == 0) {
-            if(sda==-1) {
-                sdaPin = SDA;    //use Default Pin
-            } else {
-                sdaPin = sda;    // reuse prior pin
-            }
-        } else {
-            if(sda==-1) {
-                log_e("no Default SDA Pin for Second Peripheral");
-                return false; //no Default pin for Second Peripheral
-            } else {
-                sdaPin = sda;    // reuse prior pin
-            }
-        }
-    }
-
-    if(sclPin < 0) { // default param passed
-        if(num == 0) {
-            if(scl == -1) {
-                sclPin = SCL;    // use Default pin
-            } else {
-                sclPin = scl;    // reuse prior pin
-            }
-        } else {
-            if(scl == -1) {
-                log_e("no Default SCL Pin for Second Peripheral");
-                return false; //no Default pin for Second Peripheral
-            } else {
-                sclPin = scl;    // reuse prior pin
-            }
-        }
-    }
-
-    sda = sdaPin;
-    scl = sclPin;
-    i2c_slave_attach_callbacks(num, onRequestService, onReceiveService, this);
-    if(i2c_slave_init(num, sda, scl, addr, frequency, I2C_BUFFER_LENGTH, I2C_BUFFER_LENGTH) != ESP_OK){
-        Serial.println("INIT ERROR");
-        return false;
-    }
-    is_slave = true;
-    return true;
-}
-
 size_t TwoWire::slaveWrite(const uint8_t * buffer, size_t len)
 {
-    return i2c_slave_write(num, buffer, len, _timeOutMillis);
+    return i2cSlaveWrite(num, buffer, len, _timeOutMillis);
 }
 
 void TwoWire::onReceiveService(uint8_t num, uint8_t* inBytes, size_t numBytes, bool stop, void * arg)

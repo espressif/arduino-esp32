@@ -67,6 +67,7 @@ private:
     void (*user_onReceive)(int);
     static void onRequestService(uint8_t, void *);
     static void onReceiveService(uint8_t, uint8_t*, size_t, bool, void *);
+    bool initPins(int sdaPin, int sclPin);
 
 public:
     TwoWire(uint8_t bus_num);
