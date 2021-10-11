@@ -54,7 +54,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     host.set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode;
     host.set_card_clk = &sdmmc_host_set_card_clk;
     host.do_transaction = &sdmmc_host_do_transaction;
-    host.deinit_p = &sdspi_host_remove_device;
+    host.deinit = &sdmmc_host_deinit;
     host.io_int_enable = &sdmmc_host_io_int_enable;
     host.io_int_wait = &sdmmc_host_io_int_wait;
     host.command_timeout_ms = 0;
