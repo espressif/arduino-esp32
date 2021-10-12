@@ -10,7 +10,7 @@
 #define DL_LOG_LAYER_LATENCY 0 /*<! - 1: print the latency of each parts of layer */
                                /*<! - 0: mute */
 
-#if CONFIG_SPIRAM_SUPPORT || CONFIG_ESP32_SPIRAM_SUPPORT || CONFIG_ESP32S3_SPIRAM_SUPPORT
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_ESP32_SPIRAM_SUPPORT || CONFIG_ESP32S2_SPIRAM_SUPPORT || CONFIG_ESP32S3_SPIRAM_SUPPORT
 #define DL_SPIRAM_SUPPORT 1
 #else
 #define DL_SPIRAM_SUPPORT 0
@@ -83,8 +83,17 @@ namespace dl
 
     typedef enum
     {
-        PADDING_VALID,     /*<! no padding >*/
-        PADDING_SAME,      /*<! SAME in TensorFlow style >*/
-        PADDING_SAME_MXNET /*<! SAME in MXNET style >*/
+        PADDING_NOT_SET,
+        PADDING_VALID,      /*<! no padding >*/
+        PADDING_SAME_BEGIN,  /*<! SAME in MXNET style >*/
+        PADDING_SAME_END,   /*<! SAME in TensorFlow style >*/
     } padding_type_t;
+    
+    typedef enum
+    {
+        CONSTANT,
+        EDGE, 
+        REFLECT,
+        SYMMETRIC,
+    } padding_mode_t;
 } // namespace dl
