@@ -76,9 +76,9 @@
     #include "class/msc/msc_device.h"
   #endif
 
-#if CFG_TUD_AUDIO
-  #include "class/audio/audio_device.h"
-#endif
+  #if CFG_TUD_AUDIO
+    #include "class/audio/audio_device.h"
+  #endif
 
   #if CFG_TUD_MIDI
     #include "class/midi/midi_device.h"
@@ -100,7 +100,7 @@
     #include "class/dfu/dfu_device.h"
   #endif
 
-  #if CFG_TUD_NET
+  #if CFG_TUD_ECM_RNDIS || CFG_TUD_NCM
     #include "class/net/net_device.h"
   #endif
 

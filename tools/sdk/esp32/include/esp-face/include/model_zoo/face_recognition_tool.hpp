@@ -92,7 +92,7 @@ namespace face_recognition_tool
      * @return dl::Tensor<T>* 
      */
     template <typename T>
-    dl::Tensor<T> *transform_mfn_input(dl::Tensor<uint8_t> &image, bool free_input = false, bool do_padding = true);
+    dl::Tensor<T> *transform_mfn_input(dl::Tensor<uint8_t> &image, bool free_input = false);
 
     /**
      * @brief  transform the image to the input of a mfn model 
@@ -106,7 +106,7 @@ namespace face_recognition_tool
      *                             false: do not pad the result
      */
     template <typename T>
-    void transform_mfn_input(dl::Tensor<uint8_t> &image, dl::Tensor<T> &output, bool free_input = false, bool do_padding = true);
+    void transform_mfn_input(dl::Tensor<uint8_t> &image, dl::Tensor<T> &output, bool free_input = false);
 
     /**
      * @brief transform the mfn output embedding to a floating embedding

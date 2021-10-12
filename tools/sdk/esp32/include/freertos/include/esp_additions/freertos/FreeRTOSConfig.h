@@ -90,7 +90,6 @@
 #define portNUM_PROCESSORS                              1
 #endif
 
-#define configASSERT_2                                  0
 #define portUSING_MPU_WRAPPERS                          0
 #define configUSE_MUTEX                                 1
 
@@ -206,7 +205,6 @@
 #define configGENERATE_RUN_TIME_STATS                   1       /* Used by vTaskGetRunTimeStats() */
 #endif
 
-#define configUSE_TRACE_FACILITY_2                      0
 #define configBENCHMARK                                 0
 #define configUSE_16_BIT_TICKS                          0
 #define configIDLE_SHOULD_YIELD                         0
@@ -305,5 +303,10 @@ extern void vPortCleanUpTCB ( void *pxTCB );
 #define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H       1
 
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES           1
+
+// backward compatibility for 4.4
+#define xTaskRemoveFromUnorderedEventList vTaskRemoveFromUnorderedEventList
+
+#define configNUM_CORES                                 portNUM_PROCESSORS
 
 #endif /* FREERTOS_CONFIG_H */
