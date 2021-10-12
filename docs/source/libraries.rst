@@ -2,7 +2,7 @@
 Libraries
 #########
 
-Here is where the Libraries API's descriptions are located.
+Here is where the Libraries API's descriptions are located:
 
 .. toctree::
     :maxdepth: 1
@@ -12,6 +12,7 @@ Here is where the Libraries API's descriptions are located.
     Deep Sleep <api/deepsleep>
     ESPNOW <api/espnow>
     GPIO <api/gpio>
+    I2C <api/i2c>
     RainMaker <api/rainmaker>
     Reset Reason <api/reset_reason>
     Wi-Fi <api/wifi>
