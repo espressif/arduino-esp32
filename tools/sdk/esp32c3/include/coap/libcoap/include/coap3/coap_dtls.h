@@ -27,6 +27,12 @@ typedef struct coap_dtls_pki_t coap_dtls_pki_t;
 #ifndef COAP_DTLS_HINT_LENGTH
 #define COAP_DTLS_HINT_LENGTH 128
 #endif
+#ifndef COAP_DTLS_MAX_PSK_IDENTITY
+#define COAP_DTLS_MAX_PSK_IDENTITY 64
+#endif
+#ifndef COAP_DTLS_MAX_PSK
+#define COAP_DTLS_MAX_PSK 64
+#endif
 
 typedef enum coap_dtls_role_t {
   COAP_DTLS_ROLE_CLIENT, /**< Internal function invoked for client */

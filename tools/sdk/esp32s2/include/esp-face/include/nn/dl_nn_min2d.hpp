@@ -47,20 +47,20 @@ namespace dl
          * @return min2d result or no return(result store to input0)
          */
         template <bool inplace = false, typename feature_t>
-        auto min2d(Tensor<feature_t> &input0, 
-                    Tensor<feature_t> &input1, 
-                    const std::vector<int> &assign_core = CONFIG_DEFAULT_ASSIGN_CORE) -> typename std::conditional<inplace, void, Tensor<feature_t>>::type
+        auto min2d(Tensor<feature_t> &input0,
+                   Tensor<feature_t> &input1,
+                   const std::vector<int> &assign_core = CONFIG_DEFAULT_ASSIGN_CORE) -> typename std::conditional<inplace, void, Tensor<feature_t>>::type
         {
             assert(input0.is_same_shape(input1));
             assert(input0.exponent == input1.exponent);
 
             DL_LOG_NN_LATENCY_INIT();
             Tensor<feature_t> output;
-            
-            if constexpr(!inplace)
+
+            if constexpr (!inplace)
             {
                 DL_LOG_NN_LATENCY_START();
-                output.set_exponent(input0.exponent).set_shape(input0.shape).apply_element();
+                output.set_exponent(input0.exponent).set_shape(input0.shape).malloc_element();
                 DL_LOG_NN_LATENCY_END("apply");
 
                 DL_LOG_NN_LATENCY_START();

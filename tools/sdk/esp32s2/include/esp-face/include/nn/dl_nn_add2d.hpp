@@ -58,20 +58,20 @@ namespace dl
          */
         template <bool inplace = false, typename feature_t>
         auto add2d(const int output_exponent,
-                    Tensor<feature_t> &input0,
-                    Tensor<feature_t> &input1,
-                    const Activation<feature_t> *activation,
-                    const std::vector<int> &assign_core = CONFIG_DEFAULT_ASSIGN_CORE) -> typename std::conditional<inplace, void, Tensor<feature_t>>::type
+                   Tensor<feature_t> &input0,
+                   Tensor<feature_t> &input1,
+                   const Activation<feature_t> *activation,
+                   const std::vector<int> &assign_core = CONFIG_DEFAULT_ASSIGN_CORE) -> typename std::conditional<inplace, void, Tensor<feature_t>>::type
         {
             assert(input0.is_same_shape(input1));
 
             DL_LOG_NN_LATENCY_INIT();
 
             Tensor<feature_t> output;
-            if constexpr(!inplace)
+            if constexpr (!inplace)
             {
                 DL_LOG_NN_LATENCY_START();
-                output.set_exponent(output_exponent).set_shape(input0.shape).apply_element();
+                output.set_exponent(output_exponent).set_shape(input0.shape).malloc_element();
                 DL_LOG_NN_LATENCY_END("apply");
 
                 DL_LOG_NN_LATENCY_START();

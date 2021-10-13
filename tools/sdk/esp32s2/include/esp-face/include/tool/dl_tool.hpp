@@ -67,62 +67,49 @@ namespace dl
         void copy_memory(void *dst, void *src, const int n);
 
         /**
-         * @brief Apply memory without initialized. Must use free_aligned() to free the memory.
+         * @brief Apply memory without initialized. Can use free_aligned() to free the memory.
          * 
          * @param number number of elements
          * @param size   size of element
-         * @param align  number of aligned, e.g., 16 means 16-byte aligned
+         * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
          * @return pointer of allocated memory. NULL for failed
          */
-        inline void *malloc_aligned(int number, int size, int align = 0)
+        inline void *malloc_aligned(int number, int size, int align = 4)
         {
-            int n = number * size;
-            n >>= 4;
-            n += 2;
-            n <<= 4;
-            int total_size = n + align + sizeof(void *) + sizeof(int);
-            void *res = malloc(total_size);
+            assert((align > 0) && (((align & (align-1)) == 0)));
+            int total_size = number * size;
+
+            void *res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
 #if DL_SPIRAM_SUPPORT
             if (NULL == res)
-                res = heap_caps_malloc(total_size, MALLOC_CAP_SPIRAM);
+                res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_SPIRAM);
 #endif
             if (NULL == res)
             {
                 printf("Fail to malloc %d bytes from DRAM(%d bytyes) and PSRAM(%d bytes), PSRAM is %s.\n",
                        total_size,
-                       heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                       heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
                        heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
                        DL_SPIRAM_SUPPORT ? "on" : "off");
                 return NULL;
             }
-            void **data = (void **)res + 2; // 4-byte for pointer, 4-bytes for n
-            void **aligned;
-            if (align)
-                aligned = (void **)(((size_t)data + (align - 1)) & -align);
-            else
-                aligned = data;
 
-            aligned[-1] = res;
-            int *temp = (int *)aligned;
-            temp[-2] = n;
-
-            return (void *)aligned;
+            return (void *)res;
         }
 
         /**
-         * @brief Apply memory with zero-initialized. Must use dl_lib_free() to free the memory.
+         * @brief Apply memory with zero-initialized. Can use free_aligned() to free the memory.
          * 
          * @param number number of elements
          * @param size   size of element
-         * @param align  number of aligned, e.g., 16 means 16-byte aligned
+         * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
          * @return pointer of allocated memory. NULL for failed
          */
-        inline void *calloc_aligned(int number, int size, int align = 0)
+        inline void *calloc_aligned(int number, int size, int align = 4)
         {
 
             void *aligned = malloc_aligned(number, size, align);
-            int n = *((int *)aligned - 2);
-            set_zero(aligned, n);
+            set_zero(aligned, number * size);
 
             return (void *)aligned;
         }
@@ -137,7 +124,70 @@ namespace dl
             if (NULL == address)
                 return;
 
-            free(((void **)address)[-1]);
+            heap_caps_free(address);
+        }
+
+        /**
+         * @brief Apply memory without initialized in preference order: internal aligned, internal, external aligned
+         * 
+         * @param number number of elements
+         * @param size   size of element
+         * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
+         * @return pointer of allocated memory. NULL for failed
+         */
+        inline void *malloc_aligned_prefer(int number, int size, int align = 4)
+        {
+            assert((align > 0) && (((align & (align-1)) == 0)));
+            int total_size = number * size;
+            void *res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+            if (NULL == res){
+                res = heap_caps_malloc(total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+            }
+#if DL_SPIRAM_SUPPORT
+            if (NULL == res){
+                res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_SPIRAM);
+            }
+#endif
+            if (NULL == res)
+            {
+                printf("Fail to malloc %d bytes from DRAM(%d bytyes) and PSRAM(%d bytes), PSRAM is %s.\n",
+                       total_size,
+                       heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL),
+                       heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+                       DL_SPIRAM_SUPPORT ? "on" : "off");
+                return NULL;
+            }
+
+            return res;
+        }
+
+        /**
+         * @brief Apply memory with zero-initialized in preference order: internal aligned, internal, external aligned
+         * 
+         * @param number number of elements
+         * @param size   size of element
+         * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
+         * @return pointer of allocated memory. NULL for failed
+         */
+        inline void *calloc_aligned_prefer(int number, int size, int align = 4)
+        {
+            void *res = malloc_aligned_prefer(number, size, align);
+            set_zero(res, number * size);
+
+            return (void *)res;
+        }
+
+        /**
+         * @brief Free the calloc_aligned_prefer() and malloc_aligned_prefer() memory
+         * 
+         * @param address pointer of memory to free
+         */
+        inline void free_aligned_prefer(void *address)
+        {
+            if (NULL == address)
+                return;
+
+            heap_caps_free(address);
         }
 
         /**
