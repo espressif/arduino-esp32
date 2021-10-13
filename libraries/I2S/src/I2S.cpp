@@ -119,7 +119,7 @@ int I2SClass::_installDriver(){
   if(_mode == I2S_ADC_DAC){
     #if SOC_I2S_SUPPORTS_ADC_DAC
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
-        log_e("ERROR I2SClass::begin invalid bps for ADC/DAC");
+        log_e("ERROR I2SClass::begin invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
         return 0; // ERR
       }
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
@@ -130,12 +130,8 @@ int I2SClass::_installDriver(){
   }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal Philips mode
-    if(_bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
-      if(_bitsPerSample == 8){
-        log_e("ESP unfortunately does not support 8 bits per sample");
-      }else{
-        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 16 | 24 | 32", _bitsPerSample);
-      }
+    if(_bitsPerSample != 8 && _bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
+        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 8 | 16 | 24 | 32", _bitsPerSample);
       return 0; // ERR
     }
     if(_bitsPerSample == 24){
