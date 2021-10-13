@@ -88,7 +88,11 @@ COAP_STATIC_INLINE uint64_t coap_ticks_to_rt_us(coap_tick_t t) {
 #elif defined(RIOT_VERSION)
 #include <xtimer.h>
 
+#ifdef XTIMER_HZ
 #define COAP_TICKS_PER_SECOND (XTIMER_HZ)
+#else /* XTIMER_HZ */
+#define COAP_TICKS_PER_SECOND (XTIMER_HZ_BASE)
+#endif /* XTIMER_HZ */
 
 typedef uint64_t coap_tick_t;
 typedef int64_t coap_tick_diff_t;

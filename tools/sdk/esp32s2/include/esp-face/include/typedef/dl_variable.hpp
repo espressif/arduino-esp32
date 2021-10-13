@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <vector>
 #include <assert.h>
+#include <iostream>
 
 #include "dl_tool.hpp"
 
@@ -17,27 +18,20 @@ namespace dl
     class Tensor
     {
     private:
-        int size;       /*<! size of element including padding */
-        bool auto_free; /*<! free element when object destroy */
+        int size;                     /*<! size of element including padding */
+        bool auto_free;               /*<! free element when object destroy */
+        std::vector<int> axis_offset; /*<! element offset of each axis */
 
     public:
-        T *element;                          /*<! point to element */
-        int exponent;                        /*<! exponent of element */
-        std::vector<int> shape;              /*<! shape of Tensor */
-                                             /*<! 2D: shape is [height, width, channel] */
-                                             /*<! 1D: reserved */
-        std::vector<int> shape_with_padding; /*<! shape with padding of Tensor */
-                                             /*<! 2D: shape_with_padding is [height_with_padding, width_with_padding, channel_with_padding] */
-                                             /*<! 1D: reserved */
-        std::vector<int> padding;            /*<! padding of Tensor */
-                                             /*<!- 2D: padding format is [top, bottom, left, right] */
-                                             /*<! - 1D: reserved */
+        T *element;             /*<! point to element */
+        int exponent;           /*<! exponent of element */
+        std::vector<int> shape; /*<! shape of Tensor */
 
         /**
          * @brief Construct a new Tensor object
          * 
          */
-        Tensor() : size(-1), auto_free(true), element(NULL), exponent(0) {}
+        Tensor() : auto_free(true), element(NULL), exponent(0) { this->set_shape({0}); }
 
         /**
          * @brief Construct a new Tensor object by copying from input.
@@ -49,21 +43,20 @@ namespace dl
          */
         Tensor(Tensor<T> &input, bool deep) : size(input.size),
                                               auto_free(input.auto_free),
-                                              exponent(input.exponent),
-                                              shape(input.shape),
-                                              shape_with_padding(input.shape_with_padding),
-                                              padding(input.padding)
+                                              exponent(input.exponent)
         {
-            if (deep)
+            this->set_shape(input.shape);
+            if (deep && (input.element != NULL))
             {
-                int size_real = input.shape_with_padding.size() ? input.shape_with_padding[0] * input.shape_with_padding[1] * input.shape_with_padding[2] : 0;
-                T *new_element = (T *)tool::calloc_aligned(size_real, sizeof(T), 16);
+                int size_real = input.get_size();
+                T *new_element = (T *)tool::calloc_aligned_prefer(size_real, sizeof(T), 16);
                 tool::copy_memory(new_element, input.element, size_real * sizeof(T));
                 this->element = new_element;
             }
             else
             {
                 this->element = input.element;
+                this->auto_free = false;
             }
         }
 
@@ -75,6 +68,33 @@ namespace dl
         {
             if (this->auto_free)
                 this->free_element();
+        }
+
+        /**
+         * @brief 
+         * 
+         * @param input an input Tensor
+         * @param deep one of true or false
+         *              - true: apply a new memory, copy value from input.element to this new memory
+         *              - false: take over input.element to this->element
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &copy_element(Tensor<T> &input, bool deep)
+        {
+            assert(this->get_size() == input.get_size());
+            assert(input.element != NULL);
+
+            this->malloc_element();
+            if (deep)
+            {
+                tool::copy_memory(this->element, input.element, this->get_size() * sizeof(T));
+            }
+            else
+            {
+                this->element = input.element;
+                this->auto_free = false;
+            }
+            return *this;
         }
 
         /**
@@ -120,188 +140,142 @@ namespace dl
         }
 
         /**
-         * @brief Set the shape of Tensor. Initial this->padding = {0}. Initial this->size = -1.
+         * @brief Set the shape of Tensor.
          * 
-         * @param shape shape in 
-         *              - 2D: [height, width]
+         * @param shape the target shape 
+         *        
          * @return self
          */
-        Tensor<T> &set_shape(const std::vector<int> shape)
+        Tensor<T> &set_shape(const std::vector<int> shape);
+
+        /**
+         * @brief print the shape of the Tensor
+         * 
+         */
+        void print_shape()
         {
-            for (int i = 0; i < shape.size(); ++i)
+            if (this->shape.size())
             {
-                assert(shape[i] > 0);
+                printf("shape = (");
+                for (int i = 0; i < this->shape.size() - 1; i++)
+                {
+                    printf("%d, ", this->shape[i]);
+                }
+                printf("%d)\n", this->shape.back());
             }
-            this->shape = shape;
-            this->shape_with_padding = shape;
-            this->size = -1;
-            this->padding = std::vector<int>(((this->shape.size() - 1) << 1), 0);
-            return *this;
+            else
+            {
+                printf("shape = ()\n");
+            }
         }
 
         /**
-         * @brief Set the padding size object.
+         * @brief flatten the Tensor
          * 
-         * @param padding padding size in
-         *                - 2D: [top, bottom, left, right]
-         * @return self
+         * @return Tensor<T>& self
          */
-        Tensor &set_padding_size(std::vector<int> &padding)
-        {
-            assert(this->shape.size());      // call Tensor.set_shape() first
-            assert(this->shape.size() == 3); // TODO: || this->shape.size() == 2
-
-            if (this->shape.size() == 3)
-            {
-                std::vector<int> new_padding = this->padding;
-                bool dont_update = true;
-
-                if (padding[0] > this->padding[0])
-                {
-                    new_padding[0] = padding[0];
-                    dont_update = false;
-                }
-
-                if (padding[1] > this->padding[1])
-                {
-                    new_padding[1] = padding[1];
-                    dont_update = false;
-                }
-
-                if (padding[2] > this->padding[2])
-                {
-                    new_padding[2] = padding[2];
-                    dont_update = false;
-                }
-
-                if (padding[3] > this->padding[3])
-                {
-                    new_padding[3] = padding[3];
-                    dont_update = false;
-                }
-
-                if (dont_update)
-                {
-                    return *this;
-                }
-
-                std::vector<int> new_shape_with_padding = this->shape;
-
-                new_shape_with_padding[0] += (new_padding[0] + new_padding[1]);
-                new_shape_with_padding[1] += (new_padding[2] + new_padding[3]);
-                int new_size = new_shape_with_padding[0] * new_shape_with_padding[1] * new_shape_with_padding[2];
-
-                if (this->element) // if this->element != NULL, do padding by copy memory
-                {
-                    T *new_element = (T *)tool::malloc_aligned(new_size, sizeof(T), 16);
-                    T *dst = new_element + ((new_padding[0] * new_shape_with_padding[1]) + new_padding[2]) * new_shape_with_padding[2];
-                    T *src = this->get_element_ptr();
-                    int offset_dst_next_y = new_shape_with_padding[1] * new_shape_with_padding[2];     // width * channel
-                    int src_copy_length = this->shape[1] * this->shape[2];                             // width * channel
-                    int offset_src_next_y = this->shape_with_padding[1] * this->shape_with_padding[2]; // width * channel
-                    for (int y = 0; y < this->shape[0]; y++)
-                    {
-                        tool::copy_memory(dst, src, src_copy_length * sizeof(T));
-                        dst += offset_dst_next_y;
-                        src += offset_src_next_y;
-                    }
-
-                    if (this->auto_free)
-                        tool::free_aligned(this->element);
-                    this->element = new_element;
-                    this->auto_free = true;
-                }
-                this->padding = new_padding;
-                this->shape_with_padding = new_shape_with_padding;
-                this->size = new_size;
-            }
-            else if (this->shape.size() == 2)
-            {
-                printf("Tensor.set_padding_size with this->shape.size() == 2 not implement yet.\n");
-            }
-
-            return *this;
-        }
+        Tensor<T> &flatten();
 
         /**
-         * @brief Set the padding value object.
+         * @brief Change a new shape to the Tensor without changing its data.
          * 
-         * @param padding padding size in
-         *                - 2D: [top, bottom, left, right]
-         * @param value   value to set
-         * @return self
+         * @param shape  the target shape
+         * @return Tensor<T>&  self
          */
-        Tensor<T> &set_padding_value(std::vector<int> &padding, T value);
+        Tensor<T> &reshape(std::vector<int> shape);
+
+        /**
+         * @brief Remove dims with length==1 from Tensor
+         * 
+         * @param axis the dim to to be remove. make sure the length of the dim is equal to 1.
+         *              if axis == INT32_MAX, all the dims with length==1 will be removed.
+         * @return Tensor<T>& self 
+         */
+        Tensor<T> &squeeze(int axis = INT32_MAX);
+
+        /**
+         * @brief Insert a new dim that will appear at the axis position in the expanded Tensor shape.
+         * 
+         * @param axis the dim to be inserted
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &expand_dims(int axis);
+
+        /**
+         * @brief Insert a new dim that will appear at the axis position in the expanded Tensor shape.
+         * 
+         * @param axis  the dim to be inserted
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &expand_dims(std::vector<int> axis);
+
+        /**
+         * @brief Reverse or permute the axes of the Tensor
+         * 
+         * @param perm the new arangement of the dims. if perm == {}, the dims arangement will be reversed. 
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &transpose(std::vector<int> perm = {});
+
+        /**
+         * @brief Reverse or permute the axes of the input Tensor
+         * 
+         * @param input the input Tensor
+         * @param perm the new arangement of the dims. if perm == {}, the dims arangement will be reversed. 
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &transpose(Tensor<T> &input, std::vector<int> perm = {});
 
         /**
          * @brief Get the element pointer.
          * 
-         * @param padding padding size in
-         *                - 2D: [top, bottom, left, right]
-         * @return pointer to memory with padding
+         * @return pointer to memory
          */
-        T *get_element_ptr(const std::vector<int> padding = {0, 0, 0, 0})
+        T *get_element_ptr()
         {
-            assert(this->shape.size() == 3); // TODO: || this->shape.size() == 2
-
-            if (this->shape.size() == 3)
-            {
-                return this->element + ((this->padding[0] - padding[0]) * this->shape_with_padding[1] + (this->padding[2] - padding[2])) * this->shape_with_padding[2];
-            }
-            else if (this->shape.size() == 2)
-            {
-                printf("Tensor.get_element_ptr with this->shape.size() == 2 is not implemented.\n");
-            }
-
-            return NULL;
+            return this->element;
         }
 
         /**
          * @brief Get the element value.
          * 
-         * @param index        index in
-         *                     - 2D: [y, x, c]
-         * @param with_padding one of true or false,
-         *                     - true: make padding size in count
-         *                     - false: do not
-         * @return element value
+         * @param index   the index of each dim. 
+         * @return T element value
          */
-        T &get_element_value(const std::vector<int> index, const bool with_padding = false)
+        T get_element_value(const std::vector<int> index)
         {
-            assert(index.size() == this->shape.size());
-            assert(this->shape.size() == 3); // TODO: || this->shape() == 2
-
-            int i = 0;
-            if (this->shape.size() == 3)
-            {
-                int y = index[0];
-                int x = index[1];
-                int c = index[2];
-                i = with_padding ? (y * this->shape_with_padding[1] + x) * this->shape_with_padding[2] + c : ((y + this->padding[0]) * this->shape_with_padding[1] + x + this->padding[2]) * this->shape_with_padding[2] + c;
-            }
-            else if (this->shape.size() == 2)
-            {
-                printf("Tensor.get_element_value with this->shape.size() == 2 is not implemented.\n");
-            }
-
-            return this->element[i];
+            return this->element[this->get_element_index(index)];
         }
 
         /**
-         * @brief Get the size of element.
+         * @brief Get the element value.
          * 
-         * @return size of element including padding
+         * @param index  the index of the element.
+         * @return T  element value
+         */
+        T get_element_value(int index)
+        {
+            return this->element[index];
+        }
+
+        /**
+         * @brief Get the size of Tensor.
+         * 
+         * @return  the size of Tensor.
          */
         int get_size()
         {
-            if (this->size == -1) // didn't call Tensor.set_padding_size() before
-            {
-                this->size = 1;
-                for (std::vector<int>::iterator d = this->shape.begin(); d != this->shape.end(); d++)
-                    this->size *= *d;
-            }
-
             return this->size;
+        }
+
+        /**
+         * @brief Get the axis offset
+         * 
+         * @return std::vector<int> the axis offset
+         */
+        std::vector<int> get_axis_offset()
+        {
+            return this->axis_offset;
         }
 
         /**
@@ -319,7 +293,7 @@ namespace dl
             if (this->element != NULL)
                 return false;
 
-            this->element = (T *)dl::tool::calloc_aligned(this->get_size(), sizeof(T), 16);
+            this->element = (T *)dl::tool::calloc_aligned_prefer(this->get_size(), sizeof(T), 16);
             this->auto_free = auto_free;
 
             return true;
@@ -340,31 +314,7 @@ namespace dl
             if (this->element != NULL)
                 return false;
 
-            this->element = (T *)tool::malloc_aligned(this->get_size(), sizeof(T), 16);
-            this->auto_free = auto_free;
-
-            return true;
-        }
-
-        /**
-         * @brief If this->element != NULL no memory will be applied and no value will be set in padding.
-         * Else apply memory without initialized and set value to padding.
-         * 
-         * @param padding_value value to set in padding
-         * @param auto_free     one of true of false
-         *                      - true: free element when object destroyed
-         *                      - false: do not
-         * @return 
-         *         - true: apply memory and set padding value successfully
-         *         - false: no memory applied and no padding value set
-         */
-        bool apply_element(const T padding_value = 0, const bool auto_free = true)
-        {
-            if (this->element != NULL)
-                return false;
-
-            this->element = (T *)tool::malloc_aligned(this->get_size(), sizeof(T), 16);
-            this->set_padding_value(this->padding, padding_value);
+            this->element = (T *)tool::malloc_aligned_prefer(this->get_size(), sizeof(T), 16);
             this->auto_free = auto_free;
 
             return true;
@@ -379,258 +329,56 @@ namespace dl
         {
             if (this->auto_free && this->element)
             {
-                tool::free_aligned(this->element);
+                tool::free_aligned_prefer(this->element);
                 this->element = NULL;
             }
         }
 
         /**
-         * @brief Print the shape of Tensor in format "shape = ({top_padding} + {height} + {bottom_padding}, {left_padding} + {width} + {right_padding}, {channel}(channel_with_padding))\n".
+         * @brief print the element of the tensor
+         * 
+         * @param axis_index_range  the element range of each dims to be print. if axis_index_range == {}, all the element will be print. 
+         * @param message  to print  
          */
-        void print_shape()
-        {
-            printf("shape = (%d + %d + %d, %d + %d + %d, %d(%d))\n",
-                   this->padding[0], this->shape[0], this->padding[1],
-                   this->padding[2], this->shape[1], this->padding[3],
-                   this->shape[2], this->shape_with_padding[2]);
-        }
+        void print(std::vector<int> axis_index_range = {}, const char *message = "");
 
         /**
-         * @brief Take numpy for example, this function print Tensor[y_start:y_end, x_start:x_end, c_start:c_end].
+         * @brief  print all the element of the Tensor.
          * 
-         * inner box is effective value of Tensor, "0" around is padding.
-         * 
-         * (with padding)
-         *               00000000000000000000000000000000000000000000000000
-         *               00000000000000000000000000000000000000000000000000
-         *               00000000000000000000000000000000000000000000000000
-         *               000000(without padding)                   00000000
-         *               000000                                    00000000
-         *               000000                                    00000000
-         *               000000          effective value           00000000
-         *               000000                                    00000000
-         *               000000                                    00000000
-         *               00000000000000000000000000000000000000000000000000
-         *               00000000000000000000000000000000000000000000000000
-         *               00000000000000000000000000000000000000000000000000
-         * 
-         * @param y_start start index in height
-         * @param y_end   end index in height
-         * @param x_start start index in width
-         * @param x_end   end index in width
-         * @param c_start start index in channel
-         * @param c_end   end index in channel
-         * @param message to print
-         * @param axis    print aligned this axis, effective only if all y_end - y_start, x_end - x_start and c_end - c_start equals to 1
+         * @param message to print  
          * @param with_padding one of true or false,
-         *                     - true: count from (with padding) in upper image
-         *                     - false: count from (without padding) in upper image
+         *                     - true: the padding element will also be ed
+         *                     - false: the padding element will not be ed
          */
-        void print(int y_start, int y_end,
-                   int x_start, int x_end,
-                   int c_start, int c_end,
-                   const char *message, int axis = 0, const bool with_padding = false)
+        void print_all(const char *message = "")
         {
-            assert(y_end > y_start);
-            assert(x_end > x_start);
-            assert(c_end > c_start);
-
-            y_start = DL_MAX(y_start, 0);
-            x_start = DL_MAX(x_start, 0);
-            c_start = DL_MAX(c_start, 0);
-            if (with_padding)
-            {
-                y_end = DL_MIN(y_end, this->shape_with_padding[0]);
-                x_end = DL_MIN(x_end, this->shape_with_padding[1]);
-                c_end = DL_MIN(c_end, this->shape_with_padding[2]);
-            }
-            else
-            {
-                y_end = DL_MIN(y_end, this->shape[0]);
-                x_end = DL_MIN(x_end, this->shape[1]);
-                c_end = DL_MIN(c_end, this->shape[2]);
-            }
-
-            printf("%s[%d:%d, %d:%d, %d:%d] | ", message, y_start, y_end, x_start, x_end, c_start, c_end);
+            std::cout << "\n"
+                      << message << " | ";
             this->print_shape();
 
-            if (y_end - y_start == 1)
+            for (int i = 0; i < this->get_size(); i++)
             {
-                if (x_end - x_start == 1)
-                {
-                    for (int c = c_start; c < c_end; c++)
-                        printf("%7d", c);
-                    printf("\n");
-
-                    for (int c = c_start; c < c_end; c++)
-                        printf("%7d", this->get_element_value({y_start, x_start, c}, with_padding));
-                    printf("\n");
-
-                    return;
-                }
-                else
-                {
-                    if (c_end - c_start == 1)
-                    {
-                        for (int x = x_start; x < x_end; x++)
-                            printf("%7d", x);
-                        printf("\n");
-
-                        for (int x = x_start; x < x_end; x++)
-                            printf("%7d", this->get_element_value({y_start, x, c_start}, with_padding));
-                        printf("\n");
-
-                        return;
-                    }
-                }
+                std::cout << this->element[i] << " ";
             }
-            else
-            {
-                if (x_end - x_start == 1)
-                {
-                    if (c_end - c_start == 1)
-                    {
-                        for (int y = y_start; y < y_end; y++)
-                            printf("%7d", y);
-                        printf("\n");
-
-                        for (int y = y_start; y < y_end; y++)
-                            printf("%7d", this->get_element_value({y, x_start, c_start}, with_padding));
-                        printf("\n");
-
-                        return;
-                    }
-                }
-            }
-
-            if (y_end - y_start == 1)
-                axis = 0;
-
-            if (x_end - x_start == 1)
-                axis = 1;
-
-            if (c_end - c_start == 1)
-                axis = 2;
-
-            if (axis == 0)
-            {
-                // ______c
-                // |
-                // |
-                // x
-                //
-                for (int y = y_start; y < y_end; y++)
-                {
-                    printf("y = %d\n     ", y);
-
-                    for (int c = c_start; c < c_end; c++)
-                        printf("%7d", c);
-                    printf("\n");
-
-                    for (int x = x_start; x < x_end; x++)
-                    {
-                        printf("%5d", x);
-                        for (int c = c_start; c < c_end; c++)
-                            printf("%7d", this->get_element_value({y, x, c}, with_padding));
-                        printf("\n");
-                    }
-                    printf("\n");
-                }
-            }
-            else if (axis == 1)
-            {
-                // ______c
-                // |
-                // |
-                // y
-                //
-                for (int x = x_start; x < x_end; x++)
-                {
-                    printf("x = %d\n     ", x);
-
-                    for (int c = c_start; c < c_end; c++)
-                        printf("%7d", c);
-                    printf("\n");
-
-                    for (int y = y_start; y < y_end; y++)
-                    {
-                        printf("%5d", y);
-                        for (int c = c_start; c < c_end; c++)
-                            printf("%7d", this->get_element_value({y, x, c}, with_padding));
-                        printf("\n");
-                    }
-                    printf("\n");
-                }
-            }
-            else
-            {
-                // ______x
-                // |
-                // |
-                // y
-                //
-                for (int c = c_start; c < c_end; c++)
-                {
-                    printf("c = %d\n     ", c);
-
-                    for (int x = x_start; x < x_end; x++)
-                        printf("%7d", x);
-                    printf("\n");
-
-                    for (int y = y_start; y < y_end; y++)
-                    {
-                        printf("%5d", y);
-                        for (int x = x_start; x < x_end; x++)
-                            printf("%7d", this->get_element_value({y, x, c}, with_padding));
-                        printf("\n");
-                    }
-                    printf("\n");
-                }
-            }
-
+            std::cout << "\n";
             return;
         }
 
         /**
-         * @brief print all the element of the Tensor.
+         * @brief Get the index of each dims
          * 
-         * @param message to print
-         * @param with_padding one of true or false,
-         *                     - true: the padding element will also be printed
-         *                     - false: the padding element will not be printed
+         * @param element_index the index of the element
+         * @return std::vector<int> the index of each dims
          */
-        void print_all(const char *message, const bool with_padding = false)
-        {
-            int y_end;
-            int x_end;
-            int c_end;
-            if (with_padding)
-            {
-                y_end = this->shape_with_padding[0];
-                x_end = this->shape_with_padding[1];
-                c_end = this->shape_with_padding[2];
-            }
-            else
-            {
-                y_end = this->shape[0];
-                x_end = this->shape[1];
-                c_end = this->shape[2];
-            }
+        std::vector<int> get_axis_index(int element_index);
 
-            printf("\n%s | ", message);
-            this->print_shape();
-
-            for (int y = 0; y < y_end; y++)
-            {
-                for (int x = 0; x < x_end; x++)
-                {
-                    for (int c = 0; c < c_end; c++)
-                        printf("%d ", this->get_element_value({y, x, c}, with_padding));
-                }
-            }
-            printf("\n");
-            return;
-        }
+        /**
+         * @brief Get the index of element 
+         * 
+         * @param axis_index the index of each dims
+         * @return int the index of element 
+         */
+        int get_element_index(const std::vector<int> axis_index);
 
         /**
          * @brief Check the element value with input ground-truth.
@@ -638,35 +386,39 @@ namespace dl
          * @param gt_element ground-truth value of element
          * @param bias permissible error
          * @param info one of true or false
-         *             - true: print shape and result
+         *             - true:  shape and result
          *             - false: do not
+         * @param failed_number maximum number of wrong element that will be printed
+         * 
          * @return 
          *         - true: in permissible error
          *         - false: not 
          */
-        bool check_element(T *gt_element, int bias = 2, bool info = true)
+        bool check_element(T *gt_element, int bias = 2, bool info = true, int failed_number = 0)
         {
+            int count = 0;
             if (info)
                 this->print_shape();
-            int i = 0;
-            for (int y = 0; y < this->shape[0]; y++)
+            int size = this->get_size();
+            for (int i = 0; i < size; i++)
             {
-                for (int x = 0; x < this->shape[1]; x++)
+                if (DL_ABS(this->element[i] - gt_element[i]) > bias)
                 {
-                    for (int c = 0; c < this->shape[2]; c++)
+                    std::vector<int> index = get_axis_index(i);
+                    std::cout << "element[";
+                    for (int j = 0; j < index.size() - 1; j++)
                     {
-                        int a = this->get_element_value({y, x, c});
-                        int b = gt_element[i];
-                        int offset = DL_ABS(a - b);
-                        if (offset > bias)
-                        {
-                            printf("element[%d, %d, %d]: %d v.s. %d\n", y, x, c, a, b);
-                            return false;
-                        }
-                        i++;
+                        std::cout << index[j] << ", ";
                     }
+                    std::cout << index.back() << "]: ";
+                    std::cout << +this->element[i] << " v.s. " << +gt_element[i] << "\n";
+                    count++;
+                    if (count > failed_number)
+                        return false;
                 }
             }
+            if (count)
+                return false;
 
             if (info)
                 printf("PASS\n");
@@ -700,35 +452,44 @@ namespace dl
 
         Tensor<T> &operator=(const Tensor<T> &input)
         {
-            this->size = input.size;
             this->auto_free = input.auto_free;
             this->exponent = input.exponent;
-            this->shape = input.shape;
-            this->padding = input.padding;
-            int size_real_tmp = this->shape_with_padding.size() ? this->shape_with_padding[0] * this->shape_with_padding[1] * this->shape_with_padding[2] : 0;
-            int size_input_real = input.shape_with_padding.size() ? input.shape_with_padding[0] * input.shape_with_padding[1] * input.shape_with_padding[2] : 0;
-            this->shape_with_padding = input.shape_with_padding;
-            if (this->element)
+            int size_real_tmp = this->size;
+            int size_input_real = input.size;
+            this->set_shape(input.shape);
+            if (input.element)
             {
-                if (size_real_tmp != size_input_real)
+                if (this->element)
                 {
-                    tool::free_aligned(this->element);
-                    T *new_element = (T *)tool::calloc_aligned(size_input_real, sizeof(T), 16);
-                    tool::copy_memory(new_element, input.element, size_input_real * sizeof(T));
-                    this->element = new_element;
+                    if (size_real_tmp != size_input_real)
+                    {
+                        tool::free_aligned_prefer(this->element);
+                        T *new_element = (T *)tool::malloc_aligned_prefer(size_input_real, sizeof(T), 16);
+                        tool::copy_memory(new_element, input.element, size_input_real * sizeof(T));
+                        this->element = new_element;
+                    }
+                    else
+                    {
+                        tool::copy_memory(this->element, input.element, size_input_real * sizeof(T));
+                    }
                 }
                 else
                 {
-                    tool::copy_memory(this->element, input.element, size_input_real * sizeof(T));
+                    T *new_element = (T *)tool::malloc_aligned_prefer(size_input_real, sizeof(T), 16);
+                    tool::copy_memory(new_element, input.element, size_input_real * sizeof(T));
+                    this->element = new_element;
                 }
+                return *this;
             }
             else
             {
-                T *new_element = (T *)tool::calloc_aligned(size_input_real, sizeof(T), 16);
-                tool::copy_memory(new_element, input.element, size_input_real * sizeof(T));
-                this->element = new_element;
+                if (this->element)
+                {
+                    tool::free_aligned_prefer(this->element);
+                    this->element = NULL;
+                }
+                return *this;
             }
-            return *this;
         }
     };
 } // namespace dl

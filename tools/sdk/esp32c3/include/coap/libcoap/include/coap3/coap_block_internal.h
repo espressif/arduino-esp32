@@ -191,6 +191,9 @@ int coap_handle_response_get_block(coap_context_t *context,
 void coap_block_delete_lg_xmit(coap_session_t *session,
                                coap_lg_xmit_t *lg_xmit);
 
+coap_tick_t coap_block_check_lg_xmit_timeouts(coap_session_t *session,
+                                              coap_tick_t now);
+
 /**
  * The function that does all the work for the coap_add_data_large*()
  * functions.

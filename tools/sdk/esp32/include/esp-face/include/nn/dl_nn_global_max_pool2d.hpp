@@ -51,7 +51,7 @@ namespace dl
             std::vector<int> output_shape(input.shape.size(), 1);
             output_shape[2] = input.shape[2];
             Tensor<feature_t> output;
-            output.set_exponent(input.exponent).set_shape(output_shape).apply_element();
+            output.set_exponent(input.exponent).set_shape(output_shape).malloc_element();
             DL_LOG_NN_LATENCY_END("apply");
 
             DL_LOG_NN_LATENCY_START();
