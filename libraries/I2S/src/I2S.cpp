@@ -579,8 +579,8 @@ int I2SClass::read(void* buffer, size_t size){
       } // tmp buffer not NULL ?
     } // ring buffer not NULL ?
   } // if(_initialized)
-  return 0;
   _give_if_top_call();
+  return 0;
 }
 
 /*
