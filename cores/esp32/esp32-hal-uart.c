@@ -269,7 +269,7 @@ void uartWrite(uart_t* uart, uint8_t c)
 
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
 {
-    if(uart == NULL) {
+    if(uart == NULL || data == NULL || !len) {
         return;
     }
 

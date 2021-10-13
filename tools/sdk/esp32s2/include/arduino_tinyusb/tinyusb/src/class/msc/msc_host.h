@@ -106,11 +106,11 @@ TU_ATTR_WEAK void tuh_msc_umount_cb(uint8_t dev_addr);
 // Internal Class Driver API
 //--------------------------------------------------------------------+
 
-void     msch_init       (void);
-uint16_t msch_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
-bool     msch_set_config (uint8_t dev_addr, uint8_t itf_num);
-bool     msch_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
-void     msch_close      (uint8_t dev_addr);
+void msch_init       (void);
+bool msch_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
+bool msch_set_config (uint8_t dev_addr, uint8_t itf_num);
+void msch_close      (uint8_t dev_addr);
+bool msch_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);
 
 #ifdef __cplusplus
  }

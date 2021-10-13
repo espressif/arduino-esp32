@@ -156,7 +156,7 @@ void USBCDC::_onUnplugged(void){
         connected = false;
         dtr = false;
         rts = false;
-        arduino_usb_cdc_event_data_t p = {0};
+        arduino_usb_cdc_event_data_t p;
         arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
     }
 }
@@ -178,7 +178,7 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
                 lineState++;
                 if(connected){
                     connected = false;
-                    arduino_usb_cdc_event_data_t p = {0};
+                    arduino_usb_cdc_event_data_t p;
                     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
                 }
             } else {
@@ -208,14 +208,14 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
     if(lineState == CDC_LINE_IDLE){
         if(dtr && rts && !connected){
             connected = true;
-            arduino_usb_cdc_event_data_t p = {0};
+            arduino_usb_cdc_event_data_t p;
             arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_CONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
         } else if(!dtr && connected){
             connected = false;
-            arduino_usb_cdc_event_data_t p = {0};
+            arduino_usb_cdc_event_data_t p;
             arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
         }
-        arduino_usb_cdc_event_data_t l = {0};
+        arduino_usb_cdc_event_data_t l;
         l.line_state.dtr = dtr;
         l.line_state.rts = rts;
         arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_LINE_STATE_EVENT, &l, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
@@ -233,7 +233,7 @@ void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _pari
             data_bits = _data_bits;
             stop_bits = _stop_bits;
             parity = _parity;
-            arduino_usb_cdc_event_data_t p = {0};
+            arduino_usb_cdc_event_data_t p;
             p.line_coding.bit_rate = bit_rate;
             p.line_coding.data_bits = data_bits;
             p.line_coding.stop_bits = stop_bits;
@@ -251,13 +251,13 @@ void USBCDC::_onRX(){
             return;
         }
     }
-    arduino_usb_cdc_event_data_t p = {0};
+    arduino_usb_cdc_event_data_t p;
     p.rx.len = count;
     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
 }
 
 void USBCDC::_onTX(){
-    arduino_usb_cdc_event_data_t p = {0};
+    arduino_usb_cdc_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_TX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
 }
 

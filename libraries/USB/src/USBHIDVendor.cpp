@@ -124,7 +124,7 @@ uint16_t USBHIDVendor::_onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_
         return 0;
     }
     memcpy(buffer, feature, len);
-    arduino_usb_hid_vendor_event_data_t p = {0};
+    arduino_usb_hid_vendor_event_data_t p;
     p.buffer = feature;
     p.len = len;
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_GET_FEATURE_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
@@ -136,7 +136,7 @@ void USBHIDVendor::_onSetFeature(uint8_t report_id, const uint8_t* buffer, uint1
         return;
     }
     memcpy(feature, buffer, len);
-    arduino_usb_hid_vendor_event_data_t p = {0};
+    arduino_usb_hid_vendor_event_data_t p;
     p.buffer = feature;
     p.len = len;
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_SET_FEATURE_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
@@ -153,7 +153,7 @@ void USBHIDVendor::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t 
             break;
         }
     }
-    arduino_usb_hid_vendor_event_data_t p = {0};
+    arduino_usb_hid_vendor_event_data_t p;
     p.buffer = buffer;
     p.len = len;
     arduino_usb_event_post(ARDUINO_USB_HID_VENDOR_EVENTS, ARDUINO_USB_HID_VENDOR_OUTPUT_EVENT, &p, sizeof(arduino_usb_hid_vendor_event_data_t), portMAX_DELAY);
