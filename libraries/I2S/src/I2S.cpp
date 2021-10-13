@@ -271,18 +271,18 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       return 0; // ERR
   }
 
+  if(!_installDriver()){
+    _initialized = false;
+    end();
+    _give_if_top_call();
+    return 0; // ERR
+  }
+
   _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
     log_e("ERROR I2SClass::begin could not create one or both internal buffers. Requested size = %d\n", _buffer_byte_size);
-    _give_if_top_call();
-    return 0; // ERR
-  }
-
-  if(!_installDriver()){
-    _initialized = false;
-    end();
     _give_if_top_call();
     return 0; // ERR
   }
