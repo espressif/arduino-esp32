@@ -1,4 +1,5 @@
 /*
+ This example is only for ESP
  This example demonstrates simultaneous usage of microphone and speaker using single I2S module.
  The application transfers data from input to output
 
@@ -20,11 +21,11 @@
 #include <I2S.h>
 const long sampleRate = 16000;
 const int bitsPerSample = 32;
+uint8_t *buffer;
 
 void setup() {
-  disableCore0WDT();
   Serial.begin(115200);
-  I2S.setAllPins(5, 25, 35, 26);
+  //I2S.setAllPins(5, 25, 35, 26); // you can change default pins; order of pins = (CLK, WS, IN, OUT)
   if(!I2S.setDuplex()){
     Serial.println("ERROR - could not set duplex");
     while(true){
@@ -37,7 +38,6 @@ void setup() {
       vTaskDelay(10); // Cannot continue
     }
   }
-  uint8_t *buffer;
   buffer = (uint8_t*) malloc(I2S.getBufferSize() * (bitsPerSample / 8));
   if(buffer == NULL){
     Serial.println("Failed to allocate buffer!");
@@ -52,6 +52,8 @@ void loop() {
   //I2S.write(I2S.read()); // primitive implementation sample-by-sample
 
   // Buffer based implementation
-  I2S.read(buffer, I2S.getBufferSize()*(bps/8));
-  I2S.write(buffer, I2S.getBufferSize()*(bps/8));
+  I2S.read(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
+  I2S.write(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
+
+  //optimistic_yield(1000); // yield if last yield occurred before <parameter> CPU clock cycles ago
 }
