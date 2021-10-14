@@ -117,7 +117,7 @@ int I2SClass::_installDriver(){
   }
 
   if(_mode == I2S_ADC_DAC){
-    #if SOC_I2S_SUPPORTS_ADC_DAC
+    #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
         log_e("ERROR I2SClass::begin invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
         return 0; // ERR
@@ -138,7 +138,7 @@ int I2SClass::_installDriver(){
       log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
     }
   }else if(_mode == I2S_PDM){ // end of Normal Philips mode; start of PDM mode
-    #if SOC_I2S_SUPPORTS_PDM
+    #if (SOC_I2S_SUPPORTS_PDM_TX && SOC_I2S_SUPPORTS_PDM_RX)
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
     #else
       log_e("This chip does not support PDM");
@@ -175,7 +175,7 @@ int I2SClass::_installDriver(){
     esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO);
   }
 
-#if SOC_I2S_SUPPORTS_ADC_DAC
+#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
   if(_mode == I2S_ADC_DAC){
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
     esp_i2s::adc_unit_t adc_unit;
@@ -259,7 +259,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     case I2S_PHILIPS_MODE:
     case I2S_RIGHT_JUSTIFIED_MODE:
     case I2S_LEFT_JUSTIFIED_MODE:
-#if SOC_I2S_SUPPORTS_ADC_DAC
+#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
     case I2S_ADC_DAC:
 #endif
     case I2S_PDM:
@@ -470,7 +470,7 @@ int I2SClass::getDataOutPin(){
 }
 
 void I2SClass::_uninstallDriver(){
-#if SOC_I2S_SUPPORTS_ADC_DAC
+#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
   if(_mode == I2S_ADC_DAC){
     esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
   }
@@ -563,7 +563,7 @@ int I2SClass::read(void* buffer, size_t size){
       tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), size);
       if(tmp_buffer != NULL){
         memcpy(buffer, tmp_buffer, item_size);
-        #if SOC_I2S_SUPPORTS_ADC_DAC
+        #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
           if(_mode == I2S_ADC_DAC){
             for(size_t i = 0; i < item_size / 2; ++i){
               ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
@@ -908,7 +908,7 @@ void I2SClass::_give_if_top_call(){
   }
 }
 
-#if SOC_I2S_SUPPORTS_ADC_DAC
+#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
 int I2SClass::gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
   switch(gpio_num){
 #if CONFIG_IDF_TARGET_ESP32
