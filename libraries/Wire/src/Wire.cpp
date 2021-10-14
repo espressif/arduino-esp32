@@ -199,8 +199,6 @@ size_t requestFrom(uint8_t address, size_t len, bool stopBit)
     return requestFrom(address, (uint8_t)len, stopBit);
 }
 
-/* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
- */
 uint8_t TwoWire::requestFrom(uint16_t address, uint8_t size, bool sendStop)
 {
     //use internal Wire rxBuffer, multiple requestFrom()'s may be pending, try to share rxBuffer
