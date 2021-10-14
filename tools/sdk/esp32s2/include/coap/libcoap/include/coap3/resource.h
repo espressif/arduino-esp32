@@ -83,7 +83,8 @@ typedef void (*coap_method_handler_t)
  * variable of coap_str_const_t has to point to constant text, or point to data
  * within the allocated coap_str_const_t parameter.
  *
- * @param uri_path The string URI path of the new resource.
+ * @param uri_path The string URI path of the new resource. The leading '/' is
+ *                 not normally required - e.g. just "full/path/for/resource".
  * @param flags    Flags for memory management (in particular release of
  *                 memory). Possible values:@n
  *

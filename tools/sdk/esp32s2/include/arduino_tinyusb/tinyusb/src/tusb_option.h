@@ -241,6 +241,10 @@
   #define CFG_TUD_AUDIO           0
 #endif
 
+#ifndef CFG_TUD_VIDEO
+  #define CFG_TUD_VIDEO           0
+#endif
+
 #ifndef CFG_TUD_MIDI
   #define CFG_TUD_MIDI            0
 #endif
@@ -261,12 +265,21 @@
   #define CFG_TUD_DFU             0
 #endif
 
-#ifndef CFG_TUD_NET
-  #define CFG_TUD_NET             0
-#endif
-
 #ifndef CFG_TUD_BTH
   #define CFG_TUD_BTH             0
+#endif
+
+#ifndef CFG_TUD_ECM_RNDIS
+  #ifdef CFG_TUD_NET
+    #warning "CFG_TUD_NET is renamed to CFG_TUD_ECM_RNDIS"
+    #define CFG_TUD_ECM_RNDIS   CFG_TUD_NET
+  #else
+    #define CFG_TUD_ECM_RNDIS   0
+  #endif
+#endif
+
+#ifndef CFG_TUD_NCM
+  #define CFG_TUD_NCM         0
 #endif
 
 //--------------------------------------------------------------------
@@ -280,9 +293,33 @@
   #ifndef CFG_TUH_ENUMERATION_BUFSIZE
     #define CFG_TUH_ENUMERATION_BUFSIZE 256
   #endif
-
-  //------------- CLASS -------------//
 #endif // TUSB_OPT_HOST_ENABLED
+
+//------------- CLASS -------------//
+
+#ifndef CFG_TUH_HUB
+#define CFG_TUH_HUB    0
+#endif
+
+#ifndef CFG_TUH_CDC
+#define CFG_TUH_CDC    0
+#endif
+
+#ifndef CFG_TUH_HID
+#define CFG_TUH_HID    0
+#endif
+
+#ifndef CFG_TUH_MIDI
+#define CFG_TUH_MIDI   0
+#endif
+
+#ifndef CFG_TUH_MSC
+#define CFG_TUH_MSC    0
+#endif
+
+#ifndef CFG_TUH_VENDOR
+#define CFG_TUH_VENDOR 0
+#endif
 
 //--------------------------------------------------------------------+
 // Port Specific
