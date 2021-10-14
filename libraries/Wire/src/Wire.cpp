@@ -191,6 +191,14 @@ uint8_t TwoWire::endTransmission(bool sendStop)  // Assumes Wire.beginTransactio
     return (last_error == I2C_ERROR_CONTINUE)?I2C_ERROR_OK:last_error; // Don't return Continue for compatibility.
 }
 
+/* Added to match the Arduino function definition: https://github.com/arduino/ArduinoCore-API/blob/173e8eadced2ad32eeb93bcbd5c49f8d6a055ea6/api/HardwareI2C.h#L39
+ * See: https://github.com/arduino-libraries/ArduinoECCX08/issues/25
+*/
+size_t requestFrom(uint8_t address, size_t len, bool stopBit)
+{
+    return requestFrom(address, (uint8_t)len, stopBit);
+}
+
 /* @stickBreaker 11/2017 fix for ReSTART timeout, ISR
  */
 uint8_t TwoWire::requestFrom(uint16_t address, uint8_t size, bool sendStop)
