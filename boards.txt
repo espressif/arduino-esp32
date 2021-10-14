@@ -9687,10 +9687,10 @@ deneyapmini.build.boot=qio
 deneyapmini.build.partitions=default
 deneyapmini.build.defines=
 
-deneyapmini.menu.SerialMode.default=USB_CDC
-deneyapmini.menu.SerialMode.default.build.serial=1
-deneyapmini.menu.SerialMode.uart=UART0
-deneyapmini.menu.SerialMode.uart.build.serial=0
+deneyapmini.menu.CDCOnBoot.default=Disabled
+deneyapmini.menu.CDCOnBoot.default.build.cdc_on_boot=0
+deneyapmini.menu.CDCOnBoot.cdc=Enabled
+deneyapmini.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
 deneyapmini.menu.PSRAM.disabled=Disabled
 deneyapmini.menu.PSRAM.disabled.build.defines=
