@@ -210,9 +210,10 @@ int I2SClass::_installDriver(){
     _initialized = true;
   }else // End of ADC/DAC mode
 #endif // SOC_I2S_SUPPORTS_ADC_DAC
-  if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE){ // if I2S mode
+  if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == I2S_PDM){ // if I2S mode
     _initialized = true; // must be _initialized before calling _applyPinSetting
     if(!_applyPinSetting()){
+      log_e("could not apply pin setting during driver install");
       end();
       return 0; // ERR
     }
@@ -272,6 +273,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   }
 
   if(!_installDriver()){
+    log_e("ERROR I2SClass::begin() failed to install driver");
     _initialized = false;
     end();
     _give_if_top_call();

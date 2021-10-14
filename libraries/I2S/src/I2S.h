@@ -112,7 +112,7 @@ public:
 
   int setBufferSize(int bufferSize);
   int getBufferSize();
-  #if SOC_I2S_SUPPORTS_ADC_DAC
+  #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
     int gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
     int gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel);
   #endif
