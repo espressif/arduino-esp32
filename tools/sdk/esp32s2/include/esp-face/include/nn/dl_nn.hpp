@@ -14,13 +14,13 @@ namespace dl
          * @param filter_shape filter shape with dilation
          * @param stride_y     stride in height
          * @param stride_x     stride in width
-         * @param pad_type     one of PADDING_VALID or PADDING_SAME or PADDING_SAME_MXNET
+         * @param pad_type     one of PADDING_VALID or PADDING_SAME_END or PADDING_SAME_BEGIN
          * @param is_conv2d    one of true or false,
          *                     - true: serve for Conv2D
          *                     - false: serve for other operations
          * @return std::vector<int> 
          */
-        std::vector<int> get_output_shape(const std::vector<int> &input_shape, const std::vector<int> &filter_shape, const int stride_y, const int stride_x, const padding_type_t pad_type, const bool is_conv2d = false);
+        std::vector<int> get_output_shape(const std::vector<int> &input_shape, const std::vector<int> &filter_shape, const int stride_y, const int stride_x, const padding_type_t pad_type, const bool is_conv2d = false, std::vector<int> padding = {});
 
         /**
          * @brief Get the pad size object
@@ -30,7 +30,7 @@ namespace dl
          * @param filter_shape filter shape with dilation
          * @param stride_y     stride in height
          * @param stride_x     stride in width
-         * @param padding_type one of PADDING_VALID or PADDING_SAME or PADDING_SAME_MXNET
+         * @param padding_type one of PADDING_VALID or PADDING_SAME_END or PADDING_SAME_BEGIN
          * @return padding size
          */
         std::vector<int> get_pad_size(const std::vector<int> &output_shape, const std::vector<int> &input_shape, const std::vector<int> &filter_shape, const int stride_y, const int stride_x, const padding_type_t padding_type);

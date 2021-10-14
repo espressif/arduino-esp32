@@ -58,12 +58,12 @@ namespace dl
          * @param filter_shape    filter_shape in [filter_height, filter_width]
          * @param stride_y        stride in height
          * @param stride_x        stride in width
-         * @param padding_type    one of PADDING_VALID or PADDING_SAME or PADDING_SAME_MXNET,
+         * @param padding_type    one of PADDING_VALID or PADDING_SAME_END or PADDING_SAME_BEGIN,
          *                        - PADDING_VALID: no padding
-         *                        PADDING_SAME and PADDING_SAME_MXNET results in padding with zeros evenly to the left/right or up/down of the input 
+         *                        PADDING_SAME_END and PADDING_SAME_BEGIN results in padding with zeros evenly to the left/right or up/down of the input 
          *                        such that output has the same height/width dimension as the input,
-         *                        - PADDING_SAME results padding in TensorFlow style
-         *                        - PADDING_SAME_MXNET results padding in MXNET style
+         *                        - PADDING_SAME_END results padding in TensorFlow style
+         *                        - PADDING_SAME_BEGIN results padding in MXNET style
          * @param assign_core     not effective yet
          * @return avg_pool2d result
          */
@@ -81,19 +81,19 @@ namespace dl
             DL_LOG_NN_LATENCY_START();
             std::vector<int> output_shape = get_output_shape(input.shape, filter_shape, stride_y, stride_x, padding_type);
             Tensor<feature_t> output;
-            output.set_exponent(output_exponent).set_shape(output_shape).apply_element();
+            output.set_exponent(output_exponent).set_shape(output_shape).malloc_element();
             DL_LOG_NN_LATENCY_END("apply");
+            std::vector<int> padding(4, 0);
 
             DL_LOG_NN_LATENCY_START();
-            if (padding_type == PADDING_SAME || padding_type == PADDING_SAME_MXNET)
+            if (padding_type == PADDING_SAME_END || padding_type == PADDING_SAME_BEGIN)
             {
-                std::vector<int> padding = get_pad_size(output_shape, input.shape, filter_shape, stride_y, stride_x, padding_type);
-                input.set_padding_size(padding);
+                padding = get_pad_size(output_shape, input.shape, filter_shape, stride_y, stride_x, padding_type);
             }
             DL_LOG_NN_LATENCY_END("padding");
 
             DL_LOG_NN_LATENCY_START();
-            avg_pool2d(output, input, input.padding, filter_shape, stride_y, stride_x, assign_core);
+            avg_pool2d(output, input, padding, filter_shape, stride_y, stride_x, assign_core);
             DL_LOG_NN_LATENCY_END("avg_pool2d");
 
             return output;

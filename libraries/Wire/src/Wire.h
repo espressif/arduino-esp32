@@ -61,6 +61,13 @@ protected:
     TaskHandle_t nonStopTask;
     SemaphoreHandle_t lock;
 #endif
+private:
+    bool is_slave;
+    void (*user_onRequest)(void);
+    void (*user_onReceive)(int);
+    static void onRequestService(uint8_t, void *);
+    static void onReceiveService(uint8_t, uint8_t*, size_t, bool, void *);
+    bool initPins(int sdaPin, int sclPin);
 
 public:
     TwoWire(uint8_t bus_num);
@@ -70,6 +77,7 @@ public:
     bool setPins(int sda, int scl);
     
     bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
+    bool begin(uint8_t slaveAddr, int sda=-1, int scl=-1, uint32_t frequency=0);
     bool end();
 
     void setTimeOut(uint16_t timeOutMillis); // default timeout of i2c transactions is 50ms
@@ -123,6 +131,7 @@ public:
 
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
+    size_t slaveWrite(const uint8_t *, size_t);
 };
 
 extern TwoWire Wire;

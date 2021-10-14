@@ -63,6 +63,9 @@
 #elif TU_CHECK_MCU(MKL25ZXX) || TU_CHECK_MCU(K32L2BXX)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
+#elif TU_CHECK_MCU(MM32F327X)
+  #define DCD_ATTR_ENDPOINT_MAX   16
+
 //------------- Nordic -------------//
 #elif TU_CHECK_MCU(NRF5X)
   // 8 CBI + 1 ISO
