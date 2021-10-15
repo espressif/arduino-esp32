@@ -43,6 +43,7 @@ WiFiClientSecure::WiFiClientSecure()
     _pskIdent = NULL;
     _psKey = NULL;
     next = NULL;
+    _alpn_protos = NULL;
 }
 
 
@@ -66,6 +67,7 @@ WiFiClientSecure::WiFiClientSecure(int sock)
     _pskIdent = NULL;
     _psKey = NULL;
     next = NULL;
+    _alpn_protos = NULL;
 }
 
 WiFiClientSecure::~WiFiClientSecure()
