@@ -494,18 +494,6 @@ typedef enum
 
 /// All remaining definitions are taken from the descriptor descriptions in the UAC2 main specification
 
-/// Isochronous End Point Attributes
-typedef enum
-{
-  TUSB_ISO_EP_ATT_NO_SYNC         = 0x00,
-  TUSB_ISO_EP_ATT_ASYNCHRONOUS    = 0x04,
-  TUSB_ISO_EP_ATT_ADAPTIVE        = 0x08,
-  TUSB_ISO_EP_ATT_SYNCHRONOUS     = 0x0C,
-  TUSB_ISO_EP_ATT_DATA            = 0x00, ///< Data End Point
-  TUSB_ISO_EP_ATT_EXPLICIT_FB     = 0x10, ///< Feedback End Point
-  TUSB_ISO_EP_ATT_IMPLICIT_FB     = 0x20, ///< Data endpoint that also serves as an implicit feedback
-} tusb_iso_ep_attribute_t;
-
 /// Audio Class-Control Values UAC2
 typedef enum
 {

@@ -38,9 +38,14 @@
 //--------------------------------------------------------------------+
 
 // TODO Highspeed interrupt can be up to 512 bytes
-#ifndef CFG_TUH_HID_EP_BUFSIZE
-#define CFG_TUH_HID_EP_BUFSIZE 64
+#ifndef CFG_TUH_HID_EPIN_BUFSIZE
+#define CFG_TUH_HID_EPIN_BUFSIZE 64
 #endif
+
+#ifndef CFG_TUH_HID_EPOUT_BUFSIZE
+#define CFG_TUH_HID_EPOUT_BUFSIZE 64
+#endif
+
 
 typedef struct
 {
@@ -54,7 +59,7 @@ typedef struct
 } tuh_hid_report_info_t;
 
 //--------------------------------------------------------------------+
-// Application API
+// Interface API
 //--------------------------------------------------------------------+
 
 // Get the number of HID instances
@@ -65,6 +70,14 @@ bool tuh_hid_mounted(uint8_t dev_addr, uint8_t instance);
 
 // Get interface supported protocol (bInterfaceProtocol) check out hid_interface_protocol_enum_t for possible values
 uint8_t tuh_hid_interface_protocol(uint8_t dev_addr, uint8_t instance);
+
+// Parse report descriptor into array of report_info struct and return number of reports.
+// For complicated report, application should write its own parser.
+uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr, uint8_t arr_count, uint8_t const* desc_report, uint16_t desc_len) TU_ATTR_UNUSED;
+
+//--------------------------------------------------------------------+
+// Control Endpoint API
+//--------------------------------------------------------------------+
 
 // Get current protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 // Note: Device will be initialized in Boot protocol for simplicity.
@@ -79,12 +92,17 @@ bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
 // report_type is either Intput, Output or Feature, (value from hid_report_type_t)
 bool tuh_hid_set_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
 
-// Parse report descriptor into array of report_info struct and return number of reports.
-// For complicated report, application should write its own parser.
-uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr, uint8_t arr_count, uint8_t const* desc_report, uint16_t desc_len) TU_ATTR_UNUSED;
+//--------------------------------------------------------------------+
+// Interrupt Endpoint API
+//--------------------------------------------------------------------+
 
 // Check if the interface is ready to use
 //bool tuh_n_hid_n_ready(uint8_t dev_addr, uint8_t instance);
+
+// Try to receive next report on Interrupt Endpoint. Immediately return
+// - true If succeeded, tuh_hid_report_received_cb() callback will be invoked when report is available
+// - false if failed to queue the transfer e.g endpoint is busy
+bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t instance);
 
 // Send report using interrupt endpoint
 // If report_id > 0 (composite), it will be sent as 1st byte, then report contents. Otherwise only report content is sent.
@@ -97,6 +115,8 @@ uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr,
 // Invoked when device with hid interface is mounted
 // Report descriptor is also available for use. tuh_hid_parse_report_descriptor()
 // can be used to parse common/simple enough descriptor.
+// Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
+// therefore report_desc = NULL, desc_len = 0
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report_desc, uint16_t desc_len);
 
 // Invoked when device with hid interface is un-mounted
@@ -119,11 +139,11 @@ TU_ATTR_WEAK void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t ins
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void     hidh_init       (void);
-uint16_t hidh_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
-bool     hidh_set_config (uint8_t dev_addr, uint8_t itf_num);
-bool     hidh_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-void     hidh_close      (uint8_t dev_addr);
+void hidh_init       (void);
+bool hidh_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
+bool hidh_set_config (uint8_t dev_addr, uint8_t itf_num);
+bool hidh_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void hidh_close      (uint8_t dev_addr);
 
 #ifdef __cplusplus
 }
