@@ -19,19 +19,19 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Testing EEPROMClass\n");
-  if (!NAMES.begin(NAMES.length())) {
+  if (!NAMES.begin(NAMES.capacity())) {
     Serial.println("Failed to initialise NAMES");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();
   }
-  if (!HEIGHT.begin(HEIGHT.length())) {
+  if (!HEIGHT.begin(HEIGHT.capacity())) {
     Serial.println("Failed to initialise HEIGHT");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();
   }
-  if (!AGE.begin(AGE.length())) {
+  if (!AGE.begin(AGE.capacity())) {
     Serial.println("Failed to initialise AGE");
     Serial.println("Restarting...");
     delay(1000);

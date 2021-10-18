@@ -42,6 +42,7 @@ class EEPROMClass {
     bool begin(size_t size);
     uint8_t read(int address);
     void write(int address, uint8_t val);
+    uint16_t capacity();
     uint16_t length();
     bool commit();
     void end();

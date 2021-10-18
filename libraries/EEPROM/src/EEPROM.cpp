@@ -213,6 +213,14 @@ uint8_t * EEPROMClass::getDataPtr() {
 /*
    Get EEPROM total size in byte defined by the user
 */
+uint16_t EEPROMClass::capacity ()
+{
+  return _user_defined_size;
+}
+
+/*
+   Get EEPROM total size in byte defined by the user
+*/
 uint16_t EEPROMClass::length ()
 {
   return _user_defined_size;
