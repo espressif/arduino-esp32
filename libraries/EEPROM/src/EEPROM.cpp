@@ -223,7 +223,7 @@ uint16_t EEPROMClass::capacity ()
 */
 uint16_t EEPROMClass::length ()
 {
-  return _user_defined_size;
+  return _size;
 }
 
 /* 
