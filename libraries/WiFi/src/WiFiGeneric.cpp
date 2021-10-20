@@ -557,6 +557,18 @@ bool wifiLowLevelInit(bool persistent){
         }
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+#if 1
+        // TWEAK to force Dynamic Buffer instead of Static ones
+        // This uses less heap space in Arduino and makes it similar to 1.0.6 configuration
+        cfg.static_tx_buf_num = 0;
+        cfg.dynamic_tx_buf_num = 32;
+        cfg.tx_buf_type = 1;
+        cfg.cache_tx_buf_num = 1;          // it can't be zero for WPA/WPA2
+        cfg.static_rx_buf_num = 4;
+        cfg.dynamic_rx_buf_num = 32;
+#endif
+
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
             log_e("esp_wifi_init %d", err);
