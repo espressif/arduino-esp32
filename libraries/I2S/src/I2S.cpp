@@ -22,7 +22,7 @@
 #include "freertos/semphr.h"
 
 #define _I2S_EVENT_QUEUE_LENGTH 16
-#define _I2S_DMA_BUFFER_COUNT 4 // BUFFER COUNT must be between 2 and 128
+#define _I2S_DMA_BUFFER_COUNT 8 // BUFFER COUNT must be between 2 and 128
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
 
 #ifndef I2S_DEVICE
@@ -55,7 +55,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(1024),
+  _i2s_dma_buffer_size(200),
   _driveClock(true),
   _nesting_counter(0),
 
@@ -149,7 +149,7 @@ int I2SClass::_installDriver(){
     .mode = i2s_mode,
     .sample_rate = _sampleRate,
     .bits_per_sample = (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample,
-    .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT,
+    .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT, // MONO only LEFT
     .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S), // 0x01 // default
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
@@ -171,8 +171,9 @@ int I2SClass::_installDriver(){
     }
   } //try installing with increasing size
 
-  if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE){ // end of Normal Philips mode; start of mono/single channel
-    esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO);
+  // Set the clock for MONO. Stereo is not supported yet.
+  if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
+    log_e("Setting the I2S Clock has failed!\n");
   }
 
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
