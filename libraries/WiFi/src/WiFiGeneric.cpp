@@ -550,10 +550,9 @@ bool WiFiGenericClass::useStaticBuffers(){
 
 void WiFiGenericClass::useStaticBuffers(bool bufferMode){
     if (lowLevelInitDone) {
-        log_w("WiFi already started. Call espWiFiStop() before setting Static Buffer Mode.");
-    } else  {
-        _wifiUseStaticBuffers = bufferMode;
-    }
+        log_w("WiFi already started. Call WiFi.mode(WIFI_MODE_NULL) before setting Static Buffer Mode.");
+    } 
+    _wifiUseStaticBuffers = bufferMode;
 }
 
 
