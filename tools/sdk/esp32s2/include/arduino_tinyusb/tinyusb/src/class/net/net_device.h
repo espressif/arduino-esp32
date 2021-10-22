@@ -30,12 +30,34 @@
 
 #include "class/cdc/cdc.h"
 
+#if CFG_TUD_ECM_RNDIS && CFG_TUD_NCM
+#error "Cannot enable both ECM_RNDIS and NCM network drivers"
+#endif
+
+#include "ncm.h"
+
 /* declared here, NOT in usb_descriptors.c, so that the driver can intelligently ZLP as needed */
 #define CFG_TUD_NET_ENDPOINT_SIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
-/* Maximum Tranmission Unit (in bytes) of the network, including Ethernet header */
+/* Maximum Transmission Unit (in bytes) of the network, including Ethernet header */
 #ifndef CFG_TUD_NET_MTU
 #define CFG_TUD_NET_MTU           1514
+#endif
+
+#ifndef CFG_TUD_NCM_IN_NTB_MAX_SIZE
+#define CFG_TUD_NCM_IN_NTB_MAX_SIZE 3200
+#endif
+
+#ifndef CFG_TUD_NCM_OUT_NTB_MAX_SIZE
+#define CFG_TUD_NCM_OUT_NTB_MAX_SIZE 3200
+#endif
+
+#ifndef CFG_TUD_NCM_MAX_DATAGRAMS_PER_NTB
+#define CFG_TUD_NCM_MAX_DATAGRAMS_PER_NTB 8
+#endif
+
+#ifndef CFG_TUD_NCM_ALIGNMENT
+#define CFG_TUD_NCM_ALIGNMENT 4
 #endif
 
 #ifdef __cplusplus
@@ -46,8 +68,18 @@
 // Application API
 //--------------------------------------------------------------------+
 
-// client must provide this: initialize any network state back to the beginning
-void tud_network_init_cb(void);
+// indicate to network driver that client has finished with the packet provided to network_recv_cb()
+void tud_network_recv_renew(void);
+
+// poll network driver for its ability to accept another packet to transmit
+bool tud_network_can_xmit(uint16_t size);
+
+// if network_can_xmit() returns true, network_xmit() can be called once
+void tud_network_xmit(void *ref, uint16_t arg);
+
+//--------------------------------------------------------------------+
+// Application Callbacks (WEAK is optional)
+//--------------------------------------------------------------------+
 
 // client must provide this: return false if the packet buffer was not accepted
 bool tud_network_recv_cb(const uint8_t *src, uint16_t size);
@@ -55,18 +87,19 @@ bool tud_network_recv_cb(const uint8_t *src, uint16_t size);
 // client must provide this: copy from network stack packet pointer to dst
 uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg);
 
+//------------- ECM/RNDIS -------------//
+
+// client must provide this: initialize any network state back to the beginning
+void tud_network_init_cb(void);
+
 // client must provide this: 48-bit MAC address
 // TODO removed later since it is not part of tinyusb stack
 extern const uint8_t tud_network_mac_address[6];
 
-// indicate to network driver that client has finished with the packet provided to network_recv_cb()
-void tud_network_recv_renew(void);
+//------------- NCM -------------//
 
-// poll network driver for its ability to accept another packet to transmit
-bool tud_network_can_xmit(void);
-
-// if network_can_xmit() returns true, network_xmit() can be called once
-void tud_network_xmit(void *ref, uint16_t arg);
+// callback to client providing optional indication of internal state of network driver
+void tud_network_link_state_cb(bool state);
 
 //--------------------------------------------------------------------+
 // INTERNAL USBD-CLASS DRIVER API

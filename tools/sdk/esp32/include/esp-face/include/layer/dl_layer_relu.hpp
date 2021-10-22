@@ -21,29 +21,28 @@ namespace dl
         class ReLU : public Layer
         {
         private:
-            Tensor<feature_t> *output;  /*<! output ptr of relu >*/
-            bool inplace;               /*<! true: the output will store to input0
-                                             false: the output will store to a seperate memeory >*/ 
+            Tensor<feature_t> *output;     /*<! output ptr of relu >*/
+            bool inplace;                  /*<! true: the output will store to input0
+                                                false: the output will store to a separate memory >*/
+            std::vector<int> output_shape; /*<! output shape of relu >*/
         public:
-
-
             /**
              * @brief Construct a new ReLU object
              * 
              * @param name            name of relu
              * @param inplace         true: the output will store to input0
-             *                        false: the output will store to a seperate memeory
+             *                        false: the output will store to a separate memory
              */
-            ReLU(const char *name = NULL, bool inplace = false) : Layer(name), output(NULL)
+            ReLU(const char *name = "ReLU", bool inplace = false) : Layer(name),
+                                                                    output(NULL), inplace(inplace), output_shape({})
             {
-                this->inplace = inplace;
             }
 
             /**
              * @brief Destroy the ReLU object
              * 
              */
-            ~ReLU() 
+            ~ReLU()
             {
                 if ((!this->inplace) && (this->output != NULL))
                 {
@@ -55,22 +54,30 @@ namespace dl
              * @brief Update output shape and exponent
              * 
              * @param input       as an input
+             * @param print_shape  whether to print the output shape.
              */
-            void build(Tensor<feature_t> &input)
+            void build(Tensor<feature_t> &input, bool print_shape = false)
             {
-                if(!this->inplace)
+                this->output_shape = input.shape;
+                if (!this->inplace)
                 {
-                    if(this->output != NULL)
+                    if (this->output != NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
                     this->output->set_exponent(input.exponent);
-                    this->output->set_shape(input.shape);
+                    this->output->set_shape(this->output_shape);
                     this->output->free_element();
                 }
                 else
                 {
                     this->output = &input;
+                }
+
+                if (print_shape)
+                {
+                    std::cout << this->name << " | ";
+                    this->output->print_shape();
                 }
             }
 
@@ -95,10 +102,14 @@ namespace dl
             {
                 DL_LOG_LAYER_LATENCY_INIT();
 
-                if(!this->inplace)
+                if (!this->inplace)
                 {
                     DL_LOG_LAYER_LATENCY_START();
-                    this->output->apply_element();
+                    if (this->output->shape != this->output_shape)
+                    {
+                        this->output->set_shape(this->output_shape);
+                    }
+                    this->output->malloc_element();
                     this->output->set_exponent(input.exponent);
                     DL_LOG_LAYER_LATENCY_END(this->name, "apply");
 
@@ -109,6 +120,10 @@ namespace dl
                 else
                 {
                     DL_LOG_LAYER_LATENCY_START();
+                    if (this->output->shape != this->output_shape)
+                    {
+                        this->output->set_shape(this->output_shape);
+                    }
                     nn::relu(*this->output, input, assign_core);
                     DL_LOG_LAYER_LATENCY_END(this->name, "relu");
                 }
