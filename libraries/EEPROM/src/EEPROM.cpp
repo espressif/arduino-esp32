@@ -133,7 +133,7 @@ bool EEPROMClass::begin(size_t size) {
 
   _data = (uint8_t*) malloc(size);
   if(!_data) {
-    log_e("Not enough memory for %d bytes in EEPROM");
+    log_e("Not enough memory for %d bytes in EEPROM", size);
     return false;
   }
   _size = size;
