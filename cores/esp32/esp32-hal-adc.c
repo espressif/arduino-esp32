@@ -46,13 +46,22 @@ static uint8_t __analogVRefPin = 0;
 #endif
 
 static uint8_t __analogAttenuation = 3;//11db
-#if CONFIG_IDF_TARGET_ESP32S2
-static uint8_t __analogWidth = 4; // 13 bits
-#else
-static uint8_t __analogWidth = 3; // 12 bits
-#endif
+static uint8_t __analogWidth = ADC_WIDTH_MAX - 1; //3 for ESP32/ESP32C3; 4 for ESP32S2
+static uint8_t __analogReturnedWidth = SOC_ADC_MAX_BITWIDTH; //12 for ESP32/ESP32C3; 13 for ESP32S2
 static uint8_t __analogClockDiv = 1;
 static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
+
+static inline uint16_t mapResolution(uint16_t value)
+{
+    uint8_t from = __analogWidth + 9;
+    if (from == __analogReturnedWidth) {
+        return value;
+    }
+    if (from > __analogReturnedWidth) {
+        return value >> (from  - __analogReturnedWidth);
+    }
+    return value << (__analogReturnedWidth - from);
+}
 
 void __analogSetClockDiv(uint8_t clockDiv){
     if(!clockDiv){
@@ -150,6 +159,7 @@ void __analogReadResolution(uint8_t bits)
     if(!bits || bits > 16){
         return;
     }
+    __analogReturnedWidth = bits;
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(bits);         // hadware from 9 to 12
 #endif
@@ -169,7 +179,7 @@ uint16_t __analogRead(uint8_t pin)
         channel -= 10;
         r = adc2_get_raw( channel, __analogWidth, &value);
         if ( r == ESP_OK ) {
-            return value;
+            return mapResolution(value);
         } else if ( r == ESP_ERR_INVALID_STATE ) {
             log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
         } else if ( r == ESP_ERR_TIMEOUT ) {
@@ -178,9 +188,10 @@ uint16_t __analogRead(uint8_t pin)
             log_e("GPIO%u: %s", pin, esp_err_to_name(r));
         }
     } else {
-        return adc1_get_raw(channel);
+        value = adc1_get_raw(channel);
+        return mapResolution(value);
     }
-    return value;
+    return mapResolution(value);
 }
 
 uint32_t __analogReadMilliVolts(uint8_t pin){
