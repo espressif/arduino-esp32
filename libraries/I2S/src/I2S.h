@@ -28,7 +28,7 @@ namespace esp_i2s {
 
 // Default pins
 #ifndef PIN_I2S_SCK
-  #define PIN_I2S_SCK 5
+  #define PIN_I2S_SCK 14
 #endif
 
 #ifndef PIN_I2S_FS
@@ -51,8 +51,9 @@ typedef enum {
   I2S_PHILIPS_MODE,
   I2S_RIGHT_JUSTIFIED_MODE,
   I2S_LEFT_JUSTIFIED_MODE,
-  I2S_ADC_DAC,
-  I2S_PDM
+  ADC_DAC_MODE,
+  PDM_STEREO_MODE,
+  PDM_MONO_MODE
 } i2s_mode_t;
 
 class I2SClass : public Stream

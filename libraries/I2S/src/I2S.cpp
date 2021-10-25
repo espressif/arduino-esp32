@@ -116,7 +116,7 @@ int I2SClass::_installDriver(){
     i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_SLAVE);
   }
 
-  if(_mode == I2S_ADC_DAC){
+  if(_mode == ADC_DAC_MODE){
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
         log_e("ERROR I2SClass::begin invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
@@ -137,7 +137,7 @@ int I2SClass::_installDriver(){
     if(_bitsPerSample == 24){
       log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
     }
-  }else if(_mode == I2S_PDM){ // end of Normal Philips mode; start of PDM mode
+  }else if(_mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // end of Normal Philips mode; start of PDM mode
     #if (SOC_I2S_SUPPORTS_PDM_TX && SOC_I2S_SUPPORTS_PDM_RX)
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
     #else
@@ -171,14 +171,16 @@ int I2SClass::_installDriver(){
     }
   } //try installing with increasing size
 
-  if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == I2S_PDM){
+  if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_MONO_MODE){ // mono/single channel
+  // Set the clock for MONO. Stereo is not supported yet.
     if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
       log_e("Setting the I2S Clock has failed!\n");
+      return 0; // ERR
     }
-  }
+  } // mono channel mode
 
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-  if(_mode == I2S_ADC_DAC){
+  if(_mode == ADC_DAC_MODE){
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
     esp_i2s::adc_unit_t adc_unit;
     if(!gpioToAdcUnit((gpio_num_t)_inSdPin, &adc_unit)){
@@ -192,12 +194,10 @@ int I2SClass::_installDriver(){
     }
     if(ESP_OK != esp_i2s::i2s_set_adc_mode(adc_unit, (esp_i2s::adc1_channel_t)adc_channel)){
       log_e("i2s_set_adc_mode failed");
-      end();
       return 0; // ERR
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
       log_e("i2s_set_pin failed");
-      end();
       return 0; // ERR
     }
 
@@ -212,7 +212,7 @@ int I2SClass::_installDriver(){
     _initialized = true;
   }else // End of ADC/DAC mode
 #endif // SOC_I2S_SUPPORTS_ADC_DAC
-  if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == I2S_PDM){ // if I2S mode
+  if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // if I2S mode
     _initialized = true; // must be _initialized before calling _applyPinSetting
     if(!_applyPinSetting()){
       log_e("could not apply pin setting during driver install");
@@ -263,9 +263,10 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     case I2S_RIGHT_JUSTIFIED_MODE:
     case I2S_LEFT_JUSTIFIED_MODE:
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-    case I2S_ADC_DAC:
+    case ADC_DAC_MODE:
 #endif
-    case I2S_PDM:
+    case PDM_STEREO_MODE:
+    case PDM_MONO_MODE:
       break;
 
     default: // invalid mode
@@ -475,7 +476,7 @@ int I2SClass::getDataOutPin(){
 
 void I2SClass::_uninstallDriver(){
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-  if(_mode == I2S_ADC_DAC){
+  if(_mode == ADC_DAC_MODE){
     esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
   }
 #endif
@@ -568,7 +569,7 @@ int I2SClass::read(void* buffer, size_t size){
       if(tmp_buffer != NULL){
         memcpy(buffer, tmp_buffer, item_size);
         #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-          if(_mode == I2S_ADC_DAC){
+          if(_mode == ADC_DAC_MODE){
             for(size_t i = 0; i < item_size / 2; ++i){
               ((uint16_t*)buffer)[i] = ((uint16_t*)buffer)[i] & 0x0FFF;
             }

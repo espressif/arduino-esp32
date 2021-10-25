@@ -73,7 +73,7 @@ void setup() {
   }
 
   // start I2S at 8 kHz with 32-bits per sample
-  if (!I2S.begin(I2S_ADC_DAC, 8000, 16)) {
+  if (!I2S.begin(ADC_DAC_MODE, 8000, 16)) {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }

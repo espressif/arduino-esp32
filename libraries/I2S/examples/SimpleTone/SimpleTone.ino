@@ -39,7 +39,7 @@ short sample = amplitude; // current sample value
 int count = 0;
 
 i2s_mode_t mode = I2S_PHILIPS_MODE; // I2S decoder is needed
-// i2s_mode_t mode = I2S_ADC_DAC; // Audio amplifier is needed
+// i2s_mode_t mode = ADC_DAC_MODE; // Audio amplifier is needed
 
 // Mono channel input
 // This is ESP specific implementation -
@@ -67,7 +67,7 @@ void loop() {
       sample = -1 * sample;
     }
 
-    if(mode == I2S_PHILIPS_MODE){ // write the same sample twice, once for Righ and once for Left channel
+    if(mode == I2S_PHILIPS_MODE){ // write the same sample twice, once for Right and once for Left channel
       I2S.write(sample); // Right channel
       I2S.write(sample); // Left channel
     }else if(mode == I2S_RIGHT_JUSTIFIED_MODE || mode == I2S_LEFT_JUSTIFIED_MODE){
