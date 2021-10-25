@@ -158,7 +158,8 @@ private:
 
   uint16_t _buffer_byte_size;
 
-  bool _initialized;
+  bool _driverInstalled; // Is IDF I2S driver installed?
+  bool _initialized; // Is everything initialized (callback task, I2S driver, ring buffers)?
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
   QueueHandle_t _task_kill_cmd_semaphore_handle;

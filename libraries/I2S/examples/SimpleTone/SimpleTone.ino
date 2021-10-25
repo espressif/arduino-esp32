@@ -22,7 +22,7 @@
 
  created 17 November 2016
  by Sandeep Mistry
- For ESP extended by
+ For ESP extended
  Tomas Pilny
  2nd September 2021
  */
@@ -58,7 +58,6 @@ void setup() {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }
-  I2S.setDataOutPin(26);
 }
 
 void loop() {
@@ -67,7 +66,7 @@ void loop() {
       sample = -1 * sample;
     }
 
-    if(mode == I2S_PHILIPS_MODE){ // write the same sample twice, once for Right and once for Left channel
+    if(mode == I2S_PHILIPS_MODE || mode == ADC_DAC_MODE){ // write the same sample twice, once for Right and once for Left channel
       I2S.write(sample); // Right channel
       I2S.write(sample); // Left channel
     }else if(mode == I2S_RIGHT_JUSTIFIED_MODE || mode == I2S_LEFT_JUSTIFIED_MODE){

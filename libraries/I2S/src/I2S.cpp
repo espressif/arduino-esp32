@@ -48,6 +48,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
 
   _buffer_byte_size(0),
 
+  _driverInstalled(false),
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
@@ -107,6 +108,11 @@ void I2SClass::_destroyCallbackTask(){
 }
 
 int I2SClass::_installDriver(){
+  if(_driverInstalled){
+    log_e("I2S driver is already installed");
+    return 0; // ERR
+  }
+
   esp_i2s::i2s_mode_t i2s_mode = (esp_i2s::i2s_mode_t)(esp_i2s::I2S_MODE_RX | esp_i2s::I2S_MODE_TX);
 
   if(_driveClock){
@@ -209,14 +215,14 @@ int I2SClass::_installDriver(){
     }
 
     esp_i2s::i2s_adc_enable((esp_i2s::i2s_port_t) _deviceIndex);
-    _initialized = true;
+    _driverInstalled = true;
   }else // End of ADC/DAC mode
 #endif // SOC_I2S_SUPPORTS_ADC_DAC
   if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // if I2S mode
-    _initialized = true; // must be _initialized before calling _applyPinSetting
+    _driverInstalled = true; // IDF I2S driver must be installed before calling _applyPinSetting
     if(!_applyPinSetting()){
       log_e("could not apply pin setting during driver install");
-      end();
+      _uninstallDriver();
       return 0; // ERR
     }
   } // if I2S _mode
@@ -244,7 +250,9 @@ int I2SClass::begin(int mode, int bitsPerSample){
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
   _take_if_not_holding();
   if(_initialized){
-    end();
+    log_e("ERROR I2SClass::begin() object already initialized! Call I2S.end() to deinitialize");
+    _give_if_top_call();
+    return 0; // ERR
   }
   _driveClock = driveClock;
   _mode = mode;
@@ -277,7 +285,6 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 
   if(!_installDriver()){
     log_e("ERROR I2SClass::begin() failed to install driver");
-    _initialized = false;
     end();
     _give_if_top_call();
     return 0; // ERR
@@ -293,17 +300,17 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   }
 
   if(!_createCallbackTask()){
-    _initialized = false;
     end();
     _give_if_top_call();
     return 0; // ERR
   }
+  _initialized = true;
   _give_if_top_call();
   return 1; // OK
 }
 
 int I2SClass::_applyPinSetting(){
-  if(_initialized){
+  if(_driverInstalled){
     esp_i2s::i2s_pin_config_t pin_config = {
       .bck_io_num = _sckPin,
       .ws_io_num = _fsPin,
@@ -331,7 +338,7 @@ int I2SClass::_applyPinSetting(){
     }else{
       return 1; // OK
     }
-  } // Is driver _initialized ?
+  } // _driverInstalled ?
   return 1; // OK
 }
 
@@ -475,26 +482,26 @@ int I2SClass::getDataOutPin(){
 }
 
 void I2SClass::_uninstallDriver(){
-#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-  if(_mode == ADC_DAC_MODE){
-    esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
-  }
-#endif
-  esp_i2s::i2s_driver_uninstall((esp_i2s::i2s_port_t) _deviceIndex);
+  if(_driverInstalled){
+    #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
+      if(_mode == ADC_DAC_MODE){
+        esp_i2s::i2s_adc_disable((esp_i2s::i2s_port_t) _deviceIndex);
+      }
+    #endif
+    esp_i2s::i2s_driver_uninstall((esp_i2s::i2s_port_t) _deviceIndex);
 
-  if(_state != I2S_STATE_DUPLEX){
-    _state = I2S_STATE_IDLE;
-  }
+    if(_state != I2S_STATE_DUPLEX){
+      _state = I2S_STATE_IDLE;
+    }
+    _driverInstalled = false;
+  } // if(_driverInstalled)
 }
 
 void I2SClass::end(){
   _take_if_not_holding();
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     _destroyCallbackTask();
-    if(_initialized){
-      _uninstallDriver();
-      _initialized = false;
-    }
+    _uninstallDriver();
     _onTransmit = NULL;
     _onReceive  = NULL;
     if(_input_ring_buffer != NULL){
@@ -505,6 +512,7 @@ void I2SClass::end(){
       vRingbufferDelete(_output_ring_buffer);
       _output_ring_buffer = NULL;
     }
+    _initialized = false;
   }else{
     log_w("WARNING: ending I2SClass from callback task not permitted, but attempted!");
   }
