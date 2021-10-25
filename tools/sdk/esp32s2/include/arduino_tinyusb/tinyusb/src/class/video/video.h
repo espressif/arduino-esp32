@@ -373,6 +373,7 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 #define TUD_VIDEO_DESC_CS_VC_LEN                  12
 #define TUD_VIDEO_DESC_INPUT_TERM_LEN             8
 #define TUD_VIDEO_DESC_OUTPUT_TERM_LEN            9
+#define TUD_VIDEO_DESC_CAMERA_TERM_LEN            18
 #define TUD_VIDEO_DESC_STD_VS_LEN                 9
 #define TUD_VIDEO_DESC_CS_VS_IN_LEN               13
 #define TUD_VIDEO_DESC_CS_VS_OUT_LEN              9
@@ -411,6 +412,13 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 #define TUD_VIDEO_DESC_OUTPUT_TERM(_tid, _tt, _at, _srcid, _stridx) \
   TUD_VIDEO_DESC_OUTPUT_TERM_LEN, TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VC_OUTPUT_TERMINAL, \
     _tid, U16_TO_U8S_LE(_tt), _at, _srcid, _stridx
+
+/* 3.7.2.3 */
+#define TUD_VIDEO_DESC_CAMERA_TERM(_tid, _at, _stridx, _focal_min, _focal_max, _focal, _ctls) \
+  TUD_VIDEO_DESC_CAMERA_TERM_LEN, TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VC_INPUT_TERMINAL, \
+    _tid, U16_TO_U8S_LE(VIDEO_ITT_CAMERA), _at, _stridx, \
+    U16_TO_U8S_LE(_focal_min), U16_TO_U8S_LE(_focal_max), U16_TO_U8S_LE(_focal), 3, \
+    TU_U32_BYTE0(_ctls), TU_U32_BYTE1(_ctls), TU_U32_BYTE2(_ctls)
 
 /* 3.9.1 */
 #define TUD_VIDEO_DESC_STD_VS(_itfnum, _alt, _epn, _stridx) \
