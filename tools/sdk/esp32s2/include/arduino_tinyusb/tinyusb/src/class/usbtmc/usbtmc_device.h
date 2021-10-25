@@ -1,10 +1,4 @@
 /*
- * usbtmc_device.h
- *
- *  Created on: Sep 10, 2019
- *      Author: nconrad
- */
-/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 N Conrad
