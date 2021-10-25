@@ -67,6 +67,10 @@ typedef void (*osal_task_func_t)( void * );
 // OSAL Porting API
 //--------------------------------------------------------------------+
 
+#if __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#endif
 //------------- Semaphore -------------//
 static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef);
 static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr);
@@ -84,6 +88,9 @@ static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef);
 static inline bool osal_queue_receive(osal_queue_t qhdl, void* data);
 static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr);
 static inline bool osal_queue_empty(osal_queue_t qhdl);
+#if __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #if 0  // TODO remove subtask related macros later
 // Sub Task

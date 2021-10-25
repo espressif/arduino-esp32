@@ -179,12 +179,16 @@ class WiFiGenericClass
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     static esp_err_t _eventCallback(arduino_event_t *event);
+    
+    static void useStaticBuffers(bool bufferMode);
+    static bool useStaticBuffers();
 
   protected:
     static bool _persistent;
     static bool _long_range;
     static wifi_mode_t _forceSleepLastMode;
     static wifi_ps_type_t _sleepEnabled;
+    static bool _wifiUseStaticBuffers;
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);

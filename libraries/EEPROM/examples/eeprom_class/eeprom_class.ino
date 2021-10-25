@@ -11,9 +11,9 @@
 #include "EEPROM.h"
 
 // Instantiate eeprom objects with parameter/argument names and sizes
-EEPROMClass  NAMES("eeprom0", 0x500);
-EEPROMClass  HEIGHT("eeprom1", 0x200);
-EEPROMClass  AGE("eeprom2", 0x100);
+EEPROMClass  NAMES("eeprom0");
+EEPROMClass  HEIGHT("eeprom1");
+EEPROMClass  AGE("eeprom2");
 
 void setup() {
   Serial.begin(115200);

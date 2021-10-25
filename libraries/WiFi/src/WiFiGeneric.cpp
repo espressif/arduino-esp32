@@ -542,6 +542,20 @@ bool tcpipInit(){
  * */
 
 static bool lowLevelInitDone = false;
+bool WiFiGenericClass::_wifiUseStaticBuffers = false;
+
+bool WiFiGenericClass::useStaticBuffers(){
+    return _wifiUseStaticBuffers;
+}
+
+void WiFiGenericClass::useStaticBuffers(bool bufferMode){
+    if (lowLevelInitDone) {
+        log_w("WiFi already started. Call WiFi.mode(WIFI_MODE_NULL) before setting Static Buffer Mode.");
+    } 
+    _wifiUseStaticBuffers = bufferMode;
+}
+
+
 bool wifiLowLevelInit(bool persistent){
     if(!lowLevelInitDone){
         lowLevelInitDone = true;
@@ -557,6 +571,16 @@ bool wifiLowLevelInit(bool persistent){
         }
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+	if(!WiFiGenericClass::useStaticBuffers()) {
+	    cfg.static_tx_buf_num = 0;
+            cfg.dynamic_tx_buf_num = 32;
+	    cfg.tx_buf_type = 1;
+            cfg.cache_tx_buf_num = 1;  // can't be zero!
+	    cfg.static_rx_buf_num = 4;
+            cfg.dynamic_rx_buf_num = 32;
+        }
+
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
             log_e("esp_wifi_init %d", err);
@@ -644,7 +668,6 @@ wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
 
 WiFiGenericClass::WiFiGenericClass() 
 {
-
 }
 
 const char * WiFiGenericClass::getHostname()

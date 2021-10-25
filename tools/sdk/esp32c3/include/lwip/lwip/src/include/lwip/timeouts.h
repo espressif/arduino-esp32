@@ -101,6 +101,7 @@ struct sys_timeo {
 };
 
 void sys_timeouts_init(void);
+void sys_timeouts_deinit(void);
 
 #if LWIP_DEBUG_TIMERNAMES
 void sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char* handler_name);

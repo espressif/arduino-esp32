@@ -35,7 +35,7 @@ typedef uint32_t nvs_handle;
 class EEPROMClass {
   public:
     EEPROMClass(uint32_t sector);
-    EEPROMClass(const char* name, uint32_t user_defined_size);
+    EEPROMClass(const char* name);
     EEPROMClass(void);
     ~EEPROMClass(void);
 
@@ -113,7 +113,6 @@ class EEPROMClass {
     size_t _size;
     bool _dirty;
     const char* _name;
-    uint32_t _user_defined_size;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_EEPROM)
