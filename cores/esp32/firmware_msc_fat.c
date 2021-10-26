@@ -39,7 +39,7 @@ static const char * FAT12_FILE_SYSTEM_TYPE = "FAT12";
 
 static uint16_t fat12_sectors_per_alloc_table(uint32_t sector_num){
   uint32_t required_bytes = (((sector_num * 3)+1)/2);
-  return (required_bytes / DISK_SECTOR_SIZE) + ((required_bytes & DISK_SECTOR_SIZE)?1:0);
+  return (required_bytes / DISK_SECTOR_SIZE) + ((required_bytes & (DISK_SECTOR_SIZE - 1))?1:0);
 }
 
 static uint8_t * fat12_add_table(uint8_t * dst, fat_boot_sector_t * boot){
@@ -68,7 +68,7 @@ static const char * FAT16_FILE_SYSTEM_TYPE = "FAT16";
 
 static uint16_t fat16_sectors_per_alloc_table(uint32_t sector_num){
   uint32_t required_bytes = sector_num * 2;
-  return (required_bytes / DISK_SECTOR_SIZE) + ((required_bytes & DISK_SECTOR_SIZE)?1:0);
+  return (required_bytes / DISK_SECTOR_SIZE) + ((required_bytes & (DISK_SECTOR_SIZE - 1))?1:0);
 }
 
 static uint8_t * fat16_add_table(uint8_t * dst, fat_boot_sector_t * boot){
@@ -129,7 +129,7 @@ fat_boot_sector_t * fat_add_boot_sector(uint8_t * dst, uint16_t sector_num, uint
   boot->num_heads = 1;
   boot->hidden_sectors_count = 0;
   boot->total_sectors_32 = 0;
-  boot->physical_drive_number = 0x00;
+  boot->physical_drive_number = 0x80;
   boot->reserved0 = 0x00;
   boot->extended_boot_signature = 0x29;
   boot->serial_number = serial_number;

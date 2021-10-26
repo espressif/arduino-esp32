@@ -1,6 +1,7 @@
 #pragma once
 #include "dl_tool.hpp"
 #include "dl_tool_cache.hpp"
+#include <iostream>
 
 namespace dl
 {

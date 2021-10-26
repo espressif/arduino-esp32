@@ -206,6 +206,7 @@ typedef struct {
     int network_timeout_ms;                 /*!< Abort network operation if it is not completed after this value, in milliseconds (defaults to 10s) */
     bool disable_keepalive;                 /*!< Set disable_keepalive=true to turn off keep-alive mechanism, false by default (keepalive is active by default). Note: setting the config value `keepalive` to `0` doesn't disable keepalive feature, but uses a default keepalive period */
     const char *path;                       /*!< Path in the URI*/
+    int message_retransmit_timeout;         /*!< timeout for retansmit of failded packet */
 } esp_mqtt_client_config_t;
 
 /**
@@ -375,6 +376,7 @@ esp_err_t esp_mqtt_client_destroy(esp_mqtt_client_handle_t client);
  * @param config    mqtt configuration structure
  *
  * @return ESP_ERR_NO_MEM if failed to allocate
+ *         ESP_ERR_INVALID_ARG if conflicts on transport configuration.
  *         ESP_OK on success
  */
 esp_err_t esp_mqtt_set_config(esp_mqtt_client_handle_t client, const esp_mqtt_client_config_t *config);

@@ -57,7 +57,8 @@ namespace dl
          * @param exponent exponent of element
          * @param shape    shape of Filter,
          *                 - 1D: reserved
-         *                 - 2D: [filter_height, filter_width, input_channel, output_channel]
+         *                 - 2D: for convolution is [filter_height, filter_width, input_channel, output_channel],
+         *                       for depthwise convolution is [filter_height, filter_width, input_channel, 1]
          * @param dilation dilation of Filter
          *                 - 1D: reserved
          *                 - 2D: [dilation_in_height, dilation_in_width]
@@ -97,6 +98,9 @@ namespace dl
     {
     public:
         using Constant<T>::Constant;
+        std::vector<int> channel_exponent;    /*<! exponent for per-channel >*/
+
+        Bias(const T *element, const std::vector<int> channel_exponent, const std::vector<int> shape);
     };
 
     /**

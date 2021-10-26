@@ -113,6 +113,7 @@ static size_t msc_update_get_required_disk_sectors(){
     log_d("USING FAT12");
     mcs_is_fat16 = false;
   }
+  log_d("FAT sector size: %u", DISK_SECTOR_SIZE);
   log_d("FAT data sectors: %u", data_sectors);
   log_d("FAT table sectors: %u", msc_table_sectors);
   log_d("FAT total sectors: %u (%uKB)", total_sectors, (total_sectors * DISK_SECTOR_SIZE) / 1024);
