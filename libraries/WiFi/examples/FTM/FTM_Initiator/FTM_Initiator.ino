@@ -48,7 +48,7 @@ void onFtmReport(arduino_event_t *event) {
 
 // Initiate FTM Session and wait for FTM Report
 bool getFtmReport(){
-  if(!WiFi.initiateFTM(FTM_FRAME_COUNT, FTM_BURST_PERIOD)){
+  if(!WiFi.initiateFTM(FTM_FRAME_COUNT, FTM_BURST_PERIOD,1)){
     Serial.println("FTM Error: Initiate Session Failed");
     return false;
   }
