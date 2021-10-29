@@ -51,6 +51,8 @@ This function is used to start the peripheral using the default configuration.
 
     bool begin();
 
+This function will return ``true`` if the peripheral was initialized correctly.
+
 setPins
 ^^^^^^^
 
@@ -72,6 +74,8 @@ The default pins may vary from board to board. On the *Generic ESP32* the defaul
 
 * ``sclPin`` **GPIO22**
 
+This function will return ``true`` if the peripheral was configured correctly.
+
 setClock
 ^^^^^^^^
 
@@ -79,7 +83,11 @@ Use this function to set the bus clock. The default value will be used if this f
 
 .. code-block:: arduino
 
-    bool setClock(uint32_t);
+    bool setClock(uint32_t frequency);
+
+* ``frequency`` sets the bus frequency clock.
+
+This function will return ``true`` if the clock was configured correctly.
 
 getClock
 ^^^^^^^^
@@ -89,6 +97,8 @@ Use this function to get the bus clock.
 .. code-block:: arduino
 
     uint32_t getClock();
+
+This function will return the current frequency configuration.
 
 setTimeOut
 ^^^^^^^^^^
@@ -109,6 +119,8 @@ Get the bus timeout in milliseconds.
 .. code-block:: arduino
 
     uint16_t getTimeOut();
+
+This function will return the current timeout configuration.
 
 .. _i2c write:
 
@@ -307,6 +319,11 @@ Now, we can start the peripheral configuration by calling ``begin`` function wit
 
 By using ``begin`` without any arguments, all the settings will be done by using the default values. To set the values by your own, see the function description. This function is described here: `i2c begin`_
 
+
+**For ESP32 only!**
+
+Use the function ``slaveWrite`` in order to pre-write to the slave response buffer. This is used only for the ESP32 in order to add the slave capability on the chip and keep compatability with Arduino.
+
 .. code-block:: arduino
 
     Wire.slaveWrite((uint8_t *)message, strlen(message));
@@ -348,7 +365,9 @@ The ``onRequest`` function is used to define the callback for the data to be sen
 slaveWrite
 ^^^^^^^^^^
 
-To write back to the master device, use the ``slaveWrite`` function.
+The ``slaveWrite`` function writes on the slave response buffer before receiving the response message. This function is only used for adding the slave compatability for the ESP32.
+
+.. warning:: This function is only required for the ESP32. You **don't** need to use for ESP32-S2 and ESP32-C3.
 
 .. code-block:: arduino
 
