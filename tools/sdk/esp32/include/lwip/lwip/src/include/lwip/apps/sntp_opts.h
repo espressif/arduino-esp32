@@ -165,10 +165,10 @@
 #endif
 
 /** SNTP update delay - in milliseconds
- * Default is 1 hour. Must not be beolw 60 seconds by specification (i.e. 60000)
+ * Default is 6 hours. Must not be below 60 seconds by specification (i.e. 60000)
  */
 #if !defined SNTP_UPDATE_DELAY || defined __DOXYGEN__
-#define SNTP_UPDATE_DELAY           3600000
+#define SNTP_UPDATE_DELAY           3600000 * 6
 #endif
 
 /** SNTP macro to get system time, used with SNTP_CHECK_RESPONSE >= 2
