@@ -65,7 +65,7 @@ This function is used to set the memory allocation mode for the Wi-Fi buffers.
 The use of dynamic allocation is recommended to save memory and reduce resources usage. However, the dynamic performs slightly slower than the static allocation.
 Use static allocation if you want to have more performance and if your application is multi-tasking.
 
-By default, the memory allocation will be set to *dynamic* if this function is not being used.
+By default, the memory allocation will be set to **dynamic** if this function is not being used.
 
 WiFiAP
 ------
