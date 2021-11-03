@@ -1188,6 +1188,7 @@ bool HTTPClient::sendHeader(const char * type)
     }
 
     if(_base64Authorization.length()) {
+        _base64Authorization.replace("\n", "");
         header += F("Authorization: ");
         header += _authorizationType; 
         header += " ";
