@@ -91,9 +91,10 @@ namespace dl
     
     typedef enum
     {
-        CONSTANT,
-        EDGE, 
-        REFLECT,
-        SYMMETRIC,
+        PADDING_EMPTY,
+        PADDING_CONSTANT,
+        PADDING_EDGE, 
+        PADDING_REFLECT,
+        PADDING_SYMMETRIC,
     } padding_mode_t;
 } // namespace dl
