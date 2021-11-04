@@ -67,6 +67,46 @@
 #define TU_LITTLE_ENDIAN (0x12u)
 #define TU_BIG_ENDIAN (0x21u)
 
+/*------------------------------------------------------------------*/
+/* Count number of arguments of __VA_ARGS__
+ * - reference https://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
+ * - _GET_NTH_ARG() takes args >= N (64) but only expand to Nth one (64th)
+ * - _RSEQ_N() is reverse sequential to N to add padding to have
+ * Nth position is the same as the number of arguments
+ * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
+ *------------------------------------------------------------------*/
+#define TU_ARGS_NUM(...) 	 _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
+
+#define _TU_NARG(...)      _GET_NTH_ARG(__VA_ARGS__)
+#define _GET_NTH_ARG( \
+          _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
+         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
+         _21,_22,_23,_24,_25,_26,_27,_28,_29,_30, \
+         _31,_32,_33,_34,_35,_36,_37,_38,_39,_40, \
+         _41,_42,_43,_44,_45,_46,_47,_48,_49,_50, \
+         _51,_52,_53,_54,_55,_56,_57,_58,_59,_60, \
+         _61,_62,_63,N,...) N
+#define _RSEQ_N() \
+         62,61,60,                      \
+         59,58,57,56,55,54,53,52,51,50, \
+         49,48,47,46,45,44,43,42,41,40, \
+         39,38,37,36,35,34,33,32,31,30, \
+         29,28,27,26,25,24,23,22,21,20, \
+         19,18,17,16,15,14,13,12,11,10, \
+         9,8,7,6,5,4,3,2,1,0
+
+// Apply an macro X to each of the arguments with an separated of choice
+#define TU_ARGS_APPLY(_X, _s, ...)   TU_XSTRCAT(_TU_ARGS_APPLY_, TU_ARGS_NUM(__VA_ARGS__))(_X, _s, __VA_ARGS__)
+
+#define _TU_ARGS_APPLY_1(_X, _s, _a1)                                    _X(_a1)
+#define _TU_ARGS_APPLY_2(_X, _s, _a1, _a2)                               _X(_a1) _s _X(_a2)
+#define _TU_ARGS_APPLY_3(_X, _s, _a1, _a2, _a3)                          _X(_a1) _s _TU_ARGS_APPLY_2(_X, _s, _a2, _a3)
+#define _TU_ARGS_APPLY_4(_X, _s, _a1, _a2, _a3, _a4)                     _X(_a1) _s _TU_ARGS_APPLY_3(_X, _s, _a2, _a3, _a4)
+#define _TU_ARGS_APPLY_5(_X, _s, _a1, _a2, _a3, _a4, _a5)                _X(_a1) _s _TU_ARGS_APPLY_4(_X, _s, _a2, _a3, _a4, _a5)
+#define _TU_ARGS_APPLY_6(_X, _s, _a1, _a2, _a3, _a4, _a5, _a6)           _X(_a1) _s _TU_ARGS_APPLY_5(_X, _s, _a2, _a3, _a4, _a5, _a6)
+#define _TU_ARGS_APPLY_7(_X, _s, _a1, _a2, _a3, _a4, _a5, _a6, _a7)      _X(_a1) _s _TU_ARGS_APPLY_6(_X, _s, _a2, _a3, _a4, _a5, _a6, _a7)
+#define _TU_ARGS_APPLY_8(_X, _s, _a1, _a2, _a3, _a4, _a5, _a6, _a7, _a8) _X(_a1) _s _TU_ARGS_APPLY_7(_X, _s, _a2, _a3, _a4, _a5, _a6, _a7, _a8)
+
 //--------------------------------------------------------------------+
 // Compiler porting with Attribute and Endian
 //--------------------------------------------------------------------+
