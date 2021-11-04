@@ -385,16 +385,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
         info.gw.addr = 0;
         info.netmask.addr = 0;
 	}
-    
-    // avoid error messages or failure while DHCP still did not get stopped
-    uint8_t tries = 5;
-    do {
-      const TickType_t xDelay = 50 / portTICK_PERIOD_MS;
-      vTaskDelay( xDelay );
-      err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
-      tries--;
-    } while (tries && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED);
 
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
     if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
         log_e("DHCP could not be stopped! Error: %d", err);
         return false;
@@ -404,8 +396,7 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     if(err != ERR_OK){
         log_e("STA IP could not be configured! Error: %d", err);
         return false;
-    }
-    
+}
     if(info.ip.addr){
         staticIP = true;
     } else {
