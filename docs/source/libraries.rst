@@ -2,7 +2,7 @@
 Libraries
 #########
 
-Here is where the Libraries API's descriptions are located.
+Here is where the Libraries API's descriptions are located:
 
 Supported Peripherals
 ---------------------
@@ -63,6 +63,7 @@ The Arduino ESP32 offers some unique APIs, described in this section:
     Deep Sleep <api/deepsleep>
     ESPNOW <api/espnow>
     GPIO <api/gpio>
+    I2C <api/i2c>
     RainMaker <api/rainmaker>
     Reset Reason <api/reset_reason>
     Wi-Fi <api/wifi>
