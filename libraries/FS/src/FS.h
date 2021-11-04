@@ -89,8 +89,8 @@ class FS
 public:
     FS(FSImplPtr impl) : _impl(impl) { }
 
-    File open(const char* path, const char* mode = FILE_READ);
-    File open(const String& path, const char* mode = FILE_READ);
+    File open(const char* path, const char* mode = FILE_READ, const bool create = false);
+    File open(const String& path, const char* mode = FILE_READ, const bool create = false);
 
     bool exists(const char* path);
     bool exists(const String& path);

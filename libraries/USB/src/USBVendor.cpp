@@ -40,8 +40,8 @@ uint16_t tusb_vendor_load_descriptor(uint8_t * dst, uint8_t * itf)
 }
 
 void tud_vendor_rx_cb(uint8_t itf){
-    log_v("%u", len);
     size_t len = tud_vendor_n_available(itf);
+    log_v("%u", len);
     if(len){
         uint8_t buffer[len];
         len = tud_vendor_n_read(itf, buffer, len);
@@ -146,7 +146,7 @@ void USBVendor::_onRX(const uint8_t* buffer, size_t len){
             break;
         }
     }
-    arduino_usb_vendor_event_data_t p = {0};
+    arduino_usb_vendor_event_data_t p;
     p.data.len = len;
     arduino_usb_event_post(ARDUINO_USB_VENDOR_EVENTS, ARDUINO_USB_VENDOR_DATA_EVENT, &p, sizeof(arduino_usb_vendor_event_data_t), portMAX_DELAY);
 }

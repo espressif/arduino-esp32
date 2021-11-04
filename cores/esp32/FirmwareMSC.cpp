@@ -113,6 +113,7 @@ static size_t msc_update_get_required_disk_sectors(){
     log_d("USING FAT12");
     mcs_is_fat16 = false;
   }
+  log_d("FAT sector size: %u", DISK_SECTOR_SIZE);
   log_d("FAT data sectors: %u", data_sectors);
   log_d("FAT table sectors: %u", msc_table_sectors);
   log_d("FAT total sectors: %u (%uKB)", total_sectors, (total_sectors * DISK_SECTOR_SIZE) / 1024);
@@ -227,7 +228,7 @@ static esp_err_t msc_update_write(const esp_partition_t *partition, uint32_t off
 //called when error was encountered while updating
 static void msc_update_error(){
   log_e("UPDATE_ERROR: %u", msc_update_bytes_written);
-  arduino_firmware_msc_event_data_t p = {0};
+  arduino_firmware_msc_event_data_t p;
   p.error.size = msc_update_bytes_written;
   arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_ERROR_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
   msc_update_state = MSC_UPDATE_IDLE;
@@ -251,7 +252,7 @@ static void msc_update_end(){
     msc_update_error();
     return;
   }
-  arduino_firmware_msc_event_data_t p = {0};
+  arduino_firmware_msc_event_data_t p;
   p.end.size = msc_update_entry->file_size;
   arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_END_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
 }
@@ -289,7 +290,7 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_
     }
   } else if(msc_ota_partition && lba >= msc_update_start_sector){
     //handle writes to the region where the new firmware will be uploaded
-    arduino_firmware_msc_event_data_t p = {0};
+    arduino_firmware_msc_event_data_t p;
     if(msc_update_state <= MSC_UPDATE_STARTING && buffer[0] == 0xE9){
       msc_update_state = MSC_UPDATE_RUNNING;
       msc_update_start_sector = lba;
@@ -345,7 +346,7 @@ static int32_t msc_read(uint32_t lba, uint32_t offset, void* buffer, uint32_t bu
 
 static bool msc_start_stop(uint8_t power_condition, bool start, bool load_eject){
   //log_d("power: %u, start: %u, eject: %u", power_condition, start, load_eject);
-  arduino_firmware_msc_event_data_t p = {0};
+  arduino_firmware_msc_event_data_t p;
   p.power.power_condition = power_condition;
   p.power.start = start;
   p.power.load_eject = load_eject;

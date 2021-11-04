@@ -52,6 +52,27 @@ public:
      * @param[in] src: source matrix
      */
     Mat(const Mat &src);
+
+    /**
+     * Make copy of matrix.
+     * @param[in] src: source matrix
+     * @param[in] row_pos: start row position of destination matrix
+     * @param[in] col_pos: start col position of destination matrix
+     */
+    void Copy(const Mat &src, int row_pos, int col_pos);
+
+    /**
+     * Make copy of matrix.
+     * @param[in] row_start: start row position of source matrix to copy
+     * @param[in] row_size: size of wor elements of source matrix to copy
+     * @param[in] col_start: start col position of source matrix to copy
+     * @param[in] col_size: size of wor elements of source matrix to copy
+     * 
+     * @return
+     *      - result matrix size row_size x col_size 
+     */
+    Mat Get(int row_start, int row_size, int col_start, int col_size);
+
     /**
      * Copy operator
      *
@@ -356,10 +377,18 @@ public:
     int length; /*!< Total amount of data in data array*/
 
     static float abs_tol; /*!< Max acceptable absolute tolerance*/
+
+    /**
+     * Find determinant
+     * @param[in] n: element number in first row
+     *
+     * @return
+     *      - determinant value
+     */
+	float det(int n);
 private:
-    Mat cofactor(int row, int col, int n);
-    float det(int n);
-    Mat adjoint();
+	Mat cofactor(int row, int col, int n);
+	Mat adjoint();
 
     void allocate(); // Allocate buffer
     Mat expHelper(const Mat &m, int num);

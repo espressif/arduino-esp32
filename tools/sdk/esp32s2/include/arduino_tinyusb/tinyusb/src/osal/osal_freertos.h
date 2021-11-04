@@ -28,10 +28,10 @@
 #define _TUSB_OSAL_FREERTOS_H_
 
 // FreeRTOS Headers
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "queue.h"
-#include "task.h"
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,FreeRTOS.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,semphr.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,queue.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,task.h)
 
 #ifdef __cplusplus
 extern "C" {

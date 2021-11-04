@@ -261,6 +261,10 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
     url.remove(0, (index + 3)); // remove http:// or https://
 
     index = url.indexOf('/');
+    if (index == -1) {
+        index = url.length();
+        url += '/';
+    }
     String host = url.substring(0, index);
     url.remove(0, index); // remove host part
 
@@ -456,6 +460,17 @@ void HTTPClient::setAuthorization(const char * auth)
 {
     if(auth) {
         _base64Authorization = auth;
+    }
+}
+
+/**
+ * set the Authorization type for the http request
+ * @param authType const char *
+ */
+void HTTPClient::setAuthorizationType(const char * authType)
+{
+    if(authType) {
+        _authorizationType = authType;
     }
 }
 
@@ -1174,7 +1189,9 @@ bool HTTPClient::sendHeader(const char * type)
 
     if(_base64Authorization.length()) {
         _base64Authorization.replace("\n", "");
-        header += F("Authorization: Basic ");
+        header += F("Authorization: ");
+        header += _authorizationType; 
+        header += " ";
         header += _base64Authorization;
         header += "\r\n";
     }
