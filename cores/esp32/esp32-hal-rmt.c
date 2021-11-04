@@ -546,16 +546,16 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
     size_t channel = rmt->channel;
 
 #if CONFIG_IDF_TARGET_ESP32C3
-    int apb_div = _LIMIT(tick/25.0, 256);
-    float apb_tick = 25.0 * apb_div;
+    int apb_div = _LIMIT(tick/25.0f, 256);
+    float apb_tick = 25.0f * apb_div;
     RMT.tx_conf[channel].div_cnt = apb_div & 0xFF;
     RMT.tx_conf[channel].conf_update = 1;
     return apb_tick;
 #else
-    int apb_div = _LIMIT(tick/12.5, 256);
+    int apb_div = _LIMIT(tick/12.5f, 256);
     int ref_div = _LIMIT(tick/1000, 256);
-    float apb_tick = 12.5 * apb_div;
-    float ref_tick = 1000.0 * ref_div;
+    float apb_tick = 12.5f * apb_div;
+    float ref_tick = 1000.0f * ref_div;
     if (_ABS(apb_tick - tick) < _ABS(ref_tick - tick)) {
         RMT.conf_ch[channel].conf0.div_cnt = apb_div & 0xFF;
         RMT.conf_ch[channel].conf1.ref_always_on = 1;
