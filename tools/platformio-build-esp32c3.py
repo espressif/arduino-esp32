@@ -119,6 +119,7 @@ env.Append(
         "-T", "esp32c3.rom.libgcc.ld",
         "-T", "esp32c3.rom.newlib.ld",
         "-T", "esp32c3.rom.version.ld",
+        "-T", "esp32c3.rom.eco3.ld",
         "-T", "esp32c3.peripherals.ld",
         "-u", "_Z5setupv",
         "-u", "_Z4loopv",

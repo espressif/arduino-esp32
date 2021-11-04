@@ -257,6 +257,8 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "dct", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "conv", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "common", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "kalman", "ekf", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "kalman", "ekf_imu13states", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "tool"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "typedef"),
