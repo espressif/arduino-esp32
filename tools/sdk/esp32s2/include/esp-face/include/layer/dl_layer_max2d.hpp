@@ -72,7 +72,7 @@ namespace dl
                     {
                         this->output = new Tensor<feature_t>;
                     }
-                    this->output->set_exponent(this->output_exponent);
+                    this->output->set_exponent(input0.exponent);
                     this->output->set_shape(this->output_shape);
                     this->output->free_element();
                 }
