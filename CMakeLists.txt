@@ -55,6 +55,7 @@ set(LIBRARY_SRCS
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
+  libraries/Ethernet/src/ETH.cpp
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
@@ -91,7 +92,6 @@ set(LIBRARY_SRCS
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
-  libraries/WiFi/src/ETH.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
   libraries/WiFi/src/WiFi.cpp
