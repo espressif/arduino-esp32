@@ -10,8 +10,7 @@ For a simplified method, see `lib-builder <lib_builder>`_.
 Installation
 ------------
 
-.. note::
-Latest Arduino Core ESP32 version is now compatible with [ESP-IDF v4.4](https://github.com/espressif/esp-idf/tree/release/v4.4). Please consider this compability when using Arduino as component in ESP-IDF.
+.. note:: Latest Arduino Core ESP32 version is now compatible with [ESP-IDF v4.4](https://github.com/espressif/esp-idf/tree/release/v4.4). Please consider this compability when using Arduino as component in ESP-IDF.
 
 - Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
 - Create blank idf project (from one of the examples).
