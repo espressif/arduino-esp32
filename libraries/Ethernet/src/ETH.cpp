@@ -389,8 +389,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     // this delay forces changing FreeRTOS task context
     // it avoids DHCP error messages by running DHCP LwIP Events correctly before setting static IP
     delay(50);
-    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
 
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
     if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
         log_e("DHCP could not be stopped! Error: %d", err);
         return false;
