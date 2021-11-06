@@ -22,168 +22,169 @@
 
 #define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF
 
+#define ENCRYPTED_BLOCK_SIZE 16
+
 #define U_FLASH   0
 #define U_SPIFFS  100
 #define U_AUTH    200
 
-#define ENCRYPTED_BLOCK_SIZE 16
+typedef void (*LED_Init_t)(void);
+typedef void (*LED_Write_t)(bool Value);
 
-class UpdateClass {
-  public:
-    typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
+class UpdateClass
+{
+	public:
+		typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
 
-    UpdateClass();
+		UpdateClass();
 
-    /*
-      This callback will be called when Update is receiving data
-    */
-    UpdateClass& onProgress(THandlerFunction_Progress fn);
+		/*
+		  This callback will be called when Update is receiving data
+		*/
+		UpdateClass& onProgress(THandlerFunction_Progress fn);
 
-    /*
-      Call this to check the space needed for the update
-      Will return false if there is not enough space
-    */
-    bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, int ledPin = -1, uint8_t ledOn = LOW, const char *label = NULL);
+		/*
+		  Call this to check the space needed for the update
+		  Will return false if there is not enough space
+		*/
+		bool begin(size_t size=UPDATE_SIZE_UNKNOWN, int command = U_FLASH, LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL, const char *label = NULL);
 
-    /*
-      Writes a buffer to the flash and increments the address
-      Returns the amount written
-    */
-    size_t write(uint8_t *data, size_t len);
+		/*
+		  Writes a buffer to the flash and increments the address
+		  Returns the amount written
+		*/
+		size_t write(uint8_t *data, size_t len);
 
-    /*
-      Writes the remaining bytes from the Stream to the flash
-      Uses readBytes() and sets UPDATE_ERROR_STREAM on timeout
-      Returns the bytes written
-      Should be equal to the remaining bytes when called
-      Usable for slow streams like Serial
-    */
-    size_t writeStream(Stream &data);
+		/*
+		  Writes the remaining bytes from the Stream to the flash
+		  Uses readBytes() and sets UPDATE_ERROR_STREAM on timeout
+		  Returns the bytes written
+		  Should be equal to the remaining bytes when called
+		  Usable for slow streams like Serial
+		*/
+		size_t writeStream(Stream &data);
 
-    /*
-      If all bytes are written
-      this call will write the config to eboot
-      and return true
-      If there is already an update running but is not finished and !evenIfRemaining
-      or there is an error
-      this will clear everything and return false
-      the last error is available through getError()
-      evenIfRemaining is helpfull when you update without knowing the final size first
-    */
-    bool end(bool evenIfRemaining = false);
+		/*
+		  If all bytes are written
+		  this call will write the config to eboot
+		  and return true
+		  If there is already an update running but is not finished and !evenIfRemaining
+		  or there is an error
+		  this will clear everything and return false
+		  the last error is available through getError()
+		  evenIfRemaining is helpfull when you update without knowing the final size first
+		*/
+		bool end(bool evenIfRemaining = false);
 
-    /*
-      Aborts the running update
-    */
-    void abort();
+		/*
+		  Aborts the running update
+		*/
+		void abort();
 
-    /*
-      Prints the last error to an output stream
-    */
-    void printError(Print &out);
+		/*
+		  Prints the last error to an output stream
+		*/
+		void printError(Stream &out);
 
-    const char * errorString();
+		const char * errorString();
 
-    /*
-      sets the expected MD5 for the firmware (hexString)
-    */
-    bool setMD5(const char * expected_md5);
+		/*
+		  sets the expected MD5 for the firmware (hexString)
+		*/
+		bool setMD5(const char * expected_md5);
 
-    /*
-      returns the MD5 String of the successfully ended firmware
-    */
-    String md5String(void){ return _md5.toString(); }
+		/*
+		  returns the MD5 String of the sucessfully ended firmware
+		*/
+		String md5String(void){ return _md5.toString(); }
 
-    /*
-      populated the result with the md5 bytes of the successfully ended firmware
-    */
-    void md5(uint8_t * result){ return _md5.getBytes(result); }
+		/*
+		  populated the result with the md5 bytes of the sucessfully ended firmware
+		*/
+		void md5(uint8_t * result){ return _md5.getBytes(result); }
 
-    //Helpers
-    uint8_t getError(){ return _error; }
-    void clearError(){ _error = UPDATE_ERROR_OK; }
-    bool hasError(){ return _error != UPDATE_ERROR_OK; }
-    bool isRunning(){ return _size > 0; }
-    bool isFinished(){ return _progress == _size; }
-    size_t size(){ return _size; }
-    size_t progress(){ return _progress; }
-    size_t remaining(){ return _size - _progress; }
+		//Helpers
+		uint8_t getError(){ return _error; }
+		void clearError(){ _error = UPDATE_ERROR_OK; }
+		bool hasError(){ return _error != UPDATE_ERROR_OK; }
+		bool isRunning(){ return _size > 0; }
+		bool isFinished(){ return _progress == _size; }
+		size_t size(){ return _size; }
+		size_t progress(){ return _progress; }
+		size_t remaining(){ return _size - _progress; }
 
-    /*
-      Template to write from objects that expose
-      available() and read(uint8_t*, size_t) methods
-      faster than the writeStream method
-      writes only what is available
-    */
-    template<typename T>
-    size_t write(T &data){
-      size_t written = 0;
-      if (hasError() || !isRunning())
-        return 0;
+		/*
+		  Template to write from objects that expose
+		  available() and read(uint8_t*, size_t) methods
+		  faster than the writeStream method
+		  writes only what is available
+		*/
+		template<typename T>
+		size_t write(T &data){
+		  size_t written = 0;
+		  if (hasError() || !isRunning())
+			return 0;
 
-      size_t available = data.available();
-      while(available) {
-        if(_bufferLen + available > remaining()){
-          available = remaining() - _bufferLen;
-        }
-        if(_bufferLen + available > 4096) {
-          size_t toBuff = 4096 - _bufferLen;
-          data.read(_buffer + _bufferLen, toBuff);
-          _bufferLen += toBuff;
-          if(!_writeBuffer())
-            return written;
-          written += toBuff;
-        } else {
-          data.read(_buffer + _bufferLen, available);
-          _bufferLen += available;
-          written += available;
-          if(_bufferLen == remaining()) {
-            if(!_writeBuffer()) {
-              return written;
-            }
-          }
-        }
-        if(remaining() == 0)
-          return written;
-        available = data.available();
-      }
-      return written;
-    }
+		  size_t available = data.available();
+		  while(available) {
+			if(_bufferLen + available > remaining()){
+			  available = remaining() - _bufferLen;
+			}
+			if(_bufferLen + available > 4096) {
+			  size_t toBuff = 4096 - _bufferLen;
+			  data.read(_buffer + _bufferLen, toBuff);
+			  _bufferLen += toBuff;
+			  if(!_writeBuffer())
+				return written;
+			  written += toBuff;
+			} else {
+			  data.read(_buffer + _bufferLen, available);
+			  _bufferLen += available;
+			  written += available;
+			  if(_bufferLen == remaining()) {
+				if(!_writeBuffer()) {
+				  return written;
+				}
+			  }
+			}
+			if(remaining() == 0)
+			  return written;
+			available = data.available();
+		  }
+		  return written;
+		}
 
-    /*
-      check if there is a firmware on the other OTA partition that you can bootinto
-    */
-    bool canRollBack();
-    /*
-      set the other OTA partition as bootable (reboot to enable)
-    */
-    bool rollBack();
+		/*
+		  check if there is a firmware on the other OTA partition that you can bootinto
+		*/
+		bool canRollBack();
+		/*
+		  set the other OTA partition as bootable (reboot to enable)
+		*/
+		bool rollBack();
 
-  private:
-    void _reset();
-    void _abort(uint8_t err);
-    bool _writeBuffer();
-    bool _verifyHeader(uint8_t data);
-    bool _verifyEnd();
-    bool _enablePartition(const esp_partition_t* partition);
+	private:
+		void _reset();
+		void _abort(uint8_t err);
+		bool _writeBuffer();
+		bool _verifyHeader(uint8_t data);
+		bool _verifyEnd();
 
 
-    uint8_t _error;
-    uint8_t *_buffer;
-    uint8_t *_skipBuffer;
-    size_t _bufferLen;
-    size_t _size;
-    THandlerFunction_Progress _progress_callback;
-    uint32_t _progress;
-    uint32_t _paroffset;
-    uint32_t _command;
-    const esp_partition_t* _partition;
+		uint8_t _error;
+		uint8_t *_buffer;
+		size_t _bufferLen;
+		size_t _size;
+		THandlerFunction_Progress _progress_callback;
+		uint32_t _progress;
+		uint32_t _command;
+		const esp_partition_t* _partition;
 
-    String _target_md5;
-    MD5Builder _md5;
+		String _target_md5;
+		MD5Builder _md5;
 
-    int _ledPin;
-    uint8_t _ledOn;
+		LED_Init_t _on_LED_Init;
+		LED_Write_t _on_LED_Write;
 };
 
 extern UpdateClass Update;

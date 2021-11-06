@@ -31,15 +31,14 @@
 
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
-
 HTTPUpdate::HTTPUpdate(void)
-        : _httpClientTimeout(8000), _ledPin(-1)
+        : _httpClientTimeout(8000)
 {
     _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
 }
 
 HTTPUpdate::HTTPUpdate(int httpClientTimeout)
-        : _httpClientTimeout(httpClientTimeout), _ledPin(-1)
+        : _httpClientTimeout(httpClientTimeout)
 {
     _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
 }
@@ -48,46 +47,46 @@ HTTPUpdate::~HTTPUpdate(void)
 {
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, on_LED_Init, on_LED_Write);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
-    return handleUpdate(httpClient, currentVersion, true);
+    return handleUpdate(httpClient, currentVersion, true, on_LED_Init, on_LED_Write);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, true);
+    return handleUpdate(http, currentVersion, true, on_LED_Init, on_LED_Write);
 }
 
 HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
-        const String& currentVersion)
+        const String& currentVersion, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
-    return handleUpdate(httpClient, currentVersion, false);
+    return handleUpdate(httpClient, currentVersion, false, on_LED_Init, on_LED_Write);
 }
 
 HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
-        const String& currentVersion)
+        const String& currentVersion, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
     HTTPClient http;
     if(!http.begin(client, host, port, uri))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, on_LED_Init, on_LED_Write);
 }
 
 /**
@@ -180,7 +179,7 @@ String getSketchSHA256() {
  * @param currentVersion const char *
  * @return HTTPUpdateResult
  */
-HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs)
+HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
 
     HTTPUpdateResult ret = HTTP_UPDATE_FAILED;
@@ -188,7 +187,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     // use HTTP/1.0 for update since the update handler not support any transfer Encoding
     http.useHTTP10(true);
     http.setTimeout(_httpClientTimeout);
-    http.setFollowRedirects(_followRedirects);
+    //http.setFollowRedirects(_followRedirects);
     http.setUserAgent("ESP32-http-Update");
     http.addHeader("Cache-Control", "no-cache");
     http.addHeader("x-ESP32-STA-MAC", WiFi.macAddress());
@@ -338,7 +337,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     }
 */
                 }
-                if(runUpdate(*tcp, len, http.header("x-MD5"), command)) {
+                if(runUpdate(*tcp, len, http.header("x-MD5"), command, on_LED_Init, on_LED_Write)) {
                     ret = HTTP_UPDATE_OK;
                     log_d("Update ok\n");
                     http.end();
@@ -392,7 +391,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
  * @param md5 String
  * @return true if Update ok
  */
-bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
+bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command, LED_Init_t on_LED_Init, LED_Write_t on_LED_Write)
 {
 
     StreamString error;
@@ -401,7 +400,7 @@ bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command)
         Update.onProgress(_cbProgress);
     }
 
-    if(!Update.begin(size, command, _ledPin, _ledOn)) {
+    if(!Update.begin(size, command, on_LED_Init, on_LED_Write)) {
         _lastError = Update.getError();
         Update.printError(error);
         error.trim(); // remove line ending

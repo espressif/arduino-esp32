@@ -78,23 +78,17 @@ public:
         _followRedirects = follow;
     }
 
-    void setLedPin(int ledPin = -1, uint8_t ledOn = HIGH)
-    {
-        _ledPin = ledPin;
-        _ledOn = ledOn;
-    }
-
-    t_httpUpdate_return update(WiFiClient& client, const String& url, const String& currentVersion = "");
+    t_httpUpdate_return update(WiFiClient& client, const String& url, const String& currentVersion = "", LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
     t_httpUpdate_return update(WiFiClient& client, const String& host, uint16_t port, const String& uri = "/",
-                               const String& currentVersion = "");
+                               const String& currentVersion = "", LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
-    t_httpUpdate_return updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion = "");
+    t_httpUpdate_return updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion = "", LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
     t_httpUpdate_return update(HTTPClient& httpClient,
-                               const String& currentVersion = "");
+                               const String& currentVersion = "", LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
-    t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "");
+    t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "", LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
     // Notification callbacks
     void onStart(HTTPUpdateStartCB cbOnStart)          { _cbStart = cbOnStart; }
@@ -106,8 +100,8 @@ public:
     String getLastErrorString(void);
 
 protected:
-    t_httpUpdate_return handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs = false);
-    bool runUpdate(Stream& in, uint32_t size, String md5, int command = U_FLASH);
+    t_httpUpdate_return handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs = false, LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
+    bool runUpdate(Stream& in, uint32_t size, String md5, int command = U_FLASH, LED_Init_t on_LED_Init = NULL, LED_Write_t on_LED_Write = NULL);
 
     // Set the error and potentially use a CB to notify the application
     void _setLastError(int err) {
@@ -127,9 +121,6 @@ private:
     HTTPUpdateEndCB      _cbEnd;
     HTTPUpdateErrorCB    _cbError;
     HTTPUpdateProgressCB _cbProgress;
-
-    int _ledPin;
-    uint8_t _ledOn;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPUPDATE)
