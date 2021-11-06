@@ -136,13 +136,13 @@ recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\bui
 recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
 
 ## Compile c files
-recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.c.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.c.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
 
 ## Compile c++ files
-recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpreprocessor.flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.cpp.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpreprocessor.flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.cpp.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
 
 ## Compile S files
-recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.S.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
+recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.S.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
 
 ## Create archives
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
