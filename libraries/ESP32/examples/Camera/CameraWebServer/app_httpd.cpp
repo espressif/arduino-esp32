@@ -471,7 +471,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
         last_frame = fr_end;
         frame_time /= 1000;
         uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
-        ESerial.printf("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
+        Serial.printf("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
 #if CONFIG_ESP_FACE_DETECT_ENABLED
                       ", %u+%u+%u+%u=%u %s%d"
 #endif
