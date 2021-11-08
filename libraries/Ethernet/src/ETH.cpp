@@ -368,6 +368,10 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         log_e("esp_eth_init error: %d", err);
     }
 #endif
+    // holds a few microseconds to let DHCP start and enter into a good state
+    // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
+    delay(50);
+
     return true;
 }
 
@@ -385,12 +389,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
         info.gw.addr = 0;
         info.netmask.addr = 0;
 	}
-    
-    // this delay forces changing FreeRTOS task context
-    // it avoids DHCP error messages by running DHCP LwIP Events correctly before setting static IP
-    delay(50);
-    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
 
+    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
     if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
         log_e("DHCP could not be stopped! Error: %d", err);
         return false;
