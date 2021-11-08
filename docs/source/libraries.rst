@@ -20,7 +20,7 @@ Currently, the Arduino ESP32 supports the following peripherals with Arduino API
 +---------------+---------------+---------------+---------------+-------------------------------+
 | DAC           | Yes           | Yes           | Not Supported |                               |
 +---------------+---------------+---------------+---------------+-------------------------------+
-| Ethernet      | Yes           | Not Supported | Not Supported |                               |
+| Ethernet      | Yes           | Not Supported | Not Supported | (*)                           |
 +---------------+---------------+---------------+---------------+-------------------------------+
 | GPIO          | Yes           | Yes           | Yes           |                               |
 +---------------+---------------+---------------+---------------+-------------------------------+
@@ -57,9 +57,15 @@ Currently, the Arduino ESP32 supports the following peripherals with Arduino API
 | Wi-Fi         | Yes           | Yes           | Yes           |                               |
 +---------------+---------------+---------------+---------------+-------------------------------+
 
-Some peripherals are not available for all ESP32 families. To see more details about it, see the corresponding SoC at `Product Selector <https://products.espressif.com>`_ page.
+Notes
+^^^^^
 
-Datasheets:
+(*) SPI Ethernet is supported by all ESP32 families and RMII only for ESP32.
+
+.. note:: Some peripherals are not available for all ESP32 families. To see more details about it, see the corresponding SoC at `Product Selector <https://products.espressif.com>`_ page.
+
+Datasheet
+^^^^^^^^^
 
 * `ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_
 * `ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf>`_
