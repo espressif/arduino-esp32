@@ -296,7 +296,8 @@ env.Append(
         ("F_CPU", "$BOARD_F_CPU"),
         ("ARDUINO", 10812),
         ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
-        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', ""))
+        ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', "")),
+        "ARDUINO_PARTITION_%s" % env.BoardConfig().get("build.partitions", "default.csv").replace(".csv", "")
     ],
 
     LIBSOURCE_DIRS=[
