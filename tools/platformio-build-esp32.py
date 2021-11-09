@@ -303,7 +303,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4-dev-3569-g6a7d83af19\\"'),
+        ("IDF_VER", '\\"v4.4-dev-3608-gbbe2a1bf34\\"'),
         "ESP_PLATFORM",
         "ARDUINO_ARCH_ESP32",
         "ESP32",
