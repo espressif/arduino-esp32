@@ -71,7 +71,7 @@ namespace dl
         }
 
         /**
-         * @brief 
+         * @brief copy the element of the input Tensor.
          * 
          * @param input an input Tensor
          * @param deep one of true or false
@@ -257,6 +257,56 @@ namespace dl
         {
             return this->element[index];
         }
+
+        /**
+         * @brief Set the all the element to value.
+         * 
+         * @param value  target value
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &set_value(T value);
+
+        /**
+         * @brief Set the the element to value
+         * 
+         * @param value target value, it will be broadcast automatically. 
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &set_value(Tensor<T> &value);
+
+        /**
+         * @brief Set the sliced element to value
+         * 
+         * @param axis_index_range range of slices
+         * @param value target value
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &set_value(std::vector<int> axis_index_range, T value);
+
+        /**
+         * @brief Set the sliced element to value
+         * 
+         * @param axis_index_range range of slices
+         * @param value target value, it will be broadcast automatically. 
+         * @return Tensor<T>& self
+         */
+        Tensor<T> &set_value(std::vector<int> axis_index_range, Tensor<T> &value);
+
+        /**
+         * @brief Extracts a slice from the Tensor.
+         * 
+         * @param axis_index_range range of slices
+         * @return Tensor<T> output
+         */
+        Tensor<T> slice(std::vector<int> axis_index_range);
+
+        /**
+         * @brief Reverses specific dims of the tensor.
+         * 
+         * @param axis The dims to be reversed
+         * @return Tensor<T>& 
+         */
+        Tensor<T> &reverse(std::vector<int> axis);
 
         /**
          * @brief Get the size of Tensor.
@@ -490,6 +540,17 @@ namespace dl
                 }
                 return *this;
             }
+        }
+
+        static Tensor<T> arange(int size)
+        {
+            Tensor<T> output;
+            output.set_auto_free(true).set_exponent(0).set_shape({size}).malloc_element();
+            for (int i = 0; i < size; ++i)
+            {
+                output.element[i] = i;
+            }
+            return output;
         }
     };
 } // namespace dl
