@@ -368,6 +368,10 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         log_e("esp_eth_init error: %d", err);
     }
 #endif
+    // holds a few microseconds to let DHCP start and enter into a good state
+    // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
+    delay(50);
+
     return true;
 }
 
@@ -396,7 +400,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     if(err != ERR_OK){
         log_e("STA IP could not be configured! Error: %d", err);
         return false;
-}
+    }
+    
     if(info.ip.addr){
         staticIP = true;
     } else {
