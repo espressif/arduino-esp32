@@ -5,7 +5,7 @@
 #include <MD5Builder.h>
 #include <functional>
 #include "esp_partition.h"
-#include <hwcrypto/aes.h>
+#include "aes/esp_aes.h"
 
 #define UPDATE_ERROR_OK                 (0)
 #define UPDATE_ERROR_WRITE              (1)
@@ -32,13 +32,11 @@
 #define ENCRYPTED_TWEAK_BLOCK_SIZE 32
 #define ENCRYPTED_KEY_SIZE         32
 
-#define U_AES_DECRYPT_NONE       0
-#define U_AES_AUTO_FLASH         1
-#define U_AES_FLASH              2
-#define U_AES_SPIFFS             4
-#define U_AES_SPIFFS_AUTO_FLASH  5
-#define U_AES_DECRYPT_ALL        6
-#define U_DECRYPTING             8
+#define U_AES_DECRYPT_NONE         0
+#define U_AES_DECRYPT_AUTO         1
+#define U_AES_DECRYPT_ON           2
+#define U_AES_DECRYPT_MODE_MASK    3
+#define U_AES_IMAGE_DECRYPTING_BIT 4
 
 class UpdateClass {
   public:
@@ -59,12 +57,12 @@ class UpdateClass {
 
     /*
      Setup decryption configuration
-     Crypt Key is 32bytes(256bits) block of data, same as the AES key used to encrypt file
-     Crypt Address is addressed used to encrypt file
-     Crypt Config is cfg used to encrypt image file
-     Crypt Mode select if image file is to be decrypted
+    Crypt Key is 32bytes(256bits) block of data, use the same key as used to encrypt image file
+     Crypt Address, use the same value as used to encrypt image file
+     Crypt Config,  use the same value as used to encrypt image file
+     Crypt Mode,    used to select if image files should be decrypted or not
     */
-    bool setupCrypt(const uint8_t *cryptKey=0, size_t cryptAddress=0, uint8_t cryptConfig=0xf, int cryptMode=U_AES_AUTO_FLASH);
+    bool setupCrypt(const uint8_t *cryptKey=0, size_t cryptAddress=0, uint8_t cryptConfig=0xf, int cryptMode=U_AES_DECRYPT_AUTO);
 
     /*
       Writes a buffer to the flash and increments the address
@@ -94,22 +92,22 @@ class UpdateClass {
     bool end(bool evenIfRemaining = false);
 
     /*
-      sets AES256 key(32 bytes) used to encrpt flash image, sizeOf
+      sets AES256 key(32 bytes) used for decrypting image file
     */
     bool setCryptKey(const uint8_t *cryptKey);
 
     /*
-      sets address used to encrypt flash image(0x000000 default)
-    */
-    void setCryptAddress(const size_t cryptAddress){ _cryptAddress = cryptAddress & 0x00fffff0; }
-
-    /*
-      sets crypt mode used on images(UM_AUTO default)
+      sets crypt mode used on image files(U_AES_DECRYPT_AUTO default)
     */
     bool setCryptMode(const int cryptMode);
 
     /*
-      sets crypt config used to encrypt flash image(0xf default)
+      sets address used for decrypting image file(0x000000 default)
+    */
+    void setCryptAddress(const size_t cryptAddress){ _cryptAddress = cryptAddress & 0xfffffff0; }
+
+    /*
+      sets crypt config used for decrypting image file(0x0f default)
     */
     void setCryptConfig(const uint8_t cryptConfig){ _cryptCfg = cryptConfig & 0x0f; }
 
@@ -230,8 +228,8 @@ class UpdateClass {
     int _ledPin;
     uint8_t _ledOn;
 
-    size_t _cryptAddress;
     uint8_t _cryptMode;
+    size_t _cryptAddress;
     uint8_t _cryptCfg;
 };
 

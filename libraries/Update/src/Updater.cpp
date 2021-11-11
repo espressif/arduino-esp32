@@ -74,7 +74,7 @@ UpdateClass::UpdateClass()
 , _partition(NULL)
 , _cryptCfg(0xf)
 , _cryptAddress(0)
-, _cryptMode(U_AES_AUTO_FLASH)
+, _cryptMode(U_AES_DECRYPT_AUTO)
 {
 }
 
@@ -202,7 +202,7 @@ bool UpdateClass::setCryptKey(const uint8_t *cryptKey){
             _cryptKey = 0;
             log_d("AES key unset");
         }
-        return false; //key cleared, so no key to decrypt with
+        return false; //key cleared, no key to decrypt with
     }
     //initialize
     if(!_cryptKey){
@@ -217,13 +217,13 @@ bool UpdateClass::setCryptKey(const uint8_t *cryptKey){
 }
 
 bool UpdateClass::setCryptMode(const int cryptMode){
-    if(cryptMode >= 0 && cryptMode < U_DECRYPTING){
+    if(cryptMode >= U_AES_DECRYPT_NONE && cryptMode <= U_AES_DECRYPT_ON){
         _cryptMode = cryptMode;
     }else{
         log_e("bad crypt mode arguement %i", cryptMode);
         return false;
     }
-    return (cryptMode != U_AES_DECRYPT_NONE);
+    return true;
 }
 
 void UpdateClass::_abort(uint8_t err){
@@ -237,7 +237,8 @@ void UpdateClass::abort(){
 
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key){
     memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE );
-    if(_cryptCfg == 0)  return; //no tweak needed
+    if(_cryptCfg == 0)  return; //no tweaking needed, use crypt key as-is
+
     const uint8_t pattern[] = { 23, 23, 23, 14, 23, 23, 23, 12, 23, 23, 23, 10, 23, 23, 23, 8 };
     int pattern_idx = 0;
     int key_idx = 0;
@@ -245,51 +246,49 @@ void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key){
     uint32_t tweak = 0;
     cryptAddress &= 0x00ffffe0; //bit 23-5
     cryptAddress <<= 8; //bit23 shifted to bit31(MSB)
-
     while(pattern_idx < sizeof(pattern)){
         tweak = cryptAddress<<(23 - pattern[pattern_idx]); //bit shift for small patterns
 //      tweak = rotl32(tweak,8 - bit_len);
-        tweak = (tweak << (8 - bit_len)) | (tweak >> (24 + bit_len)); //rotate to line up with end of previous tweak bits
-        bit_len += pattern[pattern_idx++] - 4; //add number of bits in next pattern(23-5 = 19bits)
+        tweak = (tweak<<(8 - bit_len)) | (tweak>>(24 + bit_len)); //rotate to line up with end of previous tweak bits
+        bit_len += pattern[pattern_idx++] - 4; //add number of bits in next pattern(23-4 = 19bits = 23bit to 5bit)
         while(bit_len > 7){
             tweaked_key[key_idx++] ^= tweak; //XOR byte
 //          tweak = rotl32(tweak, 8);
-            tweak = (tweak << 8) | (tweak >> 24); //compiler should optimize to use rotate(fast)
+            tweak = (tweak<<8) | (tweak>>24); //compiler should optimize to use rotate(fast)
             bit_len -=8;
-//        if(key_idx>=ENCRYPTED_KEY_SIZE) return; //end of key, error in pattern if this is used
         }
         tweaked_key[key_idx] ^= tweak; //XOR remaining bits, will XOR zeros if no remaining bits
     }
-    if(_cryptCfg == 0xf)  return; //no more tweaking needed
+    if(_cryptCfg == 0xf)  return; //return with fully tweaked key
+
+    //some of tweaked key bits need to be restore back to crypt key bits
     const uint8_t cfg_bits[] = { 67, 65, 63, 61 };
     key_idx = 0;
     pattern_idx = 0;
     while(key_idx < ENCRYPTED_KEY_SIZE){
         bit_len += cfg_bits[pattern_idx];
-        if( ( _cryptCfg & (1<<pattern_idx) ) == 0 ){ //restore crypt key bits
-            while(bit_len > 7){ //restore bytes to crypt key bits
-                tweaked_key[key_idx] = _cryptKey[key_idx];
-                key_idx++;
-                bit_len -= 8;
-            }
-            pattern_idx++;
-            if( bit_len > 0 && (_cryptCfg & (1<<pattern_idx))!= 0 ){  //in this single byte, first bits restore to crypt key bits, the rest keep as tweaked bits
-                tweaked_key[key_idx] &= (0xff>>bit_len);
-                tweaked_key[key_idx] |= (_cryptKey[key_idx] & (~(0xff>>bit_len)) );
+        if( (_cryptCfg & (1<<pattern_idx)) == 0 ){ //restore crypt key bits
+            while(bit_len > 0){
+                if( bit_len > 7 || ((_cryptCfg & (2<<pattern_idx)) == 0) ){ //restore a crypt key byte
+                    tweaked_key[key_idx] = _cryptKey[key_idx];
+                }else{ //MSBits restore crypt key bits, LSBits keep as tweaked bits
+                    tweaked_key[key_idx] &= (0xff>>bit_len);
+                    tweaked_key[key_idx] |= (_cryptKey[key_idx] & (~(0xff>>bit_len)) );
+                }
                 key_idx++;
                 bit_len -= 8;
             }
         }else{ //keep tweaked key bits
-            key_idx += (bit_len>>3); //skip bytes to keep tweaked key bits
-            bit_len %= 8;
-            pattern_idx++;
-            if( bit_len > 0 && ( _cryptCfg&(1<<pattern_idx)) == 0 ){ //in this single byte, first bits keep as tweated bits, the rest restore crypt key bits
-                tweaked_key[key_idx] &= (~(0xff>>bit_len));
-                tweaked_key[key_idx] |= ( _cryptKey[key_idx] & (0xff>>bit_len) );
+            while(bit_len > 0){
+                if( bit_len <8 && ((_cryptCfg & (2<<pattern_idx)) == 0) ){ //MSBits keep as tweaked bits, LSBits restore crypt key bits
+                    tweaked_key[key_idx] &= (~(0xff>>bit_len));
+                    tweaked_key[key_idx] |= (_cryptKey[key_idx] & (0xff>>bit_len));
+                }
                 key_idx++;
-                bit_len -= 8;                
+                bit_len -= 8;
             }
         }
+        pattern_idx++;
     }
 }
 
@@ -332,26 +331,23 @@ bool UpdateClass::_decryptBuffer(){
 }
 
 bool UpdateClass::_writeBuffer(){
-    //raw or encrypted received data buffer
-    if( _cryptMode != U_AES_DECRYPT_NONE ){ //leave buffer raw if crypt disabled
-        if( !_progress){
-            if(( _command == U_SPIFFS && (_cryptMode & U_AES_SPIFFS) )
-            || ( _command == U_FLASH  && (_cryptMode & U_AES_FLASH) )
-            || ( _command == U_FLASH  && (!_progress && (_cryptMode & U_AES_AUTO_FLASH) && (_buffer[0] != ESP_IMAGE_HEADER_MAGIC)) )
-            ){
-                _cryptMode |= U_DECRYPTING; //decrypt the loading image
-                log_d("Decrypting OTA Image");
-            }
-        }            
-    
-        if( _cryptMode & U_DECRYPTING ){
-            if( !_decryptBuffer() ){ //decrypt data being received
-                _abort(UPDATE_ERROR_DECRYPT);
-                return false;
-            }
+    //first bytes of loading image, check to see if loading image needs decrypting
+    if(!_progress){
+        _cryptMode &= U_AES_DECRYPT_MODE_MASK;
+        if(  ( _cryptMode == U_AES_DECRYPT_ON )
+          || ((_command == U_FLASH) && (_cryptMode & U_AES_DECRYPT_AUTO) && (_buffer[0] != ESP_IMAGE_HEADER_MAGIC))
+        ){
+            _cryptMode |= U_AES_IMAGE_DECRYPTING_BIT; //set to decrypt the loading image
+            log_d("Decrypting OTA Image");
         }
     }
-    //raw or decrypted received data buffer
+    //check if data in buffer needs decrypting
+    if( _cryptMode & U_AES_IMAGE_DECRYPTING_BIT ){
+        if( !_decryptBuffer() ){
+            _abort(UPDATE_ERROR_DECRYPT);
+            return false;
+        }
+    }
     //first bytes of new firmware
     uint8_t skip = 0;
     if(!_progress && _command == U_FLASH){
