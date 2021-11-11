@@ -1,10 +1,12 @@
 /*
 An example of how to use Update to upload encrypted and plain image files OTA. This example uses a simple webserver & Wifi connection via AP or STA with mDNS and DNS for simple host URI.
 
-To protect firmware images files from being copied and used on blank devices, use encrypted image files by using espressif idf.
-These can be OTA uploaded to device using 'Update.h', if set it up with the same key, address and flash_crypt_conf as used to encrypt image file or vice versa
-or if needed OTA upload with plain(unencrypted) FLASH image file, if OTA_MODE = U_AES_AUTO_FLASH(default) or U_AES_SPIFFS_AUTO_FLASH.
-Firmware is also protected on device, when FLASH encryption is enabled on device, suggest not to use the same key for updates 'OTA_KEY' as the device's FLASH key burnt into eFuses 'flash_encryption'
+Encrypted image will help protect your app image file from being copied and used on blank devices, encrypt your image file by using espressif IDF.
+First install an app on device that has Update setup with the OTA decrypt mode on, same key, address and flash_crypt_conf as used in IDF to encrypt image file or vice versa.
+
+For easier development use the default U_AES_DECRYPT_AUTO decrypt mode. This mode allows both plain and encrypted app images to be uploaded.
+
+Note:- App image can also encrypted on device, by using espressif IDF to configure & enabled FLASH encryption, suggest the use of a different 'OTA_KEY' key for update from the eFuses 'flash_encryption' key used by device.
 
   ie. "Update.setupCrypt(OTA_KEY, OTA_ADDRESS, OTA_CFG);"
 
@@ -12,15 +14,12 @@ defaults:- {if not set ie. "Update.setupCrypt();" }
   OTA_KEY     = 0  ( 0 = no key, disables decryption )
   OTA_ADDRESS = 0  ( suggest dont set address to app0=0x10000 usually or app1=varies )
   OTA_CFG     = 0xf
-  OTA_MODE    = U_AES_AUTO_FLASH
+  OTA_MODE    = U_AES_DECRYPT_AUTO
 
 OTA_MODE options:-
   U_AES_DECRYPT_NONE       decryption disabled, loads OTA image files as sent(plain)
-  U_AES_AUTO_FLASH         auto loads both plain & encrypted OTA FLASH image files and loads plain OTA SPIFFS image files
-  U_AES_FLASH              loads encrypted OTA FLASH image files and plain OTA SPIFFS image files
-  U_AES_SPIFFS             loads encrypted OTA SPIFFS image files and plain OTA FLASH image files
-  U_AES_SPIFFS_AUTO_FLASH  loads encrypted OTA SPIFFS image files and auto loads both plain & encrypted OTA FLASH image files
-  U_AES_DECRYPT_ALL        decrypts all OTA image files sent
+  U_AES_DECRYPT_AUTO       auto loads both plain & encrypted OTA FLASH image files, and plain OTA SPIFFS image files
+  U_AES_DECRYPT_ON         decrypts OTA image files
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/
 
@@ -55,7 +54,8 @@ const char*     host = "esp32-web";
 const char*     ssid = "wifi-ssid";
 const char* password = "wifi-password";
 
-//const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, \
+                           
+const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, \
                               0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20, \
                               0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, \
                               0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79 };
@@ -65,11 +65,11 @@ const char* password = "wifi-password";
                               'a',  ' ',  's',  'i',  'm',  'p',  'l',  'e', \
                               't',  'e',  's',  't',  ' ',  'k',  'e',  'y' };
 
-const uint8_t   OTA_KEY[33] = "0123456789 this a simpletest key";
+//const uint8_t   OTA_KEY[33] = "0123456789 this a simpletest key";
                            
-const uint32_t  OTA_ADDRESS = 0x4320;
+const uint32_t  OTA_ADDRESS = 0x00654320; //OTA_ADDRESS value has no effect when OTA_CFG = 0x00
 const uint32_t  OTA_CFG     = 0x0f;
-const uint32_t  OTA_MODE    = U_AES_AUTO_FLASH;
+const uint32_t  OTA_MODE    = U_AES_DECRYPT_AUTO;
 
 /*=================================================================*/
 const char* update_path = "update";
