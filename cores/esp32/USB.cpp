@@ -15,6 +15,7 @@
 
 #if CONFIG_TINYUSB_ENABLED
 
+#include "pins_arduino.h"
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "common/tusb_common.h"
@@ -85,14 +86,14 @@ static bool tinyusb_device_suspended = false;
 // Invoked when device is mounted (configured)
 void tud_mount_cb(void){
     tinyusb_device_mounted = true;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STARTED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
 // Invoked when device is unmounted
 void tud_umount_cb(void){
     tinyusb_device_mounted = false;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
@@ -100,7 +101,7 @@ void tud_umount_cb(void){
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en){
     tinyusb_device_suspended = true;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     p.suspend.remote_wakeup_en = remote_wakeup_en;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_SUSPEND_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
@@ -108,7 +109,7 @@ void tud_suspend_cb(bool remote_wakeup_en){
 // Invoked when usb bus is resumed
 void tud_resume_cb(void){
     tinyusb_device_suspended = false;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_RESUME_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 

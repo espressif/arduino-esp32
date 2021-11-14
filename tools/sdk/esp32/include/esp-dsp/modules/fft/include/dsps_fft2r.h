@@ -72,8 +72,8 @@ esp_err_t dsps_fft2r_init_sc16(int16_t *fft_table_buff, int table_size);
  *
  * @return
  */
-void dsps_fft2r_deinit_fc32();
-void dsps_fft2r_deinit_sc16();
+void dsps_fft2r_deinit_fc32(void);
+void dsps_fft2r_deinit_sc16(void);
 /**@}*/
 
 /**@{*/

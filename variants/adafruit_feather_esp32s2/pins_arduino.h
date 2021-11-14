@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 
-#define USB_VID 0x239A
-#define USB_PID 0x80EB
-#define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Adafruit Feather ESP32-S2"
-#define USB_SERIAL ""
+#define USB_VID            0x239A
+#define USB_PID            0x80EB
+#define USB_MANUFACTURER   "Adafruit"
+#define USB_PRODUCT        "Feather ESP32-S2"
+#define USB_SERIAL         "" // Empty string for MAC adddress
 
 
 #define EXTERNAL_NUM_INTERRUPTS 46
@@ -19,12 +19,12 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-static const uint8_t PIN_NEOPIXEL = 33;
-static const uint8_t PIN_NEOPIXEL_POWER = 21;
-static const uint8_t LED_BUILTIN = 13;
+#define LED_BUILTIN     13
 
-static const uint8_t TX = 39;
-static const uint8_t RX = 38;
+#define PIN_NEOPIXEL        33
+#define NEOPIXEL_NUM        1     // number of neopixels
+#define NEOPIXEL_POWER      21    // power pin
+#define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
 
 static const uint8_t SDA = 3;
 static const uint8_t SCL = 4;
@@ -40,6 +40,12 @@ static const uint8_t A2 = 16;
 static const uint8_t A3 = 15;
 static const uint8_t A4 = 14;
 static const uint8_t A5 = 8;
+
+
+
+
+static const uint8_t TX = 43;
+static const uint8_t RX = 44;
 
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;

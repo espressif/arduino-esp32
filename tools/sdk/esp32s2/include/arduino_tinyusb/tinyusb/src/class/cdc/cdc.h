@@ -58,31 +58,32 @@ typedef enum
 /// Communication Interface Subclass Codes
 typedef enum
 {
-  CDC_COMM_SUBCLASS_DIRECT_LINE_CONTROL_MODEL = 0x01  , ///< Direct Line Control Model  [USBPSTN1.2]
-  CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL            , ///< Abstract Control Model  [USBPSTN1.2]
-  CDC_COMM_SUBCLASS_TELEPHONE_CONTROL_MODEL           , ///< Telephone Control Model  [USBPSTN1.2]
-  CDC_COMM_SUBCLASS_MULTICHANNEL_CONTROL_MODEL        , ///< Multi-Channel Control Model  [USBISDN1.2]
-  CDC_COMM_SUBCLASS_CAPI_CONTROL_MODEL                , ///< CAPI Control Model  [USBISDN1.2]
-  CDC_COMM_SUBCLASS_ETHERNET_CONTROL_MODEL            , ///< Ethernet Networking Control Model  [USBECM1.2]
-  CDC_COMM_SUBCLASS_ATM_NETWORKING_CONTROL_MODEL      , ///< ATM Networking Control Model  [USBATM1.2]
-  CDC_COMM_SUBCLASS_WIRELESS_HANDSET_CONTROL_MODEL    , ///< Wireless Handset Control Model  [USBWMC1.1]
-  CDC_COMM_SUBCLASS_DEVICE_MANAGEMENT                 , ///< Device Management  [USBWMC1.1]
-  CDC_COMM_SUBCLASS_MOBILE_DIRECT_LINE_MODEL          , ///< Mobile Direct Line Model  [USBWMC1.1]
-  CDC_COMM_SUBCLASS_OBEX                              , ///< OBEX  [USBWMC1.1]
-  CDC_COMM_SUBCLASS_ETHERNET_EMULATION_MODEL            ///< Ethernet Emulation Model  [USBEEM1.0]
+  CDC_COMM_SUBCLASS_DIRECT_LINE_CONTROL_MODEL      = 0x01 , ///< Direct Line Control Model         [USBPSTN1.2]
+  CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL         = 0x02 , ///< Abstract Control Model            [USBPSTN1.2]
+  CDC_COMM_SUBCLASS_TELEPHONE_CONTROL_MODEL        = 0x03 , ///< Telephone Control Model           [USBPSTN1.2]
+  CDC_COMM_SUBCLASS_MULTICHANNEL_CONTROL_MODEL     = 0x04 , ///< Multi-Channel Control Model       [USBISDN1.2]
+  CDC_COMM_SUBCLASS_CAPI_CONTROL_MODEL             = 0x05 , ///< CAPI Control Model                [USBISDN1.2]
+  CDC_COMM_SUBCLASS_ETHERNET_CONTROL_MODEL         = 0x06 , ///< Ethernet Networking Control Model [USBECM1.2]
+  CDC_COMM_SUBCLASS_ATM_NETWORKING_CONTROL_MODEL   = 0x07 , ///< ATM Networking Control Model      [USBATM1.2]
+  CDC_COMM_SUBCLASS_WIRELESS_HANDSET_CONTROL_MODEL = 0x08 , ///< Wireless Handset Control Model    [USBWMC1.1]
+  CDC_COMM_SUBCLASS_DEVICE_MANAGEMENT              = 0x09 , ///< Device Management                 [USBWMC1.1]
+  CDC_COMM_SUBCLASS_MOBILE_DIRECT_LINE_MODEL       = 0x0A , ///< Mobile Direct Line Model          [USBWMC1.1]
+  CDC_COMM_SUBCLASS_OBEX                           = 0x0B , ///< OBEX                              [USBWMC1.1]
+  CDC_COMM_SUBCLASS_ETHERNET_EMULATION_MODEL       = 0x0C , ///< Ethernet Emulation Model          [USBEEM1.0]
+  CDC_COMM_SUBCLASS_NETWORK_CONTROL_MODEL          = 0x0D   ///< Network Control Model             [USBNCM1.0]
 } cdc_comm_sublcass_type_t;
 
 /// Communication Interface Protocol Codes
 typedef enum
 {
-  CDC_COMM_PROTOCOL_NONE                   = 0x00 , ///< No specific protocol
-  CDC_COMM_PROTOCOL_ATCOMMAND                     , ///< AT Commands: V.250 etc
-  CDC_COMM_PROTOCOL_ATCOMMAND_PCCA_101            , ///< AT Commands defined by PCCA-101
-  CDC_COMM_PROTOCOL_ATCOMMAND_PCCA_101_AND_ANNEXO , ///< AT Commands defined by PCCA-101 & Annex O
-  CDC_COMM_PROTOCOL_ATCOMMAND_GSM_707             , ///< AT Commands defined by GSM 07.07
-  CDC_COMM_PROTOCOL_ATCOMMAND_3GPP_27007          , ///< AT Commands defined by 3GPP 27.007
-  CDC_COMM_PROTOCOL_ATCOMMAND_CDMA                , ///< AT Commands defined by TIA for CDMA
-  CDC_COMM_PROTOCOL_ETHERNET_EMULATION_MODEL        ///< Ethernet Emulation Model
+  CDC_COMM_PROTOCOL_NONE                          = 0x00 , ///< No specific protocol
+  CDC_COMM_PROTOCOL_ATCOMMAND                     = 0x01 , ///< AT Commands: V.250 etc
+  CDC_COMM_PROTOCOL_ATCOMMAND_PCCA_101            = 0x02 , ///< AT Commands defined by PCCA-101
+  CDC_COMM_PROTOCOL_ATCOMMAND_PCCA_101_AND_ANNEXO = 0x03 , ///< AT Commands defined by PCCA-101 & Annex O
+  CDC_COMM_PROTOCOL_ATCOMMAND_GSM_707             = 0x04 , ///< AT Commands defined by GSM 07.07
+  CDC_COMM_PROTOCOL_ATCOMMAND_3GPP_27007          = 0x05 , ///< AT Commands defined by 3GPP 27.007
+  CDC_COMM_PROTOCOL_ATCOMMAND_CDMA                = 0x06 , ///< AT Commands defined by TIA for CDMA
+  CDC_COMM_PROTOCOL_ETHERNET_EMULATION_MODEL      = 0x07   ///< Ethernet Emulation Model
 } cdc_comm_protocol_type_t;
 
 //------------- SubType Descriptor in COMM Functional Descriptor -------------//
@@ -114,7 +115,8 @@ typedef enum
   CDC_FUNC_DESC_COMMAND_SET                                      = 0x16 , ///< Command Set Functional Descriptor
   CDC_FUNC_DESC_COMMAND_SET_DETAIL                               = 0x17 , ///< Command Set Detail Functional Descriptor
   CDC_FUNC_DESC_TELEPHONE_CONTROL_MODEL                          = 0x18 , ///< Telephone Control Model Functional Descriptor
-  CDC_FUNC_DESC_OBEX_SERVICE_IDENTIFIER                          = 0x19   ///< OBEX Service Identifier Functional Descriptor
+  CDC_FUNC_DESC_OBEX_SERVICE_IDENTIFIER                          = 0x19 , ///< OBEX Service Identifier Functional Descriptor
+  CDC_FUNC_DESC_NCM                                              = 0x1A , ///< NCM Functional Descriptor
 }cdc_func_desc_type_t;
 
 //--------------------------------------------------------------------+
@@ -122,7 +124,8 @@ typedef enum
 //--------------------------------------------------------------------+
 
 // SUBCLASS code of Data Interface is not used and should/must be zero
-/// Data Interface Protocol Codes
+
+// Data Interface Protocol Codes
 typedef enum{
   CDC_DATA_PROTOCOL_ISDN_BRI                               = 0x30, ///< Physical interface protocol for ISDN BRI
   CDC_DATA_PROTOCOL_HDLC                                   = 0x31, ///< HDLC
@@ -147,7 +150,6 @@ typedef enum
 {
   CDC_REQUEST_SEND_ENCAPSULATED_COMMAND                    = 0x00, ///< is used to issue a command in the format of the supported control protocol of the Communications Class interface
   CDC_REQUEST_GET_ENCAPSULATED_RESPONSE                    = 0x01, ///< is used to request a response in the format of the supported control protocol of the Communications Class interface.
-
   CDC_REQUEST_SET_COMM_FEATURE                             = 0x02,
   CDC_REQUEST_GET_COMM_FEATURE                             = 0x03,
   CDC_REQUEST_CLEAR_COMM_FEATURE                           = 0x04,
@@ -194,26 +196,27 @@ typedef enum
 // Management Elemenent Notification (Notification Endpoint)
 //--------------------------------------------------------------------+
 
-/// Communication Interface Management Element Notification Codes
+/// 6.3 Notification Codes
 typedef enum
 {
-  NETWORK_CONNECTION               = 0x00, ///< This notification allows the device to notify the host about network connection status.
-  RESPONSE_AVAILABLE               = 0x01, ///< This notification allows the device to notify the hostthat a response is available. This response can be retrieved with a subsequent \ref CDC_REQUEST_GET_ENCAPSULATED_RESPONSE request.
-
-  AUX_JACK_HOOK_STATE              = 0x08,
-  RING_DETECT                      = 0x09,
-
-  SERIAL_STATE                     = 0x20,
-
-  CALL_STATE_CHANGE                = 0x28,
-  LINE_STATE_CHANGE                = 0x29,
-  CONNECTION_SPEED_CHANGE          = 0x2A, ///< This notification allows the device to inform the host-networking driver that a change in either the upstream or the downstream bit rate of the connection has occurred
-  MDLM_SEMANTIC_MODEL_NOTIFICATION = 0x40,
+  CDC_NOTIF_NETWORK_CONNECTION               = 0x00, ///< This notification allows the device to notify the host about network connection status.
+  CDC_NOTIF_RESPONSE_AVAILABLE               = 0x01, ///< This notification allows the device to notify the hostthat a response is available. This response can be retrieved with a subsequent \ref CDC_REQUEST_GET_ENCAPSULATED_RESPONSE request.
+  CDC_NOTIF_AUX_JACK_HOOK_STATE              = 0x08,
+  CDC_NOTIF_RING_DETECT                      = 0x09,
+  CDC_NOTIF_SERIAL_STATE                     = 0x20,
+  CDC_NOTIF_CALL_STATE_CHANGE                = 0x28,
+  CDC_NOTIF_LINE_STATE_CHANGE                = 0x29,
+  CDC_NOTIF_CONNECTION_SPEED_CHANGE          = 0x2A, ///< This notification allows the device to inform the host-networking driver that a change in either the upstream or the downstream bit rate of the connection has occurred
+  CDC_NOTIF_MDLM_SEMANTIC_MODEL_NOTIFICATION = 0x40,
 }cdc_notification_request_t;
 
 //--------------------------------------------------------------------+
 // Class Specific Functional Descriptor (Communication Interface)
 //--------------------------------------------------------------------+
+
+// Start of all packed definitions for compiler without per-type packed
+TU_ATTR_PACKED_BEGIN
+TU_ATTR_BIT_FIELD_ORDER_BEGIN
 
 /// Header Functional Descriptor (Communication Interface)
 typedef struct TU_ATTR_PACKED
@@ -235,7 +238,7 @@ typedef struct TU_ATTR_PACKED
 }cdc_desc_func_union_t;
 
 #define cdc_desc_func_union_n_t(no_slave)\
- struct TU_ATTR_PACKED { \
+ struct TU_ATTR_PACKED {                   \
   uint8_t bLength                         ;\
   uint8_t bDescriptorType                 ;\
   uint8_t bDescriptorSubType              ;\
@@ -254,7 +257,7 @@ typedef struct TU_ATTR_PACKED
 }cdc_desc_func_country_selection_t;
 
 #define cdc_desc_func_country_selection_n_t(no_country) \
-  struct TU_ATTR_PACKED {\
+  struct TU_ATTR_PACKED {            \
   uint8_t bLength                   ;\
   uint8_t bDescriptorType           ;\
   uint8_t bDescriptorSubType        ;\
@@ -283,7 +286,6 @@ typedef struct TU_ATTR_PACKED
   uint8_t bDataInterface;
 }cdc_desc_func_call_management_t;
 
-
 typedef struct TU_ATTR_PACKED
 {
   uint8_t support_comm_request                    : 1; ///< Device supports the request combination of Set_Comm_Feature, Clear_Comm_Feature, and Get_Comm_Feature.
@@ -295,8 +297,8 @@ typedef struct TU_ATTR_PACKED
 
 TU_VERIFY_STATIC(sizeof(cdc_acm_capability_t) == 1, "mostly problem with compiler");
 
-/// \brief Abstract Control Management Functional Descriptor
-/// \details This functional descriptor describes the commands supported by by the Communications Class interface with SubClass code of \ref CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL
+/// Abstract Control Management Functional Descriptor
+/// This functional descriptor describes the commands supported by by the Communications Class interface with SubClass code of \ref CDC_COMM_SUBCLASS_ABSTRACT_CONTROL_MODEL
 typedef struct TU_ATTR_PACKED
 {
   uint8_t bLength                  ; ///< Size of this descriptor in bytes.
@@ -367,6 +369,7 @@ typedef struct TU_ATTR_PACKED
   } bmCapabilities;
 }cdc_desc_func_telephone_call_state_reporting_capabilities_t;
 
+// TODO remove
 static inline uint8_t cdc_functional_desc_typeof(uint8_t const * p_desc)
 {
   return p_desc[2];
@@ -394,7 +397,8 @@ typedef struct TU_ATTR_PACKED
 
 TU_VERIFY_STATIC(sizeof(cdc_line_control_state_t) == 2, "size is not correct");
 
-/** @} */
+TU_ATTR_PACKED_END  // End of all packed definitions
+TU_ATTR_BIT_FIELD_ORDER_END
 
 #ifdef __cplusplus
  }

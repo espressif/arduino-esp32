@@ -35,7 +35,7 @@ protected:
     friend class VFSFileImpl;
 
 public:
-    FileImplPtr open(const char* path, const char* mode) override;
+    FileImplPtr open(const char* path, const char* mode, const bool create) override;
     bool        exists(const char* path) override;
     bool        rename(const char* pathFrom, const char* pathTo) override;
     bool        remove(const char* path) override;

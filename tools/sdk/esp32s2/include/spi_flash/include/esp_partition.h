@@ -87,6 +87,7 @@ typedef enum {
     ESP_PARTITION_SUBTYPE_DATA_COREDUMP = 0x03,                               //!< COREDUMP partition
     ESP_PARTITION_SUBTYPE_DATA_NVS_KEYS = 0x04,                               //!< Partition for NVS keys
     ESP_PARTITION_SUBTYPE_DATA_EFUSE_EM = 0x05,                               //!< Partition for emulate eFuse bits
+    ESP_PARTITION_SUBTYPE_DATA_UNDEFINED = 0x06,                              //!< Undefined (or unspecified) data partition
 
     ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD = 0x80,                               //!< ESPHTTPD partition
     ESP_PARTITION_SUBTYPE_DATA_FAT = 0x81,                                    //!< FAT partition
@@ -180,7 +181,9 @@ esp_partition_iterator_t esp_partition_next(esp_partition_iterator_t iterator);
 /**
  * @brief Release partition iterator
  *
- * @param iterator Iterator obtained using esp_partition_find. Must be non-NULL.
+ * @param iterator Iterator obtained using esp_partition_find.
+ *                 The iterator is allowed to be NULL, so it is not necessary to check its value
+ *                 before calling this function.
  *
  */
 void esp_partition_iterator_release(esp_partition_iterator_t iterator);

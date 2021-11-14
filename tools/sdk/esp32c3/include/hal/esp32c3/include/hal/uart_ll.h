@@ -17,8 +17,11 @@
 
 
 #pragma once
+
+#include "hal/misc.h"
 #include "hal/uart_types.h"
 #include "soc/uart_periph.h"
+#include "soc/uart_struct.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -163,7 +166,7 @@ static inline void uart_ll_set_baudrate(uart_dev_t *hw, uint32_t baud)
     // an integer part and a fractional part.
     hw->clk_div.div_int = clk_div >> 4;
     hw->clk_div.div_frag = clk_div &  0xf;
-    hw->clk_conf.sclk_div_num = sclk_div - 1;
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->clk_conf, sclk_div_num, sclk_div - 1);
 #undef DIV_UP
 }
 
@@ -178,7 +181,7 @@ static inline uint32_t uart_ll_get_baudrate(uart_dev_t *hw)
 {
     uint32_t sclk_freq = uart_ll_get_sclk_freq(hw);
     typeof(hw->clk_div) div_reg = hw->clk_div;
-    return ((sclk_freq << 4)) / (((div_reg.div_int << 4) | div_reg.div_frag) * (hw->clk_conf.sclk_div_num + 1));
+    return ((sclk_freq << 4)) / (((div_reg.div_int << 4) | div_reg.div_frag) * (HAL_FORCE_READ_U32_REG_FIELD(hw->clk_conf, sclk_div_num) + 1));
 }
 
 /**
@@ -451,7 +454,7 @@ static inline void uart_ll_set_tx_idle_num(uart_dev_t *hw, uint32_t idle_num)
 static inline void uart_ll_tx_break(uart_dev_t *hw, uint32_t break_num)
 {
     if (break_num > 0) {
-        hw->txbrk_conf.tx_brk_num = break_num;
+        HAL_FORCE_MODIFY_U32_REG_FIELD(hw->txbrk_conf, tx_brk_num, break_num);
         hw->conf0.txd_brk = 1;
     } else {
         hw->conf0.txd_brk = 0;
@@ -518,8 +521,8 @@ static inline void uart_ll_set_sw_flow_ctrl(uart_dev_t *hw, uart_sw_flowctrl_t *
         hw->flow_conf.sw_flow_con_en = 1;
         hw->swfc_conf1.xon_threshold = flow_ctrl->xon_thrd;
         hw->swfc_conf0.xoff_threshold = flow_ctrl->xoff_thrd;
-        hw->swfc_conf1.xon_char = flow_ctrl->xon_char;
-        hw->swfc_conf0.xoff_char = flow_ctrl->xoff_char;
+        HAL_FORCE_MODIFY_U32_REG_FIELD(hw->swfc_conf1, xon_char, flow_ctrl->xon_char);
+        HAL_FORCE_MODIFY_U32_REG_FIELD(hw->swfc_conf0, xoff_char, flow_ctrl->xoff_char);
     } else {
         hw->flow_conf.sw_flow_con_en = 0;
         hw->flow_conf.xonoff_del = 0;
@@ -541,11 +544,11 @@ static inline void uart_ll_set_sw_flow_ctrl(uart_dev_t *hw, uart_sw_flowctrl_t *
  */
 static inline void uart_ll_set_at_cmd_char(uart_dev_t *hw, uart_at_cmd_t *cmd_char)
 {
-    hw->at_cmd_char.data = cmd_char->cmd_char;
-    hw->at_cmd_char.char_num = cmd_char->char_num;
-    hw->at_cmd_postcnt.post_idle_num = cmd_char->post_idle;
-    hw->at_cmd_precnt.pre_idle_num = cmd_char->pre_idle;
-    hw->at_cmd_gaptout.rx_gap_tout = cmd_char->gap_tout;
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->at_cmd_char, data, cmd_char->cmd_char);
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->at_cmd_char, char_num, cmd_char->char_num);
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->at_cmd_postcnt, post_idle_num, cmd_char->post_idle);
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->at_cmd_precnt, pre_idle_num, cmd_char->pre_idle);
+    HAL_FORCE_MODIFY_U32_REG_FIELD(hw->at_cmd_gaptout, rx_gap_tout, cmd_char->gap_tout);
 }
 
 /**
@@ -734,8 +737,8 @@ static inline void uart_ll_set_mode(uart_dev_t *hw, uart_mode_t mode)
  */
 static inline void uart_ll_get_at_cmd_char(uart_dev_t *hw, uint8_t *cmd_char, uint8_t *char_num)
 {
-    *cmd_char = hw->at_cmd_char.data;
-    *char_num = hw->at_cmd_char.char_num;
+    *cmd_char = HAL_FORCE_READ_U32_REG_FIELD(hw->at_cmd_char, data);
+    *char_num = HAL_FORCE_READ_U32_REG_FIELD(hw->at_cmd_char, char_num);
 }
 
 /**
@@ -888,6 +891,67 @@ static inline uint16_t uart_ll_get_rx_tout_thr(uart_dev_t *hw)
 static inline uint16_t uart_ll_max_tout_thrd(uart_dev_t *hw)
 {
     return UART_RX_TOUT_THRHD_V;
+}
+
+/**
+ * @brief  Configure the auto baudrate.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ * @param  enable Boolean marking whether the auto baudrate should be enabled or not.
+ */
+static inline void uart_ll_set_autobaud_en(uart_dev_t *hw, bool enable)
+{
+    hw->conf0.autobaud_en = enable ? 1 : 0;
+}
+
+/**
+ * @brief  Get the RXD edge count.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ */
+static inline uint32_t uart_ll_get_rxd_edge_cnt(uart_dev_t *hw)
+{
+    return hw->rxd_cnt.edge_cnt;
+}
+
+/**
+ * @brief  Get the positive pulse minimum count.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ */
+static inline uint32_t uart_ll_get_pos_pulse_cnt(uart_dev_t *hw)
+{
+    return hw->pospulse.min_cnt;
+}
+
+/**
+ * @brief  Get the negative pulse minimum count.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ */
+static inline uint32_t uart_ll_get_neg_pulse_cnt(uart_dev_t *hw)
+{
+    return hw->negpulse.min_cnt;
+}
+
+/**
+ * @brief  Get the high pulse minimum count.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ */
+static inline uint32_t uart_ll_get_high_pulse_cnt(uart_dev_t *hw)
+{
+    return hw->highpulse.min_cnt;
+}
+
+/**
+ * @brief  Get the low pulse minimum count.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ */
+static inline uint32_t uart_ll_get_low_pulse_cnt(uart_dev_t *hw)
+{
+    return hw->lowpulse.min_cnt;
 }
 
 /**

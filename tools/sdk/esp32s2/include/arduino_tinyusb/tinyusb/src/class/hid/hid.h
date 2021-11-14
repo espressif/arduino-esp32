@@ -871,10 +871,10 @@ enum
     {0, 0                     }, /* 0x07           */ \
     {0, HID_KEY_BACKSPACE     }, /* 0x08 Backspace */ \
     {0, HID_KEY_TAB           }, /* 0x09 Tab       */ \
-    {0, HID_KEY_RETURN        }, /* 0x0A Line Feed */ \
+    {0, HID_KEY_ENTER         }, /* 0x0A Line Feed */ \
     {0, 0                     }, /* 0x0B           */ \
     {0, 0                     }, /* 0x0C           */ \
-    {0, HID_KEY_RETURN        }, /* 0x0D CR        */ \
+    {0, HID_KEY_ENTER         }, /* 0x0D CR        */ \
     {0, 0                     }, /* 0x0E           */ \
     {0, 0                     }, /* 0x0F           */ \
     {0, 0                     }, /* 0x10           */ \
