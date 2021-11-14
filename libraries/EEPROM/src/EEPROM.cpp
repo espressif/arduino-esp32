@@ -33,7 +33,7 @@ EEPROMClass::EEPROMClass(void)
   , _data(0)
   , _size(0)
   , _dirty(false)
-  , _name("eeprom")
+  , _name(EEPROM_FLASH_PARTITION_NAME)
 {
 }
 
@@ -43,7 +43,7 @@ EEPROMClass::EEPROMClass(uint32_t sector)
   , _data(0)
   , _size(0)
   , _dirty(false)
-  , _name("eeprom")
+  , _name(EEPROM_FLASH_PARTITION_NAME)
 {
 }
 

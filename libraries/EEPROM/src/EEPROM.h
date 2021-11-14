@@ -47,7 +47,7 @@ class EEPROMClass {
     void end();
 
     uint8_t * getDataPtr();
-    uint16_t convert(bool clear, const char* EEPROMname = "eeprom", const char* nvsname = "eeprom");
+    uint16_t convert(bool clear, const char* EEPROMname = EEPROM_FLASH_PARTITION_NAME, const char* nvsname = EEPROM_FLASH_PARTITION_NAME);
 
     template<typename T>
     T &get(int address, T &t) {
