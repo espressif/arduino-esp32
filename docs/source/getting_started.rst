@@ -122,6 +122,7 @@ Resources
 .. _ESP32 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
 .. _ESP32-S2 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf
 .. _ESP32-C3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
+.. _ESP32-S3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/
 .. _ESP32 Forum: https://esp32.com
