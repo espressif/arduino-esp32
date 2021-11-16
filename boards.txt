@@ -2571,6 +2571,9 @@ esp32micromod.upload.extra_flags=
 esp32micromod.serial.disableDTR=true
 esp32micromod.serial.disableRTS=true
 
+esp32micromod.build.tarch=xtensa
+esp32micromod.build.bootloader_addr=0x1000
+esp32micromod.build.target=esp32
 esp32micromod.build.mcu=esp32
 esp32micromod.build.core=esp32
 esp32micromod.build.variant=esp32micromod
@@ -4373,7 +4376,7 @@ adafruit_funhouse_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-adafruit_feather_esp32s2_nopsram.name=Adafruit Feather ESP32-S2 (no PSRAM)
+adafruit_feather_esp32s2_nopsram.name=Adafruit Feather ESP32-S2
 adafruit_feather_esp32s2_nopsram.vid.0=0x239A
 adafruit_feather_esp32s2_nopsram.pid.0=0x80EB
 adafruit_feather_esp32s2_nopsram.vid.1=0x239A
@@ -4398,7 +4401,7 @@ adafruit_feather_esp32s2_nopsram.build.target=esp32s2
 adafruit_feather_esp32s2_nopsram.build.mcu=esp32s2
 adafruit_feather_esp32s2_nopsram.build.core=esp32
 adafruit_feather_esp32s2_nopsram.build.variant=adafruit_feather_esp32s2
-adafruit_feather_esp32s2_nopsram.build.board=ADAFRUIT_FEATHER_ESP32S2_NOPSRAM
+adafruit_feather_esp32s2_nopsram.build.board=ADAFRUIT_FEATHER_ESP32S2
 
 adafruit_feather_esp32s2_nopsram.build.cdc_on_boot=0
 adafruit_feather_esp32s2_nopsram.build.msc_on_boot=0
@@ -4426,10 +4429,10 @@ adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu=Enabled
 adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled.build.defines=
 adafruit_feather_esp32s2_nopsram.menu.PSRAM.enabled=Enabled
 adafruit_feather_esp32s2_nopsram.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled=Disabled
+adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled.build.defines=
 
 adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default.build.partitions=default

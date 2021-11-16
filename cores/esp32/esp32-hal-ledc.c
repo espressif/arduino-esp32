@@ -17,6 +17,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp32-hal-matrix.h"
+#include "soc/soc_caps.h"
 #include "soc/ledc_reg.h"
 #include "soc/ledc_struct.h"
 #include "driver/periph_ctrl.h"
@@ -330,4 +331,22 @@ double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num)
     }
     double res_freq = _ledcSetupTimerFreq(chan, freq, bit_num);
     return res_freq;
+}
+
+static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
+static int cnt_channel = SOC_LEDC_CHANNEL_NUM;
+void analogWrite(uint8_t pin, int value) {
+  // Use ledc hardware for internal pins
+  if (pin < SOC_GPIO_PIN_COUNT) {
+    if (pin_to_channel[pin] == 0) {
+      if (!cnt_channel) {
+          log_e("No more analogWrite channels available! You can have maximum %u", SOC_LEDC_CHANNEL_NUM);
+          return;
+      }
+      pin_to_channel[pin] = cnt_channel--;
+      ledcAttachPin(pin, cnt_channel);
+      ledcSetup(cnt_channel, 1000, 8);
+    }
+    ledcWrite(pin_to_channel[pin] - 1, value);
+  }
 }
