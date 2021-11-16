@@ -7,7 +7,7 @@ About
 GPIO (General Purpouse Input Output) is peripheral responsible to controls reception and 
 deliver digital signals by means of easy interface acess with world, physical pins.
 
-A fetures of this peripheral relates with largely quantity pins available on chip, also being
+Fetures of this peripheral relates with largely quantity pins available on chip, also being
 this programmable and configurable. An example of interaction happen when turn on LED or pulse control a button.
 
 .. note:: 
