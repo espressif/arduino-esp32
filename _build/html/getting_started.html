@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Getting Started &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing" href="installing.html" />
+    <link rel="prev" title="Welcome to ESP32 Arduino Core’s documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="installing.html" title="Installing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ESP32 Arduino Core’s documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<section id="about-arduino-esp32">
+<h2>About Arduino ESP32<a class="headerlink" href="#about-arduino-esp32" title="Permalink to this headline">¶</a></h2>
+<p>Welcome to the Arduino ESP32 support documentation! Here you will find important information on how to use the project.</p>
+</section>
+<section id="first-things-first">
+<h2>First Things First<a class="headerlink" href="#first-things-first" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Before continuing, we must be clear that this project is supported by <a class="reference external" href="https://www.espressif.com">Espressif Systems</a> and the community.
+Everyone is more than welcome to contribute back to this project.</p>
+</div>
+<p>ESP32 is a single 2.4 GHz Wi-Fi-and-Bluetooth SoC (System On a Chip) designed by <a class="reference external" href="https://www.espressif.com">Espressif Systems</a>.</p>
+<p>ESP32 is designed for mobile, wearable electronics, and Internet-of-Things (IoT) applications. It features all the state-of-the-art characteristics
+of low-power chips, including fine-grained clock gating, multiple power modes,and dynamic power scaling. For instance, in a low-power IoT sensor
+hub application scenario, ESP32 is woken-up periodically and only when a specified condition is detected. Low-duty cycle is used to minimize the
+amount of energy that the chip expends.</p>
+<p>The output of the power amplifier is also adjustable, thus contributing to an optimal trade-off between communication range, data rate and
+power consumption.</p>
+<p>The ESP32 series is available as a chip or module.</p>
+</section>
+<section id="supported-soc-s">
+<h2>Supported SoC’s<a class="headerlink" href="#supported-soc-s" title="Permalink to this headline">¶</a></h2>
+<p>Here are the ESP32 series supported by the Arduino-ESP32 project:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 10%" />
+<col style="width: 18%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>SoC</p></th>
+<th class="head"><p>Stable</p></th>
+<th class="head"><p>Development</p></th>
+<th class="head"><p>Datasheet</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ESP32</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf">ESP32 Datasheet</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>ESP32-S2</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Datasheet</a></p></td>
+</tr>
+<tr class="row-even"><td><p>ESP32-C3</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3 Datasheet</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>ESP32-S3</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>Not Available Yet</p></td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference external" href="boards/boards.html">Boards</a> for more details about ESP32 development boards.</p>
+</section>
+<section id="arduino-core-reference">
+<h2>Arduino Core Reference<a class="headerlink" href="#arduino-core-reference" title="Permalink to this headline">¶</a></h2>
+<p>This documentation is built on the ESP32 and we are not going to cover the common Arduino API. To see the Arduino reference documentation,
+please consider reading the official documentation.</p>
+<p>Arduino Official Documentation: <a class="reference external" href="https://www.arduino.cc/reference/en/">Arduino Reference</a>.</p>
+</section>
+<section id="supported-operating-systems">
+<h2>Supported Operating Systems<a class="headerlink" href="#supported-operating-systems" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><img alt="windows-logo" src="_images/logo_windows.png" /></p></td>
+<td><p><img alt="linux-logo" src="_images/logo_linux.png" /></p></td>
+<td><p><img alt="macos-logo" src="_images/logo_macos.png" /></p></td>
+</tr>
+<tr class="row-even"><td><p>Windows</p></td>
+<td><p>Linux</p></td>
+<td><p>macOS</p></td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference external" href="installing.html">Installing Guides</a> for more details on how to install the Arduino ESP32 support.</p>
+</section>
+<section id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>This is an open project and it’s supported by the community. Fell free to ask for help in one of the community channels.</p>
+</section>
+<section id="community">
+<h2>Community<a class="headerlink" href="#community" title="Permalink to this headline">¶</a></h2>
+<p>The Arduino community is huge! You can find a lot of useful content on the Internet.
+Here are some community channels where you may find information and ask for some help, if needed.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://esp32.com">ESP32 Forum</a>: Official Espressif Forum.</p></li>
+<li><p><a class="reference external" href="https://esp32.com/viewforum.php?f=19">ESP32 Forum - Arduino</a>: Official Espressif Forum for Arduino related discussions.</p></li>
+<li><p><a class="reference external" href="https://esp32.com/viewforum.php?f=12">ESP32 Forum - Hardware</a>: Official Espressif Forum for Hardware related discussions.</p></li>
+<li><p><a class="reference external" href="https://gitter.im/espressif/arduino-esp32">Gitter</a></p></li>
+<li><p><a class="reference external" href="https://discord.gg/nKxMTnkD">Espressif MCUs (Discord)</a></p></li>
+<li><p><a class="reference external" href="https://www.reddit.com/r/esp32">ESP32 on Reddit</a></p></li>
+</ul>
+</section>
+<section id="issues-reporting">
+<h2>Issues Reporting<a class="headerlink" href="#issues-reporting" title="Permalink to this headline">¶</a></h2>
+<p>Before opening a new issue, please read this:</p>
+<p>Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
+We also have the troubleshooting guide to save your time on the most common issues reported by users.</p>
+<p>For more details, see the <a class="reference external" href="https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md">Issue Template</a>.</p>
+</section>
+<section id="first-steps">
+<h2>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h2>
+<p>Here are the first steps to get the Arduino ESP32 support running.</p>
+<p>To install Arduino-ESP32, please see the dedicated section on the Installation guide. We recommend you install it using the boards manager.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installing.html">How to Install</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#before-installing">Before Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#installing-using-boards-manager">Installing using Boards Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#linux">Linux</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#macos">macOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#platformio">PlatformIO</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="boards/boards.html">Development Boards</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="boards/boards.html#development-boards">Development Boards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boards/boards.html#espressif">Espressif</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boards/boards.html#third-party">Third Party</a></li>
+<li class="toctree-l2"><a class="reference internal" href="boards/boards.html#resources">Resources</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>After installing the toolchain into your environment, you will be able to see all the dedicated examples for the ESP32. These examples are located
+in the examples menu or inside each library folder.</p>
+<blockquote>
+<div><p><a class="reference external" href="https://github.com/espressif/arduino-esp32/tree/master/libraries">https://github.com/espressif/arduino-esp32/tree/master/libraries</a></p>
+</div></blockquote>
+</section>
+<section id="resources">
+<h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#about-arduino-esp32">About Arduino ESP32</a></li>
+<li><a class="reference internal" href="#first-things-first">First Things First</a></li>
+<li><a class="reference internal" href="#supported-soc-s">Supported SoC’s</a></li>
+<li><a class="reference internal" href="#arduino-core-reference">Arduino Core Reference</a></li>
+<li><a class="reference internal" href="#supported-operating-systems">Supported Operating Systems</a></li>
+<li><a class="reference internal" href="#support">Support</a></li>
+<li><a class="reference internal" href="#community">Community</a></li>
+<li><a class="reference internal" href="#issues-reporting">Issues Reporting</a></li>
+<li><a class="reference internal" href="#first-steps">First Steps</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to ESP32 Arduino Core’s documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installing.html"
+                        title="next chapter">Installing</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting_started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="installing.html" title="Installing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ESP32 Arduino Core’s documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

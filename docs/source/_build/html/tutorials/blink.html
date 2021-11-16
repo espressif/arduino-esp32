@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Blink Interactive Tutorial &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Basic Tutorial" href="basic.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="basic.html" title="Basic Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorials.html" title="Tutorials"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="tutorials.html" accesskey="U">Tutorials</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Blink Interactive Tutorial</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="blink-interactive-tutorial">
+<h1>Blink Interactive Tutorial<a class="headerlink" href="#blink-interactive-tutorial" title="Permalink to this headline">¶</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This is the interactive blink tutorial using <a class="reference external" href="https://wokwi.com/">Wokwi</a>. For this tutorial, you don’t need the ESP32 board or the Arduino toolchain.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t want to use this tutorial with the simulation, you can copy and paste the <a class="reference internal" href="#blink-example-code"><span class="std std-ref">Example Code</span></a> from <a class="reference external" href="https://wokwi.com/">Wokwi</a> editor and use it on the <a class="reference external" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager">Arduino IDE</a> or <a class="reference external" href="https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#platformio">PlatformIO</a>.</p>
+</div>
+</section>
+<section id="about-this-tutorial">
+<h2>About this Tutorial<a class="headerlink" href="#about-this-tutorial" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial is the most basic for any get started. In this tutorial, we will show how to set a GPIO pin as an output to drive a LED to blink each 1 second.</p>
+</section>
+<section id="step-by-step">
+<h2>Step by step<a class="headerlink" href="#step-by-step" title="Permalink to this headline">¶</a></h2>
+<p>In order to make this simple blink tutorial, you’ll need to do the following steps.</p>
+<ol class="arabic simple">
+<li><p><strong>Define the GPIO for the LED.</strong></p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define LED 2</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">LED</span> <span class="pre">2</span></code> will be used to set the GPIO2 as the <code class="docutils literal notranslate"><span class="pre">LED</span></code> output pin.</p>
+<ol class="arabic simple" start="2">
+<li><p><strong>Setup.</strong></p></li>
+</ol>
+<p>Inside the <code class="docutils literal notranslate"><span class="pre">setup()</span></code> function, we need to add all things we want to run once during the startup.
+Here we’ll add the <code class="docutils literal notranslate"><span class="pre">pinMode</span></code> function to set the pin as output.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">setup</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">pinMode</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">OUTPUT</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The first argument is the GPIO number, already defined and the second is the mode, here defined as an output.</p>
+<ol class="arabic simple" start="3">
+<li><p><strong>Main Loop.</strong></p></li>
+</ol>
+<p>After the <code class="docutils literal notranslate"><span class="pre">setup</span></code>, the code runs the <code class="docutils literal notranslate"><span class="pre">loop</span></code> function infinitely. Here we will handle the GPIO in order to get the LED blinking.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">loop</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">digitalWrite</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">HIGH</span><span class="p">);</span>
+    <span class="n">delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+    <span class="n">digitalWrite</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">LOW</span><span class="p">);</span>
+    <span class="n">delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The first function is the <code class="docutils literal notranslate"><span class="pre">digitalWrite()</span></code> with two arguments:</p>
+<ul class="simple">
+<li><p>GPIO: Set the GPIO pin. Here defined by our <code class="docutils literal notranslate"><span class="pre">LED</span></code> connected to the GPIO2.</p></li>
+<li><p>State: Set the GPIO state as HIGH (ON) or LOW (OFF).</p></li>
+</ul>
+<p>This first <code class="docutils literal notranslate"><span class="pre">digitalWrite</span></code> we will set the LED ON.</p>
+<p>After the <code class="docutils literal notranslate"><span class="pre">digitalWrite</span></code>, we will set a <code class="docutils literal notranslate"><span class="pre">delay</span></code> function in order to wait for some time, defined in milliseconds.</p>
+<p>Now we can set the GPIO to <code class="docutils literal notranslate"><span class="pre">LOW</span></code> to turn the LED off and <code class="docutils literal notranslate"><span class="pre">delay</span></code> for more few milliseconds to get the LED blinking.</p>
+<ol class="arabic simple" start="4">
+<li><p><strong>Run the code.</strong></p></li>
+</ol>
+<p>To run this code, you’ll need a development board and the Arduino toolchain installed on your computer. If you don’t have both, you can use the simulator to test and edit the code.</p>
+</section>
+<section id="simulation">
+<h2>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline">¶</a></h2>
+<p>This simulator is provided by <a class="reference external" href="https://wokwi.com/">Wokwi</a> and you can test the blink code and play with some modifications to learn more about this example.</p>
+<iframe src="https://wokwi.com/arduino/projects/305566932847821378?embed=1" width="100%" height="400" border="0"></iframe><p>Change the parameters, like the delay period, to test the code right on your browser. You can add more LEDs, change the GPIO, and more.</p>
+</section>
+<section id="example-code">
+<span id="blink-example-code"></span><h2>Example Code<a class="headerlink" href="#example-code" title="Permalink to this headline">¶</a></h2>
+<p>Here is the full blink code.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define LED 2</span>
+
+<span class="n">void</span> <span class="n">setup</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">pinMode</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">OUTPUT</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">void</span> <span class="n">loop</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">digitalWrite</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">HIGH</span><span class="p">);</span>
+    <span class="n">delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+    <span class="n">digitalWrite</span><span class="p">(</span><span class="n">LED</span><span class="p">,</span> <span class="n">LOW</span><span class="p">);</span>
+    <span class="n">delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="resources">
+<h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf">ESP32 Datasheet</a> (Datasheet)</p></li>
+<li><p><a class="reference external" href="https://wokwi.com/">Wokwi</a> (Wokwi Website)</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Blink Interactive Tutorial</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#about-this-tutorial">About this Tutorial</a></li>
+<li><a class="reference internal" href="#step-by-step">Step by step</a></li>
+<li><a class="reference internal" href="#simulation">Simulation</a></li>
+<li><a class="reference internal" href="#example-code">Example Code</a></li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorials.html"
+                        title="previous chapter">Tutorials</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="basic.html"
+                        title="next chapter">Basic Tutorial</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorials/blink.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="basic.html" title="Basic Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorials.html" title="Tutorials"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="tutorials.html" >Tutorials</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Blink Interactive Tutorial</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

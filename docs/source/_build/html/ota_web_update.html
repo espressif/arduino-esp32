@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>OTA Web Update &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="makeEspArduino" href="make.html" />
+    <link rel="prev" title="Arduino as a ESP-IDF component" href="esp-idf_component.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="make.html" title="makeEspArduino"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="esp-idf_component.html" title="Arduino as a ESP-IDF component"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="advanced_utils.html" accesskey="U">Advanced Utilities</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">OTA Web Update</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="ota-web-update">
+<h1>OTA Web Update<a class="headerlink" href="#ota-web-update" title="Permalink to this headline">¶</a></h1>
+<p>OTAWebUpdate is done with a web browser that can be useful in the following typical scenarios:</p>
+<ul class="simple">
+<li><p>Once the application developed and loading directly from Arduino IDE is inconvenient or not possible</p></li>
+<li><p>after deployment if user is unable to expose Firmware for OTA from external update server</p></li>
+<li><p>provide updates after deployment to small quantity of modules when setting an update server is not practicable</p></li>
+</ul>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The ESP and the computer must be connected to the same network</p></li>
+</ul>
+</section>
+<section id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h2>
+<p>The sample implementation has been done using:</p>
+<ul class="simple">
+<li><p>Example sketch <code class="docutils literal notranslate"><span class="pre">`OTAWebUpdater.ino`</span></code>.</p></li>
+<li><p>ESP32 Board.</p></li>
+</ul>
+<p>You can also use another module if it meets Flash chip size of the sketch</p>
+<p>Before you begin, please make sure that you have the following software installed:</p>
+<ul class="simple">
+<li><p>Arduino IDE</p></li>
+<li><dl class="simple">
+<dt>Host software depending on O/S you use</dt><dd><ul>
+<li><p><a class="reference external" href="http://avahi.org/">Avahi</a> for Linux</p></li>
+<li><p><a class="reference external" href="http://www.apple.com/support/bonjour/">Bonjour</a> for Windows</p></li>
+<li><p>Mac OSX and iOS - support is already built in / no any extra s/w is required</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Prepare the sketch and configuration for initial upload with a serial port
+- Start Arduino IDE and load sketch OTAWebUpdater.ino available under File &gt; Examples &gt; OTAWebUpdater.ino
+- Update ssid and pass in the sketch so the module can join your Wi-Fi network
+- Open File &gt; Preferences, look for “Show verbose output during:” and check out “compilation” option</p>
+<figure class="align-center">
+<img alt="_images/ota_esp32_verbose.png" src="_images/ota_esp32_verbose.png" />
+</figure>
+<ul class="simple">
+<li><p>Upload sketch (Ctrl+U)</p></li>
+<li><p>Now open web browser and enter the url, i.e. <a class="reference external" href="http://esp32.local">http://esp32.local</a>. Once entered, browser should display a form</p></li>
+</ul>
+<figure class="align-center">
+<img alt="_images/ota_esp32_login.png" src="_images/ota_esp32_login.png" />
+</figure>
+<ul class="simple">
+<li><p>username = admin</p></li>
+<li><p>password = admin</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><em>If entering “http://ESP32.local” does not work, try replacing “ESP32” with module’s IP address. This workaround is useful in case the host software installed does not work</em>.</p>
+</div>
+<p>Now click on the Login button and browser will display an upload form</p>
+<figure class="align-center">
+<img alt="_images/ota_esp32_upload.png" src="_images/ota_esp32_upload.png" />
+</figure>
+<p>For Uploading the New Firmware, you need to provide the Binary File of your Code.</p>
+<p>Exporting Binary file of the Firmware (Code)
+- Open up the Arduino IDE
+- Open up the Code, for Exporting up Binary file
+- Now go to Sketch &gt; export compiled Binary</p>
+<figure class="align-center">
+<img alt="_images/ota_export_to_binary.png" src="_images/ota_export_to_binary.png" />
+</figure>
+<ul class="simple">
+<li><p>Binary file is exported to the same Directory where your code is present</p></li>
+</ul>
+<p>Once you are comfortable with this procedure, go ahead and modify OTAWebUpdater.ino sketch to print some additional messages and compile it. Then, export the new binary file and upload it using web browser to see entered changes on a Serial Monitor.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">OTA Web Update</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#implementation">Implementation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="esp-idf_component.html"
+                        title="previous chapter">Arduino as a ESP-IDF component</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="make.html"
+                        title="next chapter">makeEspArduino</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/ota_web_update.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="make.html" title="makeEspArduino"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="esp-idf_component.html" title="Arduino as a ESP-IDF component"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="advanced_utils.html" >Advanced Utilities</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">OTA Web Update</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
