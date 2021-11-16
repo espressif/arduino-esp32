@@ -40,7 +40,7 @@ Initial configuration for use pin with input or output.
 
 .. code-block:: arduino
 
-    void piMode(uint8_t pin, uint8_t mode);
+    void pinMode(uint8_t pin, uint8_t mode);
  
 * ``pin``   select  GPIO 
 * ``mode``  sets  mode operation (``INPUT``, ``OUTPUT`` or ``INPUT_PULLUP``, ).
@@ -58,7 +58,7 @@ Write digital signal on pin.
 * ``val``  logic level write on pin (``HIGH`` or ``LOW``) 
 
 .. warning:: 
-  If pin not set to ``OUTPUT`` on  pinMode(), may do not work correct.
+  If pin not set to ``OUTPUT`` on  pinMode(), may not work correct.
 
 digitalRead
 ***********
