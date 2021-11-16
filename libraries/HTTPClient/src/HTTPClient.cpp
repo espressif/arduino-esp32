@@ -464,6 +464,17 @@ void HTTPClient::setAuthorization(const char * auth)
 }
 
 /**
+ * set the Authorization type for the http request
+ * @param authType const char *
+ */
+void HTTPClient::setAuthorizationType(const char * authType)
+{
+    if(authType) {
+        _authorizationType = authType;
+    }
+}
+
+/**
  * set the timeout (ms) for establishing a connection to the server
  * @param connectTimeout int32_t
  */
@@ -1178,7 +1189,9 @@ bool HTTPClient::sendHeader(const char * type)
 
     if(_base64Authorization.length()) {
         _base64Authorization.replace("\n", "");
-        header += F("Authorization: Basic ");
+        header += F("Authorization: ");
+        header += _authorizationType; 
+        header += " ";
         header += _base64Authorization;
         header += "\r\n";
     }

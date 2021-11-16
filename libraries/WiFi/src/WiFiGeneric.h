@@ -172,7 +172,7 @@ class WiFiGenericClass
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
 
-    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=0, const uint8_t * mac=NULL);
+    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);

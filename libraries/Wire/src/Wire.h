@@ -95,6 +95,7 @@ public:
 
     uint8_t requestFrom(uint16_t address, uint8_t size, bool sendStop);
     uint8_t requestFrom(uint16_t address, uint8_t size, uint8_t sendStop);
+    size_t requestFrom(uint8_t address, size_t len, bool stopBit);
     uint8_t requestFrom(uint16_t address, uint8_t size);
     uint8_t requestFrom(uint8_t address, uint8_t size, uint8_t sendStop);
     uint8_t requestFrom(uint8_t address, uint8_t size);
