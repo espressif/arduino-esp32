@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ESP32-C3-DevKitM-1 &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Generic ESP32 Boards" href="generic.html" />
+    <link rel="prev" title="ESP32-S2-Saola-1" href="ESP32-S2-Saola-1.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="generic.html" title="Generic ESP32 Boards"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ESP32-S2-Saola-1.html" title="ESP32-S2-Saola-1"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../getting_started.html" >Getting Started</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="boards.html" accesskey="U">Boards</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">ESP32-C3-DevKitM-1</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="esp32-c3-devkitm-1">
+<h1>ESP32-C3-DevKitM-1<a class="headerlink" href="#esp32-c3-devkitm-1" title="Permalink to this headline">¶</a></h1>
+<p>The ESP32-C3-DevKitM-1 development board is one of Espressif’s official boards. This board is based on the <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3-mini-1_datasheet_en.pdf">ESP32-C3-MINI-1</a> module, with the <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a> as the core.</p>
+<section id="specifications">
+<h2>Specifications<a class="headerlink" href="#specifications" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Small­ sized 2.4 GHz Wi­Fi (802.11 b/g/n) and Bluetooth® 5 module</p></li>
+<li><p>Built around ESP32­C3 series of SoCs, RISC­V single­core microprocessor</p></li>
+<li><p>4 MB flash in chip package</p></li>
+<li><p>15 available GPIOs (module)</p></li>
+<li><dl class="simple">
+<dt>Peripherals</dt><dd><ul>
+<li><p>22 × programmable GPIOs</p></li>
+<li><p>Digital interfaces:</p></li>
+<li><p>3 × SPI</p></li>
+<li><p>2 × UART</p></li>
+<li><p>1 × I2C</p></li>
+<li><p>1 × I2S</p></li>
+<li><p>Remote control peripheral, with 2 transmit channels and 2 receive channels</p></li>
+<li><p>LED PWM controller, with up to 6 channels</p></li>
+<li><p>Full-speed USB Serial/JTAG controller</p></li>
+<li><p>General DMA controller (GDMA), with 3 transmit channels and 3 receive channels</p></li>
+<li><p>1 × TWAI® controller (compatible with ISO 11898-1)</p></li>
+<li><dl class="simple">
+<dt>Analog interfaces:</dt><dd><ul>
+<li><p>2 × 12-bit SAR ADCs, up to 6 channels</p></li>
+<li><p>1 × temperature sensor</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Timers:</dt><dd><ul>
+<li><p>2 × 54-bit general-purpose timers</p></li>
+<li><p>3 × watchdog timers</p></li>
+<li><p>1 × 52-bit system timer</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>On­board PCB antenna or external antenna connector</p></li>
+</ul>
+</section>
+<section id="header-block">
+<h2>Header Block<a class="headerlink" href="#header-block" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Not all of the chip pins are exposed to the pin headers.</p>
+</div>
+<section id="j1">
+<h3>J1<a class="headerlink" href="#j1" title="Permalink to this headline">¶</a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 8%" />
+<col style="width: 19%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>No.</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Type <a class="footnote-reference brackets" href="#id6" id="id1">1</a></p></th>
+<th class="head"><p>Function</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>3V3</p></td>
+<td><p>P</p></td>
+<td><p>3.3 V power supply</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>3V3</p></td>
+<td><p>P</p></td>
+<td><p>3.3 V power supply</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>IO2</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO2 <a class="footnote-reference brackets" href="#id7" id="id2">2</a>, ADC1_CH2, FSPIQ</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>IO3</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO3, ADC1_CH3</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>RST</p></td>
+<td><p>I</p></td>
+<td><p>CHIP_PU</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>IO0</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO0, ADC1_CH0, XTAL_32K_P</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>IO1</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO1, ADC1_CH1, XTAL_32K_N</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>IO10</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO10, FSPICS0</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>5V</p></td>
+<td><p>P</p></td>
+<td><p>5 V power supply</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>5V</p></td>
+<td><p>P</p></td>
+<td><p>5 V power supply</p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="j3">
+<h3>J3<a class="headerlink" href="#j3" title="Permalink to this headline">¶</a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 8%" />
+<col style="width: 19%" />
+<col style="width: 68%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>No.</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Type <a class="footnote-reference brackets" href="#id6" id="id3">1</a></p></th>
+<th class="head"><p>Function</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>TX</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO21, U0TXD</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>RX</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO20, U0RXD</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>IO9</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO9 <a class="footnote-reference brackets" href="#id7" id="id4">2</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>IO8</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO8 <a class="footnote-reference brackets" href="#id7" id="id5">2</a>, RGB LED</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>IO7</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO7, FSPID, MTDO</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>IO6</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO6, FSPICLK, MTCK</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>IO5</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO5, ADC2_CH0, FSPIWP, MTDI</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>IO4</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO4, ADC1_CH4, FSPIHD, MTMS</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p>IO18</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO18, USB_D-</p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p>IO19</p></td>
+<td><p>I/O/T</p></td>
+<td><p>GPIO19, USB_D+</p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p>GND</p></td>
+<td><p>G</p></td>
+<td><p>Ground</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="footnote brackets">
+<dt class="label" id="id6"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id3">2</a>)</span></dt>
+<dd><p>P: Power supply; I: Input; O: Output; T: High impedance.</p>
+</dd>
+<dt class="label" id="id7"><span class="brackets">2</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id4">2</a>,<a href="#id5">3</a>)</span></dt>
+<dd><p>GPIO2, GPIO8, and GPIO9 are strapping pins of the ESP32-C3FN4 chip. During the chip’s system reset, the latches of the strapping pins sample the voltage level as strapping bits, and hold these bits until the chip is powered down or shut down.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="pin-layout">
+<h2>Pin Layout<a class="headerlink" href="#pin-layout" title="Permalink to this headline">¶</a></h2>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/esp32-c3_devkitM-1_pinlayout.png"><img alt="ESP32-C3-DevKitM-1 (click to enlarge)" src="../_images/esp32-c3_devkitM-1_pinlayout.png" style="width: 600px;" /></a>
+</figure>
+</section>
+<section id="strapping-pins">
+<h2>Strapping Pins<a class="headerlink" href="#strapping-pins" title="Permalink to this headline">¶</a></h2>
+<p>Some of the GPIO’s have important features during the booting process. Here is the list of the strapping pins on the <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 3%" />
+<col style="width: 8%" />
+<col style="width: 60%" />
+<col style="width: 14%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GPIO</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Function</p></th>
+<th class="head"><p>Pull-up</p></th>
+<th class="head"><p>Pull-down</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IO2</p></td>
+<td><p>N/A</p></td>
+<td><p>Booting Mode</p></td>
+<td><p>See <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a></p></td>
+<td><p>See <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>IO9</p></td>
+<td><p>Pull-up</p></td>
+<td><p>Booting Mode</p></td>
+<td><p>SPI Boot</p></td>
+<td><p>Download Boot</p></td>
+</tr>
+<tr class="row-even"><td><p>IO8</p></td>
+<td><p>N/A</p></td>
+<td><p>Booting Mode</p></td>
+<td><p>Don’t Care</p></td>
+<td><p>Download Boot</p></td>
+</tr>
+<tr class="row-odd"><td><p>IO8</p></td>
+<td><p>Pull-up</p></td>
+<td><p>Enabling/Disabling Log Print</p></td>
+<td><p>See <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a></p></td>
+<td><p>See <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a></p></td>
+</tr>
+</tbody>
+</table>
+<p>For more detailed information, see the <a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a> datasheet.</p>
+</section>
+<section id="resources">
+<h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a> (Datasheet)</p></li>
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3-mini-1_datasheet_en.pdf">ESP32-C3-MINI-1</a> (Datasheet)</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ESP32-C3-DevKitM-1</a><ul>
+<li><a class="reference internal" href="#specifications">Specifications</a></li>
+<li><a class="reference internal" href="#header-block">Header Block</a><ul>
+<li><a class="reference internal" href="#j1">J1</a></li>
+<li><a class="reference internal" href="#j3">J3</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pin-layout">Pin Layout</a></li>
+<li><a class="reference internal" href="#strapping-pins">Strapping Pins</a></li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ESP32-S2-Saola-1.html"
+                        title="previous chapter">ESP32-S2-Saola-1</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="generic.html"
+                        title="next chapter">Generic ESP32 Boards</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/boards/ESP32-C3-DevKitM-1.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="generic.html" title="Generic ESP32 Boards"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ESP32-S2-Saola-1.html" title="ESP32-S2-Saola-1"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../getting_started.html" >Getting Started</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="boards.html" >Boards</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">ESP32-C3-DevKitM-1</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

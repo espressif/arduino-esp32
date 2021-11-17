@@ -1,6 +1,7 @@
 ####
 GPIO
 ####
+
 About
 -----
 
@@ -11,7 +12,7 @@ Fetures of this peripheral relates with largely quantity pins available on chip,
 this programmable and configurable. An example of interaction happen when turn on LED or pulse control a button.
 
 .. note:: 
-   There are some GPIOs with special functions and not all the is accessible in all development board. For more information strong suggest acess datasheet.
+   There are some GPIOs with special functions and not all the is accessible in all development board. For more information strong suggest acess datasheet_.
 
 GPIOs Configuration
 *******************
@@ -110,6 +111,7 @@ Here is full code for example application of GPIOs
       }
     }
 
- 
+.. _Wokwi: https://wokwi.com/ 
+.. _datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
     
     

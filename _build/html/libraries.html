@@ -1,0 +1,308 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Libraries &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Bluetooth API" href="api/bluetooth.html" />
+    <link rel="prev" title="Generic ESP32 Boards" href="boards/generic.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api/bluetooth.html" title="Bluetooth API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="boards/generic.html" title="Generic ESP32 Boards"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Libraries</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="libraries">
+<h1>Libraries<a class="headerlink" href="#libraries" title="Permalink to this headline">¶</a></h1>
+<p>Here is where the Libraries API’s descriptions are located:</p>
+<section id="supported-peripherals">
+<h2>Supported Peripherals<a class="headerlink" href="#supported-peripherals" title="Permalink to this headline">¶</a></h2>
+<p>Currently, the Arduino ESP32 supports the following peripherals with Arduino APIs.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Peripheral</p></th>
+<th class="head"><p>ESP32</p></th>
+<th class="head"><p>ESP32-S2</p></th>
+<th class="head"><p>ESP32-C3</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ADC</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Bluetooth</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Bluetooth Classic</p></td>
+</tr>
+<tr class="row-even"><td><p>BLE</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>DAC</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Ethernet</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Not Supported</p></td>
+<td><p>(*)</p></td>
+</tr>
+<tr class="row-odd"><td><p>GPIO</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Hall Sensor</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Not Supported</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>I2C</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>I2S</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>WIP</p></td>
+</tr>
+<tr class="row-odd"><td><p>LEDC</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Motor PWM</p></td>
+<td><p>No</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Not Supported</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Pulse Counter</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>RMT</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>SDIO</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>SPI</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Timer</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Temp. Sensor</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Touch</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Not Supported</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>TWAI</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td><p>No</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>UART</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>USB</p></td>
+<td><p>Not Supported</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>ESP32-C3 only CDC/JTAG</p></td>
+</tr>
+<tr class="row-odd"><td><p>Wi-Fi</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td><p>Yes</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h3>
+<p>(*) SPI Ethernet is supported by all ESP32 families and RMII only for ESP32.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some peripherals are not available for all ESP32 families. To see more details about it, see the corresponding SoC at <a class="reference external" href="https://products.espressif.com">Product Selector</a> page.</p>
+</div>
+</section>
+<section id="datasheet">
+<h3>Datasheet<a class="headerlink" href="#datasheet" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf">ESP32</a></p></li>
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2</a></p></li>
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3</a></p></li>
+</ul>
+</section>
+</section>
+<section id="apis">
+<h2>APIs<a class="headerlink" href="#apis" title="Permalink to this headline">¶</a></h2>
+<p>The Arduino ESP32 offers some unique APIs, described in this section:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/bluetooth.html">Bluetooth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/deepsleep.html">Deep Sleep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/espnow.html">ESPNOW</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gpio.html">GPIO</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/i2c.html">I2C</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/rainmaker.html">RainMaker</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/reset_reason.html">Reset Reason</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/wifi.html">Wi-Fi</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Libraries</a><ul>
+<li><a class="reference internal" href="#supported-peripherals">Supported Peripherals</a><ul>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+<li><a class="reference internal" href="#datasheet">Datasheet</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#apis">APIs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="boards/generic.html"
+                        title="previous chapter">Generic ESP32 Boards</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api/bluetooth.html"
+                        title="next chapter">Bluetooth API</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/libraries.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api/bluetooth.html" title="Bluetooth API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="boards/generic.html" title="Generic ESP32 Boards"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Libraries</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

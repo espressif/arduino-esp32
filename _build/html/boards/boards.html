@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Boards &#8212; Arduino-ESP32 2.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ESP32-DevKitC-1" href="ESP32-DevKitC-1.html" />
+    <link rel="prev" title="Installing" href="../installing.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ESP32-DevKitC-1.html" title="ESP32-DevKitC-1"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../installing.html" title="Installing"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../getting_started.html" accesskey="U">Getting Started</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Boards</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="boards">
+<h1>Boards<a class="headerlink" href="#boards" title="Permalink to this headline">¶</a></h1>
+<section id="development-boards">
+<h2>Development Boards<a class="headerlink" href="#development-boards" title="Permalink to this headline">¶</a></h2>
+<p>You will need a development board or a custom board with the ESP32 (see Supported SoC’s) to start playing.
+There is a bunch of different types and models widely available on the Internet. You need to choose one that covers all your requirements.</p>
+<p>To help you on this selection, we point out some facts about choosing the proper boardsto help you to save money and time.</p>
+<p><strong>One ESP32 to rule them all!</strong></p>
+<p>One important information that usually bring about some confusion is regarding the different models of the ESP32 SoC and modules.</p>
+<p>The ESP32 is divided by family:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>ESP32</dt><dd><ul>
+<li><p>Wi-Fi and BLE</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>ESP32-S</dt><dd><ul>
+<li><p>Wi-Fi only</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>ESP32-C</dt><dd><ul>
+<li><p>Wi-Fi and BLE 5</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).</p>
+<p>The modules use the SoC internally, including the external flash, PSRAM (in some models) and other essential electronic components. Essentially, all
+modules from the same family use the same SoC.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/soc-module.png"><img alt="ESP32 SoC and Module (click to enlarge)" src="../_images/soc-module.png" style="width: 250px;" /></a>
+</figure>
+<p><strong>For example:</strong></p>
+<p>The SoC partnumber is the ESP32-D0WD-V3 and it’s the same SoC used inside of the ESP32-WROVER (with PSRAM) and ESP32-WROOM modules. This means that the
+same characteristics are present in both modules’ core.</p>
+<p>For more detailed information regarding the SoC’s and modules, see the <a class="reference external" href="https://products.espressif.com/">Espressif Product Selector</a>.</p>
+<p>Now that you know that the module can be different but the heart is the same, you can choose your development board.</p>
+<p>Before buying: Keep in mind that for some “must have” features when choosing the best board for your needs:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Embedded USB-to-Serial</dt><dd><ul>
+<li><p>This is very convenient for programming and monitoring the logs with the terminal via USB.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Breadboard friendly</dt><dd><ul>
+<li><p>If you are prototyping, this will be very useful to connect your board directly on the breadboard.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>open-source/open-hardware</dt><dd><ul>
+<li><p>Check if the schematics are available for download. This helps a lot on prototyping.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Support</dt><dd><ul>
+<li><p>Some of the manufacturers offer a very good level of support, with examples and demo projects.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="espressif">
+<h2>Espressif<a class="headerlink" href="#espressif" title="Permalink to this headline">¶</a></h2>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/logo_espressif.png"><img alt="Espressif Logo" src="../_images/logo_espressif.png" style="width: 250px;" /></a>
+</figure>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ESP32-DevKitC-1.html">ESP32-DevKitC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ESP32-S2-Saola-1.html">ESP32-S2-Saola-1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ESP32-C3-DevKitM-1.html">ESP32-C3-DevKitM-1</a></li>
+</ul>
+</div>
+</section>
+<section id="third-party">
+<h2>Third Party<a class="headerlink" href="#third-party" title="Permalink to this headline">¶</a></h2>
+<p>Add here the third party boards, listed by vendors.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All the information must be provided by the vendor. If your favorite board is not here, consider
+creating an <a class="reference external" href="https://github.com/espressif/arduino-esp32/issues">issue on GitHub</a> and directly
+link/mention the vendor in the issue description.</p>
+</div>
+<section id="lolin">
+<h3>LOLIN<a class="headerlink" href="#lolin" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a href="https://www.wemos.cc/en/latest/d32/d32.html" target="_blank">LOLIN D32</a></p></li>
+<li><p><a href="https://www.wemos.cc/en/latest/d32/d32_pro.html" target="_blank">LOLIN D32 Pro</a></p></li>
+</ul>
+</section>
+<section id="generic-vendor">
+<h3>Generic Vendor<a class="headerlink" href="#generic-vendor" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="generic.html">Generic Board Name</a></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Create one file per board or one file with multiple boards. Do not add board information/description on this file.</p>
+</div>
+</div></blockquote>
+</section>
+</section>
+<section id="resources">
+<h2>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf">ESP32 Datasheet</a> (Datasheet)</p></li>
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-S2 Datasheet</a> (Datasheet)</p></li>
+<li><p><a class="reference external" href="https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf">ESP32-C3 Datasheet</a> (Datasheet)</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_espressif.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Boards</a><ul>
+<li><a class="reference internal" href="#development-boards">Development Boards</a></li>
+<li><a class="reference internal" href="#espressif">Espressif</a></li>
+<li><a class="reference internal" href="#third-party">Third Party</a><ul>
+<li><a class="reference internal" href="#lolin">LOLIN</a></li>
+<li><a class="reference internal" href="#generic-vendor">Generic Vendor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#resources">Resources</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../installing.html"
+                        title="previous chapter">Installing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ESP32-DevKitC-1.html"
+                        title="next chapter">ESP32-DevKitC-1</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/boards/boards.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ESP32-DevKitC-1.html" title="ESP32-DevKitC-1"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../installing.html" title="Installing"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Arduino-ESP32 2.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../getting_started.html" >Getting Started</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Boards</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Espressif.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
