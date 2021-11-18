@@ -13,7 +13,7 @@ Installation
 .. note:: Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
 
 - Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
-- Create blank idf project (use sample_project from /examples/get-started) or choose one of the examples.
+- Create blank ESP-IDF project (use sample_project from /examples/get-started) or choose one of the examples.
 - In the project folder, create a new folder called `components` and clone this repository inside the new created folder.
 
 .. code-block:: bash
@@ -54,8 +54,8 @@ Option 1. Using Arduino setup() and loop()
         delay(1000);
     }
 
-Option 2. Using IDF appmain()
-*****************************
+Option 2. Using ESP-IDF appmain()
+*********************************
 
 - You need to implement ``app_main()`` and call ``initArduino();`` in it.
 
