@@ -124,7 +124,6 @@ private:
   int _enableReceiver();
   void _onTransferComplete();
 
-  void _destroyCallbackTask();
   int _createCallbackTask();
 
   static void onDmaTransferComplete(void*);
@@ -162,7 +161,6 @@ private:
   bool _initialized; // Is everything initialized (callback task, I2S driver, ring buffers)?
   TaskHandle_t _callbackTaskHandle;
   QueueHandle_t _i2sEventQueue;
-  QueueHandle_t _task_kill_cmd_semaphore_handle;
   SemaphoreHandle_t _i2s_general_mutex;
   RingbufHandle_t _input_ring_buffer;
   RingbufHandle_t _output_ring_buffer;

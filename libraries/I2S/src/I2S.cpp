@@ -36,8 +36,12 @@
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
   _sdPin(sdPin),   // shared data pin
-  _inSdPin(-1),    // input data pin
+  _inSdPin(sdPin),    // input data pin
+#ifdef PIN_I2S_SD_OUT
+  _outSdPin(PIN_I2S_SD_OUT),   // output data pin
+#else
   _outSdPin(-1),   // output data pin
+#endif
   _sckPin(sckPin), // clock pin
   _fsPin(fsPin),   // frame (word) select pin
 
@@ -52,7 +56,6 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _initialized(false),
   _callbackTaskHandle(NULL),
   _i2sEventQueue(NULL),
-  _task_kill_cmd_semaphore_handle(NULL),
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
@@ -70,41 +73,25 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
 }
 
 int I2SClass::_createCallbackTask(){
-  int stack_size = 10000;
-  if(_callbackTaskHandle == NULL){
-    if(_task_kill_cmd_semaphore_handle == NULL){
-      _task_kill_cmd_semaphore_handle = xSemaphoreCreateBinary();
-      if(_task_kill_cmd_semaphore_handle == NULL){
-        log_e("Could not create semaphore");
-        return 0; // ERR
-      }
-    }
+  int stack_size = 20000;
+  if(_callbackTaskHandle != NULL){
+    log_e("Callback task already exists!");
+    return 0; // ERR
+  }
 
-    xTaskCreate(
-      onDmaTransferComplete, // Function to implement the task
-      "onDmaTransferComplete", // Name of the task
-      stack_size,  // Stack size in words
-      NULL,  // Task input parameter
-      2,  // Priority of the task
-      &_callbackTaskHandle  // Task handle.
-      );
-    if(_callbackTaskHandle == NULL){
-      log_e("Could not create callback task");
-      return 0; // ERR
-    }
+  xTaskCreate(
+    onDmaTransferComplete, // Function to implement the task
+    "onDmaTransferComplete", // Name of the task
+    stack_size,  // Stack size in words
+    NULL,  // Task input parameter
+    2,  // Priority of the task
+    &_callbackTaskHandle  // Task handle.
+    );
+  if(_callbackTaskHandle == NULL){
+    log_e("Could not create callback task");
+    return 0; // ERR
   }
   return 1; // OK
-}
-
-void I2SClass::_destroyCallbackTask(){
-  if(_callbackTaskHandle != NULL && xTaskGetCurrentTaskHandle() != _callbackTaskHandle && _task_kill_cmd_semaphore_handle != NULL){
-    xSemaphoreGive(_task_kill_cmd_semaphore_handle);
-    while(_callbackTaskHandle != NULL){
-      ; // wait until task ends itself properly
-    }
-    vSemaphoreDelete(_task_kill_cmd_semaphore_handle); // delete semaphore after usage
-    _task_kill_cmd_semaphore_handle = NULL; // prevent usage of uninitialized (deleted) semaphore
-  } // callback handle check
 }
 
 int I2SClass::_installDriver(){
@@ -500,7 +487,8 @@ void I2SClass::_uninstallDriver(){
 void I2SClass::end(){
   _take_if_not_holding();
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
-    _destroyCallbackTask();
+    vTaskDelete(_callbackTaskHandle);
+    _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
     _uninstallDriver();
     _onTransmit = NULL;
     _onReceive  = NULL;
@@ -607,7 +595,7 @@ size_t I2SClass::write(uint8_t data){
   _take_if_not_holding();
   size_t ret = 0;
   if(_initialized){
-    ret = write_blocking((int32_t)data);
+    ret = write_blocking((int32_t*)&data, 1);
   }
   _give_if_top_call();
   return ret;
@@ -654,15 +642,13 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
         return 0; // There was an error switching to transmitter
       } // _enableTransmitter succeeded ?
     } // _state ?
-    uint8_t timeout = 10; // RTOS tics
-    while(availableForWrite() < size && timeout--){
-      vTaskDelay(1);
-    }
+
     if(_output_ring_buffer != NULL){
-      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
+      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, portMAX_DELAY)){
         _give_if_top_call();
         return size;
       }else{
+        log_e("xRingbufferSend() with infinite wait returned with error");
         _give_if_top_call();
         return 0;
       } // ring buffer send ok ?
@@ -865,36 +851,19 @@ void I2SClass::_onTransferComplete(){
   static QueueSetHandle_t xQueueSet;
   QueueSetMemberHandle_t xActivatedMember;
   esp_i2s::i2s_event_t i2s_event;
-  xQueueSet = xQueueCreateSet(sizeof(i2s_event)*_I2S_EVENT_QUEUE_LENGTH + 1);
-  configASSERT(xQueueSet);
-  configASSERT(_i2sEventQueue);
-  xQueueAddToSet(_i2sEventQueue, xQueueSet);
-  xQueueAddToSet(_task_kill_cmd_semaphore_handle, xQueueSet);
 
   while(true){
-    //xActivatedMember = xQueueSelectFromSet(xQueueSet, portMAX_DELAY); // default - member was never selected even when present
-    xActivatedMember = xQueueSelectFromSet(xQueueSet, 1); // hack
-    if(xActivatedMember == _task_kill_cmd_semaphore_handle){
-      xSemaphoreTake(_task_kill_cmd_semaphore_handle, 0);
-      break; // from the infinite loop
-    //}else if(xActivatedMember == _i2sEventQueue){ // default
-    }else if(xActivatedMember == _i2sEventQueue || xActivatedMember == NULL){ // hack
-      if(uxQueueMessagesWaiting(_i2sEventQueue)){
-        xQueueReceive(_i2sEventQueue, &i2s_event, 0);
-        if(i2s_event.type == esp_i2s::I2S_EVENT_TX_DONE){
-          _tx_done_routine(prev_item);
-        }else if(i2s_event.type == esp_i2s::I2S_EVENT_RX_DONE){
-         _rx_done_routine();
-        } // RX Done
-      } // queue not empty
-    } // activated member of queue set
+    xQueueReceive(_i2sEventQueue, &i2s_event, portMAX_DELAY);
+    if(i2s_event.type == esp_i2s::I2S_EVENT_TX_DONE){
+      _tx_done_routine(prev_item);
+    }else if(i2s_event.type == esp_i2s::I2S_EVENT_RX_DONE){
+      _rx_done_routine();
+    } // RX Done
   } // infinite loop
-  _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
 }
 
 void I2SClass::onDmaTransferComplete(void*){
   I2S._onTransferComplete();
-  vTaskDelete(NULL);
 }
 
 void I2SClass::_take_if_not_holding(){
