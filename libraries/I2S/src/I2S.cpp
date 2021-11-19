@@ -607,7 +607,7 @@ size_t I2SClass::write(uint8_t data){
   _take_if_not_holding();
   size_t ret = 0;
   if(_initialized){
-    ret = write((int32_t)data);
+    ret = write_blocking((int32_t)data);
   }
   _give_if_top_call();
   return ret;
@@ -617,7 +617,7 @@ size_t I2SClass::write(int32_t sample){
   _take_if_not_holding();
   size_t ret = 0;
   if(_initialized){
-    ret = write(&sample, _bitsPerSample/8);
+    ret = write_blocking(&sample, _bitsPerSample/8);
   }
   _give_if_top_call();
   return ret;
@@ -629,6 +629,17 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size){
   if(_initialized){
     ret = write((const void*)buffer, size);
   }
+  _give_if_top_call();
+  return ret;
+}
+
+size_t I2SClass::write(const void *buffer, size_t size){
+  _take_if_not_holding();
+  size_t ret = 0;
+  if(_initialized){
+    //size_t ret = write_blocking(buffer, size);
+    ret = write_nonblocking(buffer, size);
+  } // if(_initialized)
   _give_if_top_call();
   return ret;
 }
@@ -687,17 +698,6 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   } // if(_initialized)
   return 0;
   _give_if_top_call(); // this should not be needed
-}
-
-size_t I2SClass::write(const void *buffer, size_t size){
-  _take_if_not_holding();
-  size_t ret = 0;
-  if(_initialized){
-    //size_t ret = write_blocking(buffer, size);
-    ret = write_nonblocking(buffer, size);
-  } // if(_initialized)
-  _give_if_top_call();
-  return ret;
 }
 
 int I2SClass::peek(){
