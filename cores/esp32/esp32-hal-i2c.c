@@ -24,6 +24,7 @@
 #include "soc/soc_caps.h"
 #include "soc/i2c_periph.h"
 #include "hal/i2c_hal.h"
+#include "hal/i2c_ll.h"
 #include "driver/i2c.h"
 
 typedef volatile struct {
@@ -91,6 +92,8 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
         } else {
             bus[i2c_num].initialized = true;
             bus[i2c_num].frequency = frequency;
+            //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
+            i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
