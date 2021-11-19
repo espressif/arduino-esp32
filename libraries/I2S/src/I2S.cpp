@@ -746,19 +746,23 @@ void I2SClass::onReceive(void(*function)(void)){
 int I2SClass::setBufferSize(int bufferSize){
   _take_if_not_holding();
   int ret = 0;
-  if(_initialized){
-    if(bufferSize >= 8 && bufferSize <= 1024){
-      _i2s_dma_buffer_size = bufferSize;
-      _uninstallDriver();
-      ret = _installDriver();
-      _give_if_top_call();
-      return ret;
+  if(bufferSize >= 8 && bufferSize <= 1024){
+    Serial.println("I2SClass::setBufferSize() buffer size ok");
+    _i2s_dma_buffer_size = bufferSize;
+  }else{
+    log_e("setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d\n ", bufferSize);
     _give_if_top_call();
-    return 1; // OK
-    }else{ // check requested buffer size
-      _give_if_top_call();
-      return 0; // ERR
-    } // check requested buffer size
+    return 0; // ERR
+  } // check requested buffer size
+
+  if(_initialized){
+    _uninstallDriver();
+    ret = _installDriver();
+    _give_if_top_call();
+    return ret;
+  }else{ // check requested buffer size
+    _give_if_top_call();
+    return 1; // It's ok to change buffer size for uninitialized driver - new size will be used on begin()
   } // if(_initialized)
   _give_if_top_call();
   return 0; // ERR
@@ -788,6 +792,7 @@ int I2SClass::_enableReceiver(){
 }
 
 void I2SClass::_tx_done_routine(uint8_t* prev_item){
+  _take_if_not_holding();
   static bool prev_item_valid = false;
   const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
   static size_t item_size = 0;
@@ -825,25 +830,32 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
   if(_onTransmit){
     _onTransmit();
   } // user callback
+  _give_if_top_call();
 }
 
 void I2SClass::_rx_done_routine(){
-  static size_t bytes_read;
+  _take_if_not_holding();
+  size_t bytes_read = 0;
   const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
 
   if(_input_ring_buffer != NULL){
     uint8_t *_inputBuffer = (uint8_t*)malloc(_i2s_dma_buffer_size*4);
     size_t avail = xRingbufferGetCurFreeSize(_input_ring_buffer);
-    esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
-    if(pdTRUE != xRingbufferSend(_input_ring_buffer, _inputBuffer, bytes_read, 0)){
-      log_w("I2S failed to send item from DMA to internal buffer\n");
-    }else{
-      if (_onReceive) {
-        _onReceive();
-      } // user callback
-    } // xRingbufferSendComplete
+    if(avail > 0){
+      esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
+    }
+
+    if(bytes_read > 0){ // when read more than 0, then send to ring buffer
+      if(pdTRUE != xRingbufferSend(_input_ring_buffer, _inputBuffer, bytes_read, 0)){
+        log_w("I2S failed to send item from DMA to internal buffer\n");
+      } // xRingbufferSendComplete
+    } // if(bytes_read > 0)
     free(_inputBuffer);
+    if (_onReceive && avail < _buffer_byte_size){ // when user callback is registered && and there is some data in ring buffer to read
+      _onReceive();
+    } // user callback
   }
+  _give_if_top_call();
 }
 
 void I2SClass::_onTransferComplete(){
@@ -885,7 +897,7 @@ void I2SClass::_give_if_top_call(){
     --_nesting_counter;
   }else{
     if(xSemaphoreGive(_i2s_general_mutex) != pdTRUE){
-      log_e("I2S intternal mutex give error");
+      log_e("I2S internal mutex give error");
     }
   }
 }
