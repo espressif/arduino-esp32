@@ -90,8 +90,6 @@ void yield(void);
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
 
-void analogWrite(uint8_t pin, int value);
-
 //returns chip temperature in Celsius
 float temperatureRead();
 
