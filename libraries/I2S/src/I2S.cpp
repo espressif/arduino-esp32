@@ -747,7 +747,6 @@ int I2SClass::setBufferSize(int bufferSize){
   _take_if_not_holding();
   int ret = 0;
   if(bufferSize >= 8 && bufferSize <= 1024){
-    Serial.println("I2SClass::setBufferSize() buffer size ok");
     _i2s_dma_buffer_size = bufferSize;
   }else{
     log_e("setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d\n ", bufferSize);
@@ -792,7 +791,6 @@ int I2SClass::_enableReceiver(){
 }
 
 void I2SClass::_tx_done_routine(uint8_t* prev_item){
-  _take_if_not_holding();
   static bool prev_item_valid = false;
   const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
   static size_t item_size = 0;
@@ -830,11 +828,9 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
   if(_onTransmit){
     _onTransmit();
   } // user callback
-  _give_if_top_call();
 }
 
 void I2SClass::_rx_done_routine(){
-  _take_if_not_holding();
   size_t bytes_read = 0;
   const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
 
@@ -855,7 +851,6 @@ void I2SClass::_rx_done_routine(){
       _onReceive();
     } // user callback
   }
-  _give_if_top_call();
 }
 
 void I2SClass::_onTransferComplete(){
