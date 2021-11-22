@@ -82,4 +82,4 @@ jobs:
         run: |
           . ${IDF_PATH}/export.sh
           idf.py create-project test
-          idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/../components build
+          idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
