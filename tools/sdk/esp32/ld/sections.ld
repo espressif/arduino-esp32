@@ -1,6 +1,6 @@
 /* Automatically generated file; DO NOT EDIT */
 /* Espressif IoT Development Framework Linker Script */
-/* Generated from: /Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public/components/esp_system/ld/esp32/sections.ld.in */
+/* Generated from: /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp_system/ld/esp32/sections.ld.in */
 
 /*
  * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
@@ -323,7 +323,7 @@ SECTIONS
     *libesp_system.a:ubsan.*(.literal .literal.* .text .text.*)
     *libfreertos.a:(EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .literal EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .literal.* EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .text EXCLUDE_FILE(*libfreertos.a:port.* *libfreertos.a:port_common.*) .text.*)
     *libfreertos.a:port.*(.literal.pxPortInitialiseStack .literal.unlikely.vPortEndScheduler .literal.vApplicationStackOverflowHook .literal.vPortAssertIfInISR .literal.vPortEnterCritical .literal.vPortExitCritical .literal.vPortReleaseTaskMPUSettings .literal.vPortSetStackWatchpoint .literal.vPortYieldOtherCore .literal.xPortInIsrContext .literal.xPortStartScheduler .text .text.pxPortInitialiseStack .text.unlikely.vPortEndScheduler .text.vApplicationStackOverflowHook .text.vPortAssertIfInISR .text.vPortEnterCritical .text.vPortExitCritical .text.vPortReleaseTaskMPUSettings .text.vPortSetStackWatchpoint .text.vPortStoreTaskMPUSettings .text.vPortYieldOtherCore .text.xPortGetTickRateHz .text.xPortInIsrContext .text.xPortStartScheduler)
-    *libfreertos.a:port_common.*(.literal.esp_startup_start_app_common .literal.xPortCheckValidTCBMem .literal.xPortcheckValidStackMem .text .text.esp_startup_start_app_common .text.xPortCheckValidTCBMem .text.xPortcheckValidStackMem)
+    *libfreertos.a:port_common.*(.literal.esp_startup_start_app_common .literal.vApplicationGetIdleTaskMemory .literal.vApplicationGetTimerTaskMemory .literal.xPortCheckValidTCBMem .literal.xPortcheckValidStackMem .text .text.esp_startup_start_app_common .text.vApplicationGetIdleTaskMemory .text.vApplicationGetTimerTaskMemory .text.xPortCheckValidTCBMem .text.xPortcheckValidStackMem)
     *libgcc.a:lib2funcs.*(.literal .literal.* .text .text.*)
     *libgcov.a:(.literal .literal.* .text .text.*)
     *libhal.a:cpu_hal.*(.literal .literal.* .text .text.*)
