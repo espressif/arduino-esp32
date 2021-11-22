@@ -56,3 +56,7 @@ void Ticker::detach() {
     _timer = nullptr;
   }
 }
+
+void Ticker::active() {
+  return (bool)_timer; 
+}
