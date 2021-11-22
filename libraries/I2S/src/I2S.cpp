@@ -61,6 +61,8 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _output_ring_buffer(NULL),
   _i2s_dma_buffer_size(1024),
   _driveClock(true),
+  _peek_buff(0),
+  _peek_buff_valid(false),
   _nesting_counter(0),
 
   _onTransmit(NULL),
@@ -550,6 +552,7 @@ int I2SClass::read(){
 
 int I2SClass::read(void* buffer, size_t size){
   _take_if_not_holding();
+  size_t requested_size = size;
   if(_initialized){
     if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
       if(!_enableReceiver()){
@@ -561,7 +564,12 @@ int I2SClass::read(void* buffer, size_t size){
     size_t item_size = 0;
     void *tmp_buffer;
     if(_input_ring_buffer != NULL){
-      tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), size);
+      if(_peek_buff_valid){
+        memcpy(buffer, &_peek_buff, _bitsPerSample/8);
+        _peek_buff_valid = false;
+        requested_size -= _bitsPerSample/8;
+      }
+      tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), requested_size);
       if(tmp_buffer != NULL){
         memcpy(buffer, tmp_buffer, item_size);
         #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
@@ -672,7 +680,7 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
       flush();
     }
     if(_output_ring_buffer != NULL){
-      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 10)){
+      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 0)){
         _give_if_top_call();
         return size;
       }else{
@@ -686,14 +694,28 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   _give_if_top_call(); // this should not be needed
 }
 
+/*
+  Read 1 sample from internal buffer and return it.
+  Repeated peeks will return the same sample until read is called.
+*/
 int I2SClass::peek(){
   _take_if_not_holding();
   int ret = 0;
-  if(_initialized){
-    // TODO
-    // peek() is not implemented for ESP yet
-    ret = 0;
+  if(_initialized && _input_ring_buffer != NULL && !_peek_buff_valid){
+    size_t item_size = 0;
+    void *item = NULL;
+
+    item = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, 0, _bitsPerSample/8); // fetch 1 sample
+    if (item != NULL && item_size == _bitsPerSample/8){
+      _peek_buff = *((int*)item);
+      vRingbufferReturnItem(_input_ring_buffer, item);
+      _peek_buff_valid = true;
+    }
+
   } // if(_initialized)
+  if(_peek_buff_valid){
+    ret = _peek_buff;
+  }
   _give_if_top_call();
   return ret;
 }
@@ -706,7 +728,7 @@ void I2SClass::flush(){
     size_t bytes_written;
     void *item = NULL;
     if(_output_ring_buffer != NULL){
-      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
+      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, 0, single_dma_buf);
       if (item != NULL){
         esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, item, item_size, &bytes_written, 0);
         if(item_size != bytes_written){
