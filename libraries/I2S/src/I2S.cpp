@@ -489,8 +489,10 @@ void I2SClass::_uninstallDriver(){
 void I2SClass::end(){
   _take_if_not_holding();
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
-    vTaskDelete(_callbackTaskHandle);
-    _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
+    if(_callbackTaskHandle){
+      vTaskDelete(_callbackTaskHandle);
+      _callbackTaskHandle = NULL; // prevent secondary termination to non-existing task
+    }
     _uninstallDriver();
     _onTransmit = NULL;
     _onReceive  = NULL;
