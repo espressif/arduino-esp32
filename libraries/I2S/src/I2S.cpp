@@ -119,7 +119,7 @@ int I2SClass::_installDriver(){
       }
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
     #else
-      log_e("This chip does not support DAC / ADC");
+      log_e("This chip does not support ADC / DAC mode");
       return 0; // ERR
     #endif
   }else if(_mode == I2S_PHILIPS_MODE ||
@@ -682,6 +682,7 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
       flush();
     }
     if(_output_ring_buffer != NULL){
+      log_d("try to send %d B to ring buffer", size);
       if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 0)){
         _give_if_top_call();
         return size;
@@ -879,8 +880,6 @@ void I2SClass::_rx_done_routine(){
 
 void I2SClass::_onTransferComplete(){
   uint8_t prev_item[_i2s_dma_buffer_size*4];
-  static QueueSetHandle_t xQueueSet;
-  QueueSetMemberHandle_t xActivatedMember;
   esp_i2s::i2s_event_t i2s_event;
 
   while(true){
