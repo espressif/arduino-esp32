@@ -27,6 +27,8 @@
 #ifndef _TUSB_OPTION_H_
 #define _TUSB_OPTION_H_
 
+#include "common/tusb_compiler.h"
+
 #define TUSB_VERSION_MAJOR     0
 #define TUSB_VERSION_MINOR     12
 #define TUSB_VERSION_REVISION  0
@@ -36,7 +38,6 @@
 // Supported MCUs
 // CFG_TUSB_MCU must be defined to one of following value
 //--------------------------------------------------------------------+
-#define TU_CHECK_MCU(_m)            (CFG_TUSB_MCU == OPT_MCU_##_m)
 
 #define OPT_MCU_NONE                0
 
@@ -67,22 +68,27 @@
 #define OPT_MCU_SAMX7X            207 ///< MicroChip SAME70, S70, V70, V71 family
 
 // STM32
-#define OPT_MCU_STM32F0           300 ///< ST STM32F0
-#define OPT_MCU_STM32F1           301 ///< ST STM32F1
-#define OPT_MCU_STM32F2           302 ///< ST STM32F2
-#define OPT_MCU_STM32F3           303 ///< ST STM32F3
-#define OPT_MCU_STM32F4           304 ///< ST STM32F4
-#define OPT_MCU_STM32F7           305 ///< ST STM32F7
-#define OPT_MCU_STM32H7           306 ///< ST STM32H7
-#define OPT_MCU_STM32L0           307 ///< ST STM32L0
-#define OPT_MCU_STM32L1           308 ///< ST STM32L1
-#define OPT_MCU_STM32L4           309 ///< ST STM32L4
+#define OPT_MCU_STM32F0           300 ///< ST F0
+#define OPT_MCU_STM32F1           301 ///< ST F1
+#define OPT_MCU_STM32F2           302 ///< ST F2
+#define OPT_MCU_STM32F3           303 ///< ST F3
+#define OPT_MCU_STM32F4           304 ///< ST F4
+#define OPT_MCU_STM32F7           305 ///< ST F7
+#define OPT_MCU_STM32H7           306 ///< ST H7
+#define OPT_MCU_STM32L1           308 ///< ST L1
+#define OPT_MCU_STM32L0           307 ///< ST L0
+#define OPT_MCU_STM32L4           309 ///< ST L4
+#define OPT_MCU_STM32G0           310 ///< ST G0
+#define OPT_MCU_STM32G4           311 ///< ST G4
 
 // Sony
 #define OPT_MCU_CXD56             400 ///< SONY CXD56
 
-// TI MSP430
+// TI
 #define OPT_MCU_MSP430x5xx        500 ///< TI MSP430x5xx
+#define OPT_MCU_MSP432E4          510 ///< TI MSP432E4xx
+#define OPT_MCU_TM4C123           511 ///< TI Tiva-C 123x
+#define OPT_MCU_TM4C129           512 ///< TI Tiva-C 129x
 
 // ValentyUSB eptri
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
@@ -112,8 +118,6 @@
 
 // Silabs
 #define OPT_MCU_EFM32GG          1300 ///< Silabs EFM32GG
-#define OPT_MCU_EFM32GG11        1301 ///< Silabs EFM32GG11
-#define OPT_MCU_EFM32GG12        1302 ///< Silabs EFM32GG12
 
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
@@ -125,6 +129,17 @@
 
 // GigaDevice
 #define OPT_MCU_GD32VF103        1600 ///< GigaDevice GD32VF103
+
+// Broadcom
+#define OPT_MCU_BCM2711          1700 ///< Broadcom BCM2711
+
+// Infineon
+#define OPT_MCU_XMC4000          1800 ///< Infineon XMC4000
+
+// Helper to check if configured MCU is one of listed
+// Apply _TU_CHECK_MCU with || as separator to list of input
+#define _TU_CHECK_MCU(_m)   (CFG_TUSB_MCU == _m)
+#define TU_CHECK_MCU(...)   (TU_ARGS_APPLY(_TU_CHECK_MCU, ||, __VA_ARGS__))
 
 //--------------------------------------------------------------------+
 // Supported OS
