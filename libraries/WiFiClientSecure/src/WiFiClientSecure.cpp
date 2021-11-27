@@ -261,21 +261,25 @@ void WiFiClientSecure::setInsecure()
 void WiFiClientSecure::setCACert (const char *rootCA)
 {
     _CA_cert = rootCA;
+    _use_insecure = false;
 }
 
 void WiFiClientSecure::setCertificate (const char *client_ca)
 {
     _cert = client_ca;
+    _use_insecure = false;
 }
 
 void WiFiClientSecure::setPrivateKey (const char *private_key)
 {
     _private_key = private_key;
+    _use_insecure = false;
 }
 
 void WiFiClientSecure::setPreSharedKey(const char *pskIdent, const char *psKey) {
     _pskIdent = pskIdent;
     _psKey = psKey;
+    _use_insecure = false;
 }
 
 bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
@@ -300,8 +304,26 @@ char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
   return dest;
 }
 
+bool WiFiClientSecure::_streamLoad(char **destPtr, Stream& stream, size_t size) {
+  if (!*destPtr)
+    *destPtr = (char*)malloc(size+1);
+  else
+    (char*)realloc(*destPtr, size+1);
+  if (!*destPtr) {
+    return false;
+  }
+  if (size != stream.readBytes(*destPtr, size)) {
+    free(*destPtr);
+    *destPtr = nullptr;
+    return false;
+  }
+  (*destPtr)[size] = '\0';
+  return true;
+}
+
 bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
-  char *dest = _streamLoad(stream, size);
+  char *dest = _CA_cert;
+  _streamLoad(&dest, stream, size);
   bool ret = false;
   if (dest) {
     setCACert(dest);

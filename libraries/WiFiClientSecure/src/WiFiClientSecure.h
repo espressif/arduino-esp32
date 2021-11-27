@@ -77,6 +77,7 @@ public:
     void setAlpnProtocols(const char **alpn_protos);
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
+
     int setTimeout(uint32_t seconds){ return 0; }
 
     operator bool()
@@ -105,6 +106,7 @@ public:
 
 private:
     char *_streamLoad(Stream& stream, size_t size);
+    bool _streamLoad(char **destPtr, Stream& stream, size_t size);
 
     //friend class WiFiServer;
     using Print::write;
