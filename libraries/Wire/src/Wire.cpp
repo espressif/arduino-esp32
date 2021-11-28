@@ -464,7 +464,7 @@ uint8_t TwoWire::requestFrom(uint16_t address, uint8_t quantity, uint8_t sendSto
 /* Added to match the Arduino function definition: https://github.com/arduino/ArduinoCore-API/blob/173e8eadced2ad32eeb93bcbd5c49f8d6a055ea6/api/HardwareI2C.h#L39
  * See: https://github.com/arduino-libraries/ArduinoECCX08/issues/25
 */
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t len, bool stopBit)
+uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len, bool stopBit)
 {
     return requestFrom((uint16_t)address, (size_t)len, stopBit);
 }
