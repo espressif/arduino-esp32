@@ -446,6 +446,11 @@ void TwoWire::flush(void)
     //i2cFlush(num); // cleanup
 }
 
+size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
+{
+    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+}
+  
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
 {
     return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
