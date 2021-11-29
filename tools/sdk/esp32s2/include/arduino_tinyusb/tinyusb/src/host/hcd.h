@@ -24,14 +24,13 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_usbh
- * \defgroup Group_HCD Host Controller Driver (HCD)
- *  @{ */
-
 #ifndef _TUSB_HCD_H_
 #define _TUSB_HCD_H_
 
-#include <common/tusb_common.h>
+#include "common/tusb_common.h"
+#include "osal/osal.h"
+#include "common/tusb_fifo.h"
+#include "hcd_attr.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -64,6 +63,7 @@ typedef struct
     struct {
       uint8_t hub_addr;
       uint8_t hub_port;
+      uint8_t speed;
     } connection;
 
     // XFER_COMPLETE
@@ -85,38 +85,57 @@ typedef struct
 #if TUSB_OPT_HOST_ENABLED
 // Max number of endpoints per device
 enum {
-  HCD_MAX_ENDPOINT = CFG_TUSB_HOST_DEVICE_MAX*(CFG_TUH_HUB + CFG_TUH_HID_KEYBOARD + CFG_TUH_HID_MOUSE + CFG_TUSB_HOST_HID_GENERIC +
-                     CFG_TUH_MSC*2 + CFG_TUH_CDC*3),
-
+  // TODO better computation
+  HCD_MAX_ENDPOINT = CFG_TUH_DEVICE_MAX*(CFG_TUH_HUB + CFG_TUH_HID*2 + CFG_TUH_MSC*2 + CFG_TUH_CDC*3),
   HCD_MAX_XFER     = HCD_MAX_ENDPOINT*2,
 };
 
 //#define HCD_MAX_ENDPOINT 16
 //#define HCD_MAX_XFER 16
+
+typedef struct {
+  uint8_t rhport;
+  uint8_t hub_addr;
+  uint8_t hub_port;
+  uint8_t speed;
+} hcd_devtree_info_t;
+
 #endif
 
 //--------------------------------------------------------------------+
-// Controller & Port API
+// Controller API
 //--------------------------------------------------------------------+
+
+// Initialize controller to host mode
 bool hcd_init(uint8_t rhport);
+
+// Interrupt Handler
 void hcd_int_handler(uint8_t rhport);
+
+// Enable USB interrupt
 void hcd_int_enable (uint8_t rhport);
+
+// Disable USB interrupt
 void hcd_int_disable(uint8_t rhport);
 
-// Get micro frame number (125 us)
-uint32_t hcd_uframe_number(uint8_t rhport);
-
 // Get frame number (1ms)
-static inline uint32_t hcd_frame_number(uint8_t rhport)
-{
-  return hcd_uframe_number(rhport) >> 3;
-}
+uint32_t hcd_frame_number(uint8_t rhport);
 
-/// return the current connect status of roothub port
-bool hcd_port_connect_status(uint8_t hostid);
-void hcd_port_reset(uint8_t hostid);
+//--------------------------------------------------------------------+
+// Port API
+//--------------------------------------------------------------------+
+
+// Get the current connect status of roothub port
+bool hcd_port_connect_status(uint8_t rhport);
+
+// Reset USB bus on the port
+void hcd_port_reset(uint8_t rhport);
+
+// TODO implement later
 void hcd_port_reset_end(uint8_t rhport);
-tusb_speed_t hcd_port_speed_get(uint8_t hostid);
+
+// Get port link speed
+tusb_speed_t hcd_port_speed_get(uint8_t rhport);
 
 // HCD closes all opened endpoints belong to this device
 void hcd_device_close(uint8_t rhport, uint8_t dev_addr);
@@ -124,28 +143,22 @@ void hcd_device_close(uint8_t rhport, uint8_t dev_addr);
 //--------------------------------------------------------------------+
 // Endpoints API
 //--------------------------------------------------------------------+
+
 bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);
 bool hcd_edpt_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_endpoint_t const * ep_desc);
-
-bool hcd_edpt_busy(uint8_t dev_addr, uint8_t ep_addr);
-bool hcd_edpt_stalled(uint8_t dev_addr, uint8_t ep_addr);
+bool hcd_edpt_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t buflen);
 bool hcd_edpt_clear_stall(uint8_t dev_addr, uint8_t ep_addr);
 
-// TODO merge with pipe_xfer
-bool hcd_edpt_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t buflen);
+//--------------------------------------------------------------------+
+// USBH implemented API
+//--------------------------------------------------------------------+
 
-//--------------------------------------------------------------------+
-// PIPE API
-//--------------------------------------------------------------------+
-// TODO control xfer should be used via usbh layer
-bool hcd_pipe_queue_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t buffer[], uint16_t total_bytes); // only queue, not transferring yet
-bool hcd_pipe_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t buffer[], uint16_t total_bytes, bool int_on_complete);
+// Get device tree information of a device
+// USB device tree can be complicated and manged by USBH, this help HCD to retrieve
+// needed topology info to carry out its work
+extern void hcd_devtree_get_info(uint8_t dev_addr, hcd_devtree_info_t* devtree_info);
 
-// tusb_error_t hcd_pipe_cancel();
-
-//--------------------------------------------------------------------+
-// Event API (implemented by stack)
-//--------------------------------------------------------------------+
+//------------- Event API -------------//
 
 // Called by HCD to notify stack
 extern void hcd_event_handler(hcd_event_t const* event, bool in_isr);
@@ -164,5 +177,3 @@ extern void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t 
 #endif
 
 #endif /* _TUSB_HCD_H_ */
-
-/// @}

@@ -157,6 +157,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 
 		case ESP_GATTS_MTU_EVT:
 			updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
+			if (m_pServerCallbacks != nullptr) {
+				m_pServerCallbacks->onMtuChanged(this, param);
+			}
 			break;
 
 		// ESP_GATTS_CONNECT_EVT
@@ -370,6 +373,12 @@ void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
 	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
 	log_d("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
+
+void BLEServerCallbacks::onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+	log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
+	log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), param->mtu.mtu);
+	log_d("BLEServerCallbacks", "<< onMtuChanged()");
+} // onMtuChanged
 
 /* multi connect support */
 /* TODO do some more tweaks */

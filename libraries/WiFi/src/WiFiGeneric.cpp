@@ -41,7 +41,6 @@ extern "C" {
 #include "lwip/err.h"
 #include "lwip/dns.h"
 #include "dhcpserver/dhcpserver_options.h"
-#include "esp_ipc.h"
 
 } //extern "C"
 
@@ -395,6 +394,14 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP) {
     	arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PBC_OVERLAP;
 
+	/*
+	 * FTM
+	 * */
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_FTM_REPORT) {
+    	wifi_event_ftm_report_t * event = (wifi_event_ftm_report_t*)event_data;
+    	arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
+    	memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
+
 
 	/*
 	 * SMART CONFIG
@@ -535,6 +542,20 @@ bool tcpipInit(){
  * */
 
 static bool lowLevelInitDone = false;
+bool WiFiGenericClass::_wifiUseStaticBuffers = false;
+
+bool WiFiGenericClass::useStaticBuffers(){
+    return _wifiUseStaticBuffers;
+}
+
+void WiFiGenericClass::useStaticBuffers(bool bufferMode){
+    if (lowLevelInitDone) {
+        log_w("WiFi already started. Call WiFi.mode(WIFI_MODE_NULL) before setting Static Buffer Mode.");
+    } 
+    _wifiUseStaticBuffers = bufferMode;
+}
+
+
 bool wifiLowLevelInit(bool persistent){
     if(!lowLevelInitDone){
         lowLevelInitDone = true;
@@ -550,6 +571,16 @@ bool wifiLowLevelInit(bool persistent){
         }
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+	if(!WiFiGenericClass::useStaticBuffers()) {
+	    cfg.static_tx_buf_num = 0;
+            cfg.dynamic_tx_buf_num = 32;
+	    cfg.tx_buf_type = 1;
+            cfg.cache_tx_buf_num = 1;  // can't be zero!
+	    cfg.static_rx_buf_num = 4;
+            cfg.dynamic_rx_buf_num = 32;
+        }
+
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
             log_e("esp_wifi_init %d", err);
@@ -559,15 +590,20 @@ bool wifiLowLevelInit(bool persistent){
         if(!persistent){
         	lowLevelInitDone = esp_wifi_set_storage(WIFI_STORAGE_RAM) == ESP_OK;
         }
+        if(lowLevelInitDone){
+			arduino_event_t arduino_event;
+			arduino_event.event_id = ARDUINO_EVENT_WIFI_READY;
+			postArduinoEvent(&arduino_event);
+        }
     }
     return lowLevelInitDone;
 }
 
 static bool wifiLowLevelDeinit(){
     if(lowLevelInitDone){
-    	lowLevelInitDone = esp_wifi_deinit() == ESP_OK;
+    	lowLevelInitDone = !(esp_wifi_deinit() == ESP_OK);
     }
-    return true;
+    return !lowLevelInitDone;
 }
 
 static bool _esp_wifi_started = false;
@@ -632,7 +668,6 @@ wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
 
 WiFiGenericClass::WiFiGenericClass() 
 {
-
 }
 
 const char * WiFiGenericClass::getHostname()
@@ -778,7 +813,8 @@ const char * arduino_event_names[] = {
 		"WIFI_READY",
 		"SCAN_DONE",
 		"STA_START", "STA_STOP", "STA_CONNECTED", "STA_DISCONNECTED", "STA_AUTHMODE_CHANGE", "STA_GOT_IP", "STA_GOT_IP6", "STA_LOST_IP",
-		"AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "AP_GOT_IP6",
+		"AP_START", "AP_STOP", "AP_STACONNECTED", "AP_STADISCONNECTED", "AP_STAIPASSIGNED", "AP_PROBEREQRECVED", "AP_GOT_IP6", 
+		"FTM_REPORT",
 		"ETH_START", "ETH_STOP", "ETH_CONNECTED", "ETH_DISCONNECTED", "ETH_GOT_IP", "ETH_GOT_IP6",
 		"WPS_ER_SUCCESS", "WPS_ER_FAILED", "WPS_ER_TIMEOUT", "WPS_ER_PIN", "WPS_ER_PBC_OVERLAP",
 		"SC_SCAN_DONE", "SC_FOUND_CHANNEL", "SC_GOT_SSID_PSWD", "SC_SEND_ACK_DONE",
@@ -1123,6 +1159,32 @@ wifi_power_t WiFiGenericClass::getTxPower(){
         return WIFI_POWER_19_5dBm;
     }
     return (wifi_power_t)power;
+}
+
+/**
+ * Initiate FTM Session.
+ * @param frm_count Number of FTM frames requested in terms of 4 or 8 bursts (allowed values - 0(No pref), 16, 24, 32, 64)
+ * @param burst_period Requested time period between consecutive FTM bursts in 100's of milliseconds (allowed values - 0(No pref), 2 - 255)
+ * @param channel Primary channel of the FTM Responder
+ * @param mac MAC address of the FTM Responder
+ * @return true on success
+ */
+bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t * mac) {
+  wifi_ftm_initiator_cfg_t ftmi_cfg = {
+    .resp_mac = {0,0,0,0,0,0},
+    .channel = channel,
+    .frm_count = frm_count,
+    .burst_period = burst_period,
+  };
+  if(mac != NULL){
+    memcpy(ftmi_cfg.resp_mac, mac, 6);
+  }
+  // Request FTM session with the Responder
+  if (ESP_OK != esp_wifi_ftm_initiate_session(&ftmi_cfg)) {
+    log_e("Failed to initiate FTM session");
+    return false;
+  }
+  return true;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------

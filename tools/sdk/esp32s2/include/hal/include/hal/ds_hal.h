@@ -21,7 +21,7 @@
 #pragma once
 
 #if CONFIG_IDF_TARGET_ESP32
-    #error "ESP32 doesn't have a DS peripheral"
+#error "ESP32 doesn't have a DS peripheral"
 #endif
 
 #include <stdint.h>
@@ -59,11 +59,6 @@ void ds_hal_start(void);
  * @brief Finish the whole signing process. Call this after the signature is read or in case of an error.
  */
 void ds_hal_finish(void);
-
-/**
- * @brief Check whether the key input (HMAC on ESP32-C3) is correct.
- */
-ds_key_check_t ds_hal_check_decryption_key(void);
 
 /**
  * @brief Write the initialization vector.

@@ -31,6 +31,11 @@
 #include "sdkconfig.h"
 #include "esp_system.h"
 #include "esp_sleep.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
+#include "freertos/event_groups.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +89,8 @@ void yield(void);
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
 #include "esp32-hal-cpu.h"
+
+void analogWrite(uint8_t pin, int value);
 
 //returns chip temperature in Celsius
 float temperatureRead();

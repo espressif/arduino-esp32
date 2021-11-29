@@ -17,6 +17,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp32-hal-matrix.h"
+#include "soc/soc_caps.h"
 #include "soc/ledc_reg.h"
 #include "soc/ledc_struct.h"
 #include "driver/periph_ctrl.h"
@@ -115,6 +116,10 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     uint8_t group=(chan/8), timer=((chan/2)%4);
     static bool tHasStarted = false;
     static uint16_t _activeChannels = 0;
+#if CONFIG_IDF_TARGET_ESP32S2
+// ESP32-S2 TRM v1.0 on Page 789 -> BIT LEDC_TICK_SEL_TIMERx is 0 for LEDC_PWM_CLK and 1 for REF_TICK
+    apb_clk = 0;        
+#endif
     if(!tHasStarted) {
         tHasStarted = true;
         periph_module_enable(PERIPH_LEDC_MODULE);
@@ -326,4 +331,22 @@ double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num)
     }
     double res_freq = _ledcSetupTimerFreq(chan, freq, bit_num);
     return res_freq;
+}
+
+static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
+static int cnt_channel = SOC_LEDC_CHANNEL_NUM;
+void analogWrite(uint8_t pin, int value) {
+  // Use ledc hardware for internal pins
+  if (pin < SOC_GPIO_PIN_COUNT) {
+    if (pin_to_channel[pin] == 0) {
+      if (!cnt_channel) {
+          log_e("No more analogWrite channels available! You can have maximum %u", SOC_LEDC_CHANNEL_NUM);
+          return;
+      }
+      pin_to_channel[pin] = cnt_channel--;
+      ledcAttachPin(pin, cnt_channel);
+      ledcSetup(cnt_channel, 1000, 8);
+    }
+    ledcWrite(pin_to_channel[pin] - 1, value);
+  }
 }

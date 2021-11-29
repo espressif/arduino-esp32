@@ -27,9 +27,6 @@
 #ifndef _TUSB_MIDI_DEVICE_H_
 #define _TUSB_MIDI_DEVICE_H_
 
-#include "common/tusb_common.h"
-#include "device/usbd.h"
-
 #include "class/audio/audio.h"
 #include "midi.h"
 

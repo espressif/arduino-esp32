@@ -75,7 +75,7 @@
 #if CFG_TUSB_DEBUG
   #include <stdio.h>
   #define _MESS_ERR(_err)   tu_printf("%s %d: failed, error = %s\r\n", __func__, __LINE__, tusb_strerr[_err])
-  #define _MESS_FAILED()    tu_printf("%s %d: assert failed\r\n", __func__, __LINE__)
+  #define _MESS_FAILED()    tu_printf("%s %d: ASSERT FAILED\r\n", __func__, __LINE__)
 #else
   #define _MESS_ERR(_err) do {} while (0)
   #define _MESS_FAILED() do {} while (0)

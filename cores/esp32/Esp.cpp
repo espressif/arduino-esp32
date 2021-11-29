@@ -35,15 +35,20 @@ extern "C" {
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/spi_flash.h"
 #include "soc/efuse_reg.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000     // Flash offset containing flash size and spi mode
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/spi_flash.h"
+#include "soc/efuse_reg.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c3 is located at 0x0000
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
 #include "rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000
 #endif
 
 /**
@@ -266,7 +271,17 @@ const char * EspClass::getChipModel(void)
             return "Unknown";
     }
 #elif CONFIG_IDF_TARGET_ESP32S2
-    return "ESP32-S2";
+    uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    switch (pkg_ver) {
+    case 0:
+      return "ESP32-S2";
+    case 1:
+      return "ESP32-S2FH16";
+    case 2:
+      return "ESP32-S2FH32";
+    default:
+      return "ESP32-S2 (Unknown)";
+    }
 #elif CONFIG_IDF_TARGET_ESP32S3
     return "ESP32-S3";
 #elif CONFIG_IDF_TARGET_ESP32C3
@@ -289,7 +304,7 @@ const char * EspClass::getSdkVersion(void)
 uint32_t EspClass::getFlashChipSize(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSize(fhdr.spi_size);
@@ -298,7 +313,7 @@ uint32_t EspClass::getFlashChipSize(void)
 uint32_t EspClass::getFlashChipSpeed(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSpeed(fhdr.spi_speed);
@@ -307,7 +322,7 @@ uint32_t EspClass::getFlashChipSpeed(void)
 FlashMode_t EspClass::getFlashChipMode(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return FM_UNKNOWN;
     }
     return magicFlashChipMode(fhdr.spi_mode);

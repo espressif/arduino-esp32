@@ -1,5 +1,3 @@
-//Disable Example for now
-#if 0
 #include "esp_camera.h"
 #include <WiFi.h>
 
@@ -16,6 +14,7 @@
 //#define CAMERA_MODEL_M5STACK_V2_PSRAM // M5Camera version B Has PSRAM
 //#define CAMERA_MODEL_M5STACK_WIDE // Has PSRAM
 //#define CAMERA_MODEL_M5STACK_ESP32CAM // No PSRAM
+//#define CAMERA_MODEL_M5STACK_UNITCAM // No PSRAM
 //#define CAMERA_MODEL_AI_THINKER // Has PSRAM
 //#define CAMERA_MODEL_TTGO_T_JOURNAL // No PSRAM
 
@@ -112,7 +111,3 @@ void loop() {
   // put your main code here, to run repeatedly:
   delay(10000);
 }
-#else
-void setup(){}
-void loop(){}
-#endif

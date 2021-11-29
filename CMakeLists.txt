@@ -1,3 +1,27 @@
+# Check ESP-IDF version and error out if it is not in the supported range.
+#
+# Note for arduino-esp32 developers: to bypass the version check locally,
+# set ARDUINO_SKIP_IDF_VERSION_CHECK environment variable to 1. For example:
+#   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
+#   idf.py build
+
+set(min_supported_idf_version "4.4.0")
+set(max_supported_idf_version "4.4.99")
+set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
+
+if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
+  if (idf_version VERSION_LESS min_supported_idf_version)
+    message(FATAL_ERROR "Arduino-esp32 can be used with ESP-IDF versions "
+                        "between ${min_supported_idf_version} and ${max_supported_idf_version}, "
+                        "but an older version is detected: ${idf_version}.")
+  endif()
+  if (idf_version VERSION_GREATER max_supported_idf_version)
+    message(FATAL_ERROR "Arduino-esp32 can be used with ESP-IDF versions "
+                        "between ${min_supported_idf_version} and ${max_supported_idf_version}, "
+                        "but a newer version is detected: ${idf_version}.")
+  endif()
+endif()
+
 set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
@@ -7,6 +31,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-dac.c
   cores/esp32/esp32-hal-gpio.c
   cores/esp32/esp32-hal-i2c.c
+  cores/esp32/esp32-hal-i2c-slave.c
   cores/esp32/esp32-hal-ledc.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
@@ -32,8 +57,12 @@ set(CORE_SRCS
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
+  cores/esp32/USBMSC.cpp
+  cores/esp32/FirmwareMSC.cpp
+  cores/esp32/firmware_msc_fat.c
   cores/esp32/wiring_pulse.c
   cores/esp32/wiring_shift.c
   cores/esp32/WMath.cpp
@@ -50,12 +79,13 @@ set(LIBRARY_SRCS
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
+  libraries/Ethernet/src/ETH.cpp
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
-  libraries/LITTLEFS/src/LITTLEFS.cpp
+  libraries/LittleFS/src/LittleFS.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/RainMaker/src/RMaker.cpp
@@ -73,12 +103,19 @@ set(LIBRARY_SRCS
   libraries/Ticker/src/Ticker.cpp
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBHIDMouse.cpp
+  libraries/USB/src/USBHIDKeyboard.cpp
+  libraries/USB/src/USBHIDGamepad.cpp
+  libraries/USB/src/USBHIDConsumerControl.cpp
+  libraries/USB/src/USBHIDSystemControl.cpp
+  libraries/USB/src/USBHIDVendor.cpp
+  libraries/USB/src/USBVendor.cpp
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
-  libraries/WiFi/src/ETH.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
   libraries/WiFi/src/WiFi.cpp
@@ -140,7 +177,7 @@ set(includedirs
   libraries/FS/src
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
-  libraries/LITTLEFS/src
+  libraries/LittleFS/src
   libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/RainMaker/src
@@ -151,6 +188,7 @@ set(includedirs
   libraries/SPI/src
   libraries/Ticker/src
   libraries/Update/src
+  libraries/USB/src
   libraries/WebServer/src
   libraries/WiFiClientSecure/src
   libraries/WiFi/src
@@ -160,24 +198,51 @@ set(includedirs
 
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt main)
-
-if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
-  list(APPEND priv_requires arduino_tinyusb)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
-  list(APPEND priv_requires esp_https_ota)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-  list(APPEND priv_requires esp_littlefs)
-endif()
+set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
-if(IDF_TARGET STREQUAL "esp32")
-target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32_DEV" -DARDUINO_VARIANT="esp32" -DESP32)
+string(TOUPPER ${CONFIG_IDF_TARGET} idf_target_caps)
+target_compile_options(${COMPONENT_TARGET} PUBLIC
+    -DARDUINO=10812
+    -DARDUINO_${idf_target_caps}_DEV
+    -DARDUINO_ARCH_ESP32
+    -DARDUINO_BOARD="${idf_target_caps}_DEV"
+    -DARDUINO_VARIANT="${CONFIG_IDF_TARGET}"
+    -DESP32)
+
+if(CONFIG_AUTOSTART_ARDUINO)
+    # in autostart mode, arduino-esp32 contains app_main() function and needs to
+    # reference setup() and loop() in the main component. If we add main
+    # component to priv_requires then we create a large circular dependency
+    # (arduino-esp32 -> main -> arduino-esp32) and can get linker errors, so
+    # instead we add setup() and loop() to the undefined symbols list so the
+    # linker will always include them.
+    #
+    # (As they are C++ symbol, we need to add the C++ mangled names.)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
 endif()
-if(IDF_TARGET STREQUAL "esp32s2")
-target_compile_options(${COMPONENT_TARGET} PUBLIC -DARDUINO=10812 -DARDUINO_ESP32S2_DEV -DARDUINO_ARCH_ESP32 -DARDUINO_BOARD="ESP32S2_DEV" -DARDUINO_VARIANT="esp32s2" -DESP32)
+
+# This function adds a dependency on the given component if the component is included into the build.
+function(maybe_add_component component_name)
+    idf_build_get_property(components BUILD_COMPONENTS)
+    if (${component_name} IN_LIST components)
+        idf_component_get_property(lib_name ${component_name} COMPONENT_LIB)
+        target_link_libraries(${COMPONENT_LIB} PUBLIC ${lib_name})
+    endif()
+endfunction()
+
+if(IDF_TARGET MATCHES "esp32" AND CONFIG_ESP_RMAKER_TASK_STACK)
+    maybe_add_component(esp_rainmaker)
+    maybe_add_component(qrcode)
+endif()
+if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
+    maybe_add_component(arduino_tinyusb)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
+    maybe_add_component(esp_https_ota)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
+    maybe_add_component(esp_littlefs)
 endif()

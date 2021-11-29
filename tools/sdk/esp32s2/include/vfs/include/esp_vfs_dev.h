@@ -1,16 +1,8 @@
-// Copyright 2015-2017 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -113,6 +105,20 @@ void esp_vfs_dev_uart_use_nonblocking(int uart_num);
  * @param uart_num UART peripheral number
  */
 void esp_vfs_dev_uart_use_driver(int uart_num);
+
+/**
+ * @brief set VFS to use USB-SERIAL-JTAG driver for reading and writing
+ * @note application must configure USB-SERIAL-JTAG driver before calling these functions
+ * With these functions, read and write are blocking and interrupt-driven.
+ */
+void esp_vfs_usb_serial_jtag_use_driver(void);
+
+/**
+ * @brief set VFS to use simple functions for reading and writing UART
+ * Read is non-blocking, write is busy waiting until TX FIFO has enough space.
+ * These functions are used by default.
+ */
+void esp_vfs_usb_serial_jtag_use_nonblocking(void);
 
 #ifdef __cplusplus
 }

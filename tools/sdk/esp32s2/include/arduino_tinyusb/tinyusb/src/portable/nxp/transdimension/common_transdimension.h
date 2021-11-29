@@ -127,7 +127,7 @@ typedef struct
   __I  uint32_t ENDPTSTAT;       ///< Endpoint Status
   __IO uint32_t ENDPTCOMPLETE;   ///< Endpoint Complete
   __IO uint32_t ENDPTCTRL[8];    ///< Endpoint Control 0 - 7
-} dcd_registers_t;
+} dcd_registers_t, hcd_registers_t;
 
 #ifdef __cplusplus
  }

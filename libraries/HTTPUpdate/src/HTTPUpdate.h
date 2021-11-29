@@ -52,6 +52,11 @@ enum HTTPUpdateResult {
 
 typedef HTTPUpdateResult t_httpUpdate_return; // backward compatibility
 
+using HTTPUpdateStartCB = std::function<void()>;
+using HTTPUpdateEndCB = std::function<void()>;
+using HTTPUpdateErrorCB = std::function<void(int)>;
+using HTTPUpdateProgressCB = std::function<void(int, int)>;
+
 class HTTPUpdate
 {
 public:
@@ -91,6 +96,12 @@ public:
 
     t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "");
 
+    // Notification callbacks
+    void onStart(HTTPUpdateStartCB cbOnStart)          { _cbStart = cbOnStart; }
+    void onEnd(HTTPUpdateEndCB cbOnEnd)                { _cbEnd = cbOnEnd; }
+    void onError(HTTPUpdateErrorCB cbOnError)          { _cbError = cbOnError; }
+    void onProgress(HTTPUpdateProgressCB cbOnProgress) { _cbProgress = cbOnProgress; }
+
     int getLastError(void);
     String getLastErrorString(void);
 
@@ -98,11 +109,24 @@ protected:
     t_httpUpdate_return handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs = false);
     bool runUpdate(Stream& in, uint32_t size, String md5, int command = U_FLASH);
 
+    // Set the error and potentially use a CB to notify the application
+    void _setLastError(int err) {
+        _lastError = err;
+        if (_cbError) {
+            _cbError(err);
+        }
+    }
     int _lastError;
     bool _rebootOnUpdate = true;
 private:
     int _httpClientTimeout;
     followRedirects_t _followRedirects;
+
+    // Callbacks
+    HTTPUpdateStartCB    _cbStart;
+    HTTPUpdateEndCB      _cbEnd;
+    HTTPUpdateErrorCB    _cbError;
+    HTTPUpdateProgressCB _cbProgress;
 
     int _ledPin;
     uint8_t _ledOn;

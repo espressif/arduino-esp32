@@ -24,12 +24,6 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup Group_HCD
- * @{
- *  \defgroup EHCI
- *  \brief EHCI driver. All documents sources mentioned here (eg section 3.5) is referring to EHCI Specs unless state otherwise
- *  @{ */
-
 #ifndef _TUSB_EHCI_H_
 #define _TUSB_EHCI_H_
 
@@ -52,17 +46,12 @@
 //--------------------------------------------------------------------+
 // EHCI CONFIGURATION & CONSTANTS
 //--------------------------------------------------------------------+
-#define	EHCI_CFG_FRAMELIST_SIZE_BITS		7			/// Framelist Size (NXP specific) (0:1024) - (1:512) - (2:256) - (3:128) - (4:64) - (5:32) - (6:16) - (7:8)
-#define EHCI_FRAMELIST_SIZE             (1024 >> EHCI_CFG_FRAMELIST_SIZE_BITS)
 
 // TODO merge OHCI with EHCI
 enum {
   EHCI_MAX_ITD  = 4,
   EHCI_MAX_SITD = 16
 };
-
-//------------- Validation -------------//
-TU_VERIFY_STATIC(EHCI_CFG_FRAMELIST_SIZE_BITS <= 7, "incorrect value");
 
 //--------------------------------------------------------------------+
 // EHCI Data Structure
@@ -300,7 +289,7 @@ enum ehci_interrupt_mask_{
 
 enum ehci_usbcmd_pos_ {
   EHCI_USBCMD_POS_RUN_STOP               = 0,
-  EHCI_USBCMD_POS_FRAMELIST_SZIE         = 2,
+  EHCI_USBCMD_POS_FRAMELIST_SIZE         = 2,
   EHCI_USBCMD_POS_PERIOD_ENABLE          = 4,
   EHCI_USBCMD_POS_ASYNC_ENABLE           = 5,
   EHCI_USBCMD_POS_NXP_FRAMELIST_SIZE_MSB = 15,
@@ -309,12 +298,11 @@ enum ehci_usbcmd_pos_ {
 
 enum ehci_portsc_change_mask_{
   EHCI_PORTSC_MASK_CURRENT_CONNECT_STATUS = TU_BIT(0),
-  EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE = TU_BIT(1),
-  EHCI_PORTSC_MASK_PORT_EANBLED = TU_BIT(2),
-  EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE = TU_BIT(3),
-  EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE = TU_BIT(5),
-
-  EHCI_PORTSC_MASK_PORT_RESET = TU_BIT(8),
+  EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE  = TU_BIT(1),
+  EHCI_PORTSC_MASK_PORT_EANBLED           = TU_BIT(2),
+  EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE     = TU_BIT(3),
+  EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE    = TU_BIT(5),
+  EHCI_PORTSC_MASK_PORT_RESET             = TU_BIT(8),
 
   EHCI_PORTSC_MASK_ALL =
       EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
@@ -418,43 +406,15 @@ typedef volatile struct
       uint32_t wake_on_over_current_enable : 1; ///< Enables over-current conditions as wake-up events
       uint32_t nxp_phy_clock_disable       : 1; ///< NXP customized: the PHY can be put into Low Power Suspend – Clock Disable when the downstream device has been put into suspend mode or when no downstream device is connected. Low power suspend is completely under the control of software. 0: enable PHY clock, 1: disable PHY clock
       uint32_t nxp_port_force_fullspeed    : 1; ///< NXP customized: Writing this bit to a 1 will force the port to only connect at Full Speed. It disables the chirp sequence that allowsthe port to identify itself as High Speed. This is useful for testing FS configurations with a HS host, hub or device.
-      uint32_t                             : 1;
+      uint32_t TU_RESERVED                 : 1;
       uint32_t nxp_port_speed              : 2; ///< NXP customized: This register field indicates the speed atwhich the port is operating. For HS mode operation in the host controllerand HS/FS operation in the device controller the port routing steers data to the Protocol engine. For FS and LS mode operation in the host controller, the port routing steers data to the Protocol Engine w/ Embedded Transaction Translator. 0x0: Fullspeed, 0x1: Lowspeed, 0x2: Highspeed
       uint32_t TU_RESERVED                 : 4;
     }portsc_bm;
   };
 }ehci_registers_t;
 
-//--------------------------------------------------------------------+
-// EHCI Data Organization
-//--------------------------------------------------------------------+
-typedef struct
-{
-  ehci_link_t period_framelist[EHCI_FRAMELIST_SIZE];
-
-  // for NXP ECHI, only implement 1 ms & 2 ms & 4 ms, 8 ms (framelist)
-  // [0] : 1ms, [1] : 2ms, [2] : 4ms, [3] : 8 ms
-  ehci_qhd_t period_head_arr[4];
-
-  // Note control qhd of dev0 is used as head of async list
-  struct {
-    ehci_qhd_t qhd;
-    ehci_qtd_t qtd;
-  }control[CFG_TUSB_HOST_DEVICE_MAX+1];
-
-  ehci_qhd_t qhd_pool[HCD_MAX_ENDPOINT];
-  ehci_qtd_t qtd_pool[HCD_MAX_XFER] TU_ATTR_ALIGNED(32);
-
-  ehci_registers_t* regs;
-
-  volatile uint32_t uframe_number;
-}ehci_data_t;
-
 #ifdef __cplusplus
  }
 #endif
 
 #endif /* _TUSB_EHCI_H_ */
-
-/** @} */
-/** @} */

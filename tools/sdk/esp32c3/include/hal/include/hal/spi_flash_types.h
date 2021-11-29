@@ -37,6 +37,7 @@ typedef struct {
 #define SPI_FLASH_TRANS_FLAG_BYTE_SWAP      BIT(2)  ///< Used for DTR mode, to swap the bytes of a pair of rising/falling edge
     uint16_t command;           ///< Command to send
     uint8_t dummy_bitlen;       ///< Basic dummy bits to use
+    uint32_t io_mode;           ///< Flash working mode when `SPI_FLASH_IGNORE_BASEIO` is specified.
 } spi_flash_trans_t;
 
 /**
@@ -54,6 +55,7 @@ typedef enum {
     ESP_FLASH_26MHZ,    ///< The flash runs under 26MHz
     ESP_FLASH_40MHZ,    ///< The flash runs under 40MHz
     ESP_FLASH_80MHZ,    ///< The flash runs under 80MHz
+    ESP_FLASH_120MHZ,   ///< The flash runs under 120MHz, 120MHZ can only be used by main flash after timing tuning in system. Do not use this directely in any API.
     ESP_FLASH_SPEED_MAX, ///< The maximum frequency supported by the host is ``ESP_FLASH_SPEED_MAX-1``.
 } esp_flash_speed_t;
 
@@ -71,7 +73,9 @@ typedef enum {
     SPI_FLASH_DIO,    ///< Both address & data transferred using dual I/O
     SPI_FLASH_QOUT,   ///< Data read using quad I/O
     SPI_FLASH_QIO,    ///< Both address & data transferred using quad I/O
-
+#define SPI_FLASH_OPI_FLAG 16    ///< A flag for flash work in opi mode, the io mode below are opi, above are SPI/QSPI mode. DO NOT use this value in any API.
+    SPI_FLASH_OPI_STR = SPI_FLASH_OPI_FLAG,///< Only support on OPI flash, flash read and write under STR mode
+    SPI_FLASH_OPI_DTR,///< Only support on OPI flash, flash read and write under DTR mode
     SPI_FLASH_READ_MODE_MAX,    ///< The fastest io mode supported by the host is ``ESP_FLASH_READ_MODE_MAX-1``.
 } esp_flash_io_mode_t;
 
@@ -85,6 +89,44 @@ typedef struct {
         uint32_t reserved    :8;             ///< Reserved, set to 0.
     };
 } spi_flash_sus_cmd_conf;
+
+/// Structure for flash encryption operations.
+typedef struct
+{
+    /**
+     * @brief Enable the flash encryption
+    */
+    void (*flash_encryption_enable)(void);
+    /**
+     * @brief Disable the flash encryption
+    */
+    void (*flash_encryption_disable)(void);
+    /**
+     * Prepare flash encryption before operation.
+     *
+     * @param address The destination address in flash for the write operation.
+     * @param buffer Data for programming
+     * @param size Size to program.
+     *
+     * @note address and buffer must be 8-word aligned.
+     */
+    void (*flash_encryption_data_prepare)(uint32_t address, const uint32_t* buffer, uint32_t size);
+    /**
+     * @brief flash data encryption operation is done.
+     */
+    void (*flash_encryption_done)(void);
+    /**
+     * Destroy encrypted result
+    */
+    void (*flash_encryption_destroy)(void);
+    /**
+     * Check if is qualified to encrypt the buffer
+     *
+     * @param address the address of written flash partition.
+     * @param length Buffer size.
+     */
+    bool (*flash_encryption_check)(uint32_t address, uint32_t length);
+} spi_flash_encryption_t;
 
 ///Slowest io mode supported by ESP32, currently SlowRd
 #define SPI_FLASH_READ_MODE_MIN SPI_FLASH_SLOWRD
