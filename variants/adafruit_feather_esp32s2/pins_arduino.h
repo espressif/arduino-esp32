@@ -47,13 +47,8 @@ static const uint8_t RX = 38;
 #define TX1 TX
 #define RX1 RX
 
-static const uint8_t T1 = 1;
-static const uint8_t T2 = 2;
-static const uint8_t T3 = 3;
-static const uint8_t T4 = 4;
 static const uint8_t T5 = 5;
 static const uint8_t T6 = 6;
-static const uint8_t T7 = 7;
 static const uint8_t T8 = 8;
 static const uint8_t T9 = 9;
 static const uint8_t T10 = 10;
