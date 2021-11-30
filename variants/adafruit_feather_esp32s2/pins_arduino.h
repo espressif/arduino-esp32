@@ -42,10 +42,10 @@ static const uint8_t A4 = 14;
 static const uint8_t A5 = 8;
 
 
-
-
-static const uint8_t TX = 43;
-static const uint8_t RX = 44;
+static const uint8_t TX = 39;
+static const uint8_t RX = 38;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;
