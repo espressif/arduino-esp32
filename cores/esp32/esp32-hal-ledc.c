@@ -315,7 +315,7 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
     pinMatrixOutAttach(pin, LEDC_LS_SIG_OUT0_IDX + chan, false, false);
 #else
-    pinMatrixOutAttach(pin, ((chan/8)?LEDC_LS_SIG_OUT0_IDX:LEDC_HS_SIG_OUT0_IDX) + (chan%8), false, false);
+    pinMatrixOutAttach(pin, ((chan/8)?LEDC_HS_SIG_OUT0_IDX:LEDC_LS_SIG_OUT0_IDX) + (chan%8), false, false);
 #endif
 }
 
