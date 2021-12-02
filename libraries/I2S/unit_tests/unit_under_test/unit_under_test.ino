@@ -34,52 +34,73 @@ void loop() {
     //; // do nothing
   }
   int data = Serial1.read();
-  Serial.print("Received number "); Serial.println(data);
+  Serial.print("Received number "); Serial.print(data); Serial.print(": ");
   enum msg_t msg = (msg_t)data;
 
   switch(msg){
     case START_TEST_1:
       // Verify that unexpected calls return with error and don't crash
       // Unexpected calls are for example begin() on initialized object...
-      Serial.print("Received code "); Serial.print(msg);  Serial.print(" = "); Serial.println(txt_msg[msg]);
-      Serial.println("Start smoke test");
+      Serial.print("Start smoke test "); Serial.println(txt_msg[msg]);
       errors += test_01();
       Serial1.write(TEST_1_FINISHED);
       break;
     case START_TEST_2:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
       // Verify data transfer - send predefined data sequence and wait for confirmation from counterpart
       // Receive predefined data sequence and send confirmation to counterpart
       // Repeat test for all digital modes
+      Serial.print("Verify data transfer "); Serial.println(txt_msg[msg]);
+      errors += test_02();
+      Serial1.write(TEST_2_FINISHED);
       break;
     case START_TEST_3:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
       // Verify buffers - proper available returns, peek and flush
+      Serial.print("Verify buffers "); Serial.println(txt_msg[msg]);
+      //errors += test_03();
+      Serial1.write(TEST_3_FINISHED);
       break;
     case START_TEST_4:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
       // Verify callbacks
+      Serial.print("Verify callbacks "); Serial.println(txt_msg[msg]);
+      //errors += test_04();
+      Serial1.write(TEST_4_FINISHED);
       break;
     case START_TEST_5:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
       // Verify pin setups
+      Serial.print("Verify pin setups "); Serial.println(txt_msg[msg]);
+      //errors += test_05();
+      Serial1.write(TEST_5_FINISHED);
       break;
     case START_TEST_6:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
       // Verify ADC and DAC
+      Serial.print("Verify ADC and DAC "); Serial.println(txt_msg[msg]);
+      //errors += test_06();
+      Serial1.write(TEST_6_FINISHED);
       break;
     case START_TEST_7:
-      Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
+      // duplex
+      Serial.print("Verify duplex "); Serial.println(txt_msg[msg]);
+      //errors += test_07();
+      Serial1.write(TEST_7_FINISHED);
       break;
+/*
     case START_TEST_8:
       Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
+      errors += test_08();
+      Serial1.write(TEST_8_FINISHED);
       break;
     case START_TEST_9:
       Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
+
+      errors += test_09();
+      Serial1.write(TEST_9_FINISHED);
       break;
     case START_TEST_10:
       Serial.print("TODO: call test"); Serial.println(txt_msg[msg]);
+      errors += test_10();
+      Serial1.write(TEST_10_FINISHED);
       break;
+*/
     case NOP:
       break;
     default:
