@@ -57,7 +57,7 @@ class UpdateClass {
 
     /*
      Setup decryption configuration
-    Crypt Key is 32bytes(256bits) block of data, use the same key as used to encrypt image file
+     Crypt Key is 32bytes(256bits) block of data, use the same key as used to encrypt image file
      Crypt Address, use the same value as used to encrypt image file
      Crypt Config,  use the same value as used to encrypt image file
      Crypt Mode,    used to select if image files should be decrypted or not
@@ -97,17 +97,17 @@ class UpdateClass {
     bool setCryptKey(const uint8_t *cryptKey);
 
     /*
-      sets crypt mode used on image files(U_AES_DECRYPT_AUTO default)
+      sets crypt mode used on image files
     */
     bool setCryptMode(const int cryptMode);
 
     /*
-      sets address used for decrypting image file(0x000000 default)
+      sets address used for decrypting image file
     */
-    void setCryptAddress(const size_t cryptAddress){ _cryptAddress = cryptAddress & 0xfffffff0; }
+    void setCryptAddress(const size_t cryptAddress){ _cryptAddress = cryptAddress & 0x00fffff0; }
 
     /*
-      sets crypt config used for decrypting image file(0x0f default)
+      sets crypt config used for decrypting image file
     */
     void setCryptConfig(const uint8_t cryptConfig){ _cryptCfg = cryptConfig & 0x0f; }
 
@@ -204,7 +204,6 @@ class UpdateClass {
     void _cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key);
     bool _decryptBuffer();
     bool _writeBuffer();
-    bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
     bool _enablePartition(const esp_partition_t* partition);
 
