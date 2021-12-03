@@ -390,19 +390,6 @@ bool UpdateClass::_writeBuffer(){
     return true;
 }
 
-bool UpdateClass::_verifyHeader(uint8_t data) {
-    if(_command == U_FLASH) {
-        if(data != ESP_IMAGE_HEADER_MAGIC) {
-            _abort(UPDATE_ERROR_MAGIC_BYTE);
-            return false;
-        }
-        return true;
-    } else if(_command == U_SPIFFS) {
-        return true;
-    }
-    return false;
-}
-
 bool UpdateClass::_verifyEnd() {
     if(_command == U_FLASH) {
         if(!_enablePartition(_partition) || !_partitionIsBootable(_partition)) {
@@ -499,11 +486,6 @@ size_t UpdateClass::writeStream(Stream &data) {
 
     if(hasError() || !isRunning())
         return 0;
-
-    if(!_verifyHeader(data.peek())) {
-        _reset();
-        return 0;
-    }
 
     if(_ledPin != -1) {
         pinMode(_ledPin, OUTPUT);
