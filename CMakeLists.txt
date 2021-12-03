@@ -69,13 +69,16 @@ set(CORE_SRCS
   cores/esp32/WString.cpp
   )
 
-set(LIBRARY_SRCS
-  libraries/ArduinoOTA/src/ArduinoOTA.cpp
-  libraries/AsyncUDP/src/AsyncUDP.cpp
+set(BLUETOOTH_SERIAL_SRCS
   libraries/BluetoothSerial/src/BluetoothSerial.cpp
   libraries/BluetoothSerial/src/BTAddress.cpp
   libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
   libraries/BluetoothSerial/src/BTScanResultsSet.cpp
+)
+
+set(LIBRARY_SRCS
+  libraries/ArduinoOTA/src/ArduinoOTA.cpp
+  libraries/AsyncUDP/src/AsyncUDP.cpp
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
@@ -200,6 +203,10 @@ set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
+
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_BluetoothSerial)
+set(srcs ${srcs} ${BLUETOOTH_SERIAL_SRCS})
+endif()
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
