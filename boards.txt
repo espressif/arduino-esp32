@@ -9690,10 +9690,20 @@ deneyapmini.build.boot=qio
 deneyapmini.build.partitions=default
 deneyapmini.build.defines=
 
-deneyapmini.menu.CDCOnBoot.default=Disabled
-deneyapmini.menu.CDCOnBoot.default.build.cdc_on_boot=0
-deneyapmini.menu.CDCOnBoot.cdc=Enabled
-deneyapmini.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+deneyapmini.menu.CDCOnBoot.default=Enabled
+deneyapmini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+deneyapmini.menu.CDCOnBoot.cdc=Disabled
+deneyapmini.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+deneyapmini.menu.MSCOnBoot.default=Disabled
+deneyapmini.menu.MSCOnBoot.default.build.msc_on_boot=0
+deneyapmini.menu.MSCOnBoot.msc=Enabled
+deneyapmini.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+deneyapmini.menu.DFUOnBoot.default=Disabled
+deneyapmini.menu.DFUOnBoot.default.build.dfu_on_boot=0
+deneyapmini.menu.DFUOnBoot.dfu=Enabled
+deneyapmini.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 deneyapmini.menu.PSRAM.disabled=Disabled
 deneyapmini.menu.PSRAM.disabled.build.defines=
