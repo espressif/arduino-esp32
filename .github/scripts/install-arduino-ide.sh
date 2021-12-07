@@ -48,11 +48,8 @@ else
 	export ARDUINO_USR_PATH="$HOME/Arduino"
 fi
 
-# Updated as of Nov 3rd 2020
-ARDUINO_IDE_URL="https://github.com/espressif/arduino-esp32/releases/download/1.0.4/arduino-nightly-"
-
-# Currently not working
-#ARDUINO_IDE_URL="https://www.arduino.cc/download.php?f=/arduino-nightly-"
+# Download the latest Arduino IDE version.
+ARDUINO_IDE_URL="https://downloads.arduino.cc/arduino-nightly-"
 
 if [ ! -d "$ARDUINO_IDE_PATH" ]; then
 	echo "Installing Arduino IDE on $OS_NAME ..."
