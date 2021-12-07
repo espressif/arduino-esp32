@@ -82,7 +82,7 @@ if [ ! -d "$ARDUINO_IDE_PATH" ]; then
 fi
 
 function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
-    if [ "$#" -lt 2 ]; then
+  if [ "$#" -lt 2 ]; then
 		echo "ERROR: Illegal number of parameters"
 		echo "USAGE: build_sketch <fqbn> <path-to-ino> [extra-options]"
 		return 1
@@ -120,45 +120,47 @@ function count_sketches() # count_sketches <examples-path> <target-mcu>
 {
 	local examples="$1"
 	local target="$2"
-    rm -rf sketches.txt
-	if [ ! -d "$examples" ]; then
-		touch sketches.txt
-		return 0
-	fi
-    local sketches=$(find $examples -name *.ino)
-    local sketchnum=0
-    for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        local sketchname=$(basename $sketch)
-        if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
-            continue
-        elif [[ -f "$sketchdir/.skip.$target" ]]; then
-            continue
-        else
-        	echo $sketch >> sketches.txt
-        	sketchnum=$(($sketchnum + 1))
-        fi
-    done
-    return $sketchnum
+  rm -rf sketches.txt
+  if [ ! -d "$examples" ]; then
+    touch sketches.txt
+    return 0
+  fi
+
+  local sketches=$(find $examples -name *.ino)
+  local sketchnum=0
+  for sketch in $sketches; do
+    local sketchdir=$(dirname $sketch)
+    local sketchdirname=$(basename $sketchdir)
+    local sketchname=$(basename $sketch)
+    if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
+      continue
+    elif [[ -f "$sketchdir/.skip.$target" ]]; then
+      continue
+    else
+   	  echo $sketch >> sketches.txt
+     	sketchnum=$(($sketchnum + 1))
+    fi
+  done
+
+  return $sketchnum
 }
 
 function build_sketches() # build_sketches <fqbn> <target-mcu> <examples-path> <chunk> <total-chunks> [extra-options]
 {
-    local fqbn=$1
+  local fqbn=$1
 	local target="$2"
-    local examples=$3
-    local chunk_idex=$4
-    local chunks_num=$5
-    local xtra_opts=$6
+  local examples=$3
+  local chunk_idex=$4
+  local chunks_num=$5
+  local xtra_opts=$6
 
-    if [ "$#" -lt 3 ]; then
-		echo "ERROR: Illegal number of parameters"
-		echo "USAGE: build_sketches <fqbn> <target-mcu <examples-path> [<chunk> <total-chunks>] [extra-options]"
-		return 1
+  if [ "$#" -lt 3 ]; then
+	  echo "ERROR: Illegal number of parameters"
+	  echo "USAGE: build_sketches <fqbn> <target-mcu <examples-path> [<chunk> <total-chunks>] [extra-options]"
+	  return 1
 	fi
 
-    if [ "$#" -lt 5 ]; then
+  if [ "$#" -lt 5 ]; then
 		chunk_idex="0"
 		chunks_num="1"
 		xtra_opts=$4
@@ -168,71 +170,72 @@ function build_sketches() # build_sketches <fqbn> <target-mcu> <examples-path> <
 		echo "ERROR: Chunks count must be positive number"
 		return 1
 	fi
+
 	if [ "$chunk_idex" -ge "$chunks_num" ] && [ "$chunks_num" -ge 2 ]; then
 		echo "ERROR: Chunk index must be less than chunks count"
 		return 1
 	fi
 
 	set +e
-    count_sketches "$examples" "$target"
-    local sketchcount=$?
+  count_sketches "$examples" "$target"
+  local sketchcount=$?
 	set -e
-    local sketches=$(cat sketches.txt)
-    rm -rf sketches.txt
+  local sketches=$(cat sketches.txt)
+  rm -rf sketches.txt
 
-    local chunk_size=$(( $sketchcount / $chunks_num ))
-    local all_chunks=$(( $chunks_num * $chunk_size ))
-    if [ "$all_chunks" -lt "$sketchcount" ]; then
-    	chunk_size=$(( $chunk_size + 1 ))
-    fi
+  local chunk_size=$(( $sketchcount / $chunks_num ))
+  local all_chunks=$(( $chunks_num * $chunk_size ))
+  if [ "$all_chunks" -lt "$sketchcount" ]; then
+  	chunk_size=$(( $chunk_size + 1 ))
+  fi
 
-    local start_index=0
-    local end_index=0
-    if [ "$chunk_idex" -ge "$chunks_num" ]; then
-    	start_index=$chunk_idex
-    	end_index=$sketchcount
-    else
-	    start_index=$(( $chunk_idex * $chunk_size ))
-	    if [ "$sketchcount" -le "$start_index" ]; then
-	    	echo "Skipping job"
-	    	return 0
-	    fi
+  local start_index=0
+  local end_index=0
+  if [ "$chunk_idex" -ge "$chunks_num" ]; then
+  	start_index=$chunk_idex
+    end_index=$sketchcount
+  else
+	  start_index=$(( $chunk_idex * $chunk_size ))
+	  if [ "$sketchcount" -le "$start_index" ]; then
+	  	echo "Skipping job"
+	  	return 0
+	  fi
 
-	    end_index=$(( $(( $chunk_idex + 1 )) * $chunk_size ))
-	    if [ "$end_index" -gt "$sketchcount" ]; then
-	    	end_index=$sketchcount
-	    fi
+	  end_index=$(( $(( $chunk_idex + 1 )) * $chunk_size ))
+	  if [ "$end_index" -gt "$sketchcount" ]; then
+	  	end_index=$sketchcount
+	  fi
 	fi
 
-    local start_num=$(( $start_index + 1 ))
-    echo "Found $sketchcount Sketches for target '$target'";
-    echo "Chunk Index : $chunk_idex"
-    echo "Chunk Count : $chunks_num"
-    echo "Chunk Size  : $chunk_size"
-    echo "Start Sketch: $start_num"
-    echo "End Sketch  : $end_index"
-
-    local sketchnum=0
-    for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        local sketchname=$(basename $sketch)
-        if [ "${sketchdirname}.ino" != "$sketchname" ] \
-        || [ -f "$sketchdir/.skip.$target" ]; then
-            continue
-        fi
-        sketchnum=$(($sketchnum + 1))
-        if [ "$sketchnum" -le "$start_index" ] \
-        || [ "$sketchnum" -gt "$end_index" ]; then
-        	continue
-        fi
-        echo ""
-        echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
-        build_sketch "$fqbn" "$sketch" "$xtra_opts"
-        local result=$?
-        if [ $result -ne 0 ]; then
-            return $result
-        fi
-    done
-    return 0
+  local start_num=$(( $start_index + 1 ))
+  echo "Found $sketchcount Sketches for target '$target'";
+  echo "Chunk Index : $chunk_idex"
+  echo "Chunk Count : $chunks_num"
+  echo "Chunk Size  : $chunk_size"
+  echo "Start Sketch: $start_num"
+  echo "End Sketch  : $end_index"
+  
+  local sketchnum=0
+  for sketch in $sketches; do
+    local sketchdir=$(dirname $sketch)
+    local sketchdirname=$(basename $sketchdir)
+    local sketchname=$(basename $sketch)
+    if [ "${sketchdirname}.ino" != "$sketchname" ] \
+    || [ -f "$sketchdir/.skip.$target" ]; then
+        continue
+    fi
+    sketchnum=$(($sketchnum + 1))
+    if [ "$sketchnum" -le "$start_index" ] \
+    || [ "$sketchnum" -gt "$end_index" ]; then
+    	continue
+    fi
+    echo ""
+    echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
+    build_sketch "$fqbn" "$sketch" "$xtra_opts"
+    local result=$?
+    if [ $result -ne 0 ]; then
+      return $result
+    fi
+  done
+  return 0
 }

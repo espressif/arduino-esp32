@@ -35,7 +35,7 @@ fi
 
 if [ "$BUILD_PIO" -eq 0 ]; then
 	# ArduinoIDE ESP32 Test
-    TARGET="esp32"
+  TARGET="esp32"
 	FQBN="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
 	source ./.github/scripts/install-arduino-ide.sh
 	source ./.github/scripts/install-arduino-core-esp32.sh
@@ -58,7 +58,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 	fi
 
 	# ArduinoIDE ESP32S2 Test
-    TARGET="esp32s2"
+  TARGET="esp32s2"
 	FQBN="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
 	if [ "$OS_IS_WINDOWS" == "1" ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
@@ -68,10 +68,10 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
 	else
 		build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-    fi
+  fi
 
 	# ArduinoIDE ESP32C3 Test
-    TARGET="esp32c3"
+  TARGET="esp32c3"
 	FQBN="espressif:esp32:esp32c3:PartitionScheme=huge_app"
 	if [ "$OS_IS_WINDOWS" == "1" ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
@@ -81,12 +81,12 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 		build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
 	else
 		build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-    fi
+  fi
 else
 	source ./.github/scripts/install-platformio-esp32.sh
 	# PlatformIO ESP32 Test
 	BOARD="esp32dev"
-    OPTIONS="board_build.partitions = huge_app.csv"
+  OPTIONS="board_build.partitions = huge_app.csv"
 	build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
 	build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
 	build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
@@ -98,7 +98,7 @@ else
     # build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
     # build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
 
-    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s2" --project-option="board_build.partitions = huge_app.csv"
+  python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s2" --project-option="board_build.partitions = huge_app.csv"
     
 	#build_pio_sketches "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries"
 fi
