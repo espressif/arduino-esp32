@@ -9126,13 +9126,15 @@ kb32.name=KB32-FT
 kb32.upload.tool=esptool_py
 kb32.upload.maximum_size=1310720
 kb32.upload.maximum_data_size=327680
-kb32.upload.wait_for_upload_port=true
 kb32.upload.flags=
 kb32.upload.extra_flags=
 
 kb32.serial.disableDTR=true
 kb32.serial.disableRTS=true
 
+kb32.build.tarch=xtensa
+kb32.build.bootloader_addr=0x1000
+kb32.build.target=esp32
 kb32.build.mcu=esp32
 kb32.build.core=esp32
 kb32.build.variant=esp32
@@ -9145,13 +9147,15 @@ kb32.build.flash_mode=dio
 kb32.build.boot=dio
 kb32.build.partitions=default
 kb32.build.defines=
+kb32.build.loop_core=
+kb32.build.event_core=
 
 kb32.menu.PSRAM.disabled=Disabled
 kb32.menu.PSRAM.disabled.build.defines=
 kb32.menu.PSRAM.disabled.build.extra_libs=
 kb32.menu.PSRAM.enabled=Enabled
-kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-kb32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+kb32.menu.PSRAM.enabled.build.extra_libs=
 
 kb32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 kb32.menu.PartitionScheme.default.build.partitions=default
@@ -9186,6 +9190,9 @@ kb32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 kb32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+kb32.menu.PartitionScheme.rainmaker=RainMaker
+kb32.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+kb32.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
 
 kb32.menu.CPUFreq.240=240MHz (WiFi/BT)
 kb32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -9247,6 +9254,16 @@ kb32.menu.UploadSpeed.460800.macosx=460800
 kb32.menu.UploadSpeed.460800.upload.speed=460800
 kb32.menu.UploadSpeed.512000.windows=512000
 kb32.menu.UploadSpeed.512000.upload.speed=512000
+
+kb32.menu.LoopCore.1=Core 1
+kb32.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+kb32.menu.LoopCore.0=Core 0
+kb32.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+kb32.menu.EventsCore.1=Core 1
+kb32.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+kb32.menu.EventsCore.0=Core 0
+kb32.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 kb32.menu.DebugLevel.none=None
 kb32.menu.DebugLevel.none.build.code_debug=0
