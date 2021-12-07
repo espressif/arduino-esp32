@@ -2,18 +2,7 @@
 
 set -e
 
-if [ ! -z "$TRAVIS_TAG" ]; then
-	echo "Skipping Test: Tagged build"
-	exit 0
-fi
-
-if [ ! -z "$GITHUB_WORKSPACE" ]; then
-	export TRAVIS_BUILD_DIR="$GITHUB_WORKSPACE"
-	export TRAVIS_REPO_SLUG="$GITHUB_REPOSITORY"
-elif [ ! -z "$TRAVIS_BUILD_DIR" ]; then
-	export GITHUB_WORKSPACE="$TRAVIS_BUILD_DIR"
-	export GITHUB_REPOSITORY="$TRAVIS_REPO_SLUG"
-else
+if [ -z "$GITHUB_WORKSPACE" ]; then
 	export GITHUB_WORKSPACE="$PWD"
 	export GITHUB_REPOSITORY="espressif/arduino-esp32"
 fi
