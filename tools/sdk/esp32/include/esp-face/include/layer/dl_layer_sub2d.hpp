@@ -38,7 +38,11 @@ namespace dl
              *                        false: the output will store to a separate memory
              */
             Sub2D(const int output_exponent, const Activation<feature_t> *activation = NULL, const char *name = "Sub2D", bool inplace = false) : Layer(name),
-                                                                                                                                                 output_exponent(output_exponent), activation(activation), output(NULL), inplace(inplace), output_shape({})
+                                                                                                                                                 output_exponent(output_exponent), 
+                                                                                                                                                 activation(activation), 
+                                                                                                                                                 output(NULL), 
+                                                                                                                                                 inplace(inplace), 
+                                                                                                                                                 output_shape({})
             {
             }
 

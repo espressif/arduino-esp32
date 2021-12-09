@@ -2,6 +2,7 @@
 
 #include "dl_define.hpp"
 #include <vector>
+#include <stdint.h>
 
 namespace dl
 {
@@ -48,10 +49,11 @@ namespace dl
                                               /*<! - 2D: [dilation_in_height, dilation_in_width] >*/
         std::vector<int> shape_with_dilation; /*<! - 1D: reserved >*/
                                               /*<! - 2D: [filter_height_with_dilation, filter_width_with_dilation, input_channel, output_channel] >*/
-        std::vector<int> channel_exponent;    /*<! exponent for per-channel >*/
+        const int8_t* channel_exponent;       /*<! exponent for per-channel >*/
+        const int channel_exponent_size;
 
         /**
-         * @brief Construct a new Filter object.
+         * @brief Construct a new Filter object. 
          * 
          * @param element  point to element
          * @param exponent exponent of element
@@ -66,16 +68,17 @@ namespace dl
         Filter(const T *element, const int exponent, const std::vector<int> shape, const std::vector<int> dilation = {1, 1});
 
         /**
-         * @brief Construct a new Filter object.
+         * @brief Construct a new Filter object. it is only avaliable to int16_t
          * 
-         * @param element          point to element
-         * @param channel_exponent exponent for per-channel
-         * @param shape            shape of element
-         * @param dilation         dilation of Filter
-         *                         - 1D: reserved
-         *                         - 2D: [dilation_in_height, dilation_in_width]
+         * @param element               point to element
+         * @param channel_exponent      exponent for per-channel
+         * @param channel_exponent_size size of exponent
+         * @param shape                 shape of element
+         * @param dilation              dilation of Filter
+         *                              - 1D: reserved
+         *                              - 2D: [dilation_in_height, dilation_in_width]
          */
-        Filter(const T *element, const std::vector<int> channel_exponent, const std::vector<int> shape, const std::vector<int> dilation = {1, 1});
+        Filter(const T *element, const int8_t* channel_exponent, const int channel_exponent_size, const std::vector<int> shape, const std::vector<int> dilation = {1, 1});
 
         /**
          * @brief Print the n-th filter.
@@ -98,9 +101,6 @@ namespace dl
     {
     public:
         using Constant<T>::Constant;
-        std::vector<int> channel_exponent;    /*<! exponent for per-channel >*/
-
-        Bias(const T *element, const std::vector<int> channel_exponent, const std::vector<int> shape);
     };
 
     /**

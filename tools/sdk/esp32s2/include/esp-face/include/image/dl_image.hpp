@@ -49,6 +49,15 @@ namespace dl
         }
 
         /**
+         * @brief Convert RGB565 image to RGB888 image.
+         * 
+         * @param image  ptr of RGB565 image
+         * @param image_shape shape of the input image
+         * @return Tensor<uint8_t>* output RGB88 image
+         */
+        Tensor<uint8_t> *convert_image_rgb565_to_rgb888(uint16_t *image, std::vector<int> &image_shape);
+
+        /**
          * @brief Convert RGB565 pixel to Gray.
          * 
          * @param input pixel value in RGB565
@@ -434,6 +443,49 @@ namespace dl
          * @return Tensor<uint8_t>* output image in HSV format
          */
         Tensor<uint8_t> *rgb2hsv(Tensor<uint8_t> &image, bool bgr = false, bool fast = true);
+
+        /**
+         * @brief resize an image to the target shape.
+         * 
+         * @param image the input image Tensor
+         * @param target_shape the target shape of the resized image.
+         * @param resize_type one of IMAGE_RESIZE_BILINEAR or IMAGE_RESIZE_MEAN or IMAGE_RESIZE_NEAREST
+         * @return Tensor<uint8_t>* the pointer of the resized image Tensor
+         */
+        Tensor<uint8_t> *resize_image(Tensor<uint8_t> &image, std::vector<int> target_shape, resize_type_t resize_type);
+
+        /**
+         * @brief resize an image to the target shape.
+         * 
+         * @param image the input image Tensor
+         * @param resized_image the resized image Tensor
+         * @param resize_type one of IMAGE_RESIZE_BILINEAR or IMAGE_RESIZE_MEAN or IMAGE_RESIZE_NEAREST
+         */
+        void resize_image(Tensor<uint8_t> &image, Tensor<uint8_t> &resized_image, resize_type_t resize_type);
+
+       /**
+        * @brief resize an image to the target shape with nearest method.
+        * 
+        * @tparam T 
+        * @param image the pointer of the input image
+        * @param input_shape the input shape of the image
+        * @param target_shape the target shape of the resized image
+        * @return T* the pointer of the resized image
+        */
+        template <typename T>
+        T *resize_image_nearest(T *image, std::vector<int> input_shape, std::vector<int> target_shape);
+
+        /**
+         * @brief resize an image to the target shape with nearest method.
+         * 
+         * @tparam T 
+         * @param image the pointer of the input image
+         * @param input_shape the input shape of the image
+         * @param resized_image the pointer of the resized image
+         * @param target_shape the target shape of the resized image
+         */
+        template <typename T>
+        void resize_image_nearest(T *image, std::vector<int> input_shape, T *resized_image, std::vector<int> target_shape);
 
     } // namespace image
 } // namespace dl
