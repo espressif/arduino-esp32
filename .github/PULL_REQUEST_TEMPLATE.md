@@ -6,7 +6,8 @@
 3. [ ] Please check [Contributing guide](https://docs.espressif.com/projects/arduino-esp32/en/latest/contributing.html)
 
 *This entire section above can be deleted if all items are checked.*
----------------
+
+-----------
 ## Summary
 Please describe your proposed PR and what it contains.
 
