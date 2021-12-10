@@ -1,4 +1,3 @@
----------------
 *By completing this PR sufficiently, you help us to improve the quality of Release Notes*
 
 ### Checklist
