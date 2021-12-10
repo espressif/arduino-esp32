@@ -76,8 +76,8 @@ body:
       label: PSRAM enabled
       description: Is PSRAM enabled?
       options:
-        - yes
-        - no 
+        - 'yes'
+        - 'no' 
     validations:
       required: true
   - type: input
@@ -88,7 +88,7 @@ body:
       placeholder: eg. 115200
     validations:
       required: true
-  - type: Textarea
+  - type: textarea
     id: Description
     attributes:
       label: Description

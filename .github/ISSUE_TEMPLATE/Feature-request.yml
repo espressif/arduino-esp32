@@ -12,7 +12,7 @@ body:
     id: Area
     attributes:
       label: Related area
-      description: Please briefly explain the are of your Pull Request.
+      description: Please briefly explain the area of your Pull Request.
       placeholder: eg. Board support, specific Peripheral, BT, Wifi...
     validations:
       required: true
@@ -20,8 +20,8 @@ body:
     id: HW
     attributes:
       label: Hardware specification
-      description: Please provide if your proposal is depends on specific Hardware.
-      placeholder: eg. This PR adds support for Adafruit 32u4 Board.
+      description: Please provide if your proposal depends on specific Hardware.
+      placeholder: eg. Support for Adafruit 32u4 Board...
     validations:
       required: true
   - type: textarea
@@ -45,7 +45,7 @@ body:
     attributes:
       label: Describe alternatives you've considered
       description: Please provide a clear and concise description of any alternative solutions or features you've considered.
-      placeholder: ex. Choosing other approach wouldn't work, because ...
+      placeholder: ex. Choosing other approach wouldn't work, because...
   - type: textarea
     id: context
     attributes:
