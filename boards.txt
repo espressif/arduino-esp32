@@ -4757,10 +4757,10 @@ adafruit_qtpy_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_qtpy_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_qtpy_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-adafruit_qtpy_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=
 adafruit_qtpy_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_qtpy_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qtpy_esp32s2.menu.PSRAM.disabled=Disabled
+adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=
 
 adafruit_qtpy_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_qtpy_esp32s2.menu.PartitionScheme.default.build.partitions=default
