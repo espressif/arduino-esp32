@@ -102,6 +102,7 @@ body:
       label: Sketch
       description: Please provide your sketch/code which was run
       placeholder: ex. related part of the code
+      render: shell
     validations:
      required: true
   - type: textarea
@@ -109,26 +110,21 @@ body:
     attributes:
       label: Debug Message
       description: Please provide a debug message or error message.
-      placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here
+      placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
+      render: shell
     validations:
       required: true      
   - type: textarea
     id: other-remarks
     attributes:
-      label: Other Steps to Reproduce
-      description: Is there any other information you can think of which will help us reproduce this problem?
+      label: Other Steps to Reproduce 
+      description: Is there any other information you can think of which will help us reproduce this problem? Any additional info can be added as well.
       placeholder: ex. I also tried on other OS, HW...it works correctly on that setup.
-  - type: textarea
-    id: more-info
-    attributes:
-      label: More Information
-      description: Do you have any other information from investigating this?
-      placeholder: Add any additional info.
   - type: checkboxes
     id: confirmation
     attributes:
-      label: I have check existing issues, online documentation and the Troubleshooting Guide
+      label: I have checked existing issues, online documentation and the Troubleshooting Guide
       description: You agree to check all the resources above before opening a new issue.
       options:
-        - label: I confirm I have check existing issues, online documentation and Troubleshooting guide.
+        - label: I confirm I have checked existing issues, online documentation and Troubleshooting guide.
           required: true
