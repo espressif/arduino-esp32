@@ -21,7 +21,7 @@ body:
     attributes:
       label: Hardware specification
       description: Please provide if your proposal depends on specific Hardware.
-      placeholder: eg. Support for Adafruit 32u4 Board...
+      placeholder: eg. Support for ESP32 DevKitC, ESP32-C3 DevKitM...
     validations:
       required: true
   - type: textarea
