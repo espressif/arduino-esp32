@@ -119,6 +119,9 @@
   #define DCD_ATTR_ENDPOINT_MAX   9
   #define DCD_ATTR_DWC2_STM32
 
+#elif TU_CHECK_MCU(OPT_MCU_STM32G4)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
 #elif TU_CHECK_MCU(OPT_MCU_STM32L0, OPT_MCU_STM32L1)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
@@ -141,6 +144,9 @@
 
 //------------- TI -------------//
 #elif TU_CHECK_MCU(OPT_MCU_MSP430x5xx)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_MSP432E4, OPT_MCU_TM4C123, OPT_MCU_TM4C129)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
 //------------- ValentyUSB -------------//
@@ -183,6 +189,10 @@
 
 //------------- Broadcom -------------//
 #elif TU_CHECK_MCU(OPT_MCU_BCM2711)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+//------------- Broadcom -------------//
+#elif TU_CHECK_MCU(OPT_MCU_XMC4000)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
 #else
