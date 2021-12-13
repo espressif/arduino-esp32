@@ -136,29 +136,35 @@ To detach the interruption from a specific pin, use the ``detachInterrupt`` func
 .. _gpio_example_code:
 
 Example Code
--------------
+------------
 
-Here is the full code for the GPIO application example. 
+GPIO Input and Output Modes
+***************************
 
-.. code-block::
+.. code-block:: arduino
 
   #define LED    12
   #define BUTTON 2
-  
+
   uint8_t stateLED = 0;
-  
+
     void setup() {
         pinMode(LED, OUTPUT);
         pinMode(BUTTON,INPUT_PULLUP);
     }
 
     void loop() {
-       
+
        if(!digitalRead(BUTTON)){ 
          stateLED = stateLED^1;
         digitalWrite(LED,stateLED); 
       }
     }
 
-.. _Wokwi: https://wokwi.com/ 
+GPIO Interrupt
+**************
+
+.. literalinclude:: ../../../libraries/ESP32/examples/GPIO/GPIOInterrupt/GPIOInterrupt.ino
+    :language: arduino
+
 .. _datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
