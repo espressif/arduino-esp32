@@ -77,7 +77,7 @@ To read the state of a given pin configured as ``INPUT``, the function ``digital
 
 * ``pin`` select GPIO
 
-This function will return the logical state of the selecetd pin as ``HIGH`` or ``LOW``.
+This function will return the logical state of the selected pin as ``HIGH`` or ``LOW``.
 
 Interrupts
 ----------
