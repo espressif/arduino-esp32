@@ -5,66 +5,71 @@ GPIO
 About
 -----
 
-GPIO (General Purpouse Input Output) is peripheral responsible to controls reception and 
-deliver digital signals by means of easy interface acess with world, physical pins.
+One of the most used and versatile peripheral in a microcontroller is the GPIO. The GPIO is commonly used to write and read the pin state.
 
-Fetures of this peripheral relates with largely quantity pins available on chip, also being
-this programmable and configurable. An example of interaction happen when turn on LED or pulse control a button.
+GPIO stands to General Purpose Input Output, and is responsible to control or read the state of a specific pin in the digital world. For example, this peripheral is widely used to create the LED blinking or to read a simple button.
 
-.. note:: 
-   There are some GPIOs with special functions and not all the is accessible in all development board. For more information strong suggest acess datasheet_.
+.. note:: There are some GPIOs with special restrictions, and not all GPIOs are accessible through the developemnt board. For more information about it, see the corresponding board pin layout information.
 
-GPIOs Configuration
-*******************
-
-The GPIOs used two different configuration :
-    
-- **Input**
-
-  - Receive external digital signals 
-  
-
-- **Output**
-  
-  - Send internal digital signals
-
-
-Arduino - ESP32 API
--------------------------   
-Here are description of frequently used functions for GPIOs
-
-pinMode
+GPIOs Modes
 ***********
 
-Initial configuration for use pin with input or output.  
+There are two different modes in the GPIO configuration:
+    
+- **Input Mode**
 
+In this mode, the GPIO will receive the digital state from a specific device. This device could be a button or a switch.
+
+- **Output Mode**
+  
+For the output mode, the GPIO will change the GPIO digital state to a specific device. You can drive an LED for example.
+
+GPIO API
+--------
+
+Here is the common functions used for the GPIO peripheral.
+
+pinMode
+*******
+
+The ``pinMode`` function is used to define the GPIO operation mode for a specific pin.
 
 .. code-block:: arduino
 
     void pinMode(uint8_t pin, uint8_t mode);
  
-* ``pin``   select  GPIO 
-* ``mode``  sets  mode operation (``INPUT``, ``OUTPUT`` or ``INPUT_PULLUP``, ).
+* ``pin``   defines the GPIO pin number.
+* ``mode``  sets operation mode.
+  
+The following modes are supported for the basic `input` and `output`: 
+
+* **INPUT** sets the GPIO as input without pullup or pulldown (high impedance).
+* **OUTPUT** sets the GPIO as output/read mode.
+* **INPUT_PULLDOWN** sets the GPIO as input with the internal pulldown.
+* **INPUT_PULLUP** sets the GPIO as input with the internal pullup.
+
+Internal Pullup and Pulldown
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ESP32 SoC families supports the internal pullup and pulldown throught a 45kR resistor, that can be enabled when configuring the GPIO mode as ``INPUT`` mode.
+If the pullup or pulldown mode is not defined, the pin will stay in the high impedance mode.
 
 digitalWrite
 *************
 
-Write digital signal on pin.
+The function ``digitalWrite`` sets the state of the selected GPIO to ``HIGH`` or ``LOW``. This function is only used if the ``pinMode`` was configured as ``OUTPUT``.
 
 .. code-block:: arduino
 
     void digitalWrite(uint8_t pin, uint8_t val);
 
-* ``pin``  select a GPIO
-* ``val``  logic level write on pin (``HIGH`` or ``LOW``) 
-
-.. warning:: 
-  If pin not set to ``OUTPUT`` on  pinMode(), may not work correct.
+* ``pin``  defines the GPIO pin number.
+* ``val``  set the output digital state to ``HIGH`` or ``LOW``. 
 
 digitalRead
 ***********
 
-Read digital pin signal picked 
+To read the state of a given pin configured as ``INPUT``, the function ``digitalRead`` is used.
 
 .. code-block:: arduino
 
@@ -72,24 +77,68 @@ Read digital pin signal picked
 
 * ``pin`` select GPIO
 
-This function will be return logical state ``HIGH`` or ``LOW``
+This function will return the logical state of the selecetd pin as ``HIGH`` or ``LOW``.
 
-Simulation
+Interrupts
 ----------
 
-This application helps understand concepts using dynamic simulation provide by `Wokwi`_, test the gpio code and start. 
+The GPIO peripheral on the ESP32 supports interruptions.
 
-.. raw:: html
+attachInterrupt
+***************
 
-    <iframe src="https://wokwi.com/arduino/projects/314835473253007936" width="100%" height="400" border="0"></iframe>
+The function ``attachInterruptArg`` is used to attach the interrupt to the defined pin.
 
+.. code-block:: arduino
+
+  attachInterrupt(uint8_t pin, voidFuncPtr handler, int mode);
+
+* ``pin``  defines the GPIO pin number.
+* ``handler``  set the handler function.
+* ``mode``  set the interrupt mode.
+
+Here are the supported interrupt modes:
+
+* **DISABLED**
+* **RISING**
+* **FALLING**
+* **CHANGE**
+* **ONLOW**
+* **ONHIGH**
+* **ONLOW_WE**
+* **ONHIGH_WE**
+
+attachInterruptArg
+******************
+
+The function ``attachInterruptArg`` is used to attach the interrupt to the defined pin using arguments.
+
+.. code-block:: arduino
+
+  attachInterruptArg(uint8_t pin, voidFuncPtrArg handler, void * arg, int mode);
+
+* ``pin``  defines the GPIO pin number.
+* ``handler``  set the handler function.
+* ``arg`` pointer to the interrupt arguments.
+* ``mode``  set the interrupt mode.
+
+detachInterrupt
+***************
+
+To detach the interruption from a specific pin, use the ``detachInterrupt`` function giving the GPIO to be detached.
+
+.. code-block:: arduino
+
+  detachInterrupt(uint8_t pin);
+
+* ``pin``  defines the GPIO pin number.
 
 .. _gpio_example_code:
 
 Example Code
 -------------
 
-Here is full code for example application of GPIOs 
+Here is the full code for the GPIO application example. 
 
 .. code-block::
 
@@ -113,5 +162,3 @@ Here is full code for example application of GPIOs
 
 .. _Wokwi: https://wokwi.com/ 
 .. _datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
-    
-    
