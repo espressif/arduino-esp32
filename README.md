@@ -27,6 +27,10 @@ You can use [Arduino-ESP32 Online Documentation](https://docs.espressif.com/proj
 * [FAQ](https://docs.espressif.com/projects/arduino-esp32/en/latest/faq.html)
 * [Troubleshooting](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
 
+### Supported Chips
+
+Visit the [supported chips](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s) documentation to see the list of current supported ESP32 SoCs.
+
 ### Decoding exceptions
 
 You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder) to get meaningful call trace.
