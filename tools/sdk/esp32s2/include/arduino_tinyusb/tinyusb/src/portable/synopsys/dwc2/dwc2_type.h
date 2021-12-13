@@ -416,6 +416,10 @@ TU_VERIFY_STATIC(offsetof(dwc2_regs_t, fifo   ) == 0x1000, "incorrect size");
 #define DCFG_PFIVL_0                     (0x1UL << DCFG_PFIVL_Pos)                // 0x00000800 */
 #define DCFG_PFIVL_1                     (0x2UL << DCFG_PFIVL_Pos)                // 0x00001000 */
 
+#define DCFG_XCVRDLY_Pos                 (14U)
+#define DCFG_XCVRDLY_Msk                 (0x1UL << DCFG_XCVRDLY_Pos)             /*!< 0x00004000 */
+#define DCFG_XCVRDLY                     DCFG_XCVRDLY_Msk                        // Enables delay between xcvr_sel and txvalid during device chirp
+
 #define DCFG_PERSCHIVL_Pos               (24U)
 #define DCFG_PERSCHIVL_Msk               (0x3UL << DCFG_PERSCHIVL_Pos)            // 0x03000000 */
 #define DCFG_PERSCHIVL                   DCFG_PERSCHIVL_Msk                       // Periodic scheduling interval */
