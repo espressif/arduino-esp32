@@ -102,7 +102,7 @@ body:
       label: Sketch
       description: Please provide your sketch/code which was run
       placeholder: ex. related part of the code
-      render: shell
+      render: cpp
     validations:
      required: true
   - type: textarea
@@ -111,7 +111,7 @@ body:
       label: Debug Message
       description: Please provide a debug message or error message. If you have a Guru Meditation Error or Backtrace, please decode it with [ExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder)
       placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
-      render: shell
+      render: plain
     validations:
       required: true      
   - type: textarea

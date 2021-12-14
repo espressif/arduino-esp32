@@ -12,7 +12,7 @@ body:
     id: Area
     attributes:
       label: Related area
-      description: Please briefly explain the area of your Pull Request.
+      description: Please briefly explain the area of your Feature Request.
       placeholder: eg. Board support, specific Peripheral, BT, Wifi...
     validations:
       required: true
