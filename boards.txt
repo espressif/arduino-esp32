@@ -10042,3 +10042,104 @@ franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose=Verbose
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
+sonoff_dualr3.name=Sonoff DUALR3
+
+sonoff_dualr3.upload.tool=esptool_py
+sonoff_dualr3.upload.maximum_size=1310720
+sonoff_dualr3.upload.maximum_data_size=327680
+sonoff_dualr3.upload.flags=
+sonoff_dualr3.upload.extra_flags=
+
+sonoff_dualr3.serial.disableDTR=true
+sonoff_dualr3.serial.disableRTS=true
+
+sonoff_dualr3.build.tarch=xtensa
+sonoff_dualr3.build.bootloader_addr=0x1000
+sonoff_dualr3.build.target=esp32
+sonoff_dualr3.build.mcu=esp32
+sonoff_dualr3.build.core=esp32
+sonoff_dualr3.build.variant=esp32
+sonoff_dualr3.build.board=SONOFF_DUALR3
+
+sonoff_dualr3.build.f_cpu=240000000L
+sonoff_dualr3.build.flash_size=4MB
+sonoff_dualr3.build.flash_freq=40m
+sonoff_dualr3.build.flash_mode=dio
+sonoff_dualr3.build.boot=dio
+sonoff_dualr3.build.partitions=rainmaker
+sonoff_dualr3.build.defines=
+sonoff_dualr3.build.loop_core=
+sonoff_dualr3.build.event_core=
+
+sonoff_dualr3.menu.PartitionScheme.rainmaker=RainMaker
+sonoff_dualr3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+sonoff_dualr3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+sonoff_dualr3.menu.CPUFreq.240=240MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.240.build.f_cpu=240000000L
+sonoff_dualr3.menu.CPUFreq.160=160MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.160.build.f_cpu=160000000L
+sonoff_dualr3.menu.CPUFreq.80=80MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.80.build.f_cpu=80000000L
+sonoff_dualr3.menu.CPUFreq.40=40MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.40.build.f_cpu=40000000L
+sonoff_dualr3.menu.CPUFreq.26=26MHz (26MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.26.build.f_cpu=26000000L
+sonoff_dualr3.menu.CPUFreq.20=20MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.20.build.f_cpu=20000000L
+sonoff_dualr3.menu.CPUFreq.13=13MHz (26MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.13.build.f_cpu=13000000L
+sonoff_dualr3.menu.CPUFreq.10=10MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sonoff_dualr3.menu.FlashMode.qio=QIO
+sonoff_dualr3.menu.FlashMode.qio.build.flash_mode=dio
+sonoff_dualr3.menu.FlashMode.qio.build.boot=qio
+sonoff_dualr3.menu.FlashMode.dio=DIO
+sonoff_dualr3.menu.FlashMode.dio.build.flash_mode=dio
+sonoff_dualr3.menu.FlashMode.dio.build.boot=dio
+sonoff_dualr3.menu.FlashMode.qout=QOUT
+sonoff_dualr3.menu.FlashMode.qout.build.flash_mode=dout
+sonoff_dualr3.menu.FlashMode.qout.build.boot=qout
+sonoff_dualr3.menu.FlashMode.dout=DOUT
+sonoff_dualr3.menu.FlashMode.dout.build.flash_mode=dout
+sonoff_dualr3.menu.FlashMode.dout.build.boot=dout
+
+sonoff_dualr3.menu.FlashFreq.80=80MHz
+sonoff_dualr3.menu.FlashFreq.80.build.flash_freq=80m
+sonoff_dualr3.menu.FlashFreq.40=40MHz
+sonoff_dualr3.menu.FlashFreq.40.build.flash_freq=40m
+
+sonoff_dualr3.menu.FlashSize.4M=4MB (32Mb)
+sonoff_dualr3.menu.FlashSize.4M.build.flash_size=4MB
+
+sonoff_dualr3.menu.UploadSpeed.921600=921600
+sonoff_dualr3.menu.UploadSpeed.921600.upload.speed=921600
+sonoff_dualr3.menu.UploadSpeed.115200=115200
+sonoff_dualr3.menu.UploadSpeed.115200.upload.speed=115200
+sonoff_dualr3.menu.UploadSpeed.256000.windows=256000
+sonoff_dualr3.menu.UploadSpeed.256000.upload.speed=256000
+sonoff_dualr3.menu.UploadSpeed.230400.windows.upload.speed=256000
+sonoff_dualr3.menu.UploadSpeed.230400=230400
+sonoff_dualr3.menu.UploadSpeed.230400.upload.speed=230400
+sonoff_dualr3.menu.UploadSpeed.460800.linux=460800
+sonoff_dualr3.menu.UploadSpeed.460800.macosx=460800
+sonoff_dualr3.menu.UploadSpeed.460800.upload.speed=460800
+sonoff_dualr3.menu.UploadSpeed.512000.windows=512000
+sonoff_dualr3.menu.UploadSpeed.512000.upload.speed=512000
+
+sonoff_dualr3.menu.DebugLevel.none=None
+sonoff_dualr3.menu.DebugLevel.none.build.code_debug=0
+sonoff_dualr3.menu.DebugLevel.error=Error
+sonoff_dualr3.menu.DebugLevel.error.build.code_debug=1
+sonoff_dualr3.menu.DebugLevel.warn=Warn
+sonoff_dualr3.menu.DebugLevel.warn.build.code_debug=2
+sonoff_dualr3.menu.DebugLevel.info=Info
+sonoff_dualr3.menu.DebugLevel.info.build.code_debug=3
+sonoff_dualr3.menu.DebugLevel.debug=Debug
+sonoff_dualr3.menu.DebugLevel.debug.build.code_debug=4
+sonoff_dualr3.menu.DebugLevel.verbose=Verbose
+sonoff_dualr3.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
