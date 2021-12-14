@@ -109,7 +109,7 @@ body:
     id: Debug
     attributes:
       label: Debug Message
-      description: Please provide a debug message or error message.
+      description: Please provide a debug message or error message. If you have a Guru Meditation Error or Backtrace, please decode it with [ExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder)
       placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
       render: shell
     validations:
