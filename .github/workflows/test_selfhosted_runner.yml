@@ -10,6 +10,7 @@ jobs:
   build:
     name: Dummy test - self hosted GHR
     runs-on: self-hosted
+    if: github.repository == 'espressif/arduino-esp32'
     steps:
       - name: Check out repo
         uses: actions/checkout@v2

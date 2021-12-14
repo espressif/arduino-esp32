@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script is for Travis. It checks all non-examples source files in libraries/ and cores/ are listed in
+# This script is used in the CI workflow. It checks all non-examples source files in libraries/ and cores/ are listed in
 # CMakeLists.txt for the cmake-based IDF component
 #
 # If you see an error running this script, edit CMakeLists.txt and add any new source files into your PR
