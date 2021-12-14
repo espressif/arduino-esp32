@@ -29,7 +29,7 @@ This is the preferred and easiest way to install Arduino-ESP32.
 
 .. note::
    Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform 
-   packages using Boards Manager. We have packages available for Windows, macOS, and Linux (x86, amd64, armhf and arm64).
+   packages using Boards Manager. We have packages available for Windows, macOS, and Linux.
 
 To start the installation process using the Boards Managaer, follow these steps:
 
@@ -62,9 +62,6 @@ Windows
 -------
 
 Steps to install Arduino ESP32 support on Windows:
-
-.. note::
-   Tested on Windows 10 32 and 64 bit machines.
 
 **Step 1**
 

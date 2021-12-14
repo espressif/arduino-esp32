@@ -35,7 +35,9 @@ namespace dl
              *                   false: the output will store to a separate memory
              */
             Reshape(std::vector<int> shape, const char *name = "Reshape", bool inplace = false) : Layer(name),
-                                                                                                  output_shape(shape), inplace(inplace)
+                                                                                                  output(NULL),
+                                                                                                  inplace(inplace),
+                                                                                                  output_shape(shape)
             {
             }
 

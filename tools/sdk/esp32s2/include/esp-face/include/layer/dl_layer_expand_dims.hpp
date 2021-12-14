@@ -36,7 +36,10 @@ namespace dl
              *                false: the output will store to a separate memory
              */
             ExpandDims(std::vector<int> axis, const char *name = "ExpandDims", bool inplace = false) : Layer(name),
-                                                                                                       axis(axis), inplace(inplace), output_shape({})
+                                                                                                       output_shape({}),
+                                                                                                       axis(axis), 
+                                                                                                       output(NULL),
+                                                                                                       inplace(inplace) 
             {
             }
 

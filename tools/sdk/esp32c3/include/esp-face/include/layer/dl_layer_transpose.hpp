@@ -33,7 +33,11 @@ namespace dl
              * @param inplace       true: the output will store to input
              *                      false: the output will store to a separate memory
              */
-            Transpose(std::vector<int> perm = {}, const char *name = "Transpose", bool inplace = false) : Layer(name), perm(perm), inplace(inplace), output_shape({})
+            Transpose(std::vector<int> perm = {}, const char *name = "Transpose", bool inplace = false) : Layer(name),
+                                                                                                          output(NULL),
+                                                                                                          inplace(inplace),
+                                                                                                          perm(perm),
+                                                                                                          output_shape({})
             {
             }
 
