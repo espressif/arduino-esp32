@@ -21,17 +21,13 @@
 #include "soc/dac_channel.h"
 #include "driver/dac_common.h"
 
-#define DAC1    DAC_CHANNEL_1_GPIO_NUM
-#define DAC2    DAC_CHANNEL_2_GPIO_NUM
-
 void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 {
-    if(pin < DAC1 || pin > DAC2){
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
         return;//not dac pin
     }
 
-    uint8_t channel = pin - DAC1;
-
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
     dac_output_enable(channel);
     dac_output_voltage(channel, value);
 
@@ -39,11 +35,11 @@ void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 
 void ARDUINO_ISR_ATTR __dacDisable(uint8_t pin)
 {
-    if(pin < DAC1 || pin > DAC2){
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
         return;//not dac pin
     }
 
-    uint8_t channel = pin - DAC1;
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
     dac_output_disable(channel);
 }
 
