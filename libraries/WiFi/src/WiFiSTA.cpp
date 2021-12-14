@@ -92,7 +92,7 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     wifi_config->sta.pmf_cfg.required = pmf_required;
     wifi_config->sta.bssid_set = 0;
     memset(wifi_config->sta.bssid, 0, 6);
-    wifi_config->sta.threshold.authmode = WIFI_AUTH_OPEN;
+    wifi_config->sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config->sta.ssid[0] = 0;
     wifi_config->sta.password[0] = 0;
     if(ssid != NULL && ssid[0] != 0){
