@@ -445,19 +445,19 @@ void TwoWire::flush(void)
     //i2cFlush(num); // cleanup
 }
 
-size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
+size_t TwoWire::requestFrom(uint8_t address, size_t len, bool sendStop)
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop));
 }
   
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
+uint8_t TwoWire::requestFrom(uint8_t address, uint8_t len, uint8_t sendStop)
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop));
 }
 
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t quantity, uint8_t sendStop)
+uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len, uint8_t sendStop)
 {
-    return requestFrom(address, static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+    return requestFrom(address, static_cast<size_t>(len), static_cast<bool>(sendStop));
 }
 
 /* Added to match the Arduino function definition: https://github.com/arduino/ArduinoCore-API/blob/173e8eadced2ad32eeb93bcbd5c49f8d6a055ea6/api/HardwareI2C.h#L39
@@ -468,24 +468,24 @@ uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len, bool stopBit)
     return requestFrom((uint16_t)address, (size_t)len, stopBit);
 }
 
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)
+uint8_t TwoWire::requestFrom(uint8_t address, uint8_t len)
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), true);
+    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), true);
 }
 
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t quantity)
+uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len)
 {
-    return requestFrom(address, static_cast<size_t>(quantity), true);
+    return requestFrom(address, static_cast<size_t>(len), true);
 }
 
-uint8_t TwoWire::requestFrom(int address, int quantity)
+uint8_t TwoWire::requestFrom(int address, int len)
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), true);
+    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), true);
 }
 
-uint8_t TwoWire::requestFrom(int address, int quantity, int sendStop)
+uint8_t TwoWire::requestFrom(int address, int len, int sendStop)
 {
-    return static_cast<uint8_t>(requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop)));
+    return static_cast<uint8_t>(requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop)));
 }
 
 void TwoWire::beginTransmission(int address)
