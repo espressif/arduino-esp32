@@ -12,7 +12,7 @@ class MyProcessor {
 
   public:
     MyProcessor(uint8_t pin, float nanoTicks) {
-      assert((rmt_recv = rmtInit(21, false, RMT_MEM_192)));
+      assert((rmt_recv = rmtInit(21, false, RMT_MEM_64, 1024)));
 
       realNanoTick = rmtSetTick(rmt_recv, nanoTicks);
     };
@@ -62,3 +62,4 @@ void loop()
   Serial.printf("GPIO 4: %08x 5: %08x 6: %08x\n", mp1.val(), mp2.val(), mp3.val());
   delay(500);
 }
+

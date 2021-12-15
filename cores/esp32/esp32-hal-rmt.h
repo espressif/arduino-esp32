@@ -58,7 +58,7 @@ typedef struct {
 *    Initialize the object
 *
 */
-rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize);
+rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_t rxBufferSize);
 
 /**
 *    Sets the clock/divider of timebase the nearest tick to the supplied value in nanoseconds
@@ -71,7 +71,7 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 *     (more data being send while updating buffers in interrupts)
 *
 */
-bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool wait_tx_done);
 
 /**
 *    Loop data up to the reserved memsize continuously

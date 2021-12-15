@@ -18,18 +18,19 @@ void setup()
     Serial.begin(115200);
     events = xEventGroupCreate();
     
-    if ((rmt_send = rmtInit(18, true, RMT_MEM_64)) == NULL)
+    if ((rmt_send = rmtInit(18, true, RMT_MEM_64, 1024)) == NULL)
     {
         Serial.println("init sender failed\n");
     }
-    if ((rmt_recv = rmtInit(21, false, RMT_MEM_192)) == NULL)
+    if ((rmt_recv = rmtInit(21, false, RMT_MEM_64, 1024)) == NULL)
     {
         Serial.println("init receiver failed\n");
     }
 
     float realTick = rmtSetTick(rmt_send, 100);
     printf("real tick set to: %fns\n", realTick);
-
+    // both will keep same tick 
+    realTick = rmtSetTick(rmt_recv, 100);
 }
 
 void loop() 
@@ -45,7 +46,7 @@ void loop()
     rmtReadAsync(rmt_recv, my_data, 100, events, false, 0);
 
     // Send in continous mode
-    rmtWrite(rmt_send, data, 100);
+    rmtWrite(rmt_send, data, 100, false);
 
     // Wait for data
     xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
@@ -60,3 +61,4 @@ void loop()
 
     delay(2000);
 }
+
