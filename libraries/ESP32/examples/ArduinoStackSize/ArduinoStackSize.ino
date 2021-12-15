@@ -6,19 +6,19 @@
     This should be plenty for most general sketches.
 
     There is a way to change the stack size of this task by using
-    SET_LOOPTASK_STACK_SIZE(size);
+    SET_LOOP_TASK_STACK_SIZE(size);
     It will bypass the default stack size of 8KB and allow the user to define a new size.
 
     It is recommend this value to be higher than 8KB, for instance 16KB.
     This increasing may be necessary for the sketches that use deep recursion for instance.
 
-    In this example, you can verify it by changing or just commenting out SET_LOOPTASK_STACK_SIZE();
+    In this example, you can verify it by changing or just commenting out SET_LOOP_TASK_STACK_SIZE();
 */
 
 #define ARDUINO_TASK_STACK_SIZE     (16*1024)       // 16KB
 
 // This sets Arduino Stack Size - comment this line to use default 8K stack size
-SET_LOOPTASK_STACK_SIZE(ARDUINO_TASK_STACK_SIZE);
+SET_LOOP_TASK_STACK_SIZE(ARDUINO_TASK_STACK_SIZE);
 
 void setup() {
   Serial.begin(115200);
