@@ -15,10 +15,9 @@
     In this example, you can verify it by changing or just commenting out SET_LOOP_TASK_STACK_SIZE();
 */
 
-#define ARDUINO_TASK_STACK_SIZE     (16*1024)       // 16KB
 
 // This sets Arduino Stack Size - comment this line to use default 8K stack size
-SET_LOOP_TASK_STACK_SIZE(ARDUINO_TASK_STACK_SIZE);
+SET_LOOP_TASK_STACK_SIZE(16*1024); // 16KB
 
 void setup() {
   Serial.begin(115200);
