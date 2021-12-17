@@ -37,7 +37,13 @@
 #include "soc/periph_defs.h"
 #include "soc/rtc_io_reg.h"
 #define GPIO_FUNC 1
-#else 
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
+#include "esp32c3/rom/gpio.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
+#define USE_ESP_IDF_GPIO 1
+#else
 #define USE_ESP_IDF_GPIO 1
 #endif
 #else // ESP32 Before IDF 4.0
@@ -143,6 +149,29 @@ const DRAM_ATTR esp32_gpioMux_t esp32_gpioMux[SOC_GPIO_PIN_COUNT]={
     {0xb8, -1, -1, -1},//SCL?
     {0xbc, -1, -1, -1},//INPUT ONLY
     {0, -1, -1, -1}
+#elif CONFIG_IDF_TARGET_ESP32C3
+    {0x04, -1, 0, -1}, // ADC1_CH0
+    {0x08, -1, 1, -1}, // ADC1_CH1
+    {0x0c, -1, 2, -1}, // ADC1_CH2 | FSPIQ
+    {0x10, -1, 3, -1}, // ADC1_CH3
+    {0x14, -1, 4, -1}, // MTMS | ADC1_CH4 | FSPIHD
+    {0x18, -1, 5, -1}, // MTDI | ADC2_CH0 | FSPIWP
+    {0x1c, -1, -1, -1}, // MTCK | FSPICLK
+    {0x20, -1, -1, -1}, // MTDO | FSPID
+    {0x24, -1, -1, -1}, //
+    {0x28, -1, -1, -1}, //
+    {0x2c, -1, -1, -1}, // FSPICSO
+    {0x30, -1, -1, -1}, //
+    {0x34, -1, -1, -1}, // SPIHD
+    {0x38, -1, -1, -1}, // SPIWP
+    {0x3c, -1, -1, -1}, // SPICSO
+    {0x40, -1, -1, -1}, // SPICLK
+    {0x44, -1, -1, -1}, // SPID
+    {0x48, -1, -1, -1}, // SPIQ
+    {0x4c, -1, -1, -1}, // USB-
+    {0x50, -1, -1, -1}, // USB+
+    {0x54, -1, -1, -1}, // U0RXD
+    {0x58, -1, -1, -1}, // U0TXD
 #endif
 };
 
@@ -192,7 +221,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 #endif
 	} else if(mode == ANALOG){
 #if !CONFIG_IDF_TARGET_ESP32C3
-		//adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0);
+		adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0);
 #endif
 	} else if(mode >= 0x20 && mode < ANALOG) {//function
 		PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], mode >> 5);
