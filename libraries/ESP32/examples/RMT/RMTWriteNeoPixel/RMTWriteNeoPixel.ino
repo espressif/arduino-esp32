@@ -41,7 +41,7 @@ void setup()
 {
     Serial.begin(115200);
     
-    if ((rmt_send = rmtInit(18, true, RMT_MEM_64, 1024)) == NULL)
+    if ((rmt_send = rmtInit(18, RMT_TX_MODE, RMT_MEM_64)) == NULL)
     {
         Serial.println("init sender failed\n");
     }
@@ -83,8 +83,7 @@ void loop()
     }
 
     // Send the data
-    rmtWrite(rmt_send, led_data, NR_OF_ALL_BITS, false);
+    rmtWrite(rmt_send, led_data, NR_OF_ALL_BITS);
 
     delay(100);
 }
-

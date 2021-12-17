@@ -5,6 +5,17 @@
 
 #include "esp32-hal.h"
 
+#if CONFIG_IDF_TARGET_ESP32C3
+// ESP32 C3 has only 2 channels for RX and 2 for TX, thus MAX RMT_MEM is 128
+#define RMT_TX_PIN 4
+#define RMT_RX_PIN 5
+#define RMT_MEM_RX RMT_MEM_128
+#else 
+#define RMT_TX_PIN 18
+#define RMT_RX_PIN 21
+#define RMT_MEM_RX RMT_MEM_192
+#endif
+
 rmt_data_t my_data[256];
 rmt_data_t data[256];
 
@@ -18,11 +29,11 @@ void setup()
     Serial.begin(115200);
     events = xEventGroupCreate();
     
-    if ((rmt_send = rmtInit(18, true, RMT_MEM_64, 1024)) == NULL)
+    if ((rmt_send = rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_64)) == NULL)
     {
         Serial.println("init sender failed\n");
     }
-    if ((rmt_recv = rmtInit(21, false, RMT_MEM_64, 1024)) == NULL)
+    if ((rmt_recv = rmtInit(RMT_RX_PIN, RMT_RX_MODE, RMT_MEM_RX)) == NULL)
     {
         Serial.println("init receiver failed\n");
     }
@@ -46,7 +57,7 @@ void loop()
     rmtReadAsync(rmt_recv, my_data, 100, events, false, 0);
 
     // Send in continous mode
-    rmtWrite(rmt_send, data, 100, false);
+    rmtWrite(rmt_send, data, 100);
 
     // Wait for data
     xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
@@ -61,4 +72,3 @@ void loop()
 
     delay(2000);
 }
-

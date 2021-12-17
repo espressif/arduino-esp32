@@ -25,6 +25,9 @@ extern "C" {
 #define RMT_FLAG_ERROR       (4)
 #define RMT_FLAGS_ALL        (RMT_FLAG_TX_DONE | RMT_FLAG_RX_DONE | RMT_FLAG_ERROR)
 
+#define RMT_TX_MODE      true
+#define RMT_RX_MODE      false
+
 struct rmt_obj_s;
 
 typedef enum {
@@ -54,11 +57,18 @@ typedef struct {
     };
 } rmt_data_t;
 
+
+/**
+*    Prints object information
+*
+*/
+void _rmtDumpStatus(rmt_obj_t* rmt);
+
 /**
 *    Initialize the object
 *
 */
-rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_t rxBufferSize);
+rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize);
 
 /**
 *    Sets the clock/divider of timebase the nearest tick to the supplied value in nanoseconds
@@ -71,7 +81,7 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 *     (more data being send while updating buffers in interrupts)
 *
 */
-bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool wait_tx_done);
+bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Loop data up to the reserved memsize continuously

@@ -12,59 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
-#include "freertos/semphr.h"
-
 #include "esp32-hal.h"
-#include "esp8266-compat.h"
-#include "soc/gpio_reg.h"
-#include "soc/rmt_struct.h"
-#include "driver/periph_ctrl.h"
-#include "esp_intr_alloc.h"
-
 #include "driver/rmt.h"
 
 /**
  * Internal macros
  */
 
-// USE SOC_RMT_CHANNELS_PER_GROUP
-// LOOK to https://github.com/espressif/esp-idf/blob/master/components/hal/include/hal/rmt_types.h#L32
+#define MAX_CHANNELS                        (SOC_RMT_GROUPS * SOC_RMT_CHANNELS_PER_GROUP)
 
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#define MAX_CHANNELS 8
-#define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 62
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define MAX_CHANNELS 4
-#define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 62
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define MAX_CHANNELS 4
-#define MAX_DATA_PER_CHANNEL 48
-#define MAX_DATA_PER_ITTERATION 46
-#else 
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-#define _ABS(a) (a>0?a:-a)
+#define RMT_TX_CH_START       (0)
+#define RMT_TX_CH_END         (SOC_RMT_TX_CANDIDATES_PER_GROUP - 1)
+#define RMT_RX_CH_START       (SOC_RMT_CHANNELS_PER_GROUP - SOC_RMT_TX_CANDIDATES_PER_GROUP)
+#define RMT_RX_CH_END         (SOC_RMT_CHANNELS_PER_GROUP - 1)
+
 #define _LIMIT(a,b) (a>b?b:a)
-#if CONFIG_IDF_TARGET_ESP32C3
-#define _INT_TX_END(channel) (1<<(channel))
-#define _INT_RX_END(channel) (4<<(channel))
-#define _INT_ERROR(channel)  (16<<(channel))
-#define _INT_THR_EVNT(channel)  (256<<(channel))
-#else
-#define __INT_TX_END     (1)
-#define __INT_RX_END     (2)
-#define __INT_ERROR      (4)
-#define __INT_THR_EVNT   (1<<24)
-
-#define _INT_TX_END(channel) (__INT_TX_END<<(channel*3))
-#define _INT_RX_END(channel) (__INT_RX_END<<(channel*3))
-#define _INT_ERROR(channel)  (__INT_ERROR<<(channel*3))
-#define _INT_THR_EVNT(channel)  ((__INT_THR_EVNT)<<(channel))
-#endif
 
 #if CONFIG_DISABLE_HAL_LOCKS
 # define RMT_MUTEX_LOCK(channel)
@@ -122,35 +84,15 @@
 /**
  * Typedefs for internal stuctures, enums
  */
-typedef enum {
-    E_NO_INTR = 0,
-    E_TX_INTR = 1,
-    E_TXTHR_INTR = 2,
-    E_RX_INTR = 4,
-} intr_mode_t;
-
-typedef enum {
-    E_INACTIVE   = 0,
-    E_FIRST_HALF = 1,
-    E_LAST_DATA  = 2,
-    E_END_TRANS  = 4,
-    E_SET_CONTI =  8,
-} transaction_state_t;
-
 struct rmt_obj_s
 {
     bool allocated;
     EventGroupHandle_t events;
-    int pin;
     int channel;
-    bool tx_not_rx;
     int buffers;
     int data_size;
     uint32_t* data_ptr;
-    intr_mode_t intr_mode;
-    transaction_state_t tx_state;
     rmt_rx_data_cb_t cb;
-    bool data_alloc;
     void * arg;
     TaskHandle_t rxTaskHandle;  
     bool rx_completed;
@@ -161,22 +103,21 @@ struct rmt_obj_s
  */
 static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
     NULL, NULL, NULL, NULL, 
-#if CONFIG_IDF_TARGET_ESP32
+#if MAX_CHANNELS > 4
     NULL, NULL, NULL, NULL
 #endif
 };
 
 static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-//#if CONFIG_IDF_TARGET_ESP32
-#if SOC_RMT_CHANNELS_PER_GROUP > 4
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+#if MAX_CHANNELS > 4
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
 #endif
 };
 
@@ -206,9 +147,7 @@ static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
     return &(g_rmt_objects[from]);
 }
 
-static char tag[] = "rmt_receiver";
-
-static void _rmtDumpStatus(rmt_channel_t channel) 
+void _rmtDumpStatus(rmt_obj_t* rmt) 
 {
    bool loop_en;
    uint8_t div_cnt;
@@ -218,6 +157,7 @@ static void _rmtDumpStatus(rmt_channel_t channel)
    uint16_t idleThreshold;
    uint32_t status;
    rmt_source_clk_t srcClk;
+   rmt_channel_t channel = rmt->channel;
 
 RMT_MUTEX_LOCK(channel);
    rmt_get_tx_loop_mode(channel, &loop_en);
@@ -229,15 +169,15 @@ RMT_MUTEX_LOCK(channel);
    rmt_get_status(channel, &status);
    rmt_get_source_clk(channel, &srcClk);
 
-   ESP_LOGD(tag, "Status for RMT channel %d", channel);
-   ESP_LOGD(tag, "- Loop enabled: %d", loop_en);
-   ESP_LOGD(tag, "- Clock divisor: %d", div_cnt);
-   ESP_LOGD(tag, "- Number of memory blocks: %d", memNum);
-   ESP_LOGD(tag, "- Low power mode: %d", lowPowerMode);
-   ESP_LOGD(tag, "- Memory owner: %s", owner==RMT_MEM_OWNER_TX?"TX":"RX");
-   ESP_LOGD(tag, "- Idle threshold: %d", idleThreshold);
-   ESP_LOGD(tag, "- Status: %d", status);
-   ESP_LOGD(tag, "- Source clock: %s", srcClk==RMT_BASECLK_APB?"APB (80MHz)":"1MHz");
+   log_d("Status for RMT channel %d", channel);
+   log_d("- Loop enabled: %d", loop_en);
+   log_d("- Clock divisor: %d", div_cnt);
+   log_d("- Number of memory blocks: %d", memNum);
+   log_d("- Low power mode: %d", lowPowerMode);
+   log_d("- Memory owner: %s", owner==RMT_MEM_OWNER_TX?"TX":"RX");
+   log_d("- Idle threshold: %d", idleThreshold);
+   log_d("- Status: %d", status);
+   log_d("- Source clock: %s", srcClk==RMT_BASECLK_APB?"APB (80MHz)":"1MHz");
 RMT_MUTEX_UNLOCK(channel);
 }
 
@@ -294,7 +234,7 @@ err:
 }
 
 
-bool _rmtCreateRxTask(rmt_obj_t* rmt) 
+static bool _rmtCreateRxTask(rmt_obj_t* rmt) 
 {
     if (!rmt) {
         return false;
@@ -383,10 +323,6 @@ bool rmtDeinit(rmt_obj_t *rmt)
     size_t to = rmt->buffers + rmt->channel;
     size_t i;
 
-    if (g_rmt_objects[from].data_alloc) {
-        free(g_rmt_objects[from].data_ptr);
-    }
-    
     for (i = from; i < to; i++) {
         g_rmt_objects[i].allocated = false;
     }
@@ -419,7 +355,7 @@ bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     return true;
 }
 
-bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool wait_tx_done)
+bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
     if (!rmt) {
         return false;
@@ -429,7 +365,7 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool wait_tx_done)
     RMT_MUTEX_LOCK(channel);
     ESP_ERROR_CHECK(rmt_tx_stop(channel));
     ESP_ERROR_CHECK(rmt_set_tx_loop_mode(channel, false));
-    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, wait_tx_done));
+    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, false));
     RMT_MUTEX_UNLOCK(channel);
     return true;
 }
@@ -517,7 +453,7 @@ bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag
     int channel = rmt->channel;
 
     // No limit on size with IDF ;-)
-    //if (g_rmt_objects[channel].buffers < size/MAX_DATA_PER_CHANNEL) {
+    //if (g_rmt_objects[channel].buffers < size/SOC_RMT_MEM_WORDS_PER_CHANNEL) {
     //    return false;
     //}
 
@@ -566,7 +502,7 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
     return apb_tick;
 }
 
-rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_t rxBufferSize)
+rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
     int buffers = memsize;
     rmt_obj_t* rmt;
@@ -580,8 +516,17 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_
     // lock
     while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
-    for (i=0; i<MAX_CHANNELS; i++) {
-        for (j=0; j<buffers && i+j < MAX_CHANNELS; j++) {
+    // Some SoC may have fixed channel numbers for TX and RX - example: ESP32C3
+    uint8_t ch_start, ch_end;
+    if (tx_not_rx) {
+        ch_start = RMT_TX_CH_START;
+        ch_end = RMT_TX_CH_END;
+    } else {
+        ch_start = RMT_RX_CH_START;
+        ch_end = RMT_RX_CH_END;
+    }
+    for (i=ch_start; i<=ch_end; i++) {
+        for (j=0; j<buffers && i+j <= ch_end; j++) {
             // if the space is ocupied break and continue on other channel
             if (g_rmt_objects[i+j].allocated) {
                 i += j; // continue searching from latter channel
@@ -605,8 +550,6 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_
 
     xSemaphoreGive(g_rmt_block_lock);
 
-    rmt->pin = pin;
-    rmt->tx_not_rx = tx_not_rx;
     rmt->buffers = buffers;
     rmt->channel = channel;
     rmt->arg = NULL;
@@ -630,17 +573,17 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize, size_
     if (tx_not_rx) {
         rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_TX(pin, channel, buffers);
         ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(config.channel, 0, 0));
-        log_d(" -- Init TX RMT on CH %d *RMT [%x]\n", channel, rmt);
+        ESP_ERROR_CHECK(rmt_driver_install(channel, 0, 0));
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } else {
         rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_RX(pin, channel, buffers);
         ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(config.channel, 1024, 0)); //, rxBufferSize, 0));
-        log_d(" -- Init RX RMT CH %d *RMT [%x]\n", channel, rmt);
+        ESP_ERROR_CHECK(rmt_driver_install(channel, 1024, 0));
+        rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } 
 
     RMT_MUTEX_UNLOCK(channel);
 
     return rmt;
 }
-
