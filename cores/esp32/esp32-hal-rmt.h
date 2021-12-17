@@ -79,9 +79,16 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 /**
 *    Sending data in one-go mode or continual mode
 *     (more data being send while updating buffers in interrupts)
-*
+*    Non-Blocking mode - returns right after executing
 */
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+
+/**
+*    Sending data in one-go mode or continual mode
+*     (more data being send while updating buffers in interrupts)
+*    Blocking mode - only returns when data has been sent
+*/
+bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Loop data up to the reserved memsize continuously

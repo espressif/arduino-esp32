@@ -370,6 +370,21 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     return true;
 }
 
+bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
+{
+    if (!rmt) {
+        return false;
+    }
+    
+    int channel = rmt->channel;
+    RMT_MUTEX_LOCK(channel);
+    ESP_ERROR_CHECK(rmt_tx_stop(channel));
+    ESP_ERROR_CHECK(rmt_set_tx_loop_mode(channel, false));
+    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, true));
+    RMT_MUTEX_UNLOCK(channel);
+    return true;
+}
+
 bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
     if (!rmt) {
