@@ -69,6 +69,19 @@ static uart_t _uart_bus_array[] = {
 
 #endif
 
+// solves issue https://github.com/espressif/arduino-esp32/issues/6032
+// baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
+uint32_t _get_effective_baudrate(uint32_t baudrate) 
+{
+    uint32_t Freq = getCpuFrequencyMhz();
+    if (Freq < 80) {
+        return 80 / Freq * baudrate;
+     }
+    else {
+        return baudrate;
+    }
+}
+
 bool uartIsDriverInstalled(uart_t* uart) 
 {
     if(uart == NULL) {
@@ -121,7 +134,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_LOCK();
 
     uart_config_t uart_config;
-    uart_config.baud_rate = baudrate;
+    uart_config.baud_rate = _get_effective_baudrate(baudrate);
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
     uart_config.stop_bits = (config & 0x30) >> 4;
@@ -307,7 +320,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
+    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
     UART_MUTEX_UNLOCK();
 }
 
