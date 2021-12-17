@@ -18,7 +18,7 @@ namespace dl
          *         - int8_t: stands for operation in int8_t quantize
          */
         template <typename feature_t>
-        class ReLU : public Layer
+        class Relu : public Layer
         {
         private:
             Tensor<feature_t> *output;     /*<! output ptr of relu >*/
@@ -33,7 +33,7 @@ namespace dl
              * @param inplace         true: the output will store to input0
              *                        false: the output will store to a separate memory
              */
-            ReLU(const char *name = "ReLU", bool inplace = false) : Layer(name),
+            Relu(const char *name = "Relu", bool inplace = false) : Layer(name),
                                                                     output(NULL), inplace(inplace), output_shape({})
             {
             }
@@ -42,7 +42,7 @@ namespace dl
              * @brief Destroy the ReLU object
              * 
              */
-            ~ReLU()
+            ~Relu()
             {
                 if ((!this->inplace) && (this->output != NULL))
                 {

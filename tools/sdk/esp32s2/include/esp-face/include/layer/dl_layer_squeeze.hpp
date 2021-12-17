@@ -35,7 +35,11 @@ namespace dl
              * @param inplace   true: the output will store to input0
              *                  false: the output will store to a separate memory
              */
-            Squeeze(int axis = INT32_MAX, const char *name = "Squeeze", bool inplace = false) : Layer(name), axis(axis), inplace(inplace), output_shape({})
+            Squeeze(int axis = INT32_MAX, const char *name = "Squeeze", bool inplace = false) : Layer(name),
+                                                                                                output(NULL),
+                                                                                                inplace(inplace),
+                                                                                                axis(axis),
+                                                                                                output_shape({})
             {
             }
 
