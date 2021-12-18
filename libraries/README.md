@@ -8,9 +8,6 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### AsyncUDP
   Asynchronous task driven UDP datagram client/server
 
-### AzureIoT
-  Library to interact with Microsoft Azure IoT services
-
 ### BLE
   Bluetooth Low Energy v4.2 client/server framework
 
