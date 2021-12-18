@@ -88,11 +88,6 @@ set(LIBRARY_SRCS
   libraries/LittleFS/src/LittleFS.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
-  libraries/RainMaker/src/RMaker.cpp
-  libraries/RainMaker/src/RMakerNode.cpp
-  libraries/RainMaker/src/RMakerParam.cpp
-  libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -180,7 +175,6 @@ set(includedirs
   libraries/LittleFS/src
   libraries/NetBIOS/src
   libraries/Preferences/src
-  libraries/RainMaker/src
   libraries/SD_MMC/src
   libraries/SD/src
   libraries/SimpleBLE/src
@@ -233,10 +227,6 @@ function(maybe_add_component component_name)
     endif()
 endfunction()
 
-if(IDF_TARGET MATCHES "esp32" AND CONFIG_ESP_RMAKER_TASK_STACK)
-    maybe_add_component(esp_rainmaker)
-    maybe_add_component(qrcode)
-endif()
 if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
     maybe_add_component(arduino_tinyusb)
 endif()
