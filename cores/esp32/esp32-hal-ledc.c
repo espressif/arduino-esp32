@@ -70,7 +70,7 @@ double ledcSetup(uint8_t chan, double freq, uint8_t bit_num)
         .freq_hz          = freq,
         .clk_cfg          = LEDC_DEFAULT_CLK
     };
-    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+    ledc_timer_config(&ledc_timer);
     channels_resolution[chan] = bit_num;
 
     return ledc_get_freq(group,timer);
@@ -90,8 +90,8 @@ void ledcWrite(uint8_t chan, uint32_t duty)
         duty = max_duty + 1;
     }
 
-    ESP_ERROR_CHECK(ledc_set_duty(group, channel, duty));
-    ESP_ERROR_CHECK(ledc_update_duty(group, channel));
+    ledc_set_duty(group, channel, duty);
+    ledc_update_duty(group, channel);
 }
 
 uint32_t ledcRead(uint8_t chan)
@@ -168,7 +168,7 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         .duty           = 0,
         .hpoint         = 0
     };
-    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+    ledc_channel_config(&ledc_channel);
 }
 
 void ledcDetachPin(uint8_t pin)
