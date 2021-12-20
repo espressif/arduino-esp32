@@ -327,3 +327,5 @@ Example Code
 ------------
 
 There are a collection of USB device examples on the project GitHub, including Firmware MSC update, USB CDC, HID and composite device.
+
+.. _USB.org: https://www.usb.org/developers

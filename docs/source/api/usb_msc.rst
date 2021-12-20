@@ -107,3 +107,5 @@ FirmwareMSC
 
 .. literalinclude:: ../../../libraries/USB/examples/FirmwareMSC/FirmwareMSC.ino
     :language: arduino
+
+.. _USB.org: https://www.usb.org/developers
