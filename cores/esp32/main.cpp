@@ -33,6 +33,10 @@ void yieldIfNecessary(void){
 
 bool loopTaskWDTEnabled;
 
+__attribute__((weak)) size_t getArduinoLoopTaskStackSize(void) {
+    return ARDUINO_LOOP_STACK_SIZE;
+}
+
 void loopTask(void *pvParameters)
 {
     setup();
@@ -64,7 +68,7 @@ extern "C" void app_main()
 #endif
     loopTaskWDTEnabled = false;
     initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", ARDUINO_LOOP_STACK_SIZE, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
+    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
 }
 
 #endif
