@@ -73,7 +73,7 @@ static uart_t _uart_bus_array[] = {
 // baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
 uint32_t _get_effective_baudrate(uint32_t baudrate) 
 {
-    uint32_t Freq = getCpuFrequencyMhz();
+    uint32_t Freq = getApbFrequency()/1000000;
     if (Freq < 80) {
         return 80 / Freq * baudrate;
      }
