@@ -7,28 +7,32 @@ USB API
 About
 -----
 
-The **Universal Serial Bus** is a widely used peripheral to exchange data between devices. USB was introduced on the ESP32-S2, supporting both device and host mode.
+The **Universal Serial Bus** is a widely used peripheral to exchange data between devices. USB was introduced on the ESP32, supporting both device and host mode.
 
 To learn about the USB, see the `USB.org`_ for developers.
 
 USB as Device
 *************
 
-In the device mode, the ESP32-S2 acts as an USB device, like a mouse or keyboard to be connected to a host device, like your computer or smartphone.
+In the device mode, the ESP32 acts as an USB device, like a mouse or keyboard to be connected to a host device, like your computer or smartphone.
 
 USB as Host
 ***********
 
-The USB host mode, you can connect devices on the ESP32-S2, like external modems, mouse and keyboards.
+The USB host mode, you can connect devices on the ESP32, like external modems, mouse and keyboards.
 
-.. note:: This mode is still under development for the ESP32-S2.
+.. note:: This mode is still under development for the ESP32.
 
 API Description
 ---------------
 
+This is the common USB API description.
+
+For more supported USB classes implementation, see the following sections:
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Classes:
 
    USB CDC <usb_cdc>
    USB MSC <usb_msc>
