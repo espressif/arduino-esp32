@@ -15,7 +15,6 @@
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "driver/ledc.h"
-#include "esp_err.h"
 
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS           (SOC_LEDC_CHANNEL_NUM<<1)
