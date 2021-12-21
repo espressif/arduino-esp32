@@ -10,14 +10,14 @@ namespace dl
     namespace layer
     {
         /**
-         * @brief LeakyReLU(input).
+         * @brief LeakyRelu(input).
          * 
          * @tparam feature_t supports int16_t and int8_t,
          *         - int16_t: stands for operation in int16_t quantize
          *         - int8_t: stands for operation in int8_t quantize
          */
         template <typename feature_t>
-        class LeakyReLU : public Layer
+        class LeakyRelu : public Layer
         {
         private:
             feature_t activation_alpha;    /*<! quantized alpha >*/
@@ -28,7 +28,7 @@ namespace dl
             std::vector<int> output_shape; /*<! output shape of leakyrelu >*/
         public:
             /**
-             * @brief Construct a new LeakyReLU object
+             * @brief Construct a new LeakyRelu object
              * 
              * @param activation_alpha     quantized alpha
              * @param activation_exponent  exponent of quantized alpha
@@ -36,7 +36,7 @@ namespace dl
              * @param inplace              true: the output will store to input0
              *                             false: the output will store to a separate memory
              */
-            LeakyReLU(const int activation_alpha, const int activation_exponent, const char *name = "LeakyReLU", bool inplace = false) : Layer(name), output(NULL), output_shape({})
+            LeakyRelu(const int activation_alpha, const int activation_exponent, const char *name = "LeakyRelu", bool inplace = false) : Layer(name), output(NULL), output_shape({})
             {
                 this->activation_alpha = activation_alpha;
                 this->activation_exponent = activation_exponent;
@@ -44,10 +44,10 @@ namespace dl
             }
 
             /**
-             * @brief Destroy the LeakyReLU object
+             * @brief Destroy the LeakyRelu object
              * 
              */
-            ~LeakyReLU()
+            ~LeakyRelu()
             {
                 if ((!this->inplace) && (this->output != NULL))
                 {
@@ -66,7 +66,7 @@ namespace dl
                 this->output_shape = input.shape;
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
@@ -90,7 +90,7 @@ namespace dl
             /**
              * @brief Get the output 
              * 
-             * @return Tensor<feature_t>& LeakyReLU result
+             * @return Tensor<feature_t>& LeakyRelu result
              */
             Tensor<feature_t> &get_output()
             {
@@ -98,11 +98,11 @@ namespace dl
             }
 
             /**
-             * @brief Call LeakyReLU operation.
+             * @brief Call LeakyRelu operation.
              * 
              * @param input       as an input
              * @param assign_core not effective yet
-             * @return LeakyReLU result
+             * @return LeakyRelu result
              */
             Tensor<feature_t> &call(Tensor<feature_t> &input, const std::vector<int> &assign_core = CONFIG_DEFAULT_ASSIGN_CORE)
             {
@@ -130,7 +130,7 @@ namespace dl
                     {
                         this->output->set_shape(this->output_shape);
                     }
-                    nn::leakyrelu<true>(*this->output, input, this->activation_alpha, this->activation_exponent, assign_core);
+                    nn::leakyrelu(*this->output, input, this->activation_alpha, this->activation_exponent, assign_core);
                     DL_LOG_LAYER_LATENCY_END(this->name, "leakyrelu");
                 }
 
