@@ -45,11 +45,11 @@ static const uint8_t IO36 = 36;
 static const uint8_t IO39 = 39;
 
 // UART interfaces
-static const uint8_t TXD0 = IO1, TX0 = IO1;
-static const uint8_t RXD0 = IO3, RX0 = IO3;
-static const uint8_t TXD2 = IO17, TXD = IO17;
-static const uint8_t RXD2 = IO5, RXD = IO5;
-static const uint8_t TX = TX0;
-static const uint8_t RX = TX0;
+static const uint8_t TXD0 = 1, TX0 = 1;
+static const uint8_t RXD0 = 3, RX0 = 3;
+static const uint8_t TXD2 = 17, TXD = 17;
+static const uint8_t RXD2 = 5, RXD = 5;
+static const uint8_t TX = 1;
+static const uint8_t RX = 3;
 
 #endif /* Pins_Arduino_h */

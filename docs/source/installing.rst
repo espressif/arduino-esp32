@@ -61,6 +61,10 @@ To start the installation process using the Boards Managaer, follow these steps:
 Windows
 -------
 
+.. warning:: Arduino ESP32 core v2.x.x cannot be used on Windows 8.x x86 (32 bits), Windows 7 or earlier. The Windows 32 bits OS is no longer supported by this toolchain.
+
+   The Arduino ESP32 v1.0.6 still works on WIN32. You might want to install python 3.8.x because it is the latest release supported by Windows 7.
+
 Steps to install Arduino ESP32 support on Windows:
 
 **Step 1**
