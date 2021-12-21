@@ -124,10 +124,6 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
 /**
  * Internal variables for driver data
  */
-static  intr_handle_t intr_handle;
-
-static bool periph_enabled = false;
-
 static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 /**
@@ -390,7 +386,6 @@ bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
     if (!rmt) {
         return false;
     }
-    int channel = rmt->channel;
 
     rmtReadAsync(rmt, (rmt_data_t*) data, size, NULL, false, 0);
     return true;
@@ -492,7 +487,7 @@ bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag
 
     // wait for data if requested so
     if (waitForData && eventFlag) {
-        uint32_t flags = xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
+        xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
                             pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
     }
     return true;
@@ -521,8 +516,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
     int buffers = memsize;
     rmt_obj_t* rmt;
-    size_t i;
-    size_t j;
+    size_t i = 0, j = 0;
 
     // create common block mutex for protecting allocs from multiple threads
     if (!g_rmt_block_lock) {
