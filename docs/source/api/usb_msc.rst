@@ -2,8 +2,6 @@
 USB MSC
 #######
 
-.. note:: This feature is only supported by ESP32-S2.
-
 About
 -----
 
@@ -101,6 +99,11 @@ Set the ``onWrite`` callback function.
 .. code-block:: arduino
 
     void onWrite(msc_write_cb cb);
+
+Example Code
+------------
+
+Here is an example of how to use the USB MSC.
 
 FirmwareMSC
 ***********

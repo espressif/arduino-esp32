@@ -7,7 +7,7 @@ About
 
 USB Communications Device Class API. This class is used to enable communication between the host and the device.
 
-This class is often used to enable serial communication and can be used to flash the firmware on the ESP32-S2 without the external USB to Serial chip.
+This class is often used to enable serial communication and can be used to flash the firmware on the ESP32 without the external USB to Serial chip.
 
 APIs
 ****
@@ -181,24 +181,12 @@ This function will return if the reboot is enabled.
 Example Code
 ------------
 
-There are a collection of USB device examples on the project GitHub, including Firmware MSC update, USB CDC, HID and composite device.
+Here is an example of how to use the USB CDC.
 
-HIDVendor
+USBSerial
 *********
 
-.. literalinclude:: ../../../libraries/USB/examples/HIDVendor/HIDVendor.ino
-    :language: arduino
-
-FirmwareMSC
-***********
-
-.. literalinclude:: ../../../libraries/USB/examples/FirmwareMSC/FirmwareMSC.ino
-    :language: arduino
-
-Mouse
-*****
-
-.. literalinclude:: ../../../libraries/USB/examples/Mouse/ButtonMouseControl/ButtonMouseControl.ino
+.. literalinclude:: ../../../libraries/USB/examples/USBSerial/USBSerial.ino
     :language: arduino
 
 .. _USB.org: https://www.usb.org/developers
