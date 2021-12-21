@@ -63,24 +63,13 @@ namespace dl
             {
                 this->output_exponent = input.exponent;
                 this->output_shape = input.shape;
-                int dims = this->output_shape.size();
-                if (this->perm.size() == 0)
+                for (int i = 0; i < this->perm.size(); i++)
                 {
-                    for (int i = dims - 1; i >= 0; i--)
-                    {
-                        this->perm.push_back(i);
-                    }
-                }
-                for (int i = 0; i < dims; ++i)
-                {
-                    if (this->perm[i] < 0)
-                        this->perm[i] = dims + this->perm[i];
                     this->output_shape[i] = input.shape[this->perm[i]];
                 }
-
                 if (!this->inplace)
                 {
-                    if (this->output == NULL)
+                    if (this->output != NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
