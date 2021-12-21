@@ -348,9 +348,9 @@ bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
-    ESP_ERROR_CHECK(rmt_tx_stop(channel));
-    ESP_ERROR_CHECK(rmt_set_tx_loop_mode(channel, true));
-    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, false));
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, true);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
     RMT_MUTEX_UNLOCK(channel);
     return true;
 }
@@ -363,9 +363,9 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
-    ESP_ERROR_CHECK(rmt_tx_stop(channel));
-    ESP_ERROR_CHECK(rmt_set_tx_loop_mode(channel, false));
-    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, false));
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, false);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
     RMT_MUTEX_UNLOCK(channel);
     return true;
 }
@@ -378,9 +378,9 @@ bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
     
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
-    ESP_ERROR_CHECK(rmt_tx_stop(channel));
-    ESP_ERROR_CHECK(rmt_set_tx_loop_mode(channel, false));
-    ESP_ERROR_CHECK(rmt_write_items(channel, (const rmt_item32_t *)data, size, true));
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, false);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, true);
     RMT_MUTEX_UNLOCK(channel);
     return true;
 }
@@ -508,11 +508,11 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
     RMT_MUTEX_LOCK(channel);
     // RMT_BASECLK_REF (1MHz) is not supported in IDF upon Programmming Guide
     // Only APB works
-    ESP_ERROR_CHECK(rmt_set_source_clk(channel, RMT_BASECLK_APB));   
+    rmt_set_source_clk(channel, RMT_BASECLK_APB);   
     int apb_div = _LIMIT(tick/12.5f, 256);
     float apb_tick = 12.5f * apb_div;
     
-    ESP_ERROR_CHECK(rmt_set_clk_div(channel, apb_div & 0xFF));
+    rmt_set_clk_div(channel, apb_div & 0xFF);
     RMT_MUTEX_UNLOCK(channel);
     return apb_tick;
 }
@@ -584,21 +584,30 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 #endif
 
     RMT_MUTEX_LOCK(channel);
+    esp_err_t esp_err_code = ESP_OK;
 
     if (tx_not_rx) {
         rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_TX(pin, channel, buffers);
-        ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(channel, 0, 0));
+        esp_err_code = rmt_config(&config);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_driver_install(channel, 0, 0);
         log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } else {
         rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_RX(pin, channel, buffers);
-        ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(channel, 1024, 0));
-        rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
+        esp_err_code = rmt_config(&config);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_driver_install(channel, 1024, 0);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
         log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } 
 
     RMT_MUTEX_UNLOCK(channel);
 
-    return rmt;
+    if (esp_err_code == ESP_OK) {
+        return rmt;
+    } else {
+        log_e("RMT failed to initilize.");
+        return NULL;
+    }
 }
