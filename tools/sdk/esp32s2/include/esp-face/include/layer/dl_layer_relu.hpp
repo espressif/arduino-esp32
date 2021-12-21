@@ -61,7 +61,7 @@ namespace dl
                 this->output_shape = input.shape;
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }

@@ -68,7 +68,7 @@ namespace dl
 
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
@@ -132,7 +132,7 @@ namespace dl
                     {
                         this->output->set_shape(this->output_shape);
                     }
-                    nn::min2d<true>(*this->output, input0, input1, assign_core);
+                    nn::min2d(*this->output, input0, input1, assign_core);
                     DL_LOG_LAYER_LATENCY_END(this->name, "min2d");
                 }
 

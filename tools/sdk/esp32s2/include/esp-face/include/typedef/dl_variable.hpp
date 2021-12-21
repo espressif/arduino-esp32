@@ -396,9 +396,6 @@ namespace dl
          * @brief  print all the element of the Tensor.
          * 
          * @param message to print  
-         * @param with_padding one of true or false,
-         *                     - true: the padding element will also be ed
-         *                     - false: the padding element will not be ed
          */
         void print_all(const char *message = "")
         {
