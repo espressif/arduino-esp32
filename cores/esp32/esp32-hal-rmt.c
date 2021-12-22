@@ -515,9 +515,9 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
 rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
     int buffers = memsize;
-    rmt_obj_t* rmt;
-    size_t i;
-    size_t j;
+    rmt_obj_t* rmt = NULL;
+    size_t i = 0;
+    size_t j = 0;
 
     // create common block mutex for protecting allocs from multiple threads
     if (!g_rmt_block_lock) {
@@ -536,7 +536,6 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
         ch_end = RMT_RX_CH_END;
     }
     for (i=ch_start; i<=ch_end; i++) {
-        j = 0;  // fixes compiling option -Werror=maybe-uninitialized
         for (j=0; j<buffers && i+j <= ch_end; j++) {
             // if the space is ocupied break and continue on other channel
             if (g_rmt_objects[i+j].allocated) {
