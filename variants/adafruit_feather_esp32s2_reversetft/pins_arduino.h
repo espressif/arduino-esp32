@@ -5,9 +5,9 @@
 
 
 #define USB_VID            0x239A
-#define USB_PID            0x810F
+#define USB_PID            0x80ED
 #define USB_MANUFACTURER   "Adafruit"
-#define USB_PRODUCT        "Feather ESP32-S2 TFT"
+#define USB_PRODUCT        "Feather ESP32-S2 Reverse TFT"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
 
@@ -23,19 +23,19 @@
 
 #define PIN_NEOPIXEL        33
 #define NEOPIXEL_NUM        1     // number of neopixels
-#define NEOPIXEL_POWER      34    // power pin
+#define NEOPIXEL_POWER      21    // power pin
 #define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
 
-#define TFT_I2C_POWER  21
-#define TFT_CS          7
-#define TFT_RST        40
-#define TFT_DC         39
+#define TFT_I2C_POWER  7
+#define TFT_CS         42
+#define TFT_RST        41
+#define TFT_DC         40
 #define TFT_BACKLITE   45
 
-static const uint8_t SDA = 42;
-static const uint8_t SCL = 41;
+static const uint8_t SDA = 3;
+static const uint8_t SCL = 4;
 
-static const uint8_t SS    = 7;
+static const uint8_t SS    = 42;
 static const uint8_t MOSI  = 35;
 static const uint8_t SCK   = 36;
 static const uint8_t MISO  = 37;
@@ -47,11 +47,11 @@ static const uint8_t A3 = 15;
 static const uint8_t A4 = 14;
 static const uint8_t A5 = 8;
 
-static const uint8_t TX = 1;
-static const uint8_t RX = 2;
+static const uint8_t TX = 39;
+static const uint8_t RX = 38;
+static const uint8_t TX1 = 39;
+static const uint8_t RX1 = 38;
 
-static const uint8_t T1 = 1;
-static const uint8_t T2 = 2;
 static const uint8_t T5 = 5;
 static const uint8_t T6 = 6;
 static const uint8_t T8 = 8;

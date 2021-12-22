@@ -34,8 +34,8 @@ static const uint8_t SCL1 = 40;
 
 static const uint8_t SS    = 42;
 static const uint8_t MOSI  = 35;
-static const uint8_t SCK   = 34;
-static const uint8_t MISO  = 33;
+static const uint8_t SCK   = 36;
+static const uint8_t MISO  = 37;
 
 static const uint8_t A0 = 18;
 static const uint8_t A1 = 17;
@@ -48,6 +48,8 @@ static const uint8_t A7 = 16;
 
 static const uint8_t TX = 5;
 static const uint8_t RX = 16;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t T5 = 5;
 static const uint8_t T6 = 6;

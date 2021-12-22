@@ -510,4 +510,3 @@ extern int digitalRead(uint8_t pin) __attribute__ ((weak, alias("__digitalRead")
 extern void attachInterrupt(uint8_t pin, voidFuncPtr handler, int mode) __attribute__ ((weak, alias("__attachInterrupt")));
 extern void attachInterruptArg(uint8_t pin, voidFuncPtrArg handler, void * arg, int mode) __attribute__ ((weak, alias("__attachInterruptArg")));
 extern void detachInterrupt(uint8_t pin) __attribute__ ((weak, alias("__detachInterrupt")));
-
