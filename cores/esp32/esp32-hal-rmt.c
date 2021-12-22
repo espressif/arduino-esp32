@@ -535,8 +535,8 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
         ch_start = RMT_RX_CH_START;
         ch_end = RMT_RX_CH_END;
     }
+    j = 0;  // fixes compiling option -Werror=maybe-uninitialized
     for (i=ch_start; i<=ch_end; i++) {
-        j = 0;  // fixes compiling option -Werror=maybe-uninitialized
         for (j=0; j<buffers && i+j <= ch_end; j++) {
             // if the space is ocupied break and continue on other channel
             if (g_rmt_objects[i+j].allocated) {
