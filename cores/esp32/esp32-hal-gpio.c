@@ -221,7 +221,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 #endif
 	} else if(mode == ANALOG){
 #if !CONFIG_IDF_TARGET_ESP32C3
-		adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0);
+		//adc_gpio_init(ADC_UNIT_1, ADC_CHANNEL_0);
 #endif
 	} else if(mode >= 0x20 && mode < ANALOG) {//function
 		PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], mode >> 5);
