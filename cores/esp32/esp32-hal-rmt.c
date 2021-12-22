@@ -124,10 +124,6 @@ static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
 /**
  * Internal variables for driver data
  */
-static  intr_handle_t intr_handle;
-
-static bool periph_enabled = false;
-
 static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 /**
@@ -188,21 +184,21 @@ static void _rmtRxTask(void *args) {
     rmt_item32_t *data = NULL;
 
     if (!rmt) {
-        log_e(" -- Inavalid Argument \n");
+        log_e(" -- Inavalid Argument");
         goto err;
     }
 
     int channel = rmt->channel;
     rmt_get_ringbuf_handle(channel, &rb);
     if (!rb) {
-        log_e(" -- Failed to get RMT ringbuffer handle\n");
+        log_e(" -- Failed to get RMT ringbuffer handle");
         goto err;  
     }
     
     for(;;) {
         data = (rmt_item32_t *) xRingbufferReceive(rb, &rmt_len, portMAX_DELAY);
         if (data) {
-            log_d(" -- Got %d bytes on RX Ringbuffer - CH %d\n", rmt_len, rmt->channel);
+            log_d(" -- Got %d bytes on RX Ringbuffer - CH %d", rmt_len, rmt->channel);
             rmt->rx_completed = true;  // used in rmtReceiveCompleted()
             // callback
             if (rmt->cb) {
@@ -390,7 +386,6 @@ bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
     if (!rmt) {
         return false;
     }
-    int channel = rmt->channel;
 
     rmtReadAsync(rmt, (rmt_data_t*) data, size, NULL, false, 0);
     return true;
@@ -492,7 +487,7 @@ bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag
 
     // wait for data if requested so
     if (waitForData && eventFlag) {
-        uint32_t flags = xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
+        xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
                             pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
     }
     return true;
@@ -520,9 +515,9 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
 rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
     int buffers = memsize;
-    rmt_obj_t* rmt;
-    size_t i;
-    size_t j;
+    rmt_obj_t* rmt = NULL;
+    size_t i = 0;
+    size_t j = 0;
 
     // create common block mutex for protecting allocs from multiple threads
     if (!g_rmt_block_lock) {
@@ -555,7 +550,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     }
     if (i == MAX_CHANNELS || i+j > MAX_CHANNELS || j != buffers)  {
         xSemaphoreGive(g_rmt_block_lock);
-        log_e("rmInit Failed - not enough channels\n");
+        log_e("rmInit Failed - not enough channels");
         return NULL;
     }
     
@@ -591,7 +586,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
         esp_err_code = rmt_config(&config);
         if (esp_err_code == ESP_OK) 
             esp_err_code = rmt_driver_install(channel, 0, 0);
-        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } else {
         rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_RX(pin, channel, buffers);
         esp_err_code = rmt_config(&config);
@@ -599,7 +594,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
             esp_err_code = rmt_driver_install(channel, 1024, 0);
         if (esp_err_code == ESP_OK) 
             esp_err_code = rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
-        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d\n", tx_not_rx?"TX":"RX", channel, buffers, pin);
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } 
 
     RMT_MUTEX_UNLOCK(channel);
