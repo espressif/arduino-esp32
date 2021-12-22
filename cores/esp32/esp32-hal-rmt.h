@@ -25,6 +25,9 @@ extern "C" {
 #define RMT_FLAG_ERROR       (4)
 #define RMT_FLAGS_ALL        (RMT_FLAG_TX_DONE | RMT_FLAG_RX_DONE | RMT_FLAG_ERROR)
 
+#define RMT_TX_MODE      true
+#define RMT_RX_MODE      false
+
 struct rmt_obj_s;
 
 typedef enum {
@@ -54,6 +57,13 @@ typedef struct {
     };
 } rmt_data_t;
 
+
+/**
+*    Prints object information
+*
+*/
+void _rmtDumpStatus(rmt_obj_t* rmt);
+
 /**
 *    Initialize the object
 *
@@ -69,9 +79,16 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 /**
 *    Sending data in one-go mode or continual mode
 *     (more data being send while updating buffers in interrupts)
-*
+*    Non-Blocking mode - returns right after executing
 */
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
+
+/**
+*    Sending data in one-go mode or continual mode
+*     (more data being send while updating buffers in interrupts)
+*    Blocking mode - only returns when data has been sent
+*/
+bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Loop data up to the reserved memsize continuously

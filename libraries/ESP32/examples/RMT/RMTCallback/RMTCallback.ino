@@ -12,7 +12,7 @@ class MyProcessor {
 
   public:
     MyProcessor(uint8_t pin, float nanoTicks) {
-      assert((rmt_recv = rmtInit(21, false, RMT_MEM_192)));
+      assert((rmt_recv = rmtInit(21, RMT_RX_MODE, RMT_MEM_192)));
 
       realNanoTick = rmtSetTick(rmt_recv, nanoTicks);
     };

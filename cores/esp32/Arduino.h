@@ -179,6 +179,9 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 
 #define word(...) makeWord(__VA_ARGS__)
 
+size_t getArduinoLoopTaskStackSize(void);
+#define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
+    
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 

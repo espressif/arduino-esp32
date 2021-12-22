@@ -57,10 +57,10 @@ namespace dl
                       const char *name = "AvgPool2D") : Layer(name),
                                                         output_exponent(output_exponent),
                                                         filter_shape(filter_shape),
-                                                        padding_type(padding_type),
-                                                        padding(padding),
                                                         stride_y(stride_y),
                                                         stride_x(stride_x),
+                                                        padding_type(padding_type),
+                                                        padding(padding),
                                                         output_shape({})
             {
                 this->output = new Tensor<feature_t>;

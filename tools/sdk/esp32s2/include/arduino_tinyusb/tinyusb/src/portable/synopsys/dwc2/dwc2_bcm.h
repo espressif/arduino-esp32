@@ -34,7 +34,7 @@
 #include "broadcom/interrupts.h"
 #include "broadcom/caches.h"
 
-#define DWC2_REG_BASE       0xFE980000UL
+#define DWC2_REG_BASE       USB_OTG_GLOBAL_BASE
 #define DWC2_EP_MAX         8
 #define DWC2_EP_FIFO_SIZE   4096
 
