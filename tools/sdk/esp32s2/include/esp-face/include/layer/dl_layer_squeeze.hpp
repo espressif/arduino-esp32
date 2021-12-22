@@ -66,7 +66,7 @@ namespace dl
                 this->output_exponent = input.exponent;
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
@@ -78,7 +78,6 @@ namespace dl
                 else
                 {
                     this->output = &input;
-                    this->output->set_shape(input.shape);
                     this->output->squeeze(this->axis);
                 }
                 this->output_shape = this->output->shape;

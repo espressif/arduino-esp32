@@ -71,7 +71,7 @@ namespace dl
                 this->output_shape = input0.shape;
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
@@ -120,12 +120,12 @@ namespace dl
                     {
                         this->output->set_shape(this->output_shape);
                     }
-                    this->output.malloc_element();
+                    this->output->malloc_element();
                     this->output->set_exponent(input0.exponent);
                     DL_LOG_LAYER_LATENCY_END(this->name, "apply");
 
                     DL_LOG_LAYER_LATENCY_START();
-                    nn::sub2d(this->output, input0, input1, this->activation, assign_core);
+                    nn::sub2d(*this->output, input0, input1, this->activation, assign_core);
                     DL_LOG_LAYER_LATENCY_END(this->name, "sub2d");
                 }
                 else
@@ -135,7 +135,7 @@ namespace dl
                     {
                         this->output->set_shape(this->output_shape);
                     }
-                    nn::sub2d<true>(this->output, input0, input1, this->activation, assign_core, this->output_exponent);
+                    nn::sub2d(*this->output, input0, input1, this->activation, assign_core, this->output_exponent);
                     DL_LOG_LAYER_LATENCY_END(this->name, "sub2d");
                 }
                 return *this->output;
