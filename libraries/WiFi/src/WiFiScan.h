@@ -31,7 +31,7 @@ class WiFiScanClass
 
 public:
 
-    int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300);
+    int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0);
 
     int16_t scanComplete();
     void scanDelete();

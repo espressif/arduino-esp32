@@ -274,18 +274,16 @@ bool WiFiClientSecure::verify(const char* fp, const char* domain_name)
 }
 
 char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
-  static char *dest = nullptr;
-  if(dest) {
-      free(dest);
-  }
-  dest = (char*)malloc(size);
+  char *dest = (char*)malloc(size+1);
   if (!dest) {
     return nullptr;
   }
   if (size != stream.readBytes(dest, size)) {
     free(dest);
     dest = nullptr;
+    return nullptr;
   }
+  dest[size] = '\0';
   return dest;
 }
 

@@ -37,8 +37,9 @@
 #include "WiFiClient.h"
 #include "WiFiServer.h"
 #include "WiFiUdp.h"
+#include "WiFiProv.h"
 
-class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass
+class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass, public WiFiProvClass
 {
 public:
     using WiFiGenericClass::channel;
@@ -54,8 +55,7 @@ public:
     using WiFiScanClass::BSSID;
     using WiFiScanClass::BSSIDstr;
     using WiFiScanClass::channel;
-
-public:
+public:  
     void printDiag(Print& dest);
     friend class WiFiClient;
     friend class WiFiServer;

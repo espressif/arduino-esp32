@@ -6,7 +6,7 @@ based WPS entry to get your ESP connected to your WiFi router.
 
 Hardware Requirements
 ========================
-ESP32 and a Router having atleast one WPS functionality
+ESP32 and a Router having WPS functionality
 
 This code is under Public Domain License.
 
@@ -63,7 +63,7 @@ void WiFiEvent(WiFiEvent_t event, system_event_info_t info){
       WiFi.reconnect();
       break;
     case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
-      Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
+      Serial.println("WPS Successful, stopping WPS and connecting to: " + String(WiFi.SSID()));
       esp_wifi_wps_disable();
       delay(10);
       WiFi.begin();
@@ -75,7 +75,7 @@ void WiFiEvent(WiFiEvent_t event, system_event_info_t info){
       esp_wifi_wps_start(0);
       break;
     case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
-      Serial.println("WPS Timedout, retrying");
+      Serial.println("WPS Timeout, retrying");
       esp_wifi_wps_disable();
       esp_wifi_wps_enable(&config);
       esp_wifi_wps_start(0);

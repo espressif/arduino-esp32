@@ -54,6 +54,7 @@ typedef uint8_t esp_ble_key_type_t;
 #define ESP_LE_AUTH_NO_BOND                 0x00                                     /*!< 0*/                     /* relate to BTM_LE_AUTH_NO_BOND in stack/btm_api.h */
 #define ESP_LE_AUTH_BOND                    0x01                                     /*!< 1 << 0 */               /* relate to BTM_LE_AUTH_BOND in stack/btm_api.h */
 #define ESP_LE_AUTH_REQ_MITM                (1 << 2)                                 /*!< 1 << 2 */               /* relate to BTM_LE_AUTH_REQ_MITM in stack/btm_api.h */
+#define ESP_LE_AUTH_REQ_BOND_MITM           (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_MITM)/*!< 0101*/
 #define ESP_LE_AUTH_REQ_SC_ONLY             (1 << 3)                                 /*!< 1 << 3 */               /* relate to BTM_LE_AUTH_REQ_SC_ONLY in stack/btm_api.h */
 #define ESP_LE_AUTH_REQ_SC_BOND             (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_SC_ONLY)            /*!< 1001 */  /* relate to BTM_LE_AUTH_REQ_SC_BOND in stack/btm_api.h */
 #define ESP_LE_AUTH_REQ_SC_MITM             (ESP_LE_AUTH_REQ_MITM | ESP_LE_AUTH_REQ_SC_ONLY)        /*!< 1100 */  /* relate to BTM_LE_AUTH_REQ_SC_MITM in stack/btm_api.h */
@@ -62,6 +63,9 @@ typedef uint8_t   esp_ble_auth_req_t;         /*!< combination of the above bit 
 
 #define ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_DISABLE 0
 #define ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_ENABLE  1
+
+#define ESP_BLE_OOB_DISABLE 0
+#define ESP_BLE_OOB_ENABLE  1
 
 /* relate to BTM_IO_CAP_xxx in stack/btm_api.h */
 #define ESP_IO_CAP_OUT                      0   /*!< DisplayOnly */         /* relate to BTM_IO_CAP_OUT in stack/btm_api.h */
@@ -263,14 +267,26 @@ typedef enum {
 
 typedef enum {
     ESP_BLE_SM_PASSKEY = 0,
+    /* Authentication requirements of local device */
     ESP_BLE_SM_AUTHEN_REQ_MODE,
+    /* The IO capability of local device */
     ESP_BLE_SM_IOCAP_MODE,
+    /* Initiator Key Distribution/Generation */
     ESP_BLE_SM_SET_INIT_KEY,
+    /* Responder Key Distribution/Generation */
     ESP_BLE_SM_SET_RSP_KEY,
+    /* Maximum Encryption key size to support */
     ESP_BLE_SM_MAX_KEY_SIZE,
+    /* Minimum Encryption key size requirement from Peer */
+    ESP_BLE_SM_MIN_KEY_SIZE,
+    /* Set static Passkey */
     ESP_BLE_SM_SET_STATIC_PASSKEY,
+    /* Reset static Passkey */
     ESP_BLE_SM_CLEAR_STATIC_PASSKEY,
+    /* Accept only specified SMP Authentication requirement */
     ESP_BLE_SM_ONLY_ACCEPT_SPECIFIED_SEC_AUTH,
+    /* Enable/Disable OOB support */
+    ESP_BLE_SM_OOB_SUPPORT,
     ESP_BLE_SM_MAX_PARAM,
 } esp_ble_sm_param_t;
 
@@ -584,7 +600,7 @@ typedef enum {
 typedef enum {
     ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_ADV_ADDR       = 0,  /*!< BLE advertising address , device info will be added into ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_ADDR_LIST */
     ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_LINK_ID,        /*!< BLE mesh link ID, it is for BLE mesh, device info will be added into ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_MESH_LINK_ID_LIST */
-    ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_BEACON_TYPE,    /*!< BLE mesh beacon AD type, the format is | Len | 0x2B | Beacon Type | Beacon Data | */     
+    ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_BEACON_TYPE,    /*!< BLE mesh beacon AD type, the format is | Len | 0x2B | Beacon Type | Beacon Data | */
     ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_PROV_SRV_ADV,   /*!< BLE mesh provisioning service uuid, the format is | 0x02 | 0x01 | flags | 0x03 | 0x03 | 0x1827 | .... |` */
     ESP_BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_PROXY_SRV_ADV,  /*!< BLE mesh adv with proxy service uuid, the format is | 0x02 | 0x01 | flags | 0x03 | 0x03 | 0x1828 | .... |` */
 } esp_ble_duplicate_exceptional_info_type_t;
@@ -1145,7 +1161,7 @@ esp_err_t esp_ble_passkey_reply(esp_bd_addr_t bd_addr, bool accept, uint32_t pas
 
 
 /**
-* @brief           Reply the confirm value to the peer device in the legacy connection stage.
+* @brief           Reply the confirm value to the peer device in the secure connection stage.
 *
 * @param[in]       bd_addr : BD address of the peer device
 * @param[in]       accept : numbers to compare are the same or different.
@@ -1193,6 +1209,20 @@ int esp_ble_get_bond_device_num(void);
 *
 */
 esp_err_t esp_ble_get_bond_device_list(int *dev_num, esp_ble_bond_dev_t *dev_list);
+
+/**
+* @brief           This function is called to provide the OOB data for
+*                  SMP in response to ESP_GAP_BLE_OOB_REQ_EVT
+*
+* @param[in]       bd_addr: BD address of the peer device.
+* @param[in]       TK: TK value, the TK value shall be a 128-bit random number
+* @param[in]       len: length of tk, should always be 128-bit
+*
+* @return          - ESP_OK : success
+*                  - other  : failed
+*
+*/
+esp_err_t esp_ble_oob_req_reply(esp_bd_addr_t bd_addr, uint8_t *TK, uint8_t len);
 
 #endif /* #if (SMP_INCLUDED == TRUE) */
 

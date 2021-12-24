@@ -65,6 +65,14 @@ bool btStop(){
         while(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED){
+        if (esp_bt_controller_deinit()) {
+			log_e("BT deint failed");
+			return false;
+		}
+		vTaskDelay(1);
+		if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_IDLE) {			
+			return false;		
+		}
         return true;
     }
     log_e("BT Stop failed");

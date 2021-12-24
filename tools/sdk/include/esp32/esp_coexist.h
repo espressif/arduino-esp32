@@ -32,6 +32,22 @@ typedef enum {
     ESP_COEX_PREFER_NUM,            /*!< Prefer value numbers */
 } esp_coex_prefer_t;
 
+ /**
+ * @brief coex status type
+ */
+typedef enum {
+    ESP_COEX_ST_TYPE_WIFI = 0,
+    ESP_COEX_ST_TYPE_BLE,
+    ESP_COEX_ST_TYPE_BT,
+} esp_coex_status_type_t;
+
+#define ESP_COEX_BLE_ST_MESH_CONFIG        0x08
+#define ESP_COEX_BLE_ST_MESH_TRAFFIC       0x10
+#define ESP_COEX_BLE_ST_MESH_STANDBY       0x20
+
+#define ESP_COEX_BT_ST_A2DP_STREAMING      0x10
+#define ESP_COEX_BT_ST_A2DP_PAUSED         0x20
+
 /**
  * @brief Get software coexist version string
  *
@@ -40,7 +56,8 @@ typedef enum {
 const char *esp_coex_version_get(void);
 
 /**
- * @brief Set coexist preference of performance
+ * @deprecated Use esp_coex_status_bit_set() and esp_coex_status_bit_clear() instead.
+ *  Set coexist preference of performance
  *  For example, if prefer to bluetooth, then it will make A2DP(play audio via classic bt)
  *  more smooth while wifi is runnning something.
  *  If prefer to wifi, it will do similar things as prefer to bluetooth.
@@ -50,6 +67,37 @@ const char *esp_coex_version_get(void);
  *  @return : ESP_OK - success, other - failed
  */
 esp_err_t esp_coex_preference_set(esp_coex_prefer_t prefer);
+
+/**
+ * @brief Set coex schm status
+ * @param type : WIFI/BLE/BT
+ * @param status : WIFI/BLE/BT STATUS
+ * @return : ESP_OK - success, other - failed
+ */
+esp_err_t esp_coex_status_bit_set(esp_coex_status_type_t type, uint32_t status);
+
+/**
+ * @brief Clear coex schm status
+ * @param type : WIFI/BLE/BT
+ * @param status : WIFI/BLE/BT STATUS
+ * @return : ESP_OK - success, other - failed
+ */
+esp_err_t esp_coex_status_bit_clear(esp_coex_status_type_t type, uint32_t status);
+
+/**
+ * @brief Enable BLE connection dynamic priority
+ * @attention If the parameter is true, BLE connection performance will be better but WiFi performance
+ *            will be poorer. And vice versa.
+ * @param low_interval : true - Increase BLE connection priority to be higher than WiFi's when BLE
+ *                              connection interval is less or equal than 50 ms. The default value
+ *                              is false.
+ *                       false - not increace
+ * @param high_interval : true - Increase BLE connection priority to be higher than WiFi's when BLE
+ *                               connection interval is more than 50 ms. The default value is true.
+ *                        false - not increace
+ * @return : ESP_OK - success, other - failed
+ */
+esp_err_t esp_coex_ble_conn_dynamic_prio_enable(bool low_interval, bool high_interval);
 
 #ifdef __cplusplus
 }

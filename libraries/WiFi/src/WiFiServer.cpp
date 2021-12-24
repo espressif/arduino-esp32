@@ -63,6 +63,10 @@ WiFiClient WiFiServer::available(){
 }
 
 void WiFiServer::begin(uint16_t port){
+    begin(port, 1);
+}
+
+void WiFiServer::begin(uint16_t port, int enable){
   if(_listening)
     return;
   if(port){
@@ -72,6 +76,7 @@ void WiFiServer::begin(uint16_t port){
   sockfd = socket(AF_INET , SOCK_STREAM, 0);
   if (sockfd < 0)
     return;
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(_port);

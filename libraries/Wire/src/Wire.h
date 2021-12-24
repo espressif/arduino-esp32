@@ -67,6 +67,10 @@ protected:
 public:
     TwoWire(uint8_t bus_num);
     ~TwoWire();
+    
+    //call setPins() first, so that begin() can be called without arguments from libraries
+    bool setPins(int sda, int scl);
+    
     bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
       // calling will attemp to recover hung bus
 

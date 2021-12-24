@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define ESP_WIFI_OS_ADAPTER_VERSION  0x00000002
+#define ESP_WIFI_OS_ADAPTER_VERSION  0x00000004
 #define ESP_WIFI_OS_ADAPTER_MAGIC    0xDEADBEAF
 
 #define OSI_FUNCS_TIME_BLOCKING      0xffffffff
@@ -78,6 +78,8 @@ typedef struct {
     void (* _dport_access_stall_other_cpu_end_wrap)(void);
     int32_t (* _phy_rf_deinit)(uint32_t module);
     void (* _phy_load_cal_and_init)(uint32_t module);
+    void (* _phy_common_clock_enable)(void);
+    void (* _phy_common_clock_disable)(void);
     int32_t (* _read_mac)(uint8_t* mac, uint32_t type);
     void (* _timer_arm)(void *timer, uint32_t tmout, bool repeat);
     void (* _timer_disarm)(void *timer);
@@ -103,6 +105,7 @@ typedef struct {
     int32_t (* _get_time)(void *t);
     unsigned long (* _random)(void);
     void (* _log_write)(uint32_t level, const char* tag, const char* format, ...);
+    void (* _log_writev)(uint32_t level, const char* tag, const char* format, va_list args);
     uint32_t (* _log_timestamp)(void);
     void * (* _malloc_internal)(size_t size);
     void * (* _realloc_internal)(void *ptr, size_t size);
@@ -121,6 +124,7 @@ typedef struct {
     void (* _sc_ack_send)(void *param);
     void (* _sc_ack_send_stop)(void);
     uint32_t (* _coex_status_get)(void);
+    void (* _coex_condition_set)(uint32_t type, bool dissatisfy);
     int32_t (* _coex_wifi_request)(uint32_t event, uint32_t latency, uint32_t duration);
     int32_t (* _coex_wifi_release)(uint32_t event);
     int32_t _magic;

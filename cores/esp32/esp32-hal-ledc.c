@@ -28,7 +28,7 @@
 #else
 #define LEDC_MUTEX_LOCK()    do {} while (xSemaphoreTake(_ledc_sys_lock, portMAX_DELAY) != pdPASS)
 #define LEDC_MUTEX_UNLOCK()  xSemaphoreGive(_ledc_sys_lock)
-xSemaphoreHandle _ledc_sys_lock;
+xSemaphoreHandle _ledc_sys_lock = NULL;
 #endif
 
 /*
@@ -55,27 +55,35 @@ xSemaphoreHandle _ledc_sys_lock;
 
 static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
     if(ev_type == APB_AFTER_CHANGE && old_apb != new_apb){
-        uint32_t iarg = (uint32_t)arg;
-        uint8_t chan = iarg;
-        uint8_t group=(chan/8), timer=((chan/2)%4);
+        uint16_t iarg = *(uint16_t*)arg;
+        uint8_t chan = 0;
         old_apb /= 1000000;
         new_apb /= 1000000;
-        if(LEDC_TIMER(group, timer).conf.tick_sel){
-            LEDC_MUTEX_LOCK();
-            uint32_t old_div = LEDC_TIMER(group, timer).conf.clock_divider;
-            uint32_t div_num = (new_apb * old_div) / old_apb;
-            if(div_num > LEDC_DIV_NUM_HSTIMER0_V){
-                new_apb = REF_CLK_FREQ / 1000000;
-                div_num = (new_apb * old_div) / old_apb;
-                if(div_num > LEDC_DIV_NUM_HSTIMER0_V) {
-                    div_num = LEDC_DIV_NUM_HSTIMER0_V;//lowest clock possible
+        while(iarg){ // run though all active channels, adjusting timing configurations
+            if(iarg & 1) {// this channel is active
+                uint8_t group=(chan/8), timer=((chan/2)%4);
+                if(LEDC_TIMER(group, timer).conf.tick_sel){
+                    LEDC_MUTEX_LOCK();
+                    uint32_t old_div = LEDC_TIMER(group, timer).conf.clock_divider;
+                    uint32_t div_num = (new_apb * old_div) / old_apb;
+                    if(div_num > LEDC_DIV_NUM_HSTIMER0_V){
+                        div_num = ((REF_CLK_FREQ /1000000) * old_div) / old_apb;
+                        if(div_num > LEDC_DIV_NUM_HSTIMER0_V) {
+                            div_num = LEDC_DIV_NUM_HSTIMER0_V;//lowest clock possible
+                        }
+                        LEDC_TIMER(group, timer).conf.tick_sel = 0;
+                    } else if(div_num < 256) {
+                        div_num = 256;//highest clock possible
+                    }
+                    LEDC_TIMER(group, timer).conf.clock_divider = div_num;
+                    LEDC_MUTEX_UNLOCK();
                 }
-                LEDC_TIMER(group, timer).conf.tick_sel = 0;
-            } else if(div_num < 256) {
-                div_num = 256;//highest clock possible
+                else {
+                    log_d("using REF_CLK chan=%d",chan);
+                }
             }
-            LEDC_TIMER(group, timer).conf.clock_divider = div_num;
-            LEDC_MUTEX_UNLOCK();
+            iarg = iarg >> 1;
+            chan++;
         }
     }
 }
@@ -85,11 +93,14 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
 {
     uint8_t group=(chan/8), timer=((chan/2)%4);
     static bool tHasStarted = false;
+    static uint16_t _activeChannels = 0;
     if(!tHasStarted) {
         tHasStarted = true;
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_LEDC_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_LEDC_RST);
         LEDC.conf.apb_clk_sel = 1;//LS use apb clock
+        addApbChangeCallback((void*)&_activeChannels, _on_apb_change);
+
 #if !CONFIG_DISABLE_HAL_LOCKS
         _ledc_sys_lock = xSemaphoreCreateMutex();
 #endif
@@ -105,8 +116,7 @@ static void _ledcSetupTimer(uint8_t chan, uint32_t div_num, uint8_t bit_num, boo
     LEDC_TIMER(group, timer).conf.rst = 1;//This bit is used to reset timer the counter will be 0 after reset.
     LEDC_TIMER(group, timer).conf.rst = 0;
     LEDC_MUTEX_UNLOCK();
-    uint32_t iarg = chan;
-    addApbChangeCallback((void*)iarg, _on_apb_change);
+    _activeChannels |= (1 << chan); // mark as active for APB callback
 }
 
 //max div_num 0x3FFFF (262143)

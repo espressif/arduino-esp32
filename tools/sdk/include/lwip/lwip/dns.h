@@ -105,11 +105,7 @@ typedef void (*dns_found_callback)(const char *name, const ip_addr_t *ipaddr, vo
 void             dns_init(void);
 void             dns_tmr(void);
 void             dns_setserver(u8_t numdns, const ip_addr_t *dnsserver);
-#if ESP_DNS
-ip_addr_t       dns_getserver(u8_t numdns);
-#else
 const ip_addr_t* dns_getserver(u8_t numdns);
-#endif
 err_t            dns_gethostbyname(const char *hostname, ip_addr_t *addr,
                                    dns_found_callback found, void *callback_arg);
 err_t            dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr,

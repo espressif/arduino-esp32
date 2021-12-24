@@ -21,6 +21,7 @@ public:
 	void setInitEncryptionKey(uint8_t init_key);
 	void setRespEncryptionKey(uint8_t resp_key);
 	void setKeySize(uint8_t key_size = 16);
+	void setStaticPIN(uint32_t pin);
 	static char* esp_key_type_to_str(esp_ble_key_type_t key_type);
 
 private:

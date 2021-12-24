@@ -2,7 +2,7 @@
 #include <DNSServer.h>
 
 const byte DNS_PORT = 53;
-IPAddress apIP(192, 168, 1, 1);
+IPAddress apIP(8,8,4,4); // The default android DNS
 DNSServer dnsServer;
 WiFiServer server(80);
 
@@ -11,10 +11,10 @@ String responseHTML = ""
   "<h1>Hello World!</h1><p>This is a captive portal example. All requests will "
   "be redirected here.</p></body></html>";
 
-void setup() {
+void setup() { 
   WiFi.mode(WIFI_AP);
+  WiFi.softAP("ESP32-DNSServer");
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP("DNSServer CaptivePortal example");
 
   // if DNSServer is started with "*" for domain name, it will reply with
   // provided IP to all DNS request

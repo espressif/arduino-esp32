@@ -186,16 +186,16 @@ void FreeRTOS::Semaphore::giveFromISR() {
  * @return True if we took the semaphore.
  */
 bool FreeRTOS::Semaphore::take(std::string owner) {
-	log_d("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
+	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
 	} else {
 		rc = ::xSemaphoreTake(m_semaphore, portMAX_DELAY) == pdTRUE;
 	}
-	m_owner = owner;
 	if (rc) {
-		log_d("Semaphore taken:  %s", toString().c_str());
+		m_owner = owner;
+		log_v("Semaphore taken:  %s", toString().c_str());
 	} else {
 		log_e("Semaphore NOT taken:  %s", toString().c_str());
 	}
@@ -218,8 +218,8 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
 	} else {
 		rc = ::xSemaphoreTake(m_semaphore, timeoutMs / portTICK_PERIOD_MS) == pdTRUE;
 	}
-	m_owner = owner;
 	if (rc) {
+		m_owner = owner;
 		log_v("Semaphore taken:  %s", toString().c_str());
 	} else {
 		log_e("Semaphore NOT taken:  %s", toString().c_str());

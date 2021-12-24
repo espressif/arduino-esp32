@@ -11,13 +11,13 @@ typedef int16_t qtp_t;
 typedef struct
 {
     /******* fix start *******/
-    int w;          /*!< Width */
-    int h;          /*!< Height */
-    int c;          /*!< Channel */
-    int n;          /*!< Number of filter, input and output must be 1 */
-    int stride;     /*!< Step between lines */
-    int exponent;   /*!< Exponent for quantization */
-    qtp_t *item;    /*!< Data */
+    int w;        /*!< Width */
+    int h;        /*!< Height */
+    int c;        /*!< Channel */
+    int n;        /*!< Number of filter, input and output must be 1 */
+    int stride;   /*!< Step between lines */
+    int exponent; /*!< Exponent for quantization */
+    qtp_t *item;  /*!< Data */
     /******* fix end *******/
 } dl_matrix3dq_t;
 
@@ -38,24 +38,37 @@ typedef struct
  */
 typedef enum
 {
-    DL_C_IMPL = 0,      /*!< ANSI C */
-    DL_XTENSA_IMPL = 1  /*!< Handwrite xtensa instruction */
+    DL_C_IMPL = 0,     /*!< ANSI C */
+    DL_XTENSA_IMPL = 1 /*!< Handwrite xtensa instruction */
 } dl_conv_mode;
-
 
 /**
  * Configuration of mobilenet operation
  */
 typedef struct
 {
-    int stride_x;               /*!< Strides of width */
-    int stride_y;               /*!< Strides of height */
-    dl_padding_type padding;    /*!< Padding type */
-    dl_conv_mode mode;          /*!< Implementation mode */
-    int dilate_exponent;        /*!< Exponent of dilation filter */
-    int depthwise_exponent;     /*!< Exponent of depthwise filter */
-    int compress_exponent;      /*!< Exponent of compress filter */
+    int stride_x;            /*!< Strides of width */
+    int stride_y;            /*!< Strides of height */
+    dl_padding_type padding; /*!< Padding type */
+    dl_conv_mode mode;       /*!< Implementation mode */
+    int dilate_exponent;     /*!< Exponent of dilation filter */
+    int depthwise_exponent;  /*!< Exponent of depthwise filter */
+    int compress_exponent;   /*!< Exponent of compress filter */
 } dl_matrix3dq_mobilenet_config_t;
+
+typedef struct
+{
+    int stride_x;            /*!< Strides of width */
+    int stride_y;            /*!< Strides of height */
+    dl_padding_type padding; /*!< Padding type */
+    dl_conv_mode mode;       /*!< Implementation mode */
+    int dw1_exponent;        /*!< Exponent of dw1 filter */
+    int pw1_exponent;        /*!< Exponent of pw1 filter */
+    int dw2_exponent;        /*!< Exponent of dw2 filter */
+    int pw2_exponent;        /*!< Exponent of pw2 filter */
+    int shortcut;           /*!< Shortcut connection flag */
+    int save_input;         /*!< Input save flag */
+} dl_matrix3dq_blazeblock_config_t;
 
 //
 // Utility
@@ -71,14 +84,52 @@ typedef struct
  * @param e Exponent of matrix data
  * @return 3d quantized matrix
  */
-dl_matrix3dq_t *dl_matrix3dq_alloc(int n, int w, int h, int c, int e);
+static inline dl_matrix3dq_t *dl_matrix3dq_alloc(int n, int w, int h, int c, int e)
+{
+    dl_matrix3dq_t *r = (dl_matrix3dq_t *)dl_lib_calloc(1, sizeof(dl_matrix3dq_t), 0);
+    if (NULL == r)
+    {
+        printf("dl_matrix3dq alloc failed.\n");
+        return NULL;
+    }
+
+    qtp_t *items = (qtp_t *)dl_lib_calloc(n * w * h * c, sizeof(qtp_t), 16);
+    if (NULL == items)
+    {
+        printf("matrix3dq item alloc failed.\n");
+        dl_lib_free(r);
+        return NULL;
+    }
+
+    r->w = w;
+    r->h = h;
+    r->c = c;
+    r->n = n;
+    r->exponent = e;
+    r->stride = w * c;
+    r->item = items;
+
+    return r;
+}
 
 /*
  * @brief Free a 3d quantized matrix
  *
  * @param m 3d quantised matrix
  */
-void dl_matrix3dq_free(dl_matrix3dq_t *m);
+static inline void dl_matrix3dq_free(dl_matrix3dq_t *m)
+{
+    if (NULL == m)
+        return;
+    if (NULL == m->item)
+    {
+        dl_lib_free(m);
+        return;
+    }
+    dl_lib_free(m->item);
+    dl_lib_free(m);
+}
+
 
 /**
  * @brief Copy a range of items from an existing matrix to a preallocated matrix
@@ -91,6 +142,15 @@ void dl_matrix3dq_free(dl_matrix3dq_t *m);
  * @param h     Height of the resulting matrix
  */
 void dl_matrix3dq_slice_copy(dl_matrix3dq_t *dst, dl_matrix3dq_t *src, int x, int y, int w, int h);
+
+/**
+ * @brief Transform a sliced matrix block from nhwc to nchw, the block needs to be memory continous.
+ *
+ * @param out  The destination sliced matrix in nchw
+ * @param in   The source sliced matrix in nhwc
+ */
+void dl_matrix3dq_sliced_transform_nchw(dl_matrix3dq_t *out,
+                                        dl_matrix3dq_t *in);
 
 /**
  * @brief Transform a fixed point matrix to a float point matrix
@@ -117,6 +177,13 @@ dl_matrix3dq_t *dl_matrixq_from_matrix3d_qmf(dl_matrix3d_t *m, int exponent);
  */
 dl_matrix3dq_t *dl_matrixq_from_matrix3d(dl_matrix3d_t *m);
 
+/**
+ * @brief Truncate the overflowed 16bit number
+ * 
+ * @param value               Input value
+ * @param location            Location tag
+ * @return qtp_t              Truncated value
+ */
 qtp_t dl_matrix3dq_quant_range_exceeded_checking(int64_t value, char *location);
 
 /**
@@ -140,12 +207,22 @@ void dl_matrix3dq_batch_normalize(dl_matrix3dq_t *m, dl_matrix3dq_t *scale, dl_m
 /**
  * @brief Add two quantized matrix with a pre-defined exponent
  *
- * @param in_1      Adder 1
- * @param in_2      Adder 2
- * @param exponent  Exponent for resulting matrix
- * @return          Result of accumulation of two matrix
+ * @param in_1                     Adder 1
+ * @param in_2                     Adder 2
+ * @param exponent                 Exponent for resulting matrix
+ * @return dl_matrix3dq_t*         Result of accumulation of two matrix
  */
 dl_matrix3dq_t *dl_matrix3dq_add(dl_matrix3dq_t *in_1, dl_matrix3dq_t *in_2, int exponent);
+
+/**
+ * @brief Add two quantized matrix with different channels 
+ * 
+ * @param in_1               Adder 1
+ * @param in_2               Adder 2
+ * @param exponent           Exponent for resulting matrix
+ * @return dl_matrix3dq_t*   Result of accumulation of two matrix
+ */
+dl_matrix3dq_t *dl_matrix3dq_add_channel_diff(dl_matrix3dq_t *in_1, dl_matrix3dq_t *in_2, int exponent);
 
 //
 // Activation
@@ -241,11 +318,13 @@ dl_matrix3dq_t *dl_matrix3dq_concat_8(dl_matrix3dq_t *in_1,
  * @param in        Input matrix, size (1, w, h, c)
  * @param filter    1x1 filter, size (n, 1, 1, c)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3dqq_conv_1x1(dl_matrix3dq_t *out,
                             dl_matrix3dq_t *in,
                             dl_matrix3dq_t *filter,
-                            dl_conv_mode mode);
+                            dl_conv_mode mode,
+                            char *name);
 
 /**
  * @brief Do 1x1 convolution with a quantized matrix, with relu activation
@@ -254,11 +333,13 @@ void dl_matrix3dqq_conv_1x1(dl_matrix3dq_t *out,
  * @param in        Input matrix, size (1, w, h, c)
  * @param filter    1x1 filter, size (n, 1, 1, c)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3dqq_conv_1x1_with_relu(dl_matrix3dq_t *out,
                                       dl_matrix3dq_t *in,
                                       dl_matrix3dq_t *filter,
-                                      dl_conv_mode mode);
+                                      dl_conv_mode mode,
+                                      char *name);
 
 /**
  * @brief Do 1x1 convolution with a quantized matrix, with bias adding
@@ -278,25 +359,38 @@ void dl_matrix3dqq_conv_1x1_with_bias(dl_matrix3dq_t *out,
                                       char *name);
 
 /**
- * @brief Do 1x1 convolution with a quantized matrix, with bias adding and relu activation
+ * @brief Do 1x1 convolution with a quantized matrix, with bias adding
  *
  * @param out       Preallocated quantized matrix, size (1, w, h, n)
  * @param in        Input matrix, size (1, w, h, c)
  * @param filter    1x1 filter, size (n, 1, 1, c)
  * @param bias      Bias, size (1, 1, 1, n)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3dqq_conv_1x1_with_bias_relu(dl_matrix3dq_t *out,
                                            dl_matrix3dq_t *in,
                                            dl_matrix3dq_t *filter,
                                            dl_matrix3dq_t *bias,
-                                           dl_conv_mode mode);
+                                           dl_conv_mode mode,
+                                           char *name);
 
+/**
+ * @brief Do 1x1 convolution with a quantized matrix, with prelu activation         
+ * 
+ * @param out       Preallocated quantized matrix, size (1, w, h, n)
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param filter    1x1 filter, size (n, 1, 1, c)
+ * @param prelu     prelu params, size (1, 1, 1, n)
+ * @param mode      Implementation mode
+ * @param name      Layer name to debug
+ */
 void dl_matrix3dqq_conv_1x1_with_prelu(dl_matrix3dq_t *out,
                                        dl_matrix3dq_t *in,
                                        dl_matrix3dq_t *filter,
                                        dl_matrix3dq_t *prelu,
-                                       dl_conv_mode mode);
+                                       dl_conv_mode mode,
+                                       char *name);
 
 /**
  * @brief Do 1x1 convolution with an 8-bit fixed point matrix
@@ -305,11 +399,13 @@ void dl_matrix3dqq_conv_1x1_with_prelu(dl_matrix3dq_t *out,
  * @param in        Input matrix, size (1, w, h, c)
  * @param filter    1x1 filter, size (n, 1, 1, c)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3duq_conv_1x1(dl_matrix3dq_t *out,
                             dl_matrix3du_t *in,
                             dl_matrix3dq_t *filter,
-                            dl_conv_mode mode);
+                            dl_conv_mode mode,
+                            char *name);
 
 /**
  * @brief Do 1x1 convolution with an 8-bit fixed point matrix, with bias adding
@@ -319,71 +415,53 @@ void dl_matrix3duq_conv_1x1(dl_matrix3dq_t *out,
  * @param filter    1x1 filter, size (n, 1, 1, c)
  * @param bias      Bias, size (1, 1, 1, n)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3duq_conv_1x1_with_bias(dl_matrix3dq_t *out,
                                       dl_matrix3du_t *in,
                                       dl_matrix3dq_t *filter,
                                       dl_matrix3dq_t *bias,
-                                      dl_conv_mode mode);
+                                      dl_conv_mode mode,
+                                      char *name);
 
 //
 // Conv 3x3
 //
-/**
- * @brief Do 3x3 convolution basic operation with a quantized matrix
- *
- * @param out       Preallocated quantized matrix
- * @param in        Input matrix, size (1, w, h, c)
- * @param filter    3x3 filter, size (n, 3, 3, c)
- * @param stride_x  Stride of width
- * @param stride_y  Stride of height
- */
-void dl_matrix3dqq_conv_3x3_op(dl_matrix3dq_t *out,
-                               dl_matrix3dq_t *in,
-                               dl_matrix3dq_t *filter,
-                               int stride_x,
-                               int stride_y);
 
 /**
  * @brief Do 3x3 convolution with a quantized matrix
- *
- * @param in        Input matrix, size (1, w, h, c)
- * @param filter    3x3 filter, size (n, 3, 3, c)
- * @param stride_x  Stride of width
- * @param stride_y  Stride of height
- * @param padding   Padding type, 0: valid, 1: same
- * @param exponent  Exponent for resulting matrix
- * @return          Resulting quantized matrix
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type, 0: valid, 1: same
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug 
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
  */
-dl_matrix3dq_t *dl_matrix3dqq_conv_3x3(dl_matrix3dq_t *in,
+dl_matrix3dq_t *dl_matrix3dqq_conv_3x3(dl_matrix3dq_t *input,
                                        dl_matrix3dq_t *filter,
                                        int stride_x,
                                        int stride_y,
                                        dl_padding_type padding,
-                                       int exponent);
+                                       int exponent,
+                                       char *name);
 
 /**
  * @brief Do 3x3 convolution with a quantized matrix, with bias adding
- *
- * @param in        Input matrix, size (1, w, h, c)
- * @param filter    3x3 filter, size (n, 3, 3, c)
- * @param bias      Bias, size (1, 1, 1, n)
- * @param stride_x  Stride of width
- * @param stride_y  Stride of height
- * @param padding   Padding type, 0: valid, 1: same
- * @param exponent  Exponent for resulting matrix
- * @return          Resulting quantized matrix
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug 
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
  */
-dl_matrix3dq_t *dl_matrix3dqq_conv_3x3_with_bias(dl_matrix3dq_t *in,
-                                                 dl_matrix3dq_t *f,
-                                                 dl_matrix3dq_t *bias,
-                                                 int stride_x,
-                                                 int stride_y,
-                                                 dl_padding_type padding,
-                                                 int exponent,
-                                                 int relu);
-
-dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias(dl_matrix3du_t *in,
+dl_matrix3dq_t *dl_matrix3dqq_conv_3x3_with_bias(dl_matrix3dq_t *input,
                                                  dl_matrix3dq_t *filter,
                                                  dl_matrix3dq_t *bias,
                                                  int stride_x,
@@ -392,7 +470,65 @@ dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias(dl_matrix3du_t *in,
                                                  int exponent,
                                                  char *name);
 
-dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias_prelu(dl_matrix3du_t *in,
+/**
+ * @brief Do 3x3 convolution with a quantized matrix, with bias adding, relu activation
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug 
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_conv_3x3_with_bias_relu(dl_matrix3dq_t *input,
+                                                      dl_matrix3dq_t *filter,
+                                                      dl_matrix3dq_t *bias,
+                                                      int stride_x,
+                                                      int stride_y,
+                                                      dl_padding_type padding,
+                                                      int exponent,
+                                                      char *name);
+
+/**
+ * @brief  Do 3x3 convolution with an 8-bit fixed point matrix, with bias adding
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug 
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias(dl_matrix3du_t *input,
+                                                 dl_matrix3dq_t *filter,
+                                                 dl_matrix3dq_t *bias,
+                                                 int stride_x,
+                                                 int stride_y,
+                                                 dl_padding_type padding,
+                                                 int exponent,
+                                                 char *name);
+
+/**
+ * @brief   Do 3x3 convolution with an 8-bit fixed point matrix, with bias adding, prelu activation
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param prelu             prelu params, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias_prelu(dl_matrix3du_t *input,
                                                        dl_matrix3dq_t *filter,
                                                        dl_matrix3dq_t *bias,
                                                        dl_matrix3dq_t *prelu,
@@ -402,6 +538,30 @@ dl_matrix3dq_t *dl_matrix3duq_conv_3x3_with_bias_prelu(dl_matrix3du_t *in,
                                                        int exponent,
                                                        char *name);
 
+
+/**
+ * @brief   Do 3x3 convolution with a quantized matrix, with bias adding, prelu activation
+ * 
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param filter            3x3 filter, size (n, 3, 3, c)
+ * @param bias              Bias, size (1, 1, 1, n)
+ * @param prelu             prelu params, size (1, 1, 1, n)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param padding           Padding type
+ * @param exponent          Exponent for resulting matrix
+ * @param name              Layer name to debug
+ * @return dl_matrix3dq_t*  Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_conv_3x3_with_bias_prelu(dl_matrix3dq_t *input,
+                                                       dl_matrix3dq_t *filter,
+                                                       dl_matrix3dq_t *bias,
+                                                       dl_matrix3dq_t *prelu,
+                                                       int stride_x,
+                                                       int stride_y,
+                                                       dl_padding_type padding,
+                                                       int exponent,
+                                                       char *name);
 //
 // Conv common
 //
@@ -462,6 +622,7 @@ dl_matrix3dq_t *dl_matrix3duq_conv_common(dl_matrix3du_t *in,
  * @param stride_y  Stride of height
  * @param padding   Padding type, 0: valid, 1: same
  * @param exponent  Exponent for resulting matrix
+ * @param name      Layer name to debug
  * @return          Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3duq_depthwise_conv_3x3(dl_matrix3du_t *in,
@@ -469,7 +630,8 @@ dl_matrix3dq_t *dl_matrix3duq_depthwise_conv_3x3(dl_matrix3du_t *in,
                                                  int stride_x,
                                                  int stride_y,
                                                  dl_padding_type padding,
-                                                 int exponent);
+                                                 int exponent,
+                                                 char *name);
 
 /**
  * @brief Do 3x3 depthwise convolution with a quantized matrix
@@ -479,7 +641,9 @@ dl_matrix3dq_t *dl_matrix3duq_depthwise_conv_3x3(dl_matrix3du_t *in,
  * @param stride_x  Stride of width
  * @param stride_y  Stride of height
  * @param padding   Padding type, 0: valid, 1: same
+ * @param relu      ReLU, 0: don't, 1: do
  * @param exponent  Exponent for resulting matrix
+ * @param name      Layer name to debug
  * @return          Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3(dl_matrix3dq_t *in,
@@ -487,7 +651,9 @@ dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3(dl_matrix3dq_t *in,
                                                  int stride_x,
                                                  int stride_y,
                                                  dl_padding_type padding,
-                                                 int exponent);
+                                                 int relu,
+                                                 int exponent,
+                                                 char *name);
 
 #if CONFIG_DEVELOPING_CODE
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_2(dl_matrix3dq_t *in,
@@ -495,69 +661,328 @@ dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_2(dl_matrix3dq_t *in,
                                                    int stride_x,
                                                    int stride_y,
                                                    dl_padding_type padding,
-                                                   int exponent);
+                                                   int exponent,
+                                                   char *name);
 
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_3(dl_matrix3dq_t *in,
                                                    dl_matrix3dq_t *filter,
                                                    int stride_x,
                                                    int stride_y,
                                                    dl_padding_type padding,
-                                                   int exponent);
+                                                   int exponent,
+                                                   char *name);
 #endif
 
 /**
  * @brief Do 3x3 depthwise convolution with a quantized matrix, with bias adding
  *
  * @param in        Input matrix, size (1, w, h, c)
- * @param filter    3x3 filter, size (1, 3, 3, c)
+ * @param f         3x3 filter, size (1, 3, 3, c)
  * @param bias      Bias, size (1, 1, 1, c)
  * @param stride_x  Stride of width
  * @param stride_y  Stride of height
  * @param padding   Padding type, 0: valid, 1: same
  * @param exponent  Exponent for resulting matrix
  * @param relu      Whether to use relu activation
+ * @param name      Layer name to debug
  * @return          Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_with_bias(dl_matrix3dq_t *in,
-                                                          dl_matrix3dq_t *f,
-                                                          dl_matrix3dq_t *bias,
-                                                          int stride_x,
-                                                          int stride_y,
-                                                          dl_padding_type padding,
-                                                          int exponent,
-                                                          int relu);
+                                                           dl_matrix3dq_t *f,
+                                                           dl_matrix3dq_t *bias,
+                                                           int stride_x,
+                                                           int stride_y,
+                                                           dl_padding_type padding,
+                                                           int exponent,
+                                                           int relu,
+                                                           char *name);
 
 /**
  * @brief Do 3x3 depthwise convolution with a quantized matrix, with bias adding and stride 1
  *
  * @param in        Input matrix, size (1, w, h, c)
- * @param filter    3x3 filter, size (1, 3, 3, c)
- * @param bias      Bias, size (1, 1, 1, n)
+ * @param f         3x3 filter, size (1, 3, 3, c)
+ * @param bias      Bias, size (1, 1, 1, c)
  * @param padding   Padding type, 0: valid, 1: same
  * @param exponent  Exponent for resulting matrix
  * @param relu      Whether to use relu activation
+ * @param name      Layer name to debug
  * @return          Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3s1_with_bias(dl_matrix3dq_t *in,
-                                                            dl_matrix3dq_t *f,
-                                                            dl_matrix3dq_t *bias,
-                                                            dl_padding_type padding,
-                                                            int exponent,
-                                                            int relu);
+                                                             dl_matrix3dq_t *f,
+                                                             dl_matrix3dq_t *bias,
+                                                             dl_padding_type padding,
+                                                             int exponent,
+                                                             int relu,
+                                                             char *name);
 
+/**
+ * @brief Do 3x3 depthwise convolution with a quantized matrix, with prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param filter           3x3 filter, size (1, 3, 3, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_with_prelu(dl_matrix3dq_t *in,
                                                             dl_matrix3dq_t *filter,
                                                             dl_matrix3dq_t *prelu,
                                                             int stride_x,
                                                             int stride_y,
                                                             dl_padding_type padding,
-                                                            int exponent);
+                                                            int exponent,
+                                                            char *name);
+
+/**
+ * @brief Do 3x3 depthwise convolution with a quantized matrix, with bias adding and prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param f                3x3 filter, size (1, 3, 3, c)
+ * @param bias             Bias, size (1, 1, 1, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_3x3_with_bias_prelu(dl_matrix3dq_t *in,
+                                                           dl_matrix3dq_t *f,
+                                                           dl_matrix3dq_t *bias,
+                                                           dl_matrix3dq_t *prelu,
+                                                           int stride_x,
+                                                           int stride_y,
+                                                           dl_padding_type padding,
+                                                           int exponent,
+                                                           char *name);
+
+/**
+ * @brief Do global depthwise convolution with a quantized matrix, with bias adding
+ * 
+ * @param in                 Input matrix, size (1, w, h, c)    
+ * @param filter             filter, size (1, w, h, c)
+ * @param bias               Bias, size (1, 1, 1, c)
+ * @param exponent           Exponent for resulting matrix
+ * @param name               Layer name to debug
+ * @return dl_matrix3dq_t*   Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_global_depthwise_conv_with_bias(dl_matrix3dq_t *in,
+                                                    dl_matrix3dq_t *filter,
+                                                    dl_matrix3dq_t *bias,
+                                                    int exponent,
+                                                    char *name);
 
 
+
+//
+// Depthwise 2x2
+//
+/**
+ * @brief Do 2x2 depthwise convolution with a quantized matrix
+ *
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param filter    2x2 filter, size (1, 2, 2, c)
+ * @param stride_x  Stride of width
+ * @param stride_y  Stride of height
+ * @param padding   Padding type, 0: valid, 1: same
+ * @param exponent  Exponent for resulting matrix
+ * @param name      Layer name to debug
+ * @return          Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_2x2(dl_matrix3dq_t *in,
+                                                 dl_matrix3dq_t *filter,
+                                                 int stride_x,
+                                                 int stride_y,
+                                                 dl_padding_type padding,
+                                                 int exponent,
+                                                 char *name);
+
+/**
+ * @brief Do 2x2 depthwise convolution with a quantized matrix, with bias adding
+ *
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param f         2x2 filter, size (1, 2, 2, c)
+ * @param bias      Bias, size (1, 1, 1, c)
+ * @param stride_x  Stride of width
+ * @param stride_y  Stride of height
+ * @param padding   Padding type, 0: valid, 1: same
+ * @param exponent  Exponent for resulting matrix
+ * @param relu      Whether to use relu activation
+ * @param name      Layer name to debug
+ * @return          Resulting quantized matrix
+ */                                        
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_2x2_with_bias(dl_matrix3dq_t *in,
+                                                           dl_matrix3dq_t *f,
+                                                           dl_matrix3dq_t *bias,
+                                                           int stride_x,
+                                                           int stride_y,
+                                                           dl_padding_type padding,
+                                                           int exponent,
+                                                           int relu,
+                                                           char *name);
+
+/**
+ * @brief Do 2x2 depthwise convolution with a quantized matrix, with prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param filter           2x2 filter, size (1, 2, 2, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_2x2_with_prelu(dl_matrix3dq_t *in,
+                                                            dl_matrix3dq_t *filter,
+                                                            dl_matrix3dq_t *prelu,
+                                                            int stride_x,
+                                                            int stride_y,
+                                                            dl_padding_type padding,
+                                                            int exponent,
+                                                            char *name);
+
+/**
+ * @brief Do 2x2 depthwise convolution with a quantized matrix, with bias adding and prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param f                2x2 filter, size (1, 2, 2, c)
+ * @param bias             Bias, size (1, 1, 1, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_2x2_with_bias_prelu(dl_matrix3dq_t *in,
+                                                                 dl_matrix3dq_t *f,
+                                                                 dl_matrix3dq_t *bias,
+                                                                 dl_matrix3dq_t *prelu,
+                                                                 int stride_x,
+                                                                 int stride_y,
+                                                                 dl_padding_type padding,
+                                                                 int exponent,
+                                                                 char *name);
+
+//
+// Depthwise 5x5
+//
+/**
+ * @brief Do 5x5 depthwise convolution with a quantized matrix
+ *
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param filter    5x5 filter, size (1, 5, 5, c)
+ * @param stride_x  Stride of width
+ * @param stride_y  Stride of height
+ * @param padding   Padding type, 0: valid, 1: same
+ * @param exponent  Exponent for resulting matrix
+ * @param name      Layer name to debug
+ * @return          Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_5x5(dl_matrix3dq_t *in,
+                                                 dl_matrix3dq_t *filter,
+                                                 int stride_x,
+                                                 int stride_y,
+                                                 dl_padding_type padding,
+                                                 int exponent,
+                                                 char *name);
+
+/**
+ * @brief Do 5x5 depthwise convolution with a quantized matrix, with bias adding
+ *
+ * @param in        Input matrix, size (1, w, h, c)
+ * @param f         5x5 filter, size (1, 5, 5, c)
+ * @param bias      Bias, size (1, 1, 1, c)
+ * @param stride_x  Stride of width
+ * @param stride_y  Stride of height
+ * @param padding   Padding type, 0: valid, 1: same
+ * @param exponent  Exponent for resulting matrix
+ * @param relu      Whether to use relu activation
+ * @param name      Layer name to debug
+ * @return          Resulting quantized matrix
+ */                                         
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_5x5_with_bias(dl_matrix3dq_t *in,
+                                                           dl_matrix3dq_t *f,
+                                                           dl_matrix3dq_t *bias,
+                                                           int stride_x,
+                                                           int stride_y,
+                                                           dl_padding_type padding,
+                                                           int exponent,
+                                                           int relu,
+                                                           char *name);
+
+/**
+ * @brief Do 5x5 depthwise convolution with a quantized matrix, with prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param filter           5x5 filter, size (1, 5, 5, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_5x5_with_prelu(dl_matrix3dq_t *in,
+                                                            dl_matrix3dq_t *filter,
+                                                            dl_matrix3dq_t *prelu,
+                                                            int stride_x,
+                                                            int stride_y,
+                                                            dl_padding_type padding,
+                                                            int exponent,
+                                                            char *name);
+
+/**
+ * @brief Do 5x5 depthwise convolution with a quantized matrix, with bias adding and prelu activation
+ * 
+ * @param in               Input matrix, size (1, w, h, c) 
+ * @param f                5x5 filter, size (1, 5, 5, c)
+ * @param bias             Bias, size (1, 1, 1, c)
+ * @param prelu            prelu params, size (1, 1, 1, c)
+ * @param stride_x         Stride of width
+ * @param stride_y         Stride of height
+ * @param padding          Padding type
+ * @param exponent         Exponent for resulting matrix
+ * @param name             Layer name to debug
+ * @return dl_matrix3dq_t* Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_5x5_with_bias_prelu(dl_matrix3dq_t *in,
+                                                                 dl_matrix3dq_t *f,
+                                                                 dl_matrix3dq_t *bias,
+                                                                 dl_matrix3dq_t *prelu,
+                                                                 int stride_x,
+                                                                 int stride_y,
+                                                                 dl_padding_type padding,
+                                                                 int exponent,
+                                                                 char *name);
+                                                    
 //
 // Depthwise Common
 //
 #if CONFIG_DEVELOPING_CODE
+/**
+ * @brief Do a general depthwise convolution layer pass with a quantized matrix
+ * 
+ * @param in                    Input matrix, size (1, w, h, c) 
+ * @param filter                Weights of the neurons, size (1, k_w, k_h, c)
+ * @param stride_x              Stride of width
+ * @param stride_y              Stride of height
+ * @param padding               Padding type
+ * @param exponent              Exponent for resulting matrix
+ * @param mode                  Implementation mode
+ * @return dl_matrix3dq_t*      Resulting quantized matrix
+ */
 dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_common(dl_matrix3dq_t *in,
                                                     dl_matrix3dq_t *filter,
                                                     int stride_x,
@@ -566,6 +991,18 @@ dl_matrix3dq_t *dl_matrix3dqq_depthwise_conv_common(dl_matrix3dq_t *in,
                                                     int exponent,
                                                     dl_conv_mode mode);
 
+/**
+ * @brief Do a general depthwise convolution layer pass with an 8-bit fixed point matrix
+ * 
+ * @param in                    Input matrix, size (1, w, h, c) 
+ * @param filter                Weights of the neurons, size (1, k_w, k_h, c)
+ * @param stride_x              Stride of width
+ * @param stride_y              Stride of height
+ * @param padding               Padding type
+ * @param exponent              Exponent for resulting matrix
+ * @param mode                  Implementation mode
+ * @return dl_matrix3dq_t*      Resulting quantized matrix
+ */
 dl_matrix3dq_t *dl_matrix3duq_depthwise_conv_common(dl_matrix3du_t *in,
                                                     dl_matrix3dq_t *filter,
                                                     int stride_x,
@@ -579,6 +1016,14 @@ dl_matrix3dq_t *dl_matrix3duq_depthwise_conv_common(dl_matrix3du_t *in,
 // Dot Product
 //
 
+/**
+ * @brief Do dot product operation with a quantized matrix
+ * 
+ * @param out     Preallocated resulting matrix, size (1, 1, 1, h)
+ * @param in      Input matrix, size (1, 1, 1, w)
+ * @param filter  Filter matrix, size (1, w, h, 1)
+ * @param mode    Implementation mode
+ */
 void dl_matrix3dqq_dot_product(dl_matrix3dq_t *out,
                                dl_matrix3dq_t *in,
                                dl_matrix3dq_t *filter,
@@ -594,11 +1039,13 @@ void dl_matrix3dqq_dot_product(dl_matrix3dq_t *out,
  * @param in        Input matrix, size (1, 1, 1, w)
  * @param filter    Filter matrix, size (1, w, h, 1)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3dqq_fc(dl_matrix3dq_t *out,
                       dl_matrix3dq_t *in,
                       dl_matrix3dq_t *filter,
-                      dl_conv_mode mode);
+                      dl_conv_mode mode,
+                      char *name);
 
 /**
  * @brief Do fully connected layer forward, with bias adding
@@ -608,6 +1055,7 @@ void dl_matrix3dqq_fc(dl_matrix3dq_t *out,
  * @param filter    Filter matrix, size (1, w, h, 1)
  * @param bias      Bias matrix, size (1, 1, 1, h)
  * @param mode      Implementation mode
+ * @param name      Layer name to debug
  */
 void dl_matrix3dqq_fc_with_bias(dl_matrix3dq_t *out,
                                 dl_matrix3dq_t *in,
@@ -695,6 +1143,170 @@ dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock(dl_matrix3dq_t *in,
                                               dl_conv_mode mode,
                                               int shortcut);
 
+/**
+ * @brief Do mobilefacenet process, the process sequence is 1x1 pointwise->bn->prelu->3x3 depthwise->bn->prelu->1x1 pointwise->bn
+ * 
+ * @param in                     Input matrix, size (1, w, h, c)
+ * @param pw                     Pointwise 1x1 filter, size (n1, 1, 1, c)
+ * @param pw_bias                Pointwise bias, size (1, 1, 1, n1)
+ * @param pw_prelu               Pointwise prelu, size (1, 1, 1, n1)
+ * @param dw                     Depthwise 3x3 filter, size (1, 3, 3, n1)
+ * @param dw_bias                Depthwise bias, size (1, 1, 1, n1)
+ * @param dw_prelu               Depthwise prelu, size(1, 1, 1, n1)
+ * @param pw_linear              Pointwise 1x1 filter, size (n2, 1, 1, n1)
+ * @param pw_linear_bias         Pointwise bias, size (1, 1, 1, n2)
+ * @param pw_exponent            Exponent for pointwise resulting matrix
+ * @param dw_exponent            Exponent for depthwise resulting matrix
+ * @param pw_linear_exponent     Exponent for pointwise resulting matrix
+ * @param stride_x               Stride of width
+ * @param stride_y               Stride of height
+ * @param padding                Depthwise Convlution Padding type
+ * @param mode                   Implementation mode
+ * @param shortcut               Whether has a shortcut at pointwise linear
+ * @return dl_matrix3dq_t*       Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock_prelu(dl_matrix3dq_t *in,
+                                                dl_matrix3dq_t *pw,
+                                                dl_matrix3dq_t *pw_bias,
+                                                dl_matrix3dq_t *pw_prelu,
+                                                dl_matrix3dq_t *dw,
+                                                dl_matrix3dq_t *dw_bias,
+                                                dl_matrix3dq_t *dw_prelu,
+                                                dl_matrix3dq_t *pw_linear,
+                                                dl_matrix3dq_t *pw_linear_bias,
+                                                int pw_exponent,
+                                                int dw_exponent,
+                                                int pw_linear_exponent,
+                                                int stride_x,
+                                                int stride_y,
+                                                dl_padding_type padding,
+                                                dl_conv_mode mode,
+                                                int shortcut);
+
+/**@{*/
+/**
+ * @brief Do mobilefacenet process, the process sequence is 1x1 pointwise->bn->prelu->3x3 depthwise->bn->prelu->1x1 pointwise->bn
+ * 
+ * Compared to ‘dl_matrix3dqq_mobilefaceblock_prelu’， this family of functions 'dl_matrix3dqq_mobilefaceblock_prelu_split_x1_x2' 
+ * split the first pointwise convlution into x1 pointwise convlutions, and split the second pointwise convlution into x2 pointwise convlutions.
+ * 
+ * 
+ */
+dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock_prelu_split_2_2(dl_matrix3dq_t *in,
+                                                    dl_matrix3dq_t *pw_1,
+                                                    dl_matrix3dq_t *pw_2,
+                                                    dl_matrix3dq_t *pw_bias,
+                                                    dl_matrix3dq_t *pw_prelu,
+                                                    dl_matrix3dq_t *dw,
+                                                    dl_matrix3dq_t *dw_bias,
+                                                    dl_matrix3dq_t *dw_prelu,
+                                                    dl_matrix3dq_t *pw_linear_1,
+                                                    dl_matrix3dq_t *pw_linear_2,
+                                                    dl_matrix3dq_t *pw_linear_bias,
+                                                    int pw_exponent,
+                                                    int dw_exponent,
+                                                    int pw_linear_exponent,
+                                                    int stride_x,
+                                                    int stride_y,
+                                                    dl_padding_type padding,
+                                                    dl_conv_mode mode,
+                                                    int shortcut);
+
+dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock_prelu_split_4_4(dl_matrix3dq_t *in,
+                                                    dl_matrix3dq_t *pw_1,
+                                                    dl_matrix3dq_t *pw_2,
+                                                    dl_matrix3dq_t *pw_3,
+                                                    dl_matrix3dq_t *pw_4,
+                                                    dl_matrix3dq_t *pw_bias,
+                                                    dl_matrix3dq_t *pw_prelu,
+                                                    dl_matrix3dq_t *dw,
+                                                    dl_matrix3dq_t *dw_bias,
+                                                    dl_matrix3dq_t *dw_prelu,
+                                                    dl_matrix3dq_t *pw_linear_1,
+                                                    dl_matrix3dq_t *pw_linear_2,
+                                                    dl_matrix3dq_t *pw_linear_3,
+                                                    dl_matrix3dq_t *pw_linear_4,
+                                                    dl_matrix3dq_t *pw_linear_bias,
+                                                    int pw_exponent,
+                                                    int dw_exponent,
+                                                    int pw_linear_exponent,
+                                                    int stride_x,
+                                                    int stride_y,
+                                                    dl_padding_type padding,
+                                                    dl_conv_mode mode,
+                                                    int shortcut);
+
+dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock_prelu_split_1_2(dl_matrix3dq_t *in,
+                                                    dl_matrix3dq_t *pw,
+                                                    dl_matrix3dq_t *pw_bias,
+                                                    dl_matrix3dq_t *pw_prelu,
+                                                    dl_matrix3dq_t *dw,
+                                                    dl_matrix3dq_t *dw_bias,
+                                                    dl_matrix3dq_t *dw_prelu,
+                                                    dl_matrix3dq_t *pw_linear_1,
+                                                    dl_matrix3dq_t *pw_linear_2,
+                                                    dl_matrix3dq_t *pw_linear_bias,
+                                                    int pw_exponent,
+                                                    int dw_exponent,
+                                                    int pw_linear_exponent,
+                                                    int stride_x,
+                                                    int stride_y,
+                                                    dl_padding_type padding,
+                                                    dl_conv_mode mode,
+                                                    int shortcut);
+/**@}*/
+
+//
+//  blazeblock
+//
+
+/**
+ * @brief Do blazeblock process, the process sequence is depthwise->bn->1x1 pointwise->bn->shortcut->relu
+ * 
+ * @param in                 Input matrix, size (1, w, h, c)
+ * @param dw1_kernel         Depthwise filter, size (1, k, k, c)
+ * @param dw1_bias           Depthwise bias, size (1, 1, 1, c)
+ * @param pw1_kernel         Pointwise 1x1 filter, size (n, 1, 1, c)
+ * @param pw1_bias           Pointwise bias, size (1, 1, 1, n)
+ * @param config             blazeblock configuration
+ * @param name               Layer name to debug
+ * @return dl_matrix3dq_t*   Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_blazeblock(dl_matrix3dq_t *in,
+                                        dl_matrix3dq_t *dw1_kernel,
+                                        dl_matrix3dq_t *dw1_bias,
+                                        dl_matrix3dq_t *pw1_kernel,
+                                        dl_matrix3dq_t *pw1_bias,
+                                        dl_matrix3dq_blazeblock_config_t config,
+                                        char *name);
+
+/**
+ * @brief Do double blazeblock process, the process sequence is depthwise->bn->1x1 pointwise->bn->relu->depthwise->bn->1x1 pointwise->bn->shortcut->relu 
+ * 
+ * @param in                 Input matrix, size (1, w, h, c)
+ * @param dw1_kernel         Depthwise filter, size (1, k, k, c)
+ * @param dw1_bias           Depthwise bias, size (1, 1, 1, c)
+ * @param pw1_kernel         Pointwise 1x1 filter, size (n1, 1, 1, c)
+ * @param pw1_bias           Pointwise bias, size (1, 1, 1, n1)
+ * @param dw2_kernel         Depthwise filter, size (1, k, k, n1)
+ * @param dw2_bias           Depthwise bias, size (1, 1, 1, n1)
+ * @param pw2_kernel         Pointwise 1x1 filter, size (n2, 1, 1, n1)
+ * @param pw2_bias           Pointwise bias, size (1, 1, 1, n2)
+ * @param config             blazeblock configuration
+ * @param name               Layer name to debug
+ * @return dl_matrix3dq_t*   Resulting quantized matrix
+ */
+dl_matrix3dq_t *dl_matrix3dqq_double_blazeblock(dl_matrix3dq_t *in,
+                                        dl_matrix3dq_t *dw1_kernel,
+                                        dl_matrix3dq_t *dw1_bias,
+                                        dl_matrix3dq_t *pw1_kernel,
+                                        dl_matrix3dq_t *pw1_bias,
+                                        dl_matrix3dq_t *dw2_kernel,
+                                        dl_matrix3dq_t *dw2_bias,
+                                        dl_matrix3dq_t *pw2_kernel,
+                                        dl_matrix3dq_t *pw2_bias,
+                                        dl_matrix3dq_blazeblock_config_t config,
+                                        char *name);
 //
 // Mobilenet
 //
@@ -710,7 +1322,8 @@ dl_matrix3dq_t *dl_matrix3dqq_mobilefaceblock(dl_matrix3dq_t *in,
  * @param compress              Pointwise 1x1 filter, size (n2, 1, 1, n1)
  * @param bias                  Pointwise bias, size (1, 1, 1, n2)
  * @param config                Mobilenet configuration
- * @return                      Resulting quantized matrix
+ * @param name                  Block name to debug
+ * @return dl_matrix3dq_t*      Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3dqq_mobilenet(dl_matrix3dq_t *in,
                                         dl_matrix3dq_t *dilate,
@@ -733,7 +1346,8 @@ dl_matrix3dq_t *dl_matrix3dqq_mobilenet(dl_matrix3dq_t *in,
  * @param compress              Pointwise 1x1 filter, size (n2, 1, 1, n1)
  * @param bias                  Pointwise bias, size (1, 1, 1, n2)
  * @param config                Mobilenet configuration
- * @return                      Resulting quantized matrix
+ * @param name                  Block name to debug
+ * @return dl_matrix3dq_t*      Resulting quantized matrix
  */
 dl_matrix3dq_t *dl_matrix3duq_mobilenet(dl_matrix3du_t *in,
                                         dl_matrix3dq_t *dilate,
@@ -749,23 +1363,51 @@ dl_matrix3dq_t *dl_matrix3duq_mobilenet(dl_matrix3du_t *in,
 // Padding
 //
 
-dl_error_type dl_matrix3dqq_padding(dl_matrix3dq_t **padded_in,
-                                    dl_matrix3dq_t **out,
-                                    dl_matrix3dq_t *in,
-                                    int out_c,
+/**@{*/
+/**
+ * @brief This family of functions do a padding operation before a convlution
+ * 
+ * @param padded_input      the padded result pointer
+ * @param output_height     the output height pointer
+ * @param output_width      the output width pointer
+ * @param input             Input matrix, size (1, w, h, c)
+ * @param stride_x          Stride of width
+ * @param stride_y          Stride of height
+ * @param kernel_size       Kernel size of the next convlution
+ * @param padding_type      Padding type
+ * @return dl_error_type    Return DL_SUCCESS if padding successfully, else return DL_FAIL
+ */
+dl_error_type dl_matrix3dqq_padding(dl_matrix3dq_t **padded_input,
+                                    int *output_height,
+                                    int *output_width,
+                                    dl_matrix3dq_t *input,
                                     int stride_x,
                                     int stride_y,
-                                    int padding,
-                                    int exponent);
+                                    int kernel_size,
+                                    dl_padding_type padding_type);
 
-dl_error_type dl_matrix3duq_padding(dl_matrix3du_t **padded_in,
-                                    dl_matrix3dq_t **out,
-                                    dl_matrix3du_t *in,
-                                    int out_c,
+dl_error_type dl_matrix3duq_padding(dl_matrix3du_t **padded_input,
+                                    int *output_height,
+                                    int *output_width,
+                                    dl_matrix3du_t *input,
                                     int stride_x,
                                     int stride_y,
-                                    int padding,
-                                    int exponent);
+                                    int kernel_size,
+                                    dl_padding_type padding_type);
+/**@}*/
+
+//
+// Upsample
+//
+/**
+ * @brief Upsample a feature map to twice the size 
+ * 
+ * @param in                  Input matrix, size (1, w, h, c)
+ * @param upsample            upsample type
+ * @return dl_matrix3dq_t*    Resulting matrix, size (1, 2*w, 2*h, c)
+ */
+dl_matrix3dq_t *dl_matrix3dqq_upsample_2x(dl_matrix3dq_t *in, 
+                                        dl_upsample_type upsample);
 
 //
 // Pooling
@@ -773,7 +1415,27 @@ dl_error_type dl_matrix3duq_padding(dl_matrix3du_t **padded_in,
 /**
  * @brief Calculate average value of a feature map
  *
- * @param in        Input matrix, size (1, w, h, c)
- * @return          Resulting matrix, size (1, 1, 1, c)
+ * @param in                 Input matrix, size (1, w, h, c)
+ * @return dl_matrix3dq_t*   Resulting matrix, size (1, 1, 1, c)
  */
 dl_matrix3dq_t *dl_matrix3dq_global_pool(dl_matrix3dq_t *in);
+
+/**
+ * @brief Calculate pooling layer of a feature map
+ *
+ * @param in                Input matrix, size (1, w, h, c)
+ * @param f_w               Window width
+ * @param f_h               Window height 
+ * @param stride_x          Stride in horizontal direction
+ * @param stride_y          Stride in vertical direction
+ * @param padding           Padding type: PADDING_VALID and PADDING_SAME
+ * @param pooling_type      Pooling type: DL_POOLING_MAX and POOLING_AVG
+ * @return dl_matrix3dq_t*  Resulting matrix, size (1, w', h', c)
+ */
+dl_matrix3dq_t *dl_matrix3dq_pooling(dl_matrix3dq_t *in,
+                                     int f_w,
+                                     int f_h,
+                                     int stride_x,
+                                     int stride_y,
+                                     dl_padding_type padding,
+                                     dl_pooling_type pooling_type);

@@ -19,6 +19,7 @@ BLERemoteDescriptor::BLERemoteDescriptor(
 	m_handle                = handle;
 	m_uuid                  = uuid;
 	m_pRemoteCharacteristic = pRemoteCharacteristic;
+    m_auth                  = ESP_GATT_AUTH_REQ_NONE;
 }
 
 
@@ -48,6 +49,23 @@ BLEUUID BLERemoteDescriptor::getUUID() {
 	return m_uuid;
 } // getUUID
 
+void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam) {
+	switch(event) {
+		case ESP_GATTC_READ_DESCR_EVT:
+			if (evtParam->read.handle != getHandle())
+				break;
+			m_semaphoreReadDescrEvt.give();
+			break;
+
+		case ESP_GATTC_WRITE_DESCR_EVT:
+			if (evtParam->write.handle != getHandle())
+				break;
+			m_semaphoreWriteDescrEvt.give();
+			break;
+		default:
+			break;
+	}
+}
 
 std::string BLERemoteDescriptor::readValue() {
 	log_v(">> readValue: %s", toString().c_str());
@@ -65,7 +83,7 @@ std::string BLERemoteDescriptor::readValue() {
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),    // The connection ID to the BLE server
 		getHandle(),                                   // The handle of this characteristic
-		ESP_GATT_AUTH_REQ_NONE);                       // Security
+		m_auth);                       // Security
 
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -136,6 +154,8 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 		return;
 	}
 
+	m_semaphoreWriteDescrEvt.take("writeValue");
+
 	esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
 		m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),
@@ -143,11 +163,13 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
 		length,                           // Data length
 		data,                             // Data
 		response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP,
-		ESP_GATT_AUTH_REQ_NONE
+		m_auth
 	);
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gattc_write_char_descr: %d", errRc);
 	}
+
+	m_semaphoreWriteDescrEvt.wait("writeValue");
 	log_v("<< writeValue");
 } // writeValue
 
@@ -171,5 +193,12 @@ void BLERemoteDescriptor::writeValue(uint8_t newValue, bool response) {
 	writeValue(&newValue, 1, response);
 } // writeValue
 
+/**
+ * @brief Set authentication request type for characteristic
+ * @param [in] auth Authentication request type.
+ */
+void BLERemoteDescriptor::setAuth(esp_gatt_auth_req_t auth) {
+    m_auth = auth;
+}
 
 #endif /* CONFIG_BT_ENABLED */

@@ -50,6 +50,7 @@ void readFile(fs::FS &fs, const char * path){
     while(file.available()){
         Serial.write(file.read());
     }
+    file.close();
 }
 
 void writeFile(fs::FS &fs, const char * path, const char * message){
@@ -63,8 +64,9 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
     if(file.print(message)){
         Serial.println("- file written");
     } else {
-        Serial.println("- frite failed");
+        Serial.println("- write failed");
     }
+    file.close();
 }
 
 void appendFile(fs::FS &fs, const char * path, const char * message){
@@ -80,6 +82,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message){
     } else {
         Serial.println("- append failed");
     }
+    file.close();
 }
 
 void renameFile(fs::FS &fs, const char * path1, const char * path2){

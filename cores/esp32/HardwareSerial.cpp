@@ -53,6 +53,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 256, invert);
+    _tx_pin = txPin;
+    _rx_pin = rxPin;
 
     if(!baud) {
         uartStartDetectBaudrate(_uart);
@@ -70,6 +72,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
+            _tx_pin = 255;
+            _rx_pin = 255;
         }
     }
 }
@@ -84,7 +88,8 @@ void HardwareSerial::end()
     if(uartGetDebug() == _uart_nr) {
         uartSetDebug(0);
     }
-    uartEnd(_uart);
+    log_v("pins %d %d",_tx_pin, _rx_pin);
+    uartEnd(_uart, _tx_pin, _rx_pin);
     _uart = 0;
 }
 
@@ -131,9 +136,32 @@ int HardwareSerial::read(void)
     return -1;
 }
 
-void HardwareSerial::flush()
+// read characters into buffer
+// terminates if size characters have been read, or no further are pending
+// returns the number of characters placed in the buffer
+// the buffer is NOT null terminated.
+size_t HardwareSerial::read(uint8_t *buffer, size_t size)
+{
+    size_t avail = available();
+    if (size < avail) {
+        avail = size;
+    }
+    size_t count = 0;
+    while(count < avail) {
+        *buffer++ = uartRead(_uart);
+        count++;
+    }
+    return count;
+}
+
+void HardwareSerial::flush(void)
 {
     uartFlush(_uart);
+}
+
+void HardwareSerial::flush(bool txOnly)
+{
+    uartFlushTxOnly(_uart, txOnly);
 }
 
 size_t HardwareSerial::write(uint8_t c)
@@ -155,4 +183,9 @@ uint32_t  HardwareSerial::baudRate()
 HardwareSerial::operator bool() const
 {
     return true;
+}
+
+void HardwareSerial::setRxInvert(bool invert)
+{
+    uartSetRxInvert(_uart, invert);
 }

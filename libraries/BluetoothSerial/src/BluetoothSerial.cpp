@@ -36,9 +36,7 @@
 #include "esp_spp_api.h"
 #include <esp_log.h>
 
-#ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
-#endif
 
 const char * _spp_server_name = "ESP32SPP";
 
@@ -52,6 +50,7 @@ static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static boolean secondConnectionAttempt;
 static esp_spp_cb_t * custom_spp_callback = NULL;
+static BluetoothSerialDataCb custom_data_callback = NULL;
 
 #define INQ_LEN 0x10
 #define INQ_NUM_RSPS 20
@@ -76,6 +75,7 @@ typedef struct {
         uint8_t data[];
 } spp_packet_t;
 
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
 static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
 {
   if (bda == NULL || str == NULL || size < 18) {
@@ -87,6 +87,7 @@ static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
           p[0], p[1], p[2], p[3], p[4], p[5]);
   return str;
 }
+#endif
 
 static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
 {
@@ -152,7 +153,7 @@ static uint8_t _spp_tx_buffer[SPP_TX_MAX];
 static uint16_t _spp_tx_buffer_len = 0;
 
 static bool _spp_send_buffer(){
-    if((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED)){
+    if((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, portMAX_DELAY) & SPP_CONGESTED) != 0){
         esp_err_t err = esp_spp_write(_spp_client, _spp_tx_buffer_len, _spp_tx_buffer);
         if(err != ESP_OK){
             log_e("SPP Write Failed! [0x%X]", err);
@@ -216,7 +217,6 @@ static void _spp_tx_task(void * arg){
     _spp_task_handle = NULL;
 }
 
-
 static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
     switch (event)
@@ -276,7 +276,9 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
         //ets_printf("r:%u\n", param->data_ind.len);
 
-        if (_spp_rx_queue != NULL){
+        if(custom_data_callback){
+            custom_data_callback(param->data_ind.data, param->data_ind.len);
+        } else if (_spp_rx_queue != NULL){
             for (int i = 0; i < param->data_ind.len; i++){
                 if(xQueueSend(_spp_rx_queue, param->data_ind.data + i, (TickType_t)0) != pdTRUE){
                     log_e("RX Full! Discarding %u bytes", param->data_ind.len - i);
@@ -320,13 +322,19 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
     if(custom_spp_callback)(*custom_spp_callback)(event, param);
 }
 
+void BluetoothSerial::onData(BluetoothSerialDataCb cb){
+    custom_data_callback = cb;
+}
+
 static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 {
     switch(event){
         case ESP_BT_GAP_DISC_RES_EVT:
             log_i("ESP_BT_GAP_DISC_RES_EVT");
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
             char bda_str[18];
             log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
+#endif
             for (int i = 0; i < param->disc_res.num_prop; i++) {
                 uint8_t peer_bdname_len;
                 char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
@@ -361,11 +369,11 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                         break;
 
                     case ESP_BT_GAP_DEV_PROP_COD:
-                        //log_i("ESP_BT_GAP_DEV_PROP_COD");
+                        log_d("ESP_BT_GAP_DEV_PROP_COD");
                         break;
 
                     case ESP_BT_GAP_DEV_PROP_RSSI:
-                        //log_i("ESP_BT_GAP_DEV_PROP_RSSI");
+                        log_d("ESP_BT_GAP_DEV_PROP_RSSI");
                         break;
                         
                     default:
@@ -465,7 +473,7 @@ static bool _init_bt(const char *deviceName)
     }
 
     if(!_spp_task_handle){
-        xTaskCreate(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 2, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
@@ -505,6 +513,10 @@ static bool _init_bt(const char *deviceName)
     if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
         log_e("spp init failed");
         return false;
+    }
+
+    if (esp_bt_sleep_disable() != ESP_OK){
+        log_e("esp_bt_sleep_disable failed");
     }
 
     log_i("device name set");
@@ -574,7 +586,7 @@ static bool _stop_bt()
 
 static bool waitForConnect(int timeout) {
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_CONNECTED) != 0;
 }
 
 /*
@@ -648,7 +660,11 @@ size_t BluetoothSerial::write(const uint8_t *buffer, size_t size)
 
 void BluetoothSerial::flush()
 {
-    while(read() >= 0){}
+    if (_spp_tx_queue != NULL){
+        while(uxQueueMessagesWaiting(_spp_tx_queue) > 0){
+	    delay(5);
+        }
+    }
 }
 
 void BluetoothSerial::end()
@@ -757,7 +773,7 @@ bool BluetoothSerial::disconnect() {
         log_i("disconnecting");
         if (esp_spp_disconnect(_spp_client) == ESP_OK) {
             TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) != 0);
+            return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED) != 0;
         }
     }
     return false;
@@ -785,6 +801,6 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
         return false;
     }
     TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) != 0);
+    return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
 }
 #endif

@@ -51,7 +51,8 @@ public:
 	void           setActiveScan(bool active);
 	void           setAdvertisedDeviceCallbacks(
 			              BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks,
-										bool wantDuplicates = false);
+										bool wantDuplicates = false,
+										bool shouldParse = true);
 	void           setInterval(uint16_t intervalMSecs);
 	void           setWindow(uint16_t windowMSecs);
 	bool           start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue = false);
@@ -73,6 +74,7 @@ private:
 	esp_ble_scan_params_t         m_scan_params;
 	BLEAdvertisedDeviceCallbacks* m_pAdvertisedDeviceCallbacks = nullptr;
 	bool                          m_stopped = true;
+	bool                          m_shouldParse = true;
 	FreeRTOS::Semaphore           m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
 	BLEScanResults                m_scanResults;
 	bool                          m_wantDuplicates;

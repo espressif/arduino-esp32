@@ -22,12 +22,15 @@
  * Constructor
  */
 BLEScan::BLEScan() {
+	memset(&m_scan_params, 0, sizeof(m_scan_params)); // Initialize all params
 	m_scan_params.scan_type          = BLE_SCAN_TYPE_PASSIVE; // Default is a passive scan.
 	m_scan_params.own_addr_type      = BLE_ADDR_TYPE_PUBLIC;
 	m_scan_params.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
+	m_scan_params.scan_duplicate     = BLE_SCAN_DUPLICATE_DISABLE;
 	m_pAdvertisedDeviceCallbacks     = nullptr;
 	m_stopped                        = true;
 	m_wantDuplicates                 = false;
+	m_shouldParse                    = true;
 	setInterval(100);
 	setWindow(100);
 } // BLEScan
@@ -88,15 +91,18 @@ void BLEScan::handleGAPEvent(
 // ignore it.
 					BLEAddress advertisedAddress(param->scan_rst.bda);
 					bool found = false;
+					bool shouldDelete = true;
 
-					if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString()) != 0) {
-						found = true;
-					}
+					if (!m_wantDuplicates) {
+						if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString()) != 0) {
+							found = true;
+						}
 
-					if (found && !m_wantDuplicates) {  // If we found a previous entry AND we don't want duplicates, then we are done.
-						log_d("Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
-						vTaskDelay(1);  // <--- allow to switch task in case we scan infinity and dont have new devices to report, or we are blocked here
-						break;
+						if (found) {  // If we found a previous entry AND we don't want duplicates, then we are done.
+							log_d("Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
+							vTaskDelay(1);  // <--- allow to switch task in case we scan infinity and dont have new devices to report, or we are blocked here
+							break;
+						}
 					}
 
 					// We now construct a model of the advertised device that we have just found for the first
@@ -107,19 +113,23 @@ void BLEScan::handleGAPEvent(
 					advertisedDevice->setAddress(advertisedAddress);
 					advertisedDevice->setRSSI(param->scan_rst.rssi);
 					advertisedDevice->setAdFlag(param->scan_rst.flag);
-					advertisedDevice->parseAdvertisement((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					if (m_shouldParse) {
+						advertisedDevice->parseAdvertisement((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					} else {
+						advertisedDevice->setPayload((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					}
 					advertisedDevice->setScan(this);
 					advertisedDevice->setAddressType(param->scan_rst.ble_addr_type);
 
-					if (!found) {   // If we have previously seen this device, don't record it again.
-						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
-					}
-
-					if (m_pAdvertisedDeviceCallbacks) {
+					if (m_pAdvertisedDeviceCallbacks) { // if has callback, no need to record to vector
 						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
+					} else if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
+						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
+						shouldDelete = false;
 					}
-					if(found)
+					if (shouldDelete) {
 						delete advertisedDevice;
+					}
 
 					break;
 				} // ESP_GAP_SEARCH_INQ_RES_EVT
@@ -159,12 +169,13 @@ void BLEScan::setActiveScan(bool active) {
  * @brief Set the call backs to be invoked.
  * @param [in] pAdvertisedDeviceCallbacks Call backs to be invoked.
  * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
+ * @param [in] shouldParse  True if we wish to parse advertised package or raw payload.  Default is true.
  */
-void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates) {
+void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates, bool shouldParse) {
 	m_wantDuplicates = wantDuplicates;
 	m_pAdvertisedDeviceCallbacks = pAdvertisedDeviceCallbacks;
+	m_shouldParse = shouldParse;
 } // setAdvertisedDeviceCallbacks
-
 
 /**
  * @brief Set the interval to scan.

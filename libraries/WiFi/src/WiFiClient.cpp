@@ -105,7 +105,7 @@ public:
 
     int read(uint8_t * dst, size_t len){
         if(!dst || !len || (_pos == _fill && !fillBuffer())){
-            return -1;
+            return _failed ? -1 : 0;
         }
         size_t a = _fill - _pos;
         if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
@@ -346,6 +346,9 @@ int WiFiClient::read()
     if(res < 0) {
         return res;
     }
+    if (res == 0) {  //  No data available.
+        return -1;
+    }
     return data;
 }
 
@@ -495,23 +498,28 @@ uint8_t WiFiClient::connected()
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
         // avoid unused var warning by gcc
         (void)res;
-        switch (errno) {
-            case EWOULDBLOCK:
-            case ENOENT: //caused by vfs
-                _connected = true;
-                break;
-            case ENOTCONN:
-            case EPIPE:
-            case ECONNRESET:
-            case ECONNREFUSED:
-            case ECONNABORTED:
-                _connected = false;
-                log_d("Disconnected: RES: %d, ERR: %d", res, errno);
-                break;
-            default:
-                log_i("Unexpected: RES: %d, ERR: %d", res, errno);
-                _connected = true;
-                break;
+        // recv only sets errno if res is <= 0
+        if (res <= 0){
+          switch (errno) {
+              case EWOULDBLOCK:
+              case ENOENT: //caused by vfs
+                  _connected = true;
+                  break;
+              case ENOTCONN:
+              case EPIPE:
+              case ECONNRESET:
+              case ECONNREFUSED:
+              case ECONNABORTED:
+                  _connected = false;
+                  log_d("Disconnected: RES: %d, ERR: %d", res, errno);
+                  break;
+              default:
+                  log_i("Unexpected: RES: %d, ERR: %d", res, errno);
+                  _connected = true;
+                  break;
+          }
+        } else {
+          _connected = true;
         }
     }
     return _connected;

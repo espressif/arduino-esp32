@@ -17,6 +17,7 @@ EEPROMClass  AGE("eeprom2", 0x100);
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
   Serial.println("Testing EEPROMClass\n");
   if (!NAMES.begin(NAMES.length())) {
     Serial.println("Failed to initialise NAMES");
@@ -43,7 +44,7 @@ void setup() {
   uint32_t age = 47;
 
   // Write: Variables ---> EEPROM stores
-  NAMES.put(0, name);
+  NAMES.writeString(0, name);
   HEIGHT.put(0, height);
   AGE.put(0, age);
   Serial.print("name: ");   Serial.println(name);

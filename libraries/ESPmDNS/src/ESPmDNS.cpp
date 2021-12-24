@@ -130,7 +130,7 @@ void MDNSResponder::disableWorkstation(){
     }
 }
 
-void MDNSResponder::addService(char *name, char *proto, uint16_t port){
+bool MDNSResponder::addService(char *name, char *proto, uint16_t port){
     char _name[strlen(name)+2];
     char _proto[strlen(proto)+2];
 	if (name[0] == '_') {
@@ -146,7 +146,9 @@ void MDNSResponder::addService(char *name, char *proto, uint16_t port){
 
     if(mdns_service_add(NULL, _name, _proto, port, NULL, 0)) {
         log_e("Failed adding service %s.%s.\n", name, proto);
+	return false;
     }
+    return true;
 }
 
 bool MDNSResponder::addServiceTxt(char *name, char *proto, char *key, char *value){
