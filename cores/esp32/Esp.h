@@ -22,6 +22,7 @@
 
 #include <Arduino.h>
 #include <esp_partition.h>
+#include <hal/cpu_hal.h>
 
 /**
  * AVR macros for WDT managment
@@ -108,11 +109,9 @@ public:
 
 };
 
-uint32_t IRAM_ATTR EspClass::getCycleCount()
+uint32_t ARDUINO_ISR_ATTR EspClass::getCycleCount()
 {
-    uint32_t ccount;
-    __asm__ __volatile__("esync; rsr %0,ccount":"=a" (ccount));
-    return ccount;
+    return cpu_hal_get_cycle_count();
 }
 
 extern EspClass ESP;

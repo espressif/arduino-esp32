@@ -28,8 +28,9 @@
 #include <stdint.h>
 #include <math.h>
 #include "stdlib_noniso.h"
+#include "esp_system.h"
 
-void reverse(char* begin, char* end) {
+static void reverse(char* begin, char* end) {
     char *is = begin;
     char *ie = end - 1;
     while(is < ie) {

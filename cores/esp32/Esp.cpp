@@ -19,18 +19,37 @@
 
 #include "Arduino.h"
 #include "Esp.h"
-#include "rom/spi_flash.h"
 #include "esp_sleep.h"
 #include "esp_spi_flash.h"
 #include <memory>
 #include <soc/soc.h>
-#include <soc/efuse_reg.h>
 #include <esp_partition.h>
 extern "C" {
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 }
 #include <MD5Builder.h>
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/spi_flash.h"
+#include "soc/efuse_reg.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000     // Flash offset containing flash size and spi mode
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/spi_flash.h"
+#include "soc/efuse_reg.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c3 is located at 0x0000
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x1000
+#endif
 
 /**
  * User-defined Literals
@@ -121,24 +140,36 @@ uint32_t EspClass::getMaxAllocHeap(void)
 
 uint32_t EspClass::getPsramSize(void)
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
-    return info.total_free_bytes + info.total_allocated_bytes;
+	if(psramFound()){
+	    multi_heap_info_t info;
+	    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
+	    return info.total_free_bytes + info.total_allocated_bytes;
+	}
+	return 0;
 }
 
 uint32_t EspClass::getFreePsram(void)
 {
-    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMinFreePsram(void)
 {
-    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 uint32_t EspClass::getMaxAllocPsram(void)
 {
-    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	if(psramFound()){
+	    return heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM);
+	}
+	return 0;
 }
 
 static uint32_t sketchSize(sketchSize_t response) {
@@ -220,6 +251,7 @@ uint8_t EspClass::getChipRevision(void)
 
 const char * EspClass::getChipModel(void)
 {
+#if CONFIG_IDF_TARGET_ESP32
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
     uint32_t pkg_ver = chip_ver & 0x7;
     switch (pkg_ver) {
@@ -233,9 +265,28 @@ const char * EspClass::getChipModel(void)
             return "ESP32-PICO-D2";
         case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4 :
             return "ESP32-PICO-D4";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302 :
+            return "ESP32-PICO-V3-02";
         default:
             return "Unknown";
     }
+#elif CONFIG_IDF_TARGET_ESP32S2
+    uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    switch (pkg_ver) {
+    case 0:
+      return "ESP32-S2";
+    case 1:
+      return "ESP32-S2FH16";
+    case 2:
+      return "ESP32-S2FH32";
+    default:
+      return "ESP32-S2 (Unknown)";
+    }
+#elif CONFIG_IDF_TARGET_ESP32S3
+    return "ESP32-S3";
+#elif CONFIG_IDF_TARGET_ESP32C3
+    return "ESP32-C3";
+#endif
 }
 
 uint8_t EspClass::getChipCores(void)
@@ -253,7 +304,7 @@ const char * EspClass::getSdkVersion(void)
 uint32_t EspClass::getFlashChipSize(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSize(fhdr.spi_size);
@@ -262,7 +313,7 @@ uint32_t EspClass::getFlashChipSize(void)
 uint32_t EspClass::getFlashChipSpeed(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSpeed(fhdr.spi_speed);
@@ -271,7 +322,7 @@ uint32_t EspClass::getFlashChipSpeed(void)
 FlashMode_t EspClass::getFlashChipMode(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(0x1000, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return FM_UNKNOWN;
     }
     return magicFlashChipMode(fhdr.spi_mode);

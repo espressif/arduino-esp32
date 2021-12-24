@@ -21,6 +21,9 @@
 #define APX20X_INT          35
 #define BMA42X_INT1         39
 
+static const uint8_t TX = 1;
+static const uint8_t RX = 3;
+
 //Serial1 Already assigned to GPS LORA
 #define TX1                 33
 #define RX1                 34

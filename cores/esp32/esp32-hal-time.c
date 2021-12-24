@@ -14,7 +14,8 @@
 
 #include "esp32-hal.h"
 #include "lwip/apps/sntp.h"
-#include "tcpip_adapter.h"
+//#include "tcpip_adapter.h"
+#include "esp_netif.h"
 
 static void setTimeZone(long offset, int daylight)
 {
@@ -43,10 +44,13 @@ static void setTimeZone(long offset, int daylight)
 /*
  * configTime
  * Source: https://github.com/esp8266/Arduino/blob/master/cores/esp8266/time.c
+ * Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
+ *       see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
  * */
 void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3)
 {
-    tcpip_adapter_init();  // Should not hurt anything if already inited
+    //tcpip_adapter_init();  // Should not hurt anything if already inited
+    esp_netif_init();
     if(sntp_enabled()){
         sntp_stop();
     }
@@ -61,10 +65,13 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
 /*
  * configTzTime
  * sntp setup using TZ environment variable
+ * Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
+ *       see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
  * */
 void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3)
 {
-    tcpip_adapter_init();  // Should not hurt anything if already inited
+    //tcpip_adapter_init();  // Should not hurt anything if already inited
+    esp_netif_init();
     if(sntp_enabled()){
         sntp_stop();
     }

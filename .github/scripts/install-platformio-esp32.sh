@@ -1,18 +1,43 @@
 #!/bin/bash
 
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
+PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git#feature/arduino-idf-master"
+
+XTENSA32_TOOLCHAIN_VERSION="8.4.0+2021r1"
+XTENSA32S2_TOOLCHAIN_VERSION="8.4.0+2021r1"
+RISCV_TOOLCHAIN_VERSION="8.4.0+2021r1"
+ESPTOOLPY_VERSION="~1.30100.0"
+ESPRESSIF_ORGANIZATION_NAME="espressif"
 
 echo "Installing Python Wheel ..."
 pip install wheel > /dev/null 2>&1
 
 echo "Installing PlatformIO ..."
-pip install -U https://github.com/platformio/platformio/archive/develop.zip > /dev/null 2>&1
+pip install -U https://github.com/platformio/platformio/archive/master.zip > /dev/null 2>&1
 
 echo "Installing Platform ESP32 ..."
-python -m platformio platform install https://github.com/platformio/platform-espressif32.git > /dev/null 2>&1
+python -m platformio platform install $PLATFORMIO_ESP32_URL  > /dev/null 2>&1
 
-echo "Replacing the framework version ..."
-python -c "import json; import os; fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+'); data=json.load(fp); data['packages']['framework-arduinoespressif32']['version'] = '*'; del data['packages']['framework-arduinoespressif32']['owner']; fp.seek(0); fp.truncate(); json.dump(data, fp); fp.close()"
+echo "Replacing the package versions ..."
+replace_script="import json; import os;"
+replace_script+="fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+');"
+replace_script+="data=json.load(fp);"
+# Use framework sources from the repository
+replace_script+="data['packages']['framework-arduinoespressif32']['version'] = '*';"
+replace_script+="del data['packages']['framework-arduinoespressif32']['owner'];"
+# Use toolchain packages from the "espressif" organization
+replace_script+="data['packages']['toolchain-xtensa-esp32']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
+replace_script+="data['packages']['toolchain-xtensa-esp32s2']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
+replace_script+="data['packages']['toolchain-riscv32-esp']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
+# Update versions to use the upstream
+replace_script+="data['packages']['toolchain-xtensa-esp32']['version']='$XTENSA32_TOOLCHAIN_VERSION';"
+replace_script+="data['packages']['toolchain-xtensa-esp32s2']['version']='$XTENSA32S2_TOOLCHAIN_VERSION';"
+replace_script+="data['packages']['toolchain-riscv32-esp']['version']='$RISCV_TOOLCHAIN_VERSION';"
+# esptool.py may require an upstream version (for now platformio is the owner)
+replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSION';"
+# Save results
+replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close()"
+python -c "$replace_script"
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
 	echo "Linking Core..."
@@ -25,19 +50,20 @@ fi
 echo "PlatformIO for ESP32 has been installed"
 echo ""
 
-function build_pio_sketch(){ # build_pio_sketch <board> <path-to-ino>
-    if [ "$#" -lt 2 ]; then
+function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
+    if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
-        echo "USAGE: build_pio_sketch <board> <path-to-ino>"
+        echo "USAGE: build_pio_sketch <board> <options> <path-to-ino>"
         return 1
     fi
 
     local board="$1"
-    local sketch="$2"
+    local options="$2"
+    local sketch="$3"
     local sketch_dir=$(dirname "$sketch")
     echo ""
     echo "Compiling '"$(basename "$sketch")"' ..."
-    python -m platformio ci --board "$board" "$sketch_dir" --project-option="board_build.partitions = huge_app.csv"
+    python -m platformio ci --board "$board" "$sketch_dir" --project-option="$options"
 }
 
 function count_sketches() # count_sketches <examples-path>
@@ -66,20 +92,21 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_pio_sketches() # build_pio_sketches <board> <examples-path> <chunk> <total-chunks>
+function build_pio_sketches() # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
 {
-    if [ "$#" -lt 2 ]; then
+    if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
-        echo "USAGE: build_pio_sketches <board> <examples-path> [<chunk> <total-chunks>]"
+        echo "USAGE: build_pio_sketches <board> <options> <examples-path> [<chunk> <total-chunks>]"
         return 1
     fi
 
     local board=$1
-    local examples=$2
-    local chunk_idex=$3
-    local chunks_num=$4
+    local options="$2"
+    local examples=$3
+    local chunk_idex=$4
+    local chunks_num=$5
 
-    if [ "$#" -lt 4 ]; then
+    if [ "$#" -lt 5 ]; then
         chunk_idex="0"
         chunks_num="1"
     fi
@@ -138,7 +165,7 @@ function build_pio_sketches() # build_pio_sketches <board> <examples-path> <chun
         || [ "$sketchnum" -gt "$end_index" ]; then
             continue
         fi
-        build_pio_sketch "$board" "$sketch"
+        build_pio_sketch "$board" "$options" "$sketch"
         local result=$?
         if [ $result -ne 0 ]; then
             return $result

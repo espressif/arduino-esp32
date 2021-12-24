@@ -5,7 +5,7 @@
  *      Author: pcbreflux
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string.h>
 #include "esp32-hal-log.h"
 #include "BLEEddystoneURL.h"

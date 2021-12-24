@@ -30,13 +30,19 @@ typedef enum {
     ADC_0db,
     ADC_2_5db,
     ADC_6db,
-    ADC_11db
+    ADC_11db,
+    ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
 /*
  * Get ADC value for pin
  * */
 uint16_t analogRead(uint8_t pin);
+
+/*
+ * Get MilliVolts value for pin
+ * */
+uint32_t analogReadMilliVolts(uint8_t pin);
 
 /*
  * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
@@ -46,13 +52,6 @@ uint16_t analogRead(uint8_t pin);
  * Note: compatibility with Arduino SAM
  */
 void analogReadResolution(uint8_t bits);
-
-/*
- * Sets the sample bits and read resolution
- * Default is 12bit (0 - 4095)
- * Range is 9 - 12
- * */
-void analogSetWidth(uint8_t bits);
 
 /*
  * Set the divider for the ADC clock.
@@ -74,15 +73,17 @@ void analogSetAttenuation(adc_attenuation_t attenuation);
 void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
 /*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
- * */
-int hallRead();
-
-/*
  * Attach pin to ADC (will also clear any other analog mode that could be on)
  * */
 bool adcAttachPin(uint8_t pin);
+
+#if CONFIG_IDF_TARGET_ESP32
+/*
+ * Sets the sample bits and read resolution
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
+ * */
+void analogSetWidth(uint8_t bits);
 
 /*
  * Set pin to use for ADC calibration if the esp is not already calibrated (25, 26 or 27)
@@ -90,9 +91,11 @@ bool adcAttachPin(uint8_t pin);
 void analogSetVRefPin(uint8_t pin);
 
 /*
- * Get MilliVolts value for pin
+ * Get value for HALL sensor (without LNA)
+ * connected to pins 36(SVP) and 39(SVN)
  * */
-uint32_t analogReadMilliVolts(uint8_t pin);
+int hallRead();
+#endif
 
 #ifdef __cplusplus
 }

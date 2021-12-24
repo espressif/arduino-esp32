@@ -23,9 +23,9 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 		git clone https://github.com/espressif/arduino-esp32.git esp32 > /dev/null 2>&1
 	fi
 
-	echo "Updating Submodules ..."
+	#echo "Updating Submodules ..."
 	cd esp32
-	git submodule update --init --recursive > /dev/null 2>&1
+	#git submodule update --init --recursive > /dev/null 2>&1
 
 	echo "Installing Platform Tools ..."
 	cd tools && python get.py

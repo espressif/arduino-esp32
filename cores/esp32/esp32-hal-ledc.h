@@ -35,6 +35,7 @@ uint32_t    ledcRead(uint8_t channel);
 double      ledcReadFreq(uint8_t channel);
 void        ledcAttachPin(uint8_t pin, uint8_t channel);
 void        ledcDetachPin(uint8_t pin);
+double      ledcChangeFrequency(uint8_t channel, double freq, uint8_t resolution_bits);
 
 
 #ifdef __cplusplus

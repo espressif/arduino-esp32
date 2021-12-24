@@ -29,7 +29,7 @@ class Preferences {
         Preferences();
         ~Preferences();
 
-        bool begin(const char * name, bool readOnly=false);
+        bool begin(const char * name, bool readOnly=false, const char* partition_label=NULL);
         void end();
 
         bool clear();

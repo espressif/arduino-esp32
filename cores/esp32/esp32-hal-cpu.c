@@ -16,16 +16,31 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "freertos/xtensa_timer.h"
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
-#include "rom/rtc.h"
 #include "soc/apb_ctrl_reg.h"
 #include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "freertos/xtensa_timer.h"
+#include "esp32/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "freertos/xtensa_timer.h"
+#include "esp32s2/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/rtc.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
+#include "rom/rtc.h"
+#endif
 
 typedef struct apb_change_cb_s {
         struct apb_change_cb_s * prev;
@@ -34,7 +49,6 @@ typedef struct apb_change_cb_s {
         apb_change_cb_t cb;
 } apb_change_t;
 
-const uint32_t MHZ = 1000000;
 
 static apb_change_t * apb_change_callbacks = NULL;
 static xSemaphoreHandle apb_change_lock = NULL;
@@ -130,10 +144,14 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
+#if CONFIG_IDF_TARGET_ESP32C3
+	return APB_CLK_FREQ;
+#else
     if(conf->freq_mhz >= 80){
         return 80 * MHZ;
     }
     return (conf->source_freq_mhz * MHZ) / conf->div;
+#endif
 }
 
 void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us); //private in IDF
@@ -143,6 +161,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     uint32_t capb, apb;
     //Get XTAL Frequency and calculate min CPU MHz
     rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
+#if CONFIG_IDF_TARGET_ESP32
     if(xtal > RTC_XTAL_FREQ_AUTO){
         if(xtal < RTC_XTAL_FREQ_40M) {
             if(cpu_freq_mhz <= xtal && cpu_freq_mhz != xtal && cpu_freq_mhz != (xtal/2)){
@@ -154,6 +173,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
             return false;
         }
     }
+#endif
     if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 80){
         if(xtal >= RTC_XTAL_FREQ_40M){
             log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
@@ -162,6 +182,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         }
         return false;
     }
+#if CONFIG_IDF_TARGET_ESP32
     //check if cpu supports the frequency
     if(cpu_freq_mhz == 240){
         //Check if ESP32 is rated for a CPU frequency of 160MHz only
@@ -171,6 +192,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
             cpu_freq_mhz = 160;
         }
     }
+#endif
     //Get current CPU clock configuration
     rtc_clk_cpu_freq_get_config(&cconf);
     //return if frequency has not changed
@@ -204,8 +226,12 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
     //Update FreeRTOS Tick Divisor
+#if CONFIG_IDF_TARGET_ESP32C3
+
+#else
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);
     _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
+#endif
     //Call peripheral functions after the APB change
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);

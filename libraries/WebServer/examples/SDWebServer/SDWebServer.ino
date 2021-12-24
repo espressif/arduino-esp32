@@ -25,6 +25,8 @@
   index.htm is the default index (works on subfolders as well)
 
   upload the contents of SdRoot to the root of the SDcard and access the editor by going to http://esp8266sd.local/edit
+  To retrieve the contents of SDcard, visit http://esp32sd.local/list?dir=/
+      dir is the argument that needs to be passed to the function PrintDirectory via HTTP Get request.
 
 */
 #include <WiFi.h>
@@ -229,7 +231,7 @@ void printDirectory() {
     output += "{\"type\":\"";
     output += (entry.isDirectory()) ? "dir" : "file";
     output += "\",\"name\":\"";
-    output += entry.name();
+    output += entry.path();
     output += "\"";
     output += "}";
     server.sendContent(output);
@@ -310,4 +312,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
 }

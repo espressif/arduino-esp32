@@ -66,3 +66,18 @@ To use PSK:
   encryption for the connection
 
 Please see the WiFiClientPSK example.
+
+Specifying the ALPN Protocol
+----------------------------
+
+Application-Layer Protocol Negotiation (ALPN) is a Transport Layer Security (TLS) extension that allows 
+the application layer to negotiate which protocol should be performed over a secure connection in a manner 
+that avoids additional round trips and which is independent of the application-layer protocols.
+
+For example, this is used with AWS IoT Custom Authorizers where an MQTT client must set the ALPN protocol to ```mqtt```: 
+
+```
+const char *aws_protos[] = {"mqtt", NULL};
+...
+wiFiClient.setAlpnProtocols(aws_protos);
+```

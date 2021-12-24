@@ -8,11 +8,11 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h>
 #include "BLEUUID.h"
 #include <vector>
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 /**
  * @brief Advertisement data set by the programmer to be published by the %BLE server.
@@ -53,6 +53,7 @@ public:
 	void stop();
 	void setAppearance(uint16_t appearance);
 	void setAdvertisementType(esp_ble_adv_type_t adv_type);
+	void setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map);
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(BLEAdvertisementData& advertisementData);
@@ -77,5 +78,36 @@ private:
 	bool                 m_scanResp = true;
 
 };
-#endif /* CONFIG_BT_ENABLED */
+
+#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+
+class BLEMultiAdvertising
+{
+private:
+	esp_ble_gap_ext_adv_params_t* params_arrays;
+	esp_ble_gap_ext_adv_t* ext_adv;
+	uint8_t count;
+
+public:
+	BLEMultiAdvertising(uint8_t num = 1);
+	~BLEMultiAdvertising() {}
+
+	bool setAdvertisingParams(uint8_t instance, const esp_ble_gap_ext_adv_params_t* params);
+	bool setAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data);
+	bool setScanRspData(uint8_t instance, uint16_t length, const uint8_t* data);
+	bool start();
+	bool start(uint8_t num, uint8_t from);
+	void setDuration(uint8_t instance, int duration = 0, int max_events = 0);
+	bool setInstanceAddress(uint8_t instance, esp_bd_addr_t rand_addr);
+	bool stop(uint8_t num_adv, const uint8_t* ext_adv_inst);
+	bool remove(uint8_t instance);
+	bool clear();
+	bool setPeriodicAdvertisingParams(uint8_t instance, const esp_ble_gap_periodic_adv_params_t* params);
+	bool setPeriodicAdvertisingData(uint8_t instance, uint16_t length, const uint8_t* data);
+	bool startPeriodicAdvertising(uint8_t instance);
+};
+
+#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISING_H_ */

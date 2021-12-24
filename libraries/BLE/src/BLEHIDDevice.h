@@ -9,7 +9,7 @@
 #define _BLEHIDDEVICE_H_
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLECharacteristic.h"
 #include "BLEService.h"
@@ -26,6 +26,7 @@
 #define HID_CARD_READER	0x03C6
 #define HID_DIGITAL_PEN	0x03C7
 #define HID_BARCODE		0x03C8
+#define HID_BRAILLE_DISPLAY		0x03C9
 
 class BLEHIDDevice {
 public:
@@ -71,5 +72,5 @@ private:
 	BLECharacteristic* 	m_protocolModeCharacteristic;	//0x2a4e
 	BLECharacteristic*	m_batteryLevelCharacteristic;	//0x2a19
 };
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif /* _BLEHIDDEVICE_H_ */

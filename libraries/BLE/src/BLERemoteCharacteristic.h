@@ -8,21 +8,21 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <string>
+#include <functional>
 
 #include <esp_gattc_api.h>
 
 #include "BLERemoteService.h"
 #include "BLERemoteDescriptor.h"
 #include "BLEUUID.h"
-#include "FreeRTOS.h"
+#include "RTOS.h"
 
 class BLERemoteService;
 class BLERemoteDescriptor;
-typedef void (*notify_callback)(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
-
+typedef std::function<void(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify)> notify_callback;
 /**
  * @brief A model of a remote %BLE characteristic.
  */
@@ -39,6 +39,7 @@ public:
 	bool        canWriteNoResponse();
 	BLERemoteDescriptor* getDescriptor(BLEUUID uuid);
 	std::map<std::string, BLERemoteDescriptor*>* getDescriptors();
+	BLERemoteService* getRemoteService();
 	uint16_t    getHandle();
 	BLEUUID     getUUID();
 	std::string readValue();
@@ -46,7 +47,7 @@ public:
 	uint16_t    readUInt16();
 	uint32_t    readUInt32();
 	float       readFloat();
-	void        registerForNotify(notify_callback _callback, bool notifications = true);
+	void        registerForNotify(notify_callback _callback, bool notifications = true, bool descriptorRequiresRegistration = true);
 	void        writeValue(uint8_t* data, size_t length, bool response = false);
 	void        writeValue(std::string newValue, bool response = false);
 	void        writeValue(uint8_t newValue, bool response = false);
@@ -63,7 +64,6 @@ private:
 	// Private member functions
 	void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam);
 
-	BLERemoteService* getRemoteService();
 	void              removeDescriptors();
 	void              retrieveDescriptors();
 
@@ -83,5 +83,5 @@ private:
 	// We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
 	std::map<std::string, BLERemoteDescriptor*> m_descriptorMap;
 }; // BLERemoteCharacteristic
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_ */

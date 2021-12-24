@@ -14,9 +14,19 @@
 #ifndef _SDMMC_H_
 #define _SDMMC_H_
 
+#include "sdkconfig.h"
+#ifndef CONFIG_IDF_TARGET_ESP32S2
+
 #include "FS.h"
 #include "driver/sdmmc_types.h"
 #include "sd_defines.h"
+
+// If reading/writing to the SD card is unstable, 
+// you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT) 
+// in pins_arduino.h for your board variant.
+#ifndef BOARD_MAX_SDMMC_FREQ
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_HIGHSPEED
+#endif
 
 namespace fs
 {
@@ -28,7 +38,7 @@ protected:
 
 public:
     SDMMCFS(FSImplPtr impl);
-    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false);
+    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false, int sdmmc_frequency=BOARD_MAX_SDMMC_FREQ);
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
@@ -40,4 +50,5 @@ public:
 
 extern fs::SDMMCFS SD_MMC;
 
+#endif /* CONFIG_IDF_TARGET_ESP32S2 */
 #endif /* _SDMMC_H_ */

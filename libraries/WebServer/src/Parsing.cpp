@@ -30,6 +30,14 @@
 #define WEBSERVER_MAX_POST_ARGS 32
 #endif
 
+#define __STR(a) #a
+#define _STR(a) __STR(a)
+const char * _http_method_str[] = {
+#define XX(num, name, string) _STR(name),
+  HTTP_METHOD_MAP(XX)
+#undef XX
+};
+
 static const char Content_Type[] PROGMEM = "Content-Type";
 static const char filename[] PROGMEM = "filename";
 
@@ -96,17 +104,17 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   _currentUri = url;
   _chunked = false;
 
-  HTTPMethod method = HTTP_GET;
-  if (methodStr == F("POST")) {
-    method = HTTP_POST;
-  } else if (methodStr == F("DELETE")) {
-    method = HTTP_DELETE;
-  } else if (methodStr == F("OPTIONS")) {
-    method = HTTP_OPTIONS;
-  } else if (methodStr == F("PUT")) {
-    method = HTTP_PUT;
-  } else if (methodStr == F("PATCH")) {
-    method = HTTP_PATCH;
+  HTTPMethod method = HTTP_ANY;
+  size_t num_methods = sizeof(_http_method_str) / sizeof(const char *);
+  for (size_t i=0; i<num_methods; i++) {
+    if (methodStr == _http_method_str[i]) {
+      method = (HTTPMethod)i;
+      break;
+    }
+  }
+  if (method == HTTP_ANY) {
+    log_e("Unknown HTTP Method: %s", methodStr.c_str());
+    return false;
   }
   _currentMethod = method;
 
@@ -303,7 +311,6 @@ void WebServer::_uploadWriteByte(uint8_t b){
 }
 
 int WebServer::_uploadReadByte(WiFiClient& client){
-  if (!client.connected()) return -1;
   int res = client.read();
   if(res < 0) {
     // keep trying until you either read a valid byte or timeout
@@ -311,6 +318,7 @@ int WebServer::_uploadReadByte(WiFiClient& client){
     long timeoutIntervalMillis = client.getTimeout();
     boolean timedOut = false;
     for(;;) {
+      if (!client.connected()) return -1;
       // loosely modeled after blinkWithoutDelay pattern
       while(!timedOut && !client.available() && client.connected()){
         delay(2);

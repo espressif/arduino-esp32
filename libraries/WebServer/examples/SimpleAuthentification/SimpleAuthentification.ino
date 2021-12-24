@@ -129,4 +129,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
 }

@@ -8,9 +8,6 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### AsyncUDP
   Asynchronous task driven UDP datagram client/server
 
-### AzureIoT
-  Library to interact with Microsoft Azure IoT services
-
 ### BLE
   Bluetooth Low Energy v4.2 client/server framework
 
@@ -43,6 +40,9 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### ESPmDNS
   mDNS service advertising
 
+### Ethernet
+  Ethernet networking
+
 ### FFat
   FAT indexed filesystem on SPI flash
 
@@ -55,11 +55,20 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### HTTPUpdate
   Download a firmware update from HTTPd and apply it using Update
 
+### HTTPUpdateServer
+  Upload a firmware for the update from HTTPd
+
+### LittleFS
+  LittleFS (File System)
+
 ### NetBIOS
   NetBIOS name advertiser
 
 ### Preferences
   Flash keystore using ESP32 NVS
+
+### ESP RainMaker
+  End-to-end platform by Espressif that enables Makers to realize their IoT ideas faster
 
 ### SD
   Secure Digital card filesystem using SPI access
@@ -82,6 +91,9 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### Update
   Sketch Update using ESP32 OTA functionality
 
+### USB
+  Universal Serial Bus driver (device only)
+
 ### WebServer
   A simple HTTP daemon
 
@@ -92,4 +104,4 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
   Arduino compatible WiFi client object using embedded encryption
 
 ### Wire
-  Arduino compatible I2C driver (master only)
+  Arduino compatible I2C driver

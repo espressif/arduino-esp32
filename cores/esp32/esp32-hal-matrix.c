@@ -14,33 +14,47 @@
 
 #include "esp32-hal-matrix.h"
 #include "esp_attr.h"
+
+#include "esp_system.h"
+#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
+#include "esp32/rom/gpio.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/gpio.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/gpio.h"
+#else 
+#error Target CONFIG_IDF_TARGET is not supported
+#endif
+#else // ESP32 Before IDF 4.0
 #include "rom/gpio.h"
+#endif
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 #define MATRIX_DETACH_IN_LOW_PIN 0x30
 #define MATRIX_DETACH_IN_LOW_HIGH 0x38
 
-void IRAM_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable)
+void ARDUINO_ISR_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable)
 {
     gpio_matrix_out(pin, function, invertOut, invertEnable);
 }
 
-void IRAM_ATTR pinMatrixOutDetach(uint8_t pin, bool invertOut, bool invertEnable)
+void ARDUINO_ISR_ATTR pinMatrixOutDetach(uint8_t pin, bool invertOut, bool invertEnable)
 {
     gpio_matrix_out(pin, MATRIX_DETACH_OUT_SIG, invertOut, invertEnable);
 }
 
-void IRAM_ATTR pinMatrixInAttach(uint8_t pin, uint8_t signal, bool inverted)
+void ARDUINO_ISR_ATTR pinMatrixInAttach(uint8_t pin, uint8_t signal, bool inverted)
 {
     gpio_matrix_in(pin, signal, inverted);
 }
 
-void IRAM_ATTR pinMatrixInDetach(uint8_t signal, bool high, bool inverted)
+void ARDUINO_ISR_ATTR pinMatrixInDetach(uint8_t signal, bool high, bool inverted)
 {
     gpio_matrix_in(high?MATRIX_DETACH_IN_LOW_HIGH:MATRIX_DETACH_IN_LOW_PIN, signal, inverted);
 }
 /*
-void IRAM_ATTR intrMatrixAttach(uint32_t source, uint32_t inum){
+void ARDUINO_ISR_ATTR intrMatrixAttach(uint32_t source, uint32_t inum){
   intr_matrix_set(PRO_CPU_NUM, source, inum);
 }
 */

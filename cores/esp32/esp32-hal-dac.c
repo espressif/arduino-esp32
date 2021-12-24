@@ -12,43 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal-dac.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "rom/ets_sys.h"
-#include "esp_attr.h"
-#include "esp_intr.h"
-#include "soc/rtc_io_reg.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
+#include "esp32-hal.h"
+#include "soc/soc_caps.h"
 
-void IRAM_ATTR __dacWrite(uint8_t pin, uint8_t value)
+#ifndef SOC_DAC_SUPPORTED           
+#define NODAC
+#else
+#include "soc/dac_channel.h"
+#include "driver/dac_common.h"
+
+void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 {
-    if(pin < 25 || pin > 26){
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
         return;//not dac pin
     }
-    pinMode(pin, ANALOG);
-    uint8_t channel = pin - 25;
 
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
+    dac_output_enable(channel);
+    dac_output_voltage(channel, value);
 
-    //Disable Tone
-    CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL1_REG, SENS_SW_TONE_EN);
+}
 
-    if (channel) {
-        //Disable Channel Tone
-        CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN2_M);
-        //Set the Dac value
-        SET_PERI_REG_BITS(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_DAC, value, RTC_IO_PDAC2_DAC_S);   //dac_output
-        //Channel output enable
-        SET_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);
-    } else {
-        //Disable Channel Tone
-        CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
-        //Set the Dac value
-        SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, value, RTC_IO_PDAC1_DAC_S);   //dac_output
-        //Channel output enable
-        SET_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);
+void ARDUINO_ISR_ATTR __dacDisable(uint8_t pin)
+{
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
+        return;//not dac pin
     }
+
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
+    dac_output_disable(channel);
 }
 
 extern void dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
+extern void dacDisable(uint8_t pin) __attribute__ ((weak, alias("__dacDisable")));
+
+#endif

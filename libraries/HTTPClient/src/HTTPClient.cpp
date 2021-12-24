@@ -73,11 +73,15 @@ public:
 
     bool verify(WiFiClient& client, const char* host) override
     {
-         WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
-         wcs.setCACert(_cacert);
-         wcs.setCertificate(_clicert);
-         wcs.setPrivateKey(_clikey);
-         return true;
+        WiFiClientSecure& wcs = static_cast<WiFiClientSecure&>(client);
+        if (_cacert == nullptr) {
+            wcs.setInsecure();
+        } else {
+            wcs.setCACert(_cacert);
+            wcs.setCertificate(_clicert);
+            wcs.setPrivateKey(_clikey);
+        }
+        return true;
     }
 
 protected:
@@ -104,6 +108,12 @@ HTTPClient::~HTTPClient()
     }
     if(_currentHeaders) {
         delete[] _currentHeaders;
+    }
+    if(_tcpDeprecated) {
+        _tcpDeprecated.reset(nullptr);
+    }
+    if(_transportTraits) {
+        _transportTraits.reset(nullptr);
     }
 }
 
@@ -190,6 +200,7 @@ bool HTTPClient::begin(String url, const char* CAcert)
         end();
     }
 
+    clear();
     _port = 443;
     if (!beginInternal(url, "https")) {
         return false;
@@ -216,6 +227,7 @@ bool HTTPClient::begin(String url)
         end();
     }
 
+    clear();
     _port = 80;
     if (!beginInternal(url, "http")) {
         return begin(url, (const char*)NULL);
@@ -233,7 +245,6 @@ bool HTTPClient::begin(String url)
 bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 {
     log_v("url: %s", url.c_str());
-    clear();
 
     // check for : (http: or https:
     int index = url.indexOf(':');
@@ -251,6 +262,10 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
     url.remove(0, (index + 3)); // remove http:// or https://
 
     index = url.indexOf('/');
+    if (index == -1) {
+        index = url.length();
+        url += '/';
+    }
     String host = url.substring(0, index);
     url.remove(0, index); // remove host part
 
@@ -265,15 +280,22 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     // get port
     index = host.indexOf(':');
+    String the_host;
     if(index >= 0) {
-        _host = host.substring(0, index); // hostname
+        the_host = host.substring(0, index); // hostname
         host.remove(0, (index + 1)); // remove hostname + :
         _port = host.toInt(); // get port
     } else {
-        _host = host;
+        the_host = host;
     }
+    if(_host != the_host && connected()){
+        log_d("switching host from '%s' to '%s'. disconnecting first", _host.c_str(), the_host.c_str());
+        _canReuse = false;
+        disconnect(true);
+    }
+    _host = the_host;
     _uri = url;
-    log_d("host: %s port: %d url: %s", _host.c_str(), _port, _uri.c_str());
+    log_d("protocol: %s, host: %s port: %d url: %s", _protocol.c_str(), _host.c_str(), _port, _uri.c_str());
     return true;
 }
 
@@ -365,19 +387,19 @@ void HTTPClient::disconnect(bool preserveClient)
         }
 
         if(_reuse && _canReuse) {
-            log_d("tcp keep open for reuse\n");
+            log_d("tcp keep open for reuse");
         } else {
-            log_d("tcp stop\n");
+            log_d("tcp stop");
             _client->stop();
             if(!preserveClient) {
                 _client = nullptr;
-            }
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-            if(_tcpDeprecated) {
-                _transportTraits.reset(nullptr);
-                _tcpDeprecated.reset(nullptr);
-            }
+                if(_tcpDeprecated) {
+                    _transportTraits.reset(nullptr);
+                    _tcpDeprecated.reset(nullptr);
+                }
 #endif
+            }
         }
     } else {
         log_d("tcp is closed\n");
@@ -439,6 +461,17 @@ void HTTPClient::setAuthorization(const char * auth)
 {
     if(auth) {
         _base64Authorization = auth;
+    }
+}
+
+/**
+ * set the Authorization type for the http request
+ * @param authType const char *
+ */
+void HTTPClient::setAuthorizationType(const char * authType)
+{
+    if(authType) {
+        _authorizationType = authType;
     }
 }
 
@@ -1157,7 +1190,9 @@ bool HTTPClient::sendHeader(const char * type)
 
     if(_base64Authorization.length()) {
         _base64Authorization.replace("\n", "");
-        header += F("Authorization: Basic ");
+        header += F("Authorization: ");
+        header += _authorizationType; 
+        header += " ";
         header += _base64Authorization;
         header += "\r\n";
     }
@@ -1178,8 +1213,8 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    clear();
-
+    _returnCode = 0;
+    _size = -1;
     _canReuse = _reuse;
 
     String transferEncoding;
@@ -1247,6 +1282,8 @@ int HTTPClient::handleHeaderResponse()
                     log_d("Transfer-Encoding: %s", transferEncoding.c_str());
                     if(transferEncoding.equalsIgnoreCase("chunked")) {
                         _transferEncoding = HTTPC_TE_CHUNKED;
+                    } else if(transferEncoding.equalsIgnoreCase("identity")) {
+                        _transferEncoding = HTTPC_TE_IDENTITY;
                     } else {
                         return HTTPC_ERROR_ENCODING;
                     }
@@ -1314,9 +1351,9 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                     readBytes = buff_size;
                 }
 		    
-		// stop if no more reading    
-		if (readBytes == 0)
-			break;
+        		// stop if no more reading    
+        		if (readBytes == 0)
+        			break;
 
                 // read data
                 int bytesRead = _client->readBytes(buff, readBytes);

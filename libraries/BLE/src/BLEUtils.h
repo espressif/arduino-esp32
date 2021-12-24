@@ -8,7 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEUTILS_H_
 #define COMPONENTS_CPP_UTILS_BLEUTILS_H_
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>   // ESP32 BLE
 #include <esp_gatts_api.h>   // ESP32 BLE
 #include <esp_gap_ble_api.h> // ESP32 BLE
@@ -59,5 +59,5 @@ public:
 	static const char* searchEventTypeToString(esp_gap_search_evt_t searchEvt);
 };
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BLUEDROID_ENABLED
 #endif /* COMPONENTS_CPP_UTILS_BLEUTILS_H_ */

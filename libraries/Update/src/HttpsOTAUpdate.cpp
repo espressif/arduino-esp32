@@ -11,13 +11,13 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/event_groups.h>
 
 #include "esp32-hal-log.h"
 #include "esp_http_client.h"
 #include "esp_https_ota.h"
 
 #include "HttpsOTAUpdate.h"
-#include "Esp.h"
 #define OTA_TASK_STACK_SIZE 9216
 
 typedef void (*HttpEventCb)(HttpEvent_t*);
