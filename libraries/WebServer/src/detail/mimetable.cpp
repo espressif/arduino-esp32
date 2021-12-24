@@ -8,10 +8,14 @@ namespace mime
 const Entry mimeTable[maxType] = 
 {
     { ".html", "text/html" },
+    { ".html.gz", "text/html" },
     { ".htm", "text/html" },
+    { ".htm.gz", "text/html" },
     { ".css", "text/css" },
+    { ".css.gz", "text/css" },
     { ".txt", "text/plain" },
     { ".js", "application/javascript" },
+    { ".js.gz", "application/javascript" },
     { ".json", "application/json" },
     { ".png", "image/png" },
     { ".gif", "image/gif" },
@@ -25,6 +29,7 @@ const Entry mimeTable[maxType] =
     { ".eot", "application/vnd.ms-fontobject" },
     { ".sfnt", "application/font-sfnt" },
     { ".xml", "text/xml" },
+    { ".xml.gz", "text/xml" },
     { ".pdf", "application/pdf" },
     { ".zip", "application/zip" },
     { ".gz", "application/x-gzip" },
