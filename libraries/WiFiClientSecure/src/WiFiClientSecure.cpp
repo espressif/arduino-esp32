@@ -305,10 +305,7 @@ char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::_streamLoad(char **destPtr, Stream& stream, size_t size) {
-  if (!*destPtr)
-    *destPtr = (char*)malloc(size+1);
-  else
-    (char*)realloc(*destPtr, size+1);
+  *destPtr = (char*)realloc(*destPtr, size+1);
   if (!*destPtr) {
     return false;
   }
