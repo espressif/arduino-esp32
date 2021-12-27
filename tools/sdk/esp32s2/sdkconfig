@@ -341,6 +341,13 @@ CONFIG_ADC_DISABLE_DAC=y
 #
 # CONFIG_UART_ISR_IN_IRAM is not set
 # end of UART configuration
+
+#
+# GDMA Configuration
+#
+# CONFIG_GDMA_CTRL_FUNC_IN_IRAM is not set
+# CONFIG_GDMA_ISR_IRAM_SAFE is not set
+# end of GDMA Configuration
 # end of Driver configurations
 
 #
@@ -1003,7 +1010,6 @@ CONFIG_MBEDTLS_INTERNAL_MEM_ALLOC=y
 # CONFIG_MBEDTLS_CUSTOM_MEM_ALLOC is not set
 CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN=16384
 # CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN is not set
-# CONFIG_MBEDTLS_DYNAMIC_BUFFER is not set
 # CONFIG_MBEDTLS_DEBUG is not set
 
 #

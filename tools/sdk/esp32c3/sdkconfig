@@ -565,6 +565,13 @@ CONFIG_SPI_SLAVE_ISR_IN_IRAM=y
 #
 # CONFIG_UART_ISR_IN_IRAM is not set
 # end of UART configuration
+
+#
+# GDMA Configuration
+#
+# CONFIG_GDMA_CTRL_FUNC_IN_IRAM is not set
+# CONFIG_GDMA_ISR_IRAM_SAFE is not set
+# end of GDMA Configuration
 # end of Driver configurations
 
 #
