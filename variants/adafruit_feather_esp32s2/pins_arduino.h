@@ -25,6 +25,7 @@
 #define NEOPIXEL_NUM        1     // number of neopixels
 #define NEOPIXEL_POWER      21    // power pin
 #define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
+#define PIN_I2C_POWER       7     // Ppwer pin for I2C
 
 static const uint8_t SDA = 3;
 static const uint8_t SCL = 4;
