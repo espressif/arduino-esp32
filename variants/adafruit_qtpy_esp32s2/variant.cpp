@@ -25,8 +25,6 @@
 
 #include "esp32-hal-gpio.h"
 #include "pins_arduino.h"
-#include "Arduino.h"
-#include "Wire.h"
 
 extern "C" {
 
