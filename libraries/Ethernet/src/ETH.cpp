@@ -288,6 +288,13 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
             log_e("unsupported ethernet type 'ETH_PHY_KSZ8081'");
 #endif
             break;
+        case ETH_PHY_KSZ8041:
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4,4,0)
+            eth_phy = esp_eth_phy_new_ksz8041(&phy_config);
+#else
+            log_e("unsupported ethernet type 'ETH_PHY_KSZ8041'");
+#endif
+            break;            
         default:
             break;
     }
