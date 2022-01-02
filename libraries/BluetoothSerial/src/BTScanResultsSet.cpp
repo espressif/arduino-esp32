@@ -64,9 +64,6 @@ int BTScanResultsSet::getCount() {
  * @return The device at the specified index.
  */
 BTAdvertisedDevice* BTScanResultsSet::getDevice(uint32_t i) {
-	if (i < 0)
-		return nullptr;
-
 	uint32_t x = 0;
 	BTAdvertisedDeviceSet* pDev = &m_vectorAdvertisedDevices.begin()->second;
 	for (auto it = m_vectorAdvertisedDevices.begin(); it != m_vectorAdvertisedDevices.end(); it++) {
