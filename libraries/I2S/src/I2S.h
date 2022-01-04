@@ -176,7 +176,7 @@ private:
   void _take_if_not_holding();
   void _give_if_top_call();
   void _post_read_data_fix(void *input, size_t *size);
-  void _fix_and_write(void *output, size_t size, size_t *bytes_written);
+  void _fix_and_write(void *output, size_t size, size_t *bytes_written = NULL, size_t *actual_bytes_written = NULL);
 
   void (*_onTransmit)(void);
   void (*_onReceive)(void);

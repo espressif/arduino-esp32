@@ -59,7 +59,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(128),
+  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * bits (or Bytes) per sample
   _driveClock(true),
   _peek_buff(0),
   _peek_buff_valid(false),
@@ -149,6 +149,7 @@ int I2SClass::_installDriver(){
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
     .dma_buf_len = _i2s_dma_buffer_size,
     .use_apll = false
+    //left_align = true // will it fix ? - no
   };
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
@@ -228,10 +229,12 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
 
 int I2SClass::begin(int mode, int bitsPerSample){
   // slave mode (not driving clock and frame select pin - input)
+  log_d("begin in slave mode");
   return begin(mode, 0, bitsPerSample, false);
 }
 
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
+  log_d("starting ");
   _take_if_not_holding();
   if(_initialized){
     log_e("ERROR I2SClass::begin() object already initialized! Call I2S.end() to deinitialize");
@@ -244,7 +247,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _bitsPerSample = bitsPerSample;
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
-    log_e("I2S.begin: unexpected _state (%d)",_state);
+    log_e("Error: unexpected _state (%d)",_state);
     _give_if_top_call();
     return 0; // ERR
   }
@@ -262,13 +265,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       break;
 
     default: // invalid mode
-      log_e("ERROR I2SClass::begin() unknown mode");
+      log_e("ERROR: unknown mode");
       _give_if_top_call();
       return 0; // ERR
   }
 
   if(!_installDriver()){
-    log_e("ERROR I2SClass::begin() failed to install driver");
+    log_e("ERROR: failed to install driver");
     end();
     _give_if_top_call();
     return 0; // ERR
@@ -278,12 +281,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
-    log_e("ERROR I2SClass::begin could not create one or both internal buffers. Requested size = %d\n", _buffer_byte_size);
+    log_e("ERROR: could not create one or both internal buffers. Requested size = %d\n", _buffer_byte_size);
     _give_if_top_call();
     return 0; // ERR
   }
 
   if(!_createCallbackTask()){
+    log_e("ERROR: failed to create callback task");
     end();
     _give_if_top_call();
     return 0; // ERR
@@ -650,7 +654,8 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
     } // _state ?
 
     if(_output_ring_buffer != NULL){
-      if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, portMAX_DELAY)){
+      int ret = xRingbufferSend(_output_ring_buffer, buffer, size, portMAX_DELAY);
+      if(pdTRUE == ret){
         _give_if_top_call();
         return size;
       }else{
@@ -661,7 +666,9 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
     } // ring buffer not NULL ?
   } // if(_initialized)
   return 0;
+  log_w("I2S not initialized");
   _give_if_top_call();
+  return 0;
 }
 
 // non-blocking version of write
@@ -727,7 +734,7 @@ void I2SClass::flush(){
     if(_output_ring_buffer != NULL){
       item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, 0, single_dma_buf);
       if (item != NULL){
-        _fix_and_write(item, item_size, NULL);
+        _fix_and_write(item, item_size);
         vRingbufferReturnItem(_output_ring_buffer, item);
       }
     }
@@ -814,43 +821,37 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
   static size_t prev_item_size = 0;
   static void *item = NULL;
   static int prev_item_offset = 0;
-  static size_t bytes_written;
+  static size_t bytes_written = 0;
 
   if(prev_item_valid){ // use item from previous round
-    uint8_t *tmp_buff = (uint8_t*)malloc(prev_item_size);
-    if(tmp_buff == NULL){
-      log_e("Could not allocate memory before write");
-    }else{
-      _fix_and_write(tmp_buff, prev_item_size, &bytes_written);
-      if(prev_item_size == bytes_written){
-        prev_item_valid = false;
-      } // write size check
-      prev_item_offset = bytes_written;
-      prev_item_size -= bytes_written;
-      free(tmp_buff);
-    } // tmp_buff alloc ok
+    _fix_and_write(prev_item+prev_item_offset, prev_item_size, &bytes_written);
+    if(prev_item_size == bytes_written){
+      prev_item_valid = false;
+    } // write size check
+    prev_item_offset = bytes_written;
+    prev_item_size -= bytes_written;
   } // prev_item_valid
 
   if(_output_ring_buffer != NULL && (_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf)){ // fill up the I2S DMA buffer
     bytes_written = 0;
     item_size = 0;
-    //if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
-    item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(1000), single_dma_buf);
-    if (item != NULL){
-      _fix_and_write(item, item_size, &bytes_written);
-      if(item_size != bytes_written){ // save item that was not written correctly for later
-        memcpy(prev_item, (void*)&((uint8_t*)item)[bytes_written], item_size-bytes_written);
-        prev_item_size = item_size - bytes_written;
-        prev_item_offset = 0;
-        prev_item_valid = true;
-      } // save item that was not written correctly for later
-      vRingbufferReturnItem(_output_ring_buffer, item);
-    } // Check received item
-  } // don't read from almost empty buffer
-
-  if(_onTransmit){
-    _onTransmit();
-  } // user callback
+    if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
+      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), single_dma_buf);
+      if (item != NULL){
+        _fix_and_write(item, item_size, &bytes_written);
+        if(item_size != bytes_written){ // save item that was not written correctly for later
+          memcpy(prev_item, (void*)&((uint8_t*)item)[bytes_written], item_size-bytes_written);
+          prev_item_size = item_size - bytes_written;
+          prev_item_offset = 0;
+          prev_item_valid = true;
+        } // save item that was not written correctly for later
+        vRingbufferReturnItem(_output_ring_buffer, item);
+      } // Check received item
+    } // don't read from almost empty buffer
+    if(_onTransmit){
+      _onTransmit();
+    } // user callback
+  } // fill up the I2S DMA buffer
 }
 
 void I2SClass::_rx_done_routine(){
@@ -952,55 +953,58 @@ void I2SClass::_post_read_data_fix(void *input, size_t *size){
 // This counters possible bug in ESP IDF I2S driver
 // output - bytes to be sent (input and output for this function)
 // size - number of bytes in original buffer (this may change)
-// bytes_written - number of bytes written by i2s_write
-void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written){
+// bytes_written - number of bytes used from original buffer
+// actual_bytes_written - number of bytes written by i2s_write after fix
+void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, size_t *actual_bytes_written){
+  long start = millis();
   ulong src_ptr = 0;
   uint8_t* buff;
+  size_t buff_size = size;
   switch(_bitsPerSample){
     case 8:
-      //log_d("For tmp_buff alocate Bytes %d; ESP.getFreeHeap() = %d", size, ESP.getFreeHeap());
-      //vTaskDelay(500);
-      buff = (uint8_t*)malloc(size *2);
+      buff_size = size *2;
+      buff = (uint8_t*)calloc(buff_size, sizeof(uint8_t));
       if(buff == NULL){
-        log_d("mallock error");
+        log_e("callock error");
         if(bytes_written != NULL){ *bytes_written = 0; }
         return;
       }
-      //log_d("allock ok (ESP.getFreeHeap() = %d)", ESP.getFreeHeap());
-      //vTaskDelay(500);
-       for(int i = 0; i < size; i+=2){
-        ((uint16_t*)buff)[i+1] = (uint16_t)((uint8_t*)output)[src_ptr++];
-        ((uint16_t*)buff)[i] = (uint16_t)((uint8_t*)output)[src_ptr++];
+      for(int i = 0; i < buff_size ; i+=4){
+        ((uint8_t*)buff)[i+3] = (uint16_t)((uint8_t*)output)[src_ptr++];
+        ((uint8_t*)buff)[i+1] = (uint16_t)((uint8_t*)output)[src_ptr++];
       }
     break;
     case 16:
-      buff = (uint8_t*)malloc(size);
+      buff = (uint8_t*)malloc(buff_size);
       if(buff == NULL){
         log_e("malloc error");
         if(bytes_written != NULL){ *bytes_written = 0; }
         return;
       }
-      for(int i = 0; i < size; i += 2){
+      for(int i = 0; i < size/2; i += 2 ){
         ((uint16_t*)buff)[i]   = ((uint16_t*)output)[i+1]; // [1] <- [0]
         ((uint16_t*)buff)[i+1] = ((uint16_t*)output)[i]; // [0] <- [1]
       }
     break;
+    case 32:
+      buff = (uint8_t*)output;
     default: ; // Do nothing
   } // switch
 
   size_t _bytes_written;
-  esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, sizeof(buff), &_bytes_written, 0);
+  esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0); // fixed
   if(ret != ESP_OK){
-    log_w("Error writing data to i2s - function returned with err code %d", ret);
+    log_e("Error: writing data to i2s - function returned with err code %d", ret);
   }
-  if(ret == ESP_OK && sizeof(buff) != _bytes_written){
-    log_w("Error writing data to i2s - written %d B instead of requested %d B", _bytes_written, sizeof(buff));
+  if(ret == ESP_OK && buff_size != _bytes_written){
+    log_w("Warning: writing data to i2s - written %d B instead of requested %d B", _bytes_written, buff_size);
   }
-  log_d("free buff");
-  vTaskDelay(500);
   free(buff);
   if(bytes_written != NULL){
-    *bytes_written = _bytes_written;
+    *bytes_written = _bitsPerSample == 8 ? _bytes_written/2 : _bytes_written;
+  }
+  if(actual_bytes_written != NULL){
+    *actual_bytes_written = _bytes_written;
   }
 }
 
