@@ -1,0 +1,113 @@
+name: Run tests in hardware
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+# schedule:
+#   - cron: '0 2 * * *'
+
+concurrency:
+  group: build-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  prep_sketches:
+    if: contains(github.event.pull_request.labels.*.name, 'hil_test')
+    name: Prepare Sketches
+    runs-on: ubuntu-latest
+    outputs:
+      sketches: ${{ steps.prep-sketches.outputs.sketches }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Prepare Sketches
+        id: prep-sketches
+        run: |
+          SKETCHES=$(jq -c -n '{sketches: $ARGS.positional}' --args `find tests -mindepth 1 -type d | cut -d"/" -f2`)
+          echo "::set-output name=sketches::${SKETCHES}"
+
+  Build:
+    needs: prep_sketches
+    name: Build ${{matrix.sketches}}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build sketches
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: 'esp32:esp32:esp32'
+          platforms: |
+            - name: esp32:esp32
+              source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          cli-compile-flags: |
+            - --build-path
+            - tests/${{matrix.sketches}}/build
+          sketch-paths: |
+            - tests/${{matrix.sketches}}
+
+      - name: Upload ${{matrix.sketches}} artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{matrix.sketches}}.artifacts
+          path: |
+            tests/${{matrix.sketches}}/build/*.bin
+            tests/${{matrix.sketches}}/build/*.json
+
+  Test:
+    needs: [prep_sketches, Build]
+    name: Test ${{matrix.sketches}}
+    runs-on: ESP32
+    env:
+      PYTHON_VERSION: 3.10.1
+      PYENV_VERSION: v2.2.3
+    strategy:
+      matrix: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
+
+    steps:
+       - name: Checkout repository
+         uses: actions/checkout@v2
+
+       - name: Download ${{matrix.sketches}} artifacts
+         uses: actions/download-artifact@v2
+         with:
+           name: ${{matrix.sketches}}.artifacts
+           path: tests/${{matrix.sketches}}/build
+
+       # Our self-hosted runners run on an RPI, the setup-python action doesn't
+       # support an ARM architecture.
+
+       - name: Cache Python
+         id: cache-python
+         uses: actions/cache@v2
+         with:
+           path: ~/.pyenv
+           key: pyenv-${{env.PYENV_VERSION}}-${{env.PYTHON_VERSION}}
+
+       - name: Install Python
+         if: steps.cache-python.outputs.cache-hit != 'true'
+         run: |
+           rm -rf ~/.pyenv
+           git clone https://github.com/pyenv/pyenv.git -b ${{env.PYENV_VERSION}} ~/.pyenv
+           export PYENV_ROOT=~/.pyenv
+           export PATH=$PYENV_ROOT/bin:$PATH
+           pyenv install ${{env.PYTHON_VERSION}}
+
+       - name: Install dependencies
+         run: |
+           ~/.pyenv/versions/${{env.PYTHON_VERSION}}/bin/python -m venv test_venv
+           source test_venv/bin/activate
+           pip install -U pip
+           pip install -r tests/requirements.txt
+
+       - name: Run Tests
+         run: |
+           ~/.pyenv/versions/${{env.PYTHON_VERSION}}/bin/python -m venv test_venv
+           source test_venv/bin/activate
+           pytest tests -k test_${{matrix.sketches}}
