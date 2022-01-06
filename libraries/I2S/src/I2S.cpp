@@ -35,15 +35,15 @@
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
-  _sdPin(sdPin),   // shared data pin
-  _inSdPin(sdPin),    // input data pin
+  _sdPin(sdPin),             // shared data pin
+  _inSdPin(sdPin),           // input data pin
 #ifdef PIN_I2S_SD_OUT
-  _outSdPin(PIN_I2S_SD_OUT),   // output data pin
+  _outSdPin(PIN_I2S_SD_OUT), // output data pin
 #else
-  _outSdPin(-1),   // output data pin
+  _outSdPin(-1),             // output data pin
 #endif
-  _sckPin(sckPin), // clock pin
-  _fsPin(fsPin),   // frame (word) select pin
+  _sckPin(sckPin),           // clock pin
+  _fsPin(fsPin),             // frame (word) select pin
 
   _state(I2S_STATE_IDLE),
   _bitsPerSample(0),
@@ -59,7 +59,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * bits (or Bytes) per sample
+  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample
   _driveClock(true),
   _peek_buff(0),
   _peek_buff_valid(false),
@@ -82,12 +82,12 @@ int I2SClass::_createCallbackTask(){
   }
 
   xTaskCreate(
-    onDmaTransferComplete, // Function to implement the task
+    onDmaTransferComplete,   // Function to implement the task
     "onDmaTransferComplete", // Name of the task
-    stack_size,  // Stack size in words
-    NULL,  // Task input parameter
-    2,  // Priority of the task
-    &_callbackTaskHandle  // Task handle.
+    stack_size,              // Stack size in words
+    NULL,                    // Task input parameter
+    2,                       // Priority of the task
+    &_callbackTaskHandle     // Task handle.
     );
   if(_callbackTaskHandle == NULL){
     log_e("Could not create callback task");
@@ -144,12 +144,11 @@ int I2SClass::_installDriver(){
     .sample_rate = _sampleRate,
     .bits_per_sample = (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample,
     .channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT,
-    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S), // 0x01 // default
+    .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
     .dma_buf_len = _i2s_dma_buffer_size,
     .use_apll = false
-    //left_align = true // will it fix ? - no
   };
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
@@ -161,13 +160,13 @@ int I2SClass::_installDriver(){
       log_w("WARNING i2s driver install failed; Trying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
       setBufferSize(1024);
     }else{ // install failed with max buffer size
-        log_e("ERROR i2s driver install failed");
-        return 0; // ERR
+      log_e("ERROR i2s driver install failed");
+      return 0; // ERR
     }
   } //try installing with increasing size
 
   if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_MONO_MODE){ // mono/single channel
-  // Set the clock for MONO. Stereo is not supported yet.
+    // Set the clock for MONO. Stereo is not supported yet.
     if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
       log_e("Setting the I2S Clock has failed!\n");
       return 0; // ERR
@@ -224,20 +223,20 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
   int ret = begin(mode, sampleRate, bitsPerSample, true);
   _give_if_top_call();
   return ret;
-
 }
 
 int I2SClass::begin(int mode, int bitsPerSample){
+  _take_if_not_holding();
   // slave mode (not driving clock and frame select pin - input)
-  log_d("begin in slave mode");
-  return begin(mode, 0, bitsPerSample, false);
+  int ret = begin(mode, 0, bitsPerSample, false);
+  _give_if_top_call();
+  return ret;
 }
 
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
-  log_d("starting ");
   _take_if_not_holding();
   if(_initialized){
-    log_e("ERROR I2SClass::begin() object already initialized! Call I2S.end() to deinitialize");
+    log_e("ERROR: Object already initialized! Call I2S.end() to disable");
     _give_if_top_call();
     return 0; // ERR
   }
@@ -247,19 +246,20 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _bitsPerSample = bitsPerSample;
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
-    log_e("Error: unexpected _state (%d)",_state);
+    log_e("Error: unexpected _state (%d)", _state);
     _give_if_top_call();
     return 0; // ERR
   }
 
-  // TODO implement left / right justified modes
   switch (mode) {
     case I2S_PHILIPS_MODE:
     case I2S_RIGHT_JUSTIFIED_MODE:
     case I2S_LEFT_JUSTIFIED_MODE:
-#if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-    case ADC_DAC_MODE:
-#endif
+
+    #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
+      case ADC_DAC_MODE:
+    #endif
+
     case PDM_STEREO_MODE:
     case PDM_MONO_MODE:
       break;
@@ -321,12 +321,12 @@ int I2SClass::_applyPinSetting(){
       }
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d\n", _sckPin, _fsPin, pin_config.data_in_num, pin_config.data_out_num);
+      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d", _sckPin, _fsPin, pin_config.data_in_num, pin_config.data_out_num);
       return 0; // ERR
     }else{
       return 1; // OK
     }
-  } // _driverInstalled ?
+  } // if(_driverInstalled)
   return 1; // OK
 }
 
@@ -394,7 +394,6 @@ int I2SClass::setDataOutPin(int outSdPin){
   _give_if_top_call();
   return ret;
 }
-
 
 int I2SClass::setAllPins(){
   _take_if_not_holding();
@@ -533,6 +532,7 @@ int I2SClass::read(){
   sample.b32 = 0;
   if(_initialized){
     read(&sample, _bitsPerSample / 8);
+
     if (_bitsPerSample == 32) {
       _give_if_top_call();
       return sample.b32;
@@ -594,13 +594,6 @@ int I2SClass::read(void* buffer, size_t size){
   return 0; // 0 Bytes read / ERR
 }
 
-/*
-size_t I2SClass::write(int sample)
-{
-  return write((int32_t)sample);
-}
-*/
-
 size_t I2SClass::write(uint8_t data){
   _take_if_not_holding();
   size_t ret = 0;
@@ -643,6 +636,8 @@ size_t I2SClass::write(const void *buffer, size_t size){
 }
 
 // blocking version of write
+// This version of write will wait indefinitely to write requested samples
+// into output buffer
 size_t I2SClass::write_blocking(const void *buffer, size_t size){
   _take_if_not_holding();
   if(_initialized){
@@ -672,6 +667,8 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
 }
 
 // non-blocking version of write
+// In case there is not enough space in buffer to write requested size
+// this function will try to flush the buffer and write requested data with 0 time-out
 size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   _take_if_not_holding();
   if(_initialized){
@@ -848,10 +845,10 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
         vRingbufferReturnItem(_output_ring_buffer, item);
       } // Check received item
     } // don't read from almost empty buffer
-    if(_onTransmit){
-      _onTransmit();
-    } // user callback
   } // fill up the I2S DMA buffer
+  if(_onTransmit){
+    _onTransmit();
+  } // user callback
 }
 
 void I2SClass::_rx_done_routine(){
@@ -951,8 +948,8 @@ void I2SClass::_post_read_data_fix(void *input, size_t *size){
 
 // Prepares data and writes them to IDF i2s driver.
 // This counters possible bug in ESP IDF I2S driver
-// output - bytes to be sent (input and output for this function)
-// size - number of bytes in original buffer (this may change)
+// output - bytes to be sent
+// size - number of bytes in original buffer
 // bytes_written - number of bytes used from original buffer
 // actual_bytes_written - number of bytes written by i2s_write after fix
 void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, size_t *actual_bytes_written){
