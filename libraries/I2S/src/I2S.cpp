@@ -245,6 +245,17 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _sampleRate = (uint32_t)sampleRate;
   _bitsPerSample = bitsPerSample;
 
+  // There is work in progress on this library.
+  if(_bitsPerSample == 16 && _sampleRate < 16000){
+    log_w("This sample rate is not officially supported - audio might be noisy. Try using sample rate below or equal to 16000");
+  }
+  if(_bitsPerSample != 16){
+    log_w("This bit-per-sample is not officially supported - audio quality might suffer. Try using 16bps, with sample rate below equal 16000");
+  }
+  if(_mode != I2S_PHILIPS_MODE){
+    log_w("This mode is not officially supported - audio quality might suffer. At the moment the only supported mode is I2S_PHILIPS_MODE");
+  }
+
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
     log_e("Error: unexpected _state (%d)", _state);
     _give_if_top_call();
@@ -983,8 +994,12 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
         ((uint16_t*)buff)[i+1] = ((uint16_t*)output)[i]; // [0] <- [1]
       }
     break;
+    case 24:
+      buff = (uint8_t*)output;
+      break;
     case 32:
       buff = (uint8_t*)output;
+      break;
     default: ; // Do nothing
   } // switch
 
@@ -996,7 +1011,10 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
   if(ret == ESP_OK && buff_size != _bytes_written){
     log_w("Warning: writing data to i2s - written %d B instead of requested %d B", _bytes_written, buff_size);
   }
-  free(buff);
+  // free if the buffer was actually allocated
+  if(_bitsPerSample == 8 || _bitsPerSample == 16){
+    free(buff);
+  }
   if(bytes_written != NULL){
     *bytes_written = _bitsPerSample == 8 ? _bytes_written/2 : _bytes_written;
   }
