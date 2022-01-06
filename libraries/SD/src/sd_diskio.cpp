@@ -609,6 +609,11 @@ unknown_card:
 
 DSTATUS ff_sd_status(uint8_t pdrv)
 {
+    if(sdCommand(pdrv, SEND_STATUS, 0, NULL) == 0xFF)
+    {
+        log_e("Check status failed");
+        return STA_NOINIT;
+    }
     return s_cards[pdrv]->status;
 }
 

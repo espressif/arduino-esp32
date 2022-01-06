@@ -98,7 +98,7 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     if(ssid != NULL && ssid[0] != 0){
         _wifi_strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
-    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WEP;
+    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     		_wifi_strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
@@ -176,15 +176,19 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
     _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
-    conf.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;       //force full scan to be able to choose the nearest / strongest AP
 
     if(passphrase) {
         _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
     }
 
-    wifi_config_t current_conf;
-    wifi_sta_config(&conf, ssid, passphrase, bssid, channel);
+    if(channel == 0) {
+        // If no specific channel specified, then do an slower WIFI_ALL_CHANNEL_SCAN
+        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_ALL_CHANNEL_SCAN);
+    }
+    else
+        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_FAST_SCAN);
 
+    wifi_config_t current_conf;
     if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
         log_e("get current config failed!");
         return WL_CONNECT_FAILED;

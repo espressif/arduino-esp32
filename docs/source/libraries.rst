@@ -86,4 +86,5 @@ The Arduino ESP32 offers some unique APIs, described in this section:
     I2C <api/i2c>
     RainMaker <api/rainmaker>
     Reset Reason <api/reset_reason>
+    USB <api/usb.rst>
     Wi-Fi <api/wifi>

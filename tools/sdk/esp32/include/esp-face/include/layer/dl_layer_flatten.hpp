@@ -32,7 +32,7 @@ namespace dl
              * @param inplace true: the output will store to input0
              *                false: the output will store to a separate memory
              */
-            Flatten(const char *name = "Flatten", bool inplace = false) : Layer(name), inplace(inplace), output_shape({})
+            Flatten(const char *name = "Flatten", bool inplace = false) : Layer(name), output(NULL), inplace(inplace), output_shape({})
             {}
 
             /**
@@ -59,7 +59,7 @@ namespace dl
                 this->output_shape = {input.get_size()};
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
