@@ -22,7 +22,7 @@
 #include "freertos/semphr.h"
 
 #define _I2S_EVENT_QUEUE_LENGTH 16
-#define _I2S_DMA_BUFFER_COUNT 4 // BUFFER COUNT must be between 2 and 128
+#define _I2S_DMA_BUFFER_COUNT 2 // BUFFER COUNT must be between 2 and 128
 #define I2S_INTERFACES_COUNT SOC_I2S_NUM
 
 #ifndef I2S_DEVICE
@@ -813,7 +813,7 @@ int I2SClass::_enableReceiver(){
 
 void I2SClass::_tx_done_routine(uint8_t* prev_item){
   static bool prev_item_valid = false;
-  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
+  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8)*2; // *2 for stereo - it has double number of samples for 2 channels
   static size_t item_size = 0;
   static size_t prev_item_size = 0;
   static void *item = NULL;
