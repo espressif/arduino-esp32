@@ -26,6 +26,7 @@
 #define HID_CARD_READER	0x03C6
 #define HID_DIGITAL_PEN	0x03C7
 #define HID_BARCODE		0x03C8
+#define HID_BRAILLE_DISPLAY		0x03C9
 
 class BLEHIDDevice {
 public:

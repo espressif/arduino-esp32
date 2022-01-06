@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <math.h>
 #include <string>
+#include "esp_partition.h"
 
 /**
  * @brief struct of face similarity
@@ -44,6 +45,13 @@ public:
      * @param name      id name
      */
     FaceID(int id, dl::Tensor<feature_t> &id_emb, std::string name = "");
+
+    /**
+     * @brief Construct a new Face ID which is same as input face_id
+     * 
+     * @param face_id input face_id
+     */
+    FaceID(FaceID<feature_t> &face_id);
 
     /**
      * @brief Destroy the Face ID object

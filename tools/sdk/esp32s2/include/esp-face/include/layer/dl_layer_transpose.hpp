@@ -33,7 +33,11 @@ namespace dl
              * @param inplace       true: the output will store to input
              *                      false: the output will store to a separate memory
              */
-            Transpose(std::vector<int> perm = {}, const char *name = "Transpose", bool inplace = false) : Layer(name), perm(perm), inplace(inplace), output_shape({})
+            Transpose(std::vector<int> perm = {}, const char *name = "Transpose", bool inplace = false) : Layer(name),
+                                                                                                          output(NULL),
+                                                                                                          inplace(inplace),
+                                                                                                          perm(perm),
+                                                                                                          output_shape({})
             {
             }
 
@@ -59,13 +63,24 @@ namespace dl
             {
                 this->output_exponent = input.exponent;
                 this->output_shape = input.shape;
-                for (int i = 0; i < this->perm.size(); i++)
+                int dims = this->output_shape.size();
+                if (this->perm.size() == 0)
                 {
+                    for (int i = dims - 1; i >= 0; i--)
+                    {
+                        this->perm.push_back(i);
+                    }
+                }
+                for (int i = 0; i < dims; ++i)
+                {
+                    if (this->perm[i] < 0)
+                        this->perm[i] = dims + this->perm[i];
                     this->output_shape[i] = input.shape[this->perm[i]];
                 }
+
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }

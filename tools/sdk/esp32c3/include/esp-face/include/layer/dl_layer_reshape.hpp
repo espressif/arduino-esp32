@@ -35,7 +35,9 @@ namespace dl
              *                   false: the output will store to a separate memory
              */
             Reshape(std::vector<int> shape, const char *name = "Reshape", bool inplace = false) : Layer(name),
-                                                                                                  output_shape(shape), inplace(inplace)
+                                                                                                  output(NULL),
+                                                                                                  inplace(inplace),
+                                                                                                  output_shape(shape)
             {
             }
 
@@ -62,19 +64,21 @@ namespace dl
                 this->output_exponent = input.exponent;
                 if (!this->inplace)
                 {
-                    if (this->output != NULL)
+                    if (this->output == NULL)
                     {
                         this->output = new Tensor<feature_t>;
                     }
                     this->output->set_exponent(this->output_exponent);
-                    this->output->set_shape(this->output_shape);
+                    this->output->set_shape(input.shape);
+                    this->output->reshape(this->output_shape);
                     this->output->free_element();
                 }
                 else
                 {
                     this->output = &input;
-                    this->output->set_shape(this->output_shape);
+                    this->output->reshape(this->output_shape);
                 }
+                this->output_shape = this->output->shape;
 
                 if (print_shape)
                 {

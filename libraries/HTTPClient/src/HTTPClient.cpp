@@ -200,6 +200,7 @@ bool HTTPClient::begin(String url, const char* CAcert)
         end();
     }
 
+    clear();
     _port = 443;
     if (!beginInternal(url, "https")) {
         return false;
@@ -226,6 +227,7 @@ bool HTTPClient::begin(String url)
         end();
     }
 
+    clear();
     _port = 80;
     if (!beginInternal(url, "http")) {
         return begin(url, (const char*)NULL);
@@ -243,7 +245,6 @@ bool HTTPClient::begin(String url)
 bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 {
     log_v("url: %s", url.c_str());
-    clear();
 
     // check for : (http: or https:
     int index = url.indexOf(':');
@@ -1212,8 +1213,8 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    clear();
-
+    _returnCode = 0;
+    _size = -1;
     _canReuse = _reuse;
 
     String transferEncoding;
