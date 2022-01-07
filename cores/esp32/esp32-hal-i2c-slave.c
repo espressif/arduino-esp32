@@ -360,10 +360,12 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     }
 
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+#if !CONFIG_DISABLE_HAL_LOCKS
     if(!i2c->lock){
         log_e("Lock is not initialized! Did you call i2c_slave_init()?");
         return ESP_ERR_NO_MEM;
     }
+#endif
     I2C_SLAVE_MUTEX_LOCK();
     i2c_slave_free_resources(i2c);
     I2C_SLAVE_MUTEX_UNLOCK();
@@ -377,10 +379,12 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
     }
     size_t to_queue = 0, to_fifo = 0;
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+#if !CONFIG_DISABLE_HAL_LOCKS
     if(!i2c->lock){
         log_e("Lock is not initialized! Did you call i2c_slave_init()?");
         return ESP_ERR_NO_MEM;
     }
+#endif
     if(!i2c->tx_queue){
         return 0;
     }
