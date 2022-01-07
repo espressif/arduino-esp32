@@ -73,6 +73,7 @@ jobs:
       PYTHON_VERSION: 3.10.1
       PYENV_VERSION: v2.2.3
     strategy:
+      fail-fast: false
       matrix:
         fqbn: ['esp32:esp32:esp32', 'esp32:esp32:esp32s2', 'esp32:esp32:esp32c3']
         sketches: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
