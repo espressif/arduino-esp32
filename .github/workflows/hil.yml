@@ -25,24 +25,29 @@ jobs:
       - name: Prepare Sketches
         id: prep-sketches
         run: |
-          SKETCHES=$(jq -c -n '{sketches: $ARGS.positional}' --args `find tests -mindepth 1 -type d | cut -d"/" -f2`)
+          SKETCHES=$(jq -c -n '$ARGS.positional' --args `find tests -mindepth 1 -maxdepth 1 -type d | cut -d"/" -f2`)
           echo "::set-output name=sketches::${SKETCHES}"
 
   Build:
     needs: prep_sketches
-    name: Build ${{matrix.sketches}}
+    name: Build ${{matrix.sketches}} for ${{matrix.fqbn}}
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
+      matrix:
+        fqbn: ['esp32:esp32:esp32', 'esp32:esp32:esp32s2', 'esp32:esp32:esp32c3']
+        sketches: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Get target
+        run: echo "chip=$(echo ${{matrix.fqbn}} | cut -d":" -f3)" >> $GITHUB_ENV
+
       - name: Build sketches
         uses: arduino/compile-sketches@v1
         with:
-          fqbn: 'esp32:esp32:esp32'
+          fqbn: ${{matrix.fqbn}}
           platforms: |
             - name: esp32:esp32
               source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
@@ -52,33 +57,41 @@ jobs:
           sketch-paths: |
             - tests/${{matrix.sketches}}
 
-      - name: Upload ${{matrix.sketches}} artifacts
+      - name: Upload ${{matrix.sketches}}-${{env.chip}} artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{matrix.sketches}}.artifacts
+          name: ${{matrix.sketches}}-${{env.chip}}.artifacts
           path: |
             tests/${{matrix.sketches}}/build/*.bin
             tests/${{matrix.sketches}}/build/*.json
 
   Test:
     needs: [prep_sketches, Build]
-    name: Test ${{matrix.sketches}}
+    name: Test ${{matrix.sketches}} for ${{matrix.fqbn}}
     runs-on: ESP32
     env:
       PYTHON_VERSION: 3.10.1
       PYENV_VERSION: v2.2.3
     strategy:
-      matrix: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
+      matrix:
+        fqbn: ['esp32:esp32:esp32', 'esp32:esp32:esp32s2', 'esp32:esp32:esp32c3']
+        sketches: ${{fromJson(needs.prep_sketches.outputs.sketches)}}
 
     steps:
        - name: Checkout repository
          uses: actions/checkout@v2
 
-       - name: Download ${{matrix.sketches}} artifacts
+       - name: Get target
+         run: echo "chip=$(echo ${{matrix.fqbn}} | cut -d":" -f3)" >> $GITHUB_ENV
+
+       - name: Download ${{matrix.sketches}}-${{env.chip}} artifacts
          uses: actions/download-artifact@v2
          with:
-           name: ${{matrix.sketches}}.artifacts
+           name: ${{matrix.sketches}}-${{env.chip}}.artifacts
            path: tests/${{matrix.sketches}}/build
+
+       - name: Check chip
+         run: cat tests/${{matrix.sketches}}/build/build.options.json
 
        # Our self-hosted runners run on an RPI, the setup-python action doesn't
        # support an ARM architecture.
