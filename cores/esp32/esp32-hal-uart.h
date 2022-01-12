@@ -54,6 +54,8 @@ typedef struct uart_struct_t uart_t;
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd);
 void uartEnd(uart_t* uart);
 
+void uartOnReceive(uart_t* uart, void(*function)(void));
+
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);
 uint8_t uartRead(uart_t* uart);
