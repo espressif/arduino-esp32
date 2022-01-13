@@ -22,6 +22,12 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+    - name: Cache tools
+      id: cache-linux
+      uses: actions/cache@v2
+      with:
+        path: ./tools/dist
+        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
