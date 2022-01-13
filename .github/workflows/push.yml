@@ -30,8 +30,12 @@ jobs:
       id: cache-linux
       uses: actions/cache@v2
       with:
-        path: ./tools/dist
-        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
+        path: |
+          ./tools/dist
+          ~/arduino_ide
+        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
+                                            'tools/get.py',
+                                            '.github/scripts/install-arduino-ide.sh') }}
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
