@@ -56,6 +56,12 @@
 #ifdef CONFIG_IDF_TARGET_ESP32
 uint8_t temprature_sens_read();
 
+//allows user to bypass SPI RAM test routine
+__attribute__((weak)) bool testSPIRAM(void) 
+{ 
+     return esp_spiram_test(); 
+}
+
 float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;

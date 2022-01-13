@@ -66,7 +66,8 @@ bool psramInit(){
         return false;
     }
     esp_spiram_init_cache();
-    if (!esp_spiram_test()) {
+    //testSPIRAM() allows user to bypass SPI RAM test routine
+    if (!testSPIRAM()) {
         spiramFailed = true;
         log_e("PSRAM test failed!");
         return false;
