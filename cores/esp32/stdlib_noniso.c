@@ -88,6 +88,32 @@ char* ultoa(unsigned long value, char* result, int base) {
     return result;
 }
 
+#if 1
+// This version is intended to be user proof
+// It avoids Stack Smashing issue, even for s = String(-234223.4f, 32) or String(0.0f, 100) 
+char *dtostrf(double number, signed char width, unsigned char prec, char *s) {
+  char fmt[34];
+  // calculates how many characters the integer part of the float will take
+  sprintf(fmt, "%32.0f", number);
+  // finds the start of number ignoring the blanks
+  char *start = fmt;
+  while (*start == ' ') start++;
+  unsigned char numSize = strlen(start), maxSize = sizeof(fmt) - 1;
+  int maxPrec;
+
+  if (prec) numSize += 1; // for the '.'
+
+  // avoiding Stack smashing protect failure!
+  if (width > maxSize) width = maxSize;
+  maxPrec = maxSize - numSize;
+  prec = maxPrec > 0 ? maxPrec : 0;
+  
+  sprintf(fmt, "%%%d.%df", width, prec);
+  sprintf(s, fmt, number);
+  return s;
+}
+#else
+// orginal code from Arduino ESP8266
 char * dtostrf(double number, signed char width, unsigned char prec, char *s) {
     bool negative = false;
 
@@ -160,3 +186,4 @@ char * dtostrf(double number, signed char width, unsigned char prec, char *s) {
     *out = 0;
     return s;
 }
+#endif
