@@ -112,13 +112,13 @@ String::String(unsigned long value, unsigned char base) {
     *this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces) {
+String::String(float value, unsigned int decimalPlaces) {
     init();
     char *buf = (char*)malloc(decimalPlaces + 42);
     *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
     free(buf);}
 
-String::String(double value, unsigned char decimalPlaces) {
+String::String(double value, unsigned int decimalPlaces) {
     init();
     char *buf = (char*)malloc(decimalPlaces + 312);
     *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
