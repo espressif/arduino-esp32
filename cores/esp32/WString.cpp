@@ -114,14 +114,14 @@ String::String(unsigned long value, unsigned char base) {
 
 String::String(float value, unsigned char decimalPlaces) {
     init();
-    char buf[34];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char buf[64];
+    *this = dtostrf(value, sizeof(buf) - 1, decimalPlaces, buf);
 }
 
 String::String(double value, unsigned char decimalPlaces) {
     init();
-    char buf[34];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char buf[64];
+    *this = dtostrf(value,  sizeof(buf) - 1, decimalPlaces, buf);
 }
 
 String::~String() {
