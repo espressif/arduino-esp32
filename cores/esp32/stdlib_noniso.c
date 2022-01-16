@@ -88,7 +88,7 @@ char* ultoa(unsigned long value, char* result, int base) {
     return result;
 }
 
-char * dtostrf(double number, signed char width, unsigned int prec, char *s) {
+char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
     bool negative = false;
 
     if (isnan(number)) {
