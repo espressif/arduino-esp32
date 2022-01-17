@@ -214,9 +214,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         ESP_ERROR_CHECK(uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV));    
     }
 
-    // Set RS485 half duplex mode on UART.  This shall force flush to wait up to sending all bits out
-    ESP_ERROR_CHECK(uart_set_mode(uart_nr, UART_MODE_RS485_HALF_DUPLEX));
-
     // Creating UART event Task
     xTaskCreate(uart_event_task, "uart_event_task", 2048, uart, configMAX_PRIORITIES - 1, &(uart->envent_task));
     if (!uart->envent_task) {
@@ -224,7 +221,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     }
 
     UART_MUTEX_UNLOCK();
-
 
     uartFlush(uart);
     return uart;
@@ -379,7 +375,7 @@ void uartFlushTxOnly(uart_t* uart, bool txOnly)
     }
     
     UART_MUTEX_LOCK();
-    ESP_ERROR_CHECK(uart_wait_tx_done(uart->num, portMAX_DELAY));
+    while(!uart_ll_is_tx_idle(UART_LL_GET_HW(uart->num)));
 
     if ( !txOnly ) {
         ESP_ERROR_CHECK(uart_flush_input(uart->num));
