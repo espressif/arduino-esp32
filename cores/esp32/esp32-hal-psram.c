@@ -35,6 +35,13 @@
 static volatile bool spiramDetected = false;
 static volatile bool spiramFailed = false;
 
+//allows user to bypass SPI RAM test routine
+__attribute__((weak)) bool testSPIRAM(void) 
+{ 
+     return esp_spiram_test(); 
+}
+
+
 bool psramInit(){
     if (spiramDetected) {
         return true;
@@ -66,7 +73,8 @@ bool psramInit(){
         return false;
     }
     esp_spiram_init_cache();
-    if (!esp_spiram_test()) {
+    //testSPIRAM() allows user to bypass SPI RAM test routine
+    if (!testSPIRAM()) {
         spiramFailed = true;
         log_e("PSRAM test failed!");
         return false;

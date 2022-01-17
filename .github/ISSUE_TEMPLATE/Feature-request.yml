@@ -52,3 +52,11 @@ body:
       label: Additional context
       description: Please add any other context or screenshots about the feature request here.
       placeholder: ex. This would work only when ...
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: I have checked existing list of Feature requests and the Contribution Guide
+      description: You agree to check all the resources above before opening a new Feature request.
+      options:
+        - label: I confirm I have checked existing list of Feature requests and Contribution Guide.
+          required: true
