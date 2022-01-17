@@ -71,8 +71,8 @@ class String {
         explicit String(unsigned int, unsigned char base = 10);
         explicit String(long, unsigned char base = 10);
         explicit String(unsigned long, unsigned char base = 10);
-        explicit String(float, unsigned char decimalPlaces = 2);
-        explicit String(double, unsigned char decimalPlaces = 2);
+        explicit String(float, unsigned int decimalPlaces = 2);
+        explicit String(double, unsigned int decimalPlaces = 2);
         ~String(void);
 
         // memory management

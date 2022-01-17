@@ -17,10 +17,6 @@ WiFiMulti WiFiMulti;
 
 // Set time via NTP, as required for x.509 validation
 void setClock() {
-  /*
-    Note: Bundled Arduino lwip supports only ONE ntp server, 2nd and 3rd options are silently ignored
-    see CONFIG_LWIP_DHCP_MAX_NTP_SERVERS define in ./tools/sdk/esp32/sdkconfig
-  */
   configTime(0, 0, "pool.ntp.org", "time.nist.gov");  // UTC
 
   Serial.print(F("Waiting for NTP time sync: "));

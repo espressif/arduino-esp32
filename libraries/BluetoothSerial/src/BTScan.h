@@ -24,14 +24,14 @@ public:
 
     virtual void        		dump(Print *print = nullptr);
     virtual int         		getCount();
-    virtual BTAdvertisedDevice* getDevice(uint32_t i);
+    virtual BTAdvertisedDevice* getDevice(int i);
 };
 
 class BTScanResultsSet : public BTScanResults {
 public:
     void                	dump(Print *print = nullptr);
     int                 	getCount();
-    BTAdvertisedDevice*		getDevice(uint32_t i);
+    BTAdvertisedDevice*		getDevice(int i);
 
 	bool add(BTAdvertisedDeviceSet advertisedDevice, bool unique = true);
 	void clear();
