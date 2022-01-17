@@ -15,7 +15,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
 		pip install requests > /dev/null
 	fi
 
-	if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
+	if [ ! -z "$GITHUB_REPOSITORY" ];  then
 		echo "Linking Core..."
 		ln -s $GITHUB_WORKSPACE esp32
 	else
