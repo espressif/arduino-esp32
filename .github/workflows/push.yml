@@ -1,6 +1,7 @@
 name: ESP32 Arduino CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - master
