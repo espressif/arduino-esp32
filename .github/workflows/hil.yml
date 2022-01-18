@@ -94,25 +94,6 @@ jobs:
        - name: Check chip
          run: cat tests/${{matrix.sketches}}/build/build.options.json
 
-       # Our self-hosted runners run on an RPI, the setup-python action doesn't
-       # support an ARM architecture.
-
-       - name: Cache Python
-         id: cache-python
-         uses: actions/cache@v2
-         with:
-           path: ~/.pyenv
-           key: pyenv-${{env.PYENV_VERSION}}-${{env.PYTHON_VERSION}}
-
-       - name: Install Python
-         if: steps.cache-python.outputs.cache-hit != 'true'
-         run: |
-           rm -rf ~/.pyenv
-           git clone https://github.com/pyenv/pyenv.git -b ${{env.PYENV_VERSION}} ~/.pyenv
-           export PYENV_ROOT=~/.pyenv
-           export PATH=$PYENV_ROOT/bin:$PATH
-           pyenv install ${{env.PYTHON_VERSION}}
-
        - name: Install dependencies
          run: |
            ~/.pyenv/versions/${{env.PYTHON_VERSION}}/bin/python -m venv test_venv
