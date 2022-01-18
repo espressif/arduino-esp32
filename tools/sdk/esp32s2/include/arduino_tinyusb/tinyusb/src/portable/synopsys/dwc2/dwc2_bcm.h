@@ -31,6 +31,7 @@
  extern "C" {
 #endif
 
+#include "broadcom/defines.h"
 #include "broadcom/interrupts.h"
 #include "broadcom/caches.h"
 
@@ -47,7 +48,6 @@ static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
   (void) rhport;
   BP_EnableIRQ(USB_IRQn);
-  __asm__ volatile("isb"); // needed if TIMER1 IRQ is not enabled !?
 }
 
 TU_ATTR_ALWAYS_INLINE
@@ -55,7 +55,6 @@ static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
   (void) rhport;
   BP_DisableIRQ(USB_IRQn);
-  __asm__ volatile("isb"); // needed if TIMER1 IRQ is not enabled !?
 }
 
 static inline void dwc2_remote_wakeup_delay(void)
