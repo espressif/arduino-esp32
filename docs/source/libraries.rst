@@ -28,7 +28,7 @@ Currently, the Arduino ESP32 supports the following peripherals with Arduino API
 +---------------+---------------+---------------+---------------+-------------------------------+
 | I2C           | Yes           | Yes           | Yes           |                               |
 +---------------+---------------+---------------+---------------+-------------------------------+
-| I2S           | No            | No            | No            | WIP                           |
+| I2S           | Yes           | No            | No            | WIP                           |
 +---------------+---------------+---------------+---------------+-------------------------------+
 | LEDC          | Yes           | Yes           | Yes           |                               |
 +---------------+---------------+---------------+---------------+-------------------------------+
@@ -84,6 +84,7 @@ The Arduino ESP32 offers some unique APIs, described in this section:
     ESPNOW <api/espnow>
     GPIO <api/gpio>
     I2C <api/i2c>
+    I2S <api/i2s>
     RainMaker <api/rainmaker>
     Reset Reason <api/reset_reason>
     USB <api/usb.rst>
