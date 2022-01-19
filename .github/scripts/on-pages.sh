@@ -71,7 +71,7 @@ function git_safe_upload_to_pages(){
     local name=$(basename "$file")
     local size=`get_file_size "$file"`
     local upload_res=`git_upload_to_pages "$path" "$file"`
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         >&2 echo "ERROR: Failed to upload '$name' ($?)"
         return 1
     fi
