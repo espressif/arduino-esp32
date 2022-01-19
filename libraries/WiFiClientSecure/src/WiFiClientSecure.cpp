@@ -272,6 +272,7 @@ void WiFiClientSecure::setCACert (const char *rootCA)
         esp_crt_bundle_set(bundle);
         _use_ca_bundle = true;
     } else {
+        esp_crt_bundle_detach(NULL);
         _use_ca_bundle = false;
     }
  }
