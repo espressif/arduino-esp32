@@ -878,6 +878,7 @@ esp32wroverkit.menu.DebugLevel.verbose=Verbose
 esp32wroverkit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 tinypico.name=UM TinyPICO
 
 tinypico.upload.tool=esptool_py
@@ -962,6 +963,7 @@ tinypico.menu.DebugLevel.verbose=Verbose
 tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 feathers2.name=UM FeatherS2
 feathers2.vid.0=0x239A
 feathers2.pid.0=0x80AB
@@ -1101,6 +1103,7 @@ feathers2.menu.DebugLevel.verbose=Verbose
 feathers2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 feathers2neo.name=UM FeatherS2 Neo
 feathers2neo.vid.0=0x303a
 feathers2neo.pid.0=0x80B4
@@ -1226,6 +1229,7 @@ feathers2neo.menu.DebugLevel.verbose=Verbose
 feathers2neo.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 tinys2.name=UM TinyS2
 tinys2.vid.0=0x303a
 tinys2.pid.0=0x8001
@@ -1351,6 +1355,7 @@ tinys2.menu.DebugLevel.verbose=Verbose
 tinys2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 S_ODI_Ultra.name=S.ODI Ultra v1
 
 S_ODI_Ultra.upload.tool=esptool_py
@@ -1550,6 +1555,7 @@ micros2.menu.DebugLevel.verbose=Verbose
 micros2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 magicbit.name=MagicBit
 
 magicbit.upload.tool=esptool_py
@@ -1588,7 +1594,22 @@ magicbit.menu.UploadSpeed.921600=921600
 magicbit.menu.UploadSpeed.921600.upload.speed=921600
 magicbit.menu.UploadSpeed.115200=115200
 magicbit.menu.UploadSpeed.115200.upload.speed=115200
+
+magicbit.menu.DebugLevel.none=None
+magicbit.menu.DebugLevel.none.build.code_debug=0
+magicbit.menu.DebugLevel.error=Error
+magicbit.menu.DebugLevel.error.build.code_debug=1
+magicbit.menu.DebugLevel.warn=Warn
+magicbit.menu.DebugLevel.warn.build.code_debug=2
+magicbit.menu.DebugLevel.info=Info
+magicbit.menu.DebugLevel.info.build.code_debug=3
+magicbit.menu.DebugLevel.debug=Debug
+magicbit.menu.DebugLevel.debug.build.code_debug=4
+magicbit.menu.DebugLevel.verbose=Verbose
+magicbit.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
 turta_iot_node.name=Turta IoT Node
 
 turta_iot_node.upload.tool=esptool_py
@@ -1635,7 +1656,6 @@ turta_iot_node.menu.DebugLevel.verbose=Verbose
 turta_iot_node.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 ttgo-lora32.name=TTGO LoRa32-OLED
 
@@ -1705,7 +1725,6 @@ ttgo-lora32.menu.DebugLevel.debug=Debug
 ttgo-lora32.menu.DebugLevel.debug.build.code_debug=4
 ttgo-lora32.menu.DebugLevel.verbose=Verbose
 ttgo-lora32.menu.DebugLevel.verbose.build.code_debug=5
-
 
 ##############################################################
 
@@ -2129,7 +2148,6 @@ ttgo-t-oi-plus.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-
 
 ttgo-t-oi-plus.menu.CPUFreq.160=160MHz (WiFi)
 ttgo-t-oi-plus.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -2788,6 +2806,19 @@ sparkfun_lora_gateway_1-channel.menu.UploadSpeed.460800.upload.speed=460800
 sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.windows=512000
 sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.upload.speed=512000
 
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.none=None
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.none.build.code_debug=0
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.error=Error
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.error.build.code_debug=1
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.warn=Warn
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.warn.build.code_debug=2
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.info=Info
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.info.build.code_debug=3
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug=Debug
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug.build.code_debug=4
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose=Verbose
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 nina_w10.name=u-blox NINA-W10 series (ESP32)
@@ -2830,6 +2861,19 @@ nina_w10.menu.UploadSpeed.460800.macosx=460800
 nina_w10.menu.UploadSpeed.460800.upload.speed=460800
 nina_w10.menu.UploadSpeed.512000.windows=512000
 nina_w10.menu.UploadSpeed.512000.upload.speed=512000
+
+nina_w10.menu.DebugLevel.none=None
+nina_w10.menu.DebugLevel.none.build.code_debug=0
+nina_w10.menu.DebugLevel.error=Error
+nina_w10.menu.DebugLevel.error.build.code_debug=1
+nina_w10.menu.DebugLevel.warn=Warn
+nina_w10.menu.DebugLevel.warn.build.code_debug=2
+nina_w10.menu.DebugLevel.info=Info
+nina_w10.menu.DebugLevel.info.build.code_debug=3
+nina_w10.menu.DebugLevel.debug=Debug
+nina_w10.menu.DebugLevel.debug.build.code_debug=4
+nina_w10.menu.DebugLevel.verbose=Verbose
+nina_w10.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2879,6 +2923,19 @@ widora-air.menu.UploadSpeed.460800.upload.speed=460800
 widora-air.menu.UploadSpeed.512000.windows=512000
 widora-air.menu.UploadSpeed.512000.upload.speed=512000
 
+widora-air.menu.DebugLevel.none=None
+widora-air.menu.DebugLevel.none.build.code_debug=0
+widora-air.menu.DebugLevel.error=Error
+widora-air.menu.DebugLevel.error.build.code_debug=1
+widora-air.menu.DebugLevel.warn=Warn
+widora-air.menu.DebugLevel.warn.build.code_debug=2
+widora-air.menu.DebugLevel.info=Info
+widora-air.menu.DebugLevel.info.build.code_debug=3
+widora-air.menu.DebugLevel.debug=Debug
+widora-air.menu.DebugLevel.debug.build.code_debug=4
+widora-air.menu.DebugLevel.verbose=Verbose
+widora-air.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 esp320.name=Electronic SweetPeas - ESP320
@@ -2926,6 +2983,19 @@ esp320.menu.UploadSpeed.460800.macosx=460800
 esp320.menu.UploadSpeed.460800.upload.speed=460800
 esp320.menu.UploadSpeed.512000.windows=512000
 esp320.menu.UploadSpeed.512000.upload.speed=512000
+
+esp320.menu.DebugLevel.none=None
+esp320.menu.DebugLevel.none.build.code_debug=0
+esp320.menu.DebugLevel.error=Error
+esp320.menu.DebugLevel.error.build.code_debug=1
+esp320.menu.DebugLevel.warn=Warn
+esp320.menu.DebugLevel.warn.build.code_debug=2
+esp320.menu.DebugLevel.info=Info
+esp320.menu.DebugLevel.info.build.code_debug=3
+esp320.menu.DebugLevel.debug=Debug
+esp320.menu.DebugLevel.debug.build.code_debug=4
+esp320.menu.DebugLevel.verbose=Verbose
+esp320.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2975,6 +3045,19 @@ nano32.menu.UploadSpeed.460800.upload.speed=460800
 nano32.menu.UploadSpeed.512000.windows=512000
 nano32.menu.UploadSpeed.512000.upload.speed=512000
 
+nano32.menu.DebugLevel.none=None
+nano32.menu.DebugLevel.none.build.code_debug=0
+nano32.menu.DebugLevel.error=Error
+nano32.menu.DebugLevel.error.build.code_debug=1
+nano32.menu.DebugLevel.warn=Warn
+nano32.menu.DebugLevel.warn.build.code_debug=2
+nano32.menu.DebugLevel.info=Info
+nano32.menu.DebugLevel.info.build.code_debug=3
+nano32.menu.DebugLevel.debug=Debug
+nano32.menu.DebugLevel.debug.build.code_debug=4
+nano32.menu.DebugLevel.verbose=Verbose
+nano32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 d32.name=LOLIN D32
@@ -3015,14 +3098,10 @@ d32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 d32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 d32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
-
 d32.menu.FlashFreq.80=80MHz
 d32.menu.FlashFreq.80.build.flash_freq=80m
 d32.menu.FlashFreq.40=40MHz
 d32.menu.FlashFreq.40.build.flash_freq=40m
-
-
 
 d32.menu.UploadSpeed.921600=921600
 d32.menu.UploadSpeed.921600.upload.speed=921600
@@ -3099,14 +3178,10 @@ d32_pro.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 d32_pro.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 d32_pro.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
-
 d32_pro.menu.FlashFreq.80=80MHz
 d32_pro.menu.FlashFreq.80.build.flash_freq=80m
 d32_pro.menu.FlashFreq.40=40MHz
 d32_pro.menu.FlashFreq.40.build.flash_freq=40m
-
-
 
 d32_pro.menu.UploadSpeed.921600=921600
 d32_pro.menu.UploadSpeed.921600.upload.speed=921600
@@ -3212,6 +3287,19 @@ lolin32.menu.UploadSpeed.460800.upload.speed=460800
 lolin32.menu.UploadSpeed.512000.windows=512000
 lolin32.menu.UploadSpeed.512000.upload.speed=512000
 
+lolin32.menu.DebugLevel.none=None
+lolin32.menu.DebugLevel.none.build.code_debug=0
+lolin32.menu.DebugLevel.error=Error
+lolin32.menu.DebugLevel.error.build.code_debug=1
+lolin32.menu.DebugLevel.warn=Warn
+lolin32.menu.DebugLevel.warn.build.code_debug=2
+lolin32.menu.DebugLevel.info=Info
+lolin32.menu.DebugLevel.info.build.code_debug=3
+lolin32.menu.DebugLevel.debug=Debug
+lolin32.menu.DebugLevel.debug.build.code_debug=4
+lolin32.menu.DebugLevel.verbose=Verbose
+lolin32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 lolin32-lite.name=WEMOS LOLIN32 Lite
@@ -3287,6 +3375,19 @@ lolin32-lite.menu.UploadSpeed.460800.upload.speed=460800
 lolin32-lite.menu.UploadSpeed.512000.windows=512000
 lolin32-lite.menu.UploadSpeed.512000.upload.speed=512000
 
+lolin32-lite.menu.DebugLevel.none=None
+lolin32-lite.menu.DebugLevel.none.build.code_debug=0
+lolin32-lite.menu.DebugLevel.error=Error
+lolin32-lite.menu.DebugLevel.error.build.code_debug=1
+lolin32-lite.menu.DebugLevel.warn=Warn
+lolin32-lite.menu.DebugLevel.warn.build.code_debug=2
+lolin32-lite.menu.DebugLevel.info=Info
+lolin32-lite.menu.DebugLevel.info.build.code_debug=3
+lolin32-lite.menu.DebugLevel.debug=Debug
+lolin32-lite.menu.DebugLevel.debug.build.code_debug=4
+lolin32-lite.menu.DebugLevel.verbose=Verbose
+lolin32-lite.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 pocket_32.name=Dongsen Tech Pocket 32
@@ -3334,6 +3435,19 @@ pocket_32.menu.UploadSpeed.460800.macosx=460800
 pocket_32.menu.UploadSpeed.460800.upload.speed=460800
 pocket_32.menu.UploadSpeed.512000.windows=512000
 pocket_32.menu.UploadSpeed.512000.upload.speed=512000
+
+pocket_32.menu.DebugLevel.none=None
+pocket_32.menu.DebugLevel.none.build.code_debug=0
+pocket_32.menu.DebugLevel.error=Error
+pocket_32.menu.DebugLevel.error.build.code_debug=1
+pocket_32.menu.DebugLevel.warn=Warn
+pocket_32.menu.DebugLevel.warn.build.code_debug=2
+pocket_32.menu.DebugLevel.info=Info
+pocket_32.menu.DebugLevel.info.build.code_debug=3
+pocket_32.menu.DebugLevel.debug=Debug
+pocket_32.menu.DebugLevel.debug.build.code_debug=4
+pocket_32.menu.DebugLevel.verbose=Verbose
+pocket_32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3444,6 +3558,19 @@ espea32.menu.UploadSpeed.460800.upload.speed=460800
 espea32.menu.UploadSpeed.512000.windows=512000
 espea32.menu.UploadSpeed.512000.upload.speed=512000
 
+espea32.menu.DebugLevel.none=None
+espea32.menu.DebugLevel.none.build.code_debug=0
+espea32.menu.DebugLevel.error=Error
+espea32.menu.DebugLevel.error.build.code_debug=1
+espea32.menu.DebugLevel.warn=Warn
+espea32.menu.DebugLevel.warn.build.code_debug=2
+espea32.menu.DebugLevel.info=Info
+espea32.menu.DebugLevel.info.build.code_debug=3
+espea32.menu.DebugLevel.debug=Debug
+espea32.menu.DebugLevel.debug.build.code_debug=4
+espea32.menu.DebugLevel.verbose=Verbose
+espea32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 quantum.name=Noduino Quantum
@@ -3491,6 +3618,19 @@ quantum.menu.UploadSpeed.460800.macosx=460800
 quantum.menu.UploadSpeed.460800.upload.speed=460800
 quantum.menu.UploadSpeed.512000.windows=512000
 quantum.menu.UploadSpeed.512000.upload.speed=512000
+
+quantum.menu.DebugLevel.none=None
+quantum.menu.DebugLevel.none.build.code_debug=0
+quantum.menu.DebugLevel.error=Error
+quantum.menu.DebugLevel.error.build.code_debug=1
+quantum.menu.DebugLevel.warn=Warn
+quantum.menu.DebugLevel.warn.build.code_debug=2
+quantum.menu.DebugLevel.info=Info
+quantum.menu.DebugLevel.info.build.code_debug=3
+quantum.menu.DebugLevel.debug=Debug
+quantum.menu.DebugLevel.debug.build.code_debug=4
+quantum.menu.DebugLevel.verbose=Verbose
+quantum.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3610,6 +3750,19 @@ hornbill32dev.menu.UploadSpeed.460800.upload.speed=460800
 hornbill32dev.menu.UploadSpeed.512000.windows=512000
 hornbill32dev.menu.UploadSpeed.512000.upload.speed=512000
 
+hornbill32dev.menu.DebugLevel.none=None
+hornbill32dev.menu.DebugLevel.none.build.code_debug=0
+hornbill32dev.menu.DebugLevel.error=Error
+hornbill32dev.menu.DebugLevel.error.build.code_debug=1
+hornbill32dev.menu.DebugLevel.warn=Warn
+hornbill32dev.menu.DebugLevel.warn.build.code_debug=2
+hornbill32dev.menu.DebugLevel.info=Info
+hornbill32dev.menu.DebugLevel.info.build.code_debug=3
+hornbill32dev.menu.DebugLevel.debug=Debug
+hornbill32dev.menu.DebugLevel.debug.build.code_debug=4
+hornbill32dev.menu.DebugLevel.verbose=Verbose
+hornbill32dev.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 hornbill32minima.name=Hornbill ESP32 Minima
@@ -3656,6 +3809,19 @@ hornbill32minima.menu.UploadSpeed.460800.macosx=460800
 hornbill32minima.menu.UploadSpeed.460800.upload.speed=460800
 hornbill32minima.menu.UploadSpeed.512000.windows=512000
 hornbill32minima.menu.UploadSpeed.512000.upload.speed=512000
+
+hornbill32minima.menu.DebugLevel.none=None
+hornbill32minima.menu.DebugLevel.none.build.code_debug=0
+hornbill32minima.menu.DebugLevel.error=Error
+hornbill32minima.menu.DebugLevel.error.build.code_debug=1
+hornbill32minima.menu.DebugLevel.warn=Warn
+hornbill32minima.menu.DebugLevel.warn.build.code_debug=2
+hornbill32minima.menu.DebugLevel.info=Info
+hornbill32minima.menu.DebugLevel.info.build.code_debug=3
+hornbill32minima.menu.DebugLevel.debug=Debug
+hornbill32minima.menu.DebugLevel.debug.build.code_debug=4
+hornbill32minima.menu.DebugLevel.verbose=Verbose
+hornbill32minima.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3705,6 +3871,19 @@ firebeetle32.menu.UploadSpeed.460800.upload.speed=460800
 firebeetle32.menu.UploadSpeed.512000.windows=512000
 firebeetle32.menu.UploadSpeed.512000.upload.speed=512000
 
+firebeetle32.menu.DebugLevel.none=None
+firebeetle32.menu.DebugLevel.none.build.code_debug=0
+firebeetle32.menu.DebugLevel.error=Error
+firebeetle32.menu.DebugLevel.error.build.code_debug=1
+firebeetle32.menu.DebugLevel.warn=Warn
+firebeetle32.menu.DebugLevel.warn.build.code_debug=2
+firebeetle32.menu.DebugLevel.info=Info
+firebeetle32.menu.DebugLevel.info.build.code_debug=3
+firebeetle32.menu.DebugLevel.debug=Debug
+firebeetle32.menu.DebugLevel.debug.build.code_debug=4
+firebeetle32.menu.DebugLevel.verbose=Verbose
+firebeetle32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 intorobot-fig.name=IntoRobot Fig
@@ -3753,6 +3932,19 @@ intorobot-fig.menu.UploadSpeed.460800.upload.speed=460800
 intorobot-fig.menu.UploadSpeed.512000.windows=512000
 intorobot-fig.menu.UploadSpeed.512000.upload.speed=512000
 
+intorobot-fig.menu.DebugLevel.none=None
+intorobot-fig.menu.DebugLevel.none.build.code_debug=0
+intorobot-fig.menu.DebugLevel.error=Error
+intorobot-fig.menu.DebugLevel.error.build.code_debug=1
+intorobot-fig.menu.DebugLevel.warn=Warn
+intorobot-fig.menu.DebugLevel.warn.build.code_debug=2
+intorobot-fig.menu.DebugLevel.info=Info
+intorobot-fig.menu.DebugLevel.info.build.code_debug=3
+intorobot-fig.menu.DebugLevel.debug=Debug
+intorobot-fig.menu.DebugLevel.debug.build.code_debug=4
+intorobot-fig.menu.DebugLevel.verbose=Verbose
+intorobot-fig.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 onehorse32dev.name=Onehorse ESP32 Dev Module
@@ -3800,6 +3992,19 @@ onehorse32dev.menu.UploadSpeed.460800.macosx=460800
 onehorse32dev.menu.UploadSpeed.460800.upload.speed=460800
 onehorse32dev.menu.UploadSpeed.512000.windows=512000
 onehorse32dev.menu.UploadSpeed.512000.upload.speed=512000
+
+onehorse32dev.menu.DebugLevel.none=None
+onehorse32dev.menu.DebugLevel.none.build.code_debug=0
+onehorse32dev.menu.DebugLevel.error=Error
+onehorse32dev.menu.DebugLevel.error.build.code_debug=1
+onehorse32dev.menu.DebugLevel.warn=Warn
+onehorse32dev.menu.DebugLevel.warn.build.code_debug=2
+onehorse32dev.menu.DebugLevel.info=Info
+onehorse32dev.menu.DebugLevel.info.build.code_debug=3
+onehorse32dev.menu.DebugLevel.debug=Debug
+onehorse32dev.menu.DebugLevel.debug.build.code_debug=4
+onehorse32dev.menu.DebugLevel.verbose=Verbose
+onehorse32dev.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4042,7 +4247,6 @@ adafruit_metro_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_metro_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_metro_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
 
 adafruit_magtag29_esp32s2.name=Adafruit MagTag 2.9"
@@ -4214,7 +4418,6 @@ adafruit_magtag29_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
 
 adafruit_funhouse_esp32s2.name=Adafruit FunHouse
@@ -4385,7 +4588,6 @@ adafruit_funhouse_esp32s2.menu.DebugLevel.debug=Debug
 adafruit_funhouse_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
-
 
 ##############################################################
 
@@ -4934,6 +5136,19 @@ nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.512000.windows=512000
 nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
 
+nodemcu-32s.menu.DebugLevel.none=None
+nodemcu-32s.menu.DebugLevel.none.build.code_debug=0
+nodemcu-32s.menu.DebugLevel.error=Error
+nodemcu-32s.menu.DebugLevel.error.build.code_debug=1
+nodemcu-32s.menu.DebugLevel.warn=Warn
+nodemcu-32s.menu.DebugLevel.warn.build.code_debug=2
+nodemcu-32s.menu.DebugLevel.info=Info
+nodemcu-32s.menu.DebugLevel.info.build.code_debug=3
+nodemcu-32s.menu.DebugLevel.debug=Debug
+nodemcu-32s.menu.DebugLevel.debug.build.code_debug=4
+nodemcu-32s.menu.DebugLevel.verbose=Verbose
+nodemcu-32s.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
@@ -5076,7 +5291,7 @@ mhetesp32minikit.menu.DebugLevel.debug.build.code_debug=4
 mhetesp32minikit.menu.DebugLevel.verbose=Verbose
 mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
 
-#################################################################
+##############################################################
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
 
@@ -5123,6 +5338,19 @@ esp32vn-iot-uno.menu.UploadSpeed.460800.macosx=460800
 esp32vn-iot-uno.menu.UploadSpeed.460800.upload.speed=460800
 esp32vn-iot-uno.menu.UploadSpeed.512000.windows=512000
 esp32vn-iot-uno.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32vn-iot-uno.menu.DebugLevel.none=None
+esp32vn-iot-uno.menu.DebugLevel.none.build.code_debug=0
+esp32vn-iot-uno.menu.DebugLevel.error=Error
+esp32vn-iot-uno.menu.DebugLevel.error.build.code_debug=1
+esp32vn-iot-uno.menu.DebugLevel.warn=Warn
+esp32vn-iot-uno.menu.DebugLevel.warn.build.code_debug=2
+esp32vn-iot-uno.menu.DebugLevel.info=Info
+esp32vn-iot-uno.menu.DebugLevel.info.build.code_debug=3
+esp32vn-iot-uno.menu.DebugLevel.debug=Debug
+esp32vn-iot-uno.menu.DebugLevel.debug.build.code_debug=4
+esp32vn-iot-uno.menu.DebugLevel.verbose=Verbose
+esp32vn-iot-uno.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5276,7 +5504,6 @@ esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
 esp32-evb.menu.FlashFreq.40=40MHz
 esp32-evb.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-evb.menu.UploadSpeed.115200=115200
 esp32-evb.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -5288,6 +5515,19 @@ esp32-evb.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-evb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-evb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-evb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-evb.menu.DebugLevel.none=None
+esp32-evb.menu.DebugLevel.none.build.code_debug=0
+esp32-evb.menu.DebugLevel.error=Error
+esp32-evb.menu.DebugLevel.error.build.code_debug=1
+esp32-evb.menu.DebugLevel.warn=Warn
+esp32-evb.menu.DebugLevel.warn.build.code_debug=2
+esp32-evb.menu.DebugLevel.info=Info
+esp32-evb.menu.DebugLevel.info.build.code_debug=3
+esp32-evb.menu.DebugLevel.debug=Debug
+esp32-evb.menu.DebugLevel.debug.build.code_debug=4
+esp32-evb.menu.DebugLevel.verbose=Verbose
+esp32-evb.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5328,7 +5568,6 @@ esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
 esp32-gateway.menu.FlashFreq.40=40MHz
 esp32-gateway.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-gateway.menu.UploadSpeed.115200=115200
 esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -5340,6 +5579,19 @@ esp32-gateway.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-gateway.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-gateway.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-gateway.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-gateway.menu.DebugLevel.none=None
+esp32-gateway.menu.DebugLevel.none.build.code_debug=0
+esp32-gateway.menu.DebugLevel.error=Error
+esp32-gateway.menu.DebugLevel.error.build.code_debug=1
+esp32-gateway.menu.DebugLevel.warn=Warn
+esp32-gateway.menu.DebugLevel.warn.build.code_debug=2
+esp32-gateway.menu.DebugLevel.info=Info
+esp32-gateway.menu.DebugLevel.info.build.code_debug=3
+esp32-gateway.menu.DebugLevel.debug=Debug
+esp32-gateway.menu.DebugLevel.debug.build.code_debug=4
+esp32-gateway.menu.DebugLevel.verbose=Verbose
+esp32-gateway.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5374,7 +5626,6 @@ esp32-poe.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe.menu.FlashFreq.40=40MHz
 esp32-poe.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-poe.menu.UploadSpeed.115200=115200
 esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -5386,6 +5637,19 @@ esp32-poe.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-poe.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-poe.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-poe.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-poe.menu.DebugLevel.none=None
+esp32-poe.menu.DebugLevel.none.build.code_debug=0
+esp32-poe.menu.DebugLevel.error=Error
+esp32-poe.menu.DebugLevel.error.build.code_debug=1
+esp32-poe.menu.DebugLevel.warn=Warn
+esp32-poe.menu.DebugLevel.warn.build.code_debug=2
+esp32-poe.menu.DebugLevel.info=Info
+esp32-poe.menu.DebugLevel.info.build.code_debug=3
+esp32-poe.menu.DebugLevel.debug=Debug
+esp32-poe.menu.DebugLevel.debug.build.code_debug=4
+esp32-poe.menu.DebugLevel.verbose=Verbose
+esp32-poe.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5420,7 +5684,6 @@ esp32-poe-iso.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe-iso.menu.FlashFreq.40=40MHz
 esp32-poe-iso.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-poe-iso.menu.UploadSpeed.115200=115200
 esp32-poe-iso.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -5432,6 +5695,19 @@ esp32-poe-iso.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-poe-iso.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-poe-iso.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-poe-iso.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-poe-iso.menu.DebugLevel.none=None
+esp32-poe-iso.menu.DebugLevel.none.build.code_debug=0
+esp32-poe-iso.menu.DebugLevel.error=Error
+esp32-poe-iso.menu.DebugLevel.error.build.code_debug=1
+esp32-poe-iso.menu.DebugLevel.warn=Warn
+esp32-poe-iso.menu.DebugLevel.warn.build.code_debug=2
+esp32-poe-iso.menu.DebugLevel.info=Info
+esp32-poe-iso.menu.DebugLevel.info.build.code_debug=3
+esp32-poe-iso.menu.DebugLevel.debug=Debug
+esp32-poe-iso.menu.DebugLevel.debug.build.code_debug=4
+esp32-poe-iso.menu.DebugLevel.verbose=Verbose
+esp32-poe-iso.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5510,6 +5786,20 @@ esp32-DevKitLipo.menu.UploadSpeed.460800.macosx=460800
 esp32-DevKitLipo.menu.UploadSpeed.460800.upload.speed=460800
 esp32-DevKitLipo.menu.UploadSpeed.512000.windows=512000
 esp32-DevKitLipo.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32-DevKitLipo.menu.DebugLevel.none=None
+esp32-DevKitLipo.menu.DebugLevel.none.build.code_debug=0
+esp32-DevKitLipo.menu.DebugLevel.error=Error
+esp32-DevKitLipo.menu.DebugLevel.error.build.code_debug=1
+esp32-DevKitLipo.menu.DebugLevel.warn=Warn
+esp32-DevKitLipo.menu.DebugLevel.warn.build.code_debug=2
+esp32-DevKitLipo.menu.DebugLevel.info=Info
+esp32-DevKitLipo.menu.DebugLevel.info.build.code_debug=3
+esp32-DevKitLipo.menu.DebugLevel.debug=Debug
+esp32-DevKitLipo.menu.DebugLevel.debug.build.code_debug=4
+esp32-DevKitLipo.menu.DebugLevel.verbose=Verbose
+esp32-DevKitLipo.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 espino32.name=ThaiEasyElec's ESPino32
@@ -5557,6 +5847,19 @@ espino32.menu.UploadSpeed.460800.macosx=460800
 espino32.menu.UploadSpeed.460800.upload.speed=460800
 espino32.menu.UploadSpeed.512000.windows=512000
 espino32.menu.UploadSpeed.512000.upload.speed=512000
+
+espino32.menu.DebugLevel.none=None
+espino32.menu.DebugLevel.none.build.code_debug=0
+espino32.menu.DebugLevel.error=Error
+espino32.menu.DebugLevel.error.build.code_debug=1
+espino32.menu.DebugLevel.warn=Warn
+espino32.menu.DebugLevel.warn.build.code_debug=2
+espino32.menu.DebugLevel.info=Info
+espino32.menu.DebugLevel.info.build.code_debug=3
+espino32.menu.DebugLevel.debug=Debug
+espino32.menu.DebugLevel.debug.build.code_debug=4
+espino32.menu.DebugLevel.verbose=Verbose
+espino32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5750,7 +6053,6 @@ m5stick-c.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 m5stick-c.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stick-c.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
 m5stick-c.menu.UploadSpeed.1500000=1500000
 m5stick-c.menu.UploadSpeed.1500000.upload.speed=1500000
 m5stick-c.menu.UploadSpeed.750000=750000
@@ -5761,8 +6063,6 @@ m5stick-c.menu.UploadSpeed.250000=250000
 m5stick-c.menu.UploadSpeed.250000.upload.speed=250000
 m5stick-c.menu.UploadSpeed.115200=115200
 m5stick-c.menu.UploadSpeed.115200.upload.speed=115200
-
-
 
 m5stick-c.menu.DebugLevel.none=None
 m5stick-c.menu.DebugLevel.none.build.code_debug=0
@@ -5815,7 +6115,6 @@ m5stack-atom.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA
 m5stack-atom.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack-atom.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
 m5stack-atom.menu.UploadSpeed.1500000=1500000
 m5stack-atom.menu.UploadSpeed.1500000.upload.speed=1500000
 m5stack-atom.menu.UploadSpeed.750000=750000
@@ -5826,8 +6125,6 @@ m5stack-atom.menu.UploadSpeed.250000=250000
 m5stack-atom.menu.UploadSpeed.250000.upload.speed=250000
 m5stack-atom.menu.UploadSpeed.115200=115200
 m5stack-atom.menu.UploadSpeed.115200.upload.speed=115200
-
-
 
 m5stack-atom.menu.DebugLevel.none=None
 m5stack-atom.menu.DebugLevel.none.build.code_debug=0
@@ -5841,7 +6138,6 @@ m5stack-atom.menu.DebugLevel.debug=Debug
 m5stack-atom.menu.DebugLevel.debug.build.code_debug=4
 m5stack-atom.menu.DebugLevel.verbose=Verbose
 m5stack-atom.menu.DebugLevel.verbose.build.code_debug=5
-
 
 ##############################################################
 
@@ -6758,8 +7054,8 @@ espectro32.menu.DebugLevel.debug.build.code_debug=4
 espectro32.menu.DebugLevel.verbose=Verbose
 espectro32.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
+
 CoreESP32.name=Microduino-CoreESP32
 
 CoreESP32.upload.tool=esptool_py
@@ -6840,7 +7136,6 @@ CoreESP32.menu.DebugLevel.verbose=Verbose
 CoreESP32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 alksesp32.name=ALKS ESP32
 
@@ -6976,7 +7271,6 @@ alksesp32.menu.DebugLevel.verbose=Verbose
 alksesp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 wipy3.name=WiPy 3.0
 
@@ -7178,6 +7472,19 @@ bpi-bit.menu.UploadSpeed.460800.macosx=460800
 bpi-bit.menu.UploadSpeed.460800.upload.speed=460800
 bpi-bit.menu.UploadSpeed.512000.windows=512000
 bpi-bit.menu.UploadSpeed.512000.upload.speed=512000
+
+bpi-bit.menu.DebugLevel.none=None
+bpi-bit.menu.DebugLevel.none.build.code_debug=0
+bpi-bit.menu.DebugLevel.error=Error
+bpi-bit.menu.DebugLevel.error.build.code_debug=1
+bpi-bit.menu.DebugLevel.warn=Warn
+bpi-bit.menu.DebugLevel.warn.build.code_debug=2
+bpi-bit.menu.DebugLevel.info=Info
+bpi-bit.menu.DebugLevel.info.build.code_debug=3
+bpi-bit.menu.DebugLevel.debug=Debug
+bpi-bit.menu.DebugLevel.debug.build.code_debug=4
+bpi-bit.menu.DebugLevel.verbose=Verbose
+bpi-bit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -7577,8 +7884,6 @@ oroca_edubot.menu.DebugLevel.debug.build.code_debug=4
 oroca_edubot.menu.DebugLevel.verbose=Verbose
 oroca_edubot.menu.DebugLevel.verbose.build.code_debug=5
 
-
-
 ##############################################################
 
 fm-devkit.name=ESP32 FM DevKit
@@ -7794,6 +8099,19 @@ esp32cam.menu.FlashFreq.80.build.flash_freq=80m
 esp32cam.menu.FlashFreq.40=40MHz
 esp32cam.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32cam.menu.DebugLevel.none=None
+esp32cam.menu.DebugLevel.none.build.code_debug=0
+esp32cam.menu.DebugLevel.error=Error
+esp32cam.menu.DebugLevel.error.build.code_debug=1
+esp32cam.menu.DebugLevel.warn=Warn
+esp32cam.menu.DebugLevel.warn.build.code_debug=2
+esp32cam.menu.DebugLevel.info=Info
+esp32cam.menu.DebugLevel.info.build.code_debug=3
+esp32cam.menu.DebugLevel.debug=Debug
+esp32cam.menu.DebugLevel.debug.build.code_debug=4
+esp32cam.menu.DebugLevel.verbose=Verbose
+esp32cam.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 twatch.name=TTGO T-Watch
@@ -7952,6 +8270,19 @@ d1_mini32.menu.UploadSpeed.460800.macosx=460800
 d1_mini32.menu.UploadSpeed.460800.upload.speed=460800
 d1_mini32.menu.UploadSpeed.512000.windows=512000
 d1_mini32.menu.UploadSpeed.512000.upload.speed=512000
+
+d1_mini32.menu.DebugLevel.none=None
+d1_mini32.menu.DebugLevel.none.build.code_debug=0
+d1_mini32.menu.DebugLevel.error=Error
+d1_mini32.menu.DebugLevel.error.build.code_debug=1
+d1_mini32.menu.DebugLevel.warn=Warn
+d1_mini32.menu.DebugLevel.warn.build.code_debug=2
+d1_mini32.menu.DebugLevel.info=Info
+d1_mini32.menu.DebugLevel.info.build.code_debug=3
+d1_mini32.menu.DebugLevel.debug=Debug
+d1_mini32.menu.DebugLevel.debug.build.code_debug=4
+d1_mini32.menu.DebugLevel.verbose=Verbose
+d1_mini32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -8166,6 +8497,19 @@ honeylemon.menu.UploadSpeed.460800.macosx=460800
 honeylemon.menu.UploadSpeed.460800.upload.speed=460800
 honeylemon.menu.UploadSpeed.512000.windows=512000
 honeylemon.menu.UploadSpeed.512000.upload.speed=512000
+
+honeylemon.menu.DebugLevel.none=None
+honeylemon.menu.DebugLevel.none.build.code_debug=0
+honeylemon.menu.DebugLevel.error=Error
+honeylemon.menu.DebugLevel.error.build.code_debug=1
+honeylemon.menu.DebugLevel.warn=Warn
+honeylemon.menu.DebugLevel.warn.build.code_debug=2
+honeylemon.menu.DebugLevel.info=Info
+honeylemon.menu.DebugLevel.info.build.code_debug=3
+honeylemon.menu.DebugLevel.debug=Debug
+honeylemon.menu.DebugLevel.debug.build.code_debug=4
+honeylemon.menu.DebugLevel.verbose=Verbose
+honeylemon.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -8456,6 +8800,7 @@ mgbot-iotik32b.menu.DebugLevel.verbose=Verbose
 mgbot-iotik32b.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 piranha_esp-32.name=Piranha ESP-32
 
 piranha_esp-32.upload.tool=esptool_py
@@ -8595,6 +8940,7 @@ metro_esp-32.menu.DebugLevel.verbose=Verbose
 metro_esp-32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 sensesiot_weizen.name=Senses's WEIZEN
 
 sensesiot_weizen.upload.tool=esptool_py
@@ -8641,7 +8987,21 @@ sensesiot_weizen.menu.UploadSpeed.460800.upload.speed=460800
 sensesiot_weizen.menu.UploadSpeed.512000.windows=512000
 sensesiot_weizen.menu.UploadSpeed.512000.upload.speed=512000
 
+sensesiot_weizen.menu.DebugLevel.none=None
+sensesiot_weizen.menu.DebugLevel.none.build.code_debug=0
+sensesiot_weizen.menu.DebugLevel.error=Error
+sensesiot_weizen.menu.DebugLevel.error.build.code_debug=1
+sensesiot_weizen.menu.DebugLevel.warn=Warn
+sensesiot_weizen.menu.DebugLevel.warn.build.code_debug=2
+sensesiot_weizen.menu.DebugLevel.info=Info
+sensesiot_weizen.menu.DebugLevel.info.build.code_debug=3
+sensesiot_weizen.menu.DebugLevel.debug=Debug
+sensesiot_weizen.menu.DebugLevel.debug.build.code_debug=4
+sensesiot_weizen.menu.DebugLevel.verbose=Verbose
+sensesiot_weizen.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
 kits-edu.name=KITS ESP32 EDU
 
 kits-edu.upload.tool=esptool_py
@@ -8772,7 +9132,6 @@ mPython.menu.PartitionScheme.fatflash.build.partitions=ffat
 mPython.menu.CPUFreq.240=240MHz (WiFi/BT)
 mPython.menu.CPUFreq.240.build.f_cpu=240000000L
 
-
 mPython.menu.FlashMode.qio=QIO
 mPython.menu.FlashMode.qio.build.flash_mode=dio
 mPython.menu.FlashMode.qio.build.boot=qio
@@ -8793,7 +9152,6 @@ mPython.menu.FlashFreq.40.build.flash_freq=40m
 
 mPython.menu.FlashSize.8M=8MB (64Mb)
 mPython.menu.FlashSize.8M.build.flash_size=8MB
-
 
 mPython.menu.UploadSpeed.921600=921600
 mPython.menu.UploadSpeed.921600.upload.speed=921600
@@ -8872,6 +9230,19 @@ OpenKB.menu.UploadSpeed.460800.upload.speed=460800
 OpenKB.menu.UploadSpeed.512000.windows=512000
 OpenKB.menu.UploadSpeed.512000.upload.speed=512000
 
+OpenKB.menu.DebugLevel.none=None
+OpenKB.menu.DebugLevel.none.build.code_debug=0
+OpenKB.menu.DebugLevel.error=Error
+OpenKB.menu.DebugLevel.error.build.code_debug=1
+OpenKB.menu.DebugLevel.warn=Warn
+OpenKB.menu.DebugLevel.warn.build.code_debug=2
+OpenKB.menu.DebugLevel.info=Info
+OpenKB.menu.DebugLevel.info.build.code_debug=3
+OpenKB.menu.DebugLevel.debug=Debug
+OpenKB.menu.DebugLevel.debug.build.code_debug=4
+OpenKB.menu.DebugLevel.verbose=Verbose
+OpenKB.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 wifiduino32.name=WiFiduino32
@@ -8942,7 +9313,6 @@ wifiduino32.menu.DebugLevel.debug=Debug
 wifiduino32.menu.DebugLevel.debug.build.code_debug=4
 wifiduino32.menu.DebugLevel.verbose=Verbose
 wifiduino32.menu.DebugLevel.verbose.build.code_debug=5
-
 
 ##############################################################
 
@@ -9019,6 +9389,19 @@ imbrios-logsens-v1p1.menu.UploadSpeed.460800.upload.speed=460800
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.windows=512000
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.upload.speed=512000
 
+imbrios-logsens-v1p1.menu.DebugLevel.none=None
+imbrios-logsens-v1p1.menu.DebugLevel.none.build.code_debug=0
+imbrios-logsens-v1p1.menu.DebugLevel.error=Error
+imbrios-logsens-v1p1.menu.DebugLevel.error.build.code_debug=1
+imbrios-logsens-v1p1.menu.DebugLevel.warn=Warn
+imbrios-logsens-v1p1.menu.DebugLevel.warn.build.code_debug=2
+imbrios-logsens-v1p1.menu.DebugLevel.info=Info
+imbrios-logsens-v1p1.menu.DebugLevel.info.build.code_debug=3
+imbrios-logsens-v1p1.menu.DebugLevel.debug=Debug
+imbrios-logsens-v1p1.menu.DebugLevel.debug.build.code_debug=4
+imbrios-logsens-v1p1.menu.DebugLevel.verbose=Verbose
+imbrios-logsens-v1p1.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 healthypi4.name=ProtoCentral HealthyPi 4
@@ -9091,7 +9474,6 @@ healthypi4.menu.DebugLevel.verbose=Verbose
 healthypi4.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 ET-Board.name=ET-Board
 
@@ -10570,5 +10952,150 @@ sonoff_dualr3.menu.DebugLevel.debug=Debug
 sonoff_dualr3.menu.DebugLevel.debug.build.code_debug=4
 sonoff_dualr3.menu.DebugLevel.verbose=Verbose
 sonoff_dualr3.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+lionbit.name=Lion:Bit Dev Board
+
+lionbit.upload.tool=esptool_py
+lionbit.upload.maximum_size=1310720
+lionbit.upload.maximum_data_size=327680
+lionbit.upload.flags=
+lionbit.upload.extra_flags=
+
+lionbit.serial.disableDTR=true
+lionbit.serial.disableRTS=true
+
+lionbit.build.tarch=xtensa
+lionbit.build.bootloader_addr=0x1000
+lionbit.build.target=esp32
+lionbit.build.mcu=esp32
+lionbit.build.core=esp32
+lionbit.build.variant=lionbit
+lionbit.build.board=Lion:Bit_Dev_Board
+
+lionbit.build.f_cpu=240000000L
+lionbit.build.flash_size=4MB
+lionbit.build.flash_freq=80m
+lionbit.build.flash_mode=dio
+lionbit.build.boot=dio
+lionbit.build.partitions=default
+lionbit.build.defines=
+lionbit.build.loop_core=
+lionbit.build.event_core=
+
+
+lionbit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lionbit.menu.PartitionScheme.default.build.partitions=default
+lionbit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lionbit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lionbit.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+lionbit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+lionbit.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+lionbit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+lionbit.menu.PartitionScheme.minimal.build.partitions=minimal
+lionbit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lionbit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lionbit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lionbit.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lionbit.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lionbit.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lionbit.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lionbit.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lionbit.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lionbit.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lionbit.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lionbit.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lionbit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+lionbit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+lionbit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lionbit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+lionbit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+lionbit.menu.PartitionScheme.fatflash.build.partitions=ffat
+lionbit.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lionbit.menu.PartitionScheme.rainmaker=RainMaker
+lionbit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lionbit.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lionbit.menu.CPUFreq.240=240MHz (WiFi/BT)
+lionbit.menu.CPUFreq.240.build.f_cpu=240000000L
+lionbit.menu.CPUFreq.160=160MHz (WiFi/BT)
+lionbit.menu.CPUFreq.160.build.f_cpu=160000000L
+lionbit.menu.CPUFreq.80=80MHz (WiFi/BT)
+lionbit.menu.CPUFreq.80.build.f_cpu=80000000L
+lionbit.menu.CPUFreq.40=40MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.40.build.f_cpu=40000000L
+lionbit.menu.CPUFreq.26=26MHz (26MHz XTAL)
+lionbit.menu.CPUFreq.26.build.f_cpu=26000000L
+lionbit.menu.CPUFreq.20=20MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.20.build.f_cpu=20000000L
+lionbit.menu.CPUFreq.13=13MHz (26MHz XTAL)
+lionbit.menu.CPUFreq.13.build.f_cpu=13000000L
+lionbit.menu.CPUFreq.10=10MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+lionbit.menu.FlashMode.dio=DIO
+lionbit.menu.FlashMode.dio.build.flash_mode=dio
+lionbit.menu.FlashMode.dio.build.boot=dio
+lionbit.menu.FlashMode.qio=QIO
+lionbit.menu.FlashMode.qio.build.flash_mode=dio
+lionbit.menu.FlashMode.qio.build.boot=qio
+lionbit.menu.FlashMode.qout=QOUT
+lionbit.menu.FlashMode.qout.build.flash_mode=dout
+lionbit.menu.FlashMode.qout.build.boot=qout
+lionbit.menu.FlashMode.dout=DOUT
+lionbit.menu.FlashMode.dout.build.flash_mode=dout
+lionbit.menu.FlashMode.dout.build.boot=dout
+
+lionbit.menu.FlashFreq.80=80MHz
+lionbit.menu.FlashFreq.80.build.flash_freq=80m
+lionbit.menu.FlashFreq.40=40MHz
+lionbit.menu.FlashFreq.40.build.flash_freq=40m
+
+lionbit.menu.FlashSize.4M=4MB (32Mb)
+lionbit.menu.FlashSize.4M.build.flash_size=4MB
+lionbit.menu.FlashSize.4M.build.partitions=default
+
+
+
+lionbit.menu.UploadSpeed.115200=115200
+lionbit.menu.UploadSpeed.115200.upload.speed=115200
+lionbit.menu.UploadSpeed.256000.windows=256000
+lionbit.menu.UploadSpeed.256000.upload.speed=256000
+lionbit.menu.UploadSpeed.230400.windows.upload.speed=256000
+lionbit.menu.UploadSpeed.230400=230400
+lionbit.menu.UploadSpeed.230400.upload.speed=230400
+lionbit.menu.UploadSpeed.460800.linux=460800
+lionbit.menu.UploadSpeed.460800.macosx=460800
+lionbit.menu.UploadSpeed.460800.upload.speed=460800
+
+
+lionbit.menu.LoopCore.1=Core 1
+lionbit.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lionbit.menu.LoopCore.0=Core 0
+lionbit.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lionbit.menu.EventsCore.1=Core 1
+lionbit.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lionbit.menu.EventsCore.0=Core 0
+lionbit.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lionbit.menu.DebugLevel.none=None
+lionbit.menu.DebugLevel.none.build.code_debug=0
+lionbit.menu.DebugLevel.error=Error
+lionbit.menu.DebugLevel.error.build.code_debug=1
+lionbit.menu.DebugLevel.warn=Warn
+lionbit.menu.DebugLevel.warn.build.code_debug=2
+lionbit.menu.DebugLevel.info=Info
+lionbit.menu.DebugLevel.info.build.code_debug=3
+lionbit.menu.DebugLevel.debug=Debug
+lionbit.menu.DebugLevel.debug.build.code_debug=4
+lionbit.menu.DebugLevel.verbose=Verbose
+lionbit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################

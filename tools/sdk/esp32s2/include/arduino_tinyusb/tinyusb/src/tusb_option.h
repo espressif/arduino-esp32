@@ -132,6 +132,8 @@
 
 // Broadcom
 #define OPT_MCU_BCM2711          1700 ///< Broadcom BCM2711
+#define OPT_MCU_BCM2835          1701 ///< Broadcom BCM2835
+#define OPT_MCU_BCM2837          1702 ///< Broadcom BCM2837
 
 // Infineon
 #define OPT_MCU_XMC4000          1800 ///< Infineon XMC4000

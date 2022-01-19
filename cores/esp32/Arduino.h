@@ -166,6 +166,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
+#include "esp32/spiram.h"
 
 using std::abs;
 using std::isinf;
@@ -181,7 +182,10 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 
 size_t getArduinoLoopTaskStackSize(void);
 #define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
-    
+
+// allows user to bypass esp_spiram_test()
+#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_spiram_test(); }
+
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 
