@@ -22,22 +22,29 @@ All lines can be attached to almost any pin and this change can occur even durin
   * 0 = Left channel, 1 = Right channel
   * In this library function parameter ``fsPin`` or constant ``PIN_I2S_FS``.
 
-* **At least one multiplexed data line**
+* **Data line**
 
   * Officially "serial data (SD)", but can be called SDATA, SDIN, SDOUT, DACDAT, ADCDAT, etc.
-  * Unlike in original Arduino I2S library with single data pin swithing between input and output, in ESP version of this library we use separate data line for input and output.
-  * Input data are called ``inSdPin`` and ``sdPin`` for function parameter, or constant ``PIN_I2S_SD`` (for backward compatibility with original Arduino I2S library)
-  * Output data are called ``outSdPin`` for function parameter, or constant ``PIN_I2S_SD_OUT``
+  * Unlike Arduino I2S with single data pin switching between input and output, in ESP core driver use separate data line for input and output.
+  * For backward compatibility the shared data pin is ``sdPin`` or constant ``PIN_I2S_SD`` when using simplex mode.
+  * When using duplex mode there are two data lines:
+    * Output data line is called ``outSdPin`` for function parameter, or constant ``PIN_I2S_SD_OUT``
+    * Input data line is called ``inSdPin`` for function parameter, or constant ``PIN_I2S_SD_IN``
 
 I2S Modes
-*********
+---------
 
-The I2C can be used in few different modes:
+The I2S can be set up in three groups of modes:
 
-.. note:: Officially supported mode is only ``I2S_PHILIPS_MODE``. Other modes are implemented, but we cannot guarantee flawless execution and behavior.
+  * Master (default) or Slave
+  * Simplex (default) or Duplex
+  * Operation modes (Philips standard, ADC/DAC, PDM)
+    * Most of them are dual channel, some can be single channel
+
+.. note:: Officially supported operation mode is only ``I2S_PHILIPS_MODE``. Other modes are implemented, but we cannot guarantee flawless execution and behavior.
 
 Master / slave mode
--------------------
+*******************
 
 In **Master mode** (default) the device is generating clock signal ``sckPin`` and word select signal on ``fsPin``.
 
@@ -46,7 +53,9 @@ In **Slave mode** the device listens on attached pins for clock signal and word 
 How to enter either mode is described in function section.
 
 Operation modes
----------------
+***************
+
+Setting the operation mode is done with function ``begin`` (see API section)
 
 * ``I2S_PHILIPS_MODE``
     Currently the only officially supported mode.
@@ -71,6 +80,19 @@ Operation modes
 * ``PDM_MONO_MODE``
     Single-channel version of PDM mode described above.
 
+Simplex / duplex mode
+*********************
+
+The **Simplex** mode is default after driver initialization. Simplex mode is using shared data pin ``sdPin`` or constant ``PIN_I2S_SD`` for both output and input, but can only read or write. This is the same behavior as in original Arduino library.
+
+The **Duplex** mode uses two separate data pins:
+
+  * Output pin ``outSdPin`` for function parameter, or constant ``PIN_I2S_SD_OUT``
+  * Input pin ``inSdPin`` for function parameter, or constant ``PIN_I2S_SD_IN``
+In this mode the driver is able to read and write simultaneously on each line and is suitable for applications like walkie-talkie or phone.
+
+Switching between these modes is performed simply by calling setDuplex() or setSimplex() (see APi section for details and more functions).
+
 
 Arduino-ESP32 I2S API
 ---------------------
@@ -89,14 +111,14 @@ Performs initialization before use - creates buffers, task handling underlying d
 This version initializes I2S in MASTER mode (see next entry for SLAVE mode).
 
 parameters:
- [in] ``mode`` one of above mentioned modes for example ``I2S_PHILIPS_MODE``.
+ [in] ``mode`` one of above mentioned operation mode, for example ``I2S_PHILIPS_MODE``.
 
  [in] ``sampleRate`` sampling rate in Hz. Currently officially supported value is only 16000 - other than this value will print warning, but continue to operate, however the resulting audio quality may suffer and the app may crash.
 
  [in] ``bitsPerSample`` Number of bits in a channel sample. Currently officially supported value is only 16 - other than this value will print warning, but continue to operate, however the resulting audio quality may suffer and the app may crash.
  For ``ADC_DAC_MODE`` the only possible value will remain 16.
 
-returns 1 on success, 0 on failure. When failed an error message will be printed if subscribed.
+Returns 1 on success, 0 on failure. When failed an error message will be printed if subscribed.
 
 int begin(int mode, int bitsPerSample)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,19 +148,21 @@ sckPin != fsPin != outSdPin != inSdPin
 
 sckPin != fsPin != sdPin
 
-By default the pin numbers are defined in constants in the header file. You can redefine any of those constants before including ``I2S.h``. This way the driver will be use these new default values and you will not need to specify pins in your code. The constants and their default values are
+By default the pin numbers are defined in constants in the header file. You can redefine any of those constants before including ``I2S.h``. This way the driver will use these new default values and you will not need to specify pins in your code. The constants and their default values are:
 
-``PIN_I2S_SCK 14``
+* ``PIN_I2S_SCK`` 14
 
-``PIN_I2S_FS 25``
+* ``PIN_I2S_FS`` 25
 
-``PIN_I2S_SD 26``
+* ``PIN_I2S_SD`` 26
 
-``PIN_I2S_SD_OUT 26``
+* ``PIN_I2S_SD_OUT`` 26
 
-``PIN_I2S_SD_IN 35``
+* ``PIN_I2S_SD_IN`` 35
 
-Second option to change pins is using the following functions. These functions *MUST* be called on intialized object (after calling ``begin``) therefore they can change pin value during operation.
+Second option to change pins is using the following functions. These functions can be called on either on initialized or uninitialized object.
+If called on initialized object (after calling ``begin``) the pins will change during operation.
+If called on uninitialized object (before calling ``begin``, or after calling ``end``) the new pin setup will be used on next initialization.
 
 
 int setSckPin(int sckPin)
@@ -172,8 +196,7 @@ Returns 1 on success, 0 on failure.
 
 int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set all pins using given values in parameters. This simply a wrapper of four functions mentioned above.
-
+Set all pins using given values in parameters. This is simply a wrapper of four functions mentioned above.
 
 int setAllPins()
 ^^^^^^^^^^^^^^^^
@@ -337,3 +360,23 @@ size_t write_nonblocking(const void *buffer, size_t size)
 Core function implementing non-blocking write, i.e. writes as much as possible and exits.
 
 Returns number of successfully written bytes. Returns 0 on error.
+
+Sample code
+-----------
+.. code-block:: c
+
+  #include <I2S.h>
+  const int buff_size = 128;
+  int available, read;
+  uint8_t buffer[buff_size];
+
+  I2S.begin(I2S_PHILIPS_MODE, 16000, 16);
+  I2S.read(); // Switch the driver in simplex mode to receive
+  available = I2S.available();
+  if(available < buff_size){
+    read = I2S.read(buffer, available);
+  }else{
+    read = I2S.read(buffer, buff_size);
+  }
+  I2S.write(buffer, read);
+  I2S.end();
