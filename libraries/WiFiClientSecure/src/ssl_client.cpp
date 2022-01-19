@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <string>
 #include "ssl_client.h"
+#include "esp_crt_bundle.h"
 #include "WiFi.h"
 
 #ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
@@ -53,14 +54,14 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
     char buf[512];
     int ret, flags;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
 
-    if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure) {
+    if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure && !useRootCABundle) {
         return -1;
     }
 
@@ -181,6 +182,13 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         if (ret < 0) {
             // free the ca_cert in the case parse failed, otherwise, the old ca_cert still in the heap memory, that lead to "out of memory" crash.
             mbedtls_x509_crt_free(&ssl_client->ca_cert);
+            return handle_error(ret);
+        }
+    } else if (useRootCABundle) {
+        log_v("Attaching root CA cert bundle");
+        ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
+
+        if (ret < 0) {
             return handle_error(ret);
         }
     } else if (pskIdent != NULL && psKey != NULL) {
