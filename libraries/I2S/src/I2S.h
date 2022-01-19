@@ -40,11 +40,15 @@ namespace esp_i2s {
 #endif
 
 #ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 35 // Pin 35 is only input!
+  #define PIN_I2S_SD 26
 #endif
 
 #ifndef PIN_I2S_SD_OUT
   #define PIN_I2S_SD_OUT 26
+#endif
+
+#ifndef PIN_I2S_SD_IN
+  #define PIN_I2S_SD_IN 35 // Pin 35 is only input!
 #endif
 
 typedef enum {
@@ -59,28 +63,31 @@ typedef enum {
 class I2SClass : public Stream
 {
 public:
-  // the device index and pins must map to the "COM" pads in Table 6-1 of the datasheet
+  // The device index and pins must map to the "COM" pads in Table 6-1 of the datasheet
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin);
-  // the SCK and FS pins are driven as outputs using the sample rate
+
+  // Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
   int begin(int mode, int sampleRate, int bitsPerSample);
-  // the SCK and FS pins are inputs, other side controls sample rate
+
+  // Init in SLAVE mode: the SCK and FS pins are inputs, other side controls sample rate
   int begin(int mode, int bitsPerSample);
 
   // change pin setup and mode (default is Half Duplex)
   // Can be called only on initialized object (after begin)
   int setSckPin(int sckPin);
   int setFsPin(int fsPin);
-  int setDataInPin(int inSdPin);
+  int setDataPin(int sdPin); // shared data pin for simplex
   int setDataOutPin(int outSdPin);
+  int setDataInPin(int inSdPin);
 
   int setAllPins();
-  int setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin);
+  int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin);
 
   int getSckPin();
   int getFsPin();
   int getDataPin();
-  int getDataInPin();
   int getDataOutPin();
+  int getDataInPin();
 
   int setDuplex();
   int setSimplex();
@@ -113,11 +120,11 @@ public:
 
   int setBufferSize(int bufferSize);
   int getBufferSize();
-  #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-    int gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
-    int gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel);
-  #endif
 private:
+  #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
+    int _gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
+    int _gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel);
+  #endif
   int begin(int mode, int sampleRate, int bitsPerSample, bool driveClock);
 
   int _enableTransmitter();
@@ -131,8 +138,9 @@ private:
   void _uninstallDriver();
   void _setSckPin(int sckPin);
   void _setFsPin(int fsPin);
-  void _setDataInPin(int inSdPin);
+  void _setDataPin(int sdPin);
   void _setDataOutPin(int outSdPin);
+  void _setDataInPin(int inSdPin);
   int  _applyPinSetting();
 
 private:

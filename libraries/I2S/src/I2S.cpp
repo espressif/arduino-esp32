@@ -36,12 +36,8 @@
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
   _sdPin(sdPin),             // shared data pin
-  _inSdPin(sdPin),           // input data pin
-#ifdef PIN_I2S_SD_OUT
-  _outSdPin(PIN_I2S_SD_OUT), // output data pin
-#else
-  _outSdPin(-1),             // output data pin
-#endif
+  _inSdPin(PIN_I2S_SD_IN),   // input data pin
+  _outSdPin(PIN_I2S_SD),     // output data pin
   _sckPin(sckPin),           // clock pin
   _fsPin(fsPin),             // frame (word) select pin
 
@@ -59,7 +55,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample
+  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample; Must be between 8 and 1024
   _driveClock(true),
   _peek_buff(0),
   _peek_buff_valid(false),
@@ -113,7 +109,7 @@ int I2SClass::_installDriver(){
   if(_mode == ADC_DAC_MODE){
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
-        log_e("ERROR I2SClass::begin invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
+        log_e("ERROR invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
         return 0; // ERR
       }
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
@@ -129,7 +125,7 @@ int I2SClass::_installDriver(){
       return 0; // ERR
     }
     if(_bitsPerSample == 24){
-      log_w("Original Arduino library does not support 24 bits per sample - keep that in mind if you should switch back");
+      log_w("Original Arduino library does not support 24 bits per sample.\nKeep that in mind if you should switch back to Arduino");
     }
   }else if(_mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // end of Normal Philips mode; start of PDM mode
     #if (SOC_I2S_SUPPORTS_PDM_TX && SOC_I2S_SUPPORTS_PDM_RX)
@@ -150,14 +146,20 @@ int I2SClass::_installDriver(){
     .dma_buf_len = _i2s_dma_buffer_size,
     .use_apll = false
   };
+
+  if(_driveClock == false){
+    i2s_config.use_apll = true;
+    i2s_config.fixed_mclk = 512*_sampleRate;
+  }
+
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
     // increase buffer size
     if(2*_i2s_dma_buffer_size <= 1024){
-      log_w("WARNING i2s driver install failed; Trying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
+      log_w("WARNING i2s driver install failed.\nTrying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
       setBufferSize(2*_i2s_dma_buffer_size);
     }else if(_i2s_dma_buffer_size < 1024){
-      log_w("WARNING i2s driver install failed; Trying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
+      log_w("WARNING i2s driver install failed.\nTrying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
       setBufferSize(1024);
     }else{ // install failed with max buffer size
       log_e("ERROR i2s driver install failed");
@@ -177,12 +179,12 @@ int I2SClass::_installDriver(){
   if(_mode == ADC_DAC_MODE){
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
     esp_i2s::adc_unit_t adc_unit;
-    if(!gpioToAdcUnit((gpio_num_t)_inSdPin, &adc_unit)){
+    if(!_gpioToAdcUnit((gpio_num_t)_inSdPin, &adc_unit)){
       log_e("pin to adc unit conversion failed");
       return 0; // ERR
     }
     esp_i2s::adc_channel_t adc_channel;
-    if(!gpioToAdcChannel((gpio_num_t)_inSdPin, &adc_channel)){
+    if(!_gpioToAdcChannel((gpio_num_t)_inSdPin, &adc_channel)){
       log_e("pin to adc channel conversion failed");
       return 0; // ERR
     }
@@ -217,6 +219,7 @@ int I2SClass::_installDriver(){
   return 1; // OK
 }
 
+// Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
   _take_if_not_holding();
   // master mode (driving clock and frame select pins - output)
@@ -225,14 +228,17 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
   return ret;
 }
 
+// Init in SLAVE mode: the SCK and FS pins are inputs, other side controls sample rate
 int I2SClass::begin(int mode, int bitsPerSample){
   _take_if_not_holding();
   // slave mode (not driving clock and frame select pin - input)
-  int ret = begin(mode, 0, bitsPerSample, false);
+  int ret = begin(mode, 96000, bitsPerSample, false);
   _give_if_top_call();
   return ret;
 }
 
+
+// Core function
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
   _take_if_not_holding();
   if(_initialized){
@@ -246,14 +252,14 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _bitsPerSample = bitsPerSample;
 
   // There is work in progress on this library.
-  if(_bitsPerSample == 16 && _sampleRate < 16000){
-    log_w("This sample rate is not officially supported - audio might be noisy. Try using sample rate below or equal to 16000");
+  if(_bitsPerSample == 16 && _sampleRate > 16000 && driveClock){
+    log_w("This sample rate is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000");
   }
   if(_bitsPerSample != 16){
-    log_w("This bit-per-sample is not officially supported - audio quality might suffer. Try using 16bps, with sample rate below equal 16000");
+    log_w("This bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000");
   }
   if(_mode != I2S_PHILIPS_MODE){
-    log_w("This mode is not officially supported - audio quality might suffer. At the moment the only supported mode is I2S_PHILIPS_MODE");
+    log_w("This mode is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE");
   }
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
@@ -288,7 +294,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     return 0; // ERR
   }
 
-  _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT;
+  _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT * 2;
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
@@ -322,9 +328,9 @@ int I2SClass::_applyPinSetting(){
     }else{ // simplex
       if(_state == I2S_STATE_RECEIVER){
         pin_config.data_out_num = I2S_PIN_NO_CHANGE;
-        pin_config.data_in_num = _inSdPin>0 ? _inSdPin : _sdPin;
+        pin_config.data_in_num = _sdPin;
       }else if(_state == I2S_STATE_TRANSMITTER){
-        pin_config.data_out_num = _outSdPin>0 ? _outSdPin : _sdPin;
+        pin_config.data_out_num = _sdPin;
         pin_config.data_in_num = I2S_PIN_NO_CHANGE;
       }else{
         pin_config.data_out_num = I2S_PIN_NO_CHANGE;
@@ -332,7 +338,7 @@ int I2SClass::_applyPinSetting(){
       }
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d", _sckPin, _fsPin, pin_config.data_in_num, pin_config.data_out_num);
+      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d", pin_config.bck_io_num, pin_config.ws_io_num, pin_config.data_in_num, pin_config.data_out_num);
       return 0; // ERR
     }else{
       return 1; // OK
@@ -342,11 +348,13 @@ int I2SClass::_applyPinSetting(){
 }
 
 void I2SClass::_setSckPin(int sckPin){
+  _take_if_not_holding();
   if(sckPin >= 0){
     _sckPin = sckPin;
   }else{
     _sckPin = PIN_I2S_SCK;
   }
+  _give_if_top_call();
 }
 
 int I2SClass::setSckPin(int sckPin){
@@ -374,11 +382,29 @@ int I2SClass::setFsPin(int fsPin){
   return ret;
 }
 
+// shared data pin for simplex
+void I2SClass::_setDataPin(int sdPin){
+  if(sdPin >= 0){
+    _sdPin = sdPin;
+  }else{
+    _sdPin = PIN_I2S_SD;
+  }
+}
+
+// shared data pin for simplex
+int I2SClass::setDataPin(int sdPin){
+  _take_if_not_holding();
+  _setDataPin(sdPin);
+  int ret = _applyPinSetting();
+  _give_if_top_call();
+  return ret;
+}
+
 void I2SClass::_setDataInPin(int inSdPin){
   if(inSdPin >= 0){
     _inSdPin = inSdPin;
   }else{
-    _inSdPin = PIN_I2S_SD;
+    _inSdPin = PIN_I2S_SD_IN;
   }
 }
 
@@ -394,7 +420,7 @@ void I2SClass::_setDataOutPin(int outSdPin){
   if(outSdPin >= 0){
     _outSdPin = outSdPin;
   }else{
-    _outSdPin = PIN_I2S_SD_OUT;
+    _outSdPin = PIN_I2S_SD;
   }
 }
 
@@ -408,19 +434,21 @@ int I2SClass::setDataOutPin(int outSdPin){
 
 int I2SClass::setAllPins(){
   _take_if_not_holding();
-  int ret = setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT);
+  int ret = setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SD_IN);
   _give_if_top_call();
   return ret;
 }
 
-int I2SClass::setAllPins(int sckPin, int fsPin, int inSdPin, int outSdPin){
+int I2SClass::setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin){
   _take_if_not_holding();
   _setSckPin(sckPin);
   _setFsPin(fsPin);
-  _setDataInPin(inSdPin);
+  _setDataPin(sdPin);
   _setDataOutPin(outSdPin);
+  _setDataInPin(inSdPin);
+  int ret = _applyPinSetting();
   _give_if_top_call();
-  return 1; // OK
+  return ret;
 }
 
 int I2SClass::setDuplex(){
@@ -566,12 +594,10 @@ int I2SClass::read(void* buffer, size_t size){
   _take_if_not_holding();
   size_t requested_size = size;
   if(_initialized){
-    if (_state != I2S_STATE_RECEIVER && _state != I2S_STATE_DUPLEX) {
-      if(!_enableReceiver()){
-        _give_if_top_call();
-        return 0; // There was an error switching to receiver
-      } // _enableReceiver succeeded ?
-    } // _state ?
+    if(!_enableReceiver()){
+      _give_if_top_call();
+      return 0; // There was an error switching to receiver
+    } // _enableReceiver succeeded ?
 
     size_t item_size = 0;
     void *tmp_buffer;
@@ -652,12 +678,10 @@ size_t I2SClass::write(const void *buffer, size_t size){
 size_t I2SClass::write_blocking(const void *buffer, size_t size){
   _take_if_not_holding();
   if(_initialized){
-    if (_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX){
-      if(!_enableTransmitter()){
-        _give_if_top_call();
-        return 0; // There was an error switching to transmitter
-      } // _enableTransmitter succeeded ?
-    } // _state ?
+    if(!_enableTransmitter()){
+      _give_if_top_call();
+      return 0; // There was an error switching to transmitter
+    } // _enableTransmitter succeeded ?
 
     if(_output_ring_buffer != NULL){
       int ret = xRingbufferSend(_output_ring_buffer, buffer, size, portMAX_DELAY);
@@ -736,7 +760,7 @@ int I2SClass::peek(){
 void I2SClass::flush(){
   _take_if_not_holding();
   if(_initialized){
-    const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
+    const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8)*2;
     size_t item_size = 0;
     void *item = NULL;
     if(_output_ring_buffer != NULL){
@@ -781,7 +805,7 @@ int I2SClass::setBufferSize(int bufferSize){
   if(bufferSize >= 8 && bufferSize <= 1024){
     _i2s_dma_buffer_size = bufferSize;
   }else{
-    log_e("setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d\n ", bufferSize);
+    log_e("setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", bufferSize);
     _give_if_top_call();
     return 0; // ERR
   } // check requested buffer size
@@ -1025,7 +1049,7 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
 
 
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
-int I2SClass::gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
+int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
   switch(gpio_num){
 #if CONFIG_IDF_TARGET_ESP32
     // ADC 1
@@ -1105,7 +1129,7 @@ int I2SClass::gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){
   }
 }
 
-int I2SClass::gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel){
+int I2SClass::_gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc_channel){
  switch(gpio_num){
 #if CONFIG_IDF_TARGET_ESP32
     // ADC 1
