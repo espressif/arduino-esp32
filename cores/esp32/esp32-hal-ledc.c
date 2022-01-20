@@ -168,6 +168,8 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         .hpoint         = 0
     };
     ledc_channel_config(&ledc_channel);
+
+    pinMode(pin,OUTPUT);
 }
 
 void ledcDetachPin(uint8_t pin)
