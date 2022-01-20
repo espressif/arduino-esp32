@@ -7349,7 +7349,7 @@ wt32-eth01.build.bootloader_addr=0x1000
 wt32-eth01.build.target=esp32
 wt32-eth01.build.mcu=esp32
 wt32-eth01.build.core=esp32
-wt32-eth01.build.variant=wt32-eth0
+wt32-eth01.build.variant=wt32-eth01
 wt32-eth01.build.board=WT32_ETH01
 
 wt32-eth01.build.f_cpu=240000000L
