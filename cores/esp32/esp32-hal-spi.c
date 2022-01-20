@@ -37,6 +37,11 @@
 #include "esp32s2/rom/ets_sys.h"
 #include "esp32s2/rom/gpio.h"
 #include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "soc/dport_reg.h"
+#include "esp32s3/rom/ets_sys.h"
+#include "esp32s3/rom/gpio.h"
+#include "esp_intr_alloc.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
 #include "esp32c3/rom/gpio.h"
@@ -49,6 +54,8 @@
 #include "rom/gpio.h"
 #include "esp_intr.h"
 #endif
+
+#ifndef CONFIG_IDF_TARGET_ESP32S3
 
 struct spi_struct_t {
     spi_dev_t * dev;
@@ -72,6 +79,21 @@ struct spi_struct_t {
 #define SPI_SS_IDX(p, n)    ((p==0)?SPI_SPI_SS_IDX(n):((p==1)?SPI_SPI_SS_IDX(n):((p==2)?SPI_HSPI_SS_IDX(n):0)))
 
 #define SPI_INTR_SOURCE(u)  ((u==0)?ETS_SPI1_INTR_SOURCE:((u==1)?ETS_SPI2_INTR_SOURCE:((u==2)?ETS_SPI3_INTR_SOURCE:0)))
+
+#elif CONFIG_IDF_TARGET_ESP32S3
+// ESP32S3
+#define SPI_COUNT           (2)
+
+#define SPI_CLK_IDX(p)      ((p==0)?SPICLK_OUT_IDX:((p==1)?FSPICLK_OUT_IDX:0))
+#define SPI_MISO_IDX(p)     ((p==0)?SPIQ_OUT_IDX:((p==1)?FSPIQ_OUT_IDX:0))
+#define SPI_MOSI_IDX(p)     ((p==0)?SPID_IN_IDX:((p==1)?FSPID_IN_IDX:0))
+
+#define SPI_SPI_SS_IDX(n)   ((n==0)?SPICS0_OUT_IDX:((n==1)?SPICS1_OUT_IDX:0))
+#define SPI_HSPI_SS_IDX(n)  ((n==0)?SPI3_CS0_OUT_IDX:((n==1)?SPI3_CS1_OUT_IDX:0))
+#define SPI_FSPI_SS_IDX(n)  ((n==0)?FSPICS0_OUT_IDX:((n==1)?FSPICS1_OUT_IDX:0))
+#define SPI_SS_IDX(p, n)    ((p==0)?SPI_SPI_SS_IDX(n):((p==1)?SPI_SPI_SS_IDX(n):0))
+
+#define SPI_INTR_SOURCE(u)  ((u==0)?ETS_SPI1_INTR_SOURCE:((u==1)?ETS_SPI2_INTR_SOURCE:0))
 
 #elif CONFIG_IDF_TARGET_ESP32C3
 // ESP32S2
@@ -112,6 +134,9 @@ static spi_t _spi_bus_array[] = {
     {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 0},
     {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 1},
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 2}
+#elif CONFIG_IDF_TARGET_ESP32S3
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 1}
 #else
     {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), 0},
     {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 1},
@@ -128,6 +153,9 @@ static spi_t _spi_bus_array[] = {
     {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 0},
     {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 1},
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 2}
+#elif CONFIG_IDF_TARGET_ESP32S3
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 1}
 #elif CONFIG_IDF_TARGET_ESP32C3
     {(volatile spi_dev_t *)(&GPSPI2), NULL, FSPI}
 #else
@@ -145,7 +173,7 @@ void spiAttachSCK(spi_t * spi, int8_t sck)
         return;
     }
     if(sck < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             sck = 36;
         } else {
@@ -175,7 +203,7 @@ void spiAttachMISO(spi_t * spi, int8_t miso)
         return;
     }
     if(miso < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             miso = 37;
         } else {
@@ -207,7 +235,7 @@ void spiAttachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             mosi = 35;
         } else {
@@ -237,7 +265,7 @@ void spiDetachSCK(spi_t * spi, int8_t sck)
         return;
     }
     if(sck < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             sck = 36;
         } else {
@@ -267,7 +295,7 @@ void spiDetachMISO(spi_t * spi, int8_t miso)
         return;
     }
     if(miso < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             miso = 37;
         } else {
@@ -297,7 +325,7 @@ void spiDetachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             mosi = 35;
         } else {
@@ -331,7 +359,7 @@ void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
     }
     if(ss < 0) {
         cs_num = 0;
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             ss = 34;
         } else {
@@ -362,7 +390,7 @@ void spiDetachSS(spi_t * spi, int8_t ss)
         return;
     }
     if(ss < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(spi->num == FSPI) {
             ss = 34;
         } else {
@@ -392,7 +420,7 @@ void spiEnableSSPins(spi_t * spi, uint8_t cs_mask)
         return;
     }
     SPI_MUTEX_LOCK();
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     spi->dev->misc.val &= ~(cs_mask & SPI_CS_MASK_ALL);
 #else
     spi->dev->pin.val &= ~(cs_mask & SPI_CS_MASK_ALL);
@@ -406,7 +434,7 @@ void spiDisableSSPins(spi_t * spi, uint8_t cs_mask)
         return;
     }
     SPI_MUTEX_LOCK();
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     spi->dev->misc.val |= (cs_mask & SPI_CS_MASK_ALL);
 #else
     spi->dev->pin.val |= (cs_mask & SPI_CS_MASK_ALL);
@@ -442,7 +470,7 @@ void spiSSSet(spi_t * spi)
         return;
     }
     SPI_MUTEX_LOCK();
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     spi->dev->misc.cs_keep_active = 1;
 #else
     spi->dev->pin.cs_keep_active = 1;
@@ -456,7 +484,7 @@ void spiSSClear(spi_t * spi)
         return;
     }
     SPI_MUTEX_LOCK();
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     spi->dev->misc.cs_keep_active = 0;
 #else
     spi->dev->pin.cs_keep_active = 0;
@@ -487,7 +515,7 @@ uint8_t spiGetDataMode(spi_t * spi)
     if(!spi) {
         return 0;
     }
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     bool idleEdge = spi->dev->misc.ck_idle_edge;
 #else
     bool idleEdge = spi->dev->pin.ck_idle_edge;
@@ -513,7 +541,7 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
     SPI_MUTEX_LOCK();
     switch (dataMode) {
     case SPI_MODE1:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 0;
 #else
         spi->dev->pin.ck_idle_edge = 0;
@@ -521,7 +549,7 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE2:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 1;
 #else
         spi->dev->pin.ck_idle_edge = 1;
@@ -529,7 +557,7 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE3:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 1;
 #else
         spi->dev->pin.ck_idle_edge = 1;
@@ -538,7 +566,7 @@ void spiSetDataMode(spi_t * spi, uint8_t dataMode)
         break;
     case SPI_MODE0:
     default:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 0;
 #else
         spi->dev->pin.ck_idle_edge = 0;
@@ -591,7 +619,7 @@ static void spiInitBus(spi_t * spi)
     spi->dev->slave.trans_done = 0;
 #endif
     spi->dev->slave.val = 0;
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     spi->dev->misc.val = 0;
 #else
     spi->dev->pin.val = 0;
@@ -641,7 +669,7 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     }
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     if(spi_num == FSPI) {
         DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
         DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
@@ -704,7 +732,7 @@ void spiWaitReady(spi_t * spi)
     while(spi->dev->cmd.usr);
 }
 
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define usr_mosi_dbitlen usr_mosi_bit_len
 #define usr_miso_dbitlen usr_miso_bit_len
 #elif CONFIG_IDF_TARGET_ESP32C3
@@ -1012,7 +1040,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
     spi->dev->clock.val = clockDiv;
     switch (dataMode) {
     case SPI_MODE1:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 0;
 #else
         spi->dev->pin.ck_idle_edge = 0;
@@ -1020,7 +1048,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE2:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 1;
 #else
         spi->dev->pin.ck_idle_edge = 1;
@@ -1028,7 +1056,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
         spi->dev->user.ck_out_edge = 1;
         break;
     case SPI_MODE3:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 1;
 #else
         spi->dev->pin.ck_idle_edge = 1;
@@ -1037,7 +1065,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
         break;
     case SPI_MODE0:
     default:
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
         spi->dev->misc.ck_idle_edge = 0;
 #else
         spi->dev->pin.ck_idle_edge = 0;
@@ -1475,4 +1503,4 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
     }
     return bestReg.value;
 }
-
+#endif /* ifndef CONFIG_IDF_TARGET_ESP32S3 */

@@ -541,6 +541,7 @@ void log_print_buf(const uint8_t *b, size_t len){
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
+#ifndef CONFIG_IDF_TARGET_ESP32S3
     if(uart == NULL) {
         return 0;
     }
@@ -558,6 +559,9 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
     UART_MUTEX_UNLOCK();
 
     return ret;
+#else
+    return 0;
+#endif
 }
 
 
@@ -602,7 +606,7 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-
+#elif CONFIG_IDF_TARGET_ESP32S3
 #else
     hw->auto_baud.glitch_filt = 0x08;
     hw->auto_baud.en = 0;
@@ -639,6 +643,7 @@ uartDetectBaudrate(uart_t *uart)
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     //hw->conf0.autobaud_en = 0;
+#elif CONFIG_IDF_TARGET_ESP32S3
 #else
     hw->auto_baud.en = 0;
 #endif

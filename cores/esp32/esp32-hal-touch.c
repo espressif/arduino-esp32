@@ -32,6 +32,10 @@
 #include "esp32s2/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/ets_sys.h"
+#include "esp_intr_alloc.h"
+#include "soc/periph_defs.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
