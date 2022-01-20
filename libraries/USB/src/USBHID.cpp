@@ -340,8 +340,10 @@ bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeo
             }
         }
     }
-
     xSemaphoreGive(tinyusb_hid_device_input_mutex);
+    if (tinyusb_hid_device_input_sem) {
+        xSemaphoreGive(tinyusb_hid_device_input_sem);
+    }
     return res;
 }
 
