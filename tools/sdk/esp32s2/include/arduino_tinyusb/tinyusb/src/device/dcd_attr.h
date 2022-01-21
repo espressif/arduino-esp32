@@ -86,6 +86,10 @@
   #define DCD_ATTR_ENDPOINT_MAX   10
   #define DCD_ATTR_ENDPOINT_EXCLUSIVE_NUMBER
 
+#elif TU_CHECK_MCU(OPT_MCU_PIC32MZ)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+  #define DCD_ATTR_ENDPOINT_EXCLUSIVE_NUMBER
+
 //------------- ST -------------//
 #elif TU_CHECK_MCU(OPT_MCU_STM32F0)
   #define DCD_ATTR_ENDPOINT_MAX   8
@@ -196,6 +200,13 @@
 //------------- Broadcom -------------//
 #elif TU_CHECK_MCU(OPT_MCU_XMC4000)
   #define DCD_ATTR_ENDPOINT_MAX   8
+
+//------------- BridgeTek -------------//
+#elif TU_CHECK_MCU(OPT_MCU_FT90X)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_FT93X)
+  #define DCD_ATTR_ENDPOINT_MAX   16
 
 #else
   #warning "DCD_ATTR_ENDPOINT_MAX is not defined for this MCU, default to 8"
