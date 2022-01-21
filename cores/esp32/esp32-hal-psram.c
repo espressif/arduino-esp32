@@ -25,6 +25,9 @@
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/spiram.h"
 #include "esp32s2/rom/cache.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/spiram.h"
+#include "esp32s3/rom/cache.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif

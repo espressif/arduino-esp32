@@ -14,7 +14,7 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 
 #include <inttypes.h>
 #include "esp_event.h"

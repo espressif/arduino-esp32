@@ -155,6 +155,9 @@ ESPUSB::~ESPUSB(){
 
 bool ESPUSB::begin(){
     if(!_started){
+#if CONFIG_IDF_TARGET_ESP32S3
+        //serialNumber(mac_str);
+#endif
         tinyusb_device_config_t tinyusb_device_config = {
                 .vid = vid,
                 .pid = pid,
