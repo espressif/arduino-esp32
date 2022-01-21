@@ -1,4 +1,5 @@
 menu.UploadSpeed=Upload Speed
+menu.USBMode=USB Mode
 menu.CDCOnBoot=USB CDC On Boot
 menu.MSCOnBoot=USB Firmware MSC On Boot
 menu.DFUOnBoot=USB DFU On Boot
@@ -43,6 +44,7 @@ esp32s3.build.core=esp32
 esp32s3.build.variant=esp32s3
 esp32s3.build.board=ESP32S3_DEV
 
+esp32s3.build.usb_mode=1
 esp32s3.build.cdc_on_boot=0
 esp32s3.build.msc_on_boot=0
 esp32s3.build.dfu_on_boot=0
@@ -66,6 +68,11 @@ esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 esp32s3.menu.EventsCore.0=Core 0
 esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
+esp32s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32s3.menu.USBMode.hwcdc.build.usb_mode=1
+esp32s3.menu.USBMode.default=USB-OTG
+esp32s3.menu.USBMode.default.build.usb_mode=0
+
 esp32s3.menu.CDCOnBoot.default=Disabled
 esp32s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32s3.menu.CDCOnBoot.cdc=Enabled
@@ -73,12 +80,12 @@ esp32s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
 esp32s3.menu.MSCOnBoot.default=Disabled
 esp32s3.menu.MSCOnBoot.default.build.msc_on_boot=0
-esp32s3.menu.MSCOnBoot.msc=Enabled
+esp32s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
 esp32s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
 
 esp32s3.menu.DFUOnBoot.default=Disabled
 esp32s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
-esp32s3.menu.DFUOnBoot.dfu=Enabled
+esp32s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 esp32s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 esp32s3.menu.UploadMode.default=UART0

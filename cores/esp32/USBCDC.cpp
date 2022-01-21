@@ -412,7 +412,7 @@ USBCDC::operator bool() const
     return connected;
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
 USBCDC Serial(0);
 #endif
 
