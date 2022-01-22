@@ -175,6 +175,7 @@ void HWCDC::begin(unsigned long baud)
         end();
         return;
     }
+    usb_serial_jtag_ll_txfifo_flush();
 }
 
 void HWCDC::end()
