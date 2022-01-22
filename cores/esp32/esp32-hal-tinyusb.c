@@ -532,8 +532,33 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
             if (usb_persist_enabled) {
                 chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
             } else {
+#if CONFIG_IDF_TARGET_ESP32S3
+                /*
+                 * This currently does not work!
+                 * Integrated CDC+JTAG refuses to communicate, once into Download mode
+                */
+                // Disable USB-OTG
+                periph_module_reset(PERIPH_USB_MODULE);
+                //periph_module_enable(PERIPH_USB_MODULE);
+                periph_module_disable(PERIPH_USB_MODULE);
+                // Switch to hardware CDC+JTAG
+                REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, (RTC_CNTL_SW_HW_USB_PHY_SEL|RTC_CNTL_SW_USB_PHY_SEL));
+                // Release GPIO pins from  CDC+JTAG
+                CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);
+                // Force the host to re-enumerate (BUS_RESET)
+                pinMode(USBPHY_DM_NUM, OUTPUT_OPEN_DRAIN);
+                pinMode(USBPHY_DP_NUM, OUTPUT_OPEN_DRAIN);
+                digitalWrite(USBPHY_DM_NUM, LOW);
+                digitalWrite(USBPHY_DP_NUM, LOW);
+                delay(20);
+                // Connect GPIOs to integrated CDC+JTAG
+                SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);
+                // Do not use external PHY
+                CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_PHY_SEL);
+#else
                 periph_module_reset(PERIPH_USB_MODULE);
                 periph_module_enable(PERIPH_USB_MODULE);
+#endif
             }
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
