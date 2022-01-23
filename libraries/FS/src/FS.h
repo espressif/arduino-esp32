@@ -95,6 +95,9 @@ public:
     bool exists(const char* path);
     bool exists(const String& path);
 
+    bool isDirectory(const char* path);     // fix for #6172
+    bool isDirectory(const String& path);
+
     bool remove(const char* path);
     bool remove(const String& path);
 

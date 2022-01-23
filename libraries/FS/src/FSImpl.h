@@ -40,7 +40,7 @@ public:
     virtual time_t getLastWrite() = 0;
     virtual const char* path() const = 0;
     virtual const char* name() const = 0;
-    virtual boolean isDirectory(void) = 0;
+    virtual boolean isDirectory(void) = 0; // fix for #6172
     virtual FileImplPtr openNextFile(const char* mode) = 0;
     virtual void rewindDirectory(void) = 0;
     virtual operator bool() = 0;
@@ -55,6 +55,7 @@ public:
     virtual ~FSImpl() { }
     virtual FileImplPtr open(const char* path, const char* mode, const bool create) = 0;
     virtual bool exists(const char* path) = 0;
+    virtual bool isDirectory(const char* path) = 0; // fix for #6172
     virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
     virtual bool remove(const char* path) = 0;
     virtual bool mkdir(const char *path) = 0;

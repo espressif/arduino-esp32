@@ -37,6 +37,7 @@ public:
     LittleFSImpl();
     virtual ~LittleFSImpl() { }
     virtual bool exists(const char* path);
+    virtual bool isDirectory(const char* path); // fix for #6172
 };
 
 LittleFSImpl::LittleFSImpl()
@@ -47,6 +48,12 @@ bool LittleFSImpl::exists(const char* path)
 {
     File f = open(path, "r",false);
     return (f == true);
+}
+
+bool LittleFSImpl::isDirectory(const char* path)
+{
+    File f = open(path, "r",false);
+    return (f == true) && f.isDirectory(); // fix for #6172
 }
 
 LittleFSFS::LittleFSFS() : FS(FSImplPtr(new LittleFSImpl())), partitionLabel_(NULL)

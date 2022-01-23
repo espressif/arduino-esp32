@@ -31,6 +31,7 @@ public:
     SPIFFSImpl();
     virtual ~SPIFFSImpl() { }
     virtual bool exists(const char* path);
+    virtual bool isDirectory(const char* path); // fix for #6172
 };
 
 SPIFFSImpl::SPIFFSImpl()
@@ -41,6 +42,12 @@ bool SPIFFSImpl::exists(const char* path)
 {
     File f = open(path, "r",false);
     return (f == true) && !f.isDirectory();
+}
+
+bool SPIFFSImpl::isDirectory(const char* path) // fix for #6172
+{
+    File f = open(path, "r",false);
+    return (f == true) && f.isDirectory();
 }
 
 SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl())), partitionLabel_(NULL)

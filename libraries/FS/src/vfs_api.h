@@ -37,6 +37,7 @@ protected:
 public:
     FileImplPtr open(const char* path, const char* mode, const bool create) override;
     bool        exists(const char* path) override;
+    bool        isDirectory(const char* path) override;
     bool        rename(const char* pathFrom, const char* pathTo) override;
     bool        remove(const char* path) override;
     bool        mkdir(const char *path) override;

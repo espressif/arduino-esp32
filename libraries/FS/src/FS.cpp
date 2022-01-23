@@ -213,6 +213,19 @@ bool FS::exists(const String& path)
     return exists(path.c_str());
 }
 
+bool FS::isDirectory(const char* path) // fix for #6172
+{
+    if (!_impl) {
+        return false;
+    }
+    return _impl->isDirectory(path);
+}
+
+bool FS::isDirectory(const String& path) // fix for #6172
+{
+    return isDirectory(path.c_str());
+}
+
 bool FS::remove(const char* path)
 {
     if (!_impl) {
