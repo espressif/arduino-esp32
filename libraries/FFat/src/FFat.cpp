@@ -177,5 +177,16 @@ bool F_Fat::exists(const String& path)
     return exists(path.c_str());
 }
 
+bool F_Fat::isDirectory(const char* path) // fix for #6172
+{
+    File f = open(path, "r",false);
+    return (f == true) && f.isDirectory();
+}
+
+bool F_Fat::isDirectory(const String& path) // fix for #6172
+{
+    return isDirectory(path.c_str());
+}
+
 
 F_Fat FFat = F_Fat(FSImplPtr(new VFSImpl()));
