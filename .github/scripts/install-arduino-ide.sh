@@ -34,7 +34,6 @@ else
 fi
 export OS_NAME
 
-ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
 
 if [ "$OS_IS_MACOS" == "1" ]; then
@@ -100,7 +99,8 @@ function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
 
     #echo ""
     #echo "Compiling '"$(basename "$sketch")"' ..."
-    mkdir -p "$ARDUINO_BUILD_DIR"
+    build_dir="$(dirname $sketch)/build"
+    mkdir -p "$build_dir"
     mkdir -p "$ARDUINO_CACHE_DIR"
     $ARDUINO_IDE_PATH/arduino-builder -compile -logger=human -core-api-version=10810 \
         -fqbn=$fqbn \
@@ -112,7 +112,7 @@ function build_sketch(){ # build_sketch <fqbn> <path-to-ino> [extra-options]
         -hardware "$ARDUINO_USR_PATH/hardware" \
         -libraries "$ARDUINO_USR_PATH/libraries" \
         -build-cache "$ARDUINO_CACHE_DIR" \
-        -build-path "$ARDUINO_BUILD_DIR" \
+        -build-path "$build_dir" \
         $win_opts $xtra_opts "$sketch"
 }
 
