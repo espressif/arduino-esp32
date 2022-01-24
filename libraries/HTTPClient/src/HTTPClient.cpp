@@ -1263,12 +1263,19 @@ int HTTPClient::handleHeaderResponse()
                     _location = headerValue;
                 }
 
-                for(size_t i = 0; i < _headerKeysCount; i++) {
-                    if(_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
-                        _currentHeaders[i].value = headerValue;
-                        break;
+                for (size_t i = 0; i < _headerKeysCount; i++) {
+                    if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
+                        if (!_currentHeaders[i].value.isEmpty()) {
+                            // Existing value, append this one with a comma
+                            _currentHeaders[i].value += ',';
+                            _currentHeaders[i].value += headerValue;
+                        } else {
+                            _currentHeaders[i].value = headerValue;
+                        }
+                        break; // We found a match, stop looking
                     }
                 }
+
             }
 
             if(headerLine == "") {
