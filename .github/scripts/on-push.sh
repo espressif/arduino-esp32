@@ -17,10 +17,6 @@ function build(){
     args+=" \"$fqbn\""
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        # CMake Test
-        if [ "$chunk_index" -eq 0 ]; then
-            bash "$ARDUINO_ESP32_PATH/${SCRIPTS_DIR}/check-cmakelists.sh"
-        fi
         args+=" $target"
         args+=" $ARDUINO_ESP32_PATH/libraries"
         args+=" $chunk_index $chunks_cnt"
