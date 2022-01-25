@@ -1,19 +1,19 @@
 {
   "packages": [
     {
-      "name": "esp32",
-      "maintainer": "Espressif Systems",
-      "websiteURL": "https://github.com/espressif/arduino-esp32",
-      "email": "hristo@espressif.com",
+      "name": "ticos-kit",
+      "maintainer": "Tiwater",
+      "websiteURL": "https://github.com/tiwater/arduino-esp32.git",
+      "email": "hi@tiwater.com",
       "help": {
-        "online": "http://esp32.com"
+        "online": "http://tiwater.com"
       },
       "platforms": [
         {
-          "name": "esp32",
+          "name": "Ticos Kit",
           "architecture": "esp32",
           "version": "",
-          "category": "ESP32",
+          "category": "Contributed",
           "url": "",
           "archiveFileName": "",
           "checksum": "",
@@ -23,13 +23,7 @@
           },
           "boards": [
             {
-              "name": "ESP32 Dev Board"
-            },
-            {
-              "name": "ESP32-S2 Dev Board"
-            },
-            {
-              "name": "ESP32-C3 Dev Board"
+              "name": "Ticos Kit Aksu"
             }
           ],
           "toolsDependencies": [
@@ -37,7 +31,7 @@
               "packager": "esp32",
               "name": "riscv32-esp-elf-gcc",
               "version": "gcc8_4_0-esp-2021r2"
-            },
+            },                                                       
             {
               "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
