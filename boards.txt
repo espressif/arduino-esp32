@@ -5550,11 +5550,11 @@ esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
 esp32-gateway.build.board=ESP32_GATEWAY
 esp32-gateway.menu.Revision.RevC=Revision C or older
-esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY_C
+esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY='C'
 esp32-gateway.menu.Revision.RevE=Revision E
-esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY_E
-esp32-gateway.menu.Revision.RevF=Revision F
-esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY_F
+esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY='E'
+esp32-gateway.menu.Revision.RevF=Revision F or newer
+esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY='F'
 
 esp32-gateway.build.f_cpu=240000000L
 esp32-gateway.build.flash_mode=dio

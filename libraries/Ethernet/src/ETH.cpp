@@ -228,6 +228,9 @@ ETHClass::~ETHClass()
 
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
 {
+#if defined ARDUINO_ESP32_EVB
+    delay (350); // Olimex board ESP32-EVB requires short delay before the phy initialization after reset
+#endif
 #if ESP_IDF_VERSION_MAJOR > 3
     eth_clock_mode = clock_mode;
     tcpipInit();
