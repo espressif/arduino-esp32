@@ -134,10 +134,6 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <fqbn> <targe
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
         local sketchname=$(basename $sketch)
-        if [ "${sketchdirname}.ino" != "$sketchname" ] \
-        || [ -f "$sketchdir/.skip.$target" ]; then
-            continue
-        fi
         sketchnum=$(($sketchnum + 1))
         if [ "$sketchnum" -le "$start_index" ] \
         || [ "$sketchnum" -gt "$end_index" ]; then
