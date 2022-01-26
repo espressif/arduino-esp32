@@ -6,7 +6,7 @@ The sketh will tell when it is touched and then relesased as like a push-button
 This method based on touchInterruptGetLastStatus() is only available for ESP32 S2 and S3
 */
 
-#include <Arduino.h>
+#include "Arduino.h"
 
 int threshold = 1500;   // ESP32S2 
 bool touch1detected = false;

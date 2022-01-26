@@ -6,7 +6,7 @@ The sketh will tell when it is touched and then relesased as like a push-button
 This method based on touchInterruptSetThresholdDirection() is only available for ESP32
 */
 
-#include <Arduino.h>
+#include "Arduino.h"
 
 int threshold = 40;
 bool touchActive = false;
