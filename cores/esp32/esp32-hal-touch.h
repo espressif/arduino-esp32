@@ -79,8 +79,9 @@ bool touchInterruptGetLastStatus(uint8_t pin);
 #endif
 
 
+#endif // SOC_TOUCH_SENSOR_NUM > 0
+
 #ifdef __cplusplus
 }
 #endif
-#endif // SOC_TOUCH_SENSOR_NUM > 0
 #endif /* MAIN_ESP32_HAL_TOUCH_H_ */
