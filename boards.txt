@@ -7349,7 +7349,7 @@ wt32-eth01.build.bootloader_addr=0x1000
 wt32-eth01.build.target=esp32
 wt32-eth01.build.mcu=esp32
 wt32-eth01.build.core=esp32
-wt32-eth01.build.variant=wt32-eth0
+wt32-eth01.build.variant=wt32-eth01
 wt32-eth01.build.board=WT32_ETH01
 
 wt32-eth01.build.f_cpu=240000000L
@@ -11097,5 +11097,76 @@ lionbit.menu.DebugLevel.debug=Debug
 lionbit.menu.DebugLevel.debug.build.code_debug=4
 lionbit.menu.DebugLevel.verbose=Verbose
 lionbit.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+watchy.name=Watchy
+
+watchy.upload.tool=esptool_py
+watchy.upload.maximum_size=1310720
+watchy.upload.maximum_data_size=327680
+watchy.upload.flags=
+watchy.upload.extra_flags=
+
+watchy.serial.disableDTR=true
+watchy.serial.disableRTS=true
+
+watchy.build.tarch=xtensa
+watchy.build.bootloader_addr=0x1000
+watchy.build.target=esp32
+watchy.build.mcu=esp32
+watchy.build.core=esp32
+watchy.build.variant=watchy
+watchy.build.board=WATCHY
+
+watchy.build.f_cpu=240000000L
+watchy.build.flash_size=4MB
+watchy.build.flash_freq=80m
+watchy.build.flash_mode=dio
+watchy.build.boot=qio
+watchy.build.partitions=min_spiffs
+watchy.build.defines=
+
+watchy.menu.Revision.v10=Watchy v1.0
+watchy.menu.Revision.v10.build.board=WATCHY_V10
+watchy.menu.Revision.v15=Watchy v1.5
+watchy.menu.Revision.v15.build.board=WATCHY_V15
+watchy.menu.Revision.v20=Watchy v2.0
+watchy.menu.Revision.v20.build.board=WATCHY_V20
+
+watchy.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+watchy.menu.PartitionScheme.huge_app.build.partitions=huge_app
+watchy.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+watchy.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+watchy.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+watchy.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+watchy.menu.UploadSpeed.921600=921600
+watchy.menu.UploadSpeed.921600.upload.speed=921600
+watchy.menu.UploadSpeed.115200=115200
+watchy.menu.UploadSpeed.115200.upload.speed=115200
+watchy.menu.UploadSpeed.256000.windows=256000
+watchy.menu.UploadSpeed.256000.upload.speed=256000
+watchy.menu.UploadSpeed.230400.windows.upload.speed=256000
+watchy.menu.UploadSpeed.230400=230400
+watchy.menu.UploadSpeed.230400.upload.speed=230400
+watchy.menu.UploadSpeed.460800.linux=460800
+watchy.menu.UploadSpeed.460800.macosx=460800
+watchy.menu.UploadSpeed.460800.upload.speed=460800
+watchy.menu.UploadSpeed.512000.windows=512000
+watchy.menu.UploadSpeed.512000.upload.speed=512000
+
+watchy.menu.DebugLevel.none=None
+watchy.menu.DebugLevel.none.build.code_debug=0
+watchy.menu.DebugLevel.error=Error
+watchy.menu.DebugLevel.error.build.code_debug=1
+watchy.menu.DebugLevel.warn=Warn
+watchy.menu.DebugLevel.warn.build.code_debug=2
+watchy.menu.DebugLevel.info=Info
+watchy.menu.DebugLevel.info.build.code_debug=3
+watchy.menu.DebugLevel.debug=Debug
+watchy.menu.DebugLevel.debug.build.code_debug=4
+watchy.menu.DebugLevel.verbose=Verbose
+watchy.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
