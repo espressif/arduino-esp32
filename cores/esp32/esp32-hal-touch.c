@@ -216,6 +216,8 @@ static void __touchDettachInterrupt(uint8_t pin)
 {
     __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as dettaching 
 }
+
+
 /*
     External Public Touch API Functions
 */
@@ -241,8 +243,6 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
     return __touchInterruptHandlers[pad].lastStatusIsPressed;
 }
 #endif
-
-
 
 extern uint32_t touchRead(uint8_t) __attribute__ ((weak, alias("__touchRead")));
 extern void touchAttachInterrupt(uint8_t, voidFuncPtr, uint32_t) __attribute__ ((weak, alias("__touchAttachInterrupt")));
