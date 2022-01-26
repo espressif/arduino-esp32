@@ -145,6 +145,9 @@
 #define OPT_MCU_FT90X            2000 ///< BridgeTek FT90x
 #define OPT_MCU_FT93X            2001 ///< BridgeTek FT93x
 
+// Allwinner
+#define OPT_MCU_F1C100S          2100 ///< Allwinner F1C100s family
+
 // Helper to check if configured MCU is one of listed
 // Apply _TU_CHECK_MCU with || as separator to list of input
 #define _TU_CHECK_MCU(_m)   (CFG_TUSB_MCU == _m)
@@ -160,6 +163,7 @@
 #define OPT_OS_CUSTOM     4  ///< Custom OS is implemented by application
 #define OPT_OS_PICO       5  ///< Raspberry Pi Pico SDK
 #define OPT_OS_RTTHREAD   6  ///< RT-Thread
+#define OPT_OS_RTX4       7  ///< Keil RTX 4
 
 // Allow to use command line to change the config name/location
 #ifdef CFG_TUSB_CONFIG_FILE
