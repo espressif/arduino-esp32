@@ -40,11 +40,11 @@ replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close
 python -c "$replace_script"
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
-	echo "Linking Core..."
-	ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
+    echo "Linking Core..."
+    ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
 else
-	echo "Cloning Core Repository ..."
-	git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
+    echo "Cloning Core Repository ..."
+    git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
 fi
 
 echo "PlatformIO for ESP32 has been installed"
@@ -66,8 +66,7 @@ function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
     python -m platformio ci --board "$board" "$sketch_dir" --project-option="$options"
 }
 
-function count_sketches() # count_sketches <examples-path>
-{
+function count_sketches(){ # count_sketches <examples-path>
     local examples="$1"
     rm -rf sketches.txt
     if [ ! -d "$examples" ]; then
@@ -82,7 +81,7 @@ function count_sketches() # count_sketches <examples-path>
         local sketchname=$(basename $sketch)
         if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
             continue
-        fi;
+        fi
         if [[ -f "$sketchdir/.test.skip" ]]; then
             continue
         fi
@@ -92,8 +91,7 @@ function count_sketches() # count_sketches <examples-path>
     return $sketchnum
 }
 
-function build_pio_sketches() # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
-{
+function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
     if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
         echo "USAGE: build_pio_sketches <board> <options> <examples-path> [<chunk> <total-chunks>]"
