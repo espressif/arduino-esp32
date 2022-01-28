@@ -64,7 +64,7 @@ void serialEvent1(void) {}
 #ifndef RX2
 #if CONFIG_IDF_TARGET_ESP32
 #define RX2 16
-#else
+#elif CONFIG_IDF_TARGET_ESP32S3
 #define RX2 19 
 #endif
 #endif
@@ -72,7 +72,7 @@ void serialEvent1(void) {}
 #ifndef TX2
 #if CONFIG_IDF_TARGET_ESP32
 #define TX2 17
-#else
+#elif CONFIG_IDF_TARGET_ESP32S3
 #define TX2 20
 #endif
 #endif
