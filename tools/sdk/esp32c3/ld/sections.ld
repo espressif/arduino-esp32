@@ -25,8 +25,9 @@ SECTIONS
     *(.rtc.literal .rtc.text .rtc.text.*)
 
     *rtc_wake_stub*.*(.literal .text .literal.* .text.*)
+    *(.rtc_text_end_test)
 
-     /* 16B padding for possible CPU prefetch and 4B alignment for PMS split lines */
+    /* 16B padding for possible CPU prefetch and 4B alignment for PMS split lines */
     . += _esp_memprot_prefetch_pad_size;
     . = ALIGN(4);
 
@@ -517,7 +518,7 @@ SECTIONS
   /* Marks the end of IRAM code segment */
   .iram0.text_end (NOLOAD) :
   {
-    /* iram_end_test section exists for use by memprot unit tests only */
+    /* iram_end_test section exists for use by Memprot unit tests only */
     *(.iram_end_test)
     /* ESP32-C3 memprot requires 16B padding for possible CPU prefetch and 512B alignment for PMS split lines */
     . += _esp_memprot_prefetch_pad_size;
