@@ -85,13 +85,13 @@ public:
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String("") );
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const Uri &uri, THandlerFunction handler);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);
+  void on(const Uri &uri, THandlerFunction fn);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn); 
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn); //ufn handles file uploads
   void addHandler(RequestHandler* handler);
   void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL );
   void onNotFound(THandlerFunction fn);  //called when handler is not assigned
-  void onFileUpload(THandlerFunction fn); //handle file uploads
+  void onFileUpload(THandlerFunction ufn); //handle file uploads
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
