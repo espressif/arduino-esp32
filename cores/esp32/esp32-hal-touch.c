@@ -101,29 +101,42 @@ static void __touchInit()
     if(initialized){
         return;
     }
-    initialized = true;
+ 
+   esp_err_t err = ESP_OK;
 
 #if SOC_TOUCH_VERSION_1                         // ESP32
-    touch_pad_init();
-    // the next two lines will drive the touch reading values
-    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
+    err = touch_pad_init();
+    if (err != ESP_OK) {
+        goto err;
+    }
+    // the next two lines will drive the touch reading values -- both will return ESP_OK
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V); 
     touch_pad_set_meas_time(__touchMeasureCycles, __touchSleepCycles);
     // Touch Sensor Timer initiated
-    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);
-    touch_pad_filter_start(10);
+    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);   // returns ESP_OK
+    err = touch_pad_filter_start(10);
+    if (err != ESP_OK) {
+        goto err;
+    }
     // Initial no Threshold and setup
     for (int i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
         __touchInterruptHandlers[i].fn =  NULL;
-        touch_pad_config(i, SOC_TOUCH_PAD_THRESHOLD_MAX);
+        touch_pad_config(i, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
     }
     // keep ISR activated - it can run all together (ISR + touchRead())
-    touch_pad_isr_register(__touchISR, NULL);
-    touch_pad_intr_enable();
+    err = touch_pad_isr_register(__touchISR, NULL);
+    if (err != ESP_OK) {
+        goto err;
+    }
+    touch_pad_intr_enable();  // returns ESP_OK
 #endif
 
 #if SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
-    touch_pad_init();
-    // the next two lines will drive the touch reading values
+    err = touch_pad_init();
+    if (err != ESP_OK) {
+        goto err;
+    }
+    // the next lines will drive the touch reading values -- all os them return ESP_OK
     touch_pad_set_meas_time(TOUCH_PAD_SLEEP_CYCLE_DEFAULT, TOUCH_PAD_MEASURE_CYCLE_DEFAULT);
     touch_pad_set_voltage(TOUCH_PAD_HIGH_VOLTAGE_THRESHOLD, TOUCH_PAD_LOW_VOLTAGE_THRESHOLD, TOUCH_PAD_ATTEN_VOLTAGE_THRESHOLD);
     touch_pad_set_idle_channel_connect(TOUCH_PAD_IDLE_CH_CONNECT_DEFAULT);
@@ -134,18 +147,28 @@ static void __touchInit()
     touch_pad_denoise_set_config(&denoise);
     touch_pad_denoise_enable();
     // Touch Sensor Timer initiated
-    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);
-    touch_pad_fsm_start();
+    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);  // returns ESP_OK
+    touch_pad_fsm_start();                         // returns ESP_OK
 
     // Initial no Threshold and setup - TOUCH0 is internal denoise channel
-    for (int i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
+    for (int i = 1; i < SOC_TOUCH_SENSOR_NUM; i++) {
         __touchInterruptHandlers[i].fn =  NULL;
-        touch_pad_config(i);
+        touch_pad_config(i);                       // returns ESP_OK
     }
     // keep ISR activated - it can run all together (ISR + touchRead())
-    touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
-    touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
+    err = touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
+     if (err != ESP_OK) {
+        goto err;
+    }
+    touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE); // returns ESP_OK
 #endif
+
+    initialized = true;
+    return;
+err:
+    log_e(" Touch sensor initialization error.");
+    initialized = false;
+    return;
 }
 
 static uint32_t __touchRead(uint8_t pin)
