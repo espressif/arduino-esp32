@@ -91,8 +91,6 @@ Before opening a new issue, please read this:
 Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
 
-For more details, see the `Issue Template`_.
-
 First Steps
 -----------
 
@@ -131,4 +129,3 @@ Resources
 .. _Adafruit (Discord): https://discord.gg/adafruit
 .. _Espressif MCUs (Discord): https://discord.gg/nKxMTnkD
 .. _ESP32 on Reddit: https://www.reddit.com/r/esp32
-.. _Issue Template: https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md
