@@ -2,6 +2,40 @@
 
 set -e
 
+function build(){
+    local target=$1
+    local fqbn=$2
+    local chunk_index=$3
+    local chunks_cnt=$4
+    local sketches=$5
+
+    local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
+    local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
+
+    local args="$ARDUINO_IDE_PATH $ARDUINO_USR_PATH"
+
+    args+=" \"$fqbn\""
+
+    if [ "$OS_IS_LINUX" == "1" ]; then
+        args+=" $target"
+        args+=" $ARDUINO_ESP32_PATH/libraries"
+        args+=" $chunk_index $chunks_cnt"
+        ${BUILD_SKETCHES} ${args}
+    else
+        if [ "$OS_IS_WINDOWS" == "1" ]; then
+            local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
+            local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
+            win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
+            -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
+            args+=" ${win_opts}"
+        fi
+
+        for sketch in ${sketches}; do
+            ${BUILD_SKETCH} ${args} ${sketch}
+        done
+    fi
+}
+
 if [ -z "$GITHUB_WORKSPACE" ]; then
     export GITHUB_WORKSPACE="$PWD"
     export GITHUB_REPOSITORY="espressif/arduino-esp32"
@@ -22,57 +56,31 @@ fi
 #echo "Updating submodules ..."
 #git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
 
+SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    # ArduinoIDE ESP32 Test
-    TARGET="esp32"
-    FQBN="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
     source ./.github/scripts/install-arduino-ide.sh
-    source ./.github/scripts/install-arduino-core-esp32.sh
-    if [ "$OS_IS_WINDOWS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
-    elif [ "$OS_IS_MACOS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
-    else
-        # CMake Test
-        if [ "$CHUNK_INDEX" -eq 0 ]; then
-            bash "$ARDUINO_ESP32_PATH/.github/scripts/check-cmakelists.sh"
-        fi
-        build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-    fi
+    source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
-    # ArduinoIDE ESP32S2 Test
-    TARGET="esp32s2"
-    FQBN="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
-    if [ "$OS_IS_WINDOWS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
-    elif [ "$OS_IS_MACOS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
-    else
-        build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-    fi
+    FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
+    FQBN_ESP32S2="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
+    FQBN_ESP32C3="espressif:esp32:esp32c3:PartitionScheme=huge_app"
 
-    # ArduinoIDE ESP32C3 Test
-    TARGET="esp32c3"
-    FQBN="espressif:esp32:esp32c3:PartitionScheme=huge_app"
-    if [ "$OS_IS_WINDOWS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
-    elif [ "$OS_IS_MACOS" == "1" ]; then
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-        build_sketch "$FQBN" "$ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
-    else
-        build_sketches "$FQBN" "$TARGET" "$ARDUINO_ESP32_PATH/libraries" "$CHUNK_INDEX" "$CHUNKS_CNT"
-    fi
+    SKETCHES_ESP32="\
+      $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
+      $ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino\
+      $ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino\
+    "
+
+    SKETCHES_ESP32XX="\
+      $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
+      $ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino\
+    "
+
+    build "esp32" $FQBN_ESP32 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
+    build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
 else
-    source ./.github/scripts/install-platformio-esp32.sh
+    source ./${SCRIPTS_DIR}/install-platformio-esp32.sh
     # PlatformIO ESP32 Test
     BOARD="esp32dev"
     OPTIONS="board_build.partitions = huge_app.csv"
