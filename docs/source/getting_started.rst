@@ -91,6 +91,10 @@ Before opening a new issue, please read this:
 Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
 
+For more details about creating new Issue, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Issue-report.yml>`_.
+
+If you have any new idea, see the `Feature request Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Feature-request.yml>`_.
+
 First Steps
 -----------
 
