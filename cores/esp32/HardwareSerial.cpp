@@ -10,7 +10,7 @@
 #ifndef SOC_RX0
 #if CONFIG_IDF_TARGET_ESP32
 #define SOC_RX0 3
-#elif CONFIG_IDF_TARGET_ESP32S2
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define SOC_RX0 44
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define SOC_RX0 20
@@ -20,7 +20,7 @@
 #ifndef SOC_TX0
 #if CONFIG_IDF_TARGET_ESP32
 #define SOC_TX0 1
-#elif CONFIG_IDF_TARGET_ESP32S2
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define SOC_TX0 43
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define SOC_TX0 21
@@ -35,10 +35,12 @@ void serialEvent(void) {}
 #ifndef RX1
 #if CONFIG_IDF_TARGET_ESP32
 #define RX1 9
-#elif CONFIG_IDF_TARGET_ESP32S2
+#elif CONFIG_IDF_TARGET_ESP32S2 
 #define RX1 18
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define RX1 18
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define RX1 15
 #endif
 #endif
 
@@ -49,6 +51,8 @@ void serialEvent(void) {}
 #define TX1 17
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define TX1 19
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define TX1 16
 #endif
 #endif
 
@@ -60,12 +64,16 @@ void serialEvent1(void) {}
 #ifndef RX2
 #if CONFIG_IDF_TARGET_ESP32
 #define RX2 16
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define RX2 19 
 #endif
 #endif
 
 #ifndef TX2
 #if CONFIG_IDF_TARGET_ESP32
 #define TX2 17
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define TX2 20
 #endif
 #endif
 
