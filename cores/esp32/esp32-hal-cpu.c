@@ -147,7 +147,7 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 	return APB_CLK_FREQ;
 #else
     if(conf->freq_mhz >= 80){
