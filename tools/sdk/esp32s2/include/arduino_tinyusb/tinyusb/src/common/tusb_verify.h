@@ -37,31 +37,31 @@
  * manipulation that you are told to stay away.
  *
  * This contains macros for both VERIFY and ASSERT:
- * 
+ *
  *   VERIFY: Used when there is an error condition which is not the
  *           fault of the MCU. For example, bounds checking on data
  *           sent to the micro over USB should use this function.
  *           Another example is checking for buffer overflows, where
  *           returning from the active function causes a NAK.
- * 
+ *
  *   ASSERT: Used for error conditions that are caused by MCU firmware
  *           bugs. This is used to discover bugs in the code more
  *           quickly. One example would be adding assertions in library
  *           function calls to confirm a function's (untainted)
  *           parameters are valid.
- * 
+ *
  * The difference in behavior is that ASSERT triggers a breakpoint while
  * verify does not.
  *
  *   #define TU_VERIFY(cond)                  if(cond) return false;
  *   #define TU_VERIFY(cond,ret)              if(cond) return ret;
- *   
+ *
  *   #define TU_VERIFY_HDLR(cond,handler)     if(cond) {handler; return false;}
  *   #define TU_VERIFY_HDLR(cond,ret,handler) if(cond) {handler; return ret;}
  *
  *   #define TU_ASSERT(cond)                  if(cond) {_MESS_FAILED(); TU_BREAKPOINT(), return false;}
  *   #define TU_ASSERT(cond,ret)              if(cond) {_MESS_FAILED(); TU_BREAKPOINT(), return ret;}
- *  
+ *
  *------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -81,8 +81,8 @@
   #define _MESS_FAILED() do {} while (0)
 #endif
 
-// Halt CPU (breakpoint) when hitting error, only apply for Cortex M3, M4, M7
-#if defined(__ARM_ARCH_7M__) || defined (__ARM_ARCH_7EM__)
+// Halt CPU (breakpoint) when hitting error, only apply for Cortex M3, M4, M7, M33
+#if defined(__ARM_ARCH_7M__) || defined (__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__)
   #define TU_BREAKPOINT() do                                                                                \
   {                                                                                                         \
     volatile uint32_t* ARM_CM_DHCSR =  ((volatile uint32_t*) 0xE000EDF0UL); /* Cortex M CoreDebug->DHCSR */ \

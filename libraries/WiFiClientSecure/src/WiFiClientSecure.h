@@ -40,6 +40,7 @@ protected:
     const char *_pskIdent; // identity for PSK cipher suites
     const char *_psKey; // key in hex for PSK cipher suites
     const char **_alpn_protos;
+    bool _use_ca_bundle;
 
 public:
     WiFiClientSecure *next;
@@ -70,6 +71,7 @@ public:
     void setCertificate(const char *client_ca);
     void setPrivateKey (const char *private_key);
     bool loadCACert(Stream& stream, size_t size);
+    void setCACertBundle(const uint8_t * bundle);
     bool loadCertificate(Stream& stream, size_t size);
     bool loadPrivateKey(Stream& stream, size_t size);
     bool verify(const char* fingerprint, const char* domain_name);
