@@ -68,7 +68,7 @@ long random(long howsmall, long howbig)
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
     const long run = in_max - in_min;
-    if(divisor == 0){
+    if(run == 0){
         log_e("map(): Invalid input range, min == max");
         return -1; // AVR returns -1, SAM returns 0
     }
