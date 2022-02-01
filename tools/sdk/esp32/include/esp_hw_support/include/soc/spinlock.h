@@ -1,16 +1,8 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #pragma once
 
 #include <stdint.h>
@@ -60,6 +52,15 @@ static inline void __attribute__((always_inline)) spinlock_initialize(spinlock_t
 
 /**
  * @brief Top level spinlock acquire function, spins until get the lock
+ *
+ * This function will:
+ * - Save current interrupt state, then disable interrupts
+ * - Spin until lock is acquired or until timeout occurs
+ * - Restore interrupt state
+ *
+ * @note Spinlocks alone do no constitute true critical sections (as this
+ *       function reenables interrupts once the spinlock is acquired). For critical
+ *       sections, use the interface provided by the operating system.
  * @param lock - target spinlock object
  * @param timeout - cycles to wait, passing SPINLOCK_WAIT_FOREVER blocs indefinitely
  */
@@ -133,6 +134,15 @@ static inline bool __attribute__((always_inline)) spinlock_acquire(spinlock_t *l
 
 /**
  * @brief Top level spinlock unlock function, unlocks a previously locked spinlock
+ *
+ * This function will:
+ * - Save current interrupt state, then disable interrupts
+ * - Release the spinlock
+ * - Restore interrupt state
+ *
+ * @note Spinlocks alone do no constitute true critical sections (as this
+ *       function reenables interrupts once the spinlock is acquired). For critical
+ *       sections, use the interface provided by the operating system.
  * @param lock - target, locked before, spinlock object
  */
 static inline void __attribute__((always_inline)) spinlock_release(spinlock_t *lock)

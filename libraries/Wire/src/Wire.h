@@ -20,17 +20,20 @@
   Modified December 2014 by Ivan Grokhotkov (ivan@esp8266.com) - esp8266 support
   Modified April 2015 by Hrsto Gochkov (ficeto@ficeto.com) - alternative esp8266 support
   Modified November 2017 by Chuck Todd <stickbreaker on GitHub> to use ISR and increase stability.
+  Modified Nov 2021 by Hristo Gochkov <Me-No-Dev> to support ESP-IDF API
 */
 
 #ifndef TwoWire_h
 #define TwoWire_h
 
 #include <esp32-hal.h>
+#if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+#endif
 #include "Stream.h"
 
-#define STICKBREAKER 'V1.1.0'
 #ifndef I2C_BUFFER_LENGTH
     #define I2C_BUFFER_LENGTH 128
 #endif
@@ -43,28 +46,28 @@ protected:
     uint8_t num;
     int8_t sda;
     int8_t scl;
-    i2c_t * i2c;
 
     uint8_t rxBuffer[I2C_BUFFER_LENGTH];
-    uint16_t rxIndex;
-    uint16_t rxLength;
-    uint16_t rxQueued; //@stickBreaker
+    size_t rxIndex;
+    size_t rxLength;
 
     uint8_t txBuffer[I2C_BUFFER_LENGTH];
-    uint16_t txIndex;
-    uint16_t txLength;
+    size_t txLength;
     uint16_t txAddress;
-    uint16_t txQueued; //@stickbreaker
 
-    uint8_t transmitting;
-    /* slave Mode, not yet Stickbreaker
-            static user_onRequest uReq[2];
-            static user_onReceive uRcv[2];
-        void onRequestService(void);
-        void onReceiveService(uint8_t*, int);
-    */
-    i2c_err_t last_error; // @stickBreaker from esp32-hal-i2c.h
-    uint16_t _timeOutMillis;
+    uint32_t _timeOutMillis;
+    bool nonStop;
+#if !CONFIG_DISABLE_HAL_LOCKS
+    TaskHandle_t nonStopTask;
+    SemaphoreHandle_t lock;
+#endif
+private:
+    bool is_slave;
+    void (*user_onRequest)(void);
+    void (*user_onReceive)(int);
+    static void onRequestService(uint8_t, void *);
+    static void onReceiveService(uint8_t, uint8_t*, size_t, bool, void *);
+    bool initPins(int sdaPin, int sclPin);
 
 public:
     TwoWire(uint8_t bus_num);
@@ -74,20 +77,14 @@ public:
     bool setPins(int sda, int scl);
     
     bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
-      // calling will attemp to recover hung bus
-
-    void setClock(uint32_t frequency); // change bus clock without initing hardware
-    size_t getClock(); // current bus clock rate in hz
+    bool begin(uint8_t slaveAddr, int sda=-1, int scl=-1, uint32_t frequency=0);
+    bool end();
 
     void setTimeOut(uint16_t timeOutMillis); // default timeout of i2c transactions is 50ms
     uint16_t getTimeOut();
 
-    uint8_t lastError();
-    char * getErrorText(uint8_t err);
-
-    //@stickBreaker for big blocks and ISR model
-    i2c_err_t writeTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true);
-    i2c_err_t readTransmission(uint16_t address, uint8_t* buff, uint16_t size, bool sendStop=true, uint32_t *readCount=NULL);
+    bool setClock(uint32_t);
+    uint32_t getClock();
 
     void beginTransmission(uint16_t address);
     void beginTransmission(uint8_t address);
@@ -96,8 +93,10 @@ public:
     uint8_t endTransmission(bool sendStop);
     uint8_t endTransmission(void);
 
+    size_t requestFrom(uint16_t address, size_t size, bool sendStop);
     uint8_t requestFrom(uint16_t address, uint8_t size, bool sendStop);
     uint8_t requestFrom(uint16_t address, uint8_t size, uint8_t sendStop);
+    size_t requestFrom(uint8_t address, size_t len, bool stopBit);
     uint8_t requestFrom(uint16_t address, uint8_t size);
     uint8_t requestFrom(uint8_t address, uint8_t size, uint8_t sendStop);
     uint8_t requestFrom(uint8_t address, uint8_t size);
@@ -134,22 +133,10 @@ public:
 
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
-
-    uint32_t setDebugFlags( uint32_t setBits, uint32_t resetBits);
-    bool busy();
+    size_t slaveWrite(const uint8_t *, size_t);
 };
 
 extern TwoWire Wire;
 extern TwoWire Wire1;
 
-
-/*
-V1.1.0 08JAN2019 Support CPU Clock frequency changes
-V1.0.2 30NOV2018 stop returning I2C_ERROR_CONTINUE on ReSTART operations, regain compatibility with Arduino libs
-V1.0.1 02AUG2018 First Fix after release, Correct ReSTART handling, change Debug control, change begin()
-  to a function, this allow reporting if bus cannot be initialized, Wire.begin() can be used to recover
-  a hung bus busy condition.
-V0.2.2 13APR2018 preserve custom SCL,SDA,Frequency when no parameters passed to begin()
-V0.2.1 15MAR2018 Hardware reset, Glitch prevention, adding destructor for second i2c testing
-*/
 #endif

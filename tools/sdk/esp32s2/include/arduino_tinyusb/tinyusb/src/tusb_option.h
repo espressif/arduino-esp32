@@ -27,16 +27,17 @@
 #ifndef _TUSB_OPTION_H_
 #define _TUSB_OPTION_H_
 
+#include "common/tusb_compiler.h"
+
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     10
-#define TUSB_VERSION_REVISION  1
+#define TUSB_VERSION_MINOR     12
+#define TUSB_VERSION_REVISION  0
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
 //--------------------------------------------------------------------+
 // Supported MCUs
 // CFG_TUSB_MCU must be defined to one of following value
 //--------------------------------------------------------------------+
-#define TU_CHECK_MCU(_m)            (CFG_TUSB_MCU == OPT_MCU_##_m)
 
 #define OPT_MCU_NONE                0
 
@@ -67,22 +68,27 @@
 #define OPT_MCU_SAMX7X            207 ///< MicroChip SAME70, S70, V70, V71 family
 
 // STM32
-#define OPT_MCU_STM32F0           300 ///< ST STM32F0
-#define OPT_MCU_STM32F1           301 ///< ST STM32F1
-#define OPT_MCU_STM32F2           302 ///< ST STM32F2
-#define OPT_MCU_STM32F3           303 ///< ST STM32F3
-#define OPT_MCU_STM32F4           304 ///< ST STM32F4
-#define OPT_MCU_STM32F7           305 ///< ST STM32F7
-#define OPT_MCU_STM32H7           306 ///< ST STM32H7
-#define OPT_MCU_STM32L0           307 ///< ST STM32L0
-#define OPT_MCU_STM32L1           308 ///< ST STM32L1
-#define OPT_MCU_STM32L4           309 ///< ST STM32L4
+#define OPT_MCU_STM32F0           300 ///< ST F0
+#define OPT_MCU_STM32F1           301 ///< ST F1
+#define OPT_MCU_STM32F2           302 ///< ST F2
+#define OPT_MCU_STM32F3           303 ///< ST F3
+#define OPT_MCU_STM32F4           304 ///< ST F4
+#define OPT_MCU_STM32F7           305 ///< ST F7
+#define OPT_MCU_STM32H7           306 ///< ST H7
+#define OPT_MCU_STM32L1           308 ///< ST L1
+#define OPT_MCU_STM32L0           307 ///< ST L0
+#define OPT_MCU_STM32L4           309 ///< ST L4
+#define OPT_MCU_STM32G0           310 ///< ST G0
+#define OPT_MCU_STM32G4           311 ///< ST G4
 
 // Sony
 #define OPT_MCU_CXD56             400 ///< SONY CXD56
 
-// TI MSP430
+// TI
 #define OPT_MCU_MSP430x5xx        500 ///< TI MSP430x5xx
+#define OPT_MCU_MSP432E4          510 ///< TI MSP432E4xx
+#define OPT_MCU_TM4C123           511 ///< TI Tiva-C 123x
+#define OPT_MCU_TM4C129           512 ///< TI Tiva-C 129x
 
 // ValentyUSB eptri
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
@@ -108,18 +114,34 @@
 
 // NXP Kinetis
 #define OPT_MCU_MKL25ZXX         1200 ///< NXP MKL25Zxx
+#define OPT_MCU_K32L2BXX         1201 ///< NXP K32L2Bxx
 
 // Silabs
 #define OPT_MCU_EFM32GG          1300 ///< Silabs EFM32GG
-#define OPT_MCU_EFM32GG11        1301 ///< Silabs EFM32GG11
-#define OPT_MCU_EFM32GG12        1302 ///< Silabs EFM32GG12
 
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
 #define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
+#define OPT_MCU_RX72N            1402 ///< Renesas RX72N
 
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
+
+// GigaDevice
+#define OPT_MCU_GD32VF103        1600 ///< GigaDevice GD32VF103
+
+// Broadcom
+#define OPT_MCU_BCM2711          1700 ///< Broadcom BCM2711
+#define OPT_MCU_BCM2835          1701 ///< Broadcom BCM2835
+#define OPT_MCU_BCM2837          1702 ///< Broadcom BCM2837
+
+// Infineon
+#define OPT_MCU_XMC4000          1800 ///< Infineon XMC4000
+
+// Helper to check if configured MCU is one of listed
+// Apply _TU_CHECK_MCU with || as separator to list of input
+#define _TU_CHECK_MCU(_m)   (CFG_TUSB_MCU == _m)
+#define TU_CHECK_MCU(...)   (TU_ARGS_APPLY(_TU_CHECK_MCU, ||, __VA_ARGS__))
 
 //--------------------------------------------------------------------+
 // Supported OS
@@ -198,12 +220,18 @@
   #define CFG_TUSB_MEM_SECTION
 #endif
 
+// alignment requirement of buffer used for endpoint transferring
 #ifndef CFG_TUSB_MEM_ALIGN
   #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
 
+// OS selection
 #ifndef CFG_TUSB_OS
   #define CFG_TUSB_OS             OPT_OS_NONE
+#endif
+
+#ifndef CFG_TUSB_OS_INC_PATH
+  #define CFG_TUSB_OS_INC_PATH
 #endif
 
 //--------------------------------------------------------------------
@@ -230,6 +258,10 @@
   #define CFG_TUD_AUDIO           0
 #endif
 
+#ifndef CFG_TUD_VIDEO
+  #define CFG_TUD_VIDEO           0
+#endif
+
 #ifndef CFG_TUD_MIDI
   #define CFG_TUD_MIDI            0
 #endif
@@ -250,34 +282,61 @@
   #define CFG_TUD_DFU             0
 #endif
 
-#ifndef CFG_TUD_NET
-  #define CFG_TUD_NET             0
-#endif
-
 #ifndef CFG_TUD_BTH
   #define CFG_TUD_BTH             0
+#endif
+
+#ifndef CFG_TUD_ECM_RNDIS
+  #ifdef CFG_TUD_NET
+    #warning "CFG_TUD_NET is renamed to CFG_TUD_ECM_RNDIS"
+    #define CFG_TUD_ECM_RNDIS   CFG_TUD_NET
+  #else
+    #define CFG_TUD_ECM_RNDIS   0
+  #endif
+#endif
+
+#ifndef CFG_TUD_NCM
+  #define CFG_TUD_NCM         0
 #endif
 
 //--------------------------------------------------------------------
 // HOST OPTIONS
 //--------------------------------------------------------------------
 #if TUSB_OPT_HOST_ENABLED
-  #ifndef CFG_TUSB_HOST_DEVICE_MAX
-    #define CFG_TUSB_HOST_DEVICE_MAX 1
-    #warning CFG_TUSB_HOST_DEVICE_MAX is not defined, default value is 1
-  #endif
-
-  //------------- HUB CLASS -------------//
-  #if CFG_TUH_HUB && (CFG_TUSB_HOST_DEVICE_MAX == 1)
-    #error There is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
+  #ifndef CFG_TUH_DEVICE_MAX
+    #define CFG_TUH_DEVICE_MAX 1
   #endif
 
   #ifndef CFG_TUH_ENUMERATION_BUFSIZE
     #define CFG_TUH_ENUMERATION_BUFSIZE 256
   #endif
-
-  //------------- CLASS -------------//
 #endif // TUSB_OPT_HOST_ENABLED
+
+//------------- CLASS -------------//
+
+#ifndef CFG_TUH_HUB
+#define CFG_TUH_HUB    0
+#endif
+
+#ifndef CFG_TUH_CDC
+#define CFG_TUH_CDC    0
+#endif
+
+#ifndef CFG_TUH_HID
+#define CFG_TUH_HID    0
+#endif
+
+#ifndef CFG_TUH_MIDI
+#define CFG_TUH_MIDI   0
+#endif
+
+#ifndef CFG_TUH_MSC
+#define CFG_TUH_MSC    0
+#endif
+
+#ifndef CFG_TUH_VENDOR
+#define CFG_TUH_VENDOR 0
+#endif
 
 //--------------------------------------------------------------------+
 // Port Specific

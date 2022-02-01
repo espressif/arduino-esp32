@@ -7,7 +7,7 @@
  *      Author: Thomas M. (ArcticSnowSky)
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BTAddress.h"
 #include <string>

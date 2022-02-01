@@ -34,7 +34,9 @@ struct uart_struct_t {
     uint8_t num;
     bool has_peek;
     uint8_t peek_byte;
-
+    QueueHandle_t uart_event_queue;
+    void (*onReceive)(void);
+    TaskHandle_t envent_task;
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -43,12 +45,12 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-    {0, false, 0},
+    {0, false, 0, NULL, NULL, NULL},
 #if SOC_UART_NUM > 1
-    {1, false, 0},
+    {1, false, 0, NULL, NULL, NULL},
 #endif
 #if SOC_UART_NUM > 2
-    {2, false, 0},
+    {2, false, 0, NULL, NULL, NULL},
 #endif
 };
 
@@ -58,16 +60,88 @@ static uart_t _uart_bus_array[] = {
 #define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-    {NULL, 0, false, 0},
+    {NULL, 0, false, 0, NULL, NULL, NULL},
 #if SOC_UART_NUM > 1
-    {NULL, 1, false, 0},
+    {NULL, 1, false, 0, NULL, NULL, NULL},
 #endif
 #if SOC_UART_NUM > 2
-    {NULL, 2, false, 0},
+    {NULL, 2, false, 0, NULL, NULL, NULL},
 #endif
 };
 
 #endif
+
+// solves issue https://github.com/espressif/arduino-esp32/issues/6032
+// baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
+uint32_t _get_effective_baudrate(uint32_t baudrate) 
+{
+    uint32_t Freq = getApbFrequency()/1000000;
+    if (Freq < 80) {
+        return 80 / Freq * baudrate;
+     }
+    else {
+        return baudrate;
+    }
+}
+
+
+void uartOnReceive(uart_t* uart, void(*function)(void))
+{
+    if(uart == NULL || function == NULL) {
+        return;
+    }
+    UART_MUTEX_LOCK();
+    uart->onReceive = function;
+    UART_MUTEX_UNLOCK();
+}
+
+
+static void uart_event_task(void *args)
+{
+    uart_t* uart = (uart_t *)args;
+    uart_event_t event;
+    for(;;) {
+        //Waiting for UART event.
+        if(xQueueReceive(uart->uart_event_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
+            switch(event.type) {
+                //Event of UART receving data
+                case UART_DATA:
+                    if(uart->onReceive) uart->onReceive();
+                    break;
+                //Event of HW FIFO overflow detected
+                case UART_FIFO_OVF:
+                    log_w("UART%d FIFO Overflow. Flushing data. Consider adding Flow Control to your Application.", uart->num);
+                    uart_flush_input(uart->num);
+                    xQueueReset(uart->uart_event_queue);
+                    break;
+                //Event of UART ring buffer full
+                case UART_BUFFER_FULL:
+                    log_w("UART%d Buffer Full. Flushing data. Consider encreasing your buffer size of your Application.", uart->num);
+                    uart_flush_input(uart->num);
+                    xQueueReset(uart->uart_event_queue);
+                    break;
+                //Event of UART RX break detected
+                case UART_BREAK:
+                    log_w("UART%d RX break.", uart->num);
+                    break;
+                //Event of UART parity check error
+                case UART_PARITY_ERR:
+                    log_w("UART%d parity error.", uart->num);
+                    break;
+                //Event of UART frame error
+                case UART_FRAME_ERR:
+                    log_w("UART%d frame error.", uart->num);
+                    break;
+                //Others
+                default:
+                    log_w("UART%d unknown event type %d.", uart->num, event.type);
+                    break;
+            }
+        }
+    }
+    vTaskDelete(NULL);
+}
+
 
 bool uartIsDriverInstalled(uart_t* uart) 
 {
@@ -121,7 +195,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_LOCK();
 
     uart_config_t uart_config;
-    uart_config.baud_rate = baudrate;
+    uart_config.baud_rate = _get_effective_baudrate(baudrate);
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
     uart_config.stop_bits = (config & 0x30) >> 4;
@@ -130,7 +204,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.source_clk = UART_SCLK_APB;
 
 
-    ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 0, NULL, 0));
+    ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
@@ -138,6 +212,12 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     if (inverted) {
         // invert signal for both Rx and Tx
         ESP_ERROR_CHECK(uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV));    
+    }
+
+    // Creating UART event Task
+    xTaskCreate(uart_event_task, "uart_event_task", 2048, uart, configMAX_PRIORITIES - 1, &(uart->envent_task));
+    if (!uart->envent_task) {
+        log_e(" -- UART%d Event Task not Created!", uart_nr);
     }
 
     UART_MUTEX_UNLOCK();
@@ -154,6 +234,11 @@ void uartEnd(uart_t* uart)
    
     UART_MUTEX_LOCK();
     uart_driver_delete(uart->num);
+    if (uart->envent_task) {
+        vTaskDelete(uart->envent_task);
+        uart->envent_task = NULL;
+        uart->onReceive = NULL;
+    }
     UART_MUTEX_UNLOCK();
 }
 
@@ -269,7 +354,7 @@ void uartWrite(uart_t* uart, uint8_t c)
 
 void uartWriteBuf(uart_t* uart, const uint8_t * data, size_t len)
 {
-    if(uart == NULL) {
+    if(uart == NULL || data == NULL || !len) {
         return;
     }
 
@@ -290,7 +375,7 @@ void uartFlushTxOnly(uart_t* uart, bool txOnly)
     }
     
     UART_MUTEX_LOCK();
-    ESP_ERROR_CHECK(uart_wait_tx_done(uart->num, portMAX_DELAY));
+    while(!uart_ll_is_tx_idle(UART_LL_GET_HW(uart->num)));
 
     if ( !txOnly ) {
         ESP_ERROR_CHECK(uart_flush_input(uart->num));
@@ -304,7 +389,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
+    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
     UART_MUTEX_UNLOCK();
 }
 
@@ -368,13 +453,9 @@ void uartSetDebug(uart_t* uart)
 {
     if(uart == NULL || uart->num >= SOC_UART_NUM) {
         s_uart_debug_nr = -1;
-        //ets_install_putc1(NULL);
-        //return;
-    } else
-    if(s_uart_debug_nr == uart->num) {
-        return;
-    } else
-    s_uart_debug_nr = uart->num;
+    } else {
+        s_uart_debug_nr = uart->num;
+    }
     uart_install_putc();
 }
 

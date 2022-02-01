@@ -57,16 +57,25 @@ void tuh_task(void);
 extern void hcd_int_handler(uint8_t rhport);
 #define tuh_int_handler   hcd_int_handler
 
-tusb_speed_t tuh_device_get_speed (uint8_t dev_addr);
+bool tuh_vid_pid_get(uint8_t dev_addr, uint16_t* vid, uint16_t* pid);
+tusb_speed_t tuh_speed_get(uint8_t dev_addr);
 
-// Check if device is configured
-bool tuh_device_configured(uint8_t dev_addr);
+// Check if device is connected and configured
+bool tuh_mounted(uint8_t dev_addr);
+
+// Check if device is suspended
+static inline bool tuh_suspended(uint8_t dev_addr)
+{
+  // TODO implement suspend & resume on host
+  (void) dev_addr;
+  return false;
+}
 
 // Check if device is ready to communicate with
 TU_ATTR_ALWAYS_INLINE
-static inline bool tuh_device_ready(uint8_t dev_addr)
+static inline bool tuh_ready(uint8_t dev_addr)
 {
-  return tuh_device_configured(dev_addr);
+  return tuh_mounted(dev_addr) && !tuh_suspended(dev_addr);
 }
 
 // Carry out control transfer

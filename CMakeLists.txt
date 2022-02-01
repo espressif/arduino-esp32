@@ -1,3 +1,27 @@
+# Check ESP-IDF version and error out if it is not in the supported range.
+#
+# Note for arduino-esp32 developers: to bypass the version check locally,
+# set ARDUINO_SKIP_IDF_VERSION_CHECK environment variable to 1. For example:
+#   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
+#   idf.py build
+
+set(min_supported_idf_version "4.4.0")
+set(max_supported_idf_version "4.4.99")
+set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
+
+if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
+  if (idf_version VERSION_LESS min_supported_idf_version)
+    message(FATAL_ERROR "Arduino-esp32 can be used with ESP-IDF versions "
+                        "between ${min_supported_idf_version} and ${max_supported_idf_version}, "
+                        "but an older version is detected: ${idf_version}.")
+  endif()
+  if (idf_version VERSION_GREATER max_supported_idf_version)
+    message(FATAL_ERROR "Arduino-esp32 can be used with ESP-IDF versions "
+                        "between ${min_supported_idf_version} and ${max_supported_idf_version}, "
+                        "but a newer version is detected: ${idf_version}.")
+  endif()
+endif()
+
 set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
@@ -7,6 +31,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-dac.c
   cores/esp32/esp32-hal-gpio.c
   cores/esp32/esp32-hal-i2c.c
+  cores/esp32/esp32-hal-i2c-slave.c
   cores/esp32/esp32-hal-ledc.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
@@ -54,6 +79,7 @@ set(LIBRARY_SRCS
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
   libraries/ESPmDNS/src/ESPmDNS.cpp
+  libraries/Ethernet/src/ETH.cpp
   libraries/FFat/src/FFat.cpp
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp
@@ -89,8 +115,8 @@ set(LIBRARY_SRCS
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
+  libraries/WiFiClientSecure/src/esp_crt_bundle.c
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
-  libraries/WiFi/src/ETH.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
   libraries/WiFi/src/WiFi.cpp
@@ -174,7 +200,7 @@ set(includedirs
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 

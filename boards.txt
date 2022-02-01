@@ -57,13 +57,6 @@ esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32c3.menu.CDCOnBoot.cdc=Enabled
 esp32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
-esp32c3.menu.UploadMode.default=UART0
-esp32c3.menu.UploadMode.default.upload.use_1200bps_touch=false
-esp32c3.menu.UploadMode.default.upload.wait_for_upload_port=false
-esp32c3.menu.UploadMode.cdc=Internal USB
-esp32c3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-esp32c3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-
 esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32c3.menu.PartitionScheme.default.build.partitions=default
 esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -885,6 +878,7 @@ esp32wroverkit.menu.DebugLevel.verbose=Verbose
 esp32wroverkit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 tinypico.name=UM TinyPICO
 
 tinypico.upload.tool=esptool_py
@@ -969,6 +963,7 @@ tinypico.menu.DebugLevel.verbose=Verbose
 tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 feathers2.name=UM FeatherS2
 feathers2.vid.0=0x239A
 feathers2.pid.0=0x80AB
@@ -1108,6 +1103,7 @@ feathers2.menu.DebugLevel.verbose=Verbose
 feathers2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 feathers2neo.name=UM FeatherS2 Neo
 feathers2neo.vid.0=0x303a
 feathers2neo.pid.0=0x80B4
@@ -1233,6 +1229,7 @@ feathers2neo.menu.DebugLevel.verbose=Verbose
 feathers2neo.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 tinys2.name=UM TinyS2
 tinys2.vid.0=0x303a
 tinys2.pid.0=0x8001
@@ -1358,6 +1355,7 @@ tinys2.menu.DebugLevel.verbose=Verbose
 tinys2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 S_ODI_Ultra.name=S.ODI Ultra v1
 
 S_ODI_Ultra.upload.tool=esptool_py
@@ -1557,6 +1555,7 @@ micros2.menu.DebugLevel.verbose=Verbose
 micros2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 magicbit.name=MagicBit
 
 magicbit.upload.tool=esptool_py
@@ -1595,7 +1594,22 @@ magicbit.menu.UploadSpeed.921600=921600
 magicbit.menu.UploadSpeed.921600.upload.speed=921600
 magicbit.menu.UploadSpeed.115200=115200
 magicbit.menu.UploadSpeed.115200.upload.speed=115200
+
+magicbit.menu.DebugLevel.none=None
+magicbit.menu.DebugLevel.none.build.code_debug=0
+magicbit.menu.DebugLevel.error=Error
+magicbit.menu.DebugLevel.error.build.code_debug=1
+magicbit.menu.DebugLevel.warn=Warn
+magicbit.menu.DebugLevel.warn.build.code_debug=2
+magicbit.menu.DebugLevel.info=Info
+magicbit.menu.DebugLevel.info.build.code_debug=3
+magicbit.menu.DebugLevel.debug=Debug
+magicbit.menu.DebugLevel.debug.build.code_debug=4
+magicbit.menu.DebugLevel.verbose=Verbose
+magicbit.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
 turta_iot_node.name=Turta IoT Node
 
 turta_iot_node.upload.tool=esptool_py
@@ -1643,63 +1657,74 @@ turta_iot_node.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-ttgo-lora32-v1.name=TTGO LoRa32-OLED V1
+ttgo-lora32.name=TTGO LoRa32-OLED
 
-ttgo-lora32-v1.upload.tool=esptool_py
-ttgo-lora32-v1.upload.maximum_size=1310720
-ttgo-lora32-v1.upload.maximum_data_size=294912
-ttgo-lora32-v1.upload.flags=
-ttgo-lora32-v1.upload.extra_flags=
+ttgo-lora32.upload.tool=esptool_py
+ttgo-lora32.upload.maximum_size=1310720
+ttgo-lora32.upload.maximum_data_size=294912
+ttgo-lora32.upload.flags=
+ttgo-lora32.upload.extra_flags=
 
-ttgo-lora32-v1.serial.disableDTR=true
-ttgo-lora32-v1.serial.disableRTS=true
+ttgo-lora32.serial.disableDTR=true
+ttgo-lora32.serial.disableRTS=true
 
-ttgo-lora32-v1.build.tarch=xtensa
-ttgo-lora32-v1.build.bootloader_addr=0x1000
-ttgo-lora32-v1.build.target=esp32
-ttgo-lora32-v1.build.mcu=esp32
-ttgo-lora32-v1.build.core=esp32
-ttgo-lora32-v1.build.variant=ttgo-lora32-v1
-ttgo-lora32-v1.build.board=TTGO_LoRa32_V1
+ttgo-lora32.build.tarch=xtensa
+ttgo-lora32.build.bootloader_addr=0x1000
+ttgo-lora32.build.target=esp32
+ttgo-lora32.build.mcu=esp32
+ttgo-lora32.build.core=esp32
+ttgo-lora32.build.board=TTGO_LoRa32
 
-ttgo-lora32-v1.build.f_cpu=240000000L
-ttgo-lora32-v1.build.flash_mode=dio
-ttgo-lora32-v1.build.flash_size=4MB
-ttgo-lora32-v1.build.boot=dio
-ttgo-lora32-v1.build.partitions=default
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V1=TTGO LoRa32 V1 (No TFCard)
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V1.build.board=TTGO_LoRa32_V1
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V1.build.variant=ttgo-lora32-v1
 
-ttgo-lora32-v1.menu.FlashFreq.80=80MHz
-ttgo-lora32-v1.menu.FlashFreq.80.build.flash_freq=80m
-ttgo-lora32-v1.menu.FlashFreq.40=40MHz
-ttgo-lora32-v1.menu.FlashFreq.40.build.flash_freq=40m
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V2=TTGO LoRa32 V2
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V2.build.board=TTGO_LoRa32_V2
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V2.build.variant=ttgo-lora32-v2
 
-ttgo-lora32-v1.menu.UploadSpeed.921600=921600
-ttgo-lora32-v1.menu.UploadSpeed.921600.upload.speed=921600
-ttgo-lora32-v1.menu.UploadSpeed.115200=115200
-ttgo-lora32-v1.menu.UploadSpeed.115200.upload.speed=115200
-ttgo-lora32-v1.menu.UploadSpeed.256000.windows=256000
-ttgo-lora32-v1.menu.UploadSpeed.256000.upload.speed=256000
-ttgo-lora32-v1.menu.UploadSpeed.230400.windows.upload.speed=256000
-ttgo-lora32-v1.menu.UploadSpeed.230400=230400
-ttgo-lora32-v1.menu.UploadSpeed.230400.upload.speed=230400
-ttgo-lora32-v1.menu.UploadSpeed.460800.linux=460800
-ttgo-lora32-v1.menu.UploadSpeed.460800.macosx=460800
-ttgo-lora32-v1.menu.UploadSpeed.460800.upload.speed=460800
-ttgo-lora32-v1.menu.UploadSpeed.512000.windows=512000
-ttgo-lora32-v1.menu.UploadSpeed.512000.upload.speed=512000
+ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new=TTGO LoRa32 V2.1 (1.6.1)
+ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new.build.board=TTGO_LoRa32_v21new
+ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new.build.variant=ttgo-lora32-v21new
 
-ttgo-lora32-v1.menu.DebugLevel.none=None
-ttgo-lora32-v1.menu.DebugLevel.none.build.code_debug=0
-ttgo-lora32-v1.menu.DebugLevel.error=Error
-ttgo-lora32-v1.menu.DebugLevel.error.build.code_debug=1
-ttgo-lora32-v1.menu.DebugLevel.warn=Warn
-ttgo-lora32-v1.menu.DebugLevel.warn.build.code_debug=2
-ttgo-lora32-v1.menu.DebugLevel.info=Info
-ttgo-lora32-v1.menu.DebugLevel.info.build.code_debug=3
-ttgo-lora32-v1.menu.DebugLevel.debug=Debug
-ttgo-lora32-v1.menu.DebugLevel.debug.build.code_debug=4
-ttgo-lora32-v1.menu.DebugLevel.verbose=Verbose
-ttgo-lora32-v1.menu.DebugLevel.verbose.build.code_debug=5
+ttgo-lora32.build.f_cpu=240000000L
+ttgo-lora32.build.flash_mode=dio
+ttgo-lora32.build.flash_size=4MB
+ttgo-lora32.build.boot=dio
+ttgo-lora32.build.partitions=default
+
+ttgo-lora32.menu.FlashFreq.80=80MHz
+ttgo-lora32.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-lora32.menu.FlashFreq.40=40MHz
+ttgo-lora32.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-lora32.menu.UploadSpeed.921600=921600
+ttgo-lora32.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-lora32.menu.UploadSpeed.115200=115200
+ttgo-lora32.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-lora32.menu.UploadSpeed.256000.windows=256000
+ttgo-lora32.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-lora32.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-lora32.menu.UploadSpeed.230400=230400
+ttgo-lora32.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-lora32.menu.UploadSpeed.460800.linux=460800
+ttgo-lora32.menu.UploadSpeed.460800.macosx=460800
+ttgo-lora32.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-lora32.menu.UploadSpeed.512000.windows=512000
+ttgo-lora32.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-lora32.menu.DebugLevel.none=None
+ttgo-lora32.menu.DebugLevel.none.build.code_debug=0
+ttgo-lora32.menu.DebugLevel.error=Error
+ttgo-lora32.menu.DebugLevel.error.build.code_debug=1
+ttgo-lora32.menu.DebugLevel.warn=Warn
+ttgo-lora32.menu.DebugLevel.warn.build.code_debug=2
+ttgo-lora32.menu.DebugLevel.info=Info
+ttgo-lora32.menu.DebugLevel.info.build.code_debug=3
+ttgo-lora32.menu.DebugLevel.debug=Debug
+ttgo-lora32.menu.DebugLevel.debug.build.code_debug=4
+ttgo-lora32.menu.DebugLevel.verbose=Verbose
+ttgo-lora32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2068,6 +2093,121 @@ ttgo-t7-v14-mini32.menu.DebugLevel.debug=Debug
 ttgo-t7-v14-mini32.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t7-v14-mini32.menu.DebugLevel.verbose=Verbose
 ttgo-t7-v14-mini32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+ttgo-t-oi-plus.name=TTGO T-OI PLUS RISC-V ESP32-C3
+
+ttgo-t-oi-plus.upload.tool=esptool_py
+ttgo-t-oi-plus.upload.maximum_size=1310720
+ttgo-t-oi-plus.upload.maximum_data_size=327680
+ttgo-t-oi-plus.upload.flags=
+ttgo-t-oi-plus.upload.extra_flags=
+
+ttgo-t-oi-plus.serial.disableDTR=false
+ttgo-t-oi-plus.serial.disableRTS=false
+
+ttgo-t-oi-plus.build.tarch=riscv32
+ttgo-t-oi-plus.build.target=esp
+ttgo-t-oi-plus.build.mcu=esp32c3
+ttgo-t-oi-plus.build.core=esp32
+ttgo-t-oi-plus.build.variant=ttgo-t-oi-plus
+ttgo-t-oi-plus.build.board=TTGO-T-OI-PLUS_DEV
+ttgo-t-oi-plus.build.bootloader_addr=0x0
+
+ttgo-t-oi-plus.build.cdc_on_boot=0
+ttgo-t-oi-plus.build.f_cpu=160000000L
+ttgo-t-oi-plus.build.flash_size=4MB
+ttgo-t-oi-plus.build.flash_freq=80m
+ttgo-t-oi-plus.build.flash_mode=qio
+ttgo-t-oi-plus.build.boot=qio
+ttgo-t-oi-plus.build.partitions=default
+ttgo-t-oi-plus.build.defines=
+
+ttgo-t-oi-plus.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.default.build.partitions=default
+ttgo-t-oi-plus.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ttgo-t-oi-plus.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ttgo-t-oi-plus.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.minimal.build.partitions=minimal
+ttgo-t-oi-plus.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ttgo-t-oi-plus.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ttgo-t-oi-plus.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ttgo-t-oi-plus.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ttgo-t-oi-plus.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ttgo-t-oi-plus.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ttgo-t-oi-plus.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ttgo-t-oi-plus.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ttgo-t-oi-plus.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+ttgo-t-oi-plus.menu.CPUFreq.160=160MHz (WiFi)
+ttgo-t-oi-plus.menu.CPUFreq.160.build.f_cpu=160000000L
+ttgo-t-oi-plus.menu.CPUFreq.80=80MHz (WiFi)
+ttgo-t-oi-plus.menu.CPUFreq.80.build.f_cpu=80000000L
+ttgo-t-oi-plus.menu.CPUFreq.40=40MHz
+ttgo-t-oi-plus.menu.CPUFreq.40.build.f_cpu=40000000L
+ttgo-t-oi-plus.menu.CPUFreq.20=20MHz
+ttgo-t-oi-plus.menu.CPUFreq.20.build.f_cpu=20000000L
+ttgo-t-oi-plus.menu.CPUFreq.10=10MHz
+ttgo-t-oi-plus.menu.CPUFreq.10.build.f_cpu=10000000L
+
+ttgo-t-oi-plus.menu.FlashMode.qio=QIO
+ttgo-t-oi-plus.menu.FlashMode.qio.build.flash_mode=dio
+ttgo-t-oi-plus.menu.FlashMode.qio.build.boot=qio
+ttgo-t-oi-plus.menu.FlashMode.dio=DIO
+ttgo-t-oi-plus.menu.FlashMode.dio.build.flash_mode=dio
+ttgo-t-oi-plus.menu.FlashMode.dio.build.boot=dio
+ttgo-t-oi-plus.menu.FlashMode.qout=QOUT
+ttgo-t-oi-plus.menu.FlashMode.qout.build.flash_mode=dout
+ttgo-t-oi-plus.menu.FlashMode.qout.build.boot=qout
+ttgo-t-oi-plus.menu.FlashMode.dout=DOUT
+ttgo-t-oi-plus.menu.FlashMode.dout.build.flash_mode=dout
+ttgo-t-oi-plus.menu.FlashMode.dout.build.boot=dout
+
+ttgo-t-oi-plus.menu.FlashFreq.80=80MHz
+ttgo-t-oi-plus.menu.FlashFreq.80.build.flash_freq=80m
+ttgo-t-oi-plus.menu.FlashFreq.40=40MHz
+ttgo-t-oi-plus.menu.FlashFreq.40.build.flash_freq=40m
+
+ttgo-t-oi-plus.menu.FlashSize.4M=4MB (32Mb)
+ttgo-t-oi-plus.menu.FlashSize.4M.build.flash_size=4MB
+
+ttgo-t-oi-plus.menu.UploadSpeed.921600=921600
+ttgo-t-oi-plus.menu.UploadSpeed.921600.upload.speed=921600
+ttgo-t-oi-plus.menu.UploadSpeed.115200=115200
+ttgo-t-oi-plus.menu.UploadSpeed.115200.upload.speed=115200
+ttgo-t-oi-plus.menu.UploadSpeed.256000.windows=256000
+ttgo-t-oi-plus.menu.UploadSpeed.256000.upload.speed=256000
+ttgo-t-oi-plus.menu.UploadSpeed.230400.windows.upload.speed=256000
+ttgo-t-oi-plus.menu.UploadSpeed.230400=230400
+ttgo-t-oi-plus.menu.UploadSpeed.230400.upload.speed=230400
+ttgo-t-oi-plus.menu.UploadSpeed.460800.linux=460800
+ttgo-t-oi-plus.menu.UploadSpeed.460800.macosx=460800
+ttgo-t-oi-plus.menu.UploadSpeed.460800.upload.speed=460800
+ttgo-t-oi-plus.menu.UploadSpeed.512000.windows=512000
+ttgo-t-oi-plus.menu.UploadSpeed.512000.upload.speed=512000
+
+ttgo-t-oi-plus.menu.DebugLevel.none=None
+ttgo-t-oi-plus.menu.DebugLevel.none.build.code_debug=0
+ttgo-t-oi-plus.menu.DebugLevel.error=Error
+ttgo-t-oi-plus.menu.DebugLevel.error.build.code_debug=1
+ttgo-t-oi-plus.menu.DebugLevel.warn=Warn
+ttgo-t-oi-plus.menu.DebugLevel.warn.build.code_debug=2
+ttgo-t-oi-plus.menu.DebugLevel.info=Info
+ttgo-t-oi-plus.menu.DebugLevel.info.build.code_debug=3
+ttgo-t-oi-plus.menu.DebugLevel.debug=Debug
+ttgo-t-oi-plus.menu.DebugLevel.debug.build.code_debug=4
+ttgo-t-oi-plus.menu.DebugLevel.verbose=Verbose
+ttgo-t-oi-plus.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2462,6 +2602,9 @@ esp32micromod.upload.extra_flags=
 esp32micromod.serial.disableDTR=true
 esp32micromod.serial.disableRTS=true
 
+esp32micromod.build.tarch=xtensa
+esp32micromod.build.bootloader_addr=0x1000
+esp32micromod.build.target=esp32
 esp32micromod.build.mcu=esp32
 esp32micromod.build.core=esp32
 esp32micromod.build.variant=esp32micromod
@@ -2663,6 +2806,19 @@ sparkfun_lora_gateway_1-channel.menu.UploadSpeed.460800.upload.speed=460800
 sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.windows=512000
 sparkfun_lora_gateway_1-channel.menu.UploadSpeed.512000.upload.speed=512000
 
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.none=None
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.none.build.code_debug=0
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.error=Error
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.error.build.code_debug=1
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.warn=Warn
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.warn.build.code_debug=2
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.info=Info
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.info.build.code_debug=3
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug=Debug
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug.build.code_debug=4
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose=Verbose
+sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 nina_w10.name=u-blox NINA-W10 series (ESP32)
@@ -2705,6 +2861,19 @@ nina_w10.menu.UploadSpeed.460800.macosx=460800
 nina_w10.menu.UploadSpeed.460800.upload.speed=460800
 nina_w10.menu.UploadSpeed.512000.windows=512000
 nina_w10.menu.UploadSpeed.512000.upload.speed=512000
+
+nina_w10.menu.DebugLevel.none=None
+nina_w10.menu.DebugLevel.none.build.code_debug=0
+nina_w10.menu.DebugLevel.error=Error
+nina_w10.menu.DebugLevel.error.build.code_debug=1
+nina_w10.menu.DebugLevel.warn=Warn
+nina_w10.menu.DebugLevel.warn.build.code_debug=2
+nina_w10.menu.DebugLevel.info=Info
+nina_w10.menu.DebugLevel.info.build.code_debug=3
+nina_w10.menu.DebugLevel.debug=Debug
+nina_w10.menu.DebugLevel.debug.build.code_debug=4
+nina_w10.menu.DebugLevel.verbose=Verbose
+nina_w10.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2754,6 +2923,19 @@ widora-air.menu.UploadSpeed.460800.upload.speed=460800
 widora-air.menu.UploadSpeed.512000.windows=512000
 widora-air.menu.UploadSpeed.512000.upload.speed=512000
 
+widora-air.menu.DebugLevel.none=None
+widora-air.menu.DebugLevel.none.build.code_debug=0
+widora-air.menu.DebugLevel.error=Error
+widora-air.menu.DebugLevel.error.build.code_debug=1
+widora-air.menu.DebugLevel.warn=Warn
+widora-air.menu.DebugLevel.warn.build.code_debug=2
+widora-air.menu.DebugLevel.info=Info
+widora-air.menu.DebugLevel.info.build.code_debug=3
+widora-air.menu.DebugLevel.debug=Debug
+widora-air.menu.DebugLevel.debug.build.code_debug=4
+widora-air.menu.DebugLevel.verbose=Verbose
+widora-air.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 esp320.name=Electronic SweetPeas - ESP320
@@ -2801,6 +2983,19 @@ esp320.menu.UploadSpeed.460800.macosx=460800
 esp320.menu.UploadSpeed.460800.upload.speed=460800
 esp320.menu.UploadSpeed.512000.windows=512000
 esp320.menu.UploadSpeed.512000.upload.speed=512000
+
+esp320.menu.DebugLevel.none=None
+esp320.menu.DebugLevel.none.build.code_debug=0
+esp320.menu.DebugLevel.error=Error
+esp320.menu.DebugLevel.error.build.code_debug=1
+esp320.menu.DebugLevel.warn=Warn
+esp320.menu.DebugLevel.warn.build.code_debug=2
+esp320.menu.DebugLevel.info=Info
+esp320.menu.DebugLevel.info.build.code_debug=3
+esp320.menu.DebugLevel.debug=Debug
+esp320.menu.DebugLevel.debug.build.code_debug=4
+esp320.menu.DebugLevel.verbose=Verbose
+esp320.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -2850,6 +3045,19 @@ nano32.menu.UploadSpeed.460800.upload.speed=460800
 nano32.menu.UploadSpeed.512000.windows=512000
 nano32.menu.UploadSpeed.512000.upload.speed=512000
 
+nano32.menu.DebugLevel.none=None
+nano32.menu.DebugLevel.none.build.code_debug=0
+nano32.menu.DebugLevel.error=Error
+nano32.menu.DebugLevel.error.build.code_debug=1
+nano32.menu.DebugLevel.warn=Warn
+nano32.menu.DebugLevel.warn.build.code_debug=2
+nano32.menu.DebugLevel.info=Info
+nano32.menu.DebugLevel.info.build.code_debug=3
+nano32.menu.DebugLevel.debug=Debug
+nano32.menu.DebugLevel.debug.build.code_debug=4
+nano32.menu.DebugLevel.verbose=Verbose
+nano32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 d32.name=LOLIN D32
@@ -2890,14 +3098,10 @@ d32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 d32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 d32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
-
 d32.menu.FlashFreq.80=80MHz
 d32.menu.FlashFreq.80.build.flash_freq=80m
 d32.menu.FlashFreq.40=40MHz
 d32.menu.FlashFreq.40.build.flash_freq=40m
-
-
 
 d32.menu.UploadSpeed.921600=921600
 d32.menu.UploadSpeed.921600.upload.speed=921600
@@ -2974,14 +3178,10 @@ d32_pro.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 d32_pro.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 d32_pro.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
-
 d32_pro.menu.FlashFreq.80=80MHz
 d32_pro.menu.FlashFreq.80.build.flash_freq=80m
 d32_pro.menu.FlashFreq.40=40MHz
 d32_pro.menu.FlashFreq.40.build.flash_freq=40m
-
-
 
 d32_pro.menu.UploadSpeed.921600=921600
 d32_pro.menu.UploadSpeed.921600.upload.speed=921600
@@ -3087,6 +3287,19 @@ lolin32.menu.UploadSpeed.460800.upload.speed=460800
 lolin32.menu.UploadSpeed.512000.windows=512000
 lolin32.menu.UploadSpeed.512000.upload.speed=512000
 
+lolin32.menu.DebugLevel.none=None
+lolin32.menu.DebugLevel.none.build.code_debug=0
+lolin32.menu.DebugLevel.error=Error
+lolin32.menu.DebugLevel.error.build.code_debug=1
+lolin32.menu.DebugLevel.warn=Warn
+lolin32.menu.DebugLevel.warn.build.code_debug=2
+lolin32.menu.DebugLevel.info=Info
+lolin32.menu.DebugLevel.info.build.code_debug=3
+lolin32.menu.DebugLevel.debug=Debug
+lolin32.menu.DebugLevel.debug.build.code_debug=4
+lolin32.menu.DebugLevel.verbose=Verbose
+lolin32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 lolin32-lite.name=WEMOS LOLIN32 Lite
@@ -3162,6 +3375,19 @@ lolin32-lite.menu.UploadSpeed.460800.upload.speed=460800
 lolin32-lite.menu.UploadSpeed.512000.windows=512000
 lolin32-lite.menu.UploadSpeed.512000.upload.speed=512000
 
+lolin32-lite.menu.DebugLevel.none=None
+lolin32-lite.menu.DebugLevel.none.build.code_debug=0
+lolin32-lite.menu.DebugLevel.error=Error
+lolin32-lite.menu.DebugLevel.error.build.code_debug=1
+lolin32-lite.menu.DebugLevel.warn=Warn
+lolin32-lite.menu.DebugLevel.warn.build.code_debug=2
+lolin32-lite.menu.DebugLevel.info=Info
+lolin32-lite.menu.DebugLevel.info.build.code_debug=3
+lolin32-lite.menu.DebugLevel.debug=Debug
+lolin32-lite.menu.DebugLevel.debug.build.code_debug=4
+lolin32-lite.menu.DebugLevel.verbose=Verbose
+lolin32-lite.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 pocket_32.name=Dongsen Tech Pocket 32
@@ -3209,6 +3435,19 @@ pocket_32.menu.UploadSpeed.460800.macosx=460800
 pocket_32.menu.UploadSpeed.460800.upload.speed=460800
 pocket_32.menu.UploadSpeed.512000.windows=512000
 pocket_32.menu.UploadSpeed.512000.upload.speed=512000
+
+pocket_32.menu.DebugLevel.none=None
+pocket_32.menu.DebugLevel.none.build.code_debug=0
+pocket_32.menu.DebugLevel.error=Error
+pocket_32.menu.DebugLevel.error.build.code_debug=1
+pocket_32.menu.DebugLevel.warn=Warn
+pocket_32.menu.DebugLevel.warn.build.code_debug=2
+pocket_32.menu.DebugLevel.info=Info
+pocket_32.menu.DebugLevel.info.build.code_debug=3
+pocket_32.menu.DebugLevel.debug=Debug
+pocket_32.menu.DebugLevel.debug.build.code_debug=4
+pocket_32.menu.DebugLevel.verbose=Verbose
+pocket_32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3319,6 +3558,19 @@ espea32.menu.UploadSpeed.460800.upload.speed=460800
 espea32.menu.UploadSpeed.512000.windows=512000
 espea32.menu.UploadSpeed.512000.upload.speed=512000
 
+espea32.menu.DebugLevel.none=None
+espea32.menu.DebugLevel.none.build.code_debug=0
+espea32.menu.DebugLevel.error=Error
+espea32.menu.DebugLevel.error.build.code_debug=1
+espea32.menu.DebugLevel.warn=Warn
+espea32.menu.DebugLevel.warn.build.code_debug=2
+espea32.menu.DebugLevel.info=Info
+espea32.menu.DebugLevel.info.build.code_debug=3
+espea32.menu.DebugLevel.debug=Debug
+espea32.menu.DebugLevel.debug.build.code_debug=4
+espea32.menu.DebugLevel.verbose=Verbose
+espea32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 quantum.name=Noduino Quantum
@@ -3366,6 +3618,19 @@ quantum.menu.UploadSpeed.460800.macosx=460800
 quantum.menu.UploadSpeed.460800.upload.speed=460800
 quantum.menu.UploadSpeed.512000.windows=512000
 quantum.menu.UploadSpeed.512000.upload.speed=512000
+
+quantum.menu.DebugLevel.none=None
+quantum.menu.DebugLevel.none.build.code_debug=0
+quantum.menu.DebugLevel.error=Error
+quantum.menu.DebugLevel.error.build.code_debug=1
+quantum.menu.DebugLevel.warn=Warn
+quantum.menu.DebugLevel.warn.build.code_debug=2
+quantum.menu.DebugLevel.info=Info
+quantum.menu.DebugLevel.info.build.code_debug=3
+quantum.menu.DebugLevel.debug=Debug
+quantum.menu.DebugLevel.debug.build.code_debug=4
+quantum.menu.DebugLevel.verbose=Verbose
+quantum.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3485,6 +3750,19 @@ hornbill32dev.menu.UploadSpeed.460800.upload.speed=460800
 hornbill32dev.menu.UploadSpeed.512000.windows=512000
 hornbill32dev.menu.UploadSpeed.512000.upload.speed=512000
 
+hornbill32dev.menu.DebugLevel.none=None
+hornbill32dev.menu.DebugLevel.none.build.code_debug=0
+hornbill32dev.menu.DebugLevel.error=Error
+hornbill32dev.menu.DebugLevel.error.build.code_debug=1
+hornbill32dev.menu.DebugLevel.warn=Warn
+hornbill32dev.menu.DebugLevel.warn.build.code_debug=2
+hornbill32dev.menu.DebugLevel.info=Info
+hornbill32dev.menu.DebugLevel.info.build.code_debug=3
+hornbill32dev.menu.DebugLevel.debug=Debug
+hornbill32dev.menu.DebugLevel.debug.build.code_debug=4
+hornbill32dev.menu.DebugLevel.verbose=Verbose
+hornbill32dev.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 hornbill32minima.name=Hornbill ESP32 Minima
@@ -3531,6 +3809,19 @@ hornbill32minima.menu.UploadSpeed.460800.macosx=460800
 hornbill32minima.menu.UploadSpeed.460800.upload.speed=460800
 hornbill32minima.menu.UploadSpeed.512000.windows=512000
 hornbill32minima.menu.UploadSpeed.512000.upload.speed=512000
+
+hornbill32minima.menu.DebugLevel.none=None
+hornbill32minima.menu.DebugLevel.none.build.code_debug=0
+hornbill32minima.menu.DebugLevel.error=Error
+hornbill32minima.menu.DebugLevel.error.build.code_debug=1
+hornbill32minima.menu.DebugLevel.warn=Warn
+hornbill32minima.menu.DebugLevel.warn.build.code_debug=2
+hornbill32minima.menu.DebugLevel.info=Info
+hornbill32minima.menu.DebugLevel.info.build.code_debug=3
+hornbill32minima.menu.DebugLevel.debug=Debug
+hornbill32minima.menu.DebugLevel.debug.build.code_debug=4
+hornbill32minima.menu.DebugLevel.verbose=Verbose
+hornbill32minima.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3580,6 +3871,19 @@ firebeetle32.menu.UploadSpeed.460800.upload.speed=460800
 firebeetle32.menu.UploadSpeed.512000.windows=512000
 firebeetle32.menu.UploadSpeed.512000.upload.speed=512000
 
+firebeetle32.menu.DebugLevel.none=None
+firebeetle32.menu.DebugLevel.none.build.code_debug=0
+firebeetle32.menu.DebugLevel.error=Error
+firebeetle32.menu.DebugLevel.error.build.code_debug=1
+firebeetle32.menu.DebugLevel.warn=Warn
+firebeetle32.menu.DebugLevel.warn.build.code_debug=2
+firebeetle32.menu.DebugLevel.info=Info
+firebeetle32.menu.DebugLevel.info.build.code_debug=3
+firebeetle32.menu.DebugLevel.debug=Debug
+firebeetle32.menu.DebugLevel.debug.build.code_debug=4
+firebeetle32.menu.DebugLevel.verbose=Verbose
+firebeetle32.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 intorobot-fig.name=IntoRobot Fig
@@ -3628,6 +3932,19 @@ intorobot-fig.menu.UploadSpeed.460800.upload.speed=460800
 intorobot-fig.menu.UploadSpeed.512000.windows=512000
 intorobot-fig.menu.UploadSpeed.512000.upload.speed=512000
 
+intorobot-fig.menu.DebugLevel.none=None
+intorobot-fig.menu.DebugLevel.none.build.code_debug=0
+intorobot-fig.menu.DebugLevel.error=Error
+intorobot-fig.menu.DebugLevel.error.build.code_debug=1
+intorobot-fig.menu.DebugLevel.warn=Warn
+intorobot-fig.menu.DebugLevel.warn.build.code_debug=2
+intorobot-fig.menu.DebugLevel.info=Info
+intorobot-fig.menu.DebugLevel.info.build.code_debug=3
+intorobot-fig.menu.DebugLevel.debug=Debug
+intorobot-fig.menu.DebugLevel.debug.build.code_debug=4
+intorobot-fig.menu.DebugLevel.verbose=Verbose
+intorobot-fig.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 onehorse32dev.name=Onehorse ESP32 Dev Module
@@ -3675,6 +3992,19 @@ onehorse32dev.menu.UploadSpeed.460800.macosx=460800
 onehorse32dev.menu.UploadSpeed.460800.upload.speed=460800
 onehorse32dev.menu.UploadSpeed.512000.windows=512000
 onehorse32dev.menu.UploadSpeed.512000.upload.speed=512000
+
+onehorse32dev.menu.DebugLevel.none=None
+onehorse32dev.menu.DebugLevel.none.build.code_debug=0
+onehorse32dev.menu.DebugLevel.error=Error
+onehorse32dev.menu.DebugLevel.error.build.code_debug=1
+onehorse32dev.menu.DebugLevel.warn=Warn
+onehorse32dev.menu.DebugLevel.warn.build.code_debug=2
+onehorse32dev.menu.DebugLevel.info=Info
+onehorse32dev.menu.DebugLevel.info.build.code_debug=3
+onehorse32dev.menu.DebugLevel.debug=Debug
+onehorse32dev.menu.DebugLevel.debug.build.code_debug=4
+onehorse32dev.menu.DebugLevel.verbose=Verbose
+onehorse32dev.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -3801,6 +4131,13 @@ adafruit_metro_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_metro_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_metro_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
+adafruit_metro_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_metro_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_metro_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_metro_esp32s2.menu.UploadMode.default=UART0
+adafruit_metro_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_metro_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
+
 adafruit_metro_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_metro_esp32s2.menu.PSRAM.disabled=Disabled
@@ -3910,16 +4247,15 @@ adafruit_metro_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_metro_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_metro_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
 
 adafruit_magtag29_esp32s2.name=Adafruit MagTag 2.9"
 adafruit_magtag29_esp32s2.vid.0=0x239A
-adafruit_magtag29_esp32s2.pid.0=0x80DF
+adafruit_magtag29_esp32s2.pid.0=0x80E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x00DF
+adafruit_magtag29_esp32s2.pid.1=0x00E5
 adafruit_magtag29_esp32s2.vid.1=0x239A
-adafruit_magtag29_esp32s2.pid.1=0x80E0
+adafruit_magtag29_esp32s2.pid.1=0x80E6
 
 adafruit_magtag29_esp32s2.upload.tool=esptool_py
 adafruit_magtag29_esp32s2.upload.maximum_size=1310720
@@ -3965,6 +4301,13 @@ adafruit_magtag29_esp32s2.menu.DFUOnBoot.default=Disabled
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_magtag29_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_magtag29_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_magtag29_esp32s2.menu.UploadMode.default=UART0
+adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -4075,7 +4418,6 @@ adafruit_magtag29_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
 
 adafruit_funhouse_esp32s2.name=Adafruit FunHouse
@@ -4130,6 +4472,13 @@ adafruit_funhouse_esp32s2.menu.DFUOnBoot.default=Disabled
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu=Enabled
 adafruit_funhouse_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_funhouse_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_funhouse_esp32s2.menu.UploadMode.default=UART0
+adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled=Enabled
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
@@ -4240,171 +4589,504 @@ adafruit_funhouse_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+##############################################################
+
+adafruit_feather_esp32s2.name=Adafruit Feather ESP32-S2
+adafruit_feather_esp32s2.vid.0=0x239A
+adafruit_feather_esp32s2.pid.0=0x80EB
+adafruit_feather_esp32s2.vid.1=0x239A
+adafruit_feather_esp32s2.pid.1=0x00EB
+adafruit_feather_esp32s2.vid.1=0x239A
+adafruit_feather_esp32s2.pid.1=0x80EC
+
+adafruit_feather_esp32s2.upload.tool=esptool_py
+adafruit_feather_esp32s2.upload.maximum_size=1310720
+adafruit_feather_esp32s2.upload.maximum_data_size=327680
+adafruit_feather_esp32s2.upload.flags=
+adafruit_feather_esp32s2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s2.upload.use_1200bps_touch=true
+adafruit_feather_esp32s2.upload.wait_for_upload_port=true
+
+adafruit_feather_esp32s2.serial.disableDTR=false
+adafruit_feather_esp32s2.serial.disableRTS=false
+
+adafruit_feather_esp32s2.build.tarch=xtensa
+adafruit_feather_esp32s2.build.bootloader_addr=0x1000
+adafruit_feather_esp32s2.build.target=esp32s2
+adafruit_feather_esp32s2.build.mcu=esp32s2
+adafruit_feather_esp32s2.build.core=esp32
+adafruit_feather_esp32s2.build.variant=adafruit_feather_esp32s2
+adafruit_feather_esp32s2.build.board=ADAFRUIT_FEATHER_ESP32S2
+
+adafruit_feather_esp32s2.build.cdc_on_boot=1
+adafruit_feather_esp32s2.build.msc_on_boot=0
+adafruit_feather_esp32s2.build.dfu_on_boot=0
+adafruit_feather_esp32s2.build.f_cpu=240000000L
+adafruit_feather_esp32s2.build.flash_size=4MB
+adafruit_feather_esp32s2.build.flash_freq=80m
+adafruit_feather_esp32s2.build.flash_mode=qio
+adafruit_feather_esp32s2.build.boot=qio
+adafruit_feather_esp32s2.build.partitions=default
+adafruit_feather_esp32s2.build.defines=
+
+adafruit_feather_esp32s2.menu.CDCOnBoot.cdc=Enabled
+adafruit_feather_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_feather_esp32s2.menu.CDCOnBoot.default=Disabled
+adafruit_feather_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_feather_esp32s2.menu.MSCOnBoot.default=Disabled
+adafruit_feather_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_feather_esp32s2.menu.MSCOnBoot.msc=Enabled
+adafruit_feather_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_feather_esp32s2.menu.DFUOnBoot.default=Disabled
+adafruit_feather_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_feather_esp32s2.menu.DFUOnBoot.dfu=Enabled
+adafruit_feather_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_feather_esp32s2.menu.UploadMode.cdc=Internal USB
+adafruit_feather_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_feather_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_feather_esp32s2.menu.UploadMode.default=UART0
+adafruit_feather_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_feather_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+adafruit_feather_esp32s2.menu.PSRAM.enabled=Enabled
+adafruit_feather_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2.menu.PSRAM.disabled=Disabled
+adafruit_feather_esp32s2.menu.PSRAM.disabled.build.defines=
+
+adafruit_feather_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.default.build.partitions=default
+adafruit_feather_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+adafruit_feather_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+adafruit_feather_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_feather_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+adafruit_feather_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+adafruit_feather_esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+adafruit_feather_esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+adafruit_feather_esp32s2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+adafruit_feather_esp32s2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+adafruit_feather_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+adafruit_feather_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+adafruit_feather_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+adafruit_feather_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+adafruit_feather_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
+adafruit_feather_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+adafruit_feather_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+adafruit_feather_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+adafruit_feather_esp32s2.menu.CPUFreq.240=240MHz (WiFi)
+adafruit_feather_esp32s2.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_feather_esp32s2.menu.CPUFreq.160=160MHz (WiFi)
+adafruit_feather_esp32s2.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_feather_esp32s2.menu.CPUFreq.80=80MHz (WiFi)
+adafruit_feather_esp32s2.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_feather_esp32s2.menu.CPUFreq.40=40MHz
+adafruit_feather_esp32s2.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_feather_esp32s2.menu.CPUFreq.20=20MHz
+adafruit_feather_esp32s2.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_feather_esp32s2.menu.CPUFreq.10=10MHz
+adafruit_feather_esp32s2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+adafruit_feather_esp32s2.menu.FlashMode.qio=QIO
+adafruit_feather_esp32s2.menu.FlashMode.qio.build.flash_mode=dio
+adafruit_feather_esp32s2.menu.FlashMode.qio.build.boot=qio
+adafruit_feather_esp32s2.menu.FlashMode.dio=DIO
+adafruit_feather_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
+adafruit_feather_esp32s2.menu.FlashMode.dio.build.boot=dio
+adafruit_feather_esp32s2.menu.FlashMode.qout=QOUT
+adafruit_feather_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
+adafruit_feather_esp32s2.menu.FlashMode.qout.build.boot=qout
+adafruit_feather_esp32s2.menu.FlashMode.dout=DOUT
+adafruit_feather_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
+adafruit_feather_esp32s2.menu.FlashMode.dout.build.boot=dout
+
+adafruit_feather_esp32s2.menu.FlashFreq.80=80MHz
+adafruit_feather_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
+adafruit_feather_esp32s2.menu.FlashFreq.40=40MHz
+adafruit_feather_esp32s2.menu.FlashFreq.40.build.flash_freq=40m
+
+adafruit_feather_esp32s2.menu.FlashSize.4M=4MB (32Mb)
+adafruit_feather_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
+adafruit_feather_esp32s2.menu.FlashSize.8M=8MB (64Mb)
+adafruit_feather_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
+adafruit_feather_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
+adafruit_feather_esp32s2.menu.FlashSize.2M=2MB (16Mb)
+adafruit_feather_esp32s2.menu.FlashSize.2M.build.flash_size=2MB
+adafruit_feather_esp32s2.menu.FlashSize.2M.build.partitions=minimal
+adafruit_feather_esp32s2.menu.FlashSize.16M=16MB (128Mb)
+adafruit_feather_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
+
+adafruit_feather_esp32s2.menu.UploadSpeed.921600=921600
+adafruit_feather_esp32s2.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_feather_esp32s2.menu.UploadSpeed.115200=115200
+adafruit_feather_esp32s2.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_feather_esp32s2.menu.UploadSpeed.256000.windows=256000
+adafruit_feather_esp32s2.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_feather_esp32s2.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_feather_esp32s2.menu.UploadSpeed.230400=230400
+adafruit_feather_esp32s2.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_feather_esp32s2.menu.UploadSpeed.460800.linux=460800
+adafruit_feather_esp32s2.menu.UploadSpeed.460800.macosx=460800
+adafruit_feather_esp32s2.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_feather_esp32s2.menu.UploadSpeed.512000.windows=512000
+adafruit_feather_esp32s2.menu.UploadSpeed.512000.upload.speed=512000
+
+adafruit_feather_esp32s2.menu.DebugLevel.none=None
+adafruit_feather_esp32s2.menu.DebugLevel.none.build.code_debug=0
+adafruit_feather_esp32s2.menu.DebugLevel.error=Error
+adafruit_feather_esp32s2.menu.DebugLevel.error.build.code_debug=1
+adafruit_feather_esp32s2.menu.DebugLevel.warn=Warn
+adafruit_feather_esp32s2.menu.DebugLevel.warn.build.code_debug=2
+adafruit_feather_esp32s2.menu.DebugLevel.info=Info
+adafruit_feather_esp32s2.menu.DebugLevel.info.build.code_debug=3
+adafruit_feather_esp32s2.menu.DebugLevel.debug=Debug
+adafruit_feather_esp32s2.menu.DebugLevel.debug.build.code_debug=4
+adafruit_feather_esp32s2.menu.DebugLevel.verbose=Verbose
+adafruit_feather_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-adafruit_feather_esp32s2_nopsram.name=Adafruit Feather ESP32-S2 (no PSRAM)
-adafruit_feather_esp32s2_nopsram.vid.0=0x239A
-adafruit_feather_esp32s2_nopsram.pid.0=0x80EB
-adafruit_feather_esp32s2_nopsram.vid.1=0x239A
-adafruit_feather_esp32s2_nopsram.pid.1=0x00EB
-adafruit_feather_esp32s2_nopsram.vid.1=0x239A
-adafruit_feather_esp32s2_nopsram.pid.1=0x80EC
+adafruit_feather_esp32s2_tft.name=Adafruit Feather ESP32-S2 TFT
+adafruit_feather_esp32s2_tft.vid.0=0x239A
+adafruit_feather_esp32s2_tft.pid.0=0x810F
+adafruit_feather_esp32s2_tft.vid.1=0x239A
+adafruit_feather_esp32s2_tft.pid.1=0x010F
+adafruit_feather_esp32s2_tft.vid.1=0x239A
+adafruit_feather_esp32s2_tft.pid.1=0x8110
 
-adafruit_feather_esp32s2_nopsram.upload.tool=esptool_py
-adafruit_feather_esp32s2_nopsram.upload.maximum_size=1310720
-adafruit_feather_esp32s2_nopsram.upload.maximum_data_size=327680
-adafruit_feather_esp32s2_nopsram.upload.flags=
-adafruit_feather_esp32s2_nopsram.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
-adafruit_feather_esp32s2_nopsram.upload.use_1200bps_touch=true
-adafruit_feather_esp32s2_nopsram.upload.wait_for_upload_port=true
+adafruit_feather_esp32s2_tft.upload.tool=esptool_py
+adafruit_feather_esp32s2_tft.upload.maximum_size=1310720
+adafruit_feather_esp32s2_tft.upload.maximum_data_size=327680
+adafruit_feather_esp32s2_tft.upload.flags=
+adafruit_feather_esp32s2_tft.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s2_tft.upload.use_1200bps_touch=true
+adafruit_feather_esp32s2_tft.upload.wait_for_upload_port=true
 
-adafruit_feather_esp32s2_nopsram.serial.disableDTR=false
-adafruit_feather_esp32s2_nopsram.serial.disableRTS=false
+adafruit_feather_esp32s2_tft.serial.disableDTR=false
+adafruit_feather_esp32s2_tft.serial.disableRTS=false
 
-adafruit_feather_esp32s2_nopsram.build.tarch=xtensa
-adafruit_feather_esp32s2_nopsram.build.bootloader_addr=0x1000
-adafruit_feather_esp32s2_nopsram.build.target=esp32s2
-adafruit_feather_esp32s2_nopsram.build.mcu=esp32s2
-adafruit_feather_esp32s2_nopsram.build.core=esp32
-adafruit_feather_esp32s2_nopsram.build.variant=adafruit_feather_esp32s2
-adafruit_feather_esp32s2_nopsram.build.board=ADAFRUIT_FEATHER_ESP32S2_NOPSRAM
+adafruit_feather_esp32s2_tft.build.tarch=xtensa
+adafruit_feather_esp32s2_tft.build.bootloader_addr=0x1000
+adafruit_feather_esp32s2_tft.build.target=esp32s2
+adafruit_feather_esp32s2_tft.build.mcu=esp32s2
+adafruit_feather_esp32s2_tft.build.core=esp32
+adafruit_feather_esp32s2_tft.build.variant=adafruit_feather_esp32s2_tft
+adafruit_feather_esp32s2_tft.build.board=ADAFRUIT_FEATHER_ESP32S2_TFT
 
-adafruit_feather_esp32s2_nopsram.build.cdc_on_boot=0
-adafruit_feather_esp32s2_nopsram.build.msc_on_boot=0
-adafruit_feather_esp32s2_nopsram.build.dfu_on_boot=0
-adafruit_feather_esp32s2_nopsram.build.f_cpu=240000000L
-adafruit_feather_esp32s2_nopsram.build.flash_size=4MB
-adafruit_feather_esp32s2_nopsram.build.flash_freq=80m
-adafruit_feather_esp32s2_nopsram.build.flash_mode=qio
-adafruit_feather_esp32s2_nopsram.build.boot=qio
-adafruit_feather_esp32s2_nopsram.build.partitions=default
-adafruit_feather_esp32s2_nopsram.build.defines=
+adafruit_feather_esp32s2_tft.build.cdc_on_boot=0
+adafruit_feather_esp32s2_tft.build.msc_on_boot=0
+adafruit_feather_esp32s2_tft.build.dfu_on_boot=0
+adafruit_feather_esp32s2_tft.build.f_cpu=240000000L
+adafruit_feather_esp32s2_tft.build.flash_size=4MB
+adafruit_feather_esp32s2_tft.build.flash_freq=80m
+adafruit_feather_esp32s2_tft.build.flash_mode=qio
+adafruit_feather_esp32s2_tft.build.boot=qio
+adafruit_feather_esp32s2_tft.build.partitions=default
+adafruit_feather_esp32s2_tft.build.defines=
 
-adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.cdc=Enabled
-adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.default=Disabled
-adafruit_feather_esp32s2_nopsram.menu.CDCOnBoot.default.build.cdc_on_boot=0
+adafruit_feather_esp32s2_tft.menu.CDCOnBoot.cdc=Enabled
+adafruit_feather_esp32s2_tft.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_feather_esp32s2_tft.menu.CDCOnBoot.default=Disabled
+adafruit_feather_esp32s2_tft.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
-adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.default=Disabled
-adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.default.build.msc_on_boot=0
-adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.msc=Enabled
-adafruit_feather_esp32s2_nopsram.menu.MSCOnBoot.msc.build.msc_on_boot=1
+adafruit_feather_esp32s2_tft.menu.MSCOnBoot.default=Disabled
+adafruit_feather_esp32s2_tft.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_feather_esp32s2_tft.menu.MSCOnBoot.msc=Enabled
+adafruit_feather_esp32s2_tft.menu.MSCOnBoot.msc.build.msc_on_boot=1
 
-adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.default=Disabled
-adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.default.build.dfu_on_boot=0
-adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu=Enabled
-adafruit_feather_esp32s2_nopsram.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+adafruit_feather_esp32s2_tft.menu.DFUOnBoot.default=Disabled
+adafruit_feather_esp32s2_tft.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_feather_esp32s2_tft.menu.DFUOnBoot.dfu=Enabled
+adafruit_feather_esp32s2_tft.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.disabled.build.defines=
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.enabled=Enabled
-adafruit_feather_esp32s2_nopsram.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2_tft.menu.PSRAM.enabled=Enabled
+adafruit_feather_esp32s2_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2_tft.menu.PSRAM.disabled=Disabled
+adafruit_feather_esp32s2_tft.menu.PSRAM.disabled.build.defines=
 
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default.build.partitions=default
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.minimal.build.partitions=minimal
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.no_ota.build.partitions=no_ota
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.huge_app.build.partitions=huge_app
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.fatflash.build.partitions=ffat
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-adafruit_feather_esp32s2_nopsram.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.default.build.partitions=default
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.minimal.build.partitions=minimal
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.no_ota.build.partitions=no_ota
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.huge_app.build.partitions=huge_app
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.fatflash.build.partitions=ffat
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.240=240MHz (WiFi)
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.240.build.f_cpu=240000000L
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.160=160MHz (WiFi)
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.160.build.f_cpu=160000000L
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.80=80MHz (WiFi)
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.80.build.f_cpu=80000000L
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.40=40MHz
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.40.build.f_cpu=40000000L
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.20=20MHz
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.20.build.f_cpu=20000000L
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.10=10MHz
-adafruit_feather_esp32s2_nopsram.menu.CPUFreq.10.build.f_cpu=10000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.240=240MHz (WiFi)
+adafruit_feather_esp32s2_tft.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.160=160MHz (WiFi)
+adafruit_feather_esp32s2_tft.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.80=80MHz (WiFi)
+adafruit_feather_esp32s2_tft.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.40=40MHz
+adafruit_feather_esp32s2_tft.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.20=20MHz
+adafruit_feather_esp32s2_tft.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_feather_esp32s2_tft.menu.CPUFreq.10=10MHz
+adafruit_feather_esp32s2_tft.menu.CPUFreq.10.build.f_cpu=10000000L
 
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qio=QIO
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qio.build.flash_mode=dio
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qio.build.boot=qio
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dio=DIO
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dio.build.flash_mode=dio
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dio.build.boot=dio
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qout=QOUT
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.qout.build.boot=qout
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dout=DOUT
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_feather_esp32s2_nopsram.menu.FlashMode.dout.build.boot=dout
+adafruit_feather_esp32s2_tft.menu.FlashMode.qio=QIO
+adafruit_feather_esp32s2_tft.menu.FlashMode.qio.build.flash_mode=dio
+adafruit_feather_esp32s2_tft.menu.FlashMode.qio.build.boot=qio
+adafruit_feather_esp32s2_tft.menu.FlashMode.dio=DIO
+adafruit_feather_esp32s2_tft.menu.FlashMode.dio.build.flash_mode=dio
+adafruit_feather_esp32s2_tft.menu.FlashMode.dio.build.boot=dio
+adafruit_feather_esp32s2_tft.menu.FlashMode.qout=QOUT
+adafruit_feather_esp32s2_tft.menu.FlashMode.qout.build.flash_mode=dout
+adafruit_feather_esp32s2_tft.menu.FlashMode.qout.build.boot=qout
+adafruit_feather_esp32s2_tft.menu.FlashMode.dout=DOUT
+adafruit_feather_esp32s2_tft.menu.FlashMode.dout.build.flash_mode=dout
+adafruit_feather_esp32s2_tft.menu.FlashMode.dout.build.boot=dout
 
-adafruit_feather_esp32s2_nopsram.menu.FlashFreq.80=80MHz
-adafruit_feather_esp32s2_nopsram.menu.FlashFreq.80.build.flash_freq=80m
-adafruit_feather_esp32s2_nopsram.menu.FlashFreq.40=40MHz
-adafruit_feather_esp32s2_nopsram.menu.FlashFreq.40.build.flash_freq=40m
+adafruit_feather_esp32s2_tft.menu.FlashFreq.80=80MHz
+adafruit_feather_esp32s2_tft.menu.FlashFreq.80.build.flash_freq=80m
+adafruit_feather_esp32s2_tft.menu.FlashFreq.40=40MHz
+adafruit_feather_esp32s2_tft.menu.FlashFreq.40.build.flash_freq=40m
 
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.4M=4MB (32Mb)
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.4M.build.flash_size=4MB
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.8M=8MB (64Mb)
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.8M.build.flash_size=8MB
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.8M.build.partitions=default_8MB
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.2M=2MB (16Mb)
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.2M.build.flash_size=2MB
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.2M.build.partitions=minimal
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.16M=16MB (128Mb)
-adafruit_feather_esp32s2_nopsram.menu.FlashSize.16M.build.flash_size=16MB
+adafruit_feather_esp32s2_tft.menu.FlashSize.4M=4MB (32Mb)
+adafruit_feather_esp32s2_tft.menu.FlashSize.4M.build.flash_size=4MB
+adafruit_feather_esp32s2_tft.menu.FlashSize.8M=8MB (64Mb)
+adafruit_feather_esp32s2_tft.menu.FlashSize.8M.build.flash_size=8MB
+adafruit_feather_esp32s2_tft.menu.FlashSize.8M.build.partitions=default_8MB
+adafruit_feather_esp32s2_tft.menu.FlashSize.2M=2MB (16Mb)
+adafruit_feather_esp32s2_tft.menu.FlashSize.2M.build.flash_size=2MB
+adafruit_feather_esp32s2_tft.menu.FlashSize.2M.build.partitions=minimal
+adafruit_feather_esp32s2_tft.menu.FlashSize.16M=16MB (128Mb)
+adafruit_feather_esp32s2_tft.menu.FlashSize.16M.build.flash_size=16MB
 
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.921600=921600
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.921600.upload.speed=921600
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.115200=115200
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.115200.upload.speed=115200
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.256000.windows=256000
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.256000.upload.speed=256000
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.230400.windows.upload.speed=256000
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.230400=230400
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.230400.upload.speed=230400
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.460800.linux=460800
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.460800.macosx=460800
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.460800.upload.speed=460800
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.512000.windows=512000
-adafruit_feather_esp32s2_nopsram.menu.UploadSpeed.512000.upload.speed=512000
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.921600=921600
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.115200=115200
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.256000.windows=256000
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.230400=230400
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.460800.linux=460800
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.460800.macosx=460800
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.512000.windows=512000
+adafruit_feather_esp32s2_tft.menu.UploadSpeed.512000.upload.speed=512000
 
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.none=None
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.none.build.code_debug=0
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.error=Error
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.error.build.code_debug=1
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.warn=Warn
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.warn.build.code_debug=2
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.info=Info
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.info.build.code_debug=3
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.debug=Debug
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.debug.build.code_debug=4
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.verbose=Verbose
-adafruit_feather_esp32s2_nopsram.menu.DebugLevel.verbose.build.code_debug=5
+adafruit_feather_esp32s2_tft.menu.DebugLevel.none=None
+adafruit_feather_esp32s2_tft.menu.DebugLevel.none.build.code_debug=0
+adafruit_feather_esp32s2_tft.menu.DebugLevel.error=Error
+adafruit_feather_esp32s2_tft.menu.DebugLevel.error.build.code_debug=1
+adafruit_feather_esp32s2_tft.menu.DebugLevel.warn=Warn
+adafruit_feather_esp32s2_tft.menu.DebugLevel.warn.build.code_debug=2
+adafruit_feather_esp32s2_tft.menu.DebugLevel.info=Info
+adafruit_feather_esp32s2_tft.menu.DebugLevel.info.build.code_debug=3
+adafruit_feather_esp32s2_tft.menu.DebugLevel.debug=Debug
+adafruit_feather_esp32s2_tft.menu.DebugLevel.debug.build.code_debug=4
+adafruit_feather_esp32s2_tft.menu.DebugLevel.verbose=Verbose
+adafruit_feather_esp32s2_tft.menu.DebugLevel.verbose.build.code_debug=5
 
+##############################################################
+
+adafruit_qtpy_esp32s2.name=Adafruit QT Py ESP32-S2
+adafruit_qtpy_esp32s2.vid.0=0x239A
+adafruit_qtpy_esp32s2.pid.0=0x8111
+adafruit_qtpy_esp32s2.vid.1=0x239A
+adafruit_qtpy_esp32s2.pid.1=0x0111
+adafruit_qtpy_esp32s2.vid.1=0x239A
+adafruit_qtpy_esp32s2.pid.1=0x8112
+
+adafruit_qtpy_esp32s2.upload.tool=esptool_py
+adafruit_qtpy_esp32s2.upload.maximum_size=1310720
+adafruit_qtpy_esp32s2.upload.maximum_data_size=327680
+adafruit_qtpy_esp32s2.upload.flags=
+adafruit_qtpy_esp32s2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_qtpy_esp32s2.upload.use_1200bps_touch=true
+adafruit_qtpy_esp32s2.upload.wait_for_upload_port=true
+
+adafruit_qtpy_esp32s2.serial.disableDTR=false
+adafruit_qtpy_esp32s2.serial.disableRTS=false
+
+adafruit_qtpy_esp32s2.build.tarch=xtensa
+adafruit_qtpy_esp32s2.build.bootloader_addr=0x1000
+adafruit_qtpy_esp32s2.build.target=esp32s2
+adafruit_qtpy_esp32s2.build.mcu=esp32s2
+adafruit_qtpy_esp32s2.build.core=esp32
+adafruit_qtpy_esp32s2.build.variant=adafruit_qtpy_esp32s2
+adafruit_qtpy_esp32s2.build.board=ADAFRUIT_QTPY_ESP32S2
+
+adafruit_qtpy_esp32s2.build.cdc_on_boot=0
+adafruit_qtpy_esp32s2.build.msc_on_boot=0
+adafruit_qtpy_esp32s2.build.dfu_on_boot=0
+adafruit_qtpy_esp32s2.build.f_cpu=240000000L
+adafruit_qtpy_esp32s2.build.flash_size=4MB
+adafruit_qtpy_esp32s2.build.flash_freq=80m
+adafruit_qtpy_esp32s2.build.flash_mode=qio
+adafruit_qtpy_esp32s2.build.boot=qio
+adafruit_qtpy_esp32s2.build.partitions=default
+adafruit_qtpy_esp32s2.build.defines=
+
+adafruit_qtpy_esp32s2.menu.CDCOnBoot.cdc=Enabled
+adafruit_qtpy_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_qtpy_esp32s2.menu.CDCOnBoot.default=Disabled
+adafruit_qtpy_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_qtpy_esp32s2.menu.MSCOnBoot.default=Disabled
+adafruit_qtpy_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_qtpy_esp32s2.menu.MSCOnBoot.msc=Enabled
+adafruit_qtpy_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_qtpy_esp32s2.menu.DFUOnBoot.default=Disabled
+adafruit_qtpy_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_qtpy_esp32s2.menu.DFUOnBoot.dfu=Enabled
+adafruit_qtpy_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_qtpy_esp32s2.menu.PSRAM.enabled=Enabled
+adafruit_qtpy_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qtpy_esp32s2.menu.PSRAM.disabled=Disabled
+adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=
+
+adafruit_qtpy_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.default.build.partitions=default
+adafruit_qtpy_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+adafruit_qtpy_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_qtpy_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+adafruit_qtpy_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+adafruit_qtpy_esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+adafruit_qtpy_esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+adafruit_qtpy_esp32s2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+adafruit_qtpy_esp32s2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+adafruit_qtpy_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+adafruit_qtpy_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+adafruit_qtpy_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+adafruit_qtpy_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
+adafruit_qtpy_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+adafruit_qtpy_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+adafruit_qtpy_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+adafruit_qtpy_esp32s2.menu.CPUFreq.240=240MHz (WiFi)
+adafruit_qtpy_esp32s2.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_qtpy_esp32s2.menu.CPUFreq.160=160MHz (WiFi)
+adafruit_qtpy_esp32s2.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_qtpy_esp32s2.menu.CPUFreq.80=80MHz (WiFi)
+adafruit_qtpy_esp32s2.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_qtpy_esp32s2.menu.CPUFreq.40=40MHz
+adafruit_qtpy_esp32s2.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_qtpy_esp32s2.menu.CPUFreq.20=20MHz
+adafruit_qtpy_esp32s2.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_qtpy_esp32s2.menu.CPUFreq.10=10MHz
+adafruit_qtpy_esp32s2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+adafruit_qtpy_esp32s2.menu.FlashMode.qio=QIO
+adafruit_qtpy_esp32s2.menu.FlashMode.qio.build.flash_mode=dio
+adafruit_qtpy_esp32s2.menu.FlashMode.qio.build.boot=qio
+adafruit_qtpy_esp32s2.menu.FlashMode.dio=DIO
+adafruit_qtpy_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
+adafruit_qtpy_esp32s2.menu.FlashMode.dio.build.boot=dio
+adafruit_qtpy_esp32s2.menu.FlashMode.qout=QOUT
+adafruit_qtpy_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
+adafruit_qtpy_esp32s2.menu.FlashMode.qout.build.boot=qout
+adafruit_qtpy_esp32s2.menu.FlashMode.dout=DOUT
+adafruit_qtpy_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
+adafruit_qtpy_esp32s2.menu.FlashMode.dout.build.boot=dout
+
+adafruit_qtpy_esp32s2.menu.FlashFreq.80=80MHz
+adafruit_qtpy_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
+adafruit_qtpy_esp32s2.menu.FlashFreq.40=40MHz
+adafruit_qtpy_esp32s2.menu.FlashFreq.40.build.flash_freq=40m
+
+adafruit_qtpy_esp32s2.menu.FlashSize.4M=4MB (32Mb)
+adafruit_qtpy_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
+adafruit_qtpy_esp32s2.menu.FlashSize.8M=8MB (64Mb)
+adafruit_qtpy_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
+adafruit_qtpy_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
+adafruit_qtpy_esp32s2.menu.FlashSize.2M=2MB (16Mb)
+adafruit_qtpy_esp32s2.menu.FlashSize.2M.build.flash_size=2MB
+adafruit_qtpy_esp32s2.menu.FlashSize.2M.build.partitions=minimal
+adafruit_qtpy_esp32s2.menu.FlashSize.16M=16MB (128Mb)
+adafruit_qtpy_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
+
+adafruit_qtpy_esp32s2.menu.UploadSpeed.921600=921600
+adafruit_qtpy_esp32s2.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_qtpy_esp32s2.menu.UploadSpeed.115200=115200
+adafruit_qtpy_esp32s2.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_qtpy_esp32s2.menu.UploadSpeed.256000.windows=256000
+adafruit_qtpy_esp32s2.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_qtpy_esp32s2.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_qtpy_esp32s2.menu.UploadSpeed.230400=230400
+adafruit_qtpy_esp32s2.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_qtpy_esp32s2.menu.UploadSpeed.460800.linux=460800
+adafruit_qtpy_esp32s2.menu.UploadSpeed.460800.macosx=460800
+adafruit_qtpy_esp32s2.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_qtpy_esp32s2.menu.UploadSpeed.512000.windows=512000
+adafruit_qtpy_esp32s2.menu.UploadSpeed.512000.upload.speed=512000
+
+adafruit_qtpy_esp32s2.menu.DebugLevel.none=None
+adafruit_qtpy_esp32s2.menu.DebugLevel.none.build.code_debug=0
+adafruit_qtpy_esp32s2.menu.DebugLevel.error=Error
+adafruit_qtpy_esp32s2.menu.DebugLevel.error.build.code_debug=1
+adafruit_qtpy_esp32s2.menu.DebugLevel.warn=Warn
+adafruit_qtpy_esp32s2.menu.DebugLevel.warn.build.code_debug=2
+adafruit_qtpy_esp32s2.menu.DebugLevel.info=Info
+adafruit_qtpy_esp32s2.menu.DebugLevel.info.build.code_debug=3
+adafruit_qtpy_esp32s2.menu.DebugLevel.debug=Debug
+adafruit_qtpy_esp32s2.menu.DebugLevel.debug.build.code_debug=4
+adafruit_qtpy_esp32s2.menu.DebugLevel.verbose=Verbose
+adafruit_qtpy_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4453,6 +5135,19 @@ nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
 nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.512000.windows=512000
 nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
+
+nodemcu-32s.menu.DebugLevel.none=None
+nodemcu-32s.menu.DebugLevel.none.build.code_debug=0
+nodemcu-32s.menu.DebugLevel.error=Error
+nodemcu-32s.menu.DebugLevel.error.build.code_debug=1
+nodemcu-32s.menu.DebugLevel.warn=Warn
+nodemcu-32s.menu.DebugLevel.warn.build.code_debug=2
+nodemcu-32s.menu.DebugLevel.info=Info
+nodemcu-32s.menu.DebugLevel.info.build.code_debug=3
+nodemcu-32s.menu.DebugLevel.debug=Debug
+nodemcu-32s.menu.DebugLevel.debug.build.code_debug=4
+nodemcu-32s.menu.DebugLevel.verbose=Verbose
+nodemcu-32s.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4596,7 +5291,7 @@ mhetesp32minikit.menu.DebugLevel.debug.build.code_debug=4
 mhetesp32minikit.menu.DebugLevel.verbose=Verbose
 mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
 
-#################################################################
+##############################################################
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
 
@@ -4643,6 +5338,19 @@ esp32vn-iot-uno.menu.UploadSpeed.460800.macosx=460800
 esp32vn-iot-uno.menu.UploadSpeed.460800.upload.speed=460800
 esp32vn-iot-uno.menu.UploadSpeed.512000.windows=512000
 esp32vn-iot-uno.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32vn-iot-uno.menu.DebugLevel.none=None
+esp32vn-iot-uno.menu.DebugLevel.none.build.code_debug=0
+esp32vn-iot-uno.menu.DebugLevel.error=Error
+esp32vn-iot-uno.menu.DebugLevel.error.build.code_debug=1
+esp32vn-iot-uno.menu.DebugLevel.warn=Warn
+esp32vn-iot-uno.menu.DebugLevel.warn.build.code_debug=2
+esp32vn-iot-uno.menu.DebugLevel.info=Info
+esp32vn-iot-uno.menu.DebugLevel.info.build.code_debug=3
+esp32vn-iot-uno.menu.DebugLevel.debug=Debug
+esp32vn-iot-uno.menu.DebugLevel.debug.build.code_debug=4
+esp32vn-iot-uno.menu.DebugLevel.verbose=Verbose
+esp32vn-iot-uno.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4796,7 +5504,6 @@ esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
 esp32-evb.menu.FlashFreq.40=40MHz
 esp32-evb.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-evb.menu.UploadSpeed.115200=115200
 esp32-evb.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -4808,6 +5515,19 @@ esp32-evb.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-evb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-evb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-evb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-evb.menu.DebugLevel.none=None
+esp32-evb.menu.DebugLevel.none.build.code_debug=0
+esp32-evb.menu.DebugLevel.error=Error
+esp32-evb.menu.DebugLevel.error.build.code_debug=1
+esp32-evb.menu.DebugLevel.warn=Warn
+esp32-evb.menu.DebugLevel.warn.build.code_debug=2
+esp32-evb.menu.DebugLevel.info=Info
+esp32-evb.menu.DebugLevel.info.build.code_debug=3
+esp32-evb.menu.DebugLevel.debug=Debug
+esp32-evb.menu.DebugLevel.debug.build.code_debug=4
+esp32-evb.menu.DebugLevel.verbose=Verbose
+esp32-evb.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4848,7 +5568,6 @@ esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
 esp32-gateway.menu.FlashFreq.40=40MHz
 esp32-gateway.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-gateway.menu.UploadSpeed.115200=115200
 esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -4860,6 +5579,19 @@ esp32-gateway.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-gateway.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-gateway.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-gateway.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-gateway.menu.DebugLevel.none=None
+esp32-gateway.menu.DebugLevel.none.build.code_debug=0
+esp32-gateway.menu.DebugLevel.error=Error
+esp32-gateway.menu.DebugLevel.error.build.code_debug=1
+esp32-gateway.menu.DebugLevel.warn=Warn
+esp32-gateway.menu.DebugLevel.warn.build.code_debug=2
+esp32-gateway.menu.DebugLevel.info=Info
+esp32-gateway.menu.DebugLevel.info.build.code_debug=3
+esp32-gateway.menu.DebugLevel.debug=Debug
+esp32-gateway.menu.DebugLevel.debug.build.code_debug=4
+esp32-gateway.menu.DebugLevel.verbose=Verbose
+esp32-gateway.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4894,7 +5626,6 @@ esp32-poe.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe.menu.FlashFreq.40=40MHz
 esp32-poe.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-poe.menu.UploadSpeed.115200=115200
 esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -4906,6 +5637,19 @@ esp32-poe.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-poe.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-poe.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-poe.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-poe.menu.DebugLevel.none=None
+esp32-poe.menu.DebugLevel.none.build.code_debug=0
+esp32-poe.menu.DebugLevel.error=Error
+esp32-poe.menu.DebugLevel.error.build.code_debug=1
+esp32-poe.menu.DebugLevel.warn=Warn
+esp32-poe.menu.DebugLevel.warn.build.code_debug=2
+esp32-poe.menu.DebugLevel.info=Info
+esp32-poe.menu.DebugLevel.info.build.code_debug=3
+esp32-poe.menu.DebugLevel.debug=Debug
+esp32-poe.menu.DebugLevel.debug.build.code_debug=4
+esp32-poe.menu.DebugLevel.verbose=Verbose
+esp32-poe.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -4940,7 +5684,6 @@ esp32-poe-iso.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe-iso.menu.FlashFreq.40=40MHz
 esp32-poe-iso.menu.FlashFreq.40.build.flash_freq=40m
 
-
 esp32-poe-iso.menu.UploadSpeed.115200=115200
 esp32-poe-iso.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -4952,6 +5695,19 @@ esp32-poe-iso.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 esp32-poe-iso.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-poe-iso.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-poe-iso.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32-poe-iso.menu.DebugLevel.none=None
+esp32-poe-iso.menu.DebugLevel.none.build.code_debug=0
+esp32-poe-iso.menu.DebugLevel.error=Error
+esp32-poe-iso.menu.DebugLevel.error.build.code_debug=1
+esp32-poe-iso.menu.DebugLevel.warn=Warn
+esp32-poe-iso.menu.DebugLevel.warn.build.code_debug=2
+esp32-poe-iso.menu.DebugLevel.info=Info
+esp32-poe-iso.menu.DebugLevel.info.build.code_debug=3
+esp32-poe-iso.menu.DebugLevel.debug=Debug
+esp32-poe-iso.menu.DebugLevel.debug.build.code_debug=4
+esp32-poe-iso.menu.DebugLevel.verbose=Verbose
+esp32-poe-iso.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5030,6 +5786,20 @@ esp32-DevKitLipo.menu.UploadSpeed.460800.macosx=460800
 esp32-DevKitLipo.menu.UploadSpeed.460800.upload.speed=460800
 esp32-DevKitLipo.menu.UploadSpeed.512000.windows=512000
 esp32-DevKitLipo.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32-DevKitLipo.menu.DebugLevel.none=None
+esp32-DevKitLipo.menu.DebugLevel.none.build.code_debug=0
+esp32-DevKitLipo.menu.DebugLevel.error=Error
+esp32-DevKitLipo.menu.DebugLevel.error.build.code_debug=1
+esp32-DevKitLipo.menu.DebugLevel.warn=Warn
+esp32-DevKitLipo.menu.DebugLevel.warn.build.code_debug=2
+esp32-DevKitLipo.menu.DebugLevel.info=Info
+esp32-DevKitLipo.menu.DebugLevel.info.build.code_debug=3
+esp32-DevKitLipo.menu.DebugLevel.debug=Debug
+esp32-DevKitLipo.menu.DebugLevel.debug.build.code_debug=4
+esp32-DevKitLipo.menu.DebugLevel.verbose=Verbose
+esp32-DevKitLipo.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 espino32.name=ThaiEasyElec's ESPino32
@@ -5077,6 +5847,19 @@ espino32.menu.UploadSpeed.460800.macosx=460800
 espino32.menu.UploadSpeed.460800.upload.speed=460800
 espino32.menu.UploadSpeed.512000.windows=512000
 espino32.menu.UploadSpeed.512000.upload.speed=512000
+
+espino32.menu.DebugLevel.none=None
+espino32.menu.DebugLevel.none.build.code_debug=0
+espino32.menu.DebugLevel.error=Error
+espino32.menu.DebugLevel.error.build.code_debug=1
+espino32.menu.DebugLevel.warn=Warn
+espino32.menu.DebugLevel.warn.build.code_debug=2
+espino32.menu.DebugLevel.info=Info
+espino32.menu.DebugLevel.info.build.code_debug=3
+espino32.menu.DebugLevel.debug=Debug
+espino32.menu.DebugLevel.debug.build.code_debug=4
+espino32.menu.DebugLevel.verbose=Verbose
+espino32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -5270,7 +6053,6 @@ m5stick-c.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 m5stick-c.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stick-c.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
 m5stick-c.menu.UploadSpeed.1500000=1500000
 m5stick-c.menu.UploadSpeed.1500000.upload.speed=1500000
 m5stick-c.menu.UploadSpeed.750000=750000
@@ -5281,8 +6063,6 @@ m5stick-c.menu.UploadSpeed.250000=250000
 m5stick-c.menu.UploadSpeed.250000.upload.speed=250000
 m5stick-c.menu.UploadSpeed.115200=115200
 m5stick-c.menu.UploadSpeed.115200.upload.speed=115200
-
-
 
 m5stick-c.menu.DebugLevel.none=None
 m5stick-c.menu.DebugLevel.none.build.code_debug=0
@@ -5335,7 +6115,6 @@ m5stack-atom.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA
 m5stack-atom.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack-atom.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 
-
 m5stack-atom.menu.UploadSpeed.1500000=1500000
 m5stack-atom.menu.UploadSpeed.1500000.upload.speed=1500000
 m5stack-atom.menu.UploadSpeed.750000=750000
@@ -5346,8 +6125,6 @@ m5stack-atom.menu.UploadSpeed.250000=250000
 m5stack-atom.menu.UploadSpeed.250000.upload.speed=250000
 m5stack-atom.menu.UploadSpeed.115200=115200
 m5stack-atom.menu.UploadSpeed.115200.upload.speed=115200
-
-
 
 m5stack-atom.menu.DebugLevel.none=None
 m5stack-atom.menu.DebugLevel.none.build.code_debug=0
@@ -5361,7 +6138,6 @@ m5stack-atom.menu.DebugLevel.debug=Debug
 m5stack-atom.menu.DebugLevel.debug.build.code_debug=4
 m5stack-atom.menu.DebugLevel.verbose=Verbose
 m5stack-atom.menu.DebugLevel.verbose.build.code_debug=5
-
 
 ##############################################################
 
@@ -6278,8 +7054,8 @@ espectro32.menu.DebugLevel.debug.build.code_debug=4
 espectro32.menu.DebugLevel.verbose=Verbose
 espectro32.menu.DebugLevel.verbose.build.code_debug=5
 
-
 ##############################################################
+
 CoreESP32.name=Microduino-CoreESP32
 
 CoreESP32.upload.tool=esptool_py
@@ -6360,7 +7136,6 @@ CoreESP32.menu.DebugLevel.verbose=Verbose
 CoreESP32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 alksesp32.name=ALKS ESP32
 
@@ -6497,7 +7272,6 @@ alksesp32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-
 wipy3.name=WiPy 3.0
 
 wipy3.upload.tool=esptool_py
@@ -6559,6 +7333,101 @@ wipy3.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+wt32-eth01.name=WT32-ETH01 Ethernet Module
+
+wt32-eth01.upload.tool=esptool_py
+wt32-eth01.upload.maximum_size=8388608
+wt32-eth01.upload.maximum_data_size=327680
+wt32-eth01.upload.flags=
+wt32-eth01.upload.extra_flags=
+
+wt32-eth01.serial.disableDTR=true
+wt32-eth01.serial.disableRTS=true
+
+wt32-eth01.build.tarch=xtensa
+wt32-eth01.build.bootloader_addr=0x1000
+wt32-eth01.build.target=esp32
+wt32-eth01.build.mcu=esp32
+wt32-eth01.build.core=esp32
+wt32-eth01.build.variant=wt32-eth01
+wt32-eth01.build.board=WT32_ETH01
+
+wt32-eth01.build.f_cpu=240000000L
+wt32-eth01.build.flash_size=4MB
+wt32-eth01.build.flash_freq=40m
+wt32-eth01.build.flash_mode=dio
+wt32-eth01.build.boot=dio
+wt32-eth01.build.partitions=default
+wt32-eth01.build.defines=
+wt32-eth01.build.extra_libs=
+
+wt32-eth01.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+wt32-eth01.menu.PartitionScheme.default.build.partitions=default
+wt32-eth01.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+wt32-eth01.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+wt32-eth01.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+wt32-eth01.menu.PartitionScheme.minimal.build.partitions=minimal
+wt32-eth01.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+wt32-eth01.menu.PartitionScheme.no_ota.build.partitions=no_ota
+wt32-eth01.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+wt32-eth01.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+wt32-eth01.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+wt32-eth01.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+wt32-eth01.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+wt32-eth01.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+wt32-eth01.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+wt32-eth01.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+wt32-eth01.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+wt32-eth01.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+wt32-eth01.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+wt32-eth01.menu.PartitionScheme.huge_app.build.partitions=huge_app
+wt32-eth01.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+wt32-eth01.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+wt32-eth01.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+wt32-eth01.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+wt32-eth01.menu.FlashMode.qio=QIO
+wt32-eth01.menu.FlashMode.qio.build.flash_mode=dio
+wt32-eth01.menu.FlashMode.qio.build.boot=qio
+wt32-eth01.menu.FlashMode.dio=DIO
+wt32-eth01.menu.FlashMode.dio.build.flash_mode=dio
+wt32-eth01.menu.FlashMode.dio.build.boot=dio
+
+wt32-eth01.menu.FlashFreq.80=80MHz
+wt32-eth01.menu.FlashFreq.80.build.flash_freq=80m
+wt32-eth01.menu.FlashFreq.40=40MHz
+wt32-eth01.menu.FlashFreq.40.build.flash_freq=40m
+
+wt32-eth01.menu.UploadSpeed.921600=921600
+wt32-eth01.menu.UploadSpeed.921600.upload.speed=921600
+wt32-eth01.menu.UploadSpeed.115200=115200
+wt32-eth01.menu.UploadSpeed.115200.upload.speed=115200
+wt32-eth01.menu.UploadSpeed.256000.windows=256000
+wt32-eth01.menu.UploadSpeed.256000.upload.speed=256000
+wt32-eth01.menu.UploadSpeed.230400.windows.upload.speed=256000
+wt32-eth01.menu.UploadSpeed.230400=230400
+wt32-eth01.menu.UploadSpeed.230400.upload.speed=230400
+wt32-eth01.menu.UploadSpeed.460800.linux=460800
+wt32-eth01.menu.UploadSpeed.460800.macosx=460800
+wt32-eth01.menu.UploadSpeed.460800.upload.speed=460800
+wt32-eth01.menu.UploadSpeed.512000.windows=512000
+wt32-eth01.menu.UploadSpeed.512000.upload.speed=512000
+
+wt32-eth01.menu.DebugLevel.none=None
+wt32-eth01.menu.DebugLevel.none.build.code_debug=0
+wt32-eth01.menu.DebugLevel.error=Error
+wt32-eth01.menu.DebugLevel.error.build.code_debug=1
+wt32-eth01.menu.DebugLevel.warn=Warn
+wt32-eth01.menu.DebugLevel.warn.build.code_debug=2
+wt32-eth01.menu.DebugLevel.info=Info
+wt32-eth01.menu.DebugLevel.info.build.code_debug=3
+wt32-eth01.menu.DebugLevel.debug=Debug
+wt32-eth01.menu.DebugLevel.debug.build.code_debug=4
+wt32-eth01.menu.DebugLevel.verbose=Verbose
+wt32-eth01.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 bpi-bit.name=BPI-BIT
 
 bpi-bit.upload.tool=esptool_py
@@ -6603,6 +7472,19 @@ bpi-bit.menu.UploadSpeed.460800.macosx=460800
 bpi-bit.menu.UploadSpeed.460800.upload.speed=460800
 bpi-bit.menu.UploadSpeed.512000.windows=512000
 bpi-bit.menu.UploadSpeed.512000.upload.speed=512000
+
+bpi-bit.menu.DebugLevel.none=None
+bpi-bit.menu.DebugLevel.none.build.code_debug=0
+bpi-bit.menu.DebugLevel.error=Error
+bpi-bit.menu.DebugLevel.error.build.code_debug=1
+bpi-bit.menu.DebugLevel.warn=Warn
+bpi-bit.menu.DebugLevel.warn.build.code_debug=2
+bpi-bit.menu.DebugLevel.info=Info
+bpi-bit.menu.DebugLevel.info.build.code_debug=3
+bpi-bit.menu.DebugLevel.debug=Debug
+bpi-bit.menu.DebugLevel.debug.build.code_debug=4
+bpi-bit.menu.DebugLevel.verbose=Verbose
+bpi-bit.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -7002,8 +7884,6 @@ oroca_edubot.menu.DebugLevel.debug.build.code_debug=4
 oroca_edubot.menu.DebugLevel.verbose=Verbose
 oroca_edubot.menu.DebugLevel.verbose.build.code_debug=5
 
-
-
 ##############################################################
 
 fm-devkit.name=ESP32 FM DevKit
@@ -7219,6 +8099,19 @@ esp32cam.menu.FlashFreq.80.build.flash_freq=80m
 esp32cam.menu.FlashFreq.40=40MHz
 esp32cam.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32cam.menu.DebugLevel.none=None
+esp32cam.menu.DebugLevel.none.build.code_debug=0
+esp32cam.menu.DebugLevel.error=Error
+esp32cam.menu.DebugLevel.error.build.code_debug=1
+esp32cam.menu.DebugLevel.warn=Warn
+esp32cam.menu.DebugLevel.warn.build.code_debug=2
+esp32cam.menu.DebugLevel.info=Info
+esp32cam.menu.DebugLevel.info.build.code_debug=3
+esp32cam.menu.DebugLevel.debug=Debug
+esp32cam.menu.DebugLevel.debug.build.code_debug=4
+esp32cam.menu.DebugLevel.verbose=Verbose
+esp32cam.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 twatch.name=TTGO T-Watch
@@ -7377,6 +8270,19 @@ d1_mini32.menu.UploadSpeed.460800.macosx=460800
 d1_mini32.menu.UploadSpeed.460800.upload.speed=460800
 d1_mini32.menu.UploadSpeed.512000.windows=512000
 d1_mini32.menu.UploadSpeed.512000.upload.speed=512000
+
+d1_mini32.menu.DebugLevel.none=None
+d1_mini32.menu.DebugLevel.none.build.code_debug=0
+d1_mini32.menu.DebugLevel.error=Error
+d1_mini32.menu.DebugLevel.error.build.code_debug=1
+d1_mini32.menu.DebugLevel.warn=Warn
+d1_mini32.menu.DebugLevel.warn.build.code_debug=2
+d1_mini32.menu.DebugLevel.info=Info
+d1_mini32.menu.DebugLevel.info.build.code_debug=3
+d1_mini32.menu.DebugLevel.debug=Debug
+d1_mini32.menu.DebugLevel.debug.build.code_debug=4
+d1_mini32.menu.DebugLevel.verbose=Verbose
+d1_mini32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -7591,6 +8497,19 @@ honeylemon.menu.UploadSpeed.460800.macosx=460800
 honeylemon.menu.UploadSpeed.460800.upload.speed=460800
 honeylemon.menu.UploadSpeed.512000.windows=512000
 honeylemon.menu.UploadSpeed.512000.upload.speed=512000
+
+honeylemon.menu.DebugLevel.none=None
+honeylemon.menu.DebugLevel.none.build.code_debug=0
+honeylemon.menu.DebugLevel.error=Error
+honeylemon.menu.DebugLevel.error.build.code_debug=1
+honeylemon.menu.DebugLevel.warn=Warn
+honeylemon.menu.DebugLevel.warn.build.code_debug=2
+honeylemon.menu.DebugLevel.info=Info
+honeylemon.menu.DebugLevel.info.build.code_debug=3
+honeylemon.menu.DebugLevel.debug=Debug
+honeylemon.menu.DebugLevel.debug.build.code_debug=4
+honeylemon.menu.DebugLevel.verbose=Verbose
+honeylemon.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -7881,6 +8800,7 @@ mgbot-iotik32b.menu.DebugLevel.verbose=Verbose
 mgbot-iotik32b.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 piranha_esp-32.name=Piranha ESP-32
 
 piranha_esp-32.upload.tool=esptool_py
@@ -8020,6 +8940,7 @@ metro_esp-32.menu.DebugLevel.verbose=Verbose
 metro_esp-32.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
 sensesiot_weizen.name=Senses's WEIZEN
 
 sensesiot_weizen.upload.tool=esptool_py
@@ -8066,7 +8987,21 @@ sensesiot_weizen.menu.UploadSpeed.460800.upload.speed=460800
 sensesiot_weizen.menu.UploadSpeed.512000.windows=512000
 sensesiot_weizen.menu.UploadSpeed.512000.upload.speed=512000
 
+sensesiot_weizen.menu.DebugLevel.none=None
+sensesiot_weizen.menu.DebugLevel.none.build.code_debug=0
+sensesiot_weizen.menu.DebugLevel.error=Error
+sensesiot_weizen.menu.DebugLevel.error.build.code_debug=1
+sensesiot_weizen.menu.DebugLevel.warn=Warn
+sensesiot_weizen.menu.DebugLevel.warn.build.code_debug=2
+sensesiot_weizen.menu.DebugLevel.info=Info
+sensesiot_weizen.menu.DebugLevel.info.build.code_debug=3
+sensesiot_weizen.menu.DebugLevel.debug=Debug
+sensesiot_weizen.menu.DebugLevel.debug.build.code_debug=4
+sensesiot_weizen.menu.DebugLevel.verbose=Verbose
+sensesiot_weizen.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
+
 kits-edu.name=KITS ESP32 EDU
 
 kits-edu.upload.tool=esptool_py
@@ -8197,7 +9132,6 @@ mPython.menu.PartitionScheme.fatflash.build.partitions=ffat
 mPython.menu.CPUFreq.240=240MHz (WiFi/BT)
 mPython.menu.CPUFreq.240.build.f_cpu=240000000L
 
-
 mPython.menu.FlashMode.qio=QIO
 mPython.menu.FlashMode.qio.build.flash_mode=dio
 mPython.menu.FlashMode.qio.build.boot=qio
@@ -8218,7 +9152,6 @@ mPython.menu.FlashFreq.40.build.flash_freq=40m
 
 mPython.menu.FlashSize.8M=8MB (64Mb)
 mPython.menu.FlashSize.8M.build.flash_size=8MB
-
 
 mPython.menu.UploadSpeed.921600=921600
 mPython.menu.UploadSpeed.921600.upload.speed=921600
@@ -8297,6 +9230,19 @@ OpenKB.menu.UploadSpeed.460800.upload.speed=460800
 OpenKB.menu.UploadSpeed.512000.windows=512000
 OpenKB.menu.UploadSpeed.512000.upload.speed=512000
 
+OpenKB.menu.DebugLevel.none=None
+OpenKB.menu.DebugLevel.none.build.code_debug=0
+OpenKB.menu.DebugLevel.error=Error
+OpenKB.menu.DebugLevel.error.build.code_debug=1
+OpenKB.menu.DebugLevel.warn=Warn
+OpenKB.menu.DebugLevel.warn.build.code_debug=2
+OpenKB.menu.DebugLevel.info=Info
+OpenKB.menu.DebugLevel.info.build.code_debug=3
+OpenKB.menu.DebugLevel.debug=Debug
+OpenKB.menu.DebugLevel.debug.build.code_debug=4
+OpenKB.menu.DebugLevel.verbose=Verbose
+OpenKB.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 wifiduino32.name=WiFiduino32
@@ -8367,122 +9313,6 @@ wifiduino32.menu.DebugLevel.debug=Debug
 wifiduino32.menu.DebugLevel.debug.build.code_debug=4
 wifiduino32.menu.DebugLevel.verbose=Verbose
 wifiduino32.menu.DebugLevel.verbose.build.code_debug=5
-
-##############################################################
-
-ttgo-lora32-v21new.name=TTGO LoRa32-OLED v2.1.6
-
-ttgo-lora32-v21new.upload.tool=esptool_py
-ttgo-lora32-v21new.upload.maximum_size=1310720
-ttgo-lora32-v21new.upload.maximum_data_size=294912
-ttgo-lora32-v21new.upload.wait_for_upload_port=true
-ttgo-lora32-v21new.upload.flags=
-ttgo-lora32-v21new.upload.extra_flags=
-
-ttgo-lora32-v21new.serial.disableDTR=true
-ttgo-lora32-v21new.serial.disableRTS=true
-
-ttgo-lora32-v21new.build.tarch=xtensa
-ttgo-lora32-v21new.build.bootloader_addr=0x1000
-ttgo-lora32-v21new.build.target=esp32
-ttgo-lora32-v21new.build.mcu=esp32
-ttgo-lora32-v21new.build.core=esp32
-ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
-ttgo-lora32-v21new.build.board=TTGO_LoRa32_v21new
-
-ttgo-lora32-v21new.build.f_cpu=240000000L
-ttgo-lora32-v21new.build.flash_mode=dio
-ttgo-lora32-v21new.build.flash_size=4MB
-ttgo-lora32-v21new.build.boot=dio
-ttgo-lora32-v21new.build.partitions=default
-
-ttgo-lora32-v21new.menu.FlashFreq.80=80MHz
-ttgo-lora32-v21new.menu.FlashFreq.80.build.flash_freq=80m
-ttgo-lora32-v21new.menu.FlashFreq.40=40MHz
-ttgo-lora32-v21new.menu.FlashFreq.40.build.flash_freq=40m
-
-ttgo-lora32-v21new.menu.UploadSpeed.921600=921600
-ttgo-lora32-v21new.menu.UploadSpeed.921600.upload.speed=921600
-ttgo-lora32-v21new.menu.UploadSpeed.115200=115200
-ttgo-lora32-v21new.name=TTGO LoRa32-OLED v2.1.6
-
-ttgo-lora32-v21new.upload.tool=esptool_py
-ttgo-lora32-v21new.upload.maximum_size=1310720
-ttgo-lora32-v21new.upload.maximum_data_size=294912
-ttgo-lora32-v21new.upload.wait_for_upload_port=true
-
-ttgo-lora32-v21new.serial.disableDTR=true
-ttgo-lora32-v21new.serial.disableRTS=true
-
-ttgo-lora32-v21new.build.tarch=xtensa
-ttgo-lora32-v21new.build.bootloader_addr=0x1000
-ttgo-lora32-v21new.build.target=esp32
-ttgo-lora32-v21new.build.mcu=esp32
-ttgo-lora32-v21new.build.core=esp32
-ttgo-lora32-v21new.build.variant=ttgo-lora32-v21new
-ttgo-lora32-v21new.build.board=TTGO_LoRa32_v21new
-
-ttgo-lora32-v21new.build.f_cpu=240000000L
-ttgo-lora32-v21new.build.flash_mode=dio
-ttgo-lora32-v21new.build.flash_size=4MB
-ttgo-lora32-v21new.build.boot=dio
-ttgo-lora32-v21new.build.partitions=default
-
-ttgo-lora32-v21new.menu.FlashFreq.80=80MHz
-ttgo-lora32-v21new.menu.FlashFreq.80.build.flash_freq=80m
-ttgo-lora32-v21new.menu.FlashFreq.40=40MHz
-ttgo-lora32-v21new.menu.FlashFreq.40.build.flash_freq=40m
-
-ttgo-lora32-v21new.menu.UploadSpeed.921600=921600
-ttgo-lora32-v21new.menu.UploadSpeed.921600.upload.speed=921600
-ttgo-lora32-v21new.menu.UploadSpeed.115200=115200
-ttgo-lora32-v21new.menu.UploadSpeed.115200.upload.speed=115200
-ttgo-lora32-v21new.menu.UploadSpeed.256000.windows=256000
-ttgo-lora32-v21new.menu.UploadSpeed.256000.upload.speed=256000
-ttgo-lora32-v21new.menu.UploadSpeed.230400.windows.upload.speed=256000
-ttgo-lora32-v21new.menu.UploadSpeed.230400=230400
-ttgo-lora32-v21new.menu.UploadSpeed.230400.upload.speed=230400
-ttgo-lora32-v21new.menu.UploadSpeed.460800.linux=460800
-ttgo-lora32-v21new.menu.UploadSpeed.460800.macosx=460800
-ttgo-lora32-v21new.menu.UploadSpeed.460800.upload.speed=460800
-ttgo-lora32-v21new.menu.UploadSpeed.512000.windows=512000
-ttgo-lora32-v21new.menu.UploadSpeed.512000.upload.speed=512000
-
-ttgo-lora32-v21new.menu.DebugLevel.none=None
-ttgo-lora32-v21new.menu.DebugLevel.none.build.code_debug=0
-ttgo-lora32-v21new.menu.DebugLevel.error=Error
-ttgo-lora32-v21new.menu.DebugLevel.error.build.code_debug=1
-ttgo-lora32-v21new.menu.DebugLevel.warn=Warn
-ttgo-lora32-v21new.menu.DebugLevel.warn.build.code_debug=2
-ttgo-lora32-v21new.menu.DebugLevel.info=Info
-ttgo-lora32-v21new.menu.DebugLevel.info.build.code_debug=3
-ttgo-lora32-v21new.menu.DebugLevel.debug=Debug
-ttgo-lora32-v21new.menu.DebugLevel.debug.build.code_debug=4
-ttgo-lora32-v21new.menu.DebugLevel.verbose=Verbose
-ttgo-lora32-v21new.menu.DebugLevel.verbose.build.code_debug=5w.menu.UploadSpeed.115200.upload.speed=115200
-ttgo-lora32-v21new.menu.UploadSpeed.256000.windows=256000
-ttgo-lora32-v21new.menu.UploadSpeed.256000.upload.speed=256000
-ttgo-lora32-v21new.menu.UploadSpeed.230400.windows.upload.speed=256000
-ttgo-lora32-v21new.menu.UploadSpeed.230400=230400
-ttgo-lora32-v21new.menu.UploadSpeed.230400.upload.speed=230400
-ttgo-lora32-v21new.menu.UploadSpeed.460800.linux=460800
-ttgo-lora32-v21new.menu.UploadSpeed.460800.macosx=460800
-ttgo-lora32-v21new.menu.UploadSpeed.460800.upload.speed=460800
-ttgo-lora32-v21new.menu.UploadSpeed.512000.windows=512000
-ttgo-lora32-v21new.menu.UploadSpeed.512000.upload.speed=512000
-
-ttgo-lora32-v21new.menu.DebugLevel.none=None
-ttgo-lora32-v21new.menu.DebugLevel.none.build.code_debug=0
-ttgo-lora32-v21new.menu.DebugLevel.error=Error
-ttgo-lora32-v21new.menu.DebugLevel.error.build.code_debug=1
-ttgo-lora32-v21new.menu.DebugLevel.warn=Warn
-ttgo-lora32-v21new.menu.DebugLevel.warn.build.code_debug=2
-ttgo-lora32-v21new.menu.DebugLevel.info=Info
-ttgo-lora32-v21new.menu.DebugLevel.info.build.code_debug=3
-ttgo-lora32-v21new.menu.DebugLevel.debug=Debug
-ttgo-lora32-v21new.menu.DebugLevel.debug.build.code_debug=4
-ttgo-lora32-v21new.menu.DebugLevel.verbose=Verbose
-ttgo-lora32-v21new.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -8559,6 +9389,19 @@ imbrios-logsens-v1p1.menu.UploadSpeed.460800.upload.speed=460800
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.windows=512000
 imbrios-logsens-v1p1.menu.UploadSpeed.512000.upload.speed=512000
 
+imbrios-logsens-v1p1.menu.DebugLevel.none=None
+imbrios-logsens-v1p1.menu.DebugLevel.none.build.code_debug=0
+imbrios-logsens-v1p1.menu.DebugLevel.error=Error
+imbrios-logsens-v1p1.menu.DebugLevel.error.build.code_debug=1
+imbrios-logsens-v1p1.menu.DebugLevel.warn=Warn
+imbrios-logsens-v1p1.menu.DebugLevel.warn.build.code_debug=2
+imbrios-logsens-v1p1.menu.DebugLevel.info=Info
+imbrios-logsens-v1p1.menu.DebugLevel.info.build.code_debug=3
+imbrios-logsens-v1p1.menu.DebugLevel.debug=Debug
+imbrios-logsens-v1p1.menu.DebugLevel.debug.build.code_debug=4
+imbrios-logsens-v1p1.menu.DebugLevel.verbose=Verbose
+imbrios-logsens-v1p1.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 healthypi4.name=ProtoCentral HealthyPi 4
@@ -8631,7 +9474,6 @@ healthypi4.menu.DebugLevel.verbose=Verbose
 healthypi4.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
-
 
 ET-Board.name=ET-Board
 
@@ -8993,13 +9835,15 @@ kb32.name=KB32-FT
 kb32.upload.tool=esptool_py
 kb32.upload.maximum_size=1310720
 kb32.upload.maximum_data_size=327680
-kb32.upload.wait_for_upload_port=true
 kb32.upload.flags=
 kb32.upload.extra_flags=
 
 kb32.serial.disableDTR=true
 kb32.serial.disableRTS=true
 
+kb32.build.tarch=xtensa
+kb32.build.bootloader_addr=0x1000
+kb32.build.target=esp32
 kb32.build.mcu=esp32
 kb32.build.core=esp32
 kb32.build.variant=esp32
@@ -9012,13 +9856,15 @@ kb32.build.flash_mode=dio
 kb32.build.boot=dio
 kb32.build.partitions=default
 kb32.build.defines=
+kb32.build.loop_core=
+kb32.build.event_core=
 
 kb32.menu.PSRAM.disabled=Disabled
 kb32.menu.PSRAM.disabled.build.defines=
 kb32.menu.PSRAM.disabled.build.extra_libs=
 kb32.menu.PSRAM.enabled=Enabled
-kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
-kb32.menu.PSRAM.enabled.build.extra_libs=-lc-psram-workaround -lm-psram-workaround
+kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+kb32.menu.PSRAM.enabled.build.extra_libs=
 
 kb32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 kb32.menu.PartitionScheme.default.build.partitions=default
@@ -9053,6 +9899,9 @@ kb32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 kb32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+kb32.menu.PartitionScheme.rainmaker=RainMaker
+kb32.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+kb32.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
 
 kb32.menu.CPUFreq.240=240MHz (WiFi/BT)
 kb32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -9114,6 +9963,16 @@ kb32.menu.UploadSpeed.460800.macosx=460800
 kb32.menu.UploadSpeed.460800.upload.speed=460800
 kb32.menu.UploadSpeed.512000.windows=512000
 kb32.menu.UploadSpeed.512000.upload.speed=512000
+
+kb32.menu.LoopCore.1=Core 1
+kb32.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+kb32.menu.LoopCore.0=Core 0
+kb32.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+kb32.menu.EventsCore.1=Core 1
+kb32.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+kb32.menu.EventsCore.0=Core 0
+kb32.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 kb32.menu.DebugLevel.none=None
 kb32.menu.DebugLevel.none.build.code_debug=0
@@ -9196,7 +10055,7 @@ deneyapkart.menu.CPUFreq.80=80MHz (WiFi/BT)
 deneyapkart.menu.CPUFreq.80.build.f_cpu=80000000L
 deneyapkart.menu.CPUFreq.40=40MHz
 deneyapkart.menu.CPUFreq.40.build.f_cpu=40000000L
-deneyapkart.menu.CPUFreq.20=20MHz 
+deneyapkart.menu.CPUFreq.20=20MHz
 deneyapkart.menu.CPUFreq.20.build.f_cpu=20000000L
 deneyapkart.menu.CPUFreq.10=10MHz
 deneyapkart.menu.CPUFreq.10.build.f_cpu=10000000L
@@ -9386,19 +10245,32 @@ atmegazero_esp32s2.build.core=esp32
 atmegazero_esp32s2.build.variant=atmegazero_esp32s2
 atmegazero_esp32s2.build.board=atmegazero_esp32s2
 
+atmegazero_esp32s2.build.cdc_on_boot=1
+atmegazero_esp32s2.build.msc_on_boot=0
+atmegazero_esp32s2.build.dfu_on_boot=0
 atmegazero_esp32s2.build.serial=0
 atmegazero_esp32s2.build.f_cpu=240000000L
-atmegazero_esp32s2.build.flash_size=4MB
-atmegazero_esp32s2.build.flash_freq=80m
+atmegazero_esp32s2.build.flash_size=16MB
+atmegazero_esp32s2.build.flash_freq=40m
 atmegazero_esp32s2.build.flash_mode=qio
 atmegazero_esp32s2.build.boot=qio
 atmegazero_esp32s2.build.partitions=default
 atmegazero_esp32s2.build.defines=
 
-atmegazero_esp32s2.menu.SerialMode.cdc=USB CDC
-atmegazero_esp32s2.menu.SerialMode.cdc.build.serial=1
-atmegazero_esp32s2.menu.SerialMode.default=UART0
-atmegazero_esp32s2.menu.SerialMode.default.build.serial=0
+atmegazero_esp32s2.menu.CDCOnBoot.cdc=Enabled
+atmegazero_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+atmegazero_esp32s2.menu.CDCOnBoot.default=Disabled
+atmegazero_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+atmegazero_esp32s2.menu.MSCOnBoot.default=Disabled
+atmegazero_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+atmegazero_esp32s2.menu.MSCOnBoot.msc=Enabled
+atmegazero_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+atmegazero_esp32s2.menu.DFUOnBoot.default=Disabled
+atmegazero_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+atmegazero_esp32s2.menu.DFUOnBoot.dfu=Enabled
+atmegazero_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 atmegazero_esp32s2.menu.PSRAM.disabled=Disabled
 atmegazero_esp32s2.menu.PSRAM.disabled.build.defines=
@@ -9544,10 +10416,20 @@ deneyapmini.build.boot=qio
 deneyapmini.build.partitions=default
 deneyapmini.build.defines=
 
-deneyapmini.menu.SerialMode.default=USB_CDC
-deneyapmini.menu.SerialMode.default.build.serial=1
-deneyapmini.menu.SerialMode.uart=UART0
-deneyapmini.menu.SerialMode.uart.build.serial=0
+deneyapmini.menu.CDCOnBoot.default=Enabled
+deneyapmini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+deneyapmini.menu.CDCOnBoot.cdc=Disabled
+deneyapmini.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+deneyapmini.menu.MSCOnBoot.default=Disabled
+deneyapmini.menu.MSCOnBoot.default.build.msc_on_boot=0
+deneyapmini.menu.MSCOnBoot.msc=Enabled
+deneyapmini.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+deneyapmini.menu.DFUOnBoot.default=Disabled
+deneyapmini.menu.DFUOnBoot.default.build.dfu_on_boot=0
+deneyapmini.menu.DFUOnBoot.dfu=Enabled
+deneyapmini.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 deneyapmini.menu.PSRAM.disabled=Disabled
 deneyapmini.menu.PSRAM.disabled.build.defines=
@@ -9860,5 +10742,431 @@ franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug=Debug
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose=Verbose
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+dpu_esp32.name=DPU ESP32
+
+dpu_esp32.upload.tool=esptool_py
+dpu_esp32.upload.maximum_size=3342336
+dpu_esp32.upload.maximum_data_size=327680
+dpu_esp32.upload.flags=
+dpu_esp32.upload.extra_flags=
+
+dpu_esp32.serial.disableDTR=true
+dpu_esp32.serial.disableRTS=true
+
+dpu_esp32.build.tarch=xtensa
+dpu_esp32.build.bootloader_addr=0x1000
+dpu_esp32.build.target=esp32
+dpu_esp32.build.mcu=esp32
+dpu_esp32.build.core=esp32
+dpu_esp32.build.variant=dpu_esp32
+dpu_esp32.build.board=DPU_ESP32
+
+dpu_esp32.build.f_cpu=240000000L
+dpu_esp32.build.flash_size=8MB
+dpu_esp32.build.flash_freq=40m
+dpu_esp32.build.flash_mode=dio
+dpu_esp32.build.boot=dio
+dpu_esp32.build.partitions=default_8MB
+dpu_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+dpu_esp32.build.extra_libs=
+
+dpu_esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+dpu_esp32.menu.PartitionScheme.default.build.partitions=default
+dpu_esp32.menu.PartitionScheme.default.upload.maximum_size=1310720
+dpu_esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+dpu_esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+dpu_esp32.menu.PartitionScheme.defaultffat.upload.maximum_size=1310720
+dpu_esp32.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+dpu_esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+dpu_esp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+dpu_esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+dpu_esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+dpu_esp32.menu.PartitionScheme.minimal.upload.maximum_size=1310720
+dpu_esp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+dpu_esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+dpu_esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+dpu_esp32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+dpu_esp32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+dpu_esp32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+dpu_esp32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+dpu_esp32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+dpu_esp32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+dpu_esp32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+dpu_esp32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+dpu_esp32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+dpu_esp32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+dpu_esp32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+dpu_esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+dpu_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+dpu_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+dpu_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+dpu_esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+dpu_esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
+
+dpu_esp32.menu.FlashMode.qio=QIO
+dpu_esp32.menu.FlashMode.qio.build.flash_mode=dio
+dpu_esp32.menu.FlashMode.qio.build.boot=qio
+dpu_esp32.menu.FlashMode.dio=DIO
+dpu_esp32.menu.FlashMode.dio.build.flash_mode=dio
+dpu_esp32.menu.FlashMode.dio.build.boot=dio
+dpu_esp32.menu.FlashMode.qout=QOUT
+dpu_esp32.menu.FlashMode.qout.build.flash_mode=dout
+dpu_esp32.menu.FlashMode.qout.build.boot=qout
+dpu_esp32.menu.FlashMode.dout=DOUT
+dpu_esp32.menu.FlashMode.dout.build.flash_mode=dout
+dpu_esp32.menu.FlashMode.dout.build.boot=dout
+
+dpu_esp32.menu.FlashFreq.80=80MHz
+dpu_esp32.menu.FlashFreq.80.build.flash_freq=80m
+dpu_esp32.menu.FlashFreq.40=40MHz
+dpu_esp32.menu.FlashFreq.40.build.flash_freq=40m
+
+dpu_esp32.menu.UploadSpeed.921600=921600
+dpu_esp32.menu.UploadSpeed.921600.upload.speed=921600
+dpu_esp32.menu.UploadSpeed.115200=115200
+dpu_esp32.menu.UploadSpeed.115200.upload.speed=115200
+dpu_esp32.menu.UploadSpeed.256000.windows=256000
+dpu_esp32.menu.UploadSpeed.256000.upload.speed=256000
+dpu_esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+dpu_esp32.menu.UploadSpeed.230400=230400
+dpu_esp32.menu.UploadSpeed.230400.upload.speed=230400
+dpu_esp32.menu.UploadSpeed.460800.linux=460800
+dpu_esp32.menu.UploadSpeed.460800.macosx=460800
+dpu_esp32.menu.UploadSpeed.460800.upload.speed=460800
+dpu_esp32.menu.UploadSpeed.512000.windows=512000
+dpu_esp32.menu.UploadSpeed.512000.upload.speed=512000
+
+dpu_esp32.menu.DebugLevel.none=None
+dpu_esp32.menu.DebugLevel.none.build.code_debug=0
+dpu_esp32.menu.DebugLevel.error=Error
+dpu_esp32.menu.DebugLevel.error.build.code_debug=1
+dpu_esp32.menu.DebugLevel.warn=Warn
+dpu_esp32.menu.DebugLevel.warn.build.code_debug=2
+dpu_esp32.menu.DebugLevel.info=Info
+dpu_esp32.menu.DebugLevel.info.build.code_debug=3
+dpu_esp32.menu.DebugLevel.debug=Debug
+dpu_esp32.menu.DebugLevel.debug.build.code_debug=4
+dpu_esp32.menu.DebugLevel.verbose=Verbose
+dpu_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+sonoff_dualr3.name=Sonoff DUALR3
+
+sonoff_dualr3.upload.tool=esptool_py
+sonoff_dualr3.upload.maximum_size=1310720
+sonoff_dualr3.upload.maximum_data_size=327680
+sonoff_dualr3.upload.flags=
+sonoff_dualr3.upload.extra_flags=
+
+sonoff_dualr3.serial.disableDTR=true
+sonoff_dualr3.serial.disableRTS=true
+
+sonoff_dualr3.build.tarch=xtensa
+sonoff_dualr3.build.bootloader_addr=0x1000
+sonoff_dualr3.build.target=esp32
+sonoff_dualr3.build.mcu=esp32
+sonoff_dualr3.build.core=esp32
+sonoff_dualr3.build.variant=esp32
+sonoff_dualr3.build.board=SONOFF_DUALR3
+
+sonoff_dualr3.build.f_cpu=240000000L
+sonoff_dualr3.build.flash_size=4MB
+sonoff_dualr3.build.flash_freq=40m
+sonoff_dualr3.build.flash_mode=dio
+sonoff_dualr3.build.boot=dio
+sonoff_dualr3.build.partitions=rainmaker
+sonoff_dualr3.build.defines=
+sonoff_dualr3.build.loop_core=
+sonoff_dualr3.build.event_core=
+
+sonoff_dualr3.menu.PartitionScheme.rainmaker=RainMaker
+sonoff_dualr3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+sonoff_dualr3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+sonoff_dualr3.menu.CPUFreq.240=240MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.240.build.f_cpu=240000000L
+sonoff_dualr3.menu.CPUFreq.160=160MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.160.build.f_cpu=160000000L
+sonoff_dualr3.menu.CPUFreq.80=80MHz (WiFi/BT)
+sonoff_dualr3.menu.CPUFreq.80.build.f_cpu=80000000L
+sonoff_dualr3.menu.CPUFreq.40=40MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.40.build.f_cpu=40000000L
+sonoff_dualr3.menu.CPUFreq.26=26MHz (26MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.26.build.f_cpu=26000000L
+sonoff_dualr3.menu.CPUFreq.20=20MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.20.build.f_cpu=20000000L
+sonoff_dualr3.menu.CPUFreq.13=13MHz (26MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.13.build.f_cpu=13000000L
+sonoff_dualr3.menu.CPUFreq.10=10MHz (40MHz XTAL)
+sonoff_dualr3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sonoff_dualr3.menu.FlashMode.qio=QIO
+sonoff_dualr3.menu.FlashMode.qio.build.flash_mode=dio
+sonoff_dualr3.menu.FlashMode.qio.build.boot=qio
+sonoff_dualr3.menu.FlashMode.dio=DIO
+sonoff_dualr3.menu.FlashMode.dio.build.flash_mode=dio
+sonoff_dualr3.menu.FlashMode.dio.build.boot=dio
+sonoff_dualr3.menu.FlashMode.qout=QOUT
+sonoff_dualr3.menu.FlashMode.qout.build.flash_mode=dout
+sonoff_dualr3.menu.FlashMode.qout.build.boot=qout
+sonoff_dualr3.menu.FlashMode.dout=DOUT
+sonoff_dualr3.menu.FlashMode.dout.build.flash_mode=dout
+sonoff_dualr3.menu.FlashMode.dout.build.boot=dout
+
+sonoff_dualr3.menu.FlashFreq.80=80MHz
+sonoff_dualr3.menu.FlashFreq.80.build.flash_freq=80m
+sonoff_dualr3.menu.FlashFreq.40=40MHz
+sonoff_dualr3.menu.FlashFreq.40.build.flash_freq=40m
+
+sonoff_dualr3.menu.FlashSize.4M=4MB (32Mb)
+sonoff_dualr3.menu.FlashSize.4M.build.flash_size=4MB
+
+sonoff_dualr3.menu.UploadSpeed.921600=921600
+sonoff_dualr3.menu.UploadSpeed.921600.upload.speed=921600
+sonoff_dualr3.menu.UploadSpeed.115200=115200
+sonoff_dualr3.menu.UploadSpeed.115200.upload.speed=115200
+sonoff_dualr3.menu.UploadSpeed.256000.windows=256000
+sonoff_dualr3.menu.UploadSpeed.256000.upload.speed=256000
+sonoff_dualr3.menu.UploadSpeed.230400.windows.upload.speed=256000
+sonoff_dualr3.menu.UploadSpeed.230400=230400
+sonoff_dualr3.menu.UploadSpeed.230400.upload.speed=230400
+sonoff_dualr3.menu.UploadSpeed.460800.linux=460800
+sonoff_dualr3.menu.UploadSpeed.460800.macosx=460800
+sonoff_dualr3.menu.UploadSpeed.460800.upload.speed=460800
+sonoff_dualr3.menu.UploadSpeed.512000.windows=512000
+sonoff_dualr3.menu.UploadSpeed.512000.upload.speed=512000
+
+sonoff_dualr3.menu.DebugLevel.none=None
+sonoff_dualr3.menu.DebugLevel.none.build.code_debug=0
+sonoff_dualr3.menu.DebugLevel.error=Error
+sonoff_dualr3.menu.DebugLevel.error.build.code_debug=1
+sonoff_dualr3.menu.DebugLevel.warn=Warn
+sonoff_dualr3.menu.DebugLevel.warn.build.code_debug=2
+sonoff_dualr3.menu.DebugLevel.info=Info
+sonoff_dualr3.menu.DebugLevel.info.build.code_debug=3
+sonoff_dualr3.menu.DebugLevel.debug=Debug
+sonoff_dualr3.menu.DebugLevel.debug.build.code_debug=4
+sonoff_dualr3.menu.DebugLevel.verbose=Verbose
+sonoff_dualr3.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+lionbit.name=Lion:Bit Dev Board
+
+lionbit.upload.tool=esptool_py
+lionbit.upload.maximum_size=1310720
+lionbit.upload.maximum_data_size=327680
+lionbit.upload.flags=
+lionbit.upload.extra_flags=
+
+lionbit.serial.disableDTR=true
+lionbit.serial.disableRTS=true
+
+lionbit.build.tarch=xtensa
+lionbit.build.bootloader_addr=0x1000
+lionbit.build.target=esp32
+lionbit.build.mcu=esp32
+lionbit.build.core=esp32
+lionbit.build.variant=lionbit
+lionbit.build.board=Lion:Bit_Dev_Board
+
+lionbit.build.f_cpu=240000000L
+lionbit.build.flash_size=4MB
+lionbit.build.flash_freq=80m
+lionbit.build.flash_mode=dio
+lionbit.build.boot=dio
+lionbit.build.partitions=default
+lionbit.build.defines=
+lionbit.build.loop_core=
+lionbit.build.event_core=
+
+
+lionbit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lionbit.menu.PartitionScheme.default.build.partitions=default
+lionbit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lionbit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lionbit.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+lionbit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+lionbit.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+lionbit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+lionbit.menu.PartitionScheme.minimal.build.partitions=minimal
+lionbit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lionbit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lionbit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lionbit.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lionbit.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lionbit.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lionbit.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lionbit.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lionbit.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lionbit.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lionbit.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lionbit.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lionbit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+lionbit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+lionbit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lionbit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+lionbit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+lionbit.menu.PartitionScheme.fatflash.build.partitions=ffat
+lionbit.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lionbit.menu.PartitionScheme.rainmaker=RainMaker
+lionbit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lionbit.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lionbit.menu.CPUFreq.240=240MHz (WiFi/BT)
+lionbit.menu.CPUFreq.240.build.f_cpu=240000000L
+lionbit.menu.CPUFreq.160=160MHz (WiFi/BT)
+lionbit.menu.CPUFreq.160.build.f_cpu=160000000L
+lionbit.menu.CPUFreq.80=80MHz (WiFi/BT)
+lionbit.menu.CPUFreq.80.build.f_cpu=80000000L
+lionbit.menu.CPUFreq.40=40MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.40.build.f_cpu=40000000L
+lionbit.menu.CPUFreq.26=26MHz (26MHz XTAL)
+lionbit.menu.CPUFreq.26.build.f_cpu=26000000L
+lionbit.menu.CPUFreq.20=20MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.20.build.f_cpu=20000000L
+lionbit.menu.CPUFreq.13=13MHz (26MHz XTAL)
+lionbit.menu.CPUFreq.13.build.f_cpu=13000000L
+lionbit.menu.CPUFreq.10=10MHz (40MHz XTAL)
+lionbit.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+lionbit.menu.FlashMode.dio=DIO
+lionbit.menu.FlashMode.dio.build.flash_mode=dio
+lionbit.menu.FlashMode.dio.build.boot=dio
+lionbit.menu.FlashMode.qio=QIO
+lionbit.menu.FlashMode.qio.build.flash_mode=dio
+lionbit.menu.FlashMode.qio.build.boot=qio
+lionbit.menu.FlashMode.qout=QOUT
+lionbit.menu.FlashMode.qout.build.flash_mode=dout
+lionbit.menu.FlashMode.qout.build.boot=qout
+lionbit.menu.FlashMode.dout=DOUT
+lionbit.menu.FlashMode.dout.build.flash_mode=dout
+lionbit.menu.FlashMode.dout.build.boot=dout
+
+lionbit.menu.FlashFreq.80=80MHz
+lionbit.menu.FlashFreq.80.build.flash_freq=80m
+lionbit.menu.FlashFreq.40=40MHz
+lionbit.menu.FlashFreq.40.build.flash_freq=40m
+
+lionbit.menu.FlashSize.4M=4MB (32Mb)
+lionbit.menu.FlashSize.4M.build.flash_size=4MB
+lionbit.menu.FlashSize.4M.build.partitions=default
+
+
+
+lionbit.menu.UploadSpeed.115200=115200
+lionbit.menu.UploadSpeed.115200.upload.speed=115200
+lionbit.menu.UploadSpeed.256000.windows=256000
+lionbit.menu.UploadSpeed.256000.upload.speed=256000
+lionbit.menu.UploadSpeed.230400.windows.upload.speed=256000
+lionbit.menu.UploadSpeed.230400=230400
+lionbit.menu.UploadSpeed.230400.upload.speed=230400
+lionbit.menu.UploadSpeed.460800.linux=460800
+lionbit.menu.UploadSpeed.460800.macosx=460800
+lionbit.menu.UploadSpeed.460800.upload.speed=460800
+
+
+lionbit.menu.LoopCore.1=Core 1
+lionbit.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lionbit.menu.LoopCore.0=Core 0
+lionbit.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lionbit.menu.EventsCore.1=Core 1
+lionbit.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lionbit.menu.EventsCore.0=Core 0
+lionbit.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lionbit.menu.DebugLevel.none=None
+lionbit.menu.DebugLevel.none.build.code_debug=0
+lionbit.menu.DebugLevel.error=Error
+lionbit.menu.DebugLevel.error.build.code_debug=1
+lionbit.menu.DebugLevel.warn=Warn
+lionbit.menu.DebugLevel.warn.build.code_debug=2
+lionbit.menu.DebugLevel.info=Info
+lionbit.menu.DebugLevel.info.build.code_debug=3
+lionbit.menu.DebugLevel.debug=Debug
+lionbit.menu.DebugLevel.debug.build.code_debug=4
+lionbit.menu.DebugLevel.verbose=Verbose
+lionbit.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+watchy.name=Watchy
+
+watchy.upload.tool=esptool_py
+watchy.upload.maximum_size=1310720
+watchy.upload.maximum_data_size=327680
+watchy.upload.flags=
+watchy.upload.extra_flags=
+
+watchy.serial.disableDTR=true
+watchy.serial.disableRTS=true
+
+watchy.build.tarch=xtensa
+watchy.build.bootloader_addr=0x1000
+watchy.build.target=esp32
+watchy.build.mcu=esp32
+watchy.build.core=esp32
+watchy.build.variant=watchy
+watchy.build.board=WATCHY
+
+watchy.build.f_cpu=240000000L
+watchy.build.flash_size=4MB
+watchy.build.flash_freq=80m
+watchy.build.flash_mode=dio
+watchy.build.boot=qio
+watchy.build.partitions=min_spiffs
+watchy.build.defines=
+
+watchy.menu.Revision.v10=Watchy v1.0
+watchy.menu.Revision.v10.build.board=WATCHY_V10
+watchy.menu.Revision.v15=Watchy v1.5
+watchy.menu.Revision.v15.build.board=WATCHY_V15
+watchy.menu.Revision.v20=Watchy v2.0
+watchy.menu.Revision.v20.build.board=WATCHY_V20
+
+watchy.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+watchy.menu.PartitionScheme.huge_app.build.partitions=huge_app
+watchy.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+watchy.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+watchy.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+watchy.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+watchy.menu.UploadSpeed.921600=921600
+watchy.menu.UploadSpeed.921600.upload.speed=921600
+watchy.menu.UploadSpeed.115200=115200
+watchy.menu.UploadSpeed.115200.upload.speed=115200
+watchy.menu.UploadSpeed.256000.windows=256000
+watchy.menu.UploadSpeed.256000.upload.speed=256000
+watchy.menu.UploadSpeed.230400.windows.upload.speed=256000
+watchy.menu.UploadSpeed.230400=230400
+watchy.menu.UploadSpeed.230400.upload.speed=230400
+watchy.menu.UploadSpeed.460800.linux=460800
+watchy.menu.UploadSpeed.460800.macosx=460800
+watchy.menu.UploadSpeed.460800.upload.speed=460800
+watchy.menu.UploadSpeed.512000.windows=512000
+watchy.menu.UploadSpeed.512000.upload.speed=512000
+
+watchy.menu.DebugLevel.none=None
+watchy.menu.DebugLevel.none.build.code_debug=0
+watchy.menu.DebugLevel.error=Error
+watchy.menu.DebugLevel.error.build.code_debug=1
+watchy.menu.DebugLevel.warn=Warn
+watchy.menu.DebugLevel.warn.build.code_debug=2
+watchy.menu.DebugLevel.info=Info
+watchy.menu.DebugLevel.info.build.code_debug=3
+watchy.menu.DebugLevel.debug=Debug
+watchy.menu.DebugLevel.debug.build.code_debug=4
+watchy.menu.DebugLevel.verbose=Verbose
+watchy.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################

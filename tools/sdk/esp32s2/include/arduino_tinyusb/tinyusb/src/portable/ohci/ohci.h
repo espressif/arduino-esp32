@@ -159,7 +159,7 @@ typedef struct TU_ATTR_ALIGNED(256)
   struct {
     ohci_ed_t ed;
     ohci_gtd_t gtd;
-  }control[CFG_TUSB_HOST_DEVICE_MAX+1];
+  }control[CFG_TUH_DEVICE_MAX+1];
 
   //  ochi_itd_t itd[OHCI_MAX_ITD]; // itd requires alignment of 32
   ohci_ed_t ed_pool[HCD_MAX_ENDPOINT];

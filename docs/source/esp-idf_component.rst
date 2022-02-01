@@ -5,13 +5,15 @@ Arduino as a ESP-IDF component
 ESP32 Arduino lib-builder
 -------------------------
 
-For a simplified method, see `lib-builder <lib_builder>`_.
+For a simplified method, see `lib-builder <https://github.com/espressif/esp32-arduino-lib-builder>`_.
 
 Installation
 ------------
 
+.. note:: Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
+
 - Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
-- Create blank idf project (from one of the examples).
+- Create blank ESP-IDF project (use sample_project from /examples/get-started) or choose one of the examples.
 - In the project folder, create a new folder called `components` and clone this repository inside the new created folder.
 
 .. code-block:: bash
@@ -24,10 +26,19 @@ Installation
     cd ../.. && \
     idf.py menuconfig
 
+Option 1. Using Arduino setup() and loop()
+******************************************
 
 - The `idf.py menuconfig` has some Arduino options.
-    - On `Autostart Arduino setup and loop on boot`.
-        - If you enable these options, your main.cpp should be formated like any other sketch.
+    - Turn on `Autostart Arduino setup and loop on boot`.
+    - In main folder rename file `main.c` to `main.cpp`.
+    - In main folder open file `CMakeList.txt` and change `main.c` to `main.cpp` as described below.
+
+.. code-block:: bash
+
+    idf_component_register(SRCS "main.cpp" INCLUDE_DIRS ".")
+
+- Your main.cpp should be formated like any other sketch.
 
 .. code-block:: c
 
@@ -43,14 +54,17 @@ Installation
         delay(1000);
     }
 
-- Otherwise, you need to implement ```app_main()``` and call ```initArduino();``` in it.
+Option 2. Using ESP-IDF appmain()
+*********************************
+
+- You need to implement ``app_main()`` and call ``initArduino();`` in it.
 
 Keep in mind that setup() and loop() will not be called in this case.
 If you plan to base your code on examples provided in `examples <https://github.com/espressif/esp-idf/tree/master/examples>`_, please make sure to move the app_main() function in main.cpp from the files in the example.
 
 .. code-block:: cpp
 
-    //file: main.cpp
+    //file: main.c or main.cpp
     #include "Arduino.h"
 
     extern "C" void app_main()
@@ -67,7 +81,11 @@ If you plan to base your code on examples provided in `examples <https://github.
 - If enabled, WiFi will start with the last known configuration
 - Otherwise it will wait for WiFi.begin
 
-- ```idf.py -p <your-board-serial-port> flash monitor``` will build, upload and open serial monitor to your board
+Build, flash and monitor
+************************
+
+- For both options use command ``idf.py -p <your-board-serial-port> flash monitor``
+- It will build, upload and open serial monitor to your board.
 
 Logging To Serial
 -----------------

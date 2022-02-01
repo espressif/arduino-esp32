@@ -172,19 +172,23 @@ class WiFiGenericClass
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
 
-    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=0, const uint8_t * mac=NULL);
+    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     static esp_err_t _eventCallback(arduino_event_t *event);
+    
+    static void useStaticBuffers(bool bufferMode);
+    static bool useStaticBuffers();
 
   protected:
     static bool _persistent;
     static bool _long_range;
     static wifi_mode_t _forceSleepLastMode;
     static wifi_ps_type_t _sleepEnabled;
+    static bool _wifiUseStaticBuffers;
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);

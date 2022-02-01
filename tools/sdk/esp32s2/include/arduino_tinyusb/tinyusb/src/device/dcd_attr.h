@@ -36,116 +36,166 @@
 // - PORT_HIGHSPEED: mask to indicate which port support highspeed mode, bit0 for port0 and so on.
 
 //------------- NXP -------------//
-#if   TU_CHECK_MCU(LPC11UXX) || TU_CHECK_MCU(LPC13XX) || TU_CHECK_MCU(LPC15XX)
+#if   TU_CHECK_MCU(OPT_MCU_LPC11UXX, OPT_MCU_LPC13XX, OPT_MCU_LPC15XX)
   #define DCD_ATTR_ENDPOINT_MAX   5
 
-#elif TU_CHECK_MCU(LPC175X_6X) || TU_CHECK_MCU(LPC177X_8X) || TU_CHECK_MCU(LPC40XX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC175X_6X, OPT_MCU_LPC177X_8X, OPT_MCU_LPC40XX)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
-#elif TU_CHECK_MCU(LPC18XX) || TU_CHECK_MCU(LPC43XX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC18XX, OPT_MCU_LPC43XX)
   // TODO USB0 has 6, USB1 has 4
+  #define DCD_ATTR_CONTROLLER_CHIPIDEA_HS
   #define DCD_ATTR_ENDPOINT_MAX   6
 
-#elif TU_CHECK_MCU(LPC51UXX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC51UXX)
    #define DCD_ATTR_ENDPOINT_MAX   5
 
-#elif TU_CHECK_MCU(LPC54XXX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC54XXX)
   // TODO USB0 has 5, USB1 has 6
   #define DCD_ATTR_ENDPOINT_MAX   6
 
-#elif TU_CHECK_MCU(LPC55XX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC55XX)
   // TODO USB0 has 5, USB1 has 6
   #define DCD_ATTR_ENDPOINT_MAX   6
 
-#elif TU_CHECK_MCU(MIMXRT10XX)
+#elif TU_CHECK_MCU(OPT_MCU_MIMXRT10XX)
+  #define DCD_ATTR_CONTROLLER_CHIPIDEA_HS
   #define DCD_ATTR_ENDPOINT_MAX   8
 
-#elif TU_CHECK_MCU(MKL25ZXX)
+#elif TU_CHECK_MCU(OPT_MCU_MKL25ZXX, OPT_MCU_K32L2BXX)
+  #define DCD_ATTR_ENDPOINT_MAX   16
+
+#elif TU_CHECK_MCU(OPT_MCU_MM32F327X)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
 //------------- Nordic -------------//
-#elif TU_CHECK_MCU(NRF5X)
+#elif TU_CHECK_MCU(OPT_MCU_NRF5X)
   // 8 CBI + 1 ISO
   #define DCD_ATTR_ENDPOINT_MAX   9
 
 //------------- Microchip -------------//
-#elif TU_CHECK_MCU(SAMD21) || TU_CHECK_MCU(SAMD51) || TU_CHECK_MCU(SAME5X) || \
-      TU_CHECK_MCU(SAMD11) || TU_CHECK_MCU(SAML21) || TU_CHECK_MCU(SAML22)
+#elif TU_CHECK_MCU(OPT_MCU_SAMD21, OPT_MCU_SAMD51, OPT_MCU_SAME5X) || \
+      TU_CHECK_MCU(OPT_MCU_SAMD11, OPT_MCU_SAML21, OPT_MCU_SAML22)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
-#elif TU_CHECK_MCU(SAMG)
+#elif TU_CHECK_MCU(OPT_MCU_SAMG)
   #define DCD_ATTR_ENDPOINT_MAX   6
   #define DCD_ATTR_ENDPOINT_EXCLUSIVE_NUMBER
 
-#elif TU_CHECK_MCU(SAMX7X)
+#elif TU_CHECK_MCU(OPT_MCU_SAMX7X)
   #define DCD_ATTR_ENDPOINT_MAX   10
   #define DCD_ATTR_ENDPOINT_EXCLUSIVE_NUMBER
 
 //------------- ST -------------//
-#elif TU_CHECK_MCU(STM32F0) || TU_CHECK_MCU(STM32F1) || TU_CHECK_MCU(STM32F3) || \
-      TU_CHECK_MCU(STM32L0) || TU_CHECK_MCU(STM32L1) || TU_CHECK_MCU(STM32L4)
-  // F1: F102, F103
-  // L4: L4x2, L4x3
+#elif TU_CHECK_MCU(OPT_MCU_STM32F0)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
-#elif TU_CHECK_MCU(STM32F2) || TU_CHECK_MCU(STM32F4) || TU_CHECK_MCU(STM32F3)
-  // F1: F105, F107 only has 4
-  // L4: L4x5, L4x6 has 6
-  // For most mcu, FS has 4, HS has 6
-  #define DCD_ATTR_ENDPOINT_MAX   6
+#elif TU_CHECK_MCU(OPT_MCU_STM32F1)
+  #if defined (STM32F105x8) || defined (STM32F105xB) || defined (STM32F105xC) || \
+      defined (STM32F107xB) || defined (STM32F107xC)
+    #define DCD_ATTR_ENDPOINT_MAX   4
+    #define DCD_ATTR_DWC2_STM32
+  #else
+    #define DCD_ATTR_ENDPOINT_MAX   8
+  #endif
 
-#elif TU_CHECK_MCU(STM32F7)
+#elif TU_CHECK_MCU(OPT_MCU_STM32F2)
+  // FS has 4 ep, HS has 5 ep
+  #define DCD_ATTR_ENDPOINT_MAX   6
+  #define DCD_ATTR_DWC2_STM32
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32F3)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32F4)
+  // For most mcu, FS has 4, HS has 6. TODO 446/469/479 HS has 9
+  #define DCD_ATTR_ENDPOINT_MAX   6
+  #define DCD_ATTR_DWC2_STM32
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32F7)
   // FS has 6, HS has 9
   #define DCD_ATTR_ENDPOINT_MAX   9
+  #define DCD_ATTR_DWC2_STM32
 
-#elif TU_CHECK_MCU(STM32H7)
+#elif TU_CHECK_MCU(OPT_MCU_STM32H7)
   #define DCD_ATTR_ENDPOINT_MAX   9
+  #define DCD_ATTR_DWC2_STM32
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32G4)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32L0, OPT_MCU_STM32L1)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32L4)
+  #if defined (STM32L475xx) || defined (STM32L476xx) ||                          \
+      defined (STM32L485xx) || defined (STM32L486xx) || defined (STM32L496xx) || \
+      defined (STM32L4A6xx) || defined (STM32L4P5xx) || defined (STM32L4Q5xx) || \
+      defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || \
+      defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx)
+    #define DCD_ATTR_ENDPOINT_MAX   6
+    #define DCD_ATTR_DWC2_STM32
+  #else
+    #define DCD_ATTR_ENDPOINT_MAX   8
+  #endif
 
 //------------- Sony -------------//
-#elif TU_CHECK_MCU(CXD56)
+#elif TU_CHECK_MCU(OPT_MCU_CXD56)
   #define DCD_ATTR_ENDPOINT_MAX   7
   #define DCD_ATTR_ENDPOINT_EXCLUSIVE_NUMBER
 
 //------------- TI -------------//
-#elif TU_CHECK_MCU(MSP430x5xx)
+#elif TU_CHECK_MCU(OPT_MCU_MSP430x5xx)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+#elif TU_CHECK_MCU(OPT_MCU_MSP432E4, OPT_MCU_TM4C123, OPT_MCU_TM4C129)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
 //------------- ValentyUSB -------------//
-#elif TU_CHECK_MCU(VALENTYUSB_EPTRI)
+#elif TU_CHECK_MCU(OPT_MCU_VALENTYUSB_EPTRI)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
 //------------- Nuvoton -------------//
-#elif TU_CHECK_MCU(NUC121) || TU_CHECK_MCU(NUC126)
+#elif TU_CHECK_MCU(OPT_MCU_NUC121, OPT_MCU_NUC126)
   #define DCD_ATTR_ENDPOINT_MAX   8
 
-#elif TU_CHECK_MCU(NUC120)
+#elif TU_CHECK_MCU(OPT_MCU_NUC120)
   #define DCD_ATTR_ENDPOINT_MAX   6
 
-#elif TU_CHECK_MCU(NUC505)
+#elif TU_CHECK_MCU(OPT_MCU_NUC505)
   #define DCD_ATTR_ENDPOINT_MAX   12
 
 //------------- Espressif -------------//
-#elif TU_CHECK_MCU(ESP32S2) || TU_CHECK_MCU(ESP32S3)
+#elif TU_CHECK_MCU(OPT_MCU_ESP32S2, OPT_MCU_ESP32S3)
   #define DCD_ATTR_ENDPOINT_MAX   6
 
 //------------- Dialog -------------//
-#elif TU_CHECK_MCU(DA1469X)
+#elif TU_CHECK_MCU(OPT_MCU_DA1469X)
   #define DCD_ATTR_ENDPOINT_MAX   4
 
 //------------- Raspberry Pi -------------//
-#elif TU_CHECK_MCU(RP2040)
+#elif TU_CHECK_MCU(OPT_MCU_RP2040)
   #define DCD_ATTR_ENDPOINT_MAX   16
 
 //------------- Silabs -------------//
-#elif TU_CHECK_MCU(EFM32GG) || TU_CHECK_MCU(EFM32GG11) || TU_CHECK_MCU(EFM32GG12)
+#elif TU_CHECK_MCU(OPT_MCU_EFM32GG)
   #define DCD_ATTR_ENDPOINT_MAX   7
 
 //------------- Renesas -------------//
-#elif TU_CHECK_MCU(RX63X) || TU_CHECK_MCU(RX65X)
+#elif TU_CHECK_MCU(OPT_MCU_RX63X, OPT_MCU_RX65X, OPT_MCU_RX72N)
   #define DCD_ATTR_ENDPOINT_MAX   10
 
-//#elif TU_CHECK_MCU(MM32F327X)
-//  #define DCD_ATTR_ENDPOINT_MAX not knwon yet
+//------------- GigaDevice -------------//
+#elif TU_CHECK_MCU(OPT_MCU_GD32VF103)
+  #define DCD_ATTR_ENDPOINT_MAX   4
+
+//------------- Broadcom -------------//
+#elif TU_CHECK_MCU(OPT_MCU_BCM2711, OPT_MCU_BCM2835, OPT_MCU_BCM2837)
+  #define DCD_ATTR_ENDPOINT_MAX   8
+
+//------------- Broadcom -------------//
+#elif TU_CHECK_MCU(OPT_MCU_XMC4000)
+  #define DCD_ATTR_ENDPOINT_MAX   8
 
 #else
   #warning "DCD_ATTR_ENDPOINT_MAX is not defined for this MCU, default to 8"

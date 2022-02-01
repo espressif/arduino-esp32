@@ -13,51 +13,37 @@
 // limitations under the License.
 
 #include "esp32-hal.h"
+#include "soc/soc_caps.h"
 
-#if CONFIG_IDF_TARGET_ESP32
-#include "soc/rtc_io_reg.h"
-#define DAC1 25
-#define DAC2 26
-#elif CONFIG_IDF_TARGET_ESP32S2
-#include "soc/rtc_io_reg.h"
-#define DAC1 17
-#define DAC2 18
-#elif CONFIG_IDF_TARGET_ESP32C3
+#ifndef SOC_DAC_SUPPORTED           
 #define NODAC
 #else
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-
-#ifndef NODAC
-#include "esp_attr.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/rtc_io_periph.h"
-#include "soc/sens_reg.h"
-#include "soc/sens_struct.h"
-#include "driver/dac.h"
+#include "soc/dac_channel.h"
+#include "driver/dac_common.h"
 
 void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
 {
-    if(pin < DAC1 || pin > DAC2){
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
         return;//not dac pin
     }
-    pinMode(pin, ANALOG);
-    uint8_t channel = pin - DAC1;
-#if CONFIG_IDF_TARGET_ESP32
-    CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL1_REG, SENS_SW_TONE_EN);
-#elif CONFIG_IDF_TARGET_ESP32S2
-    SENS.sar_dac_ctrl1.dac_clkgate_en = 1;
-#endif
-    RTCIO.pad_dac[channel].dac_xpd_force = 1;
-    RTCIO.pad_dac[channel].xpd_dac = 1;
-    if (channel == 0) {
-        SENS.sar_dac_ctrl2.dac_cw_en1 = 0;
-    } else if (channel == 1) {
-        SENS.sar_dac_ctrl2.dac_cw_en2 = 0;
+
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
+    dac_output_enable(channel);
+    dac_output_voltage(channel, value);
+
+}
+
+void ARDUINO_ISR_ATTR __dacDisable(uint8_t pin)
+{
+    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
+        return;//not dac pin
     }
-    RTCIO.pad_dac[channel].dac = value;
+
+    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
+    dac_output_disable(channel);
 }
 
 extern void dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
+extern void dacDisable(uint8_t pin) __attribute__ ((weak, alias("__dacDisable")));
 
 #endif

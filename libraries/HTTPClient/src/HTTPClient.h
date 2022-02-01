@@ -27,7 +27,9 @@
 #ifndef HTTPClient_H_
 #define HTTPClient_H_
 
+#ifndef HTTPCLIENT_1_1_COMPATIBLE
 #define HTTPCLIENT_1_1_COMPATIBLE
+#endif
 
 #include <memory>
 #include <Arduino.h>
@@ -171,6 +173,7 @@ public:
     void setUserAgent(const String& userAgent);
     void setAuthorization(const char * user, const char * password);
     void setAuthorization(const char * auth);
+    void setAuthorizationType(const char * authType);
     void setConnectTimeout(int32_t connectTimeout);
     void setTimeout(uint16_t timeout);
 
@@ -251,6 +254,7 @@ protected:
     String _headers;
     String _userAgent = "ESP32HTTPClient";
     String _base64Authorization;
+    String _authorizationType = "Basic";
 
     /// Response handling
     RequestArgument* _currentHeaders = nullptr;

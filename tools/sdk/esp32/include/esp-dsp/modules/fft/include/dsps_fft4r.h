@@ -67,7 +67,7 @@ esp_err_t dsps_fft4r_init_fc32(float *fft_table_buff, int max_fft_size);
  *
  * @return
  */
-void dsps_fft4r_deinit_fc32();
+void dsps_fft4r_deinit_fc32(void);
 /**@}*/
 
 /**@{*/

@@ -98,18 +98,13 @@ Generic Vendor
     .. note::
         Create one file per board or one file with multiple boards. Do not add board information/description on this file.
 
+.. include:: ../common/datasheet.inc
+
 Resources
 ---------
 
-* `ESP32 Datasheet`_ (Datasheet)
-* `ESP32-S2 Datasheet`_ (Datasheet)
-* `ESP32-C3 Datasheet`_ (Datasheet)
-
 .. _Espressif Systems: https://www.espressif.com 
 .. _Espressif Product Selector: https://products.espressif.com/
-.. _ESP32 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
-.. _ESP32-S2 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf
-.. _ESP32-C3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
 
 .. |board_lolin_d32| raw:: html
 

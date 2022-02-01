@@ -200,6 +200,7 @@ bool HTTPClient::begin(String url, const char* CAcert)
         end();
     }
 
+    clear();
     _port = 443;
     if (!beginInternal(url, "https")) {
         return false;
@@ -226,6 +227,7 @@ bool HTTPClient::begin(String url)
         end();
     }
 
+    clear();
     _port = 80;
     if (!beginInternal(url, "http")) {
         return begin(url, (const char*)NULL);
@@ -243,7 +245,6 @@ bool HTTPClient::begin(String url)
 bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 {
     log_v("url: %s", url.c_str());
-    clear();
 
     // check for : (http: or https:
     int index = url.indexOf(':');
@@ -261,6 +262,10 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
     url.remove(0, (index + 3)); // remove http:// or https://
 
     index = url.indexOf('/');
+    if (index == -1) {
+        index = url.length();
+        url += '/';
+    }
     String host = url.substring(0, index);
     url.remove(0, index); // remove host part
 
@@ -456,6 +461,17 @@ void HTTPClient::setAuthorization(const char * auth)
 {
     if(auth) {
         _base64Authorization = auth;
+    }
+}
+
+/**
+ * set the Authorization type for the http request
+ * @param authType const char *
+ */
+void HTTPClient::setAuthorizationType(const char * authType)
+{
+    if(authType) {
+        _authorizationType = authType;
     }
 }
 
@@ -1174,7 +1190,9 @@ bool HTTPClient::sendHeader(const char * type)
 
     if(_base64Authorization.length()) {
         _base64Authorization.replace("\n", "");
-        header += F("Authorization: Basic ");
+        header += F("Authorization: ");
+        header += _authorizationType; 
+        header += " ";
         header += _base64Authorization;
         header += "\r\n";
     }
@@ -1195,8 +1213,8 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    clear();
-
+    _returnCode = 0;
+    _size = -1;
     _canReuse = _reuse;
 
     String transferEncoding;

@@ -34,7 +34,7 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 .. note::
    Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform 
-   packages using Boards Manager. We have packages available for Windows, macOS, and Linux (x86, amd64, armhf and arm64).
+   packages using Boards Manager. We have packages available for Windows, macOS, and Linux.
 
 To start the installation process using the Boards Managaer, follow these steps:
 
@@ -128,10 +128,11 @@ To get more information about PlatformIO, see the following links:
 Windows (manual installation)
 -----------------------------
 
-Steps to install Arduino ESP32 support on Windows:
+.. warning:: Arduino ESP32 core v2.x.x cannot be used on Windows 8.x x86 (32 bits), Windows 7 or earlier. The Windows 32 bits OS is no longer supported by this toolchain.
 
-.. note::
-   Tested on Windows 10 32 and 64 bit machines.
+   The Arduino ESP32 v1.0.6 still works on WIN32. You might want to install python 3.8.x because it is the latest release supported by Windows 7.
+
+Steps to install Arduino ESP32 support on Windows:
 
 **Step 1**
 
@@ -238,9 +239,7 @@ Debian/Ubuntu
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python3 get.py
 
 - Restart Arduino IDE.
@@ -253,9 +252,7 @@ Debian/Ubuntu
    mkdir -p espressif && \
    cd espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python3 get.py
 
 Fedora
@@ -275,9 +272,7 @@ Fedora
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python get.py
 
 - Restart Arduino IDE.
@@ -300,9 +295,7 @@ openSUSE
    mkdir -p ~/Arduino/hardware/espressif && \
    cd ~/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
-   cd esp32 && \
-   git submodule update --init --recursive && \
-   cd tools && \
+   cd esp32/tools && \
    python get.py
 
 - Restart Arduino IDE.
@@ -318,10 +311,8 @@ macOS
 
    mkdir -p ~/Documents/Arduino/hardware/espressif && \
    cd ~/Documents/Arduino/hardware/espressif && \
-   git clone https://github.com/espressif/arduino-esp32.git esp32 --depth 1 && \
-   cd esp32 && \
-   git submodule update --init --recursive --depth 1 && \
-   cd tools && \
+   git clone https://github.com/espressif/arduino-esp32.git esp32 && \
+   cd esp32/tools && \
    python get.py 
 
 Where ``~/Documents/Arduino`` represents your sketch book location as per "Arduino" > "Preferences" > "Sketchbook location" (in the IDE once started). Adjust the command above accordingly.

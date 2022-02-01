@@ -89,8 +89,8 @@ tinfl_decompress_mem_to_mem = 0x40000100;
  ***************************************/
 
 /* Functions */
-jd_prepare = 0x40000104;
-jd_decomp = 0x40000108;
+PROVIDE( jd_prepare = 0x40000104 );
+PROVIDE( jd_decomp = 0x40000108 );
 
 
 /***************************************
@@ -260,7 +260,7 @@ PROVIDE( esp_flash_chip_driver_initialized = 0x400002fc );
 PROVIDE( esp_flash_read_id = 0x40000300 );
 PROVIDE( esp_flash_get_size = 0x40000304 );
 PROVIDE( esp_flash_erase_chip = 0x40000308 );
-PROVIDE( esp_flash_erase_region = 0x4000030c );
+PROVIDE( rom_esp_flash_erase_region = 0x4000030c );
 PROVIDE( esp_flash_get_chip_write_protect = 0x40000310 );
 PROVIDE( esp_flash_set_chip_write_protect = 0x40000314 );
 PROVIDE( esp_flash_get_protectable_regions = 0x40000318 );
@@ -1567,7 +1567,6 @@ ppEnqueueRxq = 0x400016c8;
 ppEnqueueTxDone = 0x400016cc;
 ppGetTxQFirstAvail_Locked = 0x400016d0;
 ppGetTxframe = 0x400016d4;
-ppProcTxSecFrame = 0x400016dc;
 ppProcessRxPktHdr = 0x400016e0;
 ppProcessTxQ = 0x400016e4;
 ppRecordBarRRC = 0x400016e8;
@@ -1606,7 +1605,7 @@ rcSetTxAmpduLimit = 0x4000176c;
 rcTxUpdatePer = 0x40001770;
 rcUpdateAckSnr = 0x40001774;
 rcUpdateRate = 0x40001778;
-rcUpdateTxDone = 0x4000177c;
+/* rcUpdateTxDone = 0x4000177c; */
 rcUpdateTxDoneAmpdu2 = 0x40001780;
 rcUpSched = 0x40001784;
 rssi_margin = 0x40001788;
