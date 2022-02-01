@@ -106,9 +106,7 @@ static void uart_event_task(void *args)
             switch(event.type) {
                 //Event of UART receving data
                 case UART_DATA:
-                    UART_MUTEX_LOCK();
                     if(uart->onReceive) uart->onReceive();
-                    UART_MUTEX_UNLOCK();
                     break;
                 //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
