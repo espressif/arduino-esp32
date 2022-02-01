@@ -87,12 +87,12 @@ bool psramInit(){
         log_e("PSRAM could not be added to the heap!");
         return false;
     }
-#if CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL && !CONFIG_ARDUINO_ISR_IRAM
-        heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
+#if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
+    heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
 #endif
+    log_i("PSRAM enabled");
 #endif
     spiramDetected = true;
-    log_d("PSRAM enabled");
     return true;
 }
 
