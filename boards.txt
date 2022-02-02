@@ -55,6 +55,7 @@ esp32s3.build.flash_mode=dio
 esp32s3.build.boot=qio
 esp32s3.build.partitions=default
 esp32s3.build.defines=
+esp32s3.build.extra_libs="-L{compiler.sdk.path}/lib/spiram"
 esp32s3.build.loop_core=
 esp32s3.build.event_core=
 
@@ -97,8 +98,13 @@ esp32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s3.menu.PSRAM.disabled=Disabled
 esp32s3.menu.PSRAM.disabled.build.defines=
-esp32s3.menu.PSRAM.enabled=Enabled
-esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3.menu.PSRAM.disabled.build.extra_libs="-L{compiler.sdk.path}/lib/spiram"
+esp32s3.menu.PSRAM.qspi=QSPI
+esp32s3.menu.PSRAM.qspi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3.menu.PSRAM.qspi.build.extra_libs="-L{compiler.sdk.path}/lib/spiram"
+esp32s3.menu.PSRAM.opi=OPI
+esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM -DCONFIG_SPIRAM_BOOT_INIT -DCONFIG_SPIRAM_MODE_OCT=1
+esp32s3.menu.PSRAM.opi.build.extra_libs="-L{compiler.sdk.path}/lib/opiram"
 
 esp32s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s3.menu.PartitionScheme.default.build.partitions=default
@@ -878,7 +884,8 @@ esp32s3box.build.flash_freq=80m
 esp32s3box.build.flash_mode=dio
 esp32s3box.build.boot=qio
 esp32s3box.build.partitions=default
-esp32s3box.build.defines=-DBOARD_HAS_PSRAM
+esp32s3box.build.extra_libs="-L{compiler.sdk.path}/lib/opiram"
+esp32s3box.build.defines=-DBOARD_HAS_PSRAM -DCONFIG_SPIRAM_BOOT_INIT -DCONFIG_SPIRAM_MODE_OCT=1
 esp32s3box.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3box.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
