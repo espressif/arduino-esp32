@@ -14,6 +14,10 @@
 
 #include "soc/soc_caps.h"
 
+#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
+#error CONFIG_IDF_TARGET is not supported for Touch IDF driver!
+#endif
+
 #if SOC_TOUCH_SENSOR_NUM > 0
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
@@ -22,8 +26,13 @@
     Internal Private Touch Data Structure and Functions
 */
 
+#if SOC_TOUCH_VERSION_1         // ESP32 
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
+#elif SOC_TOUCH_VERSION_2       // ESP32S2, ESP32S3
+static uint16_t __touchSleepCycles = TOUCH_PAD_SLEEP_CYCLE_DEFAULT;
+static uint16_t __touchMeasureCycles = TOUCH_PAD_MEASURE_CYCLE_DEFAULT;
+#endif
 
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidArgFuncPtr)(void *);
@@ -58,27 +67,25 @@ static void ARDUINO_ISR_ATTR __touchISR(void * arg)
             }
         }
     }
-#endif
-
-#if SOC_TOUCH_VERSION_2     // ESP32S2, ESP32S3
-            touch_pad_intr_mask_t evt = touch_pad_read_intr_status_mask();
-            uint8_t pad_num = touch_pad_get_current_meas_channel();
-            if (evt & TOUCH_PAD_INTR_MASK_ACTIVE) {
-                // touch has been pressed / touched
-                __touchInterruptHandlers[pad_num].lastStatusIsPressed = true;
-            }
-            if (evt & TOUCH_PAD_INTR_MASK_INACTIVE) {
-                // touch has been released / untouched
-                __touchInterruptHandlers[pad_num].lastStatusIsPressed = false;
-            }
-            if(__touchInterruptHandlers[pad_num].fn){
-                // keeping backward compatibility with "void cb(void)" and with new "void cb(vooid *)"
-                if (__touchInterruptHandlers[pad_num].callWithArgs) {
-                    ((voidArgFuncPtr)__touchInterruptHandlers[pad_num].fn)(__touchInterruptHandlers[pad_num].arg);
-                } else {
-                    __touchInterruptHandlers[pad_num].fn();
-                }
-            }
+#elif SOC_TOUCH_VERSION_2     // ESP32S2, ESP32S3
+    touch_pad_intr_mask_t evt = touch_pad_read_intr_status_mask();
+    uint8_t pad_num = touch_pad_get_current_meas_channel();
+    if (evt & TOUCH_PAD_INTR_MASK_ACTIVE) {
+        // touch has been pressed / touched
+        __touchInterruptHandlers[pad_num].lastStatusIsPressed = true;
+    }
+    if (evt & TOUCH_PAD_INTR_MASK_INACTIVE) {
+        // touch has been released / untouched
+        __touchInterruptHandlers[pad_num].lastStatusIsPressed = false;
+    }
+    if(__touchInterruptHandlers[pad_num].fn){
+        // keeping backward compatibility with "void cb(void)" and with new "void cb(vooid *)"
+        if (__touchInterruptHandlers[pad_num].callWithArgs) {
+            ((voidArgFuncPtr)__touchInterruptHandlers[pad_num].fn)(__touchInterruptHandlers[pad_num].arg);
+        } else {
+            __touchInterruptHandlers[pad_num].fn();
+        }
+    }
 #endif
 }
 
@@ -88,9 +95,7 @@ static void __touchSetCycles(uint16_t measure, uint16_t sleep)
 {
     __touchSleepCycles = sleep;
     __touchMeasureCycles = measure;
-#if SOC_TOUCH_VERSION_1  || SOC_TOUCH_VERSION_2         // ESP32 || ESP32S2, ESP32S3
     touch_pad_set_meas_time(sleep, measure);
-#endif
 }
 
 
@@ -129,15 +134,13 @@ static void __touchInit()
         goto err;
     }
     touch_pad_intr_enable();  // returns ESP_OK
-#endif
-
-#if SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
+#elif SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
     err = touch_pad_init();
     if (err != ESP_OK) {
         goto err;
     }
     // the next lines will drive the touch reading values -- all os them return ESP_OK
-    touch_pad_set_meas_time(TOUCH_PAD_SLEEP_CYCLE_DEFAULT, TOUCH_PAD_MEASURE_CYCLE_DEFAULT);
+    touch_pad_set_meas_time(__touchSleepCycles, __touchMeasureCycles);
     touch_pad_set_voltage(TOUCH_PAD_HIGH_VOLTAGE_THRESHOLD, TOUCH_PAD_LOW_VOLTAGE_THRESHOLD, TOUCH_PAD_ATTEN_VOLTAGE_THRESHOLD);
     touch_pad_set_idle_channel_connect(TOUCH_PAD_IDLE_CH_CONNECT_DEFAULT);
     touch_pad_denoise_t denoise = {
@@ -171,7 +174,7 @@ err:
     return;
 }
 
-static uint32_t __touchRead(uint8_t pin)
+static touch_value_t __touchRead(uint8_t pin)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
@@ -179,22 +182,13 @@ static uint32_t __touchRead(uint8_t pin)
     }
     __touchInit();
 
-#if SOC_TOUCH_VERSION_1                 // ESP32
-    uint16_t    touch_value;
-#endif
-
-#if SOC_TOUCH_VERSION_2                 // ESP32S2 ESP32S3
-    uint32_t    touch_value;
-#endif
-
-#if SOC_TOUCH_VERSION_1  || SOC_TOUCH_VERSION_2         // ESP32 || ESP32S2, ESP32S3
+    touch_value_t touch_value;
     touch_pad_read_raw_data(pad, &touch_value);
-#endif
 
-    return (uint32_t) touch_value;
+    return touch_value;
 }
 
-static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, uint32_t threshold, bool callWithArgs)
+static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, touch_value_t threshold, bool callWithArgs)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
@@ -214,22 +208,20 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     }
 
 #if SOC_TOUCH_VERSION_1                         // ESP32
-    touch_pad_config(pad, (uint16_t) threshold);
-#endif
-
-#if SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
+    touch_pad_config(pad, threshold);
+#elif SOC_TOUCH_VERSION_2                       // ESP32S2, ESP32S3
     touch_pad_set_thresh(pad, threshold);
 #endif
 }
 
 // it keeps backwards compatibility
-static void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint32_t threshold)
+static void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold)
 {
     __touchConfigInterrupt(pin, userFunc, NULL, threshold, false);
 }
 
 // new additional version of the API with User Args
-static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void *args, uint32_t threshold)
+static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void *args, touch_value_t threshold)
 {
     __touchConfigInterrupt(pin, userFunc, args, threshold, true);
 }
@@ -245,7 +237,7 @@ static void __touchDettachInterrupt(uint8_t pin)
     External Public Touch API Functions
 */
 
-#if SOC_TOUCH_VERSION_1     // Only for ESP32 SoC
+#if SOC_TOUCH_VERSION_1        // Only for ESP32 SoC
 void touchInterruptSetThresholdDirection(bool mustbeLower) {
     if (mustbeLower) {
         touch_pad_set_trigger_mode(TOUCH_TRIGGER_BELOW);
@@ -253,9 +245,7 @@ void touchInterruptSetThresholdDirection(bool mustbeLower) {
         touch_pad_set_trigger_mode(TOUCH_TRIGGER_ABOVE);
     }
 }
-#endif
-
-#if SOC_TOUCH_VERSION_2     // Only for ESP32S2 and ESP32S3
+#elif SOC_TOUCH_VERSION_2     // Only for ESP32S2 and ESP32S3
 // returns true if touch pad has been and continues pressed and false otherwise 
 bool touchInterruptGetLastStatus(uint8_t pin) {
     int8_t pad = digitalPinToTouchChannel(pin);
@@ -267,9 +257,9 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
 }
 #endif
 
-extern uint32_t touchRead(uint8_t) __attribute__ ((weak, alias("__touchRead")));
-extern void touchAttachInterrupt(uint8_t, voidFuncPtr, uint32_t) __attribute__ ((weak, alias("__touchAttachInterrupt")));
-extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, uint32_t) __attribute__ ((weak, alias("__touchAttachArgsInterrupt")));
+extern touch_value_t touchRead(uint8_t) __attribute__ ((weak, alias("__touchRead")));
+extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribute__ ((weak, alias("__touchAttachInterrupt")));
+extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value_t) __attribute__ ((weak, alias("__touchAttachArgsInterrupt")));
 extern void touchDetachInterrupt(uint8_t) __attribute__ ((weak, alias("__touchDettachInterrupt")));
 extern void touchSetCycles(uint16_t, uint16_t) __attribute__ ((weak, alias("__touchSetCycles")));
 

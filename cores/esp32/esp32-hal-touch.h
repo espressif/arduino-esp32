@@ -29,6 +29,12 @@ extern "C" {
 #if SOC_TOUCH_SENSOR_NUM > 0
 #include "esp32-hal.h"
 
+#if SOC_TOUCH_VERSION_1 // ESP32
+typedef uint16_t touch_value_t;
+#elif SOC_TOUCH_VERSION_2 // ESP32S2 ESP32S3
+typedef uint32_t touch_value_t;
+#endif
+
 /*
  * Set cycles that measurement operation takes
  * The result from touchRead, threshold and detection
@@ -43,15 +49,15 @@ void touchSetCycles(uint16_t measure, uint16_t sleep);
  * You can use this method to chose a good threshold value
  * to use as value for touchAttachInterrupt
  * */
-uint32_t touchRead(uint8_t pin);
+touch_value_t touchRead(uint8_t pin);
 
 /*
  * Set function to be called if touch pad value falls (ESP32)
  * below the given threshold / rises (ESP32-S2/S3) by given increment (threshold). 
  * Use touchRead to determine a proper threshold between touched and untouched state
  * */
-void touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint32_t threshold);
-void touchAttachInterruptArg(uint8_t pin, void (*userFunc)(void*), void *arg, uint32_t threshold);
+void touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold);
+void touchAttachInterruptArg(uint8_t pin, void (*userFunc)(void*), void *arg, touch_value_t threshold);
 void touchDetachInterrupt(uint8_t pin);
 
 /*
