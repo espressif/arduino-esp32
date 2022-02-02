@@ -15,7 +15,7 @@
 #include "soc/soc_caps.h"
 
 #if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
-#error CONFIG_IDF_TARGET is not supported for Touch IDF driver!
+#warning CONFIG_IDF_TARGET is not supported for Touch IDF driver!
 #endif
 
 #if SOC_TOUCH_SENSOR_NUM > 0
