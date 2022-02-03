@@ -29,8 +29,8 @@ extern "C" {
 
 #if SOC_TOUCH_SENSOR_NUM > 0
 
-#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-#warning This SoC may not support the current Touch Sensor implementation!
+#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
+#error Touch IDF driver Not supported!
 #endif
 
 #if SOC_TOUCH_VERSION_1 // ESP32

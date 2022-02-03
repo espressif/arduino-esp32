@@ -18,10 +18,6 @@
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
 
-#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
-#error Touch IDF driver Not supported!
-#endif
-
 /*
     Internal Private Touch Data Structure and Functions
 */
