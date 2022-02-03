@@ -1192,11 +1192,12 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
   return true;
 }
 
+
 /**
  * Configure Dual antenna.
  * @param gpio_ant1 Configure the GPIO number for the antenna 1 connected to the RF switch (default GPIO2 on ESP32-WROOM-DA)
  * @param gpio_ant2 Configure the GPIO number for the antenna 2 connected to the RF switch (default GPIO25 on ESP32-WROOM-DA)
- * @param default_rx_ant Set the default RX antenna
+ * @param default_rx_ant Set the default RX antenna for rece
  * @return true on success
  */
 bool WiFiGenericClass::setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant) {
@@ -1258,103 +1259,13 @@ bool WiFiGenericClass::setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, ui
  */
 static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
 {
-    if(ipaddr) {/**
- * Configure Dual antenna.
- * @param gpio_ant1 Configure the GPIO number for the antenna 1 connected to the RF switch (default GPIO2 on ESP32-WROOM-DA)
- * @param gpio_ant2 Configure the GPIO number for the antenna 2 connected to the RF switch (default GPIO25 on ESP32-WROOM-DA)
- * @param default_rx_ant Set the default RX antenna
- * @return true on success
- */
-bool WiFiGenericClass::setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant) {
-
-    wifi_ant_gpio_config_t wifi_ant_io;
-    wifi_ant_config_t ant_config;
-
-    if (ESP_OK != esp_wifi_get_ant_gpio(&wifi_ant_io)) {
-        log_e("Failed to get antenna configuration");
-        return false;
+    if(ipaddr) {
+        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
     }
-
-    wifi_ant_io.gpio_cfg[0].gpio_num = gpio_ant1;
-    wifi_ant_io.gpio_cfg[0].gpio_select = 1;
-    wifi_ant_io.gpio_cfg[1].gpio_num = gpio_ant2;
-    wifi_ant_io.gpio_cfg[1].gpio_select = 1;
-
-    if (ESP_OK != esp_wifi_set_ant_gpio(&wifi_ant_io)) {
-        log_e("Failed to set antenna GPIO configuration");
-        return false;/**
- * Configure Dual antenna.
- * @param gpio_ant1 Configure the GPIO number for the antenna 1 connected to the RF switch (default GPIO2 on ESP32-WROOM-DA)
- * @param gpio_ant2 Configure the GPIO number for the antenna 2 connected to the RF switch (default GPIO25 on ESP32-WROOM-DA)
- * @param default_rx_ant Set the default RX antenna
- * @return true on success
- */
-bool WiFiGenericClass::setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant) {
-
-    wifi_ant_gpio_config_t wifi_ant_io;
-    wifi_ant_config_t ant_config;
-
-    if (ESP_OK != esp_wifi_get_ant_gpio(&wifi_ant_io)) {
-        log_e("Failed to get antenna configuration");
-        return false;
-    }
-
-    wifi_ant_io.gpio_cfg[0].gpio_num = gpio_ant1;
-    wifi_ant_io.gpio_cfg[0].gpio_select = 1;
-    wifi_ant_io.gpio_cfg[1].gpio_num = gpio_ant2;
-    wifi_ant_io.gpio_cfg[1].gpio_select = 1;
-
-    if (ESP_OK != esp_wifi_set_ant_gpio(&wifi_ant_io)) {
-        log_e("Failed to set antenna GPIO configuration");
-        return false;
-    }
-
-    // Set antenna configuration
-    ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
-    ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
-    ant_config.enabled_ant0 = 0;
-    ant_config.enabled_ant1 = 1;
-
-    switch (default_rx_ant)
-    {
-    case 0:
-        ant_config.rx_ant_default = WIFI_ANT_ANT0;
-        break;
-    case 1:
-        ant_config.rx_ant_default = WIFI_ANT_ANT1;
-        break;
-    default:
-        log_e("Invalid default antenna");
-        break;
-    }
-    
-    if (ESP_OK != esp_wifi_set_ant(&ant_config)) {
-        log_e("Failed to set antenna configuration");
-        return false;
-    }
-
-    return true;
+    xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
 }
-    switch (default_rx_ant)
-    {
-    case 0:
-        ant_config.rx_ant_default = WIFI_ANT_ANT0;
-        break;
-    case 1:
-        ant_config.rx_ant_default = WIFI_ANT_ANT1;
-        break;
-    default:
-        log_e("Invalid default antenna");
-        break;
-    }
-    
-    if (ESP_OK != esp_wifi_set_ant(&ant_config)) {
-        log_e("Failed to set antenna configuration");
-        return false;
-    }
 
-    return true;
-}
+/**
  * Resolve the given hostname to an IP address.
  * @param aHostname     Name to be resolved
  * @param aResult       IPAddress structure to store the returned IP address
