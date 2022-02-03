@@ -13,14 +13,14 @@
 // limitations under the License.
 
 #include "soc/soc_caps.h"
-
-#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
-#warning CONFIG_IDF_TARGET is not supported for Touch IDF driver!
-#endif
-
 #if SOC_TOUCH_SENSOR_NUM > 0
+
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
+
+#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
+#error Touch IDF driver Not supported!
+#endif
 
 /*
     Internal Private Touch Data Structure and Functions

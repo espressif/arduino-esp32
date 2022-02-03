@@ -25,9 +25,13 @@ extern "C" {
 #endif
 
 #include "soc/soc_caps.h"
+#include "esp32-hal.h"
 
 #if SOC_TOUCH_SENSOR_NUM > 0
-#include "esp32-hal.h"
+
+#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+#warning This SoC may not support the current Touch Sensor implementation!
+#endif
 
 #if SOC_TOUCH_VERSION_1 // ESP32
 typedef uint16_t touch_value_t;
@@ -83,7 +87,6 @@ void touchInterruptSetThresholdDirection(bool mustbeLower);
 // returns true if touch pad has been and continues pressed and false otherwise 
 bool touchInterruptGetLastStatus(uint8_t pin);
 #endif
-
 
 #endif // SOC_TOUCH_SENSOR_NUM > 0
 
