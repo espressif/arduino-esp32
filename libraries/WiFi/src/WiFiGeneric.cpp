@@ -1200,7 +1200,7 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
  * @param default_rx_ant Set the default RX antenna for rece
  * @return true on success
  */
-bool WiFiGenericClass::setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant) {
+bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant) {
 
     wifi_ant_gpio_config_t wifi_ant_io;
     wifi_ant_config_t ant_config;
