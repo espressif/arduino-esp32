@@ -1192,6 +1192,94 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
   return true;
 }
 
+/**
+ * Configure Dual antenna.
+ * @param gpio_ant1 Configure the GPIO number for the antenna 1 connected to the RF switch (default GPIO2 on ESP32-WROOM-DA)
+ * @param gpio_ant2 Configure the GPIO number for the antenna 2 connected to the RF switch (default GPIO25 on ESP32-WROOM-DA)
+ * @param rx_mode Set the RX antenna mode. See wifi_rx_ant_t for the options.
+ * @param tx_mode Set the TX antenna mode. See wifi_tx_ant_t for the options.
+ * @return true on success
+ */
+bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode) {
+
+    wifi_ant_gpio_config_t wifi_ant_io;
+
+    if (ESP_OK != esp_wifi_get_ant_gpio(&wifi_ant_io)) {
+        log_e("Failed to get antenna configuration");
+        return false;
+    }
+
+    wifi_ant_io.gpio_cfg[0].gpio_num = gpio_ant1;
+    wifi_ant_io.gpio_cfg[0].gpio_select = 1;
+    wifi_ant_io.gpio_cfg[1].gpio_num = gpio_ant2;
+    wifi_ant_io.gpio_cfg[1].gpio_select = 1;
+
+    if (ESP_OK != esp_wifi_set_ant_gpio(&wifi_ant_io)) {
+        log_e("Failed to set antenna GPIO configuration");
+        return false;
+    }
+
+    // Set antenna default configuration
+    wifi_ant_config_t ant_config = {
+        .rx_ant_mode = WIFI_ANT_MODE_AUTO,
+        .tx_ant_mode = WIFI_ANT_MODE_AUTO,
+        .enabled_ant0 = 0,
+        .enabled_ant1 = 1,
+    };
+
+    switch (rx_mode)
+    {
+    case WIFI_RX_ANT0:
+        ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT0;
+        break;
+    case WIFI_RX_ANT1:
+        ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT1;
+        break;
+    case WIFI_RX_ANT_AUTO:
+        log_i("TX Antenna will be automatically selected");
+        ant_config.rx_ant_default = WIFI_ANT_ANT0;
+        ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+        // Force TX for AUTO if RX is AUTO
+        ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+        goto set_ant;
+        break;
+    default:
+        log_e("Invalid default antenna! Falling back to AUTO");
+        ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+        break;
+    }
+
+    switch (tx_mode)
+    {
+    case WIFI_TX_ANT0:
+        ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT0;
+        break;
+    case WIFI_TX_ANT1:
+        ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT1;
+        break;
+    case WIFI_TX_ANT_AUTO:
+        log_i("RX Antenna will be automatically selected");
+        ant_config.rx_ant_default = WIFI_ANT_ANT0;
+        ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+        // Force RX for AUTO if RX is AUTO
+        ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+        break;
+    default:
+        log_e("Invalid default antenna! Falling back to AUTO");
+        ant_config.rx_ant_default = WIFI_ANT_ANT0;
+        ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+        break;
+    }
+
+set_ant:
+    if (ESP_OK != esp_wifi_set_ant(&ant_config)) {
+        log_e("Failed to set antenna configuration");
+        return false;
+    }
+
+    return true;
+}
+
 // -----------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------ Generic Network function ---------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
