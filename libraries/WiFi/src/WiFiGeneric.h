@@ -174,6 +174,8 @@ class WiFiGenericClass
 
     bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
 
+	bool setAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, uint8_t default_rx_ant);
+
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
