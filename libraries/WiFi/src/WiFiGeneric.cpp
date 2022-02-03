@@ -1192,7 +1192,6 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
   return true;
 }
 
-
 /**
  * Configure Dual antenna.
  * @param gpio_ant1 Configure the GPIO number for the antenna 1 connected to the RF switch (default GPIO2 on ESP32-WROOM-DA)
@@ -1242,6 +1241,7 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
         ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
         // Force TX for AUTO if RX is AUTO
         ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+        goto set_ant;
         break;
     default:
         log_e("Invalid default antenna! Falling back to AUTO");
@@ -1271,6 +1271,7 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
         break;
     }
 
+set_ant:
     if (ESP_OK != esp_wifi_set_ant(&ant_config)) {
         log_e("Failed to set antenna configuration");
         return false;
