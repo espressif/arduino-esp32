@@ -990,7 +990,7 @@ void I2SClass::_post_read_data_fix(void *input, size_t *size){
 void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, size_t *actual_bytes_written){
   long start = millis();
   ulong src_ptr = 0;
-  uint8_t* buff;
+  uint8_t* buff = NULL;
   size_t buff_size = size;
   switch(_bitsPerSample){
     case 8:
