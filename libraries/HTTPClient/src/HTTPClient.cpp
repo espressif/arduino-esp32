@@ -1291,13 +1291,14 @@ int HTTPClient::handleHeaderResponse()
 
                 for (size_t i = 0; i < _headerKeysCount; i++) {
                     if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
-                        if (!_currentHeaders[i].value.isEmpty()) {
-                            // Existing value, append this one with a comma
-                            _currentHeaders[i].value += ',';
-                            _currentHeaders[i].value += headerValue;
-                        } else {
-                            _currentHeaders[i].value = headerValue;
-                        }
+                        // Uncomment the following lines if you need to add support for multiple headers with the same key:
+                        // if (!_currentHeaders[i].value.isEmpty()) {
+                        //     // Existing value, append this one with a comma
+                        //     _currentHeaders[i].value += ',';
+                        //     _currentHeaders[i].value += headerValue;
+                        // } else {
+                        _currentHeaders[i].value = headerValue;
+                        // }
                         break; // We found a match, stop looking
                     }
                 }
