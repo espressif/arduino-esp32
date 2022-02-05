@@ -53,10 +53,12 @@
 #endif
 
 #include "soc/soc_caps.h"
-#include "soc/touch_sensor_periph.h"
 // It fixes lack of pin definition for S3 and for any future SoC
 // this function works for ESP32, ESP32-S2 and ESP32-S3 - including the C3, it will return -1 for any pin
-int8_t digitalPinToTouchChannel(uint8_t pin) {
+#if SOC_TOUCH_SENSOR_NUM >  0
+#include "soc/touch_sensor_periph.h"
+int8_t digitalPinToTouchChannel(uint8_t pin) 
+{
     int8_t ret = -1;
     if (pin < SOC_GPIO_PIN_COUNT) {
         for (uint8_t i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
@@ -68,6 +70,13 @@ int8_t digitalPinToTouchChannel(uint8_t pin) {
     }
     return ret;
 }
+#else
+// No Touch Sensor available
+int8_t digitalPinToTouchChannel(uint8_t pin) 
+{
+    return -1;
+}
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
 const int8_t esp32_adc2gpio[20] = {36, 37, 38, 39, 32, 33, 34, 35, -1, -1, 4, 0, 2, 15, 13, 12, 14, 27, 25, 26};
