@@ -53,6 +53,7 @@
 #endif
 
 #include "soc/soc_caps.h"
+#include "soc/touch_sensor_periph.h"
 // It fixes lack of pin definition for S3 and for any future SoC
 // this function works for ESP32, ESP32-S2 and ESP32-S3 - including the C3, it will return -1 for any pin
 int8_t digitalPinToTouchChannel(uint8_t pin) {
