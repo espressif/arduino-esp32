@@ -20,7 +20,7 @@
 #include "esp_crt_bundle.h"
 #include "WiFi.h"
 
-#ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
+#if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
 #  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
 #else
 
@@ -335,8 +335,13 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
+    
+    // save only interesting field
+    int timeout = ssl_client->handshake_timeout;
     // reset embedded pointers to zero
     memset(ssl_client, 0, sizeof(sslclient_context));
+    
+    ssl_client->handshake_timeout = timeout;
 }
 
 
