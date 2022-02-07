@@ -1645,7 +1645,7 @@ void HTTPClient::setCookie(String date, String headerValue)
 	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
         if (c->domain == cookie.domain && c->name == cookie.name) {
             // when evaluating, max-age takes precedence over expires if both are defined
-            if (cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt || cookie.max_age.duration <= 0)
+            if ((cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt)) || cookie.max_age.duration <= 0
             || (!cookie.max_age.valid && cookie.expires.valid && cookie.expires.date < now_gmt)) {
                 _cookieJar->erase(c);
                 c--;
@@ -1671,7 +1671,7 @@ bool HTTPClient::generateCookieString(String *cookieString)
     bool found = false;
 
  	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
-        if (c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
+        if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
             _cookieJar->erase(c);
             c--;
         } else if (_host.indexOf(c->domain) >= 0 && (!c->secure || _secure) ) {
@@ -1684,5 +1684,3 @@ bool HTTPClient::generateCookieString(String *cookieString)
     }
     return found;
 }
-
-
