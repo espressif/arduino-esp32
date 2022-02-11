@@ -98,18 +98,18 @@
 /*-------------------------- GPIO CAPS ---------------------------------------*/
 // ESP32-S2 has 1 GPIO peripheral
 #define SOC_GPIO_PORT           (1)
-#define SOC_GPIO_PIN_COUNT      (48)
+#define SOC_GPIO_PIN_COUNT      (47)
 
-// On ESP32 those PADs which have RTC functions must set pullup/down/capability via RTC register.
+// On ESP32-S2 those PADs which have RTC functions must set pullup/down/capability via RTC register.
 // On ESP32-S2, Digital IOs have their own registers to control pullup/down/capability, independent with RTC registers.
 #define SOC_GPIO_SUPPORT_RTC_INDEPENDENT (1)
 // Force hold is a new function of ESP32-S2
 #define SOC_GPIO_SUPPORT_FORCE_HOLD      (1)
 
-// 0~47 except from 22~25, 47 are valid
-#define SOC_GPIO_VALID_GPIO_MASK             (0xFFFFFFFFFFFFULL & ~(0ULL | BIT22 | BIT23 | BIT24 | BIT25 | BIT47))
-// GPIO 46, 47 are input only
-#define SOC_GPIO_VALID_OUTPUT_GPIO_MASK     (SOC_GPIO_VALID_GPIO_MASK & ~(0ULL | BIT46 | BIT47))
+// 0~46 except from 22~25 are valid
+#define SOC_GPIO_VALID_GPIO_MASK             (0x7FFFFFFFFFFFULL & ~(0ULL | BIT22 | BIT23 | BIT24 | BIT25))
+// GPIO 46 is input only
+#define SOC_GPIO_VALID_OUTPUT_GPIO_MASK     (SOC_GPIO_VALID_GPIO_MASK & ~(0ULL | BIT46))
 
 // Support to configure slept status
 #define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
@@ -181,7 +181,6 @@
 #define SOC_RMT_RX_CANDIDATES_PER_GROUP (4)  /*!< Number of channels that capable of Receive in each group */
 #define SOC_RMT_CHANNELS_PER_GROUP      (4)  /*!< Total 4 channels */
 #define SOC_RMT_MEM_WORDS_PER_CHANNEL   (64) /*!< Each channel owns 64 words memory (1 word = 4 Bytes) */
-#define SOC_RMT_SUPPORT_RX_PINGPONG     (1)  /*!< Support Ping-Pong mode on RX path */
 #define SOC_RMT_SUPPORT_RX_DEMODULATION (1)  /*!< Support signal demodulation on RX path (i.e. remove carrier) */
 #define SOC_RMT_SUPPORT_TX_LOOP_COUNT   (1)  /*!< Support transmiting specified number of cycles in loop mode */
 #define SOC_RMT_SUPPORT_TX_SYNCHRO      (1)  /*!< Support coordinate a group of TX channels to start simultaneously */
