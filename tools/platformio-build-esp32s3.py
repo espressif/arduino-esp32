@@ -294,7 +294,8 @@ env.Append(
 
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "lib"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "ld")
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "ld"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "qspi_qspi")
     ],
 
     LIBS=[
