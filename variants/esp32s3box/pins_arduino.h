@@ -62,12 +62,14 @@ static const uint8_t T14 = 14;
 #define I2S_SDIN   16
 #define I2S_DOUT   15
 
+#define BOARD_HAS_SDMMC
 #define SDMMC_CLK  13
 #define SDMMC_CMD  11
 #define SDMMC_D0   14
 #define SDMMC_D1   12
 #define SDMMC_D2   10
 #define SDMMC_D3    9
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_DEFAULT
 
 #define PA_PIN     46 //Audio Amp Power
 #define MUTE_PIN    1 //MUTE Button
