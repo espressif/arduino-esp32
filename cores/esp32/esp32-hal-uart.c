@@ -155,25 +155,23 @@ bool uartIsDriverInstalled(uart_t* uart)
     return false;
 }
 
-void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin)
+// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
+// Negative Pin Number will keep it unmodified, thus this function can set individual pins
+void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(uart == NULL || rxPin >= SOC_GPIO_PIN_COUNT || txPin >= SOC_GPIO_PIN_COUNT) {
+    if(uart == NULL) {
         return;
     }
     UART_MUTEX_LOCK();
-    ESP_ERROR_CHECK(uart_set_pin(uart->num, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)); 
-    UART_MUTEX_UNLOCK();
-    
+    // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
+    uart_set_pin(uart->num, txPin, rxPin, ctsPin, rtsPin); 
+    UART_MUTEX_UNLOCK();  
 }
 
 
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart_nr >= SOC_UART_NUM) {
-        return NULL;
-    }
-
-    if(rxPin == -1 && txPin == -1) {
         return NULL;
     }
 

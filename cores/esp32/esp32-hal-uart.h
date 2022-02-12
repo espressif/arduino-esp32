@@ -76,7 +76,9 @@ void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
-void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin);
+
+// Negative Pin Number will keep it unmodified, thus this function can set individual pins
+void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);

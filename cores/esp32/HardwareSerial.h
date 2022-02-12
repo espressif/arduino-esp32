@@ -107,7 +107,12 @@ public:
     void setDebugOutput(bool);
     
     void setRxInvert(bool);
-    void setPins(uint8_t rxPin, uint8_t txPin);
+
+    // Negative Pin Number will keep it unmodified, thus this function can set individual pins
+    // SetPins shall be called after Serial begin()
+    void setPins(int8_t rxPin, int8_t txPin);
+    void setAllPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+    
     size_t setRxBufferSize(size_t new_size);
 
 protected:
