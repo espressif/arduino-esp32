@@ -301,6 +301,12 @@ void HardwareSerial::setAllPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_
     uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
 }
 
+// Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
+void HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
+{
+    uartSetHwFlowCtrlMode(_uart, mode, threshold);
+}
+
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
     if (_uart) {

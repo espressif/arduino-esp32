@@ -168,6 +168,16 @@ void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
     UART_MUTEX_UNLOCK();  
 }
 
+// 
+void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+    if(uart == NULL) {
+        return;
+    }
+    // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
+    // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
+    uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold);
+}
+
 
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
 {
