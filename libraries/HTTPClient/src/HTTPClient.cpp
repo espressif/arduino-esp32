@@ -1543,122 +1543,125 @@ void HTTPClient::clearAllCookies()
 
 void HTTPClient::setCookie(String date, String headerValue)
 {
-    #define HTTP_TIME_PATTERN "%a, %d %b %Y %H:%M:%S"
+    if (_cookieJar)
+    {
+        #define HTTP_TIME_PATTERN "%a, %d %b %Y %H:%M:%S"
 
-    Cookie cookie;
-    String value;
-    int pos1, pos2;
+        Cookie cookie;
+        String value;
+        int pos1, pos2;
 
-    headerValue.toLowerCase();
+        headerValue.toLowerCase();
 
-    struct tm tm;
-    strptime(date.c_str(), HTTP_TIME_PATTERN, &tm);
-    cookie.date = mktime(&tm);
+        struct tm tm;
+        strptime(date.c_str(), HTTP_TIME_PATTERN, &tm);
+        cookie.date = mktime(&tm);
 
-    pos1 = headerValue.indexOf('=');
-    pos2 = headerValue.indexOf(';');
+        pos1 = headerValue.indexOf('=');
+        pos2 = headerValue.indexOf(';');
 
-    if (pos1 >= 0 && pos2 > pos1){
-        cookie.name = headerValue.substring(0, pos1);
-        cookie.value = headerValue.substring(pos1 + 1, pos2);
-    } else {
-        return;     // invalid cookie header
-    }
-
-    // expires
-    if (headerValue.indexOf("expires=") >= 0){
-        pos1 = headerValue.indexOf("expires=") + strlen("expires=");
-        pos2 = headerValue.indexOf(';', pos1);
-
-        if (pos2 > pos1)
-            value = headerValue.substring(pos1, pos2);
-        else
-            value = headerValue.substring(pos1);
-    
-        strptime(value.c_str(), HTTP_TIME_PATTERN, &tm);
-        cookie.expires.date = mktime(&tm);
-        cookie.expires.valid = true;
-    }
-
-    // max-age
-    if (headerValue.indexOf("max-age=") >= 0){
-        pos1 = headerValue.indexOf("max-age=") + strlen("max-age=");
-        pos2 = headerValue.indexOf(';', pos1);
-
-        if (pos2 > pos1)
-            value = headerValue.substring(pos1, pos2);
-        else
-            value = headerValue.substring(pos1);
-    
-        cookie.max_age.duration = value.toInt();
-        cookie.max_age.valid = true;
-    }
-
-    // domain
-    if (headerValue.indexOf("domain=") >= 0){
-        pos1 = headerValue.indexOf("domain=") + strlen("domain=");
-        pos2 = headerValue.indexOf(';', pos1);
-
-        if (pos2 > pos1)
-            value = headerValue.substring(pos1, pos2);
-        else
-            value = headerValue.substring(pos1);
-
-        if (value.startsWith(".")) value.remove(0, 1);
-
-        if (_host.indexOf(value) >= 0) {
-            cookie.domain = value;
+        if (pos1 >= 0 && pos2 > pos1){
+            cookie.name = headerValue.substring(0, pos1);
+            cookie.value = headerValue.substring(pos1 + 1, pos2);
         } else {
-            return;     // server tries to set a cookie on a different domain; ignore it
+            return;     // invalid cookie header
         }
-    } else {
-        pos1 = _host.lastIndexOf('.', _host.lastIndexOf('.') - 1);
-        if (pos1 >= 0)
-            cookie.domain = _host.substring(pos1 + 1);
-        else
-            cookie.domain = _host;
-    }
 
-    // path
-    if (headerValue.indexOf("path=") >= 0){
-        pos1 = headerValue.indexOf("path=") + strlen("path=");
-        pos2 = headerValue.indexOf(';', pos1);
+        // expires
+        if (headerValue.indexOf("expires=") >= 0){
+            pos1 = headerValue.indexOf("expires=") + strlen("expires=");
+            pos2 = headerValue.indexOf(';', pos1);
 
-        if (pos2 > pos1)
-            cookie.path = headerValue.substring(pos1, pos2);
-        else
-            cookie.path = headerValue.substring(pos1);
-    }
+            if (pos2 > pos1)
+                value = headerValue.substring(pos1, pos2);
+            else
+                value = headerValue.substring(pos1);
 
-    // HttpOnly
-    cookie.http_only = (headerValue.indexOf("httponly") >= 0);
+            strptime(value.c_str(), HTTP_TIME_PATTERN, &tm);
+            cookie.expires.date = mktime(&tm);
+            cookie.expires.valid = true;
+        }
 
-    // secure
-    cookie.secure = (headerValue.indexOf("secure") >= 0);
+        // max-age
+        if (headerValue.indexOf("max-age=") >= 0){
+            pos1 = headerValue.indexOf("max-age=") + strlen("max-age=");
+            pos2 = headerValue.indexOf(';', pos1);
 
-    // overwrite or delete cookie in/from cookie jar
-    time_t now_local = time(NULL);
-    time_t now_gmt = mktime(gmtime(&now_local));
-    
-    bool found = false;
+            if (pos2 > pos1)
+                value = headerValue.substring(pos1, pos2);
+            else
+                value = headerValue.substring(pos1);
 
-	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
-        if (c->domain == cookie.domain && c->name == cookie.name) {
-            // when evaluating, max-age takes precedence over expires if both are defined
-            if ((cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt)) || cookie.max_age.duration <= 0
-            || (!cookie.max_age.valid && cookie.expires.valid && cookie.expires.date < now_gmt)) {
-                _cookieJar->erase(c);
-                c--;
+            cookie.max_age.duration = value.toInt();
+            cookie.max_age.valid = true;
+        }
+
+        // domain
+        if (headerValue.indexOf("domain=") >= 0){
+            pos1 = headerValue.indexOf("domain=") + strlen("domain=");
+            pos2 = headerValue.indexOf(';', pos1);
+
+            if (pos2 > pos1)
+                value = headerValue.substring(pos1, pos2);
+            else
+                value = headerValue.substring(pos1);
+
+            if (value.startsWith(".")) value.remove(0, 1);
+
+            if (_host.indexOf(value) >= 0) {
+                cookie.domain = value;
             } else {
-                *c = cookie;
+                return;     // server tries to set a cookie on a different domain; ignore it
             }
-            found = true;
+        } else {
+            pos1 = _host.lastIndexOf('.', _host.lastIndexOf('.') - 1);
+            if (pos1 >= 0)
+                cookie.domain = _host.substring(pos1 + 1);
+            else
+                cookie.domain = _host;
         }
-    }
 
-    // add cookie to jar
-    if (!found && !(cookie.max_age.valid && cookie.max_age.duration <= 0)) 
-        _cookieJar->push_back(cookie);
+        // path
+        if (headerValue.indexOf("path=") >= 0){
+            pos1 = headerValue.indexOf("path=") + strlen("path=");
+            pos2 = headerValue.indexOf(';', pos1);
+
+            if (pos2 > pos1)
+                cookie.path = headerValue.substring(pos1, pos2);
+            else
+                cookie.path = headerValue.substring(pos1);
+        }
+
+        // HttpOnly
+        cookie.http_only = (headerValue.indexOf("httponly") >= 0);
+
+        // secure
+        cookie.secure = (headerValue.indexOf("secure") >= 0);
+
+        // overwrite or delete cookie in/from cookie jar
+        time_t now_local = time(NULL);
+        time_t now_gmt = mktime(gmtime(&now_local));
+
+        bool found = false;
+
+        for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
+            if (c->domain == cookie.domain && c->name == cookie.name) {
+                // when evaluating, max-age takes precedence over expires if both are defined
+                if ((cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt)) || cookie.max_age.duration <= 0
+                || (!cookie.max_age.valid && cookie.expires.valid && cookie.expires.date < now_gmt)) {
+                    _cookieJar->erase(c);
+                    c--;
+                } else {
+                    *c = cookie;
+                }
+                found = true;
+            }
+        }
+
+        // add cookie to jar
+        if (!found && !(cookie.max_age.valid && cookie.max_age.duration <= 0)) 
+            _cookieJar->push_back(cookie);
+    }
 
 }
 
@@ -1670,16 +1673,19 @@ bool HTTPClient::generateCookieString(String *cookieString)
     *cookieString = "";
     bool found = false;
 
+    if (_cookieJar)
+    {
  	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
-        if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
-            _cookieJar->erase(c);
-            c--;
-        } else if (_host.indexOf(c->domain) >= 0 && (!c->secure || _secure) ) {
-            if (*cookieString == "")
-                *cookieString = c->name + "=" + c->value;
-            else
-                *cookieString += " ;" + c->name + "=" + c->value;
-            found = true;
+            if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
+                _cookieJar->erase(c);
+                c--;
+            } else if (_host.indexOf(c->domain) >= 0 && (!c->secure || _secure) ) {
+                if (*cookieString == "")
+                    *cookieString = c->name + "=" + c->value;
+                else
+                    *cookieString += " ;" + c->name + "=" + c->value;
+                found = true;
+            }
         }
     }
     return found;
