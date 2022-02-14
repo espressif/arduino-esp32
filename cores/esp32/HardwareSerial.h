@@ -110,8 +110,7 @@ public:
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
     // SetPins shall be called after Serial begin()
-    void setPins(int8_t rxPin, int8_t txPin);
-    void setAllPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+    void setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
     void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
 

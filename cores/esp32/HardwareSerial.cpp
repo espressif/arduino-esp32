@@ -290,13 +290,7 @@ void HardwareSerial::setRxInvert(bool invert)
 }
 
 // negative Pin value will keep it unmodified
-void HardwareSerial::setPins(int8_t rxPin, int8_t txPin)
-{
-    uartSetPins(_uart, rxPin, txPin, -1, -1);
-}
-
-// negative Pin value will keep it unmodified
-void HardwareSerial::setAllPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
 }
