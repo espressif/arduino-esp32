@@ -14,6 +14,7 @@ Here you will find all the relevant information about the project.
    Getting Started <getting_started>
    Libraries <libraries>
    Tutorials <tutorials/tutorials>
+   Guides <guides/guides>
    Advanced Utilities <advanced_utils>
    FAQ <faq>
    Troubleshooting <troubleshooting>
