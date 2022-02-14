@@ -47,24 +47,25 @@ int8_t digitalPinToTouchChannel(uint8_t pin)
 
 int8_t digitalPinToAnalogChannel(uint8_t pin) 
 {
-    uint8_t channel;
-    int8_t ret = -1;
+    uint8_t channel = 0;
     if (pin < SOC_GPIO_PIN_COUNT) {
         for (uint8_t i = 0; i < SOC_ADC_PERIPH_NUM; i++) {
             for (uint8_t j = 0; j < SOC_ADC_MAX_CHANNEL_NUM; j++) {
                 if (adc_channel_io_map[i][j] == pin) {
-                ret = channel;
-                break;
+                    return channel;
                 }
                 channel++;
             }
         }
     }
-    return ret;
+    return -1;
 }
 
 int8_t analogChannelToDigitalPin(uint8_t channel) 
 {
+    if (channel >= (SOC_ADC_PERIPH_NUM * SOC_ADC_MAX_CHANNEL_NUM)) {
+        return -1;
+    }
     uint8_t adc_unit = (channel / SOC_ADC_MAX_CHANNEL_NUM);
     uint8_t adc_chan = (channel % SOC_ADC_MAX_CHANNEL_NUM);
     return adc_channel_io_map[adc_unit][adc_chan];
