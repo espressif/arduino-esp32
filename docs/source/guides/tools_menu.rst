@@ -15,8 +15,6 @@ Since some boards and SoC's may vary in terms of hardware configuration, be sure
 Arduino IDE
 -----------
 
-
-
 Tools Menu
 ----------
 
@@ -37,6 +35,10 @@ If your board is not present on this list, you can select the generic ``ESP32-XX
 
 Currently we have one generic development module for each of the supported targets.
 
+If the board selected belongs to another SoC family, you will see the following information at the build output:
+
+    ``A fatal error occurred: This chip is ESP32 not ESP32-S2. Wrong --chip argument?``
+
 Upload Speed
 ************
 
@@ -52,32 +54,80 @@ On this option, you can select the CPU clock frequency. This option is critical 
 Flash Frequency
 ***************
 
+Use this function to select the flash memory frequency.
+
+* **40MHz**
+* **80MHz**
+
 Flash Mode
 **********
+
+This option is used to select the SPI mode for the flash memory.
+
+* **QIO** - Quad I/O Fast Read
+    * Four SPI pins are used to write the flash address part of the command, and to read flash data out.
+
+* **DIO** - Dual I/O Fast Read
+    * Two SPI pins are used to write the flash address part of the command, and to read flash data out.
+
+* **QOUT** - Quad Output Fast Read
+    * Four SPI pins are used to read the flash data out.
+
+* **DOUT** - Dual Output Fast Read
+    * Two SPI pins are used to read flash data out.
+
+If don't know how the board flash is phisically connected or the flash memory model, try the **QIO/QOUT** first and then **DIO/DOUT**.
 
 Flash Size
 **********
 
+This option is used to select the flash size.
+
+* **2MB** (16Mb)
+* **4MB** (32Mb)
+* **8MB** (64Mb)
+* **16MB** (128Mb)
+
 Partition Scheme
 ****************
+
+This option is used to select the partition model according to the flash size and the resources needed, like storage area and OTA (Over The Air updates).
+
+.. note:: Be carefull selecting the right partition according to the flash size.
 
 Core Debug Level
 ****************
 
+This option is used to select the Arduino core debugging level to be printed to the serial debug.
+
+* **None** - Prints nothing.
+* **Error** - Onle at error level.
+* **Warning** - Only at warning level and above.
+* **Info** - Only at info level and above.
+* **Debug** - Only at debug level and above.
+* **Verbose** - Prints everything.
+
 PSRAM
 *****
+
+The PSRAM is an internal or external extended RAM.
+
+This option can be used to ``Enable`` or ``Disable`` the PSRAM.
 
 Arduino Runs On
 ***************
 
+This function is used to selecte the core that runs the Arduino core. This is only valid if the target SoC has 2 cores.
+
 Events Run On
 *************
+
+This function is used to selecte the core that runs the events. This is only valid if the target SoC has 2 cores.
 
 Port
 ****
 
-Get Board Info
-**************
+This option is used to select the serial port to be used on the flashing and monitor.
 
 USB Options
 -----------
@@ -102,10 +152,19 @@ This class is used for flashing the device without any other external device att
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, one new serial port will appear in the serial ports list.
 Use this new serial port for flashing the device.
 
+This option can be used as well for debigging via the ``Serial Monitor``. 
+
 USB Firmware MSC On Boot
 ************************
 
-The USB Mass Storage Class
+The USB Mass Storage Class, or USB MSC, is a class used for storage devices, like a USB flash drive.
+
+This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, one new storage device will appear in the system as a storage drive.
+Use this new storage drive to write or read files, or to drop a new firmware binary to flash the device.
 
 USB DFU On Boot
 ***************
+
+The USB Device Firmware Upgrade is a class used for flashing the device throught USB.
+
+This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, the device will appear as a USB DFU capable device.
