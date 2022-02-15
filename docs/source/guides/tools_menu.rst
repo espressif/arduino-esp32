@@ -57,51 +57,61 @@ CPU Frequency
 
 On this option, you can select the CPU clock frequency. This option is critical and must be selected according to the high-frequency crystal present on the board and the radio usage (Wi-Fi and Bluetooth).
 
+In some application, reducing the CPU clock frequency is recommended in order to reduce the power consumption.
+
 If you don't know why you shuld change this frequency, leave the default option.
 
 Flash Frequency
 ***************
 
-Use this function to select the flash memory frequency.
+Use this function to select the flash memory frequency. The frequency will be dependant of the memory model.
 
 * **40MHz**
 * **80MHz**
 
+If you don't know if your memory supports **80Mhz**, you can try to upload you scketch and watch the log output via the serial monitor.
+
 Flash Mode
 **********
 
-This option is used to select the SPI mode for the flash memory.
+This option is used to select the SPI communication mode with the flash memory.
+
+Depending on the application, this mode can be changed in order to increase the flash communication speed.
 
 * **QIO** - Quad I/O Fast Read
-    * Four SPI pins are used to write the flash address part of the command and to read flash data out.
+    * Four SPI pins are used to write to the flash and to read from flash.
 
 * **DIO** - Dual I/O Fast Read
-    * Two SPI pins are used to write the flash address part of the command and to read flash data out.
+    * Two SPI pins are used to write to the flash and to read from flash.
 
 * **QOUT** - Quad Output Fast Read
-    * Four SPI pins are used to read the flash data out.
+    * Four SPI pins are used to read the flash data.
 
 * **DOUT** - Dual Output Fast Read
-    * Two SPI pins are used to read flash data out.
+    * Two SPI pins are used to read flash data.
 
 If you don't know how the board flash is physically connected or the flash memory model, try the **QIO/QOUT** first and then **DIO/DOUT**.
 
 Flash Size
 **********
 
-This option is used to select the flash size.
+This option is used to select the flash size. The flash size should be selected according to the flash model used on your board.
 
 * **2MB** (16Mb)
 * **4MB** (32Mb)
 * **8MB** (64Mb)
 * **16MB** (128Mb)
 
+If you choose the wrong size, you may have issues when selecting the partition scheme.
+
+
+
 Partition Scheme
 ****************
 
 This option is used to select the partition model according to the flash size and the resources needed, like storage area and OTA (Over The Air updates).
 
-.. note:: Be careful selecting the right partition according to the flash size.
+.. note:: Be careful selecting the right partition according to the flash size. If you select the wrong partition, the system will crash.
 
 Core Debug Level
 ****************
@@ -127,10 +137,14 @@ Arduino Runs On
 
 This function is used to select the core that runs the Arduino core. This is only valid if the target SoC has 2 cores.
 
+When you have some heavy task running, you might want to run this task on a different core then the Arduino tasks. For this reason, you have this configuration to select the core.
+
 Events Run On
 *************
 
 This function is used to select the core that runs the events. This is only valid if the target SoC has 2 cores.
+
+The same situation on the previous configuration.
 
 Port
 ****
