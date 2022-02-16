@@ -1543,6 +1543,10 @@ void HTTPClient::clearAllCookies()
 
 void HTTPClient::setCookie(String date, String headerValue)
 {
+    if (!_cookieJar)
+    {
+        return;
+    }
     #define HTTP_TIME_PATTERN "%a, %d %b %Y %H:%M:%S"
 
     Cookie cookie;
@@ -1574,7 +1578,7 @@ void HTTPClient::setCookie(String date, String headerValue)
             value = headerValue.substring(pos1, pos2);
         else
             value = headerValue.substring(pos1);
-    
+
         strptime(value.c_str(), HTTP_TIME_PATTERN, &tm);
         cookie.expires.date = mktime(&tm);
         cookie.expires.valid = true;
@@ -1589,7 +1593,7 @@ void HTTPClient::setCookie(String date, String headerValue)
             value = headerValue.substring(pos1, pos2);
         else
             value = headerValue.substring(pos1);
-    
+
         cookie.max_age.duration = value.toInt();
         cookie.max_age.valid = true;
     }
@@ -1639,10 +1643,10 @@ void HTTPClient::setCookie(String date, String headerValue)
     // overwrite or delete cookie in/from cookie jar
     time_t now_local = time(NULL);
     time_t now_gmt = mktime(gmtime(&now_local));
-    
+
     bool found = false;
 
-	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
+    for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
         if (c->domain == cookie.domain && c->name == cookie.name) {
             // when evaluating, max-age takes precedence over expires if both are defined
             if ((cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt)) || cookie.max_age.duration <= 0
@@ -1670,6 +1674,10 @@ bool HTTPClient::generateCookieString(String *cookieString)
     *cookieString = "";
     bool found = false;
 
+    if (!_cookieJar)
+    {
+        return false;
+    }
  	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
         if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
             _cookieJar->erase(c);
@@ -1682,5 +1690,6 @@ bool HTTPClient::generateCookieString(String *cookieString)
             found = true;
         }
     }
+    
     return found;
 }
