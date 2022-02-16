@@ -5,7 +5,8 @@ Arduino as a ESP-IDF component
 ESP32 Arduino lib-builder
 -------------------------
 
-For a simplified method, see `lib-builder <https://github.com/espressif/esp32-arduino-lib-builder>`_.
+For a simplified method, see `Installing using Boards Manager <https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager>`_.
+
 
 Installation
 ------------
@@ -13,6 +14,8 @@ Installation
 .. note:: Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
 
 - Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
+
+  - For more information see `Installation step by step <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#installation-step-by-step>`_.
 - Create blank ESP-IDF project (use sample_project from /examples/get-started) or choose one of the examples.
 - In the project folder, create a new folder called `components` and clone this repository inside the new created folder.
 
@@ -26,17 +29,32 @@ Installation
     cd ../.. && \
     idf.py menuconfig
 
+Configuration
+-------------
+
+Depending on one the two following options, in the menuconfig set the appropriate settings.
+After the setup you can save and exit:
+
+- Save [S]
+
+- Confirm default filename [Enter]
+
+- Close confirmation window [Enter] or [Space] or [Esc]
+
+- Quit [Q]
+
 Option 1. Using Arduino setup() and loop()
 ******************************************
 
-- The `idf.py menuconfig` has some Arduino options.
-    - Turn on `Autostart Arduino setup and loop on boot`.
-    - In main folder rename file `main.c` to `main.cpp`.
-    - In main folder open file `CMakeList.txt` and change `main.c` to `main.cpp` as described below.
+While in the menuconfig go to `Arduino Configuration --->`
 
-.. code-block:: bash
+- Turn on ``Autostart Arduino setup and loop on boot``
+- Turn off ``Disable mutex locks for HAL``
+- Save and exit
 
-    idf_component_register(SRCS "main.cpp" INCLUDE_DIRS ".")
+- In main folder rename file `main.c` to `main.cpp`.
+
+- In main folder open file `CMakeList.txt` and change `main.c` to `main.cpp` as described below.
 
 - Your main.cpp should be formated like any other sketch.
 
@@ -57,10 +75,16 @@ Option 1. Using Arduino setup() and loop()
 Option 2. Using ESP-IDF appmain()
 *********************************
 
-- You need to implement ``app_main()`` and call ``initArduino();`` in it.
+While in the menuconfig go to `Arduino Configuration --->`
+
+- Turn off ``Autostart Arduino setup and loop on boot``
+- Turn on ``Disable mutex locks for HAL``
+- Save and exit
+
+In main.c or main cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
 
 Keep in mind that setup() and loop() will not be called in this case.
-If you plan to base your code on examples provided in `examples <https://github.com/espressif/esp-idf/tree/master/examples>`_, please make sure to move the app_main() function in main.cpp from the files in the example.
+Furthermore the ``app_main()`` is single execution as normal function so if you need infinite loop as in Arduino place it there.
 
 .. code-block:: cpp
 
@@ -69,23 +93,39 @@ If you plan to base your code on examples provided in `examples <https://github.
 
     extern "C" void app_main()
     {
-        initArduino();
-        pinMode(4, OUTPUT);
-        digitalWrite(4, HIGH);
-        //do your own thing
+      initArduino();
+
+      // Arduino-like setup()
+      Serial.begin(115200);
+
+      // Arduino-like loop()
+      while(!Serial){
+        Serial.println("loop");
+        delay(1000);
+      }
+
+      // WARNING: if program reaches end of function app_main() the MCU will restart.
     }
 
 - "Disable mutex locks for HAL"
-- If enabled, there will be no protection on the drivers from concurently accessing them from another thread/interrupt/core
-    - "Autoconnect WiFi on boot"
-- If enabled, WiFi will start with the last known configuration
-- Otherwise it will wait for WiFi.begin
+
+  - If enabled, there will be no protection on the drivers from concurently accessing them from another thread/interrupt/core
+
 
 Build, flash and monitor
 ************************
 
 - For both options use command ``idf.py -p <your-board-serial-port> flash monitor``
-- It will build, upload and open serial monitor to your board.
+
+  - The port is usually ``/dev/ttyUSB0`` search the active port with ``ls /dev/ttyUSB*``
+
+- The project will build, upload and open serial monitor to your board
+
+  - Some boards require button combo press on the board: press-and-hold Boot button + press-and-release RST button, release Boot button
+
+  - After successful flash you may need to press RST button again
+
+  - To terminate the serial monitor press [Ctrl] + [ ] ]
 
 Logging To Serial
 -----------------
