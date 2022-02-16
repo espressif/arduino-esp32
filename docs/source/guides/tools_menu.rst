@@ -59,17 +59,17 @@ On this option, you can select the CPU clock frequency. This option is critical 
 
 In some application, reducing the CPU clock frequency is recommended in order to reduce the power consumption.
 
-If you don't know why you shuld change this frequency, leave the default option.
+If you don't know why you should change this frequency, leave the default option.
 
 Flash Frequency
 ***************
 
-Use this function to select the flash memory frequency. The frequency will be dependant of the memory model.
+Use this function to select the flash memory frequency. The frequency will be dependent of the memory model.
 
 * **40MHz**
 * **80MHz**
 
-If you don't know if your memory supports **80Mhz**, you can try to upload you scketch and watch the log output via the serial monitor.
+If you don't know if your memory supports **80Mhz**, you can try to upload you scketch using the **80MHz** option and watch the log output via the serial monitor.
 
 Flash Mode
 **********
@@ -90,7 +90,7 @@ Depending on the application, this mode can be changed in order to increase the 
 * **DOUT** - Dual Output Fast Read
     * Two SPI pins are used to read flash data.
 
-If you don't know how the board flash is physically connected or the flash memory model, try the **QIO/QOUT** first and then **DIO/DOUT**.
+If you don't know how the board flash is physically connected or the flash memory model, try the **QIO** at **80MHz** first.
 
 Flash Size
 **********
@@ -119,7 +119,7 @@ Core Debug Level
 This option is used to select the Arduino core debugging level to be printed to the serial debug.
 
 * **None** - Prints nothing.
-* **Error** - Onle at error level.
+* **Error** - Only at error level.
 * **Warning** - Only at warning level and above.
 * **Info** - Only at info level and above.
 * **Debug** - Only at debug level and above.
@@ -128,7 +128,7 @@ This option is used to select the Arduino core debugging level to be printed to 
 PSRAM
 *****
 
-The PSRAM is an internal or external extended RAM present on some boards, modules or SoC..
+The PSRAM is an internal or external extended RAM present on some boards, modules or SoC.
 
 This option can be used to ``Enable`` or ``Disable`` the PSRAM.
 
@@ -156,11 +156,7 @@ USB Options
 
 Some ESP32 families have a USB peripheral. This peripheral can be used for flashing and debugging.
 
-Currently, the SoC's with USB supported are:
-
-* ESP32-C3 (CDC only)
-* ESP32-S2
-* ESP32-S3 (in development mode, not stable yet)
+To see the supported list for each SoC, see this section: `Libraries <../libraries.html>`_.
 
 The USB option will be available only if the correct target is selected.
 
@@ -174,7 +170,9 @@ This class is used for flashing the device without any other external device att
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, one new serial port will appear in the list of the serial ports.
 Use this new serial port for flashing the device.
 
-This option can be used as well for debugging via the ``Serial Monitor``. 
+This option can be used as well for debugging via the ``Serial Monitor`` using **CDC** instead of the **UART0**.
+
+To use the UART as serial output, you can use ``Serial0.print("Hello World!");`` instead of ``Serial.print("Hello World!");`` which will be printed using USB CDC.
 
 USB Firmware MSC On Boot
 ************************
