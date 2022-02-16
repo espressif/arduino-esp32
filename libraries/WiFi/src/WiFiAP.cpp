@@ -205,7 +205,23 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
     }
 
     err = set_esp_interface_ip(ESP_IF_WIFI_AP, local_ip, gateway, subnet);
-    return err == ESP_OK;
+
+    // testing effectiveness of the operation beyond internal DHCP Client process
+	esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(get_esp_interface_netif(ESP_IF_WIFI_AP), &ip) != ESP_OK){
+    	log_e("Netif Get IP Failed!");
+    	return false;
+    }
+    bool ip_ok = IPAddress(ip.ip.addr) == local_ip;
+    bool gw_ok = IPAddress(ip.gw.addr) == gateway;
+    bool mk_ok = IPAddress(ip.netmask.addr) == subnet;
+
+    if (ip_ok && gw_ok && mk_ok) {
+        return true;
+    } else {
+        log_e("Failed setting: %s %s %s", ip_ok ? "" : "Static IP", gw_ok ? "" : "- Gateway", mk_ok ? "" : "- Netmask"); 
+        return false;
+    }
 }
 
 
