@@ -7,6 +7,8 @@ ESP32 Arduino lib-builder
 
 For a simplified method, see `Installing using Boards Manager <https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager>`_.
 
+To build your own Arduino core see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
+
 
 Installation
 ------------
@@ -33,6 +35,13 @@ Configuration
 -------------
 
 Depending on one the two following options, in the menuconfig set the appropriate settings.
+Go to section ``Arduino Configuration --->``
+
+1. For usage of ``app_main()`` function - Turn off ``Autostart Arduino setup and loop on boot``
+2. For usage of ``setup()`` and ``loop()`` functions - Turn on ``Autostart Arduino setup and loop on boot``
+
+Experienced users can explore other options in the Arduino section.
+
 After the setup you can save and exit:
 
 - Save [S]
@@ -45,12 +54,6 @@ After the setup you can save and exit:
 
 Option 1. Using Arduino setup() and loop()
 ******************************************
-
-While in the menuconfig go to `Arduino Configuration --->`
-
-- Turn on ``Autostart Arduino setup and loop on boot``
-- Turn off ``Disable mutex locks for HAL``
-- Save and exit
 
 - In main folder rename file `main.c` to `main.cpp`.
 
@@ -74,12 +77,6 @@ While in the menuconfig go to `Arduino Configuration --->`
 
 Option 2. Using ESP-IDF appmain()
 *********************************
-
-While in the menuconfig go to `Arduino Configuration --->`
-
-- Turn off ``Autostart Arduino setup and loop on boot``
-- Turn on ``Disable mutex locks for HAL``
-- Save and exit
 
 In main.c or main cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
 
@@ -106,11 +103,6 @@ Furthermore the ``app_main()`` is single execution as normal function so if you 
 
       // WARNING: if program reaches end of function app_main() the MCU will restart.
     }
-
-- "Disable mutex locks for HAL"
-
-  - If enabled, there will be no protection on the drivers from concurently accessing them from another thread/interrupt/core
-
 
 Build, flash and monitor
 ************************
