@@ -16,7 +16,7 @@ Installing using Boards Manager
 This is the preferred and easiest way to install Arduino-ESP32.
 
 .. note::
-   Currently, the support for new chips (ESP32-S2 and ESP32-C3) is in the development release. Consider installing the development release if you need to test the new supported SoC in beta.
+   For overview of SoC's support, take a look on `Supported Soc's table <https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s>`_ where you can find if the particular chip is under stable or development release.
 
 - Stable release link::
 
