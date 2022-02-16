@@ -143,7 +143,7 @@ bool __adcAttachPin(uint8_t pin){
         }
 #endif
     }
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+#if SOC_DAC_SUPPORTED
     else if(pin == DAC_CHANNEL_1_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
     } else if(pin == DAC_CHANNEL_2_GPIO_NUM){
