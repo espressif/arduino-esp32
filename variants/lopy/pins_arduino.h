@@ -7,7 +7,7 @@
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       18
 
-#define analogInputToDigitalPin(p)  (((p)<40)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<40)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
