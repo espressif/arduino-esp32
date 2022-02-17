@@ -2,24 +2,29 @@
 Arduino as a ESP-IDF component
 ##############################
 
-ESP32 Arduino lib-builder
--------------------------
+This method is recommended for advanced users. To use this method, you will need to have the ESP-IDF toolchain installed.
 
 For a simplified method, see `Installing using Boards Manager <https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager>`_.
 
-To build your own Arduino core see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
+ESP32 Arduino lib-builder
+-------------------------
 
+If you don't need any modifications in the default Arduino ESP32 core, we recommend you to install using the Boards Manager.
+
+Arduino lib builder will allow you to build your own version of Arduino core for Arduino IDE.
+
+To build your own Arduino core see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
 
 Installation
 ------------
 
 .. note:: Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
 
-- Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
+#. Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
 
-  - For more information see `Installation step by step <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#installation-step-by-step>`_.
-- Create blank ESP-IDF project (use sample_project from /examples/get-started) or choose one of the examples.
-- In the project folder, create a new folder called `components` and clone this repository inside the new created folder.
+   * For more information see `Get Started <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#installation-step-by-step>`_.
+#. Create blank ESP-IDF project (use sample_project from /examples/get-started) or choose one of the examples.
+#. In the project folder, create a new folder called ``components`` and clone this repository inside the new created folder.
 
 .. code-block:: bash
     
@@ -35,6 +40,7 @@ Configuration
 -------------
 
 Depending on one the two following options, in the menuconfig set the appropriate settings.
+
 Go to section ``Arduino Configuration --->``
 
 1. For usage of ``app_main()`` function - Turn off ``Autostart Arduino setup and loop on boot``
@@ -45,11 +51,8 @@ Experienced users can explore other options in the Arduino section.
 After the setup you can save and exit:
 
 - Save [S]
-
 - Confirm default filename [Enter]
-
 - Close confirmation window [Enter] or [Space] or [Esc]
-
 - Quit [Q]
 
 Option 1. Using Arduino setup() and loop()
@@ -59,7 +62,7 @@ Option 1. Using Arduino setup() and loop()
 
 - In main folder open file `CMakeList.txt` and change `main.c` to `main.cpp` as described below.
 
-- Your main.cpp should be formated like any other sketch.
+- Your main.cpp should be formatted like any other sketch.
 
 .. code-block:: c
 
