@@ -6,6 +6,7 @@
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
 #include "soc/soc_caps.h"
+#include "driver/uart.h"
 
 #ifndef SOC_RX0
 #if CONFIG_IDF_TARGET_ESP32
@@ -116,8 +117,6 @@ void serialEventRun(void)
 
 HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256) {}
 
-enum { UART_NUM_0, UART_NUM_1, UART_NUM_2 };
-
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
     if(0 > _uart_nr || _uart_nr >= SOC_UART_NUM) {
@@ -144,6 +143,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
                 txPin = txPin < 0 ? TX2 : txPin;
             break;
 #endif
+            default:
+                log_e("Bad UART Number");
+                return;
         }
     }
 
