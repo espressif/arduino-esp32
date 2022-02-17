@@ -27,6 +27,7 @@
 #include "soc/rtc_io_reg.h"
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
+#include "soc/dac_channel.h"
 #define DEFAULT_VREF    1100
 static esp_adc_cal_characteristics_t *__analogCharacteristics[2] = {NULL, NULL};
 static uint16_t __analogVRef = 0;
@@ -35,6 +36,7 @@ static uint8_t __analogVRefPin = 0;
 #include "esp32s2/rom/ets_sys.h"
 #include "soc/sens_reg.h"
 #include "soc/rtc_io_reg.h"
+#include "soc/dac_channel.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
 #else
@@ -141,10 +143,10 @@ bool __adcAttachPin(uint8_t pin){
         }
 #endif
     }
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-    else if(pin == 25){
+#if SOC_DAC_SUPPORTED
+    else if(pin == DAC_CHANNEL_1_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
-    } else if(pin == 26){
+    } else if(pin == DAC_CHANNEL_2_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);//stop dac2
     }
 #endif
