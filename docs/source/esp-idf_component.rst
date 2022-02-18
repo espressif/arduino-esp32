@@ -18,7 +18,8 @@ To build your own Arduino core see `Arduino lib builder <https://github.com/espr
 Installation
 ------------
 
-.. note:: Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
+.. note::
+ Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
 
 #. Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
 
@@ -70,7 +71,10 @@ Option 1. Using Arduino setup() and loop()
     #include "Arduino.h"
 
     void setup(){
-        Serial.begin(115200);
+      Serial.begin(115200);
+      while(!Serial){
+        ; // wait for serial port to connect
+      }
     }
 
     void loop(){
@@ -97,11 +101,13 @@ Furthermore the ``app_main()`` is single execution as normal function so if you 
 
       // Arduino-like setup()
       Serial.begin(115200);
+      while(!Serial){
+        ; // wait for serial port to connect
+      }
 
       // Arduino-like loop()
-      while(!Serial){
+      while(true){
         Serial.println("loop");
-        delay(1000);
       }
 
       // WARNING: if program reaches end of function app_main() the MCU will restart.
