@@ -19,7 +19,7 @@ Installation
 ------------
 
 .. note::
- Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
+    Latest Arduino Core ESP32 version is now compatible with `ESP-IDF v4.4 <https://github.com/espressif/esp-idf/tree/release/v4.4>`_. Please consider this compability when using Arduino as component in ESP-IDF.
 
 #. Download and install `ESP-IDF <https://github.com/espressif/esp-idf>`_.
 
