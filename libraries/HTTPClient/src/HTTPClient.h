@@ -36,6 +36,9 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 
+/// Cookie jar support
+#include <vector>
+
 #define HTTPCLIENT_DEFAULT_TCP_TIMEOUT (5000)
 
 /// HTTP client errors
@@ -144,6 +147,28 @@ class TransportTraits;
 typedef std::unique_ptr<TransportTraits> TransportTraitsPtr;
 #endif
 
+// cookie jar support
+typedef struct  {
+    String host;       // host which tries to set the cookie
+    time_t date;       // timestamp of the response that set the cookie
+    String name;
+    String value;
+    String domain;
+    String path = "";
+    struct {
+        time_t date = 0;
+        bool valid = false;
+    } expires;
+    struct {
+        time_t duration = 0;
+        bool valid = false;
+    } max_age;
+    bool http_only = false;
+    bool secure = false;
+} Cookie;
+typedef std::vector<Cookie> CookieJar;
+
+
 class HTTPClient
 {
 public:
@@ -217,6 +242,11 @@ public:
 
     static String errorToString(int error);
 
+    /// Cookie jar support
+    void setCookieJar(CookieJar* cookieJar);
+    void resetCookieJar();
+    void clearAllCookies();
+
 protected:
     struct RequestArgument {
         String key;
@@ -232,6 +262,9 @@ protected:
     int handleHeaderResponse();
     int writeToStreamDataBlock(Stream * stream, int len);
 
+    /// Cookie jar support
+    void setCookie(String date, String headerValue);
+    bool generateCookieString(String *cookieString);
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
     TransportTraitsPtr _transportTraits;
@@ -267,6 +300,10 @@ protected:
     uint16_t _redirectLimit = 10;
     String _location;
     transferEncoding_t _transferEncoding = HTTPC_TE_IDENTITY;
+
+    /// Cookie jar support
+    CookieJar* _cookieJar = nullptr;
+
 };
 
 
