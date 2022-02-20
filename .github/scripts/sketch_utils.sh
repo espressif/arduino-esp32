@@ -47,7 +47,7 @@ function count_sketches(){ # count_sketches <path> <target>
         return 0
     fi
 
-    local sketches=$(find $path -name *.ino)
+    local sketches=$(find $path -name *.ino | sort)
     local sketchnum=0
     for sketch in $sketches; do
         local sketchdir=$(dirname $sketch)
