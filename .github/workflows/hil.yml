@@ -15,14 +15,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Build:
+  gen_chunks:
     if: contains(github.event.pull_request.labels.*.name, 'hil_test')
+    name: Generate Chunks matrix
+    runs-on: ubuntu-latest
+    outputs:
+      chunks: ${{ steps.gen-chunks.outputs.chunks }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Generate Chunks matrix
+        id: gen-chunks
+        run: |
+          set +e
+          bash .github/scripts/sketch_utils.sh count tests
+          sketches=$((? - 1))
+          if [[ $sketches -gt ${{env.MAX_CHUNKS}} ]]; then
+            $sketches=${{env.MAX_CHUNKS}}
+          fi
+          set -e
+          rm sketches.txt
+          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $sketches`)
+          echo "::set-output name=chunks::${CHUNKS}"
+
+  Build:
+    needs: gen_chunks
     name: ${{matrix.chip}}-Build#${{matrix.chunks}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32c3']
-        chunks: [0, 1, 2, 3]
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
 
     steps:
       - name: Checkout Repository
@@ -39,14 +63,14 @@ jobs:
              tests/*/build/*.bin
              tests/*/build/*.json
   Test:
-    needs: Build
+    needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
     runs-on: ESP32
     strategy:
       fail-fast: false
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32c3']
-        chunks: [0, 1, 2, 3]
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     container:
       image: python:3.10.1-bullseye
       options: --privileged
