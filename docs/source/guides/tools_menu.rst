@@ -131,8 +131,6 @@ The **x** stands for the temperature range specification.
 * **H** High Temperature (*-40 to 85ºC*)
 * **N** Low Temeprature (*-40 to 65ºC*)
 
-
-
 For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 
 Partition Scheme
@@ -245,7 +243,6 @@ USB DFU On Boot
 The USB Device Firmware Upgrade is a class used for flashing the device through USB.
 
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, the device will appear as a USB DFU capable device.
-
 
 .. _Espressif Product Selector: https://products.espressif.com/
 .. _boards.txt: https://github.com/espressif/arduino-esp32/blob/master/boards.txt
