@@ -71,6 +71,8 @@ Use this function to select the flash memory frequency. The frequency will be de
 
 If you don't know if your memory supports **80Mhz**, you can try to upload you scketch using the **80MHz** option and watch the log output via the serial monitor.
 
+.. note:: In some boards/SoC, the flash frequency is automatically selected according to the flash mode. In some cases (i.e ESP32-S3), the flash frequency is up to 120MHz.
+
 Flash Mode
 **********
 
@@ -90,6 +92,9 @@ Depending on the application, this mode can be changed in order to increase the 
 * **DOUT** - Dual Output Fast Read
     * Two SPI pins are used to read flash data.
 
+* **OPI** - Octal I/O
+    * Eight SPI pins are used to write and to read from the flash.
+
 If you don't know how the board flash is physically connected or the flash memory model, try the **QIO** at **80MHz** first.
 
 Flash Size
@@ -104,7 +109,31 @@ This option is used to select the flash size. The flash size should be selected 
 
 If you choose the wrong size, you may have issues when selecting the partition scheme.
 
+Embedded Flash
+^^^^^^^^^^^^^^
 
+Some SoC has embedded flash. The ESP32-S3 is a good example.
+
+.. note:: Check the manufacturer part number of your SoC/module to see the right version.
+
+Example: **ESP32-S3FH4R2**
+
+This particular ESP32-S3 variant comes with 4MB Flash and 2MB PSRAM.
+
+**Options for Ebedded Flash**
+
+* **Fx4** 4MB Flash (*QIO*)
+* **Fx8** 8MB Flash (*QIO*)
+* **V** 1.8V SPI
+
+The **x** stands for the temperature range specification.
+
+* **H** High Temperature (*-40 to 85ºC*)
+* **N** Low Temeprature (*-40 to 65ºC*)
+
+
+
+For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 
 Partition Scheme
 ****************
@@ -130,7 +159,32 @@ PSRAM
 
 The PSRAM is an internal or external extended RAM present on some boards, modules or SoC.
 
-This option can be used to ``Enable`` or ``Disable`` the PSRAM.
+This option can be used to ``Enable`` or ``Disable`` the PSRAM and you can select the PSRAM mode if available.
+
+* **QSPI PSRAM** - Quad PSRAM
+* **OPI PSRAM** - Octal PSRAM
+
+Embedded PSRAM
+^^^^^^^^^^^^^^
+
+Some SoC has embedded PSRAM. The ESP32-S3 is a good example.
+
+Example: **ESP32-S3FH4R2**
+
+This particular ESP32-S3 comes with 4MB Flash and 2MB PSRAM.
+
+**Options for Ebedded Flash and PSRAM**
+
+* **R2** 2MB PSRAM (*QSPI*)
+* **R8** 8MB PSRAM (*OPI*)
+* **V** 1.8V SPI
+
+The **x** stands for the temperature range specification.
+
+* **H** High Temperature (*-40 to 85ºC*)
+* **N** Low Temeprature (*-40 to 65ºC*)
+
+For more datails, please see the correspomnding datasheet at `Espressif Product Selector`_.
 
 Arduino Runs On
 ***************
