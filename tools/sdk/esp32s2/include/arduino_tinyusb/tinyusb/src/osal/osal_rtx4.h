@@ -167,4 +167,4 @@ static inline bool osal_queue_empty(osal_queue_t qhdl)
  }
 #endif
 
-#endif /* _TUSB_OSAL_FREERTOS_H_ */
+#endif
