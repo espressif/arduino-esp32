@@ -3408,6 +3408,93 @@ lolin_s2_mini.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+lolin_s2_pico.name=LOLIN S2 PICO
+lolin_s2_pico.vid.0=0x303a
+lolin_s2_pico.pid.0=0x80C5
+
+lolin_s2_pico.upload.tool=esptool_py
+lolin_s2_pico.upload.maximum_size=1310720
+lolin_s2_pico.upload.maximum_data_size=327680
+lolin_s2_pico.upload.flags=
+lolin_s2_pico.upload.extra_flags=
+lolin_s2_pico.upload.use_1200bps_touch=true
+lolin_s2_pico.upload.wait_for_upload_port=true
+lolin_s2_pico.upload.speed=921600
+
+lolin_s2_pico.serial.disableDTR=false
+lolin_s2_pico.serial.disableRTS=false
+
+lolin_s2_pico.build.tarch=xtensa
+lolin_s2_pico.build.bootloader_addr=0x1000
+lolin_s2_pico.build.target=esp32s2
+lolin_s2_pico.build.mcu=esp32s2
+lolin_s2_pico.build.core=esp32
+lolin_s2_pico.build.variant=lolin_s2_pico
+lolin_s2_pico.build.board=LOLIN_S2_PICO
+
+lolin_s2_pico.build.cdc_on_boot=1
+lolin_s2_pico.build.msc_on_boot=1
+lolin_s2_pico.build.dfu_on_boot=1
+lolin_s2_pico.build.f_cpu=240000000L
+lolin_s2_pico.build.flash_size=4MB
+lolin_s2_pico.build.flash_freq=80m
+lolin_s2_pico.build.flash_mode=dio
+lolin_s2_pico.build.boot=qio
+lolin_s2_pico.build.partitions=default
+lolin_s2_pico.build.defines=
+
+lolin_s2_pico.build.defines=-DBOARD_HAS_PSRAM
+
+lolin_s2_pico.menu.CDCOnBoot.default=Enabled
+lolin_s2_pico.menu.CDCOnBoot.default.build.cdc_on_boot=1
+lolin_s2_pico.menu.CDCOnBoot.dis_cdc=Disabled
+lolin_s2_pico.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+lolin_s2_pico.menu.MSCOnBoot.default=Disabled
+lolin_s2_pico.menu.MSCOnBoot.default.build.msc_on_boot=0
+lolin_s2_pico.menu.MSCOnBoot.msc=Enabled
+lolin_s2_pico.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lolin_s2_pico.menu.DFUOnBoot.default=Disabled
+lolin_s2_pico.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lolin_s2_pico.menu.DFUOnBoot.dfu=Enabled
+lolin_s2_pico.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lolin_s2_pico.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lolin_s2_pico.menu.PartitionScheme.default.build.partitions=default
+lolin_s2_pico.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lolin_s2_pico.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lolin_s2_pico.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lolin_s2_pico.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin_s2_pico.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin_s2_pico.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lolin_s2_pico.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lolin_s2_pico.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lolin_s2_pico.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lolin_s2_pico.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lolin_s2_pico.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lolin_s2_pico.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lolin_s2_pico.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lolin_s2_pico.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lolin_s2_pico.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lolin_s2_pico.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lolin_s2_pico.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+lolin_s2_pico.menu.DebugLevel.none=None
+lolin_s2_pico.menu.DebugLevel.none.build.code_debug=0
+lolin_s2_pico.menu.DebugLevel.error=Error
+lolin_s2_pico.menu.DebugLevel.error.build.code_debug=1
+lolin_s2_pico.menu.DebugLevel.warn=Warn
+lolin_s2_pico.menu.DebugLevel.warn.build.code_debug=2
+lolin_s2_pico.menu.DebugLevel.info=Info
+lolin_s2_pico.menu.DebugLevel.info.build.code_debug=3
+lolin_s2_pico.menu.DebugLevel.debug=Debug
+lolin_s2_pico.menu.DebugLevel.debug.build.code_debug=4
+lolin_s2_pico.menu.DebugLevel.verbose=Verbose
+lolin_s2_pico.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool_py
