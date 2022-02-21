@@ -32,13 +32,13 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
         $win_opts $xtra_opts "$sketch"
 }
 
-function count_sketches(){ # count_sketches <path> <target>
+function count_sketches(){ # count_sketches <path> [target]
     local path=$1
     local target=$2
 
-    if [ $# -lt 2 ]; then
+    if [ $# -lt 1 ]; then
       echo "ERROR: Illegal number of parameters"
-      echo "USAGE: ${0} count <path> <target>"
+      echo "USAGE: ${0} count <path> [target]"
     fi
 
     rm -rf sketches.txt
@@ -55,7 +55,7 @@ function count_sketches(){ # count_sketches <path> <target>
         local sketchname=$(basename $sketch)
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -f "$sketchdir/.skip.$target" ]]; then
+        elif [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
             continue
         else
             echo $sketch >> sketches.txt
