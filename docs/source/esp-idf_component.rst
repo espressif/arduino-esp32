@@ -11,9 +11,10 @@ ESP32 Arduino lib-builder
 
 If you don't need any modifications in the default Arduino ESP32 core, we recommend you to install using the Boards Manager.
 
-Arduino lib builder will allow you to build your own version of Arduino core for Arduino IDE.
+Arduino Lib Builder is the tool that integrates ESP-IDF into Arduino. It allows you to customize the default settings used by Espressif and try them in Arduino IDE.
 
-To build your own Arduino core see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
+For more information see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
+
 
 Installation
 ------------
@@ -84,7 +85,7 @@ Option 1. Using Arduino setup() and loop()
 Option 2. Using ESP-IDF appmain()
 *********************************
 
-In main.c or main cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
+In main.c or main.cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
 
 Keep in mind that setup() and loop() will not be called in this case.
 Furthermore the ``app_main()`` is single execution as a normal function so if you need an infinite loop as in Arduino place it there.
@@ -116,8 +117,6 @@ Build, flash and monitor
 ************************
 
 - For both options use command ``idf.py -p <your-board-serial-port> flash monitor``
-
-  - The port is usually ``/dev/ttyUSB0`` search the active port with ``ls /dev/ttyUSB*``
 
 - The project will build, upload and open the serial monitor to your board
 
