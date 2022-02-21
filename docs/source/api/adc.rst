@@ -80,22 +80,67 @@ analogSetAttenuation
 
 This function is used to set the attenuation for all channels.
 
-Default is 11db.
+Input voltages can be attenuated before being input to the ADCs.
+There are 4 available attenuation options, the higher the attenuation is, the higher the measurable input voltage could be.
+
+The measurable input voltage differs for each chip, see table below for detailed information.
+
+.. tabs::
+
+   .. tab:: ESP32
+
+      =====================  ===========================================
+      Attenuation            Measurable input voltage range
+      =====================  ===========================================
+      ``ADC_ATTEN_DB_0``     100 mV ~ 950 mV
+      ``ADC_ATTEN_DB_2_5``   100 mV ~ 1250 mV
+      ``ADC_ATTEN_DB_6``     150 mV ~ 1750 mV
+      ``ADC_ATTEN_DB_11``    150 mV ~ 2450 mV
+      =====================  ===========================================
+
+   .. tab:: ESP32-S2
+
+      =====================  ===========================================
+      Attenuation            Measurable input voltage range
+      =====================  ===========================================
+      ``ADC_ATTEN_DB_0``     0 mV ~ 750 mV
+      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1050 mV
+      ``ADC_ATTEN_DB_6``     0 mV ~ 1300 mV
+      ``ADC_ATTEN_DB_11``    0 mV ~ 2500 mV
+      =====================  ===========================================
+
+   .. tab:: ESP32-C3
+
+      =====================  ===========================================
+      Attenuation            Measurable input voltage range
+      =====================  ===========================================
+      ``ADC_ATTEN_DB_0``     0 mV ~ 750 mV
+      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1050 mV
+      ``ADC_ATTEN_DB_6``     0 mV ~ 1300 mV
+      ``ADC_ATTEN_DB_11``    0 mV ~ 2500 mV
+      =====================  ===========================================
+
+   .. tab:: ESP32-S3
+
+      =====================  ===========================================
+      Attenuation            Measurable input voltage range
+      =====================  ===========================================
+      ``ADC_ATTEN_DB_0``     0 mV ~ 950 mV
+      ``ADC_ATTEN_DB_2_5``   0 mV ~ 1250 mV
+      ``ADC_ATTEN_DB_6``     0 mV ~ 1750 mV
+      ``ADC_ATTEN_DB_11``    0 mV ~ 3100 mV
+      =====================  ===========================================
 
 .. code-block:: arduino
 
     void analogSetAttenuation(adc_attenuation_t attenuation);
 
 * ``attenuation`` sets the attenuation.
-  
-  * can be set to ADC_0db, ADC_2_5db, ADC_6db or ADC_11db.
 
 analogSetPinAttenuation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the attenuation for a specific pin.
-
-Default is 11db.
+This function is used to set the attenuation for a specific pin. For more information refer to `analogSetAttenuation`_.
 
 .. code-block:: arduino
 
@@ -103,8 +148,6 @@ Default is 11db.
 
 * ``pin`` selects specific pin for attenuation settings.
 * ``attenuation`` sets the attenuation.
-
-  * can be set to ADC_0db, ADC_2_5db, ADC_6db or ADC_11db.
       
 adcAttachPin
 ^^^^^^^^^^^^
