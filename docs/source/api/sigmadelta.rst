@@ -22,7 +22,7 @@ Arduino-ESP32 SigmaDelta API
 ----------------------------
 
 sigmaDeltaSetup
-**************
+***************
 
 This function is used to setup SigmaDelta channel frequency and resolution.
 
