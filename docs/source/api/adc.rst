@@ -5,13 +5,13 @@ ADC
 About
 -----
 
-ADC (analog to digital converter) is a very common peripheral used to convert an analogue signal such as voltage 
+ADC (analog to digital converter) is a very common peripheral used to convert an analog signal such as voltage 
 to a digital form so that it can be read and processed by a microcontroller. 
 
 ADCs are very useful in control and monitoring applications since most sensors 
-(e.g., temperature sensor, pressure sensor, force sensor) produce analogue output voltages.
+(e.g., temperature, pressure, force) produce analogue output voltages.
 
-.. note:: Each board have ADC different number of ADC channels and pins availible. Refer to datasheet of each board for more info.
+.. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins availible. Refer to datasheet of each board for more info.
 
 Arduino-ESP32 ADC API
 ---------------------
@@ -22,7 +22,7 @@ ADC common API
 analogRead
 ^^^^^^^^^^
 
-This function is used to get ADC value for pin.
+This function is used to get the ADC raw value for a given pin/ADC channel.
 
 .. code-block:: arduino
 
@@ -30,12 +30,12 @@ This function is used to get ADC value for pin.
 
 * ``pin`` GPIO pin to read analog value
   
-This function will return analog value.
+This function will return analog raw value.
 
 analogReadMillivolts
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to get ADC value for pin in millivolts.
+This function is used to get ADC value for a given pin/ADC channel in millivolts.
 
 .. code-block:: arduino
 
@@ -48,13 +48,13 @@ This function will return analog value in millivolts.
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of analogRead return value. Default is 12 bits (range from 0 to 4096) 
+This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4096) 
 for all chips except ESP32S3 where default is 13 bits (range from 0 to 8192). 
 When different resolution is set, the values read will be shifted to match the given resolution.
 
 Range is 1 - 16 .The default value will be used, if this function is not used.
 
-.. note:: For ESP32 resolution between 9 and 12 will change ADC hardware resolution. Else value will be shifted.
+.. note:: For the ESP32, the resolution is between 9 to12 and it will change the ADC hardware resolution. Else value will be shifted.
 
 .. code-block:: arduino
 
@@ -140,7 +140,7 @@ The measurable input voltage differs for each chip, see table below for detailed
 analogSetPinAttenuation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the attenuation for a specific pin. For more information refer to `analogSetAttenuation`_.
+This function is used to set the attenuation for a specific pin/ADC channel. For more information refer to `analogSetAttenuation`_.
 
 .. code-block:: arduino
 
@@ -152,7 +152,7 @@ This function is used to set the attenuation for a specific pin. For more inform
 adcAttachPin
 ^^^^^^^^^^^^
 
-This function is used to attach pin to ADC (it will also clear any other analog mode that could be on)
+This function is used to attach the pin to ADC (it will also clear any other analog mode that could be on)
 
 .. code-block:: arduino
 
@@ -188,13 +188,13 @@ This function is used to set pin to use for ADC calibration if the esp is not al
 hallRead
 ^^^^^^^^
 
-This function is used to get ADC value of HALL sensor conneted to pins 36(SVP) and 39(SVN).
+This function is used to get the ADC value of the HALL sensor conneted to pins 36(SVP) and 39(SVN).
 
 .. code-block:: arduino
 
     int hallRead();
     
-This function will return hall sensors value.
+This function will return the hall sensor value.
 
 
 Example Applications
