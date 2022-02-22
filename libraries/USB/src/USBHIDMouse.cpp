@@ -89,4 +89,72 @@ bool USBHIDMouse::isPressed(uint8_t b){
 }
 
 
+// Absolute Mouse
+
+// We use a custom HID mouse report descriptor with absolute positioning
+// where coordinates are expressed as an unsigned value between 0 and 32767
+static const uint8_t abs_mouse_report_descriptor[] = {
+  0x05, 0x01,                // USAGE_PAGE (Generic Desktop)
+  0x09, 0x02,                // USAGE (Mouse)
+  0xa1, 0x01,                // COLLECTION (Application)
+  0x09, 0x01,                //   USAGE (Pointer)
+  0xA1, 0x00,                //   COLLECTION (Physical)
+  0x85, HID_REPORT_ID_MOUSE, //     REPORT_ID (1)
+  0x05, 0x09,                //     USAGE_PAGE (Button)
+  0x19, 0x01,                //     USAGE_MINIMUM (1)
+  0x29, 0x03,                //     USAGE_MAXIMUM (3)
+  0x15, 0x00,                //     LOGICAL_MINIMUM (0)
+  0x25, 0x01,                //     LOGICAL_MAXIMUM (1)
+  0x95, 0x03,                //     REPORT_COUNT (3)
+  0x75, 0x01,                //     REPORT_SIZE (1)
+  0x81, 0x02,                //     INPUT (Data,Var,Abs)
+  0x95, 0x01,                //     REPORT_COUNT (1)
+  0x75, 0x05,                //     REPORT_SIZE (5)
+  0x81, 0x03,                //     INPUT (Const,Var,Abs)
+  0x05, 0x01,                //     USAGE_PAGE (Generic Desktop)
+  0x09, 0x30,                //     USAGE (X)
+  0x09, 0x31,                //     USAGE (Y)
+  0x16, 0x00, 0x00,          //     LOGICAL_MINIMUM(0)
+  0x26, 0xff, 0x7f,          //     LOGICAL_MAXIMUM(32767)
+  0x75, 0x10,                //     REPORT_SIZE (16)
+  0x95, 0x02,                //     REPORT_COUNT (2)
+  0x81, 0x02,                //     INPUT (Data,Var,Abs)
+  0xC0,                      //   END_COLLECTION
+  0xC0,                      // END COLLECTION
+};
+
+
+
+USBHIDAbsMouse::USBHIDAbsMouse(): hid() {
+    static bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        hid.addDevice(this, sizeof(abs_mouse_report_descriptor));
+    }
+}
+
+void USBHIDAbsMouse::begin(void)
+{
+    hid.begin();
+}
+
+uint16_t USBHIDAbsMouse::_onGetDescriptor(uint8_t* buffer)
+{
+    memcpy(buffer, abs_mouse_report_descriptor, sizeof(abs_mouse_report_descriptor));
+    return sizeof(abs_mouse_report_descriptor);
+}
+
+bool USBHIDAbsMouse::sendReport(abs_mouse_report_t * report)
+{
+    return hid.SendReport( HID_REPORT_ID_MOUSE, report, sizeof(abs_mouse_report_t) );
+}
+
+void USBHIDAbsMouse::end()
+{
+    hid.end();
+}
+
+
+
+
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
