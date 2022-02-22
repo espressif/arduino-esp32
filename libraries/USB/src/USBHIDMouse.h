@@ -56,6 +56,7 @@ public:
 
 // Absolute Mouse
 
+
 typedef struct TU_ATTR_PACKED
 {
   uint8_t buttons = 0;
