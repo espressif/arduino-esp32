@@ -31,7 +31,7 @@ This function is used to setup the SigmaDelta channel frequency and resolution.
     double ledcSetup(uint8_t channel, double freq, uint8_t resolution_bits);
 
 * ``pin`` select GPIO pin.
-* ``channel`` select SigmaDelta channel to config.
+* ``channel`` select SigmaDelta channel.
 * ``freq`` select frequency.
 
   * range is 1-14 bits (1-20 bits for ESP32).
@@ -60,7 +60,7 @@ This function is used to get configured duty for the SigmaDelta channel.
 
     uint8_t sigmaDeltaRead(uint8_t channel)
 
-* ``channnel`` select SigmaDelta channel to read duty.
+* ``channnel`` select SigmaDelta channel.
 
 This function will return ``duty`` configured for the selected SigmaDelta channel.
 
