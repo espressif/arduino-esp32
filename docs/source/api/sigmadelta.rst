@@ -24,7 +24,7 @@ Arduino-ESP32 SigmaDelta API
 sigmaDeltaSetup
 ***************
 
-This function is used to setup SigmaDelta channel frequency and resolution.
+This function is used to setup the SigmaDelta channel frequency and resolution.
 
 .. code-block:: arduino
 
@@ -36,38 +36,38 @@ This function is used to setup SigmaDelta channel frequency and resolution.
 
   * range is 1-14 bits (1-20 bits for ESP32).
   
-This function will return ``frequency`` set for SigmaDelta channel.
-If ``0`` is returned, error occurs and sigmadelta channel was not configured.
+This function will return ``frequency`` configured for the SigmaDelta channel.
+If ``0`` is returned, error occurs and the SigmaDelta channel was not configured.
 
 sigmaDeltaWrite
 ***************
 
-This function is used to set duty for SigmaDelta channel.
+This function is used to set duty for the SigmaDelta channel.
 
 .. code-block:: arduino
 
     void sigmaDeltaWrite(uint8_t channel, uint8_t duty);
 
-* ``channel`` select SigmaDelta channel to set duty.
+* ``channel`` select SigmaDelta channel.
 * ``duty`` select duty to be set for selected channel.
 
 sigmaDeltaRead
 **************
 
-This function is used to get configured duty for SigmaDelta channel.
+This function is used to get configured duty for the SigmaDelta channel.
 
 .. code-block:: arduino
 
     uint8_t sigmaDeltaRead(uint8_t channel)
 
-* ``channnel`` select SigmaDelta channel to raed duty.
+* ``channnel`` select SigmaDelta channel to read duty.
 
-This function will return ``duty`` set for selected LEDC channel.
+This function will return ``duty`` configured for the selected SigmaDelta channel.
 
 sigmaDeltaDetachPin
 *******************
 
-This function is used to detach GPIO pin from SigmaDelta.
+This function is used to detach pin from SigmaDelta.
 
 .. code-block:: arduino
 
