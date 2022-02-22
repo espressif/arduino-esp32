@@ -30,6 +30,8 @@
 #define MOUSE_FORWARD   0x10
 #define MOUSE_ALL       0x1F
 
+// Relative Mouse
+
 class USBHIDMouse: public USBHIDDevice {
 private:
     USBHID hid;
@@ -49,6 +51,29 @@ public:
 
     // internal use
     uint16_t _onGetDescriptor(uint8_t* buffer);
+};
+
+
+// Absolute Mouse
+
+typedef struct TU_ATTR_PACKED
+{
+  uint8_t buttons = 0;
+  int16_t x = 0;
+  int16_t y = 0;
+} abs_mouse_report_t;
+
+
+class USBHIDAbsMouse: public USBHIDDevice
+{
+private:
+    USBHID hid;
+public:
+    USBHIDAbsMouse(void);
+    void begin(void);
+    uint16_t _onGetDescriptor(uint8_t* buffer);
+    bool sendReport(abs_mouse_report_t * value);
+    void end();
 };
 
 #endif
