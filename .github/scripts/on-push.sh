@@ -63,7 +63,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 
     FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
     FQBN_ESP32S2="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
-    FQBN_ESP32S3="espressif:esp32:esp32s3:PSRAM=opi,PartitionScheme=huge_app"
+    FQBN_ESP32S3="espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
     FQBN_ESP32C3="espressif:esp32:esp32c3:PartitionScheme=huge_app"
 
     SKETCHES_ESP32="\

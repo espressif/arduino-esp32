@@ -26,13 +26,13 @@ replace_script+="del data['packages']['framework-arduinoespressif32']['owner'];"
 # Use toolchain packages from the "espressif" organization
 replace_script+="data['packages']['toolchain-xtensa-esp32']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
 replace_script+="data['packages']['toolchain-xtensa-esp32s2']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
-replace_script+="data['packages']['toolchain-xtensa-esp32s3']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
 replace_script+="data['packages']['toolchain-riscv32-esp']['owner']='$ESPRESSIF_ORGANIZATION_NAME';"
 # Update versions to use the upstream
 replace_script+="data['packages']['toolchain-xtensa-esp32']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-xtensa-esp32s2']['version']='$TOOLCHAIN_VERSION';"
-replace_script+="data['packages']['toolchain-xtensa-esp32s3']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-riscv32-esp']['version']='$TOOLCHAIN_VERSION';"
+# Add ESP32-S3 Toolchain
+replace_script+="data['packages'].append({'toolchain-xtensa-esp32s3':{'type':'toolchain','optional':true,'owner':'$ESPRESSIF_ORGANIZATION_NAME','version':'$TOOLCHAIN_VERSION'}});"
 # esptool.py may require an upstream version (for now platformio is the owner)
 replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSION';"
 # Save results
