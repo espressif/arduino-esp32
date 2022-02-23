@@ -57,6 +57,8 @@ typedef void (*osal_task_func_t)( void * );
   #include "osal_pico.h"
 #elif CFG_TUSB_OS == OPT_OS_RTTHREAD
   #include "osal_rtthread.h"
+#elif CFG_TUSB_OS == OPT_OS_RTX4
+  #include "osal_rtx4.h"
 #elif CFG_TUSB_OS == OPT_OS_CUSTOM
   #include "tusb_os_custom.h" // implemented by application
 #else
@@ -67,7 +69,7 @@ typedef void (*osal_task_func_t)( void * );
 // OSAL Porting API
 //--------------------------------------------------------------------+
 
-#if __GNUC__
+#if __GNUC__ && !defined(__ARMCC_VERSION)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #endif
@@ -88,7 +90,7 @@ static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef);
 static inline bool osal_queue_receive(osal_queue_t qhdl, void* data);
 static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr);
 static inline bool osal_queue_empty(osal_queue_t qhdl);
-#if __GNUC__
+#if __GNUC__ && !defined(__ARMCC_VERSION)
 #pragma GCC diagnostic pop
 #endif
 
