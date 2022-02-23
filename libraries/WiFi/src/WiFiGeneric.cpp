@@ -555,6 +555,10 @@ void WiFiGenericClass::useStaticBuffers(bool bufferMode){
     _wifiUseStaticBuffers = bufferMode;
 }
 
+// Temporary fix to ensure that CDC+JTAG stay on on ESP32-C3
+#if CONFIG_IDF_TARGET_ESP32C3
+extern "C" void phy_bbpll_en_usb(bool en);
+#endif
 
 bool wifiLowLevelInit(bool persistent){
     if(!lowLevelInitDone){
@@ -587,6 +591,10 @@ bool wifiLowLevelInit(bool persistent){
         	lowLevelInitDone = false;
         	return lowLevelInitDone;
         }
+// Temporary fix to ensure that CDC+JTAG stay on on ESP32-C3
+#if CONFIG_IDF_TARGET_ESP32C3
+	phy_bbpll_en_usb(true);
+#endif
         if(!persistent){
         	lowLevelInitDone = esp_wifi_set_storage(WIFI_STORAGE_RAM) == ESP_OK;
         }

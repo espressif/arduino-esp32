@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 #define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        20
+#define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 

@@ -4194,6 +4194,199 @@ d32_pro.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
+lolin_c3_mini.name=LOLIN C3 Mini
+lolin_c3_mini.vid.0=0x303a
+lolin_c3_mini.pid.0=0x1001
+
+lolin_c3_mini.upload.tool=esptool_py
+lolin_c3_mini.upload.maximum_size=1310720
+lolin_c3_mini.upload.maximum_data_size=327680
+lolin_c3_mini.upload.flags=
+lolin_c3_mini.upload.extra_flags=
+lolin_c3_mini.upload.use_1200bps_touch=false
+lolin_c3_mini.upload.wait_for_upload_port=false
+
+lolin_c3_mini.serial.disableDTR=true
+lolin_c3_mini.serial.disableRTS=true
+
+lolin_c3_mini.build.tarch=riscv32
+lolin_c3_mini.build.target=esp
+lolin_c3_mini.build.mcu=esp32c3
+lolin_c3_mini.build.core=esp32
+lolin_c3_mini.build.variant=lolin_c3_mini
+lolin_c3_mini.build.board=LOLIN_C3_MINI
+lolin_c3_mini.build.bootloader_addr=0x0
+
+lolin_c3_mini.build.cdc_on_boot=1
+lolin_c3_mini.build.f_cpu=160000000L
+lolin_c3_mini.build.flash_size=4MB
+lolin_c3_mini.build.flash_freq=80m
+lolin_c3_mini.build.flash_mode=dio
+lolin_c3_mini.build.boot=qio
+lolin_c3_mini.build.partitions=default
+lolin_c3_mini.build.defines=
+
+lolin_c3_mini.menu.CDCOnBoot.default=Enabled
+lolin_c3_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+lolin_c3_mini.menu.CDCOnBoot.dis_cdc=Disabled
+lolin_c3_mini.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+lolin_c3_mini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lolin_c3_mini.menu.PartitionScheme.default.build.partitions=default
+lolin_c3_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lolin_c3_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lolin_c3_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lolin_c3_mini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin_c3_mini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin_c3_mini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lolin_c3_mini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lolin_c3_mini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lolin_c3_mini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lolin_c3_mini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lolin_c3_mini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lolin_c3_mini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lolin_c3_mini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lolin_c3_mini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lolin_c3_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lolin_c3_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lolin_c3_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+
+lolin_c3_mini.menu.CPUFreq.160=160MHz (WiFi)
+lolin_c3_mini.menu.CPUFreq.160.build.f_cpu=160000000L
+lolin_c3_mini.menu.CPUFreq.80=80MHz (WiFi)
+lolin_c3_mini.menu.CPUFreq.80.build.f_cpu=80000000L
+lolin_c3_mini.menu.CPUFreq.40=40MHz
+lolin_c3_mini.menu.CPUFreq.40.build.f_cpu=40000000L
+lolin_c3_mini.menu.CPUFreq.20=20MHz
+lolin_c3_mini.menu.CPUFreq.20.build.f_cpu=20000000L
+lolin_c3_mini.menu.CPUFreq.10=10MHz
+lolin_c3_mini.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+
+lolin_c3_mini.menu.FlashFreq.80=80MHz
+lolin_c3_mini.menu.FlashFreq.80.build.flash_freq=80m
+lolin_c3_mini.menu.FlashFreq.40=40MHz
+lolin_c3_mini.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin_c3_mini.menu.UploadSpeed.921600=921600
+lolin_c3_mini.menu.UploadSpeed.921600.upload.speed=921600
+lolin_c3_mini.menu.UploadSpeed.115200=115200
+lolin_c3_mini.menu.UploadSpeed.115200.upload.speed=115200
+lolin_c3_mini.menu.UploadSpeed.256000.windows=256000
+lolin_c3_mini.menu.UploadSpeed.256000.upload.speed=256000
+lolin_c3_mini.menu.UploadSpeed.230400.windows.upload.speed=256000
+lolin_c3_mini.menu.UploadSpeed.230400=230400
+lolin_c3_mini.menu.UploadSpeed.230400.upload.speed=230400
+lolin_c3_mini.menu.UploadSpeed.460800.linux=460800
+lolin_c3_mini.menu.UploadSpeed.460800.macosx=460800
+lolin_c3_mini.menu.UploadSpeed.460800.upload.speed=460800
+lolin_c3_mini.menu.UploadSpeed.512000.windows=512000
+lolin_c3_mini.menu.UploadSpeed.512000.upload.speed=512000
+
+lolin_c3_mini.menu.DebugLevel.none=None
+lolin_c3_mini.menu.DebugLevel.none.build.code_debug=0
+lolin_c3_mini.menu.DebugLevel.error=Error
+lolin_c3_mini.menu.DebugLevel.error.build.code_debug=1
+lolin_c3_mini.menu.DebugLevel.warn=Warn
+lolin_c3_mini.menu.DebugLevel.warn.build.code_debug=2
+lolin_c3_mini.menu.DebugLevel.info=Info
+lolin_c3_mini.menu.DebugLevel.info.build.code_debug=3
+lolin_c3_mini.menu.DebugLevel.debug=Debug
+lolin_c3_mini.menu.DebugLevel.debug.build.code_debug=4
+lolin_c3_mini.menu.DebugLevel.verbose=Verbose
+lolin_c3_mini.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+lolin_s2_mini.name=LOLIN S2 Mini
+lolin_s2_mini.vid.0=0x303a
+lolin_s2_mini.pid.0=0x80C2
+
+lolin_s2_mini.upload.tool=esptool_py
+lolin_s2_mini.upload.maximum_size=1310720
+lolin_s2_mini.upload.maximum_data_size=327680
+lolin_s2_mini.upload.flags=
+lolin_s2_mini.upload.extra_flags=
+lolin_s2_mini.upload.use_1200bps_touch=true
+lolin_s2_mini.upload.wait_for_upload_port=true
+lolin_s2_mini.upload.speed=921600
+
+lolin_s2_mini.serial.disableDTR=false
+lolin_s2_mini.serial.disableRTS=false
+
+lolin_s2_mini.build.tarch=xtensa
+lolin_s2_mini.build.bootloader_addr=0x1000
+lolin_s2_mini.build.target=esp32s2
+lolin_s2_mini.build.mcu=esp32s2
+lolin_s2_mini.build.core=esp32
+lolin_s2_mini.build.variant=lolin_s2_mini
+lolin_s2_mini.build.board=LOLIN_S2_MINI
+
+lolin_s2_mini.build.cdc_on_boot=1
+lolin_s2_mini.build.msc_on_boot=1
+lolin_s2_mini.build.dfu_on_boot=1
+lolin_s2_mini.build.f_cpu=240000000L
+lolin_s2_mini.build.flash_size=4MB
+lolin_s2_mini.build.flash_freq=80m
+lolin_s2_mini.build.flash_mode=dio
+lolin_s2_mini.build.boot=qio
+lolin_s2_mini.build.partitions=default
+lolin_s2_mini.build.defines=
+
+lolin_s2_mini.build.defines=-DBOARD_HAS_PSRAM
+
+lolin_s2_mini.menu.CDCOnBoot.default=Enabled
+lolin_s2_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+lolin_s2_mini.menu.CDCOnBoot.dis_cdc=Disabled
+lolin_s2_mini.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+lolin_s2_mini.menu.MSCOnBoot.default=Disabled
+lolin_s2_mini.menu.MSCOnBoot.default.build.msc_on_boot=0
+lolin_s2_mini.menu.MSCOnBoot.msc=Enabled
+lolin_s2_mini.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lolin_s2_mini.menu.DFUOnBoot.default=Disabled
+lolin_s2_mini.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lolin_s2_mini.menu.DFUOnBoot.dfu=Enabled
+lolin_s2_mini.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lolin_s2_mini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lolin_s2_mini.menu.PartitionScheme.default.build.partitions=default
+lolin_s2_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lolin_s2_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lolin_s2_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lolin_s2_mini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin_s2_mini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin_s2_mini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lolin_s2_mini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lolin_s2_mini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lolin_s2_mini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lolin_s2_mini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lolin_s2_mini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lolin_s2_mini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lolin_s2_mini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lolin_s2_mini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lolin_s2_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lolin_s2_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lolin_s2_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+lolin_s2_mini.menu.DebugLevel.none=None
+lolin_s2_mini.menu.DebugLevel.none.build.code_debug=0
+lolin_s2_mini.menu.DebugLevel.error=Error
+lolin_s2_mini.menu.DebugLevel.error.build.code_debug=1
+lolin_s2_mini.menu.DebugLevel.warn=Warn
+lolin_s2_mini.menu.DebugLevel.warn.build.code_debug=2
+lolin_s2_mini.menu.DebugLevel.info=Info
+lolin_s2_mini.menu.DebugLevel.info.build.code_debug=3
+lolin_s2_mini.menu.DebugLevel.debug=Debug
+lolin_s2_mini.menu.DebugLevel.debug.build.code_debug=4
+lolin_s2_mini.menu.DebugLevel.verbose=Verbose
+lolin_s2_mini.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
 lolin32.name=WEMOS LOLIN32
 
 lolin32.upload.tool=esptool_py
@@ -9350,6 +9543,31 @@ esp32cam.menu.FlashMode.qout.build.boot=qout
 esp32cam.menu.FlashMode.dout=DOUT
 esp32cam.menu.FlashMode.dout.build.flash_mode=dout
 esp32cam.menu.FlashMode.dout.build.boot=dout
+
+esp32cam.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32cam.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32cam.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32cam.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32cam.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32cam.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32cam.menu.PartitionScheme.default=Regular 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32cam.menu.PartitionScheme.default.build.partitions=default
+esp32cam.menu.PartitionScheme.defaultffat=Regular 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32cam.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32cam.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32cam.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32cam.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32cam.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32cam.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32cam.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32cam.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32cam.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32cam.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32cam.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32cam.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32cam.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32cam.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32cam.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 
 esp32cam.menu.FlashFreq.80=80MHz
 esp32cam.menu.FlashFreq.80.build.flash_freq=80m
