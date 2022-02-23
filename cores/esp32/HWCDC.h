@@ -98,10 +98,12 @@ public:
 
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT && ARDUINO_USB_MODE//Serial used for USB CDC
+#if ARDUINO_USB_MODE
+#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
 extern HWCDC Serial;
 #else
 extern HWCDC USBSerial;
+#endif
 #endif
 
 #endif /* CONFIG_IDF_TARGET_ESP32C3 */
