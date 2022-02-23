@@ -33,6 +33,7 @@ replace_script+="data['packages']['toolchain-xtensa-esp32s2']['version']='$TOOLC
 replace_script+="data['packages']['toolchain-riscv32-esp']['version']='$TOOLCHAIN_VERSION';"
 # Add ESP32-S3 Toolchain
 replace_script+="data['packages'].update({'toolchain-xtensa-esp32s3':{'type':'toolchain','optional':True,'owner':'$ESPRESSIF_ORGANIZATION_NAME','version':'$TOOLCHAIN_VERSION'}});"
+replace_script+="data['packages']['toolchain-xtensa-esp32'].update({'optional':False});"
 # esptool.py may require an upstream version (for now platformio is the owner)
 replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSION';"
 # Save results
