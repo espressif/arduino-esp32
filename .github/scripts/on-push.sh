@@ -63,6 +63,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 
     FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
     FQBN_ESP32S2="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
+    FQBN_ESP32S3="espressif:esp32:esp32s3:PSRAM=opi,PartitionScheme=huge_app"
     FQBN_ESP32C3="espressif:esp32:esp32c3:PartitionScheme=huge_app"
 
     SKETCHES_ESP32="\
@@ -78,6 +79,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 
     build "esp32" $FQBN_ESP32 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
+    build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
 else
     source ./${SCRIPTS_DIR}/install-platformio-esp32.sh
@@ -96,6 +98,8 @@ else
     # build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
 
     python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s2" --project-option="board_build.partitions = huge_app.csv"
+    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s3" --project-option="board_build.partitions = huge_app.csv"
+    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32c3" --project-option="board_build.partitions = huge_app.csv"
 
     #build_pio_sketches "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries"
 fi
