@@ -106,6 +106,8 @@ else
     replace_script+="data=json.load(fp);"
     replace_script+="data['packages']['toolchain-xtensa-esp32']['optional']=True;"
     replace_script+="data['packages']['toolchain-xtensa-esp32s3']['optional']=False;"
+    replace_script+="data['packages']['tool-esptoolpy']['owner']='tasmota';"
+    replace_script+="data['packages']['tool-esptoolpy']['version']='https://github.com/tasmota/esptool/releases/download/v3.2.1/esptool-3.2.1.zip';"
     replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close()"
     python -c "$replace_script"
 
