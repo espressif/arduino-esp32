@@ -8,7 +8,7 @@
  */
 
 #ifndef IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP
-#define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP                     200
+#define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP                     250
 #endif
 #ifndef IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP_PSRAM
 #define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP_PSRAM               300
@@ -48,6 +48,20 @@
 #endif
 #ifndef IDF_PERFORMANCE_MIN_UDP_TX_THROUGHPUT
 #define IDF_PERFORMANCE_MIN_UDP_TX_THROUGHPUT                                   50
+#endif
+
+// throughput performance by ethernet iperf
+#ifndef IDF_PERFORMANCE_MIN_TCP_RX_ETH_THROUGHPUT
+#define IDF_PERFORMANCE_MIN_TCP_RX_ETH_THROUGHPUT                                   20
+#endif
+#ifndef IDF_PERFORMANCE_MIN_TCP_TX_ETH_THROUGHPUT
+#define IDF_PERFORMANCE_MIN_TCP_TX_ETH_THROUGHPUT                                   30
+#endif
+#ifndef IDF_PERFORMANCE_MIN_UDP_RX_ETH_THROUGHPUT
+#define IDF_PERFORMANCE_MIN_UDP_RX_ETH_THROUGHPUT                                   50
+#endif
+#ifndef IDF_PERFORMANCE_MIN_UDP_TX_ETH_THROUGHPUT
+#define IDF_PERFORMANCE_MIN_UDP_TX_ETH_THROUGHPUT                                   70
 #endif
 
 // events dispatched per second by event loop library

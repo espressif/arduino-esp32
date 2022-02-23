@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include "WString.h"
 #include "stdlib_noniso.h"
+#include "esp32-hal-log.h"
 
 /*********************************************/
 /*  Constructors                             */
@@ -33,6 +34,12 @@ String::String(const char *cstr) {
     init();
     if (cstr)
         copy(cstr, strlen(cstr));
+}
+
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
 }
 
 String::String(const String &value) {
@@ -106,16 +113,28 @@ String::String(unsigned long value, unsigned char base) {
     *this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces) {
+String::String(float value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 42);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
-String::String(double value, unsigned char decimalPlaces) {
+String::String(double value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 312);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
 String::~String() {
@@ -705,10 +724,7 @@ String String::substring(unsigned int left, unsigned int right) const {
         return out;
     if(right > len())
         right = len();
-    char temp = buffer()[right];  // save the replaced character
-    wbuffer()[right] = '\0';
-    out = wbuffer() + left;  // pointer arithmetic
-    wbuffer()[right] = temp;  //restore character
+    out.copy(buffer() + left, right - left);
     return out;
 }
 
@@ -758,8 +774,10 @@ void String::replace(const String& find, const String& replace) {
         }
         if(size == len())
             return;
-        if(size > capacity() && !changeBuffer(size))
-            return; // XXX: tell user!
+        if(size > capacity() && !changeBuffer(size)) {
+            log_w("String.Replace() Insufficient space to replace string");
+            return;
+        }
         int index = len() - 1;
         while(index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
             readFrom = wbuffer() + index + find.len();

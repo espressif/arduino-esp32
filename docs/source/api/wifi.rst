@@ -26,7 +26,7 @@ a Wi-Fi network.
     :width: 520
     :figclass: align-center
 
-This mode can be used for serving a HTTP or HTTPS server inside the ESP32, for example.
+This mode can be used for serving an HTTP or HTTPS server inside the ESP32, for example.
 
 Working as STA
 **************
@@ -38,12 +38,34 @@ The STA mode is used to connect the ESP32 to a Wi-Fi network, provided by an Acc
     :width: 520
     :figclass: align-center
 
-If you need to connect your project to the Internet, this is the mode you are looking for.
+This is the mode to be used if you want to connect your project to the Internet.
 
 API Description
 ---------------
 
-Here is the description about the WiFi API.
+Here is the description of the WiFi API.
+
+Common API
+----------
+
+Here are the common APIs that are used for both modes, AP and STA.
+
+useStaticBuffers
+****************
+
+This function is used to set the memory allocation mode for the Wi-Fi buffers.
+
+.. code-block:: arduino
+
+    static void useStaticBuffers(bool bufferMode);
+
+* Set ``true`` to use the Wi-Fi buffers memory allocation as **static**.
+* Set ``false`` to set the buffers memory allocation to **dynamic**.
+
+The use of dynamic allocation is recommended to save memory and reduce resources usage. However, the dynamic performs slightly slower than the static allocation.
+Use static allocation if you want to have more performance and if your application is multi-tasking.
+
+By default, the memory allocation will be set to **dynamic** if this function is not being used.
 
 WiFiAP
 ------

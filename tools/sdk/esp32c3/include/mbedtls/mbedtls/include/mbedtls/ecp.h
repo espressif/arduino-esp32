@@ -72,19 +72,29 @@
 /*
  * ECP error codes
  */
-#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80  /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00  /**< The buffer is too small to write to. */
-#define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80  /**< The requested feature is not available, for example, the requested curve is not supported. */
-#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00  /**< The signature is not valid. */
-#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80  /**< Memory allocation failed. */
-#define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00  /**< Generation of random value, such as ephemeral key, failed. */
-#define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80  /**< Invalid private or public key. */
-#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00  /**< The buffer contains a valid signature followed by more data. */
+/** Bad input parameters to function. */
+#define MBEDTLS_ERR_ECP_BAD_INPUT_DATA                    -0x4F80
+/** The buffer is too small to write to. */
+#define MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL                  -0x4F00
+/** The requested feature is not available, for example, the requested curve is not supported. */
+#define MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE               -0x4E80
+/** The signature is not valid. */
+#define MBEDTLS_ERR_ECP_VERIFY_FAILED                     -0x4E00
+/** Memory allocation failed. */
+#define MBEDTLS_ERR_ECP_ALLOC_FAILED                      -0x4D80
+/** Generation of random value, such as ephemeral key, failed. */
+#define MBEDTLS_ERR_ECP_RANDOM_FAILED                     -0x4D00
+/** Invalid private or public key. */
+#define MBEDTLS_ERR_ECP_INVALID_KEY                       -0x4C80
+/** The buffer contains a valid signature followed by more data. */
+#define MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH                  -0x4C00
 
 /* MBEDTLS_ERR_ECP_HW_ACCEL_FAILED is deprecated and should not be used. */
-#define MBEDTLS_ERR_ECP_HW_ACCEL_FAILED                   -0x4B80  /**< The ECP hardware accelerator failed. */
+/** The ECP hardware accelerator failed. */
+#define MBEDTLS_ERR_ECP_HW_ACCEL_FAILED                   -0x4B80
 
-#define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00  /**< Operation in progress, call again with the same parameters to continue. */
+/** Operation in progress, call again with the same parameters to continue. */
+#define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
 
 #ifdef __cplusplus
 extern "C" {
@@ -153,6 +163,40 @@ typedef struct mbedtls_ecp_point
     mbedtls_mpi Z;          /*!< The Z coordinate of the ECP point. */
 }
 mbedtls_ecp_point;
+
+/* Determine the minimum safe value of MBEDTLS_ECP_MAX_BITS. */
+#if !defined(MBEDTLS_ECP_C)
+#define MBEDTLS_ECP_MAX_BITS_MIN 0
+/* Note: the curves must be listed in DECREASING size! */
+#elif defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 521
+#elif defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 512
+#elif defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 448
+#elif defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 384
+#elif defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 384
+#elif defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 256
+#elif defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 256
+#elif defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 256
+#elif defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 255
+#elif defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 225 // n is slightly above 2^224
+#elif defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 224
+#elif defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 192
+#elif defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS_MIN 192
+#else
+#error "MBEDTLS_ECP_C enabled, but no curve?"
+#endif
 
 #if !defined(MBEDTLS_ECP_ALT)
 /*
@@ -228,7 +272,13 @@ mbedtls_ecp_group;
  * \{
  */
 
-#if !defined(MBEDTLS_ECP_MAX_BITS)
+#if defined(MBEDTLS_ECP_MAX_BITS)
+
+#if MBEDTLS_ECP_MAX_BITS < MBEDTLS_ECP_MAX_BITS_MIN
+#error "MBEDTLS_ECP_MAX_BITS is smaller than the largest supported curve"
+#endif
+
+#else
 /**
  * The maximum size of the groups, that is, of \c N and \c P.
  */

@@ -113,6 +113,8 @@ typedef struct {
     size_t                      client_cert_len;     /*!< Length of the buffer pointed to by client_cert_pem. May be 0 for null-terminated pem */
     const char                  *client_key_pem;     /*!< SSL client key, PEM format as string, if the server requires to verify client */
     size_t                      client_key_len;      /*!< Length of the buffer pointed to by client_key_pem. May be 0 for null-terminated pem */
+    const char                  *client_key_password;      /*!< Client key decryption password string */
+    size_t                      client_key_password_len;   /*!< String length of the password pointed to by client_key_password */
     const char                  *user_agent;         /*!< The User Agent string to send with HTTP requests */
     esp_http_client_method_t    method;                   /*!< HTTP Method */
     int                         timeout_ms;               /*!< Network timeout in milliseconds */
@@ -167,6 +169,7 @@ typedef enum {
 #define ESP_ERR_HTTP_INVALID_TRANSPORT  (ESP_ERR_HTTP_BASE + 5)     /*!< There are no transport support for the input scheme */
 #define ESP_ERR_HTTP_CONNECTING         (ESP_ERR_HTTP_BASE + 6)     /*!< HTTP connection hasn't been established yet */
 #define ESP_ERR_HTTP_EAGAIN             (ESP_ERR_HTTP_BASE + 7)     /*!< Mapping of errno EAGAIN to esp_err_t */
+#define ESP_ERR_HTTP_CONNECTION_CLOSED  (ESP_ERR_HTTP_BASE + 8)     /*!< Read FIN from peer and the connection closed */
 
 /**
  * @brief      Start a HTTP session
@@ -340,6 +343,17 @@ esp_err_t esp_http_client_set_password(esp_http_client_handle_t client, const ch
  *     - ESP_ERR_INVALID_ARG
  */
 esp_err_t esp_http_client_set_authtype(esp_http_client_handle_t client, esp_http_client_auth_type_t auth_type);
+
+/**
+ * @brief      Get HTTP client session errno
+ *
+ * @param[in]  client  The esp_http_client handle
+ *
+ * @return
+ *         - (-1) if invalid argument
+ *         - errno
+ */
+int esp_http_client_get_errno(esp_http_client_handle_t client);
 
 /**
  * @brief      Set http request method

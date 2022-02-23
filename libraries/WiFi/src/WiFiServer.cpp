@@ -82,7 +82,7 @@ void WiFiServer::begin(uint16_t port, int enable){
     return;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
   server.sin_family = AF_INET;
-  server.sin_addr.s_addr = INADDR_ANY;
+  server.sin_addr.s_addr = _addr;
   server.sin_port = htons(_port);
   if(bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     return;

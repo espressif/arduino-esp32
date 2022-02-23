@@ -27,6 +27,7 @@
 #include "soc/rtc_io_reg.h"
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
+#include "soc/dac_channel.h"
 #define DEFAULT_VREF    1100
 static esp_adc_cal_characteristics_t *__analogCharacteristics[2] = {NULL, NULL};
 static uint16_t __analogVRef = 0;
@@ -35,9 +36,10 @@ static uint8_t __analogVRefPin = 0;
 #include "esp32s2/rom/ets_sys.h"
 #include "soc/sens_reg.h"
 #include "soc/rtc_io_reg.h"
+#include "soc/dac_channel.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
@@ -46,9 +48,22 @@ static uint8_t __analogVRefPin = 0;
 #endif
 
 static uint8_t __analogAttenuation = 3;//11db
-static uint8_t __analogWidth = 3;//12 bits
+static uint8_t __analogWidth = ADC_WIDTH_MAX - 1; //3 for ESP32/ESP32C3; 4 for ESP32S2
+static uint8_t __analogReturnedWidth = SOC_ADC_MAX_BITWIDTH; //12 for ESP32/ESP32C3; 13 for ESP32S2
 static uint8_t __analogClockDiv = 1;
 static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
+
+static inline uint16_t mapResolution(uint16_t value)
+{
+    uint8_t from = __analogWidth + 9;
+    if (from == __analogReturnedWidth) {
+        return value;
+    }
+    if (from > __analogReturnedWidth) {
+        return value >> (from  - __analogReturnedWidth);
+    }
+    return value << (__analogReturnedWidth - from);
+}
 
 void __analogSetClockDiv(uint8_t clockDiv){
     if(!clockDiv){
@@ -104,7 +119,9 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
         adc1_config_channel_atten(channel, attenuation);
     }
     __analogInit();
-    __pin_attenuation[pin] = attenuation;
+    if((__pin_attenuation[pin] != ADC_ATTENDB_MAX) || (attenuation != __analogAttenuation)){
+        __pin_attenuation[pin] = attenuation;
+    }
 }
 
 bool __adcAttachPin(uint8_t pin){
@@ -113,6 +130,7 @@ bool __adcAttachPin(uint8_t pin){
         log_e("Pin %u is not ADC pin!", pin);
         return false;
     }
+    __analogInit();
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
 #if CONFIG_IDF_TARGET_ESP32
@@ -125,10 +143,10 @@ bool __adcAttachPin(uint8_t pin){
         }
 #endif
     }
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-    else if(pin == 25){
+#if SOC_DAC_SUPPORTED
+    else if(pin == DAC_CHANNEL_1_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
-    } else if(pin == 26){
+    } else if(pin == DAC_CHANNEL_2_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);//stop dac2
     }
 #endif
@@ -143,6 +161,7 @@ void __analogReadResolution(uint8_t bits)
     if(!bits || bits > 16){
         return;
     }
+    __analogReturnedWidth = bits;
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(bits);         // hadware from 9 to 12
 #endif
@@ -162,7 +181,7 @@ uint16_t __analogRead(uint8_t pin)
         channel -= 10;
         r = adc2_get_raw( channel, __analogWidth, &value);
         if ( r == ESP_OK ) {
-            return value;
+            return mapResolution(value);
         } else if ( r == ESP_ERR_INVALID_STATE ) {
             log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
         } else if ( r == ESP_ERR_TIMEOUT ) {
@@ -171,9 +190,10 @@ uint16_t __analogRead(uint8_t pin)
             log_e("GPIO%u: %s", pin, esp_err_to_name(r));
         }
     } else {
-        return adc1_get_raw(channel);
+        value = adc1_get_raw(channel);
+        return mapResolution(value);
     }
-    return value;
+    return mapResolution(value);
 }
 
 uint32_t __analogReadMilliVolts(uint8_t pin){

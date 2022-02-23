@@ -3,9 +3,8 @@ Tutorials
 #########
 
 .. toctree::
-    :maxdepth: 2
     :caption: Tutorials:
+    :maxdepth: 1
+    :glob:
 
-    Basic <basic>
-    DFU <dfu>
-    GPIO Matrix and Pin Mux <io_mux>
+    *

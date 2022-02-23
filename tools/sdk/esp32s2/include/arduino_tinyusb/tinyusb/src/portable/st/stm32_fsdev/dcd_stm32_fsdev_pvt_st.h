@@ -83,6 +83,14 @@
   #include "stm32l0xx.h"
   #define PMA_LENGTH (1024u)
 
+#elif CFG_TUSB_MCU == OPT_MCU_STM32L1
+  #include "stm32l1xx.h"
+  #define PMA_LENGTH (512u)
+
+#elif CFG_TUSB_MCU == OPT_MCU_STM32G4
+  #include "stm32g4xx.h"
+  #define PMA_LENGTH (1024u)
+
 #else
   #error You are using an untested or unimplemented STM32 variant. Please update the driver.
   // This includes L1x0, L1x1, L1x2, L4x2 and L4x3, G1x1, G1x3, and G1x4

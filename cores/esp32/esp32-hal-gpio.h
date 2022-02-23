@@ -68,22 +68,11 @@ extern "C" {
 #define ONLOW_WE  0x0C
 #define ONHIGH_WE 0x0D
 
-typedef struct {
-    uint8_t reg;      /*!< GPIO register offset from DR_REG_IO_MUX_BASE */
-    int8_t rtc;       /*!< RTC GPIO number (-1 if not RTC GPIO pin) */
-    int8_t adc;       /*!< ADC Channel number (-1 if not ADC pin) */
-    int8_t touch;     /*!< Touch Channel number (-1 if not Touch pin) */
-} esp32_gpioMux_t;
+#define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
+#define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)
 
-extern const esp32_gpioMux_t esp32_gpioMux[SOC_GPIO_PIN_COUNT];
-extern const int8_t esp32_adc2gpio[20];
-
-#define digitalPinIsValid(pin)          ((pin) < SOC_GPIO_PIN_COUNT && esp32_gpioMux[(pin)].reg)
-#define digitalPinCanOutput(pin)        ((pin) < NUM_OUPUT_PINS && esp32_gpioMux[(pin)].reg)
-#define digitalPinToRtcPin(pin)         (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].rtc:-1)
-#define digitalPinToAnalogChannel(pin)  (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].adc:-1)
-#define digitalPinToTouchChannel(pin)   (((pin) < SOC_GPIO_PIN_COUNT)?esp32_gpioMux[(pin)].touch:-1)
-#define digitalPinToDacChannel(pin)     (((pin) == PIN_DAC1)?0:((pin) == PIN_DAC2)?1:-1)
+#define digitalPinToRtcPin(pin)         ((RTC_GPIO_IS_VALID_GPIO(pin))?rtc_io_number_get(pin):-1) 
+#define digitalPinToDacChannel(pin)     (((pin) == DAC_CHANNEL_1_GPIO_NUM)?0:((pin) == DAC_CHANNEL_2_GPIO_NUM)?1:-1)
 
 void pinMode(uint8_t pin, uint8_t mode);
 void digitalWrite(uint8_t pin, uint8_t val);
@@ -92,6 +81,10 @@ int digitalRead(uint8_t pin);
 void attachInterrupt(uint8_t pin, void (*)(void), int mode);
 void attachInterruptArg(uint8_t pin, void (*)(void*), void * arg, int mode);
 void detachInterrupt(uint8_t pin);
+
+int8_t digitalPinToTouchChannel(uint8_t pin);
+int8_t digitalPinToAnalogChannel(uint8_t pin);
+int8_t analogChannelToDigitalPin(uint8_t channel);
 
 #ifdef __cplusplus
 }

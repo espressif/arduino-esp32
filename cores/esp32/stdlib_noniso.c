@@ -30,8 +30,7 @@
 #include "stdlib_noniso.h"
 #include "esp_system.h"
 
-#if !CONFIG_DSP_ANSI && !CONFIG_DSP_OPTIMIZED
-void reverse(char* begin, char* end) {
+static void reverse(char* begin, char* end) {
     char *is = begin;
     char *ie = end - 1;
     while(is < ie) {
@@ -42,9 +41,6 @@ void reverse(char* begin, char* end) {
         --ie;
     }
 }
-#else
-void reverse(char* begin, char* end);
-#endif
 
 char* ltoa(long value, char* result, int base) {
     if(base < 2 || base > 16) {
@@ -92,7 +88,7 @@ char* ultoa(unsigned long value, char* result, int base) {
     return result;
 }
 
-char * dtostrf(double number, signed char width, unsigned char prec, char *s) {
+char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
     bool negative = false;
 
     if (isnan(number)) {
@@ -121,7 +117,7 @@ char * dtostrf(double number, signed char width, unsigned char prec, char *s) {
     // Round correctly so that print(1.999, 2) prints as "2.00"
     // I optimized out most of the divisions
     double rounding = 2.0;
-    for (uint8_t i = 0; i < prec; ++i)
+    for (uint32_t i = 0; i < prec; ++i)
         rounding *= 10.0;
     rounding = 1.0 / rounding;
 

@@ -55,6 +55,10 @@ class String {
         // fails, the string will be marked as invalid (i.e. "if (s)" will
         // be false).
         String(const char *cstr = "");
+        String(const char *cstr, unsigned int length);
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+        String(const uint8_t *cstr, unsigned int length) : String((const char*)cstr, length) {}
+#endif
         String(const String &str);
         String(const __FlashStringHelper *str);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
@@ -67,8 +71,8 @@ class String {
         explicit String(unsigned int, unsigned char base = 10);
         explicit String(long, unsigned char base = 10);
         explicit String(unsigned long, unsigned char base = 10);
-        explicit String(float, unsigned char decimalPlaces = 2);
-        explicit String(double, unsigned char decimalPlaces = 2);
+        explicit String(float, unsigned int decimalPlaces = 2);
+        explicit String(double, unsigned int decimalPlaces = 2);
         ~String(void);
 
         // memory management
@@ -108,6 +112,8 @@ class String {
         // concatenation is considered unsuccessful.
         unsigned char concat(const String &str);
         unsigned char concat(const char *cstr);
+        unsigned char concat(const char *cstr, unsigned int length);
+        unsigned char concat(const uint8_t *cstr, unsigned int length) {return concat((const char*)cstr, length);}
         unsigned char concat(char c);
         unsigned char concat(unsigned char c);
         unsigned char concat(int num);
@@ -326,7 +332,6 @@ class String {
         void init(void);
         void invalidate(void);
         unsigned char changeBuffer(unsigned int maxStrLen);
-        unsigned char concat(const char *cstr, unsigned int length);
 
         // copy and move
         String & copy(const char *cstr, unsigned int length);

@@ -44,7 +44,8 @@ bool     tud_vendor_n_mounted         (uint8_t itf);
 
 uint32_t tud_vendor_n_available       (uint8_t itf);
 uint32_t tud_vendor_n_read            (uint8_t itf, void* buffer, uint32_t bufsize);
-bool     tud_vendor_n_peek            (uint8_t itf, uint8_t* u8);
+bool     tud_vendor_n_peek            (uint8_t itf, uint8_t* ui8);
+void     tud_vendor_n_read_flush      (uint8_t itf);
 
 uint32_t tud_vendor_n_write           (uint8_t itf, void const* buffer, uint32_t bufsize);
 uint32_t tud_vendor_n_write_available (uint8_t itf);
@@ -58,7 +59,8 @@ uint32_t tud_vendor_n_write_str       (uint8_t itf, char const* str);
 static inline bool     tud_vendor_mounted         (void);
 static inline uint32_t tud_vendor_available       (void);
 static inline uint32_t tud_vendor_read            (void* buffer, uint32_t bufsize);
-static inline bool     tud_vendor_peek            (uint8_t* u8);
+static inline bool     tud_vendor_peek            (uint8_t* ui8);
+static inline void     tud_vendor_read_flush      (void);
 static inline uint32_t tud_vendor_write           (void const* buffer, uint32_t bufsize);
 static inline uint32_t tud_vendor_write_str       (char const* str);
 static inline uint32_t tud_vendor_write_available (void);
@@ -94,9 +96,14 @@ static inline uint32_t tud_vendor_read (void* buffer, uint32_t bufsize)
   return tud_vendor_n_read(0, buffer, bufsize);
 }
 
-static inline bool tud_vendor_peek (uint8_t* u8)
+static inline bool tud_vendor_peek (uint8_t* ui8)
 {
-  return tud_vendor_n_peek(0, u8);
+  return tud_vendor_n_peek(0, ui8);
+}
+
+static inline void tud_vendor_read_flush(void)
+{
+    tud_vendor_n_read_flush(0);
 }
 
 static inline uint32_t tud_vendor_write (void const* buffer, uint32_t bufsize)

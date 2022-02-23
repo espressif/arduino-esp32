@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 
 /*               Notes about WiFi Programming
@@ -236,21 +228,21 @@ extern uint64_t g_wifi_feature_caps;
     .feature_caps = g_wifi_feature_caps, \
     .sta_disconnected_pm = WIFI_STA_DISCONNECTED_PM_ENABLED,  \
     .magic = WIFI_INIT_CONFIG_MAGIC\
-};
+}
 
 /**
-  * @brief  Init WiFi
-  *         Alloc resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
-  *         WiFi NVS structure etc, this WiFi also start WiFi task
+  * @brief  Initialize WiFi
+  *         Allocate resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
+  *         WiFi NVS structure etc. This WiFi also starts WiFi task
   *
   * @attention 1. This API must be called before all other WiFi API can be called
-  * @attention 2. Always use WIFI_INIT_CONFIG_DEFAULT macro to init the config to default values, this can
-  *               guarantee all the fields got correct value when more fields are added into wifi_init_config_t
-  *               in future release. If you want to set your owner initial values, overwrite the default values
-  *               which are set by WIFI_INIT_CONFIG_DEFAULT, please be notified that the field 'magic' of
+  * @attention 2. Always use WIFI_INIT_CONFIG_DEFAULT macro to initialize the configuration to default values, this can
+  *               guarantee all the fields get correct value when more fields are added into wifi_init_config_t
+  *               in future release. If you want to set your own initial values, overwrite the default values
+  *               which are set by WIFI_INIT_CONFIG_DEFAULT. Please be notified that the field 'magic' of
   *               wifi_init_config_t should always be WIFI_INIT_CONFIG_MAGIC!
   *
-  * @param  config pointer to WiFi init configuration structure; can point to a temporary variable.
+  * @param  config pointer to WiFi initialized configuration structure; can point to a temporary variable.
   *
   * @return
   *    - ESP_OK: succeed
@@ -275,7 +267,7 @@ esp_err_t esp_wifi_deinit(void);
   * @brief     Set the WiFi operating mode
   *
   *            Set the WiFi operating mode as station, soft-AP or station+soft-AP,
-  *            The default mode is soft-AP mode.
+  *            The default mode is station mode.
   *
   * @param     mode  WiFi operating mode
   *
@@ -1224,7 +1216,7 @@ esp_err_t esp_wifi_config_11b_rate(wifi_interface_t ifx, bool disable);
   * @attention  1. This API should be called after esp_wifi_init() and before esp_wifi_start().
   *
   * @param      ifx  Interface to be configured.
-  * @param      rate Only support 1M, 6M and MCS0_LGI
+  * @param      rate Phy rate to be configured.
   *
   * @return
   *    - ESP_OK: succeed
@@ -1288,6 +1280,20 @@ esp_err_t esp_wifi_set_country_code(const char *country, bool ieee80211d_enabled
   *    - ESP_ERR_INVALID_ARG: invalid argument
   */
 esp_err_t esp_wifi_get_country_code(char *country);
+
+/**
+  * @brief      Config 80211 tx rate of specified interface
+  *
+  * @attention  1. This API should be called after esp_wifi_init() and before esp_wifi_start().
+  *
+  * @param      ifx  Interface to be configured.
+  * @param      rate Phy rate to be configured.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_config_80211_tx_rate(wifi_interface_t ifx, wifi_phy_rate_t rate);
 
 #ifdef __cplusplus
 }

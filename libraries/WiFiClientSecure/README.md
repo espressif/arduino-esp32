@@ -26,6 +26,32 @@ Then:
 
 Please see the WiFiClientSecure example.
 
+Using a bundle of root certificate authority certificates 
+---------------------------------------------------------
+This method is similar to the single root certificate verfication above, but it uses a standard set of 
+root certificates from Mozilla to authenticate against, while the previous method only accepts a single 
+certificate for a given server. This allows the client to connect to all public SSL servers.
+
+To use this feature in PlatformIO:
+1. create a certificate bundle as described in the document below, or obtain a pre-built one you trust:
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_crt_bundle.htm 
+(gen_crt_bundle.py can be found in the /tools folder)
+   a. note: the full bundle will take up around 64k of flash space, but has minimal RAM usage, as only
+      the index of the certificates is kept in RAM
+2. Place the bundle under the file name "data/cert/x509_crt_bundle.bin" in your platformio project
+3. add "board_build.embed_files = data/cert/x509_crt_bundle.bin" in your platformio.ini
+4. add the following global declaration in your project:
+   extern const uint8_t rootca_crt_bundle_start[] asm("_binary_data_cert_x509_crt_bundle_bin_start");
+5. before initiating the first SSL connection, call
+   my_client.setCACertBundle(rootca_crt_bundle_start);
+
+To use this feature in Android IDE:
+If the Arduino IDE added support for embedding files in the meantime, then follow the instructions above.
+If not, you have three choices:
+1. convert your project to PlatformIO
+2. create a makefile where you can add the idf_component_register() declaration to include the certificate bundle
+3. Store the bundle as a SPIFFS file, but then you have to load it into RAM in runtime and waste 64k of precious memory
+
 Using a root CA cert and client cert/keys
 -----------------------------------------
 This method authenticates the server and additionally also authenticates
@@ -66,3 +92,18 @@ To use PSK:
   encryption for the connection
 
 Please see the WiFiClientPSK example.
+
+Specifying the ALPN Protocol
+----------------------------
+
+Application-Layer Protocol Negotiation (ALPN) is a Transport Layer Security (TLS) extension that allows 
+the application layer to negotiate which protocol should be performed over a secure connection in a manner 
+that avoids additional round trips and which is independent of the application-layer protocols.
+
+For example, this is used with AWS IoT Custom Authorizers where an MQTT client must set the ALPN protocol to ```mqtt```: 
+
+```
+const char *aws_protos[] = {"mqtt", NULL};
+...
+wiFiClient.setAlpnProtocols(aws_protos);
+```
