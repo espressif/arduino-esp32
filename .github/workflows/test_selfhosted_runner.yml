@@ -12,6 +12,8 @@ jobs:
     runs-on: self-hosted
     if: github.repository == 'espressif/arduino-esp32'
     steps:
+      - name:
+        run: whoami
       - name: Check out repo
         uses: actions/checkout@v2
       - name: Test message 1
