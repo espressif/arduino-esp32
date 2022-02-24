@@ -168,12 +168,6 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         .hpoint         = 0
     };
     ledc_channel_config(&ledc_channel);
-
-    //Making attachInterrupt to work. 
-    //WILL BE REMOVED AFTER REFACTORING GPIO to use ESP-IDF API
-    #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-    pinMode(pin,OUTPUT);
-    #endif
 }
 
 void ledcDetachPin(uint8_t pin)

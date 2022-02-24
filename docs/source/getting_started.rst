@@ -26,6 +26,9 @@ power consumption.
 
 The ESP32 series is available as a chip or module.
 
+
+.. _supported_socs:
+
 Supported SoC's
 ---------------
 

@@ -48,6 +48,14 @@ extern "C" {
 #define SERIAL_7O2 0x800003b
 #define SERIAL_8O2 0x800003f
 
+// These are Hardware Flow Contol possible usage
+// equivalent to UDF enum uart_hw_flowcontrol_t from 
+// https://github.com/espressif/esp-idf/blob/master/components/hal/include/hal/uart_types.h#L75-L81
+#define HW_FLOWCTRL_DISABLE   0x0       // disable HW Flow Control
+#define HW_FLOWCTRL_RTS       0x1       // use only RTS PIN for HW Flow Control
+#define HW_FLOWCTRL_CTS       0x2       // use only CTS PIN for HW Flow Control
+#define HW_FLOWCTRL_CTS_RTS   0x3       // use both CTS and RTS PIN for HW Flow Control
+
 struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
@@ -76,7 +84,12 @@ void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
-void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin);
+
+// Negative Pin Number will keep it unmodified, thus this function can set individual pins
+void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+
+// Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
+void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
