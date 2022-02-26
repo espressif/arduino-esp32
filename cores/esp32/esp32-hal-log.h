@@ -187,9 +187,9 @@ void log_print_buf(const uint8_t *b, size_t len);
 #include "esp_log.h"
 
 #ifdef USE_ESP_IDF_LOG
-#ifndef TAG
-#define TAG "ARDUINO"
-#endif
+//#ifndef TAG
+//#define TAG "ARDUINO"
+//#endif
 //#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
 #else
 #ifdef CONFIG_ARDUHAL_ESP_LOG
