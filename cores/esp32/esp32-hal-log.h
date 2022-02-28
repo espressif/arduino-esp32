@@ -38,7 +38,9 @@ extern "C"
 #else
 #define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
 #ifdef USE_ESP_IDF_LOG
+#ifndef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
+#endif
 #endif
 #endif
 
