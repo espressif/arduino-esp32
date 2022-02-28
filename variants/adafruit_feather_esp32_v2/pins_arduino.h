@@ -15,10 +15,10 @@ static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 
-static const uint8_t TX = 7;
-static const uint8_t RX = 8;
-static const uint8_t TX1 = 7;
-static const uint8_t RX1 = 8;
+static const uint8_t TX = 8;
+static const uint8_t RX = 7;
+static const uint8_t TX1 = 8;
+static const uint8_t RX1 = 7;
 
 static const uint8_t SDA = 22;
 static const uint8_t SCL = 20;
@@ -52,6 +52,7 @@ static const uint8_t BUTTON = 38;
 
 // Neopixel
 static const uint8_t NEOPIXEL_PIN = 0;
+static const uint8_t PIN_NEOPIXEL = 0;
 
 // Neopixel & I2C power
 static const uint8_t NEOPIXEL_I2C_POWER = 2;
