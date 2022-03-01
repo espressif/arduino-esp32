@@ -28,7 +28,7 @@ For more details or to add a new board, see the `boards.txt`_ file.
 Generic Options
 ---------------
 
-Most of the options are available for every ESP32 families. Some options will be available only for specific targets, like the USB configuration.
+Most of the options are available for every ESP32 family. Some options will be available only for specific targets, like the USB configuration.
 
 Board
 *****
@@ -57,19 +57,21 @@ CPU Frequency
 
 On this option, you can select the CPU clock frequency. This option is critical and must be selected according to the high-frequency crystal present on the board and the radio usage (Wi-Fi and Bluetooth).
 
-In some application, reducing the CPU clock frequency is recommended in order to reduce the power consumption.
+In some applications, reducing the CPU clock frequency is recommended in order to reduce power consumption.
 
 If you don't know why you should change this frequency, leave the default option.
 
 Flash Frequency
 ***************
 
-Use this function to select the flash memory frequency. The frequency will be dependent of the memory model.
+Use this function to select the flash memory frequency. The frequency will be dependent on the memory model.
 
 * **40MHz**
 * **80MHz**
 
-If you don't know if your memory supports **80Mhz**, you can try to upload you scketch using the **80MHz** option and watch the log output via the serial monitor.
+If you don't know if your memory supports **80Mhz**, you can try to upload the sketch using the **80MHz** option and watch the log output via the serial monitor.
+
+.. note:: In some boards/SoC, the flash frequency is automatically selected according to the flash mode. In some cases (i.e ESP32-S3), the flash frequency is up to 120MHz.
 
 Flash Mode
 **********
@@ -79,16 +81,19 @@ This option is used to select the SPI communication mode with the flash memory.
 Depending on the application, this mode can be changed in order to increase the flash communication speed.
 
 * **QIO** - Quad I/O Fast Read
-    * Four SPI pins are used to write to the flash and to read from flash.
+    * Four SPI pins are used to write to the flash and to read from the flash.
 
 * **DIO** - Dual I/O Fast Read
-    * Two SPI pins are used to write to the flash and to read from flash.
+    * Two SPI pins are used to write to the flash and to read from the flash.
 
 * **QOUT** - Quad Output Fast Read
     * Four SPI pins are used to read the flash data.
 
 * **DOUT** - Dual Output Fast Read
     * Two SPI pins are used to read flash data.
+
+* **OPI** - Octal I/O
+    * Eight SPI pins are used to write and to read from the flash.
 
 If you don't know how the board flash is physically connected or the flash memory model, try the **QIO** at **80MHz** first.
 
@@ -104,7 +109,29 @@ This option is used to select the flash size. The flash size should be selected 
 
 If you choose the wrong size, you may have issues when selecting the partition scheme.
 
+Embedded Flash
+^^^^^^^^^^^^^^
 
+Some SoC has embedded flash. The ESP32-S3 is a good example.
+
+.. note:: Check the manufacturer part number of your SoC/module to see the right version.
+
+Example: **ESP32-S3FH4R2**
+
+This particular ESP32-S3 variant comes with 4MB Flash and 2MB PSRAM.
+
+**Options for Embedded Flash**
+
+* **Fx4** 4MB Flash (*QIO*)
+* **Fx8** 8MB Flash (*QIO*)
+* **V** 1.8V SPI
+
+The **x** stands for the temperature range specification.
+
+* **H** High Temperature (*-40 to 85ºC*)
+* **N** Low Temeprature (*-40 to 65ºC*)
+
+For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 
 Partition Scheme
 ****************
@@ -130,21 +157,44 @@ PSRAM
 
 The PSRAM is an internal or external extended RAM present on some boards, modules or SoC.
 
-This option can be used to ``Enable`` or ``Disable`` the PSRAM.
+This option can be used to ``Enable`` or ``Disable`` PSRAM. In some SoCs, you can select the PSRAM mode as the following.
+
+* **QSPI PSRAM** - Quad PSRAM
+* **OPI PSRAM** - Octal PSRAM
+
+Embedded PSRAM
+^^^^^^^^^^^^^^
+
+Some SoC has embedded PSRAM. The ESP32-S3 is a good example.
+
+Example: **ESP32-S3FH4R2**
+
+This particular ESP32-S3 comes with 4MB Flash and 2MB PSRAM.
+
+**Options for Embedded Flash and PSRAM**
+
+* **R2** 2MB PSRAM (*QSPI*)
+* **R8** 8MB PSRAM (*OPI*)
+* **V** 1.8V SPI
+
+The **x** stands for the temperature range specification.
+
+* **H** High Temperature (*-40 to 85ºC*)
+* **N** Low Temeprature (*-40 to 65ºC*)
+
+For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 
 Arduino Runs On
 ***************
 
 This function is used to select the core that runs the Arduino core. This is only valid if the target SoC has 2 cores.
 
-When you have some heavy task running, you might want to run this task on a different core then the Arduino tasks. For this reason, you have this configuration to select the core.
+When you have some heavy task running, you might want to run this task on a different core than the Arduino tasks. For this reason, you have this configuration to select the right core.
 
 Events Run On
 *************
 
-This function is used to select the core that runs the events. This is only valid if the target SoC has 2 cores.
-
-The same situation on the previous configuration.
+This function is also used to select the core that runs the Arduino events. This is only valid if the target SoC has 2 cores.
 
 Port
 ****
@@ -180,7 +230,7 @@ USB Firmware MSC On Boot
 The USB Mass Storage Class, or USB MSC, is a class used for storage devices, like a USB flash drive.
 
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, one new storage device will appear in the system as a storage drive.
-Use this new storage drive to write or read files, or to drop a new firmware binary to flash the device.
+Use this new storage drive to write and read files or to drop a new firmware binary to flash the device.
 
 .. figure:: ../_static/usb_msc_drive.png
     :align: center
@@ -193,7 +243,6 @@ USB DFU On Boot
 The USB Device Firmware Upgrade is a class used for flashing the device through USB.
 
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, the device will appear as a USB DFU capable device.
-
 
 .. _Espressif Product Selector: https://products.espressif.com/
 .. _boards.txt: https://github.com/espressif/arduino-esp32/blob/master/boards.txt

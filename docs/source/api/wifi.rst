@@ -67,6 +67,35 @@ Use static allocation if you want to have more performance and if your applicati
 
 By default, the memory allocation will be set to **dynamic** if this function is not being used.
 
+setDualAntennaConfig
+********************
+
+Configures the Dual antenna functionallity. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
+
+.. code-block:: arduino
+
+    bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
+
+
+* ``gpio_ant1`` Configure the GPIO number for the antenna 1 connected to the RF switch (default ``GPIO2`` on ESP32-WROOM-DA)
+* ``gpio_ant2`` Configure the GPIO number for the antenna 2 connected to the RF switch (default ``GPIO25`` on ESP32-WROOM-DA)
+* ``rx_mode`` Set the RX antenna mode. See wifi_rx_ant_t for the options.
+* ``tx_mode`` Set the TX antenna mode. See wifi_tx_ant_t for the options.
+
+Return ``true`` if the configuration was successful.
+
+For the ``rx_mode`` you can use the following configuration:
+
+* ``WIFI_RX_ANT0`` Selects the antenna 1 for all RX activity.
+* ``WIFI_RX_ANT1`` Selects the antenna 2 for all RX activity.
+* ``WIFI_RX_ANT_AUTO``  Selects the antenna for RX automatically.
+
+For the ``tx_mode`` you can use the following configuration:
+
+* ``WIFI_TX_ANT0`` Selects the antenna 1 for all TX activity.
+* ``WIFI_TX_ANT1`` Selects the antenna 2 for all TX activity.
+* ``WIFI_TX_ANT_AUTO`` Selects the antenna for TX automatically.
+
 WiFiAP
 ------
 
