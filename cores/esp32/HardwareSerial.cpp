@@ -119,6 +119,9 @@ void serialEventRun(void)
 #if !CONFIG_DISABLE_HAL_LOCKS
 #define HSERIAL_MUTEX_LOCK()    do {} while (xSemaphoreTake(_lock, portMAX_DELAY) != pdPASS)
 #define HSERIAL_MUTEX_UNLOCK()  xSemaphoreGive(_lock)
+#else
+#define HSERIAL_MUTEX_LOCK()    
+#define HSERIAL_MUTEX_UNLOCK()  
 #endif
 
 HardwareSerial::HardwareSerial(int uart_nr) : 

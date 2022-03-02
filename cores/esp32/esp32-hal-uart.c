@@ -90,10 +90,7 @@ void uartGetEventQueue(uart_t* uart, QueueHandle_t *q)
     if(uart == NULL) {
         return;
     }
-    // MUTEX will lock for the case that another task is executing begin() on the same UART and has not finished
-    //UART_MUTEX_LOCK();
     *q = uart->uart_event_queue;
-    //UART_MUTEX_UNLOCK();
     return;
 }
 
