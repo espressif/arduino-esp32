@@ -300,6 +300,17 @@ typedef struct TU_ATTR_PACKED
   int8_t  pan;     // using AC Pan
 } hid_mouse_report_t;
 
+// Absolute Mouse data struct is a copy of the Standard (relative) Mouse Report
+// with int16_t instead of int8_t for X and Y coordinates.
+typedef struct TU_ATTR_PACKED
+{
+    uint8_t buttons; /**< buttons mask for currently pressed buttons in the mouse. */
+    int16_t x;       /**< Current x position of the mouse. */
+    int16_t y;       /**< Current y position of the mouse. */
+    int8_t wheel;    /**< Current delta wheel movement on the mouse. */
+    int8_t pan;      // using AC Pan
+} abs_mouse_report_t;
+  
 /// Standard Mouse Buttons Bitmap
 typedef enum
 {
