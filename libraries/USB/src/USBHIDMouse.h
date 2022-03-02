@@ -60,7 +60,7 @@ public:
     template <typename T> bool sendReport(T report) { return hid.SendReport( HID_REPORT_ID_MOUSE, &report, _type->report_size ); };
     // internal use
     uint16_t _onGetDescriptor(uint8_t* buffer);
-    void buttons(uint8_t b);
+    virtual void buttons(uint8_t b);
 protected:
     USBHID hid;
     uint8_t _buttons;
@@ -73,7 +73,7 @@ public:
     USBHIDRelativeMouse(void): USBHIDMouseBase(&HIDMouseRel) { }
     void move(int8_t x, int8_t y, int8_t wheel = 0, int8_t pan = 0);
     void click(uint8_t b = MOUSE_LEFT);
-    void buttons(uint8_t b);
+    void buttons(uint8_t b) override;
 };
 
 
@@ -82,7 +82,7 @@ public:
     USBHIDAbsoluteMouse(void): USBHIDMouseBase(&HIDMouseAbs) { }
     void move(int16_t x, int16_t y, int8_t wheel = 0, int8_t pan = 0);
     void click(uint8_t b = MOUSE_LEFT);
-    void buttons(uint8_t b);
+    void buttons(uint8_t b) override;
 private:
     int16_t _lastx = 0;
     int16_t _lasty = 0;
