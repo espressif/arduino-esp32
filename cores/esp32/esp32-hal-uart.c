@@ -421,11 +421,12 @@ int log_printf(const char *format, ...)
     va_list copy;
     va_start(arg, format);
     va_copy(copy, arg);
-    len = vsnprintf(NULL, 0, format, arg);
+    len = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
     if(len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
+            va_end(arg);
             return 0;
         }
     }
