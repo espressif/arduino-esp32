@@ -90,7 +90,7 @@ private:
 
 
 // don't break examples and old sketches
-#define USBHIDMouse USBHIDRelativeMouse;
+typedef USBHIDRelativeMouse USBHIDMouse;
 
 
 #endif
