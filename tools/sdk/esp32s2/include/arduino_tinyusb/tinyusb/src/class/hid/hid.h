@@ -309,7 +309,7 @@ typedef struct TU_ATTR_PACKED
     int16_t y;       /**< Current y position of the mouse. */
     int8_t wheel;    /**< Current delta wheel movement on the mouse. */
     int8_t pan;      // using AC Pan
-} abs_mouse_report_t;
+} hid_abs_mouse_report_t;
   
 /// Standard Mouse Buttons Bitmap
 typedef enum
