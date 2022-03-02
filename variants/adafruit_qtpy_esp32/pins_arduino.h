@@ -20,7 +20,7 @@ static const uint8_t RX = 7;
 #define TX1 32
 #define RX1 7
 
-static const uint8_t SDA = 25;
+static const uint8_t SDA = 4;
 static const uint8_t SCL = 33;
 
 static const uint8_t SDA1 = 22;
@@ -31,11 +31,11 @@ static const uint8_t MOSI  = 13;
 static const uint8_t MISO  = 12;
 static const uint8_t SCK   = 14;
 
-static const uint8_t A0 = 15; 
-static const uint8_t A1 = 4;
+static const uint8_t A0 = 26; 
+static const uint8_t A1 = 25;
 static const uint8_t A2 = 27;
-static const uint8_t A3 = 26;
-static const uint8_t A4 = 25;
+static const uint8_t A3 = 15;
+static const uint8_t A4 = 4;
 static const uint8_t A5 = 33;
 static const uint8_t A6 = 32;
 static const uint8_t A7 = 7;
