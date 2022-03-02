@@ -67,7 +67,7 @@ struct DNSHeader
 struct DNSQuestion
 {
   uint8_t   QName[256] ; //need 1 Byte for zero termination!
-  uint8_t   QNameLength ; 
+  uint16_t  QNameLength ; 
   uint16_t  QType ; 
   uint16_t  QClass ; 
 } ; 
