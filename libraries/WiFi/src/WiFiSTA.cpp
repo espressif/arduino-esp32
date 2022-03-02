@@ -655,8 +655,15 @@ IPv6Address WiFiSTAClass::localIPv6()
 bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;
 
-
-bool WiFiSTAClass::beginSmartConfig() {
+/**
+ * @brief 
+ * 
+ * @param type Select type of SmartConfig. Default type is SC_TYPE_ESPTOUCH
+ * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Lenght should be 16 chars.
+ * @return true if configuration is successful.
+ * @return false if configuration fails.
+ */
+bool WiFiSTAClass::beginSmartConfig(smartconfig_type_t type, char* crypt_key) {
     esp_err_t err;
     if (_smartConfigStarted) {
         return false;
@@ -668,7 +675,13 @@ bool WiFiSTAClass::beginSmartConfig() {
     esp_wifi_disconnect();
 
     smartconfig_start_config_t conf = SMARTCONFIG_START_CONFIG_DEFAULT();
-    err = esp_smartconfig_set_type(SC_TYPE_ESPTOUCH);
+
+    if (type == SC_TYPE_ESPTOUCH_V2){
+        conf.esp_touch_v2_enable_crypt = true;
+        conf.esp_touch_v2_key = crypt_key;
+    }
+
+    err = esp_smartconfig_set_type(type);
     if (err != ESP_OK) {
     	log_e("SmartConfig Set Type Failed!");
         return false;
