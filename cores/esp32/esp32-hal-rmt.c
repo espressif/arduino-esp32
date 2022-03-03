@@ -249,7 +249,8 @@ static bool _rmtCreateRxTask(rmt_obj_t* rmt)
     return true;
 }
 
-// Helper function to test if a RMT channel is correctly assigned to TX or RX, issuing a error message if necessary
+// Helper function to test if an RMT channel is correctly assigned to TX or RX, issuing an error message if necessary
+// Also test RMT pointer for NULL and returns false in case it is NULL
 // return true when it is correctly assigned, false otherwise
 static bool _rmtCheckTXnotRX(rmt_obj_t* rmt, bool tx_not_rx)
 {
