@@ -64,6 +64,8 @@ typedef enum
 #if CFG_TUSB_DEBUG
 /// Enum to String for debugging purposes. Only available if \ref CFG_TUSB_DEBUG > 0
 extern char const* const tusb_strerr[TUSB_ERROR_COUNT];
+extern char const* const tusb_speed_str[];
+
 #endif
 
 #ifdef __cplusplus

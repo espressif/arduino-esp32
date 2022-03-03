@@ -30,7 +30,6 @@
 #include "common/tusb_common.h"
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
-#include "hcd_attr.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -82,7 +81,7 @@ typedef struct
 
 } hcd_event_t;
 
-#if TUSB_OPT_HOST_ENABLED
+#if CFG_TUH_ENABLED
 // Max number of endpoints per device
 enum {
   // TODO better computation

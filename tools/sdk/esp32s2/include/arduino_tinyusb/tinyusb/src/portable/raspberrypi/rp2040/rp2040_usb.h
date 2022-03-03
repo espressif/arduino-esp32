@@ -56,7 +56,7 @@ typedef struct hw_endpoint
     // Interrupt, bulk, etc
     uint8_t transfer_type;
     
-#if TUSB_OPT_HOST_ENABLED
+#if CFG_TUH_ENABLED
     // Only needed for host
     uint8_t dev_addr;
 
