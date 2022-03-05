@@ -295,7 +295,7 @@ env.Append(
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "ld"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "qspi_qspi")
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", env.BoardConfig().get("build.arduino.memory_type", "qspi_qspi"))
     ],
 
     LIBS=[
