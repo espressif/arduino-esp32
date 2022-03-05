@@ -62,8 +62,9 @@ class BluetoothSerial: public Stream
         void enableSSP();
         bool setPin(const char *pin);
         bool connect(String remoteName);
-        bool connect(uint8_t remoteAddress[], int channel=0);
-        bool connect(const BTAddress &remoteAddress, int channel=0) { return connect(*remoteAddress.getNative(), channel); };
+        bool connect(uint8_t remoteAddress[], int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER);
+        bool connect(const BTAddress &remoteAddress, int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER) {
+			return connect(*remoteAddress.getNative(), channel, sec_mask); };
         bool connect();
         bool connected(int timeout=0);
         bool isClosed();

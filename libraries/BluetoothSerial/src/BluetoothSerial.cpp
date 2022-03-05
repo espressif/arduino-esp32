@@ -72,6 +72,8 @@ static esp_bt_pin_code_t _pin_code;
 static int _pin_len;
 static bool _isPinSet;
 static bool _enableSSP;
+static esp_spp_sec_t _sec_mask;
+static esp_spp_role_t _role;
 // start connect on ESP_SPP_DISCOVERY_COMP_EVT or save entry for getChannels
 static bool _doConnect;
 static std::map <int, std::string> sdpRecords;
@@ -359,8 +361,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                         param->disc_comp.scn[0]);
 #endif
                     xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
-                    // if(esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], _peer_bd_addr) ) {
-                    if(esp_spp_connect(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE, /* ESP_SPP_ROLE_SLAVE */ ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], _peer_bd_addr) != ESP_OK) {
+                    if(esp_spp_connect(_sec_mask, _role, param->disc_comp.scn[0], _peer_bd_addr) != ESP_OK) {
                         log_e("ESP_SPP_DISCOVERY_COMP_EVT connect failed");
                         xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
                     }
@@ -928,6 +929,8 @@ bool BluetoothSerial::connect(String remoteName)
     disconnect();
     _doConnect = true;
     _isRemoteAddressSet = false;
+	_sec_mask = ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE;
+	_role = ESP_SPP_ROLE_MASTER;
     strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
@@ -946,8 +949,14 @@ bool BluetoothSerial::connect(String remoteName)
 
 /**
  * @Param channel: specify channel or 0 for auto-detect
+ * @Param sec_mask:
+ *           ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE
+ *           ESP_SPP_SEC_NONE
+ * @Param role:
+ *           ESP_SPP_ROLE_MASTER   master can handle up to 7 connections to slaves
+ *           ESP_SPP_ROLE_SLAVE    can only have one connection to a master
  */
-bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel)
+bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_t sec_mask, esp_spp_role_t role)
 {
     if (!isReady(true, READY_TIMEOUT)) return false;
     if (!remoteAddress) {
@@ -958,6 +967,8 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel)
     _doConnect = true;
     _remote_name[0] = 0;
     _isRemoteAddressSet = true;
+	_sec_mask = sec_mask;
+	_role = role;
     memcpy(_peer_bd_addr, remoteAddress, ESP_BD_ADDR_LEN);
     log_i("master : remoteAddress");
     xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
@@ -966,10 +977,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel)
         log_i("spp connect to remote %s channel %d",
             bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)),
             channel);
-#warning todo: set master/slave
-//        return esp_spp_connect(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE, /* ESP_SPP_ROLE_SLAVE */ ESP_SPP_ROLE_MASTER, channel, _peer_bd_addr) == ESP_OK;
-//        if(esp_spp_connect(ESP_SPP_SEC_NONE, /* ESP_SPP_ROLE_SLAVE */ ESP_SPP_ROLE_MASTER, channel, _peer_bd_addr) != ESP_OK ) {
-        if(esp_spp_connect(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE, /* ESP_SPP_ROLE_SLAVE */ ESP_SPP_ROLE_MASTER, channel, _peer_bd_addr) != ESP_OK ) {
+        if(esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK ) {
 			log_e("spp connect failed");
 			return false;
 		}
@@ -977,7 +985,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel)
         if(rc) {
             log_i("connected");
         } else {
-            if(this.isClosed()) {
+            if(this->isClosed()) {
                 log_e("connect failed");
             } else {
                 log_e("connect timed out after %dms", READY_TIMEOUT);
