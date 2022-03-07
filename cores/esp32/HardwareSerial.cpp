@@ -127,7 +127,8 @@ void serialEventRun(void)
 HardwareSerial::HardwareSerial(int uart_nr) : 
 _uart_nr(uart_nr), 
 _uart(NULL), 
-_rxBufferSize(256), 
+_rxBufferSize(256),
+_txBufferSize(0), 
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
@@ -289,7 +290,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
         uartStartDetectBaudrate(_uart);
@@ -303,7 +304,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
@@ -458,4 +459,15 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
     _rxBufferSize = new_size;
     return _rxBufferSize;
+}
+
+size_t HardwareSerial::setTxBufferSize(size_t new_size) {
+
+    if (_uart) {
+        log_e("TX Buffer can't be resized when Serial is already running.\n");
+        return 0;
+    }
+
+    _txBufferSize = new_size;
+    return _txBufferSize;
 }
