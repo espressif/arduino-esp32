@@ -184,6 +184,9 @@
     #define TUP_DCD_ENDPOINT_MAX  8
   #endif
 
+#elif TU_CHECK_MCU(OPT_MCU_STM32WB)
+#define TUP_DCD_ENDPOINT_MAX    8
+
 //------------- Sony -------------//
 #elif TU_CHECK_MCU(OPT_MCU_CXD56)
   #define TUP_DCD_ENDPOINT_MAX    7

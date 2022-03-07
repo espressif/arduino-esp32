@@ -35,6 +35,19 @@
  extern "C" {
 #endif
 
+//--------------------------------------------------------------------+
+// Configuration
+//--------------------------------------------------------------------+
+
+#ifndef CFG_TUH_ENDPOINT_MAX
+  #define CFG_TUH_ENDPOINT_MAX   (CFG_TUH_HUB + CFG_TUH_HID*2 + CFG_TUH_MSC*2 + CFG_TUH_CDC*3)
+//  #ifdef TUP_HCD_ENDPOINT_MAX
+//    #define CFG_TUH_ENDPPOINT_MAX   TUP_HCD_ENDPOINT_MAX
+//  #else
+//    #define
+//  #endif
+#endif
+
  //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
 //--------------------------------------------------------------------+
@@ -81,25 +94,12 @@ typedef struct
 
 } hcd_event_t;
 
-#if CFG_TUH_ENABLED
-// Max number of endpoints per device
-enum {
-  // TODO better computation
-  HCD_MAX_ENDPOINT = CFG_TUH_DEVICE_MAX*(CFG_TUH_HUB + CFG_TUH_HID*2 + CFG_TUH_MSC*2 + CFG_TUH_CDC*3),
-  HCD_MAX_XFER     = HCD_MAX_ENDPOINT*2,
-};
-
-//#define HCD_MAX_ENDPOINT 16
-//#define HCD_MAX_XFER 16
-
 typedef struct {
   uint8_t rhport;
   uint8_t hub_addr;
   uint8_t hub_port;
   uint8_t speed;
 } hcd_devtree_info_t;
-
-#endif
 
 //--------------------------------------------------------------------+
 // Controller API
