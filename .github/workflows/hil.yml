@@ -100,3 +100,21 @@ jobs:
        - name: Run Tests
          run: |
            bash .github/scripts/tests_run.sh ${{matrix.chip}} ${{matrix.chunks}} ${{env.MAX_CHUNKS}}
+
+       - name: Upload test result artifacts
+         uses: actions/upload-artifact@v2
+         if: always()
+         with:
+           name: test_results-${{matrix.chip}}-${{matrix.chunks}}
+           path: tests/*/*.xml
+
+  event_file:
+    name: "Event File"
+    needs: Test
+    runs-on: ubuntu-latest
+    steps:
+       - name: Upload
+         uses: actions/upload-artifact@v2
+         with:
+           name: Event File
+           path: ${{github.event_path}}

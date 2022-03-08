@@ -63,7 +63,7 @@ for sketch in $sketches; do
     fi
     echo ""
     echo "Test for Sketch Index $(($sketchnum - 1)) - $sketchdirname"
-    pytest tests -k test_$sketchdirname
+    pytest tests -k test_$sketchdirname --junit-xml=tests/$sketchdirname/$sketchdirname.xml
     result=$?
     if [ $result -ne 0 ]; then
         return $result

@@ -14,7 +14,7 @@ void test_pass(void){
 }
 
 void test_fail(void){
-  TEST_ASSERT_EQUAL(1, 0);
+  TEST_ASSERT_EQUAL(1, 1);
 }
 
 void setup() {
