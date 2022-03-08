@@ -129,7 +129,7 @@ _uart_nr(uart_nr),
 _uart(NULL), 
 _rxBufferSize(256), 
 _onReceiveCB(NULL),
-_onReceiveTimeout(1),
+_onReceiveTimeout(5),
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
