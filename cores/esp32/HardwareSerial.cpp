@@ -233,10 +233,12 @@ void HardwareSerial::_uartEventTask(void *args)
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
+                        xQueueReset(uartEventQueue);
                         break;
                     case UART_BUFFER_FULL:
                         log_w("UART%d Buffer Full. Consider encreasing your buffer size of your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
+                        xQueueReset(uartEventQueue);
                         break;
                     case UART_BREAK:
                         log_w("UART%d RX break.", uart->_uart_nr);
