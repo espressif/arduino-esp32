@@ -73,9 +73,21 @@ public:
     HardwareSerial(int uart_nr);
     ~HardwareSerial();
 
-    // onReceive will setup a callback for whenever UART data is received
+    // onReceive will setup a callback for whenever UART data is received and a later timeout occurs (no receiving data after specified time):
+    // param function        is the callback to be called after reception timeout
+    
     // it will work as UART Rx interrupt -- Using C++ 11 std::fuction 
     void onReceive(OnReceiveCb function);
+
+    // onReceiveTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
+    // param symbols_timeout defines a timeout threshold in uart symbol periods. 
+    //                       Minimum is 1 symbol timeout. Maximum is calculacted automatically by IDF. If set above the maximum, it is ignored and an error is printed on Serial0 (check console).
+    //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 11 bits symbol is 101 (SERIAL_8N1).
+    //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate. 
+    //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
+    void onReceiveTimeout(uint8_t symbols_timeout);
+
+    // onReceive will be called on error events (see hardwareSerial_error_t)
     void onReceiveError(OnReceiveErrorCb function);
  
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
@@ -138,6 +150,7 @@ protected:
     uart_t* _uart;
     size_t _rxBufferSize;
     OnReceiveCb _onReceiveCB;
+    uint8_t _onReceiveTimeout;
     OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;
 

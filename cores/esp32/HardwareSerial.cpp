@@ -128,7 +128,8 @@ HardwareSerial::HardwareSerial(int uart_nr) :
 _uart_nr(uart_nr), 
 _uart(NULL), 
 _rxBufferSize(256), 
-_onReceiveCB(NULL), 
+_onReceiveCB(NULL),
+_onReceiveTimeout(1),
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -191,10 +192,27 @@ void HardwareSerial::onReceive(OnReceiveCb function)
     HSERIAL_MUTEX_LOCK();
     // function may be NULL to cancel onReceive() from its respective task 
     _onReceiveCB = function;
+
     // this can be called after Serial.begin(), therefore it shall create the event task
     if (function != NULL && _uart != NULL && _eventTask == NULL) {
-        _createEventTask(this);
+        _createEventTask(this); // Create event task
     }
+    HSERIAL_MUTEX_UNLOCK();
+}
+
+void HardwareSerial::onReceiveTimeout(uint8_t symbols_timeout)
+{
+    HSERIAL_MUTEX_LOCK();
+    
+    if(symbols_timeout == 0) {
+        _onReceiveTimeout = 1; // Never disable timeout
+    }
+    else {
+        _onReceiveTimeout = symbols_timeout;
+    }
+
+    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _onReceiveTimeout); // Set new timeout
+    
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -210,7 +228,7 @@ void HardwareSerial::_uartEventTask(void *args)
             if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
                 switch(event.type) {
                     case UART_DATA:
-                        if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();
+                        if(uart->_onReceiveCB && uart->available() > 0  && event.timeout_flag) uart->_onReceiveCB();
                         break;
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
@@ -314,6 +332,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
         _createEventTask(this);
     }
+
+    // Set UART RX timeout
+    if (_uart != NULL && _onReceiveCB != NULL) {
+        uart_set_rx_timeout(_uart_nr, _onReceiveTimeout);
+    }
+    
     HSERIAL_MUTEX_UNLOCK();
 }
 
