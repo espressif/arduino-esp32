@@ -1,12 +1,22 @@
 #!/bin/bash
 
-target=$1
-chunk_index=$2
-chunk_max=$3
+SCRIPTS_DIR="./.github/scripts"
+BUILD_CMD=""
 
-if [ "$chunk_index" -gt "$chunk_max" ] &&  [ "$chunk_max" -ge 2 ]; then
-    chunk_index=$chunk_max
+if [ $# -eq 3 ]; then
+    chunk_build=1
+elif [ $# -eq 2 ]; then
+    chunk_build=0
+else
+  echo "ERROR: Illegal number of parameters"
+  echo "USAGE:
+        ${0} <target> <sketch_dir>
+        ${0} <target> <chunk> <total_chunks>
+        "
+  exit 0
 fi
+
+target=$1
 
 case "$target" in
     "esp32") fqbn="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
@@ -22,13 +32,25 @@ if [ -z $fqbn ]; then
   exit 0
 fi
 
-SCRIPTS_DIR="./.github/scripts"
-BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
-
 source ${SCRIPTS_DIR}/install-arduino-ide.sh
 source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
-args="$ARDUINO_IDE_PATH $ARDUINO_USR_PATH"
-args+=" \"$fqbn\"  $target $PWD/tests $chunk_index $chunk_max"
-${BUILD_SKETCHES} ${args}
+args="$ARDUINO_IDE_PATH $ARDUINO_USR_PATH \"$fqbn\""
+
+if [ $chunk_build -eq 1 ]; then
+    chunk_index=$2
+    chunk_max=$3
+
+    if [ "$chunk_index" -gt "$chunk_max" ] &&  [ "$chunk_max" -ge 2 ]; then
+        chunk_index=$chunk_max
+    fi
+    BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
+    args+=" $target $PWD/tests $chunk_index $chunk_max"
+else
+    sketchdir=$2
+    BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh build"
+    args+=" $PWD/tests/$sketchdir/$sketchdir.ino"
+fi
+
+${BUILD_CMD} ${args}
 
