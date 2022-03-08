@@ -4,8 +4,8 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
-# schedule:
-#   - cron: '0 2 * * *'
+  schedule:
+    - cron: '0 2 * * *'
 
 env:
   MAX_CHUNKS: 15
@@ -16,7 +16,9 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: contains(github.event.pull_request.labels.*.name, 'hil_test')
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
+      github.event_name == 'schedule'
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
