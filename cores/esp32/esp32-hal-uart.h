@@ -22,6 +22,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 #define SERIAL_5N1 0x8000010
 #define SERIAL_6N1 0x8000014
@@ -62,7 +64,8 @@ typedef struct uart_struct_t uart_t;
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd);
 void uartEnd(uart_t* uart);
 
-void uartOnReceive(uart_t* uart, void(*function)(void));
+// This is used to retrieve the Event Queue pointer from a UART IDF Driver in order to allow user to deal with its events
+void uartGetEventQueue(uart_t* uart, QueueHandle_t *q); 
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);

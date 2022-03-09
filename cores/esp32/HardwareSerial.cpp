@@ -7,6 +7,7 @@
 #include "HardwareSerial.h"
 #include "soc/soc_caps.h"
 #include "driver/uart.h"
+#include "freertos/queue.h"
 
 #ifndef SOC_RX0
 #if CONFIG_IDF_TARGET_ESP32
@@ -115,7 +116,131 @@ void serialEventRun(void)
 }
 #endif
 
-HardwareSerial::HardwareSerial(int uart_nr) : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256) {}
+#if !CONFIG_DISABLE_HAL_LOCKS
+#define HSERIAL_MUTEX_LOCK()    do {} while (xSemaphoreTake(_lock, portMAX_DELAY) != pdPASS)
+#define HSERIAL_MUTEX_UNLOCK()  xSemaphoreGive(_lock)
+#else
+#define HSERIAL_MUTEX_LOCK()    
+#define HSERIAL_MUTEX_UNLOCK()  
+#endif
+
+HardwareSerial::HardwareSerial(int uart_nr) : 
+_uart_nr(uart_nr), 
+_uart(NULL), 
+_rxBufferSize(256), 
+_onReceiveCB(NULL), 
+_onReceiveErrorCB(NULL),
+_eventTask(NULL)
+#if !CONFIG_DISABLE_HAL_LOCKS
+    ,_lock(NULL)
+#endif
+{
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(_lock == NULL){
+        _lock = xSemaphoreCreateMutex();
+        if(_lock == NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return;
+        }
+    }
+#endif
+}
+
+HardwareSerial::~HardwareSerial()
+{
+    end();
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(_lock != NULL){
+        vSemaphoreDelete(_lock);
+    }
+#endif
+}
+
+
+void HardwareSerial::_createEventTask(void *args)
+{
+    // Creating UART event Task
+    xTaskCreate(_uartEventTask, "uart_event_task", 2048, this, configMAX_PRIORITIES - 1, &_eventTask);
+    if (_eventTask == NULL) {
+        log_e(" -- UART%d Event Task not Created!", _uart_nr);
+    }
+}
+
+void HardwareSerial::_destroyEventTask(void)
+{
+    if (_eventTask != NULL) {
+        vTaskDelete(_eventTask);
+        _eventTask = NULL;
+    }
+}
+
+void HardwareSerial::onReceiveError(OnReceiveErrorCb function) 
+{
+    HSERIAL_MUTEX_LOCK();
+    // function may be NULL to cancel onReceive() from its respective task 
+    _onReceiveErrorCB = function;
+    // this can be called after Serial.begin(), therefore it shall create the event task
+    if (function != NULL && _uart != NULL && _eventTask == NULL) {
+        _createEventTask(this);
+    }
+    HSERIAL_MUTEX_UNLOCK();
+}
+
+void HardwareSerial::onReceive(OnReceiveCb function)
+{
+    HSERIAL_MUTEX_LOCK();
+    // function may be NULL to cancel onReceive() from its respective task 
+    _onReceiveCB = function;
+    // this can be called after Serial.begin(), therefore it shall create the event task
+    if (function != NULL && _uart != NULL && _eventTask == NULL) {
+        _createEventTask(this);
+    }
+    HSERIAL_MUTEX_UNLOCK();
+}
+
+void HardwareSerial::_uartEventTask(void *args)
+{
+    HardwareSerial *uart = (HardwareSerial *)args;
+    uart_event_t event;
+    QueueHandle_t uartEventQueue = NULL;
+    uartGetEventQueue(uart->_uart, &uartEventQueue);
+    if (uartEventQueue != NULL) {
+        for(;;) {
+            //Waiting for UART event.
+            if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
+                switch(event.type) {
+                    case UART_DATA:
+                        if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();
+                        break;
+                    case UART_FIFO_OVF:
+                        log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
+                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
+                        break;
+                    case UART_BUFFER_FULL:
+                        log_w("UART%d Buffer Full. Consider encreasing your buffer size of your Application.", uart->_uart_nr);
+                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
+                        break;
+                    case UART_BREAK:
+                        log_w("UART%d RX break.", uart->_uart_nr);
+                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BREAK_ERROR);
+                        break;
+                    case UART_PARITY_ERR:
+                        log_w("UART%d parity error.", uart->_uart_nr);
+                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_PARITY_ERROR);
+                        break;
+                    case UART_FRAME_ERR:
+                        log_w("UART%d frame error.", uart->_uart_nr);
+                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FRAME_ERROR);
+                        break;
+                    default:
+                        log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type);
+                        break;
+                }
+            }
+        }
+    }
+    vTaskDelete(NULL);
+}
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
@@ -124,6 +249,14 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         return;
     }
 
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(_lock == NULL){
+        log_e("MUTEX Lock failed. Can't begin.");
+        return;
+    }
+#endif
+
+    HSERIAL_MUTEX_LOCK();
     // First Time or after end() --> set default Pins
     if (!uartIsDriverInstalled(_uart)) {
         switch (_uart_nr) {
@@ -176,11 +309,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
             _uart = NULL;
         }
     }
-}
-
-void HardwareSerial::onReceive(void(*function)(void))
-{
-    uartOnReceive(_uart, function);
+    // create a task to deal with Serial Events when, for example, calling begin() twice to change the baudrate,
+    // or when setting the callback before calling begin() 
+    if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
+        _createEventTask(this);
+    }
+    HSERIAL_MUTEX_UNLOCK();
 }
 
 void HardwareSerial::updateBaudRate(unsigned long baud)
@@ -188,14 +322,21 @@ void HardwareSerial::updateBaudRate(unsigned long baud)
 	uartSetBaudRate(_uart, baud);
 }
 
-void HardwareSerial::end(bool turnOffDebug)
+void HardwareSerial::end(bool fullyTerminate)
 {
-    if(turnOffDebug && uartGetDebug() == _uart_nr) {
-        uartSetDebug(0);
+    // default Serial.end() will completely disable HardwareSerial, 
+    // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
+    if(fullyTerminate) {
+        _onReceiveCB = NULL;
+        _onReceiveErrorCB = NULL;
+        if (uartGetDebug() == _uart_nr) {
+            uartSetDebug(0);
+        }
     }
     delay(10);
     uartEnd(_uart);
     _uart = 0;
+    _destroyEventTask();
 }
 
 void HardwareSerial::setDebugOutput(bool en)
