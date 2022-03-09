@@ -24,7 +24,12 @@ void setup()
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     WiFi.mode(WIFI_STA);
 
-    // Set WiFi dual antenna configuration by passing the GPIO and antenna mode for RX ant TX
+    /* Attention: This is the manual prodecure for the dual antenna configuration.
+     * If you choose the ESP32-WROOM-DA module from the Tools -> Board, this configuration
+     * is not necessary!
+     * 
+     * Set WiFi dual antenna configuration by passing the GPIO and antenna mode for RX ant TX
+     */ 
     err = WiFi.setDualAntennaConfig(GPIO_ANT1, GPIO_ANT1, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO);
 
     /* For more details on how to use this feature, see our docs:

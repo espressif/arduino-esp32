@@ -138,9 +138,20 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
 
         dhcps_lease_t lease;
         lease.enable = true;
-        lease.start_ip.addr = static_cast<uint32_t>(local_ip) + (1 << 24);
-        lease.end_ip.addr = static_cast<uint32_t>(local_ip) + (11 << 24);
-
+        uint32_t dhcp_ipaddr = static_cast<uint32_t>(local_ip);
+        // prevents DHCP lease range to overflow subnet/24 range
+        // there will be 11 addresses for DHCP to lease
+        uint8_t leaseStart = (uint8_t)(~subnet[3] - 12);  
+        if ((local_ip[3]) < leaseStart) {
+            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
+            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
+        } else {
+            // make range stay in the begining of the netmask range
+            dhcp_ipaddr = (dhcp_ipaddr & 0x00FFFFFF);
+            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
+            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
+        }
+        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString(), IPAddress(lease.end_ip.addr).toString());
         err = tcpip_adapter_dhcps_option(
             (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
             (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
@@ -1061,6 +1072,14 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     if(!espWiFiStart()){
         return false;
     }
+
+    #ifdef BOARD_HAS_DUAL_ANTENNA
+        if(!setDualAntennaConfig(ANT1, ANT2, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO)){
+            log_e("Dual Antenna Config failed!");
+            return false;
+        }
+    #endif
+
     return true;
 }
 
