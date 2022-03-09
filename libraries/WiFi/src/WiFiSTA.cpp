@@ -145,6 +145,78 @@ wl_status_t WiFiSTAClass::status()
     return (wl_status_t)xEventGroupClearBits(_sta_status_group, 0);
 }
 
+
+#ifdef ENABLE_WPA2_AUTHENTICATION
+static WiFiClientSecure client_secure;
+
+/**
+ * Start Wifi connection with a WPA2 Enterprise AP
+ * if passphrase is set the most secure supported mode will be automatically selected
+ * @param ssid const char*          Pointer to the SSID string.
+ * @param wpa2_identity  const char*          Pointer to the entity
+ * @param wpa2_username  const char*          Pointer to the username
+ * @param password const char *     Pinter to the password.
+ * @param root_ca  const char*          Optional. Pointer to the root certificate string.
+ * @param client_cert  const char*          Optional. Pointer to the client certificate string.
+ * @param client_key  const char*          Optional. Pointer to the client key.
+ * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
+ * @param channel                   Optional. Channel of AP
+ * @param connect                   Optional. call connect
+ * @return
+ */
+wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, const char* wpa2_identity, const char* wpa2_username, const char *wpa2_password, const char* root_ca, const char* client_cert, const char* client_key, int32_t channel, const uint8_t* bssid, bool connect)
+{
+    if(!WiFi.enableSTA(true)) {
+        log_e("STA enable failed!");
+        return WL_CONNECT_FAILED;
+    }
+
+    if(!wpa2_ssid || *wpa2_ssid == 0x00 || strlen(wpa2_ssid) > 32) {
+        log_e("SSID too long or missing!");
+        return WL_CONNECT_FAILED;
+    }
+
+    if(wpa2_identity && strlen(wpa2_identity) > 64) {
+        log_e("identity too long!");
+        return WL_CONNECT_FAILED;
+    }
+
+    if(wpa2_username && strlen(wpa2_username) > 64) {
+        log_e("username too long!");
+        return WL_CONNECT_FAILED;
+    }
+
+    if(wpa2_password && strlen(wpa2_password) > 64) {
+        log_e("password too long!");
+    }
+
+    esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+    esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+    esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+    esp_wifi_sta_wpa2_ent_enable(); //set config settings to enable function
+    WiFi.begin(wpa2_ssid); //connect to wifi
+
+    int cert_count = (root_ca != NULL) + (client_cert != NULL) + (client_key != NULL);
+    if ( cert_count > 1 ) {
+        log_e("only one cert method allowed!");
+        return WL_CONNECT_FAILED;
+    }
+
+    if (root_ca != NULL) {
+        client_secure.setCACert(root_ca);
+    }
+    else if (client_cert != NULL) {
+        client_secure.setCertificate(client_cert);
+    }
+    else if (client_key != NULL) {
+        client_secure.setPrivateKey(client_key);
+    }
+    return status();
+}
+#endif
+
+
+
 /**
  * Start Wifi connection
  * if passphrase is set the most secure supported mode will be automatically selected

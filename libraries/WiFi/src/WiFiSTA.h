@@ -39,6 +39,9 @@ class WiFiSTAClass
 
 public:
 
+#ifdef ENABLE_WPA2_AUTHENTICATION
+    wl_status_t begin(const char* wpa2_ssid, const char* wpa2_identity, const char* wpa2_username, const char *wpa2_password, const char* root_ca=NULL, const char* client_cert=NULL, const char* client_key=NULL,int32_t channel=0, const uint8_t* bssid=0, bool connect=true);
+#endif
     wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin();
