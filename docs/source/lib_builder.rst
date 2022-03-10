@@ -164,7 +164,7 @@ Set the build type. ex. 'build' to build the project and prepare for uploading t
 
 .. code-block:: bash
 
-    ./build.sh -b <build|menuconfig|idf_libs|copy_bootloader|mem_variant>
+    ./build.sh -t esp32 -b <build|menuconfig|idf_libs|copy_bootloader|mem_variant>
 
 Additional Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
