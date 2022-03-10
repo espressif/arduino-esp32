@@ -8,6 +8,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
     fi
 
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
+    ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
     local ide_path=$1
     local usr_path=$2
     local fqbn=$3
@@ -15,8 +16,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
     local xtra_opts=$5
     local win_opts=$6
 
-    build_dir="$(dirname $sketch)/build"
-    mkdir -p "$build_dir"
+    rm -rf "$ARDUINO_BUILD_DIR"
+    mkdir -p "$ARDUINO_BUILD_DIR"
     mkdir -p "$ARDUINO_CACHE_DIR"
     $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
         -fqbn=$fqbn \
@@ -28,7 +29,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
         -hardware "$usr_path/hardware" \
         -libraries "$usr_path/libraries" \
         -build-cache "$ARDUINO_CACHE_DIR" \
-        -build-path "$build_dir" \
+        -build-path "$ARDUINO_BUILD_DIR" \
         $win_opts $xtra_opts "$sketch"
 }
 
