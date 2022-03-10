@@ -8,14 +8,6 @@ on:
       - completed
 
 jobs:
-  debug:
-    name: Debug
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Debug Action
-        uses: hmarr/debug-action@v2.0.0
-
   unit-test-results:
     name: Unit Test Results
     runs-on: ubuntu-latest
@@ -35,4 +27,7 @@ jobs:
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
-          commit: ${{ github.event.workflow
+          commit: ${{ github.event.workflow_run.head_sha }}
+          event_file: artifacts/Event File/event.json
+          event_name: ${{ github.event.workflow_run.event }}
+          files: "artifacts/**/*.xml"
