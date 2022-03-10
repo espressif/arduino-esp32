@@ -30,7 +30,7 @@ void setup()
      * 
      * Set WiFi dual antenna configuration by passing the GPIO and antenna mode for RX ant TX
      */ 
-    err = WiFi.setDualAntennaConfig(GPIO_ANT1, GPIO_ANT1, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO);
+    err = WiFi.setDualAntennaConfig(GPIO_ANT1, GPIO_ANT2, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO);
 
     /* For more details on how to use this feature, see our docs:
      * https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html
