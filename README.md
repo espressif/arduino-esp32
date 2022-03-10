@@ -45,3 +45,4 @@ Finally, if you are sure no one else had the issue, follow the **Issue template*
 We welcome contributions to the Arduino ESP32 project!
 
 See [contributing](https://docs.espressif.com/projects/arduino-esp32/en/latest/contributing.html) in the documentation for more information on how to contribute to the project.
+Testing comments
