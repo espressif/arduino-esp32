@@ -32,12 +32,12 @@ To install the Library Builder into your environment, please, follow the instruc
 
     ./build.sh
 
-If everyting works, you may see the following message: ``Successfully created esp32 image.``
+If everything works, you may see the following message: ``Successfully created esp32 image.``
 
 Dependencies
 ************
 
-To build the libraries you will need to install some dependencies. Maybe you already have installed, but it is a good idea to check before building.
+To build the library you will need to install some dependencies. Maybe you already have installed it, but it is a good idea to check before building.
 
 - Install all dependencies (**Ubuntu**):
 
@@ -72,7 +72,7 @@ To build using the default configuration:
 Custom Build
 ************
 
-There are some options to help you creating the custom libraries. You can use the following options:
+There are some options to help you create custom libraries. You can use the following options:
 
 Usage
 ^^^^^
@@ -104,7 +104,7 @@ Set which branch of arduino-esp32 to be used for compilation
 Set ESP-IDF Branch
 ^^^^^^^^^^^^^^^^^^
 
-Set which branch of ESP-IDF to be used for compilation
+Set which branch of ESP-IDF is to be used for compilation
 
 .. code-block:: bash
 
@@ -158,7 +158,9 @@ This build command will build for the ESP32-S3 target. You can specify other tar
 Set Build Type
 ^^^^^^^^^^^^^^
 
-Set the build type. ex. 'build' to build the project and prepare for uploading to a board
+Set the build type. ex. 'build' to build the project and prepare for uploading to a board.
+
+.. note:: This command depends on the ``-t`` argument.
 
 .. code-block:: bash
 
@@ -169,6 +171,9 @@ Additional Configuration
 
 Specify additional configs to be applied. ex. 'qio 80m' to compile for QIO Flash@80MHz. Requires -b
 
+.. note:: This command requires the ``-b`` to work properly.
+
+
 .. code-block:: bash
 
-    ./build.sh -b
+    ./build.sh -t esp32 -b idf_libs qio 80m
