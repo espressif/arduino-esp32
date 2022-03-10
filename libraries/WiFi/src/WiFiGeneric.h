@@ -31,12 +31,6 @@
 #include "esp_smartconfig.h"
 #include "wifi_provisioning/manager.h"
 
-#ifdef ENABLE_WPA2_AUTHENTICATION
-#include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include "esp_wpa2.h"
-#endif
-
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
 typedef enum {

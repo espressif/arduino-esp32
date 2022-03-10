@@ -25,6 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
+#include <WiFiClientSecure.h>
 
 extern "C" {
 #include <stdint.h>
@@ -42,6 +43,7 @@ extern "C" {
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
 #include <esp_netif.h>
+#include "esp_wpa2.h"
 }
 
 // -----------------------------------------------------------------------------------------------------------------------
@@ -146,7 +148,6 @@ wl_status_t WiFiSTAClass::status()
 }
 
 
-#ifdef ENABLE_WPA2_AUTHENTICATION
 static WiFiClientSecure client_secure;
 
 /**
@@ -213,9 +214,6 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, const char* wpa2_identity
     }
     return status();
 }
-#endif
-
-
 
 /**
  * Start Wifi connection
