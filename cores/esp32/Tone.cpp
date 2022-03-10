@@ -6,7 +6,6 @@
 
 static TaskHandle_t _tone_task = NULL;
 static QueueHandle_t _tone_queue = NULL;
-static QueueHandle_t _tone_mutex = NULL;
 static uint8_t _channel = 0;
 
 typedef enum{
@@ -30,30 +29,29 @@ static void tone_task(void*){
     switch(tone_msg.tone_cmd){
       case TONE_START:
         log_d("Task received from queue TONE_START: _pin=%d, frequency=%u Hz, duration=%u ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
-        if(xSemaphoreTake(_tone_mutex, portMAX_DELAY) != pdTRUE ){
-          log_e("Tone mutex take returned with error");
-          break;
-        }
+
         log_d("Setup LED controll on channel %d", _channel);
-        ledcSetup(_channel, tone_msg.frequency, 11);
+        // ledcSetup(_channel, tone_msg.frequency, 11);
+        // ledcAttachPin(tone_msg.pin, _channel);
+        // ledcWrite(_channel, 1024);
+        ledcWriteTone(_channel, tone_msg.frequency);
         ledcAttachPin(tone_msg.pin, _channel);
-        ledcWrite(_channel, 1024);
-        if(xSemaphoreGive(_tone_mutex) != pdTRUE){
-          log_e("Tone mutex give returned with error");
-        }
 
         if(tone_msg.duration){
-          vTaskDelay(pdMS_TO_TICKS(tone_msg.duration));
+          delay(tone_msg.duration);
           ledcDetachPin(tone_msg.pin);
+          ledcWriteTone(_channel, 0);
         }
         break;
 
       case TONE_END:
         log_d("Task received from queue TONE_END: pin=%d", tone_msg.pin);
         ledcDetachPin(tone_msg.pin);
+        ledcWriteTone(_channel, 0);
         break;
 
       case TONE_SET_CHANNEL:
+        log_d("Task received from queue TONE_SET_CHANNEL: channel=%d", tone_msg.channel);
         _channel = tone_msg.channel;
         break;
 
@@ -63,17 +61,6 @@ static void tone_task(void*){
 }
 
 static int tone_init(){
-  if(_tone_mutex == NULL){
-    log_v("Creating tone mutex");
-    _tone_mutex = xSemaphoreCreateMutex();
-    if(_tone_mutex == NULL){
-      log_e("Could not create tone mutex");
-      return 0; // ERR
-    }
-    log_v("Tone mutex created");
-  }
-
-
   if(_tone_queue == NULL){
     log_v("Creating tone queue");
     _tone_queue = xQueueCreate(128, sizeof(tone_msg_t));
