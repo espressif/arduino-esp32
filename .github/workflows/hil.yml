@@ -110,6 +110,7 @@ jobs:
 
   event_file:
     name: "Event File"
+    if: ${{ always() }}
     needs: Test
     runs-on: ubuntu-latest
     steps:
