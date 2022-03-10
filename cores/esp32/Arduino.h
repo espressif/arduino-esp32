@@ -195,6 +195,10 @@ extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
 extern "C" void configTzTime(const char* tz,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
 
+void setToneChannel(uint8_t channel = 0);
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+void noTone(uint8_t _pin);
+
 // WMath prototypes
 long random(long);
 #endif /* __cplusplus */
