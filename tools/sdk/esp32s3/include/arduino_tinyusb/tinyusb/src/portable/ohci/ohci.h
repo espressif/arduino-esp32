@@ -42,6 +42,9 @@ enum {
   OHCI_MAX_ITD = 4
 };
 
+#define ED_MAX       (CFG_TUH_DEVICE_MAX*CFG_TUH_ENDPOINT_MAX)
+#define GTD_MAX      ED_MAX
+
 //--------------------------------------------------------------------+
 // OHCI Data Structure
 //--------------------------------------------------------------------+
@@ -162,8 +165,8 @@ typedef struct TU_ATTR_ALIGNED(256)
   }control[CFG_TUH_DEVICE_MAX+CFG_TUH_HUB+1];
 
   //  ochi_itd_t itd[OHCI_MAX_ITD]; // itd requires alignment of 32
-  ohci_ed_t ed_pool[HCD_MAX_ENDPOINT];
-  ohci_gtd_t gtd_pool[HCD_MAX_XFER];
+  ohci_ed_t ed_pool[ED_MAX];
+  ohci_gtd_t gtd_pool[GTD_MAX];
 
   volatile uint16_t frame_number_hi;
 

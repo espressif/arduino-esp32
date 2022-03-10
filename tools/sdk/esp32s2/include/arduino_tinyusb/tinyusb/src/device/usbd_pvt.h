@@ -58,6 +58,8 @@ usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count) TU_ATTR
 
 typedef bool (*usbd_control_xfer_cb_t)(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
 
+void usbd_int_set(bool enabled);
+
 //--------------------------------------------------------------------+
 // USBD Endpoint API
 //--------------------------------------------------------------------+

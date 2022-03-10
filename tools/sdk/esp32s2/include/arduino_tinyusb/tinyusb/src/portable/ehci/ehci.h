@@ -101,8 +101,8 @@ typedef struct
 
 	// Word 2: qTQ Token
 	volatile uint32_t ping_err             : 1  ; ///< For Highspeed: 0 Out, 1 Ping. Full/Slow used as error indicator
-	volatile uint32_t non_hs_split_state   : 1  ; ///< Used by HC to track the state of slipt transaction
-	volatile uint32_t non_hs_missed_uframe : 1  ; ///< HC misses a complete slip transaction
+	volatile uint32_t non_hs_split_state   : 1  ; ///< Used by HC to track the state of split transaction
+	volatile uint32_t non_hs_missed_uframe : 1  ; ///< HC misses a complete split transaction
 	volatile uint32_t xact_err             : 1  ; ///< Error (Timeout, CRC, Bad PID ... )
 	volatile uint32_t babble_err           : 1  ; ///< Babble detected, also set Halted bit to 1
 	volatile uint32_t buffer_err           : 1  ; ///< Data overrun/underrun error

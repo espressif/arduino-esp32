@@ -103,59 +103,34 @@ static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 //--------------------------------------------------------------------+
 #include "common/tusb_fifo.h"
 
-// extern to avoid including dcd.h and hcd.h
-#if TUSB_OPT_DEVICE_ENABLED
-extern void dcd_int_disable(uint8_t rhport);
-extern void dcd_int_enable(uint8_t rhport);
-#endif
-
-#if TUSB_OPT_HOST_ENABLED
-extern void hcd_int_disable(uint8_t rhport);
-extern void hcd_int_enable(uint8_t rhport);
-#endif
-
 typedef struct
 {
-    uint8_t role; // device or host
-    tu_fifo_t ff;
+  void (*interrupt_set)(bool);
+  tu_fifo_t ff;
 }osal_queue_def_t;
 
 typedef osal_queue_def_t* osal_queue_t;
 
 // role device/host is used by OS NONE for mutex (disable usb isr) only
-#define OSAL_QUEUE_DEF(_role, _name, _depth, _type)       \
+#define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type)    \
   uint8_t _name##_buf[_depth*sizeof(_type)];              \
   osal_queue_def_t _name = {                              \
-    .role = _role,                                        \
+    .interrupt_set = _int_set,                            \
     .ff = TU_FIFO_INIT(_name##_buf, _depth, _type, false) \
   }
 
 // lock queue by disable USB interrupt
 static inline void _osal_q_lock(osal_queue_t qhdl)
 {
-  (void) qhdl;
-
-#if TUSB_OPT_DEVICE_ENABLED
-  if (qhdl->role == OPT_MODE_DEVICE) dcd_int_disable(TUD_OPT_RHPORT);
-#endif
-
-#if TUSB_OPT_HOST_ENABLED
-  if (qhdl->role == OPT_MODE_HOST) hcd_int_disable(TUH_OPT_RHPORT);
-#endif
+  // disable dcd/hcd interrupt
+  qhdl->interrupt_set(false);
 }
 
 // unlock queue
 static inline void _osal_q_unlock(osal_queue_t qhdl)
 {
-  (void) qhdl;
-
-#if TUSB_OPT_DEVICE_ENABLED
-  if (qhdl->role == OPT_MODE_DEVICE) dcd_int_enable(TUD_OPT_RHPORT);
-#endif
-
-#if TUSB_OPT_HOST_ENABLED
-  if (qhdl->role == OPT_MODE_HOST) hcd_int_enable(TUH_OPT_RHPORT);
-#endif
+  // enable dcd/hcd interrupt
+  qhdl->interrupt_set(true);
 }
 
 static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)

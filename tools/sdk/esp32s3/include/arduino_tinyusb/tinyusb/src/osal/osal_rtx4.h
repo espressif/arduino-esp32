@@ -111,7 +111,7 @@ static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 //--------------------------------------------------------------------+
 
 // role device/host is used by OS NONE for mutex (disable usb isr) only
-#define OSAL_QUEUE_DEF(_role, _name, _depth, _type)   \
+#define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type)   \
   os_mbx_declare(_name##__mbox, _depth);              \
   _declare_box(_name##__pool, sizeof(_type), _depth); \
   osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .pool = _name##__pool, .mbox = _name##__mbox };

@@ -31,9 +31,6 @@
  extern "C" {
 #endif
 
-/** \addtogroup group_osal
- *  @{ */
-
 #include "common/tusb_common.h"
 
 // Return immediately
@@ -67,47 +64,26 @@ typedef void (*osal_task_func_t)( void * );
 
 //--------------------------------------------------------------------+
 // OSAL Porting API
+// Should be implemented as static inline function in osal_port.h header
+/*
+    static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef);
+    static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr);
+    static inline bool osal_semaphore_wait(osal_semaphore_t sem_hdl, uint32_t msec);
+    static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl); // TODO removed
+
+    static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef);
+    static inline bool osal_mutex_lock (osal_mutex_t sem_hdl, uint32_t msec);
+    static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl);
+
+    static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef);
+    static inline bool osal_queue_receive(osal_queue_t qhdl, void* data);
+    static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr);
+    static inline bool osal_queue_empty(osal_queue_t qhdl);
+*/
 //--------------------------------------------------------------------+
-
-#if __GNUC__ && !defined(__ARMCC_VERSION)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#endif
-//------------- Semaphore -------------//
-static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef);
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr);
-static inline bool osal_semaphore_wait(osal_semaphore_t sem_hdl, uint32_t msec);
-
-static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl); // TODO removed
-
-//------------- Mutex -------------//
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef);
-static inline bool osal_mutex_lock (osal_mutex_t sem_hdl, uint32_t msec);
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl);
-
-//------------- Queue -------------//
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef);
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data);
-static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr);
-static inline bool osal_queue_empty(osal_queue_t qhdl);
-#if __GNUC__ && !defined(__ARMCC_VERSION)
-#pragma GCC diagnostic pop
-#endif
-
-#if 0  // TODO remove subtask related macros later
-// Sub Task
-#define OSAL_SUBTASK_BEGIN
-#define OSAL_SUBTASK_END                    return TUSB_ERROR_NONE;
-
-#define STASK_RETURN(_error)                return _error;
-#define STASK_INVOKE(_subtask, _status)     (_status) = _subtask
-#define STASK_ASSERT(_cond)                 TU_VERIFY(_cond, TUSB_ERROR_OSAL_TASK_FAILED)
-#endif
 
 #ifdef __cplusplus
  }
 #endif
-
-/** @} */
 
 #endif /* _TUSB_OSAL_H_ */

@@ -248,7 +248,8 @@ SECTIONS
     *libxtensa.a:eri.*(.literal .literal.* .text .text.*)
     *libxtensa.a:xtensa_intr_asm.*(.literal .literal.* .text .text.*)
 
-    /* added to maintain compability */
+    /* Added to maintain compability, there are no iram0 data section to put
+     * sections:iram_coredump entry defined in espcoredump's linker.lf file */
     _coredump_iram_start = 0;
     _coredump_iram_end = 0;
 
@@ -285,7 +286,7 @@ SECTIONS
     *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .data EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .data.*)
     *(.dram1 .dram1.*)
     _coredump_dram_start = ABSOLUTE(.);
-    *(.dram1.coredump .dram1.coredump.*)
+    *(.dram2.coredump .dram2.coredump.*)
     _coredump_dram_end = ABSOLUTE(.);
     *libapp_trace.a:app_trace.*(.rodata .rodata.*)
     *libapp_trace.a:app_trace_util.*(.rodata .rodata.*)
@@ -373,8 +374,8 @@ SECTIONS
     *(.ext_ram.bss*)
 
     *(.bss .bss.*)
-    *(.ext_ram.bss .ext_ram.bss.*)
     *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
+    *(.ext_ram.bss .ext_ram.bss.*)
     *(COMMON)
     _bt_bss_start = ABSOLUTE(.);
     *libbt.a:(.bss .bss.* COMMON)
