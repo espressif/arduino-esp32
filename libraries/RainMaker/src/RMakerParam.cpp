@@ -1,5 +1,4 @@
 #include "RMakerParam.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 
 static esp_err_t err;
 
@@ -29,5 +28,3 @@ esp_err_t Param::updateAndReport(param_val_t val)
     }
     return err;
 }
-
-#endif

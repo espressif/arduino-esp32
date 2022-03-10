@@ -1,11 +1,10 @@
 #include "RMaker.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 bool wifiLowLevelInit(bool persistent);
 static esp_err_t err;
 
-static void event_handler(void *arg, esp_event_base_t event_base, int event_id, void *event_data)
+static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == RMAKER_EVENT) {
         switch (event_id) {
@@ -113,4 +112,3 @@ esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 }
 
 RMakerClass RMaker;
-#endif
