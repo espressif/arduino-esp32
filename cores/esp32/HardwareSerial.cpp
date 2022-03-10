@@ -281,19 +281,25 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if (!uartIsDriverInstalled(_uart)) {
         switch (_uart_nr) {
             case UART_NUM_0:
-                rxPin = rxPin < 0 ? SOC_RX0 : rxPin;
-                txPin = txPin < 0 ? SOC_TX0 : txPin;
+                if (rxPin < 0 && txPin < 0) {
+                    rxPin = SOC_RX0;
+                    txPin = SOC_TX0;
+                }
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
-                rxPin = rxPin < 0 ? RX1 : rxPin;
-                txPin = txPin < 0 ? TX1 : txPin;
+               if (rxPin < 0 && txPin < 0) {
+                    rxPin = RX1;
+                    txPin = TX1;
+                }
             break;
 #endif
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
-                rxPin = rxPin < 0 ? RX2 : rxPin;
-                txPin = txPin < 0 ? TX2 : txPin;
+               if (rxPin < 0 && txPin < 0) {
+                    rxPin = RX2;
+                    txPin = TX2;
+                }
             break;
 #endif
             default:
