@@ -148,6 +148,7 @@ void USBCDC::end()
     setRxBufferSize(0);
     if(tx_lock != NULL) {
         vSemaphoreDelete(tx_lock);
+        tx_lock = NULL;
     }
 }
 
