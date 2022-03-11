@@ -114,12 +114,15 @@ void USBCDC::onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback
 }
 
 size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
-    if(rx_queue){
-        vQueueDelete(rx_queue);
-        rx_queue = NULL;
-        if(!rx_queue_len){
-            return 0;
-        }
+    size_t currentQueueSize = rx_queue ? 
+            uxQueueSpacesAvailable(rx_queue) + uxQueueMessagesWaiting(rx_queue) : 0;
+
+    if (rx_queue && (!rx_queue_len || rx_queue_len != currentQueueSize)) {
+            vQueueDelete(rx_queue);
+            rx_queue = NULL;
+    }
+    if(!rx_queue_len || rx_queue_len == currentQueueSize){
+        return 0;
     }
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
