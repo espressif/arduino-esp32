@@ -133,6 +133,7 @@ void SPIClass::setBitOrder(uint8_t bitOrder)
 
 void SPIClass::beginTransaction(SPISettings settings)
 {
+    spiLock(_spi);
     //check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != settings._clock || _div != cdiv) {
@@ -148,6 +149,7 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
+	spiUnlock(_spi);
     }
 }
 
