@@ -67,22 +67,22 @@ long random(long howsmall, long howbig)
 }
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
-    const long dividend = out_max - out_min;
-    const long divisor = in_max - in_min;
-    const long delta = x - in_min;
-    if(divisor == 0){
-        log_e("Invalid map input range, min == max");
-        return -1; //AVR returns -1, SAM returns 0
+    const long run = in_max - in_min;
+    if(run == 0){
+        log_e("map(): Invalid input range, min == max");
+        return -1; // AVR returns -1, SAM returns 0
     }
-    return (delta * dividend + (divisor / 2)) / divisor + out_min;
+    const long rise = out_max - out_min;
+    const long delta = x - in_min;
+    return (delta * rise) / run + out_min;
 }
 
-unsigned int makeWord(unsigned int w)
+uint16_t makeWord(uint16_t w)
 {
     return w;
 }
 
-unsigned int makeWord(unsigned char h, unsigned char l)
+uint16_t makeWord(uint8_t h, uint8_t l)
 {
     return (h << 8) | l;
 }

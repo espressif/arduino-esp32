@@ -27,14 +27,17 @@
 #ifndef _TUSB_OPTION_H_
 #define _TUSB_OPTION_H_
 
+#include "common/tusb_compiler.h"
+
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     9
+#define TUSB_VERSION_MINOR     12
 #define TUSB_VERSION_REVISION  0
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
-/** \defgroup group_mcu Supported MCU
- * \ref CFG_TUSB_MCU must be defined to one of these
- *  @{ */
+//--------------------------------------------------------------------+
+// Supported MCUs
+// CFG_TUSB_MCU must be defined to one of following value
+//--------------------------------------------------------------------+
 
 #define OPT_MCU_NONE                0
 
@@ -55,29 +58,37 @@
 #define OPT_MCU_NRF5X             100 ///< Nordic nRF5x series
 
 // SAM
-#define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
 #define OPT_MCU_SAMD21            200 ///< MicroChip SAMD21
 #define OPT_MCU_SAMD51            201 ///< MicroChip SAMD51
-#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
 #define OPT_MCU_SAMG              202 ///< MicroChip SAMDG series
+#define OPT_MCU_SAME5X            203 ///< MicroChip SAM E5x
+#define OPT_MCU_SAMD11            204 ///< MicroChip SAMD11
+#define OPT_MCU_SAML22            205 ///< MicroChip SAML22
+#define OPT_MCU_SAML21            206 ///< MicroChip SAML21
+#define OPT_MCU_SAMX7X            207 ///< MicroChip SAME70, S70, V70, V71 family
 
 // STM32
-#define OPT_MCU_STM32F0           300 ///< ST STM32F0
-#define OPT_MCU_STM32F1           301 ///< ST STM32F1
-#define OPT_MCU_STM32F2           302 ///< ST STM32F2
-#define OPT_MCU_STM32F3           303 ///< ST STM32F3
-#define OPT_MCU_STM32F4           304 ///< ST STM32F4
-#define OPT_MCU_STM32F7           305 ///< ST STM32F7
-#define OPT_MCU_STM32H7           306 ///< ST STM32H7
-#define OPT_MCU_STM32L0           307 ///< ST STM32L0
-#define OPT_MCU_STM32L1           308 ///< ST STM32L1
-#define OPT_MCU_STM32L4           309 ///< ST STM32L4
+#define OPT_MCU_STM32F0           300 ///< ST F0
+#define OPT_MCU_STM32F1           301 ///< ST F1
+#define OPT_MCU_STM32F2           302 ///< ST F2
+#define OPT_MCU_STM32F3           303 ///< ST F3
+#define OPT_MCU_STM32F4           304 ///< ST F4
+#define OPT_MCU_STM32F7           305 ///< ST F7
+#define OPT_MCU_STM32H7           306 ///< ST H7
+#define OPT_MCU_STM32L1           308 ///< ST L1
+#define OPT_MCU_STM32L0           307 ///< ST L0
+#define OPT_MCU_STM32L4           309 ///< ST L4
+#define OPT_MCU_STM32G0           310 ///< ST G0
+#define OPT_MCU_STM32G4           311 ///< ST G4
 
 // Sony
 #define OPT_MCU_CXD56             400 ///< SONY CXD56
 
-// TI MSP430
+// TI
 #define OPT_MCU_MSP430x5xx        500 ///< TI MSP430x5xx
+#define OPT_MCU_MSP432E4          510 ///< TI MSP432E4xx
+#define OPT_MCU_TM4C123           511 ///< TI Tiva-C 123x
+#define OPT_MCU_TM4C129           512 ///< TI Tiva-C 129x
 
 // ValentyUSB eptri
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
@@ -93,6 +104,7 @@
 
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
+#define OPT_MCU_ESP32S3           901 ///< Espressif ESP32-S3
 
 // Dialog
 #define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
@@ -102,28 +114,45 @@
 
 // NXP Kinetis
 #define OPT_MCU_MKL25ZXX         1200 ///< NXP MKL25Zxx
+#define OPT_MCU_K32L2BXX         1201 ///< NXP K32L2Bxx
 
 // Silabs
 #define OPT_MCU_EFM32GG          1300 ///< Silabs EFM32GG
-#define OPT_MCU_EFM32GG11        1301 ///< Silabs EFM32GG11
-#define OPT_MCU_EFM32GG12        1302 ///< Silabs EFM32GG12
 
 // Renesas RX
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
+#define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
+#define OPT_MCU_RX72N            1402 ///< Renesas RX72N
 
-/** @} */
+// Mind Motion
+#define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
 
-/** \defgroup group_supported_os Supported RTOS
- *  \ref CFG_TUSB_OS must be defined to one of these
- *  @{ */
+// GigaDevice
+#define OPT_MCU_GD32VF103        1600 ///< GigaDevice GD32VF103
+
+// Broadcom
+#define OPT_MCU_BCM2711          1700 ///< Broadcom BCM2711
+#define OPT_MCU_BCM2835          1701 ///< Broadcom BCM2835
+#define OPT_MCU_BCM2837          1702 ///< Broadcom BCM2837
+
+// Infineon
+#define OPT_MCU_XMC4000          1800 ///< Infineon XMC4000
+
+// Helper to check if configured MCU is one of listed
+// Apply _TU_CHECK_MCU with || as separator to list of input
+#define _TU_CHECK_MCU(_m)   (CFG_TUSB_MCU == _m)
+#define TU_CHECK_MCU(...)   (TU_ARGS_APPLY(_TU_CHECK_MCU, ||, __VA_ARGS__))
+
+//--------------------------------------------------------------------+
+// Supported OS
+//--------------------------------------------------------------------+
+
 #define OPT_OS_NONE       1  ///< No RTOS
 #define OPT_OS_FREERTOS   2  ///< FreeRTOS
 #define OPT_OS_MYNEWT     3  ///< Mynewt OS
 #define OPT_OS_CUSTOM     4  ///< Custom OS is implemented by application
 #define OPT_OS_PICO       5  ///< Raspberry Pi Pico SDK
 #define OPT_OS_RTTHREAD   6  ///< RT-Thread
-/** @} */
-
 
 // Allow to use command line to change the config name/location
 #ifdef CFG_TUSB_CONFIG_FILE
@@ -131,12 +160,6 @@
 #else
   #include "tusb_config.h"
 #endif
-
-
-
-/** \addtogroup group_configuration
- *  @{ */
-
 
 //--------------------------------------------------------------------
 // RootHub Mode Configuration
@@ -197,12 +220,18 @@
   #define CFG_TUSB_MEM_SECTION
 #endif
 
+// alignment requirement of buffer used for endpoint transferring
 #ifndef CFG_TUSB_MEM_ALIGN
   #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
 
+// OS selection
 #ifndef CFG_TUSB_OS
   #define CFG_TUSB_OS             OPT_OS_NONE
+#endif
+
+#ifndef CFG_TUSB_OS_INC_PATH
+  #define CFG_TUSB_OS_INC_PATH
 #endif
 
 //--------------------------------------------------------------------
@@ -229,6 +258,10 @@
   #define CFG_TUD_AUDIO           0
 #endif
 
+#ifndef CFG_TUD_VIDEO
+  #define CFG_TUD_VIDEO           0
+#endif
+
 #ifndef CFG_TUD_MIDI
   #define CFG_TUD_MIDI            0
 #endif
@@ -242,40 +275,92 @@
 #endif
 
 #ifndef CFG_TUD_DFU_RUNTIME
-  #define CFG_TUD_DFU_RUNTIME          0
+  #define CFG_TUD_DFU_RUNTIME     0
 #endif
 
-#ifndef CFG_TUD_NET
-  #define CFG_TUD_NET             0
+#ifndef CFG_TUD_DFU
+  #define CFG_TUD_DFU             0
 #endif
 
 #ifndef CFG_TUD_BTH
   #define CFG_TUD_BTH             0
 #endif
 
+#ifndef CFG_TUD_ECM_RNDIS
+  #ifdef CFG_TUD_NET
+    #warning "CFG_TUD_NET is renamed to CFG_TUD_ECM_RNDIS"
+    #define CFG_TUD_ECM_RNDIS   CFG_TUD_NET
+  #else
+    #define CFG_TUD_ECM_RNDIS   0
+  #endif
+#endif
+
+#ifndef CFG_TUD_NCM
+  #define CFG_TUD_NCM         0
+#endif
+
 //--------------------------------------------------------------------
 // HOST OPTIONS
 //--------------------------------------------------------------------
 #if TUSB_OPT_HOST_ENABLED
-  #ifndef CFG_TUSB_HOST_DEVICE_MAX
-    #define CFG_TUSB_HOST_DEVICE_MAX 1
-    #warning CFG_TUSB_HOST_DEVICE_MAX is not defined, default value is 1
+  #ifndef CFG_TUH_DEVICE_MAX
+    #define CFG_TUH_DEVICE_MAX 1
   #endif
 
-  //------------- HUB CLASS -------------//
-  #if CFG_TUH_HUB && (CFG_TUSB_HOST_DEVICE_MAX == 1)
-    #error there is no benefit enable hub with max device is 1. Please disable hub or increase CFG_TUSB_HOST_DEVICE_MAX
+  #ifndef CFG_TUH_ENUMERATION_BUFSIZE
+    #define CFG_TUH_ENUMERATION_BUFSIZE 256
   #endif
-
-  //------------- HID CLASS -------------//
-  #define HOST_CLASS_HID   ( CFG_TUH_HID_KEYBOARD + CFG_TUH_HID_MOUSE + CFG_TUSB_HOST_HID_GENERIC )
-
-  #ifndef CFG_TUSB_HOST_ENUM_BUFFER_SIZE
-    #define CFG_TUSB_HOST_ENUM_BUFFER_SIZE 256
-  #endif
-
-  //------------- CLASS -------------//
 #endif // TUSB_OPT_HOST_ENABLED
+
+//------------- CLASS -------------//
+
+#ifndef CFG_TUH_HUB
+#define CFG_TUH_HUB    0
+#endif
+
+#ifndef CFG_TUH_CDC
+#define CFG_TUH_CDC    0
+#endif
+
+#ifndef CFG_TUH_HID
+#define CFG_TUH_HID    0
+#endif
+
+#ifndef CFG_TUH_MIDI
+#define CFG_TUH_MIDI   0
+#endif
+
+#ifndef CFG_TUH_MSC
+#define CFG_TUH_MSC    0
+#endif
+
+#ifndef CFG_TUH_VENDOR
+#define CFG_TUH_VENDOR 0
+#endif
+
+//--------------------------------------------------------------------+
+// Port Specific
+// TUP stand for TinyUSB Port (can be renamed)
+//--------------------------------------------------------------------+
+
+//------------- Unaligned Memory -------------//
+
+// ARMv7+ (M3-M7, M23-M33) can access unaligned memory
+#if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7))
+  #define TUP_ARCH_STRICT_ALIGN   0
+#else
+  #define TUP_ARCH_STRICT_ALIGN   1
+#endif
+
+// TUP_MCU_STRICT_ALIGN will overwrite TUP_ARCH_STRICT_ALIGN.
+// In case TUP_MCU_STRICT_ALIGN = 1 and TUP_ARCH_STRICT_ALIGN =0, we will not reply on compiler
+// to generate unaligned access code.
+// LPC_IP3511 Highspeed cannot access unaligned memory on USB_RAM
+#if TUD_OPT_HIGH_SPEED && (CFG_TUSB_MCU == OPT_MCU_LPC54XXX || CFG_TUSB_MCU == OPT_MCU_LPC55XX)
+  #define TUP_MCU_STRICT_ALIGN   1
+#else
+  #define TUP_MCU_STRICT_ALIGN   0
+#endif
 
 
 //------------------------------------------------------------------

@@ -124,5 +124,20 @@ public:
 	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
+#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+class BLEExtAdvertisingCallbacks {
+public:
+	virtual ~BLEExtAdvertisingCallbacks() {}
+	/**
+	 * @brief Called when a new scan result is detected.
+	 *
+	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
+	 * device that was found.  During any individual scan, a device will only be detected one time.
+	 */
+	virtual void onResult(esp_ble_gap_ext_adv_reprot_t report) = 0;
+};
+#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+
+
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_ */

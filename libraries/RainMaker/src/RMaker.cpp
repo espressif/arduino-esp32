@@ -1,5 +1,5 @@
 #include "RMaker.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
+#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 bool wifiLowLevelInit(bool persistent);
@@ -88,6 +88,15 @@ esp_err_t RMakerClass::enableSchedule()
     err = esp_rmaker_schedule_enable();
     if(err != ESP_OK) {
         log_e("Schedule enable failed");
+    }
+    return err;
+}
+
+esp_err_t RMakerClass::enableTZService()
+{
+    err = esp_rmaker_timezone_service_enable();
+    if(err != ESP_OK) {
+        log_e("Timezone service enable failed");
     }
     return err;
 }

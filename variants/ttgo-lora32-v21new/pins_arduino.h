@@ -13,7 +13,7 @@
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
@@ -27,7 +27,7 @@
 #define LORA_MISO   19  // GPIO19 - SX1276 MISO
 #define LORA_MOSI   27  // GPIO27 - SX1276 MOSI
 #define LORA_CS     18  // GPIO18 - SX1276 CS
-#define LORA_RST    12  // GPIO14 - SX1276 RST
+#define LORA_RST    23  // GPIO23 - SX1276 RST
 #define LORA_IRQ    26  // GPIO26 - SX1276 IRQ (interrupt request)
 #define LORA_D1     33  // GPIO33 - SX1276 IO1 (for LMIC Arduino library)
 #define LORA_D2     32 // GPIO32 - SX1276 IO2
@@ -63,7 +63,7 @@ static const uint8_t A4 =   32;
 static const uint8_t A5 =   33;
 static const uint8_t A6 =   34;
 static const uint8_t A7 =   35;
-static const uint8_t A10 =  4; 
+static const uint8_t A10 =  4;
 static const uint8_t A11 =  0;
 static const uint8_t A12 =  2;
 static const uint8_t A13 =  15;

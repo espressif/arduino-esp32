@@ -24,14 +24,14 @@ SODIUM_EXPORT
 int crypto_auth_hmacsha512(unsigned char *out,
                            const unsigned char *in,
                            unsigned long long inlen,
-                           const unsigned char *k);
+                           const unsigned char *k) __attribute__ ((nonnull(1, 4)));
 
 SODIUM_EXPORT
 int crypto_auth_hmacsha512_verify(const unsigned char *h,
                                   const unsigned char *in,
                                   unsigned long long inlen,
                                   const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(1, 4)));
 
 /* ------------------------------------------------------------------------- */
 
@@ -46,19 +46,20 @@ size_t crypto_auth_hmacsha512_statebytes(void);
 SODIUM_EXPORT
 int crypto_auth_hmacsha512_init(crypto_auth_hmacsha512_state *state,
                                 const unsigned char *key,
-                                size_t keylen);
+                                size_t keylen) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_auth_hmacsha512_update(crypto_auth_hmacsha512_state *state,
                                   const unsigned char *in,
-                                  unsigned long long inlen);
+                                  unsigned long long inlen) __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_auth_hmacsha512_final(crypto_auth_hmacsha512_state *state,
-                                 unsigned char *out);
+                                 unsigned char *out) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-void crypto_auth_hmacsha512_keygen(unsigned char k[crypto_auth_hmacsha512_KEYBYTES]);
+void crypto_auth_hmacsha512_keygen(unsigned char k[crypto_auth_hmacsha512_KEYBYTES])
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

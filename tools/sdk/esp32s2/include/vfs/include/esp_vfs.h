@@ -1,16 +1,8 @@
-// Copyright 2015-2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __ESP_VFS_H__
 #define __ESP_VFS_H__
@@ -254,7 +246,6 @@ typedef struct
 #endif // CONFIG_VFS_SUPPORT_SELECT
 } esp_vfs_t;
 
-
 /**
  * Register a virtual filesystem for given path prefix.
  *
@@ -326,6 +317,15 @@ esp_err_t esp_vfs_register_with_id(const esp_vfs_t *vfs, void *ctx, esp_vfs_id_t
 esp_err_t esp_vfs_unregister(const char* base_path);
 
 /**
+ * Unregister a virtual filesystem with the given index
+ *
+ * @param vfs_id  The VFS ID returned by esp_vfs_register_with_id
+ * @return ESP_OK if successful, ESP_ERR_INVALID_STATE if VFS for the given index
+ *         hasn't been registered
+ */
+esp_err_t esp_vfs_unregister_with_id(esp_vfs_id_t vfs_id);
+
+/**
  * Special function for registering another file descriptor for a VFS registered
  * by esp_vfs_register_with_id.
  *
@@ -337,6 +337,21 @@ esp_err_t esp_vfs_unregister(const char* base_path);
  *          ESP_ERR_INVALID_ARG if the arguments are incorrect.
  */
 esp_err_t esp_vfs_register_fd(esp_vfs_id_t vfs_id, int *fd);
+
+/**
+ * Special function for registering another file descriptor with given local_fd
+ * for a VFS registered by esp_vfs_register_with_id.
+ *
+ * @param vfs_id VFS identificator returned by esp_vfs_register_with_id.
+ * @param local_fd The fd in the local vfs. Passing -1 will set the local fd as the (*fd) value.
+ * @param permanent Whether the fd should be treated as permannet (not removed after close())
+ * @param fd The registered file descriptor will be written to this address.
+ *
+ * @return  ESP_OK if the registration is successful,
+ *          ESP_ERR_NO_MEM if too many file descriptors are registered,
+ *          ESP_ERR_INVALID_ARG if the arguments are incorrect.
+ */
+esp_err_t esp_vfs_register_fd_with_local_fd(esp_vfs_id_t vfs_id, int local_fd, bool permanent, int *fd);
 
 /**
  * Special function for unregistering a file descriptor belonging to a VFS
@@ -387,7 +402,8 @@ int esp_vfs_utime(const char *path, const struct utimbuf *times);
  * @param timeout   If not NULL, then points to timeval structure which
  *                  specifies the time period after which the functions should
  *                  time-out and return. If it is NULL, then the function will
- *                  not time-out.
+ *                  not time-out. Note that the timeout period is rounded up to
+ *                  the system tick and incremented by one.
  *
  * @return      The number of descriptors set in the descriptor sets, or -1
  *              when an error (specified by errno) have occurred.

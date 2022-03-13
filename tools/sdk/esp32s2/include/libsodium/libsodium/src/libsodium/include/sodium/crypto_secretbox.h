@@ -29,23 +29,28 @@ size_t  crypto_secretbox_macbytes(void);
 SODIUM_EXPORT
 const char *crypto_secretbox_primitive(void);
 
+#define crypto_secretbox_MESSAGEBYTES_MAX crypto_secretbox_xsalsa20poly1305_MESSAGEBYTES_MAX
+SODIUM_EXPORT
+size_t crypto_secretbox_messagebytes_max(void);
+
 SODIUM_EXPORT
 int crypto_secretbox_easy(unsigned char *c, const unsigned char *m,
                           unsigned long long mlen, const unsigned char *n,
-                          const unsigned char *k);
+                          const unsigned char *k) __attribute__ ((nonnull(1, 4, 5)));
 
 SODIUM_EXPORT
 int crypto_secretbox_open_easy(unsigned char *m, const unsigned char *c,
                                unsigned long long clen, const unsigned char *n,
                                const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(2, 4, 5)));
 
 SODIUM_EXPORT
 int crypto_secretbox_detached(unsigned char *c, unsigned char *mac,
                               const unsigned char *m,
                               unsigned long long mlen,
                               const unsigned char *n,
-                              const unsigned char *k);
+                              const unsigned char *k)
+            __attribute__ ((nonnull(1, 2, 5, 6)));
 
 SODIUM_EXPORT
 int crypto_secretbox_open_detached(unsigned char *m,
@@ -54,10 +59,11 @@ int crypto_secretbox_open_detached(unsigned char *m,
                                    unsigned long long clen,
                                    const unsigned char *n,
                                    const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(2, 3, 5, 6)));
 
 SODIUM_EXPORT
-void crypto_secretbox_keygen(unsigned char k[crypto_secretbox_KEYBYTES]);
+void crypto_secretbox_keygen(unsigned char k[crypto_secretbox_KEYBYTES])
+            __attribute__ ((nonnull));
 
 /* -- NaCl compatibility interface ; Requires padding -- */
 
@@ -72,13 +78,13 @@ size_t  crypto_secretbox_boxzerobytes(void);
 SODIUM_EXPORT
 int crypto_secretbox(unsigned char *c, const unsigned char *m,
                      unsigned long long mlen, const unsigned char *n,
-                     const unsigned char *k);
+                     const unsigned char *k) __attribute__ ((nonnull(1, 4, 5)));
 
 SODIUM_EXPORT
 int crypto_secretbox_open(unsigned char *m, const unsigned char *c,
                           unsigned long long clen, const unsigned char *n,
                           const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(2, 4, 5)));
 
 #ifdef __cplusplus
 }

@@ -1,10 +1,12 @@
 tools/xtensa-esp32-elf
 tools/xtensa-esp32s2-elf
+tools/riscv32-esp-elf
 tools/dist
 tools/esptool
 tools/esptool.exe
 tools/mkspiffs
 tools/mklittlefs
+tools/mkfatfs.exe
 .DS_Store
  
 #Ignore files built by Visual Studio/Visual Micro
@@ -16,4 +18,10 @@ __vm/
 .vscode/
 platform.sloeber.txt
 boards.sloeber.txt
-tools/mklittlefs
+
+# Ignore docs build (Sphinx)
+docs/build
+docs/source/_build
+
+# Test log files
+*.log

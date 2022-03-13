@@ -86,6 +86,47 @@ typedef struct {
     */
     esp_err_t (*on_lowlevel_deinit_done)(esp_eth_handle_t eth_handle);
 
+    /**
+    * @brief Read PHY register
+    *
+    * @note Usually the PHY register read/write function is provided by MAC (SMI interface),
+    *       but if the PHY device is managed by other interface (e.g. I2C), then user needs to
+    *       implement the corresponding read/write.
+    *       Setting this to NULL means your PHY device is managed by MAC's SMI interface.
+    *
+    * @param[in] eth_handle: handle of Ethernet driver
+    * @param[in] phy_addr: PHY chip address (0~31)
+    * @param[in] phy_reg: PHY register index code
+    * @param[out] reg_value: PHY register value
+    *
+    * @return
+    *      - ESP_OK: read PHY register successfully
+    *      - ESP_ERR_INVALID_ARG: read PHY register failed because of invalid argument
+    *      - ESP_ERR_TIMEOUT: read PHY register failed because of timeout
+    *      - ESP_FAIL: read PHY register failed because some other error occurred
+    */
+    esp_err_t (*read_phy_reg)(esp_eth_handle_t eth_handle, uint32_t phy_addr, uint32_t phy_reg, uint32_t *reg_value);
+
+    /**
+    * @brief Write PHY register
+    *
+    * @note Usually the PHY register read/write function is provided by MAC (SMI interface),
+    *       but if the PHY device is managed by other interface (e.g. I2C), then user needs to
+    *       implement the corresponding read/write.
+    *       Setting this to NULL means your PHY device is managed by MAC's SMI interface.
+    *
+    * @param[in] eth_handle: handle of Ethernet driver
+    * @param[in] phy_addr: PHY chip address (0~31)
+    * @param[in] phy_reg: PHY register index code
+    * @param[in] reg_value: PHY register value
+    *
+    * @return
+    *      - ESP_OK: write PHY register successfully
+    *      - ESP_ERR_INVALID_ARG: read PHY register failed because of invalid argument
+    *      - ESP_ERR_TIMEOUT: write PHY register failed because of timeout
+    *      - ESP_FAIL: write PHY register failed because some other error occurred
+    */
+    esp_err_t (*write_phy_reg)(esp_eth_handle_t eth_handle, uint32_t phy_addr, uint32_t phy_reg, uint32_t reg_value);
 } esp_eth_config_t;
 
 /**
@@ -100,6 +141,8 @@ typedef struct {
         .stack_input = NULL,             \
         .on_lowlevel_init_done = NULL,   \
         .on_lowlevel_deinit_done = NULL, \
+        .read_phy_reg = NULL,            \
+        .write_phy_reg = NULL,           \
     }
 
 /**
@@ -222,12 +265,24 @@ esp_err_t esp_eth_receive(esp_eth_handle_t hdl, uint8_t *buf, uint32_t *length) 
 *
 * @param[in] hdl: handle of Ethernet driver
 * @param[in] cmd: IO control command
-* @param[in] data: specificed data for command
+* @param[in, out] data: address of data for `set` command or address where to store the data when used with `get` command
 *
 * @return
 *       - ESP_OK: process io command successfully
 *       - ESP_ERR_INVALID_ARG: process io command failed because of some invalid argument
 *       - ESP_FAIL: process io command failed because some other error occurred
+*
+* The following IO control commands are supported:
+* @li @c ETH_CMD_S_MAC_ADDR sets Ethernet interface MAC address. @c data argument is pointer to MAC address buffer with expected size of 6 bytes.
+* @li @c ETH_CMD_G_MAC_ADDR gets Ethernet interface MAC address. @c data argument is pointer to a buffer to which MAC address is to be copied. The buffer size must be at least 6 bytes.
+* @li @c ETH_CMD_S_PHY_ADDR sets PHY address in range of <0-31>. @c data argument is pointer to memory of uint32_t datatype from where the configuration option is read.
+* @li @c ETH_CMD_G_PHY_ADDR gets PHY address. @c data argument is pointer to memory of uint32_t datatype to which the PHY address is to be stored.
+* @li @c ETH_CMD_G_SPEED gets current Ethernet link speed. @c data argument is pointer to memory of eth_speed_t datatype to which the speed is to be stored.
+* @li @c ETH_CMD_S_PROMISCUOUS sets/resets Ethernet interface promiscuous mode. @c data argument is pointer to memory of bool datatype from which the configuration option is read.
+* @li @c ETH_CMD_S_FLOW_CTRL sets/resets Ethernet interface flow control. @c data argument is pointer to memory of bool datatype from which the configuration option is read.
+* @li @c ETH_CMD_G_DUPLEX_MODE gets current Ethernet link duplex mode.  @c data argument is pointer to memory of eth_duplex_t datatype to which the duplex mode is to be stored.
+* @li @c ETH_CMD_S_PHY_LOOPBACK sets/resets PHY to/from loopback mode. @c data argument is pointer to memory of bool datatype from which the configuration option is read.
+*
 */
 esp_err_t esp_eth_ioctl(esp_eth_handle_t hdl, esp_eth_io_cmd_t cmd, void *data);
 

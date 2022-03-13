@@ -17,7 +17,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "dsp_err.h"
-
+#include "esp_idf_version.h"
+#include "soc/cpu.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -48,6 +49,13 @@ int dsp_power_of_two(int x);
 
 #ifdef __cplusplus
 }
+#endif
+
+// esp_cpu_get_ccount function is implemented in IDF 4.1 and later
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 1, 0)
+#define dsp_get_cpu_cycle_count  esp_cpu_get_ccount
+#else
+#define dsp_get_cpu_cycle_count  xthal_get_ccount
 #endif
 
 #endif // _dsp_common_H_

@@ -38,6 +38,7 @@ public:
     virtual size_t size() const = 0;
     virtual void close() = 0;
     virtual time_t getLastWrite() = 0;
+    virtual const char* path() const = 0;
     virtual const char* name() const = 0;
     virtual boolean isDirectory(void) = 0;
     virtual FileImplPtr openNextFile(const char* mode) = 0;
@@ -52,7 +53,7 @@ protected:
 public:
     FSImpl() : _mountpoint(NULL) { }
     virtual ~FSImpl() { }
-    virtual FileImplPtr open(const char* path, const char* mode) = 0;
+    virtual FileImplPtr open(const char* path, const char* mode, const bool create) = 0;
     virtual bool exists(const char* path) = 0;
     virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
     virtual bool remove(const char* path) = 0;

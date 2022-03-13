@@ -207,7 +207,7 @@ void handleFileList() {
           output += "{\"type\":\"";
           output += (file.isDirectory()) ? "dir" : "file";
           output += "\",\"name\":\"";
-          output += String(file.name()).substring(1);
+          output += String(file.path()).substring(1);
           output += "\"}";
           file = root.openNextFile();
       }

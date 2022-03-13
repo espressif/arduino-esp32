@@ -38,6 +38,7 @@
 #include <esp_err.h>
 #include "soc/lldesc.h"
 #include "soc/soc_caps.h"
+#include "hal/spi_types.h"
 
 /**
  * Input parameters to the ``spi_hal_cal_clock_conf`` to calculate the timing configuration
@@ -100,7 +101,8 @@ typedef struct {
     uint64_t addr;                      ///< Address value to be sent
     uint8_t *send_buffer;               ///< Data to be sent
     uint8_t *rcv_buffer;                ///< Buffer to hold the receive data.
-    spi_ll_io_mode_t io_mode;           ///< IO mode of the master
+    spi_line_mode_t line_mode;          ///< SPI line mode of this transaction
+    int cs_keep_active;                 ///< Keep CS active after transaction
 } spi_hal_trans_config_t;
 
 /**
@@ -160,7 +162,7 @@ typedef struct {
  * Init the peripheral and the context.
  *
  * @param hal        Context of the HAL layer.
- * @param host_id    Index of the SPI peripheral. 0 for SPI1, 1 for HSPI (SPI2) and 2 for VSPI (SPI3).
+ * @param host_id    Index of the SPI peripheral. 0 for SPI1, 1 for SPI2 and 2 for SPI3.
  * @param hal_config Configuration of the hal defined by the upper layer.
  */
 void spi_hal_init(spi_hal_context_t *hal, uint32_t host_id, const spi_hal_config_t *hal_config);

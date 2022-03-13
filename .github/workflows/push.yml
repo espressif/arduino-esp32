@@ -1,14 +1,26 @@
 name: ESP32 Arduino CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - master
     - release/*
   pull_request:
 
+concurrency:
+  group: build-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+
 jobs:
-  
+
+  cmake-check:
+    name: Check cmake file
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: bash ./.github/scripts/check-cmakelists.sh
+
   # Ubuntu
   build-arduino-linux:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
@@ -16,12 +28,22 @@ jobs:
     strategy:
       matrix:
         chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+    - name: Cache tools
+      id: cache-linux
+      uses: actions/cache@v2
+      with:
+        path: |
+          ./tools/dist
+          ~/arduino_ide
+        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
+                                            'tools/get.py',
+                                            '.github/scripts/install-arduino-ide.sh') }}
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
@@ -32,10 +54,10 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macOS-latest]
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Build Sketches
@@ -48,10 +70,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Build Sketches

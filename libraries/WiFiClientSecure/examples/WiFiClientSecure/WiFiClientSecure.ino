@@ -66,8 +66,8 @@ void setup() {
   Serial.println(ssid);
 
   client.setCACert(test_root_ca);
-  //client.setCertificate(test_client_key); // for client verification
-  //client.setPrivateKey(test_client_cert);	// for client verification
+  //client.setCertificate(test_client_cert); // for client verification
+  //client.setPrivateKey(test_client_key);	// for client verification
 
   Serial.println("\nStarting connection to server...");
   if (!client.connect(server, 443))

@@ -16,25 +16,30 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
-#include "soc/rtc_io_reg.h"
 #include "soc/rtc_cntl_reg.h"
-#include "soc/sens_reg.h"
-
 #include "driver/adc.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp_adc_cal.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
 #include "esp32/rom/ets_sys.h"
 #include "esp_intr_alloc.h"
+#include "soc/dac_channel.h"
 #define DEFAULT_VREF    1100
 static esp_adc_cal_characteristics_t *__analogCharacteristics[2] = {NULL, NULL};
 static uint16_t __analogVRef = 0;
 static uint8_t __analogVRefPin = 0;
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/ets_sys.h"
-#else 
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
+#include "soc/dac_channel.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/ets_sys.h"
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
@@ -43,15 +48,31 @@ static uint8_t __analogVRefPin = 0;
 #endif
 
 static uint8_t __analogAttenuation = 3;//11db
-static uint8_t __analogWidth = 3;//12 bits
+static uint8_t __analogWidth = ADC_WIDTH_MAX - 1; //3 for ESP32/ESP32C3; 4 for ESP32S2
+static uint8_t __analogReturnedWidth = SOC_ADC_MAX_BITWIDTH; //12 for ESP32/ESP32C3; 13 for ESP32S2
 static uint8_t __analogClockDiv = 1;
+static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
+
+static inline uint16_t mapResolution(uint16_t value)
+{
+    uint8_t from = __analogWidth + 9;
+    if (from == __analogReturnedWidth) {
+        return value;
+    }
+    if (from > __analogReturnedWidth) {
+        return value >> (from  - __analogReturnedWidth);
+    }
+    return value << (__analogReturnedWidth - from);
+}
 
 void __analogSetClockDiv(uint8_t clockDiv){
     if(!clockDiv){
         clockDiv = 1;
     }
     __analogClockDiv = clockDiv;
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     adc_set_clk_div(__analogClockDiv);
+#endif
 }
 
 void __analogSetAttenuation(adc_attenuation_t attenuation)
@@ -81,6 +102,9 @@ void __analogInit(){
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(__analogWidth + 9);//in bits
 #endif
+    for(int i=0; i<SOC_GPIO_PIN_COUNT; i++){
+        __pin_attenuation[i] = ADC_ATTENDB_MAX;
+    }
 }
 
 void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
@@ -95,6 +119,9 @@ void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
         adc1_config_channel_atten(channel, attenuation);
     }
     __analogInit();
+    if((__pin_attenuation[pin] != ADC_ATTENDB_MAX) || (attenuation != __analogAttenuation)){
+        __pin_attenuation[pin] = attenuation;
+    }
 }
 
 bool __adcAttachPin(uint8_t pin){
@@ -103,6 +130,7 @@ bool __adcAttachPin(uint8_t pin){
         log_e("Pin %u is not ADC pin!", pin);
         return false;
     }
+    __analogInit();
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad >= 0){
 #if CONFIG_IDF_TARGET_ESP32
@@ -114,14 +142,17 @@ bool __adcAttachPin(uint8_t pin){
             WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, touch);
         }
 #endif
-    } else if(pin == 25){
+    }
+#if SOC_DAC_SUPPORTED
+    else if(pin == DAC_CHANNEL_1_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_XPD_DAC | RTC_IO_PDAC1_DAC_XPD_FORCE);//stop dac1
-    } else if(pin == 26){
+    } else if(pin == DAC_CHANNEL_2_GPIO_NUM){
         CLEAR_PERI_REG_MASK(RTC_IO_PAD_DAC2_REG, RTC_IO_PDAC2_XPD_DAC | RTC_IO_PDAC2_DAC_XPD_FORCE);//stop dac2
     }
+#endif
 
     pinMode(pin, ANALOG);
-    __analogSetPinAttenuation(pin, __analogAttenuation);
+    __analogSetPinAttenuation(pin, (__pin_attenuation[pin] != ADC_ATTENDB_MAX)?__pin_attenuation[pin]:__analogAttenuation);
     return true;
 }
 
@@ -130,6 +161,7 @@ void __analogReadResolution(uint8_t bits)
     if(!bits || bits > 16){
         return;
     }
+    __analogReturnedWidth = bits;
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(bits);         // hadware from 9 to 12
 #endif
@@ -149,18 +181,19 @@ uint16_t __analogRead(uint8_t pin)
         channel -= 10;
         r = adc2_get_raw( channel, __analogWidth, &value);
         if ( r == ESP_OK ) {
-            return value;
+            return mapResolution(value);
         } else if ( r == ESP_ERR_INVALID_STATE ) {
             log_e("GPIO%u: %s: ADC2 not initialized yet.", pin, esp_err_to_name(r));
         } else if ( r == ESP_ERR_TIMEOUT ) {
-            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi.", pin, esp_err_to_name(r));
+            log_e("GPIO%u: %s: ADC2 is in use by Wi-Fi. Please see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#adc-limitations for more info", pin, esp_err_to_name(r));
         } else {
             log_e("GPIO%u: %s", pin, esp_err_to_name(r));
         }
     } else {
-        return adc1_get_raw(channel);
+        value = adc1_get_raw(channel);
+        return mapResolution(value);
     }
-    return value;
+    return mapResolution(value);
 }
 
 uint32_t __analogReadMilliVolts(uint8_t pin){
@@ -237,28 +270,12 @@ void __analogSetVRefPin(uint8_t pin){
     __analogVRefPin = pin;
 }
 
-int __hallRead()    //hall sensor without LNA
+int __hallRead()    //hall sensor using idf read
 {
-    int Sens_Vp0;
-    int Sens_Vn0;
-    int Sens_Vp1;
-    int Sens_Vn1;
-
     pinMode(36, ANALOG);
     pinMode(39, ANALOG);
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_XPD_HALL_FORCE_M);     // hall sens force enable
-    SET_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_XPD_HALL);               // xpd hall
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_HALL_PHASE_FORCE_M);   // phase force
-    CLEAR_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_HALL_PHASE);           // hall phase
-    Sens_Vp0 = __analogRead(36);
-    Sens_Vn0 = __analogRead(39);
-    SET_PERI_REG_MASK(RTC_IO_HALL_SENS_REG, RTC_IO_HALL_PHASE);
-    Sens_Vp1 = __analogRead(36);
-    Sens_Vn1 = __analogRead(39);
-    SET_PERI_REG_BITS(SENS_SAR_MEAS_WAIT2_REG, SENS_FORCE_XPD_SAR, 0, SENS_FORCE_XPD_SAR_S);
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_XPD_HALL_FORCE);
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_HALL_PHASE_FORCE);
-    return (Sens_Vp1 - Sens_Vp0) - (Sens_Vn1 - Sens_Vn0);
+    __analogSetWidth(12);
+    return hall_sensor_read();
 }
 #endif
 

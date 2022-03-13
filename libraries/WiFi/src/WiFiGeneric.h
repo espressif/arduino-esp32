@@ -51,6 +51,7 @@ typedef enum {
 	ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED,
 	ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED,
 	ARDUINO_EVENT_WIFI_AP_GOT_IP6,
+	ARDUINO_EVENT_WIFI_FTM_REPORT,
 	ARDUINO_EVENT_ETH_START,
 	ARDUINO_EVENT_ETH_STOP,
 	ARDUINO_EVENT_ETH_CONNECTED,
@@ -86,6 +87,7 @@ typedef union {
 	wifi_event_ap_probe_req_rx_t wifi_ap_probereqrecved;
 	wifi_event_ap_staconnected_t wifi_ap_staconnected;
 	wifi_event_ap_stadisconnected_t wifi_ap_stadisconnected;
+	wifi_event_ftm_report_t wifi_ftm_report;
 	ip_event_ap_staipassigned_t wifi_ap_staipassigned;
 	ip_event_got_ip_t got_ip;
 	ip_event_got_ip6_t got_ip6;
@@ -137,6 +139,18 @@ static const int WIFI_SCAN_DONE_BIT= BIT12;
 static const int WIFI_DNS_IDLE_BIT = BIT13;
 static const int WIFI_DNS_DONE_BIT = BIT14;
 
+typedef enum {
+	WIFI_RX_ANT0 = 0,
+	WIFI_RX_ANT1,
+	WIFI_RX_ANT_AUTO
+} wifi_rx_ant_t;
+
+typedef enum {
+	WIFI_TX_ANT0 = 0,
+	WIFI_TX_ANT1,
+	WIFI_TX_ANT_AUTO
+} wifi_tx_ant_t;
+
 class WiFiGenericClass
 {
   public:
@@ -170,17 +184,25 @@ class WiFiGenericClass
     bool setTxPower(wifi_power_t power);
     wifi_power_t getTxPower();
 
+    bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
+
+    static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
+
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     static esp_err_t _eventCallback(arduino_event_t *event);
+    
+    static void useStaticBuffers(bool bufferMode);
+    static bool useStaticBuffers();
 
   protected:
     static bool _persistent;
     static bool _long_range;
     static wifi_mode_t _forceSleepLastMode;
     static wifi_ps_type_t _sleepEnabled;
+    static bool _wifiUseStaticBuffers;
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);

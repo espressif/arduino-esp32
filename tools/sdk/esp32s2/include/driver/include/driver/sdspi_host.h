@@ -1,16 +1,8 @@
-// Copyright 2015-2017 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -28,6 +20,12 @@ extern "C" {
 /// Handle representing an SD SPI device
 typedef int sdspi_dev_handle_t;
 
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+#define SDSPI_DEFAULT_HOST HSPI_HOST
+#else
+#define SDSPI_DEFAULT_HOST SPI2_HOST
+#endif
+
 /**
  * @brief Default sdmmc_host_t structure initializer for SD over SPI driver
  *
@@ -37,7 +35,7 @@ typedef int sdspi_dev_handle_t;
  */
 #define SDSPI_HOST_DEFAULT() {\
     .flags = SDMMC_HOST_FLAG_SPI | SDMMC_HOST_FLAG_DEINIT_ARG, \
-    .slot = HSPI_HOST, \
+    .slot = SDSPI_DEFAULT_HOST, \
     .max_freq_khz = SDMMC_FREQ_DEFAULT, \
     .io_voltage = 3.3f, \
     .init = &sdspi_host_init, \
@@ -71,7 +69,7 @@ typedef struct {
  * Macro defining default configuration of SD SPI device.
  */
 #define SDSPI_DEVICE_CONFIG_DEFAULT() {\
-    .host_id   = HSPI_HOST, \
+    .host_id   = SDSPI_DEFAULT_HOST, \
     .gpio_cs   = GPIO_NUM_13, \
     .gpio_cd   = SDSPI_SLOT_NO_CD, \
     .gpio_wp   = SDSPI_SLOT_NO_WP, \
@@ -228,7 +226,7 @@ typedef struct {
 *
 * @note The SDIO over sdspi needs an extra interrupt line. Call ``gpio_install_isr_service()`` before this function.
 *
-* @param slot         SPI controller to use (HSPI_HOST or VSPI_HOST)
+* @param slot         SPI controller to use (SPI2_HOST or SPI3_HOST)
 * @param slot_config  pointer to slot configuration structure
 
 * @deprecated Use `sdspi_host_init_device` instead.

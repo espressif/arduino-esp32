@@ -1,0 +1,6 @@
+# This is a list of python packages used to generate documentation. This file is used with pip:
+# pip install --user -r requirements.txt
+#
+# matplotlib is currently required only by the script generate_chart.py
+sphinx-copybutton==0.3.0
+sphinx-tabs==3.2.0

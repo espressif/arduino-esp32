@@ -14,8 +14,9 @@
 
 #pragma once
 
+#include <stdint.h>
 #include "esp_attr.h"
-#include <esp_bit_defs.h>
+#include "esp_bit_defs.h"
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
 
@@ -31,34 +32,42 @@ typedef enum {
 
 /// SPI Events
 typedef enum {
-    SPI_EV_BUF_TX        = BIT(0), ///< The buffer has sent data to master, Slave HD only
-    SPI_EV_BUF_RX        = BIT(1), ///< The buffer has received data from master, Slave HD only
-    SPI_EV_SEND          = BIT(2), ///< Slave has loaded some data to DMA, and master has received certain number of the data, the number is determined by master. Slave HD only
-    SPI_EV_RECV          = BIT(3), ///< Slave has received certain number of data from master, the number is determined by master. Slave HD only.
-    SPI_EV_CMD9          = BIT(4), ///< Received CMD9 from master, Slave HD only
-    SPI_EV_CMDA          = BIT(5), ///< Received CMDA from master, Slave HD only
-    SPI_EV_TRANS         = BIT(6), ///< A transaction has done
+    /* Slave HD Only */
+    SPI_EV_BUF_TX         = BIT(0), ///< The buffer has sent data to master.
+    SPI_EV_BUF_RX         = BIT(1), ///< The buffer has received data from master.
+    SPI_EV_SEND_DMA_READY = BIT(2), ///< Slave has loaded its TX data buffer to the hardware (DMA).
+    SPI_EV_SEND           = BIT(3), ///< Master has received certain number of the data, the number is determined by Master.
+    SPI_EV_RECV_DMA_READY = BIT(4), ///< Slave has loaded its RX data buffer to the hardware (DMA).
+    SPI_EV_RECV           = BIT(5), ///< Slave has received certain number of data from master, the number is determined by Master.
+    SPI_EV_CMD9           = BIT(6), ///< Received CMD9 from master.
+    SPI_EV_CMDA           = BIT(7), ///< Received CMDA from master.
+    /* Common Event */
+    SPI_EV_TRANS          = BIT(8), ///< A transaction has done
 } spi_event_t;
 FLAG_ATTR(spi_event_t)
+
+/**
+ * @brief Line mode of SPI transaction phases: CMD, ADDR, DOUT/DIN.
+ */
+typedef struct {
+    uint8_t cmd_lines;    ///< The line width of command phase, e.g. 2-line-cmd-phase.
+    uint8_t addr_lines;   ///< The line width of address phase, e.g. 1-line-addr-phase.
+    uint8_t data_lines;   ///< The line width of data phase, e.g. 4-line-data-phase.
+} spi_line_mode_t;
 
 
 /** @cond */    //Doxy command to hide preprocessor definitions from docs */
 
-//alias for different chips
+//alias for different chips, deprecated for the chips after esp32s2
 #ifdef CONFIG_IDF_TARGET_ESP32
 #define SPI_HOST    SPI1_HOST
 #define HSPI_HOST   SPI2_HOST
 #define VSPI_HOST   SPI3_HOST
-#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#elif CONFIG_IDF_TARGET_ESP32S2
 // SPI_HOST (SPI1_HOST) is not supported by the SPI Master and SPI Slave driver on ESP32-S2 and later
 #define SPI_HOST    SPI1_HOST
 #define FSPI_HOST   SPI2_HOST
 #define HSPI_HOST   SPI3_HOST
-#elif CONFIG_IDF_TARGET_ESP32C3
-/* No SPI3_host on C3 */
-#define SPI_HOST    SPI1_HOST
-#define FSPI_HOST   SPI2_HOST
-#define HSPI_HOST   SPI2_HOST
 #endif
 
 /** @endcond */

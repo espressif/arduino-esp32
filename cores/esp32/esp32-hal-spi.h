@@ -25,10 +25,15 @@ extern "C" {
 
 #define SPI_HAS_TRANSACTION
 
+#if CONFIG_IDF_TARGET_ESP32C3
+#define FSPI  0
+#define HSPI  1
+#else
 #define FSPI  1 //SPI bus attached to the flash (can use the same data lines but different SS)
 #define HSPI  2 //SPI bus normally mapped to pins 12 - 15, but can be matrixed to any pins
 #if CONFIG_IDF_TARGET_ESP32
 #define VSPI  3 //SPI bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
+#endif
 #endif
 
 // This defines are not representing the real Divider of the ESP32

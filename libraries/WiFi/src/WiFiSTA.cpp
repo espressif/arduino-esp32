@@ -53,6 +53,20 @@ esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IP
 esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress());
 static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs);
 
+static size_t _wifi_strncpy(char * dst, const char * src, size_t dst_len){
+    if(!dst || !src || !dst_len){
+        return 0;
+    }
+    size_t src_len = strlen(src);
+    if(src_len >= dst_len){
+        src_len = dst_len;
+    } else {
+        src_len += 1;
+    }
+    memcpy(dst, src, src_len);
+    return src_len;
+}
+
 
 /**
  * compare two STA configurations
@@ -73,7 +87,7 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     wifi_config->sta.listen_interval = listen_interval;
     wifi_config->sta.scan_method = scan_method;//WIFI_ALL_CHANNEL_SCAN or WIFI_FAST_SCAN
     wifi_config->sta.sort_method = sort_method;//WIFI_CONNECT_AP_BY_SIGNAL or WIFI_CONNECT_AP_BY_SECURITY
-    wifi_config->sta.threshold.rssi = -75;
+    wifi_config->sta.threshold.rssi = -127;
     wifi_config->sta.pmf_cfg.capable = true;
     wifi_config->sta.pmf_cfg.required = pmf_required;
     wifi_config->sta.bssid_set = 0;
@@ -82,14 +96,10 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     wifi_config->sta.ssid[0] = 0;
     wifi_config->sta.password[0] = 0;
     if(ssid != NULL && ssid[0] != 0){
-    	snprintf((char*)wifi_config->sta.ssid, 32, ssid);
+        _wifi_strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
-    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WEP;
-    		if(strlen(password) == 64){
-    			memcpy((char*)wifi_config->sta.password, password, 64);
-    		} else {
-    			snprintf((char*)wifi_config->sta.password, 64, password);
-    		}
+    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    		_wifi_strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
             wifi_config->sta.bssid_set = 1;
@@ -165,20 +175,20 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    strcpy(reinterpret_cast<char*>(conf.sta.ssid), ssid);
-    conf.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;       //force full scan to be able to choose the nearest / strongest AP
+    _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
 
     if(passphrase) {
-        if (strlen(passphrase) == 64){ // it's not a passphrase, is the PSK
-            memcpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
-        } else {
-            strcpy(reinterpret_cast<char*>(conf.sta.password), passphrase);
-        }
+        _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
     }
 
-    wifi_config_t current_conf;
-    wifi_sta_config(&conf, ssid, passphrase, bssid, channel);
+    if(channel == 0) {
+        // If no specific channel specified, then do an slower WIFI_ALL_CHANNEL_SCAN
+        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_ALL_CHANNEL_SCAN);
+    }
+    else
+        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_FAST_SCAN);
 
+    wifi_config_t current_conf;
     if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
         log_e("get current config failed!");
         return WL_CONNECT_FAILED;
@@ -370,14 +380,14 @@ bool WiFiSTAClass::getAutoReconnect()
  * returns the status reached or disconnect if STA is off
  * @return wl_status_t
  */
-uint8_t WiFiSTAClass::waitForConnectResult()
+uint8_t WiFiSTAClass::waitForConnectResult(unsigned long timeoutLength)
 {
     //1 and 3 have STA enabled
     if((WiFiGenericClass::getMode() & WIFI_MODE_STA) == 0) {
         return WL_DISCONNECTED;
     }
-    int i = 0;
-    while((!status() || status() >= WL_DISCONNECTED) && i++ < 100) {
+    unsigned long start = millis();
+    while((!status() || status() >= WL_DISCONNECTED) && (millis() - start) < timeoutLength) {
         delay(100);
     }
     return status();
@@ -645,8 +655,15 @@ IPv6Address WiFiSTAClass::localIPv6()
 bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;
 
-
-bool WiFiSTAClass::beginSmartConfig() {
+/**
+ * @brief 
+ * 
+ * @param type Select type of SmartConfig. Default type is SC_TYPE_ESPTOUCH
+ * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Lenght should be 16 chars.
+ * @return true if configuration is successful.
+ * @return false if configuration fails.
+ */
+bool WiFiSTAClass::beginSmartConfig(smartconfig_type_t type, char* crypt_key) {
     esp_err_t err;
     if (_smartConfigStarted) {
         return false;
@@ -658,7 +675,13 @@ bool WiFiSTAClass::beginSmartConfig() {
     esp_wifi_disconnect();
 
     smartconfig_start_config_t conf = SMARTCONFIG_START_CONFIG_DEFAULT();
-    err = esp_smartconfig_set_type(SC_TYPE_ESPTOUCH);
+
+    if (type == SC_TYPE_ESPTOUCH_V2){
+        conf.esp_touch_v2_enable_crypt = true;
+        conf.esp_touch_v2_key = crypt_key;
+    }
+
+    err = esp_smartconfig_set_type(type);
     if (err != ESP_OK) {
     	log_e("SmartConfig Set Type Failed!");
         return false;

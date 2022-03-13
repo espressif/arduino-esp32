@@ -34,7 +34,6 @@ EEPROMClass::EEPROMClass(void)
   , _size(0)
   , _dirty(false)
   , _name("eeprom")
-  , _user_defined_size(0)
 {
 }
 
@@ -45,17 +44,15 @@ EEPROMClass::EEPROMClass(uint32_t sector)
   , _size(0)
   , _dirty(false)
   , _name("eeprom")
-  , _user_defined_size(0)
 {
 }
 
-EEPROMClass::EEPROMClass(const char* name, uint32_t user_defined_size)
+EEPROMClass::EEPROMClass(const char* name)
   : _handle(0)
   , _data(0)
   , _size(0)
   , _dirty(false)
   , _name(name)
-  , _user_defined_size(user_defined_size)
 {
 }
 
@@ -133,7 +130,7 @@ bool EEPROMClass::begin(size_t size) {
 
   _data = (uint8_t*) malloc(size);
   if(!_data) {
-    log_e("Not enough memory for %d bytes in EEPROM");
+    log_e("Not enough memory for %d bytes in EEPROM", size);
     return false;
   }
   _size = size;
@@ -215,7 +212,7 @@ uint8_t * EEPROMClass::getDataPtr() {
 */
 uint16_t EEPROMClass::length ()
 {
-  return _user_defined_size;
+  return _size;
 }
 
 /* 

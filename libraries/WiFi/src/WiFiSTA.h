@@ -56,7 +56,7 @@ public:
     bool setAutoReconnect(bool autoReconnect);
     bool getAutoReconnect();
 
-    uint8_t waitForConnectResult();
+    uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
 
     // STA network info
     IPAddress localIP();
@@ -92,7 +92,7 @@ protected:
     static bool _autoReconnect;
 
 public: 
-    bool beginSmartConfig();
+    bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
     bool stopSmartConfig();
     bool smartConfigDone();
 

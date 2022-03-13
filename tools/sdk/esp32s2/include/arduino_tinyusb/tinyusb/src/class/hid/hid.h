@@ -62,15 +62,15 @@ typedef enum
 {
   HID_SUBCLASS_NONE = 0, ///< No Subclass
   HID_SUBCLASS_BOOT = 1  ///< Boot Interface Subclass
-}hid_subclass_type_t;
+}hid_subclass_enum_t;
 
-/// HID Protocol
+/// HID Interface Protocol
 typedef enum
 {
-  HID_PROTOCOL_NONE     = 0, ///< None
-  HID_PROTOCOL_KEYBOARD = 1, ///< Keyboard
-  HID_PROTOCOL_MOUSE    = 2  ///< Mouse
-}hid_protocol_type_t;
+  HID_ITF_PROTOCOL_NONE     = 0, ///< None
+  HID_ITF_PROTOCOL_KEYBOARD = 1, ///< Keyboard
+  HID_ITF_PROTOCOL_MOUSE    = 2  ///< Mouse
+}hid_interface_protocol_enum_t;
 
 /// HID Descriptor Type
 typedef enum
@@ -78,7 +78,7 @@ typedef enum
   HID_DESC_TYPE_HID      = 0x21, ///< HID Descriptor
   HID_DESC_TYPE_REPORT   = 0x22, ///< Report Descriptor
   HID_DESC_TYPE_PHYSICAL = 0x23  ///< Physical Descriptor
-}hid_descriptor_type_t;
+}hid_descriptor_enum_t;
 
 /// HID Request Report Type
 typedef enum
@@ -98,9 +98,9 @@ typedef enum
   HID_REQ_CONTROL_SET_REPORT   = 0x09, ///< Set Report
   HID_REQ_CONTROL_SET_IDLE     = 0x0a, ///< Set Idle
   HID_REQ_CONTROL_SET_PROTOCOL = 0x0b  ///< Set Protocol
-}hid_request_type_t;
+}hid_request_enum_t;
 
-/// HID Country Code
+/// HID Local Code
 typedef enum
 {
   HID_LOCAL_NotSupported = 0   , ///< NotSupported
@@ -139,7 +139,14 @@ typedef enum
   HID_LOCAL_US                 , ///< US
   HID_LOCAL_Yugoslavia         , ///< Yugoslavia
   HID_LOCAL_Turkish_F            ///< Turkish-F
-} hid_country_code_t;
+} hid_local_enum_t;
+
+// HID protocol value used by GetProtocol / SetProtocol
+typedef enum
+{
+  HID_PROTOCOL_BOOT = 0,
+  HID_PROTOCOL_REPORT = 1
+} hid_protocol_mode_enum_t;
 
 /** @} */
 
@@ -194,29 +201,72 @@ typedef struct TU_ATTR_PACKED
   int8_t  rx;        ///< Delta Rx movement of analog left trigger
   int8_t  ry;        ///< Delta Ry movement of analog right trigger
   uint8_t hat;       ///< Buttons mask for currently pressed buttons in the DPad/hat
-  uint16_t buttons;  ///< Buttons mask for currently pressed buttons
+  uint32_t buttons;  ///< Buttons mask for currently pressed buttons
 }hid_gamepad_report_t;
 
-/// Standard Gamepad Buttons Bitmap (from Linux input event codes)
+/// Standard Gamepad Buttons Bitmap
 typedef enum
 {
-  GAMEPAD_BUTTON_A      = TU_BIT(0),  ///< A/South button
-  GAMEPAD_BUTTON_B      = TU_BIT(1),  ///< B/East button
-  GAMEPAD_BUTTON_C      = TU_BIT(2),  ///< C button
-  GAMEPAD_BUTTON_X      = TU_BIT(3),  ///< X/North button
-  GAMEPAD_BUTTON_Y      = TU_BIT(4),  ///< Y/West button
-  GAMEPAD_BUTTON_Z      = TU_BIT(5),  ///< Z button
-  GAMEPAD_BUTTON_TL     = TU_BIT(6),  ///< L1 button
-  GAMEPAD_BUTTON_TR     = TU_BIT(7),  ///< R1 button
-  GAMEPAD_BUTTON_TL2    = TU_BIT(8),  ///< L2 button
-  GAMEPAD_BUTTON_TR2    = TU_BIT(9),  ///< R2 button
-  GAMEPAD_BUTTON_SELECT = TU_BIT(10), ///< Select button
-  GAMEPAD_BUTTON_START  = TU_BIT(11), ///< Start button
-  GAMEPAD_BUTTON_MODE   = TU_BIT(12), ///< Mode button
-  GAMEPAD_BUTTON_THUMBL = TU_BIT(13), ///< L3 button
-  GAMEPAD_BUTTON_THUMBR = TU_BIT(14), ///< R3 button
-//GAMEPAD_BUTTON_       = TU_BIT(15), ///< Undefined button
+  GAMEPAD_BUTTON_0  = TU_BIT(0),
+  GAMEPAD_BUTTON_1  = TU_BIT(1),
+  GAMEPAD_BUTTON_2  = TU_BIT(2),
+  GAMEPAD_BUTTON_3  = TU_BIT(3),
+  GAMEPAD_BUTTON_4  = TU_BIT(4),
+  GAMEPAD_BUTTON_5  = TU_BIT(5),
+  GAMEPAD_BUTTON_6  = TU_BIT(6),
+  GAMEPAD_BUTTON_7  = TU_BIT(7),
+  GAMEPAD_BUTTON_8  = TU_BIT(8),
+  GAMEPAD_BUTTON_9  = TU_BIT(9),
+  GAMEPAD_BUTTON_10 = TU_BIT(10),
+  GAMEPAD_BUTTON_11 = TU_BIT(11),
+  GAMEPAD_BUTTON_12 = TU_BIT(12),
+  GAMEPAD_BUTTON_13 = TU_BIT(13),
+  GAMEPAD_BUTTON_14 = TU_BIT(14),
+  GAMEPAD_BUTTON_15 = TU_BIT(15),
+  GAMEPAD_BUTTON_16 = TU_BIT(16),
+  GAMEPAD_BUTTON_17 = TU_BIT(17),
+  GAMEPAD_BUTTON_18 = TU_BIT(18),
+  GAMEPAD_BUTTON_19 = TU_BIT(19),
+  GAMEPAD_BUTTON_20 = TU_BIT(20),
+  GAMEPAD_BUTTON_21 = TU_BIT(21),
+  GAMEPAD_BUTTON_22 = TU_BIT(22),
+  GAMEPAD_BUTTON_23 = TU_BIT(23),
+  GAMEPAD_BUTTON_24 = TU_BIT(24),
+  GAMEPAD_BUTTON_25 = TU_BIT(25),
+  GAMEPAD_BUTTON_26 = TU_BIT(26),
+  GAMEPAD_BUTTON_27 = TU_BIT(27),
+  GAMEPAD_BUTTON_28 = TU_BIT(28),
+  GAMEPAD_BUTTON_29 = TU_BIT(29),
+  GAMEPAD_BUTTON_30 = TU_BIT(30),
+  GAMEPAD_BUTTON_31 = TU_BIT(31),
 }hid_gamepad_button_bm_t;
+
+/// Standard Gamepad Buttons Naming from Linux input event codes
+/// https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h
+#define GAMEPAD_BUTTON_A       GAMEPAD_BUTTON_0
+#define GAMEPAD_BUTTON_SOUTH   GAMEPAD_BUTTON_0
+
+#define GAMEPAD_BUTTON_B       GAMEPAD_BUTTON_1
+#define GAMEPAD_BUTTON_EAST    GAMEPAD_BUTTON_1
+
+#define GAMEPAD_BUTTON_C       GAMEPAD_BUTTON_2
+
+#define GAMEPAD_BUTTON_X       GAMEPAD_BUTTON_3
+#define GAMEPAD_BUTTON_NORTH   GAMEPAD_BUTTON_3
+
+#define GAMEPAD_BUTTON_Y       GAMEPAD_BUTTON_4
+#define GAMEPAD_BUTTON_WEST    GAMEPAD_BUTTON_4
+
+#define GAMEPAD_BUTTON_Z       GAMEPAD_BUTTON_5
+#define GAMEPAD_BUTTON_TL      GAMEPAD_BUTTON_6
+#define GAMEPAD_BUTTON_TR      GAMEPAD_BUTTON_7
+#define GAMEPAD_BUTTON_TL2     GAMEPAD_BUTTON_8
+#define GAMEPAD_BUTTON_TR2     GAMEPAD_BUTTON_9
+#define GAMEPAD_BUTTON_SELECT  GAMEPAD_BUTTON_10
+#define GAMEPAD_BUTTON_START   GAMEPAD_BUTTON_11
+#define GAMEPAD_BUTTON_MODE    GAMEPAD_BUTTON_12
+#define GAMEPAD_BUTTON_THUMBL  GAMEPAD_BUTTON_13
+#define GAMEPAD_BUTTON_THUMBR  GAMEPAD_BUTTON_14
 
 /// Standard Gamepad HAT/DPAD Buttons (from Linux input event codes)
 typedef enum
@@ -479,6 +529,7 @@ typedef enum
 //--------------------------------------------------------------------+
 // REPORT DESCRIPTOR
 //--------------------------------------------------------------------+
+
 //------------- ITEM & TAG -------------//
 #define HID_REPORT_DATA_0(data)
 #define HID_REPORT_DATA_1(data) , data
@@ -488,18 +539,31 @@ typedef enum
 #define HID_REPORT_ITEM(data, tag, type, size) \
   (((tag) << 4) | ((type) << 2) | (size)) HID_REPORT_DATA_##size(data)
 
-#define RI_TYPE_MAIN   0
-#define RI_TYPE_GLOBAL 1
-#define RI_TYPE_LOCAL  2
+// Report Item Types
+enum {
+  RI_TYPE_MAIN   = 0,
+  RI_TYPE_GLOBAL = 1,
+  RI_TYPE_LOCAL  = 2
+};
 
-//------------- MAIN ITEMS 6.2.2.4 -------------//
-#define HID_INPUT(x)           HID_REPORT_ITEM(x,  8, RI_TYPE_MAIN, 1)
-#define HID_OUTPUT(x)          HID_REPORT_ITEM(x,  9, RI_TYPE_MAIN, 1)
-#define HID_COLLECTION(x)      HID_REPORT_ITEM(x, 10, RI_TYPE_MAIN, 1)
-#define HID_FEATURE(x)         HID_REPORT_ITEM(x, 11, RI_TYPE_MAIN, 1)
-#define HID_COLLECTION_END     HID_REPORT_ITEM(x, 12, RI_TYPE_MAIN, 0)
+//------------- Main Items - HID 1.11 section 6.2.2.4 -------------//
 
-//------------- INPUT, OUTPUT, FEATURE 6.2.2.5 -------------//
+// Report Item Main group
+enum {
+  RI_MAIN_INPUT          = 8,
+  RI_MAIN_OUTPUT         = 9,
+  RI_MAIN_COLLECTION     = 10,
+  RI_MAIN_FEATURE        = 11,
+  RI_MAIN_COLLECTION_END = 12
+};
+
+#define HID_INPUT(x)           HID_REPORT_ITEM(x, RI_MAIN_INPUT         , RI_TYPE_MAIN, 1)
+#define HID_OUTPUT(x)          HID_REPORT_ITEM(x, RI_MAIN_OUTPUT        , RI_TYPE_MAIN, 1)
+#define HID_COLLECTION(x)      HID_REPORT_ITEM(x, RI_MAIN_COLLECTION    , RI_TYPE_MAIN, 1)
+#define HID_FEATURE(x)         HID_REPORT_ITEM(x, RI_MAIN_FEATURE       , RI_TYPE_MAIN, 1)
+#define HID_COLLECTION_END     HID_REPORT_ITEM(x, RI_MAIN_COLLECTION_END, RI_TYPE_MAIN, 0)
+
+//------------- Input, Output, Feature - HID 1.11 section 6.2.2.5 -------------//
 #define HID_DATA             (0<<0)
 #define HID_CONSTANT         (1<<0)
 
@@ -527,7 +591,7 @@ typedef enum
 #define HID_BITFIELD         (0<<8)
 #define HID_BUFFERED_BYTES   (1<<8)
 
-//------------- COLLECTION ITEM 6.2.2.6 -------------//
+//------------- Collection Item - HID 1.11 section 6.2.2.6 -------------//
 enum {
   HID_COLLECTION_PHYSICAL = 0,
   HID_COLLECTION_APPLICATION,
@@ -538,49 +602,81 @@ enum {
   HID_COLLECTION_USAGE_MODIFIER
 };
 
-//------------- GLOBAL ITEMS 6.2.2.7 -------------//
-#define HID_USAGE_PAGE(x)         HID_REPORT_ITEM(x, 0, RI_TYPE_GLOBAL, 1)
-#define HID_USAGE_PAGE_N(x, n)    HID_REPORT_ITEM(x, 0, RI_TYPE_GLOBAL, n)
+//------------- Global Items - HID 1.11 section 6.2.2.7 -------------//
 
-#define HID_LOGICAL_MIN(x)        HID_REPORT_ITEM(x, 1, RI_TYPE_GLOBAL, 1)
-#define HID_LOGICAL_MIN_N(x, n)   HID_REPORT_ITEM(x, 1, RI_TYPE_GLOBAL, n)
+// Report Item Global group
+enum {
+  RI_GLOBAL_USAGE_PAGE    = 0,
+  RI_GLOBAL_LOGICAL_MIN   = 1,
+  RI_GLOBAL_LOGICAL_MAX   = 2,
+  RI_GLOBAL_PHYSICAL_MIN  = 3,
+  RI_GLOBAL_PHYSICAL_MAX  = 4,
+  RI_GLOBAL_UNIT_EXPONENT = 5,
+  RI_GLOBAL_UNIT          = 6,
+  RI_GLOBAL_REPORT_SIZE   = 7,
+  RI_GLOBAL_REPORT_ID     = 8,
+  RI_GLOBAL_REPORT_COUNT  = 9,
+  RI_GLOBAL_PUSH          = 10,
+  RI_GLOBAL_POP           = 11
+};
 
-#define HID_LOGICAL_MAX(x)        HID_REPORT_ITEM(x, 2, RI_TYPE_GLOBAL, 1)
-#define HID_LOGICAL_MAX_N(x, n)   HID_REPORT_ITEM(x, 2, RI_TYPE_GLOBAL, n)
+#define HID_USAGE_PAGE(x)         HID_REPORT_ITEM(x, RI_GLOBAL_USAGE_PAGE, RI_TYPE_GLOBAL, 1)
+#define HID_USAGE_PAGE_N(x, n)    HID_REPORT_ITEM(x, RI_GLOBAL_USAGE_PAGE, RI_TYPE_GLOBAL, n)
 
-#define HID_PHYSICAL_MIN(x)       HID_REPORT_ITEM(x, 3, RI_TYPE_GLOBAL, 1)
-#define HID_PHYSICAL_MIN_N(x, n)  HID_REPORT_ITEM(x, 3, RI_TYPE_GLOBAL, n)
+#define HID_LOGICAL_MIN(x)        HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MIN, RI_TYPE_GLOBAL, 1)
+#define HID_LOGICAL_MIN_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MIN, RI_TYPE_GLOBAL, n)
 
-#define HID_PHYSICAL_MAX(x)       HID_REPORT_ITEM(x, 4, RI_TYPE_GLOBAL, 1)
-#define HID_PHYSICAL_MAX_N(x, n)  HID_REPORT_ITEM(x, 4, RI_TYPE_GLOBAL, n)
+#define HID_LOGICAL_MAX(x)        HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MAX, RI_TYPE_GLOBAL, 1)
+#define HID_LOGICAL_MAX_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_LOGICAL_MAX, RI_TYPE_GLOBAL, n)
 
-#define HID_UNIT_EXPONENT(x)      HID_REPORT_ITEM(x, 5, RI_TYPE_GLOBAL, 1)
-#define HID_UNIT_EXPONENT_N(x, n) HID_REPORT_ITEM(x, 5, RI_TYPE_GLOBAL, n)
+#define HID_PHYSICAL_MIN(x)       HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MIN, RI_TYPE_GLOBAL, 1)
+#define HID_PHYSICAL_MIN_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MIN, RI_TYPE_GLOBAL, n)
 
-#define HID_UNIT(x)               HID_REPORT_ITEM(x, 6, RI_TYPE_GLOBAL, 1)
-#define HID_UNIT_N(x, n)          HID_REPORT_ITEM(x, 6, RI_TYPE_GLOBAL, n)
+#define HID_PHYSICAL_MAX(x)       HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MAX, RI_TYPE_GLOBAL, 1)
+#define HID_PHYSICAL_MAX_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_PHYSICAL_MAX, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_SIZE(x)        HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, 1)
-#define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, 7, RI_TYPE_GLOBAL, n)
+#define HID_UNIT_EXPONENT(x)      HID_REPORT_ITEM(x, RI_GLOBAL_UNIT_EXPONENT, RI_TYPE_GLOBAL, 1)
+#define HID_UNIT_EXPONENT_N(x, n) HID_REPORT_ITEM(x, RI_GLOBAL_UNIT_EXPONENT, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, 1),
-#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, 8, RI_TYPE_GLOBAL, n),
+#define HID_UNIT(x)               HID_REPORT_ITEM(x, RI_GLOBAL_UNIT, RI_TYPE_GLOBAL, 1)
+#define HID_UNIT_N(x, n)          HID_REPORT_ITEM(x, RI_GLOBAL_UNIT, RI_TYPE_GLOBAL, n)
 
-#define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, 1)
-#define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, 9, RI_TYPE_GLOBAL, n)
+#define HID_REPORT_SIZE(x)        HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_SIZE, RI_TYPE_GLOBAL, 1)
+#define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_SIZE, RI_TYPE_GLOBAL, n)
 
-#define HID_PUSH                  HID_REPORT_ITEM(x, 10, RI_TYPE_GLOBAL, 0)
-#define HID_POP                   HID_REPORT_ITEM(x, 11, RI_TYPE_GLOBAL, 0)
+#define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, 1),
+#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, n),
+
+#define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, 1)
+#define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, n)
+
+#define HID_PUSH                  HID_REPORT_ITEM(x, RI_GLOBAL_PUSH, RI_TYPE_GLOBAL, 0)
+#define HID_POP                   HID_REPORT_ITEM(x, RI_GLOBAL_POP, RI_TYPE_GLOBAL, 0)
 
 //------------- LOCAL ITEMS 6.2.2.8 -------------//
-#define HID_USAGE(x)              HID_REPORT_ITEM(x, 0, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_N(x, n)         HID_REPORT_ITEM(x, 0, RI_TYPE_LOCAL, n)
 
-#define HID_USAGE_MIN(x)          HID_REPORT_ITEM(x, 1, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_MIN_N(x, n)     HID_REPORT_ITEM(x, 1, RI_TYPE_LOCAL, n)
+enum {
+  RI_LOCAL_USAGE            = 0,
+  RI_LOCAL_USAGE_MIN        = 1,
+  RI_LOCAL_USAGE_MAX        = 2,
+  RI_LOCAL_DESIGNATOR_INDEX = 3,
+  RI_LOCAL_DESIGNATOR_MIN   = 4,
+  RI_LOCAL_DESIGNATOR_MAX   = 5,
+  // 6 is reserved
+  RI_LOCAL_STRING_INDEX     = 7,
+  RI_LOCAL_STRING_MIN       = 8,
+  RI_LOCAL_STRING_MAX       = 9,
+  RI_LOCAL_DELIMITER        = 10,
+};
 
-#define HID_USAGE_MAX(x)          HID_REPORT_ITEM(x, 2, RI_TYPE_LOCAL, 1)
-#define HID_USAGE_MAX_N(x, n)     HID_REPORT_ITEM(x, 2, RI_TYPE_LOCAL, n)
+#define HID_USAGE(x)              HID_REPORT_ITEM(x, RI_LOCAL_USAGE, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_N(x, n)         HID_REPORT_ITEM(x, RI_LOCAL_USAGE, RI_TYPE_LOCAL, n)
+
+#define HID_USAGE_MIN(x)          HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MIN, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_MIN_N(x, n)     HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MIN, RI_TYPE_LOCAL, n)
+
+#define HID_USAGE_MAX(x)          HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MAX, RI_TYPE_LOCAL, 1)
+#define HID_USAGE_MAX_N(x, n)     HID_REPORT_ITEM(x, RI_LOCAL_USAGE_MAX, RI_TYPE_LOCAL, n)
 
 //--------------------------------------------------------------------+
 // Usage Table
@@ -775,10 +871,10 @@ enum
     {0, 0                     }, /* 0x07           */ \
     {0, HID_KEY_BACKSPACE     }, /* 0x08 Backspace */ \
     {0, HID_KEY_TAB           }, /* 0x09 Tab       */ \
-    {0, HID_KEY_RETURN        }, /* 0x0A Line Feed */ \
+    {0, HID_KEY_ENTER         }, /* 0x0A Line Feed */ \
     {0, 0                     }, /* 0x0B           */ \
     {0, 0                     }, /* 0x0C           */ \
-    {0, HID_KEY_RETURN        }, /* 0x0D CR        */ \
+    {0, HID_KEY_ENTER         }, /* 0x0D CR        */ \
     {0, 0                     }, /* 0x0E           */ \
     {0, 0                     }, /* 0x0F           */ \
     {0, 0                     }, /* 0x10           */ \

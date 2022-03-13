@@ -32,28 +32,31 @@ const char *crypto_onetimeauth_primitive(void);
 
 SODIUM_EXPORT
 int crypto_onetimeauth(unsigned char *out, const unsigned char *in,
-                       unsigned long long inlen, const unsigned char *k);
+                       unsigned long long inlen, const unsigned char *k)
+            __attribute__ ((nonnull(1, 4)));
 
 SODIUM_EXPORT
 int crypto_onetimeauth_verify(const unsigned char *h, const unsigned char *in,
                               unsigned long long inlen, const unsigned char *k)
-            __attribute__ ((warn_unused_result));
+            __attribute__ ((warn_unused_result)) __attribute__ ((nonnull(1, 4)));
 
 SODIUM_EXPORT
 int crypto_onetimeauth_init(crypto_onetimeauth_state *state,
-                            const unsigned char *key);
+                            const unsigned char *key) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_onetimeauth_update(crypto_onetimeauth_state *state,
                               const unsigned char *in,
-                              unsigned long long inlen);
+                              unsigned long long inlen)
+            __attribute__ ((nonnull(1)));
 
 SODIUM_EXPORT
 int crypto_onetimeauth_final(crypto_onetimeauth_state *state,
-                             unsigned char *out);
+                             unsigned char *out) __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-void crypto_onetimeauth_keygen(unsigned char k[crypto_onetimeauth_KEYBYTES]);
+void crypto_onetimeauth_keygen(unsigned char k[crypto_onetimeauth_KEYBYTES])
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

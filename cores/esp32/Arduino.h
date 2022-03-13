@@ -99,13 +99,23 @@
 #define bit(b) (1UL << (b))
 #define _BV(b) (1UL << (b))
 
-#define digitalPinToPort(pin)       (((pin)>31)?1:0)
-#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-32):(pin)))
 #define digitalPinToTimer(pin)      (0)
 #define analogInPinToBit(P)         (P)
+#if SOC_GPIO_PIN_COUNT <= 32
+#define digitalPinToPort(pin)       (0)
+#define digitalPinToBitMask(pin)    (1UL << (pin))
+#define portOutputRegister(port)    ((volatile uint32_t*)GPIO_OUT_REG)
+#define portInputRegister(port)     ((volatile uint32_t*)GPIO_IN_REG)
+#define portModeRegister(port)      ((volatile uint32_t*)GPIO_ENABLE_REG)
+#elif SOC_GPIO_PIN_COUNT <= 64
+#define digitalPinToPort(pin)       (((pin)>31)?1:0)
+#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-32):(pin)))
 #define portOutputRegister(port)    ((volatile uint32_t*)((port)?GPIO_OUT1_REG:GPIO_OUT_REG))
 #define portInputRegister(port)     ((volatile uint32_t*)((port)?GPIO_IN1_REG:GPIO_IN_REG))
 #define portModeRegister(port)      ((volatile uint32_t*)((port)?GPIO_ENABLE1_REG:GPIO_ENABLE_REG))
+#else
+#error SOC_GPIO_PIN_COUNT > 64 not implemented
+#endif
 
 #define NOT_A_PIN -1
 #define NOT_A_PORT -1
@@ -156,6 +166,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
+#include "esp32/spiram.h"
 
 using std::abs;
 using std::isinf;
@@ -165,9 +176,15 @@ using std::min;
 using ::round;
 
 uint16_t makeWord(uint16_t w);
-uint16_t makeWord(byte h, byte l);
+uint16_t makeWord(uint8_t h, uint8_t l);
 
 #define word(...) makeWord(__VA_ARGS__)
+
+size_t getArduinoLoopTaskStackSize(void);
+#define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
+
+// allows user to bypass esp_spiram_test()
+#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_spiram_test(); }
 
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
@@ -177,6 +194,10 @@ extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
 extern "C" void configTzTime(const char* tz,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
+
+void setToneChannel(uint8_t channel = 0);
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+void noTone(uint8_t _pin);
 
 // WMath prototypes
 long random(long);

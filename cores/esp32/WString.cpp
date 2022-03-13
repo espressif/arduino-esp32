@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include "WString.h"
 #include "stdlib_noniso.h"
+#include "esp32-hal-log.h"
 
 /*********************************************/
 /*  Constructors                             */
@@ -33,6 +34,12 @@ String::String(const char *cstr) {
     init();
     if (cstr)
         copy(cstr, strlen(cstr));
+}
+
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
 }
 
 String::String(const String &value) {
@@ -59,9 +66,7 @@ String::String(StringSumHelper &&rval) {
 
 String::String(char c) {
     init();
-    char buf[2];
-    buf[0] = c;
-    buf[1] = 0;
+    char buf[] = { c, '\0' };
     *this = buf;
 }
 
@@ -108,16 +113,28 @@ String::String(unsigned long value, unsigned char base) {
     *this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces) {
+String::String(float value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 42);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
-String::String(double value, unsigned char decimalPlaces) {
+String::String(double value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 312);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
 String::~String() {
@@ -290,10 +307,11 @@ String & String::operator =(const char *cstr) {
     return *this;
 }
 
-String & String::operator = (const __FlashStringHelper *pstr)
-{
-    if (pstr) copy(pstr, strlen_P((PGM_P)pstr));
-    else invalidate();
+String & String::operator =(const __FlashStringHelper *pstr) {
+    if(pstr)
+        copy(pstr, strlen_P((PGM_P)pstr));
+    else
+        invalidate();
 
     return *this;
 }
@@ -347,22 +365,18 @@ unsigned char String::concat(const char *cstr) {
 }
 
 unsigned char String::concat(char c) {
-    char buf[2];
-    buf[0] = c;
-    buf[1] = 0;
+    char buf[] = { c, '\0' };
     return concat(buf, 1);
 }
 
 unsigned char String::concat(unsigned char num) {
     char buf[1 + 3 * sizeof(unsigned char)];
-    sprintf(buf, "%d", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%d", num));
 }
 
 unsigned char String::concat(int num) {
     char buf[2 + 3 * sizeof(int)];
-    sprintf(buf, "%d", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%d", num));
 }
 
 unsigned char String::concat(unsigned int num) {
@@ -373,8 +387,7 @@ unsigned char String::concat(unsigned int num) {
 
 unsigned char String::concat(long num) {
     char buf[2 + 3 * sizeof(long)];
-    sprintf(buf, "%ld", num);
-    return concat(buf, strlen(buf));
+    return concat(buf, sprintf(buf, "%ld", num));
 }
 
 unsigned char String::concat(unsigned long num) {
@@ -555,7 +568,7 @@ unsigned char String::equalsConstantTime(const String &s2) const {
     //at this point lengths are the same
     if(len() == 0)
         return 1;
-    //at this point lenghts are the same and non-zero
+    //at this point lengths are the same and non-zero
     const char *p1 = buffer();
     const char *p2 = s2.buffer();
     unsigned int equalchars = 0;
@@ -711,10 +724,7 @@ String String::substring(unsigned int left, unsigned int right) const {
         return out;
     if(right > len())
         right = len();
-    char temp = buffer()[right];  // save the replaced character
-    wbuffer()[right] = '\0';
-    out = wbuffer() + left;  // pointer arithmetic
-    wbuffer()[right] = temp;  //restore character
+    out.copy(buffer() + left, right - left);
     return out;
 }
 
@@ -764,8 +774,10 @@ void String::replace(const String& find, const String& replace) {
         }
         if(size == len())
             return;
-        if(size > capacity() && !changeBuffer(size))
-            return; // XXX: tell user!
+        if(size > capacity() && !changeBuffer(size)) {
+            log_w("String.Replace() Insufficient space to replace string");
+            return;
+        }
         int index = len() - 1;
         while(index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
             readFrom = wbuffer() + index + find.len();

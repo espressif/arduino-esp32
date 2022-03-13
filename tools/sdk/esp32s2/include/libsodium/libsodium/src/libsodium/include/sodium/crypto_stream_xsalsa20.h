@@ -28,23 +28,31 @@ size_t crypto_stream_xsalsa20_keybytes(void);
 SODIUM_EXPORT
 size_t crypto_stream_xsalsa20_noncebytes(void);
 
+#define crypto_stream_xsalsa20_MESSAGEBYTES_MAX SODIUM_SIZE_MAX
+SODIUM_EXPORT
+size_t crypto_stream_xsalsa20_messagebytes_max(void);
+
 SODIUM_EXPORT
 int crypto_stream_xsalsa20(unsigned char *c, unsigned long long clen,
-                           const unsigned char *n, const unsigned char *k);
+                           const unsigned char *n, const unsigned char *k)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_stream_xsalsa20_xor(unsigned char *c, const unsigned char *m,
                                unsigned long long mlen, const unsigned char *n,
-                               const unsigned char *k);
+                               const unsigned char *k)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_stream_xsalsa20_xor_ic(unsigned char *c, const unsigned char *m,
                                   unsigned long long mlen,
                                   const unsigned char *n, uint64_t ic,
-                                  const unsigned char *k);
+                                  const unsigned char *k)
+            __attribute__ ((nonnull));
 
 SODIUM_EXPORT
-void crypto_stream_xsalsa20_keygen(unsigned char k[crypto_stream_xsalsa20_KEYBYTES]);
+void crypto_stream_xsalsa20_keygen(unsigned char k[crypto_stream_xsalsa20_KEYBYTES])
+            __attribute__ ((nonnull));
 
 #ifdef __cplusplus
 }

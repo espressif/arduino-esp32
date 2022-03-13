@@ -469,58 +469,30 @@ typedef enum
 /// Additional Audio Device Class Codes - Source: Audio Data Formats
 
 /// A.1 - Audio Class-Format Type Codes UAC2
-//typedef enum
-//{
-//  AUDIO_FORMAT_TYPE_UNDEFINED     = 0x00,
-//  AUDIO_FORMAT_TYPE_I             = 0x01,
-//  AUDIO_FORMAT_TYPE_II            = 0x02,
-//  AUDIO_FORMAT_TYPE_III           = 0x03,
-//  AUDIO_FORMAT_TYPE_IV            = 0x04,
-//  AUDIO_EXT_FORMAT_TYPE_I         = 0x81,
-//  AUDIO_EXT_FORMAT_TYPE_II        = 0x82,
-//  AUDIO_EXT_FORMAT_TYPE_III       = 0x83,
-//} audio_format_type_t;
-
-#define AUDIO_FORMAT_TYPE_UNDEFINED     0x00
-#define AUDIO_FORMAT_TYPE_I             0x01
-#define AUDIO_FORMAT_TYPE_II            0x02
-#define AUDIO_FORMAT_TYPE_III           0x03
-#define AUDIO_FORMAT_TYPE_IV            0x04
-#define AUDIO_EXT_FORMAT_TYPE_I         0x81
-#define AUDIO_EXT_FORMAT_TYPE_II        0x82
-#define AUDIO_EXT_FORMAT_TYPE_III       0x83
-
-/// A.2.1 - Audio Class-Audio Data Format Type I UAC2
-//typedef enum
-//{
-//  AUDIO_DATA_FORMAT_TYPE_I_PCM            = (uint32_t) (1 << 0),
-//  AUDIO_DATA_FORMAT_TYPE_I_PCM8           = (uint32_t) (1 << 1),
-//  AUDIO_DATA_FORMAT_TYPE_I_IEEE_FLOAT     = (uint32_t) (1 << 2),
-//  AUDIO_DATA_FORMAT_TYPE_I_ALAW           = (uint32_t) (1 << 3),
-//  AUDIO_DATA_FORMAT_TYPE_I_MULAW          = (uint32_t) (1 << 4),
-//  AUDIO_DATA_FORMAT_TYPE_I_RAW_DATA       = 0x100000000,
-//} audio_data_format_type_I_t;
-
-#define AUDIO_DATA_FORMAT_TYPE_I_PCM            ((uint32_t) (1 << 0))
-#define AUDIO_DATA_FORMAT_TYPE_I_PCM8           ((uint32_t) (1 << 1))
-#define AUDIO_DATA_FORMAT_TYPE_I_IEEE_FLOAT     ((uint32_t) (1 << 2))
-#define AUDIO_DATA_FORMAT_TYPE_I_ALAW           ((uint32_t) (1 << 3))
-#define AUDIO_DATA_FORMAT_TYPE_I_MULAW          ((uint32_t) (1 << 4))
-#define AUDIO_DATA_FORMAT_TYPE_I_RAW_DATA       0x100000000
-
-/// All remaining definitions are taken from the descriptor descriptions in the UAC2 main specification
-
-/// Isochronous End Point Attributes
 typedef enum
 {
-  TUSB_ISO_EP_ATT_NO_SYNC         = 0x00,
-  TUSB_ISO_EP_ATT_ASYNCHRONOUS    = 0x04,
-  TUSB_ISO_EP_ATT_ADAPTIVE        = 0x08,
-  TUSB_ISO_EP_ATT_SYNCHRONOUS     = 0x0C,
-  TUSB_ISO_EP_ATT_DATA            = 0x00, ///< Data End Point
-  TUSB_ISO_EP_ATT_EXPLICIT_FB     = 0x10, ///< Feedback End Point
-  TUSB_ISO_EP_ATT_IMPLICIT_FB     = 0x20, ///< Data endpoint that also serves as an implicit feedback
-} tusb_iso_ep_attribute_t;
+  AUDIO_FORMAT_TYPE_UNDEFINED     = 0x00,
+  AUDIO_FORMAT_TYPE_I             = 0x01,
+  AUDIO_FORMAT_TYPE_II            = 0x02,
+  AUDIO_FORMAT_TYPE_III           = 0x03,
+  AUDIO_FORMAT_TYPE_IV            = 0x04,
+  AUDIO_EXT_FORMAT_TYPE_I         = 0x81,
+  AUDIO_EXT_FORMAT_TYPE_II        = 0x82,
+  AUDIO_EXT_FORMAT_TYPE_III       = 0x83,
+} audio_format_type_t;
+
+// A.2.1 - Audio Class-Audio Data Format Type I UAC2
+typedef enum
+{
+  AUDIO_DATA_FORMAT_TYPE_I_PCM            = (uint32_t) (1 << 0),
+  AUDIO_DATA_FORMAT_TYPE_I_PCM8           = (uint32_t) (1 << 1),
+  AUDIO_DATA_FORMAT_TYPE_I_IEEE_FLOAT     = (uint32_t) (1 << 2),
+  AUDIO_DATA_FORMAT_TYPE_I_ALAW           = (uint32_t) (1 << 3),
+  AUDIO_DATA_FORMAT_TYPE_I_MULAW          = (uint32_t) (1 << 4),
+  AUDIO_DATA_FORMAT_TYPE_I_RAW_DATA       = 0x80000000,
+} audio_data_format_type_I_t;
+
+/// All remaining definitions are taken from the descriptor descriptions in the UAC2 main specification
 
 /// Audio Class-Control Values UAC2
 typedef enum
@@ -839,6 +811,33 @@ typedef struct TU_ATTR_PACKED
   uint16_t wLockDelay        ; ///< Indicates the time it takes this endpoint to reliably lock its internal clock recovery circuitry. Units used depend on the value of the bLockDelayUnits field.
 } audio_desc_cs_as_iso_data_ep_t;
 
+// 5.2.2 Control Request Layout
+typedef struct TU_ATTR_PACKED
+{
+    union
+    {
+        struct TU_ATTR_PACKED
+        {
+            uint8_t recipient :  5; ///< Recipient type tusb_request_recipient_t.
+            uint8_t type      :  2; ///< Request type tusb_request_type_t.
+            uint8_t direction :  1; ///< Direction type. tusb_dir_t
+        } bmRequestType_bit;
+        
+        uint8_t bmRequestType;
+    };
+    
+    uint8_t bRequest;  ///< Request type audio_cs_req_t
+    uint8_t bChannelNumber;
+    uint8_t bControlSelector;
+    union
+    {
+        uint8_t bInterface;
+        uint8_t bEndpoint;
+    };
+    uint8_t bEntityID;
+    uint16_t wLength;
+} audio_control_request_t;
+
 //// 5.2.3 Control Request Parameter Block Layout
 
 // 5.2.3.1 1-byte Control CUR Parameter Block
@@ -901,7 +900,7 @@ typedef struct TU_ATTR_PACKED {
     } subrange[numSubRanges]    ;               \
 }
 
-    /// 5.2.3.2 2-byte Control RANGE Parameter Block
+/// 5.2.3.2 2-byte Control RANGE Parameter Block
 #define audio_control_range_2_n_t(numSubRanges) \
     struct TU_ATTR_PACKED {                     \
   uint16_t wNumSubRanges;                       \
@@ -912,7 +911,7 @@ typedef struct TU_ATTR_PACKED {
     } subrange[numSubRanges];                   \
 }
 
-    // 5.2.3.3 4-byte Control RANGE Parameter Block
+// 5.2.3.3 4-byte Control RANGE Parameter Block
 #define audio_control_range_4_n_t(numSubRanges) \
     struct TU_ATTR_PACKED {                     \
   uint16_t wNumSubRanges;                       \
@@ -923,12 +922,12 @@ typedef struct TU_ATTR_PACKED {
     } subrange[numSubRanges];                   \
 }
 
-    /** @} */
+/** @} */
 
 #ifdef __cplusplus
-  }
+}
 #endif
 
 #endif
 
-  /** @} */
+/** @} */

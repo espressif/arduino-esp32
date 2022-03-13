@@ -4,23 +4,26 @@
 #include <stdint.h>
 
 
-#define USB_VID 0x239A
-#define USB_PID 0x80DF
-#define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Metro ESP32-S2"
-#define USB_SERIAL ""
-
+#define USB_VID            0x239A
+#define USB_PID            0x80DF
+#define USB_MANUFACTURER   "Adafruit"
+#define USB_PRODUCT        "Metro ESP32-S2"
+#define USB_SERIAL         ""   // Empty string for MAC adddress
 
 #define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        48
 #define NUM_ANALOG_INPUTS       20
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-static const uint8_t PIN_NEOPIXEL = 45;
-static const uint8_t LED_BUILTIN = 42;
+#define LED_BUILTIN     42
+
+#define PIN_NEOPIXEL    45
+#define NEOPIXEL_NUM    1
+
+#define PIN_BUTTON1     0  // BOOT0 switch
 
 static const uint8_t TX = 5;
 static const uint8_t RX = 6;

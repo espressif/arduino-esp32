@@ -40,6 +40,10 @@
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
+#include "driver/temp_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#include "esp32c3/rom/rtc.h"
+#include "driver/temp_sensor.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -49,12 +53,25 @@
 
 //Undocumented!!! Get chip temperature in Farenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
+#ifdef CONFIG_IDF_TARGET_ESP32
 uint8_t temprature_sens_read();
 
 float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;
 }
+#else
+float temperatureRead()
+{
+    float result = NAN;
+    temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
+    temp_sensor_set_config(tsens);
+    temp_sensor_start();
+    temp_sensor_read_celsius(&result); 
+    temp_sensor_stop();
+    return result;
+}
+#endif
 
 void __yield()
 {

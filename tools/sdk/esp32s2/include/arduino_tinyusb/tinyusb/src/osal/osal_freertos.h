@@ -28,10 +28,10 @@
 #define _TUSB_OSAL_FREERTOS_H_
 
 // FreeRTOS Headers
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "queue.h"
-#include "task.h"
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,FreeRTOS.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,semphr.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,queue.h)
+#include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,task.h)
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +67,7 @@ static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
     BaseType_t xHigherPriorityTaskWoken;
     BaseType_t res = xSemaphoreGiveFromISR(sem_hdl, &xHigherPriorityTaskWoken);
 
-#if CFG_TUSB_MCU == OPT_MCU_ESP32S2
+#if CFG_TUSB_MCU == OPT_MCU_ESP32S2 || CFG_TUSB_MCU == OPT_MCU_ESP32S3
     if ( xHigherPriorityTaskWoken ) portYIELD_FROM_ISR();
 #else
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -150,7 +150,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
     BaseType_t xHigherPriorityTaskWoken;
     BaseType_t res = xQueueSendToBackFromISR(qhdl, data, &xHigherPriorityTaskWoken);
 
-#if CFG_TUSB_MCU == OPT_MCU_ESP32S2
+#if CFG_TUSB_MCU == OPT_MCU_ESP32S2 || CFG_TUSB_MCU == OPT_MCU_ESP32S3
     if ( xHigherPriorityTaskWoken ) portYIELD_FROM_ISR();
 #else
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

@@ -144,15 +144,31 @@
 #undef MBEDTLS_SHA512_ALT
 #endif
 
-/* The following MPI (bignum) functions have ESP32 hardware support.
-   For exponential mod, both software and hardware implementation
-   will be compiled. If CONFIG_MBEDTLS_HARDWARE_MPI is enabled, mod APIs
-   will be wrapped to use hardware implementation.
+/* MBEDTLS_MDx_ALT to enable ROM MD support
+   with software fallback.
 */
-#undef MBEDTLS_MPI_EXP_MOD_ALT
+#ifdef CONFIG_MBEDTLS_ROM_MD5
+#define MBEDTLS_MD5_ALT
+#else
+#undef MBEDTLS_MD5_ALT
+#endif
+
+/* The following MPI (bignum) functions have hardware support.
+ * Uncommenting these macros will use the hardware-accelerated
+ * implementations.
+ */
 #ifdef CONFIG_MBEDTLS_HARDWARE_MPI
+#ifdef CONFIG_MBEDTLS_LARGE_KEY_SOFTWARE_MPI
+    /* Prefer hardware and fallback to software */
+    #define MBEDTLS_MPI_EXP_MOD_ALT_FALLBACK
+#else
+    /* Hardware only mode */
+    #define MBEDTLS_MPI_EXP_MOD_ALT
+#endif
 #define MBEDTLS_MPI_MUL_MPI_ALT
 #else
+#undef MBEDTLS_MPI_EXP_MOD_ALT_FALLBACK
+#undef MBEDTLS_MPI_EXP_MOD_ALT
 #undef MBEDTLS_MPI_MUL_MPI_ALT
 #endif
 
@@ -1184,7 +1200,11 @@
  *
  * Comment to skip keyUsage checking for both CA and leaf certificates.
  */
+#ifdef CONFIG_MBEDTLS_X509_CHECK_KEY_USAGE
 #define MBEDTLS_X509_CHECK_KEY_USAGE
+#else
+#undef MBEDTLS_X509_CHECK_KEY_USAGE
+#endif
 
 /**
  * \def MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
@@ -1197,7 +1217,11 @@
  *
  * Comment to skip extendedKeyUsage checking for certificates.
  */
+#ifdef CONFIG_MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 #define MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
+#else
+#undef MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
+#endif
 
 /**
  * \def MBEDTLS_X509_RSASSA_PSS_SUPPORT
@@ -2449,6 +2473,21 @@
 #define MBEDTLS_THREADING_PTHREAD
 #else
 #undef MBEDTLS_THREADING_PTHREAD
+#endif
+
+/**
+ * \def MBEDTLS_NIST_KW_C
+ *
+ * Enable AES key wrapping as per NIST
+ *
+ * Requires: MBEDTLS_AES_C
+ *
+ * Uncomment this to enable aes key wrap.
+ */
+#ifdef CONFIG_MBEDTLS_NIST_KW_C
+#define MBEDTLS_NIST_KW_C
+#else
+#undef MBEDTLS_NIST_KW_C
 #endif
 
 /* \} name SECTION: Module configuration options */

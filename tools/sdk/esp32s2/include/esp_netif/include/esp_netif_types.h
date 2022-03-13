@@ -1,19 +1,17 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _ESP_NETIF_TYPES_H_
 #define _ESP_NETIF_TYPES_H_
+
+#include <stdbool.h>
+#include <stdint.h>
+#include "esp_event_base.h"
+#include "esp_err.h"
+#include "esp_netif_ip_addr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +31,8 @@ extern "C" {
 #define ESP_ERR_ESP_NETIF_DRIVER_ATTACH_FAILED   ESP_ERR_ESP_NETIF_BASE + 0x08
 #define ESP_ERR_ESP_NETIF_INIT_FAILED           ESP_ERR_ESP_NETIF_BASE + 0x09
 #define ESP_ERR_ESP_NETIF_DNS_NOT_CONFIGURED    ESP_ERR_ESP_NETIF_BASE + 0x0A
+#define ESP_ERR_ESP_NETIF_MLD6_FAILED           ESP_ERR_ESP_NETIF_BASE + 0x0B
+#define ESP_ERR_ESP_NETIF_IP6_ADDR_FAILED       ESP_ERR_ESP_NETIF_BASE + 0x0C
 
 
 /** @brief Type of esp_netif_object server */
@@ -79,6 +79,8 @@ typedef enum{
     ESP_NETIF_REQUESTED_IP_ADDRESS          = 50,   /**< Request specific IP address */
     ESP_NETIF_IP_ADDRESS_LEASE_TIME         = 51,   /**< Request IP address lease time */
     ESP_NETIF_IP_REQUEST_RETRY_TIME         = 52,   /**< Request IP address retry counter */
+    ESP_NETIF_VENDOR_CLASS_IDENTIFIER       = 60,   /**< Vendor Class Identifier of a DHCP client */
+    ESP_NETIF_VENDOR_SPECIFIC_INFO          = 43,   /**< Vendor Specific Information of a DHCP server */
 } esp_netif_dhcp_option_id_t;
 
 /** IP event declarations */
@@ -88,6 +90,7 @@ typedef enum {
     IP_EVENT_AP_STAIPASSIGNED,         /*!< soft-AP assign an IP to a connected station */
     IP_EVENT_GOT_IP6,                  /*!< station or ap or ethernet interface v6IP addr is preferred */
     IP_EVENT_ETH_GOT_IP,               /*!< ethernet got IP from connected AP */
+    IP_EVENT_ETH_LOST_IP,              /*!< ethernet lost IP and the IP is reset to 0 */
     IP_EVENT_PPP_GOT_IP,               /*!< PPP interface got IP */
     IP_EVENT_PPP_LOST_IP,              /*!< PPP interface lost IP */
 } ip_event_t;
@@ -123,6 +126,12 @@ typedef struct {
     esp_netif_ip6_info_t ip6_info;   /*!< IPv6 address of the interface */
     int ip_index;                    /*!< IPv6 address index */
 } ip_event_got_ip6_t;
+
+/** Event structure for ADD_IP6 event */
+typedef struct {
+    esp_ip6_addr_t addr;            /*!< The address to be added to the interface */
+    bool preferred;                 /*!< The default preference of the address */
+} ip_event_add_ip6_t;
 
 /** Event structure for IP_EVENT_AP_STAIPASSIGNED event */
 typedef struct {

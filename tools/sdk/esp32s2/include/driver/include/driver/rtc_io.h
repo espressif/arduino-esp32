@@ -1,26 +1,20 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _DRIVER_RTC_GPIO_H_
 #define _DRIVER_RTC_GPIO_H_
 
 #include <stdint.h>
 #include "esp_err.h"
-#include "driver/gpio.h"
 #include "soc/soc_caps.h"
 #include "soc/rtc_io_periph.h"
 #include "hal/rtc_io_types.h"
+#include "driver/gpio.h"
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,6 +36,7 @@ static inline bool rtc_gpio_is_valid_gpio(gpio_num_t gpio_num)
 
 #define RTC_GPIO_IS_VALID_GPIO(gpio_num) rtc_gpio_is_valid_gpio(gpio_num) // Deprecated, use rtc_gpio_is_valid_gpio()
 
+#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 /**
  * @brief Get RTC IO index number by gpio number.
  *
@@ -52,14 +47,8 @@ static inline bool rtc_gpio_is_valid_gpio(gpio_num_t gpio_num)
  */
 static inline int rtc_io_number_get(gpio_num_t gpio_num)
 {
-#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
     return rtc_io_num_map[gpio_num];
-#else
-    return gpio_num;
-#endif
 }
-
-#if SOC_RTCIO_INPUT_OUTPUT_SUPPORTED
 
 /**
  * @brief Init a GPIO as RTC GPIO

@@ -72,20 +72,15 @@ static void configure_pins(usb_hal_context_t *usb)
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config)
 {
-    log_i("Driver installation...");
-
-    // Hal init
     usb_hal_context_t hal = {
         .use_external_phy = config->external_phy
     };
     usb_hal_init(&hal);
     configure_pins(&hal);
-
     if (!tusb_init()) {
         log_e("Can't initialize the TinyUSB stack.");
         return ESP_FAIL;
     }
-    log_i("Driver installed");
     return ESP_OK;
 }
 
@@ -106,6 +101,7 @@ static tusb_str_t WEBUSB_URL              = "";
 static tusb_str_t USB_DEVICE_PRODUCT      = "";
 static tusb_str_t USB_DEVICE_MANUFACTURER = "";
 static tusb_str_t USB_DEVICE_SERIAL       = "";
+static tusb_str_t USB_DEVICE_LANGUAGE     = "\x09\x04";//English (0x0409)
 
 static uint8_t USB_DEVICE_ATTRIBUTES     = 0;
 static uint16_t USB_DEVICE_POWER         = 0;
@@ -140,7 +136,7 @@ static tusb_desc_device_t tinyusb_device_descriptor = {
 static uint32_t tinyusb_string_descriptor_len = 4;
 static char * tinyusb_string_descriptor[MAX_STRING_DESCRIPTORS] = {
         // array of pointer to string descriptors
-        "\x09\x04",   // 0: is supported language is English (0x0409)
+        USB_DEVICE_LANGUAGE,    // 0: is supported language
         USB_DEVICE_MANUFACTURER,// 1: Manufacturer
         USB_DEVICE_PRODUCT,     // 2: Product
         USB_DEVICE_SERIAL,      // 3: Serials, should use chip ID
@@ -228,7 +224,7 @@ typedef struct TU_ATTR_PACKED {
 static tinyusb_desc_webusb_url_t tinyusb_url_descriptor = {
         .bLength         = 3,
         .bDescriptorType = 3, // WEBUSB URL type
-        .bScheme         = 1, // URL Scheme Prefix: 0: "http://", 1: "https://", 255: ""
+        .bScheme         = 255, // URL Scheme Prefix: 0: "http://", 1: "https://", 255: ""
         .url             = ""
 };
 
@@ -263,7 +259,7 @@ static tinyusb_endpoints_usage_t tinyusb_endpoints;
 /**
  * @brief Invoked when received GET CONFIGURATION DESCRIPTOR.
  */
-uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
+__attribute__ ((weak)) uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 {
     //log_d("%u", index);
     return tinyusb_config_descriptor;
@@ -272,7 +268,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 /**
  * @brief Invoked when received GET DEVICE DESCRIPTOR.
  */
-uint8_t const *tud_descriptor_device_cb(void)
+__attribute__ ((weak)) uint8_t const *tud_descriptor_device_cb(void)
 {
     //log_d("");
     return (uint8_t const *)&tinyusb_device_descriptor;
@@ -281,7 +277,7 @@ uint8_t const *tud_descriptor_device_cb(void)
 /**
  * @brief Invoked when received GET STRING DESCRIPTOR request.
  */
-uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
+__attribute__ ((weak)) uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
     //log_d("%u (0x%x)", index, langid);
     static uint16_t _desc_str[127];
@@ -317,42 +313,37 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
  */
 uint8_t const * tud_descriptor_bos_cb(void)
 {
-    //log_d("");
+    //log_v("");
     return tinyusb_bos_descriptor;
 }
 
-__attribute__ ((weak)) bool tinyusb_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request){ return false; }
-__attribute__ ((weak)) bool tinyusb_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request){ return true; }
+__attribute__ ((weak)) bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request){ return false; }
 
 /**
  * @brief Handle WebUSB and Vendor requests.
  */
-bool tud_vendor_control_request_cb(uint8_t rhport, tusb_control_request_t const * request)
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request)
 {
     if(WEBUSB_ENABLED && (request->bRequest == VENDOR_REQUEST_WEBUSB
             || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
-        if(request->bRequest == VENDOR_REQUEST_WEBUSB){
-            // match vendor request in BOS descriptor
-            // Get landing page url
-            tinyusb_url_descriptor.bLength = 3 + strlen(WEBUSB_URL);
-            snprintf(tinyusb_url_descriptor.url, 127, "%s", WEBUSB_URL);
-            return tud_control_xfer(rhport, request, (void*) &tinyusb_url_descriptor, tinyusb_url_descriptor.bLength);
+        // we only care for SETUP stage
+        if (stage == CONTROL_STAGE_SETUP) {
+            if(request->bRequest == VENDOR_REQUEST_WEBUSB){
+                // match vendor request in BOS descriptor
+                // Get landing page url
+                tinyusb_url_descriptor.bLength = 3 + strlen(WEBUSB_URL);
+                snprintf(tinyusb_url_descriptor.url, 127, "%s", WEBUSB_URL);
+                return tud_control_xfer(rhport, request, (void*) &tinyusb_url_descriptor, tinyusb_url_descriptor.bLength);
+            }
+            // Get Microsoft OS 2.0 compatible descriptor
+            uint16_t total_len;
+            memcpy(&total_len, tinyusb_ms_os_20_descriptor + 8, 2);
+            return tud_control_xfer(rhport, request, (void*) tinyusb_ms_os_20_descriptor, total_len);
         }
-        // Get Microsoft OS 2.0 compatible descriptor
-        uint16_t total_len;
-        memcpy(&total_len, tinyusb_ms_os_20_descriptor + 8, 2);
-        return tud_control_xfer(rhport, request, (void*) tinyusb_ms_os_20_descriptor, total_len);
+        return true;
     }
-    return tinyusb_vendor_control_request_cb(rhport, request);
-}
-
-bool tud_vendor_control_complete_cb(uint8_t rhport, tusb_control_request_t const * request)
-{
-    if(!WEBUSB_ENABLED || !(request->bRequest == VENDOR_REQUEST_WEBUSB
-            || (request->bRequest == VENDOR_REQUEST_MICROSOFT && request->wIndex == 7))){
-        return tinyusb_vendor_control_complete_cb(rhport, request);
-    }
-    return true;
+    log_v("rhport: %u, stage: %u, type: 0x%x, request: 0x%x", rhport, stage, request->bmRequestType_bit.type, request->bRequest);
+    return tinyusb_vendor_control_request_cb(rhport, stage, request);
 }
 
 /*
@@ -433,12 +424,6 @@ static bool tinyusb_load_enabled_interfaces(){
                 log_e("Descriptor Load Failed");
                 return false;
             } else {
-                if(i == USB_INTERFACE_CDC){
-                    if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){
-                        log_e("CDC Reserve Endpoints Failed");
-                        return false;
-                    }
-                }
                 dst += len;
             }
         }
@@ -507,6 +492,16 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
         snprintf(WEBUSB_URL, 126, "%s", config->webusb_url);
     }
 
+    // Windows 10 will not recognize the CDC device if WebUSB is enabled and USB Class is not 2 (CDC)
+    if(
+        (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) 
+        && config->webusb_enabled 
+        && (config->usb_class != TUSB_CLASS_CDC)
+    ){
+        config->usb_class = TUSB_CLASS_CDC;
+        config->usb_protocol = 0x00;
+    }
+
     WEBUSB_ENABLED            = config->webusb_enabled;
     USB_DEVICE_ATTRIBUTES     = config->usb_attributes;
     USB_DEVICE_POWER          = config->usb_power_ma;
@@ -537,6 +532,9 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
             //DFU Download
+            // Reset USB Core
+            USB0.grstctl |= USB_CSFTRST;
+            while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST){}
             chip_usb_set_persist_flags(USBDC_BOOT_DFU);
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
         } else if (usb_persist_enabled) {
@@ -556,31 +554,43 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
+static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
+
+static bool tinyusb_is_initialized = false;
 
 esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
 {
-    if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
-        log_e("Interface %u not enabled", interface);
+    if(tinyusb_is_initialized){
+        log_e("TinyUSB has already started! Interface %s not enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
+    }
+    if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
+        log_e("Interface %s invalid or already enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
+        return ESP_FAIL;
+    }
+    if(interface == USB_INTERFACE_CDC){
+        if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){
+            log_e("CDC Reserve Endpoints Failed");
+            return ESP_FAIL;
+        }
     }
     tinyusb_loaded_interfaces_mask |= (1U << interface);
     tinyusb_config_descriptor_len += descriptor_len;
     tinyusb_loaded_interfaces_callbacks[interface] = cb;
-    log_d("Interface %u enabled", interface);
+    log_d("Interface %s enabled", tinyusb_interface_names[interface]);
     return ESP_OK;
 }
 
 esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
-    static bool initialized = false;
-    if(initialized){
+    if(tinyusb_is_initialized){
         return ESP_OK;
     }
-    initialized = true;
+    tinyusb_is_initialized = true;
     
-    tinyusb_endpoints.val = 0;
+    //tinyusb_endpoints.val = 0;
     tinyusb_apply_device_config(config);
     if (!tinyusb_load_enabled_interfaces()) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return ESP_FAIL;
     }
 
@@ -598,7 +608,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     }
 
     if (esp_register_shutdown_handler(usb_persist_shutdown_handler) != ESP_OK) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return ESP_FAIL;
     }
 
@@ -607,7 +617,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     };
     esp_err_t err = tinyusb_driver_install(&tusb_cfg);
     if (err != ESP_OK) {
-        initialized = false;
+        tinyusb_is_initialized = false;
         return err;
     }
     xTaskCreate(usb_device_task, "usbd", 4096, NULL, configMAX_PRIORITIES - 1, NULL);
@@ -683,84 +693,4 @@ uint8_t tinyusb_get_free_out_endpoint(void){
     return 0;
 }
 
-/*
-void usb_dw_reg_dump(void)
-{
-#define USB_PRINT_REG(r) printf("USB0." #r " = 0x%x;\n", USB0.r)
-#define USB_PRINT_IREG(i, r) printf("USB0.in_ep_reg[%u]." #r " = 0x%x;\n", i, USB0.in_ep_reg[i].r)
-#define USB_PRINT_OREG(i, r) printf("USB0.out_ep_reg[%u]." #r " = 0x%x;\n", i, USB0.out_ep_reg[i].r)
-    uint8_t i;
-    USB_PRINT_REG(gotgctl);
-    USB_PRINT_REG(gotgint);
-    USB_PRINT_REG(gahbcfg);
-    USB_PRINT_REG(gusbcfg);
-    USB_PRINT_REG(grstctl);
-    USB_PRINT_REG(gintsts);
-    USB_PRINT_REG(gintmsk);
-    USB_PRINT_REG(grxstsr);
-    USB_PRINT_REG(grxstsp);
-    USB_PRINT_REG(grxfsiz);
-    USB_PRINT_REG(gnptxsts);
-    USB_PRINT_REG(gpvndctl);
-    USB_PRINT_REG(ggpio);
-    USB_PRINT_REG(guid);
-    USB_PRINT_REG(gsnpsid);
-    USB_PRINT_REG(ghwcfg1);
-    USB_PRINT_REG(ghwcfg2);
-    USB_PRINT_REG(ghwcfg3);
-    USB_PRINT_REG(ghwcfg4);
-    USB_PRINT_REG(glpmcfg);
-    USB_PRINT_REG(gpwrdn);
-    USB_PRINT_REG(gdfifocfg);
-    USB_PRINT_REG(gadpctl);
-    USB_PRINT_REG(hptxfsiz);
-    USB_PRINT_REG(hcfg);
-    USB_PRINT_REG(hfir);
-    USB_PRINT_REG(hfnum);
-    USB_PRINT_REG(hptxsts);
-    USB_PRINT_REG(haint);
-    USB_PRINT_REG(haintmsk);
-    USB_PRINT_REG(hflbaddr);
-    USB_PRINT_REG(hprt);
-    USB_PRINT_REG(dcfg);
-    USB_PRINT_REG(dctl);
-    USB_PRINT_REG(dsts);
-    USB_PRINT_REG(diepmsk);
-    USB_PRINT_REG(doepmsk);
-    USB_PRINT_REG(daint);
-    USB_PRINT_REG(daintmsk);
-    USB_PRINT_REG(dtknqr1);
-    USB_PRINT_REG(dtknqr2);
-    USB_PRINT_REG(dvbusdis);
-    USB_PRINT_REG(dvbuspulse);
-    USB_PRINT_REG(dtknqr3_dthrctl);
-    USB_PRINT_REG(dtknqr4_fifoemptymsk);
-    USB_PRINT_REG(deachint);
-    USB_PRINT_REG(deachintmsk);
-    USB_PRINT_REG(pcgctrl);
-    USB_PRINT_REG(pcgctrl1);
-    USB_PRINT_REG(gnptxfsiz);
-    for (i = 0; i < 4; i++) {
-        printf("USB0.dieptxf[%u] = 0x%x;\n", i, USB0.dieptxf[i]);
-    }
-//    for (i = 0; i < 16; i++) {
-//        printf("USB0.diepeachintmsk[%u] = 0x%x;\n", i, USB0.diepeachintmsk[i]);
-//    }
-//    for (i = 0; i < 16; i++) {
-//        printf("USB0.doepeachintmsk[%u] = 0x%x;\n", i, USB0.doepeachintmsk[i]);
-//    }
-    for (i = 0; i < 7; i++) {
-        printf("// EP %u:\n", i);
-        USB_PRINT_IREG(i, diepctl);
-        USB_PRINT_IREG(i, diepint);
-        USB_PRINT_IREG(i, dieptsiz);
-        USB_PRINT_IREG(i, diepdma);
-        USB_PRINT_IREG(i, dtxfsts);
-        USB_PRINT_OREG(i, doepctl);
-        USB_PRINT_OREG(i, doepint);
-        USB_PRINT_OREG(i, doeptsiz);
-        USB_PRINT_OREG(i, doepdma);
-    }
-}
- */
 #endif /* CONFIG_TINYUSB_ENABLED */

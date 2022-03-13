@@ -41,7 +41,7 @@
 
 bool wifiLowLevelInit(bool persistent);
 
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_BLUEDROID_ENABLED
 static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
                                                   0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02, };
 #endif

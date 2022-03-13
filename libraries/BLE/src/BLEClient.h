@@ -57,7 +57,8 @@ public:
 	uint16_t                                   getConnId();
 	esp_gatt_if_t                              getGattcIf();
 	uint16_t								   getMTU();
-
+	bool 											 setMTU(uint16_t mtu);
+	
 uint16_t m_appId;
 private:
 	friend class BLEDevice;

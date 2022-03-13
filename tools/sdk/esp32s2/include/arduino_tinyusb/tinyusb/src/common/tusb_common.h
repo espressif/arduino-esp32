@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -24,10 +24,6 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup Group_Common
- *  \defgroup Group_CommonH common.h
- *  @{ */
-
 #ifndef _TUSB_COMMON_H_
 #define _TUSB_COMMON_H_
 
@@ -42,20 +38,21 @@
 #define TU_MIN(_x, _y)        ( ( (_x) < (_y) ) ? (_x) : (_y) )
 #define TU_MAX(_x, _y)        ( ( (_x) > (_y) ) ? (_x) : (_y) )
 
-#define TU_U16_HIGH(u16)      ((uint8_t) (((u16) >> 8) & 0x00ff))
-#define TU_U16_LOW(u16)       ((uint8_t) ((u16)       & 0x00ff))
-#define U16_TO_U8S_BE(u16)    TU_U16_HIGH(u16), TU_U16_LOW(u16)
-#define U16_TO_U8S_LE(u16)    TU_U16_LOW(u16), TU_U16_HIGH(u16)
+#define TU_U16_HIGH(_u16)     ((uint8_t) (((_u16) >> 8) & 0x00ff))
+#define TU_U16_LOW(_u16)      ((uint8_t) ((_u16)       & 0x00ff))
+#define U16_TO_U8S_BE(_u16)   TU_U16_HIGH(_u16), TU_U16_LOW(_u16)
+#define U16_TO_U8S_LE(_u16)   TU_U16_LOW(_u16), TU_U16_HIGH(_u16)
 
-#define U32_B1_U8(u32)        ((uint8_t) ((((uint32_t) u32) >> 24) & 0x000000ff)) // MSB
-#define U32_B2_U8(u32)        ((uint8_t) ((((uint32_t) u32) >> 16) & 0x000000ff))
-#define U32_B3_U8(u32)        ((uint8_t) ((((uint32_t) u32) >>  8) & 0x000000ff))
-#define U32_B4_U8(u32)        ((uint8_t) (((uint32_t)  u32)        & 0x000000ff)) // LSB
+#define TU_U32_BYTE3(_u32)    ((uint8_t) ((((uint32_t) _u32) >> 24) & 0x000000ff)) // MSB
+#define TU_U32_BYTE2(_u32)    ((uint8_t) ((((uint32_t) _u32) >> 16) & 0x000000ff))
+#define TU_U32_BYTE1(_u32)    ((uint8_t) ((((uint32_t) _u32) >>  8) & 0x000000ff))
+#define TU_U32_BYTE0(_u32)    ((uint8_t) (((uint32_t)  _u32)        & 0x000000ff)) // LSB
 
-#define U32_TO_U8S_BE(u32)    U32_B1_U8(u32), U32_B2_U8(u32), U32_B3_U8(u32), U32_B4_U8(u32)
-#define U32_TO_U8S_LE(u32)    U32_B4_U8(u32), U32_B3_U8(u32), U32_B2_U8(u32), U32_B1_U8(u32)
+#define U32_TO_U8S_BE(_u32)   TU_U32_BYTE3(_u32), TU_U32_BYTE2(_u32), TU_U32_BYTE1(_u32), TU_U32_BYTE0(_u32)
+#define U32_TO_U8S_LE(_u32)   TU_U32_BYTE0(_u32), TU_U32_BYTE1(_u32), TU_U32_BYTE2(_u32), TU_U32_BYTE3(_u32)
 
-#define TU_BIT(n)             (1U << (n))
+#define TU_BIT(n)             (1UL << (n))
+#define TU_GENMASK(h, l)      ( (UINT32_MAX << (l)) & (UINT32_MAX >> (31 - (h))) )
 
 //--------------------------------------------------------------------+
 // Includes
@@ -72,55 +69,85 @@
 #include "tusb_option.h"
 #include "tusb_compiler.h"
 #include "tusb_verify.h"
-#include "tusb_error.h" // TODO remove
-#include "tusb_timeout.h"
 #include "tusb_types.h"
 
+#include "tusb_error.h"   // TODO remove
+#include "tusb_timeout.h" // TODO remove
+
 //--------------------------------------------------------------------+
-// Inline Functions
+// Internal Helper used by Host and Device Stack
 //--------------------------------------------------------------------+
+
+// Check if endpoint descriptor is valid per USB specs
+bool tu_edpt_validate(tusb_desc_endpoint_t const * desc_ep, tusb_speed_t speed);
+
+// Bind all endpoint of a interface descriptor to class driver
+void tu_edpt_bind_driver(uint8_t ep2drv[][2], tusb_desc_interface_t const* p_desc, uint16_t desc_len, uint8_t driver_id);
+
+// Calculate total length of n interfaces (depending on IAD)
+uint16_t tu_desc_get_interface_total_len(tusb_desc_interface_t const* desc_itf, uint8_t itf_count, uint16_t max_len);
+
+//--------------------------------------------------------------------+
+// Internal Inline Functions
+//--------------------------------------------------------------------+
+
+//------------- Mem -------------//
 #define tu_memclr(buffer, size)  memset((buffer), 0, (size))
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
 
-static inline uint32_t tu_u32(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
+//------------- Bytes -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_u32(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0)
 {
-  return ( ((uint32_t) b1) << 24) + ( ((uint32_t) b2) << 16) + ( ((uint32_t) b3) << 8) + b4;
+  return ( ((uint32_t) b3) << 24) | ( ((uint32_t) b2) << 16) | ( ((uint32_t) b1) << 8) | b0;
 }
 
-static inline uint16_t tu_u16(uint8_t high, uint8_t low)
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u16(uint8_t high, uint8_t low)
 {
-  return (uint16_t)((((uint16_t) high) << 8) + low);
+  return (uint16_t) ((((uint16_t) high) << 8) | low);
 }
 
-static inline uint8_t tu_u16_high(uint16_t u16) { return (uint8_t) (((uint16_t) (u16 >> 8)) & 0x00ff); }
-static inline uint8_t tu_u16_low (uint16_t u16) { return (uint8_t) (u16 & 0x00ff); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte3(uint32_t ui32) { return TU_U32_BYTE3(ui32); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte2(uint32_t ui32) { return TU_U32_BYTE2(ui32); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte1(uint32_t ui32) { return TU_U32_BYTE1(ui32); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u32_byte0(uint32_t ui32) { return TU_U32_BYTE0(ui32); }
 
-// Min
-static inline uint8_t  tu_min8  (uint8_t  x, uint8_t y ) { return (x < y) ? x : y; }
-static inline uint16_t tu_min16 (uint16_t x, uint16_t y) { return (x < y) ? x : y; }
-static inline uint32_t tu_min32 (uint32_t x, uint32_t y) { return (x < y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_high16(uint32_t ui32) { return (uint16_t) (ui32 >> 16); }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_u32_low16 (uint32_t ui32) { return (uint16_t) (ui32 & 0x0000ffffu); }
 
-// Max
-static inline uint8_t  tu_max8  (uint8_t  x, uint8_t y ) { return (x > y) ? x : y; }
-static inline uint16_t tu_max16 (uint16_t x, uint16_t y) { return (x > y) ? x : y; }
-static inline uint32_t tu_max32 (uint32_t x, uint32_t y) { return (x > y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_high(uint16_t ui16) { return TU_U16_HIGH(ui16); }
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_u16_low (uint16_t ui16) { return TU_U16_LOW(ui16); }
 
-// Align
-static inline uint32_t tu_align(uint32_t value, uint32_t alignment)
+//------------- Bits -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_bit_set  (uint32_t value, uint8_t pos) { return value | TU_BIT(pos);                  }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_bit_clear(uint32_t value, uint8_t pos) { return value & (~TU_BIT(pos));               }
+TU_ATTR_ALWAYS_INLINE static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value & TU_BIT(pos)) ? true : false; }
+
+//------------- Min -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint8_t  tu_min8  (uint8_t  x, uint8_t y ) { return (x < y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_min16 (uint16_t x, uint16_t y) { return (x < y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_min32 (uint32_t x, uint32_t y) { return (x < y) ? x : y; }
+
+//------------- Max -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint8_t  tu_max8  (uint8_t  x, uint8_t y ) { return (x > y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_max16 (uint16_t x, uint16_t y) { return (x > y) ? x : y; }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_max32 (uint32_t x, uint32_t y) { return (x > y) ? x : y; }
+
+//------------- Align -------------//
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align(uint32_t value, uint32_t alignment)
 {
   return value & ((uint32_t) ~(alignment-1));
 }
 
-static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
-static inline uint32_t tu_align16 (uint32_t value) { return (value & 0xFFFFFFF0UL); }
-static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
-static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align16 (uint32_t value) { return (value & 0xFFFFFFF0UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
 
 //------------- Mathematics -------------//
-static inline uint32_t tu_abs(int32_t value) { return (uint32_t)((value < 0) ? (-value) : value); }
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_div_ceil(uint32_t v, uint32_t d) { return (v + d -1)/d; }
 
-/// inclusive range checking
-static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
+/// inclusive range checking TODO remove
+TU_ATTR_ALWAYS_INLINE static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
 {
   return (lower <= value) && (value <= upper);
 }
@@ -130,48 +157,85 @@ static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
 static inline uint8_t tu_log2(uint32_t value)
 {
   uint8_t result = 0;
-
-  while (value >>= 1)
-  {
-    result++;
-  }
+  while (value >>= 1) { result++; }
   return result;
 }
 
-// Bit
-static inline uint32_t tu_bit_set  (uint32_t value, uint8_t pos) { return value | TU_BIT(pos);                  }
-static inline uint32_t tu_bit_clear(uint32_t value, uint8_t pos) { return value & (~TU_BIT(pos));               }
-static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value & TU_BIT(pos)) ? true : false; }
+//------------- Unaligned Access -------------//
+#if TUP_ARCH_STRICT_ALIGN
 
-/*------------------------------------------------------------------*/
-/* Count number of arguments of __VA_ARGS__
- * - reference https://groups.google.com/forum/#!topic/comp.std.c/d-6Mj5Lko_s
- * - _GET_NTH_ARG() takes args >= N (64) but only expand to Nth one (64th)
- * - _RSEQ_N() is reverse sequential to N to add padding to have
- * Nth position is the same as the number of arguments
- * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
- *------------------------------------------------------------------*/
-#ifndef TU_ARGS_NUM
+// Rely on compiler to generate correct code for unaligned access
+typedef struct { uint16_t val; } TU_ATTR_PACKED tu_unaligned_uint16_t;
+typedef struct { uint32_t val; } TU_ATTR_PACKED tu_unaligned_uint32_t;
 
-#define TU_ARGS_NUM(...) 	 NARG_(_0, ##__VA_ARGS__,_RSEQ_N())
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_unaligned_read32(const void* mem)
+{
+  tu_unaligned_uint32_t const* ua32 = (tu_unaligned_uint32_t const*) mem;
+  return ua32->val;
+}
 
-#define NARG_(...)        _GET_NTH_ARG(__VA_ARGS__)
-#define _GET_NTH_ARG( \
-          _1, _2, _3, _4, _5, _6, _7, _8, _9,_10, \
-         _11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
-         _21,_22,_23,_24,_25,_26,_27,_28,_29,_30, \
-         _31,_32,_33,_34,_35,_36,_37,_38,_39,_40, \
-         _41,_42,_43,_44,_45,_46,_47,_48,_49,_50, \
-         _51,_52,_53,_54,_55,_56,_57,_58,_59,_60, \
-         _61,_62,_63,N,...) N
-#define _RSEQ_N() \
-         62,61,60,                      \
-         59,58,57,56,55,54,53,52,51,50, \
-         49,48,47,46,45,44,43,42,41,40, \
-         39,38,37,36,35,34,33,32,31,30, \
-         29,28,27,26,25,24,23,22,21,20, \
-         19,18,17,16,15,14,13,12,11,10, \
-         9,8,7,6,5,4,3,2,1,0
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write32(void* mem, uint32_t value)
+{
+  tu_unaligned_uint32_t* ua32 = (tu_unaligned_uint32_t*) mem;
+  ua32->val = value;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_unaligned_read16(const void* mem)
+{
+  tu_unaligned_uint16_t const* ua16 = (tu_unaligned_uint16_t const*) mem;
+  return ua16->val;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write16(void* mem, uint16_t value)
+{
+  tu_unaligned_uint16_t* ua16 = (tu_unaligned_uint16_t*) mem;
+  ua16->val = value;
+}
+
+#elif TUP_MCU_STRICT_ALIGN
+
+// MCU such as LPC_IP3511 Highspeed cannot access unaligned memory on USB_RAM although it is ARM M4.
+// We have to manually pick up bytes since tu_unaligned_uint32_t will still generate unaligned code
+// NOTE: volatile cast to memory to prevent compiler to optimize and generate unaligned code
+// TODO Big Endian may need minor changes
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_unaligned_read32(const void* mem)
+{
+  volatile uint8_t const* buf8 = (uint8_t const*) mem;
+  return tu_u32(buf8[3], buf8[2], buf8[1], buf8[0]);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write32(void* mem, uint32_t value)
+{
+  volatile uint8_t* buf8 = (uint8_t*) mem;
+  buf8[0] = tu_u32_byte0(value);
+  buf8[1] = tu_u32_byte1(value);
+  buf8[2] = tu_u32_byte2(value);
+  buf8[3] = tu_u32_byte3(value);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_unaligned_read16(const void* mem)
+{
+  volatile uint8_t const* buf8 = (uint8_t const*) mem;
+  return tu_u16(buf8[1], buf8[0]);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void tu_unaligned_write16(void* mem, uint16_t value)
+{
+  volatile uint8_t* buf8 = (uint8_t*) mem;
+  buf8[0] = tu_u16_low(value);
+  buf8[1] = tu_u16_high(value);
+}
+
+
+#else
+
+// MCU that could access unaligned memory natively
+TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_unaligned_read32  (const void* mem) { return *((uint32_t const *) mem); }
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_unaligned_read16  (const void* mem) { return *((uint16_t const *) mem); }
+
+TU_ATTR_ALWAYS_INLINE static inline void     tu_unaligned_write32 (void* mem, uint32_t value ) { *((uint32_t*) mem) = value; }
+TU_ATTR_ALWAYS_INLINE static inline void     tu_unaligned_write16 (void* mem, uint16_t value ) { *((uint16_t*) mem) = value; }
+
 #endif
 
 // To be removed
@@ -209,8 +273,9 @@ static inline bool     tu_bit_test (uint32_t value, uint8_t pos) { return (value
 
 // CFG_TUSB_DEBUG for debugging
 // 0 : no debug
-// 1 : print when there is error
-// 2 : print out log
+// 1 : print error
+// 2 : print warning
+// 3 : print info
 #if CFG_TUSB_DEBUG
 
 void tu_print_mem(void const *buf, uint32_t count, uint8_t indent);
@@ -228,25 +293,39 @@ void tu_print_var(uint8_t const* buf, uint32_t bufsize)
   for(uint32_t i=0; i<bufsize; i++) tu_printf("%02X ", buf[i]);
 }
 
-// Log with debug level 1
+// Log with Level
+#define TU_LOG(n, ...)        TU_XSTRCAT(TU_LOG, n)(__VA_ARGS__)
+#define TU_LOG_MEM(n, ...)    TU_XSTRCAT3(TU_LOG, n, _MEM)(__VA_ARGS__)
+#define TU_LOG_VAR(n, ...)    TU_XSTRCAT3(TU_LOG, n, _VAR)(__VA_ARGS__)
+#define TU_LOG_INT(n, ...)    TU_XSTRCAT3(TU_LOG, n, _INT)(__VA_ARGS__)
+#define TU_LOG_HEX(n, ...)    TU_XSTRCAT3(TU_LOG, n, _HEX)(__VA_ARGS__)
+#define TU_LOG_LOCATION()     tu_printf("%s: %d:\r\n", __PRETTY_FUNCTION__, __LINE__)
+#define TU_LOG_FAILED()       tu_printf("%s: %d: Failed\r\n", __PRETTY_FUNCTION__, __LINE__)
+
+// Log Level 1: Error
 #define TU_LOG1               tu_printf
 #define TU_LOG1_MEM           tu_print_mem
 #define TU_LOG1_VAR(_x)       tu_print_var((uint8_t const*)(_x), sizeof(*(_x)))
-#define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\n", (uint32_t) (_x) )
-#define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\n", (uint32_t) (_x) )
-#define TU_LOG1_LOCATION()    tu_printf("%s: %d:\r\n", __PRETTY_FUNCTION__, __LINE__)
-#define TU_LOG1_FAILED()      tu_printf("%s: %d: Failed\r\n", __PRETTY_FUNCTION__, __LINE__)
+#define TU_LOG1_INT(_x)       tu_printf(#_x " = %ld\r\n", (unsigned long) (_x) )
+#define TU_LOG1_HEX(_x)       tu_printf(#_x " = %lX\r\n", (unsigned long) (_x) )
 
-// Log with debug level 2
-#if CFG_TUSB_DEBUG > 1
+// Log Level 2: Warn
+#if CFG_TUSB_DEBUG >= 2
   #define TU_LOG2             TU_LOG1
   #define TU_LOG2_MEM         TU_LOG1_MEM
   #define TU_LOG2_VAR         TU_LOG1_VAR
   #define TU_LOG2_INT         TU_LOG1_INT
   #define TU_LOG2_HEX         TU_LOG1_HEX
-  #define TU_LOG2_LOCATION()  TU_LOG1_LOCATION()
 #endif
 
+// Log Level 3: Info
+#if CFG_TUSB_DEBUG >= 3
+  #define TU_LOG3             TU_LOG1
+  #define TU_LOG3_MEM         TU_LOG1_MEM
+  #define TU_LOG3_VAR         TU_LOG1_VAR
+  #define TU_LOG3_INT         TU_LOG1_INT
+  #define TU_LOG3_HEX         TU_LOG1_HEX
+#endif
 
 typedef struct
 {
@@ -262,15 +341,39 @@ typedef struct
 
 static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint32_t key)
 {
+  static char not_found[11];
+
   for(uint16_t i=0; i<p_table->count; i++)
   {
     if (p_table->items[i].key == key) return p_table->items[i].data;
   }
 
-  return NULL;
+  // not found return the key value in hex
+  sprintf(not_found, "0x%08lX", (unsigned long) key);
+
+  return not_found;
 }
 
 #endif // CFG_TUSB_DEBUG
+
+#ifndef TU_LOG
+#define TU_LOG(n, ...)
+#define TU_LOG_MEM(n, ...)
+#define TU_LOG_VAR(n, ...)
+#define TU_LOG_INT(n, ...)
+#define TU_LOG_HEX(n, ...)
+#define TU_LOG_LOCATION()
+#define TU_LOG_FAILED()
+#endif
+
+// TODO replace all TU_LOGn with TU_LOG(n)
+
+#define TU_LOG0(...)
+#define TU_LOG0_MEM(...)
+#define TU_LOG0_VAR(...)
+#define TU_LOG0_INT(...)
+#define TU_LOG0_HEX(...)
+
 
 #ifndef TU_LOG1
   #define TU_LOG1(...)
@@ -278,8 +381,6 @@ static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint3
   #define TU_LOG1_VAR(...)
   #define TU_LOG1_INT(...)
   #define TU_LOG1_HEX(...)
-  #define TU_LOG1_LOCATION()
-  #define TU_LOG1_FAILED()
 #endif
 
 #ifndef TU_LOG2
@@ -288,7 +389,14 @@ static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint3
   #define TU_LOG2_VAR(...)
   #define TU_LOG2_INT(...)
   #define TU_LOG2_HEX(...)
-  #define TU_LOG2_LOCATION()
+#endif
+
+#ifndef TU_LOG3
+  #define TU_LOG3(...)
+  #define TU_LOG3_MEM(...)
+  #define TU_LOG3_VAR(...)
+  #define TU_LOG3_INT(...)
+  #define TU_LOG3_HEX(...)
 #endif
 
 #ifdef __cplusplus
@@ -296,5 +404,3 @@ static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint3
 #endif
 
 #endif /* _TUSB_COMMON_H_ */
-
-/**  @} */
