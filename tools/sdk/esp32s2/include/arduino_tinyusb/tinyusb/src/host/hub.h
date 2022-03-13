@@ -176,7 +176,7 @@ bool hub_port_set_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature, t
 
 bool hub_port_reset(uint8_t hub_addr, uint8_t hub_port, tuh_control_complete_cb_t complete_cb);
 bool hub_port_get_status(uint8_t hub_addr, uint8_t hub_port, void* resp, tuh_control_complete_cb_t complete_cb);
-bool hub_status_pipe_queue(uint8_t dev_addr);
+bool hub_edpt_status_xfer(uint8_t dev_addr);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
