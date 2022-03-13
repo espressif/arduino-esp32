@@ -888,13 +888,23 @@ void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
 #define MSB_24_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[2] | (d[1] << 8) | (d[0] << 16); }
 #define MSB_16_SET(var, val) { (var) = (((val) & 0xFF00) >> 8) | (((val) & 0xFF) << 8); }
 #define MSB_PIX_SET(var, val) { uint8_t * d = (uint8_t *)&(val); (var) = d[1] | (d[0] << 8) | (d[3] << 16) | (d[2] << 24); }
-
+void spiLock(spi_t * spi){
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_LOCK();
+}
+void spiUnlock(spi_t * spi){
+    if(!spi) {
+        return;
+    }
+    SPI_MUTEX_UNLOCK();
+}
 void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder)
 {
     if(!spi) {
         return;
     }
-    SPI_MUTEX_LOCK();
     spi->dev->clock.val = clockDiv;
     switch (dataMode) {
     case SPI_MODE1:
@@ -945,7 +955,6 @@ void spiSimpleTransaction(spi_t * spi)
     if(!spi) {
         return;
     }
-    SPI_MUTEX_LOCK();
 }
 
 void spiEndTransaction(spi_t * spi)
