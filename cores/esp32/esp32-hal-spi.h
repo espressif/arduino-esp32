@@ -114,6 +114,8 @@ void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
 /*
  * New (EXPERIMENTAL) Transaction lock based API (lock once until endTransaction)
  * */
+void spiLock(spi_t * spi);
+void spiUnlock(spi_t * spi);
 void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder);
 void spiSimpleTransaction(spi_t * spi);
 void spiEndTransaction(spi_t * spi);
