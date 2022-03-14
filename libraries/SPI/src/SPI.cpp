@@ -21,6 +21,14 @@
 
 #include "SPI.h"
 
+#if !CONFIG_DISABLE_HAL_LOCKS
+#define SPI_PARAM_LOCK()    do {} while (xSemaphoreTake(paramLock, portMAX_DELAY) != pdPASS)
+#define SPI_PARAM_UNLOCK()  xSemaphoreGive(paramLock)
+#else
+#define SPI_PARAM_LOCK()
+#define SPI_PARAM_UNLOCK()
+#endif
+
 SPIClass::SPIClass(uint8_t spi_bus)
     :_spi_num(spi_bus)
     ,_spi(NULL)
