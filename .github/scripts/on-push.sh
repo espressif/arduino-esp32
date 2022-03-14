@@ -58,7 +58,7 @@ fi
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    source ./.github/scripts/install-arduino-ide.sh
+    source ${SCRIPTS_DIR}/install-arduino-ide.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
     FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
@@ -80,7 +80,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
     build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
 else
-    source ./${SCRIPTS_DIR}/install-platformio-esp32.sh
+    source ${SCRIPTS_DIR}/install-platformio-esp32.sh
     # PlatformIO ESP32 Test
     BOARD="esp32dev"
     OPTIONS="board_build.partitions = huge_app.csv"

@@ -38,7 +38,9 @@ extern "C"
 #else
 #define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
 #ifdef USE_ESP_IDF_LOG
+#ifndef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
+#endif
 #endif
 #endif
 
@@ -158,7 +160,7 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define isr_log_e(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #define log_buf_e(b,l) do{ARDUHAL_LOG_COLOR_PRINT(E);log_print_buf(b,l);ARDUHAL_LOG_COLOR_PRINT_END;}while(0)
 #else
-#define log_e(format, ...) do {log_to_esp(TAG, ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
+#define log_e(format, ...) do {ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, TAG, format, ##__VA_ARGS__);}while(0)
 #define isr_log_e(format, ...) do {ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
 #define log_buf_e(b,l) do {ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_ERROR);}while(0)
 #endif
@@ -187,9 +189,9 @@ void log_print_buf(const uint8_t *b, size_t len);
 #include "esp_log.h"
 
 #ifdef USE_ESP_IDF_LOG
-#ifndef TAG
-#define TAG "ARDUINO"
-#endif
+//#ifndef TAG
+//#define TAG "ARDUINO"
+//#endif
 //#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
 #else
 #ifdef CONFIG_ARDUHAL_ESP_LOG

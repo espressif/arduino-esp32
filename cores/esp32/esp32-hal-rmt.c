@@ -96,6 +96,7 @@ struct rmt_obj_s
     void * arg;
     TaskHandle_t rxTaskHandle;  
     bool rx_completed;
+    bool tx_not_rx;
 };
 
 /**
@@ -109,15 +110,15 @@ static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
 };
 
 static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
 #if MAX_CHANNELS > 4
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
 #endif
 };
 
@@ -248,6 +249,26 @@ static bool _rmtCreateRxTask(rmt_obj_t* rmt)
     return true;
 }
 
+// Helper function to test if an RMT channel is correctly assigned to TX or RX, issuing an error message if necessary
+// Also test RMT pointer for NULL and returns false in case it is NULL
+// return true when it is correctly assigned, false otherwise
+static bool _rmtCheckTXnotRX(rmt_obj_t* rmt, bool tx_not_rx)
+{
+    if (!rmt) {           // also returns false on NULL
+        return false;
+    }
+
+    if (rmt->tx_not_rx == tx_not_rx) {  // matches expected RX/TX channel
+        return true;
+    }
+   
+    if (tx_not_rx) {    // expected TX channel
+        log_e("Can't write on a RX RMT Channel");
+    } else{             // expected RX channel
+        log_e("Can't read on a TX RMT Channel");
+    }
+    return false;       // missmatched
+}
 
 /**
  * Public method definitions
@@ -255,7 +276,7 @@ static bool _rmtCreateRxTask(rmt_obj_t* rmt)
 
 bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high)
 {
-    if (!rmt || low > 0xFFFF || high > 0xFFFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE) || low > 0xFFFF || high > 0xFFFF) {
         return false;
     }
     size_t channel = rmt->channel;
@@ -268,7 +289,7 @@ bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t
 
 bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
 {
-    if (!rmt || filter_level > 0xFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || filter_level > 0xFF) {
         return false;
     }
     size_t channel = rmt->channel;
@@ -281,7 +302,7 @@ bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
 
 bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value)
 {
-    if (!rmt || value > 0xFFFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || value > 0xFFFF) {
         return false;
     }
     size_t channel = rmt->channel;
@@ -306,14 +327,17 @@ bool rmtDeinit(rmt_obj_t *rmt)
 
     RMT_MUTEX_LOCK(rmt->channel);
     // force stopping rmt processing
-    rmt_rx_stop(rmt->channel);
-    rmt_tx_stop(rmt->channel);
+    if (rmt->tx_not_rx) {
+        rmt_tx_stop(rmt->channel);
+    } else {
+        rmt_rx_stop(rmt->channel);
+        if(rmt->rxTaskHandle){
+            vTaskDelete(rmt->rxTaskHandle);
+            rmt->rxTaskHandle = NULL;
+        }       
+    }
 
-    if(rmt->rxTaskHandle){
-        vTaskDelete(rmt->rxTaskHandle);
-        rmt->rxTaskHandle = NULL;
-    }    
-   rmt_driver_uninstall(rmt->channel);
+    rmt_driver_uninstall(rmt->channel);
 
     size_t from = rmt->channel;
     size_t to = rmt->buffers + rmt->channel;
@@ -330,6 +354,7 @@ bool rmtDeinit(rmt_obj_t *rmt)
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(g_rmt_objlocks[from] != NULL) {
         vSemaphoreDelete(g_rmt_objlocks[from]);
+        g_rmt_objlocks[from] = NULL;
     }
 #endif
 
@@ -338,10 +363,9 @@ bool rmtDeinit(rmt_obj_t *rmt)
 
 bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
         return false;
     }
-
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
     rmt_tx_stop(channel);
@@ -353,10 +377,9 @@ bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
         return false;
     }
-    
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
     rmt_tx_stop(channel);
@@ -368,10 +391,9 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 
 bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
         return false;
     }
-    
     int channel = rmt->channel;
     RMT_MUTEX_LOCK(channel);
     rmt_tx_stop(channel);
@@ -383,10 +405,9 @@ bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 
 bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
-
     rmtReadAsync(rmt, (rmt_data_t*) data, size, NULL, false, 0);
     return true;
 }
@@ -394,7 +415,7 @@ bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
 
 bool rmtBeginReceive(rmt_obj_t* rmt)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
@@ -418,7 +439,7 @@ bool rmtReceiveCompleted(rmt_obj_t* rmt)
 
 bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg)
 {
-    if (!rmt || !cb) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
@@ -449,15 +470,19 @@ bool rmtEnd(rmt_obj_t* rmt)
     int channel = rmt->channel;
 
     RMT_MUTEX_LOCK(channel);
-    rmt_rx_stop(channel);
-    rmt->rx_completed = true;
+    if (rmt->tx_not_rx) {
+        rmt_tx_stop(channel);
+    } else {
+        rmt_rx_stop(channel);
+        rmt->rx_completed = true;
+    }
     RMT_MUTEX_UNLOCK(channel);
     return  true;
 }
 
 bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
@@ -568,6 +593,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     rmt->data_size = 0;
     rmt->rx_completed = false;
     rmt->events = NULL;
+    rmt->tx_not_rx = tx_not_rx;
 
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(g_rmt_objlocks[channel] == NULL) {
