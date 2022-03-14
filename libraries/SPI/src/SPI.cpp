@@ -56,6 +56,12 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     if(!_spi) {
         return;
     }
+    #if !CONFIG_DISABLE_HAL_LOCKS
+    if(paramLock==NULL){
+        paramLock = xSemaphoreCreateMutex();
+        if(paramLock==NULL) return; // fail to create mutex so abort initialization
+    }
+    #endif
 
     if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 #if CONFIG_IDF_TARGET_ESP32S2
