@@ -16,7 +16,7 @@ We all know how important documentation is. This project is no different.
 
 This documentation was created in a collaborative and open way, letting everyone contribute, from a small typo fix to a new chapter writing. We try to motivate our community by giving all the support needed through this guide.
 
-The documentation is in **English only**. Future translations can be added since we finish the essential content in English first.
+The documentation is in **English only**. Future translations can be added when we finish the essential content in English first.
 
 How to Collaborate
 ------------------
@@ -114,7 +114,9 @@ The Arduino ESP32 is structured in some sections to make it easier to maintain. 
 API
 ***
 
-In this section, you will include all the documentation about drivers, libraries and any other related to the core.
+In this section, you will include all the documentation about drivers, libraries, and any other related to the core.
+
+In this section we do not add general information. For more general information, we have sections for other related parts, like the FAQ, library builder, troubleshooting, etc.
 
 Boards
 ******
