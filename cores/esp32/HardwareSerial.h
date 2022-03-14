@@ -82,7 +82,7 @@ public:
     // onReceiveTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
     // param symbols_timeout defines a timeout threshold in uart symbol periods. 
     //                       Minimum is 1 symbol timeout. Maximum is calculacted automatically by IDF. If set above the maximum, it is ignored and an error is printed on Serial0 (check console).
-    //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 11 bits symbol is 101 (SERIAL_8N1).
+    //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 10 bits symbol is 101 (SERIAL_8N1).
     //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate. 
     //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
     void onReceiveTimeout(uint8_t symbols_timeout);
