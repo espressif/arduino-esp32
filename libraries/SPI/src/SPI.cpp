@@ -165,7 +165,6 @@ void SPIClass::beginTransaction(SPISettings settings)
     }
     spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
     _inTransaction = true;
-    SPI_PARAM_UNLOCK();
 }
 
 void SPIClass::endTransaction()
@@ -173,6 +172,7 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
+	SPI_PARAM_UNLOCK();
     }
 }
 
