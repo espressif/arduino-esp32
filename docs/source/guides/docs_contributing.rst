@@ -154,12 +154,110 @@ Basic Structure
 
 To help you create a new section from scratch, we recommend you include this structure in your content if it applies.
 
-* Brief description of the document.
-* Description of the peripheral, driver, protocol, including all different modes and configurations.
-* Description of each public function, macros, and structs.
-* If it's relevant for the user or if it's used in the example must be included in the description.
-* How to use.
-* Example code from the examples folder or code snippet.
+* **About** - Brief description of the document.
+    * Description of the peripheral, driver, protocol, including all different modes and configurations.
+* **API** - Description of each public function, macros, and structs.
+* **Basic Usage**
+* **Example Application**
+
+About Section
+^^^^^^^^^^^^^
+
+In this section, you need to add a brief description of the API. If you are describing a peripheral API, you should explain a little bit about the peripheral and the working modes, if it's applicable.
+
+API Functions
+^^^^^^^^^^^^^
+
+To add a new function description, you must have in mind that the users only have access to the public functions.
+
+
+Here is an example on how to add the function description from `I2C API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2c.html>`_:
+
+.. code-block::
+
+    setPins
+    ^^^^^^^
+
+    This function is used to define the ``SDA`` and ``SCL`` pins. 
+
+    .. note:: Call this function before ``begin`` to change the pins from the default ones.
+
+    .. code-block:: arduino
+
+        bool setPins(int sdaPin, int sclPin);
+
+    * ``sdaPin`` sets the GPIO to be used as the I2C peripheral data line.
+
+    * ``sclPin`` sets the GPIO to be used as the I2C peripheral clock line.
+
+    The default pins may vary from board to board. On the *Generic ESP32* the default I2C pins are:
+
+    * ``sdaPin`` **GPIO21**
+
+    * ``sclPin`` **GPIO22**
+
+    This function will return ``true`` if the peripheral was configured correctly.
+
+Be sure to include a very comprehensive description, add all the parameters in and out, and describe the desired output.
+
+If the function use a spacific structure, you can also describe the structure in the same function block or add a specific section if the structure is shared with other functions.
+
+Basic Usage
+^^^^^^^^^^^
+
+Some APIs are more complex to use or require more steps in order to configure or initialize. If the API is not straight forward in terms of usalibilty, plese consider adding a how to use section, describing all the steps to get the API configured.
+
+Here is an example:
+
+.. code-block::
+
+    Basic Usage
+    ^^^^^^^^^^^
+
+    To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the scketch.
+
+    .. code-block:: arduino
+
+        #include "Wire.h"
+
+    Before calling ``begin`` we must create two callback functions to handle the communication with the master device.
+
+    .. code-block:: arduino
+
+        Wire.onReceive(onReceive);
+
+    and
+
+    .. code-block:: arduino
+
+        Wire.onRequest(onRequest);
+
+    The ``onReceive`` will handle the request from the master device uppon a slave read request and the ``onRequest`` will handle the answer to the master.
+
+    Now, we can start the peripheral configuration by calling ``begin`` function with the device address.
+
+    .. code-block:: arduino
+
+        Wire.begin((uint8_t)I2C_DEV_ADDR);
+
+    By using ``begin`` without any arguments, all the settings will be done by using the default values. To set the values by your own, see the function description. This function is described here: `i2c begin`_
+
+
+
+Example Application
+^^^^^^^^^^^^^^^^^^^
+It is very important to include at least one application example or a code snippet to help people using the API.
+
+If the API does not have any application example, you can embed the code directly. However, if the example is available, you must include it as a literal block.
+
+.. code-block::
+
+    .. literalinclude:: ../../../libraries/WiFi/examples/WiFiAccessPoint/WiFiAccessPoint.ino
+        :language: arduino
+
+
+Sphinx Basics
+-------------
 
 Heading Levels
 **************
@@ -220,6 +318,11 @@ Support
 *******
 
 If you need support on the documentation, you can ask a question as a discussion `here <https://github.com/espressif/arduino-esp32/discussions>`_.
+
+Additional Guidelines
+---------------------
+
+If you want to contribute with code on the Arduino ESP32 core, be sure to follow the `ESP-IDF Documenting Code <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/contribute/documenting-code.html>`_ as a reference.
 
 .. _Arduino-ESP32: https://github.com/espressif/arduino-esp32
 .. _Sphinx: https://www.sphinx-doc.org/en/master/
