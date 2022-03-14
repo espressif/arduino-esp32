@@ -106,19 +106,23 @@ void SPIClass::setHwCs(bool use)
 
 void SPIClass::setFrequency(uint32_t freq)
 {
-    //check if last freq changed
+    SPI_PARAM_LOCK();
+	//check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != freq || _div != cdiv) {
         _freq = freq;
         _div = spiFrequencyToClockDiv(_freq);
         spiSetClockDiv(_spi, _div);
     }
+	SPI_PARAM_UNLOCK();
 }
 
 void SPIClass::setClockDivider(uint32_t clockDiv)
 {
-    _div = clockDiv;
+    SPI_PARAM_LOCK();
+	_div = clockDiv;
     spiSetClockDiv(_spi, _div);
+	SPI_PARAM_UNLOCK();
 }
 
 uint32_t SPIClass::getClockDivider()
@@ -138,8 +142,8 @@ void SPIClass::setBitOrder(uint8_t bitOrder)
 
 void SPIClass::beginTransaction(SPISettings settings)
 {
-    spiLock(_spi);
-    //check if last freq changed
+    SPI_PARAM_LOCK();
+	//check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != settings._clock || _div != cdiv) {
         _freq = settings._clock;
@@ -147,6 +151,7 @@ void SPIClass::beginTransaction(SPISettings settings)
     }
     spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
     _inTransaction = true;
+    SPI_PARAM_UNLOCK();
 }
 
 void SPIClass::endTransaction()
@@ -154,7 +159,6 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
-	spiUnlock(_spi);
     }
 }
 

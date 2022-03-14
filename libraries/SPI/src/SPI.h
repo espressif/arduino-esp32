@@ -25,6 +25,10 @@
 #include "pins_arduino.h"
 #include "esp32-hal-spi.h"
 
+#if !CONFIG_DISABLE_HAL_LOCKS
+#include "FreeRTOS.h"
+#endif
+
 #define SPI_HAS_TRANSACTION
 
 class SPISettings
@@ -49,6 +53,9 @@ private:
     int8_t _ss;
     uint32_t _div;
     uint32_t _freq;
+	#if !CONFIG_DISABLE_HAL_LOCKS
+    xSemaphoreHandle paramLock=NULL;
+    #endif
     bool _inTransaction;
     void writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat);
 

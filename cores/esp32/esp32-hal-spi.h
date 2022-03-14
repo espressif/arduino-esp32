@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+SPI_MUTEX_LOCK();// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,8 +119,6 @@ void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
 /*
  * New (EXPERIMENTAL) Transaction lock based API (lock once until endTransaction)
  * */
-void spiLock(spi_t * spi);
-void spiUnlock(spi_t * spi);
 void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder);
 void spiSimpleTransaction(spi_t * spi);
 void spiEndTransaction(spi_t * spi);
