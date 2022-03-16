@@ -239,7 +239,7 @@ endfunction()
 
 maybe_add_component(esp-dsp)
 
-if(IDF_TARGET MATCHES "esp32" AND CONFIG_ESP_RMAKER_TASK_STACK)
+if(CONFIG_ESP_RMAKER_TASK_STACK)
     maybe_add_component(esp_rainmaker)
     maybe_add_component(qrcode)
 endif()

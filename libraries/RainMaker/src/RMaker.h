@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "esp_system.h"
 #include "Arduino.h"
 #include "RMakerNode.h"
@@ -38,3 +40,4 @@ class RMakerClass
 };
 
 extern RMakerClass RMaker;
+#endif

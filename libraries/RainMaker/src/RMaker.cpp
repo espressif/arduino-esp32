@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMaker.h"
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
@@ -112,3 +114,4 @@ esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 }
 
 RMakerClass RMaker;
+#endif

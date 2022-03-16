@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerParam.h"
 
 static esp_err_t err;
@@ -28,3 +30,4 @@ esp_err_t Param::updateAndReport(param_val_t val)
     }
     return err;
 }
+#endif

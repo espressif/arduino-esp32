@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerNode.h"
 static esp_err_t err;
 
@@ -37,3 +39,4 @@ esp_err_t Node::addNodeAttr(const char *attr_name, const char *val)
     }   
     return err;
 }
+#endif

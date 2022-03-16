@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "esp_system.h"
 #include "RMakerType.h"
 
@@ -46,3 +48,4 @@ class Param
         esp_err_t addBounds(param_val_t min, param_val_t max, param_val_t step);
         esp_err_t updateAndReport(param_val_t val);
 };
+#endif

@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerDevice.h"
 
 static esp_err_t err;
@@ -204,3 +206,4 @@ esp_err_t Device::updateAndReportParam(const char *param_name, const char *my_va
     }
     return ESP_OK;
 }
+#endif
