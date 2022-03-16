@@ -39,7 +39,7 @@
 #include "common/tusb_fifo.h"
 
 //------------- HOST -------------//
-#if TUSB_OPT_HOST_ENABLED
+#if CFG_TUH_ENABLED
   #include "host/usbh.h"
 
   #if CFG_TUH_HID
@@ -61,7 +61,7 @@
 #endif
 
 //------------- DEVICE -------------//
-#if TUSB_OPT_DEVICE_ENABLED
+#if CFG_TUD_ENABLED
   #include "device/usbd.h"
 
   #if CFG_TUD_HID

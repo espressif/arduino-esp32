@@ -138,9 +138,20 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
 
         dhcps_lease_t lease;
         lease.enable = true;
-        lease.start_ip.addr = static_cast<uint32_t>(local_ip) + (1 << 24);
-        lease.end_ip.addr = static_cast<uint32_t>(local_ip) + (11 << 24);
-
+        uint32_t dhcp_ipaddr = static_cast<uint32_t>(local_ip);
+        // prevents DHCP lease range to overflow subnet/24 range
+        // there will be 11 addresses for DHCP to lease
+        uint8_t leaseStart = (uint8_t)(~subnet[3] - 12);  
+        if ((local_ip[3]) < leaseStart) {
+            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
+            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
+        } else {
+            // make range stay in the begining of the netmask range
+            dhcp_ipaddr = (dhcp_ipaddr & 0x00FFFFFF);
+            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
+            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
+        }
+        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString(), IPAddress(lease.end_ip.addr).toString());
         err = tcpip_adapter_dhcps_option(
             (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
             (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
@@ -555,6 +566,10 @@ void WiFiGenericClass::useStaticBuffers(bool bufferMode){
     _wifiUseStaticBuffers = bufferMode;
 }
 
+// Temporary fix to ensure that CDC+JTAG stay on on ESP32-C3
+#if CONFIG_IDF_TARGET_ESP32C3
+extern "C" void phy_bbpll_en_usb(bool en);
+#endif
 
 bool wifiLowLevelInit(bool persistent){
     if(!lowLevelInitDone){
@@ -587,6 +602,10 @@ bool wifiLowLevelInit(bool persistent){
         	lowLevelInitDone = false;
         	return lowLevelInitDone;
         }
+// Temporary fix to ensure that CDC+JTAG stay on on ESP32-C3
+#if CONFIG_IDF_TARGET_ESP32C3
+	phy_bbpll_en_usb(true);
+#endif
         if(!persistent){
         	lowLevelInitDone = esp_wifi_set_storage(WIFI_STORAGE_RAM) == ESP_OK;
         }
@@ -827,6 +846,8 @@ const char * system_event_reasons[] = { "UNSPECIFIED", "AUTH_EXPIRE", "AUTH_LEAV
 #endif
 esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
 {
+    static bool first_connect = true;
+
     if(event->event_id < ARDUINO_EVENT_MAX) {
         log_d("Arduino Event: %d - %s", event->event_id, arduino_event_names[event->event_id]);
     }
@@ -852,7 +873,7 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         log_w("Reason: %u - %s", reason, reason2str(reason));
         if(reason == WIFI_REASON_NO_AP_FOUND) {
             WiFiSTAClass::_setStatus(WL_NO_SSID_AVAIL);
-        } else if(reason == WIFI_REASON_AUTH_FAIL) {
+        } else if((reason == WIFI_REASON_AUTH_FAIL) && !first_connect){
             WiFiSTAClass::_setStatus(WL_CONNECT_FAILED);
         } else if(reason == WIFI_REASON_BEACON_TIMEOUT || reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
             WiFiSTAClass::_setStatus(WL_CONNECTION_LOST);
@@ -862,7 +883,15 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(WiFi.getAutoReconnect()){
+        if(first_connect && ((reason == WIFI_REASON_AUTH_EXPIRE) ||
+        (reason >= WIFI_REASON_BEACON_TIMEOUT)))
+        {
+            log_d("WiFi Reconnect Running");
+            WiFi.disconnect();
+            WiFi.begin();
+            first_connect = false;
+        }
+        else if(WiFi.getAutoReconnect()){
             if((reason == WIFI_REASON_AUTH_EXPIRE) ||
             (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL))
             {
@@ -1043,6 +1072,14 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
     if(!espWiFiStart()){
         return false;
     }
+
+    #ifdef BOARD_HAS_DUAL_ANTENNA
+        if(!setDualAntennaConfig(ANT1, ANT2, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO)){
+            log_e("Dual Antenna Config failed!");
+            return false;
+        }
+    #endif
+
     return true;
 }
 

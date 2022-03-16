@@ -51,10 +51,10 @@
 #endif
 
 // Compile-time Assert
-#if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-  #define TU_VERIFY_STATIC   _Static_assert
-#elif defined (__cplusplus) && __cplusplus >= 201103L
+#if defined (__cplusplus) && __cplusplus >= 201103L
   #define TU_VERIFY_STATIC   static_assert
+#elif defined (__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+  #define TU_VERIFY_STATIC   _Static_assert
 #elif defined(__CCRX__)
   #define TU_VERIFY_STATIC(const_expr, _mess) typedef char TU_XSTRCAT(Line, __LINE__)[(const_expr) ? 1 : 0];
 #else
@@ -75,7 +75,11 @@
  * Nth position is the same as the number of arguments
  * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
  *------------------------------------------------------------------*/
-#define TU_ARGS_NUM(...) 	 _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
+#if !defined(__CCRX__)
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
+#else
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, __VA_ARGS__,_RSEQ_N())
+#endif
 
 #define _TU_NARG(...)      _GET_NTH_ARG(__VA_ARGS__)
 #define _GET_NTH_ARG( \
@@ -137,9 +141,11 @@
   #define TU_BSWAP16(u16) (__builtin_bswap16(u16))
   #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
 
+	#ifndef __ARMCC_VERSION
   // List of obsolete callback function that is renamed and should not be defined.
   // Put it here since only gcc support this pragma
-  #pragma GCC poison tud_vendor_control_request_cb
+		#pragma GCC poison tud_vendor_control_request_cb
+	#endif
 
 #elif defined(__TI_COMPILER_VERSION__)
   #define TU_ATTR_ALIGNED(Bytes)        __attribute__ ((aligned(Bytes)))

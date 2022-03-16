@@ -381,10 +381,12 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT && ARDUINO_USB_MODE //Serial used for USB CDC
+#if ARDUINO_USB_MODE
+#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
 HWCDC Serial;
 #else
 HWCDC USBSerial;
+#endif
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

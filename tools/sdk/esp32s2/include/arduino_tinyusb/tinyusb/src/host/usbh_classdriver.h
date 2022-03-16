@@ -57,6 +57,8 @@ uint8_t usbh_get_rhport(uint8_t dev_addr);
 
 uint8_t* usbh_get_enum_buf(void);
 
+void usbh_int_set(bool enabled);
+
 //--------------------------------------------------------------------+
 // USBH Endpoint API
 //--------------------------------------------------------------------+

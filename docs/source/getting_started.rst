@@ -26,6 +26,9 @@ power consumption.
 
 The ESP32 series is available as a chip or module.
 
+
+.. _supported_socs:
+
 Supported SoC's
 ---------------
 
@@ -62,6 +65,20 @@ Supported Operating Systems
 .. |windows-logo| image:: _static/logo_windows.png
 .. |linux-logo| image:: _static/logo_linux.png
 .. |macos-logo| image:: _static/logo_macos.png
+
+Supported IDEs
+---------------------------
+
+Here is the list of supported IDE for Arduino ESP32 support integration.
+
++-------------------+-------------------+
+| |arduino-logo|    | |pio-logo|        |
++-------------------+-------------------+
+| Arduino IDE       | PlatformIO        |
++-------------------+-------------------+
+
+.. |arduino-logo| image:: _static/logo_arduino.png
+.. |pio-logo| image:: _static/logo_pio.png
 
 See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
 

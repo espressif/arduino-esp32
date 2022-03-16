@@ -8,6 +8,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
     fi
 
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
+    if [ -z "$ARDUINO_BUILD_DIR" ]; then
+        build_dir="$(dirname $sketch)/build"
+    else
+        build_dir="$ARDUINO_BUILD_DIR"
+    fi
     local ide_path=$1
     local usr_path=$2
     local fqbn=$3
@@ -15,7 +20,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
     local xtra_opts=$5
     local win_opts=$6
 
-    build_dir="$(dirname $sketch)/build"
+    rm -rf "$build_dir"
     mkdir -p "$build_dir"
     mkdir -p "$ARDUINO_CACHE_DIR"
     $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
@@ -32,13 +37,13 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <fqbn> <path-to-i
         $win_opts $xtra_opts "$sketch"
 }
 
-function count_sketches(){ # count_sketches <path> <target>
+function count_sketches(){ # count_sketches <path> [target]
     local path=$1
     local target=$2
 
-    if [ $# -lt 2 ]; then
+    if [ $# -lt 1 ]; then
       echo "ERROR: Illegal number of parameters"
-      echo "USAGE: ${0} count <path> <target>"
+      echo "USAGE: ${0} count <path> [target]"
     fi
 
     rm -rf sketches.txt
@@ -47,7 +52,7 @@ function count_sketches(){ # count_sketches <path> <target>
         return 0
     fi
 
-    local sketches=$(find $path -name *.ino)
+    local sketches=$(find $path -name *.ino | sort)
     local sketchnum=0
     for sketch in $sketches; do
         local sketchdir=$(dirname $sketch)
@@ -55,7 +60,7 @@ function count_sketches(){ # count_sketches <path> <target>
         local sketchname=$(basename $sketch)
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -f "$sketchdir/.skip.$target" ]]; then
+        elif [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
             continue
         else
             echo $sketch >> sketches.txt

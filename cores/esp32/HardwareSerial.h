@@ -46,23 +46,40 @@
 #define HardwareSerial_h
 
 #include <inttypes.h>
-
+#include <functional>
 #include "Stream.h"
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "HWCDC.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+
+typedef enum {
+    UART_BREAK_ERROR,
+    UART_BUFFER_FULL_ERROR,
+    UART_FIFO_OVF_ERROR,
+    UART_FRAME_ERROR,
+    UART_PARITY_ERROR
+} hardwareSerial_error_t;
+
+typedef std::function<void(void)> OnReceiveCb;
+typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
+
 class HardwareSerial: public Stream
 {
 public:
     HardwareSerial(int uart_nr);
+    ~HardwareSerial();
 
     // onReceive will setup a callback for whenever UART data is received
-    // it will work as UART Rx interrupt 
-    void onReceive(void(*function)(void));
-
+    // it will work as UART Rx interrupt -- Using C++ 11 std::fuction 
+    void onReceive(OnReceiveCb function);
+    void onReceiveError(OnReceiveErrorCb function);
+ 
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
-    void end(bool turnOffDebug = true);
+    void end(bool fullyTerminate = true);
     void updateBaudRate(unsigned long baud);
     int available(void);
     int availableForWrite(void);
@@ -107,13 +124,29 @@ public:
     void setDebugOutput(bool);
     
     void setRxInvert(bool);
-    void setPins(uint8_t rxPin, uint8_t txPin);
+
+    // Negative Pin Number will keep it unmodified, thus this function can set individual pins
+    // SetPins shall be called after Serial begin()
+    void setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
+    // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
+    void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
+
     size_t setRxBufferSize(size_t new_size);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
+    OnReceiveCb _onReceiveCB;
+    OnReceiveErrorCb _onReceiveErrorCB;
+    TaskHandle_t _eventTask;
+
+    void _createEventTask(void *args);
+    void _destroyEventTask(void);
+    static void _uartEventTask(void *args);
+#if !CONFIG_DISABLE_HAL_LOCKS
+    SemaphoreHandle_t _lock;
+#endif
 };
 
 extern void serialEventRun(void) __attribute__((weak));

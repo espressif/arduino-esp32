@@ -57,6 +57,7 @@ set(CORE_SRCS
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
@@ -174,6 +175,7 @@ set(includedirs
   libraries/EEPROM/src
   libraries/ESP32/src
   libraries/ESPmDNS/src
+  libraries/Ethernet/src
   libraries/FFat/src
   libraries/FS/src
   libraries/HTTPClient/src

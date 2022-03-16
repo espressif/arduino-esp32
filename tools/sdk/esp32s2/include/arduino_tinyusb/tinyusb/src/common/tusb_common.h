@@ -38,6 +38,7 @@
 #define TU_MIN(_x, _y)        ( ( (_x) < (_y) ) ? (_x) : (_y) )
 #define TU_MAX(_x, _y)        ( ( (_x) > (_y) ) ? (_x) : (_y) )
 
+#define TU_U16(_high, _low)   ((uint16_t) (((_high) << 8) | (_low)))
 #define TU_U16_HIGH(_u16)     ((uint8_t) (((_u16) >> 8) & 0x00ff))
 #define TU_U16_LOW(_u16)      ((uint8_t) ((_u16)       & 0x00ff))
 #define U16_TO_U8S_BE(_u16)   TU_U16_HIGH(_u16), TU_U16_LOW(_u16)
@@ -349,7 +350,7 @@ static inline const char* tu_lookup_find(tu_lookup_table_t const* p_table, uint3
   }
 
   // not found return the key value in hex
-  sprintf(not_found, "0x%08lX", (unsigned long) key);
+  snprintf(not_found, sizeof(not_found), "0x%08lX", (unsigned long) key);
 
   return not_found;
 }
