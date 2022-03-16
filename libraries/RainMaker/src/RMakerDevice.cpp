@@ -1,5 +1,6 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerDevice.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 
 static esp_err_t err;
 typedef void (*deviceWriteCb)(Device*, Param*, const param_val_t val, void *priv_data, write_ctx_t *ctx);
@@ -205,5 +206,4 @@ esp_err_t Device::updateAndReportParam(const char *param_name, const char *my_va
     }
     return ESP_OK;
 }
-
 #endif
