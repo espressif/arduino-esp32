@@ -116,7 +116,7 @@ API
 
 In this section, you will include all the documentation about drivers, libraries, and any other related to the core.
 
-In this section we do not add general information. For more general information, we have sections for other related parts, like the FAQ, library builder, troubleshooting, etc.
+In this section, we do not add general information. For more general information, we have sections for other related parts, like the FAQ, library builder, troubleshooting, etc.
 
 Boards
 ******
@@ -126,7 +126,7 @@ Here is the place to add any special guide on the development boards, pin layout
 Common
 ******
 
-In this folder, you can add all common information used in several different places. This helps to maintain the documentation easily maintainable.
+In this folder, you can add all common information used in several different places. This helps to make documentation easily maintainable.
 
 
 Guides
@@ -137,7 +137,7 @@ This is the place to add the guides for common applications, IDEs configuration,
 Tutorials
 *********
 
-If you want to add a specific tutorial related to the Arduino for ESP32, this is the place. The intention is not to create a blog or a demo area, but this can be used to add some complex description or to add some more information about APIs.
+If you want to add a specific tutorial related to the Arduino core for ESP32, this is the place. The intention is not to create a blog or a demo area, but this can be used to add some complex description or to add some more information about APIs.
 
 Images and Assets
 *****************
@@ -170,10 +170,10 @@ In this section, you need to add a brief description of the API. If you are desc
 API Functions
 ^^^^^^^^^^^^^
 
-To add a new function description, you must have in mind that the users only have access to the public functions.
+To add a new function description, you must know that the users only have access to the public functions.
 
 
-Here is an example on how to add the function description from `I2C API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2c.html>`_:
+Here is an example of how to add the function description from `I2C API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2c.html>`_:
 
 .. code-block::
 
@@ -202,12 +202,12 @@ Here is an example on how to add the function description from `I2C API <https:/
 
 Be sure to include a very comprehensive description, add all the parameters in and out, and describe the desired output.
 
-If the function use a spacific structure, you can also describe the structure in the same function block or add a specific section if the structure is shared with other functions.
+If the function uses a specific structure, you can also describe the structure in the same function block or add a specific section if the structure is shared with other functions.
 
 Basic Usage
 ^^^^^^^^^^^
 
-Some APIs are more complex to use or require more steps in order to configure or initialize. If the API is not straight forward in terms of usalibilty, plese consider adding a how to use section, describing all the steps to get the API configured.
+Some APIs are more complex to use or require more steps in order to configure or initialize. If the API is not straightforward in terms of usability, please consider adding a how-to-use section describing all the steps to get the API configured.
 
 Here is an example:
 
@@ -216,13 +216,13 @@ Here is an example:
     Basic Usage
     ^^^^^^^^^^^
 
-    To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the scketch.
+    To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the sketch.
 
     .. code-block:: arduino
 
         #include "Wire.h"
 
-    Before calling ``begin`` we must create two callback functions to handle the communication with the master device.
+    Before calling ``begin``, you must create two callback functions to handle the communication with the master device.
 
     .. code-block:: arduino
 
@@ -234,7 +234,7 @@ Here is an example:
 
         Wire.onRequest(onRequest);
 
-    The ``onReceive`` will handle the request from the master device uppon a slave read request and the ``onRequest`` will handle the answer to the master.
+    The ``onReceive`` will handle the request from the ``master`` device upon a slave read request and the ``onRequest`` will handle the answer to the master.
 
     Now, we can start the peripheral configuration by calling ``begin`` function with the device address.
 
@@ -242,7 +242,7 @@ Here is an example:
 
         Wire.begin((uint8_t)I2C_DEV_ADDR);
 
-    By using ``begin`` without any arguments, all the settings will be done by using the default values. To set the values by your own, see the function description. This function is described here: `i2c begin`_
+    By using ``begin`` without any arguments, all the settings will be done by using the default values. To set the values on your own, see the function description. This function is described here: `i2c begin`_
 
 
 
@@ -284,7 +284,9 @@ To add a code block, you can use the following structure:
 Links
 *****
 
-To include links to external content, you can use two ways. The first 
+To include links to external content, you can use two ways.
+
+* First option:
 
 .. code-block::
 
@@ -292,7 +294,7 @@ To include links to external content, you can use two ways. The first
 
     _Arduino Wire Library: https://www.arduino.cc/en/reference/wire
 
-or
+* Second option:
 
 .. code-block::
 
@@ -319,7 +321,7 @@ Be sure the file size does not exceed 600kB.
 Support
 *******
 
-If you need support on the documentation, you can ask a question as a discussion `here <https://github.com/espressif/arduino-esp32/discussions>`_.
+If you need support on the documentation, you can ask a question in the discussion `here <https://github.com/espressif/arduino-esp32/discussions>`_.
 
 Additional Guidelines
 ---------------------
