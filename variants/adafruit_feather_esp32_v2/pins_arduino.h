@@ -42,20 +42,19 @@ static const uint8_t A9 = 33;
 static const uint8_t A10 = 27;
 static const uint8_t A11 = 12;
 static const uint8_t A12 = 13;
-
-// vbat measure
-static const uint8_t BATT_MONITOR = 35;
 static const uint8_t A13 = 35;
 
+// vbat measure
+#define BATT_MONITOR 35
+
 // internal switch
-static const uint8_t BUTTON = 38;
+#define BUTTON = 38;
 
 // Neopixel
-static const uint8_t NEOPIXEL_PIN = 0;
-static const uint8_t PIN_NEOPIXEL = 0;
+#define PIN_NEOPIXEL 0
 
 // Neopixel & I2C power
-static const uint8_t NEOPIXEL_I2C_POWER = 2;
+#define NEOPIXEL_I2C_POWER 2
 
 static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;
