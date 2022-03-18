@@ -3,6 +3,7 @@ name: Unit Test Results
 on:
   workflow_run:
     workflows: [Run tests in hardware]
+    branches-ignore: [master]
 
     types:
       - completed
@@ -11,6 +12,9 @@ jobs:
   unit-test-results:
     name: Unit Test Results
     runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion != 'skipped'
     steps:
       - name: Download and Extract Artifacts
         env:
