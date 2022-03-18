@@ -50,7 +50,7 @@ typedef struct {
 }rndish_data_t;
 
 void rndish_init(void);
-tusb_error_t rndish_open_subtask(uint8_t dev_addr, cdch_data_t *p_cdc);
+bool rndish_open_subtask(uint8_t dev_addr, cdch_data_t *p_cdc);
 void rndish_xfer_isr(cdch_data_t *p_cdc, pipe_handle_t pipe_hdl, xfer_result_t event, uint32_t xferred_bytes);
 void rndish_close(uint8_t dev_addr);
 

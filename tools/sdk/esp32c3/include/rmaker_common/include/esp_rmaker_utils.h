@@ -15,10 +15,22 @@
 #include <stdint.h>
 #include <sntp.h>
 #include <esp_err.h>
+#include <esp_heap_caps.h>
+#include <sdkconfig.h>
 
 #ifdef __cplusplus
 extern "C"
 {
+#endif
+
+#ifdef CONFIG_SPIRAM
+#define MEM_ALLOC_EXTRAM(size)         heap_caps_malloc(size, MALLOC_CAP_SPIRAM)
+#define MEM_CALLOC_EXTRAM(num, size)   heap_caps_calloc(num, size, MALLOC_CAP_SPIRAM)
+#define MEM_REALLOC_EXTRAM(ptr, size)  heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM)
+#else
+#define MEM_ALLOC_EXTRAM(size)         malloc(size)
+#define MEM_CALLOC_EXTRAM(num, size)   calloc(num, size)
+#define MEM_REALLOC_EXTRAM(ptr, size)  realloc(ptr, size)
 #endif
 
 typedef struct esp_rmaker_time_config {

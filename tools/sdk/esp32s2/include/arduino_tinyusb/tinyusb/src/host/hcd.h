@@ -94,7 +94,8 @@ typedef struct
 
 } hcd_event_t;
 
-typedef struct {
+typedef struct
+{
   uint8_t rhport;
   uint8_t hub_addr;
   uint8_t hub_port;

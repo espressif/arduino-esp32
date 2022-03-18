@@ -111,7 +111,7 @@ typedef struct
 
 typedef osal_queue_def_t* osal_queue_t;
 
-// role device/host is used by OS NONE for mutex (disable usb isr) only
+// _int_set is used as mutex in OS NONE (disable/enable USB ISR)
 #define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type)    \
   uint8_t _name##_buf[_depth*sizeof(_type)];              \
   osal_queue_def_t _name = {                              \

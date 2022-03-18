@@ -171,12 +171,35 @@ typedef struct {
 
 TU_VERIFY_STATIC( sizeof(hub_port_status_response_t) == 4, "size is not correct");
 
-bool hub_port_clear_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature, tuh_control_complete_cb_t complete_cb);
-bool hub_port_set_feature(uint8_t hub_addr, uint8_t hub_port, uint8_t feature, tuh_control_complete_cb_t complete_cb);
+// Clear feature
+bool hub_port_clear_feature (uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
+                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
 
-bool hub_port_reset(uint8_t hub_addr, uint8_t hub_port, tuh_control_complete_cb_t complete_cb);
-bool hub_port_get_status(uint8_t hub_addr, uint8_t hub_port, void* resp, tuh_control_complete_cb_t complete_cb);
-bool hub_status_pipe_queue(uint8_t dev_addr);
+// Set feature
+bool hub_port_set_feature   (uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
+                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+
+// Get port status
+bool hub_port_get_status    (uint8_t hub_addr, uint8_t hub_port, void* resp,
+                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+
+// Get status from Interrupt endpoint
+bool hub_edpt_status_xfer(uint8_t dev_addr);
+
+// Reset a port
+static inline bool hub_port_reset(uint8_t hub_addr, uint8_t hub_port,
+                                  tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg)
+{
+  return hub_port_set_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET, complete_cb, user_arg);
+}
+
+// Clear Reset Change
+static inline bool hub_port_clear_reset_change(uint8_t hub_addr, uint8_t hub_port,
+                                               tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg)
+{
+  return hub_port_clear_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET_CHANGE, complete_cb, user_arg);
+}
+
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

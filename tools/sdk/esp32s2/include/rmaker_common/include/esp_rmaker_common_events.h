@@ -35,9 +35,26 @@ typedef enum {
     RMAKER_MQTT_EVENT_CONNECTED,
     /** Disconnected from MQTT Broker */
     RMAKER_MQTT_EVENT_DISCONNECTED,
-    /** MQTT message published successfully */
+    /** MQTT message published successfully.
+     * Event data will contain the message ID (integer) of published message.
+     */
     RMAKER_MQTT_EVENT_PUBLISHED,
-} esp_rmaker_mqtt_event_t;
+    /** POSIX Timezone Changed. Associated data would be NULL terminated POSIX Timezone
+     * Eg. "PST8PDT,M3.2.0,M11.1.0" */
+    RMAKER_EVENT_TZ_POSIX_CHANGED,
+    /** Timezone Changed. Associated data would be NULL terminated Timezone.
+     * Eg. "America/Los_Angeles"
+     * Note that whenever this event is received, the RMAKER_EVENT_TZ_POSIX_CHANGED event
+     * will also be received, but not necessarily vice versa.
+     */
+    RMAKER_EVENT_TZ_CHANGED,
+    /**
+     * MQTT message deleted from the outbox if the message couldn't have been sent and acknowledged.
+     * Event data will contain the message ID (integer) of deleted message.
+     * Valid only if CONFIG_MQTT_REPORT_DELETED_MESSAGES is enabled.
+     */
+    RMAKER_MQTT_EVENT_MSG_DELETED,
+} esp_rmaker_common_event_t;
 #ifdef __cplusplus
 }
 #endif

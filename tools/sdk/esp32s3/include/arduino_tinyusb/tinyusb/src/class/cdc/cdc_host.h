@@ -42,14 +42,14 @@
  * \defgroup   CDC_Serial_Host Host
  * @{ */
 
-bool tuh_cdc_set_control_line_state(uint8_t dev_addr, bool dtr, bool rts, tuh_control_complete_cb_t complete_cb);
+bool tuh_cdc_set_control_line_state(uint8_t dev_addr, bool dtr, bool rts, tuh_control_xfer_cb_t complete_cb);
 
-static inline bool tuh_cdc_connect(uint8_t dev_addr, tuh_control_complete_cb_t complete_cb)
+static inline bool tuh_cdc_connect(uint8_t dev_addr, tuh_control_xfer_cb_t complete_cb)
 {
   return tuh_cdc_set_control_line_state(dev_addr, true, true, complete_cb);
 }
 
-static inline bool tuh_cdc_disconnect(uint8_t dev_addr, tuh_control_complete_cb_t complete_cb)
+static inline bool tuh_cdc_disconnect(uint8_t dev_addr, tuh_control_xfer_cb_t complete_cb)
 {
   return tuh_cdc_set_control_line_state(dev_addr, false, false, complete_cb);
 }
