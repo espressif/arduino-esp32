@@ -134,7 +134,7 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
                         if (!xQueueSend(new_rx_queue, &ch, 0)) {
                             arduino_usb_cdc_event_data_t p;
                             p.rx_overflow.dropped_bytes = copySize - i;
-                            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_OVERFLOW, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+                            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_OVERFLOW_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
                             log_e("CDC RX Overflow.");
                             break;
                         }
@@ -278,7 +278,7 @@ void USBCDC::_onRX(){
     for(uint32_t i=0; i<count; i++){
         if(rx_queue == NULL || !xQueueSend(rx_queue, buf+i, 10)) {
             p.rx_overflow.dropped_bytes = count - i;
-            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_OVERFLOW, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_OVERFLOW_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
             log_e("CDC RX Overflow.");
             count = i;
             break;
