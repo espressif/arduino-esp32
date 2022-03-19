@@ -459,7 +459,7 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
     }
 
     if (new_size <= SOC_UART_FIFO_LEN) {
-        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);
+        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
         return 0;
     }
 
@@ -471,6 +471,11 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
 
     if (_uart) {
         log_e("TX Buffer can't be resized when Serial is already running.\n");
+        return 0;
+    }
+
+    if (new_size <= SOC_UART_FIFO_LEN) {
+        log_e("TX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
         return 0;
     }
 
