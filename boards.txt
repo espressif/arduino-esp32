@@ -6800,7 +6800,7 @@ adafruit_feather_esp32s3.serial.disableDTR=false
 adafruit_feather_esp32s3.serial.disableRTS=false
 
 adafruit_feather_esp32s3.build.tarch=xtensa
-adafruit_feather_esp32s3.build.bootloader_addr=0x1000
+adafruit_feather_esp32s3.build.bootloader_addr=0x0
 adafruit_feather_esp32s3.build.target=esp32s3
 adafruit_feather_esp32s3.build.mcu=esp32s3
 adafruit_feather_esp32s3.build.core=esp32
