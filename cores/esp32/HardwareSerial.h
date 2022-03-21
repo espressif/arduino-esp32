@@ -155,7 +155,7 @@ protected:
     uart_t* _uart;
     size_t _rxBufferSize;
     OnReceiveCb _onReceiveCB;
-    uint8_t _onReceiveTimeout;
+    uint8_t _rxTimeout;
     OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;
 

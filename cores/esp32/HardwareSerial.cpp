@@ -129,7 +129,7 @@ _uart_nr(uart_nr),
 _uart(NULL), 
 _rxBufferSize(256), 
 _onReceiveCB(NULL),
-_onReceiveTimeout(10),
+_rxTimeout(10),
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -204,9 +204,9 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 {
     HSERIAL_MUTEX_LOCK();
     
-    _onReceiveTimeout = symbols_timeout;
+    _rxTimeout = symbols_timeout;
 
-    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _onReceiveTimeout); // Set new timeout
+    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _rxTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
 }
@@ -345,7 +345,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
     // Set UART RX timeout
     if (_uart != NULL && _onReceiveCB != NULL) {
-        uart_set_rx_timeout(_uart_nr, _onReceiveTimeout);
+        uart_set_rx_timeout(_uart_nr, _rxTimeout);
     }
     
     HSERIAL_MUTEX_UNLOCK();
