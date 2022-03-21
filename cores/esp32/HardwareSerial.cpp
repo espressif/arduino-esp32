@@ -200,20 +200,24 @@ void HardwareSerial::onReceive(OnReceiveCb function)
     HSERIAL_MUTEX_UNLOCK();
 }
 
-void HardwareSerial::onReceiveTimeout(uint8_t symbols_timeout)
+void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 {
     HSERIAL_MUTEX_LOCK();
     
-    if(symbols_timeout == 0) {
-        _onReceiveTimeout = 1; // Never disable timeout
-    }
-    else {
-        _onReceiveTimeout = symbols_timeout;
-    }
+    _onReceiveTimeout = symbols_timeout;
 
     if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _onReceiveTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
+}
+
+void HardwareSerial::eventQueueReset()
+{
+    QueueHandle_t uartEventQueue = NULL;
+    uartGetEventQueue(uart->_uart, &uartEventQueue);
+    if (uartEventQueue != NULL) {
+        xQueueReset(uartEventQueue);
+    }
 }
 
 void HardwareSerial::_uartEventTask(void *args)
@@ -228,17 +232,15 @@ void HardwareSerial::_uartEventTask(void *args)
             if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
                 switch(event.type) {
                     case UART_DATA:
-                        if(uart->_onReceiveCB && uart->available() > 0  && event.timeout_flag) uart->_onReceiveCB();
+                        if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB(event.timeout_flag);
                         break;
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
-                        xQueueReset(uartEventQueue);
                         break;
                     case UART_BUFFER_FULL:
                         log_w("UART%d Buffer Full. Consider encreasing your buffer size of your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
-                        xQueueReset(uartEventQueue);
                         break;
                     case UART_BREAK:
                         log_w("UART%d RX break.", uart->_uart_nr);
