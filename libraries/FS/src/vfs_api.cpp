@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "vfs_api.h"
+#include <stdio_ext.h>
 
 using namespace fs;
 
