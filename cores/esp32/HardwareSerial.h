@@ -93,7 +93,7 @@ public:
     void onReceiveError(OnReceiveErrorCb function);
 
     // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError)
-    void eventQueueReset()
+    void eventQueueReset();
  
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
     void end(bool fullyTerminate = true);

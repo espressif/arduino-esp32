@@ -214,7 +214,7 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 void HardwareSerial::eventQueueReset()
 {
     QueueHandle_t uartEventQueue = NULL;
-    uartGetEventQueue(uart->_uart, &uartEventQueue);
+    uartGetEventQueue(_uart, &uartEventQueue);
     if (uartEventQueue != NULL) {
         xQueueReset(uartEventQueue);
     }
