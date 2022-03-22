@@ -344,7 +344,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // Set UART RX timeout
-    if (_uart != NULL && _onReceiveCB != NULL) {
+    if (_uart != NULL) {
         uart_set_rx_timeout(_uart_nr, _rxTimeout);
     }
     
