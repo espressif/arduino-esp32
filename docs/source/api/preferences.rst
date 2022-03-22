@@ -1,5 +1,3 @@
-.. 2022-03-17 by Xylopyrographer. Initial PR release.
-
 ###########
 Preferences
 ###########
@@ -16,7 +14,7 @@ Preferences works best for storing many small values, rather than a few large va
 The Preferences library is usable by all ESP32 variants.
 
 
-Header file
+Header File
 -----------
 
 .. code-block:: arduino
@@ -84,7 +82,7 @@ String values can be stored and retrieved either as an Arduino String or as a nu
 Bytes type is used for storing and retrieving an arbitrary number of bytes in a namespace.
 
 
-arduino-esp32 Preferences API
+Arduino-esp32 Preferences API
 -----------------------------
 
 ``begin``
@@ -626,12 +624,12 @@ Get the Preferences data type of a given key within the currently open namespace
 
    **Returns**
       * an ``int`` value as per Table 2 below.
-      * a value of ``10`` (PT_INVALID) is returned if the call fails.
+      * a value of ``10`` (PT_INVALID) if the call fails.
       
    **Notes**
-      * The return values are enumerated in ``Preferences.h`` with a ``typedef`` of ``PreferenceType`` but a ``type_name`` is not defined. Therefore the return value is implicitly of type ``int`` and not an enumerated value. Table 2 includes the enumerated values for information.
+      * The return values are enumerated in ``Preferences.h``. Table 2 includes the enumerated values for information.
       * A return value can map to more than one Prefs Type.
-      * The method will fail if : the namespace is not open; the key does not exist; the length of the provided key exceeds 15 characters.
+      * The method will fail if: the namespace is not open; the key does not exist; the provided key exceeds 15 characters.
 
 .. table:: **Table 2 — getType Return Values**
    :align: center
@@ -658,18 +656,18 @@ Get the Preferences data type of a given key within the currently open namespace
    |               | ULong         |                   |                       |
    +---------------+---------------+-------------------+-----------------------+
    | 6             | Long64        | int64_t           | PT_I64                |
-   |               +---------------+-------------------+                       |
-   |               | Float         | float_t           |                       |
    +---------------+---------------+-------------------+-----------------------+
    | 7             | ULong64       | uint64_t          | PT_U64                |
-   |               +---------------+-------------------+                       |
-   |               | Double        | double_t          |                       |
    +---------------+---------------+-------------------+-----------------------+
    | 8             | String        | String            | PT_STR                |
    |               |               +-------------------+                       |
    |               |               | \*char            |                       |
    +---------------+---------------+-------------------+-----------------------+
-   | 9             | Bytes         | uint8_t           | PT_BLOB               |
+   | 9             | Double        | double_t          | PT_BLOB               |
+   |               +---------------+-------------------+                       |
+   |               | Float         | float_t           |                       |
+   |               +---------------+-------------------+                       |   
+   |               | Bytes         | uint8_t           |                       |
    +---------------+---------------+-------------------+-----------------------+
    | 10            | \-            | \-                | PT_INVALID            |
    +---------------+---------------+-------------------+-----------------------+
@@ -700,3 +698,4 @@ Get the number of free entries available in the key table of the currently open 
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
       
 
+..    --- EOF ----
