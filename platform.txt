@@ -11,10 +11,10 @@ tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
 
-tools.esptool_py.network_cmd=python "{runtime.platform.path}/tools/espota.py" -r
+tools.esptool_py.network_cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
 tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 
-tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
+tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
 compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
@@ -176,7 +176,7 @@ recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}
 ## Create bin
 recipe.objcopy.bin.pattern_args=--chip {build.mcu} elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
 recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
-recipe.objcopy.bin.pattern.linux=python "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
+recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
 
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
@@ -194,5 +194,5 @@ tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
 tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" {upload.extra_flags}
 tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
-tools.esptool_py.upload.pattern.linux=python "{path}/{cmd}" {upload.pattern_args}
+tools.esptool_py.upload.pattern.linux=python3 "{path}/{cmd}" {upload.pattern_args}
 tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{network.port}" "--auth={network.password}" -f "{build.path}/{build.project_name}.bin"
