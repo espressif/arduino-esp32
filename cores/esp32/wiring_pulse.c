@@ -17,8 +17,9 @@
 //#include <limits.h>
 #include "wiring_private.h"
 #include "pins_arduino.h"
-#include <hal/cpu_hal.h>
+#include "esp32-hal-cpu.h"
 
+/*
 #define WAIT_FOR_PIN_STATE(state) \
     while (digitalRead(pin) != (state)) { \
         if (cpu_hal_get_cycle_count() - start_cycle_count > timeout_cycles) { \
@@ -46,3 +47,4 @@ unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout)
 {
     return pulseIn(pin, state, timeout);
 }
+*/

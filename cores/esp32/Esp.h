@@ -20,7 +20,7 @@
 #ifndef ESP_H
 #define ESP_H
 
-#include <Arduino.h>
+#include "Arduino.h"
 #include <esp_partition.h>
 #include <hal/cpu_hal.h>
 

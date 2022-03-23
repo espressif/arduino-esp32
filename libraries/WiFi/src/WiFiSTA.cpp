@@ -201,7 +201,10 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method
         esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
         esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
     }
-    esp_wifi_sta_wpa2_ent_enable(); //set config settings to enable function
+
+    esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT();
+    esp_wifi_sta_wpa2_ent_enable(&config); //set config settings to enable function
+    
     WiFi.begin(wpa2_ssid); //connect to wifi
 
     return status();

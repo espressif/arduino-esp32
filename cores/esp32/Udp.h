@@ -35,8 +35,8 @@
 #ifndef udp_h
 #define udp_h
 
-#include <Stream.h>
-#include <IPAddress.h>
+#include "Stream.h"
+#include "IPAddress.h"
 
 class UDP: public Stream
 {

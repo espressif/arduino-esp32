@@ -18,6 +18,7 @@
 #include "esp_attr.h"
 #include "soc/rtc_cntl_reg.h"
 #include "driver/adc.h"
+#include "esp_err.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+

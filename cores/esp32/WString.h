@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <pgmspace.h>
+#include "pgmspace.h"
 #include <stdint.h>
 
 // An inherited class for holding the result of a concatenation.  These
