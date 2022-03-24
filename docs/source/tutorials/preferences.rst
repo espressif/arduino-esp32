@@ -381,7 +381,7 @@ To send to the serial monitor the number of available entries the following coul
 
 ..
 
-The number of available entries in the key table changes depending on the number of keys in the namespace and also the dynamic size of certain types of data stored in the namespace. Details are in the `Preferences API document`_.
+The number of available entries in the key table changes depending on the number of keys in the namespace and also the dynamic size of certain types of data stored in the namespace. Details are in the `Preferences API Reference`_.
 
 Do note that the number of entries in the key table does not guarantee that there is room in the opened NVS namespace for all the data to be stored in that namespace. Refer to the espressif `Non-volatile storage library`_ documentation for full details.
 
@@ -405,7 +405,7 @@ As in:
    
 ..
 
-The value returned is a ``PreferenceType`` value that maps to a Preferences Type. Refer to the description in the `Preferences API document`_ for details.
+The value returned is a ``PreferenceType`` value that maps to a Preferences Type. Refer to the description in the `Preferences API Reference`_ for details.
 
 
 
@@ -563,7 +563,7 @@ Here the "``currentNamespace``" object is reused, but different Preferences obje
 A Closer Look at ``getX`` 
 --------------------------
 
-Methods in the Preferences library return a status code that can be used to determine if the method completed successfully. This is described in the `Preferences API document`_.
+Methods in the Preferences library return a status code that can be used to determine if the method completed successfully. This is described in the `Preferences API Reference`_.
 
 Assume we have a key named "``favourites``" that contains a value of a ``String`` data type.
 
@@ -637,7 +637,7 @@ If we predetermine a default value that is outside all legitimate values, we now
 
 In summary, if you need to confirm that a value was retrieved without error from a namespace, use the complete form of the ``getX`` method with a predetermined default "this can only happen if an error" value and compare that against the value returned by the call. Otherwise, you can omit the default value as the call will return the default for that particular ``getX`` method.
 
-Additional detail is given in the `Preferences API document`_.
+Additional detail is given in the `Preferences API Reference`_.
 
 
 Advanced Item
@@ -672,11 +672,11 @@ To completely erase and reformat the NVS memory used by Preferences, create and 
 Resources
 ---------
 
-* `Preferences API document`_
+* `Preferences API Reference <../api/preferences.html>`_
 * `Non-volatile storage library`_ (espressif-IDF API Reference)
 * `Official ESP-IDF documentation`_ (espressif-IDF Reference)
 
-.. _Preferences API document: https://../api/preferences.html
+
 .. _Non-volatile storage library: https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/storage/nvs_flash.html
 .. _Official ESP-IDF documentation: https://docs.espressif.com/projects/esp-idf/en/stable
 
