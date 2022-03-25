@@ -64,7 +64,7 @@ typedef enum {
     UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
-typedef std::function<void()> OnReceiveCb;
+typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 
 class HardwareSerial: public Stream
@@ -72,6 +72,14 @@ class HardwareSerial: public Stream
 public:
     HardwareSerial(int uart_nr);
     ~HardwareSerial();
+
+    // setRxTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
+    // param symbols_timeout defines a timeout threshold in uart symbol periods. Setting 0 symbol timeout disables the callback call by timeout.
+    //                       Maximum timeout setting is calculacted automatically by IDF. If set above the maximum, it is ignored and an error is printed on Serial0 (check console).
+    //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 10 bits symbol is 101 (SERIAL_8N1).
+    //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate. 
+    //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
+    void setRxTimeout(uint8_t symbols_timeout);
 
     // onReceive will setup a callback that will be called whenever an UART interruption occurs (UART_INTR_RXFIFO_FULL or UART_INTR_RXFIFO_TOUT)
     // UART_INTR_RXFIFO_FULL interrupt triggers at UART_FULL_THRESH_DEFAULT bytes received (defined as 120 bytes by default in IDF)
@@ -151,7 +159,9 @@ protected:
     uart_t* _uart;
     size_t _rxBufferSize;
     OnReceiveCb _onReceiveCB;
+    // _onReceive and _rxTimeout have be consistent when timeout is disabled
     bool _onReceiveTimeout;
+    uint8_t _rxTimeout;
     OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;
 
