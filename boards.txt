@@ -6892,19 +6892,6 @@ adafruit_feather_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
 adafruit_feather_esp32s3.menu.CPUFreq.10=10MHz
 adafruit_feather_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
 
-adafruit_feather_esp32s3.menu.FlashMode.qio=QIO
-adafruit_feather_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
-adafruit_feather_esp32s3.menu.FlashMode.qio.build.boot=qio
-adafruit_feather_esp32s3.menu.FlashMode.dio=DIO
-adafruit_feather_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
-adafruit_feather_esp32s3.menu.FlashMode.dio.build.boot=dio
-adafruit_feather_esp32s3.menu.FlashMode.qout=QOUT
-adafruit_feather_esp32s3.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_feather_esp32s3.menu.FlashMode.qout.build.boot=qout
-adafruit_feather_esp32s3.menu.FlashMode.dout=DOUT
-adafruit_feather_esp32s3.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_feather_esp32s3.menu.FlashMode.dout.build.boot=dout
-
 adafruit_feather_esp32s3.menu.FlashFreq.80=80MHz
 adafruit_feather_esp32s3.menu.FlashFreq.80.build.flash_freq=80m
 adafruit_feather_esp32s3.menu.FlashFreq.40=40MHz
@@ -7054,19 +7041,6 @@ adafruit_qtpy_esp32s3.menu.CPUFreq.20=20MHz
 adafruit_qtpy_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
 adafruit_qtpy_esp32s3.menu.CPUFreq.10=10MHz
 adafruit_qtpy_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
-
-adafruit_qtpy_esp32s3.menu.FlashMode.qio=QIO
-adafruit_qtpy_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
-adafruit_qtpy_esp32s3.menu.FlashMode.qio.build.boot=qio
-adafruit_qtpy_esp32s3.menu.FlashMode.dio=DIO
-adafruit_qtpy_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
-adafruit_qtpy_esp32s3.menu.FlashMode.dio.build.boot=dio
-adafruit_qtpy_esp32s3.menu.FlashMode.qout=QOUT
-adafruit_qtpy_esp32s3.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_qtpy_esp32s3.menu.FlashMode.qout.build.boot=qout
-adafruit_qtpy_esp32s3.menu.FlashMode.dout=DOUT
-adafruit_qtpy_esp32s3.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_qtpy_esp32s3.menu.FlashMode.dout.build.boot=dout
 
 adafruit_qtpy_esp32s3.menu.FlashFreq.80=80MHz
 adafruit_qtpy_esp32s3.menu.FlashFreq.80.build.flash_freq=80m
