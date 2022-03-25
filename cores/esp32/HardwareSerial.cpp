@@ -130,6 +130,7 @@ _uart(NULL),
 _rxBufferSize(256), 
 _onReceiveCB(NULL),
 _onReceiveTimeout(true),
+_rxTimeout(10),
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -192,12 +193,29 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
     HSERIAL_MUTEX_LOCK();
     // function may be NULL to cancel onReceive() from its respective task 
     _onReceiveCB = function;
-    _onReceiveTimeout = onlyOnTimeout;
+    // When Rx timeout is Zero (disabled), there is only one possible option that is callback when FIFO reaches 120 bytes
+    _onReceiveTimeout = _rxTimeout > 0 ? onlyOnTimeout : false;
 
     // this can be called after Serial.begin(), therefore it shall create the event task
     if (function != NULL && _uart != NULL && _eventTask == NULL) {
         _createEventTask(this); // Create event task
     }
+    HSERIAL_MUTEX_UNLOCK();
+}
+
+// timout is calculates in time to receive UART symbols at the UART baudrate.
+// the estimation is about 11 bits per symbol (SERIAL_8N1)
+void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+{
+    HSERIAL_MUTEX_LOCK();
+    
+    // Zero disables timeout, thus, onReceive callback will only be called when RX FIFO reaches 120 bytes
+    // Any non-zero value will activate onReceive callback based on UART baudrate with about 11 bits per symbol 
+    _rxTimeout = symbols_timeout;   
+    if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
+
+    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _rxTimeout); // Set new timeout
+    
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -336,6 +354,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     // or when setting the callback before calling begin() 
     if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
         _createEventTask(this);
+    }
+
+    // Set UART RX timeout
+    if (_uart != NULL) {
+        uart_set_rx_timeout(_uart_nr, _rxTimeout);
     }
 
     HSERIAL_MUTEX_UNLOCK();
