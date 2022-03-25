@@ -67,8 +67,10 @@ bool psramInit(){
         spiramFailed = true;
         log_w("PSRAM init failed!");
 #if CONFIG_IDF_TARGET_ESP32
-        pinMatrixOutDetach(16, false, false);
-        pinMatrixOutDetach(17, false, false);
+        if (pkg_ver != EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4) {
+            pinMatrixOutDetach(16, false, false);
+            pinMatrixOutDetach(17, false, false);
+        }
 #endif
         return false;
     }
