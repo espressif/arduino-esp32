@@ -1,3 +1,6 @@
+#ifndef HTTPSOTAUPDATE_H
+#define HTTPSOTAUPDATE_H
+
 #include "esp_http_client.h"
 #define HttpEvent_t esp_http_client_event_t
 
@@ -19,3 +22,5 @@ class HttpsOTAUpdateClass {
 };
 
 extern HttpsOTAUpdateClass HttpsOTA;
+
+#endif
