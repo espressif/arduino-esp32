@@ -38,6 +38,8 @@
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
 
+#include "class/hid/hid.h"
+
 //------------- HOST -------------//
 #if CFG_TUH_ENABLED
   #include "host/usbh.h"

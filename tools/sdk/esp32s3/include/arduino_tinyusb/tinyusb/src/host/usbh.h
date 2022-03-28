@@ -39,17 +39,34 @@
 //--------------------------------------------------------------------+
 
 // forward declaration
-struct tuh_control_xfer_s;
-typedef struct tuh_control_xfer_s tuh_control_xfer_t;
+struct tuh_xfer_s;
+typedef struct tuh_xfer_s tuh_xfer_t;
 
-typedef bool (*tuh_control_xfer_cb_t)(uint8_t daddr, tuh_control_xfer_t const * xfer, xfer_result_t result);
+typedef void (*tuh_xfer_cb_t)(tuh_xfer_t* xfer);
 
-struct tuh_control_xfer_s
+// Note1: layout and order of this will be changed in near future
+// it is advised to initialize it using member name
+// Note2: not all field is available/meaningful in callback, some info is not saved by
+// usbh to save SRAM
+struct tuh_xfer_s
 {
-  tusb_control_request_t request TU_ATTR_ALIGNED(4);
-  uint8_t* buffer;
-  tuh_control_xfer_cb_t complete_cb;
-  uintptr_t user_arg;
+  uint8_t daddr;
+  uint8_t ep_addr;
+
+  xfer_result_t result;
+  uint32_t actual_len;      // excluding setup packet
+
+  union
+  {
+    tusb_control_request_t const* setup; // setup packet pointer if control transfer
+    uint32_t buflen;        // expected length if not control transfer (not available in callback)
+  };
+
+  uint8_t* buffer;           // not available in callback if not control transfer
+  tuh_xfer_cb_t complete_cb;
+  uintptr_t user_data;
+
+  // uint32_t timeout_ms;    // place holder, not supported yet
 };
 
 //--------------------------------------------------------------------+
@@ -104,21 +121,28 @@ static inline bool tuh_ready(uint8_t daddr)
   return tuh_mounted(daddr) && !tuh_suspended(daddr);
 }
 
-// Carry out a control transfer
-// true on success, false if there is on-going control transfer or incorrect parameters
-// Blocking if complete callback is NULL, in this case 'user_arg' must contain xfer_result_t variable
-bool tuh_control_xfer (uint8_t daddr, tuh_control_xfer_t const* xfer);
+//--------------------------------------------------------------------+
+// Transfer API
+//--------------------------------------------------------------------+
 
-// Sync (blocking) version of tuh_control_xfer()
-// return transfer result
-uint8_t tuh_control_xfer_sync(uint8_t daddr, tuh_control_xfer_t const* xfer, uint32_t timeout_ms);
+// Submit a control transfer
+//  - async: complete callback invoked when finished.
+//  - sync : blocking if complete callback is NULL.
+bool tuh_control_xfer(tuh_xfer_t* xfer);
+
+// Submit a bulk/interrupt transfer
+//  - async: complete callback invoked when finished.
+//  - sync : blocking if complete callback is NULL.
+bool tuh_edpt_xfer(tuh_xfer_t* xfer);
+
+// Open an non-control endpoint
+bool tuh_edpt_open(uint8_t dev_addr, tusb_desc_endpoint_t const * desc_ep);
 
 // Set Configuration (control transfer)
 // config_num = 0 will un-configure device. Note: config_num = config_descriptor_index + 1
 // true on success, false if there is on-going control transfer or incorrect parameters
-// Blocking if complete callback is NULL, in this case 'user_arg' must contain xfer_result_t variable
 bool tuh_configuration_set(uint8_t daddr, uint8_t config_num,
-                           tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                           tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 //--------------------------------------------------------------------+
 // Descriptors Asynchronous (non-blocking)
@@ -127,43 +151,43 @@ bool tuh_configuration_set(uint8_t daddr, uint8_t config_num,
 // Get an descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get(uint8_t daddr, uint8_t type, uint8_t index, void* buffer, uint16_t len,
-                        tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                        tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get device descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_device(uint8_t daddr, void* buffer, uint16_t len,
-                               tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                               tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get configuration descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_configuration(uint8_t daddr, uint8_t index, void* buffer, uint16_t len,
-                                      tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                                      tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get HID report descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_hid_report(uint8_t daddr, uint8_t itf_num, uint8_t desc_type, uint8_t index, void* buffer, uint16_t len,
-                                   tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                                   tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get string descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
-// Blocking if complete callback is NULL, in this case 'user_arg' must contain xfer_result_t variable
+// Blocking if complete callback is NULL, in this case 'user_data' must contain xfer_result_t variable
 bool tuh_descriptor_get_string(uint8_t daddr, uint8_t index, uint16_t language_id, void* buffer, uint16_t len,
-                               tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                               tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get manufacturer string descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_manufacturer_string(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len,
-                                            tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                                            tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get product string descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_product_string(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len,
-                                       tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                                       tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get serial string descriptor (control transfer)
 // true on success, false if there is on-going control transfer or incorrect parameters
 bool tuh_descriptor_get_serial_string(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len,
-                                      tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                                      tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 //--------------------------------------------------------------------+
 // Descriptors Synchronous (blocking)
@@ -171,35 +195,35 @@ bool tuh_descriptor_get_serial_string(uint8_t daddr, uint16_t language_id, void*
 
 // Sync (blocking) version of tuh_descriptor_get()
 // return transfer result
-uint8_t tuh_descriptor_get_sync(uint8_t daddr, uint8_t type, uint8_t index, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_sync(uint8_t daddr, uint8_t type, uint8_t index, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_device()
 // return transfer result
-uint8_t tuh_descriptor_get_device_sync(uint8_t daddr, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_device_sync(uint8_t daddr, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_configuration()
 // return transfer result
-uint8_t tuh_descriptor_get_configuration_sync(uint8_t daddr, uint8_t index, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_configuration_sync(uint8_t daddr, uint8_t index, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_hid_report()
 // return transfer result
-uint8_t tuh_descriptor_get_hid_report_sync(uint8_t daddr, uint8_t itf_num, uint8_t desc_type, uint8_t index, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_hid_report_sync(uint8_t daddr, uint8_t itf_num, uint8_t desc_type, uint8_t index, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_string()
 // return transfer result
-uint8_t tuh_descriptor_get_string_sync(uint8_t daddr, uint8_t index, uint16_t language_id, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_string_sync(uint8_t daddr, uint8_t index, uint16_t language_id, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_manufacturer_string()
 // return transfer result
-uint8_t tuh_descriptor_get_manufacturer_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_manufacturer_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_product_string()
 // return transfer result
-uint8_t tuh_descriptor_get_product_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_product_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len);
 
 // Sync (blocking) version of tuh_descriptor_get_serial_string()
 // return transfer result
-uint8_t tuh_descriptor_get_serial_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len, uint8_t timeout_ms);
+uint8_t tuh_descriptor_get_serial_string_sync(uint8_t daddr, uint16_t language_id, void* buffer, uint16_t len);
 
 #ifdef __cplusplus
  }

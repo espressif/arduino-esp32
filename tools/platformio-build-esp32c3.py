@@ -111,7 +111,7 @@ env.Append(
         "-u", "newlib_include_pthread_impl",
         "-u", "newlib_include_assert_impl",
         "-u", "__cxa_guard_dummy",
-        '-Wl,-Map="%s"' % join("${BUILD_DIR}", "${PROGNAME}.map")
+        '-Wl,-Map="%s"' % join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
     ],
 
     CPPPATH=[
