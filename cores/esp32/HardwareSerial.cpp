@@ -122,11 +122,13 @@ void serialEventRun(void)
 
 HardwareSerial::HardwareSerial(int uart_nr) : 
 _uart_nr(uart_nr), 
-_uart(NULL), 
+_uart(NULL),
 _rxBufferSize(256),
 _txBufferSize(0), 
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
+_onReceiveTimeout(true),
+_rxTimeout(10),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
@@ -183,16 +185,47 @@ void HardwareSerial::onReceiveError(OnReceiveErrorCb function)
     HSERIAL_MUTEX_UNLOCK();
 }
 
-void HardwareSerial::onReceive(OnReceiveCb function)
+void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
 {
     HSERIAL_MUTEX_LOCK();
     // function may be NULL to cancel onReceive() from its respective task 
     _onReceiveCB = function;
+    // When Rx timeout is Zero (disabled), there is only one possible option that is callback when FIFO reaches 120 bytes
+    _onReceiveTimeout = _rxTimeout > 0 ? onlyOnTimeout : false;
+
     // this can be called after Serial.begin(), therefore it shall create the event task
     if (function != NULL && _uart != NULL && _eventTask == NULL) {
-        _createEventTask(this);
+        _createEventTask(this); // Create event task
     }
     HSERIAL_MUTEX_UNLOCK();
+}
+
+// timout is calculates in time to receive UART symbols at the UART baudrate.
+// the estimation is about 11 bits per symbol (SERIAL_8N1)
+void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+{
+    HSERIAL_MUTEX_LOCK();
+    
+    // Zero disables timeout, thus, onReceive callback will only be called when RX FIFO reaches 120 bytes
+    // Any non-zero value will activate onReceive callback based on UART baudrate with about 11 bits per symbol 
+    _rxTimeout = symbols_timeout;   
+    if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
+
+    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _rxTimeout); // Set new timeout
+    
+    HSERIAL_MUTEX_UNLOCK();
+}
+
+void HardwareSerial::eventQueueReset()
+{
+    QueueHandle_t uartEventQueue = NULL;
+    if (_uart == NULL) {
+	    return;
+    }
+    uartGetEventQueue(_uart, &uartEventQueue);
+    if (uartEventQueue != NULL) {
+        xQueueReset(uartEventQueue);
+    }
 }
 
 void HardwareSerial::_uartEventTask(void *args)
@@ -207,14 +240,16 @@ void HardwareSerial::_uartEventTask(void *args)
             if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
                 switch(event.type) {
                     case UART_DATA:
-                        if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();
+                        if(uart->_onReceiveCB && uart->available() > 0 && 
+                            ((uart->_onReceiveTimeout && event.timeout_flag) || !uart->_onReceiveTimeout) ) 
+                                uart->_onReceiveCB();
                         break;
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
                         break;
                     case UART_BUFFER_FULL:
-                        log_w("UART%d Buffer Full. Consider encreasing your buffer size of your Application.", uart->_uart_nr);
+                        log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
                         if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
                         break;
                     case UART_BREAK:
@@ -317,6 +352,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
         _createEventTask(this);
     }
+
+    // Set UART RX timeout
+    if (_uart != NULL) {
+        uart_set_rx_timeout(_uart_nr, _rxTimeout);
+    }
+
     HSERIAL_MUTEX_UNLOCK();
 }
 
