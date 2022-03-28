@@ -15,6 +15,10 @@
 #include"esp_gap_bt_api.h"
 #include "esp_err.h"
 
+#if !defined(CONFIG_BT_SPP_ENABLED)
+#error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
+#endif
+
 #define REMOVE_BONDED_DEVICES 0   // <- Set to 0 to view all bonded devices addresses, set to 1 to remove
 
 #define PAIR_MAX_DEVICES 20
