@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32c3']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
 
     steps:
@@ -71,7 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32c3']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     container:
       image: python:3.10.1-bullseye
@@ -110,6 +110,7 @@ jobs:
 
   event_file:
     name: "Event File"
+    if: ${{ always() }}
     needs: Test
     runs-on: ubuntu-latest
     steps:
