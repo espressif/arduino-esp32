@@ -127,9 +127,9 @@ _rxBufferSize(256),
 _txBufferSize(0), 
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
-_eventTask(NULL)
 _onReceiveTimeout(true),
 _rxTimeout(10),
+_eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
