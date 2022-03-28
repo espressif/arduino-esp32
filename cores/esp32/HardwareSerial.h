@@ -132,11 +132,13 @@ public:
     void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
 
     size_t setRxBufferSize(size_t new_size);
+    size_t setTxBufferSize(size_t new_size);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
+    size_t _txBufferSize;
     OnReceiveCb _onReceiveCB;
     OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;

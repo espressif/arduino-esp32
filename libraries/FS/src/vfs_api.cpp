@@ -13,8 +13,11 @@
 // limitations under the License.
 
 #include "vfs_api.h"
+#include <stdio_ext.h>
 
 using namespace fs;
+
+#define READ_SIZE_SWITCH 128    //swithc to read func when read size > 128bytes
 
 FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create)
 {
@@ -374,7 +377,28 @@ size_t VFSFileImpl::read(uint8_t* buf, size_t size)
         return 0;
     }
 
-    return fread(buf, 1, size, _f);
+    //ERASE BYTEBUFFER and use read when size > READ_SIZE_SWITCH always
+    if(size > READ_SIZE_SWITCH)
+    {
+        //check some data in buffer exists –> clear buffer and move pointer to deleted data
+        size_t bytesinbuf = __fpending(_f);
+        if (bytesinbuf && (bytesinbuf != 128))  //buffer lenght is 128 bytes
+        {
+            fpurge(_f);
+            lseek(fileno(_f),(-128+bytesinbuf),SEEK_CUR);
+        }
+
+        int res = ::read(fileno(_f), buf, size);
+        if (res < 0) {
+            // an error occurred
+            return 0;
+        }
+        return res;
+    }
+    else
+    {
+        return fread(buf, 1, size, _f);
+    }
 }
 
 void VFSFileImpl::flush()

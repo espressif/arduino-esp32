@@ -10,10 +10,10 @@ tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
 
-tools.esptool_py.network_cmd=python "{runtime.platform.path}/tools/espota.py" -r
+tools.esptool_py.network_cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
 tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 
-tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
+tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
 compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
