@@ -130,7 +130,7 @@ void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
 }
 
 
-uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
+uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart_nr >= SOC_UART_NUM) {
         return NULL;
@@ -163,7 +163,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.source_clk = UART_SCLK_APB;
 
 
-    ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 20, &(uart->uart_event_queue), 0));
+    ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
