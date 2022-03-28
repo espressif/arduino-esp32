@@ -1,3 +1,8 @@
+#if ARDUINO_USB_MODE
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 #include "USB.h"
 #include "USBVendor.h"
 
@@ -189,3 +194,4 @@ void loop() {
     Vendor.write(b, l);
   }
 }
+#endif /* ARDUINO_USB_MODE */

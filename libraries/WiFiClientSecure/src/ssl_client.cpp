@@ -17,9 +17,10 @@
 #include <algorithm>
 #include <string>
 #include "ssl_client.h"
+#include "esp_crt_bundle.h"
 #include "WiFi.h"
 
-#ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
+#if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
 #  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
 #else
 
@@ -53,14 +54,14 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
+int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
     char buf[512];
     int ret, flags;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
 
-    if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure) {
+    if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure && !useRootCABundle) {
         return -1;
     }
 
@@ -170,7 +171,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     if (insecure) {
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
-        log_i("WARNING: Skipping SSL Verification. INSECURE!");
+        log_d("WARNING: Skipping SSL Verification. INSECURE!");
     } else if (rootCABuff != NULL) {
         log_v("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
@@ -181,6 +182,13 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         if (ret < 0) {
             // free the ca_cert in the case parse failed, otherwise, the old ca_cert still in the heap memory, that lead to "out of memory" crash.
             mbedtls_x509_crt_free(&ssl_client->ca_cert);
+            return handle_error(ret);
+        }
+    } else if (useRootCABundle) {
+        log_v("Attaching root CA cert bundle");
+        ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
+
+        if (ret < 0) {
             return handle_error(ret);
         }
     } else if (pskIdent != NULL && psKey != NULL) {
@@ -327,8 +335,13 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
+    
+    // save only interesting field
+    int timeout = ssl_client->handshake_timeout;
     // reset embedded pointers to zero
     memset(ssl_client, 0, sizeof(sslclient_context));
+    
+    ssl_client->handshake_timeout = timeout;
 }
 
 

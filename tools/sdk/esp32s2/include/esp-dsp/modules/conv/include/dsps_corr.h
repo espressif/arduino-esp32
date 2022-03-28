@@ -43,7 +43,7 @@ extern "C"
  */
 esp_err_t dsps_corr_f32_ansi(const float *Signal, const int siglen, const float *Pattern, const int patlen, float *dest);
 esp_err_t dsps_corr_f32_ae32(const float *Signal, const int siglen, const float *Pattern, const int patlen, float *dest);
-/**}@*/
+/**@}*/
 
 #ifdef __cplusplus
 }
