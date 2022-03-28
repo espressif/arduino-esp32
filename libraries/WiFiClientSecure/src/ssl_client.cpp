@@ -171,7 +171,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     if (insecure) {
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
-        log_i("WARNING: Skipping SSL Verification. INSECURE!");
+        log_d("WARNING: Skipping SSL Verification. INSECURE!");
     } else if (rootCABuff != NULL) {
         log_v("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
