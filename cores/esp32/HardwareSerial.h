@@ -161,18 +161,18 @@ protected:
     size_t _rxBufferSize;
     size_t _txBufferSize;
     OnReceiveCb _onReceiveCB;
+    OnReceiveErrorCb _onReceiveErrorCB;
     // _onReceive and _rxTimeout have be consistent when timeout is disabled
     bool _onReceiveTimeout;
     uint8_t _rxTimeout;
-    OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;
+#if !CONFIG_DISABLE_HAL_LOCKS
+    SemaphoreHandle_t _lock;
+#endif
 
     void _createEventTask(void *args);
     void _destroyEventTask(void);
     static void _uartEventTask(void *args);
-#if !CONFIG_DISABLE_HAL_LOCKS
-    SemaphoreHandle_t _lock;
-#endif
 };
 
 extern void serialEventRun(void) __attribute__((weak));
