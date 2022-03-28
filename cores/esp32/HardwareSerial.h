@@ -132,11 +132,13 @@ public:
     void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
 
     size_t setRxBufferSize(size_t new_size);
+    size_t setTxBufferSize(size_t new_size);
 
 protected:
     int _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
+    size_t _txBufferSize;
     OnReceiveCb _onReceiveCB;
     OnReceiveErrorCb _onReceiveErrorCB;
     TaskHandle_t _eventTask;
@@ -156,10 +158,10 @@ extern void serialEventRun(void) __attribute__((weak));
 #define ARDUINO_USB_CDC_ON_BOOT 0
 #endif
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+#if !ARDUINO_USB_MODE
 #include "USB.h"
 #include "USBCDC.h"
-extern HardwareSerial Serial0;
-#elif ARDUINO_HW_CDC_ON_BOOT
+#endif
 extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;

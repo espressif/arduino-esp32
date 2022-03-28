@@ -37,7 +37,7 @@ void serialEvent(void) {}
 #ifndef RX1
 #if CONFIG_IDF_TARGET_ESP32
 #define RX1 9
-#elif CONFIG_IDF_TARGET_ESP32S2 
+#elif CONFIG_IDF_TARGET_ESP32S2
 #define RX1 18
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define RX1 18
@@ -86,8 +86,6 @@ void serialEvent2(void) {}
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
 HardwareSerial Serial0(0);
-#elif ARDUINO_HW_CDC_ON_BOOT
-HardwareSerial Serial0(0);
 #else
 HardwareSerial Serial(0);
 #endif
@@ -101,8 +99,6 @@ HardwareSerial Serial2(2);
 void serialEventRun(void)
 {
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-    if(Serial0.available()) serialEvent();
-#elif ARDUINO_HW_CDC_ON_BOOT
     if(Serial0.available()) serialEvent();
 #else
     if(Serial.available()) serialEvent();
@@ -127,7 +123,8 @@ void serialEventRun(void)
 HardwareSerial::HardwareSerial(int uart_nr) : 
 _uart_nr(uart_nr), 
 _uart(NULL), 
-_rxBufferSize(256), 
+_rxBufferSize(256),
+_txBufferSize(0), 
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
 _eventTask(NULL)
@@ -295,7 +292,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
         uartStartDetectBaudrate(_uart);
@@ -309,7 +306,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, invert, rxfifo_full_thrhd);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
@@ -458,10 +455,26 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
     }
 
     if (new_size <= SOC_UART_FIFO_LEN) {
-        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);
+        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
         return 0;
     }
 
     _rxBufferSize = new_size;
     return _rxBufferSize;
+}
+
+size_t HardwareSerial::setTxBufferSize(size_t new_size) {
+
+    if (_uart) {
+        log_e("TX Buffer can't be resized when Serial is already running.\n");
+        return 0;
+    }
+
+    if (new_size <= SOC_UART_FIFO_LEN) {
+        log_e("TX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
+        return 0;
+    }
+
+    _txBufferSize = new_size;
+    return _txBufferSize;
 }
