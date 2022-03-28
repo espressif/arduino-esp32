@@ -173,31 +173,31 @@ TU_VERIFY_STATIC( sizeof(hub_port_status_response_t) == 4, "size is not correct"
 
 // Clear feature
 bool hub_port_clear_feature (uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
-                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                             tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Set feature
 bool hub_port_set_feature   (uint8_t hub_addr, uint8_t hub_port, uint8_t feature,
-                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                             tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get port status
 bool hub_port_get_status    (uint8_t hub_addr, uint8_t hub_port, void* resp,
-                             tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg);
+                             tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Get status from Interrupt endpoint
 bool hub_edpt_status_xfer(uint8_t dev_addr);
 
 // Reset a port
 static inline bool hub_port_reset(uint8_t hub_addr, uint8_t hub_port,
-                                  tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg)
+                                  tuh_xfer_cb_t complete_cb, uintptr_t user_data)
 {
-  return hub_port_set_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET, complete_cb, user_arg);
+  return hub_port_set_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET, complete_cb, user_data);
 }
 
 // Clear Reset Change
 static inline bool hub_port_clear_reset_change(uint8_t hub_addr, uint8_t hub_port,
-                                               tuh_control_xfer_cb_t complete_cb, uintptr_t user_arg)
+                                               tuh_xfer_cb_t complete_cb, uintptr_t user_data)
 {
-  return hub_port_clear_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET_CHANGE, complete_cb, user_arg);
+  return hub_port_clear_feature(hub_addr, hub_port, HUB_FEATURE_PORT_RESET_CHANGE, complete_cb, user_data);
 }
 
 
