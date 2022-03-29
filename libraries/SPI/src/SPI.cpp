@@ -40,6 +40,9 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_div(0)
     ,_freq(1000000)
     ,_inTransaction(false)
+    #if !CONFIG_DISABLE_HAL_LOCKS
+    ,paramLock(NULL)
+    #endif
 {
     #if !CONFIG_DISABLE_HAL_LOCKS
     if(paramLock==NULL){
