@@ -54,6 +54,11 @@ SPIClass::SPIClass(uint8_t spi_bus)
 SPIClass::~SPIClass()
 {
     end();
+    #if !CONFIG_DISABLE_HAL_LOCKS
+    if(paramLock!=NULL){
+        vSemaphoreDelete(paramLock);
+    }
+    #endif
 }
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -111,11 +116,6 @@ void SPIClass::end()
     spiDetachMOSI(_spi, _mosi);
     setHwCs(false);
     spiStopBus(_spi);
-    #if !CONFIG_DISABLE_HAL_LOCKS
-    if(paramLock!=NULL){ // not sure if that statement is mandatory
-        vSemaphoreDelete(paramLock);
-    }
-    #endif
     _spi = NULL;
 }
 
