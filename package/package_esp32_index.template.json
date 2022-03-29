@@ -297,6 +297,13 @@
           "version": "3.3.0",
           "systems": [
             {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.2/esptool-3.3-windows.zip",
+              "archiveFileName": "esptool-3.3-windows.zip",
+              "checksum": "SHA-256:55a1d7165414bf4dbd2bb16ca094e555d671958450f5d1536b457a518d2b15df",
+              "size": "7436864"
+            },
+            {
               "host": "x86_64-mingw32",
               "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.2/esptool-3.3-windows.zip",
               "archiveFileName": "esptool-3.3-windows.zip",
