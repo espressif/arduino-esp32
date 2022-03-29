@@ -52,6 +52,7 @@ SPIClass::SPIClass(uint8_t spi_bus)
             log_e("xSemaphoreCreateMutex failed");
             return;
         }
+    }
     #endif
 }
 
