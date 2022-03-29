@@ -40,7 +40,21 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_div(0)
     ,_freq(1000000)
     ,_inTransaction(false)
-{}
+{
+    #if !CONFIG_DISABLE_HAL_LOCKS
+    if(paramLock==NULL){
+        paramLock = xSemaphoreCreateMutex();
+        if(paramLock==NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return;
+        }
+    #endif
+}
+
+SPIClass::~SPIClass()
+{
+    end();
+}
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
 {
@@ -56,12 +70,6 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     if(!_spi) {
         return;
     }
-    #if !CONFIG_DISABLE_HAL_LOCKS
-    if(paramLock==NULL){
-        paramLock = xSemaphoreCreateMutex();
-        if(paramLock==NULL) return; // fail to create mutex so abort initialization
-    }
-    #endif
 
     if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -103,9 +111,11 @@ void SPIClass::end()
     spiDetachMOSI(_spi, _mosi);
     setHwCs(false);
     spiStopBus(_spi);
+    #if !CONFIG_DISABLE_HAL_LOCKS
     if(paramLock!=NULL){ // not sure if that statement is mandatory
         vSemaphoreDelete(paramLock);
     }
+    #endif
     _spi = NULL;
 }
 
