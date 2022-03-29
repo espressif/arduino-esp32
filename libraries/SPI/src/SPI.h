@@ -52,7 +52,7 @@ private:
     uint32_t _div;
     uint32_t _freq;
 	#if !CONFIG_DISABLE_HAL_LOCKS
-    xSemaphoreHandle_t paramLock=NULL;
+    SemaphoreHandle_t paramLock=NULL;
     #endif
     bool _inTransaction;
     void writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat);
