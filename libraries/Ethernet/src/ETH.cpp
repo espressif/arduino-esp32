@@ -226,11 +226,18 @@ ETHClass::ETHClass()
 ETHClass::~ETHClass()
 {}
 
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode, bool use_mac_from_efuse)
 {
 #if ESP_IDF_VERSION_MAJOR > 3
     eth_clock_mode = clock_mode;
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
 
     tcpip_adapter_set_default_eth_handlers();
     
@@ -363,6 +370,14 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
+
     err = esp_eth_init(&eth_config);
     if(!err){
         initialized = true;
