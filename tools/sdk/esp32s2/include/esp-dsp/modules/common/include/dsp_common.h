@@ -18,7 +18,12 @@
 #include <stdbool.h>
 #include "dsp_err.h"
 #include "esp_idf_version.h"
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
+#include "esp_cpu.h"
+#else
 #include "soc/cpu.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"

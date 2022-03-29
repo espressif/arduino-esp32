@@ -69,8 +69,6 @@ esp_err_t dsps_fft2r_init_sc16(int16_t *fft_table_buff, int table_size);
  * Free resources of Complex FFT. This function delete coefficients table if it was allocated by dsps_fft2r_init_fc32.
  * The implementation use ANSI C and could be compiled and run on any platform
  *
- *
- * @return
  */
 void dsps_fft2r_deinit_fc32(void);
 void dsps_fft2r_deinit_sc16(void);
@@ -128,13 +126,13 @@ esp_err_t dsps_fft2r_sc16_aes3_(int16_t *data, int N, int16_t *w);
 esp_err_t dsps_bit_rev_fc32_ansi(float *data, int N);
 esp_err_t dsps_bit_rev_sc16_ansi(int16_t *data, int N);
 esp_err_t dsps_bit_rev2r_fc32(float *data, int N);
-
-/**@{*/
+/**@}*/
 
 esp_err_t dsps_bit_rev_lookup_fc32_ansi(float *data, int reverse_size, uint16_t *reverse_tab);
 esp_err_t dsps_bit_rev_lookup_fc32_ae32(float *data, int reverse_size, uint16_t *reverse_tab);
 esp_err_t dsps_bit_rev_lookup_fc32_aes3(float *data, int reverse_size, uint16_t *reverse_tab);
 
+/**@{*/
 /**
  * @brief      Generate coefficients table for the FFT radix 2
  *

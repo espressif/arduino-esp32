@@ -25,6 +25,9 @@
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/spiram.h"
 #include "esp32s2/rom/cache.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/spiram.h"
+#include "esp32s3/rom/cache.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -86,12 +89,12 @@ bool psramInit(){
         log_e("PSRAM could not be added to the heap!");
         return false;
     }
-#if CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL && !CONFIG_ARDUINO_ISR_IRAM
-        heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
+#if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
+    heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
 #endif
-#endif
+#endif /* CONFIG_SPIRAM_BOOT_INIT */
+    log_i("PSRAM enabled");
     spiramDetected = true;
-    log_d("PSRAM enabled");
     return true;
 }
 

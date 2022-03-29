@@ -1,3 +1,8 @@
+#if ARDUINO_USB_MODE
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 #include "USB.h"
 #include "USBHIDSystemControl.h"
 USBHIDSystemControl SystemControl;
@@ -19,3 +24,4 @@ void loop() {
   }
   previousButtonState = buttonState;
 }
+#endif /* ARDUINO_USB_MODE */
