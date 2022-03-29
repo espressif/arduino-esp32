@@ -20,6 +20,7 @@
  */
 
 #include "SPI.h"
+#include "esp32-hal-log.h"
 
 #if !CONFIG_DISABLE_HAL_LOCKS
 #define SPI_PARAM_LOCK()    do {} while (xSemaphoreTake(paramLock, portMAX_DELAY) != pdPASS)
