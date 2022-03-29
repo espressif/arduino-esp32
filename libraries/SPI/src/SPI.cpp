@@ -57,6 +57,7 @@ SPIClass::~SPIClass()
     #if !CONFIG_DISABLE_HAL_LOCKS
     if(paramLock!=NULL){
         vSemaphoreDelete(paramLock);
+        paramLock = NULL;
     }
     #endif
 }
