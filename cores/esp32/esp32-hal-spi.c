@@ -1059,7 +1059,7 @@ void spiSimpleTransaction(spi_t * spi)
     if(!spi) {
         return;
     }
-	SPI_MUTEX_UNLOCK();
+	SPI_MUTEX_LOCK();
 }
 
 void spiEndTransaction(spi_t * spi)
