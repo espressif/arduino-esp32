@@ -103,6 +103,9 @@ void SPIClass::end()
     spiDetachMOSI(_spi, _mosi);
     setHwCs(false);
     spiStopBus(_spi);
+    if(paramLock!=NULL){ // not sure if that statement is mandatory
+        vSemaphoreDelete(paramLock);
+    }
     _spi = NULL;
 }
 
@@ -172,7 +175,7 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
-	SPI_PARAM_UNLOCK();
+	    SPI_PARAM_UNLOCK(); // <-- Im not sure should it be here or right after spiTransaction()
     }
 }
 
