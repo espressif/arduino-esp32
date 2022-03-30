@@ -52,6 +52,8 @@
 #include "soc/soc_caps.h"
 #include "HWCDC.h"
 
+#define SERIAL_PORT_HARDWARE Serial
+
 class HardwareSerial: public Stream
 {
 public:
@@ -114,6 +116,8 @@ protected:
     int _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
+    int8_t _rxPin = -1;
+    int8_t _txPin = -1;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
