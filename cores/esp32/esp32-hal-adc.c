@@ -37,6 +37,10 @@ static uint8_t __analogVRefPin = 0;
 #include "soc/sens_reg.h"
 #include "soc/rtc_io_reg.h"
 #include "soc/dac_channel.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/ets_sys.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc_io_reg.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
 #else

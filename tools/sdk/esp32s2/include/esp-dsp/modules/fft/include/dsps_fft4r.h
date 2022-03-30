@@ -65,7 +65,6 @@ esp_err_t dsps_fft4r_init_fc32(float *fft_table_buff, int max_fft_size);
  * The implementation use ANSI C and could be compiled and run on any platform
  *
  *
- * @return
  */
 void dsps_fft4r_deinit_fc32(void);
 /**@}*/
@@ -115,7 +114,7 @@ esp_err_t dsps_bit_rev4r_fc32(float *data, int N);
 esp_err_t dsps_bit_rev4r_fc32_ae32(float *data, int N);
 esp_err_t dsps_bit_rev4r_direct_fc32_ansi(float *data, int N);
 esp_err_t dsps_bit_rev4r_sc16_ansi(int16_t *data, int N);
-
+/**@}*/
 
 /**@{*/
 /**

@@ -61,7 +61,7 @@ extern "C" {
 struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
-uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd);
+uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd);
 void uartEnd(uart_t* uart);
 
 // This is used to retrieve the Event Queue pointer from a UART IDF Driver in order to allow user to deal with its events

@@ -226,11 +226,18 @@ ETHClass::ETHClass()
 ETHClass::~ETHClass()
 {}
 
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode, bool use_mac_from_efuse)
 {
 #if ESP_IDF_VERSION_MAJOR > 3
     eth_clock_mode = clock_mode;
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
 
     tcpip_adapter_set_default_eth_handlers();
     
@@ -245,6 +252,8 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
         eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+        mac_config.clock_config.rmii.clock_mode = (eth_clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
+        mac_config.clock_config.rmii.clock_gpio = (1 == eth_clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == eth_clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == eth_clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
         mac_config.smi_mdc_gpio_num = mdc;
         mac_config.smi_mdio_gpio_num = mdio;
         mac_config.sw_reset_timeout_ms = 1000;
@@ -305,7 +314,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 
     eth_handle = NULL;
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(eth_mac, eth_phy);
-    eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
+    //eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
     //eth_config.on_lowlevel_deinit_done = on_lowlevel_deinit_done;
     if(esp_eth_driver_install(&eth_config, &eth_handle) != ESP_OK || eth_handle == NULL){
         log_e("esp_eth_driver_install failed");
@@ -361,6 +370,14 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
+
     err = esp_eth_init(&eth_config);
     if(!err){
         initialized = true;
@@ -386,7 +403,7 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
 {
     esp_err_t err = ESP_OK;
     tcpip_adapter_ip_info_t info;
-	
+
     if(local_ip != (uint32_t)0x00000000 && local_ip != INADDR_NONE){
         info.ip.addr = static_cast<uint32_t>(local_ip);
         info.gw.addr = static_cast<uint32_t>(gateway);
