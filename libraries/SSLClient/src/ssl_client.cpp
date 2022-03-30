@@ -19,7 +19,7 @@
 #include <string>
 #include "ssl_client.h"
 
-#ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
+#if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
 #  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
 #else
 
