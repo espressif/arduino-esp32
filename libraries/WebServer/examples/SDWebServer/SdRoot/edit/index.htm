@@ -375,7 +375,7 @@
   
         function createTreeLeaf(path, name, size){
           var leaf = document.createElement("li");
-          leaf.id = (((path == "/")?"":path)+"/"+name).toLowerCase();
+          leaf.id = name.toLowerCase();
           var label = document.createElement("span");
           label.textContent = name.toLowerCase();
           leaf.appendChild(label);
@@ -398,7 +398,7 @@
           var leaf = document.createElement("li");
           var check = document.createElement("input");
           check.type = "checkbox";
-          check.id = (((path == "/")?"":path)+"/"+name).toLowerCase();
+          check.id = name.toLowerCase();
           if(typeof disabled !== "undefined" && disabled) check.disabled = "disabled";
           leaf.appendChild(check);
           var label = document.createElement("label");
