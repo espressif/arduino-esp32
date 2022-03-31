@@ -26,7 +26,15 @@ esp32s3.name=ESP32S3 Dev Module
 esp32s3.vid.0=0x303a
 esp32s3.pid.0=0x1001
 
+esp32s3.bootloader.tool=esptool_py
+esp32s3.bootloader.tool.default=esptool_py
+esp32s3.bootloader.file=bootloader_{build.boot}_{build.flash_freq}.bin
+
 esp32s3.upload.tool=esptool_py
+esp32s3.upload.tool.default=esptool_py
+esp32s3.upload.tool.network=esptool_py
+esp32s3.upload.protocol=esp32
+
 esp32s3.upload.maximum_size=1310720
 esp32s3.upload.maximum_data_size=327680
 esp32s3.upload.flags=
@@ -62,13 +70,6 @@ esp32s3.build.event_core=
 esp32s3.build.flash_type=qspi
 esp32s3.build.psram_type=qspi
 esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
-
-#esp32s3.menu.MemoryType.default=QSPI Flash and PSRAM
-#esp32s3.menu.MemoryType.default.build.memory_type=qspi_qspi
-#esp32s3.menu.MemoryType.qspi_opi=QSPI Flash and OPI PSRAM
-#esp32s3.menu.MemoryType.qspi_opi.build.memory_type=qspi_opi
-#esp32s3.menu.MemoryType.opi_opi=OPI Flash and PSRAM
-#esp32s3.menu.MemoryType.opi_opi.build.memory_type=opi_opi
 
 esp32s3.menu.PSRAM.disabled=Disabled
 esp32s3.menu.PSRAM.disabled.build.defines=
