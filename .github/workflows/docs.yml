@@ -35,4 +35,4 @@ jobs:
         # GitHub CI installs pip3 and setuptools outside the path.
         # Update the path to include them and run.
         PATH=/home/runner/.local/bin:$PATH pip3 install --user -r ./docs/requirements.txt
-        cd ./docs && PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" make html
+        cd ./docs && PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en -t esp32
