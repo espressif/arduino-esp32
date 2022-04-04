@@ -14,6 +14,9 @@ tools.esptool_py.cmd.windows=esptool.exe
 tools.esptool_py.network_cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
 tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 
+tools.esp_ota.cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
+tools.esp_ota.cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
+
 tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
@@ -187,12 +190,60 @@ recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build
 recipe.size.regex=^(?:\.iram0\.text|\.iram0\.vectors|\.dram0\.data|\.flash\.text|\.flash\.rodata|)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.noinit)\s+([0-9]+).*
 
-# ------------------------------
+## Required discoveries and monitors
+## ---------------------------------
+pluggable_discovery.required.0=builtin:serial-discovery
+pluggable_discovery.required.1=builtin:mdns-discovery
+pluggable_monitor.required.serial=builtin:serial-monitor
 
-tools.esptool_py.upload.protocol=esp32
+## ------------------
+## Upload/Debug tools
+## ------------------
+
+##
+## ESPTool
+##
+
+## Upload Sketch
+## -------------
+tools.esptool_py.upload.protocol=serial
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
-tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" {upload.extra_flags}
+tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
 tools.esptool_py.upload.pattern.linux=python3 "{path}/{cmd}" {upload.pattern_args}
+
+## Program Application
+## -------------------
+tools.esptool_py.program.params.verbose=
+tools.esptool_py.program.params.quiet=
+tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} 0x10000 "{build.path}/{build.project_name}.bin"
+tools.esptool_py.program.pattern="{path}/{cmd}" {program.pattern_args}
+tools.esptool_py.program.pattern.linux=python3 "{path}/{cmd}" {program.pattern_args}
+
+## Erase Chip (before burning the bootloader)
+## ------------------------------------------
+tools.esptool_py.erase.protocol=serial
+tools.esptool_py.erase.params.verbose=
+tools.esptool_py.erase.params.quiet=
+tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset erase_flash
+tools.esptool_py.erase.pattern="{path}/{cmd}" {erase.pattern_args}
+tools.esptool_py.erase.pattern.linux=python3 "{path}/{cmd}" {erase.pattern_args}
+
+## Burn Bootloader
+## ---------------
+tools.esptool_py.bootloader.protocol=serial
+tools.esptool_py.bootloader.params.verbose=
+tools.esptool_py.bootloader.params.quiet=
+tools.esptool_py.bootloader.pattern=
+
+## Upload Sketch Through OTA (Arduino IDE 1.x)
+## -------------------------------------------
+## The following rule is deprecated by pluggable discovery.
+## We keep it to avoid breaking compatibility with the Arduino Java IDE.
 tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{network.port}" "--auth={network.password}" -f "{build.path}/{build.project_name}.bin"
+
+## Upload Sketch Through OTA (Arduino IDE 2.x)
+## -------------------------------------------
+tools.esp_ota.upload.protocol=network
+tools.esp_ota.upload.pattern={cmd} -i "{upload.port.address}" -p "{upload.port.properties.port}" "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
