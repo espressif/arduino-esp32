@@ -246,4 +246,9 @@ tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{ne
 ## Upload Sketch Through OTA (Arduino IDE 2.x)
 ## -------------------------------------------
 tools.esp_ota.upload.protocol=network
-tools.esp_ota.upload.pattern={cmd} -i "{upload.port.address}" -p "{upload.port.properties.port}" "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
+## Following command does not work currently, because port properties are lost and auth dialog does not permit empty fields
+#tools.esp_ota.upload.field.password=Password
+#tools.esp_ota.upload.field.password.secret=true
+#tools.esp_ota.upload.pattern={cmd} -i "{upload.port.address}" -p "{upload.port.properties.port}" "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
+## So we do basic default OTA on port 3232 and no auth
+tools.esp_ota.upload.pattern={cmd} -i "{upload.port.address}" -f "{build.path}/{build.project_name}.bin"
