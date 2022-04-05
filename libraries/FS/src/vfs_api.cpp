@@ -429,17 +429,14 @@ bool VFSFileImpl::seek(uint32_t pos, SeekMode mode)
         return false;
     }
 
+    fpurge(_f); //clear the file internal buffer -> no longer valid when changing file position
     off_t res = lseek(fileno(_f), pos, mode);
     if (res < 0) {
         // an error occurred
         log_d("FILE SEEK ERROR OCCURED");
         return 1; //return error -> for seek its all above 0
     }
-    //return 0; //return success -> for fseek its 0
-
-    //Call fseek to adjust pointer in fstruct
-    auto rc = fseek(_f, pos, mode);
-    return rc == 0;
+    return 0; //return success -> for fseek its 0
 }
 
 size_t VFSFileImpl::position() const
