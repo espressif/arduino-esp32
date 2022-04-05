@@ -434,9 +434,9 @@ bool VFSFileImpl::seek(uint32_t pos, SeekMode mode)
     if (res < 0) {
         // an error occurred
         log_d("FILE SEEK ERROR OCCURED");
-        return 1; //return error -> for seek its all above 0
+        return 0; //return error -> for lseek its all above 0
     }
-    return 0; //return success -> for fseek its 0
+    return 1; //return success -> for fseek its 0
 }
 
 size_t VFSFileImpl::position() const
@@ -444,7 +444,8 @@ size_t VFSFileImpl::position() const
     if(_isDirectory || !_f) {
         return 0;
     }
-    return ftell(_f);
+    return lseek(fileno(_f), 0, SEEK_CUR);
+    //return ftell(_f); // old implementation
 }
 
 size_t VFSFileImpl::size() const
