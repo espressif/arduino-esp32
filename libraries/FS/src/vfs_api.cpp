@@ -376,21 +376,33 @@ size_t VFSFileImpl::read(uint8_t* buf, size_t size)
     if(_isDirectory || !_f || !buf || !size) {
         return 0;
     }
-
-    //ERASE BYTEBUFFER and use read when size > READ_SIZE_SWITCH always
-    if(size > READ_SIZE_SWITCH)
+    
+    if(size > READ_SIZE_SWITCH) //to be tested -> switch between fread/read to optimize speeds (call sd status check only once for each read)
     {
-        //check some data in buffer exists –> clear buffer and move pointer to deleted data
         size_t bytesinbuf = __fpending(_f);
-        if (bytesinbuf && (bytesinbuf != 128))  //buffer lenght is 128 bytes
+        size_t buf_size = __fbufsize(_f);
+
+        if (bytesinbuf && (bytesinbuf != buf_size))  //buffer size SD=128 , LittleFS=4096
         {
+            fpos_t pointer = 0;
+            //clear buffer
             fpurge(_f);
-            lseek(fileno(_f),(-128+bytesinbuf),SEEK_CUR);
+            //get file pointer
+            fgetpos(_f, &pointer);
+
+            if(pointer <= buf_size){
+                lseek(fileno(_f),(-pointer+bytesinbuf),SEEK_CUR);
+            }
+            else{
+                uint64_t modulo = pointer % buf_size;
+                lseek(fileno(_f),(-modulo+bytesinbuf),SEEK_CUR);
+            }
         }
 
         int res = ::read(fileno(_f), buf, size);
         if (res < 0) {
             // an error occurred
+            log_d("FILE READ ERROR OCCURED");
             return 0;
         }
         return res;
@@ -416,8 +428,14 @@ bool VFSFileImpl::seek(uint32_t pos, SeekMode mode)
     if(_isDirectory || !_f) {
         return false;
     }
-    auto rc = fseek(_f, pos, mode);
-    return rc == 0;
+
+    off_t res = lseek(fileno(_f), pos, mode);
+    if (res < 0) {
+        // an error occurred
+        log_d("FILE SEEK ERROR OCCURED");
+        return 1; //return error -> for seek its all above 0
+    }
+    return 0; //return success -> for fseek its 0
 }
 
 size_t VFSFileImpl::position() const
