@@ -435,7 +435,11 @@ bool VFSFileImpl::seek(uint32_t pos, SeekMode mode)
         log_d("FILE SEEK ERROR OCCURED");
         return 1; //return error -> for seek its all above 0
     }
-    return 0; //return success -> for fseek its 0
+    //return 0; //return success -> for fseek its 0
+
+    //Call fseek to adjust pointer in fstruct
+    auto rc = fseek(_f, pos, mode);
+    return rc == 0;
 }
 
 size_t VFSFileImpl::position() const
