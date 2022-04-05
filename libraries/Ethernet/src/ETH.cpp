@@ -123,7 +123,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
         //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_EMAC_TX_CLK);
         //PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[0]);
         pinMode(0, INPUT);
-        pinMode(0, FUNCTION_6);
+        PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[0], 5);
         EMAC_EXT.ex_clk_ctrl.ext_en = 1;
         EMAC_EXT.ex_clk_ctrl.int_en = 0;
         EMAC_EXT.ex_oscclk_conf.clk_sel = 1;
@@ -135,7 +135,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_CLK_OUT1);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[0]);
             pinMode(0, OUTPUT);
-            pinMode(0, FUNCTION_2);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[0], 1);
             // Choose the APLL clock to output on GPIO
             REG_WRITE(PIN_CTRL, 6);
 #endif
@@ -145,7 +145,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO16_U, FUNC_GPIO16_EMAC_CLK_OUT);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[16]);
             pinMode(16, OUTPUT);
-            pinMode(16, FUNCTION_6);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[16], 5);
 #endif
         } else if(eth_clock_mode == ETH_CLOCK_GPIO17_OUT){
 #if CONFIG_ETH_RMII_CLK_OUT_GPIO != 17
@@ -153,7 +153,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO17_U, FUNC_GPIO17_EMAC_CLK_OUT_180);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[17]);
             pinMode(17, OUTPUT);
-            pinMode(17, FUNCTION_6);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[17], 5);
 #endif
         }
 #if CONFIG_ETH_RMII_CLK_INPUT
