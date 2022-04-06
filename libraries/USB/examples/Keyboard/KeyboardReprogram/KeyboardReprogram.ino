@@ -24,6 +24,11 @@
 
   http://www.arduino.cc/en/Tutorial/KeyboardReprogram
 */
+#if ARDUINO_USB_MODE
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 
 #include "USB.h"
 #include "USBHIDKeyboard.h"
@@ -104,3 +109,4 @@ void loop() {
   // wait for the sweet oblivion of reprogramming:
   while (true)delay(1000);
 }
+#endif /* ARDUINO_USB_MODE */

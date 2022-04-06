@@ -8,6 +8,10 @@
 
 #include "BluetoothSerial.h"
 
+#if !defined(CONFIG_BT_SPP_ENABLED)
+#error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
+#endif
+
 BluetoothSerial SerialBT;
 
 String MACadd = "AA:BB:CC:11:22:33";
