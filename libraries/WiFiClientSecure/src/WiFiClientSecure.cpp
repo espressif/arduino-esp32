@@ -360,13 +360,18 @@ void WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 int WiFiClientSecure::setTimeout(uint32_t seconds)
 {
     _timeout = seconds * 1000;
-    struct timeval tv;
-    tv.tv_sec = seconds;
-    tv.tv_usec = 0;
-    if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        return -1;
+    if (sslclient->socket >= 0) {
+        struct timeval tv;
+        tv.tv_sec = seconds;
+        tv.tv_usec = 0;
+        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+            return -1;
+        }
+        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
     }
-    return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
+    else {
+        return 0;
+    }
 }
 int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
 {

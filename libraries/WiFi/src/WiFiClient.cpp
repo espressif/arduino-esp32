@@ -311,15 +311,20 @@ int WiFiClient::setSocketOption(int option, char* value, size_t len)
 
 int WiFiClient::setTimeout(uint32_t seconds)
 {
-    Client::setTimeout(seconds * 1000);
+    Client::setTimeout(seconds * 1000); // This should be here?
     _timeout = seconds * 1000;
-    struct timeval tv;
-    tv.tv_sec = seconds;
-    tv.tv_usec = 0;
-    if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        return -1;
+    if(fd() >= 0) {
+        struct timeval tv;
+        tv.tv_sec = seconds;
+        tv.tv_usec = 0;
+        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+            return -1;
+        }
+        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
     }
-    return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
+    else {
+        return 0;
+    }
 }
 
 int WiFiClient::setOption(int option, int *value)
