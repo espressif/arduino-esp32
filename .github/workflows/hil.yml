@@ -92,11 +92,6 @@ jobs:
            name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
            path: tests/
 
-       - name: Check Artifacts
-         run: |
-           ls -R tests
-           cat tests/*/build/build.options.json
-
        - name: Install dependencies
          run: |
            pip install -U pip
