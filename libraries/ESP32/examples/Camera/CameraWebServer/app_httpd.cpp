@@ -17,7 +17,6 @@
 #include "img_converters.h"
 #include "fb_gfx.h"
 #include "driver/ledc.h"
-//#include "camera_index.h"
 #include "sdkconfig.h"
 #include "camera_index.h"
 

@@ -12,219 +12,251 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal-touch.h"
-#ifndef CONFIG_IDF_TARGET_ESP32C3
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_attr.h"
-#include "soc/rtc_io_reg.h"
-#include "soc/sens_reg.h"
-#include "soc/sens_struct.h"
-#include "soc/rtc_cntl_reg.h"
+#include "soc/soc_caps.h"
+#if SOC_TOUCH_SENSOR_NUM > 0
+
 #include "driver/touch_sensor.h"
+#include "esp32-hal-touch.h"
 
-#include "esp_system.h"
-#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#include "esp32/rom/ets_sys.h"
-#include "esp_intr_alloc.h"
-#elif CONFIG_IDF_TARGET_ESP32S2
-#include "esp32s2/rom/ets_sys.h"
-#include "esp_intr_alloc.h"
-#include "soc/periph_defs.h"
-#else 
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-#else // ESP32 Before IDF 4.0
-#include "rom/ets_sys.h"
-#include "esp_intr.h"
-#endif
+/*
+    Internal Private Touch Data Structure and Functions
+*/
 
+#if SOC_TOUCH_VERSION_1         // ESP32 
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
+#elif SOC_TOUCH_VERSION_2       // ESP32S2, ESP32S3
+static uint16_t __touchSleepCycles = TOUCH_PAD_SLEEP_CYCLE_DEFAULT;
+static uint16_t __touchMeasureCycles = TOUCH_PAD_MEASURE_CYCLE_DEFAULT;
+#endif
 
 typedef void (*voidFuncPtr)(void);
-static voidFuncPtr __touchInterruptHandlers[10] = {0,};
-static intr_handle_t touch_intr_handle = NULL;
+typedef void (*voidArgFuncPtr)(void *);
 
-void ARDUINO_ISR_ATTR __touchISR(void * arg)
+typedef struct {
+    voidFuncPtr fn;
+    bool callWithArgs;
+    void* arg;
+#if SOC_TOUCH_VERSION_2     // Only for ESP32S2 and ESP32S3
+    bool lastStatusIsPressed;
+#endif
+} TouchInterruptHandle_t;
+
+static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {0,};
+
+static void ARDUINO_ISR_ATTR __touchISR(void * arg)
 {
-#if CONFIG_IDF_TARGET_ESP32
-    uint32_t pad_intr = READ_PERI_REG(SENS_SAR_TOUCH_CTRL2_REG) & 0x3ff;
-    uint32_t rtc_intr = READ_PERI_REG(RTC_CNTL_INT_ST_REG);
-    uint8_t i = 0;
+#if SOC_TOUCH_VERSION_1         // ESP32 
+    uint32_t pad_intr = touch_pad_get_status();
     //clear interrupt
-    WRITE_PERI_REG(RTC_CNTL_INT_CLR_REG, rtc_intr);
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
-
-    if (rtc_intr & RTC_CNTL_TOUCH_INT_ST) {
-        for (i = 0; i < 10; ++i) {
-            if ((pad_intr >> i) & 0x01) {
-                if(__touchInterruptHandlers[i]){
-                    __touchInterruptHandlers[i]();
+    touch_pad_clear_status();
+    // call Pad ISR User callback
+    for (int i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
+        if ((pad_intr >> i) & 0x01) {
+            if(__touchInterruptHandlers[i].fn){
+                // keeping backward compatibility with "void cb(void)" and with new "void cb(vooid *)"
+                if (__touchInterruptHandlers[i].callWithArgs) {
+                    ((voidArgFuncPtr)__touchInterruptHandlers[i].fn)(__touchInterruptHandlers[i].arg);
+                } else {
+                    __touchInterruptHandlers[i].fn();
                 }
             }
+        }
+    }
+#elif SOC_TOUCH_VERSION_2     // ESP32S2, ESP32S3
+    touch_pad_intr_mask_t evt = touch_pad_read_intr_status_mask();
+    uint8_t pad_num = touch_pad_get_current_meas_channel();
+    if (evt & TOUCH_PAD_INTR_MASK_ACTIVE) {
+        // touch has been pressed / touched
+        __touchInterruptHandlers[pad_num].lastStatusIsPressed = true;
+    }
+    if (evt & TOUCH_PAD_INTR_MASK_INACTIVE) {
+        // touch has been released / untouched
+        __touchInterruptHandlers[pad_num].lastStatusIsPressed = false;
+    }
+    if(__touchInterruptHandlers[pad_num].fn){
+        // keeping backward compatibility with "void cb(void)" and with new "void cb(vooid *)"
+        if (__touchInterruptHandlers[pad_num].callWithArgs) {
+            ((voidArgFuncPtr)__touchInterruptHandlers[pad_num].fn)(__touchInterruptHandlers[pad_num].arg);
+        } else {
+            __touchInterruptHandlers[pad_num].fn();
         }
     }
 #endif
 }
 
-void __touchSetCycles(uint16_t measure, uint16_t sleep)
+
+
+static void __touchSetCycles(uint16_t measure, uint16_t sleep)
 {
     __touchSleepCycles = sleep;
     __touchMeasureCycles = measure;
-#if CONFIG_IDF_TARGET_ESP32
-    //Touch pad SleepCycle Time
-    SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_SLEEP_CYCLES, __touchSleepCycles, SENS_TOUCH_SLEEP_CYCLES_S);
-    //Touch Pad Measure Time
-    SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_MEAS_DELAY, __touchMeasureCycles, SENS_TOUCH_MEAS_DELAY_S);
-#else
     touch_pad_set_meas_time(sleep, measure);
-#endif
 }
 
-void __touchInit()
+
+
+static void __touchInit()
 {
     static bool initialized = false;
     if(initialized){
         return;
     }
-    initialized = true;
-#if CONFIG_IDF_TARGET_ESP32
-    SET_PERI_REG_BITS(RTC_IO_TOUCH_CFG_REG, RTC_IO_TOUCH_XPD_BIAS, 1, RTC_IO_TOUCH_XPD_BIAS_S);
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_EN_CLR);
-    //clear touch enable
-    WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, 0x0);
-    SET_PERI_REG_MASK(RTC_CNTL_STATE0_REG, RTC_CNTL_TOUCH_SLP_TIMER_EN);
-    __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
-    esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, __touchISR, NULL, &touch_intr_handle);
-#else
-    touch_pad_init();
-    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V5);
-    touch_pad_set_idle_channel_connect(TOUCH_PAD_CONN_GND);
-    __touchSetCycles(__touchMeasureCycles, __touchSleepCycles);
+ 
+   esp_err_t err = ESP_OK;
+
+#if SOC_TOUCH_VERSION_1                         // ESP32
+    err = touch_pad_init();
+    if (err != ESP_OK) {
+        goto err;
+    }
+    // the next two lines will drive the touch reading values -- both will return ESP_OK
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V); 
+    touch_pad_set_meas_time(__touchMeasureCycles, __touchSleepCycles);
+    // Touch Sensor Timer initiated
+    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);   // returns ESP_OK
+    err = touch_pad_filter_start(10);
+    if (err != ESP_OK) {
+        goto err;
+    }
+    // Initial no Threshold and setup
+    for (int i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
+        __touchInterruptHandlers[i].fn =  NULL;
+        touch_pad_config(i, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
+    }
+    // keep ISR activated - it can run all together (ISR + touchRead())
+    err = touch_pad_isr_register(__touchISR, NULL);
+    if (err != ESP_OK) {
+        goto err;
+    }
+    touch_pad_intr_enable();  // returns ESP_OK
+#elif SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
+    err = touch_pad_init();
+    if (err != ESP_OK) {
+        goto err;
+    }
+    // the next lines will drive the touch reading values -- all os them return ESP_OK
+    touch_pad_set_meas_time(__touchSleepCycles, __touchMeasureCycles);
+    touch_pad_set_voltage(TOUCH_PAD_HIGH_VOLTAGE_THRESHOLD, TOUCH_PAD_LOW_VOLTAGE_THRESHOLD, TOUCH_PAD_ATTEN_VOLTAGE_THRESHOLD);
+    touch_pad_set_idle_channel_connect(TOUCH_PAD_IDLE_CH_CONNECT_DEFAULT);
     touch_pad_denoise_t denoise = {
         .grade = TOUCH_PAD_DENOISE_BIT4,
         .cap_level = TOUCH_PAD_DENOISE_CAP_L4,
     };
     touch_pad_denoise_set_config(&denoise);
     touch_pad_denoise_enable();
-    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);
-    touch_pad_fsm_start();
+    // Touch Sensor Timer initiated
+    touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);  // returns ESP_OK
+    touch_pad_fsm_start();                         // returns ESP_OK
+
+    // Initial no Threshold and setup - TOUCH0 is internal denoise channel
+    for (int i = 1; i < SOC_TOUCH_SENSOR_NUM; i++) {
+        __touchInterruptHandlers[i].fn =  NULL;
+        touch_pad_config(i);                       // returns ESP_OK
+    }
+    // keep ISR activated - it can run all together (ISR + touchRead())
+    err = touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
+     if (err != ESP_OK) {
+        goto err;
+    }
+    touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE); // returns ESP_OK
 #endif
+
+    initialized = true;
+    return;
+err:
+    log_e(" Touch sensor initialization error.");
+    initialized = false;
+    return;
 }
 
-uint16_t __touchRead(uint8_t pin)
+static touch_value_t __touchRead(uint8_t pin)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
         return 0;
     }
-
-    pinMode(pin, ANALOG);
-
     __touchInit();
 
-#if CONFIG_IDF_TARGET_ESP32
-    uint32_t v0 = READ_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG);
-    //Disable Intr & enable touch pad
-    WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG,
-            (v0 & ~((1 << (pad + SENS_TOUCH_PAD_OUTEN2_S)) | (1 << (pad + SENS_TOUCH_PAD_OUTEN1_S))))
-            | (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)));
+    touch_value_t touch_value;
+    touch_pad_read_raw_data(pad, &touch_value);
 
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_ENABLE_REG, (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)));
-
-    uint32_t rtc_tio_reg = RTC_IO_TOUCH_PAD0_REG + pad * 4;
-    WRITE_PERI_REG(rtc_tio_reg, (READ_PERI_REG(rtc_tio_reg)
-                      & ~(RTC_IO_TOUCH_PAD0_DAC_M))
-                      | (7 << RTC_IO_TOUCH_PAD0_DAC_S)//Touch Set Slope
-                      | RTC_IO_TOUCH_PAD0_TIE_OPT_M   //Enable Tie,Init Level
-                      | RTC_IO_TOUCH_PAD0_START_M     //Enable Touch Pad IO
-                      | RTC_IO_TOUCH_PAD0_XPD_M);     //Enable Touch Pad Power on
-
-    //force oneTime test start
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_START_EN_M|SENS_TOUCH_START_FORCE_M);
-
-    SET_PERI_REG_BITS(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_XPD_WAIT, 10, SENS_TOUCH_XPD_WAIT_S);
-
-    while (GET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_MEAS_DONE) == 0) {};
-
-    uint16_t touch_value = READ_PERI_REG(SENS_SAR_TOUCH_OUT1_REG + (pad / 2) * 4) >> ((pad & 1) ? SENS_TOUCH_MEAS_OUT1_S : SENS_TOUCH_MEAS_OUT0_S);
-
-    //clear touch force ,select the Touch mode is Timer
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_START_EN_M|SENS_TOUCH_START_FORCE_M);
-
-    //restore previous value
-    WRITE_PERI_REG(SENS_SAR_TOUCH_ENABLE_REG, v0);
     return touch_value;
-#else
-    static uint32_t chan_mask = 0;
-    uint32_t value = 0;
-    if((chan_mask & (1 << pad)) == 0){
-        if(touch_pad_set_thresh((touch_pad_t)pad, TOUCH_PAD_THRESHOLD_MAX) != ESP_OK){
-        	log_e("touch_pad_set_thresh failed");
-        } else if(touch_pad_config((touch_pad_t)pad) != ESP_OK){
-        	log_e("touch_pad_config failed");
-        } else {
-        	chan_mask |= (1 << pad);
-        }
-    }
-    if((chan_mask & (1 << pad)) != 0) {
-        if(touch_pad_read_raw_data((touch_pad_t)pad, &value) != ESP_OK){
-        	log_e("touch_pad_read_raw_data failed");
-        }
-    }
-    return value;
-#endif
 }
 
-void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t threshold)
+static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, touch_value_t threshold, bool callWithArgs)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
         return;
     }
 
-    pinMode(pin, ANALOG);
+    if (userFunc == NULL) {
+        // dettach ISR User Call
+        __touchInterruptHandlers[pad].fn = NULL;
+        threshold = SOC_TOUCH_PAD_THRESHOLD_MAX;   // deactivate the ISR with SOC_TOUCH_PAD_THRESHOLD_MAX
+    } else {
+        // attach ISR User Call
+        __touchInit();
+        __touchInterruptHandlers[pad].fn = userFunc;
+        __touchInterruptHandlers[pad].callWithArgs = callWithArgs;
+        __touchInterruptHandlers[pad].arg = Args;
+    }
 
-    __touchInit();
-
-    __touchInterruptHandlers[pad] = userFunc;
-
-#if CONFIG_IDF_TARGET_ESP32
-    //clear touch force ,select the Touch mode is Timer
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL2_REG, SENS_TOUCH_START_EN_M|SENS_TOUCH_START_FORCE_M);
-
-    //interrupt when touch value < threshold
-    CLEAR_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_OUT_SEL);
-    //Intr will give ,when SET0 < threshold
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_CTRL1_REG, SENS_TOUCH_OUT_1EN);
-    //Enable Rtc Touch Module Intr,the Interrupt need Rtc out  Enable
-    SET_PERI_REG_MASK(RTC_CNTL_INT_ENA_REG, RTC_CNTL_TOUCH_INT_ENA);
-
-    //set threshold
-    uint8_t shift = (pad & 1) ? SENS_TOUCH_OUT_TH1_S : SENS_TOUCH_OUT_TH0_S;
-    SET_PERI_REG_BITS((SENS_SAR_TOUCH_THRES1_REG + (pad / 2) * 4), SENS_TOUCH_OUT_TH0, threshold, shift);
-
-    uint32_t rtc_tio_reg = RTC_IO_TOUCH_PAD0_REG + pad * 4;
-    WRITE_PERI_REG(rtc_tio_reg, (READ_PERI_REG(rtc_tio_reg)
-                      & ~(RTC_IO_TOUCH_PAD0_DAC_M))
-                      | (7 << RTC_IO_TOUCH_PAD0_DAC_S)//Touch Set Slope
-                      | RTC_IO_TOUCH_PAD0_TIE_OPT_M   //Enable Tie,Init Level
-                      | RTC_IO_TOUCH_PAD0_START_M     //Enable Touch Pad IO
-                      | RTC_IO_TOUCH_PAD0_XPD_M);     //Enable Touch Pad Power on
-
-    //Enable Digital rtc control :work mode and out mode
-    SET_PERI_REG_MASK(SENS_SAR_TOUCH_ENABLE_REG,
-                      (1 << (pad + SENS_TOUCH_PAD_WORKEN_S)) | \
-                      (1 << (pad + SENS_TOUCH_PAD_OUTEN2_S)) | \
-                      (1 << (pad + SENS_TOUCH_PAD_OUTEN1_S)));
-#else
-
+#if SOC_TOUCH_VERSION_1                         // ESP32
+    touch_pad_config(pad, threshold);
+#elif SOC_TOUCH_VERSION_2                       // ESP32S2, ESP32S3
+    touch_pad_set_thresh(pad, threshold);
 #endif
 }
 
-extern uint16_t touchRead(uint8_t pin) __attribute__ ((weak, alias("__touchRead")));
-extern void touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), uint16_t threshold) __attribute__ ((weak, alias("__touchAttachInterrupt")));
-extern void touchSetCycles(uint16_t measure, uint16_t sleep) __attribute__ ((weak, alias("__touchSetCycles")));
+// it keeps backwards compatibility
+static void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold)
+{
+    __touchConfigInterrupt(pin, userFunc, NULL, threshold, false);
+}
+
+// new additional version of the API with User Args
+static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void *args, touch_value_t threshold)
+{
+    __touchConfigInterrupt(pin, userFunc, args, threshold, true);
+}
+
+// new additional API to dettach touch ISR
+static void __touchDettachInterrupt(uint8_t pin)
+{
+    __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as dettaching 
+}
+
+
+/*
+    External Public Touch API Functions
+*/
+
+#if SOC_TOUCH_VERSION_1        // Only for ESP32 SoC
+void touchInterruptSetThresholdDirection(bool mustbeLower) {
+    if (mustbeLower) {
+        touch_pad_set_trigger_mode(TOUCH_TRIGGER_BELOW);
+    } else {
+        touch_pad_set_trigger_mode(TOUCH_TRIGGER_ABOVE);
+    }
+}
+#elif SOC_TOUCH_VERSION_2     // Only for ESP32S2 and ESP32S3
+// returns true if touch pad has been and continues pressed and false otherwise 
+bool touchInterruptGetLastStatus(uint8_t pin) {
+    int8_t pad = digitalPinToTouchChannel(pin);
+    if(pad < 0){
+        return false;
+    }
+
+    return __touchInterruptHandlers[pad].lastStatusIsPressed;
+}
 #endif
+
+extern touch_value_t touchRead(uint8_t) __attribute__ ((weak, alias("__touchRead")));
+extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribute__ ((weak, alias("__touchAttachInterrupt")));
+extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value_t) __attribute__ ((weak, alias("__touchAttachArgsInterrupt")));
+extern void touchDetachInterrupt(uint8_t) __attribute__ ((weak, alias("__touchDettachInterrupt")));
+extern void touchSetCycles(uint16_t, uint16_t) __attribute__ ((weak, alias("__touchSetCycles")));
+
+#endif      // #if SOC_TOUCH_SENSOR_NUM > 0

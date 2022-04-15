@@ -24,6 +24,11 @@
 
   http://www.arduino.cc/en/Tutorial/KeyboardLogout
 */
+#if ARDUINO_USB_MODE
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 
 #define OSX 0
 #define WINDOWS 1
@@ -90,3 +95,4 @@ void loop() {
   // do nothing:
   while (true) delay(1000);
 }
+#endif /* ARDUINO_USB_MODE */

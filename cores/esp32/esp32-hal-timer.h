@@ -58,7 +58,7 @@ bool timerGetAutoReload(hw_timer_t *timer);
 
 void timerAlarmEnable(hw_timer_t *timer);
 void timerAlarmDisable(hw_timer_t *timer);
-void timerAlarmWrite(hw_timer_t *timer, uint64_t interruptAt, bool autoreload);
+void timerAlarmWrite(hw_timer_t *timer, uint64_t alarm_value, bool autoreload);
 
 bool timerAlarmEnabled(hw_timer_t *timer);
 uint64_t timerAlarmRead(hw_timer_t *timer);

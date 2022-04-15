@@ -139,6 +139,18 @@ static const int WIFI_SCAN_DONE_BIT= BIT12;
 static const int WIFI_DNS_IDLE_BIT = BIT13;
 static const int WIFI_DNS_DONE_BIT = BIT14;
 
+typedef enum {
+	WIFI_RX_ANT0 = 0,
+	WIFI_RX_ANT1,
+	WIFI_RX_ANT_AUTO
+} wifi_rx_ant_t;
+
+typedef enum {
+	WIFI_TX_ANT0 = 0,
+	WIFI_TX_ANT1,
+	WIFI_TX_ANT_AUTO
+} wifi_tx_ant_t;
+
 class WiFiGenericClass
 {
   public:
@@ -173,6 +185,8 @@ class WiFiGenericClass
     wifi_power_t getTxPower();
 
     bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
+
+    static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);

@@ -8,11 +8,12 @@ Here you will find all the relevant information about the project.
    This is a work in progress documentation and we will appreciate your help! We are looking for contributors! 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    Getting Started <getting_started>
    Libraries <libraries>
+   Guides <guides/guides>
    Tutorials <tutorials/tutorials>
    Advanced Utilities <advanced_utils>
    FAQ <faq>
