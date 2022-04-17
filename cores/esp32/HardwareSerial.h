@@ -56,6 +56,8 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
+#define SERIAL_PORT_HARDWARE Serial
+
 typedef enum {
     UART_BREAK_ERROR,
     UART_BUFFER_FULL_ERROR,
@@ -148,7 +150,11 @@ public:
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
     // SetPins shall be called after Serial begin()
+#if 0	// version==2.0.2
+	void setPins(uint8_t rxPin, uint8_t txPin);
+#else
     void setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
+#endif
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
     void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
 
@@ -159,6 +165,8 @@ protected:
     int _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
+    int8_t _rxPin = -1;// support change pin before start uart 8194123143dcc8e43fc745d427c6d5fd1aaafac7
+    int8_t _txPin = -1;// support change pin before start uart 8194123143dcc8e43fc745d427c6d5fd1aaafac7
     size_t _txBufferSize;
     OnReceiveCb _onReceiveCB;
     OnReceiveErrorCb _onReceiveErrorCB;
@@ -186,6 +194,8 @@ extern void serialEventRun(void) __attribute__((weak));
 #include "USB.h"
 #include "USBCDC.h"
 #endif
+extern HardwareSerial Serial0;
+#elif ARDUINO_HW_CDC_ON_BOOT
 extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
