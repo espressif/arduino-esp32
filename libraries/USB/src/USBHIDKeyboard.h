@@ -114,7 +114,6 @@ class USBHIDKeyboard: public USBHIDDevice, public Print
 private:
     USBHID hid;
     KeyReport _keyReport;
-    void sendReport(KeyReport* keys);
 public:
     USBHIDKeyboard(void);
     void begin(void);
@@ -124,6 +123,7 @@ public:
     size_t press(uint8_t k);
     size_t release(uint8_t k);
     void releaseAll(void);
+    void sendReport(KeyReport* keys);
 
     //raw functions work with TinyUSB's HID_KEY_* macros
     size_t pressRaw(uint8_t k);

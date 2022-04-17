@@ -33,6 +33,7 @@ typedef enum {
     ARDUINO_USB_CDC_LINE_CODING_EVENT,
     ARDUINO_USB_CDC_RX_EVENT,
     ARDUINO_USB_CDC_TX_EVENT,
+    ARDUINO_USB_CDC_RX_OVERFLOW_EVENT,
     ARDUINO_USB_CDC_MAX_EVENT,
 } arduino_usb_cdc_event_t;
 
@@ -50,6 +51,9 @@ typedef union {
     struct {
             size_t len;
     } rx;
+    struct {
+            size_t dropped_bytes;
+    } rx_overflow;
 } arduino_usb_cdc_event_data_t;
 
 class USBCDC: public Stream
@@ -134,7 +138,7 @@ protected:
     
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
 extern USBCDC Serial;
 #endif
 

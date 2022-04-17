@@ -30,6 +30,11 @@
 #include "esp_event.h"
 #endif
 
+typedef enum {
+    WPA2_AUTH_TLS = 0,
+    WPA2_AUTH_PEAP = 1,
+    WPA2_AUTH_TTLS = 2
+} wpa2_auth_method_t;
 
 class WiFiSTAClass
 {
@@ -39,6 +44,7 @@ class WiFiSTAClass
 
 public:
 
+    wl_status_t begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity=NULL, const char* wpa2_username=NULL, const char *wpa2_password=NULL, const char* ca_pem=NULL, const char* client_crt=NULL, const char* client_key=NULL, int32_t channel=0, const uint8_t* bssid=0, bool connect=true);
     wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin();
@@ -92,7 +98,7 @@ protected:
     static bool _autoReconnect;
 
 public: 
-    bool beginSmartConfig();
+    bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
     bool stopSmartConfig();
     bool smartConfigDone();
 

@@ -18,11 +18,11 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = 'Arduino-ESP32'
-copyright = '2021, Espressif'
+copyright = '2022, Espressif'
 author = 'Espressif'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.0'
+release = '2.0.2'
 
 # -- General configuration ---------------------------------------------------
 
@@ -30,7 +30,8 @@ release = '2.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_copybutton'
+    'sphinx_copybutton',
+    'sphinx_tabs.tabs'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

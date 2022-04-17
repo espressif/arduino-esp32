@@ -15,7 +15,6 @@
 
 #include "esp32-hal.h"
 
-#if CONFIG_IDF_TARGET_ESP32S2
 #if CONFIG_TINYUSB_ENABLED
 
 #ifdef __cplusplus
@@ -105,4 +104,3 @@ uint8_t tinyusb_get_free_out_endpoint(void);
 #endif
 
 #endif /* CONFIG_TINYUSB_ENABLED */
-#endif /* CONFIG_IDF_TARGET_ESP32S2 */

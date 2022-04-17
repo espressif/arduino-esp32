@@ -50,7 +50,7 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     }
 
     if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         _sck = (_spi_num == FSPI) ? SCK : -1;
         _miso = (_spi_num == FSPI) ? MISO : -1;
         _mosi = (_spi_num == FSPI) ? MOSI : -1;
