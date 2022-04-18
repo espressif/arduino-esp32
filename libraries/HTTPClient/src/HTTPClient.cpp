@@ -260,7 +260,7 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     _protocol = url.substring(0, index);
     if (_protocol != expectedProtocol) {
-        log_w("unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
+        log_d("unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
         return false;
     }
 

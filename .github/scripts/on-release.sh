@@ -172,6 +172,7 @@ mkdir -p "$PKG_DIR/tools"
 # Copy all core files to the package folder
 echo "Copying files for packaging ..."
 cp -f  "$GITHUB_WORKSPACE/boards.txt"              "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/package.json"            "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"         "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                   "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/libraries"               "$PKG_DIR/"

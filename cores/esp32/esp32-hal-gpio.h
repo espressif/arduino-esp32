@@ -49,13 +49,6 @@ extern "C" {
 #define INPUT_PULLDOWN    0x09
 #define OPEN_DRAIN        0x10
 #define OUTPUT_OPEN_DRAIN 0x12
-#define SPECIAL           0xF0
-#define FUNCTION_1        0x00
-#define FUNCTION_2        0x20
-#define FUNCTION_3        0x40
-#define FUNCTION_4        0x60
-#define FUNCTION_5        0x80
-#define FUNCTION_6        0xA0
 #define ANALOG            0xC0
 
 //Interrupt Modes

@@ -15,7 +15,12 @@
 
 #ifndef dsp_platform_h_
 #define dsp_platform_h_
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
+#include "esp_cpu.h"
+#else
 #include "soc/cpu.h"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/portable.h"
