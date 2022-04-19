@@ -224,7 +224,7 @@ void HardwareSerial::eventQueueReset()
 {
     QueueHandle_t uartEventQueue = NULL;
     if (_uart == NULL) {
-	    return;
+        return;
     }
     uartGetEventQueue(_uart, &uartEventQueue);
     if (uartEventQueue != NULL) {
@@ -298,7 +298,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         switch (_uart_nr) {
             case UART_NUM_0:
                 // If begin() provides txPin and rxPin, override the original pins
-				if(rxPin < 0){
+                if(rxPin < 0){
                     if(_rxPin < 0){
                         _rxPin = SOC_RX0;
                     }
@@ -315,12 +315,12 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
-				// If begin() provides txPin and rxPin, override the original pins
-            	if(rxPin < 0){
+                // If begin() provides txPin and rxPin, override the original pins
+                if(rxPin < 0){
                     if(_rxPin < 0){
                         _rxPin = RX1;
                     }
-                } else {		
+                } else {
                     _rxPin = rxPin;
                 }
                 if(txPin < 0){
@@ -335,7 +335,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
                 // If begin() provides txPin and rxPin, override the original pins
-				if(rxPin < 0){
+                if(rxPin < 0){
                     if(_rxPin < 0){
                         _rxPin = RX2;
                     }
@@ -364,7 +364,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
-	_uart = uartBegin(_uart_nr, baud ? baud : 9600, config, _rxPin, _txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);    
+    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, _rxPin, _txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);    
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
         uartStartDetectBaudrate(_uart);
@@ -378,7 +378,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
-			_uart = uartBegin(_uart_nr, detectedBaudRate, config, _rxPin, _txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
+            _uart = uartBegin(_uart_nr, detectedBaudRate, config, _rxPin, _txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
@@ -400,7 +400,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
 void HardwareSerial::updateBaudRate(unsigned long baud)
 {
-	uartSetBaudRate(_uart, baud);
+    uartSetBaudRate(_uart, baud);
 }
 
 void HardwareSerial::end(bool fullyTerminate)
@@ -501,7 +501,7 @@ size_t HardwareSerial::write(const uint8_t *buffer, size_t size)
 uint32_t  HardwareSerial::baudRate()
 
 {
-	return uartGetBaudRate(_uart);
+    return uartGetBaudRate(_uart);
 }
 HardwareSerial::operator bool() const
 {
@@ -520,7 +520,7 @@ void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     _txPin = txPin;
     if(_uart != NULL) {
         uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
-	}
+    }
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)

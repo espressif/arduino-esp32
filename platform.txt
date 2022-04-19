@@ -6,7 +6,7 @@ runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-e
 runtime.tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
 runtime.tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 
-tools.esptool_py.path={runtime.platform.path}/tools/esptool
+tools.esptool_py.path={runtime.tools.esptool_py.path}
 tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
