@@ -91,8 +91,17 @@ bool tuh_init(uint8_t rhport);
 // Check if host stack is already initialized
 bool tuh_inited(void);
 
+// Task function should be called in main/rtos loop, extended version of tuh_task()
+// - timeout_ms: millisecond to wait, zero = no wait, 0xFFFFFFFF = wait forever
+// - in_isr: if function is called in ISR
+void tuh_task_ext(uint32_t timeout_ms, bool in_isr);
+
 // Task function should be called in main/rtos loop
-void tuh_task(void);
+TU_ATTR_ALWAYS_INLINE static inline
+void tuh_task(void)
+{
+  tuh_task_ext(UINT32_MAX, false);
+}
 
 // Interrupt handler, name alias to HCD
 extern void hcd_int_handler(uint8_t rhport);
@@ -106,8 +115,8 @@ tusb_speed_t tuh_speed_get(uint8_t daddr);
 bool tuh_mounted(uint8_t daddr);
 
 // Check if device is suspended
-TU_ATTR_ALWAYS_INLINE
-static inline bool tuh_suspended(uint8_t daddr)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_suspended(uint8_t daddr)
 {
   // TODO implement suspend & resume on host
   (void) daddr;
@@ -115,8 +124,8 @@ static inline bool tuh_suspended(uint8_t daddr)
 }
 
 // Check if device is ready to communicate with
-TU_ATTR_ALWAYS_INLINE
-static inline bool tuh_ready(uint8_t daddr)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_ready(uint8_t daddr)
 {
   return tuh_mounted(daddr) && !tuh_suspended(daddr);
 }
