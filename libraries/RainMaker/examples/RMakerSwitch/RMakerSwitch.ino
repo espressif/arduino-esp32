@@ -10,12 +10,15 @@ const char *pop = "abcd1234";
 //GPIO for push button
 #if CONFIG_IDF_TARGET_ESP32C3
 static int gpio_0 = 9;
-static int gpio_dimmer = 7;
+static int gpio_switch = 7;
 #else
 //GPIO for virtual device
 static int gpio_0 = 0;
-static int gpio_dimmer = 16;
+static int gpio_switch = 16;
 #endif
+
+/* Variable for reading pin status*/
+bool switch_state = true;
 
 //The framework provides some standard device types like switch, lightbulb, fan, temperaturesensor.
 static Switch my_switch("Switch", &gpio_switch);
