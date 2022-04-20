@@ -22,13 +22,13 @@ Latest Development Release  [![Release Version](https://img.shields.io/github/re
 
 ### Development Planning
 
-Our internal Development is fully tracked on this public **[Roadmap 🎉](https://github.com/orgs/espressif/projects/3)** 
+Our Development is fully tracked on this public **[Roadmap 🎉](https://github.com/orgs/espressif/projects/3)** 
 
-For even more information you can take a look on [Sprint Meeting notes](https://github.com/espressif/arduino-esp32/discussions/categories/sprints-meeting-notes) or join [Monthly Community Meetings 🔔](https://github.com/espressif/arduino-esp32/discussions/categories/monthly-community-meetings)
+For even more information you can take a look at [Sprint Meeting notes](https://github.com/espressif/arduino-esp32/discussions/categories/sprints-meeting-notes) or join [Monthly Community Meetings 🔔](https://github.com/espressif/arduino-esp32/discussions/categories/monthly-community-meetings)
 
 ### Documentation
 
-You can use [Arduino-ESP32 Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/) to get all information about this project.
+You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/) to get all information about this project.
 
 * [Getting Started](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html)
 * [Installing (Windows, Linux and macOS)](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)

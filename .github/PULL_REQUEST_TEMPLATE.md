@@ -1,4 +1,4 @@
-*By completing this PR sufficiently, you help us to review your Pull Request quicker and also you help on improving the quality of Release Notes*
+*By completing this PR sufficiently, you help us to review this Pull Request quicker and also help improve the quality of Release Notes*
 
 ### Checklist
 1. [ ] Please provide specific title of the PR describing the change, including the component name (*eg. „Update of Documentation link on Readme.md“*)
