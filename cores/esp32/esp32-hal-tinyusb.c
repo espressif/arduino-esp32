@@ -646,11 +646,13 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
+#endif
 static bool tinyusb_is_initialized = false;
 
 esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
 {
-    const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
     if(tinyusb_is_initialized){
         log_e("TinyUSB has already started! Interface %s not enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
