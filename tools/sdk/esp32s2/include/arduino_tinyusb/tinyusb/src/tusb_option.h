@@ -286,7 +286,7 @@
 #endif
 
 // mutex is only needed for RTOS TODO also required with multiple core MCUs
-#define TUSB_OPT_MUTEX    (CFG_TUSB_OS != OPT_OS_NONE)
+#define TUSB_OPT_MUTEX      (CFG_TUSB_OS != OPT_OS_NONE)
 
 //--------------------------------------------------------------------
 // DEVICE OPTIONS
