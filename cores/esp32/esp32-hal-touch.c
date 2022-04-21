@@ -143,12 +143,7 @@ static void __touchInit()
     // Touch Sensor Timer initiated
     touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);  // returns ESP_OK
     touch_pad_fsm_start();                         // returns ESP_OK
-    // keep ISR activated - it can run all together (ISR + touchRead())
-    err = touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
-     if (err != ESP_OK) {
-        goto err;
-    }
-    touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE); // returns ESP_OK
+    //ISR setup moved to __touchChannelInit
 #endif
 
     initialized = true;
@@ -168,12 +163,19 @@ static void __touchChannelInit(int pad)
 
 #if SOC_TOUCH_VERSION_1                         // ESP32
     // Initial no Threshold and setup
-        __touchInterruptHandlers[pad].fn =  NULL;
-        touch_pad_config(pad, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
-#elif SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
-    // Initial no Threshold and setup - TOUCH0 is internal denoise channel
-        __touchInterruptHandlers[pad].fn =  NULL;
-        touch_pad_config(pad);                       // returns ESP_OK
+    __touchInterruptHandlers[pad].fn =  NULL;
+    touch_pad_config(pad, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
+#elif SOC_TOUCH_VERSION_2                       // ESP32S2, ESP32S3
+    // Initial no Threshold and setup
+    __touchInterruptHandlers[pad].fn =  NULL;
+    touch_pad_config(pad);                       // returns ESP_OK
+    // keep ISR activated - it can run all together (ISR + touchRead())
+    esp_err_t err = touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
+    if (err != ESP_OK) {
+        log_e(" Touch sensor initialization error.");
+        return;
+    }
+    touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE); // returns ESP_OK
 #endif
 
     channels_initialized[pad] = true;
@@ -210,6 +212,9 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     } else {
         // attach ISR User Call
         __touchInit();
+        #if SOC_TOUCH_VERSION_2                 // ESP32S2, ESP32S3
+        __touchChannelInit(pad);
+        #endif
         __touchInterruptHandlers[pad].fn = userFunc;
         __touchInterruptHandlers[pad].callWithArgs = callWithArgs;
         __touchInterruptHandlers[pad].arg = Args;
