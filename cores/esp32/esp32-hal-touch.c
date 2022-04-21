@@ -174,7 +174,6 @@ static void __touchChannelInit(int pad)
     // Initial no Threshold and setup - TOUCH0 is internal denoise channel
         __touchInterruptHandlers[pad].fn =  NULL;
         touch_pad_config(pad);                       // returns ESP_OK
-    }
 #endif
 
     channels_initialized[pad] = true;
