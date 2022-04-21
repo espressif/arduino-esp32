@@ -195,6 +195,7 @@ esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IP
 	return ESP_OK;
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 static const char * auth_mode_str(int authmode)
 {
     switch (authmode) {
@@ -221,6 +222,7 @@ static const char * auth_mode_str(int authmode)
     }
 	return ("UNKNOWN");
 }
+#endif
 
 static char default_hostname[32] = {0,};
 static const char * get_esp_netif_hostname(){
