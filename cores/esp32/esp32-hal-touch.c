@@ -119,11 +119,6 @@ static void __touchInit()
     if (err != ESP_OK) {
         goto err;
     }
-    // Initial no Threshold and setup
-    for (int i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
-        __touchInterruptHandlers[i].fn =  NULL;
-        touch_pad_config(i, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
-    }
     // keep ISR activated - it can run all together (ISR + touchRead())
     err = touch_pad_isr_register(__touchISR, NULL);
     if (err != ESP_OK) {
@@ -148,12 +143,6 @@ static void __touchInit()
     // Touch Sensor Timer initiated
     touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);  // returns ESP_OK
     touch_pad_fsm_start();                         // returns ESP_OK
-
-    // Initial no Threshold and setup - TOUCH0 is internal denoise channel
-    for (int i = 1; i < SOC_TOUCH_SENSOR_NUM; i++) {
-        __touchInterruptHandlers[i].fn =  NULL;
-        touch_pad_config(i);                       // returns ESP_OK
-    }
     // keep ISR activated - it can run all together (ISR + touchRead())
     err = touch_pad_isr_register(__touchISR, NULL, TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE);
      if (err != ESP_OK) {
@@ -170,13 +159,37 @@ err:
     return;
 }
 
+static void __touchChannelInit(int pad)
+{
+   static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = { false };
+       if(channels_initialized[pad]){
+        return;
+    }
+
+#if SOC_TOUCH_VERSION_1                         // ESP32
+    // Initial no Threshold and setup
+        __touchInterruptHandlers[pad].fn =  NULL;
+        touch_pad_config(pad, SOC_TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
+#elif SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
+    // Initial no Threshold and setup - TOUCH0 is internal denoise channel
+        __touchInterruptHandlers[pad].fn =  NULL;
+        touch_pad_config(pad);                       // returns ESP_OK
+    }
+#endif
+
+    channels_initialized[pad] = true;
+    delay(20);  //delay needed before reading from touch channel after config
+}
+
 static touch_value_t __touchRead(uint8_t pin)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
         return 0;
     }
+
     __touchInit();
+    __touchChannelInit(pad);
 
     touch_value_t touch_value;
     touch_pad_read_raw_data(pad, &touch_value);
