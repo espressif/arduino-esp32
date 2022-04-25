@@ -148,6 +148,7 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size)
     return filter;
 }
 
+/* unused function triggers error
 static int ra_filter_run(ra_filter_t *filter, int value)
 {
     if (!filter->values)
@@ -165,6 +166,7 @@ static int ra_filter_run(ra_filter_t *filter, int value)
     }
     return filter->sum / filter->count;
 }
+*/
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
@@ -294,7 +296,9 @@ static esp_err_t bmp_handler(httpd_req_t *req)
 {
     camera_fb_t *fb = NULL;
     esp_err_t res = ESP_OK;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint64_t fr_start = esp_timer_get_time();
+#endif
     fb = esp_camera_fb_get();
     if (!fb)
     {
@@ -323,7 +327,9 @@ static esp_err_t bmp_handler(httpd_req_t *req)
     }
     res = httpd_resp_send(req, (const char *)buf, buf_len);
     free(buf);
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint64_t fr_end = esp_timer_get_time();
+#endif
     ESP_LOGI(TAG, "BMP: %llums, %uB", (uint64_t)((fr_end - fr_start) / 1000), buf_len);
     return res;
 }
@@ -347,7 +353,9 @@ static esp_err_t capture_handler(httpd_req_t *req)
 {
     camera_fb_t *fb = NULL;
     esp_err_t res = ESP_OK;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     int64_t fr_start = esp_timer_get_time();
+#endif
 
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
     enable_led(true);
@@ -382,10 +390,14 @@ static esp_err_t capture_handler(httpd_req_t *req)
     if (!detection_enabled || fb->width > 400)
     {
 #endif
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         size_t fb_len = 0;
+#endif
         if (fb->format == PIXFORMAT_JPEG)
         {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
             fb_len = fb->len;
+#endif
             res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
         }
         else
@@ -393,10 +405,14 @@ static esp_err_t capture_handler(httpd_req_t *req)
             jpg_chunking_t jchunk = {req, 0};
             res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
             httpd_resp_send_chunk(req, NULL, 0);
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
             fb_len = jchunk.len;
+#endif
         }
         esp_camera_fb_return(fb);
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         int64_t fr_end = esp_timer_get_time();
+#endif
         ESP_LOGI(TAG, "JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start) / 1000));
         return res;
 #if CONFIG_ESP_FACE_DETECT_ENABLED
@@ -721,7 +737,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
+#endif
         ESP_LOGI(TAG, "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
 #if CONFIG_ESP_FACE_DETECT_ENABLED
                       ", %u+%u+%u+%u=%u %s%d"
