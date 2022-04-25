@@ -54,7 +54,7 @@
 
 uint8_t channels_resolution[LEDC_CHANNELS] = {0};
 
-double ledcSetup(uint8_t chan, double freq, uint8_t bit_num)
+uint32_t ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num)
 {
     if(chan >= LEDC_CHANNELS || bit_num > LEDC_MAX_BIT_WIDTH){
         log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
@@ -106,7 +106,7 @@ uint32_t ledcRead(uint8_t chan)
     return ledc_get_duty(group,channel);
 }
 
-double ledcReadFreq(uint8_t chan)
+uint32_t ledcReadFreq(uint8_t chan)
 {
     if(!ledcRead(chan)){
         return 0;
@@ -115,7 +115,7 @@ double ledcReadFreq(uint8_t chan)
     return ledc_get_freq(group,timer);
 }
 
-double ledcWriteTone(uint8_t chan, double freq)
+uint32_t ledcWriteTone(uint8_t chan, uint32_t freq)
 {
     if(chan >= LEDC_CHANNELS){
         return 0;
@@ -142,12 +142,12 @@ double ledcWriteTone(uint8_t chan, double freq)
     }
     channels_resolution[chan] = 10;
 
-    double res_freq = ledc_get_freq(group,timer);
+    uint32_t res_freq = ledc_get_freq(group,timer);
     ledcWrite(chan, 0x1FF);
     return res_freq;
 }
 
-double ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
+uint32_t ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
     const uint16_t noteFrequencyBase[12] = {
     //   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
         4186,    4435,    4699,    4978,    5274,    5588,    5920,    6272,    6645,    7040,    7459,    7902
@@ -156,7 +156,7 @@ double ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
     if(octave > 8 || note >= NOTE_MAX){
         return 0;
     }
-    double noteFreq =  (double)noteFrequencyBase[note] / (double)(1 << (8-octave));
+    uint32_t noteFreq =  (uint32_t)noteFrequencyBase[note] / (uint32_t)(1 << (8-octave));
     return ledcWriteTone(chan, noteFreq);
 }
 
@@ -184,7 +184,7 @@ void ledcDetachPin(uint8_t pin)
     pinMatrixOutDetach(pin, false, false);
 }
 
-double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num)
+uint32_t ledcChangeFrequency(uint8_t chan, uint32_t freq, uint8_t bit_num)
 {
     if(chan >= LEDC_CHANNELS || bit_num > LEDC_MAX_BIT_WIDTH){
         log_e("LEDC channel not available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
