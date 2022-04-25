@@ -385,7 +385,9 @@ static esp_err_t capture_handler(httpd_req_t *req)
     size_t out_len, out_width, out_height;
     uint8_t *out_buf;
     bool s;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     bool detected = false;
+#endif
     int face_id = 0;
     if (!detection_enabled || fb->width > 400)
     {
@@ -525,10 +527,10 @@ static esp_err_t stream_handler(httpd_req_t *req)
 #if CONFIG_ESP_FACE_DETECT_ENABLED
     #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         bool detected = false;
+        int64_t fr_ready = 0;
     #endif
     int face_id = 0;
     int64_t fr_start = 0;
-    int64_t fr_ready = 0;
     int64_t fr_face = 0;
     int64_t fr_recognize = 0;
     int64_t fr_encode = 0;
@@ -585,7 +587,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
             _timestamp.tv_usec = fb->timestamp.tv_usec;
 #if CONFIG_ESP_FACE_DETECT_ENABLED
             fr_start = esp_timer_get_time();
+    #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
             fr_ready = fr_start;
+    #endif
             fr_face = fr_start;
             fr_encode = fr_start;
             fr_recognize = fr_start;
@@ -617,7 +621,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
                     && !recognition_enabled
 #endif
                 ){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                     fr_ready = esp_timer_get_time();
+#endif
 #if TWO_STAGE
                     std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
                     std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
@@ -664,7 +670,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
                             ESP_LOGE(TAG, "to rgb888 failed");
                             res = ESP_FAIL;
                         } else {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                             fr_ready = esp_timer_get_time();
+#endif
 
                             fb_data_t rfb;
                             rfb.width = out_width;
