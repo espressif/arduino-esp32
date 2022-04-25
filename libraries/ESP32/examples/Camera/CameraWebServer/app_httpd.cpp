@@ -528,13 +528,12 @@ static esp_err_t stream_handler(httpd_req_t *req)
     #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         bool detected = false;
         int64_t fr_ready = 0;
+        int64_t fr_recognize = 0;
+        int64_t fr_encode = 0;
     #endif
     int face_id = 0;
     int64_t fr_start = 0;
     int64_t fr_face = 0;
-    int64_t fr_recognize = 0;
-    int64_t fr_encode = 0;
-
     size_t out_len = 0, out_width = 0, out_height = 0;
     uint8_t *out_buf = NULL;
     bool s = false;
@@ -589,10 +588,10 @@ static esp_err_t stream_handler(httpd_req_t *req)
             fr_start = esp_timer_get_time();
     #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
             fr_ready = fr_start;
-    #endif
-            fr_face = fr_start;
             fr_encode = fr_start;
             fr_recognize = fr_start;
+    #endif
+            fr_face = fr_start;
             if (!detection_enabled || fb->width > 400)
             {
 #endif
@@ -631,7 +630,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
                     std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
 #endif
                     fr_face = esp_timer_get_time();
+#if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                     fr_recognize = fr_face;
+#endif
                     if (results.size() > 0) {
                         fb_data_t rfb;
                         rfb.width = fb->width;
@@ -651,7 +652,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
                         ESP_LOGE(TAG, "fmt2jpg failed");
                         res = ESP_FAIL;
                     }
+#if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                     fr_encode = esp_timer_get_time();
+#endif
                 } else
                 {
                     out_len = fb->width * fb->height * 3;
@@ -689,7 +692,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
 #endif
 
                             fr_face = esp_timer_get_time();
+#if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                             fr_recognize = fr_face;
+#endif
 
                             if (results.size() > 0) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
@@ -698,7 +703,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
                                 if (recognition_enabled) {
                                     face_id = run_face_recognition(&rfb, &results);
+    #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                                     fr_recognize = esp_timer_get_time();
+    #endif
                                 }
 #endif
                                 draw_face_boxes(&rfb, &results, face_id);
@@ -709,7 +716,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
                                 ESP_LOGE(TAG, "fmt2jpg failed");
                                 res = ESP_FAIL;
                             }
+#if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
                             fr_encode = esp_timer_get_time();
+#endif
                         }
                     }
                 }
