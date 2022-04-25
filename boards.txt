@@ -22,394 +22,394 @@ menu.MemoryType=Memory Type
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
 ##############################################################
 
-ticos-kit-aksu.name=Ticos Kit Aksu
+aksu.name=Ticos Kit Aksu
 
-ticos-kit-aksu.upload.tool=esptool_py
-ticos-kit-aksu.upload.tool.default=esptool_py
-ticos-kit-aksu.upload.maximum_size=1310720
-ticos-kit-aksu.upload.maximum_data_size=327680
-ticos-kit-aksu.upload.flags=
-ticos-kit-aksu.upload.extra_flags=
+aksu.upload.tool=esptool_py
+aksu.upload.tool.default=esptool_py
+aksu.upload.maximum_size=1310720
+aksu.upload.maximum_data_size=327680
+aksu.upload.flags=
+aksu.upload.extra_flags=
 
-ticos-kit-aksu.serial.disableDTR=true
-ticos-kit-aksu.serial.disableRTS=true
+aksu.serial.disableDTR=true
+aksu.serial.disableRTS=true
 
-ticos-kit-aksu.build.tarch=xtensa
-ticos-kit-aksu.build.bootloader_addr=0x1000
-ticos-kit-aksu.build.target=esp32
-ticos-kit-aksu.build.mcu=esp32
-ticos-kit-aksu.build.core=esp32
-ticos-kit-aksu.build.variant=ticos_kit_aksu
-ticos-kit-aksu.build.board=ticos_kit_aksu
-ticos-kit-aksu.build.f_cpu=240000000L
-ticos-kit-aksu.build.boot=dio
-ticos-kit-aksu.build.partitions=minimal
-ticos-kit-aksu.build.flash_mode=dio
-ticos-kit-aksu.build.flash_size=4MB
-ticos-kit-aksu.build.flash_freq=40m
-ticos-kit-aksu.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+aksu.build.tarch=xtensa
+aksu.build.bootloader_addr=0x1000
+aksu.build.target=esp32
+aksu.build.mcu=esp32
+aksu.build.core=esp32
+aksu.build.variant=aksu
+aksu.build.board=aksu
+aksu.build.f_cpu=240000000L
+aksu.build.boot=dio
+aksu.build.partitions=minimal
+aksu.build.flash_mode=dio
+aksu.build.flash_size=4MB
+aksu.build.flash_freq=40m
+aksu.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 
-ticos-kit-aksu.menu.UploadSpeed.921600=921600
-ticos-kit-aksu.menu.UploadSpeed.921600.upload.speed=921600
-ticos-kit-aksu.menu.UploadSpeed.115200=115200
-ticos-kit-aksu.menu.UploadSpeed.115200.upload.speed=115200
-ticos-kit-aksu.menu.UploadSpeed.256000.windows=256000
-ticos-kit-aksu.menu.UploadSpeed.256000.upload.speed=256000
-ticos-kit-aksu.menu.UploadSpeed.230400.windows.upload.speed=256000
-ticos-kit-aksu.menu.UploadSpeed.230400=230400
-ticos-kit-aksu.menu.UploadSpeed.230400.upload.speed=230400
-ticos-kit-aksu.menu.UploadSpeed.460800.linux=460800
-ticos-kit-aksu.menu.UploadSpeed.460800.macosx=460800
-ticos-kit-aksu.menu.UploadSpeed.460800.upload.speed=460800
-ticos-kit-aksu.menu.UploadSpeed.512000.windows=512000
-ticos-kit-aksu.menu.UploadSpeed.512000.upload.speed=512000
+aksu.menu.UploadSpeed.921600=921600
+aksu.menu.UploadSpeed.921600.upload.speed=921600
+aksu.menu.UploadSpeed.115200=115200
+aksu.menu.UploadSpeed.115200.upload.speed=115200
+aksu.menu.UploadSpeed.256000.windows=256000
+aksu.menu.UploadSpeed.256000.upload.speed=256000
+aksu.menu.UploadSpeed.230400.windows.upload.speed=256000
+aksu.menu.UploadSpeed.230400=230400
+aksu.menu.UploadSpeed.230400.upload.speed=230400
+aksu.menu.UploadSpeed.460800.linux=460800
+aksu.menu.UploadSpeed.460800.macosx=460800
+aksu.menu.UploadSpeed.460800.upload.speed=460800
+aksu.menu.UploadSpeed.512000.windows=512000
+aksu.menu.UploadSpeed.512000.upload.speed=512000
 
-ticos-kit-aksu.menu.DebugLevel.none=None
-ticos-kit-aksu.menu.DebugLevel.none.build.code_debug=0
-ticos-kit-aksu.menu.DebugLevel.error=Error
-ticos-kit-aksu.menu.DebugLevel.error.build.code_debug=1
-ticos-kit-aksu.menu.DebugLevel.warn=Warn
-ticos-kit-aksu.menu.DebugLevel.warn.build.code_debug=2
-ticos-kit-aksu.menu.DebugLevel.info=Info
-ticos-kit-aksu.menu.DebugLevel.info.build.code_debug=3
-ticos-kit-aksu.menu.DebugLevel.debug=Debug
-ticos-kit-aksu.menu.DebugLevel.debug.build.code_debug=4
-ticos-kit-aksu.menu.DebugLevel.verbose=Verbose
-ticos-kit-aksu.menu.DebugLevel.verbose.build.code_debug=5
-
-##############################################################
-
-ticos-kit-longan.name=Ticos Kit Longan
-ticos-kit-longan.vid.0=0x303a
-ticos-kit-longan.pid.0=0x1001
-
-ticos-kit-longan.bootloader.tool=esptool_py
-ticos-kit-longan.bootloader.tool.default=esptool_py
-ticos-kit-longan.upload.tool=esptool_py
-ticos-kit-longan.upload.tool.default=esptool_py
-ticos-kit-longan.upload.tool.network=esp_ota
-ticos-kit-longan.upload.maximum_size=1310720
-ticos-kit-longan.upload.maximum_data_size=327680
-ticos-kit-longan.upload.flags=
-ticos-kit-longan.upload.extra_flags=
-ticos-kit-longan.upload.use_1200bps_touch=false
-ticos-kit-longan.upload.wait_for_upload_port=false
-
-ticos-kit-longan.serial.disableDTR=false
-ticos-kit-longan.serial.disableRTS=false
-
-ticos-kit-longan.build.tarch=xtensa
-ticos-kit-longan.build.bootloader_addr=0x0
-ticos-kit-longan.build.target=esp32s3
-ticos-kit-longan.build.mcu=esp32s3
-ticos-kit-longan.build.core=esp32
-ticos-kit-longan.build.variant=ticos_kit_longan
-ticos-kit-longan.build.board=ticos_kit_longan
-
-ticos-kit-longan.build.usb_mode=1
-ticos-kit-longan.build.cdc_on_boot=1
-ticos-kit-longan.build.msc_on_boot=0
-ticos-kit-longan.build.dfu_on_boot=0
-ticos-kit-longan.build.f_cpu=240000000L
-ticos-kit-longan.build.flash_size=4MB
-ticos-kit-longan.build.flash_freq=80m
-ticos-kit-longan.build.flash_mode=dio
-ticos-kit-longan.build.boot=qio
-ticos-kit-longan.build.boot_freq=80m
-ticos-kit-longan.build.partitions=default
-ticos-kit-longan.build.defines=
-ticos-kit-longan.build.loop_core=
-ticos-kit-longan.build.event_core=
-
-ticos-kit-longan.menu.LoopCore.1=Core 1
-ticos-kit-longan.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-ticos-kit-longan.menu.LoopCore.0=Core 0
-ticos-kit-longan.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
-
-ticos-kit-longan.menu.EventsCore.1=Core 1
-ticos-kit-longan.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-ticos-kit-longan.menu.EventsCore.0=Core 0
-ticos-kit-longan.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
-
-ticos-kit-longan.menu.USBMode.hwcdc=Hardware CDC and JTAG
-ticos-kit-longan.menu.USBMode.hwcdc.build.usb_mode=1
-ticos-kit-longan.menu.USBMode.default=USB-OTG
-ticos-kit-longan.menu.USBMode.default.build.usb_mode=0
-
-ticos-kit-longan.menu.CDCOnBoot.default=Disabled
-ticos-kit-longan.menu.CDCOnBoot.default.build.cdc_on_boot=1
-ticos-kit-longan.menu.CDCOnBoot.cdc=Enabled
-ticos-kit-longan.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-
-ticos-kit-longan.menu.MSCOnBoot.default=Disabled
-ticos-kit-longan.menu.MSCOnBoot.default.build.msc_on_boot=0
-ticos-kit-longan.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-ticos-kit-longan.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-ticos-kit-longan.menu.DFUOnBoot.default=Disabled
-ticos-kit-longan.menu.DFUOnBoot.default.build.dfu_on_boot=0
-ticos-kit-longan.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-ticos-kit-longan.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
-
-ticos-kit-longan.menu.UploadMode.default=UART0
-ticos-kit-longan.menu.UploadMode.default.upload.use_1200bps_touch=false
-ticos-kit-longan.menu.UploadMode.default.upload.wait_for_upload_port=false
-ticos-kit-longan.menu.UploadMode.cdc=Internal USB
-ticos-kit-longan.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-ticos-kit-longan.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-ticos-kit-longan.menu.PSRAM.disabled=Disabled
-ticos-kit-longan.menu.PSRAM.disabled.build.defines=
-ticos-kit-longan.menu.PSRAM.enabled=Enabled
-ticos-kit-longan.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-
-ticos-kit-longan.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.default.build.partitions=default
-ticos-kit-longan.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-ticos-kit-longan.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-ticos-kit-longan.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
-ticos-kit-longan.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-ticos-kit-longan.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-ticos-kit-longan.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.minimal.build.partitions=minimal
-ticos-kit-longan.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.no_ota.build.partitions=no_ota
-ticos-kit-longan.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-ticos-kit-longan.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-ticos-kit-longan.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-ticos-kit-longan.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-ticos-kit-longan.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-ticos-kit-longan.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-ticos-kit-longan.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-ticos-kit-longan.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-ticos-kit-longan.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-ticos-kit-longan.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.huge_app.build.partitions=huge_app
-ticos-kit-longan.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-ticos-kit-longan.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-ticos-kit-longan.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-ticos-kit-longan.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-ticos-kit-longan.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-ticos-kit-longan.menu.PartitionScheme.fatflash.build.partitions=ffat
-ticos-kit-longan.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-ticos-kit-longan.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-ticos-kit-longan.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-ticos-kit-longan.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
-ticos-kit-longan.menu.CPUFreq.240=240MHz (WiFi)
-ticos-kit-longan.menu.CPUFreq.240.build.f_cpu=240000000L
-ticos-kit-longan.menu.CPUFreq.160=160MHz (WiFi)
-ticos-kit-longan.menu.CPUFreq.160.build.f_cpu=160000000L
-ticos-kit-longan.menu.CPUFreq.80=80MHz (WiFi)
-ticos-kit-longan.menu.CPUFreq.80.build.f_cpu=80000000L
-ticos-kit-longan.menu.CPUFreq.40=40MHz
-ticos-kit-longan.menu.CPUFreq.40.build.f_cpu=40000000L
-ticos-kit-longan.menu.CPUFreq.20=20MHz
-ticos-kit-longan.menu.CPUFreq.20.build.f_cpu=20000000L
-ticos-kit-longan.menu.CPUFreq.10=10MHz
-ticos-kit-longan.menu.CPUFreq.10.build.f_cpu=10000000L
-
-ticos-kit-longan.menu.FlashMode.qio=QIO
-ticos-kit-longan.menu.FlashMode.qio.build.flash_mode=dio
-ticos-kit-longan.menu.FlashMode.qio.build.boot=qio
-ticos-kit-longan.menu.FlashMode.dio=DIO
-ticos-kit-longan.menu.FlashMode.dio.build.flash_mode=dio
-ticos-kit-longan.menu.FlashMode.dio.build.boot=dio
-ticos-kit-longan.menu.FlashMode.qout=QOUT
-ticos-kit-longan.menu.FlashMode.qout.build.flash_mode=dout
-ticos-kit-longan.menu.FlashMode.qout.build.boot=qout
-ticos-kit-longan.menu.FlashMode.dout=DOUT
-ticos-kit-longan.menu.FlashMode.dout.build.flash_mode=dout
-ticos-kit-longan.menu.FlashMode.dout.build.boot=dout
-
-ticos-kit-longan.menu.FlashFreq.80=80MHz
-ticos-kit-longan.menu.FlashFreq.80.build.flash_freq=80m
-ticos-kit-longan.menu.FlashFreq.40=40MHz
-ticos-kit-longan.menu.FlashFreq.40.build.flash_freq=40m
-
-ticos-kit-longan.menu.FlashSize.4M=4MB (32Mb)
-ticos-kit-longan.menu.FlashSize.4M.build.flash_size=4MB
-ticos-kit-longan.menu.FlashSize.8M=8MB (64Mb)
-ticos-kit-longan.menu.FlashSize.8M.build.flash_size=8MB
-ticos-kit-longan.menu.FlashSize.8M.build.partitions=default_8MB
-ticos-kit-longan.menu.FlashSize.2M=2MB (16Mb)
-ticos-kit-longan.menu.FlashSize.2M.build.flash_size=2MB
-ticos-kit-longan.menu.FlashSize.2M.build.partitions=minimal
-ticos-kit-longan.menu.FlashSize.16M=16MB (128Mb)
-ticos-kit-longan.menu.FlashSize.16M.build.flash_size=16MB
-ticos-kit-longan.menu.UploadSpeed.921600=921600
-ticos-kit-longan.menu.UploadSpeed.921600.upload.speed=921600
-ticos-kit-longan.menu.UploadSpeed.115200=115200
-ticos-kit-longan.menu.UploadSpeed.115200.upload.speed=115200
-ticos-kit-longan.menu.UploadSpeed.256000.windows=256000
-ticos-kit-longan.menu.UploadSpeed.256000.upload.speed=256000
-ticos-kit-longan.menu.UploadSpeed.230400.windows.upload.speed=256000
-ticos-kit-longan.menu.UploadSpeed.230400=230400
-ticos-kit-longan.menu.UploadSpeed.230400.upload.speed=230400
-ticos-kit-longan.menu.UploadSpeed.460800.linux=460800
-ticos-kit-longan.menu.UploadSpeed.460800.macosx=460800
-ticos-kit-longan.menu.UploadSpeed.460800.upload.speed=460800
-ticos-kit-longan.menu.UploadSpeed.512000.windows=512000
-ticos-kit-longan.menu.UploadSpeed.512000.upload.speed=512000
-
-ticos-kit-longan.menu.DebugLevel.none=None
-ticos-kit-longan.menu.DebugLevel.none.build.code_debug=0
-ticos-kit-longan.menu.DebugLevel.error=Error
-ticos-kit-longan.menu.DebugLevel.error.build.code_debug=1
-ticos-kit-longan.menu.DebugLevel.warn=Warn
-ticos-kit-longan.menu.DebugLevel.warn.build.code_debug=2
-ticos-kit-longan.menu.DebugLevel.info=Info
-ticos-kit-longan.menu.DebugLevel.info.build.code_debug=3
-ticos-kit-longan.menu.DebugLevel.debug=Debug
-ticos-kit-longan.menu.DebugLevel.debug.build.code_debug=4
-ticos-kit-longan.menu.DebugLevel.verbose=Verbose
-ticos-kit-longan.menu.DebugLevel.verbose.build.code_debug=5
+aksu.menu.DebugLevel.none=None
+aksu.menu.DebugLevel.none.build.code_debug=0
+aksu.menu.DebugLevel.error=Error
+aksu.menu.DebugLevel.error.build.code_debug=1
+aksu.menu.DebugLevel.warn=Warn
+aksu.menu.DebugLevel.warn.build.code_debug=2
+aksu.menu.DebugLevel.info=Info
+aksu.menu.DebugLevel.info.build.code_debug=3
+aksu.menu.DebugLevel.debug=Debug
+aksu.menu.DebugLevel.debug.build.code_debug=4
+aksu.menu.DebugLevel.verbose=Verbose
+aksu.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
-ticos-kit-orange.name=Ticos Kit Orange
-ticos-kit-orange.vid.0=0x303a
-ticos-kit-orange.pid.0=0x1001
+longan.name=Ticos Kit Longan
+longan.vid.0=0x303a
+longan.pid.0=0x1001
 
-ticos-kit-orange.bootloader.tool=esptool_py
-ticos-kit-orange.bootloader.tool.default=esptool_py
+longan.bootloader.tool=esptool_py
+longan.bootloader.tool.default=esptool_py
+longan.upload.tool=esptool_py
+longan.upload.tool.default=esptool_py
+longan.upload.tool.network=esp_ota
+longan.upload.maximum_size=1310720
+longan.upload.maximum_data_size=327680
+longan.upload.flags=
+longan.upload.extra_flags=
+longan.upload.use_1200bps_touch=false
+longan.upload.wait_for_upload_port=false
 
-ticos-kit-orange.upload.tool=esptool_py
-ticos-kit-orange.upload.tool.default=esptool_py
-ticos-kit-orange.upload.tool.network=esp_ota
+longan.serial.disableDTR=false
+longan.serial.disableRTS=false
 
-ticos-kit-orange.upload.maximum_size=1310720
-ticos-kit-orange.upload.maximum_data_size=327680
-ticos-kit-orange.upload.flags=
-ticos-kit-orange.upload.extra_flags=
-ticos-kit-orange.upload.use_1200bps_touch=false
-ticos-kit-orange.upload.wait_for_upload_port=false
+longan.build.tarch=xtensa
+longan.build.bootloader_addr=0x0
+longan.build.target=esp32s3
+longan.build.mcu=esp32s3
+longan.build.core=esp32
+longan.build.variant=longan
+longan.build.board=longan
 
-ticos-kit-orange.serial.disableDTR=false
-ticos-kit-orange.serial.disableRTS=false
+longan.build.usb_mode=1
+longan.build.cdc_on_boot=1
+longan.build.msc_on_boot=0
+longan.build.dfu_on_boot=0
+longan.build.f_cpu=240000000L
+longan.build.flash_size=4MB
+longan.build.flash_freq=80m
+longan.build.flash_mode=dio
+longan.build.boot=qio
+longan.build.boot_freq=80m
+longan.build.partitions=default
+longan.build.defines=
+longan.build.loop_core=
+longan.build.event_core=
 
-ticos-kit-orange.build.tarch=riscv32
-ticos-kit-orange.build.target=esp
-ticos-kit-orange.build.mcu=esp32c3
-ticos-kit-orange.build.core=esp32
-ticos-kit-orange.build.variant=ticos_kit_orange
-ticos-kit-orange.build.board=ticos_kit_orange
-ticos-kit-orange.build.bootloader_addr=0x0
+longan.menu.LoopCore.1=Core 1
+longan.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+longan.menu.LoopCore.0=Core 0
+longan.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
 
-ticos-kit-orange.build.cdc_on_boot=0
-ticos-kit-orange.build.f_cpu=160000000L
-ticos-kit-orange.build.flash_size=4MB
-ticos-kit-orange.build.flash_freq=80m
-ticos-kit-orange.build.flash_mode=qio
-ticos-kit-orange.build.boot=qio
-ticos-kit-orange.build.partitions=default
-ticos-kit-orange.build.defines=
+longan.menu.EventsCore.1=Core 1
+longan.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+longan.menu.EventsCore.0=Core 0
+longan.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-ticos-kit-orange.menu.CDCOnBoot.default=Disabled
-ticos-kit-orange.menu.CDCOnBoot.default.build.cdc_on_boot=0
-ticos-kit-orange.menu.CDCOnBoot.cdc=Enabled
-ticos-kit-orange.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+longan.menu.USBMode.hwcdc=Hardware CDC and JTAG
+longan.menu.USBMode.hwcdc.build.usb_mode=1
+longan.menu.USBMode.default=USB-OTG
+longan.menu.USBMode.default.build.usb_mode=0
 
-ticos-kit-orange.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.default.build.partitions=default
-ticos-kit-orange.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-ticos-kit-orange.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-ticos-kit-orange.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
-ticos-kit-orange.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-ticos-kit-orange.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-ticos-kit-orange.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.minimal.build.partitions=minimal
-ticos-kit-orange.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.no_ota.build.partitions=no_ota
-ticos-kit-orange.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-ticos-kit-orange.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-ticos-kit-orange.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-ticos-kit-orange.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-ticos-kit-orange.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-ticos-kit-orange.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-ticos-kit-orange.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-ticos-kit-orange.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-ticos-kit-orange.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-ticos-kit-orange.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.huge_app.build.partitions=huge_app
-ticos-kit-orange.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-ticos-kit-orange.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-ticos-kit-orange.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-ticos-kit-orange.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-ticos-kit-orange.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-ticos-kit-orange.menu.PartitionScheme.fatflash.build.partitions=ffat
-ticos-kit-orange.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-ticos-kit-orange.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-ticos-kit-orange.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-ticos-kit-orange.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+longan.menu.CDCOnBoot.default=Disabled
+longan.menu.CDCOnBoot.default.build.cdc_on_boot=1
+longan.menu.CDCOnBoot.cdc=Enabled
+longan.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
-ticos-kit-orange.menu.CPUFreq.160=160MHz (WiFi)
-ticos-kit-orange.menu.CPUFreq.160.build.f_cpu=160000000L
-ticos-kit-orange.menu.CPUFreq.80=80MHz (WiFi)
-ticos-kit-orange.menu.CPUFreq.80.build.f_cpu=80000000L
-ticos-kit-orange.menu.CPUFreq.40=40MHz
-ticos-kit-orange.menu.CPUFreq.40.build.f_cpu=40000000L
-ticos-kit-orange.menu.CPUFreq.20=20MHz
-ticos-kit-orange.menu.CPUFreq.20.build.f_cpu=20000000L
-ticos-kit-orange.menu.CPUFreq.10=10MHz
-ticos-kit-orange.menu.CPUFreq.10.build.f_cpu=10000000L
+longan.menu.MSCOnBoot.default=Disabled
+longan.menu.MSCOnBoot.default.build.msc_on_boot=0
+longan.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+longan.menu.MSCOnBoot.msc.build.msc_on_boot=1
 
-ticos-kit-orange.menu.FlashMode.qio=QIO
-ticos-kit-orange.menu.FlashMode.qio.build.flash_mode=dio
-ticos-kit-orange.menu.FlashMode.qio.build.boot=qio
-ticos-kit-orange.menu.FlashMode.dio=DIO
-ticos-kit-orange.menu.FlashMode.dio.build.flash_mode=dio
-ticos-kit-orange.menu.FlashMode.dio.build.boot=dio
-ticos-kit-orange.menu.FlashMode.qout=QOUT
-ticos-kit-orange.menu.FlashMode.qout.build.flash_mode=dout
-ticos-kit-orange.menu.FlashMode.qout.build.boot=qout
-ticos-kit-orange.menu.FlashMode.dout=DOUT
-ticos-kit-orange.menu.FlashMode.dout.build.flash_mode=dout
-ticos-kit-orange.menu.FlashMode.dout.build.boot=dout
+longan.menu.DFUOnBoot.default=Disabled
+longan.menu.DFUOnBoot.default.build.dfu_on_boot=0
+longan.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+longan.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-ticos-kit-orange.menu.FlashFreq.80=80MHz
-ticos-kit-orange.menu.FlashFreq.80.build.flash_freq=80m
-ticos-kit-orange.menu.FlashFreq.40=40MHz
-ticos-kit-orange.menu.FlashFreq.40.build.flash_freq=40m
+longan.menu.UploadMode.default=UART0
+longan.menu.UploadMode.default.upload.use_1200bps_touch=false
+longan.menu.UploadMode.default.upload.wait_for_upload_port=false
+longan.menu.UploadMode.cdc=Internal USB
+longan.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+longan.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+longan.menu.PSRAM.disabled=Disabled
+longan.menu.PSRAM.disabled.build.defines=
+longan.menu.PSRAM.enabled=Enabled
+longan.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 
-ticos-kit-orange.menu.FlashSize.4M=4MB (32Mb)
-ticos-kit-orange.menu.FlashSize.4M.build.flash_size=4MB
-ticos-kit-orange.menu.FlashSize.8M=8MB (64Mb)
-ticos-kit-orange.menu.FlashSize.8M.build.flash_size=8MB
-ticos-kit-orange.menu.FlashSize.8M.build.partitions=default_8MB
-ticos-kit-orange.menu.FlashSize.2M=2MB (16Mb)
-ticos-kit-orange.menu.FlashSize.2M.build.flash_size=2MB
-ticos-kit-orange.menu.FlashSize.2M.build.partitions=minimal
-ticos-kit-orange.menu.FlashSize.16M=16MB (128Mb)
-ticos-kit-orange.menu.FlashSize.16M.build.flash_size=16MB
+longan.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+longan.menu.PartitionScheme.default.build.partitions=default
+longan.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+longan.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+longan.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+longan.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+longan.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+longan.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+longan.menu.PartitionScheme.minimal.build.partitions=minimal
+longan.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+longan.menu.PartitionScheme.no_ota.build.partitions=no_ota
+longan.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+longan.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+longan.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+longan.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+longan.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+longan.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+longan.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+longan.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+longan.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+longan.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+longan.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+longan.menu.PartitionScheme.huge_app.build.partitions=huge_app
+longan.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+longan.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+longan.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+longan.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+longan.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+longan.menu.PartitionScheme.fatflash.build.partitions=ffat
+longan.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+longan.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+longan.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+longan.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
-ticos-kit-orange.menu.UploadSpeed.921600=921600
-ticos-kit-orange.menu.UploadSpeed.921600.upload.speed=921600
-ticos-kit-orange.menu.UploadSpeed.115200=115200
-ticos-kit-orange.menu.UploadSpeed.115200.upload.speed=115200
-ticos-kit-orange.menu.UploadSpeed.256000.windows=256000
-ticos-kit-orange.menu.UploadSpeed.256000.upload.speed=256000
-ticos-kit-orange.menu.UploadSpeed.230400.windows.upload.speed=256000
-ticos-kit-orange.menu.UploadSpeed.230400=230400
-ticos-kit-orange.menu.UploadSpeed.230400.upload.speed=230400
-ticos-kit-orange.menu.UploadSpeed.460800.linux=460800
-ticos-kit-orange.menu.UploadSpeed.460800.macosx=460800
-ticos-kit-orange.menu.UploadSpeed.460800.upload.speed=460800
-ticos-kit-orange.menu.UploadSpeed.512000.windows=512000
-ticos-kit-orange.menu.UploadSpeed.512000.upload.speed=512000
+longan.menu.CPUFreq.240=240MHz (WiFi)
+longan.menu.CPUFreq.240.build.f_cpu=240000000L
+longan.menu.CPUFreq.160=160MHz (WiFi)
+longan.menu.CPUFreq.160.build.f_cpu=160000000L
+longan.menu.CPUFreq.80=80MHz (WiFi)
+longan.menu.CPUFreq.80.build.f_cpu=80000000L
+longan.menu.CPUFreq.40=40MHz
+longan.menu.CPUFreq.40.build.f_cpu=40000000L
+longan.menu.CPUFreq.20=20MHz
+longan.menu.CPUFreq.20.build.f_cpu=20000000L
+longan.menu.CPUFreq.10=10MHz
+longan.menu.CPUFreq.10.build.f_cpu=10000000L
 
-ticos-kit-orange.menu.DebugLevel.none=None
-ticos-kit-orange.menu.DebugLevel.none.build.code_debug=0
-ticos-kit-orange.menu.DebugLevel.error=Error
-ticos-kit-orange.menu.DebugLevel.error.build.code_debug=1
-ticos-kit-orange.menu.DebugLevel.warn=Warn
-ticos-kit-orange.menu.DebugLevel.warn.build.code_debug=2
-ticos-kit-orange.menu.DebugLevel.info=Info
-ticos-kit-orange.menu.DebugLevel.info.build.code_debug=3
-ticos-kit-orange.menu.DebugLevel.debug=Debug
-ticos-kit-orange.menu.DebugLevel.debug.build.code_debug=4
-ticos-kit-orange.menu.DebugLevel.verbose=Verbose
-ticos-kit-orange.menu.DebugLevel.verbose.build.code_debug=5
+longan.menu.FlashMode.qio=QIO
+longan.menu.FlashMode.qio.build.flash_mode=dio
+longan.menu.FlashMode.qio.build.boot=qio
+longan.menu.FlashMode.dio=DIO
+longan.menu.FlashMode.dio.build.flash_mode=dio
+longan.menu.FlashMode.dio.build.boot=dio
+longan.menu.FlashMode.qout=QOUT
+longan.menu.FlashMode.qout.build.flash_mode=dout
+longan.menu.FlashMode.qout.build.boot=qout
+longan.menu.FlashMode.dout=DOUT
+longan.menu.FlashMode.dout.build.flash_mode=dout
+longan.menu.FlashMode.dout.build.boot=dout
+
+longan.menu.FlashFreq.80=80MHz
+longan.menu.FlashFreq.80.build.flash_freq=80m
+longan.menu.FlashFreq.40=40MHz
+longan.menu.FlashFreq.40.build.flash_freq=40m
+
+longan.menu.FlashSize.4M=4MB (32Mb)
+longan.menu.FlashSize.4M.build.flash_size=4MB
+longan.menu.FlashSize.8M=8MB (64Mb)
+longan.menu.FlashSize.8M.build.flash_size=8MB
+longan.menu.FlashSize.8M.build.partitions=default_8MB
+longan.menu.FlashSize.2M=2MB (16Mb)
+longan.menu.FlashSize.2M.build.flash_size=2MB
+longan.menu.FlashSize.2M.build.partitions=minimal
+longan.menu.FlashSize.16M=16MB (128Mb)
+longan.menu.FlashSize.16M.build.flash_size=16MB
+longan.menu.UploadSpeed.921600=921600
+longan.menu.UploadSpeed.921600.upload.speed=921600
+longan.menu.UploadSpeed.115200=115200
+longan.menu.UploadSpeed.115200.upload.speed=115200
+longan.menu.UploadSpeed.256000.windows=256000
+longan.menu.UploadSpeed.256000.upload.speed=256000
+longan.menu.UploadSpeed.230400.windows.upload.speed=256000
+longan.menu.UploadSpeed.230400=230400
+longan.menu.UploadSpeed.230400.upload.speed=230400
+longan.menu.UploadSpeed.460800.linux=460800
+longan.menu.UploadSpeed.460800.macosx=460800
+longan.menu.UploadSpeed.460800.upload.speed=460800
+longan.menu.UploadSpeed.512000.windows=512000
+longan.menu.UploadSpeed.512000.upload.speed=512000
+
+longan.menu.DebugLevel.none=None
+longan.menu.DebugLevel.none.build.code_debug=0
+longan.menu.DebugLevel.error=Error
+longan.menu.DebugLevel.error.build.code_debug=1
+longan.menu.DebugLevel.warn=Warn
+longan.menu.DebugLevel.warn.build.code_debug=2
+longan.menu.DebugLevel.info=Info
+longan.menu.DebugLevel.info.build.code_debug=3
+longan.menu.DebugLevel.debug=Debug
+longan.menu.DebugLevel.debug.build.code_debug=4
+longan.menu.DebugLevel.verbose=Verbose
+longan.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
+
+orange.name=Ticos Kit Orange
+orange.vid.0=0x303a
+orange.pid.0=0x1001
+
+orange.bootloader.tool=esptool_py
+orange.bootloader.tool.default=esptool_py
+
+orange.upload.tool=esptool_py
+orange.upload.tool.default=esptool_py
+orange.upload.tool.network=esp_ota
+
+orange.upload.maximum_size=1310720
+orange.upload.maximum_data_size=327680
+orange.upload.flags=
+orange.upload.extra_flags=
+orange.upload.use_1200bps_touch=false
+orange.upload.wait_for_upload_port=false
+
+orange.serial.disableDTR=false
+orange.serial.disableRTS=false
+
+orange.build.tarch=riscv32
+orange.build.target=esp
+orange.build.mcu=esp32c3
+orange.build.core=esp32
+orange.build.variant=orange
+orange.build.board=orange
+orange.build.bootloader_addr=0x0
+
+orange.build.cdc_on_boot=0
+orange.build.f_cpu=160000000L
+orange.build.flash_size=4MB
+orange.build.flash_freq=80m
+orange.build.flash_mode=qio
+orange.build.boot=qio
+orange.build.partitions=default
+orange.build.defines=
+
+orange.menu.CDCOnBoot.default=Disabled
+orange.menu.CDCOnBoot.default.build.cdc_on_boot=0
+orange.menu.CDCOnBoot.cdc=Enabled
+orange.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+orange.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+orange.menu.PartitionScheme.default.build.partitions=default
+orange.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+orange.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+orange.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+orange.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+orange.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+orange.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+orange.menu.PartitionScheme.minimal.build.partitions=minimal
+orange.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+orange.menu.PartitionScheme.no_ota.build.partitions=no_ota
+orange.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+orange.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+orange.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+orange.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+orange.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+orange.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+orange.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+orange.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+orange.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+orange.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+orange.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+orange.menu.PartitionScheme.huge_app.build.partitions=huge_app
+orange.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+orange.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+orange.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+orange.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+orange.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+orange.menu.PartitionScheme.fatflash.build.partitions=ffat
+orange.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+orange.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+orange.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+orange.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+orange.menu.CPUFreq.160=160MHz (WiFi)
+orange.menu.CPUFreq.160.build.f_cpu=160000000L
+orange.menu.CPUFreq.80=80MHz (WiFi)
+orange.menu.CPUFreq.80.build.f_cpu=80000000L
+orange.menu.CPUFreq.40=40MHz
+orange.menu.CPUFreq.40.build.f_cpu=40000000L
+orange.menu.CPUFreq.20=20MHz
+orange.menu.CPUFreq.20.build.f_cpu=20000000L
+orange.menu.CPUFreq.10=10MHz
+orange.menu.CPUFreq.10.build.f_cpu=10000000L
+
+orange.menu.FlashMode.qio=QIO
+orange.menu.FlashMode.qio.build.flash_mode=dio
+orange.menu.FlashMode.qio.build.boot=qio
+orange.menu.FlashMode.dio=DIO
+orange.menu.FlashMode.dio.build.flash_mode=dio
+orange.menu.FlashMode.dio.build.boot=dio
+orange.menu.FlashMode.qout=QOUT
+orange.menu.FlashMode.qout.build.flash_mode=dout
+orange.menu.FlashMode.qout.build.boot=qout
+orange.menu.FlashMode.dout=DOUT
+orange.menu.FlashMode.dout.build.flash_mode=dout
+orange.menu.FlashMode.dout.build.boot=dout
+
+orange.menu.FlashFreq.80=80MHz
+orange.menu.FlashFreq.80.build.flash_freq=80m
+orange.menu.FlashFreq.40=40MHz
+orange.menu.FlashFreq.40.build.flash_freq=40m
+
+orange.menu.FlashSize.4M=4MB (32Mb)
+orange.menu.FlashSize.4M.build.flash_size=4MB
+orange.menu.FlashSize.8M=8MB (64Mb)
+orange.menu.FlashSize.8M.build.flash_size=8MB
+orange.menu.FlashSize.8M.build.partitions=default_8MB
+orange.menu.FlashSize.2M=2MB (16Mb)
+orange.menu.FlashSize.2M.build.flash_size=2MB
+orange.menu.FlashSize.2M.build.partitions=minimal
+orange.menu.FlashSize.16M=16MB (128Mb)
+orange.menu.FlashSize.16M.build.flash_size=16MB
+
+orange.menu.UploadSpeed.921600=921600
+orange.menu.UploadSpeed.921600.upload.speed=921600
+orange.menu.UploadSpeed.115200=115200
+orange.menu.UploadSpeed.115200.upload.speed=115200
+orange.menu.UploadSpeed.256000.windows=256000
+orange.menu.UploadSpeed.256000.upload.speed=256000
+orange.menu.UploadSpeed.230400.windows.upload.speed=256000
+orange.menu.UploadSpeed.230400=230400
+orange.menu.UploadSpeed.230400.upload.speed=230400
+orange.menu.UploadSpeed.460800.linux=460800
+orange.menu.UploadSpeed.460800.macosx=460800
+orange.menu.UploadSpeed.460800.upload.speed=460800
+orange.menu.UploadSpeed.512000.windows=512000
+orange.menu.UploadSpeed.512000.upload.speed=512000
+
+orange.menu.DebugLevel.none=None
+orange.menu.DebugLevel.none.build.code_debug=0
+orange.menu.DebugLevel.error=Error
+orange.menu.DebugLevel.error.build.code_debug=1
+orange.menu.DebugLevel.warn=Warn
+orange.menu.DebugLevel.warn.build.code_debug=2
+orange.menu.DebugLevel.info=Info
+orange.menu.DebugLevel.info.build.code_debug=3
+orange.menu.DebugLevel.debug=Debug
+orange.menu.DebugLevel.debug.build.code_debug=4
+orange.menu.DebugLevel.verbose=Verbose
+orange.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
