@@ -67,7 +67,7 @@ jobs:
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
         idf_ver: ["release-v4.4"]
-        idf_target: ["esp32", "esp32s2", "esp32c3"]
+        idf_target: ["esp32", "esp32s2", "esp32s3", "esp32c3"]
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - name: Check out arduino-esp32 as a component
