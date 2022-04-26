@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join, basename
+from os.path import abspath, isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -324,6 +324,12 @@ env.Append(
         ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
         ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"))
     ]
+    + [
+        (offset, join(FRAMEWORK_DIR, img))
+        for offset, img in env.BoardConfig().get(
+            "upload.arduino.flash_extra_images", []
+        )
+    ],
 )
 
 #
