@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join, basename
+from os.path import abspath, isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -88,6 +88,7 @@ env.Append(
         "-T", "esp32s2.rom.newlib-funcs.ld",
         "-T", "esp32s2.rom.newlib-data.ld",
         "-T", "esp32s2.rom.spiflash.ld",
+        "-T", "esp32s2.rom.newlib-time.ld",
         "-T", "esp32s2.peripherals.ld",
         "-u", "_Z5setupv",
         "-u", "_Z4loopv",
@@ -96,6 +97,7 @@ env.Append(
         "-u", "pthread_include_pthread_cond_impl",
         "-u", "pthread_include_pthread_local_storage_impl",
         "-u", "pthread_include_pthread_rwlock_impl",
+        "-u", "include_esp_phy_override",
         "-u", "ld_include_highint_hdl",
         "-u", "start_app",
         "-u", "__ubsan_include",
@@ -107,7 +109,7 @@ env.Append(
         "-u", "newlib_include_pthread_impl",
         "-u", "newlib_include_assert_impl",
         "-u", "__cxa_guard_dummy",
-        '-Wl,-Map="%s"' % join("$BUILD_DIR", basename(env.subst("${PROJECT_DIR}.map")))
+        '-Wl,-Map="%s"' % join("${BUILD_DIR}", "${PROGNAME}.map")
     ],
 
     CPPPATH=[
@@ -230,11 +232,15 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "touch_element", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "ulp", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "wifi_provisioning", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "freertos"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "arduino_tinyusb", "tinyusb", "src"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "arduino_tinyusb", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "src"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "button", "button", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "rmaker_common", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "json_parser", "upstream", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "json_parser", "upstream"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "json_generator", "upstream"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_schedule", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_rainmaker", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "qrcode", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "ws2812_led"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "dotprod", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "support", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "windows", "include"),
@@ -260,28 +266,37 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "common", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "kalman", "ekf", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dsp", "modules", "kalman", "ekf_imu13states", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "tool"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "typedef"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "image"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "math"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "nn"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "layer"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "detect"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-face", "include", "model_zoo"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "freertos"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "arduino_tinyusb", "tinyusb", "src"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "arduino_tinyusb", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "src"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp_littlefs", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "tool"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "typedef"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "image"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "math"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "nn"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "layer"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "detect"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-dl", "include", "model_zoo"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-sr", "esp-tts", "esp_tts_chinese", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp-sr", "include", "esp32"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp32-camera", "driver", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "esp32-camera", "conversions", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "fb_gfx", "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", env.BoardConfig().get("build.arduino.memory_type", "qspi_qspi"), "include"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
 
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "lib"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "ld")
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "ld"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", env.BoardConfig().get("build.arduino.memory_type", "qspi_qspi"))
     ],
 
     LIBS=[
-        "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lasio", "-lcbor", "-lunity", "-lcmock", "-lcoap", "-lnghttp", "-lesp-tls", "-lesp_adc_cal", "-lesp_hid", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lesp_https_server", "-lesp_lcd", "-lprotobuf-c", "-lprotocomm", "-lmdns", "-lesp_local_ctrl", "-lsdmmc", "-lesp_serial_slave_link", "-lesp_websocket_client", "-lexpat", "-lwear_levelling", "-lfatfs", "-lfreemodbus", "-ljsmn", "-ljson", "-llibsodium", "-lmqtt", "-lopenssl", "-lperfmon", "-lspiffs", "-lusb", "-ltouch_element", "-lulp", "-lwifi_provisioning", "-lesp-dsp", "-lesp32-camera", "-lesp_littlefs", "-lfb_gfx", "-lasio", "-lcbor", "-lcmock", "-lunity", "-lcoap", "-lesp_lcd", "-lesp_local_ctrl", "-lesp_https_server", "-lesp_websocket_client", "-lexpat", "-lfreemodbus", "-ljsmn", "-llibsodium", "-lmqtt", "-lperfmon", "-lusb", "-ltouch_element", "-lesp_adc_cal", "-lesp_hid", "-lfatfs", "-lwear_levelling", "-lopenssl", "-lspiffs", "-lwifi_provisioning", "-lprotocomm", "-lprotobuf-c", "-lmdns", "-ljson", "-larduino_tinyusb", "-lcat_face_detect", "-lhuman_face_detect", "-lcolor_detect", "-lmfn", "-ldl", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lesp_phy", "-lphy", "-lesp_phy", "-lphy", "-lxt_hal", "-lm", "-lnewlib", "-lstdc++", "-lpthread", "-lgcc", "-lcxx", "-lapp_trace", "-lgcov", "-lapp_trace", "-lgcov", "-lc"
+        "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lasio", "-lcbor", "-lunity", "-lcmock", "-lcoap", "-lnghttp", "-lesp-tls", "-lesp_adc_cal", "-lesp_hid", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lesp_https_server", "-lesp_lcd", "-lprotobuf-c", "-lprotocomm", "-lmdns", "-lesp_local_ctrl", "-lsdmmc", "-lesp_serial_slave_link", "-lesp_websocket_client", "-lexpat", "-lwear_levelling", "-lfatfs", "-lfreemodbus", "-ljsmn", "-ljson", "-llibsodium", "-lmqtt", "-lopenssl", "-lperfmon", "-lspiffs", "-lusb", "-ltouch_element", "-lulp", "-lwifi_provisioning", "-lbutton", "-lrmaker_common", "-ljson_parser", "-ljson_generator", "-lesp_schedule", "-lesp_rainmaker", "-lqrcode", "-lws2812_led", "-lesp-dsp", "-lesp-sr", "-lesp32-camera", "-lesp_littlefs", "-lfb_gfx", "-lasio", "-lcbor", "-lcmock", "-lunity", "-lcoap", "-lesp_lcd", "-lesp_websocket_client", "-lexpat", "-lfreemodbus", "-ljsmn", "-llibsodium", "-lperfmon", "-lusb", "-ltouch_element", "-lesp_adc_cal", "-lesp_hid", "-lfatfs", "-lwear_levelling", "-lopenssl", "-lesp_rainmaker", "-lesp_local_ctrl", "-lesp_https_server", "-lwifi_provisioning", "-lprotocomm", "-lprotobuf-c", "-lmdns", "-lrmaker_common", "-lmqtt", "-ljson_parser", "-ljson_generator", "-lesp_schedule", "-lqrcode", "-larduino_tinyusb", "-lcat_face_detect", "-lhuman_face_detect", "-lcolor_detect", "-lmfn", "-ldl", "-ljson", "-lspiffs", "-lesp_tts_chinese", "-lvoice_set_xiaole", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lesp_ringbuf", "-lefuse", "-lesp_ipc", "-ldriver", "-lesp_pm", "-lmbedtls", "-lapp_update", "-lbootloader_support", "-lspi_flash", "-lnvs_flash", "-lpthread", "-lesp_gdbstub", "-lespcoredump", "-lesp_phy", "-lesp_system", "-lesp_rom", "-lhal", "-lvfs", "-lesp_eth", "-ltcpip_adapter", "-lesp_netif", "-lesp_event", "-lwpa_supplicant", "-lesp_wifi", "-lconsole", "-llwip", "-llog", "-lheap", "-lsoc", "-lesp_hw_support", "-lxtensa", "-lesp_common", "-lesp_timer", "-lfreertos", "-lnewlib", "-lcxx", "-lapp_trace", "-lnghttp", "-lesp-tls", "-ltcp_transport", "-lesp_http_client", "-lesp_http_server", "-lesp_https_ota", "-lsdmmc", "-lesp_serial_slave_link", "-lulp", "-lmbedtls", "-lmbedcrypto", "-lmbedx509", "-lcoexist", "-lcore", "-lespnow", "-lmesh", "-lnet80211", "-lpp", "-lsmartconfig", "-lwapi", "-lphy", "-lesp_phy", "-lphy", "-lesp_phy", "-lphy", "-lxt_hal", "-lm", "-lnewlib", "-lstdc++", "-lpthread", "-lgcc", "-lcxx", "-lapp_trace", "-lgcov", "-lapp_trace", "-lgcov", "-lc"
     ],
 
     CPPDEFINES=[
@@ -290,7 +305,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4-beta1-308-gf3e0c8bc41\\"'),
+        ("IDF_VER", '\\"v4.4.1-1-gb8050b365e\\"'),
         "ESP_PLATFORM",
         "_POSIX_READER_WRITER_LOCKS",
         "ARDUINO_ARCH_ESP32",
@@ -311,6 +326,12 @@ env.Append(
         ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
         ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"))
     ]
+    + [
+        (offset, join(FRAMEWORK_DIR, img))
+        for offset, img in env.BoardConfig().get(
+            "upload.arduino.flash_extra_images", []
+        )
+    ],
 )
 
 #
