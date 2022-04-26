@@ -91,7 +91,7 @@ Using the stable code
 
 The most reliable and easiest way to get started is to use the latest stable version of the ESP32 development platform that passed all tests/verifications and can be used in production.
 
-Create a new project and select one of the available boards. You can change after by changing the *platformio.ini* file.
+Create a new project and select one of the available boards. You can change after by changing the `platformio.ini <https://docs.platformio.org/en/latest/projectconf/index.html>`_ file.
 
 - For ESP32
 
