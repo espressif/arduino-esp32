@@ -315,6 +315,7 @@ char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
+  if (_CA_cert != NULL) free(const_cast<char*>(_CA_cert));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -325,6 +326,7 @@ bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
+  if (_cert != NULL) free(const_cast<char*>(_cert));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -335,6 +337,7 @@ bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadPrivateKey(Stream& stream, size_t size) {
+  if (_private_key != NULL) free(const_cast<char*>(_private_key));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
