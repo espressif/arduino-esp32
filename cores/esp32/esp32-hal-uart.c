@@ -34,7 +34,7 @@ struct uart_struct_t {
     uint8_t num;
     bool has_peek;
     uint8_t peek_byte;
-
+    QueueHandle_t uart_event_queue;   // export it by some uartGetEventQueue() function
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -43,12 +43,12 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-    {0, false, 0},
+    {0, false, 0, NULL},
 #if SOC_UART_NUM > 1
-    {1, false, 0},
+    {1, false, 0, NULL},
 #endif
 #if SOC_UART_NUM > 2
-    {2, false, 0},
+    {2, false, 0, NULL},
 #endif
 };
 
@@ -58,21 +58,46 @@ static uart_t _uart_bus_array[] = {
 #define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-    {NULL, 0, false, 0},
+    {NULL, 0, false, 0, NULL},
 #if SOC_UART_NUM > 1
-    {NULL, 1, false, 0},
+    {NULL, 1, false, 0, NULL},
 #endif
 #if SOC_UART_NUM > 2
-    {NULL, 2, false, 0},
+    {NULL, 2, false, 0, NULL},
 #endif
 };
 
 #endif
 
+// solves issue https://github.com/espressif/arduino-esp32/issues/6032
+// baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
+uint32_t _get_effective_baudrate(uint32_t baudrate) 
+{
+    uint32_t Freq = getApbFrequency()/1000000;
+    if (Freq < 80) {
+        return 80 / Freq * baudrate;
+     }
+    else {
+        return baudrate;
+    }
+}
+
+// Routines that take care of UART events will be in the HardwareSerial Class code
+void uartGetEventQueue(uart_t* uart, QueueHandle_t *q)
+{
+    // passing back NULL for the Queue pointer when UART is not initialized yet
+    *q = NULL;
+    if(uart == NULL) {
+        return;
+    }
+    *q = uart->uart_event_queue;
+    return;
+}
+
 bool uartIsDriverInstalled(uart_t* uart) 
 {
     if(uart == NULL) {
-        return 0;
+        return false;
     }
 
     if (uart_is_driver_installed(uart->num)) {
@@ -81,25 +106,33 @@ bool uartIsDriverInstalled(uart_t* uart)
     return false;
 }
 
-void uartSetPins(uart_t* uart, uint8_t rxPin, uint8_t txPin)
+// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
+// Negative Pin Number will keep it unmodified, thus this function can set individual pins
+void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(uart == NULL || rxPin >= SOC_GPIO_PIN_COUNT || txPin >= SOC_GPIO_PIN_COUNT) {
+    if(uart == NULL) {
         return;
     }
     UART_MUTEX_LOCK();
-    ESP_ERROR_CHECK(uart_set_pin(uart->num, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)); 
-    UART_MUTEX_UNLOCK();
-    
+    // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
+    uart_set_pin(uart->num, txPin, rxPin, ctsPin, rtsPin); 
+    UART_MUTEX_UNLOCK();  
+}
+
+// 
+void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+    if(uart == NULL) {
+        return;
+    }
+    // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
+    // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
+    uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold);
 }
 
 
-uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t queueLen, bool inverted, uint8_t rxfifo_full_thrhd)
+uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart_nr >= SOC_UART_NUM) {
-        return NULL;
-    }
-
-    if(rxPin == -1 && txPin == -1) {
         return NULL;
     }
 
@@ -121,7 +154,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_LOCK();
 
     uart_config_t uart_config;
-    uart_config.baud_rate = baudrate;
+    uart_config.baud_rate = _get_effective_baudrate(baudrate);
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
     uart_config.stop_bits = (config & 0x30) >> 4;
@@ -130,7 +163,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.source_clk = UART_SCLK_APB;
 
 
-    ESP_ERROR_CHECK(uart_driver_install(uart_nr, 2*queueLen, 0, 0, NULL, 0));
+    ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
@@ -290,7 +323,7 @@ void uartFlushTxOnly(uart_t* uart, bool txOnly)
     }
     
     UART_MUTEX_LOCK();
-    ESP_ERROR_CHECK(uart_wait_tx_done(uart->num, portMAX_DELAY));
+    while(!uart_ll_is_tx_idle(UART_LL_GET_HW(uart->num)));
 
     if ( !txOnly ) {
         ESP_ERROR_CHECK(uart_flush_input(uart->num));
@@ -304,7 +337,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
+    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
     UART_MUTEX_UNLOCK();
 }
 
@@ -388,11 +421,12 @@ int log_printf(const char *format, ...)
     va_list copy;
     va_start(arg, format);
     va_copy(copy, arg);
-    len = vsnprintf(NULL, 0, format, arg);
+    len = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
     if(len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
+            va_end(arg);
             return 0;
         }
     }
@@ -454,6 +488,7 @@ void log_print_buf(const uint8_t *b, size_t len){
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
+#ifndef CONFIG_IDF_TARGET_ESP32S3
     if(uart == NULL) {
         return 0;
     }
@@ -471,6 +506,9 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
     UART_MUTEX_UNLOCK();
 
     return ret;
+#else
+    return 0;
+#endif
 }
 
 
@@ -515,7 +553,7 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-
+#elif CONFIG_IDF_TARGET_ESP32S3
 #else
     hw->auto_baud.glitch_filt = 0x08;
     hw->auto_baud.en = 0;
@@ -552,6 +590,7 @@ uartDetectBaudrate(uart_t *uart)
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     //hw->conf0.autobaud_en = 0;
+#elif CONFIG_IDF_TARGET_ESP32S3
 #else
     hw->auto_baud.en = 0;
 #endif

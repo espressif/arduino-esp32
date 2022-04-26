@@ -2,7 +2,7 @@
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
 #include "Arduino.h"
-#if (ARDUINO_USB_CDC_ON_BOOT|ARDUINO_USB_MSC_ON_BOOT|ARDUINO_USB_DFU_ON_BOOT)
+#if (ARDUINO_USB_CDC_ON_BOOT|ARDUINO_USB_MSC_ON_BOOT|ARDUINO_USB_DFU_ON_BOOT) && !ARDUINO_USB_MODE
 #include "USB.h"
 #if ARDUINO_USB_MSC_ON_BOOT
 #include "FirmwareMSC.h"
@@ -33,6 +33,10 @@ void yieldIfNecessary(void){
 
 bool loopTaskWDTEnabled;
 
+__attribute__((weak)) size_t getArduinoLoopTaskStackSize(void) {
+    return ARDUINO_LOOP_STACK_SIZE;
+}
+
 void loopTask(void *pvParameters)
 {
     setup();
@@ -50,21 +54,21 @@ void loopTask(void *pvParameters)
 
 extern "C" void app_main()
 {
-#if ARDUINO_USB_CDC_ON_BOOT
+#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE
     Serial.begin();
 #endif
-#if ARDUINO_USB_MSC_ON_BOOT
+#if ARDUINO_USB_MSC_ON_BOOT && !ARDUINO_USB_MODE
     MSC_Update.begin();
 #endif
-#if ARDUINO_USB_DFU_ON_BOOT
+#if ARDUINO_USB_DFU_ON_BOOT && !ARDUINO_USB_MODE
     USB.enableDFU();
 #endif
-#if ARDUINO_USB_ON_BOOT
+#if ARDUINO_USB_ON_BOOT && !ARDUINO_USB_MODE
     USB.begin();
 #endif
     loopTaskWDTEnabled = false;
     initArduino();
-    xTaskCreateUniversal(loopTask, "loopTask", ARDUINO_LOOP_STACK_SIZE, NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
+    xTaskCreateUniversal(loopTask, "loopTask", getArduinoLoopTaskStackSize(), NULL, 1, &loopTaskHandle, ARDUINO_RUNNING_CORE);
 }
 
 #endif

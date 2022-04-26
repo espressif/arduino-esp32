@@ -15,7 +15,7 @@
 #define NUM_DIGITAL_PINS        48
 #define NUM_ANALOG_INPUTS       20
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
@@ -25,6 +25,8 @@
 #define NEOPIXEL_NUM        1     // number of neopixels
 #define NEOPIXEL_POWER      21    // power pin
 #define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
+#define I2C_POWER           7     // I2C power pin
+#define PIN_I2C_POWER       7     // I2C power pin
 
 static const uint8_t SDA = 3;
 static const uint8_t SCL = 4;
@@ -42,18 +44,13 @@ static const uint8_t A4 = 14;
 static const uint8_t A5 = 8;
 
 
+static const uint8_t TX = 39;
+static const uint8_t RX = 38;
+#define TX1 TX
+#define RX1 RX
 
-
-static const uint8_t TX = 43;
-static const uint8_t RX = 44;
-
-static const uint8_t T1 = 1;
-static const uint8_t T2 = 2;
-static const uint8_t T3 = 3;
-static const uint8_t T4 = 4;
 static const uint8_t T5 = 5;
 static const uint8_t T6 = 6;
-static const uint8_t T7 = 7;
 static const uint8_t T8 = 8;
 static const uint8_t T9 = 9;
 static const uint8_t T10 = 10;

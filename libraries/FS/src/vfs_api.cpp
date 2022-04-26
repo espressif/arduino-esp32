@@ -16,6 +16,8 @@
 
 using namespace fs;
 
+#define DEFAULT_FILE_BUFFER_SIZE 4096
+
 FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create)
 {
     if(!_mountpoint) {
@@ -280,6 +282,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         } else if(S_ISDIR(_stat.st_mode)) {
             _isDirectory = true;
             _d = opendir(temp);
@@ -307,6 +313,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         }
     }
     free(temp);
@@ -413,6 +423,19 @@ size_t VFSFileImpl::size() const
         _getStat();
     }
     return _stat.st_size;
+}
+
+/*
+* Change size of files internal buffer used for read / write operations.
+* Need to be called right after opening file before any other operation!
+*/
+bool VFSFileImpl::setBufferSize(size_t size)
+{
+    if(_isDirectory || !_f) {
+        return 0;
+    }
+    int res = setvbuf(_f,NULL,_IOFBF,size);
+    return res == 0;
 }
 
 const char* VFSFileImpl::path() const

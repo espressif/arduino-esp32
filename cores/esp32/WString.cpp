@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include "WString.h"
 #include "stdlib_noniso.h"
+#include "esp32-hal-log.h"
 
 /*********************************************/
 /*  Constructors                             */
@@ -112,16 +113,28 @@ String::String(unsigned long value, unsigned char base) {
     *this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces) {
+String::String(float value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 42);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
-String::String(double value, unsigned char decimalPlaces) {
+String::String(double value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 312);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
 String::~String() {
@@ -761,8 +774,10 @@ void String::replace(const String& find, const String& replace) {
         }
         if(size == len())
             return;
-        if(size > capacity() && !changeBuffer(size))
-            return; // XXX: tell user!
+        if(size > capacity() && !changeBuffer(size)) {
+            log_w("String.Replace() Insufficient space to replace string");
+            return;
+        }
         int index = len() - 1;
         while(index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
             readFrom = wbuffer() + index + find.len();

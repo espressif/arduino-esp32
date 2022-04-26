@@ -26,6 +26,9 @@ power consumption.
 
 The ESP32 series is available as a chip or module.
 
+
+.. _supported_socs:
+
 Supported SoC's
 ---------------
 
@@ -34,10 +37,10 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 ======== ====== =========== ===================================
 SoC      Stable Development Datasheet
 ======== ====== =========== ===================================
-ESP32    Yes    Yes         `ESP32 Datasheet`_
-ESP32-S2 Yes    Yes         `ESP32-S2 Datasheet`_
-ESP32-C3 Yes    Yes         `ESP32-C3 Datasheet`_
-ESP32-S3 No     No          `ESP32-S3 Datasheet`_
+ESP32    Yes    Yes         `ESP32`_
+ESP32-S2 Yes    Yes         `ESP32-S2`_
+ESP32-C3 Yes    Yes         `ESP32-C3`_
+ESP32-S3 No     Yes         `ESP32-S3`_
 ======== ====== =========== ===================================
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
@@ -62,6 +65,20 @@ Supported Operating Systems
 .. |windows-logo| image:: _static/logo_windows.png
 .. |linux-logo| image:: _static/logo_linux.png
 .. |macos-logo| image:: _static/logo_macos.png
+
+Supported IDEs
+---------------------------
+
+Here is the list of supported IDE for Arduino ESP32 support integration.
+
++-------------------+-------------------+
+| |arduino-logo|    | |pio-logo|        |
++-------------------+-------------------+
+| Arduino IDE       | PlatformIO        |
++-------------------+-------------------+
+
+.. |arduino-logo| image:: _static/logo_arduino.png
+.. |pio-logo| image:: _static/logo_pio.png
 
 See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
 
@@ -91,7 +108,9 @@ Before opening a new issue, please read this:
 Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
 
-For more details, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/docs/ISSUE_TEMPLATE.md>`_.
+For more details about creating new Issue, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Issue-report.yml>`_.
+
+If you have any new idea, see the `Feature request Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Feature-request.yml>`_.
 
 First Steps
 -----------
@@ -114,15 +133,14 @@ in the examples menu or inside each library folder.
 
     https://github.com/espressif/arduino-esp32/tree/master/libraries
 
+
+.. include:: common/datasheet.inc
+
 Resources
 ---------
 
 .. _Espressif Systems: https://www.espressif.com 
 .. _Espressif Product Selector: https://products.espressif.com/
-.. _ESP32 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
-.. _ESP32-S2 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf
-.. _ESP32-C3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf
-.. _ESP32-S3 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/
 .. _ESP32 Forum: https://esp32.com

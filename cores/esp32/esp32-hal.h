@@ -95,6 +95,9 @@ void analogWrite(uint8_t pin, int value);
 //returns chip temperature in Celsius
 float temperatureRead();
 
+//allows user to bypass SPI RAM test routine
+bool testSPIRAM(void);
+
 #if CONFIG_AUTOSTART_ARDUINO
 //enable/disable WDT for Arduino's setup and loop functions
 void enableLoopWDT();

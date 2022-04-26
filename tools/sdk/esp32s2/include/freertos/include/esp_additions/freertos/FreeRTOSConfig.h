@@ -166,10 +166,19 @@
 #define configSTACK_OVERHEAD_APPTRACE                   0
 #endif
 
+/* Stack watchpoint decreases minimum usable stack size by up to 60 bytes.
+   See FreeRTOS FREERTOS_WATCHPOINT_END_OF_STACK option in Kconfig. */
+#if CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK
+#define configSTACK_OVERHEAD_WATCHPOINT                   60
+#else
+#define configSTACK_OVERHEAD_WATCHPOINT                   0
+#endif
+
 #define configSTACK_OVERHEAD_TOTAL (                                    \
                                     configSTACK_OVERHEAD_CHECKER +      \
                                     configSTACK_OVERHEAD_OPTIMIZATION + \
-                                    configSTACK_OVERHEAD_APPTRACE       \
+                                    configSTACK_OVERHEAD_APPTRACE +     \
+                                    configSTACK_OVERHEAD_WATCHPOINT     \
                                                                         )
 
 #define configMINIMAL_STACK_SIZE                        (768 + configSTACK_OVERHEAD_TOTAL)
@@ -241,8 +250,12 @@
 #define INCLUDE_pcTaskGetTaskName                       1
 #define INCLUDE_xTaskGetIdleTaskHandle                  1
 #define INCLUDE_pxTaskGetStackStart                     1
-
+#define INCLUDE_eTaskGetState                           1
+#define INCLUDE_xTaskAbortDelay                         1
+#define INCLUDE_xTaskGetHandle                          1
 #define INCLUDE_xSemaphoreGetMutexHolder                1
+#define INCLUDE_xTimerPendFunctionCall                  1
+#define INCLUDE_xTimerGetTimerDaemonTaskHandle          0   //Currently there is no need for this API
 
 /* The priority at which the tick interrupt runs.  This should probably be
    kept at 1. */
@@ -269,8 +282,6 @@ extern void vPortCleanUpTCB ( void *pxTCB );
 #define configTIMER_QUEUE_LENGTH                        CONFIG_FREERTOS_TIMER_QUEUE_LENGTH
 #define configTIMER_TASK_STACK_DEPTH                    CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH
 
-#define INCLUDE_xTimerPendFunctionCall                  1
-#define INCLUDE_eTaskGetState                           1
 #define configUSE_QUEUE_SETS                            1
 
 #define configUSE_TICKLESS_IDLE                         CONFIG_FREERTOS_USE_TICKLESS_IDLE

@@ -166,6 +166,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
+#include "esp32/spiram.h"
 
 using std::abs;
 using std::isinf;
@@ -179,6 +180,12 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 
 #define word(...) makeWord(__VA_ARGS__)
 
+size_t getArduinoLoopTaskStackSize(void);
+#define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
+
+// allows user to bypass esp_spiram_test()
+#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_spiram_test(); }
+
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 
@@ -187,6 +194,10 @@ extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
 extern "C" void configTzTime(const char* tz,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
+
+void setToneChannel(uint8_t channel = 0);
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+void noTone(uint8_t _pin);
 
 // WMath prototypes
 long random(long);

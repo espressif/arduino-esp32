@@ -28,6 +28,7 @@ extern "C" {
 #include "driver/gpio.h"
 
 void dacWrite(uint8_t pin, uint8_t value);
+void dacDisable(uint8_t pin);
 
 #ifdef __cplusplus
 }
