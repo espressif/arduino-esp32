@@ -14332,10 +14332,6 @@ AirM2M_CORE_ESP32C3.menu.CPUFreq.20.build.f_cpu=20000000L
 AirM2M_CORE_ESP32C3.menu.CPUFreq.10=10MHz
 AirM2M_CORE_ESP32C3.menu.CPUFreq.10.build.f_cpu=10000000L
 
-AirM2M_CORE_ESP32C3.menu.FlashMode.dio=DIO
-AirM2M_CORE_ESP32C3.menu.FlashMode.dio.build.flash_mode=dio
-AirM2M_CORE_ESP32C3.menu.FlashMode.dio.build.boot=dio
-
 AirM2M_CORE_ESP32C3.menu.FlashFreq.80=80MHz
 AirM2M_CORE_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
 AirM2M_CORE_ESP32C3.menu.FlashFreq.40=40MHz
