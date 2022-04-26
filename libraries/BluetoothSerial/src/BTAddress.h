@@ -22,11 +22,14 @@
  */
 class BTAddress {
 public:
+	BTAddress();
 	BTAddress(esp_bd_addr_t address);
 	BTAddress(std::string stringAddress);
 	bool           equals(BTAddress otherAddress);
-	esp_bd_addr_t* getNative();
-	std::string    toString();
+	operator bool () const;
+
+	esp_bd_addr_t* getNative() const;
+	std::string    toString() const;
 
 private:
 	esp_bd_addr_t m_address;
