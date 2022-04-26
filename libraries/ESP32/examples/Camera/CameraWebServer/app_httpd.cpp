@@ -28,14 +28,37 @@
 static const char *TAG = "camera_httpd";
 #endif
 
+// Face Detection will not work on boards without (or with disabled) PSRAM 
+#ifdef BOARD_HAS_PSRAM
+#define CONFIG_ESP_FACE_DETECT_ENABLED 1
+// Face Recognition takes upward from 15 seconds per frame on chips other than ESP32S3
+// Makes no sense to have it enabled for them
+#if CONFIG_IDF_TARGET_ESP32S3
+#define CONFIG_ESP_FACE_RECOGNITION_ENABLED 1
+#else
+#define CONFIG_ESP_FACE_RECOGNITION_ENABLED 0
+#endif
+#else
+#define CONFIG_ESP_FACE_DETECT_ENABLED 0
+#define CONFIG_ESP_FACE_RECOGNITION_ENABLED 0
+#endif
+
 #if CONFIG_ESP_FACE_DETECT_ENABLED
 
-#include "fd_forward.h"
+#include <vector>
+#include "human_face_detect_msr01.hpp"
+#include "human_face_detect_mnp01.hpp"
+
+#define TWO_STAGE 1 /*<! 1: detect by two-stage which is more accurate but slower(with keypoints). */
+                    /*<! 0: detect by one-stage which is less accurate but faster(without keypoints). */
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-#include "fr_forward.h"
+#include "face_recognition_tool.hpp"
+#include "face_recognition_112_v1_s16.hpp"
+#include "face_recognition_112_v1_s8.hpp"
 
-#define ENROLL_CONFIRM_TIMES 5
+#define QUANT_TYPE 0 //if set to 1 => very large firmware, very slow, reboots when streaming...
+
 #define FACE_ID_SAVE_NUMBER 7
 #endif
 
@@ -77,12 +100,24 @@ httpd_handle_t camera_httpd = NULL;
 
 static int8_t detection_enabled = 0;
 
-static mtmn_config_t mtmn_config = {0};
+// #if TWO_STAGE
+// static HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
+// static HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
+// #else
+// static HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
+// #endif
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
 static int8_t recognition_enabled = 0;
 static int8_t is_enrolling = 0;
-static face_id_list id_list = {0};
+
+#if QUANT_TYPE
+    // S16 model
+    FaceRecognition112V1S16 recognizer;
+#else
+    // S8 model
+    FaceRecognition112V1S8 recognizer;
+#endif
 #endif
 
 #endif
@@ -133,18 +168,12 @@ static int ra_filter_run(ra_filter_t *filter, int value)
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-static void rgb_print(dl_matrix3du_t *image_matrix, uint32_t color, const char *str)
+static void rgb_print(fb_data_t *fb, uint32_t color, const char *str)
 {
-    fb_data_t fb;
-    fb.width = image_matrix->w;
-    fb.height = image_matrix->h;
-    fb.data = image_matrix->item;
-    fb.bytes_per_pixel = 3;
-    fb.format = FB_BGR888;
-    fb_gfx_print(&fb, (fb.width - (strlen(str) * 14)) / 2, 10, color, str);
+    fb_gfx_print(fb, (fb->width - (strlen(str) * 14)) / 2, 10, color, str);
 }
 
-static int rgb_printf(dl_matrix3du_t *image_matrix, uint32_t color, const char *format, ...)
+static int rgb_printf(fb_data_t *fb, uint32_t color, const char *format, ...)
 {
     char loc_buf[64];
     char *temp = loc_buf;
@@ -165,7 +194,7 @@ static int rgb_printf(dl_matrix3du_t *image_matrix, uint32_t color, const char *
     }
     vsnprintf(temp, len + 1, format, arg);
     va_end(arg);
-    rgb_print(image_matrix, color, temp);
+    rgb_print(fb, color, temp);
     if (len > 64)
     {
         free(temp);
@@ -173,9 +202,9 @@ static int rgb_printf(dl_matrix3du_t *image_matrix, uint32_t color, const char *
     return len;
 }
 #endif
-static void draw_face_boxes(dl_matrix3du_t *image_matrix, box_array_t *boxes, int face_id)
+static void draw_face_boxes(fb_data_t *fb, std::list<dl::detect::result_t> *results, int face_id)
 {
-    int x, y, w, h, i;
+    int x, y, w, h;
     uint32_t color = FACE_COLOR_YELLOW;
     if (face_id < 0)
     {
@@ -185,89 +214,64 @@ static void draw_face_boxes(dl_matrix3du_t *image_matrix, box_array_t *boxes, in
     {
         color = FACE_COLOR_GREEN;
     }
-    fb_data_t fb;
-    fb.width = image_matrix->w;
-    fb.height = image_matrix->h;
-    fb.data = image_matrix->item;
-    fb.bytes_per_pixel = 3;
-    fb.format = FB_BGR888;
-    for (i = 0; i < boxes->len; i++)
+    if(fb->bytes_per_pixel == 2){
+        //color = ((color >> 8) & 0xF800) | ((color >> 3) & 0x07E0) | (color & 0x001F);
+        color = ((color >> 16) & 0x001F) | ((color >> 3) & 0x07E0) | ((color << 8) & 0xF800);
+    }
+    int i = 0;
+    for (std::list<dl::detect::result_t>::iterator prediction = results->begin(); prediction != results->end(); prediction++, i++)
     {
         // rectangle box
-        x = (int)boxes->box[i].box_p[0];
-        y = (int)boxes->box[i].box_p[1];
-        w = (int)boxes->box[i].box_p[2] - x + 1;
-        h = (int)boxes->box[i].box_p[3] - y + 1;
-        fb_gfx_drawFastHLine(&fb, x, y, w, color);
-        fb_gfx_drawFastHLine(&fb, x, y + h - 1, w, color);
-        fb_gfx_drawFastVLine(&fb, x, y, h, color);
-        fb_gfx_drawFastVLine(&fb, x + w - 1, y, h, color);
-#if 0
-        // landmark
+        x = (int)prediction->box[0];
+        y = (int)prediction->box[1];
+        w = (int)prediction->box[2] - x + 1;
+        h = (int)prediction->box[3] - y + 1;
+        if((x + w) > fb->width){
+            w = fb->width - x;
+        }
+        if((y + h) > fb->height){
+            h = fb->height - y;
+        }
+        fb_gfx_drawFastHLine(fb, x, y, w, color);
+        fb_gfx_drawFastHLine(fb, x, y + h - 1, w, color);
+        fb_gfx_drawFastVLine(fb, x, y, h, color);
+        fb_gfx_drawFastVLine(fb, x + w - 1, y, h, color);
+#if TWO_STAGE
+        // landmarks (left eye, mouth left, nose, right eye, mouth right)
         int x0, y0, j;
         for (j = 0; j < 10; j+=2) {
-            x0 = (int)boxes->landmark[i].landmark_p[j];
-            y0 = (int)boxes->landmark[i].landmark_p[j+1];
-            fb_gfx_fillRect(&fb, x0, y0, 3, 3, color);
+            x0 = (int)prediction->keypoint[j];
+            y0 = (int)prediction->keypoint[j+1];
+            fb_gfx_fillRect(fb, x0, y0, 3, 3, color);
         }
 #endif
     }
 }
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-static int run_face_recognition(dl_matrix3du_t *image_matrix, box_array_t *net_boxes)
+static int run_face_recognition(fb_data_t *fb, std::list<dl::detect::result_t> *results)
 {
-    dl_matrix3du_t *aligned_face = NULL;
-    int matched_id = 0;
+    std::vector<int> landmarks = results->front().keypoint;
+    int id = -1;
 
-    aligned_face = dl_matrix3du_alloc(1, FACE_WIDTH, FACE_HEIGHT, 3);
-    if (!aligned_face)
-    {
-        ESP_LOGE(TAG, "Could not allocate face recognition buffer");
-        return matched_id;
-    }
-    if (align_face(net_boxes, image_matrix, aligned_face) == ESP_OK)
-    {
-        if (is_enrolling == 1)
-        {
-            int8_t left_sample_face = enroll_face(&id_list, aligned_face);
+    Tensor<uint8_t> tensor;
+    tensor.set_element((uint8_t *)fb->data).set_shape({fb->height, fb->width, 3}).set_auto_free(false);
 
-            if (left_sample_face == (ENROLL_CONFIRM_TIMES - 1))
-            {
-                ESP_LOGD(TAG, "Enrolling Face ID: %d", id_list.tail);
-            }
-            ESP_LOGD(TAG, "Enrolling Face ID: %d sample %d", id_list.tail, ENROLL_CONFIRM_TIMES - left_sample_face);
-            rgb_printf(image_matrix, FACE_COLOR_CYAN, "ID[%u] Sample[%u]", id_list.tail, ENROLL_CONFIRM_TIMES - left_sample_face);
-            if (left_sample_face == 0)
-            {
-                is_enrolling = 0;
-                ESP_LOGD(TAG, "Enrolled Face ID: %d", id_list.tail);
-            }
-        }
-        else
-        {
-            matched_id = recognize_face(&id_list, aligned_face);
-            if (matched_id >= 0)
-            {
-                ESP_LOGW(TAG, "Match Face ID: %u", matched_id);
-                rgb_printf(image_matrix, FACE_COLOR_GREEN, "Hello Subject %u", matched_id);
-            }
-            else
-            {
-                ESP_LOGW(TAG, "No Match Found");
-                rgb_print(image_matrix, FACE_COLOR_RED, "Intruder Alert!");
-                matched_id = -1;
-            }
-        }
-    }
-    else
-    {
-        ESP_LOGW(TAG, "Face Not Aligned");
-        //rgb_print(image_matrix, FACE_COLOR_YELLOW, "Human Detected");
+    int enrolled_count = recognizer.get_enrolled_id_num();
+
+    if (enrolled_count < FACE_ID_SAVE_NUMBER && is_enrolling){
+        id = recognizer.enroll_id(tensor, landmarks, "", true);
+        ESP_LOGI(TAG, "Enrolled ID: %d", id);
+        rgb_printf(fb, FACE_COLOR_CYAN, "ID[%u]", id);
     }
 
-    dl_matrix3du_free(aligned_face);
-    return matched_id;
+    face_info_t recognize = recognizer.recognize(tensor, landmarks);
+    if(recognize.id >= 0){
+        rgb_printf(fb, FACE_COLOR_GREEN, "ID[%u]: %.2f", recognize.id, recognize.similarity);
+    } else {
+        rgb_print(fb, FACE_COLOR_RED, "Intruder Alert!");
+    }
+    return recognize.id;
 }
 #endif
 #endif
@@ -398,55 +402,88 @@ static esp_err_t capture_handler(httpd_req_t *req)
 #if CONFIG_ESP_FACE_DETECT_ENABLED
     }
 
-    dl_matrix3du_t *image_matrix = dl_matrix3du_alloc(1, fb->width, fb->height, 3);
-    if (!image_matrix)
-    {
-        esp_camera_fb_return(fb);
-        ESP_LOGE(TAG, "dl_matrix3du_alloc failed");
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
-    }
-
-    out_buf = image_matrix->item;
-    out_len = fb->width * fb->height * 3;
-    out_width = fb->width;
-    out_height = fb->height;
-
-    s = fmt2rgb888(fb->buf, fb->len, fb->format, out_buf);
-    esp_camera_fb_return(fb);
-    if (!s)
-    {
-        dl_matrix3du_free(image_matrix);
-        ESP_LOGE(TAG, "to rgb888 failed");
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
-    }
-
-    box_array_t *net_boxes = face_detect(image_matrix, &mtmn_config);
-
-    if (net_boxes)
-    {
-        detected = true;
-#if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-        if (recognition_enabled)
-        {
-            face_id = run_face_recognition(image_matrix, net_boxes);
-        }
-#endif
-        draw_face_boxes(image_matrix, net_boxes, face_id);
-        dl_lib_free(net_boxes->score);
-        dl_lib_free(net_boxes->box);
-        if (net_boxes->landmark != NULL)
-            dl_lib_free(net_boxes->landmark);
-        dl_lib_free(net_boxes);
-    }
-
     jpg_chunking_t jchunk = {req, 0};
-    s = fmt2jpg_cb(out_buf, out_len, out_width, out_height, PIXFORMAT_RGB888, 90, jpg_encode_stream, &jchunk);
-    dl_matrix3du_free(image_matrix);
-    if (!s)
+
+    if (fb->format == PIXFORMAT_RGB565
+#if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+     && !recognition_enabled
+#endif
+     ){
+#if TWO_STAGE
+        HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
+        HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
+        std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+        std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
+#else
+        HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
+        std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+#endif
+        if (results.size() > 0) {
+            fb_data_t rfb;
+            rfb.width = fb->width;
+            rfb.height = fb->height;
+            rfb.data = fb->buf;
+            rfb.bytes_per_pixel = 2;
+            rfb.format = FB_RGB565;
+            detected = true;
+            draw_face_boxes(&rfb, &results, face_id);
+        }
+        s = fmt2jpg_cb(fb->buf, fb->len, fb->width, fb->height, PIXFORMAT_RGB565, 90, jpg_encode_stream, &jchunk);
+        esp_camera_fb_return(fb);
+    } else 
     {
+        out_len = fb->width * fb->height * 3;
+        out_width = fb->width;
+        out_height = fb->height;
+        out_buf = (uint8_t*)malloc(out_len);
+        if (!out_buf) {
+            ESP_LOGE(TAG, "out_buf malloc failed");
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        s = fmt2rgb888(fb->buf, fb->len, fb->format, out_buf);
+        esp_camera_fb_return(fb);
+        if (!s) {
+            free(out_buf);
+            ESP_LOGE(TAG, "to rgb888 failed");
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+
+        fb_data_t rfb;
+        rfb.width = out_width;
+        rfb.height = out_height;
+        rfb.data = out_buf;
+        rfb.bytes_per_pixel = 3;
+        rfb.format = FB_BGR888;
+
+#if TWO_STAGE
+        HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
+        HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
+        std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+        std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3}, candidates);
+#else
+        HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
+        std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+#endif
+
+        if (results.size() > 0) {
+            detected = true;
+#if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+            if (recognition_enabled) {
+                face_id = run_face_recognition(&rfb, &results);
+            }
+#endif
+            draw_face_boxes(&rfb, &results, face_id);
+        }
+
+        s = fmt2jpg_cb(out_buf, out_len, out_width, out_height, PIXFORMAT_RGB888, 90, jpg_encode_stream, &jchunk);
+        free(out_buf);
+    }
+
+    if (!s) {
         ESP_LOGE(TAG, "JPEG compression failed");
+        httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 
@@ -465,7 +502,6 @@ static esp_err_t stream_handler(httpd_req_t *req)
     uint8_t *_jpg_buf = NULL;
     char *part_buf[128];
 #if CONFIG_ESP_FACE_DETECT_ENABLED
-    dl_matrix3du_t *image_matrix = NULL;
     bool detected = false;
     int face_id = 0;
     int64_t fr_start = 0;
@@ -473,6 +509,16 @@ static esp_err_t stream_handler(httpd_req_t *req)
     int64_t fr_face = 0;
     int64_t fr_recognize = 0;
     int64_t fr_encode = 0;
+
+    size_t out_len = 0, out_width = 0, out_height = 0;
+    uint8_t *out_buf = NULL;
+    bool s = false;
+#if TWO_STAGE
+    HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
+    HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
+#else
+    HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
+#endif
 #endif
 
     static int64_t last_frame = 0;
@@ -541,65 +587,94 @@ static esp_err_t stream_handler(httpd_req_t *req)
             }
             else
             {
-
-                image_matrix = dl_matrix3du_alloc(1, fb->width, fb->height, 3);
-
-                if (!image_matrix)
-                {
-                    ESP_LOGE(TAG, "dl_matrix3du_alloc failed");
-                    res = ESP_FAIL;
-                }
-                else
-                {
-                    if (!fmt2rgb888(fb->buf, fb->len, fb->format, image_matrix->item))
-                    {
-                        ESP_LOGE(TAG, "fmt2rgb888 failed");
+                if (fb->format == PIXFORMAT_RGB565
+#if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+                    && !recognition_enabled
+#endif
+                ){
+                    fr_ready = esp_timer_get_time();
+#if TWO_STAGE
+                    std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+                    std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
+#else
+                    std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+#endif
+                    fr_face = esp_timer_get_time();
+                    fr_recognize = fr_face;
+                    if (results.size() > 0) {
+                        fb_data_t rfb;
+                        rfb.width = fb->width;
+                        rfb.height = fb->height;
+                        rfb.data = fb->buf;
+                        rfb.bytes_per_pixel = 2;
+                        rfb.format = FB_RGB565;
+                        detected = true;
+                        draw_face_boxes(&rfb, &results, face_id);
+                    }
+                    s = fmt2jpg(fb->buf, fb->len, fb->width, fb->height, PIXFORMAT_RGB565, 80, &_jpg_buf, &_jpg_buf_len);
+                    esp_camera_fb_return(fb);
+                    fb = NULL;
+                    if (!s) {
+                        ESP_LOGE(TAG, "fmt2jpg failed");
                         res = ESP_FAIL;
                     }
-                    else
-                    {
-                        fr_ready = esp_timer_get_time();
-                        box_array_t *net_boxes = NULL;
-                        if (detection_enabled)
-                        {
-                            net_boxes = face_detect(image_matrix, &mtmn_config);
-                        }
-                        fr_face = esp_timer_get_time();
-                        fr_recognize = fr_face;
-                        if (net_boxes || fb->format != PIXFORMAT_JPEG)
-                        {
-                            if (net_boxes)
-                            {
+                    fr_encode = esp_timer_get_time();
+                } else 
+                {
+                    out_len = fb->width * fb->height * 3;
+                    out_width = fb->width;
+                    out_height = fb->height;
+                    out_buf = (uint8_t*)malloc(out_len);
+                    if (!out_buf) {
+                        ESP_LOGE(TAG, "out_buf malloc failed");
+                        res = ESP_FAIL;
+                    } else {
+                        s = fmt2rgb888(fb->buf, fb->len, fb->format, out_buf);
+                        esp_camera_fb_return(fb);
+                        fb = NULL;
+                        if (!s) {
+                            free(out_buf);
+                            ESP_LOGE(TAG, "to rgb888 failed");
+                            res = ESP_FAIL;
+                        } else {
+                            fr_ready = esp_timer_get_time();
+
+                            fb_data_t rfb;
+                            rfb.width = out_width;
+                            rfb.height = out_height;
+                            rfb.data = out_buf;
+                            rfb.bytes_per_pixel = 3;
+                            rfb.format = FB_BGR888;
+
+#if TWO_STAGE
+                            std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+                            std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3}, candidates);
+#else
+                            std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+#endif
+
+                            fr_face = esp_timer_get_time();
+                            fr_recognize = fr_face;
+
+                            if (results.size() > 0) {
                                 detected = true;
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-                                if (recognition_enabled)
-                                {
-                                    face_id = run_face_recognition(image_matrix, net_boxes);
+                                if (recognition_enabled) {
+                                    face_id = run_face_recognition(&rfb, &results);
+                                    fr_recognize = esp_timer_get_time();
                                 }
-                                fr_recognize = esp_timer_get_time();
 #endif
-                                draw_face_boxes(image_matrix, net_boxes, face_id);
-                                dl_lib_free(net_boxes->score);
-                                dl_lib_free(net_boxes->box);
-                                if (net_boxes->landmark != NULL)
-                                    dl_lib_free(net_boxes->landmark);
-                                dl_lib_free(net_boxes);
+                                draw_face_boxes(&rfb, &results, face_id);
                             }
-                            if (!fmt2jpg(image_matrix->item, fb->width * fb->height * 3, fb->width, fb->height, PIXFORMAT_RGB888, 90, &_jpg_buf, &_jpg_buf_len))
-                            {
+                            s = fmt2jpg(out_buf, out_len, out_width, out_height, PIXFORMAT_RGB888, 90, &_jpg_buf, &_jpg_buf_len);
+                            free(out_buf);
+                            if (!s) {
                                 ESP_LOGE(TAG, "fmt2jpg failed");
+                                res = ESP_FAIL;
                             }
-                            esp_camera_fb_return(fb);
-                            fb = NULL;
+                            fr_encode = esp_timer_get_time();
                         }
-                        else
-                        {
-                            _jpg_buf = fb->buf;
-                            _jpg_buf_len = fb->len;
-                        }
-                        fr_encode = esp_timer_get_time();
                     }
-                    dl_matrix3du_free(image_matrix);
                 }
             }
 #endif
@@ -630,6 +705,7 @@ static esp_err_t stream_handler(httpd_req_t *req)
         }
         if (res != ESP_OK)
         {
+            ESP_LOGE(TAG, "send frame failed failed");
             break;
         }
         int64_t fr_end = esp_timer_get_time();
@@ -784,8 +860,10 @@ static esp_err_t cmd_handler(httpd_req_t *req)
 #endif
     }
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-    else if (!strcmp(variable, "face_enroll"))
-        is_enrolling = val;
+    else if (!strcmp(variable, "face_enroll")){
+        is_enrolling = !is_enrolling;
+        ESP_LOGI(TAG, "Enrolling: %s", is_enrolling?"true":"false");
+    }
     else if (!strcmp(variable, "face_recognize")) {
         recognition_enabled = val;
         if (recognition_enabled) {
@@ -1150,26 +1228,11 @@ void startCameraServer()
 
     ra_filter_init(&ra_filter, 20);
 
-#if CONFIG_ESP_FACE_DETECT_ENABLED
-
-    mtmn_config.type = FAST;
-    mtmn_config.min_face = 80;
-    mtmn_config.pyramid = 0.707;
-    mtmn_config.pyramid_times = 4;
-    mtmn_config.p_threshold.score = 0.6;
-    mtmn_config.p_threshold.nms = 0.7;
-    mtmn_config.p_threshold.candidate_number = 20;
-    mtmn_config.r_threshold.score = 0.7;
-    mtmn_config.r_threshold.nms = 0.7;
-    mtmn_config.r_threshold.candidate_number = 10;
-    mtmn_config.o_threshold.score = 0.7;
-    mtmn_config.o_threshold.nms = 0.7;
-    mtmn_config.o_threshold.candidate_number = 1;
-
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
-    face_id_init(&id_list, FACE_ID_SAVE_NUMBER, ENROLL_CONFIRM_TIMES);
-#endif
+    recognizer.set_partition(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, "fr");
 
+    // load ids from flash partition
+    recognizer.set_ids_from_flash();
 #endif
     ESP_LOGI(TAG, "Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK)

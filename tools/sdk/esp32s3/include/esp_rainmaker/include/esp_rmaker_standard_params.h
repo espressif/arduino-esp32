@@ -45,6 +45,7 @@ extern "C"
 #define ESP_RMAKER_DEF_TIMEZONE_NAME        "TZ"
 #define ESP_RMAKER_DEF_TIMEZONE_POSIX_NAME  "TZ-POSIX"
 #define ESP_RMAKER_DEF_SCHEDULE_NAME        "Schedules"
+#define ESP_RMAKER_DEF_SCENES_NAME          "Scenes"
 #define ESP_RMAKER_DEF_REBOOT_NAME          "Reboot"
 #define ESP_RMAKER_DEF_FACTORY_RESET_NAME   "Factory-Reset"
 #define ESP_RMAKER_DEF_WIFI_RESET_NAME      "Wi-Fi-Reset"
@@ -264,6 +265,20 @@ esp_rmaker_param_t *esp_rmaker_timezone_posix_param_create(const char *param_nam
  * @return NULL in case of failures.
  */
 esp_rmaker_param_t *esp_rmaker_schedules_param_create(const char *param_name, int max_schedules);
+
+/**
+ * Create standard Scenes param
+ *
+ * This will create the standard scenes parameter. Default value
+ * is set internally.
+ *
+ * @param[in] param_name Name of the parameter
+ * @param[in] max_scenes Maximum number of scenes allowed
+ *
+ * @return Parameter handle on success.
+ * @return NULL in case of failures.
+ */
+esp_rmaker_param_t *esp_rmaker_scenes_param_create(const char *param_name, int max_scenes);
 
 /**
  * Create standard Reboot param
