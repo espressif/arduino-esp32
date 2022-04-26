@@ -14267,3 +14267,104 @@ deneyapkart1A.menu.DebugLevel.verbose=Verbose
 deneyapkart1A.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
+AirM2M_CORE_ESP32C3.name=AirM2M_CORE_ESP32C3
+AirM2M_CORE_ESP32C3.vid.0=0x303a
+AirM2M_CORE_ESP32C3.pid.0=0x1001
+
+AirM2M_CORE_ESP32C3.upload.tool=esptool_py
+AirM2M_CORE_ESP32C3.upload.maximum_size=1310720
+AirM2M_CORE_ESP32C3.upload.maximum_data_size=327680
+AirM2M_CORE_ESP32C3.upload.flags=
+AirM2M_CORE_ESP32C3.upload.extra_flags=
+AirM2M_CORE_ESP32C3.upload.use_1200bps_touch=false
+AirM2M_CORE_ESP32C3.upload.wait_for_upload_port=false
+
+AirM2M_CORE_ESP32C3.serial.disableDTR=false
+AirM2M_CORE_ESP32C3.serial.disableRTS=false
+
+AirM2M_CORE_ESP32C3.build.tarch=riscv32
+AirM2M_CORE_ESP32C3.build.target=esp
+AirM2M_CORE_ESP32C3.build.mcu=esp32c3
+AirM2M_CORE_ESP32C3.build.core=esp32
+AirM2M_CORE_ESP32C3.build.variant=AirM2M_CORE_ESP32C3
+AirM2M_CORE_ESP32C3.build.board=AirM2M_CORE_ESP32C3
+AirM2M_CORE_ESP32C3.build.bootloader_addr=0x0
+
+AirM2M_CORE_ESP32C3.build.cdc_on_boot=0
+AirM2M_CORE_ESP32C3.build.f_cpu=160000000L
+AirM2M_CORE_ESP32C3.build.flash_size=4MB
+AirM2M_CORE_ESP32C3.build.flash_freq=80m
+AirM2M_CORE_ESP32C3.build.flash_mode=dio
+AirM2M_CORE_ESP32C3.build.boot=dio
+AirM2M_CORE_ESP32C3.build.partitions=default
+AirM2M_CORE_ESP32C3.build.defines=
+
+AirM2M_CORE_ESP32C3.menu.CDCOnBoot.default=Disabled
+AirM2M_CORE_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+AirM2M_CORE_ESP32C3.menu.CDCOnBoot.cdc=Enabled
+AirM2M_CORE_ESP32C3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default.build.partitions=default
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.minimal.build.partitions=minimal
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+AirM2M_CORE_ESP32C3.menu.CPUFreq.160=160MHz (WiFi)
+AirM2M_CORE_ESP32C3.menu.CPUFreq.160.build.f_cpu=160000000L
+AirM2M_CORE_ESP32C3.menu.CPUFreq.80=80MHz (WiFi)
+AirM2M_CORE_ESP32C3.menu.CPUFreq.80.build.f_cpu=80000000L
+AirM2M_CORE_ESP32C3.menu.CPUFreq.40=40MHz
+AirM2M_CORE_ESP32C3.menu.CPUFreq.40.build.f_cpu=40000000L
+AirM2M_CORE_ESP32C3.menu.CPUFreq.20=20MHz
+AirM2M_CORE_ESP32C3.menu.CPUFreq.20.build.f_cpu=20000000L
+AirM2M_CORE_ESP32C3.menu.CPUFreq.10=10MHz
+AirM2M_CORE_ESP32C3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+AirM2M_CORE_ESP32C3.menu.FlashFreq.80=80MHz
+AirM2M_CORE_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
+AirM2M_CORE_ESP32C3.menu.FlashFreq.40=40MHz
+AirM2M_CORE_ESP32C3.menu.FlashFreq.40.build.flash_freq=40m
+
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.921600=921600
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.921600.upload.speed=921600
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.115200=115200
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.115200.upload.speed=115200
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.1152000=1152000
+AirM2M_CORE_ESP32C3.menu.UploadSpeed.1152000.upload.speed=1152000
+
+
+AirM2M_CORE_ESP32C3.menu.DebugLevel.none=None
+AirM2M_CORE_ESP32C3.menu.DebugLevel.none.build.code_debug=0
+AirM2M_CORE_ESP32C3.menu.DebugLevel.error=Error
+AirM2M_CORE_ESP32C3.menu.DebugLevel.error.build.code_debug=1
+AirM2M_CORE_ESP32C3.menu.DebugLevel.warn=Warn
+AirM2M_CORE_ESP32C3.menu.DebugLevel.warn.build.code_debug=2
+AirM2M_CORE_ESP32C3.menu.DebugLevel.info=Info
+AirM2M_CORE_ESP32C3.menu.DebugLevel.info.build.code_debug=3
+AirM2M_CORE_ESP32C3.menu.DebugLevel.debug=Debug
+AirM2M_CORE_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
+AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose=Verbose
+AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+#############################################################
