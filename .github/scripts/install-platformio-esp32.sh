@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
-PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git#feature/arduino-idf-master"
+PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
 
 TOOLCHAIN_VERSION="8.4.0+2021r2-patch3"
 ESPTOOLPY_VERSION="~1.30100.0"
