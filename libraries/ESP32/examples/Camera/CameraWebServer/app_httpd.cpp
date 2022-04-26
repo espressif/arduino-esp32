@@ -531,9 +531,9 @@ static esp_err_t stream_handler(httpd_req_t *req)
         int64_t fr_recognize = 0;
         int64_t fr_encode = 0;
         int64_t fr_face = 0;
+        int64_t fr_start = 0;
     #endif
     int face_id = 0;
-    int64_t fr_start = 0;
     size_t out_len = 0, out_width = 0, out_height = 0;
     uint8_t *out_buf = NULL;
     bool s = false;
@@ -585,8 +585,8 @@ static esp_err_t stream_handler(httpd_req_t *req)
             _timestamp.tv_sec = fb->timestamp.tv_sec;
             _timestamp.tv_usec = fb->timestamp.tv_usec;
 #if CONFIG_ESP_FACE_DETECT_ENABLED
-            fr_start = esp_timer_get_time();
     #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+            fr_start = esp_timer_get_time();
             fr_ready = fr_start;
             fr_encode = fr_start;
             fr_recognize = fr_start;
