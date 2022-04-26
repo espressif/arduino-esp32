@@ -67,7 +67,12 @@ jobs:
   Test:
     needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
-    runs-on: ESP32
+    runs-on:
+      - ESP32
+      - ESP32-S2
+      - ESP32-S3
+      - ESP32-C3
+
     strategy:
       fail-fast: false
       matrix:
@@ -86,11 +91,6 @@ jobs:
          with:
            name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
            path: tests/
-
-       - name: Check Artifacts
-         run: |
-           ls -R tests
-           cat tests/*/build/build.options.json
 
        - name: Install dependencies
          run: |

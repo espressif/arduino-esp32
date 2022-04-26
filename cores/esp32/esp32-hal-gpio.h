@@ -42,20 +42,15 @@ extern "C" {
 
 //GPIO FUNCTIONS
 #define INPUT             0x01
-#define OUTPUT            0x02
+// Changed OUTPUT from 0x02 to behave the same as Arduino pinMode(pin,OUTPUT) 
+// where you can read the state of pin even when it is set as OUTPUT
+#define OUTPUT            0x03 
 #define PULLUP            0x04
 #define INPUT_PULLUP      0x05
 #define PULLDOWN          0x08
 #define INPUT_PULLDOWN    0x09
 #define OPEN_DRAIN        0x10
 #define OUTPUT_OPEN_DRAIN 0x12
-#define SPECIAL           0xF0
-#define FUNCTION_1        0x00
-#define FUNCTION_2        0x20
-#define FUNCTION_3        0x40
-#define FUNCTION_4        0x60
-#define FUNCTION_5        0x80
-#define FUNCTION_6        0xA0
 #define ANALOG            0xC0
 
 //Interrupt Modes
