@@ -130,6 +130,15 @@ size_t File::size() const
     return _p->size();
 }
 
+bool File::setBufferSize(size_t size)
+{
+    if (!*this) {
+        return 0;
+    }
+
+    return _p->setBufferSize(size);
+}
+
 void File::close()
 {
     if (_p) {

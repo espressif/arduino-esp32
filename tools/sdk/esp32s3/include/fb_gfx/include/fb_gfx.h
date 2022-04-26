@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
     typedef enum {
-        FB_RGB888, FB_BGR888, FB_RGB565, FB_BGR565
+        FB_RGB888, FB_BGR888, FB_RGB565, FB_BGR565, FB_GRAY
     } fb_format_t;
 
     typedef struct {
