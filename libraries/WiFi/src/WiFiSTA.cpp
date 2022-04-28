@@ -83,7 +83,7 @@ static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
     return true;
 }
 
-static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL, const char * password=NULL, const uint8_t * bssid=NULL, uint8_t channel=0, wifi_scan_method_t scan_method=WIFI_ALL_CHANNEL_SCAN, wifi_sort_method_t sort_method=WIFI_CONNECT_AP_BY_SIGNAL, uint16_t listen_interval=0, bool pmf_required=false){
+static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL, const char * password=NULL, const uint8_t * bssid=NULL, uint8_t channel=0, wifi_auth_mode_t min_security=WIFI_AUTH_WPA2_PSK, wifi_scan_method_t scan_method=WIFI_ALL_CHANNEL_SCAN, wifi_sort_method_t sort_method=WIFI_CONNECT_AP_BY_SIGNAL, uint16_t listen_interval=0, bool pmf_required=false){
     wifi_config->sta.channel = channel;
     wifi_config->sta.listen_interval = listen_interval;
     wifi_config->sta.scan_method = scan_method;//WIFI_ALL_CHANNEL_SCAN or WIFI_FAST_SCAN
@@ -99,7 +99,7 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     if(ssid != NULL && ssid[0] != 0){
         _wifi_strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
-    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    		wifi_config->sta.threshold.authmode = min_security;
     		_wifi_strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
@@ -115,6 +115,9 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
 
 bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
+wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
+wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
+wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
 static wl_status_t _sta_status = WL_NO_SHIELD;
 static EventGroupHandle_t _sta_status_group = NULL;
@@ -243,12 +246,7 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
         _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
     }
 
-    if(channel == 0) {
-        // If no specific channel specified, then do an slower WIFI_ALL_CHANNEL_SCAN
-        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_ALL_CHANNEL_SCAN);
-    }
-    else
-        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_FAST_SCAN);
+    wifi_sta_config(&conf, ssid, passphrase, bssid, channel, _minSecurity, _scanMethod, _sortMethod);
 
     wifi_config_t current_conf;
     if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
@@ -404,6 +402,37 @@ bool WiFiSTAClass::isConnected()
     return (status() == WL_CONNECTED);
 }
 
+/**
+ * Set the minimum security for AP to be considered connectable
+ * Must be called before WiFi.begin()
+ * @param minSecurity wifi_auth_mode_t
+ */
+void WiFiSTAClass::setMinSecurity(wifi_auth_mode_t minSecurity)
+{
+    _minSecurity = minSecurity;
+}
+
+/**
+ * Set the way that AP is chosen. 
+ * First SSID match[WIFI_FAST_SCAN] or Sorted[WIFI_ALL_CHANNEL_SCAN] (RSSI or Security)
+ * Must be called before WiFi.begin()
+ * @param scanMethod wifi_scan_method_t
+ */
+void WiFiSTAClass::setScanMethod(wifi_scan_method_t scanMethod)
+{
+    _scanMethod = scanMethod;
+}
+
+/**
+ * Set the way that AP is sorted. (requires scanMethod WIFI_ALL_CHANNEL_SCAN) 
+ * By SSID[WIFI_CONNECT_AP_BY_SIGNAL] or Security[WIFI_CONNECT_AP_BY_SECURITY]
+ * Must be called before WiFi.begin()
+ * @param sortMethod wifi_sort_method_t
+ */
+void WiFiSTAClass::setSortMethod(wifi_sort_method_t sortMethod)
+{
+    _sortMethod = sortMethod;
+}
 
 /**
  * Setting the ESP32 station to connect to the AP (which is recorded)
