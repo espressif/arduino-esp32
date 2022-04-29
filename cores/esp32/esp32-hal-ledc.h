@@ -27,15 +27,15 @@ typedef enum {
 } note_t;
 
 //channel 0-15 resolution 1-16bits freq limits depend on resolution
-double      ledcSetup(uint8_t channel, double freq, uint8_t resolution_bits);
+uint32_t    ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
 void        ledcWrite(uint8_t channel, uint32_t duty);
-double      ledcWriteTone(uint8_t channel, double freq);
-double      ledcWriteNote(uint8_t channel, note_t note, uint8_t octave);
+uint32_t    ledcWriteTone(uint8_t channel, uint32_t freq);
+uint32_t    ledcWriteNote(uint8_t channel, note_t note, uint8_t octave);
 uint32_t    ledcRead(uint8_t channel);
-double      ledcReadFreq(uint8_t channel);
+uint32_t    ledcReadFreq(uint8_t channel);
 void        ledcAttachPin(uint8_t pin, uint8_t channel);
 void        ledcDetachPin(uint8_t pin);
-double      ledcChangeFrequency(uint8_t channel, double freq, uint8_t resolution_bits);
+uint32_t    ledcChangeFrequency(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
 
 
 #ifdef __cplusplus

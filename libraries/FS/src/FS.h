@@ -70,6 +70,7 @@ public:
     }
     size_t position() const;
     size_t size() const;
+    bool setBufferSize(size_t size);
     void close();
     operator bool() const;
     time_t getLastWrite();

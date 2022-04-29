@@ -16,14 +16,14 @@ public:
     virtual ~BTAdvertisedDevice() = default;
 
     virtual BTAddress   getAddress();
-    virtual uint32_t    getCOD();
-    virtual std::string getName();
-    virtual int8_t      getRSSI();
+    virtual uint32_t    getCOD() const;
+    virtual std::string getName() const;
+    virtual int8_t      getRSSI() const;
 
 
-    virtual bool        haveCOD();
-    virtual bool        haveName();
-    virtual bool        haveRSSI();
+    virtual bool        haveCOD() const;
+    virtual bool        haveName() const;
+    virtual bool        haveRSSI() const;
 
     virtual std::string toString();
 };
@@ -35,14 +35,14 @@ public:
     
 
     BTAddress   getAddress();
-    uint32_t    getCOD();
-    std::string getName();
-    int8_t      getRSSI();
+    uint32_t    getCOD() const;
+    std::string getName() const;
+    int8_t      getRSSI() const;
 
 
-    bool        haveCOD();
-    bool        haveName();
-    bool        haveRSSI();
+    bool        haveCOD() const;
+    bool        haveName() const;
+    bool        haveRSSI() const;
 
     std::string toString();
 
