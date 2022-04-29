@@ -13,11 +13,10 @@
 // limitations under the License.
 
 #include "vfs_api.h"
-#include <stdio_ext.h>
 
 using namespace fs;
 
-#define READ_SIZE_SWITCH 128    //swithc to read func when read size > 128bytes
+#define DEFAULT_FILE_BUFFER_SIZE 4096
 
 FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create)
 {
@@ -283,6 +282,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         } else if(S_ISDIR(_stat.st_mode)) {
             _isDirectory = true;
             _d = opendir(temp);
@@ -310,6 +313,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         }
     }
     free(temp);
@@ -377,28 +384,7 @@ size_t VFSFileImpl::read(uint8_t* buf, size_t size)
         return 0;
     }
 
-    //ERASE BYTEBUFFER and use read when size > READ_SIZE_SWITCH always
-    if(size > READ_SIZE_SWITCH)
-    {
-        //check some data in buffer exists –> clear buffer and move pointer to deleted data
-        size_t bytesinbuf = __fpending(_f);
-        if (bytesinbuf && (bytesinbuf != 128))  //buffer lenght is 128 bytes
-        {
-            fpurge(_f);
-            lseek(fileno(_f),(-128+bytesinbuf),SEEK_CUR);
-        }
-
-        int res = ::read(fileno(_f), buf, size);
-        if (res < 0) {
-            // an error occurred
-            return 0;
-        }
-        return res;
-    }
-    else
-    {
-        return fread(buf, 1, size, _f);
-    }
+    return fread(buf, 1, size, _f);
 }
 
 void VFSFileImpl::flush()
@@ -437,6 +423,19 @@ size_t VFSFileImpl::size() const
         _getStat();
     }
     return _stat.st_size;
+}
+
+/*
+* Change size of files internal buffer used for read / write operations.
+* Need to be called right after opening file before any other operation!
+*/
+bool VFSFileImpl::setBufferSize(size_t size)
+{
+    if(_isDirectory || !_f) {
+        return 0;
+    }
+    int res = setvbuf(_f,NULL,_IOFBF,size);
+    return res == 0;
 }
 
 const char* VFSFileImpl::path() const
