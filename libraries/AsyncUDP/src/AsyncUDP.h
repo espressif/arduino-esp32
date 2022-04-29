@@ -7,7 +7,6 @@
 #include "Stream.h"
 #include <functional>
 extern "C" {
-#include "lwip/ip_addr.h"
 #include "esp_netif.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"

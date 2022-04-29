@@ -91,9 +91,6 @@ public:
     friend class DNSClient;
 };
 
-// avoids some conflict in some AWS, Microsoft Azure and MATTER projects
-#ifndef INADDR_NONE   
-const IPAddress INADDR_NONE(0, 0, 0, 0);
-#endif
-
+// changed to extern because const declaration creates copies in BSS of INADDR_NONE for each CPP unit that includes it
+extern IPAddress INADDR_NONE;
 #endif
