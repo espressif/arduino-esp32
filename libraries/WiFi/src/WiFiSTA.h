@@ -64,6 +64,11 @@ public:
 
     uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
 
+    // Next group functions must be called before WiFi.begin()
+    void setMinSecurity(wifi_auth_mode_t minSecurity);// Default is WIFI_AUTH_WPA2_PSK
+    void setScanMethod(wifi_scan_method_t scanMethod);// Default is WIFI_FAST_SCAN
+    void setSortMethod(wifi_sort_method_t sortMethod);// Default is WIFI_CONNECT_AP_BY_SIGNAL
+
     // STA network info
     IPAddress localIP();
 
@@ -96,6 +101,9 @@ public:
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;
+    static wifi_auth_mode_t _minSecurity;
+    static wifi_scan_method_t _scanMethod;
+    static wifi_sort_method_t _sortMethod;
 
 public: 
     bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);

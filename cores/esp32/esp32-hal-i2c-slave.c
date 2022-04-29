@@ -719,10 +719,12 @@ static void i2c_slave_isr_handler(void* arg)
         }
         if(slave_rw){ // READ
 #if CONFIG_IDF_TARGET_ESP32
-            //SEND TX Event
-            i2c_slave_queue_event_t event;
-            event.event = I2C_SLAVE_EVT_TX;
-            pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            if(i2c->dev->status_reg.scl_main_state_last == 6){
+                //SEND TX Event
+                i2c_slave_queue_event_t event;
+                event.event = I2C_SLAVE_EVT_TX;
+                pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            }
 #else
             //reset TX data
             i2c_ll_txfifo_rst(i2c->dev);
