@@ -54,6 +54,8 @@ WiFiClientSecure::WiFiClientSecure(int sock)
 {
     _connected = false;
     _timeout = 30000; // Same default as ssl_client
+    _lastReadTimeout = 0;
+    _lastWriteTimeout = 0;
 
     sslclient = new sslclient_context;
     ssl_init(sslclient);
@@ -94,6 +96,8 @@ void WiFiClientSecure::stop()
         sslclient->socket = -1;
         _connected = false;
         _peek = -1;
+        _lastReadTimeout = 0;
+        _lastWriteTimeout = 0;
     }
     stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
 }
