@@ -82,6 +82,7 @@ public:
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
     int setTimeout(uint32_t seconds);
     int fd() const;
+    int setSocketOption(int option, char* value, size_t len);
 
     operator bool()
     {
