@@ -211,6 +211,8 @@ void WiFiClient::stop()
     clientSocketHandle = NULL;
     _rxBuffer = NULL;
     _connected = false;
+    _lastReadTimeout = 0;
+    _lastWriteTimeout = 0;
 }
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
@@ -329,13 +331,6 @@ int WiFiClient::getSocketOption(int level, int option, const void* value, size_t
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
-}
-
-void WiFiClient::setTimeout(uint32_t seconds)
-{
-    _lastReadTimeout = _timeout;
-    _lastWriteTimeout = _timeout;
-    _timeout = seconds * 1000;
 }
 
 int WiFiClient::setOption(int option, int *value)

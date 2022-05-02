@@ -92,7 +92,6 @@ public:
     int getSocketOption(int level, int option, const void* value, size_t size);
     int setOption(int option, int *value);
     int getOption(int option, int *value);
-    void setTimeout(uint32_t seconds);
     int setNoDelay(bool nodelay);
     bool getNoDelay();
 
