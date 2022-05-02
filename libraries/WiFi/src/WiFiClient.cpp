@@ -331,23 +331,25 @@ int WiFiClient::getSocketOption(int level, int option, const void* value, size_t
     return res;
 }
 
-
-int WiFiClient::setTimeout(uint32_t seconds)
+void WiFiClient::setTimeout(uint32_t seconds)
 {
+    _lastReadTimeout = Client::getTimeout();
+    _lastWriteTimeout = _lastReadTimeout;
     Client::setTimeout(seconds * 1000); // This should be here?
     _timeout = seconds * 1000;
-    if(fd() >= 0) {
-        struct timeval tv;
-        tv.tv_sec = seconds;
-        tv.tv_usec = 0;
-        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-            return -1;
-        }
-        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
-    }
-    else {
-        return 0;
-    }
+    
+    // if(fd() >= 0) {
+    //     struct timeval tv;
+    //     tv.tv_sec = seconds;
+    //     tv.tv_usec = 0;
+    //     if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+    //         return -1;
+    //     }
+    //     return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
+    // }
+    // else {
+    //     return 0;
+    // }
 }
 
 int WiFiClient::setOption(int option, int *value)
@@ -418,6 +420,18 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
         tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
         retry--;
 
+        if(_lastWriteTimeout != _timeout){
+            if(fd() >= 0){
+                struct timeval tv;
+                tv.tv_sec = _timeout/1000;
+                tv.tv_usec = 0;
+                if(setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval)) >= 0)
+                {
+                    _lastWriteTimeout = _timeout;
+                }
+            }
+        }
+
         if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
             return 0;
         }
@@ -477,6 +491,18 @@ size_t WiFiClient::write(Stream &stream)
 
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
+    if(_lastReadTimeout != _timeout){
+        if(fd() >= 0){
+            struct timeval tv;
+            tv.tv_sec = _timeout/1000;
+            tv.tv_usec = 0;
+            if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) >= 0)
+            {
+                _lastReadTimeout = _timeout;
+            }
+        }
+    }
+
     int res = -1;
     if (_rxBuffer) {
         res = _rxBuffer->read(buf, size);
