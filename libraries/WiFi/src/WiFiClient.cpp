@@ -333,8 +333,8 @@ int WiFiClient::getSocketOption(int level, int option, const void* value, size_t
 
 void WiFiClient::setTimeout(uint32_t seconds)
 {
-    _lastReadTimeout = Client::getTimeout();
-    _lastWriteTimeout = _lastReadTimeout;
+    _lastReadTimeout = _timeout;
+    _lastWriteTimeout = _timeout;
     _timeout = seconds * 1000;
 }
 
