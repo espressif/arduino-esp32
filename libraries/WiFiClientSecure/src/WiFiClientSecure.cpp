@@ -185,6 +185,16 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     if (!_connected) {
         return 0;
     }
+    if(_lastWriteTimeout != _timeout){
+        struct timeval timeout_tv;
+        timeout_tv.tv_sec = _timeout/1000;
+        timeout_tv.tv_usec = 0;
+        if(setSocketOption(SO_SNDTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
+        {
+            _lastWriteTimeout = _timeout;
+        }
+    }
+
     int res = send_ssl_data(sslclient, buf, size);
     if (res < 0) {
         stop();
@@ -195,6 +205,18 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
 
 int WiFiClientSecure::read(uint8_t *buf, size_t size)
 {
+    if(_lastReadTimeout != _timeout){
+        if(fd() >= 0){
+            struct timeval timeout_tv;
+            timeout_tv.tv_sec = _timeout/1000;
+            timeout_tv.tv_usec = 0;
+            if(setSocketOption(SO_RCVTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
+            {
+                _lastReadTimeout = _timeout;
+            }
+        }
+    }
+
     int peeked = 0;
     int avail = available();
     if ((!buf && size) || avail <= 0) {
@@ -360,22 +382,7 @@ void WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 {
     _alpn_protos = alpn_protos;
 }
-int WiFiClientSecure::setTimeout(uint32_t seconds)
-{
-    _timeout = seconds * 1000;
-    if (sslclient->socket >= 0) {
-        struct timeval tv;
-        tv.tv_sec = seconds;
-        tv.tv_usec = 0;
-        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-            return -1;
-        }
-        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
-    }
-    else {
-        return 0;
-    }
-}
+
 int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
 {
     int res = setsockopt(sslclient->socket, SOL_SOCKET, option, value, len);

@@ -79,7 +79,6 @@ public:
     void setAlpnProtocols(const char **alpn_protos);
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
-    int setTimeout(uint32_t seconds);
     int setSocketOption(int option, char* value, size_t len);
 
     operator bool()
