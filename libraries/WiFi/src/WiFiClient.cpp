@@ -404,8 +404,8 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
         if(_lastWriteTimeout != _timeout){
             if(fd() >= 0){
                 struct timeval timeout_tv;
-                timeout_tv.tv_sec = _timeout/1000;
-                timeout_tv.tv_usec = 0;
+                timeout_tv.tv_sec = _timeout / 1000;
+                timeout_tv.tv_usec = (_timeout % 1000) * 1000;
                 if(setSocketOption(SO_SNDTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
                 {
                     _lastWriteTimeout = _timeout;
@@ -475,8 +475,8 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     if(_lastReadTimeout != _timeout){
         if(fd() >= 0){
             struct timeval timeout_tv;
-            timeout_tv.tv_sec = _timeout/1000;
-            timeout_tv.tv_usec = 0;
+            timeout_tv.tv_sec = _timeout / 1000;
+            timeout_tv.tv_usec = (_timeout % 1000) * 1000;
             if(setSocketOption(SO_RCVTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
             {
                 _lastReadTimeout = _timeout;
