@@ -1,7 +1,6 @@
 from esp_docs.conf_docs import *  # noqa: F403,F401
 
 languages = ["en"]
-idf_targets = ["esp32"]
 
 # link roles config
 github_repo = "espressif/arduino-esp32"
@@ -22,10 +21,6 @@ extensions += ['sphinx_copybutton',
 ESP32_DOCS = [
     "index.rst",
 ]
-
-conditional_include_dict = {
-    "esp32": ESP32_DOCS,
-}
 
 # Extra options required by sphinx_idf_theme
 project_slug = "arduino-esp32"
