@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// MacAddress8.h - class to make it easier to handle BSSID and MAC addresses.
+// MacAddress8.h - class to make it easier to handle 8-byte EUI-64 addresses.
 // 
 // Copyright 2022 David McCurley
 // Licensed under the Apache License, Version 2.0 (the "License").
