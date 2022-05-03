@@ -9,7 +9,6 @@ Here you will find all the relevant information about the project.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    Getting Started <getting_started>
    Libraries <libraries>
