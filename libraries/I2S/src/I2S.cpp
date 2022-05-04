@@ -641,7 +641,7 @@ size_t I2SClass::write(uint8_t data){
   return ret;
 }
 
-size_t I2SClass::write(int32_t sample){
+size_t I2SClass::write(uint32_t sample){
   _take_if_not_holding();
   size_t ret = 0;
   if(_initialized){

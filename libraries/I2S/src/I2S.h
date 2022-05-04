@@ -26,31 +26,6 @@ namespace esp_i2s {
   #include "driver/i2s.h" // ESP specific i2s driver
 }
 
-// Default pins
-#ifndef PIN_I2S_SCK
-  #define PIN_I2S_SCK 14
-#endif
-
-#ifndef PIN_I2S_FS
-  #if CONFIG_IDF_TARGET_ESP32S2
-    #define PIN_I2S_FS 27
-  #else
-    #define PIN_I2S_FS 25
-  #endif
-#endif
-
-#ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 26
-#endif
-
-#ifndef PIN_I2S_SD_OUT
-  #define PIN_I2S_SD_OUT 26
-#endif
-
-#ifndef PIN_I2S_SD_IN
-  #define PIN_I2S_SD_IN 35 // Pin 35 is only input!
-#endif
-
 typedef enum {
   I2S_PHILIPS_MODE,
   I2S_RIGHT_JUSTIFIED_MODE,
@@ -110,7 +85,7 @@ public:
   int read(void* buffer, size_t size);
 
   //size_t write(int);
-  size_t write(int32_t);
+  size_t write(uint32_t);
   size_t write(const void *buffer, size_t size);
   size_t write_blocking(const void *buffer, size_t size);
   size_t write_nonblocking(const void *buffer, size_t size);

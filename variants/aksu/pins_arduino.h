@@ -11,6 +11,27 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
+// Default pins for I2S
+#ifndef PIN_I2S_SCK
+  #define PIN_I2S_SCK 26
+#endif
+
+#ifndef PIN_I2S_FS
+  #define PIN_I2S_FS 33
+#endif
+
+#ifndef PIN_I2S_SD
+  #define PIN_I2S_SD 25   //Shared pin in simplex mode
+#endif
+
+#ifndef PIN_I2S_SD_OUT
+  #define PIN_I2S_SD_OUT 25
+#endif
+
+#ifndef PIN_I2S_SD_IN
+  #define PIN_I2S_SD_IN 32
+#endif
+
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
