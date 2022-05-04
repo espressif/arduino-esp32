@@ -17,6 +17,10 @@
 #define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES-1)
 #endif
 
+#ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+#define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#endif
+
 #ifndef SOC_RX0
 #if CONFIG_IDF_TARGET_ESP32
 #define SOC_RX0 3
@@ -167,7 +171,7 @@ HardwareSerial::~HardwareSerial()
 void HardwareSerial::_createEventTask(void *args)
 {
     // Creating UART event Task
-    xTaskCreate(_uartEventTask, "uart_event_task", ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, this, ARDUINO_SERIAL_EVENT_TASK_PRIORITY, &_eventTask);
+    xTaskCreateUniversal(_uartEventTask, "uart_event_task", ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, this, ARDUINO_SERIAL_EVENT_TASK_PRIORITY, &_eventTask, ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE);
     if (_eventTask == NULL) {
         log_e(" -- UART%d Event Task not Created!", _uart_nr);
     }
