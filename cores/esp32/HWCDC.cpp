@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USB.h"
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 
 #include "esp32-hal.h"
 #include "HWCDC.h"
@@ -167,19 +167,21 @@ void HWCDC::begin(unsigned long baud)
     setRxBufferSize(256);//default if not preset
     setTxBufferSize(256);//default if not preset
 
-    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
         return;
     }
+    usb_serial_jtag_ll_txfifo_flush();
 }
 
 void HWCDC::end()
 {
     //Disable tx/rx interrupt.
-    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     esp_intr_free(intr_handle);
     intr_handle = NULL;
     if(tx_lock != NULL) {
@@ -379,10 +381,12 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_HW_CDC_ON_BOOT //Serial used for USB CDC
+#if ARDUINO_USB_MODE
+#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
 HWCDC Serial;
 #else
 HWCDC USBSerial;
+#endif
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

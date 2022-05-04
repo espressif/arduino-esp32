@@ -1,5 +1,6 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerType.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 
 param_val_t value(int ival)
 {
@@ -20,5 +21,4 @@ param_val_t value(float fval)
 {
     return esp_rmaker_float(fval);
 }
-
 #endif

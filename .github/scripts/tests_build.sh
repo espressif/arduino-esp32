@@ -25,6 +25,8 @@ case "$target" in
     ;;
     "esp32c3") fqbn="espressif:esp32:esp32c3:PartitionScheme=huge_app"
     ;;
+    "esp32s3") fqbn="espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
+    ;;
 esac
 
 if [ -z $fqbn ]; then
