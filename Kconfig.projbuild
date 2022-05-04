@@ -82,6 +82,18 @@ choice ARDUINO_UDP_RUNNING_CORE
 
 endchoice
 
+config ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+    int "Serial Event task stack size"
+    default 2048
+    help
+        Amount of stack available for the Serial Event task.
+
+config ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+    int "Priority of the Serial Event task"
+    default 24
+    help
+        Select at what priority you want the Serial Event task to run.
+
 config ARDUINO_UDP_TASK_PRIORITY
     int "Priority of the UDP task"
     default 3
