@@ -7966,7 +7966,7 @@ esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 esp32doit-espduino.name=DOIT ESPduino32
 
-esp32doit-espduino.upload.tool=esptool
+esp32doit-espduino.upload.tool=esptool_py
 esp32doit-espduino.upload.maximum_size=1310720
 esp32doit-espduino.upload.maximum_data_size=327680
 esp32doit-espduino.upload.wait_for_upload_port=true
