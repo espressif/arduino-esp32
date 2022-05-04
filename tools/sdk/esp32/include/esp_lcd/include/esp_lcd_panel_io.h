@@ -98,7 +98,8 @@ typedef struct {
         unsigned int dc_as_cmd_phase: 1; /*!< D/C line value is encoded into SPI transaction command phase */
         unsigned int dc_low_on_data: 1;  /*!< If this flag is enabled, DC line = 0 means transfer data, DC line = 1 means transfer command; vice versa */
         unsigned int octal_mode: 1;      /*!< transmit with octal mode (8 data lines), this mode is used to simulate Intel 8080 timing */
-    } flags;
+        unsigned int lsb_first: 1;       /*!< transmit LSB bit first */
+    } flags; /*!< Extra flags to fine-tune the SPI device */
 } esp_lcd_panel_io_spi_config_t;
 
 /**
@@ -151,6 +152,8 @@ typedef struct {
     int data_gpio_nums[SOC_LCD_I80_BUS_WIDTH]; /*!< GPIOs used for data lines */
     size_t bus_width;          /*!< Number of data lines, 8 or 16 */
     size_t max_transfer_bytes; /*!< Maximum transfer size, this determines the length of internal DMA link */
+    size_t psram_trans_align;  /*!< DMA transfer alignment for data allocated from PSRAM */
+    size_t sram_trans_align;   /*!< DMA transfer alignment for data allocated from SRAM */
 } esp_lcd_i80_bus_config_t;
 
 /**
