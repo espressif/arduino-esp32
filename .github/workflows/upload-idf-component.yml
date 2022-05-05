@@ -2,7 +2,7 @@ name: Push components to https://components.espressif.com
 on:
   push:
     tags:
-      - v*
+      - *
 jobs:
   upload_components:
     runs-on: ubuntu-latest
