@@ -37,7 +37,7 @@ public:
     MacAddress();
     MacAddress(uint64_t mac);
     MacAddress(const uint8_t *macbytearray);
-    MAcAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6);
+    MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6);
     virtual ~MacAddress() {}
     bool fromCStr(const char *buf);
     bool fromString(const String &macstr);
