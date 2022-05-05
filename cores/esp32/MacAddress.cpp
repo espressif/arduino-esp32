@@ -14,7 +14,7 @@ MacAddress::MacAddress(const uint8_t *macbytearray) {
     memcpy(_mac.bytes, macbytearray, sizeof(_mac.bytes));
 }
 
-MacAddress::MacAddress((uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
+MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
     _mac.bytes[0] = b1;
     _mac.bytes[1] = b2;
     _mac.bytes[2] = b3;
