@@ -1,5 +1,6 @@
 #include <MacAddress8.h>
 #include <stdio.h>
+#include <Print.h>
 
 //Default constructor, blank mac address.
 MacAddress8::MacAddress8() {
@@ -92,4 +93,16 @@ bool MacAddress8::operator==(const uint8_t *mac) const
 bool MacAddress8::operator==(const MacAddress8& mac2) const
 {
     return _mac.val == mac2._mac.val;
+}
+
+size_t MacAddress8::printTo(Print& p) const
+{
+    size_t n = 0;
+    for(int i = 0; i < 8; i++) {
+        if(i){
+            n += p.print(':');
+        }
+        n += p.printf("%02x", _mac.bytes[i]);
+    }
+    return n;
 }
