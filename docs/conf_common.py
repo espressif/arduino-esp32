@@ -24,5 +24,3 @@ ESP32_DOCS = [
 
 # Extra options required by sphinx_idf_theme
 project_slug = "arduino-esp32"
-
-versions_url = "./_static/arduino_versions.js"
