@@ -18,7 +18,9 @@
 #ifndef MacAddress_h
 #define MacAddress_h
 
+#include <stdint.h>
 #include <WString.h>
+#include <Printable.h>
 
 // A class to make it easier to handle and pass around 6-byte BSSID and MAC addresses.
 class MacAddress : public Printable {
