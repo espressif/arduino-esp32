@@ -18,10 +18,12 @@
 #ifndef MacAddress8_h
 #define MacAddress8_h
 
+#include <stdint.h>
 #include <WString.h>
+#include <Printable.h>
 
 // A class to make it easier to handle and pass around 8-byte EUI-64(used for IEEE 802.15.4) addresses. See <esp_mac.h>.
-class MacAddress8 {
+class MacAddress8 : public Printable {
 private:
     union {
         uint8_t bytes[8];
@@ -45,6 +47,35 @@ public:
     MacAddress8& operator=(uint64_t macval);
     bool operator==(const uint8_t *mac) const;
     bool operator==(const MacAddress8& mac2) const;
+
+    // Overloaded index operator to allow getting and setting individual octets of the address
+    uint8_t operator[](int index) const
+    {
+        return _mac.bytes[index];
+    }
+    uint8_t& operator[](int index)
+    {
+        return _mac.bytes[index];
+    }
+
+    operator const uint8_t*() const
+    {
+        return _mac.bytes;
+    }
+    operator const uint64_t*() const
+    {
+        return &_mac.val;
+    }
+
+    virtual size_t printTo(Print& p) const;
+
+    // future use in Arduino Networking 
+    friend class EthernetClass;
+    friend class UDP;
+    friend class Client;
+    friend class Server;
+    friend class DhcpClass;
+    friend class DNSClient;    
 };
 
 #endif
