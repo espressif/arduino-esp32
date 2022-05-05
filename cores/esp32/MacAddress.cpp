@@ -14,6 +14,15 @@ MacAddress::MacAddress(const uint8_t *macbytearray) {
     memcpy(_mac.bytes, macbytearray, sizeof(_mac.bytes));
 }
 
+MacAddress::MacAddress((uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
+    _mac.bytes[0] = b1;
+    _mac.bytes[1] = b2;
+    _mac.bytes[2] = b3;
+    _mac.bytes[3] = b4;
+    _mac.bytes[4] = b5;
+    _mac.bytes[5] = b6;
+}
+
 //Parse user entered string into MAC address
 bool MacAddress::fromCStr(const char *buf) {
   char cs[18];
@@ -63,12 +72,6 @@ uint64_t MacAddress::Value() {
     return _mac.val;
 }
 
-//Implicit conversion object to number [same as .Value()]
-MacAddress::operator uint64_t() const
-{
-    return _mac.val;
-}
-
 //Overloaded copy operators to allow initialisation of MacAddress objects from other types
 MacAddress& MacAddress::operator=(const uint8_t *mac)
 {
@@ -93,3 +96,16 @@ bool MacAddress::operator==(const MacAddress& mac2) const
 {
     return _mac.val == mac2._mac.val;
 }
+                       
+size_t MacAddress::printTo(Print& p) const
+{
+    size_t n = 0;
+    for(int i = 0; i < 6; i++) {
+        if(i){
+            n += p.print(':');
+        }
+        n += p.printf("%02x", _mac.bytes[i]);
+    }
+    return n;
+}
+                       
