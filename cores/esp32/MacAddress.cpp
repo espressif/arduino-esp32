@@ -1,5 +1,6 @@
 #include <MacAddress.h>
 #include <stdio.h>
+#include <Print.h>
 
 //Default constructor, blank mac address.
 MacAddress::MacAddress() {
