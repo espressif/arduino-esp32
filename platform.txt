@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=2.0.3
+version=2.0.4
 
 runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
@@ -127,6 +127,8 @@ build.flash_freq=80m
 build.boot=qio
 build.boot_freq={build.flash_freq}
 build.bootloader_addr=0x1000
+build.custom_bootloader=bootloader
+build.custom_partitions=partitions
 build.code_debug=0
 build.defines=
 build.loop_core=
@@ -140,16 +142,16 @@ build.opt.path={build.path}/{build.opt.name}
 
 # Check if custom partitions exist: source > variant > build.partitions
 recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
-recipe.hooks.prebuild.2.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/partitions.csv ] || cp "{build.variant.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
 recipe.hooks.prebuild.3.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
 
 recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
-recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\partitions.csv" COPY "{build.variant.path}\partitions.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\{build.custom_partitions}.csv" COPY "{build.variant.path}\{build.custom_partitions}.csv" "{build.path}\partitions.csv"
 recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
 
 # Check if custom bootloader exist: source > variant > build.boot
-recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/bootloader.bin ] && cp "{build.variant.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || cp -f "{runtime.platform.path}"/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.boot_freq}.bin "{build.path}"/{build.project_name}.bootloader.bin )"
-recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\bootloader.bin" ( COPY "{build.variant.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( COPY /y "{runtime.platform.path}\tools\sdk\{build.mcu}\bin\bootloader_{build.boot}_{build.boot_freq}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) )
+recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || cp -f "{runtime.platform.path}"/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.boot_freq}.bin "{build.path}"/{build.project_name}.bootloader.bin )"
+recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( COPY /y "{runtime.platform.path}\tools\sdk\{build.mcu}\bin\bootloader_{build.boot}_{build.boot_freq}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) )
 
 # Check if custom build options exist in the sketch folder
 recipe.hooks.prebuild.5.pattern=bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
