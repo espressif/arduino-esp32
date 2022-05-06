@@ -46,33 +46,15 @@ public:
     String toString() const;
     uint64_t Value();
 
-    // Overloaded index operator to allow getting and setting individual octets of the address
-    uint8_t operator[](int index) const
-    {
-        return _mac.bytes[index];
-    }
-    uint8_t& operator[](int index)
-    {
-        return _mac.bytes[index];
-    }
-
-    MacAddress& operator=(const uint8_t *mac);
+    uint8_t operator[](int index) const;
+    uint8_t& operator[](int index);
+    MacAddress& operator=(const uint8_t *macbytearray);
     MacAddress& operator=(uint64_t macval);
-    bool operator==(const uint8_t *mac) const;
+    bool operator==(const uint8_t *macbytearray) const;
     bool operator==(const MacAddress& mac2) const;
-    
-    operator uint64_t() const
-    {
-        return _mac.val;
-    }
-    operator const uint8_t*() const
-    {
-        return _mac.bytes;
-    }
-    operator const uint64_t*() const
-    {
-        return &_mac.val;
-    }
+    operator uint64_t() const;
+    operator const uint8_t*() const;
+    operator const uint64_t*() const;
 
     virtual size_t printTo(Print& p) const;
 
@@ -83,6 +65,9 @@ public:
     friend class Server;
     friend class DhcpClass;
     friend class DNSClient;
+
+private:
+    int EnforceIndexBounds(int i) const;
 };
 
 #endif

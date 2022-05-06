@@ -34,39 +34,24 @@ public:
     MacAddress8();
     MacAddress8(uint64_t mac);
     MacAddress8(const uint8_t *macbytearray);
+    MacAddress8(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8);
     virtual ~MacAddress8() {}
     bool fromCStr(const char *buf);
     bool fromString(const String &macstr);
     void toBytes(uint8_t *buf);
-    int toCStr(char *buf);
+    int  toCStr(char *buf);
     String toString() const;
     uint64_t Value();
 
-    operator uint64_t() const;
-    MacAddress8& operator=(const uint8_t *mac);
+    uint8_t operator[](int index) const;
+    uint8_t& operator[](int index);
+    MacAddress8& operator=(const uint8_t *macbytearray);
     MacAddress8& operator=(uint64_t macval);
-    bool operator==(const uint8_t *mac) const;
+    bool operator==(const uint8_t *macbytearray) const;
     bool operator==(const MacAddress8& mac2) const;
-
-    // Overloaded index operator to allow getting and setting individual octets of the address
-    uint8_t operator[](int index) const
-    {
-        return _mac.bytes[index];
-    }
-    uint8_t& operator[](int index)
-    {
-        return _mac.bytes[index];
-    }
-
-    operator const uint8_t*() const
-    {
-        return _mac.bytes;
-    }
-    operator const uint64_t*() const
-    {
-        return &_mac.val;
-    }
-
+    operator uint64_t() const;
+    operator const uint8_t*() const;
+    operator const uint64_t*() const;
     virtual size_t printTo(Print& p) const;
 
     // future use in Arduino Networking 
@@ -75,7 +60,10 @@ public:
     friend class Client;
     friend class Server;
     friend class DhcpClass;
-    friend class DNSClient;    
+    friend class DNSClient;
+
+private:
+    int EnforceIndexBounds(int i) const;
 };
 
 #endif

@@ -73,31 +73,55 @@ uint64_t MacAddress::Value() {
     return _mac.val;
 }
 
-//Overloaded copy operators to allow initialisation of MacAddress objects from other types
-MacAddress& MacAddress::operator=(const uint8_t *mac)
-{
-    memcpy(_mac.bytes, mac, sizeof(_mac.bytes));
+//Allow getting individual octets of the address. e.g. uint8_t b0 = ma[0];
+uint8_t MacAddress::operator[](int index) const {
+    index = EnforceIndexBounds(index);
+    return _mac.bytes[index];
+}
+
+//Allow setting individual octets of the address. e.g. ma[2] = 255;
+uint8_t& MacAddress::operator[](int index) {
+    index = EnforceIndexBounds(index);
+    return _mac.bytes[index];
+}
+
+//Overloaded copy operator: init MacAddress object from byte array
+MacAddress& MacAddress::operator=(const uint8_t *macbytearray) {
+    memcpy(_mac.bytes, macbytearray, sizeof(_mac.bytes));
     return *this;
 }
 
-MacAddress& MacAddress::operator=(uint64_t macval)
-{
+//Overloaded copy operator: init MacAddress object from uint64_t
+MacAddress& MacAddress::operator=(uint64_t macval) {
     _mac.val = macval;
     return *this;
 }
 
 //Compare class to byte array
-bool MacAddress::operator==(const uint8_t *mac) const
-{
-    return !memcmp(_mac.bytes, mac, sizeof(_mac.bytes));
+bool MacAddress::operator==(const uint8_t *macbytearray) const {
+    return !memcmp(_mac.bytes, macbytearray, sizeof(_mac.bytes));
 }
 
 //Allow comparing value of two classes
-bool MacAddress::operator==(const MacAddress& mac2) const
-{
+bool MacAddress::operator==(const MacAddress& mac2) const {
     return _mac.val == mac2._mac.val;
 }
-                       
+
+//Type converter object to uint64_t [same as .Value()]
+MacAddress::operator uint64_t() const {
+    return _mac.val;
+}
+
+//Type converter object to read only pointer to mac bytes. e.g. const uint8_t *ip_8 = ma;
+MacAddress::operator const uint8_t*() const {
+    return _mac.bytes;
+}
+
+//Type converter object to read only pointer to mac value. e.g. const uint32_t *ip_64 = ma;
+MacAddress::operator const uint64_t*() const {
+    return &_mac.val;
+}
+
 size_t MacAddress::printTo(Print& p) const
 {
     size_t n = 0;
@@ -109,4 +133,14 @@ size_t MacAddress::printTo(Print& p) const
     }
     return n;
 }
-                       
+
+//Bounds checking
+int MacAddress::EnforceIndexBounds(int i) const {
+    if(i < 0) {
+        return 0;
+    }
+    if(i >= sizeof(_mac.bytes)) {
+        return sizeof(_mac.bytes)-1;
+    }
+    return i;
+}
