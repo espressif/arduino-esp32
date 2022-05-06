@@ -29,4 +29,15 @@ static const uint8_t A3 = 5;
 static const uint8_t A4 = 6;
 static const uint8_t A5 = 7;
 
+static const uint8_t D0 = 2;
+static const uint8_t D1 = 3;
+static const uint8_t D2 = 4;
+static const uint8_t D3 = 5;
+static const uint8_t D4 = 6;
+static const uint8_t D5 = 7;
+static const uint8_t D6 = 20;
+static const uint8_t D7 = 8;
+static const uint8_t D8 = 9;
+static const uint8_t D9 = 10;
+
 #endif /* Pins_Arduino_h */
