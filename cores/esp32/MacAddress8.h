@@ -52,6 +52,7 @@ public:
     operator uint64_t() const;
     operator const uint8_t*() const;
     operator const uint64_t*() const;
+
     virtual size_t printTo(Print& p) const;
 
     // future use in Arduino Networking 

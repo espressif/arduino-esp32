@@ -130,7 +130,7 @@ size_t MacAddress8::printTo(Print& p) const
         if(i){
             n += p.print(':');
         }
-        n += p.printf("%02x", _mac.bytes[i]);
+        n += p.printf("%02X", _mac.bytes[i]);
     }
     return n;
 }
