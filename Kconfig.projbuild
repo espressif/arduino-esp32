@@ -31,7 +31,7 @@ choice ARDUINO_RUNNING_CORE
         bool "CORE 1"
     config ARDUINO_RUN_NO_AFFINITY
         bool "BOTH"
-        depends on !CONFIG_FREERTOS_UNICORE
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
@@ -59,7 +59,7 @@ choice ARDUINO_EVENT_RUNNING_CORE
         bool "CORE 1"
     config ARDUINO_EVENT_RUN_NO_AFFINITY
         bool "BOTH"
-        depends on !CONFIG_FREERTOS_UNICORE
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
@@ -81,7 +81,7 @@ choice ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
         bool "CORE 1"
     config ARDUINO_SERIAL_EVENT_RUN_NO_AFFINITY
         bool "BOTH"
-        depends on !CONFIG_FREERTOS_UNICORE
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
@@ -121,7 +121,7 @@ choice ARDUINO_UDP_RUNNING_CORE
         bool "CORE 1"
     config ARDUINO_UDP_RUN_NO_AFFINITY
         bool "BOTH"
-        depends on !CONFIG_FREERTOS_UNICORE
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
