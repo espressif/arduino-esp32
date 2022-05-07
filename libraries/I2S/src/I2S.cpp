@@ -55,7 +55,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample; Must be between 8 and 1024
+  _i2s_dma_buffer_size(400), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample; Must be between 8 and 1024
   _driveClock(true),
   _peek_buff(0),
   _peek_buff_valid(false),
@@ -888,7 +888,7 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
 
 void I2SClass::_rx_done_routine(){
   size_t bytes_read = 0;
-  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
+  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8) * 2;
 
   if(_input_ring_buffer != NULL){
     uint8_t *_inputBuffer = (uint8_t*)malloc(_i2s_dma_buffer_size*4);
