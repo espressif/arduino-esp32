@@ -14415,10 +14415,10 @@ SEEED_XIAO_WIFI.build.boot=qio
 SEEED_XIAO_WIFI.build.partitions=default
 SEEED_XIAO_WIFI.build.defines=
 
-SEEED_XIAO_WIFI.menu.CDCOnBoot.default=Disabled
-SEEED_XIAO_WIFI.menu.CDCOnBoot.default.build.cdc_on_boot=0
-SEEED_XIAO_WIFI.menu.CDCOnBoot.cdc=Enabled
-SEEED_XIAO_WIFI.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+SEEED_XIAO_WIFI.menu.CDCOnBoot.default=Enabled
+SEEED_XIAO_WIFI.menu.CDCOnBoot.default.build.cdc_on_boot=1
+SEEED_XIAO_WIFI.menu.CDCOnBoot.cdc=Disabled
+SEEED_XIAO_WIFI.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 SEEED_XIAO_WIFI.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 SEEED_XIAO_WIFI.menu.PartitionScheme.default.build.partitions=default
