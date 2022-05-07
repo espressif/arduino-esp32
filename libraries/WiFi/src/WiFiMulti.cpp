@@ -30,7 +30,6 @@
 
 WiFiMulti::WiFiMulti()
 {
-    ipv6_support = false;
 }
 
 WiFiMulti::~WiFiMulti()

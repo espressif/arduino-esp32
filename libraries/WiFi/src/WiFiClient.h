@@ -95,6 +95,8 @@ public:
 
     IPAddress remoteIP() const;
     IPAddress remoteIP(int fd) const;
+    IPv6Address remoteIP6() const;
+    IPv6Address remoteIP6(int fd) const;    
     uint16_t remotePort() const;
     uint16_t remotePort(int fd) const;
     IPAddress localIP() const;
@@ -105,5 +107,10 @@ public:
     //friend class WiFiServer;
     using Print::write;
 };
+
+#define IN6_IS_ADDR_V4MAPPED(a) \
+        ((((__const uint32_t *) (a))[0] == 0)                                 \
+         && (((__const uint32_t *) (a))[1] == 0)                              \
+         && (((__const uint32_t *) (a))[2] == htonl (0xffff)))
 
 #endif /* _WIFICLIENT_H_ */

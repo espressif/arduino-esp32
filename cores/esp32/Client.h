@@ -22,6 +22,7 @@
 #include "Print.h"
 #include "Stream.h"
 #include "IPAddress.h"
+#include "IPv6Address.h"
 
 class Client: public Stream
 {

@@ -561,8 +561,52 @@ IPAddress WiFiClient::remoteIP(int fd) const
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
     getpeername(fd, (struct sockaddr*)&addr, &len);
-    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+
+    // Old way, IPv4
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        return IPAddress((uint32_t)(s->sin_addr.s_addr));
+    }
+    // IPv6, but it might be IPv4 mapped address
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET6) {
+        struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
+        if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+            struct sockaddr_in addr4;
+            memset(&addr4, 0, sizeof(addr4));
+            addr4.sin_family = AF_INET;
+            addr4.sin_port = saddr6->sin6_port;
+            memcpy(&addr4.sin_addr.s_addr, saddr6->sin6_addr.s6_addr+12, sizeof(addr4.sin_addr.s_addr));
+            return IPAddress((uint32_t)(addr4.sin_addr.s_addr));
+        }
+        log_e("WiFiClient::remoteIP IPv6 to IPv4 cannot convert");
+        return (IPAddress(0,0,0,0));
+    }
+    log_e("WiFiClient::remoteIP Not AF_INET or AF_INET6?");
+    return (IPAddress(0,0,0,0));
+}
+
+IPv6Address WiFiClient::remoteIP6(int fd) const
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof addr;
+    getpeername(fd, (struct sockaddr*)&addr, &len);
+
+    // IPv4 socket we can print as IPv6 mapped
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET) {
+        uint8_t buffer[16] = { 0 };
+        buffer[10] = 0xFF;
+        buffer[11] = 0xFF;
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        memcpy(&buffer[12], (uint8_t*)&s->sin_addr.s_addr, 4);
+        return IPv6Address(buffer);
+    }
+    // IPv6
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET6) {
+        struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
+        return (IPv6Address(saddr6->sin6_addr.s6_addr));
+    }
+    log_e("WiFiClient::remoteIP Not AF_INET or AF_INET6?");
+    return (IPv6Address());
 }
 
 uint16_t WiFiClient::remotePort(int fd) const
@@ -577,6 +621,11 @@ uint16_t WiFiClient::remotePort(int fd) const
 IPAddress WiFiClient::remoteIP() const
 {
     return remoteIP(fd());
+}
+
+IPv6Address WiFiClient::remoteIP6() const
+{
+    return remoteIP6(fd());
 }
 
 uint16_t WiFiClient::remotePort() const
