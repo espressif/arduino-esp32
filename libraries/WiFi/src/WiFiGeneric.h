@@ -138,6 +138,7 @@ static const int WIFI_SCANNING_BIT = BIT11;
 static const int WIFI_SCAN_DONE_BIT= BIT12;
 static const int WIFI_DNS_IDLE_BIT = BIT13;
 static const int WIFI_DNS_DONE_BIT = BIT14;
+static const int WIFI_WANT_IP6_BIT = BIT15;
 
 typedef enum {
 	WIFI_RX_ANT0 = 0,

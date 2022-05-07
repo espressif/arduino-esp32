@@ -866,8 +866,8 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
         setStatusBits(STA_CONNECTED_BIT);
-
-        //esp_netif_create_ip6_linklocal(esp_netifs[ESP_IF_WIFI_STA]);
+        if (getStatusBits() & WIFI_WANT_IP6_BIT)
+            esp_netif_create_ip6_linklocal(esp_netifs[ESP_IF_WIFI_STA]);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
         uint8_t reason = event->event_info.wifi_sta_disconnected.reason;
         log_w("Reason: %u - %s", reason, reason2str(reason));
