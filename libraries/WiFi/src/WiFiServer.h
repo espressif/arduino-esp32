@@ -23,12 +23,14 @@
 #include "Server.h"
 #include "WiFiClient.h"
 #include "IPAddress.h"
+#include "lwip/inet.h"
+#include "lwip/netdb.h"
 
 class WiFiServer : public Server {
   private:
     int sockfd;
     int _accepted_sockfd = -1;
-    IPAddress _addr;
+    in6_addr _addr;
     uint16_t _port;
     uint8_t _max_clients;
     bool _listening;
@@ -37,12 +39,19 @@ class WiFiServer : public Server {
   public:
     void listenOnLocalhost(){}
 
-    // _addr(INADDR_ANY) is the same as _addr() ==> 0.0.0.0
-    WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
+    WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
+      _addr = IN6ADDR_ANY_INIT;
     }
-    WiFiServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(addr),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
+    WiFiServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
+      char buffer[64] = { 0 };
+      // Print IPv4 in IPv6 notation
+      sprintf(buffer, "::FFFF:%s", addr.toString().c_str());
+      int rc = inet_pton(AF_INET6, buffer, &_addr);
+      if (rc != 1) {
+        log_e("WiFiServer::WiFiServer unable to resolve address, rc=%d", rc);
+      }
     }
     ~WiFiServer(){ end();}
     WiFiClient available();
