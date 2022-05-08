@@ -60,6 +60,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     int ret, flags;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
+    bool is_ipv4 = true;
 
     if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure && !useRootCABundle) {
         return -1;
@@ -67,24 +68,45 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
     log_v("Starting socket");
     ssl_client->socket = -1;
+    struct sockaddr_storage serveraddr;
+    ip_addr_t dstip;
+    IPAddress srv((uint32_t)0);
 
-    ssl_client->socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (WiFiGenericClass::getStatusBits() & WIFI_WANT_IP6_BIT) {
+        ip_addr_t srv6;
+        if(!WiFiGenericClass::hostByName6(host, srv6)){
+            return -1;
+        }
+        if (IP_IS_V6(&srv6)) {
+            is_ipv4 = false;
+            ssl_client->socket = lwip_socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+            struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
+            memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in6));
+            tmpaddr->sin6_family = AF_INET6;
+            inet6_addr_from_ip6addr(&tmpaddr->sin6_addr, ip_2_ip6(&srv6));
+            tmpaddr->sin6_port = htons(port);
+        } else {
+            srv = ip4_addr_get_u32(&srv6.u_addr.ip4);
+        }
+    } else {
+        if(!WiFiGenericClass::hostByName(host, srv))
+            return -1;
+    }
+    if (is_ipv4 == true) {
+        ssl_client->socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        struct sockaddr_in *serv_addr = (struct sockaddr_in*)&serveraddr;
+        memset(serv_addr, 0, sizeof(serv_addr));
+        serv_addr->sin_family = AF_INET;
+        serv_addr->sin_addr.s_addr = srv;
+        serv_addr->sin_port = htons(port);
+    }
+
     if (ssl_client->socket < 0) {
         log_e("ERROR opening socket");
         return ssl_client->socket;
     }
 
-    IPAddress srv((uint32_t)0);
-    if(!WiFiGenericClass::hostByName(host, srv)){
-        return -1;
-    }
-
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
-    struct sockaddr_in serv_addr;
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = srv;
-    serv_addr.sin_port = htons(port);
 
     if(timeout <= 0){
         timeout = 30000; // Milli seconds.
@@ -97,7 +119,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     tv.tv_sec = timeout / 1000;
     tv.tv_usec = (timeout % 1000) * 1000;
 
-    int res = lwip_connect(ssl_client->socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    int res = lwip_connect(ssl_client->socket, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     if (res < 0 && errno != EINPROGRESS) {
         log_e("connect on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
         close(ssl_client->socket);
