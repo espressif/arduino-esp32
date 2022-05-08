@@ -1336,6 +1336,25 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
 }
 
 /**
+ * IPv6 compatible DNS callback
+ * @param name
+ * @param ipaddr
+ * @param callback_arg
+ */
+static void wifi_dns6_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
+{
+    struct dns_api_msg *msg = (struct dns_api_msg *)callback_arg;
+
+    if(ipaddr && !msg->result) {
+        msg->ip_addr = *ipaddr;
+        msg->result = 1;
+    } else {
+        msg->result = -1;
+    }
+    xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
+}
+
+/**
  * Resolve the given hostname to an IP address.
  * @param aHostname     Name to be resolved
  * @param aResult       IPAddress structure to store the returned IP address
@@ -1360,6 +1379,36 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
         log_e("DNS Failed for %s", aHostname);
     }
     return (uint32_t)aResult != 0;
+}
+
+/**
+ * Resolve the given hostname to an IP6 address.
+ * @param aHostname     Name to be resolved
+ * @param aResult       IPv6Address structure to store the returned IP address
+ * @return 1 if aHostname was successfully converted to an IP address,
+ *          else error code
+ */
+int WiFiGenericClass::hostByName6(const char* aHostname, ip_addr_t& aResult)
+{
+    ip_addr_t addr;
+    struct dns_api_msg arg;
+
+    memset(&arg, 0x0, sizeof(arg));
+    waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
+    clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
+
+    err_t err = dns_gethostbyname_addrtype(aHostname, &addr, &wifi_dns6_found_callback,
+                &arg, LWIP_DNS_ADDRTYPE_IPV6_IPV4);
+    if(err == ERR_OK) {
+        aResult = addr;
+    } else if(err == ERR_INPROGRESS) {
+        waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
+        clearStatusBits(WIFI_DNS_DONE_BIT);
+        if (arg.result == 1)
+            aResult = arg.ip_addr;
+    }
+    setStatusBits(WIFI_DNS_IDLE_BIT);
+    return (uint32_t)err == ERR_OK || (err == ERR_INPROGRESS && arg.result == 1);
 }
 
 IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {

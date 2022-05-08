@@ -24,6 +24,7 @@
 #include "Arduino.h"
 #include "Client.h"
 #include <memory>
+#include "lwip/ip_addr.h"
 
 class WiFiClientSocketHandle;
 class WiFiClientRxBuffer;
@@ -49,6 +50,7 @@ public:
     WiFiClient();
     WiFiClient(int fd);
     ~WiFiClient();
+    int connect(ip_addr_t ip, uint16_t port, int32_t timeout);
     int connect(IPAddress ip, uint16_t port);
     int connect(IPAddress ip, uint16_t port, int32_t timeout);
     int connect(const char *host, uint16_t port);
