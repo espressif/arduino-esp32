@@ -152,6 +152,11 @@ typedef enum {
 	WIFI_TX_ANT_AUTO
 } wifi_tx_ant_t;
 
+struct dns_api_msg {
+    ip_addr_t ip_addr;
+    int result;
+};
+
 class WiFiGenericClass
 {
   public:
@@ -213,6 +218,7 @@ class WiFiGenericClass
 
   public:
     static int hostByName(const char *aHostname, IPAddress &aResult);
+    static int hostByName6(const char *aHostname, ip_addr_t& aResult);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);

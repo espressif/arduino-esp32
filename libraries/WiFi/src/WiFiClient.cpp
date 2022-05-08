@@ -215,22 +215,34 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
     return connect(ip,port,_timeout);
 }
+
 int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 {
+    struct sockaddr_storage serveraddr;
     _timeout = timeout;
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd = -1;
+
+    if (ip.type() == IPv6) {
+        struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
+        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
+        sockfd = socket(AF_INET6, SOCK_STREAM, 0);
+        tmpaddr->sin6_family = AF_INET6;
+        memcpy(tmpaddr->sin6_addr.un.u8_addr, &ip[0], 16);
+        tmpaddr->sin6_port = htons(port);
+    } else {
+        struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
+        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        tmpaddr->sin_family = AF_INET;
+        tmpaddr->sin_addr.s_addr = ip;
+        tmpaddr->sin_port = htons(port);
+    }
     if (sockfd < 0) {
         log_e("socket: %d", errno);
         return 0;
     }
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
 
-    uint32_t ip_addr = ip;
-    struct sockaddr_in serveraddr;
-    memset((char *) &serveraddr, 0, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    memcpy((void *)&serveraddr.sin_addr.s_addr, (const void *)(&ip_addr), 4);
-    serveraddr.sin_port = htons(port);
     fd_set fdset;
     struct timeval tv;
     FD_ZERO(&fdset);
@@ -299,6 +311,19 @@ int WiFiClient::connect(const char *host, uint16_t port)
 
 int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
 {
+    if (WiFiGenericClass::getStatusBits() & WIFI_WANT_IP6_BIT) {
+        ip_addr_t srv6;
+        if(!WiFiGenericClass::hostByName6(host, srv6)){
+            return 0;
+        }
+        if (srv6.type == IPADDR_TYPE_V4) {
+            IPAddress ip(srv6.u_addr.ip4.addr);
+            return connect(ip, port, timeout);
+        } else {
+            IPAddress ip(IPv6, (uint8_t*)&srv6.u_addr.ip6.addr[0]);
+            return connect(ip, port, timeout);
+        }
+    }
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
