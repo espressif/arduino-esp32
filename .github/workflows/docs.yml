@@ -54,6 +54,9 @@ jobs:
       env:
         DOCS_BUILD_DIR: "./docs/_build/"
         DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/arduino-esp32"
+        DOCS_DEPLOY_SERVER: "$DOCS_SERVER"
+        DOCS_DEPLOY_SERVER_USER: "$DOCS_PROD_SERVER_USER"
+        DOCS_DEPLOY_PRIVATEKEY: "$DOCS_DEPLOY_KEY"
       run: |
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
         PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
