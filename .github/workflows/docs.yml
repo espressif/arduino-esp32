@@ -51,6 +51,8 @@ jobs:
       with:
         python-version: '3.x'
     - name: Deploy
+      env:
+        DOCS_BUILD_DIR: "${./docs/_build/"
       run: |
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
         PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
@@ -58,3 +60,5 @@ jobs:
         PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
         cd ./docs && PATH=/home/runner/.local/bin:$PATH build-docs -l en
         PATH=/home/runner/.local/bin:$PATH deploy-docs
+
+
