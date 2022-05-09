@@ -16,7 +16,7 @@ on:
 jobs:
 
   build-docs:
-    name: Build ReadTheDocs
+    name: Build Docs
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,3 +36,24 @@ jobs:
         # Update the path to include them and run.
         PATH=/home/runner/.local/bin:$PATH pip3 install --user -r ./docs/requirements.txt
         cd ./docs && PATH=/home/runner/.local/bin:$PATH build-docs -l en
+
+  deploy-docs:
+    name: Deploy Docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Deploy
+      run: |
+        PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
+        PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
+        export GIT_VER=$(git describe --always)
+        PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
+        PATH=/home/runner/.local/bin:$PATH deploy-docs
