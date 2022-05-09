@@ -18,7 +18,7 @@
 
 void setup()
 {
-    bool err = ESP_FAIL;
+    bool err = false;
     Serial.begin(115200);
 
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
@@ -36,7 +36,7 @@ void setup()
      * https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html
      */
 
-    if(err == ESP_FAIL) {
+    if(err == false) {
         Serial.println("Dual Antenna configuration failed!");
     } else {
         Serial.println("Dual Antenna configuration successfuly done!");

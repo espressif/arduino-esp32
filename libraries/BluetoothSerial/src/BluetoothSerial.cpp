@@ -973,10 +973,12 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
     log_i("master : remoteAddress");
     xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
     if (channel > 0) {
+#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
         char bda_str[18];
         log_i("spp connect to remote %s channel %d",
             bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)),
             channel);
+#endif
         if(esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK ) {
 			log_e("spp connect failed");
 			return false;
