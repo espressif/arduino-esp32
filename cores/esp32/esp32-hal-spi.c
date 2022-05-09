@@ -1091,7 +1091,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
     if(!spi) {
         return;
     }
-	SPI_MUTEX_LOCK();
+    SPI_MUTEX_LOCK();
     spi->dev->clock.val = clockDiv;
     switch (dataMode) {
     case SPI_MODE1:
@@ -1142,7 +1142,7 @@ void spiSimpleTransaction(spi_t * spi)
     if(!spi) {
         return;
     }
-	SPI_MUTEX_LOCK();
+    SPI_MUTEX_LOCK();
 }
 
 void spiEndTransaction(spi_t * spi)

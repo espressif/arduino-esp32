@@ -41,11 +41,9 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_div(0)
     ,_freq(1000000)
     ,_inTransaction(false)
-    #if !CONFIG_DISABLE_HAL_LOCKS
+#if !CONFIG_DISABLE_HAL_LOCKS
     ,paramLock(NULL)
-    #endif
 {
-    #if !CONFIG_DISABLE_HAL_LOCKS
     if(paramLock==NULL){
         paramLock = xSemaphoreCreateMutex();
         if(paramLock==NULL){
@@ -53,18 +51,20 @@ SPIClass::SPIClass(uint8_t spi_bus)
             return;
         }
     }
-    #endif
 }
+#else
+{}
+#endif
 
 SPIClass::~SPIClass()
 {
     end();
-    #if !CONFIG_DISABLE_HAL_LOCKS
+#if !CONFIG_DISABLE_HAL_LOCKS
     if(paramLock!=NULL){
         vSemaphoreDelete(paramLock);
         paramLock = NULL;
     }
-    #endif
+#endif
 }
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -140,22 +140,22 @@ void SPIClass::setHwCs(bool use)
 void SPIClass::setFrequency(uint32_t freq)
 {
     SPI_PARAM_LOCK();
-	//check if last freq changed
+    //check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != freq || _div != cdiv) {
         _freq = freq;
         _div = spiFrequencyToClockDiv(_freq);
         spiSetClockDiv(_spi, _div);
     }
-	SPI_PARAM_UNLOCK();
+    SPI_PARAM_UNLOCK();
 }
 
 void SPIClass::setClockDivider(uint32_t clockDiv)
 {
     SPI_PARAM_LOCK();
-	_div = clockDiv;
+    _div = clockDiv;
     spiSetClockDiv(_spi, _div);
-	SPI_PARAM_UNLOCK();
+    SPI_PARAM_UNLOCK();
 }
 
 uint32_t SPIClass::getClockDivider()
@@ -176,7 +176,7 @@ void SPIClass::setBitOrder(uint8_t bitOrder)
 void SPIClass::beginTransaction(SPISettings settings)
 {
     SPI_PARAM_LOCK();
-	//check if last freq changed
+    //check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != settings._clock || _div != cdiv) {
         _freq = settings._clock;
@@ -191,7 +191,7 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
-	    SPI_PARAM_UNLOCK(); // <-- Im not sure should it be here or right after spiTransaction()
+        SPI_PARAM_UNLOCK(); // <-- Im not sure should it be here or right after spiTransaction()
     }
 }
 
