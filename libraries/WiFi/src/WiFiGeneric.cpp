@@ -151,7 +151,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
             lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
             lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
         }
-        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString(), IPAddress(lease.end_ip.addr).toString());
+        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
         err = tcpip_adapter_dhcps_option(
             (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
             (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
