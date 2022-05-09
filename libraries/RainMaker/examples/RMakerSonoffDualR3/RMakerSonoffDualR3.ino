@@ -50,6 +50,7 @@ void sysProvEvent(arduino_event_t *sys_event)
         Serial.printf("\nConnected to Wi-Fi!\n");
         digitalWrite(gpio_led, true);
         break;
+        default:;
     }
 }
 
