@@ -33,9 +33,10 @@ static const uint8_t D2 = 4;
 static const uint8_t D3 = 5;
 static const uint8_t D4 = 6;
 static const uint8_t D5 = 7;
-static const uint8_t D6 = 20;
-static const uint8_t D7 = 8;
-static const uint8_t D8 = 9;
-static const uint8_t D9 = 10;
+static const uint8_t D6 = 21;
+static const uint8_t D7 = 20;
+static const uint8_t D8 = 8;
+static const uint8_t D9 = 9;
+static const uint8_t D10 = 10;
 
 #endif /* Pins_Arduino_h */
