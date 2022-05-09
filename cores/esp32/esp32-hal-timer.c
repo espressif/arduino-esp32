@@ -47,7 +47,7 @@ typedef struct hw_timer_s
 
 // Works for all chips
 static hw_timer_t timer_dev[4] = {
-    {0,0}, {1,0},  {1,0},  {1,1}
+    {0,0}, {1,0},  {0,1},  {1,1}
 };
 
 // NOTE: (in IDF 5.0 there wont be need to know groups/numbers 
