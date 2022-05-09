@@ -52,7 +52,7 @@ jobs:
         python-version: '3.x'
     - name: Deploy
       env:
-        DOCS_BUILD_DIR: "${./docs/_build/"
+        DOCS_BUILD_DIR: "./docs/_build/"
       run: |
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
         PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
