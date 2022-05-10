@@ -4314,6 +4314,28 @@ nina_w10.menu.UploadSpeed.460800.upload.speed=460800
 nina_w10.menu.UploadSpeed.512000.windows=512000
 nina_w10.menu.UploadSpeed.512000.upload.speed=512000
 
+nina_w10.menu.FlashSize.2M=2MB (16Mb, NINA-W101/W102)
+nina_w10.menu.FlashSize.2M.build.flash_size=2MB
+nina_w10.menu.FlashSize.4M=4MB (32Mb, NINA-W106-00B)
+nina_w10.menu.FlashSize.4M.build.flash_size=4MB
+nina_w10.menu.FlashSize.8M=8MB (64Mb, NINA-W106-10B)
+nina_w10.menu.FlashSize.8M.build.flash_size=8MB
+
+nina_w10.menu.FlashFreq.80=80MHz
+nina_w10.menu.FlashFreq.80.build.flash_freq=80m
+nina_w10.menu.FlashFreq.40=40MHz
+nina_w10.menu.FlashFreq.40.build.flash_freq=40m
+
+nina_w10.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+nina_w10.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+nina_w10.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+nina_w10.menu.PartitionScheme.default=Default (3MB No OTA/1MB SPIFFS)
+nina_w10.menu.PartitionScheme.default.build.partitions=huge_app
+nina_w10.menu.PartitionScheme.default.upload.maximum_size=3145728
+nina_w10.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+nina_w10.menu.PartitionScheme.no_ota.build.partitions=no_ota
+nina_w10.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+
 nina_w10.menu.DebugLevel.none=None
 nina_w10.menu.DebugLevel.none.build.code_debug=0
 nina_w10.menu.DebugLevel.error=Error
