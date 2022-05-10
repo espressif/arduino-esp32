@@ -14406,7 +14406,7 @@ SEEED_XIAO_WIFI.build.variant=SEEED_XIAO_WIFI
 SEEED_XIAO_WIFI.build.board=SEEED_XIAO_WIFI
 SEEED_XIAO_WIFI.build.bootloader_addr=0x0
 
-SEEED_XIAO_WIFI.build.cdc_on_boot=0
+SEEED_XIAO_WIFI.build.cdc_on_boot=1
 SEEED_XIAO_WIFI.build.f_cpu=160000000L
 SEEED_XIAO_WIFI.build.flash_size=4MB
 SEEED_XIAO_WIFI.build.flash_freq=80m
