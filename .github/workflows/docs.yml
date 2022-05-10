@@ -56,7 +56,8 @@ jobs:
         DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
         DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_PROD_SERVER }}
         DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PROD_SERVER_USER }}
-        DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/arduino-esp32"
+        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
+        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
       run: |
         PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
@@ -84,7 +85,8 @@ jobs:
         DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
         DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_PREV_SERVER }}
         DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PREV_SERVER_USER }}
-        DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/preview/arduino-esp32"
+        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PREV_PATH }}
+        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_PREV_URL }}
       run: |
         PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
