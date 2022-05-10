@@ -95,6 +95,8 @@ set(LIBRARY_SRCS
   libraries/RainMaker/src/RMakerParam.cpp
   libraries/RainMaker/src/RMakerDevice.cpp
   libraries/RainMaker/src/RMakerType.cpp
+  libraries/RainMaker/src/RMakerQR.cpp
+  libraries/RainMaker/src/RMakerUtils.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
