@@ -1,4 +1,4 @@
-name: ReadTheDocs CI
+name: Docs CI
 
 on:
   push:
@@ -50,14 +50,45 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    - name: Deploy
+    - name: Deploy Production
       env:
         DOCS_BUILD_DIR: "./docs/_build/"
+        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+        DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_PROD_SERVER }}
+        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PROD_SERVER_USER }}
         DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/arduino-esp32"
       run: |
+        PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
         PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
         PATH=/home/runner/.local/bin:$PATH export GIT_VER=$(git describe --always)
+        cd ./docs && PATH=/home/runner/.local/bin:$PATH build-docs -l en
+        PATH=/home/runner/.local/bin:$PATH deploy-docs
+
+  deploy-preview-docs:
+    name: Deploy Preview Docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Deploy Preview
+      env:
+        DOCS_BUILD_DIR: "./docs/_build/"
+        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+        DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_PREV_SERVER }}
+        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PREV_SERVER_USER }}
+        DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/preview/arduino-esp32"
+      run: |
         PATH=/home/runner/.local/bin:$PATH pip install -r ./docs/requirements.txt --prefer-binary
+        PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
+        PATH=/home/runner/.local/bin:$PATH add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
+        PATH=/home/runner/.local/bin:$PATH export GIT_VER=$(git describe --always)
         cd ./docs && PATH=/home/runner/.local/bin:$PATH build-docs -l en
         PATH=/home/runner/.local/bin:$PATH deploy-docs
