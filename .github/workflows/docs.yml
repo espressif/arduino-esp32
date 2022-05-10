@@ -52,11 +52,7 @@ jobs:
         python-version: '3.x'
     - name: Deploy
       env:
-        TYPE: "production"
-        DOCS_DEPLOY_PRIVATEKEY: "$DOCS_PROD_DEPLOY_KEY"
-        DOCS_DEPLOY_SERVER: "$DOCS_PROD_SERVER"
-        DOCS_DEPLOY_SERVER_USER: "$DOCS_PROD_SERVER_USER"
-        DOCS_DEPLOY_PATH: "$DOCS_PROD_PATH"
+        DOCS_BUILD_DIR: "./docs/_build/"
         DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/arduino-esp32"
       run: |
         PATH=/home/runner/.local/bin:$PATH source ./docs/utils.sh
