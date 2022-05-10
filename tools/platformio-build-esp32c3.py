@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join
+from os.path import abspath, basename, isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -312,7 +312,8 @@ env.Append(
         ("ARDUINO", 10812),
         ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', "")),
-        "ARDUINO_PARTITION_%s" % env.BoardConfig().get("build.partitions", "default.csv").replace(".csv", "")
+        "ARDUINO_PARTITION_%s" % basename(env.BoardConfig().get(
+            "build.partitions", "default.csv")).replace(".csv", "").replace("-", "_")
     ],
 
     LIBSOURCE_DIRS=[

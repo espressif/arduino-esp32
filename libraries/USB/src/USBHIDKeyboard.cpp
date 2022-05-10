@@ -274,7 +274,6 @@ size_t USBHIDKeyboard::releaseRaw(uint8_t k)
 // call release(), releaseAll(), or otherwise clear the report and resend.
 size_t USBHIDKeyboard::press(uint8_t k) 
 {
-    uint8_t i;
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
     } else if (k >= 0x80) {  // it's a modifier key
@@ -298,7 +297,6 @@ size_t USBHIDKeyboard::press(uint8_t k)
 // it shouldn't be repeated any more.
 size_t USBHIDKeyboard::release(uint8_t k) 
 {
-    uint8_t i;
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
     } else if (k >= 0x80) {  // it's a modifier key

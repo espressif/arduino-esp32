@@ -2287,7 +2287,7 @@ tinys3.build.cdc_on_boot=0
 tinys3.build.msc_on_boot=0
 tinys3.build.dfu_on_boot=0
 tinys3.build.f_cpu=240000000L
-tinys3.build.flash_size=4MB
+tinys3.build.flash_size=8MB
 tinys3.build.flash_freq=80m
 tinys3.build.flash_mode=dio
 tinys3.build.boot=qio
@@ -2295,6 +2295,9 @@ tinys3.build.partitions=default
 tinys3.build.defines=
 tinys3.build.loop_core=
 tinys3.build.event_core=
+tinys3.build.flash_type=qspi
+tinys3.build.psram_type=qspi
+tinys3.build.memory_type=qspi_qspi
 
 tinys3.menu.LoopCore.1=Core 1
 tinys3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2306,11 +2309,10 @@ tinys3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 tinys3.menu.EventsCore.0=Core 0
 tinys3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
+tinys3.menu.USBMode.default=USB-OTG (TinyUSB)
+tinys3.menu.USBMode.default.build.usb_mode=0
 tinys3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 tinys3.menu.USBMode.hwcdc.build.usb_mode=1
-tinys3.menu.USBMode.default=USB-OTG
-tinys3.menu.USBMode.default.build.usb_mode=0
-
 
 tinys3.menu.CDCOnBoot.cdc=Enabled
 tinys3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -2327,10 +2329,10 @@ tinys3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 tinys3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 tinys3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-tinys3.menu.UploadMode.cdc=Internal USB
+tinys3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 tinys3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 tinys3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-tinys3.menu.UploadMode.default=UART0
+tinys3.menu.UploadMode.default=UART0 / Hardware CDC
 tinys3.menu.UploadMode.default.upload.use_1200bps_touch=false
 tinys3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -2339,39 +2341,14 @@ tinys3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 tinys3.menu.PSRAM.disabled=Disabled
 tinys3.menu.PSRAM.disabled.build.defines=
 
-tinys3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+tinys3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 tinys3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 tinys3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-tinys3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-tinys3.menu.PartitionScheme.default.build.partitions=default
-tinys3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-tinys3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-tinys3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-tinys3.menu.PartitionScheme.minimal.build.partitions=minimal
-tinys3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-tinys3.menu.PartitionScheme.no_ota.build.partitions=no_ota
-tinys3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-tinys3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-tinys3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-tinys3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-tinys3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-tinys3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-tinys3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-tinys3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-tinys3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-tinys3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-tinys3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-tinys3.menu.PartitionScheme.huge_app.build.partitions=huge_app
-tinys3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-tinys3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-tinys3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-tinys3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-tinys3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-tinys3.menu.PartitionScheme.fatflash.build.partitions=ffat
-tinys3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-tinys3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-tinys3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-tinys3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+tinys3.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/3.7MB FFAT)
+tinys3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+tinys3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+tinys3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+tinys3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
 
 tinys3.menu.CPUFreq.240=240MHz (WiFi)
 tinys3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -2392,28 +2369,6 @@ tinys3.menu.FlashMode.qio.build.boot=qio
 tinys3.menu.FlashMode.dio=DIO
 tinys3.menu.FlashMode.dio.build.flash_mode=dio
 tinys3.menu.FlashMode.dio.build.boot=dio
-tinys3.menu.FlashMode.qout=QOUT
-tinys3.menu.FlashMode.qout.build.flash_mode=dout
-tinys3.menu.FlashMode.qout.build.boot=qout
-tinys3.menu.FlashMode.dout=DOUT
-tinys3.menu.FlashMode.dout.build.flash_mode=dout
-tinys3.menu.FlashMode.dout.build.boot=dout
-
-tinys3.menu.FlashFreq.80=80MHz
-tinys3.menu.FlashFreq.80.build.flash_freq=80m
-tinys3.menu.FlashFreq.40=40MHz
-tinys3.menu.FlashFreq.40.build.flash_freq=40m
-
-tinys3.menu.FlashSize.8M=8MB (64Mb)
-tinys3.menu.FlashSize.8M.build.flash_size=8MB
-tinys3.menu.FlashSize.8M.build.partitions=default_8MB
-tinys3.menu.FlashSize.4M=4MB (32Mb)
-tinys3.menu.FlashSize.4M.build.flash_size=4MB
-tinys3.menu.FlashSize.2M=2MB (16Mb)
-tinys3.menu.FlashSize.2M.build.flash_size=2MB
-tinys3.menu.FlashSize.2M.build.partitions=minimal
-tinys3.menu.FlashSize.16M=16MB (128Mb)
-tinys3.menu.FlashSize.16M.build.flash_size=16MB
 
 tinys3.menu.UploadSpeed.921600=921600
 tinys3.menu.UploadSpeed.921600.upload.speed=921600
@@ -2479,7 +2434,7 @@ pros3.build.cdc_on_boot=0
 pros3.build.msc_on_boot=0
 pros3.build.dfu_on_boot=0
 pros3.build.f_cpu=240000000L
-pros3.build.flash_size=4MB
+pros3.build.flash_size=16MB
 pros3.build.flash_freq=80m
 pros3.build.flash_mode=dio
 pros3.build.boot=qio
@@ -2487,6 +2442,9 @@ pros3.build.partitions=default
 pros3.build.defines=
 pros3.build.loop_core=
 pros3.build.event_core=
+pros3.build.flash_type=qspi
+pros3.build.psram_type=qspi
+pros3.build.memory_type=qspi_qspi
 
 pros3.menu.LoopCore.1=Core 1
 pros3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2498,11 +2456,10 @@ pros3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 pros3.menu.EventsCore.0=Core 0
 pros3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
+pros3.menu.USBMode.default=USB-OTG (TinyUSB)
+pros3.menu.USBMode.default.build.usb_mode=0
 pros3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 pros3.menu.USBMode.hwcdc.build.usb_mode=1
-pros3.menu.USBMode.default=USB-OTG
-pros3.menu.USBMode.default.build.usb_mode=0
-
 
 pros3.menu.CDCOnBoot.cdc=Enabled
 pros3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -2519,10 +2476,10 @@ pros3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 pros3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 pros3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-pros3.menu.UploadMode.cdc=Internal USB
+pros3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 pros3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 pros3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-pros3.menu.UploadMode.default=UART0
+pros3.menu.UploadMode.default=UART0 / Hardware CDC
 pros3.menu.UploadMode.default.upload.use_1200bps_touch=false
 pros3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -2531,39 +2488,23 @@ pros3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 pros3.menu.PSRAM.disabled=Disabled
 pros3.menu.PSRAM.disabled.build.defines=
 
-pros3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-pros3.menu.PartitionScheme.fatflash.build.partitions=ffat
-pros3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-pros3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
-pros3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-pros3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-pros3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-pros3.menu.PartitionScheme.default.build.partitions=default
-pros3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-pros3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-pros3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-pros3.menu.PartitionScheme.minimal.build.partitions=minimal
-pros3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-pros3.menu.PartitionScheme.no_ota.build.partitions=no_ota
-pros3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-pros3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-pros3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-pros3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-pros3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-pros3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-pros3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-pros3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-pros3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-pros3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-pros3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-pros3.menu.PartitionScheme.huge_app.build.partitions=huge_app
-pros3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-pros3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-pros3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-pros3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-pros3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+pros3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+pros3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+pros3.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+pros3.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/12MB FFAT)
+pros3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+pros3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+pros3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+pros3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+pros3.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+pros3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+pros3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+pros3.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
 pros3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 pros3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+pros3.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+pros3.menu.PartitionScheme.fatflash.build.partitions=ffat
+pros3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 
 pros3.menu.CPUFreq.240=240MHz (WiFi)
 pros3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -2584,28 +2525,6 @@ pros3.menu.FlashMode.qio.build.boot=qio
 pros3.menu.FlashMode.dio=DIO
 pros3.menu.FlashMode.dio.build.flash_mode=dio
 pros3.menu.FlashMode.dio.build.boot=dio
-pros3.menu.FlashMode.qout=QOUT
-pros3.menu.FlashMode.qout.build.flash_mode=dout
-pros3.menu.FlashMode.qout.build.boot=qout
-pros3.menu.FlashMode.dout=DOUT
-pros3.menu.FlashMode.dout.build.flash_mode=dout
-pros3.menu.FlashMode.dout.build.boot=dout
-
-pros3.menu.FlashFreq.80=80MHz
-pros3.menu.FlashFreq.80.build.flash_freq=80m
-pros3.menu.FlashFreq.40=40MHz
-pros3.menu.FlashFreq.40.build.flash_freq=40m
-
-pros3.menu.FlashSize.16M=16MB (128Mb)
-pros3.menu.FlashSize.16M.build.flash_size=16MB
-pros3.menu.FlashSize.8M=8MB (64Mb)
-pros3.menu.FlashSize.8M.build.flash_size=8MB
-pros3.menu.FlashSize.8M.build.partitions=default_8MB
-pros3.menu.FlashSize.4M=4MB (32Mb)
-pros3.menu.FlashSize.4M.build.flash_size=4MB
-pros3.menu.FlashSize.2M=2MB (16Mb)
-pros3.menu.FlashSize.2M.build.flash_size=2MB
-pros3.menu.FlashSize.2M.build.partitions=minimal
 
 pros3.menu.UploadSpeed.921600=921600
 pros3.menu.UploadSpeed.921600.upload.speed=921600
@@ -2671,7 +2590,7 @@ feathers3.build.cdc_on_boot=0
 feathers3.build.msc_on_boot=0
 feathers3.build.dfu_on_boot=0
 feathers3.build.f_cpu=240000000L
-feathers3.build.flash_size=4MB
+feathers3.build.flash_size=16MB
 feathers3.build.flash_freq=80m
 feathers3.build.flash_mode=dio
 feathers3.build.boot=qio
@@ -2679,6 +2598,9 @@ feathers3.build.partitions=default
 feathers3.build.defines=
 feathers3.build.loop_core=
 feathers3.build.event_core=
+feathers3.build.flash_type=qspi
+feathers3.build.psram_type=qspi
+feathers3.build.memory_type=qspi_qspi
 
 feathers3.menu.LoopCore.1=Core 1
 feathers3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2690,11 +2612,10 @@ feathers3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 feathers3.menu.EventsCore.0=Core 0
 feathers3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
+feathers3.menu.USBMode.default=USB-OTG (TinyUSB)
+feathers3.menu.USBMode.default.build.usb_mode=0
 feathers3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 feathers3.menu.USBMode.hwcdc.build.usb_mode=1
-feathers3.menu.USBMode.default=USB-OTG
-feathers3.menu.USBMode.default.build.usb_mode=0
-
 
 feathers3.menu.CDCOnBoot.cdc=Enabled
 feathers3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -2711,10 +2632,10 @@ feathers3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 feathers3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 feathers3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-feathers3.menu.UploadMode.cdc=Internal USB
+feathers3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 feathers3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 feathers3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-feathers3.menu.UploadMode.default=UART0
+feathers3.menu.UploadMode.default=UART0 / Hardware CDC
 feathers3.menu.UploadMode.default.upload.use_1200bps_touch=false
 feathers3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -2723,39 +2644,23 @@ feathers3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 feathers3.menu.PSRAM.disabled=Disabled
 feathers3.menu.PSRAM.disabled.build.defines=
 
-feathers3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-feathers3.menu.PartitionScheme.fatflash.build.partitions=ffat
-feathers3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-feathers3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
-feathers3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-feathers3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-feathers3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-feathers3.menu.PartitionScheme.default.build.partitions=default
-feathers3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-feathers3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-feathers3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-feathers3.menu.PartitionScheme.minimal.build.partitions=minimal
-feathers3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-feathers3.menu.PartitionScheme.no_ota.build.partitions=no_ota
-feathers3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-feathers3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-feathers3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-feathers3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-feathers3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-feathers3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-feathers3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-feathers3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-feathers3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-feathers3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-feathers3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-feathers3.menu.PartitionScheme.huge_app.build.partitions=huge_app
-feathers3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-feathers3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-feathers3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-feathers3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-feathers3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+feathers3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+feathers3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+feathers3.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+feathers3.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/12MB FFAT)
+feathers3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+feathers3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+feathers3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+feathers3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+feathers3.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+feathers3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+feathers3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+feathers3.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
 feathers3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 feathers3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+feathers3.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+feathers3.menu.PartitionScheme.fatflash.build.partitions=ffat
+feathers3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 
 feathers3.menu.CPUFreq.240=240MHz (WiFi)
 feathers3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -2776,28 +2681,6 @@ feathers3.menu.FlashMode.qio.build.boot=qio
 feathers3.menu.FlashMode.dio=DIO
 feathers3.menu.FlashMode.dio.build.flash_mode=dio
 feathers3.menu.FlashMode.dio.build.boot=dio
-feathers3.menu.FlashMode.qout=QOUT
-feathers3.menu.FlashMode.qout.build.flash_mode=dout
-feathers3.menu.FlashMode.qout.build.boot=qout
-feathers3.menu.FlashMode.dout=DOUT
-feathers3.menu.FlashMode.dout.build.flash_mode=dout
-feathers3.menu.FlashMode.dout.build.boot=dout
-
-feathers3.menu.FlashFreq.80=80MHz
-feathers3.menu.FlashFreq.80.build.flash_freq=80m
-feathers3.menu.FlashFreq.40=40MHz
-feathers3.menu.FlashFreq.40.build.flash_freq=40m
-
-feathers3.menu.FlashSize.16M=16MB (128Mb)
-feathers3.menu.FlashSize.16M.build.flash_size=16MB
-feathers3.menu.FlashSize.8M=8MB (64Mb)
-feathers3.menu.FlashSize.8M.build.flash_size=8MB
-feathers3.menu.FlashSize.8M.build.partitions=default_8MB
-feathers3.menu.FlashSize.4M=4MB (32Mb)
-feathers3.menu.FlashSize.4M.build.flash_size=4MB
-feathers3.menu.FlashSize.2M=2MB (16Mb)
-feathers3.menu.FlashSize.2M.build.flash_size=2MB
-feathers3.menu.FlashSize.2M.build.partitions=minimal
 
 feathers3.menu.UploadSpeed.921600=921600
 feathers3.menu.UploadSpeed.921600.upload.speed=921600
@@ -8083,7 +7966,7 @@ esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
 esp32doit-espduino.name=DOIT ESPduino32
 
-esp32doit-espduino.upload.tool=esptool
+esp32doit-espduino.upload.tool=esptool_py
 esp32doit-espduino.upload.maximum_size=1310720
 esp32doit-espduino.upload.maximum_data_size=327680
 esp32doit-espduino.upload.wait_for_upload_port=true
@@ -14492,64 +14375,3 @@ AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose=Verbose
 AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
 
 #############################################################
-
-esp32-trueverit-iot-driver-mkiii.name=Trueverit ESP32 Universal IoT Driver MK III
-
-esp32-trueverit-iot-driver-mkiii.bootloader.tool=esptool_py
-esp32-trueverit-iot-driver-mkiii.bootloader.tool.default=esptool_py
-
-esp32-trueverit-iot-driver-mkiii.upload.tool=esptool_py
-esp32-trueverit-iot-driver-mkiii.upload.tool.default=esptool_py
-esp32-trueverit-iot-driver-mkiii.upload.tool.network=esp_ota
-
-esp32-trueverit-iot-driver-mkiii.upload.maximum_size=1310720
-esp32-trueverit-iot-driver-mkiii.upload.maximum_data_size=327680
-esp32-trueverit-iot-driver-mkiii.upload.flags=
-esp32-trueverit-iot-driver-mkiii.upload.extra_flags=
-
-esp32-trueverit-iot-driver-mkiii.serial.disableDTR=true
-esp32-trueverit-iot-driver-mkiii.serial.disableRTS=true
-
-esp32-trueverit-iot-driver-mkiii.build.tarch=xtensa
-esp32-trueverit-iot-driver-mkiii.build.bootloader_addr=0x1000
-esp32-trueverit-iot-driver-mkiii.build.target=esp32
-esp32-trueverit-iot-driver-mkiii.build.mcu=esp32
-esp32-trueverit-iot-driver-mkiii.build.core=esp32
-esp32-trueverit-iot-driver-mkiii.build.variant=esp32-trueverit-iot-driver-mkiii
-esp32-trueverit-iot-driver-mkiii.build.board=Trueverit_ESP32_Universal_IoT_Driver_MK_III
-
-esp32-trueverit-iot-driver-mkiii.build.f_cpu=240000000L
-esp32-trueverit-iot-driver-mkiii.build.flash_mode=dio
-esp32-trueverit-iot-driver-mkiii.build.flash_size=4MB
-esp32-trueverit-iot-driver-mkiii.build.boot=dio
-esp32-trueverit-iot-driver-mkiii.build.partitions=default
-esp32-trueverit-iot-driver-mkiii.build.defines=
-
-esp32-trueverit-iot-driver-mkiii.menu.FlashFreq.80=80MHz
-esp32-trueverit-iot-driver-mkiii.menu.FlashFreq.80.build.flash_freq=80m
-esp32-trueverit-iot-driver-mkiii.menu.FlashFreq.40=40MHz
-esp32-trueverit-iot-driver-mkiii.menu.FlashFreq.40.build.flash_freq=40m
-
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.115200=115200
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.115200.upload.speed=115200
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.256000.windows=256000
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.256000.upload.speed=256000
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.230400.windows.upload.speed=256000
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.230400=230400
-esp32-trueverit-iot-driver-mkiii.menu.UploadSpeed.230400.upload.speed=230400
-
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.none=None
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.none.build.code_debug=0
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.error=Error
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.error.build.code_debug=1
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.warn=Warn
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.warn.build.code_debug=2
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.info=Info
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.info.build.code_debug=3
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.debug=Debug
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.debug.build.code_debug=4
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.verbose=Verbose
-esp32-trueverit-iot-driver-mkiii.menu.DebugLevel.verbose.build.code_debug=5
-
-##############################################################
-

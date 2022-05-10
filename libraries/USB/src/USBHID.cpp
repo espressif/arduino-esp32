@@ -42,7 +42,9 @@ static bool tinyusb_hid_is_initialized = false;
 static uint8_t tinyusb_loaded_hid_devices_num = 0;
 static uint16_t tinyusb_hid_device_descriptor_len = 0;
 static uint8_t * tinyusb_hid_device_descriptor = NULL;
-static const char * tinyusb_hid_device_report_types[4] = {"INVALID", "INPUT", "OUTPUT", "FEATURE"};
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+    static const char * tinyusb_hid_device_report_types[4] = {"INVALID", "INPUT", "OUTPUT", "FEATURE"};
+#endif
 
 static bool tinyusb_enable_hid_device(uint16_t descriptor_len, USBHIDDevice * device){
     if(tinyusb_hid_is_initialized){
