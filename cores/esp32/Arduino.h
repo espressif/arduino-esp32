@@ -70,11 +70,11 @@
 #endif
 
 // can't define max() / min() because of conflicts with C++
-#define _min(a,b) ((a)<(b)?(a):(b))
+#define _min(a,b) ((a)<(b)?(a):(b))  
 #define _max(a,b) ((a)>(b)?(a):(b))
-//#define abs(x) ((x)>0?(x):-(x))  // abs() comes from stdlib
+#define _abs(x) ((x)>0?(x):-(x))  // abs() comes from STL
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define _round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))  // round() comes from STL
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
