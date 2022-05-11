@@ -921,6 +921,8 @@ bool BluetoothSerial::setPin(const char *pin) {
 
 bool BluetoothSerial::connect(String remoteName)
 {
+    bool retval = false;
+
     if (!isReady(true, READY_TIMEOUT)) return false;
     if (remoteName && remoteName.length() < 1) {
         log_e("No remote name is provided");
@@ -942,9 +944,12 @@ bool BluetoothSerial::connect(String remoteName)
 #endif
     xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
     if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
-        return waitForConnect(SCAN_TIMEOUT);
+        retval = waitForConnect(SCAN_TIMEOUT);
     }
-    return false;
+    if (retval == false) {
+      _isRemoteAddressSet = false;
+    }
+    return retval;
 }
 
 /**
@@ -958,6 +963,7 @@ bool BluetoothSerial::connect(String remoteName)
  */
 bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_t sec_mask, esp_spp_role_t role)
 {
+    bool retval = false;
     if (!isReady(true, READY_TIMEOUT)) return false;
     if (!remoteAddress) {
         log_e("No remote address is provided");
@@ -981,10 +987,10 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
 #endif
         if(esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK ) {
 			log_e("spp connect failed");
-			return false;
-		}
-        bool rc=waitForConnect(READY_TIMEOUT);
-        if(rc) {
+      retval = false;
+    } else {
+      retval = waitForConnect(READY_TIMEOUT);
+      if(retval) {
             log_i("connected");
         } else {
             if(this->isClosed()) {
@@ -993,12 +999,15 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
                 log_e("connect timed out after %dms", READY_TIMEOUT);
             }
         }
-        return rc;
     }
-    if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
-        return waitForConnect(READY_TIMEOUT);
+  } else if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
+    retval = waitForConnect(READY_TIMEOUT);
+  }
+
+  if (!retval) {
+    _isRemoteAddressSet = false;
     }
-    return false;
+    return retval;
 }
 
 bool BluetoothSerial::connect()
