@@ -30,7 +30,7 @@
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 
-void print_reset_reason(RESET_REASON reason)
+void print_reset_reason(int reason)
 {
   switch ( reason)
   {
@@ -53,7 +53,7 @@ void print_reset_reason(RESET_REASON reason)
   }
 }
 
-void verbose_print_reset_reason(RESET_REASON reason)
+void verbose_print_reset_reason(int reason)
 {
   switch ( reason)
   {

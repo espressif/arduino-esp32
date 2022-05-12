@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include "pins_arduino.h"
 #include "esp32-hal-spi.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #define SPI_HAS_TRANSACTION
 
@@ -50,10 +52,14 @@ private:
     uint32_t _div;
     uint32_t _freq;
     bool _inTransaction;
+#if !CONFIG_DISABLE_HAL_LOCKS
+    SemaphoreHandle_t paramLock=NULL;
+#endif
     void writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat);
 
 public:
     SPIClass(uint8_t spi_bus=HSPI);
+    ~SPIClass();
     void begin(int8_t sck=-1, int8_t miso=-1, int8_t mosi=-1, int8_t ss=-1);
     void end();
 

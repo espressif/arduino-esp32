@@ -151,7 +151,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
             lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
             lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
         }
-        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString(), IPAddress(lease.end_ip.addr).toString());
+        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
         err = tcpip_adapter_dhcps_option(
             (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
             (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
@@ -195,6 +195,7 @@ esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IP
 	return ESP_OK;
 }
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 static const char * auth_mode_str(int authmode)
 {
     switch (authmode) {
@@ -221,6 +222,7 @@ static const char * auth_mode_str(int authmode)
     }
 	return ("UNKNOWN");
 }
+#endif
 
 static char default_hostname[32] = {0,};
 static const char * get_esp_netif_hostname(){
@@ -286,24 +288,32 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	log_v("STA Stopped");
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_STOP;
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_AUTHMODE_CHANGE) {
-    	wifi_event_sta_authmode_change_t * event = (wifi_event_sta_authmode_change_t*)event_data;
-    	log_v("STA Auth Mode Changed: From: %s, To: %s", auth_mode_str(event->old_mode), auth_mode_str(event->new_mode));
+    	#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_sta_authmode_change_t * event = (wifi_event_sta_authmode_change_t*)event_data;
+    	    log_v("STA Auth Mode Changed: From: %s, To: %s", auth_mode_str(event->old_mode), auth_mode_str(event->new_mode));
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE;
     	memcpy(&arduino_event.event_info.wifi_sta_authmode_change, event_data, sizeof(wifi_event_sta_authmode_change_t));
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED) {
-    	wifi_event_sta_connected_t * event = (wifi_event_sta_connected_t*)event_data;
-    	log_v("STA Connected: SSID: %s, BSSID: " MACSTR ", Channel: %u, Auth: %s", event->ssid, MAC2STR(event->bssid), event->channel, auth_mode_str(event->authmode));
+    	#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_sta_connected_t * event = (wifi_event_sta_connected_t*)event_data;
+    	    log_v("STA Connected: SSID: %s, BSSID: " MACSTR ", Channel: %u, Auth: %s", event->ssid, MAC2STR(event->bssid), event->channel, auth_mode_str(event->authmode));
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_CONNECTED;
     	memcpy(&arduino_event.event_info.wifi_sta_connected, event_data, sizeof(wifi_event_sta_connected_t));
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-    	wifi_event_sta_disconnected_t * event = (wifi_event_sta_disconnected_t*)event_data;
-    	log_v("STA Disconnected: SSID: %s, BSSID: " MACSTR ", Reason: %u", event->ssid, MAC2STR(event->bssid), event->reason);
+    	#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_sta_disconnected_t * event = (wifi_event_sta_disconnected_t*)event_data;
+    	    log_v("STA Disconnected: SSID: %s, BSSID: " MACSTR ", Reason: %u", event->ssid, MAC2STR(event->bssid), event->reason);
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_DISCONNECTED;
     	memcpy(&arduino_event.event_info.wifi_sta_disconnected, event_data, sizeof(wifi_event_sta_disconnected_t));
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        log_v("STA Got %sIP:" IPSTR, event->ip_changed?"New ":"Same ", IP2STR(&event->ip_info.ip));
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+            log_v("STA Got %sIP:" IPSTR, event->ip_changed?"New ":"Same ", IP2STR(&event->ip_info.ip));
+    	#endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
     	memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_LOST_IP) {
     	log_v("STA IP Lost");
@@ -313,8 +323,10 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 	 * SCAN
 	 * */
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
-    	wifi_event_sta_scan_done_t * event = (wifi_event_sta_scan_done_t*)event_data;
-    	log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+    	   wifi_event_sta_scan_done_t * event = (wifi_event_sta_scan_done_t*)event_data;
+    	   log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
     	memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
 
@@ -328,24 +340,32 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 		log_v("AP Stopped");
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STOP;
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_PROBEREQRECVED) {
-		wifi_event_ap_probe_req_rx_t * event = (wifi_event_ap_probe_req_rx_t*)event_data;
-		log_v("AP Probe Request: RSSI: %d, MAC: " MACSTR, event->rssi, MAC2STR(event->mac));
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED;
+		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_ap_probe_req_rx_t * event = (wifi_event_ap_probe_req_rx_t*)event_data;
+		    log_v("AP Probe Request: RSSI: %d, MAC: " MACSTR, event->rssi, MAC2STR(event->mac));
+    	#endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED;
     	memcpy(&arduino_event.event_info.wifi_ap_probereqrecved, event_data, sizeof(wifi_event_ap_probe_req_rx_t));
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
-		wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-		log_v("AP Station Connected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STACONNECTED;
+		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+		    log_v("AP Station Connected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
+    	#endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STACONNECTED;
     	memcpy(&arduino_event.event_info.wifi_ap_staconnected, event_data, sizeof(wifi_event_ap_staconnected_t));
 	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-		wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-		log_v("AP Station Disconnected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
+		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+		    log_v("AP Station Disconnected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STADISCONNECTED;
     	memcpy(&arduino_event.event_info.wifi_ap_stadisconnected, event_data, sizeof(wifi_event_ap_stadisconnected_t));
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_AP_STAIPASSIGNED) {
-    	ip_event_ap_staipassigned_t * event = (ip_event_ap_staipassigned_t*)event_data;
-    	log_v("AP Station IP Assigned:" IPSTR, IP2STR(&event->ip));
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED;
+    	#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+           ip_event_ap_staipassigned_t * event = (ip_event_ap_staipassigned_t*)event_data;
+    	   log_v("AP Station IP Assigned:" IPSTR, IP2STR(&event->ip));
+    	#endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED;
     	memcpy(&arduino_event.event_info.wifi_ap_staipassigned, event_data, sizeof(ip_event_ap_staipassigned_t));
 
 	/*
@@ -353,7 +373,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 	 * */
 	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_CONNECTED) {
 		log_v("Ethernet Link Up");
-	    esp_eth_handle_t eth_handle = *(esp_eth_handle_t *)event_data;
     	arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
     	memcpy(&arduino_event.event_info.eth_connected, event_data, sizeof(esp_eth_handle_t));
 	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_DISCONNECTED) {
@@ -366,9 +385,11 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 		log_v("Ethernet Stopped");
     	arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_ETH_GOT_IP) {
-        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        log_v("Ethernet got %sip:" IPSTR, event->ip_changed?"new":"", IP2STR(&event->ip_info.ip));
-    	arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+            log_v("Ethernet got %sip:" IPSTR, event->ip_changed?"new":"", IP2STR(&event->ip_info.ip));
+    	#endif
+        arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
     	memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
 
 	/*
@@ -393,13 +414,11 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_SUCCESS) {
     	arduino_event.event_id = ARDUINO_EVENT_WPS_ER_SUCCESS;
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_FAILED) {
-    	wifi_event_sta_wps_fail_reason_t * event = (wifi_event_sta_wps_fail_reason_t*)event_data;
     	arduino_event.event_id = ARDUINO_EVENT_WPS_ER_FAILED;
     	memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_fail_reason_t));
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_TIMEOUT) {
     	arduino_event.event_id = ARDUINO_EVENT_WPS_ER_TIMEOUT;
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_PIN) {
-    	wifi_event_sta_wps_er_pin_t * event = (wifi_event_sta_wps_er_pin_t*)event_data;
     	arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PIN;
     	memcpy(&arduino_event.event_info.wps_er_pin, event_data, sizeof(wifi_event_sta_wps_er_pin_t));
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP) {
@@ -409,7 +428,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 	 * FTM
 	 * */
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_FTM_REPORT) {
-    	wifi_event_ftm_report_t * event = (wifi_event_ftm_report_t*)event_data;
     	arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
     	memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
 
@@ -424,8 +442,10 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	log_v("SC Found Channel");
     	arduino_event.event_id = ARDUINO_EVENT_SC_FOUND_CHANNEL;
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_GOT_SSID_PSWD) {
-        smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
-        log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+            smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
+            log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_SC_GOT_SSID_PSWD;
     	memcpy(&arduino_event.event_info.sc_got_ssid_pswd, event_data, sizeof(smartconfig_event_got_ssid_pswd_t));
 
@@ -450,13 +470,17 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 		wifi_prov_mgr_deinit();
     	arduino_event.event_id = ARDUINO_EVENT_PROV_END;
 	} else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_RECV) {
-        wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
-        log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *) event->ssid, (const char *) event->password);
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+            wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
+            log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *) event->ssid, (const char *) event->password);
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_RECV;
     	memcpy(&arduino_event.event_info.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
 	} else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_FAIL) {
-        wifi_prov_sta_fail_reason_t *reason = (wifi_prov_sta_fail_reason_t *)event_data;
-        log_e("Provisioning Failed: Reason : %s", (*reason == WIFI_PROV_STA_AUTH_ERROR)?"Authentication Failed":"AP Not Found");
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+            wifi_prov_sta_fail_reason_t *reason = (wifi_prov_sta_fail_reason_t *)event_data;
+            log_e("Provisioning Failed: Reason : %s", (*reason == WIFI_PROV_STA_AUTH_ERROR)?"Authentication Failed":"AP Not Found");
+        #endif
     	arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_FAIL;
     	memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(wifi_prov_sta_fail_reason_t));
 	} else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_SUCCESS) {

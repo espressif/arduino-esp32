@@ -86,9 +86,9 @@ build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.
 
 # Compile Flags
 compiler.cpreprocessor.flags={compiler.cpreprocessor.flags.{build.mcu}} "-I{compiler.sdk.path}/{build.memory_type}/include"
-compiler.c.flags={compiler.c.flags.{build.mcu}}
-compiler.cpp.flags={compiler.cpp.flags.{build.mcu}}
-compiler.S.flags={compiler.S.flags.{build.mcu}}
+compiler.c.flags={compiler.c.flags.{build.mcu}} {compiler.warning_flags}
+compiler.cpp.flags={compiler.cpp.flags.{build.mcu}} {compiler.warning_flags}
+compiler.S.flags={compiler.S.flags.{build.mcu}} {compiler.warning_flags}
 compiler.c.elf.flags={compiler.c.elf.flags.{build.mcu}}
 compiler.c.elf.libs={compiler.c.elf.libs.{build.mcu}}
 compiler.ar.flags={compiler.ar.flags.{build.mcu}}

@@ -42,33 +42,6 @@ extern "C" {
 #include "lwip/err.h"
 }
 
-static const char * cipher_str(int cipher)
-{
-    switch (cipher) {
-    case WIFI_CIPHER_TYPE_NONE:
-        return ("NONE");
-        break;
-    case WIFI_CIPHER_TYPE_WEP40:
-    	return ("WEP40");
-        break;
-    case WIFI_CIPHER_TYPE_WEP104:
-    	return ("WEP104");
-        break;
-    case WIFI_CIPHER_TYPE_TKIP:
-    	return ("TKIP");
-        break;
-    case WIFI_CIPHER_TYPE_CCMP:
-    	return ("CCMP");
-        break;
-    case WIFI_CIPHER_TYPE_TKIP_CCMP:
-    	return ("TKIP_CCMP");
-        break;
-    default:
-        break;
-    }
-	return ("UNKNOWN");
-}
-
 bool WiFiScanClass::_scanAsync = false;
 uint32_t WiFiScanClass::_scanStarted = 0;
 uint32_t WiFiScanClass::_scanTimeout = 10000;

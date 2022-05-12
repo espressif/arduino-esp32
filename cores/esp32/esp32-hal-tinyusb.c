@@ -646,8 +646,9 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
-static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
-
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
+#endif
 static bool tinyusb_is_initialized = false;
 
 esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
