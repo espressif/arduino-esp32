@@ -48,6 +48,7 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
+#define _byte_swap32(num) (((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000))
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 /*
  * Private (exposable) methods
@@ -82,7 +83,7 @@ esp_err_t set_esp_interface_hostname(esp_interface_t interface, const char * hos
 	return ESP_FAIL;
 }
 
-esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress()){
+esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress(), IPAddress dhcp_lease_start=INADDR_NONE){
 	esp_netif_t *esp_netif = esp_netifs[interface];
 	esp_netif_dhcp_status_t status = ESP_NETIF_DHCP_INIT;
 	esp_netif_ip_info_t info;
@@ -138,20 +139,64 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
 
         dhcps_lease_t lease;
         lease.enable = true;
-        uint32_t dhcp_ipaddr = static_cast<uint32_t>(local_ip);
-        // prevents DHCP lease range to overflow subnet/24 range
-        // there will be 11 addresses for DHCP to lease
-        uint8_t leaseStart = (uint8_t)(~subnet[3] - 12);  
-        if ((local_ip[3]) < leaseStart) {
-            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
-            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
-        } else {
-            // make range stay in the begining of the netmask range
-            dhcp_ipaddr = (dhcp_ipaddr & 0x00FFFFFF);
-            lease.start_ip.addr = dhcp_ipaddr + (1 << 24);
-            lease.end_ip.addr = dhcp_ipaddr + (11 << 24);
+        uint8_t CIDR = WiFiGenericClass::calculateSubnetCIDR(subnet);
+        log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dhcp_lease_start.toString().c_str(), subnet.toString().c_str());
+        // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
+        // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
+        // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
+        if (CIDR > 28 || CIDR < 24) {
+            log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
+            return ESP_FAIL; //  ESP_FAIL if initializing failed
         }
+        // The code below is ready for any netmask, not limited to 255.255.255.0
+        uint32_t netmask = _byte_swap32(info.netmask.addr);
+        uint32_t ap_ipaddr = _byte_swap32(info.ip.addr);
+        uint32_t dhcp_ipaddr = _byte_swap32(static_cast<uint32_t>(dhcp_lease_start));
+        dhcp_ipaddr = dhcp_ipaddr == 0 ? ap_ipaddr + 1 : dhcp_ipaddr;
+        uint32_t leaseStartMax = ~netmask - 10;
+        // there will be 10 addresses for DHCP to lease
+        lease.start_ip.addr = dhcp_ipaddr;
+        lease.end_ip.addr = lease.start_ip.addr + 10;
+        // Check if local_ip is in the same subnet as the dhcp leasing range initial address
+        if ((ap_ipaddr & netmask) != (dhcp_ipaddr & netmask)) {
+            log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet", 
+                local_ip.toString().c_str(), IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str());
+            return ESP_FAIL; //  ESP_FAIL if initializing failed
+        }
+        // prevents DHCP lease range to overflow subnet range
+        if ((dhcp_ipaddr & ~netmask) >= leaseStartMax) {
+            // make first DHCP lease addr stay in the begining of the netmask range
+            lease.start_ip.addr = (dhcp_ipaddr & netmask) + 1;
+            lease.end_ip.addr = lease.start_ip.addr + 10;
+            log_w("DHCP Lease out of range - Changing DHCP leasing start to %s", IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str());
+        }
+        // Check if local_ip is within DHCP range
+        if (ap_ipaddr >= lease.start_ip.addr && ap_ipaddr <= lease.end_ip.addr) {
+            log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)", 
+                local_ip.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+            return ESP_FAIL; //  ESP_FAIL if initializing failed
+        }
+        // Check if gateway is within DHCP range
+        uint32_t gw_ipaddr = _byte_swap32(info.gw.addr);
+        bool gw_in_same_subnet = (gw_ipaddr & netmask) == (ap_ipaddr & netmask);
+        if (gw_in_same_subnet && gw_ipaddr >= lease.start_ip.addr && gw_ipaddr <= lease.end_ip.addr) {
+            log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", 
+                gateway.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+            return ESP_FAIL; //  ESP_FAIL if initializing failed
+        }
+        // all done, just revert back byte order of DHCP lease range
+        lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
+        lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
         log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
+        err = tcpip_adapter_dhcps_option(
+            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
+            (tcpip_adapter_dhcp_option_id_t)ESP_NETIF_SUBNET_MASK,
+            (void*)&info.netmask.addr, sizeof(info.netmask.addr)
+        );
+		if(err){
+        	log_e("DHCPS Set Netmask Failed! 0x%04x", err);
+        	return err;
+        }
         err = tcpip_adapter_dhcps_option(
             (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
             (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
@@ -161,7 +206,6 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         	log_e("DHCPS Set Lease Failed! 0x%04x", err);
         	return err;
         }
-
 		err = esp_netif_dhcps_start(esp_netif);
 		if(err){
         	log_e("DHCPS Start Failed! 0x%04x", err);

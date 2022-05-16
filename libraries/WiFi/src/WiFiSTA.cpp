@@ -51,7 +51,7 @@ extern "C" {
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
 esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IPAddress(), IPAddress backup_dns=IPAddress(), IPAddress fallback_dns=IPAddress());
-esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress());
+esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=INADDR_NONE, IPAddress gateway=INADDR_NONE, IPAddress subnet=INADDR_NONE, IPAddress dhcp_lease_start=INADDR_NONE);
 static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs);
 
 static size_t _wifi_strncpy(char * dst, const char * src, size_t dst_len){
