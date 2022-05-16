@@ -25,6 +25,8 @@ It's important that your board includes the USB connector attached to the embedd
 
 This instructions will only work on the supported devices with the embedded USB peripheral. The external USB-to-Serial doesn't works on this tutorial.
 
+For a complete reference to the Arduino IDE tools menu, please see the `Tools Menus <../guides/tools_menu.html>`_ reference guide.
+
 USB DFU
 -------
 
