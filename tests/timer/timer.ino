@@ -7,18 +7,26 @@
 hw_timer_t * timer = NULL;
 static volatile bool alarm_flag;
 
+/* These functions are intended to be called before and after each test. */
+void setUp(void) {
+  timer = timerBegin(0, TIMER_DIVIDER, true);
+  timerStop(timer);
+  timerRestart(timer);
+}
+
+void tearDown(void){
+  timerEnd(timer);
+}
+
+
+
 void ARDUINO_ISR_ATTR onTimer(){
-  //Serial.println("Timer ISR triggered");
   alarm_flag = true;
 }
 
 
 void timer_interrupt_test(void){
-
-  timer = timerBegin(0, TIMER_DIVIDER, true);
-  timerStop(timer);
-  timerRestart(timer);
-
+  
   alarm_flag = false;
   timerAttachInterrupt(timer, &onTimer, true);
   timerAlarmWrite(timer, (1.2 * TIMER_SCALE), true);
@@ -37,9 +45,6 @@ void timer_interrupt_test(void){
 
   delay(2000);
   TEST_ASSERT_EQUAL(false, alarm_flag);
-
-  timerEnd(timer);
-
 }
 
 void timer_divider_test(void){
@@ -47,9 +52,6 @@ void timer_divider_test(void){
   uint64_t time_val;
   uint64_t comp_time_val;
 
-  timer = timerBegin(0, TIMER_DIVIDER, true);
-  timerStop(timer);
-  timerRestart(timer);
   timerStart(timer);
 
   delay(1000);
@@ -76,8 +78,6 @@ void timer_divider_test(void){
   comp_time_val = timerRead(timer);
   TEST_ASSERT_INT_WITHIN(5000, 5000000, time_val);
   TEST_ASSERT_INT_WITHIN(3126, 312500, comp_time_val);
-
-  timerEnd(timer);
 }
 
 void timer_read_test(void){
@@ -85,15 +85,10 @@ void timer_read_test(void){
   uint64_t set_timer_val = 0xFF;
   uint64_t get_timer_val = 0;
 
-  timer = timerBegin(0, TIMER_DIVIDER, true);
-  timerStop(timer);
-
   timerWrite(timer,set_timer_val);
   get_timer_val = timerRead(timer);
 
   TEST_ASSERT_EQUAL(set_timer_val, get_timer_val);
-
-  timerEnd(timer);
 }
 
 void setup(){
