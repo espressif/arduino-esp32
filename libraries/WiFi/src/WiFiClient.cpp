@@ -109,11 +109,12 @@ public:
     }
 
     int read(uint8_t * dst, size_t len){
-        if(!dst || !len || (_pos == _fill && !fillBuffer())){
+        size_t fb = fillBuffer();
+        if(!dst || !len || (_pos == _fill && !fb)){
             return _failed ? -1 : 0;
         }
         size_t a = _fill - _pos;
-        if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
+        if(len <= a || ((len - a) <= (_size - _fill) && fb >= (len - a))){
             if(len == 1){
                 *dst = _buffer[_pos];
             } else {
