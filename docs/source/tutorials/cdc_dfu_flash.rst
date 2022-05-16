@@ -109,7 +109,7 @@ You can now upload your sketch to the device. After flashing for the first time,
 
 This procedure enables the flashing and monitoring thought the internal USB and does not requires you to manually enter into the download mode or to do the manual reset after flashing.
 
-To monitor the device, you need to select the USB port and open the Monitor tool selecting the correct baud rate (usually 115200) according to the `Serial.begin` defined in your code.
+To monitor the device, you need to select the USB port and open the Monitor tool selecting the correct baud rate (usually 115200) according to the ``Serial.begin()`` defined in your code.
 
 Hardware
 --------
