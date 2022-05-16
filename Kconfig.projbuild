@@ -21,7 +21,8 @@ config AUTOSTART_ARDUINO
 
 choice ARDUINO_RUNNING_CORE
     bool "Core on which Arduino's setup() and loop() are running"
-    default ARDUINO_RUN_CORE1
+    default ARDUINO_RUN_CORE0 if FREERTOS_UNICORE
+    default ARDUINO_RUN_CORE1 if !FREERTOS_UNICORE
     help
         Select on which core Arduino's setup() and loop() functions run
 
@@ -29,8 +30,10 @@ choice ARDUINO_RUNNING_CORE
         bool "CORE 0"
     config ARDUINO_RUN_CORE1
         bool "CORE 1"
+        depends on !FREERTOS_UNICORE
     config ARDUINO_RUN_NO_AFFINITY
         bool "BOTH"
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
@@ -48,7 +51,8 @@ config ARDUINO_LOOP_STACK_SIZE
 
 choice ARDUINO_EVENT_RUNNING_CORE
     bool "Core on which Arduino's event handler is running"
-    default ARDUINO_EVENT_RUN_CORE1
+    default ARDUINO_EVENT_RUN_CORE0 if FREERTOS_UNICORE
+    default ARDUINO_EVENT_RUN_CORE1 if !FREERTOS_UNICORE
     help
         Select on which core Arduino's WiFi.onEvent() run
 
@@ -56,8 +60,10 @@ choice ARDUINO_EVENT_RUNNING_CORE
         bool "CORE 0"
     config ARDUINO_EVENT_RUN_CORE1
         bool "CORE 1"
+        depends on !FREERTOS_UNICORE
     config ARDUINO_EVENT_RUN_NO_AFFINITY
         bool "BOTH"
+        depends on !FREERTOS_UNICORE
 
 endchoice
 
@@ -67,9 +73,45 @@ config ARDUINO_EVENT_RUNNING_CORE
     default 1 if ARDUINO_EVENT_RUN_CORE1
     default -1 if ARDUINO_EVENT_RUN_NO_AFFINITY
 
+choice ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+    bool "Core on which Arduino's Serial Event task is running"
+    default ARDUINO_SERIAL_EVENT_RUN_CORE0 if FREERTOS_UNICORE
+    default ARDUINO_SERIAL_EVENT_RUN_NO_AFFINITY if !FREERTOS_UNICORE
+    help
+        Select on which core Arduino's Serial Event task run
+
+    config ARDUINO_SERIAL_EVENT_RUN_CORE0
+        bool "CORE 0"
+    config ARDUINO_SERIAL_EVENT_RUN_CORE1
+        bool "CORE 1"
+        depends on !FREERTOS_UNICORE
+    config ARDUINO_SERIAL_EVENT_RUN_NO_AFFINITY
+        bool "BOTH"
+        depends on !FREERTOS_UNICORE
+
+endchoice
+
+config ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+    int
+    default 0 if ARDUINO_SERIAL_EVENT_RUN_CORE0
+    default 1 if ARDUINO_SERIAL_EVENT_RUN_CORE1
+    default -1 if ARDUINO_SERIAL_EVENT_RUN_NO_AFFINITY
+
+config ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+    int "Serial Event task stack size"
+    default 2048
+    help
+        Amount of stack available for the Serial Event task.
+
+config ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+    int "Priority of the Serial Event task"
+    default 24
+    help
+        Select at what priority you want the Serial Event task to run.
+
 choice ARDUINO_UDP_RUNNING_CORE
     bool "Core on which Arduino's UDP is running"
-    default ARDUINO_UDP_RUN_CORE1
+    default ARDUINO_UDP_RUN_CORE0
     help
         Select on which core Arduino's UDP run
 
@@ -77,22 +119,24 @@ choice ARDUINO_UDP_RUNNING_CORE
         bool "CORE 0"
     config ARDUINO_UDP_RUN_CORE1
         bool "CORE 1"
+        depends on !FREERTOS_UNICORE
     config ARDUINO_UDP_RUN_NO_AFFINITY
         bool "BOTH"
+        depends on !FREERTOS_UNICORE
 
 endchoice
-
-config ARDUINO_UDP_TASK_PRIORITY
-    int "Priority of the UDP task"
-    default 3
-    help
-        Select at what priority you want the UDP task to run.
 
 config ARDUINO_UDP_RUNNING_CORE
     int
     default 0 if ARDUINO_UDP_RUN_CORE0
     default 1 if ARDUINO_UDP_RUN_CORE1
     default -1 if ARDUINO_UDP_RUN_NO_AFFINITY
+
+config ARDUINO_UDP_TASK_PRIORITY
+    int "Priority of the UDP task"
+    default 3
+    help
+        Select at what priority you want the UDP task to run.
 
 config ARDUINO_ISR_IRAM
     bool "Run interrupts in IRAM"
@@ -356,3 +400,4 @@ config ARDUINO_SELECTIVE_Wire
 
 
 endmenu
+
