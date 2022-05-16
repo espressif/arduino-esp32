@@ -42,33 +42,6 @@ extern "C" {
 #include "lwip/err.h"
 }
 
-static const char * cipher_str(int cipher)
-{
-    switch (cipher) {
-    case WIFI_CIPHER_TYPE_NONE:
-        return ("NONE");
-        break;
-    case WIFI_CIPHER_TYPE_WEP40:
-    	return ("WEP40");
-        break;
-    case WIFI_CIPHER_TYPE_WEP104:
-    	return ("WEP104");
-        break;
-    case WIFI_CIPHER_TYPE_TKIP:
-    	return ("TKIP");
-        break;
-    case WIFI_CIPHER_TYPE_CCMP:
-    	return ("CCMP");
-        break;
-    case WIFI_CIPHER_TYPE_TKIP_CCMP:
-    	return ("TKIP_CCMP");
-        break;
-    default:
-        break;
-    }
-	return ("UNKNOWN");
-}
-
 bool WiFiScanClass::_scanAsync = false;
 uint32_t WiFiScanClass::_scanStarted = 0;
 uint32_t WiFiScanClass::_scanTimeout = 10000;
@@ -81,7 +54,7 @@ void* WiFiScanClass::_scanResult = 0;
  * @param show_hidden   show hidden networks
  * @return Number of discovered networks
  */
-int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan, uint8_t channel)
+int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, uint32_t max_ms_per_chan, uint8_t channel, const char * ssid, const uint8_t * bssid)
 {
     if(WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
         return WIFI_SCAN_RUNNING;
@@ -95,8 +68,8 @@ int16_t WiFiScanClass::scanNetworks(bool async, bool show_hidden, bool passive, 
     scanDelete();
 
     wifi_scan_config_t config;
-    config.ssid = 0;
-    config.bssid = 0;
+    config.ssid = (uint8_t*)ssid;
+    config.bssid = (uint8_t*)bssid;
     config.channel = channel;
     config.show_hidden = show_hidden;
     if(passive){

@@ -14,16 +14,10 @@
 #pragma once
 #include "sdkconfig.h"
 #ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
+#include "RMaker.h"
 #include "esp_system.h"
 #include <esp_rmaker_utils.h>
 
-static void RMakerFactoryReset(int seconds)
-{
-    esp_rmaker_factory_reset(0, seconds);
-}
-
-static void RMakerWiFiReset(int seconds)
-{
-    esp_rmaker_wifi_reset(0, seconds);
-}
+void RMakerFactoryReset(int seconds);
+void RMakerWiFiReset(int seconds);
 #endif
