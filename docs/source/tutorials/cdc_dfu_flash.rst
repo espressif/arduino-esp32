@@ -69,7 +69,10 @@ Setp 3 - Flash
 
 Now you can upload your sketch to the device. After flashing, you need to manually reset the device.
 
-On the USB DFU, you can't use the USB for the serial output for the logging, just for flashing. To enable the serial output, use the CDC option instead.
+.. note::
+        On the USB DFU, you can't use the USB for the serial output for the logging, just for flashing. To enable the serial output, use the CDC option instead.
+        If you want to use the USB DFU for just upgrading the firmware using the manual download mode, this will work just fine, however, for developing please consider using USB CDC.
+
 
 USB CDC
 -------
