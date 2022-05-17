@@ -95,7 +95,7 @@ Where:
 
 5. **Size**
 
-    Size and defines the amount of memory to be allocated on the partition. The size can be formatted as decimal, hex numbers (0x prefix), or using unit prefix K (kilo) or M (mega) i.e: 4096 = 4K = 0x1000.
+    Size defines the amount of memory to be allocated on the partition. The size can be formatted as decimal, hex numbers (0x prefix), or using unit prefix K (kilo) or M (mega) i.e: 4096 = 4K = 0x1000.
 
 6. **Flags**
 
@@ -132,6 +132,55 @@ Here is an example you can use for a custom partition table:
 This partition will use about 12MB of the 16MB flash. The offset will be automatically calculated and the units are in K and M.
 
 A alternative is to create the new partition table as a new file in the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table.
+
+Examples
+--------
+
+**2MB no OTA**
+
+.. code-block::
+
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0x9000,  20K,
+    factory,  app,  factory, ,        1992K,
+
+**4MB no OTA**
+
+.. code-block::
+
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0x9000,  20K,
+    factory,  app,  factory, ,        4000K,
+
+**4MB with OTA**
+
+.. code-block::
+
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0x9000,  20K,
+    otadata,  data, ota,     ,        8K,
+    app0,     app,  ota_0,   ,        1900K,
+    app1,     app,  ota_1,   ,        1900K,
+
+**8MB no OTA with Storage**
+
+.. code-block::
+
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0x9000,  20K,
+    factory,  app,  factory, ,        2M,
+    spiffs,   data, spiffs,  ,        5M,
+
+**8MB with OTA and Storage**
+
+.. code-block::
+
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0x9000,  20K,
+    otadata,  data, ota,     ,        8K,
+    app0,     app,  ota_0,   ,        2M,
+    app1,     app,  ota_1,   ,        2M,
+    spiffs,   data, spiffs,  ,        3M,
 
 Reference
 ---------
