@@ -30,8 +30,6 @@ void setup() {
 }
 
 void loop() {
-  static uint32_t count = 0;
-
   if (touch1detected) {
     touch1detected = false;
     if (touchInterruptGetLastStatus(T1)) {

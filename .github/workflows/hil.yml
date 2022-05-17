@@ -18,7 +18,7 @@ jobs:
   gen_chunks:
     if: |
       contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      github.event_name == 'schedule'
+      (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
@@ -110,7 +110,9 @@ jobs:
 
   event_file:
     name: "Event File"
-    if: ${{ always() }}
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
+      github.event_name == 'schedule'
     needs: Test
     runs-on: ubuntu-latest
     steps:

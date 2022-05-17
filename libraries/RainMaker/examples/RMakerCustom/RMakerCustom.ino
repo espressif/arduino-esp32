@@ -36,6 +36,7 @@ void sysProvEvent(arduino_event_t *sys_event)
         printQR(service_name, pop, "ble");
 #endif        
         break;
+        default:;
     }
 }
 
