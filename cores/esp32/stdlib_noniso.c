@@ -67,6 +67,31 @@ char* ltoa(long value, char* result, int base) {
     return result;
 }
 
+char* lltoa (long long val, char* result, int base) {
+    if(base < 2 || base > 16) {
+        *result = 0;
+        return result;
+    }
+
+    char* out = result;
+    long long quotient = val > 0 ? val : -val;
+
+    do {
+        const long long tmp = quotient / base;
+        *out = "0123456789abcdef"[quotient - (tmp * base)];
+        ++out;
+        quotient = tmp;
+    } while(quotient);
+
+    // Apply negative sign
+    if(val < 0)
+        *out++ = '-';
+
+    reverse(result, out);
+    *out = 0;
+    return result;
+}
+
 char* ultoa(unsigned long value, char* result, int base) {
     if(base < 2 || base > 16) {
         *result = 0;
@@ -78,6 +103,27 @@ char* ultoa(unsigned long value, char* result, int base) {
 
     do {
         const unsigned long tmp = quotient / base;
+        *out = "0123456789abcdef"[quotient - (tmp * base)];
+        ++out;
+        quotient = tmp;
+    } while(quotient);
+
+    reverse(result, out);
+    *out = 0;
+    return result;
+}
+
+char* ulltoa (unsigned long long val, char* result, int base) {
+    if(base < 2 || base > 16) {
+        *result = 0;
+        return result;
+    }
+
+    char* out = result;
+    unsigned long long quotient = val;
+
+    do {
+        const unsigned long long tmp = quotient / base;
         *out = "0123456789abcdef"[quotient - (tmp * base)];
         ++out;
         quotient = tmp;
@@ -160,3 +206,5 @@ char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
     *out = 0;
     return s;
 }
+
+
