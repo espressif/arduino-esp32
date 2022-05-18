@@ -91,7 +91,7 @@ Where:
 
 .. note:: 
     Offset must be multiple of 4kB (0x1000) and for app partitions it must be aligned by 64kB (0x10000).
-    If left blank, the offset will be automatically calculated based on the end of the previous partition, including any necessary alignment, however, the offset for the first partition must be always set as **0x9000**.
+    If left blank, the offset will be automatically calculated based on the end of the previous partition, including any necessary alignment, however, the offset for the first partition must be always set as **0x9000** and for the first application partition **0x10000**.
 
 5. **Size**
 
@@ -123,13 +123,13 @@ Here is an example you can use for a custom partition table:
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    otadata,  data, ota,     ,        8K,
-    app0,     app,  ota_0,   ,        2M,
+    nvs,      data, nvs,     36K,     20K,
+    otadata,  data, ota,     56K,     8K,
+    app0,     app,  ota_0,   64K,     2M,
     app1,     app,  ota_1,   ,        2M,
     spiffs,   data, spiffs,  ,        8M,
 
-This partition will use about 12MB of the 16MB flash. The offset will be automatically calculated and the units are in K and M.
+This partition will use about 12MB of the 16MB flash. The offset will be automatically calculated after the first application partition and the units are in K and M.
 
 A alternative is to create the new partition table as a new file in the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table.
 
@@ -141,25 +141,25 @@ Examples
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    factory,  app,  factory, ,        1992K,
+    nvs,      data, nvs,     36K,     20K,
+    factory,  app,  factory, 64K,     1900K,
 
 **4MB no OTA**
 
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    factory,  app,  factory, ,        4000K,
+    nvs,      data, nvs,     36K,     20K,
+    factory,  app,  factory, 64K,     4000K,
 
 **4MB with OTA**
 
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    otadata,  data, ota,     ,        8K,
-    app0,     app,  ota_0,   ,        1900K,
+    nvs,      data, nvs,     36K,     20K,
+    otadata,  data, ota,     56K,     8K,
+    app0,     app,  ota_0,   64K,     1900K,
     app1,     app,  ota_1,   ,        1900K,
 
 **8MB no OTA with Storage**
@@ -167,8 +167,8 @@ Examples
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    factory,  app,  factory, ,        2M,
+    nvs,      data, nvs,     36K,     20K,
+    factory,  app,  factory, 64K,     2M,
     spiffs,   data, spiffs,  ,        5M,
 
 **8MB with OTA and Storage**
@@ -176,9 +176,9 @@ Examples
 .. code-block::
 
     # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0x9000,  20K,
-    otadata,  data, ota,     ,        8K,
-    app0,     app,  ota_0,   ,        2M,
+    nvs,      data, nvs,     36K,     20K,
+    otadata,  data, ota,     56K,     8K,
+    app0,     app,  ota_0,   64K,     2M,
     app1,     app,  ota_1,   ,        2M,
     spiffs,   data, spiffs,  ,        3M,
 
