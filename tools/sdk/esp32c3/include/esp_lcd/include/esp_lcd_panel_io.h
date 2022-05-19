@@ -20,6 +20,25 @@ typedef void *esp_lcd_i2c_bus_handle_t;                       /*!< Type of LCD I
 typedef struct esp_lcd_i80_bus_t *esp_lcd_i80_bus_handle_t;   /*!< Type of LCD intel 8080 bus handle */
 
 /**
+ * @brief Transmit LCD command and receive corresponding parameters
+ *
+ * @note Commands sent by this function are short, so they are sent using polling transactions.
+ *       The function does not return before the command tranfer is completed.
+ *       If any queued transactions sent by `esp_lcd_panel_io_tx_color()` are still pending when this function is called,
+ *       this function will wait until they are finished and the queue is empty before sending the command(s).
+ *
+ * @param[in]  io LCD panel IO handle, which is created by other factory API like `esp_lcd_new_panel_io_spi()`
+ * @param[in]  lcd_cmd The specific LCD command, set to -1 if no command needed
+ * @param[out] param Buffer for the command data
+ * @param[in]  param_size Size of `param` buffer
+ * @return
+ *          - ESP_ERR_INVALID_ARG   if parameter is invalid
+ *          - ESP_ERR_NOT_SUPPORTED if read is not supported by transport
+ *          - ESP_OK                on success
+ */
+esp_err_t esp_lcd_panel_io_rx_param(esp_lcd_panel_io_handle_t io, int lcd_cmd, void *param, size_t param_size);
+
+/**
  * @brief Transmit LCD command and corresponding parameters
  *
  * @note Commands sent by this function are short, so they are sent using polling transactions.
@@ -98,7 +117,8 @@ typedef struct {
         unsigned int dc_as_cmd_phase: 1; /*!< D/C line value is encoded into SPI transaction command phase */
         unsigned int dc_low_on_data: 1;  /*!< If this flag is enabled, DC line = 0 means transfer data, DC line = 1 means transfer command; vice versa */
         unsigned int octal_mode: 1;      /*!< transmit with octal mode (8 data lines), this mode is used to simulate Intel 8080 timing */
-    } flags;
+        unsigned int lsb_first: 1;       /*!< transmit LSB bit first */
+    } flags; /*!< Extra flags to fine-tune the SPI device */
 } esp_lcd_panel_io_spi_config_t;
 
 /**
@@ -124,6 +144,7 @@ typedef struct {
     int lcd_param_bits;         /*!< Bit-width of LCD parameter */
     struct {
         unsigned int dc_low_on_data: 1;  /*!< If this flag is enabled, DC line = 0 means transfer data, DC line = 1 means transfer command; vice versa */
+        unsigned int disable_control_phase: 1; /*!< If this flag is enabled, the control phase isn't used */
     } flags;
 } esp_lcd_panel_io_i2c_config_t;
 
@@ -151,6 +172,8 @@ typedef struct {
     int data_gpio_nums[SOC_LCD_I80_BUS_WIDTH]; /*!< GPIOs used for data lines */
     size_t bus_width;          /*!< Number of data lines, 8 or 16 */
     size_t max_transfer_bytes; /*!< Maximum transfer size, this determines the length of internal DMA link */
+    size_t psram_trans_align;  /*!< DMA transfer alignment for data allocated from PSRAM */
+    size_t sram_trans_align;   /*!< DMA transfer alignment for data allocated from SRAM */
 } esp_lcd_i80_bus_config_t;
 
 /**

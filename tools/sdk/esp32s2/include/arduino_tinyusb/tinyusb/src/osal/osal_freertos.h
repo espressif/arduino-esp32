@@ -37,10 +37,24 @@
 extern "C" {
 #endif
 
+TU_ATTR_ALWAYS_INLINE static inline uint32_t _osal_ms2tick(uint32_t msec)
+{
+  if (msec == OSAL_TIMEOUT_WAIT_FOREVER) return portMAX_DELAY;
+  if (msec == 0) return 0;
+
+  uint32_t ticks = pdMS_TO_TICKS(msec);
+
+  // configTICK_RATE_HZ is less than 1000 and 1 tick > 1 ms
+  // we still need to delay at least 1 tick
+  if (ticks == 0) ticks =1 ;
+
+  return ticks;
+}
+
 //--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline void osal_task_delay(uint32_t msec)
 {
   vTaskDelay( pdMS_TO_TICKS(msec) );
 }
@@ -51,12 +65,12 @@ static inline void osal_task_delay(uint32_t msec)
 typedef StaticSemaphore_t osal_semaphore_def_t;
 typedef SemaphoreHandle_t osal_semaphore_t;
 
-static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
 {
   return xSemaphoreCreateBinaryStatic(semdef);
 }
 
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
   if ( !in_isr )
   {
@@ -78,13 +92,12 @@ static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
   }
 }
 
-static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
 {
-  uint32_t const ticks = (msec == OSAL_TIMEOUT_WAIT_FOREVER) ? portMAX_DELAY : pdMS_TO_TICKS(msec);
-  return xSemaphoreTake(sem_hdl, ticks);
+  return xSemaphoreTake(sem_hdl, _osal_ms2tick(msec));
 }
 
-static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
+TU_ATTR_ALWAYS_INLINE static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
 {
   xQueueReset(sem_hdl);
 }
@@ -95,17 +108,17 @@ static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
 typedef StaticSemaphore_t osal_mutex_def_t;
 typedef SemaphoreHandle_t osal_mutex_t;
 
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
 {
   return xSemaphoreCreateMutexStatic(mdef);
 }
 
-static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
 {
   return osal_semaphore_wait(mutex_hdl, msec);
 }
 
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 {
   return xSemaphoreGive(mutex_hdl);
 }
@@ -114,7 +127,7 @@ static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 // QUEUE API
 //--------------------------------------------------------------------+
 
-// role device/host is used by OS NONE for mutex (disable usb isr) only
+// _int_set is not used with an RTOS
 #define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type) \
   static _type _name##_##buf[_depth];\
   osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf };
@@ -130,17 +143,17 @@ typedef struct
 
 typedef QueueHandle_t osal_queue_t;
 
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
 {
   return xQueueCreateStatic(qdef->depth, qdef->item_sz, (uint8_t*) qdef->buf, &qdef->sq);
 }
 
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec)
 {
-  return xQueueReceive(qhdl, data, portMAX_DELAY);
+  return xQueueReceive(qhdl, data, _osal_ms2tick(msec));
 }
 
-static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   if ( !in_isr )
   {
@@ -162,7 +175,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   }
 }
 
-static inline bool osal_queue_empty(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_empty(osal_queue_t qhdl)
 {
   return uxQueueMessagesWaiting(qhdl) == 0;
 }

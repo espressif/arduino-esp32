@@ -39,7 +39,11 @@ typedef enum {
     MQTT_EVENT_ERROR = 0,          /*!< on error event, additional context: connection return code, error handle from esp_tls (if supported) */
     MQTT_EVENT_CONNECTED,          /*!< connected event, additional context: session_present flag */
     MQTT_EVENT_DISCONNECTED,       /*!< disconnected event */
-    MQTT_EVENT_SUBSCRIBED,         /*!< subscribed event, additional context: msg_id */
+    MQTT_EVENT_SUBSCRIBED,         /*!< subscribed event, additional context:
+                                        - msg_id               message id
+                                        - data                 pointer to the received data
+                                        - data_len             length of the data for this event
+                                        */ 
     MQTT_EVENT_UNSUBSCRIBED,       /*!< unsubscribed event */
     MQTT_EVENT_PUBLISHED,          /*!< published event, additional context:  msg_id */
     MQTT_EVENT_DATA,               /*!< data event, additional context:
@@ -51,6 +55,8 @@ typedef enum {
                                         - current_data_offset  offset of the current data for this event
                                         - total_data_len       total length of the data received
                                         - retain               retain flag of the message
+                                        - qos                  qos level of the message
+                                        - dup                  dup flag of the message
                                         Note: Multiple MQTT_EVENT_DATA could be fired for one message, if it is
                                         longer than internal buffer. In that case only first event contains topic
                                         pointer and length, other contain data only with current data length
@@ -153,6 +159,8 @@ typedef struct {
     int session_present;                /*!< MQTT session_present flag for connection event */
     esp_mqtt_error_codes_t *error_handle; /*!< esp-mqtt error handle including esp-tls errors as well as internal mqtt errors */
     bool retain;                        /*!< Retained flag of the message associated with this event */
+    int qos;                            /*!< qos of the messages associated with this event */
+    bool dup;                           /*!< dup flag of the message associated with this event */
 } esp_mqtt_event_t;
 
 typedef esp_mqtt_event_t *esp_mqtt_event_handle_t;
@@ -168,7 +176,11 @@ typedef struct {
     const char *host;                       /*!< MQTT server domain (ipv4 as string) */
     const char *uri;                        /*!< Complete MQTT broker URI */
     uint32_t port;                          /*!< MQTT server port */
-    const char *client_id;                  /*!< default client id is ``ESP32_%CHIPID%`` where %CHIPID% are last 3 bytes of MAC address in hex format */
+    bool set_null_client_id;                /*!< Selects a NULL client id */
+    const char *client_id;                  /*!< Set client id.
+                                                 Ignored if set_null_client_id == true
+                                                 If NULL set the default client id.
+                                                 Default client id is ``ESP32_%CHIPID%`` where %CHIPID% are last 3 bytes of MAC address in hex format */
     const char *username;                   /*!< MQTT username */
     const char *password;                   /*!< MQTT password */
     const char *lwt_topic;                  /*!< LWT (Last Will and Testament) message topic (NULL by default) */

@@ -36,7 +36,7 @@
 //--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline void osal_task_delay(uint32_t msec)
 {
   os_time_delay( os_time_ms_to_ticks32(msec) );
 }
@@ -47,18 +47,18 @@ static inline void osal_task_delay(uint32_t msec)
 typedef struct os_sem  osal_semaphore_def_t;
 typedef struct os_sem* osal_semaphore_t;
 
-static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
 {
   return (os_sem_init(semdef, 0) == OS_OK) ? (osal_semaphore_t) semdef : NULL;
 }
 
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
   (void) in_isr;
   return os_sem_release(sem_hdl) == OS_OK;
 }
 
-static inline bool osal_semaphore_wait(osal_semaphore_t sem_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_wait(osal_semaphore_t sem_hdl, uint32_t msec)
 {
   uint32_t const ticks = (msec == OSAL_TIMEOUT_WAIT_FOREVER) ? OS_TIMEOUT_NEVER : os_time_ms_to_ticks32(msec);
   return os_sem_pend(sem_hdl, ticks) == OS_OK;
@@ -75,18 +75,18 @@ static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl)
 typedef struct os_mutex osal_mutex_def_t;
 typedef struct os_mutex* osal_mutex_t;
 
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
 {
   return (os_mutex_init(mdef) == OS_OK) ? (osal_mutex_t) mdef : NULL;
 }
 
-static inline bool osal_mutex_lock(osal_mutex_t mutex_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock(osal_mutex_t mutex_hdl, uint32_t msec)
 {
   uint32_t const ticks = (msec == OSAL_TIMEOUT_WAIT_FOREVER) ? OS_TIMEOUT_NEVER : os_time_ms_to_ticks32(msec);
   return os_mutex_pend(mutex_hdl, ticks) == OS_OK;
 }
 
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 {
   return os_mutex_release(mutex_hdl) == OS_OK;
 }
@@ -116,7 +116,7 @@ typedef struct
 
 typedef osal_queue_def_t* osal_queue_t;
 
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
 {
   if ( OS_OK != os_mempool_init(&qdef->mpool, qdef->depth, qdef->item_sz, qdef->buf, "usbd queue") ) return NULL;
   if ( OS_OK != os_mempool_init(&qdef->epool, qdef->depth, sizeof(struct os_event), qdef->evbuf, "usbd evqueue") ) return NULL;
@@ -125,8 +125,10 @@ static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
   return (osal_queue_t) qdef;
 }
 
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec)
 {
+  (void) msec; // os_eventq_get() does not take timeout, always behave as msec = WAIT_FOREVER
+
   struct os_event* ev;
   ev = os_eventq_get(&qhdl->evq);
 
@@ -161,7 +163,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   return true;
 }
 
-static inline bool osal_queue_empty(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_empty(osal_queue_t qhdl)
 {
   return STAILQ_EMPTY(&qhdl->evq.evq_list);
 }

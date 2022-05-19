@@ -144,9 +144,16 @@ void hcd_device_close(uint8_t rhport, uint8_t dev_addr);
 // Endpoints API
 //--------------------------------------------------------------------+
 
-bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);
+// Open an endpoint
 bool hcd_edpt_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_endpoint_t const * ep_desc);
+
+// Submit a transfer, when complete hcd_event_xfer_complete() must be invoked
 bool hcd_edpt_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t buflen);
+
+// Submit a special transfer to send 8-byte Setup Packet, when complete hcd_event_xfer_complete() must be invoked
+bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);
+
+// clear stall, data toggle is also reset to DATA0
 bool hcd_edpt_clear_stall(uint8_t dev_addr, uint8_t ep_addr);
 
 //--------------------------------------------------------------------+
@@ -164,13 +171,49 @@ extern void hcd_devtree_get_info(uint8_t dev_addr, hcd_devtree_info_t* devtree_i
 extern void hcd_event_handler(hcd_event_t const* event, bool in_isr);
 
 // Helper to send device attach event
-extern void hcd_event_device_attach(uint8_t rhport, bool in_isr);
+TU_ATTR_ALWAYS_INLINE static inline
+void hcd_event_device_attach(uint8_t rhport, bool in_isr)
+{
+  hcd_event_t event;
+  event.rhport              = rhport;
+  event.event_id            = HCD_EVENT_DEVICE_ATTACH;
+  event.connection.hub_addr = 0;
+  event.connection.hub_port = 0;
+  hcd_event_handler(&event, in_isr);
+}
 
 // Helper to send device removal event
-extern void hcd_event_device_remove(uint8_t rhport, bool in_isr);
+TU_ATTR_ALWAYS_INLINE static inline
+void hcd_event_device_remove(uint8_t rhport, bool in_isr)
+{
+  hcd_event_t event;
+  event.rhport              = rhport;
+  event.event_id            = HCD_EVENT_DEVICE_REMOVE;
+  event.connection.hub_addr = 0;
+  event.connection.hub_port = 0;
+
+  hcd_event_handler(&event, in_isr);
+}
 
 // Helper to send USB transfer event
-extern void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t xferred_bytes, xfer_result_t result, bool in_isr);
+TU_ATTR_ALWAYS_INLINE static inline
+void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t xferred_bytes, xfer_result_t result, bool in_isr)
+{
+  hcd_event_t event =
+  {
+    .rhport   = 0, // TODO correct rhport
+    .event_id = HCD_EVENT_XFER_COMPLETE,
+    .dev_addr = dev_addr,
+    .xfer_complete =
+    {
+      .ep_addr = ep_addr,
+      .result  = result,
+      .len     = xferred_bytes
+    }
+  };
+
+  hcd_event_handler(&event, in_isr);
+}
 
 #ifdef __cplusplus
  }

@@ -113,6 +113,7 @@ err_t            dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *add
                                    u8_t dns_addrtype);
 #if ESP_DNS
 void             dns_clear_servers(bool keep_fallback);
+void             dns_clear_cache(void);
 #endif
 
 #if DNS_LOCAL_HOSTLIST
