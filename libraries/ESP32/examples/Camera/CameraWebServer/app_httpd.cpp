@@ -20,6 +20,17 @@
 #include "sdkconfig.h"
 #include "camera_index.h"
 
+//#define CONFIG_LED_ILLUMINATOR_ENABLED 1
+#ifdef CONFIG_LED_ILLUMINATOR_ENABLED
+#define FLASH_LED_GPIO GPIO_NUM_4
+#define CONFIG_LED_MAX_INTENSITY 255
+#define CONFIG_LED_LEDC_CHANNEL LEDC_CHANNEL_0
+#endif
+
+#ifdef CONFIG_LED_ILLUMINATOR_ENABLED
+#include "esp32-hal-ledc.h"
+#endif
+
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
 #define TAG ""
@@ -1303,4 +1314,15 @@ void startCameraServer()
     {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
     }
+}
+
+void ledc_setup()
+{
+#ifdef CONFIG_LED_ILLUMINATOR_ENABLED
+  // PWM
+  ledcSetup(LEDC_CHANNEL_0, 4000, LEDC_TIMER_8_BIT);
+  ledcAttachPin(FLASH_LED_GPIO, LEDC_CHANNEL_0);
+#else
+  ESP_LOGI(TAG, "Flash led illumination is not configured");
+#endif
 }

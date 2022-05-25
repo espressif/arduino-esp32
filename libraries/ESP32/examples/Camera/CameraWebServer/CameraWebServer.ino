@@ -37,6 +37,7 @@ const char* ssid = "**********";
 const char* password = "**********";
 
 void startCameraServer();
+void ledc_setup();
 
 void setup() {
   Serial.begin(115200);
@@ -139,6 +140,8 @@ void setup() {
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
+
+  ledc_setup(); // uncomment CONFIG_LED_ILLUMINATOR_ENABLED in app_httpd.cpp if you need this
 }
 
 void loop() {
