@@ -228,6 +228,8 @@
 #elif TU_CHECK_MCU(OPT_MCU_RP2040)
   #define TUP_DCD_ENDPOINT_MAX    16
 
+  #define TU_ATTR_FAST_FUNC   __attribute__((section(".time_critical.tinyusb")))
+
 //------------- Silabs -------------//
 #elif TU_CHECK_MCU(OPT_MCU_EFM32GG)
   #define TUP_USBIP_DWC2
@@ -280,6 +282,11 @@
 // Default to fullspeed if not defined
 #ifndef TUP_RHPORT_HIGHSPEED
   #define TUP_RHPORT_HIGHSPEED    0x00
+#endif
+
+// fast function, normally mean placing function in SRAM
+#ifndef TU_ATTR_FAST_FUNC
+  #define TU_ATTR_FAST_FUNC
 #endif
 
 #endif
