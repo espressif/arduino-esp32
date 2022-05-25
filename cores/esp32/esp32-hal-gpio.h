@@ -63,22 +63,6 @@ extern "C" {
 #define ONLOW_WE  0x0C
 #define ONHIGH_WE 0x0D
 
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-  #define BOARD_HAS_RGB_LED
-#endif
-
-#if CONFIG_IDF_TARGET_ESP32S2
-  #define LED_BUILTIN   18 // Saola-1 & DevKitM-1
-  //#define LED_BUILTIN   45 // Kaluga
-#elif CONFIG_IDF_TARGET_ESP32S3
-  // Some boards have too low voltage on this pin (board design bug)
-  // Use different pin with 3V and connect with 48
-  #define LED_BUILTIN   48
-#elif CONFIG_IDF_TARGET_ESP32C3
-  #define LED_BUILTIN   8
-#else
-  #define LED_BUILTIN   21   // ESP32 has no builtin RGB LED
-#endif
 
 #define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
 #define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)
