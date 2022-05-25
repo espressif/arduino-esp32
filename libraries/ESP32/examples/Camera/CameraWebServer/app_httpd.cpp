@@ -17,21 +17,6 @@
 #include "img_converters.h"
 #include "fb_gfx.h"
 #include "driver/ledc.h"
-
-#include "board.h"
-
-#if defined(CAMERA_MODEL_AI_THINKER)
-#ifndef CONFIG_LED_ILLUMINATOR_ENABLED
-#define CONFIG_LED_ILLUMINATOR_ENABLED 1
-#endif
-#define CONFIG_LED_MAX_INTENSITY 255
-#define CONFIG_LED_LEDC_CHANNEL LEDC_CHANNEL_0
-#endif
-
-#ifdef CONFIG_LED_ILLUMINATOR_ENABLED
-#include "esp32-hal-ledc.h"
-#endif
-
 #include "sdkconfig.h"
 #include "camera_index.h"
 
@@ -294,13 +279,6 @@ static int run_face_recognition(fb_data_t *fb, std::list<dl::detect::result_t> *
 #endif
 
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
-void ledc_setup()
-{
-  // PWM
-  ledcSetup(LEDC_CHANNEL_0, 4000, LEDC_TIMER_8_BIT);
-  ledcAttachPin(GPIO_NUM_4, LEDC_CHANNEL_0); // GPIO_NUM_4 = 4
-}
-
 void enable_led(bool en)
 { // Turn LED On or Off
     int duty = en ? led_duty : 0;
