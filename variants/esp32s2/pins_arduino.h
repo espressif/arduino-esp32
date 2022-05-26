@@ -8,12 +8,11 @@
 #define NUM_DIGITAL_PINS        48
 #define NUM_ANALOG_INPUTS       20
 
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+1; // non-existing pin
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+18; // GPIO pin for Saola-1 & DevKitM-1 = 18
+//static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+45; // GPIO pin for Kaluga = 45
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 #define BOARD_HAS_NEOPIXEL
-#define NEOPIXEL_PIN 18 // Actual NeoPixel GPIO pin for Saola-1 & DevKitM-1
-//#define NEOPIXEL_PIN 45 // Actual NeoPixel GPIO pin for Kaluga
 #define LED_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)

@@ -26,6 +26,7 @@ extern "C" {
 
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
+#include "pins_arduino.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define NUM_OUPUT_PINS  46
@@ -71,7 +72,9 @@ extern "C" {
 #define digitalPinToDacChannel(pin)     (((pin) == DAC_CHANNEL_1_GPIO_NUM)?0:((pin) == DAC_CHANNEL_2_GPIO_NUM)?1:-1)
 
 void pinMode(uint8_t pin, uint8_t mode);
-void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
+#ifdef BOARD_HAS_NEOPIXEL
+  void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
+#endif
 void digitalWrite(uint8_t pin, uint8_t val);
 int digitalRead(uint8_t pin);
 

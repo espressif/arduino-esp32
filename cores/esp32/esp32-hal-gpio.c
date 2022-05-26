@@ -15,7 +15,6 @@
 #include "esp32-hal-gpio.h"
 #include "hal/gpio_hal.h"
 #include "soc/soc_caps.h"
-#include "pins_arduino.h"
 
 // It fixes lack of pin definition for S3 and for any future SoC
 // this function works for ESP32, ESP32-S2 and ESP32-S3 - including the C3, it will return -1 for any pin
@@ -92,17 +91,13 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
-    log_d("pin %d", pin);
 #ifdef BOARD_HAS_NEOPIXEL
-    log_d("BOARD_HAS_NEOPIXEL");
     if (pin == LED_BUILTIN){
-        log_d("pin == LED_BUILTIN; call __pinMode(%d)", NEOPIXEL_PIN);
-        __pinMode(NEOPIXEL_PIN, mode);
+        __pinMode(LED_BUILTIN-SOC_GPIO_PIN_COUNT, mode);
         return;
     }
 #endif
 
-    log_d("Normal operation");
     if (!GPIO_IS_VALID_GPIO(pin)) {
         log_e("Invalid pin selected");
         return;
@@ -137,6 +132,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 }
 
+#ifdef BOARD_HAS_NEOPIXEL
 void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
   rmt_data_t led_data[24];
   static rmt_obj_t* rmt_send = NULL;
@@ -144,19 +140,19 @@ void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_v
 
   uint8_t _pin;
   if(pin == LED_BUILTIN){
-    _pin = NEOPIXEL_PIN;
+    _pin = LED_BUILTIN-SOC_GPIO_PIN_COUNT;
   }else{
     _pin = pin;
   }
 
   if(!initialized){
-      if((rmt_send = rmtInit(_pin, RMT_TX_MODE, RMT_MEM_64)) == NULL){
+    if((rmt_send = rmtInit(_pin, RMT_TX_MODE, RMT_MEM_64)) == NULL){
         log_e("RGB LED driver initialization failed!");
         rmt_send = NULL;
         return;
-      }
-      rmtSetTick(rmt_send, 100);
-      initialized = true;
+    }
+    rmtSetTick(rmt_send, 100);
+    initialized = true;
   }
 
   int color[] = {green_val, red_val, blue_val};  // Color coding is in order GREEN, RED, BLUE
@@ -181,6 +177,7 @@ void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_v
   }
   rmtWrite(rmt_send, led_data, 24);
 }
+#endif
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
