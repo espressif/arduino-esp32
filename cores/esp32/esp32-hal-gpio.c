@@ -91,13 +91,6 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
-#ifdef BOARD_HAS_NEOPIXEL
-    if (pin == LED_BUILTIN){
-        __pinMode(LED_BUILTIN-SOC_GPIO_PIN_COUNT, mode);
-        return;
-    }
-#endif
-
     if (!GPIO_IS_VALID_GPIO(pin)) {
         log_e("Invalid pin selected");
         return;
@@ -131,53 +124,6 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
         return;
     }
 }
-
-#ifdef BOARD_HAS_NEOPIXEL
-void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
-  rmt_data_t led_data[24];
-  static rmt_obj_t* rmt_send = NULL;
-  static bool initialized = false;
-
-  uint8_t _pin;
-  if(pin == LED_BUILTIN){
-    _pin = LED_BUILTIN-SOC_GPIO_PIN_COUNT;
-  }else{
-    _pin = pin;
-  }
-
-  if(!initialized){
-    if((rmt_send = rmtInit(_pin, RMT_TX_MODE, RMT_MEM_64)) == NULL){
-        log_e("RGB LED driver initialization failed!");
-        rmt_send = NULL;
-        return;
-    }
-    rmtSetTick(rmt_send, 100);
-    initialized = true;
-  }
-
-  int color[] = {green_val, red_val, blue_val};  // Color coding is in order GREEN, RED, BLUE
-  int i = 0;
-  for(int col=0; col<3; col++ ){
-    for(int bit=0; bit<8; bit++){
-      if((color[col] & (1<<(7-bit)))){
-        // HIGH bit
-        led_data[i].level0 = 1; // T1H
-        led_data[i].duration0 = 8; // 0.8us
-        led_data[i].level1 = 0; // T1L
-        led_data[i].duration1 = 4; // 0.4us
-      }else{
-        // LOW bit
-        led_data[i].level0 = 1; // T0H
-        led_data[i].duration0 = 4; // 0.4us
-        led_data[i].level1 = 0; // T0L
-        led_data[i].duration1 = 8; // 0.8us
-      }
-      i++;
-    }
-  }
-  rmtWrite(rmt_send, led_data, 24);
-}
-#endif
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
