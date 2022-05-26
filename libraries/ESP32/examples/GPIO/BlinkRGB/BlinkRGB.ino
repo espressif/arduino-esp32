@@ -24,7 +24,6 @@ void loop() {
 #ifdef BOARD_HAS_NEOPIXEL
   digitalWrite(LED_BUILTIN, HIGH);   // Turn the RGB LED white
   delay(1000);                       
-  log_w("LED LOW");  
   digitalWrite(LED_BUILTIN, LOW);    // Turn the RGB LED off
   delay(1000);                       
  
