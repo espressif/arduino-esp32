@@ -350,10 +350,10 @@ if "build.variant" in env.BoardConfig():
             join(variants_dir, env.BoardConfig().get("build.variant"))
         ]
     )
-    libs.append(env.BuildLibrary(
+    env.BuildSources(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
         join(variants_dir, env.BoardConfig().get("build.variant"))
-    ))
+    )
 
 envsafe = env.Clone()
 
