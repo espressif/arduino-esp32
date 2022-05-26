@@ -20,7 +20,8 @@ void setup() {
 }
 
 // the loop function runs over and over again forever
-void loop() { 
+void loop() {
+#ifdef BOARD_HAS_NEOPIXEL
   digitalWrite(LED_BUILTIN, HIGH);   // Turn the RGB LED white
   delay(1000);                       
   log_w("LED LOW");  
@@ -35,4 +36,5 @@ void loop() {
   delay(1000);          
   RGBLedWrite(LED_BUILTIN,0,0,0); // Off / black
   delay(1000);                             
+#endif
 }
