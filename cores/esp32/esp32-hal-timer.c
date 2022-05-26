@@ -187,7 +187,7 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
 hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     if(num >= NUM_OF_TIMERS)
     {
-        log_e("'num' exceeds available number of Timers.");
+        log_e("Timer number %u exceeds available number of Timers.", num);
         return NULL;
     }
 
@@ -223,7 +223,7 @@ bool IRAM_ATTR timerFnWrapper(void *arg){
 
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     if(edge){
-        log_w("EDGE timer interrupt is not supported!");
+        log_w("EDGE timer interrupt is not supported! Setting to LEVEL...");
     }
     timer_isr_callback_add(timer->group, timer->num, timerFnWrapper, fn, 0);
 }
