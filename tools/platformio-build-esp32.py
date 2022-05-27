@@ -36,7 +36,11 @@ assert isdir(FRAMEWORK_DIR)
 
 env.Append(
     ASFLAGS=[
-        "-x", "assembler-with-cpp"
+        "-mlongcalls",
+    ],
+    
+    ASPPFLAGS=[
+        "-x", "assembler-with-cpp",
     ],
 
     CFLAGS=[
