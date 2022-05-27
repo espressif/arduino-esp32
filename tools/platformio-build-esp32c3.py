@@ -35,24 +35,32 @@ FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 assert isdir(FRAMEWORK_DIR)
 
 env.Append(
+    # common assembler flags for .s, .S, .asm, etc.
     ASFLAGS=[
-        "-x", "assembler-with-cpp"
+        "-march=rv32imc",
+    ],
+    
+    # .S flags
+    ASPPFLAGS=[
+        "-x", "assembler-with-cpp",
     ],
 
+    # .c flags
     CFLAGS=[
-        "-march=rv32imc",
         "-std=gnu99",
         "-Wno-old-style-declaration"
     ],
 
+    # .cpp flags
     CXXFLAGS=[
-        "-march=rv32imc",
         "-std=gnu++11",
         "-fexceptions",
         "-fno-rtti"
     ],
 
+    # common flags for .c & .cpp
     CCFLAGS=[
+        "-march=rv32imc",        
         "-ffunction-sections",
         "-fdata-sections",
         "-Wno-error=unused-function",
@@ -76,8 +84,8 @@ env.Append(
     ],
 
     LINKFLAGS=[
+        "-march=rv32imc",        
         "-nostartfiles",
-        "-march=rv32imc",
         "--specs=nosys.specs",
         "-Wl,--cref",
         "-Wl,--gc-sections",
