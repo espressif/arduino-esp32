@@ -27,13 +27,13 @@ void loop() {
   digitalWrite(LED_BUILTIN, LOW);    // Turn the RGB LED off
   delay(1000);                       
  
-  RGBLedWrite(LED_BUILTIN,255,0,0); // Red
+  RGBLedWrite(LED_BUILTIN,LED_BRIGHTNESS,0,0); // Red
   delay(1000);          
-  RGBLedWrite(LED_BUILTIN,0,255,0); // Green
+  RGBLedWrite(LED_BUILTIN,0,LED_BRIGHTNESS,0); // Green
   delay(1000);          
-  RGBLedWrite(LED_BUILTIN,0,0,255); // Blue
+  RGBLedWrite(LED_BUILTIN,0,0,LED_BRIGHTNESS); // Blue
   delay(1000);          
   RGBLedWrite(LED_BUILTIN,0,0,0); // Off / black
-  delay(1000);                             
+  delay(1000);
 #endif
 }
