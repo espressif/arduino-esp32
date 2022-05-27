@@ -261,6 +261,15 @@ static const char * auth_mode_str(int authmode)
     case WIFI_AUTH_WPA2_ENTERPRISE:
     	return ("WPA2_ENTERPRISE");
         break;
+    case WIFI_AUTH_WPA3_PSK:
+    	return ("WPA3_PSK");
+        break;
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+    	return ("WPA2_WPA3_PSK");
+        break;
+    case WIFI_AUTH_WAPI_PSK:
+    	return ("WPAPI_PSK");
+        break;
     default:
         break;
     }
