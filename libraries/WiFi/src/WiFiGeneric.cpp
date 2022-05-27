@@ -261,6 +261,15 @@ static const char * auth_mode_str(int authmode)
     case WIFI_AUTH_WPA2_ENTERPRISE:
     	return ("WPA2_ENTERPRISE");
         break;
+    case WIFI_AUTH_WPA3_PSK:
+    	return ("WPA3_PSK");
+        break;
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+    	return ("WPA2_WPA3_PSK");
+        break;
+    case WIFI_AUTH_WAPI_PSK:
+    	return ("WPAPI_PSK");
+        break;
     default:
         break;
     }
@@ -1327,6 +1336,7 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
     // Set antenna default configuration
     wifi_ant_config_t ant_config = {
         .rx_ant_mode = WIFI_ANT_MODE_AUTO,
+        .rx_ant_default = WIFI_ANT_MAX, // Ignored in AUTO mode
         .tx_ant_mode = WIFI_ANT_MODE_AUTO,
         .enabled_ant0 = 0,
         .enabled_ant1 = 1,
