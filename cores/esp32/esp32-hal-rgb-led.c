@@ -1,19 +1,17 @@
 #include "esp32-hal-rgb-led.h"
 
-#ifdef BOARD_HAS_NEOPIXEL
 
-void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
-  log_d("RGB: %d %d %d", red_val, green_val, blue_val);
+void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
   rmt_data_t led_data[24];
   static rmt_obj_t* rmt_send = NULL;
   static bool initialized = false;
 
-  uint8_t _pin;
+  uint8_t _pin = pin;
+#ifdef BOARD_HAS_NEOPIXEL
   if(pin == LED_BUILTIN){
     _pin = LED_BUILTIN-SOC_GPIO_PIN_COUNT;
-  }else{
-    _pin = pin;
   }
+#endif
 
   if(!initialized){
     if((rmt_send = rmtInit(_pin, RMT_TX_MODE, RMT_MEM_64)) == NULL){
@@ -47,5 +45,3 @@ void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_v
   }
   rmtWrite(rmt_send, led_data, 24);
 }
-
-#endif

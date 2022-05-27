@@ -6,14 +6,12 @@ extern "C" {
 #endif
 
 #include "esp32-hal.h"
-/*
-#include "soc/soc_caps.h"
-#include "pins_arduino.h"
-*/
 
-//#ifdef BOARD_HAS_NEOPIXEL
-  void RGBLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
-//#endif
+#ifndef LED_BRIGHTNESS
+  #define LED_BRIGHTNESS 64
+#endif
+
+void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
 #ifdef __cplusplus
 }

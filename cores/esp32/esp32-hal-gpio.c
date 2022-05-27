@@ -131,7 +131,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
         if(pin == LED_BUILTIN){
             //use RMT to set all channels on/off
             const uint8_t comm_val = val != 0 ? LED_BRIGHTNESS : 0;
-            RGBLedWrite(LED_BUILTIN, comm_val, comm_val, comm_val);
+            neopixelWrite(LED_BUILTIN, comm_val, comm_val, comm_val);
             return;
         }
     #endif
