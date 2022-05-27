@@ -113,7 +113,6 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "newlib", "platform_include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "esp_additions", "freertos"),
@@ -305,7 +304,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4.1-216-g7e20435a54\\"'),
+        ("IDF_VER", '\\"v4.4.1-221-g692c1a6bea\\"'),
         "ESP_PLATFORM",
         "_POSIX_READER_WRITER_LOCKS",
         "ARDUINO_ARCH_ESP32",
