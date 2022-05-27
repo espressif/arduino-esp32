@@ -113,7 +113,6 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "newlib", "platform_include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "esp_additions", "freertos"),
