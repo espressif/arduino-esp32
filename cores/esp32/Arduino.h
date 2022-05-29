@@ -165,6 +165,9 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Server.h"
 #include "Udp.h"
 #include "HardwareSerial.h"
+#if ARDUINO_USB_MODE
+#include "HWCDC.h"
+#endif
 #include "Esp.h"
 #include "esp32/spiram.h"
 

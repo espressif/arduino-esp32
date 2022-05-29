@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#ifndef HW_CDC_H
+#define HW_CDC_H
 
 #include "sdkconfig.h"
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 
+#include "HardwareSerial.h"
 #include <inttypes.h>
 #include "esp_event.h"
 #include "Stream.h"
@@ -40,7 +43,7 @@ typedef union {
     } tx;
 } arduino_hw_cdc_event_data_t;
 
-class HWCDC: public Stream
+class HWCDC: public HardwareSerial
 {
 public:
     HWCDC();
@@ -52,17 +55,17 @@ public:
     size_t setRxBufferSize(size_t);
     size_t setTxBufferSize(size_t);
     void setTxTimeoutMs(uint32_t timeout);
-    void begin(unsigned long baud=0);
-    void end();
+    virtual void begin(unsigned long baud, uint32_t config=0, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112) override;
+    virtual void end(bool fullyTerminate = true) override;
     
-    int available(void);
-    int availableForWrite(void);
-    int peek(void);
-    int read(void);
-    size_t read(uint8_t *buffer, size_t size);
-    size_t write(uint8_t);
-    size_t write(const uint8_t *buffer, size_t size);
-    void flush(void);
+    virtual int available(void) override;
+    virtual int availableForWrite(void) override;
+    virtual int peek(void) override;
+    virtual int read(void) override;
+    virtual size_t read(uint8_t *buffer, size_t size) override;
+    virtual size_t write(uint8_t) override;
+    virtual size_t write(const uint8_t *buffer, size_t size) override;
+    virtual void flush(void) override;
     
     inline size_t read(char * buffer, size_t size)
     {
@@ -92,9 +95,9 @@ public:
     {
         return write((uint8_t) n);
     }
-    operator bool() const;
-    void setDebugOutput(bool);
-    uint32_t baudRate(){return 115200;}
+    virtual operator bool() const override;
+    virtual void setDebugOutput(bool) override;
+    virtual uint32_t baudRate() override {return 115200;}
 
 };
 
@@ -107,3 +110,4 @@ extern HWCDC USBSerial;
 #endif
 
 #endif /* CONFIG_IDF_TARGET_ESP32C3 */
+#endif

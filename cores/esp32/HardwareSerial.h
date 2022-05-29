@@ -50,7 +50,7 @@
 #include "Stream.h"
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
-#include "HWCDC.h"
+// #include "HWCDC.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -101,22 +101,22 @@ public:
     // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe usefull in some use cases
     void eventQueueReset();
  
-    void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
-    void end(bool fullyTerminate = true);
+    virtual void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
+    virtual void end(bool fullyTerminate = true);
     void updateBaudRate(unsigned long baud);
-    int available(void);
-    int availableForWrite(void);
-    int peek(void);
-    int read(void);
-    size_t read(uint8_t *buffer, size_t size);
+    virtual int available(void);
+    virtual int availableForWrite(void);
+    virtual int peek(void);
+    virtual int read(void);
+    virtual size_t read(uint8_t *buffer, size_t size);
     inline size_t read(char * buffer, size_t size)
     {
         return read((uint8_t*) buffer, size);
     }
-    void flush(void);
+    virtual void flush(void);
     void flush( bool txOnly);
-    size_t write(uint8_t);
-    size_t write(const uint8_t *buffer, size_t size);
+    virtual size_t write(uint8_t);
+    virtual size_t write(const uint8_t *buffer, size_t size);
     inline size_t write(const char * buffer, size_t size)
     {
         return write((uint8_t*) buffer, size);
@@ -141,10 +141,10 @@ public:
     {
         return write((uint8_t) n);
     }
-    uint32_t baudRate();
-    operator bool() const;
+    virtual uint32_t baudRate();
+    virtual operator bool() const;
 
-    void setDebugOutput(bool);
+    virtual void setDebugOutput(bool);
     
     void setRxInvert(bool);
 

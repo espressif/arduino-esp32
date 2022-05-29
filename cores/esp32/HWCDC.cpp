@@ -138,7 +138,7 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
-HWCDC::HWCDC() {
+HWCDC::HWCDC() : HardwareSerial(-1) {
 
 }
 
@@ -159,11 +159,12 @@ void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback){
     arduino_hw_cdc_event_handler_register_with(ARDUINO_HW_CDC_EVENTS, event, callback, this);
 }
 
-void HWCDC::begin(unsigned long baud)
+void HWCDC::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
     if(tx_lock == NULL) {
         tx_lock = xSemaphoreCreateMutex();
     }
+    tx_timeout_ms = timeout_ms;
     setRxBufferSize(256);//default if not preset
     setTxBufferSize(256);//default if not preset
 
@@ -178,7 +179,7 @@ void HWCDC::begin(unsigned long baud)
     usb_serial_jtag_ll_txfifo_flush();
 }
 
-void HWCDC::end()
+void HWCDC::end(bool fullyTerminate)
 {
     //Disable tx/rx interrupt.
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
