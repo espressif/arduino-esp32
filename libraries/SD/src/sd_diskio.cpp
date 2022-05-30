@@ -801,8 +801,13 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
     if (res != FR_OK) {
         log_e("f_mount failed: %s", fferr2str[res]);
         if(res == 13 && format_if_empty){
-            BYTE work[FF_MAX_SS];
+            BYTE* work = (BYTE*) malloc(sizeof(BYTE) * FF_MAX_SS);
+            if (!work) {
+              log_e("alloc for f_mkfs failed");
+              return false;
+            }
             res = f_mkfs(drv, FM_ANY, 0, work, sizeof(work));
+            free(work);
             if (res != FR_OK) {
                 log_e("f_mkfs failed: %s", fferr2str[res]);
                 esp_vfs_fat_unregister_path(path);
