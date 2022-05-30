@@ -7,9 +7,9 @@ Introduction
 
 Partition table is used to define the flash memory organization and the different kind of data will be stored on each partition.
 
-You can use one of the predefined partition table schemes available or create your own.
+You can use one of the available partition table scheme or create your own. You can see all the different schemes on the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder or by the Arduino IDE tools menu `Tools -> Partition Scheme`.
 
-The partition table is created using a CSV file format with the following format:
+The partition table is created by a .CSV (Comma-separeted Values) file with the following structure:
 
 .. code-block::
 
@@ -20,7 +20,7 @@ Where:
 
 1. **Name**
 
-    Is the partition name and must be a unique name. This name is not relevant for the system and the size must be at maximum of 16-chars.
+    Is the partition name and must be a unique name. This name is not relevant for the system and the size must be at maximum of 16-chars (no special chars).
 
 2. **Type**
 
@@ -102,7 +102,7 @@ Where:
     The last column in the CSV file is the flags and it is currently used to define if the partition will be encrypted by the flash encryption feature.
 
 
-For example, the most common partition is the ``default_8MB.csv`` (see `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder for some examples):
+For example, **the most common partition** is the ``default_8MB.csv`` (see `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder for some examples):
 
 .. code-block::
 
@@ -116,7 +116,7 @@ For example, the most common partition is the ``default_8MB.csv`` (see `tools/pa
 Using a Custom Partition Scheme
 -------------------------------
 
-To create your own partition table, you can create the ``partitions.csv`` file in the same folder you created your sketch. The build system will automatically pick the partition table file and use it instead of the predefined ones.
+To create your own partition table, you can create the ``partitions.csv`` file **in the same folder you created your sketch**. The build system will automatically pick the partition table file and use it instead of the predefined ones.
 
 Here is an example you can use for a custom partition table:
 
