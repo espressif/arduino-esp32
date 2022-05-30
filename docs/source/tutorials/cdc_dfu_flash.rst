@@ -21,9 +21,9 @@ ESP32-C3  CDC only
 ESP32-S3  CDC and DFU
 ========= =======================
 
-It's important that your board includes the USB connector attached to the embedded USB from the SoC. If your board doesnt have the USB connector, you can attach an external one to the USB pins.
+It's important that your board includes the USB connector attached to the embedded USB from the SoC. If your board doesn't have the USB connector, you can attach an external one to the USB pins.
 
-This instructions will only work on the supported devices with the embedded USB peripheral. The external USB-to-Serial doesn't works on this tutorial.
+These instructions it will only work on the supported devices with the embedded USB peripheral. This tutorial will not work if you are using an external USB-to-serial converter like FTDI, CP2102, CH340, etc.
 
 For a complete reference to the Arduino IDE tools menu, please see the `Tools Menus <../guides/tools_menu.html>`_ reference guide.
 
@@ -48,7 +48,7 @@ To check if this procedure was done correctly, now you will see the new USB devi
 
 2. Configure the USB DFU
 
-Now you need to set the USB DFU as default on BOOT and for flashing.
+In the next step you can set the USB DFU as default on BOOT and for flashing.
 
 Go to the Tools menu in the Arduino IDE and set the following options:
 
