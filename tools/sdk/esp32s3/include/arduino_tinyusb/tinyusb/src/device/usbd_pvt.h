@@ -48,7 +48,7 @@ typedef struct
   uint16_t (* open             ) (uint8_t rhport, tusb_desc_interface_t const * desc_intf, uint16_t max_len);
   bool     (* control_xfer_cb  ) (uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
   bool     (* xfer_cb          ) (uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-  void     (* sof              ) (uint8_t rhport); /* optional */
+  void     (* sof_isr          ) (uint8_t rhport, uint32_t frame_count); // optional
 } usbd_class_driver_t;
 
 // Invoked when initializing device stack to get additional class drivers.
@@ -101,6 +101,9 @@ bool usbd_edpt_ready(uint8_t rhport, uint8_t ep_addr)
 {
   return !usbd_edpt_busy(rhport, ep_addr) && !usbd_edpt_stalled(rhport, ep_addr);
 }
+
+// Enable SOF interrupt
+void usbd_sof_enable(uint8_t rhport, bool en);
 
 /*------------------------------------------------------------------*/
 /* Helper
