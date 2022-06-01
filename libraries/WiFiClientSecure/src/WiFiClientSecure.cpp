@@ -32,6 +32,7 @@
 WiFiClientSecure::WiFiClientSecure()
 {
     _connected = false;
+    _timeout = 30000; // Same default as ssl_client
 
     sslclient = new sslclient_context;
     ssl_init(sslclient);
@@ -52,7 +53,7 @@ WiFiClientSecure::WiFiClientSecure()
 WiFiClientSecure::WiFiClientSecure(int sock)
 {
     _connected = false;
-    _timeout = 0;
+    _timeout = 30000; // Same default as ssl_client
 
     sslclient = new sslclient_context;
     ssl_init(sslclient);
@@ -128,9 +129,6 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cert, 
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key)
 {
-    if(_timeout > 0){
-        sslclient->handshake_timeout = _timeout;
-    }
     int ret = start_ssl_client(sslclient, host, port, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
@@ -148,9 +146,6 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent,
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
     log_v("start_ssl_client with PSK");
-    if(_timeout > 0){
-        sslclient->handshake_timeout = _timeout;
-    }
     int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
@@ -315,6 +310,7 @@ char *WiFiClientSecure::_streamLoad(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
+  if (_CA_cert != NULL) free(const_cast<char*>(_CA_cert));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -325,6 +321,7 @@ bool WiFiClientSecure::loadCACert(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
+  if (_cert != NULL) free(const_cast<char*>(_cert));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -335,6 +332,7 @@ bool WiFiClientSecure::loadCertificate(Stream& stream, size_t size) {
 }
 
 bool WiFiClientSecure::loadPrivateKey(Stream& stream, size_t size) {
+  if (_private_key != NULL) free(const_cast<char*>(_private_key));
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -361,4 +359,28 @@ void WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
 void WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 {
     _alpn_protos = alpn_protos;
+}
+int WiFiClientSecure::setTimeout(uint32_t seconds)
+{
+    _timeout = seconds * 1000;
+    if (sslclient->socket >= 0) {
+        struct timeval tv;
+        tv.tv_sec = seconds;
+        tv.tv_usec = 0;
+        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+            return -1;
+        }
+        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
+    }
+    else {
+        return 0;
+    }
+}
+int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
+{
+    int res = setsockopt(sslclient->socket, SOL_SOCKET, option, value, len);
+    if(res < 0) {
+        log_e("%X : %d", option, errno);
+    }
+    return res;
 }

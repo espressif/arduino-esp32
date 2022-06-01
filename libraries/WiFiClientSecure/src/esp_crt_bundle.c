@@ -22,8 +22,6 @@
 #define BUNDLE_HEADER_OFFSET 2
 #define CRT_HEADER_OFFSET 4
 
-static const char *TAG = "esp-x509-crt-bundle";
-
 /* a dummy certificate so that
  * cacert_ptr passes non-NULL check during handshake */
 static mbedtls_x509_crt s_dummy_crt;

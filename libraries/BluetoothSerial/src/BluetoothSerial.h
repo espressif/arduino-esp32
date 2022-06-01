@@ -24,6 +24,7 @@
 #include <esp_gap_bt_api.h>
 #include <esp_spp_api.h>
 #include <functional>
+#include <map>
 #include "BTScan.h"
 
 typedef std::function<void(const uint8_t *buffer, size_t size)> BluetoothSerialDataCb;
@@ -50,6 +51,7 @@ class BluetoothSerial: public Stream
         size_t write(const uint8_t *buffer, size_t size);
         void flush();
         void end(void);
+        void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
         esp_err_t register_callback(esp_spp_cb_t * callback);
         
@@ -60,9 +62,12 @@ class BluetoothSerial: public Stream
         void enableSSP();
         bool setPin(const char *pin);
         bool connect(String remoteName);
-        bool connect(uint8_t remoteAddress[]);
+        bool connect(uint8_t remoteAddress[], int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER);
+        bool connect(const BTAddress &remoteAddress, int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER) {
+			return connect(*remoteAddress.getNative(), channel, sec_mask); };
         bool connect();
         bool connected(int timeout=0);
+        bool isClosed();
         bool isReady(bool checkMaster=false, int timeout=0);
         bool disconnect();
         bool unpairDevice(uint8_t remoteAddress[]);
@@ -73,6 +78,8 @@ class BluetoothSerial: public Stream
         void discoverClear();
         BTScanResults* getScanResults();
         
+        std::map<int, std::string> getChannels(const BTAddress &remoteAddress);
+
         const int INQ_TIME = 1280;   // Inquire Time unit 1280 ms
         const int MIN_INQ_TIME = (ESP_BT_GAP_MIN_INQ_LEN * INQ_TIME);
         const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
@@ -80,7 +87,7 @@ class BluetoothSerial: public Stream
         operator bool() const;
     private:
         String local_name;
-
+        int timeoutTicks=0;
 };
 
 #endif

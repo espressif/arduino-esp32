@@ -91,30 +91,34 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
-	if (!GPIO_IS_VALID_GPIO(pin)) {
+    if (!GPIO_IS_VALID_GPIO(pin)) {
         log_e("Invalid pin selected");
-		return;
-	}
-	gpio_config_t conf = {
-		    .pin_bit_mask = (1ULL<<pin),			/*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
-		    .mode = GPIO_MODE_DISABLE,              /*!< GPIO mode: set input/output mode                     */
-		    .pull_up_en = GPIO_PULLUP_DISABLE,      /*!< GPIO pull-up                                         */
-		    .pull_down_en = GPIO_PULLDOWN_DISABLE,  /*!< GPIO pull-down                                       */
-		    .intr_type = GPIO_INTR_DISABLE      	/*!< GPIO interrupt type                                  */
-	};
-	if (mode < 0x20) {//io
-		conf.mode = mode & (INPUT | OUTPUT);
-		if (mode & OPEN_DRAIN) {
-			conf.mode |= GPIO_MODE_DEF_OD;
-		}
-		if (mode & PULLUP) {
-			conf.pull_up_en = GPIO_PULLUP_ENABLE;
-		}
-		if (mode & PULLDOWN) {
-			conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-		}
-	}
-	if(gpio_config(&conf) != ESP_OK)
+        return;
+    }
+    
+    gpio_hal_context_t gpiohal;
+    gpiohal.dev = GPIO_LL_GET_HW(GPIO_PORT_0);
+
+    gpio_config_t conf = {
+        .pin_bit_mask = (1ULL<<pin),                 /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+        .mode = GPIO_MODE_DISABLE,                   /*!< GPIO mode: set input/output mode                     */
+        .pull_up_en = GPIO_PULLUP_DISABLE,           /*!< GPIO pull-up                                         */
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,       /*!< GPIO pull-down                                       */
+        .intr_type = gpiohal.dev->pin[pin].int_type  /*!< GPIO interrupt type - previously set                 */
+    };
+    if (mode < 0x20) {//io
+        conf.mode = mode & (INPUT | OUTPUT);
+        if (mode & OPEN_DRAIN) {
+            conf.mode |= GPIO_MODE_DEF_OD;
+        }
+        if (mode & PULLUP) {
+            conf.pull_up_en = GPIO_PULLUP_ENABLE;
+        }
+        if (mode & PULLDOWN) {
+            conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
+        }
+    }
+    if(gpio_config(&conf) != ESP_OK)
     {
         log_e("GPIO config failed");
         return;

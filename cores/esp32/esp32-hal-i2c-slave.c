@@ -695,7 +695,6 @@ static void i2c_slave_isr_handler(void* arg)
     uint32_t activeInt = i2c_ll_get_intsts_mask(i2c->dev);
     i2c_ll_clr_intsts_mask(i2c->dev, activeInt);
     uint8_t rx_fifo_len = i2c_ll_get_rxfifo_cnt(i2c->dev);
-    uint8_t tx_fifo_len = SOC_I2C_FIFO_LEN - i2c_ll_get_txfifo_len(i2c->dev);
     bool slave_rw = i2c_ll_slave_rw(i2c->dev);
 
     if(activeInt & I2C_RXFIFO_WM_INT_ENA){ // RX FiFo Full
@@ -719,10 +718,12 @@ static void i2c_slave_isr_handler(void* arg)
         }
         if(slave_rw){ // READ
 #if CONFIG_IDF_TARGET_ESP32
-            //SEND TX Event
-            i2c_slave_queue_event_t event;
-            event.event = I2C_SLAVE_EVT_TX;
-            pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            if(i2c->dev->status_reg.scl_main_state_last == 6){
+                //SEND TX Event
+                i2c_slave_queue_event_t event;
+                event.event = I2C_SLAVE_EVT_TX;
+                pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            }
 #else
             //reset TX data
             i2c_ll_txfifo_rst(i2c->dev);

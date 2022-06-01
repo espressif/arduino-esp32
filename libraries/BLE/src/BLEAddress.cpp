@@ -71,7 +71,7 @@ bool BLEAddress::operator!=(const BLEAddress& otherAddress) const {
 }
 
 bool BLEAddress::operator<(const BLEAddress& otherAddress) const {
-  return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) < 0;
+  return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) < 0;
 }
 
 bool BLEAddress::operator<=(const BLEAddress& otherAddress) const {
@@ -83,7 +83,7 @@ bool BLEAddress::operator>=(const BLEAddress& otherAddress) const {
 }
 
 bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
-  return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) > 0;
+  return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) > 0;
 }
 
 /**
