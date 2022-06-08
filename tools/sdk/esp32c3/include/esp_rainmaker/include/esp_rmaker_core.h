@@ -917,6 +917,20 @@ esp_err_t esp_rmaker_system_service_enable(esp_rmaker_system_serv_config_t *conf
  */
 bool esp_rmaker_local_ctrl_service_started(void);
 
+/**
+ * Enable Default RainMaker OTA Firmware Upgrade
+ *
+ * This enables the default recommended RainMaker OTA Firmware Upgrade, which is
+ * "Using the Topics", which allows performing OTA from Dashboard.
+ * This OTA can be triggered by Admin Users only.
+ * On Public RainMaker deployment, for nodes using "Self Claiming", since there
+ * is no associated admin user, the Primary user will automatically become the admin
+ * and can perform OTA from dashboard.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_ota_enable_default(void);
 #ifdef __cplusplus
 }
 #endif

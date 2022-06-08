@@ -524,10 +524,10 @@ typedef struct {
 TU_ATTR_WEAK void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedback_params_t* feedback_param);
 
 // Callback in ISR context, invoked periodically according to feedback endpoint bInterval.
-// Could be used to compute and update feedback value
+// Could be used to compute and update feedback value, should be placed in RAM if possible
 // frame_number  : current SOF count
 // interval_shift: number of bit shift i.e log2(interval) from Feedback endpoint descriptor
-TU_ATTR_WEAK void tud_audio_feedback_interval_isr(uint8_t func_id, uint32_t frame_number, uint8_t interval_shift);
+TU_ATTR_WEAK TU_ATTR_FAST_FUNC void tud_audio_feedback_interval_isr(uint8_t func_id, uint32_t frame_number, uint8_t interval_shift);
 
 #endif // CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_FEEDBACK_EP
 

@@ -62,6 +62,7 @@ void usbd_int_set(bool enabled);
 
 //--------------------------------------------------------------------+
 // USBD Endpoint API
+// Note: rhport should be 0 since device stack only support 1 rhport for now
 //--------------------------------------------------------------------+
 
 // Open an endpoint
