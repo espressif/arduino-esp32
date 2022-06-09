@@ -32,13 +32,6 @@ typedef union {
 
 #define NUM_OF_TIMERS   SOC_TIMER_GROUP_TOTAL_TIMERS
 
-typedef struct {
-    int timer_group;
-    int timer_idx;
-    int alarm_interval;
-    bool auto_reload;
-} timer_info_t;
-
 typedef struct hw_timer_s
 {
     uint8_t group;
@@ -47,7 +40,7 @@ typedef struct hw_timer_s
 
 // Works for all chips
 static hw_timer_t timer_dev[4] = {
-    {0,0}, {1,0},  {1,0},  {1,1}
+    {0,0}, {1,0},  {0,1},  {1,1}
 };
 
 // NOTE: (in IDF 5.0 there wont be need to know groups/numbers 
@@ -194,7 +187,7 @@ static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb
 hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp){
     if(num >= NUM_OF_TIMERS)
     {
-        log_e("Timer dont have that timer number.");
+        log_e("Timer number %u exceeds available number of Timers.", num);
         return NULL;
     }
 
@@ -220,24 +213,23 @@ void timerEnd(hw_timer_t *timer){
     timer_deinit(timer->group, timer->num);
 }
 
+bool IRAM_ATTR timerFnWrapper(void *arg){
+    void (*fn)(void) = arg;
+    fn();
+
+    // some additional logic or handling may be required here to approriately yield or not
+    return false;
+}
+
 void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
     if(edge){
         log_w("EDGE timer interrupt is not supported! Setting to LEVEL...");
-        edge = false;
     }
-    timer_enable_intr(timer->group, timer->num);
-
-    timer_info_t *timer_info = calloc(1, sizeof(timer_info_t));
-    timer_info->timer_group = timer->group;
-    timer_info->timer_idx = timer->num;
-    timer_info->auto_reload = timerGetAutoReload(timer);
-    timer_info->alarm_interval = timerAlarmRead(timer);
-
-    timer_isr_callback_add(timer->group, timer->num, (timer_isr_t)fn, timer_info, 0);
+    timer_isr_callback_add(timer->group, timer->num, timerFnWrapper, fn, 0);
 }
 
 void timerDetachInterrupt(hw_timer_t *timer){
-    timerAttachInterrupt(timer, NULL, false);
+    timer_isr_callback_remove(timer->group, timer->num);
 }
 
 uint64_t timerReadMicros(hw_timer_t *timer){

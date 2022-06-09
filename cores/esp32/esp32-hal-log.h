@@ -206,16 +206,16 @@ void log_print_buf(const uint8_t *b, size_t len);
 #undef ESP_EARLY_LOGD
 #undef ESP_EARLY_LOGV
 
-#define ESP_LOGE(tag, ...)  log_e(__VA_ARGS__)
-#define ESP_LOGW(tag, ...)  log_w(__VA_ARGS__)
-#define ESP_LOGI(tag, ...)  log_i(__VA_ARGS__)
-#define ESP_LOGD(tag, ...)  log_d(__VA_ARGS__)
-#define ESP_LOGV(tag, ...)  log_v(__VA_ARGS__)
-#define ESP_EARLY_LOGE(tag, ...)  isr_log_e(__VA_ARGS__)
-#define ESP_EARLY_LOGW(tag, ...)  isr_log_w(__VA_ARGS__)
-#define ESP_EARLY_LOGI(tag, ...)  isr_log_i(__VA_ARGS__)
-#define ESP_EARLY_LOGD(tag, ...)  isr_log_d(__VA_ARGS__)
-#define ESP_EARLY_LOGV(tag, ...)  isr_log_v(__VA_ARGS__)
+#define ESP_LOGE(tag, format, ...)  log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGW(tag, format, ...)  log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGI(tag, format, ...)  log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGD(tag, format, ...)  log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGV(tag, format, ...)  log_v("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGE(tag, format, ...)  isr_log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGW(tag, format, ...)  isr_log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGI(tag, format, ...)  isr_log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGD(tag, format, ...)  isr_log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGV(tag, format, ...)  isr_log_v("[%s] " format, tag, ##__VA_ARGS__)
 #endif
 #endif
 

@@ -41,6 +41,9 @@
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
 #include "driver/temp_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/rtc.h"
+#include "driver/temp_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
 #include "driver/temp_sensor.h"
@@ -197,8 +200,13 @@ void initVariant() {}
 void init() __attribute__((weak));
 void init() {}
 
+#ifdef CONFIG_APP_ROLLBACK_ENABLE
 bool verifyOta() __attribute__((weak));
 bool verifyOta() { return true; }
+
+bool verifyRollbackLater() __attribute__((weak));
+bool verifyRollbackLater() { return false; }
+#endif
 
 #ifdef CONFIG_BT_ENABLED
 //overwritten in esp32-hal-bt.c
@@ -209,15 +217,17 @@ bool btInUse(){ return false; }
 void initArduino()
 {
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
-    const esp_partition_t *running = esp_ota_get_running_partition();
-    esp_ota_img_states_t ota_state;
-    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
-        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
-            if (verifyOta()) {
-                esp_ota_mark_app_valid_cancel_rollback();
-            } else {
-                log_e("OTA verification failed! Start rollback to the previous version ...");
-                esp_ota_mark_app_invalid_rollback_and_reboot();
+    if(!verifyRollbackLater()){
+        const esp_partition_t *running = esp_ota_get_running_partition();
+        esp_ota_img_states_t ota_state;
+        if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+            if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+                if (verifyOta()) {
+                    esp_ota_mark_app_valid_cancel_rollback();
+                } else {
+                    log_e("OTA verification failed! Start rollback to the previous version ...");
+                    esp_ota_mark_app_invalid_rollback_and_reboot();
+                }
             }
         }
     }
@@ -232,7 +242,7 @@ void initArduino()
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
-    if(err == ESP_ERR_NVS_NO_FREE_PAGES){
+    if(err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND){
         const esp_partition_t* partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
         if (partition != NULL) {
             err = esp_partition_erase_range(partition, 0, partition->size);
@@ -241,6 +251,8 @@ void initArduino()
             } else {
                 log_e("Failed to format the broken NVS partition!");
             }
+        } else {
+            log_e("Could not find NVS partition");
         }
     }
     if(err) {

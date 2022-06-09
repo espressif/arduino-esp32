@@ -30,6 +30,11 @@
 #include "esp_event.h"
 #endif
 
+typedef enum {
+    WPA2_AUTH_TLS = 0,
+    WPA2_AUTH_PEAP = 1,
+    WPA2_AUTH_TTLS = 2
+} wpa2_auth_method_t;
 
 class WiFiSTAClass
 {
@@ -39,6 +44,7 @@ class WiFiSTAClass
 
 public:
 
+    wl_status_t begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity=NULL, const char* wpa2_username=NULL, const char *wpa2_password=NULL, const char* ca_pem=NULL, const char* client_crt=NULL, const char* client_key=NULL, int32_t channel=0, const uint8_t* bssid=0, bool connect=true);
     wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
     wl_status_t begin();
@@ -57,6 +63,11 @@ public:
     bool getAutoReconnect();
 
     uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
+
+    // Next group functions must be called before WiFi.begin()
+    void setMinSecurity(wifi_auth_mode_t minSecurity);// Default is WIFI_AUTH_WPA2_PSK
+    void setScanMethod(wifi_scan_method_t scanMethod);// Default is WIFI_FAST_SCAN
+    void setSortMethod(wifi_sort_method_t sortMethod);// Default is WIFI_CONNECT_AP_BY_SIGNAL
 
     // STA network info
     IPAddress localIP();
@@ -90,9 +101,12 @@ public:
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;
+    static wifi_auth_mode_t _minSecurity;
+    static wifi_scan_method_t _scanMethod;
+    static wifi_sort_method_t _sortMethod;
 
 public: 
-    bool beginSmartConfig();
+    bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
     bool stopSmartConfig();
     bool smartConfigDone();
 

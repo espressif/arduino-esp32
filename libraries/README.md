@@ -12,7 +12,9 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
   Bluetooth Low Energy v4.2 client/server framework
 
 ### BluetoothSerial
-  Serial to Bluetooth redirection server
+  Serial to Bluetooth redirection server\
+  Note: This library depends on Bluetooth Classic which is only available for ESP32\
+  (Bluetoothserial is **not available** for ESP32-S2, ESP32-C3, ESP32-S3).
 
 ### DNSServer
   A basic UDP DNS daemon (includes captive portal demo)

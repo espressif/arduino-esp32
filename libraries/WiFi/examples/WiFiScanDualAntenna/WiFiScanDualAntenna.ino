@@ -18,20 +18,25 @@
 
 void setup()
 {
-    bool err = ESP_FAIL;
+    bool err = false;
     Serial.begin(115200);
 
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     WiFi.mode(WIFI_STA);
 
-    // Set WiFi dual antenna configuration by passing the GPIO and antenna mode for RX ant TX
-    err = WiFi.setDualAntennaConfig(GPIO_ANT1, GPIO_ANT1, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO);
+    /* Attention: This is the manual prodecure for the dual antenna configuration.
+     * If you choose the ESP32-WROOM-DA module from the Tools -> Board, this configuration
+     * is not necessary!
+     * 
+     * Set WiFi dual antenna configuration by passing the GPIO and antenna mode for RX ant TX
+     */ 
+    err = WiFi.setDualAntennaConfig(GPIO_ANT1, GPIO_ANT2, WIFI_RX_ANT_AUTO, WIFI_TX_ANT_AUTO);
 
     /* For more details on how to use this feature, see our docs:
      * https://docs.espressif.com/projects/arduino-esp32/en/latest/api/wifi.html
      */
 
-    if(err == ESP_FAIL) {
+    if(err == false) {
         Serial.println("Dual Antenna configuration failed!");
     } else {
         Serial.println("Dual Antenna configuration successfuly done!");

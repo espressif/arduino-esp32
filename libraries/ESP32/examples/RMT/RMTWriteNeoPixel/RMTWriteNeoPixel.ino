@@ -5,6 +5,17 @@
 
 #include "esp32-hal.h"
 
+// The effect seen in ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
+#if CONFIG_IDF_TARGET_ESP32S2
+#define BUILTIN_RGBLED_PIN   18
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define BUILTIN_RGBLED_PIN   48
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define BUILTIN_RGBLED_PIN   8
+#else
+#define BUILTIN_RGBLED_PIN   21   // ESP32 has no builtin RGB LED
+#endif
+
 #define NR_OF_LEDS   8*4
 #define NR_OF_ALL_BITS 24*NR_OF_LEDS
 
@@ -41,7 +52,7 @@ void setup()
 {
     Serial.begin(115200);
     
-    if ((rmt_send = rmtInit(18, RMT_TX_MODE, RMT_MEM_64)) == NULL)
+    if ((rmt_send = rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_64)) == NULL)
     {
         Serial.println("init sender failed\n");
     }

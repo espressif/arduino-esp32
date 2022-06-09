@@ -71,48 +71,70 @@ Installing using PlatformIO
    :width: 200
    :figclass: align-center
 
-PlatformIO is one of most popular embedded development tool. Currently, it supports Arduino ESP32 and ESP-IDF from Espressif (other platforms are also supported).
+PlatformIO is a professional collaborative platform for embedded development. It has out-of-the-box support for ESP32 SoCs and allows working with Arduino ESP32 as well as ESP-IDF from Espressif without changing your development environment. PlatformIO includes lots of instruments for the most common development tasks such as debugging, unit testing, and static code analysis.
 
-To install PIO, you can follow this Getting Started, provided by PIO at `docs.platformio.org`_.
+A detailed overview of the PlatformIO ecosystem and its philosophy can be found in `the official documentation <https://docs.platformio.org/en/latest/core/index.html>`_.
 
-To test the latest Arduino ESP32, you need to change your project *platform.ini* accordingly.
+PlatformIO can be used in two flavors:
 
-- Start a new project and select one of the available board. You can change after by changing the *platform.ini* file.
+- `PlatformIO IDE <https://platformio.org/platformio-ide>`_ is a toolset for embedded C/C++ development available on Windows, macOS and Linux platforms
+
+- `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_ is a command-line tool that consists of a multi-platform build system, platform and library managers and other integration components. It can be used with a variety of code development environments and allows integration with cloud platforms and web services
+
+To install PlatformIO, you can follow this Getting Started, provided at `docs.platformio.org`_.
+
+Using the stable code
+*********************
+
+.. note::
+   A detailed overview of supported development boards, examples and frameworks can be found on `the official Espressif32 dev-platform page <https://registry.platformio.org/platforms/platformio/espressif32>`_ in the PlatformIO Registry.
+
+The most reliable and easiest way to get started is to use the latest stable version of the ESP32 development platform that passed all tests/verifications and can be used in production.
+
+Create a new project and select one of the available boards. You can change after by changing the `platformio.ini <https://docs.platformio.org/en/latest/projectconf/index.html>`_ file.
 
 - For ESP32
 
 .. code-block:: bash
 
-   [env:arduino-esp32]
-   platform = https://github.com/platformio/platform-espressif32.git#feature/arduino-upstream
+   [env:esp32dev]
+   platform = espressif32
    board = esp32dev
    framework = arduino
-   platform_packages =
-      framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
 
 - For ESP32-S2 (ESP32-S2-Saola-1 board)
 
 .. code-block:: bash
 
-   [env:arduino-esp32s2]
-   platform = https://github.com/platformio/platform-espressif32.git#feature/arduino-upstream
+   [env:esp32-s2-saola-1]
+   platform = espressif32
    board = esp32-s2-saola-1
    framework = arduino
-   platform_packages =
-      framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
 
-- For ESP32-C3 (ESP32-S3-DevKitM-1 board)
+- For ESP32-C3 (ESP32-C3-DevKitM-1 board)
 
 .. code-block:: bash
 
-   [env:arduino-esp32c3]
-   platform = https://github.com/platformio/platform-espressif32.git#feature/arduino-upstream
+   [env:esp32-c3-devkitm-1]
+   platform = espressif32
+   board = esp32-c3-devkitm-1
+   framework = arduino
+
+How to update to the latest code
+********************************
+
+To test the latest Arduino ESP32, you need to change your project *platformio.ini* accordingly.
+The following configuration uses the upstream version of the Espressif development platform and the latest Arduino core directly from the Espressif GitHub repository:
+
+.. code-block:: bash
+
+   [env:esp32-c3-devkitm-1]
+   platform = https://github.com/platformio/platform-espressif32.git
    board = esp32-c3-devkitm-1
    framework = arduino
    platform_packages =
-      framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
+       framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
 
-Now you're able to use the latest Arduino ESP32 support directly from Espressif GitHub repository. 
 
 To get more information about PlatformIO, see the following links:
 
