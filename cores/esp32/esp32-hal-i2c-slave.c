@@ -127,7 +127,7 @@ typedef enum {
 
 static inline i2c_stretch_cause_t i2c_ll_stretch_cause(i2c_dev_t *hw)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
     return hw->sr.stretch_cause;
 #elif CONFIG_IDF_TARGET_ESP32S2
     return hw->status_reg.stretch_cause;
@@ -164,7 +164,7 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
     return hw->sr.slave_addressed;
 #else
     return hw->status_reg.slave_addressed;
@@ -173,7 +173,7 @@ static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)//not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
     return hw->sr.slave_rw;
 #else
     return hw->status_reg.slave_rw;
@@ -390,18 +390,6 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
     }
     I2C_SLAVE_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32
-    //make sure that tx is idle
-    uint64_t tout_at = esp_timer_get_time() + (timeout_ms * 1000);
-    while(i2c_ll_slave_addressed(i2c->dev) && i2c_ll_slave_rw(i2c->dev)) {
-        // ongoing MASTER READ
-        //wait up to timeout_ms for current transaction to finish
-        vTaskDelay(2);
-        if((uint64_t)esp_timer_get_time() >= tout_at){
-            log_e("TX IDLE WAIT TIMEOUT!");
-            I2C_SLAVE_MUTEX_UNLOCK();
-            return 0;
-        }
-    }
     i2c_ll_slave_disable_tx_it(i2c->dev);
     if (i2c_ll_get_txfifo_len(i2c->dev) < SOC_I2C_FIFO_LEN) {
         i2c_ll_txfifo_rst(i2c->dev);
@@ -695,7 +683,6 @@ static void i2c_slave_isr_handler(void* arg)
     uint32_t activeInt = i2c_ll_get_intsts_mask(i2c->dev);
     i2c_ll_clr_intsts_mask(i2c->dev, activeInt);
     uint8_t rx_fifo_len = i2c_ll_get_rxfifo_cnt(i2c->dev);
-    uint8_t tx_fifo_len = SOC_I2C_FIFO_LEN - i2c_ll_get_txfifo_len(i2c->dev);
     bool slave_rw = i2c_ll_slave_rw(i2c->dev);
 
     if(activeInt & I2C_RXFIFO_WM_INT_ENA){ // RX FiFo Full
@@ -719,10 +706,12 @@ static void i2c_slave_isr_handler(void* arg)
         }
         if(slave_rw){ // READ
 #if CONFIG_IDF_TARGET_ESP32
-            //SEND TX Event
-            i2c_slave_queue_event_t event;
-            event.event = I2C_SLAVE_EVT_TX;
-            pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            if(i2c->dev->status_reg.scl_main_state_last == 6){
+                //SEND TX Event
+                i2c_slave_queue_event_t event;
+                event.event = I2C_SLAVE_EVT_TX;
+                pxHigherPriorityTaskWoken |= i2c_slave_send_event(i2c, &event);
+            }
 #else
             //reset TX data
             i2c_ll_txfifo_rst(i2c->dev);

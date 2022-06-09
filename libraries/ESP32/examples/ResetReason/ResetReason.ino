@@ -19,6 +19,8 @@
 #include "esp32s2/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "esp32s3/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -28,7 +30,7 @@
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
 
-void print_reset_reason(RESET_REASON reason)
+void print_reset_reason(int reason)
 {
   switch ( reason)
   {
@@ -51,7 +53,7 @@ void print_reset_reason(RESET_REASON reason)
   }
 }
 
-void verbose_print_reset_reason(RESET_REASON reason)
+void verbose_print_reset_reason(int reason)
 {
   switch ( reason)
   {

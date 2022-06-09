@@ -33,6 +33,9 @@
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "freertos/xtensa_timer.h"
 #include "esp32s2/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#include "freertos/xtensa_timer.h"
+#include "esp32s3/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
 #else 
@@ -104,7 +107,7 @@ bool addApbChangeCallback(void * arg, apb_change_cb_t cb){
         // look for duplicate callbacks
         while( (r != NULL ) && !((r->cb == cb) && ( r->arg == arg))) r = r->next;
         if (r) {
-            log_e("duplicate func=%08X arg=%08X",c->cb,c->arg);
+            log_e("duplicate func=%8p arg=%8p",c->cb,c->arg);
             free(c);
             xSemaphoreGive(apb_change_lock);
             return false;
@@ -126,7 +129,7 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
     // look for matching callback
     while( (r != NULL ) && !((r->cb == cb) && ( r->arg == arg))) r = r->next;
     if ( r == NULL ) {
-        log_e("not found func=%08X arg=%08X",cb,arg);
+        log_e("not found func=%8p arg=%8p",cb,arg);
         xSemaphoreGive(apb_change_lock);
         return false;
         }
@@ -144,7 +147,7 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 	return APB_CLK_FREQ;
 #else
     if(conf->freq_mhz >= 80){
@@ -227,6 +230,8 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     }
     //Update FreeRTOS Tick Divisor
 #if CONFIG_IDF_TARGET_ESP32C3
+
+#elif CONFIG_IDF_TARGET_ESP32S3
 
 #else
     uint32_t fcpu = (conf.freq_mhz >= 80)?(conf.freq_mhz * MHZ):(apb);

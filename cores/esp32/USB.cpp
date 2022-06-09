@@ -19,6 +19,7 @@
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
 #include "common/tusb_common.h"
+#include "StreamString.h"
 
 #ifndef USB_VID
 #define USB_VID USB_ESPRESSIF_VID
@@ -33,7 +34,11 @@
 #define USB_PRODUCT ARDUINO_BOARD
 #endif
 #ifndef USB_SERIAL
+#if CONFIG_IDF_TARGET_ESP32S3
+#define USB_SERIAL "__MAC__"
+#else
 #define USB_SERIAL "0"
+#endif
 #endif
 #ifndef USB_WEBUSB_ENABLED
 #define USB_WEBUSB_ENABLED false
@@ -155,6 +160,15 @@ ESPUSB::~ESPUSB(){
 
 bool ESPUSB::begin(){
     if(!_started){
+#if CONFIG_IDF_TARGET_ESP32S3
+        if(serial_number == "__MAC__"){
+            StreamString s;
+            uint8_t m[6];
+            esp_efuse_mac_get_default(m);
+            s.printf("%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+            serial_number = s;
+        }
+#endif
         tinyusb_device_config_t tinyusb_device_config = {
                 .vid = vid,
                 .pid = pid,

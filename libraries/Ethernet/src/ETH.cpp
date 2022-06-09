@@ -57,24 +57,25 @@ extern void tcpipInit();
 static eth_clock_mode_t eth_clock_mode = ETH_CLK_MODE;
 
 #if CONFIG_ETH_RMII_CLK_INPUT
+/*
 static void emac_config_apll_clock(void)
 {
-    /* apll_freq = xtal_freq * (4 + sdm2 + sdm1/256 + sdm0/65536)/((o_div + 2) * 2) */
+    // apll_freq = xtal_freq * (4 + sdm2 + sdm1/256 + sdm0/65536)/((o_div + 2) * 2)
     rtc_xtal_freq_t rtc_xtal_freq = rtc_clk_xtal_freq_get();
     switch (rtc_xtal_freq) {
     case RTC_XTAL_FREQ_40M: // Recommended
-        /* 50 MHz = 40MHz * (4 + 6) / (2 * (2 + 2) = 50.000 */
-        /* sdm0 = 0, sdm1 = 0, sdm2 = 6, o_div = 2 */
+        // 50 MHz = 40MHz * (4 + 6) / (2 * (2 + 2) = 50.000
+        // sdm0 = 0, sdm1 = 0, sdm2 = 6, o_div = 2
         rtc_clk_apll_enable(true, 0, 0, 6, 2);
         break;
     case RTC_XTAL_FREQ_26M:
-        /* 50 MHz = 26MHz * (4 + 15 + 118 / 256 + 39/65536) / ((3 + 2) * 2) = 49.999992 */
-        /* sdm0 = 39, sdm1 = 118, sdm2 = 15, o_div = 3 */
+        // 50 MHz = 26MHz * (4 + 15 + 118 / 256 + 39/65536) / ((3 + 2) * 2) = 49.999992
+        // sdm0 = 39, sdm1 = 118, sdm2 = 15, o_div = 3
         rtc_clk_apll_enable(true, 39, 118, 15, 3);
         break;
     case RTC_XTAL_FREQ_24M:
-        /* 50 MHz = 24MHz * (4 + 12 + 255 / 256 + 255/65536) / ((2 + 2) * 2) = 49.499977 */
-        /* sdm0 = 255, sdm1 = 255, sdm2 = 12, o_div = 2 */
+        // 50 MHz = 24MHz * (4 + 12 + 255 / 256 + 255/65536) / ((2 + 2) * 2) = 49.499977
+        // sdm0 = 255, sdm1 = 255, sdm2 = 12, o_div = 2
         rtc_clk_apll_enable(true, 255, 255, 12, 2);
         break;
     default: // Assume we have a 40M xtal
@@ -82,8 +83,10 @@ static void emac_config_apll_clock(void)
         break;
     }
 }
+*/
 #endif
 
+/*
 static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
 #if CONFIG_IDF_TARGET_ESP32
     if(eth_clock_mode > ETH_CLOCK_GPIO17_OUT){
@@ -123,7 +126,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
         //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_EMAC_TX_CLK);
         //PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[0]);
         pinMode(0, INPUT);
-        pinMode(0, FUNCTION_6);
+        PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[0], 5);
         EMAC_EXT.ex_clk_ctrl.ext_en = 1;
         EMAC_EXT.ex_clk_ctrl.int_en = 0;
         EMAC_EXT.ex_oscclk_conf.clk_sel = 1;
@@ -135,7 +138,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_CLK_OUT1);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[0]);
             pinMode(0, OUTPUT);
-            pinMode(0, FUNCTION_2);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[0], 1);
             // Choose the APLL clock to output on GPIO
             REG_WRITE(PIN_CTRL, 6);
 #endif
@@ -145,7 +148,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO16_U, FUNC_GPIO16_EMAC_CLK_OUT);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[16]);
             pinMode(16, OUTPUT);
-            pinMode(16, FUNCTION_6);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[16], 5);
 #endif
         } else if(eth_clock_mode == ETH_CLOCK_GPIO17_OUT){
 #if CONFIG_ETH_RMII_CLK_OUT_GPIO != 17
@@ -153,7 +156,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
             //gpio_hal_iomux_func_sel(PERIPHS_IO_MUX_GPIO17_U, FUNC_GPIO17_EMAC_CLK_OUT_180);
             //PIN_INPUT_DISABLE(GPIO_PIN_MUX_REG[17]);
             pinMode(17, OUTPUT);
-            pinMode(17, FUNCTION_6);
+            PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[17], 5);
 #endif
         }
 #if CONFIG_ETH_RMII_CLK_INPUT
@@ -168,7 +171,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
 #endif
     return ESP_OK;
 }
-
+*/
 
 
 /**
@@ -226,11 +229,18 @@ ETHClass::ETHClass()
 ETHClass::~ETHClass()
 {}
 
-bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode)
+bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode, bool use_mac_from_efuse)
 {
 #if ESP_IDF_VERSION_MAJOR > 3
     eth_clock_mode = clock_mode;
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
 
     tcpip_adapter_set_default_eth_handlers();
     
@@ -245,6 +255,8 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
         eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+        mac_config.clock_config.rmii.clock_mode = (eth_clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
+        mac_config.clock_config.rmii.clock_gpio = (1 == eth_clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == eth_clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == eth_clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
         mac_config.smi_mdc_gpio_num = mdc;
         mac_config.smi_mdio_gpio_num = mdio;
         mac_config.sw_reset_timeout_ms = 1000;
@@ -305,7 +317,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 
     eth_handle = NULL;
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(eth_mac, eth_phy);
-    eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
+    //eth_config.on_lowlevel_init_done = on_lowlevel_init_done;
     //eth_config.on_lowlevel_deinit_done = on_lowlevel_deinit_done;
     if(esp_eth_driver_install(&eth_config, &eth_handle) != ESP_OK || eth_handle == NULL){
         log_e("esp_eth_driver_install failed");
@@ -361,6 +373,14 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     tcpipInit();
+
+    if (use_mac_from_efuse)
+    {
+        uint8_t p[6] = { 0x00,0x00,0x00,0x00,0x00,0x00 };
+        esp_efuse_mac_get_custom(p);
+        esp_base_mac_addr_set(p);
+    }
+
     err = esp_eth_init(&eth_config);
     if(!err){
         initialized = true;
@@ -386,8 +406,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
 {
     esp_err_t err = ESP_OK;
     tcpip_adapter_ip_info_t info;
-	
-    if(local_ip != (uint32_t)0x00000000 && local_ip != INADDR_NONE){
+
+    if(static_cast<uint32_t>(local_ip) != 0){
         info.ip.addr = static_cast<uint32_t>(local_ip);
         info.gw.addr = static_cast<uint32_t>(gateway);
         info.netmask.addr = static_cast<uint32_t>(subnet);
@@ -423,13 +443,13 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     ip_addr_t d;
     d.type = IPADDR_TYPE_V4;
 
-    if(dns1 != (uint32_t)0x00000000 && dns1 != INADDR_NONE) {
+    if(static_cast<uint32_t>(dns1) != 0) {
         // Set DNS1-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
         dns_setserver(0, &d);
     }
 
-    if(dns2 != (uint32_t)0x00000000 && dns2 != INADDR_NONE) {
+    if(static_cast<uint32_t>(dns2) != 0) {
         // Set DNS2-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
         dns_setserver(1, &d);
