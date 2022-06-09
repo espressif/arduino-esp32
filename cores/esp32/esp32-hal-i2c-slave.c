@@ -390,18 +390,6 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
     }
     I2C_SLAVE_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32
-    //make sure that tx is idle
-    uint64_t tout_at = esp_timer_get_time() + (timeout_ms * 1000);
-    while(i2c_ll_slave_addressed(i2c->dev) && i2c_ll_slave_rw(i2c->dev)) {
-        // ongoing MASTER READ
-        //wait up to timeout_ms for current transaction to finish
-        vTaskDelay(2);
-        if((uint64_t)esp_timer_get_time() >= tout_at){
-            log_e("TX IDLE WAIT TIMEOUT!");
-            I2C_SLAVE_MUTEX_UNLOCK();
-            return 0;
-        }
-    }
     i2c_ll_slave_disable_tx_it(i2c->dev);
     if (i2c_ll_get_txfifo_len(i2c->dev) < SOC_I2C_FIFO_LEN) {
         i2c_ll_txfifo_rst(i2c->dev);

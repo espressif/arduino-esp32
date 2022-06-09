@@ -95,6 +95,9 @@ void setToneChannel(uint8_t channel){
   if(tone_init()){
     tone_msg_t tone_msg = {
       .tone_cmd = TONE_SET_CHANNEL,
+      .pin = 0, // Ignored
+      .frequency = 0, // Ignored
+      .duration = 0, // Ignored
       .channel = channel
     };
     xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
@@ -106,7 +109,10 @@ void noTone(uint8_t _pin){
   if(tone_init()){
     tone_msg_t tone_msg = {
       .tone_cmd = TONE_END,
-      .pin = _pin
+      .pin = _pin,
+      .frequency = 0, // Ignored
+      .duration = 0, // Ignored
+      .channel = 0 // Ignored
     };
     xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
   }
@@ -124,7 +130,8 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration){
       .tone_cmd = TONE_START,
       .pin = _pin,
       .frequency = frequency,
-      .duration = duration
+      .duration = duration,
+      .channel = 0 // Ignored
     };
     xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
   }
