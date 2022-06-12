@@ -1338,8 +1338,8 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
         .rx_ant_mode = WIFI_ANT_MODE_AUTO,
         .rx_ant_default = WIFI_ANT_MAX, // Ignored in AUTO mode
         .tx_ant_mode = WIFI_ANT_MODE_AUTO,
-        .enabled_ant0 = 0,
-        .enabled_ant1 = 1,
+        .enabled_ant0 = 1,
+        .enabled_ant1 = 2,
     };
 
     switch (rx_mode)
