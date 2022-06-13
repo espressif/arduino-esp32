@@ -16,30 +16,30 @@
 
 // Default pins for I2S
 #ifndef PIN_I2S_SCK
-  #define PIN_I2S_SCK 26
+  #define PIN_I2S_SCK 33
 #endif
 
 #ifndef PIN_I2S_FS
-  #define PIN_I2S_FS 33
+  #define PIN_I2S_FS 35
 #endif
 
 #ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 25   //Shared pin in simplex mode
+  #define PIN_I2S_SD 36   //Shared pin in simplex mode
 #endif
 
 #ifndef PIN_I2S_SD_OUT
-  #define PIN_I2S_SD_OUT 25
+  #define PIN_I2S_SD_OUT 36
 #endif
 
 #ifndef PIN_I2S_SD_IN
-  #define PIN_I2S_SD_IN 32
+  #define PIN_I2S_SD_IN 34
 #endif
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-static const uint8_t SDA = 8;
-static const uint8_t SCL = 9;
+static const uint8_t SDA = 40;
+static const uint8_t SCL = 39;
 
 static const uint8_t SS    = 10;
 static const uint8_t MOSI  = 11;
