@@ -240,11 +240,6 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
-
-    if(passphrase) {
-        _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
-    }
 
     wifi_sta_config(&conf, ssid, passphrase, bssid, channel, _minSecurity, _scanMethod, _sortMethod);
 
