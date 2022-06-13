@@ -34,6 +34,8 @@ typedef enum {
     OTA_STATUS_FAILED,
     /** OTA was delayed by the application */
     OTA_STATUS_DELAYED,
+    /** OTA rejected due to some reason (wrong project, version, etc.) */
+    OTA_STATUS_REJECTED,
 } ota_status_t;
 
 /** OTA Workflow type */
@@ -145,6 +147,29 @@ esp_err_t esp_rmaker_ota_enable(esp_rmaker_ota_config_t *ota_config, esp_rmaker_
  */
 esp_err_t esp_rmaker_ota_report_status(esp_rmaker_ota_handle_t ota_handle, ota_status_t status, char *additional_info);
 
+/** Default OTA callback
+ *
+ * This is the default OTA callback which will get used if you do not pass your own callback. You can call this
+ * even from your callback, in case you want better control on when the OTA can proceed and yet let the actual
+ * OTA process be managed by the RainMaker Core.
+ *
+ * @param[in] handle An OTA handle assigned by the ESP RainMaker Core
+ * @param[in] ota_data The data to be used for the OTA
+ *
+ * @return ESP_OK if the OTA was successful
+ * @return ESP_FAIL if the OTA failed.
+ * */
+esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t handle, esp_rmaker_ota_data_t *ota_data);
+
+/** Fetch OTA Info
+ *
+ * For OTA using Topics, this API can be used to explicitly ask the backend if an OTA is available.
+ * If it is, then the OTA callback would get invoked.
+ *
+ * @return ESP_OK if the OTA fetch publish message was successful.
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_ota_fetch(void);
 #ifdef __cplusplus
 }
 #endif
