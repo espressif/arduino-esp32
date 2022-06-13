@@ -25,10 +25,7 @@ extern "C"
 #define ESP_RMAKER_UI_DROPDOWN          "esp.ui.dropdown"
 #define ESP_RMAKER_UI_TEXT              "esp.ui.text"
 #define ESP_RMAKER_UI_HUE_SLIDER        "esp.ui.hue-slider"
-#define ESP_RMAKER_UI_HUE_CIRCLE        "esp.ui.hue-circle"
-#define ESP_RMAKER_UI_PUSHBUTTON        "esp.ui.push-btn-big"
-#define ESP_RMAKER_UI_TRIGGER           "esp.ui.trigger"
-#define ESP_RMAKER_UI_HIDDEN            "esp.ui.hidden"
+
 /********** STANDARD PARAM TYPES **********/
 
 #define ESP_RMAKER_PARAM_NAME           "esp.param.name"
@@ -53,13 +50,7 @@ extern "C"
 #define ESP_RMAKER_PARAM_WIFI_RESET     "esp.param.wifi-reset"
 #define ESP_RMAKER_PARAM_LOCAL_CONTROL_POP      "esp.param.local_control_pop"
 #define ESP_RMAKER_PARAM_LOCAL_CONTROL_TYPE     "esp.param.local_control_type"
-#define ESP_RMAKER_PARAM_TOGGLE         "esp.param.toggle"
-#define ESP_RMAKER_PARAM_RANGE          "esp.param.range"
-#define ESP_RMAKER_PARAM_MODE           "esp.param.mode"
-#define ESP_RMAKER_PARAM_BLINDS_POSITION     "esp.param.blinds-position"
-#define ESP_RMAKER_PARAM_GARAGE_POSITION     "esp.param.garage-position"
-#define ESP_RMAKER_PARAM_LIGHT_MODE     "esp.param.light-mode"
-#define ESP_RMAKER_PARAM_AC_MODE        "esp.param.ac-mode"
+
 
 /********** STANDARD DEVICE TYPES **********/
 
