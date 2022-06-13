@@ -113,7 +113,6 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "newlib", "platform_include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32s2", "include", "freertos", "include", "esp_additions", "freertos"),
@@ -352,10 +351,10 @@ if "build.variant" in env.BoardConfig():
             join(variants_dir, env.BoardConfig().get("build.variant"))
         ]
     )
-    libs.append(env.BuildLibrary(
+    env.BuildSources(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
         join(variants_dir, env.BoardConfig().get("build.variant"))
-    ))
+    )
 
 envsafe = env.Clone()
 

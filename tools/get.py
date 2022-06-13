@@ -53,10 +53,11 @@ def mkdir_p(path):
             raise
 
 def report_progress(count, blockSize, totalSize):
-    percent = int(count*blockSize*100/totalSize)
-    percent = min(100, percent)
-    sys.stdout.write("\r%d%%" % percent)
-    sys.stdout.flush()
+    if sys.stdout.isatty():
+        percent = int(count*blockSize*100/totalSize)
+        percent = min(100, percent)
+        sys.stdout.write("\r%d%%" % percent)
+        sys.stdout.flush()
 
 def unpack(filename, destination):
     dirname = ''

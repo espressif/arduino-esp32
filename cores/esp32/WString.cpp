@@ -137,6 +137,24 @@ String::String(double value, unsigned int decimalPlaces) {
     }
 }
 
+String::String(long long value, unsigned char base) {
+    init();
+    char buf[2 + 8 * sizeof(long long)];
+    if (base==10) {
+        sprintf(buf, "%lld", value);   // NOT SURE - NewLib Nano ... does it support %lld? 
+    } else {
+        lltoa(value, buf, base);
+    }
+    *this = buf;
+}
+
+String::String(unsigned long long value, unsigned char base) {
+    init();
+    char buf[1 + 8 * sizeof(unsigned long long)];
+    ulltoa(value, buf, base);
+    *this = buf;
+}
+
 String::~String() {
     invalidate();
 }
@@ -408,6 +426,17 @@ unsigned char String::concat(double num) {
     return concat(string, strlen(string));
 }
 
+unsigned char String::concat(long long num) {
+    char buf[2 + 3 * sizeof(long long)];
+    return concat(buf, sprintf(buf, "%lld", num));    // NOT SURE - NewLib Nano ... does it support %lld?
+}
+
+unsigned char String::concat(unsigned long long num) {
+    char buf[1 + 3 * sizeof(unsigned long long)];
+    ulltoa(num, buf, 10);
+    return concat(buf, strlen(buf));
+}
+
 unsigned char String::concat(const __FlashStringHelper * str) {
     if (!str) return 0;
     int length = strlen_P((PGM_P)str);
@@ -487,6 +516,20 @@ StringSumHelper & operator +(const StringSumHelper &lhs, float num) {
 }
 
 StringSumHelper & operator +(const StringSumHelper &lhs, double num) {
+    StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
+    if(!a.concat(num))
+        a.invalidate();
+    return a;
+}
+
+StringSumHelper & operator +(const StringSumHelper &lhs, long long num) {
+    StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
+    if(!a.concat(num))
+        a.invalidate();
+    return a;
+}
+
+StringSumHelper & operator +(const StringSumHelper &lhs, unsigned long long num) {
     StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
     if(!a.concat(num))
         a.invalidate();

@@ -115,7 +115,7 @@ void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
     }
     UART_MUTEX_LOCK();
     // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    uart_set_pin(uart->num, txPin, rxPin, ctsPin, rtsPin); 
+    uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin); 
     UART_MUTEX_UNLOCK();  
 }
 
