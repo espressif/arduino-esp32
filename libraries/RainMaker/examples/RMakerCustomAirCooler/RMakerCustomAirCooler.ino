@@ -21,6 +21,7 @@ static int gpio_swing = 3;
 static int gpio_mode_auto = 4;
 static int gpio_mode_cool = 5;
 static int gpio_mode_heat = 6;
+static int gpio_speed = 10;
 
 #else
 //GPIO for push button
