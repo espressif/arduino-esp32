@@ -85,13 +85,13 @@ public:
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String("") );
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const Uri &uri, THandlerFunction handler);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);
+  void on(const Uri &uri, THandlerFunction fn);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn); 
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn); //ufn handles file uploads
   void addHandler(RequestHandler* handler);
   void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL );
   void onNotFound(THandlerFunction fn);  //called when handler is not assigned
-  void onFileUpload(THandlerFunction fn); //handle file uploads
+  void onFileUpload(THandlerFunction ufn); //handle file uploads
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
@@ -120,6 +120,8 @@ public:
   void send(int code, const char* content_type = NULL, const String& content = String(""));
   void send(int code, char* content_type, const String& content);
   void send(int code, const String& content_type, const String& content);
+  void send(int code, const char* content_type, const char* content);
+
   void send_P(int code, PGM_P content_type, PGM_P content);
   void send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength);
 

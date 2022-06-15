@@ -20,12 +20,12 @@
 #ifndef MAIN_ESP32_HAL_TIMER_H_
 #define MAIN_ESP32_HAL_TIMER_H_
 
+#include "esp32-hal.h"
+#include "freertos/FreeRTOS.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "esp32-hal.h"
-#include "freertos/FreeRTOS.h"
 
 struct hw_timer_s;
 typedef struct hw_timer_s hw_timer_t;
@@ -50,6 +50,7 @@ void timerSetAutoReload(hw_timer_t *timer, bool autoreload);
 bool timerStarted(hw_timer_t *timer);
 uint64_t timerRead(hw_timer_t *timer);
 uint64_t timerReadMicros(hw_timer_t *timer);
+uint64_t timerReadMilis(hw_timer_t *timer);
 double timerReadSeconds(hw_timer_t *timer);
 uint16_t timerGetDivider(hw_timer_t *timer);
 bool timerGetCountUp(hw_timer_t *timer);
@@ -57,7 +58,7 @@ bool timerGetAutoReload(hw_timer_t *timer);
 
 void timerAlarmEnable(hw_timer_t *timer);
 void timerAlarmDisable(hw_timer_t *timer);
-void timerAlarmWrite(hw_timer_t *timer, uint64_t interruptAt, bool autoreload);
+void timerAlarmWrite(hw_timer_t *timer, uint64_t alarm_value, bool autoreload);
 
 bool timerAlarmEnabled(hw_timer_t *timer);
 uint64_t timerAlarmRead(hw_timer_t *timer);

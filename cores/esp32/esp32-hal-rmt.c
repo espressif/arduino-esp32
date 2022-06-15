@@ -12,53 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
-#include "freertos/semphr.h"
-
 #include "esp32-hal.h"
-#include "esp8266-compat.h"
-#include "soc/gpio_reg.h"
-#include "soc/rmt_struct.h"
-#include "driver/periph_ctrl.h"
-#include "esp_intr_alloc.h"
+#include "driver/rmt.h"
 
 /**
  * Internal macros
  */
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#define MAX_CHANNELS 8
-#define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 62
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define MAX_CHANNELS 4
-#define MAX_DATA_PER_CHANNEL 64
-#define MAX_DATA_PER_ITTERATION 62
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define MAX_CHANNELS 4
-#define MAX_DATA_PER_CHANNEL 48
-#define MAX_DATA_PER_ITTERATION 46
-#else 
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-#define _ABS(a) (a>0?a:-a)
-#define _LIMIT(a,b) (a>b?b:a)
-#if CONFIG_IDF_TARGET_ESP32C3
-#define _INT_TX_END(channel) (1<<(channel))
-#define _INT_RX_END(channel) (4<<(channel))
-#define _INT_ERROR(channel)  (16<<(channel))
-#define _INT_THR_EVNT(channel)  (256<<(channel))
-#else
-#define __INT_TX_END     (1)
-#define __INT_RX_END     (2)
-#define __INT_ERROR      (4)
-#define __INT_THR_EVNT   (1<<24)
 
-#define _INT_TX_END(channel) (__INT_TX_END<<(channel*3))
-#define _INT_RX_END(channel) (__INT_RX_END<<(channel*3))
-#define _INT_ERROR(channel)  (__INT_ERROR<<(channel*3))
-#define _INT_THR_EVNT(channel)  ((__INT_THR_EVNT)<<(channel))
-#endif
+#define MAX_CHANNELS                        (SOC_RMT_GROUPS * SOC_RMT_CHANNELS_PER_GROUP)
+
+#define RMT_TX_CH_START       (0)
+#define RMT_TX_CH_END         (SOC_RMT_TX_CANDIDATES_PER_GROUP - 1)
+#define RMT_RX_CH_START       (SOC_RMT_CHANNELS_PER_GROUP - SOC_RMT_TX_CANDIDATES_PER_GROUP)
+#define RMT_RX_CH_END         (SOC_RMT_CHANNELS_PER_GROUP - 1)
+
+#define _LIMIT(a,b) (a>b?b:a)
 
 #if CONFIG_DISABLE_HAL_LOCKS
 # define RMT_MUTEX_LOCK(channel)
@@ -77,39 +45,58 @@
 # define DEBUG_INTERRUPT_END(pin)
 #endif /* _RMT_INTERNAL_DEBUG */
 
+#define RMT_DEFAULT_ARD_CONFIG_TX(gpio, channel_id, buffers)      \
+    {                                                \
+        .rmt_mode = RMT_MODE_TX,                     \
+        .channel = channel_id,                       \
+        .gpio_num = gpio,                            \
+        .clk_div = 1,                                \
+        .mem_block_num = buffers,                    \
+        .flags = 0,                                  \
+        .tx_config = {                               \
+            .carrier_level = RMT_CARRIER_LEVEL_HIGH, \
+            .idle_level = RMT_IDLE_LEVEL_LOW,        \
+            .carrier_duty_percent = 50,              \
+            .carrier_en = false,                     \
+            .loop_en = false,                        \
+            .idle_output_en = true,                  \
+        }                                            \
+    }
+
+#define RMT_DEFAULT_ARD_CONFIG_RX(gpio, channel_id, buffers) \
+    {                                           \
+        .rmt_mode = RMT_MODE_RX,                \
+        .channel = channel_id,                  \
+        .gpio_num = gpio,                       \
+        .clk_div = 1,                           \
+        .mem_block_num = buffers,               \
+        .flags = 0,                             \
+        .rx_config = {                          \
+            .idle_threshold = 0x80,             \
+            .filter_ticks_thresh = 100,         \
+            .filter_en = false,                 \
+        }                                       \
+    }
+
+
+
+
 /**
  * Typedefs for internal stuctures, enums
  */
-typedef enum {
-    E_NO_INTR = 0,
-    E_TX_INTR = 1,
-    E_TXTHR_INTR = 2,
-    E_RX_INTR = 4,
-} intr_mode_t;
-
-typedef enum {
-    E_INACTIVE   = 0,
-    E_FIRST_HALF = 1,
-    E_LAST_DATA  = 2,
-    E_END_TRANS  = 4,
-    E_SET_CONTI =  8,
-} transaction_state_t;
-
 struct rmt_obj_s
 {
     bool allocated;
     EventGroupHandle_t events;
-    int pin;
     int channel;
-    bool tx_not_rx;
     int buffers;
     int data_size;
     uint32_t* data_ptr;
-    intr_mode_t intr_mode;
-    transaction_state_t tx_state;
     rmt_rx_data_cb_t cb;
-    bool data_alloc;
     void * arg;
+    TaskHandle_t rxTaskHandle;  
+    bool rx_completed;
+    bool tx_not_rx;
 };
 
 /**
@@ -117,119 +104,212 @@ struct rmt_obj_s
  */
 static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
     NULL, NULL, NULL, NULL, 
-#if CONFIG_IDF_TARGET_ESP32
+#if MAX_CHANNELS > 4
     NULL, NULL, NULL, NULL
 #endif
 };
 
 static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-#if CONFIG_IDF_TARGET_ESP32
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
-    { false, NULL, 0, 0, 0, 0, 0, NULL, E_NO_INTR, E_INACTIVE, NULL, false, NULL},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+#if MAX_CHANNELS > 4
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
+    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
 #endif
 };
 
 /**
  * Internal variables for driver data
  */
-static  intr_handle_t intr_handle;
-
-static bool periph_enabled = false;
-
 static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 /**
  * Internal method (private) declarations
  */
-static void _initPin(int pin, int channel, bool tx_not_rx);
 
-static bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool continuous);
+static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
+{
+    size_t i;
+    // setup how many buffers shall we use
+    g_rmt_objects[from].buffers = size;
 
-static void ARDUINO_ISR_ATTR _rmt_isr(void* arg);
+    for (i=0; i<size; i++) {
+        // mark the block of channels as used
+        g_rmt_objects[i+from].allocated = true;
+    }
+    return &(g_rmt_objects[from]);
+}
 
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size);
+void _rmtDumpStatus(rmt_obj_t* rmt) 
+{
+   bool loop_en;
+   uint8_t div_cnt;
+   uint8_t memNum;
+   bool lowPowerMode;
+   rmt_mem_owner_t owner;
+   uint16_t idleThreshold;
+   uint32_t status;
+   rmt_source_clk_t srcClk;
+   rmt_channel_t channel = rmt->channel;
 
-static void _initPin(int pin, int channel, bool tx_not_rx);
+RMT_MUTEX_LOCK(channel);
+   rmt_get_tx_loop_mode(channel, &loop_en);
+   rmt_get_clk_div(channel, &div_cnt);
+   rmt_get_mem_block_num(channel, &memNum);
+   rmt_get_mem_pd(channel, &lowPowerMode);
+   rmt_get_memory_owner(channel, &owner);
+   rmt_get_rx_idle_thresh(channel, &idleThreshold);
+   rmt_get_status(channel, &status);
+   rmt_get_source_clk(channel, &srcClk);
 
-static int ARDUINO_ISR_ATTR _rmt_get_mem_len(uint8_t channel);
+   log_d("Status for RMT channel %d", channel);
+   log_d("- Loop enabled: %d", loop_en);
+   log_d("- Clock divisor: %d", div_cnt);
+   log_d("- Number of memory blocks: %d", memNum);
+   log_d("- Low power mode: %d", lowPowerMode);
+   log_d("- Memory owner: %s", owner==RMT_MEM_OWNER_TX?"TX":"RX");
+   log_d("- Idle threshold: %d", idleThreshold);
+   log_d("- Status: %d", status);
+   log_d("- Source clock: %s", srcClk==RMT_BASECLK_APB?"APB (80MHz)":"1MHz");
+RMT_MUTEX_UNLOCK(channel);
+}
 
-static void ARDUINO_ISR_ATTR _rmt_tx_mem_first(uint8_t ch);
+static void _rmtRxTask(void *args) {
+    rmt_obj_t *rmt = (rmt_obj_t *) args;
+    RingbufHandle_t rb = NULL;
+    size_t rmt_len = 0;
+    rmt_item32_t *data = NULL;
 
-static void ARDUINO_ISR_ATTR _rmt_tx_mem_second(uint8_t ch);
+    if (!rmt) {
+        log_e(" -- Inavalid Argument");
+        goto err;
+    }
 
+    int channel = rmt->channel;
+    rmt_get_ringbuf_handle(channel, &rb);
+    if (!rb) {
+        log_e(" -- Failed to get RMT ringbuffer handle");
+        goto err;  
+    }
+    
+    for(;;) {
+        data = (rmt_item32_t *) xRingbufferReceive(rb, &rmt_len, portMAX_DELAY);
+        if (data) {
+            log_d(" -- Got %d bytes on RX Ringbuffer - CH %d", rmt_len, rmt->channel);
+            rmt->rx_completed = true;  // used in rmtReceiveCompleted()
+            // callback
+            if (rmt->cb) {
+                (rmt->cb)((uint32_t *)data, rmt_len / sizeof(rmt_item32_t), rmt->arg);
+            } else {
+                // stop RX -- will force a correct call with a callback pointer / new rmtReadData() / rmtReadAsync()
+                rmt_rx_stop(channel);
+            }
+            // Async Read -- copy data to caller
+            if (rmt->data_ptr && rmt->data_size) {
+                uint32_t data_size = rmt->data_size;
+                uint32_t read_len = rmt_len / sizeof(rmt_item32_t);
+                if (read_len < rmt->data_size) data_size = read_len;
+                rmt_item32_t *p = (rmt_item32_t *)rmt->data_ptr;
+                for (uint32_t i = 0; i < data_size; i++) {
+                    p[i] = data[i];
+                }
+            }
+            // set events
+            if (rmt->events) {
+                xEventGroupSetBits(rmt->events, RMT_FLAG_RX_DONE);
+            }
+            vRingbufferReturnItem(rb, (void *) data);
+        } // xRingbufferReceive
+    } // for(;;)
+
+err:
+  vTaskDelete(NULL);    
+}
+
+
+static bool _rmtCreateRxTask(rmt_obj_t* rmt) 
+{
+    if (!rmt) {
+        return false;
+    }
+    if (rmt->rxTaskHandle) {   // Task already created
+        return false;
+    }
+
+    xTaskCreate(_rmtRxTask, "rmt_rx_task", 4096, rmt, 20, &rmt->rxTaskHandle);
+
+    if(rmt->rxTaskHandle == NULL){
+        log_e("RMT RX Task create failed");
+        return false;
+    }
+    return true;
+}
+
+// Helper function to test if an RMT channel is correctly assigned to TX or RX, issuing an error message if necessary
+// Also test RMT pointer for NULL and returns false in case it is NULL
+// return true when it is correctly assigned, false otherwise
+static bool _rmtCheckTXnotRX(rmt_obj_t* rmt, bool tx_not_rx)
+{
+    if (!rmt) {           // also returns false on NULL
+        return false;
+    }
+
+    if (rmt->tx_not_rx == tx_not_rx) {  // matches expected RX/TX channel
+        return true;
+    }
+   
+    if (tx_not_rx) {    // expected TX channel
+        log_e("Can't write on a RX RMT Channel");
+    } else{             // expected RX channel
+        log_e("Can't read on a TX RMT Channel");
+    }
+    return false;       // missmatched
+}
 
 /**
  * Public method definitions
  */
+
 bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high)
 {
-    if (!rmt || low > 0xFFFF || high > 0xFFFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE) || low > 0xFFFF || high > 0xFFFF) {
         return false;
     }
     size_t channel = rmt->channel;
 
     RMT_MUTEX_LOCK(channel);
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.tx_carrier[channel].low = low;
-    RMT.tx_carrier[channel].high = high;
-    RMT.rx_conf[channel].conf0.carrier_en = carrier_en;
-    RMT.rx_conf[channel].conf0.carrier_out_lv = carrier_level;
-#else
-    RMT.carrier_duty_ch[channel].low = low;
-    RMT.carrier_duty_ch[channel].high = high;
-    RMT.conf_ch[channel].conf0.carrier_en = carrier_en;
-    RMT.conf_ch[channel].conf0.carrier_out_lv = carrier_level;
-#endif
+    rmt_set_tx_carrier(channel, carrier_en, high, low, carrier_level);
     RMT_MUTEX_UNLOCK(channel);
-
     return true;
-
 }
 
 bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
 {
-    if (!rmt || filter_level > 0xFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || filter_level > 0xFF) {
         return false;
     }
     size_t channel = rmt->channel;
 
     RMT_MUTEX_LOCK(channel);
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.rx_filter_thres = filter_level;
-    RMT.rx_conf[channel].conf1.rx_filter_en = filter_en;
-#else
-    RMT.conf_ch[channel].conf1.rx_filter_thres = filter_level;
-    RMT.conf_ch[channel].conf1.rx_filter_en = filter_en;
-#endif
-
+    rmt_set_rx_filter(channel, filter_en, filter_level);
     RMT_MUTEX_UNLOCK(channel);
-
     return true;
-
 }
 
 bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value)
 {
-    if (!rmt || value > 0xFFFF) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || value > 0xFFFF) {
         return false;
     }
     size_t channel = rmt->channel;
 
     RMT_MUTEX_LOCK(channel);
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf0.idle_thres = value;
-#else
-    RMT.conf_ch[channel].conf0.idle_thres = value;
-#endif
+    rmt_set_rx_idle_thresh(channel, value);
     RMT_MUTEX_UNLOCK(channel);
-
     return true;
 }
 
@@ -245,152 +325,106 @@ bool rmtDeinit(rmt_obj_t *rmt)
         return false;
     }
 
+    RMT_MUTEX_LOCK(rmt->channel);
+    // force stopping rmt processing
+    if (rmt->tx_not_rx) {
+        rmt_tx_stop(rmt->channel);
+    } else {
+        rmt_rx_stop(rmt->channel);
+        if(rmt->rxTaskHandle){
+            vTaskDelete(rmt->rxTaskHandle);
+            rmt->rxTaskHandle = NULL;
+        }       
+    }
+
+    rmt_driver_uninstall(rmt->channel);
+
     size_t from = rmt->channel;
     size_t to = rmt->buffers + rmt->channel;
     size_t i;
 
-#if !CONFIG_DISABLE_HAL_LOCKS
-    if(g_rmt_objlocks[from] != NULL) {
-        vSemaphoreDelete(g_rmt_objlocks[from]);
-    }
-#endif
-
-    if (g_rmt_objects[from].data_alloc) {
-        free(g_rmt_objects[from].data_ptr);
-    }
-    
     for (i = from; i < to; i++) {
         g_rmt_objects[i].allocated = false;
     }
 
     g_rmt_objects[from].channel = 0;
     g_rmt_objects[from].buffers = 0;
+    RMT_MUTEX_UNLOCK(rmt->channel);
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(g_rmt_objlocks[from] != NULL) {
+        vSemaphoreDelete(g_rmt_objlocks[from]);
+        g_rmt_objlocks[from] = NULL;
+    }
+#endif
 
     return true;
 }
 
 bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
         return false;
     }
-
-    int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
-
-    if (size > allocated_size) {
-        return false;
-    }
-    return _rmtSendOnce(rmt, data, size, true);
+    int channel = rmt->channel;
+    RMT_MUTEX_LOCK(channel);
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, true);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
+    RMT_MUTEX_UNLOCK(channel);
+    return true;
 }
 
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
         return false;
     }
-    
     int channel = rmt->channel;
-    int allocated_size = MAX_DATA_PER_CHANNEL * rmt->buffers;
+    RMT_MUTEX_LOCK(channel);
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, false);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
+    RMT_MUTEX_UNLOCK(channel);
+    return true;
+}
 
-    if (size > (allocated_size - 1)) {
-
-        int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-        RMT_MUTEX_LOCK(channel);
-        // setup interrupt handler if not yet installed for half and full tx
-        if (!intr_handle) {
-            esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, _rmt_isr, NULL, &intr_handle);
-        }
-
-        rmt->data_size = size - MAX_DATA_PER_ITTERATION;
-        rmt->data_ptr = ((uint32_t*)data) + MAX_DATA_PER_ITTERATION;
-        rmt->intr_mode = E_TX_INTR | E_TXTHR_INTR;
-        rmt->tx_state = E_SET_CONTI | E_FIRST_HALF;
-
-#if CONFIG_IDF_TARGET_ESP32C3
-        //uint32_t val = RMT.tx_conf[channel].val;
-        // init the tx limit for interruption
-        RMT.tx_lim[channel].limit = half_tx_nr+2;
-        //RMT.tx_conf[channel].val = val;
-        //RMT.tx_conf[channel].conf_update = 1;
-        // reset memory pointer
-        RMT.tx_conf[channel].mem_rst = 1;
-        //RMT.tx_conf[channel].mem_rst = 0;
-        RMT.tx_conf[channel].mem_rd_rst = 1;
-        //RMT.tx_conf[channel].mem_rd_rst = 0;
-#else
-        // init the tx limit for interruption
-        RMT.tx_lim_ch[channel].limit = half_tx_nr+2;
-        // reset memory pointer
-        RMT.conf_ch[channel].conf1.apb_mem_rst = 1;
-        RMT.conf_ch[channel].conf1.apb_mem_rst = 0;
-        RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-        RMT.conf_ch[channel].conf1.mem_rd_rst = 0;
-        RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-        RMT.conf_ch[channel].conf1.mem_wr_rst = 0;
-#endif
-        // set the tx end mark
-        //RMTMEM.chan[channel].data32[MAX_DATA_PER_ITTERATION].val = 0;
-
-        // clear and enable both Tx completed and half tx event
-        RMT.int_clr.val = _INT_TX_END(channel);
-        RMT.int_clr.val = _INT_THR_EVNT(channel);
-        RMT.int_clr.val = _INT_ERROR(channel);
-        
-        RMT.int_ena.val |= _INT_TX_END(channel);
-        RMT.int_ena.val |= _INT_THR_EVNT(channel);
-        RMT.int_ena.val |= _INT_ERROR(channel);
-
-        RMT_MUTEX_UNLOCK(channel);
-
-        // start the transation
-        //return _rmtSendOnce(rmt, data, MAX_DATA_PER_ITTERATION, true);
-        return _rmtSendOnce(rmt, data, MAX_DATA_PER_ITTERATION, false);
-    } else {
-        // use one-go mode if data fits one buffer 
-        return _rmtSendOnce(rmt, data, size, false);
+bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
+{
+    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
+        return false;
     }
+    int channel = rmt->channel;
+    RMT_MUTEX_LOCK(channel);
+    rmt_tx_stop(channel);
+    rmt_set_tx_loop_mode(channel, false);
+    rmt_write_items(channel, (const rmt_item32_t *)data, size, true);
+    RMT_MUTEX_UNLOCK(channel);
+    return true;
 }
 
 bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
-    int channel = rmt->channel;
-
-    if (g_rmt_objects[channel].buffers < size/MAX_DATA_PER_CHANNEL) {
-        return false;
-    }
-
-    size_t i;
-    volatile uint32_t* rmt_mem_ptr = &(RMTMEM.chan[channel].data32[0].val);
-    for (i=0; i<size; i++) {
-        data[i] = *rmt_mem_ptr++;
-    }
-
+    rmtReadAsync(rmt, (rmt_data_t*) data, size, NULL, false, 0);
     return true;
 }
 
 
 bool rmtBeginReceive(rmt_obj_t* rmt)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
 
-    RMT.int_clr.val = _INT_ERROR(channel);
-    RMT.int_ena.val |= _INT_ERROR(channel);
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.mem_owner = 1;
-    RMT.rx_conf[channel].conf1.mem_wr_rst = 1;
-    RMT.rx_conf[channel].conf1.rx_en = 1;
-#else
-    RMT.conf_ch[channel].conf1.mem_owner = 1;
-    RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-    RMT.conf_ch[channel].conf1.rx_en = 1;
-#endif
+    RMT_MUTEX_LOCK(channel);
+    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
+    rmt_rx_start(channel, true);
+    rmt->rx_completed = false;
+    RMT_MUTEX_UNLOCK(channel);
     return true;
 }
 
@@ -399,134 +433,88 @@ bool rmtReceiveCompleted(rmt_obj_t* rmt)
     if (!rmt) {
         return false;
     }
-    int channel = rmt->channel;
 
-    if (RMT.int_raw.val&_INT_RX_END(channel)) {
-        // RX end flag
-        RMT.int_clr.val = _INT_RX_END(channel);
-        return true;
-    } else {
-        return false;
-    }
+    return rmt->rx_completed;
 }
 
 bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg)
 {
-    if (!rmt && !cb) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
 
-    RMT_MUTEX_LOCK(channel);
     rmt->arg = arg;
-    rmt->intr_mode = E_RX_INTR;
-    rmt->tx_state = E_FIRST_HALF;
     rmt->cb = cb;
-    // allocate internally two buffers which would alternate
-    if (!rmt->data_alloc) {
-        rmt->data_ptr = (uint32_t*)malloc(2*MAX_DATA_PER_CHANNEL*(rmt->buffers)*sizeof(uint32_t));
-        rmt->data_size = MAX_DATA_PER_CHANNEL*rmt->buffers;
-        rmt->data_alloc = true;
+
+    RMT_MUTEX_LOCK(channel);
+    // cb as NULL is a way to cancel the callback process
+    if (cb == NULL) {        
+        rmt_rx_stop(channel);
+        return true;
     }
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.mem_owner = 1;
-#else
-    RMT.conf_ch[channel].conf1.mem_owner = 1;
-#endif
-    RMT.int_clr.val = _INT_RX_END(channel);
-    RMT.int_clr.val = _INT_ERROR(channel);
-    
-    RMT.int_ena.val |= _INT_RX_END(channel);
-    RMT.int_ena.val |= _INT_ERROR(channel);
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.mem_wr_rst = 1;
-
-    RMT.rx_conf[channel].conf1.rx_en = 1;
-#else
-    RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-
-    RMT.conf_ch[channel].conf1.rx_en = 1;
-#endif
+    // Start a read process but now with a call back function
+    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
+    rmt_rx_start(channel, true);
+    rmt->rx_completed = false;
+    _rmtCreateRxTask(rmt);
     RMT_MUTEX_UNLOCK(channel);
-
     return true;
 }
 
-bool rmtEnd(rmt_obj_t* rmt) {
+bool rmtEnd(rmt_obj_t* rmt) 
+{
     if (!rmt) {
         return false;
     }
     int channel = rmt->channel;
 
     RMT_MUTEX_LOCK(channel);
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.rx_en = 1;
-#else
-    RMT.conf_ch[channel].conf1.rx_en = 1;
-#endif
+    if (rmt->tx_not_rx) {
+        rmt_tx_stop(channel);
+    } else {
+        rmt_rx_stop(channel);
+        rmt->rx_completed = true;
+    }
     RMT_MUTEX_UNLOCK(channel);
-
     return  true;
 }
 
 bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout)
 {
-    if (!rmt) {
+    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
         return false;
     }
     int channel = rmt->channel;
 
-    if (g_rmt_objects[channel].buffers < size/MAX_DATA_PER_CHANNEL) {
-        return false;
-    }
-
-    if (eventFlag) {
-        xEventGroupClearBits(eventFlag, RMT_FLAGS_ALL);
-        rmt->events = eventFlag;
-    }
-
-    if (data && size>0) {
-        rmt->data_ptr = (uint32_t*)data;
-        rmt->data_size = size;
-    }
+    // No limit on size with IDF ;-)
+    //if (g_rmt_objects[channel].buffers < size/SOC_RMT_MEM_WORDS_PER_CHANNEL) {
+    //    return false;
+    //}
 
     RMT_MUTEX_LOCK(channel);
-    rmt->intr_mode = E_RX_INTR;
+    if (eventFlag) {
+        xEventGroupClearBits(eventFlag, RMT_FLAGS_ALL);
+    }
+    // if NULL, no problems - rmtReadAsync works as a plain rmtReadData()
+    rmt->events = eventFlag;  
 
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.mem_owner = 1;
-#else
-    RMT.conf_ch[channel].conf1.mem_owner = 1;
-#endif
-
-    RMT.int_clr.val = _INT_RX_END(channel);
-    RMT.int_clr.val = _INT_ERROR(channel);
-    
-    RMT.int_ena.val |= _INT_RX_END(channel);
-    RMT.int_ena.val |= _INT_ERROR(channel);
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.rx_conf[channel].conf1.mem_wr_rst = 1;
-
-    RMT.rx_conf[channel].conf1.rx_en = 1;
-#else
-    RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-
-    RMT.conf_ch[channel].conf1.rx_en = 1;
-#endif
+    // if NULL, no problems - task will take care of it
+    rmt->data_ptr = (uint32_t*)data;
+    rmt->data_size = size;
+ 
+    // Start a read process
+    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX); 
+    rmt_rx_start(channel, true);
+    rmt->rx_completed = false;
+    _rmtCreateRxTask(rmt);
     RMT_MUTEX_UNLOCK(channel);
 
     // wait for data if requested so
     if (waitForData && eventFlag) {
-        uint32_t flags = xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
+        xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
                             pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
-        if (flags & RMT_FLAG_ERROR) {
-            return false;
-        }
     }
-
     return true;
 }
 
@@ -534,46 +522,27 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
 {
     if (!rmt) {
         return false;
-    }
-    /*
-     divider field span from 1 (smallest), 2, 3, ... , 0xFF, 0x00 (highest)
-     * rmt tick from 1/80M -> 12.5ns  (1x)    div_cnt = 0x01
-                              3.2 us (256x)   div_cnt = 0x00
-     * rmt tick for 1 MHz  -> 1us (1x)        div_cnt = 0x01
-                              256us (256x)    div_cnt = 0x00
-    */
-    
+    }    
     size_t channel = rmt->channel;
 
-#if CONFIG_IDF_TARGET_ESP32C3
-    int apb_div = _LIMIT(tick/25.0, 256);
-    float apb_tick = 25.0 * apb_div;
-    RMT.tx_conf[channel].div_cnt = apb_div & 0xFF;
-    RMT.tx_conf[channel].conf_update = 1;
+    RMT_MUTEX_LOCK(channel);
+    // RMT_BASECLK_REF (1MHz) is not supported in IDF upon Programmming Guide
+    // Only APB works
+    rmt_set_source_clk(channel, RMT_BASECLK_APB);   
+    int apb_div = _LIMIT(tick/12.5f, 256);
+    float apb_tick = 12.5f * apb_div;
+    
+    rmt_set_clk_div(channel, apb_div & 0xFF);
+    RMT_MUTEX_UNLOCK(channel);
     return apb_tick;
-#else
-    int apb_div = _LIMIT(tick/12.5, 256);
-    int ref_div = _LIMIT(tick/1000, 256);
-    float apb_tick = 12.5 * apb_div;
-    float ref_tick = 1000.0 * ref_div;
-    if (_ABS(apb_tick - tick) < _ABS(ref_tick - tick)) {
-        RMT.conf_ch[channel].conf0.div_cnt = apb_div & 0xFF;
-        RMT.conf_ch[channel].conf1.ref_always_on = 1;
-        return apb_tick;
-    } else {
-        RMT.conf_ch[channel].conf0.div_cnt = ref_div & 0xFF;
-        RMT.conf_ch[channel].conf1.ref_always_on = 0;
-        return ref_tick;
-    }
-#endif
 }
 
 rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
     int buffers = memsize;
-    rmt_obj_t* rmt;
-    size_t i;
-    size_t j;
+    rmt_obj_t* rmt = NULL;
+    size_t i = 0;
+    size_t j = 0;
 
     // create common block mutex for protecting allocs from multiple threads
     if (!g_rmt_block_lock) {
@@ -582,8 +551,17 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     // lock
     while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
-    for (i=0; i<MAX_CHANNELS; i++) {
-        for (j=0; j<buffers && i+j < MAX_CHANNELS; j++) {
+    // Some SoC may have fixed channel numbers for TX and RX - example: ESP32C3
+    uint8_t ch_start, ch_end;
+    if (tx_not_rx) {
+        ch_start = RMT_TX_CH_START;
+        ch_end = RMT_TX_CH_END;
+    } else {
+        ch_start = RMT_RX_CH_START;
+        ch_end = RMT_RX_CH_END;
+    }
+    for (i=ch_start; i<=ch_end; i++) {
+        for (j=0; j<buffers && i+j <= ch_end; j++) {
             // if the space is ocupied break and continue on other channel
             if (g_rmt_objects[i+j].allocated) {
                 i += j; // continue searching from latter channel
@@ -597,13 +575,25 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
     }
     if (i == MAX_CHANNELS || i+j > MAX_CHANNELS || j != buffers)  {
         xSemaphoreGive(g_rmt_block_lock);
+        log_e("rmInit Failed - not enough channels");
         return NULL;
     }
+    
+    // A suitable channel has been found, it has to block its resources in our internal data strucuture
+    size_t channel = i;
     rmt = _rmtAllocate(pin, i, buffers);
 
     xSemaphoreGive(g_rmt_block_lock);
 
-    size_t channel = i;
+    rmt->buffers = buffers;
+    rmt->channel = channel;
+    rmt->arg = NULL;
+    rmt->cb = NULL;
+    rmt->data_ptr = NULL;
+    rmt->data_size = 0;
+    rmt->rx_completed = false;
+    rmt->events = NULL;
+    rmt->tx_not_rx = tx_not_rx;
 
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(g_rmt_objlocks[channel] == NULL) {
@@ -615,447 +605,30 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 #endif
 
     RMT_MUTEX_LOCK(channel);
-
-    rmt->pin = pin;
-    rmt->tx_not_rx = tx_not_rx;
-    rmt->buffers =buffers;
-    rmt->channel = channel;
-    rmt->arg = NULL;
-
-    _initPin(pin, channel, tx_not_rx);
-
-    // Initialize the registers in default mode:
-    // - no carrier, filter
-    // - timebase tick of 1us
-    // - idle threshold set to 0x8000 (max pulse width + 1)
-#if CONFIG_IDF_TARGET_ESP32C3
-
-    RMT.sys_conf.fifo_mask = 1;
+    esp_err_t esp_err_code = ESP_OK;
 
     if (tx_not_rx) {
-    	RMT.tx_lim[channel].limit = MAX_DATA_PER_ITTERATION/2 + 2;
-    	RMT.tx_conf[channel].val = 0;
-//        RMT.tx_conf[channel].carrier_en = 0;
-//        RMT.tx_conf[channel].carrier_out_lv = 0;
-//        RMT.tx_conf[channel].tx_conti_mode = 0;
-//        RMT.tx_conf[channel].idle_out_lv = 0;     // signal level for idle
-//        RMT.tx_conf[channel].tx_start = 0;
-//        RMT.tx_conf[channel].tx_stop = 0;
-//        RMT.tx_conf[channel].carrier_eff_en = 0;
-//        RMT.tx_conf[channel].afifo_rst = 0;
-//        RMT.tx_conf[channel].conf_update = 0;
-//        RMT.tx_conf[channel].mem_tx_wrap_en = 0;
-//        RMT.tx_conf[channel].mem_rst = 1;
-
-        RMT.tx_conf[channel].idle_out_en = 1;     // enable idle
-        RMT.tx_conf[channel].div_cnt = 1;
-        RMT.tx_conf[channel].mem_size = buffers;
-        RMT.tx_conf[channel].mem_rd_rst = 1;
-        RMT.tx_conf[channel].conf_update = 1;
+        rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_TX(pin, channel, buffers);
+        esp_err_code = rmt_config(&config);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_driver_install(channel, 0, 0);
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
     } else {
-        RMT.rx_conf[channel].conf0.div_cnt = 1;
-        RMT.rx_conf[channel].conf0.mem_size = buffers;
-        RMT.rx_conf[channel].conf0.carrier_en = 0;
-        RMT.rx_conf[channel].conf0.carrier_out_lv = 0;
-        RMT.rx_conf[channel].conf0.idle_thres = 0x80;
-        RMT.rx_conf[channel].conf1.rx_filter_en = 0;
-        RMT.rx_conf[channel].conf1.rx_filter_thres = 0;
-        RMT.rx_conf[channel].conf1.mem_rst = 0;
-        RMT.rx_conf[channel].conf1.mem_rx_wrap_en = 0;
-        RMT.rx_conf[channel].conf1.afifo_rst = 0;
-        RMT.rx_conf[channel].conf1.conf_update = 0;
-        RMT.rx_conf[channel].conf1.rx_en = 1;
-        RMT.rx_conf[channel].conf1.mem_owner = 1;
-        RMT.rx_conf[channel].conf1.mem_wr_rst = 1;
-    }
-#else
-    RMT.conf_ch[channel].conf0.div_cnt = 1;
-    RMT.conf_ch[channel].conf0.mem_size = buffers;
-    RMT.conf_ch[channel].conf0.carrier_en = 0;
-    RMT.conf_ch[channel].conf0.carrier_out_lv = 0;
-#if CONFIG_IDF_TARGET_ESP32
-    RMT.conf_ch[channel].conf0.mem_pd = 0;
-#endif
-    RMT.conf_ch[channel].conf0.idle_thres = 0x80;
-    RMT.conf_ch[channel].conf1.rx_en = 0;
-    RMT.conf_ch[channel].conf1.tx_conti_mode = 0;
-#if CONFIG_IDF_TARGET_ESP32
-    RMT.conf_ch[channel].conf1.ref_cnt_rst = 0;
-#else
-    RMT.conf_ch[channel].conf1.chk_rx_carrier_en = 0;
-#endif
-    RMT.conf_ch[channel].conf1.rx_filter_en = 0;
-    RMT.conf_ch[channel].conf1.rx_filter_thres = 0;
-    RMT.conf_ch[channel].conf1.idle_out_lv = 0;     // signal level for idle
-    RMT.conf_ch[channel].conf1.idle_out_en = 1;     // enable idle
-    RMT.conf_ch[channel].conf1.ref_always_on = 0;     // base clock
+        rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_RX(pin, channel, buffers);
+        esp_err_code = rmt_config(&config);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_driver_install(channel, 1024, 0);
+        if (esp_err_code == ESP_OK) 
+            esp_err_code = rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
+        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
+    } 
 
-    RMT.apb_conf.fifo_mask = 1;
-
-    if (tx_not_rx) {
-        // RMT.conf_ch[channel].conf1.rx_en = 0;
-        RMT.conf_ch[channel].conf1.mem_owner = 0;
-        RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-    } else {
-        // RMT.conf_ch[channel].conf1.rx_en = 1;
-        RMT.conf_ch[channel].conf1.mem_owner = 1;
-        RMT.conf_ch[channel].conf1.mem_wr_rst = 1;
-    }
-#endif
-    // install interrupt if at least one channel is active
-    if (!intr_handle) {
-        esp_intr_alloc(ETS_RMT_INTR_SOURCE, (int)ARDUINO_ISR_FLAG, _rmt_isr, NULL, &intr_handle);
-    }
     RMT_MUTEX_UNLOCK(channel);
 
-    return rmt;
-}
-
-/**
- * Private methods definitions
- */
-bool _rmtSendOnce(rmt_obj_t* rmt, rmt_data_t* data, size_t size, bool continuous)
-{
-    if (!rmt) {
-        return false;
-    }
-    int channel = rmt->channel;
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.sys_conf.fifo_mask = 1;
-#else
-    RMT.apb_conf.fifo_mask = 1;
-#endif
-    if (data && size>0) {
-        size_t i;
-        volatile uint32_t* rmt_mem_ptr = &(RMTMEM.chan[channel].data32[0].val);
-        for (i = 0; i < size; i++) {
-            *rmt_mem_ptr++ = data[i].val;
-        }
-        // tx end mark
-        RMTMEM.chan[channel].data32[size].val = 0;
-    }
-
-    RMT_MUTEX_LOCK(channel);
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.tx_conf[channel].tx_conti_mode = continuous;
-    RMT.tx_conf[channel].mem_rd_rst = 1;
-    RMT.tx_conf[channel].tx_start = 1;
-#else
-    RMT.conf_ch[channel].conf1.tx_conti_mode = continuous;
-    RMT.conf_ch[channel].conf1.mem_rd_rst = 1;
-    RMT.conf_ch[channel].conf1.tx_start = 1;
-#endif
-    RMT_MUTEX_UNLOCK(channel);
-
-    return true;
-}
-
-
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
-{
-    size_t i;
-    // setup how many buffers shall we use
-    g_rmt_objects[from].buffers = size;
-
-    for (i=0; i<size; i++) {
-        // mark the block of channels as used
-        g_rmt_objects[i+from].allocated = true;
-    }
-    return &(g_rmt_objects[from]);
-}
-
-
-static void _initPin(int pin, int channel, bool tx_not_rx) 
-{
-    if (!periph_enabled) {
-        periph_enabled = true;
-        periph_module_reset( PERIPH_RMT_MODULE );
-        periph_module_enable( PERIPH_RMT_MODULE );
-    }
-    if (tx_not_rx) {
-        pinMode(pin, OUTPUT);
-        pinMatrixOutAttach(pin, RMT_SIG_OUT0_IDX + channel, 0, 0);
+    if (esp_err_code == ESP_OK) {
+        return rmt;
     } else {
-        pinMode(pin, INPUT);
-        pinMatrixInAttach(pin, RMT_SIG_IN0_IDX + channel, 0);
-
+        log_e("RMT failed to initilize.");
+        return NULL;
     }
-}
-
-
-static void ARDUINO_ISR_ATTR _rmt_isr(void* arg)
-{
-	//DEBUG_INTERRUPT_START(4);
-    int intr_val = RMT.int_st.val;
-    size_t ch;
-    for (ch = 0; ch < MAX_CHANNELS; ch++) {
-
-        if (intr_val & _INT_RX_END(ch)) {
-            // clear the flag
-            RMT.int_clr.val = _INT_RX_END(ch);
-            RMT.int_ena.val &= ~_INT_RX_END(ch);
-
-            if ((g_rmt_objects[ch].intr_mode) & E_RX_INTR) {
-                if (g_rmt_objects[ch].events) {
-                    xEventGroupSetBits(g_rmt_objects[ch].events, RMT_FLAG_RX_DONE);
-                }
-                if (g_rmt_objects[ch].data_ptr && g_rmt_objects[ch].data_size > 0) {
-                    size_t i;
-                    uint32_t * data = g_rmt_objects[ch].data_ptr;
-                    // in case of callback, provide switching between memories
-                    if (g_rmt_objects[ch].cb) {
-                        if (g_rmt_objects[ch].tx_state & E_FIRST_HALF) {
-                            g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-                        } else {
-                            g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
-                            data += MAX_DATA_PER_CHANNEL*(g_rmt_objects[ch].buffers);
-                        }
-                    }
-                    uint32_t *data_received = data;
-                    for (i = 0; i < g_rmt_objects[ch].data_size; i++ ) {
-                        *data++ = RMTMEM.chan[ch].data32[i].val;
-                    }
-                    if (g_rmt_objects[ch].cb) {
-                        // actually received data ptr                        
-                        (g_rmt_objects[ch].cb)(data_received, _rmt_get_mem_len(ch), g_rmt_objects[ch].arg);
-
-                        // restart the reception
-#if CONFIG_IDF_TARGET_ESP32C3
-                        RMT.rx_conf[ch].conf1.mem_owner = 1;
-                        RMT.rx_conf[ch].conf1.mem_wr_rst = 1;
-                        RMT.rx_conf[ch].conf1.rx_en = 1;
-#else
-                        RMT.conf_ch[ch].conf1.mem_owner = 1;
-                        RMT.conf_ch[ch].conf1.mem_wr_rst = 1;
-                        RMT.conf_ch[ch].conf1.rx_en = 1;
-#endif
-                        RMT.int_ena.val |= _INT_RX_END(ch);
-                    } else {
-                        // if not callback provide, expect only one Rx
-                        g_rmt_objects[ch].intr_mode &= ~E_RX_INTR;
-                    }
-                }
-            } else {
-                // Report error and disable Rx interrupt
-                log_e("Unexpected Rx interrupt!\n");  // TODO: eplace messages with log_X
-                RMT.int_ena.val &= ~_INT_RX_END(ch);
-            }
-
-
-        }
-
-        if (intr_val & _INT_ERROR(ch)) {
-            // clear the flag
-            RMT.int_clr.val = _INT_ERROR(ch);
-            RMT.int_ena.val &= ~_INT_ERROR(ch);
-            // report error 
-            log_e("RMT Error %d!\n", ch);
-            if (g_rmt_objects[ch].events) {
-                xEventGroupSetBits(g_rmt_objects[ch].events, RMT_FLAG_ERROR);
-            }
-            // reset memory
-#if CONFIG_IDF_TARGET_ESP32C3
-            RMT.tx_conf[ch].mem_rd_rst = 1;
-            RMT.tx_conf[ch].mem_rd_rst = 0;
-            RMT.rx_conf[ch].conf1.mem_wr_rst = 1;
-            RMT.rx_conf[ch].conf1.mem_wr_rst = 0;
-#else
-            RMT.conf_ch[ch].conf1.mem_rd_rst = 1;
-            RMT.conf_ch[ch].conf1.mem_rd_rst = 0;
-            RMT.conf_ch[ch].conf1.mem_wr_rst = 1;
-            RMT.conf_ch[ch].conf1.mem_wr_rst = 0;
-#endif
-        }
-
-        if (intr_val & _INT_TX_END(ch)) {
-
-            RMT.int_clr.val = _INT_TX_END(ch);
-            _rmt_tx_mem_second(ch);
-        }
-
-        if (intr_val & _INT_THR_EVNT(ch)) {
-            // clear the flag
-            RMT.int_clr.val = _INT_THR_EVNT(ch);
-#if CONFIG_IDF_TARGET_ESP32C3
-            //RMT.int_clr.val = _INT_TX_END(ch);
-            //RMT.int_ena.val |= _INT_TX_END(ch);
-#endif
-
-            // initial setup of continuous mode
-            if (g_rmt_objects[ch].tx_state & E_SET_CONTI) {
-#if CONFIG_IDF_TARGET_ESP32C3
-                RMT.tx_conf[ch].tx_conti_mode = 1;
-#else
-                RMT.conf_ch[ch].conf1.tx_conti_mode = 1;
-#endif
-                g_rmt_objects[ch].intr_mode &= ~E_SET_CONTI;
-            }
-            _rmt_tx_mem_first(ch);
-        }
-    }
-    //DEBUG_INTERRUPT_END(4);
-}
-
-static void ARDUINO_ISR_ATTR _rmt_tx_mem_second(uint8_t ch)
-{
-    DEBUG_INTERRUPT_START(4)
-    uint32_t* data = g_rmt_objects[ch].data_ptr;
-    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-    int i;
-
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.tx_lim[ch].limit = half_tx_nr+2;
-#else
-    RMT.tx_lim_ch[ch].limit = half_tx_nr+2;
-#endif
-    RMT.int_clr.val = _INT_THR_EVNT(ch);
-    RMT.int_ena.val |= _INT_THR_EVNT(ch);
-#if CONFIG_IDF_TARGET_ESP32C3
-    //RMT.int_clr.val = _INT_TX_END(ch);
-    //RMT.int_ena.val &= ~_INT_TX_END(ch);
-#endif
-
-    g_rmt_objects[ch].tx_state |= E_FIRST_HALF;
-
-    if (data) {
-        int remaining_size = g_rmt_objects[ch].data_size;
-        //ets_printf("RMT Tx[%d] %d\n", ch, remaining_size);
-        // will the remaining data occupy the entire halfbuffer
-        if (remaining_size > half_tx_nr) {
-            for (i = 0; i < half_tx_nr; i++) {
-                RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
-            }
-            g_rmt_objects[ch].data_size -= half_tx_nr;
-            g_rmt_objects[ch].data_ptr += half_tx_nr;
-        } else {
-            for (i = 0; i < half_tx_nr; i++) {
-                if (i < remaining_size) {
-                    RMTMEM.chan[ch].data32[half_tx_nr+i].val = data[i];
-                } else {
-                    RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
-                }
-            }
-            g_rmt_objects[ch].data_ptr = NULL;
-
-        }
-#if CONFIG_IDF_TARGET_ESP32C3
-        RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0;
-        RMT.tx_conf[ch].tx_start = 1;
-#endif
-    } else if   ((!(g_rmt_objects[ch].tx_state & E_LAST_DATA)) &&
-                 (!(g_rmt_objects[ch].tx_state & E_END_TRANS))) {
-        //ets_printf("RMT Tx finishing %d!\n", ch);
-        for (i = 0; i < half_tx_nr; i++) {
-            RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0x000F000F;
-        }
-        RMTMEM.chan[ch].data32[half_tx_nr+i].val = 0;
-        g_rmt_objects[ch].tx_state |= E_LAST_DATA;
-#if CONFIG_IDF_TARGET_ESP32C3
-        RMT.tx_conf[ch].tx_conti_mode = 0;
-#else
-        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-#endif
-    } else {
-        //ets_printf("RMT Tx finished %d!\n", ch);
-#if CONFIG_IDF_TARGET_ESP32C3
-        RMT.tx_conf[ch].tx_conti_mode = 0;
-#else
-        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-#endif
-        RMT.int_ena.val &= ~_INT_TX_END(ch);
-        RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
-        g_rmt_objects[ch].intr_mode = E_NO_INTR;
-        g_rmt_objects[ch].tx_state = E_INACTIVE;
-    }
-    DEBUG_INTERRUPT_END(4);
-}
-
-static void ARDUINO_ISR_ATTR _rmt_tx_mem_first(uint8_t ch)
-{
-    DEBUG_INTERRUPT_START(2);
-    uint32_t* data = g_rmt_objects[ch].data_ptr;
-    int half_tx_nr = MAX_DATA_PER_ITTERATION/2;
-    int i;
-    RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
-#if CONFIG_IDF_TARGET_ESP32C3
-    RMT.tx_lim[ch].limit = 0;
-#else
-    RMT.tx_lim_ch[ch].limit = 0;
-#endif
-
-    if (data) {
-        int remaining_size = g_rmt_objects[ch].data_size;
-        //ets_printf("RMT TxF[%d] %d\n", ch, remaining_size);
-
-        // will the remaining data occupy the entire halfbuffer
-        if (remaining_size > half_tx_nr) {
-            RMTMEM.chan[ch].data32[0].val = data[0] - 1;
-            for (i = 1; i < half_tx_nr; i++) {
-                RMTMEM.chan[ch].data32[i].val = data[i];
-            }
-            g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-            // turn off the treshold interrupt
-            RMT.int_ena.val &= ~_INT_THR_EVNT(ch);
-#if CONFIG_IDF_TARGET_ESP32C3
-            RMT.tx_lim[ch].limit = 0;
-#else
-            RMT.tx_lim_ch[ch].limit = 0;
-#endif
-            g_rmt_objects[ch].data_size -= half_tx_nr;
-            g_rmt_objects[ch].data_ptr += half_tx_nr;
-        } else {
-            RMTMEM.chan[ch].data32[0].val = data[0] - 1;
-            for (i = 1; i < half_tx_nr; i++) {
-                if (i < remaining_size) {
-                    RMTMEM.chan[ch].data32[i].val = data[i];
-                } else {
-                    RMTMEM.chan[ch].data32[i].val = 0x000F000F;
-                }
-            }
-
-            g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-            g_rmt_objects[ch].data_ptr = NULL;
-        }
-    } else { 
-        //ets_printf("RMT TxF finished %d!\n", ch);
-        for (i = 0; i < half_tx_nr; i++) {
-            RMTMEM.chan[ch].data32[i].val = 0x000F000F;
-        }
-        RMTMEM.chan[ch].data32[i].val = 0;
-
-        g_rmt_objects[ch].tx_state &= ~E_FIRST_HALF;
-#if CONFIG_IDF_TARGET_ESP32C3
-        RMT.tx_lim[ch].limit = 0;
-#else
-        RMT.tx_lim_ch[ch].limit = 0;
-#endif
-        g_rmt_objects[ch].tx_state |= E_LAST_DATA;
-#if CONFIG_IDF_TARGET_ESP32C3
-        RMT.tx_conf[ch].tx_conti_mode = 0;
-#else
-        RMT.conf_ch[ch].conf1.tx_conti_mode = 0;
-#endif
-    }
-    DEBUG_INTERRUPT_END(2);
-}
-
-static int ARDUINO_ISR_ATTR _rmt_get_mem_len(uint8_t channel)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    int block_num = RMT.rx_conf[channel].conf0.mem_size;
-    int item_block_len = block_num * 48;
-#else
-    int block_num = RMT.conf_ch[channel].conf0.mem_size;
-    int item_block_len = block_num * 64;
-#endif
-    volatile rmt_item32_t* data = RMTMEM.chan[channel].data32;
-    int idx;
-    for(idx = 0; idx < item_block_len; idx++) {
-        if(data[idx].duration0 == 0) {
-            return idx;
-        } else if(data[idx].duration1 == 0) {
-            return idx + 1;
-        }
-    }
-    return idx;
 }

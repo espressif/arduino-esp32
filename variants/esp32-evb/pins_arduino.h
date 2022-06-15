@@ -7,7 +7,7 @@
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
@@ -29,5 +29,6 @@ static const uint8_t MISO  = 15;
 static const uint8_t SCK   = 14;
 
 #define BOARD_HAS_1BIT_SDMMC
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_DEFAULT
 
 #endif /* Pins_Arduino_h */

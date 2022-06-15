@@ -66,8 +66,8 @@ struct DNSHeader
 
 struct DNSQuestion
 {
-  uint8_t   QName[255] ;
-  int8_t    QNameLength ; 
+  uint8_t   QName[256] ; //need 1 Byte for zero termination!
+  uint16_t  QNameLength ; 
   uint16_t  QType ; 
   uint16_t  QClass ; 
 } ; 
@@ -76,6 +76,7 @@ class DNSServer
 {
   public:
     DNSServer();
+    ~DNSServer();
     void processNextRequest();
     void setErrorReplyCode(const DNSReplyCode &replyCode);
     void setTTL(const uint32_t &ttl);

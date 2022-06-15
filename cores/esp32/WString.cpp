@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include "WString.h"
 #include "stdlib_noniso.h"
+#include "esp32-hal-log.h"
 
 /*********************************************/
 /*  Constructors                             */
@@ -33,6 +34,12 @@ String::String(const char *cstr) {
     init();
     if (cstr)
         copy(cstr, strlen(cstr));
+}
+
+String::String(const char *cstr, unsigned int length) {
+    init();
+    if (cstr)
+        copy(cstr, length);
 }
 
 String::String(const String &value) {
@@ -106,16 +113,46 @@ String::String(unsigned long value, unsigned char base) {
     *this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces) {
+String::String(float value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 42);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
 }
 
-String::String(double value, unsigned char decimalPlaces) {
+String::String(double value, unsigned int decimalPlaces) {
     init();
-    char buf[33];
-    *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+    char *buf = (char*)malloc(decimalPlaces + 312);
+    if (buf) {
+        *this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+        free(buf);
+    } else {
+        *this = "nan";
+        log_e("No enought memory for the operation.");
+    }
+}
+
+String::String(long long value, unsigned char base) {
+    init();
+    char buf[2 + 8 * sizeof(long long)];
+    if (base==10) {
+        sprintf(buf, "%lld", value);   // NOT SURE - NewLib Nano ... does it support %lld? 
+    } else {
+        lltoa(value, buf, base);
+    }
+    *this = buf;
+}
+
+String::String(unsigned long long value, unsigned char base) {
+    init();
+    char buf[1 + 8 * sizeof(unsigned long long)];
+    ulltoa(value, buf, base);
+    *this = buf;
 }
 
 String::~String() {
@@ -389,6 +426,17 @@ unsigned char String::concat(double num) {
     return concat(string, strlen(string));
 }
 
+unsigned char String::concat(long long num) {
+    char buf[2 + 3 * sizeof(long long)];
+    return concat(buf, sprintf(buf, "%lld", num));    // NOT SURE - NewLib Nano ... does it support %lld?
+}
+
+unsigned char String::concat(unsigned long long num) {
+    char buf[1 + 3 * sizeof(unsigned long long)];
+    ulltoa(num, buf, 10);
+    return concat(buf, strlen(buf));
+}
+
 unsigned char String::concat(const __FlashStringHelper * str) {
     if (!str) return 0;
     int length = strlen_P((PGM_P)str);
@@ -468,6 +516,20 @@ StringSumHelper & operator +(const StringSumHelper &lhs, float num) {
 }
 
 StringSumHelper & operator +(const StringSumHelper &lhs, double num) {
+    StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
+    if(!a.concat(num))
+        a.invalidate();
+    return a;
+}
+
+StringSumHelper & operator +(const StringSumHelper &lhs, long long num) {
+    StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
+    if(!a.concat(num))
+        a.invalidate();
+    return a;
+}
+
+StringSumHelper & operator +(const StringSumHelper &lhs, unsigned long long num) {
     StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
     if(!a.concat(num))
         a.invalidate();
@@ -705,10 +767,7 @@ String String::substring(unsigned int left, unsigned int right) const {
         return out;
     if(right > len())
         right = len();
-    char temp = buffer()[right];  // save the replaced character
-    wbuffer()[right] = '\0';
-    out = wbuffer() + left;  // pointer arithmetic
-    wbuffer()[right] = temp;  //restore character
+    out.copy(buffer() + left, right - left);
     return out;
 }
 
@@ -758,8 +817,10 @@ void String::replace(const String& find, const String& replace) {
         }
         if(size == len())
             return;
-        if(size > capacity() && !changeBuffer(size))
-            return; // XXX: tell user!
+        if(size > capacity() && !changeBuffer(size)) {
+            log_w("String.Replace() Insufficient space to replace string");
+            return;
+        }
         int index = len() - 1;
         while(index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
             readFrom = wbuffer() + index + find.len();

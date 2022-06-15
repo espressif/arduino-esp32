@@ -35,7 +35,7 @@ protected:
     friend class VFSFileImpl;
 
 public:
-    FileImplPtr open(const char* path, const char* mode) override;
+    FileImplPtr open(const char* path, const char* mode, const bool create) override;
     bool        exists(const char* path) override;
     bool        rename(const char* pathFrom, const char* pathTo) override;
     bool        remove(const char* path) override;
@@ -65,10 +65,11 @@ public:
     bool        seek(uint32_t pos, SeekMode mode) override;
     size_t      position() const override;
     size_t      size() const override;
+    bool        setBufferSize(size_t size);
     void        close() override;
     const char* path() const override;
     const char* name() const override;
-    time_t getLastWrite()  override;
+    time_t      getLastWrite()  override;
     boolean     isDirectory(void) override;
     FileImplPtr openNextFile(const char* mode) override;
     void        rewindDirectory(void) override;

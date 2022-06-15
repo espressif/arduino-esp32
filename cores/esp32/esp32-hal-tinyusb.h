@@ -15,7 +15,6 @@
 
 #include "esp32-hal.h"
 
-#if CONFIG_IDF_TARGET_ESP32S2
 #if CONFIG_TINYUSB_ENABLED
 
 #ifdef __cplusplus
@@ -82,11 +81,11 @@ void usb_persist_restart(restart_type_t mode);
 
 // The following definitions and functions are to be used only by the drivers
 typedef enum {
-    USB_INTERFACE_CDC,
+    USB_INTERFACE_MSC,
     USB_INTERFACE_DFU,
     USB_INTERFACE_HID,
     USB_INTERFACE_VENDOR,
-    USB_INTERFACE_MSC,
+    USB_INTERFACE_CDC,
     USB_INTERFACE_MIDI,
     USB_INTERFACE_CUSTOM,
     USB_INTERFACE_MAX
@@ -105,4 +104,3 @@ uint8_t tinyusb_get_free_out_endpoint(void);
 #endif
 
 #endif /* CONFIG_TINYUSB_ENABLED */
-#endif /* CONFIG_IDF_TARGET_ESP32S2 */

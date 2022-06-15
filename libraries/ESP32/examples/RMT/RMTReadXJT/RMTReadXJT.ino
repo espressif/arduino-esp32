@@ -182,7 +182,7 @@ void setup()
     Serial.begin(115200);
     
     // Initialize the channel to capture up to 192 items
-    if ((rmt_recv = rmtInit(21, false, RMT_MEM_192)) == NULL)
+    if ((rmt_recv = rmtInit(21, RMT_RX_MODE, RMT_MEM_192)) == NULL)
     {
         Serial.println("init receiver failed\n");
     }

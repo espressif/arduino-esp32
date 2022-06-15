@@ -33,7 +33,7 @@ PACKAGE_JSON_DEV="package_esp32_dev_index.json"
 PACKAGE_JSON_REL="package_esp32_index.json"
 
 echo "Event: $GITHUB_EVENT_NAME, Repo: $GITHUB_REPOSITORY, Path: $GITHUB_WORKSPACE, Ref: $GITHUB_REF"
-echo "Action: $action, Branch: $RELEASE_BRANCH, ID: $RELEASE_ID" 
+echo "Action: $action, Branch: $RELEASE_BRANCH, ID: $RELEASE_ID"
 echo "Tag: $RELEASE_TAG, Draft: $draft, Pre-Release: $RELEASE_PRE"
 
 function get_file_size(){
@@ -60,7 +60,7 @@ function git_safe_upload_asset(){
     local name=$(basename "$file")
     local size=`get_file_size "$file"`
     local upload_res=`git_upload_asset "$file"`
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         >&2 echo "ERROR: Failed to upload '$name' ($?)"
         return 1
     fi
@@ -112,7 +112,7 @@ function git_safe_upload_to_pages(){
     local name=$(basename "$file")
     local size=`get_file_size "$file"`
     local upload_res=`git_upload_to_pages "$path" "$file"`
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         >&2 echo "ERROR: Failed to upload '$name' ($?)"
         return 1
     fi
@@ -131,7 +131,7 @@ function merge_package_json(){
     local jsonOut=$2
     local old_json=$OUTPUT_DIR/oldJson.json
     local merged_json=$OUTPUT_DIR/mergedJson.json
-    
+
     echo "Downloading previous JSON $jsonLink ..."
     curl -L -o "$old_json" "https://github.com/$GITHUB_REPOSITORY/releases/download/$jsonLink?access_token=$GITHUB_TOKEN" 2>/dev/null
     if [ $? -ne 0 ]; then echo "ERROR: Download Failed! $?"; exit 1; fi
@@ -140,7 +140,7 @@ function merge_package_json(){
     set +e
     stdbuf -oL python "$PACKAGE_JSON_MERGE" "$jsonOut" "$old_json" > "$merged_json"
     set -e
-    
+
     set -v
     if [ ! -s $merged_json ]; then
         rm -f "$merged_json"
@@ -172,6 +172,7 @@ mkdir -p "$PKG_DIR/tools"
 # Copy all core files to the package folder
 echo "Copying files for packaging ..."
 cp -f  "$GITHUB_WORKSPACE/boards.txt"              "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/package.json"            "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"         "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                   "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/libraries"               "$PKG_DIR/"
@@ -317,7 +318,7 @@ releaseNotes=""
 relNotesRaw=`git -C "$GITHUB_WORKSPACE" show -s --format=%b $RELEASE_TAG`
 readarray -t msgArray <<<"$relNotesRaw"
 arrLen=${#msgArray[@]}
-if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then 
+if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then
     ind=3
     while [ $ind -lt $arrLen ]; do
         if [ $ind -eq 3 ]; then
@@ -327,7 +328,7 @@ if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then
             oneLine="$(echo -e "${msgArray[ind]}" | sed -e 's/^[[:space:]]*//')"
             if [ ${#oneLine} -gt 0 ]; then
                 if [ "${oneLine:0:2}" == "* " ]; then oneLine=$(echo ${oneLine/\*/-}); fi
-                if [ "${oneLine:0:2}" != "- " ]; then releaseNotes+="- "; fi        
+                if [ "${oneLine:0:2}" != "- " ]; then releaseNotes+="- "; fi
                 releaseNotes+="$oneLine"
                 releaseNotes+=$'\r\n'
             fi
@@ -368,9 +369,9 @@ done
 rm -f $commitFile
 
 # Prepend the original release body
-if [ "${RELEASE_BODY: -1}" == $'\r' ]; then         
+if [ "${RELEASE_BODY: -1}" == $'\r' ]; then
     RELEASE_BODY="${RELEASE_BODY:0:-1}"
-else 
+else
     RELEASE_BODY="$RELEASE_BODY"
 fi
 RELEASE_BODY+=$'\r\n'

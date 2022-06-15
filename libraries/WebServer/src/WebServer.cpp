@@ -59,6 +59,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _contentLength(0)
 , _chunked(false)
 {
+  log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
 }
 
 WebServer::WebServer(int port)
@@ -81,6 +82,7 @@ WebServer::WebServer(int port)
 , _contentLength(0)
 , _chunked(false)
 {
+  log_v("WebServer::Webserver(port=%d)", port);
 }
 
 WebServer::~WebServer() {
@@ -289,7 +291,7 @@ void WebServer::handleClient() {
       return;
     }
 
-    log_v("New client");
+    log_v("New client: client.localIP()=%s", client.localIP().toString().c_str());
 
     _currentClient = client;
     _currentStatus = HC_WAIT_READ;
@@ -437,10 +439,30 @@ void WebServer::send(int code, const char* content_type, const String& content) 
     // Can we asume the following?
     //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
     //  _contentLength = CONTENT_LENGTH_UNKNOWN;
+    if (content.length() == 0) {
+        log_w("content length is zero");
+    }
     _prepareHeader(header, code, content_type, content.length());
     _currentClientWrite(header.c_str(), header.length());
     if(content.length())
       sendContent(content);
+}
+
+void WebServer::send(int code, char* content_type, const String& content) {
+  send(code, (const char*)content_type, content);
+}
+
+void WebServer::send(int code, const String& content_type, const String& content) {
+  send(code, (const char*)content_type.c_str(), content);
+}
+
+void WebServer::send(int code, const char* content_type, const char* content)
+{
+    const String passStr = (String)content;
+    if (strlen(content) != passStr.length()) {
+       log_e("String cast failed.  Use send_P for long arrays");
+    }
+    send(code, content_type, passStr);
 }
 
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
@@ -465,14 +487,6 @@ void WebServer::send_P(int code, PGM_P content_type, PGM_P content, size_t conte
     _prepareHeader(header, code, (const char* )type, contentLength);
     sendContent(header);
     sendContent_P(content, contentLength);
-}
-
-void WebServer::send(int code, char* content_type, const String& content) {
-  send(code, (const char*)content_type, content);
-}
-
-void WebServer::send(int code, const String& content_type, const String& content) {
-  send(code, (const char*)content_type.c_str(), content);
 }
 
 void WebServer::sendContent(const String& content) {

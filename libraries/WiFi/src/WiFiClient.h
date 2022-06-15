@@ -43,6 +43,7 @@ protected:
     std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
     bool _connected;
     bool _sse;
+    int _timeout;
 
 public:
     WiFiClient *next;

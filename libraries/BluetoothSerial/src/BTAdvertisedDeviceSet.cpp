@@ -6,7 +6,7 @@
  */
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 //#include <map>
 
@@ -25,14 +25,14 @@ BTAdvertisedDeviceSet::BTAdvertisedDeviceSet() {
 } // BTAdvertisedDeviceSet
 
 BTAddress   BTAdvertisedDeviceSet::getAddress()    { return m_address; }
-uint32_t    BTAdvertisedDeviceSet::getCOD()        { return m_cod; }
-std::string BTAdvertisedDeviceSet::getName()       { return m_name; }
-int8_t      BTAdvertisedDeviceSet::getRSSI()	    { return m_rssi; }
+uint32_t    BTAdvertisedDeviceSet::getCOD() const       { return m_cod; }
+std::string BTAdvertisedDeviceSet::getName() const      { return m_name; }
+int8_t      BTAdvertisedDeviceSet::getRSSI() const	    { return m_rssi; }
 
 
-bool        BTAdvertisedDeviceSet::haveCOD()   { return m_haveCOD; }
-bool        BTAdvertisedDeviceSet::haveName()  { return m_haveName; }
-bool        BTAdvertisedDeviceSet::haveRSSI()  { return m_haveRSSI; }
+bool        BTAdvertisedDeviceSet::haveCOD() const  { return m_haveCOD; }
+bool        BTAdvertisedDeviceSet::haveName() const { return m_haveName; }
+bool        BTAdvertisedDeviceSet::haveRSSI() const { return m_haveRSSI; }
 
 /**
  * @brief Create a string representation of this device.

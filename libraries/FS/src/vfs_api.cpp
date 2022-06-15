@@ -16,7 +16,9 @@
 
 using namespace fs;
 
-FileImplPtr VFSImpl::open(const char* fpath, const char* mode)
+#define DEFAULT_FILE_BUFFER_SIZE 4096
+
+FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create)
 {
     if(!_mountpoint) {
         log_e("File system is not mounted");
@@ -37,7 +39,7 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode)
     sprintf(temp,"%s%s", _mountpoint, fpath);
 
     struct stat st;
-    //file lound
+    //file found
     if(!stat(temp, &st)) {
         free(temp);
         if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)) {
@@ -45,12 +47,6 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode)
         }
         log_e("%s has wrong mode 0x%08X", fpath, st.st_mode);
         return FileImplPtr();
-    }
-
-    //file not found but mode permits creation
-    if(mode && mode[0] != 'r') {
-        free(temp);
-        return std::make_shared<VFSFileImpl>(this, fpath, mode);
     }
 
     //try to open this as directory (might be mount point)
@@ -61,7 +57,51 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode)
         return std::make_shared<VFSFileImpl>(this, fpath, mode);
     }
 
-    log_e("%s does not exist", temp);
+    //file not found but mode permits file creation without folder creation
+    if((mode && mode[0] != 'r') && (!create)){
+        free(temp);
+        return std::make_shared<VFSFileImpl>(this, fpath, mode);
+    }
+
+    ////file not found but mode permits file creation and folder creation
+    if((mode && mode[0] != 'r') && create){
+
+        char *token;
+        char *folder = (char *)malloc(strlen(fpath));
+
+        int start_index = 0;
+        int end_index = 0;
+
+        token = strchr(fpath+1,'/');
+        end_index = (token-fpath);
+
+        while (token != NULL)
+        {
+            memcpy(folder,fpath + start_index, end_index-start_index);
+            folder[end_index-start_index] = '\0';
+            
+            if(!VFSImpl::mkdir(folder))
+            {
+                log_e("Creating folder: %s failed!",folder);
+                return FileImplPtr();
+            }
+
+            token=strchr(token+1,'/');
+            if(token != NULL)
+            {
+                end_index = (token-fpath);
+                memset(folder, 0, strlen(folder));
+            }
+            
+        }
+
+        free(folder);
+        free(temp);
+        return std::make_shared<VFSFileImpl>(this, fpath, mode);
+
+    }
+
+    log_e("%s does not exist, no permits for creation", temp);
     free(temp);
     return FileImplPtr();
 }
@@ -242,6 +282,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         } else if(S_ISDIR(_stat.st_mode)) {
             _isDirectory = true;
             _d = opendir(temp);
@@ -269,6 +313,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         }
     }
     free(temp);
@@ -375,6 +423,19 @@ size_t VFSFileImpl::size() const
         _getStat();
     }
     return _stat.st_size;
+}
+
+/*
+* Change size of files internal buffer used for read / write operations.
+* Need to be called right after opening file before any other operation!
+*/
+bool VFSFileImpl::setBufferSize(size_t size)
+{
+    if(_isDirectory || !_f) {
+        return 0;
+    }
+    int res = setvbuf(_f,NULL,_IOFBF,size);
+    return res == 0;
 }
 
 const char* VFSFileImpl::path() const

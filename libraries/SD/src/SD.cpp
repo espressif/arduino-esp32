@@ -75,6 +75,22 @@ uint64_t SDFS::cardSize()
     return (uint64_t)sectors * sectorSize;
 }
 
+size_t SDFS::numSectors()
+{
+    if(_pdrv == 0xFF) {
+        return 0;
+    }
+    return sdcard_num_sectors(_pdrv);
+}
+
+size_t SDFS::sectorSize()
+{
+    if(_pdrv == 0xFF) {
+        return 0;
+    }
+    return sdcard_sector_size(_pdrv);
+}
+
 uint64_t SDFS::totalBytes()
 {
 	FATFS* fsinfo;

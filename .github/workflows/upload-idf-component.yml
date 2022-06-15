@@ -1,0 +1,19 @@
+name: Push components to https://components.espressif.com
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  upload_components:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Upload components to the component registry
+        uses: espressif/github-actions/upload_components@master
+        with:
+          name: arduino-esp32
+          namespace: espressif
+          api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

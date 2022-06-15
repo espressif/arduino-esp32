@@ -7,7 +7,7 @@
  *      Author: Thomas M. (ArcticSnowSky)
  */
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BTAddress.h"
 #include <string>
@@ -29,6 +29,9 @@ BTAddress::BTAddress(esp_bd_addr_t address) {
 	memcpy(m_address, address, ESP_BD_ADDR_LEN);
 } // BTAddress
 
+BTAddress::BTAddress() {
+	bzero(m_address, ESP_BD_ADDR_LEN);
+} // BTAddress
 
 /**
  * @brief Create an address from a hex string
@@ -64,13 +67,20 @@ bool BTAddress::equals(BTAddress otherAddress) {
 	return memcmp(otherAddress.getNative(), m_address, 6) == 0;
 } // equals
 
+BTAddress::operator bool () const {
+	for(int i = 0; i < ESP_BD_ADDR_LEN; i++){
+		if(this->m_address[i])
+			return true;
+	}
+	return false;
+} // operator ()
 
 /**
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
  */
-esp_bd_addr_t *BTAddress::getNative() {
-	return &m_address;
+esp_bd_addr_t *BTAddress::getNative() const {
+	return const_cast<esp_bd_addr_t *>(&m_address);
 } // getNative
 
 
@@ -85,7 +95,7 @@ esp_bd_addr_t *BTAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-std::string BTAddress::toString() {
+std::string BTAddress::toString() const {
 	auto size = 18;
 	char *res = (char*)malloc(size);
 	snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);

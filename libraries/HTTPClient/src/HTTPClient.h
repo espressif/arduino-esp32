@@ -27,12 +27,17 @@
 #ifndef HTTPClient_H_
 #define HTTPClient_H_
 
+#ifndef HTTPCLIENT_1_1_COMPATIBLE
 #define HTTPCLIENT_1_1_COMPATIBLE
+#endif
 
 #include <memory>
 #include <Arduino.h>
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
+
+/// Cookie jar support
+#include <vector>
 
 #define HTTPCLIENT_DEFAULT_TCP_TIMEOUT (5000)
 
@@ -142,6 +147,28 @@ class TransportTraits;
 typedef std::unique_ptr<TransportTraits> TransportTraitsPtr;
 #endif
 
+// cookie jar support
+typedef struct  {
+    String host;       // host which tries to set the cookie
+    time_t date;       // timestamp of the response that set the cookie
+    String name;
+    String value;
+    String domain;
+    String path = "";
+    struct {
+        time_t date = 0;
+        bool valid = false;
+    } expires;
+    struct {
+        time_t duration = 0;
+        bool valid = false;
+    } max_age;
+    bool http_only = false;
+    bool secure = false;
+} Cookie;
+typedef std::vector<Cookie> CookieJar;
+
+
 class HTTPClient
 {
 public:
@@ -171,6 +198,7 @@ public:
     void setUserAgent(const String& userAgent);
     void setAuthorization(const char * user, const char * password);
     void setAuthorization(const char * auth);
+    void setAuthorizationType(const char * authType);
     void setConnectTimeout(int32_t connectTimeout);
     void setTimeout(uint16_t timeout);
 
@@ -214,6 +242,11 @@ public:
 
     static String errorToString(int error);
 
+    /// Cookie jar support
+    void setCookieJar(CookieJar* cookieJar);
+    void resetCookieJar();
+    void clearAllCookies();
+
 protected:
     struct RequestArgument {
         String key;
@@ -229,6 +262,9 @@ protected:
     int handleHeaderResponse();
     int writeToStreamDataBlock(Stream * stream, int len);
 
+    /// Cookie jar support
+    void setCookie(String date, String headerValue);
+    bool generateCookieString(String *cookieString);
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
     TransportTraitsPtr _transportTraits;
@@ -240,7 +276,7 @@ protected:
     /// request handling
     String _host;
     uint16_t _port = 0;
-    int32_t _connectTimeout = -1;
+    int32_t _connectTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _reuse = true;
     uint16_t _tcpTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _useHTTP10 = false;
@@ -251,6 +287,7 @@ protected:
     String _headers;
     String _userAgent = "ESP32HTTPClient";
     String _base64Authorization;
+    String _authorizationType = "Basic";
 
     /// Response handling
     RequestArgument* _currentHeaders = nullptr;
@@ -263,6 +300,10 @@ protected:
     uint16_t _redirectLimit = 10;
     String _location;
     transferEncoding_t _transferEncoding = HTTPC_TE_IDENTITY;
+
+    /// Cookie jar support
+    CookieJar* _cookieJar = nullptr;
+
 };
 
 
