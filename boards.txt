@@ -14751,3 +14751,115 @@ aw2eth.menu.DebugLevel.verbose=Verbose
 aw2eth.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
+
+beetle_esp32_c3.name=Beetle ESP32 C3
+beetle_esp32_c3.vid.0=0x303A
+beetle_esp32_c3.pid.0=0x1001
+
+beetle_esp32_c3.bootloader.tool=esptool_py
+beetle_esp32_c3.bootloader.tool.default=esptool_py
+
+beetle_esp32_c3.upload.tool=esptool_py
+beetle_esp32_c3.upload.tool.default=esptool_py
+beetle_esp32_c3.upload.tool.network=esp_ota
+
+beetle_esp32_c3.upload.maximum_size=1310720
+beetle_esp32_c3.upload.maximum_data_size=327680
+beetle_esp32_c3.upload.flags=
+beetle_esp32_c3.upload.extra_flags=
+beetle_esp32_c3.upload.use_1200bps_touch=false
+beetle_esp32_c3.upload.wait_for_upload_port=false
+
+beetle_esp32_c3.serial.disableDTR=false
+beetle_esp32_c3.serial.disableRTS=false
+
+beetle_esp32_c3.build.tarch=riscv32
+beetle_esp32_c3.build.target=esp
+beetle_esp32_c3.build.mcu=esp32c3
+beetle_esp32_c3.build.core=esp32
+beetle_esp32_c3.build.variant=beetle32c3
+beetle_esp32_c3.build.board=beetle32c3
+beetle_esp32_c3.build.bootloader_addr=0x0
+
+beetle_esp32_c3.build.cdc_on_boot=1
+beetle_esp32_c3.build.f_cpu=160000000L
+beetle_esp32_c3.build.flash_size=4MB
+beetle_esp32_c3.build.flash_freq=80m
+beetle_esp32_c3.build.flash_mode=qio
+beetle_esp32_c3.build.boot=qio
+beetle_esp32_c3.build.partitions=default
+beetle_esp32_c3.build.defines=
+
+beetle_esp32_c3.menu.CDCOnBoot.default=Enabled
+beetle_esp32_c3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+beetle_esp32_c3.menu.CDCOnBoot.dis_cdc=Disabled
+beetle_esp32_c3.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+beetle_esp32_c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+beetle_esp32_c3.menu.PartitionScheme.default.build.partitions=default
+beetle_esp32_c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+beetle_esp32_c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+beetle_esp32_c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+beetle_esp32_c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+beetle_esp32_c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+beetle_esp32_c3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+beetle_esp32_c3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+beetle_esp32_c3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+beetle_esp32_c3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+beetle_esp32_c3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+beetle_esp32_c3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+beetle_esp32_c3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+beetle_esp32_c3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+beetle_esp32_c3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+beetle_esp32_c3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+beetle_esp32_c3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+beetle_esp32_c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+
+beetle_esp32_c3.menu.CPUFreq.160=160MHz (WiFi)
+beetle_esp32_c3.menu.CPUFreq.160.build.f_cpu=160000000L
+beetle_esp32_c3.menu.CPUFreq.80=80MHz (WiFi)
+beetle_esp32_c3.menu.CPUFreq.80.build.f_cpu=80000000L
+beetle_esp32_c3.menu.CPUFreq.40=40MHz
+beetle_esp32_c3.menu.CPUFreq.40.build.f_cpu=40000000L
+beetle_esp32_c3.menu.CPUFreq.20=20MHz
+beetle_esp32_c3.menu.CPUFreq.20.build.f_cpu=20000000L
+beetle_esp32_c3.menu.CPUFreq.10=10MHz
+beetle_esp32_c3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+
+beetle_esp32_c3.menu.FlashFreq.80=80MHz
+beetle_esp32_c3.menu.FlashFreq.80.build.flash_freq=80m
+beetle_esp32_c3.menu.FlashFreq.40=40MHz
+beetle_esp32_c3.menu.FlashFreq.40.build.flash_freq=40m
+
+beetle_esp32_c3.menu.UploadSpeed.921600=921600
+beetle_esp32_c3.menu.UploadSpeed.921600.upload.speed=921600
+beetle_esp32_c3.menu.UploadSpeed.115200=115200
+beetle_esp32_c3.menu.UploadSpeed.115200.upload.speed=115200
+beetle_esp32_c3.menu.UploadSpeed.256000.windows=256000
+beetle_esp32_c3.menu.UploadSpeed.256000.upload.speed=256000
+beetle_esp32_c3.menu.UploadSpeed.230400.windows.upload.speed=256000
+beetle_esp32_c3.menu.UploadSpeed.230400=230400
+beetle_esp32_c3.menu.UploadSpeed.230400.upload.speed=230400
+beetle_esp32_c3.menu.UploadSpeed.460800.linux=460800
+beetle_esp32_c3.menu.UploadSpeed.460800.macosx=460800
+beetle_esp32_c3.menu.UploadSpeed.460800.upload.speed=460800
+beetle_esp32_c3.menu.UploadSpeed.512000.windows=512000
+beetle_esp32_c3.menu.UploadSpeed.512000.upload.speed=512000
+
+beetle_esp32_c3.menu.DebugLevel.none=None
+beetle_esp32_c3.menu.DebugLevel.none.build.code_debug=0
+beetle_esp32_c3.menu.DebugLevel.error=Error
+beetle_esp32_c3.menu.DebugLevel.error.build.code_debug=1
+beetle_esp32_c3.menu.DebugLevel.warn=Warn
+beetle_esp32_c3.menu.DebugLevel.warn.build.code_debug=2
+beetle_esp32_c3.menu.DebugLevel.info=Info
+beetle_esp32_c3.menu.DebugLevel.info.build.code_debug=3
+beetle_esp32_c3.menu.DebugLevel.debug=Debug
+beetle_esp32_c3.menu.DebugLevel.debug.build.code_debug=4
+beetle_esp32_c3.menu.DebugLevel.verbose=Verbose
+beetle_esp32_c3.menu.DebugLevel.verbose.build.code_debug=5
+
+##############################################################
