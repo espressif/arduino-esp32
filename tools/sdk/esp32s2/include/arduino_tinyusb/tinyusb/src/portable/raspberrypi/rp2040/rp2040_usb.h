@@ -16,6 +16,15 @@
 #define TUD_OPT_RP2040_USB_DEVICE_ENUMERATION_FIX PICO_RP2040_USB_DEVICE_ENUMERATION_FIX
 #endif
 
+#ifndef PICO_RP2040_USB_FAST_IRQ
+#define PICO_RP2040_USB_FAST_IRQ 0
+#endif
+
+#if PICO_RP2040_USB_FAST_IRQ
+#define __tusb_irq_path_func(x) __no_inline_not_in_flash_func(x)
+#else
+#define __tusb_irq_path_func(x) x
+#endif
 
 #define pico_info(...)  TU_LOG(2, __VA_ARGS__)
 #define pico_trace(...) TU_LOG(3, __VA_ARGS__)

@@ -128,8 +128,7 @@
 
 #define SOC_I2C_FIFO_LEN       (32) /*!< I2C hardware FIFO depth */
 
-//ESP32-S2 support hardware FSM reset
-#define SOC_I2C_SUPPORT_HW_FSM_RST  (1)
+// FSM_RST only resets the FSM, not using it. So SOC_I2C_SUPPORT_HW_FSM_RST not defined.
 //ESP32-S2 support hardware clear bus
 #define SOC_I2C_SUPPORT_HW_CLR_BUS  (1)
 
@@ -331,12 +330,12 @@
 #define SOC_SPI_MEM_SUPPORT_SW_SUSPEND                    (1)
 /*-------------------------- Power Management CAPS ---------------------------*/
 #define SOC_PM_SUPPORT_EXT_WAKEUP       (1)
-
 #define SOC_PM_SUPPORT_WIFI_WAKEUP      (1)
+#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
 
+#define SOC_PM_SUPPORT_RTC_PERIPH_PD              (1)
 #define SOC_PM_SUPPORT_WIFI_PD          (1)
 
-#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
 
 /*-------------------------- COEXISTENCE HARDWARE PTI CAPS -------------------------------*/
 #define SOC_COEX_HW_PTI                 (1)

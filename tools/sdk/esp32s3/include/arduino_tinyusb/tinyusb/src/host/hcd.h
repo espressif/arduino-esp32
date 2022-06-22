@@ -207,13 +207,11 @@ void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t xferred
     .rhport   = 0, // TODO correct rhport
     .event_id = HCD_EVENT_XFER_COMPLETE,
     .dev_addr = dev_addr,
-    .xfer_complete =
-    {
-      .ep_addr = ep_addr,
-      .result  = result,
-      .len     = xferred_bytes
-    }
   };
+  event.xfer_complete.ep_addr = ep_addr;
+  event.xfer_complete.result = result;
+  event.xfer_complete.len = xferred_bytes;
+
 
   hcd_event_handler(&event, in_isr);
 }

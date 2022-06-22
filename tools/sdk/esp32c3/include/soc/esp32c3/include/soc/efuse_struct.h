@@ -165,7 +165,8 @@ typedef volatile struct efuse_dev_s {
             uint32_t rpt4_reserved7:           5;                /*Reserved.*/
             uint32_t force_send_resume:        1;                /*The value of FORCE_SEND_RESUME.*/
             uint32_t secure_version:          16;                /*The value of SECURE_VERSION.*/
-            uint32_t rpt4_reserved1:           2;                /*Reserved.*/
+            uint32_t rpt4_reserved1:           1;                /*Reserved.*/
+            uint32_t err_rst_enable:           1;                /*Use BLOCK0 to check error record registers, 0 - without check.*/
         };
         uint32_t val;
     } rd_repeat_data3;
@@ -357,30 +358,30 @@ typedef volatile struct efuse_dev_s {
     union {
         struct {
             uint32_t mac_spi_8m_err_num: 3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t mac_spi_8m_fail:    1;                      /*0: Means no failure and that the data of MAC_SPI_8M is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
+            uint32_t reserved3:          1;                      /*Reserved.*/
             uint32_t sys_part1_num:      3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t sys_part1_fail:     1;                      /*0: Means no failure and that the data of system part1 is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
+            uint32_t mac_spi_8m_fail:    1;                      /*0: Means no failure and that the data of MAC_SPI_8M is reliable 1: Means that programming MAC_SPI_8M failed and the number of error bytes is over 6.*/
             uint32_t usr_data_err_num:   3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t usr_data_fail:      1;                      /*0: Means no failure and that the user data is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
+            uint32_t sys_part1_fail:     1;                      /*0: Means no failure and that the data of system part1 is reliable 1: Means that programming the data of system part1 failed and the number of error bytes is over 6.*/
             uint32_t key0_err_num:       3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t key0_fail:          1;                      /*0: Means no failure and that the data of key$n is reliable 1: Means that programming key$n failed and the number of error bytes is over 6.*/
+            uint32_t usr_data_fail:      1;                      /*0: Means no failure and that the data of user data is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
             uint32_t key1_err_num:       3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t key1_fail:          1;                      /*0: Means no failure and that the data of key$n is reliable 1: Means that programming key$n failed and the number of error bytes is over 6.*/
+            uint32_t key0_fail:          1;                      /*0: Means no failure and that the data of key0 is reliable 1: Means that programming key0 failed and the number of error bytes is over 6.*/
             uint32_t key2_err_num:       3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t key2_fail:          1;                      /*0: Means no failure and that the data of key$n is reliable 1: Means that programming key$n failed and the number of error bytes is over 6.*/
+            uint32_t key1_fail:          1;                      /*0: Means no failure and that the data of key1 is reliable 1: Means that programming key1 failed and the number of error bytes is over 6.*/
             uint32_t key3_err_num:       3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t key3_fail:          1;                      /*0: Means no failure and that the data of key$n is reliable 1: Means that programming key$n failed and the number of error bytes is over 6.*/
+            uint32_t key2_fail:          1;                      /*0: Means no failure and that the data of key2 is reliable 1: Means that programming key2 failed and the number of error bytes is over 6.*/
             uint32_t key4_err_num:       3;                      /*The value of this signal means the number of error bytes.*/
-            uint32_t key4_fail:          1;                      /*0: Means no failure and that the data of key$n is reliable 1: Means that programming key$n failed and the number of error bytes is over 6.*/
+            uint32_t key3_fail:          1;                      /*0: Means no failure and that the data of key3 is reliable 1: Means that programming key3 failed and the number of error bytes is over 6.*/
         };
         uint32_t val;
     } rd_rs_err0;
     union {
         struct {
             uint32_t key5_err_num:      3;                       /*The value of this signal means the number of error bytes.*/
-            uint32_t key5_fail:         1;                       /*0: Means no failure and that the data of KEY5 is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
+            uint32_t key4_fail:         1;                       /*0: Means no failure and that the data of KEY4 is reliable 1: Means that programming KEY4 failed and the number of error bytes is over 6.*/
             uint32_t sys_part2_err_num: 3;                       /*The value of this signal means the number of error bytes.*/
-            uint32_t sys_part2_fail:    1;                       /*0: Means no failure and that the data of system part2 is reliable 1: Means that programming user data failed and the number of error bytes is over 6.*/
+            uint32_t key5_fail:         1;                       /*0: Means no failure and that the data of KEY5 is reliable 1: Means that programming KEY5 failed and the number of error bytes is over 6.*/
             uint32_t reserved8:        24;                       /*Reserved.*/
         };
         uint32_t val;
