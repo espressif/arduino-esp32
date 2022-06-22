@@ -154,6 +154,10 @@ typedef enum {
     ESP_RMAKER_REQ_SRC_CLOUD,
     /** Request received when a schedule has triggered */
     ESP_RMAKER_REQ_SRC_SCHEDULE,
+    /** Request received when a scene has been activated */
+    ESP_RMAKER_REQ_SRC_SCENE_ACTIVATE,
+    /** Request received when a scene has been deactivated */
+    ESP_RMAKER_REQ_SRC_SCENE_DEACTIVATE,
     /** Request received from a local controller */
     ESP_RMAKER_REQ_SRC_LOCAL,
     /** This will always be the last value. Any value equal to or

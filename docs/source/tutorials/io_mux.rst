@@ -5,12 +5,12 @@ GPIO Matrix and Pin Mux
 Introduction
 ------------
 
-This is a basic introduction on how the peripherals work in the ESP32. This tutorial can be used to understand
+This is a basic introduction to how the peripherals work in the ESP32. This tutorial can be used to understand
 how to define the peripheral usage and its corresponding pins.
 
 In some microcontrollers' architecture, the peripherals are attached to specific pins and cannot be redefined to another one.
 
-For example.
+For example:
 
 The *XYZ* MCU defines that the I2C peripheral SDA signal is the IO5 on the physical pin 10 and the SCL is on the IO6 and physical pin 11.
 
