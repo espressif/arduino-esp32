@@ -132,6 +132,9 @@ private:
   int _outSdPin;
   int _sckPin;
   int _fsPin;
+#ifdef ESP32
+  int _mckpin;
+#endif
 
   i2s_state_t _state;
   int _bitsPerSample;
