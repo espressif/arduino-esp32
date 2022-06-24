@@ -55,7 +55,6 @@ sketchnum=0
 for sketch in $sketches; do
     sketchdir=$(dirname $sketch)
     sketchdirname=$(basename $sketchdir)
-    sketchname=$(basename $sketch)
     sketchnum=$(($sketchnum + 1))
     if [ "$sketchnum" -le "$start_index" ] \
     || [ "$sketchnum" -gt "$end_index" ]; then

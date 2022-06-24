@@ -56,7 +56,7 @@ jobs:
 
       - name: Build sketches
         run: |
-          bash .github/scripts/tests_build.sh ${{matrix.chip}} ${{matrix.chunks}} ${{env.MAX_CHUNKS}}
+          bash .github/scripts/tests_build.sh -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
       - name: Upload ${{matrix.chip}}-${{matrix.chunks}} artifacts
         uses: actions/upload-artifact@v2
         with:
