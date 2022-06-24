@@ -26,6 +26,7 @@ extern "C" {
 
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
+#include "pins_arduino.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define NUM_OUPUT_PINS  46
@@ -62,6 +63,7 @@ extern "C" {
 #define ONHIGH    0x05
 #define ONLOW_WE  0x0C
 #define ONHIGH_WE 0x0D
+
 
 #define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
 #define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)
