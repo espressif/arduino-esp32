@@ -452,12 +452,20 @@ bool WiFiSTAClass::getAutoConnect()
     return false;//now deprecated
 }
 
+/**
+ * Function used to set the automatic reconnection if the connection is lost. 
+ * @param autoReconnect `true` to enable this option.
+ * @return true 
+ */
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
 {
     _autoReconnect = autoReconnect;
     return true;
 }
-
+/**
+ * Function used to get the automatic reconnection if the connection is lost.
+ * @return The function will return `true` if this setting is enabled.
+ */
 bool WiFiSTAClass::getAutoReconnect()
 {
     return _autoReconnect;
