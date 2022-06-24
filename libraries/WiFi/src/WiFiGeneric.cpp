@@ -250,7 +250,7 @@ static const char * auth_mode_str(int authmode)
     	return ("WEP");
         break;
     case WIFI_AUTH_WPA_PSK:
-    	return ("PSK");
+    	return ("WPA_PSK");
         break;
     case WIFI_AUTH_WPA2_PSK:
     	return ("WPA2_PSK");
