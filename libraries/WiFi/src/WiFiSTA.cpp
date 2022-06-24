@@ -337,9 +337,10 @@ bool WiFiSTAClass::reconnect()
 }
 
 /**
- * Disconnect from the network
- * @param wifioff
- * @return  one value of wl_status_t enum
+ * Disconnect from the network.
+ * @param wifioff `true` to turn the Wi-Fi radio off.
+ * @param eraseap `true` to erase the AP configuration from the NVS memory.
+ * @return `true` when successful.
  */
 bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
 {
@@ -398,8 +399,8 @@ bool WiFiSTAClass::isConnected()
 }
 
 /**
- * Set the minimum security for AP to be considered connectable
- * Must be called before WiFi.begin()
+ * Set the minimum security for AP to be considered connectable.
+ * Must be called before WiFi.begin().
  * @param minSecurity wifi_auth_mode_t
  */
 void WiFiSTAClass::setMinSecurity(wifi_auth_mode_t minSecurity)
