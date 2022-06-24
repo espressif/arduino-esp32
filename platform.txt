@@ -120,7 +120,6 @@ compiler.elf2hex.extra_flags=
 compiler.libraries.ldflags=
 
 # This can be overriden in boards.txt
-build.memory_type=qspi_qspi
 build.flash_size=4MB
 build.flash_mode=dio
 build.flash_freq=80m
@@ -135,6 +134,7 @@ build.loop_core=
 build.event_core=
 build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
 build.extra_libs=
+build.memory_type={build.boot}_qspi
 
 # Custom build options
 build.opt.name=build_opt.h
