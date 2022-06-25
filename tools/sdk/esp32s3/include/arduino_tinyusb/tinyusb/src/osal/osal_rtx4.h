@@ -37,7 +37,7 @@ extern "C" {
 //--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline void osal_task_delay(uint32_t msec)
 {
   uint16_t hi = msec >> 16;
   uint16_t lo = msec;
@@ -47,7 +47,7 @@ static inline void osal_task_delay(uint32_t msec)
   os_dly_wait(lo);
 }
 
-static inline uint16_t msec2wait(uint32_t msec) {
+TU_ATTR_ALWAYS_INLINE static inline uint16_t msec2wait(uint32_t msec) {
   if (msec == OSAL_TIMEOUT_WAIT_FOREVER)
     return 0xFFFF;
   else if (msec >= 0xFFFE)
@@ -62,12 +62,12 @@ static inline uint16_t msec2wait(uint32_t msec) {
 typedef OS_SEM osal_semaphore_def_t;
 typedef OS_ID osal_semaphore_t;
 
-static inline OS_ID osal_semaphore_create(osal_semaphore_def_t* semdef) {
+TU_ATTR_ALWAYS_INLINE static inline OS_ID osal_semaphore_create(osal_semaphore_def_t* semdef) {
   os_sem_init(semdef, 0);
   return semdef;
 }
 
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr) {
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr) {
   if ( !in_isr ) {
     os_sem_send(sem_hdl);
   } else {
@@ -76,11 +76,11 @@ static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr) {
 	return true;
 }
 
-static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec) {
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec) {
   return os_sem_wait(sem_hdl, msec2wait(msec)) != OS_R_TMO;
 }
 
-static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl) {
+TU_ATTR_ALWAYS_INLINE static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl) {
   // TODO: implement
 }
 
@@ -90,18 +90,18 @@ static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl) {
 typedef OS_MUT osal_mutex_def_t;
 typedef OS_ID osal_mutex_t;
 
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
 {
   os_mut_init(mdef);
   return mdef;
 }
 
-static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
 {
   return os_mut_wait(mutex_hdl, msec2wait(msec)) != OS_R_TMO;
 }
 
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 {
   return os_mut_release(mutex_hdl) == OS_R_OK;
 }
@@ -127,23 +127,23 @@ typedef struct
 
 typedef osal_queue_def_t* osal_queue_t;
 
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
 {
   os_mbx_init(qdef->mbox, (qdef->depth + 4) * 4);
   _init_box(qdef->pool, ((qdef->item_sz+3)/4)*(qdef->depth) + 3, qdef->item_sz);
   return qdef;
 }
 
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec)
 {
   void* buf;
-  os_mbx_wait(qhdl->mbox, &buf, 0xFFFF);
+  os_mbx_wait(qhdl->mbox, &buf, msec2wait(msec));
   memcpy(data, buf, qhdl->item_sz);
   _free_box(qhdl->pool, buf);
   return true;
 }
 
-static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   void* buf = _alloc_box(qhdl->pool);
   memcpy(buf, data, qhdl->item_sz);
@@ -158,7 +158,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   return true;
 }
 
-static inline bool osal_queue_empty(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_empty(osal_queue_t qhdl)
 {
   return os_mbx_check(qhdl->mbox) == qhdl->depth;
 }

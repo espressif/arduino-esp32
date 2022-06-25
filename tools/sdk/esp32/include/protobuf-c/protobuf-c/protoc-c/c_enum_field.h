@@ -80,11 +80,11 @@ class EnumFieldGenerator : public FieldGenerator {
   // implements FieldGenerator ---------------------------------------
   void GenerateStructMembers(io::Printer* printer) const;
   void GenerateDescriptorInitializer(io::Printer* printer) const;
-  string GetDefaultValue(void) const;
+  std::string GetDefaultValue(void) const;
   void GenerateStaticInit(io::Printer* printer) const;
 
  private:
-  std::map<string, string> variables_;
+  std::map<std::string, std::string> variables_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(EnumFieldGenerator);
 };

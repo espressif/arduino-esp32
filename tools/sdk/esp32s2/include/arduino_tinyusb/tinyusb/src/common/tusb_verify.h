@@ -90,6 +90,9 @@
 #elif defined(__riscv)
   #define TU_BREAKPOINT() do { __asm("ebreak\n"); } while(0)
 
+#elif defined(_mips)
+  #define TU_BREAKPOINT() do { __asm("sdbbp 0"); } while (0)
+
 #else
   #define TU_BREAKPOINT() do {} while (0)
 #endif
@@ -99,8 +102,8 @@
  *------------------------------------------------------------------*/
 
 // Helper to implement optional parameter for TU_VERIFY Macro family
-#define GET_3RD_ARG(arg1, arg2, arg3, ...)        arg3
-#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...)  arg4
+#define _GET_3RD_ARG(arg1, arg2, arg3, ...)        arg3
+#define _GET_4TH_ARG(arg1, arg2, arg3, arg4, ...)  arg4
 
 /*------------- Generator for TU_VERIFY and TU_VERIFY_HDLR -------------*/
 #define TU_VERIFY_DEFINE(_cond, _handler, _ret)  do            \
@@ -116,7 +119,7 @@
 #define TU_VERIFY_1ARGS(_cond)                         TU_VERIFY_DEFINE(_cond, , false)
 #define TU_VERIFY_2ARGS(_cond, _ret)                   TU_VERIFY_DEFINE(_cond, , _ret)
 
-#define TU_VERIFY(...)                   GET_3RD_ARG(__VA_ARGS__, TU_VERIFY_2ARGS, TU_VERIFY_1ARGS, UNUSED)(__VA_ARGS__)
+#define TU_VERIFY(...)                   _GET_3RD_ARG(__VA_ARGS__, TU_VERIFY_2ARGS, TU_VERIFY_1ARGS, UNUSED)(__VA_ARGS__)
 
 
 /*------------------------------------------------------------------*/
@@ -127,7 +130,7 @@
 #define TU_VERIFY_HDLR_2ARGS(_cond, _handler)           TU_VERIFY_DEFINE(_cond, _handler, false)
 #define TU_VERIFY_HDLR_3ARGS(_cond, _handler, _ret)     TU_VERIFY_DEFINE(_cond, _handler, _ret)
 
-#define TU_VERIFY_HDLR(...)              GET_4TH_ARG(__VA_ARGS__, TU_VERIFY_HDLR_3ARGS, TU_VERIFY_HDLR_2ARGS,UNUSED)(__VA_ARGS__)
+#define TU_VERIFY_HDLR(...)              _GET_4TH_ARG(__VA_ARGS__, TU_VERIFY_HDLR_3ARGS, TU_VERIFY_HDLR_2ARGS,UNUSED)(__VA_ARGS__)
 
 /*------------------------------------------------------------------*/
 /* ASSERT
@@ -139,7 +142,7 @@
 #define ASSERT_2ARGS(_cond, _ret)      TU_VERIFY_DEFINE(_cond, _MESS_FAILED(); TU_BREAKPOINT(), _ret)
 
 #ifndef TU_ASSERT
-#define TU_ASSERT(...)             GET_3RD_ARG(__VA_ARGS__, ASSERT_2ARGS, ASSERT_1ARGS,UNUSED)(__VA_ARGS__)
+#define TU_ASSERT(...)             _GET_3RD_ARG(__VA_ARGS__, ASSERT_2ARGS, ASSERT_1ARGS,UNUSED)(__VA_ARGS__)
 #endif
 
 /*------------------------------------------------------------------*/

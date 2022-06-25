@@ -146,6 +146,8 @@ PACK_STRUCT_END
 #  include "arch/epstruct.h"
 #endif
 
+#define ICMP6_HLEN 8
+
 /** This is the ICMP6 header adapted for echo req/resp. */
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
