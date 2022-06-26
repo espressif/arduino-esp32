@@ -94,8 +94,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ $options -eq 0 ] && [ -f $sketchdir/cfg ]; then
-            opts=`cat $sketchdir/cfg`
+        if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
+            opts=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn' $sketchdir/cfg.json`
         else
             partition="PartitionScheme=$partition_opt"
             ff="FlashFreq=$ff_opt"
