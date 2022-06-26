@@ -75,41 +75,48 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             exit 1
         fi
 
-        # Select the common part of the FQBN based on the target.  The rest will be
-        # appended depending on the passed options.
-
-        case "$target" in
-            "esp32") fqbn="espressif:esp32:esp32:"
-            ;;
-            "esp32s2") fqbn="espressif:esp32:esp32s2:"
-            ;;
-            "esp32c3") fqbn="espressif:esp32:esp32c3:"
-            ;;
-            "esp32s3") fqbn="espressif:esp32:esp32s3:"
-            ;;
-        esac
-
         # The options are either stored in the test directory, for a per test
         # customization or passed as parameters.  Command line options take
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
         if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
-            opts=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn' $sketchdir/cfg.json`
+            # The config file could contain multiple FQBNs for one chip.  If
+            # that's the case we build one time for every FQBN.
+
+            len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
+            fqbn=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn' $sketchdir/cfg.json`
         else
+            # Since we are passing options, we will end up with only one FQBN to
+            # build.
+
+            len=1
+
+            # Select the common part of the FQBN based on the target.  The rest will be
+            # appended depending on the passed options.
+
+            case "$target" in
+                "esp32") fqbn="espressif:esp32:esp32:"
+                ;;
+                "esp32s2") fqbn="espressif:esp32:esp32s2:"
+                ;;
+                "esp32c3") fqbn="espressif:esp32:esp32c3:"
+                ;;
+                "esp32s3") fqbn="espressif:esp32:esp32s3:"
+                ;;
+            esac
+
             partition="PartitionScheme=$partition_opt"
             ff="FlashFreq=$ff_opt"
             fm="FlashMode=$fm_opt"
             fs="FlashSize=$fs_opt"
             opts=$fm,$ff,$fs,$partition
+            fqbn+=$opts
+            fqbn="[\"$fqbn\"]"
         fi
-
-        fqbn+=$opts
     fi
 
-    echo $fqbn
-
-    if [ -z $fqbn ]; then
+    if [ -z "$fqbn" ]; then
         echo "No FQBN passed or unvalid chip: $target"
         exit 1
     fi
@@ -121,21 +128,26 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         build_dir="$ARDUINO_BUILD_DIR"
     fi
 
-    rm -rf "$build_dir"
-    mkdir -p "$build_dir"
     mkdir -p "$ARDUINO_CACHE_DIR"
-    $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
-        -fqbn=\"$fqbn\" \
-        -warnings="all" \
-        -tools "$ide_path/tools-builder" \
-        -tools "$ide_path/tools" \
-        -built-in-libraries "$ide_path/libraries" \
-        -hardware "$ide_path/hardware" \
-        -hardware "$user_path/hardware" \
-        -libraries "$user_path/libraries" \
-        -build-cache "$ARDUINO_CACHE_DIR" \
-        -build-path "$build_dir" \
-        $win_opts $xtra_opts "${sketchdir}/$(basename ${sketchdir}).ino"
+    for i in `seq 0 $(($len - 1))`
+    do
+        rm -rf "$build_dir$i"
+        mkdir -p "$build_dir$i"
+        currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
+        echo "Building with FQBN=$currfqbn"
+        $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
+            -fqbn=\"$currfqbn\" \
+            -warnings="all" \
+            -tools "$ide_path/tools-builder" \
+            -tools "$ide_path/tools" \
+            -built-in-libraries "$ide_path/libraries" \
+            -hardware "$ide_path/hardware" \
+            -hardware "$user_path/hardware" \
+            -libraries "$user_path/libraries" \
+            -build-cache "$ARDUINO_CACHE_DIR" \
+            -build-path "$build_dir$i" \
+            $win_opts $xtra_opts "${sketchdir}/$(basename ${sketchdir}).ino"
+    done
 }
 
 function count_sketches(){ # count_sketches <path> [target]
