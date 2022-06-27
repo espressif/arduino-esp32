@@ -6,7 +6,7 @@ function run_test() {
     local options=$3
     local erase_flash=$4
     local sketchdir=$(dirname $sketch)
-    local sketchdirname=$(basename $sketchdir)
+    local sketchname=$(basename $sketchdir)
 
     if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
         len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
@@ -16,12 +16,12 @@ function run_test() {
 
     for i in `seq 0 $(($len - 1))`
     do
-        echo "Running test: $sketchdirname -- Config: $i"
+        echo "Running test: $sketchname -- Config: $i"
         if [ $erase_flash -eq 1 ]; then
             esptool.py -c $target erase_flash
         fi
 
-        pytest tests --build-dir tests/$sketchdirname/build$i -k test_$sketchdirname --junit-xml=tests/$sketchdirname/$sketchdirname$i.xml
+        pytest tests --build-dir tests/$sketchname/build$i -k test_$sketchname --junit-xml=tests/$sketchname/$sketchname$i.xml
         result=$?
         if [ $result -ne 0 ]; then
             return $result

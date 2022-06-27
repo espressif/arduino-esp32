@@ -23,16 +23,16 @@ function build(){
         args+=" -i $chunk_index -m $chunks_cnt"
         ${BUILD_SKETCHES} ${args}
     else
-        if [ "$OS_IS_WINDOWS" == "1" ]; then
-            local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
-            local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
-            win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
-            -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
-            args+="-w \"${win_opts}\""
-        fi
-
         for sketch in ${sketches}; do
-            ${BUILD_SKETCH} ${args} " -s $(dirname $sketch)"
+            args+=" -s $(dirname $sketch)"
+            if [ "$OS_IS_WINDOWS" == "1" ]; then
+                local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
+                local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
+                win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
+                -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
+                args+=" ${win_opts}"
+            fi
+            ${BUILD_SKETCH} ${args}
         done
     fi
 }

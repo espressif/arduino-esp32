@@ -24,17 +24,13 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             target=$1
             ;;
-        -s )
-            shift
-            sketchdir=$1
-            ;;
-        -w )
-            shift
-            win_opts=$1
-            ;;
         -fqbn )
             shift
             fqbn=$1
+            ;;
+        -s )
+            shift
+            sketchdir=$1
             ;;
         -ff )
             shift
@@ -139,7 +135,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         rm -rf "$build_dir$i"
         mkdir -p "$build_dir$i"
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
-        echo "Building with FQBN=$currfqbn"
+        sketchname=$(basename $sketchdir)
+        echo "Building $sketchname with FQBN=$currfqbn"
         $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             -fqbn=\"$currfqbn\" \
             -warnings="all" \
@@ -151,7 +148,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             -libraries "$user_path/libraries" \
             -build-cache "$ARDUINO_CACHE_DIR" \
             -build-path "$build_dir$i" \
-            $win_opts $xtra_opts "${sketchdir}/$(basename ${sketchdir}).ino"
+            $xtra_opts "${sketchdir}/${sketchname}.ino"
     done
 }
 
