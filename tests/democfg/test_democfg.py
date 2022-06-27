@@ -1,2 +1,2 @@
-def test_hello_world(dut):
+def test_cfg(dut):
     dut.expect('Hello cfg!')
