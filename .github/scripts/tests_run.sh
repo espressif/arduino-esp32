@@ -4,6 +4,7 @@ function run_test() {
     local target=$1
     local sketch=$2
     local options=$3
+    local erase_flash=$4
     local sketchdir=$(dirname $sketch)
     local sketchdirname=$(basename $sketchdir)
 
@@ -16,6 +17,10 @@ function run_test() {
     for i in `seq 0 $(($len - 1))`
     do
         echo "Running test: $sketchdirname -- Config: $i"
+        if [ $erase_flash -eq 1 ]; then
+            esptool.py -c $target erase_flash
+        fi
+
         pytest tests --build-dir tests/$sketchdirname/build$i -k test_$sketchdirname --junit-xml=tests/$sketchdirname/$sketchdirname$i.xml
         result=$?
         if [ $result -ne 0 ]; then
@@ -54,6 +59,9 @@ while [ ! -z "$1" ]; do
         shift
         chunk_max=$1
         ;;
+    -e )
+        erase=$1
+        ;;
     -h )
         echo "$USAGE"
         exit 0
@@ -68,7 +76,7 @@ done
 source ${SCRIPTS_DIR}/install-arduino-ide.sh
 
 if [ $chunk_run -eq 0 ]; then
-    run_test $target $PWD/tests/$sketch/$sketch.ino $options
+    run_test $target $PWD/tests/$sketch/$sketch.ino $options $erase
 else
   if [ "$chunk_max" -le 0 ]; then
       echo "ERROR: Chunks count must be positive number"
@@ -124,6 +132,6 @@ else
       echo ""
       echo "Sketch Index $(($sketchnum - 1))"
 
-      run_test $target $sketch
+      run_test $target $sketch $options $erase
   done
 fi

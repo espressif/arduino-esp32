@@ -99,7 +99,7 @@ jobs:
 
        - name: Run Tests
          run: |
-           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
+           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
        - name: Upload test result artifacts
          uses: actions/upload-artifact@v2
