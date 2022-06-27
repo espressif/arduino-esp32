@@ -1,5 +1,5 @@
 /*
-  This example demonstrates I2S ADC capability to sample high frequency analog signals (up to 5MHz sampling - 2.5MHz input signal)
+  This example demonstrates I2S ADC capability to sample high frequency analog signals.
   The PWM signal generated with ledc is only for ease of use when first trying out.
   To sample the generated signal connect default pins 27(PWM) and 32(Sampling) together.
   If you do not wish to generate PWM simply comment out the definition of constant GENERATE_PWM
@@ -23,22 +23,21 @@
 #include <driver/i2s.h>
 
 // I2S
-//#define I2S_SAMPLE_RATE 5000000 // Max sampling frequency is 5MHz (value 5000000)
-#define I2S_SAMPLE_RATE 277777 // Real max sampling frequency = 277777 Hz
-#define ADC_INPUT ADC1_CHANNEL_4 //pin 32
-#define I2S_DMA_BUF_LEN 1024
+#define I2S_SAMPLE_RATE (277777) // Max sampling frequency = 277.777 kHz
+#define ADC_INPUT (ADC1_CHANNEL_4) //pin 32
+#define I2S_DMA_BUF_LEN (1024)
 
 // PWM
 #define GENERATE_PWM
-#define OUTPUT_PIN 27
+#define OUTPUT_PIN (27)
 #define PWM_FREQUENCY ((I2S_SAMPLE_RATE)/4)
-#define PWM_DUTY_PERCENT 50
-#define PWM_RESOLUTION_BITS 6 // Lower bit resolution enables higher frequency
+#define PWM_DUTY_PERCENT (50)
+#define PWM_RESOLUTION_BITS (2) // Lower bit resolution enables higher frequency
 #define PWM_DUTY_VALUE ((((1<<(PWM_RESOLUTION_BITS)))*(PWM_DUTY_PERCENT))/100) // Duty value used for setup function based on resolution
 
 // Sample post processing
 #define PRINT_ALL_VALUES
-#define AVERAGE_EVERY_N_SAMPLES 100
+#define AVERAGE_EVERY_N_SAMPLES (100)
 
 void i2sInit(){
   i2s_config_t i2s_config = {
@@ -48,7 +47,7 @@ void i2sInit(){
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
     .communication_format = I2S_COMM_FORMAT_STAND_I2S,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = 2,
+    .dma_buf_count = 8,
     .dma_buf_len = I2S_DMA_BUF_LEN,
     .use_apll = false,
     .tx_desc_auto_clear = false,
@@ -63,6 +62,11 @@ void i2sInit(){
     Serial.printf("Error setting up ADC. Halt!");
     while(1);
   }
+  if(ESP_OK != adc1_config_channel_atten(ADC_INPUT, ADC_ATTEN_DB_11)){
+    Serial.printf("Error setting up ADC attenuation. Halt!");
+    while(1);
+  }
+
   if(ESP_OK != i2s_adc_enable(I2S_NUM_0)){
     Serial.printf("Error enabling ADC. Halt!");
     while(1);
@@ -90,11 +94,8 @@ void setup() {
   i2sInit();
 }
 
-void loop() {
+void loop(){
 // The 4 high bits are the channel, and the data is inverted
-#if defined(PRINT_ALL_VALUES) || defined(AVERAGE_EVERY_N_SAMPLES)
-  uint16_t offset = (int)ADC_INPUT * 0x1000 + 0xFFF;
-#endif
   size_t bytes_read;
   uint16_t buffer[I2S_DMA_BUF_LEN] = {0};
 
@@ -110,11 +111,11 @@ void loop() {
 
     for(int i = 0; i < bytes_read/2; ++i){
 #ifdef PRINT_ALL_VALUES
-      //Serial.printf("[%d] = %d\n", i, offset - buffer[i]); // Print with indexes
-      Serial.printf("Signal:%d ", offset - buffer[i]); // Print compatible with Arduino Plotter
+      //Serial.printf("[%d] = %d\n", i, buffer[i] & 0x0FFF); // Print with indexes
+      Serial.printf("Signal:%d ", buffer[i] & 0x0FFF); // Print compatible with Arduino Plotter
 #endif
 #ifdef AVERAGE_EVERY_N_SAMPLES
-      read_sum += offset - buffer[i];
+      read_sum += buffer[i] & 0x0FFF;
       ++read_counter;
       if(read_counter == AVERAGE_EVERY_N_SAMPLES){
         averaged_reading = read_sum / AVERAGE_EVERY_N_SAMPLES;
