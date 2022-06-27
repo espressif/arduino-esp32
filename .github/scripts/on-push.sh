@@ -16,11 +16,11 @@ function build(){
 
     local args="-ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH"
 
-    args+=" -fqbn $fqbn"
+    args+=" -t $target -fqbn $fqbn"
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        args+=" $ARDUINO_ESP32_PATH/libraries"
-        args+=" $chunk_index $chunks_cnt"
+        args+=" -p $ARDUINO_ESP32_PATH/libraries"
+        args+=" -i $chunk_index -m $chunks_cnt"
         ${BUILD_SKETCHES} ${args}
     else
         if [ "$OS_IS_WINDOWS" == "1" ]; then
@@ -32,8 +32,7 @@ function build(){
         fi
 
         for sketch in ${sketches}; do
-            args+=" -s $sketch"
-            ${BUILD_SKETCH} ${args}
+            ${BUILD_SKETCH} ${args} " -s $(dirname $sketch)"
         done
     fi
 }

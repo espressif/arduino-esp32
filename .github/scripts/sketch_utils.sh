@@ -114,6 +114,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             fqbn+=$opts
             fqbn="[\"$fqbn\"]"
         fi
+    else
+        # An FQBN was passed.  Make it look like a JSON array.
+
+        len=1
+        fqbn="[\"$fqbn\"]"
     fi
 
     if [ -z "$fqbn" ]; then
