@@ -430,8 +430,9 @@ void WiFiSTAClass::setSortMethod(wifi_sort_method_t sortMethod)
 }
 
 /**
- * Setting the ESP32 station to connect to the AP (which is recorded)
+ * Deprecated. Setting the ESP32 station to connect to the AP (which is recorded)
  * automatically or not when powered on. Enable auto-connect by default.
+ * @deprecated use `setAutoReconnect`
  * @param autoConnect bool
  * @return if saved
  */
@@ -441,8 +442,9 @@ bool WiFiSTAClass::setAutoConnect(bool autoConnect)
 }
 
 /**
- * Checks if ESP32 station mode will connect to AP
+ * Deprecated. Checks if ESP32 station mode will connect to AP
  * automatically or not when it is powered on.
+ * @deprecated use `getAutoReconnect`
  * @return auto connect
  */
 bool WiFiSTAClass::getAutoConnect()
@@ -450,12 +452,20 @@ bool WiFiSTAClass::getAutoConnect()
     return false;//now deprecated
 }
 
+/**
+ * Function used to set the automatic reconnection if the connection is lost. 
+ * @param autoReconnect `true` to enable this option.
+ * @return true 
+ */
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
 {
     _autoReconnect = autoReconnect;
     return true;
 }
-
+/**
+ * Function used to get the automatic reconnection if the connection is lost.
+ * @return The function will return `true` if this setting is enabled.
+ */
 bool WiFiSTAClass::getAutoReconnect()
 {
     return _autoReconnect;

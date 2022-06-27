@@ -446,26 +446,12 @@ Return the connection state.
 setAutoConnect
 **************
 
-Function used to set the automatic connection.
-
-.. code-block:: arduino
-
-    bool setAutoConnect(bool autoConnect);
-
-Where:
-
-* ``bool autoConnect`` is set to ``true`` to enable this option.
+Function is deprecated.
 
 getAutoConnect
 **************
 
-Function used to get the automatic connection setting value.
-
-.. code-block:: arduino
-
-    bool getAutoConnect();
-
-The function will return ``true`` if the setting is enabled.
+Function is deprecated.
 
 setAutoReconnect
 ****************
@@ -484,11 +470,12 @@ getAutoReconnect
 ****************
 
 Function used to get the automatic reconnection if the connection is lost.
+
 .. code-block:: arduino
 
     bool getAutoReconnect();
 
-    The function will return ``true`` if this setting is enabled.
+The function will return ``true`` if this setting is enabled.
 
 WiFiMulti
 ---------
