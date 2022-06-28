@@ -185,9 +185,9 @@ void BLEDescriptor::handleGATTServerEvent(
 		case ESP_GATTS_READ_EVT: {
 			if (param->read.handle == m_handle) {  // If this event is for this descriptor ... process it
 
-					if (m_pCallback != nullptr) {   // If we have a user supplied callback, invoke it now.
-						m_pCallback->onRead(this);    // Invoke the onRead callback method in the callback handler.
-					}
+				if (m_pCallback != nullptr) {   // If we have a user supplied callback, invoke it now.
+					m_pCallback->onRead(this);    // Invoke the onRead callback method in the callback handler.
+				}
 
 			} // End of this is our handle
 			break;
