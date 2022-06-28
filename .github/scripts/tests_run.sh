@@ -34,6 +34,7 @@ COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
 chunk_run=0
 options=0
+erase=0
 
 while [ ! -z "$1" ]; do
     case $1 in
@@ -60,7 +61,7 @@ while [ ! -z "$1" ]; do
         chunk_max=$1
         ;;
     -e )
-        erase=$1
+        erase=1
         ;;
     -h )
         echo "$USAGE"
