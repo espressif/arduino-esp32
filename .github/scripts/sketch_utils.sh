@@ -1,15 +1,6 @@
 #!/bin/bash
 
 function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
-    # Options default values
-
-    local fm_opt="qio"
-    local ff_opt="80"
-    local fs_opt="4M"
-    local partition_opt="huge_app"
-
-    local options=0
-
     while [ ! -z "$1" ]; do
         case "$1" in
         -ai )
@@ -28,24 +19,13 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             fqbn=$1
             ;;
+        -o )
+            shift
+            options=$1
+            ;;
         -s )
             shift
             sketchdir=$1
-            ;;
-        -ff )
-            shift
-            ff_opt=$1
-            options=1
-            ;;
-        -fm )
-            shift
-            fm_opt=$1
-            options=1
-            ;;
-        -fs )
-            shift
-            fs_opt=$1
-            options=1
             ;;
         * )
             break
@@ -76,7 +56,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
+        if [ -z $options ] && [ -f $sketchdir/cfg.json ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
@@ -88,26 +68,33 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             len=1
 
+            # Default FQBN options if none were passed in the command line.
+
+            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
+            esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
+            esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
+            esp32c3_opts="PartitionScheme=huge_app"
+
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
 
             case "$target" in
-                "esp32") fqbn="espressif:esp32:esp32:"
+                "esp32")
+                    fqbn="espressif:esp32:esp32:${options:-$esp32_opts}"
                 ;;
-                "esp32s2") fqbn="espressif:esp32:esp32s2:"
+                "esp32s2")
+                    fqbn="espressif:esp32:esp32s2:${options:-$esp32s2_opts}"
                 ;;
-                "esp32c3") fqbn="espressif:esp32:esp32c3:"
+                "esp32c3")
+                    fqbn="espressif:esp32:esp32c3:${options:-$esp32c3_opts}"
                 ;;
-                "esp32s3") fqbn="espressif:esp32:esp32s3:"
+                "esp32s3")
+                    fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
                 ;;
             esac
 
-            partition="PartitionScheme=$partition_opt"
-            ff="FlashFreq=$ff_opt"
-            fm="FlashMode=$fm_opt"
-            fs="FlashSize=$fs_opt"
-            opts=$fm,$ff,$fs,$partition
-            fqbn+=$opts
+            # Make it look like a JSON array.
+
             fqbn="[\"$fqbn\"]"
         fi
     else
