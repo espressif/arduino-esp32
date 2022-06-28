@@ -74,8 +74,7 @@ bool TwoWire::initPins(int sdaPin, int sclPin)
             }
         } else {
             if(sda==-1) {
-                log_e("no Default SDA Pin for Second Peripheral");
-                return false; //no Default pin for Second Peripheral
+                sdaPin = SDA1;    //use Default Pin
             } else {
                 sdaPin = sda;    // reuse prior pin
             }
@@ -91,8 +90,7 @@ bool TwoWire::initPins(int sdaPin, int sclPin)
             }
         } else {
             if(scl == -1) {
-                log_e("no Default SCL Pin for Second Peripheral");
-                return false; //no Default pin for Second Peripheral
+                sclPin = SCL1;    // use Default pin
             } else {
                 sclPin = scl;    // reuse prior pin
             }

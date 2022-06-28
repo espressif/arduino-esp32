@@ -41,6 +41,9 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 40;
 static const uint8_t SCL = 39;
 
+static const uint8_t SDA1 = 40;
+static const uint8_t SCL1 = 39;
+
 static const uint8_t SS    = 10;
 static const uint8_t MOSI  = 11;
 static const uint8_t MISO  = 13;
