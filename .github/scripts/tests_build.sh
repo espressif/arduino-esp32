@@ -6,7 +6,16 @@ USAGE:
        Example: ${0} -c -t esp32 -i 0 -m 15
     ${0} -s sketch_name <build_opts>
        Example: ${0} -s hello_world -t esp32
+    ${0} -clean
+       Remove build and test generated files
 "
+
+function clean(){
+    rm -rf tests/*/build*/
+    rm -rf tests/.pytest_cache
+    rm -rf tests/*/__pycache__/
+    rm -rf tests/*/*.xml
+}
 
 SCRIPTS_DIR="./.github/scripts"
 BUILD_CMD=""
@@ -24,6 +33,10 @@ while [ ! -z "$1" ]; do
         ;;
     -h )
         echo "$USAGE"
+        exit 0
+        ;;
+    -clean )
+        clean
         exit 0
         ;;
     * )
