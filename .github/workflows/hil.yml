@@ -31,14 +31,14 @@ jobs:
         id: gen-chunks
         run: |
           set +e
-          bash .github/scripts/sketch_utils.sh count tests
-          sketches=$((? - 1))
-          if [[ $sketches -gt ${{env.MAX_CHUNKS}} ]]; then
+          .github/scripts/sketch_utils.sh count tests
+          sketches=$?
+          if [[ $sketches -ge ${{env.MAX_CHUNKS}} ]]; then
             $sketches=${{env.MAX_CHUNKS}}
           fi
           set -e
           rm sketches.txt
-          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $sketches`)
+          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
           echo "::set-output name=chunks::${CHUNKS}"
 
   Build:
