@@ -96,6 +96,7 @@ jobs:
          run: |
            pip install -U pip
            pip install -r tests/requirements.txt
+           apt update && apt install -y -qq jq
 
        - name: Run Tests
          run: |
