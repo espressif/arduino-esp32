@@ -15,6 +15,10 @@
 #define digitalPinHasPWM(p)         (p < 46)
 
 // Default pins for I2S
+#ifndef PIN_I2S_MCK
+	#define PIN_I2S_MCK	21
+#endif
+
 #ifndef PIN_I2S_SCK
   #define PIN_I2S_SCK 33
 #endif
@@ -24,15 +28,41 @@
 #endif
 
 #ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 36   //Shared pin in simplex mode
+  #define PIN_I2S_SD 34	//36   //Shared pin in simplex mode
 #endif
 
 #ifndef PIN_I2S_SD_OUT
-  #define PIN_I2S_SD_OUT 36
+  #define PIN_I2S_SD_OUT  34 //36
 #endif
 
 #ifndef PIN_I2S_SD_IN
-  #define PIN_I2S_SD_IN 34
+  #define PIN_I2S_SD_IN  36	//34
+#endif
+
+#define BOARD_HAS_SDMMC
+
+#ifndef SDMMC_CLK
+	#define SDMMC_CLK GPIO_NUM_43
+#endif
+
+#ifndef SDMMC_CMD
+	#define SDMMC_CMD GPIO_NUM_44
+#endif
+
+#ifndef SDMMC_D0
+	#define SDMMC_D0 GPIO_NUM_42
+#endif
+
+#ifndef SDMMC_D1
+	#define SDMMC_D1 GPIO_NUM_41
+#endif
+
+#ifndef SDMMC_D2
+	#define SDMMC_D2 GPIO_NUM_46
+#endif
+
+#ifndef SDMMC_D3
+	#define SDMMC_D3 GPIO_NUM_47
 #endif
 
 static const uint8_t TX = 43;

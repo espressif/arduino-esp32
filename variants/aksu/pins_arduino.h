@@ -12,6 +12,9 @@
 #define digitalPinHasPWM(p)         (p < 34)
 
 // Default pins for I2S
+#ifndef PIN_I2S_MCK
+	#define PIN_I2S_MCK 0
+#endif
 #ifndef PIN_I2S_SCK
   #define PIN_I2S_SCK 26
 #endif

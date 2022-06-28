@@ -40,6 +40,10 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _outSdPin(PIN_I2S_SD),     // output data pin
   _sckPin(sckPin),           // clock pin
   _fsPin(fsPin),             // frame (word) select pin
+  
+#ifdef ESP32
+  _mckpin(PIN_I2S_MCK),
+#endif
 
   _state(I2S_STATE_IDLE),
   _bitsPerSample(0),
@@ -317,6 +321,9 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 int I2SClass::_applyPinSetting(){
   if(_driverInstalled){
     esp_i2s::i2s_pin_config_t pin_config = {
+#ifdef ESP32
+	  .mck_io_num = _mckpin,
+#endif
       .bck_io_num = _sckPin,
       .ws_io_num = _fsPin,
       .data_out_num = I2S_PIN_NO_CHANGE,
