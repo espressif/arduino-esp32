@@ -11,7 +11,7 @@ The Wi-Fi API provides support for the 802.11b/g/n protocol driver. This API inc
 
 * AP mode (aka Soft-AP mode or Access Point mode). Devices connect to the ESP32
 
-* Security modes (WPA, WPA2, WEP, etc.)
+* Security modes (WPA2, WPA3 etc.)
 
 * Scanning for access points
 
@@ -476,6 +476,19 @@ Function used to get the automatic reconnection if the connection is lost.
     bool getAutoReconnect();
 
 The function will return ``true`` if this setting is enabled.
+
+setMinSecurity
+**************
+
+Function used to set the minimum security for AP to be considered connectable.
+
+.. code-block:: arduino
+
+    bool setMinSecurity(wifi_auth_mode_t minSecurity);
+
+Where:
+
+* ``minSecurity`` is the minimum security for AP to be considered connectable. Default is ``WIFI_AUTH_WPA2_PSK``.
 
 WiFiMulti
 ---------
