@@ -82,6 +82,8 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
 
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();

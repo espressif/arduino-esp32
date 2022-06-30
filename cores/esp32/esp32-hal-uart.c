@@ -162,6 +162,12 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
     uart_config.source_clk = UART_SCLK_APB;
 
+    uart_intr_config_t uart_intr = {
+        .intr_enable_mask = UART_INTR_RXFIFO_FULL | UART_INTR_RXFIFO_TOUT,   // only these IRQs - no BREAK, PARITY or OVERFLOW
+        .rx_timeout_thresh = 1,
+        .txfifo_empty_intr_thresh = 10,
+        .rxfifo_full_thresh = rxfifo_full_thrhd,
+    };
 
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
@@ -173,10 +179,35 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         ESP_ERROR_CHECK(uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV));    
     }
 
+    // override default RX IDF Driver Interrupt - no BREAK, PARITY or OVERFLOW
+    ESP_ERROR_CHECK(uart_intr_config(uart_nr, &uart_intr));
+    
     UART_MUTEX_UNLOCK();
 
     uartFlush(uart);
     return uart;
+}
+
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    uart_set_rx_timeout(uart->num, numSymbTimeout);
+    UART_MUTEX_UNLOCK();
+}
+
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    uart_set_rx_full_threshold(uart->num, numBytesFIFOFull);
+    UART_MUTEX_UNLOCK();
 }
 
 void uartEnd(uart_t* uart)

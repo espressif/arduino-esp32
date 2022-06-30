@@ -81,6 +81,12 @@ public:
     //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
     void setRxTimeout(uint8_t symbols_timeout);
 
+    // setRxFIFOFull(uint8_t fifoBytes) will set the number of bytes that will trigger UART_INTR_RXFIFO_FULL interrupt and fill up RxRingBuffer
+    // This affects some functions such as Serial::available() and Serial.read() because, in a UART flow of receiving data, Serial internal 
+    // RxRingBuffer will be filled only after these number of bytes arrive or a RX Timeout happens.
+    // This parameter can be set to 1 in order to receive byte by byte, but it will also consume more CPU time as the ISR will be activates often.
+    void setRxFIFOFull(uint8_t fifoBytes);
+
     // onReceive will setup a callback that will be called whenever an UART interruption occurs (UART_INTR_RXFIFO_FULL or UART_INTR_RXFIFO_TOUT)
     // UART_INTR_RXFIFO_FULL interrupt triggers at UART_FULL_THRESH_DEFAULT bytes received (defined as 120 bytes by default in IDF)
     // UART_INTR_RXFIFO_TOUT interrupt triggers at UART_TOUT_THRESH_DEFAULT symbols passed without any reception (defined as 10 symbos by default in IDF)

@@ -140,7 +140,7 @@ _txBufferSize(0),
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
 _onReceiveTimeout(true),
-_rxTimeout(10),
+_rxTimeout(1),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
@@ -212,6 +212,18 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
     HSERIAL_MUTEX_UNLOCK();
 }
 
+// This function allow the user to define how many bytes will trigger an Interrupt that will copy RX FIFO to the internal RX Ringbuffer
+// ISR will also move data from FIFO to RX Ringbuffer after a RX Timeout defined in HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+// A low value of FIFO Full bytes will consume more CPU time within the ISR
+// A high value of FIFO Full bytes will make the application wait longer to have byte available for the Stkech in a streaming scenario
+// Both RX FIFO Full and RX Timeout may affect when onReceive() will be called
+void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
+{
+    HSERIAL_MUTEX_LOCK();
+    uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
+    HSERIAL_MUTEX_UNLOCK();
+}
+
 // timout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
 void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
@@ -223,7 +235,7 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
     _rxTimeout = symbols_timeout;   
     if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
 
-    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _rxTimeout); // Set new timeout
+    uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
 }
@@ -367,7 +379,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
     // Set UART RX timeout
     if (_uart != NULL) {
-        uart_set_rx_timeout(_uart_nr, _rxTimeout);
+        uartSetRxTimeout(_uart, _rxTimeout);
     }
 
     HSERIAL_MUTEX_UNLOCK();
