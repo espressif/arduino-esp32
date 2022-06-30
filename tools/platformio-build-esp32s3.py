@@ -24,15 +24,13 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, basename, isdir, isfile, join
+from os.path import basename, join
 
 from SCons.Script import DefaultEnvironment
 
 env = DefaultEnvironment()
-platform = env.PioPlatform()
 
-FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
-assert isdir(FRAMEWORK_DIR)
+FRAMEWORK_DIR = env.PioPlatform().get_package_dir("framework-arduinoespressif32")
 
 env.Append(
     ASFLAGS=[
@@ -332,71 +330,5 @@ env.Append(
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', "")),
         "ARDUINO_PARTITION_%s" % basename(env.BoardConfig().get(
             "build.partitions", "default.csv")).replace(".csv", "").replace("-", "_")
-    ],
-
-    LIBSOURCE_DIRS=[
-        join(FRAMEWORK_DIR, "libraries")
-    ],
-
-    FLASH_EXTRA_IMAGES=[
-        ("0x0000", join(FRAMEWORK_DIR, "tools", "sdk", "esp32s3", "bin", "bootloader_${BOARD_FLASH_MODE}_${__get_board_f_flash(__env__)}.bin")),
-        ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
-        ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"))
     ]
-    + [
-        (offset, join(FRAMEWORK_DIR, img))
-        for offset, img in env.BoardConfig().get(
-            "upload.arduino.flash_extra_images", []
-        )
-    ],
 )
-
-#
-# Target: Build Core Library
-#
-
-libs = []
-
-variants_dir = join(FRAMEWORK_DIR, "variants")
-
-if "build.variants_dir" in env.BoardConfig():
-    variants_dir = join("$PROJECT_DIR", env.BoardConfig().get("build.variants_dir"))
-
-if "build.variant" in env.BoardConfig():
-    env.Append(
-        CPPPATH=[
-            join(variants_dir, env.BoardConfig().get("build.variant"))
-        ]
-    )
-    env.BuildSources(
-        join("$BUILD_DIR", "FrameworkArduinoVariant"),
-        join(variants_dir, env.BoardConfig().get("build.variant"))
-    )
-
-envsafe = env.Clone()
-
-libs.append(envsafe.BuildLibrary(
-    join("$BUILD_DIR", "FrameworkArduino"),
-    join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
-))
-
-env.Prepend(LIBS=libs)
-
-#
-# Generate partition table
-#
-
-fwpartitions_dir = join(FRAMEWORK_DIR, "tools", "partitions")
-partitions_csv = env.BoardConfig().get("build.partitions", "default.csv")
-env.Replace(
-    PARTITIONS_TABLE_CSV=abspath(
-        join(fwpartitions_dir, partitions_csv) if isfile(
-            join(fwpartitions_dir, partitions_csv)) else partitions_csv))
-
-partition_table = env.Command(
-    join("$BUILD_DIR", "partitions.bin"),
-    "$PARTITIONS_TABLE_CSV",
-    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
-        FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
-                      "Generating partitions $TARGET"))
-env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)

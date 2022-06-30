@@ -36,7 +36,7 @@ typedef struct {
 } member_t;
 
 static const member_t members_ids[] = {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 	{0xFE08, "Microsoft"},
 	{0xFE09, "Pillsy, Inc."},
 	{0xFE0A, "ruwido austria gmbh"},
@@ -296,7 +296,7 @@ typedef struct {
 } gattdescriptor_t;
 
 static const gattdescriptor_t g_descriptor_ids[] = {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		{0x2905,"Characteristic Aggregate Format"},
 		{0x2900,"Characteristic Extended Properties"},
 		{0x2904,"Characteristic Presentation Format"},
@@ -322,7 +322,7 @@ typedef struct {
 } characteristicMap_t;
 
 static const characteristicMap_t g_characteristicsMappings[] = {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		{0x2A7E,"Aerobic Heart Rate Lower Limit"},
 		{0x2A84,"Aerobic Heart Rate Upper Limit"},
 		{0x2A7F,"Aerobic Threshold"},
@@ -557,7 +557,7 @@ typedef struct {
  * Definition of the service ids to names that we know about.
  */
 static const gattService_t g_gattServices[] = {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 	{"Alert Notification Service", "org.bluetooth.service.alert_notification", 0x1811},
 	{"Automation IO", "org.bluetooth.service.automation_io",	0x1815 },
 	{"Battery Service","org.bluetooth.service.battery_service",	0x180F},
@@ -638,7 +638,7 @@ static std::string gattIdToString(esp_gatt_id_t gattId) {
  */
 const char* BLEUtils::addressTypeToString(esp_ble_addr_type_t type) {
 	switch (type) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case BLE_ADDR_TYPE_PUBLIC:
 			return "BLE_ADDR_TYPE_PUBLIC";
 		case BLE_ADDR_TYPE_RANDOM:
@@ -690,7 +690,7 @@ std::string BLEUtils::adFlagsToString(uint8_t adFlags) {
  */
 const char* BLEUtils::advTypeToString(uint8_t advType) {
 	switch (advType) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_BLE_AD_TYPE_FLAG:				   // 0x01
 			return "ESP_BLE_AD_TYPE_FLAG";
 		case ESP_BLE_AD_TYPE_16SRV_PART:			 // 0x02
@@ -825,7 +825,7 @@ std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
  */
 std::string BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
 	switch (reason) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATT_CONN_UNKNOWN: {
 			return "ESP_GATT_CONN_UNKNOWN";
 		}
@@ -863,7 +863,7 @@ std::string BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
 
 std::string BLEUtils::gattClientEventTypeToString(esp_gattc_cb_event_t eventType) {
 	switch (eventType) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATTC_ACL_EVT:
 			return "ESP_GATTC_ACL_EVT";
 		case ESP_GATTC_ADV_DATA_EVT:
@@ -961,7 +961,7 @@ std::string BLEUtils::gattClientEventTypeToString(esp_gattc_cb_event_t eventType
  */
 std::string BLEUtils::gattServerEventTypeToString(esp_gatts_cb_event_t eventType) {
 	switch (eventType) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATTS_REG_EVT:
 			return "ESP_GATTS_REG_EVT";
 		case ESP_GATTS_READ_EVT:
@@ -1026,7 +1026,7 @@ std::string BLEUtils::gattServerEventTypeToString(esp_gatts_cb_event_t eventType
  */
 const char* BLEUtils::devTypeToString(esp_bt_dev_type_t type) {
 	switch (type) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_BT_DEVICE_TYPE_BREDR:
 			return "ESP_BT_DEVICE_TYPE_BREDR";
 		case ESP_BT_DEVICE_TYPE_BLE:
@@ -1048,7 +1048,7 @@ void BLEUtils::dumpGapEvent(
 	esp_ble_gap_cb_param_t* param) {
 	log_v("Received a GAP event: %s", gapEventToString(event));
 	switch (event) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		// ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT
 		// adv_data_cmpl
 		// - esp_bt_status_t
@@ -1282,7 +1282,7 @@ void BLEUtils::dumpGattClientEvent(
 	//esp_ble_gattc_cb_param_t* evtParam = (esp_ble_gattc_cb_param_t*) param;
 	log_v("GATT Event: %s", BLEUtils::gattClientEventTypeToString(event).c_str());
 	switch (event) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		// ESP_GATTC_CLOSE_EVT
 		//
 		// close:
@@ -1529,7 +1529,7 @@ void BLEUtils::dumpGattServerEvent(
 		esp_ble_gatts_cb_param_t* evtParam) {
 	log_v("GATT ServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
 	switch (event) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 
 		case ESP_GATTS_ADD_CHAR_DESCR_EVT: {
 			log_v("[status: %s, attr_handle: %d 0x%.2x, service_handle: %d 0x%.2x, char_uuid: %s]",
@@ -1730,7 +1730,7 @@ void BLEUtils::dumpGattServerEvent(
  */
 const char* BLEUtils::eventTypeToString(esp_ble_evt_type_t eventType) {
 	switch (eventType) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_BLE_EVT_CONN_ADV:
 			return "ESP_BLE_EVT_CONN_ADV";
 		case ESP_BLE_EVT_CONN_DIR_ADV:
@@ -1757,7 +1757,7 @@ const char* BLEUtils::eventTypeToString(esp_ble_evt_type_t eventType) {
  */
 const char* BLEUtils::gapEventToString(uint32_t eventType) {
 	switch (eventType) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
 			return "ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT";
 		case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
@@ -1901,7 +1901,7 @@ std::string BLEUtils::gattServiceToString(uint32_t serviceId) {
  */
 std::string BLEUtils::gattStatusToString(esp_gatt_status_t status) {
 	switch (status) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATT_OK:
 			return "ESP_GATT_OK";
 		case ESP_GATT_INVALID_HANDLE:
@@ -2015,7 +2015,7 @@ std::string BLEUtils::getMember(uint32_t memberId) {
  */
 const char* BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
 	switch (searchEvt) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 4
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GAP_SEARCH_INQ_RES_EVT:
 			return "ESP_GAP_SEARCH_INQ_RES_EVT";
 		case ESP_GAP_SEARCH_INQ_CMPL_EVT:

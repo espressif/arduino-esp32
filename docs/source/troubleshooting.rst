@@ -80,3 +80,42 @@ Solution
 * Change the USB port.
 * Check your power supply.
 * Check if the board is damaged or defective.
+
+Wi-Fi
+-----
+
+Why does the board not connect to WEP/WPA-"encrypted" Wi-Fi?
+************************************************************
+
+Please note that WEP/WPA has significant security vulnerabilities and its use is strongly discouraged.
+The support may therefore be removed in the future. Please migrate to WPA2 or newer.
+
+Solution
+^^^^^^^^
+
+Nevertheless, it may be necessary to connect to insecure networks. To do this, the security requirement of the ESP32 must be lowered to an insecure level by using:
+
+.. code-block:: arduino
+
+    WiFi.setMinSecurity(WIFI_AUTH_WEP); // Lower min security to WEP.
+    // or
+    WiFi.setMinSecurity(WIFI_AUTH_WPA_PSK); // Lower min security to WPA.
+
+Why does the board not connect to WPA3-encrypted Wi-Fi?
+*******************************************************
+
+WPA3 support is resource intensive and may not be compiled into the used SDK.
+
+Solution
+^^^^^^^^
+
+* Check WPA3 support by your SDK.
+* Compile your custom SDK with WPA3 support.
+
+Sample code to check SDK WPA3 support at compile time:
+
+.. code-block:: arduino
+
+    #ifndef CONFIG_ESP32_WIFI_ENABLE_WPA3_SAE
+    #warning "No WPA3 support."
+    #endif
