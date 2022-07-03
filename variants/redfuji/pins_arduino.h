@@ -16,7 +16,7 @@
 
 // Default pins for I2S
 #ifndef PIN_I2S_MCK
-	#define PIN_I2S_MCK	45
+	#define PIN_I2S_MCK	17
 #endif
 
 #ifndef PIN_I2S_SCK
