@@ -57,24 +57,25 @@ extern void tcpipInit();
 static eth_clock_mode_t eth_clock_mode = ETH_CLK_MODE;
 
 #if CONFIG_ETH_RMII_CLK_INPUT
+/*
 static void emac_config_apll_clock(void)
 {
-    /* apll_freq = xtal_freq * (4 + sdm2 + sdm1/256 + sdm0/65536)/((o_div + 2) * 2) */
+    // apll_freq = xtal_freq * (4 + sdm2 + sdm1/256 + sdm0/65536)/((o_div + 2) * 2)
     rtc_xtal_freq_t rtc_xtal_freq = rtc_clk_xtal_freq_get();
     switch (rtc_xtal_freq) {
     case RTC_XTAL_FREQ_40M: // Recommended
-        /* 50 MHz = 40MHz * (4 + 6) / (2 * (2 + 2) = 50.000 */
-        /* sdm0 = 0, sdm1 = 0, sdm2 = 6, o_div = 2 */
+        // 50 MHz = 40MHz * (4 + 6) / (2 * (2 + 2) = 50.000
+        // sdm0 = 0, sdm1 = 0, sdm2 = 6, o_div = 2
         rtc_clk_apll_enable(true, 0, 0, 6, 2);
         break;
     case RTC_XTAL_FREQ_26M:
-        /* 50 MHz = 26MHz * (4 + 15 + 118 / 256 + 39/65536) / ((3 + 2) * 2) = 49.999992 */
-        /* sdm0 = 39, sdm1 = 118, sdm2 = 15, o_div = 3 */
+        // 50 MHz = 26MHz * (4 + 15 + 118 / 256 + 39/65536) / ((3 + 2) * 2) = 49.999992
+        // sdm0 = 39, sdm1 = 118, sdm2 = 15, o_div = 3
         rtc_clk_apll_enable(true, 39, 118, 15, 3);
         break;
     case RTC_XTAL_FREQ_24M:
-        /* 50 MHz = 24MHz * (4 + 12 + 255 / 256 + 255/65536) / ((2 + 2) * 2) = 49.499977 */
-        /* sdm0 = 255, sdm1 = 255, sdm2 = 12, o_div = 2 */
+        // 50 MHz = 24MHz * (4 + 12 + 255 / 256 + 255/65536) / ((2 + 2) * 2) = 49.499977
+        // sdm0 = 255, sdm1 = 255, sdm2 = 12, o_div = 2
         rtc_clk_apll_enable(true, 255, 255, 12, 2);
         break;
     default: // Assume we have a 40M xtal
@@ -82,8 +83,10 @@ static void emac_config_apll_clock(void)
         break;
     }
 }
+*/
 #endif
 
+/*
 static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
 #if CONFIG_IDF_TARGET_ESP32
     if(eth_clock_mode > ETH_CLOCK_GPIO17_OUT){
@@ -168,7 +171,7 @@ static esp_err_t on_lowlevel_init_done(esp_eth_handle_t eth_handle){
 #endif
     return ESP_OK;
 }
-
+*/
 
 
 /**
@@ -404,7 +407,7 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     esp_err_t err = ESP_OK;
     tcpip_adapter_ip_info_t info;
 
-    if(local_ip != (uint32_t)0x00000000 && local_ip != INADDR_NONE){
+    if(static_cast<uint32_t>(local_ip) != 0){
         info.ip.addr = static_cast<uint32_t>(local_ip);
         info.gw.addr = static_cast<uint32_t>(gateway);
         info.netmask.addr = static_cast<uint32_t>(subnet);
@@ -440,13 +443,13 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
     ip_addr_t d;
     d.type = IPADDR_TYPE_V4;
 
-    if(dns1 != (uint32_t)0x00000000 && dns1 != INADDR_NONE) {
+    if(static_cast<uint32_t>(dns1) != 0) {
         // Set DNS1-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
         dns_setserver(0, &d);
     }
 
-    if(dns2 != (uint32_t)0x00000000 && dns2 != INADDR_NONE) {
+    if(static_cast<uint32_t>(dns2) != 0) {
         // Set DNS2-Server
         d.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
         dns_setserver(1, &d);

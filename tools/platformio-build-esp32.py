@@ -24,7 +24,7 @@ http://arduino.cc/en/Reference/HomePage
 
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
-from os.path import abspath, isdir, isfile, join, basename
+from os.path import abspath, basename, isdir, isfile, join
 
 from SCons.Script import DefaultEnvironment
 
@@ -100,6 +100,7 @@ env.Append(
         "-u", "pthread_include_pthread_cond_impl",
         "-u", "pthread_include_pthread_local_storage_impl",
         "-u", "pthread_include_pthread_rwlock_impl",
+        "-u", "include_esp_phy_override",
         "-u", "ld_include_highint_hdl",
         "-u", "start_app",
         "-u", "start_app_other_cores",
@@ -116,7 +117,6 @@ env.Append(
     ],
 
     CPPPATH=[
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32", "include", "config"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32", "include", "newlib", "platform_include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32", "include", "freertos", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32", "include", "freertos", "include", "esp_additions", "freertos"),
@@ -309,7 +309,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4-367-gc29343eb94\\"'),
+        ("IDF_VER", '\\"v4.4.1-1-gb8050b365e\\"'),
         "ESP_PLATFORM",
         "_POSIX_READER_WRITER_LOCKS",
         "ARDUINO_ARCH_ESP32",
@@ -318,7 +318,8 @@ env.Append(
         ("ARDUINO", 10812),
         ("ARDUINO_VARIANT", '\\"%s\\"' % env.BoardConfig().get("build.variant").replace('"', "")),
         ("ARDUINO_BOARD", '\\"%s\\"' % env.BoardConfig().get("name").replace('"', "")),
-        "ARDUINO_PARTITION_%s" % env.BoardConfig().get("build.partitions", "default.csv").replace(".csv", "")
+        "ARDUINO_PARTITION_%s" % basename(env.BoardConfig().get(
+            "build.partitions", "default.csv")).replace(".csv", "").replace("-", "_")
     ],
 
     LIBSOURCE_DIRS=[
@@ -330,6 +331,12 @@ env.Append(
         ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
         ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"))
     ]
+    + [
+        (offset, join(FRAMEWORK_DIR, img))
+        for offset, img in env.BoardConfig().get(
+            "upload.arduino.flash_extra_images", []
+        )
+    ],
 )
 
 #
@@ -349,10 +356,10 @@ if "build.variant" in env.BoardConfig():
             join(variants_dir, env.BoardConfig().get("build.variant"))
         ]
     )
-    libs.append(env.BuildLibrary(
+    env.BuildSources(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
         join(variants_dir, env.BoardConfig().get("build.variant"))
-    ))
+    )
 
 envsafe = env.Clone()
 

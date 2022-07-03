@@ -20,6 +20,22 @@ DNSServer::DNSServer()
   _port = 0;
 }
 
+DNSServer::~DNSServer()
+{
+  if (_dnsHeader) {
+    free(_dnsHeader);
+    _dnsHeader = NULL;
+  }
+  if (_dnsQuestion) {
+    free(_dnsQuestion);
+    _dnsQuestion = NULL;
+  }
+  if (_buffer) {
+    free(_buffer);
+    _buffer = NULL;
+  }
+}
+
 bool DNSServer::start(const uint16_t &port, const String &domainName,
                      const IPAddress &resolvedIP)
 {

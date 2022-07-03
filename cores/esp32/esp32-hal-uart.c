@@ -115,7 +115,7 @@ void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
     }
     UART_MUTEX_LOCK();
     // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    uart_set_pin(uart->num, txPin, rxPin, ctsPin, rtsPin); 
+    uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin); 
     UART_MUTEX_UNLOCK();  
 }
 
@@ -538,8 +538,6 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-
 #ifdef CONFIG_IDF_TARGET_ESP32C3
     
     // ESP32-C3 requires further testing
@@ -555,6 +553,7 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->conf0.autobaud_en = 1;
 #elif CONFIG_IDF_TARGET_ESP32S3
 #else
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     hw->auto_baud.glitch_filt = 0x08;
     hw->auto_baud.en = 0;
     hw->auto_baud.en = 1;
@@ -571,7 +570,6 @@ uartDetectBaudrate(uart_t *uart)
 #ifndef CONFIG_IDF_TARGET_ESP32C3    // ESP32-C3 requires further testing - Baud rate detection returns wrong values 
 
     static bool uartStateDetectingBaudrate = false;
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
     if(!uartStateDetectingBaudrate) {
         uartStartDetectBaudrate(uart);
@@ -592,6 +590,7 @@ uartDetectBaudrate(uart_t *uart)
     //hw->conf0.autobaud_en = 0;
 #elif CONFIG_IDF_TARGET_ESP32S3
 #else
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     hw->auto_baud.en = 0;
 #endif
     uartStateDetectingBaudrate = false; // Initialize for the next round

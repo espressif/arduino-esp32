@@ -71,6 +71,24 @@ esp_rmaker_device_t *esp_rmaker_time_service_create(const char *serv_name, const
  */
 esp_rmaker_device_t *esp_rmaker_create_schedule_service(const char *serv_name, esp_rmaker_device_write_cb_t write_cb, esp_rmaker_device_read_cb_t read_cb, int max_schedules, void *priv_data);
 
+/** Create a standard Scenes service
+ *
+ * This creates a Scenes service with the mandatory parameters. The default parameter names will be used.
+ * Refer \ref esp_rmaker_standard_params.h for default names.
+ *
+ * @param[in] serv_name The unique service name
+ * @param[in] write_cb Write callback.
+ * @param[in] read_cb Read callback.
+ * @param[in] max_scenes Maximum number of scenes supported.
+ * @param[in] deactivation_support Deactivation callback support.
+ * @param[in] priv_data (Optional) Private data associated with the service. This should stay
+ * allocated throughout the lifetime of the service.
+ *
+ * @return service_handle on success.
+ * @return NULL in case of any error.
+ */
+esp_rmaker_device_t *esp_rmaker_create_scenes_service(const char *serv_name, esp_rmaker_device_write_cb_t write_cb, esp_rmaker_device_read_cb_t read_cb, int max_scenes, bool deactivation_support, void *priv_data);
+
 /** Create a standard System service
  *
  * This creates an empty System service. Appropriate parameters should be added by the caller.
