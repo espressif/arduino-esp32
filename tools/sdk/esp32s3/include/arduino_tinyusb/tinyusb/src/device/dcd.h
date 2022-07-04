@@ -110,14 +110,7 @@ typedef struct TU_ATTR_ALIGNED(4)
 void dcd_init       (uint8_t rhport);
 
 // Interrupt Handler
-#if __GNUC__ && !defined(__ARMCC_VERSION)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wredundant-decls"
-#endif
 void dcd_int_handler(uint8_t rhport);
-#if __GNUC__ && !defined(__ARMCC_VERSION)
-#pragma GCC diagnostic pop
-#endif
 
 // Enable device interrupt
 void dcd_int_enable (uint8_t rhport);

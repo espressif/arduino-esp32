@@ -32,7 +32,6 @@
 #endif
 
 #include "common/tusb_common.h"
-#include "hcd.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -115,8 +114,11 @@ void tuh_task(void)
   tuh_task_ext(UINT32_MAX, false);
 }
 
-// Interrupt handler, name alias to HCD
+#ifndef _TUSB_HCD_H_
 extern void hcd_int_handler(uint8_t rhport);
+#endif
+
+// Interrupt handler, name alias to HCD
 #define tuh_int_handler   hcd_int_handler
 
 bool tuh_vid_pid_get(uint8_t daddr, uint16_t* vid, uint16_t* pid);

@@ -58,8 +58,11 @@ void tud_task (void)
 // Check if there is pending events need processing by tud_task()
 bool tud_task_event_ready(void);
 
-// Interrupt handler, name alias to DCD
+#ifndef _TUSB_DCD_H_
 extern void dcd_int_handler(uint8_t rhport);
+#endif
+
+// Interrupt handler, name alias to DCD
 #define tud_int_handler   dcd_int_handler
 
 // Get current bus speed

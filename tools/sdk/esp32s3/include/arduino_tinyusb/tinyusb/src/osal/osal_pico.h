@@ -100,11 +100,6 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hd
 //--------------------------------------------------------------------+
 #include "common/tusb_fifo.h"
 
-#if CFG_TUH_ENABLED
-extern void hcd_int_disable(uint8_t rhport);
-extern void hcd_int_enable(uint8_t rhport);
-#endif
-
 typedef struct
 {
     tu_fifo_t ff;

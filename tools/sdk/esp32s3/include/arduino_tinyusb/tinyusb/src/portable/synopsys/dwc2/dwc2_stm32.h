@@ -43,6 +43,9 @@
   #define EP_MAX_FS       USB_OTG_FS_MAX_IN_ENDPOINTS
   #define EP_FIFO_SIZE_FS USB_OTG_FS_TOTAL_FIFO_SIZE
 
+  #define EP_MAX_HS       USB_OTG_HS_MAX_IN_ENDPOINTS
+  #define EP_FIFO_SIZE_HS USB_OTG_HS_TOTAL_FIFO_SIZE
+
 #elif CFG_TUSB_MCU == OPT_MCU_STM32F4
   #include "stm32f4xx.h"
   #define EP_MAX_FS       USB_OTG_FS_MAX_IN_ENDPOINTS
@@ -103,7 +106,8 @@ static const dwc2_controller_t _dwc2_controller[] =
 //
 //--------------------------------------------------------------------+
 
-extern uint32_t SystemCoreClock;
+// SystemCoreClock is alrady included by family header
+// extern uint32_t SystemCoreClock;
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
