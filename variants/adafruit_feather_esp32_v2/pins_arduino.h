@@ -48,7 +48,7 @@ static const uint8_t A13 = 35;
 #define BATT_MONITOR 35
 
 // internal switch
-#define BUTTON = 38;
+#define BUTTON 38
 
 // Neopixel
 #define PIN_NEOPIXEL 0
