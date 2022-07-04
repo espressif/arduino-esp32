@@ -140,8 +140,7 @@ typedef struct {
     int slot;                   /*!< slot number, to be passed to host functions */
     int max_freq_khz;           /*!< max frequency supported by the host */
 #define SDMMC_FREQ_DEFAULT      20000       /*!< SD/MMC Default speed (limited by clock divider) */
-//TODO: Change back to 40000 after the SDMMC issue on Ticos Kit Redfuji is resolved
-#define SDMMC_FREQ_HIGHSPEED    20000       /*!< SD High speed (limited by clock divider) */
+#define SDMMC_FREQ_HIGHSPEED    40000       /*!< SD High speed (limited by clock divider) */
 #define SDMMC_FREQ_PROBING      400         /*!< SD/MMC probing speed */
 #define SDMMC_FREQ_52M          52000       /*!< MMC 52MHz speed */
 #define SDMMC_FREQ_26M          26000       /*!< MMC 26MHz speed */
