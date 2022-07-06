@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,6 +14,7 @@
 #include "soc/assist_debug_reg.h"
 #include "esp_attr.h"
 #include "riscv/csr.h"
+#include "riscv/semihosting.h"
 
 /*performance counter*/
 #define CSR_PCER_MACHINE    0x7e0
@@ -71,8 +72,29 @@ static inline void cpu_ll_init_hwloop(void)
     // Nothing needed here for ESP32-C3
 }
 
+FORCE_INLINE_ATTR bool cpu_ll_is_debugger_attached(void)
+{
+    return REG_GET_BIT(ASSIST_DEBUG_CORE_0_DEBUG_MODE_REG, ASSIST_DEBUG_CORE_0_DEBUG_MODULE_ACTIVE);
+}
+
 static inline void cpu_ll_set_breakpoint(int id, uint32_t pc)
 {
+    if (cpu_ll_is_debugger_attached()) {
+        /* If we want to set breakpoint which when hit transfers control to debugger
+         * we need to set `action` in `mcontrol` to 1 (Enter Debug Mode).
+         * That `action` value is supported only when `dmode` of `tdata1` is set.
+         * But `dmode` can be modified by debugger only (from Debug Mode).
+         *
+         * So when debugger is connected we use special syscall to ask it to set breakpoint for us.
+         */
+        long args[] = {true, id, (long)pc};
+        int ret = semihosting_call_noerrno(ESP_SEMIHOSTING_SYS_BREAKPOINT_SET, args);
+        if (ret == 0) {
+            return;
+        }
+    }
+    /* The code bellow sets breakpoint which will trigger `Breakpoint` exception
+     * instead transfering control to debugger. */
     RV_WRITE_CSR(tselect,id);
     RV_SET_CSR(CSR_TCONTROL,TCONTROL_MTE);
     RV_SET_CSR(CSR_TDATA1, TDATA1_USER|TDATA1_MACHINE|TDATA1_EXECUTE);
@@ -82,6 +104,14 @@ static inline void cpu_ll_set_breakpoint(int id, uint32_t pc)
 
 static inline void cpu_ll_clear_breakpoint(int id)
 {
+    if (cpu_ll_is_debugger_attached()) {
+        /* see description in cpu_ll_set_breakpoint()  */
+        long args[] = {false, id};
+        int ret = semihosting_call_noerrno(ESP_SEMIHOSTING_SYS_BREAKPOINT_SET, args);
+        if (ret == 0){
+            return;
+        }
+    }
     RV_WRITE_CSR(tselect,id);
     RV_CLEAR_CSR(CSR_TCONTROL,TCONTROL_MTE);
     RV_CLEAR_CSR(CSR_TDATA1, TDATA1_USER|TDATA1_MACHINE|TDATA1_EXECUTE);
@@ -105,6 +135,17 @@ static inline void cpu_ll_set_watchpoint(int id,
                                         bool on_write)
 {
     uint32_t addr_napot;
+
+    if (cpu_ll_is_debugger_attached()) {
+        /* see description in cpu_ll_set_breakpoint()  */
+        long args[] = {true, id, (long)addr, (long)size,
+            (long)((on_read ? ESP_SEMIHOSTING_WP_FLG_RD : 0) | (on_write ? ESP_SEMIHOSTING_WP_FLG_WR : 0))};
+        int ret = semihosting_call_noerrno(ESP_SEMIHOSTING_SYS_WATCHPOINT_SET, args);
+        if (ret == 0) {
+            return;
+        }
+    }
+
     RV_WRITE_CSR(tselect,id);
     RV_SET_CSR(CSR_TCONTROL, TCONTROL_MPTE | TCONTROL_MTE);
     RV_SET_CSR(CSR_TDATA1, TDATA1_USER|TDATA1_MACHINE);
@@ -123,6 +164,14 @@ static inline void cpu_ll_set_watchpoint(int id,
 
 static inline void cpu_ll_clear_watchpoint(int id)
 {
+    if (cpu_ll_is_debugger_attached()) {
+        /* see description in cpu_ll_set_breakpoint()  */
+        long args[] = {false, id};
+        int ret = semihosting_call_noerrno(ESP_SEMIHOSTING_SYS_WATCHPOINT_SET, args);
+        if (ret == 0){
+            return;
+        }
+    }
     RV_WRITE_CSR(tselect,id);
     RV_CLEAR_CSR(CSR_TCONTROL,TCONTROL_MTE);
     RV_CLEAR_CSR(CSR_TDATA1, TDATA1_USER|TDATA1_MACHINE);
@@ -132,43 +181,10 @@ static inline void cpu_ll_clear_watchpoint(int id)
     return;
 }
 
-FORCE_INLINE_ATTR bool cpu_ll_is_debugger_attached(void)
-{
-    return REG_GET_BIT(ASSIST_DEBUG_CORE_0_DEBUG_MODE_REG, ASSIST_DEBUG_CORE_0_DEBUG_MODULE_ACTIVE);
-}
-
 static inline void cpu_ll_break(void)
 {
     asm volatile("ebreak\n");
     return;
-}
-
-static inline int cpu_ll_syscall(int sys_nr, int arg1, int arg2, int arg3, int arg4, int* ret_errno)
-{
-    int host_ret, host_errno;
-
-    asm volatile ( \
-        ".option push\n" \
-        ".option norvc\n" \
-        "mv a0, %[sys_nr]\n" \
-        "mv a1, %[arg1]\n" \
-        "mv a2, %[arg2]\n" \
-        "mv a3, %[arg3]\n" \
-        "mv a4, %[arg4]\n" \
-        "slli    zero,zero,0x1f\n" \
-        "ebreak\n" \
-        "srai    zero,zero,0x7\n" \
-        "mv %[host_ret], a0\n" \
-        "mv %[host_errno], a1\n" \
-        ".option pop\n" \
-        :[host_ret]"=r"(host_ret),[host_errno]"=r"(host_errno)
-        :[sys_nr]"r"(sys_nr),[arg1]"r"(arg1),[arg2]"r"(arg2),[arg3]"r"(arg3),[arg4]"r"(arg4)
-        :"a0","a1","a2","a3","a4");
-
-    if (ret_errno) {
-        *ret_errno = host_errno;
-    }
-    return host_ret;
 }
 
 static inline void cpu_ll_set_vecbase(const void* vecbase)

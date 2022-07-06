@@ -44,6 +44,8 @@
 extern "C" {
 #endif
 
+#define IP6_MIN_MTU_LENGTH 1280
+
 /** This is the packed version of ip6_addr_t,
     used in network headers that are itself packed */
 #ifdef PACK_STRUCT_USE_INCLUDES

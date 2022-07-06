@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2017, Dave Benson and the protobuf-c authors.
+ * Copyright (c) 2008-2018, Dave Benson and the protobuf-c authors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -238,7 +238,11 @@ PROTOBUF_C__BEGIN_DECLS
 #define PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC       0x114315af
 
 /* Empty string used for initializers */
+#if defined(_WIN32) && defined(PROTOBUF_C_USE_SHARED_LIB)
+static const char protobuf_c_empty_string[] = "";
+#else
 extern const char protobuf_c_empty_string[];
+#endif
 
 /**
  * \defgroup api Public API
@@ -790,13 +794,13 @@ protobuf_c_version_number(void);
  * The version of the protobuf-c headers, represented as a string using the same
  * format as protobuf_c_version().
  */
-#define PROTOBUF_C_VERSION		"1.3.0"
+#define PROTOBUF_C_VERSION		"1.4.0"
 
 /**
  * The version of the protobuf-c headers, represented as an integer using the
  * same format as protobuf_c_version_number().
  */
-#define PROTOBUF_C_VERSION_NUMBER	1003000
+#define PROTOBUF_C_VERSION_NUMBER	1004000
 
 /**
  * The minimum protoc-c version which works with the current version of the
