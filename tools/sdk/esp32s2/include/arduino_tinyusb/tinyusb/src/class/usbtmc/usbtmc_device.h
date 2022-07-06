@@ -37,7 +37,7 @@
 
 // USB spec says that full-speed must be 8,16,32, or 64.
 // However, this driver implementation requires it to be >=32
-#define USBTMCD_MAX_PACKET_SIZE (64u)
+#define USBTMCD_MAX_PACKET_SIZE (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
 /***********************************************
  *  Functions to be implemeted by the class implementation

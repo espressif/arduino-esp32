@@ -16,6 +16,15 @@
 #define TUD_OPT_RP2040_USB_DEVICE_ENUMERATION_FIX PICO_RP2040_USB_DEVICE_ENUMERATION_FIX
 #endif
 
+#ifndef PICO_RP2040_USB_FAST_IRQ
+#define PICO_RP2040_USB_FAST_IRQ 0
+#endif
+
+#if PICO_RP2040_USB_FAST_IRQ
+#define __tusb_irq_path_func(x) __no_inline_not_in_flash_func(x)
+#else
+#define __tusb_irq_path_func(x) x
+#endif
 
 #define pico_info(...)  TU_LOG(2, __VA_ARGS__)
 #define pico_trace(...) TU_LOG(3, __VA_ARGS__)
@@ -72,16 +81,20 @@ bool hw_endpoint_xfer_continue(struct hw_endpoint *ep);
 void hw_endpoint_reset_transfer(struct hw_endpoint *ep);
 
 void _hw_endpoint_buffer_control_update32(struct hw_endpoint *ep, uint32_t and_mask, uint32_t or_mask);
-static inline uint32_t _hw_endpoint_buffer_control_get_value32(struct hw_endpoint *ep) {
+
+TU_ATTR_ALWAYS_INLINE static inline uint32_t _hw_endpoint_buffer_control_get_value32(struct hw_endpoint *ep) {
     return *ep->buffer_control;
 }
-static inline void _hw_endpoint_buffer_control_set_value32(struct hw_endpoint *ep, uint32_t value) {
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_value32(struct hw_endpoint *ep, uint32_t value) {
     return _hw_endpoint_buffer_control_update32(ep, 0, value);
 }
-static inline void _hw_endpoint_buffer_control_set_mask32(struct hw_endpoint *ep, uint32_t value) {
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_mask32(struct hw_endpoint *ep, uint32_t value) {
     return _hw_endpoint_buffer_control_update32(ep, ~value, value);
 }
-static inline void _hw_endpoint_buffer_control_clear_mask32(struct hw_endpoint *ep, uint32_t value) {
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_clear_mask32(struct hw_endpoint *ep, uint32_t value) {
     return _hw_endpoint_buffer_control_update32(ep, ~value, 0);
 }
 
