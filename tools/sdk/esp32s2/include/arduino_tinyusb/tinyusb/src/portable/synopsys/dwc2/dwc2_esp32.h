@@ -37,10 +37,12 @@
 //#include "soc/usb_periph.h"
 
 #define DWC2_REG_BASE       0x60080000UL
-#define DWC2_EP_MAX         5             // USB_OUT_EP_NUM
-#define DWC2_EP_FIFO_SIZE   1024
+#define DWC2_EP_MAX         6             // USB_OUT_EP_NUM. TODO ESP32Sx only has 5 tx fifo (5 endpoint IN)
 
-// #define EP_FIFO_NUM 5
+static const dwc2_controller_t _dwc2_controller[] =
+{
+  { .reg_base = DWC2_REG_BASE, .irqnum = 0, .ep_count = DWC2_EP_MAX, .ep_fifo_size = 1024 }
+};
 
 static intr_handle_t usb_ih;
 

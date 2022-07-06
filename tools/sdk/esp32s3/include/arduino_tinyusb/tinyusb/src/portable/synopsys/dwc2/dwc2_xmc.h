@@ -34,23 +34,24 @@
 
 #include "xmc_device.h"
 
-// XMC has custom control register before DWC registers
-#define DWC2_REG_BASE       USB0_BASE
 #define DWC2_EP_MAX         7
-#define DWC2_EP_FIFO_SIZE   2048
+
+static const dwc2_controller_t _dwc2_controller[] =
+{
+  // Note: XMC has some custom control registers before DWC registers
+  { .reg_base = USB0_BASE, .irqnum = USB0_0_IRQn, .ep_count = DWC2_EP_MAX, .ep_fifo_size = 2048 }
+};
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
-  (void) rhport;
-  NVIC_EnableIRQ(USB0_0_IRQn);
+  NVIC_EnableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
-  (void) rhport;
-  NVIC_DisableIRQ(USB0_0_IRQn);
+  NVIC_DisableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 static inline void dwc2_remote_wakeup_delay(void)
