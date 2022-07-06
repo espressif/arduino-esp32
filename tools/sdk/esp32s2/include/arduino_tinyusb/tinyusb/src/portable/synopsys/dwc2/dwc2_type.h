@@ -19,6 +19,19 @@
 
 #include "stdint.h"
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
+// Controller
+typedef struct
+{
+  uintptr_t reg_base;
+  uint32_t  irqnum;
+  uint8_t   ep_count;
+  uint32_t  ep_fifo_size;
+}dwc2_controller_t;
+
 /* DWC OTG HW Release versions */
 #define DWC2_CORE_REV_2_71a   0x4f54271a
 #define DWC2_CORE_REV_2_72a   0x4f54272a
@@ -39,10 +52,6 @@
 #define DWC2_OTG_ID           0x4f540000
 #define DWC2_FS_IOT_ID        0x55310000
 #define DWC2_HS_IOT_ID        0x55320000
-
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 #if 0
 // HS PHY

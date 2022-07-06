@@ -2534,10 +2534,12 @@
 
 /**
  * LWIP_ICMP6_DATASIZE: bytes from original packet to send back in
- * ICMPv6 error messages.
+ * ICMPv6 error messages (0 = default of IP6_MIN_MTU_LENGTH)
+ * ATTENTION: RFC4443 section 2.4 says IP6_MIN_MTU_LENGTH is a MUST,
+ * so override this only if you absolutely have to!
  */
 #if !defined LWIP_ICMP6_DATASIZE || defined __DOXYGEN__
-#define LWIP_ICMP6_DATASIZE             8
+#define LWIP_ICMP6_DATASIZE             0
 #endif
 
 /**

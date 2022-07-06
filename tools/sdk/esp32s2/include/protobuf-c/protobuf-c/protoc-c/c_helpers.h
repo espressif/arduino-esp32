@@ -67,7 +67,7 @@
 #include <vector>
 #include <sstream>
 #include <google/protobuf/descriptor.h>
-#include <google/protobuf/descriptor.pb.h>
+#include <protobuf-c/protobuf-c.pb.h>
 #include <google/protobuf/io/printer.h>
 
 namespace google {
@@ -75,31 +75,20 @@ namespace protobuf {
 namespace compiler {
 namespace c {
 
-// Returns the non-nested type name for the given type.  If "qualified" is
-// true, prefix the type with the full namespace.  For example, if you had:
-//   package foo.bar;
-//   message Baz { message Qux {} }
-// Then the qualified ClassName for Qux would be:
-//   Foo__Bar__Baz_Qux
-// While the non-qualified version would be:
-//   Baz_Qux
-string ClassName(const Descriptor* descriptor, bool qualified);
-string ClassName(const EnumDescriptor* enum_descriptor, bool qualified);
-
 // --- Borrowed from stubs. ---
-template <typename T> string SimpleItoa(T n) {
+template <typename T> std::string SimpleItoa(T n) {
   std::stringstream stream;
   stream << n;
   return stream.str();
 }
 
-string SimpleFtoa(float f);
-string SimpleDtoa(double f);
-void SplitStringUsing(const string &str, const char *delim, std::vector<string> *out);
-string CEscape(const string& src);
-string StringReplace(const string& s, const string& oldsub, const string& newsub, bool replace_all);
-inline bool HasSuffixString(const string& str, const string& suffix) { return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0; }
-inline string StripSuffixString(const string& str, const string& suffix) { if (HasSuffixString(str, suffix)) { return str.substr(0, str.size() - suffix.size()); } else { return str; } }
+std::string SimpleFtoa(float f);
+std::string SimpleDtoa(double f);
+void SplitStringUsing(const std::string &str, const char *delim, std::vector<std::string> *out);
+std::string CEscape(const std::string& src);
+std::string StringReplace(const std::string& s, const std::string& oldsub, const std::string& newsub, bool replace_all);
+inline bool HasSuffixString(const std::string& str, const std::string& suffix) { return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0; }
+inline std::string StripSuffixString(const std::string& str, const std::string& suffix) { if (HasSuffixString(str, suffix)) { return str.substr(0, str.size() - suffix.size()); } else { return str; } }
 char* FastHexToBuffer(int i, char* buffer);
 
 
@@ -107,10 +96,10 @@ char* FastHexToBuffer(int i, char* buffer);
 // The name is coerced to lower-case to emulate proto1 behavior.  People
 // should be using lowercase-with-underscores style for proto field names
 // anyway, so normally this just returns field->name().
-string FieldName(const FieldDescriptor* field);
+std::string FieldName(const FieldDescriptor* field);
 
 // Get macro string for deprecated field
-string FieldDeprecated(const FieldDescriptor* field);
+std::string FieldDeprecated(const FieldDescriptor* field);
 
 // Returns the scope where the field was defined (for extensions, this is
 // different from the message type to which the field applies).
@@ -121,31 +110,31 @@ inline const Descriptor* FieldScope(const FieldDescriptor* field) {
 
 // convert a CamelCase class name into an all uppercase affair
 // with underscores separating words, e.g. MyClass becomes MY_CLASS.
-string CamelToUpper(const string &class_name);
-string CamelToLower(const string &class_name);
+std::string CamelToUpper(const std::string &class_name);
+std::string CamelToLower(const std::string &class_name);
 
 // lowercased, underscored name to camel case
-string ToCamel(const string &name);
+std::string ToCamel(const std::string &name);
 
 // lowercase the string
-string ToLower(const string &class_name);
-string ToUpper(const string &class_name);
+std::string ToLower(const std::string &class_name);
+std::string ToUpper(const std::string &class_name);
 
 // full_name() to lowercase with underscores
-string FullNameToLower(const string &full_name);
-string FullNameToUpper(const string &full_name);
+std::string FullNameToLower(const std::string &full_name, const FileDescriptor *file);
+std::string FullNameToUpper(const std::string &full_name, const FileDescriptor *file);
 
 // full_name() to c-typename (with underscores for packages, otherwise camel case)
-string FullNameToC(const string &class_name);
+std::string FullNameToC(const std::string &class_name, const FileDescriptor *file);
 
 // Splits, indents, formats, and prints comment lines
-void PrintComment (io::Printer* printer, string comment);
+void PrintComment (io::Printer* printer, std::string comment);
 
 // make a string of spaces as long as input
-string ConvertToSpaces(const string &input);
+std::string ConvertToSpaces(const std::string &input);
 
 // Strips ".proto" or ".protodevel" from the end of a filename.
-string StripProto(const string& filename);
+std::string StripProto(const std::string& filename);
 
 // Get the C++ type name for a primitive type (e.g. "double", "::google::protobuf::int32", etc.).
 // Note:  non-built-in type names will be qualified, meaning they will start
@@ -159,18 +148,18 @@ const char* PrimitiveTypeName(FieldDescriptor::CppType type);
 const char* DeclaredTypeMethodName(FieldDescriptor::Type type);
 
 // Convert a file name into a valid identifier.
-string FilenameIdentifier(const string& filename);
+std::string FilenameIdentifier(const std::string& filename);
 
 // Return the name of the BuildDescriptors() function for a given file.
-string GlobalBuildDescriptorsName(const string& filename);
+std::string GlobalBuildDescriptorsName(const std::string& filename);
 
 // return 'required', 'optional', or 'repeated'
-string GetLabelName(FieldDescriptor::Label label);
+std::string GetLabelName(FieldDescriptor::Label label);
 
 
 // write IntRanges entries for a bunch of sorted values.
 // returns the number of ranges there are to bsearch.
-unsigned WriteIntRanges(io::Printer* printer, int n_values, const int *values, const string &name);
+unsigned WriteIntRanges(io::Printer* printer, int n_values, const int *values, const std::string &name);
 
 struct NameIndex
 {

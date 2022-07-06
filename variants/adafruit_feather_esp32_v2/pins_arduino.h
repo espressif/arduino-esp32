@@ -17,8 +17,8 @@ static const uint8_t LED_BUILTIN = 13;
 
 static const uint8_t TX = 8;
 static const uint8_t RX = 7;
-static const uint8_t TX1 = 8;
-static const uint8_t RX1 = 7;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t SDA = 22;
 static const uint8_t SCL = 20;
@@ -48,7 +48,7 @@ static const uint8_t A13 = 35;
 #define BATT_MONITOR 35
 
 // internal switch
-#define BUTTON = 38;
+#define BUTTON 38
 
 // Neopixel
 #define PIN_NEOPIXEL 0
