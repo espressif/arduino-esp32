@@ -210,6 +210,12 @@ set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl b
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
+if(NOT CONFIG_FREERTOS_HZ EQUAL 1000 AND NOT "$ENV{ARDUINO_SKIP_TICK_CHECK}")
+    # See delay() in cores/esp32/esp32-hal-misc.c.
+    message(FATAL_ERROR "esp32-arduino requires CONFIG_FREERTOS_HZ=1000 "
+                        "(currently ${CONFIG_FREERTOS_HZ}")
+endif()
+
 string(TOUPPER ${CONFIG_ARDUINO_VARIANT} idf_target_caps)
 target_compile_options(${COMPONENT_TARGET} PUBLIC
     -DARDUINO=10812
