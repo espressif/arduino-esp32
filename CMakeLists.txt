@@ -216,7 +216,7 @@ idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_incl
 if(NOT CONFIG_FREERTOS_HZ EQUAL 1000 AND NOT "$ENV{ARDUINO_SKIP_TICK_CHECK}")
     # See delay() in cores/esp32/esp32-hal-misc.c.
     message(FATAL_ERROR "esp32-arduino requires CONFIG_FREERTOS_HZ=1000 "
-                        "(currently ${CONFIG_FREERTOS_HZ}")
+                        "(currently ${CONFIG_FREERTOS_HZ})")
 endif()
 
 string(TOUPPER ${CONFIG_ARDUINO_VARIANT} idf_target_caps)
