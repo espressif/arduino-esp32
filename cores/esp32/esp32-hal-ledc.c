@@ -226,3 +226,7 @@ void analogWrite(uint8_t pin, int value) {
     ledcWrite(pin_to_channel[pin] - 1, value);
   }
 }
+
+int8_t analogGetChannel(uint8_t pin) {
+    return pin_to_channel[pin] - 1;
+}
