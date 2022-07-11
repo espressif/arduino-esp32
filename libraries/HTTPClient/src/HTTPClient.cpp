@@ -618,8 +618,13 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
         }
 
         // send Payload if needed
-        if(payload && size > 0) {
-            if(_client->write(&payload[0], size) != size) {
+        if(payload && (size > 0)) {
+            size_t totalSent = 0;
+            while(_client->connected() && (totalSent < size))
+            {
+                totalSent += _client->write(&payload[totalSent], (size - totalSent));
+            }
+            if(totalSent != size) {
                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
             }
         }
