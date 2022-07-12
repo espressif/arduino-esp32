@@ -65,9 +65,8 @@ esp32s3.build.partitions=default
 esp32s3.build.defines=
 esp32s3.build.loop_core=
 esp32s3.build.event_core=
-esp32s3.build.flash_type=qspi
 esp32s3.build.psram_type=qspi
-esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
+esp32s3.build.memory_type={build.boot}_{build.psram_type}
 
 esp32s3.menu.PSRAM.disabled=Disabled
 esp32s3.menu.PSRAM.disabled.build.defines=
@@ -84,25 +83,21 @@ esp32s3.menu.FlashMode.qio.build.flash_mode=dio
 esp32s3.menu.FlashMode.qio.build.boot=qio
 esp32s3.menu.FlashMode.qio.build.boot_freq=80m
 esp32s3.menu.FlashMode.qio.build.flash_freq=80m
-esp32s3.menu.FlashMode.qio.build.flash_type=qspi
 esp32s3.menu.FlashMode.qio120=QIO 120MHz
 esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
 esp32s3.menu.FlashMode.qio120.build.boot=qio
 esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
 esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
-esp32s3.menu.FlashMode.qio120.build.flash_type=qspi
 esp32s3.menu.FlashMode.dio=DIO 80MHz
 esp32s3.menu.FlashMode.dio.build.flash_mode=dio
 esp32s3.menu.FlashMode.dio.build.boot=dio
 esp32s3.menu.FlashMode.dio.build.boot_freq=80m
 esp32s3.menu.FlashMode.dio.build.flash_freq=80m
-esp32s3.menu.FlashMode.dio.build.flash_type=qspi
 esp32s3.menu.FlashMode.opi=OPI 80MHz
 esp32s3.menu.FlashMode.opi.build.flash_mode=dout
 esp32s3.menu.FlashMode.opi.build.boot=opi
 esp32s3.menu.FlashMode.opi.build.boot_freq=80m
 esp32s3.menu.FlashMode.opi.build.flash_freq=80m
-esp32s3.menu.FlashMode.opi.build.flash_type=opi
 
 esp32s3.menu.FlashSize.4M=4MB (32Mb)
 esp32s3.menu.FlashSize.4M.build.flash_size=4MB
@@ -1101,7 +1096,7 @@ esp32s3box.build.flash_mode=dio
 esp32s3box.build.boot=qio
 esp32s3box.build.partitions=default
 esp32s3box.build.defines=-DBOARD_HAS_PSRAM
-esp32s3box.build.memory_type=qspi_opi
+esp32s3box.build.memory_type=qio_opi
 esp32s3box.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3box.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
@@ -1212,7 +1207,7 @@ esp32s3usbotg.build.flash_mode=dio
 esp32s3usbotg.build.boot=qio
 esp32s3usbotg.build.partitions=default
 esp32s3usbotg.build.defines=
-esp32s3usbotg.build.memory_type=qspi_qspi
+esp32s3usbotg.build.memory_type=qio_qspi
 esp32s3usbotg.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3usbotg.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
@@ -2295,9 +2290,9 @@ tinys3.build.partitions=default
 tinys3.build.defines=
 tinys3.build.loop_core=
 tinys3.build.event_core=
-tinys3.build.flash_type=qspi
+tinys3.build.flash_type=qio
 tinys3.build.psram_type=qspi
-tinys3.build.memory_type=qspi_qspi
+tinys3.build.memory_type=qio_qspi
 
 tinys3.menu.LoopCore.1=Core 1
 tinys3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2442,9 +2437,9 @@ pros3.build.partitions=default
 pros3.build.defines=
 pros3.build.loop_core=
 pros3.build.event_core=
-pros3.build.flash_type=qspi
+pros3.build.flash_type=qio
 pros3.build.psram_type=qspi
-pros3.build.memory_type=qspi_qspi
+pros3.build.memory_type=qio_qspi
 
 pros3.menu.LoopCore.1=Core 1
 pros3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2598,9 +2593,9 @@ feathers3.build.partitions=default
 feathers3.build.defines=
 feathers3.build.loop_core=
 feathers3.build.event_core=
-feathers3.build.flash_type=qspi
+feathers3.build.flash_type=qio
 feathers3.build.psram_type=qspi
-feathers3.build.memory_type=qspi_qspi
+feathers3.build.memory_type=qio_qspi
 
 feathers3.menu.LoopCore.1=Core 1
 feathers3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -5908,7 +5903,7 @@ dfrobot_firebeetle2_esp32s3.build.partitions=default
 dfrobot_firebeetle2_esp32s3.build.defines=
 dfrobot_firebeetle2_esp32s3.build.loop_core=
 dfrobot_firebeetle2_esp32s3.build.event_core=
-dfrobot_firebeetle2_esp32s3.build.flash_type=qspi
+dfrobot_firebeetle2_esp32s3.build.flash_type=qio
 dfrobot_firebeetle2_esp32s3.build.psram_type=qspi
 dfrobot_firebeetle2_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
 
@@ -5927,19 +5922,19 @@ dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.boot=qio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
-dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.flash_type=qspi
+dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio.build.flash_type=qio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120=QIO 120MHz
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.boot=qio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
-dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.flash_type=qspi
+dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio120.build.flash_type=qio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio=DIO 80MHz
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.boot=dio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
-dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.flash_type=qspi
+dfrobot_firebeetle2_esp32s3.menu.FlashMode.dio.build.flash_type=qio
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.opi=OPI 80MHz
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.opi.build.boot=opi
@@ -7717,7 +7712,7 @@ adafruit_feather_esp32s3.build.partitions=default
 adafruit_feather_esp32s3.build.defines=
 adafruit_feather_esp32s3.build.loop_core=
 adafruit_feather_esp32s3.build.event_core=
-adafruit_feather_esp32s3.build.flash_type=qspi
+adafruit_feather_esp32s3.build.flash_type=qio
 adafruit_feather_esp32s3.build.psram_type=qspi
 adafruit_feather_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
 
@@ -7726,19 +7721,19 @@ adafruit_feather_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
 adafruit_feather_esp32s3.menu.FlashMode.qio.build.boot=qio
 adafruit_feather_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
 adafruit_feather_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
-adafruit_feather_esp32s3.menu.FlashMode.qio.build.flash_type=qspi
+adafruit_feather_esp32s3.menu.FlashMode.qio.build.flash_type=qio
 adafruit_feather_esp32s3.menu.FlashMode.qio120=QIO 120MHz
 adafruit_feather_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
 adafruit_feather_esp32s3.menu.FlashMode.qio120.build.boot=qio
 adafruit_feather_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
 adafruit_feather_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
-adafruit_feather_esp32s3.menu.FlashMode.qio120.build.flash_type=qspi
+adafruit_feather_esp32s3.menu.FlashMode.qio120.build.flash_type=qio
 adafruit_feather_esp32s3.menu.FlashMode.dio=DIO 80MHz
 adafruit_feather_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_feather_esp32s3.menu.FlashMode.dio.build.boot=dio
 adafruit_feather_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
 adafruit_feather_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
-adafruit_feather_esp32s3.menu.FlashMode.dio.build.flash_type=qspi
+adafruit_feather_esp32s3.menu.FlashMode.dio.build.flash_type=qio
 adafruit_feather_esp32s3.menu.FlashMode.opi=OPI 80MHz
 adafruit_feather_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
 adafruit_feather_esp32s3.menu.FlashMode.opi.build.boot=opi
