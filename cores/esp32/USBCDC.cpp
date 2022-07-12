@@ -114,16 +114,42 @@ void USBCDC::onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback
 }
 
 size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
-    if(rx_queue){
-        if(!rx_queue_len){
-            vQueueDelete(rx_queue);
-            rx_queue = NULL;
+    size_t currentQueueSize = rx_queue ? 
+            uxQueueSpacesAvailable(rx_queue) + uxQueueMessagesWaiting(rx_queue) : 0;
+
+    if (rx_queue_len != currentQueueSize) {
+        xQueueHandle new_rx_queue = NULL;
+        if (rx_queue_len) {
+            new_rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
+            if(!new_rx_queue){
+                log_e("CDC Queue creation failed.");
+                return 0;
+            }
+            if (rx_queue) {
+                size_t copySize = uxQueueMessagesWaiting(rx_queue);
+                if (copySize > 0) {
+                    for(size_t i = 0; i < copySize; i++) {
+                        uint8_t ch = 0;
+                        xQueueReceive(rx_queue, &ch, 0);
+                        if (!xQueueSend(new_rx_queue, &ch, 0)) {
+                            arduino_usb_cdc_event_data_t p;
+                            p.rx_overflow.dropped_bytes = copySize - i;
+                            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_OVERFLOW_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+                            log_e("CDC RX Overflow.");
+                            break;
+                        }
+                    }    
+                }
+                vQueueDelete(rx_queue);
+            }
+            rx_queue = new_rx_queue;
+            return rx_queue_len;
+        } else {
+            if (rx_queue) {
+                    vQueueDelete(rx_queue);
+                    rx_queue = NULL;
+            }
         }
-        return 0;
-    }
-    rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
-    if(!rx_queue){
-        return 0;
     }
     return rx_queue_len;
 }
@@ -133,7 +159,8 @@ void USBCDC::begin(unsigned long baud)
     if(tx_lock == NULL) {
         tx_lock = xSemaphoreCreateMutex();
     }
-    setRxBufferSize(256);//default if not preset
+    // if rx_queue was set before begin(), keep it
+    if (!rx_queue) setRxBufferSize(256); //default if not preset
     devices[itf] = this;
 }
 
@@ -144,6 +171,7 @@ void USBCDC::end()
     setRxBufferSize(0);
     if(tx_lock != NULL) {
         vSemaphoreDelete(tx_lock);
+        tx_lock = NULL;
     }
 }
 
@@ -244,16 +272,22 @@ void USBCDC::_onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _pari
 }
 
 void USBCDC::_onRX(){
+    arduino_usb_cdc_event_data_t p;
     uint8_t buf[CONFIG_TINYUSB_CDC_RX_BUFSIZE+1];
     uint32_t count = tud_cdc_n_read(itf, buf, CONFIG_TINYUSB_CDC_RX_BUFSIZE);
     for(uint32_t i=0; i<count; i++){
-        if(rx_queue == NULL || !xQueueSend(rx_queue, buf+i, 0)){
-            return;
+        if(rx_queue == NULL || !xQueueSend(rx_queue, buf+i, 10)) {
+            p.rx_overflow.dropped_bytes = count - i;
+            arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_OVERFLOW_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+            log_e("CDC RX Overflow.");
+            count = i;
+            break;
         }
     }
-    arduino_usb_cdc_event_data_t p;
-    p.rx.len = count;
-    arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+    if (count) {
+        p.rx.len = count;
+        arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_RX_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
+    }
 }
 
 void USBCDC::_onTX(){
@@ -412,7 +446,7 @@ USBCDC::operator bool() const
     return connected;
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
 USBCDC Serial(0);
 #endif
 

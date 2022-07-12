@@ -1,16 +1,8 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef _SOC_EFUSE_REG_H_
 #define _SOC_EFUSE_REG_H_
 
@@ -264,11 +256,17 @@ extern "C" {
 #define EFUSE_KEY_PURPOSE_2_S  0
 
 #define EFUSE_PGM_DATA4_REG          (DR_REG_EFUSE_BASE + 0x010)
-/* EFUSE_RPT4_RESERVED1 : RO ;bitpos:[31:30] ;default: 2'h0 ; */
+/* EFUSE_ERR_RST_ENABLE : RO ;bitpos:[31] ;default: 1'h0 ; */
+/*description: Use BLOCK0 to check error record registers, 0 - without check.*/
+#define EFUSE_ERR_RST_ENABLE  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_M  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_V  0x1
+#define EFUSE_ERR_RST_ENABLE_S  31
+/* EFUSE_RPT4_RESERVED1 : RO ;bitpos:[30] ;default: 1'h0 ; */
 /*description: Reserved (used for four backups method).*/
-#define EFUSE_RPT4_RESERVED1  0x00000003
-#define EFUSE_RPT4_RESERVED1_M  ((EFUSE_RPT4_RESERVED1_V)<<(EFUSE_RPT4_RESERVED1_S))
-#define EFUSE_RPT4_RESERVED1_V  0x3
+#define EFUSE_RPT4_RESERVED1  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_M  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_V  0x1
 #define EFUSE_RPT4_RESERVED1_S  30
 /* EFUSE_SECURE_VERSION : R/W ;bitpos:[29:14] ;default: 16'h0 ; */
 /*description: Secure version (used by ESP-IDF anti-rollback feature).*/
@@ -282,30 +280,12 @@ extern "C" {
 #define EFUSE_FORCE_SEND_RESUME_M  (BIT(13))
 #define EFUSE_FORCE_SEND_RESUME_V  0x1
 #define EFUSE_FORCE_SEND_RESUME_S  13
-/* EFUSE_FLASH_ECC_EN : R/W ;bitpos:[12] ;default: 1'b0 ; */
-/*description: Set 1 to enable ECC for flash boot.*/
-#define EFUSE_FLASH_ECC_EN  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_M  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_V  0x1
-#define EFUSE_FLASH_ECC_EN_S  12
-/* EFUSE_FLASH_PAGE_SIZE : R/W ;bitpos:[11:10] ;default: 2'h0 ; */
-/*description: Set Flash page size.*/
-#define EFUSE_FLASH_PAGE_SIZE  0x00000003
-#define EFUSE_FLASH_PAGE_SIZE_M  ((EFUSE_FLASH_PAGE_SIZE_V)<<(EFUSE_FLASH_PAGE_SIZE_S))
-#define EFUSE_FLASH_PAGE_SIZE_V  0x3
-#define EFUSE_FLASH_PAGE_SIZE_S  10
-/* EFUSE_FLASH_TYPE : R/W ;bitpos:[9] ;default: 1'b0 ; */
-/*description: Set the maximum lines of SPI flash. 0: four lines. 1: eight lines.*/
-#define EFUSE_FLASH_TYPE  (BIT(9))
-#define EFUSE_FLASH_TYPE_M  (BIT(9))
-#define EFUSE_FLASH_TYPE_V  0x1
-#define EFUSE_FLASH_TYPE_S  9
-/* EFUSE_PIN_POWER_SELECTION : R/W ;bitpos:[8] ;default: 1'b0 ; */
-/*description: GPIO33-GPIO37 power supply selection in ROM code. 0: VDD3P3_CPU. 1: VDD_SPI.*/
-#define EFUSE_PIN_POWER_SELECTION  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_M  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_V  0x1
-#define EFUSE_PIN_POWER_SELECTION_S  8
+/* EFUSE_RPT4_RESERVED7 : R/W ;bitpos:[12:8] ;default: 5'h0 ; */
+/*description: Reserved (used for four backups method).*/
+#define EFUSE_RPT4_RESERVED7  0x0000001F
+#define EFUSE_RPT4_RESERVED7_M  ((EFUSE_RPT4_RESERVED7_V)<<(EFUSE_RPT4_RESERVED7_S))
+#define EFUSE_RPT4_RESERVED7_V  0x1F
+#define EFUSE_RPT4_RESERVED7_S  8
 /* EFUSE_UART_PRINT_CONTROL : R/W ;bitpos:[7:6] ;default: 2'h0 ; */
 /*description: Set the default UARTboot message output mode. 00: Enabled. 01:
  Enabled when GPIO8 is low at reset. 10: Enabled when GPIO8 is high at reset. 11:disabled.*/
@@ -319,31 +299,30 @@ extern "C" {
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_M  (BIT(5))
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_V  0x1
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_S  5
-/* EFUSE_DIS_USB_DOWNLOAD_MODE : R/W ;bitpos:[4] ;default: 1'b0 ; */
-/*description: Set this bit to disable UART download mode through USB.*/
-#define EFUSE_DIS_USB_DOWNLOAD_MODE  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_M  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_V  0x1
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_S  4
-/* EFUSE_FLASH_ECC_MODE : R/W ;bitpos:[3] ;default: 1'b0 ; */
-/*description: Set ECC mode in ROM  0: ROM would Enable Flash ECC 16to18 byte
- mode. 1:ROM would use 16to17 byte mode.*/
-#define EFUSE_FLASH_ECC_MODE  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_M  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_V  0x1
-#define EFUSE_FLASH_ECC_MODE_S  3
-/* EFUSE_UART_PRINT_CHANNEL : R/W ;bitpos:[2] ;default: 1'b0 ; */
-/*description: Selectes the default UART print channel. 0: UART0. 1: UART1.*/
-#define EFUSE_UART_PRINT_CHANNEL  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_M  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_V  0x1
-#define EFUSE_UART_PRINT_CHANNEL_S  2
-/* EFUSE_DIS_LEGACY_SPI_BOOT : R/W ;bitpos:[1] ;default: 1'b0 ; */
-/*description: Set this bit to disable Legacy SPI boot mode (boot_mode[3:0] = 4).*/
-#define EFUSE_DIS_LEGACY_SPI_BOOT  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_M  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_V  0x1
-#define EFUSE_DIS_LEGACY_SPI_BOOT_S  1
+/* EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE : R/W ;bitpos:[4] ;default: 1'b0 ; */
+/*description: Set this bit to disable download through USB-Serial-JTAG.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_M  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_S  4
+/* EFUSE_RPT4_RESERVED8 : R/W ;bitpos:[3] ;default: 1'b0 ; */
+/*description: Reserved (used for four backups method).*/
+#define EFUSE_RPT4_RESERVED8  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_M  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_V  0x1
+#define EFUSE_RPT4_RESERVED8_S  3
+/* EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT : R/W ;bitpos:[2] ;default: 1'b0 ; */
+/*description: Disable USB-Serial-JTAG print during rom boot.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_M  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_S  2
+/* EFUSE_DIS_DIRECT_BOOT : R/W ;bitpos:[1] ;default: 1'b0 ; */
+/*description: Set this bit to disable direct boot*/
+#define EFUSE_DIS_DIRECT_BOOT  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_M  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_V  0x1
+#define EFUSE_DIS_DIRECT_BOOT_S  1
 /* EFUSE_DIS_DOWNLOAD_MODE : R/W ;bitpos:[0] ;default: 1'b0 ; */
 /*description: Set this bit to disable download mode (boot_mode[3:0] = 0  1  2  3  6  7).*/
 #define EFUSE_DIS_DOWNLOAD_MODE  (BIT(0))
@@ -636,11 +615,17 @@ extern "C" {
 #define EFUSE_KEY_PURPOSE_2_S  0
 
 #define EFUSE_RD_REPEAT_DATA3_REG          (DR_REG_EFUSE_BASE + 0x03C)
-/* EFUSE_RPT4_RESERVED1 : RO ;bitpos:[31:30] ;default: 2'h0 ; */
+/* EFUSE_ERR_RST_ENABLE : RO ;bitpos:[31] ;default: 1'h0 ; */
+/*description: Use BLOCK0 to check error record registers, 0 - without check.*/
+#define EFUSE_ERR_RST_ENABLE  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_M  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_V  0x1
+#define EFUSE_ERR_RST_ENABLE_S  31
+/* EFUSE_RPT4_RESERVED1 : RO ;bitpos:[30] ;default: 1'h0 ; */
 /*description: Reserved.*/
-#define EFUSE_RPT4_RESERVED1  0x00000003
-#define EFUSE_RPT4_RESERVED1_M  ((EFUSE_RPT4_RESERVED1_V)<<(EFUSE_RPT4_RESERVED1_S))
-#define EFUSE_RPT4_RESERVED1_V  0x3
+#define EFUSE_RPT4_RESERVED1  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_M  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_V  0x1
 #define EFUSE_RPT4_RESERVED1_S  30
 /* EFUSE_SECURE_VERSION : RO ;bitpos:[29:14] ;default: 16'h0 ; */
 /*description: The value of SECURE_VERSION.*/
@@ -654,30 +639,12 @@ extern "C" {
 #define EFUSE_FORCE_SEND_RESUME_M  (BIT(13))
 #define EFUSE_FORCE_SEND_RESUME_V  0x1
 #define EFUSE_FORCE_SEND_RESUME_S  13
-/* EFUSE_FLASH_ECC_EN : RO ;bitpos:[12] ;default: 1'b0 ; */
-/*description: The value of FLASH_ECC_EN.*/
-#define EFUSE_FLASH_ECC_EN  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_M  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_V  0x1
-#define EFUSE_FLASH_ECC_EN_S  12
-/* EFUSE_FLASH_PAGE_SIZE : RO ;bitpos:[11:10] ;default: 2'h0 ; */
-/*description: The value of FLASH_PAGE_SIZE.*/
-#define EFUSE_FLASH_PAGE_SIZE  0x00000003
-#define EFUSE_FLASH_PAGE_SIZE_M  ((EFUSE_FLASH_PAGE_SIZE_V)<<(EFUSE_FLASH_PAGE_SIZE_S))
-#define EFUSE_FLASH_PAGE_SIZE_V  0x3
-#define EFUSE_FLASH_PAGE_SIZE_S  10
-/* EFUSE_FLASH_TYPE : RO ;bitpos:[9] ;default: 1'b0 ; */
-/*description: The value of FLASH_TYPE.*/
-#define EFUSE_FLASH_TYPE  (BIT(9))
-#define EFUSE_FLASH_TYPE_M  (BIT(9))
-#define EFUSE_FLASH_TYPE_V  0x1
-#define EFUSE_FLASH_TYPE_S  9
-/* EFUSE_PIN_POWER_SELECTION : RO ;bitpos:[8] ;default: 1'b0 ; */
-/*description: The value of PIN_POWER_SELECTION.*/
-#define EFUSE_PIN_POWER_SELECTION  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_M  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_V  0x1
-#define EFUSE_PIN_POWER_SELECTION_S  8
+/* EFUSE_RPT4_RESERVED7 : RO ;bitpos:[12:8] ;default: 5'h0 ; */
+/*description: Reserved.*/
+#define EFUSE_RPT4_RESERVED7  0x0000001F
+#define EFUSE_RPT4_RESERVED7_M  ((EFUSE_RPT4_RESERVED7_V)<<(EFUSE_RPT4_RESERVED7_S))
+#define EFUSE_RPT4_RESERVED7_V  0x1F
+#define EFUSE_RPT4_RESERVED7_S  8
 /* EFUSE_UART_PRINT_CONTROL : RO ;bitpos:[7:6] ;default: 2'h0 ; */
 /*description: The value of UART_PRINT_CONTROL.*/
 #define EFUSE_UART_PRINT_CONTROL  0x00000003
@@ -690,30 +657,30 @@ extern "C" {
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_M  (BIT(5))
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_V  0x1
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_S  5
-/* EFUSE_DIS_USB_DOWNLOAD_MODE : RO ;bitpos:[4] ;default: 1'b0 ; */
-/*description: The value of DIS_USB_DOWNLOAD_MODE.*/
-#define EFUSE_DIS_USB_DOWNLOAD_MODE  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_M  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_V  0x1
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_S  4
-/* EFUSE_FLASH_ECC_MODE : RO ;bitpos:[3] ;default: 1'b0 ; */
-/*description: The value of FLASH_ECC_MODE.*/
-#define EFUSE_FLASH_ECC_MODE  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_M  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_V  0x1
-#define EFUSE_FLASH_ECC_MODE_S  3
-/* EFUSE_UART_PRINT_CHANNEL : RO ;bitpos:[2] ;default: 1'b0 ; */
-/*description: The value of UART_PRINT_CHANNEL.*/
-#define EFUSE_UART_PRINT_CHANNEL  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_M  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_V  0x1
-#define EFUSE_UART_PRINT_CHANNEL_S  2
-/* EFUSE_DIS_LEGACY_SPI_BOOT : RO ;bitpos:[1] ;default: 1'b0 ; */
-/*description: The value of DIS_LEGACY_SPI_BOOT.*/
-#define EFUSE_DIS_LEGACY_SPI_BOOT  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_M  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_V  0x1
-#define EFUSE_DIS_LEGACY_SPI_BOOT_S  1
+/* EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE : RO ;bitpos:[4] ;default: 1'b0 ; */
+/*description: The value of DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_M  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_S  4
+/* EFUSE_RPT4_RESERVED8 : RO ;bitpos:[3] ;default: 1'b0 ; */
+/*description: Reserved.*/
+#define EFUSE_RPT4_RESERVED8  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_M  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_V  0x1
+#define EFUSE_RPT4_RESERVED8_S  3
+/* EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT : RO ;bitpos:[2] ;default: 1'b0 ; */
+/*description: The value of DIS_USB_SERIAL_JTAG_ROM_PRINT.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_M  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_S  2
+/* EFUSE_DIS_DIRECT_BOOT : RO ;bitpos:[1] ;default: 1'b0 ; */
+/*description: The value of DIS_DIRECT_BOOT.*/
+#define EFUSE_DIS_DIRECT_BOOT  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_M  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_V  0x1
+#define EFUSE_DIS_DIRECT_BOOT_S  1
 /* EFUSE_DIS_DOWNLOAD_MODE : RO ;bitpos:[0] ;default: 1'b0 ; */
 /*description: The value of DIS_DOWNLOAD_MODE.*/
 #define EFUSE_DIS_DOWNLOAD_MODE  (BIT(0))
@@ -1468,12 +1435,12 @@ extern "C" {
 #define EFUSE_DIS_USB_DEVICE_ERR_M  (BIT(11))
 #define EFUSE_DIS_USB_DEVICE_ERR_V  0x1
 #define EFUSE_DIS_USB_DEVICE_ERR_S  11
-/* EFUSE_DIS_DOWNLOAD_ICACHE : RO ;bitpos:[10] ;default: 1'b0 ; */
+/* EFUSE_DIS_DOWNLOAD_ICACHE_ERR : RO ;bitpos:[10] ;default: 1'b0 ; */
 /*description: If DIS_DOWNLOAD_ICACHE is 1  then it indicates a programming error.*/
-#define EFUSE_DIS_DOWNLOAD_ICACHE  (BIT(10))
-#define EFUSE_DIS_DOWNLOAD_ICACHE_M  (BIT(10))
-#define EFUSE_DIS_DOWNLOAD_ICACHE_V  0x1
-#define EFUSE_DIS_DOWNLOAD_ICACHE_S  10
+#define EFUSE_DIS_DOWNLOAD_ICACHE_ERR  (BIT(10))
+#define EFUSE_DIS_DOWNLOAD_ICACHE_ERR_M  (BIT(10))
+#define EFUSE_DIS_DOWNLOAD_ICACHE_ERR_V  0x1
+#define EFUSE_DIS_DOWNLOAD_ICACHE_ERR_S  10
 /* EFUSE_DIS_USB_JTAG_ERR : RO ;bitpos:[9] ;default: 1'b0 ; */
 /*description: If DIS_USB_JTAG is 1  then it indicates a programming error.*/
 #define EFUSE_DIS_USB_JTAG_ERR  (BIT(9))
@@ -1606,11 +1573,17 @@ extern "C" {
 #define EFUSE_KEY_PURPOSE_2_ERR_S  0
 
 #define EFUSE_RD_REPEAT_ERR3_REG          (DR_REG_EFUSE_BASE + 0x188)
-/* EFUSE_RPT4_RESERVED1_ERR : RO ;bitpos:[31:30] ;default: 2'h0 ; */
+/* EFUSE_ERR_RST_ENABLE_ERR : RO ;bitpos:[31] ;default: 1'h0 ; */
+/*description: Use BLOCK0 to check error record registers, 0 - without check.*/
+#define EFUSE_ERR_RST_ENABLE_ERR  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_ERR_M  (BIT(31))
+#define EFUSE_ERR_RST_ENABLE_ERR_V  0x1
+#define EFUSE_ERR_RST_ENABLE_ERR_S  31
+/* EFUSE_RPT4_RESERVED1_ERR : RO ;bitpos:[30] ;default: 1'h0 ; */
 /*description: Reserved.*/
-#define EFUSE_RPT4_RESERVED1_ERR  0x00000003
-#define EFUSE_RPT4_RESERVED1_ERR_M  ((EFUSE_RPT4_RESERVED1_ERR_V)<<(EFUSE_RPT4_RESERVED1_ERR_S))
-#define EFUSE_RPT4_RESERVED1_ERR_V  0x3
+#define EFUSE_RPT4_RESERVED1_ERR  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_ERR_M  (BIT(30))
+#define EFUSE_RPT4_RESERVED1_ERR_V  0x1
 #define EFUSE_RPT4_RESERVED1_ERR_S  30
 /* EFUSE_SECURE_VERSION_ERR : RO ;bitpos:[29:14] ;default: 16'h0 ; */
 /*description: If any bit in SECURE_VERSION is 1  then it indicates a programming error.*/
@@ -1624,30 +1597,12 @@ extern "C" {
 #define EFUSE_FORCE_SEND_RESUME_ERR_M  (BIT(13))
 #define EFUSE_FORCE_SEND_RESUME_ERR_V  0x1
 #define EFUSE_FORCE_SEND_RESUME_ERR_S  13
-/* EFUSE_FLASH_ECC_EN : RO ;bitpos:[12] ;default: 1'b0 ; */
-/*description: If FLASH_ECC_EN_ERR is 1  then it indicates a programming error.*/
-#define EFUSE_FLASH_ECC_EN  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_M  (BIT(12))
-#define EFUSE_FLASH_ECC_EN_V  0x1
-#define EFUSE_FLASH_ECC_EN_S  12
-/* EFUSE_FLASH_PAGE_SIZE : RO ;bitpos:[11:10] ;default: 2'h0 ; */
-/*description: If any bits in FLASH_PAGE_SIZE is 1  then it indicates a programming error.*/
-#define EFUSE_FLASH_PAGE_SIZE  0x00000003
-#define EFUSE_FLASH_PAGE_SIZE_M  ((EFUSE_FLASH_PAGE_SIZE_V)<<(EFUSE_FLASH_PAGE_SIZE_S))
-#define EFUSE_FLASH_PAGE_SIZE_V  0x3
-#define EFUSE_FLASH_PAGE_SIZE_S  10
-/* EFUSE_FLASH_TYPE_ERR : RO ;bitpos:[9] ;default: 1'b0 ; */
-/*description: If FLASH_TYPE is 1  then it indicates a programming error.*/
-#define EFUSE_FLASH_TYPE_ERR  (BIT(9))
-#define EFUSE_FLASH_TYPE_ERR_M  (BIT(9))
-#define EFUSE_FLASH_TYPE_ERR_V  0x1
-#define EFUSE_FLASH_TYPE_ERR_S  9
-/* EFUSE_PIN_POWER_SELECTION_ERR : RO ;bitpos:[8] ;default: 1'b0 ; */
-/*description: If PIN_POWER_SELECTION is 1  then it indicates a programming error.*/
-#define EFUSE_PIN_POWER_SELECTION_ERR  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_ERR_M  (BIT(8))
-#define EFUSE_PIN_POWER_SELECTION_ERR_V  0x1
-#define EFUSE_PIN_POWER_SELECTION_ERR_S  8
+/* EFUSE_RPT4_RESERVED7_ERR : RO ;bitpos:[12:8] ;default: 5'h0 ; */
+/*description: Reserved.*/
+#define EFUSE_RPT4_RESERVED7_ERR  0x0000001F
+#define EFUSE_RPT4_RESERVED7_ERR_M  ((EFUSE_RPT4_RESERVED7_ERR_V)<<(EFUSE_RPT4_RESERVED7_ERR_S))
+#define EFUSE_RPT4_RESERVED7_ERR_V  0x1F
+#define EFUSE_RPT4_RESERVED7_ERR_S  8
 /* EFUSE_UART_PRINT_CONTROL_ERR : RO ;bitpos:[7:6] ;default: 2'h0 ; */
 /*description: If any bit in UART_PRINT_CONTROL is 1  then it indicates a programming error.*/
 #define EFUSE_UART_PRINT_CONTROL_ERR  0x00000003
@@ -1660,30 +1615,30 @@ extern "C" {
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_ERR_M  (BIT(5))
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_ERR_V  0x1
 #define EFUSE_ENABLE_SECURITY_DOWNLOAD_ERR_S  5
-/* EFUSE_DIS_USB_DOWNLOAD_MODE_ERR : RO ;bitpos:[4] ;default: 1'b0 ; */
-/*description: If DIS_USB_DOWNLOAD_MODE is 1  then it indicates a programming error.*/
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_ERR  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_ERR_M  (BIT(4))
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_ERR_V  0x1
-#define EFUSE_DIS_USB_DOWNLOAD_MODE_ERR_S  4
-/* EFUSE_FLASH_ECC_MODE_ERR : RO ;bitpos:[3] ;default: 1'b0 ; */
-/*description: If FLASH_ECC_MODE is 1  then it indicates a programming error.*/
-#define EFUSE_FLASH_ECC_MODE_ERR  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_ERR_M  (BIT(3))
-#define EFUSE_FLASH_ECC_MODE_ERR_V  0x1
-#define EFUSE_FLASH_ECC_MODE_ERR_S  3
-/* EFUSE_UART_PRINT_CHANNEL_ERR : RO ;bitpos:[2] ;default: 1'b0 ; */
-/*description: If UART_PRINT_CHANNEL is 1  then it indicates a programming error.*/
-#define EFUSE_UART_PRINT_CHANNEL_ERR  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_ERR_M  (BIT(2))
-#define EFUSE_UART_PRINT_CHANNEL_ERR_V  0x1
-#define EFUSE_UART_PRINT_CHANNEL_ERR_S  2
-/* EFUSE_DIS_LEGACY_SPI_BOOT_ERR : RO ;bitpos:[1] ;default: 1'b0 ; */
-/*description: If DIS_LEGACY_SPI_BOOT is 1  then it indicates a programming error.*/
-#define EFUSE_DIS_LEGACY_SPI_BOOT_ERR  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_ERR_M  (BIT(1))
-#define EFUSE_DIS_LEGACY_SPI_BOOT_ERR_V  0x1
-#define EFUSE_DIS_LEGACY_SPI_BOOT_ERR_S  1
+/* EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_ERR : RO ;bitpos:[4] ;default: 1'b0 ; */
+/*description: If DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE is 1  then it indicates a programming error.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_ERR  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_ERR_M  (BIT(4))
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_ERR_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_DOWNLOAD_MODE_ERR_S  4
+/* EFUSE_RPT4_RESERVED8_ERR : RO ;bitpos:[3] ;default: 1'b0 ; */
+/*description: Reserved.*/
+#define EFUSE_RPT4_RESERVED8_ERR  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_ERR_M  (BIT(3))
+#define EFUSE_RPT4_RESERVED8_ERR_V  0x1
+#define EFUSE_RPT4_RESERVED8_ERR_S  3
+/* EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_ERR : RO ;bitpos:[2] ;default: 1'b0 ; */
+/*description: If DIS_USB_SERIAL_JTAG_ROM_PRINT is 1  then it indicates a programming error.*/
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_ERR  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_ERR_M  (BIT(2))
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_ERR_V  0x1
+#define EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT_ERR_S  2
+/* EFUSE_DIS_DIRECT_BOOT_ERR : RO ;bitpos:[1] ;default: 1'b0 ; */
+/*description: If DIS_DIRECT_BOOT is 1  then it indicates a programming error.*/
+#define EFUSE_DIS_DIRECT_BOOT_ERR  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_ERR_M  (BIT(1))
+#define EFUSE_DIS_DIRECT_BOOT_ERR_V  0x1
+#define EFUSE_DIS_DIRECT_BOOT_ERR_S  1
 /* EFUSE_DIS_DOWNLOAD_MODE_ERR : RO ;bitpos:[0] ;default: 1'b0 ; */
 /*description: If DIS_DOWNLOAD_MODE is 1  then it indicates a programming error.*/
 #define EFUSE_DIS_DOWNLOAD_MODE_ERR  (BIT(0))
@@ -1700,104 +1655,97 @@ extern "C" {
 #define EFUSE_RPT4_RESERVED4_ERR_S  0
 
 #define EFUSE_RD_RS_ERR0_REG          (DR_REG_EFUSE_BASE + 0x1C0)
-/* EFUSE_KEY4_FAIL : RO ;bitpos:[31] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of key$n is reliable 1:
- Means that programming key$n failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY4_FAIL  (BIT(31))
-#define EFUSE_KEY4_FAIL_M  (BIT(31))
-#define EFUSE_KEY4_FAIL_V  0x1
-#define EFUSE_KEY4_FAIL_S  31
+/* EFUSE_KEY3_FAIL : RO ;bitpos:[31] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of key3 is reliable 1:
+ Means that programming key3 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY3_FAIL  (BIT(31))
+#define EFUSE_KEY3_FAIL_M  (BIT(31))
+#define EFUSE_KEY3_FAIL_V  0x1
+#define EFUSE_KEY3_FAIL_S  31
 /* EFUSE_KEY4_ERR_NUM : RO ;bitpos:[30:28] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY4_ERR_NUM  0x00000007
 #define EFUSE_KEY4_ERR_NUM_M  ((EFUSE_KEY4_ERR_NUM_V)<<(EFUSE_KEY4_ERR_NUM_S))
 #define EFUSE_KEY4_ERR_NUM_V  0x7
 #define EFUSE_KEY4_ERR_NUM_S  28
-/* EFUSE_KEY3_FAIL : RO ;bitpos:[27] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of key$n is reliable 1:
- Means that programming key$n failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY3_FAIL  (BIT(27))
-#define EFUSE_KEY3_FAIL_M  (BIT(27))
-#define EFUSE_KEY3_FAIL_V  0x1
-#define EFUSE_KEY3_FAIL_S  27
+/* EFUSE_KEY2_FAIL : RO ;bitpos:[27] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of key2 is reliable 1:
+ Means that programming key2 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY2_FAIL  (BIT(27))
+#define EFUSE_KEY2_FAIL_M  (BIT(27))
+#define EFUSE_KEY2_FAIL_V  0x1
+#define EFUSE_KEY2_FAIL_S  27
 /* EFUSE_KEY3_ERR_NUM : RO ;bitpos:[26:24] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY3_ERR_NUM  0x00000007
 #define EFUSE_KEY3_ERR_NUM_M  ((EFUSE_KEY3_ERR_NUM_V)<<(EFUSE_KEY3_ERR_NUM_S))
 #define EFUSE_KEY3_ERR_NUM_V  0x7
 #define EFUSE_KEY3_ERR_NUM_S  24
-/* EFUSE_KEY2_FAIL : RO ;bitpos:[23] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of key$n is reliable 1:
- Means that programming key$n failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY2_FAIL  (BIT(23))
-#define EFUSE_KEY2_FAIL_M  (BIT(23))
-#define EFUSE_KEY2_FAIL_V  0x1
-#define EFUSE_KEY2_FAIL_S  23
+/* EFUSE_KEY1_FAIL : RO ;bitpos:[23] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of key1 is reliable 1:
+ Means that programming key1 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY1_FAIL  (BIT(23))
+#define EFUSE_KEY1_FAIL_M  (BIT(23))
+#define EFUSE_KEY1_FAIL_V  0x1
+#define EFUSE_KEY1_FAIL_S  23
 /* EFUSE_KEY2_ERR_NUM : RO ;bitpos:[22:20] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY2_ERR_NUM  0x00000007
 #define EFUSE_KEY2_ERR_NUM_M  ((EFUSE_KEY2_ERR_NUM_V)<<(EFUSE_KEY2_ERR_NUM_S))
 #define EFUSE_KEY2_ERR_NUM_V  0x7
 #define EFUSE_KEY2_ERR_NUM_S  20
-/* EFUSE_KEY1_FAIL : RO ;bitpos:[19] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of key$n is reliable 1:
- Means that programming key$n failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY1_FAIL  (BIT(19))
-#define EFUSE_KEY1_FAIL_M  (BIT(19))
-#define EFUSE_KEY1_FAIL_V  0x1
-#define EFUSE_KEY1_FAIL_S  19
+/* EFUSE_KEY0_FAIL : RO ;bitpos:[19] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of key0 is reliable 1:
+ Means that programming key0 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY0_FAIL  (BIT(19))
+#define EFUSE_KEY0_FAIL_M  (BIT(19))
+#define EFUSE_KEY0_FAIL_V  0x1
+#define EFUSE_KEY0_FAIL_S  19
 /* EFUSE_KEY1_ERR_NUM : RO ;bitpos:[18:16] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY1_ERR_NUM  0x00000007
 #define EFUSE_KEY1_ERR_NUM_M  ((EFUSE_KEY1_ERR_NUM_V)<<(EFUSE_KEY1_ERR_NUM_S))
 #define EFUSE_KEY1_ERR_NUM_V  0x7
 #define EFUSE_KEY1_ERR_NUM_S  16
-/* EFUSE_KEY0_FAIL : RO ;bitpos:[15] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of key$n is reliable 1:
- Means that programming key$n failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY0_FAIL  (BIT(15))
-#define EFUSE_KEY0_FAIL_M  (BIT(15))
-#define EFUSE_KEY0_FAIL_V  0x1
-#define EFUSE_KEY0_FAIL_S  15
+/* EFUSE_USR_DATA_FAIL : RO ;bitpos:[15] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of user data is reliable
+ 1: Means that programming user data failed and the number of error bytes is over 6.*/
+#define EFUSE_USR_DATA_FAIL  (BIT(15))
+#define EFUSE_USR_DATA_FAIL_M  (BIT(15))
+#define EFUSE_USR_DATA_FAIL_V  0x1
+#define EFUSE_USR_DATA_FAIL_S  15
 /* EFUSE_KEY0_ERR_NUM : RO ;bitpos:[14:12] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY0_ERR_NUM  0x00000007
 #define EFUSE_KEY0_ERR_NUM_M  ((EFUSE_KEY0_ERR_NUM_V)<<(EFUSE_KEY0_ERR_NUM_S))
 #define EFUSE_KEY0_ERR_NUM_V  0x7
 #define EFUSE_KEY0_ERR_NUM_S  12
-/* EFUSE_USR_DATA_FAIL : RO ;bitpos:[11] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the user data is reliable 1: Means
- that programming user data failed and the number of error bytes is over 6.*/
-#define EFUSE_USR_DATA_FAIL  (BIT(11))
-#define EFUSE_USR_DATA_FAIL_M  (BIT(11))
-#define EFUSE_USR_DATA_FAIL_V  0x1
-#define EFUSE_USR_DATA_FAIL_S  11
+/* EFUSE_SYS_PART1_FAIL : RO ;bitpos:[11] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of system part1 is reliable
+ 1: Means that programming data of system part1 failed and the number of error bytes is over 6.*/
+#define EFUSE_SYS_PART1_FAIL  (BIT(11))
+#define EFUSE_SYS_PART1_FAIL_M  (BIT(11))
+#define EFUSE_SYS_PART1_FAIL_V  0x1
+#define EFUSE_SYS_PART1_FAIL_S  11
 /* EFUSE_USR_DATA_ERR_NUM : RO ;bitpos:[10:8] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_USR_DATA_ERR_NUM  0x00000007
 #define EFUSE_USR_DATA_ERR_NUM_M  ((EFUSE_USR_DATA_ERR_NUM_V)<<(EFUSE_USR_DATA_ERR_NUM_S))
 #define EFUSE_USR_DATA_ERR_NUM_V  0x7
 #define EFUSE_USR_DATA_ERR_NUM_S  8
-/* EFUSE_SYS_PART1_FAIL : RO ;bitpos:[7] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of system part1 is reliable
- 1: Means that programming user data failed and the number of error bytes is over 6.*/
-#define EFUSE_SYS_PART1_FAIL  (BIT(7))
-#define EFUSE_SYS_PART1_FAIL_M  (BIT(7))
-#define EFUSE_SYS_PART1_FAIL_V  0x1
-#define EFUSE_SYS_PART1_FAIL_S  7
+/* EFUSE_MAC_SPI_8M_FAIL : RO ;bitpos:[7] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of MAC_SPI_8M is reliable
+ 1: Means that programming MAC_SPI_8M failed and the number of error bytes is over 6.*/
+#define EFUSE_MAC_SPI_8M_FAIL  (BIT(7))
+#define EFUSE_MAC_SPI_8M_FAIL_M  (BIT(7))
+#define EFUSE_MAC_SPI_8M_FAIL_V  0x1
+#define EFUSE_MAC_SPI_8M_FAIL_S  7
 /* EFUSE_SYS_PART1_NUM : RO ;bitpos:[6:4] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_SYS_PART1_NUM  0x00000007
 #define EFUSE_SYS_PART1_NUM_M  ((EFUSE_SYS_PART1_NUM_V)<<(EFUSE_SYS_PART1_NUM_S))
 #define EFUSE_SYS_PART1_NUM_V  0x7
 #define EFUSE_SYS_PART1_NUM_S  4
-/* EFUSE_MAC_SPI_8M_FAIL : RO ;bitpos:[3] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of MAC_SPI_8M is reliable
- 1: Means that programming user data failed and the number of error bytes is over 6.*/
-#define EFUSE_MAC_SPI_8M_FAIL  (BIT(3))
-#define EFUSE_MAC_SPI_8M_FAIL_M  (BIT(3))
-#define EFUSE_MAC_SPI_8M_FAIL_V  0x1
-#define EFUSE_MAC_SPI_8M_FAIL_S  3
 /* EFUSE_MAC_SPI_8M_ERR_NUM : RO ;bitpos:[2:0] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_MAC_SPI_8M_ERR_NUM  0x00000007
@@ -1806,26 +1754,26 @@ extern "C" {
 #define EFUSE_MAC_SPI_8M_ERR_NUM_S  0
 
 #define EFUSE_RD_RS_ERR1_REG          (DR_REG_EFUSE_BASE + 0x1C4)
-/* EFUSE_SYS_PART2_FAIL : RO ;bitpos:[7] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of system part2 is reliable
- 1: Means that programming user data failed and the number of error bytes is over 6.*/
-#define EFUSE_SYS_PART2_FAIL  (BIT(7))
-#define EFUSE_SYS_PART2_FAIL_M  (BIT(7))
-#define EFUSE_SYS_PART2_FAIL_V  0x1
-#define EFUSE_SYS_PART2_FAIL_S  7
+/* EFUSE_KEY5_FAIL : RO ;bitpos:[7] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of KEY5 is reliable 1:
+ Means that programming KEY5 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY5_FAIL  (BIT(7))
+#define EFUSE_KEY5_FAIL_M  (BIT(7))
+#define EFUSE_KEY5_FAIL_V  0x1
+#define EFUSE_KEY5_FAIL_S  7
 /* EFUSE_SYS_PART2_ERR_NUM : RO ;bitpos:[6:4] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_SYS_PART2_ERR_NUM  0x00000007
 #define EFUSE_SYS_PART2_ERR_NUM_M  ((EFUSE_SYS_PART2_ERR_NUM_V)<<(EFUSE_SYS_PART2_ERR_NUM_S))
 #define EFUSE_SYS_PART2_ERR_NUM_V  0x7
 #define EFUSE_SYS_PART2_ERR_NUM_S  4
-/* EFUSE_KEY5_FAIL : RO ;bitpos:[3] ;default: 1'b0 ; */
-/*description: 0: Means no failure and that the data of KEY5 is reliable 1:
- Means that programming user data failed and the number of error bytes is over 6.*/
-#define EFUSE_KEY5_FAIL  (BIT(3))
-#define EFUSE_KEY5_FAIL_M  (BIT(3))
-#define EFUSE_KEY5_FAIL_V  0x1
-#define EFUSE_KEY5_FAIL_S  3
+/* EFUSE_KEY4_FAIL : RO ;bitpos:[3] ;default: 1'b0 ; */
+/*description: 0: Means no failure and that the data of KEY4 is reliable 1:
+ Means that programming KEY4 failed and the number of error bytes is over 6.*/
+#define EFUSE_KEY4_FAIL  (BIT(3))
+#define EFUSE_KEY4_FAIL_M  (BIT(3))
+#define EFUSE_KEY4_FAIL_V  0x1
+#define EFUSE_KEY4_FAIL_S  3
 /* EFUSE_KEY5_ERR_NUM : RO ;bitpos:[2:0] ;default: 3'h0 ; */
 /*description: The value of this signal means the number of error bytes.*/
 #define EFUSE_KEY5_ERR_NUM  0x00000007
@@ -1866,6 +1814,9 @@ extern "C" {
 #define EFUSE_OP_CODE_M  ((EFUSE_OP_CODE_V)<<(EFUSE_OP_CODE_S))
 #define EFUSE_OP_CODE_V  0xFFFF
 #define EFUSE_OP_CODE_S  0
+
+#define EFUSE_WRITE_OP_CODE 0x5a5a
+#define EFUSE_READ_OP_CODE  0x5aa5
 
 #define EFUSE_STATUS_REG          (DR_REG_EFUSE_BASE + 0x1D0)
 /* EFUSE_REPEAT_ERR_CNT : RO ;bitpos:[17:10] ;default: 8'h0 ; */

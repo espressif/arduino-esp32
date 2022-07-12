@@ -26,6 +26,7 @@ extern "C" {
 
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
+#include "pins_arduino.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define NUM_OUPUT_PINS  46
@@ -42,20 +43,15 @@ extern "C" {
 
 //GPIO FUNCTIONS
 #define INPUT             0x01
-#define OUTPUT            0x02
+// Changed OUTPUT from 0x02 to behave the same as Arduino pinMode(pin,OUTPUT) 
+// where you can read the state of pin even when it is set as OUTPUT
+#define OUTPUT            0x03 
 #define PULLUP            0x04
 #define INPUT_PULLUP      0x05
 #define PULLDOWN          0x08
 #define INPUT_PULLDOWN    0x09
 #define OPEN_DRAIN        0x10
 #define OUTPUT_OPEN_DRAIN 0x12
-#define SPECIAL           0xF0
-#define FUNCTION_1        0x00
-#define FUNCTION_2        0x20
-#define FUNCTION_3        0x40
-#define FUNCTION_4        0x60
-#define FUNCTION_5        0x80
-#define FUNCTION_6        0xA0
 #define ANALOG            0xC0
 
 //Interrupt Modes
@@ -67,6 +63,7 @@ extern "C" {
 #define ONHIGH    0x05
 #define ONLOW_WE  0x0C
 #define ONHIGH_WE 0x0D
+
 
 #define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
 #define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)

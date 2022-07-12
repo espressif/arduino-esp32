@@ -1,5 +1,6 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerParam.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 
 static esp_err_t err;
 
@@ -30,4 +31,11 @@ esp_err_t Param::updateAndReport(param_val_t val)
     return err;
 }
 
+esp_err_t Param::addValidStrList(const char **string_list, uint8_t count) {
+    esp_err_t err = esp_rmaker_param_add_valid_str_list(getParamHandle(), string_list, count);
+    if (err != ESP_OK) {
+        log_e("Add valid string list error");
+    }
+    return err;
+}
 #endif

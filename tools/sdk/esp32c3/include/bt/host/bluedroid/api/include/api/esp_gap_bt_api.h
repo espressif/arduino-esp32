@@ -236,7 +236,7 @@ typedef enum {
 #define ESP_BT_GAP_MIN_INQ_LEN                (0x01)  /*!< Minimum inquiry duration, unit is 1.28s */
 #define ESP_BT_GAP_MAX_INQ_LEN                (0x30)  /*!< Maximum inquiry duration, unit is 1.28s */
 
-/// A2DP state callback parameters
+/// GAP state callback parameters
 typedef union {
     /**
      * @brief ESP_BT_GAP_DISC_RES_EVT
@@ -347,6 +347,7 @@ typedef union {
     struct read_rmt_name_param {
         esp_bt_status_t stat;                  /*!< read Remote Name status */
         uint8_t rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]; /*!< Remote device name */
+        esp_bd_addr_t bda;                     /*!< remote bluetooth device address*/
     } read_rmt_name;                        /*!< read Remote Name parameter struct */
 
     /**

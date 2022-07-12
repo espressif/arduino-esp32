@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,63 +12,117 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "pins_arduino.h"
 #include "SD_MMC.h"
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) //SDMMC does not work on ESP32S2
+#ifdef SOC_SDMMC_HOST_SUPPORTED
 #include "vfs_api.h"
 
-extern "C" {
-#include <sys/unistd.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include "esp_vfs_fat.h"
 #include "driver/sdmmc_host.h"
 #include "driver/sdmmc_defs.h"
 #include "sdmmc_cmd.h"
-}
+#include "soc/sdmmc_pins.h"
 #include "ff.h"
 
 using namespace fs;
-/*
 
-*/
 
 SDMMCFS::SDMMCFS(FSImplPtr impl)
-    : FS(impl), _card(NULL)
-{}
+    : FS(impl), _card(nullptr)
+{
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
+    _pin_clk = SDMMC_CLK;
+    _pin_cmd = SDMMC_CMD;
+    _pin_d0 = SDMMC_D0;
+#ifndef BOARD_HAS_1BIT_SDMMC
+    _pin_d1 = SDMMC_D1;
+    _pin_d2 = SDMMC_D2;
+    _pin_d3 = SDMMC_D3;
+#endif // BOARD_HAS_1BIT_SDMMC
+#endif // defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
+}
 
-bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency)
+bool SDMMCFS::setPins(int clk, int cmd, int d0)
+{
+    return setPins(clk, cmd, d0, GPIO_NUM_NC, GPIO_NUM_NC, GPIO_NUM_NC);
+}
+
+bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
+{
+    if (_card != nullptr) {
+        log_e("SD_MMC.setPins must be called before SD_MMC.begin");
+        return false;
+    }
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
+    _pin_clk = (int8_t) clk;
+    _pin_cmd = (int8_t) cmd;
+    _pin_d0 = (int8_t) d0;
+    _pin_d1 = (int8_t) d1;
+    _pin_d2 = (int8_t) d2;
+    _pin_d3 = (int8_t) d3;
+    return true;
+#elif CONFIG_IDF_TARGET_ESP32
+    // ESP32 doesn't support SDMMC pin configuration via GPIO matrix.
+    // Since SDMMCFS::begin hardcodes the usage of slot 1, only check if
+    // the pins match slot 1 pins.
+    bool pins_ok = (clk == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CLK) &&
+        (cmd == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CMD) &&
+        (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0) &&
+        (((d1 == -1) && (d2 == -1) && (d3 == -1)) ||
+         ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) &&
+         (d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) &&
+         (d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
+    if (!pins_ok) {
+        log_e("SDMMCFS: specified pins are not supported by this chip.");
+        return false;
+    }
+    return true;
+#else
+#error SoC not supported
+#endif
+}
+
+bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency, uint8_t maxOpenFiles)
 {
     if(_card) {
         return true;
     }
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-    sdmmc_host_t host;
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    // SoC supports SDMMC pin configuration via GPIO matrix.
+    // Chech that the pins have been set either in the constructor or setPins function.
+    if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1
+        || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
+        log_e("SDMMCFS: some SD pins are not set");
+        return false;
+    }
+
+    slot_config.clk = (gpio_num_t) _pin_clk;
+    slot_config.cmd = (gpio_num_t) _pin_cmd;
+    slot_config.d0 = (gpio_num_t) _pin_d0;
+    slot_config.d1 = (gpio_num_t) _pin_d1;
+    slot_config.d2 = (gpio_num_t) _pin_d2;
+    slot_config.d3 = (gpio_num_t) _pin_d3;
+    slot_config.width = 4;
+#endif // SOC_SDMMC_USE_GPIO_MATRIX
+    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     host.flags = SDMMC_HOST_FLAG_4BIT;
     host.slot = SDMMC_HOST_SLOT_1;
     host.max_freq_khz = sdmmc_frequency;
-    host.io_voltage = 3.3f;
-    host.init = &sdmmc_host_init;
-    host.set_bus_width = &sdmmc_host_set_bus_width;
-    host.get_bus_width = &sdmmc_host_get_slot_width;
-    host.set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode;
-    host.set_card_clk = &sdmmc_host_set_card_clk;
-    host.do_transaction = &sdmmc_host_do_transaction;
-    host.deinit = &sdmmc_host_deinit;
-    host.io_int_enable = &sdmmc_host_io_int_enable;
-    host.io_int_wait = &sdmmc_host_io_int_wait;
-    host.command_timeout_ms = 0;
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
 #endif
     if(mode1bit) {
         host.flags = SDMMC_HOST_FLAG_1BIT; //use 1-line SD mode
-	slot_config.width = 1;
+        slot_config.width = 1;
     }
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = format_if_mount_failed,
-        .max_files = 5,
+        .max_files = maxOpenFiles,
         .allocation_unit_size = 0
     };
 
@@ -81,7 +135,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
             log_w("SD Already mounted");
             return true;
         } else {
-            log_e("Failed to initialize the card (%d). Make sure SD card lines have pull-up resistors in place.", ret);
+            log_e("Failed to initialize the card (0x%x). Make sure SD card lines have pull-up resistors in place.", ret);
         }
         _card = NULL;
         return false;
@@ -144,4 +198,4 @@ uint64_t SDMMCFS::usedBytes()
 }
 
 SDMMCFS SD_MMC = SDMMCFS(FSImplPtr(new VFSImpl()));
-#endif /* CONFIG_IDF_TARGET_ESP32 */
+#endif /* SOC_SDMMC_HOST_SUPPORTED */

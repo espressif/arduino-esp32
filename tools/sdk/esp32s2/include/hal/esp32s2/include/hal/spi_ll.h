@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -42,6 +42,8 @@ extern "C" {
 /// This is the expected clock frequency
 #define SPI_LL_PERIPH_CLK_FREQ (80 * 1000000)
 #define SPI_LL_GET_HW(ID) ((ID)==0? ({abort();NULL;}):((ID)==1? &GPSPI2 : &GPSPI3))
+
+#define SPI_LL_DATA_MAX_BIT_LEN (1 << 23)
 
 /**
  * The data structure holding calculated clock configuration. Since the
@@ -738,7 +740,7 @@ static inline void spi_ll_set_dummy(spi_dev_t *hw, int dummy_n)
  */
 static inline void spi_ll_master_set_cs_hold(spi_dev_t *hw, int hold)
 {
-    hw->ctrl2.cs_hold_time = hold - 1;
+    hw->ctrl2.cs_hold_time = hold;
     hw->user.cs_hold = hold ? 1 : 0;
 }
 

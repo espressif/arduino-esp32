@@ -7,13 +7,18 @@ This guide will show how to install the Arduino-ESP32 support.
 Before Installing
 -----------------
 
-We recommend you install the support using the Boards Manager, but other options are available depending on your operating system. 
+We recommend you install the support using your favorite IDE, but other options are available depending on your operating system. 
 To install Arduino-ESP32 support, you can use one of the following options.
 
-Installing using Boards Manager
--------------------------------
+Installing using Arduino IDE
+----------------------------
 
-This is the preferred and easiest way to install Arduino-ESP32.
+.. figure:: _static/logo_arduino.png
+   :align: center
+   :width: 200
+   :figclass: align-center
+
+This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 .. note::
    For overview of SoC's support, take a look on `Supported Soc's table <https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s>`_ where you can find if the particular chip is under stable or development release.
@@ -58,8 +63,92 @@ To start the installation process using the Boards Managaer, follow these steps:
 
 - Restart Arduino IDE.
 
-Windows
--------
+Installing using PlatformIO
+---------------------------
+
+.. figure:: _static/logo_pio.png
+   :align: center
+   :width: 200
+   :figclass: align-center
+
+PlatformIO is a professional collaborative platform for embedded development. It has out-of-the-box support for ESP32 SoCs and allows working with Arduino ESP32 as well as ESP-IDF from Espressif without changing your development environment. PlatformIO includes lots of instruments for the most common development tasks such as debugging, unit testing, and static code analysis.
+
+A detailed overview of the PlatformIO ecosystem and its philosophy can be found in `the official documentation <https://docs.platformio.org/en/latest/core/index.html>`_.
+
+PlatformIO can be used in two flavors:
+
+- `PlatformIO IDE <https://platformio.org/platformio-ide>`_ is a toolset for embedded C/C++ development available on Windows, macOS and Linux platforms
+
+- `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_ is a command-line tool that consists of a multi-platform build system, platform and library managers and other integration components. It can be used with a variety of code development environments and allows integration with cloud platforms and web services
+
+To install PlatformIO, you can follow this Getting Started, provided at `docs.platformio.org`_.
+
+Using the stable code
+*********************
+
+.. note::
+   A detailed overview of supported development boards, examples and frameworks can be found on `the official Espressif32 dev-platform page <https://registry.platformio.org/platforms/platformio/espressif32>`_ in the PlatformIO Registry.
+
+The most reliable and easiest way to get started is to use the latest stable version of the ESP32 development platform that passed all tests/verifications and can be used in production.
+
+Create a new project and select one of the available boards. You can change after by changing the `platformio.ini <https://docs.platformio.org/en/latest/projectconf/index.html>`_ file.
+
+- For ESP32
+
+.. code-block:: bash
+
+   [env:esp32dev]
+   platform = espressif32
+   board = esp32dev
+   framework = arduino
+
+- For ESP32-S2 (ESP32-S2-Saola-1 board)
+
+.. code-block:: bash
+
+   [env:esp32-s2-saola-1]
+   platform = espressif32
+   board = esp32-s2-saola-1
+   framework = arduino
+
+- For ESP32-C3 (ESP32-C3-DevKitM-1 board)
+
+.. code-block:: bash
+
+   [env:esp32-c3-devkitm-1]
+   platform = espressif32
+   board = esp32-c3-devkitm-1
+   framework = arduino
+
+How to update to the latest code
+********************************
+
+To test the latest Arduino ESP32, you need to change your project *platformio.ini* accordingly.
+The following configuration uses the upstream version of the Espressif development platform and the latest Arduino core directly from the Espressif GitHub repository:
+
+.. code-block:: bash
+
+   [env:esp32-c3-devkitm-1]
+   platform = https://github.com/platformio/platform-espressif32.git
+   board = esp32-c3-devkitm-1
+   framework = arduino
+   platform_packages =
+       framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
+
+
+To get more information about PlatformIO, see the following links:
+
+- `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_
+
+- `PlatformIO Home <https://docs.platformio.org/en/latest/home/index.html>`_
+
+- `Tutorials and Examples <https://docs.platformio.org/en/latest/tutorials/index.html>`_
+
+- `Library Management <https://docs.platformio.org/en/latest/librarymanager/index.html>`_
+
+
+Windows (manual installation)
+-----------------------------
 
 .. warning:: Arduino ESP32 core v2.x.x cannot be used on Windows 8.x x86 (32 bits), Windows 7 or earlier. The Windows 32 bits OS is no longer supported by this toolchain.
 
@@ -149,6 +238,11 @@ How to update to the latest code
 
 Linux
 -----
+
+.. figure:: _static/logo_linux.png
+   :align: center
+   :width: 200
+   :figclass: align-center
 
 Debian/Ubuntu
 *************
@@ -263,20 +357,5 @@ Where ``~/Documents/Arduino`` represents your sketch book location as per "Ardui
 
 - Restart Arduino IDE.
 
-PlatformIO
-----------
-
-- `What is PlatformIO? <https://docs.platformio.org/en/latest/what-is-platformio.html?utm_source=github&utm_medium=arduino-esp32>`_
-
-- `PlatformIO IDE <https://platformio.org/platformio-ide?utm_source=github&utm_medium=arduino-esp32>`_
-
-- `PlatformIO Core <https://docs.platformio.org/en/latest/core.html?utm_source=github&utm_medium=arduino-esp32>`_
-
-- `Advanced usage <https://docs.platformio.org/en/latest/platforms/espressif32.html?utm_source=github&utm_medium=arduino-esp32>`_: Custom settings, uploading to SPIFFS, Over-the-Air (OTA), staging version
-
-- `Integration with Cloud and Standalone IDEs <https://docs.platformio.org/en/latest/ide.html?utm_source=github&utm_medium=arduino-esp32>`_: Cloud9, Codeanywhere, Eclipse Che (Codenvy), Atom, CLion, Eclipse, Emacs, NetBeans, Qt Creator, Sublime Text, VIM, Visual Studio, and VSCode
-
-- `Project Examples <https://docs.platformio.org/en/latest/platforms/espressif32.html?utm_source=github&utm_medium=arduino-esp32#examples>`_
-
-
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
+.. _docs.platformio.org: https://docs.platformio.org/en/latest/integration/ide/pioide.html

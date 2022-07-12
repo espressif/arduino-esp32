@@ -11,7 +11,7 @@ The Wi-Fi API provides support for the 802.11b/g/n protocol driver. This API inc
 
 * AP mode (aka Soft-AP mode or Access Point mode). Devices connect to the ESP32
 
-* Security modes (WPA, WPA2, WEP, etc.)
+* Security modes (WPA2, WPA3 etc.)
 
 * Scanning for access points
 
@@ -66,6 +66,35 @@ The use of dynamic allocation is recommended to save memory and reduce resources
 Use static allocation if you want to have more performance and if your application is multi-tasking.
 
 By default, the memory allocation will be set to **dynamic** if this function is not being used.
+
+setDualAntennaConfig
+********************
+
+Configures the Dual antenna functionallity. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
+
+.. code-block:: arduino
+
+    bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
+
+
+* ``gpio_ant1`` Configure the GPIO number for the antenna 1 connected to the RF switch (default ``GPIO2`` on ESP32-WROOM-DA)
+* ``gpio_ant2`` Configure the GPIO number for the antenna 2 connected to the RF switch (default ``GPIO25`` on ESP32-WROOM-DA)
+* ``rx_mode`` Set the RX antenna mode. See wifi_rx_ant_t for the options.
+* ``tx_mode`` Set the TX antenna mode. See wifi_tx_ant_t for the options.
+
+Return ``true`` if the configuration was successful.
+
+For the ``rx_mode`` you can use the following configuration:
+
+* ``WIFI_RX_ANT0`` Selects the antenna 1 for all RX activity.
+* ``WIFI_RX_ANT1`` Selects the antenna 2 for all RX activity.
+* ``WIFI_RX_ANT_AUTO``  Selects the antenna for RX automatically.
+
+For the ``tx_mode`` you can use the following configuration:
+
+* ``WIFI_TX_ANT0`` Selects the antenna 1 for all TX activity.
+* ``WIFI_TX_ANT1`` Selects the antenna 2 for all TX activity.
+* ``WIFI_TX_ANT_AUTO`` Selects the antenna for TX automatically.
 
 WiFiAP
 ------
@@ -417,26 +446,12 @@ Return the connection state.
 setAutoConnect
 **************
 
-Function used to set the automatic connection.
-
-.. code-block:: arduino
-
-    bool setAutoConnect(bool autoConnect);
-
-Where:
-
-* ``bool autoConnect`` is set to ``true`` to enable this option.
+Function is deprecated.
 
 getAutoConnect
 **************
 
-Function used to get the automatic connection setting value.
-
-.. code-block:: arduino
-
-    bool getAutoConnect();
-
-The function will return ``true`` if the setting is enabled.
+Function is deprecated.
 
 setAutoReconnect
 ****************
@@ -455,11 +470,25 @@ getAutoReconnect
 ****************
 
 Function used to get the automatic reconnection if the connection is lost.
+
 .. code-block:: arduino
 
     bool getAutoReconnect();
 
-    The function will return ``true`` if this setting is enabled.
+The function will return ``true`` if this setting is enabled.
+
+setMinSecurity
+**************
+
+Function used to set the minimum security for AP to be considered connectable.
+
+.. code-block:: arduino
+
+    bool setMinSecurity(wifi_auth_mode_t minSecurity);
+
+Where:
+
+* ``minSecurity`` is the minimum security for AP to be considered connectable. Default is ``WIFI_AUTH_WPA2_PSK``.
 
 WiFiMulti
 ---------

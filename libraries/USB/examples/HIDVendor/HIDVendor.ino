@@ -1,3 +1,8 @@
+#if ARDUINO_USB_MODE
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 #include "USB.h"
 #include "USBHIDVendor.h"
 USBHIDVendor Vendor;
@@ -15,7 +20,7 @@ static void vendorEventCallback(void* arg, esp_event_base_t event_base, int32_t 
       case ARDUINO_USB_HID_VENDOR_SET_FEATURE_EVENT:
         Serial.printf("HID VENDOR SET FEATURE: len:%u\n", data->len);
         for(uint16_t i=0; i<data->len; i++){
-          Serial.printf("0x%02X ",data->buffer);
+          Serial.printf("0x%02X ",*(data->buffer));
         }
         Serial.println();
         break;
@@ -50,3 +55,4 @@ void loop() {
     Serial.write(Vendor.read());
   }
 }
+#endif /* ARDUINO_USB_MODE */

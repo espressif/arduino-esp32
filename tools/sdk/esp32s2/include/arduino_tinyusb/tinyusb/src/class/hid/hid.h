@@ -43,7 +43,7 @@
 /** \defgroup ClassDriver_HID_Common Common Definitions
  *  @{ */
 
- /// USB HID Descriptor
+/// USB HID Descriptor
 typedef struct TU_ATTR_PACKED
 {
   uint8_t  bLength;         /**< Numeric expression that is the total size of the HID descriptor */
@@ -656,7 +656,7 @@ enum {
 #define HID_REPORT_SIZE_N(x, n)   HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_SIZE, RI_TYPE_GLOBAL, n)
 
 #define HID_REPORT_ID(x)          HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, 1),
-#define HID_REPORT_ID_N(x)        HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, n),
+#define HID_REPORT_ID_N(x, n)     HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_ID, RI_TYPE_GLOBAL, n),
 
 #define HID_REPORT_COUNT(x)       HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, 1)
 #define HID_REPORT_COUNT_N(x, n)  HID_REPORT_ITEM(x, RI_GLOBAL_REPORT_COUNT, RI_TYPE_GLOBAL, n)
@@ -1117,7 +1117,10 @@ enum
     {'8'   , 0      }, /* 0x60 */ \
     {'9'   , 0      }, /* 0x61 */ \
     {'0'   , 0      }, /* 0x62 */ \
-    {'0'   , 0      }, /* 0x63 */ \
+    {'.'   , 0      }, /* 0x63 */ \
+    {0     , 0      }, /* 0x64 */ \
+    {0     , 0      }, /* 0x65 */ \
+    {0     , 0      }, /* 0x66 */ \
     {'='   , '='    }, /* 0x67 */ \
 
 
