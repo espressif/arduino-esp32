@@ -77,6 +77,10 @@ public:
     bool setPins(int sda, int scl);
     
     bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
+    inline bool begin(uint8_t sda, uint8_t scl, uint32_t frequency=0) 
+    {
+        return begin(static_cast<int>(sda), static_cast<int>(scl), frequency);
+    }
     bool begin(uint8_t slaveAddr, int sda=-1, int scl=-1, uint32_t frequency=0);
     bool end();
 
