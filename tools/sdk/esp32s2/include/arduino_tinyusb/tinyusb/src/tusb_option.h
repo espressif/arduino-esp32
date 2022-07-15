@@ -98,7 +98,9 @@ typedef int make_iso_compilers_happy;
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
 
 // NXP iMX RT
-#define OPT_MCU_MIMXRT10XX        700 ///< NXP iMX RT10xx
+#define OPT_MCU_MIMXRT            700             ///< NXP iMX RT Series
+#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT  ///< RT10xx
+#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT  ///< RT11xx
 
 // Nuvoton
 #define OPT_MCU_NUC121            800
