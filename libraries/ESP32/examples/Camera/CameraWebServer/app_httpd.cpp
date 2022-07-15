@@ -148,7 +148,7 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size)
     return filter;
 }
 
-/* unused function triggers error
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 static int ra_filter_run(ra_filter_t *filter, int value)
 {
     if (!filter->values)
@@ -166,7 +166,7 @@ static int ra_filter_run(ra_filter_t *filter, int value)
     }
     return filter->sum / filter->count;
 }
-*/
+#endif
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
