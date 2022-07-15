@@ -39,7 +39,7 @@
 //--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline void osal_task_delay(uint32_t msec)
 {
   sleep_ms(msec);
 }
@@ -49,25 +49,25 @@ static inline void osal_task_delay(uint32_t msec)
 //--------------------------------------------------------------------+
 typedef struct semaphore osal_semaphore_def_t, *osal_semaphore_t;
 
-static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
 {
   sem_init(semdef, 0, 255);
   return semdef;
 }
 
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
   (void) in_isr;
   sem_release(sem_hdl);
   return true;
 }
 
-static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
 {
   return sem_acquire_timeout_ms(sem_hdl, msec);
 }
 
-static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl)
+TU_ATTR_ALWAYS_INLINE static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl)
 {
   sem_reset(sem_hdl, 0);
 }
@@ -78,32 +78,27 @@ static inline void osal_semaphore_reset(osal_semaphore_t sem_hdl)
 //--------------------------------------------------------------------+
 typedef struct mutex osal_mutex_def_t, *osal_mutex_t;
 
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
 {
-    mutex_init(mdef);
-    return mdef;
+  mutex_init(mdef);
+  return mdef;
 }
 
-static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
 {
-    return mutex_enter_timeout_ms(mutex_hdl, msec);
+  return mutex_enter_timeout_ms(mutex_hdl, msec);
 }
 
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 {
-    mutex_exit(mutex_hdl);
-    return true;
+  mutex_exit(mutex_hdl);
+  return true;
 }
 
 //--------------------------------------------------------------------+
 // QUEUE API
 //--------------------------------------------------------------------+
 #include "common/tusb_fifo.h"
-
-#if CFG_TUH_ENABLED
-extern void hcd_int_disable(uint8_t rhport);
-extern void hcd_int_enable(uint8_t rhport);
-#endif
 
 typedef struct
 {
@@ -121,26 +116,28 @@ typedef osal_queue_def_t* osal_queue_t;
   }
 
 // lock queue by disable USB interrupt
-static inline void _osal_q_lock(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline void _osal_q_lock(osal_queue_t qhdl)
 {
-    critical_section_enter_blocking(&qhdl->critsec);
+  critical_section_enter_blocking(&qhdl->critsec);
 }
 
 // unlock queue
-static inline void _osal_q_unlock(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline void _osal_q_unlock(osal_queue_t qhdl)
 {
-    critical_section_exit(&qhdl->critsec);
+  critical_section_exit(&qhdl->critsec);
 }
 
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
 {
   critical_section_init(&qdef->critsec);
   tu_fifo_clear(&qdef->ff);
   return (osal_queue_t) qdef;
 }
 
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec)
 {
+  (void) msec; // not used, always behave as msec = 0
+
   // TODO: revisit... docs say that mutexes are never used from IRQ context,
   //  however osal_queue_recieve may be. therefore my assumption is that
   //  the fifo mutex is not populated for queues used from an IRQ context
@@ -153,7 +150,7 @@ static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
   return success;
 }
 
-static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   // TODO: revisit... docs say that mutexes are never used from IRQ context,
   //  however osal_queue_recieve may be. therefore my assumption is that
@@ -170,7 +167,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   return success;
 }
 
-static inline bool osal_queue_empty(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_empty(osal_queue_t qhdl)
 {
   // TODO: revisit; whether this is true or not currently, tu_fifo_empty is a single
   //  volatile read.

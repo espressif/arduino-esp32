@@ -34,8 +34,11 @@
 
 #define DWC2_REG_BASE       0x50000000UL
 #define DWC2_EP_MAX         4
-#define DWC2_EP_FIFO_SIZE   1280
-#define RHPORT_IRQn         86
+
+static const dwc2_controller_t _dwc2_controller[] =
+{
+  { .reg_base = DWC2_REG_BASE, .irqnum = 86, .ep_count = DWC2_EP_MAX, .ep_fifo_size = 1280 }
+};
 
 extern uint32_t SystemCoreClock;
 
@@ -57,15 +60,13 @@ static inline void __eclic_disable_interrupt (uint32_t irq){
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
-  (void) rhport;
-  __eclic_enable_interrupt(RHPORT_IRQn);
+  __eclic_enable_interrupt(_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
-  (void) rhport;
-  __eclic_disable_interrupt(RHPORT_IRQn);
+  __eclic_disable_interrupt(_dwc2_controller[rhport].irqnum);
 }
 
 static inline void dwc2_remote_wakeup_delay(void)

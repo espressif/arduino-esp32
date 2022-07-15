@@ -27,6 +27,9 @@
 #ifndef _TUSB_OPTION_H_
 #define _TUSB_OPTION_H_
 
+// To avoid GCC compiler warnings when -pedantic option is used (strict ISO C)
+typedef int make_iso_compilers_happy;
+
 #include "common/tusb_compiler.h"
 
 #define TUSB_VERSION_MAJOR     0
@@ -192,60 +195,63 @@
 #define OPT_MODE_HIGH_SPEED     0x0400 ///< High Speed
 #define OPT_MODE_SPEED_MASK     0xff00
 
-#ifndef CFG_TUSB_RHPORT0_MODE
-  #define CFG_TUSB_RHPORT0_MODE OPT_MODE_NONE
-#endif
-
-#ifndef CFG_TUSB_RHPORT1_MODE
-  #define CFG_TUSB_RHPORT1_MODE OPT_MODE_NONE
-#endif
-
-#if (((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_HOST  ) && ((CFG_TUSB_RHPORT1_MODE) & OPT_MODE_HOST  )) || \
-    (((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_DEVICE) && ((CFG_TUSB_RHPORT1_MODE) & OPT_MODE_DEVICE))
-  #error "TinyUSB currently does not support same modes on more than 1 roothub port"
-#endif
-
 //------------- Roothub as Device -------------//
 
-#if (CFG_TUSB_RHPORT0_MODE) & OPT_MODE_DEVICE
+#if defined(CFG_TUSB_RHPORT0_MODE) && ((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_DEVICE)
   #define TUD_RHPORT_MODE     (CFG_TUSB_RHPORT0_MODE)
   #define TUD_OPT_RHPORT      0
-#elif (CFG_TUSB_RHPORT1_MODE) & OPT_MODE_DEVICE
+#elif defined(CFG_TUSB_RHPORT1_MODE) && ((CFG_TUSB_RHPORT1_MODE) & OPT_MODE_DEVICE)
   #define TUD_RHPORT_MODE     (CFG_TUSB_RHPORT1_MODE)
   #define TUD_OPT_RHPORT      1
 #else
   #define TUD_RHPORT_MODE     OPT_MODE_NONE
-  #define TUD_OPT_RHPORT      -1
 #endif
 
-#define CFG_TUD_ENABLED       (TUD_RHPORT_MODE & OPT_MODE_DEVICE)
-
-#if CFG_TUD_ENABLED
-  #define TUD_OPT_HIGH_SPEED  ((TUD_RHPORT_MODE & OPT_MODE_SPEED_MASK) ? (TUD_RHPORT_MODE & OPT_MODE_HIGH_SPEED) : (TUP_RHPORT_HIGHSPEED & (1 << TUD_OPT_RHPORT)))
-#else
-  #define TUD_OPT_HIGH_SPEED  0
+#ifndef CFG_TUD_ENABLED
+  // fallback to use CFG_TUSB_RHPORTx_MODE
+  #define CFG_TUD_ENABLED     (TUD_RHPORT_MODE & OPT_MODE_DEVICE)
 #endif
+
+#ifndef CFG_TUD_MAX_SPEED
+  // fallback to use CFG_TUSB_RHPORTx_MODE
+  #define CFG_TUD_MAX_SPEED   (TUD_RHPORT_MODE & OPT_MODE_SPEED_MASK)
+#endif
+
+// For backward compatible
+#define TUSB_OPT_DEVICE_ENABLED CFG_TUD_ENABLED
+
+// highspeed support indicator
+#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? CFG_TUD_MAX_SPEED : TUP_RHPORT_HIGHSPEED)
 
 //------------- Roothub as Host -------------//
 
-#if (CFG_TUSB_RHPORT0_MODE) & OPT_MODE_HOST
+#if defined(CFG_TUSB_RHPORT0_MODE) && ((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_HOST)
   #define TUH_RHPORT_MODE  (CFG_TUSB_RHPORT0_MODE)
   #define TUH_OPT_RHPORT   0
-#elif (CFG_TUSB_RHPORT1_MODE) & OPT_MODE_HOST
+#elif defined(CFG_TUSB_RHPORT1_MODE) && ((CFG_TUSB_RHPORT1_MODE) & OPT_MODE_HOST)
   #define TUH_RHPORT_MODE  (CFG_TUSB_RHPORT1_MODE)
   #define TUH_OPT_RHPORT   1
 #else
   #define TUH_RHPORT_MODE   OPT_MODE_NONE
-  #define TUH_OPT_RHPORT   -1
 #endif
 
-#define CFG_TUH_ENABLED     ( TUH_RHPORT_MODE & OPT_MODE_HOST )
+#ifndef CFG_TUH_ENABLED
+  // fallback to use CFG_TUSB_RHPORTx_MODE
+  #define CFG_TUH_ENABLED     (TUH_RHPORT_MODE & OPT_MODE_HOST)
+#endif
+
+#ifndef CFG_TUH_MAX_SPEED
+  // fallback to use CFG_TUSB_RHPORTx_MODE
+  #define CFG_TUH_MAX_SPEED   (TUH_RHPORT_MODE & OPT_MODE_SPEED_MASK)
+#endif
 
 // For backward compatible
-#define TUSB_OPT_DEVICE_ENABLED CFG_TUD_ENABLED
 #define TUSB_OPT_HOST_ENABLED   CFG_TUH_ENABLED
 
+//--------------------------------------------------------------------+
 // TODO move later
+//--------------------------------------------------------------------+
+
 // TUP_MCU_STRICT_ALIGN will overwrite TUP_ARCH_STRICT_ALIGN.
 // In case TUP_MCU_STRICT_ALIGN = 1 and TUP_ARCH_STRICT_ALIGN =0, we will not reply on compiler
 // to generate unaligned access code.
@@ -258,7 +264,7 @@
 
 
 //--------------------------------------------------------------------+
-// COMMON OPTIONS
+// Common Options (Default)
 //--------------------------------------------------------------------+
 
 // Debug enable to print out error message
@@ -286,14 +292,18 @@
 #endif
 
 // mutex is only needed for RTOS TODO also required with multiple core MCUs
-#define TUSB_OPT_MUTEX    (CFG_TUSB_OS != OPT_OS_NONE)
+#define TUSB_OPT_MUTEX      (CFG_TUSB_OS != OPT_OS_NONE)
 
 //--------------------------------------------------------------------
-// DEVICE OPTIONS
+// Device Options (Default)
 //--------------------------------------------------------------------
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE
   #define CFG_TUD_ENDPOINT0_SIZE  64
+#endif
+
+#ifndef CFG_TUD_INTERFACE_MAX
+  #define CFG_TUD_INTERFACE_MAX   16
 #endif
 
 #ifndef CFG_TUD_CDC
@@ -354,7 +364,7 @@
 #endif
 
 //--------------------------------------------------------------------
-// HOST OPTIONS
+// Host Options (Default)
 //--------------------------------------------------------------------
 #if CFG_TUH_ENABLED
   #ifndef CFG_TUH_DEVICE_MAX
@@ -395,6 +405,16 @@
 #ifndef CFG_TUH_API_EDPT_XFER
 #define CFG_TUH_API_EDPT_XFER 0
 #endif
+
+// Enable PIO-USB software host controller
+#ifndef CFG_TUH_RPI_PIO_USB
+#define CFG_TUH_RPI_PIO_USB 0
+#endif
+
+#ifndef CFG_TUD_RPI_PIO_USB
+#define CFG_TUD_RPI_PIO_USB 0
+#endif
+
 
 //------------------------------------------------------------------
 // Configuration Validation

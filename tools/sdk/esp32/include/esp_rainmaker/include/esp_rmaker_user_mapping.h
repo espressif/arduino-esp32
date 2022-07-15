@@ -25,6 +25,8 @@ typedef enum {
     ESP_RMAKER_USER_MAPPING_RESET = 0,
     /** Mapping has started */
     ESP_RMAKER_USER_MAPPING_STARTED,
+    /** Mapping request sent to cloud */
+    ESP_RMAKER_USER_MAPPING_REQ_SENT,
     /** Mapping is done */
     ESP_RMAKER_USER_MAPPING_DONE,
 } esp_rmaker_user_mapping_state_t;
