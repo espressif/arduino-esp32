@@ -42,6 +42,8 @@ extern "C" {
 #define SPI_LL_PERIPH_CLK_FREQ (80 * 1000000)
 #define SPI_LL_GET_HW(ID) ((ID)==0? ({abort();NULL;}):((ID)==1? &GPSPI2 : &GPSPI3))
 
+#define SPI_LL_DATA_MAX_BIT_LEN (1 << 18)
+
 /**
  * The data structure holding calculated clock configuration. Since the
  * calculation needs long time, it should be calculated during initialization and
@@ -674,8 +676,8 @@ static inline int spi_ll_master_cal_clock(int fapb, int hz, int duty_cycle, spi_
             if (pre <= 0) {
                 pre = 1;
             }
-            if (pre > 8192) {
-                pre = 8192;
+            if (pre > 16) {
+                pre = 16;
             }
             errval = abs(spi_ll_freq_for_pre_n(fapb, pre, n) - hz);
             if (bestn == -1 || errval <= besterr) {

@@ -45,8 +45,7 @@
  * - ENDPOINT_MAX: max (logical) number of endpoint
  * - ENDPOINT_EXCLUSIVE_NUMBER: endpoint number with different direction IN and OUT aren't allowed,
  *                              e.g EP1 OUT & EP1 IN cannot exist together
- * - RHPORT_HIGHSPEED: mask to indicate which port support highspeed mode (without external PHY)
- *                     bit0 for port0 and so on.
+ * - RHPORT_HIGHSPEED: support highspeed with on-chip PHY
  */
 
 //------------- NXP -------------//
@@ -63,8 +62,7 @@
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    6
-  #define TUP_RHPORT_HIGHSPEED    0x01 // Port0 HS, Port1 FS
-
+  #define TUP_RHPORT_HIGHSPEED    1 // Port0 HS, Port1 FS
 
 #elif TU_CHECK_MCU(OPT_MCU_LPC51UXX)
    #define TUP_DCD_ENDPOINT_MAX   5
@@ -82,8 +80,7 @@
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    8
-  #define TUP_RHPORT_HIGHSPEED    0x03 // Port0 HS, Port1 HS
-
+  #define TUP_RHPORT_HIGHSPEED    1 // Port0 HS, Port1 HS
 
 #elif TU_CHECK_MCU(OPT_MCU_MKL25ZXX, OPT_MCU_K32L2BXX)
   #define TUP_DCD_ENDPOINT_MAX    16
@@ -107,7 +104,7 @@
 
 #elif TU_CHECK_MCU(OPT_MCU_SAMX7X)
   #define TUP_DCD_ENDPOINT_MAX    10
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
   #define TUP_DCD_ENDPOINT_EXCLUSIVE_NUMBER
 
 #elif TU_CHECK_MCU(OPT_MCU_PIC32MZ)
@@ -155,7 +152,7 @@
 
   // MCU with on-chip HS Phy
   #if defined(STM32F723xx) || defined(STM32F730xx) || defined(STM32F733xx)
-    #define TUP_RHPORT_HIGHSPEED  0x02 // Port 0: FS, Port 1: HS
+    #define TUP_RHPORT_HIGHSPEED  1 // Port0: FS, Port1: HS
   #endif
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32H7)
@@ -185,12 +182,12 @@
   #endif
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32WB)
-#define TUP_DCD_ENDPOINT_MAX    8
+  #define TUP_DCD_ENDPOINT_MAX    8
 
 //------------- Sony -------------//
 #elif TU_CHECK_MCU(OPT_MCU_CXD56)
   #define TUP_DCD_ENDPOINT_MAX    7
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
   #define TUP_DCD_ENDPOINT_EXCLUSIVE_NUMBER
 
 //------------- TI -------------//
@@ -213,7 +210,7 @@
 
 #elif TU_CHECK_MCU(OPT_MCU_NUC505)
   #define TUP_DCD_ENDPOINT_MAX    12
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
 
 //------------- Espressif -------------//
 #elif TU_CHECK_MCU(OPT_MCU_ESP32S2, OPT_MCU_ESP32S3)
@@ -227,6 +224,8 @@
 //------------- Raspberry Pi -------------//
 #elif TU_CHECK_MCU(OPT_MCU_RP2040)
   #define TUP_DCD_ENDPOINT_MAX    16
+
+  #define TU_ATTR_FAST_FUNC       __attribute__((section(".time_critical.tinyusb")))
 
 //------------- Silabs -------------//
 #elif TU_CHECK_MCU(OPT_MCU_EFM32GG)
@@ -246,7 +245,7 @@
 #elif TU_CHECK_MCU(OPT_MCU_BCM2711, OPT_MCU_BCM2835, OPT_MCU_BCM2837)
   #define TUP_USBIP_DWC2
   #define TUP_DCD_ENDPOINT_MAX    8
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
 
 //------------- Broadcom -------------//
 #elif TU_CHECK_MCU(OPT_MCU_XMC4000)
@@ -256,11 +255,11 @@
 //------------- BridgeTek -------------//
 #elif TU_CHECK_MCU(OPT_MCU_FT90X)
   #define TUP_DCD_ENDPOINT_MAX    8
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
 
 #elif TU_CHECK_MCU(OPT_MCU_FT93X)
   #define TUP_DCD_ENDPOINT_MAX    16
-  #define TUP_RHPORT_HIGHSPEED    0x01
+  #define TUP_RHPORT_HIGHSPEED    1
 
 //------------ Allwinner -------------//
 #elif TU_CHECK_MCU(OPT_MCU_F1C100S)
@@ -279,7 +278,12 @@
 
 // Default to fullspeed if not defined
 #ifndef TUP_RHPORT_HIGHSPEED
-  #define TUP_RHPORT_HIGHSPEED    0x00
+  #define TUP_RHPORT_HIGHSPEED    0
+#endif
+
+// fast function, normally mean placing function in SRAM
+#ifndef TU_ATTR_FAST_FUNC
+  #define TU_ATTR_FAST_FUNC
 #endif
 
 #endif

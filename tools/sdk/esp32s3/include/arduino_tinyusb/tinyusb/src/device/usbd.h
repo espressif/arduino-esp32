@@ -43,14 +43,26 @@ bool tud_init (uint8_t rhport);
 // Check if device stack is already initialized
 bool tud_inited(void);
 
-// Task function should be called in main/rtos loop
-void tud_task (void);
+// Task function should be called in main/rtos loop, extended version of tud_task()
+// - timeout_ms: millisecond to wait, zero = no wait, 0xFFFFFFFF = wait forever
+// - in_isr: if function is called in ISR
+void tud_task_ext(uint32_t timeout_ms, bool in_isr);
 
-// Check if there is pending events need proccessing by tud_task()
+// Task function should be called in main/rtos loop
+TU_ATTR_ALWAYS_INLINE static inline
+void tud_task (void)
+{
+  tud_task_ext(UINT32_MAX, false);
+}
+
+// Check if there is pending events need processing by tud_task()
 bool tud_task_event_ready(void);
 
-// Interrupt handler, name alias to DCD
+#ifndef _TUSB_DCD_H_
 extern void dcd_int_handler(uint8_t rhport);
+#endif
+
+// Interrupt handler, name alias to DCD
 #define tud_int_handler   dcd_int_handler
 
 // Get current bus speed

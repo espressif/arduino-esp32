@@ -134,12 +134,6 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_offset4k(uint32_t value) { retur
 //------------- Mathematics -------------//
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_div_ceil(uint32_t v, uint32_t d) { return (v + d -1)/d; }
 
-/// inclusive range checking TODO remove
-TU_ATTR_ALWAYS_INLINE static inline bool tu_within(uint32_t lower, uint32_t value, uint32_t upper)
-{
-  return (lower <= value) && (value <= upper);
-}
-
 // log2 of a value is its MSB's position
 // TODO use clz TODO remove
 static inline uint8_t tu_log2(uint32_t value)
@@ -147,6 +141,16 @@ static inline uint8_t tu_log2(uint32_t value)
   uint8_t result = 0;
   while (value >>= 1) { result++; }
   return result;
+}
+
+//static inline uint8_t tu_log2(uint32_t value)
+//{
+//   return sizeof(uint32_t) * CHAR_BIT - __builtin_clz(x) - 1;
+//}
+
+static inline bool tu_is_power_of_two(uint32_t value)
+{
+   return (value != 0) && ((value & (value - 1)) == 0);
 }
 
 //------------- Unaligned Access -------------//
