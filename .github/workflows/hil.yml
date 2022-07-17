@@ -31,14 +31,14 @@ jobs:
         id: gen-chunks
         run: |
           set +e
-          bash .github/scripts/sketch_utils.sh count tests
-          sketches=$((? - 1))
-          if [[ $sketches -gt ${{env.MAX_CHUNKS}} ]]; then
+          .github/scripts/sketch_utils.sh count tests
+          sketches=$?
+          if [[ $sketches -ge ${{env.MAX_CHUNKS}} ]]; then
             $sketches=${{env.MAX_CHUNKS}}
           fi
           set -e
           rm sketches.txt
-          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $sketches`)
+          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
           echo "::set-output name=chunks::${CHUNKS}"
 
   Build:
@@ -56,14 +56,14 @@ jobs:
 
       - name: Build sketches
         run: |
-          bash .github/scripts/tests_build.sh ${{matrix.chip}} ${{matrix.chunks}} ${{env.MAX_CHUNKS}}
+          bash .github/scripts/tests_build.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
       - name: Upload ${{matrix.chip}}-${{matrix.chunks}} artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
-             tests/*/build/*.bin
-             tests/*/build/*.json
+             tests/*/build*/*.bin
+             tests/*/build*/*.json
   Test:
     needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
@@ -96,10 +96,11 @@ jobs:
          run: |
            pip install -U pip
            pip install -r tests/requirements.txt
+           apt update && apt install -y -qq jq
 
        - name: Run Tests
          run: |
-           bash .github/scripts/tests_run.sh ${{matrix.chip}} ${{matrix.chunks}} ${{env.MAX_CHUNKS}}
+           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
        - name: Upload test result artifacts
          uses: actions/upload-artifact@v2
