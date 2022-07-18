@@ -148,7 +148,7 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size)
     return filter;
 }
 
-/* unused function triggers error
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
 static int ra_filter_run(ra_filter_t *filter, int value)
 {
     if (!filter->values)
@@ -166,7 +166,7 @@ static int ra_filter_run(ra_filter_t *filter, int value)
     }
     return filter->sum / filter->count;
 }
-*/
+#endif
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
@@ -1210,67 +1210,144 @@ void startCameraServer()
         .uri = "/",
         .method = HTTP_GET,
         .handler = index_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t status_uri = {
         .uri = "/status",
         .method = HTTP_GET,
         .handler = status_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t cmd_uri = {
         .uri = "/control",
         .method = HTTP_GET,
         .handler = cmd_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t capture_uri = {
         .uri = "/capture",
         .method = HTTP_GET,
         .handler = capture_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t stream_uri = {
         .uri = "/stream",
         .method = HTTP_GET,
         .handler = stream_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t bmp_uri = {
         .uri = "/bmp",
         .method = HTTP_GET,
         .handler = bmp_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t xclk_uri = {
         .uri = "/xclk",
         .method = HTTP_GET,
         .handler = xclk_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t reg_uri = {
         .uri = "/reg",
         .method = HTTP_GET,
         .handler = reg_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t greg_uri = {
         .uri = "/greg",
         .method = HTTP_GET,
         .handler = greg_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t pll_uri = {
         .uri = "/pll",
         .method = HTTP_GET,
         .handler = pll_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     httpd_uri_t win_uri = {
         .uri = "/resolution",
         .method = HTTP_GET,
         .handler = win_handler,
-        .user_ctx = NULL};
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
 
     ra_filter_init(&ra_filter, 20);
 
