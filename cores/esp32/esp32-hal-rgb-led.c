@@ -7,9 +7,9 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   static bool initialized = false;
 
   uint8_t _pin = pin;
-#ifdef BOARD_HAS_NEOPIXEL
-  if(pin == LED_BUILTIN){
-    _pin = LED_BUILTIN-SOC_GPIO_PIN_COUNT;
+#ifdef RGB_BUILTIN
+  if(pin == RGB_BUILTIN){
+    _pin = RGB_BUILTIN-SOC_GPIO_PIN_COUNT;
   }
 #endif
 
