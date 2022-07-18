@@ -10,6 +10,29 @@
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
+// Default pins for I2S,
+#ifndef PIN_I2S_MCK
+	#define PIN_I2S_MCK 9
+#endif
+#ifndef PIN_I2S_SCK
+  #define PIN_I2S_SCK 10
+#endif
+
+#ifndef PIN_I2S_FS
+  #define PIN_I2S_FS 11
+#endif
+
+#ifndef PIN_I2S_SD
+  #define PIN_I2S_SD 12   
+#endif
+
+#ifndef PIN_I2S_SD_OUT
+  #define PIN_I2S_SD_OUT 13
+#endif
+
+#ifndef PIN_I2S_SD_IN
+  #define PIN_I2S_SD_IN 14
+#endif
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
