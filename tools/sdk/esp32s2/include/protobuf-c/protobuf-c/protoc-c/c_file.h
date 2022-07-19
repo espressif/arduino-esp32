@@ -63,6 +63,7 @@
 #ifndef GOOGLE_PROTOBUF_COMPILER_C_FILE_H__
 #define GOOGLE_PROTOBUF_COMPILER_C_FILE_H__
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <google/protobuf/stubs/common.h>
@@ -89,7 +90,7 @@ class FileGenerator {
  public:
   // See generator.cc for the meaning of dllexport_decl.
   explicit FileGenerator(const FileDescriptor* file,
-                         const string& dllexport_decl);
+                         const std::string& dllexport_decl);
   ~FileGenerator();
 
   void GenerateHeader(io::Printer* printer);
@@ -98,13 +99,10 @@ class FileGenerator {
  private:
   const FileDescriptor* file_;
 
-  scoped_array<scoped_ptr<MessageGenerator> > message_generators_;
-  scoped_array<scoped_ptr<EnumGenerator> > enum_generators_;
-  scoped_array<scoped_ptr<ServiceGenerator> > service_generators_;
-  scoped_array<scoped_ptr<ExtensionGenerator> > extension_generators_;
-
-  // E.g. if the package is foo.bar, package_parts_ is {"foo", "bar"}.
-  vector<string> package_parts_;
+  std::unique_ptr<std::unique_ptr<MessageGenerator>[]> message_generators_;
+  std::unique_ptr<std::unique_ptr<EnumGenerator>[]> enum_generators_;
+  std::unique_ptr<std::unique_ptr<ServiceGenerator>[]> service_generators_;
+  std::unique_ptr<std::unique_ptr<ExtensionGenerator>[]> extension_generators_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(FileGenerator);
 };

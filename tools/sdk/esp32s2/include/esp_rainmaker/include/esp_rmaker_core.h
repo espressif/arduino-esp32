@@ -63,6 +63,8 @@ typedef struct {
     char *fw_version;
     /** Model (Optional). If not set, PROJECT_NAME is used as default (recommended)*/
     char *model;
+    /** Subtype (Optional). */
+    char *subtype;
 } esp_rmaker_node_info_t;
 
 /** ESP RainMaker Configuration */
@@ -430,10 +432,11 @@ esp_err_t esp_rmaker_node_add_attribute(const esp_rmaker_node_t *node, const cha
  */
 esp_err_t esp_rmaker_node_add_fw_version(const esp_rmaker_node_t *node, const char *fw_version);
 
-/** Add model for a node (Not recommended)
+/** Add model for a node
  *
  * Model is set internally to the project name. This API can be used to
- * override that name.
+ * override that name, now that a new field "project" has also been added
+ * internally to the node info.
  *
  * @param node Node handle.
  * @param[in] model New model string.
@@ -442,6 +445,16 @@ esp_err_t esp_rmaker_node_add_fw_version(const esp_rmaker_node_t *node, const ch
  * @return error in case of failure.
  */
 esp_err_t esp_rmaker_node_add_model(const esp_rmaker_node_t *node, const char *model);
+
+/** Add subtype for a node
+ *
+ * @param node Node handle.
+ * @param[in] subtype Subtype string.
+ *
+ * @return ESP_OK on success.
+ * @return error in case of failure.
+ */
+esp_err_t esp_rmaker_node_add_subtype(const esp_rmaker_node_t *node, const char *subtype);
 
 /**
  * Create a Device
@@ -571,6 +584,18 @@ esp_err_t esp_rmaker_device_add_attribute(const esp_rmaker_device_t *device, con
  * @return error in case of failure.
  */
 esp_err_t esp_rmaker_device_add_subtype(const esp_rmaker_device_t *device, const char *subtype);
+
+/** Add a Device model
+ *
+ * This would primarily be used by the phone apps to render different icons for the same device type.
+ *
+ * @param[in] device Device handle.
+ * @param[in] model String describing the model.
+ *
+ * @return ESP_OK if the model was added successfully.
+ * @return error in case of failure.
+ */
+esp_err_t esp_rmaker_device_add_model(const esp_rmaker_device_t *device, const char *model);
 
 /** Get device name from handle
  *
@@ -892,6 +917,20 @@ esp_err_t esp_rmaker_system_service_enable(esp_rmaker_system_serv_config_t *conf
  */
 bool esp_rmaker_local_ctrl_service_started(void);
 
+/**
+ * Enable Default RainMaker OTA Firmware Upgrade
+ *
+ * This enables the default recommended RainMaker OTA Firmware Upgrade, which is
+ * "Using the Topics", which allows performing OTA from Dashboard.
+ * This OTA can be triggered by Admin Users only.
+ * On Public RainMaker deployment, for nodes using "Self Claiming", since there
+ * is no associated admin user, the Primary user will automatically become the admin
+ * and can perform OTA from dashboard.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_ota_enable_default(void);
 #ifdef __cplusplus
 }
 #endif

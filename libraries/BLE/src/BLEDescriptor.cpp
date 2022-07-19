@@ -32,7 +32,7 @@ BLEDescriptor::BLEDescriptor(const char* uuid, uint16_t len) : BLEDescriptor(BLE
 BLEDescriptor::BLEDescriptor(BLEUUID uuid, uint16_t max_len) {
 	m_bleUUID            = uuid;
 	m_value.attr_len     = 0;                                         // Initial length is 0.
-	m_value.attr_max_len = max_len;                     // Maximum length of the data.
+	m_value.attr_max_len = max_len;                     			  // Maximum length of the data.
 	m_handle             = NULL_HANDLE;                               // Handle is initially unknown.
 	m_pCharacteristic    = nullptr;                                   // No initial characteristic.
 	m_pCallback          = nullptr;                                   // No initial callback.
@@ -235,6 +235,10 @@ void BLEDescriptor::setValue(uint8_t* data, size_t length) {
 	}
 	m_value.attr_len = length;
 	memcpy(m_value.attr_value, data, length);
+	if (m_handle != NULL_HANDLE) {
+		esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t *)data);
+		log_d("Set the value in the GATTS database using handle 0x%x", m_handle);
+	}
 } // setValue
 
 

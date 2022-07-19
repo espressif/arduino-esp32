@@ -492,23 +492,23 @@ TU_ATTR_BIT_FIELD_ORDER_END
 //--------------------------------------------------------------------+
 
 // Get direction from Endpoint address
-static inline tusb_dir_t tu_edpt_dir(uint8_t addr)
+TU_ATTR_ALWAYS_INLINE static inline tusb_dir_t tu_edpt_dir(uint8_t addr)
 {
   return (addr & TUSB_DIR_IN_MASK) ? TUSB_DIR_IN : TUSB_DIR_OUT;
 }
 
 // Get Endpoint number from address
-static inline uint8_t tu_edpt_number(uint8_t addr)
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_edpt_number(uint8_t addr)
 {
   return (uint8_t)(addr & (~TUSB_DIR_IN_MASK));
 }
 
-static inline uint8_t tu_edpt_addr(uint8_t num, uint8_t dir)
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_edpt_addr(uint8_t num, uint8_t dir)
 {
   return (uint8_t)(num | (dir ? TUSB_DIR_IN_MASK : 0));
 }
 
-static inline uint16_t tu_edpt_packet_size(tusb_desc_endpoint_t const* desc_ep)
+TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_edpt_packet_size(tusb_desc_endpoint_t const* desc_ep)
 {
   return tu_le16toh(desc_ep->wMaxPacketSize) & TU_GENMASK(10, 0);
 }
@@ -516,18 +516,18 @@ static inline uint16_t tu_edpt_packet_size(tusb_desc_endpoint_t const* desc_ep)
 //--------------------------------------------------------------------+
 // Descriptor helper
 //--------------------------------------------------------------------+
-static inline uint8_t const * tu_desc_next(void const* desc)
+TU_ATTR_ALWAYS_INLINE static inline uint8_t const * tu_desc_next(void const* desc)
 {
   uint8_t const* desc8 = (uint8_t const*) desc;
   return desc8 + desc8[DESC_OFFSET_LEN];
 }
 
-static inline uint8_t tu_desc_type(void const* desc)
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_desc_type(void const* desc)
 {
   return ((uint8_t const*) desc)[DESC_OFFSET_TYPE];
 }
 
-static inline uint8_t tu_desc_len(void const* desc)
+TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_desc_len(void const* desc)
 {
   return ((uint8_t const*) desc)[DESC_OFFSET_LEN];
 }

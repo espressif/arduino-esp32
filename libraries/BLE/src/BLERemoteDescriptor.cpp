@@ -51,9 +51,26 @@ BLEUUID BLERemoteDescriptor::getUUID() {
 
 void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam) {
 	switch(event) {
+		// ESP_GATTC_READ_DESCR_EVT
+		// This event indicates that the server has responded to the read request.
+		//
+		// read:
+		// - esp_gatt_status_t  status
+		// - uint16_t           conn_id
+		// - uint16_t           handle
+		// - uint8_t*           value
+		// - uint16_t           value_len
 		case ESP_GATTC_READ_DESCR_EVT:
-			if (evtParam->read.handle != getHandle())
-				break;
+			// If this event is not for us, then nothing further to do.
+			if (evtParam->read.handle != getHandle()) break;
+			// At this point, we have determined that the event is for us, so now we save the value
+			if (evtParam->read.status == ESP_GATT_OK) {
+				// it will read the cached value of the descriptor
+				m_value = std::string((char*) evtParam->read.value, evtParam->read.value_len);
+			} else {
+				m_value = "";
+			}
+			// Unlock the semaphore to ensure that the requestor of the data can continue.
 			m_semaphoreReadDescrEvt.give();
 			break;
 

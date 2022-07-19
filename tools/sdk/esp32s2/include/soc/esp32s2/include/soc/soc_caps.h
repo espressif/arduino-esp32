@@ -75,6 +75,7 @@
 
 /*!< RTC */
 #define SOC_ADC_MAX_BITWIDTH                    (13)
+#define SOC_RTC_SLOW_CLOCK_SUPPORT_8MD256       (1)
 
 /*!< Calibration */
 #define SOC_ADC_CALIBRATION_V1_SUPPORTED        (1) /*!< support HW offset calibration version 1*/
@@ -127,8 +128,7 @@
 
 #define SOC_I2C_FIFO_LEN       (32) /*!< I2C hardware FIFO depth */
 
-//ESP32-S2 support hardware FSM reset
-#define SOC_I2C_SUPPORT_HW_FSM_RST  (1)
+// FSM_RST only resets the FSM, not using it. So SOC_I2C_SUPPORT_HW_FSM_RST not defined.
 //ESP32-S2 support hardware clear bus
 #define SOC_I2C_SUPPORT_HW_CLR_BUS  (1)
 
@@ -157,6 +157,8 @@
 #define SOC_LCD_I80_BUS_WIDTH      (24) /*!< Intel 8080 bus width */
 
 /*-------------------------- LEDC CAPS ---------------------------------------*/
+#define SOC_LEDC_HAS_TIMER_SPECIFIC_MUX  (1)
+#define SOC_LEDC_SUPPORT_REF_TICK    (1)
 #define SOC_LEDC_SUPPORT_XTAL_CLOCK  (1)
 #define SOC_LEDC_CHANNEL_NUM         (8)
 #define SOC_LEDC_TIMER_BIT_WIDE_NUM  (14)
@@ -330,12 +332,12 @@
 #define SOC_SPI_MEM_SUPPORT_SW_SUSPEND                    (1)
 /*-------------------------- Power Management CAPS ---------------------------*/
 #define SOC_PM_SUPPORT_EXT_WAKEUP       (1)
-
 #define SOC_PM_SUPPORT_WIFI_WAKEUP      (1)
+#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
 
+#define SOC_PM_SUPPORT_RTC_PERIPH_PD              (1)
 #define SOC_PM_SUPPORT_WIFI_PD          (1)
 
-#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
 
 /*-------------------------- COEXISTENCE HARDWARE PTI CAPS -------------------------------*/
 #define SOC_COEX_HW_PTI                 (1)
