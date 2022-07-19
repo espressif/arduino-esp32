@@ -105,11 +105,13 @@ public:
   int args();                     // get arguments count
   bool hasArg(String name);       // check if argument exists
   void collectHeaders(const char* headerKeys[], const size_t headerKeysCount); // set the request headers to collect
-  String header(String name);      // get request header value by name
-  String header(int i);              // get request header value by number
-  String headerName(int i);          // get request header name by number
-  int headers();                     // get header count
-  bool hasHeader(String name);       // check if header exists
+  String header(String name);     // get request header value by name
+  String header(int i);           // get request header value by number
+  String headerName(int i);       // get request header name by number
+  int headers();                  // get header count
+  bool hasHeader(String name);    // check if header exists
+
+  int clientContentLength() { return _clientContentLength; }      // return "content-length" of incoming HTTP header from "_currentClient"
 
   String hostHeader();            // get request host header if available or empty String if not
 
@@ -198,6 +200,7 @@ protected:
   int              _headerKeysCount;
   RequestArgument* _currentHeaders;
   size_t           _contentLength;
+  int              _clientContentLength;	// "Content-Length" from header of incoming POST or GET request
   String           _responseHeaders;
 
   String           _hostHeader;
