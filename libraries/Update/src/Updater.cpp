@@ -203,9 +203,10 @@ bool UpdateClass::_writeBuffer(){
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    bool block_erase = (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && ((_partition->address + _progress) % SPI_FLASH_BLOCK_SIZE == 0);        // if it's the block boundary, than erase the whole block from here
-    bool part_head_sectors = _partition->address % SPI_FLASH_BLOCK_SIZE && (_progress < SPI_FLASH_BLOCK_SIZE);                                // sector belong to unaligned partition heading block
-    bool part_tail_sectors =  _partition->address + _progress > (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;  // sector belong to unaligned partition tailing block
+    size_t offset = _partition->address + _progress;
+    bool block_erase = (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && (offset % SPI_FLASH_BLOCK_SIZE == 0);             // if it's the block boundary, than erase the whole block from here
+    bool part_head_sectors = _partition->address % SPI_FLASH_BLOCK_SIZE && offset < (_partition->address / SPI_FLASH_BLOCK_SIZE + 1) * SPI_FLASH_BLOCK_SIZE;    // sector belong to unaligned partition heading block
+    bool part_tail_sectors = offset >= (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;     // sector belong to unaligned partition tailing block
     if (block_erase || part_head_sectors || part_tail_sectors){
         if(!ESP.partitionEraseRange(_partition, _progress, block_erase ? SPI_FLASH_BLOCK_SIZE : SPI_FLASH_SEC_SIZE)){
             _abort(UPDATE_ERROR_ERASE);
