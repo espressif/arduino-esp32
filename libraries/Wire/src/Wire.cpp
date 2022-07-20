@@ -38,8 +38,11 @@ TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)
     ,sda(-1)
     ,scl(-1)
+    ,BufferSize(I2C_BUFFER_LENGTH) // default Wire Buffer Size
+    ,rxBuffer(NULL)
     ,rxIndex(0)
     ,rxLength(0)
+    ,txBuffer(NULL)
     ,txLength(0)
     ,txAddress(0)
     ,_timeOutMillis(50)
@@ -51,9 +54,6 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,is_slave(false)
     ,user_onRequest(NULL)
     ,user_onReceive(NULL)
-    ,txBuffer(NULL)
-    ,rxBuffer(NULL)
-    ,BufferSize(I2C_BUFFER_LENGTH) // default Wire Buffer Size
 {}
 
 TwoWire::~TwoWire()
