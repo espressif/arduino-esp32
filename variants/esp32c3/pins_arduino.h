@@ -11,8 +11,8 @@
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+8;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
-#define BOARD_HAS_NEOPIXEL
-#define LED_BRIGHTNESS 64
+#define RGB_BUILTIN LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
