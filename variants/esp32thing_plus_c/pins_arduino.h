@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
@@ -14,6 +15,10 @@
 static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
+
+static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT+2;
+#define RGB_BUILTIN RGB_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 static const uint8_t TX = 17;
 static const uint8_t RX = 16;
