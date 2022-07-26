@@ -495,7 +495,7 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	log_v("SC Found Channel");
     	arduino_event.event_id = ARDUINO_EVENT_SC_FOUND_CHANNEL;
     } else if (event_base == SC_EVENT && event_id == SC_EVENT_GOT_SSID_PSWD) {
-        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
             smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
             log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
         #endif
