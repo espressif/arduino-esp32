@@ -76,8 +76,21 @@ public:
     //call setPins() first, so that begin() can be called without arguments from libraries
     bool setPins(int sda, int scl);
     
-    bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
-    bool begin(uint8_t slaveAddr, int sda=-1, int scl=-1, uint32_t frequency=0);
+    bool begin(int sda, int scl, uint32_t frequency=0); // returns true, if successful init of i2c bus
+    bool begin(uint8_t slaveAddr, int sda, int scl, uint32_t frequency);
+    // Explicit Overload for Arduino MainStream API compatibility
+    inline bool begin()
+    {
+        return begin(-1, -1, static_cast<uint32_t>(0));
+    }
+    inline bool begin(uint8_t addr)
+    {
+        return begin(addr, -1, -1, 0);
+    }
+    inline bool begin(int addr)
+    {
+        return begin(static_cast<uint8_t>(addr), -1, -1, 0);
+    }
     bool end();
 
     void setTimeOut(uint16_t timeOutMillis); // default timeout of i2c transactions is 50ms
