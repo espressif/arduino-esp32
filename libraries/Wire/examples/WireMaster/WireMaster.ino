@@ -7,16 +7,16 @@ uint32_t i = 0;
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  Wire1.begin();
+  Wire.begin();
 }
 
 void loop() {
   delay(5000);
 
   //Write message to the slave
-  Wire1.beginTransmission(I2C_DEV_ADDR);
-  Wire1.printf("Hello World! %u", i++);
-  uint8_t error = Wire1.endTransmission(true);
+  Wire.beginTransmission(I2C_DEV_ADDR);
+  Wire.printf("Hello World! %u", i++);
+  uint8_t error = Wire.endTransmission(true);
   Serial.printf("endTransmission: %u\n", error);
   
   //Read 16 bytes from the slave
