@@ -176,42 +176,45 @@ size_t TwoWire::setBufferSize(size_t bSize)
         log_e("Minimum Wire Buffer size is 32 bytes");
         return 0;
     }
-    
+
 #if !CONFIG_DISABLE_HAL_LOCKS
-    if(lock != NULL){
+    if(lock == NULL){
+        lock = xSemaphoreCreateMutex();
+        if(lock == NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return false;
+        }
         //acquire lock
         if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
             log_e("could not acquire lock");
             return 0;
         }
+    }
 #endif
     // allocateWireBuffer allocates memory for both pointers or just free them
     if (rxBuffer != NULL || txBuffer != NULL) {
         // if begin() has been already executed, memory size changes... data may be lost. We don't care! :^)
-        if (bSize != bufferSize) {
+        if (bSize != BufferSize) {
             // we want a new buffer size ... just reset buffer pointers and allocate new ones
             freeWireBuffer();
-            bufferSize = bSize;
+            BufferSize = bSize;
             if (!allocateWireBuffer()) {
                 // failed! Error message already issued
                 bSize = 0; // returns error
+                log_e("Buffer allocation failed");
             }
         } // else nothing changes, all set!
     } else {
         // no memory allocated yet, just change the size value - allocation in begin()
-        bufferSize = bSize;
+        BufferSize = bSize;
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
-        //release lock
-        xSemaphoreGive(lock);
-    } else { // lock != NULL
-      // if lock is NULL, no begin() was executed, then just set the buffer size for future memory allocation
-      bufferSize = bSize;
-    }    
+    //release lock
+    xSemaphoreGive(lock);
+    
 #endif
     return bSize;
 }
-
 
 // Slave Begin
 bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
