@@ -194,10 +194,10 @@ size_t TwoWire::setBufferSize(size_t bSize)
     // allocateWireBuffer allocates memory for both pointers or just free them
     if (rxBuffer != NULL || txBuffer != NULL) {
         // if begin() has been already executed, memory size changes... data may be lost. We don't care! :^)
-        if (bSize != BufferSize) {
+        if (bSize != bufferSize) {
             // we want a new buffer size ... just reset buffer pointers and allocate new ones
             freeWireBuffer();
-            BufferSize = bSize;
+            bufferSize = bSize;
             if (!allocateWireBuffer()) {
                 // failed! Error message already issued
                 bSize = 0; // returns error
@@ -206,7 +206,7 @@ size_t TwoWire::setBufferSize(size_t bSize)
         } // else nothing changes, all set!
     } else {
         // no memory allocated yet, just change the size value - allocation in begin()
-        BufferSize = bSize;
+        bufferSize = bSize;
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
