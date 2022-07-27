@@ -34,7 +34,11 @@
 #endif
 #include "Stream.h"
 
+// WIRE_HAS_BUFFER_SIZE means Wire has setBufferSize()
 #define WIRE_HAS_BUFFER_SIZE    1
+// WIRE_HAS_END means Wire has end() 
+#define WIRE_HAS_END 1
+
 #ifndef I2C_BUFFER_LENGTH
     #define I2C_BUFFER_LENGTH 128  // Default size, if none is set using Wire::setBuffersize(size_t)
 #endif
