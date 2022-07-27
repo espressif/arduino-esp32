@@ -182,13 +182,13 @@ size_t TwoWire::setBufferSize(size_t bSize)
         lock = xSemaphoreCreateMutex();
         if(lock == NULL){
             log_e("xSemaphoreCreateMutex failed");
-            return false;
-        }
-        //acquire lock
-        if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-            log_e("could not acquire lock");
             return 0;
         }
+    }
+    //acquire lock
+    if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+        log_e("could not acquire lock");
+        return 0;
     }
 #endif
     // allocateWireBuffer allocates memory for both pointers or just free them
