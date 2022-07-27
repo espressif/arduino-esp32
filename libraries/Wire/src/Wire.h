@@ -52,7 +52,7 @@ protected:
     int8_t sda;
     int8_t scl;
 
-    size_t BufferSize;
+    size_t bufferSize;
     uint8_t *rxBuffer;
     size_t rxIndex;
     size_t rxLength;
