@@ -17,6 +17,7 @@ menu.LoRaWanDebugLevel=LoRaWan Debug Level
 menu.LoopCore=Arduino Runs On
 menu.EventsCore=Events Run On
 menu.MemoryType=Memory Type
+menu.Wipe=Erase Flash
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -714,6 +715,13 @@ esp32.menu.DebugLevel.debug=Debug
 esp32.menu.DebugLevel.debug.build.code_debug=4
 esp32.menu.DebugLevel.verbose=Verbose
 esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32.menu.Wipe.none=Only Sketch
+esp32.menu.Wipe.none.upload.erase_cmd=
+#esp32.menu.Wipe.sdk=Sketch + WiFi Settings
+#esp32.menu.Wipe.sdk.upload.erase_cmd=erase_region "{build.rfcal_addr}" 0x4000
+esp32.menu.Wipe.all=All Flash Contents
+esp32.menu.Wipe.all.upload.erase_cmd=erase_flash
 
 ##############################################################
 
