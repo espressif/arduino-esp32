@@ -298,6 +298,7 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     started = (err == ESP_OK);
 
 end:
+    freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
