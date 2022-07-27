@@ -38,7 +38,7 @@ TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)
     ,sda(-1)
     ,scl(-1)
-    ,BufferSize(I2C_BUFFER_LENGTH) // default Wire Buffer Size
+    ,bufferSize(I2C_BUFFER_LENGTH) // default Wire Buffer Size
     ,rxBuffer(NULL)
     ,rxIndex(0)
     ,rxLength(0)
@@ -139,14 +139,14 @@ bool TwoWire::allocateWireBuffer(void)
 {
     // or both buffer can be allocated or none will be
     if (rxBuffer == NULL) {
-            rxBuffer = (uint8_t *)malloc(BufferSize);
+            rxBuffer = (uint8_t *)malloc(bufferSize);
             if (rxBuffer == NULL) {
                 log_e("Can't allocate memory for I2C_%d rxBuffer", num);
                 return false;
             }
     }
     if (txBuffer == NULL) {
-            txBuffer = (uint8_t *)malloc(BufferSize);
+            txBuffer = (uint8_t *)malloc(bufferSize);
             if (txBuffer == NULL) {
                 log_e("Can't allocate memory for I2C_%d txBuffer", num);
                 freeWireBuffer();  // free rxBuffer for safety!
@@ -176,7 +176,7 @@ size_t TwoWire::setBufferSize(size_t bSize)
         log_e("Minimum Wire Buffer size is 32 bytes");
         return 0;
     }
-
+    
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(lock != NULL){
         //acquire lock
@@ -188,10 +188,10 @@ size_t TwoWire::setBufferSize(size_t bSize)
     // allocateWireBuffer allocates memory for both pointers or just free them
     if (rxBuffer != NULL || txBuffer != NULL) {
         // if begin() has been already executed, memory size changes... data may be lost. We don't care! :^)
-        if (bSize != BufferSize) {
+        if (bSize != bufferSize) {
             // we want a new buffer size ... just reset buffer pointers and allocate new ones
             freeWireBuffer();
-            BufferSize = bSize;
+            bufferSize = bSize;
             if (!allocateWireBuffer()) {
                 // failed! Error message already issued
                 bSize = 0; // returns error
@@ -199,12 +199,15 @@ size_t TwoWire::setBufferSize(size_t bSize)
         } // else nothing changes, all set!
     } else {
         // no memory allocated yet, just change the size value - allocation in begin()
-        BufferSize = bSize;
+        bufferSize = bSize;
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
         //release lock
         xSemaphoreGive(lock);
-    }
+    } else { // lock != NULL
+      // if lock is NULL, no begin() was executed, then just set the buffer size for future memory allocation
+      bufferSize = bSize;
+    }    
 #endif
     return bSize;
 }
@@ -245,14 +248,14 @@ bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
         goto end;
     }
     i2cSlaveAttachCallbacks(num, onRequestService, onReceiveService, this);
-    if(i2cSlaveInit(num, sda, scl, addr, frequency, BufferSize, BufferSize) != ESP_OK){
+    if(i2cSlaveInit(num, sda, scl, addr, frequency, bufferSize, bufferSize) != ESP_OK){
         log_e("Slave Init ERROR");
         goto end;
     }
     is_slave = true;
     started = true;
 end:
-    freeWireBuffer();
+    if (!started) freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
@@ -299,7 +302,7 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     started = (err == ESP_OK);
 
 end:
-    freeWireBuffer();
+    if (!started) freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
@@ -512,7 +515,7 @@ size_t TwoWire::write(uint8_t data)
         log_e("NULL TX buffer pointer");
         return 0;
     }
-    if(txLength >= BufferSize) {
+    if(txLength >= bufferSize) {
         return 0;
     }
     txBuffer[txLength++] = data;
