@@ -252,6 +252,7 @@ bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
     is_slave = true;
     started = true;
 end:
+    freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
