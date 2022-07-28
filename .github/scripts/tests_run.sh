@@ -14,6 +14,11 @@ function run_test() {
         len=1
     fi
 
+    if [ $len -eq 1 ]; then
+      build_dir="tests/$sketchname/build"
+      report_file="tests/$sketchname/$sketchname.xml"
+    fi
+
     for i in `seq 0 $(($len - 1))`
     do
         echo "Running test: $sketchname -- Config: $i"
@@ -21,7 +26,12 @@ function run_test() {
             esptool.py -c $target erase_flash
         fi
 
-        pytest tests --build-dir tests/$sketchname/build$i -k test_$sketchname --junit-xml=tests/$sketchname/$sketchname$i.xml
+        if [ $len -ne 1 ]; then
+            build_dir="tests/$sketchname/build$i"
+            report_file="tests/$sketchname/$sketchname$i.xml"
+        fi
+
+        pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file
         result=$?
         if [ $result -ne 0 ]; then
             return $result
