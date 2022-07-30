@@ -85,6 +85,7 @@ public:
     
     bool enableIpV6();
     IPv6Address localIPv6();
+    IPv6Address globalIPv6();
 
     // STA WiFi info
     static wl_status_t status();
