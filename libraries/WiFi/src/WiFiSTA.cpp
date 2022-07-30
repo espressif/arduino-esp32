@@ -749,7 +749,7 @@ IPv6Address WiFiSTAClass::localIPv6()
 }
 
 /**
-* Get the station interface local link IPv6 address.
+* Get the station interface global IPv6 address.
  * @return IPv6Address
  */
 IPv6Address WiFiSTAClass::globalIPv6()
