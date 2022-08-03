@@ -28,7 +28,7 @@ For each family, we have SoC variants with some differentiation. The differences
 The modules use the SoC internally, including the external flash, PSRAM (in some models) and other essential electronic components. Essentially, all
 modules from the same family use the same SoC.
 
-.. figure:: ../_static/soc-module.png
+.. figure:: ../../_static/soc-module.png
     :align: center
     :width: 250
     :alt: ESP32 SoC and Module (click to enlarge)
@@ -58,7 +58,7 @@ Before buying: Keep in mind that for some "must have" features when choosing the
 Espressif
 ---------
 
-.. figure:: ../_static/logo_espressif.png
+.. figure:: ../../_static/logo_espressif.png
     :align: center
     :width: 250
     :alt: Espressif Logo

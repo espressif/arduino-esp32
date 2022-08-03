@@ -21,7 +21,7 @@ Here are the steps for this tutorial.
 
 1. Open the Arduino IDE
 
-.. figure:: ../_static/tutorials/basic/tutorial_basic_ide.png
+.. figure:: ../../_static/tutorials/basic/tutorial_basic_ide.png
     :align: center
     :width: 600
     :alt: Arduino IDE (click to enlarge)

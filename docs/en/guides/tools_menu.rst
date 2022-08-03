@@ -232,7 +232,7 @@ The USB Mass Storage Class, or USB MSC, is a class used for storage devices, lik
 This option can be used to ``Enable`` or ``Disable`` this function at the boot. If this option is ``Enabled``, once the device is connected via USB, one new storage device will appear in the system as a storage drive.
 Use this new storage drive to write and read files or to drop a new firmware binary to flash the device.
 
-.. figure:: ../_static/usb_msc_drive.png
+.. figure:: ../../_static/usb_msc_drive.png
     :align: center
     :width: 720
     :figclass: align-center
