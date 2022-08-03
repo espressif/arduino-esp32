@@ -21,7 +21,7 @@
 #include "WiFi.h"
 
 #if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-#  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
+#  warning "Please configure IDF framework to include mbedTLS -> Enable PSK based ciphersuite modes (MBEDTLS_KEY_EXCHANGE_PSK) and activate at least one cipher"
 #else
 
 const char *pers = "esp32-tls";
