@@ -199,7 +199,7 @@ This function is also used to select the core that runs the Arduino events. This
 Erase Flash
 ***********
 
-This function is used to select if the flash memory should be erased before uploading the sketch.
+This option selects the flash memory region to be erased before uploading the new sketch.
 
 * **Only Sketch** - Upload the sketch without erasing all flash contents. (default)
 * **All Flash Contents** - Erase all flash contents before uploading the sketch.
