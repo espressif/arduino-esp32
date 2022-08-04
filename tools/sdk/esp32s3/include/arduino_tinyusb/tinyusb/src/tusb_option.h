@@ -223,7 +223,7 @@ typedef int make_iso_compilers_happy;
 #define TUSB_OPT_DEVICE_ENABLED CFG_TUD_ENABLED
 
 // highspeed support indicator
-#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? CFG_TUD_MAX_SPEED : TUP_RHPORT_HIGHSPEED)
+#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? (CFG_TUD_MAX_SPEED & OPT_MODE_HIGH_SPEED) : TUP_RHPORT_HIGHSPEED)
 
 //------------- Roothub as Host -------------//
 

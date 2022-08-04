@@ -247,13 +247,10 @@ CONFIG_ARDUHAL_PARTITION_SCHEME="default"
 #
 # ESP Speech Recognition
 #
+CONFIG_USE_AFE=y
+CONFIG_AFE_INTERFACE_V1=y
 # CONFIG_USE_WAKENET is not set
 # CONFIG_USE_MULTINET is not set
-
-#
-# Add speech commands
-#
-# end of Add speech commands
 # end of ESP Speech Recognition
 
 #
