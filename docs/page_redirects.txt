@@ -1,0 +1,12 @@
+# Redirects from "old URL" "new URL"
+#
+# Space delimited
+#
+# The old URL must be relative to the document root only and MUST NOT contain the file extension
+#
+# The new URL can either be an absolute URL or a relative URL
+#   - For absolute URLs, the URL must be wrapped in double quotation marks. Whatever is inside the quotation marks is
+#     used verbatim as the URL. Don't forget to add the "http://" or "https://" prefix to your absolute URL.
+#   - For relative URLs, must be relative to the document root only and MUST NOT be wrapped with any quotation marks.
+#
+# Empty lines and lines starting with # are ignored

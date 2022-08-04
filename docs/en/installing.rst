@@ -13,7 +13,7 @@ To install Arduino-ESP32 support, you can use one of the following options.
 Installing using Arduino IDE
 ----------------------------
 
-.. figure:: _static/logo_arduino.png
+.. figure:: ../_static/logo_arduino.png
    :align: center
    :width: 200
    :figclass: align-center
@@ -42,21 +42,21 @@ To start the installation process using the Boards Managaer, follow these steps:
 
 -  Start Arduino and open the Preferences window.
 
-.. figure:: _static/install_guide_preferences.png
+.. figure:: ../_static/install_guide_preferences.png
    :align: center
    :width: 600
    :figclass: align-center
 
 -  Enter one of the release links above into *Additional Board Manager URLs* field. You can add multiple URLs, separating them with commas.
 
-.. figure:: _static/install_guide_boards_manager_url.png
+.. figure:: ../_static/install_guide_boards_manager_url.png
    :align: center
    :width: 600
    :figclass: align-center
 
 -  Open Boards Manager from Tools > Board menu and install *esp32* platform (and do not forget to select your ESP32 board from Tools > Board menu after installation).
 
-.. figure:: _static/install_guide_boards_manager_esp32.png
+.. figure:: ../_static/install_guide_boards_manager_esp32.png
    :align: center
    :width: 600
    :figclass: align-center
@@ -66,7 +66,7 @@ To start the installation process using the Boards Managaer, follow these steps:
 Installing using PlatformIO
 ---------------------------
 
-.. figure:: _static/logo_pio.png
+.. figure:: ../_static/logo_pio.png
    :align: center
    :width: 200
    :figclass: align-center
@@ -164,7 +164,7 @@ Steps to install Arduino ESP32 support on Windows:
 
 - Select ``Clone Existing Repository``
 
-.. figure:: _static/win-gui-1.png
+.. figure:: ../_static/win-gui-1.png
    :align: center
    :width: 600
    :figclass: align-center
@@ -177,13 +177,13 @@ Steps to install Arduino ESP32 support on Windows:
 
 **Step 2**
 
-.. figure:: _static/win-gui-2.png
+.. figure:: ../_static/win-gui-2.png
    :align: center
    :figclass: align-center
 
 **Step 3**
 
-.. figure:: _static/win-gui-3.png
+.. figure:: ../_static/win-gui-3.png
    :align: center
    :figclass: align-center
 
@@ -192,7 +192,7 @@ Steps to install Arduino ESP32 support on Windows:
 
 **Step 4**
 
-.. figure:: _static/win-gui-4.png
+.. figure:: ../_static/win-gui-4.png
    :align: center
    :figclass: align-center
 
@@ -200,7 +200,7 @@ Steps to install Arduino ESP32 support on Windows:
 
 **Step 5**
 
-.. figure:: _static/win-gui-5.png
+.. figure:: ../_static/win-gui-5.png
    :align: center
    :figclass: align-center
 
@@ -210,7 +210,7 @@ Steps to install Arduino ESP32 support on Windows:
 4. Select the COM port that the board is attached to
 5. Compile and upload (You might need to hold the boot button while uploading)
 
-.. figure:: _static/arduino-ide.png
+.. figure:: ../_static/arduino-ide.png
    :align: center
    :figclass: align-center
 
@@ -219,27 +219,27 @@ How to update to the latest code
 
 1. Start ``Git GUI`` and you should see the repository under ``Open Recent Repository``. Click on it!
 
-.. figure:: _static/win-gui-update-1.png
+.. figure:: ../_static/win-gui-update-1.png
    :align: center
    :figclass: align-center
 
 1. From menu ``Remote`` select ``Fetch from`` > ``origin``
 
-.. figure:: _static/win-gui-update-2.png
+.. figure:: ../_static/win-gui-update-2.png
    :align: center
    :figclass: align-center
 
 1. Wait for git to pull any changes and close ``Git GUI``
 2. Open ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32/tools`` and double-click ``get.exe``
 
-.. figure:: _static/win-gui-4.png
+.. figure:: ../_static/win-gui-4.png
    :align: center
    :figclass: align-center
 
 Linux
 -----
 
-.. figure:: _static/logo_linux.png
+.. figure:: ../_static/logo_linux.png
    :align: center
    :width: 200
    :figclass: align-center
