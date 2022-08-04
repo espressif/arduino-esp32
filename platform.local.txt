@@ -1,0 +1,3 @@
+# Arduino Compile Warning Levels for the IDE -- removing -Werror=all
+compiler.warning_flags.more=-Wall
+compiler.warning_flags.all=-Wall -Wextra
