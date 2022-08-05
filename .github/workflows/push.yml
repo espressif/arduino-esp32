@@ -42,6 +42,7 @@ jobs:
           ./tools/dist
           ~/arduino_ide
         key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
+                                            'platform.txt',
                                             'tools/get.py',
                                             '.github/scripts/install-arduino-ide.sh') }}
     - name: Build Sketches
