@@ -136,7 +136,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
         sketchname=$(basename $sketchdir)
         echo "Building $sketchname with FQBN=$currfqbn"
-        $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
+        $ide_path/arduino-builder -prefs="compiler.warning_flags.all=-Wall -Werror=all -Wextra" -compile -logger=human -core-api-version=10810 \
             -fqbn=\"$currfqbn\" \
             -warnings="all" \
             -tools "$ide_path/tools-builder" \
