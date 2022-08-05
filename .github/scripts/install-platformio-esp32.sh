@@ -48,6 +48,9 @@ else
     git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
 fi
 
+echo "Copying CI restrictive warning settings from tools/platform.local.txt"
+cd "$PLATFORMIO_ESP32_PATH" && cp tools/platform.local.txt .
+    
 echo "PlatformIO for ESP32 has been installed"
 echo ""
 
