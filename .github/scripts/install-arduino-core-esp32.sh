@@ -21,14 +21,15 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     else
         echo "Cloning Core Repository..."
         git clone https://github.com/espressif/arduino-esp32.git esp32 > /dev/null 2>&1
-        echo "Copying CI restrictive warning settings from tools/platform.local.txt"
-        cp tools/platform.local.txt .
     fi
 
     #echo "Updating Submodules ..."
     cd esp32
     #git submodule update --init --recursive > /dev/null 2>&1
 
+    echo "Copying CI restrictive warning settings from tools/platform.local.txt"
+    cp tools/platform.local.txt .
+    
     echo "Installing Platform Tools ..."
     cd tools && python get.py
     cd $script_init_path
