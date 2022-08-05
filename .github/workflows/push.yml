@@ -44,6 +44,7 @@ jobs:
         key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
                                             'platform.txt',
                                             'tools/get.py',
+                                            'tools/platform.local.txt',                                            
                                             '.github/scripts/install-arduino-ide.sh') }}
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
