@@ -7,8 +7,8 @@ compiler.warning_flags.all=-Wall -Werror=all -Wextra
 #
 # Common Warning ignoring flags
 #
-#compiler.all.w_flags=-Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-error=unused-but-set-variable
-compiler.all.w_flags=
+compiler.all.w_flags=-Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-error=unused-but-set-variable
+#compiler.all.w_flags=
 
 #
 # ESP32 Support Start
