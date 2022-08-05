@@ -8,40 +8,40 @@ compiler.warning_flags.all=-Wall -Werror=all -Wextra
 #
 # Common Warning ignoring flags
 #
-#compiler.all.w_flags=-Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-error=unused-but-set-variable
-compiler.all.w_flags=
+#compiler.common.w_flags=-Wno-error=unused-function -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-error=unused-but-set-variable
+compiler.common.w_flags=
 
 #
 # ESP32 Support Start
 #
-#compiler.c.w_flags.esp32={compiler.all.w_flags} -Wno-frame-address -Wno-old-style-declaration
-#compiler.cpp.w_flags.esp32={compiler.all.w_flags} -Wno-frame-address     
-compiler.c.w_flags.esp32={compiler.all.w_flags}
-compiler.cpp.w_flags.esp32={compiler.all.w_flags}     
-compiler.S.w_flags.esp32={compiler.all.w_flags} 
+#compiler.c.w_flags.esp32={compiler.common.w_flags} -Wno-frame-address -Wno-old-style-declaration
+#compiler.cpp.w_flags.esp32={compiler.common.w_flags} -Wno-frame-address     
+compiler.c.w_flags.esp32={compiler.common.w_flags}
+compiler.cpp.w_flags.esp32={compiler.common.w_flags}     
+compiler.S.w_flags.esp32={compiler.common.w_flags} 
 
 #
 # ESP32S3 Support Start
 #
-#compiler.c.w_flags.esp32s3={compiler.all.w_flags} -Wno-old-style-declaration 
-compiler.c.w_flags.esp32s3={compiler.all.w_flags} 
-compiler.cpp.w_flags.esp32s3={compiler.all.w_flags} 
-compiler.S.w_flags.esp32s3={compiler.all.w_flags} 
+#compiler.c.w_flags.esp32s3={compiler.common.w_flags} -Wno-old-style-declaration 
+compiler.c.w_flags.esp32s3={compiler.common.w_flags} 
+compiler.cpp.w_flags.esp32s3={compiler.common.w_flags} 
+compiler.S.w_flags.esp32s3={compiler.common.w_flags} 
 
 #
 # ESP32S2 Support Start
 #
-#compiler.c.w_flags.esp32s2={compiler.all.w_flags} -Wno-old-style-declaration  
-compiler.c.w_flags.esp32s2={compiler.all.w_flags}  
-compiler.cpp.w_flags.esp32s2={compiler.all.w_flags} 
-compiler.S.w_flags.esp32s2={compiler.all.w_flags} 
+#compiler.c.w_flags.esp32s2={compiler.common.w_flags} -Wno-old-style-declaration  
+compiler.c.w_flags.esp32s2={compiler.common.w_flags}  
+compiler.cpp.w_flags.esp32s2={compiler.common.w_flags} 
+compiler.S.w_flags.esp32s2={compiler.common.w_flags} 
 
 #
 # ESP32C3 Support Start
 #
-#compiler.c.w_flags.esp32c3={compiler.all.w_flags} -Wno-format -Wno-error=format=  -Wno-old-style-declaration
-#compiler.cpp.w_flags.esp32c3={compiler.all.w_flags} -Wno-error=format= -Wno-format  
-#compiler.S.w_flags.esp32c3={compiler.all.w_flags} -Wno-error=format= -Wno-format   
-compiler.c.w_flags.esp32c3={compiler.all.w_flags}
-compiler.cpp.w_flags.esp32c3={compiler.all.w_flags}  
-compiler.S.w_flags.esp32c3={compiler.all.w_flags}   
+#compiler.c.w_flags.esp32c3={compiler.common.w_flags} -Wno-format -Wno-error=format=  -Wno-old-style-declaration
+#compiler.cpp.w_flags.esp32c3={compiler.common.w_flags} -Wno-error=format= -Wno-format  
+#compiler.S.w_flags.esp32c3={compiler.common.w_flags} -Wno-error=format= -Wno-format   
+compiler.c.w_flags.esp32c3={compiler.common.w_flags}
+compiler.cpp.w_flags.esp32c3={compiler.common.w_flags}  
+compiler.S.w_flags.esp32c3={compiler.common.w_flags}   
