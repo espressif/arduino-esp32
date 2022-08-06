@@ -4360,7 +4360,7 @@ sparkfun_esp32_iot_redboard.build.target=esp32
 sparkfun_esp32_iot_redboard.build.mcu=esp32
 sparkfun_esp32_iot_redboard.build.core=esp32
 sparkfun_esp32_iot_redboard.build.variant=sparkfun_esp32_iot_redboard
-sparkfun_esp32_iot_redboard.build.board=ESP32_DEV
+sparkfun_esp32_iot_redboard.build.board=ESP32_IOT_REDBOARD
 
 sparkfun_esp32_iot_redboard.build.f_cpu=240000000L
 sparkfun_esp32_iot_redboard.build.flash_size=4MB
