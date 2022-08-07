@@ -9,12 +9,12 @@
 #define USB_PRODUCT "Bee Motion S3"
 #define USB_SERIAL ""
 
-#define EXTERNAL_NUM_INTERRUPTS 38
+#define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        27
 #define NUM_ANALOG_INPUTS       11
 
-#define analogInputToDigitalPin(p)  (((p)<11)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<27)?(p):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
 static const uint8_t TX = 43;
