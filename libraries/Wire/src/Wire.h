@@ -34,8 +34,13 @@
 #endif
 #include "Stream.h"
 
+// WIRE_HAS_BUFFER_SIZE means Wire has setBufferSize()
+#define WIRE_HAS_BUFFER_SIZE    1
+// WIRE_HAS_END means Wire has end() 
+#define WIRE_HAS_END 1
+
 #ifndef I2C_BUFFER_LENGTH
-    #define I2C_BUFFER_LENGTH 128
+    #define I2C_BUFFER_LENGTH 128  // Default size, if none is set using Wire::setBuffersize(size_t)
 #endif
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
@@ -47,11 +52,12 @@ protected:
     int8_t sda;
     int8_t scl;
 
-    uint8_t rxBuffer[I2C_BUFFER_LENGTH];
+    size_t bufferSize;
+    uint8_t *rxBuffer;
     size_t rxIndex;
     size_t rxLength;
 
-    uint8_t txBuffer[I2C_BUFFER_LENGTH];
+    uint8_t *txBuffer;
     size_t txLength;
     uint16_t txAddress;
 
@@ -68,6 +74,8 @@ private:
     static void onRequestService(uint8_t, void *);
     static void onReceiveService(uint8_t, uint8_t*, size_t, bool, void *);
     bool initPins(int sdaPin, int sclPin);
+    bool allocateWireBuffer(void);
+    void freeWireBuffer(void);
 
 public:
     TwoWire(uint8_t bus_num);
@@ -76,9 +84,24 @@ public:
     //call setPins() first, so that begin() can be called without arguments from libraries
     bool setPins(int sda, int scl);
     
-    bool begin(int sda=-1, int scl=-1, uint32_t frequency=0); // returns true, if successful init of i2c bus
-    bool begin(uint8_t slaveAddr, int sda=-1, int scl=-1, uint32_t frequency=0);
+    bool begin(int sda, int scl, uint32_t frequency=0); // returns true, if successful init of i2c bus
+    bool begin(uint8_t slaveAddr, int sda, int scl, uint32_t frequency);
+    // Explicit Overload for Arduino MainStream API compatibility
+    inline bool begin()
+    {
+        return begin(-1, -1, static_cast<uint32_t>(0));
+    }
+    inline bool begin(uint8_t addr)
+    {
+        return begin(addr, -1, -1, 0);
+    }
+    inline bool begin(int addr)
+    {
+        return begin(static_cast<uint8_t>(addr), -1, -1, 0);
+    }
     bool end();
+
+    size_t setBufferSize(size_t bSize);
 
     void setTimeOut(uint16_t timeOutMillis); // default timeout of i2c transactions is 50ms
     uint16_t getTimeOut();

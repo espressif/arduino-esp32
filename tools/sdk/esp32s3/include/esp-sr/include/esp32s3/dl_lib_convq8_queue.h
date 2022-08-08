@@ -246,6 +246,28 @@ void dl_dilation_layerq8_mc_steps(dl_convq8_queue_t **in, dl_convq8_queue_t **ou
 
 void dl_convq8_queue_mc_bzero(dl_convq8_queue_t **cqm, int nch);
 
+
+
+dl_convq8_queue_t *dl_convq8_queue_alloc_from_psram(int n, int c);
+
+qtp_t *dl_dilation_layerq16_8(dl_convq_queue_t *in, dl_convq8_queue_t *out, int rate, int size,
+                            dl_matrix2dq_t* filter_kernel, dl_matrix2dq_t* filter_bias,
+                            dl_matrix2dq_t* gate_kernel, dl_matrix2dq_t* gate_bias, int prenum);
+
+
+qtp_t *dl_dilation_layerq8(dl_convq8_queue_t *in, dl_convq8_queue_t *out, int rate, int size,
+                            dl_matrix2dq8_t* filter_kernel, dl_matrix2dq_t* filter_bias,
+                            dl_matrix2dq8_t* gate_kernel, dl_matrix2dq_t* gate_bias, int prenum);
+
+dl_matrix2dq8_t *dl_convq8_lstm_layer(const dl_convq8_queue_t *in, dl_convq8_queue_t *out, dl_matrix2dq8_t *state_c,
+                                      dl_matrix2dq8_t *state_h, const dl_matrix2dq8_t *in_weight, const dl_matrix2dq8_t *h_weight,
+                                      const dl_matrix2dq_t *bias, int prenum);
+
+qtp_t *dl_atrous_conv1dq8_16_s3(dl_convq8_queue_t *in, dl_convq_queue_t *out, int rate, int size,
+                                 dl_matrix2dq8_t* kernel, dl_matrix2dq_t* bias, int prenum);
+
 void print_convq8(dl_convq8_queue_t *cq, int offset);
 void print_convq(dl_convq_queue_t *cq, int offset);
+
+void lstmq8_free(void);
 #endif
