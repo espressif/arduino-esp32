@@ -1,6 +1,7 @@
 /*
  * The little filesystem
  *
+ * Copyright (c) 2022, The littlefs authors.
  * Copyright (c) 2017, Arm Limited. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -22,7 +23,7 @@ extern "C"
 // Software library version
 // Major (top-nibble), incremented on backwards incompatible changes
 // Minor (bottom-nibble), incremented on feature additions
-#define LFS_VERSION 0x00020004
+#define LFS_VERSION 0x00020005
 #define LFS_VERSION_MAJOR (0xffff & (LFS_VERSION >> 16))
 #define LFS_VERSION_MINOR (0xffff & (LFS_VERSION >>  0))
 
@@ -159,49 +160,49 @@ struct lfs_config {
     // information to the block device operations
     void *context;
 
-    // Read a region in a block. Negative error codes are propogated
+    // Read a region in a block. Negative error codes are propagated
     // to the user.
     int (*read)(const struct lfs_config *c, lfs_block_t block,
             lfs_off_t off, void *buffer, lfs_size_t size);
 
     // Program a region in a block. The block must have previously
-    // been erased. Negative error codes are propogated to the user.
+    // been erased. Negative error codes are propagated to the user.
     // May return LFS_ERR_CORRUPT if the block should be considered bad.
     int (*prog)(const struct lfs_config *c, lfs_block_t block,
             lfs_off_t off, const void *buffer, lfs_size_t size);
 
     // Erase a block. A block must be erased before being programmed.
     // The state of an erased block is undefined. Negative error codes
-    // are propogated to the user.
+    // are propagated to the user.
     // May return LFS_ERR_CORRUPT if the block should be considered bad.
     int (*erase)(const struct lfs_config *c, lfs_block_t block);
 
     // Sync the state of the underlying block device. Negative error codes
-    // are propogated to the user.
+    // are propagated to the user.
     int (*sync)(const struct lfs_config *c);
 
 #ifdef LFS_THREADSAFE
     // Lock the underlying block device. Negative error codes
-    // are propogated to the user.
+    // are propagated to the user.
     int (*lock)(const struct lfs_config *c);
 
     // Unlock the underlying block device. Negative error codes
-    // are propogated to the user.
+    // are propagated to the user.
     int (*unlock)(const struct lfs_config *c);
 #endif
 
-    // Minimum size of a block read. All read operations will be a
+    // Minimum size of a block read in bytes. All read operations will be a
     // multiple of this value.
     lfs_size_t read_size;
 
-    // Minimum size of a block program. All program operations will be a
-    // multiple of this value.
+    // Minimum size of a block program in bytes. All program operations will be
+    // a multiple of this value.
     lfs_size_t prog_size;
 
-    // Size of an erasable block. This does not impact ram consumption and
-    // may be larger than the physical erase size. However, non-inlined files
-    // take up at minimum one block. Must be a multiple of the read
-    // and program sizes.
+    // Size of an erasable block in bytes. This does not impact ram consumption
+    // and may be larger than the physical erase size. However, non-inlined
+    // files take up at minimum one block. Must be a multiple of the read and
+    // program sizes.
     lfs_size_t block_size;
 
     // Number of erasable blocks on the device.
@@ -215,11 +216,11 @@ struct lfs_config {
     // Set to -1 to disable block-level wear-leveling.
     int32_t block_cycles;
 
-    // Size of block caches. Each cache buffers a portion of a block in RAM.
-    // The littlefs needs a read cache, a program cache, and one additional
+    // Size of block caches in bytes. Each cache buffers a portion of a block in
+    // RAM. The littlefs needs a read cache, a program cache, and one additional
     // cache per file. Larger caches can improve performance by storing more
-    // data and reducing the number of disk accesses. Must be a multiple of
-    // the read and program sizes, and a factor of the block size.
+    // data and reducing the number of disk accesses. Must be a multiple of the
+    // read and program sizes, and a factor of the block size.
     lfs_size_t cache_size;
 
     // Size of the lookahead buffer in bytes. A larger lookahead buffer
@@ -485,7 +486,7 @@ int lfs_stat(lfs_t *lfs, const char *path, struct lfs_info *info);
 // Returns the size of the attribute, or a negative error code on failure.
 // Note, the returned size is the size of the attribute on disk, irrespective
 // of the size of the buffer. This can be used to dynamically allocate a buffer
-// or check for existance.
+// or check for existence.
 lfs_ssize_t lfs_getattr(lfs_t *lfs, const char *path,
         uint8_t type, void *buffer, lfs_size_t size);
 
@@ -513,6 +514,7 @@ int lfs_removeattr(lfs_t *lfs, const char *path, uint8_t type);
 
 /// File operations ///
 
+#ifndef LFS_NO_MALLOC
 // Open a file
 //
 // The mode that the file is opened in is determined by the flags, which
@@ -521,6 +523,10 @@ int lfs_removeattr(lfs_t *lfs, const char *path, uint8_t type);
 // Returns a negative error code on failure.
 int lfs_file_open(lfs_t *lfs, lfs_file_t *file,
         const char *path, int flags);
+
+// if LFS_NO_MALLOC is defined, lfs_file_open() will fail with LFS_ERR_NOMEM
+// thus use lfs_file_opencfg() with config.buffer set.
+#endif
 
 // Open a file with extra configuration
 //
