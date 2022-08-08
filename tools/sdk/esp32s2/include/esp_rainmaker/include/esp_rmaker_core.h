@@ -931,6 +931,20 @@ bool esp_rmaker_local_ctrl_service_started(void);
  * @return error on failure
  */
 esp_err_t esp_rmaker_ota_enable_default(void);
+
+/*
+ * Send a command to self (TESTING only)
+ *
+ * This is to be passed as an argument to esp_rmaker_cmd_resp_test_send().
+ *
+ * @param[in] cmd The TLV encoded command data.
+ * @param[in] cmd_len Length of the command data.
+ * @param[in] priv_data Private data passed to esp_rmaker_cmd_resp_test_send().
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_test_cmd_resp(const void *cmd, size_t cmd_len, void *priv_data);
 #ifdef __cplusplus
 }
 #endif
