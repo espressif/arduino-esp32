@@ -12,13 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-#ifndef _ESP_MASE_H_
-#define _ESP_MASE_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define MASE_SAMPLE_RATE 16000        // Supports 16kHz only
 #define MASE_FRAME_SIZE 16            // Supports 16ms only
 #define MASE_MIC_DISTANCE 65          // According to physical design of mic-array
@@ -86,9 +79,3 @@ void mase_process(mase_handle_t st, int16_t *in, int16_t *dsp_out);
  *
  */
 void mase_destory(mase_handle_t st);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
