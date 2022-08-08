@@ -11,8 +11,8 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
-static const uint8_t PIN_NEOPIXEL = 5;
-static const uint8_t NEOPIXEL_POWER = 8;
+#define PIN_NEOPIXEL   5
+#define NEOPIXEL_POWER 8
 
 static const uint8_t TX = 32;
 static const uint8_t RX = 7;
