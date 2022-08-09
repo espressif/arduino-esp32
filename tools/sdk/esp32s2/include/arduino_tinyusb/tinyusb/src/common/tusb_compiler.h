@@ -131,6 +131,12 @@
   #define TU_ATTR_BIT_FIELD_ORDER_BEGIN
   #define TU_ATTR_BIT_FIELD_ORDER_END
 
+  #if __has_attribute(__fallthrough__)
+    #define TU_ATTR_FALLTHROUGH         __attribute__((fallthrough))
+  #else
+    #define TU_ATTR_FALLTHROUGH         do {} while (0)  /* fallthrough */
+  #endif
+
   // Endian conversion use well-known host to network (big endian) naming
   #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     #define TU_BYTE_ORDER TU_LITTLE_ENDIAN
@@ -156,6 +162,7 @@
   #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))
+  #define TU_ATTR_FALLTHROUGH           __attribute__((fallthrough))
 
   #define TU_ATTR_PACKED_BEGIN
   #define TU_ATTR_PACKED_END
@@ -182,6 +189,7 @@
   #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
+  #define TU_ATTR_FALLTHROUGH           __attribute__((fallthrough))
 
   #define TU_ATTR_PACKED_BEGIN
   #define TU_ATTR_PACKED_END
@@ -207,6 +215,7 @@
   #define TU_ATTR_DEPRECATED(mess)
   #define TU_ATTR_UNUSED
   #define TU_ATTR_USED
+  #define TU_ATTR_FALLTHROUGH           do {} while (0)  /* fallthrough */
 
   #define TU_ATTR_PACKED_BEGIN          _Pragma("pack")
   #define TU_ATTR_PACKED_END            _Pragma("packoption")
@@ -226,6 +235,7 @@
 #else 
   #error "Compiler attribute porting is required"
 #endif
+
 
 #if (TU_BYTE_ORDER == TU_LITTLE_ENDIAN)
 
