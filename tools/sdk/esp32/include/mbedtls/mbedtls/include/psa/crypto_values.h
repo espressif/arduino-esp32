@@ -12,6 +12,11 @@
  * designations of cryptographic algorithms, and error codes returned by
  * the library.
  *
+ * Note that many of the constants defined in this file are embedded in
+ * the persistent key store, as part of key metadata (including usage
+ * policies). As a consequence, they must not be changed (unless the storage
+ * format version changes).
+ *
  * This header file only defines preprocessor macros.
  */
 /*
@@ -39,6 +44,18 @@
  */
 
 /* PSA error codes */
+
+/* Error codes are standardized across PSA domains (framework, crypto, storage,
+ * etc.). Do not change the values in this section or even the expansions
+ * of each macro: it must be possible to `#include` both this header
+ * and some other PSA component's headers in the same C source,
+ * which will lead to duplicate definitions of the `PSA_SUCCESS` and
+ * `PSA_ERROR_xxx` macros, which is ok if and only if the macros expand
+ * to the same sequence of tokens.
+ *
+ * If you must add a new
+ * value, check with the Arm PSA framework group to pick one that other
+ * domains aren't already using. */
 
 /** The action was completed successfully. */
 #define PSA_SUCCESS ((psa_status_t)0)
@@ -316,6 +333,12 @@
  * @{
  */
 
+/* Note that key type values, including ECC family and DH group values, are
+ * embedded in the persistent key store, as part of key metadata. As a
+ * consequence, they must not be changed (unless the storage format version
+ * changes).
+ */
+
 /** An invalid key type value.
  *
  * Zero is not the encoding of any key type.
@@ -440,9 +463,9 @@
  * Camellia block cipher. */
 #define PSA_KEY_TYPE_CAMELLIA                       ((psa_key_type_t)0x2403)
 
-/** Key for the RC4 stream cipher.
+/** Key for the ARC4 stream cipher (also known as RC4 or ARCFOUR).
  *
- * Note that RC4 is weak and deprecated and should only be used in
+ * Note that ARC4 is weak and deprecated and should only be used in
  * legacy protocols. */
 #define PSA_KEY_TYPE_ARC4                           ((psa_key_type_t)0x2002)
 
@@ -672,6 +695,11 @@
     (((type) & PSA_KEY_TYPE_CATEGORY_MASK) == PSA_KEY_TYPE_CATEGORY_SYMMETRIC ? \
      1u << PSA_GET_KEY_TYPE_BLOCK_SIZE_EXPONENT(type) :                         \
      0u)
+
+/* Note that algorithm values are embedded in the persistent key store,
+ * as part of key metadata. As a consequence, they must not be changed
+ * (unless the storage format version changes).
+ */
 
 /** Vendor-defined algorithm flag.
  *
@@ -1390,7 +1418,7 @@
  * with a random per-message secret number (*k*).
  *
  * The representation of the signature as a byte string consists of
- * the concatentation of the signature values *r* and *s*. Each of
+ * the concatenation of the signature values *r* and *s*. Each of
  * *r* and *s* is encoded as an *N*-octet string, where *N* is the length
  * of the base point of the curve in octets. Each value is represented
  * in big-endian order (most significant octet first).
@@ -1928,6 +1956,11 @@
  * @{
  */
 
+/* Note that location and persistence level values are embedded in the
+ * persistent key store, as part of key metadata. As a consequence, they
+ * must not be changed (unless the storage format version changes).
+ */
+
 /** The default lifetime for volatile keys.
  *
  * A volatile key only exists as long as the identifier to it is not destroyed.
@@ -2043,6 +2076,11 @@
 
 #define PSA_KEY_LOCATION_VENDOR_FLAG            ((psa_key_location_t)0x800000)
 
+/* Note that key identifier values are embedded in the
+ * persistent key store, as part of key metadata. As a consequence, they
+ * must not be changed (unless the storage format version changes).
+ */
+
 /** The null key identifier.
  */
 #define PSA_KEY_ID_NULL                         ((psa_key_id_t)0)
@@ -2154,6 +2192,11 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
  * @{
  */
 
+/* Note that key usage flags are embedded in the
+ * persistent key store, as part of key metadata. As a consequence, they
+ * must not be changed (unless the storage format version changes).
+ */
+
 /** Whether the key may be exported.
  *
  * A public key or the public part of a key pair may always be exported
@@ -2254,6 +2297,9 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
 /** \defgroup derivation Key derivation
  * @{
  */
+
+/* Key input steps are not embedded in the persistent storage, so you can
+ * change them if needed: it's only an ABI change. */
 
 /** A secret input for key derivation.
  *
