@@ -14,11 +14,11 @@
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-static const uint8_t TXD1 14;
-static const uint8_t RXD1 13;
+static const uint8_t TXD1 = 14;
+static const uint8_t RXD1 = 13;
 
-static const uint8_t TXD2 17;
-static const uint8_t RXD2 16;
+static const uint8_t TXD2 = 17;
+static const uint8_t RXD2 = 16;
 
 static const uint8_t SDA = 32;
 static const uint8_t SCL = 33;
