@@ -1518,6 +1518,13 @@ CONFIG_PM_POWER_DOWN_TAGMEM_IN_LIGHT_SLEEP=y
 # end of Power Management
 
 #
+# ESP Ringbuf
+#
+# CONFIG_RINGBUF_PLACE_FUNCTIONS_INTO_FLASH is not set
+# CONFIG_RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH is not set
+# end of ESP Ringbuf
+
+#
 # ESP System Settings
 #
 # CONFIG_ESP_SYSTEM_PANIC_PRINT_HALT is not set

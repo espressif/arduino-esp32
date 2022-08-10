@@ -901,6 +901,13 @@ CONFIG_ESP_PHY_REDUCE_TX_POWER=y
 # end of Power Management
 
 #
+# ESP Ringbuf
+#
+# CONFIG_RINGBUF_PLACE_FUNCTIONS_INTO_FLASH is not set
+# CONFIG_RINGBUF_PLACE_ISR_FUNCTIONS_INTO_FLASH is not set
+# end of ESP Ringbuf
+
+#
 # ESP System Settings
 #
 # CONFIG_ESP_SYSTEM_PANIC_PRINT_HALT is not set
