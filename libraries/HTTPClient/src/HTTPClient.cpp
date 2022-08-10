@@ -495,7 +495,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 {
     _tcpTimeout = timeout;
     if(connected()) {
-        _client->setTimeout(timeout);
+        _client->setTimeout((timeout + 500) / 1000);
     }
 }
 
@@ -1151,7 +1151,7 @@ bool HTTPClient::connect(void)
     }
 
     // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
-    _client->setTimeout(_tcpTimeout);	
+    _client->setTimeout((_tcpTimeout + 500) / 1000);	
 
     log_d(" connected to %s:%u", _host.c_str(), _port);
 
