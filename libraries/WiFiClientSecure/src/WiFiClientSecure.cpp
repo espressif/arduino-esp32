@@ -389,14 +389,9 @@ void WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 
 int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
 {
-    return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
-}
-
-int WiFiClientSecure::setSocketOption(int level, int option, const void* value, size_t len)
-{
-    int res = setsockopt(sslclient->socket, level, option, value, len);
+    int res = setsockopt(sslclient->socket, SOL_SOCKET, option, value, len);
     if(res < 0) {
-        log_e("fail on %d, errno: %d, \"%s\"", sslclient->socket, errno, strerror(errno));
+        log_e("%X : %d", option, errno);
     }
     return res;
 }

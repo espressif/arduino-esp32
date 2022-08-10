@@ -80,7 +80,6 @@ public:
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
     int setSocketOption(int option, char* value, size_t len);
-    int setSocketOption(int level, int option, const void* value, size_t len);
 
     operator bool()
     {
