@@ -212,9 +212,7 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     } else {
         // attach ISR User Call
         __touchInit();
-        #if SOC_TOUCH_VERSION_2                 // ESP32S2, ESP32S3
         __touchChannelInit(pad);
-        #endif
         __touchInterruptHandlers[pad].fn = userFunc;
         __touchInterruptHandlers[pad].callWithArgs = callWithArgs;
         __touchInterruptHandlers[pad].arg = Args;
