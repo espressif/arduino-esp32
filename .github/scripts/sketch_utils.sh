@@ -109,18 +109,30 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         exit 1
     fi
 
+    # The directory that will hold all the artifcats (the build directory) is
+    # provided through:
+    #  1. An env variable called ARDUINO_BUILD_DIR.
+    #  2. Created at the sketch level as "build" in the case of a single
+    #     configuration test.
+    #  3. Created at the sketch level as "buildX" where X is the number
+    #     of configuration built in case of a multiconfiguration test.
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
-    if [ -z "$ARDUINO_BUILD_DIR" ]; then
-        build_dir="$sketchdir/build"
-    else
+    if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
+    elif [ $len -eq 1 ]; then
+        build_dir="$sketchdir/build"
     fi
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
     do
-        rm -rf "$build_dir$i"
-        mkdir -p "$build_dir$i"
+        if [ $len -ne 1 ]; then
+          build_dir="$sketchdir/build$i"
+        fi
+        rm -rf $build_dir
+        mkdir -p $build_dir
+
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
         sketchname=$(basename $sketchdir)
         echo "Building $sketchname with FQBN=$currfqbn"
@@ -134,7 +146,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             -hardware "$user_path/hardware" \
             -libraries "$user_path/libraries" \
             -build-cache "$ARDUINO_CACHE_DIR" \
-            -build-path "$build_dir$i" \
+            -build-path "$build_dir" \
             $xtra_opts "${sketchdir}/${sketchname}.ino"
     done
 }
