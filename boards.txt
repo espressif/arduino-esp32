@@ -17,6 +17,7 @@ menu.LoRaWanDebugLevel=LoRaWan Debug Level
 menu.LoopCore=Arduino Runs On
 menu.EventsCore=Events Run On
 menu.MemoryType=Memory Type
+menu.EraseFlash=Erase All Flash Before Sketch Upload
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -224,6 +225,11 @@ esp32s3.menu.DebugLevel.debug.build.code_debug=4
 esp32s3.menu.DebugLevel.verbose=Verbose
 esp32s3.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32s3.menu.EraseFlash.none=Disabled
+esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3.menu.EraseFlash.all=Enabled
+esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
@@ -373,6 +379,11 @@ esp32c3.menu.DebugLevel.debug=Debug
 esp32c3.menu.DebugLevel.debug.build.code_debug=4
 esp32c3.menu.DebugLevel.verbose=Verbose
 esp32c3.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32c3.menu.EraseFlash.none=Disabled
+esp32c3.menu.EraseFlash.none.upload.erase_cmd=
+esp32c3.menu.EraseFlash.all=Enabled
+esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -550,6 +561,11 @@ esp32s2.menu.DebugLevel.debug.build.code_debug=4
 esp32s2.menu.DebugLevel.verbose=Verbose
 esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32s2.menu.EraseFlash.none=Disabled
+esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+esp32s2.menu.EraseFlash.all=Enabled
+esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32.name=ESP32 Dev Module
@@ -714,6 +730,11 @@ esp32.menu.DebugLevel.debug=Debug
 esp32.menu.DebugLevel.debug.build.code_debug=4
 esp32.menu.DebugLevel.verbose=Verbose
 esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32.menu.EraseFlash.none=Disabled
+esp32.menu.EraseFlash.none.upload.erase_cmd=
+esp32.menu.EraseFlash.all=Enabled
+esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
