@@ -18,7 +18,7 @@
     },
     {
       "name": "esp32s3",
-      "fqbn": ["espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"]
+      "fqbn": ["espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app"]
     }
   ]
 }

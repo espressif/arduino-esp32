@@ -72,7 +72,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
             esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
-            esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
+            esp32s3_opts="PSRAM=enabled,USBMode=default,PartitionScheme=huge_app"
             esp32c3_opts="PartitionScheme=huge_app"
 
             # Select the common part of the FQBN based on the target.  The rest will be
