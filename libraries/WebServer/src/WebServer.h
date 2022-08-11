@@ -139,8 +139,8 @@ public:
   static String urlDecode(const String& text);
 
   template<typename T>
-  size_t streamFile(T &file, const String& contentType) {
-    _streamFileCore(file.size(), file.name(), contentType);
+  size_t streamFile(T &file, const String& contentType, const int code = 200) {
+    _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
 
@@ -160,7 +160,7 @@ protected:
   void _prepareHeader(String& response, int code, const char* content_type, size_t contentLength);
   bool _collectHeader(const char* headerName, const char* headerValue);
 
-  void _streamFileCore(const size_t fileSize, const String & fileName, const String & contentType);
+  void _streamFileCore(const size_t fileSize, const String & fileName, const String & contentType, const int code = 200);
 
   String _getRandomHexString();
   // for extracting Auth parameters

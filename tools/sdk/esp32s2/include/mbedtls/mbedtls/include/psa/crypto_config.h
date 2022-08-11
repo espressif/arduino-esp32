@@ -60,7 +60,6 @@
 #define PSA_WANT_ALG_CMAC                       1
 #define PSA_WANT_ALG_CFB                        1
 #define PSA_WANT_ALG_CHACHA20_POLY1305          1
-#define PSA_WANT_ALG_CMAC                       1
 #define PSA_WANT_ALG_CTR                        1
 #define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
 #define PSA_WANT_ALG_ECB_NO_PADDING             1
@@ -86,7 +85,9 @@
 #define PSA_WANT_ALG_STREAM_CIPHER              1
 #define PSA_WANT_ALG_TLS12_PRF                  1
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
-#define PSA_WANT_ALG_XTS                        1
+/* PBKDF2-HMAC is not yet supported via the PSA API in Mbed TLS.
+ * Note: when adding support, also adjust include/mbedtls/config_psa.h */
+//#define PSA_WANT_ALG_XTS                        1
 
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_256         1
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_384         1
@@ -94,14 +95,14 @@
 #define PSA_WANT_ECC_MONTGOMERY_255             1
 /*
  * Curve448 is not yet supported via the PSA API in Mbed TLS
- * (https://github.com/ARMmbed/mbedtls/issues/4249). Thus, do not enable it by
+ * (https://github.com/Mbed-TLS/mbedtls/issues/4249). Thus, do not enable it by
  * default.
  */
 //#define PSA_WANT_ECC_MONTGOMERY_448             1
 #define PSA_WANT_ECC_SECP_K1_192                1
 /*
  * SECP224K1 is buggy via the PSA API in Mbed TLS
- * (https://github.com/ARMmbed/mbedtls/issues/3541). Thus, do not enable it by
+ * (https://github.com/Mbed-TLS/mbedtls/issues/3541). Thus, do not enable it by
  * default.
  */
 //#define PSA_WANT_ECC_SECP_K1_224                1

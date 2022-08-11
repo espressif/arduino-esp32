@@ -81,6 +81,7 @@ static const uint8_t OUTPUT2 = 27;
 static const uint8_t SDA0 = 21;
 static const uint8_t SCL0 = 22;
 
+#define WIRE1_PIN_DEFINED 1             // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
 static const uint8_t SDA1 = 4;
 static const uint8_t SCL1 = 5;
 

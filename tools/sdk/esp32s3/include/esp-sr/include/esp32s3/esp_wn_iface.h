@@ -1,9 +1,18 @@
 #pragma once
 #include "stdint.h"
-#include "dl_lib_coefgetter_if.h"
 
 //Opaque model data container
 typedef struct model_iface_data_t model_iface_data_t;
+
+/**
+ * @brief The state of wakeup
+ */
+typedef enum
+{
+    WAKENET_NO_DETECT = 0,               // wake word is not detected
+    WAKENET_CHANNEL_VERIFIED = -1,       // output channel is verified
+    WAKENET_DETECTED = 1                 // wake word is detected
+} wakenet_state_t;
 
 //Set wake words recognition operating mode
 //The probability of being wake words is increased with increasing mode, 
@@ -25,14 +34,14 @@ typedef struct {
 /**
  * @brief Easy function type to initialze a model instance with a detection mode and specified wake word coefficient
  *
+ * @param model_name  The specified wake word model coefficient
  * @param det_mode    The wake words detection mode to trigger wake words, DET_MODE_90 or DET_MODE_95
- * @param model_coeff The specified wake word model coefficient
  * @returns Handle to the model data
  */
-typedef model_iface_data_t* (*esp_wn_iface_op_create_t)(const model_coeff_getter_t *model_coeff, det_mode_t det_mode);
+typedef model_iface_data_t* (*esp_wn_iface_op_create_t)(const void *model_name, det_mode_t det_mode);
 
 /**
- * @brief Callback function type to fetch the amount of samples that need to be passed to the detect function
+ * @brief Get the amount of samples that need to be passed to the detect function
  *
  * Every speech recognition model processes a certain number of samples at the same time. This function
  * can be used to query that amount. Note that the returned amount is in 16-bit samples, not in bytes.
@@ -43,7 +52,7 @@ typedef model_iface_data_t* (*esp_wn_iface_op_create_t)(const model_coeff_getter
 typedef int (*esp_wn_iface_op_get_samp_chunksize_t)(model_iface_data_t *model);
 
 /**
- * @brief Callback function type to fetch the channel number of samples that need to be passed to the detect function
+ * @brief Get the channel number of samples that need to be passed to the detect function
  *
  * Every speech recognition model processes a certain number of samples at the same time. This function
  * can be used to query that amount. Note that the returned amount is in 16-bit samples, not in bytes.
@@ -52,6 +61,17 @@ typedef int (*esp_wn_iface_op_get_samp_chunksize_t)(model_iface_data_t *model);
  * @return The amount of samples to feed the detect function
  */
 typedef int (*esp_wn_iface_op_get_channel_num_t)(model_iface_data_t *model);
+
+/**
+ * @brief Get the start point of wake word when one wake word is detected. 
+ * 
+ * @Warning: This function should be called when the channel index is verified. 
+ * The returned value is the number of samples from start point of wake word to detected point. 
+ * 
+ * @param model The model object to query
+ * @return The number of samples from start point to detected point (end point)
+ */
+typedef int (*esp_wn_iface_op_get_start_point_t)(model_iface_data_t *model);
 
 
 /**
@@ -110,7 +130,7 @@ typedef float (*esp_wn_iface_op_get_det_threshold_t)(model_iface_data_t *model, 
  *        get_samp_chunksize function.
  * @return The index of wake words, return 0 if no wake word is detected, else the index of the wake words.
  */
-typedef int (*esp_wn_iface_op_detect_t)(model_iface_data_t *model, int16_t *samples);
+typedef wakenet_state_t (*esp_wn_iface_op_detect_t)(model_iface_data_t *model, int16_t *samples);
 
 /**
  * @brief Get the volume gain
@@ -149,6 +169,7 @@ typedef void (*esp_wn_iface_op_destroy_t)(model_iface_data_t *model);
  */
 typedef struct {
     esp_wn_iface_op_create_t create;
+    esp_wn_iface_op_get_start_point_t get_start_point;
     esp_wn_iface_op_get_samp_chunksize_t get_samp_chunksize;
     esp_wn_iface_op_get_channel_num_t get_channel_num;
     esp_wn_iface_op_get_samp_rate_t get_samp_rate;
