@@ -211,7 +211,7 @@ pluggable_monitor.required.serial=builtin:serial-monitor
 tools.esptool_py.upload.protocol=serial
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
-tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
+tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash {upload.erase_cmd} -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
 tools.esptool_py.upload.pattern.linux=python3 "{path}/{cmd}" {upload.pattern_args}
 
