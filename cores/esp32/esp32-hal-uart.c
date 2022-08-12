@@ -238,6 +238,10 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     }
     UART_MUTEX_LOCK();
     uint32_t available =  uart_ll_get_txfifo_len(UART_LL_GET_HW(uart->num));  
+    size_t txRingBufferAvailable = 0;
+    if (ESP_OK == uart_get_tx_buffer_free_size(uart->num, &txRingBufferAvailable)) {
+        available += txRingBufferAvailable; 
+    }
     UART_MUTEX_UNLOCK();
     return available;
 }
