@@ -27,6 +27,7 @@ namespace esp_i2s {
 }
 
 // Default pins
+//I2S0
 #ifndef PIN_I2S_SCK
   #define PIN_I2S_SCK 14
 #endif
@@ -49,6 +50,29 @@ namespace esp_i2s {
 
 #ifndef PIN_I2S_SD_IN
   #define PIN_I2S_SD_IN 35 // Pin 35 is only input!
+#endif
+
+#if SOC_I2S_NUM > 1
+  // I2S1
+  #ifndef PIN_I2S1_SCK
+    #define PIN_I2S1_SCK 15
+  #endif
+
+  #ifndef PIN_I2S1_FS
+    #define PIN_I2S1_FS 16
+  #endif
+
+  #ifndef PIN_I2S1_SD
+    #define PIN_I2S1_SD 17
+  #endif
+
+  #ifndef PIN_I2S1_SD_OUT
+    #define PIN_I2S1_SD_OUT 17
+  #endif
+
+  #ifndef PIN_I2S1_SD_IN
+    #define PIN_I2S1_SD_IN 18
+  #endif
 #endif
 
 typedef enum {
@@ -133,7 +157,7 @@ private:
 
   int _createCallbackTask();
 
-  static void onDmaTransferComplete(void*);
+  static void onDmaTransferComplete(void *device_index);
   int _installDriver();
   void _uninstallDriver();
   void _setSckPin(int sckPin);
@@ -191,5 +215,8 @@ private:
 };
 
 extern I2SClass I2S;
+#if SOC_I2S_NUM > 1
+  extern I2SClass I2S1;
+#endif
 
 #endif

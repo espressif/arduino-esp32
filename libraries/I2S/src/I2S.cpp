@@ -23,11 +23,6 @@
 
 #define _I2S_EVENT_QUEUE_LENGTH 16
 #define _I2S_DMA_BUFFER_COUNT 2 // BUFFER COUNT must be between 2 and 128
-#define I2S_INTERFACES_COUNT SOC_I2S_NUM
-
-#ifndef I2S_DEVICE
-  #define I2S_DEVICE 0
-#endif
 
 #ifndef I2S_CLOCK_GENERATOR
   #define I2S_CLOCK_GENERATOR 0 // does nothing for ESP
@@ -66,14 +61,14 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
 {
   _i2s_general_mutex = xSemaphoreCreateMutex();
   if(_i2s_general_mutex == NULL){
-    log_e("I2S could not create internal mutex!");
+    log_e("(I2S#%d) I2S could not create internal mutex!", _deviceIndex);
   }
 }
 
 int I2SClass::_createCallbackTask(){
   int stack_size = 20000;
   if(_callbackTaskHandle != NULL){
-    log_e("Callback task already exists!");
+    log_e("(I2S#%d) Callback task already exists!", _deviceIndex);
     return 0; // ERR
   }
 
@@ -81,12 +76,12 @@ int I2SClass::_createCallbackTask(){
     onDmaTransferComplete,   // Function to implement the task
     "onDmaTransferComplete", // Name of the task
     stack_size,              // Stack size in words
-    NULL,                    // Task input parameter
+    (void *)_deviceIndex,    // Task input parameter
     2,                       // Priority of the task
     &_callbackTaskHandle     // Task handle.
     );
   if(_callbackTaskHandle == NULL){
-    log_e("Could not create callback task");
+    log_e("(I2S#%d) Could not create callback task", _deviceIndex);
     return 0; // ERR
   }
   return 1; // OK
@@ -94,7 +89,12 @@ int I2SClass::_createCallbackTask(){
 
 int I2SClass::_installDriver(){
   if(_driverInstalled){
-    log_e("I2S driver is already installed");
+    log_e("(I2S#%d) I2S driver is already installed", _deviceIndex);
+    return 0; // ERR
+  }
+
+  if(_deviceIndex >= SOC_I2S_NUM){
+    log_e("Max allowed I2S device number is %d but requested %d", SOC_I2S_NUM-1, _deviceIndex);
     return 0; // ERR
   }
 
@@ -109,29 +109,29 @@ int I2SClass::_installDriver(){
   if(_mode == ADC_DAC_MODE){
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
-        log_e("ERROR invalid bps for ADC/DAC. Allowed only 16, requested %d", _bitsPerSample);
+        log_e("(I2S#%d) ERROR invalid bps for ADC/DAC. Allowed only 16, requested %d", _deviceIndex, _bitsPerSample);
         return 0; // ERR
       }
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
     #else
-      log_e("This chip does not support ADC / DAC mode");
+      log_e("(I2S#%d) This chip does not support ADC / DAC mode", _deviceIndex);
       return 0; // ERR
     #endif
   }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal Philips mode
     if(_bitsPerSample != 8 && _bitsPerSample != 16 && _bitsPerSample != 24 &&  _bitsPerSample != 32){
-        log_e("Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 8 | 16 | 24 | 32", _bitsPerSample);
+        log_e("(I2S#%d) Invalid bits per sample for normal mode (requested %d)\nAllowed bps = 8 | 16 | 24 | 32", _deviceIndex, _bitsPerSample);
       return 0; // ERR
     }
     if(_bitsPerSample == 24){
-      log_w("Original Arduino library does not support 24 bits per sample.\nKeep that in mind if you should switch back to Arduino");
+      log_w("(I2S#%d) Original Arduino library does not support 24 bits per sample.\nKeep that in mind if you should switch back to Arduino", _deviceIndex);
     }
   }else if(_mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // end of Normal Philips mode; start of PDM mode
     #if (SOC_I2S_SUPPORTS_PDM_TX && SOC_I2S_SUPPORTS_PDM_RX)
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
     #else
-      log_e("This chip does not support PDM");
+      log_e("(I2S#%d) This chip does not support PDM", _deviceIndex);
       return 0; // ERR
     #endif
   } // Mode
@@ -156,21 +156,22 @@ int I2SClass::_installDriver(){
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
     // increase buffer size
     if(2*_i2s_dma_buffer_size <= 1024){
-      log_w("WARNING i2s driver install failed.\nTrying to increase I2S DMA buffer size from %d to %d\n", _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
+      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to increase I2S DMA buffer size from %d to %d\n", _deviceIndex, _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
       setBufferSize(2*_i2s_dma_buffer_size);
     }else if(_i2s_dma_buffer_size < 1024){
-      log_w("WARNING i2s driver install failed.\nTrying to decrease I2S DMA buffer size from %d to 1024\n", _i2s_dma_buffer_size);
+      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to decrease I2S DMA buffer size from %d to 1024\n", _deviceIndex, _i2s_dma_buffer_size);
       setBufferSize(1024);
     }else{ // install failed with max buffer size
-      log_e("ERROR i2s driver install failed");
+      log_e("(I2S#%d) ERROR i2s driver install failed", _deviceIndex);
       return 0; // ERR
     }
   } //try installing with increasing size
 
+// TODO add check for unit or PDM support - only unit 0 support, unit 1 cannot un in PDM
   if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_MONO_MODE){ // mono/single channel
     // Set the clock for MONO. Stereo is not supported yet.
     if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
-      log_e("Setting the I2S Clock has failed!\n");
+      log_e("(I2S#%d) Setting the I2S Clock has failed!\n", _deviceIndex);
       return 0; // ERR
     }
   } // mono channel mode
@@ -180,20 +181,20 @@ int I2SClass::_installDriver(){
     esp_i2s::i2s_set_dac_mode(esp_i2s::I2S_DAC_CHANNEL_BOTH_EN);
     esp_i2s::adc_unit_t adc_unit;
     if(!_gpioToAdcUnit((gpio_num_t)_inSdPin, &adc_unit)){
-      log_e("pin to adc unit conversion failed");
+      log_e("(I2S#%d) pin to adc unit conversion failed", _deviceIndex);
       return 0; // ERR
     }
     esp_i2s::adc_channel_t adc_channel;
     if(!_gpioToAdcChannel((gpio_num_t)_inSdPin, &adc_channel)){
-      log_e("pin to adc channel conversion failed");
+      log_e("(I2S#%d) pin to adc channel conversion failed", _deviceIndex);
       return 0; // ERR
     }
     if(ESP_OK != esp_i2s::i2s_set_adc_mode(adc_unit, (esp_i2s::adc1_channel_t)adc_channel)){
-      log_e("i2s_set_adc_mode failed");
+      log_e("(I2S#%d) i2s_set_adc_mode failed", _deviceIndex);
       return 0; // ERR
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, NULL)){
-      log_e("i2s_set_pin failed");
+      log_e("(I2S#%d) i2s_set_pin failed", _deviceIndex);
       return 0; // ERR
     }
 
@@ -211,7 +212,7 @@ int I2SClass::_installDriver(){
   if(_mode == I2S_PHILIPS_MODE || _mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // if I2S mode
     _driverInstalled = true; // IDF I2S driver must be installed before calling _applyPinSetting
     if(!_applyPinSetting()){
-      log_e("could not apply pin setting during driver install");
+      log_e("(I2S#%d) could not apply pin setting during driver install", _deviceIndex);
       _uninstallDriver();
       return 0; // ERR
     }
@@ -242,28 +243,29 @@ int I2SClass::begin(int mode, int bitsPerSample){
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
   _take_if_not_holding();
   if(_initialized){
-    log_e("ERROR: Object already initialized! Call I2S.end() to disable");
+    log_e("(I2S#%d) ERROR: Object already initialized! Call I2S.end() to disable", _deviceIndex);
     _give_if_top_call();
     return 0; // ERR
   }
   _driveClock = driveClock;
   _mode = mode;
   _sampleRate = (uint32_t)sampleRate;
+
   _bitsPerSample = bitsPerSample;
 
   // There is work in progress on this library.
   if(_bitsPerSample == 16 && _sampleRate > 16000 && driveClock){
-    log_w("This sample rate is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000");
+    log_w("(I2S#%d) This sample rate is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000", _deviceIndex);
   }
   if(_bitsPerSample != 16){
-    log_w("This bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000");
+    log_w("(I2S#%d) This bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000", _deviceIndex);
   }
   if(_mode != I2S_PHILIPS_MODE){
-    log_w("This mode is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE");
+    log_w("(I2S#%d) This mode is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE", _deviceIndex);
   }
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
-    log_e("Error: unexpected _state (%d)", _state);
+    log_e("(I2S#%d) Error: unexpected _state (%d)", _deviceIndex, _state);
     _give_if_top_call();
     return 0; // ERR
   }
@@ -282,13 +284,12 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       break;
 
     default: // invalid mode
-      log_e("ERROR: unknown mode");
+      log_e("(I2S#%d) ERROR: unknown mode", _deviceIndex);
       _give_if_top_call();
       return 0; // ERR
   }
-
   if(!_installDriver()){
-    log_e("ERROR: failed to install driver");
+    log_e("(I2S#%d) ERROR: failed to install driver", _deviceIndex);
     end();
     _give_if_top_call();
     return 0; // ERR
@@ -298,13 +299,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
-    log_e("ERROR: could not create one or both internal buffers. Requested size = %d\n", _buffer_byte_size);
+    log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d\n", _deviceIndex, _buffer_byte_size);
     _give_if_top_call();
     return 0; // ERR
   }
 
   if(!_createCallbackTask()){
-    log_e("ERROR: failed to create callback task");
+    log_e("(I2S#%d) ERROR: failed to create callback task", _deviceIndex);
     end();
     _give_if_top_call();
     return 0; // ERR
@@ -338,7 +339,7 @@ int I2SClass::_applyPinSetting(){
       }
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
-      log_e("i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d", pin_config.bck_io_num, pin_config.ws_io_num, pin_config.data_in_num, pin_config.data_out_num);
+      log_e("(I2S#%d) i2s_set_pin failed; attempted settings: SCK=%d; FS=%d; DIN=%d; DOUT=%d", _deviceIndex, pin_config.bck_io_num, pin_config.ws_io_num, pin_config.data_in_num, pin_config.data_out_num);
       return 0; // ERR
     }else{
       return 1; // OK
@@ -543,7 +544,7 @@ void I2SClass::end(){
     }
     _initialized = false;
   }else{
-    log_w("WARNING: ending I2SClass from callback task not permitted, but attempted!");
+    log_w("(I2S#%d) WARNING: ending I2SClass from callback task not permitted, but attempted!", _deviceIndex);
   }
   _give_if_top_call();
 }
@@ -621,7 +622,7 @@ int I2SClass::read(void* buffer, size_t size){
         _give_if_top_call();
         return item_size;
       }else{
-        log_w("input buffer is empty - timed out");
+        log_w("(I2S#%d) input buffer is empty - timed out", _deviceIndex);
         _give_if_top_call();
         return 0; // 0 Bytes read / ERR
       } // tmp buffer not NULL ?
@@ -689,14 +690,14 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
         _give_if_top_call();
         return size;
       }else{
-        log_e("xRingbufferSend() with infinite wait returned with error");
+        log_e("(I2S#%d) xRingbufferSend() with infinite wait returned with error", _deviceIndex);
         _give_if_top_call();
         return 0;
       } // ring buffer send ok ?
     } // ring buffer not NULL ?
   } // if(_initialized)
   return 0;
-  log_w("I2S not initialized");
+  log_w("(I2S#%d) I2S not initialized", _deviceIndex);
   _give_if_top_call();
   return 0;
 }
@@ -721,7 +722,7 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
         _give_if_top_call();
         return size;
       }else{
-        log_w("I2S could not write all data into ring buffer!");
+        log_w("(I2S#%d) I2S could not write all data into ring buffer!", _deviceIndex);
         _give_if_top_call();
         return 0;
       }
@@ -805,7 +806,7 @@ int I2SClass::setBufferSize(int bufferSize){
   if(bufferSize >= 8 && bufferSize <= 1024){
     _i2s_dma_buffer_size = bufferSize;
   }else{
-    log_e("setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", bufferSize);
+    log_e("(I2S#%d) setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", _deviceIndex, bufferSize);
     _give_if_top_call();
     return 0; // ERR
   } // check requested buffer size
@@ -896,14 +897,14 @@ void I2SClass::_rx_done_routine(){
     if(avail > 0){
       esp_err_t ret = esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
       if(ret != ESP_OK){
-        log_w("i2s_read returned with error %d", ret);
+        log_w("(I2S#%d) i2s_read returned with error %d", _deviceIndex, ret);
       }
       _post_read_data_fix(_inputBuffer, &bytes_read);
     }
 
     if(bytes_read > 0){ // when read more than 0, then send to ring buffer
       if(pdTRUE != xRingbufferSend(_input_ring_buffer, _inputBuffer, bytes_read, 0)){
-        log_w("I2S failed to send item from DMA to internal buffer\n");
+        log_w("(I2S#%d) I2S failed to send item from DMA to internal buffer\n", _deviceIndex);
       } // xRingbufferSendComplete
     } // if(bytes_read > 0)
     free(_inputBuffer);
@@ -917,18 +918,33 @@ void I2SClass::_onTransferComplete(){
   uint8_t prev_item[_i2s_dma_buffer_size*4];
   esp_i2s::i2s_event_t i2s_event;
 
-  while(true){
-    xQueueReceive(_i2sEventQueue, &i2s_event, portMAX_DELAY);
-    if(i2s_event.type == esp_i2s::I2S_EVENT_TX_DONE){
-      _tx_done_routine(prev_item);
-    }else if(i2s_event.type == esp_i2s::I2S_EVENT_RX_DONE){
-      _rx_done_routine();
-    } // RX Done
-  } // infinite loop
+  if(_i2sEventQueue == NULL){
+    log_e("(I2S#%d) Event Queue is NULL!", _deviceIndex);
+  }else{
+    while(true){
+      xQueueReceive(_i2sEventQueue, &i2s_event, portMAX_DELAY);
+      if(i2s_event.type == esp_i2s::I2S_EVENT_TX_DONE){
+        _tx_done_routine(prev_item);
+      }else if(i2s_event.type == esp_i2s::I2S_EVENT_RX_DONE){
+        _rx_done_routine();
+      } // RX Done
+    } // infinite loop
+  } // _i2sEventQueue NULL check
 }
 
-void I2SClass::onDmaTransferComplete(void*){
-  I2S._onTransferComplete();
+void I2SClass::onDmaTransferComplete(void *deviceIndex){
+  uint8_t *index;
+  index = (uint8_t*) deviceIndex;
+  if(*index == 0){
+    I2S._onTransferComplete();
+  }
+#if SOC_I2S_NUM > 1
+  if(*index == 1){
+    I2S1._onTransferComplete();
+  }
+#endif
+  log_w("(I2S#%d) Deleting callback task from inside!", _deviceIndex);
+  vTaskDelete(NULL);
 }
 
 void I2SClass::_take_if_not_holding(){
@@ -940,7 +956,7 @@ void I2SClass::_take_if_not_holding(){
 
   // we are not holding the mutex - wait for it and take it
   if(xSemaphoreTake(_i2s_general_mutex, portMAX_DELAY) != pdTRUE ){
-    log_e("I2S internal mutex take returned with error");
+    log_e("(I2S#%d) I2S internal mutex take returned with error", _deviceIndex);
   }
   //_give_if_top_call(); // call after this function
 }
@@ -950,7 +966,7 @@ void I2SClass::_give_if_top_call(){
     --_nesting_counter;
   }else{
     if(xSemaphoreGive(_i2s_general_mutex) != pdTRUE){
-      log_e("I2S internal mutex give error");
+      log_e("(I2S#%d) I2S internal mutex give error", _deviceIndex);
     }
   }
 }
@@ -996,7 +1012,7 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
       buff_size = size *2;
       buff = (uint8_t*)calloc(buff_size, sizeof(uint8_t));
       if(buff == NULL){
-        log_e("callock error");
+        log_e("(I2S#%d) callock error", _deviceIndex);
         if(bytes_written != NULL){ *bytes_written = 0; }
         return;
       }
@@ -1008,7 +1024,7 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
     case 16:
       buff = (uint8_t*)malloc(buff_size);
       if(buff == NULL){
-        log_e("malloc error");
+        log_e("(I2S#%d) malloc error", _deviceIndex);
         if(bytes_written != NULL){ *bytes_written = 0; }
         return;
       }
@@ -1029,10 +1045,10 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
   size_t _bytes_written;
   esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0); // fixed
   if(ret != ESP_OK){
-    log_e("Error: writing data to i2s - function returned with err code %d", ret);
+    log_e("(I2S#%d) Error: writing data to i2s - function returned with err code %d", _deviceIndex, ret);
   }
   if(ret == ESP_OK && buff_size != _bytes_written){
-    log_w("Warning: writing data to i2s - written %d B instead of requested %d B", _bytes_written, buff_size);
+    log_w("(I2S#%d) Warning: writing data to i2s - written %d B instead of requested %d B", _deviceIndex, _bytes_written, buff_size);
   }
   // free if the buffer was actually allocated
   if(_bitsPerSample == 8 || _bitsPerSample == 16){
@@ -1065,7 +1081,7 @@ int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit)
 
     // ADC 2
     case GPIO_NUM_0:
-      log_w("GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.");
+      log_w("(I2S#%d) GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.", _deviceIndex);
     case GPIO_NUM_4:
     case GPIO_NUM_2:
     case GPIO_NUM_15:
@@ -1122,7 +1138,7 @@ int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit)
       return 1; // OK
 #endif
     default:
-      log_e("GPIO %d not usable for ADC!", gpio_num);
+      log_e("(I2S#%d) GPIO %d not usable for ADC!", _deviceIndex, gpio_num);
       log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
       return 0; // ERR
   }
@@ -1143,7 +1159,7 @@ int I2SClass::_gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc
 
     // ADC 2
     case GPIO_NUM_0:
-      log_w("GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.");
+      log_w("(I2S#%d) GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.", _deviceIndex);
       *adc_channel =  esp_i2s::ADC_CHANNEL_1; return 1; // OK
     case GPIO_NUM_4:  *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
     case GPIO_NUM_2:  *adc_channel =  esp_i2s::ADC_CHANNEL_2; return 1; // OK
@@ -1191,18 +1207,17 @@ int I2SClass::_gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc
     case GPIO_NUM_5: *adc_channel =  esp_i2s::ADC_CHANNEL_0; return 1; // OK
 #endif
     default:
-      log_e("GPIO %d not usable for ADC!", gpio_num);
+      log_e("(I2S#%d) GPIO %d not usable for ADC!", _deviceIndex, gpio_num);
       log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
       return 0; // ERR
   }
 }
 #endif // SOC_I2S_SUPPORTS_ADC_DAC
 
-#if I2S_INTERFACES_COUNT > 0
-  I2SClass I2S(I2S_DEVICE, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
+#if SOC_I2S_NUM > 0
+  I2SClass I2S(0, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
 #endif
 
-#if I2S_INTERFACES_COUNT > 1
-  // TODO set default pins for second module
-  //I2SClass I2S1(I2S_DEVICE+1, I2S_CLOCK_GENERATOR, PIN_I2S_SD, PIN_I2S_SCK, PIN_I2S_FS); // default - half duplex
+#if SOC_I2S_NUM > 1
+  I2SClass I2S1(1, I2S_CLOCK_GENERATOR, PIN_I2S1_SD, PIN_I2S1_SCK, PIN_I2S1_FS); // default - half duplex
 #endif
