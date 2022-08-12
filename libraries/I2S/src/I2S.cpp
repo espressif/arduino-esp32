@@ -76,7 +76,7 @@ int I2SClass::_createCallbackTask(){
     onDmaTransferComplete,   // Function to implement the task
     "onDmaTransferComplete", // Name of the task
     stack_size,              // Stack size in words
-    (void *)_deviceIndex,    // Task input parameter
+    (void *)&_deviceIndex,    // Task input parameter
     2,                       // Priority of the task
     &_callbackTaskHandle     // Task handle.
     );
@@ -167,7 +167,6 @@ int I2SClass::_installDriver(){
     }
   } //try installing with increasing size
 
-// TODO add check for unit or PDM support - only unit 0 support, unit 1 cannot un in PDM
   if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_MONO_MODE){ // mono/single channel
     // Set the clock for MONO. Stereo is not supported yet.
     if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
@@ -576,6 +575,9 @@ int I2SClass::read(){
     if (_bitsPerSample == 32) {
       _give_if_top_call();
       return sample.b32;
+    } else if (_bitsPerSample == 24) {
+      _give_if_top_call();
+      return sample.b32;
     } else if (_bitsPerSample == 16) {
       _give_if_top_call();
       return sample.b16;
@@ -758,6 +760,7 @@ int I2SClass::peek(){
   return ret;
 }
 
+// TODO flush everything instead of one buffer
 void I2SClass::flush(){
   _take_if_not_holding();
   if(_initialized){
@@ -765,6 +768,7 @@ void I2SClass::flush(){
     size_t item_size = 0;
     void *item = NULL;
     if(_output_ring_buffer != NULL){
+      // TODO while available data to fill entire DMA buff - keep flushing
       item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, 0, single_dma_buf);
       if (item != NULL){
         _fix_and_write(item, item_size);
@@ -943,7 +947,7 @@ void I2SClass::onDmaTransferComplete(void *deviceIndex){
     I2S1._onTransferComplete();
   }
 #endif
-  log_w("(I2S#%d) Deleting callback task from inside!", _deviceIndex);
+  log_w("(I2S#%d) Deleting callback task from inside!", index);
   vTaskDelete(NULL);
 }
 
@@ -1007,6 +1011,7 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
   ulong src_ptr = 0;
   uint8_t* buff = NULL;
   size_t buff_size = size;
+  uint32_t offset = 1; // 24bit specific
   switch(_bitsPerSample){
     case 8:
       buff_size = size *2;
@@ -1034,7 +1039,14 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
       }
     break;
     case 24:
-      buff = (uint8_t*)output;
+      buff_size = (size/3)*4; // Increase by 1/3
+      buff = (uint8_t*)calloc(buff_size, sizeof(uint8_t));
+      for(int i = 0; i < size/3; i+=3){
+        // LSB in buffer's 4-Byte Word is 0 to compensate IDF driver behavior
+        buff[i+offset] = ((uint8_t*)output)[i];
+        buff[i+offset+1] = ((uint8_t*)output)[i+1];
+        buff[i+offset+2] = ((uint8_t*)output)[i+2];
+        ++offset;
       break;
     case 32:
       buff = (uint8_t*)output;
