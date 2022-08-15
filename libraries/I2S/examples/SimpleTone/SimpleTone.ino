@@ -29,13 +29,13 @@
 
 #include <I2S.h>
 const int frequency = 440; // frequency of square wave in Hz
-const int amplitude = 500; // amplitude of square wave
 const int sampleRate = 8000; // sample rate in Hz
 const int bps = 16;
+const int amplitude = ((1<<bps)-1)-1; // amplitude of square wave
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 
-short sample = amplitude; // current sample value
+int32_t sample = amplitude; // current sample value
 int count = 0;
 
 i2s_mode_t mode = I2S_PHILIPS_MODE; // I2S decoder is needed
