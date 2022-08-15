@@ -9978,6 +9978,11 @@ m5stack-station.menu.DebugLevel.debug.build.code_debug=4
 m5stack-station.menu.DebugLevel.verbose=Verbose
 m5stack-station.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stack-station.menu.EraseFlash.none=Disabled
+m5stack-station.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-station.menu.EraseFlash.all=Enabled
+m5stack-station.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stick-c.name=M5Stick-C
