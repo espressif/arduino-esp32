@@ -30,10 +30,10 @@
     {
       "name": "esp32s3",
       "fqbn": [
-        "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
-        "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio120",
-        "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=dio",
-        "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=opi"
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio120",
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=opi"
       ]
     }
   ]
