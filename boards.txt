@@ -4511,10 +4511,10 @@ sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug.build.code_debug=4
 sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose=Verbose
 sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose.build.code_debug=5
 
-sparkfun_lora_gateway_1.menu.EraseFlash.none=Disabled
-sparkfun_lora_gateway_1.menu.EraseFlash.none.upload.erase_cmd=
-sparkfun_lora_gateway_1.menu.EraseFlash.all=Enabled
-sparkfun_lora_gateway_1.menu.EraseFlash.all.upload.erase_cmd=-e
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.none=Disabled
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.none.upload.erase_cmd=
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.all=Enabled
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
