@@ -9925,8 +9925,8 @@ m5stack-station.upload.tool=esptool_py
 m5stack-station.upload.tool.default=esptool_py
 m5stack-station.upload.tool.network=esp_ota
 
-m5stack-core2.upload.maximum_size=6553600
-m5stack-core2.upload.maximum_data_size=4521984
+m5stack-station.upload.maximum_size=6553600
+m5stack-station.upload.maximum_data_size=4521984
 m5stack-station.upload.flags=
 m5stack-station.upload.extra_flags=
 
