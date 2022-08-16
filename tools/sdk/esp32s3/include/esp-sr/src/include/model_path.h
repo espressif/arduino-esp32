@@ -77,3 +77,18 @@ void srmodel_spiffs_deinit(srmodel_list_t *models);
  * @return the base path od srmodel spiffs
  */
 char *get_model_base_path(void);
+
+
+#ifdef ESP_PLATFORM
+#include "dl_lib_coefgetter_if.h"
+/**
+ * @brief Return model_coeff_getter_t pointer base on model_name
+ *
+ * @warning Just support ESP32 to load old wakenet
+ * 
+ * @param model_name    The model name
+ *
+ * @return model_coeff_getter_t pointer or NULL
+ */
+model_coeff_getter_t* srmodel_get_model_coeff(char *model_name);
+#endif

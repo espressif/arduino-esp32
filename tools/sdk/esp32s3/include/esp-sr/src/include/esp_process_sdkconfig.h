@@ -20,4 +20,4 @@ void check_chip_config(void);
  *     - ESP_OK                  Success
  *     - ESP_ERR_INVALID_STATE   Fail
  */
-esp_err_t esp_mn_commands_update_from_sdkconfig(esp_mn_iface_t *multinet, const model_iface_data_t *model_data);
+esp_mn_error_t* esp_mn_commands_update_from_sdkconfig(esp_mn_iface_t *multinet, const model_iface_data_t *model_data);
