@@ -1551,8 +1551,6 @@ void HTTPClient::setCookie(String date, String headerValue)
     String value;
     int pos1, pos2;
 
-    headerValue.toLowerCase();
-
     struct tm tm;
     strptime(date.c_str(), HTTP_TIME_PATTERN, &tm);
     cookie.date = mktime(&tm);
