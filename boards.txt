@@ -151,7 +151,7 @@ esp32s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 esp32s3.menu.PartitionScheme.default.build.partitions=default
 esp32s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -174,10 +174,10 @@ esp32s3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s3.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s3.menu.PartitionScheme.rainmaker=RainMaker
@@ -279,7 +279,7 @@ esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 esp32c3.menu.PartitionScheme.default.build.partitions=default
 esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32c3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -302,10 +302,10 @@ esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32c3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32c3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32c3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32c3.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32c3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32c3.menu.PartitionScheme.rainmaker=RainMaker
@@ -458,7 +458,7 @@ esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 esp32s2.menu.PartitionScheme.default.build.partitions=default
 esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -481,10 +481,10 @@ esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s2.menu.PartitionScheme.rainmaker=RainMaker
@@ -614,7 +614,7 @@ esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIF
 esp32.menu.PartitionScheme.default.build.partitions=default
 esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -637,10 +637,10 @@ esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32.menu.PartitionScheme.rainmaker=RainMaker
@@ -777,7 +777,7 @@ esp32da.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 esp32da.menu.PartitionScheme.default.build.partitions=default
 esp32da.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32da.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32da.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32da.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32da.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32da.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32da.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -800,10 +800,10 @@ esp32da.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32da.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32da.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32da.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32da.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32da.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32da.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32da.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32da.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32da.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32da.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32da.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32da.menu.PartitionScheme.rainmaker=RainMaker
@@ -891,6 +891,11 @@ esp32da.menu.DebugLevel.debug.build.code_debug=4
 esp32da.menu.DebugLevel.verbose=Verbose
 esp32da.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32da.menu.EraseFlash.none=Disabled
+esp32da.menu.EraseFlash.none.upload.erase_cmd=
+esp32da.menu.EraseFlash.all=Enabled
+esp32da.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32wrover.name=ESP32 Wrover Module
@@ -931,7 +936,7 @@ esp32wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5M
 esp32wrover.menu.PartitionScheme.default.build.partitions=default
 esp32wrover.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32wrover.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32wrover.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32wrover.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32wrover.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32wrover.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wrover.menu.PartitionScheme.minimal.build.partitions=minimal
@@ -953,7 +958,7 @@ esp32wrover.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32wrover.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32wrover.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32wrover.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32wrover.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32wrover.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32wrover.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 esp32wrover.menu.FlashMode.qio=QIO
@@ -1001,6 +1006,11 @@ esp32wrover.menu.DebugLevel.debug=Debug
 esp32wrover.menu.DebugLevel.debug.build.code_debug=4
 esp32wrover.menu.DebugLevel.verbose=Verbose
 esp32wrover.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32wrover.menu.EraseFlash.none=Disabled
+esp32wrover.menu.EraseFlash.none.upload.erase_cmd=
+esp32wrover.menu.EraseFlash.all=Enabled
+esp32wrover.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1074,6 +1084,11 @@ pico32.menu.DebugLevel.debug.build.code_debug=4
 pico32.menu.DebugLevel.verbose=Verbose
 pico32.menu.DebugLevel.verbose.build.code_debug=5
 
+pico32.menu.EraseFlash.none=Disabled
+pico32.menu.EraseFlash.none.upload.erase_cmd=
+pico32.menu.EraseFlash.all=Enabled
+pico32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32s3box.name=ESP32-S3-Box
@@ -1144,7 +1159,7 @@ esp32s3box.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB
 esp32s3box.menu.PartitionScheme.default.build.partitions=default
 esp32s3box.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s3box.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s3box.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s3box.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s3box.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s3box.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3box.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -1165,10 +1180,10 @@ esp32s3box.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3box.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3box.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3box.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3box.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s3box.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s3box.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s3box.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -1184,6 +1199,11 @@ esp32s3box.menu.DebugLevel.debug=Debug
 esp32s3box.menu.DebugLevel.debug.build.code_debug=4
 esp32s3box.menu.DebugLevel.verbose=Verbose
 esp32s3box.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3box.menu.EraseFlash.none=Disabled
+esp32s3box.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3box.menu.EraseFlash.all=Enabled
+esp32s3box.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1250,7 +1270,7 @@ esp32s3usbotg.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.
 esp32s3usbotg.menu.PartitionScheme.default.build.partitions=default
 esp32s3usbotg.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s3usbotg.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s3usbotg.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s3usbotg.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s3usbotg.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s3usbotg.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3usbotg.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -1271,10 +1291,10 @@ esp32s3usbotg.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3usbotg.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3usbotg.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3usbotg.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3usbotg.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s3usbotg.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s3usbotg.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s3usbotg.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -1290,6 +1310,11 @@ esp32s3usbotg.menu.DebugLevel.debug=Debug
 esp32s3usbotg.menu.DebugLevel.debug.build.code_debug=4
 esp32s3usbotg.menu.DebugLevel.verbose=Verbose
 esp32s3usbotg.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3usbotg.menu.EraseFlash.none=Disabled
+esp32s3usbotg.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3usbotg.menu.EraseFlash.all=Enabled
+esp32s3usbotg.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1351,7 +1376,7 @@ esp32s3camlcd.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.
 esp32s3camlcd.menu.PartitionScheme.default.build.partitions=default
 esp32s3camlcd.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s3camlcd.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s3camlcd.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s3camlcd.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s3camlcd.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s3camlcd.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3camlcd.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -1374,10 +1399,10 @@ esp32s3camlcd.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3camlcd.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3camlcd.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3camlcd.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3camlcd.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s3camlcd.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s3camlcd.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s3camlcd.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -1408,6 +1433,11 @@ esp32s3camlcd.menu.DebugLevel.debug=Debug
 esp32s3camlcd.menu.DebugLevel.debug.build.code_debug=4
 esp32s3camlcd.menu.DebugLevel.verbose=Verbose
 esp32s3camlcd.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3camlcd.menu.EraseFlash.none=Disabled
+esp32s3camlcd.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3camlcd.menu.EraseFlash.all=Enabled
+esp32s3camlcd.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1469,7 +1499,7 @@ esp32s2usb.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB
 esp32s2usb.menu.PartitionScheme.default.build.partitions=default
 esp32s2usb.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s2usb.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s2usb.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32s2usb.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32s2usb.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s2usb.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s2usb.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -1492,10 +1522,10 @@ esp32s2usb.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s2usb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s2usb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s2usb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s2usb.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32s2usb.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s2usb.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s2usb.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s2usb.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32s2usb.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s2usb.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s2usb.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -1511,6 +1541,11 @@ esp32s2usb.menu.DebugLevel.debug=Debug
 esp32s2usb.menu.DebugLevel.debug.build.code_debug=4
 esp32s2usb.menu.DebugLevel.verbose=Verbose
 esp32s2usb.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s2usb.menu.EraseFlash.none=Disabled
+esp32s2usb.menu.EraseFlash.none.upload.erase_cmd=
+esp32s2usb.menu.EraseFlash.all=Enabled
+esp32s2usb.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1575,7 +1610,7 @@ esp32wroverkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1
 esp32wroverkit.menu.PartitionScheme.default.build.partitions=default
 esp32wroverkit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32wroverkit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32wroverkit.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32wroverkit.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32wroverkit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.minimal.build.partitions=minimal
@@ -1597,7 +1632,7 @@ esp32wroverkit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32wroverkit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32wroverkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32wroverkit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32wroverkit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32wroverkit.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32wroverkit.menu.FlashMode.qio=QIO
 esp32wroverkit.menu.FlashMode.qio.build.flash_mode=dio
@@ -1641,6 +1676,11 @@ esp32wroverkit.menu.DebugLevel.debug=Debug
 esp32wroverkit.menu.DebugLevel.debug.build.code_debug=4
 esp32wroverkit.menu.DebugLevel.verbose=Verbose
 esp32wroverkit.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32wroverkit.menu.EraseFlash.none=Disabled
+esp32wroverkit.menu.EraseFlash.none.upload.erase_cmd=
+esp32wroverkit.menu.EraseFlash.all=Enabled
+esp32wroverkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -1733,6 +1773,11 @@ tinypico.menu.DebugLevel.debug.build.code_debug=4
 tinypico.menu.DebugLevel.verbose=Verbose
 tinypico.menu.DebugLevel.verbose.build.code_debug=5
 
+tinypico.menu.EraseFlash.none=Disabled
+tinypico.menu.EraseFlash.none.upload.erase_cmd=
+tinypico.menu.EraseFlash.all=Enabled
+tinypico.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 feathers2.name=UM FeatherS2
@@ -1795,17 +1840,17 @@ feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 feathers2.menu.PSRAM.disabled=Disabled
 feathers2.menu.PSRAM.disabled.build.defines=
 
-feathers2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+feathers2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 feathers2.menu.PartitionScheme.fatflash.build.partitions=ffat
 feathers2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-feathers2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+feathers2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 feathers2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 feathers2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 feathers2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 feathers2.menu.PartitionScheme.default.build.partitions=default
 feathers2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 feathers2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-feathers2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+feathers2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 feathers2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 feathers2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 feathers2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -1878,6 +1923,11 @@ feathers2.menu.DebugLevel.debug=Debug
 feathers2.menu.DebugLevel.debug.build.code_debug=4
 feathers2.menu.DebugLevel.verbose=Verbose
 feathers2.menu.DebugLevel.verbose.build.code_debug=5
+
+feathers2.menu.EraseFlash.none=Disabled
+feathers2.menu.EraseFlash.none.upload.erase_cmd=
+feathers2.menu.EraseFlash.all=Enabled
+feathers2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -2011,6 +2061,11 @@ feathers2neo.menu.DebugLevel.debug.build.code_debug=4
 feathers2neo.menu.DebugLevel.verbose=Verbose
 feathers2neo.menu.DebugLevel.verbose.build.code_debug=5
 
+feathers2neo.menu.EraseFlash.none=Disabled
+feathers2neo.menu.EraseFlash.none.upload.erase_cmd=
+feathers2neo.menu.EraseFlash.all=Enabled
+feathers2neo.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 tinys2.name=UM TinyS2
@@ -2143,6 +2198,11 @@ tinys2.menu.DebugLevel.debug.build.code_debug=4
 tinys2.menu.DebugLevel.verbose=Verbose
 tinys2.menu.DebugLevel.verbose.build.code_debug=5
 
+tinys2.menu.EraseFlash.none=Disabled
+tinys2.menu.EraseFlash.none.upload.erase_cmd=
+tinys2.menu.EraseFlash.all=Enabled
+tinys2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 rmp.name=UM RMP
 rmp.vid.0=0x303a
@@ -2267,6 +2327,11 @@ rmp.menu.DebugLevel.debug=Debug
 rmp.menu.DebugLevel.debug.build.code_debug=4
 rmp.menu.DebugLevel.verbose=Verbose
 rmp.menu.DebugLevel.verbose.build.code_debug=5
+
+rmp.menu.EraseFlash.none=Disabled
+rmp.menu.EraseFlash.none.upload.erase_cmd=
+rmp.menu.EraseFlash.all=Enabled
+rmp.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 tinys3.name=UM TinyS3
@@ -2413,6 +2478,11 @@ tinys3.menu.DebugLevel.debug=Debug
 tinys3.menu.DebugLevel.debug.build.code_debug=4
 tinys3.menu.DebugLevel.verbose=Verbose
 tinys3.menu.DebugLevel.verbose.build.code_debug=5
+
+tinys3.menu.EraseFlash.none=Disabled
+tinys3.menu.EraseFlash.none.upload.erase_cmd=
+tinys3.menu.EraseFlash.all=Enabled
+tinys3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -2570,6 +2640,11 @@ pros3.menu.DebugLevel.debug.build.code_debug=4
 pros3.menu.DebugLevel.verbose=Verbose
 pros3.menu.DebugLevel.verbose.build.code_debug=5
 
+pros3.menu.EraseFlash.none=Disabled
+pros3.menu.EraseFlash.none.upload.erase_cmd=
+pros3.menu.EraseFlash.all=Enabled
+pros3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 feathers3.name=UM FeatherS3
@@ -2726,6 +2801,11 @@ feathers3.menu.DebugLevel.debug.build.code_debug=4
 feathers3.menu.DebugLevel.verbose=Verbose
 feathers3.menu.DebugLevel.verbose.build.code_debug=5
 
+feathers3.menu.EraseFlash.none=Disabled
+feathers3.menu.EraseFlash.none.upload.erase_cmd=
+feathers3.menu.EraseFlash.all=Enabled
+feathers3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 S_ODI_Ultra.name=S.ODI Ultra v1
@@ -2792,6 +2872,11 @@ S_ODI_Ultra.menu.DebugLevel.info.build.code_debug=3
 S_ODI_Ultra.menu.DebugLevel.debug=Debug
 S_ODI_Ultra.menu.DebugLevel.debug.build.code_debug=4
 
+S_ODI_Ultra.menu.EraseFlash.none=Disabled
+S_ODI_Ultra.menu.EraseFlash.none.upload.erase_cmd=
+S_ODI_Ultra.menu.EraseFlash.all=Enabled
+S_ODI_Ultra.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 micros2.name=microS2
@@ -2854,17 +2939,17 @@ micros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 micros2.menu.PSRAM.disabled=Disabled
 micros2.menu.PSRAM.disabled.build.defines=
 
-micros2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+micros2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 micros2.menu.PartitionScheme.fatflash.build.partitions=ffat
 micros2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-micros2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+micros2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 micros2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 micros2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 micros2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 micros2.menu.PartitionScheme.default.build.partitions=default
 micros2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 micros2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-micros2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+micros2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 micros2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 micros2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 micros2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -2938,6 +3023,11 @@ micros2.menu.DebugLevel.debug.build.code_debug=4
 micros2.menu.DebugLevel.verbose=Verbose
 micros2.menu.DebugLevel.verbose.build.code_debug=5
 
+micros2.menu.EraseFlash.none=Disabled
+micros2.menu.EraseFlash.none.upload.erase_cmd=
+micros2.menu.EraseFlash.all=Enabled
+micros2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 magicbit.name=MagicBit
@@ -2998,6 +3088,11 @@ magicbit.menu.DebugLevel.debug.build.code_debug=4
 magicbit.menu.DebugLevel.verbose=Verbose
 magicbit.menu.DebugLevel.verbose.build.code_debug=5
 
+magicbit.menu.EraseFlash.none=Disabled
+magicbit.menu.EraseFlash.none.upload.erase_cmd=
+magicbit.menu.EraseFlash.all=Enabled
+magicbit.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 turta_iot_node.name=Turta IoT Node
@@ -3050,6 +3145,11 @@ turta_iot_node.menu.DebugLevel.debug=Debug
 turta_iot_node.menu.DebugLevel.debug.build.code_debug=4
 turta_iot_node.menu.DebugLevel.verbose=Verbose
 turta_iot_node.menu.DebugLevel.verbose.build.code_debug=5
+
+turta_iot_node.menu.EraseFlash.none=Disabled
+turta_iot_node.menu.EraseFlash.none.upload.erase_cmd=
+turta_iot_node.menu.EraseFlash.all=Enabled
+turta_iot_node.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -3127,6 +3227,11 @@ ttgo-lora32.menu.DebugLevel.debug=Debug
 ttgo-lora32.menu.DebugLevel.debug.build.code_debug=4
 ttgo-lora32.menu.DebugLevel.verbose=Verbose
 ttgo-lora32.menu.DebugLevel.verbose.build.code_debug=5
+
+ttgo-lora32.menu.EraseFlash.none=Disabled
+ttgo-lora32.menu.EraseFlash.none.upload.erase_cmd=
+ttgo-lora32.menu.EraseFlash.all=Enabled
+ttgo-lora32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -3260,6 +3365,11 @@ ttgo-t1.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t1.menu.DebugLevel.verbose=Verbose
 ttgo-t1.menu.DebugLevel.verbose.build.code_debug=5
 
+ttgo-t1.menu.EraseFlash.none=Disabled
+ttgo-t1.menu.EraseFlash.none.upload.erase_cmd=
+ttgo-t1.menu.EraseFlash.all=Enabled
+ttgo-t1.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 ttgo-t7-v13-mini32.name=TTGO T7 V1.3 Mini32
@@ -3386,6 +3496,11 @@ ttgo-t7-v13-mini32.menu.DebugLevel.debug=Debug
 ttgo-t7-v13-mini32.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t7-v13-mini32.menu.DebugLevel.verbose=Verbose
 ttgo-t7-v13-mini32.menu.DebugLevel.verbose.build.code_debug=5
+
+ttgo-t7-v13-mini32.menu.EraseFlash.none=Disabled
+ttgo-t7-v13-mini32.menu.EraseFlash.none.upload.erase_cmd=
+ttgo-t7-v13-mini32.menu.EraseFlash.all=Enabled
+ttgo-t7-v13-mini32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -3514,6 +3629,11 @@ ttgo-t7-v14-mini32.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t7-v14-mini32.menu.DebugLevel.verbose=Verbose
 ttgo-t7-v14-mini32.menu.DebugLevel.verbose.build.code_debug=5
 
+ttgo-t7-v14-mini32.menu.EraseFlash.none=Disabled
+ttgo-t7-v14-mini32.menu.EraseFlash.none.upload.erase_cmd=
+ttgo-t7-v14-mini32.menu.EraseFlash.all=Enabled
+ttgo-t7-v14-mini32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 ttgo-t-oi-plus.name=TTGO T-OI PLUS RISC-V ESP32-C3
@@ -3635,6 +3755,11 @@ ttgo-t-oi-plus.menu.DebugLevel.debug.build.code_debug=4
 ttgo-t-oi-plus.menu.DebugLevel.verbose=Verbose
 ttgo-t-oi-plus.menu.DebugLevel.verbose.build.code_debug=5
 
+ttgo-t-oi-plus.menu.EraseFlash.none=Disabled
+ttgo-t-oi-plus.menu.EraseFlash.none.upload.erase_cmd=
+ttgo-t-oi-plus.menu.EraseFlash.all=Enabled
+ttgo-t-oi-plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 cw02.name=XinaBox CW02
@@ -3721,6 +3846,11 @@ cw02.menu.DebugLevel.debug.build.code_debug=4
 cw02.menu.DebugLevel.verbose=Verbose
 cw02.menu.DebugLevel.verbose.build.code_debug=5
 
+cw02.menu.EraseFlash.none=Disabled
+cw02.menu.EraseFlash.none.upload.erase_cmd=
+cw02.menu.EraseFlash.all=Enabled
+cw02.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32thing.name=SparkFun ESP32 Thing
@@ -3797,6 +3927,11 @@ esp32thing.menu.DebugLevel.debug.build.code_debug=4
 esp32thing.menu.DebugLevel.verbose=Verbose
 esp32thing.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32thing.menu.EraseFlash.none=Disabled
+esp32thing.menu.EraseFlash.none.upload.erase_cmd=
+esp32thing.menu.EraseFlash.all=Enabled
+esp32thing.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32thing_plus.name=SparkFun ESP32 Thing Plus
@@ -3871,6 +4006,11 @@ esp32thing_plus.menu.DebugLevel.debug=Debug
 esp32thing_plus.menu.DebugLevel.debug.build.code_debug=4
 esp32thing_plus.menu.DebugLevel.verbose=Verbose
 esp32thing_plus.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32thing_plus.menu.EraseFlash.none=Disabled
+esp32thing_plus.menu.EraseFlash.none.upload.erase_cmd=
+esp32thing_plus.menu.EraseFlash.all=Enabled
+esp32thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -3947,6 +4087,11 @@ esp32thing_plus_c.menu.DebugLevel.debug.build.code_debug=4
 esp32thing_plus_c.menu.DebugLevel.verbose=Verbose
 esp32thing_plus_c.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32thing_plus_c.menu.EraseFlash.none=Disabled
+esp32thing_plus_c.menu.EraseFlash.none.upload.erase_cmd=
+esp32thing_plus_c.menu.EraseFlash.all=Enabled
+esp32thing_plus_c.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 sparkfun_esp32s2_thing_plus.name=SparkFun ESP32-S2 Thing Plus
@@ -4013,7 +4158,7 @@ sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default=Default 4MB with spiffs
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default.build.partitions=default
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -4036,10 +4181,10 @@ sparkfun_esp32s2_thing_plus.menu.PartitionScheme.huge_app.upload.maximum_size=31
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-sparkfun_esp32s2_thing_plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+sparkfun_esp32s2_thing_plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.fatflash.build.partitions=ffat
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-sparkfun_esp32s2_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+sparkfun_esp32s2_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -4113,6 +4258,11 @@ sparkfun_esp32s2_thing_plus.menu.DebugLevel.debug.build.code_debug=4
 sparkfun_esp32s2_thing_plus.menu.DebugLevel.verbose=Verbose
 sparkfun_esp32s2_thing_plus.menu.DebugLevel.verbose.build.code_debug=5
 
+sparkfun_esp32s2_thing_plus.menu.EraseFlash.none=Disabled
+sparkfun_esp32s2_thing_plus.menu.EraseFlash.none.upload.erase_cmd=
+sparkfun_esp32s2_thing_plus.menu.EraseFlash.all=Enabled
+sparkfun_esp32s2_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32micromod.name=SparkFun ESP32 MicroMod
@@ -4158,7 +4308,7 @@ esp32micromod.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.
 esp32micromod.menu.PartitionScheme.default.build.partitions=default
 esp32micromod.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32micromod.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32micromod.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+esp32micromod.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32micromod.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32micromod.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32micromod.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -4181,10 +4331,10 @@ esp32micromod.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32micromod.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32micromod.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32micromod.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32micromod.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+esp32micromod.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32micromod.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32micromod.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32micromod.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+esp32micromod.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32micromod.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32micromod.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -4261,6 +4411,11 @@ esp32micromod.menu.DebugLevel.debug=Debug
 esp32micromod.menu.DebugLevel.debug.build.code_debug=4
 esp32micromod.menu.DebugLevel.verbose=Verbose
 esp32micromod.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32micromod.menu.EraseFlash.none=Disabled
+esp32micromod.menu.EraseFlash.none.upload.erase_cmd=
+esp32micromod.menu.EraseFlash.all=Enabled
+esp32micromod.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -4356,6 +4511,11 @@ sparkfun_lora_gateway_1-channel.menu.DebugLevel.debug.build.code_debug=4
 sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose=Verbose
 sparkfun_lora_gateway_1-channel.menu.DebugLevel.verbose.build.code_debug=5
 
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.none=Disabled
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.none.upload.erase_cmd=
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.all=Enabled
+sparkfun_lora_gateway_1-channel.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 sparkfun_esp32_iot_redboard.name=SparkFun ESP32 IoT RedBoard
@@ -4404,7 +4564,7 @@ sparkfun_esp32_iot_redboard.menu.PartitionScheme.default=Default 4MB with spiffs
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.default.build.partitions=default
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-sparkfun_esp32_iot_redboard.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+sparkfun_esp32_iot_redboard.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -4427,10 +4587,10 @@ sparkfun_esp32_iot_redboard.menu.PartitionScheme.huge_app.upload.maximum_size=31
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-sparkfun_esp32_iot_redboard.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+sparkfun_esp32_iot_redboard.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.fatflash.build.partitions=ffat
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-sparkfun_esp32_iot_redboard.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+sparkfun_esp32_iot_redboard.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.rainmaker=RainMaker
@@ -4521,6 +4681,11 @@ sparkfun_esp32_iot_redboard.menu.DebugLevel.debug.build.code_debug=4
 sparkfun_esp32_iot_redboard.menu.DebugLevel.verbose=Verbose
 sparkfun_esp32_iot_redboard.menu.DebugLevel.verbose.build.code_debug=5
 
+sparkfun_esp32_iot_redboard.menu.EraseFlash.none=Disabled
+sparkfun_esp32_iot_redboard.menu.EraseFlash.none.upload.erase_cmd=
+sparkfun_esp32_iot_redboard.menu.EraseFlash.all=Enabled
+sparkfun_esp32_iot_redboard.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 nina_w10.name=u-blox NINA-W10 series (ESP32)
@@ -4594,7 +4759,7 @@ nina_w10.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB S
 nina_w10.menu.PartitionScheme.default.build.partitions=default
 nina_w10.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 nina_w10.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-nina_w10.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+nina_w10.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 nina_w10.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 nina_w10.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 nina_w10.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
@@ -4658,6 +4823,11 @@ nina_w10.menu.DebugLevel.debug=Debug
 nina_w10.menu.DebugLevel.debug.build.code_debug=4
 nina_w10.menu.DebugLevel.verbose=Verbose
 nina_w10.menu.DebugLevel.verbose.build.code_debug=5
+
+nina_w10.menu.EraseFlash.none=Disabled
+nina_w10.menu.EraseFlash.none.upload.erase_cmd=
+nina_w10.menu.EraseFlash.all=Enabled
+nina_w10.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -4726,6 +4896,11 @@ widora-air.menu.DebugLevel.debug.build.code_debug=4
 widora-air.menu.DebugLevel.verbose=Verbose
 widora-air.menu.DebugLevel.verbose.build.code_debug=5
 
+widora-air.menu.EraseFlash.none=Disabled
+widora-air.menu.EraseFlash.none.upload.erase_cmd=
+widora-air.menu.EraseFlash.all=Enabled
+widora-air.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp320.name=Electronic SweetPeas - ESP320
@@ -4793,6 +4968,11 @@ esp320.menu.DebugLevel.debug.build.code_debug=4
 esp320.menu.DebugLevel.verbose=Verbose
 esp320.menu.DebugLevel.verbose.build.code_debug=5
 
+esp320.menu.EraseFlash.none=Disabled
+esp320.menu.EraseFlash.none.upload.erase_cmd=
+esp320.menu.EraseFlash.all=Enabled
+esp320.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 nano32.name=Nano32
@@ -4859,6 +5039,11 @@ nano32.menu.DebugLevel.debug=Debug
 nano32.menu.DebugLevel.debug.build.code_debug=4
 nano32.menu.DebugLevel.verbose=Verbose
 nano32.menu.DebugLevel.verbose.build.code_debug=5
+
+nano32.menu.EraseFlash.none=Disabled
+nano32.menu.EraseFlash.none.upload.erase_cmd=
+nano32.menu.EraseFlash.all=Enabled
+nano32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -4938,6 +5123,11 @@ d32.menu.DebugLevel.debug=Debug
 d32.menu.DebugLevel.debug.build.code_debug=4
 d32.menu.DebugLevel.verbose=Verbose
 d32.menu.DebugLevel.verbose.build.code_debug=5
+
+d32.menu.EraseFlash.none=Disabled
+d32.menu.EraseFlash.none.upload.erase_cmd=
+d32.menu.EraseFlash.all=Enabled
+d32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5026,6 +5216,11 @@ d32_pro.menu.DebugLevel.debug=Debug
 d32_pro.menu.DebugLevel.debug.build.code_debug=4
 d32_pro.menu.DebugLevel.verbose=Verbose
 d32_pro.menu.DebugLevel.verbose.build.code_debug=5
+
+d32_pro.menu.EraseFlash.none=Disabled
+d32_pro.menu.EraseFlash.none.upload.erase_cmd=
+d32_pro.menu.EraseFlash.all=Enabled
+d32_pro.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5139,6 +5334,11 @@ lolin_c3_mini.menu.DebugLevel.debug.build.code_debug=4
 lolin_c3_mini.menu.DebugLevel.verbose=Verbose
 lolin_c3_mini.menu.DebugLevel.verbose.build.code_debug=5
 
+lolin_c3_mini.menu.EraseFlash.none=Disabled
+lolin_c3_mini.menu.EraseFlash.none.upload.erase_cmd=
+lolin_c3_mini.menu.EraseFlash.all=Enabled
+lolin_c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 lolin_s2_mini.name=LOLIN S2 Mini
@@ -5232,6 +5432,11 @@ lolin_s2_mini.menu.DebugLevel.debug.build.code_debug=4
 lolin_s2_mini.menu.DebugLevel.verbose=Verbose
 lolin_s2_mini.menu.DebugLevel.verbose.build.code_debug=5
 
+lolin_s2_mini.menu.EraseFlash.none=Disabled
+lolin_s2_mini.menu.EraseFlash.none.upload.erase_cmd=
+lolin_s2_mini.menu.EraseFlash.all=Enabled
+lolin_s2_mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 lolin_s2_pico.name=LOLIN S2 PICO
@@ -5324,6 +5529,11 @@ lolin_s2_pico.menu.DebugLevel.debug=Debug
 lolin_s2_pico.menu.DebugLevel.debug.build.code_debug=4
 lolin_s2_pico.menu.DebugLevel.verbose=Verbose
 lolin_s2_pico.menu.DebugLevel.verbose.build.code_debug=5
+
+lolin_s2_pico.menu.EraseFlash.none=Disabled
+lolin_s2_pico.menu.EraseFlash.none.upload.erase_cmd=
+lolin_s2_pico.menu.EraseFlash.all=Enabled
+lolin_s2_pico.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5421,10 +5631,10 @@ lolin_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 lolin_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 lolin_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-lolin_s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+lolin_s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 lolin_s3.menu.PartitionScheme.fatflash.build.partitions=ffat
 lolin_s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-lolin_s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+lolin_s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 lolin_s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 lolin_s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 lolin_s3.menu.PartitionScheme.rainmaker=RainMaker
@@ -5471,6 +5681,11 @@ lolin_s3.menu.DebugLevel.debug=Debug
 lolin_s3.menu.DebugLevel.debug.build.code_debug=4
 lolin_s3.menu.DebugLevel.verbose=Verbose
 lolin_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+lolin_s3.menu.EraseFlash.none=Disabled
+lolin_s3.menu.EraseFlash.none.upload.erase_cmd=
+lolin_s3.menu.EraseFlash.all=Enabled
+lolin_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5564,6 +5779,11 @@ lolin32.menu.DebugLevel.debug=Debug
 lolin32.menu.DebugLevel.debug.build.code_debug=4
 lolin32.menu.DebugLevel.verbose=Verbose
 lolin32.menu.DebugLevel.verbose.build.code_debug=5
+
+lolin32.menu.EraseFlash.none=Disabled
+lolin32.menu.EraseFlash.none.upload.erase_cmd=
+lolin32.menu.EraseFlash.all=Enabled
+lolin32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5659,6 +5879,11 @@ lolin32-lite.menu.DebugLevel.debug.build.code_debug=4
 lolin32-lite.menu.DebugLevel.verbose=Verbose
 lolin32-lite.menu.DebugLevel.verbose.build.code_debug=5
 
+lolin32-lite.menu.EraseFlash.none=Disabled
+lolin32-lite.menu.EraseFlash.none.upload.erase_cmd=
+lolin32-lite.menu.EraseFlash.all=Enabled
+lolin32-lite.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 pocket_32.name=Dongsen Tech Pocket 32
@@ -5726,6 +5951,11 @@ pocket_32.menu.DebugLevel.debug.build.code_debug=4
 pocket_32.menu.DebugLevel.verbose=Verbose
 pocket_32.menu.DebugLevel.verbose.build.code_debug=5
 
+pocket_32.menu.EraseFlash.none=Disabled
+pocket_32.menu.EraseFlash.none.upload.erase_cmd=
+pocket_32.menu.EraseFlash.all=Enabled
+pocket_32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 WeMosBat.name=WeMos WiFi&Bluetooth Battery
@@ -5764,7 +5994,7 @@ WeMosBat.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB S
 WeMosBat.menu.PartitionScheme.default.build.partitions=default
 WeMosBat.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 WeMosBat.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-WeMosBat.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+WeMosBat.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 WeMosBat.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 WeMosBat.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 WeMosBat.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -5787,10 +6017,10 @@ WeMosBat.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 WeMosBat.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 WeMosBat.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 WeMosBat.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-WeMosBat.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+WeMosBat.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 WeMosBat.menu.PartitionScheme.fatflash.build.partitions=ffat
 WeMosBat.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-WeMosBat.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+WeMosBat.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 WeMosBat.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 WeMosBat.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 WeMosBat.menu.PartitionScheme.rainmaker=RainMaker
@@ -5829,6 +6059,11 @@ WeMosBat.menu.DebugLevel.debug=Debug
 WeMosBat.menu.DebugLevel.debug.build.code_debug=4
 WeMosBat.menu.DebugLevel.verbose=Verbose
 WeMosBat.menu.DebugLevel.verbose.build.code_debug=5
+
+WeMosBat.menu.EraseFlash.none=Disabled
+WeMosBat.menu.EraseFlash.none.upload.erase_cmd=
+WeMosBat.menu.EraseFlash.all=Enabled
+WeMosBat.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5897,6 +6132,11 @@ espea32.menu.DebugLevel.debug.build.code_debug=4
 espea32.menu.DebugLevel.verbose=Verbose
 espea32.menu.DebugLevel.verbose.build.code_debug=5
 
+espea32.menu.EraseFlash.none=Disabled
+espea32.menu.EraseFlash.none.upload.erase_cmd=
+espea32.menu.EraseFlash.all=Enabled
+espea32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 quantum.name=Noduino Quantum
@@ -5963,6 +6203,11 @@ quantum.menu.DebugLevel.debug=Debug
 quantum.menu.DebugLevel.debug.build.code_debug=4
 quantum.menu.DebugLevel.verbose=Verbose
 quantum.menu.DebugLevel.verbose.build.code_debug=5
+
+quantum.menu.EraseFlash.none=Disabled
+quantum.menu.EraseFlash.none.upload.erase_cmd=
+quantum.menu.EraseFlash.all=Enabled
+quantum.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -6040,6 +6285,11 @@ node32s.menu.DebugLevel.debug.build.code_debug=4
 node32s.menu.DebugLevel.verbose=Verbose
 node32s.menu.DebugLevel.verbose.build.code_debug=5
 
+node32s.menu.EraseFlash.none=Disabled
+node32s.menu.EraseFlash.none.upload.erase_cmd=
+node32s.menu.EraseFlash.all=Enabled
+node32s.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 hornbill32dev.name=Hornbill ESP32 Dev
@@ -6107,6 +6357,11 @@ hornbill32dev.menu.DebugLevel.debug.build.code_debug=4
 hornbill32dev.menu.DebugLevel.verbose=Verbose
 hornbill32dev.menu.DebugLevel.verbose.build.code_debug=5
 
+hornbill32dev.menu.EraseFlash.none=Disabled
+hornbill32dev.menu.EraseFlash.none.upload.erase_cmd=
+hornbill32dev.menu.EraseFlash.all=Enabled
+hornbill32dev.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 hornbill32minima.name=Hornbill ESP32 Minima
@@ -6173,6 +6428,11 @@ hornbill32minima.menu.DebugLevel.debug.build.code_debug=4
 hornbill32minima.menu.DebugLevel.verbose=Verbose
 hornbill32minima.menu.DebugLevel.verbose.build.code_debug=5
 
+hornbill32minima.menu.EraseFlash.none=Disabled
+hornbill32minima.menu.EraseFlash.none.upload.erase_cmd=
+hornbill32minima.menu.EraseFlash.all=Enabled
+hornbill32minima.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 dfrobot_beetle_esp32c3.name=DFRobot Beetle ESP32-C3
 #dfrobot_beetle_esp32c3.vid.0=0x3343
@@ -6224,7 +6484,7 @@ dfrobot_beetle_esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2
 dfrobot_beetle_esp32c3.menu.PartitionScheme.default.build.partitions=default
 dfrobot_beetle_esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 dfrobot_beetle_esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -6247,10 +6507,10 @@ dfrobot_beetle_esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash.build.partitions=ffat
 dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 dfrobot_beetle_esp32c3.menu.PartitionScheme.rainmaker=RainMaker
@@ -6316,6 +6576,11 @@ dfrobot_beetle_esp32c3.menu.DebugLevel.debug=Debug
 dfrobot_beetle_esp32c3.menu.DebugLevel.debug.build.code_debug=4
 dfrobot_beetle_esp32c3.menu.DebugLevel.verbose=Verbose
 dfrobot_beetle_esp32c3.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_beetle_esp32c3.menu.EraseFlash.none=Disabled
+dfrobot_beetle_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_beetle_esp32c3.menu.EraseFlash.all=Enabled
+dfrobot_beetle_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -6455,7 +6720,7 @@ dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default=Default 4MB with spiffs
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default.build.partitions=default
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -6478,10 +6743,10 @@ dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.huge_app.upload.maximum_size=31
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.fatflash.build.partitions=ffat
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 dfrobot_firebeetle2_esp32s3.menu.PartitionScheme.rainmaker=RainMaker
@@ -6528,6 +6793,11 @@ dfrobot_firebeetle2_esp32s3.menu.DebugLevel.debug=Debug
 dfrobot_firebeetle2_esp32s3.menu.DebugLevel.debug.build.code_debug=4
 dfrobot_firebeetle2_esp32s3.menu.DebugLevel.verbose=Verbose
 dfrobot_firebeetle2_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_firebeetle2_esp32s3.menu.EraseFlash.none=Disabled
+dfrobot_firebeetle2_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all=Enabled
+dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -6596,6 +6866,11 @@ firebeetle32.menu.DebugLevel.debug.build.code_debug=4
 firebeetle32.menu.DebugLevel.verbose=Verbose
 firebeetle32.menu.DebugLevel.verbose.build.code_debug=5
 
+firebeetle32.menu.EraseFlash.none=Disabled
+firebeetle32.menu.EraseFlash.none.upload.erase_cmd=
+firebeetle32.menu.EraseFlash.all=Enabled
+firebeetle32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 intorobot-fig.name=IntoRobot Fig
@@ -6663,6 +6938,11 @@ intorobot-fig.menu.DebugLevel.debug.build.code_debug=4
 intorobot-fig.menu.DebugLevel.verbose=Verbose
 intorobot-fig.menu.DebugLevel.verbose.build.code_debug=5
 
+intorobot-fig.menu.EraseFlash.none=Disabled
+intorobot-fig.menu.EraseFlash.none.upload.erase_cmd=
+intorobot-fig.menu.EraseFlash.all=Enabled
+intorobot-fig.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 onehorse32dev.name=Onehorse ESP32 Dev Module
@@ -6729,6 +7009,11 @@ onehorse32dev.menu.DebugLevel.debug=Debug
 onehorse32dev.menu.DebugLevel.debug.build.code_debug=4
 onehorse32dev.menu.DebugLevel.verbose=Verbose
 onehorse32dev.menu.DebugLevel.verbose.build.code_debug=5
+
+onehorse32dev.menu.EraseFlash.none=Disabled
+onehorse32dev.menu.EraseFlash.none.upload.erase_cmd=
+onehorse32dev.menu.EraseFlash.all=Enabled
+onehorse32dev.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit ESP32 Feather
@@ -6851,6 +7136,11 @@ featheresp32.menu.DebugLevel.debug=Debug
 featheresp32.menu.DebugLevel.debug.build.code_debug=4
 featheresp32.menu.DebugLevel.verbose=Verbose
 featheresp32.menu.DebugLevel.verbose.build.code_debug=5
+
+featheresp32.menu.EraseFlash.none=Disabled
+featheresp32.menu.EraseFlash.none.upload.erase_cmd=
+featheresp32.menu.EraseFlash.all=Enabled
+featheresp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit Metro ESP32-S2
@@ -7018,6 +7308,11 @@ adafruit_metro_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_metro_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_metro_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_metro_esp32s2.menu.EraseFlash.none=Disabled
+adafruit_metro_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_metro_esp32s2.menu.EraseFlash.all=Enabled
+adafruit_metro_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit MagTag 2.9"
 
@@ -7183,6 +7478,11 @@ adafruit_magtag29_esp32s2.menu.DebugLevel.debug=Debug
 adafruit_magtag29_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_magtag29_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_magtag29_esp32s2.menu.EraseFlash.none=Disabled
+adafruit_magtag29_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_magtag29_esp32s2.menu.EraseFlash.all=Enabled
+adafruit_magtag29_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit FunHouse
@@ -7350,6 +7650,11 @@ adafruit_funhouse_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_funhouse_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_funhouse_esp32s2.menu.EraseFlash.none=Disabled
+adafruit_funhouse_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_funhouse_esp32s2.menu.EraseFlash.all=Enabled
+adafruit_funhouse_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit Feather ESP32-S2
 
@@ -7515,6 +7820,11 @@ adafruit_feather_esp32s2.menu.DebugLevel.debug=Debug
 adafruit_feather_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_feather_esp32s2.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32s2.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit Feather ESP32-S2 TFT
@@ -7682,6 +7992,11 @@ adafruit_feather_esp32s2_tft.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s2_tft.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s2_tft.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_feather_esp32s2_tft.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32s2_tft.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32s2_tft.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32s2_tft.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit QT Py ESP32-S2
 
@@ -7848,6 +8163,11 @@ adafruit_qtpy_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_qtpy_esp32s2.menu.DebugLevel.verbose=Verbose
 adafruit_qtpy_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_qtpy_esp32s2.menu.EraseFlash.none=Disabled
+adafruit_qtpy_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_qtpy_esp32s2.menu.EraseFlash.all=Enabled
+adafruit_qtpy_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit QT Py ESP32-C3
 
@@ -7979,6 +8299,11 @@ adafruit_qtpy_esp32c3.menu.DebugLevel.debug.build.code_debug=4
 adafruit_qtpy_esp32c3.menu.DebugLevel.verbose=Verbose
 adafruit_qtpy_esp32c3.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_qtpy_esp32c3.menu.EraseFlash.none=Disabled
+adafruit_qtpy_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_qtpy_esp32c3.menu.EraseFlash.all=Enabled
+adafruit_qtpy_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit QT Py ESP32
 
@@ -8085,6 +8410,11 @@ adafruit_qtpy_esp32_pico.menu.DebugLevel.debug.build.code_debug=4
 adafruit_qtpy_esp32_pico.menu.DebugLevel.verbose=Verbose
 adafruit_qtpy_esp32_pico.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_qtpy_esp32_pico.menu.EraseFlash.none=Disabled
+adafruit_qtpy_esp32_pico.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_qtpy_esp32_pico.menu.EraseFlash.all=Enabled
+adafruit_qtpy_esp32_pico.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit Feather ESP32 V2
 
@@ -8190,6 +8520,11 @@ adafruit_feather_esp32_v2.menu.DebugLevel.debug=Debug
 adafruit_feather_esp32_v2.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32_v2.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32_v2.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_feather_esp32_v2.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32_v2.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32_v2.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32_v2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit Feather ESP32-S3 2MB PSRAM
@@ -8386,6 +8721,11 @@ adafruit_feather_esp32s3.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s3.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_feather_esp32s3.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32s3.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit Feather ESP32-S3 No PSRAM
 
@@ -8549,6 +8889,11 @@ adafruit_feather_esp32s3_nopsram.menu.DebugLevel.debug=Debug
 adafruit_feather_esp32s3_nopsram.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s3_nopsram.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s3_nopsram.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_feather_esp32s3_nopsram.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32s3_nopsram.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32s3_nopsram.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32s3_nopsram.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 # Adafruit Feather ESP32-S3 TFT
@@ -8745,6 +9090,11 @@ adafruit_feather_esp32s3_tft.menu.DebugLevel.debug.build.code_debug=4
 adafruit_feather_esp32s3_tft.menu.DebugLevel.verbose=Verbose
 adafruit_feather_esp32s3_tft.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_feather_esp32s3_tft.menu.EraseFlash.none=Disabled
+adafruit_feather_esp32s3_tft.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_feather_esp32s3_tft.menu.EraseFlash.all=Enabled
+adafruit_feather_esp32s3_tft.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 # Adafruit QT Py ESP32-S3 No PSRAM
 
@@ -8909,6 +9259,11 @@ adafruit_qtpy_esp32s3_nopsram.menu.DebugLevel.debug.build.code_debug=4
 adafruit_qtpy_esp32s3_nopsram.menu.DebugLevel.verbose=Verbose
 adafruit_qtpy_esp32s3_nopsram.menu.DebugLevel.verbose.build.code_debug=5
 
+adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.none=Disabled
+adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all=Enabled
+adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 nodemcu-32s.name=NodeMCU-32S
@@ -8975,6 +9330,11 @@ nodemcu-32s.menu.DebugLevel.debug=Debug
 nodemcu-32s.menu.DebugLevel.debug.build.code_debug=4
 nodemcu-32s.menu.DebugLevel.verbose=Verbose
 nodemcu-32s.menu.DebugLevel.verbose.build.code_debug=5
+
+nodemcu-32s.menu.EraseFlash.none=Disabled
+nodemcu-32s.menu.EraseFlash.none.upload.erase_cmd=
+nodemcu-32s.menu.EraseFlash.all=Enabled
+nodemcu-32s.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9051,6 +9411,11 @@ mhetesp32devkit.menu.DebugLevel.debug=Debug
 mhetesp32devkit.menu.DebugLevel.debug.build.code_debug=4
 mhetesp32devkit.menu.DebugLevel.verbose=Verbose
 mhetesp32devkit.menu.DebugLevel.verbose.build.code_debug=5
+
+mhetesp32devkit.menu.EraseFlash.none=Disabled
+mhetesp32devkit.menu.EraseFlash.none.upload.erase_cmd=
+mhetesp32devkit.menu.EraseFlash.all=Enabled
+mhetesp32devkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9130,6 +9495,11 @@ mhetesp32minikit.menu.DebugLevel.debug.build.code_debug=4
 mhetesp32minikit.menu.DebugLevel.verbose=Verbose
 mhetesp32minikit.menu.DebugLevel.verbose.build.code_debug=5
 
+mhetesp32minikit.menu.EraseFlash.none=Disabled
+mhetesp32minikit.menu.EraseFlash.none.upload.erase_cmd=
+mhetesp32minikit.menu.EraseFlash.all=Enabled
+mhetesp32minikit.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32vn-iot-uno.name=ESP32vn IoT Uno
@@ -9197,6 +9567,11 @@ esp32vn-iot-uno.menu.DebugLevel.debug.build.code_debug=4
 esp32vn-iot-uno.menu.DebugLevel.verbose=Verbose
 esp32vn-iot-uno.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32vn-iot-uno.menu.EraseFlash.none=Disabled
+esp32vn-iot-uno.menu.EraseFlash.none.upload.erase_cmd=
+esp32vn-iot-uno.menu.EraseFlash.all=Enabled
+esp32vn-iot-uno.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32doit-devkit-v1.name=DOIT ESP32 DEVKIT V1
@@ -9262,6 +9637,11 @@ esp32doit-devkit-v1.menu.DebugLevel.info.build.code_debug=3
 esp32doit-devkit-v1.menu.DebugLevel.debug=Debug
 esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
 
+esp32doit-devkit-v1.menu.EraseFlash.none=Disabled
+esp32doit-devkit-v1.menu.EraseFlash.none.upload.erase_cmd=
+esp32doit-devkit-v1.menu.EraseFlash.all=Enabled
+esp32doit-devkit-v1.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32doit-espduino.name=DOIT ESPduino32
@@ -9321,6 +9701,11 @@ esp32doit-espduino.menu.DebugLevel.info=Info
 esp32doit-espduino.menu.DebugLevel.info.build.code_debug=3
 esp32doit-espduino.menu.DebugLevel.debug=Debug
 esp32doit-espduino.menu.DebugLevel.debug.build.code_debug=4
+
+esp32doit-espduino.menu.EraseFlash.none=Disabled
+esp32doit-espduino.menu.EraseFlash.none.upload.erase_cmd=
+esp32doit-espduino.menu.EraseFlash.all=Enabled
+esp32doit-espduino.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9385,6 +9770,11 @@ esp32-evb.menu.DebugLevel.debug=Debug
 esp32-evb.menu.DebugLevel.debug.build.code_debug=4
 esp32-evb.menu.DebugLevel.verbose=Verbose
 esp32-evb.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32-evb.menu.EraseFlash.none=Disabled
+esp32-evb.menu.EraseFlash.none.upload.erase_cmd=
+esp32-evb.menu.EraseFlash.all=Enabled
+esp32-evb.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9456,6 +9846,11 @@ esp32-gateway.menu.DebugLevel.debug.build.code_debug=4
 esp32-gateway.menu.DebugLevel.verbose=Verbose
 esp32-gateway.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32-gateway.menu.EraseFlash.none=Disabled
+esp32-gateway.menu.EraseFlash.none.upload.erase_cmd=
+esp32-gateway.menu.EraseFlash.all=Enabled
+esp32-gateway.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32-poe.name=OLIMEX ESP32-PoE
@@ -9520,6 +9915,11 @@ esp32-poe.menu.DebugLevel.debug.build.code_debug=4
 esp32-poe.menu.DebugLevel.verbose=Verbose
 esp32-poe.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32-poe.menu.EraseFlash.none=Disabled
+esp32-poe.menu.EraseFlash.none.upload.erase_cmd=
+esp32-poe.menu.EraseFlash.all=Enabled
+esp32-poe.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32-poe-iso.name=OLIMEX ESP32-PoE-ISO
@@ -9583,6 +9983,11 @@ esp32-poe-iso.menu.DebugLevel.debug=Debug
 esp32-poe-iso.menu.DebugLevel.debug.build.code_debug=4
 esp32-poe-iso.menu.DebugLevel.verbose=Verbose
 esp32-poe-iso.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32-poe-iso.menu.EraseFlash.none=Disabled
+esp32-poe-iso.menu.EraseFlash.none.upload.erase_cmd=
+esp32-poe-iso.menu.EraseFlash.all=Enabled
+esp32-poe-iso.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9681,6 +10086,11 @@ esp32-DevKitLipo.menu.DebugLevel.debug.build.code_debug=4
 esp32-DevKitLipo.menu.DebugLevel.verbose=Verbose
 esp32-DevKitLipo.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32-DevKitLipo.menu.EraseFlash.none=Disabled
+esp32-DevKitLipo.menu.EraseFlash.none.upload.erase_cmd=
+esp32-DevKitLipo.menu.EraseFlash.all=Enabled
+esp32-DevKitLipo.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 espino32.name=ThaiEasyElec's ESPino32
@@ -9747,6 +10157,11 @@ espino32.menu.DebugLevel.debug=Debug
 espino32.menu.DebugLevel.debug.build.code_debug=4
 espino32.menu.DebugLevel.verbose=Verbose
 espino32.menu.DebugLevel.verbose.build.code_debug=5
+
+espino32.menu.EraseFlash.none=Disabled
+espino32.menu.EraseFlash.none.upload.erase_cmd=
+espino32.menu.EraseFlash.all=Enabled
+espino32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9837,6 +10252,11 @@ m5stack-core-esp32.menu.DebugLevel.debug.build.code_debug=4
 m5stack-core-esp32.menu.DebugLevel.verbose=Verbose
 m5stack-core-esp32.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stack-core-esp32.menu.EraseFlash.none=Disabled
+m5stack-core-esp32.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-core-esp32.menu.EraseFlash.all=Enabled
+m5stack-core-esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stack-fire.name=M5Stack-FIRE
@@ -9914,6 +10334,101 @@ m5stack-fire.menu.DebugLevel.debug.build.code_debug=4
 m5stack-fire.menu.DebugLevel.verbose=Verbose
 m5stack-fire.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stack-fire.menu.EraseFlash.none=Disabled
+m5stack-fire.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-fire.menu.EraseFlash.all=Enabled
+m5stack-fire.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+m5stack-station.name=M5Stack-Station
+
+m5stack-station.bootloader.tool=esptool_py
+m5stack-station.bootloader.tool.default=esptool_py
+
+m5stack-station.upload.tool=esptool_py
+m5stack-station.upload.tool.default=esptool_py
+m5stack-station.upload.tool.network=esp_ota
+
+m5stack-station.upload.maximum_size=6553600
+m5stack-station.upload.maximum_data_size=4521984
+m5stack-station.upload.flags=
+m5stack-station.upload.extra_flags=
+
+m5stack-station.serial.disableDTR=true
+m5stack-station.serial.disableRTS=true
+
+m5stack-station.build.tarch=xtensa
+m5stack-station.build.bootloader_addr=0x1000
+m5stack-station.build.target=esp32
+m5stack-station.build.mcu=esp32
+m5stack-station.build.core=esp32
+m5stack-station.build.variant=m5stack_station
+m5stack-station.build.board=M5Stack_Station
+
+m5stack-station.build.f_cpu=240000000L
+m5stack-station.build.flash_size=16MB
+m5stack-station.build.flash_freq=80m
+m5stack-station.build.flash_mode=dio
+m5stack-station.build.boot=dio
+m5stack-station.build.partitions=default_16MB
+m5stack-station.build.defines=
+
+m5stack-station.menu.PartitionScheme.default=Default
+m5stack-station.menu.PartitionScheme.default.build.partitions=default_16MB
+m5stack-station.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stack-station.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack-station.menu.PartitionScheme.no_ota.upload.maximum_size=6553600
+m5stack-station.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stack-station.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack-station.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+m5stack-station.menu.CPUFreq.240=240MHz (WiFi/BT)
+m5stack-station.menu.CPUFreq.240.build.f_cpu=240000000L
+m5stack-station.menu.CPUFreq.160=160MHz (WiFi/BT)
+m5stack-station.menu.CPUFreq.160.build.f_cpu=160000000L
+m5stack-station.menu.CPUFreq.80=80MHz (WiFi/BT)
+m5stack-station.menu.CPUFreq.80.build.f_cpu=80000000L
+m5stack-station.menu.CPUFreq.40=40MHz (40MHz XTAL)
+m5stack-station.menu.CPUFreq.40.build.f_cpu=40000000L
+m5stack-station.menu.CPUFreq.26=26MHz (26MHz XTAL)
+m5stack-station.menu.CPUFreq.26.build.f_cpu=26000000L
+m5stack-station.menu.CPUFreq.20=20MHz (40MHz XTAL)
+m5stack-station.menu.CPUFreq.20.build.f_cpu=20000000L
+m5stack-station.menu.CPUFreq.13=13MHz (26MHz XTAL)
+m5stack-station.menu.CPUFreq.13.build.f_cpu=13000000L
+m5stack-station.menu.CPUFreq.10=10MHz (40MHz XTAL)
+m5stack-station.menu.CPUFreq.10.build.f_cpu=10000000L
+
+m5stack-station.menu.UploadSpeed.1500000=1500000
+m5stack-station.menu.UploadSpeed.1500000.upload.speed=1500000
+m5stack-station.menu.UploadSpeed.750000=750000
+m5stack-station.menu.UploadSpeed.750000.upload.speed=750000
+m5stack-station.menu.UploadSpeed.500000=500000
+m5stack-station.menu.UploadSpeed.500000.upload.speed=500000
+m5stack-station.menu.UploadSpeed.250000=250000
+m5stack-station.menu.UploadSpeed.250000.upload.speed=250000
+m5stack-station.menu.UploadSpeed.115200=115200
+m5stack-station.menu.UploadSpeed.115200.upload.speed=115200
+
+m5stack-station.menu.DebugLevel.none=None
+m5stack-station.menu.DebugLevel.none.build.code_debug=0
+m5stack-station.menu.DebugLevel.error=Error
+m5stack-station.menu.DebugLevel.error.build.code_debug=1
+m5stack-station.menu.DebugLevel.warn=Warn
+m5stack-station.menu.DebugLevel.warn.build.code_debug=2
+m5stack-station.menu.DebugLevel.info=Info
+m5stack-station.menu.DebugLevel.info.build.code_debug=3
+m5stack-station.menu.DebugLevel.debug=Debug
+m5stack-station.menu.DebugLevel.debug.build.code_debug=4
+m5stack-station.menu.DebugLevel.verbose=Verbose
+m5stack-station.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack-station.menu.EraseFlash.none=Disabled
+m5stack-station.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-station.menu.EraseFlash.all=Enabled
+m5stack-station.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stick-c.name=M5Stick-C
@@ -9982,6 +10497,11 @@ m5stick-c.menu.DebugLevel.debug.build.code_debug=4
 m5stick-c.menu.DebugLevel.verbose=Verbose
 m5stick-c.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stick-c.menu.EraseFlash.none=Disabled
+m5stick-c.menu.EraseFlash.none.upload.erase_cmd=
+m5stick-c.menu.EraseFlash.all=Enabled
+m5stick-c.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stack-atom.name=M5Stack-ATOM
@@ -10049,6 +10569,11 @@ m5stack-atom.menu.DebugLevel.debug=Debug
 m5stack-atom.menu.DebugLevel.debug.build.code_debug=4
 m5stack-atom.menu.DebugLevel.verbose=Verbose
 m5stack-atom.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack-atom.menu.EraseFlash.none=Disabled
+m5stack-atom.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-atom.menu.EraseFlash.all=Enabled
+m5stack-atom.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -10162,6 +10687,11 @@ m5stack-core2.menu.DebugLevel.debug.build.code_debug=4
 m5stack-core2.menu.DebugLevel.verbose=Verbose
 m5stack-core2.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stack-core2.menu.EraseFlash.none=Disabled
+m5stack-core2.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-core2.menu.EraseFlash.all=Enabled
+m5stack-core2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stack-timer-cam.name=M5Stack-Timer-CAM
@@ -10266,6 +10796,11 @@ m5stack-timer-cam.menu.DebugLevel.debug.build.code_debug=4
 m5stack-timer-cam.menu.DebugLevel.verbose=Verbose
 m5stack-timer-cam.menu.DebugLevel.verbose.build.code_debug=5
 
+m5stack-timer-cam.menu.EraseFlash.none=Disabled
+m5stack-timer-cam.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-timer-cam.menu.EraseFlash.all=Enabled
+m5stack-timer-cam.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 m5stack-coreink.name=M5Stack-CoreInk
@@ -10340,6 +10875,11 @@ m5stack-coreink.menu.DebugLevel.debug=Debug
 m5stack-coreink.menu.DebugLevel.debug.build.code_debug=4
 m5stack-coreink.menu.DebugLevel.verbose=Verbose
 m5stack-coreink.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack-coreink.menu.EraseFlash.none=Disabled
+m5stack-coreink.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-coreink.menu.EraseFlash.all=Enabled
+m5stack-coreink.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -10431,6 +10971,11 @@ odroid_esp32.menu.DebugLevel.debug.build.code_debug=4
 odroid_esp32.menu.DebugLevel.verbose=Verbose
 odroid_esp32.menu.DebugLevel.verbose.build.code_debug=5
 
+odroid_esp32.menu.EraseFlash.none=Disabled
+odroid_esp32.menu.EraseFlash.none.upload.erase_cmd=
+odroid_esp32.menu.EraseFlash.all=Enabled
+odroid_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wifi_kit_32.name=Heltec WiFi Kit 32
@@ -10509,6 +11054,11 @@ heltec_wifi_kit_32.menu.DebugLevel.debug=Debug
 heltec_wifi_kit_32.menu.DebugLevel.debug.build.code_debug=4
 heltec_wifi_kit_32.menu.DebugLevel.verbose=Verbose
 heltec_wifi_kit_32.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_wifi_kit_32.menu.EraseFlash.none=Disabled
+heltec_wifi_kit_32.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wifi_kit_32.menu.EraseFlash.all=Enabled
+heltec_wifi_kit_32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -10617,6 +11167,11 @@ heltec_wifi_lora_32.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
 heltec_wifi_lora_32.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
 heltec_wifi_lora_32.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
 
+heltec_wifi_lora_32.menu.EraseFlash.none=Disabled
+heltec_wifi_lora_32.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wifi_lora_32.menu.EraseFlash.all=Enabled
+heltec_wifi_lora_32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wifi_lora_32_V2.name=Heltec WiFi LoRa 32(V2)
@@ -10724,6 +11279,11 @@ heltec_wifi_lora_32_V2.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
 heltec_wifi_lora_32_V2.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
 heltec_wifi_lora_32_V2.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
 
+heltec_wifi_lora_32_V2.menu.EraseFlash.none=Disabled
+heltec_wifi_lora_32_V2.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wifi_lora_32_V2.menu.EraseFlash.all=Enabled
+heltec_wifi_lora_32_V2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wireless_stick.name=Heltec Wireless Stick
@@ -10830,6 +11390,11 @@ heltec_wireless_stick.menu.LoRaWanDebugLevel.2=Freq && DIO
 heltec_wireless_stick.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
 heltec_wireless_stick.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
 heltec_wireless_stick.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_wireless_stick.menu.EraseFlash.none=Disabled
+heltec_wireless_stick.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_stick.menu.EraseFlash.all=Enabled
+heltec_wireless_stick.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -10939,6 +11504,11 @@ heltec_wireless_stick_lite.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
 heltec_wireless_stick_lite.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
 heltec_wireless_stick_lite.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
 
+heltec_wireless_stick_lite.menu.EraseFlash.none=Disabled
+heltec_wireless_stick_lite.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_stick_lite.menu.EraseFlash.all=Enabled
+heltec_wireless_stick_lite.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 espectro32.name=ESPectro32
@@ -11024,6 +11594,11 @@ espectro32.menu.DebugLevel.debug=Debug
 espectro32.menu.DebugLevel.debug.build.code_debug=4
 espectro32.menu.DebugLevel.verbose=Verbose
 espectro32.menu.DebugLevel.verbose.build.code_debug=5
+
+espectro32.menu.EraseFlash.none=Disabled
+espectro32.menu.EraseFlash.none.upload.erase_cmd=
+espectro32.menu.EraseFlash.all=Enabled
+espectro32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11112,6 +11687,11 @@ CoreESP32.menu.DebugLevel.debug.build.code_debug=4
 CoreESP32.menu.DebugLevel.verbose=Verbose
 CoreESP32.menu.DebugLevel.verbose.build.code_debug=5
 
+CoreESP32.menu.EraseFlash.none=Disabled
+CoreESP32.menu.EraseFlash.none.upload.erase_cmd=
+CoreESP32.menu.EraseFlash.all=Enabled
+CoreESP32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 alksesp32.name=ALKS ESP32
@@ -11178,7 +11758,7 @@ alksesp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 alksesp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 alksesp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 alksesp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-alksesp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+alksesp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 alksesp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 alksesp32.menu.CPUFreq.240=240MHz (WiFi/BT)
@@ -11253,6 +11833,11 @@ alksesp32.menu.DebugLevel.debug.build.code_debug=4
 alksesp32.menu.DebugLevel.verbose=Verbose
 alksesp32.menu.DebugLevel.verbose.build.code_debug=5
 
+alksesp32.menu.EraseFlash.none=Disabled
+alksesp32.menu.EraseFlash.none.upload.erase_cmd=
+alksesp32.menu.EraseFlash.all=Enabled
+alksesp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 wipy3.name=WiPy 3.0
@@ -11319,6 +11904,11 @@ wipy3.menu.DebugLevel.debug=Debug
 wipy3.menu.DebugLevel.debug.build.code_debug=4
 wipy3.menu.DebugLevel.verbose=Verbose
 wipy3.menu.DebugLevel.verbose.build.code_debug=5
+
+wipy3.menu.EraseFlash.none=Disabled
+wipy3.menu.EraseFlash.none.upload.erase_cmd=
+wipy3.menu.EraseFlash.all=Enabled
+wipy3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11421,6 +12011,11 @@ wt32-eth01.menu.DebugLevel.debug.build.code_debug=4
 wt32-eth01.menu.DebugLevel.verbose=Verbose
 wt32-eth01.menu.DebugLevel.verbose.build.code_debug=5
 
+wt32-eth01.menu.EraseFlash.none=Disabled
+wt32-eth01.menu.EraseFlash.none.upload.erase_cmd=
+wt32-eth01.menu.EraseFlash.all=Enabled
+wt32-eth01.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 bpi-bit.name=BPI-BIT
@@ -11486,6 +12081,11 @@ bpi-bit.menu.DebugLevel.debug=Debug
 bpi-bit.menu.DebugLevel.debug.build.code_debug=4
 bpi-bit.menu.DebugLevel.verbose=Verbose
 bpi-bit.menu.DebugLevel.verbose.build.code_debug=5
+
+bpi-bit.menu.EraseFlash.none=Disabled
+bpi-bit.menu.EraseFlash.none.upload.erase_cmd=
+bpi-bit.menu.EraseFlash.all=Enabled
+bpi-bit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11553,6 +12153,11 @@ wesp32.menu.DebugLevel.debug=Debug
 wesp32.menu.DebugLevel.debug.build.code_debug=4
 wesp32.menu.DebugLevel.verbose=Verbose
 wesp32.menu.DebugLevel.verbose.build.code_debug=5
+
+wesp32.menu.EraseFlash.none=Disabled
+wesp32.menu.EraseFlash.none.upload.erase_cmd=
+wesp32.menu.EraseFlash.all=Enabled
+wesp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11626,6 +12231,11 @@ t-beam.menu.DebugLevel.debug=Debug
 t-beam.menu.DebugLevel.debug.build.code_debug=4
 t-beam.menu.DebugLevel.verbose=Verbose
 t-beam.menu.DebugLevel.verbose.build.code_debug=5
+
+t-beam.menu.EraseFlash.none=Disabled
+t-beam.menu.EraseFlash.none.upload.erase_cmd=
+t-beam.menu.EraseFlash.all=Enabled
+t-beam.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11708,6 +12318,11 @@ d-duino-32.menu.DebugLevel.debug.build.code_debug=4
 d-duino-32.menu.DebugLevel.verbose=Verbose
 d-duino-32.menu.DebugLevel.verbose.build.code_debug=5
 
+d-duino-32.menu.EraseFlash.none=Disabled
+d-duino-32.menu.EraseFlash.none.upload.erase_cmd=
+d-duino-32.menu.EraseFlash.all=Enabled
+d-duino-32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 lopy.name=LoPy
@@ -11773,6 +12388,11 @@ lopy.menu.DebugLevel.debug=Debug
 lopy.menu.DebugLevel.debug.build.code_debug=4
 lopy.menu.DebugLevel.verbose=Verbose
 lopy.menu.DebugLevel.verbose.build.code_debug=5
+
+lopy.menu.EraseFlash.none=Disabled
+lopy.menu.EraseFlash.none.upload.erase_cmd=
+lopy.menu.EraseFlash.all=Enabled
+lopy.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11846,6 +12466,11 @@ lopy4.menu.DebugLevel.debug=Debug
 lopy4.menu.DebugLevel.debug.build.code_debug=4
 lopy4.menu.DebugLevel.verbose=Verbose
 lopy4.menu.DebugLevel.verbose.build.code_debug=5
+
+lopy4.menu.EraseFlash.none=Disabled
+lopy4.menu.EraseFlash.none.upload.erase_cmd=
+lopy4.menu.EraseFlash.all=Enabled
+lopy4.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -11921,6 +12546,11 @@ oroca_edubot.menu.DebugLevel.debug.build.code_debug=4
 oroca_edubot.menu.DebugLevel.verbose=Verbose
 oroca_edubot.menu.DebugLevel.verbose.build.code_debug=5
 
+oroca_edubot.menu.EraseFlash.none=Disabled
+oroca_edubot.menu.EraseFlash.none.upload.erase_cmd=
+oroca_edubot.menu.EraseFlash.all=Enabled
+oroca_edubot.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 fm-devkit.name=ESP32 FM DevKit
@@ -11977,6 +12607,11 @@ fm-devkit.menu.DebugLevel.debug=Debug
 fm-devkit.menu.DebugLevel.debug.build.code_debug=4
 fm-devkit.menu.DebugLevel.verbose=Verbose
 fm-devkit.menu.DebugLevel.verbose.build.code_debug=5
+
+fm-devkit.menu.EraseFlash.none=Disabled
+fm-devkit.menu.EraseFlash.none.upload.erase_cmd=
+fm-devkit.menu.EraseFlash.all=Enabled
+fm-devkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -12079,6 +12714,11 @@ frogboard.menu.DebugLevel.debug=Debug
 frogboard.menu.DebugLevel.debug.build.code_debug=4
 frogboard.menu.DebugLevel.verbose=Verbose
 frogboard.menu.DebugLevel.verbose.build.code_debug=5
+
+frogboard.menu.EraseFlash.none=Disabled
+frogboard.menu.EraseFlash.none.upload.erase_cmd=
+frogboard.menu.EraseFlash.all=Enabled
+frogboard.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -12186,6 +12826,11 @@ esp32cam.menu.DebugLevel.debug.build.code_debug=4
 esp32cam.menu.DebugLevel.verbose=Verbose
 esp32cam.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32cam.menu.EraseFlash.none=Disabled
+esp32cam.menu.EraseFlash.none.upload.erase_cmd=
+esp32cam.menu.EraseFlash.all=Enabled
+esp32cam.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 twatch.name=TTGO T-Watch
@@ -12276,6 +12921,11 @@ twatch.menu.DebugLevel.debug=Debug
 twatch.menu.DebugLevel.debug.build.code_debug=4
 twatch.menu.DebugLevel.verbose=Verbose
 twatch.menu.DebugLevel.verbose.build.code_debug=5
+
+twatch.menu.EraseFlash.none=Disabled
+twatch.menu.EraseFlash.none.upload.erase_cmd=
+twatch.menu.EraseFlash.all=Enabled
+twatch.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -12370,6 +13020,11 @@ d1_mini32.menu.DebugLevel.debug.build.code_debug=4
 d1_mini32.menu.DebugLevel.verbose=Verbose
 d1_mini32.menu.DebugLevel.verbose.build.code_debug=5
 
+d1_mini32.menu.EraseFlash.none=Disabled
+d1_mini32.menu.EraseFlash.none.upload.erase_cmd=
+d1_mini32.menu.EraseFlash.all=Enabled
+d1_mini32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 d1_uno32.name=WEMOS D1 R32
@@ -12463,6 +13118,11 @@ d1_uno32.menu.DebugLevel.debug.build.code_debug=4
 d1_uno32.menu.DebugLevel.verbose=Verbose
 d1_uno32.menu.DebugLevel.verbose.build.code_debug=5
 
+d1_uno32.menu.EraseFlash.none=Disabled
+d1_uno32.menu.EraseFlash.none.upload.erase_cmd=
+d1_uno32.menu.EraseFlash.all=Enabled
+d1_uno32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 gpy.name=Pycom GPy
@@ -12529,6 +13189,11 @@ gpy.menu.DebugLevel.debug.build.code_debug=4
 gpy.menu.DebugLevel.verbose=Verbose
 gpy.menu.DebugLevel.verbose.build.code_debug=5
 
+gpy.menu.EraseFlash.none=Disabled
+gpy.menu.EraseFlash.none.upload.erase_cmd=
+gpy.menu.EraseFlash.all=Enabled
+gpy.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 vintlabs-devkit-v1.name=VintLabs ESP32 Devkit
@@ -12589,7 +13254,7 @@ vintlabs-devkit-v1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB A
 vintlabs-devkit-v1.menu.PartitionScheme.default.build.partitions=default
 vintlabs-devkit-v1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 vintlabs-devkit-v1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-vintlabs-devkit-v1.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+vintlabs-devkit-v1.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 vintlabs-devkit-v1.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 vintlabs-devkit-v1.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 vintlabs-devkit-v1.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -12612,10 +13277,10 @@ vintlabs-devkit-v1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 vintlabs-devkit-v1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-vintlabs-devkit-v1.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+vintlabs-devkit-v1.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 vintlabs-devkit-v1.menu.PartitionScheme.fatflash.build.partitions=ffat
 vintlabs-devkit-v1.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 vintlabs-devkit-v1.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -12640,6 +13305,11 @@ vintlabs-devkit-v1.menu.DebugLevel.info=Info
 vintlabs-devkit-v1.menu.DebugLevel.info.build.code_debug=3
 vintlabs-devkit-v1.menu.DebugLevel.debug=Debug
 vintlabs-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
+
+vintlabs-devkit-v1.menu.EraseFlash.none=Disabled
+vintlabs-devkit-v1.menu.EraseFlash.none.upload.erase_cmd=
+vintlabs-devkit-v1.menu.EraseFlash.all=Enabled
+vintlabs-devkit-v1.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -12708,6 +13378,11 @@ honeylemon.menu.DebugLevel.debug.build.code_debug=4
 honeylemon.menu.DebugLevel.verbose=Verbose
 honeylemon.menu.DebugLevel.verbose.build.code_debug=5
 
+honeylemon.menu.EraseFlash.none=Disabled
+honeylemon.menu.EraseFlash.none.upload.erase_cmd=
+honeylemon.menu.EraseFlash.all=Enabled
+honeylemon.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 mgbot-iotik32a.name=MGBOT IOTIK 32A
@@ -12754,7 +13429,7 @@ mgbot-iotik32a.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1
 mgbot-iotik32a.menu.PartitionScheme.default.build.partitions=default
 mgbot-iotik32a.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 mgbot-iotik32a.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-mgbot-iotik32a.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+mgbot-iotik32a.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 mgbot-iotik32a.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 mgbot-iotik32a.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 mgbot-iotik32a.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -12777,10 +13452,10 @@ mgbot-iotik32a.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 mgbot-iotik32a.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 mgbot-iotik32a.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 mgbot-iotik32a.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-mgbot-iotik32a.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mgbot-iotik32a.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 mgbot-iotik32a.menu.PartitionScheme.fatflash.build.partitions=ffat
 mgbot-iotik32a.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 mgbot-iotik32a.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -12858,6 +13533,11 @@ mgbot-iotik32a.menu.DebugLevel.debug.build.code_debug=4
 mgbot-iotik32a.menu.DebugLevel.verbose=Verbose
 mgbot-iotik32a.menu.DebugLevel.verbose.build.code_debug=5
 
+mgbot-iotik32a.menu.EraseFlash.none=Disabled
+mgbot-iotik32a.menu.EraseFlash.none.upload.erase_cmd=
+mgbot-iotik32a.menu.EraseFlash.all=Enabled
+mgbot-iotik32a.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 mgbot-iotik32b.name=MGBOT IOTIK 32B
@@ -12904,7 +13584,7 @@ mgbot-iotik32b.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1
 mgbot-iotik32b.menu.PartitionScheme.default.build.partitions=default
 mgbot-iotik32b.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 mgbot-iotik32b.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-mgbot-iotik32b.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+mgbot-iotik32b.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 mgbot-iotik32b.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 mgbot-iotik32b.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 mgbot-iotik32b.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -12927,10 +13607,10 @@ mgbot-iotik32b.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 mgbot-iotik32b.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 mgbot-iotik32b.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 mgbot-iotik32b.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-mgbot-iotik32b.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mgbot-iotik32b.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 mgbot-iotik32b.menu.PartitionScheme.fatflash.build.partitions=ffat
 mgbot-iotik32b.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 mgbot-iotik32b.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -13008,6 +13688,11 @@ mgbot-iotik32b.menu.DebugLevel.debug.build.code_debug=4
 mgbot-iotik32b.menu.DebugLevel.verbose=Verbose
 mgbot-iotik32b.menu.DebugLevel.verbose.build.code_debug=5
 
+mgbot-iotik32b.menu.EraseFlash.none=Disabled
+mgbot-iotik32b.menu.EraseFlash.none.upload.erase_cmd=
+mgbot-iotik32b.menu.EraseFlash.all=Enabled
+mgbot-iotik32b.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 piranha_esp-32.name=Piranha ESP-32
@@ -13083,6 +13768,11 @@ piranha_esp-32.menu.DebugLevel.debug=Debug
 piranha_esp-32.menu.DebugLevel.debug.build.code_debug=4
 piranha_esp-32.menu.DebugLevel.verbose=Verbose
 piranha_esp-32.menu.DebugLevel.verbose.build.code_debug=5
+
+piranha_esp-32.menu.EraseFlash.none=Disabled
+piranha_esp-32.menu.EraseFlash.none.upload.erase_cmd=
+piranha_esp-32.menu.EraseFlash.all=Enabled
+piranha_esp-32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13160,6 +13850,11 @@ metro_esp-32.menu.DebugLevel.debug.build.code_debug=4
 metro_esp-32.menu.DebugLevel.verbose=Verbose
 metro_esp-32.menu.DebugLevel.verbose.build.code_debug=5
 
+metro_esp-32.menu.EraseFlash.none=Disabled
+metro_esp-32.menu.EraseFlash.none.upload.erase_cmd=
+metro_esp-32.menu.EraseFlash.all=Enabled
+metro_esp-32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 sensesiot_weizen.name=Senses's WEIZEN
@@ -13226,6 +13921,11 @@ sensesiot_weizen.menu.DebugLevel.debug=Debug
 sensesiot_weizen.menu.DebugLevel.debug.build.code_debug=4
 sensesiot_weizen.menu.DebugLevel.verbose=Verbose
 sensesiot_weizen.menu.DebugLevel.verbose.build.code_debug=5
+
+sensesiot_weizen.menu.EraseFlash.none=Disabled
+sensesiot_weizen.menu.EraseFlash.none.upload.erase_cmd=
+sensesiot_weizen.menu.EraseFlash.all=Enabled
+sensesiot_weizen.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13300,6 +14000,11 @@ kits-edu.menu.DebugLevel.debug.build.code_debug=4
 kits-edu.menu.DebugLevel.verbose=Verbose
 kits-edu.menu.DebugLevel.verbose.build.code_debug=5
 
+kits-edu.menu.EraseFlash.none=Disabled
+kits-edu.menu.EraseFlash.none.upload.erase_cmd=
+kits-edu.menu.EraseFlash.all=Enabled
+kits-edu.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 mPython.name=Labplus mPython
@@ -13365,7 +14070,7 @@ mPython.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 mPython.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 mPython.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 mPython.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-mPython.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+mPython.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 mPython.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 mPython.menu.CPUFreq.240=240MHz (WiFi/BT)
@@ -13419,6 +14124,11 @@ mPython.menu.DebugLevel.debug=Debug
 mPython.menu.DebugLevel.debug.build.code_debug=4
 mPython.menu.DebugLevel.verbose=Verbose
 mPython.menu.DebugLevel.verbose.build.code_debug=5
+
+mPython.menu.EraseFlash.none=Disabled
+mPython.menu.EraseFlash.none.upload.erase_cmd=
+mPython.menu.EraseFlash.all=Enabled
+mPython.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13487,6 +14197,11 @@ OpenKB.menu.DebugLevel.debug=Debug
 OpenKB.menu.DebugLevel.debug.build.code_debug=4
 OpenKB.menu.DebugLevel.verbose=Verbose
 OpenKB.menu.DebugLevel.verbose.build.code_debug=5
+
+OpenKB.menu.EraseFlash.none=Disabled
+OpenKB.menu.EraseFlash.none.upload.erase_cmd=
+OpenKB.menu.EraseFlash.all=Enabled
+OpenKB.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13564,6 +14279,11 @@ wifiduino32.menu.DebugLevel.debug=Debug
 wifiduino32.menu.DebugLevel.debug.build.code_debug=4
 wifiduino32.menu.DebugLevel.verbose=Verbose
 wifiduino32.menu.DebugLevel.verbose.build.code_debug=5
+
+wifiduino32.menu.EraseFlash.none=Disabled
+wifiduino32.menu.EraseFlash.none.upload.erase_cmd=
+wifiduino32.menu.EraseFlash.all=Enabled
+wifiduino32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13659,6 +14379,11 @@ imbrios-logsens-v1p1.menu.DebugLevel.debug.build.code_debug=4
 imbrios-logsens-v1p1.menu.DebugLevel.verbose=Verbose
 imbrios-logsens-v1p1.menu.DebugLevel.verbose.build.code_debug=5
 
+imbrios-logsens-v1p1.menu.EraseFlash.none=Disabled
+imbrios-logsens-v1p1.menu.EraseFlash.none.upload.erase_cmd=
+imbrios-logsens-v1p1.menu.EraseFlash.all=Enabled
+imbrios-logsens-v1p1.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 healthypi4.name=ProtoCentral HealthyPi 4
@@ -13736,6 +14461,11 @@ healthypi4.menu.DebugLevel.debug.build.code_debug=4
 healthypi4.menu.DebugLevel.verbose=Verbose
 healthypi4.menu.DebugLevel.verbose.build.code_debug=5
 
+healthypi4.menu.EraseFlash.none=Disabled
+healthypi4.menu.EraseFlash.none.upload.erase_cmd=
+healthypi4.menu.EraseFlash.all=Enabled
+healthypi4.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 ET-Board.name=ET-Board
@@ -13811,6 +14541,11 @@ ET-Board.menu.DebugLevel.debug=Debug
 ET-Board.menu.DebugLevel.debug.build.code_debug=4
 ET-Board.menu.DebugLevel.verbose=Verbose
 ET-Board.menu.DebugLevel.verbose.build.code_debug=5
+
+ET-Board.menu.EraseFlash.none=Disabled
+ET-Board.menu.EraseFlash.none.upload.erase_cmd=
+ET-Board.menu.EraseFlash.all=Enabled
+ET-Board.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -13897,6 +14632,11 @@ ch_denky.menu.DebugLevel.debug=Debug
 ch_denky.menu.DebugLevel.debug.build.code_debug=4
 ch_denky.menu.DebugLevel.verbose=Verbose
 ch_denky.menu.DebugLevel.verbose.build.code_debug=5
+
+ch_denky.menu.EraseFlash.none=Disabled
+ch_denky.menu.EraseFlash.none.upload.erase_cmd=
+ch_denky.menu.EraseFlash.all=Enabled
+ch_denky.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -14010,6 +14750,11 @@ uPesy_wrover.menu.DebugLevel.debug.build.code_debug=4
 uPesy_wrover.menu.DebugLevel.verbose=Verbose
 uPesy_wrover.menu.DebugLevel.verbose.build.code_debug=5
 
+uPesy_wrover.menu.EraseFlash.none=Disabled
+uPesy_wrover.menu.EraseFlash.none.upload.erase_cmd=
+uPesy_wrover.menu.EraseFlash.all=Enabled
+uPesy_wrover.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 uPesy_wroom.name=uPesy ESP32 Wroom DevKit
@@ -14115,6 +14860,11 @@ uPesy_wroom.menu.DebugLevel.debug.build.code_debug=4
 uPesy_wroom.menu.DebugLevel.verbose=Verbose
 uPesy_wroom.menu.DebugLevel.verbose.build.code_debug=5
 
+uPesy_wroom.menu.EraseFlash.none=Disabled
+uPesy_wroom.menu.EraseFlash.none.upload.erase_cmd=
+uPesy_wroom.menu.EraseFlash.all=Enabled
+uPesy_wroom.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 kb32.name=KB32-FT
@@ -14163,7 +14913,7 @@ kb32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFF
 kb32.menu.PartitionScheme.default.build.partitions=default
 kb32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 kb32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-kb32.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+kb32.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 kb32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 kb32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 kb32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -14186,10 +14936,10 @@ kb32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 kb32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 kb32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 kb32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-kb32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+kb32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 kb32.menu.PartitionScheme.fatflash.build.partitions=ffat
 kb32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-kb32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+kb32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 kb32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 kb32.menu.PartitionScheme.rainmaker=RainMaker
@@ -14280,6 +15030,11 @@ kb32.menu.DebugLevel.debug.build.code_debug=4
 kb32.menu.DebugLevel.verbose=Verbose
 kb32.menu.DebugLevel.verbose.build.code_debug=5
 
+kb32.menu.EraseFlash.none=Disabled
+kb32.menu.EraseFlash.none.upload.erase_cmd=
+kb32.menu.EraseFlash.all=Enabled
+kb32.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 deneyapkart.name=Deneyap Kart
@@ -14321,7 +15076,7 @@ deneyapkart.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5M
 deneyapkart.menu.PartitionScheme.default.build.partitions=default
 deneyapkart.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 deneyapkart.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-deneyapkart.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+deneyapkart.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 deneyapkart.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 deneyapkart.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 deneyapkart.menu.PartitionScheme.minimal.build.partitions=minimal
@@ -14343,7 +15098,7 @@ deneyapkart.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 deneyapkart.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 deneyapkart.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 deneyapkart.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-deneyapkart.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+deneyapkart.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 deneyapkart.menu.PartitionScheme.fatflash.build.partitions=ffat
 deneyapkart.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 deneyapkart.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
@@ -14410,6 +15165,11 @@ deneyapkart.menu.DebugLevel.debug.build.code_debug=4
 deneyapkart.menu.DebugLevel.verbose=Verbose
 deneyapkart.menu.DebugLevel.verbose.build.code_debug=5
 
+deneyapkart.menu.EraseFlash.none=Disabled
+deneyapkart.menu.EraseFlash.none.upload.erase_cmd=
+deneyapkart.menu.EraseFlash.all=Enabled
+deneyapkart.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32-trueverit-iot-driver.name=Trueverit ESP32 Universal IoT Driver
@@ -14473,6 +15233,11 @@ esp32-trueverit-iot-driver.menu.DebugLevel.debug.build.code_debug=4
 esp32-trueverit-iot-driver.menu.DebugLevel.verbose=Verbose
 esp32-trueverit-iot-driver.menu.DebugLevel.verbose.build.code_debug=5
 
+esp32-trueverit-iot-driver.menu.EraseFlash.none=Disabled
+esp32-trueverit-iot-driver.menu.EraseFlash.none.upload.erase_cmd=
+esp32-trueverit-iot-driver.menu.EraseFlash.all=Enabled
+esp32-trueverit-iot-driver.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 esp32-trueverit-iot-driver-mkii.name=Trueverit ESP32 Universal IoT Driver MK II
@@ -14535,6 +15300,11 @@ esp32-trueverit-iot-driver-mkii.menu.DebugLevel.debug=Debug
 esp32-trueverit-iot-driver-mkii.menu.DebugLevel.debug.build.code_debug=4
 esp32-trueverit-iot-driver-mkii.menu.DebugLevel.verbose=Verbose
 esp32-trueverit-iot-driver-mkii.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32-trueverit-iot-driver-mkii.menu.EraseFlash.none=Disabled
+esp32-trueverit-iot-driver-mkii.menu.EraseFlash.none.upload.erase_cmd=
+esp32-trueverit-iot-driver-mkii.menu.EraseFlash.all=Enabled
+esp32-trueverit-iot-driver-mkii.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -14608,7 +15378,7 @@ atmegazero_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB A
 atmegazero_esp32s2.menu.PartitionScheme.default.build.partitions=default
 atmegazero_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 atmegazero_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-atmegazero_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+atmegazero_esp32s2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 atmegazero_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 atmegazero_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 atmegazero_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -14631,10 +15401,10 @@ atmegazero_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 atmegazero_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 atmegazero_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 atmegazero_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-atmegazero_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+atmegazero_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 atmegazero_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
 atmegazero_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-atmegazero_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+atmegazero_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 atmegazero_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 atmegazero_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -14708,6 +15478,11 @@ atmegazero_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 atmegazero_esp32s2.menu.DebugLevel.verbose=Verbose
 atmegazero_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+atmegazero_esp32s2.menu.EraseFlash.none=Disabled
+atmegazero_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+atmegazero_esp32s2.menu.EraseFlash.all=Enabled
+atmegazero_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 deneyapmini.name=Deneyap Mini
@@ -14773,7 +15548,7 @@ deneyapmini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5M
 deneyapmini.menu.PartitionScheme.default.build.partitions=default
 deneyapmini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 deneyapmini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-deneyapmini.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+deneyapmini.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 deneyapmini.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 deneyapmini.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 deneyapmini.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -14796,10 +15571,10 @@ deneyapmini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 deneyapmini.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 deneyapmini.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 deneyapmini.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-deneyapmini.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+deneyapmini.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 deneyapmini.menu.PartitionScheme.fatflash.build.partitions=ffat
 deneyapmini.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-deneyapmini.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+deneyapmini.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 deneyapmini.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 deneyapmini.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -14882,6 +15657,11 @@ deneyapmini.menu.DebugLevel.debug.build.code_debug=4
 deneyapmini.menu.DebugLevel.verbose=Verbose
 deneyapmini.menu.DebugLevel.verbose.build.code_debug=5
 
+deneyapmini.menu.EraseFlash.none=Disabled
+deneyapmini.menu.EraseFlash.none.upload.erase_cmd=
+deneyapmini.menu.EraseFlash.all=Enabled
+deneyapmini.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 franzininho_wifi_esp32s2.name=Franzininho WiFi
@@ -14942,7 +15722,7 @@ franzininho_wifi_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1
 franzininho_wifi_esp32s2.menu.PartitionScheme.default.build.partitions=default
 franzininho_wifi_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 franzininho_wifi_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 franzininho_wifi_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 franzininho_wifi_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -14965,10 +15745,10 @@ franzininho_wifi_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=31457
 franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 franzininho_wifi_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
 franzininho_wifi_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 franzininho_wifi_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -14984,6 +15764,11 @@ franzininho_wifi_esp32s2.menu.DebugLevel.debug=Debug
 franzininho_wifi_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 franzininho_wifi_esp32s2.menu.DebugLevel.verbose=Verbose
 franzininho_wifi_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+franzininho_wifi_esp32s2.menu.EraseFlash.none=Disabled
+franzininho_wifi_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+franzininho_wifi_esp32s2.menu.EraseFlash.all=Enabled
+franzininho_wifi_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -15045,7 +15830,7 @@ franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default=Default 4MB with spiff
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default.build.partitions=default
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15068,10 +15853,10 @@ franzininho_wifi_msc_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash.build.partitions=ffat
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 franzininho_wifi_msc_esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -15087,6 +15872,11 @@ franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug=Debug
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose=Verbose
 franzininho_wifi_msc_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+franzininho_wifi_msc_esp32s2.menu.EraseFlash.none=Disabled
+franzininho_wifi_msc_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+franzininho_wifi_msc_esp32s2.menu.EraseFlash.all=Enabled
+franzininho_wifi_msc_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -15130,7 +15920,7 @@ dpu_esp32.menu.PartitionScheme.default.upload.maximum_size=1310720
 dpu_esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 dpu_esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 dpu_esp32.menu.PartitionScheme.defaultffat.upload.maximum_size=1310720
-dpu_esp32.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+dpu_esp32.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 dpu_esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 dpu_esp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 dpu_esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15154,7 +15944,7 @@ dpu_esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 dpu_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 dpu_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 dpu_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-dpu_esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+dpu_esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 dpu_esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 dpu_esp32.menu.FlashMode.qio=QIO
@@ -15202,6 +15992,11 @@ dpu_esp32.menu.DebugLevel.debug=Debug
 dpu_esp32.menu.DebugLevel.debug.build.code_debug=4
 dpu_esp32.menu.DebugLevel.verbose=Verbose
 dpu_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+dpu_esp32.menu.EraseFlash.none=Disabled
+dpu_esp32.menu.EraseFlash.none.upload.erase_cmd=
+dpu_esp32.menu.EraseFlash.all=Enabled
+dpu_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -15310,6 +16105,11 @@ sonoff_dualr3.menu.DebugLevel.debug.build.code_debug=4
 sonoff_dualr3.menu.DebugLevel.verbose=Verbose
 sonoff_dualr3.menu.DebugLevel.verbose.build.code_debug=5
 
+sonoff_dualr3.menu.EraseFlash.none=Disabled
+sonoff_dualr3.menu.EraseFlash.none.upload.erase_cmd=
+sonoff_dualr3.menu.EraseFlash.all=Enabled
+sonoff_dualr3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 lionbit.name=Lion:Bit Dev Board
 
@@ -15351,7 +16151,7 @@ lionbit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 lionbit.menu.PartitionScheme.default.build.partitions=default
 lionbit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 lionbit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-lionbit.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+lionbit.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 lionbit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 lionbit.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 lionbit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15374,10 +16174,10 @@ lionbit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 lionbit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 lionbit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 lionbit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-lionbit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+lionbit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 lionbit.menu.PartitionScheme.fatflash.build.partitions=ffat
 lionbit.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-lionbit.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+lionbit.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 lionbit.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 lionbit.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 lionbit.menu.PartitionScheme.rainmaker=RainMaker
@@ -15461,6 +16261,11 @@ lionbit.menu.DebugLevel.debug.build.code_debug=4
 lionbit.menu.DebugLevel.verbose=Verbose
 lionbit.menu.DebugLevel.verbose.build.code_debug=5
 
+lionbit.menu.EraseFlash.none=Disabled
+lionbit.menu.EraseFlash.none.upload.erase_cmd=
+lionbit.menu.EraseFlash.all=Enabled
+lionbit.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 watchy.name=Watchy
@@ -15538,6 +16343,11 @@ watchy.menu.DebugLevel.debug.build.code_debug=4
 watchy.menu.DebugLevel.verbose=Verbose
 watchy.menu.DebugLevel.verbose.build.code_debug=5
 
+watchy.menu.EraseFlash.none=Disabled
+watchy.menu.EraseFlash.none.upload.erase_cmd=
+watchy.menu.EraseFlash.all=Enabled
+watchy.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 deneyapkart1A.name=Deneyap Kart 1A
@@ -15579,7 +16389,7 @@ deneyapkart1A.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.
 deneyapkart1A.menu.PartitionScheme.default.build.partitions=default
 deneyapkart1A.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 deneyapkart1A.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-deneyapkart1A.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+deneyapkart1A.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 deneyapkart1A.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 deneyapkart1A.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 deneyapkart1A.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15602,10 +16412,10 @@ deneyapkart1A.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 deneyapkart1A.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 deneyapkart1A.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 deneyapkart1A.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-deneyapkart1A.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+deneyapkart1A.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 deneyapkart1A.menu.PartitionScheme.fatflash.build.partitions=ffat
 deneyapkart1A.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-deneyapkart1A.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+deneyapkart1A.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 deneyapkart1A.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 deneyapkart1A.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 deneyapkart1A.menu.PartitionScheme.rainmaker=RainMaker
@@ -15671,6 +16481,11 @@ deneyapkart1A.menu.DebugLevel.debug.build.code_debug=4
 deneyapkart1A.menu.DebugLevel.verbose=Verbose
 deneyapkart1A.menu.DebugLevel.verbose.build.code_debug=5
 
+deneyapkart1A.menu.EraseFlash.none=Disabled
+deneyapkart1A.menu.EraseFlash.none.upload.erase_cmd=
+deneyapkart1A.menu.EraseFlash.all=Enabled
+deneyapkart1A.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 AirM2M_CORE_ESP32C3.name=AirM2M_CORE_ESP32C3
@@ -15714,7 +16529,7 @@ AirM2M_CORE_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB 
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.default.build.partitions=default
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 AirM2M_CORE_ESP32C3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15822,7 +16637,7 @@ XIAO_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5
 XIAO_ESP32C3.menu.PartitionScheme.default.build.partitions=default
 XIAO_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 XIAO_ESP32C3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-XIAO_ESP32C3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+XIAO_ESP32C3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 XIAO_ESP32C3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 XIAO_ESP32C3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 XIAO_ESP32C3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -15845,10 +16660,10 @@ XIAO_ESP32C3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 XIAO_ESP32C3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 XIAO_ESP32C3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 XIAO_ESP32C3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-XIAO_ESP32C3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+XIAO_ESP32C3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 XIAO_ESP32C3.menu.PartitionScheme.fatflash.build.partitions=ffat
 XIAO_ESP32C3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-XIAO_ESP32C3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+XIAO_ESP32C3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 XIAO_ESP32C3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 XIAO_ESP32C3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 XIAO_ESP32C3.menu.PartitionScheme.rainmaker=RainMaker
@@ -15921,6 +16736,11 @@ XIAO_ESP32C3.menu.DebugLevel.debug=Debug
 XIAO_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
 XIAO_ESP32C3.menu.DebugLevel.verbose=Verbose
 XIAO_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+XIAO_ESP32C3.menu.EraseFlash.none=Disabled
+XIAO_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
+XIAO_ESP32C3.menu.EraseFlash.all=Enabled
+XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -16035,6 +16855,11 @@ connaxio_espoir.menu.DebugLevel.debug.build.code_debug=4
 connaxio_espoir.menu.DebugLevel.verbose=Verbose
 connaxio_espoir.menu.DebugLevel.verbose.build.code_debug=5
 
+connaxio_espoir.menu.EraseFlash.none=Disabled
+connaxio_espoir.menu.EraseFlash.none.upload.erase_cmd=
+connaxio_espoir.menu.EraseFlash.all=Enabled
+connaxio_espoir.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 aw2eth.name=CNRS AW2ETH
@@ -16106,6 +16931,11 @@ aw2eth.menu.DebugLevel.debug=Debug
 aw2eth.menu.DebugLevel.debug.build.code_debug=4
 aw2eth.menu.DebugLevel.verbose=Verbose
 aw2eth.menu.DebugLevel.verbose.build.code_debug=5
+
+aw2eth.menu.EraseFlash.none=Disabled
+aw2eth.menu.EraseFlash.none.upload.erase_cmd=
+aw2eth.menu.EraseFlash.all=Enabled
+aw2eth.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -16276,6 +17106,11 @@ department_of_alchemy_minimain_esp32s2.menu.DebugLevel.debug.build.code_debug=4
 department_of_alchemy_minimain_esp32s2.menu.DebugLevel.verbose=Verbose
 department_of_alchemy_minimain_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
 
+department_of_alchemy_minimain_esp32s2.menu.EraseFlash.none=Disabled
+department_of_alchemy_minimain_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all=Enabled
+department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 Bee_Motion_S3.name=Bee Motion S3
@@ -16380,6 +17215,11 @@ Bee_Motion_S3.menu.DebugLevel.debug.build.code_debug=4
 Bee_Motion_S3.menu.DebugLevel.verbose=Verbose
 Bee_Motion_S3.menu.DebugLevel.verbose.build.code_debug=5
 
+Bee_Motion_S3.menu.EraseFlash.none=Disabled
+Bee_Motion_S3.menu.EraseFlash.none.upload.erase_cmd=
+Bee_Motion_S3.menu.EraseFlash.all=Enabled
+Bee_Motion_S3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ########################################################################
 
 Bee_Motion.name=Bee Motion
@@ -16479,6 +17319,11 @@ Bee_Motion.menu.DebugLevel.debug=Debug
 Bee_Motion.menu.DebugLevel.debug.build.code_debug=4
 Bee_Motion.menu.DebugLevel.verbose=Verbose
 Bee_Motion.menu.DebugLevel.verbose.build.code_debug=5
+
+Bee_Motion.menu.EraseFlash.none=Disabled
+Bee_Motion.menu.EraseFlash.none.upload.erase_cmd=
+Bee_Motion.menu.EraseFlash.all=Enabled
+Bee_Motion.menu.EraseFlash.all.upload.erase_cmd=-e
 
 #####################################################################
 
@@ -16587,6 +17432,11 @@ Bee_Motion_Mini.menu.DebugLevel.debug.build.code_debug=4
 Bee_Motion_Mini.menu.DebugLevel.verbose=Verbose
 Bee_Motion_Mini.menu.DebugLevel.verbose.build.code_debug=5
 
+Bee_Motion_Mini.menu.EraseFlash.none=Disabled
+Bee_Motion_Mini.menu.EraseFlash.none.upload.erase_cmd=
+Bee_Motion_Mini.menu.EraseFlash.all=Enabled
+Bee_Motion_Mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ###############################################################
 
 Bee_S3.name=Bee S3
@@ -16660,7 +17510,7 @@ Bee_S3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPI
 Bee_S3.menu.PartitionScheme.default.build.partitions=default
 Bee_S3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 Bee_S3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-Bee_S3.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+Bee_S3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 Bee_S3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 Bee_S3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 Bee_S3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -16683,10 +17533,10 @@ Bee_S3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 Bee_S3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 Bee_S3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 Bee_S3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-Bee_S3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
+Bee_S3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 Bee_S3.menu.PartitionScheme.fatflash.build.partitions=ffat
 Bee_S3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-Bee_S3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+Bee_S3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 Bee_S3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 Bee_S3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
@@ -16735,6 +17585,11 @@ Bee_S3.menu.DebugLevel.debug=Debug
 Bee_S3.menu.DebugLevel.debug.build.code_debug=4
 Bee_S3.menu.DebugLevel.verbose=Verbose
 Bee_S3.menu.DebugLevel.verbose.build.code_debug=5
+
+Bee_S3.menu.EraseFlash.none=Disabled
+Bee_S3.menu.EraseFlash.none.upload.erase_cmd=
+Bee_S3.menu.EraseFlash.all=Enabled
+Bee_S3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -16811,6 +17666,11 @@ unphone7.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 unphone7.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 unphone7.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 unphone7.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+unphone7.menu.EraseFlash.none=Disabled
+unphone7.menu.EraseFlash.none.upload.erase_cmd=
+unphone7.menu.EraseFlash.all=Enabled
+unphone7.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -16892,7 +17752,7 @@ unphone8.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB S
 unphone8.menu.PartitionScheme.default.build.partitions=default
 unphone8.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 unphone8.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-unphone8.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+unphone8.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 unphone8.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 unphone8.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 unphone8.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -17042,7 +17902,7 @@ unphone9.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB S
 unphone9.menu.PartitionScheme.default.build.partitions=default
 unphone9.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 unphone9.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-unphone9.menu.PartitionScheme.default_8MB=8M Flash (3MB APP/1.5MB FAT)
+unphone9.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 unphone9.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 unphone9.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 unphone9.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
@@ -17111,5 +17971,10 @@ unphone9.menu.DebugLevel.debug=Debug
 unphone9.menu.DebugLevel.debug.build.code_debug=4
 unphone9.menu.DebugLevel.verbose=Verbose
 unphone9.menu.DebugLevel.verbose.build.code_debug=5
+
+unphone9.menu.EraseFlash.none=Disabled
+unphone9.menu.EraseFlash.none.upload.erase_cmd=
+unphone9.menu.EraseFlash.all=Enabled
+unphone9.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ###############################################################
