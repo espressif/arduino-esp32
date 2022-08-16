@@ -34,7 +34,7 @@
 
 // Global copy of slave
 esp_now_peer_info_t slave;
-#define CHANNEL 3
+#define CHANNEL 1
 #define PRINTSCANRESULTS 0
 #define DELETEBEFOREPAIR 0
 
