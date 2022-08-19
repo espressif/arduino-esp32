@@ -402,6 +402,127 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     return true;
 }
 
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
+    if (type != ETH_PHY_W5500) {
+        log_e("Using this ETH.begin() method does not support other ethernet modules, besides the W5500.");
+        return false;
+    }
+    else if (mac_address == nullptr) {
+        log_e("Passed mac address needs to be a valid array the w5500 should be initalized with.");
+        return false;
+    }
+    else if (spi_clock_mhz > 80U) {
+        log_e("Using a higher spi clock speed than 80MHz is not possible.");
+        return false;
+    }
+    else if (spi_clock_mhz > 30U) {
+        log_w("Using a higher spi clock speed than 30MHz is possible, but not recommended as it might cause distortions.");
+    }
+
+    // Initializes TCP/IP network interface (should be called only once in application)
+    // and create default event loop that is running in the background.
+    tcpipInit();
+    esp_err_t error = tcpip_adapter_set_default_eth_handlers();
+    if (error != ESP_OK) {
+        log_e("Method: (tcpip_adapter_set_default_eth_handlers) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    // Create instance of esp-netif for SPI Ethernet.
+    esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
+    esp_netif_config_t cfg_spi = {
+        .base = &esp_netif_config,
+        .stack = ESP_NETIF_NETSTACK_DEFAULT_ETH
+    };
+    esp_netif_t *eth_netif = esp_netif_new(&cfg_spi);
+
+    eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+
+    // Install GPIO ISR handler to be able to service SPI Eth modlues interrupts.
+    error = gpio_install_isr_service(0);
+    if (error != ESP_OK) {
+        log_e("Method: (spi_bus_initialize) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    spi_device_handle_t spi_handle = nullptr;
+    spi_bus_config_t buscfg = {
+        .mosi_io_num = mosi_gpio,
+        .miso_io_num = miso_gpio,
+        .sclk_io_num = slck_gpio,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+    };
+    error = spi_bus_initialize(spi_host, &buscfg, 1);
+    if (error != ESP_OK) {
+        log_e("Method: (spi_bus_initialize) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+    spi_device_interface_config_t devcfg = {
+        .command_bits = 16,
+        .address_bits = 8,
+        .mode = 0,
+        .clock_speed_hz = spi_clock_mhz * 1000 * 1000,
+        .spics_io_num = cs_gpio,
+        .queue_size = 20
+    };
+    error = spi_bus_add_device(spi_host, &devcfg, &spi_handle);
+    if (error != ESP_OK) {
+        log_e("Method: (spi_bus_add_device) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    // W5500 ethernet driver is based on spi driver.
+    eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(spi_handle);
+    w5500_config.int_gpio_num = int_gpio;
+
+    esp_eth_mac_t* eth_mac = esp_eth_mac_new_w5500(&w5500_config, &mac_config);
+    if (eth_mac == nullptr) {
+        log_e("Method: (esp_eth_mac_new_w5500) failed with error: (%s)", esp_err_to_name(ESP_FAIL));
+        return false;
+    }
+
+    eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+    phy_config.phy_addr = phy_addr;
+    phy_config.reset_gpio_num = phy_rst_gpio;
+
+    esp_eth_phy_t *eth_phy = esp_eth_phy_new_w5500(&phy_config);
+    if (eth_phy == nullptr) {
+        log_e("Method: (esp_eth_phy_new) failed with error: (%s)", esp_err_to_name(ESP_FAIL));
+        return false;
+    }
+
+    esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(eth_mac, eth_phy);
+    eth_handle = nullptr;
+
+    error = esp_eth_driver_install(&eth_config, &eth_handle);
+    if (error != ESP_OK || eth_handle == nullptr) {
+        log_e("Method: (esp_eth_driver_install) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    // Set the mac address.
+    esp_eth_ioctl(eth_handle, ETH_CMD_S_MAC_ADDR, mac_address);
+
+    // Attach Ethernet driver to TCP/IP stack.
+    error = esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle));
+    if (error != ESP_OK) {
+        log_e("Method: (esp_netif_attach) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    // Start Ethernet driver state machine.
+    error = esp_eth_start(eth_handle);
+    if (error != ESP_OK) {
+        log_e("Method: (esp_eth_start) failed with error: (%s)", esp_err_to_name(error));
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
     esp_err_t err = ESP_OK;
