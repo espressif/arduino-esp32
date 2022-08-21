@@ -117,7 +117,7 @@ esp_mn_phrase_t *esp_mn_commands_get_from_string(const char *phoneme_string);
  *     - NULL                 Success
  *     - others               The list of error phrase which can not be parsed by multinet.
  */
-esp_mn_error_t *esp_mn_commands_update(const esp_mn_iface_t *multinet, const model_iface_data_t *model_data);
+esp_mn_error_t *esp_mn_commands_update(const esp_mn_iface_t *multinet, model_iface_data_t *model_data);
 
 /**
  * @brief Print the MultiNet Speech Commands.
