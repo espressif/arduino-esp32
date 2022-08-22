@@ -5,14 +5,15 @@ This sketch allows Arduino user to perform Over The Air (OTA) firmware upgrade. 
 
 ## HttpsOTA.begin(const char * url, const char * server_certificate, bool skip_cert_common_name_check) 
 
-Main API which starts firmware upgrade
+Begins the Https OTA update process in another task in the background, requires atleast 16KB of free heap space to use the array that will store the HTTPS packets that are downloaded.
 
 ### Parameters
-* url : URL for the uploaded firmware image
-* server_certificate : Provide the ota server certificate for authentication via HTTPS
-* skip_cert_common_name_check : Skip any validation of server certificate CN field 
+* url : Url to the binary that should be downloaded and flashed onto the 2nd ota data partition
+* server_certificate : Root server certificate of the website we are downloading the binary from
+* update_network_interface : Underlying network interface we want to download the binary over (Ethernet, WLan, etc.). Ethernet requries using the ETH.h base class
+* skip_cert_common_name_check : Wheter the certificate check should be skipped, generally not recommended if the update process needs to be secure, because this makes us vulnerable to man in the middle attacks where an attacker pretends to be the server and we might not download the actual binary we want too, but a binary sent by an attacker instead
 
-The default value provided to skip_cert_common_name_check is true
+The default value provided to update_network_interface is UpdateNetworkInterface::DEFAULT_INTERFACE and skip_cert_common_name_check is true
 
 ## HttpsOTA.onHttpEvent(function)
 

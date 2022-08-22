@@ -1,11 +1,8 @@
 // This sketch provide the functionality of OTA Firmware Upgrade
-#include "WiFi.h"
+#include "ETH.h"
 #include "HttpsOTAUpdate.h"
 // This sketch shows how to implement HTTPS firmware update Over The Air.
 // Please provide your WiFi credentials, https URL to the firmware image and the server certificate.
-
-static const char *ssid     = "your-ssid";  // your network SSID (name of wifi network)
-static const char *password = "your-password"; // your network password
 
 static const char *url = "https://example.com/firmware.bin"; //state url of your firmware image
 
@@ -36,6 +33,14 @@ static const char *server_certificate = "-----BEGIN CERTIFICATE-----\n" \
      "PfZ+G6Z6h7mjem0Y+iWlkYcV4PIWL1iwBi8saCbGS5jN2p8M+X+Q7UNKEkROb3N6\n" \
      "KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==\n" \
      "-----END CERTIFICATE-----";
+
+// Replace GPIO pins with the GPIO pins of your W5500
+#define MOSI_GPIO 23
+#define MISO_GPIO 38
+#define SCLK_GPIO 18
+#define CS_GPIO 26
+#define INT_GPIO 34
+#define PHY_RST_GPIO 19
 
 static HttpsOTAStatus_t otastatus;
 
@@ -68,21 +73,16 @@ void HttpEvent(HttpEvent_t *event)
 void setup(){
 
     Serial.begin(115200);
-    Serial.print("Attempting to connect to SSID: ");
-    WiFi.begin(ssid, password);
+    std::array<uint8_t, 6U> mac_address;
+    WiFi.macAddress(mac_address.data());
+    Serial.print("Attempting to connect to W5500");
+    ETH.begin_w5500(mac_address.data(), MOSI_GPIO, MISO_GPIO, SCLK_GPIO, CS_GPIO, INT_GPIO, PHY_RST_GPIO);
 
-    // attempt to connect to Wifi network:
-    while (WiFi.status() != WL_CONNECTED) {
-        Serial.print(".");
-        delay(1000);
-    }
+    delay(3000);
 
-    Serial.print("Connected to ");
-    Serial.println(ssid);
-    
     HttpsOTA.onHttpEvent(HttpEvent);
     Serial.println("Starting OTA");
-    HttpsOTA.begin(url, server_certificate); 
+    HttpsOTA.begin(url, server_certificate, UpdateNetworkInterface::ETHERNET_IFC, false); 
 
     Serial.println("Please Wait it takes some time ...");
 }
