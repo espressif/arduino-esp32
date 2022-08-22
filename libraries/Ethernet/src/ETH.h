@@ -26,7 +26,7 @@
 #include "esp_eth.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-        bool begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint8_t phy_addr = 1, uint8_t spi_clock_mhz = 10, spi_host_device_t spi_host = SPI3_HOST, eth_phy_type_t type = ETH_PHY_W5500);
+#include "driver/spi_master.h"
 #endif
 
 #ifndef ETH_PHY_ADDR
