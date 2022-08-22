@@ -62,7 +62,7 @@ def report_progress(count, blockSize, totalSize):
             sofar = (count*blockSize) / 1024
             if sofar >= 1000:
                 sofar /= 1024
-                sys.stdout.write("\r%dMB" % (sofar))
+                sys.stdout.write("\r%dMB  " % (sofar))
             else:
                 sys.stdout.write("\r%dKB" % (sofar))
         sys.stdout.flush()
@@ -160,10 +160,10 @@ def get_tool(tool):
             if is_ci:
                 download_file(url, local_path)
             else:
-                if (sys.version_info[0] == 3 and sys.version_info[1] >= 10) or sys.version_info[0] > 3:
-                    download_file_with_progress(url, local_path)
-                else:
+                try:
                     urlretrieve(url, local_path, report_progress)
+                except:
+                    download_file_with_progress(url, local_path)
                 sys.stdout.write("\rDone   \n")
                 sys.stdout.flush()
     else:
