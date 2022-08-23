@@ -403,7 +403,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 }
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
+bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
     if (type != ETH_PHY_W5500) {
         log_e("Using this ETH.begin() method does not support other ethernet modules, besides the W5500.");
         return false;
@@ -438,6 +438,7 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
     esp_netif_t *eth_netif = esp_netif_new(&cfg_spi);
 
     eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+    mac_config.rx_task_stack_size = mac_stack_size;
 
     // Install GPIO ISR handler to be able to service SPI Eth modlues interrupts.
     error = gpio_install_isr_service(0);
