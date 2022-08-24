@@ -32,6 +32,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
+#define CHANNEL 1
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -51,7 +52,7 @@ void InitESPNow() {
 // config AP SSID
 void configDeviceAP() {
   const char *SSID = "Slave_1";
-  bool result = WiFi.softAP(SSID, "Slave_1_Password");
+  bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
   if (!result) {
     Serial.println("AP Config failed.");
   } else {
@@ -86,5 +87,5 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 }
 
 void loop() {
-  // Behavior is handled in callback function
+  // Chill
 }
