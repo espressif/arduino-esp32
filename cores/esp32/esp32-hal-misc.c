@@ -175,10 +175,6 @@ unsigned long ARDUINO_ISR_ATTR millis()
 
 void delay(uint32_t ms)
 {
-    _Static_assert(
-        portTICK_PERIOD_MS == 1,
-        "esp32-arduino requires 1ms tick (CONFIG_FREERTOS_HZ=1000)"
-    );
     vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
