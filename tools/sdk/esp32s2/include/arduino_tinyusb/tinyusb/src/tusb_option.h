@@ -98,7 +98,9 @@ typedef int make_iso_compilers_happy;
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
 
 // NXP iMX RT
-#define OPT_MCU_MIMXRT10XX        700 ///< NXP iMX RT10xx
+#define OPT_MCU_MIMXRT            700             ///< NXP iMX RT Series
+#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT  ///< RT10xx
+#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT  ///< RT11xx
 
 // Nuvoton
 #define OPT_MCU_NUC121            800
@@ -221,7 +223,7 @@ typedef int make_iso_compilers_happy;
 #define TUSB_OPT_DEVICE_ENABLED CFG_TUD_ENABLED
 
 // highspeed support indicator
-#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? CFG_TUD_MAX_SPEED : TUP_RHPORT_HIGHSPEED)
+#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? (CFG_TUD_MAX_SPEED & OPT_MODE_HIGH_SPEED) : TUP_RHPORT_HIGHSPEED)
 
 //------------- Roothub as Host -------------//
 

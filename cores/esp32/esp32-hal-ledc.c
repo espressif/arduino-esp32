@@ -89,7 +89,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << channels_resolution[chan]) - 1;
 
-    if(duty == max_duty){
+    if((duty == max_duty) && (max_duty != 1)){
         duty = max_duty + 1;
     }
 

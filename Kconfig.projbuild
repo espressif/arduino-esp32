@@ -1,5 +1,14 @@
 menu "Arduino Configuration"
 
+config ARDUINO_VARIANT
+    string "Arduino target variant (board)"
+    default IDF_TARGET
+    help
+        The name of a target variant (e.g., a specific board) in the variants/
+        folder, e.g.  "heltec_wifi_lora_32_V2". The name is case sensitive.
+        Specifying a variant name different from the target enables additional
+        customization, for example the definition of GPIO pins.
+
 config ENABLE_ARDUINO_DEPENDS
     bool
     select LWIP_SO_RCVBUF

@@ -57,6 +57,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
@@ -80,6 +81,7 @@ WebServer::WebServer(int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(port=%d)", port);
