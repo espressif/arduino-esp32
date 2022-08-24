@@ -41,17 +41,6 @@ typedef enum {
     WDTO_8S     = 8000 //!< WDTO_8S
 } WDTO_t;
 
-
-typedef enum {
-    FM_QIO = 0x00,
-    FM_QOUT = 0x01,
-    FM_DIO = 0x02,
-    FM_DOUT = 0x03,
-    FM_FAST_READ = 0x04,
-    FM_SLOW_READ = 0x05,
-    FM_UNKNOWN = 0xff
-} FlashMode_t;
-
 typedef enum {
     SKETCH_SIZE_TOTAL = 0,
     SKETCH_SIZE_FREE = 1
@@ -87,11 +76,9 @@ public:
 
     uint32_t getFlashChipSize();
     uint32_t getFlashChipSpeed();
-    FlashMode_t getFlashChipMode();
+    const char * getFlashChipMode();
 
-    uint32_t magicFlashChipSize(uint8_t byte);
     uint32_t magicFlashChipSpeed(uint8_t byte);
-    FlashMode_t magicFlashChipMode(uint8_t byte);
 
     uint32_t getSketchSize();
     String getSketchMD5();

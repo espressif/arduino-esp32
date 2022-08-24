@@ -30,6 +30,7 @@ extern "C" {
 }
 #include <MD5Builder.h>
 
+#include "soc/spi_reg.h"
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
@@ -54,6 +55,14 @@ extern "C" {
 #include "rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x1000
 #endif
+
+// REG_SPI_BASE is not defined for S3/C3 ??
+
+#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+  #ifndef REG_SPI_BASE
+  #define REG_SPI_BASE(i)     (DR_REG_SPI1_BASE + (((i)>1) ? (((i)* 0x1000) + 0x20000) : (((~(i)) & 1)* 0x1000 )))
+  #endif // REG_SPI_BASE
+#endif // TARGET
 
 /**
  * User-defined Literals
@@ -192,7 +201,7 @@ static uint32_t sketchSize(sketchSize_t response) {
         return data.image_len;
     }
 }
-    
+
 uint32_t EspClass::getSketchSize () {
     return sketchSize(SKETCH_SIZE_TOTAL);
 }
@@ -327,31 +336,28 @@ uint32_t EspClass::getFlashChipSpeed(void)
     return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
-FlashMode_t EspClass::getFlashChipMode(void)
+const char * EspClass::getFlashChipMode(void)
 {
-    esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
-        return FM_UNKNOWN;
-    }
-    return magicFlashChipMode(fhdr.spi_mode);
-}
-
-uint32_t EspClass::magicFlashChipSize(uint8_t byte)
-{
-    switch(byte & 0x0F) {
-    case 0x0: // 8 MBit (1MB)
-        return (1_MB);
-    case 0x1: // 16 MBit (2MB)
-        return (2_MB);
-    case 0x2: // 32 MBit (4MB)
-        return (4_MB);
-    case 0x3: // 64 MBit (8MB)
-        return (8_MB);
-    case 0x4: // 128 MBit (16MB)
-        return (16_MB);
-    default: // fail?
-        return 0;
-    }
+   #if CONFIG_IDF_TARGET_ESP32S2
+   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
+   #else
+   uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
+   #endif
+   /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
+   if (spi_ctrl & BIT(24)) { //SPI_FREAD_QIO
+       return ("QIO");
+   } else if (spi_ctrl & BIT(20)) { //SPI_FREAD_QUAD
+       return ("QOUT");
+   } else if (spi_ctrl &  BIT(23)) { //SPI_FREAD_DIO
+       return ("DIO");
+   } else if (spi_ctrl & BIT(14)) { // SPI_FREAD_DUAL
+       return ("DOUT");
+   } else if (spi_ctrl & BIT(13)) { //SPI_FASTRD_MODE
+       return ("Fast");
+   } else {
+       return ("Slow");
+   }
+   return ("DOUT");
 }
 
 uint32_t EspClass::magicFlashChipSpeed(uint8_t byte)
@@ -368,15 +374,6 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte)
     default: // fail?
         return 0;
     }
-}
-
-FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
-{
-    FlashMode_t mode = (FlashMode_t) byte;
-    if(mode > FM_SLOW_READ) {
-        mode = FM_UNKNOWN;
-    }
-    return mode;
 }
 
 bool EspClass::flashEraseSector(uint32_t sector)
