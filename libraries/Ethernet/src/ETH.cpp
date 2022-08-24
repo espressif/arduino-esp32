@@ -403,7 +403,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 }
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
+bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size, int spi_max_transfer_size, spi_common_dma_t spi_dma_channel, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
     if (type != ETH_PHY_W5500) {
         log_e("Using this ETH.begin() method does not support other ethernet modules, besides the W5500.");
         return false;
@@ -454,8 +454,9 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
         .sclk_io_num = slck_gpio,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
+        .max_transfer_sz = spi_max_transfer_size
     };
-    error = spi_bus_initialize(spi_host, &buscfg, 1);
+    error = spi_bus_initialize(spi_host, &buscfg, spi_dma_channel);
     if (error != ESP_OK) {
         log_e("Method: (spi_bus_initialize) failed with error: (%s)", esp_err_to_name(error));
         return false;
