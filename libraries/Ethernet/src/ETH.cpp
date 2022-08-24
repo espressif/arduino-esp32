@@ -443,7 +443,7 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
     // Install GPIO ISR handler to be able to service SPI Eth modlues interrupts.
     error = gpio_install_isr_service(0);
     if (error != ESP_OK) {
-        log_e("Method: (spi_bus_initialize) failed with error: (%s)", esp_err_to_name(error));
+        log_e("Method: (gpio_install_isr_service) failed with error: (%s)", esp_err_to_name(error));
         return false;
     }
 
