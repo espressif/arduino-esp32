@@ -5,11 +5,6 @@
 //a specific phrase or word.
 
 
-
-#define ESP_MN_PREFIX "mn"
-#define ESP_MN_ENGLISH "en"
-#define ESP_MN_CHINESE "cn"
-
 /**
  * @brief Get the multinet handle from model name
  *
