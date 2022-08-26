@@ -64,6 +64,10 @@ public:
     {
         return _address.dword == addr._address.dword;
     }
+    bool operator!=(const IPAddress& addr) const
+    {
+        return !(this == addr);
+    }
     bool operator==(const uint8_t* addr) const;
 
     // Overloaded index operator to allow getting and setting individual octets of the address
