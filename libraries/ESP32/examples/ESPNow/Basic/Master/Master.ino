@@ -56,7 +56,7 @@ void InitESPNow() {
 
 // Scan for slaves in AP mode
 void ScanForSlave() {
-  int8_t scanResults = WiFi.scanNetworks();
+  int16_t scanResults = WiFi.scanNetworks(false, false, false, 300, CHANNEL); // Scan only on one channel
   // reset on each scan
   bool slaveFound = 0;
   memset(&slave, 0, sizeof(slave));
