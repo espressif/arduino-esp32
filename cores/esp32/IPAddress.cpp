@@ -20,6 +20,7 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 #include <Print.h>
+#include <StreamString.h>
 
 IPAddress::IPAddress() : IPAddress(IPv4) {}
 
