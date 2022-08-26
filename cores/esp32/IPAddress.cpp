@@ -113,6 +113,12 @@ bool IPAddress::operator==(const IPAddress& addr) const
         && (memcmp(addr._address.bytes, _address.bytes, sizeof(_address.bytes)) == 0);
 }
 
+bool IPAddress::operator!=(const IPAddress& addr) const
+{
+    return (addr._type != _type)
+        || (memcmp(addr._address.bytes, _address.bytes, sizeof(_address.bytes)) != 0);
+}
+
 bool IPAddress::operator==(const uint8_t* addr) const
 {
     // IPv4 only comparison to byte pointer
