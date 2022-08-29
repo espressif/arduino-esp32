@@ -27,6 +27,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+#include <driver/spi_master.h>
+#endif
+
 #define SPI_HAS_TRANSACTION
 
 class SPISettings
@@ -68,7 +72,16 @@ public:
     void setDataMode(uint8_t dataMode);
     void setFrequency(uint32_t freq);
     void setClockDivider(uint32_t clockDiv);
-    
+
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+    /**
+     * @brief Sets the spi device handle so that the underlying SPI driver, also respects when the esp-idf SPI driver attempts to use the SPI.
+     * @param spi_device_handle Spi device handle gettable via. ETH.getSpiDeviceHandle()
+     * @param spi_device_handle Spi host device gettable via. ETH.getSpiHost()
+     */
+    void setSpiDeviceHandle(spi_device_handle_t& spi_device_handle, spi_host_device_t& spi_host_device);
+#endif
+
     uint32_t getClockDivider();
 
     void beginTransaction(SPISettings settings);

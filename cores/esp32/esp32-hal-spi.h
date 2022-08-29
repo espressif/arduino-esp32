@@ -23,6 +23,10 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+#include <driver/spi_master.h>
+#endif
+
 #define SPI_HAS_TRANSACTION
 
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
@@ -95,7 +99,7 @@ void spiWaitReady(spi_t * spi);
 uint32_t spiGetClockDiv(spi_t * spi);
 uint8_t spiGetDataMode(spi_t * spi);
 uint8_t spiGetBitOrder(spi_t * spi);
-
+void spiSetDeviceHandle(void * spi_device_handle, uint8_t spi_host_device);
 
 /*
  * Non transaction based lock methods (each locks and unlocks when called)

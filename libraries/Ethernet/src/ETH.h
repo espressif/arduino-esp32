@@ -26,7 +26,7 @@
 #include "esp_eth.h"
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-#include "driver/spi_master.h"
+#include <driver/spi_master.h>
 #endif
 
 #ifndef ETH_PHY_ADDR
@@ -66,6 +66,10 @@ class ETHClass {
         bool staticIP;
 #if ESP_IDF_VERSION_MAJOR > 3
         esp_eth_handle_t eth_handle;
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+        spi_device_handle_t spi_device_handle = nullptr;
+        spi_host_device_t spi_host_device = spi_host_device_t::SPI3_HOST;
+#endif
 
     protected:
         bool started;
@@ -82,7 +86,9 @@ class ETHClass {
         bool begin(uint8_t phy_addr=ETH_PHY_ADDR, int power=ETH_PHY_POWER, int mdc=ETH_PHY_MDC, int mdio=ETH_PHY_MDIO, eth_phy_type_t type=ETH_PHY_TYPE, eth_clock_mode_t clk_mode=ETH_CLK_MODE, bool use_mac_from_efuse=false);
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-        bool begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size = 2048, int spi_max_transfer_size = 0, spi_common_dma_t spi_dma_channel = spi_common_dma_t::SPI_DMA_CH_AUTO, uint8_t phy_addr = 1, uint8_t spi_clock_mhz = 10, spi_host_device_t spi_host = SPI3_HOST, eth_phy_type_t type = ETH_PHY_W5500);
+        bool beginW5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size = 2048, int spi_max_transfer_size = 0, spi_common_dma_t spi_dma_channel = spi_common_dma_t::SPI_DMA_CH_AUTO, uint8_t phy_addr = 1, uint8_t spi_clock_mhz = 10, spi_host_device_t spi_host = SPI3_HOST, eth_phy_type_t type = ETH_PHY_W5500);
+        spi_device_handle_t& getSpiDeviceHandle(void);
+        spi_host_device_t& getSpiHost(void);
 #endif
 
         bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);

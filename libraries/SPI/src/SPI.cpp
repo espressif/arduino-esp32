@@ -158,6 +158,13 @@ void SPIClass::setClockDivider(uint32_t clockDiv)
     SPI_PARAM_UNLOCK();
 }
 
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+void SPIClass::setSpiDeviceHandle(spi_device_handle_t& spi_device_handle, spi_host_device_t& spi_host_device)
+{
+    spiSetDeviceHandle(spi_device_handle, spi_host_device);
+}
+#endif
+
 uint32_t SPIClass::getClockDivider()
 {
     return spiGetClockDiv(_spi);

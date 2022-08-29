@@ -55,6 +55,10 @@
 #include "esp_intr.h"
 #endif
 
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+#include <driver/spi_master.h>
+#endif
+
 struct spi_struct_t {
     spi_dev_t * dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -135,6 +139,29 @@ static spi_t _spi_bus_array[] = {
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 3}
 #endif
 };
+#elif ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+#define SPI_MUTEX_LOCK()    if (spi_handle != NULL && spi->num == spi_host) { spi_lock_error = spi_device_acquire_bus(spi_handle, portMAX_DELAY); }\
+    do {} while ((xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS))
+#define SPI_MUTEX_UNLOCK()  if (spi_handle != NULL && spi_lock_error == ESP_OK) { spi_device_release_bus(spi_handle); }\
+    xSemaphoreGive(spi->lock)
+
+static spi_t _spi_bus_array[] = {
+#if CONFIG_IDF_TARGET_ESP32S2
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 1},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 2}
+#elif CONFIG_IDF_TARGET_ESP32S3
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 1}
+#elif CONFIG_IDF_TARGET_ESP32C3
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0}
+#else
+    {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), NULL, 0},
+    {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 1},
+    {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 2},
+    {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 3}
+#endif
+};
 #else
 #define SPI_MUTEX_LOCK()    do {} while (xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS)
 #define SPI_MUTEX_UNLOCK()  xSemaphoreGive(spi->lock)
@@ -156,6 +183,12 @@ static spi_t _spi_bus_array[] = {
     {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 3}
 #endif
 };
+#endif
+
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+    spi_device_handle_t spi_handle = NULL;
+    uint8_t spi_host = 0;
+    esp_err_t spi_lock_error = ESP_FAIL;
 #endif
 
 void spiAttachSCK(spi_t * spi, int8_t sck)
@@ -630,6 +663,15 @@ uint8_t spiGetBitOrder(spi_t * spi)
         return 0;
     }
     return (spi->dev->ctrl.wr_bit_order | spi->dev->ctrl.rd_bit_order) == 0;
+}
+
+void spiSetDeviceHandle(void * spi_device_handle, uint8_t spi_host_device)
+{
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+    spi_handle = spi_device_handle;
+    // Increase number by 1, because SPI_HOST_1 is 0, SPI_HOST_2 is 1 and SPI_HOST_3 is 2.
+    spi_host = spi_host_device + 1U;
+#endif
 }
 
 void spiSetBitOrder(spi_t * spi, uint8_t bitOrder)

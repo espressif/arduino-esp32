@@ -40,6 +40,12 @@
 #include "lwip/err.h"
 #include "lwip/dns.h"
 
+
+#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
+    #include <hal/spi_hal.h>
+    #include <driver/spi_common_internal.h>
+#endif
+
 extern void tcpipInit();
 
 #if ESP_IDF_VERSION_MAJOR > 3
@@ -403,7 +409,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 }
 
 #if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size, int spi_max_transfer_size, spi_common_dma_t spi_dma_channel, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
+bool ETHClass::beginW5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_gpio, int8_t slck_gpio, int8_t cs_gpio, int8_t int_gpio, int8_t phy_rst_gpio, uint32_t mac_stack_size, int spi_max_transfer_size, spi_common_dma_t spi_dma_channel, uint8_t phy_addr, uint8_t spi_clock_mhz, spi_host_device_t spi_host, eth_phy_type_t type) {
     if (type != ETH_PHY_W5500) {
         log_e("Using this ETH.begin() method does not support other ethernet modules, besides the W5500.");
         return false;
@@ -447,7 +453,7 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
         return false;
     }
 
-    spi_device_handle_t spi_handle = nullptr;
+    spi_device_handle = nullptr;
     spi_bus_config_t buscfg = {
         .mosi_io_num = mosi_gpio,
         .miso_io_num = miso_gpio,
@@ -469,14 +475,14 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
         .spics_io_num = cs_gpio,
         .queue_size = 20
     };
-    error = spi_bus_add_device(spi_host, &devcfg, &spi_handle);
+    error = spi_bus_add_device(spi_host, &devcfg, &spi_device_handle);
     if (error != ESP_OK) {
         log_e("Method: (spi_bus_add_device) failed with error: (%s)", esp_err_to_name(error));
         return false;
     }
 
     // W5500 ethernet driver is based on spi driver.
-    eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(spi_handle);
+    eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(spi_device_handle);
     w5500_config.int_gpio_num = int_gpio;
 
     esp_eth_mac_t* eth_mac = esp_eth_mac_new_w5500(&w5500_config, &mac_config);
@@ -522,6 +528,14 @@ bool ETHClass::begin_w5500(uint8_t* mac_address, int8_t mosi_gpio, int8_t miso_g
     }
 
     return true;
+}
+
+spi_device_handle_t& ETHClass::getSpiDeviceHandle(void) {
+    return spi_device_handle;
+}
+
+spi_host_device_t& ETHClass::getSpiHost(void) {
+    return spi_host_device;
 }
 #endif
 
