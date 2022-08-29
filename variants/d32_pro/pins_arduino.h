@@ -9,6 +9,10 @@ static const uint8_t LED_BUILTIN = 5;
 #define LED_BUILTIN LED_BUILTIN
 static const uint8_t _VBAT = 35; // battery voltage
 
+static const uint8_t SS    = 5;
+static const uint8_t MOSI  = 23;
+static const uint8_t MISO  = 19;
+static const uint8_t SCK   = 18;
 
 #define TF_CS   4  // TF (Micro SD Card) CS pin
 #define TS_CS   12 // Touch Screen CS pin
