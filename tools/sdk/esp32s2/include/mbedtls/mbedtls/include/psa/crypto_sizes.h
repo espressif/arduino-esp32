@@ -747,7 +747,7 @@
  *      subjectPublicKey     BIT STRING  } -- contains DSAPublicKey
  * AlgorithmIdentifier  ::=  SEQUENCE  {
  *      algorithm               OBJECT IDENTIFIER,
- *      parameters              Dss-Parms  } -- SEQUENCE of 3 INTEGERs
+ *      parameters              Dss-Params  } -- SEQUENCE of 3 INTEGERs
  * DSAPublicKey  ::=  INTEGER -- public key, Y
  *
  * - 3 * 4 bytes of SEQUENCE overhead;

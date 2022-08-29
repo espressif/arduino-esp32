@@ -105,11 +105,13 @@ public:
   int args();                     // get arguments count
   bool hasArg(String name);       // check if argument exists
   void collectHeaders(const char* headerKeys[], const size_t headerKeysCount); // set the request headers to collect
-  String header(String name);      // get request header value by name
-  String header(int i);              // get request header value by number
-  String headerName(int i);          // get request header name by number
-  int headers();                     // get header count
-  bool hasHeader(String name);       // check if header exists
+  String header(String name);     // get request header value by name
+  String header(int i);           // get request header value by number
+  String headerName(int i);       // get request header name by number
+  int headers();                  // get header count
+  bool hasHeader(String name);    // check if header exists
+
+  int clientContentLength() { return _clientContentLength; }      // return "content-length" of incoming HTTP header from "_currentClient"
 
   String hostHeader();            // get request host header if available or empty String if not
 
@@ -139,8 +141,8 @@ public:
   static String urlDecode(const String& text);
 
   template<typename T>
-  size_t streamFile(T &file, const String& contentType) {
-    _streamFileCore(file.size(), file.name(), contentType);
+  size_t streamFile(T &file, const String& contentType, const int code = 200) {
+    _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
 
@@ -160,7 +162,7 @@ protected:
   void _prepareHeader(String& response, int code, const char* content_type, size_t contentLength);
   bool _collectHeader(const char* headerName, const char* headerValue);
 
-  void _streamFileCore(const size_t fileSize, const String & fileName, const String & contentType);
+  void _streamFileCore(const size_t fileSize, const String & fileName, const String & contentType, const int code = 200);
 
   String _getRandomHexString();
   // for extracting Auth parameters
@@ -198,6 +200,7 @@ protected:
   int              _headerKeysCount;
   RequestArgument* _currentHeaders;
   size_t           _contentLength;
+  int              _clientContentLength;	// "Content-Length" from header of incoming POST or GET request
   String           _responseHeaders;
 
   String           _hostHeader;

@@ -21,7 +21,7 @@
 #include "WiFi.h"
 
 #if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-#  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
+#  warning "Please configure IDF framework to include mbedTLS -> Enable PSK based ciphersuite modes (MBEDTLS_KEY_EXCHANGE_PSK) and activate at least one cipher"
 #else
 
 const char *pers = "esp32-tls";
@@ -100,18 +100,21 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     int res = lwip_connect(ssl_client->socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     if (res < 0 && errno != EINPROGRESS) {
         log_e("connect on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
-        close(ssl_client->socket);
+        lwip_close(ssl_client->socket);
+        ssl_client->socket = -1;
         return -1;
     }
 
     res = select(ssl_client->socket + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
     if (res < 0) {
         log_e("select on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
-        close(ssl_client->socket);
+        lwip_close(ssl_client->socket);
+        ssl_client->socket = -1;
         return -1;
     } else if (res == 0) {
         log_i("select returned due to timeout %d ms for fd %d", timeout, ssl_client->socket);
-        close(ssl_client->socket);
+        lwip_close(ssl_client->socket);
+        ssl_client->socket = -1;
         return -1;
     } else {
         int sockerr;
@@ -120,13 +123,15 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
 
         if (res < 0) {
             log_e("getsockopt on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
-            close(ssl_client->socket);
+            lwip_close(ssl_client->socket);
+            ssl_client->socket = -1;
             return -1;
         }
 
         if (sockerr != 0) {
             log_e("socket error on fd %d, errno: %d, \"%s\"", ssl_client->socket, sockerr, strerror(sockerr));
-            close(ssl_client->socket);
+            lwip_close(ssl_client->socket);
+            ssl_client->socket = -1;
             return -1;
         }
     }
@@ -319,7 +324,7 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     log_v("Cleaning SSL connection.");
 
     if (ssl_client->socket >= 0) {
-        close(ssl_client->socket);
+        lwip_close(ssl_client->socket);
         ssl_client->socket = -1;
     }
 

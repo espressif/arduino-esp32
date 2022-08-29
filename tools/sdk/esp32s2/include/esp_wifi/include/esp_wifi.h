@@ -498,7 +498,7 @@ esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
   * @brief     Set protocol type of specified interface
   *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
   *
-  * @attention Currently we only support 802.11b or 802.11bg or 802.11bgn mode
+  * @attention Support 802.11b or 802.11bg or 802.11bgn or LR mode
   *
   * @param     ifx  interfaces
   * @param     protocol_bitmap  WiFi protocol bitmap
@@ -1211,20 +1211,6 @@ esp_err_t esp_wifi_ftm_resp_set_offset(int16_t offset_cm);
 esp_err_t esp_wifi_config_11b_rate(wifi_interface_t ifx, bool disable);
 
 /**
-  * @brief      Config ESPNOW rate of specified interface
-  *
-  * @attention  1. This API should be called after esp_wifi_init() and before esp_wifi_start().
-  *
-  * @param      ifx  Interface to be configured.
-  * @param      rate Phy rate to be configured.
-  *
-  * @return
-  *    - ESP_OK: succeed
-  *    - others: failed
-  */
-esp_err_t esp_wifi_config_espnow_rate(wifi_interface_t ifx, wifi_phy_rate_t rate);
-
-/**
   * @brief      Set interval for station to wake up periodically at disconnected.
   *
   * @attention 1. Only when ESP_WIFI_STA_DISCONNECTED_PM_ENABLE is enabled, this configuration could work
@@ -1294,6 +1280,19 @@ esp_err_t esp_wifi_get_country_code(char *country);
   *    - others: failed
   */
 esp_err_t esp_wifi_config_80211_tx_rate(wifi_interface_t ifx, wifi_phy_rate_t rate);
+
+/**
+  * @brief      Disable PMF configuration for specified interface
+  *
+  * @attention  This API should be called after esp_wifi_set_config() and before esp_wifi_start().
+  *
+  * @param      ifx  Interface to be configured.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_disable_pmf_config(wifi_interface_t ifx);
 
 #ifdef __cplusplus
 }

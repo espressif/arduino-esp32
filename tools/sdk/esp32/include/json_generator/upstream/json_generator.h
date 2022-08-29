@@ -174,7 +174,7 @@ int json_gen_end_array(json_gen_str_t *jstr);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_push_object(json_gen_str_t *jstr, char *name);
+int json_gen_push_object(json_gen_str_t *jstr, const char *name);
 
 /** Pop a named JSON object
  *
@@ -208,7 +208,7 @@ int json_gen_pop_object(json_gen_str_t *jstr);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that.
  */
-int json_gen_push_object_str(json_gen_str_t *jstr, char *name, char *object_str);
+int json_gen_push_object_str(json_gen_str_t *jstr, const char *name, const char *object_str);
 
 /** Push a named JSON array
  *
@@ -223,7 +223,7 @@ int json_gen_push_object_str(json_gen_str_t *jstr, char *name, char *object_str)
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_push_array(json_gen_str_t *jstr, char *name);
+int json_gen_push_array(json_gen_str_t *jstr, const char *name);
 
 /** Pop a named JSON array
  *
@@ -257,7 +257,7 @@ int json_gen_pop_array(json_gen_str_t *jstr);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that.
  */
-int json_gen_push_array_str(json_gen_str_t *jstr, char *name, char *array_str);
+int json_gen_push_array_str(json_gen_str_t *jstr, const char *name, const char *array_str);
 
 /** Add a boolean element to an object
  *
@@ -276,7 +276,7 @@ int json_gen_push_array_str(json_gen_str_t *jstr, char *name, char *array_str);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_set_bool(json_gen_str_t *jstr, char *name, bool val);
+int json_gen_obj_set_bool(json_gen_str_t *jstr, const char *name, bool val);
 
 /** Add an integer element to an object
  *
@@ -295,7 +295,7 @@ int json_gen_obj_set_bool(json_gen_str_t *jstr, char *name, bool val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_set_int(json_gen_str_t *jstr, char *name, int val);
+int json_gen_obj_set_int(json_gen_str_t *jstr, const char *name, int val);
 
 /** Add a float element to an object
  *
@@ -314,7 +314,7 @@ int json_gen_obj_set_int(json_gen_str_t *jstr, char *name, int val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_set_float(json_gen_str_t *jstr, char *name, float val);
+int json_gen_obj_set_float(json_gen_str_t *jstr, const char *name, float val);
 
 /** Add a string element to an object
  *
@@ -333,7 +333,7 @@ int json_gen_obj_set_float(json_gen_str_t *jstr, char *name, float val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_set_string(json_gen_str_t *jstr, char *name, char *val);
+int json_gen_obj_set_string(json_gen_str_t *jstr, const char *name, const char *val);
 
 /** Add a NULL element to an object
  *
@@ -351,7 +351,7 @@ int json_gen_obj_set_string(json_gen_str_t *jstr, char *name, char *val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_set_null(json_gen_str_t *jstr, char *name);
+int json_gen_obj_set_null(json_gen_str_t *jstr, const char *name);
 
 /** Add a boolean element to an array
  *
@@ -415,7 +415,7 @@ int json_gen_arr_set_float(json_gen_str_t *jstr, float val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_arr_set_string(json_gen_str_t *jstr, char *val);
+int json_gen_arr_set_string(json_gen_str_t *jstr, const char *val);
 
 /** Add a NULL element to an array
  *
@@ -452,7 +452,7 @@ int json_gen_arr_set_null(json_gen_str_t *jstr);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_obj_start_long_string(json_gen_str_t *jstr, char *name, char *val);
+int json_gen_obj_start_long_string(json_gen_str_t *jstr, const char *name, const char *val);
 
 /** Start a Long string in an array
  *
@@ -473,7 +473,7 @@ int json_gen_obj_start_long_string(json_gen_str_t *jstr, char *name, char *val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_arr_start_long_string(json_gen_str_t *jstr, char *val);
+int json_gen_arr_start_long_string(json_gen_str_t *jstr, const char *val);
 
 /** Add to a JSON Long string
  *
@@ -489,7 +489,7 @@ int json_gen_arr_start_long_string(json_gen_str_t *jstr, char *val);
  * is passed to json_gen_str_start(). Else, buffer will be flushed out and new data
  * added after that
  */
-int json_gen_add_to_long_string(json_gen_str_t *jstr, char *val);
+int json_gen_add_to_long_string(json_gen_str_t *jstr, const char *val);
 
 /** End a JSON Long string
  *

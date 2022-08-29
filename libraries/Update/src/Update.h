@@ -28,6 +28,9 @@
 
 #define ENCRYPTED_BLOCK_SIZE 16
 
+#define SPI_SECTORS_PER_BLOCK   16      // usually large erase block is 32k/64k
+#define SPI_FLASH_BLOCK_SIZE    (SPI_SECTORS_PER_BLOCK*SPI_FLASH_SEC_SIZE)
+
 class UpdateClass {
   public:
     typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
@@ -166,6 +169,7 @@ class UpdateClass {
     bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
     bool _enablePartition(const esp_partition_t* partition);
+    bool _chkDataInBlock(const uint8_t *data, size_t len) const;    // check if block contains any data or is empty
 
 
     uint8_t _error;

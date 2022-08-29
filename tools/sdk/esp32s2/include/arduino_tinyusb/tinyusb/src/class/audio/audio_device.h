@@ -458,7 +458,14 @@ TU_ATTR_WEAK bool tud_audio_rx_done_post_read_cb(uint8_t rhport, uint16_t n_byte
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_FEEDBACK_EP
-TU_ATTR_WEAK bool tud_audio_fb_done_cb(uint8_t rhport);
+TU_ATTR_WEAK void tud_audio_fb_done_cb(uint8_t func_id);
+
+
+// determined by the user itself and set by use of tud_audio_n_fb_set(). The feedback value may be determined e.g. from some fill status of some FIFO buffer. Advantage: No ISR interrupt is enabled, hence the CPU need not to handle an ISR every 1ms or 125us and thus less CPU load, disadvantage: typically a larger FIFO is needed to compensate for jitter (e.g. 8 frames), i.e. a larger delay is introduced.
+
+// Feedback value is calculated within the audio driver by use of SOF interrupt. The driver needs information about the master clock f_m from which the audio sample frequency f_s is derived, f_s itself, and the cycle count of f_m at time of the SOF interrupt (e.g. by use of a hardware counter) - see tud_audio_set_fb_params(). Advantage: Reduced jitter in the feedback value computation, hence, the receive FIFO can be smaller (e.g. 2 frames) and thus a smaller delay is possible, disadvantage: higher CPU load due to SOF ISR handling every frame i.e. 1ms or 125us. This option is a great starting point to try the SOF ISR option but depending on your hardware setup (performance of the CPU) it might not work. If so, figure out why and use the next option. (The most critical point is the reading of the cycle counter value of f_m. It is read from within the SOF ISR - see: audiod_sof() -, hence, the ISR must has a high priority such that no software dependent "random" delay i.e. jitter is introduced).
+
+// Feedback value is determined by the user by use of SOF interrupt. The user may use tud_audio_sof_isr() which is called every SOF (of course only invoked when an alternate interface other than zero was set). The number of frames used to determine the feedback value for the currently active alternate setting can be get by tud_audio_get_fb_n_frames(). The feedback value must be set by use of tud_audio_n_fb_set().
 
 // This function is used to provide data rate feedback from an asynchronous sink. Feedback value will be sent at FB endpoint interval till it's changed.
 //
@@ -468,9 +475,61 @@ TU_ATTR_WEAK bool tud_audio_fb_done_cb(uint8_t rhport);
 //
 // Note that due to a bug in its USB Audio 2.0 driver, Windows currently requires 16.16 format for _all_ USB 2.0 devices. On Linux and macOS it seems the 
 // driver can work with either format. So a good compromise is to keep format correction disabled and stick to 16.16 format.
+
+// Feedback value can be determined from within the SOF ISR of the audio driver. This should reduce jitter. If the feature is used, the user can not set the feedback value.
+
+// Determine feedback value - The feedback method is described in 5.12.4.2 of the USB 2.0 spec
+// Boiled down, the feedback value Ff = n_samples / (micro)frame.
+// Since an accuracy of less than 1 Sample / second is desired, at least n_frames = ceil(2^K * f_s / f_m) frames need to be measured, where K = 10 for full speed and K = 13 for high speed, f_s is the sampling frequency e.g. 48 kHz and f_m is the cpu clock frequency e.g. 100 MHz (or any other master clock whose clock count is available and locked to f_s)
+// The update interval in the (4.10.2.1) Feedback Endpoint Descriptor must be less or equal to 2^(K - P), where P = min( ceil(log2(f_m / f_s)), K)
+// feedback = n_cycles / n_frames * f_s / f_m in 16.16 format, where n_cycles are the number of main clock cycles within fb_n_frames
+
 bool tud_audio_n_fb_set(uint8_t func_id, uint32_t feedback);
 static inline bool tud_audio_fb_set(uint32_t feedback);
+
+// Update feedback value with passed cycles since last time this update function is called.
+// Typically called within tud_audio_sof_isr(). Required tud_audio_feedback_params_cb() is implemented
+// This function will also call tud_audio_feedback_set()
+// return feedback value in 16.16 for reference (0 for error)
+uint32_t tud_audio_feedback_update(uint8_t func_id, uint32_t cycles);
+
+enum {
+  AUDIO_FEEDBACK_METHOD_DISABLED,
+  AUDIO_FEEDBACK_METHOD_FREQUENCY_FIXED,
+  AUDIO_FEEDBACK_METHOD_FREQUENCY_FLOAT,
+  AUDIO_FEEDBACK_METHOD_FREQUENCY_POWER_OF_2,
+
+  // impelemnt later
+  // AUDIO_FEEDBACK_METHOD_FIFO_COUNT
+};
+
+typedef struct {
+  uint8_t method;
+  uint32_t sample_freq;   //  sample frequency in Hz
+
+  union {
+    struct {
+      uint32_t mclk_freq; // Main clock frequency in Hz i.e. master clock to which sample clock is based on
+    }frequency;
+
+#if 0 // implement later
+    struct {
+      uint32_t threshold_bytes; // minimum number of bytes received to be considered as filled/ready
+    }fifo_count;
 #endif
+  };
+}audio_feedback_params_t;
+
+// Invoked when needed to set feedback parameters
+TU_ATTR_WEAK void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedback_params_t* feedback_param);
+
+// Callback in ISR context, invoked periodically according to feedback endpoint bInterval.
+// Could be used to compute and update feedback value, should be placed in RAM if possible
+// frame_number  : current SOF count
+// interval_shift: number of bit shift i.e log2(interval) from Feedback endpoint descriptor
+TU_ATTR_WEAK TU_ATTR_FAST_FUNC void tud_audio_feedback_interval_isr(uint8_t func_id, uint32_t frame_number, uint8_t interval_shift);
+
+#endif // CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_FEEDBACK_EP
 
 #if CFG_TUD_AUDIO_INT_CTR_EPSIZE_IN
 TU_ATTR_WEAK bool tud_audio_int_ctr_done_cb(uint8_t rhport, uint16_t n_bytes_copied);
@@ -612,10 +671,12 @@ static inline uint16_t tud_audio_int_ctr_write(uint8_t const* buffer, uint16_t l
 #endif
 
 #if CFG_TUD_AUDIO_ENABLE_EP_OUT && CFG_TUD_AUDIO_ENABLE_FEEDBACK_EP
+
 static inline bool tud_audio_fb_set(uint32_t feedback)
 {
   return tud_audio_n_fb_set(0, feedback);
 }
+
 #endif
 
 //--------------------------------------------------------------------+
@@ -626,6 +687,7 @@ void     audiod_reset          (uint8_t rhport);
 uint16_t audiod_open           (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
 bool     audiod_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
 bool     audiod_xfer_cb        (uint8_t rhport, uint8_t edpt_addr, xfer_result_t result, uint32_t xferred_bytes);
+void     audiod_sof_isr        (uint8_t rhport, uint32_t frame_count);
 
 #ifdef __cplusplus
 }

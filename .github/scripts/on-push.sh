@@ -14,26 +14,25 @@ function build(){
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
 
-    local args="$ARDUINO_IDE_PATH $ARDUINO_USR_PATH"
+    local args="-ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH"
 
-    args+=" \"$fqbn\""
+    args+=" -t $target -fqbn $fqbn"
 
     if [ "$OS_IS_LINUX" == "1" ]; then
-        args+=" $target"
-        args+=" $ARDUINO_ESP32_PATH/libraries"
-        args+=" $chunk_index $chunks_cnt"
+        args+=" -p $ARDUINO_ESP32_PATH/libraries"
+        args+=" -i $chunk_index -m $chunks_cnt"
         ${BUILD_SKETCHES} ${args}
     else
-        if [ "$OS_IS_WINDOWS" == "1" ]; then
-            local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
-            local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
-            win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
-            -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
-            args+=" ${win_opts}"
-        fi
-
         for sketch in ${sketches}; do
-            ${BUILD_SKETCH} ${args} ${sketch}
+            args+=" -s $(dirname $sketch)"
+            if [ "$OS_IS_WINDOWS" == "1" ]; then
+                local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
+                local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
+                win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
+                -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
+                args+=" ${win_opts}"
+            fi
+            ${BUILD_SKETCH} ${args}
         done
     fi
 }
@@ -82,7 +81,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
     build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
-    build "esp32" $FQBN_ESP32 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
 else
     source ${SCRIPTS_DIR}/install-platformio-esp32.sh
     # PlatformIO ESP32 Test
@@ -109,7 +108,7 @@ else
     replace_script+="data['packages']['toolchain-xtensa-esp32']['optional']=True;"
     replace_script+="data['packages']['toolchain-xtensa-esp32s3']['optional']=False;"
     replace_script+="data['packages']['tool-esptoolpy']['owner']='tasmota';"
-    replace_script+="data['packages']['tool-esptoolpy']['version']='https://github.com/tasmota/esptool/releases/download/v3.3/esptool-3.3.zip';"
+    replace_script+="data['packages']['tool-esptoolpy']['version']='https://github.com/tasmota/esptool/releases/download/v4.2.1/esptool-4.2.1.zip';"
     replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close()"
     python -c "$replace_script"
 

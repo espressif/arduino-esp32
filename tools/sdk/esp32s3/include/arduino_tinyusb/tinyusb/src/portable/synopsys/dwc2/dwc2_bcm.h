@@ -35,9 +35,12 @@
 #include "broadcom/interrupts.h"
 #include "broadcom/caches.h"
 
-#define DWC2_REG_BASE       USB_OTG_GLOBAL_BASE
 #define DWC2_EP_MAX         8
-#define DWC2_EP_FIFO_SIZE   4096
+
+static const dwc2_controller_t _dwc2_controller[] =
+{
+  { .reg_base = USB_OTG_GLOBAL_BASE, .irqnum = USB_IRQn, .ep_count = DWC2_EP_MAX, .ep_fifo_size = 4096 }
+};
 
 #define dcache_clean(_addr, _size)              data_clean(_addr, _size)
 #define dcache_invalidate(_addr, _size)         data_invalidate(_addr, _size)
@@ -46,15 +49,13 @@
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
-  (void) rhport;
-  BP_EnableIRQ(USB_IRQn);
+  BP_EnableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
-  (void) rhport;
-  BP_DisableIRQ(USB_IRQn);
+  BP_DisableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 static inline void dwc2_remote_wakeup_delay(void)
