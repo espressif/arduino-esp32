@@ -30,54 +30,6 @@
 #define SPI_PARAM_UNLOCK()
 #endif
 
-#ifndef SCK
-#if CONFIG_IDF_TARGET_ESP32
-#define SCK 18
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define SCK 36
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define SCK 12
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define SCK 4
-#endif
-#endif
-
-#ifndef MISO
-#if CONFIG_IDF_TARGET_ESP32
-#define MISO 19
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define MISO 37
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define MISO 13
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define MISO 5
-#endif
-#endif
-
-#ifndef MOSI
-#if CONFIG_IDF_TARGET_ESP32
-#define MOSI 23
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define MOSI 35
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define MOSI 11
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define MOSI 6
-#endif
-#endif
-
-#ifndef SS
-#if CONFIG_IDF_TARGET_ESP32
-#define SS 5
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define SS 34
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define SS 10
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define SS 7
-#endif
-#endif
-
 SPIClass::SPIClass(uint8_t spi_bus)
     :_spi_num(spi_bus)
     ,_spi(NULL)
