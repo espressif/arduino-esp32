@@ -2,7 +2,7 @@
 Compile Arduino libs with ESP_LOGx
 ##################################
 
-There 2 basic aproaches. Both of them involve editting file ``configs/defconfig.common``.
+There are 2 primary approaches and both of them involve editing file ``configs/defconfig.common``.
 Edit the file directly and then build.
 Later you can ``git restore configs/defconfig.common`` to go back.
 Copy the file ``cp configs/defconfig.common configs/defconfig.debug`` and edit the debug version.
