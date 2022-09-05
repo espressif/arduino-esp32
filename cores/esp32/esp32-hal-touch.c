@@ -212,19 +212,13 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     } else {
         // attach ISR User Call
         __touchInit();
-        #if SOC_TOUCH_VERSION_2                 // ESP32S2, ESP32S3
         __touchChannelInit(pad);
-        #endif
         __touchInterruptHandlers[pad].fn = userFunc;
         __touchInterruptHandlers[pad].callWithArgs = callWithArgs;
         __touchInterruptHandlers[pad].arg = Args;
     }
 
-#if SOC_TOUCH_VERSION_1                         // ESP32
-    touch_pad_config(pad, threshold);
-#elif SOC_TOUCH_VERSION_2                       // ESP32S2, ESP32S3
     touch_pad_set_thresh(pad, threshold);
-#endif
 }
 
 // it keeps backwards compatibility

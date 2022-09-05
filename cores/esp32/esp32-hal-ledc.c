@@ -89,7 +89,7 @@ void ledcWrite(uint8_t chan, uint32_t duty)
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << channels_resolution[chan]) - 1;
 
-    if(duty == max_duty){
+    if((duty == max_duty) && (max_duty != 1)){
         duty = max_duty + 1;
     }
 
@@ -225,4 +225,8 @@ void analogWrite(uint8_t pin, int value) {
     }
     ledcWrite(pin_to_channel[pin] - 1, value);
   }
+}
+
+int8_t analogGetChannel(uint8_t pin) {
+    return pin_to_channel[pin] - 1;
 }

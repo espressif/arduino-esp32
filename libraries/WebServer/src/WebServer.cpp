@@ -57,6 +57,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
@@ -80,6 +81,7 @@ WebServer::WebServer(int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(port=%d)", port);
@@ -527,7 +529,7 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
 }
 
 
-void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, const String & contentType)
+void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, const String & contentType, const int code)
 {
   using namespace mime;
   setContentLength(fileSize);
@@ -536,7 +538,7 @@ void WebServer::_streamFileCore(const size_t fileSize, const String & fileName, 
       contentType != String(FPSTR(mimeTable[none].mimeType))) {
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
-  send(200, contentType, "");
+  send(code, contentType, "");
 }
 
 String WebServer::pathArg(unsigned int i) {

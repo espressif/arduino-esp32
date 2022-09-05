@@ -140,8 +140,7 @@ If you are writing code that does not require Arduino to compile and you want yo
 FreeRTOS Tick Rate (Hz)
 -----------------------
 
-You might notice that Arduino-esp32's `delay()` function will only work in multiples of 10ms. That is because, by default, esp-idf handles task events 100 times per second.
-To fix that behavior, you need to set FreeRTOS tick rate to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
+The Arduino component requires the FreeRTOS tick rate `CONFIG_FREERTOS_HZ` set to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
 
 Compilation Errors
 ------------------

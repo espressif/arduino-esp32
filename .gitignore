@@ -8,9 +8,17 @@ tools/esptool.exe
 tools/mkspiffs
 tools/mklittlefs
 tools/mkfatfs.exe
+
+# Ignore editor backup files and macOS system metadata
 .DS_Store
+.*.swp
+.*.swo
+*~
+
+# Ignore build folder
+/build
  
-#Ignore files built by Visual Studio/Visual Micro
+# Ignore files built by Visual Studio/Visual Micro
 [Dd]ebug*/
 [Rr]elease*/
 .vs/

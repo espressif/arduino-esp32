@@ -2,6 +2,7 @@
  * Testing block device, wraps filebd and rambd while providing a bunch
  * of hooks for testing littlefs in various conditions.
  *
+ * Copyright (c) 2022, The littlefs authors.
  * Copyright (c) 2017, Arm Limited. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  */
