@@ -79,10 +79,9 @@
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
 
-#define sei()
-#define cli()
-#define interrupts() sei()
-#define noInterrupts() cli()
+// ESP32xx runs FreeRTOS... disabling interrupts can lead to issues, such as Watchdog Timeout
+#define interrupts() portENABLE_INTERRUPTS()
+#define noInterrupts() portDISABLE_INTERRUPTS()
 
 #define clockCyclesPerMicrosecond() ( (long int)getCpuFrequencyMhz() )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
