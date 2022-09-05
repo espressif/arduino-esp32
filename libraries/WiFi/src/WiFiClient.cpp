@@ -303,9 +303,14 @@ int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
+    return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
+}
+
+int WiFiClient::setSocketOption(int level, int option, const void* value, size_t len)
+{
+    int res = setsockopt(fd(), level, option, value, len);
     if(res < 0) {
-        log_e("%X : %d", option, errno);
+        log_e("fail on %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
@@ -330,11 +335,7 @@ int WiFiClient::setTimeout(uint32_t seconds)
 
 int WiFiClient::setOption(int option, int *value)
 {
-    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
-    if(res < 0) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-    }
-    return res;
+    return setSocketOption(IPPROTO_TCP, option, (const void*)value, sizeof(int));
 }
 
 int WiFiClient::getOption(int option, int *value)
