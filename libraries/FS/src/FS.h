@@ -78,7 +78,9 @@ public:
     const char* name() const;
 
     boolean isDirectory(void);
+    boolean seekDir(long position);
     File openNextFile(const char* mode = FILE_READ);
+    boolean getNextFileName(String &filename);
     void rewindDirectory(void);
 
 protected:
