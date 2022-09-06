@@ -23,10 +23,6 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#if ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3
-#include <driver/spi_master.h>
-#endif
-
 #define SPI_HAS_TRANSACTION
 
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
