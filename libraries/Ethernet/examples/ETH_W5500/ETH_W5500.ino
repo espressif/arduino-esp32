@@ -79,6 +79,7 @@ void setup()
   std::array<uint8_t, 6U> mac_address;
   WiFi.macAddress(mac_address.data());
   ETH.begin_w5500(mac_address.data(), MOSI_GPIO, MISO_GPIO, SCLK_GPIO, CS_GPIO, INT_GPIO, PHY_RST_GPIO);
+  SPI.setSpiDeviceHandle(ETH.getSpiDeviceHandle(), ETH.getSpiHost());
 }
 
 

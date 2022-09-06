@@ -137,10 +137,10 @@ static spi_t _spi_bus_array[] = {
 #endif
 };
 #else
-#define SPI_MUTEX_LOCK()    if (spi_handle != NULL && spi->num == spi_host) { printf("Lock"); spi_lock_error = spi_device_acquire_bus(spi_handle, portMAX_DELAY); }\
+#define SPI_MUTEX_LOCK()    if (spi_handle != NULL && spi->num == spi_host) { spi_lock_error = spi_device_acquire_bus(spi_handle, portMAX_DELAY); }\
     do {} while ((xSemaphoreTake(spi->lock, portMAX_DELAY) != pdPASS));\
     locked_handle = xTaskGetCurrentTaskHandle();
-#define SPI_MUTEX_UNLOCK()  if (spi_handle != NULL && spi_lock_error == ESP_OK) { printf("Unlock"); spi_device_release_bus(spi_handle); }\
+#define SPI_MUTEX_UNLOCK()  if (spi_handle != NULL && spi_lock_error == ESP_OK) { spi_device_release_bus(spi_handle); }\
     if (locked_handle == xTaskGetCurrentTaskHandle()) { xSemaphoreGive(spi->lock); }
 
 static spi_t _spi_bus_array[] = {

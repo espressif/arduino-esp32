@@ -77,6 +77,7 @@ void setup(){
     WiFi.macAddress(mac_address.data());
     Serial.print("Attempting to connect to W5500");
     ETH.begin_w5500(mac_address.data(), MOSI_GPIO, MISO_GPIO, SCLK_GPIO, CS_GPIO, INT_GPIO, PHY_RST_GPIO);
+    SPI.setSpiDeviceHandle(ETH.getSpiDeviceHandle(), ETH.getSpiHost());
 
     delay(3000);
 
