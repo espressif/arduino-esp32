@@ -378,9 +378,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // Set UART RX timeout
-    if (_uart != NULL) {
-        uartSetRxTimeout(_uart, _rxTimeout);
-    }
+    uartSetRxTimeout(_uart, _rxTimeout);
 
     HSERIAL_MUTEX_UNLOCK();
 }
