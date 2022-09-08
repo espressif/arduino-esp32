@@ -97,7 +97,7 @@ public:
     //         false -- The callback will be called when FIFO reaches 120 bytes and also on RX Timeout.
     //                  The stream of incommig bytes will be "split" into blocks of 120 bytes on each callback.
     //                  This option avoid any sort of Rx Overflow, but leaves the UART packet reassembling work to the Application.
-    void onReceive(OnReceiveCb function, bool onlyOnTimeout = true);
+    void onReceive(OnReceiveCb function, bool onlyOnTimeout = false);
 
     // onReceive will be called on error events (see hardwareSerial_error_t)
     void onReceiveError(OnReceiveErrorCb function);
