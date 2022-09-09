@@ -25,6 +25,14 @@
 #define ETH_PHY_TYPE ETH_PHY_LAN8720
 #define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 
+#define SDA 33
+#define SCL 32
+
+#define SS 2
+#define MOSI 14
+#define MISO 15
+#define SCK 12
+
 // general purpose IO pins
 static const uint8_t IO0 = 0;
 static const uint8_t IO1 = 1; // TXD0 / TX0 pin
