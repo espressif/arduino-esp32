@@ -61,7 +61,8 @@ typedef enum {
     UART_BUFFER_FULL_ERROR,
     UART_FIFO_OVF_ERROR,
     UART_FRAME_ERROR,
-    UART_PARITY_ERROR
+    UART_PARITY_ERROR,
+    UART_NO_ERROR
 } hardwareSerial_error_t;
 
 typedef std::function<void(void)> OnReceiveCb;

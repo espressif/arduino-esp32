@@ -262,6 +262,7 @@ void HardwareSerial::_uartEventTask(void *args)
         for(;;) {
             //Waiting for UART event.
             if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
+                hardwareSerial_error_t currentErr = UART_NO_ERROR;
                 switch(event.type) {
                     case UART_DATA:
                         if(uart->_onReceiveCB && uart->available() > 0 && 
@@ -270,27 +271,31 @@ void HardwareSerial::_uartEventTask(void *args)
                         break;
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
+                        currentErr = UART_FIFO_OVF_ERROR;
                         break;
                     case UART_BUFFER_FULL:
                         log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
+                        currentErr = UART_BUFFER_FULL_ERROR;
                         break;
                     case UART_BREAK:
                         log_w("UART%d RX break.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BREAK_ERROR);
+                        currentErr = UART_BREAK_ERROR;
                         break;
                     case UART_PARITY_ERR:
                         log_w("UART%d parity error.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_PARITY_ERROR);
+                        currentErr = UART_PARITY_ERROR;
                         break;
                     case UART_FRAME_ERR:
                         log_w("UART%d frame error.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FRAME_ERROR);
+                        currentErr = UART_FRAME_ERROR;
                         break;
                     default:
                         log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type);
                         break;
+                }
+                if (currentErr != UART_NO_ERROR) {
+                    if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(currentErr);
+                    if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();   // forces User Callback too
                 }
             }
         }
