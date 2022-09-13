@@ -9469,6 +9469,118 @@ adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# Adafruit ItsyBitsy ESP32
+
+adafruit_itsybitsy_esp32.name=Adafruit ItsyBitsy ESP32
+
+adafruit_itsybitsy_esp32.bootloader.tool=esptool_py
+adafruit_itsybitsy_esp32.bootloader.tool.default=esptool_py
+
+adafruit_itsybitsy_esp32.upload.tool=esptool_py
+adafruit_itsybitsy_esp32.upload.tool.default=esptool_py
+adafruit_itsybitsy_esp32.upload.tool.network=esp_ota
+
+adafruit_itsybitsy_esp32.upload.maximum_size=1310720
+adafruit_itsybitsy_esp32.upload.maximum_data_size=327680
+adafruit_itsybitsy_esp32.upload.flags=
+adafruit_itsybitsy_esp32.upload.extra_flags=
+
+adafruit_itsybitsy_esp32.serial.disableDTR=true
+adafruit_itsybitsy_esp32.serial.disableRTS=true
+
+adafruit_itsybitsy_esp32.build.tarch=xtensa
+adafruit_itsybitsy_esp32.build.bootloader_addr=0x1000
+adafruit_itsybitsy_esp32.build.target=esp32
+adafruit_itsybitsy_esp32.build.mcu=esp32
+adafruit_itsybitsy_esp32.build.core=esp32
+adafruit_itsybitsy_esp32.build.variant=adafruit_itsybitsy_esp32
+adafruit_itsybitsy_esp32.build.board=ADAFRUIT_ITSYBITSY_ESP32
+
+adafruit_itsybitsy_esp32.build.f_cpu=240000000L
+adafruit_itsybitsy_esp32.build.flash_size=8MB
+adafruit_itsybitsy_esp32.build.flash_freq=80m
+adafruit_itsybitsy_esp32.build.flash_mode=dio
+adafruit_itsybitsy_esp32.build.boot=dio
+adafruit_itsybitsy_esp32.build.partitions=default
+adafruit_itsybitsy_esp32.build.defines=
+adafruit_itsybitsy_esp32.build.loop_core=
+adafruit_itsybitsy_esp32.build.event_core=
+
+adafruit_itsybitsy_esp32.menu.LoopCore.1=Core 1
+adafruit_itsybitsy_esp32.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+adafruit_itsybitsy_esp32.menu.LoopCore.0=Core 0
+adafruit_itsybitsy_esp32.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+adafruit_itsybitsy_esp32.menu.EventsCore.1=Core 1
+adafruit_itsybitsy_esp32.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+adafruit_itsybitsy_esp32.menu.EventsCore.0=Core 0
+adafruit_itsybitsy_esp32.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+adafruit_itsybitsy_esp32.menu.PSRAM.enabled=Enabled
+adafruit_itsybitsy_esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+adafruit_itsybitsy_esp32.menu.PSRAM.disabled=Disabled
+adafruit_itsybitsy_esp32.menu.PSRAM.disabled.build.defines=
+
+adafruit_itsybitsy_esp32.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+adafruit_itsybitsy_esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_itsybitsy_esp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+adafruit_itsybitsy_esp32.menu.CPUFreq.240=240MHz (WiFi/BT)
+adafruit_itsybitsy_esp32.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_itsybitsy_esp32.menu.CPUFreq.160=160MHz (WiFi/BT)
+adafruit_itsybitsy_esp32.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_itsybitsy_esp32.menu.CPUFreq.80=80MHz (WiFi/BT)
+adafruit_itsybitsy_esp32.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_itsybitsy_esp32.menu.CPUFreq.40=40MHz
+adafruit_itsybitsy_esp32.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_itsybitsy_esp32.menu.CPUFreq.20=20MHz
+adafruit_itsybitsy_esp32.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_itsybitsy_esp32.menu.CPUFreq.10=10MHz
+adafruit_itsybitsy_esp32.menu.CPUFreq.10.build.f_cpu=10000000L
+
+adafruit_itsybitsy_esp32.menu.FlashFreq.80=80MHz
+adafruit_itsybitsy_esp32.menu.FlashFreq.80.build.flash_freq=80m
+adafruit_itsybitsy_esp32.menu.FlashFreq.40=40MHz
+adafruit_itsybitsy_esp32.menu.FlashFreq.40.build.flash_freq=40m
+
+adafruit_itsybitsy_esp32.menu.FlashSize.8M=8MB (64Mb)
+adafruit_itsybitsy_esp32.menu.FlashSize.8M.build.flash_size=8MB
+
+adafruit_itsybitsy_esp32.menu.UploadSpeed.921600=921600
+adafruit_itsybitsy_esp32.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_itsybitsy_esp32.menu.UploadSpeed.115200=115200
+adafruit_itsybitsy_esp32.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_itsybitsy_esp32.menu.UploadSpeed.256000.windows=256000
+adafruit_itsybitsy_esp32.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_itsybitsy_esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_itsybitsy_esp32.menu.UploadSpeed.230400=230400
+adafruit_itsybitsy_esp32.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_itsybitsy_esp32.menu.UploadSpeed.460800.linux=460800
+adafruit_itsybitsy_esp32.menu.UploadSpeed.460800.macosx=460800
+adafruit_itsybitsy_esp32.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_itsybitsy_esp32.menu.UploadSpeed.512000.windows=512000
+adafruit_itsybitsy_esp32.menu.UploadSpeed.512000.upload.speed=512000
+
+adafruit_itsybitsy_esp32.menu.DebugLevel.none=None
+adafruit_itsybitsy_esp32.menu.DebugLevel.none.build.code_debug=0
+adafruit_itsybitsy_esp32.menu.DebugLevel.error=Error
+adafruit_itsybitsy_esp32.menu.DebugLevel.error.build.code_debug=1
+adafruit_itsybitsy_esp32.menu.DebugLevel.warn=Warn
+adafruit_itsybitsy_esp32.menu.DebugLevel.warn.build.code_debug=2
+adafruit_itsybitsy_esp32.menu.DebugLevel.info=Info
+adafruit_itsybitsy_esp32.menu.DebugLevel.info.build.code_debug=3
+adafruit_itsybitsy_esp32.menu.DebugLevel.debug=Debug
+adafruit_itsybitsy_esp32.menu.DebugLevel.debug.build.code_debug=4
+adafruit_itsybitsy_esp32.menu.DebugLevel.verbose=Verbose
+adafruit_itsybitsy_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_itsybitsy_esp32.menu.EraseFlash.none=Disabled
+adafruit_itsybitsy_esp32.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_itsybitsy_esp32.menu.EraseFlash.all=Enabled
+adafruit_itsybitsy_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+
+##############################################################
 
 nodemcu-32s.name=NodeMCU-32S
 
