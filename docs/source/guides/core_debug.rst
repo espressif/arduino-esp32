@@ -22,7 +22,6 @@ Edit **line 44** containing by default ``CONFIG_LOG_DEFAULT_LEVEL_ERROR=y`` to o
 
 Then simply build the libs for all SoCs or one specific SoC. Note that building for all SoCs takes a lot of time, so if you are working only with specific SoC(s), build only for those.
 
-
 .. note::
    If you have copied the ``defconfig`` file and the debug settings are in file ``configs/defconfig.debug`` add flag ``debug`` to compilation command.
    Example : ``./build.sh debug``
