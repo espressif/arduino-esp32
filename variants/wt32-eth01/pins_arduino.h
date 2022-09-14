@@ -52,4 +52,14 @@ static const uint8_t RXD2 = 5, RXD = 5;
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
+//SPI VSPI default pins
+static const uint8_t SS    = -1;
+static const uint8_t MOSI  = 15;
+static const uint8_t MISO  = 12;
+static const uint8_t SCK   = 14;
+
+//I2C default pins
+static const uint8_t SDA = 2;
+static const uint8_t SCL = 4;
+
 #endif /* Pins_Arduino_h */
