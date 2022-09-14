@@ -305,13 +305,17 @@ const char * EspClass::getSdkVersion(void)
     return esp_get_idf_version();
 }
 
+uint32_t ESP_getFlashChipId(void)
+{
+  uint32_t id = g_rom_flashchip.device_id;
+  id = ((id & 0xff) << 16) | ((id >> 16) & 0xff) | (id & 0xff00);
+  return id;
+}
+
 uint32_t EspClass::getFlashChipSize(void)
 {
-    esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
-        return 0;
-    }
-    return magicFlashChipSize(fhdr.spi_size);
+  uint32_t id = (ESP_getFlashChipId() >> 16) & 0xFF;
+  return 2 << (id - 1);
 }
 
 uint32_t EspClass::getFlashChipSpeed(void)
