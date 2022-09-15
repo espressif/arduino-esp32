@@ -8,7 +8,7 @@ Development Boards
 You will need a development board or a custom board with the ESP32 (see Supported SoC's) to start playing.
 There is a bunch of different types and models widely available on the Internet. You need to choose one that covers all your requirements.
 
-To help you on this selection, we point out some facts about choosing the proper boardsto help you to save money and time.
+To help you on this selection, we point out some facts about choosing the proper boards to help you to save money and time.
 
 **One ESP32 to rule them all!**
 

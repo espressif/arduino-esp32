@@ -11,6 +11,8 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
 
+static const uint8_t LED_BUILTIN = 3;
+
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
@@ -25,5 +27,7 @@ static const uint8_t SCK = 4;
 static const uint8_t A1 = 2;
 static const uint8_t A2 = 4;
 static const uint8_t A3 = 5;
+
+static const uint8_t BAT_ADC_PIN = 2;
 
 #endif /* Pins_Arduino_h */

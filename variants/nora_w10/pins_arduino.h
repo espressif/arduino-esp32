@@ -36,10 +36,10 @@ static const uint8_t LED_BLUE	= 8;
 #define BUILTIN_LED  LED_BLUE 	// backward compatibility
 #define LED_BUILTIN  LED_BLUE
 
-static const uint8_t SS   = 10;
-static const uint8_t MOSI = 11;
-static const uint8_t MISO = 13;
-static const uint8_t SCK  = 12;
+static const uint8_t SS   = 34;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SCK  = 36;
 
 static const uint8_t A0   = 11;
 static const uint8_t A1   = 12;

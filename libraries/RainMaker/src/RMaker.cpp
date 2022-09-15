@@ -50,7 +50,7 @@ Node RMakerClass::initNode(const char *name, const char *type)
 
 esp_err_t RMakerClass::start()
 {
-    err = esp_rmaker_start();    
+    err = esp_rmaker_start();
     if(err != ESP_OK){
         log_e("ESP RainMaker core task failed");
     }
@@ -106,6 +106,7 @@ esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 {
     esp_rmaker_ota_config_t ota_config;
     ota_config.server_cert = cert;
+    ota_config.ota_cb = NULL;
     err = esp_rmaker_ota_enable(&ota_config, type);
     if(err != ESP_OK) {
         log_e("OTA enable failed");
