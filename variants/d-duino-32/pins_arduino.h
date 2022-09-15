@@ -14,8 +14,8 @@
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-#define SDA = 5
-#define SCL = 4
+#define SDA 5
+#define SCL 4
 
 static const uint8_t SS    = 15;
 static const uint8_t MOSI  = 13;
