@@ -140,7 +140,7 @@ _txBufferSize(0),
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
 _onReceiveTimeout(true),
-_rxTimeout(10),
+_rxTimeout(2),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
@@ -212,6 +212,18 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
     HSERIAL_MUTEX_UNLOCK();
 }
 
+// This function allow the user to define how many bytes will trigger an Interrupt that will copy RX FIFO to the internal RX Ringbuffer
+// ISR will also move data from FIFO to RX Ringbuffer after a RX Timeout defined in HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+// A low value of FIFO Full bytes will consume more CPU time within the ISR
+// A high value of FIFO Full bytes will make the application wait longer to have byte available for the Stkech in a streaming scenario
+// Both RX FIFO Full and RX Timeout may affect when onReceive() will be called
+void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
+{
+    HSERIAL_MUTEX_LOCK();
+    uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
+    HSERIAL_MUTEX_UNLOCK();
+}
+
 // timout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
 void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
@@ -223,7 +235,7 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
     _rxTimeout = symbols_timeout;   
     if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
 
-    if(_uart != NULL) uart_set_rx_timeout(_uart_nr, _rxTimeout); // Set new timeout
+    uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
 }
@@ -250,6 +262,7 @@ void HardwareSerial::_uartEventTask(void *args)
         for(;;) {
             //Waiting for UART event.
             if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
+                hardwareSerial_error_t currentErr = UART_NO_ERROR;
                 switch(event.type) {
                     case UART_DATA:
                         if(uart->_onReceiveCB && uart->available() > 0 && 
@@ -258,27 +271,31 @@ void HardwareSerial::_uartEventTask(void *args)
                         break;
                     case UART_FIFO_OVF:
                         log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FIFO_OVF_ERROR);
+                        currentErr = UART_FIFO_OVF_ERROR;
                         break;
                     case UART_BUFFER_FULL:
                         log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BUFFER_FULL_ERROR);
+                        currentErr = UART_BUFFER_FULL_ERROR;
                         break;
                     case UART_BREAK:
                         log_w("UART%d RX break.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_BREAK_ERROR);
+                        currentErr = UART_BREAK_ERROR;
                         break;
                     case UART_PARITY_ERR:
                         log_w("UART%d parity error.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_PARITY_ERROR);
+                        currentErr = UART_PARITY_ERROR;
                         break;
                     case UART_FRAME_ERR:
                         log_w("UART%d frame error.", uart->_uart_nr);
-                        if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(UART_FRAME_ERROR);
+                        currentErr = UART_FRAME_ERROR;
                         break;
                     default:
                         log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type);
                         break;
+                }
+                if (currentErr != UART_NO_ERROR) {
+                    if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(currentErr);
+                    if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();   // forces User Callback too
                 }
             }
         }
@@ -366,9 +383,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // Set UART RX timeout
-    if (_uart != NULL) {
-        uart_set_rx_timeout(_uart_nr, _rxTimeout);
-    }
+    uartSetRxTimeout(_uart, _rxTimeout);
 
     HSERIAL_MUTEX_UNLOCK();
 }
