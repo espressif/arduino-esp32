@@ -310,7 +310,21 @@ bool USBHID::ready(void){
     return tud_hid_n_ready(0);
 }
 
-void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len){
+// TinyUSB is in the process of changing the type of the last argument to
+// tud_hid_report_complete_cb(), so extract the type from the version of TinyUSB that we're
+// compiled with.
+template <class F> struct ArgType;
+
+template <class R, class T1, class T2, class T3>
+struct ArgType<R(*)(T1, T2, T3)> {
+	typedef T1 type1;
+	typedef T2 type2;
+	typedef T3 type3;
+};
+
+typedef ArgType<decltype(&tud_hid_report_complete_cb)>::type3 tud_hid_report_complete_cb_len_t;
+
+void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, tud_hid_report_complete_cb_len_t len){
     if (tinyusb_hid_device_input_sem) {
         xSemaphoreGive(tinyusb_hid_device_input_sem);
     }

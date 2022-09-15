@@ -30,6 +30,7 @@ extern "C" {
 }
 #include <MD5Builder.h>
 
+#include "soc/spi_reg.h"
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
@@ -54,6 +55,14 @@ extern "C" {
 #include "rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x1000
 #endif
+
+// REG_SPI_BASE is not defined for S3/C3 ??
+
+#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+  #ifndef REG_SPI_BASE
+  #define REG_SPI_BASE(i)     (DR_REG_SPI1_BASE + (((i)>1) ? (((i)* 0x1000) + 0x20000) : (((~(i)) & 1)* 0x1000 )))
+  #endif // REG_SPI_BASE
+#endif // TARGET
 
 /**
  * User-defined Literals
@@ -192,7 +201,7 @@ static uint32_t sketchSize(sketchSize_t response) {
         return data.image_len;
     }
 }
-    
+
 uint32_t EspClass::getSketchSize () {
     return sketchSize(SKETCH_SIZE_TOTAL);
 }
@@ -305,13 +314,17 @@ const char * EspClass::getSdkVersion(void)
     return esp_get_idf_version();
 }
 
+uint32_t ESP_getFlashChipId(void)
+{
+  uint32_t id = g_rom_flashchip.device_id;
+  id = ((id & 0xff) << 16) | ((id >> 16) & 0xff) | (id & 0xff00);
+  return id;
+}
+
 uint32_t EspClass::getFlashChipSize(void)
 {
-    esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
-        return 0;
-    }
-    return magicFlashChipSize(fhdr.spi_size);
+  uint32_t id = (ESP_getFlashChipId() >> 16) & 0xFF;
+  return 2 << (id - 1);
 }
 
 uint32_t EspClass::getFlashChipSpeed(void)
@@ -325,11 +338,26 @@ uint32_t EspClass::getFlashChipSpeed(void)
 
 FlashMode_t EspClass::getFlashChipMode(void)
 {
-    esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
-        return FM_UNKNOWN;
-    }
-    return magicFlashChipMode(fhdr.spi_mode);
+   #if CONFIG_IDF_TARGET_ESP32S2
+   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
+   #else
+   uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
+   #endif
+   /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
+   if (spi_ctrl & BIT(24)) { //SPI_FREAD_QIO
+       return (FM_QIO);
+   } else if (spi_ctrl & BIT(20)) { //SPI_FREAD_QUAD
+       return (FM_QOUT);
+   } else if (spi_ctrl &  BIT(23)) { //SPI_FREAD_DIO
+       return (FM_DIO);
+   } else if (spi_ctrl & BIT(14)) { // SPI_FREAD_DUAL
+       return (FM_DOUT);
+   } else if (spi_ctrl & BIT(13)) { //SPI_FASTRD_MODE
+       return (FM_FAST_READ);
+   } else {
+       return (FM_SLOW_READ);
+   }
+   return (FM_DOUT);
 }
 
 uint32_t EspClass::magicFlashChipSize(uint8_t byte)
