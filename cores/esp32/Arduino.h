@@ -80,8 +80,10 @@
 #define sq(x) ((x)*(x))
 
 // ESP32xx runs FreeRTOS... disabling interrupts can lead to issues, such as Watchdog Timeout
-#define interrupts() portENABLE_INTERRUPTS()
-#define noInterrupts() portDISABLE_INTERRUPTS()
+#define sei() portENABLE_INTERRUPTS()
+#define cli() portDISABLE_INTERRUPTS()
+#define interrupts() sei()
+#define noInterrupts() cli()
 
 #define clockCyclesPerMicrosecond() ( (long int)getCpuFrequencyMhz() )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
