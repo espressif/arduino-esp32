@@ -7,6 +7,10 @@
 #define ESP_MN_MAX_PHRASE_LEN 63
 #define ESP_MN_MIN_PHRASE_LEN 2
 
+#define ESP_MN_PREFIX "mn"
+#define ESP_MN_ENGLISH "en"
+#define ESP_MN_CHINESE "cn"
+
 typedef enum {
 	ESP_MN_STATE_DETECTING = 0,     // detecting
 	ESP_MN_STATE_DETECTED = 1,      // detected
@@ -85,6 +89,14 @@ typedef int (*esp_mn_iface_op_set_det_threshold_t)(model_iface_data_t *model, fl
 typedef int (*esp_mn_iface_op_get_samp_rate_t)(model_iface_data_t *model);
 
 /**
+ * @brief Get the language of model
+ *
+ * @param model       The language name 
+ * @return Language name string defined in esp_mn_models.h, eg: ESP_MN_CHINESE, ESP_MN_ENGLISH
+ */
+typedef char * (*esp_mn_iface_op_get_language_t)(model_iface_data_t *model);
+
+/**
  * @brief Feed samples of an audio stream to the speech recognition model and detect if there is a speech command found.
  *
  * @param model       The model object to query.
@@ -133,6 +145,7 @@ typedef struct {
     esp_mn_iface_op_get_samp_chunksize_t get_samp_chunksize;
     esp_mn_iface_op_get_samp_chunknum_t get_samp_chunknum;
     esp_mn_iface_op_set_det_threshold_t set_det_threshold;
+    esp_mn_iface_op_get_language_t get_language;
     esp_mn_iface_op_detect_t detect; 
     esp_mn_iface_op_destroy_t destroy;
     esp_mn_iface_op_get_results_t get_results;

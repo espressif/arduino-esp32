@@ -46,13 +46,14 @@ ns_handle_t ns_create(int frame_length);
  * @warning frame_length only supports be 10 ms.
  *
  * @param frame_length    The length of the audio processing can only be 10ms.
- * @param mode            0: Mild, 1: Medium, 2: Aggressive  
+ * @param mode            0: Mild, 1: Medium, 2: Aggressive
+ * @param sample_rate     The sample rate of the audio. 
  *
  * @return
  *         - NULL: Create failed
  *         - Others: The instance of NS
  */
-ns_handle_t ns_pro_create(int frame_length, int mode);
+ns_handle_t ns_pro_create(int frame_length, int mode, int sample_rate);
 
 /**
  * @brief Feed samples of an audio stream to the NS and get the audio stream after Noise suppression.

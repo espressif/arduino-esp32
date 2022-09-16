@@ -2,6 +2,7 @@
 #define _dsp_types_H_
 #include <stdint.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 // union to simplify access to the 16 bit data
 typedef union sc16_u
