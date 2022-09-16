@@ -38,11 +38,6 @@
     }
 #endif
 
-#define DL_Q16_MIN (-32768)
-#define DL_Q16_MAX (32767)
-#define DL_Q8_MIN (-128)
-#define DL_Q8_MAX (127)
-
 #ifndef DL_MAX
 #define DL_MAX(x, y) (((x) < (y)) ? (y) : (x))
 #endif
@@ -60,12 +55,23 @@
 #endif
 
 #ifndef DL_RIGHT_SHIFT
-#define DL_RIGHT_SHIFT(x, shift) ((shift) > 0) ? ((x) >> (shift)) : ((x) << -(shift))
+#define DL_RIGHT_SHIFT(x, shift) (((shift) > 0) ? ((x) >> (shift)) : ((x) << -(shift)))
 #endif
 
 #ifndef DL_LEFT_SHIFT
-#define DL_LEFT_SHIFT(x, shift) ((shift) > 0) ? ((x) << (shift)) : ((x) >> -(shift))
+#define DL_LEFT_SHIFT(x, shift) (((shift) > 0) ? ((x) << (shift)) : ((x) >> -(shift)))
 #endif
+
+#ifndef DL_SCALE
+#define DL_SCALE(exponent) (((exponent) > 0) ? (1 << (exponent)) : ((float)1.0 / (1 << -(exponent))))
+#endif
+
+#ifndef DL_RESCALE
+#define DL_RESCALE(exponent) (((exponent) > 0) ? ((float)1.0 / (1 << (exponent))) : (1 << -(exponent)))
+#endif
+
+#define QIQO 0
+#define QIFO 1
 
 namespace dl
 {
@@ -75,9 +81,6 @@ namespace dl
         ReLU,      /*<! ReLU >*/
         LeakyReLU, /*<! LeakyReLU >*/
         PReLU,     /*<! PReLU >*/
-        // TODO: Sigmoid,   /*<! Sigmoid >*/
-        // TODO: Softmax,    /*<! Softmax*/
-        // TODO: TanH,
         // TODO: ReLU6
     } activation_type_t;
 
@@ -85,15 +88,15 @@ namespace dl
     {
         PADDING_NOT_SET,
         PADDING_VALID,      /*<! no padding >*/
-        PADDING_SAME_BEGIN,  /*<! SAME in MXNET style >*/
+        PADDING_SAME_BEGIN, /*<! SAME in MXNET style >*/
         PADDING_SAME_END,   /*<! SAME in TensorFlow style >*/
     } padding_type_t;
-    
+
     typedef enum
     {
         PADDING_EMPTY,
         PADDING_CONSTANT,
-        PADDING_EDGE, 
+        PADDING_EDGE,
         PADDING_REFLECT,
         PADDING_SYMMETRIC,
     } padding_mode_t;

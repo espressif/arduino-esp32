@@ -83,6 +83,8 @@ typedef struct {
     const char *server_cert;
     /** The private data passed in esp_rmaker_enable_ota() */
     char *priv;
+    /** OTA Metadata. Applicable only for OTA using Topics. Will be received (if applicable) from the backend, alongwith the OTA URL */
+    char *metadata;
 } esp_rmaker_ota_data_t;
 
 /** Function prototype for OTA Callback
