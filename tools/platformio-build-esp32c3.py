@@ -284,7 +284,6 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp-dsp", "modules", "common", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp-dsp", "modules", "kalman", "ekf", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp-dsp", "modules", "kalman", "ekf_imu13states", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_littlefs", "src"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp_littlefs", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp-dl", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp-dl", "include", "tool"),
@@ -298,14 +297,14 @@ env.Append(
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp32-camera", "driver", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "esp32-camera", "conversions", "include"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "include", "fb_gfx", "include"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", env.BoardConfig().get("build.arduino.memory_type", "qio_qspi"), "include"),
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", env.BoardConfig().get("build.arduino.memory_type", (env.BoardConfig().get("build.flash_mode", "dio") + "_qspi")), "include"),
         join(FRAMEWORK_DIR, "cores", env.BoardConfig().get("build.core"))
     ],
 
     LIBPATH=[
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "lib"),
         join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", "ld"),
-        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", env.BoardConfig().get("build.arduino.memory_type", "qio_qspi"))
+        join(FRAMEWORK_DIR, "tools", "sdk", "esp32c3", env.BoardConfig().get("build.arduino.memory_type", (env.BoardConfig().get("build.flash_mode", "dio") + "_qspi")))
     ],
 
     LIBS=[
@@ -318,7 +317,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4.2-1-gce1fde4b3b\\"'),
+        ("IDF_VER", '\\"v4.4.2\\"'),
         "ESP_PLATFORM",
         "_POSIX_READER_WRITER_LOCKS",
         "ARDUINO_ARCH_ESP32",
