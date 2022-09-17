@@ -12,6 +12,70 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "2.0.5",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.5/esp32-2.0.5.zip",
+          "archiveFileName": "esp32-2.0.5.zip",
+          "checksum": "SHA-256:c7a1040c5f007a799ef9eb249508e3544c3cf5246f67cdfdc1e80f7d0ca7b41d",
+          "size": "260916106",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Board"
+            },
+            {
+              "name": "ESP32-S2 Dev Board"
+            },
+            {
+              "name": "ESP32-S3 Dev Board"
+            },
+            {
+              "name": "ESP32-C3 Dev Board"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "riscv32-esp-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r2-patch3"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r2-patch3"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32s2-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r2-patch3"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp32s3-elf-gcc",
+              "version": "gcc8_4_0-esp-2021r2-patch3"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "4.2.1"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            },
+            {
+              "packager": "esp32",
+              "name": "mklittlefs",
+              "version": "3.0.0-gnu12-dc7f933"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "2.0.4",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esp32-2.0.4.zip",
@@ -2464,6 +2528,61 @@
               "archiveFileName": "xtensa-esp32s3-elf-gcc8_4_0-esp-2021r2-patch3-win64.zip",
               "checksum": "SHA-256:58e58575d1938879fd51e822181e54bcb343aa846eb3fca8f616c2cde7bd0041",
               "size": "120066269"
+            }
+          ]
+        },
+        {
+          "name": "esptool_py",
+          "version": "4.2.1",
+          "systems": [
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-windows.zip",
+              "archiveFileName": "esptool-4.2.1-windows.zip",
+              "checksum": "SHA-256:582560067bfbd9895f4862eb5fdf87558ddee5d4d30e7575c9b8bcb0dd60fd94",
+              "size": "6368279"
+            },
+            {
+              "host": "x86_64-mingw32",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-windows.zip",
+              "archiveFileName": "esptool-4.2.1-windows.zip",
+              "checksum": "SHA-256:582560067bfbd9895f4862eb5fdf87558ddee5d4d30e7575c9b8bcb0dd60fd94",
+              "size": "6368279"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-macos.tar.gz",
+              "archiveFileName": "esptool-4.2.1-macos.tar.gz",
+              "checksum": "SHA-256:a984f7ad8bdb40c42d0d368bf4bb21b69a9587aed46b7b6d7de23ca58a3f150d",
+              "size": "5816598"
+            },
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-linux.tar.gz",
+              "archiveFileName": "esptool-4.2.1-linux.tar.gz",
+              "checksum": "SHA-256:5a45fb77eb6574554ec2f45230d0b350f26f9c24ab3b6c13c4031ebdf72a34ab",
+              "size": "90123"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-linux.tar.gz",
+              "archiveFileName": "esptool-4.2.1-linux.tar.gz",
+              "checksum": "SHA-256:5a45fb77eb6574554ec2f45230d0b350f26f9c24ab3b6c13c4031ebdf72a34ab",
+              "size": "90123"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-4.2.1-linux.tar.gz",
+              "archiveFileName": "esptool-4.2.1-linux.tar.gz",
+              "checksum": "SHA-256:5a45fb77eb6574554ec2f45230d0b350f26f9c24ab3b6c13c4031ebdf72a34ab",
+              "size": "90123"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/2.0.4/esptool-3.3-linux.tar.gz",
+              "archiveFileName": "esptool-4.2.1-linux.tar.gz",
+              "checksum": "SHA-256:5a45fb77eb6574554ec2f45230d0b350f26f9c24ab3b6c13c4031ebdf72a34ab",
+              "size": "90123"
             }
           ]
         },
