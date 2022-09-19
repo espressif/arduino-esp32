@@ -376,16 +376,8 @@ int WiFiClientSecure::setTimeout(uint32_t seconds)
         return 0;
     }
 }
-int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
-{
-    return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
-}
 
-int WiFiClientSecure::setSocketOption(int level, int option, const void* value, size_t len)
+int WiFiClientSecure::fd() const
 {
-    int res = setsockopt(sslclient->socket, level, option, value, len);
-    if(res < 0) {
-        log_e("fail on %d, errno: %d, \"%s\"", sslclient->socket, errno, strerror(errno));
-    }
-    return res;
+    return sslclient->socket;
 }
