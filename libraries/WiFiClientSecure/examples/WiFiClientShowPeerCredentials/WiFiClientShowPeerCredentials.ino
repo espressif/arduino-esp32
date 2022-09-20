@@ -34,7 +34,7 @@ void demo() {
     return;
   };
 
-  https.setTimeout(5000);
+  https.setTimeout(5);
 
   int httpCode = https.GET();
   if (httpCode != 200) {
