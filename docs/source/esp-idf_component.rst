@@ -37,6 +37,8 @@ Installation
     cd ../.. && \
     idf.py menuconfig
 
+.. note:: If you use Arduino with IDF often, you can place the arduino folder into global components folder.
+
 Configuration
 -------------
 
