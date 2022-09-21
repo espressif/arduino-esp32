@@ -27,51 +27,79 @@ namespace esp_i2s {
 }
 
 // Default pins
-//I2S0
+//I2S0 is available for all ESP32 SoCs
+//SCK WS  SD(OUT) SDIN
+// 1   4   19      21
 #ifndef PIN_I2S_SCK
-  #define PIN_I2S_SCK 14
+  #define PIN_I2S_SCK 1
 #endif
 
 #ifndef PIN_I2S_FS
-  #if CONFIG_IDF_TARGET_ESP32S2
-    #define PIN_I2S_FS 27
-  #else
-    #define PIN_I2S_FS 25
-  #endif
+  #define PIN_I2S_FS 4
 #endif
 
 #ifndef PIN_I2S_SD
-  #define PIN_I2S_SD 26
+  #define PIN_I2S_SD 19
 #endif
 
 #ifndef PIN_I2S_SD_OUT
-  #define PIN_I2S_SD_OUT 26
+  #define PIN_I2S_SD_OUT 19
 #endif
 
 #ifndef PIN_I2S_SD_IN
-  #define PIN_I2S_SD_IN 35 // Pin 35 is only input!
+  #define PIN_I2S_SD_IN 21
 #endif
 
 #if SOC_I2S_NUM > 1
-  // I2S1
-  #ifndef PIN_I2S1_SCK
-    #define PIN_I2S1_SCK 15
+  // I2S1 is available only for ESP32 and ESP32-S3
+  #if CONFIG_IDF_TARGET_ESP32
+    // ESP32 pins
+    //SCK WS  SD(OUT) SDIN
+    // 18 22  23       25
+    #ifndef PIN_I2S1_SCK
+      #define PIN_I2S1_SCK 18
+    #endif
+
+    #ifndef PIN_I2S1_FS
+      #define PIN_I2S1_FS 22
+    #endif
+
+    #ifndef PIN_I2S1_SD
+      #define PIN_I2S1_SD 23
+    #endif
+
+    #ifndef PIN_I2S1_SD_OUT
+      #define PIN_I2S1_SD_OUT 23
+    #endif
+
+    #ifndef PIN_I2S1_SD_IN
+      #define PIN_I2S1_SD_IN 25
+    #endif
   #endif
 
-  #ifndef PIN_I2S1_FS
-    #define PIN_I2S1_FS 16
-  #endif
+  #if CONFIG_IDF_TARGET_ESP32S3
+    // ESP32-S3 pins
+    //SCK WS  SD(OUT) SDIN
+    // 36 37   39       40
+    #ifndef PIN_I2S1_SCK
+      #define PIN_I2S1_SCK 36
+    #endif
 
-  #ifndef PIN_I2S1_SD
-    #define PIN_I2S1_SD 17
-  #endif
+    #ifndef PIN_I2S1_FS
+      #define PIN_I2S1_FS 37
+    #endif
 
-  #ifndef PIN_I2S1_SD_OUT
-    #define PIN_I2S1_SD_OUT 17
-  #endif
+    #ifndef PIN_I2S1_SD
+      #define PIN_I2S1_SD 39
+    #endif
 
-  #ifndef PIN_I2S1_SD_IN
-    #define PIN_I2S1_SD_IN 18
+    #ifndef PIN_I2S1_SD_OUT
+      #define PIN_I2S1_SD_OUT 39
+    #endif
+
+    #ifndef PIN_I2S1_SD_IN
+      #define PIN_I2S1_SD_IN 40
+    #endif
   #endif
 #endif
 
