@@ -209,7 +209,7 @@ typedef struct _sensor {
 
     // Sensor function pointers
     int  (*init_status)         (sensor_t *sensor);
-    int  (*reset)               (sensor_t *sensor);
+    int  (*reset)               (sensor_t *sensor); // Reset the configuration of the sensor, and return ESP_OK if reset is successful
     int  (*set_pixformat)       (sensor_t *sensor, pixformat_t pixformat);
     int  (*set_framesize)       (sensor_t *sensor, framesize_t framesize);
     int  (*set_contrast)        (sensor_t *sensor, int level);
