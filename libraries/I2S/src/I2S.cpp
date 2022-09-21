@@ -1047,11 +1047,13 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
         buff[i+offset+1] = ((uint8_t*)output)[i+1];
         buff[i+offset+2] = ((uint8_t*)output)[i+2];
         ++offset;
+      }
       break;
     case 32:
       buff = (uint8_t*)output;
       break;
-    default: ; // Do nothing
+    default:
+      break; // Do nothing
   } // switch
 
   size_t _bytes_written;
