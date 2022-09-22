@@ -194,12 +194,12 @@ boolean File::seekDir(long position){
     return _p->seekDir(position);
 }
 
-boolean File::getNextFileName(String &filename)
+String File::getNextFileName(void)
 {
     if (!_p) {
-        return NULL; 
+        return ""; 
     }
-    return _p->getNextFileName(filename);
+    return _p->getNextFileName();
 
 }
 

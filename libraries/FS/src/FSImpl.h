@@ -44,7 +44,7 @@ public:
     virtual boolean isDirectory(void) = 0;
     virtual FileImplPtr openNextFile(const char* mode) = 0;
     virtual boolean seekDir(long position);
-    virtual boolean getNextFileName(String &filename);
+    virtual String getNextFileName(void);
     virtual void rewindDirectory(void) = 0;
     virtual operator bool() = 0;
 };

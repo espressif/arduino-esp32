@@ -485,17 +485,17 @@ boolean VFSFileImpl::seekDir(long position){
 }
 
 
-boolean VFSFileImpl::getNextFileName(String &filename)
+String VFSFileImpl::getNextFileName()
 {
     if (!_isDirectory || !_d) {
-        return false;
+        return "";
     }
     struct dirent *file = readdir(_d);
     if (file == NULL) {
-        return false;
+        return "";
     }
     if (file->d_type != DT_REG && file->d_type != DT_DIR) {
-        return false;
+        return "";
     }
     String fname = String(file->d_name);
     String name = String(_path);
@@ -503,12 +503,7 @@ boolean VFSFileImpl::getNextFileName(String &filename)
         name += "/";
     }
     name += fname;
-    if (name.length() > 0) {
-        filename = name;
-        return true;
-    } else {
-        return false;
-    }
+    return name;
 }
 
 void VFSFileImpl::rewindDirectory(void)
