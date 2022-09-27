@@ -345,11 +345,16 @@ bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeo
     if(!res){
         log_e("not ready");
     } else {
+        // The semaphore may be given if the last SendReport() timed out waiting for the report to
+        // be sent. Or, tud_hid_report_complete_cb() may be called an extra time, causing the
+        // semaphore to be given. In these cases, take the semaphore to clear its state so that
+        // we can wait for it to be given after calling tud_hid_n_report().
+        xSemaphoreTake(tinyusb_hid_device_input_sem, 0);
+
         res = tud_hid_n_report(0, id, data, len);
         if(!res){
             log_e("report %u failed", id);
         } else {
-            xSemaphoreTake(tinyusb_hid_device_input_sem, 0);
             if(xSemaphoreTake(tinyusb_hid_device_input_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
                 log_e("report %u wait failed", id);
                 res = false;

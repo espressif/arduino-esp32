@@ -21,6 +21,29 @@ extern "C"
 {
 #endif
 
+/** @cond **/
+/** ESP RainMaker Event Base */
+ESP_EVENT_DECLARE_BASE(RMAKER_OTA_EVENT);
+/** @endcond **/
+
+/** ESP RainMaker Events */
+typedef enum {
+    /* Invalid event. Used for internal handling only */
+    RMAKER_OTA_EVENT_INVALID = 0,
+    /** RainMaker OTA is Starting */
+    RMAKER_OTA_EVENT_STARTING,
+    /** RainMaker OTA has Started */
+    RMAKER_OTA_EVENT_IN_PROGRESS,
+    /** RainMaker OTA Successful */
+    RMAKER_OTA_EVENT_SUCCESSFUL,
+    /** RainMaker OTA Failed */
+    RMAKER_OTA_EVENT_FAILED,
+    /** RainMaker OTA Rejected */
+    RMAKER_OTA_EVENT_REJECTED,
+    /** RainMaker OTA Delayed */
+    RMAKER_OTA_EVENT_DELAYED,
+} esp_rmaker_ota_event_t;
+
 /** Default ESP RainMaker OTA Server Certificate */
 extern const char *ESP_RMAKER_OTA_DEFAULT_SERVER_CERT;
 
@@ -60,6 +83,8 @@ typedef struct {
     const char *server_cert;
     /** The private data passed in esp_rmaker_enable_ota() */
     char *priv;
+    /** OTA Metadata. Applicable only for OTA using Topics. Will be received (if applicable) from the backend, alongwith the OTA URL */
+    char *metadata;
 } esp_rmaker_ota_data_t;
 
 /** Function prototype for OTA Callback
