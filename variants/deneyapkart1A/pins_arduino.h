@@ -87,10 +87,6 @@ static const uint8_t CAMXC = 32;
 static const uint8_t CAMH  = 39;
 static const uint8_t CAMV  = 36;
 
-static const uint8_t RGBLED  = 13;
-static const uint8_t BUILTIN_KEY  = 0;
-static const uint8_t GPKEY  = 0;
-
 static const uint8_t PWM0 = 23;
 static const uint8_t PWM1 = 22;
 
@@ -98,5 +94,16 @@ static const uint8_t SDMI = 2;
 static const uint8_t SDMO = 14;
 static const uint8_t SDCS = 12;
 static const uint8_t SDCK = 27;
+
+static const uint8_t RGBLED  = 13;
+static const uint8_t GPKEY  = 0;
+
+#define LED_BUILTIN RGBLED
+#define BUILTIN_LED	LED_BUILTIN
+//#define RGB_BUILTIN RGBLED
+//#define RGB_BRIGHTNESS 64
+
+#define KEY_BUILTIN GPKEY
+#define BUILTIN_KEY KEY_BUILTIN
 
 #endif /* Pins_Arduino_h */

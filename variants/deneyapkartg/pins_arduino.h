@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define EXTERNAL_NUM_INTERRUPTS 22
 #define NUM_DIGITAL_PINS        22
@@ -38,5 +39,19 @@ static const uint8_t D3 = 10;
 static const uint8_t D4 = 8;
 static const uint8_t D5 = 7;
 static const uint8_t D6 = 2;
+
+static const uint8_t PWM0 = 0;
+static const uint8_t PWM1 = 1;
+
+static const uint8_t RGBLED  = 10;
+static const uint8_t GPKEY  = 9;
+
+#define LED_BUILTIN RGBLED
+#define BUILTIN_LED	LED_BUILTIN
+//#define RGB_BUILTIN RGBLED
+//#define RGB_BRIGHTNESS 64
+
+#define KEY_BUILTIN GPKEY
+#define BUILTIN_KEY KEY_BUILTIN
 
 #endif /* Pins_Arduino_h */
