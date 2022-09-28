@@ -231,7 +231,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
     tv.tv_sec = _timeout / 1000;
-    tv.tv_usec = 0;
+    tv.tv_usec = (_timeout % 1000) * 1000;
 
 #ifdef ESP_IDF_VERSION_MAJOR
     int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
@@ -311,6 +311,15 @@ int WiFiClient::setSocketOption(int level, int option, const void* value, size_t
     int res = setsockopt(fd(), level, option, value, len);
     if(res < 0) {
         log_e("fail on %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
+    }
+    return res;
+}
+
+int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
+{
+    int res = getsockopt(fd(), level, option, (char *)value, &size);
+    if(res < 0) {
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
@@ -397,8 +406,8 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
         struct timeval tv;
         FD_ZERO(&set);        // empties the set
         FD_SET(socketFileDescriptor, &set); // adds FD to the set
-        tv.tv_sec = 0;
-        tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
+        tv.tv_sec = _timeout / 1000;
+        tv.tv_usec = (_timeout  % 1000) * 1000;
         retry--;
 
         if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
