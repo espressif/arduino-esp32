@@ -117,45 +117,109 @@ namespace esp_i2s {
 #endif
 
 typedef enum {
-  I2S_PHILIPS_MODE,
-  I2S_RIGHT_JUSTIFIED_MODE,
-  I2S_LEFT_JUSTIFIED_MODE,
-  ADC_DAC_MODE,
-  PDM_STEREO_MODE,
-  PDM_MONO_MODE
+  I2S_PHILIPS_MODE, // Most common I2S mode, WS signal spans across whole channel period
+  I2S_RIGHT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
+  I2S_LEFT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
+  ADC_DAC_MODE, // Receive and transmit raw analog signal
+  PDM_STEREO_MODE, // Pulse Density Modulation - stereo / 2 channels
+  PDM_MONO_MODE // Pulse Density Modulation - mono / 1 channel
 } i2s_mode_t;
 
 class I2SClass : public Stream
 {
 public:
-  // The device index and pins must map to the "COM" pads in Table 6-1 of the datasheet
+  /*
+   * Constructor - initializes object with default values
+   *
+   * Parameters:
+   *   uint8_t deviceIndex  In case the SoC has more I2S module, specify which one is instantiated. Possible values are "0" (for all ESPs) and "1" (only for ESP32 and ESP32-S3)
+   *   uint8_t clockGenerator  Has no meaning for ESP and is kept only for compatibility
+   *   uint8_t sdPin  Shared data pin used for simplex mode
+   *   uint8_t sckPin  Clock pin
+   *   uint8_t fsPin  Frame (word) select pin
+   *
+   * Default settings:
+   *   Input data pin (used for duplex mode) is initialized with PIN_I2S_SD_IN
+   *   Out data pin (used for duplex mode) is initialized with PIN_I2S_SD
+   *   Mode = I2S_PHILIPS_MODE
+   *   Buffer size = 128
+   */
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin);
 
-  // Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
+  /*
+   * Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
+   * Parameters:
+   *   int mode  Operation mode (Phillips, Left/Right Justified, ADC+DAC,PDM) see i2s_mode_t for exact enumerations
+   *   int sampleRate  sampling frequency in Hz. Common values are 8000,11025,16000,22050,32000,44100,64000,88200,128000
+   *   int bitsPerSample  Number of bits per one sample (one channel). Possible values are 8,16,24,32
+   * Returns: 1 on success; 0 on error
+  */
   int begin(int mode, int sampleRate, int bitsPerSample);
 
-  // Init in SLAVE mode: the SCK and FS pins are inputs, other side controls sample rate
+  /* Init in SLAVE mode: the SCK and FS pins are inputs and must be controlled(generated) be external source (MASTER device).
+   * Parameters:
+   *   int mode  Operation mode (Phillips, Left/Right Justified, ADC+DAC,PDM) see i2s_mode_t for exact enumerations
+   *   int bitsPerSample  Number of bits per one sample (one channel). Possible values are 8,16,24,32
+   * Returns: 1 on success; 0 on error
+   */
   int begin(int mode, int bitsPerSample);
 
-  // change pin setup and mode (default is Half Duplex)
-  // Can be called only on initialized object (after begin)
-  int setSckPin(int sckPin);
-  int setFsPin(int fsPin);
-  int setDataPin(int sdPin); // shared data pin for simplex
-  int setDataOutPin(int outSdPin);
-  int setDataInPin(int inSdPin);
+  /*
+   * Change pin setup for each pin separately.
+   * Can be called only on initialized object (after begin).
+   * The change takes effect immediately and does not need driver restart.
+   * Parameter: int pin  number of GPIO which should be used for the requested pin setup
+   * Returns: 1 on success; 0 on error
+   */
+  int setSckPin(int sckPin); // Set Clock pin
+  int setFsPin(int fsPin); // Set Frame Sync (Word Select) pin
+  int setDataPin(int sdPin); // Set shared Data pin for simplex mode
+  int setDataOutPin(int outSdPin); // Set Data Output pin for duplex mode
+  int setDataInPin(int inSdPin); // Set Data Input pin for duplex mode
 
+  /*
+   * Change pin setup for all pins at one call using default values set constants in I2S.h
+   * Can be called only on initialized object (after begin)
+   * The change takes effect immediately and does not need driver restart.
+   * Returns: 1 on success; 0 on error
+   */
   int setAllPins();
+
+  /*
+   * Change pin setup for all pins at one call.
+   * Can be called only on initialized object (after begin).
+   * The change takes effect immediately and does not need driver restart.
+   * Parameters:
+   *   int sckPin  Clock pin
+   *   int fsPin  Frame Sync (Word Select) pin
+   *   int sdPin  Shared Data pin for simplex mode
+   *   int outSdPin  Data Output pin for duplex mode
+   *   int inSdPin  Data Input pin for duplex mode
+   * Returns: 1 on success; 0 on error
+   */
   int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin);
 
-  int getSckPin();
-  int getFsPin();
-  int getDataPin();
-  int getDataOutPin();
-  int getDataInPin();
+  /*
+   * Get current pin GPIO number
+   * Returns: the GPIO number of requested pin
+   */
+  int getSckPin(); // Get Clock pin
+  int getFsPin(); // Get Frame Sync (Word Select) pin
+  int getDataPin(); // Get shared Data pin for simplex mode
+  int getDataOutPin(); // Get Data Output pin for duplex mode
+  int getDataInPin(); // Get Data Input pin for duplex mode
 
+  /*
+   * Change mode (default is Half Duplex)
+   * Returns: 1 on success; 0 on error
+   */
   int setDuplex();
   int setSimplex();
+
+  /*
+   * Get current mode
+   * Returns: 1 if current mode is Duplex; 0 If current mode is not Duplex
+   */
   int isDuplex();
 
   void end();
