@@ -25,6 +25,33 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
             default:
                 log_i("Unhandled RainMaker Event:");
         }
+    } else if (event_base == RMAKER_OTA_EVENT) {
+        if(event_data == NULL){
+            event_data = (void*)"";
+        }
+        switch(event_id) {
+            case RMAKER_OTA_EVENT_STARTING:
+                log_i("Starting OTA : %s", (char*)event_data);
+                break;
+            case RMAKER_OTA_EVENT_IN_PROGRESS:
+                log_i("OTA in progress : %s", (char*)event_data);
+                break;
+            case RMAKER_OTA_EVENT_SUCCESSFUL:
+                log_i("OTA Successful : %s", (char*)event_data);
+                break;
+            case RMAKER_OTA_EVENT_FAILED:
+                log_i("OTA Failed : %s", (char*)event_data);
+                break;
+            case RMAKER_OTA_EVENT_DELAYED:
+                log_i("OTA Delayed : %s", (char*)event_data);
+                break;
+            case RMAKER_OTA_EVENT_REJECTED:
+                log_i("OTA Rejected : %s", (char*)event_data);
+                break;
+            default:
+                log_i("Unhandled OTA Event");
+                break;
+        }
     }
 }
 
@@ -39,6 +66,7 @@ Node RMakerClass::initNode(const char *name, const char *type)
     Node node;
     esp_rmaker_node_t *rnode = NULL;
     esp_event_handler_register(RMAKER_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL);
+    esp_event_handler_register(RMAKER_OTA_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL);
     rnode = esp_rmaker_node_init(&rainmaker_cfg, name, type);
     if (!rnode){
         log_e("Node init failed");
