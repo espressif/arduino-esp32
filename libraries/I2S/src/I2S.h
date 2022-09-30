@@ -117,7 +117,7 @@ namespace esp_i2s {
 #endif
 
 typedef enum {
-  I2S_PHILIPS_MODE, // Most common I2S mode, WS signal spans across whole channel period
+  I2S_PHILIPS_MODE, // Most common I2S mode, FS signal spans across whole channel period
   I2S_RIGHT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
   I2S_LEFT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
   ADC_DAC_MODE, // Receive and transmit raw analog signal
@@ -132,11 +132,11 @@ public:
    * Constructor - initializes object with default values
    *
    * Parameters:
-   *   uint8_t deviceIndex  In case the SoC has more I2S module, specify which one is instantiated. Possible values are "0" (for all ESPs) and "1" (only for ESP32 and ESP32-S3)
+   *   uint8_t deviceIndex  In case the SoC has more I2S modules, specify which one is instantiated. Possible values are "0" (for all ESPs) and "1" (only for ESP32 and ESP32-S3)
    *   uint8_t clockGenerator  Has no meaning for ESP and is kept only for compatibility
    *   uint8_t sdPin  Shared data pin used for simplex mode
    *   uint8_t sckPin  Clock pin
-   *   uint8_t fsPin  Frame (word) select pin
+   *   uint8_t fsPin  Frame Sync (Word Select) pin
    *
    * Default settings:
    *   Input data pin (used for duplex mode) is initialized with PIN_I2S_SD_IN
@@ -147,7 +147,8 @@ public:
   I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin);
 
   /*
-   * Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
+   * Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate.
+   * Initializes IDF I2S driver, creates ring buffers and callback handler task.
    * Parameters:
    *   int mode  Operation mode (Phillips, Left/Right Justified, ADC+DAC,PDM) see i2s_mode_t for exact enumerations
    *   int sampleRate  sampling frequency in Hz. Common values are 8000,11025,16000,22050,32000,44100,64000,88200,128000
@@ -157,12 +158,18 @@ public:
   int begin(int mode, int sampleRate, int bitsPerSample);
 
   /* Init in SLAVE mode: the SCK and FS pins are inputs and must be controlled(generated) be external source (MASTER device).
+   * Initializes IDF I2S driver, creates ring buffers and callback handler task.
    * Parameters:
    *   int mode  Operation mode (Phillips, Left/Right Justified, ADC+DAC,PDM) see i2s_mode_t for exact enumerations
    *   int bitsPerSample  Number of bits per one sample (one channel). Possible values are 8,16,24,32
    * Returns: 1 on success; 0 on error
    */
   int begin(int mode, int bitsPerSample);
+
+  /*
+   De-initialize IDF I2S driver, frees ring buffers and terminates callback handler task.
+   */
+  void end();
 
   /*
    * Change pin setup for each pin separately.
@@ -210,7 +217,7 @@ public:
   int getDataInPin(); // Get Data Input pin for duplex mode
 
   /*
-   * Change mode (default is Half Duplex)
+   * Change mode (default is Simplex)
    * Returns: 1 on success; 0 on error
    */
   int setDuplex();
@@ -222,33 +229,122 @@ public:
    */
   int isDuplex();
 
-  void end();
-
-  // from Stream
+  /*
+   * Returns: number of Bytes available to read from ring buffer.
+   * Note: The ring buffer is filled automatically by handler task from IDF I2S driver.
+   */
   virtual int available();
-  virtual int read();
+
+  /*
+   * Reads a single sample from ring buffer and keeps it available for future read (i.e. does not remove the sample from ring buffer)
+   * Returns: First sample from ring buffer
+   * Note: The ring buffer is filled automatically by handler task from IDF I2S driver.
+   */
   virtual int peek();
-  virtual void flush();
 
-  // from Print
-  virtual size_t write(uint8_t data);
-  virtual size_t write(const uint8_t *buffer, size_t size);
+  /*
+   * Reads a single sample from ring buffer and removes it from the ring buffer.
+   * Returns: First sample from ring buffer
+   * Note: The ring buffer is filled automatically by handler task from IDF I2S driver.
+   */
+  virtual int read();
 
-  virtual int availableForWrite();
-
+  /*
+   * Reads an array of samples from ring buffer and removes them from the ring buffer.
+   * Parameters:
+   *   [OUT] void* buffer  Buffer into which the samples will be copied. The buffer must allocated before calling this function!
+   *   [IN] size_t size  Requested number of bytes to be read
+   * Returns: Number of bytes that were actually read.
+   * Note: Always check the returned value!
+   */
   int read(void* buffer, size_t size);
 
-  //size_t write(int);
+  /*
+   * Returns: number of bytes that can be written into the ring buffer.
+   */
+  virtual int availableForWrite();
+
+  /*
+   * Write single sample of 8 bit size.
+   * This function is blocking - if there is not enough space in ring buffer the function will wait until it can write the sample.
+   * Parameter:
+   *   uint8_t data  The sample to be sent
+   * Returns: 1 on successful write; 0 on error = did not write the sample to ring buffer
+   * Note: This functions is used in many examples for it's simplicity, but it's use is discouraged for performance reasons.
+   * Please consider sending data in arrays using function `size_t write(const uint8_t *buffer, size_t size)`
+   */
+  virtual size_t write(uint8_t data);
+
+  /*
+   * Write single sample of up to 32 bit size.
+   * This function is blocking - if there is not enough space in ring buffer the function will wait until it can write the sample.
+   * Parameter:
+   *   int32_t data  The sample to be sent
+   * Returns: Number of written bytes, if successful the value will be equal to bitsPerSample/8
+   * Note: This functions is used in many examples for it's simplicity, but it's use is discouraged for performance reasons.
+   * Please consider sending data in arrays using function `size_t write(const uint8_t *buffer, size_t size)`
+   */
   size_t write(int32_t);
+
+  /*
+   * Write array of samples.
+   * This function is non-blocking - the function might write only portion of samples into ring buffer, or potentially none at all. Do check the returned value at all times!
+   * Parameters:
+   *   uint8_t* buffer  Array of samples
+   *   size_t size  Number of bytes in array
+   * Returns: Number of bytes successfully written to ring buffer.
+   * Note: This is the preferred function for writing samples.
+   */
+  virtual size_t write(const uint8_t *buffer, size_t size);
+
+  /*
+   * Write array of samples.
+   * This function is non-blocking - the function might write only portion of samples into ring buffer, or potentially none at all. Do check the returned value at all times!
+   * Parameters:
+   *   void* buffer  Array of samples
+   *   size_t size  Number of bytes in array
+   * Returns: Number of bytes successfully written to ring buffer.
+   * Note: This is the preferred function for writing samples.
+   */
   size_t write(const void *buffer, size_t size);
+
+  // Internally used functions
   size_t write_blocking(const void *buffer, size_t size);
   size_t write_nonblocking(const void *buffer, size_t size);
 
+  /*
+   * Force-write data from ring buffer to IDF I2S driver
+   * This function is useful when sending low amount of data, however such use will lead to low quality audio.
+   * Note: The ring buffer is emptied (sent) automatically by handler task from IDF I2S driver.
+   */
+  virtual void flush();
+
+  /*
+   * Callback handle which will be used each time when the IDF I2S driver transmits data from buffer.
+   */
   void onTransmit(void(*)(void));
+
+  /*
+   * Callback handle which will be used each time when the IDF I2S driver receives data into buffer.
+   */
   void onReceive(void(*)(void));
 
+  /*
+   * Change the size of buffers. The unit is number of sample frames (number_of_channels * (bits_per_sample/8))
+   * The resulting Bytes size of ring buffers can be calculated:
+   * ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT
+   * Example: default value of _I2S_DMA_BUFFER_COUNT is 2, default value of bufferSize is 128; for dual channel, 16 bps we will get
+   * ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT
+   *        1024            = (       2           * (     16        /8)) *    128     *         2
+   */
   int setBufferSize(int bufferSize);
+
+  /*
+   * Get buffer size. The unit is number of sample frames (number_of_channels * (bits_per_sample/8))
+   * For more info see setBufferSize
+   */
   int getBufferSize();
+
 private:
   #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
     int _gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
