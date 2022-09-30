@@ -6,6 +6,8 @@
 bool wifiLowLevelInit(bool persistent);
 static esp_err_t err;
 
+extern "C" bool verifyRollbackLater() { return true; }
+
 static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == RMAKER_EVENT) {
@@ -132,9 +134,11 @@ esp_err_t RMakerClass::enableTZService()
 
 esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
 {
-    esp_rmaker_ota_config_t ota_config;
-    ota_config.server_cert = cert;
-    ota_config.ota_cb = NULL;
+    esp_rmaker_ota_config_t ota_config = {
+        .ota_cb = NULL,
+        .ota_diag = NULL,
+        .server_cert = cert,
+    };
     err = esp_rmaker_ota_enable(&ota_config, type);
     if(err != ESP_OK) {
         log_e("OTA enable failed");
