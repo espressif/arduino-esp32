@@ -118,7 +118,6 @@ def get_patched_bootloader_image(original_bootloader_image, bootloader_offset):
                     board_config.get("upload.flash_size", "4MB"),
                     "--target-offset",
                     bootloader_offset,
-                    bootloader_offset,
                     "$SOURCE",
                 ]
             ),
