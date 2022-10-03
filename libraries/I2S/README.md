@@ -26,7 +26,15 @@ From this we can get also size of the ring buffers. As stated their size is equa
 The function `setBufferSize` allows you to change the size in frames (see detailed description below).
 
 On Arduino and most ESPs you can use object `I2S` to use the I2S module. on ESP32 and ESP32-S3 you have the option to use addititonal object `I2S1`.
-I2S module functionality on each SoC differs, please refer to [IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html?highlight=dac#overview-of-all-modes) for an overview.
+I2S module functionality on each SoC differs, please refer to the following table. More info can be found in [IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html?highlight=dac#overview-of-all-modes).
+
+### Overview of I2S Modes:
+| SoC      | Philips    | ADC/DAC | PDM TX | PDM RX |
+| -------- | ---------- | ------- | ------ | ------ |
+| ESP32    | I2S + I2S1 | I2S     | I2S    | I2S    |
+| ESP32-S2 | I2S        | N/A     | N/A    | N/A    |
+| ESP32-C3 | I2S        | N/A     | I2S    | N/A    |
+| ESP32-S3 | I2S + I2S1 | N/A     | I2S    | I2S    |
 
 ## Pins
 ESP I2S has fully configurable pins. There is a group of setter and getter functions for each pin separately and one setter for all pins at once (detailed description below). Calling the setter will take effect immediately and does not need driver restart.

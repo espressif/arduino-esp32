@@ -7,11 +7,13 @@
  Circuit:
  * Arduino/Genuino Zero, MKR family and Nano 33 IoT
  * ICS43432:
-   * GND connected GND
-   * 3.3V connected to 3.3V (Zero, Nano, ESP32), VCC (MKR)
-   * WS connected to pin 0 (Zero) or 3 (MKR), A2 (Nano) or 25 (ESP32)
-   * CLK connected to pin 1 (Zero) or 2 (MKR), A3 (Nano) or 5 (ESP32)
-   * SD connected to pin 9 (Zero) or A6 (MKR), 4 (Nano) or 26 (ESP32)
+  | Pin  | Zero  |  MKR  | Nano  | ESP32 | ESP32-S2, ESP32-C3, ESP32-S3 |
+  | -----|-------|-------|-------|-------|------------------------------|
+  | GND  |  GND  |  GND  |  GND  |  GND  |            GND               |
+  | 3.3V | 3.3V  | 3.3V  | 3.3V  | 3.3V  |           3.3V               |
+  | SCK  |   1   |   2   |  A3   |  19   |             19               |
+  | FS   |   0   |   3   |  A2   |  21   |             21               |
+  | DIN  |   9   |  A6   |   4   |  23   |              5               |
  created 17 November 2016
  by Sandeep Mistry
  */

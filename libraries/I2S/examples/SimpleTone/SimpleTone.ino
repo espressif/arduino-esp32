@@ -4,20 +4,22 @@
  MAX08357 I2S Amp Breakout board.
 
  I2S Circuit:
- * Arduino/Genuino Zero, MKR family and Nano 33 IoT
- * MAX08357:
-   * GND connected GND
-   * VIN connected 5V
-   * LRC connected to pin 0 (Zero) or 3 (MKR), A2 (Nano) or 25 (ESP32)
-   * BCLK connected to pin 1 (Zero) or 2 (MKR), A3 (Nano) or 5 (ESP32)
-   * DIN connected to pin 9 (Zero) or A6 (MKR), 4 (Nano) or 26 (ESP32)
+ * Arduino/Genuino Zero, MKR family, Nano 33 IoT or any ESP32
+ * MAX08357 or PCM510xA:
+  | Pin  | Zero  |  MKR  | Nano  | ESP32 | ESP32-S2, ESP32-C3, ESP32-S3 |
+  | -----|-------|-------|-------|-------|------------------------------|
+  | GND  |  GND  |  GND  |  GND  |  GND  |            GND               |
+  | 5V   |  5V   |  5V   |  5V   |  5V   |            5V                |
+  | SCK  |   1   |   2   |  A3   |  19   |            19                |
+  | FS   |   0   |   3   |  A2   |  21   |            21                |
+  | SD   |   9   |  A6   |   4   |  22   |             4                |
+ * note: those chips supports only 16/24/32 bits per sample, i.e. 8 bps will be refused = no audio output
 
  DAC Circuit:
- * ESP32 or ESP32-S2
+ * ESP32
  * Audio amplifier
    - Note:
      - ESP32 has DAC on GPIO pins 25 and 26.
-     - ESP32-S2 has DAC on GPIO pins 17 and 18.
   - Connect speaker(s) or headphones.
 
  created 17 November 2016
@@ -31,7 +33,7 @@
 const int frequency = 440; // frequency of square wave in Hz
 const int sampleRate = 8000; // sample rate in Hz
 const int bps = 16;
-const int amplitude = ((1<<bps)-1)-1; // amplitude of square wave
+const int amplitude = (1<<(bps-1))-1; // amplitude of square wave
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 

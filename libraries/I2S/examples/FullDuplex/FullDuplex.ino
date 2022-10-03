@@ -1,18 +1,17 @@
 /*
  This example is only for ESP
  This example demonstrates simultaneous usage of microphone and speaker using single I2S module.
- The application transfers data from input to output
+ The application transfers data from input to output.
+ You will need I2S microphone I2S decoder + headphones / speakerI2S microphone
 
- Circuit:
- * ESP32
-   * GND connected GND
-   * VIN connected 5V
-   * SCK 5
-   * FS 25
-   * DIN 35
-   * DOUT 26
- * I2S microphone
- * I2S decoder + headphones / speaker
+  | Pin  | ESP32 | ESP32-S2, ESP32-C3, ESP32-S3 |
+  | -----|-------|------------------------------|
+  | GND  |  GND  |            GND               |
+  | VIN  |  5V   |             5V               |
+  | SCK  |  19   |             19               |
+  | FS   |  21   |             21               |
+  | DIN  |  23   |              5               |
+  | DOUT |  22   |              4               |
 
  created 8 October 2021
  by Tomas Pilny
@@ -25,7 +24,7 @@ uint8_t *buffer;
 
 void setup() {
   Serial.begin(115200);
-  //I2S.setAllPins(5, 25, 35, 26); // you can change default pins; order of pins = (CLK, WS, IN, OUT)
+  //I2S.setAllPins(19, 21, 23, 22); // you can change default pins; order of pins = (CLK, WS, IN, OUT)
   if(!I2S.setDuplex()){
     Serial.println("ERROR - could not set duplex");
     while(true){
@@ -54,6 +53,4 @@ void loop() {
   // Buffer based implementation
   I2S.read(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
   I2S.write(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
-
-  //optimistic_yield(1000); // yield if last yield occurred before <parameter> CPU clock cycles ago
 }
