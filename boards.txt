@@ -18904,7 +18904,7 @@ unphone9.build.partitions=default_8MB
 unphone9.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=9
 unphone9.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone9.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-unphone9.build.flash_type=qspi
+unphone9.build.flash_type=qio
 unphone9.build.psram_type=qspi
 unphone9.build.memory_type={build.flash_type}_{build.psram_type}
 
