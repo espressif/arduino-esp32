@@ -12502,6 +12502,17 @@ t-beam.build.core=esp32
 t-beam.build.variant=tbeam
 t-beam.build.board=TBeam
 
+t-beam.menu.Revision.Radio_SX1262=Radio-SX1262
+t-beam.menu.Revision.Radio_SX1262.build.board=TBEAM_USE_RADIO_SX1262
+t-beam.menu.Revision.Radio_SX1276=Radio-SX1276
+t-beam.menu.Revision.Radio_SX1276.build.board=TBEAM_USE_RADIO_SX1276
+t-beam.menu.Revision.Radio_SX1278=Radio-SX1278
+t-beam.menu.Revision.Radio_SX1278.build.board=TBEAM_USE_RADIO_SX1278
+t-beam.menu.Revision.Radio_SX1280=Radio-SX1280
+t-beam.menu.Revision.Radio_SX1280.build.board=TBEAM_USE_RADIO_SX1280
+t-beam.menu.Revision.Radio_SX1268=Radio-SX1268
+t-beam.menu.Revision.Radio_SX1268.build.board=TBEAM_USE_RADIO_SX1268
+
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
 t-beam.build.flash_size=4MB
