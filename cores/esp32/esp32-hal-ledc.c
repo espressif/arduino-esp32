@@ -166,14 +166,15 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         return;
     }
     uint8_t group=(chan/8), channel=(chan%8), timer=((chan/2)%4);
-    
+    uint32_t duty = ledc_get_duty(group,channel);
+
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = group,
         .channel        = channel,
         .timer_sel      = timer,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
-        .duty           = 0,
+        .duty           = duty,
         .hpoint         = 0
     };
     ledc_channel_config(&ledc_channel);
