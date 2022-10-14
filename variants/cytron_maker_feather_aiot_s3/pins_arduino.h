@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID            0x303A
 #define USB_PID            0x80F8
@@ -18,12 +19,19 @@
 #define digitalPinHasPWM(p)         (p < 46)
 
 
-#define LED                 2       // Status LED.
-#define LED_BUILTIN         2
 
-#define RGB                 46      // RGB LED.
-#define RGB_BUILTIN         46
-#define NEOPIXEL            46
+static const uint8_t LED_BUILTIN = 2;                           // Status LED.
+static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;     // RGB LED.
+
+#define BUILTIN_LED     LED_BUILTIN                             // Backward compatibility
+#define LED_BUILTIN     LED_BUILTIN
+#define LED             LED_BUILTIN
+#define RGB_BUILTIN     RGB_BUILTIN
+#define RGB             RGB_BUILTIN
+#define NEOPIXEL        RGB_BUILTIN
+#define RGB_BRIGHTNESS  65
+
+
 
 #define VP_EN               11      // V Peripheral Enable.
 #define BUZZER              12      // Piezo Buzzer.
