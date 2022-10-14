@@ -19100,15 +19100,15 @@ cytron_maker_feather_aiot_s3.menu.UploadMode.default=UART0 / Hardware CDC
 cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi=OPI PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.psram_type=opi
 cytron_maker_feather_aiot_s3.menu.PSRAM.enabled=QSPI PSRAM
 cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.psram_type=qspi
 cytron_maker_feather_aiot_s3.menu.PSRAM.disabled=Disabled
 cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.defines=
 cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.psram_type=qspi
-cytron_maker_feather_aiot_s3.menu.PSRAM.opi=OPI PSRAM
-cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.psram_type=opi
 
 cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
 cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2

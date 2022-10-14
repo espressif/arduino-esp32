@@ -32,7 +32,7 @@ extern "C" {
 void initVariant(void)
 {
   // Turn on VPeripheral by default.
-  pinMode(PIN_VP_EN, OUTPUT);
-  digitalWrite(PIN_VP_EN, HIGH);
+  pinMode(VP_EN, OUTPUT);
+  digitalWrite(VP_EN, HIGH);
 }
 }

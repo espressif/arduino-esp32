@@ -22,6 +22,7 @@
 #define LED_BUILTIN         2
 
 #define RGB                 46      // RGB LED.
+#define RGB_BUILTIN         46
 #define NEOPIXEL            46
 
 #define VP_EN               11      // V Peripheral Enable.
