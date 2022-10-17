@@ -374,11 +374,11 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
-    unsigned long send_start_time=millis();
+    unsigned long write_start_time=millis();
 
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-        if((millis()-send_start_time)>ssl_client->socket_timeout) {
-            log_v("SSL write timeout.");
+        if((millis()-write_start_time)>ssl_client->socket_timeout) {
+            log_v("SSL write timed out.");
             return -1;
         }
 
