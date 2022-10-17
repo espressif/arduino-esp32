@@ -117,6 +117,7 @@ int I2SClass::_installDriver(){
       log_e("(I2S#%d) This chip does not support ADC / DAC mode", _deviceIndex);
       return 0; // ERR
     #endif
+  // TODO left/right justified mode is actually stereo, but ignoring the other channel input// left/righ
   }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal Philips mode
@@ -128,8 +129,11 @@ int I2SClass::_installDriver(){
       log_w("(I2S#%d) Original Arduino library does not support 24 bits per sample.\nKeep that in mind if you should switch back to Arduino", _deviceIndex);
     }
   }else if(_mode == PDM_STEREO_MODE || _mode == PDM_MONO_MODE){ // end of Normal Philips mode; start of PDM mode
-    #if (SOC_I2S_SUPPORTS_PDM_TX && SOC_I2S_SUPPORTS_PDM_RX)
+    #if (SOC_I2S_SUPPORTS_PDM_TX || SOC_I2S_SUPPORTS_PDM_RX)
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_PDM);
+      #ifndef SOC_I2S_SUPPORTS_PDM_RX
+        i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode & ~esp_i2s::I2S_MODE_RX); // remove PRM RX which is not supported on ESP32-C3
+      #endif
     #else
       log_e("(I2S#%d) This chip does not support PDM", _deviceIndex);
       return 0; // ERR
@@ -254,13 +258,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 
   // There is work in progress on this library.
   if(_bitsPerSample == 16 && _sampleRate > 16000 && driveClock){
-    log_w("(I2S#%d) This sample rate is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000", _deviceIndex);
+    log_w("(I2S#%d) The sample rate value %d is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000", _deviceIndex, _sampleRate);
   }
   if(_bitsPerSample != 16){
     log_w("(I2S#%d) This bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000", _deviceIndex);
   }
   if(_mode != I2S_PHILIPS_MODE){
-    log_w("(I2S#%d) This mode is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE", _deviceIndex);
+    log_w("(I2S#%d) The mode %s is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE", _deviceIndex, i2s_mode_text[_mode]);
   }
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
@@ -276,14 +280,24 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       case ADC_DAC_MODE:
+    #else
+      log_e("(I2S#%d) ERROR: ADC/DAC is not supported on this SoC. Change mode or SoC", _deviceIndex);
+     _give_if_top_call();
+     return 0; // ERR
     #endif
 
+#if defined(SOC_I2S_SUPPORTS_PDM_TX) || defined(SOC_I2S_SUPPORTS_PDM_RX)
     case PDM_STEREO_MODE:
     case PDM_MONO_MODE:
       break;
+#else
+    log_e("(I2S#%d) ERROR: PDM is not supported on this SoC. Change mode or SoC", _deviceIndex);
+    _give_if_top_call();
+    return 0; // ERR
+#endif
 
     default: // invalid mode
-      log_e("(I2S#%d) ERROR: unknown mode", _deviceIndex);
+      log_e("(I2S#%d) ERROR: unknown or unsupported mode", _deviceIndex);
       _give_if_top_call();
       return 0; // ERR
   }
@@ -295,6 +309,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   }
 
   _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT * 2;
+  log_d("(I2S#%d) Creating internal buffers. Requested size = %dB\n", _deviceIndex, _buffer_byte_size);
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
@@ -361,7 +376,6 @@ int I2SClass::setSckPin(int sckPin){
   _take_if_not_holding();
   _setSckPin(sckPin);
   int ret = _applyPinSetting();
-  _applyPinSetting();
   _give_if_top_call();
   return ret;
 }
@@ -454,15 +468,17 @@ int I2SClass::setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inS
 int I2SClass::setDuplex(){
   _take_if_not_holding();
   _state = I2S_STATE_DUPLEX;
+  int ret = _applyPinSetting();
   _give_if_top_call();
-  return 1;
+  return ret;
 }
 
 int I2SClass::setSimplex(){
   _take_if_not_holding();
   _state = I2S_STATE_IDLE;
+  int ret = _applyPinSetting();
   _give_if_top_call();
-  return 1;
+  return ret;
 }
 
 int I2SClass::isDuplex(){
@@ -707,6 +723,8 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
 // non-blocking version of write
 // In case there is not enough space in buffer to write requested size
 // this function will try to flush the buffer and write requested data with 0 time-out
+// The function will return number of successfully written bytes. It is users responsibility
+// to take care of the remaining data.
 size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   _take_if_not_holding();
   if(_initialized){
@@ -759,8 +777,8 @@ int I2SClass::peek(){
   _give_if_top_call();
   return ret;
 }
-
-// TODO flush everything instead of one buffer
+// Requests data from ring buffer and writes data to I2S module
+// note: it is NOT necessary to call the flush after writes. Buffer is flushed automatically after receiveing enough data.
 void I2SClass::flush(){
   _take_if_not_holding();
   if(_initialized){
@@ -804,6 +822,11 @@ void I2SClass::onReceive(void(*function)(void)){
   _give_if_top_call();
 }
 
+
+// Change buffer size. The unit is in frames.
+// Byte value can be calculated as follows:
+// ByteSize = (bits_per_sample / 8) * number_of_channels * bufferSize
+// Calling this function will automatically restart the driver, which could cause audio output gap.
 int I2SClass::setBufferSize(int bufferSize){
   _take_if_not_holding();
   int ret = 0;
@@ -997,7 +1020,11 @@ void I2SClass::_post_read_data_fix(void *input, size_t *size){
         ((uint16_t*)input)[dst_ptr++] = tmp;
       }
       break;
-      default: ; // Do nothing
+    case 24:
+        // TODO check if need fix and if so, implement it
+      break;
+      default: ;
+        // Do nothing
   } // switch
 }
 

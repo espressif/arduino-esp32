@@ -118,12 +118,21 @@ namespace esp_i2s {
 
 typedef enum {
   I2S_PHILIPS_MODE, // Most common I2S mode, FS signal spans across whole channel period
-  I2S_RIGHT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
-  I2S_LEFT_JUSTIFIED_MODE, // TODO check oscilloscope what it does
+  I2S_RIGHT_JUSTIFIED_MODE, // Right channel data are copied to both channels
+  I2S_LEFT_JUSTIFIED_MODE, // Left channel data are copied to both channels
   ADC_DAC_MODE, // Receive and transmit raw analog signal
   PDM_STEREO_MODE, // Pulse Density Modulation - stereo / 2 channels
   PDM_MONO_MODE // Pulse Density Modulation - mono / 1 channel
 } i2s_mode_t;
+
+const char i2s_mode_text[][32] = {
+  "I2S_PHILIPS_MODE",
+  "I2S_RIGHT_JUSTIFIED_MODE",
+  "I2S_LEFT_JUSTIFIED_MODE",
+  "ADC_DAC_MODE",
+  "PDM_STEREO_MODE",
+  "PDM_MONO_MODE"
+};
 
 class I2SClass : public Stream
 {
