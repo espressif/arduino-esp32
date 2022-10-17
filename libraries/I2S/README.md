@@ -60,13 +60,19 @@ The default mode is simplex and the shared data pin switches function upon calli
 If you wish to use duplex mode call `setDuplex();` this will change the pin setup to use both data lines. If you want to switch back ti simplex call `setSimplex();` and if you need to get current state call `isDuplex();` (detailed function description below).
 
 ## Modes (i2s_mode_t)
+.. note:: (Arduino MKRZero) First transmitted sample is in Right channel (WS=1). If your audio has swapped left and right channel try feed single zero-value sample before the data stream.
 
- * **I2S_PHILIPS_MODE** Most common mode, FS signal spans across whole channel period. TODO more info
- * **I2S_RIGHT_JUSTIFIED_MODE** ? TODO
- * **I2S_LEFT_JUSTIFIED_MODE** ? TODO
- * **ADC_DAC_MODE** Outputting and inputting raw analog signal - see example ADCPlotter
- * **PDM_STEREO_MODE** Pulse Density Modulation is basically an over-sampled  1-bit signal. Not to be confused with PCM.
- * **PDM_MONO_MODE** Same as previous but transmits only 1 channel. TODO explain timing diagram and data interpretation
+ * **I2S_PHILIPS_MODE** Most common mode, FS signal spans across whole channel period. MSB is transmitted first and data starts SCK falling edge 1 SCK period after WS change. WS 0 = Left channel, 1 = Right channel. See more on [Wikipedia](https://en.wikipedia.org/wiki/I%C2%B2S)
+ * **I2S_RIGHT_JUSTIFIED_MODE** Does not work on MKRZero, opened [issue](https://github.com/arduino/ArduinoCore-samd/issues/682). Should be expected to the ooposite of `I2S_LEFT_JUSTIFIED_MODE`.
+ * **I2S_LEFT_JUSTIFIED_MODE** Input data belonging to righ channel are ignored and data belonging to left channel are transmitted in both channels. Example: `int16_t sample[] = {0x0001, 0x0002, 0x0003, 0x0004}` samples with value `0x0001` and `0x0003` belong to the right channel and will be ignored. Samples with value `0x0002` and `0x0004` will be transmitted as follows: Right channel (WS=1) `0x0002` followd by Left channel )WS=0) `0x0004`. this pattern repeats.
+ * **ADC_DAC_MODE** Outputting and inputting raw analog signal - see [example ADCPlotter](https://github.com/espressif/arduino-esp32/blob/master/libraries/I2S/examples/ADCPlotter/ADCPlotter.ino).
+ * **PDM_STEREO_MODE** Pulse Density Modulation is basically an over-sampled  1-bit signal. Not to be confused with PCM. (ESP32-C3 supports only Transmit mode - read attempts will time-out)
+ * **PDM_MONO_MODE** Same as previous but transmits only 1 channel. TODO explain timing diagram and data interpretation.
+
+.. note:: First 2 samples in a stream are zero value, this will not affect audio quality.
+
+.. note:: Some ESP32 SoCs support PCM, TDM and LCD/Camera modes, however support for those modes is out of scope in this simplified library. If you need to use those mode you will need to use [IDF I2S driver](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html).
+
 
 ## Functions
 
