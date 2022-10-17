@@ -40,7 +40,7 @@ void loop() {
   // read a sample
   int sample = I2S.read();
 
-  if (sample && sample != -1 && sample != 1) {
+  if (abs(sample) > 1) {
     Serial.println(sample);
   }
 }
