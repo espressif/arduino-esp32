@@ -122,7 +122,8 @@ typedef enum {
   I2S_LEFT_JUSTIFIED_MODE, // Left channel data are copied to both channels
   ADC_DAC_MODE, // Receive and transmit raw analog signal
   PDM_STEREO_MODE, // Pulse Density Modulation - stereo / 2 channels
-  PDM_MONO_MODE // Pulse Density Modulation - mono / 1 channel
+  PDM_MONO_MODE, // Pulse Density Modulation - mono / 1 channel
+  MODE_MAX // Helper value - not actual mode
 } i2s_mode_t;
 
 const char i2s_mode_text[][32] = {

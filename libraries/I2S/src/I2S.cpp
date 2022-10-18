@@ -261,7 +261,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     log_w("(I2S#%d) The sample rate value %d is not officially supported - audio might be noisy.\nTry using sample rate below or equal to 16000", _deviceIndex, _sampleRate);
   }
   if(_bitsPerSample != 16){
-    log_w("(I2S#%d) This bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000", _deviceIndex);
+    log_w("(I2S#%d) The %d bit-per-sample is not officially supported - audio quality might suffer.\nTry using 16bps, with sample rate below or equal 16000", _deviceIndex, _bitsPerSample);
   }
   if(_mode != I2S_PHILIPS_MODE){
     log_w("(I2S#%d) The mode %s is not officially supported - audio quality might suffer.\nAt the moment the only supported mode is I2S_PHILIPS_MODE", _deviceIndex, i2s_mode_text[_mode]);
@@ -273,13 +273,16 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     return 0; // ERR
   }
 
+  delay(250);
   switch (mode) {
     case I2S_PHILIPS_MODE:
     case I2S_RIGHT_JUSTIFIED_MODE:
     case I2S_LEFT_JUSTIFIED_MODE:
+      break;
 
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       case ADC_DAC_MODE:
+      break;
     #else
       log_e("(I2S#%d) ERROR: ADC/DAC is not supported on this SoC. Change mode or SoC", _deviceIndex);
      _give_if_top_call();
@@ -297,7 +300,11 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 #endif
 
     default: // invalid mode
-      log_e("(I2S#%d) ERROR: unknown or unsupported mode", _deviceIndex);
+      if(mode >= 0 && mode < MODE_MAX){
+        log_e("(I2S#%d) ERROR: Mode '%s' is not supported on this SoC", _deviceIndex, i2s_mode_text[mode]);
+      }else{
+        log_e("(I2S#%d) ERROR: Mode %d is not recognized", _deviceIndex, mode);
+      }
       _give_if_top_call();
       return 0; // ERR
   }
