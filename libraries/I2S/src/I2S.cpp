@@ -52,6 +52,8 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _output_ring_buffer(NULL),
   _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample; Must be between 8 and 1024
   _driveClock(true),
+  _peek_buff(0),
+  _peek_buff_valid(false),
   _nesting_counter(0),
 
   _onTransmit(NULL),
@@ -619,6 +621,11 @@ int I2SClass::read(void* buffer, size_t size){
     size_t item_size = 0;
     void *tmp_buffer;
     if(_input_ring_buffer != NULL){
+      if(_peek_buff_valid){
+        memcpy(buffer, &_peek_buff, _bitsPerSample/8);
+        _peek_buff_valid = false;
+        requested_size -= _bitsPerSample/8;
+      }
       tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), requested_size);
       if(tmp_buffer != NULL){
         memcpy(buffer, tmp_buffer, item_size);
@@ -751,17 +758,24 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
 */
 int I2SClass::peek(){
   _take_if_not_holding();
-  if(_initialized && _input_ring_buffer != NULL){
+  int ret = 0;
+  if(_initialized && _input_ring_buffer != NULL && !_peek_buff_valid){
     size_t item_size = 0;
     void *item = NULL;
 
     item = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, 0, _bitsPerSample/8); // fetch 1 sample
     if (item != NULL && item_size == _bitsPerSample/8){
-      return *((int*)item);
+      _peek_buff = *((int*)item);
+      vRingbufferReturnItem(_input_ring_buffer, item);
+      _peek_buff_valid = true;
     }
+
   } // if(_initialized)
+  if(_peek_buff_valid){
+    ret = _peek_buff;
+  }
   _give_if_top_call();
-  return 0;
+  return ret;
 }
 // Requests data from ring buffer and writes data to I2S module
 // note: it is NOT necessary to call the flush after writes. Buffer is flushed automatically after receiveing enough data.

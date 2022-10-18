@@ -408,6 +408,8 @@ private:
   RingbufHandle_t _output_ring_buffer;
   int _i2s_dma_buffer_size;
   bool _driveClock;
+  uint32_t _peek_buff;
+  bool _peek_buff_valid;
 
   void _tx_done_routine(uint8_t* prev_item);
   void _rx_done_routine();
