@@ -17555,6 +17555,8 @@ AirM2M_CORE_ESP32C3.vid.0=0x303a
 AirM2M_CORE_ESP32C3.pid.0=0x1001
 
 AirM2M_CORE_ESP32C3.upload.tool=esptool_py
+AirM2M_CORE_ESP32C3.upload.tool.default=esptool_py
+AirM2M_CORE_ESP32C3.upload.tool.network=esp_ota
 AirM2M_CORE_ESP32C3.upload.maximum_size=1310720
 AirM2M_CORE_ESP32C3.upload.maximum_data_size=327680
 AirM2M_CORE_ESP32C3.upload.flags=
@@ -17648,6 +17650,11 @@ AirM2M_CORE_ESP32C3.menu.DebugLevel.debug=Debug
 AirM2M_CORE_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
 AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose=Verbose
 AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+AirM2M_CORE_ESP32C3.menu.EraseFlash.none=Disabled
+AirM2M_CORE_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
+AirM2M_CORE_ESP32C3.menu.EraseFlash.all=Enabled
+AirM2M_CORE_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 #############################################################
 
@@ -18001,7 +18008,7 @@ aw2eth.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-department_of_alchemy_minimain_esp32s2.name=Deparment of Alchemy MiniMain ESP32-S2
+department_of_alchemy_minimain_esp32s2.name=Department of Alchemy MiniMain ESP32-S2
 department_of_alchemy_minimain_esp32s2.vid.0=0x303A
 department_of_alchemy_minimain_esp32s2.pid.0=0x80FF
 
