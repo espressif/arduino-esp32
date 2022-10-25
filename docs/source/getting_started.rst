@@ -40,7 +40,7 @@ SoC      Stable Development Datasheet
 ESP32    Yes    Yes         `ESP32`_
 ESP32-S2 Yes    Yes         `ESP32-S2`_
 ESP32-C3 Yes    Yes         `ESP32-C3`_
-ESP32-S3 No     Yes         `ESP32-S3`_
+ESP32-S3 Yes    Yes         `ESP32-S3`_
 ======== ====== =========== ===================================
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
