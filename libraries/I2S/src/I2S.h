@@ -411,13 +411,12 @@ private:
   bool _driveClock;
   uint32_t _peek_buff;
   bool _peek_buff_valid;
-
   void _tx_done_routine(uint8_t* prev_item);
   void _rx_done_routine();
 
   uint16_t _nesting_counter;
-  void _take_if_not_holding();
-  void _give_if_top_call();
+  inline bool _take_mux();
+  inline bool _give_mux();
   void _post_read_data_fix(void *input, size_t *size);
   void _fix_and_write(void *output, size_t size, size_t *bytes_written = NULL, size_t *actual_bytes_written = NULL);
 

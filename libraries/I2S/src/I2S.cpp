@@ -59,7 +59,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _onTransmit(NULL),
   _onReceive(NULL)
 {
-  _i2s_general_mutex = xSemaphoreCreateMutex();
+  _i2s_general_mutex = xSemaphoreCreateRecursiveMutex();
   if(_i2s_general_mutex == NULL){
     log_e("(I2S#%d) I2S could not create internal mutex!", _deviceIndex);
   }
@@ -225,29 +225,28 @@ int I2SClass::_installDriver(){
 
 // Init in MASTER mode: the SCK and FS pins are driven as outputs using the sample rate
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   // master mode (driving clock and frame select pins - output)
   int ret = begin(mode, sampleRate, bitsPerSample, true);
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 // Init in SLAVE mode: the SCK and FS pins are inputs, other side controls sample rate
 int I2SClass::begin(int mode, int bitsPerSample){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   // slave mode (not driving clock and frame select pin - input)
   int ret = begin(mode, 96000, bitsPerSample, false);
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
-
 // Core function
 int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   if(_initialized){
     log_e("(I2S#%d) ERROR: Object already initialized! Call I2S.end() to disable", _deviceIndex);
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
   _driveClock = driveClock;
@@ -269,7 +268,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 
   if (_state != I2S_STATE_IDLE && _state != I2S_STATE_DUPLEX) {
     log_e("(I2S#%d) Error: unexpected _state (%d)", _deviceIndex, _state);
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
 
@@ -285,7 +284,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       break;
     #else
       log_e("(I2S#%d) ERROR: ADC/DAC is not supported on this SoC. Change mode or SoC", _deviceIndex);
-     _give_if_top_call();
+     if(!_give_mux()){ return 0; /* ERR */ }
      return 0; // ERR
     #endif
 
@@ -295,7 +294,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       break;
 #else
     log_e("(I2S#%d) ERROR: PDM is not supported on this SoC. Change mode or SoC", _deviceIndex);
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
 #endif
 
@@ -305,13 +304,13 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
       }else{
         log_e("(I2S#%d) ERROR: Mode %d is not recognized", _deviceIndex, mode);
       }
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return 0; // ERR
   }
   if(!_installDriver()){
     log_e("(I2S#%d) ERROR: failed to install driver", _deviceIndex);
     end();
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
 
@@ -321,18 +320,18 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
     log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d\n", _deviceIndex, _buffer_byte_size);
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
 
   if(!_createCallbackTask()){
     log_e("(I2S#%d) ERROR: failed to create callback task", _deviceIndex);
     end();
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
   _initialized = true;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return 1; // OK
 }
 
@@ -370,163 +369,171 @@ int I2SClass::_applyPinSetting(){
 }
 
 void I2SClass::_setSckPin(int sckPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return; /* ERR */ }
   if(sckPin >= 0){
     _sckPin = sckPin;
   }else{
     _sckPin = PIN_I2S_SCK;
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 int I2SClass::setSckPin(int sckPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setSckPin(sckPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 void I2SClass::_setFsPin(int fsPin){
+  if(!_take_mux()){ return; /* ERR */ }
   if(fsPin >= 0){
     _fsPin = fsPin;
   }else{
     _fsPin = PIN_I2S_FS;
   }
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 int I2SClass::setFsPin(int fsPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setFsPin(fsPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 // shared data pin for simplex
 void I2SClass::_setDataPin(int sdPin){
+  if(!_take_mux()){ return; /* ERR */ }
   if(sdPin >= 0){
     _sdPin = sdPin;
   }else{
     _sdPin = PIN_I2S_SD;
   }
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 // shared data pin for simplex
 int I2SClass::setDataPin(int sdPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setDataPin(sdPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 void I2SClass::_setDataInPin(int inSdPin){
+  if(!_take_mux()){ return; /* ERR */ }
   if(inSdPin >= 0){
     _inSdPin = inSdPin;
   }else{
     _inSdPin = PIN_I2S_SD_IN;
   }
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 int I2SClass::setDataInPin(int inSdPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setDataInPin(inSdPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 void I2SClass::_setDataOutPin(int outSdPin){
+  if(!_take_mux()){ return; /* ERR */ }
   if(outSdPin >= 0){
     _outSdPin = outSdPin;
   }else{
     _outSdPin = PIN_I2S_SD;
   }
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 int I2SClass::setDataOutPin(int outSdPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setDataOutPin(outSdPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::setAllPins(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SD_IN);
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _setSckPin(sckPin);
   _setFsPin(fsPin);
   _setDataPin(sdPin);
   _setDataOutPin(outSdPin);
   _setDataInPin(inSdPin);
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::setDuplex(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _state = I2S_STATE_DUPLEX;
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::setSimplex(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   _state = I2S_STATE_IDLE;
   int ret = _applyPinSetting();
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::isDuplex(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = (int)(_state == I2S_STATE_DUPLEX);
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::getSckPin(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _sckPin;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::getFsPin(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _fsPin;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::getDataPin(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _sdPin;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::getDataInPin(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _inSdPin;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 int I2SClass::getDataOutPin(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _outSdPin;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
@@ -547,7 +554,7 @@ void I2SClass::_uninstallDriver(){
 }
 
 void I2SClass::end(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return; /* ERR */ }
   if(xTaskGetCurrentTaskHandle() != _callbackTaskHandle){
     if(_callbackTaskHandle){
       vTaskDelete(_callbackTaskHandle);
@@ -568,17 +575,17 @@ void I2SClass::end(){
   }else{
     log_w("(I2S#%d) WARNING: ending I2SClass from callback task not permitted, but attempted!", _deviceIndex);
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 // Bytes available to read
 int I2SClass::available(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
   if(_input_ring_buffer != NULL){
     ret = _buffer_byte_size - (int)xRingbufferGetCurFreeSize(_input_ring_buffer);
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
@@ -589,39 +596,39 @@ union i2s_sample_t {
 };
 
 int I2SClass::read(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   i2s_sample_t sample;
   sample.b32 = 0;
   if(_initialized){
     read(&sample, _bitsPerSample / 8);
 
     if (_bitsPerSample == 32) {
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return sample.b32;
     } else if (_bitsPerSample == 24) {
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return sample.b32;
     } else if (_bitsPerSample == 16) {
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return sample.b16;
     } else if (_bitsPerSample == 8) {
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return sample.b8;
     } else {
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return 0; // sample value
     }
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return 0; // sample value
 }
 
 int I2SClass::read(void* buffer, size_t size){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   size_t requested_size = size;
   if(_initialized){
     if(!_enableReceiver()){
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return 0; // There was an error switching to receiver
     } // _enableReceiver succeeded ?
 
@@ -644,57 +651,57 @@ int I2SClass::read(void* buffer, size_t size){
           } // ADC/DAC mode
         #endif
         vRingbufferReturnItem(_input_ring_buffer, tmp_buffer);
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return item_size;
       }else{
         log_w("(I2S#%d) input buffer is empty - timed out", _deviceIndex);
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return 0; // 0 Bytes read / ERR
       } // tmp buffer not NULL ?
     } // ring buffer not NULL ?
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return 0; // 0 Bytes read / ERR
 }
 
 size_t I2SClass::write(uint8_t data){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   size_t ret = 0;
   if(_initialized){
     ret = write_blocking((int32_t*)&data, 1);
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 size_t I2SClass::write(int32_t sample){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   size_t ret = 0;
   if(_initialized){
     ret = write_blocking(&sample, _bitsPerSample/8);
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 size_t I2SClass::write(const uint8_t *buffer, size_t size){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   size_t ret = 0;
   if(_initialized){
     ret = write((const void*)buffer, size);
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 size_t I2SClass::write(const void *buffer, size_t size){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   size_t ret = 0;
   if(_initialized){
     //size_t ret = write_blocking(buffer, size);
     ret = write_nonblocking(buffer, size);
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
@@ -702,28 +709,28 @@ size_t I2SClass::write(const void *buffer, size_t size){
 // This version of write will wait indefinitely to write requested samples
 // into output buffer
 size_t I2SClass::write_blocking(const void *buffer, size_t size){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   if(_initialized){
     if(!_enableTransmitter()){
-      _give_if_top_call();
+      if(!_give_mux()){ return 0; /* ERR */ }
       return 0; // There was an error switching to transmitter
     } // _enableTransmitter succeeded ?
 
     if(_output_ring_buffer != NULL){
       int ret = xRingbufferSend(_output_ring_buffer, buffer, size, portMAX_DELAY);
       if(pdTRUE == ret){
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return size;
       }else{
         log_e("(I2S#%d) xRingbufferSend() with infinite wait returned with error", _deviceIndex);
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return 0;
       } // ring buffer send ok ?
     } // ring buffer not NULL ?
   } // if(_initialized)
   return 0;
   log_w("(I2S#%d) I2S not initialized", _deviceIndex);
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return 0;
 }
 
@@ -733,11 +740,11 @@ size_t I2SClass::write_blocking(const void *buffer, size_t size){
 // The function will return number of successfully written bytes. It is users responsibility
 // to take care of the remaining data.
 size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   if(_initialized){
     if(_state != I2S_STATE_TRANSMITTER && _state != I2S_STATE_DUPLEX){
       if(!_enableTransmitter()){
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return 0; // There was an error switching to transmitter
       }
     }
@@ -746,17 +753,17 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
     }
     if(_output_ring_buffer != NULL){
       if(pdTRUE == xRingbufferSend(_output_ring_buffer, buffer, size, 0)){
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return size;
       }else{
         log_w("(I2S#%d) I2S could not write all data into ring buffer!", _deviceIndex);
-        _give_if_top_call();
+        if(!_give_mux()){ return 0; /* ERR */ }
         return 0;
       }
     }
   } // if(_initialized)
   return 0;
-  _give_if_top_call(); // this should not be needed
+  if(!_give_mux()){ return 0; /* ERR */ } // this should not be needed
 }
 
 /*
@@ -764,7 +771,7 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
   Repeated peeks will return the same sample until read is called.
 */
 int I2SClass::peek(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
   if(_initialized && _input_ring_buffer != NULL && !_peek_buff_valid){
     size_t item_size = 0;
@@ -781,13 +788,13 @@ int I2SClass::peek(){
   if(_peek_buff_valid){
     ret = _peek_buff;
   }
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 // Requests data from ring buffer and writes data to I2S module
 // note: it is NOT necessary to call the flush after writes. Buffer is flushed automatically after receiveing enough data.
 void I2SClass::flush(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return; /* ERR */ }
   if(_initialized){
     const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8)*2;
     size_t item_size = 0;
@@ -801,32 +808,32 @@ void I2SClass::flush(){
       }
     }
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 // Bytes available to write
 int I2SClass::availableForWrite(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
   if(_initialized){
     if(_output_ring_buffer != NULL){
       ret = (int)xRingbufferGetCurFreeSize(_output_ring_buffer);
     }
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
 void I2SClass::onTransmit(void(*function)(void)){
-  _take_if_not_holding();
+  if(!_take_mux()){ return; /* ERR */ }
   _onTransmit = function;
-  _give_if_top_call();
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 void I2SClass::onReceive(void(*function)(void)){
-  _take_if_not_holding();
+  if(!_take_mux()){ return; /* ERR */ }
   _onReceive = function;
-  _give_if_top_call();
+  if(!_give_mux()){ return; /* ERR */ }
 }
 
 
@@ -835,33 +842,33 @@ void I2SClass::onReceive(void(*function)(void)){
 // ByteSize = (bits_per_sample / 8) * number_of_channels * bufferSize
 // Calling this function will automatically restart the driver, which could cause audio output gap.
 int I2SClass::setBufferSize(int bufferSize){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
   if(bufferSize >= 8 && bufferSize <= 1024){
     _i2s_dma_buffer_size = bufferSize;
   }else{
     log_e("(I2S#%d) setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", _deviceIndex, bufferSize);
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   } // check requested buffer size
 
   if(_initialized){
     _uninstallDriver();
     ret = _installDriver();
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return ret;
   }else{ // check requested buffer size
-    _give_if_top_call();
+    if(!_give_mux()){ return 0; /* ERR */ }
     return 1; // It's ok to change buffer size for uninitialized driver - new size will be used on begin()
   } // if(_initialized)
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return 0; // ERR
 }
 
 int I2SClass::getBufferSize(){
-  _take_if_not_holding();
+  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = _i2s_dma_buffer_size;
-  _give_if_top_call();
+  if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
@@ -981,28 +988,20 @@ void I2SClass::onDmaTransferComplete(void *deviceIndex){
   vTaskDelete(NULL);
 }
 
-void I2SClass::_take_if_not_holding(){
-  TaskHandle_t mutex_holder = xSemaphoreGetMutexHolder(_i2s_general_mutex);
-  if(mutex_holder != NULL && mutex_holder == xTaskGetCurrentTaskHandle()){
-    ++_nesting_counter;
-    return; // we are already holding this mutex - no need to take it
+inline bool I2SClass::_take_mux(){
+  if(_i2s_general_mutex == NULL || xSemaphoreTakeRecursive(_i2s_general_mutex, portMAX_DELAY) != pdTRUE){
+    log_e("(I2S#%d) Could not take semaphore %p", _deviceIndex, _i2s_general_mutex);
+    return false;
   }
-
-  // we are not holding the mutex - wait for it and take it
-  if(xSemaphoreTake(_i2s_general_mutex, portMAX_DELAY) != pdTRUE ){
-    log_e("(I2S#%d) I2S internal mutex take returned with error", _deviceIndex);
-  }
-  //_give_if_top_call(); // call after this function
+  return true;
 }
 
-void I2SClass::_give_if_top_call(){
-  if(_nesting_counter){
-    --_nesting_counter;
-  }else{
-    if(xSemaphoreGive(_i2s_general_mutex) != pdTRUE){
-      log_e("(I2S#%d) I2S internal mutex give error", _deviceIndex);
-    }
+inline bool I2SClass::_give_mux(){
+  if(_i2s_general_mutex == NULL || xSemaphoreGiveRecursive(_i2s_general_mutex) != pdTRUE){
+    log_e("(I2S#%d) Could not give semaphore %p", _deviceIndex, _i2s_general_mutex);
+    return false;
   }
+  return true;
 }
 
 
