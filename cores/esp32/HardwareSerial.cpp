@@ -145,6 +145,10 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
+,_rxPin(-1) 
+,_txPin(-1)
+,_ctsPin(-1)
+,_rtsPin(-1)
 {
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock == NULL){
@@ -384,7 +388,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 
     // Set UART RX timeout
     uartSetRxTimeout(_uart, _rxTimeout);
-
+    _rxPin = rxPin;
+    _txPin = txPin;
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -403,6 +408,8 @@ void HardwareSerial::end(bool fullyTerminate)
         if (uartGetDebug() == _uart_nr) {
             uartSetDebug(0);
         }
+        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
+        _rxPin = _txPin = _ctsPin = _rtsPin = -1;
     }
     delay(10);
     uartEnd(_uart);
@@ -507,10 +514,19 @@ void HardwareSerial::setRxInvert(bool invert)
 void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(_uart == NULL) {
-        log_e("setPins() shall be called after begin() - nothing done");
+        log_e("setPins() shall be called after begin() - nothing done\n");
         return;
     }
-    uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
+
+    // uartSetPins() checks if pins are valid for each function and for the SoC 
+    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
+        _txPin = _txPin >= 0 ? txPin : _txPin;
+        _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
+        _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
+        _ctsPin = _ctsPin >= 0 ? ctsPin : _ctsPin;
+    } else {
+        log_e("Error when setting Serial port Pins. Invalid Pin.\n");
+    }
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
