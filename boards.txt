@@ -5033,6 +5033,11 @@ nora_w10.menu.DebugLevel.debug.build.code_debug=4
 nora_w10.menu.DebugLevel.verbose=Verbose
 nora_w10.menu.DebugLevel.verbose.build.code_debug=5
 
+nora_w10.menu.EraseFlash.none=Disabled
+nora_w10.menu.EraseFlash.none.upload.erase_cmd=
+nora_w10.menu.EraseFlash.all=Enabled
+nora_w10.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 widora-air.name=Widora AIR
