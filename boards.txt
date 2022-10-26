@@ -12502,6 +12502,17 @@ t-beam.build.core=esp32
 t-beam.build.variant=tbeam
 t-beam.build.board=TBeam
 
+t-beam.menu.Revision.Radio_SX1262=Radio-SX1262
+t-beam.menu.Revision.Radio_SX1262.build.board=TBEAM_USE_RADIO_SX1262
+t-beam.menu.Revision.Radio_SX1276=Radio-SX1276
+t-beam.menu.Revision.Radio_SX1276.build.board=TBEAM_USE_RADIO_SX1276
+t-beam.menu.Revision.Radio_SX1278=Radio-SX1278
+t-beam.menu.Revision.Radio_SX1278.build.board=TBEAM_USE_RADIO_SX1278
+t-beam.menu.Revision.Radio_SX1280=Radio-SX1280
+t-beam.menu.Revision.Radio_SX1280.build.board=TBEAM_USE_RADIO_SX1280
+t-beam.menu.Revision.Radio_SX1268=Radio-SX1268
+t-beam.menu.Revision.Radio_SX1268.build.board=TBEAM_USE_RADIO_SX1268
+
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
 t-beam.build.flash_size=4MB
@@ -18911,7 +18922,7 @@ unphone9.build.partitions=default_8MB
 unphone9.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=9
 unphone9.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone9.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-unphone9.build.flash_type=qspi
+unphone9.build.flash_type=qio
 unphone9.build.psram_type=qspi
 unphone9.build.memory_type={build.flash_type}_{build.psram_type}
 
@@ -19022,3 +19033,178 @@ unphone9.menu.EraseFlash.all=Enabled
 unphone9.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ###############################################################
+# Cytron Maker Feather AIoT S3
+
+cytron_maker_feather_aiot_s3.name=Cytron Maker Feather AIoT S3
+cytron_maker_feather_aiot_s3.vid.0=0x303a
+cytron_maker_feather_aiot_s3.pid.0=0x80f8
+
+cytron_maker_feather_aiot_s3.bootloader.tool=esptool_py
+cytron_maker_feather_aiot_s3.bootloader.tool.default=esptool_py
+
+cytron_maker_feather_aiot_s3.upload.tool=esptool_py
+cytron_maker_feather_aiot_s3.upload.tool.default=esptool_py
+cytron_maker_feather_aiot_s3.upload.tool.network=esp_ota
+
+cytron_maker_feather_aiot_s3.upload.maximum_size=1310720
+cytron_maker_feather_aiot_s3.upload.maximum_data_size=327680
+cytron_maker_feather_aiot_s3.upload.flags=
+cytron_maker_feather_aiot_s3.upload.extra_flags=
+cytron_maker_feather_aiot_s3.upload.use_1200bps_touch=true
+cytron_maker_feather_aiot_s3.upload.wait_for_upload_port=true
+
+cytron_maker_feather_aiot_s3.serial.disableDTR=false
+cytron_maker_feather_aiot_s3.serial.disableRTS=false
+
+cytron_maker_feather_aiot_s3.build.tarch=xtensa
+cytron_maker_feather_aiot_s3.build.bootloader_addr=0x0
+cytron_maker_feather_aiot_s3.build.target=esp32s3
+cytron_maker_feather_aiot_s3.build.mcu=esp32s3
+cytron_maker_feather_aiot_s3.build.core=esp32
+cytron_maker_feather_aiot_s3.build.variant=cytron_maker_feather_aiot_s3
+cytron_maker_feather_aiot_s3.build.board=CYTRON_MAKER_FEATHER_AIOT_S3
+
+cytron_maker_feather_aiot_s3.build.usb_mode=0
+cytron_maker_feather_aiot_s3.build.cdc_on_boot=1
+cytron_maker_feather_aiot_s3.build.msc_on_boot=0
+cytron_maker_feather_aiot_s3.build.dfu_on_boot=0
+cytron_maker_feather_aiot_s3.build.f_cpu=240000000L
+cytron_maker_feather_aiot_s3.build.flash_size=8MB
+cytron_maker_feather_aiot_s3.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.build.boot=qio
+cytron_maker_feather_aiot_s3.build.partitions=default
+cytron_maker_feather_aiot_s3.build.defines=
+cytron_maker_feather_aiot_s3.build.loop_core=
+cytron_maker_feather_aiot_s3.build.event_core=
+cytron_maker_feather_aiot_s3.build.flash_type=qio
+cytron_maker_feather_aiot_s3.build.psram_type=opi
+cytron_maker_feather_aiot_s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+cytron_maker_feather_aiot_s3.menu.LoopCore.1=Core 1
+cytron_maker_feather_aiot_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+cytron_maker_feather_aiot_s3.menu.LoopCore.0=Core 0
+cytron_maker_feather_aiot_s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+cytron_maker_feather_aiot_s3.menu.EventsCore.1=Core 1
+cytron_maker_feather_aiot_s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+cytron_maker_feather_aiot_s3.menu.EventsCore.0=Core 0
+cytron_maker_feather_aiot_s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+cytron_maker_feather_aiot_s3.menu.USBMode.default=USB-OTG (TinyUSB)
+cytron_maker_feather_aiot_s3.menu.USBMode.default.build.usb_mode=0
+cytron_maker_feather_aiot_s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+cytron_maker_feather_aiot_s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.cdc=Enabled
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+cytron_maker_feather_aiot_s3.menu.UploadMode.default=UART0 / Hardware CDC
+cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi=OPI PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.psram_type=opi
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled=QSPI PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.psram_type=qspi
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled=Disabled
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.defines=
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.psram_type=qspi
+
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+cytron_maker_feather_aiot_s3.menu.CPUFreq.240=240MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.240.build.f_cpu=240000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.160=160MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.160.build.f_cpu=160000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.80=80MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.80.build.f_cpu=80000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.40=40MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.40.build.f_cpu=40000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.20=20MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.20.build.f_cpu=20000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.10=10MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio=QIO 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.boot=qio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120=QIO 120MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.boot=qio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.boot_freq=120m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio=DIO 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.boot=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi=OPI 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.flash_mode=dout
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.boot=opi
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.flash_freq=80m
+
+cytron_maker_feather_aiot_s3.menu.FlashSize.8M=8MB (64Mb)
+cytron_maker_feather_aiot_s3.menu.FlashSize.8M.build.flash_size=8MB
+
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.921600=921600
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.921600.upload.speed=921600
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.115200=115200
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.115200.upload.speed=115200
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.256000.windows=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.256000.upload.speed=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400=230400
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400.upload.speed=230400
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.linux=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.macosx=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.upload.speed=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.512000.windows=512000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.512000.upload.speed=512000
+
+cytron_maker_feather_aiot_s3.menu.DebugLevel.none=None
+cytron_maker_feather_aiot_s3.menu.DebugLevel.none.build.code_debug=0
+cytron_maker_feather_aiot_s3.menu.DebugLevel.error=Error
+cytron_maker_feather_aiot_s3.menu.DebugLevel.error.build.code_debug=1
+cytron_maker_feather_aiot_s3.menu.DebugLevel.warn=Warn
+cytron_maker_feather_aiot_s3.menu.DebugLevel.warn.build.code_debug=2
+cytron_maker_feather_aiot_s3.menu.DebugLevel.info=Info
+cytron_maker_feather_aiot_s3.menu.DebugLevel.info.build.code_debug=3
+cytron_maker_feather_aiot_s3.menu.DebugLevel.debug=Debug
+cytron_maker_feather_aiot_s3.menu.DebugLevel.debug.build.code_debug=4
+cytron_maker_feather_aiot_s3.menu.DebugLevel.verbose=Verbose
+cytron_maker_feather_aiot_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+cytron_maker_feather_aiot_s3.menu.EraseFlash.none=Disabled
+cytron_maker_feather_aiot_s3.menu.EraseFlash.none.upload.erase_cmd=
+cytron_maker_feather_aiot_s3.menu.EraseFlash.all=Enabled
+cytron_maker_feather_aiot_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
