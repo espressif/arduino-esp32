@@ -5033,6 +5033,11 @@ nora_w10.menu.DebugLevel.debug.build.code_debug=4
 nora_w10.menu.DebugLevel.verbose=Verbose
 nora_w10.menu.DebugLevel.verbose.build.code_debug=5
 
+nora_w10.menu.EraseFlash.none=Disabled
+nora_w10.menu.EraseFlash.none.upload.erase_cmd=
+nora_w10.menu.EraseFlash.all=Enabled
+nora_w10.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 widora-air.name=Widora AIR
@@ -12711,6 +12716,17 @@ t-beam.build.core=esp32
 t-beam.build.variant=tbeam
 t-beam.build.board=TBeam
 
+t-beam.menu.Revision.Radio_SX1262=Radio-SX1262
+t-beam.menu.Revision.Radio_SX1262.build.board=TBEAM_USE_RADIO_SX1262
+t-beam.menu.Revision.Radio_SX1276=Radio-SX1276
+t-beam.menu.Revision.Radio_SX1276.build.board=TBEAM_USE_RADIO_SX1276
+t-beam.menu.Revision.Radio_SX1278=Radio-SX1278
+t-beam.menu.Revision.Radio_SX1278.build.board=TBEAM_USE_RADIO_SX1278
+t-beam.menu.Revision.Radio_SX1280=Radio-SX1280
+t-beam.menu.Revision.Radio_SX1280.build.board=TBEAM_USE_RADIO_SX1280
+t-beam.menu.Revision.Radio_SX1268=Radio-SX1268
+t-beam.menu.Revision.Radio_SX1268.build.board=TBEAM_USE_RADIO_SX1268
+
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
 t-beam.build.flash_size=4MB
@@ -19120,7 +19136,7 @@ unphone9.build.partitions=default_8MB
 unphone9.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=9
 unphone9.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone9.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-unphone9.build.flash_type=qspi
+unphone9.build.flash_type=qio
 unphone9.build.psram_type=qspi
 unphone9.build.memory_type={build.flash_type}_{build.psram_type}
 
