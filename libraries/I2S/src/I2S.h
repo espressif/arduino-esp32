@@ -29,14 +29,14 @@ namespace esp_i2s {
 // Default pins
 //I2S0 is available for all ESP32 SoCs
 //SCK WS  SD(OUT) SDIN
-// 19 21  22      23    ESP32
-// 19 21   4       5    ESP32-x (C3,S2,S3)
+// 19 18  22      23    ESP32
+// 19 18   4       5    ESP32-x (C3,S2,S3)
 #ifndef PIN_I2S_SCK
   #define PIN_I2S_SCK 19
 #endif
 
 #ifndef PIN_I2S_FS
-  #define PIN_I2S_FS 21
+  #define PIN_I2S_FS 18
 #endif
 
 #ifndef PIN_I2S_SD
