@@ -154,7 +154,7 @@ int I2SClass::_installDriver(){
     .mclk_multiple = esp_i2s::I2S_MCLK_MULTIPLE_DEFAULT,
     .bits_per_chan = esp_i2s::I2S_BITS_PER_CHAN_DEFAULT,
 #if SOC_I2S_SUPPORTS_TDM
-    .chan_mask = I2S_TDM_ACTIVE_CH0 | I2S_TDM_ACTIVE_CH1,
+    .chan_mask = (esp_i2s::i2s_channel_t)(esp_i2s::I2S_TDM_ACTIVE_CH0 | esp_i2s::I2S_TDM_ACTIVE_CH1),
     .total_chan = 2,
     .left_align = false,
     .big_edin = false,
