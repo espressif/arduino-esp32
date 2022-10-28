@@ -18,8 +18,8 @@
         .pin_pwdn       = PIN_PWDN,
         .pin_reset      = PIN_RESET,
         .pin_xclk       = PIN_XCLK,
-        .pin_sscb_sda   = PIN_SIOD,
-        .pin_sscb_scl   = PIN_SIOC,
+        .pin_sccb_sda   = PIN_SIOD,
+        .pin_sccb_scl   = PIN_SIOC,
         .pin_d7         = PIN_D7,
         .pin_d6         = PIN_D6,
         .pin_d5         = PIN_D5,
@@ -112,8 +112,14 @@ typedef struct {
     int pin_pwdn;                   /*!< GPIO pin for camera power down line */
     int pin_reset;                  /*!< GPIO pin for camera reset line */
     int pin_xclk;                   /*!< GPIO pin for camera XCLK line */
-    int pin_sscb_sda;               /*!< GPIO pin for camera SDA line */
-    int pin_sscb_scl;               /*!< GPIO pin for camera SCL line */
+    union {
+        int pin_sccb_sda;           /*!< GPIO pin for camera SDA line */
+        int pin_sscb_sda __attribute__((deprecated("please use pin_sccb_sda instead")));           /*!< GPIO pin for camera SDA line (legacy name) */
+    };
+    union {
+        int pin_sccb_scl;           /*!< GPIO pin for camera SCL line */
+        int pin_sscb_scl __attribute__((deprecated("please use pin_sccb_scl instead")));           /*!< GPIO pin for camera SCL line (legacy name) */
+    };
     int pin_d7;                     /*!< GPIO pin for camera D7 line */
     int pin_d6;                     /*!< GPIO pin for camera D6 line */
     int pin_d5;                     /*!< GPIO pin for camera D5 line */
@@ -141,6 +147,8 @@ typedef struct {
 #if CONFIG_CAMERA_CONVERTER_ENABLED
     camera_conv_mode_t conv_mode;   /*!< RGB<->YUV Conversion mode */
 #endif
+
+    int sccb_i2c_port;              /*!< If pin_sccb_sda is -1, use the already configured I2C bus by number */
 } camera_config_t;
 
 /**

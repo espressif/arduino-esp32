@@ -12,8 +12,9 @@ jobs:
           submodules: "recursive"
 
       - name: Upload components to the component registry
-        uses: espressif/github-actions/upload_components@master
+        uses: espressif/upload-components-ci-action@v1
         with:
           name: arduino-esp32
+          version: ${{ github.ref_name }}
           namespace: espressif
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
