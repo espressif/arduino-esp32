@@ -45,6 +45,7 @@ enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH };
 #define HTTP_MAX_POST_WAIT 5000 //ms to wait for POST data to arrive
 #define HTTP_MAX_SEND_WAIT 5000 //ms to wait for data chunk to be ACKed
 #define HTTP_MAX_CLOSE_WAIT 2000 //ms to wait for the client to close the connection
+#define HTTP_MAX_BASIC_AUTH_LEN 256 // maximum length of a basic Auth base64 encoded username:password string
 
 #define CONTENT_LENGTH_UNKNOWN ((size_t) -1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) -2)
@@ -81,7 +82,15 @@ public:
   virtual void close();
   void stop();
 
+  const String AuthTypeDigest = F("Digest");
+  const String AuthTypeBasic = F("Basic");
+
+  typedef std::function<String * (HTTPAuthMethod mode, String enteredUsername, String extraParams[])> THandlerFunctionAuthCheck;
+
+  bool authenticate(THandlerFunctionAuthCheck fn);
   bool authenticate(const char * username, const char * password);
+  bool authenticateBasicSHA1(const char * _username, const char * _sha1AsBase64orHex);
+
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String("") );
 
   typedef std::function<void(void)> THandlerFunction;
