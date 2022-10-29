@@ -15,7 +15,6 @@ float getBatteryCapacity() {
 }
 
 bool getChargingState() {
-  pinMode(CHG, INPUT_PULLUP);
   return !digitalRead(CHG);
 }
 
@@ -33,6 +32,7 @@ void ARDUINO_ISR_ATTR chargeIsr() {
 }
 
 extern "C" void initVariant(void){
+  pinMode(CHG, INPUT_PULLUP);
   attachInterrupt(CHG, chargeIsr, CHANGE);
   analogReadResolution(12);
 }
