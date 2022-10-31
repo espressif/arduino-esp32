@@ -171,7 +171,7 @@ void loop() {
 
 }
 
-#endif
+#else
 //PASS TEST for UNSUPPORTED CHIPS
 
 void test_pass(void){
@@ -192,3 +192,5 @@ void setup() {
 void loop() {
 
 }
+
+#endif
