@@ -348,3 +348,13 @@ ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize
 *Get buffer size.* The unit is number of sample frames `(number_of_channels * (bits_per_sample/8))`
 
 For more info see `setBufferSize`
+***
+#### int getI2SNum()
+
+Get the ID number of I2S module used for particular object.
+
+Object `I2S` returns value `0`
+
+Object `I2S1` returns value `1`
+
+Only ESP32 and ESP32-S3 have two modules, other SoCs have only one I2S module controlled by object `I2S` and the return value will always be `0`, the second object `I2S1` does not exist.

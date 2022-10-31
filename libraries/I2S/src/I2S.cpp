@@ -884,6 +884,10 @@ int I2SClass::getBufferSize(){
   return ret;
 }
 
+int I2SClass::getI2SNum(){
+  return _deviceIndex;
+}
+
 int I2SClass::_enableTransmitter(){
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_TRANSMITTER){
     _state = I2S_STATE_TRANSMITTER;

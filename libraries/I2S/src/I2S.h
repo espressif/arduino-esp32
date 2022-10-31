@@ -355,6 +355,15 @@ public:
    */
   int getBufferSize();
 
+  /*
+    Get the ID number of I2S module used for particular object.
+    Object I2S returns value 0
+    Object I2S1 returns value 1
+    Only ESP32 and ESP32-S3 have two modules, other SoCs have only one I2S module
+    controlled by object I2S and the return value will always be 0, the second object I2S1 does not exist.
+  */
+  int getI2SNum();
+
 private:
   #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
     int _gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
