@@ -358,3 +358,9 @@ Object `I2S` returns value `0`
 Object `I2S1` returns value `1`
 
 Only ESP32 and ESP32-S3 have two modules, other SoCs have only one I2S module controlled by object `I2S` and the return value will always be `0`, the second object `I2S1` does not exist.
+***
+#### bool isInitialized()
+
+Returns `true` if I2S module is correctly initialized and ready for use (function `begin()` was called and returned `1`)
+
+Returns `false` if I2S module has not yet been initialized (function `begin()` was not called, or returned `0`), or it has been de-initialized (function `end()` was called)

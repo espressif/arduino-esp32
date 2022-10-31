@@ -888,6 +888,10 @@ int I2SClass::getI2SNum(){
   return _deviceIndex;
 }
 
+bool I2SClass::isInitialized(){
+  return _initialized;
+}
+
 int I2SClass::_enableTransmitter(){
   if(_state != I2S_STATE_DUPLEX && _state != I2S_STATE_TRANSMITTER){
     _state = I2S_STATE_TRANSMITTER;

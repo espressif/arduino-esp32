@@ -364,6 +364,12 @@ public:
   */
   int getI2SNum();
 
+  /*
+   * Returns true if I2S module is correctly initialized and ready for use (function begin() was called and returned 1)
+   * Returns false if I2S module has not yet been initialized (function begin() was called returned 1), or it has been de-initialized (function end() was called)
+   */
+  bool isInitialized();
+
 private:
   #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
     int _gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit);
