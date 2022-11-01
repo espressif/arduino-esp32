@@ -57,7 +57,7 @@ except Exception:
         raise
 
 
-__version__ = "3.3.2-dev"
+__version__ = "3.3.2"
 
 MAX_UINT32 = 0xffffffff
 MAX_UINT24 = 0xffffff
@@ -73,6 +73,7 @@ ERASE_WRITE_TIMEOUT_PER_MB = 40       # timeout (per megabyte) for erasing and w
 MEM_END_ROM_TIMEOUT = 0.05            # special short timeout for ESP_MEM_END, as it may never respond
 DEFAULT_SERIAL_WRITE_TIMEOUT = 10     # timeout for serial port write
 DEFAULT_CONNECT_ATTEMPTS = 7          # default number of times to try connection
+WRITE_BLOCK_ATTEMPTS = 3              # number of times to try writing a data block
 
 SUPPORTED_CHIPS = ['esp8266', 'esp32', 'esp32s2', 'esp32s3beta2', 'esp32s3', 'esp32c3', 'esp32c6beta', 'esp32h2beta1', 'esp32h2beta2', 'esp32c2']
 
@@ -118,13 +119,37 @@ def get_default_connected_device(serial_list, port, connect_attempts, initial_ba
             if port is not None:
                 raise
             print("%s failed to connect: %s" % (each_port, err))
+            if _esp and _esp._port:
+                _esp._port.close()
             _esp = None
     return _esp
 
 
-DETECTED_FLASH_SIZES = {0x12: '256KB', 0x13: '512KB', 0x14: '1MB',
-                        0x15: '2MB', 0x16: '4MB', 0x17: '8MB',
-                        0x18: '16MB', 0x19: '32MB', 0x1a: '64MB', 0x21: '128MB'}
+DETECTED_FLASH_SIZES = {
+    0x12: "256KB",
+    0x13: "512KB",
+    0x14: "1MB",
+    0x15: "2MB",
+    0x16: "4MB",
+    0x17: "8MB",
+    0x18: "16MB",
+    0x19: "32MB",
+    0x1A: "64MB",
+    0x1B: "128MB",
+    0x1C: "256MB",
+    0x20: "64MB",
+    0x21: "128MB",
+    0x22: "256MB",
+    0x32: "256KB",
+    0x33: "512KB",
+    0x34: "1MB",
+    0x35: "2MB",
+    0x36: "4MB",
+    0x37: "8MB",
+    0x38: "16MB",
+    0x39: "32MB",
+    0x3A: "64MB",
+}
 
 
 def check_supported_function(func, check_func):
@@ -796,26 +821,52 @@ class ESPLoader(object):
             print("Took %.2fs to erase flash block" % (time.time() - t))
         return num_blocks
 
-    """ Write block to flash """
     def flash_block(self, data, seq, timeout=DEFAULT_TIMEOUT):
-        self.check_command("write to target Flash after seq %d" % seq,
-                           self.ESP_FLASH_DATA,
-                           struct.pack('<IIII', len(data), seq, 0, 0) + data,
-                           self.checksum(data),
-                           timeout=timeout)
+        """Write block to flash, retry if fail"""
+        for attempts_left in range(WRITE_BLOCK_ATTEMPTS - 1, -1, -1):
+            try:
+                self.check_command(
+                    "write to target Flash after seq %d" % seq,
+                    self.ESP_FLASH_DATA,
+                    struct.pack("<IIII", len(data), seq, 0, 0) + data,
+                    self.checksum(data),
+                    timeout=timeout,
+                )
+                break
+            except FatalError:
+                if attempts_left:
+                    self.trace(
+                        "Block write failed, "
+                        "retrying with {} attempts left".format(attempts_left)
+                    )
+                else:
+                    raise
 
-    """ Encrypt before writing to flash """
     def flash_encrypt_block(self, data, seq, timeout=DEFAULT_TIMEOUT):
+        """Encrypt, write block to flash, retry if fail"""
         if isinstance(self, (ESP32S2ROM, ESP32C3ROM, ESP32S3ROM, ESP32H2BETA1ROM, ESP32C2ROM, ESP32H2BETA2ROM)) and not self.IS_STUB:
             # ROM support performs the encrypted writes via the normal write command,
             # triggered by flash_begin(begin_rom_encrypted=True)
             return self.flash_block(data, seq, timeout)
 
-        self.check_command("Write encrypted to target Flash after seq %d" % seq,
-                           self.ESP_FLASH_ENCRYPT_DATA,
-                           struct.pack('<IIII', len(data), seq, 0, 0) + data,
-                           self.checksum(data),
-                           timeout=timeout)
+        for attempts_left in range(WRITE_BLOCK_ATTEMPTS - 1, -1, -1):
+            try:
+                self.check_command(
+                    "Write encrypted to target Flash after seq %d" % seq,
+                    self.ESP_FLASH_ENCRYPT_DATA,
+                    struct.pack("<IIII", len(data), seq, 0, 0) + data,
+                    self.checksum(data),
+                    timeout=timeout,
+                )
+                break
+            except FatalError:
+                if attempts_left:
+                    self.trace(
+                        "Encrypted block write failed, "
+                        "retrying with {} attempts left".format(attempts_left)
+                    )
+                else:
+                    raise
 
     """ Leave flash mode and run/reboot """
     def flash_finish(self, reboot=False):
@@ -925,11 +976,27 @@ class ESPLoader(object):
             print("Took %.2fs to erase flash block" % (time.time() - t))
         return num_blocks
 
-    """ Write block to flash, send compressed """
     @stub_and_esp32_function_only
     def flash_defl_block(self, data, seq, timeout=DEFAULT_TIMEOUT):
-        self.check_command("write compressed data to flash after seq %d" % seq,
-                           self.ESP_FLASH_DEFL_DATA, struct.pack('<IIII', len(data), seq, 0, 0) + data, self.checksum(data), timeout=timeout)
+        """Write block to flash, send compressed, retry if fail"""
+        for attempts_left in range(WRITE_BLOCK_ATTEMPTS - 1, -1, -1):
+            try:
+                self.check_command(
+                    "write compressed data to flash after seq %d" % seq,
+                    self.ESP_FLASH_DEFL_DATA,
+                    struct.pack("<IIII", len(data), seq, 0, 0) + data,
+                    self.checksum(data),
+                    timeout=timeout,
+                )
+                break
+            except FatalError:
+                if attempts_left:
+                    self.trace(
+                        "Compressed block write failed, "
+                        "retrying with {} attempts left".format(attempts_left)
+                    )
+                else:
+                    raise
 
     """ Leave compressed flash mode and run/reboot """
     @stub_and_esp32_function_only
@@ -1969,6 +2036,7 @@ class ESP32S2ROM(ESP32ROM):
             self._setRTS(False)
             time.sleep(0.2)
         else:
+            time.sleep(0.1)
             self._setRTS(False)
 
 
@@ -2139,6 +2207,7 @@ class ESP32S3ROM(ESP32ROM):
             self._setRTS(False)
             time.sleep(0.2)
         else:
+            time.sleep(0.1)
             self._setRTS(False)
 
 
@@ -2800,7 +2869,7 @@ class BaseFirmwareImage(object):
             if segment_data[patch_offset:patch_offset + self.SHA256_DIGEST_LEN] != b'\x00' * self.SHA256_DIGEST_LEN:
                 raise FatalError('Contents of segment at SHA256 digest offset 0x%x are not all zero. Refusing to overwrite.' %
                                  self.elf_sha256_offset)
-            assert(len(self.elf_sha256) == self.SHA256_DIGEST_LEN)
+            assert len(self.elf_sha256) == self.SHA256_DIGEST_LEN
             segment_data = segment_data[0:patch_offset] + self.elf_sha256 + \
                 segment_data[patch_offset + self.SHA256_DIGEST_LEN:]
         return segment_data
@@ -3250,6 +3319,8 @@ class ESP32FirmwareImage(BaseFirmwareImage):
         if chip_id != self.ROM_LOADER.IMAGE_CHIP_ID:
             print(("Unexpected chip id in image. Expected %d but value was %d. "
                    "Is this image for a different chip model?") % (self.ROM_LOADER.IMAGE_CHIP_ID, chip_id))
+
+        self.min_rev = fields[5]
 
         # reserved fields in the middle should all be zero
         if any(f for f in fields[6:-1] if f != 0):
@@ -3738,6 +3809,18 @@ class FatalError(RuntimeError):
             0x109: 'CRC or checksum was invalid',
             0x10A: 'Version was invalid',
             0x10B: 'MAC address was invalid',
+            # Flasher stub error codes
+            0xC000: 'Bad data length',
+            0xC100: 'Bad data checksum',
+            0xC200: 'Bad blocksize',
+            0xC300: 'Invalid command',
+            0xC400: 'Failed SPI operation',
+            0xC500: 'Failed SPI unlock',
+            0xC600: 'Not in flash mode',
+            0xC700: 'Inflate error',
+            0xC800: 'Not enough data',
+            0xC900: 'Too much data',
+            0xFF00: 'Command not implemented',
         }
 
         err_code = struct.unpack(">H", result[:2])
