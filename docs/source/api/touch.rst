@@ -1,0 +1,122 @@
+#####
+TOUCH
+#####
+
+About
+-----
+
+Touch sensor is a peripheral, that can be used to sense electrical changes on respective GPIO pins. Therefore these touch sensors 
+are also known as capacitive sensors. For example, if you touch any of these pins, the touch sensor will sense output according to 
+electrical charge on your finger. These pins can be easily integrated into capacitive pads, and replace mechanical buttons.
+
+.. note:: Touch peripheral is not present in every SoC. Refer to datasheet of each chip for more info.
+
+Arduino-ESP32 TOUCH API
+-----------------------
+
+TOUCH common API
+****************
+
+touchRead
+^^^^^^^^^
+
+This function is used to get the TOUCH pad value for a given pin.
+
+.. code-block:: arduino
+
+    touch_value_t touchRead(uint8_t pin);
+
+* ``pin`` GPIO pin to read TOUCH value
+  
+This function will return touch pad value as uint16_t (ESP32) or uint32_t (ESP32-S2/S3).
+
+touchSetCycles
+^^^^^^^^^^^^^^
+
+This function is used to set cycles that measurement operation takes. The result from touchRead, threshold and detection accuracy depend on these values.
+Defaults are 0x1000 for measure and 0x1000 for sleep. With default values touchRead takes 0.5ms.
+
+.. code-block:: arduino
+
+    void touchSetCycles(uint16_t measure, uint16_t sleep);
+
+* ``measure`` Sets time it takes to measure touch pad value
+* ``sleep`` Sets waiting time before next measure cycle
+
+touchAttachInterrupt
+^^^^^^^^^^^^^^^^^^^^
+
+This function is used to attach interrupt to touch pad. The function will be called if a touch pad value falls below the given 
+threshold for ESP32 / rises above the given threshold for ESP32-S2/S3. To determine a proper threshold values between touched
+and untouched state use touchRead.
+
+.. code-block:: arduino
+
+    void touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold);
+
+* ``pin`` GPIO TOUCH pad pin
+* ``userFunc`` Function to be called when interrupt is triggered
+* ``threshold`` Sets the threshold when to call interrupt
+
+touchAttachInterruptArg
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to attach interrupt to touch pad. In the function called by ISR you have the given arguments available.
+
+.. code-block:: arduino
+
+    void touchAttachInterruptArg(uint8_t pin, void (*userFunc)(void*), void *arg, touch_value_t threshold);
+
+* ``pin`` GPIO TOUCH pad pin
+* ``userFunc`` Function to be called when interrupt is triggered
+* ``arg`` Sets arguments to the interrupt
+* ``threshold`` Sets the threshold when to call interrupt
+
+touchDetachInterrupt
+^^^^^^^^^^^^^^^^^^^^
+
+This function is used to detach interrupt from touch pad.
+
+.. code-block:: arduino
+
+    void touchDetachInterrupt(uint8_t pin);
+
+* ``pin`` GPIO TOUCH pad pin.
+
+TOUCH API specific for ESP32 chip (TOUCH_V1)
+********************************************
+
+touchInterruptSetThresholdDirection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to tell the driver if it shall activate the interrupt if the sensor is lower or higher than
+the threshold value. Default is lower.
+
+.. code-block:: arduino
+
+    void touchInterruptSetThresholdDirection(bool mustbeLower);
+
+TOUCH API specific for ESP32S2 and ESP32S3 chip (TOUCH_V2)
+**********************************************************
+
+touchInterruptGetLastStatus
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used get the lastest ISR status for the touch pad.
+
+.. code-block:: arduino
+
+    bool touchInterruptGetLastStatus(uint8_t pin);
+
+This function returns true if touch pad has been and continues pressed or false otherwise.  
+
+Example Applications
+********************
+
+Here are 2 examples of how to use the touchRead and touch interrupts.
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchRead/TouchRead.ino
+    :language: arduino
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchInterrupt/TouchInterrupt.ino
+    :language: arduino
