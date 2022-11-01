@@ -113,10 +113,14 @@ This function returns true if touch pad has been and continues pressed or false 
 Example Applications
 ********************
 
-Here are 2 examples of how to use the touchRead and touch interrupts.
+Example of reading the touch pad.
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchRead/TouchRead.ino
     :language: arduino
 
+Example of usage the touch interrupts.
+
 .. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchInterrupt/TouchInterrupt.ino
     :language: arduino
+
+More examples can be found in our repository -> `Touch examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Touch>`_. 
