@@ -2,7 +2,6 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
 #define EXTERNAL_NUM_INTERRUPTS 22
 #define NUM_DIGITAL_PINS        22
@@ -11,8 +10,6 @@
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
-
-static const uint8_t KEY_BUILTIN = 9;
 
 static const uint8_t TX = 20;
 static const uint8_t RX = 21;
@@ -46,10 +43,8 @@ static const uint8_t PWM1 = 1;
 static const uint8_t RGBLED  = 10;
 static const uint8_t GPKEY  = 9;
 
-#define LED_BUILTIN RGBLED
-#define BUILTIN_LED	LED_BUILTIN
-//#define RGB_BUILTIN RGBLED
-//#define RGB_BRIGHTNESS 64
+#define RGB_BUILTIN RGBLED
+#define RGB_BRIGHTNESS 64
 
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY KEY_BUILTIN

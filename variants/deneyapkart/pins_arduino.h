@@ -101,11 +101,11 @@ static const uint8_t MICC = 13;
 static const uint8_t IMUSD = 4;
 static const uint8_t IMUSC = 15;
 
+#define BUILTIN_LED LEDB
+#define LED_BUILTIN BUILTIN_LED // backward compatibility
+//#define RGB_BUILTIN LED_BUILTIN
 
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY KEY_BUILTIN
-
-#define LED_BUILTIN LEDB
-//#define RGB_BUILTIN LED_BUILTIN
 
 #endif /* Pins_Arduino_h */

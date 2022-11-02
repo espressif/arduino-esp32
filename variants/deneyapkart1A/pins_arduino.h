@@ -98,10 +98,8 @@ static const uint8_t SDCK = 27;
 static const uint8_t RGBLED  = 13;
 static const uint8_t GPKEY  = 0;
 
-#define LED_BUILTIN RGBLED
-#define BUILTIN_LED	LED_BUILTIN
-//#define RGB_BUILTIN RGBLED
-//#define RGB_BRIGHTNESS 64
+#define RGB_BUILTIN RGBLED
+#define RGB_BRIGHTNESS 64
 
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY KEY_BUILTIN
