@@ -23,6 +23,9 @@
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
 
+#include "hal/gpio_hal.h"
+#include "esp_rom_gpio.h"
+
 static int s_uart_debug_nr = 0;
 
 struct uart_struct_t {
@@ -69,6 +72,40 @@ static uart_t _uart_bus_array[] = {
 
 #endif
 
+// IDF UART has no detach function. As consequence, after ending a UART, the previous pins continue
+// to work as RX/TX. It can be verified by changing the UART pins and writing to the UART. Output can 
+// be seen in the previous pins and new pins as well. 
+// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
+// Negative Pin Number will keep it unmodified, thus this function can detach individual pins
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    if (txPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
+    }
+
+    if (rxPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_RX_PIN_IDX), false);
+    }
+
+    if (rtsPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
+    }
+
+    if (ctsPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_CTS_PIN_IDX), false);
+    }
+    UART_MUTEX_UNLOCK();  
+}
+
 // solves issue https://github.com/espressif/arduino-esp32/issues/6032
 // baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
 uint32_t _get_effective_baudrate(uint32_t baudrate) 
@@ -108,15 +145,16 @@ bool uartIsDriverInstalled(uart_t* uart)
 
 // Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
-void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart == NULL) {
-        return;
+        return false;
     }
     UART_MUTEX_LOCK();
     // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin); 
+    bool retCode = uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin) == ESP_OK; 
     UART_MUTEX_UNLOCK();  
+    return retCode;
 }
 
 // 
