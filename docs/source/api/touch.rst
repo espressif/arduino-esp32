@@ -20,7 +20,8 @@ TOUCH common API
 touchRead
 ^^^^^^^^^
 
-This function is used to get the TOUCH pad value for a given pin.
+This function gets the touch sensor data. Each touch sensor has a counter to count the number of charge/discharge cycles. When the pad is ‘touched’, 
+the value in the counter will change because of the larger equivalent capacitance. The change of the data determines if the pad has been touched or not.
 
 .. code-block:: arduino
 
@@ -34,21 +35,21 @@ touchSetCycles
 ^^^^^^^^^^^^^^
 
 This function is used to set cycles that measurement operation takes. The result from touchRead, threshold and detection accuracy depend on these values.
-Defaults are 0x1000 for measure and 0x1000 for sleep. With default values touchRead takes 0.5ms.
+The defaults are setting touchRead to take ~0.5ms.
 
 .. code-block:: arduino
 
     void touchSetCycles(uint16_t measure, uint16_t sleep);
 
-* ``measure`` Sets time it takes to measure touch pad value
+* ``measure`` Sets the time that it takes to measure touch sensor value
 * ``sleep`` Sets waiting time before next measure cycle
 
 touchAttachInterrupt
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to attach interrupt to touch pad. The function will be called if a touch pad value falls below the given 
-threshold for ESP32 / rises above the given threshold for ESP32-S2/S3. To determine a proper threshold values between touched
-and untouched state use touchRead.
+This function is used to attach interrupt to the touch pad. The function will be called if a touch sensor value falls below the given 
+threshold for ESP32 or rises above the given threshold for ESP32-S2/S3. To determine a proper threshold value between touched and untouched state, 
+use touchRead() function.
 
 .. code-block:: arduino
 
@@ -61,7 +62,7 @@ and untouched state use touchRead.
 touchAttachInterruptArg
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used to attach interrupt to touch pad. In the function called by ISR you have the given arguments available.
+This function is used to attach interrupt to the touch pad. In the function called by ISR you have the given arguments available.
 
 .. code-block:: arduino
 
@@ -75,7 +76,7 @@ This function is used to attach interrupt to touch pad. In the function called b
 touchDetachInterrupt
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to detach interrupt from touch pad.
+This function is used to detach interrupt from the touch pad.
 
 .. code-block:: arduino
 
@@ -108,17 +109,17 @@ This function is used get the lastest ISR status for the touch pad.
 
     bool touchInterruptGetLastStatus(uint8_t pin);
 
-This function returns true if touch pad has been and continues pressed or false otherwise.  
+This function returns true if the touch pad has been and continues pressed or false otherwise.  
 
 Example Applications
 ********************
 
-Example of reading the touch pad.
+Example of reading the touch sensor.
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchRead/TouchRead.ino
     :language: arduino
 
-Example of usage the touch interrupts.
+A usage example for the touch interrupts.
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchInterrupt/TouchInterrupt.ino
     :language: arduino
