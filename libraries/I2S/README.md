@@ -23,18 +23,18 @@ The IDF I2S driver uses multiple sets of buffer of the same size. The size of ri
 The size of IDF I2S buffer is by default 128. The unit used for this buffer is a frame. A frame means the data of all channels in a WS cycle. For example dual channel 16 bits per sample and default buffer size = 2 * 2 * 128 = 512 Bytes.
 
 From this we can get also size of the ring buffers. As stated their size is equal to the sum of IDF I2S buffers. For the example of dual channel, 16 bps the size of each ring buffer is 1024 B.
-The function `setBufferSize` allows you to change the size in frames (see detailed description below).
+The function `setDMABufferFrameSize` allows you to change the size in frames (see detailed description below).
 
-On Arduino and most ESPs you can use object `I2S` to use the I2S module. on ESP32 and ESP32-S3 you have the option to use addititonal object `I2S1`.
+On Arduino and most ESPs you can use object `I2S` to use the I2S module. on ESP32 and ESP32-S3 you have the option to use addititonal object `I2S_1`.
 I2S module functionality on each SoC differs, please refer to the following table. More info can be found in [IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html?highlight=dac#overview-of-all-modes).
 
 ### Overview of I2S Modes:
-| SoC      | Philips    | ADC/DAC | PDM TX | PDM RX |
-| -------- | ---------- | ------- | ------ | ------ |
-| ESP32    | I2S + I2S1 | I2S     | I2S    | I2S    |
-| ESP32-S2 | I2S        | N/A     | N/A    | N/A    |
-| ESP32-C3 | I2S        | N/A     | I2S    | N/A    |
-| ESP32-S3 | I2S + I2S1 | N/A     | I2S    | I2S    |
+| SoC      | Philips     | ADC/DAC | PDM TX | PDM RX |
+| -------- | ----------- | ------- | ------ | ------ |
+| ESP32    | I2S + I2S_1 | I2S     | I2S    | I2S    |
+| ESP32-S2 | I2S         | N/A     | N/A    | N/A    |
+| ESP32-C3 | I2S         | N/A     | I2S    | N/A    |
+| ESP32-S3 | I2S + I2S_1 | N/A     | I2S    | I2S    |
 
 ## Pins
 ESP I2S has fully configurable pins. There is a group of setter and getter functions for each pin separately and one setter for all pins at once (detailed description below). Calling the setter will take effect immediately and does not need driver restart.
@@ -46,7 +46,7 @@ Default pins are setup as follows:
 |  19 | 21 |    4    |   5  | ESP32-C3, ESP32-S2, ESP32-S3 |
 
 
-### I2S1 object:
+### I2S_1 object:
 | SCK | WS | SD(OUT) | SDIN | SoC      |
 | --- | -- | ------- | ---- |:-------- |
 |  18 | 22 |    25   |   26 | ESP32    |
@@ -73,6 +73,25 @@ If you wish to use duplex mode call `setDuplex();` this will change the pin setu
 
 .. note:: Some ESP32 SoCs support PCM, TDM and LCD/Camera modes, however support for those modes is out of scope in this simplified library. If you need to use those mode you will need to use [IDF I2S driver](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html).
 
+## Buffers
+
+### Direct Memory Access buffers
+The underlying IDF I2S driver uses a set of Direct Memory Access (DMA) buffers which can read from (in case of transmit line) or written to (in case of receive line) directly by the I2S module without using CPU. This helps to achieve flawless audio experience. However if TX buffers are not filled, or RX buffers emptied fast enough the I2S driver will transmit zeros (silence), or rewrite existing data (missing recorded samples) and this can be perceived as audio artifacts such as digital noise, lags, slowed playback, etc.
+
+The best way is to fill and read the buffers in chunks and let the CPU be used on other tasks. Once the DMA buffers are transmitted and freed for write, or read and stored elsewhere the CPU can fill the TX DMA buffer again and the I2S driver can fill the RX DMA buffers with new incoming samples.
+
+The number of DMA buffers can be from 2 - 128 for each data line (TX & RX) this is set by constant `_I2S_DMA_BUFFER_COUNT` in `I2S.cpp`. The default value is `2` and can be changed only in code - requires recompilation.
+
+The size of each DMA buffer is in sample frames and can be between 8 and 1024. One frame equals to number of channels (in this library always 2) multiplied by Bytes per samples (or `(bits_per_sample/8)`. The default value s `128` and can be changed changed by function `setDMABufferFrameSize()`, this automatically reinstalls the driver. The DMA buffer size can be read by functions `getDMABufferFrameSize()`, `getDMABufferSampleSize()`, and `getDMABufferByteSize()`. More info can be found in section *FUNCTIONS*.
+
+### Ring buffers buffers
+Original Arduino I2S library uses extensively single-sample writes and reads - such usage would result in poor audio quality. Therefore another layer of buffers has been added - ring buffers.
+There are two ring buffers - one for transmit line and one for receiving line.
+
+The size of ring buffer is equal to the sum of DMA buffers: `ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT`.
+Maximum size of those buffers can be read with functions `getRingBufferSampleSize()` and `getRingBufferByteSize()`.
+
+To get number of free Bytes in the transmitt buffer,  that can be actually written is performed with function `availableForWrite()`. To get number of Bytes ready to be read from receiving ring buffer use function `available()`. Changing the size of ring buffer is not possible directly - it is automatically calculated during driver installation based on DMA Buffer size.
 
 ## Functions
 
@@ -251,6 +270,10 @@ Reads a single sample from ring buffer and keeps it available for future read (i
 
 **Returns:** number of bytes that can be written into the ring buffer.
 ***
+#### virtual int availableSamplesForWrite()
+
+**Returns:** number of samples that can be written into the ring buffer.
+***
 #### virtual size_t write(uint8_t data)
 
 *Write single sample of 8 bit size.*
@@ -273,13 +296,16 @@ Please consider sending data in arrays using function `size_t write(const uint8_
 This function is **blocking** - if there is not enough space in ring buffer the function will wait until it can write the sample.
 
 **Parameter:**
-* **int32_t data**  The sample to be sent
+**int32_t data**  The sample to be sent
 
-**Returns:** Number of written bytes, if successful the value will be equal to bitsPerSample/8
+**Returns:** Number of written bytes, if successful the value will be equal to `bitsPerSample/8`
 
 .. note:: This functions is used in many examples for it's simplicity, but it's use is discouraged for performance reasons.
 
 Please consider sending data in arrays using function `size_t write(const uint8_t *buffer, size_t size)`
+
+.. note:: If used with `bits_per_sample == 24` then the Most Significant Byte will be ignored. For example `int32_t sample = 0xFFEEDDCC` will be transferred as an array: `sample[0]=0xCC, sample[1]=0xDD, sample[2]=0xEE`
+
 ***
 #### size_t write(const uint8_t* buffer, size_t size)
 
@@ -329,38 +355,79 @@ This function is useful when sending low amount of data, however such use will l
 
 *Callback handle* which will be used each time when the IDF I2S driver **receives** data into buffer.
 ***
-#### int setBufferSize(int bufferSize)
+#### int setDMABufferFrameSize(int DMABufferFrameSize)
 
-*Change the size of buffers.* The unit is number of sample frames `(number_of_channels * (bits_per_sample/8))`
+*Change the size of DMA buffers.* The unit is number of sample frames `(CHANNEL_NUMBER * (bits_per_sample/8))`
 
 The resulting Bytes size of ring buffers can be calculated:
 
-`ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT`
+`ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT`
 
-*Example:* default value of `_I2S_DMA_BUFFER_COUNT` is **2**, default value of `bufferSize` is **128**; for *dual channel*, *16 bps* we will get
+**Example:**
+
+  * This library statically set to *dual channel*, therefore `CHANNEL_NUMBER` is always **2**
+  * For this example let's have `bits_per_sample` set to **16**
+  * Default value of `DMABufferFrameSize` is **128**
+  * Default value of `_I2S_DMA_BUFFER_COUNT` is **2**
 ```
-ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT
-        1024           = (       2           * (     16        /8)) *    128     *         2
+ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample / 8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT
+        1024           = (       2       * (     16         / 8)) *        128         *         2
 ```
 ***
-#### int getBufferSize()
+#### int getDMABufferFrameSize()
+*Get size of single DMA buffer.*
 
-*Get buffer size.* The unit is number of sample frames `(number_of_channels * (bits_per_sample/8))`
+The unit is number of sample frames: Bytes size of 1 frame = `(CHANNEL_NUMBER * (bits_per_sample / 8))`
 
-For more info see `setBufferSize`
+For more info see `setDMABufferFrameSize`
+***
+#### int getDMABufferSampleSize()
+*Get size of single DMA buffer.*
+
+The unit is number of samples: 1 sample = `(bits_per_sample / 8)`
+
+For more info see setDMABufferFrameSize
+***
+#### int getDMABufferByteSize()
+*Get size of single DMA buffer in Bytes.*
+
+For more info see setDMABufferFrameSize
+***
+#### int getRingBufferSampleSize();
+*Get ring buffer size.*
+
+The unit is number of samples: 1 sample = `(bits_per_sample / 8)`
+
+For more info see setDMABufferFrameSize
+***
+#### int getRingBufferByteSize();
+Get ring buffer size in Bytes.
+
+For more info see setDMABufferFrameSize
 ***
 #### int getI2SNum()
 
 Get the ID number of I2S module used for particular object.
 
-Object `I2S` returns value `0`
+Object `I2S` **returns** value `0`
 
-Object `I2S1` returns value `1`
+Object `I2S_1` **returns** value `1`
 
-Only ESP32 and ESP32-S3 have two modules, other SoCs have only one I2S module controlled by object `I2S` and the return value will always be `0`, the second object `I2S1` does not exist.
+Only ESP32 and ESP32-S3 have two modules, other SoCs have only one I2S module controlled by object `I2S` and the return value will always be `0`, the second object `I2S_1` does not exist.
 ***
 #### bool isInitialized()
 
-Returns `true` if I2S module is correctly initialized and ready for use (function `begin()` was called and returned `1`)
+**Returns** `true` if I2S module is correctly initialized and ready for use (function `begin()` was called and returned `1`)
 
-Returns `false` if I2S module has not yet been initialized (function `begin()` was not called, or returned `0`), or it has been de-initialized (function `end()` was called)
+**Returns** `false` if I2S module has not yet been initialized (function `begin()` was not called, or returned `0`), or it has been de-initialized (function `end()` was called)
+***
+#### int getSampleRate()
+**Returns:** 0 on un-initialized object, or if the object is initialized as slave.
+
+On initialized master object **returns** sample rate in Hz (same value which was passed as argument with begin() function)
+***
+#### int getBitsPerSample()
+
+**Returns:** 0 on un-initialized object.
+
+On initialized object **returns** bits per sample (same value which was passed as argument with begin() function)

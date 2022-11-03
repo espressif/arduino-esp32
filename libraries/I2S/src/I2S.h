@@ -32,34 +32,34 @@ namespace esp_i2s {
 // 19 18  22      23    ESP32
 // 19 18   4       5    ESP32-x (C3,S2,S3)
 #ifndef PIN_I2S_SCK
-  #define PIN_I2S_SCK 19
+  #define PIN_I2S_SCK GPIO_NUM_19
 #endif
 
 #ifndef PIN_I2S_FS
-  #define PIN_I2S_FS 18
+  #define PIN_I2S_FS GPIO_NUM_18
 #endif
 
 #ifndef PIN_I2S_SD
   #if CONFIG_IDF_TARGET_ESP32
-    #define PIN_I2S_SD 22
+    #define PIN_I2S_SD GPIO_NUM_22
   #else
-    #define PIN_I2S_SD 4
+    #define PIN_I2S_SD GPIO_NUM_4
   #endif
 #endif
 
 #ifndef PIN_I2S_SD_OUT
   #if CONFIG_IDF_TARGET_ESP32
-    #define PIN_I2S_SD_OUT 22
+    #define PIN_I2S_SD_OUT GPIO_NUM_22
   #else
-    #define PIN_I2S_SD_OUT 4
+    #define PIN_I2S_SD_OUT GPIO_NUM_4
   #endif
 #endif
 
 #ifndef PIN_I2S_SD_IN
     #if CONFIG_IDF_TARGET_ESP32
-    #define PIN_I2S_SD_IN 23
+    #define PIN_I2S_SD_IN GPIO_NUM_23
   #else
-    #define PIN_I2S_SD_IN 5
+    #define PIN_I2S_SD_IN GPIO_NUM_5
   #endif
 #endif
 
@@ -70,23 +70,23 @@ namespace esp_i2s {
     //SCK WS  SD(OUT) SDIN
     // 18 22  25       26
     #ifndef PIN_I2S1_SCK
-      #define PIN_I2S1_SCK 18
+      #define PIN_I2S1_SCK GPIO_NUM_18
     #endif
 
     #ifndef PIN_I2S1_FS
-      #define PIN_I2S1_FS 22
+      #define PIN_I2S1_FS GPIO_NUM_22
     #endif
 
     #ifndef PIN_I2S1_SD
-      #define PIN_I2S1_SD 25
+      #define PIN_I2S1_SD GPIO_NUM_25
     #endif
 
     #ifndef PIN_I2S1_SD_OUT
-      #define PIN_I2S1_SD_OUT 25
+      #define PIN_I2S1_SD_OUT GPIO_NUM_25
     #endif
 
     #ifndef PIN_I2S1_SD_IN
-      #define PIN_I2S1_SD_IN 26
+      #define PIN_I2S1_SD_IN GPIO_NUM_26
     #endif
   #endif
 
@@ -95,26 +95,28 @@ namespace esp_i2s {
     //SCK WS  SD(OUT) SDIN
     // 36 37   39       40
     #ifndef PIN_I2S1_SCK
-      #define PIN_I2S1_SCK 36
+      #define PIN_I2S1_SCK GPIO_NUM_36
     #endif
 
     #ifndef PIN_I2S1_FS
-      #define PIN_I2S1_FS 37
+      #define PIN_I2S1_FS GPIO_NUM_37
     #endif
 
     #ifndef PIN_I2S1_SD
-      #define PIN_I2S1_SD 39
+      #define PIN_I2S1_SD GPIO_NUM_39
     #endif
 
     #ifndef PIN_I2S1_SD_OUT
-      #define PIN_I2S1_SD_OUT 39
+      #define PIN_I2S1_SD_OUT GPIO_NUM_39
     #endif
 
     #ifndef PIN_I2S1_SD_IN
-      #define PIN_I2S1_SD_IN 40
+      #define PIN_I2S1_SD_IN GPIO_NUM_40
     #endif
   #endif
 #endif
+
+#define CHANNEL_NUMBER 2
 
 typedef enum {
   I2S_PHILIPS_MODE, // Most common I2S mode, FS signal spans across whole channel period
@@ -275,6 +277,11 @@ public:
   virtual int availableForWrite();
 
   /*
+   * Returns: number of samples that can be written into the ring buffer.
+   */
+  int availableSamplesForWrite();
+
+  /*
    * Write single sample of 8 bit size.
    * This function is blocking - if there is not enough space in ring buffer the function will wait until it can write the sample.
    * Parameter:
@@ -340,20 +347,49 @@ public:
   void onReceive(void(*)(void));
 
   /*
-   * Change the size of buffers. The unit is number of sample frames (number_of_channels * (bits_per_sample/8))
+   * Change the size of DMA buffers. The unit is number of sample frames (CHANNEL_NUMBER * (bits_per_sample/8))
    * The resulting Bytes size of ring buffers can be calculated:
-   * ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT
-   * Example: default value of _I2S_DMA_BUFFER_COUNT is 2, default value of bufferSize is 128; for dual channel, 16 bps we will get
-   * ring_buffer_bytes_size = (number_of_channels * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT
-   *        1024            = (       2           * (     16        /8)) *    128     *         2
+   * ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT
+   * Example:
+   *  - This library statically set to dual channel, therefore CHANNEL_NUMBER is always 2
+   *  - For this example let's have bits_per_sample set to 16
+   *  - Default value of bufferSize is 128
+   *  - Default value of _I2S_DMA_BUFFER_COUNT is 2
+   * ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample / 8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT
+   *        1024            = (       2       * (     16         / 8)) *        128         *         2
    */
-  int setBufferSize(int bufferSize);
+  int setDMABufferFrameSize(int DMABufferFrameSize);
 
   /*
-   * Get buffer size. The unit is number of sample frames (number_of_channels * (bits_per_sample/8))
-   * For more info see setBufferSize
+   * Get size of single DMA buffer.
+   * The unit is number of sample frames: Bytes size of 1 frame = (CHANNEL_NUMBER * (bits_per_sample / 8))
+   * For more info see setDMABufferFrameSize
    */
-  int getBufferSize();
+  int getDMABufferFrameSize();
+
+    /*
+   * Get size of single DMA buffer. The unit is number of samples: Byte size of 1 sample = (bits_per_sample / 8)
+   * For more info see setDMABufferFrameSize
+   */
+  int getDMABufferSampleSize();
+
+  /*
+   * Get size of single DMA buffer in Bytes.
+   * For more info see setDMABufferFrameSize
+   */
+  int getDMABufferByteSize();
+
+  /*
+   * Get ring buffer size. The unit is number of samples: 1 sample = (bits_per_sample / 8)
+   * For more info see setDMABufferFrameSize
+   */
+  int getRingBufferSampleSize();
+
+  /*
+   * Get ring buffer size in Bytes.
+   * For more info see setDMABufferFrameSize
+   */
+  int getRingBufferByteSize();
 
   /*
     Get the ID number of I2S module used for particular object.
@@ -369,6 +405,18 @@ public:
    * Returns false if I2S module has not yet been initialized (function begin() was called returned 1), or it has been de-initialized (function end() was called)
    */
   bool isInitialized();
+
+  /*
+   * Returns 0 on un-initialized object, or if the object is initialized as slave.
+   * On initialized master object returns sample rate in Hz (same value which was passed as argument with begin() function)
+  */
+  int getSampleRate();
+
+  /*
+   * Returns 0 on un-initialized object.
+   * On initialized master object returns bits per sample (same value which was passed as argument with begin() function)
+   */
+  int getBitsPerSample();
 
 private:
   #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
@@ -422,7 +470,7 @@ private:
   SemaphoreHandle_t _i2s_general_mutex;
   RingbufHandle_t _input_ring_buffer;
   RingbufHandle_t _output_ring_buffer;
-  int _i2s_dma_buffer_size;
+  int _i2s_dma_buffer_frame_size;
   bool _driveClock;
   uint32_t _peek_buff;
   bool _peek_buff_valid;
@@ -440,8 +488,9 @@ private:
 };
 
 extern I2SClass I2S;
+
 #if SOC_I2S_NUM > 1
-  extern I2SClass I2S1;
+  extern I2SClass I2S_1;
 #endif
 
 #endif

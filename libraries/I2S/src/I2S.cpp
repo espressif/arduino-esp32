@@ -50,7 +50,7 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _i2s_general_mutex(NULL),
   _input_ring_buffer(NULL),
   _output_ring_buffer(NULL),
-  _i2s_dma_buffer_size(128), // Number of frames in each DMA buffer. Frame size = number of channels * Bytes per sample; Must be between 8 and 1024
+  _i2s_dma_buffer_frame_size(128), // Number of frames in each DMA buffer. Must be between 8 and 1024. Frame size = number of channels (always 2) * Bytes per sample
   _driveClock(true),
   _peek_buff(0),
   _peek_buff_valid(false),
@@ -117,7 +117,6 @@ int I2SClass::_installDriver(){
       log_e("(I2S#%d) This chip does not support ADC / DAC mode", _deviceIndex);
       return 0; // ERR
     #endif
-  // TODO left/right justified mode is actually stereo, but ignoring the other channel input// left/righ
   }else if(_mode == I2S_PHILIPS_MODE ||
            _mode == I2S_RIGHT_JUSTIFIED_MODE ||
            _mode == I2S_LEFT_JUSTIFIED_MODE){ // End of ADC/DAC mode; start of Normal Philips mode
@@ -147,7 +146,7 @@ int I2SClass::_installDriver(){
     .communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
-    .dma_buf_len = _i2s_dma_buffer_size,
+    .dma_buf_len = _i2s_dma_buffer_frame_size,
     .use_apll = false,
     .tx_desc_auto_clear = true,
     .fixed_mclk = 0,
@@ -170,23 +169,23 @@ int I2SClass::_installDriver(){
 
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
-    // increase buffer size
-    if(2*_i2s_dma_buffer_size <= 1024){
-      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to increase I2S DMA buffer size from %d to %d\n", _deviceIndex, _i2s_dma_buffer_size, 2*_i2s_dma_buffer_size);
-      setBufferSize(2*_i2s_dma_buffer_size);
-    }else if(_i2s_dma_buffer_size < 1024){
-      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to decrease I2S DMA buffer size from %d to 1024\n", _deviceIndex, _i2s_dma_buffer_size);
-      setBufferSize(1024);
+    // Double the DMA buffer size
+    if(2*_i2s_dma_buffer_frame_size <= 1024){
+      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to double the I2S DMA buffer size from %d to %d", _deviceIndex, _i2s_dma_buffer_frame_size, 2*_i2s_dma_buffer_frame_size);
+      setDMABufferFrameSize(2*_i2s_dma_buffer_frame_size); // Double the buffer size
+    }else if(_i2s_dma_buffer_frame_size < 1024){
+      log_w("(I2S#%d) WARNING i2s driver install failed.\nTrying to decrease I2S DMA buffer size from %d to maximum of 1024", _deviceIndex, _i2s_dma_buffer_frame_size);
+      setDMABufferFrameSize(1024);
     }else{ // install failed with max buffer size
       log_e("(I2S#%d) ERROR i2s driver install failed", _deviceIndex);
       return 0; // ERR
     }
   } //try installing with increasing size
 
-  if(_mode == I2S_RIGHT_JUSTIFIED_MODE || _mode == I2S_LEFT_JUSTIFIED_MODE || _mode == PDM_MONO_MODE){ // mono/single channel
+  if(_mode == PDM_MONO_MODE){ // mono/single channel
     // Set the clock for MONO. Stereo is not supported yet.
     if(ESP_OK != esp_i2s::i2s_set_clk((esp_i2s::i2s_port_t) _deviceIndex, _sampleRate, (esp_i2s::i2s_bits_per_sample_t)_bitsPerSample, esp_i2s::I2S_CHANNEL_MONO)){
-      log_e("(I2S#%d) Setting the I2S Clock has failed!\n", _deviceIndex);
+      log_e("(I2S#%d) Setting the I2S Clock has failed!", _deviceIndex);
       return 0; // ERR
     }
   } // mono channel mode
@@ -325,12 +324,11 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     return 0; // ERR
   }
 
-  _buffer_byte_size = _i2s_dma_buffer_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT * 2;
-  log_d("(I2S#%d) Creating internal buffers. Requested size = %dB\n", _deviceIndex, _buffer_byte_size);
+  _buffer_byte_size = _i2s_dma_buffer_frame_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT * CHANNEL_NUMBER; // The magic "*k2" stands for number of channels which are statically set to stereo
   _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
-    log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d\n", _deviceIndex, _buffer_byte_size);
+    log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d", _deviceIndex, _buffer_byte_size);
     if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
@@ -808,12 +806,12 @@ int I2SClass::peek(){
 void I2SClass::flush(){
   if(!_take_mux()){ return; /* ERR */ }
   if(_initialized){
-    const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8)*2;
+    const size_t single_dma_buf_byte_size = _i2s_dma_buffer_frame_size*(_bitsPerSample/8)*2;
     size_t item_size = 0;
     void *item = NULL;
     if(_output_ring_buffer != NULL){
       // TODO while available data to fill entire DMA buff - keep flushing
-      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, 0, single_dma_buf);
+      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, 0, single_dma_buf_byte_size);
       if (item != NULL){
         _fix_and_write(item, item_size);
         vRingbufferReturnItem(_output_ring_buffer, item);
@@ -825,13 +823,21 @@ void I2SClass::flush(){
 
 // Bytes available to write
 int I2SClass::availableForWrite(){
-  if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
+  if(!_take_mux()){ return 0; /* ERR */ }
   if(_initialized){
     if(_output_ring_buffer != NULL){
       ret = (int)xRingbufferGetCurFreeSize(_output_ring_buffer);
     }
   } // if(_initialized)
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::availableSamplesForWrite(){
+  int ret = 0;
+  if(!_take_mux()){ return 0; /* ERR */ }
+    ret =  availableForWrite() / (_bitsPerSample/8);
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
@@ -851,15 +857,15 @@ void I2SClass::onReceive(void(*function)(void)){
 
 // Change buffer size. The unit is in frames.
 // Byte value can be calculated as follows:
-// ByteSize = (bits_per_sample / 8) * number_of_channels * bufferSize
+// ByteSize = (bits_per_sample / 8) * number_of_channels * DMABufferFrameSize
 // Calling this function will automatically restart the driver, which could cause audio output gap.
-int I2SClass::setBufferSize(int bufferSize){
+int I2SClass::setDMABufferFrameSize(int DMABufferFrameSize){
   if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
-  if(bufferSize >= 8 && bufferSize <= 1024){
-    _i2s_dma_buffer_size = bufferSize;
+  if(DMABufferFrameSize >= 8 && DMABufferFrameSize <= 1024){
+    _i2s_dma_buffer_frame_size = DMABufferFrameSize;
   }else{
-    log_e("(I2S#%d) setBufferSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", _deviceIndex, bufferSize);
+    log_e("(I2S#%d) setDMABufferFrameSize: wrong input! Buffer size must be between 8 and 1024. Requested %d", _deviceIndex, DMABufferFrameSize);
     if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   } // check requested buffer size
@@ -877,9 +883,37 @@ int I2SClass::setBufferSize(int bufferSize){
   return 0; // ERR
 }
 
-int I2SClass::getBufferSize(){
+int I2SClass::getDMABufferFrameSize(){
   if(!_take_mux()){ return 0; /* ERR */ }
-  int ret = _i2s_dma_buffer_size;
+  int ret = _i2s_dma_buffer_frame_size;
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::getDMABufferSampleSize(){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  int ret = _i2s_dma_buffer_frame_size * CHANNEL_NUMBER;
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::getDMABufferByteSize(){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  int ret = _i2s_dma_buffer_frame_size * CHANNEL_NUMBER * (_bitsPerSample/8);
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::getRingBufferSampleSize(){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  int ret = _i2s_dma_buffer_frame_size * CHANNEL_NUMBER * _I2S_DMA_BUFFER_COUNT;
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::getRingBufferByteSize(){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  int ret = _i2s_dma_buffer_frame_size * CHANNEL_NUMBER * (_bitsPerSample/8) * _I2S_DMA_BUFFER_COUNT;
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
@@ -910,7 +944,7 @@ int I2SClass::_enableReceiver(){
 
 void I2SClass::_tx_done_routine(uint8_t* prev_item){
   static bool prev_item_valid = false;
-  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8)*2; // *2 for stereo - it has double number of samples for 2 channels
+  const size_t single_dma_buf_byte_size = _i2s_dma_buffer_frame_size*(_bitsPerSample/8)* CHANNEL_NUMBER;
   static size_t item_size = 0;
   static size_t prev_item_size = 0;
   static void *item = NULL;
@@ -926,11 +960,11 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
     prev_item_size -= bytes_written;
   } // prev_item_valid
 
-  if(_output_ring_buffer != NULL && (_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf)){ // fill up the I2S DMA buffer
+  if(_output_ring_buffer != NULL && (_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf_byte_size)){ // fill up the I2S DMA buffer
     bytes_written = 0;
     item_size = 0;
-    if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
-      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), single_dma_buf);
+    if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_frame_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
+      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), single_dma_buf_byte_size);
       if (item != NULL){
         _fix_and_write(item, item_size, &bytes_written);
         if(item_size != bytes_written){ // save item that was not written correctly for later
@@ -950,13 +984,13 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
 
 void I2SClass::_rx_done_routine(){
   size_t bytes_read = 0;
-  const size_t single_dma_buf = _i2s_dma_buffer_size*(_bitsPerSample/8);
+  const size_t single_dma_buf_byte_size = _i2s_dma_buffer_frame_size*(_bitsPerSample/8)*CHANNEL_NUMBER;
 
   if(_input_ring_buffer != NULL){
-    uint8_t *_inputBuffer = (uint8_t*)malloc(_i2s_dma_buffer_size*4);
+    uint8_t *_inputBuffer = (uint8_t*)malloc(single_dma_buf_byte_size);
     size_t avail = xRingbufferGetCurFreeSize(_input_ring_buffer);
     if(avail > 0){
-      esp_err_t ret = esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf ? avail : single_dma_buf, (size_t*) &bytes_read, 0);
+      esp_err_t ret = esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf_byte_size ? avail : single_dma_buf_byte_size, (size_t*) &bytes_read, 0);
       if(ret != ESP_OK){
         log_w("(I2S#%d) i2s_read returned with error %d", _deviceIndex, ret);
       }
@@ -976,7 +1010,7 @@ void I2SClass::_rx_done_routine(){
 }
 
 void I2SClass::_onTransferComplete(){
-  uint8_t prev_item[_i2s_dma_buffer_size*4];
+  uint8_t prev_item[_i2s_dma_buffer_frame_size*4];
   esp_i2s::i2s_event_t i2s_event;
 
   if(_i2sEventQueue == NULL){
@@ -1001,7 +1035,7 @@ void I2SClass::onDmaTransferComplete(void *deviceIndex){
   }
 #if SOC_I2S_NUM > 1
   if(*index == 1){
-    I2S1._onTransferComplete();
+    I2S_1._onTransferComplete();
   }
 #endif
   log_w("(I2S#%d) Deleting callback task from inside!", index);
@@ -1109,6 +1143,17 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
       break; // Do nothing
   } // switch
 
+    if(_mode == I2S_RIGHT_JUSTIFIED_MODE){
+      for(int i = 0; i < buff_size; i+=2){
+        buff[i] = buff[i+1];
+      }
+    }
+    if(_mode == I2S_LEFT_JUSTIFIED_MODE){
+      for(int i = 0; i < buff_size; i+=2){
+        buff[i+1] = buff[i];
+      }
+    }
+
   size_t _bytes_written;
   esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0); // fixed
   if(ret != ESP_OK){
@@ -1149,6 +1194,9 @@ int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit)
     // ADC 2
     case GPIO_NUM_0:
       log_w("(I2S#%d) GPIO 0 for ADC should not be used for dev boards due to external auto program circuits.", _deviceIndex);
+      // Only to suppress Warnings "may fall through" which exactly what is intended
+      *adc_unit = esp_i2s::ADC_UNIT_2;
+      return 1; // OK
     case GPIO_NUM_4:
     case GPIO_NUM_2:
     case GPIO_NUM_15:
@@ -1286,5 +1334,5 @@ int I2SClass::_gpioToAdcChannel(gpio_num_t gpio_num, esp_i2s::adc_channel_t* adc
 #endif
 
 #if SOC_I2S_NUM > 1
-  I2SClass I2S1(1, I2S_CLOCK_GENERATOR, PIN_I2S1_SD, PIN_I2S1_SCK, PIN_I2S1_FS); // default - half duplex
+  I2SClass I2S_1(1, I2S_CLOCK_GENERATOR, PIN_I2S1_SD, PIN_I2S1_SCK, PIN_I2S1_FS); // default - half duplex
 #endif
