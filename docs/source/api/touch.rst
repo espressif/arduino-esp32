@@ -5,9 +5,10 @@ TOUCH
 About
 -----
 
-Touch sensor is a peripheral, that can be used to sense electrical changes on respective GPIO pins. Therefore these touch sensors 
-are also known as capacitive sensors. For example, if you touch any of these pins, the touch sensor will sense output according to 
-electrical charge on your finger. These pins can be easily integrated into capacitive pads, and replace mechanical buttons.
+Touch sensor is a peripheral, that has an internal oscilator circuit and it measures charge/discharge frequency over a fixed period of time on respective GPIO pins. 
+Therefore these touch sensors are also known as capacitive sensors. For example, if you touch any of these pins, finger electrical charge will change this number of cycles, 
+by changing the RC circuit attached to the touch sensor. The TouchRead() will return the number of cycles (charges/discharges) in a certain time (meas). 
+The change of this count will be used to validate if a touch has happened or not. These pins can be easily integrated into capacitive pads, and replace mechanical buttons.
 
 .. note:: Touch peripheral is not present in every SoC. Refer to datasheet of each chip for more info.
 
