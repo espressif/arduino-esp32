@@ -11383,11 +11383,11 @@ heltec_wifi_kit_32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-heltec_wifi_kit_32_V3.name=WiFi Kit 32(V3)
-heltec_
+heltec_wifi_kit_32_V3.name=heltec WiFi Kit 32(V3)
+
 heltec_wifi_kit_32_V3.vid.0=0x303a
 heltec_wifi_kit_32_V3.pid.0=0x1001
-heltec_
+
 heltec_wifi_kit_32_V3.bootloader.tool=esptool_py
 heltec_wifi_kit_32_V3.bootloader.tool.default=esptool_py
 
@@ -11706,7 +11706,7 @@ heltec_wifi_lora_32_V2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-heltec_wifi_lora_V3.name=WiFi LoRa 32(V3) / Wireless shell(V3) / Wireless stick lite (V3)
+heltec_wifi_lora_V3.name=Heltec WiFi LoRa 32(V3) / Wireless shell(V3) / Wireless stick lite (V3)
 heltec_wifi_lora_V3.vid.0=0x303a
 heltec_wifi_lora_V3.pid.0=0x1001
 
