@@ -85,7 +85,28 @@ public:
   const String AuthTypeDigest = F("Digest");
   const String AuthTypeBasic = F("Basic");
 
-  typedef std::function<String * (HTTPAuthMethod mode, String enteredUsername, String extraParams[])> THandlerFunctionAuthCheck;
+  /* Callbackhandler for authentication. The extra parameters depend on the 
+   * HTTPAuthMethod mode:
+   *
+   * BASIC_AUTH		enteredUsernameOrReq	contains the username entered by the user
+   *                    param[0]		password entered (in the clear)
+   *                    param[1]		authentication realm.
+   *
+   * To return - the password the user entered password is compared to. Or Null on fail.
+   *
+   * DIGEST_AUTH        enteredUsernameOrReq    contains the username entered by the user
+   *                    param[0]                autenticaiton realm
+   *                    param[1]                authentication URI
+   *
+   * To return - the password of which the digest will be based on for comparison. Or NULL
+   * to fail.      
+   *
+   * OTHER_AUTH         enteredUsernameOrReq    rest of the auth line.
+   *                    params                  empty array
+   *
+   * To return - NULL to fail; or any string.
+   */
+  typedef std::function<String * (HTTPAuthMethod mode, String enteredUsernameOrReq, String extraParams[])> THandlerFunctionAuthCheck;
 
   bool authenticate(THandlerFunctionAuthCheck fn);
   bool authenticate(const char * username, const char * password);
