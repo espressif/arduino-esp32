@@ -4,11 +4,17 @@
 #include <WebServer.h>
 #include <lwip/apps/sntp.h>
 
-// https://github.com/dirkx/Arduino-Base32-Decode
+// https://github.com/dirkx/Arduino-Base32-Decode or simply from
+// Sketch->Include Library->Library manager and search for
+// "Base32-Decode".
+//
 #include <Base32-Decode.h>
 
-// https://github.com/dirkx/Arduino-TOTP-RFC6238-generator
-#include <TOTP-generator.hpp>
+// https://github.com/dirkx/Arduino-TOTP-RFC6238-generator or simply from
+// Sketch->Include Library->Library manager and search for
+// "TOTP-RC6236-generator".
+//
+#include <TOTP-RC6236-generator.hpp>
 
 #include <mbedtls/md.h> // for the hmac/ cookie
 
@@ -123,10 +129,10 @@ String * checkOTP(HTTPAuthMethod mode, String username, String params[]) {
   //          people their typical clocks.
   //
   for (int i = -2 ; i <= 2; i++) {
-    String * otp = TOTP::currentOTP(*seed); //, time(NULL) + i * TOTP::RFC6238_DEFAULT_interval);
+    String * otp = TOTP::currentOTP(time(NULL) + i * TOTP::RFC6238_DEFAULT_interval, *seed);
     
     if (!params[0].startsWith(*otp))
-      next;
+      continue;
 
     // Issue 3) Use proper 2FA/MFA - and insist the user types the token followed by the password
     //

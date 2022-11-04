@@ -4,11 +4,17 @@
 #include <WebServer.h>
 #include <lwip/apps/sntp.h>
 
-// https://github.com/dirkx/Arduino-Base32-Decode
+// https://github.com/dirkx/Arduino-Base32-Decode or simply from
+// Sketch->Include Library->Library manager and search for
+// "Base32-Decode".
+//
 #include <Base32-Decode.h>
 
-// https://github.com/dirkx/Arduino-TOTP-RFC6238-generator
-#include <TOTP-generator.hpp>
+// https://github.com/dirkx/Arduino-TOTP-RFC6238-generator or simply from
+// Sketch->Include Library->Library manager and search for
+// "TOTP-RC6236-generator".
+//
+#include <TOTP-RC6236-generator.hpp>
 
 // Naive RFC 6238 one time password; with a couple of possibly flawed
 // assumptionms:
@@ -82,7 +88,7 @@ void setup() {
   server.on("/", []() {
     if (!server.authenticate([](HTTPAuthMethod mode, String username, String params[]) -> String * {
     if (username == demouser) 
-        return otp = TOTP::currentOTP(seed);
+        return TOTP::currentOTP(seed);
       return NULL;
     }))
     {

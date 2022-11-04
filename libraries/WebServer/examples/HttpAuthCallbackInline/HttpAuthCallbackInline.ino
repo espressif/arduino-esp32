@@ -35,28 +35,32 @@ void setup() {
 
   server.on("/", []() {
     if (!server.authenticate([](HTTPAuthMethod mode, String username, String params[]) -> String * {
-        // Scan the password list for the username and return the password.
-        //
-        for (credentials_t * entry = passwdfile; entry->username; entry++) {
-            if (username == entry->username)
-                return new String(entry->password);
-        return NULL;
-      }))
-      {
-        server.requestAuthentication();
-        return;
-      }
-      server.send(200, "text/plain", "Login OK");
-    });
-    server.begin();
+      // Scan the password list for the username and return the password if
+      // we find the username.
+      //
+      for (credentials_t * entry = passwdfile; entry->username; entry++) {
+        if (username == entry->username) {
+          return new String(entry->password);
+        };
+      };
+      // we've not found the user in the list.
+      return NULL;
+    }))
+    {
+      server.requestAuthentication();
+      return;
+    }
+    server.send(200, "text/plain", "Login OK");
+  });
+  server.begin();
 
-    Serial.print("Open http://");
-    Serial.print(WiFi.localIP());
-    Serial.println("/ in your browser to see it working");
-  }
+  Serial.print("Open http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("/ in your browser to see it working");
+}
 
-  void loop() {
-    ArduinoOTA.handle();
-    server.handleClient();
-    delay(2);//allow the cpu to switch to other tasks
-  }
+void loop() {
+  ArduinoOTA.handle();
+  server.handleClient();
+  delay(2);//allow the cpu to switch to other tasks
+}

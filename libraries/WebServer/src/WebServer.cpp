@@ -284,8 +284,11 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
 
     log_v("The Proper response=%s", _responsecheck.c_str());
     return _response == _responsecheck;
+  } else if (authReq.length()) {
+      String * ret = fn(OTHER_AUTH, authReq, {});
+      if (ret)
+         return true;
   }
-
 exf:
   authReq = "";
   return false;
