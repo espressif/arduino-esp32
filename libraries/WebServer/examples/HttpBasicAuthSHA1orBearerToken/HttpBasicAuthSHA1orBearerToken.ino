@@ -87,7 +87,7 @@ void setup() {
     Serial.println("Bearer token does not look like a hex string ?!");
   }
 
-  #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a') : 0))
+  #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a'+10) : 0))
   #define H2D(x) (_H2D(tolower((x))))
   const char * _shaBase64 = secret_token_hex.c_str();
   for (int i = 0; i < 20; i++) {

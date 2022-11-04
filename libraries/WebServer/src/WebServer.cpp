@@ -161,7 +161,7 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
             // or encode the sha we calculated. We pick the latter as encoding of a 
             // fixed array of 20 bytes s safer than operating on something external.
             //
-            #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a') : 0))
+            #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a'+10) : 0))
             #define H2D(x) (_H2D(tolower((x))))
             if (strlen(_sha1Base64orHex) == 20 * 2) {
                 for(int i = 0; i < 20; i++) {
