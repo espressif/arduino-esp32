@@ -1,3 +1,8 @@
+#if 1
+// bodge to get this example to compile in the default install.
+void setup() {};
+void loop() {};
+#else
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
@@ -129,3 +134,4 @@ void loop() {
   Serial.println();
   delete otp;
 }
+#endif
