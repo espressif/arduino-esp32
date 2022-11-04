@@ -23,6 +23,9 @@
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
 
+#include "hal/gpio_hal.h"
+#include "esp_rom_gpio.h"
+
 static int s_uart_debug_nr = 0;
 
 struct uart_struct_t {
@@ -69,6 +72,40 @@ static uart_t _uart_bus_array[] = {
 
 #endif
 
+// IDF UART has no detach function. As consequence, after ending a UART, the previous pins continue
+// to work as RX/TX. It can be verified by changing the UART pins and writing to the UART. Output can 
+// be seen in the previous pins and new pins as well. 
+// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
+// Negative Pin Number will keep it unmodified, thus this function can detach individual pins
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    if (txPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
+    }
+
+    if (rxPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_RX_PIN_IDX), false);
+    }
+
+    if (rtsPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
+    }
+
+    if (ctsPin >= 0) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_CTS_PIN_IDX), false);
+    }
+    UART_MUTEX_UNLOCK();  
+}
+
 // solves issue https://github.com/espressif/arduino-esp32/issues/6032
 // baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
 uint32_t _get_effective_baudrate(uint32_t baudrate) 
@@ -108,15 +145,16 @@ bool uartIsDriverInstalled(uart_t* uart)
 
 // Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
-void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart == NULL) {
-        return;
+        return false;
     }
     UART_MUTEX_LOCK();
     // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin); 
+    bool retCode = uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin) == ESP_OK; 
     UART_MUTEX_UNLOCK();  
+    return retCode;
 }
 
 // 
@@ -162,7 +200,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
     uart_config.source_clk = UART_SCLK_APB;
 
-
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -172,11 +209,54 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         // invert signal for both Rx and Tx
         ESP_ERROR_CHECK(uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV));    
     }
-
+    
     UART_MUTEX_UNLOCK();
 
     uartFlush(uart);
     return uart;
+}
+
+// This code is under testing - for now just keep it here
+void uartSetFastReading(uart_t* uart)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    // override default RX IDF Driver Interrupt - no BREAK, PARITY or OVERFLOW
+    uart_intr_config_t uart_intr = {
+        .intr_enable_mask = UART_INTR_RXFIFO_FULL | UART_INTR_RXFIFO_TOUT,   // only these IRQs - no BREAK, PARITY or OVERFLOW
+        .rx_timeout_thresh = 1,
+        .txfifo_empty_intr_thresh = 10,
+        .rxfifo_full_thresh = 2,
+    };
+
+    ESP_ERROR_CHECK(uart_intr_config(uart->num, &uart_intr));
+    UART_MUTEX_UNLOCK();
+}
+
+
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    uart_set_rx_timeout(uart->num, numSymbTimeout);
+    UART_MUTEX_UNLOCK();
+}
+
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
+{
+    if(uart == NULL) {
+        return;
+    }
+
+    UART_MUTEX_LOCK();
+    uart_set_rx_full_threshold(uart->num, numBytesFIFOFull);
+    UART_MUTEX_UNLOCK();
 }
 
 void uartEnd(uart_t* uart)

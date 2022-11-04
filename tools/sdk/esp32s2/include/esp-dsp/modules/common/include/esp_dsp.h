@@ -22,6 +22,7 @@ extern "C"
 
 // Common includes
 #include "dsp_common.h"
+#include "dsp_types.h"
 
 // Signal processing
 #include "dsps_dotprod.h"
