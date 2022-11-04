@@ -33,7 +33,6 @@
 #include "mbedtls/md5.h"
 #include "mbedtls/sha1.h"
 #include "mbedtls/base64.h"
-#include "sodium/utils.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
 static const char qop_auth[] PROGMEM = "qop=auth";
@@ -162,9 +161,16 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
             // or encode the sha we calculated. We pick the latter as encoding of a 
             // fixed array of 20 bytes s safer than operating on something external.
             //
-            if (strlen(_sha1Base64orHex) == 20 * 2) 
-		sodium_bin2hex(sha1calc, sizeof(sha1calc), sha1, sizeof(sha1));
-            else
+            #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a') : 0))
+            #define H2D(x) (_H2D(tolower((x))))
+            if (strlen(_sha1Base64orHex) == 20 * 2) {
+                for(int i = 0; i < 20; i++) {
+		    unsigned char c = _sha1Base64orHex[2*i];
+		    unsigned char d = _sha1Base64orHex[2*i+1];
+                    sha1calc[i] = (H2D(c)<<4) | H2D(d);
+                };
+                ret = 0;
+            } else
                 ret = mbedtls_base64_encode((uint8_t*)sha1calc, sizeof(sha1calc), &olen, sha1, sizeof(sha1));
 
             return ((username.equalsConstantTime(_username)) &&

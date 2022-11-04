@@ -3,7 +3,6 @@
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 #include "mbedtls/sha1.h"
-#include "sodium/utils.h"
 
 
 /// We have two options - we either come in with a bearer
@@ -47,11 +46,12 @@ const char* www_password_hex = "8cb124f8c277c16ec0b2ee00569fd151a08e342b";
 const char* www_username_base64 = "base64admin";
 const char* www_password_base64 = "jLEk+MJ3wW7Asu4AVp/RUaCONCs=";
 
+static unsigned char _bearer[20];
 String * check_bearer_or_auth(HTTPAuthMethod mode, String authReq, String params[]) {
   // we expect authReq to be "bearer some-secret"
   //
   String lcAuthReq = authReq;
-  lcAuthReq.toLowerCase();
+  lcAuthReq.toLowerCase();                      
   if (mode == OTHER_AUTH && (lcAuthReq.startsWith("bearer "))) {
     String secret = authReq.substring(7);
     secret.trim();
@@ -59,16 +59,13 @@ String * check_bearer_or_auth(HTTPAuthMethod mode, String authReq, String params
     uint8_t sha1[20];
     mbedtls_sha1((const uint8_t*) secret.c_str(), secret.length(), sha1);
 
-    char sha1calc[48]; // large enough for base64 and Hex represenation
-    sodium_bin2hex(sha1calc, sizeof(sha1calc), sha1, sizeof(sha1));
-
-    if (secret_token_hex.equalsConstantTime(sha1calc))
-      return new String("anything non null");
+    if (0 == memcpy(_bearer, sha1, sizeof(_bearer)))
+        return new String("anything non null");
   };
 
-  // that failed - so do a normal auth
-  //
-  return server.authenticateBasicSHA1(www_username_hex, www_password_hex) ?
+// that failed - so do a normal auth
+//
+return server.authenticateBasicSHA1(www_username_hex, www_password_hex) ?
          new String(params[0]) : NULL;
 };
 
@@ -82,6 +79,22 @@ void setup() {
     ESP.restart();
   }
   ArduinoOTA.begin();
+
+
+  // Convert token to a convenient binary representation.
+  //
+  if (secret_token_hex.length() != 2 * 20) {
+    Serial.println("Bearer token does not look like a hex string ?!");
+  }
+
+  #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a') : 0))
+  #define H2D(x) (_H2D(tolower((x))))
+  const char * _shaBase64 = secret_token_hex.c_str();
+  for (int i = 0; i < 20; i++) {
+    unsigned char c = _shaBase64[2 * i + 0];
+    unsigned char d = _shaBase64[2 * i + 1];
+    _bearer[i] = (H2D(c) << 4) | H2D(d);
+  };
 
   server.on("/", []() {
     if (!server.authenticate(&check_bearer_or_auth)) {
