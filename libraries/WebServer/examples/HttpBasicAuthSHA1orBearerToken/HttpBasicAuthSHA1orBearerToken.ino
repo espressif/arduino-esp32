@@ -80,21 +80,11 @@ void setup() {
   }
   ArduinoOTA.begin();
 
-
   // Convert token to a convenient binary representation.
   //
-  if (secret_token_hex.length() != 2 * 20) {
-    Serial.println("Bearer token does not look like a hex string ?!");
-  }
-
-  #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a'+10) : 0))
-  #define H2D(x) (_H2D(tolower((x))))
-  const char * _shaBase64 = secret_token_hex.c_str();
-  for (int i = 0; i < 20; i++) {
-    unsigned char c = _shaBase64[2 * i + 0];
-    unsigned char d = _shaBase64[2 * i + 1];
-    _bearer[i] = (H2D(c) << 4) | H2D(d);
-  };
+  size_t len = HEXBuilder::hex2bytes(_bearer,sizeof(_bearer),secret_token_hex);
+  if (len != 20) 
+    Serial.println("Bearer token does not look like a valid SHA1 hex string ?!");
 
   server.on("/", []() {
     if (!server.authenticate(&check_bearer_or_auth)) {

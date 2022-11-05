@@ -28,6 +28,7 @@
 #include "WiFiServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"
+#include "HEXBuilder.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
 #include "mbedtls/md5.h"
@@ -164,12 +165,7 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
             #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a'+10) : 0))
             #define H2D(x) (_H2D(tolower((x))))
             if (strlen(_sha1Base64orHex) == 20 * 2) {
-                for(int i = 0; i < 20; i++) {
-		    unsigned char c = _sha1Base64orHex[2*i];
-		    unsigned char d = _sha1Base64orHex[2*i+1];
-                    sha1calc[i] = (H2D(c)<<4) | H2D(d);
-                };
-                ret = 0;
+                HEXBuilder::bytes2hex(sha1calc,sizeof(sha1calc),sha1,sizeof(sha1));
             } else
                 ret = mbedtls_base64_encode((uint8_t*)sha1calc, sizeof(sha1calc), &olen, sha1, sizeof(sha1));
 
