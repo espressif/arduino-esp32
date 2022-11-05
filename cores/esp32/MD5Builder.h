@@ -25,7 +25,9 @@
 #include "esp_system.h"
 #include "esp_rom_md5.h"
 
-class MD5Builder
+#include "HEXBuilder.h"
+
+class MD5Builder : HEXBuilder
 {
 private:
     md5_context_t _ctx;
