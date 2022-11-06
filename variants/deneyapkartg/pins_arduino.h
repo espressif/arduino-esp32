@@ -11,6 +11,15 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
 
+static const uint8_t RGBLED  = 10;
+static const uint8_t GPKEY  = 9;
+
+#define RGB_BUILTIN RGBLED
+#define RGB_BRIGHTNESS 64
+
+#define KEY_BUILTIN GPKEY
+#define BUILTIN_KEY KEY_BUILTIN
+
 static const uint8_t TX = 20;
 static const uint8_t RX = 21;
 
@@ -39,14 +48,5 @@ static const uint8_t D6 = 2;
 
 static const uint8_t PWM0 = 0;
 static const uint8_t PWM1 = 1;
-
-static const uint8_t RGBLED  = 10;
-static const uint8_t GPKEY  = 9;
-
-#define RGB_BUILTIN RGBLED
-#define RGB_BRIGHTNESS 64
-
-#define KEY_BUILTIN GPKEY
-#define BUILTIN_KEY KEY_BUILTIN
 
 #endif /* Pins_Arduino_h */

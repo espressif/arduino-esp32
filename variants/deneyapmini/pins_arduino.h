@@ -12,6 +12,18 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
+static const uint8_t LEDR	= 34;
+static const uint8_t LEDG	= 33;
+static const uint8_t LEDB	= 35;
+static const uint8_t GPKEY	= 0;
+
+#define KEY_BUILTIN GPKEY
+#define BUILTIN_KEY KEY_BUILTIN
+
+#define BUILTIN_LED LEDB
+#define LED_BUILTIN BUILTIN_LED // backward compatibility
+//#define RGB_BUILTIN LED_BUILTIN
+
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
@@ -56,17 +68,5 @@ static const uint8_t D13 = 0;
 static const uint8_t D14 = 35;
 static const uint8_t D15 = 33;
 static const uint8_t D16 = 34;
-
-static const uint8_t LEDR	= 34;
-static const uint8_t LEDG	= 33;
-static const uint8_t LEDB	= 35;
-static const uint8_t GPKEY	= 0;
-
-#define KEY_BUILTIN GPKEY
-#define BUILTIN_KEY KEY_BUILTIN
-
-#define BUILTIN_LED LEDB
-#define LED_BUILTIN BUILTIN_LED // backward compatibility
-//#define RGB_BUILTIN LED_BUILTIN
 
 #endif /* Pins_Arduino_h */
