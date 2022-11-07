@@ -62,12 +62,14 @@ void setup() {
 void loop() {
   //Check if alert happened
   uint32_t alerts_triggered;
-  twai_read_alerts(&alerts_triggered, 1);
+  twai_read_alerts(&alerts_triggered, pdMS_TO_TICKS(1));
   if (alerts_triggered & TWAI_ALERT_ERR_PASS) {
     Serial.println("Alert: TWAI controller has become error passive.");
-  } else if (alerts_triggered & TWAI_ALERT_BUS_ERROR) {
+  }
+  if (alerts_triggered & TWAI_ALERT_BUS_ERROR) {
     Serial.println("Alert: A (Bit, Stuff, CRC, Form, ACK) error has occurred on the bus.");
-  } else if (alerts_triggered & TWAI_ALERT_RX_QUEUE_FULL) {
+  }
+  if (alerts_triggered & TWAI_ALERT_RX_QUEUE_FULL) {
     Serial.println("Alert: The RX queue is full causing a received frame to be lost.");
   }
 
@@ -89,7 +91,7 @@ void loop() {
   Serial.printf("ID is %x\n", message.identifier);
   if (!(message.rtr)) {
     for (int i = 0; i < message.data_length_code; i++) {
-      Serial.printf("Byte %d = %x ", i, message.data[i]);
+      Serial.printf("Byte %d = %02x ", i, message.data[i]);
     }
     Serial.println("");
   }
