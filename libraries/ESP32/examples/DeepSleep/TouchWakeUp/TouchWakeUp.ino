@@ -11,7 +11,13 @@ Author:
 Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
-#define Threshold 40 /* Greater the value, more the sensitivity */
+#if CONFIG_IDF_TARGET_ESP32
+  #define THRESHOLD 40      /* Greater the value, more the sensitivity */
+#elif CONFIG_IDF_TARGET_ESP32S2
+  #define THRESHOLD   30000 /* Lower the value, more the sensitivity */
+#else //CONFIG_IDF_TARGET_ESP32S3 + default for other chips (to be adjusted) */
+  #define THRESHOLD   80000 /* Lower the value, more the sensitivity */
+#endif
 
 RTC_DATA_ATTR int bootCount = 0;
 touch_pad_t touchPin;
@@ -42,24 +48,31 @@ has been awaken from sleep
 void print_wakeup_touchpad(){
   touchPin = esp_sleep_get_touchpad_wakeup_status();
 
-  switch(touchPin)
-  {
-    case 0  : Serial.println("Touch detected on GPIO 4"); break;
-    case 1  : Serial.println("Touch detected on GPIO 0"); break;
-    case 2  : Serial.println("Touch detected on GPIO 2"); break;
-    case 3  : Serial.println("Touch detected on GPIO 15"); break;
-    case 4  : Serial.println("Touch detected on GPIO 13"); break;
-    case 5  : Serial.println("Touch detected on GPIO 12"); break;
-    case 6  : Serial.println("Touch detected on GPIO 14"); break;
-    case 7  : Serial.println("Touch detected on GPIO 27"); break;
-    case 8  : Serial.println("Touch detected on GPIO 33"); break;
-    case 9  : Serial.println("Touch detected on GPIO 32"); break;
-    default : Serial.println("Wakeup not by touchpad"); break;
-  }
-}
-
-void callback(){
-  //placeholder callback function
+  #if CONFIG_IDF_TARGET_ESP32
+    switch(touchPin)
+    {
+      case 0  : Serial.println("Touch detected on GPIO 4"); break;
+      case 1  : Serial.println("Touch detected on GPIO 0"); break;
+      case 2  : Serial.println("Touch detected on GPIO 2"); break;
+      case 3  : Serial.println("Touch detected on GPIO 15"); break;
+      case 4  : Serial.println("Touch detected on GPIO 13"); break;
+      case 5  : Serial.println("Touch detected on GPIO 12"); break;
+      case 6  : Serial.println("Touch detected on GPIO 14"); break;
+      case 7  : Serial.println("Touch detected on GPIO 27"); break;
+      case 8  : Serial.println("Touch detected on GPIO 33"); break;
+      case 9  : Serial.println("Touch detected on GPIO 32"); break;
+      default : Serial.println("Wakeup not by touchpad"); break;
+    }
+  #else
+    if(touchPin < TOUCH_PAD_MAX)
+    {
+      Serial.printf("Touch detected on GPIO %d\n", touchPin); 
+    }
+    else
+    {
+      Serial.println("Wakeup not by touchpad");
+    }
+  #endif
 }
 
 void setup(){
@@ -74,11 +87,8 @@ void setup(){
   print_wakeup_reason();
   print_wakeup_touchpad();
 
-  //Setup interrupt on Touch Pad 3 (GPIO15)
-  touchAttachInterrupt(T3, callback, Threshold);
-
-  //Configure Touchpad as wakeup source
-  esp_sleep_enable_touchpad_wakeup();
+  //Setup sleep wakeup on Touch Pad 3 (GPIO15 for ESP32) / (GPIO3 for ESP32-S2 and S3)
+  touchSleepWakeUpEnable(T3,THRESHOLD); 
 
   //Go to sleep now
   Serial.println("Going to sleep now");
