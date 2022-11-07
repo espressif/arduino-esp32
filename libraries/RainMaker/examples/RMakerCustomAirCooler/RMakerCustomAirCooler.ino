@@ -43,7 +43,7 @@ static Device my_device("Air Cooler", "my.device.air-cooler", NULL);
 
 void sysProvEvent(arduino_event_t *sys_event)
 {
-    switch (sys_event->event_id) {      
+    switch (sys_event->event_id) {
         case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32S2
         Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
@@ -51,7 +51,7 @@ void sysProvEvent(arduino_event_t *sys_event)
 #else
         Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
         printQR(service_name, pop, "ble");
-#endif        
+#endif
         break;
         default:;
     }
@@ -114,7 +114,7 @@ void setup()
     pinMode(gpio_speed, OUTPUT);
     analogWrite(gpio_speed, DEFAULT_SPEED);
 
-    Node my_node;    
+    Node my_node;
     my_node = RMaker.initNode("ESP RainMaker Node");
 
     //Create custom air cooler device
@@ -138,19 +138,21 @@ void setup()
     my_device.addParam(mode_param);
 
     my_device.addCb(write_callback);
-    
-    //Add custom Air Cooler device to the node   
+
+    //Add custom Air Cooler device to the node
     my_node.addDevice(my_device);
 
-    //This is optional 
+    //This is optional
     // RMaker.enableOTA(OTA_USING_PARAMS);
-    //If you want to enable scheduling, set time zone for your region using setTimeZone(). 
+    //If you want to enable scheduling, set time zone for your region using setTimeZone().
     //The list of available values are provided here https://rainmaker.espressif.com/docs/time-service.html
     // RMaker.setTimeZone("Asia/Shanghai");
     //Alternatively, enable the Timezone service and let the phone apps set the appropriate timezone
     // RMaker.enableTZService();
 
     RMaker.enableSchedule();
+
+    RMaker.enableScenes();
 
     RMaker.start();
 
