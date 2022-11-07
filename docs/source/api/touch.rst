@@ -85,6 +85,18 @@ This function is used to detach interrupt from the touch pad.
 
 * ``pin`` GPIO TOUCH pad pin.
 
+touchSleepWakeUpEnable
+^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to setup touch pad as the wake up source from the deep sleep.
+
+.. code-block:: arduino
+
+    void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
+
+* ``pin`` GPIO TOUCH pad pin
+* ``threshold`` Sets the threshold when to wake up
+
 TOUCH API specific for ESP32 chip (TOUCH_V1)
 ********************************************
 

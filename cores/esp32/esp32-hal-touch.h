@@ -91,7 +91,7 @@ bool touchInterruptGetLastStatus(uint8_t pin);
 
 /*
  * Setup touch pad wake up from deep sleep with given threshold.
-**/
+ **/
 void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 
 #endif // SOC_TOUCH_SENSOR_NUM > 0
