@@ -5033,6 +5033,11 @@ nora_w10.menu.DebugLevel.debug.build.code_debug=4
 nora_w10.menu.DebugLevel.verbose=Verbose
 nora_w10.menu.DebugLevel.verbose.build.code_debug=5
 
+nora_w10.menu.EraseFlash.none=Disabled
+nora_w10.menu.EraseFlash.none.upload.erase_cmd=
+nora_w10.menu.EraseFlash.all=Enabled
+nora_w10.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 widora-air.name=Widora AIR
@@ -11411,6 +11416,31 @@ heltec_wifi_lora_32.build.boot=dio
 heltec_wifi_lora_32.build.partitions=default
 heltec_wifi_lora_32.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
+heltec_wifi_lora_32.menu.PartitionScheme.default=Regular 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat=Regular 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+heltec_wifi_lora_32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+heltec_wifi_lora_32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.minimal.build.partitions=minimal
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+
 heltec_wifi_lora_32.menu.PSRAM.disabled=Disabled
 heltec_wifi_lora_32.menu.PSRAM.disabled.build.psram=
 heltec_wifi_lora_32.menu.PSRAM.disabled.build.extra_libs=
@@ -12405,6 +12435,215 @@ bpi-bit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+bpi_leaf_s3.name=BPI-Leaf-S3
+bpi_leaf_s3.vid.0=0x303a
+bpi_leaf_s3.pid.0=0x80df
+
+bpi_leaf_s3.bootloader.tool=esptool_py
+bpi_leaf_s3.bootloader.tool.default=esptool_py
+
+bpi_leaf_s3.upload.tool=esptool_py
+bpi_leaf_s3.upload.tool.default=esptool_py
+bpi_leaf_s3.upload.tool.network=esp_ota
+
+bpi_leaf_s3.upload.maximum_size=1310720
+bpi_leaf_s3.upload.maximum_data_size=327680
+bpi_leaf_s3.upload.flags=
+bpi_leaf_s3.upload.extra_flags=
+bpi_leaf_s3.upload.use_1200bps_touch=false
+bpi_leaf_s3.upload.wait_for_upload_port=false
+
+bpi_leaf_s3.serial.disableDTR=false
+bpi_leaf_s3.serial.disableRTS=false
+
+bpi_leaf_s3.build.tarch=xtensa
+bpi_leaf_s3.build.bootloader_addr=0x0
+bpi_leaf_s3.build.target=esp32s3
+bpi_leaf_s3.build.mcu=esp32s3
+bpi_leaf_s3.build.core=esp32
+bpi_leaf_s3.build.variant=bpi_leaf_s3
+bpi_leaf_s3.build.board=BPI_LEAF_S3
+
+bpi_leaf_s3.build.usb_mode=1
+bpi_leaf_s3.build.cdc_on_boot=0
+bpi_leaf_s3.build.msc_on_boot=0
+bpi_leaf_s3.build.dfu_on_boot=0
+bpi_leaf_s3.build.f_cpu=240000000L
+bpi_leaf_s3.build.flash_size=8MB
+bpi_leaf_s3.build.flash_freq=80m
+bpi_leaf_s3.build.flash_mode=dio
+bpi_leaf_s3.build.boot=qio
+bpi_leaf_s3.build.boot_freq=80m
+bpi_leaf_s3.build.partitions=default
+bpi_leaf_s3.build.defines=
+bpi_leaf_s3.build.loop_core=
+bpi_leaf_s3.build.event_core=
+bpi_leaf_s3.build.psram_type=qspi
+bpi_leaf_s3.build.memory_type={build.boot}_{build.psram_type}
+
+bpi_leaf_s3.menu.PSRAM.enabled=QSPI PSRAM
+bpi_leaf_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+bpi_leaf_s3.menu.PSRAM.enabled.build.psram_type=qspi
+bpi_leaf_s3.menu.PSRAM.disabled=Disabled
+bpi_leaf_s3.menu.PSRAM.disabled.build.defines=
+bpi_leaf_s3.menu.PSRAM.disabled.build.psram_type=qspi
+bpi_leaf_s3.menu.PSRAM.opi=OPI PSRAM
+bpi_leaf_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+bpi_leaf_s3.menu.PSRAM.opi.build.psram_type=opi
+
+bpi_leaf_s3.menu.FlashMode.qio=QIO 80MHz
+bpi_leaf_s3.menu.FlashMode.qio.build.flash_mode=dio
+bpi_leaf_s3.menu.FlashMode.qio.build.boot=qio
+bpi_leaf_s3.menu.FlashMode.qio.build.boot_freq=80m
+bpi_leaf_s3.menu.FlashMode.qio.build.flash_freq=80m
+bpi_leaf_s3.menu.FlashMode.qio120=QIO 120MHz
+bpi_leaf_s3.menu.FlashMode.qio120.build.flash_mode=dio
+bpi_leaf_s3.menu.FlashMode.qio120.build.boot=qio
+bpi_leaf_s3.menu.FlashMode.qio120.build.boot_freq=120m
+bpi_leaf_s3.menu.FlashMode.qio120.build.flash_freq=80m
+bpi_leaf_s3.menu.FlashMode.dio=DIO 80MHz
+bpi_leaf_s3.menu.FlashMode.dio.build.flash_mode=dio
+bpi_leaf_s3.menu.FlashMode.dio.build.boot=dio
+bpi_leaf_s3.menu.FlashMode.dio.build.boot_freq=80m
+bpi_leaf_s3.menu.FlashMode.dio.build.flash_freq=80m
+bpi_leaf_s3.menu.FlashMode.opi=OPI 80MHz
+bpi_leaf_s3.menu.FlashMode.opi.build.flash_mode=dout
+bpi_leaf_s3.menu.FlashMode.opi.build.boot=opi
+bpi_leaf_s3.menu.FlashMode.opi.build.boot_freq=80m
+bpi_leaf_s3.menu.FlashMode.opi.build.flash_freq=80m
+
+bpi_leaf_s3.menu.FlashSize.8M=8MB (64Mb)
+bpi_leaf_s3.menu.FlashSize.8M.build.flash_size=8MB
+bpi_leaf_s3.menu.FlashSize.8M.build.partitions=default_8MB
+bpi_leaf_s3.menu.FlashSize.4M=4MB (32Mb)
+bpi_leaf_s3.menu.FlashSize.4M.build.flash_size=4MB
+bpi_leaf_s3.menu.FlashSize.16M=16MB (128Mb)
+bpi_leaf_s3.menu.FlashSize.16M.build.flash_size=16MB
+#bpi_leaf_s3.menu.FlashSize.32M=32MB (256Mb)
+#bpi_leaf_s3.menu.FlashSize.32M.build.flash_size=32MB
+
+bpi_leaf_s3.menu.LoopCore.1=Core 1
+bpi_leaf_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+bpi_leaf_s3.menu.LoopCore.0=Core 0
+bpi_leaf_s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+bpi_leaf_s3.menu.EventsCore.1=Core 1
+bpi_leaf_s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+bpi_leaf_s3.menu.EventsCore.0=Core 0
+bpi_leaf_s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+bpi_leaf_s3.menu.USBMode.default=USB-OTG (TinyUSB)
+bpi_leaf_s3.menu.USBMode.default.build.usb_mode=0
+bpi_leaf_s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+bpi_leaf_s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+bpi_leaf_s3.menu.CDCOnBoot.cdc=Enabled
+bpi_leaf_s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+bpi_leaf_s3.menu.CDCOnBoot.default=Disabled
+bpi_leaf_s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+bpi_leaf_s3.menu.MSCOnBoot.default=Disabled
+bpi_leaf_s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+bpi_leaf_s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+bpi_leaf_s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+bpi_leaf_s3.menu.DFUOnBoot.default=Disabled
+bpi_leaf_s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+bpi_leaf_s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+bpi_leaf_s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+bpi_leaf_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+bpi_leaf_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+bpi_leaf_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+bpi_leaf_s3.menu.UploadMode.default=UART0 / Hardware CDC
+bpi_leaf_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+bpi_leaf_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+bpi_leaf_s3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+bpi_leaf_s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+bpi_leaf_s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.default.build.partitions=default
+bpi_leaf_s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+bpi_leaf_s3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+bpi_leaf_s3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.minimal.build.partitions=minimal
+bpi_leaf_s3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+bpi_leaf_s3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+bpi_leaf_s3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+bpi_leaf_s3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+bpi_leaf_s3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+bpi_leaf_s3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+bpi_leaf_s3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+bpi_leaf_s3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+bpi_leaf_s3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+bpi_leaf_s3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+bpi_leaf_s3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+bpi_leaf_s3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+bpi_leaf_s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+bpi_leaf_s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+bpi_leaf_s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+bpi_leaf_s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+bpi_leaf_s3.menu.PartitionScheme.fatflash.build.partitions=ffat
+bpi_leaf_s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+bpi_leaf_s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+bpi_leaf_s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+bpi_leaf_s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+bpi_leaf_s3.menu.PartitionScheme.rainmaker=RainMaker
+bpi_leaf_s3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+bpi_leaf_s3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+bpi_leaf_s3.menu.CPUFreq.240=240MHz (WiFi)
+bpi_leaf_s3.menu.CPUFreq.240.build.f_cpu=240000000L
+bpi_leaf_s3.menu.CPUFreq.160=160MHz (WiFi)
+bpi_leaf_s3.menu.CPUFreq.160.build.f_cpu=160000000L
+bpi_leaf_s3.menu.CPUFreq.80=80MHz (WiFi)
+bpi_leaf_s3.menu.CPUFreq.80.build.f_cpu=80000000L
+bpi_leaf_s3.menu.CPUFreq.40=40MHz
+bpi_leaf_s3.menu.CPUFreq.40.build.f_cpu=40000000L
+bpi_leaf_s3.menu.CPUFreq.20=20MHz
+bpi_leaf_s3.menu.CPUFreq.20.build.f_cpu=20000000L
+bpi_leaf_s3.menu.CPUFreq.10=10MHz
+bpi_leaf_s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+bpi_leaf_s3.menu.UploadSpeed.921600=921600
+bpi_leaf_s3.menu.UploadSpeed.921600.upload.speed=921600
+bpi_leaf_s3.menu.UploadSpeed.115200=115200
+bpi_leaf_s3.menu.UploadSpeed.115200.upload.speed=115200
+bpi_leaf_s3.menu.UploadSpeed.256000.windows=256000
+bpi_leaf_s3.menu.UploadSpeed.256000.upload.speed=256000
+bpi_leaf_s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+bpi_leaf_s3.menu.UploadSpeed.230400=230400
+bpi_leaf_s3.menu.UploadSpeed.230400.upload.speed=230400
+bpi_leaf_s3.menu.UploadSpeed.460800.linux=460800
+bpi_leaf_s3.menu.UploadSpeed.460800.macosx=460800
+bpi_leaf_s3.menu.UploadSpeed.460800.upload.speed=460800
+bpi_leaf_s3.menu.UploadSpeed.512000.windows=512000
+bpi_leaf_s3.menu.UploadSpeed.512000.upload.speed=512000
+
+bpi_leaf_s3.menu.DebugLevel.none=None
+bpi_leaf_s3.menu.DebugLevel.none.build.code_debug=0
+bpi_leaf_s3.menu.DebugLevel.error=Error
+bpi_leaf_s3.menu.DebugLevel.error.build.code_debug=1
+bpi_leaf_s3.menu.DebugLevel.warn=Warn
+bpi_leaf_s3.menu.DebugLevel.warn.build.code_debug=2
+bpi_leaf_s3.menu.DebugLevel.info=Info
+bpi_leaf_s3.menu.DebugLevel.info.build.code_debug=3
+bpi_leaf_s3.menu.DebugLevel.debug=Debug
+bpi_leaf_s3.menu.DebugLevel.debug.build.code_debug=4
+bpi_leaf_s3.menu.DebugLevel.verbose=Verbose
+bpi_leaf_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+bpi_leaf_s3.menu.EraseFlash.none=Disabled
+bpi_leaf_s3.menu.EraseFlash.none.upload.erase_cmd=
+bpi_leaf_s3.menu.EraseFlash.all=Enabled
+bpi_leaf_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 wesp32.name=Silicognition wESP32
 
 wesp32.bootloader.tool=esptool_py
@@ -12501,6 +12740,17 @@ t-beam.build.mcu=esp32
 t-beam.build.core=esp32
 t-beam.build.variant=tbeam
 t-beam.build.board=TBeam
+
+t-beam.menu.Revision.Radio_SX1262=Radio-SX1262
+t-beam.menu.Revision.Radio_SX1262.build.board=TBEAM_USE_RADIO_SX1262
+t-beam.menu.Revision.Radio_SX1276=Radio-SX1276
+t-beam.menu.Revision.Radio_SX1276.build.board=TBEAM_USE_RADIO_SX1276
+t-beam.menu.Revision.Radio_SX1278=Radio-SX1278
+t-beam.menu.Revision.Radio_SX1278.build.board=TBEAM_USE_RADIO_SX1278
+t-beam.menu.Revision.Radio_SX1280=Radio-SX1280
+t-beam.menu.Revision.Radio_SX1280.build.board=TBEAM_USE_RADIO_SX1280
+t-beam.menu.Revision.Radio_SX1268=Radio-SX1268
+t-beam.menu.Revision.Radio_SX1268.build.board=TBEAM_USE_RADIO_SX1268
 
 t-beam.build.f_cpu=240000000L
 t-beam.build.flash_mode=dio
@@ -17530,6 +17780,8 @@ AirM2M_CORE_ESP32C3.vid.0=0x303a
 AirM2M_CORE_ESP32C3.pid.0=0x1001
 
 AirM2M_CORE_ESP32C3.upload.tool=esptool_py
+AirM2M_CORE_ESP32C3.upload.tool.default=esptool_py
+AirM2M_CORE_ESP32C3.upload.tool.network=esp_ota
 AirM2M_CORE_ESP32C3.upload.maximum_size=1310720
 AirM2M_CORE_ESP32C3.upload.maximum_data_size=327680
 AirM2M_CORE_ESP32C3.upload.flags=
@@ -17623,6 +17875,11 @@ AirM2M_CORE_ESP32C3.menu.DebugLevel.debug=Debug
 AirM2M_CORE_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
 AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose=Verbose
 AirM2M_CORE_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+AirM2M_CORE_ESP32C3.menu.EraseFlash.none=Disabled
+AirM2M_CORE_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
+AirM2M_CORE_ESP32C3.menu.EraseFlash.all=Enabled
+AirM2M_CORE_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 #############################################################
 
@@ -17976,7 +18233,7 @@ aw2eth.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-department_of_alchemy_minimain_esp32s2.name=Deparment of Alchemy MiniMain ESP32-S2
+department_of_alchemy_minimain_esp32s2.name=Department of Alchemy MiniMain ESP32-S2
 department_of_alchemy_minimain_esp32s2.vid.0=0x303A
 department_of_alchemy_minimain_esp32s2.pid.0=0x80FF
 
@@ -18904,7 +19161,7 @@ unphone9.build.partitions=default_8MB
 unphone9.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=9
 unphone9.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone9.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-unphone9.build.flash_type=qspi
+unphone9.build.flash_type=qio
 unphone9.build.psram_type=qspi
 unphone9.build.memory_type={build.flash_type}_{build.psram_type}
 
@@ -19015,3 +19272,178 @@ unphone9.menu.EraseFlash.all=Enabled
 unphone9.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ###############################################################
+# Cytron Maker Feather AIoT S3
+
+cytron_maker_feather_aiot_s3.name=Cytron Maker Feather AIoT S3
+cytron_maker_feather_aiot_s3.vid.0=0x303a
+cytron_maker_feather_aiot_s3.pid.0=0x80f8
+
+cytron_maker_feather_aiot_s3.bootloader.tool=esptool_py
+cytron_maker_feather_aiot_s3.bootloader.tool.default=esptool_py
+
+cytron_maker_feather_aiot_s3.upload.tool=esptool_py
+cytron_maker_feather_aiot_s3.upload.tool.default=esptool_py
+cytron_maker_feather_aiot_s3.upload.tool.network=esp_ota
+
+cytron_maker_feather_aiot_s3.upload.maximum_size=1310720
+cytron_maker_feather_aiot_s3.upload.maximum_data_size=327680
+cytron_maker_feather_aiot_s3.upload.flags=
+cytron_maker_feather_aiot_s3.upload.extra_flags=
+cytron_maker_feather_aiot_s3.upload.use_1200bps_touch=true
+cytron_maker_feather_aiot_s3.upload.wait_for_upload_port=true
+
+cytron_maker_feather_aiot_s3.serial.disableDTR=false
+cytron_maker_feather_aiot_s3.serial.disableRTS=false
+
+cytron_maker_feather_aiot_s3.build.tarch=xtensa
+cytron_maker_feather_aiot_s3.build.bootloader_addr=0x0
+cytron_maker_feather_aiot_s3.build.target=esp32s3
+cytron_maker_feather_aiot_s3.build.mcu=esp32s3
+cytron_maker_feather_aiot_s3.build.core=esp32
+cytron_maker_feather_aiot_s3.build.variant=cytron_maker_feather_aiot_s3
+cytron_maker_feather_aiot_s3.build.board=CYTRON_MAKER_FEATHER_AIOT_S3
+
+cytron_maker_feather_aiot_s3.build.usb_mode=0
+cytron_maker_feather_aiot_s3.build.cdc_on_boot=1
+cytron_maker_feather_aiot_s3.build.msc_on_boot=0
+cytron_maker_feather_aiot_s3.build.dfu_on_boot=0
+cytron_maker_feather_aiot_s3.build.f_cpu=240000000L
+cytron_maker_feather_aiot_s3.build.flash_size=8MB
+cytron_maker_feather_aiot_s3.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.build.boot=qio
+cytron_maker_feather_aiot_s3.build.partitions=default
+cytron_maker_feather_aiot_s3.build.defines=
+cytron_maker_feather_aiot_s3.build.loop_core=
+cytron_maker_feather_aiot_s3.build.event_core=
+cytron_maker_feather_aiot_s3.build.flash_type=qio
+cytron_maker_feather_aiot_s3.build.psram_type=opi
+cytron_maker_feather_aiot_s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+cytron_maker_feather_aiot_s3.menu.LoopCore.1=Core 1
+cytron_maker_feather_aiot_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+cytron_maker_feather_aiot_s3.menu.LoopCore.0=Core 0
+cytron_maker_feather_aiot_s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+cytron_maker_feather_aiot_s3.menu.EventsCore.1=Core 1
+cytron_maker_feather_aiot_s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+cytron_maker_feather_aiot_s3.menu.EventsCore.0=Core 0
+cytron_maker_feather_aiot_s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+cytron_maker_feather_aiot_s3.menu.USBMode.default=USB-OTG (TinyUSB)
+cytron_maker_feather_aiot_s3.menu.USBMode.default.build.usb_mode=0
+cytron_maker_feather_aiot_s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+cytron_maker_feather_aiot_s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.cdc=Enabled
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+cytron_maker_feather_aiot_s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.default=Disabled
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+cytron_maker_feather_aiot_s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+cytron_maker_feather_aiot_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+cytron_maker_feather_aiot_s3.menu.UploadMode.default=UART0 / Hardware CDC
+cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi=OPI PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.psram_type=opi
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled=QSPI PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.psram_type=qspi
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled=Disabled
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.defines=
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.psram_type=qspi
+
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+cytron_maker_feather_aiot_s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+cytron_maker_feather_aiot_s3.menu.CPUFreq.240=240MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.240.build.f_cpu=240000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.160=160MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.160.build.f_cpu=160000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.80=80MHz (WiFi)
+cytron_maker_feather_aiot_s3.menu.CPUFreq.80.build.f_cpu=80000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.40=40MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.40.build.f_cpu=40000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.20=20MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.20.build.f_cpu=20000000L
+cytron_maker_feather_aiot_s3.menu.CPUFreq.10=10MHz
+cytron_maker_feather_aiot_s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio=QIO 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.boot=qio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120=QIO 120MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.boot=qio
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.boot_freq=120m
+cytron_maker_feather_aiot_s3.menu.FlashMode.qio120.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio=DIO 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.flash_mode=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.boot=dio
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.dio.build.flash_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi=OPI 80MHz
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.flash_mode=dout
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.boot=opi
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.boot_freq=80m
+cytron_maker_feather_aiot_s3.menu.FlashMode.opi.build.flash_freq=80m
+
+cytron_maker_feather_aiot_s3.menu.FlashSize.8M=8MB (64Mb)
+cytron_maker_feather_aiot_s3.menu.FlashSize.8M.build.flash_size=8MB
+
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.921600=921600
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.921600.upload.speed=921600
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.115200=115200
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.115200.upload.speed=115200
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.256000.windows=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.256000.upload.speed=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400=230400
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.230400.upload.speed=230400
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.linux=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.macosx=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.460800.upload.speed=460800
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.512000.windows=512000
+cytron_maker_feather_aiot_s3.menu.UploadSpeed.512000.upload.speed=512000
+
+cytron_maker_feather_aiot_s3.menu.DebugLevel.none=None
+cytron_maker_feather_aiot_s3.menu.DebugLevel.none.build.code_debug=0
+cytron_maker_feather_aiot_s3.menu.DebugLevel.error=Error
+cytron_maker_feather_aiot_s3.menu.DebugLevel.error.build.code_debug=1
+cytron_maker_feather_aiot_s3.menu.DebugLevel.warn=Warn
+cytron_maker_feather_aiot_s3.menu.DebugLevel.warn.build.code_debug=2
+cytron_maker_feather_aiot_s3.menu.DebugLevel.info=Info
+cytron_maker_feather_aiot_s3.menu.DebugLevel.info.build.code_debug=3
+cytron_maker_feather_aiot_s3.menu.DebugLevel.debug=Debug
+cytron_maker_feather_aiot_s3.menu.DebugLevel.debug.build.code_debug=4
+cytron_maker_feather_aiot_s3.menu.DebugLevel.verbose=Verbose
+cytron_maker_feather_aiot_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+cytron_maker_feather_aiot_s3.menu.EraseFlash.none=Disabled
+cytron_maker_feather_aiot_s3.menu.EraseFlash.none.upload.erase_cmd=
+cytron_maker_feather_aiot_s3.menu.EraseFlash.all=Enabled
+cytron_maker_feather_aiot_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
