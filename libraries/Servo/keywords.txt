@@ -1,0 +1,23 @@
+#######################################
+# Syntax Coloring Map For Deneyap_Servo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Deneyap_Servo	KEYWORD1	Deneyap_Servo
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+attach	KEYWORD2
+write	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+PWMFREQ	LITERAL1
+PWMCHANNEL	LITERAL1
+PWMRESOLUTION	LITERAL1
+FIRSTDUTY	LITERAL1
