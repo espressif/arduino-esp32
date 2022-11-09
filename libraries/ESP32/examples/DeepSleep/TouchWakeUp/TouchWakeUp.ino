@@ -97,6 +97,8 @@ void setup(){
   //Setup sleep wakeup on Touch Pad 3 (GPIO3) 
   touchSleepWakeUpEnable(T3,THRESHOLD);
 
+  #endif
+
   //Go to sleep now
   Serial.println("Going to sleep now");
   esp_deep_sleep_start();
