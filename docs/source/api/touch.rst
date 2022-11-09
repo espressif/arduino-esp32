@@ -90,6 +90,8 @@ touchSleepWakeUpEnable
 
 This function is used to setup touch pad as the wake up source from the deep sleep.
 
+.. note:: ESP32-S2 and ESP32-S3 only support one sleep wake up touch pad.
+
 .. code-block:: arduino
 
     void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
