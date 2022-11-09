@@ -5,6 +5,9 @@ This code displays how to use deep sleep with
 a touch as a wake up source and how to store data in
 RTC memory to use it over reboots
 
+ESP32 can have multiple touch pads enabled as wakeup source
+ESP32-S2 and ESP32-S3 supports only 1 touch pad as wakeup source enabled
+
 This code is under Public Domain License.
 
 Author:
@@ -12,11 +15,9 @@ Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
 #if CONFIG_IDF_TARGET_ESP32
-  #define THRESHOLD 40      /* Greater the value, more the sensitivity */
-#elif CONFIG_IDF_TARGET_ESP32S2
-  #define THRESHOLD   30000 /* Lower the value, more the sensitivity */
-#else //CONFIG_IDF_TARGET_ESP32S3 + default for other chips (to be adjusted) */
-  #define THRESHOLD   80000 /* Lower the value, more the sensitivity */
+  #define THRESHOLD   40      /* Greater the value, more the sensitivity */
+#else //ESP32-S2 and ESP32-S3 + default for other chips (to be adjusted) */
+  #define THRESHOLD   5000   /* Lower the value, more the sensitivity */
 #endif
 
 RTC_DATA_ATTR int bootCount = 0;
@@ -87,8 +88,14 @@ void setup(){
   print_wakeup_reason();
   print_wakeup_touchpad();
 
-  //Setup sleep wakeup on Touch Pad 3 (GPIO15 for ESP32) / (GPIO3 for ESP32-S2 and S3)
-  touchSleepWakeUpEnable(T3,THRESHOLD); 
+  #if CONFIG_IDF_TARGET_ESP32 
+  //Setup sleep wakeup on Touch Pad 3 + 7 (GPIO15 + GPIO 27) 
+  touchSleepWakeUpEnable(T3,THRESHOLD);
+  touchSleepWakeUpEnable(T7,THRESHOLD);
+  
+  #else //ESP32-S2 + ESP32-S3
+  //Setup sleep wakeup on Touch Pad 3 (GPIO3) 
+  touchSleepWakeUpEnable(T3,THRESHOLD);
 
   //Go to sleep now
   Serial.println("Going to sleep now");
