@@ -235,21 +235,23 @@ int8_t analogGetChannel(uint8_t pin) {
 }
 
 void analogWriteFrequency(uint32_t freq) {
-    if (cnt_channel == LEDC_CHANNELS) {
-        return; //No channel used for analogWrite
-    }
-    for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-        ledcChangeFrequency(channel, freq, analog_resolution);
+    if (cnt_channel != LEDC_CHANNELS) {
+        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
+            ledcChangeFrequency(channel, freq, analog_resolution);
+        }
     }
     analog_frequency = freq;
 }
 
 void analogWriteResolution(uint8_t bits) {
-    if (cnt_channel == LEDC_CHANNELS) {
-        return; //No channel used for analogWrite
+    if(bits > LEDC_MAX_BIT_WIDTH) {
+        log_e("AnalogWrite resoluion width too big (maximum %u bits)", LEDC_MAX_BIT_WIDTH);
+        return;
     }
-    for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-        ledcChangeFrequency(channel, analog_frequency, bits);
+    if (cnt_channel != LEDC_CHANNELS) {
+        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
+            ledcChangeFrequency(channel, analog_frequency, bits);
+        }
     }
     analog_resolution = bits;
 }
