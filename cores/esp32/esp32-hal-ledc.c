@@ -245,8 +245,8 @@ void analogWriteFrequency(uint32_t freq) {
 
 void analogWriteResolution(uint8_t bits) {
     if(bits > LEDC_MAX_BIT_WIDTH) {
-        log_e("AnalogWrite resoluion width too big (maximum %u bits)", LEDC_MAX_BIT_WIDTH);
-        return;
+        log_w("analogWrite resolution width too big! Setting to maximum %u bits)", LEDC_MAX_BIT_WIDTH);
+        bits = LEDC_MAX_BIT_WIDTH;
     }
     if (cnt_channel != LEDC_CHANNELS) {
         for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
