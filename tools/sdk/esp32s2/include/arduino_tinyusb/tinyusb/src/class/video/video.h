@@ -303,6 +303,45 @@ typedef struct TU_ATTR_PACKED {
 } tusb_desc_cs_video_fmt_uncompressed_t;
 
 typedef struct TU_ATTR_PACKED {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bFormatIndex;
+  uint8_t bNumFrameDescriptors;
+  uint8_t bmFlags;
+  uint8_t bDefaultFrameIndex;
+  uint8_t bAspectRatioX;
+  uint8_t bAspectRatioY;
+  uint8_t bmInterlaceFlags;
+  uint8_t bCopyProtect;
+} tusb_desc_cs_video_fmt_mjpeg_t;
+
+typedef struct TU_ATTR_PACKED {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bDescriptorSubType;
+  uint8_t  bFormatIndex;
+  uint32_t dwMaxVideoFrameBufferSize; /* deprecated */
+  uint8_t  bFormatType;
+} tusb_desc_cs_video_fmt_dv_t;
+
+typedef struct TU_ATTR_PACKED {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bFormatIndex;
+  uint8_t bNumFrameDescriptors;
+  uint8_t guidFormat[16];
+  uint8_t bBitsPerPixel;
+  uint8_t bDefaultFrameIndex;
+  uint8_t bAspectRatioX;
+  uint8_t bAspectRatioY;
+  uint8_t bmInterlaceFlags;
+  uint8_t bCopyProtect;
+  uint8_t bVaribaleSize;
+} tusb_desc_cs_video_fmt_frame_based_t;
+
+typedef struct TU_ATTR_PACKED {
   uint8_t  bLength;
   uint8_t  bDescriptorType;
   uint8_t  bDescriptorSubType;
@@ -317,6 +356,24 @@ typedef struct TU_ATTR_PACKED {
   uint8_t  bFrameIntervalType;
   uint32_t dwFrameInterval[];
 } tusb_desc_cs_video_frm_uncompressed_t;
+
+typedef tusb_desc_cs_video_frm_uncompressed_t tusb_desc_cs_video_frm_mjpeg_t;
+
+typedef struct TU_ATTR_PACKED {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bDescriptorSubType;
+  uint8_t  bFrameIndex;
+  uint8_t  bmCapabilities;
+  uint16_t wWidth;
+  uint16_t wHeight;
+  uint32_t dwMinBitRate;
+  uint32_t dwMaxBitRate;
+  uint32_t dwDefaultFrameInterval;
+  uint8_t  bFrameIntervalType;
+  uint32_t dwBytesPerLine;
+  uint32_t dwFrameInterval[];
+} tusb_desc_cs_video_frm_frame_based_t;
 
 //--------------------------------------------------------------------+
 // Requests
@@ -378,8 +435,11 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 #define TUD_VIDEO_DESC_CS_VS_IN_LEN               13
 #define TUD_VIDEO_DESC_CS_VS_OUT_LEN              9
 #define TUD_VIDEO_DESC_CS_VS_FMT_UNCOMPR_LEN      27
+#define TUD_VIDEO_DESC_CS_VS_FMT_MJPEG_LEN        11
 #define TUD_VIDEO_DESC_CS_VS_FRM_UNCOMPR_CONT_LEN 38
 #define TUD_VIDEO_DESC_CS_VS_FRM_UNCOMPR_DISC_LEN 26
+#define TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_CONT_LEN   38
+#define TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_DISC_LEN   26
 #define TUD_VIDEO_DESC_CS_VS_COLOR_MATCHING_LEN   6
 
 /* 2.2 compression formats */
@@ -459,6 +519,25 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 #define TUD_VIDEO_DESC_CS_VS_FRM_UNCOMPR_DISC(_frmidx, _cap, _width, _height, _minbr, _maxbr, _maxfrmbufsz, _frminterval, ...) \
   TUD_VIDEO_DESC_CS_VS_FRM_UNCOMPR_DISC_LEN + (TU_ARGS_NUM(__VA_ARGS__)) * 4, \
   TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VS_FRAME_UNCOMPRESSED, \
+  _frmidx, _cap, U16_TO_U8S_LE(_width), U16_TO_U8S_LE(_height), U32_TO_U8S_LE(_minbr), U32_TO_U8S_LE(_maxbr), \
+  U32_TO_U8S_LE(_maxfrmbufsz), U32_TO_U8S_LE(_frminterval), (TU_ARGS_NUM(__VA_ARGS__)), __VA_ARGS__
+
+/* Motion-JPEG 3.1.1 Table 3-1 */
+#define TUD_VIDEO_DESC_CS_VS_FMT_MJPEG(_fmtidx, _numfrmdesc, _fixed_sz, _frmidx, _asrx, _asry, _interlace, _cp) \
+  TUD_VIDEO_DESC_CS_VS_FMT_MJPEG_LEN, TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VS_FORMAT_MJPEG, \
+  _fmtidx, _numfrmdesc, _fixed_sz, _frmidx, _asrx,  _asry, _interlace, _cp
+
+/* Motion-JPEG 3.1.1 Table 3-2 and 3-3 */
+#define TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_CONT(_frmidx, _cap, _width, _height, _minbr, _maxbr, _maxfrmbufsz, _frminterval, _minfrminterval, _maxfrminterval, _frmintervalstep) \
+  TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_CONT_LEN, TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VS_FRAME_MJPEG, \
+  _frmidx, _cap, U16_TO_U8S_LE(_width), U16_TO_U8S_LE(_height), U32_TO_U8S_LE(_minbr), U32_TO_U8S_LE(_maxbr), \
+  U32_TO_U8S_LE(_maxfrmbufsz), U32_TO_U8S_LE(_frminterval), 0, \
+  U32_TO_U8S_LE(_minfrminterval), U32_TO_U8S_LE(_maxfrminterval), U32_TO_U8S_LE(_frmintervalstep)
+
+/* Motion-JPEG 3.1.1 Table 3-2 and 3-4 */
+#define TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_DISC(_frmidx, _cap, _width, _height, _minbr, _maxbr, _maxfrmbufsz, _frminterval, ...) \
+  TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_DISC_LEN + (TU_ARGS_NUM(__VA_ARGS__)) * 4, \
+  TUSB_DESC_CS_INTERFACE, VIDEO_CS_VS_INTERFACE_FRAME_MJPEG, \
   _frmidx, _cap, U16_TO_U8S_LE(_width), U16_TO_U8S_LE(_height), U32_TO_U8S_LE(_minbr), U32_TO_U8S_LE(_maxbr), \
   U32_TO_U8S_LE(_maxfrmbufsz), U32_TO_U8S_LE(_frminterval), (TU_ARGS_NUM(__VA_ARGS__)), __VA_ARGS__
 
