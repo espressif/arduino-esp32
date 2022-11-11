@@ -58,7 +58,9 @@
 /*!< Digital */
 #define SOC_ADC_DIGI_CONTROLLER_NUM             (2)
 #define SOC_ADC_PATT_LEN_MAX                    (24)    //Two pattern table, each contains 12 items. Each item takes 1 byte
-#define SOC_ADC_DIGI_MAX_BITWIDTH               (13)
+#define SOC_ADC_DIGI_MAX_BITWIDTH               (12)
+#define SOC_ADC_DIGI_RESULT_BYTES               (4)
+#define SOC_ADC_DIGI_DATA_BYTES_PER_CONV        (4)
 /*!< F_sample = F_digi_con / 2 / interval. F_digi_con = 5M for now. 30 <= interva <= 4095 */
 #define SOC_ADC_SAMPLE_FREQ_THRES_HIGH          83333
 #define SOC_ADC_SAMPLE_FREQ_THRES_LOW           611
@@ -179,6 +181,7 @@
 #define SOC_LCD_RGB_PANELS              (1)  /*!< Support one RGB LCD panel */
 #define SOC_LCD_I80_BUS_WIDTH           (16) /*!< Intel 8080 bus width */
 #define SOC_LCD_RGB_DATA_WIDTH          (16) /*!< Number of LCD data lines */
+#define SOC_LCD_SUPPORT_RGB_YUV_CONV    (1)  /*!< Support color format conversion between RGB and YUV */
 
 /*-------------------------- RTC CAPS --------------------------------------*/
 #define SOC_RTC_CNTL_CPU_PD_DMA_BUS_WIDTH       (128)
@@ -206,6 +209,7 @@
 #define SOC_SPI_PERIPH_NUM                  3
 #define SOC_SPI_DMA_CHAN_NUM                3
 #define SOC_SPI_PERIPH_CS_NUM(i)            3
+#define SOC_SPI_MAX_CS_NUM                  6
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE         64
 #define SOC_SPI_SUPPORT_DDRCLK              1
 #define SOC_SPI_SLAVE_SUPPORT_SEG_TRANS     1

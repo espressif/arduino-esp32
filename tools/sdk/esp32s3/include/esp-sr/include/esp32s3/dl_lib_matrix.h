@@ -32,7 +32,7 @@ extern multi_heap_handle_t gst_heap;
 #endif
 
 //Flags for matrices
-#define DL_MF_FOREIGNDATA (1<<0)  /*< Matrix *item data actually points to another matrix and should not be freed */
+#define DL_MF_FOREIGNDATA (1)  /*< Matrix *item data actually points to another matrix and should not be freed */
 
 //'Normal' float matrix
 typedef struct {
