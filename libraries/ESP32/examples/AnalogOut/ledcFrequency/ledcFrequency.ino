@@ -13,7 +13,6 @@
 #define PIN 2
 
 void setup() {
-  ledcAttachPin(PIN,analogGetChannel(PIN));
   analogWrite(PIN,128);
 
   uint32_t min_frequency;
