@@ -2273,6 +2273,14 @@
 #define MIB2_STATS                      0
 #endif
 
+/**
+ * IP_NAPT_STATS==1: Stats for IP NAPT.
+ */
+#if !defined IP_NAPT_STATS || defined __DOXYGEN__
+#define IP_NAPT_STATS                   (IP_NAPT)
+#endif
+
+
 #else
 
 #define LINK_STATS                      0
@@ -2293,6 +2301,7 @@
 #define MLD6_STATS                      0
 #define ND6_STATS                       0
 #define MIB2_STATS                      0
+#define IP_NAPT_STATS                   0
 
 #endif /* LWIP_STATS */
 /**
