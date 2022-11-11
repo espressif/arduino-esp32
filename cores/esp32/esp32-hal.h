@@ -93,6 +93,8 @@ void yield(void);
 
 void analogWrite(uint8_t pin, int value);
 int8_t analogGetChannel(uint8_t pin);
+void analogWriteFrequency(uint32_t freq);
+void analogWriteResolution(uint8_t bits);
 
 //returns chip temperature in Celsius
 float temperatureRead();
