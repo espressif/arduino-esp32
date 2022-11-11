@@ -37,7 +37,7 @@ void setup() {
       vTaskDelay(10); // Cannot continue
     }
   }
-  buffer = (uint8_t*) malloc(I2S.getBufferSize() * (bitsPerSample / 8));
+  buffer = (uint8_t*) malloc(I2S.getDMABufferByteSize());
   if(buffer == NULL){
     Serial.println("Failed to allocate buffer!");
     while(true){
@@ -51,6 +51,6 @@ void loop() {
   //I2S.write(I2S.read()); // primitive implementation sample-by-sample
 
   // Buffer based implementation
-  I2S.read(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
-  I2S.write(buffer, I2S.getBufferSize() * (bitsPerSample / 8));
+  I2S.read(buffer, I2S.getDMABufferByteSize());
+  I2S.write(buffer, I2S.getDMABufferByteSize());
 }
