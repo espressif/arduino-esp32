@@ -4,29 +4,30 @@
  The application generates square wave for both modules and transfers to each other.
  You can plot the waves with Arduino plotter
 
-    I2S
-  | Pin  | ESP32 | ESP32-S3 |
-  | -----|-------|- --------|
-  | GND  |  GND  |    GND   |
-  | VIN  |  5V   |     5V   |
-  | SCK  |  19   |     19   |
-  | FS   |  21   |     21   |
-  | DIN  |  23   |      5   |
-  | DOUT |  22   |      4   |
+ To prepare the example you will need to connect the output pins of the modules as if they were standalone devices.
+ The pin-out differ for the SoCs - refer to the table of used SoC.
 
-    I2S_1
-  | Pin  | ESP32 | ESP32-S3 |
+  ESP32
+  | Pin  |  I2S  |   I2S_1  |
   | -----|-------|- --------|
-  | GND  |  GND  |    GND   |
-  | VIN  |  5V   |     5V   |
+  | SCK  |  18   |     23   |
+  | FS   |  19   |     25   |
+  | SD 1 |  21   |     27   | I2S DOUT -> I2S_1 DIN
+  | SD 2 |  22   |     26   | I2S DIN  <- I2S_1 DOUT
+
+  ESP32-S3
+  | Pin  |  I2S  |   I2S_1  |
+  | -----|-------|- --------|
   | SCK  |  18   |     36   |
-  | FS   |  22   |     37   |
-  | DIN  |  26   |     40   |
-  | DOUT |  25   |     39   |
+  | FS   |  19   |     37   |
+  | SD 1 |   4   |     40   | I2S DOUT -> I2S_1 DIN
+  | SD 2 |   5   |     39   | I2S DIN  <- I2S_1 DOUT
 
  created 7 Nov 2022
  by Tomas Pilny
  */
+
+//#define INTERNAL_CONNECTIONS // uncomment to use without external connections
 
 #if SOC_I2S_NUM > 1
 
@@ -91,15 +92,13 @@ void setup() {
     }
   }
 
-  I2S.setDataInPin(DATA_MASTER_TO_SLAVE);
-  I2S.setDataOutPin(DATA_SLAVE_TO_MASTER);
   if(!I2S_1.setDuplex()){
     Serial.println("ERROR - could not set duplex for I2S_1");
     while(true){
       vTaskDelay(10); // Cannot continue
     }
   }
-  if (!I2S_1.begin(I2S_PHILIPS_MODE, bps)) { // start in slave mode  --- CRASHING! (i2s_driver_install)
+  if (!I2S_1.begin(I2S_PHILIPS_MODE, bps)) { // start in slave mode
     Serial.println("Failed to initialize I2S_1!");
     while(true){
       vTaskDelay(10); // Cannot continue
@@ -113,6 +112,7 @@ void setup() {
     }
   }
 
+#ifdef INTERNAL_CONNECTIONS
   gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_I2S_SCK],    PIN_FUNC_GPIO);
   gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_I2S_FS],     PIN_FUNC_GPIO);
   gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_I2S_SD_OUT], PIN_FUNC_GPIO);
@@ -134,7 +134,7 @@ void setup() {
 
   esp_rom_gpio_connect_out_signal(DATA_SLAVE_TO_MASTER, I2S1_DATA_OUT_IDX, 0, 0);
   esp_rom_gpio_connect_in_signal(DATA_SLAVE_TO_MASTER, I2S0_DATA_IN_IDX, 0);
-
+#endif
   Serial.println("Setup done");
 }
 

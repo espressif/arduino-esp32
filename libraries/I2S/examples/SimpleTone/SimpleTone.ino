@@ -10,9 +10,9 @@
   | -----|-------|-------|-------|-------|------------------------------|
   | GND  |  GND  |  GND  |  GND  |  GND  |            GND               |
   | 5V   |  5V   |  5V   |  5V   |  5V   |            5V                |
-  | SCK  |   1   |   2   |  A3   |  19   |            19                |
-  | FS   |   0   |   3   |  A2   |  21   |            21                |
-  | SD   |   9   |  A6   |   4   |  22   |             4                |
+  | SCK  |   1   |   2   |  A3   |  18   |            18                |
+  | FS   |   0   |   3   |  A2   |  19   |            19                |
+  | SD   |   9   |  A6   |   4   |  21   |             4                |
  * note: those chips supports only 16/24/32 bits per sample, i.e. 8 bps will be refused = no audio output
 
  DAC Circuit:
@@ -41,7 +41,7 @@ int32_t sample = amplitude; // current sample value
 int count = 0;
 
 i2s_mode_t mode = I2S_PHILIPS_MODE; // I2S decoder is needed
-// i2s_mode_t mode = ADC_DAC_MODE; // Audio amplifier is needed
+//i2s_mode_t mode = ADC_DAC_MODE; // Audio amplifier is needed
 
 // Mono channel input
 // This is ESP specific implementation -

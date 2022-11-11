@@ -8,10 +8,10 @@
   | -----|-------|------------------------------|
   | GND  |  GND  |            GND               |
   | VIN  |  5V   |             5V               |
-  | SCK  |  19   |             19               |
-  | FS   |  21   |             21               |
-  | DIN  |  23   |              5               |
-  | DOUT |  22   |              4               |
+  | SCK  |  18   |             18               |
+  | FS   |  19   |             19               |
+  | DOUT |  21   |              4               |
+  | DIN  |  22   |              5               |
 
  created 8 October 2021
  by Tomas Pilny
