@@ -206,7 +206,10 @@ class WiFiGenericClass
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);
-    
+
+  private:
+    static bool _isReconnectableReason(uint8_t reason);
+
   public:
     static int hostByName(const char *aHostname, IPAddress &aResult);
 
