@@ -78,4 +78,5 @@ static const uint8_t LED  = 35;
 static const uint8_t RST_OLED = 21;
 static const uint8_t SCL_OLED = 18;
 static const uint8_t SDA_OLED = 17;
+
 #endif /* Pins_Arduino_h */
