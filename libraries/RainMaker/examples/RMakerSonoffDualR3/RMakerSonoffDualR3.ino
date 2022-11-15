@@ -136,6 +136,7 @@ void setup()
     // Alternatively, enable the Timezone service and let the phone apps set the appropriate timezone
     RMaker.enableTZService();
     RMaker.enableSchedule();
+    RMaker.enableScenes();
 
     //Service Name
     for(int i=0; i<17; i=i+8) {
