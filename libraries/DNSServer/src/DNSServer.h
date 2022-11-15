@@ -1,6 +1,6 @@
 #ifndef DNSServer_h
 #define DNSServer_h
-#include <WiFiUdp.h>
+#include <AsyncUDP.h>
 
 #define DNS_QR_QUERY 0
 #define DNS_QR_RESPONSE 1
@@ -77,7 +77,7 @@ class DNSServer
   public:
     DNSServer();
     ~DNSServer();
-    void processNextRequest();
+    void processNextRequest(){};      // stub, left for compatibility with an old version
     void setErrorReplyCode(const DNSReplyCode &replyCode);
     void setTTL(const uint32_t &ttl);
 
@@ -89,7 +89,7 @@ class DNSServer
     void stop();
 
   private:
-    WiFiUDP _udp;
+    AsyncUDP _udp;
     uint16_t _port;
     String _domainName;
     unsigned char _resolvedIP[4];
@@ -104,7 +104,8 @@ class DNSServer
     void downcaseAndRemoveWwwPrefix(String &domainName);
     String getDomainNameWithoutWwwPrefix();
     bool requestIncludesOnlyOneQuestion();
-    void replyWithIP();
-    void replyWithCustomCode();
+    void replyWithIP(AsyncUDPPacket& req);
+    void replyWithCustomCode(AsyncUDPPacket& req);
+    void _handleUDP(AsyncUDPPacket& pkt);
 };
 #endif
