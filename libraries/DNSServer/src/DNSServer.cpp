@@ -9,30 +9,21 @@
 #define DEBUG_OUTPUT Serial
 #endif
 
-DNSServer::DNSServer()
+DNSServer::DNSServer() : _port(0), _ttl(htonl(DNS_DEFAULT_TTL)), _errorReplyCode(DNSReplyCode::NonExistentDomain)
 {
-  _ttl = htonl(DNS_DEFAULT_TTL);
-  _errorReplyCode = DNSReplyCode::NonExistentDomain;
-  _dnsHeader    = (DNSHeader*) malloc( sizeof(DNSHeader) ) ;
-  _dnsQuestion  = (DNSQuestion*) malloc( sizeof(DNSQuestion) ) ;     
-  _buffer     = NULL;
-  _currentPacketSize = 0;
-  _port = 0;
+  _dnsHeader    = new DNSHeader();
+  _dnsQuestion  = new DNSQuestion();
 }
 
 DNSServer::~DNSServer()
 {
   if (_dnsHeader) {
-    free(_dnsHeader);
-    _dnsHeader = NULL;
+    delete _dnsHeader;
+    _dnsHeader = nullptr;
   }
   if (_dnsQuestion) {
-    free(_dnsQuestion);
-    _dnsQuestion = NULL;
-  }
-  if (_buffer) {
-    free(_buffer);
-    _buffer = NULL;
+    delete _dnsQuestion;
+    _dnsQuestion = nullptr;
   }
 }
 
@@ -40,7 +31,6 @@ bool DNSServer::start(const uint16_t &port, const String &domainName,
                      const IPAddress &resolvedIP)
 {
   _port = port;
-  _buffer = NULL;
   _domainName = domainName;
   _resolvedIP[0] = resolvedIP[0];
   _resolvedIP[1] = resolvedIP[1];
@@ -64,8 +54,6 @@ void DNSServer::setTTL(const uint32_t &ttl)
 void DNSServer::stop()
 {
   _udp.close();
-  free(_buffer);
-  _buffer = NULL;
 }
 
 void DNSServer::downcaseAndRemoveWwwPrefix(String &domainName)
@@ -76,22 +64,30 @@ void DNSServer::downcaseAndRemoveWwwPrefix(String &domainName)
 
 void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
 {
-  _currentPacketSize = pkt.length();
-  if (!_currentPacketSize) return;
+  size_t _currentPacketSize = pkt.length();
+  if (_currentPacketSize < DNS_HEADER_SIZE) return;
 
-    // Allocate buffer for the DNS query
-    if (_buffer != NULL) 
-      free(_buffer);
-    _buffer = (unsigned char*)malloc(_currentPacketSize * sizeof(char));
-    if (_buffer == NULL) 
-      return;
+  // get DNS header (beginning of message)
+  memcpy( _dnsHeader, pkt.data(), DNS_HEADER_SIZE );
+  if (_dnsHeader->QR != DNS_QR_QUERY) return;     // ignore non-query mesages
 
-    // Put the packet received in the buffer and get DNS header (beginning of message)
-    // and the question
-    pkt.read(_buffer, _currentPacketSize);
-    memcpy( _dnsHeader, _buffer, DNS_HEADER_SIZE ) ; 
     if ( requestIncludesOnlyOneQuestion() )
     {
+      char * enoflbls = strchr((const char*)pkt.data() + DNS_HEADER_SIZE, 0);   // find end_of_label marker
+      ++enoflbls;                                                               // include null terminator
+      _dnsQuestion->QName = pkt.data() + DNS_HEADER_SIZE;                       // we can reference labels from the request
+      _dnsQuestion->QNameLength = enoflbls - (char*)pkt.data() - DNS_HEADER_SIZE;
+      /*
+        check if we aint going out of pkt bounds
+        proper dns req should have label terminator at least 4 bytes before end of packet
+      */
+      if (_dnsQuestion->QNameLength > _currentPacketSize - sizeof(_dnsQuestion->QType) - sizeof(_dnsQuestion->QClass)) return;              // malformed packet
+      
+      // Copy the QType and QClass
+      memcpy( &_dnsQuestion->QType,  enoflbls, sizeof(_dnsQuestion->QType) );
+      memcpy( &_dnsQuestion->QClass, enoflbls + sizeof(_dnsQuestion->QType), sizeof(_dnsQuestion->QClass) );
+
+/*
       // The QName has a variable length, maximum 255 bytes and is comprised of multiple labels.
       // Each label contains a byte to describe its length and the label itself. The list of 
       // labels terminates with a zero-valued byte. In "github.com", we have two labels "github" & "com"
@@ -108,25 +104,22 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
       // Copy the QType and QClass 
       memcpy( &_dnsQuestion->QType, (void*) &_buffer[DNS_HEADER_SIZE + _dnsQuestion->QNameLength], sizeof(_dnsQuestion->QType) ) ;
       memcpy( &_dnsQuestion->QClass, (void*) &_buffer[DNS_HEADER_SIZE + _dnsQuestion->QNameLength + sizeof(_dnsQuestion->QType)], sizeof(_dnsQuestion->QClass) ) ;
+*/
     }
     
-
-    if (_dnsHeader->QR == DNS_QR_QUERY &&
-        _dnsHeader->OPCode == DNS_OPCODE_QUERY &&
+    // will reply with IP only to "*" or if doman matches without www. subdomain
+    if (_dnsHeader->OPCode == DNS_OPCODE_QUERY &&
         requestIncludesOnlyOneQuestion() &&
-        (_domainName == "*" || getDomainNameWithoutWwwPrefix() == _domainName)
+        (_domainName == "*" ||
+         getDomainNameWithoutWwwPrefix((const char*)pkt.data() + DNS_HEADER_SIZE, _dnsQuestion->QNameLength) == _domainName)
        )
     {
       replyWithIP(pkt);
-    }
-    else if (_dnsHeader->QR == DNS_QR_QUERY)
-    {
-      replyWithCustomCode(pkt);
+      return;
     }
 
-    free(_buffer);
-    _buffer = NULL;
-
+    // otherwise reply with custom code
+    replyWithCustomCode(pkt);
 }
 
 bool DNSServer::requestIncludesOnlyOneQuestion()
@@ -138,25 +131,22 @@ bool DNSServer::requestIncludesOnlyOneQuestion()
 }
 
 
-String DNSServer::getDomainNameWithoutWwwPrefix()
+String DNSServer::getDomainNameWithoutWwwPrefix(const char* start, size_t len)
 {
-  // Error checking : if the buffer containing the DNS request is a null pointer, return an empty domain
   String parsedDomainName("");
-  if (_buffer == NULL) 
-    return parsedDomainName;
   
-  // Set the start of the domain just after the header (12 bytes). If equal to null character, return an empty domain
-  unsigned char *start = _buffer + DNS_OFFSET_DOMAIN_NAME;
   if (*start == 0)
   {
     return parsedDomainName;
   }
 
+  parsedDomainName.reserve(len);
   int pos = 0;
   while(true)
   {
-    unsigned char labelLength = *(start + pos);
-    for(int i = 0; i < labelLength; i++)
+    uint8_t labelLength = *(start + pos);
+
+    for(uint8_t i = 0; i < labelLength; i++)
     {
       pos++;
       parsedDomainName += (char)*(start + pos);
@@ -186,8 +176,8 @@ void DNSServer::replyWithIP(AsyncUDPPacket& req)
 
   // Write the question
   rpl.write(_dnsQuestion->QName, _dnsQuestion->QNameLength) ;
-  rpl.write( (unsigned char*) &_dnsQuestion->QType, 2 ) ;
-  rpl.write( (unsigned char*) &_dnsQuestion->QClass, 2 ) ;
+  rpl.write( (uint8_t*) &_dnsQuestion->QType, 2 ) ;
+  rpl.write( (uint8_t*) &_dnsQuestion->QClass, 2 ) ;
 
   // Write the answer 
   // Use DNS name compression : instead of repeating the name in this RNAME occurence,
@@ -209,14 +199,14 @@ void DNSServer::replyWithIP(AsyncUDPPacket& req)
 
   #ifdef DEBUG_ESP_DNS
     DEBUG_OUTPUT.printf("DNS responds: %s for %s\n",
-            IPAddress(_resolvedIP).toString().c_str(), getDomainNameWithoutWwwPrefix().c_str() );
+            IPAddress(_resolvedIP).toString().c_str(), getDomainNameWithoutWwwPrefix((const char*)rpl.data() + DNS_HEADER_SIZE, _dnsQuestion->QNameLength).c_str() );
   #endif  
 }
 
 void DNSServer::replyWithCustomCode(AsyncUDPPacket& req)
 {
   _dnsHeader->QR = DNS_QR_RESPONSE;
-  _dnsHeader->RCode = (unsigned char)_errorReplyCode;
+  _dnsHeader->RCode = (uint16_t)_errorReplyCode;
   _dnsHeader->QDCount = 0;
 
   AsyncUDPMessage rpl(sizeof(DNSHeader));

@@ -9,7 +9,7 @@
 #define DNS_OFFSET_DOMAIN_NAME 12 // Offset in bytes to reach the domain name in the DNS message 
 #define DNS_HEADER_SIZE 12 
 
-enum class DNSReplyCode
+enum class DNSReplyCode:uint16_t
 {
   NoError   = 0,
   FormError = 1,
@@ -66,7 +66,7 @@ struct DNSHeader
 
 struct DNSQuestion
 {
-  uint8_t   QName[256] ; //need 1 Byte for zero termination!
+  const uint8_t* QName;
   uint16_t  QNameLength ; 
   uint16_t  QType ; 
   uint16_t  QClass ; 
@@ -91,18 +91,25 @@ class DNSServer
   private:
     AsyncUDP _udp;
     uint16_t _port;
-    String _domainName;
-    unsigned char _resolvedIP[4];
-    int _currentPacketSize;
-    unsigned char* _buffer;
-    DNSHeader* _dnsHeader;
     uint32_t _ttl;
     DNSReplyCode _errorReplyCode;
+    String _domainName;
+    unsigned char _resolvedIP[4];
+    DNSHeader* _dnsHeader;
     DNSQuestion*    _dnsQuestion ; 
 
 
     void downcaseAndRemoveWwwPrefix(String &domainName);
-    String getDomainNameWithoutWwwPrefix();
+
+    /**
+     * @brief Get the Domain Name Without Www Prefix object
+     * scan labels in DNS packet and build a string of a domain name
+     * truncate any www. label if found 
+     * @param start a pointer to the start of labels records in DNS packet
+     * @param len labels length
+     * @return String 
+     */
+    String getDomainNameWithoutWwwPrefix(const char* start, size_t len);
     bool requestIncludesOnlyOneQuestion();
     void replyWithIP(AsyncUDPPacket& req);
     void replyWithCustomCode(AsyncUDPPacket& req);
