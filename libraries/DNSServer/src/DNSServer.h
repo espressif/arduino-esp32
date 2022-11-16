@@ -59,9 +59,9 @@ struct DNSHeader
     uint16_t Flags;
   };
   uint16_t QDCount;          // number of question entries
-  uint16_t ANCount;          // number of answer entries
+  uint16_t ANCount;          // number of ANswer entries
   uint16_t NSCount;          // number of authority entries
-  uint16_t ARCount;          // number of resource entries
+  uint16_t ARCount;          // number of Additional Resource entries
 };
 
 struct DNSQuestion
@@ -95,8 +95,6 @@ class DNSServer
     DNSReplyCode _errorReplyCode;
     String _domainName;
     unsigned char _resolvedIP[4];
-    DNSHeader* _dnsHeader;
-    DNSQuestion*    _dnsQuestion ; 
 
 
     void downcaseAndRemoveWwwPrefix(String &domainName);
@@ -110,9 +108,9 @@ class DNSServer
      * @return String 
      */
     String getDomainNameWithoutWwwPrefix(const char* start, size_t len);
-    bool requestIncludesOnlyOneQuestion();
-    void replyWithIP(AsyncUDPPacket& req);
-    void replyWithCustomCode(AsyncUDPPacket& req);
+    inline bool requestIncludesOnlyOneQuestion(DNSHeader& dnsHeader);
+    void replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuestion& dnsQuestion);
+    inline void replyWithCustomCode(AsyncUDPPacket& req, DNSHeader& dnsHeader);
     void _handleUDP(AsyncUDPPacket& pkt);
 };
 #endif
