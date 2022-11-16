@@ -112,6 +112,8 @@ def get_patched_bootloader_image(original_bootloader_image, bootloader_offset):
                     "$TARGET",
                     "--flash_mode",
                     "${__get_board_flash_mode(__env__)}",
+                    "--flash_freq",
+                    "${__get_board_f_flash(__env__)}",
                     "--flash_size",
                     board_config.get("upload.flash_size", "4MB"),
                     "--target-offset",

@@ -5,11 +5,6 @@
 //a specific phrase or word.
 
 
-
-#define ESP_MN_PREFIX "mn"
-#define ESP_MN_ENGLISH "en"
-#define ESP_MN_CHINESE "cn"
-
 /**
  * @brief Get the multinet handle from model name
  *
@@ -29,9 +24,8 @@ char *esp_mn_language_from_name(char *model_name);
 /*
  Configure wake word to use based on what's selected in menuconfig.
 */
-#if defined CONFIG_USE_MULTINET
 
-#if CONFIG_SR_MN_CN_MULTINET2_SINGLE_RECOGNITION
+#ifdef CONFIG_SR_MN_CN_MULTINET2_SINGLE_RECOGNITION
 #include "multinet2_ch.h"
 #define MULTINET_COEFF get_coeff_multinet2_ch
 #define MULTINET_MODEL_NAME "mn2_cn"
@@ -41,10 +35,6 @@ char *esp_mn_language_from_name(char *model_name);
 #define MULTINET_MODEL_NAME "NULL"
 #endif
 
-#else
-#define MULTINET_COEFF      "COEFF_NULL"
-#define MULTINET_MODEL_NAME "NULL"
-#endif
 
 /* example
 
