@@ -308,15 +308,16 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
   (uint8_t)(((_cablenum) - 1) * 4 + 4)
 
 #define TUD_MIDI_DESC_JACK_LEN (6 + 6 + 9 + 9)
-#define TUD_MIDI_DESC_JACK(_cablenum) \
+#define TUD_MIDI_DESC_JACK_DESC(_cablenum, _stridx) \
   /* MS In Jack (Embedded) */\
-  6, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_IN_JACK, MIDI_JACK_EMBEDDED, TUD_MIDI_JACKID_IN_EMB(_cablenum), 0,\
+  6, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_IN_JACK, MIDI_JACK_EMBEDDED, TUD_MIDI_JACKID_IN_EMB(_cablenum), _stridx,\
   /* MS In Jack (External) */\
-  6, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_IN_JACK, MIDI_JACK_EXTERNAL, TUD_MIDI_JACKID_IN_EXT(_cablenum), 0,\
+  6, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_IN_JACK, MIDI_JACK_EXTERNAL, TUD_MIDI_JACKID_IN_EXT(_cablenum), _stridx,\
   /* MS Out Jack (Embedded), connected to In Jack External */\
-  9, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_OUT_JACK, MIDI_JACK_EMBEDDED, TUD_MIDI_JACKID_OUT_EMB(_cablenum), 1, TUD_MIDI_JACKID_IN_EXT(_cablenum), 1, 0,\
+  9, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_OUT_JACK, MIDI_JACK_EMBEDDED, TUD_MIDI_JACKID_OUT_EMB(_cablenum), 1, TUD_MIDI_JACKID_IN_EXT(_cablenum), 1, _stridx,\
   /* MS Out Jack (External), connected to In Jack Embedded */\
-  9, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_OUT_JACK, MIDI_JACK_EXTERNAL, TUD_MIDI_JACKID_OUT_EXT(_cablenum), 1, TUD_MIDI_JACKID_IN_EMB(_cablenum), 1, 0
+  9, TUSB_DESC_CS_INTERFACE, MIDI_CS_INTERFACE_OUT_JACK, MIDI_JACK_EXTERNAL, TUD_MIDI_JACKID_OUT_EXT(_cablenum), 1, TUD_MIDI_JACKID_IN_EMB(_cablenum), 1, _stridx
+#define TUD_MIDI_DESC_JACK(_cablenum) TUD_MIDI_DESC_JACK_DESC(_cablenum, 0)
 
 #define TUD_MIDI_DESC_EP_LEN(_numcables) (9 + 4 + (_numcables))
 #define TUD_MIDI_DESC_EP(_epout, _epsize, _numcables) \
@@ -333,7 +334,7 @@ TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb
 // - 1 Embedded Jack out connected to 1 External Jack In
 #define TUD_MIDI_DESCRIPTOR(_itfnum, _stridx, _epout, _epin, _epsize) \
   TUD_MIDI_DESC_HEAD(_itfnum, _stridx, 1),\
-  TUD_MIDI_DESC_JACK(1),\
+  TUD_MIDI_DESC_JACK_DESC(1, 0),\
   TUD_MIDI_DESC_EP(_epout, _epsize, 1),\
   TUD_MIDI_JACKID_IN_EMB(1),\
   TUD_MIDI_DESC_EP(_epin, _epsize, 1),\
