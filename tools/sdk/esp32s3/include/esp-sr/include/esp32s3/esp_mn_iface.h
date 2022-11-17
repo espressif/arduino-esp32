@@ -131,6 +131,14 @@ typedef esp_mn_results_t* (*esp_mn_iface_op_get_results_t)(model_iface_data_t *m
 typedef void (*esp_mn_iface_op_open_log_t)(model_iface_data_t *model_data);
 
 /**
+ * @brief Clean all status of model
+ *
+ * @param model_data       The model object to query.
+ *
+ */
+typedef void (*esp_mn_iface_op_clean_t)(model_iface_data_t *model_data);
+
+/**
  * @brief Set the speech commands by mn_command_root
  *
  * @param model_data       The model object to query.
@@ -150,5 +158,6 @@ typedef struct {
     esp_mn_iface_op_destroy_t destroy;
     esp_mn_iface_op_get_results_t get_results;
     esp_mn_iface_op_open_log_t open_log;
+    esp_mn_iface_op_clean_t clean;
     esp_wn_iface_op_set_speech_commands set_speech_commands;
 } esp_mn_iface_t;
