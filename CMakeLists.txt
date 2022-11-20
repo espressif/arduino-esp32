@@ -177,7 +177,6 @@ set(includedirs
   libraries/DNSServer/src
   libraries/EEPROM/src
   libraries/ESP32/src
-  libraries/ESP32/examples/Serial/OnReceiveError_BREAK_Demo
   libraries/ESPmDNS/src
   libraries/Ethernet/src
   libraries/FFat/src
