@@ -1,5 +1,4 @@
-#ifndef DNSServer_h
-#define DNSServer_h
+#pragma once
 #include <AsyncUDP.h>
 
 #define DNS_QR_QUERY 0
@@ -113,4 +112,3 @@ class DNSServer
     inline void replyWithCustomCode(AsyncUDPPacket& req, DNSHeader& dnsHeader);
     void _handleUDP(AsyncUDPPacket& pkt);
 };
-#endif

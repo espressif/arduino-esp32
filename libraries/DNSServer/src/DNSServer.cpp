@@ -67,15 +67,15 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
       // Each label contains a byte to describe its length and the label itself. The list of 
       // labels terminates with a zero-valued byte. In "github.com", we have two labels "github" & "com"
 */
-      char * enoflbls = strchr((const char*)pkt.data() + DNS_HEADER_SIZE, 0);   // find end_of_label marker
-      ++enoflbls;                                                               // include null terminator
-      dnsQuestion.QName = pkt.data() + DNS_HEADER_SIZE;                       // we can reference labels from the request
+      const char * enoflbls = strchr((const char*)pkt.data() + DNS_HEADER_SIZE, 0);   // find end_of_label marker
+      ++enoflbls;                                                               // advance after null terminator
+      dnsQuestion.QName = pkt.data() + DNS_HEADER_SIZE;                         // we can reference labels from the request
       dnsQuestion.QNameLength = enoflbls - (char*)pkt.data() - DNS_HEADER_SIZE;
       /*
         check if we aint going out of pkt bounds
         proper dns req should have label terminator at least 4 bytes before end of packet
       */
-      if (dnsQuestion.QNameLength > currentPacketSize - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass)) return;              // malformed packet
+      if (dnsQuestion.QNameLength < 3 || dnsQuestion.QNameLength > currentPacketSize - DNS_HEADER_SIZE - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass)) return;              // malformed packet
       
       // Copy the QType and QClass
       memcpy( &dnsQuestion.QType,  enoflbls, sizeof(dnsQuestion.QType) );
@@ -108,35 +108,18 @@ bool DNSServer::requestIncludesOnlyOneQuestion(DNSHeader& dnsHeader)
 
 String DNSServer::getDomainNameWithoutWwwPrefix(const char* start, size_t len)
 {
-  String parsedDomainName("");
-  
-  if (*start == 0)
-  {
-    return parsedDomainName;
-  }
+  String parsedDomainName(start, --len);    // exclude trailing null byte from labels length, String constructor will add it anyway
 
-  parsedDomainName.reserve(len);
   int pos = 0;
-  while(true)
+  while(pos<len)
   {
-    uint8_t labelLength = *(start + pos);
-
-    for(uint8_t i = 0; i < labelLength; i++)
-    {
-      pos++;
-      parsedDomainName += (char)*(start + pos);
-    }
-    pos++;
-    if (*(start + pos) == 0)
-    {
-      downcaseAndRemoveWwwPrefix(parsedDomainName);
-      return parsedDomainName;
-    }
-    else
-    {
-      parsedDomainName += ".";
-    }
+    parsedDomainName.setCharAt(pos, 0x2e);  // replace len byte with dot char "."
+    pos += *(start + pos);
+    ++pos;
   }
+  parsedDomainName.remove(0,1);             // remove first "." char
+  downcaseAndRemoveWwwPrefix(parsedDomainName);
+  return parsedDomainName;
 }
 
 void DNSServer::replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuestion& dnsQuestion)
