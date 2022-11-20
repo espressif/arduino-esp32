@@ -146,10 +146,10 @@ void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
   Serial1.onReceiveError(onReceiveErrorFunction); // sets a RX callback function for Serial 1
 
   if (break_at_the_end) {
-    size_t sentBytes = uart_send_msg_with_break(TEST_UART, dataSent, sent_bytes);
+    sent_bytes = uart_send_msg_with_break(TEST_UART, dataSent, DATA_SIZE);
   } else {
     uart_send_break(TEST_UART);
-    size_t sentBytes = Serial1.write(dataSent, sent_bytes);
+    sent_bytes = Serial1.write(dataSent, DATA_SIZE);
   }
 
   Serial.printf("\nSent String: %s\n", dataSent);
