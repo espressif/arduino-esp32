@@ -120,7 +120,7 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
   Serial1.setRxFIFOFull(fifoFull); // testing diferent result based on FIFO Full setup
   Serial1.onReceive(onReceiveFunction, onlyOnTimeOut); // sets a RX callback function for Serial 1
 
-  size_t sentBytes = Serial1.write(dataSent, sent_bytes); // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine
+  sent_bytes = Serial1.write(dataSent, DATA_SIZE); // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine
   Serial.printf("\nSent String: %s\n", dataSent);
   while (received_bytes < sent_bytes) {
     // just wait for receiving all byte in the callback...
