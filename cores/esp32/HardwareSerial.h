@@ -176,6 +176,7 @@ protected:
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t _lock;
 #endif
+    int8_t _rxPin, _txPin, _ctsPin, _rtsPin;
 
     void _createEventTask(void *args);
     void _destroyEventTask(void);
