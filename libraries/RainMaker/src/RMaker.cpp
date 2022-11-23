@@ -3,6 +3,7 @@
 #include "RMaker.h"
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
+#include <esp_rmaker_scenes.h>
 bool wifiLowLevelInit(bool persistent);
 static esp_err_t err;
 
@@ -28,12 +29,12 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
                 log_i("Unhandled RainMaker Event:");
         }
     } else if (event_base == RMAKER_OTA_EVENT) {
-        if(event_data == NULL){
+        if (event_data == NULL) {
             event_data = (void*)"";
         }
         switch(event_id) {
             case RMAKER_OTA_EVENT_STARTING:
-                log_i("Starting OTA : %s", (char*)event_data);
+                log_i("Starting OTA");
                 break;
             case RMAKER_OTA_EVENT_IN_PROGRESS:
                 log_i("OTA in progress : %s", (char*)event_data);
@@ -146,5 +147,13 @@ esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert)
     return err;
 }
 
+esp_err_t RMakerClass::enableScenes()
+{
+    err = esp_rmaker_scenes_enable();
+    if (err != ESP_OK) {
+        log_e("Scenes enable failed");
+    }
+    return err;
+}
 RMakerClass RMaker;
 #endif
