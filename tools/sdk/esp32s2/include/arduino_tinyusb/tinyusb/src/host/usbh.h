@@ -71,7 +71,7 @@ struct tuh_xfer_s
 // ConfigID for tuh_config()
 enum
 {
-  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 // cfg_param: pio_usb_configuration_t
+  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 << 8 // cfg_param: pio_usb_configuration_t
 };
 
 //--------------------------------------------------------------------+
