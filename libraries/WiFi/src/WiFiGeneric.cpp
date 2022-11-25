@@ -1068,6 +1068,7 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
 
 bool WiFiGenericClass::_isReconnectableReason(uint8_t reason) {
     switch(reason) {
+        case WIFI_REASON_UNSPECIFIED:
         //Timeouts (retry)
         case WIFI_REASON_AUTH_EXPIRE:
         case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
