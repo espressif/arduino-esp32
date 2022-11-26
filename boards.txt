@@ -13121,7 +13121,7 @@ oroca_edubot.menu.EraseFlash.all.upload.erase_cmd=-e
 
 fm-devkit.name=ESP32 FM DevKit
 
-fm-devkit.upload.tool=esptool
+fm-devkit.upload.tool=esptool_py
 fm-devkit.upload.maximum_size=1310720
 fm-devkit.upload.maximum_data_size=327680
 fm-devkit.upload.flags=
