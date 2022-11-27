@@ -326,6 +326,34 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return available;
 }
 
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms)
+{
+    if(uart == NULL || size == 0 || buffer == NULL) {
+        return 0;
+    }
+
+    size_t bytes_read = 0;
+
+    UART_MUTEX_LOCK();
+
+    if (uart->has_peek) {
+        uart->has_peek = false;
+        *buffer++ = uart->peek_byte;
+        size--;
+        bytes_read = 1;
+    }
+
+    if (size > 0) {
+       int len = uart_read_bytes(uart->num, buffer, size, pdMS_TO_TICKS(timeout_ms));
+       if (len < 0) len = 0;  // error reading UART
+       bytes_read += len;
+    }
+
+        
+    UART_MUTEX_UNLOCK();
+    return bytes_read;
+}
+
 
 uint8_t uartRead(uart_t* uart)
 {
