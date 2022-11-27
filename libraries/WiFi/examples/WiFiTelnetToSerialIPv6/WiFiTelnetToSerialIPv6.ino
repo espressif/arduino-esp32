@@ -85,7 +85,7 @@ void loop() {
           if (!serverClients[i]) Serial.println("available broken");
           Serial.print("New client: ");
           Serial.print(i); Serial.print(' ');
-          Serial.println(serverClients[i].remoteIP6());
+          Serial.println(serverClients[i].remoteIP());
           break;
         }
       }
