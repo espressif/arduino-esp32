@@ -281,7 +281,7 @@ Reads a single sample from ring buffer and keeps it available for future read (i
 This function is **blocking** - if there is not enough space in ring buffer the function will wait until it can write the sample.
 
 **Parameter:**
-* **uint8_t data**  The sample to be sent
+* **uint8_t sample**  The sample to be sent
 
 **Returns:** 1 on successful write; 0 on error = did not write the sample to ring buffer
 
@@ -296,7 +296,7 @@ Please consider sending data in arrays using function `size_t write(const uint8_
 This function is **blocking** - if there is not enough space in ring buffer the function will wait until it can write the sample.
 
 **Parameter:**
-**int32_t data**  The sample to be sent
+**int32_t sample**  The sample to be sent
 
 **Returns:** Number of written bytes, if successful the value will be equal to `bitsPerSample/8`
 

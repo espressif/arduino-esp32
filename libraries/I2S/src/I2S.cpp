@@ -31,8 +31,8 @@
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
   _sdPin(sdPin),             // shared data pin
-  _inSdPin(PIN_I2S_SD_IN),   // input data pin
-  _outSdPin(PIN_I2S_SD),     // output data pin
+  _inSdPin(deviceIndex == 0 ? PIN_I2S_SD_IN : PIN_I2S1_SD_IN),   // input data pin
+  _outSdPin(deviceIndex == 0 ? PIN_I2S_SD : PIN_I2S1_SD),     // output data pin
   _sckPin(sckPin),           // clock pin
   _fsPin(fsPin),             // frame (word) select pin
 
@@ -40,8 +40,6 @@ I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, u
   _bitsPerSample(0),
   _sampleRate(0),
   _mode(I2S_PHILIPS_MODE),
-
-  _buffer_byte_size(0),
 
   _driverInstalled(false),
   _initialized(false),
@@ -76,8 +74,8 @@ int I2SClass::_createCallbackTask(){
     onDmaTransferComplete,   // Function to implement the task
     "onDmaTransferComplete", // Name of the task
     stack_size,              // Stack size in words
-    (void *)&_deviceIndex,    // Task input parameter
-    2,                       // Priority of the task
+    (void *)&_deviceIndex,   // Task input parameter
+    4,                       // Priority of the task
     &_callbackTaskHandle     // Task handle.
     );
   if(_callbackTaskHandle == NULL){
@@ -164,7 +162,7 @@ int I2SClass::_installDriver(){
 
   if(_driveClock == false){
     i2s_config.use_apll = true;
-    i2s_config.fixed_mclk = 512*_sampleRate;
+    i2s_config.fixed_mclk = 8*_sampleRate;
   }
 
   // Install and start i2s driver
@@ -324,11 +322,10 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
     return 0; // ERR
   }
 
-  _buffer_byte_size = _i2s_dma_buffer_frame_size * (_bitsPerSample / 8) * _I2S_DMA_BUFFER_COUNT * CHANNEL_NUMBER; // The magic "*k2" stands for number of channels which are statically set to stereo
-  _input_ring_buffer  = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
-  _output_ring_buffer = xRingbufferCreate(_buffer_byte_size, RINGBUF_TYPE_BYTEBUF);
+  _input_ring_buffer  = xRingbufferCreate(getRingBufferByteSize(), RINGBUF_TYPE_BYTEBUF);
+  _output_ring_buffer = xRingbufferCreate(getRingBufferByteSize(), RINGBUF_TYPE_BYTEBUF);
   if(_input_ring_buffer == NULL || _output_ring_buffer == NULL){
-    log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d", _deviceIndex, _buffer_byte_size);
+    log_e("(I2S#%d) ERROR: could not create one or both internal buffers. Requested size = %d", _deviceIndex, getRingBufferByteSize());
     if(!_give_mux()){ return 0; /* ERR */ }
     return 0; // ERR
   }
@@ -593,7 +590,7 @@ int I2SClass::available(){
   if(!_take_mux()){ return 0; /* ERR */ }
   int ret = 0;
   if(_input_ring_buffer != NULL){
-    ret = _buffer_byte_size - (int)xRingbufferGetCurFreeSize(_input_ring_buffer);
+    ret = getRingBufferByteSize() - (int)xRingbufferGetCurFreeSize(_input_ring_buffer);
   }
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
@@ -766,14 +763,14 @@ size_t I2SClass::write_nonblocking(const void *buffer, size_t size){
         if(!_give_mux()){ return 0; /* ERR */ }
         return size;
       }else{
-        log_w("(I2S#%d) I2S could not write all data into ring buffer!", _deviceIndex);
+        log_w("(I2S#%d) I2S could not write all data (%d B) into ring buffer!", _deviceIndex, size);
         if(!_give_mux()){ return 0; /* ERR */ }
         return 0;
       }
     }
   } // if(_initialized)
-  return 0;
   if(!_give_mux()){ return 0; /* ERR */ } // this should not be needed
+  return 0;
 }
 
 /*
@@ -944,7 +941,6 @@ int I2SClass::_enableReceiver(){
 
 void I2SClass::_tx_done_routine(uint8_t* prev_item){
   static bool prev_item_valid = false;
-  const size_t single_dma_buf_byte_size = _i2s_dma_buffer_frame_size*(_bitsPerSample/8)* CHANNEL_NUMBER;
   static size_t item_size = 0;
   static size_t prev_item_size = 0;
   static void *item = NULL;
@@ -960,22 +956,20 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
     prev_item_size -= bytes_written;
   } // prev_item_valid
 
-  if(_output_ring_buffer != NULL && (_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= single_dma_buf_byte_size)){ // fill up the I2S DMA buffer
+  if(_output_ring_buffer != NULL && (getRingBufferByteSize() - xRingbufferGetCurFreeSize(_output_ring_buffer) >= getDMABufferByteSize())){ // fill up the I2S DMA buffer
     bytes_written = 0;
     item_size = 0;
-    if(_buffer_byte_size - xRingbufferGetCurFreeSize(_output_ring_buffer) >= _i2s_dma_buffer_frame_size*(_bitsPerSample/8)){ // don't read from almost empty buffer
-      item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), single_dma_buf_byte_size);
-      if (item != NULL){
-        _fix_and_write(item, item_size, &bytes_written);
-        if(item_size != bytes_written){ // save item that was not written correctly for later
-          memcpy(prev_item, (void*)&((uint8_t*)item)[bytes_written], item_size-bytes_written);
-          prev_item_size = item_size - bytes_written;
-          prev_item_offset = 0;
-          prev_item_valid = true;
-        } // save item that was not written correctly for later
-        vRingbufferReturnItem(_output_ring_buffer, item);
-      } // Check received item
-    } // don't read from almost empty buffer
+    item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), getDMABufferByteSize());
+    if (item != NULL){
+      _fix_and_write(item, item_size, &bytes_written);
+      if(item_size != bytes_written){ // save item that was not written correctly for later
+        memcpy(prev_item, (void*)&((uint8_t*)item)[bytes_written], item_size-bytes_written);
+        prev_item_size = item_size - bytes_written;
+        prev_item_offset = 0;
+        prev_item_valid = true;
+      } // save item that was not written correctly for later
+      vRingbufferReturnItem(_output_ring_buffer, item);
+    } // Check received item
   } // fill up the I2S DMA buffer
   if(_onTransmit){
     _onTransmit();
@@ -984,15 +978,24 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
 
 void I2SClass::_rx_done_routine(){
   size_t bytes_read = 0;
-  const size_t single_dma_buf_byte_size = _i2s_dma_buffer_frame_size*(_bitsPerSample/8)*CHANNEL_NUMBER;
+  size_t request_read = 0;
 
   if(_input_ring_buffer != NULL){
-    uint8_t *_inputBuffer = (uint8_t*)malloc(single_dma_buf_byte_size);
+    uint8_t *_inputBuffer = (uint8_t*)malloc(getDMABufferByteSize());
     size_t avail = xRingbufferGetCurFreeSize(_input_ring_buffer);
     if(avail > 0){
-      esp_err_t ret = esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, avail <= single_dma_buf_byte_size ? avail : single_dma_buf_byte_size, (size_t*) &bytes_read, 0);
+      if(_bitsPerSample == 8){ // 8-bps is received with padding as 16bits - read twice than actually needed
+        request_read = avail*2 <= getDMABufferByteSize() ? avail*2 : getDMABufferByteSize();
+      }else{
+        request_read = avail <= getDMABufferByteSize() ? avail : getDMABufferByteSize();
+      }
+
+      esp_err_t ret = esp_i2s::i2s_read((esp_i2s::i2s_port_t) _deviceIndex, _inputBuffer, request_read, &bytes_read, 0);
       if(ret != ESP_OK){
         log_w("(I2S#%d) i2s_read returned with error %d", _deviceIndex, ret);
+      }
+      if(request_read != bytes_read){
+        log_w("(I2S#%d) i2s_read read only %d bytes instead of %d requested", _deviceIndex, bytes_read, request_read);
       }
       _post_read_data_fix(_inputBuffer, &bytes_read);
     }
@@ -1003,7 +1006,7 @@ void I2SClass::_rx_done_routine(){
       } // xRingbufferSendComplete
     } // if(bytes_read > 0)
     free(_inputBuffer);
-    if (_onReceive && avail < _buffer_byte_size){ // when user callback is registered && and there is some data in ring buffer to read
+    if (_onReceive && avail < getRingBufferByteSize()){ // when user callback is registered && and there is some data in ring buffer to read
       _onReceive();
     } // user callback
   }
@@ -1038,7 +1041,7 @@ void I2SClass::onDmaTransferComplete(void *deviceIndex){
     I2S_1._onTransferComplete();
   }
 #endif
-  log_w("(I2S#%d) Deleting callback task from inside!", index);
+  log_w("(I2S#%d) Deleting callback task from inside!", *index);
   vTaskDelete(NULL);
 }
 
@@ -1058,10 +1061,14 @@ inline bool I2SClass::_give_mux(){
   return true;
 }
 
-
 // Fixes data in-situ received from esp i2s driver. After fixing they reflect what was on the bus.
 // input - bytes as received from i2s_read - this serves as input and output buffer
 // size - number of bytes (this may be changed during operation)
+// In 8 bit mode data are received as 16 bit number with LSB padded with 0s and actual data on MSB,
+//   this function removes the padding (shrinking the size to 1/2)
+// In 16 bit mode data are received with wrong endianity, this function swaps the bytes
+// In 24 bit mode - not tested if needs fixing.
+// In 32 bit mode data are ok - no action is performed.
 void I2SClass::_post_read_data_fix(void *input, size_t *size){
   ulong dst_ptr = 0;
   switch(_bitsPerSample){
@@ -1173,7 +1180,6 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
     *actual_bytes_written = _bytes_written;
   }
 }
-
 
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
 int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){

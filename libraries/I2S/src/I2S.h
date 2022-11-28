@@ -285,23 +285,23 @@ public:
    * Write single sample of 8 bit size.
    * This function is blocking - if there is not enough space in ring buffer the function will wait until it can write the sample.
    * Parameter:
-   *   uint8_t data  The sample to be sent
+   *   uint8_t sample  The sample to be sent
    * Returns: 1 on successful write; 0 on error = did not write the sample to ring buffer
    * Note: This functions is used in many examples for it's simplicity, but it's use is discouraged for performance reasons.
    * Please consider sending data in arrays using function `size_t write(const uint8_t *buffer, size_t size)`
    */
-  virtual size_t write(uint8_t data);
+  virtual size_t write(uint8_t sample);
 
   /*
    * Write single sample of up to 32 bit size.
    * This function is blocking - if there is not enough space in ring buffer the function will wait until it can write the sample.
    * Parameter:
-   *   int32_t data  The sample to be sent
+   *   int32_t sample  The sample to be sent
    * Returns: Number of written bytes, if successful the value will be equal to bitsPerSample/8
    * Note: This functions is used in many examples for it's simplicity, but it's use is discouraged for performance reasons.
    * Please consider sending data in arrays using function `size_t write(const uint8_t *buffer, size_t size)`
    */
-  size_t write(int32_t);
+  size_t write(int32_t sample);
 
   /*
    * Write array of samples.
@@ -460,8 +460,6 @@ private:
   int _bitsPerSample;
   uint32_t _sampleRate;
   int _mode;
-
-  uint16_t _buffer_byte_size;
 
   bool _driverInstalled; // Is IDF I2S driver installed?
   bool _initialized; // Is everything initialized (callback task, I2S driver, ring buffers)?
