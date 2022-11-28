@@ -496,21 +496,18 @@ int uartGetDebug()
     return s_uart_debug_nr;
 }
 
-int log_printf(const char *format, ...)
+int log_printfv(const char *format, va_list arg)
 {
     static char loc_buf[64];
     char * temp = loc_buf;
     int len;
-    va_list arg;
     va_list copy;
-    va_start(arg, format);
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
     if(len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
-            va_end(arg);
             return 0;
         }
     }
@@ -528,10 +525,19 @@ int log_printf(const char *format, ...)
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     }
 #endif
-    va_end(arg);
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
+    return len;
+}
+
+int log_printf(const char *format, ...)
+{
+    int len;
+    va_list arg;
+    va_start(arg, format);
+    len = log_printfv(format, arg);
+    va_end(arg);
     return len;
 }
 
