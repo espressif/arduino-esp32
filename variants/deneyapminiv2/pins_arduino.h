@@ -2,22 +2,22 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        48
 #define NUM_ANALOG_INPUTS       20
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+33;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
+#define RGB_BUILTIN LED_BUILTIN
+#define RGBLED	LED_BUILTIN
+#define RGB_BRIGHTNESS 64
+
+#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
-
-#define	LEDR 34
-#define	LEDG 33
-#define	LEDB 35
-
-#define BUILTIN_LED LEDB
-#define LED_BUILTIN LEDB // backward compatibility
-//#define RGB_BUILTIN LED_BUILTIN
 
 static const uint8_t GPKEY  = 0;
 #define KEY_BUILTIN GPKEY
