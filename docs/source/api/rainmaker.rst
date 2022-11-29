@@ -22,9 +22,6 @@ The key features of ESP RainMaker are:
 
 Additional information about ESP RainMaker can be found `here <https://rainmaker.espressif.com/>`__.
 
-#########################
-Arduino ESP Rainmaker API
-#########################
 
 ESP RainMaker Agent API
 -----------------------
@@ -121,6 +118,21 @@ This API enables the scheduling service for the node. For more information, chec
 .. code-block:: arduino
 
     esp_err_t enableSchedule();
+
+This function will return
+
+1. `ESP_OK` : On success
+2. Error in case of failure
+
+RMaker.enableScenes
+*******************
+
+This API enables the Scenes service for the node. It should be called after `RMaker.initNode()` and before `RMaker.start()`.
+For more information, check `here <https://rainmaker.espressif.com/docs/scenes.html>`__.
+
+.. code-block:: arduino
+
+    esp_err_t enableScenes()
 
 This function will return
 
