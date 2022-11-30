@@ -28,9 +28,17 @@ namespace esp_i2s {
 
 // Default pins
 //I2S0 is available for all ESP32 SoCs
-//SCK WS  SD(OUT) SDIN
-// 18 19  21      22    ESP32
-// 18 19   4       5    ESP32-x (C3,S2,S3)
+//MCLK SCK WS  SD(OUT) SDIN
+//  32  18 19  21      22    ESP32
+//   1  18 19   4       5    ESP32-x (C3,S2,S3)
+#ifndef PIN_I2S_MCLK
+  #if CONFIG_IDF_TARGET_ESP32
+    #define PIN_I2S_MCLK GPIO_NUM_32
+  #else
+    #define PIN_I2S_MCLK GPIO_NUM_1
+  #endif
+#endif
+
 #ifndef PIN_I2S_SCK
   #define PIN_I2S_SCK GPIO_NUM_18
 #endif
@@ -67,8 +75,12 @@ namespace esp_i2s {
   // I2S1 is available only for ESP32 and ESP32-S3
   #if CONFIG_IDF_TARGET_ESP32
     // ESP32 pins
-    //SCK WS  SD(OUT) SDIN
-    // 23 25  26       27
+    // MCLK SCK WS  SD(OUT) SDIN
+    //   33  23 25  26       27
+    #ifndef PIN_I2S1_MCLK
+      #define PIN_I2S1_MCLK GPIO_NUM_33
+    #endif
+
     #ifndef PIN_I2S1_SCK
       #define PIN_I2S1_SCK GPIO_NUM_23
     #endif
@@ -92,8 +104,12 @@ namespace esp_i2s {
 
   #if CONFIG_IDF_TARGET_ESP32S3
     // ESP32-S3 pins
-    //SCK WS  SD(OUT) SDIN
-    // 36 37   39       40
+    // MCLK SCK WS  SD(OUT) SDIN
+    //   35 36 37   39       40
+    #ifndef PIN_I2S1_MCLK
+      #define PIN_I2S1_MCLK GPIO_NUM_35
+    #endif
+
     #ifndef PIN_I2S1_SCK
       #define PIN_I2S1_SCK GPIO_NUM_36
     #endif
@@ -190,6 +206,7 @@ public:
    * Parameter: int pin  number of GPIO which should be used for the requested pin setup
    * Returns: 1 on success; 0 on error
    */
+  int setMclkPin(int sckPin); // Set Master Clock pin
   int setSckPin(int sckPin); // Set Clock pin
   int setFsPin(int fsPin); // Set Frame Sync (Word Select) pin
   int setDataPin(int sdPin); // Set shared Data pin for simplex mode
@@ -209,6 +226,7 @@ public:
    * Can be called only on initialized object (after begin).
    * The change takes effect immediately and does not need driver restart.
    * Parameters:
+   *   int mclkPin  Master Clock pin
    *   int sckPin  Clock pin
    *   int fsPin  Frame Sync (Word Select) pin
    *   int sdPin  Shared Data pin for simplex mode
@@ -216,12 +234,13 @@ public:
    *   int inSdPin  Data Input pin for duplex mode
    * Returns: 1 on success; 0 on error
    */
-  int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin);
+  int setAllPins(int mclkPin, int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin);
 
   /*
    * Get current pin GPIO number
    * Returns: the GPIO number of requested pin
    */
+  int getMclkPin(); // Get Master Clock pin
   int getSckPin(); // Get Clock pin
   int getFsPin(); // Get Frame Sync (Word Select) pin
   int getDataPin(); // Get shared Data pin for simplex mode
@@ -434,6 +453,7 @@ private:
   static void onDmaTransferComplete(void *device_index);
   int _installDriver();
   void _uninstallDriver();
+  void _setMclkPin(int sckPin);
   void _setSckPin(int sckPin);
   void _setFsPin(int fsPin);
   void _setDataPin(int sdPin);
@@ -450,11 +470,12 @@ private:
   } i2s_state_t;
 
   int _deviceIndex;
+  int _mclkPin;
+  int _sckPin;
+  int _fsPin;
   int _sdPin;
   int _inSdPin;
   int _outSdPin;
-  int _sckPin;
-  int _fsPin;
 
   i2s_state_t _state;
   int _bitsPerSample;

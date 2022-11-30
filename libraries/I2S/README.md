@@ -40,18 +40,25 @@ I2S module functionality on each SoC differs, please refer to the following tabl
 ESP I2S has fully configurable pins. There is a group of setter and getter functions for each pin separately and one setter for all pins at once (detailed description below). Calling the setter will take effect immediately and does not need driver restart.
 Default pins are setup as follows:
 ### Common I2S object:
-| SCK | WS | SD(OUT) | SDIN | SoC                          |
-| --- | -- | ------- | ---- |:---------------------------- |
-|  19 | 21 |   22    |  23  | ESP32                        |
-|  19 | 21 |    4    |   5  | ESP32-C3, ESP32-S2, ESP32-S3 |
+| MCLK | SCK | WS | SD(OUT) | SDIN | SoC                          |
+| ---- | --- | -- | ------- | ---- |:---------------------------- |
+|   32 |  19 | 21 |   22    |  23  | ESP32                        |
+|    1 |  19 | 21 |    4    |   5  | ESP32-C3, ESP32-S2, ESP32-S3 |
 
 
 ### I2S_1 object:
-| SCK | WS | SD(OUT) | SDIN | SoC      |
-| --- | -- | ------- | ---- |:-------- |
-|  18 | 22 |    25   |   26 | ESP32    |
-|  36 | 37 |    39   |   40 | ESP32-S3 |
+| MCLK | SCK | WS | SD(OUT) | SDIN | SoC      |
+| ---- | --- | -- | ------- | ---- |:-------- |
+|   33 |  18 | 22 |    25   |   26 | ESP32    |
+|   35 |  36 | 37 |    39   |   40 | ESP32-S3 |
 
+## Master / Slave[ ](https://en.wiktionary.org/wiki/slave#Etymology) modes
+There are two versions of initializer function `begin` - one initializes in master mode and the other one in slave mode (see functions below for details).
+The usual use-case is operation in master mode which means that the MCU generates the clock signals which are transmitted to slave devices - usually microphones, speakers or I2S decoders.
+
+In master mode it is required to connect the device with clock (SCK), word-select (WS) and data (SD) signals. In duplex mode (see below) it is necessary to connect two data lines: input data (SDIN) and output data (SDOUT). The shared data (SD) signal acts as output in duplex mode.
+
+In slave mode it is necessary to connect the devices with the same signals as in master mode and also master clock (MCLK) signal. If you should try to operat the MCU in slave mode without MCLK, the MCU would not be able properly deduce the timing only from the SCK and there would be no data output from the slave and also the slave would not be able to read any data.
 
 ## Duplex / Simplex
 Arduino has only one data pin and the driver is switching between receiving and transmitting upon calling `read` or `write`. On all ESP32s each I2S module has 2 independent data lines, one for transmitting and one for receiving.
@@ -162,7 +169,7 @@ The change takes effect immediately and does not need driver restart.
 **Returns:** 1 on success; 0 on error
 
 **Function list:**
-
+* **int setMclkPin(int sckPin)**  Set Master Clock pin
 * **int setSckPin(int sckPin)**  Set Clock pin
 * **int setFsPin(int fsPin)**  Set Frame Sync (Word Select) pin
 * **int setDataPin(int sdPin)**  Set shared Data pin for simplex mode
@@ -179,7 +186,7 @@ The change takes effect immediately and does not need driver restart.
 
 **Returns:** 1 on success; 0 on error
 ***
-#### int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin)
+#### int setAllPins(int mclkPin, int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin)
 
 *Change pin setup for all pins at one call.*
 
@@ -188,6 +195,7 @@ The change takes effect immediately and does not need driver restart.
 
 **Parameters:**
 
+* **int mclkPin**  Clock pin
 * **int sckPin**  Clock pin
 * **int fsPin**  Frame Sync (Word Select) pin
 * **int sdPin**  Shared Data pin for simplex mode
@@ -204,6 +212,7 @@ The change takes effect immediately and does not need driver restart.
 
 **Function list:**
 
+* **int getMclkPin()**  Get Master Clock pin
 * **int getSckPin()**  Get Clock pin
 * **int getFsPin()**  Get Frame Sync (Word Select) pin
 * **int getDataPin()**  Get shared Data pin for simplex mode

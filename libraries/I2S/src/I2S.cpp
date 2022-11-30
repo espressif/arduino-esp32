@@ -30,11 +30,12 @@
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
+  _mclkPin(deviceIndex == 0 ? PIN_I2S_MCLK : PIN_I2S1_MCLK),   // input data pin
+  _sckPin(sckPin),           // clock pin
+  _fsPin(fsPin),             // frame (word) select pin
   _sdPin(sdPin),             // shared data pin
   _inSdPin(deviceIndex == 0 ? PIN_I2S_SD_IN : PIN_I2S1_SD_IN),   // input data pin
   _outSdPin(deviceIndex == 0 ? PIN_I2S_SD : PIN_I2S1_SD),     // output data pin
-  _sckPin(sckPin),           // clock pin
-  _fsPin(fsPin),             // frame (word) select pin
 
   _state(I2S_STATE_IDLE),
   _bitsPerSample(0),
@@ -344,7 +345,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 int I2SClass::_applyPinSetting(){
   if(_driverInstalled){
     esp_i2s::i2s_pin_config_t pin_config = {
-      .mck_io_num = I2S_PIN_NO_CHANGE,
+      .mck_io_num = _mclkPin,
       .bck_io_num = _sckPin,
       .ws_io_num = _fsPin,
       .data_out_num = I2S_PIN_NO_CHANGE,
@@ -375,22 +376,30 @@ int I2SClass::_applyPinSetting(){
   return 1; // OK
 }
 
+void I2SClass::_setMclkPin(int mclkPin){
+  if(!_take_mux()){ return; /* ERR */ }
+  if(mclkPin >= 0){
+    _mclkPin = mclkPin;
+  }else{
+    _mclkPin = PIN_I2S_MCLK;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_mclkPin = PIN_I2S1_MCLK;}
+    #endif
+  }
+  if(!_give_mux()){ return; /* ERR */ }
+}
+
 void I2SClass::_setSckPin(int sckPin){
   if(!_take_mux()){ return; /* ERR */ }
   if(sckPin >= 0){
     _sckPin = sckPin;
   }else{
     _sckPin = PIN_I2S_SCK;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_sckPin = PIN_I2S1_SCK;}
+    #endif
   }
   if(!_give_mux()){ return; /* ERR */ }
-}
-
-int I2SClass::setSckPin(int sckPin){
-  if(!_take_mux()){ return 0; /* ERR */ }
-  _setSckPin(sckPin);
-  int ret = _applyPinSetting();
-  if(!_give_mux()){ return 0; /* ERR */ }
-  return ret;
 }
 
 void I2SClass::_setFsPin(int fsPin){
@@ -399,8 +408,67 @@ void I2SClass::_setFsPin(int fsPin){
     _fsPin = fsPin;
   }else{
     _fsPin = PIN_I2S_FS;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_sckPin = PIN_I2S1_FS;}
+    #endif
   }
   if(!_give_mux()){ return; /* ERR */ }
+}
+
+// shared data pin for simplex
+void I2SClass::_setDataPin(int sdPin){
+  if(!_take_mux()){ return; /* ERR */ }
+  if(sdPin >= 0){
+    _sdPin = sdPin;
+  }else{
+    _sdPin = PIN_I2S_SD;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_sckPin = PIN_I2S1_SD;}
+    #endif
+  }
+  if(!_give_mux()){ return; /* ERR */ }
+}
+
+void I2SClass::_setDataInPin(int inSdPin){
+  if(!_take_mux()){ return; /* ERR */ }
+  if(inSdPin >= 0){
+    _inSdPin = inSdPin;
+  }else{
+    _inSdPin = PIN_I2S_SD_IN;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_sckPin = PIN_I2S1_SD_IN;}
+    #endif
+  }
+  if(!_give_mux()){ return; /* ERR */ }
+}
+
+void I2SClass::_setDataOutPin(int outSdPin){
+  if(!_take_mux()){ return; /* ERR */ }
+  if(outSdPin >= 0){
+    _outSdPin = outSdPin;
+  }else{
+    _outSdPin = PIN_I2S_SD_OUT;
+    #if SOC_I2S_NUM > 1
+      if(_deviceIndex==1){_sckPin = PIN_I2S1_SD_OUT;}
+    #endif
+  }
+  if(!_give_mux()){ return; /* ERR */ }
+}
+
+int I2SClass::setMclkPin(int mclkPin){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  _setMclkPin(mclkPin);
+  int ret = _applyPinSetting();
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::setSckPin(int sckPin){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  _setSckPin(sckPin);
+  int ret = _applyPinSetting();
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
 }
 
 int I2SClass::setFsPin(int fsPin){
@@ -412,17 +480,6 @@ int I2SClass::setFsPin(int fsPin){
 }
 
 // shared data pin for simplex
-void I2SClass::_setDataPin(int sdPin){
-  if(!_take_mux()){ return; /* ERR */ }
-  if(sdPin >= 0){
-    _sdPin = sdPin;
-  }else{
-    _sdPin = PIN_I2S_SD;
-  }
-  if(!_give_mux()){ return; /* ERR */ }
-}
-
-// shared data pin for simplex
 int I2SClass::setDataPin(int sdPin){
   if(!_take_mux()){ return 0; /* ERR */ }
   _setDataPin(sdPin);
@@ -431,32 +488,12 @@ int I2SClass::setDataPin(int sdPin){
   return ret;
 }
 
-void I2SClass::_setDataInPin(int inSdPin){
-  if(!_take_mux()){ return; /* ERR */ }
-  if(inSdPin >= 0){
-    _inSdPin = inSdPin;
-  }else{
-    _inSdPin = PIN_I2S_SD_IN;
-  }
-  if(!_give_mux()){ return; /* ERR */ }
-}
-
 int I2SClass::setDataInPin(int inSdPin){
   if(!_take_mux()){ return 0; /* ERR */ }
   _setDataInPin(inSdPin);
   int ret = _applyPinSetting();
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
-}
-
-void I2SClass::_setDataOutPin(int outSdPin){
-  if(!_take_mux()){ return; /* ERR */ }
-  if(outSdPin >= 0){
-    _outSdPin = outSdPin;
-  }else{
-    _outSdPin = PIN_I2S_SD;
-  }
-  if(!_give_mux()){ return; /* ERR */ }
 }
 
 int I2SClass::setDataOutPin(int outSdPin){
@@ -469,14 +506,22 @@ int I2SClass::setDataOutPin(int outSdPin){
 
 int I2SClass::setAllPins(){
   if(!_take_mux()){ return 0; /* ERR */ }
-  int ret = setAllPins(PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SD_IN);
+  int ret = 0;
+  if(_deviceIndex==0){
+     ret = setAllPins(PIN_I2S_MCLK, PIN_I2S_SCK, PIN_I2S_FS, PIN_I2S_SD, PIN_I2S_SD_OUT, PIN_I2S_SD_IN);
+  }
+  #if SOC_I2S_NUM > 1
+    if(_deviceIndex==1){
+      ret = setAllPins(PIN_I2S1_MCLK, PIN_I2S1_SCK, PIN_I2S1_FS, PIN_I2S1_SD, PIN_I2S1_SD_OUT, PIN_I2S1_SD_IN);
+    }
+  #endif
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
 
-int I2SClass::setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin){
+int I2SClass::setAllPins(int mclkPin, int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin){
   if(!_take_mux()){ return 0; /* ERR */ }
-  _setSckPin(sckPin);
+  _setMclkPin(mclkPin);
   _setFsPin(fsPin);
   _setDataPin(sdPin);
   _setDataOutPin(outSdPin);
@@ -505,6 +550,13 @@ int I2SClass::setSimplex(){
 int I2SClass::isDuplex(){
   if(!_take_mux()){ return 0; /* ERR */ }
   int ret = (int)(_state == I2S_STATE_DUPLEX);
+  if(!_give_mux()){ return 0; /* ERR */ }
+  return ret;
+}
+
+int I2SClass::getMclkPin(){
+  if(!_take_mux()){ return 0; /* ERR */ }
+  int ret = _mclkPin;
   if(!_give_mux()){ return 0; /* ERR */ }
   return ret;
 }
