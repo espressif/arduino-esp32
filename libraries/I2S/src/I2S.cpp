@@ -30,12 +30,18 @@
 
 I2SClass::I2SClass(uint8_t deviceIndex, uint8_t clockGenerator, uint8_t sdPin, uint8_t sckPin, uint8_t fsPin) :
   _deviceIndex(deviceIndex),
+#if SOC_I2S_NUM > 1
   _mclkPin(deviceIndex == 0 ? PIN_I2S_MCLK : PIN_I2S1_MCLK),   // input data pin
+  _inSdPin(deviceIndex == 0 ? PIN_I2S_SD_IN : PIN_I2S1_SD_IN),   // input data pin
+  _outSdPin(deviceIndex == 0 ? PIN_I2S_SD : PIN_I2S1_SD),     // output data pin
+#else
+  _mclkPin(PIN_I2S_MCLK),   // input data pin
+  _inSdPin(PIN_I2S_SD_IN),   // input data pin
+  _outSdPin(PIN_I2S_SD),     // output data pin
+#endif
   _sckPin(sckPin),           // clock pin
   _fsPin(fsPin),             // frame (word) select pin
   _sdPin(sdPin),             // shared data pin
-  _inSdPin(deviceIndex == 0 ? PIN_I2S_SD_IN : PIN_I2S1_SD_IN),   // input data pin
-  _outSdPin(deviceIndex == 0 ? PIN_I2S_SD : PIN_I2S1_SD),     // output data pin
 
   _state(I2S_STATE_IDLE),
   _bitsPerSample(0),
