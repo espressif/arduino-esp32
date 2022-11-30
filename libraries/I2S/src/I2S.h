@@ -471,11 +471,11 @@ private:
 
   int _deviceIndex;
   int _mclkPin;
+  int _inSdPin;
+  int _outSdPin;
   int _sckPin;
   int _fsPin;
   int _sdPin;
-  int _inSdPin;
-  int _outSdPin;
 
   i2s_state_t _state;
   int _bitsPerSample;
