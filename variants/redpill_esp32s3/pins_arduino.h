@@ -14,7 +14,11 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-#define RGB_LED 3
+static const uint8_t LED_BUILTIN = 3;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
+#define RGB_BUILTIN LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
