@@ -26,13 +26,23 @@
 
 // A class to make it easier to handle and pass around IP addresses
 
+#define IPADDRESS_V4_BYTES_INDEX 12
+#define IPADDRESS_V4_DWORD_INDEX 3
+
+enum IPType
+{
+    IPv4,
+    IPv6
+};
+
 class IPAddress: public Printable
 {
 private:
     union {
-        uint8_t bytes[4];  // IPv4 address
-        uint32_t dword;
+        uint8_t bytes[16];
+        uint32_t dword[4];
     } _address;
+    IPType _type;
 
     // Access the raw byte array containing the address.  Because this returns a pointer
     // to the internal structure rather than a copy of the address this function should only
@@ -40,41 +50,36 @@ private:
     // stored.
     uint8_t* raw_address()
     {
-        return _address.bytes;
+        return _type == IPv4 ? &_address.bytes[IPADDRESS_V4_BYTES_INDEX] : _address.bytes;
     }
 
 public:
     // Constructors
     IPAddress();
+    IPAddress(IPType ip_type);
     IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet);
+    IPAddress(uint8_t o1, uint8_t o2, uint8_t o3, uint8_t o4, uint8_t o5, uint8_t o6, uint8_t o7, uint8_t o8, uint8_t o9, uint8_t o10, uint8_t o11, uint8_t o12, uint8_t o13, uint8_t o14, uint8_t o15, uint8_t o16);
     IPAddress(uint32_t address);
     IPAddress(const uint8_t *address);
+    IPAddress(IPType ip_type, const uint8_t *address);
     virtual ~IPAddress() {}
 
     bool fromString(const char *address);
     bool fromString(const String &address) { return fromString(address.c_str()); }
 
-    // Overloaded cast operator to allow IPAddress objects to be used where a pointer
-    // to a four-byte uint8_t array is expected
+    // Overloaded cast operator to allow IPAddress objects to be used where a
+    // uint32_t is expected
     operator uint32_t() const
     {
-        return _address.dword;
+        return _type == IPv4 ? _address.dword[IPADDRESS_V4_DWORD_INDEX] : 0;
     }
-    bool operator==(const IPAddress& addr) const
-    {
-        return _address.dword == addr._address.dword;
-    }
+
+    bool operator==(const IPAddress& addr) const;
     bool operator==(const uint8_t* addr) const;
 
     // Overloaded index operator to allow getting and setting individual octets of the address
-    uint8_t operator[](int index) const
-    {
-        return _address.bytes[index];
-    }
-    uint8_t& operator[](int index)
-    {
-        return _address.bytes[index];
-    }
+    uint8_t operator[](int index) const;
+    uint8_t& operator[](int index);
 
     // Overloaded copy operators to allow initialisation of IPAddress objects from other types
     IPAddress& operator=(const uint8_t *address);
@@ -83,14 +88,21 @@ public:
     virtual size_t printTo(Print& p) const;
     String toString() const;
 
+    IPType type() { return _type; }
+
     friend class EthernetClass;
     friend class UDP;
     friend class Client;
     friend class Server;
     friend class DhcpClass;
     friend class DNSClient;
+
+protected:
+    bool fromString4(const char *address);
+    bool fromString6(const char *address);
 };
 
 // changed to extern because const declaration creates copies in BSS of INADDR_NONE for each CPP unit that includes it
 extern IPAddress INADDR_NONE;
+extern IPAddress IN6ADDR_ANY;
 #endif
