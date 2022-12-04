@@ -467,6 +467,12 @@ size_t HardwareSerial::read(uint8_t *buffer, size_t size)
     return uartReadBytes(_uart, buffer, size, 0);
 }
 
+// Overrides Stream::readBytes() to be faster using IDF
+size_t HardwareSerial::readBytes(uint8_t *buffer, size_t length)
+{
+    return uartReadBytes(_uart, buffer, length, (uint32_t)getTimeout());
+}
+
 void HardwareSerial::flush(void)
 {
     uartFlush(_uart);
