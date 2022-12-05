@@ -1,6 +1,7 @@
 {
 	"name":"Arduino on ESP32-C3",
 	"toolchainPrefix":"riscv32-esp-elf",
+	"svdFile":"esp32c3.svd",
 	"request":"attach",
 	"demangle":true,
 	"overrideAttachCommands":[

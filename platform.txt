@@ -188,6 +188,10 @@ recipe.hooks.postbuild.1.pattern.windows=cmd /c COPY /y "{debug.server.openocd.s
 recipe.hooks.postbuild.2.pattern=bash -c "cp -f "{runtime.platform.path}"/tools/ide-debug/{build.mcu}.json "{build.source.path}"/debug_custom.json"
 recipe.hooks.postbuild.2.pattern.windows=cmd /c COPY /y "{runtime.platform.path}\tools\ide-debug\{build.mcu}.json" "{build.source.path}\debug_custom.json"
 
+# Generate chip.svd
+recipe.hooks.postbuild.3.pattern=bash -c "cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/{build.mcu}.svd"
+recipe.hooks.postbuild.3.pattern.windows=cmd /c COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\{build.mcu}.svd"
+
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.c.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"
 
