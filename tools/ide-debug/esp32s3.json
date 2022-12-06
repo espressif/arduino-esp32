@@ -3,11 +3,15 @@
 	"toolchainPrefix":"xtensa-esp32s3-elf",
 	"svdFile":"esp32s3.svd",
 	"request":"attach",
-	"demangle":true,
 	"overrideAttachCommands":[
 		"set remote hardware-watchpoint-limit 2",
 		"monitor reset halt",
-		"thb setup"
+		"monitor gdb_sync",
+		"thb setup",
+		"c"
 	],
-	"overrideRestartCommands":[]
+	"overrideRestartCommands":[
+		"monitor reset halt",
+		"monitor gdb_sync"
+	]
 }

@@ -3,11 +3,15 @@
 	"toolchainPrefix":"riscv32-esp-elf",
 	"svdFile":"esp32c3.svd",
 	"request":"attach",
-	"demangle":true,
 	"overrideAttachCommands":[
 		"set remote hardware-watchpoint-limit 8",
 		"monitor reset",
-		"monitor halt"
+		"monitor halt",
+		"monitor gdb_sync"
 	],
-	"overrideRestartCommands":[]
+	"overrideRestartCommands":[
+		"monitor reset",
+		"monitor halt",
+		"monitor gdb_sync"
+	]
 }
