@@ -1018,7 +1018,7 @@ void I2SClass::_tx_done_routine(uint8_t* prev_item){
     bytes_written = 0;
     item_size = 0;
     item = xRingbufferReceiveUpTo(_output_ring_buffer, &item_size, pdMS_TO_TICKS(0), getDMABufferByteSize());
-    if (item != NULL){
+    if(item != NULL){
       _fix_and_write(item, item_size, &bytes_written);
       if(item_size != bytes_written){ // save item that was not written correctly for later
         memcpy(prev_item, (void*)&((uint8_t*)item)[bytes_written], item_size-bytes_written);
@@ -1318,7 +1318,21 @@ int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit)
 #endif
     default:
       log_e("(I2S#%d) GPIO %d not usable for ADC!", _deviceIndex, gpio_num);
-      log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
+      #if CONFIG_IDF_TARGET_ESP32
+        log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html");
+      #elif
+         CONFIG_IDF_TARGET_ESP32S2
+        log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/gpio.html");
+      #elif
+         CONFIG_IDF_TARGET_ESP32S3
+        log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/gpio.html");
+      #elif
+         CONFIG_IDF_TARGET_ESP32C2
+        log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32c2/api-reference/peripherals/gpio.html");
+      #elif
+         CONFIG_IDF_TARGET_ESP32C3
+        log_i("Please refer to documentation https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/api-reference/peripherals/gpio.html");
+      #endif
       return 0; // ERR
   }
 }
