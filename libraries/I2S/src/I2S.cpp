@@ -153,7 +153,7 @@ int I2SClass::_installDriver(){
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
     .dma_buf_len = _i2s_dma_buffer_frame_size,
     .use_apll = false,
-    .tx_desc_auto_clear = true,
+    .tx_desc_auto_clear = false,
     .fixed_mclk = 0,
     .mclk_multiple = esp_i2s::I2S_MCLK_MULTIPLE_DEFAULT,
     .bits_per_chan = esp_i2s::I2S_BITS_PER_CHAN_DEFAULT,
