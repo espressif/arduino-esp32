@@ -414,7 +414,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if (!_rxFIFOFull) {    // it has not being changed before calling begin()
       //  set a default FIFO Full value for the IDF driver
       uint8_t fifoFull = 1;
-      if (baud > 115200 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
+      if (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
         fifoFull = 120;
       }
       uartSetRxFIFOFull(_uart, fifoFull);
