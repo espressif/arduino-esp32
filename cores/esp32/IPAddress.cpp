@@ -212,7 +212,7 @@ String IPAddress::toString() const
 
     // IPv4
     char szRet[16];
-    sprintf(szRet,"%u.%u.%u.%u", _address.bytes[0], _address.bytes[1], _address.bytes[2], _address.bytes[3]);
+    sprintf(szRet,"%u.%u.%u.%u", _address.bytes[IPADDRESS_V4_BYTES_INDEX], _address.bytes[IPADDRESS_V4_BYTES_INDEX+1], _address.bytes[IPADDRESS_V4_BYTES_INDEX+2], _address.bytes[IPADDRESS_V4_BYTES_INDEX+3]);
     return String(szRet);
 }
 
