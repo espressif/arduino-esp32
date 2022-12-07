@@ -62,8 +62,6 @@ void setup()
 
 }
 
-int value = 0;
-
 void loop(){
  WiFiClient client = server.available();   // listen for incoming clients
 
