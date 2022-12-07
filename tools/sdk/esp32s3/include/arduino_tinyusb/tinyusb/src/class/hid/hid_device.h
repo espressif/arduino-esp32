@@ -62,7 +62,7 @@ uint8_t tud_hid_n_interface_protocol(uint8_t instance);
 uint8_t tud_hid_n_get_protocol(uint8_t instance);
 
 // Send report to host
-bool tud_hid_n_report(uint8_t instance, uint8_t report_id, void const* report, uint8_t len);
+bool tud_hid_n_report(uint8_t instance, uint8_t report_id, void const* report, uint16_t len);
 
 // KEYBOARD: convenient helper to send keyboard report if application
 // use template layout report as defined by hid_keyboard_report_t
@@ -82,7 +82,7 @@ bool tud_hid_n_gamepad_report(uint8_t instance, uint8_t report_id, int8_t x, int
 static inline bool    tud_hid_ready(void);
 static inline uint8_t tud_hid_interface_protocol(void);
 static inline uint8_t tud_hid_get_protocol(void);
-static inline bool    tud_hid_report(uint8_t report_id, void const* report, uint8_t len);
+static inline bool    tud_hid_report(uint8_t report_id, void const* report, uint16_t len);
 static inline bool    tud_hid_keyboard_report(uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
 static inline bool    tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
 static inline bool    tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint32_t buttons);
@@ -116,7 +116,7 @@ TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate);
 // Invoked when sent REPORT successfully to host
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
-TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len);
+TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, /*uint16_t*/ uint8_t len );
 
 
 //--------------------------------------------------------------------+
@@ -137,7 +137,7 @@ static inline uint8_t tud_hid_get_protocol(void)
   return tud_hid_n_get_protocol(0);
 }
 
-static inline bool tud_hid_report(uint8_t report_id, void const* report, uint8_t len)
+static inline bool tud_hid_report(uint8_t report_id, void const* report, uint16_t len)
 {
   return tud_hid_n_report(0, report_id, report, len);
 }

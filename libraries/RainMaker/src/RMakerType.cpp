@@ -21,4 +21,9 @@ param_val_t value(float fval)
 {
     return esp_rmaker_float(fval);
 }
+
+param_val_t value(const char* sval)
+{
+    return esp_rmaker_str(sval);
+}
 #endif

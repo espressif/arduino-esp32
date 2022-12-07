@@ -37,6 +37,23 @@ Installation
     cd ../.. && \
     idf.py menuconfig
 
+.. note:: If you use Arduino with ESP-IDF often, you can place the arduino folder into global components folder.
+
+If you're targeting the ESP32-S2 or ESP32-S3 and you want to use USBHID classes such as ``USBHID``, ``USBHIDConsumerControl``, ``USBHIDGamepad``, ``USBHIDKeyboard``, ``USBHIDMouse``, ``USBHIDSystemControl``, or ``USBHIDVendor``:
+
+1. Clone these nested repos somewhere:
+
+.. code-block:: bash
+
+    git clone https://github.com/espressif/esp32-arduino-lib-builder.git esp32-arduino-lib-builder && \
+    git clone https://github.com/hathach/tinyusb.git esp32-arduino-lib-builder/components/arduino_tinyusb/tinyusb
+
+2. In the project folder, edit ``CMakeLists.txt`` and add the following before the ``project()`` line:
+
+.. code-block:: bash
+
+    set(EXTRA_COMPONENT_DIRS <path to esp32-arduino-lib-builder/components/arduino_tinyusb>)
+
 Configuration
 -------------
 
@@ -140,8 +157,7 @@ If you are writing code that does not require Arduino to compile and you want yo
 FreeRTOS Tick Rate (Hz)
 -----------------------
 
-You might notice that Arduino-esp32's `delay()` function will only work in multiples of 10ms. That is because, by default, esp-idf handles task events 100 times per second.
-To fix that behavior, you need to set FreeRTOS tick rate to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
+The Arduino component requires the FreeRTOS tick rate `CONFIG_FREERTOS_HZ` set to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
 
 Compilation Errors
 ------------------

@@ -25,9 +25,9 @@ class RMakerClass
 {
     private:
         esp_rmaker_config_t rainmaker_cfg = {false};
-      
+
     public:
-    
+
         void setTimeSync(bool val);
         Node initNode(const char *name, const char *type = "ESP RainMaker with Arduino");
         esp_err_t deinitNode(Node node);
@@ -35,6 +35,7 @@ class RMakerClass
         esp_err_t enableSchedule();
         esp_err_t enableTZService();
         esp_err_t enableOTA(ota_type_t type, const char *cert = ESP_RMAKER_OTA_DEFAULT_SERVER_CERT);
+        esp_err_t enableScenes();
         esp_err_t start();
         esp_err_t stop();
 };

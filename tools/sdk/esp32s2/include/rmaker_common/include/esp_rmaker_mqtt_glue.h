@@ -11,10 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #pragma once
+
 #include <stdint.h>
 #include <esp_err.h>
 #include <esp_event.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -155,6 +158,12 @@ typedef struct {
  */
 esp_err_t esp_rmaker_mqtt_glue_setup(esp_rmaker_mqtt_config_t *mqtt_config);
 
+/* Get the ESP AWS PPI String
+ *
+ * @return pointer to a NULL terminated PPI string on success.
+ * @return NULL in case of any error.
+ */
+const char *esp_get_aws_ppi(void);
 #ifdef __cplusplus
 }
 #endif

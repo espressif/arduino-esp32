@@ -22,6 +22,7 @@
 #define SOC_CPU_CORES_NUM               2
 #define SOC_CACHE_SUPPORT_WRAP          1
 #define SOC_ULP_SUPPORTED               1
+#define SOC_RISCV_COPROC_SUPPORTED      1
 #define SOC_BT_SUPPORTED                1
 #define SOC_USB_OTG_SUPPORTED           1
 #define SOC_USB_SERIAL_JTAG_SUPPORTED   1
@@ -38,6 +39,7 @@
 #define SOC_FLASH_ENCRYPTION_XTS_AES_256 1
 #define SOC_PSRAM_DMA_CAPABLE           1
 #define SOC_XT_WDT_SUPPORTED            1
+#define SOC_TEMP_SENSOR_SUPPORTED       1
 
 /*-------------------------- SOC CAPS ----------------------------------------*/
 #define SOC_APPCPU_HAS_CLOCK_GATING_BUG (1)
@@ -56,13 +58,16 @@
 /*!< Digital */
 #define SOC_ADC_DIGI_CONTROLLER_NUM             (2)
 #define SOC_ADC_PATT_LEN_MAX                    (24)    //Two pattern table, each contains 12 items. Each item takes 1 byte
-#define SOC_ADC_DIGI_MAX_BITWIDTH               (13)
+#define SOC_ADC_DIGI_MAX_BITWIDTH               (12)
+#define SOC_ADC_DIGI_RESULT_BYTES               (4)
+#define SOC_ADC_DIGI_DATA_BYTES_PER_CONV        (4)
 /*!< F_sample = F_digi_con / 2 / interval. F_digi_con = 5M for now. 30 <= interva <= 4095 */
 #define SOC_ADC_SAMPLE_FREQ_THRES_HIGH          83333
 #define SOC_ADC_SAMPLE_FREQ_THRES_LOW           611
 
 /*!< RTC */
 #define SOC_ADC_MAX_BITWIDTH                    (12)
+#define SOC_RTC_SLOW_CLOCK_SUPPORT_8MD256       (1)
 
 /*!< Calibration */
 #define SOC_ADC_CALIBRATION_V1_SUPPORTED        (1) /*!< support HW offset calibration version 1*/
@@ -95,7 +100,22 @@
 #define SOC_GDMA_PSRAM_MIN_ALIGN   (16) // Minimal alignment for PSRAM transaction
 
 /*-------------------------- GPIO CAPS ---------------------------------------*/
-#include "gpio_caps.h"
+// ESP32-S3 has 1 GPIO peripheral
+#define SOC_GPIO_PORT           (1U)
+#define SOC_GPIO_PIN_COUNT      (49)
+
+// On ESP32-S3, Digital IOs have their own registers to control pullup/down/capability, independent with RTC registers.
+#define SOC_GPIO_SUPPORT_RTC_INDEPENDENT (1)
+// Force hold is a new function of ESP32-S3
+#define SOC_GPIO_SUPPORT_FORCE_HOLD      (1)
+
+// 0~48 except from 22~25 are valid
+#define SOC_GPIO_VALID_GPIO_MASK         (0x1FFFFFFFFFFFFULL & ~(0ULL | BIT22 | BIT23 | BIT24 | BIT25))
+// No GPIO is input only
+#define SOC_GPIO_VALID_OUTPUT_GPIO_MASK  (SOC_GPIO_VALID_GPIO_MASK)
+
+// Support to configure slept status
+#define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
 
 /*-------------------------- Dedicated GPIO CAPS -----------------------------*/
 #define SOC_DEDIC_GPIO_OUT_CHANNELS_NUM (8) /*!< 8 outward channels on each CPU core */
@@ -161,6 +181,7 @@
 #define SOC_LCD_RGB_PANELS              (1)  /*!< Support one RGB LCD panel */
 #define SOC_LCD_I80_BUS_WIDTH           (16) /*!< Intel 8080 bus width */
 #define SOC_LCD_RGB_DATA_WIDTH          (16) /*!< Number of LCD data lines */
+#define SOC_LCD_SUPPORT_RGB_YUV_CONV    (1)  /*!< Support color format conversion between RGB and YUV */
 
 /*-------------------------- RTC CAPS --------------------------------------*/
 #define SOC_RTC_CNTL_CPU_PD_DMA_BUS_WIDTH       (128)
@@ -175,7 +196,10 @@
 #define SOC_RTC_CNTL_TAGMEM_PD_DMA_ADDR_ALIGN   (SOC_RTC_CNTL_TAGMEM_PD_DMA_BUS_WIDTH >> 3)
 
 /*-------------------------- RTCIO CAPS --------------------------------------*/
-#include "rtc_io_caps.h"
+#define SOC_RTCIO_PIN_COUNT   22
+#define SOC_RTCIO_INPUT_OUTPUT_SUPPORTED 1
+#define SOC_RTCIO_HOLD_SUPPORTED 1
+#define SOC_RTCIO_WAKE_SUPPORTED 1
 
 /*-------------------------- SIGMA DELTA CAPS --------------------------------*/
 #define SOC_SIGMADELTA_NUM         (1) // 1 sigma-delta peripheral
@@ -185,6 +209,7 @@
 #define SOC_SPI_PERIPH_NUM                  3
 #define SOC_SPI_DMA_CHAN_NUM                3
 #define SOC_SPI_PERIPH_CS_NUM(i)            3
+#define SOC_SPI_MAX_CS_NUM                  6
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE         64
 #define SOC_SPI_SUPPORT_DDRCLK              1
 #define SOC_SPI_SLAVE_SUPPORT_SEG_TRANS     1
@@ -285,16 +310,13 @@
 
 /*-------------------------- Power Management CAPS ---------------------------*/
 #define SOC_PM_SUPPORT_EXT_WAKEUP       (1)
-
 #define SOC_PM_SUPPORT_WIFI_WAKEUP      (1)
-
 #define SOC_PM_SUPPORT_BT_WAKEUP        (1)
+#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP    (1)     /*!<Supports waking up from touch pad trigger */
 
 #define SOC_PM_SUPPORT_CPU_PD           (1)
-
 #define SOC_PM_SUPPORT_TAGMEM_PD        (1)
-
-#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP    (1)     /*!<Supports waking up from touch pad trigger */
+#define SOC_PM_SUPPORT_RTC_PERIPH_PD              (1)
 
 #define SOC_PM_SUPPORT_DEEPSLEEP_VERIFY_STUB_ONLY   (1)
 

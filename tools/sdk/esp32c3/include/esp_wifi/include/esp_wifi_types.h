@@ -219,6 +219,14 @@ typedef struct {
     bool required;           /**< Advertizes that Protected Management Frame is required. Device will not associate to non-PMF capable devices. */
 } wifi_pmf_config_t;
 
+/** Configuration for SAE PWE derivation */
+typedef enum {
+    WPA3_SAE_PWE_UNSPECIFIED,
+    WPA3_SAE_PWE_HUNT_AND_PECK,
+    WPA3_SAE_PWE_HASH_TO_ELEMENT,
+    WPA3_SAE_PWE_BOTH,
+} wifi_sae_pwe_method_t;
+
 /** @brief Soft-AP configuration settings for the ESP32 */
 typedef struct {
     uint8_t ssid[32];           /**< SSID of ESP32 soft-AP. If ssid_len field is 0, this must be a Null terminated string. Otherwise, length is set according to ssid_len. */
@@ -249,6 +257,7 @@ typedef struct {
     uint32_t btm_enabled:1;       /**< Whether BSS Transition Management is enabled for the connection */
     uint32_t mbo_enabled:1;       /**< Whether MBO is enabled for the connection */
     uint32_t reserved:29;         /**< Reserved for future feature set */
+    wifi_sae_pwe_method_t sae_pwe_h2e;     /**< Whether SAE hash to element is enabled */
 } wifi_sta_config_t;
 
 /** @brief Configuration data for ESP32 AP or STA.
@@ -343,7 +352,7 @@ typedef struct {
     unsigned fec_coding:1;        /**< Flag is set for 11n packets which are LDPC */
     unsigned sgi:1;               /**< Short Guide Interval(SGI). 0: Long GI; 1: Short GI */
 #if CONFIG_IDF_TARGET_ESP32
-    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: 0.25dBm*/
+    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: dBm*/
 #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     unsigned :8;                  /**< reserved */
 #endif
@@ -356,14 +365,14 @@ typedef struct {
 #if CONFIG_IDF_TARGET_ESP32S2
     unsigned :32;                 /**< reserved */
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: 0.25dBm*/
+    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: dBm*/
     unsigned :24;                 /**< reserved */
     unsigned :32;                 /**< reserved */
 #endif
     unsigned :31;                 /**< reserved */
     unsigned ant:1;               /**< antenna number from which this packet is received. 0: WiFi antenna 0; 1: WiFi antenna 1 */
 #if CONFIG_IDF_TARGET_ESP32S2
-    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: 0.25dBm*/
+    signed noise_floor:8;         /**< noise floor of Radio Frequency Module(RF). unit: dBm*/
     unsigned :24;                 /**< reserved */
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
     unsigned :32;                 /**< reserved */

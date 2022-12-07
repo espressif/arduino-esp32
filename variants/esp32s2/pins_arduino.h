@@ -12,8 +12,8 @@ static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+18; // GPIO pin for Saola-
 //static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+45; // GPIO pin for Kaluga = 45
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
-#define BOARD_HAS_NEOPIXEL
-#define LED_BRIGHTNESS 64
+#define RGB_BUILTIN LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)

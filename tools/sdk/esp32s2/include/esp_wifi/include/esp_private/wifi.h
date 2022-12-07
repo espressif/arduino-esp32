@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -251,6 +251,7 @@ esp_err_t esp_wifi_internal_set_sta_ip(void);
   *
   * @attention 1. If fixed rate is enabled, both management and data frame are transmitted with fixed rate
   * @attention 2. Make sure that the receiver is able to receive the frame with the fixed rate if you want the frame to be received
+  * @attention 3. Not support to set fix rate for espnow and 80211_tx
   *
   * @param  ifx : wifi interface
   * @param  en : false - disable, true - enable
@@ -495,6 +496,15 @@ bool esp_wifi_internal_is_tsf_active(void);
   *
   */
 void esp_wifi_internal_update_light_sleep_wake_ahead_time(uint32_t);
+
+/**
+  * @brief     Update WiFi TSF tick interval
+  *
+  * @return
+  *    - true: Active
+  *    - false: Not active
+  */
+esp_err_t esp_wifi_update_tsf_tick_interval(void);
 #endif
 
 /**
@@ -588,6 +598,15 @@ void esp_wifi_set_sleep_delay_time(uint32_t return_to_sleep_delay);
  * @param   keep_alive_time: keep alive time
  */
 void esp_wifi_set_keep_alive_time(uint32_t keep_alive_time);
+
+/**
+ * @brief   Configure wifi beacon montior default parameters
+ *
+ * @param   enable: enable or disable beacon monitor
+ * @param   timeout: timeout time for close rf phy when beacon loss occurs, Unit: 1024 microsecond
+ * @param   threshold: maximum number of consecutive lost beacons allowed
+ */
+void esp_wifi_beacon_monitor_configure(bool enable, int timeout, int threshold, int delta_intr_early, int delta_timeout);
 
 #ifdef __cplusplus
 }

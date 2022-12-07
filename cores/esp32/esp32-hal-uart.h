@@ -82,14 +82,18 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
+void uartSetFastReading(uart_t* uart);
 
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
 
-// Negative Pin Number will keep it unmodified, thus this function can set individual pins
-void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+// Negative Pin Number will keep it unmodified, thus this function can set/reset individual pins
+bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);

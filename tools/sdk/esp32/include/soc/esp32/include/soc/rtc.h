@@ -403,6 +403,11 @@ uint32_t rtc_clk_apb_freq_get(void);
  * 32k XTAL is being calibrated, but the oscillator has not started up (due to
  * incorrect loading capacitance, board design issue, or lack of 32 XTAL on board).
  *
+ * @note When 32k CLK is being calibrated, this function will check the accuracy
+ * of the clock. Since the xtal 32k or ext osc 32k is generally very stable, if
+ * the check fails, then consider this an invalid 32k clock and return 0. This
+ * check can filter some jamming signal.
+ *
  * @param cal_clk  clock to be measured
  * @param slow_clk_cycles  number of slow clock cycles to average
  * @return average slow clock period in microseconds, Q13.19 fixed point format,
@@ -475,6 +480,11 @@ void rtc_dig_clk8m_enable(void);
 void rtc_dig_clk8m_disable(void);
 
 /**
+ * @brief Get whether the rtc digital 8M clock is enabled
+ */
+bool rtc_dig_8m_enabled(void);
+
+/**
  * @brief Calculate the real clock value after the clock calibration
  *
  * @param cal_val Average slow clock period in microseconds, fixed point value as returned from `rtc_clk_cal`
@@ -506,40 +516,6 @@ typedef struct rtc_sleep_config_s {
     uint32_t xtal_fpu : 1;              //!< keep main XTAL powered up in sleep
 } rtc_sleep_config_t;
 
-/**
- * Default initializer for rtc_sleep_config_t
- *
- * This initializer sets all fields to "reasonable" values (e.g. suggested for
- * production use) based on a combination of RTC_SLEEP_PD_x flags.
- *
- * @param RTC_SLEEP_PD_x flags combined using bitwise OR
- */
-#define is_dslp(pd_flags)   ((pd_flags) & RTC_SLEEP_PD_DIG)
-#define RTC_SLEEP_CONFIG_DEFAULT(sleep_flags) { \
-    .lslp_mem_inf_fpu = 0, \
-    .rtc_mem_inf_fpu = 0, \
-    .rtc_mem_inf_follow_cpu = ((sleep_flags) & RTC_SLEEP_PD_RTC_MEM_FOLLOW_CPU) ? 1 : 0, \
-    .rtc_fastmem_pd_en = ((sleep_flags) & RTC_SLEEP_PD_RTC_FAST_MEM) ? 1 : 0, \
-    .rtc_slowmem_pd_en = ((sleep_flags) & RTC_SLEEP_PD_RTC_SLOW_MEM) ? 1 : 0, \
-    .rtc_peri_pd_en = ((sleep_flags) & RTC_SLEEP_PD_RTC_PERIPH) ? 1 : 0, \
-    .wifi_pd_en = 0, \
-    .int_8m_pd_en = is_dslp(sleep_flags) ? 1 : ((sleep_flags) & RTC_SLEEP_PD_INT_8M) ? 1 : 0, \
-    .rom_mem_pd_en = 0, \
-    .deep_slp = ((sleep_flags) & RTC_SLEEP_PD_DIG) ? 1 : 0, \
-    .wdt_flashboot_mod_en = 0, \
-    .dig_dbias_wak = RTC_CNTL_DBIAS_1V10, \
-    .dig_dbias_slp = is_dslp(sleep_flags)                   ? RTC_CNTL_DBIAS_0V90 \
-                   : !((sleep_flags) & RTC_SLEEP_PD_INT_8M) ? RTC_CNTL_DBIAS_1V10 \
-                   : RTC_CNTL_DBIAS_0V90, \
-    .rtc_dbias_wak = RTC_CNTL_DBIAS_1V10, \
-    .rtc_dbias_slp = is_dslp(sleep_flags)                   ? RTC_CNTL_DBIAS_0V90 \
-                   : !((sleep_flags) & RTC_SLEEP_PD_INT_8M) ? RTC_CNTL_DBIAS_1V10 \
-                   : RTC_CNTL_DBIAS_0V90, \
-    .lslp_meminf_pd = 1, \
-    .vddsdio_pd_en = ((sleep_flags) & RTC_SLEEP_PD_VDDSDIO) ? 1 : 0, \
-    .xtal_fpu = ((sleep_flags) & RTC_SLEEP_PD_XTAL) ? 0 : 1 \
-};
-
 #define RTC_SLEEP_PD_DIG                BIT(0)  //!< Deep sleep (power down digital domain)
 #define RTC_SLEEP_PD_RTC_PERIPH         BIT(1)  //!< Power down RTC peripherals
 #define RTC_SLEEP_PD_RTC_SLOW_MEM       BIT(2)  //!< Power down RTC SLOW memory
@@ -549,6 +525,21 @@ typedef struct rtc_sleep_config_s {
 #define RTC_SLEEP_PD_XTAL               BIT(6)  //!< Power down main XTAL
 #define RTC_SLEEP_PD_INT_8M             BIT(7)  //!< Power down Internal 8M oscillator
 
+//These flags are not power domains, but will affect some sleep parameters
+#define RTC_SLEEP_DIG_USE_8M            BIT(16)
+#define RTC_SLEEP_USE_ADC_TESEN_MONITOR BIT(17)
+#define RTC_SLEEP_NO_ULTRA_LOW          BIT(18) //!< Avoid using ultra low power in deep sleep, in which RTCIO cannot be used as input, and RTCMEM can't work under high temperature
+
+/**
+ * Default initializer for rtc_sleep_config_t
+ *
+ * This initializer sets all fields to "reasonable" values (e.g. suggested for
+ * production use) based on a combination of RTC_SLEEP_PD_x flags.
+ *
+ * @param RTC_SLEEP_PD_x flags combined using bitwise OR
+ */
+void rtc_sleep_get_default_config(uint32_t sleep_flags, rtc_sleep_config_t *out_config);
+
 /* Various delays to be programmed into power control state machines */
 #define RTC_CNTL_XTL_BUF_WAIT_SLP_US        (500)
 #define RTC_CNTL_PLL_BUF_WAIT_SLP_CYCLES    (1)
@@ -556,6 +547,9 @@ typedef struct rtc_sleep_config_s {
 #define RTC_CNTL_WAKEUP_DELAY_CYCLES        (7)
 #define RTC_CNTL_OTHER_BLOCKS_POWERUP_CYCLES    (1)
 #define RTC_CNTL_OTHER_BLOCKS_WAIT_CYCLES       (1)
+
+#define RTC_CNTL_CK8M_WAIT_DEFAULT          20
+#define RTC_CK8M_ENABLE_WAIT_DEFAULT        5
 
 /**
  * @brief Prepare the chip to enter sleep mode
