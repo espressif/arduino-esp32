@@ -29,13 +29,14 @@ namespace esp_i2s {
 // Default pins
 //I2S0 is available for all ESP32 SoCs
 //MCLK SCK WS  SD(OUT) SDIN
-//  32  18 19  21      22    ESP32
-//   1  18 19   4       5    ESP32-x (C3,S2,S3)
+//   0  18 19  21      22    ESP32
+//   0  18 19   4       5    ESP32-x (C3,S2,S3)
+
 #ifndef PIN_I2S_MCLK
   #if CONFIG_IDF_TARGET_ESP32
-    #define PIN_I2S_MCLK GPIO_NUM_32
+    #define PIN_I2S_MCLK GPIO_NUM_0
   #else
-    #define PIN_I2S_MCLK GPIO_NUM_1
+    #define PIN_I2S_MCLK GPIO_NUM_0
   #endif
 #endif
 
@@ -76,9 +77,10 @@ namespace esp_i2s {
   #if CONFIG_IDF_TARGET_ESP32
     // ESP32 pins
     // MCLK SCK WS  SD(OUT) SDIN
-    //   33  23 25  26       27
+    //    1  23 25  26       27
+
     #ifndef PIN_I2S1_MCLK
-      #define PIN_I2S1_MCLK GPIO_NUM_33
+      #define PIN_I2S1_MCLK GPIO_NUM_1
     #endif
 
     #ifndef PIN_I2S1_SCK
@@ -204,6 +206,7 @@ public:
    * Can be called only on initialized object (after begin).
    * The change takes effect immediately and does not need driver restart.
    * Parameter: int pin  number of GPIO which should be used for the requested pin setup
+   *            any negative value will set default pin number defined in PIN_I2S_X or PIN_I2S1_X
    * Returns: 1 on success; 0 on error
    */
   int setMclkPin(int sckPin); // Set Master Clock pin
