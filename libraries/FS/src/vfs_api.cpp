@@ -476,6 +476,36 @@ FileImplPtr VFSFileImpl::openNextFile(const char* mode)
     return std::make_shared<VFSFileImpl>(_fs, name.c_str(), mode);
 }
 
+boolean VFSFileImpl::seekDir(long position){
+    if(!_d){
+        return false;
+    }
+    seekdir(_d, position);
+    return true;
+}
+
+
+String VFSFileImpl::getNextFileName()
+{
+    if (!_isDirectory || !_d) {
+        return "";
+    }
+    struct dirent *file = readdir(_d);
+    if (file == NULL) {
+        return "";
+    }
+    if (file->d_type != DT_REG && file->d_type != DT_DIR) {
+        return "";
+    }
+    String fname = String(file->d_name);
+    String name = String(_path);
+    if (!fname.startsWith("/") && !name.endsWith("/")) {
+        name += "/";
+    }
+    name += fname;
+    return name;
+}
+
 void VFSFileImpl::rewindDirectory(void)
 {
     if(!_isDirectory || !_d) {

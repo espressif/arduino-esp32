@@ -187,6 +187,22 @@ File File::openNextFile(const char* mode)
     return _p->openNextFile(mode);
 }
 
+boolean File::seekDir(long position){
+    if(!_p){
+        return false;
+    }
+    return _p->seekDir(position);
+}
+
+String File::getNextFileName(void)
+{
+    if (!_p) {
+        return ""; 
+    }
+    return _p->getNextFileName();
+
+}
+
 void File::rewindDirectory(void)
 {
     if (!*this) {
