@@ -34,7 +34,7 @@
 #define USB_PRODUCT ARDUINO_BOARD
 #endif
 #ifndef USB_SERIAL
-#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define USB_SERIAL "__MAC__"
 #else
 #define USB_SERIAL "0"
@@ -160,7 +160,7 @@ ESPUSB::~ESPUSB(){
 
 bool ESPUSB::begin(){
     if(!_started){
-#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(serial_number == "__MAC__"){
             StreamString s;
             uint8_t m[6];
