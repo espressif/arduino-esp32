@@ -43,6 +43,8 @@ public:
     virtual const char* name() const = 0;
     virtual boolean isDirectory(void) = 0;
     virtual FileImplPtr openNextFile(const char* mode) = 0;
+    virtual boolean seekDir(long position);
+    virtual String getNextFileName(void);
     virtual void rewindDirectory(void) = 0;
     virtual operator bool() = 0;
 };
