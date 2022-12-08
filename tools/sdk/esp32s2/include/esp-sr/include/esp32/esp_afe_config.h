@@ -31,6 +31,7 @@ typedef struct {
     int total_ch_num;                       // total channel num. It must be: total_ch_num = mic_num + ref_num
     int mic_num;                            // mic channel num
     int ref_num;                            // reference channel num
+    int sample_rate;                        // sample rate of audio
 } afe_pcm_config_t;
 
 typedef struct {
@@ -75,6 +76,7 @@ typedef struct {
     .pcm_config.total_ch_num = 2, \
     .pcm_config.mic_num = 1, \
     .pcm_config.ref_num = 1, \
+    .pcm_config.sample_rate = 16000, \
 }
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define AFE_CONFIG_DEFAULT() { \
@@ -97,5 +99,6 @@ typedef struct {
     .pcm_config.total_ch_num = 3, \
     .pcm_config.mic_num = 2, \
     .pcm_config.ref_num = 1, \
+    .pcm_config.sample_rate = 16000, \
 }
 #endif

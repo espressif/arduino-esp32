@@ -169,6 +169,28 @@ It is compatible with Arduinos analogWrite function.
 * ``value`` select the duty cycle of pwm.
   * range is from 0 (always off) to 255 (always on).
 
+analogWriteResolution
+*********************
+
+This function is used to set resolution for all analogWrite channels.
+
+.. code-block:: arduino
+
+    void analogWriteResolution(uint8_t bits);
+   
+* ``bits`` select resolution for analog channels. 
+
+analogWriteFrequency
+********************
+
+This function is used to set frequency for all analogWrite channels.
+
+.. code-block:: arduino
+
+    void analogWriteFrequency(uint32_t freq);
+
+* ``freq`` select frequency of pwm.
+
 Example Applications
 ********************
 

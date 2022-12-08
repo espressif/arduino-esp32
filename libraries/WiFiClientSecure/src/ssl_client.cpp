@@ -21,7 +21,7 @@
 #include "WiFi.h"
 
 #if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-#  warning "Please configure IDF framework to include mbedTLS -> Enable PSK based ciphersuite modes (MBEDTLS_KEY_EXCHANGE_PSK) and activate at least one cipher"
+#  warning "Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Key Exchange Methods -> Enable pre-shared-key ciphersuites and then check `Enable PSK based cyphersuite modes`. Save and Quit."
 #else
 
 const char *pers = "esp32-tls";
@@ -89,6 +89,8 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     if(timeout <= 0){
         timeout = 30000; // Milli seconds.
     }
+
+    ssl_client->socket_timeout = timeout;
 
     fd_set fdset;
     struct timeval tv;
@@ -341,12 +343,15 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
     
-    // save only interesting field
-    int timeout = ssl_client->handshake_timeout;
+    // save only interesting fields
+    int handshake_timeout = ssl_client->handshake_timeout;
+    int socket_timeout = ssl_client->socket_timeout;
+
     // reset embedded pointers to zero
     memset(ssl_client, 0, sizeof(sslclient_context));
     
-    ssl_client->handshake_timeout = timeout;
+    ssl_client->handshake_timeout = handshake_timeout;
+    ssl_client->socket_timeout = socket_timeout;
 }
 
 
@@ -369,11 +374,19 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
+    unsigned long write_start_time=millis();
+
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
+        if((millis()-write_start_time)>ssl_client->socket_timeout) {
+            log_v("SSL write timed out.");
+            return -1;
+        }
+
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
             log_v("Handling error %d", ret); //for low level debug
             return handle_error(ret);
         }
+        
         //wait for space to become available
         vTaskDelay(2);
     }

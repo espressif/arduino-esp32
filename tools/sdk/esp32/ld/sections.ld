@@ -1,6 +1,6 @@
 /* Automatically generated file; DO NOT EDIT */
 /* Espressif IoT Development Framework Linker Script */
-/* Generated from: /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp_system/ld/esp32/sections.ld.in */
+/* Generated from: /Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public/components/esp_system/ld/esp32/sections.ld.in */
 
 /*
  * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
@@ -794,6 +794,25 @@ SECTIONS
     . = ALIGN (8);
     _heap_start = ABSOLUTE(.);
   } > dram0_0_seg
+
+  /** This section will be used by the debugger and disassembler to get more information
+    * about raw data present in the code.
+    * Indeed, it may be required to add some padding at some points in the code
+    * in order to align a branch/jump destination on a particular bound.
+    * Padding these instructions will generate null bytes that shall be
+    * interpreted as data, and not code by the debugger or disassembler.
+    * This section will only be present in the ELF file, not in the final binary
+    * For more details, check GCC-212
+    */
+  .xt.prop 0 :
+  {
+    KEEP (*(.xt.prop .gnu.linkonce.prop.*))
+  }
+
+  .xt.lit 0 :
+  {
+    KEEP (*(.xt.lit .gnu.linkonce.p.*))
+  }
 }
 
 ASSERT(((_iram_end - ORIGIN(iram0_0_seg)) <= LENGTH(iram0_0_seg)),

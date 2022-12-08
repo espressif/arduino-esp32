@@ -186,6 +186,7 @@ static touch_value_t __touchRead(uint8_t pin)
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
+        log_e(" No touch pad on selected pin!");
         return 0;
     }
 
@@ -202,6 +203,7 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
 {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
+        log_e(" No touch pad on selected pin!");
         return;
     }
 
@@ -263,6 +265,27 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
     return __touchInterruptHandlers[pad].lastStatusIsPressed;
 }
 #endif
+
+void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold)
+{
+    int8_t pad = digitalPinToTouchChannel(pin);
+    if(pad < 0){
+        log_e(" No touch pad on selected pin!");
+        return;
+    }
+    __touchInit();
+    __touchChannelInit(pad);
+
+    #if SOC_TOUCH_VERSION_1        // Only for ESP32 SoC
+    touch_pad_set_thresh(pad, threshold);
+   
+    #elif SOC_TOUCH_VERSION_2
+    touch_pad_sleep_channel_enable(pad, true);
+    touch_pad_sleep_set_threshold(pad, threshold);
+
+    #endif 
+    esp_sleep_enable_touchpad_wakeup();
+}
 
 extern touch_value_t touchRead(uint8_t) __attribute__ ((weak, alias("__touchRead")));
 extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribute__ ((weak, alias("__touchAttachInterrupt")));

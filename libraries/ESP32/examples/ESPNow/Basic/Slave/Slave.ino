@@ -57,6 +57,7 @@ void configDeviceAP() {
     Serial.println("AP Config failed.");
   } else {
     Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
+    Serial.print("AP CHANNEL "); Serial.println(WiFi.channel());
   }
 }
 
