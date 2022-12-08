@@ -660,7 +660,7 @@ int I2SClass::available(){
 }
 
 union i2s_sample_t {
-  uint8_t b8;
+  int8_t b8;
   int16_t b16;
   int32_t b32;
 };
@@ -710,7 +710,7 @@ int I2SClass::read(void* buffer, size_t size){
         _peek_buff_valid = false;
         requested_size -= _bitsPerSample/8;
       }
-      tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(1000), requested_size);
+      tmp_buffer = xRingbufferReceiveUpTo(_input_ring_buffer, &item_size, pdMS_TO_TICKS(0), requested_size);
       if(tmp_buffer != NULL){
         memcpy(buffer, tmp_buffer, item_size);
         #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)

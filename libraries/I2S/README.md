@@ -123,7 +123,10 @@ There are two ring buffers - one for transmit line and one for receiving line.
 The size of ring buffer is equal to the sum of DMA buffers: `ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT`.
 Maximum size of those buffers can be read with functions `getRingBufferSampleSize()` and `getRingBufferByteSize()`.
 
-To get number of free Bytes in the transmitt buffer,  that can be actually written is performed with function `availableForWrite()`. To get number of Bytes ready to be read from receiving ring buffer use function `available()`. Changing the size of ring buffer is not possible directly - it is automatically calculated during driver installation based on DMA Buffer size.
+To get number of free Bytes in the transmit buffer,  that can be actually written is performed with function `availableForWrite()`. To get number of Bytes ready to be read from receiving ring buffer use function `available()`. Changing the size of ring buffer is not possible directly - it is automatically calculated during driver installation based on DMA Buffer size.
+
+### Known issues
+InputSerialPlotter often freezes for a short while - this is caused by the fact that the serial output and the incoming data are not synchronized - portion of the input buffer is written to serial followed by few milliseconds until input data are buffered and ready to be read by the loop.
 
 ## Functions
 
