@@ -1,4 +1,7 @@
 /*
+  NOTE: This is a legacy example using IDF I2S driver. There is an I2S library using Arduino API.
+  You can find it on relative address `../../../../I2S/` or absolute address `arduino-esp32/libraries/I2S/`
+
   This example demonstrates I2S ADC capability to sample high frequency analog signals.
   The PWM signal generated with ledc is only for ease of use when first trying out.
   To sample the generated signal connect default pins 27(PWM) and 32(Sampling) together.
