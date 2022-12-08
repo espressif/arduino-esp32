@@ -222,9 +222,12 @@ void analogWrite(uint8_t pin, int value) {
           log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
           return;
       }
+      if(ledcSetup(cnt_channel - 1, analog_frequency, analog_resolution) == 0){
+          log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
+          return;
+      }
+      ledcAttachPin(pin, cnt_channel - 1);
       pin_to_channel[pin] = cnt_channel--;
-      ledcSetup(cnt_channel, analog_frequency, analog_resolution);
-      ledcAttachPin(pin, cnt_channel);
     }
     ledcWrite(pin_to_channel[pin] - 1, value);
   }
@@ -237,7 +240,10 @@ int8_t analogGetChannel(uint8_t pin) {
 void analogWriteFrequency(uint32_t freq) {
     if (cnt_channel != LEDC_CHANNELS) {
         for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-            ledcChangeFrequency(channel, freq, analog_resolution);
+            if (ledcChangeFrequency(channel, freq, analog_resolution) == 0){
+                log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
+                return;
+            }
         }
     }
     analog_frequency = freq;
@@ -250,7 +256,10 @@ void analogWriteResolution(uint8_t bits) {
     }
     if (cnt_channel != LEDC_CHANNELS) {
         for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-            ledcChangeFrequency(channel, analog_frequency, bits);
+            if (ledcChangeFrequency(channel, analog_frequency, bits) == 0){
+                log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
+                return;
+            }
         }
     }
     analog_resolution = bits;
