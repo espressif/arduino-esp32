@@ -1,15 +1,29 @@
 # I2S / IIS / Inter-IC Sound
 
+Inter-IC Sound bus is designed for digital transmission of audio data.
+
+The bus consists of the following signals:
+
+ - SCK - Serial Clock signal.
+ - WS - Word Select - switching between Left and Right channel.
+ - SD - Serial Data - In Simplex mode this is multiplexed data - depending on function calls this is either input or output.
+ - SD OUT - In duplex mode this line is only for outgouing data (TX).
+ - SD IN -  In duplex mode this line is only for incoming data (RX).
+ - MCLK - Master Clock signal - runs on higher frequency than SCK and for most cases is not needed.
+
 This library is based on Arduino I2S library (see doc [here](https://docs.arduino.cc/learn/built-in-libraries/i2s))
+
 This library mimics the behavior and extends possibilities with ESP-specific functionalities.
 
-The main differences are:
-Property           Arduino      ESP32 extends
-bits per sample    8,16,32        24
-data channels      1 (simplex)   2(duplex)
-modes              Philips       PDM, ADC/DAC
-I2S modules        1             2 (only for ESP32, other SoC have also only 1)
-pins               fixed         configurable
+**The main differences are:**
+
+| Property         | Arduino     | ESP32 extends                                  |
+| ---------------- | ----------- | ---------------------------------------------- |
+| Bits per sample  | 8,16,32     | 24                                             |
+| data channels    | 1 (simplex) | 2(duplex)                                      |
+| modes            | Philips     | PDM, ADC/DAC                                   |
+| I2S modules      | 1           | 2 (only for ESP32, other SoC have also only 1) |
+| Pins             | Fixed       | configurable                                   |
 
 In this document you will find overview for this version of library and description of class functions.
 
@@ -28,6 +42,21 @@ The function `setDMABufferFrameSize` allows you to change the size in frames (se
 On Arduino and most ESPs you can use object `I2S` to use the I2S module. on ESP32 and ESP32-S3 you have the option to use addititonal object `I2S_1`.
 I2S module functionality on each SoC differs, please refer to the following table. More info can be found in [IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html?highlight=dac#overview-of-all-modes).
 
+## Modes (i2s_mode_t)
+.. note:: (Arduino MKRZero) First transmitted sample is in Right channel (WS=1). If your audio has swapped left and right channel try feed single zero-value sample before the data stream.
+
+ * **I2S_PHILIPS_MODE** Most common mode, FS signal spans across whole channel period. MSB is transmitted first and data starts SCK falling edge 1 SCK period after WS change. WS 0 = Left channel, 1 = Right channel. See more on [Wikipedia](https://en.wikipedia.org/wiki/I%C2%B2S)
+ * **I2S_RIGHT_JUSTIFIED_MODE** Does not work on MKRZero, opened [issue](https://github.com/arduino/ArduinoCore-samd/issues/682). Should be expected to the ooposite of `I2S_LEFT_JUSTIFIED_MODE`.
+ * **I2S_LEFT_JUSTIFIED_MODE** Input data belonging to righ channel are ignored and data belonging to left channel are transmitted in both channels. Example: `int16_t sample[] = {0x0001, 0x0002, 0x0003, 0x0004}` samples with value `0x0001` and `0x0003` belong to the right channel and will be ignored. Samples with value `0x0002` and `0x0004` will be transmitted as follows: Right channel (WS=1) `0x0002` followd by Left channel )WS=0) `0x0004`. this pattern repeats.
+ * **ADC_DAC_MODE** Outputting and inputting raw analog signal - see [example ADCPlotter](https://github.com/espressif/arduino-esp32/blob/master/libraries/I2S/examples/ADCPlotter/ADCPlotter.ino). Can only be initialized with data pins set to 25 a 26.
+ * **PDM_STEREO_MODE** Pulse Density Modulation is basically an over-sampled  1-bit signal. Not to be confused with PCM. (ESP32-C3 supports only Transmit mode - read attempts will time-out)
+ * **PDM_MONO_MODE** Same as previous but transmits only 1 channel. TODO explain timing diagram and data interpretation.
+
+.. note:: First 2 samples in a stream are zero value, this will not affect audio quality.
+
+.. note:: Some ESP32 SoCs support PCM, TDM and LCD/Camera modes, however support for those modes is out of scope in this simplified library. If you need to use those mode you will need to use [IDF I2S driver](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html).
+
+
 ### Overview of I2S Modes:
 | SoC      | Philips     | ADC/DAC | PDM TX | PDM RX |
 | -------- | ----------- | ------- | ------ | ------ |
@@ -37,20 +66,29 @@ I2S module functionality on each SoC differs, please refer to the following tabl
 | ESP32-S3 | I2S + I2S_1 | N/A     | I2S    | I2S    |
 
 ## Pins
-ESP I2S has fully configurable pins. There is a group of setter and getter functions for each pin separately and one setter for all pins at once (detailed description below). Calling the setter will take effect immediately and does not need driver restart.
-Default pins are setup as follows:
-### Common I2S object:
-| MCLK | SCK | WS | SD(OUT) | SDIN | SoC                          |
-| ---- | --- | -- | ------- | ---- |:---------------------------- |
-|   32 |  19 | 21 |   22    |  23  | ESP32                        |
-|    1 |  19 | 21 |    4    |   5  | ESP32-C3, ESP32-S2, ESP32-S3 |
+ESP I2S has fully configurable pins. There is a group of setter and getter functions for each pin separately, two setters for all pins at once (detailed description below) and one un-setter for MCLK. Calling the setter (or un-setter) will take effect immediately and does not need driver restart.
+
+The MCLK pin is usually not needed and for most cases can be ignored. By default the MCLK pin is not attached to any GPIO. To use the MCLK pin it is has to be explicitly configured using `setMclkPin()`, or by providing last parameter to function `setAllPins()`. The MCLK pin can be attached only to few specific pins, the suggested pin is specified by `PIN_I2S_MCLK` constant (each SoC may have different GPIO number).
+
+### Default pins for SoCs and I2S modules:
+**I2S object:**
+
+| SoC                          | SCK | WS | SD(OUT) | SDIN | MCLK |
+|:---------------------------- |:---:|:--:|:-------:|:----:|:----:|
+| ESP32                        |  19 | 21 |   22    |  23  |    0 |
+| ESP32-C3, ESP32-S2, ESP32-S3 |  19 | 21 |    4    |   5  |    0 |
 
 
-### I2S_1 object:
-| MCLK | SCK | WS | SD(OUT) | SDIN | SoC      |
-| ---- | --- | -- | ------- | ---- |:-------- |
-|   33 |  18 | 22 |    25   |   26 | ESP32    |
-|   35 |  36 | 37 |    39   |   40 | ESP32-S3 |
+**I2S_1 object:**
+
+| SoC      | SCK | WS | SD(OUT) | SDIN | MCLK |
+|:-------- |:---:|:--:|:-------:|:----:|:----:|
+| ESP32    |  18 | 22 |    25   |   26 |    1 |
+| ESP32-S3 |  36 | 37 |    39   |   40 |   35 |
+
+**ADC / DAC pin limitation**
+
+Unlike other modes, the ADC can only be used on 2 specific pins: 25 and 26. Attempt to initialize I2S in `ADC_DAC_MODE` with any than allowed data pins will result in failure.
 
 ## Master / Slave[ ](https://en.wiktionary.org/wiki/slave#Etymology) modes
 There are two versions of initializer function `begin` - one initializes in master mode and the other one in slave mode (see functions below for details).
@@ -66,19 +104,6 @@ For backward compatibility with Arduino we are using DataPin for multiplexed dat
 The default mode is simplex and the shared data pin switches function upon calling `read` or `write` same as Arduino.
 If you wish to use duplex mode call `setDuplex();` this will change the pin setup to use both data lines. If you want to switch back ti simplex call `setSimplex();` and if you need to get current state call `isDuplex();` (detailed function description below).
 
-## Modes (i2s_mode_t)
-.. note:: (Arduino MKRZero) First transmitted sample is in Right channel (WS=1). If your audio has swapped left and right channel try feed single zero-value sample before the data stream.
-
- * **I2S_PHILIPS_MODE** Most common mode, FS signal spans across whole channel period. MSB is transmitted first and data starts SCK falling edge 1 SCK period after WS change. WS 0 = Left channel, 1 = Right channel. See more on [Wikipedia](https://en.wikipedia.org/wiki/I%C2%B2S)
- * **I2S_RIGHT_JUSTIFIED_MODE** Does not work on MKRZero, opened [issue](https://github.com/arduino/ArduinoCore-samd/issues/682). Should be expected to the ooposite of `I2S_LEFT_JUSTIFIED_MODE`.
- * **I2S_LEFT_JUSTIFIED_MODE** Input data belonging to righ channel are ignored and data belonging to left channel are transmitted in both channels. Example: `int16_t sample[] = {0x0001, 0x0002, 0x0003, 0x0004}` samples with value `0x0001` and `0x0003` belong to the right channel and will be ignored. Samples with value `0x0002` and `0x0004` will be transmitted as follows: Right channel (WS=1) `0x0002` followd by Left channel )WS=0) `0x0004`. this pattern repeats.
- * **ADC_DAC_MODE** Outputting and inputting raw analog signal - see [example ADCPlotter](https://github.com/espressif/arduino-esp32/blob/master/libraries/I2S/examples/ADCPlotter/ADCPlotter.ino).
- * **PDM_STEREO_MODE** Pulse Density Modulation is basically an over-sampled  1-bit signal. Not to be confused with PCM. (ESP32-C3 supports only Transmit mode - read attempts will time-out)
- * **PDM_MONO_MODE** Same as previous but transmits only 1 channel. TODO explain timing diagram and data interpretation.
-
-.. note:: First 2 samples in a stream are zero value, this will not affect audio quality.
-
-.. note:: Some ESP32 SoCs support PCM, TDM and LCD/Camera modes, however support for those modes is out of scope in this simplified library. If you need to use those mode you will need to use [IDF I2S driver](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html).
 
 ## Buffers
 
@@ -159,22 +184,25 @@ Initializes IDF I2S driver, creates ring buffers and callback handler task.
 
 *Change pin setup for each pin separately.*
 
-Can be called only on initialized object (after `begin()`).
+Can be called on both uninitialized and initialized object (before and after `begin`).
 The change takes effect immediately and does not need driver restart.
+
+Note: You can use value `-1` for default value. (Default for `MCLK` is detached state).
 
 **Parameter:**
 
-* **int pin**  number of GPIO which should be used for the requested pin setup
+* **int pin**  number of GPIO which should be used for the requested pin setup. Any negative value will set default pin number defined in PIN_I2S_X or PIN_I2S1_X.
 
 **Returns:** 1 on success; 0 on error
 
 **Function list:**
-* **int setMclkPin(int sckPin)**  Set Master Clock pin
+
 * **int setSckPin(int sckPin)**  Set Clock pin
 * **int setFsPin(int fsPin)**  Set Frame Sync (Word Select) pin
 * **int setDataPin(int sdPin)**  Set shared Data pin for simplex mode
 * **int setDataOutPin(int outSdPin)**  Set Data Output pin for duplex mode
 * **int setDataInPin(int inSdPin)**  Set Data Input pin for duplex mode
+* **int setMclkPin(int sckPin)**  Set Master Clock pin (by default not used-no pin attached)
 
 ***
 #### int setAllPins()
@@ -183,24 +211,35 @@ The change takes effect immediately and does not need driver restart.
 
 Can be called only on initialized object (after `begin()`).
 The change takes effect immediately and does not need driver restart.
+The `MCLK` pin will be un-set - i.e. detached from any GPIO.
 
 **Returns:** 1 on success; 0 on error
 ***
-#### int setAllPins(int mclkPin, int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin)
+#### int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin, int mclkPin=-1)
 
 *Change pin setup for all pins at one call.*
 
 Can be called only on initialized object (after `begin()`).
 The change takes effect immediately and does not need driver restart.
+Note: You can use value `-1` for default value. (Default for `MCLK` is detached state).
 
 **Parameters:**
 
-* **int mclkPin**  Clock pin
 * **int sckPin**  Clock pin
 * **int fsPin**  Frame Sync (Word Select) pin
 * **int sdPin**  Shared Data pin for simplex mode
 * **int outSdPin**  Data Output pin for duplex mode
 * **int inSdPin**  Data Input pin for duplex mode
+* **int mclkPin**  Master Clock pin - this parameter has default value `-1` i.e. detached state (this parameter can be omitted in function call)
+
+**Returns:** 1 on success; 0 on error
+
+***
+#### int unSetMclkPin()
+*Unset MCLK pin making it available for other use*
+
+Can be called on both uninitialized and initialized object (before and after begin).
+The change takes effect immediately and does not need driver restart.
 
 **Returns:** 1 on success; 0 on error
 ***
@@ -212,12 +251,12 @@ The change takes effect immediately and does not need driver restart.
 
 **Function list:**
 
-* **int getMclkPin()**  Get Master Clock pin
 * **int getSckPin()**  Get Clock pin
 * **int getFsPin()**  Get Frame Sync (Word Select) pin
 * **int getDataPin()**  Get shared Data pin for simplex mode
 * **int getDataOutPin()**  Get Data Output pin for duplex mode
 * **int getDataInPin()**  Get Data Input pin for duplex mode
+* **int getMclkPin()**  Get Master Clock pin
 
 ***
 #### int setDuplex()

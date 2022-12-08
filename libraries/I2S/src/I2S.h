@@ -192,6 +192,7 @@ public:
    * Parameters:
    *   int mode  Operation mode (Phillips, Left/Right Justified, ADC+DAC,PDM) see i2s_mode_t for exact enumerations
    *   int bitsPerSample  Number of bits per one sample (one channel). Possible values are 8,16,24,32
+   * Note: You can use value -1 for default value. (Default for MCLK is detached state)
    * Returns: 1 on success; 0 on error
    */
   int begin(int mode, int bitsPerSample);
@@ -203,41 +204,52 @@ public:
 
   /*
    * Change pin setup for each pin separately.
-   * Can be called only on initialized object (after begin).
+   * Can be called on both uninitialized and initialized object (before and after begin).
    * The change takes effect immediately and does not need driver restart.
    * Parameter: int pin  number of GPIO which should be used for the requested pin setup
    *            any negative value will set default pin number defined in PIN_I2S_X or PIN_I2S1_X
    * Returns: 1 on success; 0 on error
+   * Note: You can use value -1 for default value. (Default for MCLK is detached state)
    */
-  int setMclkPin(int sckPin); // Set Master Clock pin
   int setSckPin(int sckPin); // Set Clock pin
   int setFsPin(int fsPin); // Set Frame Sync (Word Select) pin
   int setDataPin(int sdPin); // Set shared Data pin for simplex mode
   int setDataOutPin(int outSdPin); // Set Data Output pin for duplex mode
   int setDataInPin(int inSdPin); // Set Data Input pin for duplex mode
+  int setMclkPin(int sckPin); // Set Master Clock pin
 
   /*
-   * Change pin setup for all pins at one call using default values set constants in I2S.h
-   * Can be called only on initialized object (after begin)
+   * Change pin setup for all pins (except MCLK) at one call using default values set constants in I2S.h
+   * Can be called on both uninitialized and initialized object (before and after begin).
    * The change takes effect immediately and does not need driver restart.
+   * The MCLK pin will be un-set - i.e. detached from any GPIO.
    * Returns: 1 on success; 0 on error
    */
   int setAllPins();
 
   /*
    * Change pin setup for all pins at one call.
-   * Can be called only on initialized object (after begin).
+   * Can be called on both uninitialized and initialized object (before and after begin).
    * The change takes effect immediately and does not need driver restart.
    * Parameters:
-   *   int mclkPin  Master Clock pin
-   *   int sckPin  Clock pin
-   *   int fsPin  Frame Sync (Word Select) pin
-   *   int sdPin  Shared Data pin for simplex mode
+   *   int sckPin    Clock pin
+   *   int fsPin     Frame Sync (Word Select) pin
+   *   int sdPin     Shared Data pin for simplex mode
    *   int outSdPin  Data Output pin for duplex mode
-   *   int inSdPin  Data Input pin for duplex mode
+   *   int inSdPin   Data Input pin for duplex mode
+   *   int mclkPin   Master Clock pin
+   * Returns: 1 on success; 0 on error
+   * Note: You can use value -1 for default value. (Default for MCLK is detached state)
+   */
+  int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin, int mclkPin=-1);
+
+  /*
+   * Unset MCLK pin making it available for other use
+   * Can be called on both uninitialized and initialized object (before and after begin).
+   * The change takes effect immediately and does not need driver restart.
    * Returns: 1 on success; 0 on error
    */
-  int setAllPins(int mclkPin, int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin);
+  int unSetMclkPin();
 
   /*
    * Get current pin GPIO number
