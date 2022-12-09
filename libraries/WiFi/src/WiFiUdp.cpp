@@ -48,7 +48,11 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
     return 0;
   }
 
+#if LWIP_IPV6
+  if ((udp_server=socket(address.isV6() ? AF_INET6 : AF_INET, SOCK_DGRAM, 0)) == -1){
+#else
   if ((udp_server=socket(AF_INET, SOCK_DGRAM, 0)) == -1){
+#endif
     log_e("could not create socket: %d", errno);
     return 0;
   }
@@ -60,16 +64,35 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
       return 0;
   }
 
-  struct sockaddr_in addr;
-  memset((char *) &addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(server_port);
-  addr.sin_addr.s_addr = (in_addr_t)address;
-  if(bind(udp_server , (struct sockaddr*)&addr, sizeof(addr)) == -1){
+  struct sockaddr_storage serveraddr = {};
+  size_t sock_size = 0;
+#if LWIP_IPV6
+  if (address.isV6()) {
+    struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
+    memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
+    tmpaddr->sin6_family = AF_INET6;
+    tmpaddr->sin6_port = htons(server_port);
+    // memcpy(tmpaddr->sin6_addr.un.u8_addr, &ip[0], 16); // TODO
+    tmpaddr->sin6_addr = in6addr_any;
+    tmpaddr->sin6_flowinfo = 0;
+    sock_size = sizeof(sockaddr_in6);
+  } else
+#endif
+  if (1) {
+    struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
+    memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
+    tmpaddr->sin_family = AF_INET;
+    tmpaddr->sin_port = htons(server_port);
+    tmpaddr->sin_addr.s_addr = (in_addr_t)address;
+    sock_size = sizeof(sockaddr_in);
+  }
+  //AddLog(LOG_LEVEL_DEBUG, "WiFiUDP46::begin udp_server=%p sock_addr=%p sock_size=%i", udp_server, sock_addr, sock_size);
+  if(bind(udp_server , (sockaddr*)&serveraddr, sock_size) == -1){
     log_e("could not bind socket: %d", errno);
     stop();
     return 0;
   }
+
   fcntl(udp_server, F_SETFL, O_NONBLOCK);
   return 1;
 }
@@ -80,7 +103,7 @@ uint8_t WiFiUDP::begin(uint16_t p){
 
 uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
   if(begin(IPAddress(INADDR_ANY), p)){
-    if(a != 0){
+    if(!ip_addr_isany((ip_addr_t*)a)){
       struct ip_mreq mreq;
       mreq.imr_multiaddr.s_addr = (in_addr_t)a;
       mreq.imr_interface.s_addr = INADDR_ANY;
@@ -109,11 +132,15 @@ void WiFiUDP::stop(){
   }
   if(udp_server == -1)
     return;
-  if(multicast_ip != 0){
+  if(!ip_addr_isany((ip_addr_t*)multicast_ip)){
     struct ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = (in_addr_t)multicast_ip;
     mreq.imr_interface.s_addr = (in_addr_t)0;
+#if LWIP_IPV6
+    setsockopt(udp_server, IPPROTO_IPV6, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
+#else
     setsockopt(udp_server, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
+#endif
     multicast_ip = IPAddress(INADDR_ANY);
   }
   close(udp_server);
@@ -174,14 +201,28 @@ int WiFiUDP::beginPacket(const char *host, uint16_t port){
 }
 
 int WiFiUDP::endPacket(){
-  struct sockaddr_in recipient;
-  recipient.sin_addr.s_addr = (uint32_t)remote_ip;
-  recipient.sin_family = AF_INET;
-  recipient.sin_port = htons(remote_port);
-  int sent = sendto(udp_server, tx_buffer, tx_buffer_len, 0, (struct sockaddr*) &recipient, sizeof(recipient));
-  if(sent < 0){
-    log_e("could not send data: %d", errno);
-    return 0;
+
+  if (remote_ip.isV4()) {
+    struct sockaddr_in recipient;
+    recipient.sin_addr.s_addr = (uint32_t)remote_ip;
+    recipient.sin_family = AF_INET;
+    recipient.sin_port = htons(remote_port);
+    int sent = sendto(udp_server, tx_buffer, tx_buffer_len, 0, (struct sockaddr*) &recipient, sizeof(recipient));
+    if(sent < 0){
+      log_e("could not send data: %d", errno);
+      return 0;
+    }
+  } else {
+    struct sockaddr_in6 recipient;
+    recipient.sin6_flowinfo = 0;
+    recipient.sin6_addr = *(in6_addr*)(ip_addr_t*)remote_ip;
+    recipient.sin6_family = AF_INET6;
+    recipient.sin6_port = htons(remote_port);
+    int sent = sendto(udp_server, tx_buffer, tx_buffer_len, 0, (struct sockaddr*) &recipient, sizeof(recipient));
+    if(sent < 0){
+      log_e("could not send data: %d", errno);
+      return 0;
+    }
   }
   return 1;
 }
