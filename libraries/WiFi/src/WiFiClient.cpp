@@ -224,7 +224,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 
     if (ip.type() == IPv6) {
         struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
-        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
+        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in6));
         sockfd = socket(AF_INET6, SOCK_STREAM, 0);
         tmpaddr->sin6_family = AF_INET6;
         memcpy(tmpaddr->sin6_addr.un.u8_addr, &ip[0], 16);
