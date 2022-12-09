@@ -22,223 +22,101 @@
 #include <Print.h>
 #include <StreamString.h>
 
-IPAddress::IPAddress() : IPAddress(IPv4) {}
-
-IPAddress::IPAddress(IPType ip_type)
-{
-    _type = ip_type;
-    memset(_address.bytes, 0, sizeof(_address.bytes));
+IPAddress::IPAddress() {
+#if LWIP_IPV6
+  _ip = *IP6_ADDR_ANY;
+#else
+  _ip = *IP_ADDR_ANY;
+#endif
+    // _ip = *IP_ANY_TYPE; // lwIP's v4-or-v6 generic address
 }
 
-IPAddress::IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet)
+IPAddress::IPAddress(const IPAddress& from)
 {
-    _type = IPv4;
-    memset(_address.bytes, 0, sizeof(_address.bytes));
-    _address.bytes[IPADDRESS_V4_BYTES_INDEX] = first_octet;
-    _address.bytes[IPADDRESS_V4_BYTES_INDEX + 1] = second_octet;
-    _address.bytes[IPADDRESS_V4_BYTES_INDEX + 2] = third_octet;
-    _address.bytes[IPADDRESS_V4_BYTES_INDEX + 3] = fourth_octet;
+    ip_addr_copy(_ip, from._ip);
+}
+
+IPAddress::IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet) {
+    setV4();
+    (*this)[0] = first_octet;
+    (*this)[1] = second_octet;
+    (*this)[2] = third_octet;
+    (*this)[3] = fourth_octet;
 }
 
 IPAddress::IPAddress(uint8_t o1, uint8_t o2, uint8_t o3, uint8_t o4, uint8_t o5, uint8_t o6, uint8_t o7, uint8_t o8, uint8_t o9, uint8_t o10, uint8_t o11, uint8_t o12, uint8_t o13, uint8_t o14, uint8_t o15, uint8_t o16) {
-    _type = IPv6;
-    _address.bytes[0] = o1;
-    _address.bytes[1] = o2;
-    _address.bytes[2] = o3;
-    _address.bytes[3] = o4;
-    _address.bytes[4] = o5;
-    _address.bytes[5] = o6;
-    _address.bytes[6] = o7;
-    _address.bytes[7] = o8;
-    _address.bytes[8] = o9;
-    _address.bytes[9] = o10;
-    _address.bytes[10] = o11;
-    _address.bytes[11] = o12;
-    _address.bytes[12] = o13;
-    _address.bytes[13] = o14;
-    _address.bytes[14] = o15;
-    _address.bytes[15] = o16;
+    setV6();
+    (*this)[0] = o1;
+    (*this)[1] = o2;
+    (*this)[2] = o3;
+    (*this)[3] = o4;
+    (*this)[4] = o5;
+    (*this)[5] = o6;
+    (*this)[6] = o7;
+    (*this)[7] = o8;
+    (*this)[8] = o9;
+    (*this)[9] = o10;
+    (*this)[10] = o11;
+    (*this)[11] = o12;
+    (*this)[12] = o13;
+    (*this)[13] = o14;
+    (*this)[14] = o15;
+    (*this)[15] = o16;
 }
 
-IPAddress::IPAddress(uint32_t address)
-{
-    // IPv4 only
-    _type = IPv4;
-    memset(_address.bytes, 0, sizeof(_address.bytes));
-    _address.dword[IPADDRESS_V4_DWORD_INDEX] = address;
-
-    // NOTE on conversion/comparison and uint32_t:
-    // These conversions are host platform dependent.
-    // There is a defined integer representation of IPv4 addresses,
-    // based on network byte order (will be the value on big endian systems),
-    // e.g. http://2398766798 is the same as http://142.250.70.206,
-    // However on little endian systems the octets 0x83, 0xFA, 0x46, 0xCE,
-    // in that order, will form the integer (uint32_t) 3460758158 .
-}
-
-IPAddress::IPAddress(const uint8_t *address) : IPAddress(IPv4, address) {}
-
-IPAddress::IPAddress(IPType ip_type, const uint8_t *address)
-{
-    _type = ip_type;
-    if (ip_type == IPv4) {
-        memset(_address.bytes, 0, sizeof(_address.bytes));
-        memcpy(&_address.bytes[IPADDRESS_V4_BYTES_INDEX], address, sizeof(uint32_t));
+IPAddress::IPAddress(IPType type, const uint8_t *address) {
+    if (type == IPv4) {
+        setV4();
+        memcpy(&this->_ip.u_addr.ip4, address, 4);
+    } else if (type == IPv6) {
+        setV6();
+        memcpy(&this->_ip.u_addr.ip6.addr[0], address, 4);
     } else {
-        memcpy(_address.bytes, address, sizeof(_address.bytes));
-    }
-}
-
-IPAddress& IPAddress::operator=(const uint8_t *address)
-{
-    // IPv4 only conversion from byte pointer
-    _type = IPv4;
-    memset(_address.bytes, 0, sizeof(_address.bytes));
-    memcpy(&_address.bytes[IPADDRESS_V4_BYTES_INDEX], address, sizeof(uint32_t));
-    return *this;
-}
-
-IPAddress& IPAddress::operator=(uint32_t address)
-{
-    // IPv4 conversion
-    // See note on conversion/comparison and uint32_t
-    _type = IPv4;
-    memset(_address.bytes, 0, sizeof(_address.bytes));
-    _address.dword[IPADDRESS_V4_DWORD_INDEX] = address;
-    return *this;
-}
-
-bool IPAddress::operator==(const IPAddress& addr) const
-{
-    return (addr._type == _type)
-        && (memcmp(addr._address.bytes, _address.bytes, sizeof(_address.bytes)) == 0);
-}
-
-bool IPAddress::operator==(const uint8_t* addr) const
-{
-    // IPv4 only comparison to byte pointer
-    // Can't support IPv6 as we know our type, but not the length of the pointer
-    return _type == IPv4 && memcmp(addr, &_address.bytes[IPADDRESS_V4_BYTES_INDEX], sizeof(uint32_t)) == 0;
-}
-
-uint8_t IPAddress::operator[](int index) const {
-    if (_type == IPv4) {
-        return _address.bytes[IPADDRESS_V4_BYTES_INDEX + index];
-    }
-    return _address.bytes[index];
-}
-
-uint8_t& IPAddress::operator[](int index) {
-    if (_type == IPv4) {
-        return _address.bytes[IPADDRESS_V4_BYTES_INDEX + index];
-    }
-    return _address.bytes[index];
-}
-
-size_t IPAddress::printTo(Print& p) const
-{
-    size_t n = 0;
-
-    if (_type == IPv6) {
-        // IPv6 IETF canonical format: compress left-most longest run of two or more zero fields, lower case
-        int8_t longest_start = -1;
-        int8_t longest_length = 1;
-        int8_t current_start = -1;
-        int8_t current_length = 0;
-        for (int8_t f = 0; f < 8; f++) {
-            if (_address.bytes[f * 2] == 0 && _address.bytes[f * 2 + 1] == 0) {
-                if (current_start == -1) {
-                    current_start = f;
-                    current_length = 1;
-                } else {
-                    current_length++;
-                }
-                if (current_length > longest_length) {
-                    longest_start = current_start;
-                    longest_length = current_length;
-                }
-            } else {
-                current_start = -1;
-            }
-        }
-        for (int f = 0; f < 8; f++) {
-            if (f < longest_start || f >= longest_start + longest_length) {
-                uint8_t c1 = _address.bytes[f * 2] >> 4;
-                uint8_t c2 = _address.bytes[f * 2] & 0xf;
-                uint8_t c3 = _address.bytes[f * 2 + 1] >> 4;
-                uint8_t c4 = _address.bytes[f * 2 + 1] & 0xf;
-                if (c1 > 0) {
-                    n += p.print((char)(c1 < 10 ? '0' + c1 : 'a' + c1 - 10));
-                }
-                if (c1 > 0 || c2 > 0) {
-                    n += p.print((char)(c2 < 10 ? '0' + c2 : 'a' + c2 - 10));
-                }
-                if (c1 > 0 || c2 > 0 || c3 > 0) {
-                    n += p.print((char)(c3 < 10 ? '0' + c3 : 'a' + c3 - 10));
-                }
-                n += p.print((char)(c4 < 10 ? '0' + c4 : 'a' + c4 - 10));
-                if (f < 7) {
-                    n += p.print(':');
-                }
-            } else if (f == longest_start) {
-                if (longest_start == 0) {
-                    n += p.print(':');
-                }
-                n += p.print(':');
-            }
-        }
-        return n;
+#if LWIP_IPV6
+  _ip = *IP6_ADDR_ANY;
+#else
+  _ip = *IP_ADDR_ANY;
+#endif
     }
 
-    // IPv4
-    for (int i =0; i < 3; i++)
-    {
-        n += p.print(_address.bytes[IPADDRESS_V4_BYTES_INDEX + i], DEC);
-        n += p.print('.');
-    }
-    n += p.print(_address.bytes[IPADDRESS_V4_BYTES_INDEX + 3], DEC);
-    return n;
 }
 
-String IPAddress::toString() const
-{
-    if (_type == IPv6)
-    {
-        StreamString s;
-        s.reserve(40);
-        printTo(s);
-        return s;
-    }
-
-    // IPv4
-    char szRet[16];
-    sprintf(szRet,"%u.%u.%u.%u", _address.bytes[IPADDRESS_V4_BYTES_INDEX], _address.bytes[IPADDRESS_V4_BYTES_INDEX+1], _address.bytes[IPADDRESS_V4_BYTES_INDEX+2], _address.bytes[IPADDRESS_V4_BYTES_INDEX+3]);
-    return String(szRet);
+void IPAddress::ctor32(uint32_t address) {
+    setV4();
+    v4() = address;
 }
 
-bool IPAddress::fromString(const char *address)
-{
-    if (!fromString4(address))
-    {
+IPAddress::IPAddress(const uint8_t *address) {
+    setV4();
+    (*this)[0] = address[0];
+    (*this)[1] = address[1];
+    (*this)[2] = address[2];
+    (*this)[3] = address[3];
+}
+
+bool IPAddress::fromString(const char *address) {
+    if (!fromString4(address)) {
+#if LWIP_IPV6
         return fromString6(address);
+#else
+        return false;
+#endif
     }
     return true;
 }
 
-bool IPAddress::fromString4(const char *address)
-{
-    // TODO: add support for "a", "a.b", "a.b.c" formats
+bool IPAddress::fromString4(const char *address) {
+    // TODO: (IPv4) add support for "a", "a.b", "a.b.c" formats
 
-    int16_t acc = -1; // Accumulator
+    uint16_t acc = 0; // Accumulator
     uint8_t dots = 0;
 
-    memset(_address.bytes, 0, sizeof(_address.bytes));
     while (*address)
     {
         char c = *address++;
         if (c >= '0' && c <= '9')
         {
-            acc = (acc < 0) ? (c - '0') : acc * 10 + (c - '0');
+            acc = acc * 10 + (c - '0');
             if (acc > 255) {
                 // Value out of [0..255] range
                 return false;
@@ -247,15 +125,11 @@ bool IPAddress::fromString4(const char *address)
         else if (c == '.')
         {
             if (dots == 3) {
-                // Too many dots (there must be 3 dots)
+                // Too much dots (there must be 3 dots)
                 return false;
             }
-            if (acc < 0) {
-                /* No value between dots, e.g. '1..' */
-                return false;
-            }
-            _address.bytes[IPADDRESS_V4_BYTES_INDEX + dots++] = acc;
-            acc = -1;
+            (*this)[dots++] = acc;
+            acc = 0;
         }
         else
         {
@@ -268,23 +142,103 @@ bool IPAddress::fromString4(const char *address)
         // Too few dots (there must be 3 dots)
         return false;
     }
-    if (acc < 0) {
-        /* No value between dots, e.g. '1..' */
-        return false;
-    }
-    _address.bytes[IPADDRESS_V4_BYTES_INDEX + 3] = acc;
-    _type = IPv4;
+    (*this)[3] = acc;
+
+    setV4();
     return true;
 }
 
+IPAddress& IPAddress::operator=(const uint8_t *address) {
+    setV4();
+    v4() = *reinterpret_cast<const uint32_t*>(address);
+    return *this;
+}
+
+IPAddress& IPAddress::operator=(uint32_t address) {
+    setV4();
+    v4() = address;
+    return *this;
+}
+
+bool IPAddress::operator==(const uint8_t* addr) const {
+    return isV4() && v4() == *reinterpret_cast<const uint32_t*>(addr);
+}
+
+size_t IPAddress::printTo(Print& p) const {
+    size_t n = 0;
+
+    // if (!isSet())
+    //     return p.print(F("(IP unset)"));
+
+#if LWIP_IPV6
+    if (isV6()) {
+        int count0 = 0;
+        for (int i = 0; i < 8; i++) {
+            uint16_t bit = PP_NTOHS(raw6()[i]);
+            if (bit || count0 < 0) {
+                n += p.printf("%x", bit);
+                if (count0 > 0)
+                    // no more hiding 0
+                    count0 = -8;
+            } else
+                count0++;
+            if ((i != 7 && count0 < 2) || count0 == 7)
+                n += p.print(':');
+        }
+        return n;
+    }
+#endif
+
+    for(int i = 0; i < 4; i++) {
+        n += p.print((*this)[i], DEC);
+        if (i != 3)
+            n += p.print('.');
+    }
+    return n;
+}
+
+String IPAddress::toString() const
+{
+    StreamString sstr;
+#if LWIP_IPV6
+    if (isV6())
+        sstr.reserve(40); // 8 shorts x 4 chars each + 7 colons + nullterm
+    else
+#endif
+        sstr.reserve(16); // 4 bytes with 3 chars max + 3 dots + nullterm, or '(IP unset)'
+    printTo(sstr);
+    return sstr;
+}
+
+bool IPAddress::isValid(const String& arg) {
+	return IPAddress().fromString(arg);
+}
+
+bool IPAddress::isValid(const char* arg) {
+	return IPAddress().fromString(arg);
+}
+
+const IPAddress INADDR46_ANY; // generic "0.0.0.0" for IPv4 & IPv6
+const IPAddress INADDR46_NONE(255,255,255,255);
+
+void IPAddress::clear() {
+    (*this) = INADDR46_ANY;
+}
+
+/**************************************/
+
+#if LWIP_IPV6
+
 bool IPAddress::fromString6(const char *address) {
+    // TODO: test test test
+
     uint32_t acc = 0; // Accumulator
-    int colons = 0, double_colons = -1;
+    int dots = 0, doubledots = -1;
 
     while (*address)
     {
         char c = tolower(*address++);
-        if (isalnum(c) && c <= 'f') {
+        if (isalnum(c)) {
             if (c >= 'a')
                 c -= 'a' - '0' - 10;
             acc = acc * 16 + (c - '0');
@@ -294,27 +248,17 @@ bool IPAddress::fromString6(const char *address) {
         }
         else if (c == ':') {
             if (*address == ':') {
-                if (double_colons >= 0) {
+                if (doubledots >= 0)
                     // :: allowed once
                     return false;
-                }
-                if (*address != '\0' && *(address + 1) == ':') {
-                    // ::: not allowed
-                    return false;
-                }
                 // remember location
-                double_colons = colons + !!acc;
+                doubledots = dots + !!acc;
                 address++;
-            } else if (*address == '\0') {
-                // can't end with a single colon
-                return false;
             }
-            if (colons == 7)
+            if (dots == 7)
                 // too many separators
                 return false;
-            _address.bytes[colons * 2] = acc >> 8;
-            _address.bytes[colons * 2 + 1] = acc & 0xff;
-            colons++;
+            raw6()[dots++] = PP_HTONS(acc);
             acc = 0;
         }
         else
@@ -322,28 +266,22 @@ bool IPAddress::fromString6(const char *address) {
             return false;
     }
 
-    if (double_colons == -1 && colons != 7) {
+    if (doubledots == -1 && dots != 7)
         // Too few separators
         return false;
-    }
-    if (double_colons > -1 && colons > 6) {
-        // Too many segments (double colon must be at least one zero field)
-        return false;
-    }
-    _address.bytes[colons * 2] = acc >> 8;
-    _address.bytes[colons * 2 + 1] = acc & 0xff;
-    colons++;
+    raw6()[dots++] = PP_HTONS(acc);
 
-    if (double_colons != -1) {
-        for (int i = colons * 2 - double_colons * 2 - 1; i >= 0; i--)
-            _address.bytes[16 - colons * 2 + double_colons * 2 + i] = _address.bytes[double_colons * 2 + i];
-        for (int i = double_colons * 2; i < 16 - colons * 2 + double_colons * 2; i++)
-            _address.bytes[i] = 0;
+    if (doubledots != -1) {
+        for (int i = dots - doubledots - 1; i >= 0; i--)
+            raw6()[8 - dots + doubledots + i] = raw6()[doubledots + i];
+        for (int i = doubledots; i < 8 - dots + doubledots; i++)
+            raw6()[i] = 0;
     }
 
-    _type = IPv6;
+    setV6();
     return true;
 }
+#endif // LWIP_IPV6
 
 // declared one time - as external in IPAddress.h
-IPAddress INADDR_NONE(0, 0, 0, 0);
+IPAddress INADDR_NONE(0, 0, 0, 0);      // TODO
