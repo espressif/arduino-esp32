@@ -85,7 +85,7 @@ bool tuh_msc_test_unit_ready(uint8_t dev_addr, uint8_t lun, tuh_msc_complete_cb_
 
 // Perform SCSI Request Sense 10 command
 // Complete callback is invoked when SCSI op is complete.
-bool tuh_msc_request_sense(uint8_t dev_addr, uint8_t lun, void *resposne, tuh_msc_complete_cb_t complete_cb, uintptr_t arg);
+bool tuh_msc_request_sense(uint8_t dev_addr, uint8_t lun, void *response, tuh_msc_complete_cb_t complete_cb, uintptr_t arg);
 
 // Perform SCSI Read 10 command. Read n blocks starting from LBA to buffer
 // Complete callback is invoked when SCSI op is complete.
