@@ -19452,3 +19452,178 @@ cytron_maker_feather_aiot_s3.menu.EraseFlash.all=Enabled
 cytron_maker_feather_aiot_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# RedPill(+) ESP32-S3
+
+redpill_esp32s3.name=RedPill(+) ESP32-S3
+redpill_esp32s3.vid.0=0x303a
+redpill_esp32s3.pid.0=0x1001
+
+redpill_esp32s3.bootloader.tool=esptool_py
+redpill_esp32s3.bootloader.tool.default=esptool_py
+
+redpill_esp32s3.upload.tool=esptool_py
+redpill_esp32s3.upload.tool.default=esptool_py
+redpill_esp32s3.upload.tool.network=esp_ota
+
+redpill_esp32s3.upload.maximum_size=1310720
+redpill_esp32s3.upload.maximum_data_size=327680
+redpill_esp32s3.upload.flags=
+redpill_esp32s3.upload.extra_flags=
+redpill_esp32s3.upload.use_1200bps_touch=true
+redpill_esp32s3.upload.wait_for_upload_port=true
+
+redpill_esp32s3.serial.disableDTR=false
+redpill_esp32s3.serial.disableRTS=false
+
+redpill_esp32s3.build.tarch=xtensa
+redpill_esp32s3.build.bootloader_addr=0x0
+redpill_esp32s3.build.target=esp32s3
+redpill_esp32s3.build.mcu=esp32s3
+redpill_esp32s3.build.core=esp32
+redpill_esp32s3.build.variant=redpill_esp32s3
+redpill_esp32s3.build.board=REDPILL_ESP32S3
+
+redpill_esp32s3.build.usb_mode=0
+redpill_esp32s3.build.cdc_on_boot=1
+redpill_esp32s3.build.msc_on_boot=0
+redpill_esp32s3.build.dfu_on_boot=0
+redpill_esp32s3.build.f_cpu=240000000L
+redpill_esp32s3.build.flash_size=8MB
+redpill_esp32s3.build.flash_freq=80m
+redpill_esp32s3.build.flash_mode=dio
+redpill_esp32s3.build.boot=qio
+redpill_esp32s3.build.partitions=default
+redpill_esp32s3.build.defines=
+redpill_esp32s3.build.loop_core=
+redpill_esp32s3.build.event_core=
+redpill_esp32s3.build.flash_type=qio
+redpill_esp32s3.build.psram_type=qspi
+redpill_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+redpill_esp32s3.menu.LoopCore.1=Core 1
+redpill_esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+redpill_esp32s3.menu.LoopCore.0=Core 0
+redpill_esp32s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+redpill_esp32s3.menu.EventsCore.1=Core 1
+redpill_esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+redpill_esp32s3.menu.EventsCore.0=Core 0
+redpill_esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+redpill_esp32s3.menu.USBMode.default=USB-OTG (TinyUSB)
+redpill_esp32s3.menu.USBMode.default.build.usb_mode=0
+redpill_esp32s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+redpill_esp32s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+redpill_esp32s3.menu.CDCOnBoot.cdc=Enabled
+redpill_esp32s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+redpill_esp32s3.menu.CDCOnBoot.default=Disabled
+redpill_esp32s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+redpill_esp32s3.menu.MSCOnBoot.default=Disabled
+redpill_esp32s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+redpill_esp32s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+redpill_esp32s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+redpill_esp32s3.menu.DFUOnBoot.default=Disabled
+redpill_esp32s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+redpill_esp32s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+redpill_esp32s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+redpill_esp32s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+redpill_esp32s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+redpill_esp32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+redpill_esp32s3.menu.UploadMode.default=UART0 / Hardware CDC
+redpill_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+redpill_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+redpill_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
+redpill_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+redpill_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
+redpill_esp32s3.menu.PSRAM.disabled=Disabled
+redpill_esp32s3.menu.PSRAM.disabled.build.defines=
+redpill_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
+redpill_esp32s3.menu.PSRAM.opi=OPI PSRAM
+redpill_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+redpill_esp32s3.menu.PSRAM.opi.build.psram_type=opi
+
+redpill_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+redpill_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+redpill_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+redpill_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+redpill_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+redpill_esp32s3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+redpill_esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+redpill_esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+redpill_esp32s3.menu.CPUFreq.240=240MHz (WiFi)
+redpill_esp32s3.menu.CPUFreq.240.build.f_cpu=240000000L
+redpill_esp32s3.menu.CPUFreq.160=160MHz (WiFi)
+redpill_esp32s3.menu.CPUFreq.160.build.f_cpu=160000000L
+redpill_esp32s3.menu.CPUFreq.80=80MHz (WiFi)
+redpill_esp32s3.menu.CPUFreq.80.build.f_cpu=80000000L
+redpill_esp32s3.menu.CPUFreq.40=40MHz
+redpill_esp32s3.menu.CPUFreq.40.build.f_cpu=40000000L
+redpill_esp32s3.menu.CPUFreq.20=20MHz
+redpill_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
+redpill_esp32s3.menu.CPUFreq.10=10MHz
+redpill_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+redpill_esp32s3.menu.FlashMode.qio=QIO 80MHz
+redpill_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
+redpill_esp32s3.menu.FlashMode.qio.build.boot=qio
+redpill_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
+redpill_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
+redpill_esp32s3.menu.FlashMode.qio120=QIO 120MHz
+redpill_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
+redpill_esp32s3.menu.FlashMode.qio120.build.boot=qio
+redpill_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
+redpill_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
+redpill_esp32s3.menu.FlashMode.dio=DIO 80MHz
+redpill_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
+redpill_esp32s3.menu.FlashMode.dio.build.boot=dio
+redpill_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
+redpill_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
+redpill_esp32s3.menu.FlashMode.opi=OPI 80MHz
+redpill_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
+redpill_esp32s3.menu.FlashMode.opi.build.boot=opi
+redpill_esp32s3.menu.FlashMode.opi.build.boot_freq=80m
+redpill_esp32s3.menu.FlashMode.opi.build.flash_freq=80m
+
+redpill_esp32s3.menu.FlashSize.8M=8MB (64Mb)
+redpill_esp32s3.menu.FlashSize.8M.build.flash_size=8MB
+
+redpill_esp32s3.menu.UploadSpeed.921600=921600
+redpill_esp32s3.menu.UploadSpeed.921600.upload.speed=921600
+redpill_esp32s3.menu.UploadSpeed.115200=115200
+redpill_esp32s3.menu.UploadSpeed.115200.upload.speed=115200
+redpill_esp32s3.menu.UploadSpeed.256000.windows=256000
+redpill_esp32s3.menu.UploadSpeed.256000.upload.speed=256000
+redpill_esp32s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+redpill_esp32s3.menu.UploadSpeed.230400=230400
+redpill_esp32s3.menu.UploadSpeed.230400.upload.speed=230400
+redpill_esp32s3.menu.UploadSpeed.460800.linux=460800
+redpill_esp32s3.menu.UploadSpeed.460800.macosx=460800
+redpill_esp32s3.menu.UploadSpeed.460800.upload.speed=460800
+redpill_esp32s3.menu.UploadSpeed.512000.windows=512000
+redpill_esp32s3.menu.UploadSpeed.512000.upload.speed=512000
+
+redpill_esp32s3.menu.DebugLevel.none=None
+redpill_esp32s3.menu.DebugLevel.none.build.code_debug=0
+redpill_esp32s3.menu.DebugLevel.error=Error
+redpill_esp32s3.menu.DebugLevel.error.build.code_debug=1
+redpill_esp32s3.menu.DebugLevel.warn=Warn
+redpill_esp32s3.menu.DebugLevel.warn.build.code_debug=2
+redpill_esp32s3.menu.DebugLevel.info=Info
+redpill_esp32s3.menu.DebugLevel.info.build.code_debug=3
+redpill_esp32s3.menu.DebugLevel.debug=Debug
+redpill_esp32s3.menu.DebugLevel.debug.build.code_debug=4
+redpill_esp32s3.menu.DebugLevel.verbose=Verbose
+redpill_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
+
+redpill_esp32s3.menu.EraseFlash.none=Disabled
+redpill_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+redpill_esp32s3.menu.EraseFlash.all=Enabled
+redpill_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
