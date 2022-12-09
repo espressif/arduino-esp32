@@ -218,20 +218,18 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 
 int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
 {
-    struct sockaddr_storage serveraddr;
+    struct sockaddr_storage serveraddr = {};
     _timeout = timeout;
     int sockfd = -1;
 
     if (ip.type() == IPv6) {
         struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
-        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in6));
         sockfd = socket(AF_INET6, SOCK_STREAM, 0);
         tmpaddr->sin6_family = AF_INET6;
         memcpy(tmpaddr->sin6_addr.un.u8_addr, &ip[0], 16);
         tmpaddr->sin6_port = htons(port);
     } else {
         struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
-        memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         tmpaddr->sin_family = AF_INET;
         tmpaddr->sin_addr.s_addr = ip;
