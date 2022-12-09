@@ -68,13 +68,8 @@ void loop() {
       sample = -1 * sample;
     }
 
-    if(mode == I2S_PHILIPS_MODE || mode == ADC_DAC_MODE){ // write the same sample twice, once for Right and once for Left channel
-      I2S.write(sample); // Right channel
-      I2S.write(sample); // Left channel
-    }else if(mode == I2S_RIGHT_JUSTIFIED_MODE || mode == I2S_LEFT_JUSTIFIED_MODE){
-      // write the same only once - it will be automatically copied to the other channel
-      I2S.write(sample);
-    }
+    I2S.write(sample); // Right channel
+    I2S.write(sample); // Left channel
 
     // increment the counter for the next sample
     count++;

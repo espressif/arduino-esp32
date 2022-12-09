@@ -49,10 +49,10 @@ Second option to measure voltage on trimmer / potentiometer has following connec
    Tools -> Board -> ESP32 Arduino -> your board
  2. Upload sketch
    Press upload button (arrow in top left corner)
-   When you see in console line like this: "Connecting........_____.....__"
-     On your board press and hold Boot button and press EN button shortly. Now you can release both buttons.
+   When you see in console line like this: "Connecting........_____.....__" press "Boot" button on your board.
      You should see lines like this: "Writing at 0x00010000... (12 %)" with rising percentage on each line.
-     If this fails, try the board buttons right after pressing upload button, or reconnect the USB cable.
+     If this fails, try the pressing the "Boot" button on board right after pressing upload button in IDE.
+     You can also try reconnect the USB cable. Reconnecting may change the serial port on your computer.
  3. Open plotter
    Tools -> Serial Plotter
      Enjoy

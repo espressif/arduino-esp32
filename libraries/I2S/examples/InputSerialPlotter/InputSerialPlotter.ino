@@ -13,7 +13,7 @@
   | 3.3V | 3.3V  | 3.3V  | 3.3V  | 3.3V  |           3.3V               |
   | SCK  |   1   |   2   |  A3   |  18   |             18               |
   | FS   |   0   |   3   |  A2   |  19   |             19               |
-  | SD   |   9   |  A6   |   4   |  22   |              5               |
+  | SD   |   9   |  A6   |   4   |  21   |              4               |
 
  created 17 November 2016
  by Sandeep Mistry
@@ -38,10 +38,10 @@ void setup() {
 }
 
 void loop() {
-  // read a sample
-  int sample = I2S.read();
+  int sample;
+  sample = I2S.read(); // read a sample
 
-  if (sample && sample != -1 && sample != 1) {
+  if(sample){
     Serial.println(sample);
   }
 }

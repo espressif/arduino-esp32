@@ -29,7 +29,7 @@ namespace esp_i2s {
 // Default pins
 //I2S0 is available for all ESP32 SoCs
 //MCLK SCK WS  SD(OUT) SDIN
-//   0  18 19  21      22    ESP32
+//   0  18 19  21      34    ESP32
 //   0  18 19   4       5    ESP32-x (C3,S2,S3)
 
 #ifndef PIN_I2S_MCLK
@@ -66,7 +66,7 @@ namespace esp_i2s {
 
 #ifndef PIN_I2S_SD_IN
     #if CONFIG_IDF_TARGET_ESP32
-    #define PIN_I2S_SD_IN GPIO_NUM_22
+    #define PIN_I2S_SD_IN GPIO_NUM_34
   #else
     #define PIN_I2S_SD_IN GPIO_NUM_5
   #endif
@@ -77,30 +77,30 @@ namespace esp_i2s {
   #if CONFIG_IDF_TARGET_ESP32
     // ESP32 pins
     // MCLK SCK WS  SD(OUT) SDIN
-    //    1  23 25  26       27
+    //    1  22 23  27       35
 
     #ifndef PIN_I2S1_MCLK
       #define PIN_I2S1_MCLK GPIO_NUM_1
     #endif
 
     #ifndef PIN_I2S1_SCK
-      #define PIN_I2S1_SCK GPIO_NUM_23
+      #define PIN_I2S1_SCK GPIO_NUM_22
     #endif
 
     #ifndef PIN_I2S1_FS
-      #define PIN_I2S1_FS GPIO_NUM_25
+      #define PIN_I2S1_FS GPIO_NUM_23
     #endif
 
     #ifndef PIN_I2S1_SD
-      #define PIN_I2S1_SD GPIO_NUM_26
+      #define PIN_I2S1_SD GPIO_NUM_27
     #endif
 
     #ifndef PIN_I2S1_SD_OUT
-      #define PIN_I2S1_SD_OUT GPIO_NUM_26
+      #define PIN_I2S1_SD_OUT GPIO_NUM_27
     #endif
 
     #ifndef PIN_I2S1_SD_IN
-      #define PIN_I2S1_SD_IN GPIO_NUM_27
+      #define PIN_I2S1_SD_IN GPIO_NUM_35
     #endif
   #endif
 
