@@ -55,8 +55,6 @@ public:
     IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet);
     IPAddress(uint8_t o1, uint8_t o2, uint8_t o3, uint8_t o4, uint8_t o5, uint8_t o6, uint8_t o7, uint8_t o8, uint8_t o9, uint8_t o10, uint8_t o11, uint8_t o12, uint8_t o13, uint8_t o14, uint8_t o15, uint8_t o16);
     IPAddress(uint32_t address) { ctor32(address); }
-    IPAddress(unsigned long address) { ctor32(address); }
-    IPAddress(int address) { ctor32(address); }
     IPAddress(const uint8_t *address);      // v4 only
     IPAddress(IPType type, const uint8_t *address);
 
