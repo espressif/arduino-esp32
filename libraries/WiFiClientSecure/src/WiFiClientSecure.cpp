@@ -264,10 +264,10 @@ void WiFiClientSecure::setCACert (const char *rootCA)
  {
     if (bundle != NULL)
     {
-        esp_crt_bundle_set(bundle);
+        arduino_esp_crt_bundle_set(bundle);
         _use_ca_bundle = true;
     } else {
-        esp_crt_bundle_detach(NULL);
+        arduino_esp_crt_bundle_detach(NULL);
         _use_ca_bundle = false;
     }
  }
