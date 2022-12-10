@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-// Due to the use of unmasked pointers, this FIFO does not suffer from loosing
+// Due to the use of unmasked pointers, this FIFO does not suffer from losing
 // one item slice. Furthermore, write and read operations are completely
 // decoupled as write and read functions do not modify a common state. Henceforth,
 // writing or reading from the FIFO within an ISR is safe as long as no other
@@ -133,7 +133,7 @@ uint16_t tu_fifo_depth(tu_fifo_t* f)
 }
 
 // Pointer modifications intended to be used in combinations with DMAs.
-// USE WITH CARE - NO SAFTY CHECKS CONDUCTED HERE! NOT MUTEX PROTECTED!
+// USE WITH CARE - NO SAFETY CHECKS CONDUCTED HERE! NOT MUTEX PROTECTED!
 void tu_fifo_advance_write_pointer(tu_fifo_t *f, uint16_t n);
 void tu_fifo_advance_read_pointer (tu_fifo_t *f, uint16_t n);
 
