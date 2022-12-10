@@ -228,6 +228,18 @@ struct stats_mib2_netif_ctrs {
   u32_t ifouterrors;
 };
 
+#if ESP_LWIP && IP_NAPT_STATS
+/**
+ * IP NAPT stats
+ */
+struct stats_ip_napt {
+  STAT_COUNTER nr_active_tcp;
+  STAT_COUNTER nr_active_udp;
+  STAT_COUNTER nr_active_icmp;
+  STAT_COUNTER nr_forced_evictions;
+};
+#endif /* ESP_LWIP && IP_NAPT */
+
 /** lwIP stats container */
 struct stats_ {
 #if LINK_STATS
@@ -298,6 +310,11 @@ struct stats_ {
   /** SNMP MIB2 */
   struct stats_mib2 mib2;
 #endif
+#if ESP_LWIP && IP_NAPT_STATS
+  /** IP NAPT */
+  struct stats_ip_napt ip_napt;
+#endif
+
 };
 
 /** Global variable containing lwIP internal statistics. Add this to your debugger's watchlist. */
@@ -465,6 +482,19 @@ void stats_init(void);
 #define MIB2_STATS_INC(x) STATS_INC(x)
 #else
 #define MIB2_STATS_INC(x)
+#endif
+
+#if IP_NAPT_STATS
+#define IP_NAPT_STATS_INC(x) STATS_INC(x)
+#else
+#define IP_NAPT_STATS_INC(x)
+#endif
+
+#if LWIP_STATS_DISPLAY && IP_NAPT_STATS
+void stats_display_ip_napt(struct stats_ip_napt *napt);
+#define IP_NAPT_STATS_DISPLAY() stats_display_ip_napt(&lwip_stats.ip_napt)
+#else
+#define IP_NAPT_STATS_DISPLAY()
 #endif
 
 /* Display of statistics */
