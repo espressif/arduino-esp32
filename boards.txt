@@ -18,6 +18,7 @@ menu.LoopCore=Arduino Runs On
 menu.EventsCore=Events Run On
 menu.MemoryType=Memory Type
 menu.EraseFlash=Erase All Flash Before Sketch Upload
+menu.JTAGAdapter=JTAG Adapter
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -68,6 +69,14 @@ esp32s3.build.loop_core=
 esp32s3.build.event_core=
 esp32s3.build.psram_type=qspi
 esp32s3.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+esp32s3.menu.JTAGAdapter.default=Integrated USB JTAG
+esp32s3.menu.JTAGAdapter.default.build.openocdscript=esp32s3-builtin.cfg
+esp32s3.menu.JTAGAdapter.external=FTDI Adapter
+esp32s3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+esp32s3.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 
 esp32s3.menu.PSRAM.disabled=Disabled
 esp32s3.menu.PSRAM.disabled.build.defines=
@@ -270,6 +279,14 @@ esp32c3.build.boot=qio
 esp32c3.build.partitions=default
 esp32c3.build.defines=
 
+## IDE 2.0 Seems to not update the value
+esp32c3.menu.JTAGAdapter.default=Integrated USB JTAG
+esp32c3.menu.JTAGAdapter.default.build.openocdscript=esp32c3-builtin.cfg
+esp32c3.menu.JTAGAdapter.external=FTDI Adapter
+esp32c3.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+esp32c3.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32c3.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+
 esp32c3.menu.CDCOnBoot.default=Disabled
 esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32c3.menu.CDCOnBoot.cdc=Enabled
@@ -426,6 +443,12 @@ esp32s2.build.flash_mode=dio
 esp32s2.build.boot=qio
 esp32s2.build.partitions=default
 esp32s2.build.defines=
+
+## IDE 2.0 Seems to not update the value
+esp32s2.menu.JTAGAdapter.external=FTDI Adapter
+esp32s2.menu.JTAGAdapter.external.build.openocdscript=esp32s2-kaluga-1.cfg
+esp32s2.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s2-bridge.cfg
 
 esp32s2.menu.CDCOnBoot.default=Disabled
 esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -602,6 +625,12 @@ esp32.build.partitions=default
 esp32.build.defines=
 esp32.build.loop_core=
 esp32.build.event_core=
+
+## IDE 2.0 Seems to not update the value
+esp32.menu.JTAGAdapter.external=FTDI Adapter
+esp32.menu.JTAGAdapter.external.build.openocdscript=esp32-wrover-kit-3.3v.cfg
+esp32.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 
 esp32.menu.PSRAM.disabled=Disabled
 esp32.menu.PSRAM.disabled.build.defines=
