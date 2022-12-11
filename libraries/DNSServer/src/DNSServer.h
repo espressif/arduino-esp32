@@ -5,8 +5,9 @@
 #define DNS_QR_RESPONSE 1
 #define DNS_OPCODE_QUERY 0
 #define DNS_DEFAULT_TTL 60        // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
-#define DNS_OFFSET_DOMAIN_NAME 12 // Offset in bytes to reach the domain name in the DNS message 
 #define DNS_HEADER_SIZE 12 
+#define DNS_OFFSET_DOMAIN_NAME DNS_HEADER_SIZE // Offset in bytes to reach the domain name labels in the DNS message
+#define DNS_DEFAULT_PORT  53
 
 enum class DNSReplyCode:uint16_t
 {
@@ -75,10 +76,29 @@ class DNSServer
 {
   public:
     DNSServer();
-    ~DNSServer();
+    /**
+     * @brief Construct a new DNSServer object
+     * builds DNS server with default parameters
+     * @param domainName - domain name to serve
+     */
+    DNSServer(const String &domainName);
+    ~DNSServer(){};                   // default d-tor
     void processNextRequest(){};      // stub, left for compatibility with an old version
     void setErrorReplyCode(const DNSReplyCode &replyCode);
     void setTTL(const uint32_t &ttl);
+
+    /**
+     * @brief Starts a server with current configuration or with default parameters
+     * if it's the first call.
+     * Defaults are:
+     * port: 53
+     * domainName: any
+     * ip: WiFi AP's IP address
+     * 
+     * @return true on success
+     * @return false if IP or socket error
+     */
+    bool start();
 
     // Returns true if successful, false if there are no sockets available
     bool start(const uint16_t &port,
@@ -93,7 +113,7 @@ class DNSServer
     uint32_t _ttl;
     DNSReplyCode _errorReplyCode;
     String _domainName;
-    unsigned char _resolvedIP[4];
+    IPAddress _resolvedIP;
 
 
     void downcaseAndRemoveWwwPrefix(String &domainName);
@@ -106,7 +126,7 @@ class DNSServer
      * @param len labels length
      * @return String 
      */
-    String getDomainNameWithoutWwwPrefix(const char* start, size_t len);
+    String getDomainNameWithoutWwwPrefix(const unsigned char* start, size_t len);
     inline bool requestIncludesOnlyOneQuestion(DNSHeader& dnsHeader);
     void replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuestion& dnsQuestion);
     inline void replyWithCustomCode(AsyncUDPPacket& req, DNSHeader& dnsHeader);
