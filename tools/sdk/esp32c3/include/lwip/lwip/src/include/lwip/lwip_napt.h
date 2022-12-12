@@ -59,13 +59,24 @@ extern "C" {
 #endif
 
 /* Timeouts in sec for the various protocol types */
+#ifndef IP_NAPT_TIMEOUT_MS_TCP
 #define IP_NAPT_TIMEOUT_MS_TCP (30*60*1000)
-#define IP_NAPT_TIMEOUT_MS_TCP_DISCON (20*1000)
+#endif
+#ifndef IP_NAPT_TIMEOUT_MS_TCP_DISCON
+#define IP_NAPT_TIMEOUT_MS_TCP_DISCON (TCP_MSL)
+#endif
+#ifndef IP_NAPT_TIMEOUT_MS_UDP
 #define IP_NAPT_TIMEOUT_MS_UDP (2*1000)
+#endif
+#ifndef IP_NAPT_TIMEOUT_MS_ICMP
 #define IP_NAPT_TIMEOUT_MS_ICMP (2*1000)
-
+#endif
+#ifndef IP_NAPT_PORT_RANGE_START
 #define IP_NAPT_PORT_RANGE_START 49152
+#endif
+#ifndef IP_NAPT_PORT_RANGE_END
 #define IP_NAPT_PORT_RANGE_END   61439
+#endif
 
 /**
  * Enable/Disable NAPT for a specified interface.
@@ -80,12 +91,11 @@ ip_napt_enable(u32_t addr, int enable);
 /**
  * Enable/Disable NAPT for a specified interface.
  *
- * @param netif number of the interface
+ * @param number number of the interface
  * @param enable non-zero to enable NAPT, or 0 to disable.
  */
 void
 ip_napt_enable_no(u8_t number, int enable);
-
 
 /**
  * Register port mapping on the external interface to internal interface.
@@ -101,15 +111,30 @@ ip_napt_enable_no(u8_t number, int enable);
 u8_t
 ip_portmap_add(u8_t proto, u32_t maddr, u16_t mport, u32_t daddr, u16_t dport);
 
+u8_t
+ip_portmap_get(u8_t proto, u16_t mport, u32_t *maddr, u32_t *daddr, u16_t *dport);
+
 
 /**
  * Unregister port mapping on the external interface to internal interface.
  *
  * @param proto target protocol
- * @param maddr ip address of the external interface
+ * @param mport mapped port on the external interface, in host byte order.
  */
 u8_t
 ip_portmap_remove(u8_t proto, u16_t mport);
+
+
+
+#if LWIP_STATS
+/**
+ * Get statistics.
+ *
+ * @param stats struct to receive current stats
+ */
+void
+ip_napt_get_stats(struct stats_ip_napt *stats);
+#endif
 
 #endif /* IP_NAPT */
 #endif /* IP_FORWARD */
