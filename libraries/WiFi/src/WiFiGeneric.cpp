@@ -188,18 +188,20 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
         lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
         log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
-        err = tcpip_adapter_dhcps_option(
-            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
-            (tcpip_adapter_dhcp_option_id_t)ESP_NETIF_SUBNET_MASK,
+        err = esp_netif_dhcps_option(
+            esp_netif,
+            ESP_NETIF_OP_SET,
+            ESP_NETIF_SUBNET_MASK,
             (void*)&info.netmask.addr, sizeof(info.netmask.addr)
         );
 		if(err){
         	log_e("DHCPS Set Netmask Failed! 0x%04x", err);
         	return err;
         }
-        err = tcpip_adapter_dhcps_option(
-            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
-            (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
+        err = esp_netif_dhcps_option(
+            esp_netif,
+            ESP_NETIF_OP_SET,
+            ESP_NETIF_REQUESTED_IP_ADDRESS,
             (void*)&lease, sizeof(dhcps_lease_t)
         );
 		if(err){
