@@ -21,16 +21,16 @@
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
 /*******************************************************************************
-  USBHS Peripheral Library Register Defintions 
+  USBHS Peripheral Library Register Definitions 
 
   File Name:
     usbhs_registers.h
 
   Summary:
-    USBHS PLIB Register Defintions
+    USBHS PLIB Register Definitions
 
   Description:
-    This file contains the constants and defintions which are required by the
+    This file contains the constants and definitions which are required by the
     the USBHS library.
 *******************************************************************************/
 
