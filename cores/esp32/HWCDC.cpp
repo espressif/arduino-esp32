@@ -32,7 +32,7 @@ static uint8_t rx_data_buf[64];
 static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
 static xSemaphoreHandle tx_lock = NULL;
-static uint32_t tx_timeout_ms = 200;
+static uint32_t tx_timeout_ms = 0;  // workaround for when USB CDC is not connected
 static esp_event_loop_handle_t arduino_hw_cdc_event_loop_handle = NULL;
 
 static esp_err_t arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked){
