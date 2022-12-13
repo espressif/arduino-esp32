@@ -93,7 +93,7 @@
 #define  USBC1_BASE                 0x01c14000
 #define  USBC2_BASE                 0x01c1E000
 
-//Some reg whithin musb
+//Some reg within musb
 #define USBPHY_CLK_REG 		0x01c200CC
 #define USBPHY_CLK_RST_BIT 0
 #define USBPHY_CLK_GAT_BIT 1
