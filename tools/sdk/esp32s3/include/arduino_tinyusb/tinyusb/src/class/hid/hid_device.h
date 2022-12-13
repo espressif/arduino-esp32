@@ -182,7 +182,7 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
   HID_COLLECTION ( HID_COLLECTION_APPLICATION )                    ,\
     /* Report ID if any */\
     __VA_ARGS__ \
-    /* 8 bits Modifier Keys (Shfit, Control, Alt) */ \
+    /* 8 bits Modifier Keys (Shift, Control, Alt) */ \
     HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
       HID_USAGE_MIN    ( 224                                    )  ,\
       HID_USAGE_MAX    ( 231                                    )  ,\
@@ -350,6 +350,31 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
     HID_REPORT_COUNT   ( 32                                     ) ,\
     HID_REPORT_SIZE    ( 1                                      ) ,\
     HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+  HID_COLLECTION_END \
+
+// FIDO U2F Authenticator Descriptor Template
+// - 1st parameter is report size, which is 64 bytes maximum in U2F
+// - 2nd parameter is HID_REPORT_ID(n) (optional)
+#define TUD_HID_REPORT_DESC_FIDO_U2F(report_size, ...) \
+  HID_USAGE_PAGE_N ( HID_USAGE_PAGE_FIDO, 2                    ) ,\
+  HID_USAGE      ( HID_USAGE_FIDO_U2FHID                       ) ,\
+  HID_COLLECTION ( HID_COLLECTION_APPLICATION                  ) ,\
+    /* Report ID if any */ \
+    __VA_ARGS__ \
+    /* Usage Data In */ \
+    HID_USAGE         ( HID_USAGE_FIDO_DATA_IN                 ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 0xff, 2                                ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( report_size                            ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Usage Data Out */ \
+    HID_USAGE         ( HID_USAGE_FIDO_DATA_OUT                ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 0xff, 2                                ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( report_size                            ) ,\
+    HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END \
 
 // HID Generic Input & Output
