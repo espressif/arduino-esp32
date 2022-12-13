@@ -8,9 +8,9 @@
 #define NUM_DIGITAL_PINS        4
 #define NUM_ANALOG_INPUTS       2
 
-#define analogInputToDigitalPin(p)  (((p)<29)?(esp32_adc2gpio[(p)]):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<6)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<22)?(p):-1)
+#define digitalPinHasPWM(p)         (p < 22)
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
