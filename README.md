@@ -56,3 +56,5 @@ Finally, if you are sure no one else had the issue, follow the **Issue template*
 We welcome contributions to the Arduino ESP32 project!
 
 See [contributing](https://docs.espressif.com/projects/arduino-esp32/en/latest/contributing.html) in the documentation for more information on how to contribute to the project.
+
+> We would like to have this repository in a polite and friendly atmosphere, so please be kind and respectful to others. For more details, look at [Code of Conduct](https://github.com/espressif/arduino-esp32/blob/master/CODE_OF_CONDUCT.md).
