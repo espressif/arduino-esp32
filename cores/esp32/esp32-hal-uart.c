@@ -331,7 +331,36 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return available;
 }
 
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms)
+{
+    if(uart == NULL || size == 0 || buffer == NULL) {
+        return 0;
+    }
 
+    size_t bytes_read = 0;
+
+    UART_MUTEX_LOCK();
+
+    if (uart->has_peek) {
+        uart->has_peek = false;
+        *buffer++ = uart->peek_byte;
+        size--;
+        bytes_read = 1;
+    }
+
+    if (size > 0) {
+       int len = uart_read_bytes(uart->num, buffer, size, pdMS_TO_TICKS(timeout_ms));
+       if (len < 0) len = 0;  // error reading UART
+       bytes_read += len;
+    }
+
+        
+    UART_MUTEX_UNLOCK();
+    return bytes_read;
+}
+
+// DEPRICATED but the original code will be kepts here as future reference when a final solution
+// to the UART driver is defined in the use case of reading byte by byte from UART.
 uint8_t uartRead(uart_t* uart)
 {
     if(uart == NULL) {
@@ -347,13 +376,14 @@ uint8_t uartRead(uart_t* uart)
     } else {
 
         int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
-        if (len == 0) {
+        if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         }
     }
     UART_MUTEX_UNLOCK();
     return c;
 }
+
 
 uint8_t uartPeek(uart_t* uart)
 {
@@ -368,7 +398,7 @@ uint8_t uartPeek(uart_t* uart)
       c = uart->peek_byte;
     } else {
         int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
-        if (len == 0) {
+        if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         } else {
             uart->has_peek = true;
