@@ -70,7 +70,7 @@ IPAddress::IPAddress(IPType type, const uint8_t *address) {
         memcpy(&this->_ip.u_addr.ip4, address, 4);
     } else if (type == IPv6) {
         setV6();
-        memcpy(&this->_ip.u_addr.ip6.addr[0], address, 4);
+        memcpy(&this->_ip.u_addr.ip6.addr[0], address, 16);
     } else {
 #if LWIP_IPV6
   _ip = *IP6_ADDR_ANY;
