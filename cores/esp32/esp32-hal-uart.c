@@ -192,14 +192,19 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_LOCK();
 
     uart_config_t uart_config;
-    uart_config.baud_rate = _get_effective_baudrate(baudrate);
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
     uart_config.stop_bits = (config & 0x30) >> 4;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
-    uart_config.source_clk = UART_SCLK_APB;
-
+#if SOC_UART_SUPPORT_XTAL_CLK
+    // works independently of APB frequency
+    uart_config.source_clk = UART_SCLK_XTAL; // ESP32C3, ESP32S3
+    uart_config.baud_rate = baudrate;
+#else
+    uart_config.source_clk = UART_SCLK_APB;  // ESP32, ESP32S2
+    uart_config.baud_rate = _get_effective_baudrate(baudrate);
+#endif
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -216,7 +221,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     return uart;
 }
 
-// This code is under testing - for now just keep it here
+// This function code is under testing - for now just keep it here
 void uartSetFastReading(uart_t* uart)
 {
     if(uart == NULL) {
