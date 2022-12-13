@@ -76,7 +76,6 @@ static void hw_cdc_isr_handler(void *arg) {
         if (usb_serial_jtag_ll_txfifo_writable() == 1) {
             // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
             usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-            if (
             if(!initial_empty){
                 initial_empty = true;
                 // First time USB is plugged and the application has not explicitly set TX Timeout, set it to default 100ms.
