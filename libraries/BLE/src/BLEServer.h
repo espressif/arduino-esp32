@@ -134,6 +134,7 @@ public:
 	 * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
 	 */
 	virtual void onDisconnect(BLEServer* pServer);
+	virtual void onDisconnect(BLEServer* pServer, esp_ble_gatts_cb_param_t *param);
 
 	/**
 	 * @brief Handle a new client connection.
