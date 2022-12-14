@@ -69,6 +69,7 @@ void uartGetEventQueue(uart_t* uart, QueueHandle_t *q);
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms);
 uint8_t uartRead(uart_t* uart);
 uint8_t uartPeek(uart_t* uart);
 

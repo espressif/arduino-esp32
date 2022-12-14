@@ -116,7 +116,7 @@ static const dwc2_controller_t _dwc2_controller[] =
 //
 //--------------------------------------------------------------------+
 
-// SystemCoreClock is alrady included by family header
+// SystemCoreClock is already included by family header
 // extern uint32_t SystemCoreClock;
 
 TU_ATTR_ALWAYS_INLINE

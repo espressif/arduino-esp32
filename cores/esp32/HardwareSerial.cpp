@@ -450,10 +450,12 @@ int HardwareSerial::peek(void)
 
 int HardwareSerial::read(void)
 {
-    if(available()) {
-        return uartRead(_uart);
+    uint8_t c = 0;
+    if (uartReadBytes(_uart, &c, 1, 0) == 1) {
+        return c;
+    } else {
+        return -1;
     }
-    return -1;
 }
 
 // read characters into buffer
@@ -462,16 +464,13 @@ int HardwareSerial::read(void)
 // the buffer is NOT null terminated.
 size_t HardwareSerial::read(uint8_t *buffer, size_t size)
 {
-    size_t avail = available();
-    if (size < avail) {
-        avail = size;
-    }
-    size_t count = 0;
-    while(count < avail) {
-        *buffer++ = uartRead(_uart);
-        count++;
-    }
-    return count;
+    return uartReadBytes(_uart, buffer, size, 0);
+}
+
+// Overrides Stream::readBytes() to be faster using IDF
+size_t HardwareSerial::readBytes(uint8_t *buffer, size_t length)
+{
+    return uartReadBytes(_uart, buffer, length, (uint32_t)getTimeout());
 }
 
 void HardwareSerial::flush(void)
