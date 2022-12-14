@@ -84,7 +84,7 @@ public:
         return !this->operator==(rhs);
     };
 
-    int fd() const;
+    virtual int fd() const;
 
     int setSocketOption(int option, char* value, size_t len);
     int setSocketOption(int level, int option, const void* value, size_t len);

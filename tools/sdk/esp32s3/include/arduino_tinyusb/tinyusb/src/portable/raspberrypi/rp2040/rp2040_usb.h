@@ -82,26 +82,30 @@ void hw_endpoint_reset_transfer(struct hw_endpoint *ep);
 
 void _hw_endpoint_buffer_control_update32(struct hw_endpoint *ep, uint32_t and_mask, uint32_t or_mask);
 
-TU_ATTR_ALWAYS_INLINE static inline uint32_t _hw_endpoint_buffer_control_get_value32(struct hw_endpoint *ep) {
-    return *ep->buffer_control;
-}
-
-TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_value32(struct hw_endpoint *ep, uint32_t value) {
-    return _hw_endpoint_buffer_control_update32(ep, 0, value);
-}
-
-TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_mask32(struct hw_endpoint *ep, uint32_t value) {
-    return _hw_endpoint_buffer_control_update32(ep, ~value, value);
-}
-
-TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_clear_mask32(struct hw_endpoint *ep, uint32_t value) {
-    return _hw_endpoint_buffer_control_update32(ep, ~value, 0);
-}
-
-static inline uintptr_t hw_data_offset(uint8_t *buf)
+TU_ATTR_ALWAYS_INLINE static inline uint32_t _hw_endpoint_buffer_control_get_value32 (struct hw_endpoint *ep)
 {
-    // Remove usb base from buffer pointer
-    return (uintptr_t)buf ^ (uintptr_t)usb_dpram;
+  return *ep->buffer_control;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_value32 (struct hw_endpoint *ep, uint32_t value)
+{
+  return _hw_endpoint_buffer_control_update32(ep, 0, value);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_mask32 (struct hw_endpoint *ep, uint32_t value)
+{
+  return _hw_endpoint_buffer_control_update32(ep, ~value, value);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_clear_mask32 (struct hw_endpoint *ep, uint32_t value)
+{
+  return _hw_endpoint_buffer_control_update32(ep, ~value, 0);
+}
+
+static inline uintptr_t hw_data_offset (uint8_t *buf)
+{
+  // Remove usb base from buffer pointer
+  return (uintptr_t) buf ^ (uintptr_t) usb_dpram;
 }
 
 extern const char *ep_dir_string[];
