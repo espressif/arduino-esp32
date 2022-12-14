@@ -32,6 +32,8 @@ boards.sloeber.txt
 # Ignore docs build (Sphinx)
 docs/build
 docs/source/_build
+__pycache__/
+_build/
 
 # Test log files
 *.log
