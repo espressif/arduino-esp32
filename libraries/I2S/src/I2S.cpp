@@ -172,6 +172,18 @@ int I2SClass::_installDriver(){
     i2s_config.fixed_mclk = 8*_sampleRate;
   }
 
+  if(_mode == ADC_DAC_MODE){
+    i2s_config.communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_COMM_FORMAT_STAND_MSB);
+  }
+
+  if(_mode == I2S_RIGHT_JUSTIFIED_MODE){
+    i2s_config.communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_CHANNEL_FMT_ALL_RIGHT); // Load right channel data in both two channels
+  }
+
+  if(_mode == I2S_LEFT_JUSTIFIED_MODE){
+    i2s_config.communication_format = (esp_i2s::i2s_comm_format_t)(esp_i2s::I2S_CHANNEL_FMT_ALL_LEFT); // Load left channel data in both two channels
+  }
+
   // Install and start i2s driver
   while(ESP_OK != esp_i2s::i2s_driver_install((esp_i2s::i2s_port_t) _deviceIndex, &i2s_config, _I2S_EVENT_QUEUE_LENGTH, &_i2sEventQueue)){
     // Double the DMA buffer size
