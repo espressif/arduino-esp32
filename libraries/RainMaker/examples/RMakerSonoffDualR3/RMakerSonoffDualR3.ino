@@ -39,20 +39,28 @@ void sysProvEvent(arduino_event_t *sys_event)
     switch (sys_event->event_id) {
         case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32
-        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-        printQR(service_name, pop, "ble");
+            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
+            printQR(service_name, pop, "ble");
 #else
-        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-        printQR(service_name, pop, "softap");
+            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
+            printQR(service_name, pop, "softap");
 #endif
-        break;
+            break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-        Serial.printf("\nConnected to Wi-Fi!\n");
-        digitalWrite(gpio_led, true);
-        break;
+            Serial.printf("\nConnected to Wi-Fi!\n");
+            digitalWrite(gpio_led, true);
+            break;
+        case ARDUINO_EVENT_PROV_INIT:
+            wifi_prov_mgr_disable_auto_stop(10000);
+            break;
+        case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+            wifi_prov_mgr_stop_provisioning();
+            break;
         default:;
     }
 }
+
+
 
 void write_callback(Device *device, Param *param, const param_val_t val, void *priv_data, write_ctx_t *ctx)
 {
@@ -129,7 +137,7 @@ void setup()
     my_node.addDevice(my_switch2);
 
     //This is optional
-    RMaker.enableOTA(OTA_USING_PARAMS);
+    RMaker.enableOTA(OTA_USING_TOPICS);
     //If you want to enable scheduling, set time zone for your region using setTimeZone().
     //The list of available values are provided here https://rainmaker.espressif.com/docs/time-service.html
     // RMaker.setTimeZone("Asia/Shanghai");
