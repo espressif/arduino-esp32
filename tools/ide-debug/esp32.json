@@ -1,0 +1,19 @@
+{
+	"name":"Arduino on ESP32",
+	"toolchainPrefix":"xtensa-esp32-elf",
+	"svdFile":"esp32.svd",
+	"request":"attach",
+	"postAttachCommands":[
+		"set remote hardware-watchpoint-limit 2",
+		"monitor reset halt",
+		"monitor gdb_sync",
+		"thb setup",
+		"c"
+	],
+	"overrideRestartCommands":[
+		"monitor reset halt",
+		"monitor gdb_sync",
+		"thb setup",
+		"c"
+	]
+}

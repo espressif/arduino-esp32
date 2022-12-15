@@ -25,9 +25,9 @@ typedef struct afe_fetch_result_t
 {
     int16_t *data;                          // the data of audio.
     int data_size;                          // the size of data. The unit is byte.
-    int wakeup_state;                       // the value is afe_wakeup_state_t
+    wakenet_state_t wakeup_state;           // the value is wakenet_state_t
     int wake_word_index;                    // if the wake word is detected. It will store the wake word index which start from 1.
-    int vad_state;                          // the value is afe_vad_state_t
+    afe_vad_state_t vad_state;              // the value is afe_vad_state_t
     int trigger_channel_id;                 // the channel index of output
     int wake_word_length;                   // the length of wake word. It's unit is the number of samples.
     int ret_value;                          // the return state of fetch function
@@ -102,6 +102,14 @@ typedef int (*esp_afe_sr_iface_op_feed_t)(esp_afe_sr_data_t *afe, const int16_t*
 typedef afe_fetch_result_t* (*esp_afe_sr_iface_op_fetch_t)(esp_afe_sr_data_t *afe);
 
 /**
+ * @brief reset ringbuf of AFE.
+ *
+ * @param afe          The AFE_SR object to query
+ * @return             -1: fail, 0: success
+ */
+typedef int (*esp_afe_sr_iface_op_reset_buffer_t)(esp_afe_sr_data_t *afe);
+
+/**
  * @brief Initial wakenet and wake words coefficient, or reset wakenet and wake words coefficient 
  *        when wakenet has been initialized.  
  *
@@ -174,6 +182,7 @@ typedef struct {
     esp_afe_sr_iface_op_create_from_config_t create_from_config;
     esp_afe_sr_iface_op_feed_t feed;
     esp_afe_sr_iface_op_fetch_t fetch;
+    esp_afe_sr_iface_op_reset_buffer_t reset_buffer;
     esp_afe_sr_iface_op_get_samp_chunksize_t get_feed_chunksize;
     esp_afe_sr_iface_op_get_samp_chunksize_t get_fetch_chunksize;
     esp_afe_sr_iface_op_get_total_channel_num_t get_total_channel_num;
