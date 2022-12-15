@@ -972,9 +972,9 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             DoReconnect = true;
             log_d("WiFi Reconnect Running");
         }
-        else if(WiFi.getAutoReconnect() && _isReconnectableReason(reason)) {
+        else if(WiFi.getAutoReconnect()) {
             DoReconnect = true;
-            log_d("WiFi AutoReconnect Running");
+            log_d("WiFi Auto Reconnect Running");
         }
         else if(reason == WIFI_REASON_ASSOC_FAIL) {
             WiFiSTAClass::_setStatus(WL_CONNECT_FAILED);
@@ -1064,37 +1064,6 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         }
     }
     return ESP_OK;
-}
-
-bool WiFiGenericClass::_isReconnectableReason(uint8_t reason) {
-    switch(reason) {
-        case WIFI_REASON_UNSPECIFIED:
-        //Timeouts (retry)
-        case WIFI_REASON_AUTH_EXPIRE:
-        case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
-        case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:
-        case WIFI_REASON_802_1X_AUTH_FAILED:
-        case WIFI_REASON_HANDSHAKE_TIMEOUT:
-        //Transient error (reconnect)
-        case WIFI_REASON_AUTH_LEAVE:
-        case WIFI_REASON_ASSOC_EXPIRE:
-        case WIFI_REASON_ASSOC_TOOMANY:
-        case WIFI_REASON_NOT_AUTHED:
-        case WIFI_REASON_NOT_ASSOCED:
-        case WIFI_REASON_ASSOC_NOT_AUTHED:
-        case WIFI_REASON_MIC_FAILURE:
-        case WIFI_REASON_IE_IN_4WAY_DIFFERS:
-        case WIFI_REASON_INVALID_PMKID:
-        case WIFI_REASON_BEACON_TIMEOUT:
-        case WIFI_REASON_NO_AP_FOUND:
-        case WIFI_REASON_ASSOC_FAIL:
-        case WIFI_REASON_CONNECTION_FAIL:
-        case WIFI_REASON_AP_TSF_RESET:
-        case WIFI_REASON_ROAMING:
-            return true;
-        default:
-            return false;
-    }
 }
 
 /**
