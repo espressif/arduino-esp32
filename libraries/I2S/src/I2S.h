@@ -134,7 +134,7 @@ namespace esp_i2s {
   #endif
 #endif
 
-#define CHANNEL_NUMBER 2
+#define CHANNEL_NUMBER (2)
 
 typedef enum {
   I2S_PHILIPS_MODE, // Most common I2S mode, FS signal spans across whole channel period
@@ -393,6 +393,13 @@ public:
    *        1024            = (       2       * (     16         / 8)) *        128         *         2
    */
   int setDMABufferFrameSize(int DMABufferFrameSize);
+
+  /*
+   * Change the size of DMA buffers. The unit is number of samples (bits_per_sample/8))
+   * The resulting Bytes size of ring buffers can be calculated:
+   * ring_buffer_bytes_size = (CHANNEL_NUMBER * DMABufferSampleSize * _I2S_DMA_BUFFER_COUNT
+   */
+  int setDMABufferSampleSize(int DMABufferSampleSize);
 
   /*
    * Get size of single DMA buffer.

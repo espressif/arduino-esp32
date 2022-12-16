@@ -115,6 +115,7 @@ int I2SClass::_installDriver(){
     #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
       if(_bitsPerSample != 16){ // ADC/DAC can only work in 16-bit sample mode
         log_e("(I2S#%d) ERROR invalid bps for ADC/DAC. Allowed only 16, requested %d", _deviceIndex, _bitsPerSample);
+        // TODO handle data transfer and allow users to use any bps
         return 0; // ERR
       }
       i2s_mode = (esp_i2s::i2s_mode_t)(i2s_mode | esp_i2s::I2S_MODE_DAC_BUILT_IN | esp_i2s::I2S_MODE_ADC_BUILT_IN);
@@ -929,7 +930,8 @@ void I2SClass::onReceive(void(*function)(void)){
 
 // Change buffer size. The unit is in frames.
 // Byte value can be calculated as follows:
-// ByteSize = (bits_per_sample / 8) * number_of_channels * DMABufferFrameSize
+// ByteSize = (bits_per_sample / 8) * CHANNEL_NUMBER * DMABufferFrameSize
+// Note: CHANNEL_NUMBER is hard-coded to value 2
 // Calling this function will automatically restart the driver, which could cause audio output gap.
 int I2SClass::setDMABufferFrameSize(int DMABufferFrameSize){
   if(!_take_mux()){ return 0; /* ERR */ }
@@ -953,6 +955,15 @@ int I2SClass::setDMABufferFrameSize(int DMABufferFrameSize){
   } // if(_initialized)
   if(!_give_mux()){ return 0; /* ERR */ }
   return 0; // ERR
+}
+
+// Change buffer size. The unit is in samples.
+// Byte value can be calculated as follows:
+// ByteSize = CHANNEL_NUMBER * DMABufferSampleSize
+// Note: CHANNEL_NUMBER is hard-coded to value 2
+// Calling this function will automatically restart the driver, which could cause audio output gap.
+int I2SClass::setDMABufferSampleSize(int DMABufferSampleSize){
+  return setDMABufferFrameSize(DMABufferSampleSize / CHANNEL_NUMBER);
 }
 
 int I2SClass::getDMABufferFrameSize(){
@@ -1225,6 +1236,8 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
       break; // Do nothing
   } // switch
 
+/*
+// Should be taken care of by comm format: I2S_CHANNEL_FMT_ALL_RIGHT / I2S_CHANNEL_FMT_ALL_LEFT
     if(_mode == I2S_RIGHT_JUSTIFIED_MODE){
       for(int i = 0; i < buff_size; i+=2){
         buff[i] = buff[i+1];
@@ -1235,9 +1248,10 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
         buff[i+1] = buff[i];
       }
     }
+*/
 
   size_t _bytes_written;
-  esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0); // fixed
+  esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0);
   if(ret != ESP_OK){
     log_e("(I2S#%d) Error: writing data to i2s - function returned with err code %d", _deviceIndex, ret);
   }

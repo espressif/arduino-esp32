@@ -2,14 +2,6 @@
 
 Inter-IC Sound bus is designed for digital transmission of audio data.
 
-The bus consists of the following signals:
-
- - SCK - Serial Clock signal.
- - WS - Word Select - switching between Left and Right channel.
- - SD - Serial Data - In Simplex mode this is multiplexed data - depending on function calls this is either input or output.
- - SD OUT - In duplex mode this line is only for outgouing data (TX).
- - SD IN -  In duplex mode this line is only for incoming data (RX).
- - MCLK - Master Clock signal - runs on higher frequency than SCK and for most cases is not needed.
 
 This library is based on Arduino I2S library (see doc [here](https://docs.arduino.cc/learn/built-in-libraries/i2s))
 
@@ -17,27 +9,47 @@ This library mimics the behavior and extends possibilities with ESP-specific fun
 
 **The main differences are:**
 
-| Property         | Arduino     | ESP32 extends                                  |
-| ---------------- | ----------- | ---------------------------------------------- |
-| Bits per sample  | 8,16,32     | 24                                             |
-| data channels    | 1 (simplex) | 2(duplex)                                      |
-| modes            | Philips     | PDM, ADC/DAC                                   |
-| I2S modules      | 1           | 2 (only for ESP32, other SoC have also only 1) |
-| Pins             | Fixed       | configurable                                   |
+| Property         | Arduino     | ESP32 extends              |
+| ---------------- | ----------- | -------------------------- |
+| Bits per sample  | 8,16,32     | 24                         |
+| data channels    | 1 (simplex) | 2 (duplex)                 |
+| modes            | Philips     | PDM, ADC/DAC               |
+| I2S modules      | 1           | ESP32 (only) has 2 modules |
+| Pins             | Fixed       | configurable               |
 
-In this document you will find overview for this version of library and description of class functions.
+**In this document you will find overview for this version of library and description of class functions.**
 
-Since all ESP32 code runs on FreeRTOS (operating system handling execution time on CPUs and allowing pseudo-parallel execution) this library uses 1 task which monitors messages from underlying IDF I2S driver which sends them whenever it sends sample from buffer to data line, or when it fills buffer with samples received from data line.
-Since Arduino utilizes single sample writes and reads heavily, which would case unbearable lags there had to be implemented another layer of ring buffers (one for transmitted data and one for received data). The user of this library writes, or reads from this buffer via functions `write` and `read` (exact variants are described below).
-The task, upon receiving the message from IDF I2S driver performs either flush data from transmit ring buffer to IDF I2S driver or received data from IDF I2S driver to receive ring buffer.
+**The bus uses following signals:**
+
+ - **SCK**    - Serial Clock signal.
+ - **WS**     - Word Select - switching between Left and Right channel.
+ - **SD**     - Serial Data - In Simplex mode this is multiplexed data - depending on function calls this is either input or output.
+ - **SD OUT** - In duplex mode this line is only for outgouing data (TX).
+ - **SD IN**  -  In duplex mode this line is only for incoming data (RX).
+ - **MCLK**   - Master Clock signal - runs on higher frequency than SCK and for most cases is not needed.
+
+**The library uses following data structures:**
+
+ - **Bits per sample (bps)** - determines how many bits is used for each sample (see line below). More bits means greater audio quality, however it is more demanding on memory and timing. The allowed values are `8`, `16`, `24` and `32` i.e. `1`, `2`, `3` or `4` Bytes per sample.
+ - **Sample** - single channel data. The size of sample depends on `bits per sample`  the size of single sample in bytes is simply calculated by `bits per sample / 8`.
+ - **Frame** - sum of samples across all channels. This library is currently hard-coded to dual channel / stereo, i.e. the number of channels is constantly `2`. The size of frame in Bytes can be calculated as `sample size * number of channels = (bits per sample / 8) * number of channels = (bits per sample / 8) * 2`. For example when `bps=16` the frame has `(16 / 8) * 2 = 4 B`.
+ - **DMA buffer** - is used in underlying IDF driver and its size is in frames. The Byte size of single DMA buffer is `DMA buf len * frame size = DMA buf len * sample size * number of channels = DMA buf len * (bits per sample / 8) * number of channels = DMA buf len * (bits per sample / 8) * 2`. By default the `DMA buf len = 128` therefore the Byte size is `128 * (bits per sample / 8) * 2`. For example when set `bps=16` then the Byte size is `128 * (16 / 8) * 2 = 512 B`. The functions `setDMABufferFrameSize` and `setDMABufferSampleSize` can be used to change the size (see function section for more details).
+ - **DMA buffer array** - There is more than one DMA buffer. The number of DMA buffers is defined in constant `_I2S_DMA_BUFFER_COUNT` by default to value `2`. If you want to change it modify file `I2S.cpp`. The Byte size of all DMA buffer can be calculated as `_I2S_DMA_BUFFER_COUNT * DMA buf len * (bits per sample / 8) * 2`. Extending the previous example (`bps=16`, default `dma buf len=128`): `2* 128 *(16 / 8) * 2 = 1024 B`
+ - **Ring buffer** - is used as an abstraction layer above the DMA buffers. There is one ring buffer for transmitting size and second one for receiving side. The size of a ring buffer will be always automatically set to the sum of all DMA buffers. The size of a single ring buffer in Bytes can be calculated as `DMA buffer len * _I2S_DMA_BUFFER_COUNT * (bits per sample / 8) * number of channels`.
+
+**Usage of underlying IDF driver**
+
+Since all ESP32 code runs on FreeRTOS (operating system handling execution time on CPUs and allowing pseudo-parallel execution) this library uses 1 task which monitors messages from underlying IDF I2S driver which sends them whenever it sends contents of single DMA buffer to output (TX) data line, or when it fills a DMA buffer with samples received on input (RX) data line.
+Since Arduino utilizes single sample writes and reads heavily, which would cause unbearable lags, there had to be implemented another layer of ring buffers (one for transmitted data and one for received data). The user of this library writes, or reads from this buffer via functions `write` and `read` (exact variants are described in functions section).
+The task, upon receiving the message from IDF I2S driver performs either write data from transmit ring buffer into IDFs I2S driver (into TX DMA buffer) or reads received data from IDF I2S driver (from RX DMA buffer) to the receive ring buffer.
 Usage of the ring buffers also enabled implementation of functions `available`, `availableForWrite`, `peak` and single sample write/read.
 
-The IDF I2S driver uses multiple sets of buffer of the same size. The size of ring buffer equals to sum of all those buffers. By default the number of IDF I2S buffers is 2. Usually there should be no need to change this, however if you choose to change it, change the constant `_I2S_DMA_BUFFER_COUNT`  in the library, in `src/I2S.cpp`:
+The IDF I2S driver uses multiple sets of buffers of the same size. The size of ring buffer equals to sum of all those buffers. By default the number of IDF I2S buffers is 2. Usually there should be no need to change this, however if you choose to change it, change the constant `_I2S_DMA_BUFFER_COUNT`  in the library, in `src/I2S.cpp`:
 
 The size of IDF I2S buffer is by default 128. The unit used for this buffer is a frame. A frame means the data of all channels in a WS cycle. For example dual channel 16 bits per sample and default buffer size = 2 * 2 * 128 = 512 Bytes.
 
 From this we can get also size of the ring buffers. As stated their size is equal to the sum of IDF I2S buffers. For the example of dual channel, 16 bps the size of each ring buffer is 1024 B.
-The function `setDMABufferFrameSize` allows you to change the size in frames (see detailed description below).
+The functions `setDMABufferFrameSize` and `setDMABufferSampleSize` allows you to change the size in frames and samples respectively (see detailed description below).
 
 On Arduino and most ESPs you can use object `I2S` to use the I2S module. on ESP32 and ESP32-S3 you have the option to use addititonal object `I2S_1`.
 I2S module functionality on each SoC differs, please refer to the following table. More info can be found in [IDF documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html?highlight=dac#overview-of-all-modes).
@@ -75,20 +87,30 @@ The MCLK pin is usually not needed and for most cases can be ignored. By default
 
 | SoC                          | SCK | WS | SD(OUT) | SDIN | MCLK |
 |:---------------------------- |:---:|:--:|:-------:|:----:|:----:|
-| ESP32                        |  19 | 21 |   22    |  23  |    0 |
-| ESP32-C3, ESP32-S2, ESP32-S3 |  19 | 21 |    4    |   5  |    0 |
-
+| ESP32                        |  18 | 19 |   21    |  34  |    0 |
+| ESP32-C3, ESP32-S2, ESP32-S3 |  18 | 19 |    4    |   5  |    0 |
 
 **I2S_1 object:**
 
 | SoC      | SCK | WS | SD(OUT) | SDIN | MCLK |
 |:-------- |:---:|:--:|:-------:|:----:|:----:|
-| ESP32    |  18 | 22 |    25   |   26 |    1 |
+| ESP32    |  22 | 23 |    27   |   35 |    1 |
 | ESP32-S3 |  36 | 37 |    39   |   40 |   35 |
 
-**ADC / DAC pin limitation**
+**DAC pin limitation**
 
-Unlike other modes, the ADC can only be used on 2 specific pins: 25 and 26. Attempt to initialize I2S in `ADC_DAC_MODE` with any than allowed data pins will result in failure.
+Unlike other modes, the ADC output is hard-wired to GPIO 25 (R) and 26 (L). DAC output is slightly limited too - please refer to the following table. Attempt to initialize I2S in `ADC_DAC_MODE` with SD IN pin set to anything other than allowed GPIO will result in failure.
+
+**ADC pin limitation:**
+
+ADC input uses internally ADC modules - usage of I2S in `ADC_DAC_MODE` may interfere with other usage of these ADC modules. Please refer to the [documentation]() for more info.
+
+| SoC      | GPIOs supporting ADC         |
+|:-------- |:----------------------------:|
+| ESP32    | 0, 2, 4, 12-15, 25-27, 32-39 |
+| ESP32-C3 | 0-5                          |
+| ESP32-S2 | 1-20                         |
+| ESP32-S3 | 1-20                         |
 
 ## Master / Slave[ ](https://en.wiktionary.org/wiki/slave#Etymology) modes
 There are two versions of initializer function `begin` - one initializes in master mode and the other one in slave mode (see functions below for details).
@@ -114,7 +136,7 @@ The best way is to fill and read the buffers in chunks and let the CPU be used o
 
 The number of DMA buffers can be from 2 - 128 for each data line (TX & RX) this is set by constant `_I2S_DMA_BUFFER_COUNT` in `I2S.cpp`. The default value is `2` and can be changed only in code - requires recompilation.
 
-The size of each DMA buffer is in sample frames and can be between 8 and 1024. One frame equals to number of channels (in this library always 2) multiplied by Bytes per samples (or `(bits_per_sample/8)`. The default value s `128` and can be changed changed by function `setDMABufferFrameSize()`, this automatically reinstalls the driver. The DMA buffer size can be read by functions `getDMABufferFrameSize()`, `getDMABufferSampleSize()`, and `getDMABufferByteSize()`. More info can be found in section *FUNCTIONS*.
+The size of each DMA buffer is in sample frames and can be between 8 and 1024. One frame equals to number of channels (in this library always 2) multiplied by Bytes per samples (or `(bits_per_sample/8)`. The default value s `128` and can be changed changed by functions `setDMABufferFrameSize()` and `setDMABufferSampleSize()`, this automatically reinstalls the driver. The DMA buffer size can be read by functions `getDMABufferFrameSize()`, `getDMABufferSampleSize()`, and `getDMABufferByteSize()`. More info can be found in section *FUNCTIONS*.
 
 ### Ring buffers buffers
 Original Arduino I2S library uses extensively single-sample writes and reads - such usage would result in poor audio quality. Therefore another layer of buffers has been added - ring buffers.
@@ -410,9 +432,15 @@ This function is useful when sending low amount of data, however such use will l
 
 *Change the size of DMA buffers.* The unit is number of sample frames `(CHANNEL_NUMBER * (bits_per_sample/8))`
 
+**Parameter:**
+
+* **int DMABufferFrameSize** The number of frames in one DMA buffer. The value must be between 8 and 1024 (including).
+
+**Returns:** 1 on successful setup; 0 on error = could not install driver with new settings or could not take mutex.
+
 The resulting Bytes size of ring buffers can be calculated:
 
-`ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * bufferSize * _I2S_DMA_BUFFER_COUNT`
+`ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample/8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT`
 
 **Example:**
 
@@ -421,8 +449,31 @@ The resulting Bytes size of ring buffers can be calculated:
   * Default value of `DMABufferFrameSize` is **128**
   * Default value of `_I2S_DMA_BUFFER_COUNT` is **2**
 ```
-ring_buffer_bytes_size = (CHANNEL_NUMBER * (bits_per_sample / 8)) * DMABufferFrameSize * _I2S_DMA_BUFFER_COUNT
-        1024           = (       2       * (     16         / 8)) *        128         *         2
+ring_buffer_bytes_size = (bits_per_sample / 8) * DMABufferFrameSize * CHANNEL_NUMBER * _I2S_DMA_BUFFER_COUNT
+        1024           = (     16         / 8) *        128         *        2       *           2
+```
+***
+#### int setDMABufferSampleSize(int DMABufferSampleSize)
+
+*Change the size of DMA buffers.* The unit is number of samples `bits_per_sample/8`
+
+This function simply calls `setDMABufferFrameSize(DMABufferSampleSize / CHANNEL_NUMBER);`
+
+**Parameter:**
+
+* **int DMABufferFrameSize** The number of samples in one DMA buffer. The value must be always even (multiple of 2) and between 16 and 2048 (including).
+
+**Returns:** 1 on successful setup; 0 on error = could not install driver with new settings or could not take mutex.
+
+**Example:**
+
+  * This library statically set to *dual channel*, therefore `CHANNEL_NUMBER` is always **2**
+  * For this example let's have `bits_per_sample` set to **16**
+  * Same value as default can be achieved with parameter value `DMABufferSampleSize` set to **256**
+  * Default value of `_I2S_DMA_BUFFER_COUNT` is **2**
+```
+ring_buffer_bytes_size = (bits_per_sample / 8) * DMABufferSampleSize * _I2S_DMA_BUFFER_COUNT
+        1024           = (     16         / 8) *       256           *         2
 ```
 ***
 #### int getDMABufferFrameSize()
