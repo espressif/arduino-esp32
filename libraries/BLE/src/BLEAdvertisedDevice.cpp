@@ -562,7 +562,7 @@ std::string BLEAdvertisedDevice::toString() {
 	}
 	if (haveRSSI()) {
 	       char val[4];
-	       snprintf(val, sizeof(val), "%i", advertisedDevice.getRSSI());
+	       snprintf(val, sizeof(val), "%i", getRSSI());
 	       res += ", rssi: ";
 	       res += val;
 	 }
