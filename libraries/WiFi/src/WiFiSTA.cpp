@@ -278,8 +278,6 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 			log_e("connect failed!");
 			return WL_CONNECT_FAILED;
 		}
-        // Set to auto reconnect
-        WiFi.setAutoReconnect(true);
     }
 
     return status();
@@ -319,8 +317,6 @@ wl_status_t WiFiSTAClass::begin()
             log_e("connect failed! 0x%x", err);
             return WL_CONNECT_FAILED;
     	}
-        // Set to auto reconnect
-        WiFi.setAutoReconnect(true);
     }
 
     return status();
@@ -334,8 +330,6 @@ bool WiFiSTAClass::reconnect()
 {
     if(WiFi.getMode() & WIFI_MODE_STA) {
         if(esp_wifi_disconnect() == ESP_OK) {
-            // Set to auto reconnect
-            WiFi.setAutoReconnect(true);
             return esp_wifi_connect() == ESP_OK;
         }
     }
@@ -365,10 +359,6 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
         }
         if(wifioff) {
              return WiFi.enableSTA(false);
-        }
-        // Disable the auto reconnect in case of disconnection from the user
-        if(WiFi.getAutoReconnect()){
-            WiFi.setAutoReconnect(false);
         }
         return true;
     }
