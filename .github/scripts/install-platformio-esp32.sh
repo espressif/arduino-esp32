@@ -4,7 +4,7 @@ export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespres
 PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
 
 TOOLCHAIN_VERSION="8.4.0+2021r2-patch3"
-ESPTOOLPY_VERSION="~1.30100.0"
+ESPTOOLPY_VERSION="~1.40201.0"
 ESPRESSIF_ORGANIZATION_NAME="espressif"
 
 echo "Installing Python Wheel ..."

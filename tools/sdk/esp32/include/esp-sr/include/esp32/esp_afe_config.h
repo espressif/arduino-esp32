@@ -8,6 +8,7 @@
 //SR:  Speech Recognition
 //afe_sr/AFE_SR: the audio front-end for speech recognition
 
+
 //Set AFE_SR mode
 typedef enum {
     SR_MODE_LOW_COST = 0,
@@ -34,6 +35,26 @@ typedef struct {
     int sample_rate;                        // sample rate of audio
 } afe_pcm_config_t;
 
+/**
+ * @brief Function to get the debug audio data
+ *
+ * @param data        The debug audio data which don't be modify. It should be copied away as soon as possible that avoid blocking for too long.
+ * @param data_size   The number of bytes of data.
+ * @returns
+ */
+typedef void (*afe_debug_hook_callback_t)(const int16_t* data, int data_size);
+
+typedef enum {
+    AFE_DEBUG_HOOK_MASE_TASK_IN = 0,        // To get the input data of mase task
+    AFE_DEBUG_HOOK_FETCH_TASK_IN = 1,       // To get the input data of fetch task
+    AFE_DEBUG_HOOK_MAX = 2
+} afe_debug_hook_type_t;
+
+typedef struct {
+    afe_debug_hook_type_t hook_type;            // debug type of hook
+    afe_debug_hook_callback_t hook_callback;    // callback function which transfer debug audio data
+} afe_debug_hook_t;
+
 typedef struct {
     bool aec_init;
     bool se_init;
@@ -52,6 +73,8 @@ typedef struct {
     afe_memory_alloc_mode_t memory_alloc_mode;
     afe_mn_peak_agc_mode_t agc_mode;        // The agc mode for ASR
     afe_pcm_config_t pcm_config;            // Config the channel num of original data which is fed to the afe feed function.
+    bool debug_init;
+    afe_debug_hook_t debug_hook[AFE_DEBUG_HOOK_MAX];
 } afe_config_t;
 
 
@@ -77,6 +100,8 @@ typedef struct {
     .pcm_config.mic_num = 1, \
     .pcm_config.ref_num = 1, \
     .pcm_config.sample_rate = 16000, \
+    .debug_init = false, \
+    .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN, NULL}, {AFE_DEBUG_HOOK_FETCH_TASK_IN, NULL}}, \
 }
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define AFE_CONFIG_DEFAULT() { \
@@ -100,5 +125,7 @@ typedef struct {
     .pcm_config.mic_num = 2, \
     .pcm_config.ref_num = 1, \
     .pcm_config.sample_rate = 16000, \
+    .debug_init = false, \
+    .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN, NULL}, {AFE_DEBUG_HOOK_FETCH_TASK_IN, NULL}}, \
 }
 #endif

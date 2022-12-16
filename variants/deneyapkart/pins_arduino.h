@@ -11,6 +11,18 @@
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
+static const uint8_t LEDR	= 3;
+static const uint8_t LEDG	= 1;
+static const uint8_t LEDB	= 4;
+static const uint8_t GPKEY	= 0;
+
+#define BUILTIN_LED LEDB
+#define LED_BUILTIN BUILTIN_LED // backward compatibility
+//#define RGB_BUILTIN LED_BUILTIN
+
+#define KEY_BUILTIN GPKEY
+#define BUILTIN_KEY KEY_BUILTIN
+
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
@@ -86,12 +98,6 @@ static const uint8_t CAMPC = 5;
 static const uint8_t CAMXC = 32;
 static const uint8_t CAMH  = 39;
 static const uint8_t CAMV  = 36;
-
-static const uint8_t LEDR 		 = 3;
-static const uint8_t LEDG 		 = 1;
-static const uint8_t LEDB 		 = 4;
-static const uint8_t BUILTIN_KEY = 0;
-static const uint8_t GPKEY		 = 0;
 
 static const uint8_t PWM0 = 23;
 static const uint8_t PWM1 = 22;
