@@ -37,6 +37,8 @@
 #define HREF_GPIO_NUM    27
 #define PCLK_GPIO_NUM    25
 
+#define LED_GPIO_NUM     22
+
 #elif defined(CAMERA_MODEL_M5STACK_PSRAM)
 #define PWDN_GPIO_NUM     -1
 #define RESET_GPIO_NUM    15
@@ -94,6 +96,8 @@
 #define HREF_GPIO_NUM     26
 #define PCLK_GPIO_NUM     21
 
+#define LED_GPIO_NUM       2
+
 #elif defined(CAMERA_MODEL_M5STACK_ESP32CAM)
 #define PWDN_GPIO_NUM     -1
 #define RESET_GPIO_NUM    15
@@ -150,6 +154,8 @@
 #define VSYNC_GPIO_NUM    25
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
+
+#define LED_GPIO_NUM      33
 
 #elif defined(CAMERA_MODEL_TTGO_T_JOURNAL)
 #define PWDN_GPIO_NUM      0

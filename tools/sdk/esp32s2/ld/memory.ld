@@ -53,7 +53,7 @@ MEMORY
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */
   /* RTC fast memory (executable). Persists over deep sleep.
    */
-  rtc_iram_seg(RWX) : org = 0x40070000, len = 0x2000
+  rtc_iram_seg(RWX) : org = 0x40070000, len = 0x2000 - (0x10)
   /* RTC slow memory (data accessible). Persists over deep sleep.
 
      Start of RTC slow memory is reserved for ULP co-processor code + data, if enabled.

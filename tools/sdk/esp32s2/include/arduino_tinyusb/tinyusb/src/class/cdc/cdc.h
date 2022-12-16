@@ -193,7 +193,7 @@ typedef enum
 }cdc_management_request_t;
 
 //--------------------------------------------------------------------+
-// Management Elemenent Notification (Notification Endpoint)
+// Management Element Notification (Notification Endpoint)
 //--------------------------------------------------------------------+
 
 /// 6.3 Notification Codes
