@@ -192,14 +192,19 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     UART_MUTEX_LOCK();
 
     uart_config_t uart_config;
-    uart_config.baud_rate = _get_effective_baudrate(baudrate);
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
     uart_config.stop_bits = (config & 0x30) >> 4;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
-    uart_config.source_clk = UART_SCLK_APB;
-
+#if SOC_UART_SUPPORT_XTAL_CLK
+    // works independently of APB frequency
+    uart_config.source_clk = UART_SCLK_XTAL; // ESP32C3, ESP32S3
+    uart_config.baud_rate = baudrate;
+#else
+    uart_config.source_clk = UART_SCLK_APB;  // ESP32, ESP32S2
+    uart_config.baud_rate = _get_effective_baudrate(baudrate);
+#endif
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -216,7 +221,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     return uart;
 }
 
-// This code is under testing - for now just keep it here
+// This function code is under testing - for now just keep it here
 void uartSetFastReading(uart_t* uart)
 {
     if(uart == NULL) {
@@ -326,7 +331,36 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     return available;
 }
 
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms)
+{
+    if(uart == NULL || size == 0 || buffer == NULL) {
+        return 0;
+    }
 
+    size_t bytes_read = 0;
+
+    UART_MUTEX_LOCK();
+
+    if (uart->has_peek) {
+        uart->has_peek = false;
+        *buffer++ = uart->peek_byte;
+        size--;
+        bytes_read = 1;
+    }
+
+    if (size > 0) {
+       int len = uart_read_bytes(uart->num, buffer, size, pdMS_TO_TICKS(timeout_ms));
+       if (len < 0) len = 0;  // error reading UART
+       bytes_read += len;
+    }
+
+        
+    UART_MUTEX_UNLOCK();
+    return bytes_read;
+}
+
+// DEPRICATED but the original code will be kepts here as future reference when a final solution
+// to the UART driver is defined in the use case of reading byte by byte from UART.
 uint8_t uartRead(uart_t* uart)
 {
     if(uart == NULL) {
@@ -342,13 +376,14 @@ uint8_t uartRead(uart_t* uart)
     } else {
 
         int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
-        if (len == 0) {
+        if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         }
     }
     UART_MUTEX_UNLOCK();
     return c;
 }
+
 
 uint8_t uartPeek(uart_t* uart)
 {
@@ -363,7 +398,7 @@ uint8_t uartPeek(uart_t* uart)
       c = uart->peek_byte;
     } else {
         int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
-        if (len == 0) {
+        if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         } else {
             uart->has_peek = true;
@@ -496,21 +531,18 @@ int uartGetDebug()
     return s_uart_debug_nr;
 }
 
-int log_printf(const char *format, ...)
+int log_printfv(const char *format, va_list arg)
 {
     static char loc_buf[64];
     char * temp = loc_buf;
     int len;
-    va_list arg;
     va_list copy;
-    va_start(arg, format);
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
     if(len >= sizeof(loc_buf)){
         temp = (char*)malloc(len+1);
         if(temp == NULL) {
-            va_end(arg);
             return 0;
         }
     }
@@ -528,10 +560,19 @@ int log_printf(const char *format, ...)
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     }
 #endif
-    va_end(arg);
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
+    return len;
+}
+
+int log_printf(const char *format, ...)
+{
+    int len;
+    va_list arg;
+    va_start(arg, format);
+    len = log_printfv(format, arg);
+    va_end(arg);
     return len;
 }
 

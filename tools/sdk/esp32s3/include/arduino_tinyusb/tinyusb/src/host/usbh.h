@@ -51,14 +51,15 @@ struct tuh_xfer_s
 {
   uint8_t daddr;
   uint8_t ep_addr;
-
+  uint8_t TU_RESERVED;      // reserved
   xfer_result_t result;
+
   uint32_t actual_len;      // excluding setup packet
 
   union
   {
     tusb_control_request_t const* setup; // setup packet pointer if control transfer
-    uint32_t buflen;        // expected length if not control transfer (not available in callback)
+    uint32_t buflen;                     // expected length if not control transfer (not available in callback)
   };
 
   uint8_t* buffer;           // not available in callback if not control transfer
@@ -71,7 +72,7 @@ struct tuh_xfer_s
 // ConfigID for tuh_config()
 enum
 {
-  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 // cfg_param: pio_usb_configuration_t
+  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 << 8 // cfg_param: pio_usb_configuration_t
 };
 
 //--------------------------------------------------------------------+
@@ -80,10 +81,13 @@ enum
 
 //TU_ATTR_WEAK uint8_t tuh_attach_cb (tusb_desc_device_t const *desc_device);
 
-// Invoked when device is mounted (configured)
+// Invoked when a device is mounted (configured)
 TU_ATTR_WEAK void tuh_mount_cb (uint8_t daddr);
 
-/// Invoked when device is unmounted (bus reset/unplugged)
+// Invoked when a device failed to mount during enumeration process
+// TU_ATTR_WEAK void tuh_mount_failed_cb (uint8_t daddr);
+
+/// Invoked when a device is unmounted (detached)
 TU_ATTR_WEAK void tuh_umount_cb(uint8_t daddr);
 
 //--------------------------------------------------------------------+

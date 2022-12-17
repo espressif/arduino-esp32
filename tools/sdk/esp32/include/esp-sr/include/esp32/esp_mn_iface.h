@@ -145,7 +145,6 @@ typedef struct {
     esp_mn_iface_op_get_samp_chunksize_t get_samp_chunksize;
     esp_mn_iface_op_get_samp_chunknum_t get_samp_chunknum;
     esp_mn_iface_op_set_det_threshold_t set_det_threshold;
-    esp_mn_iface_op_get_language_t get_language;
     esp_mn_iface_op_detect_t detect; 
     esp_mn_iface_op_destroy_t destroy;
     esp_mn_iface_op_get_results_t get_results;

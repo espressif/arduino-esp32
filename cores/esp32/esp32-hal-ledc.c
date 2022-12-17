@@ -166,14 +166,15 @@ void ledcAttachPin(uint8_t pin, uint8_t chan)
         return;
     }
     uint8_t group=(chan/8), channel=(chan%8), timer=((chan/2)%4);
-    
+    uint32_t duty = ledc_get_duty(group,channel);
+
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = group,
         .channel        = channel,
         .timer_sel      = timer,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = pin,
-        .duty           = 0,
+        .duty           = duty,
         .hpoint         = 0
     };
     ledc_channel_config(&ledc_channel);
@@ -211,6 +212,8 @@ uint32_t ledcChangeFrequency(uint8_t chan, uint32_t freq, uint8_t bit_num)
 
 static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
 static int cnt_channel = LEDC_CHANNELS;
+static uint8_t analog_resolution = 8;
+static int analog_frequency = 1000;
 void analogWrite(uint8_t pin, int value) {
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
@@ -219,9 +222,12 @@ void analogWrite(uint8_t pin, int value) {
           log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
           return;
       }
+      if(ledcSetup(cnt_channel - 1, analog_frequency, analog_resolution) == 0){
+          log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
+          return;
+      }
+      ledcAttachPin(pin, cnt_channel - 1);
       pin_to_channel[pin] = cnt_channel--;
-      ledcAttachPin(pin, cnt_channel);
-      ledcSetup(cnt_channel, 1000, 8);
     }
     ledcWrite(pin_to_channel[pin] - 1, value);
   }
@@ -229,4 +235,32 @@ void analogWrite(uint8_t pin, int value) {
 
 int8_t analogGetChannel(uint8_t pin) {
     return pin_to_channel[pin] - 1;
+}
+
+void analogWriteFrequency(uint32_t freq) {
+    if (cnt_channel != LEDC_CHANNELS) {
+        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
+            if (ledcChangeFrequency(channel, freq, analog_resolution) == 0){
+                log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
+                return;
+            }
+        }
+    }
+    analog_frequency = freq;
+}
+
+void analogWriteResolution(uint8_t bits) {
+    if(bits > LEDC_MAX_BIT_WIDTH) {
+        log_w("analogWrite resolution width too big! Setting to maximum %u bits)", LEDC_MAX_BIT_WIDTH);
+        bits = LEDC_MAX_BIT_WIDTH;
+    }
+    if (cnt_channel != LEDC_CHANNELS) {
+        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
+            if (ledcChangeFrequency(channel, analog_frequency, bits) == 0){
+                log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
+                return;
+            }
+        }
+    }
+    analog_resolution = bits;
 }
