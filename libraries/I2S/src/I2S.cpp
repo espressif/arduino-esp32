@@ -82,7 +82,7 @@ int I2SClass::_createCallbackTask(){
     "onDmaTransferComplete", // Name of the task
     stack_size,              // Stack size in words
     (void *)&_deviceIndex,   // Task input parameter
-    4,                       // Priority of the task
+    1,                       // Priority of the task
     &_callbackTaskHandle     // Task handle.
     );
   if(_callbackTaskHandle == NULL){
