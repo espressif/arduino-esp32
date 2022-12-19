@@ -38,6 +38,12 @@ class MyServerCallbacks: public BLEServerCallbacks {
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
       Serial.println("deviceConnected = false");
+
+      // Restart advertising to be visible and connectable again
+      BLEAdvertising* pAdvertising;
+      pAdvertising = pServer->getAdvertising();
+      pAdvertising->start();
+      Serial.println("iBeacon advertising restarted");
     }
 };
 
