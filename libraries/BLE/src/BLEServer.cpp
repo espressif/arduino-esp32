@@ -374,6 +374,12 @@ void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
 	log_d("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
 
+void BLEServerCallbacks::onDisconnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+	log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
+	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
+	log_d("BLEServerCallbacks", "<< onDisconnect()");
+} // onDisconnect
+
 void BLEServerCallbacks::onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
 	log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
 	log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), param->mtu.mtu);
