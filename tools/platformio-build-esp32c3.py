@@ -87,6 +87,7 @@ env.Append(
         "-fno-lto",
         "-Wl,--wrap=esp_log_write",
         "-Wl,--wrap=esp_log_writev",
+        "-Wl,--wrap=log_printf",
         "-Wl,--undefined=uxTopUsedPriority",
         "-T", "memory.ld",
         "-T", "sections.ld",
