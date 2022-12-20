@@ -42,15 +42,13 @@ extern "C" {
 // within a certain number (see tu_fifo_overflow()).
 
 #include "common/tusb_common.h"
+#include "osal/osal.h"
+
+#define tu_fifo_mutex_t  osal_mutex_t
 
 // mutex is only needed for RTOS
 // for OS None, we don't get preempted
-#define CFG_FIFO_MUTEX      (CFG_TUSB_OS != OPT_OS_NONE)
-
-#if CFG_FIFO_MUTEX
-#include "osal/osal.h"
-#define tu_fifo_mutex_t  osal_mutex_t
-#endif
+#define CFG_FIFO_MUTEX      OSAL_MUTEX_REQUIRED
 
 typedef struct
 {
@@ -65,7 +63,7 @@ typedef struct
   volatile uint16_t wr_idx      ; ///< write pointer
   volatile uint16_t rd_idx      ; ///< read pointer
 
-#if CFG_FIFO_MUTEX
+#if OSAL_MUTEX_REQUIRED
   tu_fifo_mutex_t mutex_wr;
   tu_fifo_mutex_t mutex_rd;
 #endif
@@ -99,13 +97,18 @@ bool tu_fifo_set_overwritable(tu_fifo_t *f, bool overwritable);
 bool tu_fifo_clear(tu_fifo_t *f);
 bool tu_fifo_config(tu_fifo_t *f, void* buffer, uint16_t depth, uint16_t item_size, bool overwritable);
 
-#if CFG_FIFO_MUTEX
+#if OSAL_MUTEX_REQUIRED
 TU_ATTR_ALWAYS_INLINE static inline
 void tu_fifo_config_mutex(tu_fifo_t *f, tu_fifo_mutex_t write_mutex_hdl, tu_fifo_mutex_t read_mutex_hdl)
 {
   f->mutex_wr = write_mutex_hdl;
   f->mutex_rd = read_mutex_hdl;
 }
+
+#else
+
+#define tu_fifo_config_mutex(_f, _wr_mutex, _rd_mutex)
+
 #endif
 
 bool     tu_fifo_write                  (tu_fifo_t* f, void const * p_data);
