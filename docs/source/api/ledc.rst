@@ -71,7 +71,7 @@ This function is used to get configured frequency for the LEDC channel.
 
 .. code-block:: arduino
 
-    uint32_t  ledcReadFreq(uint8_t chan);
+    uint32_t ledcReadFreq(uint8_t chan);
 
 * ``chan`` select the LEDC channel to read the configured frequency.
 
