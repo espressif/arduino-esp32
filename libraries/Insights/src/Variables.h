@@ -9,6 +9,7 @@
 #include "Arduino.h"
 #include "esp_diagnostics.h"
 #include "esp_diagnostics_variables.h"
+
 class VariablesClass
 {
     public:

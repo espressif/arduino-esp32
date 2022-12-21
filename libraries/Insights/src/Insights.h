@@ -9,6 +9,7 @@
 #include "Arduino.h"
 #include "esp_system.h"
 #include "esp_insights.h"
+
 class InsightsClass
 {
     private:

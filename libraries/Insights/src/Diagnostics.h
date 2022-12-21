@@ -8,6 +8,7 @@
 #ifdef CONFIG_ESP_INSIGHTS_ENABLED
 #include "Arduino.h"
 #include "esp_diagnostics.h"
+
 class DiagnosticsClass
 {
     public:

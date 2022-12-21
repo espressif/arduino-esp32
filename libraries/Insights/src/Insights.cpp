@@ -8,6 +8,7 @@
 #include "Insights.h"
 #include "esp_insights.h"
 #include "esp_rmaker_utils.h"
+
 static esp_err_t err;
 
 esp_err_t InsightsClass::init(const char *auth_key, uint32_t log_type, const char *node_id, bool alloc_ext_ram)
