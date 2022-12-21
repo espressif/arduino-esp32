@@ -95,6 +95,7 @@ esp_err_t VariablesClass::deinitNetworkVariables()
     if(err != ESP_OK) {
         log_e("Failed to deinitialize network variables, err=0x%x", err);
     }
+    return err;
 }
 
 VariablesClass Variables;
