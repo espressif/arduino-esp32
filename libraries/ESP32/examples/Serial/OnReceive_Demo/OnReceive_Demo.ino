@@ -39,7 +39,6 @@
 */
 
 #include <Arduino.h>
-#include "SignalConnection.h"
 
 // There are two ways to make this sketch work:
 // By physically connecting the pins 4 and 5 and then create a physical UART loopback,

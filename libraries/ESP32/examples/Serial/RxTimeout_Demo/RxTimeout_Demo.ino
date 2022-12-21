@@ -24,7 +24,6 @@
 */
 
 #include <Arduino.h>
-#include "SignalConnection.h"
 
 // There are two ways to make this sketch work:
 // By physically connecting the pins 4 and 5 and then create a physical UART loopback,
@@ -75,6 +74,8 @@ void testAndReport(uint8_t rxTimeout) {
   Serial.printf("Testing the time for receiving %d bytes at %d baud, using RX Timeout = %d:", DATA_SIZE, BAUD, rxTimeout);
   Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
   Serial1.setRxTimeout(rxTimeout); // testing diferent results based on Rx Timeout setup
+  // For baud rates lower or equal to 57600, ESP32 Arduino makes it get byte-by-byte from FIFO, thus we will change it here:
+  Serial1.setRxFIFOFull(120);      // forces it to wait receiving 120 bytes in FIFO before making it availble to Arduino
 
   size_t sentBytes = Serial1.write(dataSent, sizeof(dataSent)); // ESP32 TX FIFO is about 128 bytes, 10 bytes will fit fine
   uint32_t now = millis();
