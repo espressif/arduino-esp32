@@ -125,7 +125,7 @@ esp_err_t Device::addSpeedParam(int val, const char *param_name)
     return esp_rmaker_device_add_param(getDeviceHandle(), param);
 }
 
-esp_err_t Device::addTempratureParam(float val, const char *param_name)
+esp_err_t Device::addTemperatureParam(float val, const char *param_name)
 {   
     param_handle_t *param = esp_rmaker_temperature_param_create(param_name, val);
     return esp_rmaker_device_add_param(getDeviceHandle(), param);

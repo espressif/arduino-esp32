@@ -67,9 +67,11 @@ void TaskBlink(void *pvParameters)  // This is a task.
   for (;;) // A Task shall never return or exit.
   {
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    vTaskDelay(100);  // one tick delay (15ms) in between reads for stability
+    // arduino-esp32 has FreeRTOS configured to have a tick-rate of 1000Hz and portTICK_PERIOD_MS
+    // refers to how many milliseconds the period between each ticks is, ie. 1ms.
+    vTaskDelay(1000 / portTICK_PERIOD_MS );  // vTaskDelay wants ticks, not milliseconds
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    vTaskDelay(100);  // one tick delay (15ms) in between reads for stability
+    vTaskDelay(1000 / portTICK_PERIOD_MS); // 1 second delay
   }
 }
 
@@ -92,6 +94,6 @@ void TaskAnalogReadA3(void *pvParameters)  // This is a task.
     int sensorValueA3 = analogRead(A3);
     // print out the value you read:
     Serial.println(sensorValueA3);
-    vTaskDelay(10);  // one tick delay (15ms) in between reads for stability
+    vTaskDelay(100 / portTICK_PERIOD_MS);  // 100ms delay
   }
 }

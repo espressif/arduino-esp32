@@ -160,12 +160,12 @@ ESPUSB::~ESPUSB(){
 
 bool ESPUSB::begin(){
     if(!_started){
-#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         if(serial_number == "__MAC__"){
             StreamString s;
             uint8_t m[6];
             esp_efuse_mac_get_default(m);
-            s.printf("%02X:%02X:%02X:%02X:%02X:%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+            s.printf("%02X%02X%02X%02X%02X%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
             serial_number = s;
         }
 #endif
