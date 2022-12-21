@@ -220,7 +220,7 @@ recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool
 
 ## Create Insights Firmware Package
 recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} {build.path}
-recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ -d {build.path}/libraries/Insights ] && {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
+recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d {build.path}/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
 recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" ({tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args})
 
 ## Save bin
