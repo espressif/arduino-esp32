@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-#define ESP_LITTLEFS_VERSION_NUMBER "1.5.0"
+#define ESP_LITTLEFS_VERSION_NUMBER "1.5.1"
 #define ESP_LITTLEFS_VERSION_MAJOR 1
 #define ESP_LITTLEFS_VERSION_MINOR 5
-#define ESP_LITTLEFS_VERSION_PATCH 0
+#define ESP_LITTLEFS_VERSION_PATCH 1
 
 /**
  *Configuration structure for esp_vfs_littlefs_register.

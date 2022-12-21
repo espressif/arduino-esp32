@@ -33,17 +33,24 @@
 
 #include "common/tusb_common.h"
 
-// Return immediately
-#define OSAL_TIMEOUT_NOTIMEOUT     (0)
-// Default timeout
-#define OSAL_TIMEOUT_NORMAL        (10)
-// Wait forever
-#define OSAL_TIMEOUT_WAIT_FOREVER  (UINT32_MAX)
-
-#define OSAL_TIMEOUT_CONTROL_XFER  OSAL_TIMEOUT_WAIT_FOREVER
-
 typedef void (*osal_task_func_t)( void * );
 
+// Timeout
+#define OSAL_TIMEOUT_NOTIMEOUT     (0)          // Return immediately
+#define OSAL_TIMEOUT_NORMAL        (10)         // Default timeout
+#define OSAL_TIMEOUT_WAIT_FOREVER  (UINT32_MAX) // Wait forever
+#define OSAL_TIMEOUT_CONTROL_XFER  OSAL_TIMEOUT_WAIT_FOREVER
+
+// Mutex is required when using a preempted RTOS or MCU has multiple cores
+#if (CFG_TUSB_OS == OPT_OS_NONE) && !TUP_MCU_MULTIPLE_CORE
+  #define OSAL_MUTEX_REQUIRED   0
+  #define OSAL_MUTEX_DEF(_name)
+#else
+  #define OSAL_MUTEX_REQUIRED   1
+  #define OSAL_MUTEX_DEF(_name) osal_mutex_def_t _name
+#endif
+
+// OS thin implementation
 #if CFG_TUSB_OS == OPT_OS_NONE
   #include "osal_none.h"
 #elif CFG_TUSB_OS == OPT_OS_FREERTOS
