@@ -29,16 +29,12 @@ void loop()
     } else {
         Serial.print(n);
         Serial.println(" networks found");
-        Serial.println("Nr | SSID            | RSSI | CH | Encryption");
+        Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
         for (int i = 0; i < n; ++i) {
             // Print SSID and RSSI for each network found
             Serial.printf("%2d",i + 1);
             Serial.print(" | ");
-            if (WiFi.SSID(i).length() < 15) { // Compact column for better readability.
-                Serial.printf("%-15s", WiFi.SSID(i).c_str());
-            } else {
-                Serial.print(WiFi.SSID(i));
-            }
+            Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
             Serial.print(" | ");
             Serial.printf("%4d", WiFi.RSSI(i));
             Serial.print(" | ");
