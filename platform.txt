@@ -24,8 +24,8 @@ tools.esp_ota.cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
-tools.gen_insights_pkg.cmd = python3 {runtime.platform.path}/tools/gen_insights_package.py
-tools.gen_insights_pkg.cmd.windows = {runtime.platform.path}/tools/gen_insights_package.exe
+tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
+tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
 
 compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
@@ -219,9 +219,8 @@ recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {rec
 recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
 
 ## Create Insights Firmware Package
-recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}/insights_pkg"
-recipe.hooks.objcopy.postobjcopy.1.pattern_args.windows={build.path} {build.project_name} "{build.source.path}\insights_pkg"
-recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d {build.path}/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
+recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}"
+recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
 recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" ({tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args})
 
 ## Save bin

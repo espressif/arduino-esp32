@@ -18,7 +18,8 @@ TARGET_PATH=sys.argv[3]
 
 def main():
     print("Creating ESP Insights Firmware Package.")
-    archive_path = os.path.join(TARGET_PATH, PROJ_NAME)
+    archive_path = os.path.join(BUILD_DIR, PROJ_NAME)
+    out_path = os.path.join(TARGET_PATH, PROJ_NAME)
     
     # Create target archive directories
     os.makedirs(archive_path, exist_ok = True)
@@ -47,8 +48,8 @@ def main():
         with open(os.path.join(archive_path, "project_build_config.json"), "w") as json_file:
             json_file.write(json.dumps(project_build_config_obj))
     
-    shutil.make_archive(archive_path, "zip", TARGET_PATH, PROJ_NAME)
-    print("Archive created at {}".format(archive_path + ".zip"))
+    shutil.make_archive(out_path, "zip", BUILD_DIR, PROJ_NAME)
+    print("Archive created at {}".format(out_path + ".zip"))
     return
 
 if __name__ == '__main__':
