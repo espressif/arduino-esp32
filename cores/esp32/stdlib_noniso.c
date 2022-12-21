@@ -171,7 +171,7 @@ char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
 
     // Figure out how big our number really is
     double tenpow = 1.0;
-    unsigned int  digitcount = 1;
+    unsigned int digitcount = 1;
     while (number >= 10.0 * tenpow) {
         tenpow *= 10.0;
         digitcount++;
