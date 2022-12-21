@@ -301,8 +301,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                 xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
                 xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
                 xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
+                xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
             }        
-            xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
         } else {
             log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
         }
