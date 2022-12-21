@@ -177,7 +177,7 @@ protected:
     OnReceiveErrorCb _onReceiveErrorCB;
     // _onReceive and _rxTimeout have be consistent when timeout is disabled
     bool _onReceiveTimeout;
-    uint8_t _rxTimeout;
+    uint8_t _rxTimeout, _rxFIFOFull;
     TaskHandle_t _eventTask;
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t _lock;
