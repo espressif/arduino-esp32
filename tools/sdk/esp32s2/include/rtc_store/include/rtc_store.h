@@ -36,6 +36,33 @@ typedef enum {
     RTC_STORE_EVENT_NON_CRITICAL_DATA_WRITE_FAIL, /*!< Non critical data write failed */
 } rtc_store_event_t;
 
+#define SHA_SIZE  (CONFIG_APP_RETRIEVE_LEN_ELF_SHA / 2)
+
+/**
+ * @brief header record to identify firmware/boot data a record represent
+ */
+typedef struct {
+    uint8_t gen_id;             // generated on each hard reset
+    uint8_t boot_cnt;           // updated on each soft reboot
+    char sha_sum[SHA_SIZE];     // elf shasum
+    bool valid;                 //
+} rtc_store_meta_header_t;
+
+/**
+ * @brief   get meta header for idx
+ *
+ * @param idx   idx of meta from records
+ * @return rtc_store_meta_header_t*
+ */
+rtc_store_meta_header_t *rtc_store_get_meta_record_by_index(uint8_t idx);
+
+/**
+ * @brief   get current meta header
+ *
+ * @return rtc_store_meta_header_t*
+ */
+rtc_store_meta_header_t *rtc_store_get_meta_record_current();
+
 /**
  * @brief Non critical data header
  */
@@ -57,43 +84,33 @@ esp_err_t rtc_store_critical_data_write(void *data, size_t len);
 /**
  * @brief Read critical data from the RTC storage
  *
- * @param[out] size Number of bytes read
+ * @param[in] buf Buffer to read data in
+ * @param[in] size Number of bytes to read
  *
- * @return Pointer to the data on success, otherwise NULL
- *
- * @note It is mandatory to call \ref rtc_store_critical_data_release_and_unlock() if \ref rtc_store_critical_data_read_and_lock() is successful.
- * @note Please avoid adding \ref ESP_DIAG_EVENT(), error/warning logs using esp_log module in between rtc_store_critical_data_read_and_lock() and rtc_store_critical_data_release_and_unlock() API calls. It may lead to a deadlock.
+ * @return Number of bytes read or -1 on error
  */
-const void *rtc_store_critical_data_read_and_lock(size_t *size);
-
-/**
- * @brief Release the utilized data read using \ref rtc_store_critical_data_read_and_lock()
- *
- * This API releases the utilized data read using \ref rtc_store_critical_data_read_and_lock().
- * Utilization may involve encoding data, sending data to the cloud, post processing or printing on the console, etc.
- *
- * @param[in] size Number of bytes to free. If all the data is utilized then pass the size returned by \ref rtc_store_critical_data_read_and_lock() or 0 if no data is utilized (e.g. sending to cloud failed).
- *
- * @return ESP_OK on success, appropriate error code otherwise.
- *
- * @note Please avoid adding \ref ESP_DIAG_EVENT(), error/warning logs using esp_log module in between rtc_store_critical_data_read_and_lock() and rtc_store_critical_data_release_and_unlock() API calls. It may lead to a deadlock.
- */
-esp_err_t rtc_store_critical_data_release_and_unlock(size_t size);
+int rtc_store_critical_data_read(uint8_t *buf, size_t size);
 
 /**
  * @brief Release the size bytes critical data from RTC storage
  *
  * This API can be used to remove data from buffer when data is sent asynchronously.
  *
- * Consider data is read using \ref rtc_store_critical_data_read_and_lock() and sent to cloud asynchronously.
- * Since status of data send is unknown, call \ref rtc_store_critical_data_release_and_unlock() with zero length.
- * When acknowledgement for data send is received use this API with appropriate size to remove the data from the buffer.
- *
  * @param[in] size Number of bytes to free.
  *
  * @return ESP_OK on success, appropriate error code otherwise.
  */
 esp_err_t rtc_store_critical_data_release(size_t size);
+
+/**
+ * @brief Read critical data from the RTC storage and release that data
+ *
+ * @param[in] buf Buffer to read data in
+ * @param[in] size Number of bytes to read
+ *
+ * @return Number of bytes read or -1 on error
+ */
+int rtc_store_critical_data_read_and_release(uint8_t *buf, size_t size);
 
 /**
  * @brief Write non critical data to the RTC storage
@@ -116,26 +133,12 @@ esp_err_t rtc_store_non_critical_data_write(const char *dg, void *data, size_t l
 /**
  * @brief Read non critical data from the RTC storage
  *
- * @param[out] size Number of bytes read
+ * @param[in] buf Buffer to read data in
+ * @param[in] size Number of bytes read
  *
- * @return Pointer to the data on success, otherwise NULL
- *
- * @note It is mandatory to call \ref rtc_store_non_critical_data_release_and_unlock() if \ref rtc_store_non_critical_data_read_and_lock() is successful.
+ * @return Number of bytes read or -1 on error
  */
-const void *rtc_store_non_critical_data_read_and_lock(size_t *size);
-
-/**
- * @brief Release the utilized data read using \ref rtc_store_non_critical_data_read_and_lock()
- *
- * This API releases the utilized data read using \ref rtc_store_non_critical_data_read_and_lock().
- * Utilization may involve encoding data, sending data to the cloud, post processing or printing on the console, etc.
- *
- * @param[in] size Number of bytes to free. If all the data is utilized then pass the size returned by \ref rtc_store_non_critical_data_read_and_lock() or 0 if no data is utilized (e.g. sending to cloud failed).
- *
- * @return ESP_OK on success, appropriate error code otherwise.
- *
- */
-esp_err_t rtc_store_non_critical_data_release_and_unlock(size_t size);
+int rtc_store_non_critical_data_read(uint8_t *buf, size_t size);
 
 /**
  * @brief Release the size bytes non critical data from RTC storage
@@ -145,6 +148,16 @@ esp_err_t rtc_store_non_critical_data_release_and_unlock(size_t size);
  * @return ESP_OK on success, appropriate error code otherwise.
  */
 esp_err_t rtc_store_non_critical_data_release(size_t size);
+
+/**
+ * @brief Read non_critical data from the RTC storage and release that data
+ *
+ * @param[in] buf Buffer to read data in
+ * @param[in] size Number of bytes read
+ *
+ * @return Number of bytes read or -1 on error
+ */
+int rtc_store_non_critical_data_read_and_release(uint8_t *buf, size_t size);
 
 /**
  * @brief Initializes the RTC storage
