@@ -535,7 +535,7 @@ int log_printfv(const char *format, va_list arg)
 {
     static char loc_buf[64];
     char * temp = loc_buf;
-    int len;
+    uint32_t len;
     va_list copy;
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, copy);
