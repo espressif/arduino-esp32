@@ -75,7 +75,14 @@ struct DNSQuestion
 class DNSServer
 {
   public:
+    /**
+     * @brief Construct a new DNSServer object
+     * by default server is configured to run in "Captive-portal" mode
+     * it must be started with start() call to establish a listening socket
+     * 
+     */
     DNSServer();
+
     /**
      * @brief Construct a new DNSServer object
      * builds DNS server with default parameters
@@ -83,12 +90,35 @@ class DNSServer
      */
     DNSServer(const String &domainName);
     ~DNSServer(){};                   // default d-tor
-    void processNextRequest(){};      // stub, left for compatibility with an old version
+
+    // Copy semantics not implemented (won't run on same UDP port anyway)
+    DNSServer(const DNSServer&) = delete;
+    DNSServer& operator=(const DNSServer&) = delete;
+
+
+    /**
+     * @brief stub, left for compatibility with an old version
+     * does nothing actually
+     * 
+     */
+    void processNextRequest(){};
+
+    /**
+     * @brief Set the Error Reply Code for all req's not matching predifined domain
+     * 
+     * @param replyCode 
+     */
     void setErrorReplyCode(const DNSReplyCode &replyCode);
+
+    /**
+     * @brief set TTL for successfull replies
+     * 
+     * @param ttl in seconds
+     */
     void setTTL(const uint32_t &ttl);
 
     /**
-     * @brief Starts a server with current configuration or with default parameters
+     * @brief (re)Starts a server with current configuration or with default parameters
      * if it's the first call.
      * Defaults are:
      * port: 53
@@ -100,12 +130,38 @@ class DNSServer
      */
     bool start();
 
-    // Returns true if successful, false if there are no sockets available
-    bool start(const uint16_t &port,
+    /**
+     * @brief (re)Starts a server with provided configuration
+     * 
+     * @return true on success
+     * @return false if IP or socket error
+     */
+    bool start(uint16_t port,
               const String &domainName,
               const IPAddress &resolvedIP);
-    // stops the DNS server
+
+    /**
+     * @brief stops the server and close UDP socket
+     * 
+     */
     void stop();
+
+    /**
+     * @brief returns true if DNS server runs in captive-portal mode
+     * i.e. all requests are served with AP's ip address
+     * 
+     * @return true if catch-all mode active
+     * @return false otherwise
+     */
+    inline bool isCaptive() const { return _domainName.isEmpty(); };
+
+    /**
+     * @brief returns 'true' if server is up and UDP socket is listening for UDP req's
+     * 
+     * @return true if server is up
+     * @return false otherwise
+     */
+    inline bool isUp() { return _udp.connected(); };
 
   private:
     AsyncUDP _udp;

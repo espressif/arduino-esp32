@@ -19,18 +19,18 @@ DNSServer::DNSServer(const String &domainName) : _port(DNS_DEFAULT_PORT), _ttl(h
 
 
 bool DNSServer::start(){
-  if (WiFi.getMode() & WIFI_AP){
-    _resolvedIP = WiFi.softAPIP();
-  } else return false;        // won't run if WiFi is not in AP mode
+  if (_resolvedIP.operator uint32_t() == 0){    // no address is set, try to obtain AP interface's IP
+    if (WiFi.getMode() & WIFI_AP){
+      _resolvedIP = WiFi.softAPIP();
+    } else return false;              // won't run if WiFi is not in AP mode
+  } 
 
   _udp.close();
   _udp.onPacket([this](AsyncUDPPacket& pkt){ this->_handleUDP(pkt); });
   return _udp.listen(_port);
 }
 
-bool DNSServer::start(const uint16_t &port, const String &domainName,
-                     const IPAddress &resolvedIP)
-{
+bool DNSServer::start(uint16_t port, const String &domainName, const IPAddress &resolvedIP){
   _port = port;
   if (domainName != "*"){
     _domainName = domainName;
