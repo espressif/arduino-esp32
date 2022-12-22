@@ -24,6 +24,9 @@ tools.esp_ota.cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
+tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
+tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
+
 compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
 compiler.prefix={build.tarch}-{build.target}-elf-
@@ -211,9 +214,14 @@ recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" "-Wl,--Map={build
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
 
 ## Create bin
-recipe.objcopy.bin.pattern_args=--chip {build.mcu} elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+recipe.objcopy.bin.pattern_args=--chip {build.mcu} elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" --elf-sha256-offset 0xb0 -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
 recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
 recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
+
+## Create Insights Firmware Package
+recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}"
+recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
+recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}
 
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
