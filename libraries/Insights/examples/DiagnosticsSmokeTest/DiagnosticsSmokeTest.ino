@@ -40,7 +40,7 @@ static void smoke_test()
            }
         }
 
-        Metrics.dumpHeapMetrics();
+        Insights.metrics.dumpHeap();
         if (count % MAX_PTRS == 0) {
             allocating = !allocating;
             log_i("Allocating:%s\n", allocating ? "true" : "false");
