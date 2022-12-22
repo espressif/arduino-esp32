@@ -1,5 +1,4 @@
 #include "Insights.h"
-#include "Metrics.h"
 #include "WiFi.h"
 #include "inttypes.h"
 #include "esp_err.h"
@@ -83,7 +82,7 @@ void setup()
     Serial.println("=========================================");
     Serial.printf("ESP Insights enabled Node ID %s\n", Insights.nodeID());
     Serial.println("=========================================");
-    
+
     if (esp_reset_reason() == ESP_RST_POWERON)  {
         s_reset_count = 1;
     } else {

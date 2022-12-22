@@ -19,7 +19,7 @@ ESP Insights Agent API
 ----------------------
 
 Insights.begin
-*************8
+**************
 
 This initializes the ESP Insights agent.
 
