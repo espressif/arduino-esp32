@@ -19,7 +19,7 @@ ESP Insights Agent API
 ----------------------
 
 Insights.begin
-*************
+*************8
 
 This initializes the ESP Insights agent.
 
@@ -36,7 +36,7 @@ This function will return
 2. false in case of failure
 
 Insights.send
-*****************
+*************
 
 Read insights data from buffers and send it to the cloud. Call to this function is asynchronous, it may take some time to send the data.
 
@@ -50,7 +50,7 @@ This function will return
 2. false in case of failure
 
 Insights.end
-***************
+************
 
 Deinitialize ESP Insights.
 
@@ -73,7 +73,7 @@ ESP Insights Metrics API
 `metrics` object of `Insights` class expose API's for using metrics.
 
 Insights.metrics.addX
-**********************
+*********************
 
 Register a metric of type X, where X is one of: Bool, Int, Uint, Float, String, IPv4 or MAC
 
@@ -92,7 +92,7 @@ This function will return
 2. false in case of failure
 
 Insights.metrics.remove
-******************
+***********************
 
 Unregister a diagnostics metrics
 
@@ -108,7 +108,7 @@ This function will return
 2. false in case of failure
 
 Insights.metrics.removeAll
-*********************
+**************************
 
 Unregister all previously registered metrics
 
@@ -122,7 +122,7 @@ This function will return
 2. false in case of failure
 
 Insights.metrics.setX
-***********
+*********************
 
 Add metrics of type X to storage, where X is one of: Bool, Int, Uint, Float, String, IPv4 or MAC
 
@@ -138,8 +138,8 @@ This function will return
 1. `ESP_OK` : On success
 2. Error in case of failure
 
-Insights.metrics.dumpHeapMetrics
-***********************
+Insights.metrics.dumpHeap
+*************************
 
 Dumps the heap metrics and prints them to the console.
 This API collects and reports metrics value at any give point in time.
@@ -154,7 +154,7 @@ This function will return
 2. false in case of failure
 
 Insights.metrics.dumpWiFi
-***********************
+*************************
 
 Dumps the wifi metrics and prints them to the console.
 This API can be used to collect wifi metrics at any given point in time.
@@ -169,7 +169,7 @@ This function will return
 2. false in case of failure
 
 Insights.metrics.setHeapPeriod
-********************************
+******************************
 
 Reset the periodic interval
 By default, heap metrics are collected every 30 seconds, this function can be used to change the interval.
@@ -182,7 +182,7 @@ If the interval is set to 0, heap metrics collection disabled.
 * ``period`` : Period interval in seconds
 
 Insights.metrics.setWiFiPeriod
-********************************
+******************************
 
 Reset the periodic interval
 By default, wifi metrics are collected every 30 seconds, this function can be used to change the interval.
@@ -200,7 +200,7 @@ ESP Insights Variables API
 `variables` object of `Insights` class expose API's for using variables.
 
 Insights.variables.addX
-**************************
+***********************
 
 Register a variable of type X, where X is one of: Bool, Int, Uint, Float, String, IPv4 or MAC
 
@@ -219,7 +219,7 @@ This function will return
 2. false in case of failure
 
 Insights.variables.remove
-********************
+*************************
 
 Unregister a diagnostics variable
 
@@ -235,7 +235,7 @@ This function will return
 2. false in case of failure
 
 Insights.variables.removeAll
-***********************
+****************************
 
 Unregister all previously registered variables
 
@@ -249,7 +249,7 @@ This function will return
 2. false in case of failure
 
 Insights.variables.setX
-*************
+***********************
 
 Add variable of type X to storage, where X is one of: Bool, Int, Uint, Float, String, IPv4 or MAC
 
