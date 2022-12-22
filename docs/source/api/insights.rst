@@ -15,7 +15,6 @@ Developers normally prefer debugging issues by physically probing them using gdb
 
 Additional information about ESP Insights can be found `here <https://insights.espressif.com/>`__.
 
-
 ESP Insights Agent API
 ----------------------
 
@@ -405,13 +404,11 @@ Reset the periodic interval
 By default, heap metrics are collected every 30 seconds, this function can be used to change the interval.
 If the interval is set to 0, heap metrics collection disabled.
 
-
 .. code-block:: arduino
 
     void resetHeapMetricsInterval(uint32_t period);
 
 * ``period`` : Period interval in seconds
-
 
 Metrics.resetWiFiMetricsInterval
 ********************************
@@ -710,13 +707,11 @@ This function will return
 1. `ESP_OK` : On success
 2. Error in case of failure
 
-
 ESP Insights Diagnostics API
 ----------------------------
 
 `Diagnostics` object of `DiagnosticsClass` class exposes API's for reporting logs to the Insights Cloud
 This class is defined in "Diagnostics.h" header file.
-
 
 Diagnostics.initLogHook
 ***********************
@@ -765,3 +760,11 @@ This function will return
 
 1. `ESP_OK` : On success
 2. Error in case of failure
+
+Example
+-------
+
+To get started with Insights, you can try:
+
+.. literalinclude:: ../../../libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino
+    :language: arduino
