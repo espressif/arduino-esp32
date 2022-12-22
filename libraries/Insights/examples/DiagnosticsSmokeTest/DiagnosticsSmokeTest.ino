@@ -30,11 +30,11 @@ static void smoke_test()
         } else if (dice > 150 && dice < 300) {
             log_w("[count][%d]", count);
         } else if (dice > 300 && dice < 470) {
-            ESP_DIAG_EVENT(TAG, "[count][%d]", count);
+            Insights.event(TAG, "[count][%d]", count);
         } else {
             /* 30 in 500 probability to crash */
             if (s_reset_count > MAX_CRASHES) {
-                ESP_DIAG_EVENT(TAG, "[count][%d]", count);
+                Insights.event(TAG, "[count][%d]", count);
             } else {
                log_e("[count][%d] [crash_count][%" PRIu32 "] [excvaddr][0x0f] Crashing...", count, s_reset_count);
                *(int *)0x0F = 0x10;
@@ -77,10 +77,13 @@ void setup()
     Serial.println("");
     Serial.println("WiFi connected");
     
-    esp_err_t ret = Insights.init(insights_auth_key, ESP_DIAG_LOG_TYPE_ERROR | ESP_DIAG_LOG_TYPE_WARNING | ESP_DIAG_LOG_TYPE_EVENT);
-    if(ret != ESP_OK) {
-        ESP.restart();
+    if(!Insights.begin(insights_auth_key)){
+        return;
     }
+    Serial.println("=========================================");
+    Serial.printf("ESP Insights enabled Node ID %s\n", Insights.nodeID());
+    Serial.println("=========================================");
+    
     if (esp_reset_reason() == ESP_RST_POWERON)  {
         s_reset_count = 1;
     } else {

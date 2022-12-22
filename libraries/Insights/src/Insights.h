@@ -7,22 +7,112 @@
 #include "sdkconfig.h"
 #ifdef CONFIG_ESP_INSIGHTS_ENABLED
 #include "Arduino.h"
-#include "esp_system.h"
-#include "esp_insights.h"
 
-class InsightsClass
+#ifdef __cplusplus
+
+class ESPInsightsMetricsClass
 {
     private:
-        esp_insights_config_t config = {.log_type = 0, .node_id = NULL, .auth_key = NULL, .alloc_ext_ram = false};
+        bool initialized;
+    
     public:
-        esp_err_t init(const char *auth_key, uint32_t log_type, const char *node_id = NULL, bool alloc_ext_ram = false);
-        esp_err_t enable(const char *auth_key, uint32_t log_type, const char *node_id = NULL, bool alloc_ext_ram = false);
-        esp_err_t registerTransport(esp_insights_transport_config_t *config);
-        esp_err_t sendData();
-        void deinit();
-        void disable();
-        void unregisterTransport();
+        ESPInsightsMetricsClass():initialized(false){}
+    
+        bool addBool(const char *tag, const char *key, const char *label, const char *path);
+        bool addInt(const char *tag, const char *key, const char *label, const char *path);
+        bool addUint(const char *tag, const char *key, const char *label, const char *path);
+        bool addFloat(const char *tag, const char *key, const char *label, const char *path);
+        bool addString(const char *tag, const char *key, const char *label, const char *path);
+        bool addIPv4(const char *tag, const char *key, const char *label, const char *path);
+        bool addMAC(const char *tag, const char *key, const char *label, const char *path);
+
+        bool setBool(const char *key, bool b);
+        bool setInt(const char *key, int32_t i);
+        bool setUint(const char *key, uint32_t u);
+        bool setFloat(const char *key, float f);
+        bool setString(const char *key, const char *str);
+        bool setIPv4(const char *key, uint32_t ip);
+        bool setMAC(const char *key, uint8_t *mac);
+
+        bool remove(const char *key);
+        bool removeAll();
+
+        void setHeapPeriod(uint32_t seconds);
+        void setWiFiPeriod(uint32_t seconds);
+
+        bool dumpHeap();
+        bool dumpWiFi();
+
+        //internal use
+        void setInitialized(bool init){ initialized = init; }
 };
 
-extern InsightsClass Insights;
+class ESPInsightsVariablesClass
+{
+    private:
+        bool initialized;
+    
+    public:
+        ESPInsightsVariablesClass():initialized(false){}
+    
+        bool addBool(const char *tag, const char *key, const char *label, const char *path);
+        bool addInt(const char *tag, const char *key, const char *label, const char *path);
+        bool addUint(const char *tag, const char *key, const char *label, const char *path);
+        bool addFloat(const char *tag, const char *key, const char *label, const char *path);
+        bool addString(const char *tag, const char *key, const char *label, const char *path);
+        bool addIPv4(const char *tag, const char *key, const char *label, const char *path);
+        bool addMAC(const char *tag, const char *key, const char *label, const char *path);
+
+        bool setBool(const char *key, bool b);
+        bool setInt(const char *key, int32_t i);
+        bool setUint(const char *key, uint32_t u);
+        bool setFloat(const char *key, float f);
+        bool setString(const char *key, const char *str);
+        bool setIPv4(const char *key, uint32_t ip);
+        bool setMAC(const char *key, uint8_t *mac);
+
+        bool remove(const char *key);
+        bool removeAll();
+
+        //internal use
+        void setInitialized(bool init){ initialized = init; }
+};
+
+class ESPInsightsClass
+{
+    private:
+        bool initialized;
+    
+    public:
+        ESPInsightsMetricsClass metrics;
+        ESPInsightsVariablesClass variables;
+
+        ESPInsightsClass();
+        ~ESPInsightsClass();
+        
+        bool begin(const char *auth_key, const char *node_id = NULL, uint32_t log_type = 0xFFFFFFFF, bool alloc_ext_ram = false);
+        void end();
+        bool send();
+        const char * nodeID();
+        
+        void dumpTasksStatus();
+        
+        bool event(const char *tag, const char *format, ...);
+};
+
+extern ESPInsightsClass Insights;
+
+extern "C"
+{
+#endif
+
+#include "esp_err.h"
+#include "esp_log.h"
+esp_err_t esp_diag_log_event(const char *tag, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+#define insightsEvent(tag, format, ...) {esp_diag_log_event(tag, "EV (%" PRIu32 ") %s: " format, esp_log_timestamp(), tag, ##__VA_ARGS__);}
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

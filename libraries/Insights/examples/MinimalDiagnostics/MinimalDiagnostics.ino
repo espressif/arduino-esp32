@@ -1,5 +1,4 @@
 #include "Insights.h"
-#include "Metrics.h"
 #include "WiFi.h"
 
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
@@ -18,15 +17,15 @@ void setup()
     }
     Serial.println("");
     Serial.println("WiFi connected");
-    esp_err_t ret = Insights.init(insights_auth_key, ESP_DIAG_LOG_TYPE_ERROR | ESP_DIAG_LOG_TYPE_WARNING | ESP_DIAG_LOG_TYPE_EVENT);
-    if(ret != ESP_OK) {
-        ESP.restart();
+    if(!Insights.begin(insights_auth_key)){
+        return;
     }
+    Serial.println("=========================================");
+    Serial.printf("ESP Insights enabled Node ID %s\n", Insights.nodeID());
+    Serial.println("=========================================");
 }
 
 void loop()
 {
-    Metrics.dumpHeapMetrics();
-    Metrics.dumpWiFiMetrics();
-    delay(10 * 60 * 1000);
+    delay(1000);
 }
