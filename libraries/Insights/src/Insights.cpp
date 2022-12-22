@@ -12,7 +12,7 @@
 #include "esp_diagnostics_variables.h"
 #include "esp_diagnostics_network_variables.h"
 
-static const char * ERROR_INSIGHTS_NOT_INIT = "ESP Insights not initialized";
+const char * ERROR_INSIGHTS_NOT_INIT = "ESP Insights not initialized";
 
 #define BOOL_FN_OR_ERROR(f,e) \
     if(!initialized){ \
