@@ -394,7 +394,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
  * @param m wifi_bandwidth_t
  */
 bool WiFiSTAClass::bandwidthSTA(wifi_bandwidth_t bandwidth) {
-    if(!enableSTA(true)) {
+    if(!WiFi.enableSTA(true)) {
         log_e("STA enable failed!");
         return false;
     }
