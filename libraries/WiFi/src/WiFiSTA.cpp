@@ -390,6 +390,26 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 }
 
 /**
+ * Sets the working bandwidth of the STA mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiSTAClass::bandwidthSTA(wifi_bandwidth_t bandwidth) {
+    if(!enableSTA(true)) {
+        log_e("STA enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_STA, bandwidth);
+    if(err){
+        log_e("Could not set STA bandwidth!");
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * is STA interface connected?
  * @return true if STA is connected to an AP
  */

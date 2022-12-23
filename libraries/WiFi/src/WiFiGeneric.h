@@ -168,9 +168,6 @@ class WiFiGenericClass
 
     int32_t channel(void);
 
-    bool bandwidthSTA(wifi_bandwidth_t bandwidth);
-    bool bandwidthAP(wifi_bandwidth_t bandwidth);
-
     void persistent(bool persistent);
     void enableLongRange(bool enable);
 
