@@ -238,7 +238,7 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
  * Sets the working bandwidth of the AP mode
  * @param m wifi_bandwidth_t
  */
-bool WiFiAPClass::bandwidthAP(wifi_bandwidth_t bandwidth) {   
+bool WiFiAPClass::softAPbandwidth(wifi_bandwidth_t bandwidth) {   
     if(!WiFi.enableAP(true)) {
         log_e("AP enable failed!");
         return false;
