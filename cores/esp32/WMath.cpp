@@ -36,25 +36,17 @@ void randomSeed(unsigned long seed)
     }
 }
 
-long random(long howbig)
+long random( long howsmall, long howbig );
+long random( long howbig )
 {
-    uint32_t x = esp_random();
-    uint64_t m = uint64_t(x) * uint64_t(howbig);
-    uint32_t l = uint32_t(m);
-    if (l < howbig) {
-        uint32_t t = -howbig;
-        if (t >= howbig) {
-            t -= howbig;
-            if (t >= howbig)
-                t %= howbig;
-        }
-        while (l < t) {
-            x = esp_random();
-            m = uint64_t(x) * uint64_t(howbig);
-            l = uint32_t(m);
-        }
-    }
-    return m >> 32;
+  if ( howbig == 0 )
+  {
+    return 0 ;
+  }
+  if (howbig < 0) {
+    return (random(0, -howbig));
+  }
+  return esp_random() % howbig;
 }
 
 long random(long howsmall, long howbig)

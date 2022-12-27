@@ -22,7 +22,9 @@
 #include "hal/uart_ll.h"
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
+#include "soc/uart_periph.h"
 
+#include "driver/gpio.h"
 #include "hal/gpio_hal.h"
 #include "esp_rom_gpio.h"
 
@@ -535,7 +537,7 @@ int log_printfv(const char *format, va_list arg)
 {
     static char loc_buf[64];
     char * temp = loc_buf;
-    int len;
+    uint32_t len;
     va_list copy;
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, copy);
@@ -742,4 +744,55 @@ uartDetectBaudrate(uart_t *uart)
     log_e("ESP32-C3 baud rate detection is not supported.");
     return 0;
 #endif
+}
+
+/*
+    These functions are for testing puspose only and can be used in Arduino Sketches
+    Those are used in the UART examples
+*/
+
+/*
+    This is intended to make an internal loopback connection using IOMUX
+    The function uart_internal_loopback() shall be used right after Arduino Serial.begin(...)
+    This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
+*/
+
+// gets the right TX SIGNAL, based on the UART number
+#if SOC_UART_NUM > 2
+#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+#else
+#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+#endif
+/*
+   Make sure UART's RX signal is connected to TX pin
+   This creates a loop that lets us receive anything we send on the UART
+*/
+void uart_internal_loopback(uint8_t uartNum, int8_t rxPin)
+{
+  if (uartNum > SOC_UART_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) return;
+  esp_rom_gpio_connect_out_signal(rxPin, UART_TX_SIGNAL(uartNum), false, false);
+}
+
+/*
+    This is intended to generate BREAK in an UART line
+*/
+
+// Forces a BREAK in the line based on SERIAL_8N1 configuration at any baud rate
+void uart_send_break(uint8_t uartNum)
+{
+  uint32_t currentBaudrate = 0;
+  uart_get_baudrate(uartNum, &currentBaudrate);
+  // calculates 10 bits of breaks in microseconds for baudrates up to 500mbps
+  // This is very sensetive timing... it works fine for SERIAL_8N1
+  uint32_t breakTime = (uint32_t) (10.0 * (1000000.0 / currentBaudrate));
+  uart_set_line_inverse(uartNum, UART_SIGNAL_TXD_INV);
+  ets_delay_us(breakTime);
+  uart_set_line_inverse(uartNum, UART_SIGNAL_INV_DISABLE);
+}
+
+// Sends a buffer and at the end of the stream, it generates BREAK in the line
+int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize)
+{
+  // 12 bits long BREAK for 8N1
+  return uart_write_bytes_with_break(uartNum, (const void *)msg, msgSize, 12);
 }
