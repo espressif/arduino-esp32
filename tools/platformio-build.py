@@ -126,8 +126,8 @@ def add_tinyuf2_extra_image():
     )
 
     # Add the UF2 image only if it exists and it's not already added
-    if not isfile(tinuf2_image):
-        print("Warning! The `%s` UF2 bootloader image doesn't exist" % tinuf2_image)
+    if not isfile(env.subst(tinuf2_image)):
+        print("Warning! The `%s` UF2 bootloader image doesn't exist" % env.subst(tinuf2_image))
         return
 
     if any(
