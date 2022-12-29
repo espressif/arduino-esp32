@@ -604,6 +604,9 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         if(payload && size > 0) {
             addHeader(F("Content-Length"), String(size));
+        } else {
+			// force 0 content length for redirect request
+			addHeader(F("Content-Length"), String("0"));
         }
 
         // add cookies to header, if present
@@ -619,10 +622,21 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         // send Payload if needed
         if(payload && size > 0) {
-            if(_client->write(&payload[0], size) != size) {
-                return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+			
+			// this will fail for big payload
+//             if(_client->write(&payload[0], size) != size) {
+//                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
+//             }
+			
+			// send the payload per 1000 bytes
+			log_d("Sending %u byte ...\n", size);
+            size_t sent_bytes = 0;
+			for (size_t id_data = 0; id_data < size; id_data+=1000)
+            {
+                sent_bytes = _client->write(&payload[id_data], ((id_data+1000)<=size)?1000:(size-id_data));
+                log_d("Sent %u bytes\n", sent_bytes);
             }
-        }
+        } 
 
         code = handleHeaderResponse();
         log_d("sendRequest code=%d\n", code);
