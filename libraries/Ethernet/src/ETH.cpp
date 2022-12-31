@@ -220,9 +220,6 @@ ETHClass::ETHClass()
      ,eth_handle(NULL)
 #endif
      ,started(false)
-#if ESP_IDF_VERSION_MAJOR > 3
-     ,eth_link(ETH_LINK_DOWN)
-#endif
 {
 }
 
@@ -534,8 +531,10 @@ bool ETHClass::setHostname(const char * hostname)
 
 bool ETHClass::fullDuplex()
 {
-#ifdef ESP_IDF_VERSION_MAJOR
-    return true;//todo: do not see an API for this
+#if ESP_IDF_VERSION_MAJOR > 3
+    eth_duplex_t link_duplex;
+    esp_eth_ioctl(eth_handle, ETH_CMD_G_DUPLEX_MODE, &link_duplex);
+    return (link_duplex == ETH_DUPLEX_FULL);
 #else
     return eth_config.phy_get_duplex_mode();
 #endif
@@ -543,8 +542,8 @@ bool ETHClass::fullDuplex()
 
 bool ETHClass::linkUp()
 {
-#ifdef ESP_IDF_VERSION_MAJOR
-    return eth_link == ETH_LINK_UP;
+#if ESP_IDF_VERSION_MAJOR > 3
+    return WiFiGenericClass::getStatusBits() & ETH_CONNECTED_BIT;
 #else
     return eth_config.phy_check_link();
 #endif
@@ -552,7 +551,7 @@ bool ETHClass::linkUp()
 
 uint8_t ETHClass::linkSpeed()
 {
-#ifdef ESP_IDF_VERSION_MAJOR
+#if ESP_IDF_VERSION_MAJOR > 3
     eth_speed_t link_speed;
     esp_eth_ioctl(eth_handle, ETH_CMD_G_SPEED, &link_speed);
     return (link_speed == ETH_SPEED_10M)?10:100;

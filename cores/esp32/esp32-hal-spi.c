@@ -1003,7 +1003,7 @@ static void __spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out,
     if(!spi) {
         return;
     }
-    int i;
+    uint32_t i;
 
     if(bytes > 64) {
         bytes = 64;
@@ -1298,7 +1298,7 @@ void spiWriteNL(spi_t * spi, const void * data_in, uint32_t len){
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-        for (int i=0; i<c_longs; i++) {
+        for (size_t i=0; i<c_longs; i++) {
             spi->dev->data_buf[i] = data[i];
         }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
@@ -1333,11 +1333,11 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         spi->dev->mosi_dlen.usr_mosi_dbitlen = (c_len*8)-1;
         spi->dev->miso_dlen.usr_miso_dbitlen = (c_len*8)-1;
         if(data){
-            for (int i=0; i<c_longs; i++) {
+            for (size_t i=0; i<c_longs; i++) {
                 spi->dev->data_buf[i] = data[i];
             }
         } else {
-            for (int i=0; i<c_longs; i++) {
+            for (size_t i=0; i<c_longs; i++) {
                 spi->dev->data_buf[i] = 0xFFFFFFFF;
             }
         }
@@ -1349,17 +1349,17 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         while(spi->dev->cmd.usr);
         if(result){
             if(c_len & 3){
-                for (int i=0; i<(c_longs-1); i++) {
+                for (size_t i=0; i<(c_longs-1); i++) {
                     result[i] = spi->dev->data_buf[i];
                 }
                 uint32_t last_data = spi->dev->data_buf[c_longs-1];
                 uint8_t * last_out8 = (uint8_t *)&result[c_longs-1];
                 uint8_t * last_data8 = (uint8_t *)&last_data;
-                for (int i=0; i<(c_len & 3); i++) {
+                for (size_t i=0; i<(c_len & 3); i++) {
                     last_out8[i] = last_data8[i];
                 }
             } else {
-                for (int i=0; i<c_longs; i++) {
+                for (size_t i=0; i<c_longs; i++) {
                     result[i] = spi->dev->data_buf[i];
                 }
             }
@@ -1439,7 +1439,7 @@ void ARDUINO_ISR_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-        for (int i=0; i<c_longs; i++) {
+        for (size_t i=0; i<c_longs; i++) {
             if(msb){
                 if(l_bytes && i == (c_longs - 1)){
                     if(l_bytes == 2){

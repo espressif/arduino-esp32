@@ -22,7 +22,7 @@ copyright = '2022, Espressif'
 author = 'Espressif'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.2'
+release = '2.0.6'
 
 # -- General configuration ---------------------------------------------------
 
