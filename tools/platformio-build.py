@@ -51,19 +51,19 @@ def get_partition_table_csv(variants_dir):
 
     if partitions_name:
         # A custom partitions file is selected
-        if isfile(join(variant_partitions_dir, partitions_name)):
+        if isfile(env.subst(join(variant_partitions_dir, partitions_name))):
             return join(variant_partitions_dir, partitions_name)
 
         return abspath(
             join(fwpartitions_dir, partitions_name)
-            if isfile(join(fwpartitions_dir, partitions_name))
+            if isfile(env.subst(join(fwpartitions_dir, partitions_name)))
             else partitions_name
         )
 
     variant_partitions = join(variant_partitions_dir, "partitions.csv")
     return (
         variant_partitions
-        if isfile(variant_partitions)
+        if isfile(env.subst(variant_partitions))
         else join(fwpartitions_dir, "default.csv")
     )
 
@@ -81,7 +81,7 @@ def get_bootloader_image(variants_dir):
 
     return (
         variant_bootloader
-        if isfile(variant_bootloader)
+        if isfile(env.subst(variant_bootloader))
         else generate_bootloader_image(
             join(
                 FRAMEWORK_DIR,
