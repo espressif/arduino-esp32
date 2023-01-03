@@ -2,10 +2,23 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
+
+#define USB_VID 0x303a
+#define USB_PID 0x1001
 
 #define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       18
+#define NUM_ANALOG_INPUTS       20
+
+// Some boards have too low voltage on this pin (board design bug)
+// Use different pin with 3V and connect with 48
+// and change this setup for the chosen pin (for example 38)
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 48;
+#define BUILTIN_LED    LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN    LED_BUILTIN
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p) \
     (((p) < 20) ? (analogChannelToDigitalPin(p)) : -1)

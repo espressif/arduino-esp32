@@ -10967,17 +10967,35 @@ m5stack-atoms3.build.cdc_on_boot=0
 m5stack-atoms3.build.msc_on_boot=0
 m5stack-atoms3.build.dfu_on_boot=0
 m5stack-atoms3.build.f_cpu=240000000L
-m5stack-atoms3.build.flash_size=16MB
+m5stack-atoms3.build.flash_size=4MB
 m5stack-atoms3.build.flash_freq=80m
 m5stack-atoms3.build.flash_mode=dio
 m5stack-atoms3.build.boot=qio
 m5stack-atoms3.build.boot_freq=80m
 m5stack-atoms3.build.partitions=default
-m5stack-atoms3.build.defines=-DBOARD_HAS_PSRAM
+m5stack-atoms3.build.defines=
 m5stack-atoms3.build.loop_core=
 m5stack-atoms3.build.event_core=
-m5stack-atoms3.build.psram_type=opi
+m5stack-atoms3.build.psram_type=qspi
 m5stack-atoms3.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+m5stack-atoms3.menu.JTAGAdapter.default=Integrated USB JTAG
+m5stack-atoms3.menu.JTAGAdapter.default.build.openocdscript=esp32s3-builtin.cfg
+m5stack-atoms3.menu.JTAGAdapter.external=FTDI Adapter
+m5stack-atoms3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+m5stack-atoms3.menu.JTAGAdapter.bridge=ESP USB Bridge
+m5stack-atoms3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+
+m5stack-atoms3.menu.PSRAM.disabled=Disabled
+m5stack-atoms3.menu.PSRAM.disabled.build.defines=
+m5stack-atoms3.menu.PSRAM.disabled.build.psram_type=qspi
+m5stack-atoms3.menu.PSRAM.enabled=QSPI PSRAM
+m5stack-atoms3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack-atoms3.menu.PSRAM.enabled.build.psram_type=qspi
+m5stack-atoms3.menu.PSRAM.opi=OPI PSRAM
+m5stack-atoms3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack-atoms3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack-atoms3.menu.FlashMode.qio=QIO 80MHz
 m5stack-atoms3.menu.FlashMode.qio.build.flash_mode=dio
@@ -10989,6 +11007,26 @@ m5stack-atoms3.menu.FlashMode.qio120.build.flash_mode=dio
 m5stack-atoms3.menu.FlashMode.qio120.build.boot=qio
 m5stack-atoms3.menu.FlashMode.qio120.build.boot_freq=120m
 m5stack-atoms3.menu.FlashMode.qio120.build.flash_freq=80m
+m5stack-atoms3.menu.FlashMode.dio=DIO 80MHz
+m5stack-atoms3.menu.FlashMode.dio.build.flash_mode=dio
+m5stack-atoms3.menu.FlashMode.dio.build.boot=dio
+m5stack-atoms3.menu.FlashMode.dio.build.boot_freq=80m
+m5stack-atoms3.menu.FlashMode.dio.build.flash_freq=80m
+m5stack-atoms3.menu.FlashMode.opi=OPI 80MHz
+m5stack-atoms3.menu.FlashMode.opi.build.flash_mode=dout
+m5stack-atoms3.menu.FlashMode.opi.build.boot=opi
+m5stack-atoms3.menu.FlashMode.opi.build.boot_freq=80m
+m5stack-atoms3.menu.FlashMode.opi.build.flash_freq=80m
+
+m5stack-atoms3.menu.FlashSize.4M=4MB (32Mb)
+m5stack-atoms3.menu.FlashSize.4M.build.flash_size=4MB
+m5stack-atoms3.menu.FlashSize.8M=8MB (64Mb)
+m5stack-atoms3.menu.FlashSize.8M.build.flash_size=8MB
+m5stack-atoms3.menu.FlashSize.8M.build.partitions=default_8MB
+m5stack-atoms3.menu.FlashSize.16M=16MB (128Mb)
+m5stack-atoms3.menu.FlashSize.16M.build.flash_size=16MB
+#m5stack-atoms3.menu.FlashSize.32M=32MB (256Mb)
+#m5stack-atoms3.menu.FlashSize.32M.build.flash_size=32MB
 
 m5stack-atoms3.menu.LoopCore.1=Core 1
 m5stack-atoms3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -11027,15 +11065,13 @@ m5stack-atoms3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 m5stack-atoms3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 m5stack-atoms3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-m5stack-atoms3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack-atoms3.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack-atoms3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-m5stack-atoms3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-m5stack-atoms3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-m5stack-atoms3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-m5stack-atoms3.menu.PartitionScheme.rainmaker=RainMaker
-m5stack-atoms3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
-m5stack-atoms3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+m5stack-atoms3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack-atoms3.menu.PartitionScheme.default.build.partitions=default
+m5stack-atoms3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack-atoms3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+m5stack-atoms3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack-atoms3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+m5stack-atoms3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 
 m5stack-atoms3.menu.CPUFreq.240=240MHz (WiFi)
 m5stack-atoms3.menu.CPUFreq.240.build.f_cpu=240000000L
