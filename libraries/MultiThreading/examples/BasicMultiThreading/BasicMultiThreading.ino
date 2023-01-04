@@ -57,7 +57,7 @@ void setup() {
     ,  1024  // Stack size
     ,  NULL  // When no parameter is used, simply pass NULL
     ,  1  // Priority
-    ,  task_handle // With task handle we will be able to manipulate with this task.
+    ,  &task_handle // With task handle we will be able to manipulate with this task.
     ,  ARDUINO_RUNNING_CORE // Core on which the task will run
     );
 
@@ -65,11 +65,13 @@ void setup() {
 }
 
 void loop(){
+  /*
   if(task_handle != NULL){ // Make sure that the task actually exists
     delay(10000);
     vTaskDelete(task_handle); // Delete task
     task_handle = NULL; // prevent calling vTaskDelete on non-existing task
   }
+  */
 }
 
 /*--------------------------------------------------*/
@@ -77,7 +79,7 @@ void loop(){
 /*--------------------------------------------------*/
 
 void TaskBlink(void *pvParameters){  // This is a task.
-  uint32_t blink_delay = (uint32_t) *pvParameters;
+  uint32_t blink_delay = *((uint32_t*)pvParameters);
 
 /*
   Blink
