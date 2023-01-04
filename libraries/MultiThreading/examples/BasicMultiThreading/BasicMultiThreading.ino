@@ -1,3 +1,24 @@
+/*
+  This example demonstrates basic usage of FreeRTOS Task for multi threading.
+  Please refer to other examples in this folder to better utilize their the full potential and safe-guard potential problems.
+  It is also advised to read documentation on FreeRTOS web pages:
+  https://www.freertos.org/a00106.html
+
+  This example will blink builtin LED and read analog data.
+  Additionally this example demonstrates usage of task handle, simply by deleting the analog
+  read task after 10 seconds from main loop by calling the function `vTaskDelete`.
+
+  Theory:
+  A task is simply a function which runs when the operating system (FreeeRTOS) sees fit.
+  This task can have an infinite loop inside if you want to do some work periodically for the entirety of the program run.
+  This however can create a problem - no other task will ever run and also the Watch Dog will trigger and your program will restart.
+  A nice behaving tasks knows when it useless to keep the processor for itself and gives it away for other tasks to be used.
+  This can be achieved by many ways, but the simplest is calling `delay(milliseconds)`.
+  During that delay any other task may run and do it's job.
+  When the delay runs out the Operating System gives the processor to the task which can continue.
+  For other ways to yield the CPU in task please see other examples in this folder.
+*/
+
 #if CONFIG_FREERTOS_UNICORE
 #define ARDUINO_RUNNING_CORE 0
 #else
@@ -8,50 +29,55 @@
 #define LED_BUILTIN 13
 #endif
 
-// define two tasks for Blink & AnalogRead
+// Define two tasks for Blink & AnalogRead.
 void TaskBlink( void *pvParameters );
 void TaskAnalogReadA3( void *pvParameters );
+TaskHandle_t task_handle; // You can (don't have to) use this to be able to manipulate a task from somewhere else.
 
-// the setup function runs once when you press reset or power the board
+// The setup function runs once when you press reset or power on the board.
 void setup() {
-  
-  // initialize serial communication at 115200 bits per second:
+  // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
   
-  // Now set up two tasks to run independently.
-  xTaskCreatePinnedToCore(
+  // Set up two tasks to run independently.
+  uint32_t blink_delay = 1000; // Delay between changing state on LED pin
+  xTaskCreate(
     TaskBlink
-    ,  "TaskBlink"   // A name just for humans
-    ,  1024  // This stack size can be checked & adjusted by reading the Stack Highwater
-    ,  NULL
+    ,  "TaskBlink" // A name just for humans
+    ,  1024        // The stack size can be checked by calling `uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);`
+    ,  (void*) &blink_delay // Task parameter which can modify the task behavior. This must be passed as pointer to void.
     ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,  NULL 
-    ,  ARDUINO_RUNNING_CORE);
+    ,  NULL // Task handle is not used here
+    );
 
+  // This variant of task creation can also for the task to run specified core
   xTaskCreatePinnedToCore(
     TaskAnalogReadA3
     ,  "AnalogReadA3"
     ,  1024  // Stack size
-    ,  NULL
+    ,  NULL  // When no parameter is used, simply pass NULL
     ,  1  // Priority
-    ,  NULL 
-    ,  ARDUINO_RUNNING_CORE);
+    ,  task_handle // With task handle we will be able to manipulate with this task.
+    ,  ARDUINO_RUNNING_CORE // Core on which the task will run
+    );
 
   // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
 }
 
-void loop()
-{
-  // Empty. Things are done in Tasks.
+void loop(){
+  if(task_handle != NULL){ // Make sure that the task actually exists
+    delay(10000);
+    vTaskDelete(task_handle); // Delete task
+    task_handle = NULL; // prevent calling vTaskDelete on non-existing task
+  }
 }
 
 /*--------------------------------------------------*/
 /*---------------------- Tasks ---------------------*/
 /*--------------------------------------------------*/
 
-void TaskBlink(void *pvParameters)  // This is a task.
-{
-  (void) pvParameters;
+void TaskBlink(void *pvParameters){  // This is a task.
+  uint32_t blink_delay = (uint32_t) *pvParameters;
 
 /*
   Blink
@@ -64,19 +90,17 @@ void TaskBlink(void *pvParameters)  // This is a task.
   // initialize digital LED_BUILTIN on pin 13 as an output.
   pinMode(LED_BUILTIN, OUTPUT);
 
-  for (;;) // A Task shall never return or exit.
-  {
+  for (;;){ // A Task shall never return or exit.
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     // arduino-esp32 has FreeRTOS configured to have a tick-rate of 1000Hz and portTICK_PERIOD_MS
     // refers to how many milliseconds the period between each ticks is, ie. 1ms.
-    vTaskDelay(1000 / portTICK_PERIOD_MS );  // vTaskDelay wants ticks, not milliseconds
+    delay(blink_delay);
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    vTaskDelay(1000 / portTICK_PERIOD_MS); // 1 second delay
+    delay(blink_delay);
   }
 }
 
-void TaskAnalogReadA3(void *pvParameters)  // This is a task.
-{
+void TaskAnalogReadA3(void *pvParameters){  // This is a task.
   (void) pvParameters;
   
 /*
@@ -88,12 +112,11 @@ void TaskAnalogReadA3(void *pvParameters)  // This is a task.
   This example code is in the public domain.
 */
 
-  for (;;)
-  {
+  for (;;){
     // read the input on analog pin A3:
     int sensorValueA3 = analogRead(A3);
     // print out the value you read:
     Serial.println(sensorValueA3);
-    vTaskDelay(100 / portTICK_PERIOD_MS);  // 100ms delay
+    delay(100); // 100ms delay
   }
 }
