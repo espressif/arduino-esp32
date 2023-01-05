@@ -17,6 +17,23 @@
   During that delay any other task may run and do it's job.
   When the delay runs out the Operating System gives the processor to the task which can continue.
   For other ways to yield the CPU in task please see other examples in this folder.
+
+  Task creation has few parameter you should understand:
+  xTaskCreate(TaskFunction_t pxTaskCode,
+              const char * const pcName,
+              const uint16_t usStackDepth,
+              void * const pvParameters,
+              UBaseType_t uxPriority,
+              TaskHandle_t * const pxCreatedTask )
+
+  - pxTaskCode      is the name of your function which will run as a task
+  - pcName          is a string of human readable description for your task
+  - usStackDepth    is number of words (word = 4B) available to the task. If you see error similar to this "Debug exception reason: Stack canary watchpoint triggered (Task Blink)" you should increase it
+  - pvParameters    is a parameter which will be passed to the task function - it must be explicitly converted to (void*) and in your function explicitly converted back to the intended data type.
+  - uxPriority      is number from 0 to configMAX_PRIORITIES which determines how the FreeRTOS will allow the tasks to run. 0 is lowest priority.
+  - pxCreatedTask   task handle is basically a pointer to the task which allows you to manipulate with the task - delete it, suspend and resume.
+                    If you don't need to do anything special with you task, simply pass NULL for this parameter.
+                    You can read more about task control here: https://www.freertos.org/a00112.html
 */
 
 #if CONFIG_FREERTOS_UNICORE
@@ -43,17 +60,17 @@ void setup() {
   uint32_t blink_delay = 1000; // Delay between changing state on LED pin
   xTaskCreate(
     TaskBlink
-    ,  "TaskBlink" // A name just for humans
+    ,  "Task Blink" // A name just for humans
     ,  1024        // The stack size can be checked by calling `uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);`
     ,  (void*) &blink_delay // Task parameter which can modify the task behavior. This must be passed as pointer to void.
-    ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    ,  NULL // Task handle is not used here
+    ,  2  // Priority
+    ,  NULL // Task handle is not used here - simply pass NULL
     );
 
   // This variant of task creation can also for the task to run specified core
   xTaskCreatePinnedToCore(
     TaskAnalogReadA3
-    ,  "AnalogReadA3"
+    ,  "Analog Read A3"
     ,  1024  // Stack size
     ,  NULL  // When no parameter is used, simply pass NULL
     ,  1  // Priority
