@@ -2,10 +2,17 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define EXTERNAL_NUM_INTERRUPTS 22
 #define NUM_DIGITAL_PINS        22
 #define NUM_ANALOG_INPUTS       6
+
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+8;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
+#define RGB_BUILTIN LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)

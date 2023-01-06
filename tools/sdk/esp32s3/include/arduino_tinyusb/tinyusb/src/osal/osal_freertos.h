@@ -38,9 +38,57 @@ extern "C" {
 #endif
 
 //--------------------------------------------------------------------+
+// MACRO CONSTANT TYPEDEF PROTYPES
+//--------------------------------------------------------------------+
+
+#if configSUPPORT_STATIC_ALLOCATION
+  typedef StaticSemaphore_t osal_semaphore_def_t;
+  typedef StaticSemaphore_t osal_mutex_def_t;
+#else
+  // not used therefore defined to smallest possible type to save space
+  typedef uint8_t osal_semaphore_def_t;
+  typedef uint8_t osal_mutex_def_t;
+#endif
+
+typedef SemaphoreHandle_t osal_semaphore_t;
+typedef SemaphoreHandle_t osal_mutex_t;
+
+// _int_set is not used with an RTOS
+#define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type) \
+  static _type _name##_##buf[_depth];\
+  osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf };
+
+typedef struct
+{
+  uint16_t depth;
+  uint16_t item_sz;
+  void*    buf;
+#if configSUPPORT_STATIC_ALLOCATION
+  StaticQueue_t sq;
+#endif
+}osal_queue_def_t;
+
+typedef QueueHandle_t osal_queue_t;
+
+//--------------------------------------------------------------------+
 // TASK API
 //--------------------------------------------------------------------+
-static inline void osal_task_delay(uint32_t msec)
+
+TU_ATTR_ALWAYS_INLINE static inline uint32_t _osal_ms2tick(uint32_t msec)
+{
+  if (msec == OSAL_TIMEOUT_WAIT_FOREVER) return portMAX_DELAY;
+  if (msec == 0) return 0;
+
+  uint32_t ticks = pdMS_TO_TICKS(msec);
+
+  // configTICK_RATE_HZ is less than 1000 and 1 tick > 1 ms
+  // we still need to delay at least 1 tick
+  if (ticks == 0) ticks =1 ;
+
+  return ticks;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void osal_task_delay(uint32_t msec)
 {
   vTaskDelay( pdMS_TO_TICKS(msec) );
 }
@@ -48,15 +96,18 @@ static inline void osal_task_delay(uint32_t msec)
 //--------------------------------------------------------------------+
 // Semaphore API
 //--------------------------------------------------------------------+
-typedef StaticSemaphore_t osal_semaphore_def_t;
-typedef SemaphoreHandle_t osal_semaphore_t;
 
-static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_semaphore_def_t* semdef)
 {
+#if configSUPPORT_STATIC_ALLOCATION
   return xSemaphoreCreateBinaryStatic(semdef);
+#else
+  (void) semdef;
+  return xSemaphoreCreateBinary();
+#endif
 }
 
-static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
 {
   if ( !in_isr )
   {
@@ -64,7 +115,7 @@ static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
   }
   else
   {
-    BaseType_t xHigherPriorityTaskWoken;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     BaseType_t res = xSemaphoreGiveFromISR(sem_hdl, &xHigherPriorityTaskWoken);
 
 #if CFG_TUSB_MCU == OPT_MCU_ESP32S2 || CFG_TUSB_MCU == OPT_MCU_ESP32S3
@@ -78,13 +129,12 @@ static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr)
   }
 }
 
-static inline bool osal_semaphore_wait (osal_semaphore_t sem_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_wait(osal_semaphore_t sem_hdl, uint32_t msec)
 {
-  uint32_t const ticks = (msec == OSAL_TIMEOUT_WAIT_FOREVER) ? portMAX_DELAY : pdMS_TO_TICKS(msec);
-  return xSemaphoreTake(sem_hdl, ticks);
+  return xSemaphoreTake(sem_hdl, _osal_ms2tick(msec));
 }
 
-static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
+TU_ATTR_ALWAYS_INLINE static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
 {
   xQueueReset(sem_hdl);
 }
@@ -92,20 +142,23 @@ static inline void osal_semaphore_reset(osal_semaphore_t const sem_hdl)
 //--------------------------------------------------------------------+
 // MUTEX API (priority inheritance)
 //--------------------------------------------------------------------+
-typedef StaticSemaphore_t osal_mutex_def_t;
-typedef SemaphoreHandle_t osal_mutex_t;
 
-static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
+TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef)
 {
+#if configSUPPORT_STATIC_ALLOCATION
   return xSemaphoreCreateMutexStatic(mdef);
+#else
+  (void) mdef;
+  return xSemaphoreCreateMutex();
+#endif
 }
 
-static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock(osal_mutex_t mutex_hdl, uint32_t msec)
 {
   return osal_semaphore_wait(mutex_hdl, msec);
 }
 
-static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 {
   return xSemaphoreGive(mutex_hdl);
 }
@@ -114,33 +167,21 @@ static inline bool osal_mutex_unlock(osal_mutex_t mutex_hdl)
 // QUEUE API
 //--------------------------------------------------------------------+
 
-// role device/host is used by OS NONE for mutex (disable usb isr) only
-#define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type) \
-  static _type _name##_##buf[_depth];\
-  osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf };
-
-typedef struct
+TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
 {
-  uint16_t depth;
-  uint16_t item_sz;
-  void*    buf;
-
-  StaticQueue_t sq;
-}osal_queue_def_t;
-
-typedef QueueHandle_t osal_queue_t;
-
-static inline osal_queue_t osal_queue_create(osal_queue_def_t* qdef)
-{
-  return xQueueCreateStatic(qdef->depth, qdef->item_sz, (uint8_t*) qdef->buf, &qdef->sq);
+#if configSUPPORT_STATIC_ALLOCATION
+	return xQueueCreateStatic(qdef->depth, qdef->item_sz, (uint8_t*) qdef->buf, &qdef->sq);
+#else
+  return xQueueCreate(qdef->depth, qdef->item_sz);
+#endif
 }
 
-static inline bool osal_queue_receive(osal_queue_t qhdl, void* data)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec)
 {
-  return xQueueReceive(qhdl, data, portMAX_DELAY);
+  return xQueueReceive(qhdl, data, _osal_ms2tick(msec));
 }
 
-static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in_isr)
 {
   if ( !in_isr )
   {
@@ -148,7 +189,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   }
   else
   {
-    BaseType_t xHigherPriorityTaskWoken;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     BaseType_t res = xQueueSendToBackFromISR(qhdl, data, &xHigherPriorityTaskWoken);
 
 #if CFG_TUSB_MCU == OPT_MCU_ESP32S2 || CFG_TUSB_MCU == OPT_MCU_ESP32S3
@@ -162,7 +203,7 @@ static inline bool osal_queue_send(osal_queue_t qhdl, void const * data, bool in
   }
 }
 
-static inline bool osal_queue_empty(osal_queue_t qhdl)
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_empty(osal_queue_t qhdl)
 {
   return uxQueueMessagesWaiting(qhdl) == 0;
 }

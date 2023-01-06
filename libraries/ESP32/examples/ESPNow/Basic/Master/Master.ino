@@ -31,10 +31,11 @@
 
 #include <esp_now.h>
 #include <WiFi.h>
+#include <esp_wifi.h> // only for esp_wifi_set_channel()
 
 // Global copy of slave
 esp_now_peer_info_t slave;
-#define CHANNEL 3
+#define CHANNEL 1
 #define PRINTSCANRESULTS 0
 #define DELETEBEFOREPAIR 0
 
@@ -55,7 +56,7 @@ void InitESPNow() {
 
 // Scan for slaves in AP mode
 void ScanForSlave() {
-  int8_t scanResults = WiFi.scanNetworks();
+  int16_t scanResults = WiFi.scanNetworks(false, false, false, 300, CHANNEL); // Scan only on one channel
   // reset on each scan
   bool slaveFound = 0;
   memset(&slave, 0, sizeof(slave));
@@ -222,9 +223,11 @@ void setup() {
   Serial.begin(115200);
   //Set device in STA mode to begin with
   WiFi.mode(WIFI_STA);
+  esp_wifi_set_channel(CHANNEL, WIFI_SECOND_CHAN_NONE);
   Serial.println("ESPNow/Basic/Master Example");
   // This is the mac address of the Master in Station Mode
   Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
+  Serial.print("STA CHANNEL "); Serial.println(WiFi.channel());
   // Init ESPNow with a fallback logic
   InitESPNow();
   // Once ESPNow is successfully Init, we will register for Send CB to

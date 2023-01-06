@@ -46,6 +46,7 @@ void BLE2902::setIndications(bool flag) {
 	uint8_t *pValue = getValue();
 	if (flag) pValue[0] |= 1 << 1;
 	else pValue[0] &= ~(1 << 1);
+	setValue(pValue, 2);
 } // setIndications
 
 
@@ -57,6 +58,7 @@ void BLE2902::setNotifications(bool flag) {
 	uint8_t *pValue = getValue();
 	if (flag) pValue[0] |= 1 << 0;
 	else pValue[0] &= ~(1 << 0);
+	setValue(pValue, 2);
 } // setNotifications
 
 #endif

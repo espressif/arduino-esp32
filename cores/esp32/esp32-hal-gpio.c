@@ -91,6 +91,13 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
+#ifdef RGB_BUILTIN
+    if (pin == RGB_BUILTIN){
+        __pinMode(RGB_BUILTIN-SOC_GPIO_PIN_COUNT, mode);
+        return;
+    }
+#endif
+
     if (!GPIO_IS_VALID_GPIO(pin)) {
         log_e("Invalid pin selected");
         return;
@@ -127,6 +134,14 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
+    #ifdef RGB_BUILTIN
+        if(pin == RGB_BUILTIN){
+            //use RMT to set all channels on/off
+            const uint8_t comm_val = val != 0 ? RGB_BRIGHTNESS : 0;
+            neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
+            return;
+        }
+    #endif
 	gpio_set_level((gpio_num_t)pin, val);
 }
 

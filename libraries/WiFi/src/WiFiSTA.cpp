@@ -240,11 +240,6 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
-
-    if(passphrase) {
-        _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
-    }
 
     wifi_sta_config(&conf, ssid, passphrase, bssid, channel, _minSecurity, _scanMethod, _sortMethod);
 
@@ -342,9 +337,10 @@ bool WiFiSTAClass::reconnect()
 }
 
 /**
- * Disconnect from the network
- * @param wifioff
- * @return  one value of wl_status_t enum
+ * Disconnect from the network.
+ * @param wifioff `true` to turn the Wi-Fi radio off.
+ * @param eraseap `true` to erase the AP configuration from the NVS memory.
+ * @return `true` when successful.
  */
 bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
 {
@@ -403,8 +399,8 @@ bool WiFiSTAClass::isConnected()
 }
 
 /**
- * Set the minimum security for AP to be considered connectable
- * Must be called before WiFi.begin()
+ * Set the minimum security for AP to be considered connectable.
+ * Must be called before WiFi.begin().
  * @param minSecurity wifi_auth_mode_t
  */
 void WiFiSTAClass::setMinSecurity(wifi_auth_mode_t minSecurity)
@@ -435,8 +431,9 @@ void WiFiSTAClass::setSortMethod(wifi_sort_method_t sortMethod)
 }
 
 /**
- * Setting the ESP32 station to connect to the AP (which is recorded)
+ * Deprecated. Setting the ESP32 station to connect to the AP (which is recorded)
  * automatically or not when powered on. Enable auto-connect by default.
+ * @deprecated use `setAutoReconnect`
  * @param autoConnect bool
  * @return if saved
  */
@@ -446,8 +443,9 @@ bool WiFiSTAClass::setAutoConnect(bool autoConnect)
 }
 
 /**
- * Checks if ESP32 station mode will connect to AP
+ * Deprecated. Checks if ESP32 station mode will connect to AP
  * automatically or not when it is powered on.
+ * @deprecated use `getAutoReconnect`
  * @return auto connect
  */
 bool WiFiSTAClass::getAutoConnect()
@@ -455,12 +453,20 @@ bool WiFiSTAClass::getAutoConnect()
     return false;//now deprecated
 }
 
+/**
+ * Function used to set the automatic reconnection if the connection is lost. 
+ * @param autoReconnect `true` to enable this option.
+ * @return true 
+ */
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
 {
     _autoReconnect = autoReconnect;
     return true;
 }
-
+/**
+ * Function used to get the automatic reconnection if the connection is lost.
+ * @return The function will return `true` if this setting is enabled.
+ */
 bool WiFiSTAClass::getAutoReconnect()
 {
     return _autoReconnect;

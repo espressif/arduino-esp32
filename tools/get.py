@@ -53,10 +53,19 @@ def mkdir_p(path):
             raise
 
 def report_progress(count, blockSize, totalSize):
-    percent = int(count*blockSize*100/totalSize)
-    percent = min(100, percent)
-    sys.stdout.write("\r%d%%" % percent)
-    sys.stdout.flush()
+    if sys.stdout.isatty():
+        if totalSize > 0:
+            percent = int(count*blockSize*100/totalSize)
+            percent = min(100, percent)
+            sys.stdout.write("\r%d%%" % percent)
+        else:
+            sofar = (count*blockSize) / 1024
+            if sofar >= 1000:
+                sofar /= 1024
+                sys.stdout.write("\r%dMB  " % (sofar))
+            else:
+                sys.stdout.write("\r%dKB" % (sofar))
+        sys.stdout.flush()
 
 def unpack(filename, destination):
     dirname = ''
@@ -80,6 +89,32 @@ def unpack(filename, destination):
         if os.path.isdir(rename_to):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
+
+def download_file_with_progress(url,filename):
+    import ssl
+    import contextlib
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    with contextlib.closing(urlopen(url,context=ctx)) as fp:
+        total_size = int(fp.getheader("Content-Length",fp.getheader("Content-length","0")))
+        block_count = 0
+        block_size = 1024 * 8
+        block = fp.read(block_size)
+        if block:
+            with open(filename,'wb') as out_file:
+                out_file.write(block)
+                block_count += 1
+                report_progress(block_count, block_size, total_size)
+                while True:
+                    block = fp.read(block_size)
+                    if not block:
+                        break
+                    out_file.write(block)
+                    block_count += 1
+                    report_progress(block_count, block_size, total_size)
+        else:
+            raise Exception ('nonexisting file or connection error')
 
 def download_file(url,filename):
     import ssl
@@ -125,8 +160,11 @@ def get_tool(tool):
             if is_ci:
                 download_file(url, local_path)
             else:
-                urlretrieve(url, local_path, report_progress)
-                sys.stdout.write("\rDone\n")
+                try:
+                    urlretrieve(url, local_path, report_progress)
+                except:
+                    download_file_with_progress(url, local_path)
+                sys.stdout.write("\rDone   \n")
                 sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))

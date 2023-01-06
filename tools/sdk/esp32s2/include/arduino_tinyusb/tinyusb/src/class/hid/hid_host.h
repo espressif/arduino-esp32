@@ -89,7 +89,7 @@ uint8_t tuh_hid_get_protocol(uint8_t dev_addr, uint8_t instance);
 bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
 
 // Set Report using control endpoint
-// report_type is either Intput, Output or Feature, (value from hid_report_type_t)
+// report_type is either Input, Output or Feature, (value from hid_report_type_t)
 bool tuh_hid_set_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
 
 //--------------------------------------------------------------------+

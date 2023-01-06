@@ -32,7 +32,6 @@
 #endif
 
 #include "common/tusb_common.h"
-#include "hcd.h"
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
@@ -46,20 +45,21 @@ typedef void (*tuh_xfer_cb_t)(tuh_xfer_t* xfer);
 
 // Note1: layout and order of this will be changed in near future
 // it is advised to initialize it using member name
-// Note2: not all field is available/meaningful in callback, some info is not saved by
-// usbh to save SRAM
+// Note2: not all field is available/meaningful in callback,
+// some info is not saved by usbh to save SRAM
 struct tuh_xfer_s
 {
   uint8_t daddr;
   uint8_t ep_addr;
-
+  uint8_t TU_RESERVED;      // reserved
   xfer_result_t result;
+
   uint32_t actual_len;      // excluding setup packet
 
   union
   {
     tusb_control_request_t const* setup; // setup packet pointer if control transfer
-    uint32_t buflen;        // expected length if not control transfer (not available in callback)
+    uint32_t buflen;                     // expected length if not control transfer (not available in callback)
   };
 
   uint8_t* buffer;           // not available in callback if not control transfer
@@ -69,33 +69,60 @@ struct tuh_xfer_s
   // uint32_t timeout_ms;    // place holder, not supported yet
 };
 
+// ConfigID for tuh_config()
+enum
+{
+  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 << 8 // cfg_param: pio_usb_configuration_t
+};
+
 //--------------------------------------------------------------------+
 // APPLICATION CALLBACK
 //--------------------------------------------------------------------+
 
 //TU_ATTR_WEAK uint8_t tuh_attach_cb (tusb_desc_device_t const *desc_device);
 
-// Invoked when device is mounted (configured)
+// Invoked when a device is mounted (configured)
 TU_ATTR_WEAK void tuh_mount_cb (uint8_t daddr);
 
-/// Invoked when device is unmounted (bus reset/unplugged)
+// Invoked when a device failed to mount during enumeration process
+// TU_ATTR_WEAK void tuh_mount_failed_cb (uint8_t daddr);
+
+/// Invoked when a device is unmounted (detached)
 TU_ATTR_WEAK void tuh_umount_cb(uint8_t daddr);
 
 //--------------------------------------------------------------------+
 // APPLICATION API
 //--------------------------------------------------------------------+
 
+// Configure host stack behavior with dynamic or port-specific parameters.
+// Should be called before tuh_init()
+// - cfg_id   : configure ID (TBD)
+// - cfg_param: configure data, structure depends on the ID
+bool tuh_configure(uint8_t controller_id, uint32_t cfg_id, const void* cfg_param);
+
 // Init host stack
-bool tuh_init(uint8_t rhport);
+bool tuh_init(uint8_t controller_id);
 
 // Check if host stack is already initialized
 bool tuh_inited(void);
 
+// Task function should be called in main/rtos loop, extended version of tuh_task()
+// - timeout_ms: millisecond to wait, zero = no wait, 0xFFFFFFFF = wait forever
+// - in_isr: if function is called in ISR
+void tuh_task_ext(uint32_t timeout_ms, bool in_isr);
+
 // Task function should be called in main/rtos loop
-void tuh_task(void);
+TU_ATTR_ALWAYS_INLINE static inline
+void tuh_task(void)
+{
+  tuh_task_ext(UINT32_MAX, false);
+}
+
+#ifndef _TUSB_HCD_H_
+extern void hcd_int_handler(uint8_t rhport);
+#endif
 
 // Interrupt handler, name alias to HCD
-extern void hcd_int_handler(uint8_t rhport);
 #define tuh_int_handler   hcd_int_handler
 
 bool tuh_vid_pid_get(uint8_t daddr, uint16_t* vid, uint16_t* pid);
@@ -106,8 +133,8 @@ tusb_speed_t tuh_speed_get(uint8_t daddr);
 bool tuh_mounted(uint8_t daddr);
 
 // Check if device is suspended
-TU_ATTR_ALWAYS_INLINE
-static inline bool tuh_suspended(uint8_t daddr)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_suspended(uint8_t daddr)
 {
   // TODO implement suspend & resume on host
   (void) daddr;
@@ -115,8 +142,8 @@ static inline bool tuh_suspended(uint8_t daddr)
 }
 
 // Check if device is ready to communicate with
-TU_ATTR_ALWAYS_INLINE
-static inline bool tuh_ready(uint8_t daddr)
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_ready(uint8_t daddr)
 {
   return tuh_mounted(daddr) && !tuh_suspended(daddr);
 }

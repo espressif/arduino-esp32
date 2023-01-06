@@ -1,6 +1,6 @@
-##########
+#####
 Timer
-##########
+#####
 
 About
 -----
@@ -19,7 +19,7 @@ ESP32-S3  4
 ========= ================
 
 Arduino-ESP32 Timer API
-----------------------------
+-----------------------
 
 timerBegin
 **********
@@ -31,11 +31,9 @@ This function is used to configure the timer. After successful setup the timer w
     hw_timer_t * timerBegin(uint8_t num, uint16_t divider, bool countUp);
 
 * ``num`` select timer number.
-* ``divider`` select timer divider.
-* ``resolution`` select timer resolution.
+* ``divider`` select timer divider. Sets how quickly the timer counter is “ticking”.
+* ``countUp`` select timer direction. Sets if the counter should be incrementing or decrementing.
 
-  * range is 1-14 bits (1-20 bits for ESP32).
-  
 This function will return ``timer`` structure if configuration is successful.
 If ``NULL`` is returned, error occurs and the timer was not configured.
 

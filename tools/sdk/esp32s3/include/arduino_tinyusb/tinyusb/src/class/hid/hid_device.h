@@ -62,7 +62,7 @@ uint8_t tud_hid_n_interface_protocol(uint8_t instance);
 uint8_t tud_hid_n_get_protocol(uint8_t instance);
 
 // Send report to host
-bool tud_hid_n_report(uint8_t instance, uint8_t report_id, void const* report, uint8_t len);
+bool tud_hid_n_report(uint8_t instance, uint8_t report_id, void const* report, uint16_t len);
 
 // KEYBOARD: convenient helper to send keyboard report if application
 // use template layout report as defined by hid_keyboard_report_t
@@ -82,7 +82,7 @@ bool tud_hid_n_gamepad_report(uint8_t instance, uint8_t report_id, int8_t x, int
 static inline bool    tud_hid_ready(void);
 static inline uint8_t tud_hid_interface_protocol(void);
 static inline uint8_t tud_hid_get_protocol(void);
-static inline bool    tud_hid_report(uint8_t report_id, void const* report, uint8_t len);
+static inline bool    tud_hid_report(uint8_t report_id, void const* report, uint16_t len);
 static inline bool    tud_hid_keyboard_report(uint8_t report_id, uint8_t modifier, uint8_t keycode[6]);
 static inline bool    tud_hid_mouse_report(uint8_t report_id, uint8_t buttons, int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
 static inline bool    tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry, uint8_t hat, uint32_t buttons);
@@ -116,7 +116,7 @@ TU_ATTR_WEAK bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate);
 // Invoked when sent REPORT successfully to host
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
-TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len);
+TU_ATTR_WEAK void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, /*uint16_t*/ uint8_t len );
 
 
 //--------------------------------------------------------------------+
@@ -137,7 +137,7 @@ static inline uint8_t tud_hid_get_protocol(void)
   return tud_hid_n_get_protocol(0);
 }
 
-static inline bool tud_hid_report(uint8_t report_id, void const* report, uint8_t len)
+static inline bool tud_hid_report(uint8_t report_id, void const* report, uint16_t len)
 {
   return tud_hid_n_report(0, report_id, report, len);
 }
@@ -182,7 +182,7 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
   HID_COLLECTION ( HID_COLLECTION_APPLICATION )                    ,\
     /* Report ID if any */\
     __VA_ARGS__ \
-    /* 8 bits Modifier Keys (Shfit, Control, Alt) */ \
+    /* 8 bits Modifier Keys (Shift, Control, Alt) */ \
     HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
       HID_USAGE_MIN    ( 224                                    )  ,\
       HID_USAGE_MAX    ( 231                                    )  ,\
@@ -350,6 +350,31 @@ static inline bool  tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y
     HID_REPORT_COUNT   ( 32                                     ) ,\
     HID_REPORT_SIZE    ( 1                                      ) ,\
     HID_INPUT          ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+  HID_COLLECTION_END \
+
+// FIDO U2F Authenticator Descriptor Template
+// - 1st parameter is report size, which is 64 bytes maximum in U2F
+// - 2nd parameter is HID_REPORT_ID(n) (optional)
+#define TUD_HID_REPORT_DESC_FIDO_U2F(report_size, ...) \
+  HID_USAGE_PAGE_N ( HID_USAGE_PAGE_FIDO, 2                    ) ,\
+  HID_USAGE      ( HID_USAGE_FIDO_U2FHID                       ) ,\
+  HID_COLLECTION ( HID_COLLECTION_APPLICATION                  ) ,\
+    /* Report ID if any */ \
+    __VA_ARGS__ \
+    /* Usage Data In */ \
+    HID_USAGE         ( HID_USAGE_FIDO_DATA_IN                 ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 0xff, 2                                ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( report_size                            ) ,\
+    HID_INPUT         ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
+    /* Usage Data Out */ \
+    HID_USAGE         ( HID_USAGE_FIDO_DATA_OUT                ) ,\
+    HID_LOGICAL_MIN   ( 0                                      ) ,\
+    HID_LOGICAL_MAX_N ( 0xff, 2                                ) ,\
+    HID_REPORT_SIZE   ( 8                                      ) ,\
+    HID_REPORT_COUNT  ( report_size                            ) ,\
+    HID_OUTPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,\
   HID_COLLECTION_END \
 
 // HID Generic Input & Output

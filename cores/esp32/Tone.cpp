@@ -31,11 +31,8 @@ static void tone_task(void*){
         log_d("Task received from queue TONE_START: _pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
 
         log_d("Setup LED controll on channel %d", _channel);
-        // ledcSetup(_channel, tone_msg.frequency, 11);
-        // ledcAttachPin(tone_msg.pin, _channel);
-        // ledcWrite(_channel, 1024);
-        ledcWriteTone(_channel, tone_msg.frequency);
         ledcAttachPin(tone_msg.pin, _channel);
+        ledcWriteTone(_channel, tone_msg.frequency);
 
         if(tone_msg.duration){
           delay(tone_msg.duration);

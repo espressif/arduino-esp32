@@ -10,8 +10,8 @@
  http://yourAddress/H turns the LED on
  http://yourAddress/L turns it off
 
- This example is written for a network using WPA encryption. For
- WEP or WPA, change the Wifi.begin() call accordingly.
+ This example is written for a network using WPA2 encryption. For insecure
+ WEP or WPA, change the Wifi.begin() call and use Wifi.setMinSecurity() accordingly.
 
  Circuit:
  * WiFi shield attached
@@ -61,8 +61,6 @@ void setup()
     server.begin();
 
 }
-
-int value = 0;
 
 void loop(){
  WiFiClient client = server.available();   // listen for incoming clients

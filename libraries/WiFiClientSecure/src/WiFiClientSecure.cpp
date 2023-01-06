@@ -264,10 +264,10 @@ void WiFiClientSecure::setCACert (const char *rootCA)
  {
     if (bundle != NULL)
     {
-        esp_crt_bundle_set(bundle);
+        arduino_esp_crt_bundle_set(bundle);
         _use_ca_bundle = true;
     } else {
-        esp_crt_bundle_detach(NULL);
+        arduino_esp_crt_bundle_detach(NULL);
         _use_ca_bundle = false;
     }
  }
@@ -376,11 +376,9 @@ int WiFiClientSecure::setTimeout(uint32_t seconds)
         return 0;
     }
 }
-int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
+
+int WiFiClientSecure::fd() const
 {
-    int res = setsockopt(sslclient->socket, SOL_SOCKET, option, value, len);
-    if(res < 0) {
-        log_e("%X : %d", option, errno);
-    }
-    return res;
+    return sslclient->socket;
 }
+

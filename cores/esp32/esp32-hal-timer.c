@@ -47,7 +47,7 @@ static hw_timer_t timer_dev[4] = {
 // timer_init() will list thru all timers and return free timer handle)
 
 
-uint64_t inline timerRead(hw_timer_t *timer){
+inline uint64_t timerRead(hw_timer_t *timer){
 
     uint64_t value;
     timer_get_counter_value(timer->group, timer->num,&value);

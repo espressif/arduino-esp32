@@ -88,9 +88,13 @@ void yield(void);
 #include "esp32-hal-timer.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-psram.h"
+#include "esp32-hal-rgb-led.h"
 #include "esp32-hal-cpu.h"
 
 void analogWrite(uint8_t pin, int value);
+int8_t analogGetChannel(uint8_t pin);
+void analogWriteFrequency(uint32_t freq);
+void analogWriteResolution(uint8_t bits);
 
 //returns chip temperature in Celsius
 float temperatureRead();

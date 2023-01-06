@@ -69,6 +69,7 @@ void uartGetEventQueue(uart_t* uart, QueueHandle_t *q);
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms);
 uint8_t uartRead(uart_t* uart);
 uint8_t uartPeek(uart_t* uart);
 
@@ -82,20 +83,40 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
+void uartSetFastReading(uart_t* uart);
 
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
 
-// Negative Pin Number will keep it unmodified, thus this function can set individual pins
-void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+// Negative Pin Number will keep it unmodified, thus this function can set/reset individual pins
+bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
+
+/*
+    These functions are for testing puspose only and can be used in Arduino Sketches
+    Those are used in the UART examples
+*/
+
+// Make sure UART's RX signal is connected to TX pin
+// This creates a loop that lets us receive anything we send on the UART
+void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
+
+// Routines that generate BREAK in the UART for testing purpose
+
+// Forces a BREAK in the line based on SERIAL_8N1 configuration at any baud rate
+void uart_send_break(uint8_t uartNum);
+// Sends a buffer and at the end of the stream, it generates BREAK in the line
+int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
 
 
 #ifdef __cplusplus

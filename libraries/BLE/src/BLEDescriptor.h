@@ -51,7 +51,7 @@ private:
 	uint16_t                m_handle;
 	BLEDescriptorCallbacks* m_pCallback;
 	BLECharacteristic*      m_pCharacteristic;
-	esp_gatt_perm_t				  m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
+	esp_gatt_perm_t         m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
 	FreeRTOS::Semaphore     m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
 	esp_attr_value_t        m_value;
 

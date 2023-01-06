@@ -43,10 +43,14 @@
   #define EP_MAX_FS       USB_OTG_FS_MAX_IN_ENDPOINTS
   #define EP_FIFO_SIZE_FS USB_OTG_FS_TOTAL_FIFO_SIZE
 
+  #define EP_MAX_HS       USB_OTG_HS_MAX_IN_ENDPOINTS
+  #define EP_FIFO_SIZE_HS USB_OTG_HS_TOTAL_FIFO_SIZE
+
 #elif CFG_TUSB_MCU == OPT_MCU_STM32F4
   #include "stm32f4xx.h"
   #define EP_MAX_FS       USB_OTG_FS_MAX_IN_ENDPOINTS
   #define EP_FIFO_SIZE_FS USB_OTG_FS_TOTAL_FIFO_SIZE
+
   #define EP_MAX_HS       USB_OTG_HS_MAX_IN_ENDPOINTS
   #define EP_FIFO_SIZE_HS USB_OTG_HS_TOTAL_FIFO_SIZE
 
@@ -54,13 +58,22 @@
   #include "stm32h7xx.h"
   #define EP_MAX_FS       9
   #define EP_FIFO_SIZE_FS 4096
+
   #define EP_MAX_HS       9
   #define EP_FIFO_SIZE_HS 4096
+
+  // NOTE: H7 with only 1 USB port: H72x / H73x / H7Ax / H7Bx
+  // USB_OTG_FS_PERIPH_BASE and OTG_FS_IRQn not defined
+  #if (! defined USB2_OTG_FS)
+    #define USB_OTG_FS_PERIPH_BASE  USB1_OTG_HS_PERIPH_BASE
+    #define OTG_FS_IRQn             OTG_HS_IRQn
+  #endif
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32F7
   #include "stm32f7xx.h"
   #define EP_MAX_FS       6
   #define EP_FIFO_SIZE_FS 1280
+
   #define EP_MAX_HS       9
   #define EP_FIFO_SIZE_HS 4096
 
@@ -69,39 +82,53 @@
   #define EP_MAX_FS       6
   #define EP_FIFO_SIZE_FS 1280
 
+#elif CFG_TUSB_MCU == OPT_MCU_STM32U5
+  #include "stm32u5xx.h"
+  #define USB_OTG_FS_PERIPH_BASE       USB_OTG_FS_BASE
+  #define EP_MAX_FS       6
+  #define EP_FIFO_SIZE_FS 1280
+
 #else
   #error "Unsupported MCUs"
 #endif
 
-// On STM32 we associate Port0 to OTG_FS, and Port1 to OTG_HS
-#if TUD_OPT_RHPORT == 0
-  #define DWC2_REG_BASE       USB_OTG_FS_PERIPH_BASE
-  #define DWC2_EP_MAX         EP_MAX_FS
-  #define DWC2_EP_FIFO_SIZE   EP_FIFO_SIZE_FS
-  #define RHPORT_IRQn         OTG_FS_IRQn
-
+// OTG HS always has higher number of endpoints than FS
+#ifdef USB_OTG_HS_PERIPH_BASE
+  #define DWC2_EP_MAX   EP_MAX_HS
 #else
-  #define DWC2_REG_BASE       USB_OTG_HS_PERIPH_BASE
-  #define DWC2_EP_MAX         EP_MAX_HS
-  #define DWC2_EP_FIFO_SIZE   EP_FIFO_SIZE_HS
-  #define RHPORT_IRQn         OTG_HS_IRQn
-
+  #define DWC2_EP_MAX   EP_MAX_FS
 #endif
 
-extern uint32_t SystemCoreClock;
+// On STM32 for consistency we associate
+// - Port0 to OTG_FS, and Port1 to OTG_HS
+static const dwc2_controller_t _dwc2_controller[] =
+{
+#ifdef USB_OTG_FS_PERIPH_BASE
+  { .reg_base = USB_OTG_FS_PERIPH_BASE, .irqnum = OTG_FS_IRQn, .ep_count = EP_MAX_FS, .ep_fifo_size = EP_FIFO_SIZE_FS },
+#endif
+
+#ifdef USB_OTG_HS_PERIPH_BASE
+  { .reg_base = USB_OTG_HS_PERIPH_BASE, .irqnum = OTG_HS_IRQn, .ep_count = EP_MAX_HS, .ep_fifo_size = EP_FIFO_SIZE_HS },
+#endif
+};
+
+//--------------------------------------------------------------------+
+//
+//--------------------------------------------------------------------+
+
+// SystemCoreClock is already included by family header
+// extern uint32_t SystemCoreClock;
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
-  (void) rhport;
-  NVIC_EnableIRQ(RHPORT_IRQn);
+  NVIC_EnableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
-  (void) rhport;
-  NVIC_DisableIRQ(RHPORT_IRQn);
+  NVIC_DisableIRQ(_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE

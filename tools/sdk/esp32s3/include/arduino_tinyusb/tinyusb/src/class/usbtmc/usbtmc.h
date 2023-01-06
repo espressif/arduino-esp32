@@ -158,7 +158,7 @@ enum {
   USBTMC_BULK_IN_ERR_DATA_TOO_SHORT = 4u,
   USBTMC_BULK_IN_ERR_DATA_TOO_LONG = 5u,
 };
-// bult-in halt errors
+// built-in halt errors
 enum {
   USBTMC_BULK_IN_ERR = 1u, ///< receives a USBTMC command message that expects a response while a
                            /// Bulk-IN transfer is in progress
@@ -189,7 +189,10 @@ typedef enum {
   USBTMC_STATUS_FAILED = 0x80,
   USBTMC_STATUS_TRANSFER_NOT_IN_PROGRESS = 0x81,
   USBTMC_STATUS_SPLIT_NOT_IN_PROGRESS = 0x82,
-  USBTMC_STATUS_SPLIT_IN_PROGRESS  = 0x83
+  USBTMC_STATUS_SPLIT_IN_PROGRESS  = 0x83,
+
+  /****** USBTMC 488 *************/
+  USB488_STATUS_INTERRUPT_IN_BUSY = 0x20
 } usbtmc_status_enum;
 
 /************************************************************
