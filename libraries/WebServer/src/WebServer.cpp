@@ -37,6 +37,7 @@ static const char qop_auth[] PROGMEM = "qop=auth";
 static const char qop_auth_quoted[] PROGMEM = "qop=\"auth\"";
 static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
+static const char ETAG_HEADER[] = "If-None-Match";
 
 
 WebServer::WebServer(IPAddress addr, int port)
@@ -393,6 +394,11 @@ void WebServer::enableCrossOrigin(boolean value) {
   enableCORS(value);
 }
 
+void WebServer::enableETag(bool enable, ETagFunction fn) {
+  _eTagEnabled = enable;
+  _eTagFunction = fn;
+}
+
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
     response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
     response += String(code);
@@ -597,11 +603,12 @@ String WebServer::header(String name) {
 }
 
 void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeysCount) {
-  _headerKeysCount = headerKeysCount + 1;
+  _headerKeysCount = headerKeysCount + 2;
   if (_currentHeaders)
      delete[]_currentHeaders;
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
+  _currentHeaders[1].key = FPSTR(ETAG_HEADER);
   for (int i = 1; i < _headerKeysCount; i++){
     _currentHeaders[i].key = headerKeys[i-1];
   }
