@@ -609,8 +609,8 @@ void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeys
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
   _currentHeaders[1].key = FPSTR(ETAG_HEADER);
-  for (int i = 1; i < _headerKeysCount; i++){
-    _currentHeaders[i].key = headerKeys[i-1];
+  for (int i = 2; i < _headerKeysCount; i++){
+    _currentHeaders[i].key = headerKeys[i-2];
   }
 }
 
