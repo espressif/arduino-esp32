@@ -47,8 +47,6 @@ public:
     _attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), 0);
   }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
   template<typename TArg>
   void attach(float seconds, void (*callback)(TArg), TArg arg)
   {
@@ -67,7 +65,6 @@ public:
     uint32_t arg32 = (uint32_t)arg;
     _attach_ms(milliseconds, true, reinterpret_cast<callback_with_arg_t>(callback), arg32);
   }
-#pragma GCC diagnostic pop
 
   void once(float seconds, callback_t callback)
   {
@@ -76,11 +73,9 @@ public:
 
   void once_ms(uint32_t milliseconds, callback_t callback)
   {
-    _attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), 0);
+    _attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), 0);	
   }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
   template<typename TArg>
   void once(float seconds, void (*callback)(TArg), TArg arg)
   {
@@ -96,12 +91,11 @@ public:
     uint32_t arg32 = (uint32_t)(arg);
     _attach_ms(milliseconds, false, reinterpret_cast<callback_with_arg_t>(callback), arg32);
   }
-#pragma GCC diagnostic pop
 
   void detach();
   bool active();
 
-protected:
+protected:	
   void _attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback, uint32_t arg);
 
 
