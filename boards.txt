@@ -10980,12 +10980,17 @@ m5stack-atoms3.build.psram_type=qspi
 m5stack-atoms3.build.memory_type={build.boot}_{build.psram_type}
 
 ## IDE 2.0 Seems to not update the value
-m5stack-atoms3.menu.JTAGAdapter.default=Integrated USB JTAG
-m5stack-atoms3.menu.JTAGAdapter.default.build.openocdscript=esp32s3-builtin.cfg
+m5stack-atoms3.menu.JTAGAdapter.default=Disabled
+m5stack-atoms3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+m5stack-atoms3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+m5stack-atoms3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+m5stack-atoms3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
 m5stack-atoms3.menu.JTAGAdapter.external=FTDI Adapter
 m5stack-atoms3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+m5stack-atoms3.menu.JTAGAdapter.external.build.copy_jtag_files=1
 m5stack-atoms3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack-atoms3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+m5stack-atoms3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack-atoms3.menu.PSRAM.disabled=Disabled
 m5stack-atoms3.menu.PSRAM.disabled.build.defines=
