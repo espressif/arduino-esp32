@@ -25,7 +25,7 @@ http://arduino.cc/en/Reference/HomePage
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
 from os.path import abspath, basename, isdir, isfile, join
-
+from copy import deepcopy
 from SCons.Script import DefaultEnvironment, SConscript
 
 env = DefaultEnvironment()
@@ -82,52 +82,41 @@ def get_bootloader_image(variants_dir):
     return (
         variant_bootloader
         if isfile(variant_bootloader)
-        else join(
-            FRAMEWORK_DIR,
-            "tools",
-            "sdk",
-            build_mcu,
-            "bin",
-            "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_flash(__env__)}.bin",
+        else generate_bootloader_image(
+            join(
+                FRAMEWORK_DIR,
+                "tools",
+                "sdk",
+                build_mcu,
+                "bin",
+                "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_flash(__env__)}.elf",
+            )
         )
     )
 
 
-def get_patched_bootloader_image(original_bootloader_image, bootloader_offset):
-    patched_bootloader_image = join(env.subst("$BUILD_DIR"), "patched_bootloader.bin")
+def generate_bootloader_image(bootloader_elf):
     bootloader_cmd = env.Command(
-        patched_bootloader_image,
-        original_bootloader_image,
-        env.VerboseAction(
-            " ".join(
-                [
-                    '"$PYTHONEXE"',
-                    join(
-                        platform.get_package_dir("tool-esptoolpy") or "", "esptool.py"
-                    ),
-                    "--chip",
-                    build_mcu,
-                    "merge_bin",
-                    "-o",
-                    "$TARGET",
-                    "--flash_mode",
-                    "${__get_board_flash_mode(__env__)}",
-                    "--flash_freq",
-                    "${__get_board_f_flash(__env__)}",
-                    "--flash_size",
-                    board_config.get("upload.flash_size", "4MB"),
-                    "--target-offset",
-                    bootloader_offset,
-                    bootloader_offset,
-                    "$SOURCE",
-                ]
-            ),
-            "Updating bootloader headers",
-        ),
+        join("$BUILD_DIR", "bootloader.bin"),
+        bootloader_elf,
+        env.VerboseAction(" ".join([
+            '"$PYTHONEXE" "$OBJCOPY"',
+            "--chip", build_mcu, "elf2image",
+            "--flash_mode", "${__get_board_flash_mode(__env__)}",
+            "--flash_freq", "${__get_board_f_flash(__env__)}",
+            "--flash_size", board_config.get("upload.flash_size", "4MB"),
+            "-o", "$TARGET", "$SOURCES"
+        ]), "Building $TARGET"),
     )
+
     env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", bootloader_cmd)
 
-    return patched_bootloader_image
+    # Because the Command always returns a NodeList, we have to
+    # access the first element in the list to get the Node object
+    # that actually represents the bootloader image.
+    # Also, this file is later used in generic Python code, so the
+    # Node object in converted to a generic string
+    return str(bootloader_cmd[0])
 
 
 def add_tinyuf2_extra_image():
@@ -210,34 +199,13 @@ env.Prepend(LIBS=libs)
 # Process framework extra images
 #
 
-# Starting with v2.0.4 the Arduino core contains updated bootloader images that have
-# innacurate default headers. This results in bootloops if firmware is flashed via
-# OpenOCD (e.g. debugging or uploading via debug tools). For this reason, before
-# uploading or debugging we need to adjust the bootloader binary according to
-# the values of the --flash-size and --flash-mode arguments.
-# Note: This behavior doesn't occur if uploading is done via esptoolpy, as esptoolpy
-# overrides the binary image headers before flashing.
-
-bootloader_patch_required = bool(
-    env.get("PIOFRAMEWORK", []) == ["arduino"]
-    and (
-        "debug" in env.GetBuildType()
-        or env.subst("$UPLOAD_PROTOCOL") in board_config.get("debug.tools", {})
-        or env.IsIntegrationDump()
-    )
-)
-
-bootloader_image_path = get_bootloader_image(variants_dir)
-bootloader_offset = "0x1000" if build_mcu in ("esp32", "esp32s2") else "0x0000"
-if bootloader_patch_required:
-    bootloader_image_path = get_patched_bootloader_image(
-        bootloader_image_path, bootloader_offset
-    )
-
 env.Append(
     LIBSOURCE_DIRS=[join(FRAMEWORK_DIR, "libraries")],
     FLASH_EXTRA_IMAGES=[
-        (bootloader_offset, bootloader_image_path),
+        (
+            "0x1000" if build_mcu in ("esp32", "esp32s2") else "0x0000",
+            get_bootloader_image(variants_dir),
+        ),
         ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
         ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin")),
     ]
@@ -269,3 +237,13 @@ partition_table = env.Command(
     ),
 )
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
+
+#
+#  Adjust the `esptoolpy` command in the `ElfToBin` builder with firmware checksum offset
+#
+
+action = deepcopy(env["BUILDERS"]["ElfToBin"].action)
+action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace(
+    "-o", "--elf-sha256-offset 0xb0 -o"
+)
+env["BUILDERS"]["ElfToBin"].action = action

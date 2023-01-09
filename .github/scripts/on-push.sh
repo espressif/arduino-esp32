@@ -71,11 +71,13 @@ if [ "$BUILD_PIO" -eq 0 ]; then
       $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
       $ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino\
       $ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino\
+      $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
     "
 
     SKETCHES_ESP32XX="\
       $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
       $ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino\
+      $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
     "
 
     build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
@@ -93,26 +95,11 @@ else
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 
-    # PlatformIO ESP32 Test
-    # OPTIONS="board_build.mcu = esp32s2"
-    # build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
-    # build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino"
-
-    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s2" --project-option="board_build.partitions = huge_app.csv"
-    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32c3" --project-option="board_build.partitions = huge_app.csv"
-
-    echo "Hacking in S3 support ..."
-    replace_script="import json; import os;"
-    replace_script+="fp=open(os.path.expanduser('~/.platformio/platforms/espressif32/platform.json'), 'r+');"
-    replace_script+="data=json.load(fp);"
-    replace_script+="data['packages']['toolchain-xtensa-esp32']['optional']=True;"
-    replace_script+="data['packages']['toolchain-xtensa-esp32s3']['optional']=False;"
-    replace_script+="data['packages']['tool-esptoolpy']['owner']='tasmota';"
-    replace_script+="data['packages']['tool-esptoolpy']['version']='https://github.com/tasmota/esptool/releases/download/v4.2.1/esptool-4.2.1.zip';"
-    replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close()"
-    python -c "$replace_script"
-
-    python -m platformio ci --board "$BOARD" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.mcu = esp32s3" --project-option="board_build.partitions = huge_app.csv"
+    # Basic sanity testing for other series
+    for board in "esp32-c3-devkitm-1" "esp32-s2-saola-1" "esp32-s3-devkitc-1"
+    do
+        python -m platformio ci --board "$board" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient" --project-option="board_build.partitions = huge_app.csv"
+    done
 
     #build_pio_sketches "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries"
 fi

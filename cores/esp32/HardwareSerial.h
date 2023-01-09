@@ -118,6 +118,12 @@ public:
     {
         return read((uint8_t*) buffer, size);
     }
+    // Overrides Stream::readBytes() to be faster using IDF
+    size_t readBytes(uint8_t *buffer, size_t length);
+    size_t readBytes(char *buffer, size_t length)
+    {
+        return readBytes((uint8_t *) buffer, length);
+    }    
     void flush(void);
     void flush( bool txOnly);
     size_t write(uint8_t);
@@ -171,7 +177,7 @@ protected:
     OnReceiveErrorCb _onReceiveErrorCB;
     // _onReceive and _rxTimeout have be consistent when timeout is disabled
     bool _onReceiveTimeout;
-    uint8_t _rxTimeout;
+    uint8_t _rxTimeout, _rxFIFOFull;
     TaskHandle_t _eventTask;
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t _lock;
