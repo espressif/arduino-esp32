@@ -29,7 +29,10 @@ static void notifyCallback(
     Serial.print(" of data length ");
     Serial.println(length);
     Serial.print("data: ");
-    Serial.println((char*)pData);
+    for (size_t i = 0; i < length; i++) {
+      Serial.print((char)pData[i]);
+    }
+    Serial.println();
 }
 
 class MyClientCallback : public BLEClientCallbacks {
