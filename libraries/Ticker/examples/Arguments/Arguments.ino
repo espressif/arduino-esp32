@@ -9,7 +9,11 @@
 
 // Arguments for the function must remain valid (not run out of scope) otherwise the function would read garbage data.
 int LED_PIN_1 = 4;
-int LED_PIN_2 = LED_BUILTIN;
+#ifdef LED_BUILTIN
+  int LED_PIN_2 = LED_BUILTIN;
+#else
+  int LED_PIN_2 = 8;
+#endif
 
 Ticker tickerSetHigh;
 Ticker tickerSetLow;
