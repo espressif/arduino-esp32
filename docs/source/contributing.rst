@@ -15,9 +15,9 @@ Before Contributing
 
 Before sending us a Pull Request, please consider this:
 
-* Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License? If not, we, unfortunately, cannot accept it.
+* Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License? If not, cannot accept it.
 
-* Is the code adequately commented on to people understand how it is structured?
+* Is the code adequately commented and can people understand how it is structured?
 
 * Is there documentation or examples that go with code contributions?
 
@@ -36,7 +36,7 @@ Pull Request Process
 
 After you open the Pull Request, there will probably be some discussion in the comments field of the request itself.
 
-Once the Pull Request is ready to merge, it will first be merged into our internal git system for in-house automated testing.
+Once the Pull Request is ready to merge, it will first be merged into our internal git system for "in-house" automated testing.
 
 If this process passes, it will be merged into the public GitHub repository.
 
@@ -46,7 +46,7 @@ Example Contribution Guideline
 Checklist
 *********
 
-* Check if your example proposal has no similarities to the project
+* Check if your example proposal has no similarities to the project (**already existing examples**)
 * Use the `Arduino style guide`_
 * Add the header to all source files
 * Add the `README.md` file
@@ -58,7 +58,7 @@ Header
 
 All the source files must include the header with the example name and license, if applicable. You can change this header as you wish, but it will be reviewed by the community and may not be accepted.
 
-Additionally, you can add some description about the example, links to the documentation, or the author's name. Just have in mind to keep it simple and short.
+Ideally, you can add some description about the example, links to the documentation, or the author's name. Just have in mind to keep it simple and short.
 
 **Header Example**
 
@@ -86,7 +86,11 @@ Inline Comments
 
 Inline comments are important if the example contains complex algorithms or specific configurations that the user needs to change.
 
+Brief and clear inline comments are really helpful for the example understanding and it's fast usage.
+
 **Example**
+
+See the `FTM example <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/FTM/FTM_Initiator/FTM_Initiator.ino>`_ as a reference.
 
 .. code-block:: arduino
 
