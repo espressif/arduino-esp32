@@ -139,12 +139,14 @@ static void hw_cdc_isr_handler(void *arg) {
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
-    if(xPortInIsrContext()){
-        xRingbufferSendFromISR(tx_ring_buf, (void*) (&c), 1, NULL);
-    } else {
-        xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
+    if(initial_empty){
+        if(xPortInIsrContext()){
+            xRingbufferSendFromISR(tx_ring_buf, (void*) (&c), 1, NULL);
+        } else {
+            xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
+        }
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
-    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
@@ -245,7 +247,7 @@ int HWCDC::availableForWrite(void)
 
 size_t HWCDC::write(const uint8_t *buffer, size_t size)
 {
-    if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL){
+    if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL || initial_empty == false){
         return 0;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
@@ -293,7 +295,7 @@ size_t HWCDC::write(uint8_t c)
 
 void HWCDC::flush(void)
 {
-    if(tx_ring_buf == NULL || tx_lock == NULL){
+    if(tx_ring_buf == NULL || tx_lock == NULL || initial_empty == false){
         return;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
