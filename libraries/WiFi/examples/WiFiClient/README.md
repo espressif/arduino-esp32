@@ -1,6 +1,6 @@
 # WiFiClient
 
-This example demonstrates reading and writting data from and to a web service which can be used for logging data, creating insights and taking actions based on those data.
+This example demonstrates reading and writing data from and to a web service which can be used for logging data, creating insights and taking actions based on those data.
 
 # Supported Targets
 
@@ -12,13 +12,13 @@ Currently, this example supports all SoC with WiFi.
 
 ## How to Use Example
 
-Flash this example and observer serial output. You can also take a look the values at [https://thingspeak.com/channels/2005329](https://thingspeak.com/channels/2005329)
+Flash this example and observe the serial output. You can also take a look at the values at [https://thingspeak.com/channels/2005329](https://thingspeak.com/channels/2005329)
 
 Please note that this public channel can be accessed by anyone and it is possible that more people will write their values.
 
 ### Configure the Project
 
-Change `SSID` and `password` to connect your WiFi.
+Change `SSID` and `password` to connect to your WiFi.
 Default values will allow you to use this example without any changes. If you want to use your own channel and you don't have one already follow these steps:
 
 * Create an account on [thingspeak.com](https://www.thingspeak.com).
@@ -63,7 +63,7 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 #### Using Platform IO
 
-* Select the COM port: `Devices` or setting the `upload_port` option on the `platformio.ini` file.
+* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
 
 ## Example Log Output
 
@@ -88,7 +88,7 @@ WiFi connected
 IP address:
 192.168.1.2
 ```
-Then you can see write log:
+Then you can see the write log:
 ```
 HTTP/1.1 200 OK
 Date: Fri, 13 Jan 2023 13:12:31 GMT
@@ -108,7 +108,7 @@ X-Frame-Options: SAMEORIGIN
 0
 Closing connection
 ```
-Last portion is read log:
+Last portion is the read log:
 ```
 HTTP/1.1 200 OK
 Date: Fri, 13 Jan 2023 13:12:32 GMT
@@ -144,7 +144,7 @@ After this the write+read log repeat every 10 seconds.
 * **404 Not Found:** Check the channel ID.
 * **No data on chart / reading NULL:** Data must be sent as an integer, without commas.
 
-If the error persist, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
+If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 
 ## Contribute
 
