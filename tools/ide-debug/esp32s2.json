@@ -1,7 +1,7 @@
 {
 	"name":"Arduino on ESP32-S2",
 	"toolchainPrefix":"xtensa-esp32s2-elf",
-	"svdFile":"esp32s2.svd",
+	"svdFile":"debug.svd",
 	"request":"attach",
 	"postAttachCommands":[
 		"set remote hardware-watchpoint-limit 2",
