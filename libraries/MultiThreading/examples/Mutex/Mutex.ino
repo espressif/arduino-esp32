@@ -1,32 +1,4 @@
-/*
-  This example demonstrates basic usage of FreeRTOS Mutually Exclusive Locks (Mutex) for securing access to shared resources in multi threading.
-  Please refer to other examples in this folder to better understand usage of tasks.
-  It is also advised to read documentation on FreeRTOS web pages:
-  https://www.freertos.org/a00106.html
-
-  This example creates 2 task with same implementation - they write into shared
-  variable and then read it and check if it is the same as what they have written.
-  In single thread programming like on Arduino this is of no concern and will be always ok, however when
-  multi threading is used the tasks execution is switched by the FreeRTOS and the value can be rewritten from other task before reading again.
-  The tasks print write and read operation - each in their own column for better reading. Task 0 is on the left and Task 1 is on the right.
-  Watch the writes and read in secure mode when using the mutex (default) as the results are as you would expect them.
-  Then try to comment the USE_MUTEX and watch again - there will be a lots of mismatches!
-
-  Theory:
-  Mutex is a specialized version of Semaphore (please see the Semaphore example for more info).
-  In essence the mutex is a variable whose value determines if the mutes is taken (locked) or given (unlocked).
-  When two or more processes access the same resource (variable, peripheral, etc) it might happen, for example
-  that when one task starts to read a variable and the operating system (FreeRTOS) will schedule execution of another task
-  which will write to this variable and when the previous task runs again it will read something different.
-
-  Mutexes and binary semaphores are very similar but have some subtle differences:
-  Mutexes include a priority inheritance mechanism, binary semaphores do not.
-  This makes binary semaphores the better choice for implementing
-  synchronisation (between tasks or between tasks and an interrupt), and mutexes the better
-  choice for implementing simple mutual exclusion.
-
-  You can check the danger by commenting the definition of USE_MUTEX which will disable the mutex and present the danger of concurrent access.
-*/
+// Please read file README.md in the folder containing this example.
 
 #define USE_MUTEX
 int shared_variable = 0;
@@ -45,7 +17,6 @@ void setup() {
 #ifdef USE_MUTEX
   shared_var_mutex = xSemaphoreCreateMutex(); // Create the mutex
 #endif
-
 
   // Set up two tasks to run the same function independently.
   static int task_number0 = 0;
@@ -104,7 +75,7 @@ void Task(void *pvParameters){  // This is a task.
           //Serial.printf("Task %d after write: reading %d\n", task_num, shared_variable);
 
           if(shared_variable != new_value){
-            Serial.printf("%s\n", task_num ? " Mismatch!         |" : "                 | Mismatch!");
+            Serial.printf("%s\n", task_num ? " Mismatch!       |" : "                 | Mismatch!");
             //Serial.printf("Task %d: detected race condition - the value changed!\n", task_num);
           }
 
