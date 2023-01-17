@@ -1,40 +1,4 @@
-/*
-  This example demonstrates basic usage of FreeRTOS Task for multi threading.
-  Please refer to other examples in this folder to better utilize their the full potential and safe-guard potential problems.
-  It is also advised to read documentation on FreeRTOS web pages:
-  https://www.freertos.org/a00106.html
-
-  This example will blink builtin LED and read analog data.
-  Additionally this example demonstrates usage of task handle, simply by deleting the analog
-  read task after 10 seconds from main loop by calling the function `vTaskDelete`.
-
-  Theory:
-  A task is simply a function which runs when the operating system (FreeeRTOS) sees fit.
-  This task can have an infinite loop inside if you want to do some work periodically for the entirety of the program run.
-  This however can create a problem - no other task will ever run and also the Watch Dog will trigger and your program will restart.
-  A nice behaving tasks knows when it useless to keep the processor for itself and gives it away for other tasks to be used.
-  This can be achieved by many ways, but the simplest is calling `delay(milliseconds)`.
-  During that delay any other task may run and do it's job.
-  When the delay runs out the Operating System gives the processor to the task which can continue.
-  For other ways to yield the CPU in task please see other examples in this folder.
-
-  Task creation has few parameter you should understand:
-  xTaskCreate(TaskFunction_t pxTaskCode,
-              const char * const pcName,
-              const uint16_t usStackDepth,
-              void * const pvParameters,
-              UBaseType_t uxPriority,
-              TaskHandle_t * const pxCreatedTask )
-
-  - pxTaskCode      is the name of your function which will run as a task
-  - pcName          is a string of human readable description for your task
-  - usStackDepth    is number of words (word = 4B) available to the task. If you see error similar to this "Debug exception reason: Stack canary watchpoint triggered (Task Blink)" you should increase it
-  - pvParameters    is a parameter which will be passed to the task function - it must be explicitly converted to (void*) and in your function explicitly converted back to the intended data type.
-  - uxPriority      is number from 0 to configMAX_PRIORITIES which determines how the FreeRTOS will allow the tasks to run. 0 is lowest priority.
-  - pxCreatedTask   task handle is basically a pointer to the task which allows you to manipulate with the task - delete it, suspend and resume.
-                    If you don't need to do anything special with you task, simply pass NULL for this parameter.
-                    You can read more about task control here: https://www.freertos.org/a00112.html
-*/
+// Please read file README.md in the folder containing this example.
 
 #if CONFIG_FREERTOS_UNICORE
 #define ARDUINO_RUNNING_CORE 0
@@ -42,13 +6,15 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
+#define ANALOG_INPUT_PIN 27
+
 #ifndef LED_BUILTIN
-#define LED_BUILTIN 13
+  #define LED_BUILTIN 13 // Specify the on which is your LED
 #endif
 
 // Define two tasks for Blink & AnalogRead.
 void TaskBlink( void *pvParameters );
-void TaskAnalogReadA3( void *pvParameters );
+void TaskAnalogRead( void *pvParameters );
 TaskHandle_t task_handle; // You can (don't have to) use this to be able to manipulate a task from somewhere else.
 
 // The setup function runs once when you press reset or power on the board.
@@ -67,10 +33,10 @@ void setup() {
     ,  NULL // Task handle is not used here - simply pass NULL
     );
 
-  // This variant of task creation can also for the task to run specified core
+  // This variant of task creation can also specify on which core it will be run (only relevant for multi-core ESPs)
   xTaskCreatePinnedToCore(
-    TaskAnalogReadA3
-    ,  "Analog Read A3"
+    TaskAnalogRead
+    ,  "Analog Read"
     ,  1024  // Stack size
     ,  NULL  // When no parameter is used, simply pass NULL
     ,  1  // Priority
@@ -82,13 +48,11 @@ void setup() {
 }
 
 void loop(){
-  /*
   if(task_handle != NULL){ // Make sure that the task actually exists
     delay(10000);
     vTaskDelete(task_handle); // Delete task
     task_handle = NULL; // prevent calling vTaskDelete on non-existing task
   }
-  */
 }
 
 /*--------------------------------------------------*/
@@ -119,7 +83,7 @@ void TaskBlink(void *pvParameters){  // This is a task.
   }
 }
 
-void TaskAnalogReadA3(void *pvParameters){  // This is a task.
+void TaskAnalogRead(void *pvParameters){  // This is a task.
   (void) pvParameters;
   
 /*
@@ -132,10 +96,10 @@ void TaskAnalogReadA3(void *pvParameters){  // This is a task.
 */
 
   for (;;){
-    // read the input on analog pin A3:
-    int sensorValueA3 = analogRead(A3);
+    // read the input on analog pin:
+    int sensorValue = analogRead(ANALOG_INPUT_PIN);
     // print out the value you read:
-    Serial.println(sensorValueA3);
+    Serial.println(sensorValue);
     delay(100); // 100ms delay
   }
 }
