@@ -1,16 +1,4 @@
-/*
-  This example demonstrates basic usage of FreeRTOS Queues which enable tasks to pass data between each other in a secure asynchronous way.
-  Please refer to other examples in this folder to better understand usage of tasks.
-  It is also advised to read documentation on FreeRTOS web pages:
-  https://www.freertos.org/a00106.html
-
-  This example read data received on serial port (sent by user) pass it vie queue to another task which will send it back on Serial Output.
-
-  Theory:
-  A queue is a simple to use data structure (in the most basic way) controlled by `xQueueSend` and `xQueueReceive` functions.
-  Usually one task writes into the queue and the other task reads from it.
-  Usage of queues enables the reading task to yield the CPU until there are data in the queue and therefore not waste precious computation time.
-*/
+// Please read file README.md in the folder containing this example./*
 
 #define MAX_LINE_LENGTH (64)
 
@@ -61,7 +49,7 @@ void setup() {
     );
 
   // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
-  Serial.printf("\nAnything you write will return as echo.\nMaximum line length is %d characters (+ terminating '0').\nAnything longer will sent as separate line.\n\n", MAX_LINE_LENGTH-1);
+  Serial.printf("\nAnything you write will return as echo.\nMaximum line length is %d characters (+ terminating '0').\nAnything longer will be sent as a separate line.\n\n", MAX_LINE_LENGTH-1);
 }
 
 void loop(){
