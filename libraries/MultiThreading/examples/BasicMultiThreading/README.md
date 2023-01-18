@@ -43,13 +43,6 @@ It is also worth mentioning that two or more tasks running the exact same functi
 
 This example supports all SoCs.
 
-## How to Use Example
-
-Read this documentation and the code and try to understand it.
-When you flash it to your ESP, open a Serial Plotter and observe the analog signal.
-
-* How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espressif/arduino-esp32/tree/master/docs/arduino-ide).
-
 ### Hardware Connection
 
 If your board does not have built in LED, please connect one to the pin specified by the `LED_BUILTIN` in code (you can also change the number and connect it on pin you desire).
@@ -76,12 +69,6 @@ To get more information about the Espressif boards see [Espressif Development Ki
 ## Troubleshooting
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
-
-* **LED not blinking:** Check the wiring connection and the IO selection.
-* **Programming Fail:** If the programming/flash procedure fails, try reducing the serial connection speed.
-* **COM port not detected:** Check the USB cable and the USB to Serial driver installation.
-
-If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 
 ## Contribute
 
