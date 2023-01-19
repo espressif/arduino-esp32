@@ -26,7 +26,7 @@
 
 static uint8_t __analogAttenuation = 3;//11db
 static uint8_t __analogWidth = ADC_WIDTH_MAX - 1; //3 for ESP32/ESP32C3; 4 for ESP32S2
-static uint8_t __analogReturnedWidth = SOC_ADC_MAX_BITWIDTH; //12 for ESP32/ESP32C3; 13 for ESP32S2
+static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH; //12 for ESP32/ESP32C3; 13 for ESP32S2
 static uint8_t __analogClockDiv = 1;
 static adc_attenuation_t __pin_attenuation[SOC_GPIO_PIN_COUNT];
 
@@ -256,13 +256,6 @@ void __analogSetVRefPin(uint8_t pin){
     __analogVRefPin = pin;
 }
 
-int __hallRead()    //hall sensor using idf read
-{
-    pinMode(36, ANALOG);
-    pinMode(39, ANALOG);
-    __analogSetWidth(12);
-    return hall_sensor_read();
-}
 #endif
 
 extern uint16_t analogRead(uint8_t pin) __attribute__ ((weak, alias("__analogRead")));
@@ -277,5 +270,4 @@ extern bool adcAttachPin(uint8_t pin) __attribute__ ((weak, alias("__adcAttachPi
 #if CONFIG_IDF_TARGET_ESP32
 extern void analogSetVRefPin(uint8_t pin) __attribute__ ((weak, alias("__analogSetVRefPin")));
 extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSetWidth")));
-extern int hallRead() __attribute__ ((weak, alias("__hallRead")));
 #endif

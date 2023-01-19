@@ -23,6 +23,8 @@
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
 #include "soc/uart_periph.h"
+#include "rom/ets_sys.h"
+#include "rom/gpio.h"
 
 #include "driver/gpio.h"
 #include "hal/gpio_hal.h"
@@ -458,18 +460,26 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
+    uint32_t sclk_freq;
+    if(uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK){
+        uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate), sclk_freq);
+    }
     UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t* uart)
 {
+    uint32_t baud_rate = 0;
+    uint32_t sclk_freq;
+
     if(uart == NULL) {
         return 0;
     }
 
     UART_MUTEX_LOCK();
-    uint32_t baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+    if(uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK){
+        baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num), sclk_freq);
+    }
     UART_MUTEX_UNLOCK();
     return baud_rate;
 }
@@ -786,7 +796,7 @@ void uart_send_break(uint8_t uartNum)
   // This is very sensetive timing... it works fine for SERIAL_8N1
   uint32_t breakTime = (uint32_t) (10.0 * (1000000.0 / currentBaudrate));
   uart_set_line_inverse(uartNum, UART_SIGNAL_TXD_INV);
-  ets_delay_us(breakTime);
+  esp_rom_delay_us(breakTime);
   uart_set_line_inverse(uartNum, UART_SIGNAL_INV_DISABLE);
 }
 

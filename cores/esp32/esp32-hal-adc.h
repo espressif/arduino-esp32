@@ -90,11 +90,6 @@ void analogSetWidth(uint8_t bits);
  * */
 void analogSetVRefPin(uint8_t pin);
 
-/*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
- * */
-int hallRead();
 #endif
 
 #ifdef __cplusplus

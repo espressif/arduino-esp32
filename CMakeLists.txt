@@ -5,8 +5,8 @@
 #   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
 #   idf.py build
 
-set(min_supported_idf_version "4.4.0")
-set(max_supported_idf_version "4.4.99")
+set(min_supported_idf_version "5.1.0")
+set(max_supported_idf_version "5.1.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -121,7 +121,6 @@ set(LIBRARY_SRCS
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/esp_crt_bundle.c
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
@@ -207,8 +206,8 @@ set(includedirs
 
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp wpa_supplicant)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
+set(requires spi_flash mbedtls mdns wifi_provisioning wpa_supplicant esp_adc esp_eth http_parser)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_insights)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 

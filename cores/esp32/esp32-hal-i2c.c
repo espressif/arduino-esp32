@@ -276,24 +276,41 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     #define I2C_CLK_LIMIT_XTAL                (40 * 1000 * 1000 / 20)   /*!< Limited by RTC, no more than XTAL/20*/
 
     typedef struct {
-        uint8_t character;          /*!< I2C source clock characteristic */
+        soc_module_clk_t clk;       /*!< I2C source clock */
         uint32_t clk_freq;          /*!< I2C source clock frequency */
     } i2c_clk_alloc_t;
+
+    typedef enum {
+        I2C_SCLK_DEFAULT = 0,    /*!< I2C source clock not selected*/
+    #if SOC_I2C_SUPPORT_APB
+        I2C_SCLK_APB,            /*!< I2C source clock from APB, 80M*/
+    #endif
+    #if SOC_I2C_SUPPORT_XTAL
+        I2C_SCLK_XTAL,           /*!< I2C source clock from XTAL, 40M */
+    #endif
+    #if SOC_I2C_SUPPORT_RTC
+        I2C_SCLK_RTC,            /*!< I2C source clock from 8M RTC, 8M */
+    #endif
+    #if SOC_I2C_SUPPORT_REF_TICK
+        I2C_SCLK_REF_TICK,       /*!< I2C source clock from REF_TICK, 1M */
+    #endif
+        I2C_SCLK_MAX,
+    } i2c_sclk_t;
 
     // i2c clock characteristic, The order is the same as i2c_sclk_t.
     static i2c_clk_alloc_t i2c_clk_alloc[I2C_SCLK_MAX] = {
         {0, 0},
     #if SOC_I2C_SUPPORT_APB
-        {0, I2C_CLK_LIMIT_APB},                                                                /*!< I2C APB clock characteristic*/
+        {SOC_MOD_CLK_APB, I2C_CLK_LIMIT_APB},          /*!< I2C APB clock characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_XTAL
-        {0, I2C_CLK_LIMIT_XTAL},                                                               /*!< I2C XTAL characteristic*/
+        {SOC_MOD_CLK_XTAL, I2C_CLK_LIMIT_XTAL},        /*!< I2C XTAL characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_RTC
-        {I2C_SCLK_SRC_FLAG_LIGHT_SLEEP | I2C_SCLK_SRC_FLAG_AWARE_DFS, I2C_CLK_LIMIT_RTC},      /*!< I2C 20M RTC characteristic*/
+        {SOC_MOD_CLK_RC_FAST, I2C_CLK_LIMIT_RTC},      /*!< I2C 20M RTC characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_REF_TICK
-        {I2C_SCLK_SRC_FLAG_AWARE_DFS, I2C_CLK_LIMIT_REF_TICK},                                 /*!< I2C REF_TICK characteristic*/
+        {SOC_MOD_CLK_REF_TICK, I2C_CLK_LIMIT_REF_TICK},/*!< I2C REF_TICK characteristic*/
     #endif
     };
 
@@ -310,13 +327,13 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
             break;
         }
     }
-    if(src_clk == I2C_SCLK_MAX){
+    if(src_clk == I2C_SCLK_DEFAULT || src_clk == I2C_SCLK_MAX){
         log_e("clock source could not be selected");
         ret = ESP_FAIL;
     } else {
         i2c_hal_context_t hal;
         hal.dev = I2C_LL_GET_HW(i2c_num);
-        i2c_hal_set_bus_timing(&(hal), frequency, src_clk);
+        i2c_hal_set_bus_timing(&(hal), frequency, i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
         bus[i2c_num].frequency = frequency;
         //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
         i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);

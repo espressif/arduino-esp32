@@ -29,6 +29,8 @@
 #include "WiFiType.h"
 #include "IPAddress.h"
 #include "esp_smartconfig.h"
+#include "esp_netif_types.h"
+#include "esp_eth_driver.h"
 #include "wifi_provisioning/manager.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);

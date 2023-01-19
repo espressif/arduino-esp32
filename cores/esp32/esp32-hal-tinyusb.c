@@ -18,6 +18,8 @@
 #include "soc/timer_group_struct.h"
 #include "soc/system_reg.h"
 
+#include "rom/gpio.h"
+
 #include "hal/usb_hal.h"
 #include "hal/gpio_ll.h"
 
@@ -27,8 +29,6 @@
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 
-#include "esp_efuse.h"
-#include "esp_efuse_table.h"
 #include "esp_rom_gpio.h"
 
 #include "esp32-hal.h"

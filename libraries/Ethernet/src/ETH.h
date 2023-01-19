@@ -24,6 +24,7 @@
 #include "WiFi.h"
 #include "esp_system.h"
 #include "esp_eth.h"
+#include "esp_netif.h"
 
 #ifndef ETH_PHY_ADDR
 #define ETH_PHY_ADDR 0
@@ -62,6 +63,7 @@ class ETHClass {
         bool staticIP;
 #if ESP_IDF_VERSION_MAJOR > 3
         esp_eth_handle_t eth_handle;
+        esp_netif_t *esp_netif;
 
     protected:
         bool started;

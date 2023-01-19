@@ -53,6 +53,14 @@ void ssl_init(sslclient_context *ssl_client)
     mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
 }
 
+#warning This needs to be properly filled
+static int ssl_rng(void *ctx, unsigned char *data, size_t len)
+{
+    // while (len-- != 0) {
+    //     *data++ = random();
+    // }
+    return 0;
+}
 
 int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
@@ -193,7 +201,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
     } else if (useRootCABundle) {
         log_v("Attaching root CA cert bundle");
-        ret = arduino_esp_crt_bundle_attach(&ssl_client->ssl_conf);
+        ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
 
         if (ret < 0) {
             return handle_error(ret);
@@ -246,7 +254,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
 
         log_v("Loading private key");
-        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
+        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0, ssl_rng, NULL);
 
         if (ret != 0) {
             mbedtls_x509_crt_free(&ssl_client->client_cert); // cert+key are free'd in pair
@@ -331,13 +339,13 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     }
 
     // avoid memory leak if ssl connection attempt failed
-    if (ssl_client->ssl_conf.ca_chain != NULL) {
+    //if (ssl_client->ssl_conf.ca_chain != NULL) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
-    }
-    if (ssl_client->ssl_conf.key_cert != NULL) {
+    //}
+    //if (ssl_client->ssl_conf.key_cert != NULL) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
         mbedtls_pk_free(&ssl_client->client_key);
-    }
+    //}
     mbedtls_ssl_free(&ssl_client->ssl_ctx);
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);

@@ -23,6 +23,7 @@
 #include <Arduino.h>
 #include <esp_partition.h>
 #include <hal/cpu_hal.h>
+#include "esp_cpu.h"
 
 /**
  * AVR macros for WDT managment
@@ -111,7 +112,7 @@ public:
 
 uint32_t ARDUINO_ISR_ATTR EspClass::getCycleCount()
 {
-    return cpu_hal_get_cycle_count();
+    return (uint32_t)esp_cpu_get_cycle_count();
 }
 
 extern EspClass ESP;

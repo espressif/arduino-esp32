@@ -20,7 +20,7 @@
 #include "Arduino.h"
 #include "Esp.h"
 #include "esp_sleep.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include <memory>
 #include <soc/soc.h>
 #include <esp_partition.h>
@@ -32,6 +32,9 @@ extern "C" {
 
 #include "soc/spi_reg.h"
 #include "esp_system.h"
+#include "esp_chip_info.h"
+#include "esp_mac.h"
+#include "esp_flash.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/spi_flash.h"
@@ -330,7 +333,7 @@ uint32_t EspClass::getFlashChipSize(void)
 uint32_t EspClass::getFlashChipSpeed(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(esp_flash_read(esp_flash_default_chip, (void*)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSpeed(fhdr.spi_speed);
@@ -405,18 +408,18 @@ FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
 
 bool EspClass::flashEraseSector(uint32_t sector)
 {
-    return spi_flash_erase_sector(sector) == ESP_OK;
+    return esp_flash_erase_region(esp_flash_default_chip, sector * SPI_FLASH_SEC_SIZE, SPI_FLASH_SEC_SIZE) == ESP_OK;
 }
 
 // Warning: These functions do not work with encrypted flash
 bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_write(offset, (uint32_t*) data, size) == ESP_OK;
+    return esp_flash_write(esp_flash_default_chip, (const void*) data, offset, size) == ESP_OK;
 }
 
 bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
+    return esp_flash_read(esp_flash_default_chip, (void*) data, offset, size) == ESP_OK;
 }
 
 bool EspClass::partitionEraseRange(const esp_partition_t *partition, uint32_t offset, size_t size) 

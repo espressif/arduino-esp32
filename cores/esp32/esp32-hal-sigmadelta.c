@@ -18,6 +18,8 @@
 #include "soc/soc_caps.h"
 #include "driver/sigmadelta.h"
 
+#define SOC_SIGMADELTA_CHANNEL_NUM (SOC_SDM_GROUPS * SOC_SDM_CHANNELS_PER_GROUP)
+
 static uint8_t duty_set[SOC_SIGMADELTA_CHANNEL_NUM] = {0};
 static uint32_t prescaler_set[SOC_SIGMADELTA_CHANNEL_NUM] = {0};
 

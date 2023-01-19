@@ -23,6 +23,7 @@
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #include "hal/usb_serial_jtag_ll.h"
+#include "rom/ets_sys.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 

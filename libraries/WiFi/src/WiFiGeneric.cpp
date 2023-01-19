@@ -36,10 +36,12 @@ extern "C" {
 #include <esp_err.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
+#include <esp_mac.h>
 #include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
 #include "lwip/dns.h"
+#include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 
 } //extern "C"
