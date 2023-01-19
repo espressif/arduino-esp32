@@ -118,8 +118,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           int temp = (int)payLoad[16] + (int)(payLoad[15] << 8);
           float calcTemp = temp / 256.0f;
           Serial.printf("Reported temperature from data: %.2fC\n", calcTemp);
-          Serial.printf("Reported advertise count: %d\n", foundEddyURL.getCount());
-          Serial.printf("Reported time since last reboot: %ds\n", foundEddyURL.getTime());
+          Serial.printf("Reported advertise count: %lu\n", foundEddyURL.getCount());
+          Serial.printf("Reported time since last reboot: %lus\n", foundEddyURL.getTime());
           Serial.println("\n");
           Serial.print(foundEddyURL.toString().c_str());
           Serial.println("\n");

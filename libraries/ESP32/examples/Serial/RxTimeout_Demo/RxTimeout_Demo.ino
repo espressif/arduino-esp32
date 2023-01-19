@@ -87,7 +87,7 @@ void testAndReport(uint8_t rxTimeout) {
 
   uint32_t pastTime = millis() - now;
   Serial.printf("\nIt has sent %d bytes from Serial1 TX to Serial1 RX\n", sentBytes);
-  Serial.printf("It took %d milliseconds to read %d bytes\n", pastTime, bytesReceived);
+  Serial.printf("It took %lu milliseconds to read %d bytes\n", pastTime, bytesReceived);
   Serial.print("Received data: [");
   Serial.write(dataReceived, DATA_SIZE);
   Serial.println("]");

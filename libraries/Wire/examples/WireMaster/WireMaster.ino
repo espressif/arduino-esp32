@@ -15,7 +15,7 @@ void loop() {
 
   //Write message to the slave
   Wire.beginTransmission(I2C_DEV_ADDR);
-  Wire.printf("Hello World! %u", i++);
+  Wire.printf("Hello World! %lu", i++);
   uint8_t error = Wire.endTransmission(true);
   Serial.printf("endTransmission: %u\n", error);
   

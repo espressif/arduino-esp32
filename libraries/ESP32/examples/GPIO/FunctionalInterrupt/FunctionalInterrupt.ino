@@ -22,7 +22,7 @@ public:
 
 	void checkPressed() {
 		if (pressed) {
-			Serial.printf("Button on pin %u has been pressed %u times\n", PIN, numberKeyPresses);
+			Serial.printf("Button on pin %u has been pressed %lu times\n", PIN, numberKeyPresses);
 			pressed = false;
 		}
 	}

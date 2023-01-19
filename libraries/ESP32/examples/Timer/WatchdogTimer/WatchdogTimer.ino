@@ -1,4 +1,5 @@
 #include "esp_system.h"
+#include "rom/ets_sys.h"
 
 const int button = 0;         //gpio to use to trigger delay
 const int wdtTimeout = 3000;  //time in ms to trigger the watchdog

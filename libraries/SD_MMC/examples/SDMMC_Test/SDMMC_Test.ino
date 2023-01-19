@@ -147,7 +147,7 @@ void testFileIO(fs::FS &fs, const char * path){
             len -= toRead;
         }
         end = millis() - start;
-        Serial.printf("%u bytes read for %u ms\n", flen, end);
+        Serial.printf("%u bytes read for %lu ms\n", flen, end);
         file.close();
     } else {
         Serial.println("Failed to open file for reading");
@@ -166,7 +166,7 @@ void testFileIO(fs::FS &fs, const char * path){
         file.write(buf, 512);
     }
     end = millis() - start;
-    Serial.printf("%u bytes written for %u ms\n", 2048 * 512, end);
+    Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
     file.close();
 }
 
