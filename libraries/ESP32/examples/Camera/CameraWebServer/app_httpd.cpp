@@ -49,9 +49,11 @@
                     /*<! 0: detect by one-stage which is less accurate but faster(without keypoints). */
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+#pragma GCC diagnostic ignored "-Wformat"
 #include "face_recognition_tool.hpp"
 #include "face_recognition_112_v1_s16.hpp"
 #include "face_recognition_112_v1_s8.hpp"
+#pragma GCC diagnostic error "-Wformat"
 
 #define QUANT_TYPE 0 //if set to 1 => very large firmware, very slow, reboots when streaming...
 
