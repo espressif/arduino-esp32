@@ -38,6 +38,7 @@
 
 #ifndef PSA_CRYPTO_VALUES_H
 #define PSA_CRYPTO_VALUES_H
+#include "mbedtls/private_access.h"
 
 /** \defgroup error Error codes
  * @{
@@ -432,10 +433,54 @@
 
 /** A secret for key derivation.
  *
+ * This key type is for high-entropy secrets only. For low-entropy secrets,
+ * #PSA_KEY_TYPE_PASSWORD should be used instead.
+ *
+ * These keys can be used as the #PSA_KEY_DERIVATION_INPUT_SECRET or
+ * #PSA_KEY_DERIVATION_INPUT_PASSWORD input of key derivation algorithms.
+ *
  * The key policy determines which key derivation algorithm the key
  * can be used for.
  */
 #define PSA_KEY_TYPE_DERIVE                         ((psa_key_type_t)0x1200)
+
+/** A low-entropy secret for password hashing or key derivation.
+ *
+ * This key type is suitable for passwords and passphrases which are typically
+ * intended to be memorizable by humans, and have a low entropy relative to
+ * their size. It can be used for randomly generated or derived keys with
+ * maximum or near-maximum entropy, but #PSA_KEY_TYPE_DERIVE is more suitable
+ * for such keys. It is not suitable for passwords with extremely low entropy,
+ * such as numerical PINs.
+ *
+ * These keys can be used as the #PSA_KEY_DERIVATION_INPUT_PASSWORD input of
+ * key derivation algorithms. Algorithms that accept such an input were
+ * designed to accept low-entropy secret and are known as password hashing or
+ * key stretching algorithms.
+ *
+ * These keys cannot be used as the #PSA_KEY_DERIVATION_INPUT_SECRET input of
+ * key derivation algorithms, as the algorithms that take such an input expect
+ * it to be high-entropy.
+ *
+ * The key policy determines which key derivation algorithm the key can be
+ * used for, among the permissible subset defined above.
+ */
+#define PSA_KEY_TYPE_PASSWORD                       ((psa_key_type_t)0x1203)
+
+/** A secret value that can be used to verify a password hash.
+ *
+ * The key policy determines which key derivation algorithm the key
+ * can be used for, among the same permissible subset as for
+ * #PSA_KEY_TYPE_PASSWORD.
+ */
+#define PSA_KEY_TYPE_PASSWORD_HASH                  ((psa_key_type_t)0x1205)
+
+/** A secret value that can be used in when computing a password hash.
+ *
+ * The key policy determines which key derivation algorithm the key
+ * can be used for, among the subset of algorithms that can use pepper.
+ */
+#define PSA_KEY_TYPE_PEPPER                         ((psa_key_type_t)0x1206)
 
 /** Key for a cipher, AEAD or MAC algorithm based on the AES block cipher.
  *
@@ -463,18 +508,16 @@
  * Camellia block cipher. */
 #define PSA_KEY_TYPE_CAMELLIA                       ((psa_key_type_t)0x2403)
 
-/** Key for the ARC4 stream cipher (also known as RC4 or ARCFOUR).
- *
- * Note that ARC4 is weak and deprecated and should only be used in
- * legacy protocols. */
-#define PSA_KEY_TYPE_ARC4                           ((psa_key_type_t)0x2002)
-
 /** Key for the ChaCha20 stream cipher or the Chacha20-Poly1305 AEAD algorithm.
  *
  * ChaCha20 and the ChaCha20_Poly1305 construction are defined in RFC 7539.
  *
- * Implementations must support 12-byte nonces, may support 8-byte nonces,
- * and should reject other sizes.
+ * \note For ChaCha20 and ChaCha20_Poly1305, Mbed TLS only supports
+ *       12-byte nonces.
+ *
+ * \note For ChaCha20, the initial counter value is 0. To encrypt or decrypt
+ *       with the initial counter value 1, you can process and discard a
+ *       64-byte block before the real data.
  */
 #define PSA_KEY_TYPE_CHACHA20                       ((psa_key_type_t)0x2004)
 
@@ -536,6 +579,9 @@
     ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_ECC(type) ?             \
                         ((type) & PSA_KEY_TYPE_ECC_CURVE_MASK) : \
                         0))
+
+/** Check if the curve of given family is Weierstrass elliptic curve. */
+#define PSA_ECC_FAMILY_IS_WEIERSTRASS(family) ((family & 0xc0) == 0)
 
 /** SEC Koblitz curves over prime fields.
  *
@@ -818,14 +864,28 @@
 #define PSA_ALG_IS_KEY_DERIVATION(alg)                                  \
     (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_KEY_DERIVATION)
 
+/** Whether the specified algorithm is a key stretching / password hashing
+ * algorithm.
+ *
+ * A key stretching / password hashing algorithm is a key derivation algorithm
+ * that is suitable for use with a low-entropy secret such as a password.
+ * Equivalently, it's a key derivation algorithm that uses a
+ * #PSA_KEY_DERIVATION_INPUT_PASSWORD input step.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key stretching / password hashing algorithm, 0
+ *         otherwise. This macro may return either 0 or 1 if \p alg is not a
+ *         supported algorithm identifier.
+ */
+#define PSA_ALG_IS_KEY_DERIVATION_STRETCHING(alg)                                  \
+    (PSA_ALG_IS_KEY_DERIVATION(alg) &&              \
+     (alg) & PSA_ALG_KEY_DERIVATION_STRETCHING_FLAG)
+
 /** An invalid algorithm identifier value. */
 #define PSA_ALG_NONE                            ((psa_algorithm_t)0)
 
 #define PSA_ALG_HASH_MASK                       ((psa_algorithm_t)0x000000ff)
-/** MD2 */
-#define PSA_ALG_MD2                             ((psa_algorithm_t)0x02000001)
-/** MD4 */
-#define PSA_ALG_MD4                             ((psa_algorithm_t)0x02000002)
 /** MD5 */
 #define PSA_ALG_MD5                             ((psa_algorithm_t)0x02000003)
 /** PSA_ALG_RIPEMD160 */
@@ -1087,7 +1147,6 @@
  *
  * The underlying stream cipher is determined by the key type.
  * - To use ChaCha20, use a key type of #PSA_KEY_TYPE_CHACHA20.
- * - To use ARC4, use a key type of #PSA_KEY_TYPE_ARC4.
  */
 #define PSA_ALG_STREAM_CIPHER                   ((psa_algorithm_t)0x04800100)
 
@@ -1177,6 +1236,17 @@
  * The underlying block cipher is determined by the key type.
  */
 #define PSA_ALG_CCM                             ((psa_algorithm_t)0x05500100)
+
+/** The CCM* cipher mode without authentication.
+ *
+ * This is CCM* as specified in IEEE 802.15.4 §7, with a tag length of 0.
+ * For CCM* with a nonzero tag length, use the AEAD algorithm #PSA_ALG_CCM.
+ *
+ * The underlying block cipher is determined by the key type.
+ *
+ * Currently only 13-byte long IV's are supported.
+ */
+#define PSA_ALG_CCM_STAR_NO_TAG                 ((psa_algorithm_t)0x04c01300)
 
 /** The GCM authenticated encryption algorithm.
  *
@@ -1699,6 +1769,12 @@
  * You may pass #PSA_KEY_DERIVATION_INPUT_INFO at any time after steup and before
  * starting to generate output.
  *
+ *  \warning  HKDF processes the salt as follows: first hash it with hash_alg
+ *  if the salt is longer than the block size of the hash algorithm; then
+ *  pad with null bytes up to the block size. As a result, it is possible
+ *  for distinct salt inputs to result in the same outputs. To ensure
+ *  unique outputs, it is recommended to use a fixed length for salt values.
+ *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
  *
@@ -1723,6 +1799,112 @@
     (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_BASE)
 #define PSA_ALG_HKDF_GET_HASH(hkdf_alg)                         \
     (PSA_ALG_CATEGORY_HASH | ((hkdf_alg) & PSA_ALG_HASH_MASK))
+
+#define PSA_ALG_HKDF_EXTRACT_BASE                       ((psa_algorithm_t)0x08000400)
+/** Macro to build an HKDF-Extract algorithm.
+ *
+ * For example, `PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA256)` is
+ * HKDF-Extract using HMAC-SHA-256.
+ *
+ * This key derivation algorithm uses the following inputs:
+ *  - PSA_KEY_DERIVATION_INPUT_SALT is the salt.
+ *  - PSA_KEY_DERIVATION_INPUT_SECRET is the input keying material used in the
+ *    "extract" step.
+ * The inputs are mandatory and must be passed in the order above.
+ * Each input may only be passed once.
+ *
+ *  \warning HKDF-Extract is not meant to be used on its own. PSA_ALG_HKDF
+ *  should be used instead if possible. PSA_ALG_HKDF_EXTRACT is provided
+ *  as a separate algorithm for the sake of protocols that use it as a
+ *  building block. It may also be a slight performance optimization
+ *  in applications that use HKDF with the same salt and key but many
+ *  different info strings.
+ *
+ *  \warning  HKDF processes the salt as follows: first hash it with hash_alg
+ *  if the salt is longer than the block size of the hash algorithm; then
+ *  pad with null bytes up to the block size. As a result, it is possible
+ *  for distinct salt inputs to result in the same outputs. To ensure
+ *  unique outputs, it is recommended to use a fixed length for salt values.
+ *
+ * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return              The corresponding HKDF-Extract algorithm.
+ * \return              Unspecified if \p hash_alg is not a supported
+ *                      hash algorithm.
+ */
+#define PSA_ALG_HKDF_EXTRACT(hash_alg)                                  \
+    (PSA_ALG_HKDF_EXTRACT_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+/** Whether the specified algorithm is an HKDF-Extract algorithm.
+ *
+ * HKDF-Extract is a family of key derivation algorithms that are based
+ * on a hash function and the HMAC construction.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \c alg is an HKDF-Extract algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_HKDF_EXTRACT(alg)                            \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_EXTRACT_BASE)
+
+#define PSA_ALG_HKDF_EXPAND_BASE                       ((psa_algorithm_t)0x08000500)
+/** Macro to build an HKDF-Expand algorithm.
+ *
+ * For example, `PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA256)` is
+ * HKDF-Expand using HMAC-SHA-256.
+ *
+ * This key derivation algorithm uses the following inputs:
+ *  - PSA_KEY_DERIVATION_INPUT_SECRET is the pseudorandom key (PRK).
+ *  - PSA_KEY_DERIVATION_INPUT_INFO is the info string.
+ *
+ *  The inputs are mandatory and must be passed in the order above.
+ *  Each input may only be passed once.
+ *
+ *  \warning HKDF-Expand is not meant to be used on its own. `PSA_ALG_HKDF`
+ *  should be used instead if possible. `PSA_ALG_HKDF_EXPAND` is provided as
+ *  a separate algorithm for the sake of protocols that use it as a building
+ *  block. It may also be a slight performance optimization in applications
+ *  that use HKDF with the same salt and key but many different info strings.
+ *
+ * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return              The corresponding HKDF-Expand algorithm.
+ * \return              Unspecified if \p hash_alg is not a supported
+ *                      hash algorithm.
+ */
+#define PSA_ALG_HKDF_EXPAND(hash_alg)                                  \
+    (PSA_ALG_HKDF_EXPAND_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+/** Whether the specified algorithm is an HKDF-Expand algorithm.
+ *
+ * HKDF-Expand is a family of key derivation algorithms that are based
+ * on a hash function and the HMAC construction.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \c alg is an HKDF-Expand algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_HKDF_EXPAND(alg)                            \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_EXPAND_BASE)
+
+/** Whether the specified algorithm is an HKDF or HKDF-Extract or
+ *  HKDF-Expand algorithm.
+ *
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \c alg is any HKDF type algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_ANY_HKDF(alg)                                   \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_BASE ||          \
+     ((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_EXTRACT_BASE ||  \
+     ((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HKDF_EXPAND_BASE)
 
 #define PSA_ALG_TLS12_PRF_BASE                  ((psa_algorithm_t)0x08000200)
 /** Macro to build a TLS-1.2 PRF algorithm.
@@ -1779,13 +1961,37 @@
  * This key derivation algorithm uses the following inputs, which must be
  * passed in the order given here:
  * - #PSA_KEY_DERIVATION_INPUT_SEED is the seed.
+ * - #PSA_KEY_DERIVATION_INPUT_OTHER_SECRET is the other secret for the
+ *   computation of the premaster secret. This input is optional;
+ *   if omitted, it defaults to a string of null bytes with the same length
+ *   as the secret (PSK) input.
  * - #PSA_KEY_DERIVATION_INPUT_SECRET is the secret key.
  * - #PSA_KEY_DERIVATION_INPUT_LABEL is the label.
  *
  * For the application to TLS-1.2, the seed (which is
  * forwarded to the TLS-1.2 PRF) is the concatenation of the
  * ClientHello.Random + ServerHello.Random,
- * and the label is "master secret" or "extended master secret".
+ * the label is "master secret" or "extended master secret" and
+ * the other secret depends on the key exchange specified in the cipher suite:
+ * - for a plain PSK cipher suite (RFC 4279, Section 2), omit
+ *   PSA_KEY_DERIVATION_INPUT_OTHER_SECRET
+ * - for a DHE-PSK (RFC 4279, Section 3) or ECDHE-PSK cipher suite
+ *   (RFC 5489, Section 2), the other secret should be the output of the
+ *   PSA_ALG_FFDH or PSA_ALG_ECDH key agreement performed with the peer.
+ *   The recommended way to pass this input is to use a key derivation
+ *   algorithm constructed as
+ *   PSA_ALG_KEY_AGREEMENT(ka_alg, PSA_ALG_TLS12_PSK_TO_MS(hash_alg))
+ *   and to call psa_key_derivation_key_agreement(). Alternatively,
+ *   this input may be an output of `psa_raw_key_agreement()` passed with
+ *   psa_key_derivation_input_bytes(), or an equivalent input passed with
+ *   psa_key_derivation_input_bytes() or psa_key_derivation_input_key().
+ * - for a RSA-PSK cipher suite (RFC 4279, Section 4), the other secret
+ *   should be the 48-byte client challenge (the PreMasterSecret of
+ *   (RFC 5246, Section 7.4.7.1)) concatenation of the TLS version and
+ *   a 46-byte random string chosen by the client. On the server, this is
+ *   typically an output of psa_asymmetric_decrypt() using
+ *   PSA_ALG_RSA_PKCS1V15_CRYPT, passed to the key derivation operation
+ *   with `psa_key_derivation_input_bytes()`.
  *
  * For example, `PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA256)` represents the
  * TLS-1.2 PSK to MasterSecret derivation PRF using HMAC-SHA-256.
@@ -1812,6 +2018,67 @@
     (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_TLS12_PSK_TO_MS_BASE)
 #define PSA_ALG_TLS12_PSK_TO_MS_GET_HASH(hkdf_alg)                         \
     (PSA_ALG_CATEGORY_HASH | ((hkdf_alg) & PSA_ALG_HASH_MASK))
+
+/* This flag indicates whether the key derivation algorithm is suitable for
+ * use on low-entropy secrets such as password - these algorithms are also
+ * known as key stretching or password hashing schemes. These are also the
+ * algorithms that accepts inputs of type #PSA_KEY_DERIVATION_INPUT_PASSWORD.
+ *
+ * Those algorithms cannot be combined with a key agreement algorithm.
+ */
+#define PSA_ALG_KEY_DERIVATION_STRETCHING_FLAG  ((psa_algorithm_t)0x00800000)
+
+#define PSA_ALG_PBKDF2_HMAC_BASE                ((psa_algorithm_t)0x08800100)
+/** Macro to build a PBKDF2-HMAC password hashing / key stretching algorithm.
+ *
+ * PBKDF2 is defined by PKCS#5, republished as RFC 8018 (section 5.2).
+ * This macro specifies the PBKDF2 algorithm constructed using a PRF based on
+ * HMAC with the specified hash.
+ * For example, `PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA256)` specifies PBKDF2
+ * using the PRF HMAC-SHA-256.
+ *
+ * This key derivation algorithm uses the following inputs, which must be
+ * provided in the following order:
+ * - #PSA_KEY_DERIVATION_INPUT_COST is the iteration count.
+ *   This input step must be used exactly once.
+ * - #PSA_KEY_DERIVATION_INPUT_SALT is the salt.
+ *   This input step must be used one or more times; if used several times, the
+ *   inputs will be concatenated. This can be used to build the final salt
+ *   from multiple sources, both public and secret (also known as pepper).
+ * - #PSA_KEY_DERIVATION_INPUT_PASSWORD is the password to be hashed.
+ *   This input step must be used exactly once.
+ *
+ * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return              The corresponding PBKDF2-HMAC-XXX algorithm.
+ * \return              Unspecified if \p hash_alg is not a supported
+ *                      hash algorithm.
+ */
+#define PSA_ALG_PBKDF2_HMAC(hash_alg)                                  \
+    (PSA_ALG_PBKDF2_HMAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+/** Whether the specified algorithm is a PBKDF2-HMAC algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \c alg is a PBKDF2-HMAC algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_PBKDF2_HMAC(alg)                                    \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_PBKDF2_HMAC_BASE)
+
+/** The PBKDF2-AES-CMAC-PRF-128 password hashing / key stretching algorithm.
+ *
+ * PBKDF2 is defined by PKCS#5, republished as RFC 8018 (section 5.2).
+ * This macro specifies the PBKDF2 algorithm constructed using the
+ * AES-CMAC-PRF-128 PRF specified by RFC 4615.
+ *
+ * This key derivation algorithm uses the same inputs as
+ * #PSA_ALG_PBKDF2_HMAC() with the same constraints.
+ */
+#define PSA_ALG_PBKDF2_AES_CMAC_PRF_128         ((psa_algorithm_t)0x08800200)
 
 #define PSA_ALG_KEY_DERIVATION_MASK             ((psa_algorithm_t)0xfe00ffff)
 #define PSA_ALG_KEY_AGREEMENT_MASK              ((psa_algorithm_t)0xffff0000)
@@ -1949,6 +2216,18 @@
      PSA_ALG_IS_AEAD(alg) ?                                 \
      (alg & PSA_ALG_AEAD_AT_LEAST_THIS_LENGTH_FLAG) != 0 :  \
      (alg) == PSA_ALG_ANY_HASH)
+
+/** Get the hash used by a composite algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return The underlying hash algorithm if alg is a composite algorithm that
+ * uses a hash algorithm.
+ *
+ * \return \c 0 if alg is not a composite algorithm that uses a hash.
+ */
+#define PSA_ALG_GET_HASH(alg) \
+        (((alg) & 0x000000ff) == 0 ? ((psa_algorithm_t)0) : 0x02000000 | ((alg) & 0x000000ff))
 
 /**@}*/
 
@@ -2144,8 +2423,8 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
 #else /* MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
 
 #define MBEDTLS_SVC_KEY_ID_INIT ( (mbedtls_svc_key_id_t){ 0, 0 } )
-#define MBEDTLS_SVC_KEY_ID_GET_KEY_ID( id ) ( ( id ).key_id )
-#define MBEDTLS_SVC_KEY_ID_GET_OWNER_ID( id ) ( ( id ).owner )
+#define MBEDTLS_SVC_KEY_ID_GET_KEY_ID( id ) ( ( id ).MBEDTLS_PRIVATE(key_id) )
+#define MBEDTLS_SVC_KEY_ID_GET_OWNER_ID( id ) ( ( id ).MBEDTLS_PRIVATE(owner) )
 
 /** Utility to initialize a key identifier at runtime.
  *
@@ -2155,8 +2434,8 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
 static inline mbedtls_svc_key_id_t mbedtls_svc_key_id_make(
     mbedtls_key_owner_id_t owner_id, psa_key_id_t key_id )
 {
-    return( (mbedtls_svc_key_id_t){ .key_id = key_id,
-                                    .owner = owner_id } );
+    return( (mbedtls_svc_key_id_t){ .MBEDTLS_PRIVATE(key_id) = key_id,
+                                    .MBEDTLS_PRIVATE(owner) = owner_id } );
 }
 
 /** Compare two key identifiers.
@@ -2169,8 +2448,8 @@ static inline mbedtls_svc_key_id_t mbedtls_svc_key_id_make(
 static inline int mbedtls_svc_key_id_equal( mbedtls_svc_key_id_t id1,
                                             mbedtls_svc_key_id_t id2 )
 {
-    return( ( id1.key_id == id2.key_id ) &&
-            mbedtls_key_owner_id_equal( id1.owner, id2.owner ) );
+    return( ( id1.MBEDTLS_PRIVATE(key_id) == id2.MBEDTLS_PRIVATE(key_id) ) &&
+            mbedtls_key_owner_id_equal( id1.MBEDTLS_PRIVATE(owner), id2.MBEDTLS_PRIVATE(owner) ) );
 }
 
 /** Check whether a key identifier is null.
@@ -2181,7 +2460,7 @@ static inline int mbedtls_svc_key_id_equal( mbedtls_svc_key_id_t id1,
  */
 static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
 {
-    return( key.key_id == 0 );
+    return( key.MBEDTLS_PRIVATE(key_id) == 0 );
 }
 
 #endif /* !MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
@@ -2288,9 +2567,34 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
  */
 #define PSA_KEY_USAGE_VERIFY_HASH               ((psa_key_usage_t)0x00002000)
 
-/** Whether the key may be used to derive other keys.
+/** Whether the key may be used to derive other keys or produce a password
+ * hash.
+ *
+ * This flag allows the key to be used for a key derivation operation or for
+ * a key agreement operation, if otherwise permitted by by the key's type and
+ * policy.
+ *
+ * If this flag is present on all keys used in calls to
+ * psa_key_derivation_input_key() for a key derivation operation, then it
+ * permits calling psa_key_derivation_output_bytes() or
+ * psa_key_derivation_output_key() at the end of the operation.
  */
 #define PSA_KEY_USAGE_DERIVE                    ((psa_key_usage_t)0x00004000)
+
+/** Whether the key may be used to verify the result of a key derivation,
+ * including password hashing.
+ *
+ * This flag allows the key to be used:
+ *
+ * This flag allows the key to be used in a key derivation operation, if
+ * otherwise permitted by by the key's type and policy.
+ *
+ * If this flag is present on all keys used in calls to
+ * psa_key_derivation_input_key() for a key derivation operation, then it
+ * permits calling psa_key_derivation_verify_bytes() or
+ * psa_key_derivation_verify_key() at the end of the operation.
+ */
+#define PSA_KEY_USAGE_VERIFY_DERIVATION         ((psa_key_usage_t)0x00008000)
 
 /**@}*/
 
@@ -2311,9 +2615,40 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
  * The secret can also be a direct input (passed to
  * key_derivation_input_bytes()). In this case, the derivation operation
  * may not be used to derive keys: the operation will only allow
- * psa_key_derivation_output_bytes(), not psa_key_derivation_output_key().
+ * psa_key_derivation_output_bytes(),
+ * psa_key_derivation_verify_bytes(), or
+ * psa_key_derivation_verify_key(), but not
+ * psa_key_derivation_output_key().
  */
 #define PSA_KEY_DERIVATION_INPUT_SECRET     ((psa_key_derivation_step_t)0x0101)
+
+/** A low-entropy secret input for password hashing / key stretching.
+ *
+ * This is usually a key of type #PSA_KEY_TYPE_PASSWORD (passed to
+ * psa_key_derivation_input_key()) or a direct input (passed to
+ * psa_key_derivation_input_bytes()) that is a password or passphrase. It can
+ * also be high-entropy secret such as a key of type #PSA_KEY_TYPE_DERIVE or
+ * the shared secret resulting from a key agreement.
+ *
+ * The secret can also be a direct input (passed to
+ * key_derivation_input_bytes()). In this case, the derivation operation
+ * may not be used to derive keys: the operation will only allow
+ * psa_key_derivation_output_bytes(),
+ * psa_key_derivation_verify_bytes(), or
+ * psa_key_derivation_verify_key(), but not
+ * psa_key_derivation_output_key().
+ */
+#define PSA_KEY_DERIVATION_INPUT_PASSWORD   ((psa_key_derivation_step_t)0x0102)
+
+/** A high-entropy additional secret input for key derivation.
+ *
+ * This is typically the shared secret resulting from a key agreement obtained
+ * via `psa_key_derivation_key_agreement()`. It may alternatively be a key of
+ * type `PSA_KEY_TYPE_DERIVE` passed to `psa_key_derivation_input_key()`, or
+ * a direct input passed to `psa_key_derivation_input_bytes()`.
+ */
+#define PSA_KEY_DERIVATION_INPUT_OTHER_SECRET \
+                                            ((psa_key_derivation_step_t)0x0103)
 
 /** A label for key derivation.
  *
@@ -2325,7 +2660,8 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
 /** A salt for key derivation.
  *
  * This should be a direct input.
- * It can also be a key of type #PSA_KEY_TYPE_RAW_DATA.
+ * It can also be a key of type #PSA_KEY_TYPE_RAW_DATA or
+ * #PSA_KEY_TYPE_PEPPER.
  */
 #define PSA_KEY_DERIVATION_INPUT_SALT       ((psa_key_derivation_step_t)0x0202)
 
@@ -2342,6 +2678,12 @@ static inline int mbedtls_svc_key_id_is_null( mbedtls_svc_key_id_t key )
  * It can also be a key of type #PSA_KEY_TYPE_RAW_DATA.
  */
 #define PSA_KEY_DERIVATION_INPUT_SEED       ((psa_key_derivation_step_t)0x0204)
+
+/** A cost parameter for password hashing / key stretching.
+ *
+ * This must be a direct input, passed to psa_key_derivation_input_integer().
+ */
+#define PSA_KEY_DERIVATION_INPUT_COST       ((psa_key_derivation_step_t)0x0205)
 
 /**@}*/
 

@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __ESP_GATTC_API_H__
 #define __ESP_GATTC_API_H__
@@ -220,7 +212,6 @@ typedef union {
     struct gattc_disconnect_evt_param {
         esp_gatt_conn_reason_t reason;  /*!< disconnection reason */
         uint16_t conn_id;               /*!< Connection id */
-        uint8_t link_role;              /*!< Link role : master role = 0  ; slave role = 1*/
         esp_bd_addr_t remote_bda;       /*!< Remote bluetooth device address */
     } disconnect;                       /*!< Gatt client callback param of ESP_GATTC_DISCONNECT_EVT */
     /**
@@ -708,7 +699,7 @@ esp_err_t esp_ble_gattc_write_char( esp_gatt_if_t gattc_if,
  *
  * @param[in]       gattc_if: Gatt client access interface.
  * @param[in]       conn_id : connection ID
- * @param[in]       handle : descriptor hadle to write.
+ * @param[in]       handle : descriptor handle to write.
  * @param[in]       value_len: length of the value to be written.
  * @param[in]       value : the value to be written.
  * @param[in]       write_type : the type of attribute write operation.

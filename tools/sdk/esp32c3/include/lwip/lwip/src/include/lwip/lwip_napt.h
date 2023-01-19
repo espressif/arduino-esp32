@@ -80,7 +80,7 @@ ip_napt_enable(u32_t addr, int enable);
 /**
  * Enable/Disable NAPT for a specified interface.
  *
- * @param netif number of the interface
+ * @param number netif number of the interface
  * @param enable non-zero to enable NAPT, or 0 to disable.
  */
 void
@@ -106,7 +106,7 @@ ip_portmap_add(u8_t proto, u32_t maddr, u16_t mport, u32_t daddr, u16_t dport);
  * Unregister port mapping on the external interface to internal interface.
  *
  * @param proto target protocol
- * @param maddr ip address of the external interface
+ * @param mport mapped port
  */
 u8_t
 ip_portmap_remove(u8_t proto, u16_t mport);

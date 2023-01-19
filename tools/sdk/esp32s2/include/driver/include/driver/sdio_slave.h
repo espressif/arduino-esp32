@@ -1,17 +1,14 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 #pragma once
 
-#include "freertos/FreeRTOS.h"
 #include "esp_err.h"
-#include "sys/queue.h"
-
+#include "freertos/FreeRTOS.h" // for TickType_t
 #include "hal/sdio_slave_types.h"
-#include "soc/sdio_slave_periph.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,6 +48,9 @@ typedef struct {
         the internal pull-ups are not sufficient for stable communication, please do connect external pull-ups on the
         bus. This is only for example and debug use.
         */
+#define SDIO_SLAVE_FLAG_DEFAULT_SPEED       BIT(3)      /**< Disable the highspeed support of the hardware. */
+#define SDIO_SLAVE_FLAG_HIGH_SPEED          0           /**< Enable the highspeed support of the hardware. This is the
+        default option. The host will see highspeed capability, but the mode actually used is determined by the host. */
 } sdio_slave_config_t;
 
 /** Handle of a receive buffer, register a handle by calling ``sdio_slave_recv_register_buf``. Use the handle to load the buffer to the

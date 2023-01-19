@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __BLUFI_INT_H__
 #define __BLUFI_INT_H__
@@ -20,7 +12,7 @@
 #if (BLUFI_INCLUDED == TRUE)
 
 #define BTC_BLUFI_GREAT_VER   0x01  //Version + Subversion
-#define BTC_BLUFI_SUB_VER     0x02  //Version + Subversion
+#define BTC_BLUFI_SUB_VER     0x03  //Version + Subversion
 #define BTC_BLUFI_VERSION     ((BTC_BLUFI_GREAT_VER<<8)|BTC_BLUFI_SUB_VER)  //Version + Subversion
 
 typedef UINT8 tGATT_IF;
@@ -129,6 +121,9 @@ extern tBLUFI_ENV *blufi_env_ptr;
 #define BLUFI_TYPE_DATA_SUBTYPE_WIFI_LIST               0x11
 #define BLUFI_TYPE_DATA_SUBTYPE_ERROR_INFO              0x12
 #define BLUFI_TYPE_DATA_SUBTYPE_CUSTOM_DATA             0x13
+#define BLUFI_TYPE_DATA_SUBTYPE_STA_MAX_CONN_RETRY      0x14
+#define BLUFI_TYPE_DATA_SUBTYPE_STA_CONN_END_REASON     0x15
+#define BLUFI_TYPE_DATA_SUBTYPE_STA_CONN_RSSI           0x16
 #define BLUFI_TYPE_IS_CTRL(type)        (BLUFI_GET_TYPE((type)) == BLUFI_TYPE_CTRL)
 #define BLUFI_TYPE_IS_DATA(type)        (BLUFI_GET_TYPE((type)) == BLUFI_TYPE_DATA)
 

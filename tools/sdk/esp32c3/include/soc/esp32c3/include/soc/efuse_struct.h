@@ -1,18 +1,12 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-#ifndef _SOC_EFUSE_STRUCT_H_
-#define _SOC_EFUSE_STRUCT_H_
+/*
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -172,7 +166,9 @@ typedef volatile struct efuse_dev_s {
     } rd_repeat_data3;
     union {
         struct {
-            uint32_t rpt4_reserved4:24;                          /*Reserved.*/
+            uint32_t disable_wafer_version_major: 1;
+            uint32_t disable_blk_version_major: 1;
+            uint32_t rpt4_reserved4:22;                          /*Reserved.*/
             uint32_t reserved24:     8;                          /*Reserved.*/
         };
         uint32_t val;
@@ -189,17 +185,47 @@ typedef volatile struct efuse_dev_s {
     union {
         struct {
             uint32_t spi_pad_conf_2:  18;                        /*Stores the second part of SPI_PAD_CONF.*/
-            uint32_t sys_data_part0_0:14;                        /*Stores the fist 14 bits of the zeroth part of system data.*/
+            uint32_t wafer_version_minor_low:    3;
+            uint32_t pkg_version:      3;
+            uint32_t blk_version_minor:3;
+            uint32_t sys_data_part0_0: 5;
         };
         uint32_t val;
     } rd_mac_spi_sys_3;
-    uint32_t rd_mac_spi_sys_4;                                   /*BLOCK1 data register $n.*/
-    uint32_t rd_mac_spi_sys_5;                                   /*BLOCK1 data register $n.*/
+    union {
+        struct {
+            uint32_t reserved1:              7;
+            uint32_t k_rtc_ldo:              7;
+            uint32_t k_dig_ldo:              7;
+            uint32_t v_rtc_dbias20:          8;
+            uint32_t v_dig_dbias20_low:      3;
+        };
+        uint32_t val;
+    } rd_mac_spi_sys_4;                                   /*BLOCK1 data register $n.*/
+    union {
+        struct {
+            uint32_t v_dig_dbias20_hi:      5;
+            uint32_t dig_dbias_hvt:         5;
+            uint32_t reserved1:             13;
+            uint32_t wafer_version_minor_high:    1;
+            uint32_t wafer_version_major:    2;
+            uint32_t reserved2:              6;
+        };
+        uint32_t val;
+    } rd_mac_spi_sys_5;                                          /*BLOCK1 data register $n.*/
     uint32_t rd_sys_part1_data0;                                 /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data1;                                 /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data2;                                 /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data3;                                 /*Register $n of BLOCK2 (system).*/
-    uint32_t rd_sys_part1_data4;                                 /*Register $n of BLOCK2 (system).*/
+    union {
+        struct {
+            uint32_t blk_version_major:     2;
+            uint32_t reserved1:             10;
+            uint32_t ocode:                 8;
+            uint32_t reserved2:             12;
+        };
+        uint32_t val;
+    } rd_sys_part1_data4;                                        /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data5;                                 /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data6;                                 /*Register $n of BLOCK2 (system).*/
     uint32_t rd_sys_part1_data7;                                 /*Register $n of BLOCK2 (system).*/
@@ -504,5 +530,3 @@ extern efuse_dev_t EFUSE;
 #ifdef __cplusplus
 }
 #endif
-
-#endif  /* _SOC_EFUSE_STRUCT_H_ */

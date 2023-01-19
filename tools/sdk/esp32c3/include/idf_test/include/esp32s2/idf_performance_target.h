@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -17,11 +17,13 @@
 #define IDF_PERFORMANCE_MAX_TIME_SHA512_32KB                                    900
 
 #define IDF_PERFORMANCE_MAX_RSA_2048KEY_PUBLIC_OP                               13500
-#define IDF_PERFORMANCE_MAX_RSA_2048KEY_PRIVATE_OP                              130000
+#define IDF_PERFORMANCE_MAX_RSA_2048KEY_PRIVATE_OP                              420000
 #define IDF_PERFORMANCE_MAX_RSA_3072KEY_PUBLIC_OP                               36000
-#define IDF_PERFORMANCE_MAX_RSA_3072KEY_PRIVATE_OP                              400000
+#define IDF_PERFORMANCE_MAX_RSA_3072KEY_PRIVATE_OP                              960000
 #define IDF_PERFORMANCE_MAX_RSA_4096KEY_PUBLIC_OP                               62000
-#define IDF_PERFORMANCE_MAX_RSA_4096KEY_PRIVATE_OP                              800000
+#define IDF_PERFORMANCE_MAX_RSA_4096KEY_PRIVATE_OP                              1850000
 
+#define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING                               15
+#define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING_NO_DMA                        15
 #define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_NO_POLLING                            32
 #define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_NO_POLLING_NO_DMA                     30

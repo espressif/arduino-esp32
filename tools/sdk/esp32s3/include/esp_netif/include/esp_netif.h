@@ -1,40 +1,18 @@
-// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2019-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _ESP_NETIF_H_
 #define _ESP_NETIF_H_
 
 #include <stdint.h>
 #include "sdkconfig.h"
-#include "esp_wifi_types.h"
 #include "esp_netif_ip_addr.h"
 #include "esp_netif_types.h"
 #include "esp_netif_defaults.h"
 
-#if CONFIG_ETH_ENABLED
-#include "esp_eth_netif_glue.h"
-#endif
-
-//
-// Note: tcpip_adapter legacy API has to be included by default to provide full compatibility
-//  for applications that used tcpip_adapter API without explicit inclusion of tcpip_adapter.h
-//
-#if CONFIG_ESP_NETIF_TCPIP_ADAPTER_COMPATIBLE_LAYER
-#define _ESP_NETIF_SUPPRESS_LEGACY_WARNING_
-#include "tcpip_adapter.h"
-#undef _ESP_NETIF_SUPPRESS_LEGACY_WARNING_
-#endif // CONFIG_ESP_NETIF_TCPIP_ADAPTER_COMPATIBLE_LAYER
 
 #ifdef __cplusplus
 extern "C" {
@@ -284,6 +262,49 @@ void esp_netif_action_add_ip6_address(void *esp_netif, esp_event_base_t base, in
  * @param data
  */
 void esp_netif_action_remove_ip6_address(void *esp_netif, esp_event_base_t base, int32_t event_id, void *data);
+
+/**
+ * @brief Manual configuration of the default netif
+ *
+ * This API overrides the automatic configuration of the default interface based on the route_prio
+ * If the selected netif is set default using this API, no other interface could be set-default disregarding
+ * its route_prio number (unless the selected netif gets destroyed)
+ *
+ * @param[in] esp_netif Handle to esp-netif instance
+ * @return ESP_OK on success
+ */
+esp_err_t esp_netif_set_default_netif(esp_netif_t *esp_netif);
+
+
+#if CONFIG_ESP_NETIF_BRIDGE_EN
+/**
+ * @brief Add a port to the bridge
+ *
+ * @param esp_netif_br Handle to bridge esp-netif instance
+ * @param esp_netif_port Handle to port esp-netif instance
+ * @return ESP_OK on success
+ */
+esp_err_t esp_netif_bridge_add_port(esp_netif_t *esp_netif_br, esp_netif_t *esp_netif_port);
+
+/**
+ * @brief Add a static entry to bridge forwarding database
+ *
+ * @param esp_netif_br Handle to bridge esp-netif instance
+ * @param addr MAC address entry to be added
+ * @param ports_mask Port(s) mask where to be the address forwarded
+ * @return ESP_OK on success
+ */
+esp_err_t esp_netif_bridge_fdb_add(esp_netif_t *esp_netif_br, uint8_t *addr, uint64_t ports_mask);
+
+/**
+ * @brief Remove a static entry from bridge forwarding database
+ *
+ * @param esp_netif_br Handle to bridge esp-netif instance
+ * @param addr MAC address entry to be removed
+ * @return ESP_OK on success
+ */
+esp_err_t esp_netif_bridge_fdb_remove(esp_netif_t *esp_netif_br, uint8_t *addr);
+#endif // CONFIG_ESP_NETIF_BRIDGE_EN
 
 /**
  * @}
@@ -593,6 +614,19 @@ esp_err_t esp_netif_dhcps_start(esp_netif_t *esp_netif);
  *      - ESP_ERR_ESP_NETIF_IF_NOT_READY
  */
 esp_err_t esp_netif_dhcps_stop(esp_netif_t *esp_netif);
+
+/**
+ * @brief  Populate IP addresses of clients connected to DHCP server listed by their MAC addresses
+ *
+ * @param[in] esp_netif Handle to esp-netif instance
+ * @param[in] num Number of clients with specified MAC addresses in the array of pairs
+ * @param[in,out] mac_ip_pair Array of pairs of MAC and IP addresses (MAC are inputs, IP outputs)
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_ESP_NETIF_INVALID_PARAMS on invalid params
+ *      - ESP_ERR_NOT_SUPPORTED if DHCP server not enabled
+ */
+esp_err_t esp_netif_dhcps_get_clients_by_mac(esp_netif_t *esp_netif, int num, esp_netif_pair_mac_ip_t *mac_ip_pair);
 
 /**
  * @}

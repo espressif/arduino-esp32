@@ -1,16 +1,8 @@
-// Copyright 2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef _ROM_UART_H_
 #define _ROM_UART_H_
@@ -260,7 +252,7 @@ void uart_tx_flush(uint8_t uart_no);
 /**
   * @brief Wait until uart tx full empty and the last char send ok.
   *
-  * @param  uart_no : 0 for UART0, 1 for UART1, 2 for UART2
+  * @param  uart_no : 0 for UART0, 1 for UART1
   *
   * The function defined in ROM code has a bug, so we define the correct version
   * here for compatibility.

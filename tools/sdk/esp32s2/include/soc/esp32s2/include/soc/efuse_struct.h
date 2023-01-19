@@ -1,18 +1,12 @@
-// Copyright 2017-2018 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-#ifndef _SOC_EFUSE_STRUCT_H_
-#define _SOC_EFUSE_STRUCT_H_
+/*
+ * SPDX-FileCopyrightText: 2017-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -186,8 +180,10 @@ typedef volatile struct efuse_dev_s {
     } rd_repeat_data3;
     union {
         struct {
-            uint32_t chip_version:24;
-            uint32_t reserved24:   8;
+            uint32_t disable_wafer_version_major: 1;
+            uint32_t disable_blk_version_major: 1;
+            uint32_t rpt4_reserved4:22;
+            uint32_t reserved24:     8;
         };
         uint32_t val;
     } rd_repeat_data4;
@@ -206,14 +202,40 @@ typedef volatile struct efuse_dev_s {
         };
         uint32_t val;
     } rd_mac_spi_8m_2;
-    uint32_t rd_mac_spi_8m_3;                                   /**/
-    uint32_t rd_mac_spi_8m_4;                                   /**/
+    union {
+        struct {
+            uint32_t spi_pad_conf_2:         18;
+            uint32_t wafer_version_major:    2;
+            uint32_t wafer_version_minor_high:    1; // most significant bit
+            uint32_t reserve1:               4;
+            uint32_t blk_version_major:      2;
+            uint32_t reserve2:               5;
+        };
+        uint32_t val;
+    } rd_mac_spi_8m_3;
+    union {
+        struct {
+            uint32_t pkg_version:  4;
+            uint32_t wafer_version_minor_low:  3; // least significant bits
+            uint32_t reserve:     25;
+        };
+        uint32_t val;
+    } rd_mac_spi_8m_4;
     uint32_t rd_mac_spi_8m_5;                                   /**/
     uint32_t rd_sys_data0;                                      /**/
     uint32_t rd_sys_data1;                                      /**/
     uint32_t rd_sys_data2;                                      /**/
     uint32_t rd_sys_data3;                                      /**/
-    uint32_t rd_sys_data4;                                      /**/
+    union {
+        struct {
+            uint32_t ocode_low:              4;
+            uint32_t blk_version_minor :     3;
+            uint32_t reserved1:              9;
+            uint32_t ocode_hi:               3;
+            uint32_t reserved2:              13;
+        };
+        uint32_t val;
+    } rd_sys_data4;                                             /**/
     uint32_t rd_sys_data5;                                      /**/
     uint32_t rd_sys_data6;                                      /**/
     uint32_t rd_sys_data7;                                      /**/
@@ -518,5 +540,3 @@ extern efuse_dev_t EFUSE;
 #ifdef __cplusplus
 }
 #endif
-
-#endif  /* _SOC_EFUSE_STRUCT_H_ */

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -58,6 +58,9 @@ typedef enum {
     UART_PARITY_ERR,        /*!< UART RX parity event*/
     UART_DATA_BREAK,        /*!< UART TX data and break event*/
     UART_PATTERN_DET,       /*!< UART pattern detected */
+#if SOC_UART_SUPPORT_WAKEUP_INT
+    UART_WAKEUP,            /*!< UART wakeup event */
+#endif
     UART_EVENT_MAX,         /*!< UART event max index*/
 } uart_event_type_t;
 
@@ -191,6 +194,18 @@ esp_err_t uart_set_parity(uart_port_t uart_num, uart_parity_t parity_mode);
  *
  */
 esp_err_t uart_get_parity(uart_port_t uart_num, uart_parity_t* parity_mode);
+
+/**
+ * @brief Get the frequency of a clock source for the UART
+ *
+ * @param sclk Clock source
+ * @param[out] out_freq_hz Output of frequency, in Hz
+ *
+ * @return
+ *  - ESP_ERR_INVALID_ARG: if the clock source is not supported
+ *  - otherwise ESP_OK
+ */
+esp_err_t uart_get_sclk_freq(uart_sclk_t sclk, uint32_t* out_freq_hz);
 
 /**
  * @brief Set UART baud rate.
@@ -328,7 +343,7 @@ esp_err_t uart_enable_rx_intr(uart_port_t uart_num);
 esp_err_t uart_disable_rx_intr(uart_port_t uart_num);
 
 /**
- * @brief Disable UART TX interrupt (TXFIFO_EMPTY INTERRUPT)
+ * @brief Disable UART TX interrupt (TX_FULL & TX_TIMEOUT INTERRUPT)
  *
  * @param uart_num  UART port number
  *
@@ -339,7 +354,7 @@ esp_err_t uart_disable_rx_intr(uart_port_t uart_num);
 esp_err_t uart_disable_tx_intr(uart_port_t uart_num);
 
 /**
- * @brief Enable UART TX interrupt (TXFIFO_EMPTY INTERRUPT)
+ * @brief Enable UART TX interrupt (TX_FULL & TX_TIMEOUT INTERRUPT)
  *
  * @param uart_num UART port number, the max port number is (UART_NUM_MAX -1).
  * @param enable  1: enable; 0: disable
@@ -350,37 +365,6 @@ esp_err_t uart_disable_tx_intr(uart_port_t uart_num);
  *     - ESP_FAIL Parameter error
  */
 esp_err_t uart_enable_tx_intr(uart_port_t uart_num, int enable, int thresh);
-
-/**
- * @brief Register UART interrupt handler (ISR).
- *
- * @note UART ISR handler will be attached to the same CPU core that this function is running on.
- *
- * @param uart_num UART port number, the max port number is (UART_NUM_MAX -1).
- * @param fn  Interrupt handler function.
- * @param arg parameter for handler function
- * @param intr_alloc_flags Flags used to allocate the interrupt. One or multiple (ORred)
- *        ESP_INTR_FLAG_* values. See esp_intr_alloc.h for more info.
- * @param handle Pointer to return handle. If non-NULL, a handle for the interrupt will
- *        be returned here.
- *
- * @return
- *     - ESP_OK   Success
- *     - ESP_FAIL Parameter error
- */
-esp_err_t uart_isr_register(uart_port_t uart_num, void (*fn)(void*), void * arg, int intr_alloc_flags,  uart_isr_handle_t *handle);
-
-/**
- * @brief Free UART interrupt handler registered by uart_isr_register. Must be called on the same core as
- * uart_isr_register was called.
- *
- * @param uart_num UART port number, the max port number is (UART_NUM_MAX -1).
- *
- * @return
- *     - ESP_OK   Success
- *     - ESP_FAIL Parameter error
- */
-esp_err_t uart_isr_free(uart_port_t uart_num);
 
 /**
  * @brief Assign signals of a UART peripheral to GPIO pins
@@ -554,7 +538,7 @@ int uart_write_bytes_with_break(uart_port_t uart_num, const void* src, size_t si
  *
  * @return
  *     - (-1) Error
- *     - OTHERS (>=0) The number of bytes read from UART FIFO
+ *     - OTHERS (>=0) The number of bytes read from UART buffer
  */
 int uart_read_bytes(uart_port_t uart_num, void* buf, uint32_t length, TickType_t ticks_to_wait);
 
@@ -618,31 +602,6 @@ esp_err_t uart_get_tx_buffer_free_size(uart_port_t uart_num, size_t *size);
  *     - ESP_FAIL Parameter error
  */
 esp_err_t uart_disable_pattern_det_intr(uart_port_t uart_num);
-
-#if CONFIG_IDF_TARGET_ESP32
-/**
- * @brief UART enable pattern detect function.
- *        Designed for applications like 'AT commands'.
- *        When the hardware detect a series of one same character, the interrupt will be triggered.
- * @note  This function only works for esp32. And this function is deprecated, please use
- *        uart_enable_pattern_det_baud_intr instead.
- *
- * @param uart_num UART port number.
- * @param pattern_chr character of the pattern.
- * @param chr_num number of the character, 8bit value.
- * @param chr_tout timeout of the interval between each pattern characters, 24bit value, unit is APB (80Mhz) clock cycle.
- *        When the duration is less than this value, it will not take this data as at_cmd char.
- * @param post_idle idle time after the last pattern character, 24bit value, unit is APB (80Mhz) clock cycle.
- *        When the duration is less than this value, it will not take the previous data as the last at_cmd char
- * @param pre_idle idle time before the first pattern character, 24bit value, unit is APB (80Mhz) clock cycle.
- *        When the duration is less than this value, it will not take this data as the first at_cmd char.
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Parameter error
- */
-esp_err_t uart_enable_pattern_det_intr(uart_port_t uart_num, char pattern_chr, uint8_t chr_num, int chr_tout, int post_idle, int pre_idle) __attribute__((deprecated));
-#endif
 
 /**
  * @brief UART enable pattern detect function.
@@ -808,8 +767,7 @@ esp_err_t uart_get_collision_flag(uart_port_t uart_num, bool* collision_flag);
  * be obtained from UART FIFO). Depending on the baud rate, a few characters
  * after that will also not be received. Note that when the chip enters and exits
  * light sleep mode, APB frequency will be changing. To make sure that UART has
- * correct baud rate all the time, select REF_TICK as UART clock source,
- * by setting use_ref_tick field in uart_config_t to true.
+ * correct baud rate all the time, select UART_SCLK_REF_TICK or UART_SCLK_XTAL as UART clock source in uart_config_t::source_clk.
  *
  * @note in ESP32, the wakeup signal can only be input via IO_MUX (i.e.
  *       GPIO3 should be configured as function_1 to wake up UART0,

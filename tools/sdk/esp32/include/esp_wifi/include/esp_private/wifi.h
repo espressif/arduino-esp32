@@ -6,7 +6,7 @@
 
 /*
  * All the APIs declared here are internal only APIs, it can only be used by
- * espressif internal modules, such as SSC, LWIP, TCPIP adapter etc, espressif
+ * espressif internal modules, such as SSC, LWIP, esp-netif etc, espressif
  * customers are not recommended to use them.
  *
  * If someone really want to use specified APIs declared in here, please contact
@@ -126,7 +126,7 @@ void esp_wifi_internal_free_rx_buffer(void* buffer);
   * copy to WiFi driver.
   *
   * @param  wifi_interface_t wifi_if : wifi interface id
-  * @param  void *buffer : the buffer to be tansmit
+  * @param  void *buffer : the buffer to be transmit
   * @param  uint16_t len : the length of buffer
   *
   * @return

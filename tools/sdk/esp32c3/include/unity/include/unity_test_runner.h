@@ -1,16 +1,8 @@
-// Copyright 2016-2018 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2016-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #pragma once
 
 #include <stdint.h>
@@ -131,7 +123,6 @@ void unity_testcase_register(test_desc_t* desc);
     }
 
 
-
 /*
  * First argument is a free-form description,
  * second argument is (by convention) a list of identifiers, each one in square brackets.
@@ -157,6 +148,7 @@ void unity_testcase_register(test_desc_t* desc);
         unity_testcase_register( & UNITY_TEST_UID(test_desc_) ); \
     }
 
+
 /**
  * Note: initialization of test_desc_t fields above has to be done exactly
  * in the same order as the fields are declared in the structure.
@@ -168,11 +160,17 @@ void unity_testcase_register(test_desc_t* desc);
 
 void unity_run_test_by_name(const char *name);
 
+void unity_run_test_by_index(int test_index);
+
 void unity_run_tests_by_tag(const char *tag, bool invert);
 
 void unity_run_all_tests(void);
 
 void unity_run_menu(void);
+
+int unity_get_test_count(void);
+
+bool unity_get_test_info(int test_index, test_desc_t* out_info);
 
 #include "sdkconfig.h" //to get IDF_TARGET_xxx
 

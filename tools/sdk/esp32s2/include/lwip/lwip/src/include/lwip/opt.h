@@ -505,11 +505,8 @@
  * The number of sys timeouts used by the core stack (not apps)
  * The default number of timeouts is calculated here for all enabled modules.
  */
-#if ESP_LWIP
-#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + (LWIP_ARP + (ESP_GRATUITOUS_ARP ? 1 : 0)) + (2*LWIP_DHCP + (ESP_DHCPS_TIMER ? 1 : 0)) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
-#else
-#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
-#endif
+#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND ? LWIP_DHCP : 2*LWIP_DHCP) + LWIP_AUTOIP + (ESP_LWIP_IGMP_TIMERS_ONDEMAND ? 0 : LWIP_IGMP) + (ESP_LWIP_DNS_TIMERS_ONDEMAND ? 0 : LWIP_DNS) + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + (ESP_LWIP_MLD6_TIMERS_ONDEMAND ? 0 : LWIP_IPV6_MLD))))
+
 /**
  * MEMP_NUM_SYS_TIMEOUT: the number of simultaneously active timeouts.
  * The default number of timeouts is calculated here for all enabled modules.
@@ -976,18 +973,6 @@
  * @}
  */
 
-#ifndef LWIP_DHCP_IP_ADDR_RESTORE
-#define LWIP_DHCP_IP_ADDR_RESTORE()       0
-#endif
-
-#ifndef LWIP_DHCP_IP_ADDR_STORE
-#define LWIP_DHCP_IP_ADDR_STORE()
-#endif
-
-#ifndef LWIP_DHCP_IP_ADDR_ERASE
-#define LWIP_DHCP_IP_ADDR_ERASE(esp_netif)
-#endif
-
 /*
    ------------------------------------
    ---------- AUTOIP options ----------
@@ -1016,13 +1001,6 @@
  */
 #if !defined LWIP_DHCP_AUTOIP_COOP || defined __DOXYGEN__
 #define LWIP_DHCP_AUTOIP_COOP           0
-#endif
-
-/**
- * ESP_IPV6_AUTOCONFIG==1: Enable stateless address autoconfiguration as per RFC 4862.
- */
-#if !defined ESP_IPV6_AUTOCONFIG
-#define ESP_IPV6_AUTOCONFIG 0
 #endif
 
 /**
@@ -1335,6 +1313,15 @@
 #define TCP_CALCULATE_EFF_SEND_MSS      1
 #endif
 
+/**
+ * LWIP_TCP_RTO_TIME: Initial TCP retransmission timeout (ms).
+ * This defaults to 3 seconds as traditionally defined in the TCP protocol.
+ * For improving timely recovery on faster networks, this value could
+ * be lowered down to 1 second (RFC 6298) 
+ */
+#if !defined LWIP_TCP_RTO_TIME || defined __DOXYGEN__
+#define LWIP_TCP_RTO_TIME               3000
+#endif
 
 /**
  * TCP_SND_BUF: TCP sender buffer space (bytes).
@@ -1534,11 +1521,6 @@
 #define LWIP_ALTCP_TLS                  0
 #endif
 
-#if ESP_LWIP
-#if !defined LWIP_TCP_RTO_TIME || defined __DOXYGEN__
-#define LWIP_TCP_RTO_TIME             3000
-#endif
-#endif
 /**
  * @}
  */
@@ -1580,7 +1562,7 @@
  * TCP_MSS, IP header, and link header.
  */
 #if !defined PBUF_POOL_BUFSIZE || defined __DOXYGEN__
-#define PBUF_POOL_BUFSIZE               LWIP_MEM_ALIGN_SIZE(TCP_MSS+40+PBUF_LINK_ENCAPSULATION_HLEN+PBUF_LINK_HLEN)
+#define PBUF_POOL_BUFSIZE               LWIP_MEM_ALIGN_SIZE(TCP_MSS+PBUF_IP_HLEN+PBUF_TRANSPORT_HLEN+PBUF_LINK_ENCAPSULATION_HLEN+PBUF_LINK_HLEN)
 #endif
 
 /**
@@ -1955,11 +1937,8 @@
 
 /** LWIP_NETCONN_FULLDUPLEX==1: Enable code that allows reading from one thread,
  * writing from a 2nd thread and closing from a 3rd thread at the same time.
- * ATTENTION: This is currently really alpha! Some requirements:
- * - LWIP_NETCONN_SEM_PER_THREAD==1 is required to use one socket/netconn from
- *   multiple threads at once
- * - sys_mbox_free() has to unblock receive tasks waiting on recvmbox/acceptmbox
- *   and prevent a task pending on this during/after deletion
+ * LWIP_NETCONN_SEM_PER_THREAD==1 is required to use one socket/netconn from
+ * multiple threads at once!
  */
 #if !defined LWIP_NETCONN_FULLDUPLEX || defined __DOXYGEN__
 #define LWIP_NETCONN_FULLDUPLEX         0
@@ -2489,7 +2468,7 @@
  * network startup.
  */
 #if !defined LWIP_IPV6_SEND_ROUTER_SOLICIT || defined __DOXYGEN__
-#define LWIP_IPV6_SEND_ROUTER_SOLICIT   1
+#define LWIP_IPV6_SEND_ROUTER_SOLICIT   LWIP_IPV6
 #endif
 
 /**

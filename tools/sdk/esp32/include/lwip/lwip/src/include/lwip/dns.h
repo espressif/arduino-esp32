@@ -111,10 +111,7 @@ err_t            dns_gethostbyname(const char *hostname, ip_addr_t *addr,
 err_t            dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr,
                                    dns_found_callback found, void *callback_arg,
                                    u8_t dns_addrtype);
-#if ESP_DNS
-void             dns_clear_servers(bool keep_fallback);
 void             dns_clear_cache(void);
-#endif
 
 #if DNS_LOCAL_HOSTLIST
 size_t         dns_local_iterate(dns_found_callback iterator_fn, void *iterator_arg);

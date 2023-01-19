@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -8,7 +8,6 @@
 #define _ESP_HTTP_CLIENT_H
 
 #include "freertos/FreeRTOS.h"
-#include "http_parser.h"
 #include "sdkconfig.h"
 #include "esp_err.h"
 #include <sys/socket.h>
@@ -35,6 +34,7 @@ typedef enum {
     HTTP_EVENT_ON_DATA,         /*!< Occurs when receiving data from the server, possibly multiple portions of the packet */
     HTTP_EVENT_ON_FINISH,       /*!< Occurs when finish a HTTP session */
     HTTP_EVENT_DISCONNECTED,    /*!< The connection has been disconnected */
+    HTTP_EVENT_REDIRECT,        /*!< Intercepting HTTP redirects to handle them manually */
 } esp_http_client_event_id_t;
 
 /**
@@ -129,6 +129,9 @@ typedef struct {
     bool                        is_async;                 /*!< Set asynchronous mode, only supported with HTTPS for now */
     bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
     bool                        skip_cert_common_name_check;    /*!< Skip any validation of server certificate CN field */
+    const char                  *common_name;             /*!< Pointer to the string containing server certificate common name.
+                                                               If non-NULL, server certificate CN must match this name,
+                                                               If NULL, server certificate CN must match hostname. */
     esp_err_t (*crt_bundle_attach)(void *conf);      /*!< Function pointer to esp_crt_bundle_attach. Enables the use of certification
                                                           bundle for server verification, must be enabled in menuconfig */
     bool                        keep_alive_enable;   /*!< Enable keep-alive timeout */
@@ -136,6 +139,9 @@ typedef struct {
     int                         keep_alive_interval; /*!< Keep-alive interval time. Default is 5 (second) */
     int                         keep_alive_count;    /*!< Keep-alive packet retry send count. Default is 3 counts */
     struct ifreq                *if_name;            /*!< The name of interface for data to go through. Use the default interface without setting */
+#if CONFIG_ESP_TLS_USE_SECURE_ELEMENT
+    bool use_secure_element;                /*!< Enable this option to use secure element */
+#endif
 } esp_http_client_config_t;
 
 /**
@@ -211,6 +217,18 @@ esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *co
  *  - ESP_FAIL on error
  */
 esp_err_t esp_http_client_perform(esp_http_client_handle_t client);
+
+/**
+ * @brief       Cancel an ongoing HTTP request. This API closes the current socket and opens a new socket with the same esp_http_client context.
+ *
+ * @param       client  The esp_http_client handle
+ * @return
+ *  - ESP_OK on successful
+ *  - ESP_FAIL on error
+ *  - ESP_ERR_INVALID_ARG
+ *  - ESP_ERR_INVALID_STATE
+ */
+esp_err_t esp_http_client_cancel_request(esp_http_client_handle_t client);
 
 /**
  * @brief      Set URL for client, when performing this behavior, the options in the URL will replace the old ones
@@ -426,9 +444,10 @@ int esp_http_client_write(esp_http_client_handle_t client, const char *buffer, i
  * @return
  *     - (0) if stream doesn't contain content-length header, or chunked encoding (checked by `esp_http_client_is_chunked` response)
  *     - (-1: ESP_FAIL) if any errors
+ *     - (-ESP_ERR_HTTP_EAGAIN = -0x7007) if call is timed-out before any data was ready
  *     - Download data length defined by content-length header
  */
-int esp_http_client_fetch_headers(esp_http_client_handle_t client);
+int64_t esp_http_client_fetch_headers(esp_http_client_handle_t client);
 
 
 /**
@@ -450,6 +469,8 @@ bool esp_http_client_is_chunked_response(esp_http_client_handle_t client);
  * @return
  *     - (-1) if any errors
  *     - Length of data was read
+ *
+ * @note  (-ESP_ERR_HTTP_EAGAIN = -0x7007) is returned when call is timed-out before any data was ready
  */
 int esp_http_client_read(esp_http_client_handle_t client, char *buffer, int len);
 
@@ -473,7 +494,7 @@ int esp_http_client_get_status_code(esp_http_client_handle_t client);
  *     - (-1) Chunked transfer
  *     - Content-Length value as bytes
  */
-int esp_http_client_get_content_length(esp_http_client_handle_t client);
+int64_t esp_http_client_get_content_length(esp_http_client_handle_t client);
 
 /**
  * @brief      Close http connection, still kept all http request resources

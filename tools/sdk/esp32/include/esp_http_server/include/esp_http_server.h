@@ -14,10 +14,36 @@
 #include <http_parser.h>
 #include <sdkconfig.h>
 #include <esp_err.h>
+#include <esp_event.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define ESP_HTTPD_DEF_CTRL_PORT         (32768)    /*!< HTTP Server control socket port*/
+
+ESP_EVENT_DECLARE_BASE(ESP_HTTP_SERVER_EVENT);
+
+/**
+ * @brief   HTTP Server events id
+ */
+typedef enum {
+    HTTP_SERVER_EVENT_ERROR = 0,       /*!< This event occurs when there are any errors during execution */
+    HTTP_SERVER_EVENT_START,           /*!< This event occurs when HTTP Server is started */
+    HTTP_SERVER_EVENT_ON_CONNECTED,    /*!< Once the HTTP Server has been connected to the client, no data exchange has been performed */
+    HTTP_SERVER_EVENT_ON_HEADER,       /*!< Occurs when receiving each header sent from the client */
+    HTTP_SERVER_EVENT_HEADERS_SENT,     /*!< After sending all the headers to the client */
+    HTTP_SERVER_EVENT_ON_DATA,         /*!< Occurs when receiving data from the client */
+    HTTP_SERVER_EVENT_SENT_DATA,       /*!< Occurs when an ESP HTTP server session is finished */
+    HTTP_SERVER_EVENT_DISCONNECTED,    /*!< The connection has been disconnected */
+    HTTP_SERVER_EVENT_STOP,            /*!< This event occurs when HTTP Server is stopped */
+} esp_http_server_event_id_t;
+
+/** Argument structure for HTTP_SERVER_EVENT_ON_DATA and HTTP_SERVER_EVENT_SENT_DATA event */
+typedef struct {
+    int fd;         /*!< Session socket file descriptor */
+    int data_len;   /*!< Data length */
+} esp_http_server_event_data;
 
 /*
 note: esp_https_server.h includes a customized copy of this
@@ -28,7 +54,7 @@ initializer that should be kept in sync
         .stack_size         = 4096,                     \
         .core_id            = tskNO_AFFINITY,           \
         .server_port        = 80,                       \
-        .ctrl_port          = 32768,                    \
+        .ctrl_port          = ESP_HTTPD_DEF_CTRL_PORT,  \
         .max_open_sockets   = 7,                        \
         .max_uri_handlers   = 8,                        \
         .max_resp_headers   = 8,                        \
@@ -42,6 +68,10 @@ initializer that should be kept in sync
         .global_transport_ctx_free_fn = NULL,           \
         .enable_so_linger = false,                      \
         .linger_timeout = 0,                            \
+        .keep_alive_enable = false,                     \
+        .keep_alive_idle = 0,                           \
+        .keep_alive_interval = 0,                       \
+        .keep_alive_count = 0,                          \
         .open_fn = NULL,                                \
         .close_fn = NULL,                               \
         .uri_match_fn = NULL                            \
@@ -149,7 +179,7 @@ typedef struct httpd_config {
      */
     uint16_t    ctrl_port;
 
-    uint16_t    max_open_sockets;   /*!< Max number of sockets/clients connected at any time*/
+    uint16_t    max_open_sockets;   /*!< Max number of sockets/clients connected at any time (3 sockets are reserved for internal working of the HTTP server) */
     uint16_t    max_uri_handlers;   /*!< Maximum allowed uri handlers */
     uint16_t    max_resp_headers;   /*!< Maximum allowed additional headers in HTTP response */
     uint16_t    backlog_conn;       /*!< Number of backlog connections */
@@ -189,7 +219,10 @@ typedef struct httpd_config {
 
     bool enable_so_linger;  /*!< bool to enable/disable linger */
     int linger_timeout;     /*!< linger timeout (in seconds) */
-
+    bool keep_alive_enable; /*!< Enable keep-alive timeout */
+    int keep_alive_idle;    /*!< Keep-alive idle time. Default is 5 (second) */
+    int keep_alive_interval;/*!< Keep-alive interval time. Default is 5 (second) */
+    int keep_alive_count;   /*!< Keep-alive packet retry send count. Default is 3 counts */
     /**
      * Custom session opening callback.
      *
@@ -210,6 +243,9 @@ typedef struct httpd_config {
      *
      * Called when a session is deleted, before freeing user and transport contexts and before
      * closing the socket. This is a place for custom de-init code common to all sockets.
+     *
+     * The server will only close the socket if no custom session closing callback is set.
+     * If a custom callback is used, `close(sockfd)` should be called in here for most cases.
      *
      * Set the user or transport context to NULL if it was freed here, so the server does not
      * try to free it again.

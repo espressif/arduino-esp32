@@ -21,6 +21,7 @@
  */
 #ifndef MBEDTLS_ECJPAKE_H
 #define MBEDTLS_ECJPAKE_H
+#include "mbedtls/private_access.h"
 
 /*
  * J-PAKE is a password-authenticated key exchange that allows deriving a
@@ -38,11 +39,7 @@
  * The payloads are serialized in a way suitable for use in TLS, but could
  * also be use outside TLS.
  */
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/ecp.h"
 #include "mbedtls/md.h"
@@ -73,21 +70,21 @@ typedef enum {
  */
 typedef struct mbedtls_ecjpake_context
 {
-    const mbedtls_md_info_t *md_info;   /**< Hash to use                    */
-    mbedtls_ecp_group grp;              /**< Elliptic curve                 */
-    mbedtls_ecjpake_role role;          /**< Are we client or server?       */
-    int point_format;                   /**< Format for point export        */
+    const mbedtls_md_info_t *MBEDTLS_PRIVATE(md_info);   /**< Hash to use                    */
+    mbedtls_ecp_group MBEDTLS_PRIVATE(grp);              /**< Elliptic curve                 */
+    mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);          /**< Are we client or server?       */
+    int MBEDTLS_PRIVATE(point_format);                   /**< Format for point export        */
 
-    mbedtls_ecp_point Xm1;              /**< My public key 1   C: X1, S: X3 */
-    mbedtls_ecp_point Xm2;              /**< My public key 2   C: X2, S: X4 */
-    mbedtls_ecp_point Xp1;              /**< Peer public key 1 C: X3, S: X1 */
-    mbedtls_ecp_point Xp2;              /**< Peer public key 2 C: X4, S: X2 */
-    mbedtls_ecp_point Xp;               /**< Peer public key   C: Xs, S: Xc */
+    mbedtls_ecp_point MBEDTLS_PRIVATE(Xm1);              /**< My public key 1   C: X1, S: X3 */
+    mbedtls_ecp_point MBEDTLS_PRIVATE(Xm2);              /**< My public key 2   C: X2, S: X4 */
+    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp1);              /**< Peer public key 1 C: X3, S: X1 */
+    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp2);              /**< Peer public key 2 C: X4, S: X2 */
+    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp);               /**< Peer public key   C: Xs, S: Xc */
 
-    mbedtls_mpi xm1;                    /**< My private key 1  C: x1, S: x3 */
-    mbedtls_mpi xm2;                    /**< My private key 2  C: x2, S: x4 */
+    mbedtls_mpi MBEDTLS_PRIVATE(xm1);                    /**< My private key 1  C: x1, S: x3 */
+    mbedtls_mpi MBEDTLS_PRIVATE(xm2);                    /**< My private key 2  C: x2, S: x4 */
 
-    mbedtls_mpi s;                      /**< Pre-shared secret (passphrase) */
+    mbedtls_mpi MBEDTLS_PRIVATE(s);                      /**< Pre-shared secret (passphrase) */
 } mbedtls_ecjpake_context;
 
 #else  /* MBEDTLS_ECJPAKE_ALT */
@@ -129,6 +126,21 @@ int mbedtls_ecjpake_setup( mbedtls_ecjpake_context *ctx,
                            mbedtls_ecp_group_id curve,
                            const unsigned char *secret,
                            size_t len );
+
+/**
+ * \brief               Set the point format for future reads and writes.
+ *
+ * \param ctx           The ECJPAKE context to configure.
+ * \param point_format  The point format to use:
+ *                      #MBEDTLS_ECP_PF_UNCOMPRESSED (default)
+ *                      or #MBEDTLS_ECP_PF_COMPRESSED.
+ *
+ * \return              \c 0 if successful.
+ * \return              #MBEDTLS_ERR_ECP_BAD_INPUT_DATA if \p point_format
+ *                      is invalid.
+ */
+int mbedtls_ecjpake_set_point_format( mbedtls_ecjpake_context *ctx,
+                                      int point_format );
 
 /**
  * \brief           Check if an ECJPAKE context is ready for use.

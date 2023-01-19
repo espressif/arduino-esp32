@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #pragma once
 
 #include <inttypes.h>
+#include "esp_assert.h"
 
 /**
  * @brief ESP chip ID
@@ -16,12 +17,18 @@ typedef enum {
     ESP_CHIP_ID_ESP32S2 = 0x0002,  /*!< chip ID: ESP32-S2 */
     ESP_CHIP_ID_ESP32C3 = 0x0005, /*!< chip ID: ESP32-C3 */
     ESP_CHIP_ID_ESP32S3 = 0x0009, /*!< chip ID: ESP32-S3 */
-    ESP_CHIP_ID_ESP32H2 = 0x000A, /*!< chip ID: ESP32-H2 */  // ESP32H2-TODO: IDF-3475
+    ESP_CHIP_ID_ESP32C2 = 0x000C, /*!< chip ID: ESP32-C2 */
+#if CONFIG_IDF_TARGET_ESP32H4_BETA_VERSION_2
+    ESP_CHIP_ID_ESP32H4 = 0x000E, /*!< chip ID: ESP32-H4 Beta2*/  // ESP32H4-TODO: IDF-3475
+#elif CONFIG_IDF_TARGET_ESP32H4_BETA_VERSION_1
+    ESP_CHIP_ID_ESP32H4 = 0x000A, /*!< chip ID: ESP32-H4 Beta1 */
+#endif
+    ESP_CHIP_ID_ESP32C6 = 0x000D, /*!< chip ID: ESP32-C6 */
     ESP_CHIP_ID_INVALID = 0xFFFF /*!< Invalid chip ID (we defined it to make sure the esp_chip_id_t is 2 bytes size) */
 } __attribute__((packed)) esp_chip_id_t;
 
 /** @cond */
-_Static_assert(sizeof(esp_chip_id_t) == 2, "esp_chip_id_t should be 16 bit");
+ESP_STATIC_ASSERT(sizeof(esp_chip_id_t) == 2, "esp_chip_id_t should be 16 bit");
 /** @endcond */
 
 /**
@@ -37,13 +44,13 @@ typedef enum {
 } esp_image_spi_mode_t;
 
 /**
- * @brief SPI flash clock frequency
+ * @brief SPI flash clock division factor.
  */
 typedef enum {
-    ESP_IMAGE_SPI_SPEED_40M,        /*!< SPI clock frequency 40 MHz */
-    ESP_IMAGE_SPI_SPEED_26M,        /*!< SPI clock frequency 26 MHz */
-    ESP_IMAGE_SPI_SPEED_20M,        /*!< SPI clock frequency 20 MHz */
-    ESP_IMAGE_SPI_SPEED_80M = 0xF   /*!< SPI clock frequency 80 MHz */
+    ESP_IMAGE_SPI_SPEED_DIV_2,        /*!< The SPI flash clock frequency is divided by 2 of the clock source */
+    ESP_IMAGE_SPI_SPEED_DIV_3,        /*!< The SPI flash clock frequency is divided by 3 of the clock source */
+    ESP_IMAGE_SPI_SPEED_DIV_4,        /*!< The SPI flash clock frequency is divided by 4 of the clock source */
+    ESP_IMAGE_SPI_SPEED_DIV_1 = 0xF   /*!< The SPI flash clock frequency equals to the clock source */
 } esp_image_spi_freq_t;
 
 /**
@@ -78,8 +85,15 @@ typedef struct {
                                 * pin and sets this field to 0xEE=disabled) */
     uint8_t spi_pin_drv[3];     /*!< Drive settings for the SPI flash pins (read by ROM bootloader) */
     esp_chip_id_t chip_id;      /*!< Chip identification number */
-    uint8_t min_chip_rev;       /*!< Minimum chip revision supported by image */
-    uint8_t reserved[8];       /*!< Reserved bytes in additional header space, currently unused */
+    uint8_t min_chip_rev;       /*!< Minimal chip revision supported by image
+                                 * After the Major and Minor revision eFuses were introduced into the chips, this field is no longer used.
+                                 * But for compatibility reasons, we keep this field and the data in it.
+                                 * Use min_chip_rev_full instead.
+                                 * The software interprets this as a Major version for most of the chips and as a Minor version for the ESP32-C3.
+                                 */
+    uint16_t min_chip_rev_full; /*!< Minimal chip revision supported by image, in format: major * 100 + minor */
+    uint16_t max_chip_rev_full; /*!< Maximal chip revision supported by image, in format: major * 100 + minor */
+    uint8_t reserved[4];        /*!< Reserved bytes in additional header space, currently unused */
     uint8_t hash_appended;      /*!< If 1, a SHA256 digest "simple hash" (of the entire image) is appended after the checksum.
                                  * Included in image length. This digest
                                  * is separate to secure boot and only used for detecting corruption.
@@ -88,7 +102,7 @@ typedef struct {
 } __attribute__((packed))  esp_image_header_t;
 
 /** @cond */
-_Static_assert(sizeof(esp_image_header_t) == 24, "binary image header should be 24 bytes");
+ESP_STATIC_ASSERT(sizeof(esp_image_header_t) == 24, "binary image header should be 24 bytes");
 /** @endcond */
 
 
@@ -101,25 +115,3 @@ typedef struct {
 } esp_image_segment_header_t;
 
 #define ESP_IMAGE_MAX_SEGMENTS 16           /*!< Max count of segments in the image. */
-
-#define ESP_APP_DESC_MAGIC_WORD 0xABCD5432  /*!< The magic word for the esp_app_desc structure that is in DROM. */
-
-/**
- * @brief Description about application.
- */
-typedef struct {
-    uint32_t magic_word;        /*!< Magic word ESP_APP_DESC_MAGIC_WORD */
-    uint32_t secure_version;    /*!< Secure version */
-    uint32_t reserv1[2];        /*!< reserv1 */
-    char version[32];           /*!< Application version */
-    char project_name[32];      /*!< Project name */
-    char time[16];              /*!< Compile time */
-    char date[16];              /*!< Compile date*/
-    char idf_ver[32];           /*!< Version IDF */
-    uint8_t app_elf_sha256[32]; /*!< sha256 of elf file */
-    uint32_t reserv2[20];       /*!< reserv2 */
-} esp_app_desc_t;
-
-/** @cond */
-_Static_assert(sizeof(esp_app_desc_t) == 256, "esp_app_desc_t should be 256 bytes");
-/** @endcond */

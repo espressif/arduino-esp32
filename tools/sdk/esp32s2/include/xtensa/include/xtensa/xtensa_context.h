@@ -1,38 +1,39 @@
-/*******************************************************************************
-Copyright (c) 2006-2015 Cadence Design Systems Inc.
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+/*
+ * Copyright (c) 2015-2019 Cadence Design Systems, Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---------------------------------------------------------------------------------
-
-        XTENSA CONTEXT FRAMES AND MACROS FOR RTOS ASSEMBLER SOURCES
-
-This header contains definitions and macros for use primarily by Xtensa
-RTOS assembly coded source files. It includes and uses the Xtensa hardware
-abstraction layer (HAL) to deal with config specifics. It may also be
-included in C source files.
-
-!! Supports only Xtensa Exception Architecture 2 (XEA2). XEA1 not supported. !!
-
-NOTE: The Xtensa architecture requires stack pointer alignment to 16 bytes.
-
-*******************************************************************************/
+/*
+ * XTENSA CONTEXT FRAMES AND MACROS FOR RTOS ASSEMBLER SOURCES
+ *
+ * This header contains definitions and macros for use primarily by Xtensa
+ * RTOS assembly coded source files. It includes and uses the Xtensa hardware
+ * abstraction layer (HAL) to deal with config specifics. It may also be
+ * included in C source files.
+ *
+ * !! Supports only Xtensa Exception Architecture 2 (XEA2). XEA1 not supported. !!
+ *
+ * NOTE: The Xtensa architecture requires stack pointer alignment to 16 bytes.
+ */
 
 #ifndef XTENSA_CONTEXT_H
 #define XTENSA_CONTEXT_H
@@ -57,6 +58,10 @@ NOTE: The Xtensa architecture requires stack pointer alignment to 16 bytes.
 -------------------------------------------------------------------------------
 */
 
+/*
+We need to undef due to redefinition from xtruntime.h
+[refactor-todo] Prevent xtruntime.h from being included in IDF
+*/
 #ifdef STRUCT_BEGIN
 #undef STRUCT_BEGIN
 #undef STRUCT_FIELD
@@ -66,10 +71,18 @@ NOTE: The Xtensa architecture requires stack pointer alignment to 16 bytes.
 
 #if defined(_ASMLANGUAGE) || defined(__ASSEMBLER__)
 
+#ifdef __clang__
+#define STRUCT_BEGIN                            .set XT_STRUCT_OFFSET, 0
+#define STRUCT_FIELD(ctype,size,asname,name)    .set asname, XT_STRUCT_OFFSET; .set XT_STRUCT_OFFSET, asname + size
+#define STRUCT_AFIELD(ctype,size,asname,name,n) .set asname, XT_STRUCT_OFFSET;\
+                                                .set XT_STRUCT_OFFSET, asname + (size)*(n);
+#define STRUCT_END(sname)                       .set sname##Size, XT_STRUCT_OFFSET;
+#else // __clang__
 #define STRUCT_BEGIN            .pushsection .text; .struct 0
 #define STRUCT_FIELD(ctype,size,asname,name)    asname: .space  size
 #define STRUCT_AFIELD(ctype,size,asname,name,n) asname: .space  (size)*(n)
 #define STRUCT_END(sname)       sname##Size:; .popsection
+#endif // __clang__
 
 #else
 
@@ -189,7 +202,7 @@ STRUCT_END(XtExcFrame)
   the return address for returning to the caller, and the caller's PS register.
 
   Note: Although the xtensa ABI considers the threadptr as "global" across
-  functions (meaning it is neither caller or callee saved), it is treated as a
+  functions (meanig it is neither caller or callee saved), it is treated as a
   callee-saved register in a solicited stack frame. This omits the need for the
   OS to include extra logic to save "global" registers on each context switch.
   Only the threadptr register is treated as callee-saved, as all other NCP
@@ -394,9 +407,6 @@ STRUCT_END(XtSolFrame)
   #define RET0          retw
 #endif
 #endif
-
-
-
 
 
 #endif /* XTENSA_CONTEXT_H */

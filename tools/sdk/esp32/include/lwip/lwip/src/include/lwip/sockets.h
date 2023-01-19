@@ -40,7 +40,7 @@
 #define LWIP_HDR_SOCKETS_H
 
 #include "lwip/opt.h"
-#include "sys/poll.h"
+
 #if LWIP_SOCKET /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/ip_addr.h"
@@ -338,12 +338,6 @@ struct in_pktinfo {
 #define IPV6_LEAVE_GROUP     13
 #define IPV6_DROP_MEMBERSHIP IPV6_LEAVE_GROUP
 
-#if ESP_IPV6
-#define IPV6_MULTICAST_IF    0x300
-#define IPV6_MULTICAST_HOPS  0x301
-#define IPV6_MULTICAST_LOOP  0x302
-#endif
-
 typedef struct ipv6_mreq {
   struct in6_addr ipv6mr_multiaddr; /*  IPv6 multicast addr */
   unsigned int    ipv6mr_interface; /*  interface index, or 0 */
@@ -509,7 +503,6 @@ typedef struct fd_set
 #define POLLWRNORM 0x80
 #define POLLWRBAND 0x100
 #define POLLHUP    0x200
-#ifdef NO_POLLFD
 typedef unsigned int nfds_t;
 struct pollfd
 {
@@ -517,7 +510,6 @@ struct pollfd
   short events;
   short revents;
 };
-#endif/* NO_POLLFD*/
 #endif
 
 /** LWIP_TIMEVAL_PRIVATE: if you want to use the struct timeval provided
@@ -588,7 +580,7 @@ int lwip_getpeername (int s, struct sockaddr *name, socklen_t *namelen);
 int lwip_getsockname (int s, struct sockaddr *name, socklen_t *namelen);
 int lwip_getsockopt (int s, int level, int optname, void *optval, socklen_t *optlen);
 int lwip_setsockopt (int s, int level, int optname, const void *optval, socklen_t optlen);
-int lwip_close(int s);
+ int lwip_close(int s);
 int lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
 int lwip_listen(int s, int backlog);
 ssize_t lwip_recv(int s, void *mem, size_t len, int flags);
@@ -618,66 +610,6 @@ int lwip_inet_pton(int af, const char *src, void *dst);
 
 #if LWIP_COMPAT_SOCKETS
 #if LWIP_COMPAT_SOCKETS != 2
-
-#if ESP_SOCKET
-static inline int accept(int s,struct sockaddr *addr,socklen_t *addrlen)
-{ return lwip_accept(s,addr,addrlen); }
-static inline int bind(int s,const struct sockaddr *name, socklen_t namelen)
-{ return lwip_bind(s,name,namelen); }
-static inline int shutdown(int s,int how)
-{ return lwip_shutdown(s,how); }
-static inline int getpeername(int s,struct sockaddr *name,socklen_t *namelen)
-{ return lwip_getpeername(s,name,namelen); }
-static inline int getsockname(int s,struct sockaddr *name,socklen_t *namelen)
-{ return lwip_getsockname(s,name,namelen); }
-static inline int setsockopt(int s,int level,int optname,const void *opval,socklen_t optlen)
-{ return lwip_setsockopt(s,level,optname,opval,optlen); }
-static inline int getsockopt(int s,int level,int optname,void *opval,socklen_t *optlen)
-{ return lwip_getsockopt(s,level,optname,opval,optlen); }
-static inline int closesocket(int s)
-{ return lwip_close(s); }
-static inline int connect(int s,const struct sockaddr *name,socklen_t namelen)
-{ return lwip_connect(s,name,namelen); }
-static inline int listen(int s,int backlog)
-{ return lwip_listen(s,backlog); }
-static inline ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)
-{ return lwip_recvmsg(sockfd, msg, flags); } 
-static inline ssize_t recv(int s,void *mem,size_t len,int flags)
-{ return lwip_recv(s,mem,len,flags); }
-static inline ssize_t recvfrom(int s,void *mem,size_t len,int flags,struct sockaddr *from,socklen_t *fromlen)
-{ return lwip_recvfrom(s,mem,len,flags,from,fromlen); }
-static inline ssize_t send(int s,const void *dataptr,size_t size,int flags)
-{ return lwip_send(s,dataptr,size,flags); }
-static inline ssize_t sendmsg(int s,const struct msghdr *message,int flags)
-{ return lwip_sendmsg(s,message,flags); }
-static inline ssize_t sendto(int s,const void *dataptr,size_t size,int flags,const struct sockaddr *to,socklen_t tolen)
-{ return lwip_sendto(s,dataptr,size,flags,to,tolen); }
-static inline int socket(int domain,int type,int protocol)
-{ return lwip_socket(domain,type,protocol); }
-#ifndef ESP_HAS_SELECT
-static inline int select(int maxfdp1,fd_set *readset,fd_set *writeset,fd_set *exceptset,struct timeval *timeout)
-{ return lwip_select(maxfdp1,readset,writeset,exceptset,timeout); }
-#endif /* ESP_HAS_SELECT */
-static inline int ioctlsocket(int s,long cmd,void *argp)
-{ return lwip_ioctl(s,cmd,argp); }
-
-#if LWIP_POSIX_SOCKETS_IO_NAMES
-static inline ssize_t read(int s,void *mem,size_t len)
-{ return lwip_read(s,mem,len); }
-static inline ssize_t write(int s,const void *dataptr,size_t len)
-{ return lwip_write(s,dataptr,len); }
-static inline ssize_t writev(int s,const struct iovec *iov,int iovcnt)
-{ return lwip_writev(s,iov,iovcnt); }
-static inline int close(int s)
-{ return lwip_close(s); }
-static inline int fcntl(int s,int cmd,int val)
-{ return lwip_fcntl(s,cmd,val); }
-static inline int ioctl(int s,long cmd,void *argp)
-{ return lwip_ioctl(s,cmd,argp); }
-#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
-
-#else
-
 /** @ingroup socket */
 #define accept(s,addr,addrlen)                    lwip_accept(s,addr,addrlen)
 /** @ingroup socket */
@@ -722,6 +654,10 @@ static inline int ioctl(int s,long cmd,void *argp)
 #endif
 /** @ingroup socket */
 #define ioctlsocket(s,cmd,argp)                   lwip_ioctl(s,cmd,argp)
+/** @ingroup socket */
+#define inet_ntop(af,src,dst,size)                lwip_inet_ntop(af,src,dst,size)
+/** @ingroup socket */
+#define inet_pton(af,src,dst)                     lwip_inet_pton(af,src,dst)
 
 #if LWIP_POSIX_SOCKETS_IO_NAMES
 /** @ingroup socket */
@@ -739,25 +675,8 @@ static inline int ioctl(int s,long cmd,void *argp)
 /** @ingroup socket */
 #define ioctl(s,cmd,argp)                         lwip_ioctl(s,cmd,argp)
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
-
-#endif /* ESP_SOCKET */
 #endif /* LWIP_COMPAT_SOCKETS != 2 */
 
-#if ESP_SOCKET                                                          
-#if LWIP_COMPAT_SOCKET_INET == 1
-/* Some libraries have problems with inet_... being macros, so please use this define 
-   to declare normal functions */
-static inline const char *inet_ntop(int af, const void *src, char *dst, socklen_t size)
-{ return lwip_inet_ntop(af, src, dst, size);  }
-static inline int inet_pton(int af, const char *src, void *dst)
-{ return lwip_inet_pton(af, src, dst); }   
-#else
-/* By default fall back to original inet_... macros */
-# define inet_ntop(a,b,c,d) lwip_inet_ntop(a,b,c,d) 
-# define inet_pton(a,b,c)   lwip_inet_pton(a,b,c)   
-#endif /* LWIP_COMPAT_SOCKET_INET */
-
-#endif /* ESP_SOCKET */
 #endif /* LWIP_COMPAT_SOCKETS */
 
 #ifdef __cplusplus

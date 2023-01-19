@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __ESP_AVRC_API_H__
 #define __ESP_AVRC_API_H__
@@ -33,7 +25,7 @@ typedef enum {
     ESP_AVRC_FEAT_VENDOR = 0x0008,               /*!< remote control vendor dependent commands */
     ESP_AVRC_FEAT_BROWSE = 0x0010,               /*!< use browsing channel */
     ESP_AVRC_FEAT_META_DATA = 0x0040,            /*!< remote control metadata transfer command/response */
-    ESP_AVRC_FEAT_ADV_CTRL = 0x0200,             /*!< remote control advanced control commmand/response */
+    ESP_AVRC_FEAT_ADV_CTRL = 0x0200,             /*!< remote control advanced control command/response */
 } esp_avrc_features_t;
 
 /// AVRC supported features flag retrieved in SDP record
@@ -111,7 +103,7 @@ typedef enum {
 
 /// AVRC passthrough command filter
 typedef enum {
-    ESP_AVRC_PSTH_FILTER_ALLOWED_CMD = 0,       /*!< all of the PASSTHROUGH commands that can possibly be used, immuateble */
+    ESP_AVRC_PSTH_FILTER_ALLOWED_CMD = 0,       /*!< all of the PASSTHROUGH commands that can possibly be used, immutable */
     ESP_AVRC_PSTH_FILTER_SUPPORTED_CMD = 1,     /*!< PASSTHROUGH commands selectively supported according to the current configuration */
     ESP_AVRC_PSTH_FILTER_SUPPORT_MAX,
 } esp_avrc_psth_filter_t;
@@ -152,7 +144,7 @@ typedef enum {
     ESP_AVRC_TG_PASSTHROUGH_CMD_EVT = 2,           /*!< passthrough command event */
     ESP_AVRC_TG_SET_ABSOLUTE_VOLUME_CMD_EVT = 3,   /*!< set absolute volume command from remote device */
     ESP_AVRC_TG_REGISTER_NOTIFICATION_EVT = 4,     /*!< register notification event */
-    ESP_AVRC_TG_SET_PLAYER_APP_VALUE_EVT = 5,      /*!< set applicaton attribute value, attribute refer to esp_avrc_ps_attr_ids_t */
+    ESP_AVRC_TG_SET_PLAYER_APP_VALUE_EVT = 5,      /*!< set application attribute value, attribute refer to esp_avrc_ps_attr_ids_t */
 } esp_avrc_tg_cb_event_t;
 
 /// AVRC metadata attribute mask
@@ -639,7 +631,7 @@ esp_err_t esp_avrc_tg_get_psth_cmd_filter(esp_avrc_psth_filter_t filter, esp_avr
  *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled
  *                  - ESP_ERR_INVALID_ARG: if filter type is invalid or cmd_set is NULL
  *                  - ESP_ERR_NOT_SUPPORTED:: if filter type is ESP_AVRC_PSTH_FILTER_ALLOWED_CMD, or cmd_set
- *                    includes unallowed commands
+ *                    includes commands that are not allowed
  *
  */
 esp_err_t esp_avrc_tg_set_psth_cmd_filter(esp_avrc_psth_filter_t filter, const esp_avrc_psth_bit_mask_t *cmd_set);

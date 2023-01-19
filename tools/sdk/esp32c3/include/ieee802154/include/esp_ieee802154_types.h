@@ -1,16 +1,8 @@
-// Copyright 2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
@@ -43,6 +35,7 @@ typedef enum {
     ESP_IEEE802154_TX_ERR_COEXIST,      /*!< Rejected by coexist system */
     ESP_IEEE802154_TX_ERR_COEXIST_REJ,  /*!< Rejected by coexist system before transmitting frame */
     ESP_IEEE802154_TX_ERR_COEXIST_ACK,  /*!< Rejected by coexist system when receiving ack */
+    ESP_IEEE802154_TX_ERR_SECURITY,     /*!< Invalid security configuration */
 } esp_ieee802154_tx_error_t;
 
 /**

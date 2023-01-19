@@ -21,12 +21,9 @@
  */
 #ifndef MBEDTLS_X509_H
 #define MBEDTLS_X509_H
+#include "mbedtls/private_access.h"
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/pk.h"
@@ -270,6 +267,25 @@ mbedtls_x509_time;
 int mbedtls_x509_dn_gets( char *buf, size_t size, const mbedtls_x509_name *dn );
 
 /**
+ * \brief          Return the next relative DN in an X509 name.
+ *
+ * \note           Intended use is to compare function result to dn->next
+ *                 in order to detect boundaries of multi-valued RDNs.
+ *
+ * \param dn       Current node in the X509 name
+ *
+ * \return         Pointer to the first attribute-value pair of the
+ *                 next RDN in sequence, or NULL if end is reached.
+ */
+static inline mbedtls_x509_name * mbedtls_x509_dn_get_next(
+    mbedtls_x509_name * dn )
+{
+    while( dn->MBEDTLS_PRIVATE(next_merged) && dn->next != NULL )
+        dn = dn->next;
+    return( dn->next );
+}
+
+/**
  * \brief          Store the certificate serial in printable form into buf;
  *                 no more than size characters will be written.
  *
@@ -312,17 +328,6 @@ int mbedtls_x509_time_is_future( const mbedtls_x509_time *from );
 
 /** \} addtogroup x509_module */
 
-#if defined(MBEDTLS_SELF_TEST)
-
-/**
- * \brief          Checkup routine
- *
- * \return         0 if successful, or 1 if the test failed
- */
-int mbedtls_x509_self_test( int verbose );
-
-#endif /* MBEDTLS_SELF_TEST */
-
 /*
  * Internal module functions. You probably do not want to use these unless you
  * know you do.
@@ -348,9 +353,11 @@ int mbedtls_x509_get_serial( unsigned char **p, const unsigned char *end,
                      mbedtls_x509_buf *serial );
 int mbedtls_x509_get_ext( unsigned char **p, const unsigned char *end,
                   mbedtls_x509_buf *ext, int tag );
+#if !defined(MBEDTLS_X509_REMOVE_INFO)
 int mbedtls_x509_sig_alg_gets( char *buf, size_t size, const mbedtls_x509_buf *sig_oid,
                        mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
                        const void *sig_opts );
+#endif
 int mbedtls_x509_key_size_helper( char *buf, size_t buf_size, const char *name );
 int mbedtls_x509_string_to_names( mbedtls_asn1_named_data **head, const char *name );
 int mbedtls_x509_set_extension( mbedtls_asn1_named_data **head, const char *oid, size_t oid_len,

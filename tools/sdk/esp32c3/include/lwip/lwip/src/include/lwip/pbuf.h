@@ -222,10 +222,6 @@ struct pbuf {
 
   /** In case the user needs to store data custom data on a pbuf */
   LWIP_PBUF_CUSTOM_DATA
-#if ESP_PBUF
-  struct netif *l2_owner;
-  void *l2_buf;
-#endif
 };
 
 

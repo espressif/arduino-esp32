@@ -29,10 +29,15 @@
 
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
+#include "common/tusb_private.h"
 
 #ifdef __cplusplus
  extern "C" {
 #endif
+
+enum {
+  USBH_EPSIZE_BULK_MAX = (TUH_OPT_HIGH_SPEED ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS)
+};
 
 //--------------------------------------------------------------------+
 // Class Driver API

@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <stddef.h> /* For NULL declaration */
 #include <stdint.h>
 #include <stdbool.h>
 #include "soc/soc_caps.h"
@@ -190,6 +191,8 @@ static inline uint32_t gdma_ll_rx_get_fifo_bytes(gdma_dev_t *dev, uint32_t chann
         return dev->channel[channel].in.infifo_status.infifo_cnt_l2;
     case 3:
         return dev->channel[channel].in.infifo_status.infifo_cnt_l3;
+    default:
+        return 0;
     }
 }
 
@@ -434,6 +437,8 @@ static inline uint32_t gdma_ll_tx_get_fifo_bytes(gdma_dev_t *dev, uint32_t chann
         return dev->channel[channel].out.outfifo_status.outfifo_cnt_l2;
     case 3:
         return dev->channel[channel].out.outfifo_status.outfifo_cnt_l3;
+    default:
+        return 0;
     }
 }
 

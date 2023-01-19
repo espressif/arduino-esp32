@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include "esp_err.h"
 #include "esp_partition.h"
-#include "esp_image_format.h"
+#include "esp_app_desc.h"
 #include "esp_flash_partitions.h"
 #include "soc/soc_caps.h"
 
@@ -44,20 +44,27 @@ typedef uint32_t esp_ota_handle_t;
 /**
  * @brief   Return esp_app_desc structure. This structure includes app version.
  *
+ * @note This API is present for backward compatibility reasons. Alternative function
+ * with the same functionality is `esp_app_get_description`
+ *
  * Return description for running app.
  * @return Pointer to esp_app_desc structure.
  */
-const esp_app_desc_t *esp_ota_get_app_description(void);
+const esp_app_desc_t *esp_ota_get_app_description(void) __attribute__((deprecated("Please use esp_app_get_description instead")));
 
 /**
  * @brief   Fill the provided buffer with SHA256 of the ELF file, formatted as hexadecimal, null-terminated.
  * If the buffer size is not sufficient to fit the entire SHA256 in hex plus a null terminator,
  * the largest possible number of bytes will be written followed by a null.
+ *
+* @note This API is present for backward compatibility reasons. Alternative function
+ * with the same functionality is `esp_app_get_elf_sha256`
+ *
  * @param dst   Destination buffer
  * @param size  Size of the buffer
  * @return      Number of bytes written to dst (including null terminator)
  */
-int esp_ota_get_app_elf_sha256(char* dst, size_t size);
+int esp_ota_get_app_elf_sha256(char* dst, size_t size) __attribute__((deprecated("Please use esp_app_get_elf_sha256 instead")));
 
 /**
  * @brief   Commence an OTA update writing to the specified partition.
@@ -112,17 +119,17 @@ esp_err_t esp_ota_begin(const esp_partition_t* partition, size_t image_size, esp
 esp_err_t esp_ota_write(esp_ota_handle_t handle, const void* data, size_t size);
 
 /**
- * @brief   Write OTA update data to partition
+ * @brief   Write OTA update data to partition at an offset
  *
- * This function can write data in non contiguous manner.
- * If flash encryption is enabled, data should be 16 byte aligned.
+ * This function can write data in non-contiguous manner.
+ * If flash encryption is enabled, data should be 16 bytes aligned.
  *
  * @param handle  Handle obtained from esp_ota_begin
  * @param data    Data buffer to write
  * @param size    Size of data buffer in bytes
  * @param offset  Offset in flash partition
  *
- * @note While performing OTA, if the packets arrive out of order, esp_ota_write_with_offset() can be used to write data in non contiguous manner.
+ * @note While performing OTA, if the packets arrive out of order, esp_ota_write_with_offset() can be used to write data in non-contiguous manner.
  *       Use of esp_ota_write_with_offset() in combination with esp_ota_write() is not recommended.
  *
  * @return
@@ -327,7 +334,7 @@ typedef enum {
 /**
  * @brief Revokes the old signature digest. To be called in the application after the rollback logic.
  *
- * Relevant for Secure boot v2 on ESP32-S2, ESP32-S3, ESP32-C3 where upto 3 key digests can be stored (Key \#N-1, Key \#N, Key \#N+1).
+ * Relevant for Secure boot v2 on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-H4 where upto 3 key digests can be stored (Key \#N-1, Key \#N, Key \#N+1).
  * When key \#N-1 used to sign an app is invalidated, an OTA update is to be sent with an app signed with key \#N-1 & Key \#N.
  * After successfully booting the OTA app should call this function to revoke Key \#N-1.
  *

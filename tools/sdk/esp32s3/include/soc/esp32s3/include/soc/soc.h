@@ -1,24 +1,18 @@
-// Copyright 2010-2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
 #ifndef __ASSEMBLER__
 #include <stdint.h>
 #include "esp_assert.h"
-#include "esp_bit_defs.h"
 #endif
+
+#include "esp_bit_defs.h"
+#include "reg_base.h"
 
 #define PRO_CPU_NUM (0)
 #define APP_CPU_NUM (1)
@@ -26,90 +20,11 @@
 #define PRO_CPUID   (0xcdcd)
 #define APP_CPUID   (0xabab)
 
-#define DR_REG_UART_BASE                        0x60000000
-#define DR_REG_SPI1_BASE                        0x60002000
-#define DR_REG_SPI0_BASE                        0x60003000
-#define DR_REG_GPIO_BASE                        0x60004000
-#define DR_REG_GPIO_SD_BASE                     0x60004f00
-
-#define DR_REG_FE2_BASE                         0x60005000
-#define DR_REG_FE_BASE                          0x60006000
-
-#define DR_REG_EFUSE_BASE                       0x60007000
-#define DR_REG_RTCCNTL_BASE                     0x60008000
-#define DR_REG_RTCIO_BASE                       0x60008400
-#define DR_REG_SENS_BASE                        0x60008800
-#define DR_REG_RTC_I2C_BASE                     0x60008C00
-#define DR_REG_IO_MUX_BASE                      0x60009000
-
-#define DR_REG_HINF_BASE                        0x6000B000
-#define DR_REG_UHCI1_BASE                       0x6000C000
-
-#define DR_REG_I2S_BASE                         0x6000F000
-#define DR_REG_UART1_BASE                       0x60010000
-
-#define DR_REG_BT_BASE                          0x60011000
-
-#define DR_REG_I2C_EXT_BASE                     0x60013000
-#define DR_REG_UHCI0_BASE                       0x60014000
-
-#define DR_REG_SLCHOST_BASE                     0x60015000
-
-#define DR_REG_RMT_BASE                         0x60016000
-#define DR_REG_PCNT_BASE                        0x60017000
-
-#define DR_REG_SLC_BASE                         0x60018000
-
-#define DR_REG_LEDC_BASE                        0x60019000
-
-#define DR_REG_NRX_BASE                         0x6001CC00
-#define DR_REG_BB_BASE                          0x6001D000
-
-#define DR_REG_PWM0_BASE                        0x6001E000
-#define DR_REG_TIMERGROUP0_BASE                 0x6001F000
-#define DR_REG_TIMERGROUP1_BASE                 0x60020000
-#define DR_REG_RTC_SLOWMEM_BASE                 0x60021000
-#define DR_REG_SYSTIMER_BASE                    0x60023000
-#define DR_REG_SPI2_BASE                        0x60024000
-#define DR_REG_SPI3_BASE                        0x60025000
-#define DR_REG_SYSCON_BASE                      0x60026000
-#define DR_REG_APB_CTRL_BASE                    0x60026000 /* Old name for SYSCON, to be removed */
-#define DR_REG_I2C1_EXT_BASE                    0x60027000
-#define DR_REG_SDMMC_BASE                       0x60028000
-
-#define DR_REG_PERI_BACKUP_BASE                 0x6002A000
-
-#define DR_REG_TWAI_BASE                        0x6002B000
-#define DR_REG_PWM1_BASE                        0x6002C000
-#define DR_REG_I2S1_BASE                        0x6002D000
-#define DR_REG_UART2_BASE                       0x6002E000
-
-#define DR_REG_USB_DEVICE_BASE                  0x60038000
-#define DR_REG_USB_WRAP_BASE                    0x60039000
-#define DR_REG_AES_BASE                         0x6003A000
-#define DR_REG_SHA_BASE                         0x6003B000
-#define DR_REG_RSA_BASE                         0x6003C000
-#define DR_REG_HMAC_BASE                        0x6003E000
-#define DR_REG_DIGITAL_SIGNATURE_BASE           0x6003D000
-#define DR_REG_GDMA_BASE                        0x6003F000
-#define DR_REG_APB_SARADC_BASE                  0x60040000
-#define DR_REG_LCD_CAM_BASE                     0x60041000
-
-#define DR_REG_SYSTEM_BASE                      0x600C0000
-#define DR_REG_SENSITIVE_BASE                   0x600C1000
-#define DR_REG_INTERRUPT_BASE                   0x600C2000
-
 /* Cache configuration */
-#define DR_REG_EXTMEM_BASE                      0x600C4000
 #define DR_REG_MMU_TABLE                        0x600C5000
 #define DR_REG_ITAG_TABLE                       0x600C6000
 #define DR_REG_DTAG_TABLE                       0x600C8000
-
 #define DR_REG_EXT_MEM_ENC                      0x600CC000
-
-#define DR_REG_ASSIST_DEBUG_BASE                0x600CE000
-#define DR_REG_WORLD_CNTL_BASE                  0x600D0000
-#define DR_REG_DPORT_END                        0x600D3FFC
 
 
 #define REG_UHCI_BASE(i)         (DR_REG_UHCI0_BASE - (i) * 0x8000)
@@ -132,9 +47,9 @@
 #ifndef __ASSEMBLER__
 
 //write value to register
-#define REG_WRITE(_r, _v) ({                                                                                           \
+#define REG_WRITE(_r, _v)  do {                                                                                        \
             (*(volatile uint32_t *)(_r)) = (_v);                                                                       \
-        })
+        } while(0)
 
 //read value from register
 #define REG_READ(_r) ({                                                                                                \
@@ -147,19 +62,19 @@
         })
 
 //set bit or set bits to register
-#define REG_SET_BIT(_r, _b)  ({                                                                                        \
-            (*(volatile uint32_t*)(_r) |= (_b));                                                                       \
-        })
+#define REG_SET_BIT(_r, _b)  do {                                                                                      \
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r)) | (_b);                                            \
+        } while(0)
 
 //clear bit or clear bits of register
-#define REG_CLR_BIT(_r, _b)  ({                                                                                        \
-            (*(volatile uint32_t*)(_r) &= ~(_b));                                                                      \
-        })
+#define REG_CLR_BIT(_r, _b)  do {                                                                                      \
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r)) & (~(_b));                                         \
+        } while(0)
 
 //set bits of register controlled by mask
-#define REG_SET_BITS(_r, _b, _m) ({                                                                                    \
-            (*(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r) & ~(_m)) | ((_b) & (_m)));                         \
-        })
+#define REG_SET_BITS(_r, _b, _m) do {                                                                                  \
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r) & ~(_m)) | ((_b) & (_m));                           \
+        } while(0)
 
 //get field from register, uses field _S & _V to determine mask
 #define REG_GET_FIELD(_r, _f) ({                                                                                       \
@@ -167,9 +82,9 @@
         })
 
 //set field of a register from variable, uses field _S & _V to determine mask
-#define REG_SET_FIELD(_r, _f, _v) ({                                                                                   \
-            (REG_WRITE((_r),((REG_READ(_r) & ~((_f##_V) << (_f##_S)))|(((_v) & (_f##_V))<<(_f##_S)))));                \
-        })
+#define REG_SET_FIELD(_r, _f, _v) do {                                                                                 \
+            REG_WRITE((_r),((REG_READ(_r) & ~((_f##_V) << (_f##_S)))|(((_v) & (_f##_V))<<(_f##_S))));                  \
+        } while(0)
 
 //get field value from a variable, used when _f is not left shifted by _f##_S
 #define VALUE_GET_FIELD(_r, _f) (((_r) >> (_f##_S)) & (_f))
@@ -195,19 +110,19 @@
         })
 
 //write value to register
-#define WRITE_PERI_REG(addr, val) ({                                                                                   \
+#define WRITE_PERI_REG(addr, val) do {                                                                                 \
             (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr))) = (uint32_t)(val);                                       \
-        })
+        } while(0)
 
 //clear bits of register controlled by mask
-#define CLEAR_PERI_REG_MASK(reg, mask) ({                                                                              \
+#define CLEAR_PERI_REG_MASK(reg, mask)  do {                                                                           \
             WRITE_PERI_REG((reg), (READ_PERI_REG(reg)&(~(mask))));                                                     \
-        })
+        } while(0)
 
 //set bits of register controlled by mask
-#define SET_PERI_REG_MASK(reg, mask) ({                                                                                \
+#define SET_PERI_REG_MASK(reg, mask) do {                                                                              \
             WRITE_PERI_REG((reg), (READ_PERI_REG(reg)|(mask)));                                                        \
-        })
+        } while(0)
 
 //get bits of register controlled by mask
 #define GET_PERI_REG_MASK(reg, mask) ({                                                                                \
@@ -220,9 +135,9 @@
         })
 
 //set bits of register controlled by mask and shift
-#define SET_PERI_REG_BITS(reg,bit_map,value,shift) ({                                                                  \
-            (WRITE_PERI_REG((reg),(READ_PERI_REG(reg)&(~((bit_map)<<(shift))))|(((value) & bit_map)<<(shift)) ));      \
-        })
+#define SET_PERI_REG_BITS(reg,bit_map,value,shift) do {                                                                \
+            WRITE_PERI_REG((reg),(READ_PERI_REG(reg)&(~((bit_map)<<(shift))))|(((value) & (bit_map))<<(shift)) );      \
+        } while(0)
 
 //get field of register
 #define GET_PERI_REG_BITS2(reg, mask,shift) ({                                                                         \
@@ -236,7 +151,6 @@
 //Periheral Clock {{
 #define  APB_CLK_FREQ_ROM                            (40*1000000)
 #define  CPU_CLK_FREQ_ROM                            APB_CLK_FREQ_ROM
-#define  UART_CLK_FREQ_ROM                           (40*1000000)
 #define  EFUSE_CLK_FREQ_ROM                          (20*1000000)
 #define  CPU_CLK_FREQ                                APB_CLK_FREQ
 #define  APB_CLK_FREQ                                (80*1000000)
@@ -269,7 +183,7 @@
 #define SOC_RTC_DATA_LOW  0x50000000
 #define SOC_RTC_DATA_HIGH 0x50002000
 
-#define SOC_EXTRAM_DATA_LOW 0x3D000000
+#define SOC_EXTRAM_DATA_LOW 0x3C000000
 #define SOC_EXTRAM_DATA_HIGH 0x3E000000
 #define SOC_IROM_MASK_LOW  0x40000000
 #define SOC_IROM_MASK_HIGH 0x4001A100
@@ -355,7 +269,8 @@
 #define ETS_TG0_T1_INUM                         10 /**< use edge interrupt*/
 #define ETS_FRC1_INUM                           22
 #define ETS_T1_WDT_INUM                         24
-#define ETS_CACHEERR_INUM                       25
+#define ETS_MEMACCESS_ERR_INUM                  25
+#define ETS_CACHEERR_INUM                       ETS_MEMACCESS_ERR_INUM
 #define ETS_IPC_ISR_INUM                        28
 
 //CPU0 Interrupt number used in ROM, should be cancelled in SDK
@@ -371,3 +286,6 @@
 
 //Invalid interrupt for number interrupt matrix
 #define ETS_INVALID_INUM                        6
+
+// Interrupt number for the Interrupt watchdog
+#define ETS_INT_WDT_INUM                         (ETS_T1_WDT_INUM)

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -35,6 +35,7 @@ uint32_t esp_efuse_rtc_calib_get_init_code(int version, uint32_t adc_unit, int a
  * @brief Get the calibration digits stored in the efuse, and the corresponding voltage.
  *
  * @param version Version of the stored efuse
+ * @param adc_unit      ADC unit (not used on ESP32C3, for compatibility)
  * @param atten         Attenuation to use
  * @param out_digi      Output buffer of the digits
  * @param out_vol_mv    Output of the voltage, in mV
@@ -42,16 +43,17 @@ uint32_t esp_efuse_rtc_calib_get_init_code(int version, uint32_t adc_unit, int a
  *      - ESP_ERR_INVALID_ARG: If efuse version or attenuation is invalid
  *      - ESP_OK: if success
  */
-esp_err_t esp_efuse_rtc_calib_get_cal_voltage(int version, int atten, uint32_t* out_digi, uint32_t* out_vol_mv);
+esp_err_t esp_efuse_rtc_calib_get_cal_voltage(int version, uint32_t adc_unit, int atten, uint32_t* out_digi, uint32_t* out_vol_mv);
 
 /**
  * @brief Get the temperature sensor calibration number delta_T stored in the efuse.
  *
- * @param version Version of the stored efuse
+ * @param tsens_cal Pointer of the specification of temperature sensor calibration number in efuse.
  *
- * @return The specification of temperature sensor calibration number in efuse.
+ * @return ESP_OK if get the calibration value successfully.
+ *         ESP_ERR_INVALID_ARG if can't get the calibration value.
  */
-float esp_efuse_rtc_calib_get_cal_temp(int version);
+esp_err_t esp_efuse_rtc_calib_get_tsens_val(float* tsens_cal);
 
 #ifdef __cplusplus
 }

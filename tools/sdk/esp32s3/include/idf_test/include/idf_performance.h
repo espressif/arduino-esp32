@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sdkconfig.h"
+
 /* put target-specific macros into include/target/idf_performance_target.h */
 #include "idf_performance_target.h"
 
@@ -8,7 +10,7 @@
  */
 
 #ifndef IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP
-#define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP                     250
+#define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP                     215
 #endif
 #ifndef IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP_PSRAM
 #define IDF_PERFORMANCE_MAX_FREERTOS_SPINLOCK_CYCLES_PER_OP_PSRAM               300
@@ -20,20 +22,22 @@
 #define IDF_PERFORMANCE_MAX_ESP_TIMER_GET_TIME_PER_CALL                         1000
 #endif
 
-#ifndef IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING
-#define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING                               15
-#endif
-#ifndef IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING_NO_DMA
-#define IDF_PERFORMANCE_MAX_SPI_PER_TRANS_POLLING_NO_DMA                        15
-#endif
-
 /* Due to code size & linker layout differences interacting with cache, VFS
    microbenchmark currently runs slower with PSRAM enabled. */
+#if !CONFIG_FREERTOS_SMP // IDF-5224
 #ifndef IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME
 #define IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME                           20000
 #endif
 #ifndef IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME_PSRAM
 #define IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME_PSRAM                     25000
+#endif
+#else
+#ifndef IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME
+#define IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME                           62000
+#endif
+#ifndef IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME_PSRAM
+#define IDF_PERFORMANCE_MAX_VFS_OPEN_WRITE_CLOSE_TIME_PSRAM                     66000
+#endif
 #endif
 
 // throughput performance by iperf
@@ -65,11 +69,20 @@
 #endif
 
 // events dispatched per second by event loop library
+#if !CONFIG_FREERTOS_SMP // IDF-5112
 #ifndef IDF_PERFORMANCE_MIN_EVENT_DISPATCH
 #define IDF_PERFORMANCE_MIN_EVENT_DISPATCH                                      25000
 #endif
 #ifndef IDF_PERFORMANCE_MIN_EVENT_DISPATCH_PSRAM
 #define IDF_PERFORMANCE_MIN_EVENT_DISPATCH_PSRAM                                21000
+#endif
+#else
+#ifndef IDF_PERFORMANCE_MIN_EVENT_DISPATCH
+#define IDF_PERFORMANCE_MIN_EVENT_DISPATCH                                      18000
+#endif
+#ifndef IDF_PERFORMANCE_MIN_EVENT_DISPATCH_PSRAM
+#define IDF_PERFORMANCE_MIN_EVENT_DISPATCH_PSRAM                                14000
+#endif
 #endif
 
 #ifndef IDF_PERFORMANCE_MAX_SPILL_REG_CYCLES
@@ -85,9 +98,17 @@
 #ifndef IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_TOHOST_4BIT
 #define IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_TOHOST_4BIT                   12200
 #endif
+
+#if !CONFIG_FREERTOS_SMP // IDF-5224
+#ifndef IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_FRHOST_4BIT
+#define IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_FRHOST_4BIT                   11000   // TODO: IDF-5490
+#endif
+#else
 #ifndef IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_FRHOST_4BIT
 #define IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_FRHOST_4BIT                   12200
 #endif
+#endif
+
 #ifndef IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_TOHOST_1BIT
 #define IDF_PERFORMANCE_MIN_SDIO_THROUGHPUT_KBSEC_TOHOST_1BIT                   4000
 #endif

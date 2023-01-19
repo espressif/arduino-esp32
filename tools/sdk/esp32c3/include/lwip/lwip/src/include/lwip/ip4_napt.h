@@ -79,7 +79,6 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
  *
  * @param p the packet to forward (p->payload points to IP header)
  * @param iphdr the IP header of the input packet
- * @param inp the netif on which this packet was received
  */
 void
 ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr);

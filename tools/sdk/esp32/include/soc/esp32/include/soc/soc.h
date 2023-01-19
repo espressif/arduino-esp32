@@ -1,87 +1,25 @@
-// Copyright 2010-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #pragma once
 
 #ifndef __ASSEMBLER__
 #include <stdint.h>
 #include "esp_assert.h"
+#include "soc/soc_caps.h"
 #endif
 
-#include <esp_bit_defs.h>
+#include "esp_bit_defs.h"
+#include "reg_base.h"
 
 #define PRO_CPU_NUM (0)
 #define APP_CPU_NUM (1)
 
 
 #define SOC_MAX_CONTIGUOUS_RAM_SIZE 0x400000 ///< Largest span of contiguous memory (DRAM or IRAM) in the address space
-
-
-#define DR_REG_DPORT_BASE                       0x3ff00000
-#define DR_REG_AES_BASE                         0x3ff01000
-#define DR_REG_RSA_BASE                         0x3ff02000
-#define DR_REG_SHA_BASE                         0x3ff03000
-#define DR_REG_FLASH_MMU_TABLE_PRO              0x3ff10000
-#define DR_REG_FLASH_MMU_TABLE_APP              0x3ff12000
-#define DR_REG_DPORT_END                        0x3ff13FFC
-#define DR_REG_UART_BASE                        0x3ff40000
-#define DR_REG_SPI1_BASE                        0x3ff42000
-#define DR_REG_SPI0_BASE                        0x3ff43000
-#define DR_REG_GPIO_BASE                        0x3ff44000
-#define DR_REG_GPIO_SD_BASE                     0x3ff44f00
-#define DR_REG_FE2_BASE                         0x3ff45000
-#define DR_REG_FE_BASE                          0x3ff46000
-#define DR_REG_FRC_TIMER_BASE                   0x3ff47000
-#define DR_REG_RTCCNTL_BASE                     0x3ff48000
-#define DR_REG_RTCIO_BASE                       0x3ff48400
-#define DR_REG_SENS_BASE                        0x3ff48800
-#define DR_REG_RTC_I2C_BASE                     0x3ff48C00
-#define DR_REG_IO_MUX_BASE                      0x3ff49000
-#define DR_REG_HINF_BASE                        0x3ff4B000
-#define DR_REG_UHCI1_BASE                       0x3ff4C000
-#define DR_REG_I2S_BASE                         0x3ff4F000
-#define DR_REG_UART1_BASE                       0x3ff50000
-#define DR_REG_BT_BASE                          0x3ff51000
-#define DR_REG_I2C_EXT_BASE                     0x3ff53000
-#define DR_REG_UHCI0_BASE                       0x3ff54000
-#define DR_REG_SLCHOST_BASE                     0x3ff55000
-#define DR_REG_RMT_BASE                         0x3ff56000
-#define DR_REG_PCNT_BASE                        0x3ff57000
-#define DR_REG_SLC_BASE                         0x3ff58000
-#define DR_REG_LEDC_BASE                        0x3ff59000
-#define DR_REG_EFUSE_BASE                       0x3ff5A000
-#define DR_REG_SPI_ENCRYPT_BASE                 0x3ff5B000
-#define DR_REG_NRX_BASE                         0x3ff5CC00
-#define DR_REG_BB_BASE                          0x3ff5D000
-#define DR_REG_PWM0_BASE                        0x3ff5E000
-#define DR_REG_TIMERGROUP0_BASE                 0x3ff5F000
-#define DR_REG_TIMERGROUP1_BASE                 0x3ff60000
-#define DR_REG_RTCMEM0_BASE                     0x3ff61000
-#define DR_REG_RTCMEM1_BASE                     0x3ff62000
-#define DR_REG_RTCMEM2_BASE                     0x3ff63000
-#define DR_REG_SPI2_BASE                        0x3ff64000
-#define DR_REG_SPI3_BASE                        0x3ff65000
-#define DR_REG_SYSCON_BASE                      0x3ff66000
-#define DR_REG_APB_CTRL_BASE                    0x3ff66000    /* Old name for SYSCON, to be removed */
-#define DR_REG_I2C1_EXT_BASE                    0x3ff67000
-#define DR_REG_SDMMC_BASE                       0x3ff68000
-#define DR_REG_EMAC_BASE                        0x3ff69000
-#define DR_REG_CAN_BASE                         0x3ff6B000
-#define DR_REG_PWM1_BASE                        0x3ff6C000
-#define DR_REG_I2S1_BASE                        0x3ff6D000
-#define DR_REG_UART2_BASE                       0x3ff6E000
-#define PERIPHS_SPI_ENCRYPT_BASEADDR            DR_REG_SPI_ENCRYPT_BASE
 
 //Registers Operation {{
 #define ETS_UNCACHED_ADDR(addr) (addr)
@@ -92,17 +30,17 @@
 
 #define IS_DPORT_REG(_r) (((_r) >= DR_REG_DPORT_BASE) && (_r) <= DR_REG_DPORT_END)
 
-#if !defined( BOOTLOADER_BUILD ) && defined( CONFIG_ESP32_DPORT_WORKAROUND ) && defined( ESP_PLATFORM )
+#if !defined( BOOTLOADER_BUILD ) && !defined( CONFIG_FREERTOS_UNICORE ) && SOC_DPORT_WORKAROUND
 #define ASSERT_IF_DPORT_REG(_r, OP)  TRY_STATIC_ASSERT(!IS_DPORT_REG(_r), (Cannot use OP for DPORT registers use DPORT_##OP));
 #else
 #define ASSERT_IF_DPORT_REG(_r, OP)
 #endif
 
 //write value to register
-#define REG_WRITE(_r, _v) ({                                                                                           \
+#define REG_WRITE(_r, _v)  do {                                                                                        \
             ASSERT_IF_DPORT_REG((_r), REG_WRITE);                                                                      \
             (*(volatile uint32_t *)(_r)) = (_v);                                                                       \
-        })
+        } while(0)
 
 //read value from register
 #define REG_READ(_r) ({                                                                                                \
@@ -117,22 +55,22 @@
         })
 
 //set bit or set bits to register
-#define REG_SET_BIT(_r, _b)  ({                                                                                        \
+#define REG_SET_BIT(_r, _b)  do {                                                                                      \
             ASSERT_IF_DPORT_REG((_r), REG_SET_BIT);                                                                    \
-            (*(volatile uint32_t*)(_r) |= (_b));                                                                       \
-        })
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r)) | (_b);                                            \
+        } while(0)
 
 //clear bit or clear bits of register
-#define REG_CLR_BIT(_r, _b)  ({                                                                                        \
+#define REG_CLR_BIT(_r, _b)  do {                                                                                      \
             ASSERT_IF_DPORT_REG((_r), REG_CLR_BIT);                                                                    \
-            (*(volatile uint32_t*)(_r) &= ~(_b));                                                                      \
-        })
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r)) & (~(_b));                                         \
+        } while(0)
 
 //set bits of register controlled by mask
-#define REG_SET_BITS(_r, _b, _m) ({                                                                                    \
+#define REG_SET_BITS(_r, _b, _m) do {                                                                                  \
             ASSERT_IF_DPORT_REG((_r), REG_SET_BITS);                                                                   \
-            (*(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r) & ~(_m)) | ((_b) & (_m)));                         \
-        })
+            *(volatile uint32_t*)(_r) = (*(volatile uint32_t*)(_r) & ~(_m)) | ((_b) & (_m));                           \
+        } while(0)
 
 //get field from register, uses field _S & _V to determine mask
 #define REG_GET_FIELD(_r, _f) ({                                                                                       \
@@ -141,10 +79,10 @@
         })
 
 //set field of a register from variable, uses field _S & _V to determine mask
-#define REG_SET_FIELD(_r, _f, _v) ({                                                                                   \
+#define REG_SET_FIELD(_r, _f, _v) do {                                                                                 \
             ASSERT_IF_DPORT_REG((_r), REG_SET_FIELD);                                                                  \
-            (REG_WRITE((_r),((REG_READ(_r) & ~((_f##_V) << (_f##_S)))|(((_v) & (_f##_V))<<(_f##_S)))));                \
-        })
+            REG_WRITE((_r),((REG_READ(_r) & ~((_f##_V) << (_f##_S)))|(((_v) & (_f##_V))<<(_f##_S))));                  \
+        } while(0)
 
 //get field value from a variable, used when _f is not left shifted by _f##_S
 #define VALUE_GET_FIELD(_r, _f) (((_r) >> (_f##_S)) & (_f))
@@ -171,22 +109,22 @@
         })
 
 //write value to register
-#define WRITE_PERI_REG(addr, val) ({                                                                                   \
+#define WRITE_PERI_REG(addr, val) do {                                                                                 \
             ASSERT_IF_DPORT_REG((addr), WRITE_PERI_REG);                                                               \
             (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr))) = (uint32_t)(val);                                       \
-        })
+        } while(0)
 
 //clear bits of register controlled by mask
-#define CLEAR_PERI_REG_MASK(reg, mask) ({                                                                              \
+#define CLEAR_PERI_REG_MASK(reg, mask)  do {                                                                           \
             ASSERT_IF_DPORT_REG((reg), CLEAR_PERI_REG_MASK);                                                           \
             WRITE_PERI_REG((reg), (READ_PERI_REG(reg)&(~(mask))));                                                     \
-        })
+        } while(0)
 
 //set bits of register controlled by mask
-#define SET_PERI_REG_MASK(reg, mask) ({                                                                                \
+#define SET_PERI_REG_MASK(reg, mask) do {                                                                              \
             ASSERT_IF_DPORT_REG((reg), SET_PERI_REG_MASK);                                                             \
             WRITE_PERI_REG((reg), (READ_PERI_REG(reg)|(mask)));                                                        \
-        })
+        } while(0)
 
 //get bits of register controlled by mask
 #define GET_PERI_REG_MASK(reg, mask) ({                                                                                \
@@ -201,10 +139,10 @@
         })
 
 //set bits of register controlled by mask and shift
-#define SET_PERI_REG_BITS(reg,bit_map,value,shift) ({                                                                  \
+#define SET_PERI_REG_BITS(reg,bit_map,value,shift) do {                                                                \
             ASSERT_IF_DPORT_REG((reg), SET_PERI_REG_BITS);                                                             \
-            (WRITE_PERI_REG((reg),(READ_PERI_REG(reg)&(~((bit_map)<<(shift))))|(((value) & bit_map)<<(shift)) ));      \
-        })
+            WRITE_PERI_REG((reg),(READ_PERI_REG(reg)&(~((bit_map)<<(shift))))|(((value) & (bit_map))<<(shift)) );      \
+        } while(0)
 
 //get field of register
 #define GET_PERI_REG_BITS2(reg, mask,shift) ({                                                                         \
@@ -218,7 +156,7 @@
 //Periheral Clock {{
 #define  APB_CLK_FREQ_ROM                            ( 26*1000000 )
 #define  CPU_CLK_FREQ_ROM                            APB_CLK_FREQ_ROM
-#define  CPU_CLK_FREQ                                APB_CLK_FREQ       //this may be incorrect, please refer to ESP32_DEFAULT_CPU_FREQ_MHZ
+#define  CPU_CLK_FREQ                                APB_CLK_FREQ       //this may be incorrect, please refer to ESP_DEFAULT_CPU_FREQ_MHZ
 #define  APB_CLK_FREQ                                ( 80*1000000 )       //unit: Hz
 #define  REF_CLK_FREQ                                ( 1000000 )
 #define  UART_CLK_FREQ                               APB_CLK_FREQ
@@ -465,3 +403,6 @@
 
 //Invalid interrupt for number interrupt matrix
 #define ETS_INVALID_INUM                        6
+
+// Interrupt number for the Interrupt watchdog
+#define ETS_INT_WDT_INUM                         (ETS_T1_WDT_INUM)

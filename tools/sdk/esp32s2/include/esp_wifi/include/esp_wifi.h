@@ -34,7 +34,7 @@
  *
  * The event task is a daemon task, which receives events from WiFi driver or from other subsystem, such
  * as TCPIP stack, event task will call the default callback function on receiving the event. For example,
- * on receiving event SYSTEM_EVENT_STA_CONNECTED, it will call tcpip_adapter_start() to start the DHCP
+ * on receiving event WIFI_EVENT_STA_CONNECTED, it will call esp_netif API to start the DHCP
  * client in it's default handler.
  *
  * Application can register it's own event callback function by API esp_event_init, then the application callback
@@ -83,11 +83,12 @@ extern "C" {
 #define ESP_ERR_WIFI_NOT_ASSOC   (ESP_ERR_WIFI_BASE + 21)  /*!< The WiFi connection is not associated */
 #define ESP_ERR_WIFI_TX_DISALLOW (ESP_ERR_WIFI_BASE + 22)  /*!< The WiFi TX is disallowed */
 
+#define ESP_ERR_WIFI_TWT_FULL    (ESP_ERR_WIFI_BASE + 23)  /*!< no available flow id */
+
 /**
  * @brief WiFi stack configuration parameters passed to esp_wifi_init call.
  */
 typedef struct {
-    system_event_handler_t event_handler;          /**< WiFi event handler */
     wifi_osi_funcs_t*      osi_funcs;              /**< WiFi OS functions */
     wpa_crypto_funcs_t     wpa_crypto_funcs;       /**< WiFi station crypto functions when connect */
     int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
@@ -108,6 +109,7 @@ typedef struct {
     int                    mgmt_sbuf_num;          /**< WiFi management short buffer number, the minimum value is 6, the maximum value is 32 */
     uint64_t               feature_caps;           /**< Enables additional WiFi features and capabilities */
     bool                   sta_disconnected_pm;    /**< WiFi Power Management for station at disconnected status */
+    int                    espnow_max_encrypt_num; /**< Maximum encrypt number of peers supported by espnow */
     int                    magic;                  /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
 
@@ -117,7 +119,7 @@ typedef struct {
 #define WIFI_STATIC_TX_BUFFER_NUM 0
 #endif
 
-#if (CONFIG_ESP32_SPIRAM_SUPPORT || CONFIG_ESP32S2_SPIRAM_SUPPORT || CONFIG_ESP32S3_SPIRAM_SUPPORT)
+#if CONFIG_SPIRAM
 #define WIFI_CACHE_TX_BUFFER_NUM  CONFIG_ESP32_WIFI_CACHE_TX_BUFFER_NUM
 #else
 #define WIFI_CACHE_TX_BUFFER_NUM  0
@@ -206,7 +208,6 @@ extern uint64_t g_wifi_feature_caps;
 #define CONFIG_FEATURE_FTM_RESPONDER_BIT (1<<3)
 
 #define WIFI_INIT_CONFIG_DEFAULT() { \
-    .event_handler = &esp_event_send_internal, \
     .osi_funcs = &g_wifi_osi_funcs, \
     .wpa_crypto_funcs = g_wifi_default_wpa_crypto_funcs, \
     .static_rx_buf_num = CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM,\
@@ -227,6 +228,7 @@ extern uint64_t g_wifi_feature_caps;
     .mgmt_sbuf_num = WIFI_MGMT_SBUF_NUM, \
     .feature_caps = g_wifi_feature_caps, \
     .sta_disconnected_pm = WIFI_STA_DISCONNECTED_PM_ENABLED,  \
+    .espnow_max_encrypt_num = CONFIG_ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM, \
     .magic = WIFI_INIT_CONFIG_MAGIC\
 }
 
@@ -456,6 +458,21 @@ esp_err_t esp_wifi_scan_get_ap_records(uint16_t *number, wifi_ap_record_t *ap_re
 
 
 /**
+  * @brief     Clear AP list found in last scan
+  *
+  * @attention When the obtained ap list fails,bss info must be cleared,otherwise it may cause memory leakage.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_clear_ap_list(void);
+
+
+/**
   * @brief     Get information of AP which the ESP32 station is associated with
   *
   * @attention When the obtained country information is empty, it means that the AP does not carry country information
@@ -496,9 +513,10 @@ esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
 
 /**
   * @brief     Set protocol type of specified interface
-  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N).
+  *            if CONFIG_SOC_WIFI_HE_SUPPORT, the default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_11AX).
   *
-  * @attention Support 802.11b or 802.11bg or 802.11bgn or LR mode
+  * @attention Support 802.11b or 802.11bg or 802.11bgn or 802.11bgnax or LR mode
   *
   * @param     ifx  interfaces
   * @param     protocol_bitmap  WiFi protocol bitmap
@@ -567,6 +585,8 @@ esp_err_t esp_wifi_get_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t *bw);
   * @attention 2. When ESP32 is in STA mode, this API should not be called when STA is scanning or connecting to an external AP
   * @attention 3. When ESP32 is in softAP mode, this API should not be called when softAP has connected to external STAs
   * @attention 4. When ESP32 is in STA+softAP mode, this API should not be called when in the scenarios described above
+  * @attention 5. The channel info set by this API will not be stored in NVS. So If you want to remeber the channel used before wifi stop,
+  *               you need to call this API again after wifi start, or you can call `esp_wifi_set_config()` to store the channel info in NVS.
   *
   * @param     primary  for HT20, primary is the channel number, for HT40, primary is the primary channel
   * @param     second   for HT20, second is ignored, for HT40, second is the second channel
@@ -600,7 +620,7 @@ esp_err_t esp_wifi_get_channel(uint8_t *primary, wifi_second_chan_t *second);
   * @attention 1. It is discouraged to call this API since this doesn't validate the per-country rules,
   *               it's up to the user to fill in all fields according to local regulations.
   *               Please use esp_wifi_set_country_code instead.
-  * @attention 2. The default country is CHINA {.cc="CN", .schan=1, .nchan=13, .policy=WIFI_COUNTRY_POLICY_AUTO}.
+  * @attention 2. The default country is "01" (world safe mode) {.cc="01", .schan=1, .nchan=11, .policy=WIFI_COUNTRY_POLICY_AUTO}.
   * @attention 3. The third octect of country code string is one of the following: ' ', 'O', 'I', 'X', otherwise it is considered as ' '.
   * @attention 4. When the country policy is WIFI_COUNTRY_POLICY_AUTO, the country info of the AP to which
   *               the station is connected is used. E.g. if the configured country info is {.cc="US", .schan=1, .nchan=11}
@@ -776,6 +796,7 @@ esp_err_t esp_wifi_get_promiscuous_ctrl_filter(wifi_promiscuous_filter_t *filter
   * @attention 2. For station configuration, bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.
   * @attention 3. ESP32 is limited to only one channel, so when in the soft-AP+station mode, the soft-AP will adjust its channel automatically to be the same as
   *               the channel of the ESP32 station.
+  * @attention 4. The configuration will be stored in NVS
   *
   * @param     interface  interface
   * @param     conf  station or soft-AP configuration
@@ -1161,7 +1182,9 @@ esp_err_t esp_wifi_set_rssi_threshold(int32_t rssi);
   * @brief      Start an FTM Initiator session by sending FTM request
   *             If successful, event WIFI_EVENT_FTM_REPORT is generated with the result of the FTM procedure
   *
-  * @attention  Use this API only in Station mode
+  * @attention  1. Use this API only in Station mode.
+  * @attention  2. If FTM is initiated on a different channel than Station is connected in or internal SoftAP is started in,
+  *                FTM defaults to a single burst in ASAP mode.
   *
   * @param      cfg  FTM Initiator session configuration
   *
@@ -1211,17 +1234,20 @@ esp_err_t esp_wifi_ftm_resp_set_offset(int16_t offset_cm);
   */
 esp_err_t esp_wifi_config_11b_rate(wifi_interface_t ifx, bool disable);
 
+#define ESP_WIFI_CONNECTIONLESS_INTERVAL_DEFAULT_MODE 0
 /**
-  * @brief      Set interval for station to wake up periodically at disconnected.
+  * @brief      Set wake interval for connectionless modules to wake up periodically.
   *
-  * @attention 1. Only when ESP_WIFI_STA_DISCONNECTED_PM_ENABLE is enabled, this configuration could work
-  * @attention 2. This configuration only work for station mode and disconnected status
-  * @attention 3. This configuration would influence nothing until some module configure wake_window
-  * @attention 4. A sensible interval which is not too small is recommended (e.g. 100ms)
+  * @attention 1. Only one wake interval for all connectionless modules.
+  * @attention 2. This configuration could work at connected status.
+  *               When ESP_WIFI_STA_DISCONNECTED_PM_ENABLE is enabled, this configuration could work at disconnected status.
+  * @attention 3. Event WIFI_EVENT_CONNECTIONLESS_MODULE_WAKE_INTERVAL_START would be posted each time wake interval starts.
+  * @attention 4. Recommend to configure interval in multiples of hundred. (e.g. 100ms)
+  * @attention 5. Recommend to configure interval to ESP_WIFI_CONNECTIONLESS_INTERVAL_DEFAULT_MODE to get stable performance at coexistence mode.
   *
-  * @param      interval  how much micriosecond would the chip wake up, from 1 to 65535.
+  * @param      wake_interval  Milliseconds after would the chip wake up, from 1 to 65535.
   */
-esp_err_t esp_wifi_set_connectionless_wake_interval(uint16_t interval);
+esp_err_t esp_wifi_connectionless_module_set_wake_interval(uint16_t wake_interval);
 
 /**
   * @brief     configure country
@@ -1244,7 +1270,7 @@ esp_err_t esp_wifi_set_connectionless_wake_interval(uint16_t interval);
   *               "RO","SE","SI","SK","TW","US"
   *
   * @attention 7. When country code "01" (world safe mode) is set, SoftAP mode won't contain country IE.
-  * @attention 8. The default country is "CN" and ieee80211d_enabled is TRUE.
+  * @attention 8. The default country is "01" (world safe mode) and ieee80211d_enabled is TRUE.
   * @attention 9. The third octect of country code string is one of the following: ' ', 'O', 'I', 'X', otherwise it is considered as ' '.
   *
   * @param     country   the configured country ISO code

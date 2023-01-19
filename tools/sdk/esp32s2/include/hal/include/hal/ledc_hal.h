@@ -1,16 +1,8 @@
-// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2019-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 /*******************************************************************************
  * NOTICE
@@ -25,6 +17,7 @@
 
 #include "hal/ledc_ll.h"
 #include "hal/ledc_types.h"
+#include "soc/soc_caps.h"
 
 /**
  * Context that should be maintained by both the driver and the HAL
@@ -183,17 +176,6 @@ typedef struct {
 #define ledc_hal_get_hpoint(hal, channel_num, hpoint_val)  ledc_ll_get_hpoint((hal)->dev, (hal)->speed_mode, channel_num, hpoint_val)
 
 /**
- * @brief Set LEDC the integer part of duty value
- *
- * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_val LEDC duty value, the range of duty setting is [0, (2**duty_resolution)]
- *
- * @return None
- */
-#define ledc_hal_set_duty_int_part(hal, channel_num, duty_val)  ledc_ll_set_duty_int_part((hal)->dev, (hal)->speed_mode, channel_num, duty_val)
-
-/**
  * @brief Set the output enable
  *
  * @param hal Context of the HAL layer
@@ -203,17 +185,6 @@ typedef struct {
  * @return None
  */
 #define ledc_hal_set_sig_out_en(hal, channel_num, sig_out_en)  ledc_ll_set_sig_out_en((hal)->dev, (hal)->speed_mode, channel_num, sig_out_en)
-
-/**
- * @brief Set the duty start
- *
- * @param hal Context of the HAL layer
- * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
- * @param duty_start The duty start
- *
- * @return None
- */
-#define ledc_hal_set_duty_start(hal, channel_num, duty_start)  ledc_ll_set_duty_start((hal)->dev, (hal)->speed_mode, channel_num, duty_start)
 
 /**
  * @brief Set output idle level
@@ -278,6 +249,28 @@ void ledc_hal_init(ledc_hal_context_t *hal, ledc_mode_t speed_mode);
  * @return None
  */
 void ledc_hal_ls_channel_update(ledc_hal_context_t *hal, ledc_channel_t channel_num);
+
+/**
+ * @brief Set the duty start
+ *
+ * @param hal Context of the HAL layer
+ * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
+ * @param duty_start The duty start
+ *
+ * @return None
+ */
+void ledc_hal_set_duty_start(ledc_hal_context_t *hal, ledc_channel_t channel_num, bool duty_start);
+
+/**
+ * @brief Set LEDC the integer part of duty value
+ *
+ * @param hal Context of the HAL layer
+ * @param channel_num LEDC channel index (0-7), select from ledc_channel_t
+ * @param duty_val LEDC duty value, the range of duty setting is [0, (2**duty_resolution)]
+ *
+ * @return None
+ */
+void ledc_hal_set_duty_int_part(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_val);
 
 /**
  * @brief Set LEDC hpoint value
@@ -345,6 +338,30 @@ void ledc_hal_set_duty_cycle(ledc_hal_context_t *hal, ledc_channel_t channel_num
  */
 void ledc_hal_set_duty_scale(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_scale);
 
+#if SOC_LEDC_GAMMA_FADE_RANGE_MAX > 1
+/**
+ * @brief Set the range number of the specified duty configurations written to gamma_wr register
+ *
+ * @param hal Context of the HAL layer
+ * @param channel_num LEDC channel index, select from ledc_channel_t
+ * @param duty_range Range index (0-15), it specifies to which range the configurations in gamma_wr register apply
+ *
+ * @return None
+ */
+void ledc_hal_set_duty_range(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t duty_range);
+
+/**
+ * @brief Set the total number of ranges in one fading
+ *
+ * @param hal Context of the HAL layer
+ * @param channel_num LEDC channel index, select from ledc_channel_t
+ * @param range_num Total number of ranges (1-16) of the fading configured
+ *
+ * @return None
+ */
+void ledc_hal_set_range_number(ledc_hal_context_t *hal, ledc_channel_t channel_num, uint32_t range_num);
+#endif //SOC_LEDC_GAMMA_FADE_RANGE_MAX > 1
+
 /**
  * @brief Get interrupt status of the specified channel
  *
@@ -376,13 +393,3 @@ void ledc_hal_clear_fade_end_intr_status(ledc_hal_context_t *hal, ledc_channel_t
  * @return None
  */
 void ledc_hal_get_clk_cfg(ledc_hal_context_t *hal, ledc_timer_t timer_sel, ledc_clk_cfg_t *clk_cfg);
-
-/**
- * @brief Config low speed timer clock source with clock config
- *s
- * @param hal Context of the HAL layer
- * @param clk_cfg clock config
- *
- * @return None
- */
-void ledc_hal_set_slow_clk(ledc_hal_context_t *hal, ledc_clk_cfg_t clk_cfg);

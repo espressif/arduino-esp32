@@ -45,6 +45,7 @@ extern "C" {
     .io_int_enable = sdmmc_host_io_int_enable, \
     .io_int_wait = sdmmc_host_io_int_wait, \
     .command_timeout_ms = 0, \
+    .get_real_freq = &sdmmc_host_get_real_freq \
 }
 
 /**
@@ -260,24 +261,21 @@ esp_err_t sdmmc_host_io_int_wait(int slot, TickType_t timeout_ticks);
 esp_err_t sdmmc_host_deinit(void);
 
 /**
- * @brief Enable the pull-ups of sd pins.
+ * @brief Provides a real frequency used for an SD card installed on specific slot
+ * of SD/MMC host controller
  *
- * This function is deprecated. Please set SDMMC_SLOT_FLAG_INTERNAL_PULLUP flag in
- * sdmmc_slot_config_t::flags instead.
+ * This function calculates real working frequency given by current SD/MMC host
+ * controller setup for required slot: it reads associated host and card dividers
+ * from corresponding SDMMC registers, calculates respective frequency and stores
+ * the value into the 'real_freq_khz' parameter
  *
- * @note You should always place actual pullups on the lines instead of using
- * this function. Internal pullup resistance are high and not sufficient, may
- * cause instability in products. This is for debug or examples only.
- *
- * @param slot Slot to use, normally set it to 1.
- * @param width Bit width of your configuration, 1 or 4.
- *
+ * @param slot slot number (SDMMC_HOST_SLOT_0 or SDMMC_HOST_SLOT_1)
+ * @param[out] real_freq_khz output parameter for the result frequency (in kHz)
  * @return
- *      - ESP_OK: if success
- *      - ESP_ERR_INVALID_ARG: if configured width larger than maximum the slot can
- *              support
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_ARG on real_freq_khz == NULL or invalid slot number used
  */
-esp_err_t sdmmc_host_pullup_en(int slot, int width) __attribute__((deprecated));
+esp_err_t sdmmc_host_get_real_freq(int slot, int* real_freq_khz);
 
 #ifdef __cplusplus
 }

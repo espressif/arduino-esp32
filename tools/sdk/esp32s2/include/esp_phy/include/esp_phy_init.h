@@ -171,6 +171,16 @@ void esp_phy_enable(void);
 void esp_phy_disable(void);
 
 /**
+ * @brief Enable BTBB module
+ *
+ * BTBB module should be enabled in order to use IEEE802154 or BT.
+ * Now BTBB enabling job is done automatically when start IEEE802154 or BT. Users should not
+ * call this API in their application.
+ *
+ */
+void esp_btbb_enable(void);
+
+/**
  * @brief Load calibration data from NVS and initialize PHY and RF module
  */
 void esp_phy_load_cal_and_init(void);
@@ -178,12 +188,13 @@ void esp_phy_load_cal_and_init(void);
 /**
  * @brief Initialize backup memory for Phy power up/down
  */
-void esp_phy_pd_mem_init(void);
+void esp_phy_modem_init(void);
 
 /**
  * @brief Deinitialize backup memory for Phy power up/down
+ * Set phy_init_flag if all modems deinit on ESP32C3
  */
-void esp_phy_pd_mem_deinit(void);
+void esp_phy_modem_deinit(void);
 
 #if CONFIG_MAC_BB_PD
 /**

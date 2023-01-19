@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __ESP_GAP_BT_API_H__
 #define __ESP_GAP_BT_API_H__
@@ -223,6 +215,8 @@ typedef enum {
     ESP_BT_GAP_MODE_CHG_EVT,
     ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT,         /*!< remove bond device complete event */
     ESP_BT_GAP_QOS_CMPL_EVT,                        /*!< QOS complete event */
+    ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT,              /*!< ACL connection complete status event */
+    ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT,           /*!< ACL disconnection complete status event */
     ESP_BT_GAP_EVT_MAX,
 } esp_bt_gap_cb_event_t;
 
@@ -345,9 +339,9 @@ typedef union {
      * @brief ESP_BT_GAP_READ_REMOTE_NAME_EVT
      */
     struct read_rmt_name_param {
+        esp_bd_addr_t bda;                     /*!< remote bluetooth device address*/
         esp_bt_status_t stat;                  /*!< read Remote Name status */
         uint8_t rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]; /*!< Remote device name */
-        esp_bd_addr_t bda;                     /*!< remote bluetooth device address*/
     } read_rmt_name;                        /*!< read Remote Name parameter struct */
 
     /**
@@ -376,6 +370,24 @@ typedef union {
                                                     which from the master to a particular slave on the ACL
                                                     logical transport. unit is 0.625ms. */
     } qos_cmpl;                                /*!< QoS complete parameter struct */
+
+    /**
+     * @brief ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT
+     */
+    struct acl_conn_cmpl_stat_param {
+        esp_bt_status_t stat;                  /*!< ACL connection status */
+        uint16_t handle;                       /*!< ACL connection handle */
+        esp_bd_addr_t bda;                     /*!< remote bluetooth device address */
+    } acl_conn_cmpl_stat;                      /*!< ACL connection complete status parameter struct */
+
+    /**
+     * @brief ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT
+     */
+    struct acl_disconn_cmpl_stat_param {
+        esp_bt_status_t reason;                /*!< ACL disconnection reason */
+        uint16_t handle;                       /*!< ACL connection handle */
+        esp_bd_addr_t bda;                     /*!< remote bluetooth device address */
+    } acl_disconn_cmpl_stat;                   /*!< ACL disconnection complete status parameter struct */
 } esp_bt_gap_cb_param_t;
 
 /**
@@ -482,7 +494,7 @@ esp_err_t esp_bt_gap_set_scan_mode(esp_bt_connection_mode_t c_mode, esp_bt_disco
 /**
  * @brief           This function starts Inquiry and Name Discovery. This function should be called after esp_bluedroid_enable() completes successfully.
  *                  When Inquiry is halted and cached results do not contain device name, then Name Discovery will connect to the peer target to get the device name.
- *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT when Inquriry is started or Name Discovery is completed.
+ *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_STATE_CHANGED_EVT when Inquiry is started or Name Discovery is completed.
  *                  esp_bt_gap_cb_t will be called with ESP_BT_GAP_DISC_RES_EVT each time the two types of discovery results are got.
  *
  * @param[in]       mode - Inquiry mode

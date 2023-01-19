@@ -43,9 +43,11 @@ extern "C"
   */
 #define SPI_DEVICE_NO_DUMMY                (1<<6)
 #define SPI_DEVICE_DDRCLK                  (1<<7)
+#define SPI_DEVICE_NO_RETURN_RESULT        (1<<8)  ///< Don't return the descriptor to the host on completion (use post_cb to notify instead)
 
-
+/** @cond */
 typedef struct spi_transaction_t spi_transaction_t;
+/** @endcond */
 typedef void(*transaction_cb_t)(spi_transaction_t *trans);
 
 /**
@@ -166,7 +168,8 @@ typedef struct spi_device_t *spi_device_handle_t;  ///< Handle for a device on a
  * @param dev_config SPI interface protocol config for the device
  * @param handle Pointer to variable to hold the device handle
  * @return
- *         - ESP_ERR_INVALID_ARG   if parameter is invalid
+ *         - ESP_ERR_INVALID_ARG   if parameter is invalid or configuration combination is not supported (e.g.
+ *                                 `dev_config->post_cb` isn't set while flag `SPI_DEVICE_NO_RETURN_RESULT` is enabled)
  *         - ESP_ERR_NOT_FOUND     if host doesn't have any free CS slots
  *         - ESP_ERR_NO_MEM        if out of memory
  *         - ESP_OK                on success
@@ -223,6 +226,7 @@ esp_err_t spi_device_queue_trans(spi_device_handle_t handle, spi_transaction_t *
                         out.
  * @return
  *         - ESP_ERR_INVALID_ARG   if parameter is invalid
+ *         - ESP_ERR_NOT_SUPPORTED if flag `SPI_DEVICE_NO_RETURN_RESULT` is set
  *         - ESP_ERR_TIMEOUT       if there was no completed transaction before ticks_to_wait expired
  *         - ESP_OK                on success
  */
@@ -331,20 +335,17 @@ esp_err_t spi_device_acquire_bus(spi_device_handle_t device, TickType_t wait);
  */
 void spi_device_release_bus(spi_device_handle_t dev);
 
-
 /**
- * @brief Calculate the working frequency that is most close to desired frequency, and also the register value.
+ * @brief Calculate working frequency for specific device
  *
- * @param fapb The frequency of apb clock, should be ``APB_CLK_FREQ``.
- * @param hz Desired working frequency
- * @param duty_cycle Duty cycle of the spi clock
- * @param reg_o Output of value to be set in clock register, or NULL if not needed.
+ * @param handle SPI device handle
+ * @param[out] freq_khz output parameter to hold calculated frequency in kHz
  *
- * @deprecated The app shouldn't care about the register. Call ``spi_get_actual_clock`` instead.
- *
- * @return Actual working frequency that most fit.
+ * @return
+ *      - ESP_ERR_INVALID_ARG : ``handle`` or ``freq_khz`` parameter is NULL
+ *      - ESP_OK : Success
  */
-int spi_cal_clock(int fapb, int hz, int duty_cycle, uint32_t *reg_o) __attribute__((deprecated));
+esp_err_t spi_device_get_actual_freq(spi_device_handle_t handle, int* freq_khz);
 
 /**
  * @brief Calculate the working frequency that is most close to desired frequency.
@@ -362,7 +363,7 @@ int spi_get_actual_clock(int fapb, int hz, int duty_cycle);
   *
   * @param gpio_is_used True if using GPIO matrix, or False if iomux pins are used.
   * @param input_delay_ns Input delay from SCLK launch edge to MISO data valid.
-  * @param eff_clk Effective clock frequency (in Hz) from spi_cal_clock.
+  * @param eff_clk Effective clock frequency (in Hz) from `spi_get_actual_clock()`.
   * @param dummy_o Address of dummy bits used output. Set to NULL if not needed.
   * @param cycles_remain_o Address of cycles remaining (after dummy bits are used) output.
   *         - -1 If too many cycles remaining, suggest to compensate half a clock.

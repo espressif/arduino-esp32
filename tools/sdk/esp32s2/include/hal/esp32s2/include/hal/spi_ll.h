@@ -984,6 +984,7 @@ static inline uint32_t spi_ll_slave_get_rcv_bitlen(spi_dev_t *hw)
     item(SPI_LL_INTR_CMDA,          dma_int_ena.cmda,               dma_int_raw.cmda,               dma_int_clr.cmda=1)
 
 
+__attribute__((always_inline))
 static inline void spi_ll_enable_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 {
 #define ENA_INTR(intr_bit, en_reg, ...) if (intr_mask & (intr_bit)) hw->en_reg = 1;
@@ -991,6 +992,7 @@ static inline void spi_ll_enable_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 #undef ENA_INTR
 }
 
+__attribute__((always_inline))
 static inline void spi_ll_disable_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 {
 #define DIS_INTR(intr_bit, en_reg, ...) if (intr_mask & (intr_bit)) hw->en_reg = 0;
@@ -1005,6 +1007,7 @@ static inline void spi_ll_set_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 #undef SET_INTR
 }
 
+__attribute__((always_inline))
 static inline void spi_ll_clear_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 {
 #define CLR_INTR(intr_bit, _, __, clr_reg) if (intr_mask & (intr_bit)) hw->clr_reg;
@@ -1012,6 +1015,7 @@ static inline void spi_ll_clear_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 #undef CLR_INTR
 }
 
+__attribute__((always_inline))
 static inline bool spi_ll_get_intr(spi_dev_t *hw, spi_ll_intr_t intr_mask)
 {
 #define GET_INTR(intr_bit, _, st_reg, ...) if (intr_mask & (intr_bit) && hw->st_reg) return true;
@@ -1157,6 +1161,7 @@ static inline void spi_dma_ll_rx_enable_burst_desc(spi_dma_dev_t *dma_in, uint32
  * @param channel DMA channel, for chip version compatibility, not used.
  * @return        The address
  */
+__attribute__((always_inline))
 static inline uint32_t spi_dma_ll_get_in_suc_eof_desc_addr(spi_dma_dev_t *dma_in, uint32_t channel)
 {
     return dma_in->dma_in_suc_eof_des_addr;
@@ -1255,6 +1260,7 @@ static inline void spi_dma_ll_enable_out_auto_wrback(spi_dma_dev_t *dma_out, uin
  * @param channel DMA channel, for chip version compatibility, not used.
  * @return        The address
  */
+__attribute__((always_inline))
 static inline uint32_t spi_dma_ll_get_out_eof_desc_addr(spi_dma_dev_t *dma_out, uint32_t channel)
 {
     return dma_out->dma_out_eof_des_addr;

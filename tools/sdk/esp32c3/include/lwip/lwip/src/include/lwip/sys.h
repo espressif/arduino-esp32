@@ -83,24 +83,6 @@ typedef u8_t sys_mbox_t;
 
 #else /* NO_SYS */
 
-#if ESP_LWIP_LOCK
-#define SYS_ARCH_PROTECT_CONN(_conn) do {\
-  sys_mutex_lock(&(_conn)->lock);\
-} while(0)
-
-#define SYS_ARCH_UNPROTECT_CONN(_conn) do {\
-  sys_mutex_unlock(&(_conn)->lock);\
-} while(0)
-
-#define SYS_ARCH_PROTECT_SOCK(_sock) do {\
-  sys_mutex_lock(&(_sock)->lock);\
-} while(0)
-
-#define SYS_ARCH_UNPROTECT_SOCK(_sock) do{\
-  sys_mutex_unlock(&(_sock)->lock);\
-} while(0)
-#endif /* ESP_LWIP_LOCK */
-
 /** Return code for timeouts from sys_arch_mbox_fetch and sys_arch_sem_wait */
 #define SYS_ARCH_TIMEOUT 0xffffffffUL
 
@@ -217,14 +199,6 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count);
  * @param sem the semaphore to signal
  */
 void sys_sem_signal(sys_sem_t *sem);
-
-#if ESP_LWIP
-/** Signals a semaphore (ISR version)
- * @param sem the semaphore to signal
- * @return non-zero if a higher priority task has been woken  */
-int sys_sem_signal_isr(sys_sem_t *sem);
-#endif
-
 /**
  * @ingroup sys_sem
  *  Blocks the thread while waiting for the semaphore to be signaled. If the

@@ -21,13 +21,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SDMMC_TYPES_H_
-#define _SDMMC_TYPES_H_
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Decoded values from SD card Card Specific Data register
@@ -56,17 +59,39 @@ typedef struct {
 
 /**
  * Decoded values from SD Configuration Register
+ * Note: When new member is added, update reserved bits accordingly
  */
 typedef struct {
-    int sd_spec;    /*!< SD Physical layer specification version, reported by card */
-    int bus_width;  /*!< bus widths supported by card: BIT(0) — 1-bit bus, BIT(2) — 4-bit bus */
+    uint32_t sd_spec: 4;            /*!< SD Physical layer specification version, reported by card */
+    uint32_t erase_mem_state: 1;    /*!< data state on card after erase whether 0 or 1 (card vendor dependent) */
+    uint32_t bus_width: 4;          /*!< bus widths supported by card: BIT(0) — 1-bit bus, BIT(2) — 4-bit bus */
+    uint32_t reserved: 23;          /*!< reserved for future expansion */
+    uint32_t rsvd_mnf;              /*!< reserved for manufacturer usage */
 } sdmmc_scr_t;
+
+/**
+ * Decoded values from SD Status Register
+ * Note: When new member is added, update reserved bits accordingly
+ */
+typedef struct {
+    uint32_t alloc_unit_kb: 16;     /*!< Allocation unit of the card, in multiples of kB (1024 bytes) */
+    uint32_t erase_size_au: 16;     /*!< Erase size for the purpose of timeout calculation, in multiples of allocation unit */
+    uint32_t cur_bus_width: 2;      /*!< SD current bus width */
+    uint32_t discard_support: 1;    /*!< SD discard feature support */
+    uint32_t fule_support: 1;       /*!< SD FULE (Full User Area Logical Erase) feature support */
+    uint32_t erase_timeout: 6;      /*!< Timeout (in seconds) for erase of a single allocation unit */
+    uint32_t erase_offset: 2;       /*!< Constant timeout offset (in seconds) for any erase operation */
+    uint32_t reserved: 20;          /*!< reserved for future expansion */
+} sdmmc_ssr_t;
 
 /**
  * Decoded values of Extended Card Specific Data
  */
 typedef struct {
-    uint8_t power_class;    /*!< Power class used by the card */
+    uint8_t rev;                /*!< Extended CSD Revision */
+    uint8_t power_class;        /*!< Power class used by the card */
+    uint8_t erase_mem_state;    /*!< data state on card after erase whether 0 or 1 (card vendor dependent) */
+    uint8_t sec_feature;        /*!< secure data management features supported by the card */
 } sdmmc_ext_csd_t;
 
 /**
@@ -120,7 +145,7 @@ typedef struct {
 #define SCF_WAIT_BUSY    0x2000     /*!< Wait for completion of card busy signal before returning */
 /** @endcond */
         esp_err_t error;            /*!< error returned from transfer */
-        int timeout_ms;             /*!< response timeout, in milliseconds */
+        uint32_t timeout_ms;        /*!< response timeout, in milliseconds */
 } sdmmc_command_t;
 
 /**
@@ -158,6 +183,7 @@ typedef struct {
     esp_err_t (*io_int_enable)(int slot); /*!< Host function to enable SDIO interrupt line */
     esp_err_t (*io_int_wait)(int slot, TickType_t timeout_ticks); /*!< Host function to wait for SDIO interrupt line to be active */
     int command_timeout_ms;     /*!< timeout, in milliseconds, of a single command. Set to 0 to use the default value. */
+    esp_err_t (*get_real_freq)(int slot, int* real_freq); /*!< Host function to provide real working freq, based on SDMMC controller setup */
 } sdmmc_host_t;
 
 /**
@@ -173,9 +199,11 @@ typedef struct {
     };
     sdmmc_csd_t csd;            /*!< decoded CSD (Card-Specific Data) register value */
     sdmmc_scr_t scr;            /*!< decoded SCR (SD card Configuration Register) value */
+    sdmmc_ssr_t ssr;            /*!< decoded SSR (SD Status Register) value */
     sdmmc_ext_csd_t ext_csd;    /*!< decoded EXT_CSD (Extended Card Specific Data) register value */
     uint16_t rca;               /*!< RCA (Relative Card Address) */
     uint16_t max_freq_khz;      /*!< Maximum frequency, in kHz, supported by the card */
+    int real_freq_khz;          /*!< Real working frequency, in kHz, configured on the host controller */
     uint32_t is_mem : 1;        /*!< Bit indicates if the card is a memory card */
     uint32_t is_sdio : 1;       /*!< Bit indicates if the card is an IO card */
     uint32_t is_mmc : 1;        /*!< Bit indicates if the card is MMC */
@@ -185,5 +213,30 @@ typedef struct {
     uint32_t reserved : 23;     /*!< Reserved for future expansion */
 } sdmmc_card_t;
 
+/**
+ * SD/MMC erase command(38) arguments
+ * SD:
+ *  ERASE: Erase the write blocks, physical/hard erase.
+ *
+ *  DISCARD: Card may deallocate the discarded blocks partially or completely.
+ *  After discard operation the previously written data may be partially or
+ *  fully read by the host depending on card implementation.
+ *
+ * MMC:
+ *  ERASE: Does TRIM, applies erase operation to write blocks instead of Erase Group.
+ *
+ *  DISCARD: The Discard function allows the host to identify data that is no
+ *  longer required so that the device can erase the data if necessary during
+ *  background erase events. Applies to write blocks instead of Erase Group
+ *  After discard operation, the original data may be remained partially or
+ *  fully accessible to the host dependent on device.
+ *
+ */
+typedef enum {
+    SDMMC_ERASE_ARG = 0,      /*!< Erase operation on SD, Trim operation on MMC */
+    SDMMC_DISCARD_ARG = 1,    /*!< Discard operation for SD/MMC */
+} sdmmc_erase_arg_t;
 
-#endif // _SDMMC_TYPES_H_
+#ifdef __cplusplus
+}
+#endif

@@ -1,16 +1,8 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 /*******************************************************************************
  * NOTICE
@@ -22,16 +14,21 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include "esp_assert.h"
 #include "hal/misc.h"
+#include "hal/assert.h"
 #include "hal/twai_types.h"
 #include "soc/twai_periph.h"
 #include "soc/twai_struct.h"
+
+#define TWAI_LL_GET_HW(controller_id) ((controller_id == 0) ? (&TWAI) : NULL)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* ------------------------- Defines and Typedefs --------------------------- */
 
@@ -85,7 +82,34 @@ typedef union {
     uint8_t bytes[13];
 } __attribute__((packed)) twai_ll_frame_buffer_t;
 
-_Static_assert(sizeof(twai_ll_frame_buffer_t) == 13, "TX/RX buffer type should be 13 bytes");
+ESP_STATIC_ASSERT(sizeof(twai_ll_frame_buffer_t) == 13, "TX/RX buffer type should be 13 bytes");
+
+/* ---------------------------- Peripheral Control Register ----------------- */
+
+/**
+ * @brief Enable TWAI module clock
+ *
+ * @param hw Start address of the TWAI registers
+ * @param en true to enable, false to disable
+ */
+__attribute__((always_inline))
+static inline void twai_ll_enable_clock(twai_dev_t *hw, bool en)
+{
+    (void)hw;
+}
+
+/**
+ * @brief Set clock source for TWAI module
+ *
+ * @param hw Start address of the TWAI registers
+ * @param clk_src Clock source
+ */
+__attribute__((always_inline))
+static inline void twai_ll_set_clock_source(twai_dev_t *hw, twai_clock_source_t clk_src)
+{
+    (void)hw;
+    HAL_ASSERT(clk_src == TWAI_CLK_SRC_APB);
+}
 
 /* ---------------------------- Mode Register ------------------------------- */
 
@@ -100,6 +124,7 @@ _Static_assert(sizeof(twai_ll_frame_buffer_t) == 13, "TX/RX buffer type should b
  *
  * @note Reset mode is automatically entered on BUS OFF condition
  */
+__attribute__((always_inline))
 static inline void twai_ll_enter_reset_mode(twai_dev_t *hw)
 {
     hw->mode_reg.rm = 1;
@@ -116,6 +141,7 @@ static inline void twai_ll_enter_reset_mode(twai_dev_t *hw)
  *
  * @note Reset mode must be exit to initiate BUS OFF recovery
  */
+__attribute__((always_inline))
 static inline void twai_ll_exit_reset_mode(twai_dev_t *hw)
 {
     hw->mode_reg.rm = 0;
@@ -126,6 +152,7 @@ static inline void twai_ll_exit_reset_mode(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @return true if in reset mode
  */
+__attribute__((always_inline))
 static inline bool twai_ll_is_in_reset_mode(twai_dev_t *hw)
 {
     return hw->mode_reg.rm;
@@ -139,6 +166,7 @@ static inline bool twai_ll_is_in_reset_mode(twai_dev_t *hw)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_mode(twai_dev_t *hw, twai_mode_t mode)
 {
     if (mode == TWAI_MODE_NORMAL) {           //Normal Operating mode
@@ -168,6 +196,7 @@ static inline void twai_ll_set_mode(twai_dev_t *hw, twai_mode_t mode)
  *       release and clear data overrun) in order to prevent the other commands
  *       overwriting this latched TX bit with 0.
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_tx(twai_dev_t *hw)
 {
     hw->command_reg.tr = 1;
@@ -185,6 +214,7 @@ static inline void twai_ll_set_cmd_tx(twai_dev_t *hw)
  *       release and clear data overrun) in order to prevent the other commands
  *       overwriting this latched TX bit with 0.
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_tx_single_shot(twai_dev_t *hw)
 {
     hw->command_reg.val = 0x03; //Set command_reg.tr and command_reg.at simultaneously for single shot transmittion request
@@ -204,6 +234,7 @@ static inline void twai_ll_set_cmd_tx_single_shot(twai_dev_t *hw)
  *       release and clear data overrun) in order to prevent the other commands
  *       overwriting this latched TX bit with 0.
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_abort_tx(twai_dev_t *hw)
 {
     hw->command_reg.at = 1;
@@ -216,6 +247,7 @@ static inline void twai_ll_set_cmd_abort_tx(twai_dev_t *hw)
  *
  * @param hw Start address of the TWAI registers
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_release_rx_buffer(twai_dev_t *hw)
 {
     hw->command_reg.rrb = 1;
@@ -228,6 +260,7 @@ static inline void twai_ll_set_cmd_release_rx_buffer(twai_dev_t *hw)
  *
  * @param hw Start address of the TWAI registers
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_clear_data_overrun(twai_dev_t *hw)
 {
     hw->command_reg.cdo = 1;
@@ -247,6 +280,7 @@ static inline void twai_ll_set_cmd_clear_data_overrun(twai_dev_t *hw)
  *       release and clear data overrun) in order to prevent the other commands
  *       overwriting this latched TX bit with 0.
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_self_rx_request(twai_dev_t *hw)
 {
     hw->command_reg.srr = 1;
@@ -265,6 +299,7 @@ static inline void twai_ll_set_cmd_self_rx_request(twai_dev_t *hw)
  *       release and clear data overrun) in order to prevent the other commands
  *       overwriting this latched TX bit with 0.
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_cmd_self_rx_single_shot(twai_dev_t *hw)
 {
     hw->command_reg.val = 0x12; //Set command_reg.srr and command_reg.at simultaneously for single shot self reception request
@@ -278,6 +313,7 @@ static inline void twai_ll_set_cmd_self_rx_single_shot(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @return Status bits
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_status(twai_dev_t *hw)
 {
     return hw->status_reg.val;
@@ -289,6 +325,7 @@ static inline uint32_t twai_ll_get_status(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @return Overrun status bit
  */
+__attribute__((always_inline))
 static inline bool twai_ll_is_fifo_overrun(twai_dev_t *hw)
 {
     return hw->status_reg.dos;
@@ -300,6 +337,7 @@ static inline bool twai_ll_is_fifo_overrun(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @return Whether previous TX was successful
  */
+__attribute__((always_inline))
 static inline bool twai_ll_is_last_tx_successful(twai_dev_t *hw)
 {
     return hw->status_reg.tcs;
@@ -316,6 +354,7 @@ static inline bool twai_ll_is_last_tx_successful(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @return Bit mask of set interrupts
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_and_clear_intrs(twai_dev_t *hw)
 {
     return hw->interrupt_reg.val;
@@ -331,12 +370,28 @@ static inline uint32_t twai_ll_get_and_clear_intrs(twai_dev_t *hw)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_enabled_intrs(twai_dev_t *hw, uint32_t intr_mask)
 {
     hw->interrupt_enable_reg.val = intr_mask;
 }
 
 /* ------------------------ Bus Timing Registers --------------------------- */
+
+/**
+ * @brief Check if the brp value valid
+ *
+ * @param brp Bit rate prescaler value
+ * @return true or False
+ */
+__attribute__((always_inline))
+static inline bool twai_ll_check_brp_validation(uint32_t brp)
+{
+    bool valid = (brp >= SOC_TWAI_BRP_MIN) && (brp <= SOC_TWAI_BRP_MAX);
+    // should be an even number
+    valid = valid && !(brp & 0x01);
+    return valid;
+}
 
 /**
  * @brief   Set bus timing
@@ -351,6 +406,7 @@ static inline void twai_ll_set_enabled_intrs(twai_dev_t *hw, uint32_t intr_mask)
  * @note Must be called in reset mode
  * @note ESP32S2 brp can be any even number between 2 to 32768
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_bus_timing(twai_dev_t *hw, uint32_t brp, uint32_t sjw, uint32_t tseg1, uint32_t tseg2, bool triple_sampling)
 {
     hw->bus_timing_0_reg.brp = (brp / 2) - 1;
@@ -369,6 +425,7 @@ static inline void twai_ll_set_bus_timing(twai_dev_t *hw, uint32_t brp, uint32_t
  *
  * @param hw Start address of the TWAI registers
  */
+__attribute__((always_inline))
 static inline void twai_ll_clear_arb_lost_cap(twai_dev_t *hw)
 {
     (void)hw->arbitration_lost_captue_reg.val;
@@ -383,6 +440,7 @@ static inline void twai_ll_clear_arb_lost_cap(twai_dev_t *hw)
  *
  * @param hw Start address of the TWAI registers
  */
+__attribute__((always_inline))
 static inline void twai_ll_clear_err_code_cap(twai_dev_t *hw)
 {
     (void)hw->error_code_capture_reg.val;
@@ -398,6 +456,7 @@ static inline void twai_ll_clear_err_code_cap(twai_dev_t *hw)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_err_warn_lim(twai_dev_t *hw, uint32_t ewl)
 {
     HAL_FORCE_MODIFY_U32_REG_FIELD(hw->error_warning_limit_reg, ewl, ewl);
@@ -409,6 +468,7 @@ static inline void twai_ll_set_err_warn_lim(twai_dev_t *hw, uint32_t ewl)
  * @param hw Start address of the TWAI registers
  * @return Error Warning Limit
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_err_warn_lim(twai_dev_t *hw)
 {
     return hw->error_warning_limit_reg.val;
@@ -425,6 +485,7 @@ static inline uint32_t twai_ll_get_err_warn_lim(twai_dev_t *hw)
  * @note REC is not frozen in reset mode. Listen only mode will freeze it. A BUS
  *       OFF condition automatically sets the REC to 0.
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_rec(twai_dev_t *hw)
 {
     return hw->rx_error_counter_reg.val;
@@ -438,6 +499,7 @@ static inline uint32_t twai_ll_get_rec(twai_dev_t *hw)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_rec(twai_dev_t *hw, uint32_t rec)
 {
     HAL_FORCE_MODIFY_U32_REG_FIELD(hw->rx_error_counter_reg, rxerr, rec);
@@ -453,6 +515,7 @@ static inline void twai_ll_set_rec(twai_dev_t *hw, uint32_t rec)
  *
  * @note A BUS OFF condition will automatically set this to 128
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_tec(twai_dev_t *hw)
 {
     return hw->tx_error_counter_reg.val;
@@ -466,6 +529,7 @@ static inline uint32_t twai_ll_get_tec(twai_dev_t *hw)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_tec(twai_dev_t *hw, uint32_t tec)
 {
     HAL_FORCE_MODIFY_U32_REG_FIELD(hw->tx_error_counter_reg, txerr, tec);
@@ -482,6 +546,7 @@ static inline void twai_ll_set_tec(twai_dev_t *hw, uint32_t tec)
  *
  * @note Must be called in reset mode
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_acc_filter(twai_dev_t* hw, uint32_t code, uint32_t mask, bool single_filter)
 {
     uint32_t code_swapped = HAL_SWAP32(code);
@@ -503,6 +568,7 @@ static inline void twai_ll_set_acc_filter(twai_dev_t* hw, uint32_t code, uint32_
  *
  * @note Call twai_ll_format_frame_buffer() to format a frame
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_tx_buffer(twai_dev_t *hw, twai_ll_frame_buffer_t *tx_frame)
 {
     //Copy formatted frame into TX buffer
@@ -517,8 +583,9 @@ static inline void twai_ll_set_tx_buffer(twai_dev_t *hw, twai_ll_frame_buffer_t 
  * @param hw Start address of the TWAI registers
  * @param rx_frame Pointer to store formatted frame
  *
- * @note Call twai_ll_prase_frame_buffer() to parse the formatted frame
+ * @note Call twai_ll_parse_frame_buffer() to parse the formatted frame
  */
+__attribute__((always_inline))
 static inline void twai_ll_get_rx_buffer(twai_dev_t *hw, twai_ll_frame_buffer_t *rx_frame)
 {
     //Copy RX buffer registers into frame
@@ -542,6 +609,7 @@ static inline void twai_ll_get_rx_buffer(twai_dev_t *hw, twai_ll_frame_buffer_t 
  * @param[in] self_rx Frame will also be simultaneously received
  * @param[out] tx_frame Pointer to store formatted frame
  */
+__attribute__((always_inline))
 static inline void twai_ll_format_frame_buffer(uint32_t id, uint8_t dlc, const uint8_t *data,
                                               uint32_t flags, twai_ll_frame_buffer_t *tx_frame)
 {
@@ -585,7 +653,8 @@ static inline void twai_ll_format_frame_buffer(uint32_t id, uint8_t dlc, const u
  * @param[out] data Data. Left over bytes set to 0.
  * @param[out] format Type of TWAI frame
  */
-static inline void twai_ll_prase_frame_buffer(twai_ll_frame_buffer_t *rx_frame, uint32_t *id, uint8_t *dlc,
+__attribute__((always_inline))
+static inline void twai_ll_parse_frame_buffer(twai_ll_frame_buffer_t *rx_frame, uint32_t *id, uint8_t *dlc,
                                              uint8_t *data, uint32_t *flags)
 {
     //Copy frame information
@@ -633,6 +702,7 @@ static inline void twai_ll_prase_frame_buffer(twai_ll_frame_buffer_t *rx_frame, 
  * @param hw Start address of the TWAI registers
  * @return RX Message Counter
  */
+__attribute__((always_inline))
 static inline uint32_t twai_ll_get_rx_msg_count(twai_dev_t *hw)
 {
     return hw->rx_message_counter_reg.val;
@@ -649,6 +719,7 @@ static inline uint32_t twai_ll_get_rx_msg_count(twai_dev_t *hw)
  * @param hw Start address of the TWAI registers
  * @param divider Divider for CLKOUT (any even number from 2 to 490). Set to 0 to disable CLKOUT
  */
+__attribute__((always_inline))
 static inline void twai_ll_set_clkout(twai_dev_t *hw, uint32_t divider)
 {
     if (divider >= 2 && divider <= 490) {

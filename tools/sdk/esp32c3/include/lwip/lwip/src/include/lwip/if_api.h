@@ -49,7 +49,9 @@
 extern "C" {
 #endif
 
+#ifndef IF_NAMESIZE
 #define IF_NAMESIZE NETIF_NAMESIZE
+#endif
 
 char * lwip_if_indextoname(unsigned int ifindex, char *ifname);
 unsigned int lwip_if_nametoindex(const char *ifname);

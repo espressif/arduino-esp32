@@ -32,14 +32,11 @@
 
 #ifndef PSA_CRYPTO_PLATFORM_H
 #define PSA_CRYPTO_PLATFORM_H
+#include "mbedtls/private_access.h"
 
 /* Include the Mbed TLS configuration file, the way Mbed TLS does it
  * in each of its header files. */
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 /* Translate between classic MBEDTLS_xxx feature symbols and PSA_xxx
  * feature symbols. */
@@ -104,7 +101,7 @@ static inline int mbedtls_key_owner_id_equal( mbedtls_key_owner_id_t id1,
  * are expected to replace it with a custom definition.
  */
 typedef struct {
-    uintptr_t opaque[2];
+    uintptr_t MBEDTLS_PRIVATE(opaque)[2];
 } mbedtls_psa_external_random_context_t;
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 

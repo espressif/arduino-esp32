@@ -1,23 +1,9 @@
-// Copyright 2021 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-#pragma once
-
-/**
- * @brief Ethernet frame CRC length
+/*
+ * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
  *
+ * SPDX-License-Identifier: Apache-2.0
  */
-#define ETH_CRC_LEN (4)
+#pragma once
 
 /**
 * @brief Ethernet interface
@@ -63,3 +49,15 @@ typedef enum {
     ETH_CHECKSUM_SW, /*!< Ethernet checksum calculate by software */
     ETH_CHECKSUM_HW  /*!< Ethernet checksum calculate by hardware */
 } eth_checksum_t;
+
+/**
+* @brief Internal ethernet EMAC's DMA available burst sizes
+*/
+typedef enum {
+    ETH_DMA_BURST_LEN_32,
+    ETH_DMA_BURST_LEN_16,
+    ETH_DMA_BURST_LEN_8,
+    ETH_DMA_BURST_LEN_4,
+    ETH_DMA_BURST_LEN_2,
+    ETH_DMA_BURST_LEN_1,
+} eth_mac_dma_burst_len_t;

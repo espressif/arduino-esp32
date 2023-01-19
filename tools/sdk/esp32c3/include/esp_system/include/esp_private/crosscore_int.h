@@ -1,16 +1,8 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef __ESP_CROSSCORE_INT_H
 #define __ESP_CROSSCORE_INT_H
 
@@ -56,18 +48,34 @@ void esp_crosscore_int_send_yield(int core_id);
  */
 void esp_crosscore_int_send_freq_switch(int core_id);
 
+void esp_crosscore_int_send_gdb_call(int core_id);
 
-#if !CONFIG_IDF_TARGET_ESP32C3 && !CONFIG_IDF_TARGET_ESP32H2
+#if !CONFIG_IDF_TARGET_ESP32C3 && !CONFIG_IDF_TARGET_ESP32H4 && !CONFIG_IDF_TARGET_ESP32C2 && !CONFIG_IDF_TARGET_ESP32C6 && !CONFIG_IDF_TARGET_ESP32H2
 /**
  * Send an interrupt to a CPU indicating it should print its current backtrace
  *
- * This is use internally by the Task Watchdog to dump the backtrace of the
+ * This is used internally by the Task Watchdog to dump the backtrace of the
  * opposite core and should not be called from application code.
  *
  * @param core_id Core that should print its backtrace
  */
 void esp_crosscore_int_send_print_backtrace(int core_id);
-#endif
+
+#if CONFIG_ESP_TASK_WDT_EN
+/**
+ * Send an interrupt to a CPU indicating it call `task_wdt_timeout_abort_xtensa`.
+ * This will make the CPU abort, using the interrupted task frame.
+ *
+ * This is used internally by the Task Watchdog when it should abort after a task,
+ * running on the other core than the one running the TWDT ISR, failed to reset
+ * its timer.
+ *
+ * @param core_id Core that should abort
+ */
+void esp_crosscore_int_send_twdt_abort(int core_id);
+
+#endif // CONFIG_ESP_TASK_WDT_EN
+#endif // !CONFIG_IDF_TARGET_ESP32C3 && !CONFIG_IDF_TARGET_ESP32H4 && !CONFIG_IDF_TARGET_ESP32C2 && !CONFIG_IDF_TARGET_ESP32C6
 
 #ifdef __cplusplus
 }

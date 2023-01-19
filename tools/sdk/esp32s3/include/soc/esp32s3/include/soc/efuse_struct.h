@@ -1,16 +1,8 @@
-// Copyright 2017-2020 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2017-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #ifndef _SOC_EFUSE_STRUCT_H_
 #define _SOC_EFUSE_STRUCT_H_
 
@@ -120,8 +112,10 @@ typedef volatile struct efuse_dev_s {
     } rd_repeat_data3;
     union {
         struct {
-            uint32_t reg_rpt4_reserved2            :    24;  /*Reserved (used for four backups method).*/
-            uint32_t reserved24                    :    8;  /*Reserved.*/
+            uint32_t disable_wafer_version_major   : 1;
+            uint32_t disable_blk_version_major     : 1;
+            uint32_t reg_rpt4_reserved2            : 22; /*Reserved.*/
+            uint32_t reserved24                    : 8;  /*Reserved.*/
         };
         uint32_t val;
     } rd_repeat_data4;
@@ -136,18 +130,48 @@ typedef volatile struct efuse_dev_s {
     uint32_t rd_mac_spi_sys_2;
     union {
         struct {
-            uint32_t reg_spi_pad_conf_2            :    18;  /*Stores the second part of SPI_PAD_CONF.*/
-            uint32_t reg_sys_data_part0_0          :    14;  /*Stores the fist 14 bits of the zeroth part of system data.*/
+            uint32_t spi_pad_conf_2:  18;                        /*Stores the second part of SPI_PAD_CONF.*/
+            uint32_t wafer_version_minor_low:    3;
+            uint32_t pkg_version:      3;
+            uint32_t blk_version_minor:3;
+            uint32_t reg_sys_data_part0_0: 5;
         };
         uint32_t val;
     } rd_mac_spi_sys_3;
-    uint32_t rd_mac_spi_sys_4;
-    uint32_t rd_mac_spi_sys_5;
+    union {
+        struct {
+            uint32_t reserved1:                 13;
+            uint32_t k_rtc_ldo:                 7;
+            uint32_t k_dig_ldo:                 7;
+            uint32_t v_rtc_dbias20_low:         5;
+        };
+        uint32_t val;
+    } rd_mac_spi_sys_4;
+    union {
+        struct {
+            uint32_t v_rtc_dbias20_hi:          3;
+            uint32_t v_dig_dbias20:             8;
+            uint32_t dig_dbias_hvt:             5;
+            uint32_t reserved1:                 7;
+            uint32_t wafer_version_minor_high:  1;
+            uint32_t wafer_version_major:       2;
+            uint32_t reserved2:                 6;
+        };
+        uint32_t val;
+    } rd_mac_spi_sys_5;
     uint32_t rd_sys_part1_data0;
     uint32_t rd_sys_part1_data1;
     uint32_t rd_sys_part1_data2;
     uint32_t rd_sys_part1_data3;
-    uint32_t rd_sys_part1_data4;
+    union {
+        struct {
+            uint32_t blk_version_major:      2;
+            uint32_t reserved1:              11;
+            uint32_t ocode:                  8;  /*ADC OCode*/
+            uint32_t reserved2:              11;
+        };
+        uint32_t val;
+    } rd_sys_part1_data4;
     uint32_t rd_sys_part1_data5;
     uint32_t rd_sys_part1_data6;
     uint32_t rd_sys_part1_data7;
@@ -294,9 +318,9 @@ typedef volatile struct efuse_dev_s {
             uint32_t reg_flash_page_size_err       :    2;  /*If any bits in this filed are 1, then it indicates a programming error.*/
             uint32_t reg_flash_ecc_en_err          :    1;  /*If any bits in this filed are 1, then it indicates a programming error.*/
             uint32_t reg_force_send_resume_err     :    1;  /*If any bits in this filed are 1, then it indicates a programming error.*/
-            uint32_t reg_secure_version_err        :    16; /*If any bits in this filed are 1, then it indicates a programming error.*/
+            uint32_t reg_secure_version_err        :    16;  /*If any bits in this filed are 1, then it indicates a programming error.*/
             uint32_t reg_rpt4_reserved1_err        :    1;  /*Reserved.*/
-            uint32_t reg_dis_usb_otg_download_mode_err: 1;  /*Set this bit to disable download through USB-OTG*/
+            uint32_t reg_dis_usb_otg_download_mode_err:    1;  /*Set this bit to disable download through USB-OTG*/
         };
         uint32_t val;
     } rd_repeat_err3;

@@ -106,11 +106,6 @@ extern "C" {
  * Set by the netif driver in its init function. */
 #define NETIF_FLAG_MLD6         0x40U
 
-#if ESP_GRATUITOUS_ARP
-/** If set, the netif will send gratuitous ARP periodically */
-#define NETIF_FLAG_GARP         0x80U
-#endif
-
 /**
  * @}
  */
@@ -259,11 +254,6 @@ struct netif_hint {
 #define LWIP_NETIF_USE_HINTS              0
 #endif /* LWIP_NETIF_HWADDRHINT */
 
-#if ESP_DHCP
-/*add DHCP event processing by LiuHan*/
-typedef void (*dhcp_event_fn)(void);
-#endif
-
 /** Generic data structure used for all lwIP network interfaces.
  *  The following fields should be filled in by the initialization
  *  function for the device driver: hwaddr_len, hwaddr[], mtu, flags */
@@ -292,9 +282,6 @@ struct netif {
   u32_t ip6_addr_valid_life[LWIP_IPV6_NUM_ADDRESSES];
   u32_t ip6_addr_pref_life[LWIP_IPV6_NUM_ADDRESSES];
 #endif /* LWIP_IPV6_ADDRESS_LIFETIMES */
-#if ESP_LWIP
-  void (*ipv6_addr_cb)(struct netif* netif, u8_t ip_idex); /* callback for ipv6 addr states changed */
-#endif
 #endif /* LWIP_IPV6 */
   /** This function is called by the network device driver
    *  to pass a packet up the TCP/IP stack. */
@@ -337,12 +324,6 @@ struct netif {
 #ifdef netif_get_client_data
   void* client_data[LWIP_NETIF_CLIENT_DATA_INDEX_MAX + LWIP_NUM_NETIF_CLIENT_DATA];
 #endif
-
-#if ESP_DHCP
-  struct udp_pcb *dhcps_pcb;	
-  dhcp_event_fn dhcp_event;
-#endif
-
 #if LWIP_NETIF_HOSTNAME
   /* the hostname for this netif, NULL is a valid value */
   const char*  hostname;
@@ -405,17 +386,16 @@ struct netif {
 #if LWIP_LOOPBACK_MAX_PBUFS
   u16_t loop_cnt_current;
 #endif /* LWIP_LOOPBACK_MAX_PBUFS */
+#if LWIP_NETIF_LOOPBACK_MULTITHREADING
+  /* Used if the original scheduling failed. */
+  u8_t reschedule_poll;
+#endif /* LWIP_NETIF_LOOPBACK_MULTITHREADING */
 #endif /* ENABLE_LOOPBACK */
-#if ESP_PBUF
-  void (*l2_buffer_free_notify)(struct netif *lwip_netif, void *user_buf); /* Allows LWIP to notify driver when a L2-supplied pbuf can be freed */
-  ip_addr_t last_ip_addr; /* Store last non-zero ip address */
-#endif
-#if ESP_LWIP
 #if LWIP_IPV4 && IP_NAPT
   u8_t napt;
-#endif
-#endif /* ESP_LWIP */
+#endif /*LWIP_IPV4 && IP_NAPT */
 };
+
 #if LWIP_CHECKSUM_CTRL_PER_NETIF
 #define NETIF_SET_CHECKSUM_CTRL(netif, chksumflags) do { \
   (netif)->chksum_flags = chksumflags; } while(0)
@@ -448,11 +428,6 @@ void netif_set_addr(struct netif *netif, const ip4_addr_t *ipaddr, const ip4_add
 #else /* LWIP_IPV4 */
 struct netif *netif_add(struct netif *netif, void *state, netif_init_fn init, netif_input_fn input);
 #endif /* LWIP_IPV4 */
-
-#if ESP_GRATUITOUS_ARP
-void netif_set_garp_flag(struct netif *netif);
-#endif
-
 void netif_remove(struct netif * netif);
 
 /* Returns a network interface given its name. The name is of the form
@@ -483,7 +458,7 @@ void netif_set_gw(struct netif *netif, const ip4_addr_t *gw);
 
 #define netif_set_flags(netif, set_flags)     do { (netif)->flags = (u8_t)((netif)->flags |  (set_flags)); } while(0)
 #define netif_clear_flags(netif, clr_flags)   do { (netif)->flags = (u8_t)((netif)->flags & (u8_t)(~(clr_flags) & 0xff)); } while(0)
-#define netif_is_flag_set(nefif, flag)        (((netif)->flags & (flag)) != 0)
+#define netif_is_flag_set(netif, flag)        (((netif)->flags & (flag)) != 0)
 
 void netif_set_up(struct netif *netif);
 void netif_set_down(struct netif *netif);

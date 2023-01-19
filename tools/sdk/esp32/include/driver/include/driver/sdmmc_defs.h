@@ -21,11 +21,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SDMMC_DEFS_H_
-#define _SDMMC_DEFS_H_
+#pragma once
 
 #include <stdint.h>
 #include <limits.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* MMC commands */                              /* response type */
 #define MMC_GO_IDLE_STATE               0       /* R0 */
@@ -47,12 +50,17 @@
 #define MMC_SET_BLOCK_COUNT             23      /* R1 */
 #define MMC_WRITE_BLOCK_SINGLE          24      /* R1 */
 #define MMC_WRITE_BLOCK_MULTIPLE        25      /* R1 */
+#define MMC_ERASE_GROUP_START           35      /* R1 */
+#define MMC_ERASE_GROUP_END             36      /* R1 */
+#define MMC_ERASE                       38      /* R1B */
 #define MMC_APP_CMD                     55      /* R1 */
 
 /* SD commands */                               /* response type */
 #define SD_SEND_RELATIVE_ADDR           3       /* R6 */
 #define SD_SEND_SWITCH_FUNC             6       /* R1 */
 #define SD_SEND_IF_COND                 8       /* R7 */
+#define SD_ERASE_GROUP_START            32      /* R1 */
+#define SD_ERASE_GROUP_END              33      /* R1 */
 #define SD_READ_OCR                     58      /* R3 */
 #define SD_CRC_ON_OFF                   59      /* R1 */
 
@@ -98,6 +106,9 @@
 #define MMC_R1_READY_FOR_DATA           (1<<8)  /* ready for next transfer */
 #define MMC_R1_APP_CMD                  (1<<5)  /* app. commands supported */
 #define MMC_R1_SWITCH_ERROR             (1<<7)  /* switch command did not succeed */
+#define MMC_R1_CURRENT_STATE_POS        (9)
+#define MMC_R1_CURRENT_STATE_MASK       (0x1E00)/* card current state */
+#define MMC_R1_CURRENT_STATE_TRAN       (4)
 
 /* SPI mode R1 response type bits */
 #define SD_SPI_R1_IDLE_STATE            (1<<0)
@@ -110,6 +121,20 @@
 #define SD_SPI_R1_NO_RESPONSE           (1<<7)
 
 #define SDIO_R1_FUNC_NUM_ERR            (1<<4)
+
+/* SPI mode R2 response type bits.
+ * The first byte is the same as for R1.
+ * The bits below belong to the second byte.
+ * Bits 10, 11, 12, 15 can also be reported in data error token of a read command response.
+ */
+#define SD_SPI_R2_CARD_LOCKED           (1<<8)  /* Set when the card is locked by the user */
+#define SD_SPI_R2_UNLOCK_FAILED         (1<<9)  /* Host attempts to erase a write-protected sector or makes an error during card lock/unlock operation */
+#define SD_SPI_R2_ERROR                 (1<<10) /* A general or an unknown error occurred during the operation */
+#define SD_SPI_R2_CC_ERROR              (1<<11) /* Internal card controller error */
+#define SD_SPI_R2_ECC_FAILED            (1<<12) /* Card internal ECC was applied but failed to correct the data */
+#define SD_SPI_R2_WP_VIOLATION          (1<<13) /* The command tried to write a write-protected block */
+#define SD_SPI_R2_ERASE_PARAM           (1<<14) /* An invalid selection for erase, sectors or groups */
+#define SD_SPI_R2_OUT_OF_RANGE          (1<<15) /* The command argument was out of the allowed range for this card */
 
 /* 48-bit response decoding (32 bits w/o CRC) */
 #define MMC_R1(resp)                    ((resp)[0])
@@ -141,21 +166,26 @@
 #define SD_ARG_BUS_WIDTH_4              2
 
 /* EXT_CSD fields */
+#define EXT_CSD_SANITIZE_START          165     /* WO */
+#define EXT_CSD_ERASED_MEM_CONT         181     /* RO */
 #define EXT_CSD_BUS_WIDTH               183     /* WO */
 #define EXT_CSD_HS_TIMING               185     /* R/W */
+#define EXT_CSD_POWER_CLASS             187     /* R/W */
+#define EXT_CSD_CMD_SET                 191     /* R/W */
 #define EXT_CSD_REV                     192     /* RO */
 #define EXT_CSD_STRUCTURE               194     /* RO */
 #define EXT_CSD_CARD_TYPE               196     /* RO */
-#define EXT_CSD_SEC_COUNT               212     /* RO */
-#define EXT_CSD_PWR_CL_26_360           203     /* RO */
-#define EXT_CSD_PWR_CL_52_360           202     /* RO */
-#define EXT_CSD_PWR_CL_26_195           201     /* RO */
 #define EXT_CSD_PWR_CL_52_195           200     /* RO */
-#define EXT_CSD_POWER_CLASS             187     /* R/W */
-#define EXT_CSD_CMD_SET                 191     /* R/W */
+#define EXT_CSD_PWR_CL_26_195           201     /* RO */
+#define EXT_CSD_PWR_CL_52_360           202     /* RO */
+#define EXT_CSD_PWR_CL_26_360           203     /* RO */
+#define EXT_CSD_SEC_COUNT               212     /* RO */
+#define EXT_CSD_SEC_FEATURE_SUPPORT     231     /* RO */
 #define EXT_CSD_S_CMD_SET               504     /* RO */
 
 /* EXT_CSD field definitions */
+#define EXT_CSD_REV_1_6                 6       /* Revision 1.6 (for MMC v4.5, v4.51) */
+
 #define EXT_CSD_CMD_SET_NORMAL          (1U << 0)
 #define EXT_CSD_CMD_SET_SECURE          (1U << 1)
 #define EXT_CSD_CMD_SET_CPSECURE        (1U << 2)
@@ -185,6 +215,12 @@
 #define EXT_CSD_CARD_TYPE_52M_V18       0x07
 #define EXT_CSD_CARD_TYPE_52M_V12       0x0b
 #define EXT_CSD_CARD_TYPE_52M_V12_18    0x0f
+
+/* EXT_CSD_SEC_FEATURE_SUPPORT */
+#define EXT_CSD_SECURE_ER_EN            (uint8_t)(1 << 0)
+#define EXT_CSD_SEC_BD_BLK_EN           (uint8_t)(1 << 2)
+#define EXT_CSD_SEC_GB_CL_EN            (uint8_t)(1 << 4)
+#define EXT_CSD_SEC_SANITIZE            (uint8_t)(1 << 6)
 
 /* EXT_CSD MMC */
 #define EXT_CSD_MMC_SIZE 512
@@ -336,6 +372,15 @@
 #define SCR_CMD_SUPPORT_CMD20(scr)      MMC_RSP_BITS((scr), 32, 1)
 #define SCR_RESERVED2(scr)              MMC_RSP_BITS((scr), 0, 32)
 
+/* SSR (SD Status Register) */
+#define SSR_DAT_BUS_WIDTH(ssr)          MMC_RSP_BITS((ssr), 510, 2)
+#define SSR_AU_SIZE(ssr)                MMC_RSP_BITS((ssr), 428, 4)
+#define SSR_ERASE_SIZE(ssr)             MMC_RSP_BITS((ssr), 408, 16)
+#define SSR_ERASE_TIMEOUT(ssr)          MMC_RSP_BITS((ssr), 402, 6)
+#define SSR_ERASE_OFFSET(ssr)           MMC_RSP_BITS((ssr), 400, 2)
+#define SSR_DISCARD_SUPPORT(ssr)        MMC_RSP_BITS((ssr), 313, 1)
+#define SSR_FULE_SUPPORT(ssr)           MMC_RSP_BITS((ssr), 312, 1)
+
 /* Max supply current in SWITCH_FUNC response (in mA) */
 #define SD_SFUNC_I_MAX(status) (MMC_RSP_BITS((uint32_t *)(status), 496, 16))
 
@@ -364,6 +409,8 @@
 #define SD_ACCESS_MODE_SDR50    2       /* UHS-I, 100 MHz clock */
 #define SD_ACCESS_MODE_SDR104   3       /* UHS-I, 208 MHz clock */
 #define SD_ACCESS_MODE_DDR50    4       /* UHS-I, 50 MHz clock, DDR */
+
+#define SD_SSR_SIZE 64                 /* SD status register */
 
 /**
  * @brief Extract up to 32 sequential bits from an array of 32-bit words
@@ -487,4 +534,6 @@ static inline uint32_t MMC_RSP_BITS(uint32_t *src, int start, int len)
 #define SDMMC_TIMING_HIGHSPEED 1
 #define SDMMC_TIMING_MMC_DDR52 2
 
-#endif //_SDMMC_DEFS_H_
+#ifdef __cplusplus
+}
+#endif

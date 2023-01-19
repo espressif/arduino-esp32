@@ -468,6 +468,8 @@ struct tcp_pcb * tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog);
 
 void             tcp_abort (struct tcp_pcb *pcb);
 err_t            tcp_close   (struct tcp_pcb *pcb);
+err_t            tcp_close_ext(struct tcp_pcb *pcb, u8_t rst_on_unacked_data);
+
 err_t            tcp_shutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx);
 
 err_t            tcp_write   (struct tcp_pcb *pcb, const void *dataptr, u16_t len,
