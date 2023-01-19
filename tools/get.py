@@ -75,6 +75,10 @@ def unpack(filename, destination):
         tfile = tarfile.open(filename, 'r:gz')
         tfile.extractall(destination)
         dirname = tfile.getnames()[0]
+    elif filename.endswith('tar.xz'):
+        tfile = tarfile.open(filename, 'r:xz')
+        tfile.extractall(destination)
+        dirname = tfile.getnames()[0]
     elif filename.endswith('zip'):
         zfile = zipfile.ZipFile(filename)
         zfile.extractall(destination)
