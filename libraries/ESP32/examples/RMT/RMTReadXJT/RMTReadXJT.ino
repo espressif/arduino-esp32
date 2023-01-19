@@ -198,6 +198,6 @@ void setup()
 void loop() 
 {
     // printout some of the channels
-    Serial.printf("%04x %04x %04x %04x\n", channels[0], channels[1], channels[2], channels[3]);
+    Serial.printf("%04lx %04lx %04lx %04lx\n", channels[0], channels[1], channels[2], channels[3]);
     delay(500);
 }

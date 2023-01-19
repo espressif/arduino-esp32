@@ -113,7 +113,7 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
             result = Vendor.sendResponse(rhport, request, (void*) &vendor_line_coding, sizeof(request_line_coding_t));
           } else if (requestStage == REQUEST_STAGE_ACK) {
             //In the ACK stage the response is complete
-            HWSerial.printf("Vendor Line Coding: bit_rate: %u, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity);
+            HWSerial.printf("Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity);
           }
           result = true;
           break;

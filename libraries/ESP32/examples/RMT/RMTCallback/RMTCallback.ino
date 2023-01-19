@@ -62,6 +62,6 @@ void setup()
 
 void loop()
 {
-  Serial.printf("GPIO 4: %08x 5: %08x 10: %08x\n", mp1.val(), mp2.val(), mp3.val());
+  Serial.printf("GPIO 4: %08lx 5: %08lx 10: %08lx\n", mp1.val(), mp2.val(), mp3.val());
   delay(500);
 }

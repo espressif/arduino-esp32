@@ -120,7 +120,7 @@ void loop(){
       if(read_counter == AVERAGE_EVERY_N_SAMPLES){
         averaged_reading = read_sum / AVERAGE_EVERY_N_SAMPLES;
         //Serial.printf("averaged_reading = %d over %d samples\n", averaged_reading, read_counter); // Print with additional info
-        Serial.printf("Averaged_signal:%d", averaged_reading); // Print compatible with Arduino Plotter
+        Serial.printf("Averaged_signal:%ld", averaged_reading); // Print compatible with Arduino Plotter
         read_counter = 0;
         read_sum = 0;
       }
