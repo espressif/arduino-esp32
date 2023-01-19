@@ -1,47 +1,39 @@
 #include <Arduino.h>
-#include <FunctionalInterrupt.h>
 
 #define BUTTON1 16
 #define BUTTON2 17
 
-class Button
-{
-public:
-	Button(uint8_t reqPin) : PIN(reqPin){
-		pinMode(PIN, INPUT_PULLUP);
-		attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
-	};
-	~Button() {
-		detachInterrupt(PIN);
-	}
-
-	void ARDUINO_ISR_ATTR isr() {
-		numberKeyPresses += 1;
-		pressed = true;
-	}
-
-	void checkPressed() {
-		if (pressed) {
-			Serial.printf("Button on pin %u has been pressed %u times\n", PIN, numberKeyPresses);
-			pressed = false;
-		}
-	}
-
-private:
-	const uint8_t PIN;
-    volatile uint32_t numberKeyPresses;
-    volatile bool pressed;
+struct Button {
+  uint8_t PIN;
+  volatile uint32_t numberKeyPresses;
+  volatile int pressed;
+  void (*isr)(struct Button*);
 };
 
-Button button1(BUTTON1);
-Button button2(BUTTON2);
+void isr(struct Button* button) {
+  button->numberKeyPresses += 1;
+  button->pressed = 1;
+}
 
+void checkPressed(struct Button* button) {
+  if(button->pressed) {
+    Serial.printf("Button on pin %u has been pressed %u times\n", button->PIN, button->numberKeyPresses);
+    button->pressed = 0;
+  }
+}
+
+struct Button button1 = {BUTTON1, 0, 0, isr};
+struct Button button2 = {BUTTON2, 0, 0, isr};
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
+  pinMode(button1.PIN, INPUT_PULLUP);
+  pinMode(button2.PIN, INPUT_PULLUP);
+  attachInterrupt(button1.PIN, &isr, FALLING);
+  attachInterrupt(button2.PIN, &isr, FALLING);
 }
 
 void loop() {
-	button1.checkPressed();
-	button2.checkPressed();
+  checkPressed(&button1);
+  checkPressed(&button2);
 }
