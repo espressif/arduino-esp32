@@ -1,15 +1,15 @@
 # Queue
 
-This example demonstrates basic usage of FreeRTOS Queues which enables tasks to pass data between each other in a secure asynchronous way.
-Please refer to other examples in this folder to better understand usage of tasks.
-It is also advised to read documentation on FreeRTOS web pages:
+This example demonstrates the basic usage of FreeRTOS Queues which enables tasks to pass data between each other in a secure asynchronous way.
+Please refer to other examples in this folder to better understand the usage of tasks.
+It is also advised to read the documentation on FreeRTOS web pages:
 [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
 
-This example reads data received on serial port (sent by user) pass it via queue to another task which will send it back on Serial Output.
+This example reads data received on the serial port (sent by the user) pass it via queue to another task which will send it back on Serial Output.
 
 ### Theory:
-A queue is a simple to use data structure (in the most basic way) controlled by `xQueueSend` and `xQueueReceive` functions.
-Usually one task writes into the queue and the other task reads from it.
+A queue is a simple-to-use data structure (in the most basic way) controlled by `xQueueSend` and `xQueueReceive` functions.
+Usually, one task writes into the queue and the other task reads from it.
 Usage of queues enables the reading task to yield the CPU until there are data in the queue and therefore not waste precious computation time.
 
 # Supported Targets
