@@ -22,12 +22,12 @@
 
 #include "hal/usb_hal.h"
 #include "hal/gpio_ll.h"
+#include "hal/clk_gate_ll.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "driver/gpio.h"
-#include "driver/periph_ctrl.h"
 
 #include "esp_rom_gpio.h"
 
@@ -395,9 +395,9 @@ static void hw_cdc_reset_handler(void *arg) {
 
 static void usb_switch_to_cdc_jtag(){
     // Disable USB-OTG
-    periph_module_reset(PERIPH_USB_MODULE);
-    //periph_module_enable(PERIPH_USB_MODULE);
-    periph_module_disable(PERIPH_USB_MODULE);
+    periph_ll_reset(PERIPH_USB_MODULE);
+    //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
+    periph_ll_disable_clk_set_rst(PERIPH_USB_MODULE);
 
     // Switch to hardware CDC+JTAG
     CLEAR_PERI_REG_MASK(RTC_CNTL_USB_CONF_REG, (RTC_CNTL_SW_HW_USB_PHY_SEL|RTC_CNTL_SW_USB_PHY_SEL|RTC_CNTL_USB_PAD_ENABLE));
@@ -457,8 +457,8 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
                 chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
 #if CONFIG_IDF_TARGET_ESP32S2
             } else {
-                periph_module_reset(PERIPH_USB_MODULE);
-                periph_module_enable(PERIPH_USB_MODULE);
+                periph_ll_reset(PERIPH_USB_MODULE);
+                periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
 #endif
             }
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
@@ -696,8 +696,8 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     //} else 
     if(!usb_did_persist || !usb_persist_enabled){
         // Reset USB module
-        periph_module_reset(PERIPH_USB_MODULE);
-        periph_module_enable(PERIPH_USB_MODULE);
+        periph_ll_reset(PERIPH_USB_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
     }
 
     tinyusb_config_t tusb_cfg = {
