@@ -16,7 +16,7 @@ public:
 	}
 
 	void ARDUINO_ISR_ATTR isr() {
-		numberKeyPresses += 1;
+		numberKeyPresses = numberKeyPresses + 1;
 		pressed = true;
 	}
 

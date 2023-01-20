@@ -123,7 +123,8 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = format_if_mount_failed,
         .max_files = maxOpenFiles,
-        .allocation_unit_size = 0
+        .allocation_unit_size = 0,
+        .disk_status_check_enable = false
     };
 
     esp_err_t ret = esp_vfs_fat_sdmmc_mount(mountpoint, &host, &slot_config, &mount_config, &_card);
