@@ -36,10 +36,10 @@
 #include "freertos/ringbuf.h"
 
 #include "esp_intr_alloc.h"
-#include "driver/periph_ctrl.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
 #include "hal/i2c_ll.h"
+#include "hal/clk_gate_ll.h"
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
 
@@ -292,10 +292,10 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = (frequency * 5) / 4;
 
     if (i2c->num == 0) {
-        periph_module_enable(PERIPH_I2C0_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_I2C_NUM > 1
     } else {
-        periph_module_enable(PERIPH_I2C1_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
     }
     
