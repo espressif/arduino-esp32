@@ -21,7 +21,7 @@ volatile uint32_t lastIsrAt = 0;
 void ARDUINO_ISR_ATTR onTimer(){
   // Increment the counter and set the time of ISR
   portENTER_CRITICAL_ISR(&timerMux);
-  isrCounter++;
+  isrCounter = isrCounter + 1;
   lastIsrAt = millis();
   portEXIT_CRITICAL_ISR(&timerMux);
   // Give a semaphore that we can check in the loop

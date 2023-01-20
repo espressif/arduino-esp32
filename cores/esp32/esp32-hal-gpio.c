@@ -98,7 +98,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 #endif
 
-    if (!GPIO_IS_VALID_GPIO(pin)) {
+    if (pin >= SOC_GPIO_PIN_COUNT) {
         log_e("Invalid pin selected");
         return;
     }

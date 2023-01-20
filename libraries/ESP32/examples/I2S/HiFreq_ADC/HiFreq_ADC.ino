@@ -51,7 +51,9 @@ void i2sInit(){
     .dma_buf_len = I2S_DMA_BUF_LEN,
     .use_apll = false,
     .tx_desc_auto_clear = false,
-    .fixed_mclk = 0
+    .fixed_mclk = 0,
+    .mclk_multiple = esp_i2s::I2S_MCLK_MULTIPLE_128,
+    .bits_per_chan = esp_i2s::I2S_BITS_PER_CHAN_DEFAULT
   };
   Serial.printf("Attempting to setup I2S ADC with sampling frequency %d Hz\n", I2S_SAMPLE_RATE);
   if(ESP_OK != i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL)){

@@ -673,7 +673,9 @@ static bool _init_bt(const char *deviceName)
         return false;
     }
 
-    if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
+    esp_spp_cfg_t cfg = BT_SPP_DEFAULT_CONFIG();
+    cfg.mode = ESP_SPP_MODE_CB;
+    if (esp_spp_enhanced_init(&cfg) != ESP_OK){
         log_e("spp init failed");
         return false;
     }

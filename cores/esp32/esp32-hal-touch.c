@@ -91,7 +91,12 @@ static void __touchSetCycles(uint16_t measure, uint16_t sleep)
 {
     __touchSleepCycles = sleep;
     __touchMeasureCycles = measure;
-    touch_pad_set_meas_time(sleep, measure);
+#if SOC_TOUCH_VERSION_1                         // ESP32
+    touch_pad_set_measurement_clock_cycles(measure);
+#elif SOC_TOUCH_VERSION_2                         // ESP32S2, ESP32S3
+    touch_pad_set_charge_discharge_times(measure);
+#endif
+    touch_pad_set_measurement_interval(sleep);
 }
 
 
@@ -112,7 +117,8 @@ static void __touchInit()
     }
     // the next two lines will drive the touch reading values -- both will return ESP_OK
     touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V); 
-    touch_pad_set_meas_time(__touchMeasureCycles, __touchSleepCycles);
+    touch_pad_set_measurement_clock_cycles(__touchMeasureCycles);
+    touch_pad_set_measurement_interval(__touchSleepCycles);
     // Touch Sensor Timer initiated
     touch_pad_set_fsm_mode(TOUCH_FSM_MODE_TIMER);   // returns ESP_OK
     err = touch_pad_filter_start(10);
@@ -131,7 +137,8 @@ static void __touchInit()
         goto err;
     }
     // the next lines will drive the touch reading values -- all os them return ESP_OK
-    touch_pad_set_meas_time(__touchSleepCycles, __touchMeasureCycles);
+    touch_pad_set_charge_discharge_times(__touchMeasureCycles);
+    touch_pad_set_measurement_interval(__touchSleepCycles);
     touch_pad_set_voltage(TOUCH_PAD_HIGH_VOLTAGE_THRESHOLD, TOUCH_PAD_LOW_VOLTAGE_THRESHOLD, TOUCH_PAD_ATTEN_VOLTAGE_THRESHOLD);
     touch_pad_set_idle_channel_connect(TOUCH_PAD_IDLE_CH_CONNECT_DEFAULT);
     touch_pad_denoise_t denoise = {

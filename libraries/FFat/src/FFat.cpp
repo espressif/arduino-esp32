@@ -53,12 +53,13 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
       .max_files = maxOpenFiles,
-      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+      .disk_status_check_enable = false
     };
-    esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
+    esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
         log_e("Mounting FFat partition failed! Error: %d", err);
-        esp_vfs_fat_spiflash_unmount(basePath, _wl_handle);
+        esp_vfs_fat_spiflash_unmount_rw_wl(basePath, _wl_handle);
         _wl_handle = WL_INVALID_HANDLE;
         return false;
     }
@@ -69,7 +70,7 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
 void F_Fat::end()
 {
     if(_wl_handle != WL_INVALID_HANDLE){
-        esp_err_t err = esp_vfs_fat_spiflash_unmount(_impl->mountpoint(), _wl_handle);
+        esp_err_t err = esp_vfs_fat_spiflash_unmount_rw_wl(_impl->mountpoint(), _wl_handle);
         if(err){
             log_e("Unmounting FFat partition failed! Error: %d", err);
             return;
@@ -109,13 +110,14 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = true,
       .max_files = 1,
-      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+      .disk_status_check_enable = false
     };
-    result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
-    esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
+    result = esp_vfs_fat_spiflash_mount_rw_wl("/format_ffat", partitionLabel, &conf, &temp_handle);
+    esp_vfs_fat_spiflash_unmount_rw_wl("/format_ffat", temp_handle);
     if (result != ESP_OK){
         res = false;
-        log_w("esp_vfs_fat_spiflash_mount failed!");
+        log_w("esp_vfs_fat_spiflash_mount_rw_wl failed!");
     }
     return res;
 }

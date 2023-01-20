@@ -60,7 +60,7 @@ volatile size_t sent_bytes = 0, received_bytes = 0;
 void onReceiveFunction(void) {
   // This is a callback function that will be activated on UART RX events
   size_t available = Serial1.available();
-  received_bytes += available;
+  received_bytes = received_bytes + available;
   Serial.printf("onReceive Callback:: There are %d bytes available: ", available);
   while (available --) {
     Serial.print((char)Serial1.read());

@@ -21,6 +21,7 @@ static esp_ble_gap_periodic_adv_sync_params_t periodic_adv_sync_params = {
     .filter_policy = 0,
     .sid = 0,
     .addr_type = BLE_ADDR_TYPE_RANDOM,
+    .addr = {0,0,0,0,0,0},
     .skip = 10,
     .sync_timeout = 1000, // timeout: 1000 * 10ms
 };

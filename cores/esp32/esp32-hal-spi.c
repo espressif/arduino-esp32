@@ -1515,11 +1515,11 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
 
     uint8_t calN = 1;
     spiClk_t bestReg = { 0 };
-    int32_t bestFreq = 0;
+    uint32_t bestFreq = 0;
 
     while(calN <= 0x3F) {
         spiClk_t reg = { 0 };
-        int32_t calFreq;
+        uint32_t calFreq;
         int32_t calPre;
         int8_t calPreVari = -2;
 
@@ -1541,11 +1541,11 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
             }
             reg.clkcnt_l = ((reg.clkcnt_n + 1) / 2);
             calFreq = ClkRegToFreq(&reg);
-            if(calFreq == (int32_t) freq) {
+            if(calFreq == freq) {
                 memcpy(&bestReg, &reg, sizeof(bestReg));
                 break;
-            } else if(calFreq < (int32_t) freq) {
-                if(abs(freq - calFreq) < abs(freq - bestFreq)) {
+            } else if(calFreq < freq) {
+                if((freq - calFreq) < (freq - bestFreq)) {
                     bestFreq = calFreq;
                     memcpy(&bestReg, &reg, sizeof(bestReg));
                 }

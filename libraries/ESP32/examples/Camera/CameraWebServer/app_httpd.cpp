@@ -50,10 +50,12 @@
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
 #pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #include "face_recognition_tool.hpp"
 #include "face_recognition_112_v1_s16.hpp"
 #include "face_recognition_112_v1_s8.hpp"
 #pragma GCC diagnostic error "-Wformat"
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
 
 #define QUANT_TYPE 0 //if set to 1 => very large firmware, very slow, reboots when streaming...
 
