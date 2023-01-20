@@ -42,6 +42,7 @@ License (MIT license):
 #include "WiFi.h"
 #include <functional>
 #include "esp_wifi.h"
+#include "esp_wifi_types.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
@@ -111,18 +112,18 @@ void MDNSResponder::disableArduino(){
     }
 }
 
-// void MDNSResponder::enableWorkstation(esp_interface_t interface){
-//     char winstance[21+_hostname.length()];
-//     uint8_t mac[6];
-//     esp_wifi_get_mac((wifi_interface_t)interface, mac);
-//     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+void MDNSResponder::enableWorkstation(esp_interface_t interface){
+    char winstance[21+_hostname.length()];
+    uint8_t mac[6];
+    esp_wifi_get_mac((wifi_interface_t)interface, mac);
+    sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-//     if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
-//         log_e("Failed adding Workstation service");
-//     } else if(mdns_service_instance_name_set("_workstation", "_tcp", winstance)) {
-//         log_e("Failed setting Workstation service instance name");
-//     }
-// }
+    if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
+        log_e("Failed adding Workstation service");
+    } else if(mdns_service_instance_name_set("_workstation", "_tcp", winstance)) {
+        log_e("Failed setting Workstation service instance name");
+    }
+}
 
 void MDNSResponder::disableWorkstation(){
     if(mdns_service_remove("_workstation", "_tcp")) {
