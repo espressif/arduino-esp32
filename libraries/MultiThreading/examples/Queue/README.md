@@ -1,4 +1,4 @@
-# Queue
+# Queue Example
 
 This example demonstrates the basic usage of FreeRTOS Queues which enables tasks to pass data between each other in a secure asynchronous way.
 Please refer to other examples in this folder to better understand the usage of tasks.

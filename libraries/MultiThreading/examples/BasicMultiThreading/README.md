@@ -1,4 +1,4 @@
-# Basic Multi Threading
+# Basic Multi Threading Example
 
 This example demonstrates the basic usage of FreeRTOS Tasks for multi threading.
 

@@ -1,4 +1,4 @@
-# Mutex
+# Mutex Example
 
 This example demonstrates the basic usage of FreeRTOS Mutually Exclusive Locks (Mutex) for securing access to shared resources in multi-threading.
 Please refer to other examples in this folder to better understand the usage of tasks.
