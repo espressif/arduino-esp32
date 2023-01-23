@@ -25,15 +25,15 @@ function build(){
         ${BUILD_SKETCHES} ${args}
     else
         for sketch in ${sketches}; do
-            args+=" -s $(dirname $sketch)"
-            if [ "$OS_IS_WINDOWS" == "1" ]; then
+            local sargs="$args -s $(dirname $sketch)"
+            if [ "$OS_IS_WINDOWS" == "1" ] && [ -d "$ARDUINO_IDE_PATH/tools-builder" ]; then
                 local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
                 local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
                 win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
                 -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
-                args+=" ${win_opts}"
+                sargs+=" ${win_opts}"
             fi
-            ${BUILD_SKETCH} ${args}
+            ${BUILD_SKETCH} ${sargs}
         done
     fi
 }
