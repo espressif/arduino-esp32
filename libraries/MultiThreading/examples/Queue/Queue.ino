@@ -77,7 +77,6 @@ void TaskWriteToSerial(void *pvParameters){  // This is a task.
       int ret = xQueueReceive(QueueHandle, &message, portMAX_DELAY);
       if(ret == pdPASS){
         // The message was successfully received - send it back to Serial port and "Echo: "
-        //Serial.printf("Echo: \"%s\"\n", line);
         Serial.printf("Echo line of size %d: \"%s\"\n", message.line_length, message.line);
         // The item is queued by copy, not by reference, so lets free the buffer after use.
       }else if(ret == pdFALSE){
