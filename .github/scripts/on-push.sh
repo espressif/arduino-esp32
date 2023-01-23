@@ -9,7 +9,8 @@ function build(){
     local fqbn=$2
     local chunk_index=$3
     local chunks_cnt=$4
-    local sketches=$5
+    shift; shift; shift; shift;
+    local sketches=$*
 
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
@@ -59,7 +60,8 @@ fi
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    source ${SCRIPTS_DIR}/install-arduino-ide.sh
+    #source ${SCRIPTS_DIR}/install-arduino-ide.sh
+    source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
     FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"

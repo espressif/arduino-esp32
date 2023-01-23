@@ -177,6 +177,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             #     $xtra_opts "${sketchdir}/${sketchname}.ino"
         fi
     done
+    unset fqbn
+    unset xtra_opts
+    unset options
 }
 
 function count_sketches(){ # count_sketches <path> [target]
@@ -322,8 +325,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         fi
         echo ""
         echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
-        args+=" -s $sketchdir $xtra_opts"
-        build_sketch $args
+        build_sketch $args -s $sketchdir $xtra_opts
         local result=$?
         if [ $result -ne 0 ]; then
             return $result
