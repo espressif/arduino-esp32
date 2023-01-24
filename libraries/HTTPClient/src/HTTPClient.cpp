@@ -109,8 +109,8 @@ HTTPClient::~HTTPClient()
     if(_client) {
         _client->stop();
     }
-    if(_currentHeaders) {
-        delete[] _currentHeaders;
+    if(_responseHeaders.size()) {
+        _responseHeaders.clear();
     }
     if(_tcpDeprecated) {
         _tcpDeprecated.reset(nullptr);
@@ -589,10 +589,8 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
     uint16_t redirectCount = 0;
     do {
         // wipe out any existing headers from previous request
-        for(size_t i = 0; i < _headerKeysCount; i++) {
-            if (_currentHeaders[i].value.length() > 0) {
-                _currentHeaders[i].value.clear();
-            }
+        if(_responseHeaders.size()) {
+            _responseHeaders.clear();
         }
 
         log_d("request type: '%s' redirCount: %d\n", type, redirectCount);
@@ -1052,53 +1050,50 @@ void HTTPClient::addHeader(const String& name, const String& value, bool first, 
     }
 }
 
-void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKeysCount)
-{
-    _headerKeysCount = headerKeysCount;
-    if(_currentHeaders) {
-        delete[] _currentHeaders;
-    }
-    _currentHeaders = new RequestArgument[_headerKeysCount];
-    for(size_t i = 0; i < _headerKeysCount; i++) {
-        _currentHeaders[i].key = headerKeys[i];
-    }
-}
-
 String HTTPClient::header(const char* name)
 {
-    for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if(_currentHeaders[i].key == name) {
-            return _currentHeaders[i].value;
+    for(size_t i = 0; i < _responseHeaders.size(); i++) {
+        if(_responseHeaders[i].key == name) {
+            return _responseHeaders[i].value;
         }
     }
     return String();
 }
 
+String HTTPClient::getHeaderString()
+{
+    String headersValues;
+    for(size_t i = 0; i < _responseHeaders.size(); i++) {
+        headersValues += _responseHeaders[i].toString();
+    }
+    return headersValues;
+}
+
 String HTTPClient::header(size_t i)
 {
-    if(i < _headerKeysCount) {
-        return _currentHeaders[i].value;
+    if(i < _responseHeaders.size()) {
+        return _responseHeaders[i].value;
     }
     return String();
 }
 
 String HTTPClient::headerName(size_t i)
 {
-    if(i < _headerKeysCount) {
-        return _currentHeaders[i].key;
+    if(i < _responseHeaders.size()) {
+        return _responseHeaders[i].key;
     }
     return String();
 }
 
 int HTTPClient::headers()
 {
-    return _headerKeysCount;
+    return _responseHeaders.size();
 }
 
 bool HTTPClient::hasHeader(const char* name)
 {
-    for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if((_currentHeaders[i].key == name) && (_currentHeaders[i].value.length() > 0)) {
+    for(size_t i = 0; i < _responseHeaders.size(); i++) {
+        if((_responseHeaders[i].key == name) && (_responseHeaders[i].value.length() > 0)) {
             return true;
         }
     }
@@ -1189,8 +1184,10 @@ bool HTTPClient::sendHeader(const char * type)
         header += ':';
         header += String(_port);
     }
-    header += String(F("\r\nUser-Agent: ")) + _userAgent +
-              F("\r\nConnection: ");
+
+    header += String(F("\r\nAccept: */*"));
+
+    header += String(F("\r\nUser-Agent: ")) + _userAgent + F("\r\nConnection: ");
 
     if(_reuse) {
         header += F("keep-alive");
@@ -1256,10 +1253,14 @@ int HTTPClient::handleHeaderResponse()
                 }
                 int codePos = headerLine.indexOf(' ') + 1;
                 _returnCode = headerLine.substring(codePos, headerLine.indexOf(' ', codePos)).toInt();
-            } else if(headerLine.indexOf(':')) {
+            } else if (headerLine.indexOf(':')) {
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
                 headerValue.trim();
+
+                if (headerName.length()) {
+                    _responseHeaders.push_back({ String(headerName.c_str()), String(headerValue.c_str()) });
+                }
 
                 if(headerName.equalsIgnoreCase("Date")) {
                     date = headerValue;
@@ -1286,21 +1287,6 @@ int HTTPClient::handleHeaderResponse()
                 if (headerName.equalsIgnoreCase("Set-Cookie")) {
                     setCookie(date, headerValue);
                 }
-
-                for (size_t i = 0; i < _headerKeysCount; i++) {
-                    if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
-                        // Uncomment the following lines if you need to add support for multiple headers with the same key:
-                        // if (!_currentHeaders[i].value.isEmpty()) {
-                        //     // Existing value, append this one with a comma
-                        //     _currentHeaders[i].value += ',';
-                        //     _currentHeaders[i].value += headerValue;
-                        // } else {
-                        _currentHeaders[i].value = headerValue;
-                        // }
-                        break; // We found a match, stop looking
-                    }
-                }
-
             }
 
             if(headerLine == "") {

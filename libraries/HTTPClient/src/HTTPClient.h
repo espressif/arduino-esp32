@@ -31,13 +31,11 @@
 #define HTTPCLIENT_1_1_COMPATIBLE
 #endif
 
+#include <vector>
 #include <memory>
 #include <Arduino.h>
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-
-/// Cookie jar support
-#include <vector>
 
 #define HTTPCLIENT_DEFAULT_TCP_TIMEOUT (5000)
 
@@ -166,8 +164,8 @@ typedef struct  {
     bool http_only = false;
     bool secure = false;
 } Cookie;
-typedef std::vector<Cookie> CookieJar;
 
+typedef std::vector<Cookie> CookieJar;
 
 class HTTPClient
 {
@@ -224,13 +222,20 @@ public:
     void addHeader(const String& name, const String& value, bool first = false, bool replace = true);
 
     /// Response handling
-    void collectHeaders(const char* headerKeys[], const size_t headerKeysCount);
+    class Header {
+        public:
+            String key;
+            String value;
+            String toString() {
+                return key + ": " + value + "\n";
+            }
+    };
+
     String header(const char* name);   // get request header value by name
     String header(size_t i);              // get request header value by number
     String headerName(size_t i);          // get request header name by number
     int headers();                     // get header count
     bool hasHeader(const char* name);  // check if header exists
-
 
     int getSize(void);
     const String &getLocation(void);
@@ -239,6 +244,7 @@ public:
     WiFiClient* getStreamPtr(void);
     int writeToStream(Stream* stream);
     String getString(void);
+    String getHeaderString(void);
 
     static String errorToString(int error);
 
@@ -248,11 +254,6 @@ public:
     void clearAllCookies();
 
 protected:
-    struct RequestArgument {
-        String key;
-        String value;
-    };
-
     bool beginInternal(String url, const char* expectedProtocol);
     void disconnect(bool preserveClient = false);
     void clear();
@@ -290,8 +291,7 @@ protected:
     String _authorizationType = "Basic";
 
     /// Response handling
-    RequestArgument* _currentHeaders = nullptr;
-    size_t           _headerKeysCount = 0;
+    std::vector<Header> _responseHeaders;
 
     int _returnCode = 0;
     int _size = -1;
