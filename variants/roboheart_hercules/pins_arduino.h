@@ -25,6 +25,9 @@
 #define SLEEP_MOTOR_ABC 2  //  nSLEEP 
 
 #define LED_ROBOHEART 14  // Built in LED
+#define BUILTIN_LED LED_ROBOHEART // backward compatibility
+#define LED_BUILTIN LED_ROBOHEART
+
 #define BUTTON_ROBOHEART 0 // Button
 
 // I2C IMU sensor
@@ -81,7 +84,21 @@ static const uint8_t G34 = 34;
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 
-static const uint8_t ADC1 = 35;
-static const uint8_t ADC2 = 36;
+static const uint8_t A0 = 36;
+static const uint8_t A3 = 39;
+static const uint8_t A4 = 32;
+static const uint8_t A5 = 33;
+static const uint8_t A6 = 34;
+static const uint8_t A7 = 35;
+static const uint8_t A10 = 4;
+static const uint8_t A11 = 0;
+static const uint8_t A12 = 2;
+static const uint8_t A13 = 15;
+static const uint8_t A14 = 13;
+static const uint8_t A15 = 12;
+static const uint8_t A16 = 14;
+static const uint8_t A17 = 27;
+static const uint8_t A18 = 25;
+static const uint8_t A19 = 26;
 
 #endif /* Pins_Arduino_h */

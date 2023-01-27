@@ -20439,8 +20439,6 @@ esp32c3m1IKit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-
-
 roboheart_hercules.name=RoboHeart Hercules
 
 roboheart_hercules.upload.tool=esptool_py
@@ -20458,8 +20456,8 @@ roboheart_hercules.build.bootloader_addr=0x1000
 roboheart_hercules.build.target=esp32
 roboheart_hercules.build.mcu=esp32
 roboheart_hercules.build.core=esp32
-roboheart_hercules.build.variant=deneyapkart1A
-roboheart_hercules.build.board=DYDK1A
+roboheart_hercules.build.variant=roboheart_hercules
+roboheart_hercules.build.board=roboheart_hercules
 
 roboheart_hercules.build.f_cpu=240000000L
 roboheart_hercules.build.flash_size=4MB
@@ -20565,5 +20563,10 @@ roboheart_hercules.menu.DebugLevel.debug=Debug
 roboheart_hercules.menu.DebugLevel.debug.build.code_debug=4
 roboheart_hercules.menu.DebugLevel.verbose=Verbose
 roboheart_hercules.menu.DebugLevel.verbose.build.code_debug=5
+
+roboheart_hercules.menu.EraseFlash.none=Disabled
+roboheart_hercules.menu.EraseFlash.none.upload.erase_cmd=
+roboheart_hercules.menu.EraseFlash.all=Enabled
+roboheart_hercules.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
