@@ -7,7 +7,7 @@
  * Copyright (c) 2015 Markus Sattler. All rights reserved.
  * This file is part of the HTTPClient for Arduino.
  * Port to ESP32 by Evandro Luis Copercini (2017), 
- * changed fingerprints to CA verification. 												 
+ * changed fingerprints to CA verification. 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -605,8 +605,8 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
         if(payload && size > 0) {
             addHeader(F("Content-Length"), String(size));
         } else {
-			// force 0 content length for redirect request
-			addHeader(F("Content-Length"), String("0"));
+            // force 0 content length for redirect request
+            addHeader(F("Content-Length"), String("0"));
         }
 
         // add cookies to header, if present
@@ -622,19 +622,18 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         // send Payload if needed
         if(payload && size > 0) {
-			
-			// this will fail for big payload
-//             if(_client->write(&payload[0], size) != size) {
-//                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
-//             }
-			
-			// send the payload per 1000 bytes
-			log_d("Sending %u byte ...\n", size);
+            // send the payload per 1000 bytes
+            log_d("Sending %u byte ...\n", size);
             size_t sent_bytes = 0;
-			for (size_t id_data = 0; id_data < size; id_data+=1000)
-            {
-                sent_bytes = _client->write(&payload[id_data], ((id_data+1000)<=size)?1000:(size-id_data));
-                log_d("Sent %u bytes\n", sent_bytes);
+            size_t _chunkSize = 1000;
+            
+            while(sent_bytes < size){
+                size_t sent = _client->write(&payload[sent_bytes], std::min(size - sent_bytes, _chunkSize));
+                if (sent < 0){
+                    log_e("Failed to send chunk!");
+                    break;
+                }
+                sent_bytes += sent;
             }
         } 
 
@@ -1157,7 +1156,7 @@ bool HTTPClient::connect(void)
         log_d("transport level verify failed");
         _client->stop();
         return false;
-    }	
+    }
 #endif
     if(!_client->connect(_host.c_str(), _port, _connectTimeout)) {
         log_d("failed connect to %s:%u", _host.c_str(), _port);
@@ -1165,7 +1164,7 @@ bool HTTPClient::connect(void)
     }
 
     // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
-    _client->setTimeout((_tcpTimeout + 500) / 1000);	
+    _client->setTimeout((_tcpTimeout + 500) / 1000);
 
     log_d(" connected to %s:%u", _host.c_str(), _port);
 
@@ -1264,7 +1263,7 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(firstLine) {
-		        firstLine = false;
+                firstLine = false;
                 if(_canReuse && headerLine.startsWith("HTTP/1.")) {
                     _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
                 }
@@ -1396,10 +1395,10 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                 if(readBytes > buff_size) {
                     readBytes = buff_size;
                 }
-		    
-        		// stop if no more reading    
-        		if (readBytes == 0)
-        			break;
+            
+                // stop if no more reading    
+                if (readBytes == 0)
+                    break;
 
                 // read data
                 int bytesRead = _client->readBytes(buff, readBytes);
@@ -1691,7 +1690,7 @@ bool HTTPClient::generateCookieString(String *cookieString)
     {
         return false;
     }
- 	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
+     for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
         if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
             _cookieJar->erase(c);
             c--;
