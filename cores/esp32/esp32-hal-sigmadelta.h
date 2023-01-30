@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+#include "soc/soc_caps.h"
+#if SOC_SDM_SUPPORTED
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -19,7 +22,7 @@ bool    sigmaDeltaWrite(uint8_t pin, uint8_t duty);
 uint8_t sigmaDeltaRead(uint8_t pin);
 bool    sigmaDeltaDetach(uint8_t pin);
 
-
+#endif
 #ifdef __cplusplus
 }
 #endif

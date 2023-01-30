@@ -6,7 +6,8 @@
 
 #include "esp32-hal.h"
 #include "esp32-hal-periman.h"
-#include "soc/soc_caps.h"
+
+#if SOC_SDM_SUPPORTED
 #include "driver/sdm.h"
 
 static bool sigmaDeltaDetachBus(void * bus){
@@ -69,7 +70,7 @@ bool sigmaDeltaWrite(uint8_t pin, uint8_t duty) //chan 0-x according to SOC duty
         }
         return true;
     } else {
-        log_e("pin %u is not attached to SigmaDelta");
+        log_e("pin %u is not attached to SigmaDelta", pin);
     }
     return false;
 }
@@ -85,3 +86,4 @@ bool sigmaDeltaDetach(uint8_t pin)
     }
     return false;
 }
+#endif

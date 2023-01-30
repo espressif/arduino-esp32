@@ -9,6 +9,7 @@ extern "C"
 {
 #endif
 
+#include "soc/soc_caps.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -16,21 +17,41 @@ extern "C"
 typedef enum {
 	ESP32_BUS_TYPE_INIT, 		// IO has not been attached to a bus yet
 	ESP32_BUS_TYPE_GPIO, 		// IO is used as GPIO
+	ESP32_BUS_TYPE_UART, 		// IO is used as UART pin
+#if SOC_SDM_SUPPORTED
 	ESP32_BUS_TYPE_SIGMADELTA, 	// IO is used as SigmeDelta output
+#endif
+#if SOC_ADC_SUPPORTED
 	ESP32_BUS_TYPE_ADC_ONESHOT, // IO is used as ADC OneShot input
 	ESP32_BUS_TYPE_ADC_CONT, 	// IO is used as ADC continuous input
+#endif
+#if SOC_DAC_SUPPORTED
 	ESP32_BUS_TYPE_DAC_ONESHOT, // IO is used as DAC OneShot output
 	ESP32_BUS_TYPE_DAC_CONT, 	// IO is used as DAC continuous output
 	ESP32_BUS_TYPE_DAC_COSINE, 	// IO is used as DAC cosine output
+#endif
+#if SOC_LEDC_SUPPORTED
+	ESP32_BUS_TYPE_LEDC, 		// IO is used as LEDC output
+#endif
+#if SOC_RMT_SUPPORTED
 	ESP32_BUS_TYPE_RMT_TX, 		// IO is used as RMT output
 	ESP32_BUS_TYPE_RMT_RX, 		// IO is used as RMT input
+#endif
+#if SOC_I2S_SUPPORTED
 	ESP32_BUS_TYPE_I2S_STD, 	// IO is used as I2S STD pin
 	ESP32_BUS_TYPE_I2S_PDM, 	// IO is used as I2S PDM pin
 	ESP32_BUS_TYPE_I2S_TDM, 	// IO is used as I2S TDM pin
-	ESP32_BUS_TYPE_UART, 		// IO is used as UART pin
+#endif
+#if SOC_I2C_SUPPORTED
 	ESP32_BUS_TYPE_I2C_MASTER, 	// IO is used as I2C master pin
 	ESP32_BUS_TYPE_I2C_SLAVE, 	// IO is used as I2C slave pin
+#endif
+#if SOC_GPSPI_SUPPORTED
 	ESP32_BUS_TYPE_SPI_MASTER, 	// IO is used as SPI master pin
+#endif
+#if SOC_SDMMC_HOST_SUPPORTED
+	ESP32_BUS_TYPE_SDMMC, 		// IO is used as SDMMC pin
+#endif
 	ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 

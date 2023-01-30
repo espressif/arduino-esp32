@@ -6,7 +6,7 @@
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-periman.h"
-#include "soc/soc_caps.h"
+#include "esp_bit_defs.h"
 
 typedef struct {
 	peripheral_bus_type_t type;
@@ -16,10 +16,12 @@ typedef struct {
 static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX];
 static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
+#define GPIO_NOT_VALID(p) ((p >= SOC_GPIO_PIN_COUNT) || ((SOC_GPIO_VALID_GPIO_MASK & (1ULL << p)) == 0))
+
 bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 	peripheral_bus_type_t otype = ESP32_BUS_TYPE_INIT;
 	void * obus = NULL;
-	if(pin >= SOC_GPIO_PIN_COUNT){
+	if(GPIO_NOT_VALID(pin)){
 		log_e("Invalid pin: %u", pin);
 		return false;
 	}
@@ -53,7 +55,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 }
 
 void * perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type){
-	if(pin >= SOC_GPIO_PIN_COUNT){
+	if(GPIO_NOT_VALID(pin)){
 		log_e("Invalid pin: %u", pin);
 		return NULL;
 	}
@@ -68,7 +70,7 @@ void * perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type){
 }
 
 peripheral_bus_type_t perimanGetPinBusType(uint8_t pin){
-	if(pin >= SOC_GPIO_PIN_COUNT){
+	if(GPIO_NOT_VALID(pin)){
 		log_e("Invalid pin: %u", pin);
 		return ESP32_BUS_TYPE_MAX;
 	}
