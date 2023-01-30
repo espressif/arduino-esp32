@@ -19,7 +19,6 @@ extern "C" {
 //freq 1220-312500 duty 0-255
 bool    sigmaDeltaAttach(uint8_t pin, uint32_t freq);
 bool    sigmaDeltaWrite(uint8_t pin, uint8_t duty);
-uint8_t sigmaDeltaRead(uint8_t pin);
 bool    sigmaDeltaDetach(uint8_t pin);
 
 #endif
