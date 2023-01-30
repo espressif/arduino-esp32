@@ -12,7 +12,7 @@
 #define ARDUINO_RUNNING_CORE 1
 #endif
 
-#define ANALOG_INPUT_PIN 27
+#define ANALOG_INPUT_PIN A0
 
 #ifndef LED_BUILTIN
   #define LED_BUILTIN 13 // Specify the on which is your LED
@@ -21,19 +21,18 @@
 // Define two tasks for Blink & AnalogRead.
 void TaskBlink( void *pvParameters );
 void TaskAnalogRead( void *pvParameters );
-TaskHandle_t task_handle; // You can (don't have to) use this to be able to manipulate a task from somewhere else.
+TaskHandle_t analog_read_task_handle; // You can (don't have to) use this to be able to manipulate a task from somewhere else.
 
 // The setup function runs once when you press reset or power on the board.
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  
   // Set up two tasks to run independently.
   uint32_t blink_delay = 1000; // Delay between changing state on LED pin
   xTaskCreate(
     TaskBlink
     ,  "Task Blink" // A name just for humans
-    ,  1024        // The stack size can be checked by calling `uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);`
+    ,  2048        // The stack size can be checked by calling `uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);`
     ,  (void*) &blink_delay // Task parameter which can modify the task behavior. This must be passed as pointer to void.
     ,  2  // Priority
     ,  NULL // Task handle is not used here - simply pass NULL
@@ -43,21 +42,22 @@ void setup() {
   xTaskCreatePinnedToCore(
     TaskAnalogRead
     ,  "Analog Read"
-    ,  1024  // Stack size
+    ,  2048  // Stack size
     ,  NULL  // When no parameter is used, simply pass NULL
     ,  1  // Priority
-    ,  &task_handle // With task handle we will be able to manipulate with this task.
+    ,  &analog_read_task_handle // With task handle we will be able to manipulate with this task.
     ,  ARDUINO_RUNNING_CORE // Core on which the task will run
     );
 
+  Serial.printf("Basic Multi Threading Arduino Example\n");
   // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
 }
 
 void loop(){
-  if(task_handle != NULL){ // Make sure that the task actually exists
+  if(analog_read_task_handle != NULL){ // Make sure that the task actually exists
     delay(10000);
-    vTaskDelete(task_handle); // Delete task
-    task_handle = NULL; // prevent calling vTaskDelete on non-existing task
+    vTaskDelete(analog_read_task_handle); // Delete task
+    analog_read_task_handle = NULL; // prevent calling vTaskDelete on non-existing task
   }
 }
 
@@ -91,6 +91,12 @@ void TaskBlink(void *pvParameters){  // This is a task.
 
 void TaskAnalogRead(void *pvParameters){  // This is a task.
   (void) pvParameters;
+  // Check if the given analog pin is usable - if not - delete this task
+  if(!adcAttachPin(ANALOG_INPUT_PIN)){
+    Serial.printf("TaskAnalogRead cannot work because the given pin %d cannot be used for ADC - the task will delete itself.\n", ANALOG_INPUT_PIN);
+    analog_read_task_handle = NULL; // Prevent calling vTaskDelete on non-existing task
+    vTaskDelete(NULL); // Delete this task
+  }
   
 /*
   AnalogReadSerial
