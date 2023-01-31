@@ -29,7 +29,7 @@ public:
 	operator bool () const;
 
 	esp_bd_addr_t* getNative() const;
-	std::string    toString() const;
+	std::string    toString(bool capital = false) const;
 
 private:
 	esp_bd_addr_t m_address;
