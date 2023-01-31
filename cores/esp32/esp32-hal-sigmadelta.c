@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp32-hal.h"
-#include "esp32-hal-periman.h"
+#include "esp32-hal-sigmadelta.h"
 
 #if SOC_SDM_SUPPORTED
+#include "esp32-hal.h"
+#include "esp32-hal-periman.h"
 #include "driver/sdm.h"
 
 static bool sigmaDeltaDetachBus(void * bus){
@@ -82,7 +83,7 @@ bool sigmaDeltaDetach(uint8_t pin)
         // will call sigmaDeltaDetachBus
         return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
     } else {
-        log_e("pin %u is not attached to SigmaDelta");
+        log_e("pin %u is not attached to SigmaDelta", pin);
     }
     return false;
 }

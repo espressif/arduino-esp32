@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_SDM_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "soc/soc_caps.h"
-#if SOC_SDM_SUPPORTED
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,7 +21,8 @@ bool    sigmaDeltaAttach(uint8_t pin, uint32_t freq);
 bool    sigmaDeltaWrite(uint8_t pin, uint8_t duty);
 bool    sigmaDeltaDetach(uint8_t pin);
 
-#endif
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_SDM_SUPPORTED */
