@@ -615,13 +615,28 @@ void log_print_buf(const uint8_t *b, size_t len){
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
-#ifndef CONFIG_IDF_TARGET_ESP32S3
+
     if(uart == NULL) {
         return 0;
     }
 
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+
+    while(hw->rxd_cnt.rxd_edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
+        if(flg) return 0;
+        ets_delay_us(1000);
+    }
+
+    UART_MUTEX_LOCK();
+    //log_i("lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->lowpulse.min_cnt, hw->highpulse.min_cnt);
+    unsigned long ret = (hw->lowpulse.lowpulse_min_cnt + hw->highpulse.highpulse_min_cnt + 2) / 2;
+    UART_MUTEX_UNLOCK();
+
+    return ret;
+
+#else
     while(hw->rxd_cnt.edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
         if(flg) return 0;
         ets_delay_us(1000);
@@ -633,8 +648,7 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
     UART_MUTEX_UNLOCK();
 
     return ret;
-#else
-    return 0;
+
 #endif
 }
 
@@ -679,6 +693,11 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
 #elif CONFIG_IDF_TARGET_ESP32S3
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+    hw->rx_filt.glitch_filt = 0x08;
+    hw->rx_filt.glitch_filt_en = 1;
+    hw->conf0.autobaud_en = 0;
+    hw->conf0.autobaud_en = 1;
 #else
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     hw->auto_baud.glitch_filt = 0x08;
@@ -707,23 +726,54 @@ uartDetectBaudrate(uart_t *uart)
     if (!divisor) {
         return 0;
     }
+
     //  log_i(...) below has been used to check C3 baud rate detection results
     //log_i("Divisor = %d\n", divisor);
     //log_i("BAUD RATE based on Positive Pulse %d\n", getApbFrequency()/((hw->pospulse.min_cnt + 1)/2));
     //log_i("BAUD RATE based on Negative Pulse %d\n", getApbFrequency()/((hw->negpulse.min_cnt + 1)/2));
 
-
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-    //hw->conf0.autobaud_en = 0;
-#elif CONFIG_IDF_TARGET_ESP32S3
-#else
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.en = 0;
-#endif
-    uartStateDetectingBaudrate = false; // Initialize for the next round
 
-    unsigned long baudrate = getApbFrequency() / divisor;
-    //log_i("APB_FREQ = %d\nraw baudrate detected = %d", getApbFrequency(), baudrate);
+    uartStateDetectingBaudrate = false; // Initialize for the next round
+    unsigned long baudrate = 0;
+
+
+    #ifdef CONFIG_IDF_TARGET_ESP32S3
+        hw->conf0.autobaud_en = 0;
+
+        uart_sclk_t clk_src;
+        uart_ll_get_sclk(hw, &clk_src);
+
+        switch(clk_src)
+        {
+        case UART_SCLK_APB:
+            baudrate = getApbFrequency() / divisor;
+            break;
+
+        #if SOC_UART_SUPPORT_RTC_CLK
+            case UART_SCLK_RTC:
+                // baudrate = rtc_clk_slow_freq_get_hz() / divisor;
+                log_e("Currently unsupported clock source: UART_SCLK_RTC");
+                return 0;
+        #endif
+
+        #if SOC_UART_SUPPORT_XTAL_CLK
+            case UART_SCLK_XTAL:
+                baudrate = (getXtalFrequencyMhz() * 1000000) / divisor;
+            break;
+        #endif
+
+        default:
+            log_e("You should not ended up here! Unsupported clock source: %d", clk_src);
+            return 0;
+        }
+
+    #else  
+        hw->auto_baud.en = 0;
+        baudrate = getApbFrequency() / divisor;
+        //log_i("APB_FREQ = %d\nraw baudrate detected = %d", getApbFrequency(), baudrate);
+    #endif
+
 
     static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
