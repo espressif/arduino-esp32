@@ -168,7 +168,7 @@ public:
 
     if (upload.status == UPLOAD_FILE_START) {
       // Open the file for writing
-      TRACE("starting upload file %s...", fName.c_str());
+      TRACE("starting upload file %s...\n", fName.c_str());
       if (LittleFS.exists(fName)) {
         LittleFS.remove(fName);
       }  // if
@@ -187,7 +187,7 @@ public:
       if (_fsUploadFile) {
         _fsUploadFile.close();
       }
-      TRACE("uploading %d bytes done.", uploadSize);
+      TRACE("uploading %d bytes done.\n", uploadSize);
     }  // if
   }    // upload()
 
