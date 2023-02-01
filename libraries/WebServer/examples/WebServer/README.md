@@ -1,10 +1,10 @@
-# WebServer example documentation and hints
+# Arduino-ESP32 WebServer Example for WebServer Library
 
 This example shows different techniques on how to use and extend the WebServer for specific purposes
 
 It is a small project in it's own and has some files to use on the web server to show how to use simple REST based services.
 
-It requires some space for a filesystem and runs fine boards with 4 MByte flash using the following options:
+This example requires some space for a filesystem and runs fine boards with 4 MByte flash using the following options:
 
 * Board: ESP32 Dev Module
 * Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -24,7 +24,17 @@ It features
 * serve APIs using REST services (/api/list, /api/sysinfo)
 * define HTML response when no file/api/handler was found
 
+## Supported Targets
+
+Currently, this example supports the following targets.
+
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 |
+| ----------------- | ----- | -------- | -------- |
+|                   | yes   | yes      | yes      |
+
 ## Use the Example
+
+How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espressif/arduino-esp32/tree/master/docs/arduino-ide).
 
 * In the file `secrets.h` you can add the home WiFi network name ans password.
 * Compile and upload to the device.
@@ -36,7 +46,7 @@ It features
 
 ## Implementing a web server
 
-The WebServer library offers a simple path to implement a web server on a ESP32 board.
+The WebServer library offers a simple path to implement a web server on a ESP32 based board.
 
 The advantage on using the WebServer instead of the plain simple WiFiServer is that the WebServer
 takes much care about the http protocol conventions and features and allows easily access to parameters.
@@ -190,7 +200,6 @@ This class has to implements several functions and works in a more detailed way:
 
 * The `canUpload()`and `upload()` methods work similar while the `upload()` method is called multiple times to create, append data and close the new file.
 
-
 ## Registering a special handler for "file not found"
 
 Any other incoming request that was not handled by the registered plug-ins above can be detected by registering
@@ -214,3 +223,24 @@ You may like to change the hostname and the timezone in the lines:
 > #define HOSTNAME "webserver"
 > #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
 > ```
+
+## Troubleshooting
+
+Have a look in the Serial output for some additional runtime information.
+
+## Contribute
+
+To know how to contribute to this project, see [How to contribute.](https://github.com/espressif/arduino-esp32/blob/master/CONTRIBUTING.rst)
+
+If you have any **feedback** or **issue** to report on this example/library, please open an issue or fix it by creating a new PR. Contributions are more than welcome!
+
+Before creating a new issue, be sure to try Troubleshooting and check if the same issue was already created by someone else.
+
+## Resources
+
+* Official ESP32 Forum: [Link](https://esp32.com)
+* Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
+* ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
+* ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
+* Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)
