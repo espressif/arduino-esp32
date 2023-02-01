@@ -163,20 +163,31 @@ public:
   void upload(WebServer UNUSED &server, String UNUSED _requestUri, HTTPUpload &upload) override {
     // ensure that filename starts with '/'
     String fName = upload.filename;
+    static size_t uploadSize;
     if (!fName.startsWith("/")) { fName = "/" + fName; }
 
     if (upload.status == UPLOAD_FILE_START) {
-      // Open the file
-      if (LittleFS.exists(fName)) { LittleFS.remove(fName); }  // if
+      // Open the file for writing
+      TRACE("starting upload file %s...", fName.c_str());
+      if (LittleFS.exists(fName)) {
+        LittleFS.remove(fName);
+      }  // if
       _fsUploadFile = LittleFS.open(fName, "w");
+      uploadSize = 0;
 
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       // Write received bytes
-      if (_fsUploadFile) { _fsUploadFile.write(upload.buf, upload.currentSize); }
+      if (_fsUploadFile) {
+        _fsUploadFile.write(upload.buf, upload.currentSize);
+        uploadSize += upload.currentSize;
+      }
 
     } else if (upload.status == UPLOAD_FILE_END) {
       // Close the file
-      if (_fsUploadFile) { _fsUploadFile.close(); }
+      if (_fsUploadFile) {
+        _fsUploadFile.close();
+      }
+      TRACE("uploading %d bytes done.", uploadSize);
     }  // if
   }    // upload()
 
