@@ -120,7 +120,9 @@ Running on TLS 1.2 using mbedTLS
 Wifi secure connection example for ESP32
 Running on TLS 1.2 using mbedTLS
 #### WiFiClientSecureEnterprise
-TODO
+This example demonstrates a secure connection to a WiFi network using WPA/WPA2 Enterprise (for example eduroam),
+and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.
+..note:: This example is outdated and might not work. For more examples see https://github.com/martinius96/ESP32-eduroam
 #### WiFiClientShowPeerCredentials
 Example of a establishing a secure connection and then
 showing the fingerprint of the certificate. This can
