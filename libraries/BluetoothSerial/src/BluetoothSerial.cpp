@@ -1181,18 +1181,31 @@ std::map<int, std::string> BluetoothSerial::getChannels(const BTAddress &remoteA
     return sdpRecords;
 }
 
-void BluetoothSerial::getBtAddress(uint8_t *mac){
-   const uint8_t *dev_mac = esp_bt_dev_get_address();
-   memcpy(mac, dev_mac, ESP_BD_ADDR_LEN);
+/**
+ * @brief      Gets the MAC address of local BT device in byte array.
+ *
+ * @param      mac [out]  The mac
+ */
+void BluetoothSerial::getBtAddress(uint8_t *mac) {
+    const uint8_t *dev_mac = esp_bt_dev_get_address();
+    memcpy(mac, dev_mac, ESP_BD_ADDR_LEN);
 }
-
-BTAddress BluetoothSerial::getBtAddressObject(){
-  uint8_t mac_arr[ESP_BD_ADDR_LEN];
-  getBtAddress(mac_arr);
-  return BTAddress(mac_arr);
+/**
+ * @brief      Gets the MAC address of local BT device as BTAddress object.
+ *
+ * @return     The BTAddress object.
+ */
+BTAddress BluetoothSerial::getBtAddressObject() {
+    uint8_t mac_arr[ESP_BD_ADDR_LEN];
+    getBtAddress(mac_arr);
+    return BTAddress(mac_arr);
 }
-
-std::string BluetoothSerial::getBtAddressString(){
-  return getBtAddressObject().toString(true);
+/**
+ * @brief      Gets the MAC address of local BT device as string.
+ *
+ * @return     The BT MAC address string.
+ */
+std::string BluetoothSerial::getBtAddressString() {
+    return getBtAddressObject().toString(true);
 }
 #endif

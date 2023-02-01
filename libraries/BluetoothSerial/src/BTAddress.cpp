@@ -91,7 +91,7 @@ esp_bd_addr_t *BTAddress::getNative() const {
  * ```
  * xx:xx:xx:xx:xx:xx
  * ```
- * When the parameter `caputal` == true the format uses capital letters:
+ * When the parameter `capital` == true the format uses capital letters:
  * ```
  * XX:XX:XX:XX:XX:XX
  * ```
@@ -100,11 +100,11 @@ esp_bd_addr_t *BTAddress::getNative() const {
 std::string BTAddress::toString(bool capital) const {
 	auto size = 18;
 	char *res = (char*)malloc(size);
-  if(capital){
-    snprintf(res, size, "%02X:%02X:%02X:%02X:%02X:%02X", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
-  }else{
-    snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
-  }
+	if(capital){
+		snprintf(res, size, "%02X:%02X:%02X:%02X:%02X:%02X", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
+	}else{
+		snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
+	}
 	std::string ret(res);
 	free(res);
 	return ret;
