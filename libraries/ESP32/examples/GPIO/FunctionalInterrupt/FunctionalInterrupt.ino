@@ -7,10 +7,10 @@ struct Button {
   uint8_t PIN;
   volatile uint32_t numberKeyPresses;
   volatile int pressed;
-  void (*isr)(struct Button*);
 };
 
-void isr(struct Button* button) {
+void isr(void* param) {
+  struct Button *button = (struct Button*) param;
   button->numberKeyPresses += 1;
   button->pressed = 1;
 }
@@ -22,15 +22,15 @@ void checkPressed(struct Button* button) {
   }
 }
 
-struct Button button1 = {BUTTON1, 0, 0, isr};
-struct Button button2 = {BUTTON2, 0, 0, isr};
+struct Button button1 = {BUTTON1, 0, 0};
+struct Button button2 = {BUTTON2, 0, 0};
 
 void setup() {
   Serial.begin(115200);
   pinMode(button1.PIN, INPUT_PULLUP);
   pinMode(button2.PIN, INPUT_PULLUP);
-  attachInterrupt(button1.PIN, (void ()())isr, FALLING);
-  attachInterrupt(button2.PIN, (void ()())isr, FALLING);
+  attachInterruptArg(button1.PIN, isr, (void*)&button1, FALLING);
+  attachInterruptArg(button2.PIN, isr, (void*)&button2, FALLING);
 }
 
 void loop() {
