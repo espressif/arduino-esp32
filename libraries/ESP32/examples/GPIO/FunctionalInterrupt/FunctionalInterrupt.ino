@@ -29,8 +29,8 @@ void setup() {
   Serial.begin(115200);
   pinMode(button1.PIN, INPUT_PULLUP);
   pinMode(button2.PIN, INPUT_PULLUP);
-  attachInterrupt(button1.PIN, &isr, FALLING);
-  attachInterrupt(button2.PIN, &isr, FALLING);
+  attachInterrupt(button1.PIN, (void ()())isr, FALLING);
+  attachInterrupt(button2.PIN, (void ()())isr, FALLING);
 }
 
 void loop() {
