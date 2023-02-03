@@ -132,7 +132,7 @@ void BLEEddystoneTLM::setVolt(uint16_t volt) {
 } // setVolt
 
 void BLEEddystoneTLM::setTemp(float temp) {
-	m_eddystoneData.temp = (uint16_t)temp;
+	m_eddystoneData.temp = (int16_t)temp;
 } // setTemp
 
 void BLEEddystoneTLM::setCount(uint32_t advCount) {

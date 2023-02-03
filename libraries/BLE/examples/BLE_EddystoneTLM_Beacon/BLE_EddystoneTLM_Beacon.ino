@@ -50,7 +50,7 @@ void setBeacon()
   uint16_t volt = random(2800, 3700); // 3300mV = 3.3V
   float tempFloat = random(2000, 3100) / 100.0f;
   Serial.printf("Random temperature is %.2fC\n", tempFloat);
-  int temp = (int)(tempFloat * 256); //(uint16_t)((float)23.00);
+  int16_t temp = (int16_t)(tempFloat * 256);
   Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8), (temp & 0xFF));
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
