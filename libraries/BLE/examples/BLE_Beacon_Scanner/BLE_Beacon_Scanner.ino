@@ -115,7 +115,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           foundEddyURL.setData(eddyContent);
           Serial.printf("Reported battery voltage: %dmV\n", foundEddyURL.getVolt());
           Serial.printf("Reported temperature from TLM class: %.2fC\n", (double)foundEddyURL.getTemp());
-          int temp = (int)payLoad[16] + (int)(payLoad[15] << 8);
+          int16_t temp = (int16_t)payLoad[16] + (int16_t)(payLoad[15] << 8);
           float calcTemp = temp / 256.0f;
           Serial.printf("Reported temperature from data: %.2fC\n", calcTemp);
           Serial.printf("Reported advertise count: %d\n", foundEddyURL.getCount());
