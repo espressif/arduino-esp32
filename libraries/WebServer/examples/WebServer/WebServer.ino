@@ -147,11 +147,16 @@ public:
     String fName = requestUri;
     if (!fName.startsWith("/")) { fName = "/" + fName; }
 
+    TRACE("handle %s\n", fName.c_str());
+
     if (requestMethod == HTTP_POST) {
       // all done in upload. no other forms.
 
     } else if (requestMethod == HTTP_DELETE) {
-      if (LittleFS.exists(fName)) { LittleFS.remove(fName); }
+      if (LittleFS.exists(fName)) {
+        TRACE("DELETE %s\n", fName.c_str());
+        LittleFS.remove(fName);
+      }
     }  // if
 
     server.send(200);  // all done.
@@ -160,15 +165,18 @@ public:
 
 
   // uploading process
-  void upload(WebServer UNUSED &server, String UNUSED _requestUri, HTTPUpload &upload) override {
+  void
+  upload(WebServer UNUSED &server, String UNUSED _requestUri, HTTPUpload &upload) override {
     // ensure that filename starts with '/'
-    String fName = upload.filename;
     static size_t uploadSize;
-    if (!fName.startsWith("/")) { fName = "/" + fName; }
 
     if (upload.status == UPLOAD_FILE_START) {
+      String fName = upload.filename;
+
       // Open the file for writing
-      TRACE("starting upload file %s...\n", fName.c_str());
+      if (!fName.startsWith("/")) { fName = "/" + fName; }
+      TRACE("start uploading file %s...\n", fName.c_str());
+
       if (LittleFS.exists(fName)) {
         LittleFS.remove(fName);
       }  // if
@@ -178,18 +186,34 @@ public:
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       // Write received bytes
       if (_fsUploadFile) {
-        _fsUploadFile.write(upload.buf, upload.currentSize);
+        size_t written = _fsUploadFile.write(upload.buf, upload.currentSize);
+        if (written < upload.currentSize) {
+          // upload failed
+          TRACE("  write error!\n");
+          _fsUploadFile.close();
+
+          // delete file to free up space in filesystem
+          String fName = upload.filename;
+          if (!fName.startsWith("/")) { fName = "/" + fName; }
+          LittleFS.remove(fName);
+        }
         uploadSize += upload.currentSize;
-      }
+        // TRACE("free:: %d of %d\n", LittleFS.usedBytes(), LittleFS.totalBytes());
+        // TRACE("written:: %d of %d\n", written, upload.currentSize);
+        // TRACE("totalSize: %d\n", upload.currentSize + upload.totalSize);
+      }  // if
 
     } else if (upload.status == UPLOAD_FILE_END) {
+        TRACE("finished.\n");
       // Close the file
       if (_fsUploadFile) {
         _fsUploadFile.close();
+        TRACE(" %d bytes uploaded.\n", upload.totalSize);
       }
-      TRACE("uploading %d bytes done.\n", uploadSize);
     }  // if
-  }    // upload()
+
+  }  // upload()
+
 
 protected:
   File _fsUploadFile;

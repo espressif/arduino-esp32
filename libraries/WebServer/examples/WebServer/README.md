@@ -200,6 +200,44 @@ This class has to implements several functions and works in a more detailed way:
 
 * The `canUpload()`and `upload()` methods work similar while the `upload()` method is called multiple times to create, append data and close the new file.
 
+## File upload
+
+By opening <http://webserver/$upload.htm> you can easily upload files by dragging them over the drop area.
+
+Just take the files from the data folder to create some files that can explore the server functionality.
+
+Files will be uploaded to the root folder of the file system. and you will see it next time using  <http://webserver/files.htm>.
+
+The filesize that is uploaded is not known when the upload mechanism in function
+FileServerHandler::upload gets started.
+
+Uploading a file that fits into the available filesystem space
+can be found in the Serial output:
+
+``` txt
+starting upload file /file.txt...
+finished.
+1652 bytes uploaded.
+```
+
+Uploading a file that doesn't fit can be detected while uploading when writing to the filesystem fails.
+However upload cannot be aborted by the current handler implementation.
+
+The solution implemented here is to delete the partially uploaded file and wait for the upload ending.
+The following can be found in the Serial output:
+
+``` txt
+starting upload file /huge.jpg...
+./components/esp_littlefs/src/littlefs/lfs.c:584:error: No more free space 531
+  write error!
+finished.
+```
+
+You can see on the Serial output that one filesystem write error is reported.
+
+Please be patient and wait for the upload ending even when writing to the filesystem is disabled
+it maybe take more than a minute.
+
 ## Registering a special handler for "file not found"
 
 Any other incoming request that was not handled by the registered plug-ins above can be detected by registering

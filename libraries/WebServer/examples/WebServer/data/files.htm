@@ -51,7 +51,7 @@
       var t = evt.target;
       if (t.className === 'deleteFile') {
         var fname = t.parentElement.innerText;
-        fname = '/'+ fname.split(' ')[0];
+        fname = fname.split(' ')[0];
         if (window.confirm("Delete " + fname + " ?")) {
           fetch(fname, { method: 'DELETE' });
           document.location.reload(false);
