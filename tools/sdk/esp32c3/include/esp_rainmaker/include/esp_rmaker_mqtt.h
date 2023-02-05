@@ -100,6 +100,17 @@ esp_err_t esp_rmaker_mqtt_setup(esp_rmaker_mqtt_config_t mqtt_config);
 */
 void esp_rmaker_create_mqtt_topic(char *buf, size_t buf_size, const char *topic_suffix, const char *rule);
 
+/**
+ * @brief Check if budget is available to publish an mqtt message
+ *
+ * @return true if budget is available
+ * @return false if budget is exhausted
+ *
+ * @note  `esp_rmaker_mqtt_publish` API already does this check. In addition to that,
+ *  some use-cases might still need to check for this.
+ */
+bool esp_rmaker_mqtt_is_budget_available(void);
+
 #ifdef __cplusplus
 }
 #endif

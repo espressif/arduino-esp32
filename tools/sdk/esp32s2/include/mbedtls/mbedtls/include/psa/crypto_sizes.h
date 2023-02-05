@@ -716,7 +716,7 @@
     (PSA_KEY_EXPORT_ASN1_INTEGER_MAX_SIZE(key_bits) + 11)
 
 /* Maximum size of the export encoding of an RSA key pair.
- * Assumes thatthe public exponent is less than 2^32 and that the size
+ * Assumes that the public exponent is less than 2^32 and that the size
  * difference between the two primes is at most 1 bit.
  *
  * RSAPrivateKey ::= SEQUENCE {
