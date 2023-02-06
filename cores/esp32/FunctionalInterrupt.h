@@ -9,6 +9,7 @@
 #define CORE_CORE_FUNCTIONALINTERRUPT_H_
 
 #include <functional>
+#include <stdint.h>
 
 struct InterruptArgStructure {
 	std::function<void(void)> interruptFunction;
