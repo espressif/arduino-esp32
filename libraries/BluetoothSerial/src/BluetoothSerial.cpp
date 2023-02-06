@@ -54,7 +54,7 @@ static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static EventGroupHandle_t _bt_event_group = NULL;
 static boolean secondConnectionAttempt;
-static esp_spp_cb_t * custom_spp_callback = NULL;
+static esp_spp_cb_t custom_spp_callback = NULL;
 static BluetoothSerialDataCb custom_data_callback = NULL;
 static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
@@ -301,8 +301,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
                 xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
                 xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
                 xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
+                xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
             }        
-            xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
         } else {
             log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
         }
@@ -886,7 +886,7 @@ void BluetoothSerial::confirmReply(boolean confirm)
 }
 
 
-esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
+esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback)
 {
     custom_spp_callback = callback;
     return ESP_OK;

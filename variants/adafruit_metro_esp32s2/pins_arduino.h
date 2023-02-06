@@ -27,6 +27,8 @@
 
 static const uint8_t TX = 5;
 static const uint8_t RX = 6;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 34;

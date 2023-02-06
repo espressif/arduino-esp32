@@ -139,12 +139,17 @@ _rxBufferSize(256),
 _txBufferSize(0), 
 _onReceiveCB(NULL), 
 _onReceiveErrorCB(NULL),
-_onReceiveTimeout(true),
+_onReceiveTimeout(false),
 _rxTimeout(2),
+_rxFIFOFull(0),
 _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
+,_rxPin(-1) 
+,_txPin(-1)
+,_ctsPin(-1)
+,_rtsPin(-1)
 {
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock == NULL){
@@ -202,12 +207,23 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
     HSERIAL_MUTEX_LOCK();
     // function may be NULL to cancel onReceive() from its respective task 
     _onReceiveCB = function;
-    // When Rx timeout is Zero (disabled), there is only one possible option that is callback when FIFO reaches 120 bytes
-    _onReceiveTimeout = _rxTimeout > 0 ? onlyOnTimeout : false;
 
-    // this can be called after Serial.begin(), therefore it shall create the event task
-    if (function != NULL && _uart != NULL && _eventTask == NULL) {
-        _createEventTask(this); // Create event task
+    // setting the callback to NULL will just disable it
+    if (_onReceiveCB != NULL) {
+        // When Rx timeout is Zero (disabled), there is only one possible option that is callback when FIFO reaches 120 bytes
+        _onReceiveTimeout = _rxTimeout > 0 ? onlyOnTimeout : false;
+
+        // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
+        // this is a work around for an IDF issue with events and low FIFO Full value (< 3)
+        if (_onReceiveTimeout) {
+            uartSetRxFIFOFull(_uart, 120);
+            log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
+        }
+
+        // this method can be called after Serial.begin(), therefore it shall create the event task
+        if (_uart != NULL && _eventTask == NULL) {
+            _createEventTask(this); // Create event task
+        }
     }
     HSERIAL_MUTEX_UNLOCK();
 }
@@ -220,7 +236,14 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
 void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
 {
     HSERIAL_MUTEX_LOCK();
+    // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
+    // this is a work around for an IDF issue with events and low FIFO Full value (< 3)
+    if (_onReceiveCB != NULL && _onReceiveTimeout) {
+        fifoBytes = 120;
+        log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
+    }
     uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
+    if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) _rxFIFOFull = fifoBytes;
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -295,7 +318,6 @@ void HardwareSerial::_uartEventTask(void *args)
                 }
                 if (currentErr != UART_NO_ERROR) {
                     if(uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(currentErr);
-                    if(uart->_onReceiveCB && uart->available() > 0) uart->_onReceiveCB();   // forces User Callback too
                 }
             }
         }
@@ -385,6 +407,23 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     // Set UART RX timeout
     uartSetRxTimeout(_uart, _rxTimeout);
 
+    // Set UART FIFO Full depending on the baud rate. 
+    // Lower baud rates will force to emulate byte-by-byte reading
+    // Higher baud rates will keep IDF default of 120 bytes for FIFO FULL Interrupt
+    // It can also be changed by the application at any time 
+    if (!_rxFIFOFull) {    // it has not being changed before calling begin()
+      //  set a default FIFO Full value for the IDF driver
+      uint8_t fifoFull = 1;
+      if (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
+        fifoFull = 120;
+      }
+      uartSetRxFIFOFull(_uart, fifoFull);
+      _rxFIFOFull = fifoFull;
+    }
+
+    _rxPin = rxPin;
+    _txPin = txPin;
+
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -403,6 +442,12 @@ void HardwareSerial::end(bool fullyTerminate)
         if (uartGetDebug() == _uart_nr) {
             uartSetDebug(0);
         }
+
+        _rxFIFOFull = 0; 
+
+        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
+        _rxPin = _txPin = _ctsPin = _rtsPin = -1;
+
     }
     delay(10);
     uartEnd(_uart);
@@ -443,10 +488,12 @@ int HardwareSerial::peek(void)
 
 int HardwareSerial::read(void)
 {
-    if(available()) {
-        return uartRead(_uart);
+    uint8_t c = 0;
+    if (uartReadBytes(_uart, &c, 1, 0) == 1) {
+        return c;
+    } else {
+        return -1;
     }
-    return -1;
 }
 
 // read characters into buffer
@@ -455,16 +502,13 @@ int HardwareSerial::read(void)
 // the buffer is NOT null terminated.
 size_t HardwareSerial::read(uint8_t *buffer, size_t size)
 {
-    size_t avail = available();
-    if (size < avail) {
-        avail = size;
-    }
-    size_t count = 0;
-    while(count < avail) {
-        *buffer++ = uartRead(_uart);
-        count++;
-    }
-    return count;
+    return uartReadBytes(_uart, buffer, size, 0);
+}
+
+// Overrides Stream::readBytes() to be faster using IDF
+size_t HardwareSerial::readBytes(uint8_t *buffer, size_t length)
+{
+    return uartReadBytes(_uart, buffer, length, (uint32_t)getTimeout());
 }
 
 void HardwareSerial::flush(void)
@@ -507,10 +551,19 @@ void HardwareSerial::setRxInvert(bool invert)
 void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(_uart == NULL) {
-        log_e("setPins() shall be called after begin() - nothing done");
+        log_e("setPins() shall be called after begin() - nothing done\n");
         return;
     }
-    uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
+
+    // uartSetPins() checks if pins are valid for each function and for the SoC 
+    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
+        _txPin = _txPin >= 0 ? txPin : _txPin;
+        _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
+        _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
+        _ctsPin = _ctsPin >= 0 ? ctsPin : _ctsPin;
+    } else {
+        log_e("Error when setting Serial port Pins. Invalid Pin.\n");
+    }
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)

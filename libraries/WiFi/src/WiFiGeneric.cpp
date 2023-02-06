@@ -188,18 +188,20 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
         lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
         log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
-        err = tcpip_adapter_dhcps_option(
-            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
-            (tcpip_adapter_dhcp_option_id_t)ESP_NETIF_SUBNET_MASK,
+        err = esp_netif_dhcps_option(
+            esp_netif,
+            ESP_NETIF_OP_SET,
+            ESP_NETIF_SUBNET_MASK,
             (void*)&info.netmask.addr, sizeof(info.netmask.addr)
         );
 		if(err){
         	log_e("DHCPS Set Netmask Failed! 0x%04x", err);
         	return err;
         }
-        err = tcpip_adapter_dhcps_option(
-            (tcpip_adapter_dhcp_option_mode_t)TCPIP_ADAPTER_OP_SET,
-            (tcpip_adapter_dhcp_option_id_t)REQUESTED_IP_ADDRESS,
+        err = esp_netif_dhcps_option(
+            esp_netif,
+            ESP_NETIF_OP_SET,
+            ESP_NETIF_REQUESTED_IP_ADDRESS,
             (void*)&lease, sizeof(dhcps_lease_t)
         );
 		if(err){
@@ -947,6 +949,9 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         //esp_netif_create_ip6_linklocal(esp_netifs[ESP_IF_WIFI_STA]);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
         uint8_t reason = event->event_info.wifi_sta_disconnected.reason;
+        // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead
+        if(!reason)
+	    reason = WIFI_REASON_UNSPECIFIED;
         log_w("Reason: %u - %s", reason, reason2str(reason));
         if(reason == WIFI_REASON_NO_AP_FOUND) {
             WiFiSTAClass::_setStatus(WL_NO_SSID_AVAIL);
@@ -960,25 +965,25 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(first_connect && ((reason == WIFI_REASON_AUTH_EXPIRE) ||
-        (reason >= WIFI_REASON_BEACON_TIMEOUT)))
-        {
+
+        bool DoReconnect = false;
+        if(reason == WIFI_REASON_ASSOC_LEAVE) {                                     //Voluntarily disconnected. Don't reconnect!
+        }
+        else if(first_connect) {                                                    //Retry once for all failure reasons
+            first_connect = false;
+            DoReconnect = true;
             log_d("WiFi Reconnect Running");
+        }
+        else if(WiFi.getAutoReconnect() && _isReconnectableReason(reason)) {
+            DoReconnect = true;
+            log_d("WiFi AutoReconnect Running");
+        }
+        else if(reason == WIFI_REASON_ASSOC_FAIL) {
+            WiFiSTAClass::_setStatus(WL_CONNECT_FAILED);
+        }
+        if(DoReconnect) {
             WiFi.disconnect();
             WiFi.begin();
-            first_connect = false;
-        }
-        else if(WiFi.getAutoReconnect()){
-            if((reason == WIFI_REASON_AUTH_EXPIRE) ||
-            (reason >= WIFI_REASON_BEACON_TIMEOUT && reason != WIFI_REASON_AUTH_FAIL))
-            {
-                log_d("WiFi AutoReconnect Running");
-                WiFi.disconnect();
-                WiFi.begin();
-            }
-        }
-        else if (reason == WIFI_REASON_ASSOC_FAIL){
-            WiFiSTAClass::_setStatus(WL_CONNECT_FAILED);
         }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
@@ -1061,6 +1066,37 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         }
     }
     return ESP_OK;
+}
+
+bool WiFiGenericClass::_isReconnectableReason(uint8_t reason) {
+    switch(reason) {
+        case WIFI_REASON_UNSPECIFIED:
+        //Timeouts (retry)
+        case WIFI_REASON_AUTH_EXPIRE:
+        case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
+        case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:
+        case WIFI_REASON_802_1X_AUTH_FAILED:
+        case WIFI_REASON_HANDSHAKE_TIMEOUT:
+        //Transient error (reconnect)
+        case WIFI_REASON_AUTH_LEAVE:
+        case WIFI_REASON_ASSOC_EXPIRE:
+        case WIFI_REASON_ASSOC_TOOMANY:
+        case WIFI_REASON_NOT_AUTHED:
+        case WIFI_REASON_NOT_ASSOCED:
+        case WIFI_REASON_ASSOC_NOT_AUTHED:
+        case WIFI_REASON_MIC_FAILURE:
+        case WIFI_REASON_IE_IN_4WAY_DIFFERS:
+        case WIFI_REASON_INVALID_PMKID:
+        case WIFI_REASON_BEACON_TIMEOUT:
+        case WIFI_REASON_NO_AP_FOUND:
+        case WIFI_REASON_ASSOC_FAIL:
+        case WIFI_REASON_CONNECTION_FAIL:
+        case WIFI_REASON_AP_TSF_RESET:
+        case WIFI_REASON_ROAMING:
+            return true;
+        default:
+            return false;
+    }
 }
 
 /**
@@ -1414,28 +1450,31 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
 }
 
 /**
- * Resolve the given hostname to an IP address.
- * @param aHostname     Name to be resolved
+ * Resolve the given hostname to an IP address. If passed hostname is an IP address, it will be parsed into IPAddress structure.
+ * @param aHostname     Name to be resolved or string containing IP address
  * @param aResult       IPAddress structure to store the returned IP address
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
 int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 {
-    ip_addr_t addr;
-    aResult = static_cast<uint32_t>(0);
-    waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
-    clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-    err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
-    if(err == ERR_OK && addr.u_addr.ip4.addr) {
-        aResult = addr.u_addr.ip4.addr;
-    } else if(err == ERR_INPROGRESS) {
-        waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
-        clearStatusBits(WIFI_DNS_DONE_BIT);
-    }
-    setStatusBits(WIFI_DNS_IDLE_BIT);
-    if((uint32_t)aResult == 0){
-        log_e("DNS Failed for %s", aHostname);
+    if (!aResult.fromString(aHostname))
+    {
+        ip_addr_t addr;
+        aResult = static_cast<uint32_t>(0);
+        waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
+        clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
+        err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
+        if(err == ERR_OK && addr.u_addr.ip4.addr) {
+            aResult = addr.u_addr.ip4.addr;
+        } else if(err == ERR_INPROGRESS) {
+            waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
+            clearStatusBits(WIFI_DNS_DONE_BIT);
+        }
+        setStatusBits(WIFI_DNS_IDLE_BIT);
+        if((uint32_t)aResult == 0){
+            log_e("DNS Failed for %s", aHostname);
+        }
     }
     return (uint32_t)aResult != 0;
 }

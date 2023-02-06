@@ -34,7 +34,7 @@
 //--------------------------------------------------------------------+
 // OHCI CONFIGURATION & CONSTANTS
 //--------------------------------------------------------------------+
-#define HOST_HCD_XFER_INTERRUPT // TODO interrupt is used widely, should always be enalbed
+#define HOST_HCD_XFER_INTERRUPT // TODO interrupt is used widely, should always be enabled
 #define OHCI_PERIODIC_LIST (defined HOST_HCD_XFER_INTERRUPT || defined HOST_HCD_XFER_ISOCHRONOUS)
 
 // TODO merge OHCI with EHCI

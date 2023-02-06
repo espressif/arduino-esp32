@@ -57,8 +57,8 @@ size_t Print::printf(const char *format, ...)
     if(len < 0) {
         va_end(arg);
         return 0;
-    };
-    if(len >= sizeof(loc_buf)){
+    }
+    if(len >= (int)sizeof(loc_buf)){  // comparation of same sign type for the compiler
         temp = (char*) malloc(len+1);
         if(temp == NULL) {
             va_end(arg);
