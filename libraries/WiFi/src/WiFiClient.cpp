@@ -210,9 +210,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
     return connect(ip,port,_timeout);
 }
-int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
+int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
 {
-    _timeout = timeout;
+    _timeout = timeout_ms;
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         log_e("socket: %d", errno);
@@ -231,7 +231,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
     tv.tv_sec = _timeout / 1000;
-    tv.tv_usec = 0;
+    tv.tv_usec = (_timeout  % 1000) * 1000;
 
 #ifdef ESP_IDF_VERSION_MAJOR
     int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
@@ -292,13 +292,13 @@ int WiFiClient::connect(const char *host, uint16_t port)
     return connect(host,port,_timeout);
 }
 
-int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
+int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
     }
-    return connect(srv, port, timeout);
+    return connect(srv, port, timeout_ms);
 }
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
