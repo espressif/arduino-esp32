@@ -121,34 +121,65 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
     elif [ $len -eq 1 ]; then
-        build_dir="$sketchdir/build"
+        # build_dir="$sketchdir/build"
+        build_dir="$HOME/.arduino/build.tmp"
     fi
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
     do
         if [ $len -ne 1 ]; then
-          build_dir="$sketchdir/build$i"
+          # build_dir="$sketchdir/build$i"
+          build_dir="$HOME/.arduino/build$i.tmp"
         fi
         rm -rf $build_dir
         mkdir -p $build_dir
 
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
         sketchname=$(basename $sketchdir)
-        echo "Building $sketchname with FQBN=$currfqbn"
-        $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
-            -fqbn=\"$currfqbn\" \
-            -warnings="all" \
-            -tools "$ide_path/tools-builder" \
-            -tools "$ide_path/tools" \
-            -built-in-libraries "$ide_path/libraries" \
-            -hardware "$ide_path/hardware" \
-            -hardware "$user_path/hardware" \
-            -libraries "$user_path/libraries" \
-            -build-cache "$ARDUINO_CACHE_DIR" \
-            -build-path "$build_dir" \
-            $xtra_opts "${sketchdir}/${sketchname}.ino"
+
+        if [ -f "$ide_path/arduino-cli" ]; then
+            echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
+
+            curroptions=`echo "$currfqbn" | cut -d':' -f4`
+            currfqbn=`echo "$currfqbn" | cut -d':' -f1-3`
+            $ide_path/arduino-cli compile \
+                --fqbn "$currfqbn" \
+                --board-options "$curroptions" \
+                --warnings "all" \
+                --build-cache-path "$ARDUINO_CACHE_DIR" \
+                --build-path "$build_dir" \
+                $xtra_opts "${sketchdir}"
+        elif [ -f "$ide_path/arduino-builder" ]; then
+            echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
+
+            $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
+                -fqbn=\"$currfqbn\" \
+                -warnings="all" \
+                -tools "$ide_path/tools-builder" \
+                -hardware "$user_path/hardware" \
+                -libraries "$user_path/libraries" \
+                -build-cache "$ARDUINO_CACHE_DIR" \
+                -build-path "$build_dir" \
+                $xtra_opts "${sketchdir}/${sketchname}.ino"
+
+            # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
+            #     -fqbn=\"$currfqbn\" \
+            #     -warnings="all" \
+            #     -tools "$ide_path/tools-builder" \
+            #     -tools "$ide_path/tools" \
+            #     -built-in-libraries "$ide_path/libraries" \
+            #     -hardware "$ide_path/hardware" \
+            #     -hardware "$user_path/hardware" \
+            #     -libraries "$user_path/libraries" \
+            #     -build-cache "$ARDUINO_CACHE_DIR" \
+            #     -build-path "$build_dir" \
+            #     $xtra_opts "${sketchdir}/${sketchname}.ino"
+        fi
     done
+    unset fqbn
+    unset xtra_opts
+    unset options
 }
 
 function count_sketches(){ # count_sketches <path> [target]
@@ -294,8 +325,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         fi
         echo ""
         echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
-        args+=" -s $sketchdir $xtra_opts"
-        build_sketch $args
+        build_sketch $args -s $sketchdir $xtra_opts
         local result=$?
         if [ $result -ne 0 ]; then
             return $result
