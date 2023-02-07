@@ -23,21 +23,21 @@ We create three, simultaneous web servers, one specific to each interface and on
 
 The expected responses to a browser's requests are as follows:
 
-#### 1. Client connected to the same WLAN as the station:
+#### 1. The Client connected to the same WLAN as the station:
 
 | Request URL                | Response |
 | -----------                | -------- |
 | [http://stationaddress:8080](http://stationaddress:8080) | Hello from server0 who listens on both WLAN and own Soft AP |
 | [http://stationaddress:8081](http://stationaddress:8081) | Hello from server1 who listens only on WLAN |
 
-#### 2. Client is connected to the soft AP:
+#### 2. The Client is connected to the soft AP:
 
 | Request URL               | Response |
 | -----------               | -------- |
 | [http://softAPaddress:8080](http://softAPaddress:8080) | Hello from server0 who listens on both WLAN and own Soft AP |
 | [http://softAPaddress:8081](http://softAPaddress:8081) | Hello from server2 who listens only on own Soft AP |
 
-#### 3. Client is connect to either WLAN or SoftAP:
+#### 3. The Client is connect to either WLAN or SoftAP:
 
 | Request URL               | Response |
 | -----------               | -------- |
@@ -48,7 +48,10 @@ MultiHomedServers was originally based on HelloServer.
 
 # Supported Targets
 
-Currently, this example supports only ESP32.
+Currently, this example supports the following targets.
+
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
+| ----------------- | ----- | -------- | -------- | -------- |
 
 ## How to Use Example
 

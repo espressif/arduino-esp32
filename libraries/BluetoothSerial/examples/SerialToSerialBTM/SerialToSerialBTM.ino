@@ -16,12 +16,7 @@
 #include "BluetoothSerial.h"
 
 #define USE_NAME // Comment this to use MAC address instead of a slaveName
-//#define USE_PIN // Uncomment this to use PIN during pairing. The pin is specified on the line below
 const char *pin = "1234"; // Change this to reflect the pin expected by the real slave BT device
-
-#ifndef USE_NAME
-  #define USE_MAC
-#endif
 
 #if !defined(CONFIG_BT_SPP_ENABLED)
 #error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
@@ -31,9 +26,7 @@ BluetoothSerial SerialBT;
 
 #ifdef USE_NAME
   String slaveName = "ESP32-BT-Slave"; // Change this to reflect the real name of your slave BT device
-#endif
-
-#ifdef USE_MAC
+#else
   String MACadd = "AA:BB:CC:11:22:33"; // This only for printing
   uint8_t address[6]  = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33}; // Change this to reflect real MAC address of your slave BT device
 #endif
@@ -47,7 +40,7 @@ void setup() {
   SerialBT.begin(myName, true);
   Serial.printf("The device \"%s\" started in master mode, make sure slave BT device is on!\n", myName.c_str());
 
-  #ifdef USE_PIN
+  #ifndef USE_NAME
     SerialBT.setPin(pin);
     Serial.println("Using PIN");
   #endif
@@ -58,8 +51,7 @@ void setup() {
   #ifdef USE_NAME
     connected = SerialBT.connect(slaveName);
     Serial.printf("Connecting to slave BT device named \"%s\"\n", slaveName.c_str());
-  #endif
-  #ifdef USE_MAC
+  #else
     connected = SerialBT.connect(address);
     Serial.print("Connecting to slave BT device with MAC "); Serial.println(MACadd);
   #endif
