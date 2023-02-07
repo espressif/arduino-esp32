@@ -20677,7 +20677,7 @@ Edgebox-ESP-100.build.core=esp32
 Edgebox-ESP-100.build.variant=Edgebox-ESP-100
 Edgebox-ESP-100.build.board=Edgebox-ESP-100
 
-Edgebox-ESP-100.build.usb_mode=0
+Edgebox-ESP-100.build.usb_mode=1
 Edgebox-ESP-100.build.cdc_on_boot=0
 Edgebox-ESP-100.build.msc_on_boot=0
 Edgebox-ESP-100.build.dfu_on_boot=0
@@ -20746,9 +20746,9 @@ Edgebox-ESP-100.menu.EventsCore.0=Core 0
 Edgebox-ESP-100.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 Edgebox-ESP-100.menu.USBMode.default=Hardware CDC and JTAG
-Edgebox-ESP-100.menu.USBMode.default.build.usb_mode=0
+Edgebox-ESP-100.menu.USBMode.default.build.usb_mode=1
 Edgebox-ESP-100.menu.USBMode.hwcdc=USB-OTG (TinyUSB)
-Edgebox-ESP-100.menu.USBMode.hwcdc.build.usb_mode=1
+Edgebox-ESP-100.menu.USBMode.hwcdc.build.usb_mode=0
 
 Edgebox-ESP-100.menu.CDCOnBoot.default=Disabled
 Edgebox-ESP-100.menu.CDCOnBoot.default.build.cdc_on_boot=0
