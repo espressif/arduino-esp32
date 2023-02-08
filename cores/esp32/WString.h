@@ -81,7 +81,7 @@ class String {
         // return true on success, false on failure (in which case, the string
         // is left unchanged).  reserve(0), if successful, will validate an
         // invalid string (i.e., "if (s)" will be true afterwards)
-        unsigned char reserve(unsigned int size);
+        bool reserve(unsigned int size);
         inline unsigned int length(void) const {
             if(buffer()) {
                 return len();
@@ -112,21 +112,21 @@ class String {
         // returns true on success, false on failure (in which case, the string
         // is left unchanged).  if the argument is null or invalid, the
         // concatenation is considered unsuccessful.
-        unsigned char concat(const String &str);
-        unsigned char concat(const char *cstr);
-        unsigned char concat(const char *cstr, unsigned int length);
-        unsigned char concat(const uint8_t *cstr, unsigned int length) {return concat((const char*)cstr, length);}
-        unsigned char concat(char c);
-        unsigned char concat(unsigned char c);
-        unsigned char concat(int num);
-        unsigned char concat(unsigned int num);
-        unsigned char concat(long num);
-        unsigned char concat(unsigned long num);
-        unsigned char concat(float num);
-        unsigned char concat(double num);
-        unsigned char concat(long long num);
-        unsigned char concat(unsigned long long num);
-        unsigned char concat(const __FlashStringHelper * str);
+        bool concat(const String &str);
+        bool concat(const char *cstr);
+        bool concat(const char *cstr, unsigned int length);
+        bool concat(const uint8_t *cstr, unsigned int length) {return concat((const char*)cstr, length);}
+        bool concat(char c);
+        bool concat(unsigned char c);
+        bool concat(int num);
+        bool concat(unsigned int num);
+        bool concat(long num);
+        bool concat(unsigned long num);
+        bool concat(float num);
+        bool concat(double num);
+        bool concat(long long num);
+        bool concat(unsigned long long num);
+        bool concat(const __FlashStringHelper * str);
 
         // if there's not enough memory for the concatenated value, the string
         // will be left unchanged (but this isn't signalled in any way)
@@ -202,39 +202,39 @@ class String {
             return buffer() ? &String::StringIfHelper : 0;
         }
         int compareTo(const String &s) const;
-        unsigned char equals(const String &s) const;
-        unsigned char equals(const char *cstr) const;
-        unsigned char operator ==(const String &rhs) const {
+        bool equals(const String &s) const;
+        bool equals(const char *cstr) const;
+        bool operator ==(const String &rhs) const {
             return equals(rhs);
         }
-        unsigned char operator ==(const char *cstr) const {
+        bool operator ==(const char *cstr) const {
             return equals(cstr);
         }
-        unsigned char operator !=(const String &rhs) const {
+        bool operator !=(const String &rhs) const {
             return !equals(rhs);
         }
-        unsigned char operator !=(const char *cstr) const {
+        bool operator !=(const char *cstr) const {
             return !equals(cstr);
         }
-        unsigned char operator <(const String &rhs) const;
-        unsigned char operator >(const String &rhs) const;
-        unsigned char operator <=(const String &rhs) const;
-        unsigned char operator >=(const String &rhs) const;
-        unsigned char equalsIgnoreCase(const String &s) const;
+        bool operator <(const String &rhs) const;
+        bool operator >(const String &rhs) const;
+        bool operator <=(const String &rhs) const;
+        bool operator >=(const String &rhs) const;
+        bool equalsIgnoreCase(const String &s) const;
         unsigned char equalsConstantTime(const String &s) const;
-        unsigned char startsWith(const String &prefix) const;
-        unsigned char startsWith(const char *prefix) const {
+        bool startsWith(const String &prefix) const;
+        bool startsWith(const char *prefix) const {
             return this->startsWith(String(prefix));
         }
-        unsigned char startsWith(const __FlashStringHelper *prefix) const {
+        bool startsWith(const __FlashStringHelper *prefix) const {
             return this->startsWith(String(prefix));
         }
-        unsigned char startsWith(const String &prefix, unsigned int offset) const;
-        unsigned char endsWith(const String &suffix) const;
-        unsigned char endsWith(const char *suffix) const {
+        bool startsWith(const String &prefix, unsigned int offset) const;
+        bool endsWith(const String &suffix) const;
+        bool endsWith(const char *suffix) const {
             return this->endsWith(String(suffix));
         }
-        unsigned char endsWith(const __FlashStringHelper * suffix) const {
+        bool endsWith(const __FlashStringHelper * suffix) const {
             return this->endsWith(String(suffix));
         }
 
@@ -345,7 +345,7 @@ class String {
     protected:
         void init(void);
         void invalidate(void);
-        unsigned char changeBuffer(unsigned int maxStrLen);
+        bool changeBuffer(unsigned int maxStrLen);
 
         // copy and move
         String & copy(const char *cstr, unsigned int length);
