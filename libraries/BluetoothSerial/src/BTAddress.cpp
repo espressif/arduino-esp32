@@ -44,7 +44,7 @@ BTAddress::BTAddress() {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-BTAddress::BTAddress(std::string stringAddress) {
+BTAddress::BTAddress(String stringAddress) {
 	if (stringAddress.length() != 17) return;
 
 	int data[6];
@@ -97,7 +97,7 @@ esp_bd_addr_t *BTAddress::getNative() const {
  * ```
  * @return The string representation of the address.
  */
-std::string BTAddress::toString(bool capital) const {
+String BTAddress::toString(bool capital) const {
 	auto size = 18;
 	char *res = (char*)malloc(size);
 	if(capital){

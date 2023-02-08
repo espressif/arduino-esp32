@@ -24,12 +24,12 @@ class BTAddress {
 public:
 	BTAddress();
 	BTAddress(esp_bd_addr_t address);
-	BTAddress(std::string stringAddress);
+	BTAddress(String stringAddress);
 	bool           equals(BTAddress otherAddress);
 	operator bool () const;
 
 	esp_bd_addr_t* getNative() const;
-	std::string    toString(bool capital = false) const;
+	String         toString(bool capital = false) const;
 
 private:
 	esp_bd_addr_t m_address;
