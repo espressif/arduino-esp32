@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2018-2022 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,19 @@ bool dsp_is_power_of_two(int x);
  *      - power of two
  */
 int dsp_power_of_two(int x);
+
+
+/**
+ * @brief   Logginng for esp32s3 TIE core
+ * Registers covered q0 to q7, ACCX and SAR_BYTE
+ *
+ * @param n_regs: number of registers to be logged at once
+ * @param ...: register codes 0, 1, 2, 3, 4, 5, 6, 7, 'a', 's'
+ * 
+ * @return ESP_OK
+ *
+ */
+esp_err_t tie_log(int n_regs, ...);
 
 #ifdef __cplusplus
 }
