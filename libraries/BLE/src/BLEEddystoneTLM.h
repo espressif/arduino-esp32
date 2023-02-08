@@ -41,7 +41,7 @@ private:
 		uint8_t frameType;
 		uint8_t version;
 		uint16_t volt;
-		int16_t temp;
+		uint16_t temp;
 		uint32_t advCount;
 		uint32_t tmil;
 	} __attribute__((packed)) m_eddystoneData;
