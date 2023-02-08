@@ -1205,7 +1205,7 @@ BTAddress BluetoothSerial::getBtAddressObject() {
  *
  * @return     The BT MAC address string.
  */
-std::string BluetoothSerial::getBtAddressString() {
+String BluetoothSerial::getBtAddressString() {
     return getBtAddressObject().toString(true);
 }
 #endif
