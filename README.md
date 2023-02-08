@@ -33,7 +33,7 @@ You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/
 * [Getting Started](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html)
 * [Installing (Windows, Linux and macOS)](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
 * [Libraries](https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html)
-* [ESP-IDF as Component](https://docs.espressif.com/projects/arduino-esp32/en/latest/esp-idf_component.html)
+* [Arduino as an ESP-IDF component](https://docs.espressif.com/projects/arduino-esp32/en/latest/esp-idf_component.html)
 * [FAQ](https://docs.espressif.com/projects/arduino-esp32/en/latest/faq.html)
 * [Troubleshooting](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
 
