@@ -27,7 +27,6 @@
 #ifndef _TUSB_CDC_DEVICE_H_
 #define _TUSB_CDC_DEVICE_H_
 
-#include "common/tusb_common.h"
 #include "cdc.h"
 
 //--------------------------------------------------------------------+
@@ -81,7 +80,7 @@ int32_t  tud_cdc_n_read_char       (uint8_t itf);
 // Clear the received FIFO
 void     tud_cdc_n_read_flush      (uint8_t itf);
 
-// Get a byte from FIFO at the specified position without removing it
+// Get a byte from FIFO without removing it
 bool     tud_cdc_n_peek            (uint8_t itf, uint8_t* ui8);
 
 // Write bytes to TX FIFO, data may remain in the FIFO for a while
@@ -135,7 +134,7 @@ TU_ATTR_WEAK void tud_cdc_rx_cb(uint8_t itf);
 // Invoked when received `wanted_char`
 TU_ATTR_WEAK void tud_cdc_rx_wanted_cb(uint8_t itf, char wanted_char);
 
-// Invoked when space becomes available in TX buffer
+// Invoked when a TX is complete and therefore space becomes available in TX buffer
 TU_ATTR_WEAK void tud_cdc_tx_complete_cb(uint8_t itf);
 
 // Invoked when line state DTR & RTS are changed via SET_CONTROL_LINE_STATE

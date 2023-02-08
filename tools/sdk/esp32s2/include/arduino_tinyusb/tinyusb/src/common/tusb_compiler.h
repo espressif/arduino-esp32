@@ -76,9 +76,9 @@
  * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
  *------------------------------------------------------------------*/
 #if !defined(__CCRX__)
-#define TU_ARGS_NUM(...)   _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, ##__VA_ARGS__, _RSEQ_N())
 #else
-#define TU_ARGS_NUM(...)   _TU_NARG(_0, __VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, __VA_ARGS__, _RSEQ_N())
 #endif
 
 #define _TU_NARG(...)      _GET_NTH_ARG(__VA_ARGS__)

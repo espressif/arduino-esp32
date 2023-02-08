@@ -122,13 +122,13 @@ static const dwc2_controller_t _dwc2_controller[] =
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_enable(uint8_t rhport)
 {
-  NVIC_EnableIRQ(_dwc2_controller[rhport].irqnum);
+  NVIC_EnableIRQ((IRQn_Type)_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE
 static inline void dwc2_dcd_int_disable (uint8_t rhport)
 {
-  NVIC_DisableIRQ(_dwc2_controller[rhport].irqnum);
+  NVIC_DisableIRQ((IRQn_Type)_dwc2_controller[rhport].irqnum);
 }
 
 TU_ATTR_ALWAYS_INLINE

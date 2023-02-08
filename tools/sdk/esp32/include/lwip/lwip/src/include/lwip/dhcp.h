@@ -151,6 +151,9 @@ u8_t dhcp_supplied_address(const struct netif *netif);
 void dhcp_coarse_tmr(void);
 /* to be called every half second */
 void dhcp_fine_tmr(void);
+#if ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
+void dhcp_fine_timeout_cb(void *arg);
+#endif
 
 #if LWIP_DHCP_GET_NTP_SRV
 /** This function must exist, in other to add offered NTP servers to

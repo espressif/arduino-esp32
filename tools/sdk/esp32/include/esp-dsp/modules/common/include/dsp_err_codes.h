@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2018-2022 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #define ESP_ERR_DSP_PARAM_OUTOFRANGE    (ESP_ERR_DSP_BASE + 3)
 #define ESP_ERR_DSP_UNINITIALIZED       (ESP_ERR_DSP_BASE + 4)
 #define ESP_ERR_DSP_REINITIALIZED       (ESP_ERR_DSP_BASE + 5)
+#define ESP_ERR_DSP_ARRAY_NOT_ALIGNED   (ESP_ERR_DSP_BASE + 6)
 
 
 #endif // _dsp_error_codes_H_
