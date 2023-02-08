@@ -38,33 +38,33 @@
           "toolsDependencies": [
             {
               "packager": "esp32",
-              "name": "riscv32-esp-elf-gcc",
-              "version": "gcc11_2_0-esp-2022r1"
-            },
-            {
-              "packager": "esp32",
               "name": "xtensa-esp32-elf-gcc",
-              "version": "gcc11_2_0-esp-2022r1"
+              "version": "esp-2022r1-11.2.0"
             },
             {
               "packager": "esp32",
               "name": "xtensa-esp32s2-elf-gcc",
-              "version": "gcc11_2_0-esp-2022r1"
+              "version": "esp-2022r1-11.2.0"
             },
             {
               "packager": "esp32",
               "name": "xtensa-esp32s3-elf-gcc",
-              "version": "gcc11_2_0-esp-2022r1"
+              "version": "esp-2022r1-11.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "riscv32-esp-elf-gcc",
+              "version": "esp-2022r1-11.2.0"
+            },
+            {
+              "packager": "esp32",
+              "name": "openocd-esp32",
+              "version": "v0.11.0-esp32-20221026"
             },
             {
               "packager": "esp32",
               "name": "esptool_py",
               "version": "4.2.1"
-            },
-            {
-              "packager": "esp32",
-              "name": "openocd-esp32",
-              "version": "v0.11.0-esp32-20220706"
             },
             {
               "packager": "esp32",
@@ -81,63 +81,8 @@
       ],
       "tools": [
         {
-          "name": "riscv32-esp-elf-gcc",
-          "version": "gcc11_2_0-esp-2022r1",
-          "systems": [
-            {
-              "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-amd64.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-amd64.tar.xz",
-              "checksum": "SHA-256:52710f804df4a033a2b621cc16cfa21023b42052819a51e35a2a164140bbf665",
-              "size": "110107900"
-            },
-            {
-              "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-arm64.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-arm64.tar.xz",
-              "checksum": "SHA-256:812a18f2ecdc3f72c1d098c4e8baa968841099ce9d9ecf95baea85ff71e11013",
-              "size": "104279292"
-            },
-            {
-              "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-armel.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-armel.tar.xz",
-              "checksum": "SHA-256:bc6e3ff8323d1f8b137374788b5615152281aab9e7561c55ab1504145677b6c7",
-              "size": "102802824"
-            },
-            {
-              "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-i686.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-i686.tar.xz",
-              "checksum": "SHA-256:39d7295c30a23b5ea91baf61c207718ce86d4b1589014b030e121300370f696d",
-              "size": "111505972"
-            },
-            {
-              "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos.tar.xz",
-              "checksum": "SHA-256:d3a6f42b02a5f1485ba3fa92b8a9d9f307f643420e22b3765e88bbe4570aee01",
-              "size": "112060920"
-            },
-            {
-              "host": "i686-mingw32",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-win32.zip",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-win32.zip",
-              "checksum": "SHA-256:3e677ef068d7f154d33b0d3788b5f985c5066d110028eac44e0f76b3bda4429b",
-              "size": "268053767"
-            },
-            {
-              "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-win64.zip",
-              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-win64.zip",
-              "checksum": "SHA-256:324a5c679fef75313766cc48d3433c48bf23985a11b5070c5d19144538c6357b",
-              "size": "271158759"
-            }
-          ]
-        },
-        {
           "name": "xtensa-esp32-elf-gcc",
-          "version": "gcc11_2_0-esp-2022r1",
+          "version": "esp-2022r1-11.2.0",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -175,6 +120,13 @@
               "size": "68189688"
             },
             {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "archiveFileName": "xtensa-esp32-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "checksum": "SHA-256:297249b0dc5307fd496c4d85d960b69824996c0c450a8c92f8414a5fd32a7c3b",
+              "size": "58460768"
+            },
+            {
               "host": "i686-mingw32",
               "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32-elf-gcc11_2_0-esp-2022r1-win32.zip",
               "archiveFileName": "xtensa-esp32-elf-gcc11_2_0-esp-2022r1-win32.zip",
@@ -192,7 +144,7 @@
         },
         {
           "name": "xtensa-esp32s2-elf-gcc",
-          "version": "gcc11_2_0-esp-2022r1",
+          "version": "esp-2022r1-11.2.0",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -230,6 +182,13 @@
               "size": "53568496"
             },
             {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32s2-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "archiveFileName": "xtensa-esp32s2-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "checksum": "SHA-256:3592e0fbdb2ca438c7360d93fd62ef0e05ead2fc8144eff344bbe1971d333287",
+              "size": "44218948"
+            },
+            {
               "host": "i686-mingw32",
               "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32s2-elf-gcc11_2_0-esp-2022r1-win32.zip",
               "archiveFileName": "xtensa-esp32s2-elf-gcc11_2_0-esp-2022r1-win32.zip",
@@ -247,7 +206,7 @@
         },
         {
           "name": "xtensa-esp32s3-elf-gcc",
-          "version": "gcc11_2_0-esp-2022r1",
+          "version": "esp-2022r1-11.2.0",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -285,6 +244,13 @@
               "size": "54256036"
             },
             {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32s3-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "archiveFileName": "xtensa-esp32s3-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "checksum": "SHA-256:bb449ac62b9917638b35234c98ce03ddf1cac75c2d80fbd67c46ecec08369838",
+              "size": "44835256"
+            },
+            {
               "host": "i686-mingw32",
               "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/xtensa-esp32s3-elf-gcc11_2_0-esp-2022r1-win32.zip",
               "archiveFileName": "xtensa-esp32s3-elf-gcc11_2_0-esp-2022r1-win32.zip",
@@ -297,6 +263,123 @@
               "archiveFileName": "xtensa-esp32s3-elf-gcc11_2_0-esp-2022r1-win64.zip",
               "checksum": "SHA-256:7213a0bf22607e9c70febaabef37822c2ae5e071ac53d6467e6031b02bb0b2bf",
               "size": "99495535"
+            }
+          ]
+        },
+        {
+          "name": "riscv32-esp-elf-gcc",
+          "version": "esp-2022r1-11.2.0",
+          "systems": [
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-amd64.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-amd64.tar.xz",
+              "checksum": "SHA-256:52710f804df4a033a2b621cc16cfa21023b42052819a51e35a2a164140bbf665",
+              "size": "110107900"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-arm64.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-arm64.tar.xz",
+              "checksum": "SHA-256:812a18f2ecdc3f72c1d098c4e8baa968841099ce9d9ecf95baea85ff71e11013",
+              "size": "104279292"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-armel.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-armel.tar.xz",
+              "checksum": "SHA-256:bc6e3ff8323d1f8b137374788b5615152281aab9e7561c55ab1504145677b6c7",
+              "size": "102802824"
+            },
+            {
+              "host": "i686-pc-linux-gnu",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-i686.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-linux-i686.tar.xz",
+              "checksum": "SHA-256:39d7295c30a23b5ea91baf61c207718ce86d4b1589014b030e121300370f696d",
+              "size": "111505972"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos.tar.xz",
+              "checksum": "SHA-256:d3a6f42b02a5f1485ba3fa92b8a9d9f307f643420e22b3765e88bbe4570aee01",
+              "size": "112060920"
+            },
+            {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-macos-arm64.tar.xz",
+              "checksum": "SHA-256:23d9a715d932a3af57fd7393b0789f88d0f70fedaf5b803deb9ab81dee271bd6",
+              "size": "101254152"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-win32.zip",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-win32.zip",
+              "checksum": "SHA-256:3e677ef068d7f154d33b0d3788b5f985c5066d110028eac44e0f76b3bda4429b",
+              "size": "268053767"
+            },
+            {
+              "host": "x86_64-mingw32",
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-2022r1/riscv32-esp-elf-gcc11_2_0-esp-2022r1-win64.zip",
+              "archiveFileName": "riscv32-esp-elf-gcc11_2_0-esp-2022r1-win64.zip",
+              "checksum": "SHA-256:324a5c679fef75313766cc48d3433c48bf23985a11b5070c5d19144538c6357b",
+              "size": "271158759"
+            }
+          ]
+        },
+        {
+          "name": "openocd-esp32",
+          "version": "v0.11.0-esp32-20221026",
+          "systems": [
+            {
+              "host": "x86_64-pc-linux-gnu",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-amd64-0.11.0-esp32-20221026.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-amd64-0.11.0-esp32-20221026.tar.gz",
+              "checksum": "SHA-256:ce63e9b1dfab60cc62da5dc2abcc22ba7036c42afe74671c787eb026744e7d0b",
+              "size": "2051435"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-arm64-0.11.0-esp32-20221026.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-arm64-0.11.0-esp32-20221026.tar.gz",
+              "checksum": "SHA-256:fe60a3a603e8c6bee47367e40fcb8c0da3a38e01163e9674ebc919b067700506",
+              "size": "1993843"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-armel-0.11.0-esp32-20221026.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-armel-0.11.0-esp32-20221026.tar.gz",
+              "checksum": "SHA-256:6ef76101cca196a4be30fc74f191eff34abb423e32930a383012b866c9b76135",
+              "size": "2092111"
+            },
+            {
+              "host": "x86_64-apple-darwin",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-macos-0.11.0-esp32-20221026.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-0.11.0-esp32-20221026.tar.gz",
+              "checksum": "SHA-256:8edc666a0a230432554b73df7c62e0b5ec21fb018e7fda13b11a7ca8b6c1763b",
+              "size": "2199855"
+            },
+            {
+              "host": "arm64-apple-darwin",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-macos-arm64-0.11.0-esp32-20221026.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-arm64-0.11.0-esp32-20221026.tar.gz",
+              "checksum": "SHA-256:c426c0158ba6488e2f432f7c5b22e79155b5b0fae6d1ad5bbd7894723b43aa12",
+              "size": "2247179"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-win32-0.11.0-esp32-20221026.zip",
+              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20221026.zip",
+              "checksum": "SHA-256:e0e789d35308c029c6b53457cf4a42a5620cb1a3014740026c089c2ed4fd77b2",
+              "size": "2493214"
+            },
+            {
+              "host": "x86_64-mingw32",
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-win32-0.11.0-esp32-20221026.zip",
+              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20221026.zip",
+              "checksum": "SHA-256:e0e789d35308c029c6b53457cf4a42a5620cb1a3014740026c089c2ed4fd77b2",
+              "size": "2493214"
             }
           ]
         },
@@ -352,61 +435,6 @@
               "archiveFileName": "esptool-4.2.1-linux.tar.gz",
               "checksum": "SHA-256:5a45fb77eb6574554ec2f45230d0b350f26f9c24ab3b6c13c4031ebdf72a34ab",
               "size": "90123"
-            }
-          ]
-        },
-        {
-          "name": "openocd-esp32",
-          "version": "v0.11.0-esp32-20220706",
-          "systems": [
-            {
-              "host": "i686-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-win32-0.11.0-esp32-20220706.zip",
-              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20220706.zip",
-              "checksum": "SHA-256:c3d39eb4365a9947e71f1d3780ce031185bc6437f21186568a5c05f23f57a8d0",
-              "size": "2608736"
-            },
-            {
-              "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-win32-0.11.0-esp32-20220706.zip",
-              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20220706.zip",
-              "checksum": "SHA-256:c3d39eb4365a9947e71f1d3780ce031185bc6437f21186568a5c05f23f57a8d0",
-              "size": "2608736"
-            },
-            {
-              "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-macos-0.11.0-esp32-20220706.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-0.11.0-esp32-20220706.tar.gz",
-              "checksum": "SHA-256:333ee2ec3c9b5dc6ad4509faae55335cdea7f8bf83a56bfcf5327e4497c8538a",
-              "size": "2077882"
-            },
-            {
-              "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-linux-amd64-0.11.0-esp32-20220706.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-amd64-0.11.0-esp32-20220706.tar.gz",
-              "checksum": "SHA-256:26f1f18dd93eb70a13203848d3fb1cc2e0de1fd6749c7dd771b2de8709735aed",
-              "size": "2011201"
-            },
-            {
-              "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-linux-amd64-0.11.0-esp32-20220706.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-amd64-0.11.0-esp32-20220706.tar.gz",
-              "checksum": "SHA-256:26f1f18dd93eb70a13203848d3fb1cc2e0de1fd6749c7dd771b2de8709735aed",
-              "size": "2011201"
-            },
-            {
-              "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-linux-armhf-0.11.0-esp32-20220706.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-armhf-0.11.0-esp32-20220706.tar.gz",
-              "checksum": "SHA-256:7f3b57332104e8b8e6194553365a70a9d3754878cfc063d5dc5d839513a63de9",
-              "size": "1902964"
-            },
-            {
-              "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20220706/openocd-esp32-linux-arm64-0.11.0-esp32-20220706.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-arm64-0.11.0-esp32-20220706.tar.gz",
-              "checksum": "SHA-256:f97792bc2852937ec0accb9f0eb2e49926c0f747a71f101a4e34aed75d2c6fcc",
-              "size": "1954685"
             }
           ]
         },
