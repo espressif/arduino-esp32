@@ -2946,7 +2946,7 @@ lilygo_t_display_s3.upload.tool.default=esptool_py
 lilygo_t_display_s3.upload.tool.network=esp_ota
 
 lilygo_t_display_s3.upload.maximum_size=3145728
-lilygo_t_display_s3.upload.maximum_data_size=327680
+lilygo_t_display_s3.upload.maximum_data_size=524288
 lilygo_t_display_s3.upload.speed=921600
 lilygo_t_display_s3.upload.flags=
 lilygo_t_display_s3.upload.extra_flags=
