@@ -66,7 +66,9 @@
 
 #define SOC_ADC_SUPPORTED           1
 #define SOC_DAC_SUPPORTED           1
+#define SOC_UART_SUPPORTED          1
 #define SOC_MCPWM_SUPPORTED         1
+#define SOC_GPTIMER_SUPPORTED       1
 #define SOC_SDMMC_HOST_SUPPORTED    1
 #define SOC_BT_SUPPORTED            1
 #define SOC_PCNT_SUPPORTED          1
@@ -92,6 +94,7 @@
 #define SOC_FLASH_ENC_SUPPORTED     1
 #define SOC_SECURE_BOOT_SUPPORTED   1
 #define SOC_TOUCH_SENSOR_SUPPORTED  1
+#define SOC_BOD_SUPPORTED           1
 
 #if SOC_CAPS_ECO_VER < 200
 #define SOC_DPORT_WORKAROUND                   1
@@ -133,11 +136,8 @@
 #define SOC_BROWNOUT_RESET_SUPPORTED 1
 #endif
 
-
-/*-------------------------- CACHE/MMU CAPS ----------------------------------*/
+/*-------------------------- CACHE CAPS --------------------------------------*/
 #define SOC_SHARED_IDCACHE_SUPPORTED            1   //Shared Cache for both instructions and data
-#define SOC_MMU_LINEAR_ADDRESS_REGION_NUM       5
-
 
 /*-------------------------- CPU CAPS ----------------------------------------*/
 #define SOC_CPU_CORES_NUM               2
@@ -227,7 +227,10 @@
 #define SOC_MCPWM_CAPTURE_TIMERS_PER_GROUP   (1)    ///< The number of capture timers that each group has
 #define SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER (3)    ///< The number of capture channels that each capture timer has
 #define SOC_MCPWM_GPIO_SYNCHROS_PER_GROUP    (3)    ///< The number of GPIO synchros that each group has
-#define SOC_MCPWM_CLK_SUPPORT_PLL160M        (1)    ///< Support PLL160M as clock source
+
+/*-------------------------- MMU CAPS ----------------------------------------*/
+#define SOC_MMU_PERIPH_NUM                      2
+#define SOC_MMU_LINEAR_ADDRESS_REGION_NUM       3
 
 /*-------------------------- MPU CAPS ----------------------------------------*/
 //TODO: correct the caller and remove unsupported lines
@@ -272,6 +275,8 @@
 
 #define SOC_SPI_PERIPH_CS_NUM(i)        3
 #define SOC_SPI_MAX_CS_NUM              3
+
+#define SOC_SPI_SUPPORT_CLK_APB         1
 
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE     64
 #define SOC_SPI_MAX_PRE_DIVIDER         8192
@@ -369,6 +374,9 @@
 #define SOC_PM_SUPPORT_RTC_FAST_MEM_PD            (1)
 #define SOC_PM_SUPPORT_RTC_SLOW_MEM_PD            (1)
 #define SOC_PM_SUPPORT_RC_FAST_PD                 (1)
+#define SOC_PM_SUPPORT_VDDSDIO_PD                 (1)
+
+#define SOC_CONFIGURABLE_VDDSDIO_SUPPORTED        (1)
 
 /*-------------------------- CLOCK SUBSYSTEM CAPS ----------------------------------------*/
 #define SOC_CLK_APLL_SUPPORTED                    (1)
@@ -381,6 +389,8 @@
 #define SOC_CLK_RC_FAST_D256_SUPPORTED            (1)
 #define SOC_RTC_SLOW_CLK_SUPPORT_RC_FAST_D256     (1)
 #define SOC_CLK_RC_FAST_SUPPORT_CALIBRATION       (1)
+
+#define SOC_CLK_XTAL32K_SUPPORTED                 (1)     /*!< Support to connect an external low frequency crystal */
 
 /*-------------------------- SDMMC CAPS -----------------------------------------*/
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 #include <stdint.h>
-#include <sntp.h>
+#include <esp_sntp.h>
 #include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <sdkconfig.h>

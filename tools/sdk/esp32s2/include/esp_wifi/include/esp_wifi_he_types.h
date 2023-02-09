@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,6 +13,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define FLOW_ID_ALL                  (8)
+#define BSS_MAX_COLOR                (63)
 
 /**
   * @brief Access category
@@ -130,7 +133,7 @@ typedef struct {
     uint16_t he_siga2;                            /**< HE-SIGA2 */
     unsigned : 7;                                 /**< reserved */
     unsigned is_group : 1;                        /**< indicate whether the reception is a group addressed frame */
-    unsigned : 32;                                /**< reserved */
+    unsigned timestamp : 32;                      /**< timestamp. The local time when this packet is received. It is precise only if modem sleep or light sleep is not enabled. unit: microsecond */
     unsigned : 15;                                /**< reserved */
     unsigned : 15;                                /**< reserved */
     unsigned : 2;                                 /**< reserved */
@@ -189,6 +192,7 @@ typedef struct {
     uint16_t wake_invl_mant;             /**< the value of the mantissa of the TWT wake interval value in microseconds, base 2 */
     bool trigger;                        /**< true: indicates a trigger-enabled TWT, false: indicates a non-trigger-enabled TWT */
     uint8_t flow_type;                   /**< 0: indicate an announced TWT, 1: indicates an unannounced TWT */
+    esp_err_t status;                    /**< 1: indicate tx success, others : indicate tx fail */
 } wifi_event_sta_itwt_setup_t;
 
 /** Argument structure for WIFI_EVENT_TWT_TEARDOWN event */
