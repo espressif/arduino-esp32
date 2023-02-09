@@ -252,6 +252,9 @@ endfunction()
 
 maybe_add_component(esp-dsp)
 
+if(CONFIG_ESP_INSIGHTS_ENABLED)
+    maybe_add_component(esp_insights)
+endif()
 if(CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK)
     maybe_add_component(esp_rainmaker)
     maybe_add_component(qrcode)
