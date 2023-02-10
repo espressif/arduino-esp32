@@ -551,7 +551,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
  * \retval #PSA_ERROR_INVALID_HANDLE
  *         \p key is not a valid identifier nor \c 0.
  * \retval #PSA_ERROR_COMMUNICATION_FAILURE
- *         There was an failure in communication with the cryptoprocessor.
+ *         There was a failure in communication with the cryptoprocessor.
  *         The key material may still be present in the cryptoprocessor.
  * \retval #PSA_ERROR_DATA_INVALID
  *         This error is typically a result of either storage corruption on a

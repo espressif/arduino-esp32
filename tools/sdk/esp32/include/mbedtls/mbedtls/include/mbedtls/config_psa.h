@@ -7,7 +7,7 @@
  *  those definitions to define symbols used in the library code.
  *
  *  Users and integrators should not edit this file, please edit
- *  include/mbedtls/config.h for MBETLS_XXX settings or
+ *  include/mbedtls/config.h for MBEDTLS_XXX settings or
  *  include/psa/crypto_config.h for PSA_WANT_XXX settings.
  */
 /*
@@ -446,6 +446,8 @@ extern "C" {
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_CHACHA20_POLY1305)
 #if defined(PSA_WANT_KEY_TYPE_CHACHA20)
 #define MBEDTLS_CHACHAPOLY_C
+#define MBEDTLS_CHACHA20_C
+#define MBEDTLS_POLY1305_C
 #define MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 1
 #endif /* PSA_WANT_KEY_TYPE_CHACHA20 */
 #endif /* !MBEDTLS_PSA_ACCEL_ALG_CHACHA20_POLY1305 */

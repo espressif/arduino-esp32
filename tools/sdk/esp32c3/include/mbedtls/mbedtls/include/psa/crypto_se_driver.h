@@ -225,7 +225,7 @@ typedef psa_status_t (*psa_drv_se_mac_finish_t)(void *op_context,
  * operation by comparing the resulting MAC against a provided value
  *
  * \param[in,out] op_context    A hardware-specific structure for the previously
- *                              started MAC operation to be fiinished
+ *                              started MAC operation to be finished
  * \param[in] p_mac             The MAC value against which the resulting MAC
  *                              will be compared against
  * \param[in] mac_length        The size in bytes of the value stored in `p_mac`
@@ -336,7 +336,7 @@ typedef struct {
     /** Function that completes a MAC operation with a verify check
      */
     psa_drv_se_mac_finish_verify_t  p_finish_verify;
-    /** Function that aborts a previoustly started MAC operation
+    /** Function that aborts a previously started MAC operation
      */
     psa_drv_se_mac_abort_t          p_abort;
     /** Function that performs a MAC operation in one call
@@ -394,7 +394,7 @@ typedef psa_status_t (*psa_drv_se_cipher_setup_t)(psa_drv_se_context_t *drv_cont
                                                   psa_encrypt_or_decrypt_t direction);
 
 /** \brief A function that sets the initialization vector (if
- * necessary) for an secure element cipher operation
+ * necessary) for a secure element cipher operation
  *
  * Rationale: The `psa_se_cipher_*` operation in the PSA Cryptographic API has
  * two IV functions: one to set the IV, and one to generate it internally. The
@@ -745,7 +745,7 @@ typedef psa_status_t (*psa_drv_se_aead_encrypt_t)(psa_drv_se_context_t *drv_cont
                                                   size_t ciphertext_size,
                                                   size_t *p_ciphertext_length);
 
-/** A function that peforms a secure element authenticated decryption operation
+/** A function that performs a secure element authenticated decryption operation
  *
  * \param[in,out] drv_context           The driver context structure.
  * \param[in] key_slot                  Slot containing the key to use
@@ -1156,7 +1156,7 @@ typedef struct {
  *
  * Different key derivation algorithms require a different number of inputs.
  * Instead of having an API that takes as input variable length arrays, which
- * can be problemmatic to manage on embedded platforms, the inputs are passed
+ * can be problematic to manage on embedded platforms, the inputs are passed
  * to the driver via a function, `psa_drv_se_key_derivation_collateral`, that
  * is called multiple times with different `collateral_id`s. Thus, for a key
  * derivation algorithm that required 3 parameter inputs, the flow would look
@@ -1270,7 +1270,7 @@ typedef struct {
     psa_drv_se_key_derivation_collateral_t p_collateral;
     /** Function that performs a final key derivation step */
     psa_drv_se_key_derivation_derive_t     p_derive;
-    /** Function that perforsm a final key derivation or agreement and
+    /** Function that performs a final key derivation or agreement and
      * exports the key */
     psa_drv_se_key_derivation_export_t     p_export;
 } psa_drv_se_key_derivation_t;

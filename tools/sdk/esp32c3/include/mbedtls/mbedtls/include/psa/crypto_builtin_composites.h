@@ -43,6 +43,12 @@
 #define MBEDTLS_PSA_BUILTIN_MAC
 #endif
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CCM) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
+#define MBEDTLS_PSA_BUILTIN_AEAD  1
+#endif
+
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
 typedef struct
 {
