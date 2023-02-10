@@ -2,5 +2,6 @@
 nvs,      data, nvs,     0x9000,  0x5000,
 otadata,  data, ota,     0xe000,  0x2000,
 app0,     app,  ota_0,   0x10000, 0x100000,
-ffat,     data, fat,     0x110000,0x2F0000,
+ffat,     data, fat,     0x110000,0x2E0000,
+coredump, data, coredump,0x3F0000,0x10000,
 # to create/use ffat, see https://github.com/marcmerlin/esp32_fatfsimage

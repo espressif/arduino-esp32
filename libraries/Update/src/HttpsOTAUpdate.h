@@ -1,5 +1,5 @@
-#ifndef HTPSPOTUADATE_H
-#define HTPSPOTUADATE_H
+#ifndef HTTPSOTAUPDATE_H
+#define HTTPSOTAUPDATE_H
 #include "esp_http_client.h"
 #include "esp_netif_types.h"
 #include "UpdateNetworkInterface.h"

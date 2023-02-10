@@ -49,7 +49,8 @@ typedef uint32_t touch_value_t;
 void touchSetCycles(uint16_t measure, uint16_t sleep);
 
 /*
- * Read touch pad (values close to 0 mean touch detected)
+ * Read touch pad (for ESP32 values close to 0 mean touch detected /
+ * for ESP32-S2/S3 higher values mean touch detected)
  * You can use this method to chose a good threshold value
  * to use as value for touchAttachInterrupt
  * */
@@ -87,6 +88,11 @@ void touchInterruptSetThresholdDirection(bool mustbeLower);
 // returns true if touch pad has been and continues pressed and false otherwise 
 bool touchInterruptGetLastStatus(uint8_t pin);
 #endif
+
+/*
+ * Setup touch pad wake up from deep sleep with given threshold.
+ **/
+void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 
 #endif // SOC_TOUCH_SENSOR_NUM > 0
 

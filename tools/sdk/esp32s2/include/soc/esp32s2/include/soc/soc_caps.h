@@ -69,6 +69,8 @@
 #define SOC_ADC_DIGI_CONTROLLER_NUM             (2)
 #define SOC_ADC_PATT_LEN_MAX                    (32) /*!< Two pattern table, each contains 16 items. Each item takes 1 byte */
 #define SOC_ADC_DIGI_MAX_BITWIDTH               (12)
+#define SOC_ADC_DIGI_RESULT_BYTES               (2)
+#define SOC_ADC_DIGI_DATA_BYTES_PER_CONV        (2)
 /*!< F_sample = F_digi_con / 2 / interval. F_digi_con = 5M for now. 30 <= interva <= 4095 */
 #define SOC_ADC_SAMPLE_FREQ_THRES_HIGH          83333
 #define SOC_ADC_SAMPLE_FREQ_THRES_LOW           611
@@ -201,9 +203,10 @@
 #define SOC_SIGMADELTA_CHANNEL_NUM (8) // 8 channels
 
 /*-------------------------- SPI CAPS ----------------------------------------*/
-#define SOC_SPI_PERIPH_NUM      3
-#define SOC_SPI_DMA_CHAN_NUM    3
+#define SOC_SPI_PERIPH_NUM          3
+#define SOC_SPI_DMA_CHAN_NUM        3
 #define SOC_SPI_PERIPH_CS_NUM(i)    (((i)==0)? 2: (((i)==1)? 6: 3))
+#define SOC_SPI_MAX_CS_NUM          6
 
 #define SOC_SPI_MAXIMUM_BUFFER_SIZE     72
 #define SOC_SPI_MAX_PRE_DIVIDER         8192

@@ -310,7 +310,21 @@ bool USBHID::ready(void){
     return tud_hid_n_ready(0);
 }
 
-void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len){
+// TinyUSB is in the process of changing the type of the last argument to
+// tud_hid_report_complete_cb(), so extract the type from the version of TinyUSB that we're
+// compiled with.
+template <class F> struct ArgType;
+
+template <class R, class T1, class T2, class T3>
+struct ArgType<R(*)(T1, T2, T3)> {
+	typedef T1 type1;
+	typedef T2 type2;
+	typedef T3 type3;
+};
+
+typedef ArgType<decltype(&tud_hid_report_complete_cb)>::type3 tud_hid_report_complete_cb_len_t;
+
+void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, tud_hid_report_complete_cb_len_t len){
     if (tinyusb_hid_device_input_sem) {
         xSemaphoreGive(tinyusb_hid_device_input_sem);
     }
@@ -331,11 +345,16 @@ bool USBHID::SendReport(uint8_t id, const void* data, size_t len, uint32_t timeo
     if(!res){
         log_e("not ready");
     } else {
+        // The semaphore may be given if the last SendReport() timed out waiting for the report to
+        // be sent. Or, tud_hid_report_complete_cb() may be called an extra time, causing the
+        // semaphore to be given. In these cases, take the semaphore to clear its state so that
+        // we can wait for it to be given after calling tud_hid_n_report().
+        xSemaphoreTake(tinyusb_hid_device_input_sem, 0);
+
         res = tud_hid_n_report(0, id, data, len);
         if(!res){
             log_e("report %u failed", id);
         } else {
-            xSemaphoreTake(tinyusb_hid_device_input_sem, 0);
             if(xSemaphoreTake(tinyusb_hid_device_input_sem, timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
                 log_e("report %u wait failed", id);
                 res = false;

@@ -21,7 +21,7 @@
 #include "WiFi.h"
 
 #if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-#  warning "Please configure IDF framework to include mbedTLS -> Enable PSK based ciphersuite modes (MBEDTLS_KEY_EXCHANGE_PSK) and activate at least one cipher"
+#  warning "Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Key Exchange Methods -> Enable pre-shared-key ciphersuites and then check `Enable PSK based cyphersuite modes`. Save and Quit."
 #else
 
 const char *pers = "esp32-tls";
@@ -54,7 +54,7 @@ void ssl_init(sslclient_context *ssl_client)
 }
 
 
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
+int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_t port, const char* hostname, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
     char buf[512];
     int ret, flags;
@@ -74,21 +74,18 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return ssl_client->socket;
     }
 
-    IPAddress srv((uint32_t)0);
-    if(!WiFiGenericClass::hostByName(host, srv)){
-        return -1;
-    }
-
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = srv;
+    serv_addr.sin_addr.s_addr = ip;
     serv_addr.sin_port = htons(port);
 
     if(timeout <= 0){
         timeout = 30000; // Milli seconds.
     }
+
+    ssl_client->socket_timeout = timeout;
 
     fd_set fdset;
     struct timeval tv;
@@ -191,7 +188,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
     } else if (useRootCABundle) {
         log_v("Attaching root CA cert bundle");
-        ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
+        ret = arduino_esp_crt_bundle_attach(&ssl_client->ssl_conf);
 
         if (ret < 0) {
             return handle_error(ret);
@@ -257,7 +254,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     log_v("Setting hostname for TLS session...");
 
     // Hostname set here should match CN in server certificate
-    if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0){
+    if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, hostname != NULL ? hostname : ip.toString().c_str())) != 0){
         return handle_error(ret);
     }
 
@@ -341,12 +338,15 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
     
-    // save only interesting field
-    int timeout = ssl_client->handshake_timeout;
+    // save only interesting fields
+    int handshake_timeout = ssl_client->handshake_timeout;
+    int socket_timeout = ssl_client->socket_timeout;
+
     // reset embedded pointers to zero
     memset(ssl_client, 0, sizeof(sslclient_context));
     
-    ssl_client->handshake_timeout = timeout;
+    ssl_client->handshake_timeout = handshake_timeout;
+    ssl_client->socket_timeout = socket_timeout;
 }
 
 
@@ -369,11 +369,19 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
+    unsigned long write_start_time=millis();
+
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
+        if((millis()-write_start_time)>ssl_client->socket_timeout) {
+            log_v("SSL write timed out.");
+            return -1;
+        }
+
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
             log_v("Handling error %d", ret); //for low level debug
             return handle_error(ret);
         }
+        
         //wait for space to become available
         vTaskDelay(2);
     }
