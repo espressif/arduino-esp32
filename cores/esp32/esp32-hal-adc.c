@@ -323,13 +323,13 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
             return value;
         }
     }
-    
+    /*
     err = adc_oneshot_get_calibrated_result((adc_oneshot_unit_handle_t)perimanGetPinBus(pin,  ESP32_BUS_TYPE_ADC_ONESHOT), adc_cali_handle[adc_unit], channel, &value);
     if(err != ESP_OK){
         log_e("adc_oneshot_get_calibrated_result failed!");
         return 0;
     }
-    /*
+    */
     err = adc_oneshot_read((adc_oneshot_unit_handle_t)perimanGetPinBus(pin,  ESP32_BUS_TYPE_ADC_ONESHOT), channel, &raw_value);
     if(err != ESP_OK){
         log_e("adc_oneshot_read failed!");
@@ -340,7 +340,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         log_e("adc_cali_raw_to_voltage failed!");
         return 0;
     }
-    */
+    
     return value;
 
 }
