@@ -87,7 +87,7 @@ class BluetoothSerial: public Stream
         operator bool() const;
         void getBtAddress(uint8_t *mac);
         BTAddress getBtAddressObject();
-        std::string getBtAddressString();
+        String getBtAddressString();
     private:
         String local_name;
         int timeoutTicks=0;

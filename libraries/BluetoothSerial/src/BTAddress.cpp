@@ -105,7 +105,7 @@ String BTAddress::toString(bool capital) const {
 	}else{
 		snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
 	}
-	std::string ret(res);
+	String ret(res);
 	free(res);
 	return ret;
 } // toString

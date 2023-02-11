@@ -12,7 +12,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_bt_api.h> // ESP32 BT
-#include <string>
+#include <Arduino.h>
 
 
 /**
