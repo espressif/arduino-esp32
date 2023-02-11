@@ -21,7 +21,7 @@ void setup() {
 
   uint8_t mac_arr[6]; // Byte array to hold the MAC address from getBtAddress()
   BTAddress mac_obj; // Object holding instance of BTAddress with the MAC (for more details see libraries/BluetoothSerial/src/BTAddress.h)
-  std::string mac_str; // String holding the text version of MAC in format AA:BB:CC:DD:EE:FF
+  String mac_str; // String holding the text version of MAC in format AA:BB:CC:DD:EE:FF
 
   SerialBT.getBtAddress(mac_arr); // Fill in the array
   mac_obj = SerialBT.getBtAddressObject(); // Instantiate the object
