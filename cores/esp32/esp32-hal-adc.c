@@ -42,7 +42,7 @@ static bool adcDetachBus(void * pin){
         }
     }
 
-    if(used_channels == 1) {//only 1 channel is used
+    if(used_channels == 1){ //only 1 channel is used
         esp_err_t err = adc_oneshot_del_unit(adc_handle[adc_unit]);
         if(err != ESP_OK){
             return false;
@@ -142,8 +142,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
     return ESP_OK;
 }
 
-static inline uint16_t mapResolution(uint16_t value)
-{
+static inline uint16_t mapResolution(uint16_t value){
     uint8_t from = __analogWidth;
     if (from == __analogReturnedWidth){
         return value;
@@ -154,16 +153,14 @@ static inline uint16_t mapResolution(uint16_t value)
     return value << (__analogReturnedWidth - from);
 }
 
-void __analogSetAttenuation(adc_attenuation_t attenuation)
-{
+void __analogSetAttenuation(adc_attenuation_t attenuation){
     if(__analogChannelConfig(__analogWidth, attenuation, -1) != ESP_OK){
         log_e("__analogChannelConfig failed!");
     }
 }
 
 #if CONFIG_IDF_TARGET_ESP32
-void __analogSetWidth(uint8_t bits)
-{
+void __analogSetWidth(uint8_t bits){
     if(bits < SOC_ADC_RTC_MIN_BITWIDTH){
         bits = SOC_ADC_RTC_MIN_BITWIDTH;
     } 
@@ -177,7 +174,6 @@ void __analogSetWidth(uint8_t bits)
 #endif
 
 esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit){
-
     esp_err_t err = ESP_OK;
     if(adc_handle[adc_unit] == NULL) {
         adc_oneshot_unit_init_cfg_t init_config1 = {
@@ -211,16 +207,14 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit){
     return ESP_OK;
 }
 
-void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation)
-{
+void __analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation){
     if(__analogChannelConfig(__analogWidth, attenuation, pin) != ESP_OK)
     {
         log_e("__analogChannelConfig failed!");
     }
 }
 
-void __analogReadResolution(uint8_t bits)
-{
+void __analogReadResolution(uint8_t bits){
     if(!bits || bits > 16){
         return;
     }
@@ -231,8 +225,7 @@ void __analogReadResolution(uint8_t bits)
 #endif
 }
 
-uint16_t __analogRead(uint8_t pin)
-{
+uint16_t __analogRead(uint8_t pin){
     int value = 0;
     adc_channel_t channel;
     adc_unit_t adc_unit;
@@ -244,8 +237,7 @@ uint16_t __analogRead(uint8_t pin)
         return value;
     }
 
-    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL)
-    {
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL){
         log_d("Calling __analogInit! pin = %d", pin);
         err = __analogInit(pin, channel, adc_unit);
         if(err != ESP_OK){
@@ -259,7 +251,6 @@ uint16_t __analogRead(uint8_t pin)
 }
 
 uint32_t __analogReadMilliVolts(uint8_t pin){
-
     int value = 0;
     int raw_value = 0;
     adc_channel_t channel;
@@ -272,8 +263,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         return value;
     }
 
-    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL)
-    {
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL){
         err = __analogInit(pin, channel, adc_unit);
         if(err != ESP_OK){
             log_e("Analog initialization failed!");
@@ -281,8 +271,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         }
     }
 
-    if(adc_cali_handle[adc_unit] == NULL)
-    {
+    if(adc_cali_handle[adc_unit] == NULL){
         log_d("Creating cali handle for ADC_%d", adc_unit);
         #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
             adc_cali_curve_fitting_config_t cali_config = {
