@@ -30,7 +30,6 @@ adc_cali_handle_t adc_cali_handle[SOC_ADC_PERIPH_NUM];
 static bool adcDetachBus(void * pin){
     adc_channel_t adc_channel;
     adc_unit_t adc_unit;
-    esp_err_t err = ESP_OK;
     uint8_t used_channels = 0;
 
     adc_oneshot_io_to_channel((int)(pin-1), &adc_unit, &adc_channel);
@@ -92,7 +91,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
                             log_e("adc_cali_create_scheme_curve_fitting failed with error: %d", err);
                             return err;
                         }
-                    #else if ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+                    #else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
                         log_d("Deleting ADC_UNIT_%d line cali handle",adc_unit);
                         err = adc_cali_delete_scheme_line_fitting(adc_cali_handle[adc_unit]);
                         if(err != ESP_OK){
@@ -252,7 +251,6 @@ uint16_t __analogRead(uint8_t pin){
 
 uint32_t __analogReadMilliVolts(uint8_t pin){
     int value = 0;
-    int raw_value = 0;
     adc_channel_t channel;
     adc_unit_t adc_unit;
     esp_err_t err = ESP_OK;
@@ -280,7 +278,7 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
                 .bitwidth = __analogWidth,
             };
             err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_cali_handle[adc_unit]);
-        #else if ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+        #else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
             adc_cali_line_fitting_config_t cali_config = {
                 .unit_id = adc_unit,
                 .bitwidth = __analogWidth,
