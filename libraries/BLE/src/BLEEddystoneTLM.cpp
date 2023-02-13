@@ -17,10 +17,6 @@
 #include "BLEEddystoneTLM.h"
 
 static const char LOG_TAG[] = "BLEEddystoneTLM";
-#define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))
-#define ENDIAN_CHANGE_U32(x) ((((x)&0xFF000000)>>24) + (((x)&0x00FF0000)>>8)) + ((((x)&0xFF00)<<8) + (((x)&0xFF)<<24))
-#define EDDYSTONE_TEMP_U16_TO_FLOAT(tempU16)   (((int16_t)ENDIAN_CHANGE_U16(tempU16)) / 256.0f)
-#define EDDYSTONE_TEMP_FLOAT_TO_U16(tempFloat) (ENDIAN_CHANGE_U16(((int)(tempFloat * 256))))
 
 BLEEddystoneTLM::BLEEddystoneTLM() {
 	beaconUUID = 0xFEAA;
@@ -48,9 +44,13 @@ uint16_t BLEEddystoneTLM::getVolt() {
 	return ENDIAN_CHANGE_U16(m_eddystoneData.volt);
 } // getVolt
 
-float BLEEddystoneTLM::getTemp() {
-	return ENDIAN_CHANGE_U16(m_eddystoneData.temp) / 256.0f;
+uint16_t BLEEddystoneTLM::getTemp() {
+	return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
 } // getTemp
+
+float BLEEddystoneTLM::getFloatTemp() {
+  return EDDYSTONE_TEMP_U16_TO_FLOAT(ENDIAN_CHANGE_U16(m_eddystoneData.temp));
+} // getFloatTemp
 
 uint32_t BLEEddystoneTLM::getCount() {
 	return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
@@ -112,6 +112,9 @@ std::string BLEEddystoneTLM::toString() {
 
 /**
  * Set the raw data for the beacon record.
+ * Example:
+ * uint8_t *payLoad = advertisedDevice.getPayload();
+ * eddystoneTLM.setData(std::string((char*)payLoad+22, advertisedDevice.getPayloadLength() - 22));
  */
 void BLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
@@ -134,7 +137,7 @@ void BLEEddystoneTLM::setVolt(uint16_t volt) {
 } // setVolt
 
 void BLEEddystoneTLM::setTemp(float temp) {
-	m_eddystoneData.temp = (uint16_t)temp;
+	m_eddystoneData.temp = EDDYSTONE_TEMP_FLOAT_TO_U16(temp);
 } // setTemp
 
 void BLEEddystoneTLM::setCount(uint32_t advCount) {

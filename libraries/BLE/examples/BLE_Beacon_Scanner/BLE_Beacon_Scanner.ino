@@ -99,30 +99,17 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           Serial.printf("TX power %d\n", foundEddyURL.getPower());
           Serial.println("\n");
         }
-        else if (payLoad[11] == 0x20)
+        if (advertisedDevice.getPayloadLength() >= 22 && payLoad[22] == 0x20)
         {
-          Serial.println("Found an EddystoneTLM beacon!");
-          BLEEddystoneTLM foundEddyURL = BLEEddystoneTLM();
-          std::string eddyContent((char *)&payLoad[11]); // incomplete EddystoneURL struct!
-
-          eddyContent = "01234567890123";
-
-          for (int idx = 0; idx < 14; idx++)
-          {
-            eddyContent[idx] = payLoad[idx + 11];
-          }
-
-          foundEddyURL.setData(eddyContent);
-          Serial.printf("Reported battery voltage: %dmV\n", foundEddyURL.getVolt());
-          Serial.printf("Reported temperature from TLM class: %.2fC\n", (double)foundEddyURL.getTemp());
-          int16_t temp = (int16_t)payLoad[16] + (int16_t)(payLoad[15] << 8);
-          float calcTemp = temp / 256.0f;
-          Serial.printf("Reported temperature from data: %.2fC\n", calcTemp);
-          Serial.printf("Reported advertise count: %d\n", foundEddyURL.getCount());
-          Serial.printf("Reported time since last reboot: %ds\n", foundEddyURL.getTime());
-          Serial.println("\n");
-          Serial.print(foundEddyURL.toString().c_str());
-          Serial.println("\n");
+          Serial.printf("Found an EddystoneTLM beacon! payload length = %d B; minus 22 = %d\n", advertisedDevice.getPayloadLength(), advertisedDevice.getPayloadLength() - 22);
+          BLEEddystoneTLM eddystoneTLM;
+          //std::string TLMframe(payLoad[22], advertisedDevice.getPayloadLength() - 22);
+          //eddystoneTLM.setData(TLMFrame);
+          eddystoneTLM.setData(std::string((char*)payLoad+22, advertisedDevice.getPayloadLength() - 22));
+          Serial.printf("Reported battery voltage: %dmV\n", eddystoneTLM.getVolt());
+          Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", eddystoneTLM.getFloatTemp(), eddystoneTLM.getTemp());
+          Serial.printf("Reported advertise count: %d\n", eddystoneTLM.getCount());
+          Serial.printf("Reported time since last reboot: %ds\n", eddystoneTLM.getTime());
         }
       }
     }
