@@ -27,18 +27,13 @@ static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH;
 adc_oneshot_unit_handle_t adc_handle[SOC_ADC_PERIPH_NUM];
 adc_cali_handle_t adc_cali_handle[SOC_ADC_PERIPH_NUM];
 
-static bool adcDetachBus(void * bus){
-
+static bool adcDetachBus(void * pin){
+    adc_channel_t adc_channel;
+    adc_unit_t adc_unit;
+    esp_err_t err = ESP_OK;
     uint8_t used_channels = 0;
-    adc_unit_t adc_unit = 0;
 
-    for(int i = 0; i < SOC_ADC_PERIPH_NUM; i++){
-        if(adc_handle[i] == bus){
-            adc_unit = i;
-            break;
-        }
-    }
-
+    adc_oneshot_io_to_channel((int)(pin-1), &adc_unit, &adc_channel);
     for (uint8_t channel = 0; channel < SOC_ADC_CHANNEL_NUM(adc_unit); channel++){
         int io_pin;
         adc_oneshot_channel_to_io(adc_unit, channel, &io_pin);
@@ -48,7 +43,7 @@ static bool adcDetachBus(void * bus){
     }
 
     if(used_channels == 1) {//only 1 channel is used
-        esp_err_t err = adc_oneshot_del_unit((adc_oneshot_unit_handle_t)bus);
+        esp_err_t err = adc_oneshot_del_unit(adc_handle[adc_unit]);
         if(err != ESP_OK){
             return false;
         }
@@ -58,7 +53,6 @@ static bool adcDetachBus(void * bus){
 }
 
 esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, int8_t pin){
-
     esp_err_t err = ESP_OK;
     adc_oneshot_chan_cfg_t config = {
         .bitwidth = width,
@@ -198,8 +192,8 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit){
         }
     }
 
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT, (void *)adc_handle[adc_unit])){
-        adcDetachBus((void *)adc_handle[adc_unit]);
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT, (void *)(pin+1))){
+        adcDetachBus((void *)(pin+1));
         return err;
     }
 
@@ -209,14 +203,11 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit){
     };
 
     err = adc_oneshot_config_channel(adc_handle[adc_unit], channel, &config);
-
     if(err != ESP_OK){
         log_e("adc_oneshot_config_channel failed with error: %d", err);
         return err;
     }
-
     perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_ONESHOT, adcDetachBus);
-
     return ESP_OK;
 }
 
@@ -247,17 +238,15 @@ uint16_t __analogRead(uint8_t pin)
     adc_unit_t adc_unit;
 
     esp_err_t err = ESP_OK;
-    adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
+    err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
     if(err != ESP_OK){
         log_e("Pin %u is not ADC pin!", pin);
         return value;
     }
-    //log_d("adc_unit = %d    adc_channel = %d",adc_unit,channel);
 
-    adc_oneshot_unit_handle_t bus = (adc_oneshot_unit_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT);
-    if(bus == NULL){
-        //log_d("No BUS - calling __analogInit()");
-
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL)
+    {
+        log_d("Calling __analogInit! pin = %d", pin);
         err = __analogInit(pin, channel, adc_unit);
         if(err != ESP_OK){
             log_e("Analog initialization failed!");
@@ -265,12 +254,9 @@ uint16_t __analogRead(uint8_t pin)
         }
     }
 
-
-    adc_oneshot_read((adc_oneshot_unit_handle_t)perimanGetPinBus(pin,  ESP32_BUS_TYPE_ADC_ONESHOT), channel, &value);
+    adc_oneshot_read(adc_handle[adc_unit], channel, &value);
     return mapResolution(value);
-
 }
-
 
 uint32_t __analogReadMilliVolts(uint8_t pin){
 
@@ -286,13 +272,8 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
         return value;
     }
 
-    //log_d("adc_unit = %d    adc_channel = %d",adc_unit,channel);
-
-    adc_oneshot_unit_handle_t bus = (adc_oneshot_unit_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT);
-    if(bus == NULL){
-
-        //log_d("No BUS - calling __analogInit()");
-
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL)
+    {
         err = __analogInit(pin, channel, adc_unit);
         if(err != ESP_OK){
             log_e("Analog initialization failed!");
@@ -323,26 +304,13 @@ uint32_t __analogReadMilliVolts(uint8_t pin){
             return value;
         }
     }
-    /*
-    err = adc_oneshot_get_calibrated_result((adc_oneshot_unit_handle_t)perimanGetPinBus(pin,  ESP32_BUS_TYPE_ADC_ONESHOT), adc_cali_handle[adc_unit], channel, &value);
+
+    err = adc_oneshot_get_calibrated_result(adc_handle[adc_unit], adc_cali_handle[adc_unit], channel, &value);
     if(err != ESP_OK){
         log_e("adc_oneshot_get_calibrated_result failed!");
         return 0;
     }
-    */
-    err = adc_oneshot_read((adc_oneshot_unit_handle_t)perimanGetPinBus(pin,  ESP32_BUS_TYPE_ADC_ONESHOT), channel, &raw_value);
-    if(err != ESP_OK){
-        log_e("adc_oneshot_read failed!");
-        return value;
-    }
-    adc_cali_raw_to_voltage(adc_cali_handle[adc_unit], raw_value, &value);
-    if(err != ESP_OK){
-        log_e("adc_cali_raw_to_voltage failed!");
-        return 0;
-    }
-    
     return value;
-
 }
 
 extern uint16_t analogRead(uint8_t pin) __attribute__ ((weak, alias("__analogRead")));
