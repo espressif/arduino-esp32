@@ -16,7 +16,9 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #include "WiFiUdp.h"
+#include <new>  //std::nothrow
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
@@ -222,7 +224,7 @@ int WiFiUDP::parsePacket(){
   remote_ip = IPAddress(si_other.sin_addr.s_addr);
   remote_port = ntohs(si_other.sin_port);
   if (len > 0) {
-    rx_buffer = new cbuf(len);
+    rx_buffer = new(std::nothrow) cbuf(len);
     rx_buffer->write(buf, len);
   }
   free(buf);
