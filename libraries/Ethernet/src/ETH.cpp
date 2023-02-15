@@ -341,7 +341,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
 
     /* attach to WiFiGeneric to receive events */
-    add_esp_interface_netif(ESP_IF_ETH, eth_netif);
+    add_esp_interface_netif(ESP_IF_ETH, esp_netif);
 
     if(esp_eth_start(eth_handle) != ESP_OK){
         log_e("esp_eth_start failed");
