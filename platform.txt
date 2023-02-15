@@ -1,10 +1,10 @@
 name=ESP32 Arduino
 version=2.0.6
 
-runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
-runtime.tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
-runtime.tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
+tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
+tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
+tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 
 debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
 debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
@@ -27,7 +27,7 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
 
-compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
+compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
 compiler.prefix={build.tarch}-{build.target}-elf-
 
@@ -151,6 +151,7 @@ build.extra_libs=
 build.memory_type={build.boot}_qspi
 
 # OpenOCD default configs
+build.copy_jtag_files=0
 build.openocdscript.esp32=esp32-wrover-kit-3.3v.cfg
 build.openocdscript.esp32s2=esp32s2-kaluga-1.cfg
 build.openocdscript.esp32s3=esp32s3-builtin.cfg
@@ -184,16 +185,16 @@ recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\bui
 recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
 
 # Generate debug.cfg (must be postbuild)
-recipe.hooks.postbuild.1.pattern=bash -c "cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
-recipe.hooks.postbuild.1.pattern.windows=cmd /c COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
+recipe.hooks.postbuild.1.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
+recipe.hooks.postbuild.1.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
 
 # Generate debug_custom.json
-recipe.hooks.postbuild.2.pattern=bash -c "cp -f "{runtime.platform.path}"/tools/ide-debug/{build.mcu}.json "{build.source.path}"/debug_custom.json"
-recipe.hooks.postbuild.2.pattern.windows=cmd /c COPY /y "{runtime.platform.path}\tools\ide-debug\{build.mcu}.json" "{build.source.path}\debug_custom.json"
+recipe.hooks.postbuild.2.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.mcu}.json "{build.source.path}"/debug_custom.json"
+recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.mcu}.json" "{build.source.path}\debug_custom.json"
 
 # Generate chip.svd
-recipe.hooks.postbuild.3.pattern=bash -c "cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/{build.mcu}.svd"
-recipe.hooks.postbuild.3.pattern.windows=cmd /c COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\{build.mcu}.svd"
+recipe.hooks.postbuild.3.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
+recipe.hooks.postbuild.3.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\debug.svd"
 
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.c.extra_flags} {build.extra_flags} "@{build.opt.path}" {includes} "{source_file}" -o "{object_file}"

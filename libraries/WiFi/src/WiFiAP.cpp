@@ -136,12 +136,6 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
 bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder)
 {
 
-    if(!WiFi.enableAP(true)) {
-        // enable AP failed
-        log_e("enable AP first!");
-        return false;
-    }
-
     if(!ssid || *ssid == 0) {
         // fail SSID missing
         log_e("SSID missing!");
@@ -151,6 +145,13 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
         // fail passphrase too short
         log_e("passphrase too short!");
+        return false;
+    }
+
+    // last step after checking the SSID and password
+    if(!WiFi.enableAP(true)) {
+        // enable AP failed
+        log_e("enable AP first!");
         return false;
     }
 

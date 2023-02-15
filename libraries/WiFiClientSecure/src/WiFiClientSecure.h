@@ -55,6 +55,7 @@ public:
     int connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     int connect(IPAddress ip, uint16_t port, const char *pskIdent, const char *psKey);
     int connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey);
+    int connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key);
     int peek();
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);

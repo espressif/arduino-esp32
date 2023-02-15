@@ -60,6 +60,8 @@ static const uint8_t A3 = 18; // light sensor
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t T6 = 6;
 static const uint8_t T7 = 7;
