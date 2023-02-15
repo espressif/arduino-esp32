@@ -7,6 +7,12 @@
 /*|Supported methods: PEAP + MsCHAPv2, EAP-TTLS + MsCHAPv2    |*/
 /*|-----------------------------------------------------------|*/
 
+// This example demonstrates a secure connection to a WiFi network using WPA/WPA2 Enterprise (for example eduroam),
+// and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.
+
+// Note: this example is outdated and may not work!
+// For more examples see https://github.com/martinius96/ESP32-eduroam
+
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include "esp_wpa2.h"

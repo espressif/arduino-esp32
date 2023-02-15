@@ -1,10 +1,10 @@
 name=ESP32 Arduino
 version=2.0.6
 
-runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
-runtime.tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
-runtime.tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
+tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
+tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
+tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 
 debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
 debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
@@ -27,7 +27,7 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
 
-compiler.path={runtime.tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
+compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
 compiler.prefix={build.tarch}-{build.target}-elf-
 
