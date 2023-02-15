@@ -85,6 +85,9 @@ class BluetoothSerial: public Stream
         const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
         
         operator bool() const;
+        void getBtAddress(uint8_t *mac);
+        BTAddress getBtAddressObject();
+        String getBtAddressString();
     private:
         String local_name;
         int timeoutTicks=0;

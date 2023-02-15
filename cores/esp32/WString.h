@@ -23,21 +23,23 @@
 #define String_class_h
 #ifdef __cplusplus
 
+#include <pgmspace.h>
+
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
-#include <pgmspace.h>
-#include <stdint.h>
 
-// An inherited class for holding the result of a concatenation.  These
-// result objects are assumed to be writable by subsequent concatenations.
-class StringSumHelper;
 
 // an abstract class used as a means to proide a unique pointer type
 // but really has no body
 class __FlashStringHelper;
 #define FPSTR(pstr_pointer) (reinterpret_cast<const __FlashStringHelper *>(pstr_pointer))
 #define F(string_literal) (FPSTR(PSTR(string_literal)))
+
+// An inherited class for holding the result of a concatenation.  These
+// result objects are assumed to be writable by subsequent concatenations.
+class StringSumHelper;
 
 // The string class
 class String {
@@ -107,7 +109,7 @@ class String {
         String & operator =(StringSumHelper &&rval);
 #endif
 
-        // concatenate (works w/ built-in types)
+        // concatenate (works w/ built-in types, same as assignment)
 
         // returns true on success, false on failure (in which case, the string
         // is left unchanged).  if the argument is null or invalid, the
@@ -265,7 +267,6 @@ class String {
         String substring(unsigned int beginIndex) const {
             return substring(beginIndex, len());
         }
-        ;
         String substring(unsigned int beginIndex, unsigned int endIndex) const;
 
         // modification

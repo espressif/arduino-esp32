@@ -21,7 +21,7 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <Arduino.h>
+#include "Arduino.h"
 #include "WString.h"
 #include "stdlib_noniso.h"
 #include "esp32-hal-log.h"
@@ -80,11 +80,7 @@ String::String(unsigned char value, unsigned char base) {
 String::String(int value, unsigned char base) {
     init();
     char buf[2 + 8 * sizeof(int)];
-    if (base == 10) {
-        sprintf(buf, "%d", value);
-    } else {
-        itoa(value, buf, base);
-    }
+    itoa(value, buf, base);
     *this = buf;
 }
 
@@ -98,11 +94,7 @@ String::String(unsigned int value, unsigned char base) {
 String::String(long value, unsigned char base) {
     init();
     char buf[2 + 8 * sizeof(long)];
-    if (base==10) {
-        sprintf(buf, "%ld", value);
-    } else {
-        ltoa(value, buf, base);
-    }
+    ltoa(value, buf, base);
     *this = buf;
 }
 
@@ -140,11 +132,7 @@ String::String(double value, unsigned int decimalPlaces) {
 String::String(long long value, unsigned char base) {
     init();
     char buf[2 + 8 * sizeof(long long)];
-    if (base==10) {
-        sprintf(buf, "%lld", value);   // NOT SURE - NewLib Nano ... does it support %lld? 
-    } else {
-        lltoa(value, buf, base);
-    }
+    lltoa(value, buf, base);
     *this = buf;
 }
 
@@ -159,9 +147,9 @@ String::~String() {
     invalidate();
 }
 
-// /*********************************************/
-// /*  Memory Management                        */
-// /*********************************************/
+/*********************************************/
+/*  Memory Management                        */
+/*********************************************/
 
 inline void String::init(void) {
     setSSO(false);
@@ -221,8 +209,7 @@ bool String::changeBuffer(unsigned int maxStrLen) {
             // Copy the SSO buffer into allocated space
             memmove(newbuffer, sso.buff, sizeof(sso.buff));
         }
-        if (newSize > oldSize)
-        {
+        if (newSize > oldSize) {
             memset(newbuffer + oldSize, 0, newSize - oldSize);
         }
         setSSO(false);
@@ -234,9 +221,9 @@ bool String::changeBuffer(unsigned int maxStrLen) {
     return false;
 }
 
-// /*********************************************/
-// /*  Copy and Move                            */
-// /*********************************************/
+/*********************************************/
+/*  Copy and Move                            */
+/*********************************************/
 
 String & String::copy(const char *cstr, unsigned int length) {
     if(!reserve(length)) {
@@ -292,12 +279,10 @@ void String::move(String &rhs) {
 String & String::operator =(const String &rhs) {
     if(this == &rhs)
         return *this;
-
     if(rhs.buffer())
         copy(rhs.buffer(), rhs.len());
     else
         invalidate();
-
     return *this;
 }
 
@@ -320,7 +305,6 @@ String & String::operator =(const char *cstr) {
         copy(cstr, strlen(cstr));
     else
         invalidate();
-
     return *this;
 }
 
@@ -333,9 +317,9 @@ String & String::operator =(const __FlashStringHelper *pstr) {
     return *this;
 }
 
-// /*********************************************/
-// /*  concat                                   */
-// /*********************************************/
+/*********************************************/
+/*  concat                                   */
+/*********************************************/
 
 bool String::concat(const String &s) {
     // Special case if we're concatting ourself (s += s;) since we may end up
@@ -388,12 +372,14 @@ bool String::concat(char c) {
 
 bool String::concat(unsigned char num) {
     char buf[1 + 3 * sizeof(unsigned char)];
-    return concat(buf, sprintf(buf, "%d", num));
+    utoa(num, buf, 10);
+    return concat(buf, strlen(buf));
 }
 
 bool String::concat(int num) {
     char buf[2 + 3 * sizeof(int)];
-    return concat(buf, sprintf(buf, "%d", num));
+    itoa(num, buf, 10);
+    return concat(buf, strlen(buf));
 }
 
 bool String::concat(unsigned int num) {
@@ -404,12 +390,25 @@ bool String::concat(unsigned int num) {
 
 bool String::concat(long num) {
     char buf[2 + 3 * sizeof(long)];
-    return concat(buf, sprintf(buf, "%ld", num));
+    ltoa(num, buf, 10);
+    return concat(buf, strlen(buf));
 }
 
 bool String::concat(unsigned long num) {
     char buf[1 + 3 * sizeof(unsigned long)];
     ultoa(num, buf, 10);
+    return concat(buf, strlen(buf));
+}
+
+bool String::concat(long long num) {
+    char buf[2 + 3 * sizeof(long long)];
+    lltoa(num, buf, 10);
+    return concat(buf, strlen(buf));
+}
+
+bool String::concat(unsigned long long num) {
+    char buf[1 + 3 * sizeof(unsigned long long)];
+    ulltoa(num, buf, 10);
     return concat(buf, strlen(buf));
 }
 
@@ -423,17 +422,6 @@ bool String::concat(double num) {
     char buf[20];
     char* string = dtostrf(num, 4, 2, buf);
     return concat(string, strlen(string));
-}
-
-bool String::concat(long long num) {
-    char buf[2 + 3 * sizeof(long long)];
-    return concat(buf, sprintf(buf, "%lld", num));    // NOT SURE - NewLib Nano ... does it support %lld?
-}
-
-bool String::concat(unsigned long long num) {
-    char buf[1 + 3 * sizeof(unsigned long long)];
-    ulltoa(num, buf, 10);
-    return concat(buf, strlen(buf));
 }
 
 bool String::concat(const __FlashStringHelper * str) {
@@ -546,9 +534,9 @@ StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHel
     return a;
 }
 
-// /*********************************************/
-// /*  Comparison                               */
-// /*********************************************/
+/*********************************************/
+/*  Comparison                               */
+/*********************************************/
 
 int String::compareTo(const String &s) const {
     if(!buffer() || !s.buffer()) {
@@ -650,9 +638,9 @@ bool String::endsWith(const String &s2) const {
     return strcmp(&buffer()[len() - s2.len()], s2.buffer()) == 0;
 }
 
-// /*********************************************/
-// /*  Character Access                         */
-// /*********************************************/
+/*********************************************/
+/*  Character Access                         */
+/*********************************************/
 
 char String::charAt(unsigned int loc) const {
     return operator[](loc);
@@ -692,9 +680,9 @@ void String::getBytes(unsigned char *buf, unsigned int bufsize, unsigned int ind
     buf[n] = 0;
 }
 
-// /*********************************************/
-// /*  Search                                   */
-// /*********************************************/
+/*********************************************/
+/*  Search                                   */
+/*********************************************/
 
 int String::indexOf(char c) const {
     return indexOf(c, 0);
@@ -703,7 +691,7 @@ int String::indexOf(char c) const {
 int String::indexOf(char ch, unsigned int fromIndex) const {
     if(fromIndex >= len())
         return -1;
-    const char* temp = strchr(buffer() + fromIndex, ch);
+    const char *temp = strchr(buffer() + fromIndex, ch);
     if(temp == NULL)
         return -1;
     return temp - buffer();
@@ -773,9 +761,9 @@ String String::substring(unsigned int left, unsigned int right) const {
     return out;
 }
 
-// /*********************************************/
-// /*  Modification                             */
-// /*********************************************/
+/*********************************************/
+/*  Modification                             */
+/*********************************************/
 
 void String::replace(char find, char replace) {
     if(!buffer())
@@ -786,7 +774,7 @@ void String::replace(char find, char replace) {
     }
 }
 
-void String::replace(const String& find, const String& replace) {
+void String::replace(const String &find, const String &replace) {
     if(len() == 0 || find.len() == 0)
         return;
     int diff = replace.len() - find.len();
@@ -892,9 +880,9 @@ void String::trim(void) {
     wbuffer()[newlen] = 0;
 }
 
-// /*********************************************/
-// /*  Parsing / Conversion                     */
-// /*********************************************/
+/*********************************************/
+/*  Parsing / Conversion                     */
+/*********************************************/
 
 long String::toInt(void) const {
     if (buffer())
@@ -908,8 +896,7 @@ float String::toFloat(void) const {
     return 0;
 }
 
-double String::toDouble(void) const
-{
+double String::toDouble(void) const {
     if (buffer())
         return atof(buffer());
     return 0.0;
