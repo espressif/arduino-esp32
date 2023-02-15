@@ -137,9 +137,19 @@ typedef unsigned int word;
 void setup(void);
 void loop(void);
 
+// The default is using Real Hardware random number generator  
+// But when randomSeed() is called, it turns to Psedo random
+// generator, exactly as done in Arduino mainstream
+long random(long);
 long random(long, long);
-#endif
+// Calling randomSeed() will make random()
+// using pseudo random like in Arduino
 void randomSeed(unsigned long);
+// Allow the Application to decide if the random generator
+// will use Real Hardware random generation (true - default)
+// or Pseudo random generation (false) as in Arduino MainStream
+void useRealRandomGenerator(bool useRandomHW);
+#endif
 long map(long, long, long, long, long);
 
 #ifdef __cplusplus
@@ -207,8 +217,6 @@ void setToneChannel(uint8_t channel = 0);
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
 
-// WMath prototypes
-long random(long);
 #endif /* __cplusplus */
 
 #include "pins_arduino.h"
