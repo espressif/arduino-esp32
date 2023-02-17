@@ -19,6 +19,7 @@
  */
 
 #include "cbuf.h"
+#include "esp32-hal-log.h.h"
 
 #if CONFIG_DISABLE_HAL_LOCKS
 #define CBUF_MUTEX_CREATE()
@@ -192,7 +193,7 @@ size_t cbuf::read(char* dst, size_t size)
         if(dst != NULL){
             memcpy(dst, received_buff, received_size);
         }
-        vRingbufferReturnItem(rx_ring_buf, received_buff);
+        vRingbufferReturnItem(_buf, received_buff);
         size_read = received_size;
         size_to_read -= received_size;
         // wrap around data
@@ -203,7 +204,7 @@ size_t cbuf::read(char* dst, size_t size)
                 if(dst != NULL){
                     memcpy(dst+size_read, received_buff, received_size);
                 }
-                vRingbufferReturnItem(rx_ring_buf, received_buff);
+                vRingbufferReturnItem(_buf, received_buff);
                 size_read += received_size;
             } else {
                 log_e("failed to read wrap around data from ring buffer");
@@ -230,7 +231,7 @@ size_t cbuf::write(const char* src, size_t size)
         return 0;
     }
     size_t size_to_write = (size < bytes_available) ? size : bytes_available;
-    if(xRingbufferSend(rx_ring_buf, (void*)src, size_to_write, 0) != pdTRUE){
+    if(xRingbufferSend(_buf, (void*)src, size_to_write, 0) != pdTRUE){
         CBUF_MUTEX_UNLOCK();
         log_e("failed to write to ring buffer");
         return 0;
