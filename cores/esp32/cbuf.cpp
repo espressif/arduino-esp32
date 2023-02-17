@@ -19,7 +19,7 @@
  */
 
 #include "cbuf.h"
-#include "esp32-hal-log.h.h"
+#include "esp32-hal-log.h"
 
 #if CONFIG_DISABLE_HAL_LOCKS
 #define CBUF_MUTEX_CREATE()
