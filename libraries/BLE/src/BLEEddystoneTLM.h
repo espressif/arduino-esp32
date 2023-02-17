@@ -27,8 +27,8 @@ public:
   BLEUUID   getUUID();
   uint8_t   getVersion();
   uint16_t  getVolt();
-  uint16_t  getTemp();
-  float     getFloatTemp();
+  float     getTemp();
+  uint16_t  getRawTemp();
   uint32_t  getCount();
   uint32_t  getTime();
   std::string toString();

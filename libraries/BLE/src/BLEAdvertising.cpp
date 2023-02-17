@@ -443,11 +443,6 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
  * @brief Set the service data (UUID + data)
  * @param [in] uuid The UUID to set with the service data.  Size of UUID will be used.
  * @param [in] data The data to be associated with the service data advert.
- * Data frame:
- * | Field  || Len | Type | UUID        | EddyStone Frame |
- * | Offset || 0   | 1    | 2           | 4               |
- * | Len    || 1   | 1    | 2           | up to 20        |
- * | Data   || ??  | ??   | 0xAA | 0xFE | ???             |
  */
 void BLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
 	char cdata[2];

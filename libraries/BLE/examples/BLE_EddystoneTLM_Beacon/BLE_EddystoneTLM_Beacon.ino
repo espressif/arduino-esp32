@@ -51,7 +51,7 @@ void setBeacon()
   uint16_t volt = random(2800, 3700); // 3300mV = 3.3V
   float tempFloat = random(-3000, 3000) / 100.0f;
   Serial.printf("Random temperature is %.2f°C\n", tempFloat);
-  int temp = EDDYSTONE_TEMP_FLOAT_TO_U16(tempFloat);
+  int temp = (int)(tempFloat * 256);
   Serial.printf("Converted to 8.8 format 0x%04X\n", temp);
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();

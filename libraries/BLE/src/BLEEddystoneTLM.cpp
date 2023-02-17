@@ -44,13 +44,13 @@ uint16_t BLEEddystoneTLM::getVolt() {
 	return ENDIAN_CHANGE_U16(m_eddystoneData.volt);
 } // getVolt
 
-uint16_t BLEEddystoneTLM::getTemp() {
+float BLEEddystoneTLM::getTemp() {
+  return EDDYSTONE_TEMP_U16_TO_FLOAT(m_eddystoneData.temp);
+} // getFloatTemp
+
+uint16_t BLEEddystoneTLM::getRawTemp() {
 	return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
 } // getTemp
-
-float BLEEddystoneTLM::getFloatTemp() {
-  return EDDYSTONE_TEMP_U16_TO_FLOAT(ENDIAN_CHANGE_U16(m_eddystoneData.temp));
-} // getFloatTemp
 
 uint32_t BLEEddystoneTLM::getCount() {
 	return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
@@ -115,6 +115,18 @@ std::string BLEEddystoneTLM::toString() {
  * Example:
  * uint8_t *payLoad = advertisedDevice.getPayload();
  * eddystoneTLM.setData(std::string((char*)payLoad+22, advertisedDevice.getPayloadLength() - 22));
+ * Note: the offset 22 works for current implementation of example BLE_EddystoneTLM Beacon.ino, however it is not static and will be reimplemented
+ * Data frame:
+ * | Field  || Len | Type | UUID        | EddyStone TLM |
+ * | Offset || 0   | 1    | 2           | 4             |
+ * | Len    || 1 B | 1 B  | 2 B         | 14 B          |
+ * | Data   || ??  | ??   | 0xAA | 0xFE | ???           |
+ *
+ * EddyStone TLM frame:
+ * | Field  || Type  | Version | Batt mV     | Beacon temp | Cnt since boot | Time since boot |
+ * | Offset || 0     | 1       | 2           | 4           | 6              | 10              |
+ * | Len    || 1 B   | 1 B     | 2 B         | 2 B         | 4 B            | 4 B             |
+ * | Data   || 0x20  | ??      | ??   | ??   | ??    | ??  |   |   |   |    |   |   |   |     |
  */
 void BLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {

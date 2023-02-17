@@ -101,13 +101,11 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         }
         if (advertisedDevice.getPayloadLength() >= 22 && payLoad[22] == 0x20)
         {
-          Serial.printf("Found an EddystoneTLM beacon! payload length = %d B; minus 22 = %d\n", advertisedDevice.getPayloadLength(), advertisedDevice.getPayloadLength() - 22);
+          Serial.println("Found an EddystoneTLM beacon!");
           BLEEddystoneTLM eddystoneTLM;
-          //std::string TLMframe(payLoad[22], advertisedDevice.getPayloadLength() - 22);
-          //eddystoneTLM.setData(TLMFrame);
           eddystoneTLM.setData(std::string((char*)payLoad+22, advertisedDevice.getPayloadLength() - 22));
           Serial.printf("Reported battery voltage: %dmV\n", eddystoneTLM.getVolt());
-          Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", eddystoneTLM.getFloatTemp(), eddystoneTLM.getTemp());
+          Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", eddystoneTLM.getTemp(), eddystoneTLM.getRawTemp());
           Serial.printf("Reported advertise count: %d\n", eddystoneTLM.getCount());
           Serial.printf("Reported time since last reboot: %ds\n", eddystoneTLM.getTime());
         }
