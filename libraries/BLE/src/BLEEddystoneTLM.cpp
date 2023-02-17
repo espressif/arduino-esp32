@@ -46,11 +46,11 @@ uint16_t BLEEddystoneTLM::getVolt() {
 
 float BLEEddystoneTLM::getTemp() {
   return EDDYSTONE_TEMP_U16_TO_FLOAT(m_eddystoneData.temp);
-} // getFloatTemp
+} // getTemp
 
 uint16_t BLEEddystoneTLM::getRawTemp() {
 	return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
-} // getTemp
+} // getRawTemp
 
 uint32_t BLEEddystoneTLM::getCount() {
 	return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
