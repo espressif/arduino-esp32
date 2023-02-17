@@ -18,12 +18,15 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __cbuf_h
-#define __cbuf_h
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/ringbuf.h"
+#include "freertos/semphr.h"
 
 class cbuf
 {
@@ -33,20 +36,12 @@ public:
 
     size_t resizeAdd(size_t addSize);
     size_t resize(size_t newSize);
+
     size_t available() const;
     size_t size();
-
     size_t room() const;
-
-    inline bool empty() const
-    {
-        return _begin == _end;
-    }
-
-    inline bool full() const
-    {
-        return wrap_if_bufend(_end + 1) == _begin;
-    }
+    bool empty() const;
+    bool full() const;
 
     int peek();
     size_t peek(char *dst, size_t size);
@@ -63,17 +58,9 @@ public:
     cbuf *next;
 
 protected:
-    inline char* wrap_if_bufend(char* ptr) const
-    {
-        return (ptr == _bufend) ? _buf : ptr;
-    }
-
-    size_t _size;
-    char* _buf;
-    const char* _bufend;
-    char* _begin;
-    char* _end;
+    RingbufHandle_t _buf;
+#if !CONFIG_DISABLE_HAL_LOCKS
+    SemaphoreHandle_t _lock;
+#endif
 
 };
-
-#endif//__cbuf_h
