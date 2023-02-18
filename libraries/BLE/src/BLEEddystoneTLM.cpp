@@ -75,7 +75,7 @@ std::string BLEEddystoneTLM::toString() {
   out += " mV\n";
 
   out += "Temperature ";
-  snprintf(val, sizeof(val), "%.2f", ENDIAN_CHANGE_U16(m_eddystoneData.temp) / 256.0f);
+  snprintf(val, sizeof(val), "%.2f", ((int16_t)ENDIAN_CHANGE_U16(m_eddystoneData.temp)) / 256.0f);
   out += val;
   out += " C\n";
 
