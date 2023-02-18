@@ -87,9 +87,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         {
           Serial.println("Found an EddystoneURL beacon!");
           BLEEddystoneURL foundEddyURL = BLEEddystoneURL();
-          std::string eddyContent((char *)payLoad); // incomplete EddystoneURL struct!
-
-          foundEddyURL.setData(eddyContent);
+          uint8_t URLLen = *(payLoad - 4) - 3;  // Get Field Length less 3 bytes (type and UUID) 
+          foundEddyURL.setData(std::string((char*)payLoad, URLLen));
           std::string bareURL = foundEddyURL.getURL();
           if (bareURL[0] == 0x00)
           {
@@ -98,7 +97,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             uint8_t *payLoad = advertisedDevice.getPayload();
             for (int idx = 0; idx < payLoadLen; idx++)
             {
-              Serial.printf("0x%08X ", payLoad[idx]);
+              Serial.printf("0x%02X ", payLoad[idx]);
             }
             Serial.println("\nInvalid Data");
             return;
