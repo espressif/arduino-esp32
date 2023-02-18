@@ -52,7 +52,7 @@ void setBeacon()
   float tempFloat = random(-3000, 3000) / 100.0f;
   Serial.printf("Random temperature is %.2f°C\n", tempFloat);
   int temp = (int)(tempFloat * 256);
-  Serial.printf("Converted to 8.8 format 0x%04X\n", temp);
+  Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8) & 0xFF, (temp & 0xFF)); 
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
