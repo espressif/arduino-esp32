@@ -35,35 +35,32 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         Serial.println(devUUID.toString().c_str());
         Serial.println("");
       }
-      else
+      
+      if (advertisedDevice.haveManufacturerData() == true)
       {
-        if (advertisedDevice.haveManufacturerData() == true)
+        std::string strManufacturerData = advertisedDevice.getManufacturerData();
+
+        uint8_t cManufacturerData[100];
+        strManufacturerData.copy((char *)cManufacturerData, strManufacturerData.length(), 0);
+
+        if (strManufacturerData.length() == 25 && cManufacturerData[0] == 0x4C && cManufacturerData[1] == 0x00)
         {
-          std::string strManufacturerData = advertisedDevice.getManufacturerData();
-
-          uint8_t cManufacturerData[100];
-          strManufacturerData.copy((char *)cManufacturerData, strManufacturerData.length(), 0);
-
-          if (strManufacturerData.length() == 25 && cManufacturerData[0] == 0x4C && cManufacturerData[1] == 0x00)
-          {
-            Serial.println("Found an iBeacon!");
-            BLEBeacon oBeacon = BLEBeacon();
-            oBeacon.setData(strManufacturerData);
-            Serial.printf("iBeacon Frame\n");
-            Serial.printf("ID: %04X Major: %d Minor: %d UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()), ENDIAN_CHANGE_U16(oBeacon.getMinor()), oBeacon.getProximityUUID().toString().c_str(), oBeacon.getSignalPower());
-          }
-          else
-          {
-            Serial.println("Found another manufacturers beacon!");
-            Serial.printf("strManufacturerData: %d ", strManufacturerData.length());
-            for (int i = 0; i < strManufacturerData.length(); i++)
-            {
-              Serial.printf("[%X]", cManufacturerData[i]);
-            }
-            Serial.printf("\n");
-          }
+          Serial.println("Found an iBeacon!");
+          BLEBeacon oBeacon = BLEBeacon();
+          oBeacon.setData(strManufacturerData);
+          Serial.printf("iBeacon Frame\n");
+          Serial.printf("ID: %04X Major: %d Minor: %d UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()), ENDIAN_CHANGE_U16(oBeacon.getMinor()), oBeacon.getProximityUUID().toString().c_str(), oBeacon.getSignalPower());
         }
-        return;
+        else
+        {
+          Serial.println("Found another manufacturers beacon!");
+          Serial.printf("strManufacturerData: %d ", strManufacturerData.length());
+          for (int i = 0; i < strManufacturerData.length(); i++)
+          {
+            Serial.printf("[%X]", cManufacturerData[i]);
+          }
+          Serial.printf("\n");
+        }
       }
 
       uint8_t *payLoad = advertisedDevice.getPayload();
