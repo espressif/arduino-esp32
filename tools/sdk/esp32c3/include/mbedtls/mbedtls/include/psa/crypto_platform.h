@@ -60,8 +60,8 @@
  *
  * The function psa_its_identifier_of_slot() in psa_crypto_storage.c that
  * translates a key identifier to a key storage file name assumes that
- * mbedtls_key_owner_id_t is an 32 bits integer. This function thus needs
- * reworking if mbedtls_key_owner_id_t is not defined as a 32 bits integer
+ * mbedtls_key_owner_id_t is a 32-bit integer. This function thus needs
+ * reworking if mbedtls_key_owner_id_t is not defined as a 32-bit integer
  * here anymore.
  */
 typedef int32_t mbedtls_key_owner_id_t;
