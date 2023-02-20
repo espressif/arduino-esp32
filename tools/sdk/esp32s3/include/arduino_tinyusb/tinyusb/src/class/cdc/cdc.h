@@ -377,7 +377,9 @@ typedef struct TU_ATTR_PACKED
     uint32_t incoming_distinctive   : 1; ///< 0 : Reports only incoming ringing. 1 : Reports incoming distinctive ringing patterns.
     uint32_t dual_tone_multi_freq   : 1; ///< 0 : Cannot report dual tone multi-frequency (DTMF) digits input remotely over the telephone line. 1 : Can report DTMF digits input remotely over the telephone line.
     uint32_t line_state_change      : 1; ///< 0 : Does not support line state change notification. 1 : Does support line state change notification
-    uint32_t TU_RESERVED            : 26;
+    uint32_t TU_RESERVED0           : 2;
+    uint32_t TU_RESERVED1           : 16;
+    uint32_t TU_RESERVED2           : 8;
   } bmCapabilities;
 }cdc_desc_func_telephone_call_state_reporting_capabilities_t;
 
@@ -404,7 +406,8 @@ typedef struct TU_ATTR_PACKED
 {
   uint16_t dtr : 1;
   uint16_t rts : 1;
-  uint16_t : 14;
+  uint16_t : 6;
+  uint16_t : 8;
 } cdc_line_control_state_t;
 
 TU_VERIFY_STATIC(sizeof(cdc_line_control_state_t) == 2, "size is not correct");
