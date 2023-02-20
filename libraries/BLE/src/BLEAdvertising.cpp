@@ -196,7 +196,12 @@ void BLEAdvertising::start() {
 	int numServices = m_serviceUUIDs.size();
 	if (numServices > 0) {
 		m_advData.service_uuid_len = 16 * numServices;
-		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
+		m_advData.p_service_uuid = (uint8_t *)malloc(m_advData.service_uuid_len);
+		if(!m_advData.p_service_uuid) {
+			log_e(">> start failed: out of memory");
+			return;
+		}
+
 		uint8_t* p = m_advData.p_service_uuid;
 		for (int i = 0; i < numServices; i++) {
 			log_d("- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
@@ -241,10 +246,8 @@ void BLEAdvertising::start() {
 
 	// If we had services to advertise then we previously allocated some storage for them.
 	// Here we release that storage.
-	if (m_advData.service_uuid_len > 0) {
-		delete[] m_advData.p_service_uuid;
-		m_advData.p_service_uuid = nullptr;
-	}
+	free(m_advData.p_service_uuid); //TODO change this variable to local scope?
+	m_advData.p_service_uuid = nullptr;
 
 	// Start advertising.
 	errRc = ::esp_ble_gap_start_advertising(&m_advParams);
