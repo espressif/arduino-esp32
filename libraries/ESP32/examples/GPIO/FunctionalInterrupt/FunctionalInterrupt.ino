@@ -7,13 +7,13 @@
 class Button
 {
 public:
-	Button(uint8_t reqPin) : PIN(reqPin){
-		pinMode(PIN, INPUT_PULLUP);
-		attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
-	};
-	~Button() {
-		detachInterrupt(PIN);
-	}
+  Button(uint8_t reqPin) : PIN(reqPin){
+    pinMode(PIN, INPUT_PULLUP);
+    attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
+  };
+  ~Button() {
+    detachInterrupt(PIN);
+  }
 
 	void ARDUINO_ISR_ATTR isr() {
 		numberKeyPresses = numberKeyPresses + 1;
@@ -28,7 +28,7 @@ public:
 	}
 
 private:
-	const uint8_t PIN;
+  const uint8_t PIN;
     volatile uint32_t numberKeyPresses;
     volatile bool pressed;
 };
@@ -42,6 +42,6 @@ void setup() {
 }
 
 void loop() {
-	button1.checkPressed();
-	button2.checkPressed();
+  button1.checkPressed();
+  button2.checkPressed();
 }
