@@ -76,33 +76,14 @@ std::string BLEEddystoneURL::getData() {
 
 String BLEEddystoneURL::getFrame() {
   BLEHeadder[7] = lengthURL + 5; // Fill in real: Type + 2B UUID + Frame Type + Tx power + URL (note: the Byte holding the length does not count itself)
-  //Serial.printf("BLEHeadder[7](%d) = sizeof(BLEHeadder)(%d) + lengthURL(%d)\n", BLEHeadder[7], sizeof(BLEHeadder), lengthURL);
-
   String frame(BLEHeadder, sizeof(BLEHeadder));
-  /*
-  Serial.printf("BLEHeadder:\n");
-  for(int i = 0; i < frame.length(); ++i){
-    Serial.printf("[%d] 0x%02X=%d='%c'\n",i , frame.c_str()[i],frame.c_str()[i],frame.c_str()[i]);
-  }
-  Serial.printf("m_eddystoneData.advertisedTxPower = 0x%02X=%d:\nm_eddystoneData.url:\n", m_eddystoneData.advertisedTxPower, m_eddystoneData.advertisedTxPower);
-  for(int i = 0; i < lengthURL; ++i){
-    Serial.printf("[%d] 0x%02X=%d='%c'\n",i , m_eddystoneData.url[i],m_eddystoneData.url[i],m_eddystoneData.url[i]);
-  }
-  */
-
   frame += String((char*) &m_eddystoneData, lengthURL+1); // + 1 for TX power
-  /*
-  Serial.println("Returning frame:");
-  for(int i = 0; i < frame.length(); ++i){
-    Serial.printf("[%d] 0x%02X=%d='%c'\n",i , frame.c_str()[i],frame.c_str()[i],frame.c_str()[i]);
-  }
-  */
+
   return frame;
 } // getFrame
 
-// TODO test his change !!!
 BLEUUID BLEEddystoneURL::getUUID() {
-  uint16_t uuid = (((uint16_t)BLEHeadder[10]) << 8) & BLEHeadder[9];
+  uint16_t uuid = (((uint16_t)BLEHeadder[10]) << 8) | BLEHeadder[9];
   return BLEUUID(uuid);
 } // getUUID
 
@@ -123,7 +104,6 @@ String BLEEddystoneURL::getPrefix(){
 }
 
 String BLEEddystoneURL::getSuffix(){
-  log_d("suffix = m_eddystoneData.url[%d] 0x%02X", lengthURL-1, m_eddystoneData.url[lengthURL-1]);
   if(m_eddystoneData.url[lengthURL-1] <= 0x0D){
     return EDDYSTONE_URL_SUFFIX[m_eddystoneData.url[lengthURL-1]];
   }else{
@@ -133,9 +113,6 @@ String BLEEddystoneURL::getSuffix(){
 
 std::string BLEEddystoneURL::getDecodedURL() {
   std::string decodedURL = "";
-  log_d("prefix = m_eddystoneData.url[0] 0x%02X",m_eddystoneData.url[0]);
-  log_e("prefix type m_eddystoneData.url[0]=%d", m_eddystoneData.url[0]); // this is actually debug
-
   decodedURL += std::string(getPrefix().c_str());
   if(decodedURL.length() == 0){ // No prefix extracted - interpret byte [0] as character
     decodedURL += m_eddystoneData.url[0];
@@ -165,7 +142,6 @@ void BLEEddystoneURL::setData(std::string data) {
   lengthURL = data.length() - (sizeof(m_eddystoneData) - sizeof(m_eddystoneData.url));
 } // setData
 
-// TODO test his change !!!
 void BLEEddystoneURL::setUUID(BLEUUID l_uuid) {
   uint16_t beaconUUID = l_uuid.getNative()->uuid.uuid16;
   BLEHeadder[10] = beaconUUID >> 8;
@@ -221,11 +197,21 @@ void BLEEddystoneURL::setURL(std::string url) {
 } // setURL
 
 int BLEEddystoneURL::setSmartURL(String url) {
+  if(url.length() == 0){
+    log_e("URL String has 0 length");
+    return 0; // ERROR
+  }
+  for(auto character : url){
+    if(!isPrintable(character)){
+      log_e("URL contains unprintable character(s)");
+      return 0; // ERROR
+    }
+  }
   bool hasPrefix = false;
   bool hasSuffix = false;
   m_eddystoneData.url[0] = 0x00; // Init with default prefix "http://www."
   uint8_t suffix = 0x0E; // Init with empty string
-  log_d("encode url \"%s\" with length %d", url.c_str(), url.length());
+  log_d("Encode url \"%s\" with length %d", url.c_str(), url.length());
   for(uint8_t i = 0; i < 4; ++i){
     //log_d("check if substr \"%s\" == prefix \"%s\" ", url.substring(0, EDDYSTONE_URL_PREFIX[i].length()), EDDYSTONE_URL_PREFIX[i]);
     if(url.substring(0, EDDYSTONE_URL_PREFIX[i].length()) == EDDYSTONE_URL_PREFIX[i]){
@@ -246,7 +232,6 @@ int BLEEddystoneURL::setSmartURL(String url) {
     size_t found_pos = std_url.find(std_suffix);
     //log_d("check if in url \"%s\" can find suffix \"%s\": found_pos = %d", std_url.c_str(), std_suffix.c_str(), found_pos);
     if(found_pos != std::string::npos){
-      log_d("Found suffix 0x%02X = \"%s\" at position %d", i, EDDYSTONE_URL_SUFFIX[i], found_pos);
       hasSuffix = true;
       suffix = i;
       break;
@@ -255,29 +240,16 @@ int BLEEddystoneURL::setSmartURL(String url) {
 
   size_t baseUrlLen = url.length() - (hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0) - EDDYSTONE_URL_SUFFIX[suffix].length();
   lengthURL = baseUrlLen + 1 + (hasSuffix ? 1 : 0);
-  Serial.printf("Original URL has length %dB - prefix 1 Byte - suffix len (%d)B = base url len %dB\n=> complete url len with prefix and suffix =%d\n", url.length(), EDDYSTONE_URL_SUFFIX[suffix].length(), baseUrlLen, lengthURL); // debug
   if(lengthURL > 18){
     log_e("Encoded URL is too long %d B - max 18 B", lengthURL);
     return 0; // ERROR
   }
   String baseUrl = url.substring((hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0), baseUrlLen+(hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0));
-  Serial.printf("Prefix #%02X = \"%s\", length =%d\n", m_eddystoneData.url[0], EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].c_str(), EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length()); // debug
-  Serial.printf("Base URL and length %d = : \"%s\"\n", baseUrlLen, baseUrl.c_str()); // debug
   memcpy((void*)(m_eddystoneData.url+1), (void*)baseUrl.c_str(), baseUrl.length()); // substr for Arduino String
 
   if(hasSuffix){
-    Serial.printf("Put suffix on position m_eddystoneData.url[%d] value %d = : \"%s\"\n", 1+baseUrlLen, suffix, EDDYSTONE_URL_SUFFIX[suffix].c_str()); // debug
     m_eddystoneData.url[1+baseUrlLen] = suffix;
   }
-
-  Serial.printf("[0] 0x%02X = \"%s\" prefix\n", m_eddystoneData.url[0], EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].c_str());
-  for(int i = 1; i < baseUrlLen+1; ++i){
-    Serial.printf("[%d] 0x%02X = \'%c\'\n",i , m_eddystoneData.url[i], m_eddystoneData.url[i]);
-  }
-  if(hasSuffix){
-    Serial.printf("[%d] 0x%02X = \"%s\" suffix\n", lengthURL-1, m_eddystoneData.url[lengthURL-1], EDDYSTONE_URL_SUFFIX[m_eddystoneData.url[lengthURL-1]].c_str());
-  }
-
 
   return 1; // OK
 } // setSmartURL
