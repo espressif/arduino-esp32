@@ -28,14 +28,17 @@
 #include "BLEEddystoneURL.h"
 
 #include "esp_sleep.h"
-
-String URL[] = {"http://www.espressif.com/", // prefix 0x00, suffix 0x00
-                "https://www.texas.gov",     // prefix 0x01, suffix 0x0D
-                "http://en.mapy.cz",         // prefix 0x02, no valid suffix
-                "https://arduino.cc",        // prefix 0x03, no valid suffix
-                "google.com",                // URL without specified prefix - the function will assume default prefix "http://www." = 0x00
-                "diginfo.tv",                // URL without specified prefix - the function will assume default prefix "http://www." = 0x00
-                "http://www.URLsAbove17BytesAreNotAllowed.com", // Too long URL - setSmartURL() will return 0 = ERR
+char unprintable[] = {0x01, 0xFF, 0xDE, 0xAD};
+String URL[] = {
+  "http://www.espressif.com/", // prefix 0x00, suffix 0x00
+  "https://www.texas.gov",     // prefix 0x01, suffix 0x0D
+  "http://en.mapy.cz",         // prefix 0x02, no valid suffix
+  "https://arduino.cc",        // prefix 0x03, no valid suffix
+  "google.com",                // URL without specified prefix - the function will assume default prefix "http://www." = 0x00
+  "diginfo.tv",                // URL without specified prefix - the function will assume default prefix "http://www." = 0x00
+//  "http://www.URLsAbove17BytesAreNotAllowed.com", // Too long URL - setSmartURL() will return 0 = ERR
+//  "",  // Empty string - setSmartURL() will return 0 = ERR
+//  String(unprintable), // Unprintable characters / corrupted String - setSmartURL() will return 0 = ERR
 };
 #define GPIO_DEEP_SLEEP_DURATION 10      // sleep x seconds and then wake up
 #define BEACON_POWER ESP_PWR_LVL_N12
@@ -47,7 +50,7 @@ RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memo
 BLEAdvertising *pAdvertising;
 struct timeval now;
 
-#define BEACON_UUID "8ec76ea3-6668-48da-9866-75be8bc86f4d" // UUID 1 128-Bit (may use linux tool uuidgen or random numbers via https://www.uuidgenerator.net/)
+std::string BEACON_UUID("8ec76ea3-6668-48da-9866-75be8bc86f4d"); // UUID v1 128-Bit (may use linux tool uuidgen or random numbers via https://www.uuidgenerator.net/)
 
 int setBeacon()
 {
@@ -55,7 +58,7 @@ int setBeacon()
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
 
   BLEEddystoneURL EddystoneURL;
-
+  EddystoneURL.setUUID(BLEUUID(BEACON_UUID));
   EddystoneURL.setPower(BEACON_POWER); // This is only information about the power. The actual power is set by `BLEDevice::setPower(BEACON_POWER)`
   if(EddystoneURL.setSmartURL(URL[bootcount%(sizeof(URL)/sizeof(URL[0]))])){
     String frame = EddystoneURL.getFrame();
