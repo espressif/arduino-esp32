@@ -89,6 +89,8 @@ void setup()
 
     RMaker.enableScenes();
 
+    RMaker.enableSystemService(SYSTEM_SERV_FLAGS_ALL, 2, 2, 2);
+
     RMaker.start();
 
     WiFi.onEvent(sysProvEvent);
