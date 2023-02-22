@@ -5,6 +5,8 @@
 #include "soc/soc_caps.h"
 
 #define WIFI_LoRa_32_V3 true
+#define DISPLAY_HEIGHT 64
+#define DISPLAY_WIDTH  128
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
@@ -78,5 +80,9 @@ static const uint8_t LED  = 35;
 static const uint8_t RST_OLED = 21;
 static const uint8_t SCL_OLED = 18;
 static const uint8_t SDA_OLED = 17;
+
+static const uint8_t RST_LoRa = 12;
+static const uint8_t BUSY_LoRa = 13;
+static const uint8_t DIO0 = 14;
 
 #endif /* Pins_Arduino_h */
