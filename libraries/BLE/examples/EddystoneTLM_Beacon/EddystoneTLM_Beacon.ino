@@ -28,6 +28,7 @@
 #include "esp_sleep.h"
 
 #define GPIO_DEEP_SLEEP_DURATION 10     // sleep x seconds and then wake up
+#define BEACON_POWER ESP_PWR_LVL_N12
 RTC_DATA_ATTR static time_t last;    // remember last boot in RTC Memory
 RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memory
 
@@ -46,19 +47,17 @@ time_t lastTenth;
 // for the temperature value. It is a 8.8 fixed-point notation
 void setBeacon()
 {
-  char beacon_data[25];
-  uint16_t beconUUID = 0xFEAA;
-  uint16_t volt = random(2800, 3700); // 3300mV = 3.3V
-  float tempFloat = random(-3000, 3000) / 100.0f;
-  Serial.printf("Random temperature is %.2f°C\n", tempFloat);
-  int temp = (int)(tempFloat * 256);
-  Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8) & 0xFF, (temp & 0xFF)); 
+  BLEEddystoneTLM EddystoneTLM;
+  EddystoneTLM.setVolt((uint16_t)random(2800, 3700)); // 3300mV = 3.3V
+  EddystoneTLM.setTemp(random(-3000, 3000) / 100.0f); // 3000 = 30.00 ˚C
+  Serial.printf("Random Battery voltage is %d mV = 0x%04X\n", EddystoneTLM.getVolt(), EddystoneTLM.getVolt());
+  Serial.printf("Random temperature is %.2f°C\n", EddystoneTLM.getTemp());
+  Serial.printf("Converted to 8.8 format: 0x%04X\n", EddystoneTLM.getRawTemp());
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
+  oScanResponseData.setServiceData(BLEUUID((uint16_t)0xFEAA), std::string(EddystoneTLM.getData().c_str(), EddystoneTLM.getData().length()));
 
-  oScanResponseData.setCompleteServices(BLEUUID(beconUUID));
-  oScanResponseData.setServiceData(BLEUUID(beconUUID), std::string(beacon_data, 14));
   oAdvertisementData.setName("ESP32 TLM Beacon");
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->setScanResponseData(oScanResponseData);
@@ -78,7 +77,7 @@ void setup()
   // Create the BLE Device
   BLEDevice::init("TLMBeacon");
 
-  BLEDevice::setPower(ESP_PWR_LVL_N12);
+  BLEDevice::setPower(BEACON_POWER);
 
   pAdvertising = BLEDevice::getAdvertising();
 

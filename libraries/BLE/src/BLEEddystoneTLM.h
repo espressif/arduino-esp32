@@ -12,6 +12,7 @@
 
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
+#include <Arduino.h>
 
 #define EDDYSTONE_TLM_FRAME_TYPE 0x20
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))
@@ -28,7 +29,7 @@ class BLEEddystoneTLM {
 public:
   BLEEddystoneTLM();
   BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice);
-  std::string getData();
+  String getData();
   BLEUUID   getUUID();
   uint8_t   getVersion();
   uint16_t  getVolt();
@@ -36,7 +37,7 @@ public:
   uint16_t  getRawTemp();
   uint32_t  getCount();
   uint32_t  getTime();
-  std::string toString();
+  String toString();
   void      setData(std::string data);
   void      setUUID(BLEUUID l_uuid);
   void      setVersion(uint8_t version);
@@ -46,7 +47,7 @@ public:
   void      setTime(uint32_t tmil);
 
 private:
-  uint16_t beaconUUID;
+  BLEUUID beaconUUID;
   struct {
     uint8_t frameType;
     uint8_t version;
@@ -55,7 +56,6 @@ private:
     uint32_t advCount;
     uint32_t tmil;
   } __attribute__((packed)) m_eddystoneData;
-
 }; // BLEEddystoneTLM
 
 #endif /* SOC_BLE_SUPPORTED */

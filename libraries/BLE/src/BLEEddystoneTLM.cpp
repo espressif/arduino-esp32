@@ -22,7 +22,6 @@
 static const char LOG_TAG[] = "BLEEddystoneTLM";
 
 BLEEddystoneTLM::BLEEddystoneTLM() {
-  beaconUUID = 0xFEAA;
   m_eddystoneData.frameType = EDDYSTONE_TLM_FRAME_TYPE;
   m_eddystoneData.version = 0;
   m_eddystoneData.volt = 3300; // 3300mV = 3.3V
@@ -42,12 +41,12 @@ BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice){
   }
 }
 
-std::string BLEEddystoneTLM::getData() {
-  return std::string((char*) &m_eddystoneData, sizeof(m_eddystoneData));
+String BLEEddystoneTLM::getData() {
+  return String((char*) &m_eddystoneData, sizeof(m_eddystoneData));
 } // getData
 
 BLEUUID BLEEddystoneTLM::getUUID() {
-  return BLEUUID(beaconUUID);
+  return beaconUUID;
 } // getUUID
 
 uint8_t BLEEddystoneTLM::getVersion() {
@@ -74,8 +73,8 @@ uint32_t BLEEddystoneTLM::getTime() {
   return (ENDIAN_CHANGE_U32(m_eddystoneData.tmil)) / 10;
 } // getTime
 
-std::string BLEEddystoneTLM::toString() {
-  std::string out = "";
+String BLEEddystoneTLM::toString() {
+  String out = "";
   uint32_t rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
   char val[12];
 
@@ -152,15 +151,16 @@ void BLEEddystoneTLM::setData(std::string data) {
 } // setData
 
 void BLEEddystoneTLM::setUUID(BLEUUID l_uuid) {
-  beaconUUID = l_uuid.getNative()->uuid.uuid16;
+  beaconUUID = l_uuid;
 } // setUUID
 
 void BLEEddystoneTLM::setVersion(uint8_t version) {
   m_eddystoneData.version = version;
 } // setVersion
 
+// Set voltage in ESP32 native Big endian and convert it to little endian used for BLE Frame
 void BLEEddystoneTLM::setVolt(uint16_t volt) {
-  m_eddystoneData.volt = volt;
+  m_eddystoneData.volt = ENDIAN_CHANGE_U16(volt);
 } // setVolt
 
 void BLEEddystoneTLM::setTemp(float temp) {
@@ -175,5 +175,5 @@ void BLEEddystoneTLM::setTime(uint32_t tmil) {
   m_eddystoneData.tmil = tmil;
 } // setTime
 
-#endif
+#endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
