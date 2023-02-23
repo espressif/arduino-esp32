@@ -584,6 +584,22 @@ esp_ble_addr_type_t BLEAdvertisedDevice::getAddressType() {
 	return m_addressType;
 }
 
+ble_frame_type_t BLEAdvertisedDevice::getFrameType(){
+  for(int i = 0; i < m_payloadLength; ++i){
+    log_d("check [%d]=0x%02X", i, m_payload[i]);
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x00){
+      return BLE_EDDYSTONE_UUID_FRAME;
+    }
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x10){
+      return BLE_EDDYSTONE_URL_FRAME;
+    }
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x20){
+      return BLE_EDDYSTONE_TLM_FRAME;
+    }
+  }
+  return BLE_UNKNOWN_FRAME;
+}
+
 void BLEAdvertisedDevice::setAddressType(esp_ble_addr_type_t type) {
 	m_addressType = type;
 }

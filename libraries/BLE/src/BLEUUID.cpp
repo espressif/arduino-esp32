@@ -67,6 +67,7 @@ static void memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
  * @param [in] value The string to build a UUID from.
  */
 BLEUUID::BLEUUID(std::string value) {
+	//Serial.printf("BLEUUID constructor from std::string=\"%s\"\n", value.c_str());
 	m_valueSet = true;
 	if (value.length() == 4) {
 		m_uuid.len         = ESP_UUID_LEN_16;
@@ -94,11 +95,12 @@ BLEUUID::BLEUUID(std::string value) {
 			i+=2;
 		}		
 	}
-	else if (value.length() == 16) {  // how we can have 16 byte length string reprezenting 128 bit uuid??? needs to be investigated (lack of time)
+	else if (value.length() == 16) {  // How we can have 16 byte length string representing 128 bit uuid??? needs to be investigated (lack of time) - maybe raw data encoded as String (128b==16B)?
 		m_uuid.len = ESP_UUID_LEN_128;
 		memrcpy(m_uuid.uuid.uuid128, (uint8_t*)value.data(), 16);
 	}
 	else if (value.length() == 36) {
+		//log_d("36 characters:");
 		// If the length of the string is 36 bytes then we will assume it is a long hex string in
 		// UUID format.
 		m_uuid.len = ESP_UUID_LEN_128;
@@ -121,6 +123,11 @@ BLEUUID::BLEUUID(std::string value) {
 	}
 } //BLEUUID(std::string)
 
+/*
+BLEUUID::BLEUUID(String value) {
+	this.BLEUUID(std::string(value.c_str(), value.length()));
+} //BLEUUID(String)
+*/
 
 /**
  * @brief Create a UUID from 16 bytes of memory.

@@ -11,6 +11,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "BLEUUID.h"
+#include <BLEAdvertisedDevice.h>
 
 #define EDDYSTONE_TLM_FRAME_TYPE 0x20
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))
@@ -26,6 +27,7 @@
 class BLEEddystoneTLM {
 public:
   BLEEddystoneTLM();
+  BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice);
   std::string getData();
   BLEUUID   getUUID();
   uint8_t   getVersion();
