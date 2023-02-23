@@ -3,7 +3,6 @@
    Ported to Arduino ESP32 by Evandro Copercini
    Changed to a beacon scanner to report iBeacon, EddystoneURL and EddystoneTLM beacons by beegee-tokyo
    Upgraded Eddystone part by Tomas Pilny on Feb 20, 2023
-
 */
 
 #include <Arduino.h>
