@@ -207,7 +207,6 @@ void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
 // | Length  | 1 B     | 0 - 17 B              |
 // | Example | 0x02    | 0x676F6F676C65 0x07   |
 // | Decoded | http:// |   g o o g l e  .com   |
-// Example: 0x00676F6F676C6507
 void BLEEddystoneURL::setURL(std::string url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
   log_e("Unable to set the url ... length passed in was %d and max expected %d", url.length(), sizeof(m_eddystoneData.url));
@@ -288,7 +287,7 @@ void BLEEddystoneURL::_initHeadder(){
   BLEHeadder[8]  = 0x16; // Type Service Data
   BLEHeadder[9]  = 0xAA; // Eddystone UUID 2 -> 0xFEAA LSB
   BLEHeadder[10] = 0xFE; // Eddystone UUID 1 MSB
-  BLEHeadder[11] = 0x10; // Eddystone Frame Type
+  BLEHeadder[11] = 0x10; // Eddystone Frame Type - URL
 }
 
 #endif
