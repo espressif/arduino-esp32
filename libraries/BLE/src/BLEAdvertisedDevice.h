@@ -14,12 +14,19 @@
 #include <esp_gattc_api.h>
 
 #include <map>
-#include <vector>
+//#include <vector>
 
 #include "BLEAddress.h"
 #include "BLEScan.h"
 #include "BLEUUID.h"
 
+typedef enum {
+	BLE_UNKNOWN_FRAME,
+	BLE_EDDYSTONE_UUID_FRAME,
+	BLE_EDDYSTONE_URL_FRAME,
+	BLE_EDDYSTONE_TLM_FRAME,
+	BLE_FRAME_MAX
+} ble_frame_type_t;
 
 class BLEScan;
 /**
@@ -48,9 +55,10 @@ public:
 	int         getServiceDataUUIDCount();
 	int         getServiceUUIDCount();
 	int8_t      getTXPower();
-	uint8_t* 	getPayload();
-	size_t		getPayloadLength();
+	uint8_t*    getPayload();
+	size_t      getPayloadLength();
 	esp_ble_addr_type_t getAddressType();
+	ble_frame_type_t getFrameType();
 	void setAddressType(esp_ble_addr_type_t type);
 
 

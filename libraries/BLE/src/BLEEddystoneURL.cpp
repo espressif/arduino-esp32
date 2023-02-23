@@ -49,22 +49,19 @@ BLEEddystoneURL::BLEEddystoneURL() {
 } // BLEEddystoneURL
 
 BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice){
-  const uint8_t *payload = advertisedDevice->getPayload();
+  const char *payload = (char*)advertisedDevice->getPayload();
   memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
-  if(payload[11] != 0x10){ // Not Eddystone URL!
-    log_e("Failed to interpret Advertised Device as Eddystone URL!");
-    lengthURL = 0;
-    m_eddystoneData.advertisedTxPower = 0;
-  }else{
-    lengthURL = payload[7] - 5; // Subtracting 5 Bytes containing header and other data which are not actual URL data
-    log_d("lengthURL = %d <= payload[7](=%d) - 5", lengthURL, payload[7]);
-    //setData(std::string((char*)payLoad+11, lengthURL));
-    m_eddystoneData.advertisedTxPower = payload[12];
-    log_d("using data from [13]=0x%02X (prefix) up to [%d]=0x%02X=%c (if value==0x00-0x0 => suffix)", payload[13], 13+lengthURL, payload[13+lengthURL], payload[13+lengthURL]);
-    if(lengthURL <= 18){
-      memcpy(m_eddystoneData.url, (void*)(payload+13), (size_t)lengthURL); // Subtracting from lengthURL 1 Byte containing prefix
-    }else{
-      log_e("too long URL %d", lengthURL);
+  lengthURL = 0;
+  m_eddystoneData.advertisedTxPower = 0;
+  for(int i = 0; i < advertisedDevice->getPayloadLength(); ++i){
+    if(payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i+2+sizeof(m_eddystoneData) && payload[i+1] == 0xAA && payload[i+2] == 0xFE && payload[i+3] == 0x10){
+      lengthURL = payload[i-1] - 5; // Subtracting 5 Bytes containing header and other data which are not actual URL data
+      m_eddystoneData.advertisedTxPower = payload[i+1];
+      if(lengthURL <= 18){
+        setData(std::string(payload+i+4, lengthURL+1));
+      }else{
+        log_e("Too long URL %d", lengthURL);
+      }
     }
   }
   _initHeadder();
@@ -92,7 +89,7 @@ int8_t BLEEddystoneURL::getPower() {
 } // getPower
 
 std::string BLEEddystoneURL::getURL() {
-  return std::string((char*) &m_eddystoneData.url, sizeof(m_eddystoneData.url));
+  return std::string((char*) &m_eddystoneData.url, lengthURL);
 } // getURL
 
 String BLEEddystoneURL::getPrefix(){
@@ -122,7 +119,9 @@ std::string BLEEddystoneURL::getDecodedURL() {
     if (m_eddystoneData.url[i] >= 33 && m_eddystoneData.url[i] < 127) {
       decodedURL += m_eddystoneData.url[i];
     }else{
-      log_e("Unexpected unprintable char in URL 0x%02X: m_eddystoneData.url[%d]", m_eddystoneData.url[i], i);
+      if(i != lengthURL-1 || m_eddystoneData.url[i] > 0x0D){ // Ignore last Byte and values used for suffix
+        log_e("Unexpected unprintable char in URL 0x%02X: m_eddystoneData.url[%d]", m_eddystoneData.url[i], i);
+      }
     }
   }
   decodedURL += std::string(getSuffix().c_str());
@@ -131,6 +130,22 @@ std::string BLEEddystoneURL::getDecodedURL() {
 
 /**
  * Set the raw data for the beacon record.
+ * Example:
+ * uint8_t *payload = advertisedDevice.getPayload();
+ * eddystoneTLM.setData(std::string((char*)payload+11, advertisedDevice.getPayloadLength() - 11));
+ * Note: the offset 11 works for current implementation of example BLE_EddystoneTLM Beacon.ino, however
+ *   the position is not static and it is programmers responsibility to align the data.
+ * Data frame:
+ * | Field  || Len | Type | UUID        | EddyStone URL |
+ * | Offset || 0   | 1    | 2           | 4             |
+ * | Len    || 1 B | 1 B  | 2 B         | up to 20 B    |
+ * | Data   || ??  | ??   | 0xAA | 0xFE | ???           |
+ *
+ * EddyStone TLM frame:
+ * | Field  || Type  | TX Power | URL prefix | URL    |
+ * | Offset || 0     | 1        | 2          | 3      |
+ * | Len    || 1 B   | 1 B      | 1 B        | 0-17 B |
+ * | Data   || 0x10  | ??       | ??         | ??     |
  */
 void BLEEddystoneURL::setData(std::string data) {
   if (data.length() > sizeof(m_eddystoneData)) {
@@ -186,6 +201,13 @@ void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
   m_eddystoneData.advertisedTxPower = advertisedTxPower;
 } // setPower
 
+// Set URL bytes including prefix and optional suffix
+// | Field   | Prefix  | URL + optional Suffix |
+// | Offset  | 0       | 1                     |
+// | Length  | 1 B     | 0 - 17 B              |
+// | Example | 0x02    | 0x676F6F676C65 0x07   |
+// | Decoded | http:// |   g o o g l e  .com   |
+// Example: 0x00676F6F676C6507
 void BLEEddystoneURL::setURL(std::string url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
   log_e("Unable to set the url ... length passed in was %d and max expected %d", url.length(), sizeof(m_eddystoneData.url));

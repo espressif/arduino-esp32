@@ -26,8 +26,8 @@
 #include "BLEBeacon.h"
 #include "BLEAdvertising.h"
 #include "BLEEddystoneURL.h"
-
 #include "esp_sleep.h"
+
 char unprintable[] = {0x01, 0xFF, 0xDE, 0xAD};
 String URL[] = {
   "http://www.espressif.com/", // prefix 0x00, suffix 0x00
@@ -40,6 +40,7 @@ String URL[] = {
 //  "",  // Empty string - setSmartURL() will return 0 = ERR
 //  String(unprintable), // Unprintable characters / corrupted String - setSmartURL() will return 0 = ERR
 };
+
 #define GPIO_DEEP_SLEEP_DURATION 10      // sleep x seconds and then wake up
 #define BEACON_POWER ESP_PWR_LVL_N12
 RTC_DATA_ATTR static time_t last;        // remember last boot in RTC Memory
@@ -50,15 +51,12 @@ RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memo
 BLEAdvertising *pAdvertising;
 struct timeval now;
 
-std::string BEACON_UUID("8ec76ea3-6668-48da-9866-75be8bc86f4d"); // UUID v1 128-Bit (may use linux tool uuidgen or random numbers via https://www.uuidgenerator.net/)
-
 int setBeacon()
 {
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
 
   BLEEddystoneURL EddystoneURL;
-  EddystoneURL.setUUID(BLEUUID(BEACON_UUID));
   EddystoneURL.setPower(BEACON_POWER); // This is only information about the power. The actual power is set by `BLEDevice::setPower(BEACON_POWER)`
   if(EddystoneURL.setSmartURL(URL[bootcount%(sizeof(URL)/sizeof(URL[0]))])){
     String frame = EddystoneURL.getFrame();
@@ -67,6 +65,7 @@ int setBeacon()
     oScanResponseData.setName("ESP32 URLBeacon");
     pAdvertising->setAdvertisementData(oAdvertisementData);
     pAdvertising->setScanResponseData(oScanResponseData);
+    Serial.printf("Advertise URL \"%s\"\n", URL[bootcount%(sizeof(URL)/sizeof(URL[0]))].c_str());
     return 1; // OK
   }else{
     Serial.println("Smart URL set ERR");

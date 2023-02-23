@@ -22,29 +22,40 @@
 static const char LOG_TAG[] = "BLEEddystoneTLM";
 
 BLEEddystoneTLM::BLEEddystoneTLM() {
-	beaconUUID = 0xFEAA;
-	m_eddystoneData.frameType = EDDYSTONE_TLM_FRAME_TYPE;
-	m_eddystoneData.version = 0;
-	m_eddystoneData.volt = 3300; // 3300mV = 3.3V
-	m_eddystoneData.temp = (uint16_t) ((float) 23.00)/256;
-	m_eddystoneData.advCount = 0;
-	m_eddystoneData.tmil = 0;
+  beaconUUID = 0xFEAA;
+  m_eddystoneData.frameType = EDDYSTONE_TLM_FRAME_TYPE;
+  m_eddystoneData.version = 0;
+  m_eddystoneData.volt = 3300; // 3300mV = 3.3V
+  m_eddystoneData.temp = (uint16_t) ((float) 23.00)/256;
+  m_eddystoneData.advCount = 0;
+  m_eddystoneData.tmil = 0;
 } // BLEEddystoneTLM
 
+BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice){
+  char* payload = (char*)advertisedDevice->getPayload();
+  for(int i = 0; i < advertisedDevice->getPayloadLength(); ++i){
+    if(payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i+2+sizeof(m_eddystoneData) && payload[i+1] == 0xAA && payload[i+2] == 0xFE && payload[i+3] == 0x20){
+      log_d("Eddystone TLM data frame starting at byte [%d]", i+3);
+      setData(std::string(payload+i+3, sizeof(m_eddystoneData)));
+      break;
+    }
+  }
+}
+
 std::string BLEEddystoneTLM::getData() {
-	return std::string((char*) &m_eddystoneData, sizeof(m_eddystoneData));
+  return std::string((char*) &m_eddystoneData, sizeof(m_eddystoneData));
 } // getData
 
 BLEUUID BLEEddystoneTLM::getUUID() {
-	return BLEUUID(beaconUUID);
+  return BLEUUID(beaconUUID);
 } // getUUID
 
 uint8_t BLEEddystoneTLM::getVersion() {
-	return m_eddystoneData.version;
+  return m_eddystoneData.version;
 } // getVersion
 
 uint16_t BLEEddystoneTLM::getVolt() {
-	return ENDIAN_CHANGE_U16(m_eddystoneData.volt);
+  return ENDIAN_CHANGE_U16(m_eddystoneData.volt);
 } // getVolt
 
 float BLEEddystoneTLM::getTemp() {
@@ -52,15 +63,15 @@ float BLEEddystoneTLM::getTemp() {
 } // getTemp
 
 uint16_t BLEEddystoneTLM::getRawTemp() {
-	return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
+  return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
 } // getRawTemp
 
 uint32_t BLEEddystoneTLM::getCount() {
-	return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
+  return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
 } // getCount
 
 uint32_t BLEEddystoneTLM::getTime() {
-	return (ENDIAN_CHANGE_U32(m_eddystoneData.tmil)) / 10;
+  return (ENDIAN_CHANGE_U32(m_eddystoneData.tmil)) / 10;
 } // getTime
 
 std::string BLEEddystoneTLM::toString() {
@@ -116,9 +127,10 @@ std::string BLEEddystoneTLM::toString() {
 /**
  * Set the raw data for the beacon record.
  * Example:
- * uint8_t *payLoad = advertisedDevice.getPayload();
- * eddystoneTLM.setData(std::string((char*)payLoad+22, advertisedDevice.getPayloadLength() - 22));
- * Note: the offset 22 works for current implementation of example BLE_EddystoneTLM Beacon.ino, however it is not static and will be reimplemented
+ * uint8_t *payload = advertisedDevice.getPayload();
+ * eddystoneTLM.setData(std::string((char*)payload+22, advertisedDevice.getPayloadLength() - 22));
+ * Note: the offset 22 works for current implementation of example BLE_EddystoneTLM Beacon.ino, however
+ *   the position is not static and it is programmers responsibility to align the data.
  * Data frame:
  * | Field  || Len | Type | UUID        | EddyStone TLM |
  * | Offset || 0   | 1    | 2           | 4             |
@@ -132,35 +144,35 @@ std::string BLEEddystoneTLM::toString() {
  * | Data   || 0x20  | ??      | ??   | ??   | ??    | ??  |   |   |   |    |   |   |   |     |
  */
 void BLEEddystoneTLM::setData(std::string data) {
-	if (data.length() != sizeof(m_eddystoneData)) {
-		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
-		return;
-	}
+  if (data.length() != sizeof(m_eddystoneData)) {
+    log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+    return;
+  }
   memcpy(&m_eddystoneData, data.data(), data.length());
 } // setData
 
 void BLEEddystoneTLM::setUUID(BLEUUID l_uuid) {
-	beaconUUID = l_uuid.getNative()->uuid.uuid16;
+  beaconUUID = l_uuid.getNative()->uuid.uuid16;
 } // setUUID
 
 void BLEEddystoneTLM::setVersion(uint8_t version) {
-	m_eddystoneData.version = version;
+  m_eddystoneData.version = version;
 } // setVersion
 
 void BLEEddystoneTLM::setVolt(uint16_t volt) {
-	m_eddystoneData.volt = volt;
+  m_eddystoneData.volt = volt;
 } // setVolt
 
 void BLEEddystoneTLM::setTemp(float temp) {
-	m_eddystoneData.temp = EDDYSTONE_TEMP_FLOAT_TO_U16(temp);
+  m_eddystoneData.temp = EDDYSTONE_TEMP_FLOAT_TO_U16(temp);
 } // setTemp
 
 void BLEEddystoneTLM::setCount(uint32_t advCount) {
-	m_eddystoneData.advCount = advCount;
+  m_eddystoneData.advCount = advCount;
 } // setCount
 
 void BLEEddystoneTLM::setTime(uint32_t tmil) {
-	m_eddystoneData.tmil = tmil;
+  m_eddystoneData.tmil = tmil;
 } // setTime
 
 #endif

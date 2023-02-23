@@ -2,6 +2,8 @@
    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleScan.cpp
    Ported to Arduino ESP32 by Evandro Copercini
    Changed to a beacon scanner to report iBeacon, EddystoneURL and EddystoneTLM beacons by beegee-tokyo
+   Upgraded Eddystone part by Tomas Pilny on Feb 20, 2023
+
 */
 
 #include <Arduino.h>
@@ -63,62 +65,33 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         }
       }
 
-      uint8_t *payLoad = advertisedDevice.getPayload();
-      // search for Eddystone Service Data in the advertising payload
-      // *payload shall point to eddystone data or to its end when not found
-      const uint8_t serviceDataEddystone[3] = {0x16, 0xAA, 0xFE}; // it has Eddystone BLE UUID
-      const size_t payLoadLen = advertisedDevice.getPayloadLength();
-      uint8_t *payLoadEnd = payLoad + payLoadLen - 1; // address of the end of payLoad space
-      while (payLoad < payLoadEnd) {
-        if (payLoad[1] == serviceDataEddystone[0] && payLoad[2] == serviceDataEddystone[1] && payLoad[3] == serviceDataEddystone[2]) {
-          // found!
-          payLoad += 4;
-          break;
-        }
-        payLoad += *payLoad + 1;  // payLoad[0] has the field Length
-      }
-
-      if (payLoad < payLoadEnd) // Eddystone Service Data and respective BLE UUID were found
+      if (advertisedDevice.getFrameType() == BLE_EDDYSTONE_URL_FRAME)
       {
-        if (*payLoad == 0x10)
-        {
-          Serial.println("Found an EddystoneURL beacon!");
-          BLEEddystoneURL foundEddyURL = BLEEddystoneURL();
-          uint8_t URLLen = *(payLoad - 4) - 3;  // Get Field Length less 3 bytes (type and UUID) 
-          foundEddyURL.setData(std::string((char*)payLoad, URLLen));
-          std::string bareURL = foundEddyURL.getURL();
-          if (bareURL[0] == 0x00)
-          {
-            // dumps all bytes in advertising payload
-            Serial.println("DATA-->");
-            uint8_t *payLoad = advertisedDevice.getPayload();
-            for (int idx = 0; idx < payLoadLen; idx++)
-            {
-              Serial.printf("0x%02X ", payLoad[idx]);
-            }
-            Serial.println("\nInvalid Data");
-            return;
-          }
+        Serial.println("Found an EddystoneURL beacon!");
+        BLEEddystoneURL EddystoneURL = BLEEddystoneURL(&advertisedDevice);
+        Serial.printf("URL bytes: 0x");
+        std::string url = EddystoneURL.getURL();
+        for(auto byte : url){
+          Serial.printf("%02X", byte);
+        }
+        Serial.printf("\n");
+        Serial.printf("Decoded URL: %s\n", EddystoneURL.getDecodedURL().c_str());
+        Serial.printf("TX power %d (Raw 0x%02X)\n", EddystoneURL.getPower(), EddystoneURL.getPower());
+        Serial.println("\n");
+      }
 
-          Serial.printf("Found URL: %s\n", foundEddyURL.getURL().c_str());
-          Serial.printf("Decoded URL: %s\n", foundEddyURL.getDecodedURL().c_str());
-          Serial.printf("TX power %d\n", foundEddyURL.getPower());
-          Serial.println("\n");
-        } 
-        else if (*payLoad == 0x20)
-        {
+      if (advertisedDevice.getFrameType() == BLE_EDDYSTONE_TLM_FRAME)
+      {
           Serial.println("Found an EddystoneTLM beacon!");
-          BLEEddystoneTLM eddystoneTLM;
-          eddystoneTLM.setData(std::string((char*)payLoad, 14));
-          Serial.printf("Reported battery voltage: %dmV\n", eddystoneTLM.getVolt());
-          Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", eddystoneTLM.getTemp(), eddystoneTLM.getRawTemp());
-          Serial.printf("Reported advertise count: %lu\n", eddystoneTLM.getCount());
-          Serial.printf("Reported time since last reboot: %lus\n", eddystoneTLM.getTime());
+          BLEEddystoneTLM EddystoneTLM(&advertisedDevice);
+          Serial.printf("Reported battery voltage: %dmV\n", EddystoneTLM.getVolt());
+          Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", EddystoneTLM.getTemp(), EddystoneTLM.getRawTemp());
+          Serial.printf("Reported advertise count: %d\n", EddystoneTLM.getCount());
+          Serial.printf("Reported time since last reboot: %ds\n", EddystoneTLM.getTime());
           Serial.println("\n");
-          Serial.print(eddystoneTLM.toString().c_str());
+          Serial.print(EddystoneTLM.toString().c_str());
           Serial.println("\n");
         }
-      }
     }
 };
 
