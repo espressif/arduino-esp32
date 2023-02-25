@@ -8,7 +8,7 @@
 #define DISPLAY_WIDTH  0
 
 #define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
+#define NUM_DIGITAL_PINS        20
 #define NUM_ANALOG_INPUTS       15
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
