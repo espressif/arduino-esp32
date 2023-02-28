@@ -58,10 +58,59 @@ typedef struct {
 } rmt_data_t;
 
 
+/*
+
+// NEW RMT Ardunish API to replace the HAL C API
+
+class RMT_TX: public Stream {
+    public:
+      RMT_TX(int pin, rmt_reserve_memsize_t memsize = RMT_MEM_64);
+      float setTick(float tick);
+      
+      // Send RMT blocking/non-blocking or lopping depending of the Settings of this object
+      size_t write(rmt_data_t *data, size_t size);
+      void flush(); // wait until all data is sent - alternative to write blocking 
+      void onTransmit(rmt_tx_data_cb_t cb, void * arg);  // set async end of write callback
+   
+      // can it be replaced by flush()?
+      void setBlocking(bool block);   // Better than the one below?
+      size_t writeBlocking(rmt_data_t* data, size_t size);
+    
+      // sets looping write mode
+      void setLoop(bool loop);  // Better than the one below?
+      size_t writeLoop(rmt_data_t* data, size_t size);
+      
+
+      bool setCarrier(bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
+      void detach();
+ }
+ 
+ 
+class RMT_RX: public Stream {
+    public:
+      RMT_RX(int pin, rmt_reserve_memsize_t memsize = RMT_MEM_64);
+      float setTick(float tick);
+
+      //bool rmtRead(int pin, rmt_rx_data_cb_t cb, void * arg);
+      void onReceive(rmt_rx_data_cb_t cb, void * arg);  // set async read callback
+      // blocking reading - should it set a timeout?
+      size_t read(uint32_t* data, size_t size);
+      size_t available();
+
+      bool setCarrier(bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
+      bool setFilter(bool filter_en, uint32_t filter_level);
+      bool setRxThreshold(uint32_t value);
+      void detach();
+}
+
+*/  
+    
+    
 /**
 *    Prints object information
 *
 */
+//void _rmtDumpStatus(int pin);
 void _rmtDumpStatus(rmt_obj_t* rmt);
 
 /**
@@ -74,6 +123,7 @@ rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize);
 *    Sets the clock/divider of timebase the nearest tick to the supplied value in nanoseconds
 *    return the real actual tick value in ns
 */
+//float rmtSetTick(int pin, float tick);
 float rmtSetTick(rmt_obj_t* rmt, float tick);
 
 /**
@@ -81,6 +131,7 @@ float rmtSetTick(rmt_obj_t* rmt, float tick);
 *     (more data being send while updating buffers in interrupts)
 *    Non-Blocking mode - returns right after executing
 */
+//bool rmtWrite(int pin, rmt_data_t* data, size_t size);
 bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
@@ -88,18 +139,21 @@ bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 *     (more data being send while updating buffers in interrupts)
 *    Blocking mode - only returns when data has been sent
 */
+//bool rmtWriteBlocking(int pin, rmt_data_t* data, size_t size);
 bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Loop data up to the reserved memsize continuously
 *
 */
+//bool rmtLoop(int pin, rmt_data_t* data, size_t size);
 bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size);
 
 /**
 *    Initiates async receive, event flag indicates data received
 *
 */
+//bool rmtReadAsync(int pin, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
 bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
 
 /**
@@ -107,12 +161,14 @@ bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag
 *    and callback with data from ISR
 *
 */
+//bool rmtRead(int pin, rmt_rx_data_cb_t cb, void * arg);
 bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg);
 
 /***
  * Ends async receive started with rmtRead(); but does not
  * rmtDeInit().
  */
+//bool rmtEnd(int pin);
 bool rmtEnd(rmt_obj_t* rmt);
 
 /*  Additional interface */
@@ -121,38 +177,45 @@ bool rmtEnd(rmt_obj_t* rmt);
 *    Start reception
 *
 */
+//bool rmtBeginReceive(int pin);
 bool rmtBeginReceive(rmt_obj_t* rmt);
 
 /**
 *    Checks if reception completes
 *
 */
+//bool rmtReceiveCompleted(int pin);
 bool rmtReceiveCompleted(rmt_obj_t* rmt);
 
 /**
 *    Reads the data for particular channel
 *
 */
+//bool rmtReadData(int pin, uint32_t* data, size_t size);
 bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size);
 
 /**
  * Setting threshold for Rx completed
  */
+//bool rmtSetRxThreshold(int pin, uint32_t value);
 bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value);
 
 /**
  * Setting carrier
  */
+//bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
 bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
 
 /**
  * Setting input filter
  */
+//bool rmtSetFilter(int pin, bool filter_en, uint32_t filter_level);
 bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level);
 
 /**
  * Deinitialize the driver
  */
+//bool rmtDeinit(int pin);
 bool rmtDeinit(rmt_obj_t *rmt);
 
 // TODO:
