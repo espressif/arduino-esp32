@@ -11,7 +11,7 @@
 // Stop button is attached to PIN 0 (IO0)
 #define BTN_STOP_ALARM    0
 
-hw_timer_t * timer = NULL;
+hw_timer_t timer = NULL;
 volatile SemaphoreHandle_t timerSemaphore;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -38,20 +38,15 @@ void setup() {
   // Create semaphore to inform us when the timer has fired
   timerSemaphore = xSemaphoreCreateBinary();
 
-  // Use 1st timer of 4 (counted from zero).
-  // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
-  // info).
-  timer = timerBegin(0, 80, true);
+  // Set timer frequency to 1Mhz
+  timer = timerBegin(1000000, true);
 
   // Attach onTimer function to our timer.
-  timerAttachInterrupt(timer, &onTimer, true);
+  timerAttachInterrupt(timer, &onTimer);
 
   // Set alarm to call onTimer function every second (value in microseconds).
-  // Repeat the alarm (third parameter)
-  timerAlarmWrite(timer, 1000000, true);
-
-  // Start an alarm
-  timerAlarmEnable(timer);
+  // Repeat the alarm (third parameter) with unlimited count = 0 (fourth parameter).
+  timerAlarmWrite(timer, 1000000, true, 0);
 }
 
 void loop() {
