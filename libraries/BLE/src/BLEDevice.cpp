@@ -410,8 +410,14 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			return;
 		}
 #endif   // CONFIG_GATTS_ENABLE
-
-		errRc = ::esp_ble_gap_set_device_name(deviceName.c_str());
+		
+		// makes sure it fails with any device name that has more than the possible advertising payload length
+		if (deviceName.length() > ESP_BLE_ADV_DATA_LEN_MAX - 2) {  // 1 byte for Length + 1 bytes for ID
+			deviceName = "bad length name: max 29 bytes";
+			errRC = ESP_ERR_INVALID_ARG;
+		} else
+		        errRc = ::esp_ble_gap_set_device_name(deviceName.c_str());
+		}
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gap_set_device_name: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 			return;
