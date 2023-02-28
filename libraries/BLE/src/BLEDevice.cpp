@@ -330,7 +330,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
  * @brief Initialize the %BLE environment.
  * @param deviceName The device name of the device.
  */
-/* STATIC */ void BLEDevice::init(std::string deviceName) {
+/* STATIC */ bool BLEDevice::init(std::string deviceName) {
 	if(!initialized){
 		initialized = true; // Set the initialization flag to ensure we are only initialized once.
 
@@ -338,13 +338,13 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 #ifdef ARDUINO_ARCH_ESP32
 		if (!btStart()) {
 			errRc = ESP_FAIL;
-			return;
+			return false;
 		}
 #else
 		errRc = ::nvs_flash_init();
 		if (errRc != ESP_OK) {
 			log_e("nvs_flash_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 
 #ifndef CONFIG_BT_CLASSIC_ENABLED
@@ -354,20 +354,20 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 		errRc = esp_bt_controller_init(&bt_cfg);
 		if (errRc != ESP_OK) {
 			log_e("esp_bt_controller_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 
 #ifndef CONFIG_BT_CLASSIC_ENABLED
 		errRc = esp_bt_controller_enable(ESP_BT_MODE_BLE);
 		if (errRc != ESP_OK) {
 			log_e("esp_bt_controller_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 #else
 		errRc = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
 		if (errRc != ESP_OK) {
 			log_e("esp_bt_controller_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 #endif
 #endif
@@ -377,7 +377,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			errRc = esp_bluedroid_init();
 			if (errRc != ESP_OK) {
 				log_e("esp_bluedroid_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-				return;
+				return false;
 			}
 		}
 
@@ -385,21 +385,21 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			errRc = esp_bluedroid_enable();
 			if (errRc != ESP_OK) {
 				log_e("esp_bluedroid_enable: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-				return;
+				return false;
 			}
 		}
 
 		errRc = esp_ble_gap_register_callback(BLEDevice::gapEventHandler);
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gap_register_callback: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 
 #ifdef CONFIG_GATTC_ENABLE   // Check that BLE client is configured in make menuconfig
 		errRc = esp_ble_gattc_register_callback(BLEDevice::gattClientEventHandler);
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gattc_register_callback: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 #endif   // CONFIG_GATTC_ENABLE
 
@@ -407,7 +407,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 		errRc = esp_ble_gatts_register_callback(BLEDevice::gattServerEventHandler);
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gatts_register_callback: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		}
 #endif   // CONFIG_GATTS_ENABLE
 		
@@ -420,7 +420,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 		}
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gap_set_device_name: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		};
 
 #ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
@@ -428,11 +428,12 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 		errRc = ::esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
 		if (errRc != ESP_OK) {
 			log_e("esp_ble_gap_set_security_param: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
+			return false;
 		};
 #endif // CONFIG_BLE_SMP_ENABLE
 	}
 	vTaskDelay(200 / portTICK_PERIOD_MS); // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
+	return true;
 } // init
 
 
