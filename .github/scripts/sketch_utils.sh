@@ -117,6 +117,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     #  3. Created at the sketch level as "buildX" where X is the number
     #     of configuration built in case of a multiconfiguration test.
 
+    sketchname=$(basename $sketchdir)
+    
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
@@ -136,7 +138,6 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         mkdir -p $build_dir
 
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
-        sketchname=$(basename $sketchdir)
 
         if [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
