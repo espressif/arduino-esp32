@@ -39,7 +39,7 @@ jobs:
           set -e
           rm sketches.txt
           CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
-          echo "::set-output name=chunks::${CHUNKS}"
+          echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
 
   Build:
     needs: gen_chunks
