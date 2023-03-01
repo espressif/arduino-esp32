@@ -121,16 +121,16 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
     elif [ $len -eq 1 ]; then
-        build_dir="$sketchdir/build"
-        # build_dir="$HOME/.arduino/build.tmp"
+        # build_dir="$sketchdir/build"
+        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
     do
         if [ $len -ne 1 ]; then
-          build_dir="$sketchdir/build$i"
-          # build_dir="$HOME/.arduino/build$i.tmp"
+          # build_dir="$sketchdir/build$i"
+          build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
         fi
         rm -rf $build_dir
         mkdir -p $build_dir
