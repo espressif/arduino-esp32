@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
+        
       - name: Generate Chunks matrix
         id: gen-chunks
         run: |
@@ -49,7 +49,6 @@ jobs:
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -61,8 +60,8 @@ jobs:
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
-             /tests/*/build*/*.bin
-             /tests/*/build*/*.json
+             tests/*/build*/*.bin
+             tests/*/build*/*.json
           if-no-files-found: error
   Test:
     needs: [gen_chunks, Build]
