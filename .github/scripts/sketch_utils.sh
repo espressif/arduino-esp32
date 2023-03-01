@@ -152,6 +152,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 $xtra_opts "${sketchdir}"
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
+            echo "Build path = $build_dir"
 
             $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
                 -fqbn=\"$currfqbn\" \
