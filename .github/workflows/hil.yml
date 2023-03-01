@@ -62,8 +62,9 @@ jobs:
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
-             tests/*/build*/*.bin
-             tests/*/build*/*.json
+             tests/**/build*/*.bin
+             tests/**/build*/*.json
+          if-no-files-found: error
   Test:
     needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
