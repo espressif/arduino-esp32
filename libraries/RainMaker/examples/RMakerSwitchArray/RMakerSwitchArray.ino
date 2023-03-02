@@ -1,4 +1,4 @@
-// This example demonstrates the ESP RainMaker with a standard Switch device.
+// This example demonstrates the ESP RainMaker with a standard light switch device.
 #include "RMaker.h"
 #include "WiFi.h"
 #include "WiFiProv.h"
@@ -22,8 +22,10 @@ Preferences pref;
 
 using namespace ace_button;
 
+// Define the buttons in an array using the default constructor.
 AceButton lightSwitch[NUM_RELAYS];
 
+// The framework provides some standard device types like switch, lightbulb, fan, temperaturesensor.
 static Switch myRelay[NUM_RELAYS];
 
 struct INFOS
@@ -36,6 +38,7 @@ struct INFOS
 
 #define INITIAL_STATE LOW  // Initial state = HIGH to active LOW relay model.
 
+// Define the device name, relay pin, relay default status and switch pin to an array.
 INFOS info[NUM_RELAYS] = {
   { "Relay1", 4, INITIAL_STATE, 26},
   { "Relay2", 5, INITIAL_STATE, 27},
@@ -92,7 +95,11 @@ void write_callback(Device *device, Param *param, const param_val_t val, void *p
       {
         info[i].relayState = val.val.b;
         digitalWrite(info[i].relayPin, info[i].relayState);
+
+        // Publish the new state to all listeners
         myRelay[i].updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, info[i].relayState);
+
+        // Save the relay state.
         pref.putBool(info[i].deviceName, info[i].relayState);
         break;
       }
@@ -149,9 +156,10 @@ void setup()
 
   pinMode(resetPin, INPUT);
 
+  // Starts the configuration file where the state will be saved.
   pref.begin(nodeName, false);
 
-  // Configure the ButtonConfig with the event handler, and enable all higher level events.
+  // Configure the ButtonConfig with the event handler, enable click and long press events.
   ButtonConfig* buttonConfig = ButtonConfig::getSystemButtonConfig();
 
   buttonConfig->setEventHandler(handleEvent);
@@ -164,13 +172,23 @@ void setup()
   for (byte i = 0; i < NUM_RELAYS; i++)
   {
     pinMode(info[i].relayPin, OUTPUT);
+
+    // Turn off all relays.
     digitalWrite(info[i].relayPin, info[i].relayState);
 
-    myRelay[i] = Switch(info[i].deviceName);
+    // Initialize switch device 
+    myRelay[i] = Switch(info[i].deviceName); 
+
+    // Specify the callback function to relays.
     myRelay[i].addCb(write_callback);
+
+    //Add switch device to the node.
     my_node.addDevice(myRelay[i]);
 
+    // Switch uses the built-in pull up resistor.
     pinMode(info[i].switchPin, INPUT_PULLUP);
+
+    // initialize the corresponding AceButton.
     lightSwitch[i].init(info[i].switchPin, HIGH, i);
   }
 
@@ -195,7 +213,8 @@ void setup()
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
   #endif
 
-  getLastState();  // Get the last state of Relays
+  // Get the last state of Relays.
+  getLastState();  
 }
 
 void loop()
@@ -205,9 +224,11 @@ void loop()
     lightSwitch[i].check();
   }
 
-  if(digitalRead(resetPin) == LOW) // Push button pressed
+  // Push button pressed.
+  if(digitalRead(resetPin) == LOW) 
   {
-    delay(100);                    // Key debounce handling
+    // Key debounce handling.
+    delay(100); 
     int startTime = millis();
     while(digitalRead(resetPin) == LOW)
     {
@@ -215,7 +236,8 @@ void loop()
     }
     int endTime = millis();
 
-    if ((endTime - startTime) > 10000)   // If key pressed for more than 10secs, reset all
+    // If key pressed for more than 10secs, reset all.
+    if ((endTime - startTime) > 10000)   
     {
       Serial.printf("Factory reset!");
       RMakerFactoryReset(2);
