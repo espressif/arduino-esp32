@@ -9,6 +9,9 @@ This example demonstrates how to build a device with 8 light switches to be used
 - The physical switch will change the state of relay while is pressed or when released and the same will reflect on the phone app.
 - After compiling and flashing the example, add your device using the [ESP RainMaker phone apps](https://rainmaker.espressif.com/docs/quick-links.html#phone-apps) by scanning the QR code.
 
+### Libraries dependencies
+ - [AceButton](https://github.com/bxparks/AceButton)
+
 ### Output
 
 ```
