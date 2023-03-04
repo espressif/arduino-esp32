@@ -11,6 +11,10 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
 
+static const uint8_t LED_BUILTIN     = 12;
+#define BUILTIN_LED  LED_BUILTIN
+static const uint8_t LED_BUILTIN_AUX = 13;
+
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
