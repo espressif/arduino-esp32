@@ -43,41 +43,37 @@ static Device *my_device = NULL;
 
 void sysProvEvent(arduino_event_t *sys_event)
 {
-  switch (sys_event->event_id)
-  {
+  switch (sys_event->event_id){
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      {
         Serial.print("\nConnected IP address : ");
         Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
         break;
-      }
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      {
         Serial.println("\nDisconnected. Connecting to the AP again... ");
         break;
-      }
     case ARDUINO_EVENT_PROV_START:
-      {
-        #if CONFIG_IDF_TARGET_ESP32S2
-          Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-          printQR(service_name, pop, "softap");
-        #else
-          Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-          printQR(service_name, pop, "ble");
-        #endif
+#if CONFIG_IDF_TARGET_ESP32S2
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
+        printQR(service_name, pop, "softap");
+#else
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
+        printQR(service_name, pop, "ble");
+#endif
         break;
-      }
+    case ARDUINO_EVENT_PROV_INIT:
+        wifi_prov_mgr_disable_auto_stop(10000);
+        break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+        wifi_prov_mgr_stop_provisioning();
+        break;    
     case ARDUINO_EVENT_PROV_CRED_RECV:
-      {
         Serial.println("\nReceived Wi-Fi credentials");
         Serial.print("\tSSID : ");
         Serial.println((const char *) sys_event->event_info.prov_cred_recv.ssid);
         Serial.print("\tPassword : ");
         Serial.println((char const *) sys_event->event_info.prov_cred_recv.password);
         break;
-      }
     case ARDUINO_EVENT_PROV_CRED_FAIL:
-      {
         Serial.println("\nProvisioning failed!\nPlease reset to factory and retry provisioning\n");
         if(sys_event->event_info.prov_fail_reason == WIFI_PROV_STA_AUTH_ERROR)
         {
@@ -88,21 +84,14 @@ void sysProvEvent(arduino_event_t *sys_event)
           Serial.println("\nWi-Fi AP not found....Add API \" nvs_flash_erase() \" before beginProvision()");
         }
         break;
-      }
     case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      {
         Serial.println("\nProvisioning Successful");
         break;
-      }
     case ARDUINO_EVENT_PROV_END:
-      {
         Serial.println("\nProvisioning Ends");
         break;
-      }
     default:
-      {
         break;
-      }
   }
 }
 
