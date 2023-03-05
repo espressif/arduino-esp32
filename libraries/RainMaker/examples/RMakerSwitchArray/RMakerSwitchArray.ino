@@ -54,6 +54,17 @@ void sysProvEvent(arduino_event_t *sys_event)
 {
   switch (sys_event->event_id)
   {
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      {
+        Serial.print("\nConnected IP address : ");
+        Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
+        break;
+      }
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      {
+        Serial.println("\nDisconnected. Connecting to the AP again... ");
+        break;
+      }
     case ARDUINO_EVENT_PROV_START:
       {
         #if CONFIG_IDF_TARGET_ESP32S2
@@ -65,14 +76,36 @@ void sysProvEvent(arduino_event_t *sys_event)
         #endif
         break;
       }
-    case ARDUINO_EVENT_PROV_INIT:
+    case ARDUINO_EVENT_PROV_CRED_RECV:
       {
-        wifi_prov_mgr_disable_auto_stop(10000);
+        Serial.println("\nReceived Wi-Fi credentials");
+        Serial.print("\tSSID : ");
+        Serial.println((const char *) sys_event->event_info.prov_cred_recv.ssid);
+        Serial.print("\tPassword : ");
+        Serial.println((char const *) sys_event->event_info.prov_cred_recv.password);
+        break;
+      }
+    case ARDUINO_EVENT_PROV_CRED_FAIL:
+      {
+        Serial.println("\nProvisioning failed!\nPlease reset to factory and retry provisioning\n");
+        if(sys_event->event_info.prov_fail_reason == WIFI_PROV_STA_AUTH_ERROR)
+        {
+          Serial.println("\nWi-Fi AP password incorrect");
+        }
+        else
+        {
+          Serial.println("\nWi-Fi AP not found....Add API \" nvs_flash_erase() \" before beginProvision()");
+        }
         break;
       }
     case ARDUINO_EVENT_PROV_CRED_SUCCESS:
       {
-        wifi_prov_mgr_stop_provisioning();
+        Serial.println("\nProvisioning Successful");
+        break;
+      }
+    case ARDUINO_EVENT_PROV_END:
+      {
+        Serial.println("\nProvisioning Ends");
         break;
       }
     default:
@@ -176,13 +209,13 @@ void setup()
     // Turn off all relays.
     digitalWrite(info[i].relayPin, info[i].relayState);
 
-    // Initialize switch device 
-    myRelay[i] = Switch(info[i].deviceName); 
+    // Initialize switch device
+    myRelay[i] = Switch(info[i].deviceName);
 
     // Specify the callback function to relays.
     myRelay[i].addCb(write_callback);
 
-    //Add switch device to the node.
+    // Add switch device to the node.
     my_node.addDevice(myRelay[i]);
 
     // Switch uses the built-in pull up resistor.
@@ -214,7 +247,7 @@ void setup()
   #endif
 
   // Get the last state of Relays.
-  getLastState();  
+  getLastState();
 }
 
 void loop()
@@ -225,10 +258,10 @@ void loop()
   }
 
   // Push button pressed.
-  if(digitalRead(resetPin) == LOW) 
+  if(digitalRead(resetPin) == LOW)
   {
     // Key debounce handling.
-    delay(100); 
+    delay(100);
     int startTime = millis();
     while(digitalRead(resetPin) == LOW)
     {
@@ -237,7 +270,7 @@ void loop()
     int endTime = millis();
 
     // If key pressed for more than 10secs, reset all.
-    if ((endTime - startTime) > 10000)   
+    if ((endTime - startTime) > 10000)
     {
       Serial.printf("Factory reset!");
       RMakerFactoryReset(2);
