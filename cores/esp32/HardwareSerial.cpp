@@ -572,6 +572,16 @@ void HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
     uartSetHwFlowCtrlMode(_uart, mode, threshold);
 }
 
+// Sets the uart mode in the esp32 uart for use with RS485 modes (HwFlowCtrl must be disabled and RTS pin set)
+int HardwareSerial::setMode(uart_mode_t mode)
+{
+    if (_uart == 0)
+    {
+        return -1;
+    }
+    return uartSetMode(_uart, mode);
+}
+
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
     if (_uart) {

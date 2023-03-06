@@ -518,6 +518,17 @@ void uart_install_putc()
     }
 }
 
+// Routines that take care of UART mode in the HardwareSerial Class code
+// used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
+int uartSetMode(uart_t *uart, uint8_t mode)
+{
+    if (uart == NULL || uart->num >= SOC_UART_NUM)
+    {
+        return -1;
+    }
+    return uart_set_mode(uart->num, mode);
+}
+
 void uartSetDebug(uart_t* uart)
 {
     if(uart == NULL || uart->num >= SOC_UART_NUM) {

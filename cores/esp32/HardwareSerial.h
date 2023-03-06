@@ -164,7 +164,8 @@ public:
     void setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
     void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
-
+    // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
+    int setMode(uint8_t mode);
     size_t setRxBufferSize(size_t new_size);
     size_t setTxBufferSize(size_t new_size);
 
