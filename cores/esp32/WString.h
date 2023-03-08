@@ -31,6 +31,10 @@
 #include <ctype.h>
 
 
+// A pure abstract class forward used as a means to proide a unique pointer type
+// but really is never defined.
+class [[deprecated("not required on ESP32, only for ESP8266 compatibility")]]
+        __FlashStringHelper;
 #define FPSTR(pstr_pointer) (pstr_pointer)
 #define F(string_literal) (string_literal)
 
