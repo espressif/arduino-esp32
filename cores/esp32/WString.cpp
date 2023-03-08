@@ -47,11 +47,6 @@ String::String(const String &value) {
     *this = value;
 }
 
-String::String(const __FlashStringHelper *pstr) {
-    init();
-    *this = pstr; // see operator =
-}
-
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 String::String(String &&rval) {
     init();
@@ -235,16 +230,6 @@ String & String::copy(const char *cstr, unsigned int length) {
     return *this;
 }
 
-String & String::copy(const __FlashStringHelper *pstr, unsigned int length) {
-    if (!reserve(length)) {
-        invalidate();
-        return *this;
-    }
-    memcpy_P(wbuffer(), (PGM_P)pstr, length + 1); // We know wbuffer() cannot ever be in PROGMEM, so memcpy safe here
-    setLen(length);
-    return *this;
-}
-
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 void String::move(String &rhs) {
     if(buffer()) {
@@ -305,15 +290,6 @@ String & String::operator =(const char *cstr) {
         copy(cstr, strlen(cstr));
     else
         invalidate();
-    return *this;
-}
-
-String & String::operator =(const __FlashStringHelper *pstr) {
-    if(pstr)
-        copy(pstr, strlen_P((PGM_P)pstr));
-    else
-        invalidate();
-
     return *this;
 }
 
@@ -424,20 +400,6 @@ bool String::concat(double num) {
     return concat(string, strlen(string));
 }
 
-bool String::concat(const __FlashStringHelper * str) {
-    if (!str)
-        return false;
-    int length = strlen_P((PGM_P)str);
-    if (length == 0)
-        return true;
-    unsigned int newlen = len() + length;
-    if (!reserve(newlen))
-        return false;
-    memcpy_P(wbuffer() + len(), (PGM_P)str, length + 1);
-    setLen(newlen);
-    return true;
-}
-
 /*********************************************/
 /*  Concatenate                              */
 /*********************************************/
@@ -522,14 +484,6 @@ StringSumHelper & operator +(const StringSumHelper &lhs, long long num) {
 StringSumHelper & operator +(const StringSumHelper &lhs, unsigned long long num) {
     StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
     if(!a.concat(num))
-        a.invalidate();
-    return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHelper *rhs)
-{
-    StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-    if (!a.concat(rhs))
         a.invalidate();
     return a;
 }

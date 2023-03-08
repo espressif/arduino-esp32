@@ -12,7 +12,6 @@ class Uri {
     public:
         Uri(const char *uri) : _uri(uri) {}
         Uri(const String &uri) : _uri(uri) {}
-        Uri(const __FlashStringHelper *uri) : _uri(String(uri)) {} 
         virtual ~Uri() {}
 
         virtual Uri* clone() const {
