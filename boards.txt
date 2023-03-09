@@ -249,6 +249,7 @@ esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 esp32s3.menu.EraseFlash.all=Enabled
 esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
+
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
@@ -3348,18 +3349,18 @@ ttgo-lora32.build.bootloader_addr=0x1000
 ttgo-lora32.build.target=esp32
 ttgo-lora32.build.mcu=esp32
 ttgo-lora32.build.core=esp32
-ttgo-lora32.build.board=TTGO_LoRa32
+ttgo-lora32.build.board=TTGO_LORA32
 
 ttgo-lora32.menu.Revision.TTGO_LoRa32_V1=TTGO LoRa32 V1 (No TFCard)
-ttgo-lora32.menu.Revision.TTGO_LoRa32_V1.build.board=TTGO_LoRa32_V1
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V1.build.board=TTGO_LORA32_V1
 ttgo-lora32.menu.Revision.TTGO_LoRa32_V1.build.variant=ttgo-lora32-v1
 
 ttgo-lora32.menu.Revision.TTGO_LoRa32_V2=TTGO LoRa32 V2
-ttgo-lora32.menu.Revision.TTGO_LoRa32_V2.build.board=TTGO_LoRa32_V2
+ttgo-lora32.menu.Revision.TTGO_LoRa32_V2.build.board=TTGO_LORA32_V2
 ttgo-lora32.menu.Revision.TTGO_LoRa32_V2.build.variant=ttgo-lora32-v2
 
 ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new=TTGO LoRa32 V2.1 (1.6.1)
-ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new.build.board=TTGO_LoRa32_v21new
+ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new.build.board=TTGO_LORA32_V21NEW
 ttgo-lora32.menu.Revision.TTGO_LoRa32_v21new.build.variant=ttgo-lora32-v21new
 
 ttgo-lora32.build.f_cpu=240000000L
@@ -3569,7 +3570,7 @@ ttgo-t7-v13-mini32.build.target=esp32
 ttgo-t7-v13-mini32.build.mcu=esp32
 ttgo-t7-v13-mini32.build.core=esp32
 ttgo-t7-v13-mini32.build.variant=ttgo-t7-v13-mini32
-ttgo-t7-v13-mini32.build.board=TTGO_T7_V13_Mini32
+ttgo-t7-v13-mini32.build.board=TTGO_T7_V13_MINI32
 
 ttgo-t7-v13-mini32.build.f_cpu=240000000L
 ttgo-t7-v13-mini32.build.flash_size=4MB
@@ -3701,7 +3702,7 @@ ttgo-t7-v14-mini32.build.target=esp32
 ttgo-t7-v14-mini32.build.mcu=esp32
 ttgo-t7-v14-mini32.build.core=esp32
 ttgo-t7-v14-mini32.build.variant=ttgo-t7-v14-mini32
-ttgo-t7-v14-mini32.build.board=TTGO_T7_V14_Mini32
+ttgo-t7-v14-mini32.build.board=TTGO_T7_V14_MINI32
 
 ttgo-t7-v14-mini32.build.f_cpu=240000000L
 ttgo-t7-v14-mini32.build.flash_size=4MB
@@ -6291,7 +6292,7 @@ pocket_32.build.target=esp32
 pocket_32.build.mcu=esp32
 pocket_32.build.core=esp32
 pocket_32.build.variant=pocket_32
-pocket_32.build.board=Pocket32
+pocket_32.build.board=POCKET32
 
 pocket_32.build.f_cpu=240000000L
 pocket_32.build.flash_mode=dio
@@ -6363,7 +6364,7 @@ WeMosBat.build.target=esp32
 WeMosBat.build.mcu=esp32
 WeMosBat.build.core=esp32
 WeMosBat.build.variant=pocket_32
-WeMosBat.build.board=Pocket32
+WeMosBat.build.board=POCKET32
 
 WeMosBat.build.f_cpu=240000000L
 WeMosBat.build.flash_mode=dio
@@ -6472,7 +6473,7 @@ espea32.build.target=esp32
 espea32.build.mcu=esp32
 espea32.build.core=esp32
 espea32.build.variant=espea32
-espea32.build.board=ESPea32
+espea32.build.board=ESPEA32
 
 espea32.build.f_cpu=240000000L
 espea32.build.flash_mode=dio
@@ -6616,7 +6617,7 @@ node32s.build.target=esp32
 node32s.build.mcu=esp32
 node32s.build.core=esp32
 node32s.build.variant=node32s
-node32s.build.board=Node32s
+node32s.build.board=NODE32S
 
 node32s.build.f_cpu=240000000L
 node32s.build.flash_mode=dio
@@ -10319,7 +10320,7 @@ nodemcu-32s.build.target=esp32
 nodemcu-32s.build.mcu=esp32
 nodemcu-32s.build.core=esp32
 nodemcu-32s.build.variant=nodemcu-32s
-nodemcu-32s.build.board=NodeMCU_32S
+nodemcu-32s.build.board=NODEMCU_32S
 
 nodemcu-32s.build.f_cpu=240000000L
 nodemcu-32s.build.flash_mode=dio
@@ -10555,7 +10556,7 @@ esp32vn-iot-uno.build.target=esp32
 esp32vn-iot-uno.build.mcu=esp32
 esp32vn-iot-uno.build.core=esp32
 esp32vn-iot-uno.build.variant=esp32vn-iot-uno
-esp32vn-iot-uno.build.board=esp32vn_iot_uno
+esp32vn-iot-uno.build.board=ESP32VN_IOT_UNO
 
 esp32vn-iot-uno.build.f_cpu=240000000L
 esp32vn-iot-uno.build.flash_mode=dio
@@ -11149,7 +11150,7 @@ espino32.build.target=esp32
 espino32.build.mcu=esp32
 espino32.build.core=esp32
 espino32.build.variant=espino32
-espino32.build.board=ESPino32
+espino32.build.board=ESPINP32
 
 espino32.build.f_cpu=240000000L
 espino32.build.flash_mode=dio
@@ -11221,7 +11222,7 @@ m5stack-core-esp32.build.target=esp32
 m5stack-core-esp32.build.mcu=esp32
 m5stack-core-esp32.build.core=esp32
 m5stack-core-esp32.build.variant=m5stack_core_esp32
-m5stack-core-esp32.build.board=M5Stack_Core_ESP32
+m5stack-core-esp32.build.board=M5STACK_CORE_ESP32
 
 m5stack-core-esp32.build.f_cpu=240000000L
 m5stack-core-esp32.build.flash_size=4MB
@@ -11397,7 +11398,7 @@ m5stack-station.build.target=esp32
 m5stack-station.build.mcu=esp32
 m5stack-station.build.core=esp32
 m5stack-station.build.variant=m5stack_station
-m5stack-station.build.board=M5Stack_Station
+m5stack-station.build.board=M5STACK_STATION
 
 m5stack-station.build.f_cpu=240000000L
 m5stack-station.build.flash_size=16MB
@@ -11487,7 +11488,7 @@ m5stick-c.build.target=esp32
 m5stick-c.build.mcu=esp32
 m5stick-c.build.core=esp32
 m5stick-c.build.variant=m5stick_c
-m5stick-c.build.board=M5Stick_C
+m5stick-c.build.board=M5STICK_C
 
 m5stick-c.build.f_cpu=240000000L
 m5stick-c.build.flash_size=4MB
@@ -11560,7 +11561,7 @@ m5stack-atom.build.target=esp32
 m5stack-atom.build.mcu=esp32
 m5stack-atom.build.core=esp32
 m5stack-atom.build.variant=m5stack_atom
-m5stack-atom.build.board=M5Stack_ATOM
+m5stack-atom.build.board=M5STACK_ATOM
 
 m5stack-atom.build.f_cpu=240000000L
 m5stack-atom.build.flash_size=4MB
@@ -11637,7 +11638,7 @@ m5stack-atoms3.build.target=esp32s3
 m5stack-atoms3.build.mcu=esp32s3
 m5stack-atoms3.build.core=esp32
 m5stack-atoms3.build.variant=m5stack_atoms3
-m5stack-atoms3.build.board=M5Stack_ATOMS3
+m5stack-atoms3.build.board=M5STACK_ATOMS3
 
 m5stack-atoms3.build.usb_mode=1
 m5stack-atoms3.build.cdc_on_boot=0
@@ -11827,7 +11828,7 @@ m5stack-core2.build.target=esp32
 m5stack-core2.build.mcu=esp32
 m5stack-core2.build.core=esp32
 m5stack-core2.build.variant=m5stack_core2
-m5stack-core2.build.board=M5STACK_Core2
+m5stack-core2.build.board=M5STACK_CORE2
 
 m5stack-core2.build.f_cpu=240000000L
 m5stack-core2.build.flash_size=16MB
@@ -11944,7 +11945,7 @@ m5stack-timer-cam.build.target=esp32
 m5stack-timer-cam.build.mcu=esp32
 m5stack-timer-cam.build.core=esp32
 m5stack-timer-cam.build.variant=m5stack_timer_cam
-m5stack-timer-cam.build.board=M5Stack-Timer-CAM
+m5stack-timer-cam.build.board=M5STACK-TIMER-CAM
 
 m5stack-timer-cam.build.f_cpu=240000000L
 m5stack-timer-cam.build.flash_size=4MB
@@ -12053,7 +12054,7 @@ m5stack-coreink.build.target=esp32
 m5stack-coreink.build.mcu=esp32
 m5stack-coreink.build.core=esp32
 m5stack-coreink.build.variant=m5stack_coreink
-m5stack-coreink.build.board=M5Stack_CoreInk
+m5stack-coreink.build.board=M5STACK_COREINK
 
 m5stack-coreink.build.f_cpu=240000000L
 m5stack-coreink.build.flash_size=4MB
@@ -12810,7 +12811,7 @@ heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
 heltec_wireless_stick.build.variant=heltec_wireless_stick
-heltec_wireless_stick.build.board=heltec_wireless_stick
+heltec_wireless_stick.build.board=HELTEC_WIRELESS_STICK
 
 heltec_wireless_stick.build.f_cpu=240000000L
 heltec_wireless_stick.build.flash_size=8MB
@@ -13126,7 +13127,7 @@ CoreESP32.build.target=esp32
 CoreESP32.build.mcu=esp32
 CoreESP32.build.core=esp32
 CoreESP32.build.variant=Microduino-esp32
-CoreESP32.build.board=CORESP32
+CoreESP32.build.board=COREESP32
 
 CoreESP32.build.f_cpu=240000000L
 CoreESP32.build.flash_mode=dio
@@ -13894,7 +13895,7 @@ t-beam.build.target=esp32
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
 t-beam.build.variant=tbeam
-t-beam.build.board=TBeam
+t-beam.build.board=TBEAM
 
 t-beam.menu.Revision.Radio_SX1262=Radio-SX1262
 t-beam.menu.Revision.Radio_SX1262.build.board=TBEAM_USE_RADIO_SX1262
@@ -14069,7 +14070,7 @@ lopy.build.target=esp32
 lopy.build.mcu=esp32
 lopy.build.core=esp32
 lopy.build.variant=lopy
-lopy.build.board=LoPy
+lopy.build.board=LOPY
 
 lopy.build.f_cpu=240000000L
 lopy.build.flash_mode=dio
@@ -14140,7 +14141,7 @@ lopy4.build.target=esp32
 lopy4.build.mcu=esp32
 lopy4.build.core=esp32
 lopy4.build.variant=lopy4
-lopy4.build.board=LoPy4
+lopy4.build.board=LOPY4
 
 lopy4.build.f_cpu=240000000L
 lopy4.build.flash_mode=dio
@@ -14581,7 +14582,7 @@ twatch.build.target=esp32
 twatch.build.mcu=esp32
 twatch.build.core=esp32
 twatch.build.variant=twatch
-twatch.build.board=TWatch
+twatch.build.board=TWATCH
 
 twatch.menu.Revision.TWATCH_BASE=T-Watch Base
 twatch.menu.Revision.TWATCH_BASE.build.board=TWATCH_BASE
@@ -15442,7 +15443,7 @@ piranha_esp-32.build.target=esp32
 piranha_esp-32.build.mcu=esp32
 piranha_esp-32.build.core=esp32
 piranha_esp-32.build.variant=piranha_esp-32
-piranha_esp-32.build.board=Piranha
+piranha_esp-32.build.board=PIRANHA
 
 piranha_esp-32.build.f_cpu=240000000L
 piranha_esp-32.build.flash_mode=dio
@@ -15523,7 +15524,7 @@ metro_esp-32.build.target=esp32
 metro_esp-32.build.mcu=esp32
 metro_esp-32.build.core=esp32
 metro_esp-32.build.variant=metro_esp-32
-metro_esp-32.build.board=Metro
+metro_esp-32.build.board=METRO
 
 metro_esp-32.build.f_cpu=240000000L
 metro_esp-32.build.flash_mode=dio
@@ -15604,7 +15605,7 @@ sensesiot_weizen.build.target=esp32
 sensesiot_weizen.build.mcu=esp32
 sensesiot_weizen.build.core=esp32
 sensesiot_weizen.build.variant=esp32
-sensesiot_weizen.build.board=sensesiot_weizen
+sensesiot_weizen.build.board=SENSESIOT_WEIZEN
 
 sensesiot_weizen.build.f_cpu=240000000L
 sensesiot_weizen.build.flash_mode=dio
@@ -15880,7 +15881,7 @@ OpenKB.build.target=esp32
 OpenKB.build.mcu=esp32
 OpenKB.build.core=esp32
 OpenKB.build.variant=openkb
-OpenKB.build.board=openkb
+OpenKB.build.board=OPENKB
 
 OpenKB.build.f_cpu=240000000L
 OpenKB.build.flash_mode=dio
@@ -15953,7 +15954,7 @@ wifiduino32.build.target=esp32
 wifiduino32.build.mcu=esp32
 wifiduino32.build.core=esp32
 wifiduino32.build.variant=wifiduino32
-wifiduino32.build.board=Wifiduino32
+wifiduino32.build.board=WIFIDUINO32
 
 wifiduino32.build.f_cpu=240000000L
 wifiduino32.build.flash_mode=dio
@@ -16037,7 +16038,7 @@ wifiduino32c3.build.target=esp
 wifiduino32c3.build.mcu=esp32c3
 wifiduino32c3.build.core=esp32
 wifiduino32c3.build.variant=wifiduinov2
-wifiduino32c3.build.board=WiFiduinoV2
+wifiduino32c3.build.board=WIFIDUINOV2
 wifiduino32c3.build.bootloader_addr=0x0
 
 wifiduino32c3.build.cdc_on_boot=0
@@ -16193,7 +16194,7 @@ wifiduino32s3.build.target=esp32s3
 wifiduino32s3.build.mcu=esp32s3
 wifiduino32s3.build.core=esp32
 wifiduino32s3.build.variant=wifiduino32s3
-wifiduino32s3.build.board=WiFiduino32S3
+wifiduino32s3.build.board=WIFIDUINO32S3
 
 wifiduino32s3.build.usb_mode=1
 wifiduino32s3.build.cdc_on_boot=0
@@ -16580,7 +16581,7 @@ ET-Board.build.target=esp32
 ET-Board.build.mcu=esp32
 ET-Board.build.core=esp32
 ET-Board.build.variant=ET-Board
-ET-Board.build.board=ET-Board
+ET-Board.build.board=ET_BOARD
 ET-Board.build.f_cpu=240000000L
 ET-Board.build.flash_mode=dio
 ET-Board.build.flash_size=4MB
@@ -16751,7 +16752,7 @@ uPesy_wrover.build.target=esp32
 uPesy_wrover.build.mcu=esp32
 uPesy_wrover.build.core=esp32
 uPesy_wrover.build.variant=uPesy_esp32_wrover_devkit
-uPesy_wrover.build.board=uPesy_WROVER
+uPesy_wrover.build.board=UPESY_WROVER
 
 uPesy_wrover.build.f_cpu=240000000L
 uPesy_wrover.build.flash_size=4MB
@@ -16868,7 +16869,7 @@ uPesy_wroom.build.target=esp32
 uPesy_wroom.build.mcu=esp32
 uPesy_wroom.build.core=esp32
 uPesy_wroom.build.variant=uPesy_esp32_wroom_devkit
-uPesy_wroom.build.board=uPesy_WROOM
+uPesy_wroom.build.board=UPESY_WROOM
 
 uPesy_wroom.build.f_cpu=240000000L
 uPesy_wroom.build.flash_size=4MB
@@ -17513,7 +17514,7 @@ deneyapkart1Av2.build.target=esp32s3
 deneyapkart1Av2.build.mcu=esp32s3
 deneyapkart1Av2.build.core=esp32
 deneyapkart1Av2.build.variant=deneyapkart1Av2
-deneyapkart1Av2.build.board=DYDK1Av2
+deneyapkart1Av2.build.board=DYDK1AV2
 
 deneyapkart1Av2.build.usb_mode=1
 deneyapkart1Av2.build.cdc_on_boot=1
@@ -17928,7 +17929,7 @@ deneyapminiv2.build.target=esp32s2
 deneyapminiv2.build.mcu=esp32s2
 deneyapminiv2.build.core=esp32
 deneyapminiv2.build.variant=deneyapminiv2
-deneyapminiv2.build.board=DYMv2
+deneyapminiv2.build.board=DYMV2
 
 deneyapminiv2.build.cdc_on_boot=1
 deneyapminiv2.build.msc_on_boot=0
@@ -18284,7 +18285,7 @@ esp32-trueverit-iot-driver.build.target=esp32
 esp32-trueverit-iot-driver.build.mcu=esp32
 esp32-trueverit-iot-driver.build.core=esp32
 esp32-trueverit-iot-driver.build.variant=esp32-trueverit-iot-driver
-esp32-trueverit-iot-driver.build.board=Trueverit_ESP32_Universal_IoT_Driver
+esp32-trueverit-iot-driver.build.board=TRUEVERIT_ESP32_UNIVERSAL_IOT_DRIVER
 
 esp32-trueverit-iot-driver.build.f_cpu=240000000L
 esp32-trueverit-iot-driver.build.flash_mode=dio
@@ -18352,7 +18353,7 @@ esp32-trueverit-iot-driver-mkii.build.target=esp32
 esp32-trueverit-iot-driver-mkii.build.mcu=esp32
 esp32-trueverit-iot-driver-mkii.build.core=esp32
 esp32-trueverit-iot-driver-mkii.build.variant=esp32-trueverit-iot-driver-mkii
-esp32-trueverit-iot-driver-mkii.build.board=Trueverit_ESP32_Universal_IoT_Driver_MK_II
+esp32-trueverit-iot-driver-mkii.build.board=TRUEVERIT_ESP32_UNIVERSAL_IOT_DRIVER_MK_II
 
 esp32-trueverit-iot-driver-mkii.build.f_cpu=240000000L
 esp32-trueverit-iot-driver-mkii.build.flash_mode=dio
@@ -18424,7 +18425,7 @@ atmegazero_esp32s2.build.target=esp32s2
 atmegazero_esp32s2.build.mcu=esp32s2
 atmegazero_esp32s2.build.core=esp32
 atmegazero_esp32s2.build.variant=atmegazero_esp32s2
-atmegazero_esp32s2.build.board=atmegazero_esp32s2
+atmegazero_esp32s2.build.board=ATMEGAZERO_ESP32S2
 
 atmegazero_esp32s2.build.cdc_on_boot=1
 atmegazero_esp32s2.build.msc_on_boot=0
@@ -19251,7 +19252,7 @@ lionbit.build.target=esp32
 lionbit.build.mcu=esp32
 lionbit.build.core=esp32
 lionbit.build.variant=lionbit
-lionbit.build.board=Lion:Bit_Dev_Board
+lionbit.build.board=Lion:BIT_DEV_BOARD
 
 lionbit.build.f_cpu=240000000L
 lionbit.build.flash_size=4MB
@@ -19489,7 +19490,7 @@ AirM2M_CORE_ESP32C3.build.target=esp
 AirM2M_CORE_ESP32C3.build.mcu=esp32c3
 AirM2M_CORE_ESP32C3.build.core=esp32
 AirM2M_CORE_ESP32C3.build.variant=AirM2M_CORE_ESP32C3
-AirM2M_CORE_ESP32C3.build.board=AirM2M_CORE_ESP32C3
+AirM2M_CORE_ESP32C3.build.board=AIRM2M_CORE_ESP32C3
 AirM2M_CORE_ESP32C3.build.bootloader_addr=0x0
 
 AirM2M_CORE_ESP32C3.build.cdc_on_boot=0
@@ -19755,7 +19756,7 @@ connaxio_espoir.build.target=esp32
 connaxio_espoir.build.mcu=esp32
 connaxio_espoir.build.core=esp32
 connaxio_espoir.build.variant=connaxio_espoir
-connaxio_espoir.build.board=connaxio_espoir
+connaxio_espoir.build.board=CONNAXIO_ESPOIR
 
 connaxio_espoir.build.f_cpu=240000000L
 connaxio_espoir.build.flash_size=4MB
@@ -20127,7 +20128,7 @@ Bee_Motion_S3.build.target=esp32s3
 Bee_Motion_S3.build.mcu=esp32s3
 Bee_Motion_S3.build.core=esp32
 Bee_Motion_S3.build.variant=Bee_Motion_S3
-Bee_Motion_S3.build.board=BeeMotionS3
+Bee_Motion_S3.build.board=BEEMOTIONS3
 
 Bee_Motion_S3.build.cdc_on_boot=1
 Bee_Motion_S3.build.msc_on_boot=1
@@ -20236,7 +20237,7 @@ Bee_Motion.build.target=esp32s2
 Bee_Motion.build.mcu=esp32s2
 Bee_Motion.build.core=esp32
 Bee_Motion.build.variant=Bee_Motion
-Bee_Motion.build.board=Bee_Motion
+Bee_Motion.build.board=BEE_MOTION
 
 Bee_Motion.build.cdc_on_boot=1
 Bee_Motion.build.msc_on_boot=1
@@ -20337,7 +20338,7 @@ Bee_Motion_Mini.build.target=esp
 Bee_Motion_Mini.build.mcu=esp32c3
 Bee_Motion_Mini.build.core=esp32
 Bee_Motion_Mini.build.variant=Bee_Motion_Mini
-Bee_Motion_Mini.build.board=Bee_Motion_Mini
+Bee_Motion_Mini.build.board=BEE_MOTION_MINI
 Bee_Motion_Mini.build.bootloader_addr=0x0
 
 Bee_Motion_Mini.build.cdc_on_boot=1
@@ -20452,7 +20453,7 @@ Bee_S3.build.target=esp32s3
 Bee_S3.build.mcu=esp32s3
 Bee_S3.build.core=esp32
 Bee_S3.build.variant=Bee_S3
-Bee_S3.build.board=Bee_S3
+Bee_S3.build.board=BEE_S3
 
 Bee_S3.build.usb_mode=1
 Bee_S3.build.cdc_on_boot=1
@@ -20687,7 +20688,7 @@ unphone8.build.target=esp32s3
 unphone8.build.mcu=esp32s3
 unphone8.build.core=esp32
 unphone8.build.variant=unphone8
-unphone8.build.board=unphone8
+unphone8.build.board=UNPHONE8
 
 unphone8.build.usb_mode=1
 unphone8.build.cdc_on_boot=0
@@ -20837,7 +20838,7 @@ unphone9.build.target=esp32s3
 unphone9.build.mcu=esp32s3
 unphone9.build.core=esp32
 unphone9.build.variant=unphone9
-unphone9.build.board=unphone9
+unphone9.build.board=UNPHONE9
 
 unphone9.build.usb_mode=1
 unphone9.build.cdc_on_boot=1
@@ -21448,7 +21449,7 @@ roboheart_hercules.build.target=esp32
 roboheart_hercules.build.mcu=esp32
 roboheart_hercules.build.core=esp32
 roboheart_hercules.build.variant=roboheart_hercules
-roboheart_hercules.build.board=roboheart_hercules
+roboheart_hercules.build.board=ROBOHEART_HERCULES
 
 roboheart_hercules.build.f_cpu=240000000L
 roboheart_hercules.build.flash_size=4MB
@@ -21894,7 +21895,7 @@ Edgebox-ESP-100.build.target=esp32s3
 Edgebox-ESP-100.build.mcu=esp32s3
 Edgebox-ESP-100.build.core=esp32
 Edgebox-ESP-100.build.variant=Edgebox-ESP-100
-Edgebox-ESP-100.build.board=Edgebox-ESP-100
+Edgebox-ESP-100.build.board=EDGEBOX_ESP_100
 
 Edgebox-ESP-100.build.usb_mode=1
 Edgebox-ESP-100.build.cdc_on_boot=0
