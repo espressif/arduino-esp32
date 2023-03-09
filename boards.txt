@@ -3831,7 +3831,7 @@ ttgo-t-oi-plus.build.target=esp
 ttgo-t-oi-plus.build.mcu=esp32c3
 ttgo-t-oi-plus.build.core=esp32
 ttgo-t-oi-plus.build.variant=ttgo-t-oi-plus
-ttgo-t-oi-plus.build.board=TTGO-T-OI-PLUS_DEV
+ttgo-t-oi-plus.build.board=TTGO_T_OI_PLUS_DEV
 ttgo-t-oi-plus.build.bootloader_addr=0x0
 
 ttgo-t-oi-plus.build.cdc_on_boot=0
@@ -19251,7 +19251,7 @@ lionbit.build.target=esp32
 lionbit.build.mcu=esp32
 lionbit.build.core=esp32
 lionbit.build.variant=lionbit
-lionbit.build.board=Lion:BIT_DEV_BOARD
+lionbit.build.board=LIONBIT_DEV_BOARD
 
 lionbit.build.f_cpu=240000000L
 lionbit.build.flash_size=4MB
