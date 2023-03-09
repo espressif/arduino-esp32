@@ -249,7 +249,6 @@ esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 esp32s3.menu.EraseFlash.all=Enabled
 esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
@@ -11150,7 +11149,7 @@ espino32.build.target=esp32
 espino32.build.mcu=esp32
 espino32.build.core=esp32
 espino32.build.variant=espino32
-espino32.build.board=ESPINP32
+espino32.build.board=ESPINO32
 
 espino32.build.f_cpu=240000000L
 espino32.build.flash_mode=dio
@@ -11945,7 +11944,7 @@ m5stack-timer-cam.build.target=esp32
 m5stack-timer-cam.build.mcu=esp32
 m5stack-timer-cam.build.core=esp32
 m5stack-timer-cam.build.variant=m5stack_timer_cam
-m5stack-timer-cam.build.board=M5STACK-TIMER-CAM
+m5stack-timer-cam.build.board=M5STACK_TIMER_CAM
 
 m5stack-timer-cam.build.f_cpu=240000000L
 m5stack-timer-cam.build.flash_size=4MB
