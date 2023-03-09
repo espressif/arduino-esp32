@@ -33,8 +33,7 @@
 
 // A pure abstract class forward used as a means to proide a unique pointer type
 // but really is never defined.
-typedef [[deprecated("not required on ESP32, only for compatibility")]]
-        char __FlashStringHelper;
+class __FlashStringHelper;
 #define FPSTR(pstr_pointer) (pstr_pointer)
 #define F(string_literal) (string_literal)
 
@@ -60,9 +59,10 @@ class String {
         String(const char *cstr = "");
         String(const char *cstr, unsigned int length);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
-        String(const uint8_t *cstr, unsigned int length) : String((const char*)cstr, length) {}
+        String(const uint8_t *cstr, unsigned int length) : String(reinterpret_cast<const char*>(cstr), length) {}
 #endif
         String(const String &str);
+        String(const __FlashStringHelper *str) : String(reinterpret_cast<const char*>(str)) {}
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
         String(String &&rval);
         String(StringSumHelper &&rval);
@@ -103,6 +103,7 @@ class String {
         // marked as invalid ("if (s)" will be false).
         String & operator =(const String &rhs);
         String & operator =(const char *cstr);
+        String & operator = (const __FlashStringHelper *str) {return *this = reinterpret_cast<const char*>(str);}
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
         String & operator =(String &&rval);
         String & operator =(StringSumHelper &&rval);
@@ -116,7 +117,7 @@ class String {
         bool concat(const String &str);
         bool concat(const char *cstr);
         bool concat(const char *cstr, unsigned int length);
-        bool concat(const uint8_t *cstr, unsigned int length) {return concat((const char*)cstr, length);}
+        bool concat(const uint8_t *cstr, unsigned int length) {return concat(reinterpret_cast<const char*>(cstr), length);}
         bool concat(char c);
         bool concat(unsigned char c);
         bool concat(int num);
@@ -127,6 +128,7 @@ class String {
         bool concat(double num);
         bool concat(long long num);
         bool concat(unsigned long long num);
+        bool concat(const __FlashStringHelper * str) {return concat(reinterpret_cast<const char*>(str));}
 
         // if there's not enough memory for the concatenated value, the string
         // will be left unchanged (but this isn't signalled in any way)
@@ -178,6 +180,7 @@ class String {
             concat(num);
             return (*this);
         }
+        String & operator += (const __FlashStringHelper *str) {return *this += reinterpret_cast<const char*>(str);}
 
         friend StringSumHelper & operator +(const StringSumHelper &lhs, const String &rhs);
         friend StringSumHelper & operator +(const StringSumHelper &lhs, const char *cstr);
@@ -221,10 +224,16 @@ class String {
         bool startsWith(const char *prefix) const {
             return this->startsWith(String(prefix));
         }
+        bool startsWith(const __FlashStringHelper *prefix) const {
+            return this->startsWith(reinterpret_cast<const char*>(prefix));
+        }
         bool startsWith(const String &prefix, unsigned int offset) const;
         bool endsWith(const String &suffix) const;
         bool endsWith(const char *suffix) const {
             return this->endsWith(String(suffix));
+        }
+        bool endsWith(const __FlashStringHelper * suffix) const {
+            return this->endsWith(reinterpret_cast<const char*>(suffix));
         }
 
         // character access
@@ -262,8 +271,17 @@ class String {
         void replace(const char *find, const String &replace) {
             this->replace(String(find), replace);
         }
+        void replace(const __FlashStringHelper *find, const String &replace) {
+            this->replace(reinterpret_cast<const char*>(find), replace);
+        }
         void replace(const char *find, const char *replace) {
             this->replace(String(find), String(replace));
+        }
+        void replace(const __FlashStringHelper *find, const char *replace) {
+            this->replace(reinterpret_cast<const char*>(find), String(replace));
+        }
+        void replace(const __FlashStringHelper *find, const __FlashStringHelper *replace) {
+            this->replace(reinterpret_cast<const char*>(find), reinterpret_cast<const char*>(replace));
         }
         void remove(unsigned int index);
         void remove(unsigned int index, unsigned int count);
@@ -318,7 +336,7 @@ class String {
         inline void setCapacity(int cap) { if (!isSSO()) ptr.cap = cap; }
         inline void setBuffer(char *buff) { if (!isSSO()) ptr.buff = buff; }
         // Buffer accessor functions
-        inline const char *buffer() const { return (const char *)(isSSO() ? sso.buff : ptr.buff); }
+        inline const char *buffer() const { return reinterpret_cast<const char *>(isSSO() ? sso.buff : ptr.buff); }
         inline char *wbuffer() const { return isSSO() ? const_cast<char *>(sso.buff) : ptr.buff; } // Writable version of buffer
 
     protected:
@@ -328,6 +346,9 @@ class String {
 
         // copy and move
         String & copy(const char *cstr, unsigned int length);
+        String & copy(const __FlashStringHelper *pstr, unsigned int length) {
+                return copy(reinterpret_cast<const char*>(pstr), length);
+        }
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
         void move(String &rhs);
 #endif
@@ -372,6 +393,10 @@ class StringSumHelper: public String {
                 String(num) {
         }
 };
+        
+inline StringSumHelper & operator +(const StringSumHelper &lhs, const __FlashStringHelper *rhs) {
+        return lhs + reinterpret_cast<const char*>(rhs);
+}
 
 extern const String emptyString;
 
