@@ -61,6 +61,13 @@
   #define TU_VERIFY_STATIC(const_expr, _mess) enum { TU_XSTRCAT(_verify_static_, _TU_COUNTER_) = 1/(!!(const_expr)) }
 #endif
 
+/* --------------------- Fuzzing types -------------------------------------- */
+#ifdef _FUZZ
+  #define tu_static static __thread
+#else
+  #define tu_static static
+#endif
+
 // for declaration of reserved field, make use of _TU_COUNTER_
 #define TU_RESERVED           TU_XSTRCAT(reserved, _TU_COUNTER_)
 

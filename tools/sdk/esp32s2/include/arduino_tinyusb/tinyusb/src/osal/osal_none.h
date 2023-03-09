@@ -35,6 +35,10 @@
 // TASK API
 //--------------------------------------------------------------------+
 
+#if CFG_TUH_ENABLED
+// currently only needed/available in host mode
+void osal_task_delay(uint32_t msec);
+#endif
 
 //--------------------------------------------------------------------+
 // Binary Semaphore API

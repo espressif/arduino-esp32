@@ -76,12 +76,50 @@
 #include "tusb_timeout.h" // TODO remove
 
 //--------------------------------------------------------------------+
+// Optional API implemented by application if needed
+// TODO move to a more ovious place/file
+//--------------------------------------------------------------------+
+
+// flush data cache
+TU_ATTR_WEAK extern void tusb_app_dcache_flush(uintptr_t addr, uint32_t data_size);
+
+// invalidate data cache
+TU_ATTR_WEAK extern void tusb_app_dcache_invalidate(uintptr_t addr, uint32_t data_size);
+
+// Optional physical <-> virtual address translation
+TU_ATTR_WEAK extern void* tusb_app_virt_to_phys(void *virt_addr);
+TU_ATTR_WEAK extern void* tusb_app_phys_to_virt(void *phys_addr);
+
+//--------------------------------------------------------------------+
 // Internal Inline Functions
 //--------------------------------------------------------------------+
 
 //------------- Mem -------------//
 #define tu_memclr(buffer, size)  memset((buffer), 0, (size))
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
+
+// This is a backport of memset_s from c11
+TU_ATTR_ALWAYS_INLINE static inline int tu_memset_s(void *dest, size_t destsz, int ch, size_t count)
+{
+  // TODO may check if desst and src is not NULL
+  if (count > destsz) {
+    return -1;
+  }
+  memset(dest, ch, count);
+  return 0;
+}
+
+// This is a backport of memcpy_s from c11
+TU_ATTR_ALWAYS_INLINE static inline int tu_memcpy_s(void *dest, size_t destsz, const void * src, size_t count )
+{
+  // TODO may check if desst and src is not NULL
+  if (count > destsz) {
+    return -1;
+  }
+  memcpy(dest, src, count);
+  return 0;
+}
+
 
 //------------- Bytes -------------//
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_u32(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0)

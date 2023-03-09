@@ -410,6 +410,7 @@ CONFIG_ADC_DISABLE_DAC=y
 # TWAI configuration
 #
 # CONFIG_TWAI_ISR_IN_IRAM is not set
+# CONFIG_TWAI_ERRATA_FIX_LISTEN_ONLY_DOM is not set
 # end of TWAI configuration
 
 #
