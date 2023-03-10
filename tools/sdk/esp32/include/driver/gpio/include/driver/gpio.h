@@ -48,6 +48,9 @@ typedef struct {
     gpio_pullup_t pull_up_en;       /*!< GPIO pull-up                                         */
     gpio_pulldown_t pull_down_en;   /*!< GPIO pull-down                                       */
     gpio_int_type_t intr_type;      /*!< GPIO interrupt type                                  */
+#if SOC_GPIO_SUPPORT_PIN_HYS_FILTER
+    gpio_hys_ctrl_mode_t hys_ctrl_mode;       /*!< GPIO hysteresis: hysteresis filter on slope input    */
+#endif
 } gpio_config_t;
 
 /**
@@ -371,10 +374,9 @@ esp_err_t gpio_get_drive_capability(gpio_num_t gpio_num, gpio_drive_cap_t *stren
   *   in output mode: the output level of the GPIO will be locked and can not be changed.
   *   in input mode: the input read value can still reflect the changes of the input signal.
   *
-  * However, this function cannot be used to hold the state of a digital GPIO during Deep-sleep. Even if this
-  * function is enabled, the digital GPIO will be reset to its default state when the chip wakes up from
-  * Deep-sleep. If you want to hold the state of a digital GPIO during Deep-sleep, please call
-  * `gpio_deep_sleep_hold_en`.
+  * However, on ESP32/S2/C3/S3/C2, this function cannot be used to hold the state of a digital GPIO during Deep-sleep.
+  * Even if this function is enabled, the digital GPIO will be reset to its default state when the chip wakes up from
+  * Deep-sleep. If you want to hold the state of a digital GPIO during Deep-sleep, please call `gpio_deep_sleep_hold_en`.
   *
   * Power down or call `gpio_hold_dis` will disable this function.
   *
@@ -405,6 +407,7 @@ esp_err_t gpio_hold_en(gpio_num_t gpio_num);
   */
 esp_err_t gpio_hold_dis(gpio_num_t gpio_num);
 
+#if !SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 /**
   * @brief Enable all digital gpio pads hold function during Deep-sleep.
   *
@@ -423,6 +426,7 @@ void gpio_deep_sleep_hold_en(void);
   * @brief Disable all digital gpio pads hold function during Deep-sleep.
   */
 void gpio_deep_sleep_hold_dis(void);
+#endif //!SOC_GPIO_SUPPORT_HOLD_SINGLE_IO_IN_DSLP
 
 /**
   * @brief Set pad input to a peripheral signal through the IOMUX.
@@ -461,7 +465,6 @@ esp_err_t gpio_force_hold_all(void);
 esp_err_t gpio_force_unhold_all(void);
 #endif
 
-#if SOC_GPIO_SUPPORT_SLP_SWITCH
 /**
   * @brief Enable SLP_SEL to change GPIO status automantically in lightsleep.
   * @param gpio_num GPIO number of the pad.
@@ -508,7 +511,6 @@ esp_err_t gpio_sleep_set_direction(gpio_num_t gpio_num, gpio_mode_t mode);
  *     - ESP_ERR_INVALID_ARG : Parameter error
  */
 esp_err_t gpio_sleep_set_pull_mode(gpio_num_t gpio_num, gpio_pull_mode_t pull);
-#endif
 
 #if SOC_GPIO_SUPPORT_DEEPSLEEP_WAKEUP
 

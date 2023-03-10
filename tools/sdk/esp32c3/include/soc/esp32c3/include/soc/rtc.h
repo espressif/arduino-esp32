@@ -398,6 +398,10 @@ void rtc_clk_cpu_freq_get_config(rtc_cpu_freq_config_t *out_config);
  * Short form for filling in rtc_cpu_freq_config_t structure and calling
  * rtc_clk_cpu_freq_set_config when a switch to XTAL is needed.
  * Assumes that XTAL frequency has been determined — don't call in startup code.
+ *
+ * @note This function always disables BBPLL after switching the CPU clock source to XTAL for power saving purpose.
+ * If this is unwanted, please use rtc_clk_cpu_freq_set_config. It helps to check whether USB Serial JTAG is in use,
+ * if so, then BBPLL will not be turned off.
  */
 void rtc_clk_cpu_freq_set_xtal(void);
 
@@ -482,10 +486,6 @@ uint64_t rtc_time_slowclk_to_us(uint64_t rtc_cycles, uint32_t period);
  * @return current value of RTC counter
  */
 uint64_t rtc_time_get(void);
-
-uint64_t rtc_light_slp_time_get(void);
-
-uint64_t rtc_deep_slp_time_get(void);
 
 /**
  * @brief Busy loop until next RTC_SLOW_CLK cycle
@@ -642,13 +642,6 @@ void rtc_sleep_init(rtc_sleep_config_t cfg);
  * @param slowclk_period re-calibrated slow clock period
  */
 void rtc_sleep_low_init(uint32_t slowclk_period);
-
-/**
- * @brief Set target value of RTC counter for RTC_TIMER_TRIG_EN wakeup source
- * @param t value of RTC counter at which wakeup from sleep will happen;
- *          only the lower 48 bits are used
- */
-void rtc_sleep_set_wakeup_time(uint64_t t);
 
 #define RTC_GPIO_TRIG_EN            BIT(2)  //!< GPIO wakeup
 #define RTC_TIMER_TRIG_EN           BIT(3)  //!< Timer wakeup

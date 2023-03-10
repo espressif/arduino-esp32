@@ -27,27 +27,47 @@
 extern "C" {
 #endif
 
+#define ADC_LL_EVENT_ADC1_ONESHOT_DONE    (1 << 0)
+#define ADC_LL_EVENT_ADC2_ONESHOT_DONE    (1 << 1)
+
+/*---------------------------------------------------------------
+                    Oneshot
+---------------------------------------------------------------*/
+#define ADC_LL_DATA_INVERT_DEFAULT(PERIPH_NUM)         (0)
+#define ADC_LL_SAR_CLK_DIV_DEFAULT(PERIPH_NUM)         ((PERIPH_NUM==0)? 2 : 1)
+
+/*---------------------------------------------------------------
+                    DMA
+---------------------------------------------------------------*/
+#define ADC_LL_DIGI_DATA_INVERT_DEFAULT(PERIPH_NUM)    (0)
+#define ADC_LL_FSM_RSTB_WAIT_DEFAULT                   (8)
+#define ADC_LL_FSM_START_WAIT_DEFAULT                  (5)
+#define ADC_LL_FSM_STANDBY_WAIT_DEFAULT                (100)
+#define ADC_LL_SAMPLE_CYCLE_DEFAULT                    (3)
+#define ADC_LL_DIGI_SAR_CLK_DIV_DEFAULT                (2)
+
 #define ADC_LL_CLKM_DIV_NUM_DEFAULT       15
 #define ADC_LL_CLKM_DIV_B_DEFAULT         1
 #define ADC_LL_CLKM_DIV_A_DEFAULT         0
 #define ADC_LL_DEFAULT_CONV_LIMIT_EN      0
 #define ADC_LL_DEFAULT_CONV_LIMIT_NUM     10
 
-#define ADC_LL_EVENT_ADC1_ONESHOT_DONE    (1 << 0)
-#define ADC_LL_EVENT_ADC2_ONESHOT_DONE    (1 << 1)
+/*---------------------------------------------------------------
+                    PWDET (Power Detect)
+---------------------------------------------------------------*/
+#define ADC_LL_PWDET_CCT_DEFAULT                       (4)
 
 typedef enum {
-    ADC_POWER_BY_FSM,   /*!< ADC XPD controlled by FSM. Used for polling mode */
-    ADC_POWER_SW_ON,    /*!< ADC XPD controlled by SW. power on. Used for DMA mode */
-    ADC_POWER_SW_OFF,   /*!< ADC XPD controlled by SW. power off. */
-    ADC_POWER_MAX,      /*!< For parameter check. */
+    ADC_LL_POWER_BY_FSM,   /*!< ADC XPD controlled by FSM. Used for polling mode */
+    ADC_LL_POWER_SW_ON,    /*!< ADC XPD controlled by SW. power on. Used for DMA mode */
+    ADC_LL_POWER_SW_OFF,   /*!< ADC XPD controlled by SW. power off. */
 } adc_ll_power_t;
 
 typedef enum {
-    ADC_RTC_DATA_OK = 0,
-    ADC_RTC_CTRL_UNSELECTED = 1,
-    ADC_RTC_CTRL_BREAK = 2,
-    ADC_RTC_DATA_FAIL = -1,
+    ADC_LL_RTC_DATA_OK = 0,
+    ADC_LL_RTC_CTRL_UNSELECTED = 1,
+    ADC_LL_RTC_CTRL_BREAK = 2,
+    ADC_LL_RTC_DATA_FAIL = -1,
 } adc_ll_rtc_raw_data_t;
 
 typedef enum {
@@ -357,10 +377,12 @@ static inline void adc_ll_digi_controller_clk_disable(void)
 /**
  * Reset adc digital controller filter.
  *
+ * @param idx   Filter index
  * @param adc_n ADC unit.
  */
-static inline void adc_ll_digi_filter_reset(adc_unit_t adc_n)
+static inline void adc_ll_digi_filter_reset(adc_digi_iir_filter_t idx, adc_unit_t adc_n)
 {
+    (void)idx;
     if (adc_n == ADC_UNIT_1) {
         APB_SARADC.filter_ctrl.adc1_filter_reset = 1;
         APB_SARADC.filter_ctrl.adc1_filter_reset = 0;
@@ -371,20 +393,24 @@ static inline void adc_ll_digi_filter_reset(adc_unit_t adc_n)
 }
 
 /**
- * Set adc digital controller filter factor.
+ * Set adc digital controller filter coeff.
  *
- * @param adc_n ADC unit.
- * @param factor Expression: filter_data = (k-1)/k * last_data + new_data / k. Set values: (2, 4, 8, 16, 64).
+ * @param idx      filter index
+ * @param adc_n    adc unit
+ * @param channel  adc channel
+ * @param coeff    filter coeff
  */
-static inline void adc_ll_digi_filter_set_factor(adc_unit_t adc_n, adc_digi_filter_mode_t factor)
+static inline void adc_ll_digi_filter_set_factor(adc_digi_iir_filter_t idx, adc_unit_t adc_n, adc_channel_t channel, adc_digi_iir_filter_coeff_t coeff)
 {
+    (void)idx;
+    (void)channel;
     int mode = 0;
-    switch (factor) {
-    case ADC_DIGI_FILTER_IIR_2:  mode = 2;  break;
-    case ADC_DIGI_FILTER_IIR_4:  mode = 4;  break;
-    case ADC_DIGI_FILTER_IIR_8:  mode = 8;  break;
-    case ADC_DIGI_FILTER_IIR_16: mode = 16; break;
-    case ADC_DIGI_FILTER_IIR_64: mode = 64; break;
+    switch (coeff) {
+    case ADC_DIGI_IIR_FILTER_COEFF_2:  mode = 2;  break;
+    case ADC_DIGI_IIR_FILTER_COEFF_4:  mode = 4;  break;
+    case ADC_DIGI_IIR_FILTER_COEFF_8:  mode = 8;  break;
+    case ADC_DIGI_IIR_FILTER_COEFF_16: mode = 16; break;
+    case ADC_DIGI_IIR_FILTER_COEFF_64: mode = 64; break;
     default: mode = 8; break;
     }
     if (adc_n == ADC_UNIT_1) {
@@ -395,38 +421,17 @@ static inline void adc_ll_digi_filter_set_factor(adc_unit_t adc_n, adc_digi_filt
 }
 
 /**
- * Get adc digital controller filter factor.
- *
- * @param adc_n ADC unit.
- * @param factor Expression: filter_data = (k-1)/k * last_data + new_data / k. Set values: (2, 4, 8, 16, 64).
- */
-static inline void adc_ll_digi_filter_get_factor(adc_unit_t adc_n, adc_digi_filter_mode_t *factor)
-{
-    int mode = 0;
-    if (adc_n == ADC_UNIT_1) {
-        mode = APB_SARADC.filter_ctrl.adc1_filter_factor;
-    } else { // adc_n == ADC_UNIT_2
-        mode = APB_SARADC.filter_ctrl.adc2_filter_factor;
-    }
-    switch (mode) {
-    case 2:  *factor = ADC_DIGI_FILTER_IIR_2;  break;
-    case 4:  *factor = ADC_DIGI_FILTER_IIR_4;  break;
-    case 8:  *factor = ADC_DIGI_FILTER_IIR_8;  break;
-    case 16: *factor = ADC_DIGI_FILTER_IIR_16; break;
-    case 64: *factor = ADC_DIGI_FILTER_IIR_64; break;
-    default: *factor = ADC_DIGI_FILTER_IIR_MAX;    break;
-    }
-}
-
-/**
  * Enable/disable adc digital controller filter.
  * Filtering the ADC data to obtain smooth data at higher sampling rates.
  *
  * @note The filter will filter all the enabled channel data of the each ADC unit at the same time.
- * @param adc_n ADC unit.
+ * @param idx    Filter index
+ * @param adc_n  ADC unit
+ * @param enable Enable / Disable
  */
-static inline void adc_ll_digi_filter_enable(adc_unit_t adc_n, bool enable)
+static inline void adc_ll_digi_filter_enable(adc_digi_iir_filter_t idx, adc_unit_t adc_n, bool enable)
 {
+    (void)idx;
     if (adc_n == ADC_UNIT_1) {
         APB_SARADC.filter_ctrl.adc1_filter_en = enable;
     } else { // adc_n == ADC_UNIT_2
@@ -874,13 +879,13 @@ static inline void adc_oneshot_ll_disable_all_unit(void)
  */
 static inline void adc_ll_digi_set_power_manage(adc_ll_power_t manage)
 {
-    if (manage == ADC_POWER_SW_ON) {
+    if (manage == ADC_LL_POWER_SW_ON) {
         APB_SARADC.ctrl.sar_clk_gated = 1;
         APB_SARADC.ctrl.xpd_sar_force = 0x3;
-    } else if (manage == ADC_POWER_BY_FSM) {
+    } else if (manage == ADC_LL_POWER_BY_FSM) {
         APB_SARADC.ctrl.sar_clk_gated = 1;
         APB_SARADC.ctrl.xpd_sar_force = 0x0;
-    } else if (manage == ADC_POWER_SW_OFF) {
+    } else if (manage == ADC_LL_POWER_SW_OFF) {
         APB_SARADC.ctrl.sar_clk_gated = 0;
         APB_SARADC.ctrl.xpd_sar_force = 0x2;
     }

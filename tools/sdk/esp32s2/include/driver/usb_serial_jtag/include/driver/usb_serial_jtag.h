@@ -35,7 +35,9 @@ typedef struct {
  * USB-SERIAL-JTAG driver's ISR will be attached to the same CPU core that calls this function. Thus, users
  * should ensure that the same core is used when calling `usb_serial_jtag_driver_uninstall()`.
  *
- * @note  Blocking mode will result in usb_serial_jtag_write_bytes() blocking until all bytes have been written to the TX FIFO.
+ * @note  Blocking mode will result in usb_serial_jtag_write_bytes() blocking for a
+ * short period if the TX FIFO if full. It will not block again until the buffer
+ * has some space available again.
  *
  * @param usb_serial_jtag_driver_config_t Configuration for usb_serial_jtag driver.
  *
@@ -65,7 +67,7 @@ int usb_serial_jtag_read_bytes(void* buf, uint32_t length, TickType_t ticks_to_w
  *
  * @param src   data buffer address
  * @param size  data length to send
- * @param ticks_to_wait Timeout in RTOS ticks
+ * @param ticks_to_wait Maximum timeout in RTOS ticks
  *
  * @return
  *     - The number of bytes pushed to the TX FIFO
@@ -79,6 +81,20 @@ int usb_serial_jtag_write_bytes(const void* src, size_t size, TickType_t ticks_t
  *     - ESP_OK   Success
  */
 esp_err_t usb_serial_jtag_driver_uninstall(void);
+
+/**
+ * @brief Check if the USB Serial/JTAG port is connected to the host
+ *
+ * This function checks whether the USB Serial/JTAG (USJ) port is currently connected. USJ is considered "connected"
+ * so long as it is receiving SOF packets from the host, even if there is no serial commuincation occuring (i.e., the
+ * USJ is connected to the PC, but the serial port is not opened). Having the USB port connected to a power bank will
+ * never be considered as connected (due to the lack of SOF packets).
+ *
+ * @note If your application needs this function, it will add some extra overhead time to every freertos tick.
+ *
+ * @return True if USJ is connected, false otherwise
+ */
+bool usb_serial_jtag_is_connected(void);
 
 #ifdef __cplusplus
 }

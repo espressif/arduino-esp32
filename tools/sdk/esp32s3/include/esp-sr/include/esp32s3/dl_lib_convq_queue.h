@@ -93,8 +93,8 @@ void dl_convq_queue_bzero(dl_convq_queue_t *cq);
  * @param cq    Input fixed-point convolution queue
  * @return      Pointer of oldest element  
  */
-inline qtp_t *dl_convq_queue_pop(dl_convq_queue_t *cq);
-inline qtp_t *dl_convq_queue_popn(dl_convq_queue_t *cq, int n);
+qtp_t *dl_convq_queue_pop(dl_convq_queue_t *cq);
+qtp_t *dl_convq_queue_popn(dl_convq_queue_t *cq, int n);
 /**
  * @brief  Remove the oldest element, then insert the input element at the end of queue
  *
@@ -125,7 +125,7 @@ dl_conv_queue_t *dl_queue_from_convq(dl_convq_queue_t *cq1);
  * @param last_num  Offset from the front of the queue
  * @return          Pointer of the element
  */
-inline qtp_t *dl_get_queue_itemq(dl_convq_queue_t *cq, int last_num);
+qtp_t *dl_get_queue_itemq(dl_convq_queue_t *cq, int last_num);
 
 /**
  * @brief   Get the pointer of element in the queue by offset
