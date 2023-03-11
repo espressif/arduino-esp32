@@ -2,6 +2,7 @@
 #include "WiFi.h"
 #include "inttypes.h"
 #include "esp_err.h"
+#include "esp_random.h"
 
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
 

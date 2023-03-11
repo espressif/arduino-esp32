@@ -9,6 +9,7 @@
  */
 
 #include "soc/soc_caps.h"
+#include <string>
 
 #define PIN 2
 
