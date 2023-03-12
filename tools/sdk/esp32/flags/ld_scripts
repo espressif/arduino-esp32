@@ -1,0 +1,1 @@
+-T esp32.rom.redefined.ld -T esp32.peripherals.ld -T esp32.rom.ld -T esp32.rom.api.ld -T esp32.rom.libgcc.ld -T esp32.rom.newlib-data.ld -T esp32.rom.syscalls.ld -T memory.ld -T sections.ld 

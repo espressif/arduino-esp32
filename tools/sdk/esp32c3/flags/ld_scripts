@@ -1,0 +1,1 @@
+-T esp32c3.peripherals.ld -T esp32c3.rom.ld -T esp32c3.rom.api.ld -T esp32c3.rom.libgcc.ld -T esp32c3.rom.newlib.ld -T esp32c3.rom.version.ld -T esp32c3.rom.eco3.ld -T memory.ld -T sections.ld 

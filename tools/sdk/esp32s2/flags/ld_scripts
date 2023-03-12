@@ -1,0 +1,1 @@
+-T esp32s2.peripherals.ld -T esp32s2.rom.ld -T esp32s2.rom.api.ld -T esp32s2.rom.libgcc.ld -T esp32s2.rom.newlib-funcs.ld -T esp32s2.rom.newlib-data.ld -T esp32s2.rom.spiflash.ld -T memory.ld -T sections.ld 
