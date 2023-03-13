@@ -22,7 +22,7 @@ bool dimmer_state = true;
 
 // The framework provides some standard device types like switch, lightbulb, fan, temperature sensor.
 // But, you can also define custom devices using the 'Device' base class object, as shown here
-static Device my_device("Dimmer", "custom.device.dimmer", &gpio_dimmer);
+static Device *my_device = NULL;
 
 void sysProvEvent(arduino_event_t *sys_event)
 {
@@ -71,22 +71,25 @@ void setup()
 
     Node my_node;
     my_node = RMaker.initNode("ESP RainMaker Node");
-
+    my_device = new Device("Dimmer", "custom.device.dimmer", &gpio_dimmer);
+    if (!my_device) {
+        return;
+    }
     //Create custom dimmer device
-    my_device.addNameParam();
-    my_device.addPowerParam(DEFAULT_POWER_MODE);
-    my_device.assignPrimaryParam(my_device.getParamByName(ESP_RMAKER_DEF_POWER_NAME));
+    my_device->addNameParam();
+    my_device->addPowerParam(DEFAULT_POWER_MODE);
+    my_device->assignPrimaryParam(my_device->getParamByName(ESP_RMAKER_DEF_POWER_NAME));
 
     //Create and add a custom level parameter
     Param level_param("Level", "custom.param.level", value(DEFAULT_DIMMER_LEVEL), PROP_FLAG_READ | PROP_FLAG_WRITE);
     level_param.addBounds(value(0), value(100), value(1));
     level_param.addUIType(ESP_RMAKER_UI_SLIDER);
-    my_device.addParam(level_param);
+    my_device->addParam(level_param);
 
-    my_device.addCb(write_callback);
+    my_device->addCb(write_callback);
 
     //Add custom dimmer device to the node
-    my_node.addDevice(my_device);
+    my_node.addDevice(*my_device);
 
     //This is optional
     RMaker.enableOTA(OTA_USING_TOPICS);
@@ -130,11 +133,13 @@ void loop()
           RMakerWiFiReset(2);
         } else {
           // Toggle device state
-          dimmer_state = !dimmer_state;
-          Serial.printf("Toggle State to %s.\n", dimmer_state ? "true" : "false");
-          my_device.updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, dimmer_state);
-          (dimmer_state == false) ? digitalWrite(gpio_dimmer, LOW) : digitalWrite(gpio_dimmer, HIGH);
-      }
+            dimmer_state = !dimmer_state;
+            Serial.printf("Toggle State to %s.\n", dimmer_state ? "true" : "false");
+            if (my_device) {
+                my_device->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, dimmer_state);
+            }
+            (dimmer_state == false) ? digitalWrite(gpio_dimmer, LOW) : digitalWrite(gpio_dimmer, HIGH);
+        }
     }
     delay(100);
 }

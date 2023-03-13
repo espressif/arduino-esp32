@@ -21,7 +21,7 @@ static int gpio_switch = 16;
 bool switch_state = true;
 
 //The framework provides some standard device types like switch, lightbulb, fan, temperaturesensor.
-static Switch my_switch;
+static Switch *my_switch = NULL;
 
 void sysProvEvent(arduino_event_t *sys_event)
 {
@@ -69,13 +69,15 @@ void setup()
     my_node = RMaker.initNode("ESP RainMaker Node");
 
     //Initialize switch device
-    my_switch = Switch("Switch", &gpio_switch);
-
+    my_switch = new Switch("Switch", &gpio_switch);
+    if(!my_switch) {
+        return;
+    }
     //Standard switch device
-    my_switch.addCb(write_callback);
+    my_switch->addCb(write_callback);
 
     //Add switch device to the node
-    my_node.addDevice(my_switch);
+    my_node.addDevice(*my_switch);
 
     //This is optional
     RMaker.enableOTA(OTA_USING_TOPICS);
@@ -111,17 +113,19 @@ void loop()
 
         if ((endTime - startTime) > 10000) {
           // If key pressed for more than 10secs, reset all
-          Serial.printf("Reset to factory.\n");
-          RMakerFactoryReset(2);
+            Serial.printf("Reset to factory.\n");
+            RMakerFactoryReset(2);
         } else if ((endTime - startTime) > 3000) {
-          Serial.printf("Reset Wi-Fi.\n");
-          // If key pressed for more than 3secs, but less than 10, reset Wi-Fi
-          RMakerWiFiReset(2);
+            Serial.printf("Reset Wi-Fi.\n");
+            // If key pressed for more than 3secs, but less than 10, reset Wi-Fi
+            RMakerWiFiReset(2);
         } else {
           // Toggle device state
-          switch_state = !switch_state;
-          Serial.printf("Toggle State to %s.\n", switch_state ? "true" : "false");
-          my_switch.updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state);
+            switch_state = !switch_state;
+            Serial.printf("Toggle State to %s.\n", switch_state ? "true" : "false");
+            if(my_switch) {
+                my_switch->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state);
+            }
           (switch_state == false) ? digitalWrite(gpio_switch, LOW) : digitalWrite(gpio_switch, HIGH);
       }
     }

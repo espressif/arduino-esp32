@@ -31,8 +31,8 @@ LightSwitch switch_ch1 = {gpio_switch1, false};
 LightSwitch switch_ch2 = {gpio_switch2, false};
 
 //The framework provides some standard device types like switch, lightbulb, fan, temperature sensor.
-static Switch my_switch1;
-static Switch my_switch2;
+static Switch *my_switch1 = NULL;
+static Switch *my_switch2 = NULL;
 
 void sysProvEvent(arduino_event_t *sys_event)
 {
@@ -125,16 +125,19 @@ void setup()
     my_node = RMaker.initNode("Sonoff Dual R3");
 
     //Initialize switch device
-    my_switch1 = Switch("Switch_ch1", &gpio_relay1);
-    my_switch2 = Switch("Switch_ch2", &gpio_relay2);
+    my_switch1 = new Switch("Switch_ch1", &gpio_relay1);
+    my_switch2 = new Switch("Switch_ch2", &gpio_relay2);
 
+    if (!my_switch1 || !my_switch2) {
+        return;
+    }
     //Standard switch device
-    my_switch1.addCb(write_callback);
-    my_switch2.addCb(write_callback);
+    my_switch1->addCb(write_callback);
+    my_switch2->addCb(write_callback);
 
     //Add switch device to the node
-    my_node.addDevice(my_switch1);
-    my_node.addDevice(my_switch2);
+    my_node.addDevice(*my_switch1);
+    my_node.addDevice(*my_switch2);
 
     //This is optional
     RMaker.enableOTA(OTA_USING_TOPICS);
@@ -173,7 +176,9 @@ void loop()
         // Toggle switch 1 device state
         switch_state_ch1 = !switch_state_ch1;
         Serial.printf("Toggle State to %s.\n", switch_state_ch1 ? "true" : "false");
-        my_switch1.updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state_ch1);
+        if (my_switch1) {
+            my_switch1->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state_ch1);
+        }
         (switch_state_ch1 == false) ? digitalWrite(gpio_relay1, LOW) : digitalWrite(gpio_relay1, HIGH);
     } else if (switch_ch2.pressed) {
         Serial.printf("Switch 2 has been changed\n");
@@ -181,7 +186,9 @@ void loop()
         // Toggle switch 2 device state
         switch_state_ch2 = !switch_state_ch2;
         Serial.printf("Toggle State to %s.\n", switch_state_ch2 ? "true" : "false");
-        my_switch2.updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state_ch2);
+        if (my_switch2) {
+            my_switch2->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state_ch2);
+        }
         (switch_state_ch2 == false) ? digitalWrite(gpio_relay2, LOW) : digitalWrite(gpio_relay2, HIGH);
     }
 
