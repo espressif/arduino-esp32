@@ -280,6 +280,8 @@ const char * EspClass::getChipModel(void)
             return "ESP32-PICO-D4";
         case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302 :
             return "ESP32-PICO-V3-02";
+        case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3 :
+            return "ESP32-D0WDR2-V3";
         default:
             return "Unknown";
     }
