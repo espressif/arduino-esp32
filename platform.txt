@@ -28,8 +28,9 @@ tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
 
 compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
-compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
 compiler.prefix={build.tarch}-{build.target}-elf-
+
+compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
@@ -66,7 +67,7 @@ compiler.size.cmd={compiler.prefix}size
 compiler.c.extra_flags=-MMD -c
 compiler.cpp.extra_flags=-MMD -c
 compiler.S.extra_flags=-MMD -c -x assembler-with-cpp
-compiler.c.elf.extra_flags=
+compiler.c.elf.extra_flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}"
 compiler.ar.extra_flags=
 compiler.objcopy.eep.extra_flags=
 compiler.elf2hex.extra_flags=
@@ -118,9 +119,9 @@ recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partit
 
 # Check if custom bootloader exist: source > variant > build.boot
 recipe.hooks.prebuild.4.pattern_args=--chip {build.mcu} elf2image --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} -o
-recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{runtime.platform.path}"/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
-recipe.hooks.prebuild.4.pattern.linux=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{runtime.platform.path}"/tools/sdk/{build.mcu}/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
-recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{runtime.platform.path}\tools\sdk\{build.mcu}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
+recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern.linux=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{compiler.sdk.path}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
 
 # Check if custom build options exist in the sketch folder
 recipe.hooks.prebuild.5.pattern=bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
@@ -154,7 +155,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.extra_flags} {c
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" "-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create partitions.bin
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
