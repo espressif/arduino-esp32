@@ -1,7 +1,7 @@
 # Arduino core for the ESP32, ESP32-S2, ESP32-S3 and ESP32-C3
 
 ![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![Documentation Status](https://readthedocs.com/projects/espressif-arduino-esp32/badge/?version=latest)](https://docs.espressif.com/projects/arduino-esp32/en/latest/?badge=latest)
-[![External Libraries Test](https://github.com/P-R-O-C-H-Y/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=Libraries_CI_test&event=push)](https://github.com/P-R-O-C-H-Y/arduino-esp32/actions/workflows/lib.yml)
+[![External Libraries Test](https://github.com/P-R-O-C-H-Y/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=Libraries_CI_test&event=push)](https://github.com/P-R-O-C-H-Y/arduino-esp32/actions/workflows/lib.yml?link=http://https://github.com/P-R-O-C-H-Y/arduino-esp32/LIB_TEST.md)
 
 ### Need help or have a question? Join the chat at [Gitter](https://gitter.im/espressif/arduino-esp32) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
 
