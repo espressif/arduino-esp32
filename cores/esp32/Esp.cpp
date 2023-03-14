@@ -269,9 +269,15 @@ const char * EspClass::getChipModel(void)
     uint32_t pkg_ver = chip_ver & 0x7;
     switch (pkg_ver) {
         case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
-            return "ESP32-D0WDQ6";
+            if (getChipRevision() == 3)
+                return "ESP32-D0WDQ6-V3";  
+            else
+                return "ESP32-D0WDQ6";
         case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5 :
-            return "ESP32-D0WDQ5";
+            if (getChipRevision() == 3)
+                return "ESP32-D0WD-V3";  
+            else
+                return "ESP32-D0WD";
         case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 :
             return "ESP32-D2WDQ5";
         case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2 :
