@@ -1,6 +1,6 @@
 # Arduino core for the ESP32, ESP32-S2, ESP32-S3 and ESP32-C3
 
-![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![Documentation Status](https://readthedocs.com/projects/espressif-arduino-esp32/badge/?version=latest)](https://docs.espressif.com/projects/arduino-esp32/en/latest/?badge=latest) [![External Libraries Test](https://github.com/P-R-O-C-H-Y/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=Libraries_CI_test&event=push)](https://github.com/P-R-O-C-H-Y/arduino-esp32/blob/Libraries_CI_test/LIBRARIES_TEST.md)
+![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![Documentation Status](https://readthedocs.com/projects/espressif-arduino-esp32/badge/?version=latest)](https://docs.espressif.com/projects/arduino-esp32/en/latest/?badge=latest) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=Libraries_CI_test&event=push)](https://github.com/espressif/arduino-esp32/blob/Libraries_CI_test/LIBRARIES_TEST.md)
 
 ### Need help or have a question? Join the chat at [Gitter](https://gitter.im/espressif/arduino-esp32) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
 
@@ -53,7 +53,7 @@ Finally, if you are sure no one else had the issue, follow the **Issue template*
 
 ### External libraries compilation test
 
-We have set-up CI testing for external libraries for ESP32 Arduino core. You can check test results in file [LIBRARIES_TEST](https://github.com/P-R-O-C-H-Y/arduino-esp32/blob/Libraries_CI_test/LIBRARIES_TEST.md). 
+We have set-up CI testing for external libraries for ESP32 Arduino core. You can check test results in file [LIBRARIES_TEST](https://github.com/espressif/arduino-esp32/blob/Libraries_CI_test/LIBRARIES_TEST.md). 
 For more information and how to add your library to the test see [external library testing](https://docs.espressif.com/projects/arduino-esp32/en/latest/external_library_test.html) in documentation.
 
 ### Contributing
