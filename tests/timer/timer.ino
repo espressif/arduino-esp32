@@ -17,7 +17,7 @@ static volatile bool alarm_flag;
 
 /* These functions are intended to be called before and after each test. */
 void setUp(void) {
-  timer = timerBegin(TIMER_FREQUENCY, true);
+  timer = timerBegin(TIMER_FREQUENCY);
   timerStop(timer);
   timerRestart(timer);
 }
@@ -66,7 +66,7 @@ void timer_divider_test(void){
 
   // compare divider  16 and 8, value should be double
   timerEnd(timer);
-  timer = timerBegin(2 * TIMER_FREQUENCY, true);
+  timer = timerBegin(2 * TIMER_FREQUENCY);
   timerRestart(timer);
 
   delay(1000);        
@@ -77,7 +77,7 @@ void timer_divider_test(void){
 
   // divider is 256, value should be 2^4
   timerEnd(timer);
-  timer = timerBegin(TIMER_FREQUENCY / 16, true);
+  timer = timerBegin(TIMER_FREQUENCY / 16);
   timerRestart(timer);
   delay(1000);       
   comp_time_val = timerRead(timer);
@@ -98,7 +98,7 @@ void timer_read_test(void){
 
 void timer_clock_select_test(void){
   // Set timer frequency that can be achieved using XTAL clock source (autoselected)
-  timer_XTAL = timerBegin(TIMER_FREQUENCY_XTAL_CLK, true);
+  timer_XTAL = timerBegin(TIMER_FREQUENCY_XTAL_CLK);
   
   uint32_t resolution = timerGetFrequency(timer_XTAL);
   TEST_ASSERT_EQUAL(TIMER_FREQUENCY_XTAL_CLK,resolution);

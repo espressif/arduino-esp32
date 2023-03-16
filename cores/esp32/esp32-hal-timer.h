@@ -31,7 +31,7 @@ extern "C" {
  */
 typedef gptimer_handle_t hw_timer_t;
 
-hw_timer_t timerBegin(uint32_t frequency, bool countUp);
+hw_timer_t timerBegin(uint32_t frequency);
 void timerEnd(hw_timer_t timer);
 
 void timerAttachInterrupt(hw_timer_t timer, void (*fn)(void));

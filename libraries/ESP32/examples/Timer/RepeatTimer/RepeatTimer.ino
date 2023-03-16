@@ -39,7 +39,7 @@ void setup() {
   timerSemaphore = xSemaphoreCreateBinary();
 
   // Set timer frequency to 1Mhz
-  timer = timerBegin(1000000, true);
+  timer = timerBegin(1000000);
 
   // Attach onTimer function to our timer.
   timerAttachInterrupt(timer, &onTimer);
