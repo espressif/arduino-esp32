@@ -27,7 +27,7 @@ void timerWrite(hw_timer_t timer_handle, uint64_t val){
     gptimer_set_raw_count(timer_handle, val);
 }
 
-void timerAlarmWrite(hw_timer_t timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count){
+void timerAlarm(hw_timer_t timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count){
     esp_err_t err = ESP_OK;
     gptimer_alarm_config_t alarm_cfg = {
         .alarm_count = alarm_value,
@@ -40,10 +40,10 @@ void timerAlarmWrite(hw_timer_t timer, uint64_t alarm_value, bool autoreload, ui
     } 
 }
 
-uint32_t timerGetResolution(hw_timer_t timer_handle){
-    uint32_t resolution;
-    gptimer_get_resolution(timer_handle, &resolution);
-    return resolution;
+uint32_t timerGetFrequency(hw_timer_t timer_handle){
+    uint32_t frequency;
+    gptimer_get_resolution(timer_handle, &frequency);
+    return frequency;
 }
 
 void timerStart(hw_timer_t timer_handle){
@@ -58,7 +58,7 @@ void timerRestart(hw_timer_t timer_handle){
     gptimer_set_raw_count(timer_handle,0);
 }
 
-hw_timer_t timerBegin(uint32_t resolution, bool countUp){
+hw_timer_t timerBegin(uint32_t frequency, bool countUp){
     
     esp_err_t err = ESP_OK;
     hw_timer_t timer_handle;
@@ -70,7 +70,7 @@ hw_timer_t timerBegin(uint32_t resolution, bool countUp){
     for (size_t i = 0; i < sizeof(gptimer_clks) / sizeof(gptimer_clks[0]); i++){
         clk = gptimer_clks[i];
         clk_tree_src_get_freq_hz(clk, CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
-        divider = counter_src_hz / resolution;
+        divider = counter_src_hz / frequency;
         if((divider >= 2) && (divider <= 65536)){
             break;
         }
@@ -85,7 +85,7 @@ hw_timer_t timerBegin(uint32_t resolution, bool countUp){
     gptimer_config_t config = {
             .clk_src = clk,
             .direction = countUp,
-            .resolution_hz = resolution,
+            .resolution_hz = frequency,
             .flags.intr_shared = true,
         };
 
@@ -140,18 +140,18 @@ void timerDetachInterrupt(hw_timer_t timer){
 
 uint64_t timerReadMicros(hw_timer_t timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t resolution = timerGetResolution(timer);
-    return timer_val * 1000000 / resolution;
+    uint32_t frequency = timerGetResolution(timer);
+    return timer_val * 1000000 / frequency;
 }
 
 uint64_t timerReadMilis(hw_timer_t timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t resolution = timerGetResolution(timer);
-    return timer_val * 1000 / resolution;
+    uint32_t frequency = timerGetResolution(timer);
+    return timer_val * 1000 / frequency;
 }
 
 double timerReadSeconds(hw_timer_t timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t resolution = timerGetResolution(timer);
-    return (double)timer_val / resolution;
+    uint32_t frequency = timerGetResolution(timer);
+    return (double)timer_val / frequency;
 }

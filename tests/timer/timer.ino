@@ -100,7 +100,7 @@ void timer_clock_select_test(void){
   // Set timer frequency that can be achieved using XTAL clock source (autoselected)
   timer_XTAL = timerBegin(TIMER_FREQUENCY_XTAL_CLK, true);
   
-  uint32_t resolution = timerGetResolution(timer_XTAL);
+  uint32_t resolution = timerGetFrequency(timer_XTAL);
   TEST_ASSERT_EQUAL(TIMER_FREQUENCY_XTAL_CLK,resolution);
   
   timerEnd(timer_XTAL);

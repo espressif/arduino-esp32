@@ -31,7 +31,7 @@ extern "C" {
  */
 typedef gptimer_handle_t hw_timer_t;
 
-hw_timer_t timerBegin(uint32_t resolution, bool countUp);
+hw_timer_t timerBegin(uint32_t frequency, bool countUp);
 void timerEnd(hw_timer_t timer);
 
 void timerAttachInterrupt(hw_timer_t timer, void (*fn)(void));
@@ -48,9 +48,9 @@ uint64_t timerReadMicros(hw_timer_t timer);
 uint64_t timerReadMilis(hw_timer_t timer);
 double timerReadSeconds(hw_timer_t timer);
 
-uint32_t timerGetResolution(hw_timer_t timer);
+uint32_t timerGetFrequency(hw_timer_t timer);
 
-void timerAlarmWrite(hw_timer_t timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
+void timerAlarm(hw_timer_t timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
 
 #ifdef __cplusplus
 }
