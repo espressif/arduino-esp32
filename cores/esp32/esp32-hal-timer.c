@@ -58,7 +58,7 @@ void timerRestart(hw_timer_t timer_handle){
     gptimer_set_raw_count(timer_handle,0);
 }
 
-hw_timer_t timerBegin(uint32_t frequency, bool countUp){
+hw_timer_t timerBegin(uint32_t frequency){
     
     esp_err_t err = ESP_OK;
     hw_timer_t timer_handle;
@@ -84,7 +84,7 @@ hw_timer_t timerBegin(uint32_t frequency, bool countUp){
 
     gptimer_config_t config = {
             .clk_src = clk,
-            .direction = countUp,
+            .direction = GPTIMER_COUNT_UP,
             .resolution_hz = frequency,
             .flags.intr_shared = true,
         };
