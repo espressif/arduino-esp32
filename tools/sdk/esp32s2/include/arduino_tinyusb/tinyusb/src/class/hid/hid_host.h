@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -106,7 +106,7 @@ bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t instance);
 
 // Send report using interrupt endpoint
 // If report_id > 0 (composite), it will be sent as 1st byte, then report contents. Otherwise only report content is sent.
-//void tuh_hid_send_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t const* report, uint16_t len);
+bool tuh_hid_send_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, const void* report, uint16_t len);
 
 //--------------------------------------------------------------------+
 // Callbacks (Weak is optional)
