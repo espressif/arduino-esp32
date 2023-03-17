@@ -16,20 +16,9 @@
 #include "driver/gptimer.h"
 #include "soc/soc_caps.h"
 #include "clk_tree.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
 
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void*);
-
-// #if CONFIG_DISABLE_HAL_LOCKS
-//  #define TIMER_MUTEX_LOCK()
-//  #define TIMER_MUTEX_UNLOCK()
-// #else
-//  #define TIMER_MUTEX_LOCK()    do {} while (xSemaphoreTake(timer->lock, portMAX_DELAY) != pdPASS)
-//  #define TIMER_MUTEX_UNLOCK()  xSemaphoreGive(timer->lock)
-// #endif
 
 typedef struct {
     voidFuncPtr fn;
@@ -39,9 +28,6 @@ typedef struct {
 struct timer_struct_t {
     gptimer_handle_t timer_handle;
     interrupt_config_t interrupt_handle;
-    // #if !CONFIG_DISABLE_HAL_LOCKS
-    // xSemaphoreHandle lock;
-    // #endif
 };
 
 inline uint64_t timerRead(hw_timer_t * timer){
@@ -87,9 +73,7 @@ void timerRestart(hw_timer_t * timer){
 }
 
 hw_timer_t * timerBegin(uint32_t frequency){
-    
     esp_err_t err = ESP_OK;
-    hw_timer_t timer_handle;
     uint32_t counter_src_hz = 0;
     uint32_t divider = 0;
     soc_periph_gptimer_clk_src_t clk;
@@ -150,11 +134,9 @@ bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_
             isr->fn();
         }
     }
-
     // some additional logic or handling may be required here to approriately yield or not
     return false;
 }
-
 
 void timerAttachInterruptFunctionalArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg){
     esp_err_t err = ESP_OK;

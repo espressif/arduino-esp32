@@ -11,8 +11,8 @@
  * S3 - APB + XTAL clk
  */
 
-hw_timer_t timer = NULL;
-hw_timer_t timer_XTAL = NULL;
+hw_timer_t * timer = NULL;
+hw_timer_t * timer_XTAL = NULL;
 static volatile bool alarm_flag;
 
 /* These functions are intended to be called before and after each test. */
@@ -24,6 +24,7 @@ void setUp(void) {
 
 void tearDown(void){
   timerEnd(timer);
+  timer = NULL;
 }
 
 
@@ -66,9 +67,10 @@ void timer_divider_test(void){
 
   // compare divider  16 and 8, value should be double
   timerEnd(timer);
+  timer = NULL;
+
   timer = timerBegin(2 * TIMER_FREQUENCY);
   timerRestart(timer);
-
   delay(1000);        
   comp_time_val = timerRead(timer);
     
@@ -77,10 +79,13 @@ void timer_divider_test(void){
 
   // divider is 256, value should be 2^4
   timerEnd(timer);
+  timer = NULL;
+
   timer = timerBegin(TIMER_FREQUENCY / 16);
   timerRestart(timer);
   delay(1000);       
   comp_time_val = timerRead(timer);
+
   TEST_ASSERT_INT_WITHIN(5000, 5000000, time_val);
   TEST_ASSERT_INT_WITHIN(3125, 312500, comp_time_val);
 }
@@ -104,6 +109,7 @@ void timer_clock_select_test(void){
   TEST_ASSERT_EQUAL(TIMER_FREQUENCY_XTAL_CLK,resolution);
   
   timerEnd(timer_XTAL);
+  timer_XTAL = NULL;
 }
 
 void setup(){
