@@ -37,26 +37,26 @@ static Switch *my_switch2 = NULL;
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
-        case ARDUINO_EVENT_PROV_START:
+    case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32
-            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-            printQR(service_name, pop, "ble");
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
+        printQR(service_name, pop, "ble");
 #else
-            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-            printQR(service_name, pop, "softap");
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
+        printQR(service_name, pop, "softap");
 #endif
-            break;
-        case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-            Serial.printf("\nConnected to Wi-Fi!\n");
-            digitalWrite(gpio_led, true);
-            break;
-        case ARDUINO_EVENT_PROV_INIT:
-            wifi_prov_mgr_disable_auto_stop(10000);
-            break;
-        case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-            wifi_prov_mgr_stop_provisioning();
-            break;
-        default:;
+        break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+        Serial.printf("\nConnected to Wi-Fi!\n");
+        digitalWrite(gpio_led, true);
+        break;
+    case ARDUINO_EVENT_PROV_INIT:
+        wifi_prov_mgr_disable_auto_stop(10000);
+        break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+        wifi_prov_mgr_stop_provisioning();
+        break;
+    default:;
     }
 }
 
@@ -67,34 +67,35 @@ void write_callback(Device *device, Param *param, const param_val_t val, void *p
     const char *device_name = device->getDeviceName();
     const char *param_name = param->getParamName();
 
-    if(strcmp(device_name, "Switch_ch1") == 0) {
+    if (strcmp(device_name, "Switch_ch1") == 0) {
 
-      Serial.printf("Lightbulb = %s\n", val.val.b? "true" : "false");
+        Serial.printf("Lightbulb = %s\n", val.val.b ? "true" : "false");
 
-      if(strcmp(param_name, "Power") == 0) {
-          Serial.printf("Received value = %s for %s - %s\n", val.val.b? "true" : "false", device_name, param_name);
-        switch_state_ch1 = val.val.b;
-        (switch_state_ch1 == false) ? digitalWrite(gpio_relay1, LOW) : digitalWrite(gpio_relay1, HIGH);
-        param->updateAndReport(val);
-      }
+        if (strcmp(param_name, "Power") == 0) {
+            Serial.printf("Received value = %s for %s - %s\n", val.val.b ? "true" : "false", device_name, param_name);
+            switch_state_ch1 = val.val.b;
+            (switch_state_ch1 == false) ? digitalWrite(gpio_relay1, LOW) : digitalWrite(gpio_relay1, HIGH);
+            param->updateAndReport(val);
+        }
 
-    } else if(strcmp(device_name, "Switch_ch2") == 0) {
+    } else if (strcmp(device_name, "Switch_ch2") == 0) {
 
-      Serial.printf("Switch value = %s\n", val.val.b? "true" : "false");
+        Serial.printf("Switch value = %s\n", val.val.b ? "true" : "false");
 
-      if(strcmp(param_name, "Power") == 0) {
-        Serial.printf("Received value = %s for %s - %s\n", val.val.b? "true" : "false", device_name, param_name);
-        switch_state_ch2 = val.val.b;
-        (switch_state_ch2 == false) ? digitalWrite(gpio_relay2, LOW) : digitalWrite(gpio_relay2, HIGH);
-        param->updateAndReport(val);
-      }
+        if (strcmp(param_name, "Power") == 0) {
+            Serial.printf("Received value = %s for %s - %s\n", val.val.b ? "true" : "false", device_name, param_name);
+            switch_state_ch2 = val.val.b;
+            (switch_state_ch2 == false) ? digitalWrite(gpio_relay2, LOW) : digitalWrite(gpio_relay2, HIGH);
+            param->updateAndReport(val);
+        }
 
     }
 
 }
 
-void ARDUINO_ISR_ATTR isr(void* arg) {
-    LightSwitch* s = static_cast<LightSwitch*>(arg);
+void ARDUINO_ISR_ATTR isr(void *arg)
+{
+    LightSwitch *s = static_cast<LightSwitch *>(arg);
     s->pressed = true;
 }
 
@@ -150,8 +151,8 @@ void setup()
     RMaker.enableScenes();
 
     //Service Name
-    for(int i=0; i<17; i=i+8) {
-      chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
+    for (int i = 0; i < 17; i = i + 8) {
+        chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
     }
 
     Serial.printf("\nChip ID:  %d Service Name: %s\n", chipId, service_name);
@@ -193,22 +194,24 @@ void loop()
     }
 
     // Read GPIO0 (external button to reset device
-    if(digitalRead(gpio_reset) == LOW) { //Push button pressed
+    if (digitalRead(gpio_reset) == LOW) { //Push button pressed
         Serial.printf("Reset Button Pressed!\n");
         // Key debounce handling
         delay(100);
         int startTime = millis();
-        while(digitalRead(gpio_reset) == LOW) delay(50);
+        while (digitalRead(gpio_reset) == LOW) {
+            delay(50);
+        }
         int endTime = millis();
 
         if ((endTime - startTime) > 10000) {
-          // If key pressed for more than 10secs, reset all
-          Serial.printf("Reset to factory.\n");
-          RMakerFactoryReset(2);
+            // If key pressed for more than 10secs, reset all
+            Serial.printf("Reset to factory.\n");
+            RMakerFactoryReset(2);
         } else if ((endTime - startTime) > 3000) {
-          Serial.printf("Reset Wi-Fi.\n");
-          // If key pressed for more than 3secs, but less than 10, reset Wi-Fi
-          RMakerWiFiReset(2);
+            Serial.printf("Reset Wi-Fi.\n");
+            // If key pressed for more than 3secs, but less than 10, reset Wi-Fi
+            RMakerWiFiReset(2);
         }
     }
     delay(100);

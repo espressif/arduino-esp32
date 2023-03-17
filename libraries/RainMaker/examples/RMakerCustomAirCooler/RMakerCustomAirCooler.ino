@@ -44,22 +44,22 @@ static Device *my_device = NULL;
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
-        case ARDUINO_EVENT_PROV_START:
+    case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32S2
-            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-            printQR(service_name, pop, "softap");
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
+        printQR(service_name, pop, "softap");
 #else
-            Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-            printQR(service_name, pop, "ble");
+        Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
+        printQR(service_name, pop, "ble");
 #endif
-            break;
-        case ARDUINO_EVENT_PROV_INIT:
-            wifi_prov_mgr_disable_auto_stop(10000);
-            break;
-        case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-            wifi_prov_mgr_stop_provisioning();
-            break;
-        default:;
+        break;
+    case ARDUINO_EVENT_PROV_INIT:
+        wifi_prov_mgr_disable_auto_stop(10000);
+        break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
+        wifi_prov_mgr_stop_provisioning();
+        break;
+    default:;
     }
 }
 
@@ -68,13 +68,13 @@ void write_callback(Device *device, Param *param, const param_val_t val, void *p
     const char *device_name = device->getDeviceName();
     const char *param_name = param->getParamName();
 
-    if(strcmp(param_name, "Power") == 0) {
-        Serial.printf("Received value = %s for %s - %s\n", val.val.b? "true" : "false", device_name, param_name);
+    if (strcmp(param_name, "Power") == 0) {
+        Serial.printf("Received value = %s for %s - %s\n", val.val.b ? "true" : "false", device_name, param_name);
         power_state = val.val.b;
         (power_state == false) ? digitalWrite(gpio_power, LOW) : digitalWrite(gpio_power, HIGH);
         param->updateAndReport(val);
     } else if (strcmp(param_name, "Swing") == 0) {
-        Serial.printf("\nReceived value = %s for %s - %s\n", val.val.b? "true" : "false", device_name, param_name);
+        Serial.printf("\nReceived value = %s for %s - %s\n", val.val.b ? "true" : "false", device_name, param_name);
         bool swing = val.val.b;
         (swing == false) ? digitalWrite(gpio_swing, LOW) : digitalWrite(gpio_swing, HIGH);
         param->updateAndReport(val);
@@ -84,7 +84,7 @@ void write_callback(Device *device, Param *param, const param_val_t val, void *p
         analogWrite(gpio_speed, speed);
         param->updateAndReport(val);
     } else if (strcmp(param_name, "Mode") == 0) {
-        const char* mode = val.val.s;
+        const char *mode = val.val.s;
         if (strcmp(mode, "Auto") == 0) {
             digitalWrite(gpio_mode_auto, HIGH);
             digitalWrite(gpio_mode_heat, LOW);
@@ -112,11 +112,17 @@ void setup()
     pinMode(gpio_swing, OUTPUT);
     digitalWrite(gpio_swing, DEFAULT_SWING);
     pinMode(gpio_mode_auto, OUTPUT);
-    if (strcmp(DEFAULT_MODE, "Auto") == 0) digitalWrite(gpio_mode_auto, HIGH);
+    if (strcmp(DEFAULT_MODE, "Auto") == 0) {
+        digitalWrite(gpio_mode_auto, HIGH);
+    }
     pinMode(gpio_mode_cool, OUTPUT);
-    if (strcmp(DEFAULT_MODE, "Cool") == 0) digitalWrite(gpio_mode_auto, HIGH);
+    if (strcmp(DEFAULT_MODE, "Cool") == 0) {
+        digitalWrite(gpio_mode_auto, HIGH);
+    }
     pinMode(gpio_mode_heat, OUTPUT);
-    if (strcmp(DEFAULT_MODE, "Heat") == 0) digitalWrite(gpio_mode_auto, HIGH);
+    if (strcmp(DEFAULT_MODE, "Heat") == 0) {
+        digitalWrite(gpio_mode_auto, HIGH);
+    }
     pinMode(gpio_speed, OUTPUT);
     analogWrite(gpio_speed, DEFAULT_SPEED);
 
@@ -140,7 +146,7 @@ void setup()
     speed.addBounds(value(0), value(255), value(1));
     my_device->addParam(speed);
 
-    static const char* modes[] = { "Auto", "Cool", "Heat" };
+    static const char *modes[] = { "Auto", "Cool", "Heat" };
     Param mode_param("Mode", ESP_RMAKER_PARAM_MODE, value("Auto"), PROP_FLAG_READ | PROP_FLAG_WRITE);
     mode_param.addValidStrList(modes, 3);
     mode_param.addUIType(ESP_RMAKER_UI_DROPDOWN);
@@ -175,12 +181,14 @@ void setup()
 
 void loop()
 {
-    if(digitalRead(gpio_reset) == LOW) { //Push button pressed
+    if (digitalRead(gpio_reset) == LOW) { //Push button pressed
 
         // Key debounce handling
         delay(100);
         int startTime = millis();
-        while(digitalRead(gpio_reset) == LOW) delay(50);
+        while (digitalRead(gpio_reset) == LOW) {
+            delay(50);
+        }
         int press_duration = millis() - startTime;
 
         if (press_duration > 10000) {
@@ -199,7 +207,7 @@ void loop()
                 my_device->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, power_state);
             }
             (power_state == false) ? digitalWrite(gpio_power, LOW) : digitalWrite(gpio_power, HIGH);
-      }
+        }
     }
     delay(100);
 }
