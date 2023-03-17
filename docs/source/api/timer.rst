@@ -192,14 +192,14 @@ This function is used to detach interrupt from timer.
 
 * ``timer`` timer struct.
 
-timerAlarmWrite
-***************
+timerAlarm
+**********
 
 This function is used to configure alarm value and autoreload of the timer. Alarm is automaticaly enabled.
 
 .. code-block:: arduino
 
-    void timerAlarmWrite(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
+    void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
 
 * ``timer`` timer struct.
 * ``alarm_value`` alarm value to generate event.
