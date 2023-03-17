@@ -16,49 +16,77 @@
 #include "driver/gptimer.h"
 #include "soc/soc_caps.h"
 #include "clk_tree.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
 
-inline uint64_t timerRead(hw_timer_t timer_handle){
+typedef void (*voidFuncPtr)(void);
+typedef void (*voidFuncPtrArg)(void*);
+
+// #if CONFIG_DISABLE_HAL_LOCKS
+//  #define TIMER_MUTEX_LOCK()
+//  #define TIMER_MUTEX_UNLOCK()
+// #else
+//  #define TIMER_MUTEX_LOCK()    do {} while (xSemaphoreTake(timer->lock, portMAX_DELAY) != pdPASS)
+//  #define TIMER_MUTEX_UNLOCK()  xSemaphoreGive(timer->lock)
+// #endif
+
+typedef struct {
+    voidFuncPtr fn;
+    void* arg;
+} interrupt_config_t;
+
+struct timer_struct_t {
+    gptimer_handle_t timer_handle;
+    interrupt_config_t interrupt_handle;
+    // #if !CONFIG_DISABLE_HAL_LOCKS
+    // xSemaphoreHandle lock;
+    // #endif
+};
+
+inline uint64_t timerRead(hw_timer_t * timer){
 
     uint64_t value;
-    gptimer_get_raw_count(timer_handle, &value);
+    gptimer_get_raw_count(timer->timer_handle, &value);
     return value;
 }
-void timerWrite(hw_timer_t timer_handle, uint64_t val){
-    gptimer_set_raw_count(timer_handle, val);
+
+void timerWrite(hw_timer_t * timer, uint64_t val){
+    gptimer_set_raw_count(timer->timer_handle, val);
 }
 
-void timerAlarm(hw_timer_t timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count){
+void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count){
     esp_err_t err = ESP_OK;
     gptimer_alarm_config_t alarm_cfg = {
         .alarm_count = alarm_value,
         .reload_count = reload_count,
         .flags.auto_reload_on_alarm = autoreload,
     };
-    err = gptimer_set_alarm_action(timer, &alarm_cfg);
+    err = gptimer_set_alarm_action(timer->timer_handle, &alarm_cfg);
     if (err != ESP_OK){
         log_e("Timer Alarm Write failed, error num=%d", err);
     } 
 }
 
-uint32_t timerGetFrequency(hw_timer_t timer_handle){
+uint32_t timerGetFrequency(hw_timer_t * timer){
     uint32_t frequency;
-    gptimer_get_resolution(timer_handle, &frequency);
+    gptimer_get_resolution(timer->timer_handle, &frequency);
     return frequency;
 }
 
-void timerStart(hw_timer_t timer_handle){
-    gptimer_start(timer_handle);
+void timerStart(hw_timer_t * timer){
+    gptimer_start(timer->timer_handle);
 }
 
-void timerStop(hw_timer_t timer_handle){
-    gptimer_stop(timer_handle);
+void timerStop(hw_timer_t * timer){
+    gptimer_stop(timer->timer_handle);
 }
 
-void timerRestart(hw_timer_t timer_handle){
-    gptimer_set_raw_count(timer_handle,0);
+void timerRestart(hw_timer_t * timer){
+    gptimer_set_raw_count(timer->timer_handle,0);
 }
 
-hw_timer_t timerBegin(uint32_t frequency){
+hw_timer_t * timerBegin(uint32_t frequency){
     
     esp_err_t err = ESP_OK;
     hw_timer_t timer_handle;
@@ -89,69 +117,95 @@ hw_timer_t timerBegin(uint32_t frequency){
             .flags.intr_shared = true,
         };
 
-    err = gptimer_new_timer(&config, &timer_handle);
+    hw_timer_t *timer = malloc(sizeof(hw_timer_t));
+
+    err = gptimer_new_timer(&config, &timer->timer_handle);
     if (err != ESP_OK){
         log_e("Failed to create a new GPTimer, error num=%d", err);
+        free(timer);
         return NULL;
     } 
-    gptimer_enable(timer_handle);
-    gptimer_start(timer_handle);
-    return timer_handle;
+    gptimer_enable(timer->timer_handle);
+    gptimer_start(timer->timer_handle);
+    return timer;
 }
 
-void timerEnd(hw_timer_t timer_handle){
+void timerEnd(hw_timer_t * timer){
     esp_err_t err = ESP_OK;
-    gptimer_disable(timer_handle);
-    err = gptimer_del_timer(timer_handle);
+    gptimer_disable(timer->timer_handle);
+    err = gptimer_del_timer(timer->timer_handle);
     if (err != ESP_OK){
         log_e("Failed to destroy GPTimer, error num=%d", err);
-    } 
+        return;
+    }
+    free(timer);
 }
 
-bool IRAM_ATTR timerFnWrapper(hw_timer_t timer, const gptimer_alarm_event_data_t *edata, void *arg){
-    void (*fn)(void) = arg;
-    fn();
+bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void * args){
+    interrupt_config_t * isr = (interrupt_config_t*)args;
+    if(isr->fn) {
+        if(isr->arg){
+            ((voidFuncPtrArg)isr->fn)(isr->arg);
+        } else {
+            isr->fn();
+        }
+    }
 
     // some additional logic or handling may be required here to approriately yield or not
     return false;
 }
 
-void timerAttachInterrupt(hw_timer_t timer, void (*fn)(void)){
+
+void timerAttachInterruptFunctionalArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg){
     esp_err_t err = ESP_OK;
     gptimer_event_callbacks_t cbs = {
         .on_alarm = timerFnWrapper,
     };
 
-    gptimer_disable(timer);
-    err = gptimer_register_event_callbacks(timer, &cbs, fn);
+    timer->interrupt_handle.fn = (voidFuncPtr)userFunc;
+    timer->interrupt_handle.arg = arg;
+
+    gptimer_disable(timer->timer_handle);
+    err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
     if (err != ESP_OK){
         log_e("Timer Attach Interrupt failed, error num=%d", err);
     } 
-    gptimer_enable(timer);
+    gptimer_enable(timer->timer_handle);
 }
 
-void timerDetachInterrupt(hw_timer_t timer){
+
+void timerAttachInterruptArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg){
+    timerAttachInterruptFunctionalArg(timer, userFunc, arg);
+}
+
+void timerAttachInterrupt(hw_timer_t * timer, voidFuncPtr userFunc){
+    timerAttachInterruptFunctionalArg(timer, (voidFuncPtrArg)userFunc, NULL);
+}
+
+void timerDetachInterrupt(hw_timer_t * timer){
     esp_err_t err = ESP_OK;
-    err = gptimer_set_alarm_action(timer, NULL);
+    err = gptimer_set_alarm_action(timer->timer_handle, NULL);
+    timer->interrupt_handle.fn = NULL;
+    timer->interrupt_handle.arg = NULL;
     if (err != ESP_OK){
         log_e("Timer Detach Interrupt failed, error num=%d", err);
     } 
 }
 
-uint64_t timerReadMicros(hw_timer_t timer){
+uint64_t timerReadMicros(hw_timer_t * timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t frequency = timerGetResolution(timer);
+    uint32_t frequency = timerGetFrequency(timer);
     return timer_val * 1000000 / frequency;
 }
 
-uint64_t timerReadMilis(hw_timer_t timer){
+uint64_t timerReadMilis(hw_timer_t * timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t frequency = timerGetResolution(timer);
+    uint32_t frequency = timerGetFrequency(timer);
     return timer_val * 1000 / frequency;
 }
 
-double timerReadSeconds(hw_timer_t timer){
+double timerReadSeconds(hw_timer_t * timer){
     uint64_t timer_val = timerRead(timer);
-    uint32_t frequency = timerGetResolution(timer);
+    uint32_t frequency = timerGetFrequency(timer);
     return (double)timer_val / frequency;
 }
