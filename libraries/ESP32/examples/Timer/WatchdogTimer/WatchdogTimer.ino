@@ -18,7 +18,7 @@ void setup() {
   pinMode(button, INPUT_PULLUP);                       //init control pin
   timer = timerBegin(1000000);                   //timer 1Mhz resolution
   timerAttachInterrupt(timer, &resetModule);           //attach callback
-  timerAlarmWrite(timer, wdtTimeout * 1000, false, 0); //set time in us
+  timerAlarm(timer, wdtTimeout * 1000, false, 0); //set time in us
 }
 
 void loop() {

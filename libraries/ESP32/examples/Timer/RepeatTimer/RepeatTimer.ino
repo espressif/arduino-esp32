@@ -46,7 +46,7 @@ void setup() {
 
   // Set alarm to call onTimer function every second (value in microseconds).
   // Repeat the alarm (third parameter) with unlimited count = 0 (fourth parameter).
-  timerAlarmWrite(timer, 1000000, true, 0);
+  timerAlarm(timer, 1000000, true, 0);
 }
 
 void loop() {

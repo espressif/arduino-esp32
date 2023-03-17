@@ -38,7 +38,7 @@ void timer_interrupt_test(void){
   
   alarm_flag = false;
   timerAttachInterrupt(timer, &onTimer);
-  timerAlarmWrite(timer, (1.2 * TIMER_FREQUENCY), true, 0);
+  timerAlarm(timer, (1.2 * TIMER_FREQUENCY), true, 0);
   timerStart(timer);
   
   delay(2000);
