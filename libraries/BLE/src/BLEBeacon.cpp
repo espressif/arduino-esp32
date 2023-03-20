@@ -9,7 +9,6 @@
 
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
-#include <string.h>
 #include "BLEBeacon.h"
 #include "esp32-hal-log.h"
 

@@ -29,7 +29,7 @@
 #include "esp32-hal-log.h"
 
 /*
-static std::map<std::string, BLEClient*> g_addressMap;
+static std::map<String, BLEClient*> g_addressMap;
 static std::map<uint16_t, BLEClient*> g_connIdMap;
 */
 
@@ -606,8 +606,8 @@ static const gattService_t g_gattServices[] = {
  * @param [in] prop Characteristic properties.
  * @return A string representation of characteristic properties.
  */
-std::string BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop) {
-	std::string res = "broadcast: ";
+String BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop) {
+	String res = "broadcast: ";
 	res += ((prop & ESP_GATT_CHAR_PROP_BIT_BROADCAST)?"1":"0");
 	res += ", read: ";
 	res += ((prop & ESP_GATT_CHAR_PROP_BIT_READ)?"1":"0");
@@ -627,8 +627,8 @@ std::string BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop
 /**
  * @brief Convert an esp_gatt_id_t to a string.
  */
-static std::string gattIdToString(esp_gatt_id_t gattId) {
-	std::string res = "uuid: " + BLEUUID(gattId.uuid).toString() + ", inst_id: ";
+static String gattIdToString(esp_gatt_id_t gattId) {
+	String res = "uuid: " + BLEUUID(gattId.uuid).toString() + ", inst_id: ";
 	char val[8];
 	snprintf(val, sizeof(val), "%d", (int)gattId.inst_id);
 	res += val;
@@ -660,10 +660,10 @@ const char* BLEUtils::addressTypeToString(esp_ble_addr_type_t type) {
 /**
  * @brief Convert the BLE Advertising Data flags to a string.
  * @param adFlags The flags to convert
- * @return std::string A string representation of the advertising flags.
+ * @return String A string representation of the advertising flags.
  */
-std::string BLEUtils::adFlagsToString(uint8_t adFlags) {
-	std::string res;
+String BLEUtils::adFlagsToString(uint8_t adFlags) {
+	String res;
 	if (adFlags & (1 << 0)) {
 		res += "[LE Limited Discoverable Mode] ";
 	}
@@ -810,8 +810,8 @@ char* BLEUtils::buildHexData(uint8_t* target, uint8_t* source, uint8_t length) {
  * @param [in] length Length of memory.
  * @return A string representation of a piece of memory.
  */
-std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
-	std::string res;
+String BLEUtils::buildPrintData(uint8_t* source, size_t length) {
+	String res;
 	for (int i = 0; i < length; i++) {
 		char c = *source;
 		res += (isprint(c) ? c : '.');
@@ -826,7 +826,7 @@ std::string BLEUtils::buildPrintData(uint8_t* source, size_t length) {
  * @param [in] reason The close reason.
  * @return A string representation of the reason.
  */
-std::string BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
+String BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
 	switch (reason) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATT_CONN_UNKNOWN: {
@@ -864,7 +864,7 @@ std::string BLEUtils::gattCloseReasonToString(esp_gatt_conn_reason_t reason) {
 } // gattCloseReasonToString
 
 
-std::string BLEUtils::gattClientEventTypeToString(esp_gattc_cb_event_t eventType) {
+String BLEUtils::gattClientEventTypeToString(esp_gattc_cb_event_t eventType) {
 	switch (eventType) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATTC_ACL_EVT:
@@ -962,7 +962,7 @@ std::string BLEUtils::gattClientEventTypeToString(esp_gattc_cb_event_t eventType
  * @param [in] eventType A GATT server event code.
  * @return A string representation of the GATT server event code.
  */
-std::string BLEUtils::gattServerEventTypeToString(esp_gatts_cb_event_t eventType) {
+String BLEUtils::gattServerEventTypeToString(esp_gatts_cb_event_t eventType) {
 	switch (eventType) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATTS_REG_EVT:
@@ -1344,7 +1344,7 @@ void BLEUtils::dumpGattClientEvent(
 			// If the status of the event shows that we have a value other than ESP_GATT_OK then the
 			// characteristic fields are not set to a usable value .. so don't try and log them.
 			if (evtParam->get_char.status == ESP_GATT_OK) {
-				std::string description = "Unknown";
+				String description = "Unknown";
 				if (evtParam->get_char.char_id.uuid.len == ESP_UUID_LEN_16) {
 					description = BLEUtils::gattCharacteristicUUIDToString(evtParam->get_char.char_id.uuid.uuid.uuid16);
 				}
@@ -1823,11 +1823,11 @@ const char* BLEUtils::gapEventToString(uint32_t eventType) {
 } // gapEventToString
 
 
-std::string BLEUtils::gattCharacteristicUUIDToString(uint32_t characteristicUUID) {
+String BLEUtils::gattCharacteristicUUIDToString(uint32_t characteristicUUID) {
 	const characteristicMap_t* p = g_characteristicsMappings;
 	while (strlen(p->name) > 0) {
 		if (p->assignedNumber == characteristicUUID) {
-			return std::string(p->name);
+			return String(p->name);
 		}
 		p++;
 	}
@@ -1840,11 +1840,11 @@ std::string BLEUtils::gattCharacteristicUUIDToString(uint32_t characteristicUUID
  * @param [in] descriptorUUID UUID of the descriptor to be returned as a string.
  * @return The string representation of a descriptor UUID.
  */
-std::string BLEUtils::gattDescriptorUUIDToString(uint32_t descriptorUUID) {
+String BLEUtils::gattDescriptorUUIDToString(uint32_t descriptorUUID) {
 	gattdescriptor_t* p = (gattdescriptor_t*) g_descriptor_ids;
 	while (strlen(p->name) > 0) {
 		if (p->assignedNumber == descriptorUUID) {
-			return std::string(p->name);
+			return String(p->name);
 		}
 		p++;
 	}
@@ -1856,8 +1856,8 @@ std::string BLEUtils::gattDescriptorUUIDToString(uint32_t descriptorUUID) {
  * @brief Return a string representation of an esp_gattc_service_elem_t.
  * @return A string representation of an esp_gattc_service_elem_t.
  */
-std::string BLEUtils::gattcServiceElementToString(esp_gattc_service_elem_t* pGATTCServiceElement) {
-	std::string res;
+String BLEUtils::gattcServiceElementToString(esp_gattc_service_elem_t* pGATTCServiceElement) {
+	String res;
 	char val[6];
 	res += "[uuid: " + BLEUUID(pGATTCServiceElement->uuid).toString() + ", start_handle: ";
 	snprintf(val, sizeof(val), "%d", pGATTCServiceElement->start_handle);
@@ -1879,16 +1879,16 @@ std::string BLEUtils::gattcServiceElementToString(esp_gattc_service_elem_t* pGAT
 /**
  * @brief Convert an esp_gatt_srvc_id_t to a string.
  */
-std::string BLEUtils::gattServiceIdToString(esp_gatt_srvc_id_t srvcId) {
+String BLEUtils::gattServiceIdToString(esp_gatt_srvc_id_t srvcId) {
 	return gattIdToString(srvcId.id);
 } // gattServiceIdToString
 
 
-std::string BLEUtils::gattServiceToString(uint32_t serviceId) {
+String BLEUtils::gattServiceToString(uint32_t serviceId) {
 	gattService_t* p = (gattService_t*) g_gattServices;
 	while (strlen(p->name) > 0) {
 		if (p->assignedNumber == serviceId) {
-			return std::string(p->name);
+			return String(p->name);
 		}
 		p++;
 	}
@@ -1902,7 +1902,7 @@ std::string BLEUtils::gattServiceToString(uint32_t serviceId) {
  * @param [in] status The status to convert.
  * @return A string representation of the status.
  */
-std::string BLEUtils::gattStatusToString(esp_gatt_status_t status) {
+String BLEUtils::gattStatusToString(esp_gatt_status_t status) {
 	switch (status) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 		case ESP_GATT_OK:
@@ -1999,12 +1999,12 @@ std::string BLEUtils::gattStatusToString(esp_gatt_status_t status) {
 
 
 
-std::string BLEUtils::getMember(uint32_t memberId) {
+String BLEUtils::getMember(uint32_t memberId) {
 	member_t* p = (member_t*) members_ids;
 
 	while (strlen(p->name) > 0) {
 		if (p->assignedNumber == memberId) {
-			return std::string(p->name);
+			return String(p->name);
 		}
 		p++;
 	}

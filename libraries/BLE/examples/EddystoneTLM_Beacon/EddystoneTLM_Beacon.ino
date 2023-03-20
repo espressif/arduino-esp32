@@ -56,7 +56,7 @@ void setBeacon()
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
-  oScanResponseData.setServiceData(BLEUUID((uint16_t)0xFEAA), std::string(EddystoneTLM.getData().c_str(), EddystoneTLM.getData().length()));
+  oScanResponseData.setServiceData(BLEUUID((uint16_t)0xFEAA), String(EddystoneTLM.getData().c_str(), EddystoneTLM.getData().length()));
 
   oAdvertisementData.setName("ESP32 TLM Beacon");
   pAdvertising->setAdvertisementData(oAdvertisementData);

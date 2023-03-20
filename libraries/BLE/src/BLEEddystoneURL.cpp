@@ -58,7 +58,7 @@ BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice){
       lengthURL = payload[i-1] - 5; // Subtracting 5 Bytes containing header and other data which are not actual URL data
       m_eddystoneData.advertisedTxPower = payload[i+1];
       if(lengthURL <= 18){
-        setData(std::string(payload+i+4, lengthURL+1));
+        setData(String(payload+i+4, lengthURL+1));
       }else{
         log_e("Too long URL %d", lengthURL);
       }
@@ -67,8 +67,8 @@ BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice){
   _initHeadder();
 }
 
-std::string BLEEddystoneURL::getData() {
-  return std::string((char*) &m_eddystoneData, sizeof(m_eddystoneData));
+String BLEEddystoneURL::getData() {
+  return String((char*) &m_eddystoneData, sizeof(m_eddystoneData));
 } // getData
 
 String BLEEddystoneURL::getFrame() {
@@ -88,8 +88,8 @@ int8_t BLEEddystoneURL::getPower() {
   return m_eddystoneData.advertisedTxPower;
 } // getPower
 
-std::string BLEEddystoneURL::getURL() {
-  return std::string((char*) &m_eddystoneData.url, lengthURL);
+String BLEEddystoneURL::getURL() {
+  return String((char*) &m_eddystoneData.url, lengthURL);
 } // getURL
 
 String BLEEddystoneURL::getPrefix(){
@@ -108,9 +108,9 @@ String BLEEddystoneURL::getSuffix(){
   }
 }
 
-std::string BLEEddystoneURL::getDecodedURL() {
-  std::string decodedURL = "";
-  decodedURL += std::string(getPrefix().c_str());
+String BLEEddystoneURL::getDecodedURL() {
+  String decodedURL = "";
+  decodedURL += String(getPrefix().c_str());
   if(decodedURL.length() == 0){ // No prefix extracted - interpret byte [0] as character
     decodedURL += m_eddystoneData.url[0];
   }
@@ -124,7 +124,7 @@ std::string BLEEddystoneURL::getDecodedURL() {
       }
     }
   }
-  decodedURL += std::string(getSuffix().c_str());
+  decodedURL += String(getSuffix().c_str());
   return decodedURL;
 } // getDecodedURL
 
@@ -132,7 +132,7 @@ std::string BLEEddystoneURL::getDecodedURL() {
  * Set the raw data for the beacon record.
  * Example:
  * uint8_t *payload = advertisedDevice.getPayload();
- * eddystoneTLM.setData(std::string((char*)payload+11, advertisedDevice.getPayloadLength() - 11));
+ * eddystoneTLM.setData(String((char*)payload+11, advertisedDevice.getPayloadLength() - 11));
  * Note: the offset 11 works for current implementation of example BLE_EddystoneTLM Beacon.ino, however
  *   the position is not static and it is programmers responsibility to align the data.
  * Data frame:
@@ -147,13 +147,13 @@ std::string BLEEddystoneURL::getDecodedURL() {
  * | Len    || 1 B   | 1 B      | 1 B        | 0-17 B |
  * | Data   || 0x10  | ??       | ??         | ??     |
  */
-void BLEEddystoneURL::setData(std::string data) {
+void BLEEddystoneURL::setData(String data) {
   if (data.length() > sizeof(m_eddystoneData)) {
     log_e("Unable to set the data ... length passed in was %d and max expected %d", data.length(), sizeof(m_eddystoneData));
     return;
   }
   memset(&m_eddystoneData, 0, sizeof(m_eddystoneData));
-  memcpy(&m_eddystoneData, data.data(), data.length());
+  memcpy(&m_eddystoneData, data.c_str(), data.length());
   lengthURL = data.length() - (sizeof(m_eddystoneData) - sizeof(m_eddystoneData.url));
 } // setData
 
@@ -207,13 +207,13 @@ void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
 // | Length  | 1 B     | 0 - 17 B              |
 // | Example | 0x02    | 0x676F6F676C65 0x07   |
 // | Decoded | http:// |   g o o g l e  .com   |
-void BLEEddystoneURL::setURL(std::string url) {
+void BLEEddystoneURL::setURL(String url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
   log_e("Unable to set the url ... length passed in was %d and max expected %d", url.length(), sizeof(m_eddystoneData.url));
   return;
   }
   memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
-  memcpy(m_eddystoneData.url, url.data(), url.length());
+  memcpy(m_eddystoneData.url, url.c_str(), url.length());
   lengthURL = url.length();
 } // setURL
 

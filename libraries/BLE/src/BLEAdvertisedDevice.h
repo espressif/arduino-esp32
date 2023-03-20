@@ -9,6 +9,7 @@
 #define COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>
@@ -41,12 +42,12 @@ public:
 
 	BLEAddress  getAddress();
 	uint16_t    getAppearance();
-	std::string getManufacturerData();
-	std::string getName();
+	String getManufacturerData();
+	String getName();
 	int         getRSSI();
 	BLEScan*    getScan();
-	std::string getServiceData();
-	std::string getServiceData(int i);
+	String getServiceData();
+	String getServiceData(int i);
 	BLEUUID     getServiceDataUUID();
 	BLEUUID     getServiceDataUUID(int i);
 	BLEUUID     getServiceUUID();
@@ -71,7 +72,7 @@ public:
 	bool        haveServiceUUID();
 	bool        haveTXPower();
 
-	std::string toString();
+	String toString();
 
 private:
 	friend class BLEScan;
@@ -82,11 +83,11 @@ private:
 	void setAdFlag(uint8_t adFlag);
 	void setAdvertizementResult(uint8_t* payload);
 	void setAppearance(uint16_t appearance);
-	void setManufacturerData(std::string manufacturerData);
-	void setName(std::string name);
+	void setManufacturerData(String manufacturerData);
+	void setName(String name);
 	void setRSSI(int rssi);
 	void setScan(BLEScan* pScan);
-	void setServiceData(std::string data);
+	void setServiceData(String data);
 	void setServiceDataUUID(BLEUUID uuid);
 	void setServiceUUID(const char* serviceUUID);
 	void setServiceUUID(BLEUUID serviceUUID);
@@ -103,13 +104,13 @@ private:
 	uint8_t     m_adFlag;
 	uint16_t    m_appearance;
 	int         m_deviceType;
-	std::string m_manufacturerData;
-	std::string m_name;
+	String m_manufacturerData;
+	String m_name;
 	BLEScan*    m_pScan;
 	int         m_rssi;
 	std::vector<BLEUUID> m_serviceUUIDs;
 	int8_t      m_txPower;
-	std::vector<std::string> m_serviceData;
+	std::vector<String> m_serviceData;
 	std::vector<BLEUUID> m_serviceDataUUIDs;
 	uint8_t*	m_payload;
 	size_t		m_payloadLength = 0;
