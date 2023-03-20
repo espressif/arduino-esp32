@@ -60,7 +60,7 @@ int setBeacon()
   EddystoneURL.setPower(BEACON_POWER); // This is only information about the power. The actual power is set by `BLEDevice::setPower(BEACON_POWER)`
   if(EddystoneURL.setSmartURL(URL[bootcount%(sizeof(URL)/sizeof(URL[0]))])){
     String frame = EddystoneURL.getFrame();
-    std::string data(EddystoneURL.getFrame().c_str(), frame.length());
+    String data(EddystoneURL.getFrame().c_str(), frame.length());
     oAdvertisementData.addData(data);
     oScanResponseData.setName("ESP32 URLBeacon");
     pAdvertising->setAdvertisementData(oAdvertisementData);

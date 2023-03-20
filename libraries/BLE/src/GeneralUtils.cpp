@@ -30,7 +30,7 @@ static int base64EncodedLength(size_t length) {
 } // base64EncodedLength
 
 
-static int base64EncodedLength(const std::string& in) {
+static int base64EncodedLength(const String& in) {
 	return base64EncodedLength(in.length());
 } // base64EncodedLength
 
@@ -55,7 +55,7 @@ static void a4_to_a3(unsigned char* a3, unsigned char* a4) {
  * @param [in] in
  * @param [out] out
  */
-bool GeneralUtils::base64Encode(const std::string& in, std::string* out) {
+bool GeneralUtils::base64Encode(const String& in, String* out) {
 	int i = 0, j = 0;
 	size_t enc_len = 0;
 	unsigned char a3[3];
@@ -64,7 +64,7 @@ bool GeneralUtils::base64Encode(const std::string& in, std::string* out) {
 	out->resize(base64EncodedLength(in));
 
 	int input_len = in.size();
-	std::string::const_iterator input = in.begin();
+	String::const_iterator input = in.begin();
 
 	while (input_len--) {
 		a3[i++] = *(input++);
@@ -121,7 +121,7 @@ void GeneralUtils::dumpInfo() {
  * @param [in] c The character to look form.
  * @return True if the string ends with the given character.
  */
-bool GeneralUtils::endsWith(std::string str, char c) {
+bool GeneralUtils::endsWith(String str, char c) {
 	if (str.empty()) {
 		return false;
 	}
@@ -132,11 +132,11 @@ bool GeneralUtils::endsWith(std::string str, char c) {
 } // endsWidth
 
 
-static int DecodedLength(const std::string& in) {
+static int DecodedLength(const String& in) {
 	int numEq = 0;
 	int n = (int) in.size();
 
-	for (std::string::const_reverse_iterator it = in.rbegin(); *it == '='; ++it) {
+	for (String::const_reverse_iterator it = in.rbegin(); *it == '='; ++it) {
 		++numEq;
 	}
 	return ((6 * n) / 8) - numEq;
@@ -158,14 +158,14 @@ static unsigned char b64_lookup(unsigned char c) {
  * @param [in] in The string to be decoded.
  * @param [out] out The resulting data.
  */
-bool GeneralUtils::base64Decode(const std::string& in, std::string* out) {
+bool GeneralUtils::base64Decode(const String& in, String* out) {
 	int i = 0, j = 0;
 	size_t dec_len = 0;
 	unsigned char a3[3];
 	unsigned char a4[4];
 
 	int input_len = in.size();
-	std::string::const_iterator input = in.begin();
+	String::const_iterator input = in.begin();
 
 	out->resize(DecodedLength(in));
 
@@ -212,8 +212,8 @@ bool GeneralUtils::base64Decode(const std::string& in, std::string* out) {
 /*
 void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 	uint32_t index=0;
-	std::stringstream ascii;
-	std::stringstream hex;
+	Stringstream ascii;
+	Stringstream hex;
 	char asciiBuf[80];
 	char hexBuf[80];
 	hex.str("");
@@ -251,8 +251,8 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 /*
 void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 	uint32_t index=0;
-	static std::stringstream ascii;
-	static std::stringstream hex;
+	static Stringstream ascii;
+	static Stringstream hex;
 	hex.str("");
 	ascii.str("");
 	while(index < length) {
@@ -331,11 +331,11 @@ void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
  * @param ip The 4 byte IP address.
  * @return A string representation of the IP address.
  */
-std::string GeneralUtils::ipToString(uint8_t *ip) {
+String GeneralUtils::ipToString(uint8_t *ip) {
 	auto size = 16;
 	char *val = (char*)malloc(size);
 	snprintf(val, size, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-	std::string res(val);
+	String res(val);
 	free(val);
 	return res;
 } // ipToString
@@ -347,12 +347,12 @@ std::string GeneralUtils::ipToString(uint8_t *ip) {
  * @param [in] delimiter The delimiter characters.
  * @return A vector of strings that are the split of the input.
  */
-std::vector<std::string> GeneralUtils::split(std::string source, char delimiter) {
+std::vector<String> GeneralUtils::split(String source, char delimiter) {
 	// See also: https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
-	std::vector<std::string> strings;
+	std::vector<String> strings;
 	std::size_t current, previous = 0;
 	current = source.find(delimiter);
-	while (current != std::string::npos) {
+	while (current != String::npos) {
 		strings.push_back(trim(source.substr(previous, current - previous)));
 		previous = current + 1;
 		current = source.find(delimiter, previous);
@@ -523,9 +523,9 @@ const char* GeneralUtils::wifiErrorToString(uint8_t errCode) {
  * @param [in] value The string to convert to lower case.
  * @return A lower case representation of the string.
  */
-std::string GeneralUtils::toLower(std::string& value) {
+String GeneralUtils::toLower(String& value) {
 	// Question: Could this be improved with a signature of:
-	// std::string& GeneralUtils::toLower(std::string& value)
+	// String& GeneralUtils::toLower(String& value)
 	std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 	return value;
 } // toLower
@@ -534,9 +534,9 @@ std::string GeneralUtils::toLower(std::string& value) {
 /**
  * @brief Remove white space from a string.
  */
-std::string GeneralUtils::trim(const std::string& str) {
+String GeneralUtils::trim(const String& str) {
 	size_t first = str.find_first_not_of(' ');
-	if (std::string::npos == first) return str;
+	if (String::npos == first) return str;
 	size_t last = str.find_last_not_of(' ');
 	return str.substr(first, (last - first + 1));
 } // trim

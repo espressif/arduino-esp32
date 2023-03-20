@@ -29,13 +29,13 @@ private:
 	} __attribute__((packed)) m_beaconData;
 public:
 	BLEBeacon();
-	std::string getData();
+	String getData();
 	uint16_t    getMajor();
 	uint16_t    getMinor();
 	uint16_t    getManufacturerId();
 	BLEUUID     getProximityUUID();
 	int8_t      getSignalPower();
-	void        setData(std::string data);
+	void        setData(String data);
 	void        setMajor(uint16_t major);
 	void        setMinor(uint16_t minor);
 	void        setManufacturerId(uint16_t manufacturerId);

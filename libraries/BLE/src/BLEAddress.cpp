@@ -42,7 +42,7 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-BLEAddress::BLEAddress(std::string stringAddress) {
+BLEAddress::BLEAddress(String stringAddress) {
 	if (stringAddress.length() != 17) return;
 
 	int data[6];
