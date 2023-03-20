@@ -47,7 +47,7 @@ public:
 	void        setByHandle(uint16_t handle, BLEService* service);
 	void        setByUUID(const char* uuid, BLEService* service);
 	void        setByUUID(BLEUUID uuid, BLEService* service);
-	std::string toString();
+	String toString();
 	BLEService* getFirst();
 	BLEService* getNext();
 	void 		removeService(BLEService *service);
@@ -55,8 +55,8 @@ public:
 
 private:
 	std::map<uint16_t, BLEService*>    m_handleMap;
-	std::map<BLEService*, std::string> m_uuidMap;
-	std::map<BLEService*, std::string>::iterator m_iterator;
+	std::map<BLEService*, String> m_uuidMap;
+	std::map<BLEService*, String>::iterator m_iterator;
 };
 
 

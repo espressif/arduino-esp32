@@ -68,7 +68,7 @@ BLECharacteristic::~BLECharacteristic() {
  * @return N/A.
  */
 void BLECharacteristic::addDescriptor(BLEDescriptor* pDescriptor) {
-	log_v(">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
+	log_v(">> addDescriptor(): Adding %s to %s", pDescriptor->toString()..c_str(), toString()..c_str());
 	m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
 	log_v("<< addDescriptor()");
 } // addDescriptor
@@ -89,8 +89,8 @@ void BLECharacteristic::executeCreate(BLEService* pService) {
 	m_pService = pService; // Save the service to which this characteristic belongs.
 
 	log_d("Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s",
-		getUUID().toString().c_str(),
-		m_pService->toString().c_str());
+		getUUID().toString()..c_str(),
+		m_pService->toString()..c_str());
 
 	esp_attr_control_t control;
 	control.auto_rsp = ESP_GATT_RSP_BY_APP;
@@ -178,7 +178,7 @@ BLEUUID BLECharacteristic::getUUID() {
  * @brief Retrieve the current value of the characteristic.
  * @return A pointer to storage containing the current characteristic value.
  */
-std::string BLECharacteristic::getValue() {
+String BLECharacteristic::getValue() {
 	return m_value.getValue();
 } // getValue
 
@@ -205,7 +205,7 @@ void BLECharacteristic::handleGATTServerEvent(
 		esp_gatts_cb_event_t      event,
 		esp_gatt_if_t             gatts_if,
 		esp_ble_gatts_cb_param_t* param) {
-	log_v(">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
+	log_v(">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event)..c_str());
 
 	switch(event) {
 	// Events handled:
@@ -297,7 +297,7 @@ void BLECharacteristic::handleGATTServerEvent(
 				}
 
 				log_d(" - Response to write event: New value: handle: %.2x, uuid: %s",
-						getHandle(), getUUID().toString().c_str());
+						getHandle(), getUUID().toString()..c_str());
 
 				char* pHexData = BLEUtils::buildHexData(nullptr, param->write.value, param->write.len);
 				log_d(" - Data: length: %d, data: %s", param->write.len, pHexData);
@@ -376,19 +376,19 @@ void BLECharacteristic::handleGATTServerEvent(
 					esp_gatt_rsp_t rsp;
 
 					if (param->read.is_long) {
-						std::string value = m_value.getValue();
+						String value = m_value.getValue();
 
 						if (value.length() - m_value.getReadOffset() < maxOffset) {
 							// This is the last in the chain
 							rsp.attr_value.len    = value.length() - m_value.getReadOffset();
 							rsp.attr_value.offset = m_value.getReadOffset();
-							memcpy(rsp.attr_value.value, value.data() + rsp.attr_value.offset, rsp.attr_value.len);
+							memcpy(rsp.attr_value.value, value.c_str() + rsp.attr_value.offset, rsp.attr_value.len);
 							m_value.setReadOffset(0);
 						} else {
 							// There will be more to come.
 							rsp.attr_value.len    = maxOffset;
 							rsp.attr_value.offset = m_value.getReadOffset();
-							memcpy(rsp.attr_value.value, value.data() + rsp.attr_value.offset, rsp.attr_value.len);
+							memcpy(rsp.attr_value.value, value.c_str() + rsp.attr_value.offset, rsp.attr_value.len);
 							m_value.setReadOffset(rsp.attr_value.offset + maxOffset);
 						}
 					} else { // read.is_long == false
@@ -397,19 +397,19 @@ void BLECharacteristic::handleGATTServerEvent(
 						// Invoke the read callback.
 						m_pCallbacks->onRead(this, param);
 
-						std::string value = m_value.getValue();
+						String value = m_value.getValue();
 
 						if (value.length() + 1 > maxOffset) {
 							// Too big for a single shot entry.
 							m_value.setReadOffset(maxOffset);
 							rsp.attr_value.len    = maxOffset;
 							rsp.attr_value.offset = 0;
-							memcpy(rsp.attr_value.value, value.data(), rsp.attr_value.len);
+							memcpy(rsp.attr_value.value, value.c_str(), rsp.attr_value.len);
 						} else {
 							// Will fit in a single packet with no callbacks required.
 							rsp.attr_value.len    = value.length();
 							rsp.attr_value.offset = 0;
-							memcpy(rsp.attr_value.value, value.data(), rsp.attr_value.len);
+							memcpy(rsp.attr_value.value, value.c_str(), rsp.attr_value.len);
 						}
 					}
 					rsp.attr_value.handle   = param->read.handle;
@@ -497,7 +497,7 @@ void BLECharacteristic::notify(bool is_notification) {
 
 	m_pCallbacks->onNotify(this);   // Invoke the notify callback.
 
-	GeneralUtils::hexDump((uint8_t*)m_value.getValue().data(), m_value.getValue().length());
+	GeneralUtils::hexDump((uint8_t*)m_value.getValue().c_str(), m_value.getValue().length());
 
 	if (getService()->getServer()->getConnectedCount() == 0) {
 		log_v("<< notify: No connected clients.");
@@ -535,7 +535,7 @@ void BLECharacteristic::notify(bool is_notification) {
 		esp_err_t errRc = ::esp_ble_gatts_send_indicate(
 				getService()->getServer()->getGattsIf(),
 				myPair.first,
-				getHandle(), length, (uint8_t*)m_value.getValue().data(), !is_notification); // The need_confirm = false makes this a notify.
+				getHandle(), length, (uint8_t*)m_value.getValue().c_str(), !is_notification); // The need_confirm = false makes this a notify.
 		if (errRc != ESP_OK) {
 			log_e("<< esp_ble_gatts_send_ %s: rc=%d %s",is_notification?"notify":"indicate", errRc, GeneralUtils::errorToString(errRc));
 			m_semaphoreConfEvt.give();
@@ -604,7 +604,7 @@ void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks* pCallbacks) {
  * @param [in] handle The handle associated with this characteristic.
  */
 void BLECharacteristic::setHandle(uint16_t handle) {
-	log_v(">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString().c_str());
+	log_v(">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString()..c_str());
 	m_handle = handle;
 	log_v("<< setHandle");
 } // setHandle
@@ -659,7 +659,7 @@ void BLECharacteristic::setReadProperty(bool value) {
  */
 void BLECharacteristic::setValue(uint8_t* data, size_t length) {
 	char* pHex = BLEUtils::buildHexData(nullptr, data, length);
-	log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+	log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString()..c_str());
 	free(pHex);
 	if (length > ESP_GATT_MAX_ATTR_LEN) {
 		log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
@@ -679,8 +679,8 @@ void BLECharacteristic::setValue(uint8_t* data, size_t length) {
  * @param [in] Set the value of the characteristic.
  * @return N/A.
  */
-void BLECharacteristic::setValue(std::string value) {
-	setValue((uint8_t*)(value.data()), value.length());
+void BLECharacteristic::setValue(String value) {
+	setValue((uint8_t*)(value.c_str()), value.length());
 } // setValue
 
 void BLECharacteristic::setValue(uint16_t& data16) {
@@ -751,8 +751,8 @@ void BLECharacteristic::setWriteProperty(bool value) {
  * @brief Return a string representation of the characteristic.
  * @return A string representation of the characteristic.
  */
-std::string BLECharacteristic::toString() {
-	std::string res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
+String BLECharacteristic::toString() {
+	String res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
 	char hex[5];
 	snprintf(hex, sizeof(hex), "%04x", m_handle);
 	res += hex;

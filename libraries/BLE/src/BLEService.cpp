@@ -383,8 +383,8 @@ BLECharacteristic* BLEService::getCharacteristic(BLEUUID uuid) {
  * * Its handle
  * @return A string representation of this service.
  */
-std::string BLEService::toString() {
-	std::string res = "UUID: " + getUUID().toString();
+String BLEService::toString() {
+	String res = "UUID: " + getUUID().toString();
 	char hex[5];
 	snprintf(hex, sizeof(hex), "%04x", getHandle());
 	res += ", handle: 0x";

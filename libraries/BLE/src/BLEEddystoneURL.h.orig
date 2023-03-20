@@ -3,19 +3,16 @@
  *
  *  Created on: Mar 12, 2018
  *      Author: pcbreflux
- *  Upgraded on: Feb 20, 2023
+ *  Upgraded on: Feb 17, 2023
  *      By: Tomas Pilny
  *
  */
 
 #ifndef _BLEEddystoneURL_H_
 #define _BLEEddystoneURL_H_
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
-
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
-#include "esp_bt.h"
+#include <Arduino.h>
 
 #define EDDYSTONE_URL_FRAME_TYPE 0x10
 
@@ -31,30 +28,39 @@ class BLEEddystoneURL {
 public:
   BLEEddystoneURL();
   BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice);
-  String getData();
+  std::string getData();
   String      getFrame();
   BLEUUID     getUUID();
   int8_t      getPower();
-  String getURL();
+  std::string getURL();
   String      getPrefix();
   String      getSuffix();
-  String getDecodedURL();
-  void        setData(String data);
+  std::string getDecodedURL();
+  void        setData(std::string data);
   void        setUUID(BLEUUID l_uuid);
   void        setPower(int8_t advertisedTxPower);
-  void        setPower(esp_power_level_t advertisedTxPower);
-  void        setURL(String url);
+  void        setURL(std::string url);
   int         setSmartURL(String url);
 
 private:
-  uint8_t lengthURL; // Describes the length of the URL part including prefix and optional suffix - max 18 B (excluding TX power, frame type and preceding header)
+<<<<<<< Updated upstream
+	uint16_t beaconUUID;
+	uint8_t  lengthURL;
+	struct {
+		uint8_t frameType;
+		int8_t  advertisedTxPower;
+		uint8_t url[18];  // 18 bytes: 1 byte for URL scheme + up to 17 bytes of URL
+	} __attribute__((packed)) m_eddystoneData;
+
+=======
+  uint8_t lengthURL; // Describes length of URL part including prefix and suffix - max 18 B (excluding TX power, frame type and preceding header)
   struct {
     int8_t  advertisedTxPower;
-    uint8_t url[18]; // Byte [0] is for prefix. Last valid byte **can** contain suffix - i.e. the next byte after the URL
+    uint8_t url[18]; // Byte [0] is for prefix. Last byte **can** contain suffix
   } __attribute__((packed)) m_eddystoneData;
   void _initHeadder();
   char BLEHeadder[12];
+>>>>>>> Stashed changes
 }; // BLEEddystoneURL
 
-#endif /* SOC_BLE_SUPPORTED */
 #endif /* _BLEEddystoneURL_H_ */

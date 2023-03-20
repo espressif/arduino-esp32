@@ -32,8 +32,8 @@ public:
   bool           operator<=(const BLEAddress& otherAddress) const;
   bool           operator>(const BLEAddress& otherAddress) const;
   bool           operator>=(const BLEAddress& otherAddress) const;
-	esp_bd_addr_t* getNative();
-	std::string    toString();
+  esp_bd_addr_t* getNative();
+  String         toString();
 
 private:
 	esp_bd_addr_t m_address;

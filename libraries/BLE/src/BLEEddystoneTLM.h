@@ -12,7 +12,6 @@
 
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
-#include <Arduino.h>
 
 #define EDDYSTONE_TLM_FRAME_TYPE 0x20
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))
@@ -38,7 +37,7 @@ public:
   uint32_t  getCount();
   uint32_t  getTime();
   String toString();
-  void      setData(std::string data);
+  void      setData(String data);
   void      setUUID(BLEUUID l_uuid);
   void      setVersion(uint8_t version);
   void      setVolt(uint16_t volt);
