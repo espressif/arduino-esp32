@@ -57,7 +57,7 @@ void BLEBeacon::setData(String data) {
 		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
 		return;
 	}
-	memcpy(&m_beaconData, data.data(), sizeof(m_beaconData));
+	memcpy(&m_beaconData, data.c_str(), sizeof(m_beaconData));
 } // setData
 
 void BLEBeacon::setMajor(uint16_t major) {
