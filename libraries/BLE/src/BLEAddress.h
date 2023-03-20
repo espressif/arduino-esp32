@@ -24,7 +24,7 @@
 class BLEAddress {
 public:
 	BLEAddress(esp_bd_addr_t address);
-	BLEAddress(std::string stringAddress);
+	BLEAddress(String stringAddress);
 	bool           equals(BLEAddress otherAddress);
   bool           operator==(const BLEAddress& otherAddress) const;
   bool           operator!=(const BLEAddress& otherAddress) const;
