@@ -117,8 +117,11 @@
 #define OPT_MCU_RP2040           1100 ///< Raspberry Pi RP2040
 
 // NXP Kinetis
-#define OPT_MCU_MKL25ZXX         1200 ///< NXP MKL25Zxx
-#define OPT_MCU_K32L2BXX         1201 ///< NXP K32L2Bxx
+#define OPT_MCU_KINETIS_KL       1200 ///< NXP KL series
+#define OPT_MCU_KINETIS_K32      1201 ///< NXP K32 series
+
+#define OPT_MCU_MKL25ZXX         1200 ///< Alias to KL (obsolete)
+#define OPT_MCU_K32L2BXX         1201 ///< Alias to K32 (obsolete)
 
 // Silabs
 #define OPT_MCU_EFM32GG          1300 ///< Silabs EFM32GG
@@ -127,6 +130,8 @@
 #define OPT_MCU_RX63X            1400 ///< Renesas RX63N/631
 #define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
 #define OPT_MCU_RX72N            1402 ///< Renesas RX72N
+#define OPT_MCU_RAXXX            1403 ///< Renesas RAxxx families
+
 
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327

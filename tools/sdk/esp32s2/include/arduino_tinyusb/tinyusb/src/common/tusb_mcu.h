@@ -85,7 +85,9 @@
   #define TUP_DCD_ENDPOINT_MAX    8
   #define TUP_RHPORT_HIGHSPEED    1 // Port0 HS, Port1 HS
 
-#elif TU_CHECK_MCU(OPT_MCU_MKL25ZXX, OPT_MCU_K32L2BXX)
+#elif TU_CHECK_MCU(OPT_MCU_KINETIS_KL, OPT_MCU_KINETIS_K32)
+  #define TUP_USBIP_CHIPIDEA_FS
+  #define TUP_USBIP_CHIPIDEA_FS_KINETIS
   #define TUP_DCD_ENDPOINT_MAX    16
 
 #elif TU_CHECK_MCU(OPT_MCU_MM32F327X)
@@ -294,7 +296,7 @@
 //--------------------------------------------------------------------+
 // Renesas
 //--------------------------------------------------------------------+
-#elif TU_CHECK_MCU(OPT_MCU_RX63X, OPT_MCU_RX65X, OPT_MCU_RX72N)
+#elif TU_CHECK_MCU(OPT_MCU_RX63X, OPT_MCU_RX65X, OPT_MCU_RX72N, OPT_MCU_RAXXX)
   #define TUP_DCD_ENDPOINT_MAX    10
 
 //--------------------------------------------------------------------+

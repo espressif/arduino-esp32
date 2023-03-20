@@ -1,20 +1,37 @@
 #pragma once
 
+#define SRMODEL_STRING_LENGTH 32
+#ifdef ESP_PLATFORM
+#include "esp_partition.h"
+#endif
+
 typedef struct 
 {
-    char **model_name;     // the name of models, like "wn9_hilexin"(wakenet9, hilexin), "mn5_en"(multinet5, english)
-    char *partition_label;  // partition label used to save the files of model
-    int num;               // the number of models
+    // char *name;      // the name of model, like "wn9_hilexin"(wakenet9, hilexin)
+    int num;         // the number of files
+    char **files;           // the model files, like wn9_index, wn9_data
+    char **data;             // the pointer of file data
+    int *sizes;              // the size of different file
+} srmodel_data_t;
+
+typedef struct 
+{
+    char **model_name;                   // the name of models, like "wn9_hilexin"(wakenet9, hilexin), "mn5_en"(multinet5, english)
+    char *partition_label;               // partition label used to save the files of model
+    spi_flash_mmap_handle_t *mmap_handle;// mmap_handle if using esp_partition_mmap else NULL; 
+    int num;                             // the number of models
+    srmodel_data_t **model_data;         // the model data , NULL if spiffs format
 } srmodel_list_t;
+
 
 #define MODEL_NAME_MAX_LENGTH 64
 
 /**
- * @brief Return all avaliable models in spiffs or selected in Kconfig.
+ * @brief Return all avaliable models in flash.
  *
  * @param partition_label    The spiffs label defined in your partition file used to save models.
  * 
- * @return all avaliable models in spiffs,save as srmodel_list_t.
+ * @return all avaliable models,save as srmodel_list_t.
  */
 srmodel_list_t* esp_srmodel_init(const char* partition_label);
 
@@ -77,6 +94,14 @@ void srmodel_spiffs_deinit(srmodel_list_t *models);
  * @return the base path od srmodel spiffs
  */
 char *get_model_base_path(void);
+
+/**
+ * @brief Return static srmodel pointer. 
+ *        static srmodel pointer will be set after esp_srmodel_init 
+ *
+ * @return the pointer of srmodel_list_t
+ */
+srmodel_list_t *get_static_srmodels(void);
 
 
 #ifdef ESP_PLATFORM

@@ -316,4 +316,3 @@ typedef struct TU_ATTR_PACKED
 TU_VERIFY_STATIC(sizeof(usbtmc_read_stb_interrupt_488_t) == 2u, "struct wrong length");
 
 #endif
-
