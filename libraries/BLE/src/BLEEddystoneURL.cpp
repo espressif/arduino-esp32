@@ -248,11 +248,11 @@ int BLEEddystoneURL::setSmartURL(String url) {
   }
 
   for(uint8_t i = 0; i < 0x0E; ++i){
-    std::string std_url(url.c_str());
-    std::string std_suffix(EDDYSTONE_URL_SUFFIX[i].c_str());
+    String std_url(url.c_str());
+    String std_suffix(EDDYSTONE_URL_SUFFIX[i].c_str());
     size_t found_pos = std_url.find(std_suffix);
     //log_d("check if in url \"%s\" can find suffix \"%s\": found_pos = %d", std_url.c_str(), std_suffix.c_str(), found_pos);
-    if(found_pos != std::string::npos){
+    if(found_pos != String::npos){
       hasSuffix = true;
       suffix = i;
       break;

@@ -39,7 +39,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       
       if (advertisedDevice.haveManufacturerData() == true)
       {
-        std::string strManufacturerData = advertisedDevice.getManufacturerData();
+        String strManufacturerData = advertisedDevice.getManufacturerData();
 
         uint8_t cManufacturerData[100];
         strManufacturerData.copy((char *)cManufacturerData, strManufacturerData.length(), 0);
@@ -69,7 +69,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         Serial.println("Found an EddystoneURL beacon!");
         BLEEddystoneURL EddystoneURL = BLEEddystoneURL(&advertisedDevice);
         Serial.printf("URL bytes: 0x");
-        std::string url = EddystoneURL.getURL();
+        String url = EddystoneURL.getURL();
         for(auto byte : url){
           Serial.printf("%02X", byte);
         }
