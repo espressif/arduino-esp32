@@ -1,0 +1,37 @@
+[  
+    {   
+        "library": "Adafruit NeoPixel",    
+        "exclude_targets": null,
+        "sketches": [
+            {"name": "strandtest", "path": "~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino"}
+        ]
+    },
+    {   
+        "library": "FastLED",    
+        "exclude_targets": null,
+        "sketches": [
+            {"name": "Blink", "path": "~/Arduino/libraries/FastLED/examples/Blink/Blink.ino"}
+        ]
+    },
+    {   
+        "library": "IRremote",    
+        "exclude_targets": null,
+        "sketches": [
+            {"name": "SendDemo", "path": "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"}
+        ]
+    },
+    {   
+        "library": "ESP32Servo",    
+        "exclude_targets": null,
+        "sketches": [
+            {"name": "Knob", "path": "~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino"}
+        ]
+    },
+    {   
+        "library": "ArduinoBLE",    
+        "exclude_targets": ["esp32s2"],
+        "sketches": [
+            {"name": "Scan", "path": "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"}
+        ]
+    }
+]
