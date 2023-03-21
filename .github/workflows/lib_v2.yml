@@ -78,7 +78,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install jsonschema json
+        run: python3 -m pip install jsonschema
 
       - name: Load JSON file to variable
         id: load-json
