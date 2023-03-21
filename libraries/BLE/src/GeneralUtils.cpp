@@ -56,15 +56,16 @@ static void a4_to_a3(unsigned char* a3, unsigned char* a4) {
  * @param [out] out
  */
 bool GeneralUtils::base64Encode(const String& in, String* out) {
+	std::string std_in(in.c_str());
+	std::string std_out(out->c_str());
 	int i = 0, j = 0;
 	size_t enc_len = 0;
 	unsigned char a3[3];
 	unsigned char a4[4];
+	std_out.resize(base64EncodedLength(in));
 
-	out->resize(base64EncodedLength(in));
-
-	int input_len = in.size();
-	String::const_iterator input = in.begin();
+	int input_len = std_in.length();
+	std::string::const_iterator input = std_in.begin();
 
 	while (input_len--) {
 		a3[i++] = *(input++);
@@ -72,7 +73,7 @@ bool GeneralUtils::base64Encode(const String& in, String* out) {
 			a3_to_a4(a4, a3);
 
 			for (i = 0; i < 4; i++) {
-				(*out)[enc_len++] = kBase64Alphabet[a4[i]];
+				(std_out)[enc_len++] = kBase64Alphabet[a4[i]];
 			}
 
 			i = 0;
@@ -87,15 +88,16 @@ bool GeneralUtils::base64Encode(const String& in, String* out) {
 		a3_to_a4(a4, a3);
 
 		for (j = 0; j < i + 1; j++) {
-			(*out)[enc_len++] = kBase64Alphabet[a4[j]];
+			(std_out)[enc_len++] = kBase64Alphabet[a4[j]];
 		}
 
 		while ((i++ < 3)) {
-			(*out)[enc_len++] = '=';
+			(std_out)[enc_len++] = '=';
 		}
 	}
+	*out = String(std_out.c_str());
 
-	return (enc_len == out->size());
+	return (enc_len == out->length());
 } // base64Encode
 
 
@@ -122,26 +124,27 @@ void GeneralUtils::dumpInfo() {
  * @return True if the string ends with the given character.
  */
 bool GeneralUtils::endsWith(String str, char c) {
-	if (str.empty()) {
+	if (str.length() == 0) {
 		return false;
 	}
-	if (str.at(str.length() - 1) == c) {
+	if (str.charAt(str.length() - 1) == c) {
 		return true;
 	}
 	return false;
 } // endsWidth
 
-
+/*
 static int DecodedLength(const String& in) {
 	int numEq = 0;
-	int n = (int) in.size();
+	int n = (int) in.length();
 
-	for (String::const_reverse_iterator it = in.rbegin(); *it == '='; ++it) {
+	//for (String::const_reverse_iterator it = in.rbegin(); *it == '='; ++it) {
+	for (int it = in.length()-1; in.charAt(it) == '='; --it) {
 		++numEq;
 	}
 	return ((6 * n) / 8) - numEq;
 } // DecodedLength
-
+*/
 
 static unsigned char b64_lookup(unsigned char c) {
 	if(c >='A' && c <='Z') return c - 'A';
@@ -164,17 +167,18 @@ bool GeneralUtils::base64Decode(const String& in, String* out) {
 	unsigned char a3[3];
 	unsigned char a4[4];
 
-	int input_len = in.size();
-	String::const_iterator input = in.begin();
+	int input_len = in.length();
+	int input_iterator = 0;
 
-	out->resize(DecodedLength(in));
+	//out->resize(DecodedLength(in));
 
 	while (input_len--) {
-		if (*input == '=') {
+		//if (*input == '=') {
+		if (in[input_iterator] == '=') {
 			break;
 		}
 
-		a4[i++] = *(input++);
+		a4[i++] = in[input_iterator++];
 		if (i == 4) {
 			for (i = 0; i <4; i++) {
 				a4[i] = b64_lookup(a4[i]);
@@ -183,7 +187,8 @@ bool GeneralUtils::base64Decode(const String& in, String* out) {
 			a4_to_a3(a3,a4);
 
 			for (i = 0; i < 3; i++) {
-				(*out)[dec_len++] = a3[i];
+				out->concat(a3[i]);
+				dec_len++;
 			}
 
 			i = 0;
@@ -206,7 +211,7 @@ bool GeneralUtils::base64Decode(const String& in, String* out) {
 		}
 	}
 
-	return (dec_len == out->size());
+	return (dec_len == out->length());
  } // base64Decode
 
 /*
@@ -351,13 +356,14 @@ std::vector<String> GeneralUtils::split(String source, char delimiter) {
 	// See also: https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
 	std::vector<String> strings;
 	std::size_t current, previous = 0;
-	current = source.find(delimiter);
-	while (current != String::npos) {
-		strings.push_back(trim(source.substr(previous, current - previous)));
+	std::string std_source(source.c_str());
+	current = std_source.find(delimiter);
+	while (current != std::string::npos) {
+		strings.push_back(trim(source.substring(previous, current)));
 		previous = current + 1;
-		current = source.find(delimiter, previous);
+		current = std_source.find(delimiter, previous);
 	}
-	strings.push_back(trim(source.substr(previous, current - previous)));
+	strings.push_back(trim(source.substring(previous, current)));
 	return strings;
 } // split
 
@@ -535,8 +541,9 @@ String GeneralUtils::toLower(String& value) {
  * @brief Remove white space from a string.
  */
 String GeneralUtils::trim(const String& str) {
-	size_t first = str.find_first_not_of(' ');
-	if (String::npos == first) return str;
-	size_t last = str.find_last_not_of(' ');
-	return str.substr(first, (last - first + 1));
+	std::string std_str(str.c_str());
+	size_t first = std_str.find_first_not_of(' ');
+	if (std::string::npos == first) return str;
+	size_t last = std_str.find_last_not_of(' ');
+	return str.substring(first, (last + 1));
 } // trim

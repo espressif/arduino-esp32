@@ -42,7 +42,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         String strManufacturerData = advertisedDevice.getManufacturerData();
 
         uint8_t cManufacturerData[100];
-        strManufacturerData.copy((char *)cManufacturerData, strManufacturerData.length(), 0);
+        memcpy(cManufacturerData, strManufacturerData.c_str(), strManufacturerData.length());
 
         if (strManufacturerData.length() == 25 && cManufacturerData[0] == 0x4C && cManufacturerData[1] == 0x00)
         {
