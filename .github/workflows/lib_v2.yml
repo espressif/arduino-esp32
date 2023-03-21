@@ -63,27 +63,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Load JSON file to variable
-        id: load-json
-        run: echo "::set-output name=json::$(cat .github/workflows/lib.json)"
+      - name: JSON to variables
+        uses: rgarcia-phi/json-to-variables@v1.1.0
+        with:
+          filename: '.github/workflows/lib.json'
+          prefix: test
+          masked: true
 
-      - name: Parse JSON and set variables
-        run: |
-          for item in $(echo "${{ steps.load-json.outputs.json }}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo "${item}" | base64 --decode | jq -r "${1}"
-            }
-
-            library=$(_jq '.library')
-            exclude_targets=$(_jq '.exclude_targets')
-            name=$(_jq '.sketches[0].name')
-            path=$(_jq '.sketches[0].path')
-
-            # You can use the variables here, or add more steps to use them in other ways
-            echo "Library: $library"
-            echo "Exclude Targets: $exclude_targets"
-            echo "Sketch Name: $name"
-            echo "Sketch Path: $path"
+      - name: Show output
+        run: echo "The time was ${{ env.test_library }}, ${{ env.test_sketches_0_name }}"
 
       # Install Arduino ESP32 core -> move to compile-sketch
       #- name: Install Arduino ESP32 core
