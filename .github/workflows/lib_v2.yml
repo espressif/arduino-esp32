@@ -86,6 +86,7 @@ jobs:
 
       - name: Parse JSON and set environment variables
         run: |
+          #!/usr/bin/env python3
           import json
           data = json.loads('${{ steps.load-json.outputs.json }}')
 
