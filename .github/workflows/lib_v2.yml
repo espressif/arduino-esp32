@@ -34,12 +34,10 @@ jobs:
         - source-path: '.'
           name: "esp32:esp32"
 
-      GITHUB_URL: 
+      GITHUB_URL: |
         - name: "esp32:esp32"
           source-url: "espressif/arduino-esp32.git"
           version: 2.0.7
-          
-      
 
     strategy:
       matrix:
