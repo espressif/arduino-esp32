@@ -7,6 +7,7 @@
 
 #ifndef COMPONENTS_CPP_UTILS_GENERALUTILS_H_
 #define COMPONENTS_CPP_UTILS_GENERALUTILS_H_
+#include "Arduino.h"
 #include <stdint.h>
 #include <string>
 #include <esp_err.h>
