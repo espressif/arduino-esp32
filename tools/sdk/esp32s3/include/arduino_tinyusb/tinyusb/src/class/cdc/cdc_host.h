@@ -80,7 +80,7 @@ typedef struct
 } tuh_cdc_itf_info_t;
 
 // Get Interface index from device address + interface number
-// return TUSB_INDEX_INVALID (0xFF) if not found
+// return TUSB_INDEX_INVALID_8 (0xFF) if not found
 uint8_t tuh_cdc_itf_get_index(uint8_t daddr, uint8_t itf_num);
 
 // Get Interface information

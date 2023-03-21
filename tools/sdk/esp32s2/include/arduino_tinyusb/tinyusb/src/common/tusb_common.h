@@ -75,12 +75,6 @@
 
 #include "tusb_timeout.h" // TODO remove
 
-enum
-{
-  TU_INDEX_INVALID_8 = 0xFFu
-};
-
-
 //--------------------------------------------------------------------+
 // Optional API implemented by application if needed
 // TODO move to a more ovious place/file
