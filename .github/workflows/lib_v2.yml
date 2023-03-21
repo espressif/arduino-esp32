@@ -49,13 +49,13 @@ jobs:
 
         include:
           - target: esp32
-            fqbn: espressif:esp32:esp32
+            fqbn: esp32:esp32:esp32
           - target: esp32s2
-            fqbn: espressif:esp32:esp32s2
+            fqbn: esp32:esp32:esp32s2
           - target: esp32c3
-            fqbn: espressif:esp32:esp32c3
+            fqbn: esp32:esp32:esp32c3
           - target: esp32s3
-            fqbn: espressif:esp32:esp32s3
+            fqbn: esp32:esp32:esp32s3
 
 
     steps:
@@ -72,6 +72,47 @@ jobs:
 
       - name: Show output
         run: echo "The time was ${{ env.test_library }}, ${{ env.test_sketches_0_name }}"
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install jsonschema json
+
+    - name: Load JSON file to variable
+      id: load-json
+      run: echo "::set-output name=json::$(cat .github/workflows/lib.json)"
+
+    - name: Parse JSON and set environment variables
+      run: |
+        import json
+        data = json.loads('${{ steps.load-json.outputs.json }}')
+
+        for item in data:
+          library = item['library']
+          exclude_targets = item['exclude_targets']
+          sketches = item['sketches']
+          name = sketches[0]['name']
+          path = sketches[0]['path']
+
+          # Set environment variables for each item
+          env_var_library = f'{library.replace(" ", "_").upper()}_LIBRARY'
+          env_var_exclude_targets = f'{library.replace(" ", "_").upper()}_EXCLUDE_TARGETS'
+          env_var_sketch_name = f'{library.replace(" ", "_").upper()}_SKETCH_NAME'
+          env_var_sketch_path = f'{library.replace(" ", "_").upper()}_SKETCH_PATH'
+
+          env_var_library_value = f'{library}'
+          env_var_exclude_targets_value = f'{exclude_targets}'
+          env_var_sketch_name_value = f'{sketch_name}
+          env_var_sketch_path_value = f'{sketch_path}
+
+          echo ${{ env.env_var_library_value }}
+          echo ${{ env.env_var_exclude_targets_value }}
+          echo ${{ env.env_var_sketch_name_value }}
+          echo ${{ env.env_var_sketch_path_value }}
+
 
       # Install Arduino ESP32 core -> move to compile-sketch
       #- name: Install Arduino ESP32 core
