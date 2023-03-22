@@ -31,7 +31,7 @@ jobs:
           version: 2.0.7
 
       REPOSITORY: |
-          source-path: '.'
+        - source-path: '.'
           name: "espressif:esp32"
 
       GITHUB_URL: |
@@ -79,13 +79,16 @@ jobs:
       #     bash .github/scripts/install-arduino-core-esp32.sh
 
       # For more information: https://github.com/arduino/compile-sketches#readme
+
+      # Possible platform input
+      # ${{ env.BOARD_MANAGER }}
+      # ${{ env.GITHUB_URL }}
+
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
         with:
           platforms: |
-            # ${{ env.BOARD_MANAGER }}
             ${{ env.REPOSITORY }}
-            # ${{ env.GITHUB_URL }}
           target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
           libraries: |
