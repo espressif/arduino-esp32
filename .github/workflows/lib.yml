@@ -9,6 +9,8 @@ on:
   schedule:
     - cron: '0 4 * * SUN' 
 
+  push:
+
 env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: libraries-report
@@ -77,9 +79,9 @@ jobs:
         uses: actions/checkout@v3
 
       # Install Arduino ESP32 core, because compile-sketch wont call get.py
-      - name: Install Arduino ESP32 core
-        run: |
-           bash .github/scripts/install-arduino-core-esp32.sh
+      #- name: Install Arduino ESP32 core
+      #  run: |
+      #     bash .github/scripts/install-arduino-core-esp32.sh
 
       # For more information: https://github.com/arduino/compile-sketches#readme
       - name: Compile sketch
