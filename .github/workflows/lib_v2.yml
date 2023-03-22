@@ -31,8 +31,8 @@ jobs:
           version: 2.0.7
 
       REPOSITORY: |
-        - source-path: '.'
-          name: "esp32:esp32"
+          source-path: '.'
+          name: "espressif:esp32"
 
       GITHUB_URL: |
         - name: "esp32:esp32"
