@@ -18,9 +18,9 @@ env:
   RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
 jobs:
   compile-sketch:
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'lib_test') ||
-      (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
+    #if: |
+    #  contains(github.event.pull_request.labels.*.name, 'lib_test') ||
+    #  (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
     
     runs-on: ubuntu-latest
 
