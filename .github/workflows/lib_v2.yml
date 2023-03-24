@@ -130,7 +130,7 @@ jobs:
 
   report-to-file:
     needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
-    if: github.event_name ==  'push' #'schedule' # Only run the job when the workflow is triggered by a schedule
+    if: github.event_name == 'push' #'schedule' # Only run the job when the workflow is triggered by a schedule
     runs-on: ubuntu-latest
     steps:
       # Check out repository
