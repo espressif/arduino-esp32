@@ -26,7 +26,7 @@ jobs:
     env:
       # How should be the ESP32 Arduino core installed
       BOARD_MANAGER: |
-        - name: "esp32:esp32"
+        - name: "espressif:esp32"
           source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
           version: 2.0.7
 
@@ -35,7 +35,7 @@ jobs:
           name: "espressif:esp32"
 
       GITHUB_URL: |
-        - name: "esp32:esp32"
+        - name: "espressif:esp32"
           source-url: "espressif/arduino-esp32.git"
           version: 2.0.7
 
@@ -49,13 +49,13 @@ jobs:
 
         include:
           - target: esp32
-            fqbn: esp32:esp32:esp32
+            fqbn: espressif:esp32:esp32
           - target: esp32s2
-            fqbn: esp32:esp32:esp32s2
+            fqbn: espressif:esp32:esp32s2
           - target: esp32c3
-            fqbn: esp32:esp32:esp32c3
+            fqbn: espressif:esp32:esp32c3
           - target: esp32s3
-            fqbn: esp32:esp32:esp32s3
+            fqbn: espressif:esp32:esp32s3
 
 
     steps:
