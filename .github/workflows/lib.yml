@@ -29,7 +29,7 @@ jobs:
       UNIVERSAL_LIBRARIES: |
         - source-path: ./
         - name: Adafruit NeoPixel
-          version: 2.0.0
+          version: 1.10.6
         - name: FastLED
         - name: IRremote
         - name: ESP32Servo
