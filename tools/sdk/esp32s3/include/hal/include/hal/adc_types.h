@@ -97,6 +97,25 @@ typedef struct {
     uint8_t bit_width;  ///< ADC output bit width
 } adc_digi_pattern_config_t;
 
+/**
+ * @brief ADC IIR Filter ID
+ */
+typedef enum {
+    ADC_DIGI_IIR_FILTER_0,  ///< Filter 0
+    ADC_DIGI_IIR_FILTER_1,  ///< Filter 1
+} adc_digi_iir_filter_t;
+
+/**
+ * @brief IIR Filter Coefficient
+ */
+typedef enum {
+    ADC_DIGI_IIR_FILTER_COEFF_2,     ///< The filter coefficient is 2
+    ADC_DIGI_IIR_FILTER_COEFF_4,     ///< The filter coefficient is 4
+    ADC_DIGI_IIR_FILTER_COEFF_8,     ///< The filter coefficient is 8
+    ADC_DIGI_IIR_FILTER_COEFF_16,    ///< The filter coefficient is 16
+    ADC_DIGI_IIR_FILTER_COEFF_64,    ///< The filter coefficient is 64
+} adc_digi_iir_filter_coeff_t;
+
 /*---------------------------------------------------------------
                     Output Format
 ---------------------------------------------------------------*/
@@ -165,7 +184,7 @@ typedef struct {
     };
 } adc_digi_output_data_t;
 
-#elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
 /**
  * @brief ADC digital controller (DMA mode) output data format.
  *        Used to analyze the acquired ADC (DMA) data.

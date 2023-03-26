@@ -164,7 +164,11 @@ extern "C" {
 /**
  * LWIP_IPV4==1: Enable IPv4
  */
+#ifdef CONFIG_LWIP_IPV4
 #define LWIP_IPV4                       1
+#else
+#define LWIP_IPV4                       0
+#endif
 
 /**
  * IP_REASSEMBLY==1: Reassemble incoming fragmented IP4 packets. Note that
@@ -273,6 +277,7 @@ extern "C" {
    ---------- DHCP options ----------
    ----------------------------------
 */
+#if CONFIG_LWIP_IPV4
 /**
  * LWIP_DHCP==1: Enable DHCP module.
  */
@@ -347,7 +352,7 @@ extern "C" {
 #define ESP_DHCP_DISABLE_VENDOR_CLASS_IDENTIFIER       CONFIG_LWIP_DHCP_DISABLE_VENDOR_CLASS_ID
 
 #define DHCP_DEFINE_CUSTOM_TIMEOUTS     1
-#define DHCP_COARSE_TIMER_SECS          (1)
+#define DHCP_COARSE_TIMER_SECS          CONFIG_LWIP_DHCP_COARSE_TIMER_SECS
 #define DHCP_NEXT_TIMEOUT_THRESHOLD     (3)
 /* Since for embedded devices it's not that hard to miss a discover packet, so lower
  * the discover retry backoff time from (2,4,8,16,32,60,60)s to (500m,1,2,4,8,15,15)s.
@@ -362,6 +367,7 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
     if (timeout == 0) {
         timeout = min;
     }
+    timeout = (timeout + DHCP_COARSE_TIMER_SECS - 1) / DHCP_COARSE_TIMER_SECS;
     return timeout;
 }
 
@@ -380,6 +386,7 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define LWIP_HOOK_DHCP_APPEND_OPTIONS(netif, dhcp, state, msg, msg_type, options_len_ptr) \
         dhcp_append_extra_opts(netif, state, msg, options_len_ptr);
 
+#endif /* CONFIG_LWIP_IPV4 */
 /*
    ------------------------------------
    ---------- AUTOIP options ----------
@@ -1483,6 +1490,15 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define ESP_GRATUITOUS_ARP              0
 #endif
 
+/**
+ * ESP_MLDV6_REPORT==1: This option allows to send mldv6 report periodically.
+ */
+#ifdef CONFIG_LWIP_ESP_MLDV6_REPORT
+#define ESP_MLDV6_REPORT              1
+#else
+#define ESP_MLDV6_REPORT              0
+#endif
+
 #define ESP_LWIP                        1
 #define ESP_LWIP_ARP                    1
 #define ESP_PER_SOC_TCP_WND             0
@@ -1542,6 +1558,14 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define mem_clib_malloc malloc
 #define mem_clib_calloc calloc
 #endif /* CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP */
+
+
+/*
+ * Check if the lwIP configuration is sane
+ */
+#if !LWIP_IPV4 && !LWIP_IPV6
+#error "Please enable at least one IP stack (either IPv4 or IPv6 or both)"
+#endif
 
 #ifdef __cplusplus
 }

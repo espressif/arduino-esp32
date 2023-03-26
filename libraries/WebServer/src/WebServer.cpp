@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <libb64/cencode.h>
+#include "esp_random.h"
 #include "WiFiServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"

@@ -148,7 +148,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
 void SDMMCFS::end()
 {
     if(_card) {
-        esp_vfs_fat_sdmmc_unmount();
+        esp_vfs_fat_sdcard_unmount(_impl->mountpoint(), _card);
         _impl->mountpoint(NULL);
         _card = NULL;
     }

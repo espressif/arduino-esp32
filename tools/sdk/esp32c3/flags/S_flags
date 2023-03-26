@@ -1,0 +1,1 @@
+-ffunction-sections -fdata-sections -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-enum-conversion -gdwarf-4 -ggdb -nostartfiles -freorder-blocks -Wwrite-strings -fstack-protector -fstrict-volatile-bitfields -fno-jump-tables -fno-tree-switch-conversion 

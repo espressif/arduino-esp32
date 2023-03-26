@@ -423,6 +423,9 @@ void rtc_clk_cpu_freq_get_config(rtc_cpu_freq_config_t* out_config);
  * Short form for filling in rtc_cpu_freq_config_t structure and calling
  * rtc_clk_cpu_freq_set_config when a switch to XTAL is needed.
  * Assumes that XTAL frequency has been determined — don't call in startup code.
+ *
+ * @note Unlike on other chips, on ESP32S2, this function does not disable BBPLL after switching the CPU clock source
+ * to XTAL. If BBPLL wants to be turned off for power saving purpose, please use rtc_clk_cpu_freq_set_config.
  */
 void rtc_clk_cpu_freq_set_xtal(void);
 
@@ -507,10 +510,6 @@ uint64_t rtc_time_slowclk_to_us(uint64_t rtc_cycles, uint32_t period);
  * @return current value of RTC counter
  */
 uint64_t rtc_time_get(void);
-
-uint64_t rtc_light_slp_time_get(void);
-
-uint64_t rtc_deep_slp_time_get(void);
 
 /**
  * @brief Busy loop until next RTC_SLOW_CLK cycle
