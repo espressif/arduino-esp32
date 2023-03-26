@@ -3,24 +3,18 @@
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
   rmt_data_t led_data[24];
-  static rmt_obj_t* rmt_send = NULL;
-  static bool initialized = false;
 
-  uint8_t _pin = pin;
 #ifdef RGB_BUILTIN
   if(pin == RGB_BUILTIN){
-    _pin = RGB_BUILTIN-SOC_GPIO_PIN_COUNT;
+    pin = RGB_BUILTIN-SOC_GPIO_PIN_COUNT;
   }
 #endif
 
-  if(!initialized){
-    if((rmt_send = rmtInit(_pin, RMT_TX_MODE, RMT_MEM_64)) == NULL){
-        log_e("RGB LED driver initialization failed!");
-        rmt_send = NULL;
-        return;
-    }
-    rmtSetTick(rmt_send, 100);
-    initialized = true;
+  // 10MHz RMT Frequency -> tick = 100ns
+  // force initialization to make sure it has the right RMT Frequency
+  if(!rmtInit(pin, RMT_TX_MODE, RMT_MEM_64, 10000000)){
+    log_e("RGB LED driver initialization failed!");
+    return;
   }
 
   int color[] = {green_val, red_val, blue_val};  // Color coding is in order GREEN, RED, BLUE
@@ -43,5 +37,5 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
       i++;
     }
   }
-  rmtWrite(rmt_send, led_data, 24);
+  rmtWrite(pin, led_data, 24);
 }

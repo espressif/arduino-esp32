@@ -62,8 +62,6 @@ typedef union {
 
 #define XJT_VALID(i) (i->level0 && !i->level1 && i->duration0 >= 8 && i->duration0 <= 11)
 
-rmt_obj_t* rmt_recv = NULL;
-
 static uint32_t *s_channels;
 static uint32_t channels[16];
 static uint8_t xjt_flags = 0x0;
@@ -177,22 +175,21 @@ extern "C" void receive_data(uint32_t *data, size_t len, void * arg)
     parseRmt((rmt_data_t*) data, len, channels);
 }
 
+#define RMT_GPIO 21
+
 void setup() 
 {
     Serial.begin(115200);
     
-    // Initialize the channel to capture up to 192 items
-    if ((rmt_recv = rmtInit(21, RMT_RX_MODE, RMT_MEM_192)) == NULL)
+    // Initialize the channel to capture up to 192 items - 1us tick
+    if (!rmtInit(RMT_GPIO, RMT_RX_MODE, RMT_MEM_192, 1000000))
     {
         Serial.println("init receiver failed\n");
     }
-
-    // Setup 1us tick
-    float realTick = rmtSetTick(rmt_recv, 1000);
-    Serial.printf("real tick set to: %fns\n", realTick);
+    Serial.println("real tick set to: 1us");
 
     // Ask to start reading
-    rmtRead(rmt_recv, receive_data, NULL);
+    rmtRead(RMT_GPIO, receive_data, NULL);
 }
 
 void loop() 

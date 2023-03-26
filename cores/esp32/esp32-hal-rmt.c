@@ -1,4 +1,4 @@
-// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,622 +13,700 @@
 // limitations under the License.
 
 #include "esp32-hal.h"
-#include "driver/rmt.h"
+#include "driver/gpio.h"
+#include "driver/rmt_tx.h"
+#include "driver/rmt_rx.h"
+
+#include "esp32-hal-rmt.h"
+#include "esp32-hal-periman.h"
+
 
 /**
- * Internal macros
- */
-
-#define MAX_CHANNELS                        (SOC_RMT_GROUPS * SOC_RMT_CHANNELS_PER_GROUP)
-
-#define RMT_TX_CH_START       (0)
-#define RMT_TX_CH_END         (SOC_RMT_TX_CANDIDATES_PER_GROUP - 1)
-#define RMT_RX_CH_START       (SOC_RMT_CHANNELS_PER_GROUP - SOC_RMT_TX_CANDIDATES_PER_GROUP)
-#define RMT_RX_CH_END         (SOC_RMT_CHANNELS_PER_GROUP - 1)
-
-#define _LIMIT(a,b) (a>b?b:a)
+   Internal macros
+*/
 
 #if CONFIG_DISABLE_HAL_LOCKS
-# define RMT_MUTEX_LOCK(channel)
-# define RMT_MUTEX_UNLOCK(channel)
+# define RMT_MUTEX_LOCK(busptr)
+# define RMT_MUTEX_UNLOCK(busptr)
 #else
-# define RMT_MUTEX_LOCK(channel)    do {} while (xSemaphoreTake(g_rmt_objlocks[channel], portMAX_DELAY) != pdPASS)
-# define RMT_MUTEX_UNLOCK(channel)  xSemaphoreGive(g_rmt_objlocks[channel])
+# define RMT_MUTEX_LOCK(busptr)    do {} while (xSemaphoreTake(busptr->g_rmt_objlocks, portMAX_DELAY) != pdPASS)
+# define RMT_MUTEX_UNLOCK(busptr)  xSemaphoreGive(busptr->g_rmt_objlocks)
 #endif /* CONFIG_DISABLE_HAL_LOCKS */
 
-//#define _RMT_INTERNAL_DEBUG
-#ifdef _RMT_INTERNAL_DEBUG
-# define DEBUG_INTERRUPT_START(pin)    digitalWrite(pin, 1);
-# define DEBUG_INTERRUPT_END(pin)      digitalWrite(pin, 0);
-#else
-# define DEBUG_INTERRUPT_START(pin)
-# define DEBUG_INTERRUPT_END(pin)
-#endif /* _RMT_INTERNAL_DEBUG */
-
-#define RMT_DEFAULT_ARD_CONFIG_TX(gpio, channel_id, buffers)      \
-    {                                                \
-        .rmt_mode = RMT_MODE_TX,                     \
-        .channel = channel_id,                       \
-        .gpio_num = gpio,                            \
-        .clk_div = 1,                                \
-        .mem_block_num = buffers,                    \
-        .flags = 0,                                  \
-        .tx_config = {                               \
-            .carrier_level = RMT_CARRIER_LEVEL_HIGH, \
-            .idle_level = RMT_IDLE_LEVEL_LOW,        \
-            .carrier_duty_percent = 50,              \
-            .carrier_en = false,                     \
-            .loop_en = false,                        \
-            .idle_output_en = true,                  \
-        }                                            \
-    }
-
-#define RMT_DEFAULT_ARD_CONFIG_RX(gpio, channel_id, buffers) \
-    {                                           \
-        .rmt_mode = RMT_MODE_RX,                \
-        .channel = channel_id,                  \
-        .gpio_num = gpio,                       \
-        .clk_div = 1,                           \
-        .mem_block_num = buffers,               \
-        .flags = 0,                             \
-        .rx_config = {                          \
-            .idle_threshold = 0x80,             \
-            .filter_ticks_thresh = 100,         \
-            .filter_en = false,                 \
-        }                                       \
-    }
-
-
-
 
 /**
- * Typedefs for internal stuctures, enums
- */
-struct rmt_obj_s
-{
-    bool allocated;
-    EventGroupHandle_t events;
-    uint32_t channel;
-    uint32_t buffers;
-    uint32_t data_size;
-    uint32_t* data_ptr;
-    rmt_rx_data_cb_t cb;
-    void * arg;
-    TaskHandle_t rxTaskHandle;  
-    bool rx_completed;
-    bool tx_not_rx;
+   Typedefs for internal stuctures, enums
+*/
+// structure used as interface for RMT Reading Operations
+struct rmt_rx_obj_s {
+  EventGroupHandle_t rmt_rx_events;          // reading event user handle
+  rmt_rx_data_cb_t rmt_rx_cb;                // Rx user function callback
+  void * rmt_rx_cb_arg;                      // Rx user function argument
+  TaskHandle_t rmt_rxTaskHandle;             // Rx task created to wait for received RMT data
+  QueueHandle_t rmt_rx_queue;                // Rx callback data queue
+  bool rmt_rx_completed;                     // rmtReceiveCompleted() rmtReadAsync() async reading
+  bool rmt_async_rx_enabled;                 // rmtEnd() rmtBeginReceive() rmtRead() rmtReadAsync() control
+  rmt_data_t* rmt_data_rx_ptr;               // Rx Task - data user pointer
+  size_t rmt_data_rx_size;                   // Rx Task - data length
 };
+typedef struct rmt_rx_obj_s *rmt_rx_obj_handle_t;
+
+
+struct rmt_obj_s {
+
+  // general rmt information
+  rmt_channel_handle_t rmt_channel_h;        // NULL value means channel not alocated
+  rmt_encoder_handle_t rmt_copy_encoder_h;   // RMT simple copy encoder handle
+
+  // rmt RX (reading) information
+  rmt_rx_obj_handle_t  rmt_ch_rx_obj_h;      // RMT Reading Processing necessary data
+
+  uint8_t num_buffers;                       // Number of allocated buffers needed for reading
+  uint32_t signal_range_min_ns;              // RX Filter data - Low Pass pulse width
+  uint32_t signal_range_max_ns;              // RX idle time that defines end of reading
+
+  xSemaphoreHandle g_rmt_objlocks;           // Channel Semaphore Lock
+};
+typedef struct rmt_obj_s *rmt_bus_handle_t;
 
 /**
- * Internal variables for channel descriptors
- */
-static xSemaphoreHandle g_rmt_objlocks[MAX_CHANNELS] = {
-    NULL, NULL, NULL, NULL, 
-#if MAX_CHANNELS > 4
-    NULL, NULL, NULL, NULL
-#endif
-};
-
-static rmt_obj_t g_rmt_objects[MAX_CHANNELS] = {
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-#if MAX_CHANNELS > 4
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-    { false, NULL, 0, 0, 0, NULL, NULL, NULL, NULL, true, true},
-#endif
-};
-
-/**
- * Internal variables for driver data
- */
+   Internal variables used in RMT API
+*/
 static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 /**
- * Internal method (private) declarations
- */
+   Internal method (private) declarations
+*/
 
-static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
+// allocate the bus reading strucuture whenever necessary
+static bool _rmtStartReading(rmt_bus_handle_t bus, uint8_t gpio_num, const char* labelFunc)
 {
-    int i;
-    // setup how many buffers shall we use
-    g_rmt_objects[from].buffers = size;
+  // sanity check - it should never happen
+  assert(bus && "_rmtStartReading bus NULL pointer.");
+  assert(labelFunc && "_rmtStartReading Error Message NULL pointer.");
 
-    for (i=0; i<size; i++) {
-        // mark the block of channels as used
-        g_rmt_objects[i+from].allocated = true;
+  if (bus->rmt_ch_rx_obj_h == NULL) {
+    // allocate the rmt bus object
+    bus->rmt_ch_rx_obj_h = (rmt_rx_obj_handle_t)heap_caps_calloc(1, sizeof(struct rmt_rx_obj_s), MALLOC_CAP_DEFAULT);
+    if (bus == NULL) {
+      log_e("==>%s():GPIO %d - Bus RX Struct Memory allocation fault.", labelFunc, gpio_num);
+      return false;
     }
-    return &(g_rmt_objects[from]);
+    // when the RMT channel is created, it is enabled, thus we just set the flag here
+    bus->rmt_ch_rx_obj_h->rmt_async_rx_enabled = true;
+  }
+  return true;
 }
 
-void _rmtDumpStatus(rmt_obj_t* rmt) 
+static bool _rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *data, void *args)
 {
-   bool loop_en;
-   uint8_t div_cnt;
-   uint8_t memNum;
-   bool lowPowerMode;
-   rmt_mem_owner_t owner;
-   uint16_t idleThreshold;
-   uint32_t status;
-   rmt_source_clk_t srcClk;
-   rmt_channel_t channel = rmt->channel;
-
-RMT_MUTEX_LOCK(channel);
-   rmt_get_tx_loop_mode(channel, &loop_en);
-   rmt_get_clk_div(channel, &div_cnt);
-   rmt_get_mem_block_num(channel, &memNum);
-   rmt_get_mem_pd(channel, &lowPowerMode);
-   rmt_get_memory_owner(channel, &owner);
-   rmt_get_rx_idle_thresh(channel, &idleThreshold);
-   rmt_get_status(channel, &status);
-   rmt_get_source_clk(channel, &srcClk);
-
-   log_d("Status for RMT channel %d", channel);
-   log_d("- Loop enabled: %d", loop_en);
-   log_d("- Clock divisor: %d", div_cnt);
-   log_d("- Number of memory blocks: %d", memNum);
-   log_d("- Low power mode: %d", lowPowerMode);
-   log_d("- Memory owner: %s", owner==RMT_MEM_OWNER_TX?"TX":"RX");
-   log_d("- Idle threshold: %d", idleThreshold);
-   log_d("- Status: %d", status);
-   log_d("- Source clock: %s", srcClk==RMT_BASECLK_APB?"APB (80MHz)":"1MHz");
-RMT_MUTEX_UNLOCK(channel);
+  BaseType_t high_task_wakeup = pdFALSE;
+  QueueHandle_t rmt_rx_queue = (QueueHandle_t)args;
+  // send the received RMT symbols to the _rmtRxTask of that channel
+  xQueueSendFromISR(rmt_rx_queue, data, &high_task_wakeup);
+  return high_task_wakeup == pdTRUE;
 }
 
 static void _rmtRxTask(void *args) {
-    rmt_obj_t *rmt = (rmt_obj_t *) args;
-    RingbufHandle_t rb = NULL;
-    size_t rmt_len = 0;
-    rmt_item32_t *data = NULL;
+  rmt_bus_handle_t bus = (rmt_bus_handle_t) args;
 
-    if (!rmt) {
-        log_e(" -- Inavalid Argument");
-        goto err;
-    }
+  // sanity check - it should never happen
+  assert(bus && "_rmtRxTask bus NULL pointer.");
 
-    int channel = rmt->channel;
-    rmt_get_ringbuf_handle(channel, &rb);
-    if (!rb) {
-        log_e(" -- Failed to get RMT ringbuffer handle");
-        goto err;  
+  bus->rmt_ch_rx_obj_h->rmt_rx_queue = xQueueCreate(1, sizeof(rmt_rx_done_event_data_t));
+  if (bus->rmt_ch_rx_obj_h->rmt_rx_queue == NULL) {
+    log_e("Error creating RX Queue.");
+    goto err;
+  }
+
+  rmt_rx_event_callbacks_t cbs = { .on_recv_done = _rmt_rx_done_callback };
+  if (ESP_OK != rmt_rx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus->rmt_ch_rx_obj_h->rmt_rx_queue)) {
+    log_e("Error registering RX Callback.");
+    vQueueDelete(bus->rmt_ch_rx_obj_h->rmt_rx_queue);
+    goto err;
+  }
+
+  for (;;) {
+    // request reading RMT Channel Data
+    rmt_receive_config_t receive_config;
+    receive_config.signal_range_min_ns = bus->signal_range_min_ns;
+    receive_config.signal_range_max_ns = bus->signal_range_max_ns;
+    // buffer to save the received RMT symbols from the callback, in STACK for easier memory deallocation
+    size_t num_rmt_symbols = bus->num_buffers * SOC_RMT_MEM_WORDS_PER_CHANNEL;  // max is 8*64*4 = 2KB
+    rmt_data_t rmt_symbols[num_rmt_symbols]; // number of symbols requested by user
+    // must make sure that the RX Channel is enabled!
+    while (!bus->rmt_ch_rx_obj_h->rmt_async_rx_enabled) {
+      delay(1); // let other lower priority tasks to run, such as Arduino Task...
     }
-    
-    for(;;) {
-        data = (rmt_item32_t *) xRingbufferReceive(rb, &rmt_len, portMAX_DELAY);
-        if (data) {
-            log_d(" -- Got %d bytes on RX Ringbuffer - CH %d", rmt_len, rmt->channel);
-            rmt->rx_completed = true;  // used in rmtReceiveCompleted()
-            // callback
-            if (rmt->cb) {
-                (rmt->cb)((uint32_t *)data, rmt_len / sizeof(rmt_item32_t), rmt->arg);
-            } else {
-                // stop RX -- will force a correct call with a callback pointer / new rmtReadData() / rmtReadAsync()
-                rmt_rx_stop(channel);
-            }
-            // Async Read -- copy data to caller
-            if (rmt->data_ptr && rmt->data_size) {
-                uint32_t data_size = rmt->data_size;
-                uint32_t read_len = rmt_len / sizeof(rmt_item32_t);
-                if (read_len < rmt->data_size) data_size = read_len;
-                rmt_item32_t *p = (rmt_item32_t *)rmt->data_ptr;
-                for (uint32_t i = 0; i < data_size; i++) {
-                    p[i] = data[i];
-                }
-            }
-            // set events
-            if (rmt->events) {
-                xEventGroupSetBits(rmt->events, RMT_FLAG_RX_DONE);
-            }
-            vRingbufferReturnItem(rb, (void *) data);
-        } // xRingbufferReceive
-    } // for(;;)
+    rmt_receive(bus->rmt_channel_h, rmt_symbols, num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
+
+    // wait for ever for RX done signal
+    rmt_rx_done_event_data_t rx_data;
+    if (xQueueReceive(bus->rmt_ch_rx_obj_h->rmt_rx_queue, &rx_data, portMAX_DELAY) == pdPASS) {
+      log_d("RMT has read %d bytes.", rx_data.num_symbols * sizeof(rmt_data_t));
+      // process the user callback
+      if (bus->rmt_ch_rx_obj_h->rmt_rx_cb) {
+        (bus->rmt_ch_rx_obj_h->rmt_rx_cb)((uint32_t *)rx_data.received_symbols, rx_data.num_symbols, bus->rmt_ch_rx_obj_h->rmt_rx_cb_arg);
+      }
+      // Async Read -- copy data to caller
+      uint32_t data_size = bus->rmt_ch_rx_obj_h->rmt_data_rx_size;
+      rmt_data_t *p = (rmt_data_t *)bus->rmt_ch_rx_obj_h->rmt_data_rx_ptr;
+      if (p != NULL && data_size > 0) {
+        if (rx_data.num_symbols < data_size) data_size = rx_data.num_symbols;
+        for (uint32_t i = 0; i < data_size; i++) {
+          p[i].val = rx_data.received_symbols[i].val;
+        }
+      }
+      // set RX event group
+      if (bus->rmt_ch_rx_obj_h->rmt_rx_events) {
+        xEventGroupSetBits(bus->rmt_ch_rx_obj_h->rmt_rx_events, RMT_FLAG_RX_DONE);
+      }
+      // used in rmtReceiveCompleted()
+      bus->rmt_ch_rx_obj_h->rmt_rx_completed = true;
+    } // xQueueReceive
+  } // for(;;)
 
 err:
-  vTaskDelete(NULL);    
+  vTaskDelete(NULL);
 }
 
-
-static bool _rmtCreateRxTask(rmt_obj_t* rmt) 
+static bool _rmtCreateRxTask(rmt_bus_handle_t bus)
 {
-    if (!rmt) {
-        return false;
-    }
-    if (rmt->rxTaskHandle) {   // Task already created
-        return false;
-    }
-
-    xTaskCreate(_rmtRxTask, "rmt_rx_task", 4096, rmt, 20, &rmt->rxTaskHandle);
-
-    if(rmt->rxTaskHandle == NULL){
-        log_e("RMT RX Task create failed");
-        return false;
-    }
+  if (bus == NULL) {
+    return false;
+  }
+  if (bus->rmt_ch_rx_obj_h->rmt_rxTaskHandle != NULL) {   // Task already created
     return true;
+  }
+
+  xTaskCreate(_rmtRxTask, "rmt_rx_task", 1024 * 6, bus, configMAX_PRIORITIES - 1, &bus->rmt_ch_rx_obj_h->rmt_rxTaskHandle);
+
+  if (bus->rmt_ch_rx_obj_h->rmt_rxTaskHandle == NULL) {
+    log_e("RMT RX Task create failed");
+    return false;
+  }
+  return true;
 }
 
-// Helper function to test if an RMT channel is correctly assigned to TX or RX, issuing an error message if necessary
-// Also test RMT pointer for NULL and returns false in case it is NULL
-// return true when it is correctly assigned, false otherwise
-static bool _rmtCheckTXnotRX(rmt_obj_t* rmt, bool tx_not_rx)
+// This function must be called only after checking the pin and its bus with _rmtGetBus()
+static bool _rmtCheckDirection(uint8_t gpio_num, rmt_ch_dir_t rmt_dir, const char* labelFunc)
 {
-    if (!rmt) {           // also returns false on NULL
-        return false;
-    }
+  // gets bus RMT direction from the Peripheral Manager information
+  rmt_ch_dir_t bus_rmt_dir = perimanGetPinBusType(gpio_num) == ESP32_BUS_TYPE_RMT_TX ? RMT_TX_MODE : RMT_RX_MODE;
 
-    if (rmt->tx_not_rx == tx_not_rx) {  // matches expected RX/TX channel
-        return true;
+  if (bus_rmt_dir == rmt_dir) {  // matches expected RX/TX channel
+    return true;
+  }
+
+  // print error message
+  if (rmt_dir == RMT_RX_MODE) {
+    log_w("==>%s():Channel set as TX instead of RX.", labelFunc);
+  } else {
+    log_w("==>%s():Channel set as RX instead of TX.", labelFunc);
+  }
+  return false;       // mismatched
+}
+
+static rmt_bus_handle_t _rmtGetBus(int pin, const char* labelFunc)
+{
+  // Is pin RX or TX? Let's find it out
+  peripheral_bus_type_t rmt_bus_type = perimanGetPinBusType(pin);
+  if (rmt_bus_type != ESP32_BUS_TYPE_RMT_TX && rmt_bus_type != ESP32_BUS_TYPE_RMT_RX) {
+    log_e("==>%s():GPIO %u is not attached to an RMT channel.", labelFunc, pin);
+    return NULL;
+  }
+
+  return (rmt_bus_handle_t)perimanGetPinBus(pin, rmt_bus_type);
+}
+
+// Peripheral Manager detach callback
+static bool _rmtDetachBus(void *busptr)
+{
+  // sanity check - it should never happen
+  assert(busptr && "_rmtDetachBus bus NULL pointer.");
+
+  bool retCode = true;
+  rmt_bus_handle_t bus = (rmt_bus_handle_t) busptr;
+
+  // delete RX data
+  if (bus->rmt_ch_rx_obj_h != NULL) {
+    // deleted RX channel tasks
+    if (bus->rmt_ch_rx_obj_h->rmt_rxTaskHandle != NULL) {
+      vTaskDelete(bus->rmt_ch_rx_obj_h->rmt_rxTaskHandle);
     }
-   
-    if (tx_not_rx) {    // expected TX channel
-        log_e("Can't write on a RX RMT Channel");
-    } else{             // expected RX channel
-        log_e("Can't read on a TX RMT Channel");
+    // delete RX Queue
+    if (bus->rmt_ch_rx_obj_h->rmt_rx_queue != NULL) {
+      vQueueDelete(bus->rmt_ch_rx_obj_h->rmt_rx_queue);
     }
-    return false;       // missmatched
+    free(bus->rmt_ch_rx_obj_h);
+  }
+  // deallocate the channel encoder
+  if (bus->rmt_copy_encoder_h != NULL) {
+    if (ESP_OK != rmt_del_encoder(bus->rmt_copy_encoder_h)) {
+      log_w("RMT Encoder Deletion has failed.");
+      retCode = false;
+    }
+  }
+  // disable and deallocate RMT channal
+  if (bus->rmt_channel_h != NULL) {
+    // force stopping rmt TX/RX processing
+    rmt_disable(bus->rmt_channel_h);
+    if (ESP_OK != rmt_del_channel(bus->rmt_channel_h)) {
+      log_w("RMT Channel Deletion has failed.");
+      retCode = false;
+    }
+  }
+#if !CONFIG_DISABLE_HAL_LOCKS
+  // deallocate locker
+  if (bus->g_rmt_objlocks != NULL) {
+    vSemaphoreDelete(bus->g_rmt_objlocks);
+  }
+#endif
+  // free the allocated bus data structure
+  free(bus);
+  return retCode;
 }
 
 /**
- * Public method definitions
- */
+   Public method definitions
+*/
 
-bool rmtSetCarrier(rmt_obj_t* rmt, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high)
+// RX demodulation carrier or TX modulatin carrier
+bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent)
 {
-    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE) || low > 0xFFFF || high > 0xFFFF) {
-        return false;
-    }
-    size_t channel = rmt->channel;
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
 
-    RMT_MUTEX_LOCK(channel);
-    rmt_set_tx_carrier(channel, carrier_en, high, low, carrier_level);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
+  if (duty_percent > 1) {
+    log_w("GPIO %d - RMT Carrier must be a float percentage from 0 to 1. Setting to 50%.", pin);
+    duty_percent = 0.5;
+  }
+  rmt_carrier_config_t carrier_cfg = {0};
+  carrier_cfg.duty_cycle = duty_percent;                     // duty cycle
+  carrier_cfg.frequency_hz = carrier_en ? frequency_Hz : 0;  // carrier frequency in Hz
+  carrier_cfg.flags.polarity_active_low = carrier_level;     // carrier modulation polarity level
+
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
+  // modulate carrier to TX channel
+  if (ESP_OK != rmt_apply_carrier(bus->rmt_channel_h, &carrier_cfg)) {
+    log_w("GPIO %d - Error applying RMT carrier.", pin);
+    retCode = false;
+  }
+  RMT_MUTEX_UNLOCK(bus);
+
+  return retCode;
 }
 
-bool rmtSetFilter(rmt_obj_t* rmt, bool filter_en, uint32_t filter_level)
+//In receive mode, channel will ignore input pulse when the pulse width is smaller than <filter_pulse_ns>
+bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_pulse_ns)
 {
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || filter_level > 0xFF) {
-        return false;
-    }
-    size_t channel = rmt->channel;
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
 
-    RMT_MUTEX_LOCK(channel);
-    rmt_set_rx_filter(channel, filter_en, filter_level);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  bus->signal_range_min_ns = filter_en ? filter_pulse_ns : 0; // set as zero to disable it
+  RMT_MUTEX_UNLOCK(bus);
+  return true;
 }
 
-bool rmtSetRxThreshold(rmt_obj_t* rmt, uint32_t value)
+//In receive mode, when no edge is detected on the input signal for
+//longer than idle_thres channel clock cycles, the receive process is finished.
+bool rmtSetRxThreshold(int pin, uint16_t value)
 {
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE) || value > 0xFFFF) {
-        return false;
-    }
-    size_t channel = rmt->channel;
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
 
-    RMT_MUTEX_LOCK(channel);
-    rmt_set_rx_idle_thresh(channel, value);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  bus->signal_range_max_ns = value; // set as zero to disable it
+  RMT_MUTEX_UNLOCK(bus);
+  return true;
 }
 
-
-bool rmtDeinit(rmt_obj_t *rmt)
+bool rmtDeinit(int pin)
 {
-    if (!rmt) {
-        return false;
-    }
+  if (_rmtGetBus(pin, __FUNCTION__) != NULL) {
+    // release all allocated data
+    return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+  }
+  log_e("GPIO %d - No RMT channel associated.", pin);
+  return false;
+}
 
-    // sanity check
-    if (rmt != &(g_rmt_objects[rmt->channel])) {
-        return false;
-    }
+bool rmtLoop(int pin, rmt_data_t* data, size_t size)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
+    return false;
+  }
 
-    RMT_MUTEX_LOCK(rmt->channel);
-    // force stopping rmt processing
-    if (rmt->tx_not_rx) {
-        rmt_tx_stop(rmt->channel);
-    } else {
-        rmt_rx_stop(rmt->channel);
-        if(rmt->rxTaskHandle){
-            vTaskDelete(rmt->rxTaskHandle);
-            rmt->rxTaskHandle = NULL;
-        }       
-    }
+  rmt_transmit_config_t transmit_cfg = { -1, 0}; // enable infinite loop mode
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
 
-    rmt_driver_uninstall(rmt->channel);
+  if (ESP_OK != rmt_transmit(bus->rmt_channel_h, bus->rmt_copy_encoder_h,
+                             (const void *) data, size * sizeof(rmt_data_t), &transmit_cfg)) {
+    retCode = false;
+    log_w("GPIO %d - RMT Loop Transmission failed.", pin);
+  }
+  RMT_MUTEX_UNLOCK(bus);
+  return retCode;
+}
 
-    size_t from = rmt->channel;
-    size_t to = rmt->buffers + rmt->channel;
-    size_t i;
+bool rmtWrite(int pin, rmt_data_t* data, size_t size)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
+    return false;
+  }
 
-    for (i = from; i < to; i++) {
-        g_rmt_objects[i].allocated = false;
-    }
+  rmt_transmit_config_t transmit_cfg = {0, 0}; // disable loop mode
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
 
-    g_rmt_objects[from].channel = 0;
-    g_rmt_objects[from].buffers = 0;
-    RMT_MUTEX_UNLOCK(rmt->channel);
+  if (ESP_OK != rmt_transmit(bus->rmt_channel_h, bus->rmt_copy_encoder_h,
+                             (const void *) data, size * sizeof(rmt_data_t), &transmit_cfg)) {
+    retCode = false;
+    log_w("GPIO %d - RMT single Transmission failed.", pin);
+  }
+  RMT_MUTEX_UNLOCK(bus);
+  return retCode;
+}
 
-#if !CONFIG_DISABLE_HAL_LOCKS
-    if(g_rmt_objlocks[from] != NULL) {
-        vSemaphoreDelete(g_rmt_objlocks[from]);
-        g_rmt_objlocks[from] = NULL;
-    }
+bool rmtWriteBlocking(int pin, rmt_data_t* data, size_t size)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  rmt_transmit_config_t transmit_cfg = {0, 0}; // disable loop mode
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
+
+  if (ESP_OK != rmt_transmit(bus->rmt_channel_h, bus->rmt_copy_encoder_h,
+                             (const void *) data, size * sizeof(rmt_data_t), &transmit_cfg)) {
+    retCode = false;
+    log_w("GPIO %d - RMT Blocking Transmission failed.", pin);
+  }
+  if (ESP_OK != rmt_tx_wait_all_done(bus->rmt_channel_h, -1)) {
+    retCode = false;
+    log_w("GPIO %d - RMT Blocking TX Setup failed.", pin);
+  }
+  RMT_MUTEX_UNLOCK(bus);
+  return retCode;
+}
+
+// Sets a user buffer and length for reading RMT signal.
+// rmtReceiveCompleted() shall be used to check if there is data read fromthe RMT channel
+bool rmtReadData(int pin, uint32_t* data, size_t size)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+
+  rmtReadAsync(pin, (rmt_data_t*) data, size, NULL, false, 0);
+  return true;
+}
+
+bool rmtBeginReceive(int pin)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
+    return false;
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  bus->rmt_ch_rx_obj_h->rmt_async_rx_enabled = true;
+  bus->rmt_ch_rx_obj_h->rmt_rx_completed = false;
+  RMT_MUTEX_UNLOCK(bus);
+  return true;
+}
+
+bool rmtReceiveCompleted(int pin)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
+    return false;
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  bool retCode = bus->rmt_ch_rx_obj_h->rmt_rx_completed;
+  RMT_MUTEX_UNLOCK(bus);
+
+  return retCode;
+}
+
+bool rmtRead(int pin, rmt_rx_data_cb_t cb, void * arg)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
+    return false;
+  }
+
+  // Start a read process but now with a call back function
+  bus->rmt_ch_rx_obj_h->rmt_rx_cb_arg = arg;
+  bus->rmt_ch_rx_obj_h->rmt_rx_cb = cb;
+
+  // cb as NULL is a way to cancel the callback process
+  if (cb == NULL) {
+    rmtEnd(pin); // disable reading
+  } else {
+    rmtBeginReceive(pin); // enable reading
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  _rmtCreateRxTask(bus);
+  RMT_MUTEX_UNLOCK(bus);
+  return true;
+}
+
+bool rmtEnd(int pin)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
+    return false;
+  }
+
+  RMT_MUTEX_LOCK(bus);
+  bus->rmt_ch_rx_obj_h->rmt_async_rx_enabled = false;
+  RMT_MUTEX_UNLOCK(bus);
+  return true;
+}
+
+bool rmtReadAsync(int pin, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
+    return false;
+  }
+
+  rmtEnd(pin); // disable reading
+  if (eventFlag) {
+    xEventGroupClearBits(eventFlag, RMT_FLAG_RX_DONE);
+  }
+  // if NULL, no problems - rmtReadAsync works as a plain rmtReadData()
+  bus->rmt_ch_rx_obj_h->rmt_rx_events = eventFlag;
+
+  // if NULL, no problems - task will take care of it
+  bus->rmt_ch_rx_obj_h->rmt_data_rx_ptr = data;
+  bus->rmt_ch_rx_obj_h->rmt_data_rx_size = size;
+  bus->rmt_ch_rx_obj_h->rmt_rx_completed = false;
+
+  // Start a read task
+  RMT_MUTEX_LOCK(bus);
+  _rmtCreateRxTask(bus);
+  RMT_MUTEX_UNLOCK(bus);
+
+  // wait for data if requested so
+  rmtBeginReceive(pin); // enable reading
+  if (waitForData && eventFlag) {
+    xEventGroupWaitBits(eventFlag, RMT_FLAG_RX_DONE,
+                        pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
+  }
+  return true;
+}
+
+bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_size, uint32_t frequency_Hz)
+{
+  // check is pin is valid and in the right direction
+  if ((channel_direction == RMT_TX_MODE && !GPIO_IS_VALID_OUTPUT_GPIO(pin)) || (!GPIO_IS_VALID_GPIO(pin))) {
+    log_e("GPIO %d is not valid or can't be used for output in TX mode.", pin);
+    return false;
+  }
+
+  // set Peripheral Manager deInit Callback
+  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_TX, _rmtDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_RX, _rmtDetachBus);
+
+  // validate the RMT ticks by the requested frequency
+#if SOC_RMT_SUPPORT_APB
+  // Based on 80Mhz using a divider of 8 bits (calculated as 1..256) :: ESP32 and ESP32S2
+  if (frequency_Hz > 80000000 || frequency_Hz < 312500) {
+    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 312.5KHz to 80MHz.", pin);
+    return false;
+  }
+#elif SOC_RMT_SUPPORT_XTAL
+  // Based on 40Mhz using a divider of 8 bits (calculated as 1..256)  :: ESP32C3 and ESP32S3
+  if (frequency_Hz > 40000000 || frequency_Hz < 156250) {
+    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 156.25KHz to 40MHz.", pin);
+    return false;
+  }
 #endif
 
-    return true;
-}
-
-bool rmtLoop(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
-        return false;
+  // create common block mutex for protecting allocs from multiple threads
+  if (!g_rmt_block_lock) {
+    g_rmt_block_lock = xSemaphoreCreateMutex();
+    if (g_rmt_block_lock == NULL) {
+      log_e("GPIO %d - Failed creating RMT Mutex.", pin);
+      return false;
     }
-    int channel = rmt->channel;
-    RMT_MUTEX_LOCK(channel);
-    rmt_tx_stop(channel);
-    rmt_set_tx_loop_mode(channel, true);
-    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
-}
+  }
+  // lock it
+  while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
-bool rmtWrite(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
-        return false;
-    }
-    int channel = rmt->channel;
-    RMT_MUTEX_LOCK(channel);
-    rmt_tx_stop(channel);
-    rmt_set_tx_loop_mode(channel, false);
-    rmt_write_items(channel, (const rmt_item32_t *)data, size, false);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
-}
-
-bool rmtWriteBlocking(rmt_obj_t* rmt, rmt_data_t* data, size_t size)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_TX_MODE)) {
-        return false;
-    }
-    int channel = rmt->channel;
-    RMT_MUTEX_LOCK(channel);
-    rmt_tx_stop(channel);
-    rmt_set_tx_loop_mode(channel, false);
-    rmt_write_items(channel, (const rmt_item32_t *)data, size, true);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
-}
-
-bool rmtReadData(rmt_obj_t* rmt, uint32_t* data, size_t size)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
-        return false;
-    }
-    rmtReadAsync(rmt, (rmt_data_t*) data, size, NULL, false, 0);
-    return true;
-}
-
-
-bool rmtBeginReceive(rmt_obj_t* rmt)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
-        return false;
-    }
-    int channel = rmt->channel;
-
-    RMT_MUTEX_LOCK(channel);
-    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
-    rmt_rx_start(channel, true);
-    rmt->rx_completed = false;
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
-}
-
-bool rmtReceiveCompleted(rmt_obj_t* rmt)
-{
-    if (!rmt) {
-        return false;
-    }
-
-    return rmt->rx_completed;
-}
-
-bool rmtRead(rmt_obj_t* rmt, rmt_rx_data_cb_t cb, void * arg)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
-        return false;
-    }
-    int channel = rmt->channel;
-
-    rmt->arg = arg;
-    rmt->cb = cb;
-
-    RMT_MUTEX_LOCK(channel);
-    // cb as NULL is a way to cancel the callback process
-    if (cb == NULL) {        
-        rmt_rx_stop(channel);
-        return true;
-    }
-    // Start a read process but now with a call back function
-    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
-    rmt_rx_start(channel, true);
-    rmt->rx_completed = false;
-    _rmtCreateRxTask(rmt);
-    RMT_MUTEX_UNLOCK(channel);
-    return true;
-}
-
-bool rmtEnd(rmt_obj_t* rmt) 
-{
-    if (!rmt) {
-        return false;
-    }
-    int channel = rmt->channel;
-
-    RMT_MUTEX_LOCK(channel);
-    if (rmt->tx_not_rx) {
-        rmt_tx_stop(channel);
-    } else {
-        rmt_rx_stop(channel);
-        rmt->rx_completed = true;
-    }
-    RMT_MUTEX_UNLOCK(channel);
-    return  true;
-}
-
-bool rmtReadAsync(rmt_obj_t* rmt, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout)
-{
-    if (!_rmtCheckTXnotRX(rmt, RMT_RX_MODE)) {
-        return false;
-    }
-    int channel = rmt->channel;
-
-    // No limit on size with IDF ;-)
-    //if (g_rmt_objects[channel].buffers < size/SOC_RMT_MEM_WORDS_PER_CHANNEL) {
-    //    return false;
-    //}
-
-    RMT_MUTEX_LOCK(channel);
-    if (eventFlag) {
-        xEventGroupClearBits(eventFlag, RMT_FLAGS_ALL);
-    }
-    // if NULL, no problems - rmtReadAsync works as a plain rmtReadData()
-    rmt->events = eventFlag;  
-
-    // if NULL, no problems - task will take care of it
-    rmt->data_ptr = (uint32_t*)data;
-    rmt->data_size = size;
- 
-    // Start a read process
-    rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX); 
-    rmt_rx_start(channel, true);
-    rmt->rx_completed = false;
-    _rmtCreateRxTask(rmt);
-    RMT_MUTEX_UNLOCK(channel);
-
-    // wait for data if requested so
-    if (waitForData && eventFlag) {
-        xEventGroupWaitBits(eventFlag, RMT_FLAGS_ALL,
-                            pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout);
-    }
-    return true;
-}
-
-float rmtSetTick(rmt_obj_t* rmt, float tick)
-{
-    if (!rmt) {
-        return false;
-    }    
-    size_t channel = rmt->channel;
-
-    RMT_MUTEX_LOCK(channel);
-    // RMT_BASECLK_REF (1MHz) is not supported in IDF upon Programmming Guide
-    // Only APB works
-    rmt_set_source_clk(channel, RMT_BASECLK_APB);   
-    int apb_div = _LIMIT(tick/12.5f, 256);
-    float apb_tick = 12.5f * apb_div;
-    
-    rmt_set_clk_div(channel, apb_div & 0xFF);
-    RMT_MUTEX_UNLOCK(channel);
-    return apb_tick;
-}
-
-rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
-{
-    uint32_t buffers = memsize;
-    rmt_obj_t* rmt = NULL;
-    uint32_t i = 0;
-    uint32_t j = 0;
-
-    // create common block mutex for protecting allocs from multiple threads
-    if (!g_rmt_block_lock) {
-        g_rmt_block_lock = xSemaphoreCreateMutex();
-    }
-    // lock
-    while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
-
-    // Some SoC may have fixed channel numbers for TX and RX - example: ESP32C3
-    uint8_t ch_start, ch_end;
-    if (tx_not_rx) {
-        ch_start = RMT_TX_CH_START;
-        ch_end = RMT_TX_CH_END;
-    } else {
-        ch_start = RMT_RX_CH_START;
-        ch_end = RMT_RX_CH_END;
-    }
-    for (i=ch_start; i<=ch_end; i++) {
-        for (j=0; j<buffers && i+j <= ch_end; j++) {
-            // if the space is ocupied break and continue on other channel
-            if (g_rmt_objects[i+j].allocated) {
-                i += j; // continue searching from latter channel
-                break;
-            }
-        }
-        if (j == buffers) {
-            // found a space in channel descriptors
-            break;
-        }
-    }
-    if (i == MAX_CHANNELS || i+j > MAX_CHANNELS || j != buffers)  {
-        xSemaphoreGive(g_rmt_block_lock);
-        log_e("rmInit Failed - not enough channels");
-        return NULL;
-    }
-    
-    // A suitable channel has been found, it has to block its resources in our internal data strucuture
-    size_t channel = i;
-    rmt = _rmtAllocate(pin, i, buffers);
-
+  // Try to dettach any previous bus or just keep it as not attached
+  if (perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+    log_w("GPIO %d - Can't detach previous peripheral.", pin);
     xSemaphoreGive(g_rmt_block_lock);
+    return false;
+  }
 
-    rmt->buffers = buffers;
-    rmt->channel = channel;
-    rmt->arg = NULL;
-    rmt->cb = NULL;
-    rmt->data_ptr = NULL;
-    rmt->data_size = 0;
-    rmt->rx_completed = false;
-    rmt->events = NULL;
-    rmt->tx_not_rx = tx_not_rx;
+  // allocate the rmt bus object
+  rmt_bus_handle_t bus = (rmt_bus_handle_t)heap_caps_calloc(1, sizeof(struct rmt_obj_s), MALLOC_CAP_DEFAULT);
+  if (bus == NULL) {
+    log_e("GPIO %d - Bus Memory allocation fault.", pin);
+    xSemaphoreGive(g_rmt_block_lock);
+    return false;
+  }
 
-#if !CONFIG_DISABLE_HAL_LOCKS
-    if(g_rmt_objlocks[channel] == NULL) {
-        g_rmt_objlocks[channel] = xSemaphoreCreateMutex();
-        if(g_rmt_objlocks[channel] == NULL) {
-            return NULL;
-        }
+  // common RX/TX channel configuration - common fields
+  bus->num_buffers = mem_size;
+  bus->rmt_ch_rx_obj_h = NULL;
+  // pulses with width smaller than min_ns will be ignored (as a glitch)
+  bus->signal_range_min_ns = 1000000000 / (frequency_Hz * 2); // 1/2 pulse width
+  // RMT stops reading if the input stays idle for longer than max_ns
+  bus->signal_range_max_ns = (1000000000 / frequency_Hz) * 10; // 10 pulses width
+
+  // channel particular configuration
+  if (channel_direction == RMT_TX_MODE) {
+    // TX Channel
+    rmt_tx_channel_config_t tx_cfg;
+    tx_cfg.gpio_num = pin;
+#if SOC_RMT_SUPPORT_APB
+    tx_cfg.clk_src = RMT_CLK_SRC_APB;
+#elif SOC_RMT_SUPPORT_XTAL
+    tx_cfg.clk_src = RMT_CLK_SRC_XTAL;
+#endif
+    tx_cfg.resolution_hz = frequency_Hz;
+    tx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
+    tx_cfg.trans_queue_depth = 10;   // maximum allowed
+    tx_cfg.flags.invert_out = 0;
+    tx_cfg.flags.with_dma = 0;
+    tx_cfg.flags.io_loop_back = 0;
+    tx_cfg.flags.io_od_mode = 0;
+
+    if (rmt_new_tx_channel(&tx_cfg, &bus->rmt_channel_h) != ESP_OK) {
+      log_e("GPIO %d - RMT TX Initialization error.", pin);
+      // release the RMT object
+      _rmtDetachBus((void *)bus);
+      xSemaphoreGive(g_rmt_block_lock);
+      return false;
     }
+  } else {
+    // RX Channel
+    rmt_rx_channel_config_t rx_cfg;
+    rx_cfg.gpio_num = pin;
+#if SOC_RMT_SUPPORT_APB
+    rx_cfg.clk_src = RMT_CLK_SRC_APB;
+#elif SOC_RMT_SUPPORT_XTAL
+    rx_cfg.clk_src = RMT_CLK_SRC_XTAL;
+#endif
+    rx_cfg.resolution_hz = frequency_Hz;
+    rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
+    rx_cfg.flags.invert_in = 0;
+    rx_cfg.flags.with_dma = 0;
+    rx_cfg.flags.io_loop_back = 0;
+    // try to allocate the RMT Channel
+    if (ESP_OK != rmt_new_rx_channel(&rx_cfg, &bus->rmt_channel_h)) {
+      log_e("GPIO %d RMT - RX Initialization error.", pin);
+      // release the RMT object
+      _rmtDetachBus((void *)bus);
+      xSemaphoreGive(g_rmt_block_lock);
+      return false;
+    }
+  }
+
+  // allocate memory for the RMT Copy encoder
+  rmt_copy_encoder_config_t copy_encoder_config = {};
+  if (rmt_new_copy_encoder(&copy_encoder_config, &bus->rmt_copy_encoder_h) != ESP_OK) {
+    log_e("GPIO %d - RMT Encoder Memory Allocation error.", pin);
+    // release the RMT object
+    _rmtDetachBus((void *)bus);
+    xSemaphoreGive(g_rmt_block_lock);
+    return false;
+  }
+
+  // create each channel Mutex for multi thread operations
+#if !CONFIG_DISABLE_HAL_LOCKS
+  bus->g_rmt_objlocks = xSemaphoreCreateMutex();
+  if (bus->g_rmt_objlocks == NULL) {
+    log_e("GPIO %d - Failed creating RMT Channel Mutex.", pin);
+    // release the RMT object
+    _rmtDetachBus((void *)bus);
+    xSemaphoreGive(g_rmt_block_lock);
+    return false;
+  }
 #endif
 
-    RMT_MUTEX_LOCK(channel);
-    esp_err_t esp_err_code = ESP_OK;
+  rmt_enable(bus->rmt_channel_h); // starts the channel
 
-    if (tx_not_rx) {
-        rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_TX(pin, channel, buffers);
-        esp_err_code = rmt_config(&config);
-        if (esp_err_code == ESP_OK) 
-            esp_err_code = rmt_driver_install(channel, 0, 0);
-        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
-    } else {
-        rmt_config_t config = RMT_DEFAULT_ARD_CONFIG_RX(pin, channel, buffers);
-        esp_err_code = rmt_config(&config);
-        if (esp_err_code == ESP_OK) 
-            esp_err_code = rmt_driver_install(channel, 1024, 0);
-        if (esp_err_code == ESP_OK) 
-            esp_err_code = rmt_set_memory_owner(channel, RMT_MEM_OWNER_RX);
-        log_d(" -- %s RMT - CH %d - %d RAM Blocks - pin %d", tx_not_rx?"TX":"RX", channel, buffers, pin);
-    } 
+  // Finally, allocate Peripheral Manager RMT bus and associate it to its GPIO
+  peripheral_bus_type_t pinBusType =
+    channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
+  if (!perimanSetPinBus(pin, pinBusType, (void *) bus)) {
+    log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
+    // release the RMT object
+    _rmtDetachBus((void *)bus);
+    xSemaphoreGive(g_rmt_block_lock);
+    return false;
+  }
 
-    RMT_MUTEX_UNLOCK(channel);
-
-    if (esp_err_code == ESP_OK) {
-        return rmt;
-    } else {
-        log_e("RMT failed to initilize.");
-        return NULL;
-    }
+  // release the mutex
+  xSemaphoreGive(g_rmt_block_lock);
+  return true;
 }

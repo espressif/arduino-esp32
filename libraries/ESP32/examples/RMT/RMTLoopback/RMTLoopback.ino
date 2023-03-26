@@ -19,29 +19,32 @@
 rmt_data_t my_data[256];
 rmt_data_t data[256];
 
-rmt_obj_t* rmt_send = NULL;
-rmt_obj_t* rmt_recv = NULL;
-
 static EventGroupHandle_t events;
+
+#define RMT_FREQ 10000000
+#define RMT_NUM_EXCHANGED_DATA 30
 
 void setup() 
 {
     Serial.begin(115200);
     events = xEventGroupCreate();
     
-    if ((rmt_send = rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_64)) == NULL)
+    if (!rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_64, RMT_FREQ))
     {
         Serial.println("init sender failed\n");
     }
-    if ((rmt_recv = rmtInit(RMT_RX_PIN, RMT_RX_MODE, RMT_MEM_RX)) == NULL)
+    if (!rmtInit(RMT_RX_PIN, RMT_RX_MODE, RMT_MEM_RX, RMT_FREQ))
     {
         Serial.println("init receiver failed\n");
     }
 
-    float realTick = rmtSetTick(rmt_send, 100);
-    printf("real tick set to: %fns\n", realTick);
-    // both will keep same tick 
-    realTick = rmtSetTick(rmt_recv, 100);
+    // End of transmission shall be detected when line is idle for 2us
+    rmtSetRxThreshold(RMT_RX_PIN, 2000);
+    // Disable Glitch  filter
+    rmtSetFilter(RMT_RX_PIN, false, 0);  
+
+    Serial.println("real tick set to: 100ns");
+    Serial.printf("\nPlease connect GPIO %d to GPIO %d, now.\n", RMT_TX_PIN, RMT_RX_PIN);
 }
 
 void loop() 
@@ -50,14 +53,15 @@ void loop()
     int i;
     for (i=0; i<255; i++) {
         data[i].val = 0x80010001 + ((i%13)<<16) + 13-(i%13);
+        my_data[i].val = 0;
     }
     data[255].val = 0;
 
     // Start receiving
-    rmtReadAsync(rmt_recv, my_data, 100, events, false, 0);
+    rmtReadAsync(RMT_RX_PIN, my_data, RMT_NUM_EXCHANGED_DATA, events, false, 0);
 
     // Send in continous mode
-    rmtWrite(rmt_send, data, 100);
+    rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA);
 
     // Wait for data
     xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
@@ -66,7 +70,7 @@ void loop()
     for (i=0; i<60; i++)
     {
         Serial.printf("%08lx=%08lx ", my_data[i].val, data[i].val );
-        if (!((i+1)%4)) Serial.println("\n");
+        if (!((i+1)%4)) Serial.println("");
     }
     Serial.println("\n");
 

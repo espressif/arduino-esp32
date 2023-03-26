@@ -46,19 +46,16 @@
 
 rmt_data_t led_data[NR_OF_ALL_BITS];
 
-rmt_obj_t* rmt_send = NULL;
-
 void setup() 
 {
     Serial.begin(115200);
     
-    if ((rmt_send = rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_64)) == NULL)
+    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_64, 10000000))
     {
         Serial.println("init sender failed\n");
     }
 
-    float realTick = rmtSetTick(rmt_send, 100);
-    Serial.printf("real tick set to: %fns\n", realTick);
+    Serial.println("real tick set to: 100ns");
 
 }
 
@@ -94,7 +91,7 @@ void loop()
     }
 
     // Send the data
-    rmtWrite(rmt_send, led_data, NR_OF_ALL_BITS);
+    rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS);
 
     delay(100);
 }
