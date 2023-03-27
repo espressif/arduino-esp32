@@ -357,7 +357,8 @@ bool rmtLoop(int pin, rmt_data_t* data, size_t size)
     return false;
   }
 
-  rmt_transmit_config_t transmit_cfg = { -1, 0}; // enable infinite loop mode
+  rmt_transmit_config_t transmit_cfg = {0};
+  transmit_cfg.loop_count = 1;  // enable infinite loop mode
   bool retCode = true;
   RMT_MUTEX_LOCK(bus);
 
@@ -380,7 +381,7 @@ bool rmtWrite(int pin, rmt_data_t* data, size_t size)
     return false;
   }
 
-  rmt_transmit_config_t transmit_cfg = {0, 0}; // disable loop mode
+  rmt_transmit_config_t transmit_cfg = {0};  // disable loop mode
   bool retCode = true;
   RMT_MUTEX_LOCK(bus);
 
@@ -403,7 +404,7 @@ bool rmtWriteBlocking(int pin, rmt_data_t* data, size_t size)
     return false;
   }
 
-  rmt_transmit_config_t transmit_cfg = {0, 0}; // disable loop mode
+  rmt_transmit_config_t transmit_cfg = {0};  // disable loop mode
   bool retCode = true;
   RMT_MUTEX_LOCK(bus);
 
