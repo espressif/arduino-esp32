@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define USB_VID 0x303A
+#define USB_PID 0x815C
 #define USB_MANUFACTURER "Smart Bee Designs"
 #define USB_PRODUCT "Bee Data Logger"
 #define USB_SERIAL ""
