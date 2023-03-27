@@ -2,13 +2,13 @@ name: External Libraries Test V2
 
 # The workflow will run on schedule and labeled pull requests
 on:
-  #pull_request:
-  #  types: [opened, reopened, synchronize, labeled]
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
 
   # Schedule weekly builds on every Sunday at 4 am
   #schedule:
   #  - cron: '0 4 * * SUN' 
-  push:
+  #push:
 env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: libraries-report
