@@ -2,29 +2,42 @@
     {
         "name": "Adafruit NeoPixel",
         "version": "1.10.6",
-        "exclude_targets": null,
-        "sketch_path": "~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino"
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino"
+        ]
     },
     {
         "name": "FastLED",
-        "exclude_targets": null,
-        "sketch_path": "~/Arduino/libraries/FastLED/examples/Blink/Blink.ino"
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/FastLED/examples/Blink/Blink.ino"
+        ]
     },
     {
         "name": "IRremote",
-        "exclude_targets": null,
-        "sketch_path": "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+        ]
     },
     {
         "name": "ESP32Servo",
-        "exclude_targets": null,
-        "sketch_path": "~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino"
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino",
+            "~/Arduino/libraries/ESP32Servo/examples/Sweep/Sweep.ino",
+            "~/Arduino/libraries/ESP32Servo/examples/PWMExample/PWMExample.ino",
+            "~/Arduino/libraries/ESP32Servo/examples/Multiple-Servo-Example-Arduino/Multiple-Servo-Example-Arduino.ino"
+        ]
     },
     {
         "name": "ArduinoBLE",
         "exclude_targets": [
             "esp32s2"
         ],
-        "sketch_path": "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
+        "sketch_path": [
+            "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
+        ]
     }
 ]
