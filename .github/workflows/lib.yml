@@ -1,103 +1,83 @@
-name: External Libraries Test
+name: External Libraries Test V2
 
 # The workflow will run on schedule and labeled pull requests
 on:
-  #pull_request:
-  #  types: [opened, reopened, synchronize, labeled]
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
 
   # Schedule weekly builds on every Sunday at 4 am
-  #schedule:
-  #  - cron: '0 4 * * SUN' 
-
-  #push:
+  schedule:
+    - cron: '0 4 * * SUN' 
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: libraries-report
   SKETCHES_REPORTS_ARTIFACT_NAME: libraries-report
   RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
+  JSON_LIBRARY_LIST_FILE: .github/workflows/lib.json
 jobs:
   compile-sketch:
-    #if: |
-    #  contains(github.event.pull_request.labels.*.name, 'lib_test') ||
-    #  (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
-    
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'lib_test') ||
+      (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
     runs-on: ubuntu-latest
 
     env:
-      # Libraries list to be installed
-      UNIVERSAL_LIBRARIES: |
-        - source-path: ./
-        - name: Adafruit NeoPixel
-          version: 1.10.6
-        - name: FastLED
-        - name: IRremote
-        - name: ESP32Servo
+      # Options of how will be the ESP32 Arduino core installed
+      BOARD_MANAGER: |
+        - name: "espressif:esp32"
+          source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
+          version: 2.0.7
 
-        # Libs with no compilable example found
-        # - name: Blynk 
+      REPOSITORY: |
+        - source-path: '.'
+          name: "espressif:esp32"
 
-      # List of sketches to build (1 for each library)
-      UNIVERSAL_SKETCHES: 
-        ~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino
-        ~/Arduino/libraries/FastLED/examples/Blink/Blink.ino
-        ~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino
-        ~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino
+      GITHUB_URL: |
+        - name: "espressif:esp32"
+          source-url: https://github.com/espressif/arduino-esp32.git
+          version: 2.0.7
 
     strategy:
       matrix:
-        fqbn:
-          - espressif:esp32:esp32
-          - espressif:esp32:esp32s2
-          - espressif:esp32:esp32c3
-          - espressif:esp32:esp32s3
+        target:
+          - esp32
+          - esp32s2
+          - esp32c3
+          - esp32s3
 
-        # compile only the libraries/examples compatible with specific chip
-        # use when some chip dont have the peripheral which is used in library (e.g. ESP32-S2 dont have BLE, so it is not tested)
         include:
-          - fqbn: espressif:esp32:esp32
-            additional-libraries: |
-              - name: ArduinoBLE
-            additional-sketches: |
-              ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
-          - fqbn: espressif:esp32:esp32s2
-            additional-libraries:
-            additional-sketches:
-          - fqbn: espressif:esp32:esp32c3
-            additional-libraries: |
-              - name: ArduinoBLE
-            additional-sketches: |
-              ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
-          - fqbn: espressif:esp32:esp32s3
-            additional-libraries: |
-              - name: ArduinoBLE
-            additional-sketches: |
-              ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
+          - target: esp32
+            fqbn: espressif:esp32:esp32
+          - target: esp32s2
+            fqbn: espressif:esp32:esp32s2
+          - target: esp32c3
+            fqbn: espressif:esp32:esp32c3
+          - target: esp32s3
+            fqbn: espressif:esp32:esp32s3
+
 
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install Arduino ESP32 core, because compile-sketch wont call get.py
-      #- name: Install Arduino ESP32 core
-      #  run: |
-      #     bash .github/scripts/install-arduino-core-esp32.sh
+      # Possible platforms input for compile-sketches
+      # ${{ env.BOARD_MANAGER }}
+      # ${{ env.GITHUB_URL }}
+      # ${{ env.REPOSITORY }}
 
-      # For more information: https://github.com/arduino/compile-sketches#readme
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
         with:
           platforms: |
-            - source-path: '.'
-              name: "espressif:esp32"
+            ${{ env.GITHUB_URL }}
+          target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
-          libraries: |
-            ${{ env.UNIVERSAL_LIBRARIES }}
-            ${{ matrix.additional-libraries }}
-          sketch-paths: |
-            ${{ env.UNIVERSAL_SKETCHES }}
-            ${{ matrix.additional-sketches }}
+          #libraries: commented as json file is used instead
+          #sketch-paths: commented as json file is used instead
+          use-json-file: true
+          json-path: ${{ env.JSON_LIBRARY_LIST_FILE }}
           enable-deltas-report: true
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
           enable-warnings-report: true
@@ -165,4 +145,3 @@ jobs:
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
           git push
-
