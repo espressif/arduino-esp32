@@ -28,11 +28,6 @@
 
 #include "esp32-hal-log.h"
 
-/*
-static std::map<String, BLEClient*> g_addressMap;
-static std::map<uint16_t, BLEClient*> g_connIdMap;
-*/
-
 typedef struct {
 	uint32_t    assignedNumber;
 	const char* name;
@@ -1617,6 +1612,7 @@ void BLEUtils::dumpGattServerEvent(
 		// - uint32_t trans_id
 		// - esp_bd_addr_t bda
 		// - uint8_t exec_write_flag
+#ifdef ARDUHAL_LOG_LEVEL_VERBOSE
 		case ESP_GATTS_EXEC_WRITE_EVT: {
 			char* pWriteFlagText;
 			switch (evtParam->exec_write.exec_write_flag) {
@@ -1643,7 +1639,7 @@ void BLEUtils::dumpGattServerEvent(
 				pWriteFlagText);
 			break;
 		} // ESP_GATTS_DISCONNECT_EVT
-
+#endif
 
 		case ESP_GATTS_MTU_EVT: {
 			log_v("[conn_id: %d, mtu: %d]",

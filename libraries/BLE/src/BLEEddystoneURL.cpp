@@ -109,23 +109,22 @@ String BLEEddystoneURL::getSuffix(){
 }
 
 String BLEEddystoneURL::getDecodedURL() {
-  String decodedURL = "";
-  decodedURL += String(getPrefix().c_str());
+  std::string decodedURL = "";
+  decodedURL += getPrefix().c_str();
   if(decodedURL.length() == 0){ // No prefix extracted - interpret byte [0] as character
-    decodedURL += m_eddystoneData.url[0];
+    decodedURL += (char)m_eddystoneData.url[0];
   }
-
-  for (int i = 1; i < lengthURL; i++) {
+  for(int i = 1; i < lengthURL; i++) {
     if (m_eddystoneData.url[i] >= 33 && m_eddystoneData.url[i] < 127) {
-      decodedURL += m_eddystoneData.url[i];
+      decodedURL += (char)m_eddystoneData.url[i];
     }else{
       if(i != lengthURL-1 || m_eddystoneData.url[i] > 0x0D){ // Ignore last Byte and values used for suffix
         log_e("Unexpected unprintable char in URL 0x%02X: m_eddystoneData.url[%d]", m_eddystoneData.url[i], i);
       }
     }
   }
-  decodedURL += String(getSuffix().c_str());
-  return decodedURL;
+  decodedURL += getSuffix().c_str();
+  return String(decodedURL.c_str());
 } // getDecodedURL
 
 /**
@@ -234,9 +233,7 @@ int BLEEddystoneURL::setSmartURL(String url) {
   uint8_t suffix = 0x0E; // Init with empty string
   log_d("Encode url \"%s\" with length %d", url.c_str(), url.length());
   for(uint8_t i = 0; i < 4; ++i){
-    //log_d("check if substr \"%s\" == prefix \"%s\" ", url.substring(0, EDDYSTONE_URL_PREFIX[i].length()), EDDYSTONE_URL_PREFIX[i]);
     if(url.substring(0, EDDYSTONE_URL_PREFIX[i].length()) == EDDYSTONE_URL_PREFIX[i]){
-      //log_d("Found prefix 0x%02X = \"%s\"", i, EDDYSTONE_URL_PREFIX[i]);
       m_eddystoneData.url[0] = i;
       hasPrefix = true;
       break;
@@ -251,7 +248,6 @@ int BLEEddystoneURL::setSmartURL(String url) {
     std::string std_url(url.c_str());
     std::string std_suffix(EDDYSTONE_URL_SUFFIX[i].c_str());
     size_t found_pos = std_url.find(std_suffix);
-    //log_d("check if in url \"%s\" can find suffix \"%s\": found_pos = %d", std_url.c_str(), std_suffix.c_str(), found_pos);
     if(found_pos != std::string::npos){
       hasSuffix = true;
       suffix = i;
