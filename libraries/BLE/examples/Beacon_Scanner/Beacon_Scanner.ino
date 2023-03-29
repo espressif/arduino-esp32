@@ -75,6 +75,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         }
         Serial.printf("\n");
         Serial.printf("Decoded URL: %s\n", EddystoneURL.getDecodedURL().c_str());
+        Serial.printf("EddystoneURL.getDecodedURL(): %s\n", EddystoneURL.getDecodedURL().c_str());
         Serial.printf("TX power %d (Raw 0x%02X)\n", EddystoneURL.getPower(), EddystoneURL.getPower());
         Serial.println("\n");
       }
