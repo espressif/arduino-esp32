@@ -15,77 +15,58 @@ The test is running on all supported ESP32 chips.
 How to Add Library to Test
 --------------------------
 
-.. note:: 
-  Library must be listed in Arduino Library Manager. 
-  If you want to add your library to the Arduino Library Manager see `Adding a library to library manager <https://github.com/arduino/library-registry#adding-a-library-to-library-manager>`_
+To add a library to the CI test you need to add your library to the `lib.json`_. file located in ``./github/workflows/``.
 
-Adding a library is divided to 2 categories:
+List of parameters:
+*******************
 
-1. Adding a library which can work on all chips (eg. all chips have support for the peripherals used)
-2. Adding a chip specific library which cannot work on all chips (e.g. BLE / Ethernet peripheral is not supported by all chips)
-   
-For both categories only 2 simple steps are required to add a library to the test workflow file ``lib.yml``.
-Workflow file is located in ``./github/workflows/lib.yml``.
+Where the library will be installed from (use only 1 option):
 
-Library uses peripheral which is has all chips
-**********************************************
+* ``name`` - Name of the Library in Arduino Library Manager.
+* ``source-url`` - URL to the library github repository (example: "https://github.com/Arduino-IRremote/Arduino-IRremote.git"). Use when your Library is not listed in Arduino Library Manager.
 
-* Add new line with the library name to the list of ``UNIVERSAL_LIBRARIES`` in ``lib.yml`` file:
-   
-  .. code-block:: yaml
+Required:
 
-    # Libraries list to be installed
-    UNIVERSAL_LIBRARIES: |
-      - source-path: ./
-      - name: Adafruit NeoPixel
-      - name: FastLED
-      - name: IRremote
-      - name: ESP32Servo
+* ``exclude_targets`` - List of targets to be excluded from testing. Use only when the SoC dont support used peripheral.
+* ``sketch_path`` - Path / paths to the sketch / sketches to be tested.
+  
+Optional:
 
-* Add new line with the sketch path to the list of ``UNIVERSAL_SKETCHES`` in ``lib.yml`` file (sketch needs to be from the examples of the library):
-   
-  .. code-block:: yaml
+* ``version`` - Version of the library
+* ``destination-name`` - Folder name used for the installation of library (use only when needed)
 
-    # List of sketches to build (1 for each library)
-    UNIVERSAL_SKETCHES: 
-      ~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino
-      ~/Arduino/libraries/FastLED/examples/Blink/Blink.ino
-      ~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino
-      ~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino
 
-Library uses peripheral specific to some chips
-**********************************************
+Example of library addition from Arduino Library Manager:
+*********************************************************
 
-* Add new line with the library name to the list of ``additional-libraries`` under each SOC which supports the peripheral used by library in ``lib.yml`` file:
-   
-* Add new line with the sketch path to the list of ``additional-sketches`` under each SOC which supports the peripheral in ``lib.yml`` file 
-   (sketch needs to be from the examples of the library):
-   
-  Example for adding ``ArduinoBLE`` library (ESP32-S2 dont have BLE peripheral)
+  .. code-block:: json
 
-  .. code-block:: yaml
+    {
+        "name": "ArduinoBLE",
+        "exclude_targets": [
+            "esp32s2"
+        ],
+        "sketch_path": [
+            "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
+        ]
+    }
 
-    include:
-      - fqbn: espressif:esp32:esp32
-        additional-libraries: |
-          - name: ArduinoBLE
-        additional-sketches: |
-          ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
-      - fqbn: espressif:esp32:esp32s2
-        additional-libraries:
-        additional-sketches:
-      - fqbn: espressif:esp32:esp32c3
-        additional-libraries: |
-          - name: ArduinoBLE
-        additional-sketches: |
-          ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
-      - fqbn: espressif:esp32:esp32s3
-        additional-libraries: |
-          - name: ArduinoBLE
-        additional-sketches: |
-          ~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino
+Example of library addition from Github URL:
+********************************************
 
-Common part
+  .. code-block:: json
+
+    {
+        "name": "IRremote",
+        "source-url": "https://github.com/Arduino-IRremote/Arduino-IRremote.git",
+        "version": "latest",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+        ]
+    }
+
+Sumbit a PR
 ***********
 
 * Open a PR with the changes and someone from Espressif team will add a label ``lib_test`` to the PR and CI will run the test to check, if the addition is fine and library / example are compiling.
@@ -100,11 +81,11 @@ Icons meaning
 
 * |success| - Compilation was successful.
 
-* |warning| - Compilation was successful with some warnings. (number of warnings is printed next to the icon)
+* |warning| - Compilation was successful, but some warnings occurs.
 
 * |fail| - Compilation failed.
 
-* ``N/A`` - Not tested.
+* ``N/A`` - Not tested (target is in exclude_targets list).
 
 Scheduled test result
 *********************
@@ -138,3 +119,4 @@ In the table the results are in order ``BEFORE -> AFTER``.
    :class: no-scaled-link
 
 .. _LIBRARIES_TEST.md: https://github.com/espressif/arduino-esp32/LIBRARIES_TEST.md
+.. _lib.json: https://github.com/espressif/arduino-esp32/.github/workflow/lib.json
