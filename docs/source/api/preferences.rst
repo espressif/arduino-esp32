@@ -578,7 +578,7 @@ Copy a series of bytes stored against a given key in the currently open namespac
          - the number of bytes to be written to the buffer pointed to by ``buf``
 
    **Returns**
-      * if successful, the number of bytes equal to ``len`` is written to buffer ``buf``, and the method returns ``1``.
+      * if successful, the number of bytes equal to ``len`` is written to buffer ``buf``, and the method returns ``len``.
       * if the method fails, nothing is written to the buffer and the method returns ``0``.
 
    **Notes**
