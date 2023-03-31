@@ -247,7 +247,7 @@ void uartSetFastReading(uart_t* uart)
 }
 
 
-void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
+bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
 {
     if(uart == NULL) {
         return false;
