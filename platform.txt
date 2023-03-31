@@ -60,7 +60,7 @@ compiler.cpp.cmd={compiler.prefix}g++
 compiler.S.cmd={compiler.prefix}gcc
 compiler.c.elf.cmd={compiler.prefix}g++
 compiler.as.cmd={compiler.prefix}as
-compiler.ar.cmd={compiler.prefix}ar
+compiler.ar.cmd={compiler.prefix}gcc-ar
 compiler.size.cmd={compiler.prefix}size
 
 # These can be overridden in platform.local.txt
