@@ -17,6 +17,9 @@ How to Add Library to Test
 
 To add a library to the CI test you need to add your library to the `lib.json`_. file located in ``./github/workflows/``.
 
+.. note:: 
+  Please add the libraries to the `lib.json`_ in alphabetical order, thanks.
+
 List of parameters:
 *******************
 
@@ -32,12 +35,13 @@ Required:
   
 Optional:
 
-* ``version`` - Version of the library
-* ``destination-name`` - Folder name used for the installation of library (use only when needed)
+* ``version`` - Version of the library.
+* ``required-libs`` - Libraries that are necessary to be installed to compile the tested library.
+* ``destination-name`` - Folder name used for the installation of library (use only when needed).
 
 
-Example of library addition from Arduino Library Manager:
-*********************************************************
+Example of library addition from Arduino Library Manager with ESP32-S2 excluded:
+********************************************************************************
 
   .. code-block:: json
 
@@ -51,20 +55,24 @@ Example of library addition from Arduino Library Manager:
         ]
     }
 
-Example of library addition from Github URL:
-********************************************
+Example of library addition from Github URL with required library:
+******************************************************************
 
   .. code-block:: json
 
     {
-        "name": "IRremote",
-        "source-url": "https://github.com/Arduino-IRremote/Arduino-IRremote.git",
-        "version": "latest",
+        "source-url": "https://github.com/me-no-dev/ESPAsyncWebServer.git",
+        "required-libs": [
+            {"source-url": "https://github.com/me-no-dev/AsyncTCP.git"}
+        ],
         "exclude_targets": [],
         "sketch_path": [
-            "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/CaptivePortal/CaptivePortal.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ESP_AsyncFSBrowser/ESP_AsyncFSBrowser.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/regex_patterns/regex_patterns.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/simple_server/simple_server.ino"
         ]
-    }
+    },
 
 Sumbit a PR
 ***********
