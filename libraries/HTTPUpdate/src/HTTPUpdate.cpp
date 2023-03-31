@@ -48,46 +48,46 @@ HTTPUpdate::~HTTPUpdate(void)
 {
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
-    return handleUpdate(httpClient, currentVersion, true);
+    return handleUpdate(httpClient, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, true);
+    return handleUpdate(http, currentVersion, true, requestCB);
 }
 
 HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
-        const String& currentVersion)
+        const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
-    return handleUpdate(httpClient, currentVersion, false);
+    return handleUpdate(httpClient, currentVersion, false, requestCB);
 }
 
 HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
-        const String& currentVersion)
+        const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, host, port, uri))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, requestCB);
 }
 
 /**
@@ -180,7 +180,7 @@ String getSketchSHA256() {
  * @param currentVersion const char *
  * @return HTTPUpdateResult
  */
-HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs)
+HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs, HTTPUpdateRequestCB requestCB)
 {
 
     HTTPUpdateResult ret = HTTP_UPDATE_FAILED;
@@ -215,6 +215,9 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
 
     if(currentVersion && currentVersion[0] != 0x00) {
         http.addHeader("x-ESP32-version", currentVersion);
+    }
+    if (requestCB) {
+        requestCB(&http);
     }
 
     const char * headerkeys[] = { "x-MD5" };

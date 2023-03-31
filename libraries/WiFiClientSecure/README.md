@@ -45,7 +45,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protoc
 5. before initiating the first SSL connection, call
    my_client.setCACertBundle(rootca_crt_bundle_start);
 
-To use this feature in Android IDE:
+To use this feature in Arduino IDE:
 If the Arduino IDE added support for embedding files in the meantime, then follow the instructions above.
 If not, you have three choices:
 1. convert your project to PlatformIO
