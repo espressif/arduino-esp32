@@ -92,8 +92,8 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
-void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
-void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
+bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
 void uartSetFastReading(uart_t* uart);
 
 void uartSetDebug(uart_t* uart);
@@ -106,11 +106,11 @@ bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
 void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
-void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
+bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
 
 // Used to set RS485 function -- needs to disable HW Flow Control and set RTS pin to use
 // RTS pin becomes RS485 half duplex RE/DE
-int uartSetMode(uart_t *uart, uint8_t mode);
+bool uartSetMode(uart_t *uart, uint8_t mode);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
