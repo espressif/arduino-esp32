@@ -562,8 +562,8 @@ static esp_err_t stream_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "X-Framerate", "60");
 
 #if CONFIG_LED_ILLUMINATOR_ENABLED
-    enable_led(true);
     isStreaming = true;
+    enable_led(true);
 #endif
 
     while (true)
