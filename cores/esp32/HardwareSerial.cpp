@@ -233,7 +233,7 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
 // A low value of FIFO Full bytes will consume more CPU time within the ISR
 // A high value of FIFO Full bytes will make the application wait longer to have byte available for the Stkech in a streaming scenario
 // Both RX FIFO Full and RX Timeout may affect when onReceive() will be called
-void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
+bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
 {
     HSERIAL_MUTEX_LOCK();
     // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
@@ -242,14 +242,15 @@ void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
         fifoBytes = 120;
         log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
     }
-    uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
+    bool retCode = uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
     if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) _rxFIFOFull = fifoBytes;
     HSERIAL_MUTEX_UNLOCK();
+    return retCode;
 }
 
 // timout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
-void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+bool HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 {
     HSERIAL_MUTEX_LOCK();
     
@@ -258,9 +259,10 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
     _rxTimeout = symbols_timeout;   
     if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
 
-    uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
+    bool retCode = uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
+    return retCode;
 }
 
 void HardwareSerial::eventQueueReset()
@@ -548,15 +550,16 @@ void HardwareSerial::setRxInvert(bool invert)
 }
 
 // negative Pin value will keep it unmodified
-void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(_uart == NULL) {
         log_e("setPins() shall be called after begin() - nothing done\n");
-        return;
+        return false;
     }
 
-    // uartSetPins() checks if pins are valid for each function and for the SoC 
-    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
+    // uartSetPins() checks if pins are valid for each function and for the SoC
+    bool retCode = uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
+    if (retCode) {
         _txPin = _txPin >= 0 ? txPin : _txPin;
         _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
         _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
@@ -564,12 +567,19 @@ void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     } else {
         log_e("Error when setting Serial port Pins. Invalid Pin.\n");
     }
+    return retCode;
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-void HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
+bool HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
 {
-    uartSetHwFlowCtrlMode(_uart, mode, threshold);
+    return uartSetHwFlowCtrlMode(_uart, mode, threshold);
+}
+
+// Sets the uart mode in the esp32 uart for use with RS485 modes (HwFlowCtrl must be disabled and RTS pin set)
+bool HardwareSerial::setMode(uint8_t mode)
+{
+    return uartSetMode(_uart, mode);
 }
 
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
