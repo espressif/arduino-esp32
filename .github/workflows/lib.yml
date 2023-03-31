@@ -23,20 +23,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Options of how will be the ESP32 Arduino core installed
-      BOARD_MANAGER: |
-        - name: "espressif:esp32"
-          source-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
-          version: 2.0.7
-
       REPOSITORY: |
         - source-path: '.'
           name: "espressif:esp32"
-
-      GITHUB_URL: |
-        - name: "espressif:esp32"
-          source-url: https://github.com/espressif/arduino-esp32.git
-          version: 2.0.7
 
     strategy:
       matrix:
@@ -62,26 +51,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Possible platforms input for compile-sketches
-      # ${{ env.BOARD_MANAGER }}
-      # ${{ env.GITHUB_URL }}
-      # ${{ env.REPOSITORY }}
-
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
         with:
           platforms: |
-            ${{ env.GITHUB_URL }}
+            ${{ env.REPOSITORY }}
           target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
-          #libraries: commented as json file is used instead
-          #sketch-paths: commented as json file is used instead
           use-json-file: true
           json-path: ${{ env.JSON_LIBRARY_LIST_FILE }}
           enable-deltas-report: true
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
           enable-warnings-report: true
-          #verbose: true
           cli-compile-flags: |
             - --warnings="all"
 

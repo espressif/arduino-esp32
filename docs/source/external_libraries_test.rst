@@ -79,6 +79,8 @@ Test Results
 Icons meaning
 *************
 
+There is a number before each icon, which means the number of examples which were compiled with that result.
+
 * |success| - Compilation was successful.
 
 * |warning| - Compilation was successful, but some warnings occurs.
