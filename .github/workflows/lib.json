@@ -8,6 +8,16 @@
         ]
     },
     {
+        "source-url": "https://github.com/me-no-dev/ESPAsyncWebServer.git",
+        "required-libs": {
+            "source-url": "https://github.com/me-no-dev/AsyncTCP.git"
+        },
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/AsyncTCP/examples"
+        ]
+    },
+    {
         "name": "FastLED",
         "exclude_targets": [],
         "sketch_path": [
