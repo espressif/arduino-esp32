@@ -106,7 +106,9 @@ void loop() {
     // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
     // httpUpdate.setLedPin(LED_BUILTIN, HIGH);
 
-    t_httpUpdate_return ret = httpUpdate.update(client, "https://server/file.bin");
+    t_httpUpdate_return ret = httpUpdate.update(client, "https://server/file.bin", "", [](HTTPClient *client) {
+      client->setAuthorization("test", "password");
+    });
     // Or:
     //t_httpUpdate_return ret = httpUpdate.update(client, "server", 443, "/file.bin");
 
