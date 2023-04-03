@@ -241,7 +241,11 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
     }
+#ifdef SOC_CLK_APLL_SUPPORTED
     log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+#else
+    log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"17.5M"), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+#endif
     return true;
 }
 
