@@ -151,6 +151,9 @@ typedef enum {
 	WIFI_TX_ANT_AUTO
 } wifi_tx_ant_t;
 
+extern const char * ArduinoEventIdToCStr(arduino_event_id_t id);
+extern const char * WiFiErrReasonToCStr(wifi_err_reason_t reason);
+
 class WiFiGenericClass
 {
   public:
