@@ -6,11 +6,11 @@ About
 -----
 
 External libraries testing is a compilation test for listed libraries on arduino-esp32 master branch. The test was made for users, so they can check which libraries are compiling without errors on which SoC.
-External libraries test is running periodicaly (once a week) agains master branch and can also run on PR by adding a label ``lib_test``.
+External libraries test is running periodically (once a week) against master branch and can also run on PR by adding a label ``lib_test``.
 The test is running on all supported ESP32 chips.
 
 .. note:: 
-  As the test is just a compilation of example, that does not guarrantee that the library/sketch will run without any problems after flashing it on your device.
+  As the test is just a compilation of example, that does not guarantee that the library/sketch will run without any problems after flashing it on your device.
 
 How to Add Library to Test
 --------------------------
@@ -74,10 +74,10 @@ Example of library addition from Github URL with required library:
         ]
     },
 
-Sumbit a PR
+Submit a PR
 ***********
 
-* Open a PR with the changes and someone from Espressif team will add a label ``lib_test`` to the PR and CI will run the test to check, if the addition is fine and library / example are compiling.
+* Open a PR with the changes and someone from Espressif team will add a label ``lib_test`` to the PR and CI will run the test to check, if the addition is fine and the library/example is compiling.
 
 * After merging your PR, the next scheduled test will test your library and add the results to the `LIBRARIES_TEST.md`_.
   
