@@ -19935,8 +19935,8 @@ XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 XIAO_ESP32S3.name=XIAO_ESP32S3
 XIAO_ESP32S3.vid.0=0x2886
 XIAO_ESP32S3.pid.0=0x0056
-XIAO_ESP32S3.vid.0=0x2886
-XIAO_ESP32S3.pid.0=0x8056
+XIAO_ESP32S3.vid.1=0x2886
+XIAO_ESP32S3.pid.1=0x8056
 
 XIAO_ESP32S3.bootloader.tool=esptool_py
 XIAO_ESP32S3.bootloader.tool.default=esptool_py
@@ -19995,9 +19995,6 @@ XIAO_ESP32S3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 XIAO_ESP32S3.menu.PSRAM.disabled=Disabled
 XIAO_ESP32S3.menu.PSRAM.disabled.build.defines=
 XIAO_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
-XIAO_ESP32S3.menu.PSRAM.enabled=QSPI PSRAM
-XIAO_ESP32S3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-XIAO_ESP32S3.menu.PSRAM.enabled.build.psram_type=qspi
 XIAO_ESP32S3.menu.PSRAM.opi=OPI PSRAM
 XIAO_ESP32S3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 XIAO_ESP32S3.menu.PSRAM.opi.build.psram_type=opi
@@ -20021,6 +20018,7 @@ XIAO_ESP32S3.menu.LoopCore.1=Core 1
 XIAO_ESP32S3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
 XIAO_ESP32S3.menu.LoopCore.0=Core 0
 XIAO_ESP32S3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
 XIAO_ESP32S3.menu.EventsCore.1=Core 1
 XIAO_ESP32S3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 XIAO_ESP32S3.menu.EventsCore.0=Core 0
@@ -20031,10 +20029,10 @@ XIAO_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
 XIAO_ESP32S3.menu.USBMode.default=USB-OTG (TinyUSB)
 XIAO_ESP32S3.menu.USBMode.default.build.usb_mode=0
 
-XIAO_ESP32S3.menu.CDCOnBoot.default=Disabled
-XIAO_ESP32S3.menu.CDCOnBoot.default.build.cdc_on_boot=0
-XIAO_ESP32S3.menu.CDCOnBoot.cdc=Enabled
-XIAO_ESP32S3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+XIAO_ESP32S3.menu.CDCOnBoot.default=Enabled
+XIAO_ESP32S3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+XIAO_ESP32S3.menu.CDCOnBoot.cdc=Disabled
+XIAO_ESP32S3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 XIAO_ESP32S3.menu.MSCOnBoot.default=Disabled
 XIAO_ESP32S3.menu.MSCOnBoot.default.build.msc_on_boot=0

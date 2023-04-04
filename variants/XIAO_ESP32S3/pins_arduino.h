@@ -36,8 +36,6 @@ static const uint8_t A2 = 3;
 static const uint8_t A3 = 4;
 static const uint8_t A4 = 5;
 static const uint8_t A5 = 6;
-// static const uint8_t A6 = 7; /* not pinout */
-// static const uint8_t A7 = 8;
 static const uint8_t A8 = 7;
 static const uint8_t A9 = 8;
 static const uint8_t A10 = 9;
@@ -63,10 +61,5 @@ static const uint8_t T6 = 6;
 static const uint8_t T7 = 7;
 static const uint8_t T8 = 8;
 static const uint8_t T9 = 9;
-// static const uint8_t T10 = 10; /* not pinout */
-// static const uint8_t T11 = 11;
-// static const uint8_t T12 = 12;
-// static const uint8_t T13 = 13;
-// static const uint8_t T14 = 14;
 
 #endif /* Pins_Arduino_h */
