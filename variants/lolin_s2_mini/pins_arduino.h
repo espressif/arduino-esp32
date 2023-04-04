@@ -4,8 +4,12 @@
 #include <stdint.h>
 
 // Default USB Settings
+#ifndef USB_VID
 #define USB_VID 			0x303a
+#endif
+#ifndef USB_PID
 #define USB_PID 			0x80C2
+#endif
 #define USB_MANUFACTURER 	"WEMOS.CC"
 #define USB_PRODUCT 		"LOLIN-S2-MINI"
 #define USB_SERIAL 			"0"
