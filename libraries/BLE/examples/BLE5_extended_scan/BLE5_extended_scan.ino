@@ -8,8 +8,9 @@
    author: chegewara
 */
 #ifndef SOC_BLE_50_SUPPORTED
-#warning "Not compatible hardware"
+#warning "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
 #else
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
