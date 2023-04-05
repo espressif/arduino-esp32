@@ -1,0 +1,40 @@
+name: External Libraries Test Results
+
+on:
+  workflow_run:
+    workflows: [External Libraries Test]
+
+    types:
+      - completed
+
+env:
+  # It's convenient to set variables for values used multiple times in the workflow
+  SKETCHES_REPORTS_PATH: libraries-report
+  SKETCHES_REPORTS_ARTIFACT_NAME: libraries-report
+  RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
+  JSON_LIBRARY_LIST_FILE: .github/workflows/lib.json
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+jobs:
+  lib-test-results:
+    name: External Libraries Test Results
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      (github.event.workflow_run.conclusion == 'success' ||
+       github.event.workflow_run.conclusion == 'failure')
+
+    steps:
+      # This step is needed to get the size data produced by the compile jobs
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@main
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+
