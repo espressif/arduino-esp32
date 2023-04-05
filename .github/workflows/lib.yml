@@ -1,5 +1,6 @@
 name: External Libraries Test
 
+#add comment DBG
 # The workflow will run on schedule and labeled pull requests
 on:
   pull_request:
@@ -109,7 +110,7 @@ jobs:
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
           git push
-          
+
   event_file:
     name: "Event File"
     if: |
