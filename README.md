@@ -23,7 +23,7 @@ Latest Development Release  [![Release Version](https://img.shields.io/github/re
 
 ### Development Planning
 
-Our Development is fully tracked on this public **[Roadmap 🎉](https://github.com/orgs/espressif/projects/3)** 
+Our Development is fully tracked on this public **[Roadmap 🎉](https://github.com/orgs/espressif/projects/3)**
 
 For even more information you can take a look at [Sprint Meeting notes](https://github.com/espressif/arduino-esp32/discussions/categories/sprints-meeting-notes) or join [Monthly Community Meetings 🔔](https://github.com/espressif/arduino-esp32/discussions/categories/monthly-community-meetings)
 
@@ -54,8 +54,8 @@ Finally, if you are sure no one else had the issue, follow the **Issue template*
 
 ### External libraries compilation test
 
-We have set-up CI testing for external libraries for ESP32 Arduino core. You can check test results in the file [LIBRARIES_TEST](https://github.com/espressif/arduino-esp32/blob/master/LIBRARIES_TEST.md). 
-For more information and how to add your library to the test see [external library testing](https://docs.espressif.com/projects/arduino-esp32/en/latest/external_library_test.html) in the documentation.
+We have set-up CI testing for external libraries for ESP32 Arduino core. You can check test results in the file [LIBRARIES_TEST](https://github.com/espressif/arduino-esp32/blob/master/LIBRARIES_TEST.md).
+For more information and how to add your library to the test see [external library testing](https://docs.espressif.com/projects/arduino-esp32/en/latest/external_libraries_test.html) in the documentation.
 
 ### Contributing
 
