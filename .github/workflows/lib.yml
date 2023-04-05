@@ -26,6 +26,8 @@ jobs:
       REPOSITORY: |
         - source-path: '.'
           name: "espressif:esp32"
+      
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
     strategy:
       matrix:
