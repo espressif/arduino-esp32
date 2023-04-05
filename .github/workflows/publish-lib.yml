@@ -25,6 +25,7 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' ||
        github.event.workflow_run.conclusion == 'failure')
 
+    steps:
     # This step is needed to get the size data produced by the compile jobs
     - name: Download sketches reports artifact
       uses: actions/download-artifact@v3
