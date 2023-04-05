@@ -26,8 +26,6 @@ jobs:
       REPOSITORY: |
         - source-path: '.'
           name: "espressif:esp32"
-      
-      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
     strategy:
       matrix:
@@ -73,6 +71,19 @@ jobs:
         with:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+  event_file:
+    name: "Event File"
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'lib_test')
+    needs: compile-sketch
+    runs-on: ubuntu-latest
+    steps:
+       - name: Upload
+         uses: actions/upload-artifact@v2
+         with:
+           name: Event File
+           path: ${{github.event_path}}
 
   report-comment:
     needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
