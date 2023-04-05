@@ -2,8 +2,7 @@ name: External Libraries Test Results
 
 on:
   workflow_run:
-    workflows: [External Libraries Test]
-    branches-ignore: [master]
+    workflows: ["External Libraries Test"]
 
     types:
       - completed
