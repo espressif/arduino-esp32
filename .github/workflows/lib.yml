@@ -72,23 +72,6 @@ jobs:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
-  report-comment:
-    needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
-    if: github.event_name == 'pull_request' # Only run the job when the workflow is triggered by a pull request
-    runs-on: ubuntu-latest
-    steps:
-      # This step is needed to get the size data produced by the compile jobs
-      - name: Download sketches reports artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
-
-      - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@main
-        with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
-
   report-to-file:
     needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
     if: github.event_name == 'schedule' # Only run the job when the workflow is triggered by a schedule
@@ -126,3 +109,16 @@ jobs:
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
           git push
+          
+  event_file:
+    name: "Event File"
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'lib_test')
+    needs: compile-sketch
+    runs-on: ubuntu-latest
+    steps:
+       - name: Upload
+         uses: actions/upload-artifact@v2
+         with:
+           name: Event File
+           path: ${{github.event_path}}
