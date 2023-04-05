@@ -25,15 +25,15 @@ jobs:
        github.event.workflow_run.conclusion == 'failure')
 
     steps:
-    # This step is needed to get the size data produced by the compile jobs
-    - name: Download sketches reports artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
-        path: ${{ env.SKETCHES_REPORTS_PATH }}
+      # This step is needed to get the size data produced by the compile jobs
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
 
-    - name: Report results
-      uses: P-R-O-C-H-Y/report-size-deltas@main
-      with:
-        sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
-        github-token: ${{ env.GITHUB_TOKEN }}
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@main
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          github-token: ${{ env.GITHUB_TOKEN }}
