@@ -9,11 +9,9 @@ on:
   workflow_dispatch:
 env:
   # It's convenient to set variables for values used multiple times in the workflow
-  SKETCHES_REPORTS_PATH: libraries-report
-  SKETCHES_REPORTS_ARTIFACT_NAME: libraries-report
-  RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
-  JSON_LIBRARY_LIST_FILE: .github/workflows/lib.json
+  SKETCHES_REPORTS_PATH: artifacts/libraries-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  PR_EVENT_PATH: artifacts/Event File/event.json
 
 jobs:
   lib-test-results:
@@ -21,20 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event.workflow_run.event == 'pull_request' &&
-      (github.event.workflow_run.conclusion == 'success' ||
-       github.event.workflow_run.conclusion == 'failure')
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
-      # This step is needed to get the size data produced by the compile jobs
-      - name: Download sketches reports artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
-
+      - name: Download and Extract Artifacts
+        run: |
+          mkdir -p artifacts && cd artifacts
+          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+          gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+          do
+            IFS=$'\t' read name url <<< "$artifact"
+            gh api $url > "$name.zip"
+            unzip -d "$name" "$name.zip"
+          done
+    
       - name: Report results
         uses: P-R-O-C-H-Y/report-size-deltas@main
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
-
+          pr-event-path: ${{ env.PR_EVENT_PATH }}
