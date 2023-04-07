@@ -200,7 +200,6 @@
 #define SOC_LEDC_CHANNEL_NUM             (6)
 #define SOC_LEDC_TIMER_BIT_WIDTH         (14)
 #define SOC_LEDC_SUPPORT_FADE_STOP       (1)
-#define SOC_LEDC_GAMMA_FADE_RANGE_MAX    (1U) // The target does not support gamma curve fading
 
 /*-------------------------- MMU CAPS ----------------------------------------*/
 #define SOC_MMU_LINEAR_ADDRESS_REGION_NUM       (1U)
@@ -417,3 +416,4 @@
 /*---------------------------------- Bluetooth CAPS ----------------------------------*/
 #define SOC_BLE_SUPPORTED               (1)    /*!< Support Bluetooth Low Energy hardware */
 #define SOC_BLE_MESH_SUPPORTED          (1)    /*!< Support BLE MESH */
+#define SOC_BLE_50_SUPPORTED		(1)    /*!< Support Bluetooth 5.0 */

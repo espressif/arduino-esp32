@@ -80,7 +80,7 @@ MEMORY
    */
   extern_ram_seg(RWX) : org = 0x3c000020 , len = 0x2000000-0x20
 }
-_static_data_end = _bss_end;
+_heap_start = _heap_low_start;
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000;
 _data_seg_org = ORIGIN(rtc_data_seg);

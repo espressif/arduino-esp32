@@ -47,6 +47,7 @@
 #define SOC_DEDICATED_GPIO_SUPPORTED    1
 #define SOC_GPTIMER_SUPPORTED           1
 #define SOC_SUPPORTS_SECURE_DL_MODE     1
+#define SOC_ULP_FSM_SUPPORTED           1
 #define SOC_RISCV_COPROC_SUPPORTED      1
 #define SOC_USB_OTG_SUPPORTED           1
 #define SOC_PCNT_SUPPORTED              1
@@ -209,7 +210,6 @@
 #define SOC_LEDC_CHANNEL_NUM             (8)
 #define SOC_LEDC_TIMER_BIT_WIDTH         (14)
 #define SOC_LEDC_SUPPORT_FADE_STOP       (1)
-#define SOC_LEDC_GAMMA_FADE_RANGE_MAX    (1U) // The target does not support gamma curve fading
 
 /*-------------------------- MMU CAPS ----------------------------------------*/
 #define SOC_MMU_LINEAR_ADDRESS_REGION_NUM        5
@@ -417,11 +417,11 @@
 #define SOC_PM_SUPPORT_EXT0_WAKEUP                (1)
 #define SOC_PM_SUPPORT_EXT1_WAKEUP                (1)
 #define SOC_PM_SUPPORT_EXT_WAKEUP                 (1)     /*!<Compatible to the old version of IDF */
-
 #define SOC_PM_SUPPORT_WIFI_WAKEUP                (1)
+#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
+
 #define SOC_PM_SUPPORT_WIFI_PD                    (1)
 #define SOC_PM_SUPPORT_RTC_PERIPH_PD              (1)
-#define SOC_PM_SUPPORT_TOUCH_SENSOR_WAKEUP        (1)     /*!<Supports waking up from touch pad trigger */
 #define SOC_PM_SUPPORT_RTC_FAST_MEM_PD            (1)
 #define SOC_PM_SUPPORT_RTC_SLOW_MEM_PD            (1)
 #define SOC_PM_SUPPORT_RC_FAST_PD                 (1)
@@ -458,3 +458,4 @@
 #define SOC_WIFI_CSI_SUPPORT                (1)    /*!< Support CSI */
 #define SOC_WIFI_MESH_SUPPORT               (1)    /*!< Support WIFI MESH */
 #define SOC_WIFI_SUPPORT_VARIABLE_BEACON_WINDOW   (1)    /*!< Support delta early time for rf phy on/off */
+#define SOC_WIFI_NAN_SUPPORT                (1)    /*!< Support WIFI Aware (NAN) */

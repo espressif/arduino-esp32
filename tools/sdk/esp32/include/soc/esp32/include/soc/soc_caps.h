@@ -95,6 +95,7 @@
 #define SOC_SECURE_BOOT_SUPPORTED   1
 #define SOC_TOUCH_SENSOR_SUPPORTED  1
 #define SOC_BOD_SUPPORTED           1
+#define SOC_ULP_FSM_SUPPORTED       1
 
 #if SOC_CAPS_ECO_VER < 200
 #define SOC_DPORT_WORKAROUND                   1
@@ -211,7 +212,6 @@
 #define SOC_LEDC_SUPPORT_HS_MODE         (1)
 #define SOC_LEDC_CHANNEL_NUM             (8)
 #define SOC_LEDC_TIMER_BIT_WIDTH         (20)
-#define SOC_LEDC_GAMMA_FADE_RANGE_MAX    (1U) // The target does not support gamma curve fading
 
 /*-------------------------- MCPWM CAPS --------------------------------------*/
 #define SOC_MCPWM_GROUPS                     (2)    ///< 2 MCPWM groups on the chip (i.e., the number of independent MCPWM peripherals)
@@ -375,6 +375,7 @@
 #define SOC_PM_SUPPORT_RTC_SLOW_MEM_PD            (1)
 #define SOC_PM_SUPPORT_RC_FAST_PD                 (1)
 #define SOC_PM_SUPPORT_VDDSDIO_PD                 (1)
+#define SOC_PM_SUPPORT_MODEM_PD                   (1)     /*!<Modem here includes wifi and btdm */
 
 #define SOC_CONFIGURABLE_VDDSDIO_SUPPORTED        (1)
 
@@ -405,6 +406,7 @@
 #define SOC_WIFI_CSI_SUPPORT                    (1)    /*!< Support CSI */
 #define SOC_WIFI_MESH_SUPPORT                   (1)    /*!< Support WIFI MESH */
 #define SOC_WIFI_SUPPORT_VARIABLE_BEACON_WINDOW (1)    /*!< Support delta early time for rf phy on/off */
+#define SOC_WIFI_NAN_SUPPORT                    (1)    /*!< Support WIFI Aware (NAN) */
 
 /*---------------------------------- Bluetooth CAPS ----------------------------------*/
 #define SOC_BLE_SUPPORTED               (1)    /*!< Support Bluetooth Low Energy hardware */

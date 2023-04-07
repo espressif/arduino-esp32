@@ -48,7 +48,7 @@ MEMORY
     constraint that (paddr % 64KB == vaddr % 64KB).)
   */
   /* Shared data RAM, excluding memory reserved for bootloader and ROM bss/data/stack. */
-  dram0_0_seg (RW) : org = (0x3FFB0000 + 0x2000 + 0x2000), len = 0x3FFDF000 - (0x3FFB0000 + 0x2000 + 0x2000) - 0
+  dram0_0_seg (RW) : org = (0x3FFB0000 + 0x2000 + 0x2000), len = 0x3FFDF000 - (0x3FFB0000 + 0x2000 + 0x2000)
   /* Flash mapped constant data */
   drom0_0_seg (R) : org = 0x3F000020, len = 0x3f0000-0x20
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */
@@ -66,7 +66,7 @@ MEMORY
   extern_ram_seg(RWX) : org = 0x3F800000,
                                      len = 0x780000
 }
-_static_data_end = _bss_end;
+_heap_start = _heap_low_start;
 _heap_end = 0x40000000;
 _data_seg_org = ORIGIN(rtc_data_seg);
 /* The lines below define location alias for .rtc.data section based on Kconfig option.
