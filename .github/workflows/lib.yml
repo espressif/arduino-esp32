@@ -1,0 +1,124 @@
+name: External Libraries Test
+
+# The workflow will run on schedule and labeled pull requests
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+  # Schedule weekly builds on every Sunday at 4 am
+  schedule:
+    - cron: '0 4 * * SUN' 
+
+env:
+  # It's convenient to set variables for values used multiple times in the workflow
+  SKETCHES_REPORTS_PATH: libraries-report
+  SKETCHES_REPORTS_ARTIFACT_NAME: libraries-report
+  RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
+  JSON_LIBRARY_LIST_FILE: .github/workflows/lib.json
+jobs:
+  compile-sketch:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'lib_test') ||
+      (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
+    runs-on: ubuntu-latest
+
+    env:
+      REPOSITORY: |
+        - source-path: '.'
+          name: "espressif:esp32"
+
+    strategy:
+      matrix:
+        target:
+          - esp32
+          - esp32s2
+          - esp32c3
+          - esp32s3
+
+        include:
+          - target: esp32
+            fqbn: espressif:esp32:esp32
+          - target: esp32s2
+            fqbn: espressif:esp32:esp32s2
+          - target: esp32c3
+            fqbn: espressif:esp32:esp32c3
+          - target: esp32s3
+            fqbn: espressif:esp32:esp32s3
+
+
+    steps:
+      # This step makes the contents of the repository available to the workflow
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Compile sketch
+        uses: P-R-O-C-H-Y/compile-sketches@main
+        with:
+          platforms: |
+            ${{ env.REPOSITORY }}
+          target: ${{ matrix.target }}
+          fqbn: ${{ matrix.fqbn }}
+          use-json-file: true
+          json-path: ${{ env.JSON_LIBRARY_LIST_FILE }}
+          enable-deltas-report: true
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+          enable-warnings-report: true
+          cli-compile-flags: |
+            - --warnings="all"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+  report-to-file:
+    needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
+    if: github.event_name == 'schedule' # Only run the job when the workflow is triggered by a schedule
+    runs-on: ubuntu-latest
+    steps:
+      # Check out repository
+      - name: Checkout repository    
+        uses: actions/checkout@v3
+
+      # This step is needed to get the size data produced by the compile jobs
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@main
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          destination-file: ${{ env.RESULT_LIBRARY_TEST_FILE }}
+
+      - name: Append file with action URL
+        uses: DamianReeves/write-file-action@master
+        with:
+          path: ${{ env.RESULT_LIBRARY_TEST_FILE }}
+          contents: |
+            / [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})
+          write-mode: append
+
+      - name: Push to github repo
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
+          git commit -m "Generated External Libraries Test Results"
+          git push
+
+  event_file:
+    name: "Event File"
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'lib_test')
+    needs: compile-sketch
+    runs-on: ubuntu-latest
+    steps:
+       - name: Upload
+         uses: actions/upload-artifact@v2
+         with:
+           name: Event File
+           path: ${{github.event_path}}
