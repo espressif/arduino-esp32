@@ -4,7 +4,9 @@ version=2.0.6
 tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
 tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
 tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
+tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb
 
 debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
 debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
@@ -195,8 +197,8 @@ pluggable_monitor.required.serial=builtin:serial-monitor
 #  - this is alpha and may be subject to change without notice
 debug.executable={build.path}/{build.project_name}.elf
 debug.toolchain=gcc
-debug.toolchain.path={compiler.path}
-debug.toolchain.prefix={compiler.prefix}
+debug.toolchain.path={tools.{build.tarch}-esp-elf-gdb.path}/bin/
+debug.toolchain.prefix={build.tarch}-{build.target}-elf
 debug.server=openocd
 debug.server.openocd.script=debug.cfg
 
