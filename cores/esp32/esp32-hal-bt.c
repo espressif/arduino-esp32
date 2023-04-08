@@ -43,13 +43,17 @@ bool btStart(){
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }
+    esp_err_t ret;
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){
-        esp_bt_controller_init(&cfg);
+        if((ret = esp_bt_controller_init(&cfg)) != ESP_OK) {
+            log_e("initialize controller failed: %s", esp_err_to_name(ret));
+            return false;
+        }
         while(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){}
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED){
-        if (esp_bt_controller_enable(BT_MODE)) {
-            log_e("BT Enable failed");
+        if((ret = esp_bt_controller_enable(BT_MODE)) != ESP_OK) {
+            log_e("BT Enable mode=%d failed %s", BT_MODE, esp_err_to_name(ret));
             return false;
         }
     }
