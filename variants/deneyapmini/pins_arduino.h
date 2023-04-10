@@ -23,7 +23,6 @@ static const uint8_t LED_BUILTIN = 35;
 #define LEDB        LED_BUILTIN
 #define LEDR 34
 #define LEDG 33
-#define LEDB 35
 
 static const uint8_t GPKEY = 0;
 #define KEY_BUILTIN GPKEY
@@ -82,6 +81,7 @@ static const uint8_t PWM1 = 41;
 static const uint8_t DAC0 = 17;
 static const uint8_t DAC1 = 18;
 
+/*
 #define SD SDA
 #define SC SCL
 
@@ -91,5 +91,6 @@ static const uint8_t DAC1 = 18;
 
 #define DA0 DAC0
 #define DA1 DAC1
+*/
 
 #endif /* Pins_Arduino_h */
