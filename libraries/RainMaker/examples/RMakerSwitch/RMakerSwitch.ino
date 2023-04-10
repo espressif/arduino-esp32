@@ -2,6 +2,7 @@
 #include "RMaker.h"
 #include "WiFi.h"
 #include "WiFiProv.h"
+#include "AppInsights.h"
 
 #define DEFAULT_POWER_MODE true
 const char *service_name = "PROV_1234";
@@ -98,6 +99,9 @@ void setup()
     RMaker.enableSchedule();
 
     RMaker.enableScenes();
+    // Enable ESP Insights. Insteads of using the default http transport, this function will
+    // reuse the existing MQTT connection of Rainmaker, thereby saving memory space.
+    initAppInsights();
 
     RMaker.enableSystemService(SYSTEM_SERV_FLAGS_ALL, 2, 2, 2);
 
