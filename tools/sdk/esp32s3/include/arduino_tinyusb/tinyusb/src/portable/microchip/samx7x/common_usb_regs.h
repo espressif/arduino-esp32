@@ -2007,7 +2007,7 @@
 
 /** \brief DEVDMA hardware registers */
 typedef struct
-{  
+{
   __IO uint32_t DEVDMANXTDSC; /**< (DEVDMA Offset: 0x00) Device DMA Channel Next Descriptor Address Register */
   __IO uint32_t DEVDMAADDRESS; /**< (DEVDMA Offset: 0x04) Device DMA Channel Address Register */
   __IO uint32_t DEVDMACONTROL; /**< (DEVDMA Offset: 0x08) Device DMA Channel Control Register */
@@ -2016,7 +2016,7 @@ typedef struct
 
 /** \brief HSTDMA hardware registers */
 typedef struct
-{  
+{
   __IO uint32_t HSTDMANXTDSC; /**< (HSTDMA Offset: 0x00) Host DMA Channel Next Descriptor Address Register */
   __IO uint32_t HSTDMAADDRESS; /**< (HSTDMA Offset: 0x04) Host DMA Channel Address Register */
   __IO uint32_t HSTDMACONTROL; /**< (HSTDMA Offset: 0x08) Host DMA Channel Control Register */
@@ -2025,7 +2025,7 @@ typedef struct
 
 /** \brief USBHS hardware registers */
 typedef struct
-{  
+{
   __IO uint32_t DEVCTRL;  /**< (USBHS Offset: 0x00) Device General Control Register */
   __I  uint32_t DEVISR;   /**< (USBHS Offset: 0x04) Device Global Interrupt Status Register */
   __O  uint32_t DEVICR;   /**< (USBHS Offset: 0x08) Device Global Interrupt Clear Register */

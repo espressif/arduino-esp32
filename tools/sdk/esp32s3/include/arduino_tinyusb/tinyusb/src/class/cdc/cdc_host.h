@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -71,21 +71,13 @@
 // Application API
 //--------------------------------------------------------------------+
 
-typedef struct
-{
-  uint8_t daddr;
-  uint8_t bInterfaceNumber;
-  uint8_t bInterfaceSubClass;
-  uint8_t bInterfaceProtocol;
-} tuh_cdc_itf_info_t;
-
 // Get Interface index from device address + interface number
-// return TUSB_INDEX_INVALID (0xFF) if not found
+// return TUSB_INDEX_INVALID_8 (0xFF) if not found
 uint8_t tuh_cdc_itf_get_index(uint8_t daddr, uint8_t itf_num);
 
 // Get Interface information
 // return true if index is correct and interface is currently mounted
-bool tuh_cdc_itf_get_info(uint8_t idx, tuh_cdc_itf_info_t* info);
+bool tuh_cdc_itf_get_info(uint8_t idx, tuh_itf_info_t* info);
 
 // Check if a interface is mounted
 bool tuh_cdc_mounted(uint8_t idx);

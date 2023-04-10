@@ -275,7 +275,7 @@ enum
 
 enum
 {
-  TUSB_INDEX_INVALID = 0xff
+  TUSB_INDEX_INVALID_8 = 0xFFu
 };
 
 //--------------------------------------------------------------------+
@@ -529,13 +529,13 @@ TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_edpt_packet_size(tusb_desc_endpo
 #if CFG_TUSB_DEBUG
 TU_ATTR_ALWAYS_INLINE static inline const char *tu_edpt_dir_str(tusb_dir_t dir)
 {
-  static const char *str[] = {"out", "in"};
+  tu_static const char *str[] = {"out", "in"};
   return str[dir];
 }
 
 TU_ATTR_ALWAYS_INLINE static inline const char *tu_edpt_type_str(tusb_xfer_type_t t)
 {
-  static const char *str[] = {"control", "isochronous", "bulk", "interrupt"};
+  tu_static const char *str[] = {"control", "isochronous", "bulk", "interrupt"};
   return str[t];
 }
 #endif
