@@ -20,12 +20,14 @@ bool btInUse(){ return true; }
 
 #include "esp_bt.h"
 
-#ifdef CONFIG_BTDM_CONTROLLER_MODE_BR_EDR_ONLY
-#define BT_MODE ESP_BT_MODE_CLASSIC_BT
-#elif defined(CONFIG_BTDM_CONTROLLER_MODE_BTDM)
+#ifndef BT_MODE
+#ifdef CONFIG_BTDM_CONTROLLER_MODE_BTDM
 #define BT_MODE ESP_BT_MODE_BTDM
+#elif defined(CONFIG_BTDM_CONTROLLER_MODE_BR_EDR_ONLY)
+#define BT_MODE ESP_BT_MODE_CLASSIC_BT
 #else
 #define BT_MODE ESP_BT_MODE_BLE
+#endif
 #endif
 
 bool btStarted(){
@@ -34,13 +36,13 @@ bool btStarted(){
 
 bool btStart(){
     esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-#if CONFIG_IDF_TARGET_ESP32
-#ifdef CONFIG_BTDM_CONTROLLER_MODE_BR_EDR_ONLY
-    esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
-#endif
+#if BT_MODE == ESP_BT_MODE_CLASSIC_BT
     // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
-    cfg.mode=BT_MODE;
+    esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+#elif BT_MODE == ESP_BT_MODE_BLE
+    esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 #endif
+    cfg.mode=BT_MODE;
 
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
