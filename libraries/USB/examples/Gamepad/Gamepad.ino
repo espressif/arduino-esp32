@@ -7,26 +7,47 @@ void loop(){}
 #include "USBHIDGamepad.h"
 USBHIDGamepad Gamepad;
 
-// This sketch works correctly for the ESP32-S2 and ESP32-S3 in OTG mode (TinyUSB)
-
-const int buttonPin = 0;  // GPIO 0 is the BOOT button of the board
+const int buttonPin = 0;
 int previousButtonState = HIGH;
 
 void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
   Gamepad.begin();
   USB.begin();
+  Serial.begin(115200);
+  Serial.println("\n==================\nUSB Gamepad Testing\n==================\n");
+  Serial.println("Press BOOT Button to activate the USB gamepad.");
+  Serial.println("Longer press will change the affected button and controls.");
+  Serial.println("Shorter press/release just activates the button and controls.");
 }
 
 void loop() {
+  static uint8_t padID = 0;
+  static long lastPress = 0;
+  
   int buttonState = digitalRead(buttonPin);
   if (buttonState != previousButtonState) {
     if (buttonState == LOW) { // BOOT Button pressed
-      // changes many states
-      Gamepad.send(-100, 100, 50, 100, -100, -50, HAT_DOWN_RIGHT, BUTTON_TL);
+      Gamepad.pressButton(padID);                    // Buttons 1 to 32
+      Gamepad.leftStick(padID << 3, padID << 3);     // X Axis, Y Axis
+      Gamepad.rightStick(-(padID << 2), padID << 2); // Z Axis, Z Rotation
+      Gamepad.leftTrigger(padID << 4);               // X Rotation
+      Gamepad.rightTrigger(-(padID << 4));           // Y Rotation
+      Gamepad.hat((padID & 0x7) + 1);                // Point of View Hat
+      log_d("Pressed PadID [%d]", padID);
+      lastPress = millis();
     } else {
-      // restores neutral states
-      Gamepad.send(0, 0, 0, 0, 0, 0, 0, 0);
+      Gamepad.releaseButton(padID);
+      Gamepad.leftStick(0, 0);
+      Gamepad.rightStick(0, 0);
+      Gamepad.leftTrigger(0);
+      Gamepad.rightTrigger(0);
+      Gamepad.hat(HAT_CENTER);      
+      log_d("Released PadID [%d]\n", padID);
+      if (millis() - lastPress > 300) {
+        padID = (padID + 1) & 0x1F;
+        log_d("Changed padID to %d\n", padID);
+      }
     }
   }
   previousButtonState = buttonState;
