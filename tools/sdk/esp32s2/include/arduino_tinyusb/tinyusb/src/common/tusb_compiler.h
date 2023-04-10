@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -196,7 +196,7 @@
   #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
-  #define TU_ATTR_FALLTHROUGH           __attribute__((fallthrough))
+  #define TU_ATTR_FALLTHROUGH           do {} while (0)  /* fallthrough */
 
   #define TU_ATTR_PACKED_BEGIN
   #define TU_ATTR_PACKED_END
@@ -239,7 +239,7 @@
   #define TU_BSWAP16(u16) ((unsigned short)_builtin_revw((unsigned long)u16))
   #define TU_BSWAP32(u32) (_builtin_revl(u32))
 
-#else 
+#else
   #error "Compiler attribute porting is required"
 #endif
 

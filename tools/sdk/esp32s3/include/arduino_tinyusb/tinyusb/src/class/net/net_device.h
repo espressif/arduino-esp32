@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2020 Peter Lawrence
@@ -94,7 +94,7 @@ void tud_network_init_cb(void);
 
 // client must provide this: 48-bit MAC address
 // TODO removed later since it is not part of tinyusb stack
-extern const uint8_t tud_network_mac_address[6];
+extern uint8_t tud_network_mac_address[6];
 
 //------------- NCM -------------//
 

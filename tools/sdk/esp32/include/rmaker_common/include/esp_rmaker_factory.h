@@ -44,6 +44,18 @@ esp_err_t esp_rmaker_factory_init(void);
  */
 void *esp_rmaker_factory_get(const char *key);
 
+/** Get size of value from factory NVS
+ *
+ * This will search for the specified key in the Factory NVS partition,
+ * and return the size of the value associated with the key.
+ *
+ * @param[in] key The key of the value to be read from factory NVS.
+ *
+ * @return size of the value on success.
+ * @return 0 on failure.
+ */
+size_t esp_rmaker_factory_get_size(const char *key);
+
 /** Set a value in factory NVS
  *
  * This will write the value for the specified key into factory NVS.

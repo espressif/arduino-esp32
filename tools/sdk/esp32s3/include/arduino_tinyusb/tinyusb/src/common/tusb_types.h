@@ -275,7 +275,7 @@ enum
 
 enum
 {
-  TUSB_INDEX_INVALID = 0xff
+  TUSB_INDEX_INVALID_8 = 0xFFu
 };
 
 //--------------------------------------------------------------------+
