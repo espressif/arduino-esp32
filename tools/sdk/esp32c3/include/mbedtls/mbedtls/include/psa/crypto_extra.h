@@ -84,7 +84,7 @@ static inline void psa_set_key_enrollment_algorithm(
 static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
     const psa_key_attributes_t *attributes)
 {
-    return( attributes->core.policy.alg2 );
+    return attributes->core.policy.alg2;
 }
 
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
@@ -113,7 +113,7 @@ static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
  */
 psa_status_t psa_get_key_slot_number(
     const psa_key_attributes_t *attributes,
-    psa_key_slot_number_t *slot_number );
+    psa_key_slot_number_t *slot_number);
 
 /** Choose the slot number where a key is stored.
  *
@@ -140,7 +140,7 @@ psa_status_t psa_get_key_slot_number(
  */
 static inline void psa_set_key_slot_number(
     psa_key_attributes_t *attributes,
-    psa_key_slot_number_t slot_number )
+    psa_key_slot_number_t slot_number)
 {
     attributes->core.flags |= MBEDTLS_PSA_KA_FLAG_HAS_SLOT_NUMBER;
     attributes->slot_number = slot_number;
@@ -153,7 +153,7 @@ static inline void psa_set_key_slot_number(
  * \param[out] attributes       The attribute structure to write to.
  */
 static inline void psa_clear_key_slot_number(
-    psa_key_attributes_t *attributes )
+    psa_key_attributes_t *attributes)
 {
     attributes->core.flags &= ~MBEDTLS_PSA_KA_FLAG_HAS_SLOT_NUMBER;
 }
@@ -187,12 +187,12 @@ static inline void psa_clear_key_slot_number(
  *         or the specified slot number is not valid.
  * \retval #PSA_ERROR_NOT_PERMITTED
  *         The caller is not authorized to register the specified key slot.
- * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
- * \retval #PSA_ERROR_INSUFFICIENT_STORAGE
- * \retval #PSA_ERROR_COMMUNICATION_FAILURE
- * \retval #PSA_ERROR_DATA_INVALID
- * \retval #PSA_ERROR_DATA_CORRUPT
- * \retval #PSA_ERROR_CORRUPTION_DETECTED
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
  * \retval #PSA_ERROR_BAD_STATE
  *         The library has not been previously initialized by psa_crypto_init().
  *         It is implementation-dependent whether a failure to initialize
@@ -213,7 +213,7 @@ psa_status_t mbedtls_psa_register_se_key(
  *
  * This is an Mbed TLS extension.
  */
-void mbedtls_psa_crypto_free( void );
+void mbedtls_psa_crypto_free(void);
 
 /** \brief Statistics about
  * resource consumption related to the PSA keystore.
@@ -221,8 +221,7 @@ void mbedtls_psa_crypto_free( void );
  * \note The content of this structure is not part of the stable API and ABI
  *       of Mbed Crypto and may change arbitrarily from version to version.
  */
-typedef struct mbedtls_psa_stats_s
-{
+typedef struct mbedtls_psa_stats_s {
     /** Number of slots containing key material for a volatile key. */
     size_t volatile_slots;
     /** Number of slots containing key material for a key which is in
@@ -253,7 +252,7 @@ typedef struct mbedtls_psa_stats_s
  *       between the application and the keystore, the service may or
  *       may not expose this function.
  */
-void mbedtls_psa_get_stats( mbedtls_psa_stats_t *stats );
+void mbedtls_psa_get_stats(mbedtls_psa_stats_t *stats);
 
 /**
  * \brief Inject an initial entropy seed for the random generator into
@@ -336,7 +335,7 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  * string. The length of the byte string is the length of the base prime `p`
  * in bytes.
  */
-#define PSA_KEY_TYPE_DSA_PUBLIC_KEY                 ((psa_key_type_t)0x4002)
+#define PSA_KEY_TYPE_DSA_PUBLIC_KEY                 ((psa_key_type_t) 0x4002)
 
 /** DSA key pair (private and public key).
  *
@@ -354,13 +353,13 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  * Add 1 to the resulting integer and use this as the private key *x*.
  *
  */
-#define PSA_KEY_TYPE_DSA_KEY_PAIR                    ((psa_key_type_t)0x7002)
+#define PSA_KEY_TYPE_DSA_KEY_PAIR                    ((psa_key_type_t) 0x7002)
 
-/** Whether a key type is an DSA key (pair or public-only). */
+/** Whether a key type is a DSA key (pair or public-only). */
 #define PSA_KEY_TYPE_IS_DSA(type)                                       \
     (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) == PSA_KEY_TYPE_DSA_PUBLIC_KEY)
 
-#define PSA_ALG_DSA_BASE                        ((psa_algorithm_t)0x06000400)
+#define PSA_ALG_DSA_BASE                        ((psa_algorithm_t) 0x06000400)
 /** DSA signature with hashing.
  *
  * This is the signature scheme defined by FIPS 186-4,
@@ -377,7 +376,7 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  */
 #define PSA_ALG_DSA(hash_alg)                             \
     (PSA_ALG_DSA_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
-#define PSA_ALG_DETERMINISTIC_DSA_BASE          ((psa_algorithm_t)0x06000500)
+#define PSA_ALG_DETERMINISTIC_DSA_BASE          ((psa_algorithm_t) 0x06000500)
 #define PSA_ALG_DSA_DETERMINISTIC_FLAG PSA_ALG_ECDSA_DETERMINISTIC_FLAG
 /** Deterministic DSA signature with hashing.
  *
@@ -488,10 +487,10 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  *                              according to \p type as described above.
  * \param data_length           Size of the \p data buffer in bytes.
  *
- * \retval #PSA_SUCCESS
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- * \retval #PSA_ERROR_NOT_SUPPORTED
- * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  */
 psa_status_t psa_set_key_domain_parameters(psa_key_attributes_t *attributes,
                                            psa_key_type_t type,
@@ -518,8 +517,8 @@ psa_status_t psa_set_key_domain_parameters(psa_key_attributes_t *attributes,
  * \param[out] data_length      On success, the number of bytes
  *                              that make up the key domain parameters data.
  *
- * \retval #PSA_SUCCESS
- * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL \emptydescription
  */
 psa_status_t psa_get_key_domain_parameters(
     const psa_key_attributes_t *attributes,
@@ -584,53 +583,52 @@ psa_status_t psa_get_key_domain_parameters(
  *                      (`PSA_ECC_FAMILY_xxx`).
  * \return              \c 0 on failure (\p grpid is not recognized).
  */
-static inline psa_ecc_family_t mbedtls_ecc_group_to_psa( mbedtls_ecp_group_id grpid,
-                                                        size_t *bits )
+static inline psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
+                                                        size_t *bits)
 {
-    switch( grpid )
-    {
+    switch (grpid) {
         case MBEDTLS_ECP_DP_SECP192R1:
             *bits = 192;
-            return( PSA_ECC_FAMILY_SECP_R1 );
+            return PSA_ECC_FAMILY_SECP_R1;
         case MBEDTLS_ECP_DP_SECP224R1:
             *bits = 224;
-            return( PSA_ECC_FAMILY_SECP_R1 );
+            return PSA_ECC_FAMILY_SECP_R1;
         case MBEDTLS_ECP_DP_SECP256R1:
             *bits = 256;
-            return( PSA_ECC_FAMILY_SECP_R1 );
+            return PSA_ECC_FAMILY_SECP_R1;
         case MBEDTLS_ECP_DP_SECP384R1:
             *bits = 384;
-            return( PSA_ECC_FAMILY_SECP_R1 );
+            return PSA_ECC_FAMILY_SECP_R1;
         case MBEDTLS_ECP_DP_SECP521R1:
             *bits = 521;
-            return( PSA_ECC_FAMILY_SECP_R1 );
+            return PSA_ECC_FAMILY_SECP_R1;
         case MBEDTLS_ECP_DP_BP256R1:
             *bits = 256;
-            return( PSA_ECC_FAMILY_BRAINPOOL_P_R1 );
+            return PSA_ECC_FAMILY_BRAINPOOL_P_R1;
         case MBEDTLS_ECP_DP_BP384R1:
             *bits = 384;
-            return( PSA_ECC_FAMILY_BRAINPOOL_P_R1 );
+            return PSA_ECC_FAMILY_BRAINPOOL_P_R1;
         case MBEDTLS_ECP_DP_BP512R1:
             *bits = 512;
-            return( PSA_ECC_FAMILY_BRAINPOOL_P_R1 );
+            return PSA_ECC_FAMILY_BRAINPOOL_P_R1;
         case MBEDTLS_ECP_DP_CURVE25519:
             *bits = 255;
-            return( PSA_ECC_FAMILY_MONTGOMERY );
+            return PSA_ECC_FAMILY_MONTGOMERY;
         case MBEDTLS_ECP_DP_SECP192K1:
             *bits = 192;
-            return( PSA_ECC_FAMILY_SECP_K1 );
+            return PSA_ECC_FAMILY_SECP_K1;
         case MBEDTLS_ECP_DP_SECP224K1:
             *bits = 224;
-            return( PSA_ECC_FAMILY_SECP_K1 );
+            return PSA_ECC_FAMILY_SECP_K1;
         case MBEDTLS_ECP_DP_SECP256K1:
             *bits = 256;
-            return( PSA_ECC_FAMILY_SECP_K1 );
+            return PSA_ECC_FAMILY_SECP_K1;
         case MBEDTLS_ECP_DP_CURVE448:
             *bits = 448;
-            return( PSA_ECC_FAMILY_MONTGOMERY );
+            return PSA_ECC_FAMILY_MONTGOMERY;
         default:
             *bits = 0;
-            return( 0 );
+            return 0;
     }
 }
 
@@ -653,9 +651,9 @@ static inline psa_ecc_family_t mbedtls_ecc_group_to_psa( mbedtls_ecp_group_id gr
  * \return              #MBEDTLS_ECP_DP_NONE if \p bits is not
  *                      correct for \p curve.
  */
-mbedtls_ecp_group_id mbedtls_ecc_group_of_psa( psa_ecc_family_t curve,
-                                               size_t bits,
-                                               int bits_is_sloppy );
+mbedtls_ecp_group_id mbedtls_ecc_group_of_psa(psa_ecc_family_t curve,
+                                              size_t bits,
+                                              int bits_is_sloppy);
 #endif /* MBEDTLS_ECP_C */
 
 /**@}*/
@@ -706,7 +704,7 @@ mbedtls_ecp_group_id mbedtls_ecc_group_of_psa( psa_ecc_family_t curve,
  */
 psa_status_t mbedtls_psa_external_get_random(
     mbedtls_psa_external_random_context_t *context,
-    uint8_t *output, size_t output_size, size_t *output_length );
+    uint8_t *output, size_t output_size, size_t *output_length);
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 
 /**@}*/
@@ -726,14 +724,14 @@ psa_status_t mbedtls_psa_external_get_random(
  * This value is part of the library's ABI since changing it would invalidate
  * the values of built-in key identifiers in applications.
  */
-#define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t)0x7fff0000)
+#define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t) 0x7fff0000)
 
 /** The maximum value for a key identifier that is built into the
  * implementation.
  *
  * See #MBEDTLS_PSA_KEY_ID_BUILTIN_MIN for more information.
  */
-#define MBEDTLS_PSA_KEY_ID_BUILTIN_MAX          ((psa_key_id_t)0x7fffefff)
+#define MBEDTLS_PSA_KEY_ID_BUILTIN_MAX          ((psa_key_id_t) 0x7fffefff)
 
 /** A slot number identifying a key in a driver.
  *
@@ -751,10 +749,10 @@ typedef uint64_t psa_drv_slot_number_t;
  * \retval 0
  *         The key identifier is not a builtin key identifier.
  */
-static inline int psa_key_id_is_builtin( psa_key_id_t key_id )
+static inline int psa_key_id_is_builtin(psa_key_id_t key_id)
 {
-    return( ( key_id >= MBEDTLS_PSA_KEY_ID_BUILTIN_MIN ) &&
-            ( key_id <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX ) );
+    return (key_id >= MBEDTLS_PSA_KEY_ID_BUILTIN_MIN) &&
+           (key_id <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX);
 }
 
 /** Platform function to obtain the location and slot number of a built-in key.
@@ -804,7 +802,7 @@ static inline int psa_key_id_is_builtin( psa_key_id_t key_id )
 psa_status_t mbedtls_psa_platform_get_builtin_key(
     mbedtls_svc_key_id_t key_id,
     psa_key_lifetime_t *lifetime,
-    psa_drv_slot_number_t *slot_number );
+    psa_drv_slot_number_t *slot_number);
 #endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
 
 /** @} */

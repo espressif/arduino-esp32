@@ -1,16 +1,8 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 // The LL layer for UART register operations.
 // Note that most of the register operations in this layer are non-atomic operations.
@@ -57,6 +49,7 @@ typedef enum {
     UART_INTR_RS485_FRM_ERR    = (0x1<<16),
     UART_INTR_RS485_CLASH      = (0x1<<17),
     UART_INTR_CMD_CHAR_DET     = (0x1<<18),
+    UART_INTR_WAKEUP           = (0x1 << 19),
 } uart_intr_t;
 
 /**
@@ -157,6 +150,18 @@ FORCE_INLINE_ATTR void uart_ll_ena_intr_mask(uart_dev_t *hw, uint32_t mask)
 FORCE_INLINE_ATTR void uart_ll_disable_intr_mask(uart_dev_t *hw, uint32_t mask)
 {
     hw->int_ena.val &= (~mask);
+}
+
+/**
+ * @brief  Get the UART raw interrupt status.
+ *
+ * @param  hw Beginning address of the peripheral registers.
+ *
+ * @return The UART interrupt status.
+ */
+static inline uint32_t uart_ll_get_intraw_mask(uart_dev_t *hw)
+{
+    return hw->int_raw.val;
 }
 
 /**

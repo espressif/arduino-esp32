@@ -17,6 +17,17 @@ typedef enum {
     ESP_MN_STATE_TIMEOUT = 2,       // time out
 } esp_mn_state_t;
 
+typedef enum {
+	ESP_MN_GREEDY_SEARCH = 0,          // greedy search
+	ESP_MN_BEAM_SEARCH = 1,            // beam search
+    ESP_MN_BEAM_SEARCH_WITH_FST = 2,  // beam search with trie language model
+} esp_mn_search_method_t;
+
+typedef enum {
+	CHINESE_ID = 1,       // Chinese language
+	ENGLISH_ID = 2,       // English language
+} language_id_t;
+
 // Return all possible recognition results
 typedef struct{
     esp_mn_state_t state;
@@ -24,7 +35,9 @@ typedef struct{
     int command_id[ESP_MN_RESULT_MAX_NUM];     // The list of command id.
     int phrase_id[ESP_MN_RESULT_MAX_NUM];      // The list of phrase id.
     float prob[ESP_MN_RESULT_MAX_NUM];         // The list of probability.
+    char string[256];
 } esp_mn_results_t;
+
 
 typedef struct{
     int16_t num;                                // The number of error phrases, which can not added into model

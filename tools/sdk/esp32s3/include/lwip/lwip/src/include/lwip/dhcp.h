@@ -50,11 +50,9 @@ extern "C" {
 #endif
 
 /** period (in seconds) of the application calling dhcp_coarse_tmr() */
-#if ESP_DHCP
+#ifndef DHCP_COARSE_TIMER_SECS
 #define DHCP_COARSE_TIMER_SECS 1
-#else
-#define DHCP_COARSE_TIMER_SECS 60
-#endif
+#endif /* DHCP_COARSE_TIMER_SECS */
 /** period (in milliseconds) of the application calling dhcp_coarse_tmr() */
 #define DHCP_COARSE_TIMER_MSECS (DHCP_COARSE_TIMER_SECS * 1000UL)
 /** period (in milliseconds) of the application calling dhcp_fine_tmr() */

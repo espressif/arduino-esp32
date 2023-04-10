@@ -35,7 +35,7 @@ MEMORY
    *  are connected to the data port of the CPU and eg allow byte-wise access.
    */
   /* IRAM for PRO CPU. */
-  iram0_0_seg (RX) : org = (0x4037C000 + 0x4000), len = 0x403D0000 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
+  iram0_0_seg (RX) : org = (0x4037C000 + 0x4000), len = 0x403CE710 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
   /* Flash mapped instruction data */
   iram0_2_seg (RX) : org = 0x42000020, len = 0x800000-0x20
   /**
@@ -49,7 +49,7 @@ MEMORY
    * Shared data RAM, excluding memory reserved for ROM bss/data/stack.
    * Enabling Bluetooth & Trace Memory features in menuconfig will decrease the amount of RAM available.
    */
-  dram0_0_seg (RW) : org = (0x3FC7C000 + 0x4000), len = 0x403D0000 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
+  dram0_0_seg (RW) : org = (0x3FC7C000 + 0x4000), len = 0x403CE710 - (0x4037C000 - 0x3FC7C000) - (0x3FC7C000 + 0x4000)
   /* Flash mapped constant data */
   drom0_0_seg (R) : org = 0x3C000020, len = 0x800000-0x20
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */

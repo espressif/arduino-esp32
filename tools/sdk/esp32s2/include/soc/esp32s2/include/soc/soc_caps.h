@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2020-2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2020-2023 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -61,6 +61,7 @@
 #define SOC_ADC_ARBITER_SUPPORTED               1
 #define SOC_ADC_FILTER_SUPPORTED                1
 #define SOC_ADC_MONITOR_SUPPORTED               1
+#define SOC_ADC_DIG_SUPPORTED_UNIT(UNIT)        1    //Digital controller supported ADC unit
 #define SOC_ADC_PERIPH_NUM                      (2)
 #define SOC_ADC_CHANNEL_NUM(PERIPH_NUM)         (10)
 #define SOC_ADC_MAX_CHANNEL_NUM                 (10)
@@ -116,9 +117,6 @@
 
 // digital I/O pad powered by VDD3P3_CPU or VDD_SPI(GPIO_NUM_26~GPIO_NUM_46)
 #define SOC_GPIO_VALID_DIGITAL_IO_PAD_MASK  0x00007FFFFC000000ULL
-
-// Support to configure slept status
-#define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
 
 /*-------------------------- Dedicated GPIO CAPS ---------------------------------------*/
 #define SOC_DEDIC_GPIO_OUT_CHANNELS_NUM (8) /*!< 8 outward channels on each CPU core */
@@ -262,6 +260,7 @@
 /*-------------------------- UART CAPS ---------------------------------------*/
 // ESP32-S2 has 2 UART.
 #define SOC_UART_NUM                (2)
+#define SOC_UART_SUPPORT_WAKEUP_INT (1)         /*!< Support UART wakeup interrupt */
 #define SOC_UART_SUPPORT_REF_TICK   (1)         /*!< Support REF_TICK as the clock source */
 #define SOC_UART_FIFO_LEN           (128)       /*!< The UART hardware FIFO length */
 #define SOC_UART_BITRATE_MAX        (5000000)   /*!< Max bit rate supported by UART */
