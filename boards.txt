@@ -1012,6 +1012,9 @@ esp32wrover.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32wrover.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 esp32wrover.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32wrover.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32wrover.menu.PartitionScheme.rainmaker=RainMaker
+esp32wrover.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32wrover.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
 
 esp32wrover.menu.FlashMode.qio=QIO
 esp32wrover.menu.FlashMode.qio.build.flash_mode=dio
@@ -1238,6 +1241,9 @@ esp32s3box.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3box.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s3box.menu.PartitionScheme.rainmaker=RainMaker
+esp32s3box.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32s3box.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
 
 esp32s3box.menu.DebugLevel.none=None
 esp32s3box.menu.DebugLevel.none.build.code_debug=0
@@ -1686,6 +1692,9 @@ esp32wroverkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32wroverkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 esp32wroverkit.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32wroverkit.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32wroverkit.menu.PartitionScheme.rainmaker=RainMaker
+esp32wroverkit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32wroverkit.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
 esp32wroverkit.menu.FlashMode.qio=QIO
 esp32wroverkit.menu.FlashMode.qio.build.flash_mode=dio
 esp32wroverkit.menu.FlashMode.qio.build.boot=qio
@@ -12109,6 +12118,198 @@ m5stack-coreink.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+stamp-s3.name=STAMP-S3
+stamp-s3.vid.0=0x303a
+stamp-s3.pid.0=0x1001
+
+stamp-s3.bootloader.tool=esptool_py
+stamp-s3.bootloader.tool.default=esptool_py
+
+stamp-s3.upload.tool=esptool_py
+stamp-s3.upload.tool.default=esptool_py
+stamp-s3.upload.tool.network=esp_ota
+
+stamp-s3.upload.maximum_size=1310720
+stamp-s3.upload.maximum_data_size=327680
+stamp-s3.upload.flags=
+stamp-s3.upload.extra_flags=
+stamp-s3.upload.use_1200bps_touch=false
+stamp-s3.upload.wait_for_upload_port=false
+
+stamp-s3.serial.disableDTR=false
+stamp-s3.serial.disableRTS=false
+
+stamp-s3.build.tarch=xtensa
+stamp-s3.build.bootloader_addr=0x0
+stamp-s3.build.target=esp32s3
+stamp-s3.build.mcu=esp32s3
+stamp-s3.build.core=esp32
+stamp-s3.build.variant=m5stack_stamp_s3
+stamp-s3.build.board=STAMP_S3
+
+stamp-s3.build.usb_mode=1
+stamp-s3.build.cdc_on_boot=0
+stamp-s3.build.msc_on_boot=0
+stamp-s3.build.dfu_on_boot=0
+stamp-s3.build.f_cpu=240000000L
+stamp-s3.build.flash_size=4MB
+stamp-s3.build.flash_freq=80m
+stamp-s3.build.flash_mode=dio
+stamp-s3.build.boot=qio
+stamp-s3.build.boot_freq=80m
+stamp-s3.build.partitions=default
+stamp-s3.build.defines=
+stamp-s3.build.loop_core=
+stamp-s3.build.event_core=
+stamp-s3.build.psram_type=qspi
+stamp-s3.build.memory_type={build.boot}_{build.psram_type}
+
+stamp-s3.menu.JTAGAdapter.default=Disabled
+stamp-s3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+stamp-s3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+stamp-s3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+stamp-s3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+stamp-s3.menu.JTAGAdapter.external=FTDI Adapter
+stamp-s3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+stamp-s3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+stamp-s3.menu.JTAGAdapter.bridge=ESP USB Bridge
+stamp-s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+stamp-s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+stamp-s3.menu.PSRAM.disabled=Disabled
+stamp-s3.menu.PSRAM.disabled.build.defines=
+stamp-s3.menu.PSRAM.disabled.build.psram_type=qspi
+stamp-s3.menu.PSRAM.enabled=QSPI PSRAM
+stamp-s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+stamp-s3.menu.PSRAM.enabled.build.psram_type=qspi
+stamp-s3.menu.PSRAM.opi=OPI PSRAM
+stamp-s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+stamp-s3.menu.PSRAM.opi.build.psram_type=opi
+
+stamp-s3.menu.FlashMode.qio=QIO 80MHz
+stamp-s3.menu.FlashMode.qio.build.flash_mode=dio
+stamp-s3.menu.FlashMode.qio.build.boot=qio
+stamp-s3.menu.FlashMode.qio.build.boot_freq=80m
+stamp-s3.menu.FlashMode.qio.build.flash_freq=80m
+stamp-s3.menu.FlashMode.qio120=QIO 120MHz
+stamp-s3.menu.FlashMode.qio120.build.flash_mode=dio
+stamp-s3.menu.FlashMode.qio120.build.boot=qio
+stamp-s3.menu.FlashMode.qio120.build.boot_freq=120m
+stamp-s3.menu.FlashMode.qio120.build.flash_freq=80m
+stamp-s3.menu.FlashMode.dio=DIO 80MHz
+stamp-s3.menu.FlashMode.dio.build.flash_mode=dio
+stamp-s3.menu.FlashMode.dio.build.boot=dio
+stamp-s3.menu.FlashMode.dio.build.boot_freq=80m
+stamp-s3.menu.FlashMode.dio.build.flash_freq=80m
+stamp-s3.menu.FlashMode.opi=OPI 80MHz
+stamp-s3.menu.FlashMode.opi.build.flash_mode=dout
+stamp-s3.menu.FlashMode.opi.build.boot=opi
+stamp-s3.menu.FlashMode.opi.build.boot_freq=80m
+stamp-s3.menu.FlashMode.opi.build.flash_freq=80m
+
+stamp-s3.menu.FlashSize.4M=4MB (32Mb)
+stamp-s3.menu.FlashSize.4M.build.flash_size=4MB
+stamp-s3.menu.FlashSize.8M=8MB (64Mb)
+stamp-s3.menu.FlashSize.8M.build.flash_size=8MB
+stamp-s3.menu.FlashSize.8M.build.partitions=default_8MB
+stamp-s3.menu.FlashSize.16M=16MB (128Mb)
+stamp-s3.menu.FlashSize.16M.build.flash_size=16MB
+#stamp-s3.menu.FlashSize.32M=32MB (256Mb)
+#stamp-s3.menu.FlashSize.32M.build.flash_size=32MB
+
+stamp-s3.menu.LoopCore.1=Core 1
+stamp-s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+stamp-s3.menu.LoopCore.0=Core 0
+stamp-s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+stamp-s3.menu.EventsCore.1=Core 1
+stamp-s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+stamp-s3.menu.EventsCore.0=Core 0
+stamp-s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+stamp-s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+stamp-s3.menu.USBMode.hwcdc.build.usb_mode=1
+stamp-s3.menu.USBMode.default=USB-OTG (TinyUSB)
+stamp-s3.menu.USBMode.default.build.usb_mode=0
+
+stamp-s3.menu.CDCOnBoot.default=Disabled
+stamp-s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+stamp-s3.menu.CDCOnBoot.cdc=Enabled
+stamp-s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+stamp-s3.menu.MSCOnBoot.default=Disabled
+stamp-s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+stamp-s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+stamp-s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+stamp-s3.menu.DFUOnBoot.default=Disabled
+stamp-s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+stamp-s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+stamp-s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+stamp-s3.menu.UploadMode.default=UART0 / Hardware CDC
+stamp-s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+stamp-s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+stamp-s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+stamp-s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+stamp-s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+stamp-s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+stamp-s3.menu.PartitionScheme.default.build.partitions=default
+stamp-s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+stamp-s3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+stamp-s3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+stamp-s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+stamp-s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+stamp-s3.menu.CPUFreq.240=240MHz (WiFi)
+stamp-s3.menu.CPUFreq.240.build.f_cpu=240000000L
+stamp-s3.menu.CPUFreq.160=160MHz (WiFi)
+stamp-s3.menu.CPUFreq.160.build.f_cpu=160000000L
+stamp-s3.menu.CPUFreq.80=80MHz (WiFi)
+stamp-s3.menu.CPUFreq.80.build.f_cpu=80000000L
+stamp-s3.menu.CPUFreq.40=40MHz
+stamp-s3.menu.CPUFreq.40.build.f_cpu=40000000L
+stamp-s3.menu.CPUFreq.20=20MHz
+stamp-s3.menu.CPUFreq.20.build.f_cpu=20000000L
+stamp-s3.menu.CPUFreq.10=10MHz
+stamp-s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+stamp-s3.menu.UploadSpeed.921600=921600
+stamp-s3.menu.UploadSpeed.921600.upload.speed=921600
+stamp-s3.menu.UploadSpeed.115200=115200
+stamp-s3.menu.UploadSpeed.115200.upload.speed=115200
+stamp-s3.menu.UploadSpeed.256000.windows=256000
+stamp-s3.menu.UploadSpeed.256000.upload.speed=256000
+stamp-s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+stamp-s3.menu.UploadSpeed.230400=230400
+stamp-s3.menu.UploadSpeed.230400.upload.speed=230400
+stamp-s3.menu.UploadSpeed.460800.linux=460800
+stamp-s3.menu.UploadSpeed.460800.macosx=460800
+stamp-s3.menu.UploadSpeed.460800.upload.speed=460800
+stamp-s3.menu.UploadSpeed.512000.windows=512000
+stamp-s3.menu.UploadSpeed.512000.upload.speed=512000
+
+stamp-s3.menu.DebugLevel.none=None
+stamp-s3.menu.DebugLevel.none.build.code_debug=0
+stamp-s3.menu.DebugLevel.error=Error
+stamp-s3.menu.DebugLevel.error.build.code_debug=1
+stamp-s3.menu.DebugLevel.warn=Warn
+stamp-s3.menu.DebugLevel.warn.build.code_debug=2
+stamp-s3.menu.DebugLevel.info=Info
+stamp-s3.menu.DebugLevel.info.build.code_debug=3
+stamp-s3.menu.DebugLevel.debug=Debug
+stamp-s3.menu.DebugLevel.debug.build.code_debug=4
+stamp-s3.menu.DebugLevel.verbose=Verbose
+stamp-s3.menu.DebugLevel.verbose.build.code_debug=5
+
+stamp-s3.menu.EraseFlash.none=Disabled
+stamp-s3.menu.EraseFlash.none.upload.erase_cmd=
+stamp-s3.menu.EraseFlash.all=Enabled
+stamp-s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 odroid_esp32.name=ODROID ESP32
 
 odroid_esp32.bootloader.tool=esptool_py
@@ -19578,7 +19779,7 @@ AirM2M_CORE_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 XIAO_ESP32C3.name=XIAO_ESP32C3
 XIAO_ESP32C3.vid.0=0x2886
-XIAO_ESP32C3.pid.0=0x0047
+XIAO_ESP32C3.pid.0=0x0046
 
 XIAO_ESP32C3.bootloader.tool=esptool_py
 XIAO_ESP32C3.bootloader.tool.default=esptool_py
@@ -19727,6 +19928,186 @@ XIAO_ESP32C3.menu.EraseFlash.none=Disabled
 XIAO_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
 XIAO_ESP32C3.menu.EraseFlash.all=Enabled
 XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
+XIAO_ESP32S3.name=XIAO_ESP32S3
+XIAO_ESP32S3.vid.0=0x2886
+XIAO_ESP32S3.pid.0=0x0056
+XIAO_ESP32S3.vid.1=0x2886
+XIAO_ESP32S3.pid.1=0x8056
+
+XIAO_ESP32S3.bootloader.tool=esptool_py
+XIAO_ESP32S3.bootloader.tool.default=esptool_py
+
+XIAO_ESP32S3.upload.tool=esptool_py
+XIAO_ESP32S3.upload.tool.default=esptool_py
+XIAO_ESP32S3.upload.tool.network=esp_ota
+
+XIAO_ESP32S3.upload.maximum_size=1310720
+XIAO_ESP32S3.upload.maximum_data_size=327680
+XIAO_ESP32S3.upload.flags=
+XIAO_ESP32S3.upload.extra_flags=
+XIAO_ESP32S3.upload.use_1200bps_touch=false
+XIAO_ESP32S3.upload.wait_for_upload_port=false
+
+XIAO_ESP32S3.serial.disableDTR=false
+XIAO_ESP32S3.serial.disableRTS=false
+
+XIAO_ESP32S3.build.tarch=xtensa
+XIAO_ESP32S3.build.bootloader_addr=0x0
+XIAO_ESP32S3.build.target=esp32s3
+XIAO_ESP32S3.build.mcu=esp32s3
+XIAO_ESP32S3.build.core=esp32
+XIAO_ESP32S3.build.variant=XIAO_ESP32S3
+XIAO_ESP32S3.build.board=XIAO_ESP32S3
+
+XIAO_ESP32S3.build.usb_mode=0
+XIAO_ESP32S3.build.cdc_on_boot=1
+XIAO_ESP32S3.build.msc_on_boot=0
+XIAO_ESP32S3.build.dfu_on_boot=0
+XIAO_ESP32S3.build.f_cpu=240000000L
+XIAO_ESP32S3.build.flash_size=8MB
+XIAO_ESP32S3.build.flash_freq=80m
+XIAO_ESP32S3.build.flash_mode=dio
+XIAO_ESP32S3.build.boot=qio
+XIAO_ESP32S3.build.boot_freq=80m
+XIAO_ESP32S3.build.partitions=default_8MB
+XIAO_ESP32S3.build.defines=
+XIAO_ESP32S3.build.loop_core=
+XIAO_ESP32S3.build.event_core=
+XIAO_ESP32S3.build.psram_type=qspi
+XIAO_ESP32S3.build.memory_type={build.boot}_{build.psram_type}
+
+XIAO_ESP32S3.menu.JTAGAdapter.default=Disabled
+XIAO_ESP32S3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+XIAO_ESP32S3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+XIAO_ESP32S3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+XIAO_ESP32S3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+XIAO_ESP32S3.menu.JTAGAdapter.external=FTDI Adapter
+XIAO_ESP32S3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+XIAO_ESP32S3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+XIAO_ESP32S3.menu.JTAGAdapter.bridge=ESP USB Bridge
+XIAO_ESP32S3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+XIAO_ESP32S3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+XIAO_ESP32S3.menu.PSRAM.disabled=Disabled
+XIAO_ESP32S3.menu.PSRAM.disabled.build.defines=
+XIAO_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
+XIAO_ESP32S3.menu.PSRAM.opi=OPI PSRAM
+XIAO_ESP32S3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+XIAO_ESP32S3.menu.PSRAM.opi.build.psram_type=opi
+
+XIAO_ESP32S3.menu.FlashMode.qio=QIO 80MHz
+XIAO_ESP32S3.menu.FlashMode.qio.build.flash_mode=dio
+XIAO_ESP32S3.menu.FlashMode.qio.build.boot=qio
+XIAO_ESP32S3.menu.FlashMode.qio.build.boot_freq=80m
+XIAO_ESP32S3.menu.FlashMode.qio.build.flash_freq=80m
+XIAO_ESP32S3.menu.FlashMode.dio=DIO 80MHz
+XIAO_ESP32S3.menu.FlashMode.dio.build.flash_mode=dio
+XIAO_ESP32S3.menu.FlashMode.dio.build.boot=dio
+XIAO_ESP32S3.menu.FlashMode.dio.build.boot_freq=80m
+XIAO_ESP32S3.menu.FlashMode.dio.build.flash_freq=80m
+
+XIAO_ESP32S3.menu.FlashSize.8M=8MB (64Mb)
+XIAO_ESP32S3.menu.FlashSize.8M.build.flash_size=8MB
+XIAO_ESP32S3.menu.FlashSize.8M.build.partitions=default_8MB
+
+XIAO_ESP32S3.menu.LoopCore.1=Core 1
+XIAO_ESP32S3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+XIAO_ESP32S3.menu.LoopCore.0=Core 0
+XIAO_ESP32S3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+XIAO_ESP32S3.menu.EventsCore.1=Core 1
+XIAO_ESP32S3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+XIAO_ESP32S3.menu.EventsCore.0=Core 0
+XIAO_ESP32S3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+XIAO_ESP32S3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+XIAO_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
+XIAO_ESP32S3.menu.USBMode.default=USB-OTG (TinyUSB)
+XIAO_ESP32S3.menu.USBMode.default.build.usb_mode=0
+
+XIAO_ESP32S3.menu.CDCOnBoot.default=Enabled
+XIAO_ESP32S3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+XIAO_ESP32S3.menu.CDCOnBoot.cdc=Disabled
+XIAO_ESP32S3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+XIAO_ESP32S3.menu.MSCOnBoot.default=Disabled
+XIAO_ESP32S3.menu.MSCOnBoot.default.build.msc_on_boot=0
+XIAO_ESP32S3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+XIAO_ESP32S3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+XIAO_ESP32S3.menu.DFUOnBoot.default=Disabled
+XIAO_ESP32S3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+XIAO_ESP32S3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+XIAO_ESP32S3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+XIAO_ESP32S3.menu.UploadMode.default=UART0 / Hardware CDC
+XIAO_ESP32S3.menu.UploadMode.default.upload.use_1200bps_touch=false
+XIAO_ESP32S3.menu.UploadMode.default.upload.wait_for_upload_port=false
+XIAO_ESP32S3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+XIAO_ESP32S3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+XIAO_ESP32S3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+XIAO_ESP32S3.menu.PartitionScheme.default_8MB=Default with spiffs (3MB APP/1.5MB SPIFFS)
+XIAO_ESP32S3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+XIAO_ESP32S3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+XIAO_ESP32S3.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+XIAO_ESP32S3.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+XIAO_ESP32S3.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+
+XIAO_ESP32S3.menu.CPUFreq.240=240MHz (WiFi)
+XIAO_ESP32S3.menu.CPUFreq.240.build.f_cpu=240000000L
+XIAO_ESP32S3.menu.CPUFreq.160=160MHz (WiFi)
+XIAO_ESP32S3.menu.CPUFreq.160.build.f_cpu=160000000L
+XIAO_ESP32S3.menu.CPUFreq.80=80MHz (WiFi)
+XIAO_ESP32S3.menu.CPUFreq.80.build.f_cpu=80000000L
+XIAO_ESP32S3.menu.CPUFreq.40=40MHz
+XIAO_ESP32S3.menu.CPUFreq.40.build.f_cpu=40000000L
+XIAO_ESP32S3.menu.CPUFreq.20=20MHz
+XIAO_ESP32S3.menu.CPUFreq.20.build.f_cpu=20000000L
+XIAO_ESP32S3.menu.CPUFreq.10=10MHz
+XIAO_ESP32S3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+XIAO_ESP32S3.menu.UploadSpeed.921600=921600
+XIAO_ESP32S3.menu.UploadSpeed.921600.upload.speed=921600
+XIAO_ESP32S3.menu.UploadSpeed.115200=115200
+XIAO_ESP32S3.menu.UploadSpeed.115200.upload.speed=115200
+XIAO_ESP32S3.menu.UploadSpeed.256000.windows=256000
+XIAO_ESP32S3.menu.UploadSpeed.256000.upload.speed=256000
+XIAO_ESP32S3.menu.UploadSpeed.230400.windows.upload.speed=256000
+XIAO_ESP32S3.menu.UploadSpeed.230400=230400
+XIAO_ESP32S3.menu.UploadSpeed.230400.upload.speed=230400
+XIAO_ESP32S3.menu.UploadSpeed.460800.linux=460800
+XIAO_ESP32S3.menu.UploadSpeed.460800.macosx=460800
+XIAO_ESP32S3.menu.UploadSpeed.460800.upload.speed=460800
+XIAO_ESP32S3.menu.UploadSpeed.512000.windows=512000
+XIAO_ESP32S3.menu.UploadSpeed.512000.upload.speed=512000
+
+XIAO_ESP32S3.menu.DebugLevel.none=None
+XIAO_ESP32S3.menu.DebugLevel.none.build.code_debug=0
+XIAO_ESP32S3.menu.DebugLevel.error=Error
+XIAO_ESP32S3.menu.DebugLevel.error.build.code_debug=1
+XIAO_ESP32S3.menu.DebugLevel.warn=Warn
+XIAO_ESP32S3.menu.DebugLevel.warn.build.code_debug=2
+XIAO_ESP32S3.menu.DebugLevel.info=Info
+XIAO_ESP32S3.menu.DebugLevel.info.build.code_debug=3
+XIAO_ESP32S3.menu.DebugLevel.debug=Debug
+XIAO_ESP32S3.menu.DebugLevel.debug.build.code_debug=4
+XIAO_ESP32S3.menu.DebugLevel.verbose=Verbose
+XIAO_ESP32S3.menu.DebugLevel.verbose.build.code_debug=5
+
+XIAO_ESP32S3.menu.EraseFlash.none=Disabled
+XIAO_ESP32S3.menu.EraseFlash.none.upload.erase_cmd=
+XIAO_ESP32S3.menu.EraseFlash.all=Enabled
+XIAO_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -20098,6 +20479,116 @@ department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all=Enabled
 department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+
+Bee_Data_Logger.name=Bee Data Logger
+Bee_Data_Logger.vid.0=0x303a
+Bee_Data_Logger.pid.0=815C
+
+Bee_Data_Logger.bootloader.tool=esptool_py
+Bee_Data_Logger.bootloader.tool.default=esptool_py
+
+Bee_Data_Logger.upload.tool=esptool_py
+Bee_Data_Logger.upload.tool.default=esptool_py
+Bee_Data_Logger.upload.tool.network=esp_ota
+
+Bee_Data_Logger.upload.maximum_size=1310720
+Bee_Data_Logger.upload.maximum_data_size=327680
+Bee_Data_Logger.upload.flags=
+Bee_Data_Logger.upload.extra_flags=
+Bee_Data_Logger.upload.use_1200bps_touch=true
+Bee_Data_Logger.upload.wait_for_upload_port=true
+Bee_Data_Logger.upload.speed=921600
+
+Bee_Data_Logger.serial.disableDTR=false
+Bee_Data_Logger.serial.disableRTS=false
+
+Bee_Data_Logger.build.tarch=xtensa
+Bee_Data_Logger.build.bootloader_addr=0x0
+Bee_Data_Logger.build.target=esp32s3
+Bee_Data_Logger.build.mcu=esp32s3
+Bee_Data_Logger.build.core=esp32
+Bee_Data_Logger.build.variant=Bee_Data_Logger
+Bee_Data_Logger.build.board=BEE_DATA_LOGGER
+
+Bee_Data_Logger.build.cdc_on_boot=1
+Bee_Data_Logger.build.msc_on_boot=1
+Bee_Data_Logger.build.dfu_on_boot=1
+Bee_Data_Logger.build.f_cpu=240000000L
+Bee_Data_Logger.build.flash_size=8MB
+Bee_Data_Logger.build.flash_freq=80m
+Bee_Data_Logger.build.flash_mode=dio
+Bee_Data_Logger.build.partitions=default_8MB
+Bee_Data_Logger.build.defines=
+Bee_Data_Logger.build.loop_core=-DARDUINO_RUNNING_CORE=1
+Bee_Data_Logger.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+Bee_Data_Logger.build.boot=qio
+Bee_Data_Logger.build.partitions=default
+Bee_Data_Logger.build.defines=
+
+Bee_Data_Logger.menu.CDCOnBoot.default=Enabled
+Bee_Data_Logger.menu.CDCOnBoot.default.build.cdc_on_boot=1
+Bee_Data_Logger.menu.CDCOnBoot.dis_cdc=Disabled
+Bee_Data_Logger.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+Bee_Data_Logger.menu.MSCOnBoot.default=Disabled
+Bee_Data_Logger.menu.MSCOnBoot.default.build.msc_on_boot=0
+Bee_Data_Logger.menu.MSCOnBoot.msc=Enabled
+Bee_Data_Logger.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+Bee_Data_Logger.menu.DFUOnBoot.default=Disabled
+Bee_Data_Logger.menu.DFUOnBoot.default.build.dfu_on_boot=0
+Bee_Data_Logger.menu.DFUOnBoot.dfu=Enabled
+Bee_Data_Logger.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+Bee_Data_Logger.menu.USBMode.default=USB-OTG
+Bee_Data_Logger.menu.USBMode.default.build.usb_mode=0
+Bee_Data_Logger.menu.USBMode.default.upload.use_1200bps_touch=true
+Bee_Data_Logger.menu.USBMode.default.upload.wait_for_upload_port=true
+Bee_Data_Logger.menu.USBMode.hwcdc=Hardware CDC and JTAG
+Bee_Data_Logger.menu.USBMode.hwcdc.build.usb_mode=1
+Bee_Data_Logger.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+Bee_Data_Logger.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+
+Bee_Data_Logger.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+Bee_Data_Logger.menu.PartitionScheme.default.build.partitions=default
+Bee_Data_Logger.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+Bee_Data_Logger.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+Bee_Data_Logger.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+Bee_Data_Logger.menu.PartitionScheme.no_ota.build.partitions=no_ota
+Bee_Data_Logger.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+Bee_Data_Logger.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+Bee_Data_Logger.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+Bee_Data_Logger.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+Bee_Data_Logger.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+Bee_Data_Logger.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+Bee_Data_Logger.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+Bee_Data_Logger.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+Bee_Data_Logger.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+Bee_Data_Logger.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+Bee_Data_Logger.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+Bee_Data_Logger.menu.PartitionScheme.huge_app.build.partitions=huge_app
+Bee_Data_Logger.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+Bee_Data_Logger.menu.DebugLevel.none=None
+Bee_Data_Logger.menu.DebugLevel.none.build.code_debug=0
+Bee_Data_Logger.menu.DebugLevel.error=Error
+Bee_Data_Logger.menu.DebugLevel.error.build.code_debug=1
+Bee_Data_Logger.menu.DebugLevel.warn=Warn
+Bee_Data_Logger.menu.DebugLevel.warn.build.code_debug=2
+Bee_Data_Logger.menu.DebugLevel.info=Info
+Bee_Data_Logger.menu.DebugLevel.info.build.code_debug=3
+Bee_Data_Logger.menu.DebugLevel.debug=Debug
+Bee_Data_Logger.menu.DebugLevel.debug.build.code_debug=4
+Bee_Data_Logger.menu.DebugLevel.verbose=Verbose
+Bee_Data_Logger.menu.DebugLevel.verbose.build.code_debug=5
+
+Bee_Data_Logger.menu.EraseFlash.none=Disabled
+Bee_Data_Logger.menu.EraseFlash.none.upload.erase_cmd=
+Bee_Data_Logger.menu.EraseFlash.all=Enabled
+Bee_Data_Logger.menu.EraseFlash.all.upload.erase_cmd=-e
+
+############################################################
 
 Bee_Motion_S3.name=Bee Motion S3
 Bee_Motion_S3.vid.0=0x303a
@@ -22223,3 +22714,5 @@ crabik_slot_esp32_s3.menu.EraseFlash.all=Enabled
 crabik_slot_esp32_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+
