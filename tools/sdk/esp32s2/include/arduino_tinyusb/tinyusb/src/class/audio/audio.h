@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -824,10 +824,10 @@ typedef struct TU_ATTR_PACKED
             uint8_t type      :  2; ///< Request type tusb_request_type_t.
             uint8_t direction :  1; ///< Direction type. tusb_dir_t
         } bmRequestType_bit;
-        
+
         uint8_t bmRequestType;
     };
-    
+
     uint8_t bRequest;  ///< Request type audio_cs_req_t
     uint8_t bChannelNumber;
     uint8_t bControlSelector;

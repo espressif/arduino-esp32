@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -48,11 +48,13 @@ bool     tud_vendor_n_peek            (uint8_t itf, uint8_t* ui8);
 void     tud_vendor_n_read_flush      (uint8_t itf);
 
 uint32_t tud_vendor_n_write           (uint8_t itf, void const* buffer, uint32_t bufsize);
+uint32_t tud_vendor_n_write_flush     (uint8_t itf);
 uint32_t tud_vendor_n_write_available (uint8_t itf);
 
-static inline
-uint32_t tud_vendor_n_write_str       (uint8_t itf, char const* str);
-uint32_t tud_vendor_n_flush           (uint8_t itf);
+static inline uint32_t tud_vendor_n_write_str (uint8_t itf, char const* str);
+
+// backward compatible
+#define tud_vendor_n_flush(itf) tud_vendor_n_write_flush(itf)
 
 //--------------------------------------------------------------------+
 // Application API (Single Port)
@@ -65,7 +67,10 @@ static inline void     tud_vendor_read_flush      (void);
 static inline uint32_t tud_vendor_write           (void const* buffer, uint32_t bufsize);
 static inline uint32_t tud_vendor_write_str       (char const* str);
 static inline uint32_t tud_vendor_write_available (void);
-static inline uint32_t tud_vendor_flush           (void);
+static inline uint32_t tud_vendor_write_flush     (void);
+
+// backward compatible
+#define tud_vendor_flush() tud_vendor_write_flush()
 
 //--------------------------------------------------------------------+
 // Application Callback API (weak is optional)
@@ -115,6 +120,11 @@ static inline uint32_t tud_vendor_write (void const* buffer, uint32_t bufsize)
   return tud_vendor_n_write(0, buffer, bufsize);
 }
 
+static inline uint32_t tud_vendor_write_flush (void)
+{
+  return tud_vendor_n_write_flush(0);
+}
+
 static inline uint32_t tud_vendor_write_str (char const* str)
 {
   return tud_vendor_n_write_str(0, str);
@@ -123,11 +133,6 @@ static inline uint32_t tud_vendor_write_str (char const* str)
 static inline uint32_t tud_vendor_write_available (void)
 {
   return tud_vendor_n_write_available(0);
-}
-
-static inline uint32_t tud_vendor_flush (void)
-{
-  return tud_vendor_n_flush(0);
 }
 
 //--------------------------------------------------------------------+

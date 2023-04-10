@@ -36,8 +36,8 @@
 #define __tusb_irq_path_func(x) x
 #endif
 
-#define usb_hw_set hw_set_alias(usb_hw)
-#define usb_hw_clear hw_clear_alias(usb_hw)
+#define usb_hw_set    ((usb_hw_t *) hw_set_alias_untyped(usb_hw))
+#define usb_hw_clear  ((usb_hw_t *) hw_clear_alias_untyped(usb_hw))
 
 #define pico_info(...)  TU_LOG(2, __VA_ARGS__)
 #define pico_trace(...) TU_LOG(3, __VA_ARGS__)
@@ -47,7 +47,7 @@ typedef struct hw_endpoint
 {
     // Is this a valid struct
     bool configured;
-    
+
     // Transfer direction (i.e. IN is rx for host but tx for device)
     // allows us to common up transfer functions
     bool rx;
@@ -119,17 +119,17 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t _hw_endpoint_buffer_control_get_val
 
 TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_value32 (struct hw_endpoint *ep, uint32_t value)
 {
-  return _hw_endpoint_buffer_control_update32(ep, 0, value);
+  _hw_endpoint_buffer_control_update32(ep, 0, value);
 }
 
 TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_set_mask32 (struct hw_endpoint *ep, uint32_t value)
 {
-  return _hw_endpoint_buffer_control_update32(ep, ~value, value);
+  _hw_endpoint_buffer_control_update32(ep, ~value, value);
 }
 
 TU_ATTR_ALWAYS_INLINE static inline void _hw_endpoint_buffer_control_clear_mask32 (struct hw_endpoint *ep, uint32_t value)
 {
-  return _hw_endpoint_buffer_control_update32(ep, ~value, 0);
+  _hw_endpoint_buffer_control_update32(ep, ~value, 0);
 }
 
 static inline uintptr_t hw_data_offset (uint8_t *buf)

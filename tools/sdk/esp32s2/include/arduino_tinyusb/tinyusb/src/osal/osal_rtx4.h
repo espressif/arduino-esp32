@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021 Tian Yunhao (t123yh)
@@ -115,7 +115,7 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_unlock(osal_mutex_t mutex_hd
   os_mbx_declare(_name##__mbox, _depth);              \
   _declare_box(_name##__pool, sizeof(_type), _depth); \
   osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .pool = _name##__pool, .mbox = _name##__mbox };
-  
+
 
 typedef struct
 {

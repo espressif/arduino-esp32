@@ -549,7 +549,7 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 
 /* 3.10.1.1 */
 #define TUD_VIDEO_DESC_EP_ISO(_ep, _epsize, _ep_interval) \
-  7, TUSB_DESC_ENDPOINT, _ep, TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS,\
+  7, TUSB_DESC_ENDPOINT, _ep, (uint8_t) (TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS),\
   U16_TO_U8S_LE(_epsize), _ep_interval
 
 /* 3.10.1.2 */
