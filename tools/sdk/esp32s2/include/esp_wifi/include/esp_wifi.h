@@ -660,10 +660,10 @@ esp_err_t esp_wifi_get_country(wifi_country_t *country);
 
 
 /**
-  * @brief     Set MAC address of WiFi station or the soft-AP interface.
+  * @brief     Set MAC address of WiFi station, soft-AP or NAN interface.
   *
   * @attention 1. This API can only be called when the interface is disabled
-  * @attention 2. Soft-AP and station have different MAC addresses, do not set them to be the same.
+  * @attention 2. Above mentioned interfaces have different MAC addresses, do not set them to be the same.
   * @attention 3. The bit 0 of the first byte of MAC address can not be 1. For example, the MAC address
   *      can set to be "1a:XX:XX:XX:XX:XX", but can not be "15:XX:XX:XX:XX:XX".
   *
@@ -1151,6 +1151,7 @@ esp_err_t esp_wifi_set_inactive_time(wifi_interface_t ifx, uint16_t sec);
   * @return
   *    - ESP_OK: succeed
   *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
   *    - ESP_ERR_WIFI_ARG: invalid argument
   */
 esp_err_t esp_wifi_get_inactive_time(wifi_interface_t ifx, uint16_t *sec);
@@ -1347,6 +1348,19 @@ esp_err_t esp_wifi_sta_get_aid(uint16_t *aid);
   *    - ESP_OK: succeed
   */
 esp_err_t esp_wifi_sta_get_negotiated_phymode(wifi_phy_mode_t *phymode);
+
+/**
+  * @brief      Config dynamic carrier sense
+  *
+  * @attention  This API should be called after esp_wifi_start().
+  *
+  * @param      enabled Dynamic carrier sense is enabled or not.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_set_dynamic_cs(bool enabled);
 
 #ifdef __cplusplus
 }

@@ -47,7 +47,7 @@ extern "C" {
  *      - the to-be-mapped paddr block is overlapped with an already mapped paddr block.
  *      - the to-be-mapped paddr block encloses an already mapped paddr block.
  *   2. If the to-be-mapped paddr block is enclosed by an already mapped paddr block, no new mapping will happen, return ESP_ERR_INVALID_STATE. The out pointer will be the already mapped paddr corresponding vaddr.
- *   3. If the to-be-mapped paddr block is totally the same as an already mapped paddr block, no new mapping will happen, return ESP_ERR_INVALID_STATE. The out pointer will be the corresponding vaddr.
+ *   3. If the to-be-mapped paddr block is identical with an already mapped paddr block, no new mapping will happen, return ESP_ERR_INVALID_STATE. The out pointer will be the corresponding vaddr.
  *
  * - If this flag isn't set, overlapped, enclosed or same to-be-mapped paddr block will lead to ESP_ERR_INVALID_ARG.
  */
@@ -77,7 +77,7 @@ typedef uint32_t esp_paddr_t;
  *        - ESP_ERR_NOT_FOUND:     No enough size free block to use
  *        - ESP_ERR_NO_MEM:        Out of memory, this API will allocate some heap memory for internal usage
  *        - ESP_ERR_INVALID_STATE: Paddr is mapped already, this API will return corresponding vaddr_start of the previously mapped block.
- *                                 Only to-be-mapped paddr block is totally enclosed by a previously mapped block will lead to this error:
+ *                                 Only to-be-mapped paddr block is totally enclosed by a previously mapped block will lead to this error. (Identical scenario will behave similarly)
  *                                 new_block_start               new_block_end
  *                                              |-------- New Block --------|
  *                                      |--------------- Block ---------------|
@@ -156,6 +156,20 @@ esp_err_t esp_mmu_vaddr_to_paddr(void *vaddr, esp_paddr_t *out_paddr, mmu_target
  */
 esp_err_t esp_mmu_paddr_to_vaddr(esp_paddr_t paddr, mmu_target_t target, mmu_vaddr_t type, void **out_vaddr);
 
+/**
+ * @brief If the physical address is mapped, this API will provide the capabilities of the virtual address where the physical address is mapped to.
+ *
+ * @note: Only return value is ESP_OK(which means physically address is successfully mapped), then caps you get make sense.
+ * @note This API only check one page (see CONFIG_MMU_PAGE_SIZE), starting from the `paddr`
+ *
+ * @param[in]  paddr     Physical address
+ * @param[out] out_caps  Bitwise OR of MMU_MEM_CAP_* flags indicating the capabilities of a virtual address where the physical address is mapped to.
+ * @return
+ *      - ESP_OK: Physical address successfully mapped.
+ *      - ESP_ERR_INVALID_ARG: Null pointer
+ *      - ESP_ERR_NOT_FOUND: Physical address is not mapped successfully.
+ */
+esp_err_t esp_mmu_paddr_find_caps(const esp_paddr_t paddr, mmu_mem_caps_t *out_caps);
 
 #ifdef __cplusplus
 }
