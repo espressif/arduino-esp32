@@ -69,7 +69,7 @@
             {
               "packager": "esp32",
               "name": "openocd-esp32",
-              "version": "v0.11.0-esp32-20221026"
+              "version": "v0.12.0-esp32-20230313"
             },
             {
               "packager": "esp32",
@@ -464,56 +464,56 @@
         },
         {
           "name": "openocd-esp32",
-          "version": "v0.11.0-esp32-20221026",
+          "version": "v0.12.0-esp32-20230313",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-amd64-0.11.0-esp32-20221026.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-amd64-0.11.0-esp32-20221026.tar.gz",
-              "checksum": "SHA-256:ce63e9b1dfab60cc62da5dc2abcc22ba7036c42afe74671c787eb026744e7d0b",
-              "size": "2051435"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-linux-amd64-0.12.0-esp32-20230313.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-amd64-0.12.0-esp32-20230313.tar.gz",
+              "checksum": "SHA-256:a62e560eba02eeca82d52b8eea8ef1e432e083242ce6b01033815e9afad4343e",
+              "size": "2087489"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-arm64-0.11.0-esp32-20221026.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-arm64-0.11.0-esp32-20221026.tar.gz",
-              "checksum": "SHA-256:fe60a3a603e8c6bee47367e40fcb8c0da3a38e01163e9674ebc919b067700506",
-              "size": "1993843"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-linux-arm64-0.12.0-esp32-20230313.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-arm64-0.12.0-esp32-20230313.tar.gz",
+              "checksum": "SHA-256:12570d3513ace5a8f6f4afb53605abc2ed572243fa36f1c797ae7f7a8558deed",
+              "size": "1984119"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-linux-armel-0.11.0-esp32-20221026.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-armel-0.11.0-esp32-20221026.tar.gz",
-              "checksum": "SHA-256:6ef76101cca196a4be30fc74f191eff34abb423e32930a383012b866c9b76135",
-              "size": "2092111"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-linux-armel-0.12.0-esp32-20230313.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-armel-0.12.0-esp32-20230313.tar.gz",
+              "checksum": "SHA-256:e1b300a87f83a665d33ae9d8f7a47b883f1d0a20a90c30cdaa9ed0750ddc7a61",
+              "size": "2126878"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-macos-0.11.0-esp32-20221026.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-0.11.0-esp32-20221026.tar.gz",
-              "checksum": "SHA-256:8edc666a0a230432554b73df7c62e0b5ec21fb018e7fda13b11a7ca8b6c1763b",
-              "size": "2199855"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-macos-0.12.0-esp32-20230313.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-0.12.0-esp32-20230313.tar.gz",
+              "checksum": "SHA-256:3c462379fdca456eb9fcd696f68b489602cd51d80ebc7b45fc9f0c41404f382a",
+              "size": "2191546"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-macos-arm64-0.11.0-esp32-20221026.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-arm64-0.11.0-esp32-20221026.tar.gz",
-              "checksum": "SHA-256:c426c0158ba6488e2f432f7c5b22e79155b5b0fae6d1ad5bbd7894723b43aa12",
-              "size": "2247179"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-macos-arm64-0.12.0-esp32-20230313.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-arm64-0.12.0-esp32-20230313.tar.gz",
+              "checksum": "SHA-256:d19628bd64008298180a93c36fb8a3f0586c13800f5bb66c0a0f25c7eb9a8d6e",
+              "size": "2239378"
             },
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-win32-0.11.0-esp32-20221026.zip",
-              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20221026.zip",
-              "checksum": "SHA-256:e0e789d35308c029c6b53457cf4a42a5620cb1a3014740026c089c2ed4fd77b2",
-              "size": "2493214"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-win32-0.12.0-esp32-20230313.zip",
+              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230313.zip",
+              "checksum": "SHA-256:46580ccb9cc00d76c419636b884c5cc57422124a0a0f755595218f30b92884fa",
+              "size": "2492151"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.11.0-esp32-20221026/openocd-esp32-win32-0.11.0-esp32-20221026.zip",
-              "archiveFileName": "openocd-esp32-win32-0.11.0-esp32-20221026.zip",
-              "checksum": "SHA-256:e0e789d35308c029c6b53457cf4a42a5620cb1a3014740026c089c2ed4fd77b2",
-              "size": "2493214"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230313/openocd-esp32-win32-0.12.0-esp32-20230313.zip",
+              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230313.zip",
+              "checksum": "SHA-256:46580ccb9cc00d76c419636b884c5cc57422124a0a0f755595218f30b92884fa",
+              "size": "2492151"
             }
           ]
         },
