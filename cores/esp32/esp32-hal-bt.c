@@ -38,6 +38,7 @@ bool btStart() {
 
 bool btStartMode(bt_mode mode){
     esp_bt_mode_t esp_bt_mode;
+    esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 #if CONFIG_IDF_TARGET_ESP32
     switch(mode) {
         case BT_MODE_BLE: esp_bt_mode=ESP_BT_MODE_BLE;
@@ -49,11 +50,10 @@ bool btStartMode(bt_mode mode){
         default: esp_bt_mode=BT_MODE;
         break;
     }
-    esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
     cfg.mode=esp_bt_mode;
     if(cfg.mode == ESP_BT_MODE_CLASSIC_BT) {
-    esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+        esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
     }
 #else
 // other esp variants dont support BT-classic / DM.

@@ -789,7 +789,8 @@ BluetoothSerial::~BluetoothSerial(void)
 }
 
 /**
- * @Param isMaster set to true if you want to connect to an other device
+ * @param isMaster set to true if you want to connect to an other device
+ * @param disableBLE if BLE is not used, its ram can be freed to get +10kB free ram
  */
 bool BluetoothSerial::begin(String localName, bool isMaster, bool disableBLE)
 {
