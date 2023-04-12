@@ -430,7 +430,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
             for (int i = 0; i < param->disc_res.num_prop; i++) {
                 switch(param->disc_res.prop[i].type) {
-                    case ESP_BT_GAP_DEV_PROP_EIR:  
+                    case ESP_BT_GAP_DEV_PROP_EIR:
                         if (get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
                             log_i("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %d", peer_bdname, peer_bdname_len);
                             if (strlen(_remote_name) == peer_bdname_len
@@ -589,7 +589,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
     }
 }
 
-static bool _init_bt(const char *deviceName)
+static bool _init_bt(const char *deviceName, bt_mode mode)
 {
     if(!_bt_event_group){
         _bt_event_group = xEventGroupCreate();
@@ -641,7 +641,7 @@ static bool _init_bt(const char *deviceName)
         }
     }
 
-    if (!btStarted() && !btStart()){
+    if (!btStarted() && !btStartMode(mode)){
         log_e("initialize controller failed");
         return false;
     }
@@ -774,11 +774,10 @@ static bool waitForSDPRecord(int timeout) {
     return (xEventGroupWaitBits(_bt_event_group, BT_SDP_COMPLETED, pdFALSE, pdTRUE, xTicksToWait) & BT_SDP_COMPLETED) != 0;
 }
 
-/*
+/**
  * Serial Bluetooth Arduino
  *
- * */
-
+ */
 BluetoothSerial::BluetoothSerial()
 {
     local_name = "ESP32"; //default bluetooth name
@@ -792,13 +791,13 @@ BluetoothSerial::~BluetoothSerial(void)
 /**
  * @Param isMaster set to true if you want to connect to an other device
  */
-bool BluetoothSerial::begin(String localName, bool isMaster)
+bool BluetoothSerial::begin(String localName, bool isMaster, bool disableBLE)
 {
     _isMaster = isMaster;
     if (localName.length()){
         local_name = localName;
     }
-    return _init_bt(local_name.c_str());
+    return _init_bt(local_name.c_str(), disableBLE ? BT_MODE_CLASSIC_BT : BT_MODE_BTDM);
 }
 
 int BluetoothSerial::available(void)
@@ -869,6 +868,14 @@ void BluetoothSerial::end()
     _stop_bt();
 }
 
+/**
+ * free additional ~30kB ram, reset is required to enable BT again
+ */
+void BluetoothSerial::memrelease()
+{
+    esp_bt_mem_release(ESP_BT_MODE_BTDM);
+}
+
 void BluetoothSerial::onConfirmRequest(ConfirmRequestCb cb)
 {
     confirm_request_callback = cb;
@@ -895,10 +902,11 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback)
 void BluetoothSerial::enableSSP() {
     _enableSSP = true;
 }
-/*
-     * Set default parameters for Legacy Pairing
-     * Use fixed pin code
-*/
+
+/**
+ * Set default parameters for Legacy Pairing
+ * Use fixed pin code
+ */
 bool BluetoothSerial::setPin(const char *pin) {
     log_i("pin: %s", pin);
     bool isEmpty =  !(pin  && *pin);
@@ -952,11 +960,13 @@ bool BluetoothSerial::connect(String remoteName)
 }
 
 /**
- * @Param channel: specify channel or 0 for auto-detect
- * @Param sec_mask:
+ * Connect to an other bluetooth device
+ *
+ * @param channel specify channel or 0 for auto-detect
+ * @param sec_mask
  *           ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE
  *           ESP_SPP_SEC_NONE
- * @Param role:
+ * @param role
  *           ESP_SPP_ROLE_MASTER   master can handle up to 7 connections to slaves
  *           ESP_SPP_ROLE_SLAVE    can only have one connection to a master
  */
