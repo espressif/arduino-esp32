@@ -33,6 +33,9 @@
             },
             {
               "name": "ESP32-C3 Dev Board"
+            },
+            {
+              "name": "Arduino Nano ESP32"
             }
           ],
           "toolsDependencies": [
@@ -85,6 +88,11 @@
               "packager": "esp32",
               "name": "mklittlefs",
               "version": "3.0.0-gnu12-dc7f933"
+            },
+            {
+              "packager": "arduino",
+              "name": "dfu-util",
+              "version": "0.11.0-arduino5"
             }
           ]
         }
@@ -679,6 +687,66 @@
               "archiveFileName": "mkspiffs-0.2.3-arduino-esp32-linux-armhf.tar.gz",
               "checksum": "SHA-256:ade3dc00117912ac08a1bdbfbfe76b12d21a34bc5fa1de0cfc45fe7a8d0a0185",
               "size": "40665"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "arduino",
+      "maintainer": "Arduino",
+      "websiteURL": "http://www.arduino.cc/",
+      "email": "packages@arduino.cc",
+      "help": {
+        "online": "http://www.arduino.cc/en/Reference/HomePage"
+      },
+      "platforms": [],
+      "tools": [
+        {
+          "name": "dfu-util",
+          "version": "0.11.0-arduino5",
+          "systems": [
+            {
+              "host": "i386-apple-darwin",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-darwin_amd64.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-darwin_amd64.tar.gz",
+              "size": "72429",
+              "checksum": "SHA-256:9e576c6e44f54b1e921a43ea77bcc08ec99e0e4e0905f4b9acf9ab2c979f0a22"
+            },
+            {
+              "host": "arm-linux-gnueabihf",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-linux_arm.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-linux_arm.tar.gz",
+              "size": "2512819",
+              "checksum": "SHA-256:acd4bd283fd408515279a44dd830499ad37b0767e8f2fde5c27e878ded909dc3"
+            },
+            {
+              "host": "aarch64-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-linux_arm64.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-linux_arm64.tar.gz",
+              "size": "2607592",
+              "checksum": "SHA-256:b3f46a65da0c2fed2449dc5a3351c3c74953a868aa7f8d99ba2bb8c418344fe9"
+            },
+            {
+              "host": "x86_64-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-linux_amd64.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-linux_amd64.tar.gz",
+              "size": "2283425",
+              "checksum": "SHA-256:96c64c278561af806b585c123c85748926ad02b1aedc07e5578ca9bee2be0d2a"
+            },
+            {
+              "host": "i686-linux-gnu",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-linux_386.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-linux_386.tar.gz",
+              "size": "2524406",
+              "checksum": "SHA-256:9a707692261e5710ed79a6d8a4031ffd0bfe1e585216569934346e9b2d68d0c2"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "http://downloads.arduino.cc/tools/dfu-util-0.11-arduino5-windows_386.tar.gz",
+              "archiveFileName": "dfu-util-0.11-arduino5-windows_386.tar.gz",
+              "size": "571340",
+              "checksum": "SHA-256:6451e16bf77600fe2436c8708ab4b75077c49997cf8bedf03221d9d6726bb641"
             }
           ]
         }
