@@ -69,17 +69,21 @@ done
 # Create JSON like string with all boards found and pass it to env variable
 board_count=${#boards_array[@]}
 
-json_matrix='{"fqbn": ['
-for board in ${boards_array[@]}
-do
-    json_matrix+='"'$board'"'
-    if [ $board_count -gt 1 ]
-    then
-        json_matrix+=","
-    fi
-    board_count=$(($board_count - 1))
-done
-json_matrix+=']}'
+if [ $board_count -gt 0 ]
+then
+    json_matrix='{"fqbn": ['
+    for board in ${boards_array[@]}
+    do
+        json_matrix+='"'$board'"'
+        if [ $board_count -gt 1 ]
+        then
+            json_matrix+=","
+        fi
+        board_count=$(($board_count - 1))
+    done
+    json_matrix+=']}'
 
-echo $json_matrix
-echo "FQBNS=${json_matrix}" >> $GITHUB_ENV
+    echo $json_matrix
+    echo "FQBNS=${json_matrix}" >> $GITHUB_ENV
+else
+    echo "FQBNS=''" >> $GITHUB_ENV

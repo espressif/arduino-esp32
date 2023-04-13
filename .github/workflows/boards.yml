@@ -3,7 +3,6 @@ name: New Board Test
 # The workflow will run on schedule and labeled pull requests
 on:
   pull_request:
-    types: [opened, reopened, synchronize, labeled]
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
@@ -11,8 +10,6 @@ env:
 
 jobs:
   find-boards:
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'board_test')
     runs-on: ubuntu-latest
 
     outputs:
@@ -33,6 +30,7 @@ jobs:
   test-boards:
     needs: find-boards
     runs-on: ubuntu-latest
+    if: ${{ needs.changes.outputs.services != '' }}
 
     env:
       REPOSITORY: |
