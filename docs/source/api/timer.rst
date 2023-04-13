@@ -48,10 +48,10 @@ This function is used to end timer.
 
 * ``timer`` timer struct.
 
-timerSetConfig
+timerGetConfig
 **************
 
-This function is used to configure initialized timer (timerBegin() called).
+This function is used to get configuration of initialized timer (timerBegin() called).
 
 .. code-block:: arduino
 
