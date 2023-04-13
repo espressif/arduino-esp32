@@ -185,7 +185,6 @@ cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.py"    "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.exe"   "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/partitions"                 "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/ide-debug"                  "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/sdk"                        "$PKG_DIR/tools/"
 cp -f $GITHUB_WORKSPACE/tools/platformio-build*.py          "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
@@ -197,6 +196,7 @@ find "$PKG_DIR" -name '*.git*' -type f -delete
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$ver$extent/g" | \
+sed 's/tools.esp32-arduino-libs.path={runtime.platform.path}\/tools\/esp32-arduino-libs/tools.esp32-arduino-libs.path=\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \

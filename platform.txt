@@ -1,6 +1,7 @@
 name=ESP32 Arduino
 version=2.0.6
 
+tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
 tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
@@ -32,7 +33,7 @@ tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_p
 compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
-compiler.sdk.path={runtime.platform.path}/tools/sdk/{build.mcu}
+compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
