@@ -990,6 +990,7 @@ esp32wrover.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.
 esp32wrover.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 esp32wrover.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32wrover.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32wrover.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32wrover.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wrover.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32wrover.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -1608,6 +1609,7 @@ esp32s2usb.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32wroverkit.name=ESP32 Wrover Kit (all versions)
+
 esp32wroverkit.bootloader.tool=esptool_py
 esp32wroverkit.bootloader.tool.default=esptool_py
 
@@ -1619,8 +1621,10 @@ esp32wroverkit.upload.maximum_size=1310720
 esp32wroverkit.upload.maximum_data_size=327680
 esp32wroverkit.upload.flags=
 esp32wroverkit.upload.extra_flags=
+
 esp32wroverkit.serial.disableDTR=true
 esp32wroverkit.serial.disableRTS=true
+
 esp32wroverkit.build.tarch=xtensa
 esp32wroverkit.build.bootloader_addr=0x1000
 esp32wroverkit.build.target=esp32
@@ -1628,25 +1632,14 @@ esp32wroverkit.build.mcu=esp32
 esp32wroverkit.build.core=esp32
 esp32wroverkit.build.variant=esp32
 esp32wroverkit.build.board=ESP32_WROVER_KIT
+
 esp32wroverkit.build.f_cpu=240000000L
-esp32wroverkit.menu.CPUFreq.240=240MHz (WiFi/BT)
-esp32wroverkit.menu.CPUFreq.240.build.f_cpu=240000000L
-esp32wroverkit.menu.CPUFreq.160=160MHz (WiFi/BT)
-esp32wroverkit.menu.CPUFreq.160.build.f_cpu=160000000L
-esp32wroverkit.menu.CPUFreq.80=80MHz (WiFi/BT)
-esp32wroverkit.menu.CPUFreq.80.build.f_cpu=80000000L
-esp32wroverkit.menu.CPUFreq.40=40MHz (40MHz XTAL)
-esp32wroverkit.menu.CPUFreq.40.build.f_cpu=40000000L
-esp32wroverkit.menu.CPUFreq.26=26MHz (26MHz XTAL)
-esp32wroverkit.menu.CPUFreq.26.build.f_cpu=26000000L
-esp32wroverkit.menu.CPUFreq.20=20MHz (40MHz XTAL)
-esp32wroverkit.menu.CPUFreq.20.build.f_cpu=20000000L
-esp32wroverkit.menu.CPUFreq.13=13MHz (26MHz XTAL)
-esp32wroverkit.menu.CPUFreq.13.build.f_cpu=13000000L
-esp32wroverkit.menu.CPUFreq.10=10MHz (40MHz XTAL)
-esp32wroverkit.menu.CPUFreq.10.build.f_cpu=10000000L
 esp32wroverkit.build.flash_size=4MB
 esp32wroverkit.build.flash_freq=40m
+esp32wroverkit.build.flash_mode=dio
+esp32wroverkit.build.boot=dio
+esp32wroverkit.build.partitions=default
+
 esp32wroverkit.menu.FlashSize.4M=4MB (32Mb)
 esp32wroverkit.menu.FlashSize.4M.build.flash_size=4MB
 esp32wroverkit.menu.FlashSize.8M=8MB (64Mb)
@@ -1657,19 +1650,19 @@ esp32wroverkit.menu.FlashSize.2M.build.flash_size=2MB
 esp32wroverkit.menu.FlashSize.2M.build.partitions=minimal
 esp32wroverkit.menu.FlashSize.16M=16MB (128Mb)
 esp32wroverkit.menu.FlashSize.16M.build.flash_size=16MB
-esp32wroverkit.build.flash_mode=dio
-esp32wroverkit.build.boot=dio
-esp32wroverkit.build.partitions=default
+
 esp32wroverkit.menu.PSRAM.enabled=Enabled
 esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32wroverkit.menu.PSRAM.disabled=Disabled
 esp32wroverkit.menu.PSRAM.disabled.build.defines=
+
 esp32wroverkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.default.build.partitions=default
 esp32wroverkit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32wroverkit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 esp32wroverkit.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32wroverkit.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32wroverkit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32wroverkit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -1695,6 +1688,24 @@ esp32wroverkit.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32wroverkit.menu.PartitionScheme.rainmaker=RainMaker
 esp32wroverkit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32wroverkit.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+esp32wroverkit.menu.CPUFreq.240=240MHz (WiFi/BT)
+esp32wroverkit.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32wroverkit.menu.CPUFreq.160=160MHz (WiFi/BT)
+esp32wroverkit.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32wroverkit.menu.CPUFreq.80=80MHz (WiFi/BT)
+esp32wroverkit.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32wroverkit.menu.CPUFreq.40=40MHz (40MHz XTAL)
+esp32wroverkit.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32wroverkit.menu.CPUFreq.26=26MHz (26MHz XTAL)
+esp32wroverkit.menu.CPUFreq.26.build.f_cpu=26000000L
+esp32wroverkit.menu.CPUFreq.20=20MHz (40MHz XTAL)
+esp32wroverkit.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32wroverkit.menu.CPUFreq.13=13MHz (26MHz XTAL)
+esp32wroverkit.menu.CPUFreq.13.build.f_cpu=13000000L
+esp32wroverkit.menu.CPUFreq.10=10MHz (40MHz XTAL)
+esp32wroverkit.menu.CPUFreq.10.build.f_cpu=10000000L
+
 esp32wroverkit.menu.FlashMode.qio=QIO
 esp32wroverkit.menu.FlashMode.qio.build.flash_mode=dio
 esp32wroverkit.menu.FlashMode.qio.build.boot=qio
@@ -1711,6 +1722,7 @@ esp32wroverkit.menu.FlashFreq.80=80MHz
 esp32wroverkit.menu.FlashFreq.80.build.flash_freq=80m
 esp32wroverkit.menu.FlashFreq.40=40MHz
 esp32wroverkit.menu.FlashFreq.40.build.flash_freq=40m
+
 esp32wroverkit.menu.UploadSpeed.921600=921600
 esp32wroverkit.menu.UploadSpeed.921600.upload.speed=921600
 esp32wroverkit.menu.UploadSpeed.115200=115200
@@ -1725,6 +1737,7 @@ esp32wroverkit.menu.UploadSpeed.460800.macosx=460800
 esp32wroverkit.menu.UploadSpeed.460800.upload.speed=460800
 esp32wroverkit.menu.UploadSpeed.512000.windows=512000
 esp32wroverkit.menu.UploadSpeed.512000.upload.speed=512000
+
 esp32wroverkit.menu.DebugLevel.none=None
 esp32wroverkit.menu.DebugLevel.none.build.code_debug=0
 esp32wroverkit.menu.DebugLevel.error=Error
