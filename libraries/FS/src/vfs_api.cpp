@@ -559,7 +559,9 @@ String VFSFileImpl::getNextFileName(bool *isDir)
     }
     name += fname;
 	// check entry is a directory
-	*isDir = (file->d_type == DT_DIR);
+	if(isDir) {
+		*isDir = (file->d_type == DT_DIR);
+	}
     return name;
 }
 
