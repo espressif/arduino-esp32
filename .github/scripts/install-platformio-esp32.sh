@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
-PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
+PLATFORMIO_ESP32_URL="https://github.com/tasmota/platform-espressif32.git"
 
 TOOLCHAIN_VERSION="8.4.0+2021r2-patch5"
 ESPTOOLPY_VERSION="~1.40400.0"
@@ -40,12 +40,12 @@ replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSI
 replace_script+="fp.seek(0);fp.truncate();json.dump(data, fp, indent=2);fp.close()"
 python -c "$replace_script"
 
-if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
+if [ "$GITHUB_REPOSITORY" == "tasmota/arduino-esp32" ];  then
     echo "Linking Core..."
     ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
 else
     echo "Cloning Core Repository ..."
-    git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
+    git clone --recursive https://github.com/tasmota/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
 fi
 
 echo "PlatformIO for ESP32 has been installed"

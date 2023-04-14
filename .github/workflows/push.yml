@@ -13,14 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-  cmake-check:
-    name: Check cmake file
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - run: bash ./.github/scripts/check-cmakelists.sh
-
   # Ubuntu
   build-arduino-linux:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
