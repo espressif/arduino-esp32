@@ -1,5 +1,9 @@
 #include "WiFiProv.h"
 #include "WiFi.h"
+
+// WARNING: SysProvEvent is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void SysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {

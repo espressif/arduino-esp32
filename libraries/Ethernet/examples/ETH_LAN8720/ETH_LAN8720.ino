@@ -7,12 +7,19 @@
 
 static bool eth_connected = false;
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event)
 {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
-      //set eth hostname here
+
+      // FIXME: It's iffy to call ETH.setHostname() from the event thread,
+      // but is traditional for unknown reasons, likely init sequencing needs.
+      // See: https://github.com/espressif/arduino-esp32/issues/3398
+      // Also: https://github.com/espressif/arduino-esp32/issues/5733
       ETH.setHostname("esp32-ethernet");
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
@@ -67,7 +74,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // See warnings in WiFiEvent() above.
   ETH.begin();
 }
 

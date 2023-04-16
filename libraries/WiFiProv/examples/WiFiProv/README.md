@@ -10,7 +10,12 @@ This example allows Arduino user to choose either BLE or SOFTAP as a mode of tra
 
 ## WiFi.onEvent()
 
-Using this API user can register to receive WiFi Events and Provisioning Events
+Using this API user can register to receive WiFi Events and Provisioning Events.
+
+WARNING: The event handler is called from a separate FreeRTOS task (thread)!
+Serial.print*() is OK but most other library calls are NOT OK unless
+actions taken to ensure thread safety.
+[https://github.com/espressif/arduino-esp32/issues/6947](See bug 6947.)
 
 ## WiFi.beginProvision()
 

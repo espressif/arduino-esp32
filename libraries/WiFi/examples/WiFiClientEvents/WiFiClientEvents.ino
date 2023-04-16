@@ -42,6 +42,9 @@ const char* ssid     = "your-ssid";
 const char* password = "your-password";
 
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event)
 {
     Serial.printf("[WiFi-event] event: %d\n", event);

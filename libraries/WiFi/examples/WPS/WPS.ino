@@ -61,7 +61,11 @@ String wpspin2string(uint8_t a[]){
   return (String)wps_pin;
 }
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
+  // FIXME: It's iffy to call WiFi methods from the event thread.
   switch(event){
     case ARDUINO_EVENT_WIFI_STA_START:
       Serial.println("Station Mode Started");

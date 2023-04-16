@@ -34,6 +34,9 @@ LightSwitch switch_ch2 = {gpio_switch2, false};
 static Switch *my_switch1 = NULL;
 static Switch *my_switch2 = NULL;
 
+// WARNING: sysProvEvent is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
