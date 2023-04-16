@@ -163,7 +163,7 @@ void setup()
     Serial.printf("\nStarting ESP-RainMaker\n");
     RMaker.start();
 
-    WiFi.onEvent(sysProvEvent);
+    WiFi.onEvent(sysProvEvent);  // See warnings in sysProvEvent() above.
 #if CONFIG_IDF_TARGET_ESP32
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
 #else

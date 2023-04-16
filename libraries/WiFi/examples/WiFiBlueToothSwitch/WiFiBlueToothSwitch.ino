@@ -116,7 +116,7 @@ void WiFiEvent(WiFiEvent_t event){
 void setup() {
     Serial.begin(115200);
     pinMode(0, INPUT_PULLUP);
-    WiFi.onEvent(WiFiEvent);
+    WiFi.onEvent(WiFiEvent);  // See warnings in WiFiEvent() above.
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
     Serial.println("Press the button to select the next mode");

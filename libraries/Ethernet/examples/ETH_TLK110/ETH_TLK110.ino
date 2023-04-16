@@ -80,7 +80,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // See warnings in WiFiEvent() above.
   ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE);
 }
 

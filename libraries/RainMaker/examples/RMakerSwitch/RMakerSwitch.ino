@@ -110,7 +110,7 @@ void setup()
 
     RMaker.start();
 
-    WiFi.onEvent(sysProvEvent);
+    WiFi.onEvent(sysProvEvent);  // See warnings in sysProvEvent() above.
 #if CONFIG_IDF_TARGET_ESP32S2
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE,
                             WIFI_PROV_SECURITY_1, pop, service_name);

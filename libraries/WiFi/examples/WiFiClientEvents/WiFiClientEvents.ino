@@ -42,7 +42,7 @@ const char* ssid     = "your-ssid";
 const char* password = "your-password";
 
 
-// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+// WARNING: This function is called from a separate FreeRTOS task (thread)!
 // Serial.print*() is OK but most other library calls are NOT OK.
 // See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event)
@@ -135,6 +135,9 @@ void WiFiEvent(WiFiEvent_t event)
         default: break;
     }}
 
+// WARNING: This function is called from a separate FreeRTOS task (thread)!
+// Serial.print*() is OK but most other library calls are NOT OK.
+// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.println("WiFi connected");
@@ -152,6 +155,9 @@ void setup()
     delay(1000);
 
     // Examples of different ways to register wifi events
+    // WARNING: These handlers are called from a separate FreeRTOS thread.
+    // Serial.print*() is OK but most other library calls are NOT OK.
+    // See: https://github.com/espressif/arduino-esp32/issues/6947
     WiFi.onEvent(WiFiEvent);
     WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
     WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){

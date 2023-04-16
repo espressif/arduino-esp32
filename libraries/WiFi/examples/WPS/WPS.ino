@@ -107,7 +107,7 @@ void setup(){
   Serial.begin(115200);
   delay(10);
   Serial.println();
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // See warnings in WiFiEvent() above.
   WiFi.mode(WIFI_MODE_STA);
   Serial.println("Starting WPS");
   wpsInitConfig();
