@@ -59,11 +59,11 @@ void loop() {
 
   i = (i + 1) % sizeof(cpufreqs);
 
+#ifdef RGB_BUILTIN
   // Changes to the CPU Freq demand RMT to reset internal parameters for the Tick
   // This is fixed by reinitializing the RMT peripheral
   rmtInit(RGB_BUILTIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000); // 100ms Tick
 
-#ifdef RGB_BUILTIN
   neopixelWrite(RGB_BUILTIN, RGB_BRIGHTNESS, 0, 0); // Red
   Serial.println("LED Red");
   delay(1000);
