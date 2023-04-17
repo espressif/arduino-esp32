@@ -9,7 +9,7 @@
 #if CONFIG_IDF_TARGET_ESP32S2
 #define BUILTIN_RGBLED_PIN   18
 #elif CONFIG_IDF_TARGET_ESP32S3
-#define BUILTIN_RGBLED_PIN   48
+#define BUILTIN_RGBLED_PIN   48  // 48 or 38
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define BUILTIN_RGBLED_PIN   8
 #else
@@ -50,7 +50,7 @@ void setup()
 {
     Serial.begin(115200);
     
-    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_64, 10000000))
+    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000))
     {
         Serial.println("init sender failed\n");
     }
@@ -91,7 +91,7 @@ void loop()
     }
 
     // Send the data
-    rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS);
+    rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS, false, false);
 
     delay(100);
 }

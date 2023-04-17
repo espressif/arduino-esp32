@@ -9,11 +9,11 @@
 // ESP32 C3 has only 2 channels for RX and 2 for TX, thus MAX RMT_MEM is 128
 #define RMT_TX_PIN 4
 #define RMT_RX_PIN 5
-#define RMT_MEM_RX RMT_MEM_128
+#define RMT_MEM_RX RMT_MEM_NUM_BLOCKS_2
 #else 
 #define RMT_TX_PIN 18
 #define RMT_RX_PIN 21
-#define RMT_MEM_RX RMT_MEM_192
+#define RMT_MEM_RX RMT_MEM_NUM_BLOCKS_3
 #endif
 
 rmt_data_t my_data[256];
@@ -29,7 +29,7 @@ void setup()
     Serial.begin(115200);
     events = xEventGroupCreate();
     
-    if (!rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_64, RMT_FREQ))
+    if (!rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, RMT_FREQ))
     {
         Serial.println("init sender failed\n");
     }
@@ -58,14 +58,16 @@ void loop()
     data[255].val = 0;
 
     // Start receiving
-    rmtReadAsync(RMT_RX_PIN, my_data, RMT_NUM_EXCHANGED_DATA, events, false, 0);
+    size_t rx_num_symbols = RMT_NUM_EXCHANGED_DATA;
+    rmtReadAsync(RMT_RX_PIN, my_data, &rx_num_symbols, events, false, 0);
 
-    // Send in continous mode
-    rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA);
+    // Send in continous mode by calling it in a loop
+    rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA, false, false);
 
     // Wait for data
     xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
-
+    Serial.printf("Got %d RMT symbols\n", rx_num_symbols);
+    
     // Printout the received data plus the original values
     for (i=0; i<60; i++)
     {
