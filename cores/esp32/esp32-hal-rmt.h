@@ -27,17 +27,30 @@ typedef enum {
   RMT_TX_MODE = 1,  // true
 } rmt_ch_dir_t;
 
+// Reading and Writing shall use as rmt_symbols_size this unit
+// ESP32 has 8 MEM BLOCKS in total shared with Reading and/or Writing
+// ESP32-S2 has 4 MEM BLOCKS in total shared with Reading and/or Writing
+// ESP32-S3 has 4 MEM BLOCKS for Reading and another 4 MEM BLOCKS for Writing
+// ESP32-C3 has 2 MEM BLOCKS for Reading and another 2 MEM BLOCKS for Writing
+#define RMT_SYMBOLS_PER_CHANNEL_BLOCK SOC_RMT_MEM_WORDS_PER_CHANNEL
+
 typedef enum {
-  RMT_MEM_64 =  1,
-  RMT_MEM_128 = 2,
-  RMT_MEM_192 = 3,
-  RMT_MEM_256 = 4,
-  RMT_MEM_320 = 5,
-  RMT_MEM_384 = 6,
-  RMT_MEM_448 = 7,
-  RMT_MEM_512 = 8,
+  RMT_MEM_NUM_BLOCKS_1 = 1,
+  RMT_MEM_NUM_BLOCKS_2 = 2,
+#if SOC_RMT_TX_CANDIDATES_PER_GROUP > 2
+  RMT_MEM_NUM_BLOCKS_3 = 3,
+  RMT_MEM_NUM_BLOCKS_4 = 4,
+#if SOC_RMT_TX_CANDIDATES_PER_GROUP > 4
+  RMT_MEM_NUM_BLOCKS_5 = 5,
+  RMT_MEM_NUM_BLOCKS_6 = 6,
+  RMT_MEM_NUM_BLOCKS_7 = 7,
+  RMT_MEM_NUM_BLOCKS_8 = 8,
+#endif
+#endif
 } rmt_reserve_memsize_t;
 
+// Each RMT Symbols has 4 bytes
+// Total number of bytes per RMT_MEM_BLOCK is RMT_SYMBOLS_PER_CHANNEL_BLOCK * 4 bytes
 typedef union {
   struct {
     uint32_t duration0 : 15;
@@ -58,64 +71,16 @@ typedef union {
 bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t memsize, uint32_t frequency_Hz);
 
 /**
-     BREAKING CHANGE in Arduino Core 3: rmtSetTick() was removed, in favor od rmtInit()
-
-     Sets the clock/divider of timebase the nearest tick to the supplied value in nanoseconds
-     return the real actual tick value in ns
-*/
-//float rmtSetTick(int pin, float tick);
-
-/**
      Sending data in one-go mode or continual mode
-      (more data being send while updating buffers in interrupts)
-     Non-Blocking mode - returns right after executing
+     Blocking and non-blocking mode 
 */
-bool rmtWrite(int pin, rmt_data_t* data, size_t size_byte);
-
-/**
-     Sending data in one-go mode or continual mode
-      (more data being send while updating buffers in interrupts)
-     Blocking mode - only returns when data has been sent
-*/
-bool rmtWriteBlocking(int pin, rmt_data_t* data, size_t size_byte);
-
-/**
-     Loop data up to the reserved memsize continuously
-
-*/
-bool rmtLoop(int pin, rmt_data_t* data, size_t size_byte);
+bool rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool blocking, bool loop);
 
 /**
      Initiates async receive, event flag indicates data received
 
 */
-bool rmtReadAsync(int pin, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
-
-/***
-   Ends async receive started with rmtRead(); but does not
-   rmtDeInit().
-*/
-bool rmtEnd(int pin);
-
-/*  Additional interface */
-
-/**
-     Start reception
-
-*/
-bool rmtBeginReceive(int pin);
-
-/**
-     Checks if reception completes
-
-*/
-bool rmtReceiveCompleted(int pin);
-
-/**
-     Reads the data for particular channel
-
-*/
-bool rmtReadData(int pin, uint32_t* data, size_t size);
+bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols, void* eventFlag, bool waitForData, uint32_t timeout_ms);
 
 /**
    Setting threshold for Rx completed
