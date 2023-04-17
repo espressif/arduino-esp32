@@ -125,7 +125,8 @@ static bool _rmtDetachBus(void *busptr)
   }
   // disable and deallocate RMT channal
   if (bus->rmt_channel_h != NULL) {
-    // force stopping rmt TX/RX processing
+    // force stopping rmt TX/RX processing and unlock Power Management (APB Freq)
+    // it needs sdkconfig with CONFIG_PM_ENABLE set
     rmt_disable(bus->rmt_channel_h);
     if (ESP_OK != rmt_del_channel(bus->rmt_channel_h)) {
       log_w("RMT Channel Deletion has failed.");
@@ -312,16 +313,16 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_RX, _rmtDetachBus);
 
   // validate the RMT ticks by the requested frequency
-#if SOC_RMT_SUPPORT_APB
-  // Based on 80Mhz using a divider of 8 bits (calculated as 1..256) :: ESP32 and ESP32S2
-  if (frequency_Hz > 80000000 || frequency_Hz < 312500) {
-    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 312.5KHz to 80MHz.", pin);
-    return false;
-  }
-#elif SOC_RMT_SUPPORT_XTAL
+#if SOC_RMT_SUPPORT_XTAL  // ESP32-C3 and ESP32-S3 -- RMT works even with lower CPU Freq
   // Based on 40Mhz using a divider of 8 bits (calculated as 1..256)  :: ESP32C3 and ESP32S3
   if (frequency_Hz > 40000000 || frequency_Hz < 156250) {
     log_e("GPIO %d - Bad RMT frequency resolution. Must be between 156.25KHz to 40MHz.", pin);
+    return false;
+  }
+#elif SOC_RMT_SUPPORT_APB   // ESP32 and ESP32-S2 -- TO DO: CPU Freq < 80MHz will affect RMT Tick
+  // Based on 80Mhz using a divider of 8 bits (calculated as 1..256) :: ESP32 and ESP32S2
+  if (frequency_Hz > 80000000 || frequency_Hz < 312500) {
+    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 312.5KHz to 80MHz.", pin);
     return false;
   }
 #endif
@@ -362,10 +363,10 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // TX Channel
     rmt_tx_channel_config_t tx_cfg;
     tx_cfg.gpio_num = pin;
-#if SOC_RMT_SUPPORT_APB
-    tx_cfg.clk_src = RMT_CLK_SRC_APB;
-#elif SOC_RMT_SUPPORT_XTAL
+#if SOC_RMT_SUPPORT_XTAL
     tx_cfg.clk_src = RMT_CLK_SRC_XTAL;
+#elif SOC_RMT_SUPPORT_APB
+    tx_cfg.clk_src = RMT_CLK_SRC_APB;
 #endif
     tx_cfg.resolution_hz = frequency_Hz;
     tx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
@@ -386,10 +387,10 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // RX Channel
     rmt_rx_channel_config_t rx_cfg;
     rx_cfg.gpio_num = pin;
-#if SOC_RMT_SUPPORT_APB
-    rx_cfg.clk_src = RMT_CLK_SRC_APB;
-#elif SOC_RMT_SUPPORT_XTAL
+#if SOC_RMT_SUPPORT_XTAL
     rx_cfg.clk_src = RMT_CLK_SRC_XTAL;
+#elif SOC_RMT_SUPPORT_APB
+    rx_cfg.clk_src = RMT_CLK_SRC_APB;
 #endif
     rx_cfg.resolution_hz = frequency_Hz;
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
