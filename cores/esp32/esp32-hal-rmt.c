@@ -40,8 +40,6 @@
 // structure used as interface for RMT Reading Operations
 struct rmt_rx_obj_s {
   EventGroupHandle_t rmt_rx_events;          // reading event user handle
-  rmt_rx_data_cb_t rmt_rx_cb;                // Rx user function callback
-  void * rmt_rx_cb_arg;                      // Rx user function argument
   TaskHandle_t rmt_rxTaskHandle;             // Rx task created to wait for received RMT data
   QueueHandle_t rmt_rx_queue;                // Rx callback data queue
   bool rmt_rx_completed;                     // rmtReceiveCompleted() rmtReadAsync() async reading
@@ -144,10 +142,6 @@ static void _rmtRxTask(void *args) {
     rmt_rx_done_event_data_t rx_data;
     if (xQueueReceive(bus->rmt_ch_rx_obj_h->rmt_rx_queue, &rx_data, portMAX_DELAY) == pdPASS) {
       log_d("RMT has read %d bytes.", rx_data.num_symbols * sizeof(rmt_data_t));
-      // process the user callback
-      if (bus->rmt_ch_rx_obj_h->rmt_rx_cb) {
-        (bus->rmt_ch_rx_obj_h->rmt_rx_cb)((uint32_t *)rx_data.received_symbols, rx_data.num_symbols, bus->rmt_ch_rx_obj_h->rmt_rx_cb_arg);
-      }
       // Async Read -- copy data to caller
       uint32_t data_size = bus->rmt_ch_rx_obj_h->rmt_data_rx_size;
       rmt_data_t *p = (rmt_data_t *)bus->rmt_ch_rx_obj_h->rmt_data_rx_ptr;
@@ -472,36 +466,6 @@ bool rmtReceiveCompleted(int pin)
   RMT_MUTEX_UNLOCK(bus);
 
   return retCode;
-}
-
-bool rmtRead(int pin, rmt_rx_data_cb_t cb, void * arg)
-{
-  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
-  if (bus == NULL) {
-    return false;
-  }
-  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
-    return false;
-  }
-  if (!_rmtStartReading(bus, pin, __FUNCTION__)) {
-    return false;
-  }
-
-  // Start a read process but now with a call back function
-  bus->rmt_ch_rx_obj_h->rmt_rx_cb_arg = arg;
-  bus->rmt_ch_rx_obj_h->rmt_rx_cb = cb;
-
-  // cb as NULL is a way to cancel the callback process
-  if (cb == NULL) {
-    rmtEnd(pin); // disable reading
-  } else {
-    rmtBeginReceive(pin); // enable reading
-  }
-
-  RMT_MUTEX_LOCK(bus);
-  _rmtCreateRxTask(bus);
-  RMT_MUTEX_UNLOCK(bus);
-  return true;
 }
 
 bool rmtEnd(int pin)

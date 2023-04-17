@@ -18,7 +18,6 @@
 // Rx Done Event
 #define RMT_FLAG_RX_DONE (1)
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,9 +37,6 @@ typedef enum {
   RMT_MEM_448 = 7,
   RMT_MEM_512 = 8,
 } rmt_reserve_memsize_t;
-
-
-typedef void (*rmt_rx_data_cb_t)(uint32_t *data, size_t len, void *arg);
 
 typedef union {
   struct {
@@ -94,13 +90,6 @@ bool rmtLoop(int pin, rmt_data_t* data, size_t size_byte);
 
 */
 bool rmtReadAsync(int pin, rmt_data_t* data, size_t size, void* eventFlag, bool waitForData, uint32_t timeout);
-
-/**
-     Initiates async receive with automatic buffering
-     and callback with data from ISR
-
-*/
-bool rmtRead(int pin, rmt_rx_data_cb_t cb, void * arg);
 
 /***
    Ends async receive started with rmtRead(); but does not
