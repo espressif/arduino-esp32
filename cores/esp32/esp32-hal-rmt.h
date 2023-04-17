@@ -93,8 +93,8 @@ bool rmtSetRxThreshold(int pin, uint16_t value);
    Setting carrier
    
 */
-//bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t low, uint32_t high);
 bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent);
+
 /**
    Setting input filter
 */
