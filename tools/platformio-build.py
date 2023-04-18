@@ -164,7 +164,9 @@ SConscript(
         .PioPlatform()
         .get_package_dir("framework-arduinoespressif32"),
         "tools",
-        "platformio-build-%s.py" % build_mcu,
+        "esp32-arduino-libs",
+        "%s" % build_mcu,
+        "platformio-build.py",
     )
 )
 

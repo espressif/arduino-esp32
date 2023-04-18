@@ -38,20 +38,15 @@ void setup() {
   // Create semaphore to inform us when the timer has fired
   timerSemaphore = xSemaphoreCreateBinary();
 
-  // Use 1st timer of 4 (counted from zero).
-  // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
-  // info).
-  timer = timerBegin(0, 80, true);
+  // Set timer frequency to 1Mhz
+  timer = timerBegin(1000000);
 
   // Attach onTimer function to our timer.
-  timerAttachInterrupt(timer, &onTimer, true);
+  timerAttachInterrupt(timer, &onTimer);
 
   // Set alarm to call onTimer function every second (value in microseconds).
-  // Repeat the alarm (third parameter)
-  timerAlarmWrite(timer, 1000000, true);
-
-  // Start an alarm
-  timerAlarmEnable(timer);
+  // Repeat the alarm (third parameter) with unlimited count = 0 (fourth parameter).
+  timerAlarm(timer, 1000000, true, 0);
 }
 
 void loop() {
