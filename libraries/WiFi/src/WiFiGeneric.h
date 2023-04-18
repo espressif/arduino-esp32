@@ -138,6 +138,7 @@ static const int WIFI_SCANNING_BIT = BIT11;
 static const int WIFI_SCAN_DONE_BIT= BIT12;
 static const int WIFI_DNS_IDLE_BIT = BIT13;
 static const int WIFI_DNS_DONE_BIT = BIT14;
+static const int WIFI_WANT_IP6_BIT = BIT15;
 
 typedef enum {
 	WIFI_RX_ANT0 = 0,
@@ -150,6 +151,11 @@ typedef enum {
 	WIFI_TX_ANT1,
 	WIFI_TX_ANT_AUTO
 } wifi_tx_ant_t;
+
+struct dns_api_msg {
+    ip_addr_t ip_addr;
+    int result;
+};
 
 class WiFiGenericClass
 {
@@ -214,6 +220,7 @@ class WiFiGenericClass
 
   public:
     static int hostByName(const char *aHostname, IPAddress &aResult);
+    static int hostByName6(const char *aHostname, ip_addr_t& aResult);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);

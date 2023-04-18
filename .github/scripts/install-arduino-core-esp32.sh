@@ -20,7 +20,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
         ln -s $GITHUB_WORKSPACE esp32
     else
         echo "Cloning Core Repository..."
-        git clone https://github.com/espressif/arduino-esp32.git esp32 > /dev/null 2>&1
+        git clone https://github.com/tasmota/arduino-esp32.git esp32 > /dev/null 2>&1
     fi
 
     #echo "Updating Submodules ..."
