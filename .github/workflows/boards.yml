@@ -58,4 +58,4 @@ jobs:
             - --warnings="all"
           exit-on-fail: true
           sketch-paths:
-            "- ./libraries/ESP32/examples/ChipID/GetChipID/GetChipID.ino"
+            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
