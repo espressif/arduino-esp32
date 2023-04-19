@@ -357,6 +357,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 /*
  * Required Callbacks
  * */
+#if CFG_TUD_DFU
+__attribute__ ((weak)) uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state){return 0;}
+__attribute__ ((weak)) void tud_dfu_download_cb (uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length){}
+__attribute__ ((weak)) void tud_dfu_manifest_cb(uint8_t alt){}
+#endif
 #if CFG_TUD_HID
 __attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(uint8_t itf){return NULL;}
 __attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
