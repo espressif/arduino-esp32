@@ -30,7 +30,7 @@ jobs:
   test-boards:
     needs: find-boards
     runs-on: ubuntu-latest
-    if: ${{ needs.find-boards.outputs.fqbns != '' }}
+    if: needs.find-boards.outputs.fqbns != ''
 
     env:
       REPOSITORY: |

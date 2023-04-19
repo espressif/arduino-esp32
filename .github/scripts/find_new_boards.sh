@@ -86,5 +86,5 @@ then
     echo $json_matrix
     echo "FQBNS=${json_matrix}" >> $GITHUB_ENV
 else
-    echo "FQBNS=''" >> $GITHUB_ENV
+    echo "FQBNS=" >> $GITHUB_ENV
 fi
