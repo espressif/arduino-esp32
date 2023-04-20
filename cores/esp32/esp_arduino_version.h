@@ -19,11 +19,11 @@ extern "C" {
 #endif
 
 /** Major version number (X.x.x) */
-#define ESP_ARDUINO_VERSION_MAJOR   2
+#define ESP_ARDUINO_VERSION_MAJOR   3
 /** Minor version number (x.X.x) */
 #define ESP_ARDUINO_VERSION_MINOR   0
 /** Patch version number (x.x.X) */
-#define ESP_ARDUINO_VERSION_PATCH   6
+#define ESP_ARDUINO_VERSION_PATCH   0
 
 /**
  * Macro to convert ARDUINO version number into an integer
