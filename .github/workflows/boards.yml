@@ -1,4 +1,4 @@
-name: New Board Test
+name: Boards Test
 
 # The workflow will run on schedule and labeled pull requests
 on:
@@ -30,7 +30,7 @@ jobs:
   test-boards:
     needs: find-boards
     runs-on: ubuntu-latest
-    if: ${{ needs.changes.outputs.services != '' }}
+    if: needs.find-boards.outputs.fqbns != ''
 
     env:
       REPOSITORY: |
@@ -58,4 +58,4 @@ jobs:
             - --warnings="all"
           exit-on-fail: true
           sketch-paths:
-            "- ./libraries/ESP32/examples/ChipID/GetChipID/GetChipID.ino"
+            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
