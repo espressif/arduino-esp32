@@ -74,10 +74,7 @@ void onButton(){
 }
 
 // WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
-// Serial.print*() is OK but most other library calls are NOT OK.
-// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event){
-    // FIXME: It's iffy to call Wifi methods from the event thread.
     switch(event) {
         case ARDUINO_EVENT_WIFI_AP_START:
             Serial.println("AP Started");
@@ -116,7 +113,7 @@ void WiFiEvent(WiFiEvent_t event){
 void setup() {
     Serial.begin(115200);
     pinMode(0, INPUT_PULLUP);
-    WiFi.onEvent(WiFiEvent);  // See warnings in WiFiEvent() above.
+    WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
     Serial.println("Press the button to select the next mode");

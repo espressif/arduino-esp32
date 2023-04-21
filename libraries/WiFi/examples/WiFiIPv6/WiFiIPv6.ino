@@ -65,10 +65,7 @@ void wifiConnectedLoop(){
 }
 
 // WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
-// Serial.print*() is OK but most other library calls are NOT OK.
-// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event){
-    // FIXME: It's iffy to call WiFi methods from the event thread.
     switch(event) {
         case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
@@ -108,7 +105,7 @@ void WiFiEvent(WiFiEvent_t event){
 void setup(){
     Serial.begin(115200);
     WiFi.disconnect(true);
-    WiFi.onEvent(WiFiEvent);
+    WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
     WiFi.mode(WIFI_MODE_APSTA);
     WiFi.softAP(AP_SSID);
     WiFi.begin(STA_SSID, STA_PASS);

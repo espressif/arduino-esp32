@@ -47,7 +47,7 @@ void connectToWiFi(const char * ssid, const char * pwd){
   // delete old config
   WiFi.disconnect(true);
   //register event handler
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   
   //Initiate connection
   WiFi.begin(ssid, pwd);
@@ -56,10 +56,7 @@ void connectToWiFi(const char * ssid, const char * pwd){
 }
 
 // WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
-// Serial.print*() is OK but most other library calls are NOT OK.
-// See: https://github.com/espressif/arduino-esp32/issues/6947
 void WiFiEvent(WiFiEvent_t event){
-    // FIXME: It's iffy to call udp and Wifi methods from the event thread.
     switch(event) {
       case ARDUINO_EVENT_WIFI_STA_GOT_IP:
           //When connected set 
