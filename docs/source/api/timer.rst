@@ -62,6 +62,18 @@ This function is used to get configuration of initialized timer (timerBegin() ca
 This function will return ``configuration`` as uint32_t number. 
 This can be translated by inserting it to struct ``timer_cfg_t.val``.
 
+timerSetConfig
+**************
+
+This function is used to configure initialized timer (timerBegin() called).
+
+.. code-block:: arduino
+
+    void timerSetConfig(hw_timer_t *timer, uint32_t config);
+
+* ``timer`` timer struct.
+* ``config`` configuration as uint32_t number. Use configuration struct ``timer_cfg_t`` and pass ``timer_cfg_t.val`` as ``config`` paramater.
+
 timerAttachInterrupt
 ********************
 
