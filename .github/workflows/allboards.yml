@@ -71,7 +71,7 @@ jobs:
           FQBN: ${{ toJSON(matrix.chunk) }}
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@development
+        uses: P-R-O-C-H-Y/compile-sketches@main
         with:
           platforms: |
             ${{ env.REPOSITORY }}
