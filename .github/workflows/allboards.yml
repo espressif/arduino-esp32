@@ -1,6 +1,6 @@
 name: Boards Test - Remote trigger
 
-# The workflow will run on schedule and labeled pull requests
+# The workflow will run on remote dispath with event-type set to "test-boards"
 on:
   repository_dispatch:
     types: [test-boards]
@@ -14,7 +14,6 @@ jobs:
       board-count: ${{ env.BOARD-COUNT }}
 
     steps:
-      # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -31,7 +30,6 @@ jobs:
 
     outputs:
       test-chunks: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
-      test-chunk-ids: ${{ steps['set-test-chunks-ids'].outputs['test-chunks-ids'] }}
 
     steps:
       - uses: actions/checkout@v3
@@ -48,32 +46,6 @@ jobs:
 
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - id: set-test-chunks-ids
-        name: Set Chunk IDs
-        run: 
-          echo "$(echo $CHUNKS | jq -M 'to_entries | map(.key)')"
-
-          echo "test-chunks-ids<<EOF" >> $GITHUB_OUTPUT
-
-          echo "$(echo $CHUNKS | jq -M 'to_entries | map(.key)')" >> $GITHUB_OUTPUT
-
-          echo "EOF" >> $GITHUB_OUTPUT
-        env:
-          CHUNKS: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
-
-      - name: Echo chunks
-        run:
-          echo $CHUNK
-        env:
-          CHUNK: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
-
-      - name: Echo chunks ids
-        run:
-          echo $CHUNKID
-        env:
-          CHUNKID: ${{ steps['set-test-chunks-ids'].outputs['test-chunks-ids'] }}
-      
-
   test-boards:
     needs: setup-chunks
     runs-on: ubuntu-latest
@@ -89,7 +61,6 @@ jobs:
         chunk: ${{ fromJSON(needs.setup-chunks.outputs['test-chunks']) }}
 
     steps:
-      # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -113,5 +84,3 @@ jobs:
             - --warnings="all"
           sketch-paths:
             "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
-
-          #jq -nc '["espressif:esp32:esp32s3","espressif:esp32:esp32c3","espressif:esp32:esp32s2","espressif:esp32:esp32","espressif:esp32:esp32da"] | _nwise(15)'
