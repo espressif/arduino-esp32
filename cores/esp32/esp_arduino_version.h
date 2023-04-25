@@ -41,6 +41,13 @@ extern "C" {
                                              ESP_ARDUINO_VERSION_MINOR, \
                                              ESP_ARDUINO_VERSION_PATCH)
 
+/**
+ * Current ARDUINO version, as string
+ */
+#define df2xstr(s) #s
+#define df2str(s) df2xstr(s)
+#define ESP_ARDUINO_VERSION_STR df2str(ESP_ARDUINO_VERSION_MAJOR) "." df2str(ESP_ARDUINO_VERSION_MINOR) "." df2str(ESP_ARDUINO_VERSION_PATCH)
+
 #ifdef __cplusplus
 }
 #endif

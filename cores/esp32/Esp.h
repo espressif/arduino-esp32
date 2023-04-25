@@ -77,12 +77,14 @@ public:
     uint32_t getMinFreePsram();
     uint32_t getMaxAllocPsram();
 
-    uint8_t getChipRevision();
+    uint16_t getChipRevision();
     const char * getChipModel();
     uint8_t getChipCores();
     uint32_t getCpuFreqMHz(){ return getCpuFrequencyMhz(); }
     inline uint32_t getCycleCount() __attribute__((always_inline));
-    const char * getSdkVersion();
+
+    const char * getSdkVersion(); //version of ESP-IDF
+    const char * getCoreVersion();//version of this core
 
     void deepSleep(uint32_t time_us);
 
