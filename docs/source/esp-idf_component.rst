@@ -229,15 +229,17 @@ Download the library:
 
 ??? Modify your main\CMakeLists.txt by adding the library sources:
 
-Create new CMakeists.txt in the library folder: ``components/new_library/CMakelists.txt``
+Create new CMakeists.txt in the library folder: ``components/new_library/CMakeLists.txt``
 
 .. code-block:: bash
 
     idf_component_register(SRCS "new_library.cpp"
                           INCLUDE_DIRS "."
+                          REQUIRES arduino-esp32
+                          #PRIV_REQUIRES arduino-esp32, # ??
                           )
 
-You can read more about CMakelists in the IDF documentation regarding the `Build System <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html>`_
+You can read more about CMakeLists in the IDF documentation regarding the `Build System <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html>`_
 
 Tip
 ---
