@@ -26,16 +26,21 @@ typedef enum {
     NOTE_C, NOTE_Cs, NOTE_D, NOTE_Eb, NOTE_E, NOTE_F, NOTE_Fs, NOTE_G, NOTE_Gs, NOTE_A, NOTE_Bb, NOTE_B, NOTE_MAX
 } note_t;
 
+typedef struct {
+    uint8_t pin;                    // Pin assigned to channel
+    uint8_t channel;                // Channel number
+    uint8_t channel_resolution;     // Resolution of channel
+} *ledc_channel_handle_t;
+
 //channel 0-15 resolution 1-16bits freq limits depend on resolution
-uint32_t    ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
-void        ledcWrite(uint8_t channel, uint32_t duty);
-uint32_t    ledcWriteTone(uint8_t channel, uint32_t freq);
-uint32_t    ledcWriteNote(uint8_t channel, note_t note, uint8_t octave);
-uint32_t    ledcRead(uint8_t channel);
-uint32_t    ledcReadFreq(uint8_t channel);
-void        ledcAttachPin(uint8_t pin, uint8_t channel);
-void        ledcDetachPin(uint8_t pin);
-uint32_t    ledcChangeFrequency(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
+bool        ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
+bool        ledcWrite(uint8_t pin, uint32_t duty);
+uint32_t    ledcWriteTone(uint8_t pin, uint32_t freq);
+uint32_t    ledcWriteNote(uint8_t pin, note_t note, uint8_t octave);
+uint32_t    ledcRead(uint8_t pin);
+uint32_t    ledcReadFreq(uint8_t pin);
+bool        ledcDetach(uint8_t pin);
+uint32_t    ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution);
 
 
 #ifdef __cplusplus
