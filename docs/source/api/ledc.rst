@@ -121,7 +121,7 @@ This function is used to detach the pin from LEDC.
 
 .. code-block:: arduino
 
-    void ledcDetachPin(uint8_t pin);
+    void ledcDetach(uint8_t pin);
 
 * ``pin`` select LEDC pin.
 

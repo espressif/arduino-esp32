@@ -196,7 +196,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq)
 
         if(ledc_timer_config(&ledc_timer) != ESP_OK)
         {
-            log_e("ledcSetup failed!");
+            log_e("ledcWriteTone configuration failed!");
             return 0;
         }
         bus->channel_resolution = 10;
