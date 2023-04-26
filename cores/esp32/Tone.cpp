@@ -6,12 +6,11 @@
 
 static TaskHandle_t _tone_task = NULL;
 static QueueHandle_t _tone_queue = NULL;
-static uint8_t _channel = 0;
+static int8_t _pin = -1;
 
 typedef enum{
   TONE_START,
-  TONE_END,
-  TONE_SET_CHANNEL
+  TONE_END
 } tone_cmd_t;
 
 typedef struct{
@@ -19,7 +18,6 @@ typedef struct{
   uint8_t pin;
   unsigned int frequency;
   unsigned long duration;
-  uint8_t channel;
 } tone_msg_t;
 
 static void tone_task(void*){
@@ -30,26 +28,26 @@ static void tone_task(void*){
       case TONE_START:
         log_d("Task received from queue TONE_START: _pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
 
-        log_d("Setup LED controll on channel %d", _channel);
-        ledcAttachPin(tone_msg.pin, _channel);
-        ledcWriteTone(_channel, tone_msg.frequency);
+        if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10  == 0){
+            log_e("Tone start failed");
+            break;
+        }
+        ledcWriteTone(tone_msg.pin, tone_msg.frequency);
+        _pin = tone_msg.pin;
 
         if(tone_msg.duration){
           delay(tone_msg.duration);
-          ledcDetachPin(tone_msg.pin);
-          ledcWriteTone(_channel, 0);
+          ledcWriteTone(tone_msg.pin, 0);
+          ledcDetach(tone_msg.pin);
+          _pin = -1;
         }
         break;
 
       case TONE_END:
         log_d("Task received from queue TONE_END: pin=%d", tone_msg.pin);
-        ledcDetachPin(tone_msg.pin);
-        ledcWriteTone(_channel, 0);
-        break;
-
-      case TONE_SET_CHANNEL:
-        log_d("Task received from queue TONE_SET_CHANNEL: channel=%d", tone_msg.channel);
-        _channel = tone_msg.channel;
+        ledcWriteTone(tone_msg.pin, 0);
+        ledcDetach(tone_msg.pin);
+        _pin = -1;
         break;
 
       default: ; // do nothing
@@ -87,20 +85,6 @@ static int tone_init(){
   return 1; // OK
 }
 
-void setToneChannel(uint8_t channel){
-  log_d("channel=%d", channel);
-  if(tone_init()){
-    tone_msg_t tone_msg = {
-      .tone_cmd = TONE_SET_CHANNEL,
-      .pin = 0, // Ignored
-      .frequency = 0, // Ignored
-      .duration = 0, // Ignored
-      .channel = channel
-    };
-    xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
-  }
-}
-
 void noTone(uint8_t _pin){
   log_d("noTone was called");
   if(tone_init()){
@@ -109,27 +93,32 @@ void noTone(uint8_t _pin){
       .pin = _pin,
       .frequency = 0, // Ignored
       .duration = 0, // Ignored
-      .channel = 0 // Ignored
     };
     xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
   }
 }
 
 // parameters:
-// _pin - pin number which will output the signal
+// pin - pin number which will output the signal
 // frequency - PWM frequency in Hz
 // duration - time in ms - how long will the signal be outputted.
 //   If not provided, or 0 you must manually call noTone to end output
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration){
-  log_d("_pin=%d, frequency=%u Hz, duration=%lu ms", _pin, frequency, duration);
+void tone(uint8_t pin, unsigned int frequency, unsigned long duration){
+  log_d("pin=%d, frequency=%u Hz, duration=%lu ms", _pin, frequency, duration);
   if(tone_init()){
-    tone_msg_t tone_msg = {
-      .tone_cmd = TONE_START,
-      .pin = _pin,
-      .frequency = frequency,
-      .duration = duration,
-      .channel = 0 // Ignored
-    };
-    xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
+    if (_pin == -1 || _pin == pin) {
+      tone_msg_t tone_msg = {
+        .tone_cmd = TONE_START,
+        .pin = pin,
+        .frequency = frequency,
+        .duration = duration,
+      };
+      xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
+      return;
+    }
+    else {
+      log_e("Tone is still running on pin = %d", _pin);
+      return;
+    }
   }
 }
