@@ -14,7 +14,7 @@
 #define PIN 2
 
 void setup() {
-  analogWrite(PIN,128);
+  ledcAttach(PIN,1000,8);
 
   uint32_t min_frequency;
   uint32_t max_frequency;
@@ -31,7 +31,7 @@ void setup() {
     successful_frequency = 0;
     while(min_frequency != max_frequency && min_frequency+1 != max_frequency){
       frequency = min_frequency + ((max_frequency-min_frequency)/2);
-      if(ledcChangeFrequency(analogGetChannel(PIN), frequency, resolution)){
+      if(ledcChangeFrequency(PIN, frequency, resolution)){
         min_frequency = frequency;
         successful_frequency = frequency;
       }else{
@@ -49,7 +49,7 @@ void setup() {
     successful_frequency = max_frequency;
     while(min_frequency != max_frequency && min_frequency+1 != max_frequency){
       frequency = min_frequency + ((max_frequency-min_frequency)/2);
-      if(ledcChangeFrequency(analogGetChannel(PIN), frequency, resolution)){
+      if(ledcChangeFrequency(PIN, frequency, resolution)){
         max_frequency = frequency;
         successful_frequency = frequency;
       }else{
@@ -69,6 +69,8 @@ void setup() {
       std::string (max_len - std::to_string(max_freq_array[r-1]).length(), ' ').c_str(),
       max_freq_array[r-1]);
   }
+
+  ledcDetach(PIN);
 }
 
 void loop()
