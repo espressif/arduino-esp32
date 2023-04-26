@@ -82,13 +82,14 @@ void setup() {
 #ifdef GENERATE_PWM
   // PWM setup
   Serial.printf("Setting up PWM: frequency = %d; resolution bits %d; Duty cycle = %d; duty value = %d, Output pin = %d\n", PWM_FREQUENCY, PWM_RESOLUTION_BITS, PWM_DUTY_PERCENT, PWM_DUTY_VALUE, OUTPUT_PIN);
-  uint32_t freq = ledcSetup(0, PWM_FREQUENCY, PWM_RESOLUTION_BITS);
+  ledcAttach(OUTPUT_PIN, PWM_FREQUENCY, PWM_RESOLUTION_BITS);
+  uint32_t freq = ledcReadFreq(OUTPUT_PIN);
+  
   if(freq != PWM_FREQUENCY){
     Serial.printf("Error setting up PWM. Halt!");
     while(1);
   }
-  ledcAttachPin(OUTPUT_PIN, 0);
-  ledcWrite(0, PWM_DUTY_VALUE);
+  ledcWrite(OUTPUT_PIN, PWM_DUTY_VALUE);
   Serial.printf("PWM setup ok\n");
 #endif
 
