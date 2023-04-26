@@ -28,7 +28,7 @@ static void tone_task(void*){
       case TONE_START:
         log_d("Task received from queue TONE_START: _pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
 
-        if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10  == 0){
+        if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10)  == 0){
             log_e("Tone start failed");
             break;
         }
