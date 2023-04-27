@@ -26,20 +26,20 @@ static void tone_task(void*){
     xQueueReceive(_tone_queue, &tone_msg, portMAX_DELAY);
     switch(tone_msg.tone_cmd){
       case TONE_START:
-        log_d("Task received from queue TONE_START: _pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
+        log_d("Task received from queue TONE_START: pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
 
-        if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10)  == 0){
-            log_e("Tone start failed");
-            break;
+        if (_pin == -1) {
+          if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10) == 0) {
+              log_e("Tone start failed");
+              break;
+          }
+          _pin = tone_msg.pin;
         }
         ledcWriteTone(tone_msg.pin, tone_msg.frequency);
-        _pin = tone_msg.pin;
 
         if(tone_msg.duration){
           delay(tone_msg.duration);
           ledcWriteTone(tone_msg.pin, 0);
-          ledcDetach(tone_msg.pin);
-          _pin = -1;
         }
         break;
 
@@ -85,16 +85,21 @@ static int tone_init(){
   return 1; // OK
 }
 
-void noTone(uint8_t _pin){
+void noTone(uint8_t pin){
   log_d("noTone was called");
-  if(tone_init()){
-    tone_msg_t tone_msg = {
-      .tone_cmd = TONE_END,
-      .pin = _pin,
-      .frequency = 0, // Ignored
-      .duration = 0, // Ignored
-    };
-    xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
+  if(_pin == pin) {
+    if(tone_init()){
+      tone_msg_t tone_msg = {
+        .tone_cmd = TONE_END,
+        .pin = pin,
+        .frequency = 0, // Ignored
+        .duration = 0, // Ignored
+      };
+      xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
+    }
+  }
+  else {
+    log_e("Tone is not running on given pin %d", pin);
   }
 }
 
@@ -104,9 +109,9 @@ void noTone(uint8_t _pin){
 // duration - time in ms - how long will the signal be outputted.
 //   If not provided, or 0 you must manually call noTone to end output
 void tone(uint8_t pin, unsigned int frequency, unsigned long duration){
-  log_d("pin=%d, frequency=%u Hz, duration=%lu ms", _pin, frequency, duration);
-  if(tone_init()){
-    if (_pin == -1 || _pin == pin) {
+  log_d("pin=%d, frequency=%u Hz, duration=%lu ms", pin, frequency, duration);
+  if(_pin == -1 || _pin == pin) {
+    if(tone_init()){
       tone_msg_t tone_msg = {
         .tone_cmd = TONE_START,
         .pin = pin,
@@ -116,9 +121,9 @@ void tone(uint8_t pin, unsigned int frequency, unsigned long duration){
       xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
       return;
     }
-    else {
-      log_e("Tone is still running on pin = %d", _pin);
-      return;
-    }
+  }
+  else {
+    log_e("Tone is still running on pin %d, call noTone(%d) first!", _pin, _pin);
+    return;
   }
 }
