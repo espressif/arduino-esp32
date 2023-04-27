@@ -57,8 +57,6 @@ typedef struct {
 ** ledc: 15 => Group: 1, Channel: 7, Timer: 3
 */
 
-uint8_t channels_resolution[LEDC_CHANNELS] = {0};
-
 ledc_periph_t ledc_handle;
 
 static bool ledcDetachBus(void * bus){
