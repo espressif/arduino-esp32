@@ -53,6 +53,7 @@ public:
 
     bool reconnect();
     bool disconnect(bool wifioff = false, bool eraseap = false);
+    bool eraseAP(void);
 
     bool isConnected();
 
