@@ -28,7 +28,7 @@ This function is used to setup the LEDC channel frequency and resolution.
 
 .. code-block:: arduino
 
-    double ledcSetup(uint8_t channel, double freq, uint8_t resolution_bits);
+    uint32_t ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
 
 * ``channel`` select LEDC channel to config.
 * ``freq`` select frequency of pwm.
@@ -71,7 +71,7 @@ This function is used to get configured frequency for the LEDC channel.
 
 .. code-block:: arduino
 
-    double ledcReadFreq(uint8_t chan);
+    uint32_t ledcReadFreq(uint8_t chan);
 
 * ``chan`` select the LEDC channel to read the configured frequency.
 
@@ -84,7 +84,7 @@ This function is used to setup the LEDC channel to 50 % PWM tone on selected fre
 
 .. code-block:: arduino
 
-    double ledcWriteTone(uint8_t chan, double freq);
+    uint32_t ledcWriteTone(uint8_t chan, uint32_t freq);
 
 * ``chan`` select LEDC channel.
 * ``freq`` select frequency of pwm signal.
@@ -99,7 +99,7 @@ This function is used to setup the LEDC channel to specific note.
 
 .. code-block:: arduino
 
-    double ledcWriteNote(uint8_t chan, note_t note, uint8_t octave);
+    uint32_t ledcWriteNote(uint8_t chan, note_t note, uint8_t octave);
 
 * ``chan`` select LEDC channel.
 * ``note`` select note to be set.
@@ -144,7 +144,7 @@ This function is used to set frequency for the LEDC channel.
 
 .. code-block:: arduino
 
-    double ledcChangeFrequency(uint8_t chan, double freq, uint8_t bit_num);
+    uint32_t ledcChangeFrequency(uint8_t chan, uint32_t freq, uint8_t bit_num);
 
 * ``channel`` select LEDC channel.
 * ``freq`` select frequency of pwm.
@@ -168,6 +168,28 @@ It is compatible with Arduinos analogWrite function.
 * ``pin`` select the GPIO pin.
 * ``value`` select the duty cycle of pwm.
   * range is from 0 (always off) to 255 (always on).
+
+analogWriteResolution
+*********************
+
+This function is used to set resolution for all analogWrite channels.
+
+.. code-block:: arduino
+
+    void analogWriteResolution(uint8_t bits);
+   
+* ``bits`` select resolution for analog channels. 
+
+analogWriteFrequency
+********************
+
+This function is used to set frequency for all analogWrite channels.
+
+.. code-block:: arduino
+
+    void analogWriteFrequency(uint32_t freq);
+
+* ``freq`` select frequency of pwm.
 
 Example Applications
 ********************

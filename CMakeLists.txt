@@ -88,6 +88,7 @@ set(LIBRARY_SRCS
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/LittleFS/src/LittleFS.cpp
+  libraries/Insights/src/Insights.cpp
   libraries/I2S/src/I2S.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
@@ -98,6 +99,7 @@ set(LIBRARY_SRCS
   libraries/RainMaker/src/RMakerType.cpp
   libraries/RainMaker/src/RMakerQR.cpp
   libraries/RainMaker/src/RMakerUtils.cpp
+  libraries/RainMaker/src/AppInsights.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -184,6 +186,7 @@ set(includedirs
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
   libraries/LittleFS/src
+  libraries/Insights/src
   libraries/I2S/src
   libraries/NetBIOS/src
   libraries/Preferences/src
@@ -217,9 +220,10 @@ if(NOT CONFIG_FREERTOS_HZ EQUAL 1000 AND NOT "$ENV{ARDUINO_SKIP_TICK_CHECK}")
 endif()
 
 string(TOUPPER ${CONFIG_ARDUINO_VARIANT} idf_target_caps)
+string(REPLACE "-" "_" idf_target_for_macro "${idf_target_caps}")
 target_compile_options(${COMPONENT_TARGET} PUBLIC
     -DARDUINO=10812
-    -DARDUINO_${idf_target_caps}_DEV
+    -DARDUINO_${idf_target_for_macro}_DEV
     -DARDUINO_ARCH_ESP32
     -DARDUINO_BOARD="${idf_target_caps}_DEV"
     -DARDUINO_VARIANT="${CONFIG_ARDUINO_VARIANT}"

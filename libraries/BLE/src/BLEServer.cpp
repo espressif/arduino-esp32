@@ -207,6 +207,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 		case ESP_GATTS_DISCONNECT_EVT: {
 			if (m_pServerCallbacks != nullptr) {         // If we have callbacks, call now.
 				m_pServerCallbacks->onDisconnect(this);
+				m_pServerCallbacks->onDisconnect(this, param);
 			}
             if(m_connId == ESP_GATT_IF_NONE) {
                 return;
@@ -369,6 +370,12 @@ void BLEServerCallbacks::onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t*
 
 
 void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
+	log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
+	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
+	log_d("BLEServerCallbacks", "<< onDisconnect()");
+} // onDisconnect
+
+void BLEServerCallbacks::onDisconnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
 	log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
 	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
 	log_d("BLEServerCallbacks", "<< onDisconnect()");

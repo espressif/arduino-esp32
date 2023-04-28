@@ -281,6 +281,10 @@
 // Default Values
 //--------------------------------------------------------------------+
 
+#ifndef TUP_MCU_MULTIPLE_CORE
+#define TUP_MCU_MULTIPLE_CORE 0
+#endif
+
 #ifndef TUP_DCD_ENDPOINT_MAX
   #warning "TUP_DCD_ENDPOINT_MAX is not defined for this MCU, default to 8"
   #define TUP_DCD_ENDPOINT_MAX    8

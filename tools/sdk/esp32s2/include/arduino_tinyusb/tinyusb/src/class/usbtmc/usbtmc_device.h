@@ -36,7 +36,7 @@
 #endif
 
 /***********************************************
- *  Functions to be implemeted by the class implementation
+ *  Functions to be implemented by the class implementation
  */
 
 // In order to proceed, app must call call tud_usbtmc_start_bus_read(rhport) during or soon after:
