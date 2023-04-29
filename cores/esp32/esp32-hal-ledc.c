@@ -217,24 +217,29 @@ static int analog_frequency = 1000;
 void analogWrite(uint8_t pin, int value) {
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
+    int8_t channel = -1;
     if (pin_to_channel[pin] == 0) {
       if (!cnt_channel) {
           log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
           return;
       }
-      if(ledcSetup(cnt_channel - 1, analog_frequency, analog_resolution) == 0){
-          log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
-          return;
-      }
-      ledcAttachPin(pin, cnt_channel - 1);
-      pin_to_channel[pin] = cnt_channel--;
+      channel = cnt_channel - 1;
+    } else {
+      channel = analogGetChannel(pin);
     }
-    ledcWrite(pin_to_channel[pin] - 1, value);
+    log_v("GPIO %d - Using Channel %d, Value = %d", pin, channel, value);
+    if(ledcSetup(channel, analog_frequency, analog_resolution) == 0){
+        log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
+        return;
+    }
+    ledcAttachPin(pin, channel);
+    pin_to_channel[pin] = channel;
+    ledcWrite(channel, value);
   }
 }
 
 int8_t analogGetChannel(uint8_t pin) {
-    return pin_to_channel[pin] - 1;
+    return pin_to_channel[pin];
 }
 
 void analogWriteFrequency(uint32_t freq) {
