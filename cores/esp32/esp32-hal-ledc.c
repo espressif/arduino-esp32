@@ -223,7 +223,8 @@ void analogWrite(uint8_t pin, int value) {
           log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
           return;
       }
-      channel = cnt_channel - 1;
+      cnt_channel--;
+      channel = cnt_channel;
     } else {
       channel = analogGetChannel(pin);
     }
