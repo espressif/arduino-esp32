@@ -367,6 +367,22 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
 }
 
 /**
+ * @brief  Reset WiFi settings in NVS to default values.
+ * @return true if erase succeeded
+ * @note: Resets SSID, password, protocol, mode, etc.
+ * These settings are maintained by WiFi driver in IDF.
+ * WiFi driver must be initialized.
+ */
+bool WiFiSTAClass::eraseAP(void) {
+    if(WiFi.getMode()==WIFI_MODE_NULL) {
+        if(!WiFi.enableSTA(true))
+            return false;
+    }
+
+    return esp_wifi_restore()==ESP_OK;
+}
+
+/**
  * Change IP configuration settings disabling the dhcp client
  * @param local_ip   Static ip configuration
  * @param gateway    Static gateway configuration
