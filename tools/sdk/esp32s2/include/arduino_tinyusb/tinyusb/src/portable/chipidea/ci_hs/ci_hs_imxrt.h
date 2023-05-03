@@ -37,6 +37,11 @@
 #define USB2_BASE USB_OTG2_BASE
 #endif
 
+// RT1040 calls its only USB USB_OTG (no 1)
+#if defined(MIMXRT1042_SERIES)
+#define USB_OTG1_IRQn USB_OTG_IRQn
+#endif
+
 static const ci_hs_controller_t _ci_controller[] =
 {
   // RT1010 and RT1020 only has 1 USB controller

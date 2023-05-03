@@ -439,6 +439,16 @@
 #define CFG_TUH_CDC    0
 #endif
 
+#ifndef CFG_TUH_CDC_FTDI
+  // FTDI is not part of CDC class, only to re-use CDC driver API
+  #define CFG_TUH_CDC_FTDI 0
+#endif
+
+#ifndef CFG_TUH_CDC_CP210X
+  // CP210X is not part of CDC class, only to re-use CDC driver API
+  #define CFG_TUH_CDC_CP210X 0
+#endif
+
 #ifndef CFG_TUH_HID
 #define CFG_TUH_HID    0
 #endif
