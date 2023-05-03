@@ -86,7 +86,7 @@ def get_bootloader_image(variants_dir):
             join(
                 FRAMEWORK_DIR,
                 "tools",
-                "sdk",
+                "esp32-arduino-libs",
                 build_mcu,
                 "bin",
                 "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_flash(__env__)}.elf",
