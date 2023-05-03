@@ -7314,6 +7314,7 @@ dfrobot_beetle_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 dfrobot_firebeetle2_esp32e.name=FireBeetle 2 ESP32-E
 
 dfrobot_firebeetle2_esp32e.upload.tool=esptool_py
+dfrobot_firebeetle2_esp32e.upload.tool.default=esptool_py
 dfrobot_firebeetle2_esp32e.upload.maximum_size=1310720
 dfrobot_firebeetle2_esp32e.upload.maximum_data_size=327680
 dfrobot_firebeetle2_esp32e.upload.flags=
@@ -22259,6 +22260,7 @@ esp32c3m1IKit.menu.EraseFlash.all.upload.erase_cmd=-e
 roboheart_hercules.name=RoboHeart Hercules
 
 roboheart_hercules.upload.tool=esptool_py
+roboheart_hercules.upload.tool.default=esptool_py
 roboheart_hercules.upload.maximum_size=1310720
 roboheart_hercules.upload.maximum_data_size=327680
 roboheart_hercules.upload.wait_for_upload_port=true
