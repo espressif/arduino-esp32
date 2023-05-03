@@ -35,7 +35,7 @@
 // but really is never defined.
 class __FlashStringHelper;
 #define FPSTR(str_pointer) (reinterpret_cast<const __FlashStringHelper *>(str_pointer))
-#define F(string_literal) (FPSTR(string_literal))
+#define F(string_literal) (FPSTR(PSTR(string_literal)))
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
