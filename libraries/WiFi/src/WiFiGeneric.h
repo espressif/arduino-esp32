@@ -194,12 +194,14 @@ class WiFiGenericClass
 
     static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
 
+    const char * disconnectReasonName(wifi_err_reason_t reason);
+    const char * eventName(arduino_event_id_t id);
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 
     static esp_err_t _eventCallback(arduino_event_t *event);
-    
+
     static void useStaticBuffers(bool bufferMode);
     static bool useStaticBuffers();
 
