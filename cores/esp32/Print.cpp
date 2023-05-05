@@ -57,7 +57,7 @@ size_t Print::printf(const char *format, ...)
     if(len < 0) {
         va_end(arg);
         return 0;
-    };
+    }
     if(len >= (int)sizeof(loc_buf)){  // comparation of same sign type for the compiler
         temp = (char*) malloc(len+1);
         if(temp == NULL) {
@@ -72,11 +72,6 @@ size_t Print::printf(const char *format, ...)
         free(temp);
     }
     return len;
-}
-
-size_t Print::print(const __FlashStringHelper *ifsh)
-{
-    return print(reinterpret_cast<const char *>(ifsh));
 }
 
 size_t Print::print(const String &s)
@@ -150,13 +145,6 @@ size_t Print::print(unsigned long long n, int base)
 size_t Print::print(double n, int digits)
 {
     return printFloat(n, digits);
-}
-
-size_t Print::println(const __FlashStringHelper *ifsh)
-{
-    size_t n = print(ifsh);
-    n += println();
-    return n;
 }
 
 size_t Print::print(const Printable& x)
