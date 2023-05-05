@@ -1,3 +1,4 @@
+
 /*
   Client.h - Client class for Raspberry Pi
   Copyright (c) 2016 Hristo Gochkov  All right reserved.
@@ -316,10 +317,10 @@ int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
         }
         if (srv6.type == IPADDR_TYPE_V4) {
             IPAddress ip(srv6.u_addr.ip4.addr);
-            return connect(ip, port, timeout);
+            return connect(ip, port, timeout_ms);
         } else {
             IPAddress ip(IPv6, (uint8_t*)&srv6.u_addr.ip6.addr[0]);
-            return connect(ip, port, timeout);
+            return connect(ip, port, timeout_ms);
         }
     }
     IPAddress srv((uint32_t)0);
