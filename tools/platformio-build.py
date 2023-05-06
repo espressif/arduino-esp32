@@ -25,7 +25,7 @@ http://arduino.cc/en/Reference/HomePage
 # Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
 
 from os.path import abspath, basename, isdir, isfile, join
-
+from copy import deepcopy
 from SCons.Script import DefaultEnvironment, SConscript
 
 env = DefaultEnvironment()
@@ -51,19 +51,19 @@ def get_partition_table_csv(variants_dir):
 
     if partitions_name:
         # A custom partitions file is selected
-        if isfile(join(variant_partitions_dir, partitions_name)):
+        if isfile(env.subst(join(variant_partitions_dir, partitions_name))):
             return join(variant_partitions_dir, partitions_name)
 
         return abspath(
             join(fwpartitions_dir, partitions_name)
-            if isfile(join(fwpartitions_dir, partitions_name))
+            if isfile(env.subst(join(fwpartitions_dir, partitions_name)))
             else partitions_name
         )
 
     variant_partitions = join(variant_partitions_dir, "partitions.csv")
     return (
         variant_partitions
-        if isfile(variant_partitions)
+        if isfile(env.subst(variant_partitions))
         else join(fwpartitions_dir, "default.csv")
     )
 
@@ -81,7 +81,7 @@ def get_bootloader_image(variants_dir):
 
     return (
         variant_bootloader
-        if isfile(variant_bootloader)
+        if isfile(env.subst(variant_bootloader))
         else generate_bootloader_image(
             join(
                 FRAMEWORK_DIR,
@@ -126,8 +126,8 @@ def add_tinyuf2_extra_image():
     )
 
     # Add the UF2 image only if it exists and it's not already added
-    if not isfile(tinuf2_image):
-        print("Warning! The `%s` UF2 bootloader image doesn't exist" % tinuf2_image)
+    if not isfile(env.subst(tinuf2_image)):
+        print("Warning! The `%s` UF2 bootloader image doesn't exist" % env.subst(tinuf2_image))
         return
 
     if any(
@@ -237,3 +237,13 @@ partition_table = env.Command(
     ),
 )
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
+
+#
+#  Adjust the `esptoolpy` command in the `ElfToBin` builder with firmware checksum offset
+#
+
+action = deepcopy(env["BUILDERS"]["ElfToBin"].action)
+action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace(
+    "-o", "--elf-sha256-offset 0xb0 -o"
+)
+env["BUILDERS"]["ElfToBin"].action = action

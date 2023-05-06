@@ -163,7 +163,7 @@ char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
     // Round correctly so that print(1.999, 2) prints as "2.00"
     // I optimized out most of the divisions
     double rounding = 2.0;
-    for (uint32_t i = 0; i < prec; ++i)
+    for (unsigned int  i = 0; i < prec; ++i)
         rounding *= 10.0;
     rounding = 1.0 / rounding;
 
@@ -171,7 +171,7 @@ char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
 
     // Figure out how big our number really is
     double tenpow = 1.0;
-    int digitcount = 1;
+    unsigned int digitcount = 1;
     while (number >= 10.0 * tenpow) {
         tenpow *= 10.0;
         digitcount++;

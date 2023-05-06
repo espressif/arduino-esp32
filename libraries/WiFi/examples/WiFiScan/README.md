@@ -2,12 +2,12 @@
 
 This example demonstrates how to use the WiFi library to scan available WiFi networks and print the results.
 
-# Supported Targets
+## Supported Targets
 
 Currently this example supports the following targets.
 
-| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 |
-| ----------------- | ----- | -------- | -------- |
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
+| ----------------- | ----- | -------- | -------- | -------- |
 
 ## How to Use Example
 
@@ -25,25 +25,16 @@ Currently this example supports the following targets.
 ## Example/Log Output
 
 ```
-ets Jul 29 2019 12:21:46
-
-rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
-configsip: 0, SPIWP:0xee
-clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
-mode:DIO, clock div:1
-load:0x3fff0030,len:1412
-load:0x40078000,len:13400
-load:0x40080400,len:3672
-entry 0x400805f8
 Setup done
-scan start
-scan done
+Scan start
+Scan done
 17 networks found
-1: IoTNetwork (-62)*
-2: WiFiSSID (-62)*
-3: B3A7992 (-63)*
-4: WiFi (-63) 
-5: IoTNetwork2 (-64)*
+Nr | SSID            | RSSI | CH | Encryption
+ 1 | IoTNetwork      |  -62 |  1 | WPA2
+ 2 | WiFiSSID        |  -62 |  1 | WPA2-EAP
+ 3 | B3A7992         |  -63 |  6 | WPA+WPA2
+ 4 | WiFi            |  -63 |  6 | WPA3
+ 5 | IoTNetwork2     |  -64 | 11 | WPA2+WPA3
 ...
 ```
 

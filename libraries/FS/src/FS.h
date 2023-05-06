@@ -81,6 +81,7 @@ public:
     boolean seekDir(long position);
     File openNextFile(const char* mode = FILE_READ);
     String getNextFileName(void);
+    String getNextFileName(boolean *isDir);
     void rewindDirectory(void);
 
 protected:

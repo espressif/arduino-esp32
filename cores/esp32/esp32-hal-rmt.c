@@ -88,9 +88,9 @@ struct rmt_obj_s
 {
     bool allocated;
     EventGroupHandle_t events;
-    int channel;
-    int buffers;
-    int data_size;
+    uint32_t channel;
+    uint32_t buffers;
+    uint32_t data_size;
     uint32_t* data_ptr;
     rmt_rx_data_cb_t cb;
     void * arg;
@@ -133,7 +133,7 @@ static xSemaphoreHandle g_rmt_block_lock = NULL;
 
 static rmt_obj_t* _rmtAllocate(int pin, int from, int size)
 {
-    size_t i;
+    int i;
     // setup how many buffers shall we use
     g_rmt_objects[from].buffers = size;
 
@@ -539,10 +539,10 @@ float rmtSetTick(rmt_obj_t* rmt, float tick)
 
 rmt_obj_t* rmtInit(int pin, bool tx_not_rx, rmt_reserve_memsize_t memsize)
 {
-    int buffers = memsize;
+    uint32_t buffers = memsize;
     rmt_obj_t* rmt = NULL;
-    size_t i = 0;
-    size_t j = 0;
+    uint32_t i = 0;
+    uint32_t j = 0;
 
     // create common block mutex for protecting allocs from multiple threads
     if (!g_rmt_block_lock) {
