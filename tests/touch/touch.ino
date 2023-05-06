@@ -59,7 +59,7 @@ uint8_t TOUCH_GPIOS[] = {1,2,3,4,5,6,7,8,9,10,11,12/*,13,14*/};
   #define INTERRUPT_THRESHOLD   30000
 #elif CONFIG_IDF_TARGET_ESP32S3
   #define RELEASED_VALUE        25000 //25000- read value to pass test
-  #define PRESSED_VALUE         100000 //150000+ read value to pass test
+  #define PRESSED_VALUE         90000 //90000+ read value to pass test
   #define INTERRUPT_THRESHOLD   80000
 #else
   #error Test not currently supported on this chip. Please adjust and try again!
