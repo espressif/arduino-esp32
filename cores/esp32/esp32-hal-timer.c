@@ -88,7 +88,7 @@ hw_timer_t * timerBegin(uint32_t frequency){
 #if defined __has_include && __has_include ("clk_tree.h")
         clk_tree_src_get_freq_hz(clk, CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
 #else
-        esp_clk_tree_src_get_freq_hz(clk, CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
+        esp_clk_tree_src_get_freq_hz(clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
 #endif
         divider = counter_src_hz / frequency;
         if((divider >= 2) && (divider <= 65536)){
